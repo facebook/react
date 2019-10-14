@@ -160,8 +160,7 @@ class ReactFabricHostComponent {
       !(relativeToNativeNode instanceof ReactFabricHostComponent)
     ) {
       warningWithoutStack(
-        false,
-        'Warning: ref.measureLayout must be called with a ref to a native component.',
+        'Warning: ref.measureLayout must be called with a ref to a native component.'
       );
 
       return;
@@ -176,10 +175,7 @@ class ReactFabricHostComponent {
   }
 
   setNativeProps(nativeProps: Object) {
-    warningWithoutStack(
-      false,
-      'Warning: setNativeProps is not currently supported in Fabric',
-    );
+    warningWithoutStack('Warning: setNativeProps is not currently supported in Fabric');
 
     return;
   }
@@ -247,10 +243,9 @@ export function createTextInstance(
   hostContext: HostContext,
   internalInstanceHandle: Object,
 ): TextInstance {
-  invariant(
-    hostContext.isInAParentText,
-    'Text strings must be rendered within a <Text> component.',
-  );
+  if (!hostContext.isInAParentText) {
+    invariant('Text strings must be rendered within a <Text> component.');
+  }
 
   const tag = nextReactTag;
   nextReactTag += 2;

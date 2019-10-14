@@ -350,7 +350,7 @@ export function computeExpirationForFiber(
         expirationTime = Idle;
         break;
       default:
-        invariant(false, 'Expected a valid priority level');
+        invariant('Expected a valid priority level');
     }
   }
 
@@ -644,10 +644,10 @@ function performConcurrentWorkOnRoot(root, didTimeout) {
   const expirationTime = getNextRootExpirationTimeToWorkOn(root);
   if (expirationTime !== NoWork) {
     const originalCallbackNode = root.callbackNode;
-    invariant(
-      (executionContext & (RenderContext | CommitContext)) === NoContext,
-      'Should not already be working.',
-    );
+
+    if (!((executionContext & (RenderContext | CommitContext)) === NoContext)) {
+      invariant('Should not already be working.');
+    }
 
     flushPassiveEffects();
 
@@ -735,7 +735,7 @@ function finishConcurrentRender(
   switch (exitStatus) {
     case RootIncomplete:
     case RootFatalErrored: {
-      invariant(false, 'Root did not complete. This is a bug in React.');
+      invariant('Root did not complete. This is a bug in React.');
     }
     // Flow knows about invariant, so it complains if I add a break
     // statement, but eslint doesn't know about invariant, so it complains
@@ -961,7 +961,7 @@ function finishConcurrentRender(
       break;
     }
     default: {
-      invariant(false, 'Unknown root exit status.');
+      invariant('Unknown root exit status.');
     }
   }
 }
@@ -978,10 +978,9 @@ function performSyncWorkOnRoot(root) {
     // batch.commit() API.
     commitRoot(root);
   } else {
-    invariant(
-      (executionContext & (RenderContext | CommitContext)) === NoContext,
-      'Should not already be working.',
-    );
+    if (!((executionContext & (RenderContext | CommitContext)) === NoContext)) {
+      invariant('Should not already be working.');
+    }
 
     flushPassiveEffects();
 
@@ -1030,11 +1029,8 @@ function performSyncWorkOnRoot(root) {
 
       if (workInProgress !== null) {
         // This is a sync render, so we should have finished the whole tree.
-        invariant(
-          false,
-          'Cannot commit an incomplete root. This error is likely caused by a ' +
-            'bug in React. Please file an issue.',
-        );
+        invariant('Cannot commit an incomplete root. This error is likely caused by a ' +
+          'bug in React. Please file an issue.');
       } else {
         // We now have a consistent tree. Because this is a sync render, we
         // will commit it even if something suspended.
@@ -1083,11 +1079,8 @@ export function flushDiscreteUpdates() {
     NoContext
   ) {
     if (__DEV__ && (executionContext & RenderContext) !== NoContext) {
-      warning(
-        false,
-        'unstable_flushDiscreteUpdates: Cannot flush updates when React is ' +
-          'already rendering.',
-      );
+      warning('unstable_flushDiscreteUpdates: Cannot flush updates when React is ' +
+        'already rendering.');
     }
     // We're already rendering, so we can't synchronously flush pending work.
     // This is probably a nested event dispatch triggered by a lifecycle/effect,
@@ -1194,11 +1187,8 @@ export function unbatchedUpdates<A, R>(fn: (a: A) => R, a: A): R {
 
 export function flushSync<A, R>(fn: A => R, a: A): R {
   if ((executionContext & (RenderContext | CommitContext)) !== NoContext) {
-    invariant(
-      false,
-      'flushSync was called from inside a lifecycle method. It cannot be ' +
-        'called when React is already rendering.',
-    );
+    invariant('flushSync was called from inside a lifecycle method. It cannot be ' +
+      'called when React is already rendering.');
   }
   const prevExecutionContext = executionContext;
   executionContext |= BatchedContext;
@@ -1710,10 +1700,9 @@ function commitRootImpl(root, renderPriorityLevel) {
   flushPassiveEffects();
   flushRenderPhaseStrictModeWarningsInDEV();
 
-  invariant(
-    (executionContext & (RenderContext | CommitContext)) === NoContext,
-    'Should not already be working.',
-  );
+  if (!((executionContext & (RenderContext | CommitContext)) === NoContext)) {
+    invariant('Should not already be working.');
+  }
 
   const finishedWork = root.finishedWork;
   const expirationTime = root.finishedExpirationTime;
@@ -1723,11 +1712,10 @@ function commitRootImpl(root, renderPriorityLevel) {
   root.finishedWork = null;
   root.finishedExpirationTime = NoWork;
 
-  invariant(
-    finishedWork !== root.current,
-    'Cannot commit the same tree as before. This error is likely caused by ' +
-      'a bug in React. Please file an issue.',
-  );
+  if (!(finishedWork !== root.current)) {
+    invariant('Cannot commit the same tree as before. This error is likely caused by ' +
+      'a bug in React. Please file an issue.');
+  }
 
   // commitRoot never returns a continuation; it always finishes synchronously.
   // So we can clear these now to allow a new callback to be scheduled.
@@ -1800,7 +1788,10 @@ function commitRootImpl(root, renderPriorityLevel) {
       if (__DEV__) {
         invokeGuardedCallback(null, commitBeforeMutationEffects, null);
         if (hasCaughtError()) {
-          invariant(nextEffect !== null, 'Should be working on an effect.');
+          if (!(nextEffect !== null)) {
+            invariant('Should be working on an effect.');
+          }
+
           const error = clearCaughtError();
           captureCommitPhaseError(nextEffect, error);
           nextEffect = nextEffect.nextEffect;
@@ -1809,7 +1800,10 @@ function commitRootImpl(root, renderPriorityLevel) {
         try {
           commitBeforeMutationEffects();
         } catch (error) {
-          invariant(nextEffect !== null, 'Should be working on an effect.');
+          if (!(nextEffect !== null)) {
+            invariant('Should be working on an effect.');
+          }
+
           captureCommitPhaseError(nextEffect, error);
           nextEffect = nextEffect.nextEffect;
         }
@@ -1836,7 +1830,10 @@ function commitRootImpl(root, renderPriorityLevel) {
           renderPriorityLevel,
         );
         if (hasCaughtError()) {
-          invariant(nextEffect !== null, 'Should be working on an effect.');
+          if (!(nextEffect !== null)) {
+            invariant('Should be working on an effect.');
+          }
+
           const error = clearCaughtError();
           captureCommitPhaseError(nextEffect, error);
           nextEffect = nextEffect.nextEffect;
@@ -1845,7 +1842,10 @@ function commitRootImpl(root, renderPriorityLevel) {
         try {
           commitMutationEffects(root, renderPriorityLevel);
         } catch (error) {
-          invariant(nextEffect !== null, 'Should be working on an effect.');
+          if (!(nextEffect !== null)) {
+            invariant('Should be working on an effect.');
+          }
+
           captureCommitPhaseError(nextEffect, error);
           nextEffect = nextEffect.nextEffect;
         }
@@ -1875,7 +1875,10 @@ function commitRootImpl(root, renderPriorityLevel) {
           expirationTime,
         );
         if (hasCaughtError()) {
-          invariant(nextEffect !== null, 'Should be working on an effect.');
+          if (!(nextEffect !== null)) {
+            invariant('Should be working on an effect.');
+          }
+
           const error = clearCaughtError();
           captureCommitPhaseError(nextEffect, error);
           nextEffect = nextEffect.nextEffect;
@@ -1884,7 +1887,10 @@ function commitRootImpl(root, renderPriorityLevel) {
         try {
           commitLayoutEffects(root, expirationTime);
         } catch (error) {
-          invariant(nextEffect !== null, 'Should be working on an effect.');
+          if (!(nextEffect !== null)) {
+            invariant('Should be working on an effect.');
+          }
+
           captureCommitPhaseError(nextEffect, error);
           nextEffect = nextEffect.nextEffect;
         }
@@ -2169,10 +2175,10 @@ function flushPassiveEffectsImpl() {
   rootWithPendingPassiveEffects = null;
   pendingPassiveEffectsExpirationTime = NoWork;
 
-  invariant(
-    (executionContext & (RenderContext | CommitContext)) === NoContext,
-    'Cannot flush passive effects while already rendering.',
-  );
+  if (!((executionContext & (RenderContext | CommitContext)) === NoContext)) {
+    invariant('Cannot flush passive effects while already rendering.');
+  }
+
   const prevExecutionContext = executionContext;
   executionContext |= CommitContext;
   const prevInteractions = pushInteractions(root);
@@ -2186,7 +2192,10 @@ function flushPassiveEffectsImpl() {
       setCurrentDebugFiberInDEV(effect);
       invokeGuardedCallback(null, commitPassiveHookEffects, null, effect);
       if (hasCaughtError()) {
-        invariant(effect !== null, 'Should be working on an effect.');
+        if (!(effect !== null)) {
+          invariant('Should be working on an effect.');
+        }
+
         const error = clearCaughtError();
         captureCommitPhaseError(effect, error);
       }
@@ -2195,7 +2204,10 @@ function flushPassiveEffectsImpl() {
       try {
         commitPassiveHookEffects(effect);
       } catch (error) {
-        invariant(effect !== null, 'Should be working on an effect.');
+        if (!(effect !== null)) {
+          invariant('Should be working on an effect.');
+        }
+
         captureCommitPhaseError(effect, error);
       }
     }
@@ -2418,11 +2430,8 @@ export function resolveRetryThenable(boundaryFiber: Fiber, thenable: Thenable) {
         retryCache = boundaryFiber.stateNode;
         break;
       default:
-        invariant(
-          false,
-          'Pinged unknown suspense boundary type. ' +
-            'This is probably a bug in React.',
-        );
+        invariant('Pinged unknown suspense boundary type. ' +
+          'This is probably a bug in React.');
     }
   } else {
     retryCache = boundaryFiber.stateNode;
@@ -2494,25 +2503,19 @@ function checkForNestedUpdates() {
   if (nestedUpdateCount > NESTED_UPDATE_LIMIT) {
     nestedUpdateCount = 0;
     rootWithNestedUpdates = null;
-    invariant(
-      false,
-      'Maximum update depth exceeded. This can happen when a component ' +
-        'repeatedly calls setState inside componentWillUpdate or ' +
-        'componentDidUpdate. React limits the number of nested updates to ' +
-        'prevent infinite loops.',
-    );
+    invariant('Maximum update depth exceeded. This can happen when a component ' +
+      'repeatedly calls setState inside componentWillUpdate or ' +
+      'componentDidUpdate. React limits the number of nested updates to ' +
+      'prevent infinite loops.');
   }
 
   if (__DEV__) {
     if (nestedPassiveUpdateCount > NESTED_PASSIVE_UPDATE_LIMIT) {
       nestedPassiveUpdateCount = 0;
-      warning(
-        false,
-        'Maximum update depth exceeded. This can happen when a component ' +
-          "calls setState inside useEffect, but useEffect either doesn't " +
-          'have a dependency array, or one of the dependencies changes on ' +
-          'every render.',
-      );
+      warning('Maximum update depth exceeded. This can happen when a component ' +
+        "calls setState inside useEffect, but useEffect either doesn't " +
+        'have a dependency array, or one of the dependencies changes on ' +
+        'every render.');
     }
   }
 }
@@ -2579,16 +2582,11 @@ function warnAboutUpdateOnUnmountedFiberInDEV(fiber) {
     } else {
       didWarnStateUpdateForUnmountedComponent = new Set([componentName]);
     }
-    warningWithoutStack(
-      false,
-      "Can't perform a React state update on an unmounted component. This " +
-        'is a no-op, but it indicates a memory leak in your application. To ' +
-        'fix, cancel all subscriptions and asynchronous tasks in %s.%s',
-      tag === ClassComponent
-        ? 'the componentWillUnmount method'
-        : 'a useEffect cleanup function',
-      getStackByFiberInDevAndProd(fiber),
-    );
+    warningWithoutStack("Can't perform a React state update on an unmounted component. This " +
+      'is a no-op, but it indicates a memory leak in your application. To ' +
+      'fix, cancel all subscriptions and asynchronous tasks in %s.%s', tag === ClassComponent
+      ? 'the componentWillUnmount method'
+      : 'a useEffect cleanup function', getStackByFiberInDevAndProd(fiber));
   }
 }
 
@@ -2671,22 +2669,16 @@ function warnAboutInvalidUpdatesOnClassComponentsInDEV(fiber) {
           if (didWarnAboutUpdateInGetChildContext) {
             return;
           }
-          warningWithoutStack(
-            false,
-            'setState(...): Cannot call setState() inside getChildContext()',
-          );
+          warningWithoutStack('setState(...): Cannot call setState() inside getChildContext()');
           didWarnAboutUpdateInGetChildContext = true;
           break;
         case 'render':
           if (didWarnAboutUpdateInRender) {
             return;
           }
-          warningWithoutStack(
-            false,
-            'Cannot update during an existing state transition (such as ' +
-              'within `render`). Render methods should be a pure function of ' +
-              'props and state.',
-          );
+          warningWithoutStack('Cannot update during an existing state transition (such as ' +
+            'within `render`). Render methods should be a pure function of ' +
+            'props and state.');
           didWarnAboutUpdateInRender = true;
           break;
       }
@@ -2705,7 +2697,6 @@ export function warnIfNotScopedWithMatchingAct(fiber: Fiber): void {
       IsThisRendererActing.current !== true
     ) {
       warningWithoutStack(
-        false,
         "It looks like you're using the wrong act() around your test interactions.\n" +
           'Be sure to use the matching version of act() corresponding to your renderer:\n\n' +
           '// for react-dom:\n' +
@@ -2718,7 +2709,7 @@ export function warnIfNotScopedWithMatchingAct(fiber: Fiber): void {
           '// ...\n' +
           'act(() => ...);' +
           '%s',
-        getStackByFiberInDevAndProd(fiber),
+        getStackByFiberInDevAndProd(fiber)
       );
     }
   }
@@ -2732,22 +2723,17 @@ export function warnIfNotCurrentlyActingEffectsInDEV(fiber: Fiber): void {
       IsSomeRendererActing.current === false &&
       IsThisRendererActing.current === false
     ) {
-      warningWithoutStack(
-        false,
-        'An update to %s ran an effect, but was not wrapped in act(...).\n\n' +
-          'When testing, code that causes React state updates should be ' +
-          'wrapped into act(...):\n\n' +
-          'act(() => {\n' +
-          '  /* fire events that update state */\n' +
-          '});\n' +
-          '/* assert on the output */\n\n' +
-          "This ensures that you're testing the behavior the user would see " +
-          'in the browser.' +
-          ' Learn more at https://fb.me/react-wrap-tests-with-act' +
-          '%s',
-        getComponentName(fiber.type),
-        getStackByFiberInDevAndProd(fiber),
-      );
+      warningWithoutStack('An update to %s ran an effect, but was not wrapped in act(...).\n\n' +
+        'When testing, code that causes React state updates should be ' +
+        'wrapped into act(...):\n\n' +
+        'act(() => {\n' +
+        '  /* fire events that update state */\n' +
+        '});\n' +
+        '/* assert on the output */\n\n' +
+        "This ensures that you're testing the behavior the user would see " +
+        'in the browser.' +
+        ' Learn more at https://fb.me/react-wrap-tests-with-act' +
+        '%s', getComponentName(fiber.type), getStackByFiberInDevAndProd(fiber));
     }
   }
 }
@@ -2760,22 +2746,17 @@ function warnIfNotCurrentlyActingUpdatesInDEV(fiber: Fiber): void {
       IsSomeRendererActing.current === false &&
       IsThisRendererActing.current === false
     ) {
-      warningWithoutStack(
-        false,
-        'An update to %s inside a test was not wrapped in act(...).\n\n' +
-          'When testing, code that causes React state updates should be ' +
-          'wrapped into act(...):\n\n' +
-          'act(() => {\n' +
-          '  /* fire events that update state */\n' +
-          '});\n' +
-          '/* assert on the output */\n\n' +
-          "This ensures that you're testing the behavior the user would see " +
-          'in the browser.' +
-          ' Learn more at https://fb.me/react-wrap-tests-with-act' +
-          '%s',
-        getComponentName(fiber.type),
-        getStackByFiberInDevAndProd(fiber),
-      );
+      warningWithoutStack('An update to %s inside a test was not wrapped in act(...).\n\n' +
+        'When testing, code that causes React state updates should be ' +
+        'wrapped into act(...):\n\n' +
+        'act(() => {\n' +
+        '  /* fire events that update state */\n' +
+        '});\n' +
+        '/* assert on the output */\n\n' +
+        "This ensures that you're testing the behavior the user would see " +
+        'in the browser.' +
+        ' Learn more at https://fb.me/react-wrap-tests-with-act' +
+        '%s', getComponentName(fiber.type), getStackByFiberInDevAndProd(fiber));
     }
   }
 }
@@ -2798,22 +2779,20 @@ export function warnIfUnmockedScheduler(fiber: Fiber) {
       if (fiber.mode & BatchedMode || fiber.mode & ConcurrentMode) {
         didWarnAboutUnmockedScheduler = true;
         warningWithoutStack(
-          false,
           'In Concurrent or Sync modes, the "scheduler" module needs to be mocked ' +
             'to guarantee consistent behaviour across tests and browsers. ' +
             'For example, with jest: \n' +
             "jest.mock('scheduler', () => require('scheduler/unstable_mock'));\n\n" +
-            'For more info, visit https://fb.me/react-mock-scheduler',
+            'For more info, visit https://fb.me/react-mock-scheduler'
         );
       } else if (warnAboutUnmockedScheduler === true) {
         didWarnAboutUnmockedScheduler = true;
         warningWithoutStack(
-          false,
           'Starting from React v17, the "scheduler" module will need to be mocked ' +
             'to guarantee consistent behaviour across tests and browsers. ' +
             'For example, with jest: \n' +
             "jest.mock('scheduler', () => require('scheduler/unstable_mock'));\n\n" +
-            'For more info, visit https://fb.me/react-mock-scheduler',
+            'For more info, visit https://fb.me/react-mock-scheduler'
         );
       }
     }
@@ -2920,19 +2899,15 @@ function flushSuspensePriorityWarningInDEV() {
       componentsThatTriggeredHighPriSuspend = null;
 
       if (componentNames.length > 0) {
-        warningWithoutStack(
-          false,
-          '%s triggered a user-blocking update that suspended.' +
-            '\n\n' +
-            'The fix is to split the update into multiple parts: a user-blocking ' +
-            'update to provide immediate feedback, and another update that ' +
-            'triggers the bulk of the changes.' +
-            '\n\n' +
-            'Refer to the documentation for useSuspenseTransition to learn how ' +
-            'to implement this pattern.',
-          // TODO: Add link to React docs with more information, once it exists
-          componentNames.sort().join(', '),
-        );
+        warningWithoutStack('%s triggered a user-blocking update that suspended.' +
+          '\n\n' +
+          'The fix is to split the update into multiple parts: a user-blocking ' +
+          'update to provide immediate feedback, and another update that ' +
+          'triggers the bulk of the changes.' +
+          '\n\n' +
+          'Refer to the documentation for useSuspenseTransition to learn how ' +
+          'to implement this pattern.', // TODO: Add link to React docs with more information, once it exists
+        componentNames.sort().join(', '));
       }
     }
   }

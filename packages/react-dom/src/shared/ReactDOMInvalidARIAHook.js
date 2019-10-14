@@ -32,21 +32,15 @@ function validateProperty(tagName, name) {
     // DOM properties, then it is an invalid aria-* attribute.
     if (correctName == null) {
       warning(
-        false,
         'Invalid ARIA attribute `%s`. ARIA attributes follow the pattern aria-* and must be lowercase.',
-        name,
+        name
       );
       warnedProperties[name] = true;
       return true;
     }
     // aria-* attributes should be lowercase; suggest the lowercase version.
     if (name !== correctName) {
-      warning(
-        false,
-        'Invalid ARIA attribute `%s`. Did you mean `%s`?',
-        name,
-        correctName,
-      );
+      warning('Invalid ARIA attribute `%s`. Did you mean `%s`?', name, correctName);
       warnedProperties[name] = true;
       return true;
     }
@@ -66,12 +60,7 @@ function validateProperty(tagName, name) {
     }
     // aria-* attributes should be lowercase; suggest the lowercase version.
     if (name !== standardName) {
-      warning(
-        false,
-        'Unknown ARIA attribute `%s`. Did you mean `%s`?',
-        name,
-        standardName,
-      );
+      warning('Unknown ARIA attribute `%s`. Did you mean `%s`?', name, standardName);
       warnedProperties[name] = true;
       return true;
     }
@@ -95,21 +84,11 @@ function warnInvalidARIAProps(type, props) {
     .join(', ');
 
   if (invalidProps.length === 1) {
-    warning(
-      false,
-      'Invalid aria prop %s on <%s> tag. ' +
-        'For details, see https://fb.me/invalid-aria-prop',
-      unknownPropString,
-      type,
-    );
+    warning('Invalid aria prop %s on <%s> tag. ' +
+      'For details, see https://fb.me/invalid-aria-prop', unknownPropString, type);
   } else if (invalidProps.length > 1) {
-    warning(
-      false,
-      'Invalid aria props %s on <%s> tag. ' +
-        'For details, see https://fb.me/invalid-aria-prop',
-      unknownPropString,
-      type,
-    );
+    warning('Invalid aria props %s on <%s> tag. ' +
+      'For details, see https://fb.me/invalid-aria-prop', unknownPropString, type);
   }
 }
 

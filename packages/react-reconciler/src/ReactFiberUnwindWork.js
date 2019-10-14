@@ -56,11 +56,12 @@ function unwindWork(
       popHostContainer(workInProgress);
       popTopLevelLegacyContextObject(workInProgress);
       const effectTag = workInProgress.effectTag;
-      invariant(
-        (effectTag & DidCapture) === NoEffect,
-        'The root failed to unmount after an error. This is likely a bug in ' +
-          'React. Please file an issue.',
-      );
+
+      if (!((effectTag & DidCapture) === NoEffect)) {
+        invariant('The root failed to unmount after an error. This is likely a bug in ' +
+          'React. Please file an issue.');
+      }
+
       workInProgress.effectTag = (effectTag & ~ShouldCapture) | DidCapture;
       return workInProgress;
     }
@@ -75,11 +76,11 @@ function unwindWork(
         const suspenseState: null | SuspenseState =
           workInProgress.memoizedState;
         if (suspenseState !== null && suspenseState.dehydrated !== null) {
-          invariant(
-            workInProgress.alternate !== null,
-            'Threw in newly mounted dehydrated component. This is likely a bug in ' +
-              'React. Please file an issue.',
-          );
+          if (!(workInProgress.alternate !== null)) {
+            invariant('Threw in newly mounted dehydrated component. This is likely a bug in ' +
+              'React. Please file an issue.');
+          }
+
           resetHydrationState();
         }
       }

@@ -13,10 +13,10 @@ import invariant from 'shared/invariant';
 
 // Provided by www
 const ReactFiberErrorDialogWWW = require('ReactFiberErrorDialog');
-invariant(
-  typeof ReactFiberErrorDialogWWW.showErrorDialog === 'function',
-  'Expected ReactFiberErrorDialog.showErrorDialog to be a function.',
-);
+
+if (!(typeof ReactFiberErrorDialogWWW.showErrorDialog === 'function')) {
+  invariant('Expected ReactFiberErrorDialog.showErrorDialog to be a function.');
+}
 
 export function showErrorDialog(capturedError: CapturedError): boolean {
   return ReactFiberErrorDialogWWW.showErrorDialog(capturedError);

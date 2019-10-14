@@ -698,11 +698,11 @@ function completeWork(
         }
       } else {
         if (!newProps) {
-          invariant(
-            workInProgress.stateNode !== null,
-            'We must have new props for new mounts. This error is likely ' +
-              'caused by a bug in React. Please file an issue.',
-          );
+          if (!(workInProgress.stateNode !== null)) {
+            invariant('We must have new props for new mounts. This error is likely ' +
+              'caused by a bug in React. Please file an issue.');
+          }
+
           // This can happen when we abort work.
           break;
         }
@@ -794,12 +794,11 @@ function completeWork(
         updateHostText(current, workInProgress, oldText, newText);
       } else {
         if (typeof newText !== 'string') {
-          invariant(
-            workInProgress.stateNode !== null,
-            'We must have new props for new mounts. This error is likely ' +
-              'caused by a bug in React. Please file an issue.',
-          );
-          // This can happen when we abort work.
+          if (!(workInProgress.stateNode !== null)) {
+            invariant('We must have new props for new mounts. This error is likely ' +
+              'caused by a bug in React. Please file an issue.');
+            // This can happen when we abort work.
+          }
         }
         const rootContainerInstance = getRootHostContainer();
         const currentHostContext = getHostContext();
@@ -829,11 +828,14 @@ function completeWork(
         if (nextState !== null && nextState.dehydrated !== null) {
           if (current === null) {
             let wasHydrated = popHydrationState(workInProgress);
-            invariant(
-              wasHydrated,
-              'A dehydrated suspense component was completed without a hydrated node. ' +
-                'This is probably a bug in React.',
-            );
+
+            if (!wasHydrated) {
+              invariant(
+                'A dehydrated suspense component was completed without a hydrated node. ' +
+                  'This is probably a bug in React.'
+              );
+            }
+
             prepareToHydrateHostSuspenseInstance(workInProgress);
             if (enableSchedulerTracing) {
               markSpawnedWork(Never);
@@ -1284,10 +1286,9 @@ function completeWork(
     }
     default:
       invariant(
-        false,
         'Unknown unit of work tag (%s). This error is likely caused by a bug in ' +
           'React. Please file an issue.',
-        workInProgress.tag,
+        workInProgress.tag
       );
   }
 

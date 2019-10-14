@@ -9,10 +9,10 @@ import invariant from 'shared/invariant';
 
 // Provided by www
 const ReactFbErrorUtils = require('ReactFbErrorUtils');
-invariant(
-  typeof ReactFbErrorUtils.invokeGuardedCallback === 'function',
-  'Expected ReactFbErrorUtils.invokeGuardedCallback to be a function.',
-);
+
+if (!(typeof ReactFbErrorUtils.invokeGuardedCallback === 'function')) {
+  invariant('Expected ReactFbErrorUtils.invokeGuardedCallback to be a function.');
+}
 
 let invokeGuardedCallbackImpl = function<A, B, C, D, E, F, Context>(
   name: string | null,

@@ -41,10 +41,10 @@ type TextAreaWithWrapperState = HTMLTextAreaElement & {
 
 export function getHostProps(element: Element, props: Object) {
   const node = ((element: any): TextAreaWithWrapperState);
-  invariant(
-    props.dangerouslySetInnerHTML == null,
-    '`dangerouslySetInnerHTML` does not make sense on <textarea>.',
-  );
+
+  if (!(props.dangerouslySetInnerHTML == null)) {
+    invariant('`dangerouslySetInnerHTML` does not make sense on <textarea>.');
+  }
 
   // Always set children to the same thing. In IE9, the selection range will
   // get reset if `textContent` is mutated.  We could add a check in setTextContent
@@ -71,16 +71,12 @@ export function initWrapperState(element: Element, props: Object) {
       props.defaultValue !== undefined &&
       !didWarnValDefaultVal
     ) {
-      warning(
-        false,
-        '%s contains a textarea with both value and defaultValue props. ' +
-          'Textarea elements must be either controlled or uncontrolled ' +
-          '(specify either the value prop, or the defaultValue prop, but not ' +
-          'both). Decide between using a controlled or uncontrolled textarea ' +
-          'and remove one of these props. More info: ' +
-          'https://fb.me/react-controlled-components',
-        getCurrentFiberOwnerNameInDevOrNull() || 'A component',
-      );
+      warning('%s contains a textarea with both value and defaultValue props. ' +
+        'Textarea elements must be either controlled or uncontrolled ' +
+        '(specify either the value prop, or the defaultValue prop, but not ' +
+        'both). Decide between using a controlled or uncontrolled textarea ' +
+        'and remove one of these props. More info: ' +
+        'https://fb.me/react-controlled-components', getCurrentFiberOwnerNameInDevOrNull() || 'A component');
       didWarnValDefaultVal = true;
     }
   }
@@ -94,21 +90,19 @@ export function initWrapperState(element: Element, props: Object) {
     let children = props.children;
     if (children != null) {
       if (__DEV__) {
-        warning(
-          false,
-          'Use the `defaultValue` or `value` props instead of setting ' +
-            'children on <textarea>.',
-        );
+        warning('Use the `defaultValue` or `value` props instead of setting ' +
+          'children on <textarea>.');
       }
-      invariant(
-        defaultValue == null,
-        'If you supply `defaultValue` on a <textarea>, do not pass children.',
-      );
+
+      if (!(defaultValue == null)) {
+        invariant('If you supply `defaultValue` on a <textarea>, do not pass children.');
+      }
+
       if (Array.isArray(children)) {
-        invariant(
-          children.length <= 1,
-          '<textarea> can only have at most one child.',
-        );
+        if (!(children.length <= 1)) {
+          invariant('<textarea> can only have at most one child.');
+        }
+
         children = children[0];
       }
 

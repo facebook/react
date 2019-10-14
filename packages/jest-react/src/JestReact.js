@@ -28,11 +28,11 @@ function captureAssertion(fn) {
 function assertYieldsWereCleared(root) {
   const Scheduler = root._Scheduler;
   const actualYields = Scheduler.unstable_clearYields();
-  invariant(
-    actualYields.length === 0,
-    'Log of yielded values is not empty. ' +
-      'Call expect(ReactTestRenderer).unstable_toHaveYielded(...) first.',
-  );
+
+  if (!(actualYields.length === 0)) {
+    invariant('Log of yielded values is not empty. ' +
+      'Call expect(ReactTestRenderer).unstable_toHaveYielded(...) first.');
+  }
 }
 
 export function unstable_toMatchRenderedOutput(root, expectedJSX) {

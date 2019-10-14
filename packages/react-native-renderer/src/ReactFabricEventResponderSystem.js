@@ -180,7 +180,6 @@ function validateEventValue(eventValue: any): void {
     const showWarning = name => {
       if (__DEV__) {
         warning(
-          false,
           '%s is not available on event objects created from event responder modules (React Flare). ' +
             'Try wrapping in a conditional, i.e. `if (event.type !== "press") { event.%s }`',
           name,
@@ -241,10 +240,9 @@ function createFabricResponderEvent(
 }
 
 function validateResponderContext(): void {
-  invariant(
-    currentInstance,
-    'An event responder context was used outside of an event cycle.',
-  );
+  if (!currentInstance) {
+    invariant('An event responder context was used outside of an event cycle.');
+  }
 }
 
 // TODO this function is almost an exact copy of the DOM version, we should
@@ -438,13 +436,16 @@ function registerRootEventType(
   if (rootEventTypesSet === null) {
     rootEventTypesSet = responderInstance.rootEventTypes = new Set();
   }
-  invariant(
-    !rootEventTypesSet.has(rootEventType),
-    'addRootEventTypes() found a duplicate root event ' +
-      'type of "%s". This might be because the event type exists in the event responder "rootEventTypes" ' +
-      'array or because of a previous addRootEventTypes() using this root event type.',
-    rootEventType,
-  );
+
+  if (rootEventTypesSet.has(rootEventType)) {
+    invariant(
+      'addRootEventTypes() found a duplicate root event ' +
+        'type of "%s". This might be because the event type exists in the event responder "rootEventTypes" ' +
+        'array or because of a previous addRootEventTypes() using this root event type.',
+      rootEventType,
+    );
+  }
+
   rootEventTypesSet.add(rootEventType);
   rootEventResponderInstances.add(responderInstance);
 }

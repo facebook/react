@@ -781,12 +781,14 @@ function updateClassComponent(
   if (__DEV__) {
     let inst = workInProgress.stateNode;
     if (inst.props !== nextProps) {
-      warning(
-        didWarnAboutReassigningProps,
-        'It looks like %s is reassigning its own `this.props` while rendering. ' +
-          'This is not supported and can lead to confusing bugs.',
-        getComponentName(workInProgress.type) || 'a component',
-      );
+      if (!didWarnAboutReassigningProps) {
+        warning(
+          'It looks like %s is reassigning its own `this.props` while rendering. ' +
+            'This is not supported and can lead to confusing bugs.',
+          getComponentName(workInProgress.type) || 'a component',
+        );
+      }
+
       didWarnAboutReassigningProps = true;
     }
   }
@@ -907,12 +909,15 @@ function pushHostRootContext(workInProgress) {
 function updateHostRoot(current, workInProgress, renderExpirationTime) {
   pushHostRootContext(workInProgress);
   const updateQueue = workInProgress.updateQueue;
-  invariant(
-    updateQueue !== null,
-    'If the root does not have an updateQueue, we should have already ' +
-      'bailed out. This error is likely caused by a bug in React. Please ' +
-      'file an issue.',
-  );
+
+  if (!(updateQueue !== null)) {
+    invariant(
+      'If the root does not have an updateQueue, we should have already ' +
+        'bailed out. This error is likely caused by a bug in React. Please ' +
+        'file an issue.',
+    );
+  }
+
   const nextProps = workInProgress.pendingProps;
   const prevState = workInProgress.memoizedState;
   const prevChildren = prevState !== null ? prevState.element : null;
@@ -1153,7 +1158,6 @@ function mountLazyComponent(
       // because the fact that it's a separate type of work is an
       // implementation detail.
       invariant(
-        false,
         'Element type is invalid. Received a promise that resolves to: %s. ' +
           'Lazy element type must resolve to a class or function.%s',
         Component,
@@ -1262,7 +1266,6 @@ function mountIndeterminateComponent(
 
       if (!didWarnAboutBadClass[componentName]) {
         warningWithoutStack(
-          false,
           "The <%s /> component appears to have a render method, but doesn't extend React.Component. " +
             'This is likely to cause errors. Change %s to extend React.Component instead.',
           componentName,
@@ -1308,7 +1311,6 @@ function mountIndeterminateComponent(
       const componentName = getComponentName(Component) || 'Unknown';
       if (!didWarnAboutModulePatternComponent[componentName]) {
         warningWithoutStack(
-          false,
           'The <%s /> component appears to be a function component that returns a class instance. ' +
             'Change %s to a class that extends React.Component instead. ' +
             "If you can't use a class try assigning the prototype on the function as a workaround. " +
@@ -1368,7 +1370,6 @@ function mountIndeterminateComponent(
     if (__DEV__) {
       if (disableLegacyContext && Component.contextTypes) {
         warningWithoutStack(
-          false,
           '%s uses the legacy contextTypes API which is no longer supported. ' +
             'Use React.createContext() with React.useContext() instead.',
           getComponentName(Component) || 'Unknown',
@@ -1402,9 +1403,8 @@ function mountIndeterminateComponent(
 }
 
 function validateFunctionComponentInDev(workInProgress: Fiber, Component: any) {
-  if (Component) {
+  if (Component && Component.childContextTypes) {
     warningWithoutStack(
-      !Component.childContextTypes,
       '%s(...): childContextTypes cannot be defined on a function component.',
       Component.displayName || Component.name || 'Component',
     );
@@ -1424,7 +1424,6 @@ function validateFunctionComponentInDev(workInProgress: Fiber, Component: any) {
     if (!didWarnAboutFunctionRefs[warningKey]) {
       didWarnAboutFunctionRefs[warningKey] = true;
       warning(
-        false,
         'Function components cannot be given refs. ' +
           'Attempts to access this ref will fail. ' +
           'Did you mean to use React.forwardRef()?%s',
@@ -1441,7 +1440,6 @@ function validateFunctionComponentInDev(workInProgress: Fiber, Component: any) {
 
     if (!didWarnAboutDefaultPropsOnFunctionComponent[componentName]) {
       warningWithoutStack(
-        false,
         '%s: Support for defaultProps will be removed from function components ' +
           'in a future major release. Use JavaScript default parameters instead.',
         componentName,
@@ -1455,7 +1453,6 @@ function validateFunctionComponentInDev(workInProgress: Fiber, Component: any) {
 
     if (!didWarnAboutGetDerivedStateOnFunctionComponent[componentName]) {
       warningWithoutStack(
-        false,
         '%s: Function components do not support getDerivedStateFromProps.',
         componentName,
       );
@@ -1471,7 +1468,6 @@ function validateFunctionComponentInDev(workInProgress: Fiber, Component: any) {
 
     if (!didWarnAboutContextTypeOnFunctionComponent[componentName]) {
       warningWithoutStack(
-        false,
         '%s: Function components do not support contextType.',
         componentName,
       );
@@ -1561,7 +1557,6 @@ function updateSuspenseComponent(
       if (!didWarnAboutMaxDuration) {
         didWarnAboutMaxDuration = true;
         warning(
-          false,
           'maxDuration has been removed from React. ' +
             'Remove the maxDuration prop.',
         );
@@ -1969,7 +1964,6 @@ function mountDehydratedSuspenseComponent(
   if ((workInProgress.mode & BatchedMode) === NoMode) {
     if (__DEV__) {
       warning(
-        false,
         'Cannot hydrate Suspense in legacy mode. Switch from ' +
           'ReactDOM.hydrate(element, container) to ' +
           'ReactDOM.unstable_createSyncRoot(container, { hydrate: true })' +
@@ -2204,7 +2198,6 @@ function validateRevealOrder(revealOrder: SuspenseListRevealOrder) {
           case 'forwards':
           case 'backwards': {
             warning(
-              false,
               '"%s" is not a valid value for revealOrder on <SuspenseList />. ' +
                 'Use lowercase "%s" instead.',
               revealOrder,
@@ -2215,7 +2208,6 @@ function validateRevealOrder(revealOrder: SuspenseListRevealOrder) {
           case 'forward':
           case 'backward': {
             warning(
-              false,
               '"%s" is not a valid value for revealOrder on <SuspenseList />. ' +
                 'React uses the -s suffix in the spelling. Use "%ss" instead.',
               revealOrder,
@@ -2225,7 +2217,6 @@ function validateRevealOrder(revealOrder: SuspenseListRevealOrder) {
           }
           default:
             warning(
-              false,
               '"%s" is not a supported revealOrder on <SuspenseList />. ' +
                 'Did you mean "together", "forwards" or "backwards"?',
               revealOrder,
@@ -2234,7 +2225,6 @@ function validateRevealOrder(revealOrder: SuspenseListRevealOrder) {
         }
       } else {
         warning(
-          false,
           '%s is not a supported value for revealOrder on <SuspenseList />. ' +
             'Did you mean "together", "forwards" or "backwards"?',
           revealOrder,
@@ -2253,7 +2243,6 @@ function validateTailOptions(
       if (tailMode !== 'collapsed' && tailMode !== 'hidden') {
         didWarnAboutTailOptions[tailMode] = true;
         warning(
-          false,
           '"%s" is not a supported value for tail on <SuspenseList />. ' +
             'Did you mean "collapsed" or "hidden"?',
           tailMode,
@@ -2261,7 +2250,6 @@ function validateTailOptions(
       } else if (revealOrder !== 'forwards' && revealOrder !== 'backwards') {
         didWarnAboutTailOptions[tailMode] = true;
         warning(
-          false,
           '<SuspenseList tail="%s" /> is only valid if revealOrder is ' +
             '"forwards" or "backwards". ' +
             'Did you mean to specify revealOrder="forwards"?',
@@ -2279,7 +2267,6 @@ function validateSuspenseListNestedChild(childSlot: mixed, index: number) {
     if (isArray || isIterable) {
       let type = isArray ? 'array' : 'iterable';
       warning(
-        false,
         'A nested %s was passed to row #%s in <SuspenseList />. Wrap it in ' +
           'an additional SuspenseList to configure its revealOrder: ' +
           '<SuspenseList revealOrder=...> ... ' +
@@ -2326,7 +2313,6 @@ function validateSuspenseListChildren(
           }
         } else {
           warning(
-            false,
             'A single row was passed to a <SuspenseList revealOrder="%s" />. ' +
               'This is not useful since it needs multiple rows. ' +
               'Did you mean to pass multiple children or an array?',
@@ -2614,7 +2600,6 @@ function updateContextConsumer(
         if (!hasWarnedAboutUsingContextAsConsumer) {
           hasWarnedAboutUsingContextAsConsumer = true;
           warning(
-            false,
             'Rendering <Context> directly is not supported and will be removed in ' +
               'a future major release. Did you mean to render <Context.Consumer> instead?',
           );
@@ -2628,13 +2613,14 @@ function updateContextConsumer(
   const render = newProps.children;
 
   if (__DEV__) {
-    warningWithoutStack(
-      typeof render === 'function',
-      'A context consumer was rendered with multiple children, or a child ' +
-        "that isn't a function. A context consumer expects a single child " +
-        'that is a function. If you did pass a function, make sure there ' +
-        'is no trailing or leading whitespace around it.',
-    );
+    if (!(typeof render === 'function')) {
+      warningWithoutStack(
+        'A context consumer was rendered with multiple children, or a child ' +
+          "that isn't a function. A context consumer expects a single child " +
+          'that is a function. If you did pass a function, make sure there ' +
+          'is no trailing or leading whitespace around it.',
+      );
+    }
   }
 
   prepareToReadContext(workInProgress, renderExpirationTime);
@@ -3192,7 +3178,6 @@ function beginWork(
     }
   }
   invariant(
-    false,
     'Unknown unit of work tag (%s). This error is likely caused by a bug in ' +
       'React. Please file an issue.',
     workInProgress.tag,

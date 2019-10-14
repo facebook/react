@@ -82,13 +82,12 @@ export function appendChild(
   child: Instance | TextInstance,
 ): void {
   if (__DEV__) {
-    warning(
-      Array.isArray(parentInstance.children),
-      'An invalid container has been provided. ' +
+    if (!Array.isArray(parentInstance.children)) {
+      warning('An invalid container has been provided. ' +
         'This may indicate that another renderer is being used in addition to the test renderer. ' +
         '(For example, ReactDOM.createPortal inside of a ReactTestRenderer tree.) ' +
-        'This is not supported.',
-    );
+        'This is not supported.');
+    }
   }
   const index = parentInstance.children.indexOf(child);
   if (index !== -1) {
@@ -215,12 +214,13 @@ export function createTextInstance(
   internalInstanceHandle: Object,
 ): TextInstance {
   if (__DEV__ && enableFlareAPI) {
-    warning(
-      hostContext !== EVENT_COMPONENT_CONTEXT,
-      'validateDOMNesting: React event components cannot have text DOM nodes as children. ' +
-        'Wrap the child text "%s" in an element.',
-      text,
-    );
+    if (!(hostContext !== EVENT_COMPONENT_CONTEXT)) {
+      warning(
+        'validateDOMNesting: React event components cannot have text DOM nodes as children. ' +
+          'Wrap the child text "%s" in an element.',
+        text
+      );
+    }
   }
   return {
     text,

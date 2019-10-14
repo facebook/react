@@ -49,21 +49,11 @@ function checkSelectPropTypes(props) {
     }
     const isArray = Array.isArray(props[propName]);
     if (props.multiple && !isArray) {
-      warning(
-        false,
-        'The `%s` prop supplied to <select> must be an array if ' +
-          '`multiple` is true.%s',
-        propName,
-        getDeclarationErrorAddendum(),
-      );
+      warning('The `%s` prop supplied to <select> must be an array if ' +
+        '`multiple` is true.%s', propName, getDeclarationErrorAddendum());
     } else if (!props.multiple && isArray) {
-      warning(
-        false,
-        'The `%s` prop supplied to <select> must be a scalar ' +
-          'value if `multiple` is false.%s',
-        propName,
-        getDeclarationErrorAddendum(),
-      );
+      warning('The `%s` prop supplied to <select> must be a scalar ' +
+        'value if `multiple` is false.%s', propName, getDeclarationErrorAddendum());
     }
   }
 }
@@ -156,14 +146,11 @@ export function initWrapperState(element: Element, props: Object) {
       props.defaultValue !== undefined &&
       !didWarnValueDefaultValue
     ) {
-      warning(
-        false,
-        'Select elements must be either controlled or uncontrolled ' +
-          '(specify either the value prop, or the defaultValue prop, but not ' +
-          'both). Decide between using a controlled or uncontrolled select ' +
-          'element and remove one of these props. More info: ' +
-          'https://fb.me/react-controlled-components',
-      );
+      warning('Select elements must be either controlled or uncontrolled ' +
+        '(specify either the value prop, or the defaultValue prop, but not ' +
+        'both). Decide between using a controlled or uncontrolled select ' +
+        'element and remove one of these props. More info: ' +
+        'https://fb.me/react-controlled-components');
       didWarnValueDefaultValue = true;
     }
   }

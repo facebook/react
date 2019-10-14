@@ -146,7 +146,7 @@ export function getNodeFromInstance(inst) {
 
   // Without this first invariant, passing a non-DOM-component triggers the next
   // invariant for a missing parent, which is super confusing.
-  invariant(false, 'getNodeFromInstance: Invalid argument.');
+  invariant('getNodeFromInstance: Invalid argument.');
 }
 
 export function getFiberCurrentPropsFromNode(node) {

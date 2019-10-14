@@ -86,8 +86,7 @@ class ReactNativeFiberHostComponent {
 
     if (relativeNode == null) {
       warningWithoutStack(
-        false,
-        'Warning: ref.measureLayout must be called with a node handle or a ref to a native component.',
+        'Warning: ref.measureLayout must be called with a node handle or a ref to a native component.'
       );
 
       return;

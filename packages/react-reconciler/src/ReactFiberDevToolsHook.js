@@ -41,12 +41,9 @@ export function injectInternals(internals: Object): boolean {
   }
   if (!hook.supportsFiber) {
     if (__DEV__) {
-      warningWithoutStack(
-        false,
-        'The installed version of React DevTools is too old and will not work ' +
-          'with the current version of React. Please update React DevTools. ' +
-          'https://fb.me/react-devtools',
-      );
+      warningWithoutStack('The installed version of React DevTools is too old and will not work ' +
+        'with the current version of React. Please update React DevTools. ' +
+        'https://fb.me/react-devtools');
     }
     // DevTools exists, even though it doesn't support Fiber.
     return true;
@@ -70,11 +67,7 @@ export function injectInternals(internals: Object): boolean {
       } catch (err) {
         if (__DEV__ && !hasLoggedError) {
           hasLoggedError = true;
-          warningWithoutStack(
-            false,
-            'React DevTools encountered an error: %s',
-            err,
-          );
+          warningWithoutStack('React DevTools encountered an error: %s', err);
         }
       }
     };
@@ -84,22 +77,14 @@ export function injectInternals(internals: Object): boolean {
       } catch (err) {
         if (__DEV__ && !hasLoggedError) {
           hasLoggedError = true;
-          warningWithoutStack(
-            false,
-            'React DevTools encountered an error: %s',
-            err,
-          );
+          warningWithoutStack('React DevTools encountered an error: %s', err);
         }
       }
     };
   } catch (err) {
     // Catch all errors because it is unsafe to throw during initialization.
     if (__DEV__) {
-      warningWithoutStack(
-        false,
-        'React DevTools encountered an error: %s.',
-        err,
-      );
+      warningWithoutStack('React DevTools encountered an error: %s.', err);
     }
   }
   // DevTools exists

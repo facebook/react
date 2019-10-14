@@ -173,10 +173,7 @@ export function receiveTouches(
     if (target !== null && target !== undefined) {
       if (target < 1) {
         if (__DEV__) {
-          warningWithoutStack(
-            false,
-            'A view is reporting that a touch occurred on tag zero.',
-          );
+          warningWithoutStack('A view is reporting that a touch occurred on tag zero.');
         }
       } else {
         rootNodeID = target;

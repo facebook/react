@@ -708,14 +708,9 @@ export function createFiberFromTypeAndProps(
             info += '\n\nCheck the render method of `' + ownerName + '`.';
           }
         }
-        invariant(
-          false,
-          'Element type is invalid: expected a string (for built-in ' +
-            'components) or a class/function (for composite components) ' +
-            'but got: %s.%s',
-          type == null ? type : typeof type,
-          info,
-        );
+        invariant('Element type is invalid: expected a string (for built-in ' +
+          'components) or a class/function (for composite components) ' +
+          'but got: %s.%s', type == null ? type : typeof type, info);
       }
     }
   }
@@ -805,10 +800,7 @@ function createFiberFromProfiler(
       typeof pendingProps.id !== 'string' ||
       typeof pendingProps.onRender !== 'function'
     ) {
-      warningWithoutStack(
-        false,
-        'Profiler must specify an "id" string and "onRender" function as props',
-      );
+      warningWithoutStack('Profiler must specify an "id" string and "onRender" function as props');
     }
   }
 

@@ -80,7 +80,6 @@ export function initWrapperState(element: Element, props: Object) {
       !didWarnCheckedDefaultChecked
     ) {
       warning(
-        false,
         '%s contains an input of type %s with both checked and defaultChecked props. ' +
           'Input elements must be either controlled or uncontrolled ' +
           '(specify either the checked prop, or the defaultChecked prop, but not ' +
@@ -88,7 +87,7 @@ export function initWrapperState(element: Element, props: Object) {
           'element and remove one of these props. More info: ' +
           'https://fb.me/react-controlled-components',
         getCurrentFiberOwnerNameInDevOrNull() || 'A component',
-        props.type,
+        props.type
       );
       didWarnCheckedDefaultChecked = true;
     }
@@ -98,7 +97,6 @@ export function initWrapperState(element: Element, props: Object) {
       !didWarnValueDefaultValue
     ) {
       warning(
-        false,
         '%s contains an input of type %s with both value and defaultValue props. ' +
           'Input elements must be either controlled or uncontrolled ' +
           '(specify either the value prop, or the defaultValue prop, but not ' +
@@ -106,7 +104,7 @@ export function initWrapperState(element: Element, props: Object) {
           'element and remove one of these props. More info: ' +
           'https://fb.me/react-controlled-components',
         getCurrentFiberOwnerNameInDevOrNull() || 'A component',
-        props.type,
+        props.type
       );
       didWarnValueDefaultValue = true;
     }
@@ -144,12 +142,11 @@ export function updateWrapper(element: Element, props: Object) {
       !didWarnUncontrolledToControlled
     ) {
       warning(
-        false,
         'A component is changing an uncontrolled input of type %s to be controlled. ' +
           'Input elements should not switch from uncontrolled to controlled (or vice versa). ' +
           'Decide between using a controlled or uncontrolled input ' +
           'element for the lifetime of the component. More info: https://fb.me/react-controlled-components',
-        props.type,
+        props.type
       );
       didWarnUncontrolledToControlled = true;
     }
@@ -159,12 +156,11 @@ export function updateWrapper(element: Element, props: Object) {
       !didWarnControlledToUncontrolled
     ) {
       warning(
-        false,
         'A component is changing a controlled input of type %s to be uncontrolled. ' +
           'Input elements should not switch from controlled to uncontrolled (or vice versa). ' +
           'Decide between using a controlled or uncontrolled input ' +
           'element for the lifetime of the component. More info: https://fb.me/react-controlled-components',
-        props.type,
+        props.type
       );
       didWarnControlledToUncontrolled = true;
     }
@@ -381,11 +377,11 @@ function updateNamedCousins(rootNode, props) {
       // That's probably okay; we don't support it just as we don't support
       // mixing React radio buttons with non-React ones.
       const otherProps = getFiberCurrentPropsFromNode(otherNode);
-      invariant(
-        otherProps,
-        'ReactDOMInput: Mixing React and non-React radio inputs with the ' +
-          'same `name` is not supported.',
-      );
+
+      if (!otherProps) {
+        invariant('ReactDOMInput: Mixing React and non-React radio inputs with the ' +
+          'same `name` is not supported.');
+      }
 
       // We need update the tracked value on the named cousin since the value
       // was changed but the input saw no event or value set

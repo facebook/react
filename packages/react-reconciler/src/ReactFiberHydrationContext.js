@@ -65,9 +65,8 @@ let nextHydratableInstance: null | HydratableInstance = null;
 let isHydrating: boolean = false;
 
 function warnIfHydrating() {
-  if (__DEV__) {
+  if (__DEV__ && isHydrating) {
     warning(
-      !isHydrating,
       'We should not be hydrating here. This is a bug in React. Please file a bug.',
     );
   }
@@ -298,7 +297,6 @@ function prepareToHydrateHostInstance(
 ): boolean {
   if (!supportsHydration) {
     invariant(
-      false,
       'Expected prepareToHydrateHostInstance() to never be called. ' +
         'This error is likely caused by a bug in React. Please file an issue.',
     );
@@ -326,7 +324,6 @@ function prepareToHydrateHostInstance(
 function prepareToHydrateHostTextInstance(fiber: Fiber): boolean {
   if (!supportsHydration) {
     invariant(
-      false,
       'Expected prepareToHydrateHostTextInstance() to never be called. ' +
         'This error is likely caused by a bug in React. Please file an issue.',
     );
@@ -374,7 +371,6 @@ function prepareToHydrateHostTextInstance(fiber: Fiber): boolean {
 function prepareToHydrateHostSuspenseInstance(fiber: Fiber): void {
   if (!supportsHydration) {
     invariant(
-      false,
       'Expected prepareToHydrateHostSuspenseInstance() to never be called. ' +
         'This error is likely caused by a bug in React. Please file an issue.',
     );
@@ -383,11 +379,14 @@ function prepareToHydrateHostSuspenseInstance(fiber: Fiber): void {
   let suspenseState: null | SuspenseState = fiber.memoizedState;
   let suspenseInstance: null | SuspenseInstance =
     suspenseState !== null ? suspenseState.dehydrated : null;
-  invariant(
-    suspenseInstance,
-    'Expected to have a hydrated suspense instance. ' +
-      'This error is likely caused by a bug in React. Please file an issue.',
-  );
+
+  if (!suspenseInstance) {
+    invariant(
+      'Expected to have a hydrated suspense instance. ' +
+        'This error is likely caused by a bug in React. Please file an issue.',
+    );
+  }
+
   hydrateSuspenseInstance(suspenseInstance, fiber);
 }
 
@@ -396,7 +395,6 @@ function skipPastDehydratedSuspenseInstance(
 ): null | HydratableInstance {
   if (!supportsHydration) {
     invariant(
-      false,
       'Expected skipPastDehydratedSuspenseInstance() to never be called. ' +
         'This error is likely caused by a bug in React. Please file an issue.',
     );

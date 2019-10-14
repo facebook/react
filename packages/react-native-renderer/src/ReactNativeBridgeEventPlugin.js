@@ -44,11 +44,11 @@ const ReactNativeBridgeEventPlugin = {
     }
     const bubbleDispatchConfig = customBubblingEventTypes[topLevelType];
     const directDispatchConfig = customDirectEventTypes[topLevelType];
-    invariant(
-      bubbleDispatchConfig || directDispatchConfig,
-      'Unsupported top level event type "%s" dispatched',
-      topLevelType,
-    );
+
+    if (!(bubbleDispatchConfig || directDispatchConfig)) {
+      invariant('Unsupported top level event type "%s" dispatched', topLevelType);
+    }
+
     const event = SyntheticEvent.getPooled(
       bubbleDispatchConfig || directDispatchConfig,
       targetInst,

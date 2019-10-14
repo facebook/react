@@ -38,11 +38,12 @@ function processEventTypes(
   if (__DEV__) {
     if (bubblingEventTypes != null && directEventTypes != null) {
       for (const topLevelType in directEventTypes) {
-        invariant(
-          bubblingEventTypes[topLevelType] == null,
-          'Event cannot be both direct and bubbling: %s',
-          topLevelType,
-        );
+        if (!(bubblingEventTypes[topLevelType] == null)) {
+          invariant(
+            'Event cannot be both direct and bubbling: %s',
+            topLevelType,
+          );
+        }
       }
     }
   }
@@ -73,17 +74,18 @@ function processEventTypes(
  * This is done to avoid causing Prepack deopts.
  */
 exports.register = function(name: string, callback: ViewConfigGetter): string {
-  invariant(
-    !viewConfigCallbacks.has(name),
-    'Tried to register two views with the same name %s',
-    name,
-  );
-  invariant(
-    typeof callback === 'function',
-    'View config getter callback for component `%s` must be a function (received `%s`)',
-    name,
-    callback === null ? 'null' : typeof callback,
-  );
+  if (viewConfigCallbacks.has(name)) {
+    invariant('Tried to register two views with the same name %s', name);
+  }
+
+  if (!(typeof callback === 'function')) {
+    invariant(
+      'View config getter callback for component `%s` must be a function (received `%s`)',
+      name,
+      callback === null ? 'null' : typeof callback,
+    );
+  }
+
   viewConfigCallbacks.set(name, callback);
   return name;
 };
@@ -99,7 +101,6 @@ exports.get = function(name: string): ReactNativeBaseComponentViewConfig<> {
     const callback = viewConfigCallbacks.get(name);
     if (typeof callback !== 'function') {
       invariant(
-        false,
         'View config getter callback for component `%s` must be a function (received `%s`).%s',
         name,
         callback === null ? 'null' : typeof callback,
@@ -118,6 +119,10 @@ exports.get = function(name: string): ReactNativeBaseComponentViewConfig<> {
   } else {
     viewConfig = viewConfigs.get(name);
   }
-  invariant(viewConfig, 'View config not found for name %s', name);
+
+  if (!viewConfig) {
+    invariant('View config not found for name %s', name);
+  }
+
   return viewConfig;
 };

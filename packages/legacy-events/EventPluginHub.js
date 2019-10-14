@@ -114,12 +114,15 @@ export function getListener(inst: Fiber, registrationName: string) {
   if (shouldPreventMouseEvent(registrationName, inst.type, props)) {
     return null;
   }
-  invariant(
-    !listener || typeof listener === 'function',
-    'Expected `%s` listener to be a function, instead got a value of `%s` type.',
-    registrationName,
-    typeof listener,
-  );
+
+  if (!(!listener || typeof listener === 'function')) {
+    invariant(
+      'Expected `%s` listener to be a function, instead got a value of `%s` type.',
+      registrationName,
+      typeof listener
+    );
+  }
+
   return listener;
 }
 

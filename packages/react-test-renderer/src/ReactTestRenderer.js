@@ -207,11 +207,7 @@ function toTree(node: ?Fiber) {
     case ScopeComponent:
       return childrenToTree(node.child);
     default:
-      invariant(
-        false,
-        'toTree() does not yet know how to handle nodes with tag=%s',
-        node.tag,
-      );
+      invariant('toTree() does not yet know how to handle nodes with tag=%s', node.tag);
   }
 }
 
@@ -267,21 +263,21 @@ class ReactTestInstance {
   _currentFiber(): Fiber {
     // Throws if this component has been unmounted.
     const fiber = findCurrentFiberUsingSlowPath(this._fiber);
-    invariant(
-      fiber !== null,
-      "Can't read from currently-mounting component. This error is likely " +
-        'caused by a bug in React. Please file an issue.',
-    );
+
+    if (!(fiber !== null)) {
+      invariant("Can't read from currently-mounting component. This error is likely " +
+        'caused by a bug in React. Please file an issue.');
+    }
+
     return fiber;
   }
 
   constructor(fiber: Fiber) {
-    invariant(
-      validWrapperTypes.has(fiber.tag),
-      'Unexpected object passed to ReactTestInstance constructor (tag: %s). ' +
-        'This is probably a bug in React.',
-      fiber.tag,
-    );
+    if (!validWrapperTypes.has(fiber.tag)) {
+      invariant('Unexpected object passed to ReactTestInstance constructor (tag: %s). ' +
+        'This is probably a bug in React.', fiber.tag);
+    }
+
     this._fiber = fiber;
   }
 
@@ -446,7 +442,11 @@ const ReactTestRendererFiber = {
       false,
       null,
     );
-    invariant(root != null, 'something went wrong');
+
+    if (!(root != null)) {
+      invariant('something went wrong');
+    }
+
     updateContainer(element, root, null, null);
 
     const entry = {

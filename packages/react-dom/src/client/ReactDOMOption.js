@@ -58,21 +58,15 @@ export function validateProps(element: Element, props: Object) {
         }
         if (!didWarnInvalidChild) {
           didWarnInvalidChild = true;
-          warning(
-            false,
-            'Only strings and numbers are supported as <option> children.',
-          );
+          warning('Only strings and numbers are supported as <option> children.');
         }
       });
     }
 
     // TODO: Remove support for `selected` in <option>.
     if (props.selected != null && !didWarnSelectedSetOnOption) {
-      warning(
-        false,
-        'Use the `defaultValue` or `value` props on <select> instead of ' +
-          'setting `selected` on <option>.',
-      );
+      warning('Use the `defaultValue` or `value` props on <select> instead of ' +
+        'setting `selected` on <option>.');
       didWarnSelectedSetOnOption = true;
     }
   }

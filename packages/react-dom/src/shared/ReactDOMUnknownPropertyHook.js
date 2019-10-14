@@ -38,12 +38,9 @@ if (__DEV__) {
 
     const lowerCasedName = name.toLowerCase();
     if (lowerCasedName === 'onfocusin' || lowerCasedName === 'onfocusout') {
-      warning(
-        false,
-        'React uses onFocus and onBlur instead of onFocusIn and onFocusOut. ' +
-          'All React events are normalized to bubble, so onFocusIn and onFocusOut ' +
-          'are not needed/supported by React.',
-      );
+      warning('React uses onFocus and onBlur instead of onFocusIn and onFocusOut. ' +
+        'All React events are normalized to bubble, so onFocusIn and onFocusOut ' +
+        'are not needed/supported by React.');
       warnedProperties[name] = true;
       return true;
     }
@@ -60,20 +57,15 @@ if (__DEV__) {
         : null;
       if (registrationName != null) {
         warning(
-          false,
           'Invalid event handler property `%s`. Did you mean `%s`?',
           name,
-          registrationName,
+          registrationName
         );
         warnedProperties[name] = true;
         return true;
       }
       if (EVENT_NAME_REGEX.test(name)) {
-        warning(
-          false,
-          'Unknown event handler property `%s`. It will be ignored.',
-          name,
-        );
+        warning('Unknown event handler property `%s`. It will be ignored.', name);
         warnedProperties[name] = true;
         return true;
       }
@@ -82,12 +74,8 @@ if (__DEV__) {
       // So we can't tell if the event name is correct for sure, but we can filter
       // out known bad ones like `onclick`. We can't suggest a specific replacement though.
       if (INVALID_EVENT_NAME_REGEX.test(name)) {
-        warning(
-          false,
-          'Invalid event handler property `%s`. ' +
-            'React events use the camelCase naming convention, for example `onClick`.',
-          name,
-        );
+        warning('Invalid event handler property `%s`. ' +
+          'React events use the camelCase naming convention, for example `onClick`.', name);
       }
       warnedProperties[name] = true;
       return true;
@@ -99,21 +87,15 @@ if (__DEV__) {
     }
 
     if (lowerCasedName === 'innerhtml') {
-      warning(
-        false,
-        'Directly setting property `innerHTML` is not permitted. ' +
-          'For more information, lookup documentation on `dangerouslySetInnerHTML`.',
-      );
+      warning('Directly setting property `innerHTML` is not permitted. ' +
+        'For more information, lookup documentation on `dangerouslySetInnerHTML`.');
       warnedProperties[name] = true;
       return true;
     }
 
     if (lowerCasedName === 'aria') {
-      warning(
-        false,
-        'The `aria` attribute is reserved for future use in React. ' +
-          'Pass individual `aria-` attributes instead.',
-      );
+      warning('The `aria` attribute is reserved for future use in React. ' +
+        'Pass individual `aria-` attributes instead.');
       warnedProperties[name] = true;
       return true;
     }
@@ -125,22 +107,17 @@ if (__DEV__) {
       typeof value !== 'string'
     ) {
       warning(
-        false,
         'Received a `%s` for a string attribute `is`. If this is expected, cast ' +
           'the value to a string.',
-        typeof value,
+        typeof value
       );
       warnedProperties[name] = true;
       return true;
     }
 
     if (typeof value === 'number' && isNaN(value)) {
-      warning(
-        false,
-        'Received NaN for the `%s` attribute. If this is expected, cast ' +
-          'the value to a string.',
-        name,
-      );
+      warning('Received NaN for the `%s` attribute. If this is expected, cast ' +
+        'the value to a string.', name);
       warnedProperties[name] = true;
       return true;
     }
@@ -152,28 +129,18 @@ if (__DEV__) {
     if (possibleStandardNames.hasOwnProperty(lowerCasedName)) {
       const standardName = possibleStandardNames[lowerCasedName];
       if (standardName !== name) {
-        warning(
-          false,
-          'Invalid DOM property `%s`. Did you mean `%s`?',
-          name,
-          standardName,
-        );
+        warning('Invalid DOM property `%s`. Did you mean `%s`?', name, standardName);
         warnedProperties[name] = true;
         return true;
       }
     } else if (!isReserved && name !== lowerCasedName) {
       // Unknown attributes should have lowercase casing since that's how they
       // will be cased anyway with server rendering.
-      warning(
-        false,
-        'React does not recognize the `%s` prop on a DOM element. If you ' +
-          'intentionally want it to appear in the DOM as a custom ' +
-          'attribute, spell it as lowercase `%s` instead. ' +
-          'If you accidentally passed it from a parent component, remove ' +
-          'it from the DOM element.',
-        name,
-        lowerCasedName,
-      );
+      warning('React does not recognize the `%s` prop on a DOM element. If you ' +
+        'intentionally want it to appear in the DOM as a custom ' +
+        'attribute, spell it as lowercase `%s` instead. ' +
+        'If you accidentally passed it from a parent component, remove ' +
+        'it from the DOM element.', name, lowerCasedName);
       warnedProperties[name] = true;
       return true;
     }
@@ -183,33 +150,15 @@ if (__DEV__) {
       shouldRemoveAttributeWithWarning(name, value, propertyInfo, false)
     ) {
       if (value) {
-        warning(
-          false,
-          'Received `%s` for a non-boolean attribute `%s`.\n\n' +
-            'If you want to write it to the DOM, pass a string instead: ' +
-            '%s="%s" or %s={value.toString()}.',
-          value,
-          name,
-          name,
-          value,
-          name,
-        );
+        warning('Received `%s` for a non-boolean attribute `%s`.\n\n' +
+          'If you want to write it to the DOM, pass a string instead: ' +
+          '%s="%s" or %s={value.toString()}.', value, name, name, value, name);
       } else {
-        warning(
-          false,
-          'Received `%s` for a non-boolean attribute `%s`.\n\n' +
-            'If you want to write it to the DOM, pass a string instead: ' +
-            '%s="%s" or %s={value.toString()}.\n\n' +
-            'If you used to conditionally omit it with %s={condition && value}, ' +
-            'pass %s={condition ? value : undefined} instead.',
-          value,
-          name,
-          name,
-          value,
-          name,
-          name,
-          name,
-        );
+        warning('Received `%s` for a non-boolean attribute `%s`.\n\n' +
+          'If you want to write it to the DOM, pass a string instead: ' +
+          '%s="%s" or %s={value.toString()}.\n\n' +
+          'If you used to conditionally omit it with %s={condition && value}, ' +
+          'pass %s={condition ? value : undefined} instead.', value, name, name, value, name, name, name);
       }
       warnedProperties[name] = true;
       return true;
@@ -233,19 +182,11 @@ if (__DEV__) {
       propertyInfo !== null &&
       propertyInfo.type === BOOLEAN
     ) {
-      warning(
-        false,
-        'Received the string `%s` for the boolean attribute `%s`. ' +
-          '%s ' +
-          'Did you mean %s={%s}?',
-        value,
-        name,
-        value === 'false'
-          ? 'The browser will interpret it as a truthy value.'
-          : 'Although this works, it will not work as expected if you pass the string "false".',
-        name,
-        value,
-      );
+      warning('Received the string `%s` for the boolean attribute `%s`. ' +
+        '%s ' +
+        'Did you mean %s={%s}?', value, name, value === 'false'
+        ? 'The browser will interpret it as a truthy value.'
+        : 'Although this works, it will not work as expected if you pass the string "false".', name, value);
       warnedProperties[name] = true;
       return true;
     }
@@ -268,21 +209,19 @@ const warnUnknownProperties = function(type, props, canUseEventSystem) {
     .join(', ');
   if (unknownProps.length === 1) {
     warning(
-      false,
       'Invalid value for prop %s on <%s> tag. Either remove it from the element, ' +
         'or pass a string or number value to keep it in the DOM. ' +
         'For details, see https://fb.me/react-attribute-behavior',
       unknownPropString,
-      type,
+      type
     );
   } else if (unknownProps.length > 1) {
     warning(
-      false,
       'Invalid values for props %s on <%s> tag. Either remove them from the element, ' +
         'or pass a string or number value to keep them in the DOM. ' +
         'For details, see https://fb.me/react-attribute-behavior',
       unknownPropString,
-      type,
+      type
     );
   }
 };

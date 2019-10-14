@@ -240,7 +240,6 @@ function checkDepsAreArrayDev(deps: mixed) {
       // Verify deps, but only on mount to avoid extra checks.
       // It's unlikely their type would change as usually you define them inline.
       warning(
-        false,
         '%s received a final argument that is not an array (instead, received `%s`). When ' +
           'specified, the final argument must be an array.',
         currentHookNameInDev,
@@ -284,7 +283,6 @@ function warnOnHookMismatchInDev(currentHookName: HookType) {
         }
 
         warning(
-          false,
           'React has detected a change in the order of Hooks called by %s. ' +
             'This will lead to bugs and errors if not fixed. ' +
             'For more information, read the Rules of Hooks: https://fb.me/rules-of-hooks\n\n' +
@@ -302,7 +300,6 @@ function warnOnHookMismatchInDev(currentHookName: HookType) {
 
 function throwInvalidHookError() {
   invariant(
-    false,
     'Invalid hook call. Hooks can only be called inside of the body of a function component. This could happen for' +
       ' one of the following reasons:\n' +
       '1. You might have mismatching versions of React and the renderer (such as React DOM)\n' +
@@ -326,7 +323,6 @@ function areHookInputsEqual(
   if (prevDeps === null) {
     if (__DEV__) {
       warning(
-        false,
         '%s received a final argument during this render, but not during ' +
           'the previous render. Even though the final argument is optional, ' +
           'its type cannot change between renders.',
@@ -341,7 +337,6 @@ function areHookInputsEqual(
     // passed inline.
     if (nextDeps.length !== prevDeps.length) {
       warning(
-        false,
         'The final argument passed to %s changed size between renders. The ' +
           'order and size of this array must remain constant.\n\n' +
           'Previous: %s\n' +
@@ -498,16 +493,17 @@ export function renderWithHooks(
   componentUpdateQueue = null;
   sideEffectTag = 0;
 
-  // These were reset above
-  // didScheduleRenderPhaseUpdate = false;
-  // renderPhaseUpdates = null;
-  // numberOfReRenders = 0;
+  if (didRenderTooFewHooks) {
+    // These were reset above
+    // didScheduleRenderPhaseUpdate = false;
+    // renderPhaseUpdates = null;
+    // numberOfReRenders = 0;
 
-  invariant(
-    !didRenderTooFewHooks,
-    'Rendered fewer hooks than expected. This may be caused by an accidental ' +
-      'early return statement.',
-  );
+    invariant(
+      'Rendered fewer hooks than expected. This may be caused by an accidental ' +
+        'early return statement.',
+    );
+  }
 
   return children;
 }
@@ -593,11 +589,11 @@ function updateWorkInProgressHook(): Hook {
     currentHook = nextCurrentHook;
     nextCurrentHook = currentHook !== null ? currentHook.next : null;
   } else {
-    // Clone from the current hook.
-    invariant(
-      nextCurrentHook !== null,
-      'Rendered more hooks than during the previous render.',
-    );
+    if (!(nextCurrentHook !== null)) {
+      // Clone from the current hook.
+      invariant('Rendered more hooks than during the previous render.');
+    }
+
     currentHook = nextCurrentHook;
 
     const newHook: Hook = {
@@ -667,10 +663,12 @@ function updateReducer<S, I, A>(
 ): [S, Dispatch<A>] {
   const hook = updateWorkInProgressHook();
   const queue = hook.queue;
-  invariant(
-    queue !== null,
-    'Should have a queue. This is likely a bug in React. Please file an issue.',
-  );
+
+  if (!(queue !== null)) {
+    invariant(
+      'Should have a queue. This is likely a bug in React. Please file an issue.',
+    );
+  }
 
   queue.lastRenderedReducer = reducer;
 
@@ -987,12 +985,13 @@ function imperativeHandleEffect<T>(
   } else if (ref !== null && ref !== undefined) {
     const refObject = ref;
     if (__DEV__) {
-      warning(
-        refObject.hasOwnProperty('current'),
-        'Expected useImperativeHandle() first argument to either be a ' +
-          'ref callback or React.createRef() object. Instead received: %s.',
-        'an object with keys {' + Object.keys(refObject).join(', ') + '}',
-      );
+      if (!refObject.hasOwnProperty('current')) {
+        warning(
+          'Expected useImperativeHandle() first argument to either be a ' +
+            'ref callback or React.createRef() object. Instead received: %s.',
+          'an object with keys {' + Object.keys(refObject).join(', ') + '}',
+        );
+      }
     }
     const inst = create();
     refObject.current = inst;
@@ -1008,12 +1007,13 @@ function mountImperativeHandle<T>(
   deps: Array<mixed> | void | null,
 ): void {
   if (__DEV__) {
-    warning(
-      typeof create === 'function',
-      'Expected useImperativeHandle() second argument to be a function ' +
-        'that creates a handle. Instead received: %s.',
-      create !== null ? typeof create : 'null',
-    );
+    if (!(typeof create === 'function')) {
+      warning(
+        'Expected useImperativeHandle() second argument to be a function ' +
+          'that creates a handle. Instead received: %s.',
+        create !== null ? typeof create : 'null',
+      );
+    }
   }
 
   // TODO: If deps are provided, should we skip comparing the ref itself?
@@ -1034,12 +1034,13 @@ function updateImperativeHandle<T>(
   deps: Array<mixed> | void | null,
 ): void {
   if (__DEV__) {
-    warning(
-      typeof create === 'function',
-      'Expected useImperativeHandle() second argument to be a function ' +
-        'that creates a handle. Instead received: %s.',
-      create !== null ? typeof create : 'null',
-    );
+    if (!(typeof create === 'function')) {
+      warning(
+        'Expected useImperativeHandle() second argument to be a function ' +
+          'that creates a handle. Instead received: %s.',
+        create !== null ? typeof create : 'null',
+      );
+    }
   }
 
   // TODO: If deps are provided, should we skip comparing the ref itself?
@@ -1122,19 +1123,21 @@ function dispatchAction<S, A>(
   queue: UpdateQueue<S, A>,
   action: A,
 ) {
-  invariant(
-    numberOfReRenders < RE_RENDER_LIMIT,
-    'Too many re-renders. React limits the number of renders to prevent ' +
-      'an infinite loop.',
-  );
+  if (!(numberOfReRenders < RE_RENDER_LIMIT)) {
+    invariant(
+      'Too many re-renders. React limits the number of renders to prevent ' +
+        'an infinite loop.',
+    );
+  }
 
   if (__DEV__) {
-    warning(
-      typeof arguments[3] !== 'function',
-      "State updates from the useState() and useReducer() Hooks don't support the " +
-        'second callback argument. To execute a side effect after ' +
-        'rendering, declare it in the component body with useEffect().',
-    );
+    if (!(typeof arguments[3] !== 'function')) {
+      warning(
+        "State updates from the useState() and useReducer() Hooks don't support the " +
+          'second callback argument. To execute a side effect after ' +
+          'rendering, declare it in the component body with useEffect().',
+      );
+    }
   }
 
   const alternate = fiber.alternate;
@@ -1315,7 +1318,6 @@ let InvalidNestedHooksDispatcherOnUpdateInDEV: Dispatcher | null = null;
 if (__DEV__) {
   const warnInvalidContextAccess = () => {
     warning(
-      false,
       'Context can only be read while React is rendering. ' +
         'In classes, you can read it in the render method or getDerivedStateFromProps. ' +
         'In function components, you can read it directly in the function body, but not ' +
@@ -1325,7 +1327,6 @@ if (__DEV__) {
 
   const warnInvalidHookAccess = () => {
     warning(
-      false,
       'Do not call Hooks inside useEffect(...), useMemo(...), or other built-in Hooks. ' +
         'You can only call Hooks at the top level of your React function. ' +
         'For more information, see ' +

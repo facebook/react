@@ -85,13 +85,19 @@ export function pushProvider<T>(providerFiber: Fiber, nextValue: T): void {
 
     context._currentValue = nextValue;
     if (__DEV__) {
-      warningWithoutStack(
-        context._currentRenderer === undefined ||
+      if (
+        !(
+          context._currentRenderer === undefined ||
           context._currentRenderer === null ||
-          context._currentRenderer === rendererSigil,
-        'Detected multiple renderers concurrently rendering the ' +
-          'same context provider. This is currently unsupported.',
-      );
+          context._currentRenderer === rendererSigil
+        )
+      ) {
+        warningWithoutStack(
+          'Detected multiple renderers concurrently rendering the ' +
+            'same context provider. This is currently unsupported.',
+        );
+      }
+
       context._currentRenderer = rendererSigil;
     }
   } else {
@@ -99,13 +105,19 @@ export function pushProvider<T>(providerFiber: Fiber, nextValue: T): void {
 
     context._currentValue2 = nextValue;
     if (__DEV__) {
-      warningWithoutStack(
-        context._currentRenderer2 === undefined ||
+      if (
+        !(
+          context._currentRenderer2 === undefined ||
           context._currentRenderer2 === null ||
-          context._currentRenderer2 === rendererSigil,
-        'Detected multiple renderers concurrently rendering the ' +
-          'same context provider. This is currently unsupported.',
-      );
+          context._currentRenderer2 === rendererSigil
+        )
+      ) {
+        warningWithoutStack(
+          'Detected multiple renderers concurrently rendering the ' +
+            'same context provider. This is currently unsupported.',
+        );
+      }
+
       context._currentRenderer2 = rendererSigil;
     }
   }
@@ -139,12 +151,13 @@ export function calculateChangedBits<T>(
         : MAX_SIGNED_31_BIT_INT;
 
     if (__DEV__) {
-      warning(
-        (changedBits & MAX_SIGNED_31_BIT_INT) === changedBits,
-        'calculateChangedBits: Expected the return value to be a ' +
-          '31-bit integer. Instead received: %s',
-        changedBits,
-      );
+      if (!((changedBits & MAX_SIGNED_31_BIT_INT) === changedBits)) {
+        warning(
+          'calculateChangedBits: Expected the return value to be a ' +
+            '31-bit integer. Instead received: %s',
+          changedBits,
+        );
+      }
     }
     return changedBits | 0;
   }
@@ -255,10 +268,13 @@ export function propagateContextChange(
       // if it will have any context consumers in it. The best we can do is
       // mark it as having updates.
       let parentSuspense = fiber.return;
-      invariant(
-        parentSuspense !== null,
-        'We just came from a parent so we must have had a parent. This is a bug in React.',
-      );
+
+      if (!(parentSuspense !== null)) {
+        invariant(
+          'We just came from a parent so we must have had a parent. This is a bug in React.',
+        );
+      }
+
       if (parentSuspense.expirationTime < renderExpirationTime) {
         parentSuspense.expirationTime = renderExpirationTime;
       }
@@ -333,11 +349,10 @@ export function readContext<T>(
   context: ReactContext<T>,
   observedBits: void | number | boolean,
 ): T {
-  if (__DEV__) {
+  if (__DEV__ && isDisallowedContextReadInDEV) {
     // This warning would fire if you read context inside a Hook like useMemo.
     // Unlike the class check below, it's not enforced in production for perf.
     warning(
-      !isDisallowedContextReadInDEV,
       'Context can only be read while React is rendering. ' +
         'In classes, you can read it in the render method or getDerivedStateFromProps. ' +
         'In function components, you can read it directly in the function body, but not ' +
@@ -369,13 +384,14 @@ export function readContext<T>(
     };
 
     if (lastContextDependency === null) {
-      invariant(
-        currentlyRenderingFiber !== null,
-        'Context can only be read while React is rendering. ' +
-          'In classes, you can read it in the render method or getDerivedStateFromProps. ' +
-          'In function components, you can read it directly in the function body, but not ' +
-          'inside Hooks like useReducer() or useMemo().',
-      );
+      if (!(currentlyRenderingFiber !== null)) {
+        invariant(
+          'Context can only be read while React is rendering. ' +
+            'In classes, you can read it in the render method or getDerivedStateFromProps. ' +
+            'In function components, you can read it directly in the function body, but not ' +
+            'inside Hooks like useReducer() or useMemo().',
+        );
+      }
 
       // This is the first dependency for this component. Create a new list.
       lastContextDependency = contextItem;

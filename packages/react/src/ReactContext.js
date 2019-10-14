@@ -22,13 +22,10 @@ export function createContext<T>(
     calculateChangedBits = null;
   } else {
     if (__DEV__) {
-      warningWithoutStack(
-        calculateChangedBits === null ||
-          typeof calculateChangedBits === 'function',
-        'createContext: Expected the optional second argument to be a ' +
-          'function. Instead received: %s',
-        calculateChangedBits,
-      );
+      if (!(calculateChangedBits === null || typeof calculateChangedBits === 'function')) {
+        warningWithoutStack('createContext: Expected the optional second argument to be a ' +
+          'function. Instead received: %s', calculateChangedBits);
+      }
     }
   }
 
@@ -74,9 +71,8 @@ export function createContext<T>(
           if (!hasWarnedAboutUsingConsumerProvider) {
             hasWarnedAboutUsingConsumerProvider = true;
             warning(
-              false,
               'Rendering <Context.Consumer.Provider> is not supported and will be removed in ' +
-                'a future major release. Did you mean to render <Context.Provider> instead?',
+                'a future major release. Did you mean to render <Context.Provider> instead?'
             );
           }
           return context.Provider;
@@ -114,9 +110,8 @@ export function createContext<T>(
           if (!hasWarnedAboutUsingNestedContextConsumers) {
             hasWarnedAboutUsingNestedContextConsumers = true;
             warning(
-              false,
               'Rendering <Context.Consumer.Consumer> is not supported and will be removed in ' +
-                'a future major release. Did you mean to render <Context.Consumer> instead?',
+                'a future major release. Did you mean to render <Context.Consumer> instead?'
             );
           }
           return context.Consumer;

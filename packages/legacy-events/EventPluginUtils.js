@@ -22,11 +22,12 @@ export function setComponentTree(
   getInstanceFromNode = getInstanceFromNodeImpl;
   getNodeFromInstance = getNodeFromInstanceImpl;
   if (__DEV__) {
-    warningWithoutStack(
-      getNodeFromInstance && getInstanceFromNode,
-      'EventPluginUtils.setComponentTree(...): Injected ' +
-        'module is missing getNodeFromInstance or getInstanceFromNode.',
-    );
+    if (!(getNodeFromInstance && getInstanceFromNode)) {
+      warningWithoutStack(
+        'EventPluginUtils.setComponentTree(...): Injected ' +
+          'module is missing getNodeFromInstance or getInstanceFromNode.',
+      );
+    }
   }
 }
 
@@ -50,10 +51,9 @@ if (__DEV__) {
         ? 1
         : 0;
 
-    warningWithoutStack(
-      instancesIsArr === listenersIsArr && instancesLen === listenersLen,
-      'EventPluginUtils: Invalid `event`.',
-    );
+    if (!(instancesIsArr === listenersIsArr && instancesLen === listenersLen)) {
+      warningWithoutStack('EventPluginUtils: Invalid `event`.');
+    }
   };
 }
 
@@ -150,10 +150,11 @@ export function executeDirectDispatch(event) {
   }
   const dispatchListener = event._dispatchListeners;
   const dispatchInstance = event._dispatchInstances;
-  invariant(
-    !Array.isArray(dispatchListener),
-    'executeDirectDispatch(...): Invalid `event`.',
-  );
+
+  if (Array.isArray(dispatchListener)) {
+    invariant('executeDirectDispatch(...): Invalid `event`.');
+  }
+
   event.currentTarget = dispatchListener
     ? getNodeFromInstance(dispatchInstance)
     : null;

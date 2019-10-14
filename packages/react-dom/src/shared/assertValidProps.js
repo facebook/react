@@ -26,45 +26,37 @@ function assertValidProps(tag: string, props: ?Object) {
   }
   // Note the use of `==` which checks for null or undefined.
   if (voidElementTags[tag]) {
-    invariant(
-      props.children == null && props.dangerouslySetInnerHTML == null,
-      '%s is a void element tag and must neither have `children` nor ' +
-        'use `dangerouslySetInnerHTML`.%s',
-      tag,
-      __DEV__ ? ReactDebugCurrentFrame.getStackAddendum() : '',
-    );
+    if (!(props.children == null && props.dangerouslySetInnerHTML == null)) {
+      invariant('%s is a void element tag and must neither have `children` nor ' +
+        'use `dangerouslySetInnerHTML`.%s', tag, __DEV__ ? ReactDebugCurrentFrame.getStackAddendum() : '');
+    }
   }
   if (props.dangerouslySetInnerHTML != null) {
-    invariant(
-      props.children == null,
-      'Can only set one of `children` or `props.dangerouslySetInnerHTML`.',
-    );
-    invariant(
-      typeof props.dangerouslySetInnerHTML === 'object' &&
-        HTML in props.dangerouslySetInnerHTML,
-      '`props.dangerouslySetInnerHTML` must be in the form `{__html: ...}`. ' +
+    if (!(props.children == null)) {
+      invariant('Can only set one of `children` or `props.dangerouslySetInnerHTML`.');
+    }
+
+    if (!(typeof props.dangerouslySetInnerHTML === 'object' && HTML in props.dangerouslySetInnerHTML)) {
+      invariant('`props.dangerouslySetInnerHTML` must be in the form `{__html: ...}`. ' +
         'Please visit https://fb.me/react-invariant-dangerously-set-inner-html ' +
-        'for more information.',
-    );
+        'for more information.');
+    }
   }
   if (__DEV__) {
-    warning(
-      props.suppressContentEditableWarning ||
-        !props.contentEditable ||
-        props.children == null,
-      'A component is `contentEditable` and contains `children` managed by ' +
+    if (!(props.suppressContentEditableWarning ||
+      !props.contentEditable || props.children == null)) {
+      warning('A component is `contentEditable` and contains `children` managed by ' +
         'React. It is now your responsibility to guarantee that none of ' +
         'those nodes are unexpectedly modified or duplicated. This is ' +
-        'probably not intentional.',
-    );
+        'probably not intentional.');
+    }
   }
-  invariant(
-    props.style == null || typeof props.style === 'object',
-    'The `style` prop expects a mapping from style properties to values, ' +
+
+  if (!(props.style == null || typeof props.style === 'object')) {
+    invariant('The `style` prop expects a mapping from style properties to values, ' +
       "not a string. For example, style={{marginRight: spacing + 'em'}} when " +
-      'using JSX.%s',
-    __DEV__ ? ReactDebugCurrentFrame.getStackAddendum() : '',
-  );
+      'using JSX.%s', __DEV__ ? ReactDebugCurrentFrame.getStackAddendum() : '');
+  }
 }
 
 export default assertValidProps;

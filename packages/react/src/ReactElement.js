@@ -51,7 +51,6 @@ function defineKeyPropWarningGetter(props, displayName) {
     if (!specialPropKeyWarningShown) {
       specialPropKeyWarningShown = true;
       warningWithoutStack(
-        false,
         '%s: `key` is not a prop. Trying to access it will result ' +
           'in `undefined` being returned. If you need to access the same ' +
           'value within the child component, you should pass it as a different ' +
@@ -72,7 +71,6 @@ function defineRefPropWarningGetter(props, displayName) {
     if (!specialPropRefWarningShown) {
       specialPropRefWarningShown = true;
       warningWithoutStack(
-        false,
         '%s: `ref` is not a prop. Trying to access it will result ' +
           'in `undefined` being returned. If you need to access the same ' +
           'value within the child component, you should pass it as a different ' +
@@ -427,11 +425,12 @@ export function cloneAndReplaceKey(oldElement, newKey) {
  * See https://reactjs.org/docs/react-api.html#cloneelement
  */
 export function cloneElement(element, config, children) {
-  invariant(
-    !(element === null || element === undefined),
-    'React.cloneElement(...): The argument must be a React element, but you passed %s.',
-    element,
-  );
+  if (element === null || element === undefined) {
+    invariant(
+      'React.cloneElement(...): The argument must be a React element, but you passed %s.',
+      element,
+    );
+  }
 
   let propName;
 

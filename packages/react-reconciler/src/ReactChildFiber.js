@@ -75,11 +75,12 @@ if (__DEV__) {
     if (!child._store || child._store.validated || child.key != null) {
       return;
     }
-    invariant(
-      typeof child._store === 'object',
-      'React Component in warnForMissingKey should have a _store. ' +
-        'This error is likely caused by a bug in React. Please file an issue.',
-    );
+
+    if (!(typeof child._store === 'object')) {
+      invariant('React Component in warnForMissingKey should have a _store. ' +
+        'This error is likely caused by a bug in React. Please file an issue.');
+    }
+
     child._store.validated = true;
 
     const currentComponentErrorInfo =
@@ -92,12 +93,9 @@ if (__DEV__) {
     }
     ownerHasKeyUseWarning[currentComponentErrorInfo] = true;
 
-    warning(
-      false,
-      'Each child in a list should have a unique ' +
-        '"key" prop. See https://fb.me/react-warning-keys for ' +
-        'more information.',
-    );
+    warning('Each child in a list should have a unique ' +
+      '"key" prop. See https://fb.me/react-warning-keys for ' +
+      'more information.');
   };
 }
 
@@ -121,28 +119,17 @@ function coerceRef(
         const componentName = getComponentName(returnFiber.type) || 'Component';
         if (!didWarnAboutStringRefs[componentName]) {
           if (warnAboutStringRefs) {
-            warningWithoutStack(
-              false,
-              'Component "%s" contains the string ref "%s". Support for string refs ' +
-                'will be removed in a future major release. We recommend using ' +
-                'useRef() or createRef() instead. ' +
-                'Learn more about using refs safely here: ' +
-                'https://fb.me/react-strict-mode-string-ref%s',
-              componentName,
-              mixedRef,
-              getStackByFiberInDevAndProd(returnFiber),
-            );
+            warningWithoutStack('Component "%s" contains the string ref "%s". Support for string refs ' +
+              'will be removed in a future major release. We recommend using ' +
+              'useRef() or createRef() instead. ' +
+              'Learn more about using refs safely here: ' +
+              'https://fb.me/react-strict-mode-string-ref%s', componentName, mixedRef, getStackByFiberInDevAndProd(returnFiber));
           } else {
-            warningWithoutStack(
-              false,
-              'A string ref, "%s", has been found within a strict mode tree. ' +
-                'String refs are a source of potential bugs and should be avoided. ' +
-                'We recommend using useRef() or createRef() instead. ' +
-                'Learn more about using refs safely here: ' +
-                'https://fb.me/react-strict-mode-string-ref%s',
-              mixedRef,
-              getStackByFiberInDevAndProd(returnFiber),
-            );
+            warningWithoutStack('A string ref, "%s", has been found within a strict mode tree. ' +
+              'String refs are a source of potential bugs and should be avoided. ' +
+              'We recommend using useRef() or createRef() instead. ' +
+              'Learn more about using refs safely here: ' +
+              'https://fb.me/react-strict-mode-string-ref%s', mixedRef, getStackByFiberInDevAndProd(returnFiber));
           }
           didWarnAboutStringRefs[componentName] = true;
         }
@@ -154,19 +141,20 @@ function coerceRef(
       let inst;
       if (owner) {
         const ownerFiber = ((owner: any): Fiber);
-        invariant(
-          ownerFiber.tag === ClassComponent,
-          'Function components cannot have refs. ' +
-            'Did you mean to use React.forwardRef()?',
-        );
+
+        if (!(ownerFiber.tag === ClassComponent)) {
+          invariant('Function components cannot have refs. ' +
+            'Did you mean to use React.forwardRef()?');
+        }
+
         inst = ownerFiber.stateNode;
       }
-      invariant(
-        inst,
-        'Missing owner for string ref %s. This error is likely caused by a ' +
-          'bug in React. Please file an issue.',
-        mixedRef,
-      );
+
+      if (!inst) {
+        invariant('Missing owner for string ref %s. This error is likely caused by a ' +
+          'bug in React. Please file an issue.', mixedRef);
+      }
+
       const stringRef = '' + mixedRef;
       // Check if previous string ref matches new string ref
       if (
@@ -192,20 +180,23 @@ function coerceRef(
       ref._stringRef = stringRef;
       return ref;
     } else {
-      invariant(
-        typeof mixedRef === 'string',
-        'Expected ref to be a function, a string, an object returned by React.createRef(), or null.',
-      );
-      invariant(
-        element._owner,
-        'Element ref was specified as a string (%s) but no owner was set. This could happen for one of' +
-          ' the following reasons:\n' +
-          '1. You may be adding a ref to a function component\n' +
-          "2. You may be adding a ref to a component that was not created inside a component's render method\n" +
-          '3. You have multiple copies of React loaded\n' +
-          'See https://fb.me/react-refs-must-have-owner for more information.',
-        mixedRef,
-      );
+      if (!(typeof mixedRef === 'string')) {
+        invariant(
+          'Expected ref to be a function, a string, an object returned by React.createRef(), or null.'
+        );
+      }
+
+      if (!element._owner) {
+        invariant(
+          'Element ref was specified as a string (%s) but no owner was set. This could happen for one of' +
+            ' the following reasons:\n' +
+            '1. You may be adding a ref to a function component\n' +
+            "2. You may be adding a ref to a component that was not created inside a component's render method\n" +
+            '3. You have multiple copies of React loaded\n' +
+            'See https://fb.me/react-refs-must-have-owner for more information.',
+          mixedRef
+        );
+      }
     }
   }
   return mixedRef;
@@ -221,12 +212,11 @@ function throwOnInvalidObjectType(returnFiber: Fiber, newChild: Object) {
         getCurrentFiberStackInDev();
     }
     invariant(
-      false,
       'Objects are not valid as a React child (found: %s).%s',
       Object.prototype.toString.call(newChild) === '[object Object]'
         ? 'object with keys {' + Object.keys(newChild).join(', ') + '}'
         : newChild,
-      addendum,
+      addendum
     );
   }
 }
@@ -243,12 +233,9 @@ function warnOnFunctionType() {
   }
   ownerHasFunctionTypeWarning[currentComponentErrorInfo] = true;
 
-  warning(
-    false,
-    'Functions are not valid as a React child. This may happen if ' +
-      'you return a Component instead of <Component /> from render. ' +
-      'Or maybe you meant to call this function rather than return it.',
-  );
+  warning('Functions are not valid as a React child. This may happen if ' +
+    'you return a Component instead of <Component /> from render. ' +
+    'Or maybe you meant to call this function rather than return it.');
 }
 
 // This wrapper function exists because I expect to clone the code in each path
@@ -736,15 +723,11 @@ function ChildReconciler(shouldTrackSideEffects) {
             knownKeys.add(key);
             break;
           }
-          warning(
-            false,
-            'Encountered two children with the same key, `%s`. ' +
-              'Keys should be unique so that components maintain their identity ' +
-              'across updates. Non-unique keys may cause children to be ' +
-              'duplicated and/or omitted — the behavior is unsupported and ' +
-              'could change in a future version.',
-            key,
-          );
+          warning('Encountered two children with the same key, `%s`. ' +
+            'Keys should be unique so that components maintain their identity ' +
+            'across updates. Non-unique keys may cause children to be ' +
+            'duplicated and/or omitted — the behavior is unsupported and ' +
+            'could change in a future version.', key);
           break;
         default:
           break;
@@ -922,11 +905,11 @@ function ChildReconciler(shouldTrackSideEffects) {
     // but using the iterator instead.
 
     const iteratorFn = getIteratorFn(newChildrenIterable);
-    invariant(
-      typeof iteratorFn === 'function',
-      'An object is not an iterable. This error is likely caused by a bug in ' +
-        'React. Please file an issue.',
-    );
+
+    if (!(typeof iteratorFn === 'function')) {
+      invariant('An object is not an iterable. This error is likely caused by a bug in ' +
+        'React. Please file an issue.');
+    }
 
     if (__DEV__) {
       // We don't support rendering Generators because it's a mutation.
@@ -936,25 +919,25 @@ function ChildReconciler(shouldTrackSideEffects) {
         // $FlowFixMe Flow doesn't know about toStringTag
         newChildrenIterable[Symbol.toStringTag] === 'Generator'
       ) {
-        warning(
-          didWarnAboutGenerators,
-          'Using Generators as children is unsupported and will likely yield ' +
+        if (!didWarnAboutGenerators) {
+          warning('Using Generators as children is unsupported and will likely yield ' +
             'unexpected results because enumerating a generator mutates it. ' +
             'You may convert it to an array with `Array.from()` or the ' +
             '`[...spread]` operator before rendering. Keep in mind ' +
-            'you might need to polyfill these features for older browsers.',
-        );
+            'you might need to polyfill these features for older browsers.');
+        }
+
         didWarnAboutGenerators = true;
       }
 
       // Warn about using Maps as children
       if ((newChildrenIterable: any).entries === iteratorFn) {
-        warning(
-          didWarnAboutMaps,
-          'Using Maps as children is unsupported and will likely yield ' +
+        if (!didWarnAboutMaps) {
+          warning('Using Maps as children is unsupported and will likely yield ' +
             'unexpected results. Convert it to a sequence/iterable of keyed ' +
-            'ReactElements instead.',
-        );
+            'ReactElements instead.');
+        }
+
         didWarnAboutMaps = true;
       }
 
@@ -972,7 +955,10 @@ function ChildReconciler(shouldTrackSideEffects) {
     }
 
     const newChildren = iteratorFn.call(newChildrenIterable);
-    invariant(newChildren != null, 'An iterable object provided no iterator.');
+
+    if (!(newChildren != null)) {
+      invariant('An iterable object provided no iterator.');
+    }
 
     let resultingFirstChild: Fiber | null = null;
     let previousNewFiber: Fiber | null = null;
@@ -1349,13 +1335,9 @@ function ChildReconciler(shouldTrackSideEffects) {
         // eslint-disable-next-lined no-fallthrough
         case FunctionComponent: {
           const Component = returnFiber.type;
-          invariant(
-            false,
-            '%s(...): Nothing was returned from render. This usually means a ' +
-              'return statement is missing. Or, to render nothing, ' +
-              'return null.',
-            Component.displayName || Component.name || 'Component',
-          );
+          invariant('%s(...): Nothing was returned from render. This usually means a ' +
+            'return statement is missing. Or, to render nothing, ' +
+            'return null.', Component.displayName || Component.name || 'Component');
         }
       }
     }
@@ -1374,10 +1356,9 @@ export function cloneChildFibers(
   current: Fiber | null,
   workInProgress: Fiber,
 ): void {
-  invariant(
-    current === null || workInProgress.child === current.child,
-    'Resuming work not yet implemented.',
-  );
+  if (!(current === null || workInProgress.child === current.child)) {
+    invariant('Resuming work not yet implemented.');
+  }
 
   if (workInProgress.child === null) {
     return;

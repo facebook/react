@@ -109,21 +109,20 @@ function updateEventListener(
     responder = listener.responder;
     props = listener.props;
   }
-  invariant(
-    responder && responder.$$typeof === REACT_RESPONDER_TYPE,
-    'An invalid value was used as an event listener. Expect one or many event ' +
-      'listeners created via React.unstable_useResponder().',
-  );
+
+  if (!(responder && responder.$$typeof === REACT_RESPONDER_TYPE)) {
+    invariant(
+      'An invalid value was used as an event listener. Expect one or many event ' +
+        'listeners created via React.unstable_useResponder().'
+    );
+  }
+
   const listenerProps = ((props: any): Object);
   if (visistedResponders.has(responder)) {
     // show warning
     if (__DEV__) {
-      warning(
-        false,
-        'Duplicate event responder "%s" found in event listeners. ' +
-          'Event listeners passed to elements cannot use the same event responder more than once.',
-        responder.displayName,
-      );
+      warning('Duplicate event responder "%s" found in event listeners. ' +
+        'Event listeners passed to elements cannot use the same event responder more than once.', responder.displayName);
     }
     return;
   }

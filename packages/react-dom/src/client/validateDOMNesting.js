@@ -411,10 +411,10 @@ if (__DEV__) {
     const parentTag = parentInfo && parentInfo.tag;
 
     if (childText != null) {
-      warningWithoutStack(
-        childTag == null,
-        'validateDOMNesting: when childText is passed, childTag should be null',
-      );
+      if (!(childTag == null)) {
+        warningWithoutStack('validateDOMNesting: when childText is passed, childTag should be null');
+      }
+
       childTag = '#text';
     }
 
@@ -462,23 +462,16 @@ if (__DEV__) {
           'the browser.';
       }
       warningWithoutStack(
-        false,
         'validateDOMNesting(...): %s cannot appear as a child of <%s>.%s%s%s',
         tagDisplayName,
         ancestorTag,
         whitespaceInfo,
         info,
-        addendum,
+        addendum
       );
     } else {
-      warningWithoutStack(
-        false,
-        'validateDOMNesting(...): %s cannot appear as a descendant of ' +
-          '<%s>.%s',
-        tagDisplayName,
-        ancestorTag,
-        addendum,
-      );
+      warningWithoutStack('validateDOMNesting(...): %s cannot appear as a descendant of ' +
+        '<%s>.%s', tagDisplayName, ancestorTag, addendum);
     }
   };
 }

@@ -13,7 +13,11 @@ function getInstanceFromInstance(instanceHandle) {
 
 function getTagFromInstance(inst) {
   let tag = inst.stateNode.canonical._nativeTag;
-  invariant(tag, 'All native instances should have a tag.');
+
+  if (!tag) {
+    invariant('All native instances should have a tag.');
+  }
+
   return tag;
 }
 

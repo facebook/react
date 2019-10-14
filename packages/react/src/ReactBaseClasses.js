@@ -56,13 +56,12 @@ Component.prototype.isReactComponent = {};
  * @protected
  */
 Component.prototype.setState = function(partialState, callback) {
-  invariant(
-    typeof partialState === 'object' ||
-      typeof partialState === 'function' ||
-      partialState == null,
-    'setState(...): takes an object of state variables to update or a ' +
-      'function which returns an object of state variables.',
-  );
+  if (!(typeof partialState === 'object' ||
+    typeof partialState === 'function' || partialState == null)) {
+    invariant('setState(...): takes an object of state variables to update or a ' +
+      'function which returns an object of state variables.');
+  }
+
   this.updater.enqueueSetState(this, partialState, callback, 'setState');
 };
 
@@ -106,10 +105,9 @@ if (__DEV__) {
     Object.defineProperty(Component.prototype, methodName, {
       get: function() {
         lowPriorityWarningWithoutStack(
-          false,
           '%s(...) is deprecated in plain JavaScript React classes. %s',
           info[0],
-          info[1],
+          info[1]
         );
         return undefined;
       },

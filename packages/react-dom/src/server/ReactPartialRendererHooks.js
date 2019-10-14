@@ -58,23 +58,26 @@ let isInHookUserCodeInDev = false;
 let currentHookNameInDev: ?string;
 
 function resolveCurrentlyRenderingComponent(): Object {
-  invariant(
-    currentlyRenderingComponent !== null,
-    'Invalid hook call. Hooks can only be called inside of the body of a function component. This could happen for' +
-      ' one of the following reasons:\n' +
-      '1. You might have mismatching versions of React and the renderer (such as React DOM)\n' +
-      '2. You might be breaking the Rules of Hooks\n' +
-      '3. You might have more than one copy of React in the same app\n' +
-      'See https://fb.me/react-invalid-hook-call for tips about how to debug and fix this problem.',
-  );
-  if (__DEV__) {
-    warning(
-      !isInHookUserCodeInDev,
-      'Do not call Hooks inside useEffect(...), useMemo(...), or other built-in Hooks. ' +
-        'You can only call Hooks at the top level of your React function. ' +
-        'For more information, see ' +
-        'https://fb.me/rules-of-hooks',
+  if (!(currentlyRenderingComponent !== null)) {
+    invariant(
+      'Invalid hook call. Hooks can only be called inside of the body of a function component. This could happen for' +
+        ' one of the following reasons:\n' +
+        '1. You might have mismatching versions of React and the renderer (such as React DOM)\n' +
+        '2. You might be breaking the Rules of Hooks\n' +
+        '3. You might have more than one copy of React in the same app\n' +
+        'See https://fb.me/react-invalid-hook-call for tips about how to debug and fix this problem.',
     );
+  }
+
+  if (__DEV__) {
+    if (isInHookUserCodeInDev) {
+      warning(
+        'Do not call Hooks inside useEffect(...), useMemo(...), or other built-in Hooks. ' +
+          'You can only call Hooks at the top level of your React function. ' +
+          'For more information, see ' +
+          'https://fb.me/rules-of-hooks',
+      );
+    }
   }
   return currentlyRenderingComponent;
 }
@@ -86,7 +89,6 @@ function areHookInputsEqual(
   if (prevDeps === null) {
     if (__DEV__) {
       warning(
-        false,
         '%s received a final argument during this render, but not during ' +
           'the previous render. Even though the final argument is optional, ' +
           'its type cannot change between renders.',
@@ -101,7 +103,6 @@ function areHookInputsEqual(
     // passed inline.
     if (nextDeps.length !== prevDeps.length) {
       warning(
-        false,
         'The final argument passed to %s changed size between renders. The ' +
           'order and size of this array must remain constant.\n\n' +
           'Previous: %s\n' +
@@ -123,7 +124,7 @@ function areHookInputsEqual(
 
 function createHook(): Hook {
   if (numberOfReRenders > 0) {
-    invariant(false, 'Rendered more hooks than during the previous render');
+    invariant('Rendered more hooks than during the previous render');
   }
   return {
     memoizedState: null,
@@ -220,13 +221,14 @@ function readContext<T>(
   let threadID = currentThreadID;
   validateContextBounds(context, threadID);
   if (__DEV__) {
-    warning(
-      !isInHookUserCodeInDev,
-      'Context can only be read while React is rendering. ' +
-        'In classes, you can read it in the render method or getDerivedStateFromProps. ' +
-        'In function components, you can read it directly in the function body, but not ' +
-        'inside Hooks like useReducer() or useMemo().',
-    );
+    if (isInHookUserCodeInDev) {
+      warning(
+        'Context can only be read while React is rendering. ' +
+          'In classes, you can read it in the render method or getDerivedStateFromProps. ' +
+          'In function components, you can read it directly in the function body, but not ' +
+          'inside Hooks like useReducer() or useMemo().',
+      );
+    }
   }
   return context[threadID];
 }
@@ -391,7 +393,6 @@ export function useLayoutEffect(
     currentHookNameInDev = 'useLayoutEffect';
   }
   warning(
-    false,
     'useLayoutEffect does nothing on the server, because its effect cannot ' +
       "be encoded into the server renderer's output format. This will lead " +
       'to a mismatch between the initial, non-hydrated UI and the intended ' +
@@ -406,11 +407,12 @@ function dispatchAction<A>(
   queue: UpdateQueue<A>,
   action: A,
 ) {
-  invariant(
-    numberOfReRenders < RE_RENDER_LIMIT,
-    'Too many re-renders. React limits the number of renders to prevent ' +
-      'an infinite loop.',
-  );
+  if (!(numberOfReRenders < RE_RENDER_LIMIT)) {
+    invariant(
+      'Too many re-renders. React limits the number of renders to prevent ' +
+        'an infinite loop.',
+    );
+  }
 
   if (componentIdentity === currentlyRenderingComponent) {
     // This is a render phase update. Stash it in a lazily-created map of

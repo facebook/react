@@ -56,11 +56,14 @@ export function runEventsInBatch(
   }
 
   forEachAccumulated(processingEventQueue, executeDispatchesAndReleaseTopLevel);
-  invariant(
-    !eventQueue,
-    'processEventQueue(): Additional events were enqueued while processing ' +
-      'an event queue. Support for this has not yet been implemented.',
-  );
+
+  if (eventQueue) {
+    invariant(
+      'processEventQueue(): Additional events were enqueued while processing ' +
+        'an event queue. Support for this has not yet been implemented.',
+    );
+  }
+
   // This would be a good time to rethrow if any of the event handlers threw.
   rethrowCaughtError();
 }

@@ -121,15 +121,13 @@ function createClassErrorUpdate(
       });
       if (__DEV__) {
         if (typeof getDerivedStateFromError !== 'function') {
-          // If componentDidCatch is the only error boundary method defined,
-          // then it needs to call setState to recover from errors.
-          // If no state update is scheduled then the boundary will swallow the error.
-          warningWithoutStack(
-            fiber.expirationTime === Sync,
-            '%s: Error boundaries should implement getDerivedStateFromError(). ' +
-              'In that method, return a state update to display an error message or fallback UI.',
-            getComponentName(fiber.type) || 'Unknown',
-          );
+          if (!(fiber.expirationTime === Sync)) {
+            // If componentDidCatch is the only error boundary method defined,
+            // then it needs to call setState to recover from errors.
+            // If no state update is scheduled then the boundary will swallow the error.
+            warningWithoutStack('%s: Error boundaries should implement getDerivedStateFromError(). ' +
+              'In that method, return a state update to display an error message or fallback UI.', getComponentName(fiber.type) || 'Unknown');
+          }
         }
       }
     };

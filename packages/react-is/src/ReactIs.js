@@ -88,12 +88,9 @@ export function isAsyncMode(object: any) {
   if (__DEV__) {
     if (!hasWarnedAboutDeprecatedIsAsyncMode) {
       hasWarnedAboutDeprecatedIsAsyncMode = true;
-      lowPriorityWarningWithoutStack(
-        false,
-        'The ReactIs.isAsyncMode() alias has been deprecated, ' +
-          'and will be removed in React 17+. Update your code to use ' +
-          'ReactIs.isConcurrentMode() instead. It has the exact same API.',
-      );
+      lowPriorityWarningWithoutStack('The ReactIs.isAsyncMode() alias has been deprecated, ' +
+        'and will be removed in React 17+. Update your code to use ' +
+        'ReactIs.isConcurrentMode() instead. It has the exact same API.');
     }
   }
   return isConcurrentMode(object) || typeOf(object) === REACT_ASYNC_MODE_TYPE;

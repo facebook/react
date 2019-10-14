@@ -30,11 +30,11 @@ let rootInstanceStackCursor: StackCursor<Container | NoContextT> = createCursor(
 );
 
 function requiredContext<Value>(c: Value | NoContextT): Value {
-  invariant(
-    c !== NO_CONTEXT,
-    'Expected host context to exist. This error is likely caused by a bug ' +
-      'in React. Please file an issue.',
-  );
+  if (!(c !== NO_CONTEXT)) {
+    invariant('Expected host context to exist. This error is likely caused by a bug ' +
+      'in React. Please file an issue.');
+  }
+
   return (c: any);
 }
 

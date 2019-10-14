@@ -13,10 +13,9 @@ import type {CapturedError} from '../ReactCapturedValue';
 import {ReactFiberErrorDialog as RNImpl} from 'react-native/Libraries/ReactPrivate/ReactNativePrivateInterface';
 import invariant from 'shared/invariant';
 
-invariant(
-  typeof RNImpl.showErrorDialog === 'function',
-  'Expected ReactFiberErrorDialog.showErrorDialog to be a function.',
-);
+if (!(typeof RNImpl.showErrorDialog === 'function')) {
+  invariant('Expected ReactFiberErrorDialog.showErrorDialog to be a function.');
+}
 
 export function showErrorDialog(capturedError: CapturedError): boolean {
   return RNImpl.showErrorDialog(capturedError);

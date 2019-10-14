@@ -192,12 +192,11 @@ if (__DEV__) {
         UNSAFE_componentWillMountUniqueNames,
       );
       warningWithoutStack(
-        false,
         'Using UNSAFE_componentWillMount in strict mode is not recommended and may indicate bugs in your code. ' +
           'See https://fb.me/react-unsafe-component-lifecycles for details.\n\n' +
           '* Move code with side effects to componentDidMount, and set initial state in the constructor.\n' +
           '\nPlease update the following components: %s',
-        sortedNames,
+        sortedNames
       );
     }
 
@@ -206,7 +205,6 @@ if (__DEV__) {
         UNSAFE_componentWillReceivePropsUniqueNames,
       );
       warningWithoutStack(
-        false,
         'Using UNSAFE_componentWillReceiveProps in strict mode is not recommended ' +
           'and may indicate bugs in your code. ' +
           'See https://fb.me/react-unsafe-component-lifecycles for details.\n\n' +
@@ -215,7 +213,7 @@ if (__DEV__) {
           'refactor your code to use memoization techniques or move it to ' +
           'static getDerivedStateFromProps. Learn more at: https://fb.me/react-derived-state\n' +
           '\nPlease update the following components: %s',
-        sortedNames,
+        sortedNames
       );
     }
 
@@ -223,32 +221,24 @@ if (__DEV__) {
       const sortedNames = setToSortedString(
         UNSAFE_componentWillUpdateUniqueNames,
       );
-      warningWithoutStack(
-        false,
-        'Using UNSAFE_componentWillUpdate in strict mode is not recommended ' +
-          'and may indicate bugs in your code. ' +
-          'See https://fb.me/react-unsafe-component-lifecycles for details.\n\n' +
-          '* Move data fetching code or side effects to componentDidUpdate.\n' +
-          '\nPlease update the following components: %s',
-        sortedNames,
-      );
+      warningWithoutStack('Using UNSAFE_componentWillUpdate in strict mode is not recommended ' +
+        'and may indicate bugs in your code. ' +
+        'See https://fb.me/react-unsafe-component-lifecycles for details.\n\n' +
+        '* Move data fetching code or side effects to componentDidUpdate.\n' +
+        '\nPlease update the following components: %s', sortedNames);
     }
 
     if (componentWillMountUniqueNames.size > 0) {
       const sortedNames = setToSortedString(componentWillMountUniqueNames);
 
-      lowPriorityWarningWithoutStack(
-        false,
-        'componentWillMount has been renamed, and is not recommended for use. ' +
-          'See https://fb.me/react-unsafe-component-lifecycles for details.\n\n' +
-          '* Move code with side effects to componentDidMount, and set initial state in the constructor.\n' +
-          '* Rename componentWillMount to UNSAFE_componentWillMount to suppress ' +
-          'this warning in non-strict mode. In React 17.x, only the UNSAFE_ name will work. ' +
-          'To rename all deprecated lifecycles to their new names, you can run ' +
-          '`npx react-codemod rename-unsafe-lifecycles` in your project source folder.\n' +
-          '\nPlease update the following components: %s',
-        sortedNames,
-      );
+      lowPriorityWarningWithoutStack('componentWillMount has been renamed, and is not recommended for use. ' +
+        'See https://fb.me/react-unsafe-component-lifecycles for details.\n\n' +
+        '* Move code with side effects to componentDidMount, and set initial state in the constructor.\n' +
+        '* Rename componentWillMount to UNSAFE_componentWillMount to suppress ' +
+        'this warning in non-strict mode. In React 17.x, only the UNSAFE_ name will work. ' +
+        'To rename all deprecated lifecycles to their new names, you can run ' +
+        '`npx react-codemod rename-unsafe-lifecycles` in your project source folder.\n' +
+        '\nPlease update the following components: %s', sortedNames);
     }
 
     if (componentWillReceivePropsUniqueNames.size > 0) {
@@ -257,7 +247,6 @@ if (__DEV__) {
       );
 
       lowPriorityWarningWithoutStack(
-        false,
         'componentWillReceiveProps has been renamed, and is not recommended for use. ' +
           'See https://fb.me/react-unsafe-component-lifecycles for details.\n\n' +
           '* Move data fetching code or side effects to componentDidUpdate.\n' +
@@ -269,25 +258,21 @@ if (__DEV__) {
           'To rename all deprecated lifecycles to their new names, you can run ' +
           '`npx react-codemod rename-unsafe-lifecycles` in your project source folder.\n' +
           '\nPlease update the following components: %s',
-        sortedNames,
+        sortedNames
       );
     }
 
     if (componentWillUpdateUniqueNames.size > 0) {
       const sortedNames = setToSortedString(componentWillUpdateUniqueNames);
 
-      lowPriorityWarningWithoutStack(
-        false,
-        'componentWillUpdate has been renamed, and is not recommended for use. ' +
-          'See https://fb.me/react-unsafe-component-lifecycles for details.\n\n' +
-          '* Move data fetching code or side effects to componentDidUpdate.\n' +
-          '* Rename componentWillUpdate to UNSAFE_componentWillUpdate to suppress ' +
-          'this warning in non-strict mode. In React 17.x, only the UNSAFE_ name will work. ' +
-          'To rename all deprecated lifecycles to their new names, you can run ' +
-          '`npx react-codemod rename-unsafe-lifecycles` in your project source folder.\n' +
-          '\nPlease update the following components: %s',
-        sortedNames,
-      );
+      lowPriorityWarningWithoutStack('componentWillUpdate has been renamed, and is not recommended for use. ' +
+        'See https://fb.me/react-unsafe-component-lifecycles for details.\n\n' +
+        '* Move data fetching code or side effects to componentDidUpdate.\n' +
+        '* Rename componentWillUpdate to UNSAFE_componentWillUpdate to suppress ' +
+        'this warning in non-strict mode. In React 17.x, only the UNSAFE_ name will work. ' +
+        'To rename all deprecated lifecycles to their new names, you can run ' +
+        '`npx react-codemod rename-unsafe-lifecycles` in your project source folder.\n' +
+        '\nPlease update the following components: %s', sortedNames);
     }
   };
 
@@ -302,11 +287,8 @@ if (__DEV__) {
   ) => {
     const strictRoot = findStrictRoot(fiber);
     if (strictRoot === null) {
-      warningWithoutStack(
-        false,
-        'Expected to find a StrictMode component in a strict mode tree. ' +
-          'This error is likely caused by a bug in React. Please file an issue.',
-      );
+      warningWithoutStack('Expected to find a StrictMode component in a strict mode tree. ' +
+        'This error is likely caused by a bug in React. Please file an issue.');
       return;
     }
 
@@ -344,17 +326,12 @@ if (__DEV__) {
           strictRoot,
         );
 
-        warningWithoutStack(
-          false,
-          'Legacy context API has been detected within a strict-mode tree.' +
-            '\n\nThe old API will be supported in all 16.x releases, but applications ' +
-            'using it should migrate to the new version.' +
-            '\n\nPlease update the following components: %s' +
-            '\n\nLearn more about this warning here: https://fb.me/react-legacy-context' +
-            '%s',
-          sortedNames,
-          strictRootComponentStack,
-        );
+        warningWithoutStack('Legacy context API has been detected within a strict-mode tree.' +
+          '\n\nThe old API will be supported in all 16.x releases, but applications ' +
+          'using it should migrate to the new version.' +
+          '\n\nPlease update the following components: %s' +
+          '\n\nLearn more about this warning here: https://fb.me/react-legacy-context' +
+          '%s', sortedNames, strictRootComponentStack);
       },
     );
   };

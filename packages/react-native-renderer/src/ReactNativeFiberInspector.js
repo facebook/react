@@ -119,10 +119,7 @@ if (__DEV__) {
   };
 } else {
   getInspectorDataForViewTag = () => {
-    invariant(
-      false,
-      'getInspectorDataForViewTag() is not available in production',
-    );
+    invariant('getInspectorDataForViewTag() is not available in production');
   };
 }
 

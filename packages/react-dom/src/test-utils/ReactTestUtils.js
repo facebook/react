@@ -143,7 +143,6 @@ function validateClassInstance(inst, methodName) {
     received = stringified;
   }
   invariant(
-    false,
     '%s(...): the first argument must be a React class instance. ' +
       'Instead received: %s.',
     methodName,
@@ -235,11 +234,13 @@ const ReactTestUtils = {
         const classList = className.split(/\s+/);
 
         if (!Array.isArray(classNames)) {
-          invariant(
-            classNames !== undefined,
-            'TestUtils.scryRenderedDOMComponentsWithClass expects a ' +
-              'className as a second argument.',
-          );
+          if (!(classNames !== undefined)) {
+            invariant(
+              'TestUtils.scryRenderedDOMComponentsWithClass expects a ' +
+                'className as a second argument.',
+            );
+          }
+
           classNames = classNames.split(/\s+/);
         }
         return classNames.every(function(name) {
@@ -362,7 +363,6 @@ const ReactTestUtils = {
     if (!hasWarnedAboutDeprecatedMockComponent) {
       hasWarnedAboutDeprecatedMockComponent = true;
       lowPriorityWarningWithoutStack(
-        false,
         'ReactTestUtils.mockComponent() is deprecated. ' +
           'Use shallow rendering or jest.mock() instead.\n\n' +
           'See https://fb.me/test-utils-mock-component for more information.',
@@ -400,17 +400,20 @@ const ReactTestUtils = {
  */
 function makeSimulator(eventType) {
   return function(domNode, eventData) {
-    invariant(
-      !React.isValidElement(domNode),
-      'TestUtils.Simulate expected a DOM node as the first argument but received ' +
-        'a React element. Pass the DOM node you wish to simulate the event on instead. ' +
-        'Note that TestUtils.Simulate will not work if you are using shallow rendering.',
-    );
-    invariant(
-      !ReactTestUtils.isCompositeComponent(domNode),
-      'TestUtils.Simulate expected a DOM node as the first argument but received ' +
-        'a component instance. Pass the DOM node you wish to simulate the event on instead.',
-    );
+    if (React.isValidElement(domNode)) {
+      invariant(
+        'TestUtils.Simulate expected a DOM node as the first argument but received ' +
+          'a React element. Pass the DOM node you wish to simulate the event on instead. ' +
+          'Note that TestUtils.Simulate will not work if you are using shallow rendering.',
+      );
+    }
+
+    if (ReactTestUtils.isCompositeComponent(domNode)) {
+      invariant(
+        'TestUtils.Simulate expected a DOM node as the first argument but received ' +
+          'a component instance. Pass the DOM node you wish to simulate the event on instead.',
+      );
+    }
 
     const dispatchConfig = eventNameDispatchConfigs[eventType];
 

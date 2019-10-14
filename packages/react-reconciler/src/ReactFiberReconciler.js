@@ -140,12 +140,11 @@ function findHostInstance(component: Object): PublicInstance | null {
   const fiber = getInstance(component);
   if (fiber === undefined) {
     if (typeof component.render === 'function') {
-      invariant(false, 'Unable to find node on an unmounted component.');
+      invariant('Unable to find node on an unmounted component.');
     } else {
       invariant(
-        false,
         'Argument appears to not be a ReactComponent. Keys: %s',
-        Object.keys(component),
+        Object.keys(component)
       );
     }
   }
@@ -164,12 +163,11 @@ function findHostInstanceWithWarning(
     const fiber = getInstance(component);
     if (fiber === undefined) {
       if (typeof component.render === 'function') {
-        invariant(false, 'Unable to find node on an unmounted component.');
+        invariant('Unable to find node on an unmounted component.');
       } else {
         invariant(
-          false,
           'Argument appears to not be a ReactComponent. Keys: %s',
-          Object.keys(component),
+          Object.keys(component)
         );
       }
     }
@@ -182,31 +180,17 @@ function findHostInstanceWithWarning(
       if (!didWarnAboutFindNodeInStrictMode[componentName]) {
         didWarnAboutFindNodeInStrictMode[componentName] = true;
         if (fiber.mode & StrictMode) {
-          warningWithoutStack(
-            false,
-            '%s is deprecated in StrictMode. ' +
-              '%s was passed an instance of %s which is inside StrictMode. ' +
-              'Instead, add a ref directly to the element you want to reference. ' +
-              'Learn more about using refs safely here: ' +
-              'https://fb.me/react-strict-mode-find-node%s',
-            methodName,
-            methodName,
-            componentName,
-            getStackByFiberInDevAndProd(hostFiber),
-          );
+          warningWithoutStack('%s is deprecated in StrictMode. ' +
+            '%s was passed an instance of %s which is inside StrictMode. ' +
+            'Instead, add a ref directly to the element you want to reference. ' +
+            'Learn more about using refs safely here: ' +
+            'https://fb.me/react-strict-mode-find-node%s', methodName, methodName, componentName, getStackByFiberInDevAndProd(hostFiber));
         } else {
-          warningWithoutStack(
-            false,
-            '%s is deprecated in StrictMode. ' +
-              '%s was passed an instance of %s which renders StrictMode children. ' +
-              'Instead, add a ref directly to the element you want to reference. ' +
-              'Learn more about using refs safely here: ' +
-              'https://fb.me/react-strict-mode-find-node%s',
-            methodName,
-            methodName,
-            componentName,
-            getStackByFiberInDevAndProd(hostFiber),
-          );
+          warningWithoutStack('%s is deprecated in StrictMode. ' +
+            '%s was passed an instance of %s which renders StrictMode children. ' +
+            'Instead, add a ref directly to the element you want to reference. ' +
+            'Learn more about using refs safely here: ' +
+            'https://fb.me/react-strict-mode-find-node%s', methodName, methodName, componentName, getStackByFiberInDevAndProd(hostFiber));
         }
       }
     }
@@ -272,14 +256,10 @@ export function updateContainer(
       !didWarnAboutNestedUpdates
     ) {
       didWarnAboutNestedUpdates = true;
-      warningWithoutStack(
-        false,
-        'Render methods should be a pure function of props and state; ' +
-          'triggering nested component updates from render is not allowed. ' +
-          'If necessary, trigger nested updates in componentDidUpdate.\n\n' +
-          'Check the render method of %s.',
-        getComponentName(ReactCurrentFiberCurrent.type) || 'Unknown',
-      );
+      warningWithoutStack('Render methods should be a pure function of props and state; ' +
+        'triggering nested component updates from render is not allowed. ' +
+        'If necessary, trigger nested updates in componentDidUpdate.\n\n' +
+        'Check the render method of %s.', getComponentName(ReactCurrentFiberCurrent.type) || 'Unknown');
     }
   }
 
@@ -290,12 +270,11 @@ export function updateContainer(
 
   callback = callback === undefined ? null : callback;
   if (callback !== null) {
-    warningWithoutStack(
-      typeof callback === 'function',
-      'render(...): Expected the last optional `callback` argument to be a ' +
-        'function. Instead received: %s.',
-      callback,
-    );
+    if (!(typeof callback === 'function')) {
+      warningWithoutStack('render(...): Expected the last optional `callback` argument to be a ' +
+        'function. Instead received: %s.', callback);
+    }
+
     update.callback = callback;
   }
 

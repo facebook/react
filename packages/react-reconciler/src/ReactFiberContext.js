@@ -168,11 +168,10 @@ function pushTopLevelContextObject(
   if (disableLegacyContext) {
     return;
   } else {
-    invariant(
-      contextStackCursor.current === emptyContextObject,
-      'Unexpected context found on stack. ' +
-        'This error is likely caused by a bug in React. Please file an issue.',
-    );
+    if (!(contextStackCursor.current === emptyContextObject)) {
+      invariant('Unexpected context found on stack. ' +
+        'This error is likely caused by a bug in React. Please file an issue.');
+    }
 
     push(contextStackCursor, context, fiber);
     push(didPerformWorkStackCursor, didChange, fiber);
@@ -199,12 +198,11 @@ function processChildContext(
         if (!warnedAboutMissingGetChildContext[componentName]) {
           warnedAboutMissingGetChildContext[componentName] = true;
           warningWithoutStack(
-            false,
             '%s.childContextTypes is specified but there is no getChildContext() method ' +
               'on the instance. You can either define getChildContext() on %s or remove ' +
               'childContextTypes from it.',
             componentName,
-            componentName,
+            componentName
           );
         }
       }
@@ -222,12 +220,13 @@ function processChildContext(
       setCurrentPhase(null);
     }
     for (let contextKey in childContext) {
-      invariant(
-        contextKey in childContextTypes,
-        '%s.getChildContext(): key "%s" is not defined in childContextTypes.',
-        getComponentName(type) || 'Unknown',
-        contextKey,
-      );
+      if (!(contextKey in childContextTypes)) {
+        invariant(
+          '%s.getChildContext(): key "%s" is not defined in childContextTypes.',
+          getComponentName(type) || 'Unknown',
+          contextKey
+        );
+      }
     }
     if (__DEV__) {
       const name = getComponentName(type) || 'Unknown';
@@ -284,11 +283,11 @@ function invalidateContextProvider(
     return;
   } else {
     const instance = workInProgress.stateNode;
-    invariant(
-      instance,
-      'Expected to have an instance by this point. ' +
-        'This error is likely caused by a bug in React. Please file an issue.',
-    );
+
+    if (!instance) {
+      invariant('Expected to have an instance by this point. ' +
+        'This error is likely caused by a bug in React. Please file an issue.');
+    }
 
     if (didChange) {
       // Merge parent and own context.
@@ -319,13 +318,12 @@ function findCurrentUnmaskedContext(fiber: Fiber): Object {
   if (disableLegacyContext) {
     return emptyContextObject;
   } else {
-    // Currently this is only used with renderSubtreeIntoContainer; not sure if it
-    // makes sense elsewhere
-    invariant(
-      isFiberMounted(fiber) && fiber.tag === ClassComponent,
-      'Expected subtree parent to be a mounted class component. ' +
-        'This error is likely caused by a bug in React. Please file an issue.',
-    );
+    if (!(isFiberMounted(fiber) && fiber.tag === ClassComponent)) {
+      // Currently this is only used with renderSubtreeIntoContainer; not sure if it
+      // makes sense elsewhere
+      invariant('Expected subtree parent to be a mounted class component. ' +
+        'This error is likely caused by a bug in React. Please file an issue.');
+    }
 
     let node = fiber;
     do {
@@ -342,11 +340,8 @@ function findCurrentUnmaskedContext(fiber: Fiber): Object {
       }
       node = node.return;
     } while (node !== null);
-    invariant(
-      false,
-      'Found unexpected detached subtree parent. ' +
-        'This error is likely caused by a bug in React. Please file an issue.',
-    );
+    invariant('Found unexpected detached subtree parent. ' +
+      'This error is likely caused by a bug in React. Please file an issue.');
   }
 }
 

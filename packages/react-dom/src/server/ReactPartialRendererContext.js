@@ -112,13 +112,8 @@ export function processContext(
               Object.keys(contextType).join(', ') +
               '}.';
           }
-          warningWithoutStack(
-            false,
-            '%s defines an invalid contextType. ' +
-              'contextType should point to the Context object returned by React.createContext().%s',
-            getComponentName(type) || 'Component',
-            addendum,
-          );
+          warningWithoutStack('%s defines an invalid contextType. ' +
+            'contextType should point to the Context object returned by React.createContext().%s', getComponentName(type) || 'Component', addendum);
         }
       }
     }
@@ -129,12 +124,8 @@ export function processContext(
     if (disableLegacyContext) {
       if (__DEV__) {
         if (type.contextTypes) {
-          warningWithoutStack(
-            false,
-            '%s uses the legacy contextTypes API which is no longer supported. ' +
-              'Use React.createContext() with static contextType instead.',
-            getComponentName(type) || 'Unknown',
-          );
+          warningWithoutStack('%s uses the legacy contextTypes API which is no longer supported. ' +
+            'Use React.createContext() with static contextType instead.', getComponentName(type) || 'Unknown');
         }
       }
       return emptyObject;
@@ -151,12 +142,8 @@ export function processContext(
     if (disableLegacyContext) {
       if (__DEV__) {
         if (type.contextTypes) {
-          warningWithoutStack(
-            false,
-            '%s uses the legacy contextTypes API which is no longer supported. ' +
-              'Use React.createContext() with React.useContext() instead.',
-            getComponentName(type) || 'Unknown',
-          );
+          warningWithoutStack('%s uses the legacy contextTypes API which is no longer supported. ' +
+            'Use React.createContext() with React.useContext() instead.', getComponentName(type) || 'Unknown');
         }
       }
       return undefined;
