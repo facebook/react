@@ -35,7 +35,9 @@ export type SuspenseState = {|
   // to check things like isSuspenseInstancePending.
   dehydrated: null | SuspenseInstance,
   // Represents the earliest expiration time we should attempt to hydrate
-  // a dehydrated boundary at. Never is the default.
+  // a dehydrated boundary at.
+  // Never is the default for dehydrated boundaries.
+  // NoWork is the default for normal boundaries, which turns into "normal" pri.
   retryTime: ExpirationTime,
 |};
 

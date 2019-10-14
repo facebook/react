@@ -741,17 +741,19 @@ function finishConcurrentRender(
     // statement, but eslint doesn't know about invariant, so it complains
     // if I do. eslint-disable-next-line no-fallthrough
     case RootErrored: {
-      if (expirationTime !== Idle) {
-        // If this was an async render, the error may have happened due to
-        // a mutation in a concurrent event. Try rendering one more time,
-        // synchronously, to see if the error goes away. If there are
-        // lower priority updates, let's include those, too, in case they
-        // fix the inconsistency. Render at Idle to include all updates.
-        markRootExpiredAtTime(root, Idle);
-        break;
-      }
-      // Commit the root in its errored state.
-      commitRoot(root);
+      // If this was an async render, the error may have happened due to
+      // a mutation in a concurrent event. Try rendering one more time,
+      // synchronously, to see if the error goes away. If there are
+      // lower priority updates, let's include those, too, in case they
+      // fix the inconsistency. Render at Idle to include all updates.
+      // If it was Idle or Never or some not-yet-invented time, render
+      // at that time.
+      markRootExpiredAtTime(
+        root,
+        expirationTime > Idle ? Idle : expirationTime,
+      );
+      // We assume that this second render pass will be synchronous
+      // and therefore not hit this path again.
       break;
     }
     case RootSuspended: {
@@ -2376,7 +2378,7 @@ function retryTimedOutBoundary(
   // previously was rendered in its fallback state. One of the promises that
   // suspended it has resolved, which means at least part of the tree was
   // likely unblocked. Try rendering again, at a new expiration time.
-  if (retryTime === Never) {
+  if (retryTime === NoWork) {
     const suspenseConfig = null; // Retries don't carry over the already committed update.
     const currentTime = requestCurrentTime();
     retryTime = computeExpirationForFiber(
@@ -2395,7 +2397,7 @@ function retryTimedOutBoundary(
 
 export function retryDehydratedSuspenseBoundary(boundaryFiber: Fiber) {
   const suspenseState: null | SuspenseState = boundaryFiber.memoizedState;
-  let retryTime = Never;
+  let retryTime = NoWork;
   if (suspenseState !== null) {
     retryTime = suspenseState.retryTime;
   }
@@ -2403,7 +2405,7 @@ export function retryDehydratedSuspenseBoundary(boundaryFiber: Fiber) {
 }
 
 export function resolveRetryThenable(boundaryFiber: Fiber, thenable: Thenable) {
-  let retryTime = Never; // Default
+  let retryTime = NoWork; // Default
   let retryCache: WeakSet<Thenable> | Set<Thenable> | null;
   if (enableSuspenseServerRenderer) {
     switch (boundaryFiber.tag) {
