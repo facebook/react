@@ -22,6 +22,32 @@ aliases:
   - &attach_workspace
     at: build
 
+  - &process_artifacts
+    docker: *docker
+    environment: *environment
+    steps:
+      - checkout
+      - attach_workspace: *attach_workspace
+      - *restore_yarn_cache
+      - *run_yarn
+      - run: node ./scripts/rollup/consolidateBundleSizes.js
+      - run: ./scripts/circleci/upload_build.sh
+      - run: ./scripts/circleci/pack_and_store_artifact.sh
+      - store_artifacts:
+          path: ./node_modules.tgz
+      - store_artifacts:
+          path: ./build.tgz
+      - store_artifacts:
+          path: ./build/bundle-sizes.json
+      - store_artifacts:
+          # TODO: Update release script to use local file instead of pulling
+          # from artifacts.
+          path: ./scripts/error-codes/codes.json
+      - persist_to_workspace:
+          root: build
+          paths:
+            - bundle-sizes.json
+
 jobs:
   setup:
     docker: *docker
@@ -74,6 +100,18 @@ jobs:
       - *run_yarn
       - run: yarn test --maxWorkers=2
 
+  test_source_experimental:
+    docker: *docker
+    environment: *environment
+    steps:
+      - checkout
+      - *restore_yarn_cache
+      - *run_yarn
+      - run:
+          environment:
+            RELEASE_CHANNEL: experimental
+          command: yarn test --maxWorkers=2
+
   test_source_persistent:
     docker: *docker
     environment: *environment
@@ -105,16 +143,49 @@ jobs:
       - run: ./scripts/circleci/add_build_info_json.sh
       - run: ./scripts/circleci/update_package_versions.sh
       - run: yarn build
+      - run: echo "stable" >> build/RELEASE_CHANNEL
       - persist_to_workspace:
           root: build
           paths:
+            - RELEASE_CHANNEL
             - facebook-www
             - node_modules
             - react-native
             - dist
             - sizes/*.json
 
-  process_artifacts:
+  build_experimental:
+    docker: *docker
+    environment: *environment
+    parallelism: 20
+    steps:
+      - checkout
+      - *restore_yarn_cache
+      - *run_yarn
+      - run:
+          environment:
+            RELEASE_CHANNEL: experimental
+          command: |
+            ./scripts/circleci/add_build_info_json.sh
+            ./scripts/circleci/update_package_versions.sh
+            yarn build
+      - run: echo "experimental" >> build/RELEASE_CHANNEL
+      - persist_to_workspace:
+          root: build
+          paths:
+            - RELEASE_CHANNEL
+            - facebook-www
+            - node_modules
+            - react-native
+            - dist
+            - sizes/*.json
+
+  # These jobs are named differently so we can distinguish the stable and
+  # and experimental artifacts
+  process_artifacts: *process_artifacts
+  process_artifacts_experimental: *process_artifacts
+
+  sizebot:
     docker: *docker
     environment: *environment
     steps:
@@ -122,20 +193,10 @@ jobs:
       - attach_workspace: *attach_workspace
       - *restore_yarn_cache
       - *run_yarn
+      # This runs in the process_artifacts job, too, but it's faster to run
+      # this step in both jobs instead of running the jobs sequentially
       - run: node ./scripts/rollup/consolidateBundleSizes.js
       - run: node ./scripts/tasks/danger
-      - run: ./scripts/circleci/upload_build.sh
-      - run: ./scripts/circleci/pack_and_store_artifact.sh
-      - store_artifacts:
-          path: ./node_modules.tgz
-      - store_artifacts:
-          path: ./build.tgz
-      - store_artifacts:
-          path: ./build/bundle-sizes.json
-      - store_artifacts:
-          # TODO: Update release script to use local file instead of pulling
-          # from artifacts.
-          path: ./scripts/error-codes/codes.json
 
   lint_build:
     docker: *docker
@@ -208,7 +269,7 @@ jobs:
 
 workflows:
   version: 2
-  commit:
+  stable:
     jobs:
       - setup
       - lint:
@@ -232,6 +293,9 @@ workflows:
       - process_artifacts:
           requires:
             - build
+      - sizebot:
+          requires:
+            - build
       - lint_build:
           requires:
             - build
@@ -247,9 +311,24 @@ workflows:
       - test_dom_fixtures:
           requires:
             - build
-  hourly:
+
+  experimental:
+    jobs:
+      - setup
+      - test_source_experimental:
+          requires:
+            - setup
+      - build_experimental:
+          requires:
+            - setup
+      - process_artifacts_experimental:
+          requires:
+            - build_experimental
+
+  fuzz_tests:
     triggers:
       - schedule:
+          # Fuzz tests run hourly
           cron: "0 * * * *"
           filters:
             branches:

@@ -103,9 +103,7 @@ describe('ReactDOMRoot', () => {
   it('throws a good message on invalid containers', () => {
     expect(() => {
       ReactDOM.unstable_createRoot(<div>Hi</div>);
-    }).toThrow(
-      'unstable_createRoot(...): Target container is not a DOM element.',
-    );
+    }).toThrow('createRoot(...): Target container is not a DOM element.');
   });
 
   it('warns when rendering with legacy API into createRoot() container', () => {
@@ -119,7 +117,7 @@ describe('ReactDOMRoot', () => {
       [
         // We care about this warning:
         'You are calling ReactDOM.render() on a container that was previously ' +
-          'passed to ReactDOM.unstable_createRoot(). This is not supported. ' +
+          'passed to ReactDOM.createRoot(). This is not supported. ' +
           'Did you mean to call root.render(element)?',
         // This is more of a symptom but restructuring the code to avoid it isn't worth it:
         'Replacing React-rendered children with a new root component.',
@@ -142,7 +140,7 @@ describe('ReactDOMRoot', () => {
       [
         // We care about this warning:
         'You are calling ReactDOM.hydrate() on a container that was previously ' +
-          'passed to ReactDOM.unstable_createRoot(). This is not supported. ' +
+          'passed to ReactDOM.createRoot(). This is not supported. ' +
           'Did you mean to call createRoot(container, {hydrate: true}).render(element)?',
         // This is more of a symptom but restructuring the code to avoid it isn't worth it:
         'Replacing React-rendered children with a new root component.',
@@ -163,7 +161,7 @@ describe('ReactDOMRoot', () => {
       [
         // We care about this warning:
         'You are calling ReactDOM.unmountComponentAtNode() on a container that was previously ' +
-          'passed to ReactDOM.unstable_createRoot(). This is not supported. Did you mean to call root.unmount()?',
+          'passed to ReactDOM.createRoot(). This is not supported. Did you mean to call root.unmount()?',
         // This is more of a symptom but restructuring the code to avoid it isn't worth it:
         "The node you're attempting to unmount was rendered by React and is not a top-level container.",
       ],
@@ -202,7 +200,7 @@ describe('ReactDOMRoot', () => {
     expect(() => {
       ReactDOM.unstable_createRoot(container);
     }).toWarnDev(
-      'You are calling ReactDOM.unstable_createRoot() on a container that was previously ' +
+      'You are calling ReactDOM.createRoot() on a container that was previously ' +
         'passed to ReactDOM.render(). This is not supported.',
       {withoutStack: true},
     );

@@ -304,7 +304,8 @@ function getPlugins(
   bundleType,
   globalName,
   moduleType,
-  pureExternalModules
+  pureExternalModules,
+  isExperimentalBuild
 ) {
   const findAndRecordErrorCodes = extractErrorCodes(errorCodeOpts);
   const forks = Modules.getForks(bundleType, entry, moduleType);
@@ -362,6 +363,7 @@ function getPlugins(
       __PROFILE__: isProfiling || !isProduction ? 'true' : 'false',
       __UMD__: isUMDBundle ? 'true' : 'false',
       'process.env.NODE_ENV': isProduction ? "'production'" : "'development'",
+      __EXPERIMENTAL__: isExperimentalBuild,
     }),
     // We still need CommonJS for external deps like object-assign.
     commonjs(),
@@ -485,6 +487,8 @@ async function createBundle(bundle, bundleType) {
     module => !importSideEffects[module]
   );
 
+  const isExperimentalBuild = process.env.RELEASE_CHANNEL === 'experimental';
+
   const rollupConfig = {
     input: resolvedEntry,
     treeshake: {
@@ -508,7 +512,8 @@ async function createBundle(bundle, bundleType) {
       bundleType,
       bundle.global,
       bundle.moduleType,
-      pureExternalModules
+      pureExternalModules,
+      isExperimentalBuild
     ),
     // We can't use getters in www.
     legacy:

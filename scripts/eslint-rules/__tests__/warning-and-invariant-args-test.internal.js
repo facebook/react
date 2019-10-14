@@ -20,7 +20,7 @@ ruleTester.run('eslint-rules/warning-and-invariant-args', rule, {
     'arbitraryFunction(a, b)',
     // These messages are in the error code map
     "invariant(false, 'Do not override existing functions.')",
-    "invariant(false, '%s(...): Target container is not a DOM element.', str)",
+    "invariant(false, 'createRoot(...): Target container is not a DOM element.')",
   ],
   invalid: [
     {
