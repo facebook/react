@@ -1888,6 +1888,119 @@ describe('ReactSuspenseList', () => {
     );
   });
 
+  it('eventually resolves a nested forwards suspense list with a hidden tail', async () => {
+    let B = createAsyncText('B');
+
+    function Foo() {
+      return (
+        <SuspenseList revealOrder="together">
+          <SuspenseList revealOrder="forwards" tail="hidden">
+            <Suspense fallback={<Text text="Loading A" />}>
+              <Text text="A" />
+            </Suspense>
+            <Suspense fallback={<Text text="Loading B" />}>
+              <B />
+            </Suspense>
+          </SuspenseList>
+          <Suspense fallback={<Text text="Loading C" />}>
+            <Text text="C" />
+          </Suspense>
+        </SuspenseList>
+      );
+    }
+
+    ReactNoop.render(<Foo />);
+
+    expect(Scheduler).toFlushAndYield([
+      'A',
+      'Suspend! [B]',
+      'Loading B',
+      'C',
+      'Loading C',
+    ]);
+
+    expect(ReactNoop).toMatchRenderedOutput(<span>Loading C</span>);
+
+    await B.resolve();
+
+    expect(Scheduler).toFlushAndYield(['A', 'B', 'C']);
+
+    expect(ReactNoop).toMatchRenderedOutput(
+      <>
+        <span>A</span>
+        <span>B</span>
+        <span>C</span>
+      </>,
+    );
+  });
+
+  it('eventually resolves two nested forwards suspense list with a hidden tail', async () => {
+    let B = createAsyncText('B');
+
+    function Foo({showB}) {
+      return (
+        <SuspenseList revealOrder="forwards">
+          <SuspenseList revealOrder="forwards" tail="hidden">
+            <Suspense fallback={<Text text="Loading A" />}>
+              <Text text="A" />
+            </Suspense>
+            {showB ? (
+              <Suspense fallback={<Text text="Loading B" />}>
+                <B />
+              </Suspense>
+            ) : null}
+          </SuspenseList>
+          <Suspense fallback={<Text text="Loading C" />}>
+            <Text text="C" />
+          </Suspense>
+        </SuspenseList>
+      );
+    }
+
+    ReactNoop.render(<Foo showB={false} />);
+
+    expect(Scheduler).toFlushAndYield(['A', 'C']);
+
+    expect(ReactNoop).toMatchRenderedOutput(
+      <>
+        <span>A</span>
+        <span>C</span>
+      </>,
+    );
+
+    // Showing the B later means that C has already committed
+    // so we're now effectively in "together" mode for the head.
+    ReactNoop.render(<Foo showB={true} />);
+
+    expect(Scheduler).toFlushAndYield([
+      'A',
+      'Suspend! [B]',
+      'Loading B',
+      'C',
+      'A',
+      'C',
+    ]);
+
+    expect(ReactNoop).toMatchRenderedOutput(
+      <>
+        <span>A</span>
+        <span>C</span>
+      </>,
+    );
+
+    await B.resolve();
+
+    expect(Scheduler).toFlushAndYield(['B']);
+
+    expect(ReactNoop).toMatchRenderedOutput(
+      <>
+        <span>A</span>
+        <span>B</span>
+        <span>C</span>
+      </>,
+    );
+  });
+
   it('can do unrelated adjacent updates', async () => {
     let updateAdjacent;
     function Adjacent() {
