@@ -2529,10 +2529,8 @@ export function attach(
   function forceRerender(id: number) {
     const fiber = findCurrentFiberUsingSlowPathById(id);
 
-    if (fiber !== null) {
-      if (typeof scheduleUpdate === 'function') {
-        scheduleUpdate(fiber);
-      }
+    if (fiber !== null && typeof scheduleUpdate === 'function') {
+      scheduleUpdate(fiber);
     }
   }
 
