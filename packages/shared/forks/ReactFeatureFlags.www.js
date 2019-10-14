@@ -39,7 +39,7 @@ export const warnAboutStringRefs = false;
 export const warnAboutDefaultPropsOnFunctionComponents = false;
 export const disableSchedulerTimeoutBasedOnReactExpirationTime = false;
 
-export const enableStableConcurrentModeAPIs = false;
+export const exposeConcurrentModeAPIs = false;
 
 export const enableSuspenseServerRenderer = true;
 

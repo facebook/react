@@ -252,7 +252,10 @@ jobs:
       - attach_workspace: *attach_workspace
       - *restore_yarn_cache
       - *run_yarn
-      - run: yarn test-build-devtools --maxWorkers=2
+      - run:
+          environment:
+            RELEASE_CHANNEL: stable
+          command: yarn test-build --maxWorkers=2
 
   test_dom_fixtures:
     docker: *docker

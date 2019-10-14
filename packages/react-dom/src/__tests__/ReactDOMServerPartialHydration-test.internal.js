@@ -75,7 +75,6 @@ describe('ReactDOMServerPartialHydration', () => {
     jest.resetModuleRegistry();
 
     ReactFeatureFlags = require('shared/ReactFeatureFlags');
-    ReactFeatureFlags.enableSuspenseServerRenderer = true;
     ReactFeatureFlags.enableSuspenseCallback = true;
     ReactFeatureFlags.enableFlareAPI = true;
 
@@ -89,6 +88,11 @@ describe('ReactDOMServerPartialHydration', () => {
 
     useHover = require('react-interactions/events/hover').useHover;
   });
+
+  if (!__EXPERIMENTAL__) {
+    it("empty test so Jest doesn't complain", () => {});
+    return;
+  }
 
   it('hydrates a parent even if a child Suspense boundary is blocked', async () => {
     let suspend = false;
@@ -130,7 +134,7 @@ describe('ReactDOMServerPartialHydration', () => {
     // On the client we don't have all data yet but we want to start
     // hydrating anyway.
     suspend = true;
-    let root = ReactDOM.unstable_createRoot(container, {hydrate: true});
+    let root = ReactDOM.createRoot(container, {hydrate: true});
     root.render(<App />);
     Scheduler.unstable_flushAll();
     jest.runAllTimers();
@@ -200,7 +204,7 @@ describe('ReactDOMServerPartialHydration', () => {
     // hydrating anyway.
     suspend = true;
     suspend2 = true;
-    let root = ReactDOM.unstable_createRoot(container, {
+    let root = ReactDOM.createRoot(container, {
       hydrate: true,
       hydrationOptions: {
         onHydrated(node) {
@@ -273,7 +277,7 @@ describe('ReactDOMServerPartialHydration', () => {
     // On the client we don't have all data yet but we want to start
     // hydrating anyway.
     suspend = true;
-    let root = ReactDOM.unstable_createRoot(container, {
+    let root = ReactDOM.createRoot(container, {
       hydrate: true,
       hydrationOptions: {
         onDeleted(node) {
@@ -411,7 +415,7 @@ describe('ReactDOMServerPartialHydration', () => {
     suspend = true;
 
     act(() => {
-      let root = ReactDOM.unstable_createRoot(container, {hydrate: true});
+      let root = ReactDOM.createRoot(container, {hydrate: true});
       root.render(<App />);
     });
 
@@ -468,7 +472,7 @@ describe('ReactDOMServerPartialHydration', () => {
     // hydrating anyway.
     suspend = true;
     act(() => {
-      let root = ReactDOM.unstable_createRoot(container, {hydrate: true});
+      let root = ReactDOM.createRoot(container, {hydrate: true});
       root.render(<App />);
     });
 
@@ -518,7 +522,7 @@ describe('ReactDOMServerPartialHydration', () => {
     // On the client we don't have all data yet but we want to start
     // hydrating anyway.
     suspend = true;
-    let root = ReactDOM.unstable_createRoot(container, {hydrate: true});
+    let root = ReactDOM.createRoot(container, {hydrate: true});
     root.render(<App text="Hello" className="hello" />);
     Scheduler.unstable_flushAll();
     jest.runAllTimers();
@@ -587,7 +591,7 @@ describe('ReactDOMServerPartialHydration', () => {
     // On the client we don't have all data yet but we want to start
     // hydrating anyway.
     suspend = true;
-    let root = ReactDOM.unstable_createRoot(container, {hydrate: true});
+    let root = ReactDOM.createRoot(container, {hydrate: true});
     root.render(<App text="Hello" className="hello" />);
     Scheduler.unstable_flushAll();
     jest.runAllTimers();
@@ -660,7 +664,7 @@ describe('ReactDOMServerPartialHydration', () => {
     // On the client we don't have all data yet but we want to start
     // hydrating anyway.
     suspend = true;
-    let root = ReactDOM.unstable_createRoot(container, {hydrate: true});
+    let root = ReactDOM.createRoot(container, {hydrate: true});
     root.render(<App text="Hello" className="hello" />);
     Scheduler.unstable_flushAll();
     jest.runAllTimers();
@@ -732,7 +736,7 @@ describe('ReactDOMServerPartialHydration', () => {
     // On the client we don't have all data yet but we want to start
     // hydrating anyway.
     suspend = true;
-    let root = ReactDOM.unstable_createRoot(container, {hydrate: true});
+    let root = ReactDOM.createRoot(container, {hydrate: true});
     root.render(<App text="Hello" className="hello" />);
     Scheduler.unstable_flushAll();
     jest.runAllTimers();
@@ -803,7 +807,7 @@ describe('ReactDOMServerPartialHydration', () => {
     // On the client we don't have all data yet but we want to start
     // hydrating anyway.
     suspend = true;
-    let root = ReactDOM.unstable_createRoot(container, {hydrate: true});
+    let root = ReactDOM.createRoot(container, {hydrate: true});
     root.render(<App text="Hello" className="hello" />);
     Scheduler.unstable_flushAll();
     jest.runAllTimers();
@@ -889,7 +893,7 @@ describe('ReactDOMServerPartialHydration', () => {
     // On the client we don't have all data yet but we want to start
     // hydrating anyway.
     suspend = true;
-    let root = ReactDOM.unstable_createRoot(container, {hydrate: true});
+    let root = ReactDOM.createRoot(container, {hydrate: true});
     root.render(
       <Context.Provider value={{text: 'Hello', className: 'hello'}}>
         <App />
@@ -971,7 +975,7 @@ describe('ReactDOMServerPartialHydration', () => {
     // On the client we don't have all data yet but we want to start
     // hydrating anyway.
     suspend = true;
-    let root = ReactDOM.unstable_createRoot(container, {hydrate: true});
+    let root = ReactDOM.createRoot(container, {hydrate: true});
     root.render(
       <Context.Provider value={{text: 'Hello', className: 'hello'}}>
         <App />
@@ -1049,7 +1053,7 @@ describe('ReactDOMServerPartialHydration', () => {
 
     // On the client we have the data available quickly for some reason.
     suspend = false;
-    let root = ReactDOM.unstable_createRoot(container, {hydrate: true});
+    let root = ReactDOM.createRoot(container, {hydrate: true});
     root.render(<App />);
     Scheduler.unstable_flushAll();
     jest.runAllTimers();
@@ -1105,7 +1109,7 @@ describe('ReactDOMServerPartialHydration', () => {
 
     // On the client we have the data available quickly for some reason.
     suspend = false;
-    let root = ReactDOM.unstable_createRoot(container, {hydrate: true});
+    let root = ReactDOM.createRoot(container, {hydrate: true});
     root.render(<App />);
     Scheduler.unstable_flushAll();
     // This will have exceeded the suspended time so we should timeout.
@@ -1166,7 +1170,7 @@ describe('ReactDOMServerPartialHydration', () => {
 
     // On the client we have the data available quickly for some reason.
     suspend = false;
-    let root = ReactDOM.unstable_createRoot(container, {hydrate: true});
+    let root = ReactDOM.createRoot(container, {hydrate: true});
     root.render(<App />);
     Scheduler.unstable_flushAll();
     // This will have exceeded the suspended time so we should timeout.
@@ -1242,7 +1246,7 @@ describe('ReactDOMServerPartialHydration', () => {
 
     // Attempt to hydrate the content.
     suspend = false;
-    let root = ReactDOM.unstable_createRoot(container, {hydrate: true});
+    let root = ReactDOM.createRoot(container, {hydrate: true});
     root.render(<App />);
     Scheduler.unstable_flushAll();
     jest.runAllTimers();
@@ -1335,7 +1339,7 @@ describe('ReactDOMServerPartialHydration', () => {
 
     // Attempt to hydrate the content.
     suspend = false;
-    let root = ReactDOM.unstable_createRoot(container, {hydrate: true});
+    let root = ReactDOM.createRoot(container, {hydrate: true});
     root.render(<App />);
     Scheduler.unstable_flushAll();
     jest.runAllTimers();
@@ -1413,7 +1417,7 @@ describe('ReactDOMServerPartialHydration', () => {
 
     let spanB = container.getElementsByTagName('span')[1];
 
-    let root = ReactDOM.unstable_createRoot(container, {hydrate: true});
+    let root = ReactDOM.createRoot(container, {hydrate: true});
 
     suspend = true;
     act(() => {
@@ -1495,7 +1499,7 @@ describe('ReactDOMServerPartialHydration', () => {
 
     let spanA = container.getElementsByTagName('span')[0];
 
-    let root = ReactDOM.unstable_createRoot(container, {hydrate: true});
+    let root = ReactDOM.createRoot(container, {hydrate: true});
 
     suspend = true;
     act(() => {
@@ -1575,7 +1579,7 @@ describe('ReactDOMServerPartialHydration', () => {
     // Put the suspense node in pending state.
     suspenseNode.data = '$?';
 
-    let root = ReactDOM.unstable_createRoot(container, {hydrate: true});
+    let root = ReactDOM.createRoot(container, {hydrate: true});
 
     suspend = true;
     act(() => {
@@ -1652,7 +1656,7 @@ describe('ReactDOMServerPartialHydration', () => {
     let span = container.getElementsByTagName('span')[1];
 
     suspend = false;
-    let root = ReactDOM.unstable_createRoot(container, {hydrate: true});
+    let root = ReactDOM.createRoot(container, {hydrate: true});
     root.render(<App />);
     Scheduler.unstable_flushAll();
     jest.runAllTimers();
@@ -1695,7 +1699,7 @@ describe('ReactDOMServerPartialHydration', () => {
 
     // On the client we don't have all data yet but we want to start
     // hydrating anyway.
-    let root = ReactDOM.unstable_createRoot(container, {hydrate: true});
+    let root = ReactDOM.createRoot(container, {hydrate: true});
     root.render(<App />);
     Scheduler.unstable_flushAll();
     jest.runAllTimers();
@@ -1748,7 +1752,7 @@ describe('ReactDOMServerPartialHydration', () => {
     // On the client we don't have all data yet but we want to start
     // hydrating anyway.
     suspend = true;
-    let root = ReactDOM.unstable_createRoot(container, {hydrate: true});
+    let root = ReactDOM.createRoot(container, {hydrate: true});
     root.render(
       <ClassName.Provider value={'hello'}>
         <App text="Hello" />
@@ -1840,7 +1844,7 @@ describe('ReactDOMServerPartialHydration', () => {
     // On the client we don't have all data yet but we want to start
     // hydrating anyway.
     suspend = true;
-    let root = ReactDOM.unstable_createRoot(container, {hydrate: true});
+    let root = ReactDOM.createRoot(container, {hydrate: true});
     root.render(<App />);
     Scheduler.unstable_flushAll();
     jest.runAllTimers();
@@ -1914,7 +1918,7 @@ describe('ReactDOMServerPartialHydration', () => {
     // On the client we don't have all data yet but we want to start
     // hydrating anyway.
     suspend = true;
-    let root = ReactDOM.unstable_createRoot(container, {hydrate: true});
+    let root = ReactDOM.createRoot(container, {hydrate: true});
     root.render(<App />);
 
     // We'll do one click before hydrating.
@@ -1995,7 +1999,7 @@ describe('ReactDOMServerPartialHydration', () => {
     // On the client we don't have all data yet but we want to start
     // hydrating anyway.
     suspend = true;
-    let root = ReactDOM.unstable_createRoot(container, {hydrate: true});
+    let root = ReactDOM.createRoot(container, {hydrate: true});
     root.render(<App />);
 
     // We'll do one click before hydrating.
@@ -2072,7 +2076,7 @@ describe('ReactDOMServerPartialHydration', () => {
     // On the client we don't have all data yet but we want to start
     // hydrating anyway.
     suspend = true;
-    let root = ReactDOM.unstable_createRoot(container, {hydrate: true});
+    let root = ReactDOM.createRoot(container, {hydrate: true});
     root.render(<App />);
 
     // We'll do one click before hydrating.
@@ -2151,7 +2155,7 @@ describe('ReactDOMServerPartialHydration', () => {
     // On the client we don't have all data yet but we want to start
     // hydrating anyway.
     suspend = true;
-    let root = ReactDOM.unstable_createRoot(container, {hydrate: true});
+    let root = ReactDOM.createRoot(container, {hydrate: true});
     root.render(<App />);
     Scheduler.unstable_flushAll();
     jest.runAllTimers();
@@ -2216,7 +2220,7 @@ describe('ReactDOMServerPartialHydration', () => {
 
     // We're going to use a different root as a parent.
     // This lets us detect whether an event goes through React's event system.
-    let parentRoot = ReactDOM.unstable_createRoot(parentContainer);
+    let parentRoot = ReactDOM.createRoot(parentContainer);
     parentRoot.render(<Parent />);
     Scheduler.unstable_flushAll();
 
@@ -2229,7 +2233,7 @@ describe('ReactDOMServerPartialHydration', () => {
     suspend = true;
 
     // Hydrate asynchronously.
-    let root = ReactDOM.unstable_createRoot(childContainer, {hydrate: true});
+    let root = ReactDOM.createRoot(childContainer, {hydrate: true});
     root.render(<App />);
     jest.runAllTimers();
     Scheduler.unstable_flushAll();
@@ -2319,7 +2323,7 @@ describe('ReactDOMServerPartialHydration', () => {
     // hydrating anyway.
     suspend1 = true;
     suspend2 = true;
-    let root = ReactDOM.unstable_createRoot(container, {hydrate: true});
+    let root = ReactDOM.createRoot(container, {hydrate: true});
     root.render(<App />);
 
     Scheduler.unstable_flushAll();
@@ -2434,7 +2438,7 @@ describe('ReactDOMServerPartialHydration', () => {
     // hydrating anyway.
     suspend1 = true;
     suspend2 = true;
-    let root = ReactDOM.unstable_createRoot(container, {hydrate: true});
+    let root = ReactDOM.createRoot(container, {hydrate: true});
     root.render(<App />);
 
     Scheduler.unstable_flushAll();

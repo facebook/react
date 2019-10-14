@@ -27,29 +27,31 @@ function sleep(period) {
 
 describe('ReactTestUtils.act()', () => {
   // first we run all the tests with concurrent mode
-  let concurrentRoot = null;
-  function renderConcurrent(el, dom) {
-    concurrentRoot = ReactDOM.unstable_createRoot(dom);
-    concurrentRoot.render(el);
-  }
+  if (__EXPERIMENTAL__) {
+    let concurrentRoot = null;
+    const renderConcurrent = (el, dom) => {
+      concurrentRoot = ReactDOM.createRoot(dom);
+      concurrentRoot.render(el);
+    };
 
-  function unmountConcurrent(_dom) {
-    if (concurrentRoot !== null) {
-      concurrentRoot.unmount();
-      concurrentRoot = null;
-    }
-  }
+    const unmountConcurrent = _dom => {
+      if (concurrentRoot !== null) {
+        concurrentRoot.unmount();
+        concurrentRoot = null;
+      }
+    };
 
-  function rerenderConcurrent(el) {
-    concurrentRoot.render(el);
-  }
+    const rerenderConcurrent = el => {
+      concurrentRoot.render(el);
+    };
 
-  runActTests(
-    'concurrent mode',
-    renderConcurrent,
-    unmountConcurrent,
-    rerenderConcurrent,
-  );
+    runActTests(
+      'concurrent mode',
+      renderConcurrent,
+      unmountConcurrent,
+      rerenderConcurrent,
+    );
+  }
 
   // and then in sync mode
 
@@ -71,24 +73,26 @@ describe('ReactTestUtils.act()', () => {
   runActTests('legacy sync mode', renderSync, unmountSync, rerenderSync);
 
   // and then in batched mode
-  let batchedRoot = null;
-  function renderBatched(el, dom) {
-    batchedRoot = ReactDOM.unstable_createSyncRoot(dom);
-    batchedRoot.render(el);
-  }
+  if (__EXPERIMENTAL__) {
+    let batchedRoot = null;
+    const renderBatched = (el, dom) => {
+      batchedRoot = ReactDOM.createSyncRoot(dom);
+      batchedRoot.render(el);
+    };
 
-  function unmountBatched(dom) {
-    if (batchedRoot !== null) {
-      batchedRoot.unmount();
-      batchedRoot = null;
-    }
-  }
+    const unmountBatched = dom => {
+      if (batchedRoot !== null) {
+        batchedRoot.unmount();
+        batchedRoot = null;
+      }
+    };
 
-  function rerenderBatched(el) {
-    batchedRoot.render(el);
-  }
+    const rerenderBatched = el => {
+      batchedRoot.render(el);
+    };
 
-  runActTests('batched mode', renderBatched, unmountBatched, rerenderBatched);
+    runActTests('batched mode', renderBatched, unmountBatched, rerenderBatched);
+  }
 
   describe('unacted effects', () => {
     function App() {
@@ -116,31 +120,29 @@ describe('ReactTestUtils.act()', () => {
       ]);
     });
 
-    it('warns in batched mode', () => {
-      expect(() => {
-        const root = ReactDOM.unstable_createSyncRoot(
-          document.createElement('div'),
-        );
-        root.render(<App />);
-        Scheduler.unstable_flushAll();
-      }).toWarnDev([
-        'An update to App ran an effect, but was not wrapped in act(...)',
-        'An update to App ran an effect, but was not wrapped in act(...)',
-      ]);
-    });
+    if (__EXPERIMENTAL__) {
+      it('warns in batched mode', () => {
+        expect(() => {
+          const root = ReactDOM.createSyncRoot(document.createElement('div'));
+          root.render(<App />);
+          Scheduler.unstable_flushAll();
+        }).toWarnDev([
+          'An update to App ran an effect, but was not wrapped in act(...)',
+          'An update to App ran an effect, but was not wrapped in act(...)',
+        ]);
+      });
 
-    it('warns in concurrent mode', () => {
-      expect(() => {
-        const root = ReactDOM.unstable_createRoot(
-          document.createElement('div'),
-        );
-        root.render(<App />);
-        Scheduler.unstable_flushAll();
-      }).toWarnDev([
-        'An update to App ran an effect, but was not wrapped in act(...)',
-        'An update to App ran an effect, but was not wrapped in act(...)',
-      ]);
-    });
+      it('warns in concurrent mode', () => {
+        expect(() => {
+          const root = ReactDOM.createRoot(document.createElement('div'));
+          root.render(<App />);
+          Scheduler.unstable_flushAll();
+        }).toWarnDev([
+          'An update to App ran an effect, but was not wrapped in act(...)',
+          'An update to App ran an effect, but was not wrapped in act(...)',
+        ]);
+      });
+    }
   });
 });
 
