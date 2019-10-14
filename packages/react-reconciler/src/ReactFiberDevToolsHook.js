@@ -41,9 +41,11 @@ export function injectInternals(internals: Object): boolean {
   }
   if (!hook.supportsFiber) {
     if (__DEV__) {
-      warningWithoutStack('The installed version of React DevTools is too old and will not work ' +
-        'with the current version of React. Please update React DevTools. ' +
-        'https://fb.me/react-devtools');
+      warningWithoutStack(
+        'The installed version of React DevTools is too old and will not work ' +
+          'with the current version of React. Please update React DevTools. ' +
+          'https://fb.me/react-devtools',
+      );
     }
     // DevTools exists, even though it doesn't support Fiber.
     return true;

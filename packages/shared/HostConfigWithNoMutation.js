@@ -13,9 +13,11 @@ import invariant from 'shared/invariant';
 // can re-export everything from this module.
 
 function shim(...args: any) {
-  invariant('The current renderer does not support mutation. ' +
-    'This error is likely caused by a bug in React. ' +
-    'Please file an issue.');
+  invariant(
+    'The current renderer does not support mutation. ' +
+      'This error is likely caused by a bug in React. ' +
+      'Please file an issue.',
+  );
 }
 
 // Mutation (when unsupported)

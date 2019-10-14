@@ -169,8 +169,10 @@ function pushTopLevelContextObject(
     return;
   } else {
     if (!(contextStackCursor.current === emptyContextObject)) {
-      invariant('Unexpected context found on stack. ' +
-        'This error is likely caused by a bug in React. Please file an issue.');
+      invariant(
+        'Unexpected context found on stack. ' +
+          'This error is likely caused by a bug in React. Please file an issue.',
+      );
     }
 
     push(contextStackCursor, context, fiber);
@@ -202,7 +204,7 @@ function processChildContext(
               'on the instance. You can either define getChildContext() on %s or remove ' +
               'childContextTypes from it.',
             componentName,
-            componentName
+            componentName,
           );
         }
       }
@@ -224,7 +226,7 @@ function processChildContext(
         invariant(
           '%s.getChildContext(): key "%s" is not defined in childContextTypes.',
           getComponentName(type) || 'Unknown',
-          contextKey
+          contextKey,
         );
       }
     }
@@ -285,8 +287,10 @@ function invalidateContextProvider(
     const instance = workInProgress.stateNode;
 
     if (!instance) {
-      invariant('Expected to have an instance by this point. ' +
-        'This error is likely caused by a bug in React. Please file an issue.');
+      invariant(
+        'Expected to have an instance by this point. ' +
+          'This error is likely caused by a bug in React. Please file an issue.',
+      );
     }
 
     if (didChange) {
@@ -321,8 +325,10 @@ function findCurrentUnmaskedContext(fiber: Fiber): Object {
     if (!(isFiberMounted(fiber) && fiber.tag === ClassComponent)) {
       // Currently this is only used with renderSubtreeIntoContainer; not sure if it
       // makes sense elsewhere
-      invariant('Expected subtree parent to be a mounted class component. ' +
-        'This error is likely caused by a bug in React. Please file an issue.');
+      invariant(
+        'Expected subtree parent to be a mounted class component. ' +
+          'This error is likely caused by a bug in React. Please file an issue.',
+      );
     }
 
     let node = fiber;
@@ -340,8 +346,10 @@ function findCurrentUnmaskedContext(fiber: Fiber): Object {
       }
       node = node.return;
     } while (node !== null);
-    invariant('Found unexpected detached subtree parent. ' +
-      'This error is likely caused by a bug in React. Please file an issue.');
+    invariant(
+      'Found unexpected detached subtree parent. ' +
+        'This error is likely caused by a bug in React. Please file an issue.',
+    );
   }
 }
 

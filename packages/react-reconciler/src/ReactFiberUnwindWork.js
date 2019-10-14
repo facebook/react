@@ -58,8 +58,10 @@ function unwindWork(
       const effectTag = workInProgress.effectTag;
 
       if (!((effectTag & DidCapture) === NoEffect)) {
-        invariant('The root failed to unmount after an error. This is likely a bug in ' +
-          'React. Please file an issue.');
+        invariant(
+          'The root failed to unmount after an error. This is likely a bug in ' +
+            'React. Please file an issue.',
+        );
       }
 
       workInProgress.effectTag = (effectTag & ~ShouldCapture) | DidCapture;
@@ -77,8 +79,10 @@ function unwindWork(
           workInProgress.memoizedState;
         if (suspenseState !== null && suspenseState.dehydrated !== null) {
           if (!(workInProgress.alternate !== null)) {
-            invariant('Threw in newly mounted dehydrated component. This is likely a bug in ' +
-              'React. Please file an issue.');
+            invariant(
+              'Threw in newly mounted dehydrated component. This is likely a bug in ' +
+                'React. Please file an issue.',
+            );
           }
 
           resetHydrationState();

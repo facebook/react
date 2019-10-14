@@ -27,7 +27,9 @@ function accumulateInto<T>(
   next: T | Array<T>,
 ): T | Array<T> {
   if (!(next != null)) {
-    invariant('accumulateInto(...): Accumulated items must not be null or undefined.');
+    invariant(
+      'accumulateInto(...): Accumulated items must not be null or undefined.',
+    );
   }
 
   if (current == null) {

@@ -87,7 +87,7 @@ export function initWrapperState(element: Element, props: Object) {
           'element and remove one of these props. More info: ' +
           'https://fb.me/react-controlled-components',
         getCurrentFiberOwnerNameInDevOrNull() || 'A component',
-        props.type
+        props.type,
       );
       didWarnCheckedDefaultChecked = true;
     }
@@ -104,7 +104,7 @@ export function initWrapperState(element: Element, props: Object) {
           'element and remove one of these props. More info: ' +
           'https://fb.me/react-controlled-components',
         getCurrentFiberOwnerNameInDevOrNull() || 'A component',
-        props.type
+        props.type,
       );
       didWarnValueDefaultValue = true;
     }
@@ -146,7 +146,7 @@ export function updateWrapper(element: Element, props: Object) {
           'Input elements should not switch from uncontrolled to controlled (or vice versa). ' +
           'Decide between using a controlled or uncontrolled input ' +
           'element for the lifetime of the component. More info: https://fb.me/react-controlled-components',
-        props.type
+        props.type,
       );
       didWarnUncontrolledToControlled = true;
     }
@@ -160,7 +160,7 @@ export function updateWrapper(element: Element, props: Object) {
           'Input elements should not switch from controlled to uncontrolled (or vice versa). ' +
           'Decide between using a controlled or uncontrolled input ' +
           'element for the lifetime of the component. More info: https://fb.me/react-controlled-components',
-        props.type
+        props.type,
       );
       didWarnControlledToUncontrolled = true;
     }
@@ -379,8 +379,10 @@ function updateNamedCousins(rootNode, props) {
       const otherProps = getFiberCurrentPropsFromNode(otherNode);
 
       if (!otherProps) {
-        invariant('ReactDOMInput: Mixing React and non-React radio inputs with the ' +
-          'same `name` is not supported.');
+        invariant(
+          'ReactDOMInput: Mixing React and non-React radio inputs with the ' +
+            'same `name` is not supported.',
+        );
       }
 
       // We need update the tracked value on the named cousin since the value

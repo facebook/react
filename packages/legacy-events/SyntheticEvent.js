@@ -293,7 +293,7 @@ function getPooledWarningPropertyDefinition(propName, getVal) {
           'See https://fb.me/react-event-pooling for more information.',
         action,
         propName,
-        result
+        result,
       );
     }
   }
@@ -324,7 +324,9 @@ function releasePooledEvent(event) {
   const EventConstructor = this;
 
   if (!(event instanceof EventConstructor)) {
-    invariant('Trying to release an event instance into a pool of a different type.');
+    invariant(
+      'Trying to release an event instance into a pool of a different type.',
+    );
   }
 
   event.destructor();

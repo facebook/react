@@ -113,7 +113,7 @@ function updateEventListener(
   if (!(responder && responder.$$typeof === REACT_RESPONDER_TYPE)) {
     invariant(
       'An invalid value was used as an event listener. Expect one or many event ' +
-        'listeners created via React.unstable_useResponder().'
+        'listeners created via React.unstable_useResponder().',
     );
   }
 
@@ -121,8 +121,11 @@ function updateEventListener(
   if (visistedResponders.has(responder)) {
     // show warning
     if (__DEV__) {
-      warning('Duplicate event responder "%s" found in event listeners. ' +
-        'Event listeners passed to elements cannot use the same event responder more than once.', responder.displayName);
+      warning(
+        'Duplicate event responder "%s" found in event listeners. ' +
+          'Event listeners passed to elements cannot use the same event responder more than once.',
+        responder.displayName,
+      );
     }
     return;
   }

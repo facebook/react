@@ -46,7 +46,10 @@ const ReactNativeBridgeEventPlugin = {
     const directDispatchConfig = customDirectEventTypes[topLevelType];
 
     if (!(bubbleDispatchConfig || directDispatchConfig)) {
-      invariant('Unsupported top level event type "%s" dispatched', topLevelType);
+      invariant(
+        'Unsupported top level event type "%s" dispatched',
+        topLevelType,
+      );
     }
 
     const event = SyntheticEvent.getPooled(

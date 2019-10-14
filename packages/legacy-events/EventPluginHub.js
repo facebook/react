@@ -119,7 +119,7 @@ export function getListener(inst: Fiber, registrationName: string) {
     invariant(
       'Expected `%s` listener to be a function, instead got a value of `%s` type.',
       registrationName,
-      typeof listener
+      typeof listener,
     );
   }
 

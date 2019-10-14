@@ -163,9 +163,11 @@ function traverseAllChildrenImpl(
         // Warn about using Maps as children
         if (iteratorFn === children.entries) {
           if (!didWarnAboutMaps) {
-            warning('Using Maps as children is unsupported and will likely yield ' +
-              'unexpected results. Convert it to a sequence/iterable of keyed ' +
-              'ReactElements instead.');
+            warning(
+              'Using Maps as children is unsupported and will likely yield ' +
+                'unexpected results. Convert it to a sequence/iterable of keyed ' +
+                'ReactElements instead.',
+            );
           }
 
           didWarnAboutMaps = true;
@@ -199,7 +201,7 @@ function traverseAllChildrenImpl(
         childrenString === '[object Object]'
           ? 'object with keys {' + Object.keys(children).join(', ') + '}'
           : childrenString,
-        addendum
+        addendum,
       );
     }
   }
@@ -385,7 +387,9 @@ function toArray(children) {
  */
 function onlyChild(children) {
   if (!isValidElement(children)) {
-    invariant('React.Children.only expected to receive a single React element child.');
+    invariant(
+      'React.Children.only expected to receive a single React element child.',
+    );
   }
 
   return children;

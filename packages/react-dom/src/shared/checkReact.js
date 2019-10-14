@@ -11,6 +11,8 @@ import React from 'react';
 import invariant from 'shared/invariant';
 
 if (!React) {
- invariant('ReactDOM was loaded before React. Make sure you load ' +
-   'the React package before loading ReactDOM.');
+  invariant(
+    'ReactDOM was loaded before React. Make sure you load ' +
+      'the React package before loading ReactDOM.',
+  );
 }

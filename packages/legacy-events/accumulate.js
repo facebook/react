@@ -21,7 +21,9 @@ function accumulate<T>(
   next: T | Array<T>,
 ): T | Array<T> {
   if (!(next != null)) {
-    invariant('accumulate(...): Accumulated items must not be null or undefined.');
+    invariant(
+      'accumulate(...): Accumulated items must not be null or undefined.',
+    );
   }
 
   if (current == null) {

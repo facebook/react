@@ -117,7 +117,9 @@ export function clearCaughtError() {
     caughtError = null;
     return error;
   } else {
-    invariant('clearCaughtError was called but no error was captured. This error ' +
-      'is likely caused by a bug in React. Please file an issue.');
+    invariant(
+      'clearCaughtError was called but no error was captured. This error ' +
+        'is likely caused by a bug in React. Please file an issue.',
+    );
   }
 }

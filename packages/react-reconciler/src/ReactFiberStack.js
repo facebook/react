@@ -75,7 +75,9 @@ function push<T>(cursor: StackCursor<T>, value: T, fiber: Fiber): void {
 function checkThatStackIsEmpty() {
   if (__DEV__) {
     if (index !== -1) {
-      warningWithoutStack('Expected an empty stack. Something was not reset properly.');
+      warningWithoutStack(
+        'Expected an empty stack. Something was not reset properly.',
+      );
     }
   }
 }

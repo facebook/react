@@ -11,7 +11,9 @@ import invariant from 'shared/invariant';
 const ReactFbErrorUtils = require('ReactFbErrorUtils');
 
 if (!(typeof ReactFbErrorUtils.invokeGuardedCallback === 'function')) {
-  invariant('Expected ReactFbErrorUtils.invokeGuardedCallback to be a function.');
+  invariant(
+    'Expected ReactFbErrorUtils.invokeGuardedCallback to be a function.',
+  );
 }
 
 let invokeGuardedCallbackImpl = function<A, B, C, D, E, F, Context>(

@@ -99,11 +99,14 @@ export function isMounted(component: React$Component<any, any>): boolean {
       const instance = ownerFiber.stateNode;
 
       if (!instance._warnedAboutRefsInRender) {
-        warningWithoutStack('%s is accessing isMounted inside its render() function. ' +
-          'render() should be a pure function of props and state. It should ' +
-          'never access something that requires stale data from the previous ' +
-          'render, such as refs. Move this logic to componentDidMount and ' +
-          'componentDidUpdate instead.', getComponentName(ownerFiber.type) || 'A component');
+        warningWithoutStack(
+          '%s is accessing isMounted inside its render() function. ' +
+            'render() should be a pure function of props and state. It should ' +
+            'never access something that requires stale data from the previous ' +
+            'render, such as refs. Move this logic to componentDidMount and ' +
+            'componentDidUpdate instead.',
+          getComponentName(ownerFiber.type) || 'A component',
+        );
       }
 
       instance._warnedAboutRefsInRender = true;
@@ -237,15 +240,19 @@ export function findCurrentFiberUsingSlowPath(fiber: Fiber): Fiber | null {
         }
 
         if (!didFindChild) {
-          invariant('Child was not found in either parent set. This indicates a bug ' +
-            'in React related to the return pointer. Please file an issue.');
+          invariant(
+            'Child was not found in either parent set. This indicates a bug ' +
+              'in React related to the return pointer. Please file an issue.',
+          );
         }
       }
     }
 
     if (!(a.alternate === b)) {
-      invariant("Return fibers should always be each others' alternates. " +
-        'This error is likely caused by a bug in React. Please file an issue.');
+      invariant(
+        "Return fibers should always be each others' alternates. " +
+          'This error is likely caused by a bug in React. Please file an issue.',
+      );
     }
   }
 

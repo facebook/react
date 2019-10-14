@@ -41,7 +41,7 @@ if (__DEV__) {
       // As Andi Smith suggests
       // (http://www.andismith.com/blog/2012/02/modernizr-prefixed/), an `-ms` prefix
       // is converted to lowercase `ms`.
-      camelize(name.replace(msPattern, 'ms-'))
+      camelize(name.replace(msPattern, 'ms-')),
     );
   };
 
@@ -54,7 +54,7 @@ if (__DEV__) {
     warning(
       'Unsupported vendor-prefixed style property %s. Did you mean %s?',
       name,
-      name.charAt(0).toUpperCase() + name.slice(1)
+      name.charAt(0).toUpperCase() + name.slice(1),
     );
   };
 
@@ -64,8 +64,12 @@ if (__DEV__) {
     }
 
     warnedStyleValues[value] = true;
-    warning("Style property values shouldn't contain a semicolon. " +
-      'Try "%s: %s" instead.', name, value.replace(badStyleValueWithSemicolonPattern, ''));
+    warning(
+      "Style property values shouldn't contain a semicolon. " +
+        'Try "%s: %s" instead.',
+      name,
+      value.replace(badStyleValueWithSemicolonPattern, ''),
+    );
   };
 
   const warnStyleValueIsNaN = function(name, value) {
@@ -83,7 +87,10 @@ if (__DEV__) {
     }
 
     warnedForInfinityValue = true;
-    warning('`Infinity` is an invalid value for the `%s` css style property.', name);
+    warning(
+      '`Infinity` is an invalid value for the `%s` css style property.',
+      name,
+    );
   };
 
   warnValidStyle = function(name, value) {

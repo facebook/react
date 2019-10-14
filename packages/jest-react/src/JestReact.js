@@ -30,8 +30,10 @@ function assertYieldsWereCleared(root) {
   const actualYields = Scheduler.unstable_clearYields();
 
   if (!(actualYields.length === 0)) {
-    invariant('Log of yielded values is not empty. ' +
-      'Call expect(ReactTestRenderer).unstable_toHaveYielded(...) first.');
+    invariant(
+      'Log of yielded values is not empty. ' +
+        'Call expect(ReactTestRenderer).unstable_toHaveYielded(...) first.',
+    );
   }
 }
 

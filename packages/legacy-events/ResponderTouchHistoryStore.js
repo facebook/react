@@ -99,8 +99,12 @@ function getTouchIdentifier({identifier}: Touch): number {
 
   if (__DEV__) {
     if (!(identifier <= MAX_TOUCH_BANK)) {
-      warningWithoutStack('Touch identifier %s is greater than maximum supported %s which causes ' +
-        'performance issues backfilling array locations for all of the indices.', identifier, MAX_TOUCH_BANK);
+      warningWithoutStack(
+        'Touch identifier %s is greater than maximum supported %s which causes ' +
+          'performance issues backfilling array locations for all of the indices.',
+        identifier,
+        MAX_TOUCH_BANK,
+      );
     }
   }
   return identifier;

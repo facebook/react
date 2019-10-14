@@ -299,10 +299,12 @@ export function enqueueUpdate<State>(fiber: Fiber, update: Update<State>) {
         (queue2 !== null && currentlyProcessingQueue === queue2)) &&
       !didWarnUpdateInsideUpdate
     ) {
-      warningWithoutStack('An update (setState, replaceState, or forceUpdate) was scheduled ' +
-        'from inside an update function. Update functions should be pure, ' +
-        'with zero side-effects. Consider using componentDidUpdate or a ' +
-        'callback.');
+      warningWithoutStack(
+        'An update (setState, replaceState, or forceUpdate) was scheduled ' +
+          'from inside an update function. Update functions should be pure, ' +
+          'with zero side-effects. Consider using componentDidUpdate or a ' +
+          'callback.',
+      );
       didWarnUpdateInsideUpdate = true;
     }
   }
@@ -591,8 +593,11 @@ export function processUpdateQueue<State>(
 
 function callCallback(callback, context) {
   if (!(typeof callback === 'function')) {
-    invariant('Invalid argument passed as callback. Expected a function. Instead ' +
-      'received: %s', callback);
+    invariant(
+      'Invalid argument passed as callback. Expected a function. Instead ' +
+        'received: %s',
+      callback,
+    );
   }
 
   callback.call(context);

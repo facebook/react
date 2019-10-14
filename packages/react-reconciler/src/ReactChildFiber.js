@@ -77,8 +77,10 @@ if (__DEV__) {
     }
 
     if (!(typeof child._store === 'object')) {
-      invariant('React Component in warnForMissingKey should have a _store. ' +
-        'This error is likely caused by a bug in React. Please file an issue.');
+      invariant(
+        'React Component in warnForMissingKey should have a _store. ' +
+          'This error is likely caused by a bug in React. Please file an issue.',
+      );
     }
 
     child._store.validated = true;
@@ -93,9 +95,11 @@ if (__DEV__) {
     }
     ownerHasKeyUseWarning[currentComponentErrorInfo] = true;
 
-    warning('Each child in a list should have a unique ' +
-      '"key" prop. See https://fb.me/react-warning-keys for ' +
-      'more information.');
+    warning(
+      'Each child in a list should have a unique ' +
+        '"key" prop. See https://fb.me/react-warning-keys for ' +
+        'more information.',
+    );
   };
 }
 
@@ -119,17 +123,26 @@ function coerceRef(
         const componentName = getComponentName(returnFiber.type) || 'Component';
         if (!didWarnAboutStringRefs[componentName]) {
           if (warnAboutStringRefs) {
-            warningWithoutStack('Component "%s" contains the string ref "%s". Support for string refs ' +
-              'will be removed in a future major release. We recommend using ' +
-              'useRef() or createRef() instead. ' +
-              'Learn more about using refs safely here: ' +
-              'https://fb.me/react-strict-mode-string-ref%s', componentName, mixedRef, getStackByFiberInDevAndProd(returnFiber));
+            warningWithoutStack(
+              'Component "%s" contains the string ref "%s". Support for string refs ' +
+                'will be removed in a future major release. We recommend using ' +
+                'useRef() or createRef() instead. ' +
+                'Learn more about using refs safely here: ' +
+                'https://fb.me/react-strict-mode-string-ref%s',
+              componentName,
+              mixedRef,
+              getStackByFiberInDevAndProd(returnFiber),
+            );
           } else {
-            warningWithoutStack('A string ref, "%s", has been found within a strict mode tree. ' +
-              'String refs are a source of potential bugs and should be avoided. ' +
-              'We recommend using useRef() or createRef() instead. ' +
-              'Learn more about using refs safely here: ' +
-              'https://fb.me/react-strict-mode-string-ref%s', mixedRef, getStackByFiberInDevAndProd(returnFiber));
+            warningWithoutStack(
+              'A string ref, "%s", has been found within a strict mode tree. ' +
+                'String refs are a source of potential bugs and should be avoided. ' +
+                'We recommend using useRef() or createRef() instead. ' +
+                'Learn more about using refs safely here: ' +
+                'https://fb.me/react-strict-mode-string-ref%s',
+              mixedRef,
+              getStackByFiberInDevAndProd(returnFiber),
+            );
           }
           didWarnAboutStringRefs[componentName] = true;
         }
@@ -143,16 +156,21 @@ function coerceRef(
         const ownerFiber = ((owner: any): Fiber);
 
         if (!(ownerFiber.tag === ClassComponent)) {
-          invariant('Function components cannot have refs. ' +
-            'Did you mean to use React.forwardRef()?');
+          invariant(
+            'Function components cannot have refs. ' +
+              'Did you mean to use React.forwardRef()?',
+          );
         }
 
         inst = ownerFiber.stateNode;
       }
 
       if (!inst) {
-        invariant('Missing owner for string ref %s. This error is likely caused by a ' +
-          'bug in React. Please file an issue.', mixedRef);
+        invariant(
+          'Missing owner for string ref %s. This error is likely caused by a ' +
+            'bug in React. Please file an issue.',
+          mixedRef,
+        );
       }
 
       const stringRef = '' + mixedRef;
@@ -182,7 +200,7 @@ function coerceRef(
     } else {
       if (!(typeof mixedRef === 'string')) {
         invariant(
-          'Expected ref to be a function, a string, an object returned by React.createRef(), or null.'
+          'Expected ref to be a function, a string, an object returned by React.createRef(), or null.',
         );
       }
 
@@ -194,7 +212,7 @@ function coerceRef(
             "2. You may be adding a ref to a component that was not created inside a component's render method\n" +
             '3. You have multiple copies of React loaded\n' +
             'See https://fb.me/react-refs-must-have-owner for more information.',
-          mixedRef
+          mixedRef,
         );
       }
     }
@@ -216,7 +234,7 @@ function throwOnInvalidObjectType(returnFiber: Fiber, newChild: Object) {
       Object.prototype.toString.call(newChild) === '[object Object]'
         ? 'object with keys {' + Object.keys(newChild).join(', ') + '}'
         : newChild,
-      addendum
+      addendum,
     );
   }
 }
@@ -233,9 +251,11 @@ function warnOnFunctionType() {
   }
   ownerHasFunctionTypeWarning[currentComponentErrorInfo] = true;
 
-  warning('Functions are not valid as a React child. This may happen if ' +
-    'you return a Component instead of <Component /> from render. ' +
-    'Or maybe you meant to call this function rather than return it.');
+  warning(
+    'Functions are not valid as a React child. This may happen if ' +
+      'you return a Component instead of <Component /> from render. ' +
+      'Or maybe you meant to call this function rather than return it.',
+  );
 }
 
 // This wrapper function exists because I expect to clone the code in each path
@@ -723,11 +743,14 @@ function ChildReconciler(shouldTrackSideEffects) {
             knownKeys.add(key);
             break;
           }
-          warning('Encountered two children with the same key, `%s`. ' +
-            'Keys should be unique so that components maintain their identity ' +
-            'across updates. Non-unique keys may cause children to be ' +
-            'duplicated and/or omitted — the behavior is unsupported and ' +
-            'could change in a future version.', key);
+          warning(
+            'Encountered two children with the same key, `%s`. ' +
+              'Keys should be unique so that components maintain their identity ' +
+              'across updates. Non-unique keys may cause children to be ' +
+              'duplicated and/or omitted — the behavior is unsupported and ' +
+              'could change in a future version.',
+            key,
+          );
           break;
         default:
           break;
@@ -907,8 +930,10 @@ function ChildReconciler(shouldTrackSideEffects) {
     const iteratorFn = getIteratorFn(newChildrenIterable);
 
     if (!(typeof iteratorFn === 'function')) {
-      invariant('An object is not an iterable. This error is likely caused by a bug in ' +
-        'React. Please file an issue.');
+      invariant(
+        'An object is not an iterable. This error is likely caused by a bug in ' +
+          'React. Please file an issue.',
+      );
     }
 
     if (__DEV__) {
@@ -920,11 +945,13 @@ function ChildReconciler(shouldTrackSideEffects) {
         newChildrenIterable[Symbol.toStringTag] === 'Generator'
       ) {
         if (!didWarnAboutGenerators) {
-          warning('Using Generators as children is unsupported and will likely yield ' +
-            'unexpected results because enumerating a generator mutates it. ' +
-            'You may convert it to an array with `Array.from()` or the ' +
-            '`[...spread]` operator before rendering. Keep in mind ' +
-            'you might need to polyfill these features for older browsers.');
+          warning(
+            'Using Generators as children is unsupported and will likely yield ' +
+              'unexpected results because enumerating a generator mutates it. ' +
+              'You may convert it to an array with `Array.from()` or the ' +
+              '`[...spread]` operator before rendering. Keep in mind ' +
+              'you might need to polyfill these features for older browsers.',
+          );
         }
 
         didWarnAboutGenerators = true;
@@ -933,9 +960,11 @@ function ChildReconciler(shouldTrackSideEffects) {
       // Warn about using Maps as children
       if ((newChildrenIterable: any).entries === iteratorFn) {
         if (!didWarnAboutMaps) {
-          warning('Using Maps as children is unsupported and will likely yield ' +
-            'unexpected results. Convert it to a sequence/iterable of keyed ' +
-            'ReactElements instead.');
+          warning(
+            'Using Maps as children is unsupported and will likely yield ' +
+              'unexpected results. Convert it to a sequence/iterable of keyed ' +
+              'ReactElements instead.',
+          );
         }
 
         didWarnAboutMaps = true;
@@ -1335,9 +1364,12 @@ function ChildReconciler(shouldTrackSideEffects) {
         // eslint-disable-next-lined no-fallthrough
         case FunctionComponent: {
           const Component = returnFiber.type;
-          invariant('%s(...): Nothing was returned from render. This usually means a ' +
-            'return statement is missing. Or, to render nothing, ' +
-            'return null.', Component.displayName || Component.name || 'Component');
+          invariant(
+            '%s(...): Nothing was returned from render. This usually means a ' +
+              'return statement is missing. Or, to render nothing, ' +
+              'return null.',
+            Component.displayName || Component.name || 'Component',
+          );
         }
       }
     }

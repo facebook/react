@@ -160,7 +160,7 @@ class ReactFabricHostComponent {
       !(relativeToNativeNode instanceof ReactFabricHostComponent)
     ) {
       warningWithoutStack(
-        'Warning: ref.measureLayout must be called with a ref to a native component.'
+        'Warning: ref.measureLayout must be called with a ref to a native component.',
       );
 
       return;
@@ -175,7 +175,9 @@ class ReactFabricHostComponent {
   }
 
   setNativeProps(nativeProps: Object) {
-    warningWithoutStack('Warning: setNativeProps is not currently supported in Fabric');
+    warningWithoutStack(
+      'Warning: setNativeProps is not currently supported in Fabric',
+    );
 
     return;
   }

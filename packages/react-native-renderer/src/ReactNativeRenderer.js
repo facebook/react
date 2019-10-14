@@ -52,11 +52,14 @@ function findNodeHandle(componentOrHandle: any): ?number {
     const owner = ReactCurrentOwner.current;
     if (owner !== null && owner.stateNode !== null) {
       if (!owner.stateNode._warnedAboutRefsInRender) {
-        warningWithoutStack('%s is accessing findNodeHandle inside its render(). ' +
-          'render() should be a pure function of props and state. It should ' +
-          'never access something that requires stale data from the previous ' +
-          'render, such as refs. Move this logic to componentDidMount and ' +
-          'componentDidUpdate instead.', getComponentName(owner.type) || 'A component');
+        warningWithoutStack(
+          '%s is accessing findNodeHandle inside its render(). ' +
+            'render() should be a pure function of props and state. It should ' +
+            'never access something that requires stale data from the previous ' +
+            'render, such as refs. Move this logic to componentDidMount and ' +
+            'componentDidUpdate instead.',
+          getComponentName(owner.type) || 'A component',
+        );
       }
 
       owner.stateNode._warnedAboutRefsInRender = true;
@@ -120,8 +123,10 @@ const ReactNativeRenderer: ReactNativeType = {
   dispatchCommand(handle: any, command: string, args: Array<any>) {
     if (handle._nativeTag == null) {
       if (!(handle._nativeTag != null)) {
-        warningWithoutStack("dispatchCommand was called with a ref that isn't a " +
-          'native component. Use React.forwardRef to get access to the underlying native component');
+        warningWithoutStack(
+          "dispatchCommand was called with a ref that isn't a " +
+            'native component. Use React.forwardRef to get access to the underlying native component',
+        );
       }
 
       return;

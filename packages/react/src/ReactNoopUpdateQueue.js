@@ -19,10 +19,14 @@ function warnNoop(publicInstance, callerName) {
     if (didWarnStateUpdateForUnmountedComponent[warningKey]) {
       return;
     }
-    warningWithoutStack("Can't call %s on a component that is not yet mounted. " +
-      'This is a no-op, but it might indicate a bug in your application. ' +
-      'Instead, assign to `this.state` directly or define a `state = {};` ' +
-      'class property with the desired state in the %s component.', callerName, componentName);
+    warningWithoutStack(
+      "Can't call %s on a component that is not yet mounted. " +
+        'This is a no-op, but it might indicate a bug in your application. ' +
+        'Instead, assign to `this.state` directly or define a `state = {};` ' +
+        'class property with the desired state in the %s component.',
+      callerName,
+      componentName,
+    );
     didWarnStateUpdateForUnmountedComponent[warningKey] = true;
   }
 }

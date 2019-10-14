@@ -185,7 +185,7 @@ if (__DEV__) {
     warningWithoutStack(
       'Text content did not match. Server: "%s" Client: "%s"',
       normalizedServerText,
-      normalizedClientText
+      normalizedClientText,
     );
   };
 
@@ -211,7 +211,7 @@ if (__DEV__) {
       'Prop `%s` did not match. Server: %s Client: %s',
       propName,
       JSON.stringify(normalizedServerValue),
-      JSON.stringify(normalizedClientValue)
+      JSON.stringify(normalizedClientValue),
     );
   };
 
@@ -229,14 +229,19 @@ if (__DEV__) {
 
   warnForInvalidEventListener = function(registrationName, listener) {
     if (listener === false) {
-      warning('Expected `%s` listener to be a function, instead got `false`.\n\n' +
-        'If you used to conditionally omit it with %s={condition && value}, ' +
-        'pass %s={condition ? value : undefined} instead.', registrationName, registrationName, registrationName);
+      warning(
+        'Expected `%s` listener to be a function, instead got `false`.\n\n' +
+          'If you used to conditionally omit it with %s={condition && value}, ' +
+          'pass %s={condition ? value : undefined} instead.',
+        registrationName,
+        registrationName,
+        registrationName,
+      );
     } else {
       warning(
         'Expected `%s` listener to be a function, instead got a value of `%s` type.',
         registrationName,
-        typeof listener
+        typeof listener,
       );
     }
   };
@@ -407,9 +412,12 @@ export function createElement(
       if (!(isCustomComponentTag || type === type.toLowerCase())) {
         // Should this check be gated by parent namespace? Not sure we want to
         // allow <SVG> or <mATH>.
-        warning('<%s /> is using incorrect casing. ' +
-          'Use PascalCase for React components, ' +
-          'or lowercase for HTML elements.', type);
+        warning(
+          '<%s /> is using incorrect casing. ' +
+            'Use PascalCase for React components, ' +
+            'or lowercase for HTML elements.',
+          type,
+        );
       }
     }
 
@@ -419,10 +427,12 @@ export function createElement(
       const div = ownerDocument.createElement('div');
       if (__DEV__) {
         if (enableTrustedTypesIntegration && !didWarnScriptTags) {
-          warning('Encountered a script tag while rendering React component. ' +
-            'Scripts inside React components are never executed when rendering ' +
-            'on the client. Consider using template tag instead ' +
-            '(https://developer.mozilla.org/en-US/docs/Web/HTML/Element/template).');
+          warning(
+            'Encountered a script tag while rendering React component. ' +
+              'Scripts inside React components are never executed when rendering ' +
+              'on the client. Consider using template tag instead ' +
+              '(https://developer.mozilla.org/en-US/docs/Web/HTML/Element/template).',
+          );
           didWarnScriptTags = true;
         }
       }
@@ -472,9 +482,12 @@ export function createElement(
         !Object.prototype.hasOwnProperty.call(warnedUnknownTags, type)
       ) {
         warnedUnknownTags[type] = true;
-        warning('The tag <%s> is unrecognized in this browser. ' +
-          'If you meant to render a React component, start its name with ' +
-          'an uppercase letter.', type);
+        warning(
+          'The tag <%s> is unrecognized in this browser. ' +
+            'If you meant to render a React component, start its name with ' +
+            'an uppercase letter.',
+          type,
+        );
       }
     }
   }
@@ -505,8 +518,11 @@ export function setInitialProperties(
       !didWarnShadyDOM &&
       (domElement: any).shadyRoot
     ) {
-      warning('%s is using shady DOM. Using shady DOM with React can ' +
-        'cause things to break subtly.', getCurrentFiberOwnerNameInDevOrNull() || 'A component');
+      warning(
+        '%s is using shady DOM. Using shady DOM with React can ' +
+          'cause things to break subtly.',
+        getCurrentFiberOwnerNameInDevOrNull() || 'A component',
+      );
       didWarnShadyDOM = true;
     }
   }
@@ -902,8 +918,11 @@ export function diffHydratedProperties(
       !didWarnShadyDOM &&
       (domElement: any).shadyRoot
     ) {
-      warning('%s is using shady DOM. Using shady DOM with React can ' +
-        'cause things to break subtly.', getCurrentFiberOwnerNameInDevOrNull() || 'A component');
+      warning(
+        '%s is using shady DOM. Using shady DOM with React can ' +
+          'cause things to break subtly.',
+        getCurrentFiberOwnerNameInDevOrNull() || 'A component',
+      );
       didWarnShadyDOM = true;
     }
   }
@@ -1194,7 +1213,7 @@ export function warnForDeletedHydratableElement(
     warningWithoutStack(
       'Did not expect server HTML to contain a <%s> in <%s>.',
       child.nodeName.toLowerCase(),
-      parentNode.nodeName.toLowerCase()
+      parentNode.nodeName.toLowerCase(),
     );
   }
 }
@@ -1211,7 +1230,7 @@ export function warnForDeletedHydratableText(
     warningWithoutStack(
       'Did not expect server HTML to contain the text node "%s" in <%s>.',
       child.nodeValue,
-      parentNode.nodeName.toLowerCase()
+      parentNode.nodeName.toLowerCase(),
     );
   }
 }
@@ -1229,7 +1248,7 @@ export function warnForInsertedHydratedElement(
     warningWithoutStack(
       'Expected server HTML to contain a matching <%s> in <%s>.',
       tag,
-      parentNode.nodeName.toLowerCase()
+      parentNode.nodeName.toLowerCase(),
     );
   }
 }
@@ -1253,7 +1272,7 @@ export function warnForInsertedHydratedText(
     warningWithoutStack(
       'Expected server HTML to contain a matching text node for "%s" in <%s>.',
       text,
-      parentNode.nodeName.toLowerCase()
+      parentNode.nodeName.toLowerCase(),
     );
   }
 }

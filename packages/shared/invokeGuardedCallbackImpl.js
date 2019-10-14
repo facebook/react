@@ -81,7 +81,7 @@ if (__DEV__) {
             'finished running. To solve this, you can either unmount the component at ' +
             'the end of your test (and ensure that any asynchronous operations get ' +
             'canceled in `componentWillUnmount`), or you can change the test itself ' +
-            'to be asynchronous.'
+            'to be asynchronous.',
         );
       }
 

@@ -144,7 +144,7 @@ function findHostInstance(component: Object): PublicInstance | null {
     } else {
       invariant(
         'Argument appears to not be a ReactComponent. Keys: %s',
-        Object.keys(component)
+        Object.keys(component),
       );
     }
   }
@@ -167,7 +167,7 @@ function findHostInstanceWithWarning(
       } else {
         invariant(
           'Argument appears to not be a ReactComponent. Keys: %s',
-          Object.keys(component)
+          Object.keys(component),
         );
       }
     }
@@ -180,17 +180,29 @@ function findHostInstanceWithWarning(
       if (!didWarnAboutFindNodeInStrictMode[componentName]) {
         didWarnAboutFindNodeInStrictMode[componentName] = true;
         if (fiber.mode & StrictMode) {
-          warningWithoutStack('%s is deprecated in StrictMode. ' +
-            '%s was passed an instance of %s which is inside StrictMode. ' +
-            'Instead, add a ref directly to the element you want to reference. ' +
-            'Learn more about using refs safely here: ' +
-            'https://fb.me/react-strict-mode-find-node%s', methodName, methodName, componentName, getStackByFiberInDevAndProd(hostFiber));
+          warningWithoutStack(
+            '%s is deprecated in StrictMode. ' +
+              '%s was passed an instance of %s which is inside StrictMode. ' +
+              'Instead, add a ref directly to the element you want to reference. ' +
+              'Learn more about using refs safely here: ' +
+              'https://fb.me/react-strict-mode-find-node%s',
+            methodName,
+            methodName,
+            componentName,
+            getStackByFiberInDevAndProd(hostFiber),
+          );
         } else {
-          warningWithoutStack('%s is deprecated in StrictMode. ' +
-            '%s was passed an instance of %s which renders StrictMode children. ' +
-            'Instead, add a ref directly to the element you want to reference. ' +
-            'Learn more about using refs safely here: ' +
-            'https://fb.me/react-strict-mode-find-node%s', methodName, methodName, componentName, getStackByFiberInDevAndProd(hostFiber));
+          warningWithoutStack(
+            '%s is deprecated in StrictMode. ' +
+              '%s was passed an instance of %s which renders StrictMode children. ' +
+              'Instead, add a ref directly to the element you want to reference. ' +
+              'Learn more about using refs safely here: ' +
+              'https://fb.me/react-strict-mode-find-node%s',
+            methodName,
+            methodName,
+            componentName,
+            getStackByFiberInDevAndProd(hostFiber),
+          );
         }
       }
     }
@@ -256,10 +268,13 @@ export function updateContainer(
       !didWarnAboutNestedUpdates
     ) {
       didWarnAboutNestedUpdates = true;
-      warningWithoutStack('Render methods should be a pure function of props and state; ' +
-        'triggering nested component updates from render is not allowed. ' +
-        'If necessary, trigger nested updates in componentDidUpdate.\n\n' +
-        'Check the render method of %s.', getComponentName(ReactCurrentFiberCurrent.type) || 'Unknown');
+      warningWithoutStack(
+        'Render methods should be a pure function of props and state; ' +
+          'triggering nested component updates from render is not allowed. ' +
+          'If necessary, trigger nested updates in componentDidUpdate.\n\n' +
+          'Check the render method of %s.',
+        getComponentName(ReactCurrentFiberCurrent.type) || 'Unknown',
+      );
     }
   }
 
@@ -271,8 +286,11 @@ export function updateContainer(
   callback = callback === undefined ? null : callback;
   if (callback !== null) {
     if (!(typeof callback === 'function')) {
-      warningWithoutStack('render(...): Expected the last optional `callback` argument to be a ' +
-        'function. Instead received: %s.', callback);
+      warningWithoutStack(
+        'render(...): Expected the last optional `callback` argument to be a ' +
+          'function. Instead received: %s.',
+        callback,
+      );
     }
 
     update.callback = callback;

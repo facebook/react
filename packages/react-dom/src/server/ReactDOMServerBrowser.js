@@ -13,14 +13,14 @@ import {renderToString, renderToStaticMarkup} from './ReactDOMStringRenderer';
 function renderToNodeStream() {
   invariant(
     'ReactDOMServer.renderToNodeStream(): The streaming API is not available ' +
-      'in the browser. Use ReactDOMServer.renderToString() instead.'
+      'in the browser. Use ReactDOMServer.renderToString() instead.',
   );
 }
 
 function renderToStaticNodeStream() {
   invariant(
     'ReactDOMServer.renderToStaticNodeStream(): The streaming API is not available ' +
-      'in the browser. Use ReactDOMServer.renderToStaticMarkup() instead.'
+      'in the browser. Use ReactDOMServer.renderToStaticMarkup() instead.',
   );
 }
 

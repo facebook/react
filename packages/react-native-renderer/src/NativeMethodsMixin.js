@@ -179,9 +179,11 @@ export default function(
       }
 
       if (maybeInstance.canonical) {
-        warningWithoutStack('Warning: measureLayout on components using NativeMethodsMixin ' +
-          'or ReactNative.NativeComponent is not currently supported in Fabric. ' +
-          'measureLayout must be called on a native ref. Consider using forwardRef.');
+        warningWithoutStack(
+          'Warning: measureLayout on components using NativeMethodsMixin ' +
+            'or ReactNative.NativeComponent is not currently supported in Fabric. ' +
+            'measureLayout must be called on a native ref. Consider using forwardRef.',
+        );
         return;
       } else {
         let relativeNode;
@@ -195,7 +197,7 @@ export default function(
 
         if (relativeNode == null) {
           warningWithoutStack(
-            'Warning: ref.measureLayout must be called with a node handle or a ref to a native component.'
+            'Warning: ref.measureLayout must be called with a node handle or a ref to a native component.',
           );
 
           return;
@@ -239,7 +241,9 @@ export default function(
       }
 
       if (maybeInstance.canonical) {
-        warningWithoutStack('Warning: setNativeProps is not currently supported in Fabric');
+        warningWithoutStack(
+          'Warning: setNativeProps is not currently supported in Fabric',
+        );
         return;
       }
 
@@ -288,9 +292,14 @@ export default function(
     // isn't allowed by ReactClass)
     const NativeMethodsMixin_DEV = (NativeMethodsMixin: any);
 
-    if (!(!NativeMethodsMixin_DEV.componentWillMount &&
-      !NativeMethodsMixin_DEV.componentWillReceiveProps &&
-      !NativeMethodsMixin_DEV.UNSAFE_componentWillMount && !NativeMethodsMixin_DEV.UNSAFE_componentWillReceiveProps)) {
+    if (
+      !(
+        !NativeMethodsMixin_DEV.componentWillMount &&
+        !NativeMethodsMixin_DEV.componentWillReceiveProps &&
+        !NativeMethodsMixin_DEV.UNSAFE_componentWillMount &&
+        !NativeMethodsMixin_DEV.UNSAFE_componentWillReceiveProps
+      )
+    ) {
       invariant('Do not override existing functions.');
     }
 

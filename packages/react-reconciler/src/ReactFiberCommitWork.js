@@ -266,19 +266,25 @@ function commitBeforeMutationLifeCycles(
               !didWarnAboutReassigningProps
             ) {
               if (!(instance.props === finishedWork.memoizedProps)) {
-                warning('Expected %s props to match memoized props before ' +
-                  'getSnapshotBeforeUpdate. ' +
-                  'This might either be because of a bug in React, or because ' +
-                  'a component reassigns its own `this.props`. ' +
-                  'Please file an issue.', getComponentName(finishedWork.type) || 'instance');
+                warning(
+                  'Expected %s props to match memoized props before ' +
+                    'getSnapshotBeforeUpdate. ' +
+                    'This might either be because of a bug in React, or because ' +
+                    'a component reassigns its own `this.props`. ' +
+                    'Please file an issue.',
+                  getComponentName(finishedWork.type) || 'instance',
+                );
               }
 
               if (!(instance.state === finishedWork.memoizedState)) {
-                warning('Expected %s state to match memoized state before ' +
-                  'getSnapshotBeforeUpdate. ' +
-                  'This might either be because of a bug in React, or because ' +
-                  'a component reassigns its own `this.props`. ' +
-                  'Please file an issue.', getComponentName(finishedWork.type) || 'instance');
+                warning(
+                  'Expected %s state to match memoized state before ' +
+                    'getSnapshotBeforeUpdate. ' +
+                    'This might either be because of a bug in React, or because ' +
+                    'a component reassigns its own `this.props`. ' +
+                    'Please file an issue.',
+                  getComponentName(finishedWork.type) || 'instance',
+                );
               }
             }
           }
@@ -294,8 +300,11 @@ function commitBeforeMutationLifeCycles(
             >);
             if (snapshot === undefined && !didWarnSet.has(finishedWork.type)) {
               didWarnSet.add(finishedWork.type);
-              warningWithoutStack('%s.getSnapshotBeforeUpdate(): A snapshot value (or null) ' +
-                'must be returned. You have returned undefined.', getComponentName(finishedWork.type));
+              warningWithoutStack(
+                '%s.getSnapshotBeforeUpdate(): A snapshot value (or null) ' +
+                  'must be returned. You have returned undefined.',
+                getComponentName(finishedWork.type),
+              );
             }
           }
           instance.__reactInternalSnapshotBeforeUpdate = snapshot;
@@ -312,8 +321,10 @@ function commitBeforeMutationLifeCycles(
       // Nothing to do for these component types
       return;
     default: {
-      invariant('This unit of work tag should not have side-effects. This error is ' +
-        'likely caused by a bug in React. Please file an issue.');
+      invariant(
+        'This unit of work tag should not have side-effects. This error is ' +
+          'likely caused by a bug in React. Please file an issue.',
+      );
     }
   }
 }
@@ -367,8 +378,12 @@ function commitHookEffectList(
             } else {
               addendum = ' You returned: ' + destroy;
             }
-            warningWithoutStack('An effect function must not return anything besides a function, ' +
-              'which is used for clean-up.%s%s', addendum, getStackByFiberInDevAndProd(finishedWork));
+            warningWithoutStack(
+              'An effect function must not return anything besides a function, ' +
+                'which is used for clean-up.%s%s',
+              addendum,
+              getStackByFiberInDevAndProd(finishedWork),
+            );
           }
         }
       }
@@ -420,19 +435,25 @@ function commitLifeCycles(
               !didWarnAboutReassigningProps
             ) {
               if (!(instance.props === finishedWork.memoizedProps)) {
-                warning('Expected %s props to match memoized props before ' +
-                  'componentDidMount. ' +
-                  'This might either be because of a bug in React, or because ' +
-                  'a component reassigns its own `this.props`. ' +
-                  'Please file an issue.', getComponentName(finishedWork.type) || 'instance');
+                warning(
+                  'Expected %s props to match memoized props before ' +
+                    'componentDidMount. ' +
+                    'This might either be because of a bug in React, or because ' +
+                    'a component reassigns its own `this.props`. ' +
+                    'Please file an issue.',
+                  getComponentName(finishedWork.type) || 'instance',
+                );
               }
 
               if (!(instance.state === finishedWork.memoizedState)) {
-                warning('Expected %s state to match memoized state before ' +
-                  'componentDidMount. ' +
-                  'This might either be because of a bug in React, or because ' +
-                  'a component reassigns its own `this.props`. ' +
-                  'Please file an issue.', getComponentName(finishedWork.type) || 'instance');
+                warning(
+                  'Expected %s state to match memoized state before ' +
+                    'componentDidMount. ' +
+                    'This might either be because of a bug in React, or because ' +
+                    'a component reassigns its own `this.props`. ' +
+                    'Please file an issue.',
+                  getComponentName(finishedWork.type) || 'instance',
+                );
               }
             }
           }
@@ -454,19 +475,25 @@ function commitLifeCycles(
               !didWarnAboutReassigningProps
             ) {
               if (!(instance.props === finishedWork.memoizedProps)) {
-                warning('Expected %s props to match memoized props before ' +
-                  'componentDidUpdate. ' +
-                  'This might either be because of a bug in React, or because ' +
-                  'a component reassigns its own `this.props`. ' +
-                  'Please file an issue.', getComponentName(finishedWork.type) || 'instance');
+                warning(
+                  'Expected %s props to match memoized props before ' +
+                    'componentDidUpdate. ' +
+                    'This might either be because of a bug in React, or because ' +
+                    'a component reassigns its own `this.props`. ' +
+                    'Please file an issue.',
+                  getComponentName(finishedWork.type) || 'instance',
+                );
               }
 
               if (!(instance.state === finishedWork.memoizedState)) {
-                warning('Expected %s state to match memoized state before ' +
-                  'componentDidUpdate. ' +
-                  'This might either be because of a bug in React, or because ' +
-                  'a component reassigns its own `this.props`. ' +
-                  'Please file an issue.', getComponentName(finishedWork.type) || 'instance');
+                warning(
+                  'Expected %s state to match memoized state before ' +
+                    'componentDidUpdate. ' +
+                    'This might either be because of a bug in React, or because ' +
+                    'a component reassigns its own `this.props`. ' +
+                    'Please file an issue.',
+                  getComponentName(finishedWork.type) || 'instance',
+                );
               }
             }
           }
@@ -486,19 +513,25 @@ function commitLifeCycles(
             !didWarnAboutReassigningProps
           ) {
             if (!(instance.props === finishedWork.memoizedProps)) {
-              warning('Expected %s props to match memoized props before ' +
-                'processing the update queue. ' +
-                'This might either be because of a bug in React, or because ' +
-                'a component reassigns its own `this.props`. ' +
-                'Please file an issue.', getComponentName(finishedWork.type) || 'instance');
+              warning(
+                'Expected %s props to match memoized props before ' +
+                  'processing the update queue. ' +
+                  'This might either be because of a bug in React, or because ' +
+                  'a component reassigns its own `this.props`. ' +
+                  'Please file an issue.',
+                getComponentName(finishedWork.type) || 'instance',
+              );
             }
 
             if (!(instance.state === finishedWork.memoizedState)) {
-              warning('Expected %s state to match memoized state before ' +
-                'processing the update queue. ' +
-                'This might either be because of a bug in React, or because ' +
-                'a component reassigns its own `this.props`. ' +
-                'Please file an issue.', getComponentName(finishedWork.type) || 'instance');
+              warning(
+                'Expected %s state to match memoized state before ' +
+                  'processing the update queue. ' +
+                  'This might either be because of a bug in React, or because ' +
+                  'a component reassigns its own `this.props`. ' +
+                  'Please file an issue.',
+                getComponentName(finishedWork.type) || 'instance',
+              );
             }
           }
         }
@@ -599,8 +632,10 @@ function commitLifeCycles(
     case ScopeComponent:
       return;
     default: {
-      invariant('This unit of work tag should not have side-effects. This error is ' +
-        'likely caused by a bug in React. Please file an issue.');
+      invariant(
+        'This unit of work tag should not have side-effects. This error is ' +
+          'likely caused by a bug in React. Please file an issue.',
+      );
     }
   }
 }
@@ -677,8 +712,12 @@ function commitAttachRef(finishedWork: Fiber) {
     } else {
       if (__DEV__) {
         if (!ref.hasOwnProperty('current')) {
-          warningWithoutStack('Unexpected ref object provided for %s. ' +
-            'Use either a ref-setter function or React.createRef().%s', getComponentName(finishedWork.type), getStackByFiberInDevAndProd(finishedWork));
+          warningWithoutStack(
+            'Unexpected ref object provided for %s. ' +
+              'Use either a ref-setter function or React.createRef().%s',
+            getComponentName(finishedWork.type),
+            getStackByFiberInDevAndProd(finishedWork),
+          );
         }
       }
 
@@ -918,8 +957,10 @@ function commitContainer(finishedWork: Fiber) {
       return;
     }
     default: {
-      invariant('This unit of work tag should not have side-effects. This error is ' +
-        'likely caused by a bug in React. Please file an issue.');
+      invariant(
+        'This unit of work tag should not have side-effects. This error is ' +
+          'likely caused by a bug in React. Please file an issue.',
+      );
     }
   }
 }
@@ -932,8 +973,10 @@ function getHostParentFiber(fiber: Fiber): Fiber {
     }
     parent = parent.return;
   }
-  invariant('Expected to find a host parent. This error is likely caused by a bug ' +
-    'in React. Please file an issue.');
+  invariant(
+    'Expected to find a host parent. This error is likely caused by a bug ' +
+      'in React. Please file an issue.',
+  );
 }
 
 function isHostParent(fiber: Fiber): boolean {
@@ -1022,8 +1065,10 @@ function commitPlacement(finishedWork: Fiber): void {
       }
     // eslint-disable-next-line-no-fallthrough
     default:
-      invariant('Invalid host parent fiber. This error is likely caused by a bug ' +
-        'in React. Please file an issue.');
+      invariant(
+        'Invalid host parent fiber. This error is likely caused by a bug ' +
+          'in React. Please file an issue.',
+      );
   }
   if (parentFiber.effectTag & ContentReset) {
     // Reset the text content of the parent before doing any insertions
@@ -1098,8 +1143,10 @@ function unmountHostComponents(
       let parent = node.return;
       findParent: while (true) {
         if (!(parent !== null)) {
-          invariant('Expected to find a host parent. This error is likely caused by ' +
-            'a bug in React. Please file an issue.');
+          invariant(
+            'Expected to find a host parent. This error is likely caused by ' +
+              'a bug in React. Please file an issue.',
+          );
         }
 
         const parentStateNode = parent.stateNode;
@@ -1329,8 +1376,10 @@ function commitWork(current: Fiber | null, finishedWork: Fiber): void {
     }
     case HostText: {
       if (!(finishedWork.stateNode !== null)) {
-        invariant('This should have a text node initialized. This error is likely ' +
-          'caused by a bug in React. Please file an issue.');
+        invariant(
+          'This should have a text node initialized. This error is likely ' +
+            'caused by a bug in React. Please file an issue.',
+        );
       }
 
       const textInstance: TextInstance = finishedWork.stateNode;
@@ -1393,8 +1442,10 @@ function commitWork(current: Fiber | null, finishedWork: Fiber): void {
       return;
     }
     default: {
-      invariant('This unit of work tag should not have side-effects. This error is ' +
-        'likely caused by a bug in React. Please file an issue.');
+      invariant(
+        'This unit of work tag should not have side-effects. This error is ' +
+          'likely caused by a bug in React. Please file an issue.',
+      );
     }
   }
 }

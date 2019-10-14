@@ -125,8 +125,11 @@ function createClassErrorUpdate(
             // If componentDidCatch is the only error boundary method defined,
             // then it needs to call setState to recover from errors.
             // If no state update is scheduled then the boundary will swallow the error.
-            warningWithoutStack('%s: Error boundaries should implement getDerivedStateFromError(). ' +
-              'In that method, return a state update to display an error message or fallback UI.', getComponentName(fiber.type) || 'Unknown');
+            warningWithoutStack(
+              '%s: Error boundaries should implement getDerivedStateFromError(). ' +
+                'In that method, return a state update to display an error message or fallback UI.',
+              getComponentName(fiber.type) || 'Unknown',
+            );
           }
         }
       }

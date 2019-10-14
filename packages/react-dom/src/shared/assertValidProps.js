@@ -27,35 +27,58 @@ function assertValidProps(tag: string, props: ?Object) {
   // Note the use of `==` which checks for null or undefined.
   if (voidElementTags[tag]) {
     if (!(props.children == null && props.dangerouslySetInnerHTML == null)) {
-      invariant('%s is a void element tag and must neither have `children` nor ' +
-        'use `dangerouslySetInnerHTML`.%s', tag, __DEV__ ? ReactDebugCurrentFrame.getStackAddendum() : '');
+      invariant(
+        '%s is a void element tag and must neither have `children` nor ' +
+          'use `dangerouslySetInnerHTML`.%s',
+        tag,
+        __DEV__ ? ReactDebugCurrentFrame.getStackAddendum() : '',
+      );
     }
   }
   if (props.dangerouslySetInnerHTML != null) {
     if (!(props.children == null)) {
-      invariant('Can only set one of `children` or `props.dangerouslySetInnerHTML`.');
+      invariant(
+        'Can only set one of `children` or `props.dangerouslySetInnerHTML`.',
+      );
     }
 
-    if (!(typeof props.dangerouslySetInnerHTML === 'object' && HTML in props.dangerouslySetInnerHTML)) {
-      invariant('`props.dangerouslySetInnerHTML` must be in the form `{__html: ...}`. ' +
-        'Please visit https://fb.me/react-invariant-dangerously-set-inner-html ' +
-        'for more information.');
+    if (
+      !(
+        typeof props.dangerouslySetInnerHTML === 'object' &&
+        HTML in props.dangerouslySetInnerHTML
+      )
+    ) {
+      invariant(
+        '`props.dangerouslySetInnerHTML` must be in the form `{__html: ...}`. ' +
+          'Please visit https://fb.me/react-invariant-dangerously-set-inner-html ' +
+          'for more information.',
+      );
     }
   }
   if (__DEV__) {
-    if (!(props.suppressContentEditableWarning ||
-      !props.contentEditable || props.children == null)) {
-      warning('A component is `contentEditable` and contains `children` managed by ' +
-        'React. It is now your responsibility to guarantee that none of ' +
-        'those nodes are unexpectedly modified or duplicated. This is ' +
-        'probably not intentional.');
+    if (
+      !(
+        props.suppressContentEditableWarning ||
+        !props.contentEditable ||
+        props.children == null
+      )
+    ) {
+      warning(
+        'A component is `contentEditable` and contains `children` managed by ' +
+          'React. It is now your responsibility to guarantee that none of ' +
+          'those nodes are unexpectedly modified or duplicated. This is ' +
+          'probably not intentional.',
+      );
     }
   }
 
   if (!(props.style == null || typeof props.style === 'object')) {
-    invariant('The `style` prop expects a mapping from style properties to values, ' +
-      "not a string. For example, style={{marginRight: spacing + 'em'}} when " +
-      'using JSX.%s', __DEV__ ? ReactDebugCurrentFrame.getStackAddendum() : '');
+    invariant(
+      'The `style` prop expects a mapping from style properties to values, ' +
+        "not a string. For example, style={{marginRight: spacing + 'em'}} when " +
+        'using JSX.%s',
+      __DEV__ ? ReactDebugCurrentFrame.getStackAddendum() : '',
+    );
   }
 }
 

@@ -71,12 +71,15 @@ export function initWrapperState(element: Element, props: Object) {
       props.defaultValue !== undefined &&
       !didWarnValDefaultVal
     ) {
-      warning('%s contains a textarea with both value and defaultValue props. ' +
-        'Textarea elements must be either controlled or uncontrolled ' +
-        '(specify either the value prop, or the defaultValue prop, but not ' +
-        'both). Decide between using a controlled or uncontrolled textarea ' +
-        'and remove one of these props. More info: ' +
-        'https://fb.me/react-controlled-components', getCurrentFiberOwnerNameInDevOrNull() || 'A component');
+      warning(
+        '%s contains a textarea with both value and defaultValue props. ' +
+          'Textarea elements must be either controlled or uncontrolled ' +
+          '(specify either the value prop, or the defaultValue prop, but not ' +
+          'both). Decide between using a controlled or uncontrolled textarea ' +
+          'and remove one of these props. More info: ' +
+          'https://fb.me/react-controlled-components',
+        getCurrentFiberOwnerNameInDevOrNull() || 'A component',
+      );
       didWarnValDefaultVal = true;
     }
   }
@@ -90,12 +93,16 @@ export function initWrapperState(element: Element, props: Object) {
     let children = props.children;
     if (children != null) {
       if (__DEV__) {
-        warning('Use the `defaultValue` or `value` props instead of setting ' +
-          'children on <textarea>.');
+        warning(
+          'Use the `defaultValue` or `value` props instead of setting ' +
+            'children on <textarea>.',
+        );
       }
 
       if (!(defaultValue == null)) {
-        invariant('If you supply `defaultValue` on a <textarea>, do not pass children.');
+        invariant(
+          'If you supply `defaultValue` on a <textarea>, do not pass children.',
+        );
       }
 
       if (Array.isArray(children)) {

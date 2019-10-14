@@ -412,7 +412,9 @@ if (__DEV__) {
 
     if (childText != null) {
       if (!(childTag == null)) {
-        warningWithoutStack('validateDOMNesting: when childText is passed, childTag should be null');
+        warningWithoutStack(
+          'validateDOMNesting: when childText is passed, childTag should be null',
+        );
       }
 
       childTag = '#text';
@@ -467,11 +469,16 @@ if (__DEV__) {
         ancestorTag,
         whitespaceInfo,
         info,
-        addendum
+        addendum,
       );
     } else {
-      warningWithoutStack('validateDOMNesting(...): %s cannot appear as a descendant of ' +
-        '<%s>.%s', tagDisplayName, ancestorTag, addendum);
+      warningWithoutStack(
+        'validateDOMNesting(...): %s cannot appear as a descendant of ' +
+          '<%s>.%s',
+        tagDisplayName,
+        ancestorTag,
+        addendum,
+      );
     }
   };
 }

@@ -52,9 +52,12 @@ export function initializeLazyComponentType(
           const defaultExport = moduleObject.default;
           if (__DEV__) {
             if (defaultExport === undefined) {
-              warning('lazy: Expected the result of a dynamic import() call. ' +
-                'Instead received: %s\n\nYour code should look like: \n  ' +
-                "const MyComponent = lazy(() => import('./MyComponent'))", moduleObject);
+              warning(
+                'lazy: Expected the result of a dynamic import() call. ' +
+                  'Instead received: %s\n\nYour code should look like: \n  ' +
+                  "const MyComponent = lazy(() => import('./MyComponent'))",
+                moduleObject,
+              );
             }
           }
           lazyComponent._status = Resolved;

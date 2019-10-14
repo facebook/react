@@ -699,8 +699,10 @@ function completeWork(
       } else {
         if (!newProps) {
           if (!(workInProgress.stateNode !== null)) {
-            invariant('We must have new props for new mounts. This error is likely ' +
-              'caused by a bug in React. Please file an issue.');
+            invariant(
+              'We must have new props for new mounts. This error is likely ' +
+                'caused by a bug in React. Please file an issue.',
+            );
           }
 
           // This can happen when we abort work.
@@ -795,8 +797,10 @@ function completeWork(
       } else {
         if (typeof newText !== 'string') {
           if (!(workInProgress.stateNode !== null)) {
-            invariant('We must have new props for new mounts. This error is likely ' +
-              'caused by a bug in React. Please file an issue.');
+            invariant(
+              'We must have new props for new mounts. This error is likely ' +
+                'caused by a bug in React. Please file an issue.',
+            );
             // This can happen when we abort work.
           }
         }
@@ -832,7 +836,7 @@ function completeWork(
             if (!wasHydrated) {
               invariant(
                 'A dehydrated suspense component was completed without a hydrated node. ' +
-                  'This is probably a bug in React.'
+                  'This is probably a bug in React.',
               );
             }
 
@@ -1288,7 +1292,7 @@ function completeWork(
       invariant(
         'Unknown unit of work tag (%s). This error is likely caused by a bug in ' +
           'React. Please file an issue.',
-        workInProgress.tag
+        workInProgress.tag,
       );
   }
 

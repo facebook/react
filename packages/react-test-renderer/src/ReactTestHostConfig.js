@@ -83,10 +83,12 @@ export function appendChild(
 ): void {
   if (__DEV__) {
     if (!Array.isArray(parentInstance.children)) {
-      warning('An invalid container has been provided. ' +
-        'This may indicate that another renderer is being used in addition to the test renderer. ' +
-        '(For example, ReactDOM.createPortal inside of a ReactTestRenderer tree.) ' +
-        'This is not supported.');
+      warning(
+        'An invalid container has been provided. ' +
+          'This may indicate that another renderer is being used in addition to the test renderer. ' +
+          '(For example, ReactDOM.createPortal inside of a ReactTestRenderer tree.) ' +
+          'This is not supported.',
+      );
     }
   }
   const index = parentInstance.children.indexOf(child);
@@ -218,7 +220,7 @@ export function createTextInstance(
       warning(
         'validateDOMNesting: React event components cannot have text DOM nodes as children. ' +
           'Wrap the child text "%s" in an element.',
-        text
+        text,
       );
     }
   }

@@ -32,7 +32,7 @@ function restoreStateOfTarget(target) {
   if (!(typeof restoreImpl === 'function')) {
     invariant(
       'setRestoreImplementation() needs to be called to handle a target for controlled ' +
-        'events. This error is likely caused by a bug in React. Please file an issue.'
+        'events. This error is likely caused by a bug in React. Please file an issue.',
     );
   }
 
