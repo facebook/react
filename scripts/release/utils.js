@@ -103,8 +103,8 @@ const getBuildInfo = async () => {
     join(cwd, 'packages', 'react', 'package.json')
   );
   const reactVersion = isExperimental
-    ? `${packageJSON.version}-experimental-canary-${commit}`
-    : `${packageJSON.version}-canary-${commit}`;
+    ? `${packageJSON.version}-experimental-${commit}`
+    : `${packageJSON.version}-${commit}`;
 
   return {branch, buildNumber, checksum, commit, reactVersion, version};
 };

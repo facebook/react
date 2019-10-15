@@ -31,9 +31,9 @@ export const enableProfilerTimer = __PROFILE__;
 // Trace which interactions trigger each commit.
 export const enableSchedulerTracing = __PROFILE__;
 
-// Only used in www builds.
-export const enableSuspenseServerRenderer = false; // TODO: __DEV__? Here it might just be false.
-export const enableSelectiveHydration = false;
+// SSR experiments
+export const enableSuspenseServerRenderer = __EXPERIMENTAL__;
+export const enableSelectiveHydration = __EXPERIMENTAL__;
 
 // Only used in www builds.
 export const enableSchedulerDebugging = false;
@@ -52,7 +52,7 @@ export const disableInputAttributeSyncing = false;
 
 // These APIs will no longer be "unstable" in the upcoming 16.7 release,
 // Control this behavior with a flag to support 16.6 minor releases in the meanwhile.
-export const enableStableConcurrentModeAPIs = __EXPERIMENTAL__;
+export const exposeConcurrentModeAPIs = __EXPERIMENTAL__;
 
 export const warnAboutShorthandPropertyCollision = false;
 

@@ -27,34 +27,32 @@ it('does not warn when rendering in sync mode', () => {
   }).toWarnDev([]);
 });
 
-it('should warn when rendering in concurrent mode', () => {
-  expect(() => {
-    ReactDOM.unstable_createRoot(document.createElement('div')).render(<App />);
-  }).toWarnDev(
-    'In Concurrent or Sync modes, the "scheduler" module needs to be mocked ' +
-      'to guarantee consistent behaviour across tests and browsers.',
-    {withoutStack: true},
-  );
-  // does not warn twice
-  expect(() => {
-    ReactDOM.unstable_createRoot(document.createElement('div')).render(<App />);
-  }).toWarnDev([]);
-});
+if (__EXPERIMENTAL__) {
+  it('should warn when rendering in concurrent mode', () => {
+    expect(() => {
+      ReactDOM.createRoot(document.createElement('div')).render(<App />);
+    }).toWarnDev(
+      'In Concurrent or Sync modes, the "scheduler" module needs to be mocked ' +
+        'to guarantee consistent behaviour across tests and browsers.',
+      {withoutStack: true},
+    );
+    // does not warn twice
+    expect(() => {
+      ReactDOM.createRoot(document.createElement('div')).render(<App />);
+    }).toWarnDev([]);
+  });
 
-it('should warn when rendering in batched mode', () => {
-  expect(() => {
-    ReactDOM.unstable_createSyncRoot(document.createElement('div')).render(
-      <App />,
+  it('should warn when rendering in batched mode', () => {
+    expect(() => {
+      ReactDOM.createSyncRoot(document.createElement('div')).render(<App />);
+    }).toWarnDev(
+      'In Concurrent or Sync modes, the "scheduler" module needs to be mocked ' +
+        'to guarantee consistent behaviour across tests and browsers.',
+      {withoutStack: true},
     );
-  }).toWarnDev(
-    'In Concurrent or Sync modes, the "scheduler" module needs to be mocked ' +
-      'to guarantee consistent behaviour across tests and browsers.',
-    {withoutStack: true},
-  );
-  // does not warn twice
-  expect(() => {
-    ReactDOM.unstable_createSyncRoot(document.createElement('div')).render(
-      <App />,
-    );
-  }).toWarnDev([]);
-});
+    // does not warn twice
+    expect(() => {
+      ReactDOM.createSyncRoot(document.createElement('div')).render(<App />);
+    }).toWarnDev([]);
+  });
+}

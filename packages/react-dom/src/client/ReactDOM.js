@@ -61,7 +61,7 @@ import getComponentName from 'shared/getComponentName';
 import invariant from 'shared/invariant';
 import lowPriorityWarningWithoutStack from 'shared/lowPriorityWarningWithoutStack';
 import warningWithoutStack from 'shared/warningWithoutStack';
-import {enableStableConcurrentModeAPIs} from 'shared/ReactFeatureFlags';
+import {exposeConcurrentModeAPIs} from 'shared/ReactFeatureFlags';
 
 import {
   getInstanceFromNode,
@@ -593,26 +593,7 @@ const ReactDOM: Object = {
 
   unstable_batchedUpdates: batchedUpdates,
 
-  // TODO remove this legacy method, unstable_discreteUpdates replaces it
-  unstable_interactiveUpdates: (fn, a, b, c) => {
-    flushDiscreteUpdates();
-    return discreteUpdates(fn, a, b, c);
-  },
-
-  unstable_discreteUpdates: discreteUpdates,
-  unstable_flushDiscreteUpdates: flushDiscreteUpdates,
-
   flushSync: flushSync,
-
-  unstable_createRoot: createRoot,
-  unstable_createSyncRoot: createSyncRoot,
-  unstable_flushControlled: flushControlled,
-
-  unstable_scheduleHydration(target: Node) {
-    if (target) {
-      queueExplicitHydrationTarget(target);
-    }
-  },
 
   __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED: {
     // Keep in sync with ReactDOMUnstableNativeDependencies.js
@@ -678,9 +659,19 @@ function warnIfReactDOMContainerInDEV(container) {
   }
 }
 
-if (enableStableConcurrentModeAPIs) {
+if (exposeConcurrentModeAPIs) {
   ReactDOM.createRoot = createRoot;
   ReactDOM.createSyncRoot = createSyncRoot;
+
+  ReactDOM.unstable_discreteUpdates = discreteUpdates;
+  ReactDOM.unstable_flushDiscreteUpdates = flushDiscreteUpdates;
+  ReactDOM.unstable_flushControlled = flushControlled;
+
+  ReactDOM.unstable_scheduleHydration = target => {
+    if (target) {
+      queueExplicitHydrationTarget(target);
+    }
+  };
 }
 
 const foundDevTools = injectIntoDevTools({

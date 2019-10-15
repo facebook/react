@@ -98,7 +98,10 @@ jobs:
       - checkout
       - *restore_yarn_cache
       - *run_yarn
-      - run: yarn test --maxWorkers=2
+      - run:
+          environment:
+            RELEASE_CHANNEL: stable
+          command: yarn test --maxWorkers=2
 
   test_source_experimental:
     docker: *docker
@@ -120,7 +123,10 @@ jobs:
       - checkout
       - *restore_yarn_cache
       - *run_yarn
-      - run: yarn test-persistent --maxWorkers=2
+      - run:
+          environment:
+            RELEASE_CHANNEL: stable
+          command: yarn test-persistent --maxWorkers=2
 
   test_source_prod:
     docker: *docker
@@ -130,7 +136,10 @@ jobs:
       - checkout
       - *restore_yarn_cache
       - *run_yarn
-      - run: yarn test-prod --maxWorkers=2
+      - run:
+          environment:
+            RELEASE_CHANNEL: stable
+          command: yarn test-prod --maxWorkers=2
 
   build:
     docker: *docker
@@ -217,7 +226,23 @@ jobs:
       - attach_workspace: *attach_workspace
       - *restore_yarn_cache
       - *run_yarn
-      - run: yarn test-build --maxWorkers=2
+      - run:
+          environment:
+            RELEASE_CHANNEL: stable
+          command: yarn test-build --maxWorkers=2
+
+  test_build_experimental:
+    docker: *docker
+    environment: *environment
+    steps:
+      - checkout
+      - attach_workspace: *attach_workspace
+      - *restore_yarn_cache
+      - *run_yarn
+      - run:
+          environment:
+            RELEASE_CHANNEL: experimental
+          command: yarn test-build --maxWorkers=2
 
   test_build_devtools:
     docker: *docker
@@ -227,7 +252,10 @@ jobs:
       - attach_workspace: *attach_workspace
       - *restore_yarn_cache
       - *run_yarn
-      - run: yarn test-build-devtools --maxWorkers=2
+      - run:
+          environment:
+            RELEASE_CHANNEL: stable
+          command: yarn test-build --maxWorkers=2
 
   test_dom_fixtures:
     docker: *docker
@@ -238,6 +266,8 @@ jobs:
       - *restore_yarn_cache
       - run:
           name: Run DOM fixture tests
+          environment:
+            RELEASE_CHANNEL: stable
           command: |
             cd fixtures/dom
             yarn --frozen-lockfile
@@ -265,7 +295,23 @@ jobs:
       - attach_workspace: *attach_workspace
       - *restore_yarn_cache
       - *run_yarn
-      - run: yarn test-build-prod --maxWorkers=2
+      - run:
+          environment:
+            RELEASE_CHANNEL: stable
+          command: yarn test-build-prod --maxWorkers=2
+
+  test_build_prod_experimental:
+    docker: *docker
+    environment: *environment
+    steps:
+      - checkout
+      - attach_workspace: *attach_workspace
+      - *restore_yarn_cache
+      - *run_yarn
+      - run:
+          environment:
+            RELEASE_CHANNEL: experimental
+          command: yarn test-build-prod --maxWorkers=2
 
 workflows:
   version: 2
@@ -322,6 +368,12 @@ workflows:
           requires:
             - setup
       - process_artifacts_experimental:
+          requires:
+            - build_experimental
+      - test_build_experimental:
+          requires:
+            - build_experimental
+      - test_build_prod_experimental:
           requires:
             - build_experimental
 
