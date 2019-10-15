@@ -9,14 +9,14 @@
 
 let React;
 let ReactFeatureFlags;
-let TabbableScope;
+let tabbableScopeQuery;
 
-describe('TabbableScope', () => {
+describe('TabbableScopeQuery', () => {
   beforeEach(() => {
     jest.resetModules();
     ReactFeatureFlags = require('shared/ReactFeatureFlags');
     ReactFeatureFlags.enableScopeAPI = true;
-    TabbableScope = require('../TabbableScope').default;
+    tabbableScopeQuery = require('../TabbableScopeQuery').default;
     React = require('react');
   });
 
@@ -35,16 +35,18 @@ describe('TabbableScope', () => {
       container = null;
     });
 
-    it('getAllNodes() works as intended', () => {
+    it('queryAllNodes() works as intended', () => {
       const scopeRef = React.createRef();
       const nodeRefA = React.createRef();
       const nodeRefB = React.createRef();
       const nodeRefC = React.createRef();
       const nodeRefD = React.createRef();
 
+      const TestScope = React.unstable_createScope();
+
       function Test() {
         return (
-          <TabbableScope ref={scopeRef}>
+          <TestScope ref={scopeRef}>
             <input ref={nodeRefA} />
             <textarea ref={nodeRefB} />
             <div tabIndex={0} ref={nodeRefC}>
@@ -53,12 +55,12 @@ describe('TabbableScope', () => {
             </div>
             <input disabled={true} />
             <div tabIndex={-1} />
-          </TabbableScope>
+          </TestScope>
         );
       }
 
       ReactDOM.render(<Test />, container);
-      let nodes = scopeRef.current.getAllNodes();
+      let nodes = scopeRef.current.queryAllNodes(tabbableScopeQuery);
       expect(nodes).toEqual([
         nodeRefA.current,
         nodeRefB.current,

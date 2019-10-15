@@ -10,6 +10,7 @@
 import type {ReactScopeMethods} from 'shared/ReactTypes';
 
 export default function getTabbableNodes(
+  scopeQuery: (type: string | Object, props: Object) => boolean,
   scope: ReactScopeMethods,
 ): [
   null | Array<HTMLElement>,
@@ -18,7 +19,7 @@ export default function getTabbableNodes(
   number,
   null | HTMLElement,
 ] {
-  const tabbableNodes = scope.getAllNodes();
+  const tabbableNodes = scope.queryAllNodes(scopeQuery);
   if (tabbableNodes === null || tabbableNodes.length === 0) {
     return [null, null, null, 0, null];
   }

@@ -147,7 +147,6 @@ export function createScopeMethods(
   scope: ReactScope,
   instance: ReactScopeInstance,
 ): ReactScopeMethods {
-  const fn = scope.fn;
   return {
     getChildren(): null | Array<ReactScopeMethods> {
       const currentFiber = ((instance.fiber: any): Fiber);
@@ -189,7 +188,9 @@ export function createScopeMethods(
       const currentFiber = ((instance.fiber: any): Fiber);
       return currentFiber.memoizedProps;
     },
-    getAllNodes(): null | Array<Object> {
+    queryAllNodes(
+      fn: (type: string | Object, props: Object) => boolean,
+    ): null | Array<Object> {
       const currentFiber = ((instance.fiber: any): Fiber);
       const child = currentFiber.child;
       const scopedNodes = [];
@@ -198,7 +199,9 @@ export function createScopeMethods(
       }
       return scopedNodes.length === 0 ? null : scopedNodes;
     },
-    getFirstNode(): null | Object {
+    queryFirstNode(
+      fn: (type: string | Object, props: Object) => boolean,
+    ): null | Object {
       const currentFiber = ((instance.fiber: any): Fiber);
       const child = currentFiber.child;
       if (child !== null) {

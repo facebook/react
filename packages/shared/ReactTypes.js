@@ -162,7 +162,6 @@ export type ReactFundamentalComponent<C, H> = {|
 
 export type ReactScope = {|
   $$typeof: Symbol | number,
-  fn: (type: string | Object, props: Object) => boolean,
 |};
 
 export type ReactScopeMethods = {|
@@ -170,8 +169,12 @@ export type ReactScopeMethods = {|
   getChildrenFromRoot(): null | Array<ReactScopeMethods>,
   getParent(): null | ReactScopeMethods,
   getProps(): Object,
-  getAllNodes(): null | Array<Object>,
-  getFirstNode(): null | Object,
+  queryAllNodes(
+    (type: string | Object, props: Object) => boolean,
+  ): null | Array<Object>,
+  queryFirstNode(
+    (type: string | Object, props: Object) => boolean,
+  ): null | Object,
   containsNode(Object): boolean,
 |};
 

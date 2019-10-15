@@ -12,9 +12,14 @@ import type {KeyboardEvent} from 'react-interactions/events/keyboard';
 
 import getTabbableNodes from './shared/getTabbableNodes';
 
-export function focusFirst(scope: ReactScopeMethods): void {
-  const [, firstTabbableElem] = getTabbableNodes(scope);
-  focusElem(firstTabbableElem);
+export function focusFirst(
+  scopeQuery: (type: string | Object, props: Object) => boolean,
+  scope: ReactScopeMethods,
+): void {
+  const firstNode = scope.queryFirstNode(scopeQuery);
+  if (firstNode) {
+    focusElem(firstNode);
+  }
 }
 
 function focusElem(elem: null | HTMLElement): void {
@@ -24,6 +29,7 @@ function focusElem(elem: null | HTMLElement): void {
 }
 
 export function focusNext(
+  scopeQuery: (type: string | Object, props: Object) => boolean,
   scope: ReactScopeMethods,
   event?: KeyboardEvent,
   contain?: boolean,
@@ -34,7 +40,7 @@ export function focusNext(
     lastTabbableElem,
     currentIndex,
     focusedElement,
-  ] = getTabbableNodes(scope);
+  ] = getTabbableNodes(scopeQuery, scope);
 
   if (focusedElement === null) {
     if (event) {
@@ -58,6 +64,7 @@ export function focusNext(
 }
 
 export function focusPrevious(
+  scopeQuery: (type: string | Object, props: Object) => boolean,
   scope: ReactScopeMethods,
   event?: KeyboardEvent,
   contain?: boolean,
@@ -68,7 +75,7 @@ export function focusPrevious(
     lastTabbableElem,
     currentIndex,
     focusedElement,
-  ] = getTabbableNodes(scope);
+  ] = getTabbableNodes(scopeQuery, scope);
 
   if (focusedElement === null) {
     if (event) {
