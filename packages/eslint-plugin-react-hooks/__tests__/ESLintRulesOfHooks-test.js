@@ -479,7 +479,7 @@ const tests = {
       `,
       errors: [functionError('useState', 'invalidComponentOrHookName')],
     },
-    
+
     {
       code: `
         // Invalid because it's dangerous and might not warn otherwise.
