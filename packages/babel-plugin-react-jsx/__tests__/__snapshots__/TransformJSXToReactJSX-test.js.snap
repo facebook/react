@@ -250,6 +250,14 @@ var e = React.jsx(F, {
 });
 `;
 
+exports[`transform react to jsx should not contain duplicate children key in props object 1`] = `
+React.jsx(Component, Object.assign({
+  children: 1
+}, {
+  children: "2"
+}));
+`;
+
 exports[`transform react to jsx should not strip nbsp even couple with other whitespace 1`] = `
 React.jsx("div", {
   children: "\\xA0 "

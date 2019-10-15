@@ -268,11 +268,20 @@ You can turn on the 'throwIfNamespace' flag to bypass this warning.`,
     );
   }
 
+  function isChildrenProp(prop) {
+    return (
+      t.isJSXAttribute(prop) &&
+      t.isJSXIdentifier(prop.name) &&
+      prop.name.name === 'children'
+    );
+  }
+
   // Builds props for React.jsx. This function adds children into the props
   // and ensures that props is always an object
   function buildJSXOpeningElementAttributes(attribs, file, children) {
     let _props = [];
     const objs = [];
+    const hasChildren = children && children.length > 0;
 
     const useBuiltIns = file.opts.useBuiltIns || false;
     if (typeof useBuiltIns !== 'boolean') {
@@ -287,6 +296,14 @@ You can turn on the 'throwIfNamespace' flag to bypass this warning.`,
       if (t.isJSXSpreadAttribute(prop)) {
         _props = pushProps(_props, objs);
         objs.push(prop.argument);
+      } else if (hasChildren && isChildrenProp(prop)) {
+        // In order to avoid having duplicate "children" keys, we avoid
+        // pushing the "children" prop if we have actual children. Instead
+        // we put the children into a separate object and then rely on
+        // the Object.assign logic below to ensure the correct object is
+        // formed.
+        _props = pushProps(_props, objs);
+        objs.push(t.objectExpression([convertAttribute(prop)]));
       } else {
         _props.push(convertAttribute(prop));
       }
@@ -294,7 +311,7 @@ You can turn on the 'throwIfNamespace' flag to bypass this warning.`,
 
     // In React.JSX, children is no longer a separate argument, but passed in
     // through the argument object
-    if (children && children.length > 0) {
+    if (hasChildren) {
       if (children.length === 1) {
         _props.push(t.objectProperty(t.identifier('children'), children[0]));
       } else {
