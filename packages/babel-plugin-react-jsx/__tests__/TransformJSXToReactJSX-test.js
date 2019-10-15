@@ -480,4 +480,10 @@ describe('transform react to jsx', () => {
       transform(`<Component y={2} {...x} />`, {useBuiltIns: false})
     ).toMatchSnapshot();
   });
+
+  it('should not contain duplicate children key in props object', () => {
+    expect(
+      transform(`<Component children={1}>2</Component>`)
+    ).toMatchSnapshot();
+  });
 });
