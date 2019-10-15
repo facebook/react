@@ -420,6 +420,50 @@ function loadModules({
           ]);
         });
 
+        it('warns about render phase update on a different component', async () => {
+          let setStep;
+          function Foo() {
+            const [step, _setStep] = useState(0);
+            setStep = _setStep;
+            return <Text text={`Foo [${step}]`} />;
+          }
+
+          function Bar({triggerUpdate}) {
+            if (triggerUpdate) {
+              setStep(1);
+            }
+            return <Text text="Bar" />;
+          }
+
+          const root = ReactNoop.createRoot();
+
+          await ReactNoop.act(async () => {
+            root.render(
+              <>
+                <Foo />
+                <Bar />
+              </>,
+            );
+          });
+          expect(Scheduler).toHaveYielded(['Foo [0]', 'Bar']);
+
+          // Bar will update Foo during its render phase. React should warn.
+          await ReactNoop.act(async () => {
+            root.render(
+              <>
+                <Foo />
+                <Bar triggerUpdate={true} />
+              </>,
+            );
+            expect(() =>
+              expect(Scheduler).toFlushAndYield(['Foo [0]', 'Bar', 'Foo [1]']),
+            ).toErrorDev([
+              'Cannot update a component from inside the function body of a ' +
+                'different component.',
+            ]);
+          });
+        });
+
         it('keeps restarting until there are no more new updates', () => {
           function Counter({row: newRow}) {
             let [count, setCount] = useState(0);
