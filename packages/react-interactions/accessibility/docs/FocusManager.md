@@ -14,6 +14,10 @@ import {
   getPreviousScope,
 } from 'react-interactions/accessibility/focus-manager';
 
+function scopeQuery(type) {
+  return type === 'div';
+}
+
 function KeyboardFocusMover(props) {
   const scopeRef = useRef(null);
 
@@ -22,9 +26,9 @@ function KeyboardFocusMover(props) {
 
     if (scope) {
       // Focus the first tabbable DOM node in my children
-      focusFirst(scope);
+      focusFirst(scopeQuery, scope);
       // Then focus the next chilkd
-      focusNext(scope);
+      focusNext(scopeQuery, scope);
     }
   });
   

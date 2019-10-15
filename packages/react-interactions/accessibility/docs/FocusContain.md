@@ -10,11 +10,11 @@ using the `tabFocus` prop.
 
 ```jsx
 import FocusContain from 'react-interactions/accessibility/focus-contain';
-import TabbableScope from 'react-interactions/accessibility/tabbable-scope';
+import tabbableScopeQuery from 'react-interactions/accessibility/tabbable-scope-query';
 
 function MyDialog(props) {
   return (
-    <FocusContain tabScope={TabbableScope} disabled={false}>
+    <FocusContain scopeQuery={tabbableScopeQuery} disabled={false}>
       <div>
         <h2>{props.title}<h2>
         <p>{props.text}</p>

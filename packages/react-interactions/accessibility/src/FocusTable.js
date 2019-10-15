@@ -7,7 +7,7 @@
  * @flow
  */
 
-import type {ReactScope, ReactScopeMethods} from 'shared/ReactTypes';
+import type {ReactScopeMethods} from 'shared/ReactTypes';
 import type {KeyboardEvent} from 'react-interactions/events/keyboard';
 
 import React from 'react';
@@ -32,14 +32,18 @@ type FocusTableProps = {|
   ) => void,
   wrapX?: boolean,
   wrapY?: boolean,
-  tabScope?: ReactScope,
+  tabScopeQuery?: (type: string | Object, props: Object) => boolean,
   allowModifiers?: boolean,
 |};
 
 const {useRef} = React;
 
-function focusScope(cell: ReactScopeMethods, event?: KeyboardEvent): void {
-  const firstScopedNode = cell.getFirstNode();
+function focusScope(
+  scopeQuery: (type: string | Object, props: Object) => boolean,
+  cell: ReactScopeMethods,
+  event?: KeyboardEvent,
+): void {
+  const firstScopedNode = cell.queryFirstNode(scopeQuery);
   if (firstScopedNode !== null) {
     firstScopedNode.focus();
     if (event) {
@@ -50,6 +54,7 @@ function focusScope(cell: ReactScopeMethods, event?: KeyboardEvent): void {
 
 // This takes into account colSpan
 function focusCellByColumnIndex(
+  scopeQuery: (type: string | Object, props: Object) => boolean,
   row: ReactScopeMethods,
   columnIndex: number,
   event?: KeyboardEvent,
@@ -62,7 +67,7 @@ function focusCellByColumnIndex(
       if (cell) {
         colSize += cell.getProps().colSpan || 1;
         if (colSize > columnIndex) {
-          focusScope(cell, event);
+          focusScope(scopeQuery, cell, event);
           return;
         }
       }
@@ -157,36 +162,31 @@ function hasModifierKey(event: KeyboardEvent): boolean {
 }
 
 export function createFocusTable(
-  scope: ReactScope,
+  scopeQuery: (type: string | Object, props: Object) => boolean,
 ): [
   (FocusTableProps) => React.Node,
   (FocusRowProps) => React.Node,
   (FocusCellProps) => React.Node,
 ] {
-  const TableScope = React.unstable_createScope(scope.fn);
+  const TableScope = React.unstable_createScope();
 
   function Table({
     children,
     onKeyboardOut,
     wrapX,
     wrapY,
-    tabScope: TabScope,
+    tabScopeQuery,
     allowModifiers,
   }: FocusTableProps): React.Node {
-    const tabScopeRef = useRef(null);
     return (
       <TableScope
         type="table"
         onKeyboardOut={onKeyboardOut}
         wrapX={wrapX}
         wrapY={wrapY}
-        tabScopeRef={tabScopeRef}
+        tabScopeQuery={tabScopeQuery}
         allowModifiers={allowModifiers}>
-        {TabScope ? (
-          <TabScope ref={tabScopeRef}>{children}</TabScope>
-        ) : (
-          children
-        )}
+        {children}
       </TableScope>
     );
   }
@@ -206,19 +206,25 @@ export function createFocusTable(
         }
         const key = event.key;
         if (key === 'Tab') {
-          const tabScope = getTableProps(currentCell).tabScopeRef.current;
-          if (tabScope) {
-            const activeNode = document.activeElement;
-            const nodes = tabScope.getAllNodes();
-            for (let i = 0; i < nodes.length; i++) {
-              const node = nodes[i];
-              if (node !== activeNode) {
-                setElementCanTab(node, false);
-              } else {
-                setElementCanTab(node, true);
+          const tabScopeQuery = getTableProps(currentCell).tabScopeQuery;
+          if (tabScopeQuery) {
+            const rowScope = currentCell.getParent();
+            if (rowScope) {
+              const tableScope = rowScope.getParent();
+              if (tableScope) {
+                const activeNode = document.activeElement;
+                const nodes = tableScope.queryAllNodes(tabScopeQuery);
+                for (let i = 0; i < nodes.length; i++) {
+                  const node = nodes[i];
+                  if (node !== activeNode) {
+                    setElementCanTab(node, false);
+                  } else {
+                    setElementCanTab(node, true);
+                  }
+                }
+                return;
               }
             }
-            return;
           }
           event.continuePropagation();
           return;
@@ -240,12 +246,22 @@ export function createFocusTable(
               if (rows !== null) {
                 if (rowIndex > 0) {
                   const row = rows[rowIndex - 1];
-                  focusCellByColumnIndex(row, cellIndexWithColSpan, event);
+                  focusCellByColumnIndex(
+                    scopeQuery,
+                    row,
+                    cellIndexWithColSpan,
+                    event,
+                  );
                 } else if (rowIndex === 0) {
                   const wrapY = getTableProps(currentCell).wrapY;
                   if (wrapY) {
                     const row = rows[rows.length - 1];
-                    focusCellByColumnIndex(row, cellIndexWithColSpan, event);
+                    focusCellByColumnIndex(
+                      scopeQuery,
+                      row,
+                      cellIndexWithColSpan,
+                      event,
+                    );
                   } else {
                     triggerNavigateOut(currentCell, 'up', event);
                   }
@@ -264,13 +280,23 @@ export function createFocusTable(
                     const wrapY = getTableProps(currentCell).wrapY;
                     if (wrapY) {
                       const row = rows[0];
-                      focusCellByColumnIndex(row, cellIndexWithColSpan, event);
+                      focusCellByColumnIndex(
+                        scopeQuery,
+                        row,
+                        cellIndexWithColSpan,
+                        event,
+                      );
                     } else {
                       triggerNavigateOut(currentCell, 'down', event);
                     }
                   } else {
                     const row = rows[rowIndex + 1];
-                    focusCellByColumnIndex(row, cellIndexWithColSpan, event);
+                    focusCellByColumnIndex(
+                      scopeQuery,
+                      row,
+                      cellIndexWithColSpan,
+                      event,
+                    );
                   }
                 }
               }
@@ -281,12 +307,12 @@ export function createFocusTable(
             const [cells, rowIndex] = getRowCells(currentCell);
             if (cells !== null) {
               if (rowIndex > 0) {
-                focusScope(cells[rowIndex - 1]);
+                focusScope(scopeQuery, cells[rowIndex - 1]);
                 event.preventDefault();
               } else if (rowIndex === 0) {
                 const wrapX = getTableProps(currentCell).wrapX;
                 if (wrapX) {
-                  focusScope(cells[cells.length - 1], event);
+                  focusScope(scopeQuery, cells[cells.length - 1], event);
                 } else {
                   triggerNavigateOut(currentCell, 'left', event);
                 }
@@ -301,12 +327,12 @@ export function createFocusTable(
                 if (rowIndex === cells.length - 1) {
                   const wrapX = getTableProps(currentCell).wrapX;
                   if (wrapX) {
-                    focusScope(cells[0], event);
+                    focusScope(scopeQuery, cells[0], event);
                   } else {
                     triggerNavigateOut(currentCell, 'right', event);
                   }
                 } else {
-                  focusScope(cells[rowIndex + 1], event);
+                  focusScope(scopeQuery, cells[rowIndex + 1], event);
                 }
               }
             }

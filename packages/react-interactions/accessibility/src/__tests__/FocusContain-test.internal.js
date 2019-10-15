@@ -12,7 +12,7 @@ import {createEventTarget} from 'react-interactions/events/src/dom/testing-libra
 let React;
 let ReactFeatureFlags;
 let FocusContain;
-let TabbableScope;
+let tabbableScopeQuery;
 
 describe('FocusContain', () => {
   beforeEach(() => {
@@ -21,7 +21,7 @@ describe('FocusContain', () => {
     ReactFeatureFlags.enableScopeAPI = true;
     ReactFeatureFlags.enableFlareAPI = true;
     FocusContain = require('../FocusContain').default;
-    TabbableScope = require('../TabbableScope').default;
+    tabbableScopeQuery = require('../TabbableScopeQuery').default;
     React = require('react');
   });
 
@@ -48,7 +48,7 @@ describe('FocusContain', () => {
       const divRef = React.createRef();
 
       const Test = () => (
-        <FocusContain tabScope={TabbableScope}>
+        <FocusContain scopeQuery={tabbableScopeQuery}>
           <input ref={inputRef} />
           <button ref={buttonRef} />
           <div ref={divRef} tabIndex={0} />
@@ -78,7 +78,7 @@ describe('FocusContain', () => {
 
       const Test = () => (
         <div>
-          <FocusContain tabScope={TabbableScope}>
+          <FocusContain scopeQuery={tabbableScopeQuery}>
             <input ref={inputRef} tabIndex={-1} />
             <button ref={buttonRef} id={1} />
             <button ref={button2Ref} id={2} />
@@ -118,10 +118,10 @@ describe('FocusContain', () => {
       const button4Ref = React.createRef();
 
       const Test = () => (
-        <FocusContain tabScope={TabbableScope}>
+        <FocusContain scopeQuery={tabbableScopeQuery}>
           <input ref={inputRef} tabIndex={-1} />
           <button ref={buttonRef} id={1} />
-          <FocusContain tabScope={TabbableScope} disabled={true}>
+          <FocusContain scopeQuery={tabbableScopeQuery} disabled={true}>
             <button ref={button2Ref} id={2} />
             <button ref={button3Ref} id={3} />
           </FocusContain>
@@ -153,10 +153,10 @@ describe('FocusContain', () => {
       const button4Ref = React.createRef();
 
       const Test = () => (
-        <FocusContain tabScope={TabbableScope}>
+        <FocusContain scopeQuery={tabbableScopeQuery}>
           <input ref={inputRef} tabIndex={-1} />
           <button ref={buttonRef} id={1} />
-          <FocusContain tabScope={TabbableScope} disabled={false}>
+          <FocusContain scopeQuery={tabbableScopeQuery} disabled={false}>
             <button ref={button2Ref} id={2} />
             <button ref={button3Ref} id={3} />
           </FocusContain>
@@ -200,7 +200,7 @@ describe('FocusContain', () => {
       }
 
       const Test = () => (
-        <FocusContain tabScope={TabbableScope}>
+        <FocusContain scopeQuery={tabbableScopeQuery}>
           <button ref={buttonRef} id={1} />
           <button ref={button2Ref} id={2} />
           <React.Suspense fallback={<button ref={button3Ref} id={3} />}>

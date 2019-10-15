@@ -7,7 +7,7 @@
  * @flow
  */
 
-import type {ReactScope, ReactScopeMethods} from 'shared/ReactTypes';
+import type {ReactScopeMethods} from 'shared/ReactTypes';
 import type {KeyboardEvent} from 'react-interactions/events/keyboard';
 
 import React from 'react';
@@ -23,14 +23,18 @@ type FocusGroupProps = {|
   children: React.Node,
   portrait: boolean,
   wrap?: boolean,
-  tabScope?: ReactScope,
+  tabScopeQuery?: (type: string | Object, props: Object) => boolean,
   allowModifiers?: boolean,
 |};
 
 const {useRef} = React;
 
-function focusGroupItem(cell: ReactScopeMethods, event: KeyboardEvent): void {
-  const firstScopedNode = cell.getFirstNode();
+function focusGroupItem(
+  scopeQuery: (type: string | Object, props: Object) => boolean,
+  cell: ReactScopeMethods,
+  event: KeyboardEvent,
+): void {
+  const firstScopedNode = cell.queryFirstNode(scopeQuery);
   if (firstScopedNode !== null) {
     firstScopedNode.focus();
     event.preventDefault();
@@ -91,30 +95,25 @@ function hasModifierKey(event: KeyboardEvent): boolean {
 }
 
 export function createFocusGroup(
-  scope: ReactScope,
+  scopeQuery: (type: string | Object, props: Object) => boolean,
 ): [(FocusGroupProps) => React.Node, (FocusItemProps) => React.Node] {
-  const TableScope = React.unstable_createScope(scope.fn);
+  const TableScope = React.unstable_createScope();
 
   function Group({
     children,
     portrait,
     wrap,
-    tabScope: TabScope,
+    tabScopeQuery,
     allowModifiers,
   }: FocusGroupProps): React.Node {
-    const tabScopeRef = useRef(null);
     return (
       <TableScope
         type="group"
         portrait={portrait}
         wrap={wrap}
-        tabScopeRef={tabScopeRef}
+        tabScopeQuery={tabScopeQuery}
         allowModifiers={allowModifiers}>
-        {TabScope ? (
-          <TabScope ref={tabScopeRef}>{children}</TabScope>
-        ) : (
-          children
-        )}
+        {children}
       </TableScope>
     );
   }
@@ -132,19 +131,22 @@ export function createFocusGroup(
             const key = event.key;
 
             if (key === 'Tab') {
-              const tabScope = getGroupProps(currentItem).tabScopeRef.current;
-              if (tabScope) {
-                const activeNode = document.activeElement;
-                const nodes = tabScope.getAllNodes();
-                for (let i = 0; i < nodes.length; i++) {
-                  const node = nodes[i];
-                  if (node !== activeNode) {
-                    setElementCanTab(node, false);
-                  } else {
-                    setElementCanTab(node, true);
+              const tabScopeQuery = getGroupProps(currentItem).tabScopeQuery;
+              if (tabScopeQuery) {
+                const groupScope = currentItem.getParent();
+                if (groupScope) {
+                  const activeNode = document.activeElement;
+                  const nodes = groupScope.queryAllNodes(tabScopeQuery);
+                  for (let i = 0; i < nodes.length; i++) {
+                    const node = nodes[i];
+                    if (node !== activeNode) {
+                      setElementCanTab(node, false);
+                    } else {
+                      setElementCanTab(node, true);
+                    }
                   }
+                  return;
                 }
-                return;
               }
               event.continuePropagation();
               return;
@@ -166,7 +168,7 @@ export function createFocusGroup(
                     currentItem,
                   );
                   if (previousGroupItem) {
-                    focusGroupItem(previousGroupItem, event);
+                    focusGroupItem(scopeQuery, previousGroupItem, event);
                     return;
                   }
                 }
@@ -176,7 +178,7 @@ export function createFocusGroup(
                 if (portrait) {
                   const nextGroupItem = getNextGroupItem(group, currentItem);
                   if (nextGroupItem) {
-                    focusGroupItem(nextGroupItem, event);
+                    focusGroupItem(scopeQuery, nextGroupItem, event);
                     return;
                   }
                 }
@@ -189,7 +191,7 @@ export function createFocusGroup(
                     currentItem,
                   );
                   if (previousGroupItem) {
-                    focusGroupItem(previousGroupItem, event);
+                    focusGroupItem(scopeQuery, previousGroupItem, event);
                     return;
                   }
                 }
@@ -199,7 +201,7 @@ export function createFocusGroup(
                 if (!portrait) {
                   const nextGroupItem = getNextGroupItem(group, currentItem);
                   if (nextGroupItem) {
-                    focusGroupItem(nextGroupItem, event);
+                    focusGroupItem(scopeQuery, nextGroupItem, event);
                     return;
                   }
                 }
