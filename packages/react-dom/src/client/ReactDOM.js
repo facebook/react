@@ -624,7 +624,7 @@ type RootOptions = {
   },
 };
 
-export function createRoot(
+function createRoot(
   container: DOMContainer,
   options?: RootOptions,
 ): _ReactRoot {
@@ -636,7 +636,7 @@ export function createRoot(
   return new ReactRoot(container, options);
 }
 
-export function createSyncRoot(
+function createSyncRoot(
   container: DOMContainer,
   options?: RootOptions,
 ): _ReactRoot {
