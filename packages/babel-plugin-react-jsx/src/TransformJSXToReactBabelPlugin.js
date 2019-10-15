@@ -296,9 +296,15 @@ You can turn on the 'throwIfNamespace' flag to bypass this warning.`,
       if (t.isJSXSpreadAttribute(prop)) {
         _props = pushProps(_props, objs);
         objs.push(prop.argument);
-      } else if (!hasChildren || !isChildrenProp(prop)) {
+      } else if (hasChildren && isChildrenProp(prop)) {
         // In order to avoid having duplicate "children" keys, we avoid
-        // pushing the "children" prop if we have actual children.
+        // pushing the "children" prop if we have actual children. Instead
+        // we put the children into a separate object and then rely on
+        // the Object.assign logic below to ensure the correct object is
+        // formed.
+        _props = pushProps(_props, objs);
+        objs.push(t.objectExpression([convertAttribute(prop)]));
+      } else {
         _props.push(convertAttribute(prop));
       }
     }
