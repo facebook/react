@@ -39,4 +39,12 @@ Object.assign(
   },
 );
 
+// TODO: These are temporary until we update the callers downstream.
+ReactDOM.unstable_createRoot = ReactDOM.createRoot;
+ReactDOM.unstable_createSyncRoot = ReactDOM.createSyncRoot;
+ReactDOM.unstable_interactiveUpdates = (fn, a, b, c) => {
+  ReactDOM.unstable_flushDiscreteUpdates();
+  return ReactDOM.unstable_discreteUpdates(fn, a, b, c);
+};
+
 export default ReactDOM;
