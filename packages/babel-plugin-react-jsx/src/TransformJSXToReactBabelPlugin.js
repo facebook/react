@@ -119,8 +119,8 @@ You can turn on the 'throwIfNamespace' flag to bypass this warning.`,
     }
   }
 
-  function convertAttribute(node) {
-    const value = convertAttributeValue(node.value || t.booleanLiteral(true));
+  function convertAttribute(node, duplicateChildren) {
+    let value = convertAttributeValue(node.value || t.booleanLiteral(true));
 
     if (t.isStringLiteral(value) && !t.isJSXExpressionContainer(node.value)) {
       value.value = value.value.replace(/\n\s+/g, ' ');
@@ -129,6 +129,9 @@ You can turn on the 'throwIfNamespace' flag to bypass this warning.`,
       if (value.extra && value.extra.raw) {
         delete value.extra.raw;
       }
+    }
+    if (duplicateChildren && duplicateChildren.length > 0) {
+      value = t.sequenceExpression([...duplicateChildren, value]);
     }
 
     if (t.isJSXNamespacedName(node.name)) {
@@ -291,21 +294,31 @@ You can turn on the 'throwIfNamespace' flag to bypass this warning.`,
       );
     }
 
+    let duplicateChildren = [];
     while (attribs.length) {
       const prop = attribs.shift();
       if (t.isJSXSpreadAttribute(prop)) {
         _props = pushProps(_props, objs);
-        objs.push(prop.argument);
+        if (duplicateChildren.length > 0) {
+          objs.push(
+            t.sequenceExpression([...duplicateChildren, prop.argument]),
+          );
+          duplicateChildren = [];
+        } else {
+          objs.push(prop.argument);
+        }
       } else if (hasChildren && isChildrenProp(prop)) {
         // In order to avoid having duplicate "children" keys, we avoid
         // pushing the "children" prop if we have actual children. Instead
         // we put the children into a separate object and then rely on
         // the Object.assign logic below to ensure the correct object is
         // formed.
-        _props = pushProps(_props, objs);
-        objs.push(t.objectExpression([convertAttribute(prop)]));
+        duplicateChildren.push(convertAttributeValue(prop.value));
       } else {
-        _props.push(convertAttribute(prop));
+        _props.push(convertAttribute(prop, duplicateChildren));
+        if (duplicateChildren.length > 0) {
+          duplicateChildren = [];
+        }
       }
     }
 
@@ -313,12 +326,24 @@ You can turn on the 'throwIfNamespace' flag to bypass this warning.`,
     // through the argument object
     if (hasChildren) {
       if (children.length === 1) {
-        _props.push(t.objectProperty(t.identifier('children'), children[0]));
+        _props.push(
+          t.objectProperty(
+            t.identifier('children'),
+            duplicateChildren.length > 0
+              ? t.sequenceExpression([...duplicateChildren, children[0]])
+              : children[0],
+          ),
+        );
       } else {
         _props.push(
           t.objectProperty(
             t.identifier('children'),
-            t.arrayExpression(children),
+            duplicateChildren.length > 0
+              ? t.sequenceExpression([
+                  ...duplicateChildren,
+                  t.arrayExpression(children),
+                ])
+              : t.arrayExpression(children),
           ),
         );
       }
