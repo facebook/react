@@ -22,9 +22,9 @@ describe('when Trusted Types are available in global object', () => {
     container = document.createElement('div');
     const fakeTTObjects = new Set();
     window.trustedTypes = {
-      isHTML: value => {
+      isHTML: function(value) {
         if (this !== window.trustedTypes) {
-          throw new Error('Illegal invocation');
+          throw new Error(this);
         }
         return fakeTTObjects.has(value);
       },
