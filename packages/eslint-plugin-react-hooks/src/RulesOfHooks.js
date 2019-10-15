@@ -514,7 +514,10 @@ function getFunctionName(node) {
     ) {
       // const Hooks = {}
       // Hooks.useHook = () => {};
-      if (node.parent.left.type === 'MemberExpression') {
+      if (
+        node.parent.left.type === 'MemberExpression' &&
+        !node.parent.left.computed
+      ) {
         return node.parent.left.property;
       }
       // useHook = () => {};
