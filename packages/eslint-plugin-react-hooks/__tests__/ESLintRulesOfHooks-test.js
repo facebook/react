@@ -116,6 +116,11 @@ const tests = {
       // Valid because components can call hooks.
       Components.Foo = () => { useState(); }
       Components.Bar = () => { useState(); }
+
+      // Valid because components can call hooks.
+      Components.Foo = function () { useState(); }
+      Components.whatever = function Foo() { useState(); }
+      Components.Bar = () => { useState(); } 
     `,
     `
       // Valid because hooks can call hooks.
@@ -479,7 +484,18 @@ const tests = {
       `,
       errors: [functionError('useState', 'invalidComponentOrHookName')],
     },
-
+    {
+      code: `
+        Components.whatever = function () { useState(); }
+      `,
+      errors: [functionError('useState', 'whatever')],
+    },
+    {
+      code: `
+        Components.Foo = function whatever() { useState(); }
+      `,
+      errors: [functionError('useState', 'whatever')],
+    },
     {
       code: `
         // Invalid because it's dangerous and might not warn otherwise.
