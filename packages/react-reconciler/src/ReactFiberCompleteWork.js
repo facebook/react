@@ -870,10 +870,9 @@ function completeWork(
       const nextDidTimeout = nextState !== null;
       let prevDidTimeout = false;
       if (current === null) {
-        // In cases where we didn't find a suitable hydration boundary we never
-        // put this in dehydrated mode, but we still need to pop the hydration
-        // state since we might be inside the insertion tree.
-        popHydrationState(workInProgress);
+        if (workInProgress.memoizedProps.fallback !== undefined) {
+          popHydrationState(workInProgress);
+        }
       } else {
         const prevState: null | SuspenseState = current.memoizedState;
         prevDidTimeout = prevState !== null;

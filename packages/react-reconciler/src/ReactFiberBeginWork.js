@@ -1592,12 +1592,12 @@ function updateSuspenseComponent(
   // children. It's essentially a very basic form of re-parenting.
 
   if (current === null) {
-    if (enableSuspenseServerRenderer) {
-      // If we're currently hydrating, try to hydrate this boundary.
-      // But only if this has a fallback.
-      if (nextProps.fallback !== undefined) {
-        tryToClaimNextHydratableInstance(workInProgress);
-        // This could've been a dehydrated suspense component.
+    // If we're currently hydrating, try to hydrate this boundary.
+    // But only if this has a fallback.
+    if (nextProps.fallback !== undefined) {
+      tryToClaimNextHydratableInstance(workInProgress);
+      // This could've been a dehydrated suspense component.
+      if (enableSuspenseServerRenderer) {
         const suspenseState: null | SuspenseState =
           workInProgress.memoizedState;
         if (suspenseState !== null) {

@@ -517,14 +517,45 @@ describe('ReactDOMServerHydration', () => {
     });
   }
 
-  it('regression test: Suspense + hydration in legacy mode ', () => {
+  it('Suspense + hydration in legacy mode', () => {
     const element = document.createElement('div');
     element.innerHTML = '<div>Hello World</div>';
+    let div = element.firstChild;
+    let ref = React.createRef();
+    expect(() =>
+      ReactDOM.hydrate(
+        <React.Suspense fallback={null}>
+          <div ref={ref}>Hello World</div>
+        </React.Suspense>,
+        element,
+      ),
+    ).toWarnDev(
+      'Warning: Did not expect server HTML to contain a <div> in <div>.',
+      {withoutStack: true},
+    );
+
+    // The content should've been client rendered and replaced the
+    // existing div.
+    expect(ref.current).not.toBe(div);
+    // The HTML should be the same though.
+    expect(element.innerHTML).toBe('<div>Hello World</div>');
+  });
+
+  it('Suspense + hydration in legacy mode with no fallback', () => {
+    const element = document.createElement('div');
+    element.innerHTML = '<div>Hello World</div>';
+    let div = element.firstChild;
+    let ref = React.createRef();
     ReactDOM.hydrate(
       <React.Suspense>
-        <div>Hello World</div>
+        <div ref={ref}>Hello World</div>
       </React.Suspense>,
       element,
     );
+
+    // Because this didn't have a fallback, it was hydrated as if it's
+    // not a Suspense boundary.
+    expect(ref.current).toBe(div);
+    expect(element.innerHTML).toBe('<div>Hello World</div>');
   });
 });
