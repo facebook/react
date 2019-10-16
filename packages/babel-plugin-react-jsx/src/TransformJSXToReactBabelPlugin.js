@@ -119,8 +119,8 @@ You can turn on the 'throwIfNamespace' flag to bypass this warning.`,
     }
   }
 
-  function convertAttribute(node) {
-    const value = convertAttributeValue(node.value || t.booleanLiteral(true));
+  function convertAttribute(node, duplicateChildren) {
+    let value = convertAttributeValue(node.value || t.booleanLiteral(true));
 
     if (t.isStringLiteral(value) && !t.isJSXExpressionContainer(node.value)) {
       value.value = value.value.replace(/\n\s+/g, ' ');
@@ -129,6 +129,9 @@ You can turn on the 'throwIfNamespace' flag to bypass this warning.`,
       if (value.extra && value.extra.raw) {
         delete value.extra.raw;
       }
+    }
+    if (duplicateChildren && duplicateChildren.length > 0) {
+      value = t.sequenceExpression([...duplicateChildren, value]);
     }
 
     if (t.isJSXNamespacedName(node.name)) {
@@ -281,6 +284,17 @@ You can turn on the 'throwIfNamespace' flag to bypass this warning.`,
   function buildJSXOpeningElementAttributes(attribs, file, children) {
     let _props = [];
     const objs = [];
+
+    // In order to avoid having duplicate "children" keys, we avoid
+    // pushing the "children" prop if we have actual children. However,
+    // the children prop may have side effects, so to be certain
+    // these side effects are evaluated, we add them to the following prop
+    // as a sequence expression to preserve order. So:
+    // <div children={x++} foo={y}>{child}</div> becomes
+    // React.jsx('div', {foo: (x++, y), children: child});
+    // duplicateChildren contains the extra children prop values
+    let duplicateChildren = [];
+
     const hasChildren = children && children.length > 0;
 
     const useBuiltIns = file.opts.useBuiltIns || false;
@@ -293,19 +307,23 @@ You can turn on the 'throwIfNamespace' flag to bypass this warning.`,
 
     while (attribs.length) {
       const prop = attribs.shift();
-      if (t.isJSXSpreadAttribute(prop)) {
+      if (hasChildren && isChildrenProp(prop)) {
+        duplicateChildren.push(convertAttributeValue(prop.value));
+      } else if (t.isJSXSpreadAttribute(prop)) {
         _props = pushProps(_props, objs);
-        objs.push(prop.argument);
-      } else if (hasChildren && isChildrenProp(prop)) {
-        // In order to avoid having duplicate "children" keys, we avoid
-        // pushing the "children" prop if we have actual children. Instead
-        // we put the children into a separate object and then rely on
-        // the Object.assign logic below to ensure the correct object is
-        // formed.
-        _props = pushProps(_props, objs);
-        objs.push(t.objectExpression([convertAttribute(prop)]));
+        if (duplicateChildren.length > 0) {
+          objs.push(
+            t.sequenceExpression([...duplicateChildren, prop.argument]),
+          );
+          duplicateChildren = [];
+        } else {
+          objs.push(prop.argument);
+        }
       } else {
-        _props.push(convertAttribute(prop));
+        _props.push(convertAttribute(prop, duplicateChildren));
+        if (duplicateChildren.length > 0) {
+          duplicateChildren = [];
+        }
       }
     }
 
@@ -313,12 +331,24 @@ You can turn on the 'throwIfNamespace' flag to bypass this warning.`,
     // through the argument object
     if (hasChildren) {
       if (children.length === 1) {
-        _props.push(t.objectProperty(t.identifier('children'), children[0]));
+        _props.push(
+          t.objectProperty(
+            t.identifier('children'),
+            duplicateChildren.length > 0
+              ? t.sequenceExpression([...duplicateChildren, children[0]])
+              : children[0],
+          ),
+        );
       } else {
         _props.push(
           t.objectProperty(
             t.identifier('children'),
-            t.arrayExpression(children),
+            duplicateChildren.length > 0
+              ? t.sequenceExpression([
+                  ...duplicateChildren,
+                  t.arrayExpression(children),
+                ])
+              : t.arrayExpression(children),
           ),
         );
       }
