@@ -2526,7 +2526,7 @@ describe('ReactDOMServerPartialHydration', () => {
     container.innerHTML = finalHTML;
 
     suspend = true;
-    let root = ReactDOM.unstable_createRoot(container, {hydrate: true});
+    let root = ReactDOM.createRoot(container, {hydrate: true});
     root.render(<App showSibling={false} />);
     expect(Scheduler).toFlushAndYield([]);
 
