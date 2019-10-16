@@ -157,9 +157,10 @@ function createPressEvent(
   let ctrlKey = false;
   let metaKey = false;
   let shiftKey = false;
+  let nativeEvent;
 
   if (event) {
-    const nativeEvent = (event.nativeEvent: any);
+    nativeEvent = (event.nativeEvent: any);
     ({altKey, ctrlKey, metaKey, shiftKey} = nativeEvent);
     // Only check for one property, checking for all of them is costly. We can assume
     // if clientX exists, so do the rest.
@@ -169,7 +170,7 @@ function createPressEvent(
       ({clientX, clientY, pageX, pageY, screenX, screenY} = eventObject);
     }
   }
-  return {
+  const pressEvent = {
     altKey,
     buttons: state.buttons,
     clientX,
@@ -189,13 +190,10 @@ function createPressEvent(
     x: clientX,
     y: clientY,
     preventDefault() {
-      // NO-OP, we should remove this in the future
-      if (__DEV__) {
-        warning(
-          false,
-          'preventDefault is not available on event objects created from event responder modules (React Flare). ' +
-            'Try wrapping in a conditional, i.e. `if (event.type !== "press") { event.preventDefault() }`',
-        );
+      state.shouldPreventClick = true;
+      if (nativeEvent) {
+        pressEvent.defaultPrevented = true;
+        nativeEvent.preventDefault();
       }
     },
     stopPropagation() {
@@ -209,6 +207,7 @@ function createPressEvent(
       }
     },
   };
+  return pressEvent;
 }
 
 function dispatchEvent(
