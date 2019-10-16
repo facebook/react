@@ -42,8 +42,8 @@ function MyComponent(props) {
   );
 }
 
-// Using the ref, we can get the host nodes via getScopedNodes()
-const divs = divOnlyScope.current.getScopedNodes();
+// Using the ref, we can get the host nodes via getAllNodes()
+const divs = divOnlyScope.current.getAllNodes();
 
 // [<div>DIV 1</div>, <div>DIV 2</div>, <div>DIV 3</div>]
 console.log(divs);
@@ -72,7 +72,17 @@ Returns the parent `ReactScopeInterface` of the scope node or `null` if none exi
 
 Returns the current `props` object of the scope node.
 
-### getScopedNodes: () => null | Array<HTMLElement>
+### getAllNodes: () => null | Array<HTMLElement>
 
 Returns an array of all child host nodes that successfully match when queried using the
 query function passed to the scope. Returns `null` if there are no matching host nodes.
+
+### getFirstNode: () => null | HTMLElement
+
+Returns the first child host node that successfully matches when queried using the
+query function passed to the scope. Returns `null` if there is no matching host node.
+
+### containsNode: (node: HTMLElement) => boolean
+
+Returns `true` or `false` depending on if the given `HTMLElement` is a descendant
+of the scope's sub-tree.

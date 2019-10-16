@@ -645,13 +645,6 @@ function hideOrUnhideAllChildren(finishedWork, isHidden) {
         } else {
           unhideInstance(node.stateNode, node.memoizedProps);
         }
-      } else if (node.tag === HostPortal) {
-        const instance = node.stateNode.containerInfo;
-        if (isHidden) {
-          hideInstance(instance);
-        } else {
-          unhideInstance(instance, node.memoizedProps);
-        }
       } else if (node.tag === HostText) {
         const instance = node.stateNode;
         if (isHidden) {

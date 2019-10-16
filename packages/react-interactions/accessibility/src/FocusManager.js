@@ -12,9 +12,14 @@ import type {KeyboardEvent} from 'react-interactions/events/keyboard';
 
 import getTabbableNodes from './shared/getTabbableNodes';
 
-export function focusFirst(scope: ReactScopeMethods): void {
-  const [, firstTabbableElem] = getTabbableNodes(scope);
-  focusElem(firstTabbableElem);
+export function focusFirst(
+  scopeQuery: (type: string | Object, props: Object) => boolean,
+  scope: ReactScopeMethods,
+): void {
+  const firstNode = scope.queryFirstNode(scopeQuery);
+  if (firstNode) {
+    focusElem(firstNode);
+  }
 }
 
 function focusElem(elem: null | HTMLElement): void {
@@ -24,6 +29,7 @@ function focusElem(elem: null | HTMLElement): void {
 }
 
 export function focusNext(
+  scopeQuery: (type: string | Object, props: Object) => boolean,
   scope: ReactScopeMethods,
   event?: KeyboardEvent,
   contain?: boolean,
@@ -34,14 +40,14 @@ export function focusNext(
     lastTabbableElem,
     currentIndex,
     focusedElement,
-  ] = getTabbableNodes(scope);
+  ] = getTabbableNodes(scopeQuery, scope);
 
   if (focusedElement === null) {
     if (event) {
       event.continuePropagation();
     }
   } else if (focusedElement === lastTabbableElem) {
-    if (contain) {
+    if (contain === true) {
       focusElem(firstTabbableElem);
       if (event) {
         event.preventDefault();
@@ -49,8 +55,8 @@ export function focusNext(
     } else if (event) {
       event.continuePropagation();
     }
-  } else {
-    focusElem((tabbableNodes: any)[currentIndex + 1]);
+  } else if (tabbableNodes) {
+    focusElem(tabbableNodes[currentIndex + 1]);
     if (event) {
       event.preventDefault();
     }
@@ -58,6 +64,7 @@ export function focusNext(
 }
 
 export function focusPrevious(
+  scopeQuery: (type: string | Object, props: Object) => boolean,
   scope: ReactScopeMethods,
   event?: KeyboardEvent,
   contain?: boolean,
@@ -68,14 +75,14 @@ export function focusPrevious(
     lastTabbableElem,
     currentIndex,
     focusedElement,
-  ] = getTabbableNodes(scope);
+  ] = getTabbableNodes(scopeQuery, scope);
 
   if (focusedElement === null) {
     if (event) {
       event.continuePropagation();
     }
   } else if (focusedElement === firstTabbableElem) {
-    if (contain) {
+    if (contain === true) {
       focusElem(lastTabbableElem);
       if (event) {
         event.preventDefault();
@@ -83,8 +90,8 @@ export function focusPrevious(
     } else if (event) {
       event.continuePropagation();
     }
-  } else {
-    focusElem((tabbableNodes: any)[currentIndex - 1]);
+  } else if (tabbableNodes) {
+    focusElem(tabbableNodes[currentIndex - 1]);
     if (event) {
       event.preventDefault();
     }

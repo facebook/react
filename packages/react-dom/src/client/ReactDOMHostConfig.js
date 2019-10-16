@@ -7,7 +7,11 @@
  * @flow
  */
 
-import {precacheFiberNode, updateFiberProps} from './ReactDOMComponentTree';
+import {
+  precacheFiberNode,
+  updateFiberProps,
+  getClosestInstanceFromNode,
+} from './ReactDOMComponentTree';
 import {
   createElement,
   createTextNode,
@@ -975,4 +979,8 @@ export function unmountFundamentalComponent(
       onUnmount(null, instance, props, state);
     }
   }
+}
+
+export function getInstanceFromNode(node: HTMLElement): null | Object {
+  return getClosestInstanceFromNode(node) || null;
 }

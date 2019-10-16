@@ -200,14 +200,13 @@ const LegacyUnbatchedContext = /*       */ 0b001000;
 const RenderContext = /*                */ 0b010000;
 const CommitContext = /*                */ 0b100000;
 
-type RootExitStatus = 0 | 1 | 2 | 3 | 4 | 5 | 6;
+type RootExitStatus = 0 | 1 | 2 | 3 | 4 | 5;
 const RootIncomplete = 0;
 const RootFatalErrored = 1;
 const RootErrored = 2;
 const RootSuspended = 3;
 const RootSuspendedWithDelay = 4;
 const RootCompleted = 5;
-const RootLocked = 6;
 
 export type Thenable = {
   then(resolve: () => mixed, reject?: () => mixed): Thenable | void,
@@ -366,20 +365,6 @@ export function computeExpirationForFiber(
   }
 
   return expirationTime;
-}
-
-let lastUniqueAsyncExpiration = NoWork;
-export function computeUniqueAsyncExpiration(): ExpirationTime {
-  const currentTime = requestCurrentTime();
-  let result = computeAsyncExpiration(currentTime);
-  if (result <= lastUniqueAsyncExpiration) {
-    // Since we assume the current time monotonically increases, we only hit
-    // this branch when computeUniqueAsyncExpiration is fired multiple times
-    // within a 200ms window (or whatever the async bucket size is).
-    result -= 1;
-  }
-  lastUniqueAsyncExpiration = result;
-  return result;
 }
 
 export function scheduleUpdateOnFiber(
@@ -719,7 +704,6 @@ function performConcurrentWorkOnRoot(root, didTimeout) {
         const finishedWork: Fiber = ((root.finishedWork =
           root.current.alternate): any);
         root.finishedExpirationTime = expirationTime;
-        resolveLocksOnRoot(root, expirationTime);
         finishConcurrentRender(
           root,
           finishedWork,
@@ -757,17 +741,19 @@ function finishConcurrentRender(
     // statement, but eslint doesn't know about invariant, so it complains
     // if I do. eslint-disable-next-line no-fallthrough
     case RootErrored: {
-      if (expirationTime !== Idle) {
-        // If this was an async render, the error may have happened due to
-        // a mutation in a concurrent event. Try rendering one more time,
-        // synchronously, to see if the error goes away. If there are
-        // lower priority updates, let's include those, too, in case they
-        // fix the inconsistency. Render at Idle to include all updates.
-        markRootExpiredAtTime(root, Idle);
-        break;
-      }
-      // Commit the root in its errored state.
-      commitRoot(root);
+      // If this was an async render, the error may have happened due to
+      // a mutation in a concurrent event. Try rendering one more time,
+      // synchronously, to see if the error goes away. If there are
+      // lower priority updates, let's include those, too, in case they
+      // fix the inconsistency. Render at Idle to include all updates.
+      // If it was Idle or Never or some not-yet-invented time, render
+      // at that time.
+      markRootExpiredAtTime(
+        root,
+        expirationTime > Idle ? Idle : expirationTime,
+      );
+      // We assume that this second render pass will be synchronous
+      // and therefore not hit this path again.
       break;
     }
     case RootSuspended: {
@@ -976,13 +962,6 @@ function finishConcurrentRender(
       commitRoot(root);
       break;
     }
-    case RootLocked: {
-      // This root has a lock that prevents it from committing. Exit. If
-      // we begin work on the root again, without any intervening updates,
-      // it will finish without doing additional work.
-      markRootSuspendedAtTime(root, expirationTime);
-      break;
-    }
     default: {
       invariant(false, 'Unknown root exit status.');
     }
@@ -1060,12 +1039,10 @@ function performSyncWorkOnRoot(root) {
         );
       } else {
         // We now have a consistent tree. Because this is a sync render, we
-        // will commit it even if something suspended. The only exception is
-        // if the root is locked (using the unstable_createBatch API).
+        // will commit it even if something suspended.
         stopFinishedWorkLoopTimer();
         root.finishedWork = (root.current.alternate: any);
         root.finishedExpirationTime = expirationTime;
-        resolveLocksOnRoot(root, expirationTime);
         finishSyncRender(root, workInProgressRootExitStatus, expirationTime);
       }
 
@@ -1079,38 +1056,23 @@ function performSyncWorkOnRoot(root) {
 }
 
 function finishSyncRender(root, exitStatus, expirationTime) {
-  if (exitStatus === RootLocked) {
-    // This root has a lock that prevents it from committing. Exit. If we
-    // begin work on the root again, without any intervening updates, it
-    // will finish without doing additional work.
-    markRootSuspendedAtTime(root, expirationTime);
-  } else {
-    // Set this to null to indicate there's no in-progress render.
-    workInProgressRoot = null;
+  // Set this to null to indicate there's no in-progress render.
+  workInProgressRoot = null;
 
-    if (__DEV__) {
-      if (
-        exitStatus === RootSuspended ||
-        exitStatus === RootSuspendedWithDelay
-      ) {
-        flushSuspensePriorityWarningInDEV();
-      }
+  if (__DEV__) {
+    if (exitStatus === RootSuspended || exitStatus === RootSuspendedWithDelay) {
+      flushSuspensePriorityWarningInDEV();
     }
-    commitRoot(root);
   }
+  commitRoot(root);
 }
 
 export function flushRoot(root: FiberRoot, expirationTime: ExpirationTime) {
-  if ((executionContext & (RenderContext | CommitContext)) !== NoContext) {
-    invariant(
-      false,
-      'work.commit(): Cannot commit while already rendering. This likely ' +
-        'means you attempted to commit from inside a lifecycle method.',
-    );
-  }
   markRootExpiredAtTime(root, expirationTime);
   ensureRootIsScheduled(root);
-  flushSyncCallbackQueue();
+  if ((executionContext & (RenderContext | CommitContext)) === NoContext) {
+    flushSyncCallbackQueue();
+  }
 }
 
 export function flushDiscreteUpdates() {
@@ -1138,21 +1100,6 @@ export function flushDiscreteUpdates() {
   // If the discrete updates scheduled passive effects, flush them now so that
   // they fire before the next serial event.
   flushPassiveEffects();
-}
-
-function resolveLocksOnRoot(root: FiberRoot, expirationTime: ExpirationTime) {
-  const firstBatch = root.firstBatch;
-  if (
-    firstBatch !== null &&
-    firstBatch._defer &&
-    firstBatch._expirationTime >= expirationTime
-  ) {
-    scheduleCallback(NormalPriority, () => {
-      firstBatch._onComplete();
-      return null;
-    });
-    workInProgressRootExitStatus = RootLocked;
-  }
 }
 
 export function deferredUpdates<A>(fn: () => A): A {
@@ -2431,7 +2378,7 @@ function retryTimedOutBoundary(
   // previously was rendered in its fallback state. One of the promises that
   // suspended it has resolved, which means at least part of the tree was
   // likely unblocked. Try rendering again, at a new expiration time.
-  if (retryTime === Never) {
+  if (retryTime === NoWork) {
     const suspenseConfig = null; // Retries don't carry over the already committed update.
     const currentTime = requestCurrentTime();
     retryTime = computeExpirationForFiber(
@@ -2450,7 +2397,7 @@ function retryTimedOutBoundary(
 
 export function retryDehydratedSuspenseBoundary(boundaryFiber: Fiber) {
   const suspenseState: null | SuspenseState = boundaryFiber.memoizedState;
-  let retryTime = Never;
+  let retryTime = NoWork;
   if (suspenseState !== null) {
     retryTime = suspenseState.retryTime;
   }
@@ -2458,7 +2405,7 @@ export function retryDehydratedSuspenseBoundary(boundaryFiber: Fiber) {
 }
 
 export function resolveRetryThenable(boundaryFiber: Fiber, thenable: Thenable) {
-  let retryTime = Never; // Default
+  let retryTime = NoWork; // Default
   let retryCache: WeakSet<Thenable> | Set<Thenable> | null;
   if (enableSuspenseServerRenderer) {
     switch (boundaryFiber.tag) {

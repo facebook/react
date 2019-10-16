@@ -27,7 +27,6 @@ function loadModules() {
   ReactFeatureFlags = require('shared/ReactFeatureFlags');
   ReactFeatureFlags.debugRenderPhaseSideEffects = false;
   ReactFeatureFlags.debugRenderPhaseSideEffectsForStrictMode = false;
-  ReactFeatureFlags.enableSuspenseServerRenderer = true;
   ReactFeatureFlags.enableProfilerTimer = true;
   ReactFeatureFlags.enableSchedulerTracing = true;
   ReactFeatureFlags.replayFailedUnitOfWorkWithInvokeGuardedCallback = false;
@@ -63,6 +62,11 @@ describe('ReactDOMTracing', () => {
 
     loadModules();
   });
+
+  if (!__EXPERIMENTAL__) {
+    it("empty test so Jest doesn't complain", () => {});
+    return;
+  }
 
   describe('interaction tracing', () => {
     describe('hidden', () => {
@@ -101,7 +105,7 @@ describe('ReactDOMTracing', () => {
         const onRender = jest.fn();
 
         const container = document.createElement('div');
-        const root = ReactDOM.unstable_createRoot(container);
+        const root = ReactDOM.createRoot(container);
         SchedulerTracing.unstable_trace('initialization', 0, () => {
           interaction = Array.from(SchedulerTracing.unstable_getCurrent())[0];
           TestUtils.act(() => {
@@ -171,7 +175,7 @@ describe('ReactDOMTracing', () => {
         const onRender = jest.fn();
 
         const container = document.createElement('div');
-        const root = ReactDOM.unstable_createRoot(container);
+        const root = ReactDOM.createRoot(container);
         SchedulerTracing.unstable_trace('initialization', 0, () => {
           interaction = Array.from(SchedulerTracing.unstable_getCurrent())[0];
 
@@ -250,7 +254,7 @@ describe('ReactDOMTracing', () => {
         const onRender = jest.fn();
 
         const container = document.createElement('div');
-        const root = ReactDOM.unstable_createRoot(container);
+        const root = ReactDOM.createRoot(container);
         SchedulerTracing.unstable_trace('initialization', 0, () => {
           interaction = Array.from(SchedulerTracing.unstable_getCurrent())[0];
           TestUtils.act(() => {
@@ -344,7 +348,7 @@ describe('ReactDOMTracing', () => {
 
         const onRender = jest.fn();
         const container = document.createElement('div');
-        const root = ReactDOM.unstable_createRoot(container);
+        const root = ReactDOM.createRoot(container);
 
         // Schedule some idle work without any interactions.
         TestUtils.act(() => {
@@ -448,7 +452,7 @@ describe('ReactDOMTracing', () => {
 
         const onRender = jest.fn();
         const container = document.createElement('div');
-        const root = ReactDOM.unstable_createRoot(container);
+        const root = ReactDOM.createRoot(container);
 
         TestUtils.act(() => {
           root.render(
@@ -545,7 +549,7 @@ describe('ReactDOMTracing', () => {
         }
 
         const container = document.createElement('div');
-        const root = ReactDOM.unstable_createRoot(container);
+        const root = ReactDOM.createRoot(container);
 
         let interaction;
 
@@ -627,7 +631,7 @@ describe('ReactDOMTracing', () => {
 
         let interaction;
 
-        const root = ReactDOM.unstable_createRoot(container, {hydrate: true});
+        const root = ReactDOM.createRoot(container, {hydrate: true});
 
         // Hydrate it.
         SchedulerTracing.unstable_trace('initialization', 0, () => {
@@ -686,7 +690,7 @@ describe('ReactDOMTracing', () => {
 
         let interaction;
 
-        const root = ReactDOM.unstable_createRoot(container, {hydrate: true});
+        const root = ReactDOM.createRoot(container, {hydrate: true});
 
         // Start hydrating but simulate blocking for suspense data.
         suspend = true;
@@ -755,7 +759,7 @@ describe('ReactDOMTracing', () => {
 
         let interaction;
 
-        const root = ReactDOM.unstable_createRoot(container, {hydrate: true});
+        const root = ReactDOM.createRoot(container, {hydrate: true});
 
         // Hydrate without suspending to fill in the client-rendered content.
         suspend = false;

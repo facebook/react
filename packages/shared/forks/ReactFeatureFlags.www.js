@@ -34,13 +34,12 @@ export const enableSchedulerDebugging = true;
 export const replayFailedUnitOfWorkWithInvokeGuardedCallback = false;
 export const warnAboutDeprecatedLifecycles = true;
 export const warnAboutShorthandPropertyCollision = false;
-export const warnAboutDeprecatedSetNativeProps = false;
 export const disableLegacyContext = false;
 export const warnAboutStringRefs = false;
 export const warnAboutDefaultPropsOnFunctionComponents = false;
 export const disableSchedulerTimeoutBasedOnReactExpirationTime = false;
 
-export const enableStableConcurrentModeAPIs = false;
+export const exposeConcurrentModeAPIs = __EXPERIMENTAL__;
 
 export const enableSuspenseServerRenderer = true;
 

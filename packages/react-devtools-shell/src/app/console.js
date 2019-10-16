@@ -11,7 +11,12 @@ function ignoreStrings(
   methodName: string,
   stringsToIgnore: Array<string>,
 ): void {
-  const originalMethod = console[methodName];
+  // HACKY In the test harness, DevTools overrides the parent window's console.
+  // Our test app code uses the iframe's console though.
+  // To simulate a more accurate end-ot-end ienvironment,
+  // the shell's console patching should pass through to the parent override methods.
+  const originalMethod = window.parent.console[methodName];
+
   console[methodName] = (...args) => {
     const maybeString = args[0];
     if (typeof maybeString === 'string') {

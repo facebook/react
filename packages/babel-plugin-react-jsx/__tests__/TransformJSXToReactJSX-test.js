@@ -480,4 +480,25 @@ describe('transform react to jsx', () => {
       transform(`<Component y={2} {...x} />`, {useBuiltIns: false})
     ).toMatchSnapshot();
   });
+
+  it('duplicate children prop should transform into sequence expression with actual children', () => {
+    expect(
+      transform(`<Component children={1}>2</Component>`)
+    ).toMatchSnapshot();
+  });
+  it('duplicate children prop should transform into sequence expression with next prop', () => {
+    expect(
+      transform(`<Component children={1} foo={3}>2</Component>`)
+    ).toMatchSnapshot();
+  });
+  it('duplicate children props should transform into sequence expression with next prop', () => {
+    expect(
+      transform(`<Component children={1} children={4} foo={3}>2</Component>`)
+    ).toMatchSnapshot();
+  });
+  it('duplicate children prop should transform into sequence expression with spread', () => {
+    expect(
+      transform(`<Component children={1} {...x}>2</Component>`)
+    ).toMatchSnapshot();
+  });
 });

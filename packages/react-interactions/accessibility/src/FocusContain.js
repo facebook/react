@@ -7,7 +7,6 @@
  * @flow
  */
 
-import type {ReactScope} from 'shared/ReactTypes';
 import type {KeyboardEvent} from 'react-interactions/events/keyboard';
 
 import React from 'react';
@@ -21,37 +20,39 @@ import {
 type FocusContainProps = {|
   children: React.Node,
   disabled?: boolean,
-  tabScope: ReactScope,
+  scopeQuery: (type: string | Object, props: Object) => boolean,
 |};
 
 const {useLayoutEffect, useRef} = React;
 
+const FocusContainScope = React.unstable_createScope();
+
 export default function FocusContain({
   children,
   disabled,
-  tabScope: TabScope,
-}: FocusContainProps) {
+  scopeQuery,
+}: FocusContainProps): React.Node {
   const scopeRef = useRef(null);
   // This ensures tabbing works through the React tree (including Portals and Suspense nodes)
   const keyboard = useKeyboard({
     onKeyDown(event: KeyboardEvent): void {
-      if (disabled || event.key !== 'Tab') {
+      if (disabled === true || event.key !== 'Tab') {
         event.continuePropagation();
         return;
       }
       const scope = scopeRef.current;
       if (scope !== null) {
         if (event.shiftKey) {
-          focusPrevious(scope, event, true);
+          focusPrevious(scopeQuery, scope, event, true);
         } else {
-          focusNext(scope, event, true);
+          focusNext(scopeQuery, scope, event, true);
         }
       }
     },
   });
   const focusWithin = useFocusWithin({
     onBlurWithin: function(event) {
-      if (disabled) {
+      if (disabled === true) {
         event.continuePropagation();
         return;
       }
@@ -66,10 +67,14 @@ export default function FocusContain({
   useLayoutEffect(
     () => {
       const scope = scopeRef.current;
-      if (scope && !disabled) {
-        const elems = scope.getScopedNodes();
-        if (elems && elems.indexOf(document.activeElement) === -1) {
-          elems[0].focus();
+      if (
+        scope !== null &&
+        disabled !== true &&
+        !scope.containsNode(document.activeElement)
+      ) {
+        const fistElem = scope.queryFirstNode(scopeQuery);
+        if (fistElem !== null) {
+          fistElem.focus();
         }
       }
     },
@@ -77,8 +82,8 @@ export default function FocusContain({
   );
 
   return (
-    <TabScope ref={scopeRef} listeners={[keyboard, focusWithin]}>
+    <FocusContainScope ref={scopeRef} listeners={[keyboard, focusWithin]}>
       {children}
-    </TabScope>
+    </FocusContainScope>
   );
 }
