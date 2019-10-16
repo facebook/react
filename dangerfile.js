@@ -32,6 +32,14 @@ const {generateResultsArray} = require('./scripts/rollup/stats');
 const {existsSync, readFileSync} = require('fs');
 const {exec} = require('child_process');
 
+// This must match the name of the CI job that creates the build artifacts
+const RELEASE_CHANNEL =
+  process.env.RELEASE_CHANNEL === 'experimental' ? 'experimental' : 'stable';
+const artifactsJobName =
+  process.env.RELEASE_CHANNEL === 'experimental'
+    ? 'process_artifacts_experimental'
+    : 'process_artifacts';
+
 if (!existsSync('./build/bundle-sizes.json')) {
   // This indicates the build failed previously.
   // In that case, there's nothing for the Dangerfile to do.
@@ -117,6 +125,8 @@ function git(args) {
     return;
   }
 
+  markdown(`## Size changes (${RELEASE_CHANNEL})`);
+
   const upstreamRef = danger.github.pr.base.ref;
   await git(`remote add upstream https://github.com/facebook/react.git`);
   await git('fetch upstream');
@@ -135,8 +145,7 @@ function git(args) {
     }
     for (let i = 0; i < statuses.length; i++) {
       const status = statuses[i];
-      // This must match the name of the CI job that creates the build artifacts
-      if (status.context === 'ci/circleci: process_artifacts') {
+      if (status.context === `ci/circleci: ${artifactsJobName}`) {
         if (status.state === 'success') {
           baseCIBuildId = /\/facebook\/react\/([0-9]+)/.exec(
             status.target_url

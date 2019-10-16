@@ -205,7 +205,26 @@ jobs:
       # This runs in the process_artifacts job, too, but it's faster to run
       # this step in both jobs instead of running the jobs sequentially
       - run: node ./scripts/rollup/consolidateBundleSizes.js
-      - run: node ./scripts/tasks/danger
+      - run:
+          environment:
+            RELEASE_CHANNEL: stable
+          command: node ./scripts/tasks/danger
+
+  sizebot_experimental:
+    docker: *docker
+    environment: *environment
+    steps:
+      - checkout
+      - attach_workspace: *attach_workspace
+      - *restore_yarn_cache
+      - *run_yarn
+      # This runs in the process_artifacts job, too, but it's faster to run
+      # this step in both jobs instead of running the jobs sequentially
+      - run: node ./scripts/rollup/consolidateBundleSizes.js
+      - run:
+          environment:
+            RELEASE_CHANNEL: experimental
+          command: node ./scripts/tasks/danger
 
   lint_build:
     docker: *docker
@@ -368,6 +387,9 @@ workflows:
           requires:
             - setup
       - process_artifacts_experimental:
+          requires:
+            - build_experimental
+      - sizebot_experimental:
           requires:
             - build_experimental
       - test_build_experimental:
