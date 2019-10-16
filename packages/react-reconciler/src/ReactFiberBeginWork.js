@@ -1482,7 +1482,7 @@ function validateFunctionComponentInDev(workInProgress: Fiber, Component: any) {
 
 const SUSPENDED_MARKER: SuspenseState = {
   dehydrated: null,
-  retryTime: Never,
+  retryTime: NoWork,
 };
 
 function shouldRemainOnFallback(

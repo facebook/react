@@ -77,6 +77,7 @@ describe('ReactDOMServerPartialHydration', () => {
     ReactFeatureFlags = require('shared/ReactFeatureFlags');
     ReactFeatureFlags.enableSuspenseCallback = true;
     ReactFeatureFlags.enableFlareAPI = true;
+    ReactFeatureFlags.debugRenderPhaseSideEffectsForStrictMode = false;
 
     React = require('react');
     ReactDOM = require('react-dom');
@@ -2474,5 +2475,86 @@ describe('ReactDOMServerPartialHydration', () => {
     expect(ops).toEqual(['Hover Start Second']);
 
     document.body.removeChild(container);
+  });
+
+  it('finishes normal pri work before continuing to hydrate a retry', async () => {
+    let suspend = false;
+    let resolve;
+    let promise = new Promise(resolvePromise => (resolve = resolvePromise));
+    let ref = React.createRef();
+
+    function Child() {
+      if (suspend) {
+        throw promise;
+      } else {
+        Scheduler.unstable_yieldValue('Child');
+        return 'Hello';
+      }
+    }
+
+    function Sibling() {
+      Scheduler.unstable_yieldValue('Sibling');
+      React.useLayoutEffect(() => {
+        Scheduler.unstable_yieldValue('Commit Sibling');
+      });
+      return 'World';
+    }
+
+    // Avoid rerendering the tree by hoisting it.
+    const tree = (
+      <Suspense fallback="Loading...">
+        <span ref={ref}>
+          <Child />
+        </span>
+      </Suspense>
+    );
+
+    function App({showSibling}) {
+      return (
+        <div>
+          {tree}
+          {showSibling ? <Sibling /> : null}
+        </div>
+      );
+    }
+
+    suspend = false;
+    let finalHTML = ReactDOMServer.renderToString(<App />);
+    expect(Scheduler).toHaveYielded(['Child']);
+
+    let container = document.createElement('div');
+    container.innerHTML = finalHTML;
+
+    suspend = true;
+    let root = ReactDOM.unstable_createRoot(container, {hydrate: true});
+    root.render(<App showSibling={false} />);
+    expect(Scheduler).toFlushAndYield([]);
+
+    expect(ref.current).toBe(null);
+    expect(container.textContent).toBe('Hello');
+
+    // Resolving the promise should continue hydration
+    suspend = false;
+    resolve();
+    await promise;
+
+    Scheduler.unstable_advanceTime(100);
+
+    // Before we have a chance to flush it, we'll also render an update.
+    root.render(<App showSibling={true} />);
+
+    // When we flush we expect the Normal pri render to take priority
+    // over hydration.
+    expect(Scheduler).toFlushAndYieldThrough(['Sibling', 'Commit Sibling']);
+
+    // We shouldn't have hydrated the child yet.
+    expect(ref.current).toBe(null);
+    // But we did have a chance to update the content.
+    expect(container.textContent).toBe('HelloWorld');
+
+    expect(Scheduler).toFlushAndYield(['Child']);
+
+    // Now we're hydrated.
+    expect(ref.current).not.toBe(null);
   });
 });
