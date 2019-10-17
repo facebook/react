@@ -6,6 +6,11 @@ let Suspense;
 let SuspenseList;
 
 describe('ReactSuspenseList', () => {
+  if (!__EXPERIMENTAL__) {
+    it("empty test so Jest doesn't complain", () => {});
+    return;
+  }
+
   beforeEach(() => {
     jest.resetModules();
     ReactFeatureFlags = require('shared/ReactFeatureFlags');
@@ -16,7 +21,7 @@ describe('ReactSuspenseList', () => {
     ReactNoop = require('react-noop-renderer');
     Scheduler = require('scheduler');
     Suspense = React.Suspense;
-    SuspenseList = React.unstable_SuspenseList;
+    SuspenseList = React.SuspenseList;
   });
 
   function Text(props) {
