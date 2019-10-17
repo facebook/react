@@ -2355,18 +2355,20 @@ function initSuspenseListRenderState(
   tail: null | Fiber,
   lastContentRow: null | Fiber,
   tailMode: SuspenseListTailMode,
+  lastEffectBeforeRendering: null | Fiber,
 ): void {
   let renderState: null | SuspenseListRenderState =
     workInProgress.memoizedState;
   if (renderState === null) {
-    workInProgress.memoizedState = {
+    workInProgress.memoizedState = ({
       isBackwards: isBackwards,
       rendering: null,
       last: lastContentRow,
       tail: tail,
       tailExpiration: 0,
       tailMode: tailMode,
-    };
+      lastEffect: lastEffectBeforeRendering,
+    }: SuspenseListRenderState);
   } else {
     // We can reuse the existing object from previous renders.
     renderState.isBackwards = isBackwards;
@@ -2375,6 +2377,7 @@ function initSuspenseListRenderState(
     renderState.tail = tail;
     renderState.tailExpiration = 0;
     renderState.tailMode = tailMode;
+    renderState.lastEffect = lastEffectBeforeRendering;
   }
 }
 
@@ -2456,6 +2459,7 @@ function updateSuspenseListComponent(
           tail,
           lastContentRow,
           tailMode,
+          workInProgress.lastEffect,
         );
         break;
       }
@@ -2487,6 +2491,7 @@ function updateSuspenseListComponent(
           tail,
           null, // last
           tailMode,
+          workInProgress.lastEffect,
         );
         break;
       }
@@ -2497,6 +2502,7 @@ function updateSuspenseListComponent(
           null, // tail
           null, // last
           undefined,
+          workInProgress.lastEffect,
         );
         break;
       }
