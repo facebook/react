@@ -346,9 +346,8 @@ if (__DEV__) {
    * Returns whether
    */
   const findInvalidAncestorForTag = function(tag, ancestorInfo) {
-    const isValidHtmlInSvg = !ancestorInfo.foreignObjectInScope
-      ? ancestorInfo.svgTagInScope
-      : null;
+    const isInSvgScope =
+      !ancestorInfo.foreignObjectInScope && ancestorInfo.svgTagInScope;
 
     switch (tag) {
       case 'address':
@@ -386,32 +385,30 @@ if (__DEV__) {
       case 'h4':
       case 'h5':
       case 'h6':
-        return ancestorInfo.pTagInButtonScope || isValidHtmlInSvg;
+        return ancestorInfo.pTagInButtonScope || isInSvgScope;
 
       case 'span':
-        return isValidHtmlInSvg;
+        return isInSvgScope;
 
       case 'form':
         return (
-          ancestorInfo.formTag ||
-          ancestorInfo.pTagInButtonScope ||
-          isValidHtmlInSvg
+          ancestorInfo.formTag || ancestorInfo.pTagInButtonScope || isInSvgScope
         );
 
       case 'li':
-        return ancestorInfo.listItemTagAutoclosing || isValidHtmlInSvg;
+        return ancestorInfo.listItemTagAutoclosing || isInSvgScope;
 
       case 'dd':
       case 'dt':
         return ancestorInfo.dlItemTagAutoclosing;
 
       case 'button':
-        return ancestorInfo.buttonTagInScope || isValidHtmlInSvg;
+        return ancestorInfo.buttonTagInScope || isInSvgScope;
 
       case 'a':
         // Spec says something about storing a list of markers, but it sounds
         // equivalent to this check.
-        return ancestorInfo.aTagInScope || isValidHtmlInSvg;
+        return ancestorInfo.aTagInScope;
 
       case 'nobr':
         return ancestorInfo.nobrTagInScope;
