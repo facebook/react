@@ -1053,7 +1053,10 @@ function completeWork(
                 // Rerender the whole list, but this time, we'll force fallbacks
                 // to stay in place.
                 // Reset the effect list before doing the second pass since that's now invalid.
-                workInProgress.firstEffect = workInProgress.lastEffect = null;
+                if (renderState.lastEffect === null) {
+                  workInProgress.firstEffect = null;
+                }
+                workInProgress.lastEffect = renderState.lastEffect;
                 // Reset the child fibers to their original state.
                 resetChildFibers(workInProgress, renderExpirationTime);
 
