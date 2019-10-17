@@ -151,11 +151,8 @@ function handleRootEvent(
     case 'keyup': {
       const nativeEvent = event.nativeEvent;
       const focusTarget = state.focusTarget;
-      const {key, metaKey, altKey, ctrlKey} = (nativeEvent: any);
-      const validKey =
-        key === 'Enter' ||
-        key === ' ' ||
-        (key === 'Tab' && !(metaKey || (!isMac && altKey) || ctrlKey));
+      const {metaKey, altKey, ctrlKey} = (nativeEvent: any);
+      const validKey = !(metaKey || (!isMac && altKey) || ctrlKey);
 
       if (validKey) {
         state.pointerType = 'keyboard';
