@@ -585,6 +585,90 @@ describe('ReactSuspenseList', () => {
     );
   });
 
+  it('displays all "together" during an update', async () => {
+    let A = createAsyncText('A');
+    let B = createAsyncText('B');
+    let C = createAsyncText('C');
+    let D = createAsyncText('D');
+
+    function Foo({step}) {
+      return (
+        <SuspenseList revealOrder="together">
+          {step === 0 && (
+            <Suspense fallback={<Text text="Loading A" />}>
+              <A />
+            </Suspense>
+          )}
+          {step === 0 && (
+            <Suspense fallback={<Text text="Loading B" />}>
+              <B />
+            </Suspense>
+          )}
+          {step === 1 && (
+            <Suspense fallback={<Text text="Loading C" />}>
+              <C />
+            </Suspense>
+          )}
+          {step === 1 && (
+            <Suspense fallback={<Text text="Loading D" />}>
+              <D />
+            </Suspense>
+          )}
+        </SuspenseList>
+      );
+    }
+
+    // Mount
+    await A.resolve();
+    ReactNoop.render(<Foo step={0} />);
+    expect(Scheduler).toFlushAndYield([
+      'A',
+      'Suspend! [B]',
+      'Loading B',
+      'Loading A',
+      'Loading B',
+    ]);
+    expect(ReactNoop).toMatchRenderedOutput(
+      <>
+        <span>Loading A</span>
+        <span>Loading B</span>
+      </>,
+    );
+    await B.resolve();
+    expect(Scheduler).toFlushAndYield(['A', 'B']);
+    expect(ReactNoop).toMatchRenderedOutput(
+      <>
+        <span>A</span>
+        <span>B</span>
+      </>,
+    );
+
+    // Update
+    await C.resolve();
+    ReactNoop.render(<Foo step={1} />);
+    expect(Scheduler).toFlushAndYield([
+      'C',
+      'Suspend! [D]',
+      'Loading D',
+      'Loading C',
+      'Loading D',
+    ]);
+    expect(ReactNoop).toMatchRenderedOutput(
+      <>
+        <span>Loading C</span>
+        <span>Loading D</span>
+      </>,
+    );
+    await D.resolve();
+    expect(Scheduler).toFlushAndYield(['C', 'D']);
+    expect(ReactNoop).toMatchRenderedOutput(
+      <>
+        <span>C</span>
+        <span>D</span>
+      </>,
+    );
+  });
+
   it('avoided boundaries can be coordinate with SuspenseList', async () => {
     let A = createAsyncText('A');
     let B = createAsyncText('B');
