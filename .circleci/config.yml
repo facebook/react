@@ -149,9 +149,13 @@ jobs:
       - checkout
       - *restore_yarn_cache
       - *run_yarn
-      - run: ./scripts/circleci/add_build_info_json.sh
-      - run: ./scripts/circleci/update_package_versions.sh
-      - run: yarn build
+      - run:
+          environment:
+            RELEASE_CHANNEL: stable
+          command: |
+            ./scripts/circleci/add_build_info_json.sh
+            ./scripts/circleci/update_package_versions.sh
+            yarn build
       - run: echo "stable" >> build/RELEASE_CHANNEL
       - persist_to_workspace:
           root: build
