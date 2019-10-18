@@ -385,17 +385,12 @@ class ReactShallowRenderer {
       const startTransition = callback => {
         callback();
       };
-      warning(false, 'useTransition is not implemented for shallow renderers');
       return [startTransition, false];
     };
 
     // TODO: implement if we decide to keep the shallow renderer
     const useDeferredValue = <T>(value: T, config): T => {
       this._validateCurrentlyRenderingComponent();
-      warning(
-        false,
-        'useDeferredValue is not implemented for shallow renderers',
-      );
       return value;
     };
 
