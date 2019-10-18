@@ -724,7 +724,7 @@ function runActTests(label, render, unmount, rerender) {
     });
 
     describe('suspense', () => {
-      if (__DEV__) {
+      if (__DEV__ && __EXPERIMENTAL__) {
         it('triggers fallbacks if available', async () => {
           let resolved = false;
           let resolve;
