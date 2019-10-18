@@ -398,6 +398,9 @@ workflows:
       - test_build_prod_experimental:
           requires:
             - build_experimental
+      - lint_build:
+          requires:
+            - build_experimental
 
   fuzz_tests:
     triggers:
