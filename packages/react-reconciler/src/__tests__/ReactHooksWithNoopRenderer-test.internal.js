@@ -13,10 +13,13 @@
 'use strict';
 
 let React;
+let ReactCache;
+let TextResource;
 let ReactFeatureFlags;
 let ReactNoop;
 let Scheduler;
 let SchedulerTracing;
+let Suspense;
 let useState;
 let useReducer;
 let useEffect;
@@ -25,6 +28,8 @@ let useCallback;
 let useMemo;
 let useRef;
 let useImperativeHandle;
+let useTransition;
+let useDeferredValue;
 let forwardRef;
 let memo;
 let act;
@@ -32,14 +37,17 @@ let act;
 describe('ReactHooksWithNoopRenderer', () => {
   beforeEach(() => {
     jest.resetModules();
+    jest.useFakeTimers();
 
     ReactFeatureFlags = require('shared/ReactFeatureFlags');
     ReactFeatureFlags.debugRenderPhaseSideEffectsForStrictMode = false;
     ReactFeatureFlags.enableSchedulerTracing = true;
+    ReactFeatureFlags.flushSuspenseFallbacksInTests = false;
     React = require('react');
     ReactNoop = require('react-noop-renderer');
     Scheduler = require('scheduler');
     SchedulerTracing = require('scheduler/tracing');
+    ReactCache = require('react-cache');
     useState = React.useState;
     useReducer = React.useReducer;
     useEffect = React.useEffect;
@@ -50,16 +58,60 @@ describe('ReactHooksWithNoopRenderer', () => {
     useImperativeHandle = React.useImperativeHandle;
     forwardRef = React.forwardRef;
     memo = React.memo;
+    useTransition = React.useTransition;
+    useDeferredValue = React.useDeferredValue;
+    Suspense = React.Suspense;
     act = ReactNoop.act;
+
+    TextResource = ReactCache.unstable_createResource(([text, ms = 0]) => {
+      return new Promise((resolve, reject) =>
+        setTimeout(() => {
+          Scheduler.unstable_yieldValue(`Promise resolved [${text}]`);
+          resolve(text);
+        }, ms),
+      );
+    }, ([text, ms]) => text);
   });
 
   function span(prop) {
     return {type: 'span', hidden: false, children: [], prop};
   }
 
+  function hiddenSpan(prop) {
+    return {type: 'span', children: [], prop, hidden: true};
+  }
+
   function Text(props) {
     Scheduler.unstable_yieldValue(props.text);
     return <span prop={props.text} />;
+  }
+
+  function AsyncText(props) {
+    const text = props.text;
+    try {
+      TextResource.read([props.text, props.ms]);
+      Scheduler.unstable_yieldValue(text);
+      return <span prop={text} />;
+    } catch (promise) {
+      if (typeof promise.then === 'function') {
+        Scheduler.unstable_yieldValue(`Suspend! [${text}]`);
+      } else {
+        Scheduler.unstable_yieldValue(`Error! [${text}]`);
+      }
+      throw promise;
+    }
+  }
+
+  function advanceTimers(ms) {
+    // Note: This advances Jest's virtual time but not React's. Use
+    // ReactNoop.expire for that.
+    if (typeof ms !== 'number') {
+      throw new Error('Must specify ms');
+    }
+    jest.advanceTimersByTime(ms);
+    // Wait until the end of the current tick
+    // We cannot use a timer since we're faking them
+    return Promise.resolve().then(() => {});
   }
 
   it('resumes after an interruption', () => {
@@ -1921,7 +1973,213 @@ describe('ReactHooksWithNoopRenderer', () => {
       expect(totalRefUpdates).toBe(2); // Should not increase since last time
     });
   });
+  if (__EXPERIMENTAL__) {
+    describe('useTransition', () => {
+      it('delays showing loading state until after timeout', async () => {
+        let transition;
+        function App() {
+          const [show, setShow] = useState(false);
+          const [startTransition, isPending] = useTransition({
+            timeoutMs: 1000,
+          });
+          transition = () => {
+            startTransition(() => {
+              setShow(true);
+            });
+          };
+          return (
+            <Suspense
+              fallback={<Text text={`Loading... Pending: ${isPending}`} />}>
+              {show ? (
+                <AsyncText ms={2000} text={`After... Pending: ${isPending}`} />
+              ) : (
+                <Text text={`Before... Pending: ${isPending}`} />
+              )}
+            </Suspense>
+          );
+        }
+        ReactNoop.render(<App />);
+        expect(Scheduler).toFlushAndYield(['Before... Pending: false']);
+        expect(ReactNoop.getChildren()).toEqual([
+          span('Before... Pending: false'),
+        ]);
 
+        act(() => {
+          Scheduler.unstable_runWithPriority(
+            Scheduler.unstable_UserBlockingPriority,
+            transition,
+          );
+        });
+        Scheduler.unstable_advanceTime(500);
+        await advanceTimers(500);
+        expect(Scheduler).toHaveYielded([
+          'Before... Pending: true',
+          'Suspend! [After... Pending: false]',
+          'Loading... Pending: false',
+        ]);
+        expect(ReactNoop.getChildren()).toEqual([
+          span('Before... Pending: true'),
+        ]);
+
+        Scheduler.unstable_advanceTime(1000);
+        await advanceTimers(1000);
+        expect(ReactNoop.getChildren()).toEqual([
+          hiddenSpan('Before... Pending: true'),
+          span('Loading... Pending: false'),
+        ]);
+
+        Scheduler.unstable_advanceTime(500);
+        await advanceTimers(500);
+        expect(Scheduler).toHaveYielded([
+          'Promise resolved [After... Pending: false]',
+        ]);
+        expect(Scheduler).toFlushAndYield(['After... Pending: false']);
+        expect(ReactNoop.getChildren()).toEqual([
+          span('After... Pending: false'),
+        ]);
+      });
+      it('delays showing loading state until after busyDelayMs + busyMinDurationMs', async () => {
+        let transition;
+        function App() {
+          const [show, setShow] = useState(false);
+          const [startTransition, isPending] = useTransition({
+            busyDelayMs: 1000,
+            busyMinDurationMs: 2000,
+          });
+          transition = () => {
+            startTransition(() => {
+              setShow(true);
+            });
+          };
+          return (
+            <Suspense
+              fallback={<Text text={`Loading... Pending: ${isPending}`} />}>
+              {show ? (
+                <AsyncText ms={2000} text={`After... Pending: ${isPending}`} />
+              ) : (
+                <Text text={`Before... Pending: ${isPending}`} />
+              )}
+            </Suspense>
+          );
+        }
+        ReactNoop.render(<App />);
+        expect(Scheduler).toFlushAndYield(['Before... Pending: false']);
+        expect(ReactNoop.getChildren()).toEqual([
+          span('Before... Pending: false'),
+        ]);
+
+        act(() => {
+          Scheduler.unstable_runWithPriority(
+            Scheduler.unstable_UserBlockingPriority,
+            transition,
+          );
+        });
+        Scheduler.unstable_advanceTime(1000);
+        await advanceTimers(1000);
+        expect(Scheduler).toHaveYielded([
+          'Before... Pending: true',
+          'Suspend! [After... Pending: false]',
+          'Loading... Pending: false',
+        ]);
+        expect(ReactNoop.getChildren()).toEqual([
+          span('Before... Pending: true'),
+        ]);
+
+        Scheduler.unstable_advanceTime(1000);
+        await advanceTimers(1000);
+        expect(Scheduler).toHaveYielded([
+          'Promise resolved [After... Pending: false]',
+        ]);
+        expect(Scheduler).toFlushAndYield(['After... Pending: false']);
+        expect(ReactNoop.getChildren()).toEqual([
+          span('Before... Pending: true'),
+        ]);
+
+        Scheduler.unstable_advanceTime(1000);
+        await advanceTimers(1000);
+        expect(ReactNoop.getChildren()).toEqual([
+          span('Before... Pending: true'),
+        ]);
+        Scheduler.unstable_advanceTime(250);
+        await advanceTimers(250);
+        expect(ReactNoop.getChildren()).toEqual([
+          span('After... Pending: false'),
+        ]);
+      });
+    });
+    describe('useDeferredValue', () => {
+      it('defers text value until specified timeout', async () => {
+        function TextBox({text}) {
+          return <AsyncText ms={1000} text={text} />;
+        }
+
+        let _setText;
+        function App() {
+          const [text, setText] = useState('A');
+          const deferredText = useDeferredValue(text, {
+            timeoutMs: 500,
+          });
+          _setText = setText;
+          return (
+            <>
+              <Text text={text} />
+              <Suspense fallback={<Text text={'Loading'} />}>
+                <TextBox text={deferredText} />
+              </Suspense>
+            </>
+          );
+        }
+
+        act(() => {
+          ReactNoop.render(<App />);
+        });
+
+        expect(Scheduler).toHaveYielded(['A', 'Suspend! [A]', 'Loading']);
+        expect(ReactNoop.getChildren()).toEqual([span('A'), span('Loading')]);
+
+        Scheduler.unstable_advanceTime(1000);
+        await advanceTimers(1000);
+        expect(Scheduler).toHaveYielded(['Promise resolved [A]']);
+        expect(Scheduler).toFlushAndYield(['A']);
+        expect(ReactNoop.getChildren()).toEqual([span('A'), span('A')]);
+
+        act(() => {
+          _setText('B');
+        });
+        expect(Scheduler).toHaveYielded([
+          'B',
+          'A',
+          'B',
+          'Suspend! [B]',
+          'Loading',
+        ]);
+        expect(Scheduler).toFlushAndYield([]);
+        expect(ReactNoop.getChildren()).toEqual([span('B'), span('A')]);
+
+        Scheduler.unstable_advanceTime(250);
+        await advanceTimers(250);
+        expect(Scheduler).toFlushAndYield([]);
+        expect(ReactNoop.getChildren()).toEqual([span('B'), span('A')]);
+
+        Scheduler.unstable_advanceTime(500);
+        await advanceTimers(500);
+        expect(ReactNoop.getChildren()).toEqual([
+          span('B'),
+          hiddenSpan('A'),
+          span('Loading'),
+        ]);
+
+        Scheduler.unstable_advanceTime(250);
+        await advanceTimers(250);
+        expect(Scheduler).toHaveYielded(['Promise resolved [B]']);
+
+        act(() => {
+          expect(Scheduler).toFlushAndYield(['B']);
+        });
+        expect(ReactNoop.getChildren()).toEqual([span('B'), span('B')]);
+      });
+    });
+  }
   describe('progressive enhancement (not supported)', () => {
     it('mount additional state', () => {
       let updateA;

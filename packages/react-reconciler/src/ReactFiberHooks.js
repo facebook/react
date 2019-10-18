@@ -19,6 +19,7 @@ import type {HookEffectTag} from './ReactHookEffectTags';
 import type {SuspenseConfig} from './ReactFiberSuspenseConfig';
 import type {ReactPriorityLevel} from './SchedulerWithReactIntegration';
 
+import * as Scheduler from 'scheduler';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 
 import {NoWork} from './ReactFiberExpirationTime';
@@ -54,7 +55,7 @@ import {markWorkInProgressReceivedUpdate} from './ReactFiberBeginWork';
 import {requestCurrentSuspenseConfig} from './ReactFiberSuspenseConfig';
 import {getCurrentPriorityLevel} from './SchedulerWithReactIntegration';
 
-const {ReactCurrentDispatcher} = ReactSharedInternals;
+const {ReactCurrentDispatcher, ReactCurrentBatchConfig} = ReactSharedInternals;
 
 export type Dispatcher = {
   readContext<T>(
@@ -92,6 +93,10 @@ export type Dispatcher = {
     responder: ReactEventResponder<E, C>,
     props: Object,
   ): ReactEventResponderListener<E, C>,
+  useDeferredValue<T>(value: T, config: TimeoutConfig | void | null): T,
+  useTransition(
+    config: SuspenseConfig | void | null,
+  ): [(() => void) => void, boolean],
 };
 
 type Update<S, A> = {
@@ -123,7 +128,9 @@ export type HookType =
   | 'useMemo'
   | 'useImperativeHandle'
   | 'useDebugValue'
-  | 'useResponder';
+  | 'useResponder'
+  | 'useDeferredValue'
+  | 'useTransition';
 
 let didWarnAboutMismatchedHooksForComponent;
 if (__DEV__) {
@@ -151,6 +158,10 @@ type Effect = {
 export type FunctionComponentUpdateQueue = {
   lastEffect: Effect | null,
 };
+
+export type TimeoutConfig = {|
+  timeoutMs: number,
+|};
 
 type BasicStateAction<S> = (S => S) | S;
 
@@ -1117,6 +1128,96 @@ function updateMemo<T>(
   return nextValue;
 }
 
+function mountDeferredValue<T>(
+  value: T,
+  config: TimeoutConfig | void | null,
+): T {
+  const [prevValue, setValue] = mountState(value);
+  mountEffect(
+    () => {
+      Scheduler.unstable_next(() => {
+        const previousConfig = ReactCurrentBatchConfig.suspense;
+        ReactCurrentBatchConfig.suspense = config === undefined ? null : config;
+        try {
+          setValue(value);
+        } finally {
+          ReactCurrentBatchConfig.suspense = previousConfig;
+        }
+      });
+    },
+    [value, config],
+  );
+  return prevValue;
+}
+
+function updateDeferredValue<T>(
+  value: T,
+  config: TimeoutConfig | void | null,
+): T {
+  const [prevValue, setValue] = updateState(value);
+  updateEffect(
+    () => {
+      Scheduler.unstable_next(() => {
+        const previousConfig = ReactCurrentBatchConfig.suspense;
+        ReactCurrentBatchConfig.suspense = config === undefined ? null : config;
+        try {
+          setValue(value);
+        } finally {
+          ReactCurrentBatchConfig.suspense = previousConfig;
+        }
+      });
+    },
+    [value, config],
+  );
+  return prevValue;
+}
+
+function mountTransition(
+  config: SuspenseConfig | void | null,
+): [(() => void) => void, boolean] {
+  const [isPending, setPending] = mountState(false);
+  const startTransition = mountCallback(
+    callback => {
+      setPending(true);
+      Scheduler.unstable_next(() => {
+        const previousConfig = ReactCurrentBatchConfig.suspense;
+        ReactCurrentBatchConfig.suspense = config === undefined ? null : config;
+        try {
+          setPending(false);
+          callback();
+        } finally {
+          ReactCurrentBatchConfig.suspense = previousConfig;
+        }
+      });
+    },
+    [config, isPending],
+  );
+  return [startTransition, isPending];
+}
+
+function updateTransition(
+  config: SuspenseConfig | void | null,
+): [(() => void) => void, boolean] {
+  const [isPending, setPending] = updateState(false);
+  const startTransition = updateCallback(
+    callback => {
+      setPending(true);
+      Scheduler.unstable_next(() => {
+        const previousConfig = ReactCurrentBatchConfig.suspense;
+        ReactCurrentBatchConfig.suspense = config === undefined ? null : config;
+        try {
+          setPending(false);
+          callback();
+        } finally {
+          ReactCurrentBatchConfig.suspense = previousConfig;
+        }
+      });
+    },
+    [config, isPending],
+  );
+  return [startTransition, isPending];
+}
+
 function dispatchAction<S, A>(
   fiber: Fiber,
   queue: UpdateQueue<S, A>,
@@ -1272,6 +1373,8 @@ export const ContextOnlyDispatcher: Dispatcher = {
   useState: throwInvalidHookError,
   useDebugValue: throwInvalidHookError,
   useResponder: throwInvalidHookError,
+  useDeferredValue: throwInvalidHookError,
+  useTransition: throwInvalidHookError,
 };
 
 const HooksDispatcherOnMount: Dispatcher = {
@@ -1288,6 +1391,8 @@ const HooksDispatcherOnMount: Dispatcher = {
   useState: mountState,
   useDebugValue: mountDebugValue,
   useResponder: createResponderListener,
+  useDeferredValue: mountDeferredValue,
+  useTransition: mountTransition,
 };
 
 const HooksDispatcherOnUpdate: Dispatcher = {
@@ -1304,6 +1409,8 @@ const HooksDispatcherOnUpdate: Dispatcher = {
   useState: updateState,
   useDebugValue: updateDebugValue,
   useResponder: createResponderListener,
+  useDeferredValue: updateDeferredValue,
+  useTransition: updateTransition,
 };
 
 let HooksDispatcherOnMountInDEV: Dispatcher | null = null;
@@ -1441,6 +1548,18 @@ if (__DEV__) {
       mountHookTypesDev();
       return createResponderListener(responder, props);
     },
+    useDeferredValue<T>(value: T, config: TimeoutConfig | void | null): T {
+      currentHookNameInDev = 'useDeferredValue';
+      mountHookTypesDev();
+      return mountDeferredValue(value, config);
+    },
+    useTransition(
+      config: SuspenseConfig | void | null,
+    ): [(() => void) => void, boolean] {
+      currentHookNameInDev = 'useTransition';
+      mountHookTypesDev();
+      return mountTransition(config);
+    },
   };
 
   HooksDispatcherOnMountWithHookTypesInDEV = {
@@ -1546,6 +1665,18 @@ if (__DEV__) {
       updateHookTypesDev();
       return createResponderListener(responder, props);
     },
+    useDeferredValue<T>(value: T, config: TimeoutConfig | void | null): T {
+      currentHookNameInDev = 'useDeferredValue';
+      updateHookTypesDev();
+      return mountDeferredValue(value, config);
+    },
+    useTransition(
+      config: SuspenseConfig | void | null,
+    ): [(() => void) => void, boolean] {
+      currentHookNameInDev = 'useTransition';
+      updateHookTypesDev();
+      return mountTransition(config);
+    },
   };
 
   HooksDispatcherOnUpdateInDEV = {
@@ -1650,6 +1781,18 @@ if (__DEV__) {
       currentHookNameInDev = 'useResponder';
       updateHookTypesDev();
       return createResponderListener(responder, props);
+    },
+    useDeferredValue<T>(value: T, config: TimeoutConfig | void | null): T {
+      currentHookNameInDev = 'useDeferredValue';
+      updateHookTypesDev();
+      return updateDeferredValue(value, config);
+    },
+    useTransition(
+      config: SuspenseConfig | void | null,
+    ): [(() => void) => void, boolean] {
+      currentHookNameInDev = 'useTransition';
+      updateHookTypesDev();
+      return updateTransition(config);
     },
   };
 
@@ -1768,6 +1911,20 @@ if (__DEV__) {
       mountHookTypesDev();
       return createResponderListener(responder, props);
     },
+    useDeferredValue<T>(value: T, config: TimeoutConfig | void | null): T {
+      currentHookNameInDev = 'useDeferredValue';
+      warnInvalidHookAccess();
+      mountHookTypesDev();
+      return mountDeferredValue(value, config);
+    },
+    useTransition(
+      config: SuspenseConfig | void | null,
+    ): [(() => void) => void, boolean] {
+      currentHookNameInDev = 'useTransition';
+      warnInvalidHookAccess();
+      mountHookTypesDev();
+      return mountTransition(config);
+    },
   };
 
   InvalidNestedHooksDispatcherOnUpdateInDEV = {
@@ -1884,6 +2041,20 @@ if (__DEV__) {
       warnInvalidHookAccess();
       updateHookTypesDev();
       return createResponderListener(responder, props);
+    },
+    useDeferredValue<T>(value: T, config: TimeoutConfig | void | null): T {
+      currentHookNameInDev = 'useDeferredValue';
+      warnInvalidHookAccess();
+      updateHookTypesDev();
+      return updateDeferredValue(value, config);
+    },
+    useTransition(
+      config: SuspenseConfig | void | null,
+    ): [(() => void) => void, boolean] {
+      currentHookNameInDev = 'useTransition';
+      warnInvalidHookAccess();
+      updateHookTypesDev();
+      return updateTransition(config);
     },
   };
 }

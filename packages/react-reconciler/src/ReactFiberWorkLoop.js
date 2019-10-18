@@ -2930,7 +2930,7 @@ function flushSuspensePriorityWarningInDEV() {
             'update to provide immediate feedback, and another update that ' +
             'triggers the bulk of the changes.' +
             '\n\n' +
-            'Refer to the documentation for useSuspenseTransition to learn how ' +
+            'Refer to the documentation for useTransition to learn how ' +
             'to implement this pattern.',
           // TODO: Add link to React docs with more information, once it exists
           componentNames.sort().join(', '),
