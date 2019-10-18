@@ -17,6 +17,8 @@ The high level process of creating releases is [documented below](#process). Ind
 
 # Process
 
+If this is your first time running the release scripts, go to the `scripts/release` directory and run `yarn` to install the dependencies.
+
 ## Publishing a Canary
 
 Canaries are meant to be lightweight and published often. In most cases, canaries can be published using artifacts built by Circle CI.
@@ -24,6 +26,7 @@ Canaries are meant to be lightweight and published often. In most cases, canarie
 To prepare a canary for a particular commit:
 1. Choose a commit from [the commit log](https://github.com/facebook/react/commits/master).
 2. Click the "“✓" icon and click the Circle CI "Details" link.
+3. Select the `build` job (**not** the `build_experimental` job; see the next section). If it's still pending, you'll need to wait for it to finish. (Note: This is the most awkward part of cutting a release right now. We have plans to improve it.)
 4. Copy the build ID from the URL (e.g. the build ID for [circleci.com/gh/facebook/react/13471](https://circleci.com/gh/facebook/react/13471) is  **13471**).
 5. Run the [`prepare-canary`](#prepare-canary) script with the build ID you found <sup>1</sup>:
 ```sh
@@ -36,6 +39,18 @@ scripts/release/publish.js --tags canary
 ```
 
 <sup>1: You can omit the `build` param if you just want to release the latest commit as a canary.</sup>
+
+## Publishing an Experimental Canary
+
+Experimental canaries are special releases with additional features turned on.
+
+The steps for publishing an experimental canary are almost the same as for publishing a normal canary, except in step 3 you should choose the `build_experimental` job instead of `build`. (I know this is awkward; we have plans to make it less so. Ideally these canaries would get published by a cron job.)
+
+When publishing an experimental canary, use the `experimental` tag:
+
+```sh
+scripts/release/publish.js --tags experimental
+```
 
 ## Publishing a Stable Release
 
