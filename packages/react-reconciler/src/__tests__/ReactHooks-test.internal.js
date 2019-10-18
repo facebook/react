@@ -1470,9 +1470,6 @@ describe('ReactHooks', () => {
     const useReducerHelper = () => React.useReducer((s, a) => a, 0);
     const useRefHelper = () => React.useRef(null);
     const useStateHelper = () => React.useState(0);
-    const useTransitionHelper = () => React.useTransition({timeoutMs: 1000});
-    const useDeferredValueHelper = () =>
-      React.useDeferredValue(0, {timeoutMs: 1000});
 
     // We don't include useImperativeHandleHelper in this set,
     // because it generates an additional warning about the inputs length changing.
@@ -1487,9 +1484,32 @@ describe('ReactHooks', () => {
       useReducerHelper,
       useRefHelper,
       useStateHelper,
-      useTransitionHelper,
-      useDeferredValueHelper,
     ];
+
+    // We don't include useContext or useDebugValue in this set,
+    // because they aren't added to the hooks list and so won't throw.
+    let hooksInList = [
+      useCallbackHelper,
+      useEffectHelper,
+      useImperativeHandleHelper,
+      useLayoutEffectHelper,
+      useMemoHelper,
+      useReducerHelper,
+      useRefHelper,
+      useStateHelper,
+    ];
+
+    if (__EXPERIMENTAL__) {
+      const useTransitionHelper = () => React.useTransition({timeoutMs: 1000});
+      const useDeferredValueHelper = () =>
+        React.useDeferredValue(0, {timeoutMs: 1000});
+
+      orderedHooks.push(useTransitionHelper);
+      orderedHooks.push(useDeferredValueHelper);
+
+      hooksInList.push(useTransitionHelper);
+      hooksInList.push(useDeferredValueHelper);
+    }
 
     const formatHookNamesToMatchErrorMessage = (hookNameA, hookNameB) => {
       return `use${hookNameA}${' '.repeat(24 - hookNameA.length)}${
@@ -1603,21 +1623,6 @@ describe('ReactHooks', () => {
         ]);
       });
     });
-
-    // We don't include useContext or useDebugValue in this set,
-    // because they aren't added to the hooks list and so won't throw.
-    let hooksInList = [
-      useCallbackHelper,
-      useEffectHelper,
-      useImperativeHandleHelper,
-      useLayoutEffectHelper,
-      useMemoHelper,
-      useReducerHelper,
-      useRefHelper,
-      useStateHelper,
-      useTransitionHelper,
-      useDeferredValueHelper,
-    ];
 
     hooksInList.forEach((firstHelper, index) => {
       const secondHelper =
