@@ -20,8 +20,19 @@ import type {
 const invariant = require('invariant');
 
 // Event configs
-const customBubblingEventTypes = {};
-const customDirectEventTypes = {};
+const customBubblingEventTypes: {
+  [eventName: string]: $ReadOnly<{|
+    phasedRegistrationNames: $ReadOnly<{|
+      captured: string,
+      bubbled: string,
+    |}>,
+  |}>,
+} = {};
+const customDirectEventTypes: {
+  [eventName: string]: $ReadOnly<{|
+    registrationName: string,
+  |}>,
+} = {};
 
 exports.customBubblingEventTypes = customBubblingEventTypes;
 exports.customDirectEventTypes = customDirectEventTypes;
