@@ -1165,7 +1165,7 @@ function updateDeferredValue<T>(
         } finally {
           ReactCurrentBatchConfig.suspense = previousConfig;
         }
-      }, config);
+      });
     },
     [value, config],
   );
