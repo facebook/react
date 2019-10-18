@@ -16,6 +16,25 @@ exports[`Store collapseNodesByDefault:false should display Suspense nodes proper
         <Component key="Inside">
 `;
 
+exports[`Store collapseNodesByDefault:false should display a partially rendered SuspenseList: 1: loading 1`] = `
+[root]
+  ▾ <Wrapper>
+    ▾ <SuspenseList>
+        <Component key="A">
+      ▾ <Suspense>
+          <Loading>
+`;
+
+exports[`Store collapseNodesByDefault:false should display a partially rendered SuspenseList: 2: resolved 1`] = `
+[root]
+  ▾ <Wrapper>
+    ▾ <SuspenseList>
+        <Component key="A">
+      ▾ <Suspense>
+          <Component key="B">
+        <Component key="C">
+`;
+
 exports[`Store collapseNodesByDefault:false should filter DOM nodes from the store tree: 1: mount 1`] = `
 [root]
   ▾ <Grandparent>

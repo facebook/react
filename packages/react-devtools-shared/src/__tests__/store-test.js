@@ -342,6 +342,39 @@ describe('Store', () => {
       expect(store).toMatchSnapshot('13: third child is suspended');
     });
 
+    it('should display a partially rendered SuspenseList', () => {
+      const Loading = () => <div>Loading...</div>;
+      const SuspendingComponent = () => {
+        throw new Promise(() => {});
+      };
+      const Component = () => {
+        return <div>Hello</div>;
+      };
+      const Wrapper = ({shouldSuspense}) => (
+        <React.Fragment>
+          <React.SuspenseList revealOrder="forwards" tail="collapsed">
+            <Component key="A" />
+            <React.Suspense fallback={<Loading />}>
+              {shouldSuspense ? <SuspendingComponent /> : <Component key="B" />}
+            </React.Suspense>
+            <Component key="C" />
+          </React.SuspenseList>
+        </React.Fragment>
+      );
+
+      const container = document.createElement('div');
+      const root = ReactDOM.createRoot(container);
+      act(() => {
+        root.render(<Wrapper shouldSuspense={true} />);
+      });
+      expect(store).toMatchSnapshot('1: loading');
+
+      act(() => {
+        root.render(<Wrapper shouldSuspense={false} />);
+      });
+      expect(store).toMatchSnapshot('2: resolved');
+    });
+
     it('should support collapsing parts of the tree', () => {
       const Grandparent = ({count}) => (
         <React.Fragment>
