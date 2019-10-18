@@ -1131,4 +1131,21 @@ describe.each(environmentTable)('Press responder', hasPointerEvents => {
     target.pointerup();
     target.pointerdown();
   });
+
+  it('event.preventDefault works as expected', () => {
+    const onPress = jest.fn(e => e.preventDefault());
+    const preventDefault = jest.fn();
+    const buttonRef = React.createRef();
+
+    const Component = () => {
+      const listener = usePress({onPress});
+      return <button ref={buttonRef} listeners={listener} />;
+    };
+    ReactDOM.render(<Component />, container);
+
+    const target = createEventTarget(buttonRef.current);
+    target.pointerdown();
+    target.pointerup({preventDefault});
+    expect(preventDefault).toBeCalled();
+  });
 });

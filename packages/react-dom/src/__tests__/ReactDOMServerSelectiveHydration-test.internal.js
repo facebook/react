@@ -13,7 +13,6 @@ let React;
 let ReactDOM;
 let ReactDOMServer;
 let Scheduler;
-let ReactFeatureFlags;
 let Suspense;
 
 function dispatchMouseHoverEvent(to, from) {
@@ -93,16 +92,17 @@ describe('ReactDOMServerSelectiveHydration', () => {
   beforeEach(() => {
     jest.resetModuleRegistry();
 
-    ReactFeatureFlags = require('shared/ReactFeatureFlags');
-    ReactFeatureFlags.enableSuspenseServerRenderer = true;
-    ReactFeatureFlags.enableSelectiveHydration = true;
-
     React = require('react');
     ReactDOM = require('react-dom');
     ReactDOMServer = require('react-dom/server');
     Scheduler = require('scheduler');
     Suspense = React.Suspense;
   });
+
+  if (!__EXPERIMENTAL__) {
+    it("empty test so Jest doesn't complain", () => {});
+    return;
+  }
 
   it('hydrates the target boundary synchronously during a click', async () => {
     function Child({text}) {
@@ -144,7 +144,7 @@ describe('ReactDOMServerSelectiveHydration', () => {
 
     let span = container.getElementsByTagName('span')[1];
 
-    let root = ReactDOM.unstable_createRoot(container, {hydrate: true});
+    let root = ReactDOM.createRoot(container, {hydrate: true});
     root.render(<App />);
 
     // Nothing has been hydrated so far.
@@ -223,7 +223,7 @@ describe('ReactDOMServerSelectiveHydration', () => {
 
     // A and D will be suspended. We'll click on D which should take
     // priority, after we unsuspend.
-    let root = ReactDOM.unstable_createRoot(container, {hydrate: true});
+    let root = ReactDOM.createRoot(container, {hydrate: true});
     root.render(<App />);
 
     // Nothing has been hydrated so far.
@@ -309,7 +309,7 @@ describe('ReactDOMServerSelectiveHydration', () => {
 
     // A and D will be suspended. We'll click on D which should take
     // priority, after we unsuspend.
-    let root = ReactDOM.unstable_createRoot(container, {hydrate: true});
+    let root = ReactDOM.createRoot(container, {hydrate: true});
     root.render(<App />);
 
     // Nothing has been hydrated so far.
@@ -405,7 +405,7 @@ describe('ReactDOMServerSelectiveHydration', () => {
 
     // A and D will be suspended. We'll click on D which should take
     // priority, after we unsuspend.
-    let root = ReactDOM.unstable_createRoot(container, {hydrate: true});
+    let root = ReactDOM.createRoot(container, {hydrate: true});
     root.render(<App />);
 
     // Nothing has been hydrated so far.
@@ -474,7 +474,7 @@ describe('ReactDOMServerSelectiveHydration', () => {
     let spanB = container.getElementsByTagName('span')[1];
     let spanC = container.getElementsByTagName('span')[2];
 
-    let root = ReactDOM.unstable_createRoot(container, {hydrate: true});
+    let root = ReactDOM.createRoot(container, {hydrate: true});
     root.render(<App />);
 
     // Nothing has been hydrated so far.

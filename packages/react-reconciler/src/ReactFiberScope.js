@@ -14,7 +14,7 @@ import type {
   ReactScopeMethods,
 } from 'shared/ReactTypes';
 
-import {getPublicInstance} from './ReactFiberHostConfig';
+import {getPublicInstance, getInstanceFromNode} from './ReactFiberHostConfig';
 
 import {
   HostComponent,
@@ -54,6 +54,29 @@ function collectScopedNodes(
   }
 }
 
+function collectFirstScopedNode(
+  node: Fiber,
+  fn: (type: string | Object, props: Object) => boolean,
+): null | Object {
+  if (enableScopeAPI) {
+    if (node.tag === HostComponent) {
+      const {type, memoizedProps} = node;
+      if (fn(type, memoizedProps) === true) {
+        return getPublicInstance(node.stateNode);
+      }
+    }
+    let child = node.child;
+
+    if (isFiberSuspenseAndTimedOut(node)) {
+      child = getSuspenseFallbackChild(node);
+    }
+    if (child !== null) {
+      return collectFirstScopedNodeFromChildren(child, fn);
+    }
+  }
+  return null;
+}
+
 function collectScopedNodesFromChildren(
   startingChild: Fiber,
   fn: (type: string | Object, props: Object) => boolean,
@@ -64,6 +87,21 @@ function collectScopedNodesFromChildren(
     collectScopedNodes(child, fn, scopedNodes);
     child = child.sibling;
   }
+}
+
+function collectFirstScopedNodeFromChildren(
+  startingChild: Fiber,
+  fn: (type: string | Object, props: Object) => boolean,
+): Object | null {
+  let child = startingChild;
+  while (child !== null) {
+    const scopedNode = collectFirstScopedNode(child, fn);
+    if (scopedNode !== null) {
+      return scopedNode;
+    }
+    child = child.sibling;
+  }
+  return null;
 }
 
 function collectNearestScopeMethods(
@@ -98,14 +136,17 @@ function collectNearestChildScopeMethods(
 }
 
 function isValidScopeNode(node, scope) {
-  return node.tag === ScopeComponent && node.type === scope;
+  return (
+    node.tag === ScopeComponent &&
+    node.type === scope &&
+    node.stateNode !== null
+  );
 }
 
 export function createScopeMethods(
   scope: ReactScope,
   instance: ReactScopeInstance,
 ): ReactScopeMethods {
-  const fn = scope.fn;
   return {
     getChildren(): null | Array<ReactScopeMethods> {
       const currentFiber = ((instance.fiber: any): Fiber);
@@ -147,7 +188,9 @@ export function createScopeMethods(
       const currentFiber = ((instance.fiber: any): Fiber);
       return currentFiber.memoizedProps;
     },
-    getScopedNodes(): null | Array<Object> {
+    queryAllNodes(
+      fn: (type: string | Object, props: Object) => boolean,
+    ): null | Array<Object> {
       const currentFiber = ((instance.fiber: any): Fiber);
       const child = currentFiber.child;
       const scopedNodes = [];
@@ -155,6 +198,30 @@ export function createScopeMethods(
         collectScopedNodesFromChildren(child, fn, scopedNodes);
       }
       return scopedNodes.length === 0 ? null : scopedNodes;
+    },
+    queryFirstNode(
+      fn: (type: string | Object, props: Object) => boolean,
+    ): null | Object {
+      const currentFiber = ((instance.fiber: any): Fiber);
+      const child = currentFiber.child;
+      if (child !== null) {
+        return collectFirstScopedNodeFromChildren(child, fn);
+      }
+      return null;
+    },
+    containsNode(node: Object): boolean {
+      let fiber = getInstanceFromNode(node);
+      while (fiber !== null) {
+        if (
+          fiber.tag === ScopeComponent &&
+          fiber.type === scope &&
+          fiber.stateNode === instance
+        ) {
+          return true;
+        }
+        fiber = fiber.return;
+      }
+      return false;
     },
   };
 }

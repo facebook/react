@@ -11,7 +11,6 @@
 'use strict';
 
 let React;
-let ReactFeatureFlags;
 let StrictMode;
 let ReactNative;
 let createReactClass;
@@ -23,20 +22,12 @@ const DISPATCH_COMMAND_REQUIRES_HOST_COMPONENT =
   "Warning: dispatchCommand was called with a ref that isn't a " +
   'native component. Use React.forwardRef to get access to the underlying native component';
 
-const SET_NATIVE_PROPS_DEPRECATION_MESSAGE =
-  'Warning: Calling ref.setNativeProps(nativeProps) ' +
-  'is deprecated and will be removed in a future release. ' +
-  'Use the setNativeProps export from the react-native package instead.' +
-  "\n\timport {setNativeProps} from 'react-native';\n\tsetNativeProps(ref, nativeProps);\n";
-
 describe('ReactNative', () => {
   beforeEach(() => {
     jest.resetModules();
 
     React = require('react');
     StrictMode = React.StrictMode;
-    ReactFeatureFlags = require('shared/ReactFeatureFlags');
-    ReactFeatureFlags.warnAboutDeprecatedSetNativeProps = true;
     ReactNative = require('react-native-renderer');
     UIManager = require('react-native/Libraries/ReactPrivate/ReactNativePrivateInterface')
       .UIManager;
@@ -223,113 +214,19 @@ describe('ReactNative', () => {
         />,
         11,
       );
+
       expect(UIManager.updateView).not.toBeCalled();
 
-      expect(() => {
-        viewRef.setNativeProps({});
-      }).toWarnDev([SET_NATIVE_PROPS_DEPRECATION_MESSAGE], {
-        withoutStack: true,
-      });
+      viewRef.setNativeProps({});
       expect(UIManager.updateView).not.toBeCalled();
 
-      expect(() => {
-        viewRef.setNativeProps({foo: 'baz'});
-      }).toWarnDev([SET_NATIVE_PROPS_DEPRECATION_MESSAGE], {
-        withoutStack: true,
-      });
-
+      viewRef.setNativeProps({foo: 'baz'});
       expect(UIManager.updateView).toHaveBeenCalledTimes(1);
       expect(UIManager.updateView).toHaveBeenCalledWith(
         expect.any(Number),
         'RCTView',
         {foo: 'baz'},
       );
-    });
-  });
-
-  it('should be able to setNativeProps on native refs', () => {
-    const View = createReactNativeComponentClass('RCTView', () => ({
-      validAttributes: {foo: true},
-      uiViewClassName: 'RCTView',
-    }));
-
-    UIManager.updateView.mockReset();
-
-    let viewRef;
-    ReactNative.render(
-      <View
-        foo="bar"
-        ref={ref => {
-          viewRef = ref;
-        }}
-      />,
-      11,
-    );
-
-    ReactNative.setNativeProps(viewRef, {});
-    expect(UIManager.updateView).not.toBeCalled();
-
-    ReactNative.setNativeProps(viewRef, {foo: 'baz'});
-    expect(UIManager.updateView).toHaveBeenCalledTimes(1);
-    expect(UIManager.updateView).toHaveBeenCalledWith(
-      expect.any(Number),
-      'RCTView',
-      {foo: 'baz'},
-    );
-  });
-
-  it('should warn and no-op if calling setNativeProps on non native refs', () => {
-    const View = createReactNativeComponentClass('RCTView', () => ({
-      validAttributes: {foo: true},
-      uiViewClassName: 'RCTView',
-    }));
-
-    class BasicClass extends React.Component {
-      render() {
-        return <React.Fragment />;
-      }
-    }
-
-    class Subclass extends ReactNative.NativeComponent {
-      render() {
-        return <View />;
-      }
-    }
-
-    const CreateClass = createReactClass({
-      mixins: [NativeMethodsMixin],
-      render: () => {
-        return <View />;
-      },
-    });
-
-    [BasicClass, Subclass, CreateClass].forEach(Component => {
-      UIManager.updateView.mockReset();
-
-      let viewRef;
-      ReactNative.render(
-        <Component
-          foo="bar"
-          ref={ref => {
-            viewRef = ref;
-          }}
-        />,
-        11,
-      );
-
-      expect(UIManager.updateView).not.toBeCalled();
-      expect(() => {
-        ReactNative.setNativeProps(viewRef, {foo: 'baz'});
-      }).toWarnDev(
-        [
-          "Warning: setNativeProps was called with a ref that isn't a " +
-            'native component. Use React.forwardRef to get access ' +
-            'to the underlying native component',
-        ],
-        {withoutStack: true},
-      );
-
-      expect(UIManager.updateView).not.toBeCalled();
     });
   });
 

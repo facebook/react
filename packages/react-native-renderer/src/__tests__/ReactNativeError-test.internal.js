@@ -40,7 +40,7 @@ describe('ReactNativeError', () => {
         throw new Error(e.toString());
       }
     }).toThrow(
-      'Invariant Violation: View config getter callback for component `View` must be a function (received `null`)',
+      'View config getter callback for component `View` must be a function (received `null`)',
     );
   });
 

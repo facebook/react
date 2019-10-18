@@ -26,14 +26,6 @@ import {
 import {unstable_getThreadID} from 'scheduler/tracing';
 import {NoPriority} from './SchedulerWithReactIntegration';
 
-// TODO: This should be lifted into the renderer.
-export type Batch = {
-  _defer: boolean,
-  _expirationTime: ExpirationTime,
-  _onComplete: () => mixed,
-  _next: Batch | null,
-};
-
 export type PendingInteractionMap = Map<ExpirationTime, Set<Interaction>>;
 
 type BaseFiberRootProperties = {|
@@ -63,10 +55,6 @@ type BaseFiberRootProperties = {|
   pendingContext: Object | null,
   // Determines if we should attempt to hydrate on the initial mount
   +hydrate: boolean,
-  // List of top-level batches. This list indicates whether a commit should be
-  // deferred. Also contains completion callbacks.
-  // TODO: Lift this into the renderer
-  firstBatch: Batch | null,
   // Node returned by Scheduler.scheduleCallback
   callbackNode: *,
   // Expiration of the callback associated with this root
@@ -125,7 +113,6 @@ function FiberRootNode(containerInfo, tag, hydrate) {
   this.context = null;
   this.pendingContext = null;
   this.hydrate = hydrate;
-  this.firstBatch = null;
   this.callbackNode = null;
   this.callbackPriority = NoPriority;
   this.firstPendingTime = NoWork;

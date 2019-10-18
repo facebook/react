@@ -10,7 +10,7 @@
 let React;
 let ReactFeatureFlags;
 let FocusManager;
-let TabbableScope;
+let tabbableScopeQuery;
 
 describe('FocusManager', () => {
   beforeEach(() => {
@@ -19,7 +19,7 @@ describe('FocusManager', () => {
     ReactFeatureFlags.enableScopeAPI = true;
     ReactFeatureFlags.enableFlareAPI = true;
     FocusManager = require('../FocusManager');
-    TabbableScope = require('../TabbableScope').default;
+    tabbableScopeQuery = require('../TabbableScopeQuery').default;
     React = require('react');
   });
 
@@ -44,19 +44,20 @@ describe('FocusManager', () => {
       const buttonRef = React.createRef();
       const button2Ref = React.createRef();
       const divRef = React.createRef();
+      const TestScope = React.unstable_createScope();
 
       const Test = () => (
         <div>
-          <TabbableScope ref={firstFocusControllerRef}>
+          <TestScope ref={firstFocusControllerRef}>
             <input tabIndex={-1} />
             <button ref={buttonRef} />
             <button ref={button2Ref} />
             <input tabIndex={-1} />
-          </TabbableScope>
-          <TabbableScope ref={secondFocusControllerRef}>
+          </TestScope>
+          <TestScope ref={secondFocusControllerRef}>
             <input tabIndex={-1} />
             <div ref={divRef} tabIndex={0} />
-          </TabbableScope>
+          </TestScope>
         </div>
       );
 
@@ -64,21 +65,21 @@ describe('FocusManager', () => {
       const firstFocusController = firstFocusControllerRef.current;
       const secondFocusController = secondFocusControllerRef.current;
 
-      FocusManager.focusFirst(firstFocusController);
+      FocusManager.focusFirst(tabbableScopeQuery, firstFocusController);
       expect(document.activeElement).toBe(buttonRef.current);
-      FocusManager.focusNext(firstFocusController);
+      FocusManager.focusNext(tabbableScopeQuery, firstFocusController);
       expect(document.activeElement).toBe(button2Ref.current);
-      FocusManager.focusPrevious(firstFocusController);
+      FocusManager.focusPrevious(tabbableScopeQuery, firstFocusController);
       expect(document.activeElement).toBe(buttonRef.current);
 
       const nextController = FocusManager.getNextScope(firstFocusController);
       expect(nextController).toBe(secondFocusController);
-      FocusManager.focusFirst(nextController);
+      FocusManager.focusFirst(tabbableScopeQuery, nextController);
       expect(document.activeElement).toBe(divRef.current);
 
       const previousController = FocusManager.getPreviousScope(nextController);
       expect(previousController).toBe(firstFocusController);
-      FocusManager.focusFirst(previousController);
+      FocusManager.focusFirst(tabbableScopeQuery, previousController);
       expect(document.activeElement).toBe(buttonRef.current);
     });
   });

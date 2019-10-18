@@ -1482,7 +1482,7 @@ function validateFunctionComponentInDev(workInProgress: Fiber, Component: any) {
 
 const SUSPENDED_MARKER: SuspenseState = {
   dehydrated: null,
-  retryTime: Never,
+  retryTime: NoWork,
 };
 
 function shouldRemainOnFallback(
@@ -1592,12 +1592,12 @@ function updateSuspenseComponent(
   // children. It's essentially a very basic form of re-parenting.
 
   if (current === null) {
-    if (enableSuspenseServerRenderer) {
-      // If we're currently hydrating, try to hydrate this boundary.
-      // But only if this has a fallback.
-      if (nextProps.fallback !== undefined) {
-        tryToClaimNextHydratableInstance(workInProgress);
-        // This could've been a dehydrated suspense component.
+    // If we're currently hydrating, try to hydrate this boundary.
+    // But only if this has a fallback.
+    if (nextProps.fallback !== undefined) {
+      tryToClaimNextHydratableInstance(workInProgress);
+      // This could've been a dehydrated suspense component.
+      if (enableSuspenseServerRenderer) {
         const suspenseState: null | SuspenseState =
           workInProgress.memoizedState;
         if (suspenseState !== null) {
@@ -2121,6 +2121,20 @@ function updateDehydratedSuspenseComponent(
   }
 }
 
+function scheduleWorkOnFiber(
+  fiber: Fiber,
+  renderExpirationTime: ExpirationTime,
+) {
+  if (fiber.expirationTime < renderExpirationTime) {
+    fiber.expirationTime = renderExpirationTime;
+  }
+  let alternate = fiber.alternate;
+  if (alternate !== null && alternate.expirationTime < renderExpirationTime) {
+    alternate.expirationTime = renderExpirationTime;
+  }
+  scheduleWorkOnParentPath(fiber.return, renderExpirationTime);
+}
+
 function propagateSuspenseContextChange(
   workInProgress: Fiber,
   firstChild: null | Fiber,
@@ -2134,18 +2148,15 @@ function propagateSuspenseContextChange(
     if (node.tag === SuspenseComponent) {
       const state: SuspenseState | null = node.memoizedState;
       if (state !== null) {
-        if (node.expirationTime < renderExpirationTime) {
-          node.expirationTime = renderExpirationTime;
-        }
-        let alternate = node.alternate;
-        if (
-          alternate !== null &&
-          alternate.expirationTime < renderExpirationTime
-        ) {
-          alternate.expirationTime = renderExpirationTime;
-        }
-        scheduleWorkOnParentPath(node.return, renderExpirationTime);
+        scheduleWorkOnFiber(node, renderExpirationTime);
       }
+    } else if (node.tag === SuspenseListComponent) {
+      // If the tail is hidden there might not be an Suspense boundaries
+      // to schedule work on. In this case we have to schedule it on the
+      // list itself.
+      // We don't have to traverse to the children of the list since
+      // the list will propagate the change when it rerenders.
+      scheduleWorkOnFiber(node, renderExpirationTime);
     } else if (node.child !== null) {
       node.child.return = node;
       node = node.child;
@@ -2344,18 +2355,20 @@ function initSuspenseListRenderState(
   tail: null | Fiber,
   lastContentRow: null | Fiber,
   tailMode: SuspenseListTailMode,
+  lastEffectBeforeRendering: null | Fiber,
 ): void {
   let renderState: null | SuspenseListRenderState =
     workInProgress.memoizedState;
   if (renderState === null) {
-    workInProgress.memoizedState = {
+    workInProgress.memoizedState = ({
       isBackwards: isBackwards,
       rendering: null,
       last: lastContentRow,
       tail: tail,
       tailExpiration: 0,
       tailMode: tailMode,
-    };
+      lastEffect: lastEffectBeforeRendering,
+    }: SuspenseListRenderState);
   } else {
     // We can reuse the existing object from previous renders.
     renderState.isBackwards = isBackwards;
@@ -2364,6 +2377,7 @@ function initSuspenseListRenderState(
     renderState.tail = tail;
     renderState.tailExpiration = 0;
     renderState.tailMode = tailMode;
+    renderState.lastEffect = lastEffectBeforeRendering;
   }
 }
 
@@ -2445,6 +2459,7 @@ function updateSuspenseListComponent(
           tail,
           lastContentRow,
           tailMode,
+          workInProgress.lastEffect,
         );
         break;
       }
@@ -2476,6 +2491,7 @@ function updateSuspenseListComponent(
           tail,
           null, // last
           tailMode,
+          workInProgress.lastEffect,
         );
         break;
       }
@@ -2486,6 +2502,7 @@ function updateSuspenseListComponent(
           null, // tail
           null, // last
           undefined,
+          workInProgress.lastEffect,
         );
         break;
       }

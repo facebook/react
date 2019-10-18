@@ -491,3 +491,7 @@ export function unmountFundamentalComponent(fundamentalInstance) {
 export function cloneFundamentalInstance(fundamentalInstance) {
   throw new Error('Not yet implemented.');
 }
+
+export function getInstanceFromNode(node) {
+  throw new Error('Not yet implemented.');
+}

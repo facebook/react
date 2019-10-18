@@ -49,6 +49,7 @@ type FocusEventType = 'focus' | 'blur' | 'focuschange' | 'focusvisiblechange';
 
 type FocusWithinProps = {
   disabled?: boolean,
+  onFocusWithin?: (e: FocusEvent) => void,
   onBlurWithin?: (e: FocusEvent) => void,
   onFocusWithinChange?: boolean => void,
   onFocusWithinVisibleChange?: boolean => void,
@@ -57,7 +58,8 @@ type FocusWithinProps = {
 type FocusWithinEventType =
   | 'focuswithinvisiblechange'
   | 'focuswithinchange'
-  | 'blurwithin';
+  | 'blurwithin'
+  | 'focuswithin';
 
 /**
  * Shared between Focus and FocusWithin
@@ -149,11 +151,8 @@ function handleRootEvent(
     case 'keyup': {
       const nativeEvent = event.nativeEvent;
       const focusTarget = state.focusTarget;
-      const {key, metaKey, altKey, ctrlKey} = (nativeEvent: any);
-      const validKey =
-        key === 'Enter' ||
-        key === ' ' ||
-        (key === 'Tab' && !(metaKey || (!isMac && altKey) || ctrlKey));
+      const {metaKey, altKey, ctrlKey} = (nativeEvent: any);
+      const validKey = !(metaKey || (!isMac && altKey) || ctrlKey);
 
       if (validKey) {
         state.pointerType = 'keyboard';
@@ -236,6 +235,26 @@ function dispatchBlurEvents(
   dispatchFocusChange(context, props, false);
   if (state.isFocusVisible) {
     dispatchFocusVisibleChangeEvent(context, props, false);
+  }
+}
+
+function dispatchFocusWithinEvents(
+  context: ReactDOMResponderContext,
+  event: ReactDOMResponderEvent,
+  props: FocusWithinProps,
+  state: FocusState,
+) {
+  const pointerType = state.pointerType;
+  const target = ((state.focusTarget: any): Element | Document) || event.target;
+  const onFocusWithin = (props.onFocusWithin: any);
+  if (isFunction(onFocusWithin)) {
+    const syntheticEvent = createFocusEvent(
+      context,
+      'focuswithin',
+      target,
+      pointerType,
+    );
+    context.dispatchEvent(syntheticEvent, onFocusWithin, DiscreteEvent);
   }
 }
 
@@ -474,6 +493,7 @@ const focusWithinResponderImpl = {
           state.isFocusVisible = isGlobalFocusVisible;
           dispatchFocusWithinVisibleChangeEvent(context, props, state, true);
         }
+        dispatchFocusWithinEvents(context, event, props, state);
         break;
       }
       case 'blur': {

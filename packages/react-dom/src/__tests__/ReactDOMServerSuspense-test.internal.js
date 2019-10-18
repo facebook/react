@@ -14,15 +14,11 @@ const ReactDOMServerIntegrationUtils = require('./utils/ReactDOMServerIntegratio
 let React;
 let ReactDOM;
 let ReactDOMServer;
-let ReactFeatureFlags;
 let ReactTestUtils;
 
 function initModules() {
   // Reset warning cache.
   jest.resetModuleRegistry();
-
-  ReactFeatureFlags = require('shared/ReactFeatureFlags');
-  ReactFeatureFlags.enableSuspenseServerRenderer = true;
 
   React = require('react');
   ReactDOM = require('react-dom');
@@ -47,6 +43,11 @@ describe('ReactDOMServerSuspense', () => {
   beforeEach(() => {
     resetModules();
   });
+
+  if (!__EXPERIMENTAL__) {
+    it("empty test so Jest doesn't complain", () => {});
+    return;
+  }
 
   function Text(props) {
     return <div>{props.text}</div>;
@@ -125,7 +126,7 @@ describe('ReactDOMServerSuspense', () => {
     expect(divB.textContent).toBe('B');
 
     ReactTestUtils.act(() => {
-      const root = ReactDOM.unstable_createSyncRoot(parent, {hydrate: true});
+      const root = ReactDOM.createSyncRoot(parent, {hydrate: true});
       root.render(example);
     });
 
