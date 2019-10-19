@@ -23,6 +23,7 @@ import {
   ElementTypeProfiler,
   ElementTypeRoot,
   ElementTypeSuspense,
+  ElementTypeSuspenseList,
 } from 'react-devtools-shared/src/types';
 import {
   getDisplayName,
@@ -91,9 +92,6 @@ type ReactSymbolsType = {
   PROFILER_SYMBOL_STRING: string,
   STRICT_MODE_NUMBER: number,
   STRICT_MODE_SYMBOL_STRING: string,
-  SUSPENSE_NUMBER: number,
-  SUSPENSE_SYMBOL_STRING: string,
-  DEPRECATED_PLACEHOLDER_SYMBOL_STRING: string,
   SCOPE_NUMBER: number,
   SCOPE_SYMBOL_STRING: string,
 };
@@ -129,6 +127,7 @@ type ReactTypeOfWorkType = {|
   Profiler: number,
   SimpleMemoComponent: number,
   SuspenseComponent: number,
+  SuspenseListComponent: number,
   YieldComponent: number,
 |};
 
@@ -170,9 +169,6 @@ export function getInternalReactConstants(
     PROFILER_SYMBOL_STRING: 'Symbol(react.profiler)',
     STRICT_MODE_NUMBER: 0xeacc,
     STRICT_MODE_SYMBOL_STRING: 'Symbol(react.strict_mode)',
-    SUSPENSE_NUMBER: 0xead1,
-    SUSPENSE_SYMBOL_STRING: 'Symbol(react.suspense)',
-    DEPRECATED_PLACEHOLDER_SYMBOL_STRING: 'Symbol(react.placeholder)',
     SCOPE_NUMBER: 0xead7,
     SCOPE_SYMBOL_STRING: 'Symbol(react.scope)',
   };
@@ -227,6 +223,7 @@ export function getInternalReactConstants(
       Profiler: 12,
       SimpleMemoComponent: 15,
       SuspenseComponent: 13,
+      SuspenseListComponent: 19, // Experimental
       YieldComponent: -1, // Removed
     };
   } else if (gte(version, '16.4.3-alpha')) {
@@ -252,6 +249,7 @@ export function getInternalReactConstants(
       Profiler: 15,
       SimpleMemoComponent: -1, // Doesn't exist yet
       SuspenseComponent: 16,
+      SuspenseListComponent: -1, // Doesn't exist yet
       YieldComponent: -1, // Removed
     };
   } else {
@@ -277,6 +275,7 @@ export function getInternalReactConstants(
       Profiler: 15,
       SimpleMemoComponent: -1, // Doesn't exist yet
       SuspenseComponent: 16,
+      SuspenseListComponent: -1, // Doesn't exist yet
       YieldComponent: 9,
     };
   }
@@ -307,6 +306,8 @@ export function getInternalReactConstants(
     Fragment,
     MemoComponent,
     SimpleMemoComponent,
+    SuspenseComponent,
+    SuspenseListComponent,
   } = ReactTypeOfWork;
 
   const {
@@ -319,9 +320,6 @@ export function getInternalReactConstants(
     CONTEXT_CONSUMER_SYMBOL_STRING,
     STRICT_MODE_NUMBER,
     STRICT_MODE_SYMBOL_STRING,
-    SUSPENSE_NUMBER,
-    SUSPENSE_SYMBOL_STRING,
-    DEPRECATED_PLACEHOLDER_SYMBOL_STRING,
     PROFILER_NUMBER,
     PROFILER_SYMBOL_STRING,
     SCOPE_NUMBER,
@@ -370,6 +368,10 @@ export function getInternalReactConstants(
         } else {
           return getDisplayName(type, 'Anonymous');
         }
+      case SuspenseComponent:
+        return 'Suspense';
+      case SuspenseListComponent:
+        return 'SuspenseList';
       default:
         const typeSymbol = getTypeSymbol(type);
 
@@ -398,10 +400,6 @@ export function getInternalReactConstants(
           case STRICT_MODE_NUMBER:
           case STRICT_MODE_SYMBOL_STRING:
             return null;
-          case SUSPENSE_NUMBER:
-          case SUSPENSE_SYMBOL_STRING:
-          case DEPRECATED_PLACEHOLDER_SYMBOL_STRING:
-            return 'Suspense';
           case PROFILER_NUMBER:
           case PROFILER_SYMBOL_STRING:
             return `Profiler(${fiber.memoizedProps.id})`;
@@ -457,6 +455,7 @@ export function attach(
     MemoComponent,
     SimpleMemoComponent,
     SuspenseComponent,
+    SuspenseListComponent,
   } = ReactTypeOfWork;
   const {
     ImmediatePriority,
@@ -478,9 +477,6 @@ export function attach(
     PROFILER_SYMBOL_STRING,
     STRICT_MODE_NUMBER,
     STRICT_MODE_SYMBOL_STRING,
-    SUSPENSE_NUMBER,
-    SUSPENSE_SYMBOL_STRING,
-    DEPRECATED_PLACEHOLDER_SYMBOL_STRING,
   } = ReactSymbols;
 
   const {
@@ -711,6 +707,10 @@ export function attach(
       case MemoComponent:
       case SimpleMemoComponent:
         return ElementTypeMemo;
+      case SuspenseComponent:
+        return ElementTypeSuspense;
+      case SuspenseListComponent:
+        return ElementTypeSuspenseList;
       default:
         const typeSymbol = getTypeSymbol(type);
 
@@ -728,10 +728,6 @@ export function attach(
           case STRICT_MODE_NUMBER:
           case STRICT_MODE_SYMBOL_STRING:
             return ElementTypeOtherOrUnknown;
-          case SUSPENSE_NUMBER:
-          case SUSPENSE_SYMBOL_STRING:
-          case DEPRECATED_PLACEHOLDER_SYMBOL_STRING:
-            return ElementTypeSuspense;
           case PROFILER_NUMBER:
           case PROFILER_SYMBOL_STRING:
             return ElementTypeProfiler;
