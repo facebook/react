@@ -1292,8 +1292,9 @@ describe('ReactUpdates', () => {
     expect(ops).toEqual(['Foo', 'Bar', 'Baz']);
   });
 
-  if (__EXPERIMENTAL__) {
-    it('delays sync updates inside hidden subtrees in Concurrent Mode', () => {
+  it.experimental(
+    'delays sync updates inside hidden subtrees in Concurrent Mode',
+    () => {
       const container = document.createElement('div');
 
       function Baz() {
@@ -1368,8 +1369,8 @@ describe('ReactUpdates', () => {
         expect(Scheduler).toFlushAndYield(['Bar']);
       }
       expect(hiddenDiv.innerHTML).toBe('<p>bar 1</p>');
-    });
-  }
+    },
+  );
 
   it('can render ridiculously large number of roots without triggering infinite update loop error', () => {
     class Foo extends React.Component {
