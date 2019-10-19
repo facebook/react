@@ -344,7 +344,7 @@ describe('ReactDOMServerPartialHydration', () => {
     }).toWarnDev(
       'Warning: Cannot hydrate Suspense in legacy mode. Switch from ' +
         'ReactDOM.hydrate(element, container) to ' +
-        'ReactDOM.unstable_createSyncRoot(container, { hydrate: true })' +
+        'ReactDOM.createSyncRoot(container, { hydrate: true })' +
         '.render(element) or remove the Suspense components from the server ' +
         'rendered components.' +
         '\n    in Suspense (at **)' +
