@@ -114,11 +114,18 @@ const DEFAULT_PRESS_RETENTION_OFFSET = {
 };
 
 const targetEventTypes = hasPointerEvents
-  ? ['keydown_active', 'pointerdown', 'click_active']
-  : ['keydown_active', 'touchstart', 'mousedown', 'click_active'];
+  ? ['keydown_active', 'pointerdown_active', 'click_active']
+  : ['keydown_active', 'touchstart', 'mousedown_active', 'click_active'];
 
 const rootEventTypes = hasPointerEvents
-  ? ['pointerup', 'pointermove', 'pointercancel', 'click', 'keyup', 'scroll']
+  ? [
+      'pointerup_active',
+      'pointermove',
+      'pointercancel',
+      'click',
+      'keyup',
+      'scroll',
+    ]
   : [
       'click',
       'keyup',
@@ -128,7 +135,7 @@ const rootEventTypes = hasPointerEvents
       'touchcancel',
       // Used as a 'cancel' signal for mouse interactions
       'dragstart',
-      'mouseup',
+      'mouseup_active',
       'touchend',
     ];
 
