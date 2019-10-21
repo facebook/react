@@ -607,3 +607,8 @@ exports[`Store should properly handle a root with no visible nodes: 1: mount 1`]
 `;
 
 exports[`Store should properly handle a root with no visible nodes: 2: add host nodes 1`] = `[root]`;
+
+exports[`Store should properly serialize non-string key values: 1: mount 1`] = `
+[root]
+    <Child key="123">
+`;
