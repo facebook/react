@@ -50,7 +50,7 @@ import {
 } from './ReactFiberContext';
 import {readContext} from './ReactFiberNewContext';
 import {
-  requestCurrentTime,
+  requestCurrentTimeForUpdate,
   computeExpirationForFiber,
   scheduleWork,
 } from './ReactFiberWorkLoop';
@@ -183,7 +183,7 @@ const classComponentUpdater = {
   isMounted,
   enqueueSetState(inst, payload, callback) {
     const fiber = getInstance(inst);
-    const currentTime = requestCurrentTime();
+    const currentTime = requestCurrentTimeForUpdate();
     const suspenseConfig = requestCurrentSuspenseConfig();
     const expirationTime = computeExpirationForFiber(
       currentTime,
@@ -205,7 +205,7 @@ const classComponentUpdater = {
   },
   enqueueReplaceState(inst, payload, callback) {
     const fiber = getInstance(inst);
-    const currentTime = requestCurrentTime();
+    const currentTime = requestCurrentTimeForUpdate();
     const suspenseConfig = requestCurrentSuspenseConfig();
     const expirationTime = computeExpirationForFiber(
       currentTime,
@@ -229,7 +229,7 @@ const classComponentUpdater = {
   },
   enqueueForceUpdate(inst, callback) {
     const fiber = getInstance(inst);
-    const currentTime = requestCurrentTime();
+    const currentTime = requestCurrentTimeForUpdate();
     const suspenseConfig = requestCurrentSuspenseConfig();
     const expirationTime = computeExpirationForFiber(
       currentTime,
