@@ -28,7 +28,7 @@ afterEach(() => {
   ReactFeatureFlags.warnAboutUnmockedScheduler = false;
 });
 
-it('should warn in sync mode', () => {
+it('should warn in legacy mode', () => {
   expect(() => {
     ReactDOM.render(<App />, document.createElement('div'));
   }).toWarnDev(

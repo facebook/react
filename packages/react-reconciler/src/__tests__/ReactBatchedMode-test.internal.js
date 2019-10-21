@@ -6,7 +6,7 @@ let ReactCache;
 let Suspense;
 let TextResource;
 
-describe('ReactBatchedMode', () => {
+describe('ReactBlockingMode', () => {
   beforeEach(() => {
     jest.resetModules();
     ReactFeatureFlags = require('shared/ReactFeatureFlags');
@@ -50,7 +50,7 @@ describe('ReactBatchedMode', () => {
   }
 
   it('updates flush without yielding in the next event', () => {
-    const root = ReactNoop.createSyncRoot();
+    const root = ReactNoop.createBlockingRoot();
 
     root.render(
       <>
@@ -78,7 +78,7 @@ describe('ReactBatchedMode', () => {
       return <Text text="Hi" />;
     }
 
-    const root = ReactNoop.createSyncRoot();
+    const root = ReactNoop.createBlockingRoot();
     root.render(<App />);
     expect(root).toMatchRenderedOutput(null);
 
@@ -87,7 +87,7 @@ describe('ReactBatchedMode', () => {
   });
 
   it('uses proper Suspense semantics, not legacy ones', async () => {
-    const root = ReactNoop.createSyncRoot();
+    const root = ReactNoop.createBlockingRoot();
     root.render(
       <Suspense fallback={<Text text="Loading..." />}>
         <span>
@@ -122,7 +122,7 @@ describe('ReactBatchedMode', () => {
 
   it('flushSync does not flush batched work', () => {
     const {useState, forwardRef, useImperativeHandle} = React;
-    const root = ReactNoop.createSyncRoot();
+    const root = ReactNoop.createBlockingRoot();
 
     const Foo = forwardRef(({label}, ref) => {
       const [step, setStep] = useState(0);

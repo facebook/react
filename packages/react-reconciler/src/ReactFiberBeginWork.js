@@ -103,7 +103,7 @@ import {
   NoMode,
   ProfileMode,
   StrictMode,
-  BatchedMode,
+  BlockingMode,
 } from './ReactTypeOfMode';
 import {
   shouldSetTextContent,
@@ -1626,8 +1626,8 @@ function updateSuspenseComponent(
       );
       primaryChildFragment.return = workInProgress;
 
-      if ((workInProgress.mode & BatchedMode) === NoMode) {
-        // Outside of batched mode, we commit the effects from the
+      if ((workInProgress.mode & BlockingMode) === NoMode) {
+        // Outside of blocking mode, we commit the effects from the
         // partially completed, timed-out tree, too.
         const progressedState: SuspenseState = workInProgress.memoizedState;
         const progressedPrimaryChild: Fiber | null =
@@ -1712,8 +1712,8 @@ function updateSuspenseComponent(
             // that we're not going to hydrate.
             primaryChildFragment.child = null;
 
-            if ((workInProgress.mode & BatchedMode) === NoMode) {
-              // Outside of batched mode, we commit the effects from the
+            if ((workInProgress.mode & BlockingMode) === NoMode) {
+              // Outside of blocking mode, we commit the effects from the
               // partially completed, timed-out tree, too.
               let progressedChild = (primaryChildFragment.child =
                 workInProgress.child);
@@ -1781,8 +1781,8 @@ function updateSuspenseComponent(
         );
         primaryChildFragment.return = workInProgress;
 
-        if ((workInProgress.mode & BatchedMode) === NoMode) {
-          // Outside of batched mode, we commit the effects from the
+        if ((workInProgress.mode & BlockingMode) === NoMode) {
+          // Outside of blocking mode, we commit the effects from the
           // partially completed, timed-out tree, too.
           const progressedState: SuspenseState = workInProgress.memoizedState;
           const progressedPrimaryChild: Fiber | null =
@@ -1876,8 +1876,8 @@ function updateSuspenseComponent(
         // schedule a placement.
         // primaryChildFragment.effectTag |= Placement;
 
-        if ((workInProgress.mode & BatchedMode) === NoMode) {
-          // Outside of batched mode, we commit the effects from the
+        if ((workInProgress.mode & BlockingMode) === NoMode) {
+          // Outside of blocking mode, we commit the effects from the
           // partially completed, timed-out tree, too.
           const progressedState: SuspenseState = workInProgress.memoizedState;
           const progressedPrimaryChild: Fiber | null =
@@ -1966,13 +1966,13 @@ function mountDehydratedSuspenseComponent(
 ): null | Fiber {
   // During the first pass, we'll bail out and not drill into the children.
   // Instead, we'll leave the content in place and try to hydrate it later.
-  if ((workInProgress.mode & BatchedMode) === NoMode) {
+  if ((workInProgress.mode & BlockingMode) === NoMode) {
     if (__DEV__) {
       warning(
         false,
         'Cannot hydrate Suspense in legacy mode. Switch from ' +
           'ReactDOM.hydrate(element, container) to ' +
-          'ReactDOM.createSyncRoot(container, { hydrate: true })' +
+          'ReactDOM.createBlockingRoot(container, { hydrate: true })' +
           '.render(element) or remove the Suspense components from ' +
           'the server rendered components.',
       );
@@ -2019,7 +2019,7 @@ function updateDehydratedSuspenseComponent(
   // but after we've already committed once.
   warnIfHydrating();
 
-  if ((workInProgress.mode & BatchedMode) === NoMode) {
+  if ((workInProgress.mode & BlockingMode) === NoMode) {
     return retrySuspenseComponentWithoutHydrating(
       current,
       workInProgress,
@@ -2433,8 +2433,8 @@ function updateSuspenseListComponent(
   }
   pushSuspenseContext(workInProgress, suspenseContext);
 
-  if ((workInProgress.mode & BatchedMode) === NoMode) {
-    // Outside of batched mode, SuspenseList doesn't work so we just
+  if ((workInProgress.mode & BlockingMode) === NoMode) {
+    // Outside of blocking mode, SuspenseList doesn't work so we just
     // use make it a noop by treating it as the default revealOrder.
     workInProgress.memoizedState = null;
   } else {

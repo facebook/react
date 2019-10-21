@@ -52,7 +52,7 @@ import {
   FundamentalComponent,
   ScopeComponent,
 } from 'shared/ReactWorkTags';
-import {NoMode, BatchedMode} from './ReactTypeOfMode';
+import {NoMode, BlockingMode} from './ReactTypeOfMode';
 import {
   Ref,
   Update,
@@ -899,12 +899,12 @@ function completeWork(
       }
 
       if (nextDidTimeout && !prevDidTimeout) {
-        // If this subtreee is running in batched mode we can suspend,
+        // If this subtreee is running in blocking mode we can suspend,
         // otherwise we won't suspend.
         // TODO: This will still suspend a synchronous tree if anything
         // in the concurrent tree already suspended during this render.
         // This is a known bug.
-        if ((workInProgress.mode & BatchedMode) !== NoMode) {
+        if ((workInProgress.mode & BlockingMode) !== NoMode) {
           // TODO: Move this back to throwException because this is too late
           // if this is a large tree which is common for initial loads. We
           // don't know if we should restart a render or not until we get
