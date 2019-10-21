@@ -173,7 +173,7 @@ import {
 } from './ReactFiber';
 import {
   markSpawnedWork,
-  requestCurrentTime,
+  requestCurrentTimeForUpdate,
   retryDehydratedSuspenseBoundary,
   scheduleWork,
   renderDidSuspendDelayIfPossible,
@@ -1990,7 +1990,7 @@ function mountDehydratedSuspenseComponent(
     // a protocol to transfer that time, we'll just estimate it by using the current
     // time. This will mean that Suspense timeouts are slightly shifted to later than
     // they should be.
-    let serverDisplayTime = requestCurrentTime();
+    let serverDisplayTime = requestCurrentTimeForUpdate();
     // Schedule a normal pri update to render this content.
     let newExpirationTime = computeAsyncExpiration(serverDisplayTime);
     if (enableSchedulerTracing) {

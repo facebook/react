@@ -39,7 +39,7 @@ import {
 import {
   scheduleWork,
   computeExpirationForFiber,
-  requestCurrentTime,
+  requestCurrentTimeForUpdate,
   warnIfNotCurrentlyActingEffectsInDEV,
   warnIfNotCurrentlyActingUpdatesInDev,
   warnIfNotScopedWithMatchingAct,
@@ -1273,7 +1273,7 @@ function dispatchAction<S, A>(
       lastRenderPhaseUpdate.next = update;
     }
   } else {
-    const currentTime = requestCurrentTime();
+    const currentTime = requestCurrentTimeForUpdate();
     const suspenseConfig = requestCurrentSuspenseConfig();
     const expirationTime = computeExpirationForFiber(
       currentTime,

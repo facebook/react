@@ -288,7 +288,7 @@ let spawnedWorkDuringRender: null | Array<ExpirationTime> = null;
 // receive the same expiration time. Otherwise we get tearing.
 let currentEventTime: ExpirationTime = NoWork;
 
-export function requestCurrentTime() {
+export function requestCurrentTimeForUpdate() {
   if ((executionContext & (RenderContext | CommitContext)) !== NoContext) {
     // We're inside React, so it's fine to read the actual time.
     return msToExpirationTime(now());
@@ -301,6 +301,10 @@ export function requestCurrentTime() {
   // This is the first update since React yielded. Compute a new start time.
   currentEventTime = msToExpirationTime(now());
   return currentEventTime;
+}
+
+export function getCurrentTime() {
+  return msToExpirationTime(now());
 }
 
 export function computeExpirationForFiber(
@@ -571,7 +575,7 @@ function ensureRootIsScheduled(root: FiberRoot) {
 
   // TODO: If this is an update, we already read the current time. Pass the
   // time as an argument.
-  const currentTime = requestCurrentTime();
+  const currentTime = requestCurrentTimeForUpdate();
   const priorityLevel = inferPriorityFromExpirationTime(
     currentTime,
     expirationTime,
@@ -632,7 +636,7 @@ function performConcurrentWorkOnRoot(root, didTimeout) {
   if (didTimeout) {
     // The render task took too long to complete. Mark the current time as
     // expired to synchronously render all expired work in a single batch.
-    const currentTime = requestCurrentTime();
+    const currentTime = requestCurrentTimeForUpdate();
     markRootExpiredAtTime(root, currentTime);
     // This will schedule a synchronous callback.
     ensureRootIsScheduled(root);
@@ -2380,7 +2384,7 @@ function retryTimedOutBoundary(
   // likely unblocked. Try rendering again, at a new expiration time.
   if (retryTime === NoWork) {
     const suspenseConfig = null; // Retries don't carry over the already committed update.
-    const currentTime = requestCurrentTime();
+    const currentTime = requestCurrentTimeForUpdate();
     retryTime = computeExpirationForFiber(
       currentTime,
       boundaryFiber,
