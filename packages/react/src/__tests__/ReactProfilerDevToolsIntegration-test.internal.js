@@ -177,4 +177,26 @@ describe('ReactProfiler DevTools integration', () => {
       {name: 'some event', timestamp: eventTime},
     ]);
   });
+
+  it('regression test: #<TODO: add issue number>', () => {
+    function Text({text}) {
+      Scheduler.unstable_yieldValue(text);
+      return text;
+    }
+
+    const root = ReactTestRenderer.create(null, {unstable_isConcurrent: true});
+
+    root.update(<Text text="A" />);
+    expect(Scheduler).toFlushAndYield(['A']);
+    expect(root).toMatchRenderedOutput('A');
+
+    Scheduler.unstable_advanceTime(10000);
+    root.update(<Text text="B" />);
+
+    // Update B should not have expired
+    expect(Scheduler).toFlushExpired([]);
+
+    expect(Scheduler).toFlushAndYield(['B']);
+    expect(root).toMatchRenderedOutput('B');
+  });
 });
