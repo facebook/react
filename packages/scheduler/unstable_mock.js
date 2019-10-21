@@ -18,4 +18,5 @@ export {
   unstable_flushAll,
   unstable_yieldValue,
   unstable_advanceTime,
+  unstable_advanceCPUBoundTime,
 } from './src/SchedulerHostConfig.js';

@@ -72,7 +72,7 @@ describe('ReactExpiration', () => {
     // Schedule an update.
     ReactNoop.render(<Text text="A" />);
     // Advance the timer.
-    Scheduler.unstable_advanceTime(2000);
+    Scheduler.unstable_advanceCPUBoundTime(2000);
     // Partially flush the the first update, then interrupt it.
     expect(Scheduler).toFlushAndYieldThrough(['A [render]']);
     interrupt();
@@ -100,7 +100,7 @@ describe('ReactExpiration', () => {
     // Now do the same thing again, except this time don't flush any work in
     // between the two updates.
     ReactNoop.render(<Text text="A" />);
-    Scheduler.unstable_advanceTime(2000);
+    Scheduler.unstable_advanceCPUBoundTime(2000);
     expect(Scheduler).toHaveYielded([]);
     expect(ReactNoop.getChildren()).toEqual([span('B')]);
     // Schedule another update.
@@ -137,7 +137,7 @@ describe('ReactExpiration', () => {
       // Schedule an update.
       ReactNoop.render(<Text text="A" />);
       // Advance the timer.
-      Scheduler.unstable_advanceTime(2000);
+      Scheduler.unstable_advanceCPUBoundTime(2000);
       // Partially flush the the first update, then interrupt it.
       expect(Scheduler).toFlushAndYieldThrough(['A [render]']);
       interrupt();
@@ -165,7 +165,7 @@ describe('ReactExpiration', () => {
       // Now do the same thing again, except this time don't flush any work in
       // between the two updates.
       ReactNoop.render(<Text text="A" />);
-      Scheduler.unstable_advanceTime(2000);
+      Scheduler.unstable_advanceCPUBoundTime(2000);
       expect(Scheduler).toHaveYielded([]);
       expect(ReactNoop.getChildren()).toEqual([span('B')]);
 

@@ -211,6 +211,12 @@ export function unstable_advanceTime(ms: number) {
   }
 }
 
+export function unstable_advanceCPUBoundTime(ms: number) {
+  // Advances the time but does not fire events, as if the main thread
+  // is blocked.
+  currentTime += ms;
+}
+
 export function requestPaint() {
   needsPaint = true;
 }

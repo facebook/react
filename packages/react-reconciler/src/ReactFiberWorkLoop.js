@@ -294,12 +294,14 @@ export function requestCurrentTime() {
     return msToExpirationTime(now());
   }
   // We're not inside React, so we may be in the middle of a browser event.
-  if (currentEventTime !== NoWork) {
+  if (currentEventTime === NoWork) {
     // Use the same start time for all updates until we enter React again.
-    return currentEventTime;
+    currentEventTime = msToExpirationTime(now());
+    scheduleCallback(ImmediatePriority, () => {
+      currentEventTime = NoWork;
+      return null;
+    });
   }
-  // This is the first update since React yielded. Compute a new start time.
-  currentEventTime = msToExpirationTime(now());
   return currentEventTime;
 }
 
