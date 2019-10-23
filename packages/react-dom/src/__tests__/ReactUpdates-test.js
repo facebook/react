@@ -1099,7 +1099,7 @@ describe('ReactUpdates', () => {
   });
 
   it(
-    'in sync mode, updates in componentWillUpdate and componentDidUpdate ' +
+    'in legacy mode, updates in componentWillUpdate and componentDidUpdate ' +
       'should both flush in the immediately subsequent commit',
     () => {
       let ops = [];
@@ -1142,7 +1142,7 @@ describe('ReactUpdates', () => {
   );
 
   it(
-    'in sync mode, updates in componentWillUpdate and componentDidUpdate ' +
+    'in legacy mode, updates in componentWillUpdate and componentDidUpdate ' +
       '(on a sibling) should both flush in the immediately subsequent commit',
     () => {
       let ops = [];

@@ -209,7 +209,7 @@ function createRootImpl(
   return root;
 }
 
-function ReactSyncRoot(
+function ReactBlockingRoot(
   container: DOMContainer,
   tag: RootTag,
   options: void | RootOptions,
@@ -221,7 +221,7 @@ function ReactRoot(container: DOMContainer, options: void | RootOptions) {
   this._internalRoot = createRootImpl(container, ConcurrentRoot, options);
 }
 
-ReactRoot.prototype.render = ReactSyncRoot.prototype.render = function(
+ReactRoot.prototype.render = ReactBlockingRoot.prototype.render = function(
   children: ReactNodeList,
   callback: ?() => mixed,
 ): void {
@@ -233,7 +233,7 @@ ReactRoot.prototype.render = ReactSyncRoot.prototype.render = function(
   updateContainer(children, root, null, callback);
 };
 
-ReactRoot.prototype.unmount = ReactSyncRoot.prototype.unmount = function(
+ReactRoot.prototype.unmount = ReactBlockingRoot.prototype.unmount = function(
   callback: ?() => mixed,
 ): void {
   const root = this._internalRoot;
@@ -334,7 +334,7 @@ function legacyCreateRootFromDOMContainer(
   }
 
   // Legacy roots are not batched.
-  return new ReactSyncRoot(
+  return new ReactBlockingRoot(
     container,
     LegacyRoot,
     shouldHydrate
@@ -636,7 +636,7 @@ function createRoot(
   return new ReactRoot(container, options);
 }
 
-function createSyncRoot(
+function createBlockingRoot(
   container: DOMContainer,
   options?: RootOptions,
 ): _ReactRoot {
@@ -645,7 +645,7 @@ function createSyncRoot(
     'createRoot(...): Target container is not a DOM element.',
   );
   warnIfReactDOMContainerInDEV(container);
-  return new ReactSyncRoot(container, BatchedRoot, options);
+  return new ReactBlockingRoot(container, BatchedRoot, options);
 }
 
 function warnIfReactDOMContainerInDEV(container) {
@@ -661,7 +661,7 @@ function warnIfReactDOMContainerInDEV(container) {
 
 if (exposeConcurrentModeAPIs) {
   ReactDOM.createRoot = createRoot;
-  ReactDOM.createSyncRoot = createSyncRoot;
+  ReactDOM.createBlockingRoot = createBlockingRoot;
 
   ReactDOM.unstable_discreteUpdates = discreteUpdates;
   ReactDOM.unstable_flushDiscreteUpdates = flushDiscreteUpdates;

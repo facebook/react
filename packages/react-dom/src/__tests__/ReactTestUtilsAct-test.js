@@ -53,45 +53,50 @@ describe('ReactTestUtils.act()', () => {
     );
   }
 
-  // and then in sync mode
+  // and then in legacy mode
 
-  let syncDom = null;
-  function renderSync(el, dom) {
-    syncDom = dom;
+  let legacyDom = null;
+  function renderLegacy(el, dom) {
+    legacyDom = dom;
     ReactDOM.render(el, dom);
   }
 
-  function unmountSync(dom) {
-    syncDom = null;
+  function unmountLegacy(dom) {
+    legacyDom = null;
     ReactDOM.unmountComponentAtNode(dom);
   }
 
-  function rerenderSync(el) {
-    ReactDOM.render(el, syncDom);
+  function rerenderLegacy(el) {
+    ReactDOM.render(el, legacyDom);
   }
 
-  runActTests('legacy sync mode', renderSync, unmountSync, rerenderSync);
+  runActTests('legacy mode', renderLegacy, unmountLegacy, rerenderLegacy);
 
-  // and then in batched mode
+  // and then in blocking mode
   if (__EXPERIMENTAL__) {
-    let batchedRoot = null;
+    let blockingRoot = null;
     const renderBatched = (el, dom) => {
-      batchedRoot = ReactDOM.createSyncRoot(dom);
-      batchedRoot.render(el);
+      blockingRoot = ReactDOM.createBlockingRoot(dom);
+      blockingRoot.render(el);
     };
 
     const unmountBatched = dom => {
-      if (batchedRoot !== null) {
-        batchedRoot.unmount();
-        batchedRoot = null;
+      if (blockingRoot !== null) {
+        blockingRoot.unmount();
+        blockingRoot = null;
       }
     };
 
     const rerenderBatched = el => {
-      batchedRoot.render(el);
+      blockingRoot.render(el);
     };
 
-    runActTests('batched mode', renderBatched, unmountBatched, rerenderBatched);
+    runActTests(
+      'blocking mode',
+      renderBatched,
+      unmountBatched,
+      rerenderBatched,
+    );
   }
 
   describe('unacted effects', () => {
@@ -100,7 +105,7 @@ describe('ReactTestUtils.act()', () => {
       return null;
     }
 
-    it('does not warn in legacy sync mode', () => {
+    it('does not warn in legacy mode', () => {
       expect(() => {
         ReactDOM.render(<App />, document.createElement('div'));
       }).toWarnDev([]);
@@ -121,9 +126,11 @@ describe('ReactTestUtils.act()', () => {
     });
 
     if (__EXPERIMENTAL__) {
-      it('warns in batched mode', () => {
+      it('warns in blocking mode', () => {
         expect(() => {
-          const root = ReactDOM.createSyncRoot(document.createElement('div'));
+          const root = ReactDOM.createBlockingRoot(
+            document.createElement('div'),
+          );
           root.render(<App />);
           Scheduler.unstable_flushAll();
         }).toWarnDev([

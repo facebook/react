@@ -21,7 +21,7 @@ beforeEach(() => {
   ReactDOM = require('react-dom');
 });
 
-it('does not warn when rendering in sync mode', () => {
+it('does not warn when rendering in legacy mode', () => {
   expect(() => {
     ReactDOM.render(<App />, document.createElement('div'));
   }).toWarnDev([]);
@@ -42,9 +42,11 @@ if (__EXPERIMENTAL__) {
     }).toWarnDev([]);
   });
 
-  it('should warn when rendering in batched mode', () => {
+  it('should warn when rendering in blocking mode', () => {
     expect(() => {
-      ReactDOM.createSyncRoot(document.createElement('div')).render(<App />);
+      ReactDOM.createBlockingRoot(document.createElement('div')).render(
+        <App />,
+      );
     }).toWarnDev(
       'In Concurrent or Sync modes, the "scheduler" module needs to be mocked ' +
         'to guarantee consistent behaviour across tests and browsers.',
@@ -52,7 +54,9 @@ if (__EXPERIMENTAL__) {
     );
     // does not warn twice
     expect(() => {
-      ReactDOM.createSyncRoot(document.createElement('div')).render(<App />);
+      ReactDOM.createBlockingRoot(document.createElement('div')).render(
+        <App />,
+      );
     }).toWarnDev([]);
   });
 }

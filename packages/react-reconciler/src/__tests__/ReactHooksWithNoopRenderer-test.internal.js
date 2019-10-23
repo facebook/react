@@ -1056,7 +1056,7 @@ describe('ReactHooksWithNoopRenderer', () => {
         }
         act(() => {
           ReactNoop.renderLegacySyncRoot(<Counter count={0} />);
-          // Even in sync mode, effects are deferred until after paint
+          // Even in legacy mode, effects are deferred until after paint
           expect(Scheduler).toFlushAndYieldThrough(['Count: (empty)']);
           expect(ReactNoop.getChildren()).toEqual([span('Count: (empty)')]);
         });
