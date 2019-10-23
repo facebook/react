@@ -48,7 +48,7 @@ let style = {};
  * Bootstrap if a DOM exists.
  */
 if (canUseDOM) {
-  style = document.createElement('div').style;
+  style = window.getComputedStyle(document.createElement('div'));
 
   // On some platforms, in particular some releases of Android 4.x,
   // the un-prefixed "animation" and "transition" properties are defined on the
