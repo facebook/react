@@ -157,6 +157,8 @@ export const shorthandToLonghand = {
   ],
   listStyle: ['listStyleImage', 'listStylePosition', 'listStyleType'],
   margin: ['marginBottom', 'marginLeft', 'marginRight', 'marginTop'],
+  marginHorizontal: ['marginLeft', 'marginRight'],
+  marginVertical: ['marginBottom', 'marginTop'],
   marker: ['markerEnd', 'markerMid', 'markerStart'],
   mask: [
     'maskClip',
@@ -173,6 +175,8 @@ export const shorthandToLonghand = {
   outline: ['outlineColor', 'outlineStyle', 'outlineWidth'],
   overflow: ['overflowX', 'overflowY'],
   padding: ['paddingBottom', 'paddingLeft', 'paddingRight', 'paddingTop'],
+  paddingHorizontal: ['paddingLeft', 'paddingRight'],
+  paddingVertical: ['paddingBottom', 'paddingTop'],
   placeContent: ['alignContent', 'justifyContent'],
   placeItems: ['alignItems', 'justifyItems'],
   placeSelf: ['alignSelf', 'justifySelf'],
