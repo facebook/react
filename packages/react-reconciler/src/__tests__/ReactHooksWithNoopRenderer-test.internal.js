@@ -2179,6 +2179,49 @@ describe('ReactHooksWithNoopRenderer', () => {
         expect(ReactNoop.getChildren()).toEqual([span('B'), span('B')]);
       });
     });
+
+    it('preserves function values', async () => {
+      let _setFunc;
+      function App() {
+        const [func, setFunc] = useState(() => () => 'A');
+        const deferredFunc = useDeferredValue(func, {
+          timeoutMs: 500,
+        });
+        _setFunc = setFunc;
+        return deferredFunc();
+      }
+
+      act(() => {
+        ReactNoop.render(<App />);
+      });
+
+      expect(ReactNoop.getChildren()).toEqual([{hidden: false, text: 'A'}]);
+
+      act(() => {
+        _setFunc(() => () => 'B');
+      });
+
+      expect(ReactNoop.getChildren()).toEqual([{hidden: false, text: 'B'}]);
+    });
+
+    it('does not invoke constructors', async () => {
+      let _setClass;
+      function App() {
+        const [klass, setClass] = useState(() => class {});
+        useDeferredValue(klass, {
+          timeoutMs: 500,
+        });
+        _setClass = setClass;
+        return null;
+      }
+
+      act(() => {
+        ReactNoop.render(<App />);
+      });
+      act(() => {
+        _setClass(() => class {});
+      });
+    });
   }
   describe('progressive enhancement (not supported)', () => {
     it('mount additional state', () => {

@@ -1132,14 +1132,14 @@ function mountDeferredValue<T>(
   value: T,
   config: TimeoutConfig | void | null,
 ): T {
-  const [prevValue, setValue] = mountState(value);
+  const [prevValue, setValue] = mountState(() => value);
   mountEffect(
     () => {
       Scheduler.unstable_next(() => {
         const previousConfig = ReactCurrentBatchConfig.suspense;
         ReactCurrentBatchConfig.suspense = config === undefined ? null : config;
         try {
-          setValue(value);
+          setValue(() => value);
         } finally {
           ReactCurrentBatchConfig.suspense = previousConfig;
         }
@@ -1154,14 +1154,14 @@ function updateDeferredValue<T>(
   value: T,
   config: TimeoutConfig | void | null,
 ): T {
-  const [prevValue, setValue] = updateState(value);
+  const [prevValue, setValue] = updateState(() => value);
   updateEffect(
     () => {
       Scheduler.unstable_next(() => {
         const previousConfig = ReactCurrentBatchConfig.suspense;
         ReactCurrentBatchConfig.suspense = config === undefined ? null : config;
         try {
-          setValue(value);
+          setValue(() => value);
         } finally {
           ReactCurrentBatchConfig.suspense = previousConfig;
         }
