@@ -143,9 +143,9 @@ function onError({code, message}) {
   safeUnmount();
 
   if (code === 'EADDRINUSE') {
-    node.innerHTML = `<div id="waiting"><h2>Another instance of DevTools is running</h2></div>`;
+    node.innerHTML = `<div class="error">Another instance of DevTools is running</div>`;
   } else {
-    node.innerHTML = `<div id="waiting"><h2>Unknown error (${message})</h2></div>`;
+    node.innerHTML = `<div class="error">Unknown error (${message})</div>`;
   }
 }
 
