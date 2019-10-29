@@ -12,7 +12,7 @@ import type {
   MeasureInWindowOnSuccessCallback,
   MeasureLayoutOnSuccessCallback,
   MeasureOnSuccessCallback,
-  NativeMethodsMixinType,
+  NativeMethods,
   ReactNativeBaseComponentViewConfig,
 } from './ReactNativeTypes';
 
@@ -27,7 +27,6 @@ import {create} from './ReactNativeAttributePayload';
 import {mountSafeCallback_NOT_REALLY_SAFE} from './NativeMethodsMixinUtils';
 
 import warningWithoutStack from 'shared/warningWithoutStack';
-import {warnAboutDeprecatedSetNativeProps} from 'shared/ReactFeatureFlags';
 
 export default function(
   findNodeHandle: any => ?number,
@@ -172,7 +171,7 @@ export default function(
     measureLayout(
       relativeToNativeNode: number | Object,
       onSuccess: MeasureLayoutOnSuccessCallback,
-      onFail: () => void /* currently unused */,
+      onFail?: () => void /* currently unused */,
     ): void {
       let maybeInstance;
 
@@ -262,18 +261,6 @@ export default function(
         return;
       }
 
-      if (__DEV__) {
-        if (warnAboutDeprecatedSetNativeProps) {
-          warningWithoutStack(
-            false,
-            'Warning: Calling ref.setNativeProps(nativeProps) ' +
-              'is deprecated and will be removed in a future release. ' +
-              'Use the setNativeProps export from the react-native package instead.' +
-              "\n\timport {setNativeProps} from 'react-native';\n\tsetNativeProps(ref, nativeProps);\n",
-          );
-        }
-      }
-
       const nativeTag =
         maybeInstance._nativeTag || maybeInstance.canonical._nativeTag;
       const viewConfig: ReactNativeBaseComponentViewConfig<> =
@@ -295,7 +282,7 @@ export default function(
   }
 
   // eslint-disable-next-line no-unused-expressions
-  (ReactNativeComponent.prototype: NativeMethodsMixinType);
+  (ReactNativeComponent.prototype: NativeMethods);
 
   return ReactNativeComponent;
 }

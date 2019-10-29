@@ -52,7 +52,7 @@ import {
   FundamentalComponent,
   ScopeComponent,
 } from 'shared/ReactWorkTags';
-import {NoMode, BatchedMode} from './ReactTypeOfMode';
+import {NoMode, BlockingMode} from './ReactTypeOfMode';
 import {
   Ref,
   Update,
@@ -870,10 +870,9 @@ function completeWork(
       const nextDidTimeout = nextState !== null;
       let prevDidTimeout = false;
       if (current === null) {
-        // In cases where we didn't find a suitable hydration boundary we never
-        // put this in dehydrated mode, but we still need to pop the hydration
-        // state since we might be inside the insertion tree.
-        popHydrationState(workInProgress);
+        if (workInProgress.memoizedProps.fallback !== undefined) {
+          popHydrationState(workInProgress);
+        }
       } else {
         const prevState: null | SuspenseState = current.memoizedState;
         prevDidTimeout = prevState !== null;
@@ -900,12 +899,12 @@ function completeWork(
       }
 
       if (nextDidTimeout && !prevDidTimeout) {
-        // If this subtreee is running in batched mode we can suspend,
+        // If this subtreee is running in blocking mode we can suspend,
         // otherwise we won't suspend.
         // TODO: This will still suspend a synchronous tree if anything
         // in the concurrent tree already suspended during this render.
         // This is a known bug.
-        if ((workInProgress.mode & BatchedMode) !== NoMode) {
+        if ((workInProgress.mode & BlockingMode) !== NoMode) {
           // TODO: Move this back to throwException because this is too late
           // if this is a large tree which is common for initial loads. We
           // don't know if we should restart a render or not until we get
@@ -1054,7 +1053,10 @@ function completeWork(
                 // Rerender the whole list, but this time, we'll force fallbacks
                 // to stay in place.
                 // Reset the effect list before doing the second pass since that's now invalid.
-                workInProgress.firstEffect = workInProgress.lastEffect = null;
+                if (renderState.lastEffect === null) {
+                  workInProgress.firstEffect = null;
+                }
+                workInProgress.lastEffect = renderState.lastEffect;
                 // Reset the child fibers to their original state.
                 resetChildFibers(workInProgress, renderExpirationTime);
 
@@ -1083,6 +1085,15 @@ function completeWork(
           if (suspended !== null) {
             workInProgress.effectTag |= DidCapture;
             didSuspendAlready = true;
+
+            // Ensure we transfer the update queue to the parent so that it doesn't
+            // get lost if this row ends up dropped during a second pass.
+            let newThennables = suspended.updateQueue;
+            if (newThennables !== null) {
+              workInProgress.updateQueue = newThennables;
+              workInProgress.effectTag |= Update;
+            }
+
             cutOffTailIfNeeded(renderState, true);
             // This might have been modified.
             if (
@@ -1090,12 +1101,6 @@ function completeWork(
               renderState.tailMode === 'hidden'
             ) {
               // We need to delete the row we just rendered.
-              // Ensure we transfer the update queue to the parent.
-              let newThennables = suspended.updateQueue;
-              if (newThennables !== null) {
-                workInProgress.updateQueue = newThennables;
-                workInProgress.effectTag |= Update;
-              }
               // Reset the effect list to what it w as before we rendered this
               // child. The nested children have already appended themselves.
               let lastEffect = (workInProgress.lastEffect =
@@ -1285,8 +1290,9 @@ function completeWork(
     default:
       invariant(
         false,
-        'Unknown unit of work tag. This error is likely caused by a bug in ' +
+        'Unknown unit of work tag (%s). This error is likely caused by a bug in ' +
           'React. Please file an issue.',
+        workInProgress.tag,
       );
   }
 

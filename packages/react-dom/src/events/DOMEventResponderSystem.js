@@ -12,7 +12,7 @@ import {
   PASSIVE_NOT_SUPPORTED,
 } from 'legacy-events/EventSystemFlags';
 import type {AnyNativeEvent} from 'legacy-events/PluginModuleType';
-import {HostComponent, ScopeComponent} from 'shared/ReactWorkTags';
+import {HostComponent, ScopeComponent, HostPortal} from 'shared/ReactWorkTags';
 import type {EventPriority} from 'shared/ReactTypes';
 import type {
   ReactDOMEventResponder,
@@ -39,7 +39,6 @@ import {
   UserBlockingEvent,
   DiscreteEvent,
 } from 'shared/ReactTypes';
-import {enableUserBlockingEvents} from 'shared/ReactFeatureFlags';
 
 // Intentionally not named imports because Rollup would use dynamic dispatch for
 // CommonJS interop named imports.
@@ -57,19 +56,6 @@ export function setListenToResponderEventTypes(
   listenToResponderEventTypesImpl = _listenToResponderEventTypesImpl;
 }
 
-type ResponderTimeout = {|
-  id: TimeoutID,
-  timers: Map<number, ResponderTimer>,
-|};
-
-type ResponderTimer = {|
-  instance: ReactDOMEventResponderInstance,
-  func: () => void,
-  id: number,
-  timeStamp: number,
-|};
-
-const activeTimeouts: Map<number, ResponderTimeout> = new Map();
 const rootEventTypesToEventResponderInstances: Map<
   DOMTopLevelEventType | string,
   Set<ReactDOMEventResponderInstance>,
@@ -81,9 +67,7 @@ const DoNotPropagateToNextResponder = 0;
 const PropagateToNextResponder = 1;
 
 let currentTimeStamp = 0;
-let currentTimers = new Map();
 let currentInstance: null | ReactDOMEventResponderInstance = null;
-let currentTimerIDCounter = 0;
 let currentDocument: null | Document = null;
 let currentPropagationBehavior: PropagationBehavior = DoNotPropagateToNextResponder;
 
@@ -104,13 +88,9 @@ const eventResponderContext: ReactDOMResponderContext = {
         break;
       }
       case UserBlockingEvent: {
-        if (enableUserBlockingEvents) {
-          runWithPriority(UserBlockingPriority, () =>
-            executeUserEventHandler(eventListener, eventValue),
-          );
-        } else {
-          executeUserEventHandler(eventListener, eventValue);
-        }
+        runWithPriority(UserBlockingPriority, () =>
+          executeUserEventHandler(eventListener, eventValue),
+        );
         break;
       }
       case ContinuousEvent: {
@@ -204,46 +184,6 @@ const eventResponderContext: ReactDOMResponderContext = {
         rootEventResponders.delete(
           ((currentInstance: any): ReactDOMEventResponderInstance),
         );
-      }
-    }
-  },
-  setTimeout(func: () => void, delay): number {
-    validateResponderContext();
-    if (currentTimers === null) {
-      currentTimers = new Map();
-    }
-    let timeout = currentTimers.get(delay);
-
-    const timerId = currentTimerIDCounter++;
-    if (timeout === undefined) {
-      const timers = new Map();
-      const id = setTimeout(() => {
-        processTimers(timers, delay);
-      }, delay);
-      timeout = {
-        id,
-        timers,
-      };
-      currentTimers.set(delay, timeout);
-    }
-    timeout.timers.set(timerId, {
-      instance: ((currentInstance: any): ReactDOMEventResponderInstance),
-      func,
-      id: timerId,
-      timeStamp: currentTimeStamp,
-    });
-    activeTimeouts.set(timerId, timeout);
-    return timerId;
-  },
-  clearTimeout(timerId: number): void {
-    validateResponderContext();
-    const timeout = activeTimeouts.get(timerId);
-
-    if (timeout !== undefined) {
-      const timers = timeout.timers;
-      timers.delete(timerId);
-      if (timers.size === 0) {
-        clearTimeout(timeout.id);
       }
     }
   },
@@ -345,33 +285,6 @@ function getActiveDocument(): Document {
   return ((currentDocument: any): Document);
 }
 
-function processTimers(
-  timers: Map<number, ResponderTimer>,
-  delay: number,
-): void {
-  const timersArr = Array.from(timers.values());
-  const previousInstance = currentInstance;
-  const previousTimers = currentTimers;
-  try {
-    batchedEventUpdates(() => {
-      for (let i = 0; i < timersArr.length; i++) {
-        const {instance, func, id, timeStamp} = timersArr[i];
-        currentInstance = instance;
-        currentTimeStamp = timeStamp + delay;
-        try {
-          func();
-        } finally {
-          activeTimeouts.delete(id);
-        }
-      }
-    });
-  } finally {
-    currentTimers = previousTimers;
-    currentInstance = previousInstance;
-    currentTimeStamp = 0;
-  }
-}
-
 function createDOMResponderEvent(
   topLevelType: string,
   nativeEvent: AnyNativeEvent,
@@ -451,9 +364,12 @@ function traverseAndHandleEventResponderInstances(
     isPassiveSupported,
   );
   let node = targetFiber;
+  let insidePortal = false;
   while (node !== null) {
     const {dependencies, tag} = node;
-    if (
+    if (tag === HostPortal) {
+      insidePortal = true;
+    } else if (
       (tag === HostComponent || tag === ScopeComponent) &&
       dependencies !== null
     ) {
@@ -465,7 +381,8 @@ function traverseAndHandleEventResponderInstances(
           const {props, responder, state} = responderInstance;
           if (
             !visitedResponders.has(responder) &&
-            validateResponderTargetEventTypes(eventType, responder)
+            validateResponderTargetEventTypes(eventType, responder) &&
+            (!insidePortal || responder.targetPortalPropagation)
           ) {
             visitedResponders.add(responder);
             const onEvent = responder.onEvent;
@@ -511,7 +428,6 @@ export function mountEventResponder(
   const onMount = responder.onMount;
   if (onMount !== null) {
     const previousInstance = currentInstance;
-    const previousTimers = currentTimers;
     currentInstance = responderInstance;
     try {
       batchedEventUpdates(() => {
@@ -519,7 +435,6 @@ export function mountEventResponder(
       });
     } finally {
       currentInstance = previousInstance;
-      currentTimers = previousTimers;
     }
   }
 }
@@ -532,7 +447,6 @@ export function unmountEventResponder(
   if (onUnmount !== null) {
     let {props, state} = responderInstance;
     const previousInstance = currentInstance;
-    const previousTimers = currentTimers;
     currentInstance = responderInstance;
     try {
       batchedEventUpdates(() => {
@@ -540,7 +454,6 @@ export function unmountEventResponder(
       });
     } finally {
       currentInstance = previousInstance;
-      currentTimers = previousTimers;
     }
   }
   const rootEventTypesSet = responderInstance.rootEventTypes;
@@ -562,8 +475,7 @@ export function unmountEventResponder(
 function validateResponderContext(): void {
   invariant(
     currentInstance !== null,
-    'An event responder context was used outside of an event cycle. ' +
-      'Use context.setTimeout() to use asynchronous responder context outside of event cycle .',
+    'An event responder context was used outside of an event cycle.',
   );
 }
 
@@ -576,12 +488,10 @@ export function dispatchEventForResponderEventSystem(
 ): void {
   if (enableFlareAPI) {
     const previousInstance = currentInstance;
-    const previousTimers = currentTimers;
     const previousTimeStamp = currentTimeStamp;
     const previousDocument = currentDocument;
     const previousPropagationBehavior = currentPropagationBehavior;
     currentPropagationBehavior = DoNotPropagateToNextResponder;
-    currentTimers = null;
     // nodeType 9 is DOCUMENT_NODE
     currentDocument =
       (nativeEventTarget: any).nodeType === 9
@@ -600,7 +510,6 @@ export function dispatchEventForResponderEventSystem(
         );
       });
     } finally {
-      currentTimers = previousTimers;
       currentInstance = previousInstance;
       currentTimeStamp = previousTimeStamp;
       currentDocument = previousDocument;

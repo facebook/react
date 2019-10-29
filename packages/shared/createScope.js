@@ -9,12 +9,9 @@
 import type {ReactScope} from 'shared/ReactTypes';
 import {REACT_SCOPE_TYPE} from 'shared/ReactSymbols';
 
-export default function createScope(
-  fn: (type: string | Object, props: Object) => boolean,
-): ReactScope {
+export default function createScope(): ReactScope {
   const scopeComponent = {
     $$typeof: REACT_SCOPE_TYPE,
-    fn,
   };
   if (__DEV__) {
     Object.freeze(scopeComponent);

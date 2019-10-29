@@ -27,68 +27,77 @@ function sleep(period) {
 
 describe('ReactTestUtils.act()', () => {
   // first we run all the tests with concurrent mode
-  let concurrentRoot = null;
-  function renderConcurrent(el, dom) {
-    concurrentRoot = ReactDOM.unstable_createRoot(dom);
-    concurrentRoot.render(el);
+  if (__EXPERIMENTAL__) {
+    let concurrentRoot = null;
+    const renderConcurrent = (el, dom) => {
+      concurrentRoot = ReactDOM.createRoot(dom);
+      concurrentRoot.render(el);
+    };
+
+    const unmountConcurrent = _dom => {
+      if (concurrentRoot !== null) {
+        concurrentRoot.unmount();
+        concurrentRoot = null;
+      }
+    };
+
+    const rerenderConcurrent = el => {
+      concurrentRoot.render(el);
+    };
+
+    runActTests(
+      'concurrent mode',
+      renderConcurrent,
+      unmountConcurrent,
+      rerenderConcurrent,
+    );
   }
 
-  function unmountConcurrent(_dom) {
-    if (concurrentRoot !== null) {
-      concurrentRoot.unmount();
-      concurrentRoot = null;
-    }
-  }
+  // and then in legacy mode
 
-  function rerenderConcurrent(el) {
-    concurrentRoot.render(el);
-  }
-
-  runActTests(
-    'concurrent mode',
-    renderConcurrent,
-    unmountConcurrent,
-    rerenderConcurrent,
-  );
-
-  // and then in sync mode
-
-  let syncDom = null;
-  function renderSync(el, dom) {
-    syncDom = dom;
+  let legacyDom = null;
+  function renderLegacy(el, dom) {
+    legacyDom = dom;
     ReactDOM.render(el, dom);
   }
 
-  function unmountSync(dom) {
-    syncDom = null;
+  function unmountLegacy(dom) {
+    legacyDom = null;
     ReactDOM.unmountComponentAtNode(dom);
   }
 
-  function rerenderSync(el) {
-    ReactDOM.render(el, syncDom);
+  function rerenderLegacy(el) {
+    ReactDOM.render(el, legacyDom);
   }
 
-  runActTests('legacy sync mode', renderSync, unmountSync, rerenderSync);
+  runActTests('legacy mode', renderLegacy, unmountLegacy, rerenderLegacy);
 
-  // and then in batched mode
-  let batchedRoot = null;
-  function renderBatched(el, dom) {
-    batchedRoot = ReactDOM.unstable_createSyncRoot(dom);
-    batchedRoot.render(el);
+  // and then in blocking mode
+  if (__EXPERIMENTAL__) {
+    let blockingRoot = null;
+    const renderBatched = (el, dom) => {
+      blockingRoot = ReactDOM.createBlockingRoot(dom);
+      blockingRoot.render(el);
+    };
+
+    const unmountBatched = dom => {
+      if (blockingRoot !== null) {
+        blockingRoot.unmount();
+        blockingRoot = null;
+      }
+    };
+
+    const rerenderBatched = el => {
+      blockingRoot.render(el);
+    };
+
+    runActTests(
+      'blocking mode',
+      renderBatched,
+      unmountBatched,
+      rerenderBatched,
+    );
   }
-
-  function unmountBatched(dom) {
-    if (batchedRoot !== null) {
-      batchedRoot.unmount();
-      batchedRoot = null;
-    }
-  }
-
-  function rerenderBatched(el) {
-    batchedRoot.render(el);
-  }
-
-  runActTests('batched mode', renderBatched, unmountBatched, rerenderBatched);
 
   describe('unacted effects', () => {
     function App() {
@@ -96,7 +105,7 @@ describe('ReactTestUtils.act()', () => {
       return null;
     }
 
-    it('does not warn in legacy sync mode', () => {
+    it('does not warn in legacy mode', () => {
       expect(() => {
         ReactDOM.render(<App />, document.createElement('div'));
       }).toWarnDev([]);
@@ -116,31 +125,31 @@ describe('ReactTestUtils.act()', () => {
       ]);
     });
 
-    it('warns in batched mode', () => {
-      expect(() => {
-        const root = ReactDOM.unstable_createSyncRoot(
-          document.createElement('div'),
-        );
-        root.render(<App />);
-        Scheduler.unstable_flushAll();
-      }).toWarnDev([
-        'An update to App ran an effect, but was not wrapped in act(...)',
-        'An update to App ran an effect, but was not wrapped in act(...)',
-      ]);
-    });
+    if (__EXPERIMENTAL__) {
+      it('warns in blocking mode', () => {
+        expect(() => {
+          const root = ReactDOM.createBlockingRoot(
+            document.createElement('div'),
+          );
+          root.render(<App />);
+          Scheduler.unstable_flushAll();
+        }).toWarnDev([
+          'An update to App ran an effect, but was not wrapped in act(...)',
+          'An update to App ran an effect, but was not wrapped in act(...)',
+        ]);
+      });
 
-    it('warns in concurrent mode', () => {
-      expect(() => {
-        const root = ReactDOM.unstable_createRoot(
-          document.createElement('div'),
-        );
-        root.render(<App />);
-        Scheduler.unstable_flushAll();
-      }).toWarnDev([
-        'An update to App ran an effect, but was not wrapped in act(...)',
-        'An update to App ran an effect, but was not wrapped in act(...)',
-      ]);
-    });
+      it('warns in concurrent mode', () => {
+        expect(() => {
+          const root = ReactDOM.createRoot(document.createElement('div'));
+          root.render(<App />);
+          Scheduler.unstable_flushAll();
+        }).toWarnDev([
+          'An update to App ran an effect, but was not wrapped in act(...)',
+          'An update to App ran an effect, but was not wrapped in act(...)',
+        ]);
+      });
+    }
   });
 });
 
@@ -722,7 +731,7 @@ function runActTests(label, render, unmount, rerender) {
     });
 
     describe('suspense', () => {
-      if (__DEV__) {
+      if (__DEV__ && __EXPERIMENTAL__) {
         it('triggers fallbacks if available', async () => {
           let resolved = false;
           let resolve;

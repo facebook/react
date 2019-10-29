@@ -13,7 +13,7 @@ import {getStackByFiberInDevAndProd} from './ReactCurrentFiber';
 
 import getComponentName from 'shared/getComponentName';
 import {StrictMode} from './ReactTypeOfMode';
-import lowPriorityWarning from 'shared/lowPriorityWarning';
+import lowPriorityWarningWithoutStack from 'shared/lowPriorityWarningWithoutStack';
 import warningWithoutStack from 'shared/warningWithoutStack';
 
 type FiberArray = Array<Fiber>;
@@ -237,7 +237,7 @@ if (__DEV__) {
     if (componentWillMountUniqueNames.size > 0) {
       const sortedNames = setToSortedString(componentWillMountUniqueNames);
 
-      lowPriorityWarning(
+      lowPriorityWarningWithoutStack(
         false,
         'componentWillMount has been renamed, and is not recommended for use. ' +
           'See https://fb.me/react-unsafe-component-lifecycles for details.\n\n' +
@@ -256,7 +256,7 @@ if (__DEV__) {
         componentWillReceivePropsUniqueNames,
       );
 
-      lowPriorityWarning(
+      lowPriorityWarningWithoutStack(
         false,
         'componentWillReceiveProps has been renamed, and is not recommended for use. ' +
           'See https://fb.me/react-unsafe-component-lifecycles for details.\n\n' +
@@ -276,7 +276,7 @@ if (__DEV__) {
     if (componentWillUpdateUniqueNames.size > 0) {
       const sortedNames = setToSortedString(componentWillUpdateUniqueNames);
 
-      lowPriorityWarning(
+      lowPriorityWarningWithoutStack(
         false,
         'componentWillUpdate has been renamed, and is not recommended for use. ' +
           'See https://fb.me/react-unsafe-component-lifecycles for details.\n\n' +

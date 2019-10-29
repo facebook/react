@@ -2,7 +2,7 @@
 
 import {createElement} from 'react';
 // $FlowFixMe Flow does not yet know about createRoot()
-import {unstable_createRoot as createRoot} from 'react-dom';
+import {createRoot} from 'react-dom';
 import {
   activate as activateBackend,
   initialize as initializeBackend,
@@ -57,6 +57,7 @@ inject('dist/app.js', () => {
           browserTheme: 'light',
           showTabBar: true,
           warnIfLegacyBackendDetected: true,
+          warnIfUnsupportedVersionDetected: true,
         }),
       );
     },

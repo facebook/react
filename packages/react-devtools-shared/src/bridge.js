@@ -70,6 +70,7 @@ type NativeStyleEditor_SetValueParams = {|
 |};
 
 type BackendEvents = {|
+  extensionBackendInitialized: [],
   inspectedElement: [InspectedElementPayload],
   isBackendStorageAPISupported: [boolean],
   operations: [Array<number>],
@@ -83,6 +84,7 @@ type BackendEvents = {|
   stopInspectingNative: [boolean],
   syncSelectionFromNativeElementsPanel: [],
   syncSelectionToNativeElementsPanel: [],
+  unsupportedRendererVersion: [RendererID],
 
   // React Native style editor plug-in.
   isNativeStyleEditorSupported: [
@@ -107,6 +109,7 @@ type FrontendEvents = {|
   profilingData: [ProfilingDataBackend],
   reloadAndProfile: [boolean],
   selectFiber: [number],
+  setTraceUpdatesEnabled: [boolean],
   shutdown: [],
   startInspectingNative: [],
   startProfiling: [boolean],

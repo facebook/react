@@ -11,19 +11,13 @@ import type {ReactNodeList} from 'shared/ReactTypes';
 import type {RootTag} from 'shared/ReactRootTags';
 // TODO: This type is shared between the reconciler and ReactDOM, but will
 // eventually be lifted out to the renderer.
-import type {
-  FiberRoot,
-  Batch as FiberRootBatch,
-} from 'react-reconciler/src/ReactFiberRoot';
+import type {FiberRoot} from 'react-reconciler/src/ReactFiberRoot';
 
 import '../shared/checkReact';
 import './ReactDOMClientInjection';
 
 import {
-  computeUniqueAsyncExpiration,
   findHostInstanceWithNoPortals,
-  updateContainerAtExpirationTime,
-  flushRoot,
   createContainer,
   updateContainer,
   batchedEventUpdates,
@@ -39,6 +33,10 @@ import {
   findHostInstanceWithWarning,
   flushPassiveEffects,
   IsThisRendererActing,
+  attemptSynchronousHydration,
+  attemptUserBlockingHydration,
+  attemptContinuousHydration,
+  attemptHydrationAtCurrentPriority,
 } from 'react-reconciler/inline.dom';
 import {createPortal as createPortalImpl} from 'shared/ReactPortal';
 import {canUseDOM} from 'shared/ExecutionEnvironment';
@@ -61,9 +59,9 @@ import ReactVersion from 'shared/ReactVersion';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import getComponentName from 'shared/getComponentName';
 import invariant from 'shared/invariant';
-import lowPriorityWarning from 'shared/lowPriorityWarning';
+import lowPriorityWarningWithoutStack from 'shared/lowPriorityWarningWithoutStack';
 import warningWithoutStack from 'shared/warningWithoutStack';
-import {enableStableConcurrentModeAPIs} from 'shared/ReactFeatureFlags';
+import {exposeConcurrentModeAPIs} from 'shared/ReactFeatureFlags';
 
 import {
   getInstanceFromNode,
@@ -74,7 +72,14 @@ import {
 } from './ReactDOMComponentTree';
 import {restoreControlledState} from './ReactDOMComponent';
 import {dispatchEvent} from '../events/ReactDOMEventListener';
-import {eagerlyTrapReplayableEvents} from '../events/ReactDOMEventReplaying';
+import {
+  setAttemptSynchronousHydration,
+  setAttemptUserBlockingHydration,
+  setAttemptContinuousHydration,
+  setAttemptHydrationAtCurrentPriority,
+  eagerlyTrapReplayableEvents,
+  queueExplicitHydrationTarget,
+} from '../events/ReactDOMEventReplaying';
 import {
   ELEMENT_NODE,
   COMMENT_NODE,
@@ -82,6 +87,11 @@ import {
   DOCUMENT_FRAGMENT_NODE,
 } from '../shared/HTMLNodeType';
 import {ROOT_ATTRIBUTE_NAME} from '../shared/DOMProperty';
+
+setAttemptSynchronousHydration(attemptSynchronousHydration);
+setAttemptUserBlockingHydration(attemptUserBlockingHydration);
+setAttemptContinuousHydration(attemptContinuousHydration);
+setAttemptHydrationAtCurrentPriority(attemptHydrationAtCurrentPriority);
 
 const ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
 
@@ -163,207 +173,19 @@ setRestoreImplementation(restoreControlledState);
 
 export type DOMContainer =
   | (Element & {
-      _reactRootContainer: ?(_ReactRoot | _ReactSyncRoot),
+      _reactRootContainer: ?_ReactRoot,
       _reactHasBeenPassedToCreateRootDEV: ?boolean,
     })
   | (Document & {
-      _reactRootContainer: ?(_ReactRoot | _ReactSyncRoot),
+      _reactRootContainer: ?_ReactRoot,
       _reactHasBeenPassedToCreateRootDEV: ?boolean,
     });
 
-type Batch = FiberRootBatch & {
-  render(children: ReactNodeList): Work,
-  then(onComplete: () => mixed): void,
-  commit(): void,
-
-  // The ReactRoot constructor is hoisted but the prototype methods are not. If
-  // we move ReactRoot to be above ReactBatch, the inverse error occurs.
-  // $FlowFixMe Hoisting issue.
-  _root: _ReactRoot | _ReactSyncRoot,
-  _hasChildren: boolean,
-  _children: ReactNodeList,
-
-  _callbacks: Array<() => mixed> | null,
-  _didComplete: boolean,
-};
-
-type _ReactSyncRoot = {
-  render(children: ReactNodeList, callback: ?() => mixed): Work,
-  unmount(callback: ?() => mixed): Work,
+type _ReactRoot = {
+  render(children: ReactNodeList, callback: ?() => mixed): void,
+  unmount(callback: ?() => mixed): void,
 
   _internalRoot: FiberRoot,
-};
-
-type _ReactRoot = _ReactSyncRoot & {
-  createBatch(): Batch,
-};
-
-function ReactBatch(root: _ReactRoot | _ReactSyncRoot) {
-  const expirationTime = computeUniqueAsyncExpiration();
-  this._expirationTime = expirationTime;
-  this._root = root;
-  this._next = null;
-  this._callbacks = null;
-  this._didComplete = false;
-  this._hasChildren = false;
-  this._children = null;
-  this._defer = true;
-}
-ReactBatch.prototype.render = function(children: ReactNodeList) {
-  invariant(
-    this._defer,
-    'batch.render: Cannot render a batch that already committed.',
-  );
-  this._hasChildren = true;
-  this._children = children;
-  const internalRoot = this._root._internalRoot;
-  const expirationTime = this._expirationTime;
-  const work = new ReactWork();
-  updateContainerAtExpirationTime(
-    children,
-    internalRoot,
-    null,
-    expirationTime,
-    null,
-    work._onCommit,
-  );
-  return work;
-};
-ReactBatch.prototype.then = function(onComplete: () => mixed) {
-  if (this._didComplete) {
-    onComplete();
-    return;
-  }
-  let callbacks = this._callbacks;
-  if (callbacks === null) {
-    callbacks = this._callbacks = [];
-  }
-  callbacks.push(onComplete);
-};
-ReactBatch.prototype.commit = function() {
-  const internalRoot = this._root._internalRoot;
-  let firstBatch = internalRoot.firstBatch;
-  invariant(
-    this._defer && firstBatch !== null,
-    'batch.commit: Cannot commit a batch multiple times.',
-  );
-
-  if (!this._hasChildren) {
-    // This batch is empty. Return.
-    this._next = null;
-    this._defer = false;
-    return;
-  }
-
-  let expirationTime = this._expirationTime;
-
-  // Ensure this is the first batch in the list.
-  if (firstBatch !== this) {
-    // This batch is not the earliest batch. We need to move it to the front.
-    // Update its expiration time to be the expiration time of the earliest
-    // batch, so that we can flush it without flushing the other batches.
-    if (this._hasChildren) {
-      expirationTime = this._expirationTime = firstBatch._expirationTime;
-      // Rendering this batch again ensures its children will be the final state
-      // when we flush (updates are processed in insertion order: last
-      // update wins).
-      // TODO: This forces a restart. Should we print a warning?
-      this.render(this._children);
-    }
-
-    // Remove the batch from the list.
-    let previous = null;
-    let batch = firstBatch;
-    while (batch !== this) {
-      previous = batch;
-      batch = batch._next;
-    }
-    invariant(
-      previous !== null,
-      'batch.commit: Cannot commit a batch multiple times.',
-    );
-    previous._next = batch._next;
-
-    // Add it to the front.
-    this._next = firstBatch;
-    firstBatch = internalRoot.firstBatch = this;
-  }
-
-  // Synchronously flush all the work up to this batch's expiration time.
-  this._defer = false;
-  flushRoot(internalRoot, expirationTime);
-
-  // Pop the batch from the list.
-  const next = this._next;
-  this._next = null;
-  firstBatch = internalRoot.firstBatch = next;
-
-  // Append the next earliest batch's children to the update queue.
-  if (firstBatch !== null && firstBatch._hasChildren) {
-    firstBatch.render(firstBatch._children);
-  }
-};
-ReactBatch.prototype._onComplete = function() {
-  if (this._didComplete) {
-    return;
-  }
-  this._didComplete = true;
-  const callbacks = this._callbacks;
-  if (callbacks === null) {
-    return;
-  }
-  // TODO: Error handling.
-  for (let i = 0; i < callbacks.length; i++) {
-    const callback = callbacks[i];
-    callback();
-  }
-};
-
-type Work = {
-  then(onCommit: () => mixed): void,
-  _onCommit: () => void,
-  _callbacks: Array<() => mixed> | null,
-  _didCommit: boolean,
-};
-
-function ReactWork() {
-  this._callbacks = null;
-  this._didCommit = false;
-  // TODO: Avoid need to bind by replacing callbacks in the update queue with
-  // list of Work objects.
-  this._onCommit = this._onCommit.bind(this);
-}
-ReactWork.prototype.then = function(onCommit: () => mixed): void {
-  if (this._didCommit) {
-    onCommit();
-    return;
-  }
-  let callbacks = this._callbacks;
-  if (callbacks === null) {
-    callbacks = this._callbacks = [];
-  }
-  callbacks.push(onCommit);
-};
-ReactWork.prototype._onCommit = function(): void {
-  if (this._didCommit) {
-    return;
-  }
-  this._didCommit = true;
-  const callbacks = this._callbacks;
-  if (callbacks === null) {
-    return;
-  }
-  // TODO: Error handling.
-  for (let i = 0; i < callbacks.length; i++) {
-    const callback = callbacks[i];
-    invariant(
-      typeof callback === 'function',
-      'Invalid argument passed as callback. Expected a function. Instead ' +
-        'received: %s',
-      callback,
-    );
-    callback();
-  }
 };
 
 function createRootImpl(
@@ -387,7 +209,7 @@ function createRootImpl(
   return root;
 }
 
-function ReactSyncRoot(
+function ReactBlockingRoot(
   container: DOMContainer,
   tag: RootTag,
   options: void | RootOptions,
@@ -399,67 +221,27 @@ function ReactRoot(container: DOMContainer, options: void | RootOptions) {
   this._internalRoot = createRootImpl(container, ConcurrentRoot, options);
 }
 
-ReactRoot.prototype.render = ReactSyncRoot.prototype.render = function(
+ReactRoot.prototype.render = ReactBlockingRoot.prototype.render = function(
   children: ReactNodeList,
   callback: ?() => mixed,
-): Work {
+): void {
   const root = this._internalRoot;
-  const work = new ReactWork();
   callback = callback === undefined ? null : callback;
   if (__DEV__) {
     warnOnInvalidCallback(callback, 'render');
   }
-  if (callback !== null) {
-    work.then(callback);
-  }
-  updateContainer(children, root, null, work._onCommit);
-  return work;
+  updateContainer(children, root, null, callback);
 };
 
-ReactRoot.prototype.unmount = ReactSyncRoot.prototype.unmount = function(
+ReactRoot.prototype.unmount = ReactBlockingRoot.prototype.unmount = function(
   callback: ?() => mixed,
-): Work {
+): void {
   const root = this._internalRoot;
-  const work = new ReactWork();
   callback = callback === undefined ? null : callback;
   if (__DEV__) {
     warnOnInvalidCallback(callback, 'render');
   }
-  if (callback !== null) {
-    work.then(callback);
-  }
-  updateContainer(null, root, null, work._onCommit);
-  return work;
-};
-
-// Sync roots cannot create batches. Only concurrent ones.
-ReactRoot.prototype.createBatch = function(): Batch {
-  const batch = new ReactBatch(this);
-  const expirationTime = batch._expirationTime;
-
-  const internalRoot = this._internalRoot;
-  const firstBatch = internalRoot.firstBatch;
-  if (firstBatch === null) {
-    internalRoot.firstBatch = batch;
-    batch._next = null;
-  } else {
-    // Insert sorted by expiration time then insertion order
-    let insertAfter = null;
-    let insertBefore = firstBatch;
-    while (
-      insertBefore !== null &&
-      insertBefore._expirationTime >= expirationTime
-    ) {
-      insertAfter = insertBefore;
-      insertBefore = insertBefore._next;
-    }
-    batch._next = insertBefore;
-    if (insertAfter !== null) {
-      insertAfter._next = batch;
-    }
-  }
-
-  return batch;
+  updateContainer(null, root, null, callback);
 };
 
 /**
@@ -513,7 +295,7 @@ let warnedAboutHydrateAPI = false;
 function legacyCreateRootFromDOMContainer(
   container: DOMContainer,
   forceHydrate: boolean,
-): _ReactSyncRoot {
+): _ReactRoot {
   const shouldHydrate =
     forceHydrate || shouldHydrateDueToLegacyHeuristic(container);
   // First clear any existing content.
@@ -542,7 +324,7 @@ function legacyCreateRootFromDOMContainer(
   if (__DEV__) {
     if (shouldHydrate && !forceHydrate && !warnedAboutHydrateAPI) {
       warnedAboutHydrateAPI = true;
-      lowPriorityWarning(
+      lowPriorityWarningWithoutStack(
         false,
         'render(): Calling ReactDOM.render() to hydrate server-rendered markup ' +
           'will stop working in React v17. Replace the ReactDOM.render() call ' +
@@ -552,7 +334,7 @@ function legacyCreateRootFromDOMContainer(
   }
 
   // Legacy roots are not batched.
-  return new ReactSyncRoot(
+  return new ReactBlockingRoot(
     container,
     LegacyRoot,
     shouldHydrate
@@ -577,7 +359,7 @@ function legacyRenderSubtreeIntoContainer(
 
   // TODO: Without `any` type, Flow says "Property cannot be accessed on any
   // member of intersection type." Whyyyyyy.
-  let root: _ReactSyncRoot = (container._reactRootContainer: any);
+  let root: _ReactRoot = (container._reactRootContainer: any);
   let fiberRoot;
   if (!root) {
     // Initial mount
@@ -669,9 +451,8 @@ const ReactDOM: Object = {
       warningWithoutStack(
         !container._reactHasBeenPassedToCreateRootDEV,
         'You are calling ReactDOM.hydrate() on a container that was previously ' +
-          'passed to ReactDOM.%s(). This is not supported. ' +
+          'passed to ReactDOM.createRoot(). This is not supported. ' +
           'Did you mean to call createRoot(container, {hydrate: true}).render(element)?',
-        enableStableConcurrentModeAPIs ? 'createRoot' : 'unstable_createRoot',
       );
     }
     // TODO: throw or warn if we couldn't hydrate?
@@ -697,9 +478,8 @@ const ReactDOM: Object = {
       warningWithoutStack(
         !container._reactHasBeenPassedToCreateRootDEV,
         'You are calling ReactDOM.render() on a container that was previously ' +
-          'passed to ReactDOM.%s(). This is not supported. ' +
+          'passed to ReactDOM.createRoot(). This is not supported. ' +
           'Did you mean to call root.render(element)?',
-        enableStableConcurrentModeAPIs ? 'createRoot' : 'unstable_createRoot',
       );
     }
     return legacyRenderSubtreeIntoContainer(
@@ -744,8 +524,7 @@ const ReactDOM: Object = {
       warningWithoutStack(
         !container._reactHasBeenPassedToCreateRootDEV,
         'You are calling ReactDOM.unmountComponentAtNode() on a container that was previously ' +
-          'passed to ReactDOM.%s(). This is not supported. Did you mean to call root.unmount()?',
-        enableStableConcurrentModeAPIs ? 'createRoot' : 'unstable_createRoot',
+          'passed to ReactDOM.createRoot(). This is not supported. Did you mean to call root.unmount()?',
       );
     }
 
@@ -801,7 +580,7 @@ const ReactDOM: Object = {
   unstable_createPortal(...args) {
     if (!didWarnAboutUnstableCreatePortal) {
       didWarnAboutUnstableCreatePortal = true;
-      lowPriorityWarning(
+      lowPriorityWarningWithoutStack(
         false,
         'The ReactDOM.unstable_createPortal() alias has been deprecated, ' +
           'and will be removed in React 17+. Update your code to use ' +
@@ -814,20 +593,7 @@ const ReactDOM: Object = {
 
   unstable_batchedUpdates: batchedUpdates,
 
-  // TODO remove this legacy method, unstable_discreteUpdates replaces it
-  unstable_interactiveUpdates: (fn, a, b, c) => {
-    flushDiscreteUpdates();
-    return discreteUpdates(fn, a, b, c);
-  },
-
-  unstable_discreteUpdates: discreteUpdates,
-  unstable_flushDiscreteUpdates: flushDiscreteUpdates,
-
   flushSync: flushSync,
-
-  unstable_createRoot: createRoot,
-  unstable_createSyncRoot: createSyncRoot,
-  unstable_flushControlled: flushControlled,
 
   __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED: {
     // Keep in sync with ReactDOMUnstableNativeDependencies.js
@@ -862,49 +628,50 @@ function createRoot(
   container: DOMContainer,
   options?: RootOptions,
 ): _ReactRoot {
-  const functionName = enableStableConcurrentModeAPIs
-    ? 'createRoot'
-    : 'unstable_createRoot';
   invariant(
     isValidContainer(container),
-    '%s(...): Target container is not a DOM element.',
-    functionName,
+    'createRoot(...): Target container is not a DOM element.',
   );
   warnIfReactDOMContainerInDEV(container);
   return new ReactRoot(container, options);
 }
 
-function createSyncRoot(
+function createBlockingRoot(
   container: DOMContainer,
   options?: RootOptions,
-): _ReactSyncRoot {
-  const functionName = enableStableConcurrentModeAPIs
-    ? 'createRoot'
-    : 'unstable_createRoot';
+): _ReactRoot {
   invariant(
     isValidContainer(container),
-    '%s(...): Target container is not a DOM element.',
-    functionName,
+    'createRoot(...): Target container is not a DOM element.',
   );
   warnIfReactDOMContainerInDEV(container);
-  return new ReactSyncRoot(container, BatchedRoot, options);
+  return new ReactBlockingRoot(container, BatchedRoot, options);
 }
 
 function warnIfReactDOMContainerInDEV(container) {
   if (__DEV__) {
     warningWithoutStack(
       !container._reactRootContainer,
-      'You are calling ReactDOM.%s() on a container that was previously ' +
+      'You are calling ReactDOM.createRoot() on a container that was previously ' +
         'passed to ReactDOM.render(). This is not supported.',
-      enableStableConcurrentModeAPIs ? 'createRoot' : 'unstable_createRoot',
     );
     container._reactHasBeenPassedToCreateRootDEV = true;
   }
 }
 
-if (enableStableConcurrentModeAPIs) {
+if (exposeConcurrentModeAPIs) {
   ReactDOM.createRoot = createRoot;
-  ReactDOM.createSyncRoot = createSyncRoot;
+  ReactDOM.createBlockingRoot = createBlockingRoot;
+
+  ReactDOM.unstable_discreteUpdates = discreteUpdates;
+  ReactDOM.unstable_flushDiscreteUpdates = flushDiscreteUpdates;
+  ReactDOM.unstable_flushControlled = flushControlled;
+
+  ReactDOM.unstable_scheduleHydration = target => {
+    if (target) {
+      queueExplicitHydrationTarget(target);
+    }
+  };
 }
 
 const foundDevTools = injectIntoDevTools({

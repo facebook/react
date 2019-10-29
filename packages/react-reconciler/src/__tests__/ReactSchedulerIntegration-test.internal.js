@@ -352,4 +352,60 @@ describe('ReactSchedulerIntegration', () => {
     Scheduler.unstable_flushUntilNextPaint();
     expect(Scheduler).toHaveYielded(['A', 'B', 'C']);
   });
+
+  it('idle updates are not blocked by offscreen work', async () => {
+    function Text({text}) {
+      Scheduler.unstable_yieldValue(text);
+      return text;
+    }
+
+    function App({label}) {
+      return (
+        <>
+          <Text text={`Visible: ` + label} />
+          <div hidden={true}>
+            <Text text={`Hidden: ` + label} />
+          </div>
+        </>
+      );
+    }
+
+    const root = ReactNoop.createRoot();
+    await ReactNoop.act(async () => {
+      root.render(<App label="A" />);
+
+      // Commit the visible content
+      expect(Scheduler).toFlushUntilNextPaint(['Visible: A']);
+      expect(root).toMatchRenderedOutput(
+        <>
+          Visible: A
+          <div hidden={true} />
+        </>,
+      );
+
+      // Before the hidden content has a chance to render, schedule an
+      // idle update
+      runWithPriority(IdlePriority, () => {
+        root.render(<App label="B" />);
+      });
+
+      // The next commit should only include the visible content
+      expect(Scheduler).toFlushUntilNextPaint(['Visible: B']);
+      expect(root).toMatchRenderedOutput(
+        <>
+          Visible: B
+          <div hidden={true} />
+        </>,
+      );
+    });
+
+    // The hidden content commits later
+    expect(Scheduler).toHaveYielded(['Hidden: B']);
+    expect(root).toMatchRenderedOutput(
+      <>
+        Visible: B
+        <div hidden={true}>Hidden: B</div>
+      </>,
+    );
+  });
 });

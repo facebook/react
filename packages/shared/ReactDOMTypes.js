@@ -62,8 +62,6 @@ export type ReactDOMResponderContext = {
   isTargetWithinResponderScope: (null | Element | Document) => boolean,
   addRootEventTypes: (rootEventTypes: Array<string>) => void,
   removeRootEventTypes: (rootEventTypes: Array<string>) => void,
-  setTimeout: (func: () => void, timeout: number) => number,
-  clearTimeout: (timerId: number) => void,
   getActiveDocument(): Document,
   objectAssign: Function,
   getTimeStamp: () => number,

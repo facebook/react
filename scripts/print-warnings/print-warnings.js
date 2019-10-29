@@ -53,7 +53,8 @@ function transform(file, enc, cb) {
           if (
             callee.isIdentifier({name: 'warning'}) ||
             callee.isIdentifier({name: 'warningWithoutStack'}) ||
-            callee.isIdentifier({name: 'lowPriorityWarning'})
+            callee.isIdentifier({name: 'lowPriorityWarning'}) ||
+            callee.isIdentifier({name: 'lowPriorityWarningWithoutStack'})
           ) {
             const node = astPath.node;
 
@@ -82,6 +83,7 @@ function transform(file, enc, cb) {
 gs([
   'packages/**/*.js',
   '!packages/shared/warning.js',
+  '!packages/shared/lowPriorityWarning.js',
   '!packages/react-devtools*/**/*.js',
   '!**/__tests__/**/*.js',
   '!**/__mocks__/**/*.js',

@@ -74,7 +74,7 @@ import {
   NoMode,
   StrictMode,
   ProfileMode,
-  BatchedMode,
+  BlockingMode,
   ConcurrentMode,
 } from './ReactTypeOfMode';
 import {
@@ -200,14 +200,13 @@ const LegacyUnbatchedContext = /*       */ 0b001000;
 const RenderContext = /*                */ 0b010000;
 const CommitContext = /*                */ 0b100000;
 
-type RootExitStatus = 0 | 1 | 2 | 3 | 4 | 5 | 6;
+type RootExitStatus = 0 | 1 | 2 | 3 | 4 | 5;
 const RootIncomplete = 0;
 const RootFatalErrored = 1;
 const RootErrored = 2;
 const RootSuspended = 3;
 const RootSuspendedWithDelay = 4;
 const RootCompleted = 5;
-const RootLocked = 6;
 
 export type Thenable = {
   then(resolve: () => mixed, reject?: () => mixed): Thenable | void,
@@ -289,7 +288,7 @@ let spawnedWorkDuringRender: null | Array<ExpirationTime> = null;
 // receive the same expiration time. Otherwise we get tearing.
 let currentEventTime: ExpirationTime = NoWork;
 
-export function requestCurrentTime() {
+export function requestCurrentTimeForUpdate() {
   if ((executionContext & (RenderContext | CommitContext)) !== NoContext) {
     // We're inside React, so it's fine to read the actual time.
     return msToExpirationTime(now());
@@ -304,13 +303,17 @@ export function requestCurrentTime() {
   return currentEventTime;
 }
 
+export function getCurrentTime() {
+  return msToExpirationTime(now());
+}
+
 export function computeExpirationForFiber(
   currentTime: ExpirationTime,
   fiber: Fiber,
   suspenseConfig: null | SuspenseConfig,
 ): ExpirationTime {
   const mode = fiber.mode;
-  if ((mode & BatchedMode) === NoMode) {
+  if ((mode & BlockingMode) === NoMode) {
     return Sync;
   }
 
@@ -321,6 +324,7 @@ export function computeExpirationForFiber(
 
   if ((executionContext & RenderContext) !== NoContext) {
     // Use whatever time we're already rendering
+    // TODO: Should there be a way to opt out, like with `runWithPriority`?
     return renderExpirationTime;
   }
 
@@ -347,7 +351,7 @@ export function computeExpirationForFiber(
         expirationTime = computeAsyncExpiration(currentTime);
         break;
       case IdlePriority:
-        expirationTime = Never;
+        expirationTime = Idle;
         break;
       default:
         invariant(false, 'Expected a valid priority level');
@@ -365,20 +369,6 @@ export function computeExpirationForFiber(
   }
 
   return expirationTime;
-}
-
-let lastUniqueAsyncExpiration = NoWork;
-export function computeUniqueAsyncExpiration(): ExpirationTime {
-  const currentTime = requestCurrentTime();
-  let result = computeAsyncExpiration(currentTime);
-  if (result <= lastUniqueAsyncExpiration) {
-    // Since we assume the current time monotonically increases, we only hit
-    // this branch when computeUniqueAsyncExpiration is fired multiple times
-    // within a 200ms window (or whatever the async bucket size is).
-    result -= 1;
-  }
-  lastUniqueAsyncExpiration = result;
-  return result;
 }
 
 export function scheduleUpdateOnFiber(
@@ -423,7 +413,7 @@ export function scheduleUpdateOnFiber(
         // a batch. This is intentionally inside scheduleUpdateOnFiber instead of
         // scheduleCallbackForFiber to preserve the ability to schedule a callback
         // without immediately flushing it. We only do this for user-initiated
-        // updates, to preserve historical behavior of sync mode.
+        // updates, to preserve historical behavior of legacy mode.
         flushSyncCallbackQueue();
       }
     }
@@ -585,7 +575,7 @@ function ensureRootIsScheduled(root: FiberRoot) {
 
   // TODO: If this is an update, we already read the current time. Pass the
   // time as an argument.
-  const currentTime = requestCurrentTime();
+  const currentTime = requestCurrentTimeForUpdate();
   const priorityLevel = inferPriorityFromExpirationTime(
     currentTime,
     expirationTime,
@@ -646,7 +636,7 @@ function performConcurrentWorkOnRoot(root, didTimeout) {
   if (didTimeout) {
     // The render task took too long to complete. Mark the current time as
     // expired to synchronously render all expired work in a single batch.
-    const currentTime = requestCurrentTime();
+    const currentTime = requestCurrentTimeForUpdate();
     markRootExpiredAtTime(root, currentTime);
     // This will schedule a synchronous callback.
     ensureRootIsScheduled(root);
@@ -718,7 +708,6 @@ function performConcurrentWorkOnRoot(root, didTimeout) {
         const finishedWork: Fiber = ((root.finishedWork =
           root.current.alternate): any);
         root.finishedExpirationTime = expirationTime;
-        resolveLocksOnRoot(root, expirationTime);
         finishConcurrentRender(
           root,
           finishedWork,
@@ -756,17 +745,19 @@ function finishConcurrentRender(
     // statement, but eslint doesn't know about invariant, so it complains
     // if I do. eslint-disable-next-line no-fallthrough
     case RootErrored: {
-      if (expirationTime !== Idle) {
-        // If this was an async render, the error may have happened due to
-        // a mutation in a concurrent event. Try rendering one more time,
-        // synchronously, to see if the error goes away. If there are
-        // lower priority updates, let's include those, too, in case they
-        // fix the inconsistency. Render at Idle to include all updates.
-        markRootExpiredAtTime(root, Idle);
-        break;
-      }
-      // Commit the root in its errored state.
-      commitRoot(root);
+      // If this was an async render, the error may have happened due to
+      // a mutation in a concurrent event. Try rendering one more time,
+      // synchronously, to see if the error goes away. If there are
+      // lower priority updates, let's include those, too, in case they
+      // fix the inconsistency. Render at Idle to include all updates.
+      // If it was Idle or Never or some not-yet-invented time, render
+      // at that time.
+      markRootExpiredAtTime(
+        root,
+        expirationTime > Idle ? Idle : expirationTime,
+      );
+      // We assume that this second render pass will be synchronous
+      // and therefore not hit this path again.
       break;
     }
     case RootSuspended: {
@@ -975,13 +966,6 @@ function finishConcurrentRender(
       commitRoot(root);
       break;
     }
-    case RootLocked: {
-      // This root has a lock that prevents it from committing. Exit. If
-      // we begin work on the root again, without any intervening updates,
-      // it will finish without doing additional work.
-      markRootSuspendedAtTime(root, expirationTime);
-      break;
-    }
     default: {
       invariant(false, 'Unknown root exit status.');
     }
@@ -1059,12 +1043,10 @@ function performSyncWorkOnRoot(root) {
         );
       } else {
         // We now have a consistent tree. Because this is a sync render, we
-        // will commit it even if something suspended. The only exception is
-        // if the root is locked (using the unstable_createBatch API).
+        // will commit it even if something suspended.
         stopFinishedWorkLoopTimer();
         root.finishedWork = (root.current.alternate: any);
         root.finishedExpirationTime = expirationTime;
-        resolveLocksOnRoot(root, expirationTime);
         finishSyncRender(root, workInProgressRootExitStatus, expirationTime);
       }
 
@@ -1078,38 +1060,23 @@ function performSyncWorkOnRoot(root) {
 }
 
 function finishSyncRender(root, exitStatus, expirationTime) {
-  if (exitStatus === RootLocked) {
-    // This root has a lock that prevents it from committing. Exit. If we
-    // begin work on the root again, without any intervening updates, it
-    // will finish without doing additional work.
-    markRootSuspendedAtTime(root, expirationTime);
-  } else {
-    // Set this to null to indicate there's no in-progress render.
-    workInProgressRoot = null;
+  // Set this to null to indicate there's no in-progress render.
+  workInProgressRoot = null;
 
-    if (__DEV__) {
-      if (
-        exitStatus === RootSuspended ||
-        exitStatus === RootSuspendedWithDelay
-      ) {
-        flushSuspensePriorityWarningInDEV();
-      }
+  if (__DEV__) {
+    if (exitStatus === RootSuspended || exitStatus === RootSuspendedWithDelay) {
+      flushSuspensePriorityWarningInDEV();
     }
-    commitRoot(root);
   }
+  commitRoot(root);
 }
 
 export function flushRoot(root: FiberRoot, expirationTime: ExpirationTime) {
-  if ((executionContext & (RenderContext | CommitContext)) !== NoContext) {
-    invariant(
-      false,
-      'work.commit(): Cannot commit while already rendering. This likely ' +
-        'means you attempted to commit from inside a lifecycle method.',
-    );
-  }
   markRootExpiredAtTime(root, expirationTime);
   ensureRootIsScheduled(root);
-  flushSyncCallbackQueue();
+  if ((executionContext & (RenderContext | CommitContext)) === NoContext) {
+    flushSyncCallbackQueue();
+  }
 }
 
 export function flushDiscreteUpdates() {
@@ -1137,21 +1104,6 @@ export function flushDiscreteUpdates() {
   // If the discrete updates scheduled passive effects, flush them now so that
   // they fire before the next serial event.
   flushPassiveEffects();
-}
-
-function resolveLocksOnRoot(root: FiberRoot, expirationTime: ExpirationTime) {
-  const firstBatch = root.firstBatch;
-  if (
-    firstBatch !== null &&
-    firstBatch._defer &&
-    firstBatch._expirationTime >= expirationTime
-  ) {
-    scheduleCallback(NormalPriority, () => {
-      firstBatch._onComplete();
-      return null;
-    });
-    workInProgressRootExitStatus = RootLocked;
-  }
 }
 
 export function deferredUpdates<A>(fn: () => A): A {
@@ -1328,6 +1280,7 @@ function handleError(root, thrownValue) {
       // Reset module-level state that was set during the render phase.
       resetContextDependencies();
       resetHooks();
+      resetCurrentDebugFiberInDEV();
 
       if (workInProgress === null || workInProgress.return === null) {
         // Expected to be working on a non-root fiber. This is a fatal error
@@ -1406,14 +1359,14 @@ export function markRenderEventTimeAndConfig(
 ): void {
   if (
     expirationTime < workInProgressRootLatestProcessedExpirationTime &&
-    expirationTime > Never
+    expirationTime > Idle
   ) {
     workInProgressRootLatestProcessedExpirationTime = expirationTime;
   }
   if (suspenseConfig !== null) {
     if (
       expirationTime < workInProgressRootLatestSuspenseTimeout &&
-      expirationTime > Never
+      expirationTime > Idle
     ) {
       workInProgressRootLatestSuspenseTimeout = expirationTime;
       // Most of the time we only have one config and getting wrong is not bad.
@@ -2203,24 +2156,25 @@ function commitLayoutEffects(
 }
 
 export function flushPassiveEffects() {
+  if (pendingPassiveEffectsRenderPriority !== NoPriority) {
+    const priorityLevel =
+      pendingPassiveEffectsRenderPriority > NormalPriority
+        ? NormalPriority
+        : pendingPassiveEffectsRenderPriority;
+    pendingPassiveEffectsRenderPriority = NoPriority;
+    return runWithPriority(priorityLevel, flushPassiveEffectsImpl);
+  }
+}
+
+function flushPassiveEffectsImpl() {
   if (rootWithPendingPassiveEffects === null) {
     return false;
   }
   const root = rootWithPendingPassiveEffects;
   const expirationTime = pendingPassiveEffectsExpirationTime;
-  const renderPriorityLevel = pendingPassiveEffectsRenderPriority;
   rootWithPendingPassiveEffects = null;
   pendingPassiveEffectsExpirationTime = NoWork;
-  pendingPassiveEffectsRenderPriority = NoPriority;
-  const priorityLevel =
-    renderPriorityLevel > NormalPriority ? NormalPriority : renderPriorityLevel;
-  return runWithPriority(
-    priorityLevel,
-    flushPassiveEffectsImpl.bind(null, root, expirationTime),
-  );
-}
 
-function flushPassiveEffectsImpl(root, expirationTime) {
   invariant(
     (executionContext & (RenderContext | CommitContext)) === NoContext,
     'Cannot flush passive effects while already rendering.',
@@ -2263,6 +2217,7 @@ function flushPassiveEffectsImpl(root, expirationTime) {
   }
 
   executionContext = prevExecutionContext;
+
   flushSyncCallbackQueue();
 
   // If additional passive effects were scheduled, increment a counter. If this
@@ -2427,9 +2382,9 @@ function retryTimedOutBoundary(
   // previously was rendered in its fallback state. One of the promises that
   // suspended it has resolved, which means at least part of the tree was
   // likely unblocked. Try rendering again, at a new expiration time.
-  if (retryTime === Never) {
+  if (retryTime === NoWork) {
     const suspenseConfig = null; // Retries don't carry over the already committed update.
-    const currentTime = requestCurrentTime();
+    const currentTime = requestCurrentTimeForUpdate();
     retryTime = computeExpirationForFiber(
       currentTime,
       boundaryFiber,
@@ -2446,7 +2401,7 @@ function retryTimedOutBoundary(
 
 export function retryDehydratedSuspenseBoundary(boundaryFiber: Fiber) {
   const suspenseState: null | SuspenseState = boundaryFiber.memoizedState;
-  let retryTime = Never;
+  let retryTime = NoWork;
   if (suspenseState !== null) {
     retryTime = suspenseState.retryTime;
   }
@@ -2454,7 +2409,7 @@ export function retryDehydratedSuspenseBoundary(boundaryFiber: Fiber) {
 }
 
 export function resolveRetryThenable(boundaryFiber: Fiber, thenable: Thenable) {
-  let retryTime = Never; // Default
+  let retryTime = NoWork; // Default
   let retryCache: WeakSet<Thenable> | Set<Thenable> | null;
   if (enableSuspenseServerRenderer) {
     switch (boundaryFiber.tag) {
@@ -2669,10 +2624,12 @@ if (__DEV__ && replayFailedUnitOfWorkWithInvokeGuardedCallback) {
         throw originalError;
       }
 
-      // Keep this code in sync with renderRoot; any changes here must have
+      // Keep this code in sync with handleError; any changes here must have
       // corresponding changes there.
       resetContextDependencies();
       resetHooks();
+      // Don't reset current debug fiber, since we're about to work on the
+      // same fiber again.
 
       // Unwind the failed stack frame
       unwindInterruptedWork(unitOfWork);
@@ -2844,7 +2801,7 @@ export function warnIfUnmockedScheduler(fiber: Fiber) {
       didWarnAboutUnmockedScheduler === false &&
       Scheduler.unstable_flushAllWithoutAsserting === undefined
     ) {
-      if (fiber.mode & BatchedMode || fiber.mode & ConcurrentMode) {
+      if (fiber.mode & BlockingMode || fiber.mode & ConcurrentMode) {
         didWarnAboutUnmockedScheduler = true;
         warningWithoutStack(
           false,
@@ -2977,7 +2934,7 @@ function flushSuspensePriorityWarningInDEV() {
             'update to provide immediate feedback, and another update that ' +
             'triggers the bulk of the changes.' +
             '\n\n' +
-            'Refer to the documentation for useSuspenseTransition to learn how ' +
+            'Refer to the documentation for useTransition to learn how ' +
             'to implement this pattern.',
           // TODO: Add link to React docs with more information, once it exists
           componentNames.sort().join(', '),
@@ -3069,10 +3026,10 @@ function startWorkOnPendingInteractions(root, expirationTime) {
   );
 
   // Store the current set of interactions on the FiberRoot for a few reasons:
-  // We can re-use it in hot functions like renderRoot() without having to
-  // recalculate it. We will also use it in commitWork() to pass to any Profiler
-  // onRender() hooks. This also provides DevTools with a way to access it when
-  // the onCommitRoot() hook is called.
+  // We can re-use it in hot functions like performConcurrentWorkOnRoot()
+  // without having to recalculate it. We will also use it in commitWork() to
+  // pass to any Profiler onRender() hooks. This also provides DevTools with a
+  // way to access it when the onCommitRoot() hook is called.
   root.memoizedInteractions = interactions;
 
   if (interactions.size > 0) {

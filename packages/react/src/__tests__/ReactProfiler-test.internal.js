@@ -97,15 +97,6 @@ function loadModules({
   };
 }
 
-const mockDevToolsForTest = () => {
-  jest.mock('react-reconciler/src/ReactFiberDevToolsHook', () => ({
-    injectInternals: () => {},
-    onCommitRoot: () => {},
-    onCommitUnmount: () => {},
-    isDevToolsPresent: true,
-  }));
-};
-
 describe('Profiler', () => {
   describe('works in profiling and non-profiling bundles', () => {
     [true, false].forEach(enableSchedulerTracing => {
@@ -1203,71 +1194,6 @@ describe('Profiler', () => {
         expect(callback).toHaveBeenCalledTimes(1);
       });
     });
-  });
-
-  it('should handle interleaved async yields and batched commits', () => {
-    jest.resetModules();
-    mockDevToolsForTest();
-    loadModules({useNoopRenderer: true});
-
-    const Child = ({duration, id}) => {
-      Scheduler.unstable_advanceTime(duration);
-      Scheduler.unstable_yieldValue(`Child:render:${id}`);
-      return null;
-    };
-
-    class Parent extends React.Component {
-      componentDidMount() {
-        Scheduler.unstable_yieldValue(
-          `Parent:componentDidMount:${this.props.id}`,
-        );
-      }
-      render() {
-        const {duration, id} = this.props;
-        return (
-          <>
-            <Child duration={duration} id={id} />
-            <Child duration={duration} id={id} />
-          </>
-        );
-      }
-    }
-
-    Scheduler.unstable_advanceTime(50);
-
-    ReactNoop.renderToRootWithID(<Parent duration={3} id="one" />, 'one');
-
-    // Process up to the <Parent> component, but yield before committing.
-    // This ensures that the profiler timer still has paused fibers.
-    const commitFirstRender = ReactNoop.flushWithoutCommitting(
-      ['Child:render:one', 'Child:render:one'],
-      'one',
-    );
-
-    expect(ReactNoop.getRoot('one').current.actualDuration).toBe(0);
-
-    Scheduler.unstable_advanceTime(100);
-
-    // Process some async work, but yield before committing it.
-    ReactNoop.renderToRootWithID(<Parent duration={7} id="two" />, 'two');
-    expect(Scheduler).toFlushAndYieldThrough(['Child:render:two']);
-
-    Scheduler.unstable_advanceTime(150);
-
-    // Commit the previously paused, batched work.
-    commitFirstRender(['Parent:componentDidMount:one']);
-
-    expect(ReactNoop.getRoot('one').current.actualDuration).toBe(6);
-    expect(ReactNoop.getRoot('two').current.actualDuration).toBe(0);
-
-    Scheduler.unstable_advanceTime(200);
-
-    expect(Scheduler).toFlushAndYield([
-      'Child:render:two',
-      'Parent:componentDidMount:two',
-    ]);
-
-    expect(ReactNoop.getRoot('two').current.actualDuration).toBe(14);
   });
 
   describe('interaction tracing', () => {

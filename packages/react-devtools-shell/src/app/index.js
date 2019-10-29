@@ -5,7 +5,7 @@
 import {createElement} from 'react';
 import {
   // $FlowFixMe Flow does not yet know about createRoot()
-  unstable_createRoot as createRoot,
+  createRoot,
 } from 'react-dom';
 import DeeplyNestedComponents from './DeeplyNestedComponents';
 import Iframe from './Iframe';
@@ -31,7 +31,7 @@ ignoreErrors([
   'Warning: Unsafe lifecycle methods',
   'Warning: %s is deprecated in StrictMode.', // findDOMNode
 ]);
-ignoreWarnings(['Warning: componentWillReceiveProps is deprecated']);
+ignoreWarnings(['Warning: componentWillReceiveProps has been renamed']);
 
 const roots = [];
 

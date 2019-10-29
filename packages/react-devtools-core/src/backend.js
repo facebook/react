@@ -114,7 +114,7 @@ export function connectToDevTools(options: ?ConnectOptions) {
           }
 
           if (bridge !== null) {
-            bridge.emit('shutdown');
+            bridge.shutdown();
           }
 
           scheduleRetry();

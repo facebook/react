@@ -23,6 +23,7 @@ import {
   ElementTypeProfiler,
   ElementTypeRoot,
   ElementTypeSuspense,
+  ElementTypeSuspenseList,
 } from 'react-devtools-shared/src/types';
 import {
   getDisplayName,
@@ -57,6 +58,7 @@ import type {
   InspectedElement,
   InspectedElementPayload,
   InstanceAndStyle,
+  NativeType,
   Owner,
   PathFrame,
   PathMatch,
@@ -82,12 +84,6 @@ type ReactSymbolsType = {
   CONTEXT_CONSUMER_SYMBOL_STRING: string,
   CONTEXT_PROVIDER_NUMBER: number,
   CONTEXT_PROVIDER_SYMBOL_STRING: string,
-  EVENT_COMPONENT_NUMBER: number,
-  EVENT_COMPONENT_STRING: string,
-  EVENT_TARGET_NUMBER: number,
-  EVENT_TARGET_STRING: string,
-  EVENT_TARGET_TOUCH_HIT_NUMBER: number,
-  EVENT_TARGET_TOUCH_HIT_STRING: string,
   FORWARD_REF_NUMBER: number,
   FORWARD_REF_SYMBOL_STRING: string,
   MEMO_NUMBER: number,
@@ -96,9 +92,8 @@ type ReactSymbolsType = {
   PROFILER_SYMBOL_STRING: string,
   STRICT_MODE_NUMBER: number,
   STRICT_MODE_SYMBOL_STRING: string,
-  SUSPENSE_NUMBER: number,
-  SUSPENSE_SYMBOL_STRING: string,
-  DEPRECATED_PLACEHOLDER_SYMBOL_STRING: string,
+  SCOPE_NUMBER: number,
+  SCOPE_SYMBOL_STRING: string,
 };
 
 type ReactPriorityLevelsType = {|
@@ -132,6 +127,7 @@ type ReactTypeOfWorkType = {|
   Profiler: number,
   SimpleMemoComponent: number,
   SuspenseComponent: number,
+  SuspenseListComponent: number,
   YieldComponent: number,
 |};
 
@@ -165,12 +161,6 @@ export function getInternalReactConstants(
     CONTEXT_CONSUMER_SYMBOL_STRING: 'Symbol(react.context)',
     CONTEXT_PROVIDER_NUMBER: 0xeacd,
     CONTEXT_PROVIDER_SYMBOL_STRING: 'Symbol(react.provider)',
-    EVENT_COMPONENT_NUMBER: 0xead5,
-    EVENT_COMPONENT_STRING: 'Symbol(react.event_component)',
-    EVENT_TARGET_NUMBER: 0xead6,
-    EVENT_TARGET_STRING: 'Symbol(react.event_target)',
-    EVENT_TARGET_TOUCH_HIT_NUMBER: 0xead7,
-    EVENT_TARGET_TOUCH_HIT_STRING: 'Symbol(react.event_target.touch_hit)',
     FORWARD_REF_NUMBER: 0xead0,
     FORWARD_REF_SYMBOL_STRING: 'Symbol(react.forward_ref)',
     MEMO_NUMBER: 0xead3,
@@ -179,9 +169,8 @@ export function getInternalReactConstants(
     PROFILER_SYMBOL_STRING: 'Symbol(react.profiler)',
     STRICT_MODE_NUMBER: 0xeacc,
     STRICT_MODE_SYMBOL_STRING: 'Symbol(react.strict_mode)',
-    SUSPENSE_NUMBER: 0xead1,
-    SUSPENSE_SYMBOL_STRING: 'Symbol(react.suspense)',
-    DEPRECATED_PLACEHOLDER_SYMBOL_STRING: 'Symbol(react.placeholder)',
+    SCOPE_NUMBER: 0xead7,
+    SCOPE_SYMBOL_STRING: 'Symbol(react.scope)',
   };
 
   const ReactTypeOfSideEffect: ReactTypeOfSideEffectType = {
@@ -234,6 +223,7 @@ export function getInternalReactConstants(
       Profiler: 12,
       SimpleMemoComponent: 15,
       SuspenseComponent: 13,
+      SuspenseListComponent: 19, // Experimental
       YieldComponent: -1, // Removed
     };
   } else if (gte(version, '16.4.3-alpha')) {
@@ -259,6 +249,7 @@ export function getInternalReactConstants(
       Profiler: 15,
       SimpleMemoComponent: -1, // Doesn't exist yet
       SuspenseComponent: 16,
+      SuspenseListComponent: -1, // Doesn't exist yet
       YieldComponent: -1, // Removed
     };
   } else {
@@ -284,6 +275,7 @@ export function getInternalReactConstants(
       Profiler: 15,
       SimpleMemoComponent: -1, // Doesn't exist yet
       SuspenseComponent: 16,
+      SuspenseListComponent: -1, // Doesn't exist yet
       YieldComponent: 9,
     };
   }
@@ -314,6 +306,8 @@ export function getInternalReactConstants(
     Fragment,
     MemoComponent,
     SimpleMemoComponent,
+    SuspenseComponent,
+    SuspenseListComponent,
   } = ReactTypeOfWork;
 
   const {
@@ -326,11 +320,10 @@ export function getInternalReactConstants(
     CONTEXT_CONSUMER_SYMBOL_STRING,
     STRICT_MODE_NUMBER,
     STRICT_MODE_SYMBOL_STRING,
-    SUSPENSE_NUMBER,
-    SUSPENSE_SYMBOL_STRING,
-    DEPRECATED_PLACEHOLDER_SYMBOL_STRING,
     PROFILER_NUMBER,
     PROFILER_SYMBOL_STRING,
+    SCOPE_NUMBER,
+    SCOPE_SYMBOL_STRING,
   } = ReactSymbols;
 
   // NOTICE Keep in sync with shouldFilterFiber() and other get*ForFiber methods
@@ -375,6 +368,10 @@ export function getInternalReactConstants(
         } else {
           return getDisplayName(type, 'Anonymous');
         }
+      case SuspenseComponent:
+        return 'Suspense';
+      case SuspenseListComponent:
+        return 'SuspenseList';
       default:
         const typeSymbol = getTypeSymbol(type);
 
@@ -403,13 +400,12 @@ export function getInternalReactConstants(
           case STRICT_MODE_NUMBER:
           case STRICT_MODE_SYMBOL_STRING:
             return null;
-          case SUSPENSE_NUMBER:
-          case SUSPENSE_SYMBOL_STRING:
-          case DEPRECATED_PLACEHOLDER_SYMBOL_STRING:
-            return 'Suspense';
           case PROFILER_NUMBER:
           case PROFILER_SYMBOL_STRING:
             return `Profiler(${fiber.memoizedProps.id})`;
+          case SCOPE_NUMBER:
+          case SCOPE_SYMBOL_STRING:
+            return 'Scope';
           default:
             // Unknown element type.
             // This may mean a new element type that has not yet been added to DevTools.
@@ -459,6 +455,7 @@ export function attach(
     MemoComponent,
     SimpleMemoComponent,
     SuspenseComponent,
+    SuspenseListComponent,
   } = ReactTypeOfWork;
   const {
     ImmediatePriority,
@@ -480,9 +477,6 @@ export function attach(
     PROFILER_SYMBOL_STRING,
     STRICT_MODE_NUMBER,
     STRICT_MODE_SYMBOL_STRING,
-    SUSPENSE_NUMBER,
-    SUSPENSE_SYMBOL_STRING,
-    DEPRECATED_PLACEHOLDER_SYMBOL_STRING,
   } = ReactSymbols;
 
   const {
@@ -534,6 +528,10 @@ export function attach(
   const hideElementsWithDisplayNames: Set<RegExp> = new Set();
   const hideElementsWithPaths: Set<RegExp> = new Set();
   const hideElementsWithTypes: Set<ElementType> = new Set();
+
+  // Highlight updates
+  let traceUpdatesEnabled: boolean = false;
+  let traceUpdatesForNodes: Set<NativeType> = new Set();
 
   function applyComponentFilters(componentFilters: Array<ComponentFilter>) {
     hideElementsWithTypes.clear();
@@ -616,7 +614,7 @@ export function attach(
     hook.getFiberRoots(rendererID).forEach(root => {
       currentRootID = getFiberID(getPrimaryFiber(root.current));
       setRootPseudoKey(currentRootID, root.current);
-      mountFiberRecursively(root.current, null);
+      mountFiberRecursively(root.current, null, false, false);
       flushPendingEvents(root);
       currentRootID = -1;
     });
@@ -709,6 +707,10 @@ export function attach(
       case MemoComponent:
       case SimpleMemoComponent:
         return ElementTypeMemo;
+      case SuspenseComponent:
+        return ElementTypeSuspense;
+      case SuspenseListComponent:
+        return ElementTypeSuspenseList;
       default:
         const typeSymbol = getTypeSymbol(type);
 
@@ -726,10 +728,6 @@ export function attach(
           case STRICT_MODE_NUMBER:
           case STRICT_MODE_SYMBOL_STRING:
             return ElementTypeOtherOrUnknown;
-          case SUSPENSE_NUMBER:
-          case SUSPENSE_SYMBOL_STRING:
-          case DEPRECATED_PLACEHOLDER_SYMBOL_STRING:
-            return ElementTypeSuspense;
           case PROFILER_NUMBER:
           case PROFILER_SYMBOL_STRING:
             return ElementTypeProfiler;
@@ -1159,7 +1157,12 @@ export function attach(
         : 0;
 
       let displayNameStringID = getStringID(displayName);
-      let keyStringID = getStringID(key);
+
+      // This check is a guard to handle a React element that has been modified
+      // in such a way as to bypass the default stringification of the "key" property.
+      let keyString = key === null ? null : '' + key;
+      let keyStringID = getStringID(keyString);
+
       pushOperation(TREE_OPERATION_ADD);
       pushOperation(id);
       pushOperation(elementType);
@@ -1230,7 +1233,8 @@ export function attach(
   function mountFiberRecursively(
     fiber: Fiber,
     parentFiber: Fiber | null,
-    traverseSiblings = false,
+    traverseSiblings: boolean,
+    traceNearestHostComponentUpdate: boolean,
   ) {
     if (__DEBUG__) {
       debug('mountFiberRecursively()', fiber, parentFiber);
@@ -1245,6 +1249,20 @@ export function attach(
     const shouldIncludeInTree = !shouldFilterFiber(fiber);
     if (shouldIncludeInTree) {
       recordMount(fiber, parentFiber);
+    }
+
+    if (traceUpdatesEnabled) {
+      if (traceNearestHostComponentUpdate) {
+        const elementType = getElementTypeForFiber(fiber);
+        // If an ancestor updated, we should mark the nearest host nodes for highlighting.
+        if (elementType === ElementTypeHostComponent) {
+          traceUpdatesForNodes.add(fiber.stateNode);
+          traceNearestHostComponentUpdate = false;
+        }
+      }
+
+      // We intentionally do not re-enable the traceNearestHostComponentUpdate flag in this branch,
+      // because we don't want to highlight every host node inside of a newly mounted subtree.
     }
 
     const isTimedOutSuspense =
@@ -1267,6 +1285,7 @@ export function attach(
           fallbackChild,
           shouldIncludeInTree ? fiber : parentFiber,
           true,
+          traceNearestHostComponentUpdate,
         );
       }
     } else {
@@ -1275,6 +1294,7 @@ export function attach(
           fiber.child,
           shouldIncludeInTree ? fiber : parentFiber,
           true,
+          traceNearestHostComponentUpdate,
         );
       }
     }
@@ -1284,7 +1304,12 @@ export function attach(
     updateTrackedPathStateAfterMount(mightSiblingsBeOnTrackedPath);
 
     if (traverseSiblings && fiber.sibling !== null) {
-      mountFiberRecursively(fiber.sibling, parentFiber, true);
+      mountFiberRecursively(
+        fiber.sibling,
+        parentFiber,
+        true,
+        traceNearestHostComponentUpdate,
+      );
     }
   }
 
@@ -1433,9 +1458,33 @@ export function attach(
     nextFiber: Fiber,
     prevFiber: Fiber,
     parentFiber: Fiber | null,
+    traceNearestHostComponentUpdate: boolean,
   ): boolean {
     if (__DEBUG__) {
       debug('updateFiberRecursively()', nextFiber, parentFiber);
+    }
+
+    if (traceUpdatesEnabled) {
+      const elementType = getElementTypeForFiber(nextFiber);
+      if (traceNearestHostComponentUpdate) {
+        // If an ancestor updated, we should mark the nearest host nodes for highlighting.
+        if (elementType === ElementTypeHostComponent) {
+          traceUpdatesForNodes.add(nextFiber.stateNode);
+          traceNearestHostComponentUpdate = false;
+        }
+      } else {
+        if (
+          elementType === ElementTypeFunction ||
+          elementType === ElementTypeClass ||
+          elementType === ElementTypeContext
+        ) {
+          // Otherwise if this is a traced ancestor, flag for the nearest host descendant(s).
+          traceNearestHostComponentUpdate = didFiberRender(
+            prevFiber,
+            nextFiber,
+          );
+        }
+      }
     }
 
     if (
@@ -1484,6 +1533,7 @@ export function attach(
           nextFallbackChildSet,
           prevFallbackChildSet,
           nextFiber,
+          traceNearestHostComponentUpdate,
         )
       ) {
         shouldResetChildren = true;
@@ -1495,7 +1545,12 @@ export function attach(
       // 2. Mount primary set
       const nextPrimaryChildSet = nextFiber.child;
       if (nextPrimaryChildSet !== null) {
-        mountFiberRecursively(nextPrimaryChildSet, nextFiber, true);
+        mountFiberRecursively(
+          nextPrimaryChildSet,
+          nextFiber,
+          true,
+          traceNearestHostComponentUpdate,
+        );
       }
       shouldResetChildren = true;
     } else if (!prevDidTimeout && nextDidTimeOut) {
@@ -1510,7 +1565,12 @@ export function attach(
         ? nextFiberChild.sibling
         : null;
       if (nextFallbackChildSet != null) {
-        mountFiberRecursively(nextFallbackChildSet, nextFiber, true);
+        mountFiberRecursively(
+          nextFallbackChildSet,
+          nextFiber,
+          true,
+          traceNearestHostComponentUpdate,
+        );
         shouldResetChildren = true;
       }
     } else {
@@ -1533,6 +1593,7 @@ export function attach(
                 nextChild,
                 prevChild,
                 shouldIncludeInTree ? nextFiber : parentFiber,
+                traceNearestHostComponentUpdate,
               )
             ) {
               // If a nested tree child order changed but it can't handle its own
@@ -1550,6 +1611,8 @@ export function attach(
             mountFiberRecursively(
               nextChild,
               shouldIncludeInTree ? nextFiber : parentFiber,
+              false,
+              traceNearestHostComponentUpdate,
             );
             shouldResetChildren = true;
           }
@@ -1564,6 +1627,19 @@ export function attach(
         // If we have no more children, but used to, they don't line up.
         if (prevChildAtSameIndex !== null) {
           shouldResetChildren = true;
+        }
+      } else {
+        if (traceUpdatesEnabled) {
+          // If we're tracing updates and we've bailed out before reaching a host node,
+          // we should fall back to recursively marking the nearest host descendates for highlight.
+          if (traceNearestHostComponentUpdate) {
+            const hostFibers = findAllCurrentHostFibers(
+              getFiberID(getPrimaryFiber(nextFiber)),
+            );
+            hostFibers.forEach(hostFiber => {
+              traceUpdatesForNodes.add(hostFiber.stateNode);
+            });
+          }
         }
       }
     }
@@ -1648,7 +1724,7 @@ export function attach(
           };
         }
 
-        mountFiberRecursively(root.current, null);
+        mountFiberRecursively(root.current, null, false, false);
         flushPendingEvents(root);
         currentRootID = -1;
       });
@@ -1672,6 +1748,10 @@ export function attach(
     // our path in case we have selection to restore.
     if (trackedPath !== null) {
       mightBeOnTrackedPath = true;
+    }
+
+    if (traceUpdatesEnabled) {
+      traceUpdatesForNodes.clear();
     }
 
     // Checking root.memoizedInteractions handles multi-renderer edge-case-
@@ -1707,10 +1787,10 @@ export function attach(
       if (!wasMounted && isMounted) {
         // Mount a new root.
         setRootPseudoKey(currentRootID, current);
-        mountFiberRecursively(current, null);
+        mountFiberRecursively(current, null, false, false);
       } else if (wasMounted && isMounted) {
         // Update an existing root.
-        updateFiberRecursively(current, alternate, null);
+        updateFiberRecursively(current, alternate, null, false);
       } else if (wasMounted && !isMounted) {
         // Unmount an existing root.
         removeRootPseudoKey(currentRootID);
@@ -1719,7 +1799,7 @@ export function attach(
     } else {
       // Mount a new root.
       setRootPseudoKey(currentRootID, current);
-      mountFiberRecursively(current, null);
+      mountFiberRecursively(current, null, false, false);
     }
 
     if (isProfiling && isProfilingSupported) {
@@ -1740,6 +1820,10 @@ export function attach(
 
     // We're done here.
     flushPendingEvents(root);
+
+    if (traceUpdatesEnabled) {
+      hook.emit('traceUpdates', traceUpdatesForNodes);
+    }
 
     currentRootID = -1;
   }
@@ -3018,6 +3102,10 @@ export function attach(
     }
   };
 
+  function setTraceUpdatesEnabled(isEnabled: boolean): void {
+    traceUpdatesEnabled = isEnabled;
+  }
+
   return {
     cleanup,
     findNativeNodesForFiberID,
@@ -3039,6 +3127,7 @@ export function attach(
     setInHook,
     setInProps,
     setInState,
+    setTraceUpdatesEnabled,
     setTrackedPath,
     startProfiling,
     stopProfiling,

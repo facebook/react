@@ -160,3 +160,15 @@ export function useResponder(
   }
   return dispatcher.useResponder(responder, listenerProps || emptyObject);
 }
+
+export function useTransition(
+  config: ?Object,
+): [(() => void) => void, boolean] {
+  const dispatcher = resolveDispatcher();
+  return dispatcher.useTransition(config);
+}
+
+export function useDeferredValue<T>(value: T, config: ?Object): T {
+  const dispatcher = resolveDispatcher();
+  return dispatcher.useDeferredValue(value, config);
+}

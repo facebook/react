@@ -6,6 +6,11 @@ let Suspense;
 let SuspenseList;
 
 describe('ReactSuspenseList', () => {
+  if (!__EXPERIMENTAL__) {
+    it("empty test so Jest doesn't complain", () => {});
+    return;
+  }
+
   beforeEach(() => {
     jest.resetModules();
     ReactFeatureFlags = require('shared/ReactFeatureFlags');
@@ -16,7 +21,7 @@ describe('ReactSuspenseList', () => {
     ReactNoop = require('react-noop-renderer');
     Scheduler = require('scheduler');
     Suspense = React.Suspense;
-    SuspenseList = React.unstable_SuspenseList;
+    SuspenseList = React.SuspenseList;
   });
 
   function Text(props) {
@@ -581,6 +586,90 @@ describe('ReactSuspenseList', () => {
         <span>A</span>
         <span>B</span>
         <span>C</span>
+      </>,
+    );
+  });
+
+  it('displays all "together" during an update', async () => {
+    let A = createAsyncText('A');
+    let B = createAsyncText('B');
+    let C = createAsyncText('C');
+    let D = createAsyncText('D');
+
+    function Foo({step}) {
+      return (
+        <SuspenseList revealOrder="together">
+          {step === 0 && (
+            <Suspense fallback={<Text text="Loading A" />}>
+              <A />
+            </Suspense>
+          )}
+          {step === 0 && (
+            <Suspense fallback={<Text text="Loading B" />}>
+              <B />
+            </Suspense>
+          )}
+          {step === 1 && (
+            <Suspense fallback={<Text text="Loading C" />}>
+              <C />
+            </Suspense>
+          )}
+          {step === 1 && (
+            <Suspense fallback={<Text text="Loading D" />}>
+              <D />
+            </Suspense>
+          )}
+        </SuspenseList>
+      );
+    }
+
+    // Mount
+    await A.resolve();
+    ReactNoop.render(<Foo step={0} />);
+    expect(Scheduler).toFlushAndYield([
+      'A',
+      'Suspend! [B]',
+      'Loading B',
+      'Loading A',
+      'Loading B',
+    ]);
+    expect(ReactNoop).toMatchRenderedOutput(
+      <>
+        <span>Loading A</span>
+        <span>Loading B</span>
+      </>,
+    );
+    await B.resolve();
+    expect(Scheduler).toFlushAndYield(['A', 'B']);
+    expect(ReactNoop).toMatchRenderedOutput(
+      <>
+        <span>A</span>
+        <span>B</span>
+      </>,
+    );
+
+    // Update
+    await C.resolve();
+    ReactNoop.render(<Foo step={1} />);
+    expect(Scheduler).toFlushAndYield([
+      'C',
+      'Suspend! [D]',
+      'Loading D',
+      'Loading C',
+      'Loading D',
+    ]);
+    expect(ReactNoop).toMatchRenderedOutput(
+      <>
+        <span>Loading C</span>
+        <span>Loading D</span>
+      </>,
+    );
+    await D.resolve();
+    expect(Scheduler).toFlushAndYield(['C', 'D']);
+    expect(ReactNoop).toMatchRenderedOutput(
+      <>
+        <span>C</span>
+        <span>D</span>
       </>,
     );
   });
@@ -1816,6 +1905,181 @@ describe('ReactSuspenseList', () => {
     await C.resolve();
 
     expect(Scheduler).toFlushAndYield(['C']);
+
+    expect(ReactNoop).toMatchRenderedOutput(
+      <>
+        <span>A</span>
+        <span>B</span>
+        <span>C</span>
+      </>,
+    );
+  });
+
+  it('eventually resolves a nested forwards suspense list', async () => {
+    let B = createAsyncText('B');
+
+    function Foo() {
+      return (
+        <SuspenseList revealOrder="together">
+          <SuspenseList revealOrder="forwards">
+            <Suspense fallback={<Text text="Loading A" />}>
+              <Text text="A" />
+            </Suspense>
+            <Suspense fallback={<Text text="Loading B" />}>
+              <B />
+            </Suspense>
+            <Suspense fallback={<Text text="Loading C" />}>
+              <Text text="C" />
+            </Suspense>
+          </SuspenseList>
+          <Suspense fallback={<Text text="Loading D" />}>
+            <Text text="D" />
+          </Suspense>
+        </SuspenseList>
+      );
+    }
+
+    ReactNoop.render(<Foo />);
+
+    expect(Scheduler).toFlushAndYield([
+      'A',
+      'Suspend! [B]',
+      'Loading B',
+      'Loading C',
+      'D',
+      // The second pass forces the fallbacks
+      'Loading A',
+      'Loading B',
+      'Loading C',
+      'Loading D',
+    ]);
+
+    expect(ReactNoop).toMatchRenderedOutput(
+      <>
+        <span>Loading A</span>
+        <span>Loading B</span>
+        <span>Loading C</span>
+        <span>Loading D</span>
+      </>,
+    );
+
+    await B.resolve();
+
+    expect(Scheduler).toFlushAndYield(['A', 'B', 'C', 'D']);
+
+    expect(ReactNoop).toMatchRenderedOutput(
+      <>
+        <span>A</span>
+        <span>B</span>
+        <span>C</span>
+        <span>D</span>
+      </>,
+    );
+  });
+
+  it('eventually resolves a nested forwards suspense list with a hidden tail', async () => {
+    let B = createAsyncText('B');
+
+    function Foo() {
+      return (
+        <SuspenseList revealOrder="together">
+          <SuspenseList revealOrder="forwards" tail="hidden">
+            <Suspense fallback={<Text text="Loading A" />}>
+              <Text text="A" />
+            </Suspense>
+            <Suspense fallback={<Text text="Loading B" />}>
+              <B />
+            </Suspense>
+          </SuspenseList>
+          <Suspense fallback={<Text text="Loading C" />}>
+            <Text text="C" />
+          </Suspense>
+        </SuspenseList>
+      );
+    }
+
+    ReactNoop.render(<Foo />);
+
+    expect(Scheduler).toFlushAndYield([
+      'A',
+      'Suspend! [B]',
+      'Loading B',
+      'C',
+      'Loading C',
+    ]);
+
+    expect(ReactNoop).toMatchRenderedOutput(<span>Loading C</span>);
+
+    await B.resolve();
+
+    expect(Scheduler).toFlushAndYield(['A', 'B', 'C']);
+
+    expect(ReactNoop).toMatchRenderedOutput(
+      <>
+        <span>A</span>
+        <span>B</span>
+        <span>C</span>
+      </>,
+    );
+  });
+
+  it('eventually resolves two nested forwards suspense list with a hidden tail', async () => {
+    let B = createAsyncText('B');
+
+    function Foo({showB}) {
+      return (
+        <SuspenseList revealOrder="forwards">
+          <SuspenseList revealOrder="forwards" tail="hidden">
+            <Suspense fallback={<Text text="Loading A" />}>
+              <Text text="A" />
+            </Suspense>
+            {showB ? (
+              <Suspense fallback={<Text text="Loading B" />}>
+                <B />
+              </Suspense>
+            ) : null}
+          </SuspenseList>
+          <Suspense fallback={<Text text="Loading C" />}>
+            <Text text="C" />
+          </Suspense>
+        </SuspenseList>
+      );
+    }
+
+    ReactNoop.render(<Foo showB={false} />);
+
+    expect(Scheduler).toFlushAndYield(['A', 'C']);
+
+    expect(ReactNoop).toMatchRenderedOutput(
+      <>
+        <span>A</span>
+        <span>C</span>
+      </>,
+    );
+
+    // Showing the B later means that C has already committed
+    // so we're now effectively in "together" mode for the head.
+    ReactNoop.render(<Foo showB={true} />);
+
+    expect(Scheduler).toFlushAndYield([
+      'A',
+      'Suspend! [B]',
+      'Loading B',
+      'C',
+      'A',
+      'C',
+    ]);
+
+    expect(ReactNoop).toMatchRenderedOutput(
+      <>
+        <span>A</span>
+        <span>C</span>
+      </>,
+    );
+
+    await B.resolve();
+
+    expect(Scheduler).toFlushAndYield(['B']);
 
     expect(ReactNoop).toMatchRenderedOutput(
       <>

@@ -7,20 +7,19 @@
  */
 
 // Do not require this module directly! Use normal `invariant` calls with
-// template literal strings. The messages will be converted to ReactError during
-// build, and in production they will be minified.
+// template literal strings. The messages will be replaced with error codes
+// during build.
 
-function ReactErrorProd(error) {
-  const code = error.message;
+function formatProdErrorMessage(code) {
   let url = 'https://reactjs.org/docs/error-decoder.html?invariant=' + code;
   for (let i = 1; i < arguments.length; i++) {
     url += '&args[]=' + encodeURIComponent(arguments[i]);
   }
-  error.message =
+  return (
     `Minified React error #${code}; visit ${url} for the full message or ` +
     'use the non-minified dev environment for full errors and additional ' +
-    'helpful warnings. ';
-  return error;
+    'helpful warnings.'
+  );
 }
 
-export default ReactErrorProd;
+export default formatProdErrorMessage;

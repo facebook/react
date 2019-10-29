@@ -970,7 +970,7 @@ describe('ReactSuspense', () => {
       expect(root).toMatchRenderedOutput('Step: 3');
     });
 
-    it('does not remount the fallback while suspended children resolve in sync mode', () => {
+    it('does not remount the fallback while suspended children resolve in legacy mode', () => {
       let mounts = 0;
       class ShouldMountOnce extends React.Component {
         componentDidMount() {

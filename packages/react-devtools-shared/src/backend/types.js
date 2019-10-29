@@ -81,7 +81,10 @@ export type ReactRenderer = {
   // Enables DevTools to append owners-only component stack to error messages.
   getCurrentFiber?: () => Fiber | null,
 
-  // <= 15
+  // Uniquely identifies React DOM v15.
+  ComponentTree?: any,
+
+  // Present for React DOM v12 (possibly earlier) through v15.
   Mount?: any,
 };
 
@@ -249,10 +252,11 @@ export type RendererInterface = {
   ) => void,
   setInProps: (id: number, path: Array<string | number>, value: any) => void,
   setInState: (id: number, path: Array<string | number>, value: any) => void,
+  setTraceUpdatesEnabled: (enabled: boolean) => void,
   setTrackedPath: (path: Array<PathFrame> | null) => void,
   startProfiling: (recordChangeDescriptions: boolean) => void,
   stopProfiling: () => void,
-  updateComponentFilters: (somponentFilters: Array<ComponentFilter>) => void,
+  updateComponentFilters: (componentFilters: Array<ComponentFilter>) => void,
 };
 
 export type Handler = (data: any) => void;

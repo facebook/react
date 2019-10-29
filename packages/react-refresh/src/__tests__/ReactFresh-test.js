@@ -2394,7 +2394,7 @@ describe('ReactFresh', () => {
   });
 
   it('can hot reload offscreen components', () => {
-    if (__DEV__) {
+    if (__DEV__ && __EXPERIMENTAL__) {
       const AppV1 = prepare(() => {
         function Hello() {
           React.useLayoutEffect(() => {
@@ -2421,7 +2421,7 @@ describe('ReactFresh', () => {
         };
       });
 
-      const root = ReactDOM.unstable_createRoot(container);
+      const root = ReactDOM.createRoot(container);
       root.render(<AppV1 offscreen={true} />);
       expect(Scheduler).toFlushAndYieldThrough(['App#layout']);
       const el = container.firstChild;

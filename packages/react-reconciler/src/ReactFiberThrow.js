@@ -30,7 +30,7 @@ import {
   ShouldCapture,
   LifecycleEffectMask,
 } from 'shared/ReactSideEffectTags';
-import {NoMode, BatchedMode} from './ReactTypeOfMode';
+import {NoMode, BlockingMode} from './ReactTypeOfMode';
 import {shouldCaptureSuspense} from './ReactFiberSuspenseComponent';
 
 import {createCapturedValue} from './ReactCapturedValue';
@@ -222,15 +222,15 @@ function throwException(
           thenables.add(thenable);
         }
 
-        // If the boundary is outside of batched mode, we should *not*
+        // If the boundary is outside of blocking mode, we should *not*
         // suspend the commit. Pretend as if the suspended component rendered
         // null and keep rendering. In the commit phase, we'll schedule a
         // subsequent synchronous update to re-render the Suspense.
         //
         // Note: It doesn't matter whether the component that suspended was
-        // inside a batched mode tree. If the Suspense is outside of it, we
+        // inside a blocking mode tree. If the Suspense is outside of it, we
         // should *not* suspend the commit.
-        if ((workInProgress.mode & BatchedMode) === NoMode) {
+        if ((workInProgress.mode & BlockingMode) === NoMode) {
           workInProgress.effectTag |= DidCapture;
 
           // We're going to commit this fiber even though it didn't complete.

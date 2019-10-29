@@ -270,9 +270,9 @@ function HookView({canEditHooks, hook, id, inspectPath, path}: HookViewProps) {
             </span>
             {typeof overrideValueFn === 'function' ? (
               <EditableValue
-                initialValue={value}
                 overrideValueFn={overrideValueFn}
                 path={[]}
+                value={value}
               />
             ) : (
               // $FlowFixMe Cannot create span element because in property children

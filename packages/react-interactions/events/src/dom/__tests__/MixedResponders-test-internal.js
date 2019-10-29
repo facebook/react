@@ -34,6 +34,11 @@ describe('mixing responders with the heritage event system', () => {
     container = null;
   });
 
+  if (!__EXPERIMENTAL__) {
+    it("empty test so Jest doesn't complain", () => {});
+    return;
+  }
+
   it('should properly only flush sync once when the event systems are mixed', () => {
     const useTap = require('react-interactions/events/tap').useTap;
     const ref = React.createRef();
@@ -66,7 +71,7 @@ describe('mixing responders with the heritage event system', () => {
     }
 
     const newContainer = document.createElement('div');
-    const root = ReactDOM.unstable_createRoot(newContainer);
+    const root = ReactDOM.createRoot(newContainer);
     document.body.appendChild(newContainer);
     root.render(<MyComponent />);
     Scheduler.unstable_flushAll();
@@ -137,7 +142,7 @@ describe('mixing responders with the heritage event system', () => {
     }
 
     const newContainer = document.createElement('div');
-    const root = ReactDOM.unstable_createRoot(newContainer);
+    const root = ReactDOM.createRoot(newContainer);
     document.body.appendChild(newContainer);
     root.render(<MyComponent />);
     Scheduler.unstable_flushAll();
@@ -216,7 +221,7 @@ describe('mixing responders with the heritage event system', () => {
 
       const newContainer = document.createElement('div');
       document.body.appendChild(newContainer);
-      const root = ReactDOM.unstable_createRoot(newContainer);
+      const root = ReactDOM.createRoot(newContainer);
 
       root.render(<MyComponent />);
       Scheduler.unstable_flushAll();
@@ -236,10 +241,9 @@ describe('mixing responders with the heritage event system', () => {
   describe('mixing the Input and Press repsonders', () => {
     it('is async for non-input events', () => {
       ReactFeatureFlags.debugRenderPhaseSideEffectsForStrictMode = false;
-      ReactFeatureFlags.enableUserBlockingEvents = true;
       const useTap = require('react-interactions/events/tap').useTap;
       const useInput = require('react-interactions/events/input').useInput;
-      const root = ReactDOM.unstable_createRoot(container);
+      const root = ReactDOM.createRoot(container);
       let input;
 
       let ops = [];

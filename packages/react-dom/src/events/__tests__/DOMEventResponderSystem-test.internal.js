@@ -28,6 +28,7 @@ function createEventResponder({
   onMount,
   onUnmount,
   getInitialState,
+  targetPortalPropagation,
 }) {
   return React.unstable_createResponder('TestEventResponder', {
     targetEventTypes,
@@ -37,6 +38,7 @@ function createEventResponder({
     onMount,
     onUnmount,
     getInitialState,
+    targetPortalPropagation,
   });
 }
 
@@ -467,81 +469,6 @@ describe('DOMEventResponderSystem', () => {
     expect(eventLog).toEqual(['magic event fired', 'magicclick', 'bubble']);
   });
 
-  it('async event dispatching works', () => {
-    let eventLog = [];
-    const buttonRef = React.createRef();
-
-    function handleEvent(event, context, props, phase) {
-      const pressEvent = {
-        target: event.target,
-        type: 'press',
-        phase,
-        timeStamp: context.getTimeStamp(),
-      };
-      context.dispatchEvent(pressEvent, props.onPress, DiscreteEvent);
-
-      context.setTimeout(() => {
-        const longPressEvent = {
-          target: event.target,
-          type: 'longpress',
-          phase,
-          timeStamp: context.getTimeStamp(),
-        };
-        context.dispatchEvent(longPressEvent, props.onLongPress, DiscreteEvent);
-
-        const longPressChangeEvent = {
-          target: event.target,
-          type: 'longpresschange',
-          phase,
-          timeStamp: context.getTimeStamp(),
-        };
-        context.dispatchEvent(
-          longPressChangeEvent,
-          props.onLongPressChange,
-          DiscreteEvent,
-        );
-      }, 500);
-    }
-
-    const TestResponder = createEventResponder({
-      targetEventTypes: ['click'],
-      onEvent: (event, context, props) => {
-        handleEvent(event, context, props, 'bubble');
-      },
-    });
-
-    function log(msg) {
-      eventLog.push(msg);
-    }
-
-    const Test = () => {
-      const listener = React.unstable_useResponder(TestResponder, {
-        onPress: e => log('press ' + e.phase),
-        onLongPress: e => log('longpress ' + e.phase),
-        onLongPressChange: e => log('longpresschange ' + e.phase),
-      });
-
-      return (
-        <button ref={buttonRef} listeners={listener}>
-          Click me!
-        </button>
-      );
-    };
-
-    ReactDOM.render(<Test />, container);
-
-    // Clicking the button should trigger the event responder onEvent()
-    let buttonElement = buttonRef.current;
-    dispatchClickEvent(buttonElement);
-    jest.runAllTimers();
-
-    expect(eventLog).toEqual([
-      'press bubble',
-      'longpress bubble',
-      'longpresschange bubble',
-    ]);
-  });
-
   it('the event responder onMount() function should fire', () => {
     let onMountFired = 0;
 
@@ -918,58 +845,56 @@ describe('DOMEventResponderSystem', () => {
     buttonRef.current.dispatchEvent(createEvent('foobar'));
   });
 
-  it('should work with concurrent mode updates', async () => {
-    const log = [];
-    const TestResponder = createEventResponder({
-      targetEventTypes: ['click'],
-      onEvent(event, context, props) {
-        log.push(props);
-      },
+  if (__EXPERIMENTAL__) {
+    it('should work with concurrent mode updates', async () => {
+      const log = [];
+      const TestResponder = createEventResponder({
+        targetEventTypes: ['click'],
+        onEvent(event, context, props) {
+          log.push(props);
+        },
+      });
+      const ref = React.createRef();
+
+      function Test({counter}) {
+        const listener = React.unstable_useResponder(TestResponder, {counter});
+        Scheduler.unstable_yieldValue('Test');
+        return (
+          <button listeners={listener} ref={ref}>
+            Press me
+          </button>
+        );
+      }
+
+      let root = ReactDOM.createRoot(container);
+      root.render(<Test counter={0} />);
+      expect(Scheduler).toFlushAndYield(['Test']);
+
+      // Click the button
+      dispatchClickEvent(ref.current);
+      expect(log).toEqual([{counter: 0}]);
+
+      // Clear log
+      log.length = 0;
+
+      // Increase counter
+      root.render(<Test counter={1} />);
+      // Yield before committing
+      expect(Scheduler).toFlushAndYieldThrough(['Test']);
+
+      // Click the button again
+      dispatchClickEvent(ref.current);
+      expect(log).toEqual([{counter: 0}]);
+
+      // Clear log
+      log.length = 0;
+
+      // Commit
+      expect(Scheduler).toFlushAndYield([]);
+      dispatchClickEvent(ref.current);
+      expect(log).toEqual([{counter: 1}]);
     });
-    const ref = React.createRef();
-
-    function Test({counter}) {
-      const listener = React.unstable_useResponder(TestResponder, {counter});
-
-      return (
-        <button listeners={listener} ref={ref}>
-          Press me
-        </button>
-      );
-    }
-
-    let root = ReactDOM.unstable_createRoot(container);
-    let batch = root.createBatch();
-    batch.render(<Test counter={0} />);
-    Scheduler.unstable_flushAll();
-    jest.runAllTimers();
-    batch.commit();
-
-    // Click the button
-    dispatchClickEvent(ref.current);
-    expect(log).toEqual([{counter: 0}]);
-
-    // Clear log
-    log.length = 0;
-
-    // Increase counter
-    batch = root.createBatch();
-    batch.render(<Test counter={1} />);
-    Scheduler.unstable_flushAll();
-    jest.runAllTimers();
-
-    // Click the button again
-    dispatchClickEvent(ref.current);
-    expect(log).toEqual([{counter: 0}]);
-
-    // Clear log
-    log.length = 0;
-
-    // Commit
-    batch.commit();
-    dispatchClickEvent(ref.current);
-    expect(log).toEqual([{counter: 1}]);
-  });
+  }
 
   it('should correctly pass through event properties', () => {
     const timeStamps = [];
@@ -1033,5 +958,52 @@ describe('DOMEventResponderSystem', () => {
         type: 'click-test',
       },
     ]);
+  });
+
+  it('should not propagate target events through portals by default', () => {
+    const buttonRef = React.createRef();
+    const onEvent = jest.fn();
+    const TestResponder = createEventResponder({
+      targetEventTypes: ['click'],
+      onEvent,
+    });
+    const domNode = document.createElement('div');
+    document.body.appendChild(domNode);
+    const Component = () => {
+      const listener = React.unstable_useResponder(TestResponder, {});
+      return (
+        <div listeners={listener}>
+          {ReactDOM.createPortal(<button ref={buttonRef} />, domNode)}
+        </div>
+      );
+    };
+    ReactDOM.render(<Component />, container);
+    dispatchClickEvent(buttonRef.current);
+    document.body.removeChild(domNode);
+    expect(onEvent).not.toBeCalled();
+  });
+
+  it('should propagate target events through portals when enabled', () => {
+    const buttonRef = React.createRef();
+    const onEvent = jest.fn();
+    const TestResponder = createEventResponder({
+      targetPortalPropagation: true,
+      targetEventTypes: ['click'],
+      onEvent,
+    });
+    const domNode = document.createElement('div');
+    document.body.appendChild(domNode);
+    const Component = () => {
+      const listener = React.unstable_useResponder(TestResponder, {});
+      return (
+        <div listeners={listener}>
+          {ReactDOM.createPortal(<button ref={buttonRef} />, domNode)}
+        </div>
+      );
+    };
+    ReactDOM.render(<Component />, container);
+    dispatchClickEvent(buttonRef.current);
+    document.body.removeChild(domNode);
+    expect(onEvent).toBeCalled();
   });
 });

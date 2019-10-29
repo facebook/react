@@ -12,7 +12,7 @@
  * that support it.
  */
 
-import lowPriorityWarning from 'shared/lowPriorityWarning';
+import lowPriorityWarningWithoutStack from 'shared/lowPriorityWarningWithoutStack';
 import isValidElementType from 'shared/isValidElementType';
 import getComponentName from 'shared/getComponentName';
 import {
@@ -477,7 +477,7 @@ export function createFactoryWithValidation(type) {
     Object.defineProperty(validatedFactory, 'type', {
       enumerable: false,
       get: function() {
-        lowPriorityWarning(
+        lowPriorityWarningWithoutStack(
           false,
           'Factory.type is deprecated. Access the class directly ' +
             'before passing it to createFactory.',

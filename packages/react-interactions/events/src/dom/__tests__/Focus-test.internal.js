@@ -166,7 +166,7 @@ describe.each(table)('Focus responder', hasPointerEvents => {
 
     it('is called with the correct pointerType using a keyboard', () => {
       const target = createEventTarget(ref.current);
-      target.keydown({key: 'Tab'});
+      target.keydown({key: 'LeftArrow'});
       target.focus();
       expect(onFocus).toHaveBeenCalledTimes(1);
       expect(onFocus).toHaveBeenCalledWith(
