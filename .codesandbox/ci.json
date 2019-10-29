@@ -1,9 +1,10 @@
 {
   "packages": ["packages/react", "packages/react-dom"],
-  "buildCommand": "build react/index,react-dom/index",
+  "buildCommand": "build --type=NODE react/index,react-dom/index,scheduler/index",
   "publishDirectory": {
     "react": "build/node_modules/react",
-    "react-dom": "build/node_modules/react-dom"
+    "react-dom": "build/node_modules/react-dom",
+    "scheduler": "build/node_modules/scheduler"
   },
   "sandboxes": ["new"]
 }
