@@ -33,6 +33,7 @@ const __EXPERIMENTAL__ =
   typeof RELEASE_CHANNEL === 'string'
     ? RELEASE_CHANNEL === 'experimental'
     : true;
+global.__EXPERIMENTAL__ = __EXPERIMENTAL__;
 
 // Errors in promises should be fatal.
 let loggedErrors = new Set();

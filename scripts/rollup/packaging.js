@@ -1,6 +1,7 @@
 'use strict';
 
-const {existsSync, readdirSync, unlinkSync} = require('fs');
+const path = require('path');
+const {existsSync, readdirSync, writeFileSync, unlinkSync} = require('fs');
 const Bundles = require('./bundles');
 const {
   asyncCopyTo,
@@ -123,12 +124,34 @@ function getTarOptions(tgzName, packageName) {
 }
 
 async function prepareNpmPackage(name) {
-  await Promise.all([
-    asyncCopyTo('LICENSE', `build/node_modules/${name}/LICENSE`),
-    asyncCopyTo(
+  // If package.js exists, use that as the source of truth instead of
+  // package.json. The purpose of this is so we can output different package
+  // configurations depending on the target, e.g. so we can update the `files`
+  // array to only include certain files in the experimental build. These
+  // modules work by importing `package.json` and returning a modified copy.
+  const packageJSONModule = path.join(
+    process.cwd(),
+    'packages',
+    name,
+    'package.js'
+  );
+  if (existsSync(packageJSONModule)) {
+    const packageInfo = require(packageJSONModule);
+    writeFileSync(
+      `build/node_modules/${name}/package.json`,
+      JSON.stringify(packageInfo, null, 2)
+    );
+  } else {
+    // If package.js does not exist, use package.json.
+    await asyncCopyTo(
       `packages/${name}/package.json`,
       `build/node_modules/${name}/package.json`
-    ),
+    );
+  }
+
+  // Now copy the other files.
+  await Promise.all([
+    asyncCopyTo('LICENSE', `build/node_modules/${name}/LICENSE`),
     asyncCopyTo(
       `packages/${name}/README.md`,
       `build/node_modules/${name}/README.md`
