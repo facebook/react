@@ -837,4 +837,15 @@ describe('Store', () => {
     act(() => ReactDOM.unmountComponentAtNode(containerB));
     expect(store.supportsProfiling).toBe(false);
   });
+
+  it('should properly serialize non-string key values', () => {
+    const Child = () => null;
+
+    // Bypass React element's automatic stringifying of keys intentionally.
+    // This is pretty hacky.
+    const fauxElement = Object.assign({}, <Child />, {key: 123});
+
+    act(() => ReactDOM.render([fauxElement], document.createElement('div')));
+    expect(store).toMatchSnapshot('1: mount');
+  });
 });

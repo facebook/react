@@ -1157,7 +1157,12 @@ export function attach(
         : 0;
 
       let displayNameStringID = getStringID(displayName);
-      let keyStringID = getStringID(key);
+
+      // This check is a guard to handle a React element that has been modified
+      // in such a way as to bypass the default stringification of the "key" property.
+      let keyString = key === null ? null : '' + key;
+      let keyStringID = getStringID(keyString);
+
       pushOperation(TREE_OPERATION_ADD);
       pushOperation(id);
       pushOperation(elementType);
