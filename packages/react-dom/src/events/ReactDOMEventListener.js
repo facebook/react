@@ -328,7 +328,10 @@ export function dispatchEvent(
   eventSystemFlags: EventSystemFlags,
   nativeEvent: AnyNativeEvent,
 ): void {
-  if (!_enabled) {
+  // For Flare, need "blur" and "focus" events to fire in React
+  // for mutations to DOM nodes. Without this, it's not possible
+  // to appropiately address a11y related focus management problems.
+  if (!_enabled && eventSystemFlags & PLUGIN_EVENT_SYSTEM) {
     return;
   }
   if (hasQueuedDiscreteEvents() && isReplayableDiscreteEvent(topLevelType)) {
