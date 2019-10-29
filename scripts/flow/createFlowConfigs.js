@@ -18,20 +18,23 @@ const configTemplate = fs
   .readFileSync(__dirname + '/config/flowconfig')
   .toString();
 
-function writeConfig(renderer, isFizzSupported) {
+function writeConfig(renderer, isServerSupported) {
   const folder = __dirname + '/' + renderer;
   mkdirp.sync(folder);
 
-  const fizzRenderer = isFizzSupported ? renderer : 'custom';
+  const serverRenderer = isServerSupported ? renderer : 'custom';
   const config = configTemplate
     .replace(
       '%REACT_RENDERER_FLOW_OPTIONS%',
       `
 module.name_mapper='react-reconciler/inline.${renderer}$$' -> 'react-reconciler/inline-typed'
 module.name_mapper='ReactFiberHostConfig$$' -> 'forks/ReactFiberHostConfig.${renderer}'
-module.name_mapper='react-stream/inline.${renderer}$$' -> 'react-stream/inline-typed'
-module.name_mapper='ReactFizzHostConfig$$' -> 'forks/ReactFizzHostConfig.${fizzRenderer}'
-module.name_mapper='ReactFizzFormatConfig$$' -> 'forks/ReactFizzFormatConfig.${fizzRenderer}'
+module.name_mapper='react-server/inline.${renderer}$$' -> 'react-server/inline-typed'
+module.name_mapper='react-server/flight.inline.${renderer}$$' -> 'react-server/flight.inline-typed'
+module.name_mapper='ReactServerHostConfig$$' -> 'forks/ReactServerHostConfig.${serverRenderer}'
+module.name_mapper='ReactServerFormatConfig$$' -> 'forks/ReactServerFormatConfig.${serverRenderer}'
+module.name_mapper='react-flight/inline.${renderer}$$' -> 'react-flight/inline-typed'
+module.name_mapper='ReactFlightClientHostConfig$$' -> 'forks/ReactFlightClientHostConfig.${serverRenderer}'
     `.trim(),
     )
     .replace(
@@ -78,6 +81,6 @@ ${disclaimer}
 // so that we can run those checks in parallel if we want.
 inlinedHostConfigs.forEach(rendererInfo => {
   if (rendererInfo.isFlowTyped) {
-    writeConfig(rendererInfo.shortName, rendererInfo.isFizzSupported);
+    writeConfig(rendererInfo.shortName, rendererInfo.isServerSupported);
   }
 });

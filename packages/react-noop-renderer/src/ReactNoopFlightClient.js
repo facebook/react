@@ -14,11 +14,13 @@
  * environment.
  */
 
-import ReactFizzStreamer from 'react-server';
+import type {ReactModel} from 'react-flight/inline-typed';
+
+import ReactFlightClient from 'react-flight';
 
 type Destination = Array<string>;
 
-const ReactNoopServer = ReactFizzStreamer({
+const ReactNoopFlightClient = ReactFlightClient({
   scheduleWork(callback: () => void) {
     callback();
   },
@@ -40,10 +42,10 @@ const ReactNoopServer = ReactFizzStreamer({
   },
 });
 
-function render(children: React$Element<any>): Destination {
+function render(model: ReactModel): Destination {
   let destination: Destination = [];
-  let request = ReactNoopServer.createRequest(children, destination);
-  ReactNoopServer.startWork(request);
+  let request = ReactNoopFlightClient.createRequest(model, destination);
+  ReactNoopFlightClient.startWork(request);
   return destination;
 }
 

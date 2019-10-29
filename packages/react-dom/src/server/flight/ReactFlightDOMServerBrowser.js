@@ -7,19 +7,19 @@
  * @flow
  */
 
-import type {ReactNodeList} from 'shared/ReactTypes';
+import type {ReactModel} from 'react-server/flight.inline-typed';
 
 import {
   createRequest,
   startWork,
   startFlowing,
-} from 'react-server/inline.dom-browser';
+} from 'react-server/flight.inline.dom-browser';
 
-function renderToReadableStream(children: ReactNodeList): ReadableStream {
+function renderToReadableStream(model: ReactModel): ReadableStream {
   let request;
   return new ReadableStream({
     start(controller) {
-      request = createRequest(children, controller);
+      request = createRequest(model, controller);
       startWork(request);
     },
     pull(controller) {

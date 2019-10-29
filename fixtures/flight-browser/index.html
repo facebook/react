@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html style="width: 100%; height: 100%; overflow: hidden">
+  <head>
+    <meta charset="utf-8">
+    <title>Flight Example</title>
+  </head>
+  <body>
+    <h1>Flight Example</h1>
+    <div id="container">
+      <p>
+        To install React, follow the instructions on
+        <a href="https://github.com/facebook/react/">GitHub</a>.
+      </p>
+      <p>
+        If you can see this, React is <strong>not</strong> working right.
+        If you checked out the source from GitHub make sure to run <code>npm run build</code>.
+      </p>
+    </div>
+    <script src="../../build/dist/react.development.js"></script>
+    <script src="../../build/dist/react-dom.development.js"></script>
+    <script src="../../build/dist/react-dom-unstable-flight-client.development.js"></script>
+    <script src="https://unpkg.com/babel-standalone@6/babel.js"></script>
+    <script type="text/babel">
+      function Text({children}) {
+        return <span>{children}</span>;
+      }
+      function HTML() {
+        return (
+          <div>
+            <Text>hello</Text>
+            <Text>world</Text>
+          </div>
+        );
+      }
+
+      let model = {
+        title: 'Title',
+        content: {
+          __html: <HTML />,
+        }
+      };
+
+      let stream = ReactFlightDOMClient.renderToReadableStream(model);
+      let response = new Response(stream, {
+        headers: {'Content-Type': 'text/html'},
+      });
+      display(response);
+
+      async function display(responseToDisplay) {
+        let blob = await responseToDisplay.blob();
+        let url = URL.createObjectURL(blob);
+        let response = await fetch(url);
+        let body = await response.body;
+
+        let reader = body.getReader();
+        let charsReceived = 0;
+        let decoder = new TextDecoder();
+
+        let json = '';
+        reader.read().then(function processChunk({ done, value }) {
+          if (done) {
+            renderResult(json);
+            return;
+          }
+          json += decoder.decode(value);
+          return reader.read().then(processChunk);
+        });
+      }
+
+      function Shell({ model }) {
+        return <div>
+          <h1>{model.title}</h1>
+          <div dangerouslySetInnerHTML={model.content} />
+        </div>;
+      }
+
+      function renderResult(json) {
+        let model = JSON.parse(json);
+        let container = document.getElementById('container');
+        ReactDOM.render(<Shell model={model} />, container);
+      }
+    </script>
+  </body>
+</html>
