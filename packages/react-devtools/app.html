@@ -74,9 +74,10 @@
         border: 1px solid #eee;
         color: #777d88;
         padding: 1rem;
+        margin-top: 1rem;
       }
       .box:first-of-type {
-        margin-bottom: 1rem;
+        margin-top: 0;
       }
 
       .box-header {
@@ -92,14 +93,6 @@
       #loading-status {
         text-align: center;
         margin-top: 1rem;
-      }
-
-      .error {
-        border-radius: 0.5rem;
-        background-color: #f7f7f7;
-        border: 1px solid #eee;
-        color: #777d88;
-        padding: 1rem;
       }
     </style>
   </head>
@@ -177,7 +170,10 @@
       window.server = devtools
         .setContentDOMNode(document.getElementById("container"))
         .setStatusListener(function(status) {
-          document.getElementById("loading-status").innerText = status;
+          const element = document.getElementById("loading-status");
+          if (element) {
+            element.innerText = status;
+          }
         })
         .startServer(port);
     </script>
