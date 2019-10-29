@@ -1098,10 +1098,11 @@ function completeWork(
             // This might have been modified.
             if (
               renderState.tail === null &&
-              renderState.tailMode === 'hidden'
+              renderState.tailMode === 'hidden' &&
+              !renderedTail.alternate
             ) {
               // We need to delete the row we just rendered.
-              // Reset the effect list to what it w as before we rendered this
+              // Reset the effect list to what it was before we rendered this
               // child. The nested children have already appended themselves.
               let lastEffect = (workInProgress.lastEffect =
                 renderState.lastEffect);
