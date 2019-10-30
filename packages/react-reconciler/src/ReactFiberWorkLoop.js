@@ -1858,13 +1858,14 @@ function commitRootImpl(root, renderPriorityLevel) {
       }
     } while (nextEffect !== null);
     stopCommitHostEffectsTimer();
-    resetAfterCommit(root.containerInfo);
 
     // The work-in-progress tree is now the current tree. This must come after
     // the mutation phase, so that the previous tree is still current during
     // componentWillUnmount, but before the layout phase, so that the finished
     // work is current during componentDidMount/Update.
     root.current = finishedWork;
+
+    resetAfterCommit(root.containerInfo);
 
     // The next phase is the layout phase, where we call effects that read
     // the host tree after it's been mutated. The idiomatic use case for this is
