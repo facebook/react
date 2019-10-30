@@ -1,5 +1,5 @@
 {
-  "packages": ["packages/react", "packages/react-dom"],
+  "packages": ["packages/react", "packages/react-dom", "packages/scheduler"],
   "buildCommand": "build --type=NODE react/index,react-dom/index,scheduler/index",
   "publishDirectory": {
     "react": "build/node_modules/react",
