@@ -7,7 +7,7 @@
  * @flow
  */
 
-import type {ReactNativeType} from './ReactNativeTypes';
+import type {ReactNativeType, HostComponent} from './ReactNativeTypes';
 import type {ReactNodeList} from 'shared/ReactTypes';
 
 import './ReactNativeInjection';
@@ -46,6 +46,54 @@ import getComponentName from 'shared/getComponentName';
 import warningWithoutStack from 'shared/warningWithoutStack';
 
 const ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
+
+function findHostInstance_deprecated(
+  componentOrHandle: any,
+): ?HostComponent<mixed> {
+  if (__DEV__) {
+    const owner = ReactCurrentOwner.current;
+    if (owner !== null && owner.stateNode !== null) {
+      warningWithoutStack(
+        owner.stateNode._warnedAboutRefsInRender,
+        '%s is accessing findNodeHandle inside its render(). ' +
+          'render() should be a pure function of props and state. It should ' +
+          'never access something that requires stale data from the previous ' +
+          'render, such as refs. Move this logic to componentDidMount and ' +
+          'componentDidUpdate instead.',
+        getComponentName(owner.type) || 'A component',
+      );
+
+      owner.stateNode._warnedAboutRefsInRender = true;
+    }
+  }
+  if (componentOrHandle == null) {
+    return null;
+  }
+  if (componentOrHandle._nativeTag) {
+    return componentOrHandle;
+  }
+  if (componentOrHandle.canonical && componentOrHandle.canonical._nativeTag) {
+    return componentOrHandle.canonical;
+  }
+  let hostInstance;
+  if (__DEV__) {
+    hostInstance = findHostInstanceWithWarning(
+      componentOrHandle,
+      'findHostInstance_deprecated',
+    );
+  } else {
+    hostInstance = findHostInstance(componentOrHandle);
+  }
+
+  if (hostInstance == null) {
+    return hostInstance;
+  }
+  if ((hostInstance: any).canonical) {
+    // Fabric
+    return (hostInstance: any).canonical;
+  }
+  return hostInstance;
+}
 
 function findNodeHandle(componentOrHandle: any): ?number {
   if (__DEV__) {
@@ -117,6 +165,9 @@ const roots = new Map();
 const ReactNativeRenderer: ReactNativeType = {
   NativeComponent: ReactNativeComponent(findNodeHandle, findHostInstance),
 
+  // This is needed for implementation details of TouchableNativeFeedback
+  // Remove this once TouchableNativeFeedback doesn't use cloneElement
+  findHostInstance_deprecated,
   findNodeHandle,
 
   dispatchCommand(handle: any, command: string, args: Array<any>) {

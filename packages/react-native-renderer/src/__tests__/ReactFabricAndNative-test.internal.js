@@ -34,6 +34,26 @@ describe('created with ReactFabric called with ReactNative', () => {
       .ReactNativeViewConfigRegistry.register;
   });
 
+  it('find Fabric instances with the RN renderer', () => {
+    const View = createReactNativeComponentClass('RCTView', () => ({
+      validAttributes: {title: true},
+      uiViewClassName: 'RCTView',
+    }));
+
+    let ref = React.createRef();
+
+    class Component extends React.Component {
+      render() {
+        return <View title="foo" />;
+      }
+    }
+
+    ReactFabric.render(<Component ref={ref} />, 11);
+
+    let instance = ReactNative.findHostInstance_deprecated(ref.current);
+    expect(instance._nativeTag).toBe(2);
+  });
+
   it('find Fabric nodes with the RN renderer', () => {
     const View = createReactNativeComponentClass('RCTView', () => ({
       validAttributes: {title: true},
@@ -92,6 +112,26 @@ describe('created with ReactNative called with ReactFabric', () => {
     React = require('react');
     createReactNativeComponentClass = require('react-native/Libraries/ReactPrivate/ReactNativePrivateInterface')
       .ReactNativeViewConfigRegistry.register;
+  });
+
+  it('find Paper instances with the Fabric renderer', () => {
+    const View = createReactNativeComponentClass('RCTView', () => ({
+      validAttributes: {title: true},
+      uiViewClassName: 'RCTView',
+    }));
+
+    let ref = React.createRef();
+
+    class Component extends React.Component {
+      render() {
+        return <View title="foo" />;
+      }
+    }
+
+    ReactNative.render(<Component ref={ref} />, 11);
+
+    let instance = ReactFabric.findHostInstance_deprecated(ref.current);
+    expect(instance._nativeTag).toBe(3);
   });
 
   it('find Paper nodes with the Fabric renderer', () => {
