@@ -779,7 +779,7 @@ describe('ReactFabric', () => {
     expect(touchStart2).toBeCalled();
   });
 
-  it('findHostInstance_deprecated should warn if used to find a host component inside StrictMode', () => {
+  it('findHostInstance_DEPRECATED should warn if used to find a host component inside StrictMode', () => {
     const View = createReactNativeComponentClass('RCTView', () => ({
       validAttributes: {foo: true},
       uiViewClassName: 'RCTView',
@@ -802,10 +802,10 @@ describe('ReactFabric', () => {
 
     let match;
     expect(
-      () => (match = ReactFabric.findHostInstance_deprecated(parent)),
+      () => (match = ReactFabric.findHostInstance_DEPRECATED(parent)),
     ).toWarnDev([
-      'Warning: findHostInstance_deprecated is deprecated in StrictMode. ' +
-        'findHostInstance_deprecated was passed an instance of ContainsStrictModeChild which renders StrictMode children. ' +
+      'Warning: findHostInstance_DEPRECATED is deprecated in StrictMode. ' +
+        'findHostInstance_DEPRECATED was passed an instance of ContainsStrictModeChild which renders StrictMode children. ' +
         'Instead, add a ref directly to the element you want to reference. ' +
         'Learn more about using refs safely here: ' +
         'https://fb.me/react-strict-mode-find-node' +
@@ -816,7 +816,7 @@ describe('ReactFabric', () => {
     expect(match).toBe(child);
   });
 
-  it('findHostInstance_deprecated should warn if passed a component that is inside StrictMode', () => {
+  it('findHostInstance_DEPRECATED should warn if passed a component that is inside StrictMode', () => {
     const View = createReactNativeComponentClass('RCTView', () => ({
       validAttributes: {foo: true},
       uiViewClassName: 'RCTView',
@@ -840,10 +840,10 @@ describe('ReactFabric', () => {
 
     let match;
     expect(
-      () => (match = ReactFabric.findHostInstance_deprecated(parent)),
+      () => (match = ReactFabric.findHostInstance_DEPRECATED(parent)),
     ).toWarnDev([
-      'Warning: findHostInstance_deprecated is deprecated in StrictMode. ' +
-        'findHostInstance_deprecated was passed an instance of IsInStrictMode which is inside StrictMode. ' +
+      'Warning: findHostInstance_DEPRECATED is deprecated in StrictMode. ' +
+        'findHostInstance_DEPRECATED was passed an instance of IsInStrictMode which is inside StrictMode. ' +
         'Instead, add a ref directly to the element you want to reference. ' +
         'Learn more about using refs safely here: ' +
         'https://fb.me/react-strict-mode-find-node' +

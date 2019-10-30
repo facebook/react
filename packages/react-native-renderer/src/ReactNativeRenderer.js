@@ -47,7 +47,7 @@ import warningWithoutStack from 'shared/warningWithoutStack';
 
 const ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
 
-function findHostInstance_deprecated(
+function findHostInstance_DEPRECATED(
   componentOrHandle: any,
 ): ?HostComponent<mixed> {
   if (__DEV__) {
@@ -79,7 +79,7 @@ function findHostInstance_deprecated(
   if (__DEV__) {
     hostInstance = findHostInstanceWithWarning(
       componentOrHandle,
-      'findHostInstance_deprecated',
+      'findHostInstance_DEPRECATED',
     );
   } else {
     hostInstance = findHostInstance(componentOrHandle);
@@ -167,7 +167,7 @@ const ReactNativeRenderer: ReactNativeType = {
 
   // This is needed for implementation details of TouchableNativeFeedback
   // Remove this once TouchableNativeFeedback doesn't use cloneElement
-  findHostInstance_deprecated,
+  findHostInstance_DEPRECATED,
   findNodeHandle,
 
   dispatchCommand(handle: any, command: string, args: Array<any>) {
