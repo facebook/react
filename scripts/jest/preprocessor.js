@@ -1,3 +1,5 @@
+/* eslint-disable no-for-of-loops/no-for-of-loops */
+
 'use strict';
 
 const path = require('path');
@@ -7,6 +9,7 @@ const coffee = require('coffee-script');
 
 const tsPreprocessor = require('./typescript/preprocessor');
 const createCacheKeyFunction = require('fbjs-scripts/jest/createCacheKeyFunction');
+const getIgnoredNpmFiles = require('./getIgnoredNpmFiles');
 
 const pathToBabel = path.join(
   require.resolve('@babel/core'),
@@ -54,8 +57,26 @@ const babelOptions = {
   retainLines: true,
 };
 
+const ignoredNpmFiles = new Set();
+for (const file of getIgnoredNpmFiles()) {
+  ignoredNpmFiles.add(path.resolve('packages', file));
+}
+
 module.exports = {
   process: function(src, filePath) {
+    if (ignoredNpmFiles.has(filePath)) {
+      // If this file is not part of the `files` array, throw an error when
+      // attempting to import it, since it will not exist in the final npm
+      // package artifact.
+      return `
+throw Error(
+  'Cannot import an npm module path if it is not included in the \`files\` ' +
+  'array in \`package.json\`. If this is an experimental module, be sure to ' +
+  'mark the test as experimental: ${filePath}'
+);
+`;
+    }
+
     if (filePath.match(/\.coffee$/)) {
       return coffee.compile(src, {bare: true});
     }
@@ -87,13 +108,16 @@ module.exports = {
     return src;
   },
 
-  getCacheKey: createCacheKeyFunction([
-    __filename,
-    pathToBabel,
-    pathToBabelrc,
-    pathToBabelPluginDevWithCode,
-    pathToBabelPluginWrapWarning,
-    pathToTransformInfiniteLoops,
-    pathToErrorCodes,
-  ]),
+  getCacheKey: createCacheKeyFunction(
+    [
+      __filename,
+      pathToBabel,
+      pathToBabelrc,
+      pathToBabelPluginDevWithCode,
+      pathToBabelPluginWrapWarning,
+      pathToTransformInfiniteLoops,
+      pathToErrorCodes,
+    ],
+    [__EXPERIMENTAL__]
+  ),
 };

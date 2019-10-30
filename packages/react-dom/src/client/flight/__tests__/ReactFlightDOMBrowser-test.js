@@ -14,13 +14,11 @@ global.ReadableStream = require('@mattiasbuelens/web-streams-polyfill/ponyfill/e
 global.TextEncoder = require('util').TextEncoder;
 
 let React;
-let ReactFlightDOMServer;
 
 describe('ReactFlightDOM', () => {
   beforeEach(() => {
     jest.resetModules();
     React = require('react');
-    ReactFlightDOMServer = require('react-dom/unstable-flight-server.browser');
   });
 
   async function readResult(stream) {
@@ -35,7 +33,9 @@ describe('ReactFlightDOM', () => {
     }
   }
 
-  it('should resolve HTML', async () => {
+  it.experimental('should resolve HTML', async () => {
+    const ReactFlightDOMServer = require('react-dom/unstable-flight-server.browser');
+
     function Text({children}) {
       return <span>{children}</span>;
     }

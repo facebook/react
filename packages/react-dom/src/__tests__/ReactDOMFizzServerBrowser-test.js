@@ -14,13 +14,11 @@ global.ReadableStream = require('@mattiasbuelens/web-streams-polyfill/ponyfill/e
 global.TextEncoder = require('util').TextEncoder;
 
 let React;
-let ReactDOMFizzServer;
 
 describe('ReactDOMFizzServer', () => {
   beforeEach(() => {
     jest.resetModules();
     React = require('react');
-    ReactDOMFizzServer = require('react-dom/unstable-fizz.browser');
   });
 
   async function readResult(stream) {
@@ -35,7 +33,8 @@ describe('ReactDOMFizzServer', () => {
     }
   }
 
-  it('should call renderToReadableStream', async () => {
+  it.experimental('should call renderToReadableStream', async () => {
+    const ReactDOMFizzServer = require('react-dom/unstable-fizz.browser');
     let stream = ReactDOMFizzServer.renderToReadableStream(
       <div>hello world</div>,
     );

@@ -12,13 +12,11 @@
 
 let Stream;
 let React;
-let ReactFlightDOMServer;
 
 describe('ReactFlightDOM', () => {
   beforeEach(() => {
     jest.resetModules();
     React = require('react');
-    ReactFlightDOMServer = require('react-dom/unstable-flight-server');
     Stream = require('stream');
   });
 
@@ -30,7 +28,9 @@ describe('ReactFlightDOM', () => {
     return writable;
   }
 
-  it('should resolve HTML', () => {
+  it.experimental('should resolve HTML', () => {
+    const ReactFlightDOMServer = require('react-dom/unstable-flight-server');
+
     function Text({children}) {
       return <span>{children}</span>;
     }
