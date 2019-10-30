@@ -141,6 +141,7 @@ type SecretInternalsFabricType = {
  */
 export type ReactNativeType = {
   NativeComponent: typeof ReactNativeComponent,
+  findHostInstance_DEPRECATED(componentOrHandle: any): ?HostComponent<mixed>,
   findNodeHandle(componentOrHandle: any): ?number,
   dispatchCommand(handle: any, command: string, args: Array<any>): void,
   render(
@@ -157,6 +158,7 @@ export type ReactNativeType = {
 
 export type ReactFabricType = {
   NativeComponent: typeof ReactNativeComponent,
+  findHostInstance_DEPRECATED(componentOrHandle: any): ?HostComponent<mixed>,
   findNodeHandle(componentOrHandle: any): ?number,
   dispatchCommand(handle: any, command: string, args: Array<any>): void,
   render(
