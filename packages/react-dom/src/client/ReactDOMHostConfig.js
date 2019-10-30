@@ -447,10 +447,28 @@ export function insertInContainerBefore(
   }
 }
 
+function handleSimulateChildBlur(
+  child: Instance | TextInstance | SuspenseInstance,
+): void {
+  if (
+    enableFlareAPI &&
+    selectionInformation &&
+    child === selectionInformation.focusedElem
+  ) {
+    const simulatedEvent: any = document.createEvent('CustomEvent');
+    simulatedEvent.initCustomEvent('blur', false, true);
+    simulatedEvent.relatedTarget = null;
+    ReactBrowserEventEmitterSetEnabled(true);
+    child.dispatchEvent(simulatedEvent);
+    ReactBrowserEventEmitterSetEnabled(false);
+  }
+}
+
 export function removeChild(
   parentInstance: Instance,
   child: Instance | TextInstance | SuspenseInstance,
 ): void {
+  handleSimulateChildBlur(child);
   parentInstance.removeChild(child);
 }
 
@@ -461,6 +479,7 @@ export function removeChildFromContainer(
   if (container.nodeType === COMMENT_NODE) {
     (container.parentNode: any).removeChild(child);
   } else {
+    handleSimulateChildBlur(child);
     container.removeChild(child);
   }
 }
