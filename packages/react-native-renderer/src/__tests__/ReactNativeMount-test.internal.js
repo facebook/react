@@ -541,6 +541,81 @@ describe('ReactNative', () => {
     );
   });
 
+  it('findHostInstance_deprecated should warn if used to find a host component inside StrictMode', () => {
+    const View = createReactNativeComponentClass('RCTView', () => ({
+      validAttributes: {foo: true},
+      uiViewClassName: 'RCTView',
+    }));
+
+    let parent = undefined;
+    let child = undefined;
+
+    class ContainsStrictModeChild extends React.Component {
+      render() {
+        return (
+          <StrictMode>
+            <View ref={n => (child = n)} />
+          </StrictMode>
+        );
+      }
+    }
+
+    ReactNative.render(<ContainsStrictModeChild ref={n => (parent = n)} />, 11);
+
+    let match;
+    expect(
+      () => (match = ReactNative.findHostInstance_deprecated(parent)),
+    ).toWarnDev([
+      'Warning: findHostInstance_deprecated is deprecated in StrictMode. ' +
+        'findHostInstance_deprecated was passed an instance of ContainsStrictModeChild which renders StrictMode children. ' +
+        'Instead, add a ref directly to the element you want to reference. ' +
+        'Learn more about using refs safely here: ' +
+        'https://fb.me/react-strict-mode-find-node' +
+        '\n    in RCTView (at **)' +
+        '\n    in StrictMode (at **)' +
+        '\n    in ContainsStrictModeChild (at **)',
+    ]);
+    expect(match).toBe(child);
+  });
+
+  it('findHostInstance_deprecated should warn if passed a component that is inside StrictMode', () => {
+    const View = createReactNativeComponentClass('RCTView', () => ({
+      validAttributes: {foo: true},
+      uiViewClassName: 'RCTView',
+    }));
+
+    let parent = undefined;
+    let child = undefined;
+
+    class IsInStrictMode extends React.Component {
+      render() {
+        return <View ref={n => (child = n)} />;
+      }
+    }
+
+    ReactNative.render(
+      <StrictMode>
+        <IsInStrictMode ref={n => (parent = n)} />
+      </StrictMode>,
+      11,
+    );
+
+    let match;
+    expect(
+      () => (match = ReactNative.findHostInstance_deprecated(parent)),
+    ).toWarnDev([
+      'Warning: findHostInstance_deprecated is deprecated in StrictMode. ' +
+        'findHostInstance_deprecated was passed an instance of IsInStrictMode which is inside StrictMode. ' +
+        'Instead, add a ref directly to the element you want to reference. ' +
+        'Learn more about using refs safely here: ' +
+        'https://fb.me/react-strict-mode-find-node' +
+        '\n    in RCTView (at **)' +
+        '\n    in IsInStrictMode (at **)' +
+        '\n    in StrictMode (at **)',
+    ]);
+    expect(match).toBe(child);
+  });
+
   it('findNodeHandle should warn if used to find a host component inside StrictMode', () => {
     const View = createReactNativeComponentClass('RCTView', () => ({
       validAttributes: {foo: true},
