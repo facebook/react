@@ -7,6 +7,7 @@
 
 import type {LazyComponent, Thenable} from 'shared/ReactLazyComponent';
 
+import {initializeLazyComponentType} from 'shared/ReactLazyComponent';
 import {REACT_LAZY_TYPE} from 'shared/ReactSymbols';
 import warning from 'shared/warning';
 
@@ -17,6 +18,10 @@ export function lazy<T, R>(ctor: () => Thenable<T, R>): LazyComponent<T> {
     // React uses these fields to store the result.
     _status: -1,
     _result: null,
+    // Public API for initializing a lazy component ahead of render time.
+    preload() {
+      initializeLazyComponentType(lazyType);
+    },
   };
 
   if (__DEV__) {
