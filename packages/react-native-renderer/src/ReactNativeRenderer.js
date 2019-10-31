@@ -180,15 +180,7 @@ const ReactNativeRenderer: ReactNativeType = {
       return;
     }
 
-    if (handle._internalInstanceHandle) {
-      nativeFabricUIManager.dispatchCommand(
-        handle._internalInstanceHandle.stateNode.node,
-        command,
-        args,
-      );
-    } else {
-      UIManager.dispatchViewManagerCommand(handle._nativeTag, command, args);
-    }
+    UIManager.dispatchViewManagerCommand(handle._nativeTag, command, args);
   },
 
   render(element: React$Element<any>, containerTag: any, callback: ?Function) {
