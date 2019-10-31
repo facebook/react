@@ -180,7 +180,7 @@ describe('React hooks DevTools integration', () => {
     }
   });
 
-  it('should support overriding suspense in sync mode', () => {
+  it('should support overriding suspense in legacy mode', () => {
     if (__DEV__) {
       // Lock the first render
       setSuspenseHandler(() => true);

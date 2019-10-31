@@ -50,7 +50,7 @@ import {
 import {createFiberRoot} from './ReactFiberRoot';
 import {injectInternals} from './ReactFiberDevToolsHook';
 import {
-  requestCurrentTime,
+  requestCurrentTimeForUpdate,
   computeExpirationForFiber,
   scheduleWork,
   flushRoot,
@@ -231,7 +231,7 @@ export function updateContainer(
   callback: ?Function,
 ): ExpirationTime {
   const current = container.current;
-  const currentTime = requestCurrentTime();
+  const currentTime = requestCurrentTimeForUpdate();
   if (__DEV__) {
     // $FlowExpectedError - jest isn't a global, and isn't recognized outside of tests
     if ('undefined' !== typeof jest) {
@@ -348,7 +348,9 @@ export function attemptSynchronousHydration(fiber: Fiber): void {
       // If we're still blocked after this, we need to increase
       // the priority of any promises resolving within this
       // boundary so that they next attempt also has higher pri.
-      let retryExpTime = computeInteractiveExpiration(requestCurrentTime());
+      let retryExpTime = computeInteractiveExpiration(
+        requestCurrentTimeForUpdate(),
+      );
       markRetryTimeIfNotHydrated(fiber, retryExpTime);
       break;
   }
@@ -380,7 +382,7 @@ export function attemptUserBlockingHydration(fiber: Fiber): void {
     // Suspense.
     return;
   }
-  let expTime = computeInteractiveExpiration(requestCurrentTime());
+  let expTime = computeInteractiveExpiration(requestCurrentTimeForUpdate());
   scheduleWork(fiber, expTime);
   markRetryTimeIfNotHydrated(fiber, expTime);
 }
@@ -393,7 +395,9 @@ export function attemptContinuousHydration(fiber: Fiber): void {
     // Suspense.
     return;
   }
-  let expTime = computeContinuousHydrationExpiration(requestCurrentTime());
+  let expTime = computeContinuousHydrationExpiration(
+    requestCurrentTimeForUpdate(),
+  );
   scheduleWork(fiber, expTime);
   markRetryTimeIfNotHydrated(fiber, expTime);
 }
@@ -404,7 +408,7 @@ export function attemptHydrationAtCurrentPriority(fiber: Fiber): void {
     // their priority other than synchronously flush it.
     return;
   }
-  const currentTime = requestCurrentTime();
+  const currentTime = requestCurrentTimeForUpdate();
   const expTime = computeExpirationForFiber(currentTime, fiber, null);
   scheduleWork(fiber, expTime);
   markRetryTimeIfNotHydrated(fiber, expTime);

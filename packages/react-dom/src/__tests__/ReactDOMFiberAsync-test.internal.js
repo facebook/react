@@ -575,9 +575,9 @@ describe('ReactDOMFiberAsync', () => {
       });
     });
 
-    describe('createSyncRoot', () => {
+    describe('createBlockingRoot', () => {
       it('updates flush without yielding in the next event', () => {
-        const root = ReactDOM.createSyncRoot(container);
+        const root = ReactDOM.createBlockingRoot(container);
 
         function Text(props) {
           Scheduler.unstable_yieldValue(props.text);

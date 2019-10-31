@@ -31,6 +31,8 @@ function getSuspenseFallbackChild(fiber: Fiber): Fiber | null {
   return ((((fiber.child: any): Fiber).sibling: any): Fiber).child;
 }
 
+const emptyObject = {};
+
 function collectScopedNodes(
   node: Fiber,
   fn: (type: string | Object, props: Object) => boolean,
@@ -39,7 +41,7 @@ function collectScopedNodes(
   if (enableScopeAPI) {
     if (node.tag === HostComponent) {
       const {type, memoizedProps} = node;
-      if (fn(type, memoizedProps) === true) {
+      if (fn(type, memoizedProps || emptyObject) === true) {
         scopedNodes.push(getPublicInstance(node.stateNode));
       }
     }

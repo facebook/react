@@ -74,7 +74,7 @@ import {
   NoMode,
   StrictMode,
   ProfileMode,
-  BatchedMode,
+  BlockingMode,
   ConcurrentMode,
 } from './ReactTypeOfMode';
 import {
@@ -288,7 +288,7 @@ let spawnedWorkDuringRender: null | Array<ExpirationTime> = null;
 // receive the same expiration time. Otherwise we get tearing.
 let currentEventTime: ExpirationTime = NoWork;
 
-export function requestCurrentTime() {
+export function requestCurrentTimeForUpdate() {
   if ((executionContext & (RenderContext | CommitContext)) !== NoContext) {
     // We're inside React, so it's fine to read the actual time.
     return msToExpirationTime(now());
@@ -303,13 +303,17 @@ export function requestCurrentTime() {
   return currentEventTime;
 }
 
+export function getCurrentTime() {
+  return msToExpirationTime(now());
+}
+
 export function computeExpirationForFiber(
   currentTime: ExpirationTime,
   fiber: Fiber,
   suspenseConfig: null | SuspenseConfig,
 ): ExpirationTime {
   const mode = fiber.mode;
-  if ((mode & BatchedMode) === NoMode) {
+  if ((mode & BlockingMode) === NoMode) {
     return Sync;
   }
 
@@ -409,7 +413,7 @@ export function scheduleUpdateOnFiber(
         // a batch. This is intentionally inside scheduleUpdateOnFiber instead of
         // scheduleCallbackForFiber to preserve the ability to schedule a callback
         // without immediately flushing it. We only do this for user-initiated
-        // updates, to preserve historical behavior of sync mode.
+        // updates, to preserve historical behavior of legacy mode.
         flushSyncCallbackQueue();
       }
     }
@@ -571,7 +575,7 @@ function ensureRootIsScheduled(root: FiberRoot) {
 
   // TODO: If this is an update, we already read the current time. Pass the
   // time as an argument.
-  const currentTime = requestCurrentTime();
+  const currentTime = requestCurrentTimeForUpdate();
   const priorityLevel = inferPriorityFromExpirationTime(
     currentTime,
     expirationTime,
@@ -632,7 +636,7 @@ function performConcurrentWorkOnRoot(root, didTimeout) {
   if (didTimeout) {
     // The render task took too long to complete. Mark the current time as
     // expired to synchronously render all expired work in a single batch.
-    const currentTime = requestCurrentTime();
+    const currentTime = requestCurrentTimeForUpdate();
     markRootExpiredAtTime(root, currentTime);
     // This will schedule a synchronous callback.
     ensureRootIsScheduled(root);
@@ -2380,7 +2384,7 @@ function retryTimedOutBoundary(
   // likely unblocked. Try rendering again, at a new expiration time.
   if (retryTime === NoWork) {
     const suspenseConfig = null; // Retries don't carry over the already committed update.
-    const currentTime = requestCurrentTime();
+    const currentTime = requestCurrentTimeForUpdate();
     retryTime = computeExpirationForFiber(
       currentTime,
       boundaryFiber,
@@ -2797,7 +2801,7 @@ export function warnIfUnmockedScheduler(fiber: Fiber) {
       didWarnAboutUnmockedScheduler === false &&
       Scheduler.unstable_flushAllWithoutAsserting === undefined
     ) {
-      if (fiber.mode & BatchedMode || fiber.mode & ConcurrentMode) {
+      if (fiber.mode & BlockingMode || fiber.mode & ConcurrentMode) {
         didWarnAboutUnmockedScheduler = true;
         warningWithoutStack(
           false,
@@ -2930,7 +2934,7 @@ function flushSuspensePriorityWarningInDEV() {
             'update to provide immediate feedback, and another update that ' +
             'triggers the bulk of the changes.' +
             '\n\n' +
-            'Refer to the documentation for useSuspenseTransition to learn how ' +
+            'Refer to the documentation for useTransition to learn how ' +
             'to implement this pattern.',
           // TODO: Add link to React docs with more information, once it exists
           componentNames.sort().join(', '),

@@ -944,7 +944,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       };
     },
 
-    createSyncRoot() {
+    createBlockingRoot() {
       const container = {
         rootID: '' + idCounter++,
         pendingChildren: [],

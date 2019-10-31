@@ -25,6 +25,15 @@ const {asyncCopyTo, asyncRimRaf} = require('./utils');
 const codeFrame = require('babel-code-frame');
 const Wrappers = require('./wrappers');
 
+const RELEASE_CHANNEL = process.env.RELEASE_CHANNEL;
+
+// Default to building in experimental mode. If the release channel is set via
+// an environment variable, then check if it's "experimental".
+const __EXPERIMENTAL__ =
+  typeof RELEASE_CHANNEL === 'string'
+    ? RELEASE_CHANNEL === 'experimental'
+    : true;
+
 // Errors in promises should be fatal.
 let loggedErrors = new Set();
 process.on('unhandledRejection', err => {
@@ -304,8 +313,7 @@ function getPlugins(
   bundleType,
   globalName,
   moduleType,
-  pureExternalModules,
-  isExperimentalBuild
+  pureExternalModules
 ) {
   const findAndRecordErrorCodes = extractErrorCodes(errorCodeOpts);
   const forks = Modules.getForks(bundleType, entry, moduleType);
@@ -363,7 +371,7 @@ function getPlugins(
       __PROFILE__: isProfiling || !isProduction ? 'true' : 'false',
       __UMD__: isUMDBundle ? 'true' : 'false',
       'process.env.NODE_ENV': isProduction ? "'production'" : "'development'",
-      __EXPERIMENTAL__: isExperimentalBuild,
+      __EXPERIMENTAL__,
     }),
     // We still need CommonJS for external deps like object-assign.
     commonjs(),
@@ -493,8 +501,6 @@ async function createBundle(bundle, bundleType) {
     module => !importSideEffects[module]
   );
 
-  const isExperimentalBuild = process.env.RELEASE_CHANNEL === 'experimental';
-
   const rollupConfig = {
     input: resolvedEntry,
     treeshake: {
@@ -518,8 +524,7 @@ async function createBundle(bundle, bundleType) {
       bundleType,
       bundle.global,
       bundle.moduleType,
-      pureExternalModules,
-      isExperimentalBuild
+      pureExternalModules
     ),
     output: {
       externalLiveBindings: false,
@@ -665,9 +670,6 @@ async function buildEverything() {
       [bundle, NODE_DEV],
       [bundle, NODE_PROD],
       [bundle, NODE_PROFILING],
-      [bundle, FB_WWW_DEV],
-      [bundle, FB_WWW_PROD],
-      [bundle, FB_WWW_PROFILING],
       [bundle, RN_OSS_DEV],
       [bundle, RN_OSS_PROD],
       [bundle, RN_OSS_PROFILING],
@@ -675,6 +677,15 @@ async function buildEverything() {
       [bundle, RN_FB_PROD],
       [bundle, RN_FB_PROFILING]
     );
+
+    if (__EXPERIMENTAL__) {
+      // www uses experimental builds only.
+      bundles.push(
+        [bundle, FB_WWW_DEV],
+        [bundle, FB_WWW_PROD],
+        [bundle, FB_WWW_PROFILING]
+      );
+    }
   }
 
   if (!shouldExtractErrors && process.env.CIRCLE_NODE_TOTAL) {

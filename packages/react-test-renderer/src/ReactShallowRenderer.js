@@ -377,6 +377,23 @@ class ReactShallowRenderer {
       responder,
     });
 
+    // TODO: implement if we decide to keep the shallow renderer
+    const useTransition = (
+      config,
+    ): [(callback: () => void) => void, boolean] => {
+      this._validateCurrentlyRenderingComponent();
+      const startTransition = callback => {
+        callback();
+      };
+      return [startTransition, false];
+    };
+
+    // TODO: implement if we decide to keep the shallow renderer
+    const useDeferredValue = <T>(value: T, config): T => {
+      this._validateCurrentlyRenderingComponent();
+      return value;
+    };
+
     return {
       readContext,
       useCallback: (identity: any),
@@ -393,6 +410,8 @@ class ReactShallowRenderer {
       useRef,
       useState,
       useResponder,
+      useTransition,
+      useDeferredValue,
     };
   }
 

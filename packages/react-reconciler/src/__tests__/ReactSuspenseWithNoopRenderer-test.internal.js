@@ -10,6 +10,11 @@ let TextResource;
 let textResourceShouldFail;
 
 describe('ReactSuspenseWithNoopRenderer', () => {
+  if (!__EXPERIMENTAL__) {
+    it("empty test so Jest doesn't complain", () => {});
+    return;
+  }
+
   beforeEach(() => {
     jest.resetModules();
     ReactFeatureFlags = require('shared/ReactFeatureFlags');
