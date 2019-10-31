@@ -16,11 +16,11 @@
 
 import type {ReactModel} from 'react-server/flight.inline-typed';
 
-import ReactFlightStreamer from 'react-server/flight';
+import ReactFlightServer from 'react-server/flight';
 
 type Destination = Array<string>;
 
-const ReactNoopFlightServer = ReactFlightStreamer({
+const ReactNoopFlightServer = ReactFlightServer({
   scheduleWork(callback: () => void) {
     callback();
   },

@@ -7,7 +7,7 @@
  * @flow
  */
 
-import type {ReactModel} from 'react-server/src/ReactFlightStreamer';
+import type {ReactModel} from 'react-server/flight.inline-typed';
 import type {Writable} from 'stream';
 
 import {

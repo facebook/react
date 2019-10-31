@@ -21,4 +21,4 @@
 // renderers have different host config types. So we check them one by one.
 // We run Flow on all renderers on CI.
 
-export * from './src/ReactFlightStreamer';
+export * from './src/ReactFlightServer';
