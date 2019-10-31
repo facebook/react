@@ -500,8 +500,9 @@ describe('ReactDOMServerHydration', () => {
     expect(element.textContent).toBe('Hello world');
   });
 
-  if (__EXPERIMENTAL__) {
-    it('does not re-enter hydration after committing the first one', () => {
+  it.experimental(
+    'does not re-enter hydration after committing the first one',
+    () => {
       let finalHTML = ReactDOMServer.renderToString(<div />);
       let container = document.createElement('div');
       container.innerHTML = finalHTML;
@@ -514,8 +515,8 @@ describe('ReactDOMServerHydration', () => {
       // warnings.
       root.render(<div />);
       Scheduler.unstable_flushAll();
-    });
-  }
+    },
+  );
 
   it('Suspense + hydration in legacy mode', () => {
     const element = document.createElement('div');

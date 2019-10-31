@@ -125,31 +125,27 @@ describe('ReactTestUtils.act()', () => {
       ]);
     });
 
-    if (__EXPERIMENTAL__) {
-      it('warns in blocking mode', () => {
-        expect(() => {
-          const root = ReactDOM.createBlockingRoot(
-            document.createElement('div'),
-          );
-          root.render(<App />);
-          Scheduler.unstable_flushAll();
-        }).toWarnDev([
-          'An update to App ran an effect, but was not wrapped in act(...)',
-          'An update to App ran an effect, but was not wrapped in act(...)',
-        ]);
-      });
+    it.experimental('warns in blocking mode', () => {
+      expect(() => {
+        const root = ReactDOM.createBlockingRoot(document.createElement('div'));
+        root.render(<App />);
+        Scheduler.unstable_flushAll();
+      }).toWarnDev([
+        'An update to App ran an effect, but was not wrapped in act(...)',
+        'An update to App ran an effect, but was not wrapped in act(...)',
+      ]);
+    });
 
-      it('warns in concurrent mode', () => {
-        expect(() => {
-          const root = ReactDOM.createRoot(document.createElement('div'));
-          root.render(<App />);
-          Scheduler.unstable_flushAll();
-        }).toWarnDev([
-          'An update to App ran an effect, but was not wrapped in act(...)',
-          'An update to App ran an effect, but was not wrapped in act(...)',
-        ]);
-      });
-    }
+    it.experimental('warns in concurrent mode', () => {
+      expect(() => {
+        const root = ReactDOM.createRoot(document.createElement('div'));
+        root.render(<App />);
+        Scheduler.unstable_flushAll();
+      }).toWarnDev([
+        'An update to App ran an effect, but was not wrapped in act(...)',
+        'An update to App ran an effect, but was not wrapped in act(...)',
+      ]);
+    });
   });
 });
 

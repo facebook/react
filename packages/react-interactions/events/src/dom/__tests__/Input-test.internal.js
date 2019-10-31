@@ -750,208 +750,202 @@ describe('Input event responder', () => {
       }
     });
 
-    if (__EXPERIMENTAL__) {
-      describe('concurrent mode', () => {
-        it('text input', () => {
-          const root = ReactDOM.createRoot(container);
-          let input;
+    describe('concurrent mode', () => {
+      it.experimental('text input', () => {
+        const root = ReactDOM.createRoot(container);
+        let input;
 
-          let ops = [];
+        let ops = [];
 
-          function Component({innerRef, onChange, controlledValue}) {
-            const listener = useInput({
-              onChange,
-            });
+        function Component({innerRef, onChange, controlledValue}) {
+          const listener = useInput({
+            onChange,
+          });
+          return (
+            <input
+              type="text"
+              ref={innerRef}
+              value={controlledValue}
+              listeners={listener}
+            />
+          );
+        }
+
+        class ControlledInput extends React.Component {
+          state = {value: 'initial'};
+          onChange = event => this.setState({value: event.target.value});
+          render() {
+            ops.push(`render: ${this.state.value}`);
+            const controlledValue =
+              this.state.value === 'changed' ? 'changed [!]' : this.state.value;
             return (
-              <input
-                type="text"
-                ref={innerRef}
-                value={controlledValue}
-                listeners={listener}
+              <Component
+                onChange={this.onChange}
+                innerRef={el => (input = el)}
+                controlledValue={controlledValue}
               />
             );
           }
+        }
 
-          class ControlledInput extends React.Component {
-            state = {value: 'initial'};
-            onChange = event => this.setState({value: event.target.value});
-            render() {
-              ops.push(`render: ${this.state.value}`);
-              const controlledValue =
-                this.state.value === 'changed'
-                  ? 'changed [!]'
-                  : this.state.value;
-              return (
-                <Component
-                  onChange={this.onChange}
-                  innerRef={el => (input = el)}
-                  controlledValue={controlledValue}
-                />
-              );
-            }
-          }
+        // Initial mount. Test that this is async.
+        root.render(<ControlledInput />);
+        // Should not have flushed yet.
+        expect(ops).toEqual([]);
+        expect(input).toBe(undefined);
+        // Flush callbacks.
+        Scheduler.unstable_flushAll();
+        expect(ops).toEqual(['render: initial']);
+        expect(input.value).toBe('initial');
 
-          // Initial mount. Test that this is async.
-          root.render(<ControlledInput />);
-          // Should not have flushed yet.
-          expect(ops).toEqual([]);
-          expect(input).toBe(undefined);
-          // Flush callbacks.
-          Scheduler.unstable_flushAll();
-          expect(ops).toEqual(['render: initial']);
-          expect(input.value).toBe('initial');
+        ops = [];
 
-          ops = [];
-
-          // Trigger a change event.
-          setUntrackedValue.call(input, 'changed');
-          input.dispatchEvent(
-            new Event('input', {bubbles: true, cancelable: true}),
-          );
-          // Change should synchronously flush
-          expect(ops).toEqual(['render: changed']);
-          // Value should be the controlled value, not the original one
-          expect(input.value).toBe('changed [!]');
-        });
-
-        it('checkbox input', () => {
-          const root = ReactDOM.createRoot(container);
-          let input;
-
-          let ops = [];
-
-          function Component({innerRef, onChange, controlledValue}) {
-            const listener = useInput({
-              onChange,
-            });
-            return (
-              <input
-                type="checkbox"
-                ref={innerRef}
-                checked={controlledValue}
-                listeners={listener}
-              />
-            );
-          }
-
-          class ControlledInput extends React.Component {
-            state = {checked: false};
-            onChange = event => {
-              this.setState({checked: event.target.checked});
-            };
-            render() {
-              ops.push(`render: ${this.state.checked}`);
-              const controlledValue = this.props.reverse
-                ? !this.state.checked
-                : this.state.checked;
-              return (
-                <Component
-                  controlledValue={controlledValue}
-                  onChange={this.onChange}
-                  innerRef={el => (input = el)}
-                />
-              );
-            }
-          }
-
-          // Initial mount. Test that this is async.
-          root.render(<ControlledInput reverse={false} />);
-          // Should not have flushed yet.
-          expect(ops).toEqual([]);
-          expect(input).toBe(undefined);
-          // Flush callbacks.
-          Scheduler.unstable_flushAll();
-          expect(ops).toEqual(['render: false']);
-          expect(input.checked).toBe(false);
-
-          ops = [];
-
-          // Trigger a change event.
-          input.dispatchEvent(
-            new MouseEvent('click', {bubbles: true, cancelable: true}),
-          );
-          // Change should synchronously flush
-          expect(ops).toEqual(['render: true']);
-          expect(input.checked).toBe(true);
-
-          // Now let's make sure we're using the controlled value.
-          root.render(<ControlledInput reverse={true} />);
-          Scheduler.unstable_flushAll();
-
-          ops = [];
-
-          // Trigger another change event.
-          input.dispatchEvent(
-            new MouseEvent('click', {bubbles: true, cancelable: true}),
-          );
-          // Change should synchronously flush
-          expect(ops).toEqual(['render: true']);
-          expect(input.checked).toBe(false);
-        });
-
-        it('textarea', () => {
-          const root = ReactDOM.createRoot(container);
-          let textarea;
-
-          let ops = [];
-
-          function Component({innerRef, onChange, controlledValue}) {
-            const listener = useInput({
-              onChange,
-            });
-            return (
-              <textarea
-                type="text"
-                ref={innerRef}
-                value={controlledValue}
-                listeners={listener}
-              />
-            );
-          }
-
-          class ControlledTextarea extends React.Component {
-            state = {value: 'initial'};
-            onChange = event => this.setState({value: event.target.value});
-            render() {
-              ops.push(`render: ${this.state.value}`);
-              const controlledValue =
-                this.state.value === 'changed'
-                  ? 'changed [!]'
-                  : this.state.value;
-              return (
-                <Component
-                  onChange={this.onChange}
-                  innerRef={el => (textarea = el)}
-                  controlledValue={controlledValue}
-                />
-              );
-            }
-          }
-
-          // Initial mount. Test that this is async.
-          root.render(<ControlledTextarea />);
-          // Should not have flushed yet.
-          expect(ops).toEqual([]);
-          expect(textarea).toBe(undefined);
-          // Flush callbacks.
-          Scheduler.unstable_flushAll();
-          expect(ops).toEqual(['render: initial']);
-          expect(textarea.value).toBe('initial');
-
-          ops = [];
-
-          // Trigger a change event.
-          setUntrackedTextareaValue.call(textarea, 'changed');
-          textarea.dispatchEvent(
-            new Event('input', {bubbles: true, cancelable: true}),
-          );
-          // Change should synchronously flush
-          expect(ops).toEqual(['render: changed']);
-          // Value should be the controlled value, not the original one
-          expect(textarea.value).toBe('changed [!]');
-        });
+        // Trigger a change event.
+        setUntrackedValue.call(input, 'changed');
+        input.dispatchEvent(
+          new Event('input', {bubbles: true, cancelable: true}),
+        );
+        // Change should synchronously flush
+        expect(ops).toEqual(['render: changed']);
+        // Value should be the controlled value, not the original one
+        expect(input.value).toBe('changed [!]');
       });
-    }
+
+      it.experimental('checkbox input', () => {
+        const root = ReactDOM.createRoot(container);
+        let input;
+
+        let ops = [];
+
+        function Component({innerRef, onChange, controlledValue}) {
+          const listener = useInput({
+            onChange,
+          });
+          return (
+            <input
+              type="checkbox"
+              ref={innerRef}
+              checked={controlledValue}
+              listeners={listener}
+            />
+          );
+        }
+
+        class ControlledInput extends React.Component {
+          state = {checked: false};
+          onChange = event => {
+            this.setState({checked: event.target.checked});
+          };
+          render() {
+            ops.push(`render: ${this.state.checked}`);
+            const controlledValue = this.props.reverse
+              ? !this.state.checked
+              : this.state.checked;
+            return (
+              <Component
+                controlledValue={controlledValue}
+                onChange={this.onChange}
+                innerRef={el => (input = el)}
+              />
+            );
+          }
+        }
+
+        // Initial mount. Test that this is async.
+        root.render(<ControlledInput reverse={false} />);
+        // Should not have flushed yet.
+        expect(ops).toEqual([]);
+        expect(input).toBe(undefined);
+        // Flush callbacks.
+        Scheduler.unstable_flushAll();
+        expect(ops).toEqual(['render: false']);
+        expect(input.checked).toBe(false);
+
+        ops = [];
+
+        // Trigger a change event.
+        input.dispatchEvent(
+          new MouseEvent('click', {bubbles: true, cancelable: true}),
+        );
+        // Change should synchronously flush
+        expect(ops).toEqual(['render: true']);
+        expect(input.checked).toBe(true);
+
+        // Now let's make sure we're using the controlled value.
+        root.render(<ControlledInput reverse={true} />);
+        Scheduler.unstable_flushAll();
+
+        ops = [];
+
+        // Trigger another change event.
+        input.dispatchEvent(
+          new MouseEvent('click', {bubbles: true, cancelable: true}),
+        );
+        // Change should synchronously flush
+        expect(ops).toEqual(['render: true']);
+        expect(input.checked).toBe(false);
+      });
+
+      it.experimental('textarea', () => {
+        const root = ReactDOM.createRoot(container);
+        let textarea;
+
+        let ops = [];
+
+        function Component({innerRef, onChange, controlledValue}) {
+          const listener = useInput({
+            onChange,
+          });
+          return (
+            <textarea
+              type="text"
+              ref={innerRef}
+              value={controlledValue}
+              listeners={listener}
+            />
+          );
+        }
+
+        class ControlledTextarea extends React.Component {
+          state = {value: 'initial'};
+          onChange = event => this.setState({value: event.target.value});
+          render() {
+            ops.push(`render: ${this.state.value}`);
+            const controlledValue =
+              this.state.value === 'changed' ? 'changed [!]' : this.state.value;
+            return (
+              <Component
+                onChange={this.onChange}
+                innerRef={el => (textarea = el)}
+                controlledValue={controlledValue}
+              />
+            );
+          }
+        }
+
+        // Initial mount. Test that this is async.
+        root.render(<ControlledTextarea />);
+        // Should not have flushed yet.
+        expect(ops).toEqual([]);
+        expect(textarea).toBe(undefined);
+        // Flush callbacks.
+        Scheduler.unstable_flushAll();
+        expect(ops).toEqual(['render: initial']);
+        expect(textarea.value).toBe('initial');
+
+        ops = [];
+
+        // Trigger a change event.
+        setUntrackedTextareaValue.call(textarea, 'changed');
+        textarea.dispatchEvent(
+          new Event('input', {bubbles: true, cancelable: true}),
+        );
+        // Change should synchronously flush
+        expect(ops).toEqual(['render: changed']);
+        // Value should be the controlled value, not the original one
+        expect(textarea.value).toBe('changed [!]');
+      });
+    });
   });
 
   it('expect displayName to show up for event component', () => {
