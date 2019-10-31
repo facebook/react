@@ -55,6 +55,7 @@ import {
   addRootEventTypesForResponderInstance,
   mountEventResponder,
   unmountEventResponder,
+  dispatchEventForResponderEventSystem,
 } from '../events/DOMEventResponderSystem';
 import {retryIfBlockedOn} from '../events/ReactDOMEventReplaying';
 
@@ -108,6 +109,10 @@ import {
   enableFlareAPI,
   enableFundamentalAPI,
 } from 'shared/ReactFeatureFlags';
+import {
+  RESPONDER_EVENT_SYSTEM,
+  IS_PASSIVE,
+} from 'legacy-events/EventSystemFlags';
 
 let SUPPRESS_HYDRATION_WARNING;
 if (__DEV__) {
@@ -455,12 +460,20 @@ function handleSimulateChildBlur(
     selectionInformation &&
     child === selectionInformation.focusedElem
   ) {
-    const simulatedEvent: any = document.createEvent('CustomEvent');
-    simulatedEvent.initCustomEvent('blur', false, true);
-    simulatedEvent.relatedTarget = null;
-    ReactBrowserEventEmitterSetEnabled(true);
-    child.dispatchEvent(simulatedEvent);
-    ReactBrowserEventEmitterSetEnabled(false);
+    const targetFiber = getClosestInstanceFromNode(child);
+    // Simlulate a blur event to the React Flare responder system.
+    dispatchEventForResponderEventSystem(
+      'blur',
+      targetFiber,
+      ({
+        relatedTarget: null,
+        target: child,
+        timeStamp: Date.now(),
+        type: 'blur',
+      }: any),
+      ((child: any): Document | Element),
+      RESPONDER_EVENT_SYSTEM | IS_PASSIVE,
+    );
   }
 }
 
