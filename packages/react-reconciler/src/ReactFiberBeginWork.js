@@ -2893,7 +2893,12 @@ function beginWork(
         }
         case Profiler:
           if (enableProfilerTimer) {
-            workInProgress.effectTag |= Update;
+            // Profiler should only call onRender when one of its descendants actually rendered.
+            const hasChildWork =
+              workInProgress.childExpirationTime >= renderExpirationTime;
+            if (hasChildWork) {
+              workInProgress.effectTag |= Update;
+            }
           }
           break;
         case SuspenseComponent: {
