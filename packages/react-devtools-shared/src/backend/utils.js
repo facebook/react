@@ -11,6 +11,29 @@ import {dehydrate} from '../hydration';
 
 import type {DehydratedData} from 'react-devtools-shared/src/devtools/views/Components/types';
 
+export function getSerializableData(data: any) {
+  if (data === null) {
+    return data;
+  }
+  // $FlowFixMe
+  if (typeof data === 'bigint') {
+    return data.toString() + 'n';
+  }
+  if (Array.isArray(data)) {
+    return data.reduce(function(acc, val) {
+      acc.push(getSerializableData(val));
+      return acc;
+    }, []);
+  }
+  if (typeof data === 'object') {
+    return Object.keys(data).reduce(function(acc, key) {
+      acc[key] = getSerializableData(data[key]);
+      return acc;
+    }, {});
+  }
+  return data;
+}
+
 export function cleanForBridge(
   data: Object | null,
   isPathWhitelisted: (path: Array<string | number>) => boolean,
