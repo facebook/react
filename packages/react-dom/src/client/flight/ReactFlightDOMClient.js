@@ -7,28 +7,80 @@
  * @flow
  */
 
-import type {ReactModel} from 'react-flight/src/ReactFlightClient';
+import type {ReactModelRoot} from 'react-flight/src/ReactFlightClient';
 
 import {
-  createRequest,
-  startWork,
-  startFlowing,
-} from 'react-flight/inline.dom-browser';
+  createResponse,
+  getModelRoot,
+  reportGlobalError,
+  processStringChunk,
+  processBinaryChunk,
+  complete,
+} from 'react-flight/inline.dom';
 
-function renderToReadableStream(model: ReactModel): ReadableStream {
-  let request;
-  return new ReadableStream({
-    start(controller) {
-      request = createRequest(model, controller);
-      startWork(request);
+function startReadingFromStream(response, stream: ReadableStream): void {
+  let reader = stream.getReader();
+  function progress({done, value}) {
+    if (done) {
+      complete(response);
+      return;
+    }
+    let buffer: Uint8Array = (value: any);
+    processBinaryChunk(response, buffer, 0);
+    return reader.read().then(progress, error);
+  }
+  function error(e) {
+    reportGlobalError(response, e);
+  }
+  reader.read().then(progress, error);
+}
+
+function readFromReadableStream<T>(stream: ReadableStream): ReactModelRoot<T> {
+  let response = createResponse(stream);
+  startReadingFromStream(response, stream);
+  return getModelRoot(response);
+}
+
+function readFromFetch<T>(
+  promiseForResponse: Promise<Response>,
+): ReactModelRoot<T> {
+  let response = createResponse(promiseForResponse);
+  promiseForResponse.then(
+    function(r) {
+      startReadingFromStream(response, (r.body: any));
     },
-    pull(controller) {
-      startFlowing(request, controller.desiredSize);
+    function(e) {
+      reportGlobalError(response, e);
     },
-    cancel(reason) {},
-  });
+  );
+  return getModelRoot(response);
+}
+
+function readFromXHR<T>(request: XMLHttpRequest): ReactModelRoot<T> {
+  let response = createResponse(request);
+  let processedLength = 0;
+  function progress(e: ProgressEvent): void {
+    let chunk = request.responseText;
+    processStringChunk(response, chunk, processedLength);
+    processedLength = chunk.length;
+  }
+  function load(e: ProgressEvent): void {
+    progress(e);
+    complete(response);
+  }
+  function error(e: ProgressEvent): void {
+    reportGlobalError(response, new TypeError('Network error'));
+  }
+  request.addEventListener('progress', progress);
+  request.addEventListener('load', load);
+  request.addEventListener('error', error);
+  request.addEventListener('abort', error);
+  request.addEventListener('timeout', error);
+  return getModelRoot(response);
 }
 
 export default {
-  renderToReadableStream,
+  readFromXHR,
+  readFromFetch,
+  readFromReadableStream,
 };

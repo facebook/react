@@ -24,14 +24,10 @@
 // really an argument to a top-level wrapping function.
 
 declare var $$$hostConfig: any;
-export opaque type Destination = mixed; // eslint-disable-line no-undef
+export opaque type Source = mixed; // eslint-disable-line no-undef
+export opaque type StringDecoder = mixed; // eslint-disable-line no-undef
 
-export const formatChunkAsString = $$$hostConfig.formatChunkAsString;
-export const formatChunk = $$$hostConfig.formatChunk;
-export const scheduleWork = $$$hostConfig.scheduleWork;
-export const beginWriting = $$$hostConfig.beginWriting;
-export const writeChunk = $$$hostConfig.writeChunk;
-export const completeWriting = $$$hostConfig.completeWriting;
-export const flushBuffered = $$$hostConfig.flushBuffered;
-export const close = $$$hostConfig.close;
-export const convertStringToBuffer = $$$hostConfig.convertStringToBuffer;
+export const supportsBinaryStreams = $$$hostConfig.supportsBinaryStreams;
+export const createStringDecoder = $$$hostConfig.createStringDecoder;
+export const readPartialStringChunk = $$$hostConfig.readPartialStringChunk;
+export const readFinalStringChunk = $$$hostConfig.readFinalStringChunk;

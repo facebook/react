@@ -32,9 +32,11 @@ describe('ReactFlight', () => {
         bar: [<Bar text="a" />, <Bar text="b" />],
       };
     }
-    let result = ReactNoopFlightServer.render({
+    let transport = ReactNoopFlightServer.render({
       foo: <Foo />,
     });
-    expect(result).toEqual([{foo: {bar: ['A', 'B']}}]);
+    let root = ReactNoopFlightClient.read(transport);
+    let model = root.model;
+    expect(model).toEqual({foo: {bar: ['A', 'B']}});
   });
 });

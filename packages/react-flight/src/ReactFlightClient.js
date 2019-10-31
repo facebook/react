@@ -7,138 +7,115 @@
  * @flow
  */
 
-import type {Destination} from './ReactFlightClientHostConfig';
+import type {Source, StringDecoder} from './ReactFlightClientHostConfig';
 
 import {
-  scheduleWork,
-  beginWriting,
-  writeChunk,
-  completeWriting,
-  flushBuffered,
-  close,
-  convertStringToBuffer,
-  formatChunkAsString,
+  supportsBinaryStreams,
+  createStringDecoder,
+  readPartialStringChunk,
+  readFinalStringChunk,
 } from './ReactFlightClientHostConfig';
-import {REACT_ELEMENT_TYPE} from 'shared/ReactSymbols';
 
-export type ReactModel =
-  | React$Element<any>
-  | string
-  | boolean
-  | number
-  | null
-  | Iterable<ReactModel>
-  | ReactModelObject;
+export type ReactModelRoot<T> = {|
+  model: T,
+|};
 
-type ReactJSONValue =
-  | string
-  | boolean
-  | number
-  | null
-  | Array<ReactModel>
-  | ReactModelObject;
-
-type ReactModelObject = {
-  +[key: string]: ReactModel,
+type OpaqueResponse = {
+  source: Source,
+  modelRoot: ReactModelRoot<any>,
+  partialRow: string,
+  stringDecoder: StringDecoder,
+  rootPing: () => void,
 };
 
-type OpaqueRequest = {
-  destination: Destination,
-  model: ReactModel,
-  completedChunks: Array<Uint8Array>,
-  flowing: boolean,
-};
-
-export function createRequest(
-  model: ReactModel,
-  destination: Destination,
-): OpaqueRequest {
-  return {destination, model, completedChunks: [], flowing: false};
-}
-
-function resolveChildToHostFormat(child: ReactJSONValue): string {
-  if (typeof child === 'string') {
-    return child;
-  } else if (typeof child === 'number') {
-    return '' + child;
-  } else if (typeof child === 'boolean' || child === null) {
-    // Booleans are like null when they're React children.
-    return '';
-  } else if (Array.isArray(child)) {
-    return (child: Array<ReactModel>)
-      .map(c => resolveChildToHostFormat(resolveModelToJSON('', c)))
-      .join('');
-  } else {
-    throw new Error('Object models are not valid as children of host nodes.');
-  }
-}
-
-function resolveElementToHostFormat(type: string, props: Object): string {
-  let child = resolveModelToJSON('', props.children);
-  let childString = resolveChildToHostFormat(child);
-  return formatChunkAsString(
-    type,
-    Object.assign({}, props, {children: childString}),
+export function createResponse(source: Source): OpaqueResponse {
+  let modelRoot = {};
+  Object.defineProperty(
+    modelRoot,
+    'model',
+    ({
+      configurable: true,
+      enumerable: true,
+      get() {
+        throw rootPromise;
+      },
+    }: any),
   );
-}
 
-function resolveModelToJSON(key: string, value: ReactModel): ReactJSONValue {
-  while (value && value.$$typeof === REACT_ELEMENT_TYPE) {
-    let element: React$Element<any> = (value: any);
-    let type = element.type;
-    let props = element.props;
-    if (typeof type === 'function') {
-      // This is a nested view model.
-      value = type(props);
-      continue;
-    } else if (typeof type === 'string') {
-      // This is a host element. E.g. HTML.
-      return resolveElementToHostFormat(type, props);
-    } else {
-      throw new Error('Unsupported type.');
-    }
+  let rootPing;
+  let rootPromise = new Promise(resolve => {
+    rootPing = resolve;
+  });
+
+  let response: OpaqueResponse = ({
+    source,
+    modelRoot,
+    partialRow: '',
+    rootPing,
+  }: any);
+  if (supportsBinaryStreams) {
+    response.stringDecoder = createStringDecoder();
   }
-  return value;
+  return response;
 }
 
-function performWork(request: OpaqueRequest): void {
-  let rootModel = request.model;
-  request.model = null;
-  let json = JSON.stringify(rootModel, resolveModelToJSON);
-  request.completedChunks.push(convertStringToBuffer(json));
-  if (request.flowing) {
-    flushCompletedChunks(request);
-  }
-
-  flushBuffered(request.destination);
-}
-
-function flushCompletedChunks(request: OpaqueRequest) {
-  let destination = request.destination;
-  let chunks = request.completedChunks;
-  request.completedChunks = [];
-
-  beginWriting(destination);
-  try {
-    for (let i = 0; i < chunks.length; i++) {
-      let chunk = chunks[i];
-      writeChunk(destination, chunk);
-    }
-  } finally {
-    completeWriting(destination);
-  }
-  close(destination);
-}
-
-export function startWork(request: OpaqueRequest): void {
-  request.flowing = true;
-  scheduleWork(() => performWork(request));
-}
-
-export function startFlowing(
-  request: OpaqueRequest,
-  desiredBytes: number,
+// Report that any missing chunks in the model is now going to throw this
+// error upon read. Also notify any pending promises.
+export function reportGlobalError(
+  response: OpaqueResponse,
+  error: Error,
 ): void {
-  request.flowing = false;
-  flushCompletedChunks(request);
+  Object.defineProperty(
+    response.modelRoot,
+    'model',
+    ({
+      configurable: true,
+      enumerable: true,
+      get() {
+        throw error;
+      },
+    }: any),
+  );
+  response.rootPing();
+}
+
+export function processStringChunk(
+  response: OpaqueResponse,
+  chunk: string,
+  offset: number,
+): void {
+  response.partialRow += chunk.substr(offset);
+}
+
+export function processBinaryChunk(
+  response: OpaqueResponse,
+  chunk: Uint8Array,
+  offset: number,
+): void {
+  if (!supportsBinaryStreams) {
+    throw new Error("This environment don't support binary chunks.");
+  }
+  response.partialRow += readPartialStringChunk(response.stringDecoder, chunk);
+}
+
+let emptyBuffer = new Uint8Array(0);
+export function complete(response: OpaqueResponse): void {
+  if (supportsBinaryStreams) {
+    // This should never be needed since we're expected to have complete
+    // code units at the end of JSON.
+    response.partialRow += readFinalStringChunk(
+      response.stringDecoder,
+      emptyBuffer,
+    );
+  }
+  let modelRoot = response.modelRoot;
+  let model = JSON.parse(response.partialRow);
+  Object.defineProperty(modelRoot, 'model', {
+    value: model,
+  });
+  response.rootPing();
+}
+
+export function getModelRoot<T>(response: OpaqueResponse): ReactModelRoot<T> {
+  return response.modelRoot;
 }
