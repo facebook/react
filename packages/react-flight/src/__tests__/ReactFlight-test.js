@@ -11,13 +11,15 @@
 'use strict';
 
 let React;
+let ReactNoopFlightServer;
 let ReactNoopFlightClient;
 
-describe('ReactFlightClient', () => {
+describe('ReactFlight', () => {
   beforeEach(() => {
     jest.resetModules();
 
     React = require('react');
+    ReactNoopFlightServer = require('react-noop-renderer/flight-server');
     ReactNoopFlightClient = require('react-noop-renderer/flight-client');
   });
 
@@ -30,9 +32,11 @@ describe('ReactFlightClient', () => {
         bar: [<Bar text="a" />, <Bar text="b" />],
       };
     }
-    let result = ReactNoopFlightClient.render({
+    let transport = ReactNoopFlightServer.render({
       foo: <Foo />,
     });
-    expect(result).toEqual([{foo: {bar: ['A', 'B']}}]);
+    let root = ReactNoopFlightClient.read(transport);
+    let model = root.model;
+    expect(model).toEqual({foo: {bar: ['A', 'B']}});
   });
 });

@@ -18,9 +18,12 @@
     </div>
     <script src="../../build/dist/react.development.js"></script>
     <script src="../../build/dist/react-dom.development.js"></script>
+    <script src="../../build/dist/react-dom-unstable-flight-server.browser.development.js"></script>
     <script src="../../build/dist/react-dom-unstable-flight-client.development.js"></script>
     <script src="https://unpkg.com/babel-standalone@6/babel.js"></script>
     <script type="text/babel">
+      let Suspense = React.Suspense;
+
       function Text({children}) {
         return <span>{children}</span>;
       }
@@ -40,7 +43,7 @@
         }
       };
 
-      let stream = ReactFlightDOMClient.renderToReadableStream(model);
+      let stream = ReactFlightDOMServer.renderToReadableStream(model);
       let response = new Response(stream, {
         headers: {'Content-Type': 'text/html'},
       });
@@ -49,35 +52,35 @@
       async function display(responseToDisplay) {
         let blob = await responseToDisplay.blob();
         let url = URL.createObjectURL(blob);
-        let response = await fetch(url);
-        let body = await response.body;
 
-        let reader = body.getReader();
-        let charsReceived = 0;
-        let decoder = new TextDecoder();
+        let data = ReactFlightDOMClient.readFromFetch(
+          fetch(url)
+        );
+        // The client also supports XHR streaming.
+        // var xhr = new XMLHttpRequest();
+        // xhr.open('GET', url);
+        // let data = ReactFlightDOMClient.readFromXHR(xhr);
+        // xhr.send();
 
-        let json = '';
-        reader.read().then(function processChunk({ done, value }) {
-          if (done) {
-            renderResult(json);
-            return;
-          }
-          json += decoder.decode(value);
-          return reader.read().then(processChunk);
-        });
+        renderResult(data);
       }
 
-      function Shell({ model }) {
+      function Shell({ data }) {
+        let model = data.model;
         return <div>
           <h1>{model.title}</h1>
           <div dangerouslySetInnerHTML={model.content} />
         </div>;
       }
 
-      function renderResult(json) {
-        let model = JSON.parse(json);
+      function renderResult(data) {
         let container = document.getElementById('container');
-        ReactDOM.render(<Shell model={model} />, container);
+        ReactDOM.render(
+          <Suspense fallback="Loading...">
+            <Shell data={data} />
+          </Suspense>,
+          container
+        );
       }
     </script>
   </body>
