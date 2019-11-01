@@ -284,6 +284,9 @@ export type DevToolsHook = {
   onCommitFiberRoot: (
     rendererID: RendererID,
     fiber: Object,
+    // Added in v16.9 to support Profiler priority labels
     commitPriority?: number,
+    // Added in v16.9 to support Fast Refresh
+    didError?: boolean,
   ) => void,
 };
