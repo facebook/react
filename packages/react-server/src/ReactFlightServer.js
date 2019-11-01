@@ -18,7 +18,7 @@ import {
   close,
   convertStringToBuffer,
 } from './ReactServerHostConfig';
-import {formatChunkAsString} from './ReactServerFormatConfig';
+import {renderHostChildrenToString} from './ReactServerFormatConfig';
 import {REACT_ELEMENT_TYPE} from 'shared/ReactSymbols';
 
 export type ReactModel =
@@ -56,32 +56,6 @@ export function createRequest(
   return {destination, model, completedChunks: [], flowing: false};
 }
 
-function resolveChildToHostFormat(child: ReactJSONValue): string {
-  if (typeof child === 'string') {
-    return child;
-  } else if (typeof child === 'number') {
-    return '' + child;
-  } else if (typeof child === 'boolean' || child === null) {
-    // Booleans are like null when they're React children.
-    return '';
-  } else if (Array.isArray(child)) {
-    return (child: Array<ReactModel>)
-      .map(c => resolveChildToHostFormat(resolveModelToJSON('', c)))
-      .join('');
-  } else {
-    throw new Error('Object models are not valid as children of host nodes.');
-  }
-}
-
-function resolveElementToHostFormat(type: string, props: Object): string {
-  let child = resolveModelToJSON('', props.children);
-  let childString = resolveChildToHostFormat(child);
-  return formatChunkAsString(
-    type,
-    Object.assign({}, props, {children: childString}),
-  );
-}
-
 function resolveModelToJSON(key: string, value: ReactModel): ReactJSONValue {
   while (value && value.$$typeof === REACT_ELEMENT_TYPE) {
     let element: React$Element<any> = (value: any);
@@ -93,7 +67,7 @@ function resolveModelToJSON(key: string, value: ReactModel): ReactJSONValue {
       continue;
     } else if (typeof type === 'string') {
       // This is a host element. E.g. HTML.
-      return resolveElementToHostFormat(type, props);
+      return renderHostChildrenToString(element);
     } else {
       throw new Error('Unsupported type.');
     }

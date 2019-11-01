@@ -40,6 +40,9 @@ const ReactNoopFlightServer = ReactFlightServer({
   formatChunk(type: string, props: Object): Uint8Array {
     return Buffer.from(JSON.stringify({type, props}), 'utf8');
   },
+  renderHostChildrenToString(children: React$Element<any>): string {
+    throw new Error('The noop rendered do not support host components');
+  },
 });
 
 function render(model: ReactModel): Destination {

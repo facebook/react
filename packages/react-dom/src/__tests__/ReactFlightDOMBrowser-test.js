@@ -15,7 +15,6 @@ global.ReadableStream = require('@mattiasbuelens/web-streams-polyfill/ponyfill/e
 global.TextEncoder = require('util').TextEncoder;
 global.TextDecoder = require('util').TextDecoder;
 
-let Stream;
 let React;
 let ReactFlightDOMServer;
 let ReactFlightDOMClient;
@@ -23,7 +22,6 @@ let ReactFlightDOMClient;
 describe('ReactFlightDOMBrowser', () => {
   beforeEach(() => {
     jest.resetModules();
-    Stream = require('stream');
     React = require('react');
     ReactFlightDOMServer = require('react-dom/unstable-flight-server.browser');
     ReactFlightDOMClient = require('react-dom/unstable-flight-client');
