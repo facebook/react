@@ -1643,6 +1643,7 @@ export function attach(
         }
       }
     }
+
     if (shouldIncludeInTree) {
       const isProfilingSupported = nextFiber.hasOwnProperty('treeBaseDuration');
       if (isProfilingSupported) {
@@ -1742,6 +1743,14 @@ export function attach(
     const current = root.current;
     const alternate = current.alternate;
 
+    // Certain types of updates bail out at the root without doing any actual render work.
+    // React should probably not call the DevTools commit hook in this case,
+    // but if it does- we can detect it and filter them out from the profiler.
+    const didBailoutAtRoot =
+      alternate !== null &&
+      alternate.expirationTime === 0 &&
+      alternate.childExpirationTime === 0;
+
     currentRootID = getFiberID(getPrimaryFiber(current));
 
     // Before the traversals, remember to start tracking
@@ -1758,7 +1767,7 @@ export function attach(
     // where some v16 renderers support profiling and others don't.
     const isProfilingSupported = root.memoizedInteractions != null;
 
-    if (isProfiling && isProfilingSupported) {
+    if (isProfiling && isProfilingSupported && !didBailoutAtRoot) {
       // If profiling is active, store commit time and duration, and the current interactions.
       // The frontend may request this information after profiling has stopped.
       currentCommitProfilingMetadata = {
@@ -1802,7 +1811,7 @@ export function attach(
       mountFiberRecursively(current, null, false, false);
     }
 
-    if (isProfiling && isProfilingSupported) {
+    if (isProfiling && isProfilingSupported && !didBailoutAtRoot) {
       const commitProfilingMetadata = ((rootToCommitProfilingMetadataMap: any): CommitProfilingMetadataMap).get(
         currentRootID,
       );
