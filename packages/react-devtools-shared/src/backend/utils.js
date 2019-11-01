@@ -26,7 +26,7 @@ export function cleanForBridge(
       path,
       isPathWhitelisted,
     );
-    console.log(cleanedData);
+
     return {
       data: cleanedData,
       cleaned: cleanedPaths,
