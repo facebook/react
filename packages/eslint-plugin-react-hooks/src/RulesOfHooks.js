@@ -54,12 +54,12 @@ function isComponentName(node) {
   }
 }
 
-function isForwardRef(node) {
+function isReactFunction(node, functionName) {
   return (
-    node.name === 'forwardRef' ||
+    node.name === functionName ||
     (node.type === 'MemberExpression' &&
       node.object.name === 'React' &&
-      node.property.name === 'forwardRef')
+      node.property.name === functionName)
   );
 }
 
@@ -72,7 +72,20 @@ function isForwardRefCallback(node) {
   return !!(
     node.parent &&
     node.parent.callee &&
-    isForwardRef(node.parent.callee)
+    isReactFunction(node.parent.callee, 'forwardRef')
+  );
+}
+
+/**
+ * Checks if the node is a callback argument of React.memo. This anonymous
+ * functional component should follow the rules of hooks.
+ */
+
+function isMemoCallback(node) {
+  return !!(
+    node.parent &&
+    node.parent.callee &&
+    isReactFunction(node.parent.callee, 'memo')
   );
 }
 
@@ -84,7 +97,7 @@ function isInsideComponentOrHook(node) {
         return true;
       }
     }
-    if (isForwardRefCallback(node)) {
+    if (isForwardRefCallback(node) || isMemoCallback(node)) {
       return true;
     }
     node = node.parent;
@@ -316,7 +329,7 @@ export default {
         // expression or our code path is not in a function. In both cases we
         // will want to error since neither are React function components or
         // hook functions - unless it is an anonymous function argument to
-        // forwardRef.
+        // forwardRef or memo.
         const codePathFunctionName = getFunctionName(codePathNode);
 
         // This is a valid code path for React hooks if we are directly in a React
@@ -327,7 +340,7 @@ export default {
         const isDirectlyInsideComponentOrHook = codePathFunctionName
           ? isComponentName(codePathFunctionName) ||
             isHook(codePathFunctionName)
-          : isForwardRefCallback(codePathNode);
+          : isForwardRefCallback(codePathNode) || isMemoCallback(codePathNode);
 
         // Compute the earliest finalizer level using information from the
         // cache. We expect all reachable final segments to have a cache entry
