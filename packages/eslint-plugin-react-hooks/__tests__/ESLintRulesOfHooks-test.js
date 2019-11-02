@@ -142,21 +142,27 @@ const tests = {
       }
     `,
     `
-      // Valid because hooks can be used in forwardRef.
-      const FancyButton = React.forwardRef(() => {
-        return useHook();
+      // Valid because hooks can be used in anonymous arrow-function arguments
+      // to forwardRef.
+      const FancyButton = React.forwardRef((props, ref) => {
+        useHook();
+        return <button {...props} ref={ref} />
       });
     `,
     `
-      // Valid because hooks can be used in forwardRef.
-      const FancyButton = React.forwardRef(function () {
-        return useHook();
+      // Valid because hooks can be used in anonymous function arguments to
+      // forwardRef.
+      const FancyButton = React.forwardRef(function (props, ref) {
+        useHook();
+        return <button {...props} ref={ref} />
       });
     `,
     `
-      // Valid because hooks can be used in forwardRef.
-      const FancyButton = forwardRef(function () {
-        return useHook();
+      // Valid because hooks can be used in anonymous function arguments to
+      // forwardRef.
+      const FancyButton = forwardRef(function (props, ref) {
+        useHook();
+        return <button {...props} ref={ref} />
       });
     `,
     `
@@ -459,10 +465,11 @@ const tests = {
       code: `
         // Invalid because it's a common misunderstanding.
         // We *could* make it valid but the runtime error could be confusing.
-        const ComponentWithHookInsideCallback = React.forwardRef(() => {
+        const ComponentWithHookInsideCallback = React.forwardRef((props, ref) => {
           useEffect(() => {
             useHookInsideCallback();
           });
+          return <button {...props} ref={ref} />
         });
       `,
       errors: [genericError('useHookInsideCallback')],
