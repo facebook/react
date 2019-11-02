@@ -54,6 +54,28 @@ function isComponentName(node) {
   }
 }
 
+function isForwardRef(node) {
+  return (
+    node.name === 'forwardRef' ||
+    (node.type === 'MemberExpression' &&
+      node.object.name === 'React' &&
+      node.property.name === 'forwardRef')
+  );
+}
+
+/**
+ * Checks if the node is a callback argument of forwardRef. This render function
+ * should follow the rules of hooks.
+ */
+
+function isForwardRefCallback(node) {
+  return !!(
+    node.parent &&
+    node.parent.callee &&
+    isForwardRef(node.parent.callee)
+  );
+}
+
 function isInsideComponentOrHook(node) {
   while (node) {
     const functionName = getFunctionName(node);
@@ -61,6 +83,9 @@ function isInsideComponentOrHook(node) {
       if (isComponentName(functionName) || isHook(functionName)) {
         return true;
       }
+    }
+    if (isForwardRefCallback(node)) {
+      return true;
     }
     node = node.parent;
   }
@@ -290,7 +315,8 @@ export default {
         // `undefined` then we know either that we have an anonymous function
         // expression or our code path is not in a function. In both cases we
         // will want to error since neither are React function components or
-        // hook functions.
+        // hook functions - unless it is an anonymous function argument to
+        // forwardRef.
         const codePathFunctionName = getFunctionName(codePathNode);
 
         // This is a valid code path for React hooks if we are directly in a React
@@ -301,7 +327,7 @@ export default {
         const isDirectlyInsideComponentOrHook = codePathFunctionName
           ? isComponentName(codePathFunctionName) ||
             isHook(codePathFunctionName)
-          : false;
+          : isForwardRefCallback(codePathNode);
 
         // Compute the earliest finalizer level using information from the
         // cache. We expect all reachable final segments to have a cache entry

@@ -142,6 +142,24 @@ const tests = {
       }
     `,
     `
+      // Valid because hooks can be used in forwardRef.
+      const FancyButton = React.forwardRef(() => {
+        return useHook();
+      });
+    `,
+    `
+      // Valid because hooks can be used in forwardRef.
+      const FancyButton = React.forwardRef(function () {
+        return useHook();
+      });
+    `,
+    `
+      // Valid because hooks can be used in forwardRef.
+      const FancyButton = forwardRef(function () {
+        return useHook();
+      });
+    `,
+    `
       // Valid because classes can call functions.
       // We don't consider these to be hooks.
       class C {
@@ -441,6 +459,18 @@ const tests = {
       code: `
         // Invalid because it's a common misunderstanding.
         // We *could* make it valid but the runtime error could be confusing.
+        const ComponentWithHookInsideCallback = React.forwardRef(() => {
+          useEffect(() => {
+            useHookInsideCallback();
+          });
+        });
+      `,
+      errors: [genericError('useHookInsideCallback')],
+    },
+    {
+      code: `
+        // Invalid because it's a common misunderstanding.
+        // We *could* make it valid but the runtime error could be confusing.
         function ComponentWithHookInsideCallback() {
           function handleClick() {
             useState();
@@ -694,6 +724,32 @@ const tests = {
         // doesn't plan full support for ?? until it advances.
         // conditionalError('useState'),
       ],
+    },
+    {
+      code: `
+        // Invalid because it's dangerous and might not warn otherwise.
+        // This *must* be invalid.
+        const FancyButton = React.forwardRef((props, ref) => {
+          if (props.fancy) {
+            useCustomHook();
+          }
+          return <button ref={ref}>{props.children}</button>;
+        });
+      `,
+      errors: [conditionalError('useCustomHook')],
+    },
+    {
+      code: `
+        // Invalid because it's dangerous and might not warn otherwise.
+        // This *must* be invalid.
+        const FancyButton = forwardRef(function(props, ref) {
+          if (props.fancy) {
+            useCustomHook();
+          }
+          return <button ref={ref}>{props.children}</button>;
+        });
+      `,
+      errors: [conditionalError('useCustomHook')],
     },
     {
       code: `
