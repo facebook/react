@@ -12,20 +12,39 @@
 
 // Polyfills for test environment
 global.ReadableStream = require('@mattiasbuelens/web-streams-polyfill/ponyfill/es6').ReadableStream;
-global.TextEncoder = require('util').TextEncoder;
 global.TextDecoder = require('util').TextDecoder;
 
+let Stream;
 let React;
 let ReactFlightDOMServer;
 let ReactFlightDOMClient;
 
-describe('ReactFlightDOMBrowser', () => {
+describe('ReactFlightDOM', () => {
   beforeEach(() => {
     jest.resetModules();
+    Stream = require('stream');
     React = require('react');
-    ReactFlightDOMServer = require('react-dom/unstable-flight-server.browser');
+    ReactFlightDOMServer = require('react-dom/unstable-flight-server');
     ReactFlightDOMClient = require('react-dom/unstable-flight-client');
   });
+
+  function getTestStream() {
+    let writable = new Stream.PassThrough();
+    let readable = new ReadableStream({
+      start(controller) {
+        writable.on('data', chunk => {
+          controller.enqueue(chunk);
+        });
+        writable.on('end', () => {
+          controller.close();
+        });
+      },
+    });
+    return {
+      writable,
+      readable,
+    };
+  }
 
   async function waitForSuspense(fn) {
     while (true) {
@@ -41,7 +60,7 @@ describe('ReactFlightDOMBrowser', () => {
     }
   }
 
-  it('should resolve HTML using W3C streams', async () => {
+  it('should resolve HTML using Node streams', async () => {
     function Text({children}) {
       return <span>{children}</span>;
     }
@@ -61,8 +80,9 @@ describe('ReactFlightDOMBrowser', () => {
       return model;
     }
 
-    let stream = ReactFlightDOMServer.renderToReadableStream(<App />);
-    let result = ReactFlightDOMClient.readFromReadableStream(stream);
+    let {writable, readable} = getTestStream();
+    ReactFlightDOMServer.pipeToNodeWritable(<App />, writable);
+    let result = ReactFlightDOMClient.readFromReadableStream(readable);
     await waitForSuspense(() => {
       expect(result.model).toEqual({
         html: '<div><span>hello</span><span>world</span></div>',

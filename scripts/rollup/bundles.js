@@ -160,14 +160,14 @@ const bundles = [
     moduleType: RENDERER,
     entry: 'react-dom/unstable-fizz.browser',
     global: 'ReactDOMFizzServer',
-    externals: ['react'],
+    externals: ['react', 'react-dom/server'],
   },
   {
     bundleTypes: [NODE_DEV, NODE_PROD, FB_WWW_DEV, FB_WWW_PROD],
     moduleType: RENDERER,
     entry: 'react-dom/unstable-fizz.node',
     global: 'ReactDOMFizzServer',
-    externals: ['react'],
+    externals: ['react', 'react-dom/server'],
   },
 
   /******* React DOM Flight Server *******/
@@ -176,14 +176,14 @@ const bundles = [
     moduleType: RENDERER,
     entry: 'react-dom/unstable-flight-server.browser',
     global: 'ReactFlightDOMServer',
-    externals: ['react'],
+    externals: ['react', 'react-dom/server'],
   },
   {
     bundleTypes: [NODE_DEV, NODE_PROD, FB_WWW_DEV, FB_WWW_PROD],
     moduleType: RENDERER,
     entry: 'react-dom/unstable-flight-server.node',
     global: 'ReactFlightDOMServer',
-    externals: ['react'],
+    externals: ['react', 'react-dom/server'],
   },
 
   /******* React DOM Flight Client *******/

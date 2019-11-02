@@ -16,11 +16,11 @@
 
 import type {ReactModel} from 'react-server/flight.inline-typed';
 
-import ReactFlightStreamer from 'react-server/flight';
+import ReactFlightServer from 'react-server/flight';
 
 type Destination = Array<string>;
 
-const ReactNoopFlightServer = ReactFlightStreamer({
+const ReactNoopFlightServer = ReactFlightServer({
   scheduleWork(callback: () => void) {
     callback();
   },
@@ -39,6 +39,9 @@ const ReactNoopFlightServer = ReactFlightStreamer({
   },
   formatChunk(type: string, props: Object): Uint8Array {
     return Buffer.from(JSON.stringify({type, props}), 'utf8');
+  },
+  renderHostChildrenToString(children: React$Element<any>): string {
+    throw new Error('The noop rendered do not support host components');
   },
 });
 
