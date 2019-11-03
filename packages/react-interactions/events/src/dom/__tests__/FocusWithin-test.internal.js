@@ -143,7 +143,8 @@ describe.each(table)('FocusWithin responder', hasPointerEvents => {
     });
 
     it('is called after a focused element is unmounted', () => {
-      innerRef.current.focus();
+      const target = createEventTarget(innerRef.current);
+      target.focus();
       expect(onFocusWithinChange).toHaveBeenCalledTimes(1);
       expect(onFocusWithinChange).toHaveBeenCalledWith(true);
       ReactDOM.render(<Component show={false} />, container);
@@ -274,7 +275,7 @@ describe.each(table)('FocusWithin responder', hasPointerEvents => {
       const inner = innerRef.current;
       const target = createEventTarget(inner);
       target.keydown({key: 'Tab'});
-      inner.focus();
+      target.focus();
       expect(onFocusWithinVisibleChange).toHaveBeenCalledTimes(1);
       expect(onFocusWithinVisibleChange).toHaveBeenCalledWith(true);
       ReactDOM.render(<Component show={false} />, container);
