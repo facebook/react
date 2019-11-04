@@ -17,7 +17,6 @@ let Scheduler;
 
 function loadModules() {
   ReactFeatureFlags = require('shared/ReactFeatureFlags');
-  ReactFeatureFlags.debugRenderPhaseSideEffects = false;
   ReactFeatureFlags.debugRenderPhaseSideEffectsForStrictMode = false;
   ReactFeatureFlags.enableProfilerTimer = true;
   ReactFeatureFlags.enableSchedulerTracing = true;
