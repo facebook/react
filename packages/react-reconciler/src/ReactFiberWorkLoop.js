@@ -669,7 +669,7 @@ function performConcurrentWorkOnRoot(root, didTimeout) {
         root.current.expirationTime > root.current.childExpirationTime
           ? root.current.expirationTime
           : root.current.childExpirationTime;
-      if (remainingExpirationTimeOnRoot < renderExpirationTime) {
+      if (remainingExpirationTimeOnRoot < expirationTime) {
         // We can bailout without entering the work loop.
         markRootFinishedAtTime(
           root,
@@ -1023,7 +1023,7 @@ function performSyncWorkOnRoot(root) {
         root.current.expirationTime > root.current.childExpirationTime
           ? root.current.expirationTime
           : root.current.childExpirationTime;
-      if (remainingExpirationTimeOnRoot < renderExpirationTime) {
+      if (remainingExpirationTimeOnRoot < expirationTime) {
         // We can bailout without entering the work loop.
         markRootFinishedAtTime(
           root,
