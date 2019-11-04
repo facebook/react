@@ -570,7 +570,7 @@ const pressResponderImpl = {
                 metaKey,
                 shiftKey,
               } = (nativeEvent: MouseEvent);
-              if (nativeEvent.key === ' ') {
+              if (isValidKeyboardEvent(nativeEvent)) {
                 nativeEvent.preventDefault();
               } else if (
                 props.preventDefault !== false &&

@@ -106,7 +106,10 @@ function isValidKey(e): boolean {
 
 function handlePreventDefault(preventDefault: ?boolean, e: any): void {
   const key = e.key;
-  if (preventDefault !== false && (key === ' ' || key === 'Enter')) {
+  if (
+    preventDefault !== false &&
+    (key === ' ' || key === 'Enter' || key === 'Spacebar')
+  ) {
     e.preventDefault();
   }
 }
