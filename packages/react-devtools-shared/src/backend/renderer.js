@@ -328,7 +328,7 @@ export function getInternalReactConstants(
 
   // NOTICE Keep in sync with shouldFilterFiber() and other get*ForFiber methods
   function getDisplayNameForFiber(fiber: Fiber): string | null {
-    const {elementType, type, tag} = fiber;
+    const {type, tag} = fiber;
 
     // This is to support lazy components with a Promise as the type.
     // see https://github.com/facebook/react/pull/13397
@@ -348,10 +348,11 @@ export function getInternalReactConstants(
       case FunctionComponent:
       case IndeterminateComponent:
         return getDisplayName(resolvedType);
+      case MemoComponent:
+      case SimpleMemoComponent:
       case ForwardRef:
         return (
-          resolvedType.displayName ||
-          getDisplayName(resolvedType.render, 'Anonymous')
+          resolvedType.displayName || getDisplayName(resolvedType, 'Anonymous')
         );
       case HostRoot:
         return null;
@@ -361,13 +362,6 @@ export function getInternalReactConstants(
       case HostText:
       case Fragment:
         return null;
-      case MemoComponent:
-      case SimpleMemoComponent:
-        if (elementType.displayName) {
-          return elementType.displayName;
-        } else {
-          return getDisplayName(type, 'Anonymous');
-        }
       case SuspenseComponent:
         return 'Suspense';
       case SuspenseListComponent:

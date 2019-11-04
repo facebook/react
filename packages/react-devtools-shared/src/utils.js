@@ -29,6 +29,8 @@ import {
 } from 'react-devtools-shared/src/types';
 import {localStorageGetItem, localStorageSetItem} from './storage';
 
+import {isMemo, isForwardRef} from 'react-is';
+
 import type {ComponentFilter, ElementType} from './types';
 
 const cachedDisplayNames: WeakMap<Function, string> = new WeakMap();
@@ -55,6 +57,10 @@ export function getDisplayName(
     displayName = type.displayName;
   } else if (typeof type.name === 'string' && type.name !== '') {
     displayName = type.name;
+  } else if (isMemo(type)) {
+    displayName = getDisplayName(type.type);
+  } else if (isForwardRef(type)) {
+    displayName = getDisplayName(type.render);
   }
 
   cachedDisplayNames.set(type, displayName);
