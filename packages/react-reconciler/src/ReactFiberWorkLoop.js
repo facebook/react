@@ -661,6 +661,24 @@ function performConcurrentWorkOnRoot(root, didTimeout) {
       root !== workInProgressRoot ||
       expirationTime !== renderExpirationTime
     ) {
+      // Before starting a fresh render, check if we can bailout on the entire tree.
+      // For non-root fibers, this bailout usually happens in the begin phase
+      // of the parent component, but roots are special because they don't
+      // have parents.
+      const remainingExpirationTimeOnRoot =
+        root.current.expirationTime > root.current.childExpirationTime
+          ? root.current.expirationTime
+          : root.current.childExpirationTime;
+      if (remainingExpirationTimeOnRoot < renderExpirationTime) {
+        // We can bailout without entering the work loop.
+        markRootFinishedAtTime(
+          root,
+          expirationTime,
+          remainingExpirationTimeOnRoot,
+        );
+        return null;
+      }
+
       prepareFreshStack(root, expirationTime);
       startWorkOnPendingInteractions(root, expirationTime);
     }
@@ -997,6 +1015,24 @@ function performSyncWorkOnRoot(root) {
       root !== workInProgressRoot ||
       expirationTime !== renderExpirationTime
     ) {
+      // Before starting a fresh render, check if we can bailout on the entire tree.
+      // For non-root fibers, this bailout usually happens in the begin phase
+      // of the parent component, but roots are special because they don't
+      // have parents.
+      const remainingExpirationTimeOnRoot =
+        root.current.expirationTime > root.current.childExpirationTime
+          ? root.current.expirationTime
+          : root.current.childExpirationTime;
+      if (remainingExpirationTimeOnRoot < renderExpirationTime) {
+        // We can bailout without entering the work loop.
+        markRootFinishedAtTime(
+          root,
+          expirationTime,
+          remainingExpirationTimeOnRoot,
+        );
+        return null;
+      }
+
       prepareFreshStack(root, expirationTime);
       startWorkOnPendingInteractions(root, expirationTime);
     }
