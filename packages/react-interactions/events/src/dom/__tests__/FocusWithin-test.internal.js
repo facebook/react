@@ -77,23 +77,24 @@ describe.each(table)('FocusWithin responder', hasPointerEvents => {
   describe('onFocusWithinChange', () => {
     let onFocusWithinChange, ref, innerRef, innerRef2;
 
+    const Component = ({show}) => {
+      const listener = useFocusWithin({
+        onFocusWithinChange,
+      });
+      return (
+        <div ref={ref} listeners={listener}>
+          {show && <input ref={innerRef} />}
+          <div ref={innerRef2} />
+        </div>
+      );
+    };
+
     beforeEach(() => {
       onFocusWithinChange = jest.fn();
       ref = React.createRef();
       innerRef = React.createRef();
       innerRef2 = React.createRef();
-      const Component = () => {
-        const listener = useFocusWithin({
-          onFocusWithinChange,
-        });
-        return (
-          <div ref={ref} listeners={listener}>
-            <div ref={innerRef} />
-            <div ref={innerRef2} />
-          </div>
-        );
-      };
-      ReactDOM.render(<Component />, container);
+      ReactDOM.render(<Component show={true} />, container);
     });
 
     it('is called after "blur" and "focus" events on focus target', () => {
@@ -140,28 +141,39 @@ describe.each(table)('FocusWithin responder', hasPointerEvents => {
       expect(onFocusWithinChange).toHaveBeenCalledTimes(2);
       expect(onFocusWithinChange).toHaveBeenCalledWith(false);
     });
+
+    it('is called after a focused element is unmounted', () => {
+      const target = createEventTarget(innerRef.current);
+      target.focus();
+      expect(onFocusWithinChange).toHaveBeenCalledTimes(1);
+      expect(onFocusWithinChange).toHaveBeenCalledWith(true);
+      ReactDOM.render(<Component show={false} />, container);
+      expect(onFocusWithinChange).toHaveBeenCalledTimes(2);
+      expect(onFocusWithinChange).toHaveBeenCalledWith(false);
+    });
   });
 
   describe('onFocusWithinVisibleChange', () => {
     let onFocusWithinVisibleChange, ref, innerRef, innerRef2;
+
+    const Component = ({show}) => {
+      const listener = useFocusWithin({
+        onFocusWithinVisibleChange,
+      });
+      return (
+        <div ref={ref} listeners={listener}>
+          {show && <input ref={innerRef} />}
+          <div ref={innerRef2} />
+        </div>
+      );
+    };
 
     beforeEach(() => {
       onFocusWithinVisibleChange = jest.fn();
       ref = React.createRef();
       innerRef = React.createRef();
       innerRef2 = React.createRef();
-      const Component = () => {
-        const listener = useFocusWithin({
-          onFocusWithinVisibleChange,
-        });
-        return (
-          <div ref={ref} listeners={listener}>
-            <div ref={innerRef} />
-            <div ref={innerRef2} />
-          </div>
-        );
-      };
-      ReactDOM.render(<Component />, container);
+      ReactDOM.render(<Component show={true} />, container);
     });
 
     it('is called after "focus" and "blur" on focus target if keyboard was used', () => {
@@ -255,6 +267,18 @@ describe.each(table)('FocusWithin responder', hasPointerEvents => {
       expect(onFocusWithinVisibleChange).toHaveBeenCalledTimes(1);
       // focus shifts outside subtree
       innerTarget1.blur({relatedTarget: container});
+      expect(onFocusWithinVisibleChange).toHaveBeenCalledTimes(2);
+      expect(onFocusWithinVisibleChange).toHaveBeenCalledWith(false);
+    });
+
+    it('is called after a focused element is unmounted', () => {
+      const inner = innerRef.current;
+      const target = createEventTarget(inner);
+      target.keydown({key: 'Tab'});
+      target.focus();
+      expect(onFocusWithinVisibleChange).toHaveBeenCalledTimes(1);
+      expect(onFocusWithinVisibleChange).toHaveBeenCalledWith(true);
+      ReactDOM.render(<Component show={false} />, container);
       expect(onFocusWithinVisibleChange).toHaveBeenCalledTimes(2);
       expect(onFocusWithinVisibleChange).toHaveBeenCalledWith(false);
     });
