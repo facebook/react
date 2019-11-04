@@ -106,7 +106,9 @@ describe('ReactIs', () => {
 
   it('should identify ref forwarding component', () => {
     const RefForwardingComponent = React.forwardRef((props, ref) => null);
+    expect(ReactIs.typeOf(RefForwardingComponent)).toBe(ReactIs.ForwardRef);
     expect(ReactIs.typeOf(<RefForwardingComponent />)).toBe(ReactIs.ForwardRef);
+    expect(ReactIs.isForwardRef(RefForwardingComponent)).toBe(true);
     expect(ReactIs.isForwardRef(<RefForwardingComponent />)).toBe(true);
     expect(ReactIs.isForwardRef({type: ReactIs.StrictMode})).toBe(false);
     expect(ReactIs.isForwardRef(<div />)).toBe(false);
@@ -131,9 +133,10 @@ describe('ReactIs', () => {
 
   it('should identify memo', () => {
     const Component = () => React.createElement('div');
-    const memoized = React.memo(Component);
-    expect(ReactIs.typeOf(memoized)).toBe(ReactIs.Memo);
-    expect(ReactIs.isMemo(memoized)).toBe(true);
+    const Memoized = React.memo(Component);
+    expect(ReactIs.typeOf(Memoized)).toBe(ReactIs.Memo);
+    expect(ReactIs.typeOf(<Memoized />)).toBe(ReactIs.Element);
+    expect(ReactIs.isMemo(Memoized)).toBe(true);
     expect(ReactIs.isMemo(Component)).toBe(false);
   });
 

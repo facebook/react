@@ -56,6 +56,7 @@ export function typeOf(object: any) {
         }
       case REACT_LAZY_TYPE:
       case REACT_MEMO_TYPE:
+      case REACT_FORWARD_REF_TYPE:
       case REACT_PORTAL_TYPE:
         return $$typeof;
     }
