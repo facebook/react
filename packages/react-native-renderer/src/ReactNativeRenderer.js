@@ -49,7 +49,7 @@ const ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
 
 function findHostInstance_DEPRECATED(
   componentOrHandle: any,
-): ?HostComponent<mixed> {
+): ?React$ElementRef<HostComponent<mixed>> {
   if (__DEV__) {
     const owner = ReactCurrentOwner.current;
     if (owner !== null && owner.stateNode !== null) {
