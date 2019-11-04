@@ -140,18 +140,18 @@ describe('reactiverefs', () => {
     expectClickLogsLengthToBe(testRefsComponent, 1);
 
     // After clicking the reset, there should still only be one click log ref.
-    testRefsComponent.refs.resetDiv.click();
+    ReactTestUtils.act(() => testRefsComponent.refs.resetDiv.click());
     expectClickLogsLengthToBe(testRefsComponent, 1);
 
     // Begin incrementing clicks (and therefore refs).
-    clickIncrementer.click();
+    ReactTestUtils.act(() => clickIncrementer.click());
     expectClickLogsLengthToBe(testRefsComponent, 2);
 
-    clickIncrementer.click();
+    ReactTestUtils.act(() => clickIncrementer.click());
     expectClickLogsLengthToBe(testRefsComponent, 3);
 
     // Now reset again
-    testRefsComponent.refs.resetDiv.click();
+    ReactTestUtils.act(() => testRefsComponent.refs.resetDiv.click());
     expectClickLogsLengthToBe(testRefsComponent, 1);
   });
 });
