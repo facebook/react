@@ -13,7 +13,6 @@ import type {ExpirationTime} from './ReactFiberExpirationTime';
 import React from 'react';
 import {Update, Snapshot} from 'shared/ReactSideEffectTags';
 import {
-  debugRenderPhaseSideEffects,
   debugRenderPhaseSideEffectsForStrictMode,
   disableLegacyContext,
   warnAboutDeprecatedLifecycles,
@@ -150,9 +149,8 @@ export function applyDerivedStateFromProps(
 
   if (__DEV__) {
     if (
-      debugRenderPhaseSideEffects ||
-      (debugRenderPhaseSideEffectsForStrictMode &&
-        workInProgress.mode & StrictMode)
+      debugRenderPhaseSideEffectsForStrictMode &&
+      workInProgress.mode & StrictMode
     ) {
       // Invoke the function an extra time to help detect side-effects.
       getDerivedStateFromProps(nextProps, prevState);
@@ -605,9 +603,8 @@ function constructClassInstance(
   // Instantiate twice to help detect side-effects.
   if (__DEV__) {
     if (
-      debugRenderPhaseSideEffects ||
-      (debugRenderPhaseSideEffectsForStrictMode &&
-        workInProgress.mode & StrictMode)
+      debugRenderPhaseSideEffectsForStrictMode &&
+      workInProgress.mode & StrictMode
     ) {
       new ctor(props, context); // eslint-disable-line no-new
     }
