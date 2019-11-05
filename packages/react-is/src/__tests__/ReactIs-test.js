@@ -110,7 +110,6 @@ describe('ReactIs', () => {
     const RefForwardingComponent = React.forwardRef((props, ref) => null);
     expect(ReactIs.isValidElementType(RefForwardingComponent)).toBe(true);
     expect(ReactIs.typeOf(<RefForwardingComponent />)).toBe(ReactIs.ForwardRef);
-    expect(ReactIs.isForwardRef(RefForwardingComponent)).toBe(true);
     expect(ReactIs.isForwardRef(<RefForwardingComponent />)).toBe(true);
     expect(ReactIs.isForwardRef({type: ReactIs.StrictMode})).toBe(false);
     expect(ReactIs.isForwardRef(<div />)).toBe(false);

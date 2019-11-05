@@ -49,7 +49,6 @@ import {
   patch as patchConsole,
   registerRenderer as registerRendererWithConsole,
 } from './console';
-import {isMemo, isForwardRef} from 'react-is';
 
 import type {Fiber} from 'react-reconciler/src/ReactFiber';
 import type {
@@ -325,6 +324,10 @@ export function getInternalReactConstants(
     PROFILER_SYMBOL_STRING,
     SCOPE_NUMBER,
     SCOPE_SYMBOL_STRING,
+    FORWARD_REF_NUMBER,
+    FORWARD_REF_SYMBOL_STRING,
+    MEMO_NUMBER,
+    MEMO_SYMBOL_STRING,
   } = ReactSymbols;
 
   function resolveFiberType(type: any) {
@@ -333,14 +336,18 @@ export function getInternalReactConstants(
     if (typeof type.then === 'function') {
       return type._reactResult;
     }
-    if (isForwardRef(type)) {
-      return type.render;
+    const typeSymbol = getTypeSymbol(type);
+    switch (typeSymbol) {
+      case MEMO_NUMBER:
+      case MEMO_SYMBOL_STRING:
+        // recursively resolving memo type in case of memo(forwardRef(Component))
+        return resolveFiberType(type.type);
+      case FORWARD_REF_NUMBER:
+      case FORWARD_REF_SYMBOL_STRING:
+        return type.render;
+      default:
+        return type;
     }
-    // recursively resolving memo type in case of memo(forwardRef(Component))
-    if (isMemo(type)) {
-      return resolveFiberType(type.type);
-    }
-    return type;
   }
 
   // NOTICE Keep in sync with shouldFilterFiber() and other get*ForFiber methods
