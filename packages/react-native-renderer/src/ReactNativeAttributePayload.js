@@ -38,7 +38,7 @@ function defaultDiffer(prevProp: mixed, nextProp: mixed): boolean {
     return true;
   } else {
     // For objects and arrays, the default diffing algorithm is a deep compare
-    return deepDiffer(prevProp, nextProp);
+    return deepDiffer(prevProp, nextProp, {unsafelyIgnoreFunctions: true});
   }
 }
 
