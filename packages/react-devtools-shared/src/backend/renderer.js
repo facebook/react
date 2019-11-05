@@ -324,19 +324,39 @@ export function getInternalReactConstants(
     PROFILER_SYMBOL_STRING,
     SCOPE_NUMBER,
     SCOPE_SYMBOL_STRING,
+    FORWARD_REF_NUMBER,
+    FORWARD_REF_SYMBOL_STRING,
+    MEMO_NUMBER,
+    MEMO_SYMBOL_STRING,
   } = ReactSymbols;
+
+  function resolveFiberType(type: any) {
+    // This is to support lazy components with a Promise as the type.
+    // see https://github.com/facebook/react/pull/13397
+    if (typeof type.then === 'function') {
+      return type._reactResult;
+    }
+    const typeSymbol = getTypeSymbol(type);
+    switch (typeSymbol) {
+      case MEMO_NUMBER:
+      case MEMO_SYMBOL_STRING:
+        // recursively resolving memo type in case of memo(forwardRef(Component))
+        return resolveFiberType(type.type);
+      case FORWARD_REF_NUMBER:
+      case FORWARD_REF_SYMBOL_STRING:
+        return type.render;
+      default:
+        return type;
+    }
+  }
 
   // NOTICE Keep in sync with shouldFilterFiber() and other get*ForFiber methods
   function getDisplayNameForFiber(fiber: Fiber): string | null {
     const {elementType, type, tag} = fiber;
 
-    // This is to support lazy components with a Promise as the type.
-    // see https://github.com/facebook/react/pull/13397
     let resolvedType = type;
     if (typeof type === 'object' && type !== null) {
-      if (typeof type.then === 'function') {
-        resolvedType = type._reactResult;
-      }
+      resolvedType = resolveFiberType(type);
     }
 
     let resolvedContext: any = null;
@@ -350,8 +370,7 @@ export function getInternalReactConstants(
         return getDisplayName(resolvedType);
       case ForwardRef:
         return (
-          resolvedType.displayName ||
-          getDisplayName(resolvedType.render, 'Anonymous')
+          resolvedType.displayName || getDisplayName(resolvedType, 'Anonymous')
         );
       case HostRoot:
         return null;
@@ -366,7 +385,7 @@ export function getInternalReactConstants(
         if (elementType.displayName) {
           return elementType.displayName;
         } else {
-          return getDisplayName(type, 'Anonymous');
+          return getDisplayName(resolvedType, 'Anonymous');
         }
       case SuspenseComponent:
         return 'Suspense';
