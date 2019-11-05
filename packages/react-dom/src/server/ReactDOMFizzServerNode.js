@@ -13,7 +13,7 @@ import type {Writable} from 'stream';
 import {createRequest, startWork, startFlowing} from 'react-server/inline.dom';
 
 function createDrainHandler(destination, request) {
-  return () => startFlowing(request, 0);
+  return () => startFlowing(request);
 }
 
 function pipeToNodeWritable(

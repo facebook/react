@@ -17,7 +17,7 @@ import {
 } from 'react-server/flight.inline.dom';
 
 function createDrainHandler(destination, request) {
-  return () => startFlowing(request, 0);
+  return () => startFlowing(request);
 }
 
 function pipeToNodeWritable(model: ReactModel, destination: Writable): void {
