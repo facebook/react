@@ -19,8 +19,20 @@ import type {
 import type {RNTopLevelEventType} from 'legacy-events/TopLevelEventTypes';
 import type {CapturedError} from 'react-reconciler/src/ReactCapturedValue';
 
+type DeepDifferOptions = {|+unsafelyIgnoreFunctions?: boolean|};
+
 declare module 'react-native/Libraries/ReactPrivate/ReactNativePrivateInterface' {
-  declare export function deepDiffer(one: any, two: any): boolean;
+  declare export function deepDiffer(
+    one: any,
+    two: any,
+    maxDepth?: number,
+    options?: DeepDifferOptions,
+  ): boolean;
+  declare export function deepDiffer(
+    one: any,
+    two: any,
+    options: DeepDifferOptions,
+  ): boolean;
   declare export function deepFreezeAndThrowOnMutationInDev<T>(obj: T): T;
   declare export function flattenStyle(style: any): any;
   declare export var RCTEventEmitter: {

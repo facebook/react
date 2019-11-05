@@ -3,20 +3,43 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
+ *
+ * @format
+ * @flow
  */
 
 'use strict';
 
-// TODO: Move deepDiffer into react
+type Options = {|+unsafelyIgnoreFunctions?: boolean|};
 
-const deepDiffer = function(one: any, two: any): boolean {
+/*
+ * @returns {bool} true if different, false if equal
+ */
+const deepDiffer = function(
+  one: any,
+  two: any,
+  maxDepthOrOptions: Options | number = -1,
+  maybeOptions?: Options,
+): boolean {
+  const options =
+    typeof maxDepthOrOptions === 'number' ? maybeOptions : maxDepthOrOptions;
+  const maxDepth =
+    typeof maxDepthOrOptions === 'number' ? maxDepthOrOptions : -1;
+  if (maxDepth === 0) {
+    return true;
+  }
   if (one === two) {
     // Short circuit on identical object references instead of traversing them.
     return false;
   }
   if (typeof one === 'function' && typeof two === 'function') {
-    // We consider all functions equal
-    return false;
+    // We consider all functions equal unless explicitly configured otherwise
+    let unsafelyIgnoreFunctions =
+      options == null ? null : options.unsafelyIgnoreFunctions;
+    if (unsafelyIgnoreFunctions == null) {
+      unsafelyIgnoreFunctions = true;
+    }
+    return !unsafelyIgnoreFunctions;
   }
   if (typeof one !== 'object' || one === null) {
     // Primitives can be directly compared
@@ -37,13 +60,13 @@ const deepDiffer = function(one: any, two: any): boolean {
       return true;
     }
     for (let ii = 0; ii < len; ii++) {
-      if (deepDiffer(one[ii], two[ii])) {
+      if (deepDiffer(one[ii], two[ii], maxDepth - 1, options)) {
         return true;
       }
     }
   } else {
     for (const key in one) {
-      if (deepDiffer(one[key], two[key])) {
+      if (deepDiffer(one[key], two[key], maxDepth - 1, options)) {
         return true;
       }
     }
