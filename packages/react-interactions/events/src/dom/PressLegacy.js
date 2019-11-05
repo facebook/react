@@ -570,15 +570,14 @@ const pressResponderImpl = {
                 metaKey,
                 shiftKey,
               } = (nativeEvent: MouseEvent);
-              if (nativeEvent.key === ' ') {
-                nativeEvent.preventDefault();
-              } else if (
+              if (
                 props.preventDefault !== false &&
                 !shiftKey &&
                 !metaKey &&
                 !ctrlKey &&
                 !altKey
               ) {
+                nativeEvent.preventDefault();
                 state.shouldPreventClick = true;
               }
             } else {
