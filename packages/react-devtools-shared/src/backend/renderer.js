@@ -49,6 +49,7 @@ import {
   patch as patchConsole,
   registerRenderer as registerRendererWithConsole,
 } from './console';
+import {isMemo, isForwardRef} from 'react-is';
 
 import type {Fiber} from 'react-reconciler/src/ReactFiber';
 import type {
@@ -326,17 +327,29 @@ export function getInternalReactConstants(
     SCOPE_SYMBOL_STRING,
   } = ReactSymbols;
 
-  // NOTICE Keep in sync with shouldFilterFiber() and other get*ForFiber methods
-  function getDisplayNameForFiber(fiber: Fiber): string | null {
-    const {type, tag} = fiber;
-
+  function resolveFiberType(type: any) {
     // This is to support lazy components with a Promise as the type.
     // see https://github.com/facebook/react/pull/13397
+    if (typeof type.then === 'function') {
+      return type._reactResult;
+    }
+    if (isForwardRef(type)) {
+      return type.render;
+    }
+    // recursively resolving memo type in case of memo(forwardRef(Component))
+    if (isMemo(type)) {
+      return resolveFiberType(type.type);
+    }
+    return type;
+  }
+
+  // NOTICE Keep in sync with shouldFilterFiber() and other get*ForFiber methods
+  function getDisplayNameForFiber(fiber: Fiber): string | null {
+    const {elementType, type, tag} = fiber;
+
     let resolvedType = type;
     if (typeof type === 'object' && type !== null) {
-      if (typeof type.then === 'function') {
-        resolvedType = type._reactResult;
-      }
+      resolvedType = resolveFiberType(type);
     }
 
     let resolvedContext: any = null;
@@ -348,8 +361,6 @@ export function getInternalReactConstants(
       case FunctionComponent:
       case IndeterminateComponent:
         return getDisplayName(resolvedType);
-      case MemoComponent:
-      case SimpleMemoComponent:
       case ForwardRef:
         return (
           resolvedType.displayName || getDisplayName(resolvedType, 'Anonymous')
@@ -362,6 +373,13 @@ export function getInternalReactConstants(
       case HostText:
       case Fragment:
         return null;
+      case MemoComponent:
+      case SimpleMemoComponent:
+        if (elementType.displayName) {
+          return elementType.displayName;
+        } else {
+          return getDisplayName(resolvedType, 'Anonymous');
+        }
       case SuspenseComponent:
         return 'Suspense';
       case SuspenseListComponent:
