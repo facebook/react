@@ -2111,6 +2111,183 @@ describe('ReactHooksWithNoopRenderer', () => {
         ]);
       },
     );
+
+    it.experimental('always returns the same startTransition', async () => {
+      let transition;
+      function App() {
+        const [step, setStep] = useState(0);
+        const [startTransition, isPending] = useTransition({
+          busyDelayMs: 1000,
+          busyMinDurationMs: 2000,
+        });
+        // Log whenever startTransition changes
+        useEffect(
+          () => {
+            Scheduler.unstable_yieldValue('New startTransition function');
+          },
+          [startTransition],
+        );
+        transition = () => {
+          startTransition(() => {
+            setStep(n => n + 1);
+          });
+        };
+        return (
+          <Suspense fallback={<Text text="Loading..." />}>
+            <AsyncText key={step} ms={2000} text={`Step: ${step}`} />
+            {isPending && <Text text="(pending...)" />}
+          </Suspense>
+        );
+      }
+
+      const root = ReactNoop.createRoot();
+      await ReactNoop.act(async () => {
+        root.render(<App />);
+      });
+      expect(Scheduler).toHaveYielded([
+        'Suspend! [Step: 0]',
+        'Loading...',
+        // Initial mount. This should never be logged again.
+        'New startTransition function',
+      ]);
+      await ReactNoop.act(async () => {
+        await advanceTimers(2000);
+      });
+      expect(Scheduler).toHaveYielded([
+        'Promise resolved [Step: 0]',
+        'Step: 0',
+      ]);
+
+      // Update. The effect should not fire.
+      await ReactNoop.act(async () => {
+        Scheduler.unstable_runWithPriority(
+          Scheduler.unstable_UserBlockingPriority,
+          transition,
+        );
+      });
+      expect(Scheduler).toHaveYielded([
+        'Step: 0',
+        '(pending...)',
+        'Suspend! [Step: 1]',
+        'Loading...',
+        // No log effect, because startTransition did not change
+      ]);
+    });
+
+    it.experimental(
+      'can update suspense config (without changing startTransition)',
+      async () => {
+        let transition;
+        function App({timeoutMs}) {
+          const [step, setStep] = useState(0);
+          const [startTransition, isPending] = useTransition({timeoutMs});
+          // Log whenever startTransition changes
+          useEffect(
+            () => {
+              Scheduler.unstable_yieldValue('New startTransition function');
+            },
+            [startTransition],
+          );
+          transition = () => {
+            startTransition(() => {
+              setStep(n => n + 1);
+            });
+          };
+          return (
+            <Suspense fallback={<Text text="Loading..." />}>
+              <AsyncText key={step} ms={2000} text={`Step: ${step}`} />
+              {isPending && <Text text="(pending...)" />}
+            </Suspense>
+          );
+        }
+
+        const root = ReactNoop.createRoot();
+        await ReactNoop.act(async () => {
+          root.render(<App timeoutMs={500} />);
+        });
+        expect(Scheduler).toHaveYielded([
+          'Suspend! [Step: 0]',
+          'Loading...',
+          // Initial mount. This should never be logged again.
+          'New startTransition function',
+        ]);
+        await ReactNoop.act(async () => {
+          await advanceTimers(2000);
+        });
+        expect(Scheduler).toHaveYielded([
+          'Promise resolved [Step: 0]',
+          'Step: 0',
+        ]);
+
+        // Schedule a transition. Should timeout quickly.
+        await ReactNoop.act(async () => {
+          Scheduler.unstable_runWithPriority(
+            Scheduler.unstable_UserBlockingPriority,
+            transition,
+          );
+
+          expect(Scheduler).toFlushAndYield([
+            'Step: 0',
+            '(pending...)',
+            'Suspend! [Step: 1]',
+            'Loading...',
+            // No log effect, because startTransition did not change
+          ]);
+
+          // Advance time. This should be sufficient to timeout.
+          await advanceTimers(1000);
+          expect(Scheduler).toFlushAndYield([]);
+          // Show placeholder.
+          expect(root).toMatchRenderedOutput(
+            <>
+              <span prop="Step: 0" hidden={true} />
+              <span prop="(pending...)" hidden={true} />
+              <span prop="Loading..." />
+            </>,
+          );
+          // Resolve the promise
+          await advanceTimers(10000);
+        });
+        expect(Scheduler).toHaveYielded([
+          'Promise resolved [Step: 1]',
+          'Step: 1',
+        ]);
+
+        // Increase the timeout threshold
+        await ReactNoop.act(async () => {
+          root.render(<App timeoutMs={5000} />);
+        });
+        expect(Scheduler).toHaveYielded(['Step: 1']);
+
+        // Schedule a transition again. This time it should take longer
+        // to timeout.
+        await ReactNoop.act(async () => {
+          Scheduler.unstable_runWithPriority(
+            Scheduler.unstable_UserBlockingPriority,
+            transition,
+          );
+
+          expect(Scheduler).toFlushAndYield([
+            'Step: 1',
+            '(pending...)',
+            'Suspend! [Step: 2]',
+            'Loading...',
+            // No log effect, because startTransition did not change
+          ]);
+
+          // Advance time. This should *not* be sufficient to timeout.
+          await advanceTimers(1000);
+          expect(Scheduler).toFlushAndYield([]);
+          // Still showing pending state, no placeholder.
+          expect(root).toMatchRenderedOutput(
+            <>
+              <span prop="Step: 1" />
+              <span prop="(pending...)" />
+            </>,
+          );
+        });
+      },
+    );
   });
   describe('useDeferredValue', () => {
     it.experimental('defers text value until specified timeout', async () => {
