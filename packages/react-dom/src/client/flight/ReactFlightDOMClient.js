@@ -26,7 +26,7 @@ function startReadingFromStream(response, stream: ReadableStream): void {
       return;
     }
     let buffer: Uint8Array = (value: any);
-    processBinaryChunk(response, buffer, 0);
+    processBinaryChunk(response, buffer);
     return reader.read().then(progress, error);
   }
   function error(e) {

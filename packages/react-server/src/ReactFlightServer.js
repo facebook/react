@@ -174,16 +174,23 @@ function emitErrorChunk(
   id: number,
   error: mixed,
 ): void {
-  // TODO: We should not leak error messages to the client.
+  // TODO: We should not leak error messages to the client in prod.
   // Give this an error code instead and log on the server.
-  let errorMessage;
+  // We can serialize the error in DEV as a convenience.
+  let message;
+  let stack = '';
   try {
-    errorMessage = '' + (error: any);
+    if (error instanceof Error) {
+      message = '' + error.message;
+      stack = '' + error.stack;
+    } else {
+      message = 'Error: ' + (error: any);
+    }
   } catch (x) {
-    errorMessage =
-      'An error occurred but serializing the error message failed.';
+    message = 'An error occurred but serializing the error message failed.';
   }
-  let row = serializeRowHeader('E', id) + errorMessage + '\n';
+  let errorInfo = {message, stack};
+  let row = serializeRowHeader('E', id) + stringify(errorInfo) + '\n';
   request.completedErrorChunks.push(convertStringToBuffer(row));
 }
 
