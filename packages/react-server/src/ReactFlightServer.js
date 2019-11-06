@@ -235,7 +235,12 @@ function performWork(request: OpaqueRequest): void {
   }
 }
 
+let reentrant = false;
 function flushCompletedChunks(request: OpaqueRequest): void {
+  if (reentrant) {
+    return;
+  }
+  reentrant = true;
   let destination = request.destination;
   beginWriting(destination);
   try {
@@ -264,6 +269,7 @@ function flushCompletedChunks(request: OpaqueRequest): void {
     }
     errorChunks.splice(0, i);
   } finally {
+    reentrant = false;
     completeWriting(destination);
   }
   flushBuffered(destination);
