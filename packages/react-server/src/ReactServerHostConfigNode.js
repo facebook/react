@@ -9,7 +9,10 @@
 
 import type {Writable} from 'stream';
 
-type MightBeFlushable = {flush?: () => void};
+type MightBeFlushable = {
+  flush?: () => void,
+  flushHeaders?: () => void, // Legacy
+};
 
 export type Destination = Writable & MightBeFlushable;
 
@@ -21,13 +24,20 @@ export function flushBuffered(destination: Destination) {
   // If we don't have any more data to send right now.
   // Flush whatever is in the buffer to the wire.
   if (typeof destination.flush === 'function') {
-    // By convention the Zlib streams provide a flush function for this purpose.
-    destination.flush();
+    // http.createServer response have flush(), but it has a different meaning and
+    // is deprecated in favor of flushHeaders(). Detect to avoid a warning.
+    if (typeof destination.flushHeaders !== 'function') {
+      // By convention the Zlib streams provide a flush function for this purpose.
+      destination.flush();
+    }
   }
 }
 
 export function beginWriting(destination: Destination) {
-  destination.cork();
+  // Older Node streams like http.createServer don't have this.
+  if (typeof destination.cork === 'function') {
+    destination.cork();
+  }
 }
 
 export function writeChunk(destination: Destination, buffer: Uint8Array) {
@@ -36,7 +46,10 @@ export function writeChunk(destination: Destination, buffer: Uint8Array) {
 }
 
 export function completeWriting(destination: Destination) {
-  destination.uncork();
+  // Older Node streams like http.createServer don't have this.
+  if (typeof destination.uncork === 'function') {
+    destination.uncork();
+  }
 }
 
 export function close(destination: Destination) {
