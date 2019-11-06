@@ -45,7 +45,12 @@ type FocusProps = {
   onFocusVisibleChange: boolean => void,
 };
 
-type FocusEventType = 'focus' | 'blur' | 'focuschange' | 'focusvisiblechange';
+type FocusEventType =
+  | 'focus'
+  | 'blur'
+  | 'focuschange'
+  | 'focusvisiblechange'
+  | 'detachedvisiblenode';
 
 type FocusWithinProps = {
   disabled?: boolean,
@@ -53,13 +58,15 @@ type FocusWithinProps = {
   onBlurWithin?: (e: FocusEvent) => void,
   onFocusWithinChange?: boolean => void,
   onFocusWithinVisibleChange?: boolean => void,
+  onDetachedVisibleNode?: (e: FocusEvent) => void,
 };
 
 type FocusWithinEventType =
   | 'focuswithinvisiblechange'
   | 'focuswithinchange'
   | 'blurwithin'
-  | 'focuswithin';
+  | 'focuswithin'
+  | 'detachedvisiblenode';
 
 /**
  * Shared between Focus and FocusWithin
@@ -72,7 +79,7 @@ const isMac =
     ? /^Mac/.test(window.navigator.platform)
     : false;
 
-const targetEventTypes = ['focus', 'blur'];
+const targetEventTypes = ['focus', 'blur', 'detachedvisiblenode'];
 
 const hasPointerEvents =
   typeof window !== 'undefined' && window.PointerEvent != null;
@@ -506,6 +513,22 @@ const focusWithinResponderImpl = {
           state.isFocused = false;
         }
         break;
+      }
+      case 'detachedvisiblenode': {
+        const onDetachedVisibleNode = (props.onDetachedVisibleNode: any);
+        if (isFunction(onDetachedVisibleNode)) {
+          const syntheticEvent = createFocusEvent(
+            context,
+            'detachedvisiblenode',
+            event.target,
+            state.pointerType,
+          );
+          context.dispatchEvent(
+            syntheticEvent,
+            onDetachedVisibleNode,
+            DiscreteEvent,
+          );
+        }
       }
     }
   },

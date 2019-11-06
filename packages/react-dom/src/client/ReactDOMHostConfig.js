@@ -452,7 +452,11 @@ export function insertInContainerBefore(
   }
 }
 
-function handleSimulateChildBlur(
+// This is a specific event for the React Flare
+// event system, so event responders can act
+// accordingly to a DOM node being unmounted that
+// previously had active document focus.
+function dispatchDetachedVisibleNodeEvent(
   child: Instance | TextInstance | SuspenseInstance,
 ): void {
   if (
@@ -463,13 +467,11 @@ function handleSimulateChildBlur(
     const targetFiber = getClosestInstanceFromNode(child);
     // Simlulate a blur event to the React Flare responder system.
     dispatchEventForResponderEventSystem(
-      'blur',
+      'detachedvisiblenode',
       targetFiber,
       ({
-        relatedTarget: null,
         target: child,
         timeStamp: Date.now(),
-        type: 'blur',
       }: any),
       ((child: any): Document | Element),
       RESPONDER_EVENT_SYSTEM | IS_PASSIVE,
@@ -481,7 +483,7 @@ export function removeChild(
   parentInstance: Instance,
   child: Instance | TextInstance | SuspenseInstance,
 ): void {
-  handleSimulateChildBlur(child);
+  dispatchDetachedVisibleNodeEvent(child);
   parentInstance.removeChild(child);
 }
 
@@ -492,7 +494,7 @@ export function removeChildFromContainer(
   if (container.nodeType === COMMENT_NODE) {
     (container.parentNode: any).removeChild(child);
   } else {
-    handleSimulateChildBlur(child);
+    dispatchDetachedVisibleNodeEvent(child);
     container.removeChild(child);
   }
 }
