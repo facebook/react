@@ -37,12 +37,17 @@ function collectScopedNodes(
   node: Fiber,
   fn: (type: string | Object, props: Object) => boolean,
   scopedNodes: Array<any>,
+  searchNode: null | Set<Object>,
 ): void {
   if (enableScopeAPI) {
     if (node.tag === HostComponent) {
+      const instance = getPublicInstance(node.stateNode);
       const {type, memoizedProps} = node;
-      if (fn(type, memoizedProps || emptyObject) === true) {
-        scopedNodes.push(getPublicInstance(node.stateNode));
+      if (
+        (searchNode !== null && searchNode.has(instance)) ||
+        fn(type, memoizedProps || emptyObject) === true
+      ) {
+        scopedNodes.push(instance);
       }
     }
     let child = node.child;
@@ -51,7 +56,7 @@ function collectScopedNodes(
       child = getSuspenseFallbackChild(node);
     }
     if (child !== null) {
-      collectScopedNodesFromChildren(child, fn, scopedNodes);
+      collectScopedNodesFromChildren(child, fn, scopedNodes, searchNode);
     }
   }
 }
@@ -83,10 +88,11 @@ function collectScopedNodesFromChildren(
   startingChild: Fiber,
   fn: (type: string | Object, props: Object) => boolean,
   scopedNodes: Array<any>,
+  searchNode: null | Set<Object>,
 ): void {
   let child = startingChild;
   while (child !== null) {
-    collectScopedNodes(child, fn, scopedNodes);
+    collectScopedNodes(child, fn, scopedNodes, searchNode);
     child = child.sibling;
   }
 }
@@ -192,12 +198,14 @@ export function createScopeMethods(
     },
     queryAllNodes(
       fn: (type: string | Object, props: Object) => boolean,
+      searchNodes?: Array<Object>,
     ): null | Array<Object> {
       const currentFiber = ((instance.fiber: any): Fiber);
       const child = currentFiber.child;
       const scopedNodes = [];
+      const searchNodeSet = searchNodes ? new Set(searchNodes) : null;
       if (child !== null) {
-        collectScopedNodesFromChildren(child, fn, scopedNodes);
+        collectScopedNodesFromChildren(child, fn, scopedNodes, searchNodeSet);
       }
       return scopedNodes.length === 0 ? null : scopedNodes;
     },
