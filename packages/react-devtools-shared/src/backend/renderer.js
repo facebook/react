@@ -331,11 +331,6 @@ export function getInternalReactConstants(
   } = ReactSymbols;
 
   function resolveFiberType(type: any) {
-    // This is to support lazy components with a Promise as the type.
-    // see https://github.com/facebook/react/pull/13397
-    if (typeof type.then === 'function') {
-      return type._reactResult;
-    }
     const typeSymbol = getTypeSymbol(type);
     switch (typeSymbol) {
       case MEMO_NUMBER:
