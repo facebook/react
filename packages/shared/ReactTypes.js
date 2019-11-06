@@ -171,6 +171,7 @@ export type ReactScopeMethods = {|
   getProps(): Object,
   queryAllNodes(
     (type: string | Object, props: Object) => boolean,
+    searchNodes?: Array<Object>,
   ): null | Array<Object>,
   queryFirstNode(
     (type: string | Object, props: Object) => boolean,
