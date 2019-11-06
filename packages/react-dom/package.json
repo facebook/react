@@ -39,6 +39,7 @@
     "unstable-fizz.js",
     "unstable-fizz.browser.js",
     "unstable-fizz.node.js",
+    "unstable-flight-client.js",
     "unstable-flight-server.js",
     "unstable-flight-server.browser.js",
     "unstable-flight-server.node.js",

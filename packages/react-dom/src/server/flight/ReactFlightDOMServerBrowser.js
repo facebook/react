@@ -23,7 +23,7 @@ function renderToReadableStream(model: ReactModel): ReadableStream {
       startWork(request);
     },
     pull(controller) {
-      startFlowing(request, controller.desiredSize);
+      startFlowing(request);
     },
     cancel(reason) {},
   });

@@ -19,8 +19,8 @@
 
 'use strict';
 
-const ReactFlightStreamer = require('./src/ReactFlightStreamer');
+const ReactFlightServer = require('./src/ReactFlightServer');
 
 // TODO: decide on the top-level export form.
 // This is hacky but makes it work with both Rollup and Jest.
-module.exports = ReactFlightStreamer.default || ReactFlightStreamer;
+module.exports = ReactFlightServer.default || ReactFlightServer;

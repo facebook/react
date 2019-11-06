@@ -914,8 +914,7 @@ describe.each(environmentTable)('Press responder', hasPointerEvents => {
       ReactDOM.render(<Component />, container);
 
       const target = createEventTarget(ref.current);
-      target.keydown({key: 'Enter'});
-      target.click({preventDefault});
+      target.keydown({key: 'Enter', preventDefault});
       target.keyup({key: 'Enter'});
       expect(preventDefault).toBeCalled();
       expect(onPress).toHaveBeenCalledWith(

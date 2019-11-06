@@ -845,56 +845,54 @@ describe('DOMEventResponderSystem', () => {
     buttonRef.current.dispatchEvent(createEvent('foobar'));
   });
 
-  if (__EXPERIMENTAL__) {
-    it('should work with concurrent mode updates', async () => {
-      const log = [];
-      const TestResponder = createEventResponder({
-        targetEventTypes: ['click'],
-        onEvent(event, context, props) {
-          log.push(props);
-        },
-      });
-      const ref = React.createRef();
-
-      function Test({counter}) {
-        const listener = React.unstable_useResponder(TestResponder, {counter});
-        Scheduler.unstable_yieldValue('Test');
-        return (
-          <button listeners={listener} ref={ref}>
-            Press me
-          </button>
-        );
-      }
-
-      let root = ReactDOM.createRoot(container);
-      root.render(<Test counter={0} />);
-      expect(Scheduler).toFlushAndYield(['Test']);
-
-      // Click the button
-      dispatchClickEvent(ref.current);
-      expect(log).toEqual([{counter: 0}]);
-
-      // Clear log
-      log.length = 0;
-
-      // Increase counter
-      root.render(<Test counter={1} />);
-      // Yield before committing
-      expect(Scheduler).toFlushAndYieldThrough(['Test']);
-
-      // Click the button again
-      dispatchClickEvent(ref.current);
-      expect(log).toEqual([{counter: 0}]);
-
-      // Clear log
-      log.length = 0;
-
-      // Commit
-      expect(Scheduler).toFlushAndYield([]);
-      dispatchClickEvent(ref.current);
-      expect(log).toEqual([{counter: 1}]);
+  it.experimental('should work with concurrent mode updates', async () => {
+    const log = [];
+    const TestResponder = createEventResponder({
+      targetEventTypes: ['click'],
+      onEvent(event, context, props) {
+        log.push(props);
+      },
     });
-  }
+    const ref = React.createRef();
+
+    function Test({counter}) {
+      const listener = React.unstable_useResponder(TestResponder, {counter});
+      Scheduler.unstable_yieldValue('Test');
+      return (
+        <button listeners={listener} ref={ref}>
+          Press me
+        </button>
+      );
+    }
+
+    let root = ReactDOM.createRoot(container);
+    root.render(<Test counter={0} />);
+    expect(Scheduler).toFlushAndYield(['Test']);
+
+    // Click the button
+    dispatchClickEvent(ref.current);
+    expect(log).toEqual([{counter: 0}]);
+
+    // Clear log
+    log.length = 0;
+
+    // Increase counter
+    root.render(<Test counter={1} />);
+    // Yield before committing
+    expect(Scheduler).toFlushAndYieldThrough(['Test']);
+
+    // Click the button again
+    dispatchClickEvent(ref.current);
+    expect(log).toEqual([{counter: 0}]);
+
+    // Clear log
+    log.length = 0;
+
+    // Commit
+    expect(Scheduler).toFlushAndYield([]);
+    dispatchClickEvent(ref.current);
+    expect(log).toEqual([{counter: 1}]);
+  });
 
   it('should correctly pass through event properties', () => {
     const timeStamps = [];

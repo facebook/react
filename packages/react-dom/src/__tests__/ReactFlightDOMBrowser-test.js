@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  *
  * @emails react-core
+ * @jest-environment node
  */
 
 'use strict';
@@ -12,30 +13,35 @@
 // Polyfills for test environment
 global.ReadableStream = require('@mattiasbuelens/web-streams-polyfill/ponyfill/es6').ReadableStream;
 global.TextEncoder = require('util').TextEncoder;
+global.TextDecoder = require('util').TextDecoder;
 
 let React;
 let ReactFlightDOMServer;
+let ReactFlightDOMClient;
 
-describe('ReactFlightDOM', () => {
+describe('ReactFlightDOMBrowser', () => {
   beforeEach(() => {
     jest.resetModules();
     React = require('react');
     ReactFlightDOMServer = require('react-dom/unstable-flight-server.browser');
+    ReactFlightDOMClient = require('react-dom/unstable-flight-client');
   });
 
-  async function readResult(stream) {
-    let reader = stream.getReader();
-    let result = '';
+  async function waitForSuspense(fn) {
     while (true) {
-      let {done, value} = await reader.read();
-      if (done) {
-        return result;
+      try {
+        return fn();
+      } catch (promise) {
+        if (typeof promise.then === 'function') {
+          await promise;
+        } else {
+          throw promise;
+        }
       }
-      result += Buffer.from(value).toString('utf8');
     }
   }
 
-  it('should resolve HTML', async () => {
+  it('should resolve HTML using W3C streams', async () => {
     function Text({children}) {
       return <span>{children}</span>;
     }
@@ -48,14 +54,19 @@ describe('ReactFlightDOM', () => {
       );
     }
 
-    let model = {
-      html: <HTML />,
-    };
-    let stream = ReactFlightDOMServer.renderToReadableStream(model);
-    jest.runAllTimers();
-    let result = JSON.parse(await readResult(stream));
-    expect(result).toEqual({
-      html: '<div><span>hello</span><span>world</span></div>',
+    function App() {
+      let model = {
+        html: <HTML />,
+      };
+      return model;
+    }
+
+    let stream = ReactFlightDOMServer.renderToReadableStream(<App />);
+    let result = ReactFlightDOMClient.readFromReadableStream(stream);
+    await waitForSuspense(() => {
+      expect(result.model).toEqual({
+        html: '<div><span>hello</span><span>world</span></div>',
+      });
     });
   });
 });

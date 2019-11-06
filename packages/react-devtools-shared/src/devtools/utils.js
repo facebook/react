@@ -7,6 +7,11 @@
  * @flow
  */
 
+import {
+  ElementTypeForwardRef,
+  ElementTypeMemo,
+} from 'react-devtools-shared/src/types';
+
 import type {Element} from './views/Components/types';
 import type Store from './store';
 
@@ -21,10 +26,25 @@ export function printElement(element: Element, includeWeight: boolean = false) {
     key = ` key="${element.key}"`;
   }
 
-  let hocs = '';
+  let hocDisplayNames = null;
   if (element.hocDisplayNames !== null) {
-    hocs = ` [${element.hocDisplayNames.join('][')}]`;
+    hocDisplayNames = [...element.hocDisplayNames];
   }
+  if (element.type === ElementTypeMemo) {
+    if (hocDisplayNames === null) {
+      hocDisplayNames = ['Memo'];
+    } else {
+      hocDisplayNames.push('Memo');
+    }
+  } else if (element.type === ElementTypeForwardRef) {
+    if (hocDisplayNames === null) {
+      hocDisplayNames = ['ForwardRef'];
+    } else {
+      hocDisplayNames.push('ForwardRef');
+    }
+  }
+
+  let hocs = hocDisplayNames === null ? '' : ` [${hocDisplayNames.join('][')}]`;
 
   let suffix = '';
   if (includeWeight) {

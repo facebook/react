@@ -13,4 +13,3 @@ export const {
 } = require('SchedulerFeatureFlags');
 
 export const enableProfiling = __PROFILE__ && enableProfilingFeatureFlag;
-export const enableMessageLoopImplementation = true;

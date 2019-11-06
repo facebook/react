@@ -7,44 +7,28 @@
  * @flow
  */
 
-export type Destination = ReadableStreamController;
+export type Source = Promise<Response> | ReadableStream | XMLHttpRequest;
 
-export function scheduleWork(callback: () => void) {
-  callback();
+export type StringDecoder = TextDecoder;
+
+export const supportsBinaryStreams = true;
+
+export function createStringDecoder(): StringDecoder {
+  return new TextDecoder();
 }
 
-export function flushBuffered(destination: Destination) {
-  // WHATWG Streams do not yet have a way to flush the underlying
-  // transform streams. https://github.com/whatwg/streams/issues/960
+const decoderOptions = {stream: true};
+
+export function readPartialStringChunk(
+  decoder: StringDecoder,
+  buffer: Uint8Array,
+): string {
+  return decoder.decode(buffer, decoderOptions);
 }
 
-export function beginWriting(destination: Destination) {}
-
-export function writeChunk(destination: Destination, buffer: Uint8Array) {
-  destination.enqueue(buffer);
-}
-
-export function completeWriting(destination: Destination) {}
-
-export function close(destination: Destination) {
-  destination.close();
-}
-
-const textEncoder = new TextEncoder();
-
-export function convertStringToBuffer(content: string): Uint8Array {
-  return textEncoder.encode(content);
-}
-
-export function formatChunkAsString(type: string, props: Object): string {
-  let str = '<' + type + '>';
-  if (typeof props.children === 'string') {
-    str += props.children;
-  }
-  str += '</' + type + '>';
-  return str;
-}
-
-export function formatChunk(type: string, props: Object): Uint8Array {
-  return convertStringToBuffer(formatChunkAsString(type, props));
+export function readFinalStringChunk(
+  decoder: StringDecoder,
+  buffer: Uint8Array,
+): string {
+  return decoder.decode(buffer);
 }

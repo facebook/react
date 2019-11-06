@@ -32,6 +32,10 @@ module.exports = {
     SharedArrayBuffer: true,
     Int32Array: true,
     ArrayBuffer: true,
+
+    // Flight
+    Uint8Array: true,
+    Promise: true,
   },
   parserOptions: {
     ecmaVersion: 5,

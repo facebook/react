@@ -14,41 +14,30 @@
  * environment.
  */
 
-import type {ReactModel} from 'react-flight/inline-typed';
+import type {ReactModelRoot} from 'react-flight/inline-typed';
 
 import ReactFlightClient from 'react-flight';
 
-type Destination = Array<string>;
+type Source = Array<string>;
 
-const ReactNoopFlightClient = ReactFlightClient({
-  scheduleWork(callback: () => void) {
-    callback();
-  },
-  beginWriting(destination: Destination): void {},
-  writeChunk(destination: Destination, buffer: Uint8Array): void {
-    destination.push(JSON.parse(Buffer.from((buffer: any)).toString('utf8')));
-  },
-  completeWriting(destination: Destination): void {},
-  close(destination: Destination): void {},
-  flushBuffered(destination: Destination): void {},
-  convertStringToBuffer(content: string): Uint8Array {
-    return Buffer.from(content, 'utf8');
-  },
-  formatChunkAsString(type: string, props: Object): string {
-    return JSON.stringify({type, props});
-  },
-  formatChunk(type: string, props: Object): Uint8Array {
-    return Buffer.from(JSON.stringify({type, props}), 'utf8');
-  },
+const {
+  createResponse,
+  getModelRoot,
+  processStringChunk,
+  complete,
+} = ReactFlightClient({
+  supportsBinaryStreams: false,
 });
 
-function render(model: ReactModel): Destination {
-  let destination: Destination = [];
-  let request = ReactNoopFlightClient.createRequest(model, destination);
-  ReactNoopFlightClient.startWork(request);
-  return destination;
+function read<T>(source: Source): ReactModelRoot<T> {
+  let response = createResponse(source);
+  for (let i = 0; i < source.length; i++) {
+    processStringChunk(response, source[i], 0);
+  }
+  complete(response);
+  return getModelRoot(response);
 }
 
 export default {
-  render,
+  read,
 };

@@ -76,10 +76,7 @@ export function startWork(request: OpaqueRequest): void {
   scheduleWork(() => performWork(request));
 }
 
-export function startFlowing(
-  request: OpaqueRequest,
-  desiredBytes: number,
-): void {
+export function startFlowing(request: OpaqueRequest): void {
   request.flowing = false;
   flushCompletedChunks(request);
 }

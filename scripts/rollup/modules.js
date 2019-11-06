@@ -17,12 +17,14 @@ const importSideEffects = Object.freeze({
   'react-native/Libraries/ReactPrivate/ReactNativePrivateInterface': HAS_NO_SIDE_EFFECTS_ON_IMPORT,
   scheduler: HAS_NO_SIDE_EFFECTS_ON_IMPORT,
   'scheduler/tracing': HAS_NO_SIDE_EFFECTS_ON_IMPORT,
+  'react-dom/server': HAS_NO_SIDE_EFFECTS_ON_IMPORT,
 });
 
 // Bundles exporting globals that other modules rely on.
 const knownGlobals = Object.freeze({
   react: 'React',
   'react-dom': 'ReactDOM',
+  'react-dom/server': 'ReactDOMServer',
   'react-interactions/events/keyboard': 'ReactEventsKeyboard',
   'react-interactions/events/tap': 'ReactEventsTap',
   scheduler: 'Scheduler',
