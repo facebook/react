@@ -20,8 +20,12 @@ export function flushBuffered(destination: Destination) {
 
 export function beginWriting(destination: Destination) {}
 
-export function writeChunk(destination: Destination, buffer: Uint8Array) {
+export function writeChunk(
+  destination: Destination,
+  buffer: Uint8Array,
+): boolean {
   destination.enqueue(buffer);
+  return destination.desiredSize > 0;
 }
 
 export function completeWriting(destination: Destination) {}

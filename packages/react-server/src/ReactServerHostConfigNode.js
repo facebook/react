@@ -40,9 +40,12 @@ export function beginWriting(destination: Destination) {
   }
 }
 
-export function writeChunk(destination: Destination, buffer: Uint8Array) {
+export function writeChunk(
+  destination: Destination,
+  buffer: Uint8Array,
+): boolean {
   let nodeBuffer = ((buffer: any): Buffer); // close enough
-  destination.write(nodeBuffer);
+  return destination.write(nodeBuffer);
 }
 
 export function completeWriting(destination: Destination) {
