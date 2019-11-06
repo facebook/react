@@ -37,8 +37,26 @@
         );
       }
 
+      let resolved = false;
+      let promise = new Promise(resolve => {
+        setTimeout(() => {
+          resolved = true;
+          resolve();
+        }, 100);
+      });
+      function read() {
+        if (!resolved) {
+          throw promise;
+        }
+      }
+
+      function Title() {
+        read();
+        return 'Title';
+      }
+
       let model = {
-        title: 'Title',
+        title: <Title />,
         content: {
           __html: <HTML />,
         }
@@ -69,7 +87,9 @@
       function Shell({ data }) {
         let model = data.model;
         return <div>
-          <h1>{model.title}</h1>
+          <Suspense fallback="...">
+            <h1>{model.title}</h1>
+          </Suspense>
           <div dangerouslySetInnerHTML={model.content} />
         </div>;
       }
