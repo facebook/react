@@ -141,16 +141,6 @@ describe.each(table)('FocusWithin responder', hasPointerEvents => {
       expect(onFocusWithinChange).toHaveBeenCalledTimes(2);
       expect(onFocusWithinChange).toHaveBeenCalledWith(false);
     });
-
-    it('is called after a focused element is unmounted', () => {
-      const target = createEventTarget(innerRef.current);
-      target.focus();
-      expect(onFocusWithinChange).toHaveBeenCalledTimes(1);
-      expect(onFocusWithinChange).toHaveBeenCalledWith(true);
-      ReactDOM.render(<Component show={false} />, container);
-      expect(onFocusWithinChange).toHaveBeenCalledTimes(2);
-      expect(onFocusWithinChange).toHaveBeenCalledWith(false);
-    });
   });
 
   describe('onFocusWithinVisibleChange', () => {
@@ -270,17 +260,39 @@ describe.each(table)('FocusWithin responder', hasPointerEvents => {
       expect(onFocusWithinVisibleChange).toHaveBeenCalledTimes(2);
       expect(onFocusWithinVisibleChange).toHaveBeenCalledWith(false);
     });
+  });
+
+  describe('onDetachedVisibleNode', () => {
+    let onDetachedVisibleNode, ref, innerRef, innerRef2;
+
+    const Component = ({show}) => {
+      const listener = useFocusWithin({
+        onDetachedVisibleNode,
+      });
+      return (
+        <div ref={ref} listeners={listener}>
+          {show && <input ref={innerRef} />}
+          <div ref={innerRef2} />
+        </div>
+      );
+    };
+
+    beforeEach(() => {
+      onDetachedVisibleNode = jest.fn();
+      ref = React.createRef();
+      innerRef = React.createRef();
+      innerRef2 = React.createRef();
+      ReactDOM.render(<Component show={true} />, container);
+    });
 
     it('is called after a focused element is unmounted', () => {
       const inner = innerRef.current;
       const target = createEventTarget(inner);
       target.keydown({key: 'Tab'});
       target.focus();
-      expect(onFocusWithinVisibleChange).toHaveBeenCalledTimes(1);
-      expect(onFocusWithinVisibleChange).toHaveBeenCalledWith(true);
+      expect(onDetachedVisibleNode).toHaveBeenCalledTimes(0);
       ReactDOM.render(<Component show={false} />, container);
-      expect(onFocusWithinVisibleChange).toHaveBeenCalledTimes(2);
-      expect(onFocusWithinVisibleChange).toHaveBeenCalledWith(false);
+      expect(onDetachedVisibleNode).toHaveBeenCalledTimes(1);
     });
   });
 
