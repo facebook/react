@@ -94,9 +94,7 @@ export type Dispatcher = {
     props: Object,
   ): ReactEventResponderListener<E, C>,
   useDeferredValue<T>(value: T, config: TimeoutConfig | void | null): T,
-  useTransition(
-    config: SuspenseConfig | void | null,
-  ): [(() => void) => void, boolean],
+  useTransition(): [(() => void) => void, boolean],
 };
 
 type Update<S, A> = {
@@ -1172,50 +1170,32 @@ function updateDeferredValue<T>(
   return prevValue;
 }
 
-function mountTransition(
-  config: SuspenseConfig | void | null,
-): [(() => void) => void, boolean] {
-  const [isPending, setPending] = mountState(false);
-  const startTransition = mountCallback(
-    callback => {
-      setPending(true);
-      Scheduler.unstable_next(() => {
-        const previousConfig = ReactCurrentBatchConfig.suspense;
-        ReactCurrentBatchConfig.suspense = config === undefined ? null : config;
-        try {
-          setPending(false);
-          callback();
-        } finally {
-          ReactCurrentBatchConfig.suspense = previousConfig;
-        }
-      });
-    },
-    [config, isPending],
-  );
-  return [startTransition, isPending];
+function startTransition(setPending, callback, config) {
+  setPending(true);
+  Scheduler.unstable_next(() => {
+    const previousConfig = ReactCurrentBatchConfig.suspense;
+    ReactCurrentBatchConfig.suspense = config === undefined ? null : config;
+    try {
+      setPending(false);
+      callback();
+    } finally {
+      ReactCurrentBatchConfig.suspense = previousConfig;
+    }
+  });
 }
 
-function updateTransition(
-  config: SuspenseConfig | void | null,
-): [(() => void) => void, boolean] {
-  const [isPending, setPending] = updateState(false);
-  const startTransition = updateCallback(
-    callback => {
-      setPending(true);
-      Scheduler.unstable_next(() => {
-        const previousConfig = ReactCurrentBatchConfig.suspense;
-        ReactCurrentBatchConfig.suspense = config === undefined ? null : config;
-        try {
-          setPending(false);
-          callback();
-        } finally {
-          ReactCurrentBatchConfig.suspense = previousConfig;
-        }
-      });
-    },
-    [config, isPending],
-  );
-  return [startTransition, isPending];
+function mountTransition(): [(() => void) => void, boolean] {
+  const [isPending, setPending] = mountState(false);
+  const hook = mountWorkInProgressHook();
+  const start = (hook.memoizedState = startTransition.bind(null, setPending));
+  return [start, isPending];
+}
+
+function updateTransition(): [(() => void) => void, boolean] {
+  const [isPending] = updateState(false);
+  const hook = updateWorkInProgressHook();
+  const start = hook.memoizedState;
+  return [start, isPending];
 }
 
 function dispatchAction<S, A>(
@@ -1553,12 +1533,10 @@ if (__DEV__) {
       mountHookTypesDev();
       return mountDeferredValue(value, config);
     },
-    useTransition(
-      config: SuspenseConfig | void | null,
-    ): [(() => void) => void, boolean] {
+    useTransition(): [(() => void) => void, boolean] {
       currentHookNameInDev = 'useTransition';
       mountHookTypesDev();
-      return mountTransition(config);
+      return mountTransition();
     },
   };
 
@@ -1670,12 +1648,10 @@ if (__DEV__) {
       updateHookTypesDev();
       return mountDeferredValue(value, config);
     },
-    useTransition(
-      config: SuspenseConfig | void | null,
-    ): [(() => void) => void, boolean] {
+    useTransition(): [(() => void) => void, boolean] {
       currentHookNameInDev = 'useTransition';
       updateHookTypesDev();
-      return mountTransition(config);
+      return mountTransition();
     },
   };
 
@@ -1787,12 +1763,10 @@ if (__DEV__) {
       updateHookTypesDev();
       return updateDeferredValue(value, config);
     },
-    useTransition(
-      config: SuspenseConfig | void | null,
-    ): [(() => void) => void, boolean] {
+    useTransition(): [(() => void) => void, boolean] {
       currentHookNameInDev = 'useTransition';
       updateHookTypesDev();
-      return updateTransition(config);
+      return updateTransition();
     },
   };
 
@@ -1917,13 +1891,11 @@ if (__DEV__) {
       mountHookTypesDev();
       return mountDeferredValue(value, config);
     },
-    useTransition(
-      config: SuspenseConfig | void | null,
-    ): [(() => void) => void, boolean] {
+    useTransition(): [(() => void) => void, boolean] {
       currentHookNameInDev = 'useTransition';
       warnInvalidHookAccess();
       mountHookTypesDev();
-      return mountTransition(config);
+      return mountTransition();
     },
   };
 
@@ -2048,13 +2020,11 @@ if (__DEV__) {
       updateHookTypesDev();
       return updateDeferredValue(value, config);
     },
-    useTransition(
-      config: SuspenseConfig | void | null,
-    ): [(() => void) => void, boolean] {
+    useTransition(): [(() => void) => void, boolean] {
       currentHookNameInDev = 'useTransition';
       warnInvalidHookAccess();
       updateHookTypesDev();
-      return updateTransition(config);
+      return updateTransition();
     },
   };
 }
