@@ -32,13 +32,17 @@ type NestedNode = Array<NestedNode> | Object;
 let removedKeys = null;
 let removedKeyCount = 0;
 
+const deepDifferOptions = {
+  unsafelyIgnoreFunctions: true,
+};
+
 function defaultDiffer(prevProp: mixed, nextProp: mixed): boolean {
   if (typeof nextProp !== 'object' || nextProp === null) {
     // Scalars have already been checked for equality
     return true;
   } else {
     // For objects and arrays, the default diffing algorithm is a deep compare
-    return deepDiffer(prevProp, nextProp, {unsafelyIgnoreFunctions: true});
+    return deepDiffer(prevProp, nextProp, deepDifferOptions);
   }
 }
 
