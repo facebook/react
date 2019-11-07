@@ -14,7 +14,6 @@ global.ReadableStream = require('@mattiasbuelens/web-streams-polyfill/ponyfill/e
 global.TextDecoder = require('util').TextDecoder;
 
 let act;
-let Scheduler;
 let Stream;
 let React;
 let ReactDOM;
@@ -25,7 +24,6 @@ describe('ReactFlightIntegration', () => {
   beforeEach(() => {
     jest.resetModules();
     act = require('react-dom/test-utils').act;
-    Scheduler = require('scheduler');
     Stream = require('stream');
     React = require('react');
     ReactDOM = require('react-dom');
