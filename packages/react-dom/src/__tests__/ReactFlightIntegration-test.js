@@ -91,7 +91,10 @@ describe('ReactFlightIntegration', () => {
     let result = ReactFlightDOMClient.readFromReadableStream(readable);
 
     let container = document.createElement('div');
-    ReactDOM.render(<App result={result} />, container);
+    let root = ReactDOM.createRoot(container);
+    act(() => {
+      root.render(<App result={result} />);
+    });
     expect(container.innerHTML).toBe('<h1>Loading...</h1>');
 
     await act(async () => {});
@@ -125,7 +128,10 @@ describe('ReactFlightIntegration', () => {
     let result = ReactFlightDOMClient.readFromReadableStream(readable);
 
     let container = document.createElement('div');
-    ReactDOM.render(<App result={result} />, container);
+    let root = ReactDOM.createRoot(container);
+    act(() => {
+      root.render(<App result={result} />);
+    });
     expect(container.innerHTML).toBe('<h1>Loading...</h1>');
 
     await act(async () => {});
@@ -250,24 +256,17 @@ describe('ReactFlightIntegration', () => {
     let result = ReactFlightDOMClient.readFromReadableStream(readable);
 
     let container = document.createElement('div');
-    ReactDOM.render(<ProfilePage result={result} />, container);
-    expect(container.innerHTML).toBe(
-      '<p style="display: none;">(loading sidebar)</p>' +
-        '<p style="display: none;">(loading posts)</p>' +
-        '<p style="display: none;">(loading games)</p>' +
-        '<p>(loading)</p>',
-    );
+    let root = ReactDOM.createRoot(container);
+    act(() => {
+      root.render(<ProfilePage result={result} />);
+    });
+    expect(container.innerHTML).toBe('<p>(loading)</p>');
 
     // This isn't enough to show anything.
     await act(async () => {
       resolveFriendsModel();
     });
-    expect(container.innerHTML).toBe(
-      '<p style="display: none;">(loading sidebar)</p>' +
-        '<p style="display: none;">(loading posts)</p>' +
-        '<p style="display: none;">(loading games)</p>' +
-        '<p>(loading)</p>',
-    );
+    expect(container.innerHTML).toBe('<p>(loading)</p>');
 
     // We can now show the details. Sidebar and posts are still loading.
     await act(async () => {
@@ -276,9 +275,9 @@ describe('ReactFlightIntegration', () => {
 
     expect(container.innerHTML).toBe(
       '<div>:name::avatar:</div>' +
-        '<p style="">(loading sidebar)</p>' +
-        '<p style="">(loading posts)</p>' +
-        '<p style="">(loading games)</p>',
+        '<p>(loading sidebar)</p>' +
+        '<p>(loading posts)</p>' +
+        '<p>(loading games)</p>',
     );
 
     // Let's *fail* loading games.
@@ -287,8 +286,8 @@ describe('ReactFlightIntegration', () => {
     });
     expect(container.innerHTML).toBe(
       '<div>:name::avatar:</div>' +
-        '<p style="">(loading sidebar)</p>' +
-        '<p style="">(loading posts)</p>' +
+        '<p>(loading sidebar)</p>' +
+        '<p>(loading posts)</p>' +
         '<p>Game over</p>', // TODO: should not have message in prod.
     );
 
@@ -299,7 +298,7 @@ describe('ReactFlightIntegration', () => {
     expect(container.innerHTML).toBe(
       '<div>:name::avatar:</div>' +
         '<div>:photos::friends:</div>' +
-        '<p style="">(loading posts)</p>' +
+        '<p>(loading posts)</p>' +
         '<p>Game over</p>', // TODO: should not have message in prod.
     );
 
