@@ -14,6 +14,7 @@ import type {
 } from 'shared/ReactTypes';
 
 import {enableDeprecatedFlareAPI} from 'shared/ReactFeatureFlags';
+import {REACT_OPAQUE_OBJECT_TYPE} from 'shared/ReactSymbols';
 
 export type Type = string;
 export type Props = Object;
@@ -44,6 +45,12 @@ export type ChildSet = void; // Unused
 export type TimeoutHandle = TimeoutID;
 export type NoTimeout = -1;
 export type EventResponder = any;
+export opaque type OpaqueIDType =
+  | string
+  | {
+      $$typeof: Symbol | number,
+      _setId(): void,
+    };
 
 export type ReactListenerEvent = Object;
 export type ReactListenerMap = Object;
@@ -379,6 +386,67 @@ export function getInstanceFromNode(mockNode: Object) {
 
 export function beforeRemoveInstance(instance: any) {
   // noop
+}
+
+let clientId: number = 0;
+export function makeClientId(): OpaqueIDType {
+  return 'c_' + (clientId++).toString(36);
+}
+
+let serverId: number = 0;
+export function makeServerId(): OpaqueIDType {
+  return 's_' + (serverId++).toString(36);
+}
+
+export function isOpaqueHydratingObject(value: mixed): boolean {
+  return (
+    value !== null &&
+    typeof value === 'object' &&
+    value.$$typeof === REACT_OPAQUE_OBJECT_TYPE
+  );
+}
+
+export function makeOpaqueHydratingObject(
+  setId: () => void,
+  fiberType: mixed,
+): OpaqueIDType {
+  return {
+    $$typeof: REACT_OPAQUE_OBJECT_TYPE,
+    _setId: setId,
+    toString() {
+      setIsUpdatingOpaqueValueInRenderPhase(true);
+      setId();
+      setIsUpdatingOpaqueValueInRenderPhase(false);
+      throw new Error(
+        'The object passed back from useOpaqueIdentifier is meant to be passed through ' +
+          'to attributes only. Do not read the value directly.',
+      );
+    },
+    valueOf() {
+      setIsUpdatingOpaqueValueInRenderPhase(true);
+      setId();
+      setIsUpdatingOpaqueValueInRenderPhase(false);
+      throw new Error(
+        'The object passed back from useOpaqueIdentifier is meant to be passed through ' +
+          'to attributes only. Do not read the value directly.',
+      );
+    },
+  };
+}
+
+let isUpdatingOpaqueValueInRenderPhase;
+if (__DEV__) {
+  isUpdatingOpaqueValueInRenderPhase = false;
+}
+
+export function getIsUpdatingOpaqueValueInRenderPhase() {
+  if (__DEV__) {
+    return isUpdatingOpaqueValueInRenderPhase;
+  }
+}
+
+function setIsUpdatingOpaqueValueInRenderPhase(isUpdating) {
+  isUpdatingOpaqueValueInRenderPhase = isUpdating;
 }
 
 export function registerEvent(event: any, rootContainerInstance: Container) {

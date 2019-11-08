@@ -470,6 +470,26 @@ export function beforeRemoveInstance(instance) {
   // noop
 }
 
+export function isOpaqueHydratingObject(value: mixed): boolean {
+  throw new Error('Not yet implemented');
+}
+
+export function makeOpaqueHydratingObject(setId): OpaqueIDType {
+  throw new Error('Not yet implemented.');
+}
+
+export function getIsUpdatingOpaqueValueInRenderPhase(setId) {
+  // noop
+}
+
+export function makeClientId(): OpaqueIDType {
+  throw new Error('Not yet implemented');
+}
+
+export function makeServerId(): OpaqueIDType {
+  throw new Error('Not yet implemented');
+}
+
 export function registerEvent(event: any, rootContainerInstance: any) {
   throw new Error('Not yet implemented.');
 }

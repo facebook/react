@@ -485,9 +485,14 @@ function resetHydrationState(): void {
   isHydrating = false;
 }
 
+function getIsHydrating(): boolean {
+  return isHydrating;
+}
+
 export {
   warnIfHydrating,
   enterHydrationState,
+  getIsHydrating,
   reenterHydrationStateFromDehydratedSuspenseInstance,
   resetHydrationState,
   tryToClaimNextHydratableInstance,

@@ -12,6 +12,8 @@ import type {
   TimeoutConfig,
 } from 'react-reconciler/src/ReactFiberHooks';
 import type {ThreadID} from './ReactThreadIDAllocator';
+import type {OpaqueIDType} from 'react-reconciler/src/ReactFiberHostConfig';
+
 import type {
   MutableSource,
   MutableSourceGetSnapshotFn,
@@ -23,6 +25,7 @@ import type {SuspenseConfig} from 'react-reconciler/src/ReactFiberSuspenseConfig
 import type {ReactDOMListenerMap} from '../shared/ReactDOMTypes';
 
 import {validateContextBounds} from './ReactPartialRendererContext';
+import {makeServerId} from '../client/ReactDOMHostConfig';
 
 import invariant from 'shared/invariant';
 import is from 'shared/objectIs';
@@ -491,6 +494,10 @@ function useTransition(
   return [startTransition, false];
 }
 
+function useOpaqueIdentifier(): OpaqueIDType {
+  return makeServerId();
+}
+
 function useEvent(event: any): ReactDOMListenerMap {
   return {
     clear: noop,
@@ -525,6 +532,7 @@ export const Dispatcher: DispatcherType = {
   useDeferredValue,
   useTransition,
   useEvent,
+  useOpaqueIdentifier,
   // Subscriptions are not setup in a server environment.
   useMutableSource,
 };

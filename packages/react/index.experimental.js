@@ -45,4 +45,5 @@ export {
   unstable_withSuspenseConfig,
   // enableBlocksAPI
   block,
+  useOpaqueIdentifier,
 } from './src/React';

@@ -15,6 +15,8 @@ import type {
   ReactEventResponder,
   ReactEventResponderListener,
 } from 'shared/ReactTypes';
+import type {OpaqueIDType} from 'react-reconciler/src/ReactFiberHostConfig';
+
 import invariant from 'shared/invariant';
 import {REACT_RESPONDER_TYPE} from 'shared/ReactSymbols';
 
@@ -179,6 +181,11 @@ export function useTransition(
 export function useDeferredValue<T>(value: T, config: ?Object): T {
   const dispatcher = resolveDispatcher();
   return dispatcher.useDeferredValue(value, config);
+}
+
+export function useOpaqueIdentifier(): OpaqueIDType | void {
+  const dispatcher = resolveDispatcher();
+  return dispatcher.useOpaqueIdentifier();
 }
 
 export function useMutableSource<Source, Snapshot>(

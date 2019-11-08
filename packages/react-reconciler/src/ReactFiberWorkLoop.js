@@ -63,6 +63,7 @@ import {
   cancelTimeout,
   noTimeout,
   warnsIfNotActing,
+  getIsUpdatingOpaqueValueInRenderPhase,
 } from './ReactFiberHostConfig';
 
 import {createWorkInProgress, assignFiberPropertiesInDEV} from './ReactFiber';
@@ -2842,7 +2843,8 @@ function warnAboutRenderPhaseUpdatesInDEV(fiber) {
   if (__DEV__) {
     if (
       ReactCurrentDebugFiberIsRenderingInDEV &&
-      (executionContext & RenderContext) !== NoContext
+      (executionContext & RenderContext) !== NoContext &&
+      !getIsUpdatingOpaqueValueInRenderPhase()
     ) {
       switch (fiber.tag) {
         case FunctionComponent:

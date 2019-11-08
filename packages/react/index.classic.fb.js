@@ -50,5 +50,6 @@ export {
   DEPRECATED_createResponder,
   // enableScopeAPI
   unstable_createScope,
+  useOpaqueIdentifier,
 } from './src/React';
 export {jsx, jsxs, jsxDEV} from './src/jsx/ReactJSX';

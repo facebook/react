@@ -57,7 +57,12 @@ import {
   DOCUMENT_FRAGMENT_NODE,
 } from '../shared/HTMLNodeType';
 import dangerousStyleValue from '../shared/dangerousStyleValue';
+import getComponentName from 'shared/getComponentName';
 
+import {
+  REACT_OPAQUE_OBJECT_TYPE,
+  REACT_OPAQUE_VALUE_TYPE,
+} from 'shared/ReactSymbols';
 import {
   mountEventResponder,
   unmountEventResponder,
@@ -73,6 +78,7 @@ import {
   enableScopeAPI,
 } from 'shared/ReactFeatureFlags';
 import {HostComponent} from 'react-reconciler/src/ReactWorkTags';
+import {getIsRendering} from 'react-reconciler/src/ReactCurrentFiber';
 import {
   RESPONDER_EVENT_SYSTEM,
   IS_PASSIVE,
@@ -150,6 +156,14 @@ export type TimeoutHandle = TimeoutID;
 export type NoTimeout = -1;
 export type RendererInspectionConfig = $ReadOnly<{||}>;
 
+export opaque type OpaqueIDType =
+  | string
+  | {
+      $$typeof: number | Symbol,
+      toString: () => string | void,
+      valueOf: () => string | void,
+    };
+
 type SelectionInformation = {|
   activeElementDetached: null | HTMLElement,
   focusedElem: null | HTMLElement,
@@ -157,8 +171,12 @@ type SelectionInformation = {|
 |};
 
 let SUPPRESS_HYDRATION_WARNING;
+let didWarnAboutUseOpaqueIdentifier;
+let isUpdatingOpaqueValueInRenderPhase;
 if (__DEV__) {
   SUPPRESS_HYDRATION_WARNING = 'suppressHydrationWarning';
+  didWarnAboutUseOpaqueIdentifier = {};
+  isUpdatingOpaqueValueInRenderPhase = false;
 }
 
 const SUSPENSE_START_DATA = '$';
@@ -1145,6 +1163,108 @@ export function unmountFundamentalComponent(
 
 export function getInstanceFromNode(node: HTMLElement): null | Object {
   return getClosestInstanceFromNode(node) || null;
+}
+
+let clientId: number = 0;
+export function makeClientId(): OpaqueIDType {
+  const id = 'r:' + (clientId++).toString(36);
+  return {
+    $$typeof: REACT_OPAQUE_VALUE_TYPE,
+    toString() {
+      if (__DEV__) {
+        if (getIsRendering()) {
+          console.error(
+            'The object passed back from useOpaqueIdentifier is meant to be passed through ' +
+              'to attributes only. Do not read the value directly.',
+          );
+        }
+      }
+      return id;
+    },
+    valueOf() {
+      if (__DEV__) {
+        if (getIsRendering()) {
+          console.error(
+            'The object passed back from useOpaqueIdentifier is meant to be passed through ' +
+              'to attributes only. Do not read the value directly.',
+          );
+        }
+      }
+      return id;
+    },
+  };
+}
+
+let serverId: number = 0;
+export function makeServerId(): OpaqueIDType {
+  return 'R:' + (serverId++).toString(36);
+}
+
+export function getIsUpdatingOpaqueValueInRenderPhase() {
+  if (__DEV__) {
+    return isUpdatingOpaqueValueInRenderPhase;
+  }
+}
+
+function setIsUpdatingOpaqueValueInRenderPhase(isUpdating: boolean) {
+  isUpdatingOpaqueValueInRenderPhase = isUpdating;
+}
+
+export function isOpaqueHydratingObject(value: mixed): boolean {
+  return (
+    value !== null &&
+    typeof value === 'object' &&
+    value.$$typeof === REACT_OPAQUE_OBJECT_TYPE
+  );
+}
+
+export function makeOpaqueHydratingObject(
+  setId: () => void,
+  fiberType: mixed,
+): OpaqueIDType {
+  return {
+    $$typeof: REACT_OPAQUE_OBJECT_TYPE,
+    toString() {
+      if (__DEV__) {
+        const name = getComponentName(fiberType) || 'Unknown';
+        if (getIsRendering() && !didWarnAboutUseOpaqueIdentifier[name]) {
+          console.error(
+            'The object passed back from useOpaqueIdentifier is meant to be passed through ' +
+              'to attributes only. Do not read the value directly.',
+          );
+          didWarnAboutUseOpaqueIdentifier[name] = true;
+        }
+      }
+
+      setIsUpdatingOpaqueValueInRenderPhase(true);
+      setId();
+      setIsUpdatingOpaqueValueInRenderPhase(false);
+      throw new Error(
+        'The object passed back from useOpaqueIdentifier is meant to be passed through ' +
+          'to attributes only. Do not read the value directly.',
+      );
+    },
+    valueOf() {
+      if (__DEV__) {
+        const name = getComponentName(fiberType) || 'Unknown';
+        if (getIsRendering() && !didWarnAboutUseOpaqueIdentifier[name]) {
+          console.error(
+            'The object passed back from useOpaqueIdentifier is meant to be passed through ' +
+              'to attributes only. Do not read the value directly.',
+          );
+          didWarnAboutUseOpaqueIdentifier[name] = true;
+        }
+      }
+
+      setIsUpdatingOpaqueValueInRenderPhase(true);
+      setId();
+      setIsUpdatingOpaqueValueInRenderPhase(false);
+      throw new Error(
+        'The object passed back from useOpaqueIdentifier is meant to be passed through ' +
+          'to attributes only. Do not read the value directly.',
+      );
+    },
+  };
 }
 
 export function registerEvent(

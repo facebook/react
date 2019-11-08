@@ -26,6 +26,8 @@ export let REACT_SERVER_BLOCK_TYPE = 0xeada;
 export let REACT_FUNDAMENTAL_TYPE = 0xead5;
 export let REACT_RESPONDER_TYPE = 0xead6;
 export let REACT_SCOPE_TYPE = 0xead7;
+export let REACT_OPAQUE_OBJECT_TYPE = 0xeae0;
+export let REACT_OPAQUE_VALUE_TYPE = 0xeae1;
 
 if (typeof Symbol === 'function' && Symbol.for) {
   const symbolFor = Symbol.for;
@@ -46,6 +48,8 @@ if (typeof Symbol === 'function' && Symbol.for) {
   REACT_FUNDAMENTAL_TYPE = symbolFor('react.fundamental');
   REACT_RESPONDER_TYPE = symbolFor('react.responder');
   REACT_SCOPE_TYPE = symbolFor('react.scope');
+  REACT_OPAQUE_OBJECT_TYPE = symbolFor('react.opaqueObject');
+  REACT_OPAQUE_VALUE_TYPE = symbolFor('react.opaqueValue');
 }
 
 const MAYBE_ITERATOR_SYMBOL = typeof Symbol === 'function' && Symbol.iterator;
