@@ -646,7 +646,7 @@ function handleRollupError(error) {
 }
 
 async function buildEverything() {
-  if (!argv.partial) {
+  if (!argv['unsafe-partial']) {
     await asyncRimRaf('build');
   }
 
