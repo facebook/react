@@ -272,7 +272,8 @@ describe('ReactFlightIntegration', () => {
     await act(async () => {
       resolveNameModel();
     });
-
+    // Advance time enough to trigger a nested fallback.
+    jest.advanceTimersByTime(500);
     expect(container.innerHTML).toBe(
       '<div>:name::avatar:</div>' +
         '<p>(loading sidebar)</p>' +
