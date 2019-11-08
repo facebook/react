@@ -53,7 +53,7 @@ describe('ReactFlightIntegration', () => {
     };
   }
 
-  it('should resolve the root', async () => {
+  it.experimental('should resolve the root', async () => {
     let {Suspense} = React;
 
     // Model
@@ -103,7 +103,7 @@ describe('ReactFlightIntegration', () => {
     );
   });
 
-  it('should not get confused by $', async () => {
+  it.experimental('should not get confused by $', async () => {
     let {Suspense} = React;
 
     // Model
@@ -138,7 +138,7 @@ describe('ReactFlightIntegration', () => {
     expect(container.innerHTML).toBe('<p>$1</p>');
   });
 
-  it('should progressively reveal chunks', async () => {
+  it.experimental('should progressively reveal chunks', async () => {
     let {Suspense} = React;
 
     class ErrorBoundary extends React.Component {
