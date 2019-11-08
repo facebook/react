@@ -1,10 +1,13 @@
 {
   "packages": ["packages/react", "packages/react-dom", "packages/scheduler"],
-  "buildCommand": "build --type=NODE react/index,react-dom/index,scheduler/index,scheduler/tracing",
+  "buildCommand": "build --type=NODE react/index,react-dom,scheduler,scheduler/tracing",
   "publishDirectory": {
     "react": "build/node_modules/react",
     "react-dom": "build/node_modules/react-dom",
     "scheduler": "build/node_modules/scheduler"
   },
-  "sandboxes": ["new"]
+  "sandboxes": [
+    "new",
+    "github/acdlite/react/blob/convert-flight-fixture-to/fixtures/flight-browser/"
+  ]
 }
