@@ -13,6 +13,10 @@
 global.ReadableStream = require('@mattiasbuelens/web-streams-polyfill/ponyfill/es6').ReadableStream;
 global.TextDecoder = require('util').TextDecoder;
 
+// Don't wait before processing work on the server.
+// TODO: we can replace this with FlightServer.act().
+global.setImmediate = cb => cb();
+
 let act;
 let Stream;
 let React;
@@ -90,9 +94,7 @@ describe('ReactFlightIntegration', () => {
     ReactDOM.render(<App result={result} />, container);
     expect(container.innerHTML).toBe('<h1>Loading...</h1>');
 
-    await act(async () => {
-      jest.runAllTimers();
-    });
+    await act(async () => {});
     expect(container.innerHTML).toBe(
       '<p><div><span>hello</span><span>world</span></div></p>',
     );
@@ -126,9 +128,7 @@ describe('ReactFlightIntegration', () => {
     ReactDOM.render(<App result={result} />, container);
     expect(container.innerHTML).toBe('<h1>Loading...</h1>');
 
-    await act(async () => {
-      jest.runAllTimers();
-    });
+    await act(async () => {});
     expect(container.innerHTML).toBe('<p>$1</p>');
   });
 
@@ -259,9 +259,8 @@ describe('ReactFlightIntegration', () => {
     );
 
     // This isn't enough to show anything.
-    resolveFriendsModel();
     await act(async () => {
-      jest.runAllTimers();
+      resolveFriendsModel();
     });
     expect(container.innerHTML).toBe(
       '<p style="display: none;">(loading sidebar)</p>' +
@@ -271,13 +270,10 @@ describe('ReactFlightIntegration', () => {
     );
 
     // We can now show the details. Sidebar and posts are still loading.
-    resolveNameModel();
     await act(async () => {
-      jest.runAllTimers();
+      resolveNameModel();
     });
-    await act(async () => {
-      jest.runAllTimers();
-    });
+
     expect(container.innerHTML).toBe(
       '<div>:name::avatar:</div>' +
         '<p style="">(loading sidebar)</p>' +
@@ -286,12 +282,8 @@ describe('ReactFlightIntegration', () => {
     );
 
     // Let's *fail* loading games.
-    rejectGamesModel(new Error('Game over'));
     await act(async () => {
-      jest.runAllTimers();
-    });
-    await act(async () => {
-      jest.runAllTimers();
+      rejectGamesModel(new Error('Game over'));
     });
     expect(container.innerHTML).toBe(
       '<div>:name::avatar:</div>' +
@@ -301,12 +293,8 @@ describe('ReactFlightIntegration', () => {
     );
 
     // We can now show the sidebar.
-    resolvePhotosModel();
     await act(async () => {
-      jest.runAllTimers();
-    });
-    await act(async () => {
-      jest.runAllTimers();
+      resolvePhotosModel();
     });
     expect(container.innerHTML).toBe(
       '<div>:name::avatar:</div>' +
@@ -316,12 +304,8 @@ describe('ReactFlightIntegration', () => {
     );
 
     // Show everything.
-    resolvePostsModel();
     await act(async () => {
-      jest.runAllTimers();
-    });
-    await act(async () => {
-      jest.runAllTimers();
+      resolvePostsModel();
     });
     expect(container.innerHTML).toBe(
       '<div>:name::avatar:</div>' +
