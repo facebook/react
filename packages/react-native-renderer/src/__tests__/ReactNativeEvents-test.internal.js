@@ -13,7 +13,6 @@
 let PropTypes;
 let RCTEventEmitter;
 let React;
-let ReactFabric;
 let ReactNative;
 let ReactFeatureFlags;
 let ResponderEventPlugin;
