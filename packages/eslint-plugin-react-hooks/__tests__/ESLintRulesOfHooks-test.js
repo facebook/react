@@ -303,6 +303,24 @@ const tests = {
       }
     `,
     `
+      // Similarly, this is valid because "use"-prefixed functions called in
+      // the callbacks of unrecognised functions are not assumed to be hooks.
+      React.unknownFunction((foo, bar) => {
+        if (foo) {
+          useNotAHook(bar)
+        }
+      });
+    `,
+    `
+      // Similarly, this is valid because "use"-prefixed functions called in
+      // the callbacks of unrecognised functions are not assumed to be hooks.
+      unknownFunction(function(foo, bar) {
+        if (foo) {
+          useNotAHook(bar)
+        }
+      });
+    `,
+    `
       // Regression test for incorrectly flagged valid code.
       function RegressionTest() {
         const foo = cond ? a : b;
