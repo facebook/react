@@ -303,8 +303,8 @@ const tests = {
       }
     `,
     `
-      // Similarly, this is valid because "use"-prefixed functions called in
-      // the callbacks of unrecognised functions are not assumed to be hooks.
+      // This is valid because "use"-prefixed functions called in
+      // unnamed function arguments are not assumed to be hooks.
       React.unknownFunction((foo, bar) => {
         if (foo) {
           useNotAHook(bar)
@@ -312,8 +312,8 @@ const tests = {
       });
     `,
     `
-      // Similarly, this is valid because "use"-prefixed functions called in
-      // the callbacks of unrecognised functions are not assumed to be hooks.
+      // This is valid because "use"-prefixed functions called in
+      // unnamed function arguments are not assumed to be hooks.
       unknownFunction(function(foo, bar) {
         if (foo) {
           useNotAHook(bar)
@@ -817,6 +817,16 @@ const tests = {
         });
       `,
       errors: [conditionalError('useCustomHook')],
+    },
+    {
+      code: `
+        // This is invalid because "use"-prefixed functions used in named
+        // functions are assumed to be hooks.
+        React.unknownFunction(function notAComponent(foo, bar) {
+          useProbablyAHook(bar)
+        });
+      `,
+      errors: [functionError('useProbablyAHook', 'notAComponent')],
     },
     {
       code: `
