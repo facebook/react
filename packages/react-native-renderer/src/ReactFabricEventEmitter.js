@@ -18,7 +18,10 @@ import {registrationNameModules} from 'legacy-events/EventPluginRegistry';
 import {batchedUpdates} from 'legacy-events/ReactGenericBatching';
 
 import type {AnyNativeEvent} from 'legacy-events/PluginModuleType';
-import {enableFlareAPI} from 'shared/ReactFeatureFlags';
+import {
+  enableFlareAPI,
+  enableNativeTargetAsInstance,
+} from 'shared/ReactFeatureFlags';
 import type {TopLevelType} from 'legacy-events/TopLevelEventTypes';
 import {dispatchEventForResponderEventSystem} from './ReactFabricEventResponderSystem';
 
@@ -30,6 +33,7 @@ export function dispatchEvent(
   nativeEvent: AnyNativeEvent,
 ) {
   const targetFiber = (target: null | Fiber);
+
   if (enableFlareAPI) {
     // React Flare event system
     dispatchEventForResponderEventSystem(
@@ -38,13 +42,25 @@ export function dispatchEvent(
       (nativeEvent: any),
     );
   }
+
+  let eventTarget;
+  if (enableNativeTargetAsInstance) {
+    if (targetFiber == null) {
+      eventTarget = null;
+    } else {
+      eventTarget = targetFiber.stateNode.canonical;
+    }
+  } else {
+    eventTarget = nativeEvent.target;
+  }
+
   batchedUpdates(function() {
     // Heritage plugin event system
     runExtractedPluginEventsInBatch(
       topLevelType,
       targetFiber,
       nativeEvent,
-      nativeEvent.target,
+      eventTarget,
       PLUGIN_EVENT_SYSTEM,
     );
   });

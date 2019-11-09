@@ -85,6 +85,8 @@ export const enableSuspenseCallback = true;
 
 export const flushSuspenseFallbacksInTests = true;
 
+export const enableNativeTargetAsInstance = false;
+
 // Flow magic to verify the exports of this file match the original version.
 // eslint-disable-next-line no-unused-vars
 type Check<_X, Y: _X, X: Y = _X> = null;
