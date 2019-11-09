@@ -242,6 +242,10 @@ ReactRoot.prototype.unmount = ReactBlockingRoot.prototype.unmount = function(
     warnOnInvalidCallback(callback, 'render');
   }
   updateContainer(null, root, null, callback);
+  if (__DEV__) {
+    const container = root.containerInfo;
+    container._reactHasBeenPassedToCreateRootDEV = false;
+  }
 };
 
 /**
@@ -654,6 +658,12 @@ function warnIfReactDOMContainerInDEV(container) {
       !container._reactRootContainer,
       'You are calling ReactDOM.createRoot() on a container that was previously ' +
         'passed to ReactDOM.render(). This is not supported.',
+    );
+    warningWithoutStack(
+      !container._reactHasBeenPassedToCreateRootDEV,
+      'You are calling ReactDOM.createRoot() on a container that ' +
+        'has already been passed to createRoot() before. Instead, call ' +
+        'root.render() on the existing root instead if you want to update it.',
     );
     container._reactHasBeenPassedToCreateRootDEV = true;
   }
