@@ -92,12 +92,9 @@ describe('ReactFlightIntegration', () => {
 
     let container = document.createElement('div');
     let root = ReactDOM.createRoot(container);
-    act(() => {
+    await act(async () => {
       root.render(<App result={result} />);
     });
-    expect(container.innerHTML).toBe('<h1>Loading...</h1>');
-
-    await act(async () => {});
     expect(container.innerHTML).toBe(
       '<p><div><span>hello</span><span>world</span></div></p>',
     );
@@ -129,12 +126,9 @@ describe('ReactFlightIntegration', () => {
 
     let container = document.createElement('div');
     let root = ReactDOM.createRoot(container);
-    act(() => {
+    await act(async () => {
       root.render(<App result={result} />);
     });
-    expect(container.innerHTML).toBe('<h1>Loading...</h1>');
-
-    await act(async () => {});
     expect(container.innerHTML).toBe('<p>$1</p>');
   });
 
@@ -257,7 +251,7 @@ describe('ReactFlightIntegration', () => {
 
     let container = document.createElement('div');
     let root = ReactDOM.createRoot(container);
-    act(() => {
+    await act(async () => {
       root.render(<ProfilePage result={result} />);
     });
     expect(container.innerHTML).toBe('<p>(loading)</p>');
