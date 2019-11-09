@@ -664,11 +664,22 @@ function createBlockingRoot(
 
 function warnIfReactDOMContainerInDEV(container) {
   if (__DEV__) {
-    warningWithoutStack(
-      !container._reactRootContainer,
-      'You are calling ReactDOM.createRoot() on a container that was previously ' +
-        'passed to ReactDOM.render(). This is not supported.',
-    );
+    if (isContainerMarkedAsRoot(container)) {
+      if (container._reactRootContainer) {
+        warningWithoutStack(
+          false,
+          'You are calling ReactDOM.createRoot() on a container that was previously ' +
+            'passed to ReactDOM.render(). This is not supported.',
+        );
+      } else {
+        warningWithoutStack(
+          false,
+          'You are calling ReactDOM.createRoot() on a container that ' +
+            'has already been passed to createRoot() before. Instead, call ' +
+            'root.render() on the existing root instead if you want to update it.',
+        );
+      }
+    }
   }
 }
 
