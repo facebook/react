@@ -212,4 +212,23 @@ describe('ReactDOMRoot', () => {
       {withoutStack: true},
     );
   });
+
+  it('warns when creating two roots managing the same container', () => {
+    ReactDOM.createRoot(container);
+    expect(() => {
+      ReactDOM.createRoot(container);
+    }).toWarnDev(
+      'You are calling ReactDOM.createRoot() on a container that ' +
+        'has already been passed to createRoot() before. Instead, call ' +
+        'root.render() on the existing root instead if you want to update it.',
+      {withoutStack: true},
+    );
+  });
+
+  it('does not warn when creating second root after first one is unmounted', () => {
+    const root = ReactDOM.createRoot(container);
+    root.unmount();
+    Scheduler.unstable_flushAll();
+    ReactDOM.createRoot(container); // No warning
+  });
 });

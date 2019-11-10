@@ -68,7 +68,9 @@ import {
   getNodeFromInstance,
   getFiberCurrentPropsFromNode,
   getClosestInstanceFromNode,
+  isContainerMarkedAsRoot,
   markContainerAsRoot,
+  unmarkContainerAsRoot,
 } from './ReactDOMComponentTree';
 import {restoreControlledState} from './ReactDOMComponent';
 import {dispatchEvent} from '../events/ReactDOMEventListener';
@@ -174,11 +176,9 @@ setRestoreImplementation(restoreControlledState);
 export type DOMContainer =
   | (Element & {
       _reactRootContainer: ?_ReactRoot,
-      _reactHasBeenPassedToCreateRootDEV: ?boolean,
     })
   | (Document & {
       _reactRootContainer: ?_ReactRoot,
-      _reactHasBeenPassedToCreateRootDEV: ?boolean,
     });
 
 type _ReactRoot = {
@@ -226,22 +226,28 @@ ReactRoot.prototype.render = ReactBlockingRoot.prototype.render = function(
   callback: ?() => mixed,
 ): void {
   const root = this._internalRoot;
-  callback = callback === undefined ? null : callback;
+  const cb = callback === undefined ? null : callback;
   if (__DEV__) {
-    warnOnInvalidCallback(callback, 'render');
+    warnOnInvalidCallback(cb, 'render');
   }
-  updateContainer(children, root, null, callback);
+  updateContainer(children, root, null, cb);
 };
 
 ReactRoot.prototype.unmount = ReactBlockingRoot.prototype.unmount = function(
   callback: ?() => mixed,
 ): void {
   const root = this._internalRoot;
-  callback = callback === undefined ? null : callback;
+  const cb = callback === undefined ? null : callback;
   if (__DEV__) {
-    warnOnInvalidCallback(callback, 'render');
+    warnOnInvalidCallback(cb, 'render');
   }
-  updateContainer(null, root, null, callback);
+  const container = root.containerInfo;
+  updateContainer(null, root, null, () => {
+    unmarkContainerAsRoot(container);
+    if (cb !== null) {
+      cb();
+    }
+  });
 };
 
 /**
@@ -448,12 +454,17 @@ const ReactDOM: Object = {
       'Target container is not a DOM element.',
     );
     if (__DEV__) {
-      warningWithoutStack(
-        !container._reactHasBeenPassedToCreateRootDEV,
-        'You are calling ReactDOM.hydrate() on a container that was previously ' +
-          'passed to ReactDOM.createRoot(). This is not supported. ' +
-          'Did you mean to call createRoot(container, {hydrate: true}).render(element)?',
-      );
+      const isModernRoot =
+        isContainerMarkedAsRoot(container) &&
+        container._reactRootContainer === undefined;
+      if (isModernRoot) {
+        warningWithoutStack(
+          false,
+          'You are calling ReactDOM.hydrate() on a container that was previously ' +
+            'passed to ReactDOM.createRoot(). This is not supported. ' +
+            'Did you mean to call createRoot(container, {hydrate: true}).render(element)?',
+        );
+      }
     }
     // TODO: throw or warn if we couldn't hydrate?
     return legacyRenderSubtreeIntoContainer(
@@ -475,12 +486,17 @@ const ReactDOM: Object = {
       'Target container is not a DOM element.',
     );
     if (__DEV__) {
-      warningWithoutStack(
-        !container._reactHasBeenPassedToCreateRootDEV,
-        'You are calling ReactDOM.render() on a container that was previously ' +
-          'passed to ReactDOM.createRoot(). This is not supported. ' +
-          'Did you mean to call root.render(element)?',
-      );
+      const isModernRoot =
+        isContainerMarkedAsRoot(container) &&
+        container._reactRootContainer === undefined;
+      if (isModernRoot) {
+        warningWithoutStack(
+          false,
+          'You are calling ReactDOM.render() on a container that was previously ' +
+            'passed to ReactDOM.createRoot(). This is not supported. ' +
+            'Did you mean to call root.render(element)?',
+        );
+      }
     }
     return legacyRenderSubtreeIntoContainer(
       null,
@@ -521,11 +537,16 @@ const ReactDOM: Object = {
     );
 
     if (__DEV__) {
-      warningWithoutStack(
-        !container._reactHasBeenPassedToCreateRootDEV,
-        'You are calling ReactDOM.unmountComponentAtNode() on a container that was previously ' +
-          'passed to ReactDOM.createRoot(). This is not supported. Did you mean to call root.unmount()?',
-      );
+      const isModernRoot =
+        isContainerMarkedAsRoot(container) &&
+        container._reactRootContainer === undefined;
+      if (isModernRoot) {
+        warningWithoutStack(
+          false,
+          'You are calling ReactDOM.unmountComponentAtNode() on a container that was previously ' +
+            'passed to ReactDOM.createRoot(). This is not supported. Did you mean to call root.unmount()?',
+        );
+      }
     }
 
     if (container._reactRootContainer) {
@@ -543,6 +564,7 @@ const ReactDOM: Object = {
       unbatchedUpdates(() => {
         legacyRenderSubtreeIntoContainer(null, null, container, false, () => {
           container._reactRootContainer = null;
+          unmarkContainerAsRoot(container);
         });
       });
       // If you call unmountComponentAtNode twice in quick succession, you'll
@@ -650,12 +672,22 @@ function createBlockingRoot(
 
 function warnIfReactDOMContainerInDEV(container) {
   if (__DEV__) {
-    warningWithoutStack(
-      !container._reactRootContainer,
-      'You are calling ReactDOM.createRoot() on a container that was previously ' +
-        'passed to ReactDOM.render(). This is not supported.',
-    );
-    container._reactHasBeenPassedToCreateRootDEV = true;
+    if (isContainerMarkedAsRoot(container)) {
+      if (container._reactRootContainer) {
+        warningWithoutStack(
+          false,
+          'You are calling ReactDOM.createRoot() on a container that was previously ' +
+            'passed to ReactDOM.render(). This is not supported.',
+        );
+      } else {
+        warningWithoutStack(
+          false,
+          'You are calling ReactDOM.createRoot() on a container that ' +
+            'has already been passed to createRoot() before. Instead, call ' +
+            'root.render() on the existing root instead if you want to update it.',
+        );
+      }
+    }
   }
 }
 
