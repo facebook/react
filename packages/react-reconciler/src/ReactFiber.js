@@ -36,7 +36,7 @@ import {
   enableScopeAPI,
 } from 'shared/ReactFeatureFlags';
 import {NoEffect, Placement} from 'shared/ReactSideEffectTags';
-import {ConcurrentRoot, BatchedRoot} from 'shared/ReactRootTags';
+import {ConcurrentRoot, BlockingRoot} from 'shared/ReactRootTags';
 import {
   IndeterminateComponent,
   ClassComponent,
@@ -574,7 +574,7 @@ export function createHostRootFiber(tag: RootTag): Fiber {
   let mode;
   if (tag === ConcurrentRoot) {
     mode = ConcurrentMode | BlockingMode | StrictMode;
-  } else if (tag === BatchedRoot) {
+  } else if (tag === BlockingRoot) {
     mode = BlockingMode | StrictMode;
   } else {
     mode = NoMode;

@@ -45,7 +45,7 @@ import {
 import {createContainer, updateContainer} from 'react-reconciler/inline.dom';
 import invariant from 'shared/invariant';
 import warningWithoutStack from 'shared/warningWithoutStack';
-import {BatchedRoot, ConcurrentRoot, LegacyRoot} from 'shared/ReactRootTags';
+import {BlockingRoot, ConcurrentRoot, LegacyRoot} from 'shared/ReactRootTags';
 
 function ReactDOMRoot(container: DOMContainer, options: void | RootOptions) {
   this._internalRoot = createRootImpl(container, ConcurrentRoot, options);
@@ -130,7 +130,7 @@ export function createBlockingRoot(
     'createRoot(...): Target container is not a DOM element.',
   );
   warnIfReactDOMContainerInDEV(container);
-  return new ReactDOMBlockingRoot(container, BatchedRoot, options);
+  return new ReactDOMBlockingRoot(container, BlockingRoot, options);
 }
 
 export function createLegacyRoot(
