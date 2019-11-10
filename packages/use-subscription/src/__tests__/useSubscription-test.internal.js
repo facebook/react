@@ -52,6 +52,97 @@ describe('useSubscription', () => {
     return replaySubject;
   }
 
+  it('handles memo components', () => {
+    const observable = createBehaviorSubject('start');
+
+    function Child({value = 'default', id }) {
+      React.useEffect(
+        () => {
+          Scheduler.unstable_yieldValue(`Commit(${id}): ${value}`);
+        },
+        [value, id],
+      );
+      Scheduler.unstable_yieldValue(`Render(${id}): ${value}`);
+      return null;
+    }
+
+    function Subbed({id}) {
+      const value = useSubscription(
+        React.useMemo(
+          () => ({
+            getCurrentValue: () => observable.getValue(),
+            subscribe: callback => {
+              const subscription = observable.subscribe(callback);
+              return () => subscription.unsubscribe();
+            },
+          }),
+          [observable],
+        ),
+      );
+      return <Child value={value} id={id}/>;
+    }
+    // Change this to see the test pass
+    const isMemo = true;
+    const MemodSubbed = isMemo ? React.memo(Subbed) : Subbed;
+
+    let setCount;
+    function Parent() {
+      const [count, _setCount] = React.useState(0);
+      setCount = _setCount;
+      return (
+        <>
+          <Subbed id="Not Memod"/>
+          <MemodSubbed id="Memo" />
+          <Child value={count} id="Child" />
+        </>
+      );
+    }
+
+    act(() => {
+      ReactTestRenderer.create(<Parent />, {unstable_isConcurrent: true});
+      expect(Scheduler).toFlushAndYield([
+        'Render(Not Memod): start',
+        'Render(Memo): start',
+        'Render(Child): 0',
+        'Commit(Not Memod): start',
+        'Commit(Memo): start',
+        'Commit(Child): 0',
+      ]);
+
+      // No more pending updates. Everything has rendered
+      jest.runAllTimers();
+
+      observable.next('a');
+      expect(Scheduler).toFlushAndYieldThrough([
+        'Render(Not Memod): a',
+        'Render(Memo): a',
+      ]);
+
+      // Before the update can commit, it is interrupted.
+      Scheduler.unstable_runWithPriority(1, () => {
+        setCount(123);
+      });
+
+      expect(Scheduler).toFlushAndYieldThrough([
+        // Subbed Memo Renders with original value
+        'Render(Not Memod): start',
+        ...(!isMemo ? [ 'Render(Memo): start'] : []),
+        'Render(Child): 123',
+        'Commit(Child): 123',
+      ]);
+
+      // The observable changing update runs
+      expect(Scheduler).toFlushAndYield([
+        'Render(Not Memod): a',
+        // For some reasons, the Memo component do not render
+        // with the update value.
+        'Render(Memo): a',
+        'Commit(Not Memod): a',
+        'Commit(Memo): a',
+      ]);
+    });
+  });
+
   it('supports basic subscription pattern', () => {
     function Child({value = 'default'}) {
       Scheduler.unstable_yieldValue(value);
