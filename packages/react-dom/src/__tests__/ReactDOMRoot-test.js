@@ -231,4 +231,39 @@ describe('ReactDOMRoot', () => {
     Scheduler.unstable_flushAll();
     ReactDOM.createRoot(container); // No warning
   });
+
+  it('sets noop onclick for Mobile Safari on portal containers', () => {
+    // We set noop onclick for portals (so clicks don't get lost in iOS Safari)
+    // but there's no reason to do this for top-level containers.
+
+    // Legacy Root
+    const portalContainer1 = document.createElement('div');
+    const rootContainer1 = document.createElement('div');
+    ReactDOM.render(
+      <div>{ReactDOM.createPortal(<div />, portalContainer1)}</div>,
+      rootContainer1,
+    );
+    expect(rootContainer1.onclick).toBe(null);
+    expect(portalContainer1.onclick).not.toBe(null);
+
+    // Blocking Root
+    const portalContainer2 = document.createElement('div');
+    const rootContainer2 = document.createElement('div');
+    ReactDOM.createBlockingRoot(rootContainer2).render(
+      <div>{ReactDOM.createPortal(<div />, portalContainer2)}</div>,
+    );
+    Scheduler.unstable_flushAll();
+    expect(rootContainer2.onclick).toBe(null);
+    expect(portalContainer2.onclick).not.toBe(null);
+
+    // Concurrent Root
+    const portalContainer3 = document.createElement('div');
+    const rootContainer3 = document.createElement('div');
+    ReactDOM.createRoot(rootContainer3).render(
+      <div>{ReactDOM.createPortal(<div />, portalContainer3)}</div>,
+    );
+    Scheduler.unstable_flushAll();
+    expect(rootContainer3.onclick).toBe(null);
+    expect(portalContainer3.onclick).not.toBe(null);
+  });
 });
