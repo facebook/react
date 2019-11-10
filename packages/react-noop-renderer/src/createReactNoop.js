@@ -26,7 +26,7 @@ import {REACT_FRAGMENT_TYPE, REACT_ELEMENT_TYPE} from 'shared/ReactSymbols';
 import enqueueTask from 'shared/enqueueTask';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import warningWithoutStack from 'shared/warningWithoutStack';
-import {ConcurrentRoot, BatchedRoot, LegacyRoot} from 'shared/ReactRootTags';
+import {ConcurrentRoot, BlockingRoot, LegacyRoot} from 'shared/ReactRootTags';
 
 type Container = {
   rootID: string,
@@ -952,7 +952,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       };
       const fiberRoot = NoopRenderer.createContainer(
         container,
-        BatchedRoot,
+        BlockingRoot,
         false,
         null,
       );
