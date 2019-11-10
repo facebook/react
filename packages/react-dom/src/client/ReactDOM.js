@@ -450,7 +450,8 @@ const ReactDOM: Object = {
     );
     if (__DEV__) {
       const isModernRoot =
-        isContainerMarkedAsRoot(container) && !container._reactRootContainer;
+        isContainerMarkedAsRoot(container) &&
+        container._reactRootContainer === undefined;
       if (isModernRoot) {
         warningWithoutStack(
           false,
@@ -481,7 +482,8 @@ const ReactDOM: Object = {
     );
     if (__DEV__) {
       const isModernRoot =
-        isContainerMarkedAsRoot(container) && !container._reactRootContainer;
+        isContainerMarkedAsRoot(container) &&
+        container._reactRootContainer === undefined;
       if (isModernRoot) {
         warningWithoutStack(
           false,
@@ -531,7 +533,8 @@ const ReactDOM: Object = {
 
     if (__DEV__) {
       const isModernRoot =
-        isContainerMarkedAsRoot(container) && !container._reactRootContainer;
+        isContainerMarkedAsRoot(container) &&
+        container._reactRootContainer === undefined;
       if (isModernRoot) {
         warningWithoutStack(
           false,
