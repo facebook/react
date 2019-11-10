@@ -56,6 +56,59 @@ describe('ReactHooks', () => {
     });
   }
 
+  it('fixes #17066', () => {
+    function useTest(name: string) {
+      const [state, setState] = React.useState(0);
+      React.useEffect(() => {
+        Scheduler.unstable_yieldValue(name + ':' + state);
+        setState(1);
+      });
+      return state;
+    }
+
+    function Root1() {
+      const state = useTest('Root1');
+      return (
+        <div>
+          {'' + state}
+          {state && <Child1 />}
+        </div>
+      );
+    }
+    function Child1() {
+      const state = useTest('Child1');
+      return (
+        <div>
+          {'' + state}
+          {state && <Child2 />}
+        </div>
+      );
+    }
+    function Child2() {
+      const state = useTest('Child2');
+      return <div>{'' + state}</div>;
+    }
+
+    function Root2() {
+      React.useEffect(() => {
+        Scheduler.unstable_yieldValue('Root2');
+      }, []);
+      return null;
+    }
+
+    ReactTestRenderer.create(<Root1 />);
+    ReactTestRenderer.create(<Root2 />);
+
+    expect(Scheduler).toHaveYielded(['Root1:0', 'Root2']);
+    expect(Scheduler).toFlushAndYield([
+      'Child1:0',
+      'Root1:1',
+      'Child2:0',
+      'Child1:1',
+      'Child2:1',
+    ]);
+  });
+
   it('bails out in the render phase if all of the state is the same', () => {
     const {useState, useLayoutEffect} = React;
 
