@@ -55,7 +55,7 @@ describe('useSubscription', () => {
   it('handles memo components', () => {
     const observable = createBehaviorSubject('start');
 
-    function Child({value = 'default', id }) {
+    function Child({value = 'default', id}) {
       React.useEffect(
         () => {
           Scheduler.unstable_yieldValue(`Commit(${id}): ${value}`);
@@ -79,7 +79,7 @@ describe('useSubscription', () => {
           [observable],
         ),
       );
-      return <Child value={value} id={id}/>;
+      return <Child value={value} id={id} />;
     }
     // Change this to see the test pass
     const isMemo = true;
@@ -91,7 +91,7 @@ describe('useSubscription', () => {
       setCount = _setCount;
       return (
         <>
-          <Subbed id="Not Memod"/>
+          <Subbed id="Not Memod" />
           <MemodSubbed id="Memo" />
           <Child value={count} id="Child" />
         </>
@@ -126,7 +126,7 @@ describe('useSubscription', () => {
       expect(Scheduler).toFlushAndYieldThrough([
         // Subbed Memo Renders with original value
         'Render(Not Memod): start',
-        ...(!isMemo ? [ 'Render(Memo): start'] : []),
+        ...(!isMemo ? ['Render(Memo): start'] : []),
         'Render(Child): 123',
         'Commit(Child): 123',
       ]);
