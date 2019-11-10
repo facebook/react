@@ -228,6 +228,7 @@ describe('ReactDOMRoot', () => {
   it('does not warn when creating second root after first one is unmounted', () => {
     const root = ReactDOM.createRoot(container);
     root.unmount();
+    Scheduler.unstable_flushAll();
     ReactDOM.createRoot(container); // No warning
   });
 });

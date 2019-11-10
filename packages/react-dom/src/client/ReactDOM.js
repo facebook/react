@@ -241,8 +241,13 @@ ReactRoot.prototype.unmount = ReactBlockingRoot.prototype.unmount = function(
   if (__DEV__) {
     warnOnInvalidCallback(callback, 'render');
   }
-  updateContainer(null, root, null, callback);
-  unmarkContainerAsRoot(root.containerInfo);
+  const container = root.containerInfo;
+  updateContainer(null, root, null, () => {
+    unmarkContainerAsRoot(container);
+    if (callback !== null) {
+      callback();
+    }
+  });
 };
 
 /**
