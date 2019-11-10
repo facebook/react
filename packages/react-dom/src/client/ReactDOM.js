@@ -226,26 +226,26 @@ ReactRoot.prototype.render = ReactBlockingRoot.prototype.render = function(
   callback: ?() => mixed,
 ): void {
   const root = this._internalRoot;
-  callback = callback === undefined ? null : callback;
+  const cb = callback === undefined ? null : callback;
   if (__DEV__) {
-    warnOnInvalidCallback(callback, 'render');
+    warnOnInvalidCallback(cb, 'render');
   }
-  updateContainer(children, root, null, callback);
+  updateContainer(children, root, null, cb);
 };
 
 ReactRoot.prototype.unmount = ReactBlockingRoot.prototype.unmount = function(
   callback: ?() => mixed,
 ): void {
   const root = this._internalRoot;
-  callback = callback === undefined ? null : callback;
+  const cb = callback === undefined ? null : callback;
   if (__DEV__) {
-    warnOnInvalidCallback(callback, 'render');
+    warnOnInvalidCallback(cb, 'render');
   }
   const container = root.containerInfo;
   updateContainer(null, root, null, () => {
     unmarkContainerAsRoot(container);
-    if (callback !== null) {
-      callback();
+    if (cb !== null) {
+      cb();
     }
   });
 };
