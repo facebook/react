@@ -826,6 +826,9 @@ describe('ReactFabric', () => {
             expect(ReactFabric.findNodeHandle(ref1.current)).toEqual(
               event.target,
             );
+            expect(ReactFabric.findNodeHandle(ref1.current)).toEqual(
+              event.currentTarget,
+            );
           }}
           onStartShouldSetResponder={() => true}
         />
@@ -836,6 +839,9 @@ describe('ReactFabric', () => {
             expect(ref2.current).not.toBeNull();
             expect(ReactFabric.findNodeHandle(ref2.current)).toEqual(
               event.target,
+            );
+            expect(ReactFabric.findNodeHandle(ref2.current)).toEqual(
+              event.currentTarget,
             );
           }}
           onStartShouldSetResponder={() => true}
@@ -875,7 +881,7 @@ describe('ReactFabric', () => {
       changedTouches: [],
     });
 
-    expect.assertions(4);
+    expect.assertions(6);
   });
 
   it('dispatches event with target as instance', () => {
@@ -922,6 +928,7 @@ describe('ReactFabric', () => {
             expect(ref1.current).not.toBeNull();
             // Check for referential equality
             expect(ref1.current).toBe(event.target);
+            expect(ref1.current).toBe(event.currentTarget);
           }}
           onStartShouldSetResponder={() => true}
         />
@@ -932,6 +939,7 @@ describe('ReactFabric', () => {
             expect(ref2.current).not.toBeNull();
             // Check for referential equality
             expect(ref2.current).toBe(event.target);
+            expect(ref2.current).toBe(event.currentTarget);
           }}
           onStartShouldSetResponder={() => true}
         />
@@ -970,7 +978,7 @@ describe('ReactFabric', () => {
       changedTouches: [],
     });
 
-    expect.assertions(4);
+    expect.assertions(6);
   });
 
   it('findHostInstance_DEPRECATED should warn if used to find a host component inside StrictMode', () => {

@@ -484,6 +484,9 @@ it('dispatches event with target as reactTag', () => {
           expect(ReactNative.findNodeHandle(ref1.current)).toEqual(
             event.target,
           );
+          expect(ReactNative.findNodeHandle(ref1.current)).toEqual(
+            event.currentTarget,
+          );
         }}
         onStartShouldSetResponder={() => true}
       />
@@ -494,6 +497,9 @@ it('dispatches event with target as reactTag', () => {
           expect(ref2.current).not.toBeNull();
           expect(ReactNative.findNodeHandle(ref2.current)).toEqual(
             event.target,
+          );
+          expect(ReactNative.findNodeHandle(ref2.current)).toEqual(
+            event.currentTarget,
           );
         }}
         onStartShouldSetResponder={() => true}
@@ -526,7 +532,7 @@ it('dispatches event with target as reactTag', () => {
     [0],
   );
 
-  expect.assertions(4);
+  expect.assertions(6);
 });
 
 it('dispatches event with target as instance', () => {
@@ -553,6 +559,7 @@ it('dispatches event with target as instance', () => {
           expect(ref1.current).not.toBeNull();
           // Check for referential equality
           expect(ref1.current).toBe(event.target);
+          expect(ref1.current).toBe(event.currentTarget);
         }}
         onStartShouldSetResponder={() => true}
       />
@@ -563,6 +570,7 @@ it('dispatches event with target as instance', () => {
           expect(ref2.current).not.toBeNull();
           // Check for referential equality
           expect(ref2.current).toBe(event.target);
+          expect(ref2.current).toBe(event.currentTarget);
         }}
         onStartShouldSetResponder={() => true}
       />
@@ -594,5 +602,5 @@ it('dispatches event with target as instance', () => {
     [0],
   );
 
-  expect.assertions(4);
+  expect.assertions(6);
 });
