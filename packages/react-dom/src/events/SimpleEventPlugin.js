@@ -250,7 +250,7 @@ const SimpleEventPlugin: PluginModule<MouseEvent> & {
     topLevelType: TopLevelType,
     targetInst: null | Fiber,
     nativeEvent: MouseEvent,
-    nativeEventTarget: EventTarget,
+    nativeEventTarget: null | EventTarget,
     eventSystemFlags: EventSystemFlags,
   ): null | ReactSyntheticEvent {
     const dispatchConfig = topLevelEventsToDispatchConfig[topLevelType];
