@@ -100,11 +100,9 @@ function _receiveRootNodeIDEvent(
   const nativeEvent = nativeEventParam || EMPTY_NATIVE_EVENT;
   const inst = getInstanceFromNode(rootNodeID);
 
-  let target;
+  let target = null;
   if (enableNativeTargetAsInstance) {
-    if (inst == null) {
-      target = null;
-    } else {
+    if (inst != null) {
       target = inst.stateNode;
     }
   } else {
