@@ -14,6 +14,7 @@ let PropTypes;
 let RCTEventEmitter;
 let React;
 let ReactNative;
+let ReactFeatureFlags;
 let ResponderEventPlugin;
 let UIManager;
 let createReactNativeComponentClass;
@@ -68,6 +69,7 @@ beforeEach(() => {
     .RCTEventEmitter;
   React = require('react');
   ReactNative = require('react-native-renderer');
+  ReactFeatureFlags = require('shared/ReactFeatureFlags');
   ResponderEventPlugin = require('legacy-events/ResponderEventPlugin').default;
   UIManager = require('react-native/Libraries/ReactPrivate/ReactNativePrivateInterface')
     .UIManager;
@@ -455,4 +457,142 @@ it('handles events without target', () => {
     'two responder start',
     'two responder end',
   ]);
+});
+
+it('dispatches event with target as reactTag', () => {
+  ReactFeatureFlags.enableNativeTargetAsInstance = false;
+  const EventEmitter = RCTEventEmitter.register.mock.calls[0][0];
+
+  const View = fakeRequireNativeComponent('View', {id: true});
+
+  function getViewById(id) {
+    return UIManager.createView.mock.calls.find(
+      args => args[3] && args[3].id === id,
+    )[0];
+  }
+
+  const ref1 = React.createRef();
+  const ref2 = React.createRef();
+
+  ReactNative.render(
+    <View id="parent">
+      <View
+        ref={ref1}
+        id="one"
+        onResponderStart={event => {
+          expect(ref1.current).not.toBeNull();
+          expect(ReactNative.findNodeHandle(ref1.current)).toEqual(
+            event.target,
+          );
+        }}
+        onStartShouldSetResponder={() => true}
+      />
+      <View
+        ref={ref2}
+        id="two"
+        onResponderStart={event => {
+          expect(ref2.current).not.toBeNull();
+          expect(ReactNative.findNodeHandle(ref2.current)).toEqual(
+            event.target,
+          );
+        }}
+        onStartShouldSetResponder={() => true}
+      />
+    </View>,
+    1,
+  );
+
+  EventEmitter.receiveTouches(
+    'topTouchStart',
+    [{target: getViewById('one'), identifier: 17}],
+    [0],
+  );
+
+  EventEmitter.receiveTouches(
+    'topTouchEnd',
+    [{target: getViewById('one'), identifier: 17}],
+    [0],
+  );
+
+  EventEmitter.receiveTouches(
+    'topTouchStart',
+    [{target: getViewById('two'), identifier: 18}],
+    [0],
+  );
+
+  EventEmitter.receiveTouches(
+    'topTouchEnd',
+    [{target: getViewById('two'), identifier: 18}],
+    [0],
+  );
+
+  expect.assertions(4);
+});
+
+it('dispatches event with target as instance', () => {
+  ReactFeatureFlags.enableNativeTargetAsInstance = true;
+  const EventEmitter = RCTEventEmitter.register.mock.calls[0][0];
+
+  const View = fakeRequireNativeComponent('View', {id: true});
+
+  function getViewById(id) {
+    return UIManager.createView.mock.calls.find(
+      args => args[3] && args[3].id === id,
+    )[0];
+  }
+
+  const ref1 = React.createRef();
+  const ref2 = React.createRef();
+
+  ReactNative.render(
+    <View id="parent">
+      <View
+        ref={ref1}
+        id="one"
+        onResponderStart={event => {
+          expect(ref1.current).not.toBeNull();
+          // Check for referential equality
+          expect(ref1.current).toBe(event.target);
+        }}
+        onStartShouldSetResponder={() => true}
+      />
+      <View
+        ref={ref2}
+        id="two"
+        onResponderStart={event => {
+          expect(ref2.current).not.toBeNull();
+          // Check for referential equality
+          expect(ref2.current).toBe(event.target);
+        }}
+        onStartShouldSetResponder={() => true}
+      />
+    </View>,
+    1,
+  );
+
+  EventEmitter.receiveTouches(
+    'topTouchStart',
+    [{target: getViewById('one'), identifier: 17}],
+    [0],
+  );
+
+  EventEmitter.receiveTouches(
+    'topTouchEnd',
+    [{target: getViewById('one'), identifier: 17}],
+    [0],
+  );
+
+  EventEmitter.receiveTouches(
+    'topTouchStart',
+    [{target: getViewById('two'), identifier: 18}],
+    [0],
+  );
+
+  EventEmitter.receiveTouches(
+    'topTouchEnd',
+    [{target: getViewById('two'), identifier: 18}],
+    [0],
+  );
+
+  expect.assertions(4);
 });

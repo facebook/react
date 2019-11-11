@@ -15,6 +15,7 @@ import {
 import {registrationNameModules} from 'legacy-events/EventPluginRegistry';
 import {batchedUpdates} from 'legacy-events/ReactGenericBatching';
 import warningWithoutStack from 'shared/warningWithoutStack';
+import {enableNativeTargetAsInstance} from 'shared/ReactFeatureFlags';
 
 import {getInstanceFromNode} from './ReactNativeComponentTree';
 
@@ -98,12 +99,24 @@ function _receiveRootNodeIDEvent(
 ) {
   const nativeEvent = nativeEventParam || EMPTY_NATIVE_EVENT;
   const inst = getInstanceFromNode(rootNodeID);
+
+  let target;
+  if (enableNativeTargetAsInstance) {
+    if (inst == null) {
+      target = null;
+    } else {
+      target = inst.stateNode;
+    }
+  } else {
+    target = nativeEvent.target;
+  }
+
   batchedUpdates(function() {
     runExtractedPluginEventsInBatch(
       topLevelType,
       inst,
       nativeEvent,
-      nativeEvent.target,
+      target,
       PLUGIN_EVENT_SYSTEM,
     );
   });

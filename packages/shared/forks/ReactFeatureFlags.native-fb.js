@@ -13,7 +13,9 @@ import typeof * as FeatureFlagsType from 'shared/ReactFeatureFlags';
 import typeof * as FeatureFlagsShimType from './ReactFeatureFlags.native-fb';
 
 // Uncomment to re-export dynamic flags from the fbsource version.
-// export const {} = require('../shims/ReactFeatureFlags');
+export const {
+  enableNativeTargetAsInstance,
+} = require('../shims/ReactFeatureFlags');
 
 // The rest of the flags are static for better dead code elimination.
 export const enableUserTimingAPI = __DEV__;
