@@ -25,6 +25,7 @@ function transform(input, options = {}) {
             skipEnvCheck: true,
             // To simplify debugging tests:
             emitFullSignatures: true,
+            ...options.freshOptions,
           },
         ],
         ...(options.plugins || []),
@@ -478,6 +479,23 @@ describe('ReactFreshBabelPlugin', () => {
         const Baz = memo(() => useContext(X));
         const Qux = () => (0, useContext(X));
       `),
+    ).toMatchSnapshot();
+  });
+
+  it('uses custom identifiers for $RefreshReg$ and $RefreshSig$', () => {
+    expect(
+      transform(
+        `export default function Bar () {
+        useContext(X)
+        return <Foo />
+      };`,
+        {
+          freshOptions: {
+            refreshReg: 'import.meta.refreshReg',
+            refreshSig: 'import.meta.refreshSig',
+          },
+        },
+      ),
     ).toMatchSnapshot();
   });
 });
