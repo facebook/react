@@ -134,7 +134,7 @@ function extractPluginEvents(
   topLevelType: TopLevelType,
   targetInst: null | Fiber,
   nativeEvent: AnyNativeEvent,
-  nativeEventTarget: EventTarget,
+  nativeEventTarget: null | EventTarget,
   eventSystemFlags: EventSystemFlags,
 ): Array<ReactSyntheticEvent> | ReactSyntheticEvent | null {
   let events = null;
@@ -161,7 +161,7 @@ export function runExtractedPluginEventsInBatch(
   topLevelType: TopLevelType,
   targetInst: null | Fiber,
   nativeEvent: AnyNativeEvent,
-  nativeEventTarget: EventTarget,
+  nativeEventTarget: null | EventTarget,
   eventSystemFlags: EventSystemFlags,
 ) {
   const events = extractPluginEvents(
