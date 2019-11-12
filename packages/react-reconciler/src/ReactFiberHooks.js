@@ -56,6 +56,7 @@ import {
   runWithPriority,
   getCurrentPriorityLevel,
 } from './SchedulerWithReactIntegration';
+import {getIsHydrating} from './ReactFiberHydrationContext';
 
 const {ReactCurrentDispatcher, ReactCurrentBatchConfig} = ReactSharedInternals;
 
@@ -984,6 +985,17 @@ function updateEffect(
   );
 }
 
+function mountHydrateableEffect(
+  create: () => (() => void) | void,
+  deps: Array<mixed> | void | null,
+): void {
+  if (getIsHydrating()) {
+    return mountEffect(create, deps);
+  } else {
+    return mountLayoutEffect(create, deps);
+  }
+}
+
 function mountLayoutEffect(
   create: () => (() => void) | void,
   deps: Array<mixed> | void | null,
@@ -1397,6 +1409,7 @@ const HooksDispatcherOnMount: Dispatcher = {
   useEffect: mountEffect,
   useImperativeHandle: mountImperativeHandle,
   useLayoutEffect: mountLayoutEffect,
+  useHydrateableEffect: mountHydrateableEffect,
   useMemo: mountMemo,
   useReducer: mountReducer,
   useRef: mountRef,
@@ -1415,6 +1428,7 @@ const HooksDispatcherOnUpdate: Dispatcher = {
   useEffect: updateEffect,
   useImperativeHandle: updateImperativeHandle,
   useLayoutEffect: updateLayoutEffect,
+  useHydrateableEffect: updateLayoutEffect,
   useMemo: updateMemo,
   useReducer: updateReducer,
   useRef: updateRef,
@@ -1519,6 +1533,15 @@ if (__DEV__) {
       mountHookTypesDev();
       checkDepsAreArrayDev(deps);
       return mountLayoutEffect(create, deps);
+    },
+    useHydrateableEffect(
+      create: () => (() => void) | void,
+      deps: Array<mixed> | void | null,
+    ): void {
+      currentHookNameInDev = 'useHydrateableEffect';
+      mountHookTypesDev();
+      checkDepsAreArrayDev(deps);
+      return mountHydrateableEffect(create, deps);
     },
     useMemo<T>(create: () => T, deps: Array<mixed> | void | null): T {
       currentHookNameInDev = 'useMemo';
@@ -1638,6 +1661,14 @@ if (__DEV__) {
       updateHookTypesDev();
       return mountLayoutEffect(create, deps);
     },
+    useHydrateableEffect(
+      create: () => (() => void) | void,
+      deps: Array<mixed> | void | null,
+    ): void {
+      currentHookNameInDev = 'useHydrateableEffect';
+      updateHookTypesDev();
+      return mountHydrateableEffect(create, deps);
+    },
     useMemo<T>(create: () => T, deps: Array<mixed> | void | null): T {
       currentHookNameInDev = 'useMemo';
       updateHookTypesDev();
@@ -1752,6 +1783,14 @@ if (__DEV__) {
       deps: Array<mixed> | void | null,
     ): void {
       currentHookNameInDev = 'useLayoutEffect';
+      updateHookTypesDev();
+      return updateLayoutEffect(create, deps);
+    },
+    useHydrateableEffect(
+      create: () => (() => void) | void,
+      deps: Array<mixed> | void | null,
+    ): void {
+      currentHookNameInDev = 'useHydrateableEffect';
       updateHookTypesDev();
       return updateLayoutEffect(create, deps);
     },
@@ -1995,6 +2034,15 @@ if (__DEV__) {
       mountHookTypesDev();
       return mountLayoutEffect(create, deps);
     },
+    useHydrateableEffect(
+      create: () => (() => void) | void,
+      deps: Array<mixed> | void | null,
+    ): void {
+      currentHookNameInDev = 'useHydrateableEffect';
+      warnInvalidHookAccess();
+      mountHookTypesDev();
+      return mountHydrateableEffect(create, deps);
+    },
     useMemo<T>(create: () => T, deps: Array<mixed> | void | null): T {
       currentHookNameInDev = 'useMemo';
       warnInvalidHookAccess();
@@ -2122,6 +2170,15 @@ if (__DEV__) {
       deps: Array<mixed> | void | null,
     ): void {
       currentHookNameInDev = 'useLayoutEffect';
+      warnInvalidHookAccess();
+      updateHookTypesDev();
+      return updateLayoutEffect(create, deps);
+    },
+    useHydrateableEffect(
+      create: () => (() => void) | void,
+      deps: Array<mixed> | void | null,
+    ): void {
+      currentHookNameInDev = 'useHydrateableEffect';
       warnInvalidHookAccess();
       updateHookTypesDev();
       return updateLayoutEffect(create, deps);

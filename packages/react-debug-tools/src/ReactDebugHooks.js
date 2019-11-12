@@ -62,6 +62,7 @@ function getPrimitiveStackCache(): Map<string, Array<any>> {
       Dispatcher.useReducer((s, a) => s, null);
       Dispatcher.useRef(null);
       Dispatcher.useLayoutEffect(() => {});
+      Dispatcher.useHydrateableEffect(() => {});
       Dispatcher.useEffect(() => {});
       Dispatcher.useImperativeHandle(undefined, () => null);
       Dispatcher.useDebugValue(null);
@@ -162,6 +163,18 @@ function useLayoutEffect(
   nextHook();
   hookLog.push({
     primitive: 'LayoutEffect',
+    stackError: new Error(),
+    value: create,
+  });
+}
+
+function useHydrateableEffect(
+  create: () => (() => void) | void,
+  inputs: Array<mixed> | void | null,
+): void {
+  nextHook();
+  hookLog.push({
+    primitive: 'HydrateableEffect',
     stackError: new Error(),
     value: create,
   });
@@ -270,6 +283,7 @@ const Dispatcher: DispatcherType = {
   useImperativeHandle,
   useDebugValue,
   useLayoutEffect,
+  useHydrateableEffect,
   useMemo,
   useReducer,
   useRef,

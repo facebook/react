@@ -12,6 +12,7 @@
 let React = require('react');
 let ReactDOM = require('react-dom');
 let ReactDOMServer = require('react-dom/server');
+let ReactDOMTestUtils = require('react-dom/test-utils');
 let Scheduler = require('scheduler');
 
 describe('ReactDOMRoot', () => {
@@ -23,6 +24,7 @@ describe('ReactDOMRoot', () => {
     React = require('react');
     ReactDOM = require('react-dom');
     ReactDOMServer = require('react-dom/server');
+    ReactDOMTestUtils = require('react-dom/test-utils');
     Scheduler = require('scheduler');
   });
 
@@ -228,5 +230,51 @@ describe('ReactDOMRoot', () => {
     root.unmount();
     Scheduler.unstable_flushAll();
     ReactDOM.createRoot(container); // No warning
+  });
+
+  describe('useHydratedEffect', () => {
+    function Component({value}) {
+      const [state, setState] = React.useState('initial');
+
+      React.useHydrateableEffect(() => {
+        setState(`${value}-effect`);
+      });
+
+      return <p>{state}</p>;
+    }
+
+    it('behaves like useLayoutEffect when not hydrating', () => {
+      const root = ReactDOM.createBlockingRoot(container);
+
+      root.render(<Component />);
+      Scheduler.unstable_advanceTime(0);
+
+      expect(container.textContent).toEqual('undefined-effect');
+
+      root.render(<Component value="rerender" />);
+      Scheduler.unstable_advanceTime(0);
+
+      expect(container.textContent).toEqual('rerender-effect');
+    });
+
+    it('behaves like useEffect when hydrating', () => {
+      const root = ReactDOM.createBlockingRoot(container, {hydrate: true});
+      const button = document.createElement('p');
+      button.appendChild(document.createTextNode('initial'));
+      container.appendChild(button);
+
+      ReactDOMTestUtils.act(() => {
+        root.render(<Component />);
+        Scheduler.unstable_advanceTime(0);
+
+        expect(container.textContent).toEqual('initial');
+      });
+      expect(container.textContent).toEqual('undefined-effect');
+    });
+
+    it('behaves like useEffect when server-side rendering', () => {
+      const markup = ReactDOMServer.renderToString(<Component />);
+      expect(markup).toEqual('<p data-reactroot="">initial</p>');
+    });
   });
 });

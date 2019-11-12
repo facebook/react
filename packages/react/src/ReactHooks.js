@@ -112,6 +112,14 @@ export function useLayoutEffect(
   return dispatcher.useLayoutEffect(create, deps);
 }
 
+export function useHydrateableEffect(
+  create: () => (() => void) | void,
+  inputs: Array<mixed> | void | null,
+) {
+  const dispatcher = resolveDispatcher();
+  return dispatcher.useHydrateableEffect(create, inputs);
+}
+
 export function useCallback<T>(
   callback: T,
   deps: Array<mixed> | void | null,

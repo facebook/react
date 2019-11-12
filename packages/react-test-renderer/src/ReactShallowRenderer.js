@@ -408,6 +408,7 @@ class ReactShallowRenderer {
       useEffect: noOp,
       useImperativeHandle: noOp,
       useLayoutEffect: noOp,
+      useHydrateableEffect: noOp,
       useMemo,
       useReducer,
       useRef,

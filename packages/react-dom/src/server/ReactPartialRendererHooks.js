@@ -495,6 +495,7 @@ export const Dispatcher: DispatcherType = {
   useImperativeHandle: noop,
   // Effects are not run in the server environment.
   useEffect: noop,
+  useHydrateableEffect: noop,
   // Debugging effect
   useDebugValue: noop,
   useResponder,

@@ -220,6 +220,8 @@ export default function(babel, opts = {}) {
       case 'React.useEffect':
       case 'useLayoutEffect':
       case 'React.useLayoutEffect':
+      case 'useHydrateableEffect':
+      case 'React.useHydrateableEffect':
       case 'useMemo':
       case 'React.useMemo':
       case 'useCallback':
