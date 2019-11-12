@@ -84,6 +84,10 @@ export type Dispatcher = {|
     create: () => (() => void) | void,
     deps: Array<mixed> | void | null,
   ): void,
+  useHydrateableEffect(
+    create: () => (() => void) | void,
+    deps: Array<mixed> | void | null,
+  ): void,
   useCallback<T>(callback: T, deps: Array<mixed> | void | null): T,
   useMemo<T>(nextCreate: () => T, deps: Array<mixed> | void | null): T,
   useImperativeHandle<T>(
@@ -125,6 +129,7 @@ export type HookType =
   | 'useContext'
   | 'useRef'
   | 'useEffect'
+  | 'useHydrateableEffect'
   | 'useLayoutEffect'
   | 'useCallback'
   | 'useMemo'
@@ -1391,6 +1396,7 @@ export const ContextOnlyDispatcher: Dispatcher = {
   useEffect: throwInvalidHookError,
   useImperativeHandle: throwInvalidHookError,
   useLayoutEffect: throwInvalidHookError,
+  useHydrateableEffect: throwInvalidHookError,
   useMemo: throwInvalidHookError,
   useReducer: throwInvalidHookError,
   useRef: throwInvalidHookError,
@@ -1447,6 +1453,7 @@ const HooksDispatcherOnRerender: Dispatcher = {
   useEffect: updateEffect,
   useImperativeHandle: updateImperativeHandle,
   useLayoutEffect: updateLayoutEffect,
+  useHydrateableEffect: updateLayoutEffect,
   useMemo: updateMemo,
   useReducer: rerenderReducer,
   useRef: updateRef,
@@ -1911,6 +1918,14 @@ if (__DEV__) {
       updateHookTypesDev();
       return updateLayoutEffect(create, deps);
     },
+    useHydrateableEffect(
+      create: () => (() => void) | void,
+      deps: Array<mixed> | void | null,
+    ): void {
+      currentHookNameInDev = 'useHydrateableEffect';
+      updateHookTypesDev();
+      return updateLayoutEffect(create, deps);
+    },
     useMemo<T>(create: () => T, deps: Array<mixed> | void | null): T {
       currentHookNameInDev = 'useMemo';
       updateHookTypesDev();
@@ -2310,6 +2325,15 @@ if (__DEV__) {
       deps: Array<mixed> | void | null,
     ): void {
       currentHookNameInDev = 'useLayoutEffect';
+      warnInvalidHookAccess();
+      updateHookTypesDev();
+      return updateLayoutEffect(create, deps);
+    },
+    useHydrateableEffect(
+      create: () => (() => void) | void,
+      deps: Array<mixed> | void | null,
+    ): void {
+      currentHookNameInDev = 'useHydrateableEffect';
       warnInvalidHookAccess();
       updateHookTypesDev();
       return updateLayoutEffect(create, deps);
