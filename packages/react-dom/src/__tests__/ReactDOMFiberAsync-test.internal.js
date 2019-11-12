@@ -9,7 +9,7 @@
 
 'use strict';
 
-const React = require('react');
+let React;
 let ReactFeatureFlags = require('shared/ReactFeatureFlags');
 
 let ReactDOM;
@@ -26,6 +26,7 @@ describe('ReactDOMFiberAsync', () => {
   beforeEach(() => {
     jest.resetModules();
     container = document.createElement('div');
+    React = require('react');
     ReactDOM = require('react-dom');
     Scheduler = require('scheduler');
 
@@ -585,6 +586,39 @@ describe('ReactDOMFiberAsync', () => {
         expect(formSubmitted).toBe(true);
       },
     );
+  });
+
+  it('regression test: does not drop passive effects across roots (#17066)', () => {
+    const {useState, useEffect} = React;
+
+    function App({label}) {
+      const [step, setStep] = useState(0);
+      useEffect(
+        () => {
+          if (step < 3) {
+            setStep(step + 1);
+          }
+        },
+        [step],
+      );
+
+      // The component should keep re-rendering itself until `step` is 3.
+      return step === 3 ? 'Finished' : 'Unresolved';
+    }
+
+    const containerA = document.createElement('div');
+    const containerB = document.createElement('div');
+    const containerC = document.createElement('div');
+
+    ReactDOM.render(<App label="A" />, containerA);
+    ReactDOM.render(<App label="B" />, containerB);
+    ReactDOM.render(<App label="C" />, containerC);
+
+    Scheduler.unstable_flushAll();
+
+    expect(containerA.textContent).toEqual('Finished');
+    expect(containerB.textContent).toEqual('Finished');
+    expect(containerC.textContent).toEqual('Finished');
   });
 
   describe('createBlockingRoot', () => {
