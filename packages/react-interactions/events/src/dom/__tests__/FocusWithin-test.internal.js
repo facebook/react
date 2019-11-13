@@ -262,37 +262,77 @@ describe.each(table)('FocusWithin responder', hasPointerEvents => {
     });
   });
 
-  describe('onDetachedVisibleNode', () => {
-    let onDetachedVisibleNode, ref, innerRef, innerRef2;
-
-    const Component = ({show}) => {
-      const listener = useFocusWithin({
-        onDetachedVisibleNode,
-      });
-      return (
-        <div ref={ref} listeners={listener}>
-          {show && <input ref={innerRef} />}
-          <div ref={innerRef2} />
-        </div>
-      );
-    };
+  describe('onBeforeFocusedElementDetached/onFocusedElementDetached', () => {
+    let onBeforeFocusedElementDetached,
+      onFocusedElementDetached,
+      ref,
+      innerRef,
+      innerRef2;
 
     beforeEach(() => {
-      onDetachedVisibleNode = jest.fn();
+      onBeforeFocusedElementDetached = jest.fn();
+      onFocusedElementDetached = jest.fn();
       ref = React.createRef();
       innerRef = React.createRef();
       innerRef2 = React.createRef();
-      ReactDOM.render(<Component show={true} />, container);
     });
 
     it('is called after a focused element is unmounted', () => {
+      const Component = ({show}) => {
+        const listener = useFocusWithin({
+          onBeforeFocusedElementDetached,
+          onFocusedElementDetached,
+        });
+        return (
+          <div ref={ref} listeners={listener}>
+            {show && <input ref={innerRef} />}
+            <div ref={innerRef2} />
+          </div>
+        );
+      };
+
+      ReactDOM.render(<Component show={true} />, container);
+
       const inner = innerRef.current;
       const target = createEventTarget(inner);
       target.keydown({key: 'Tab'});
       target.focus();
-      expect(onDetachedVisibleNode).toHaveBeenCalledTimes(0);
+      expect(onBeforeFocusedElementDetached).toHaveBeenCalledTimes(0);
+      expect(onFocusedElementDetached).toHaveBeenCalledTimes(0);
       ReactDOM.render(<Component show={false} />, container);
-      expect(onDetachedVisibleNode).toHaveBeenCalledTimes(1);
+      expect(onBeforeFocusedElementDetached).toHaveBeenCalledTimes(1);
+      expect(onFocusedElementDetached).toHaveBeenCalledTimes(1);
+    });
+
+    it('is called after a nested focused element is unmounted', () => {
+      const Component = ({show}) => {
+        const listener = useFocusWithin({
+          onBeforeFocusedElementDetached,
+          onFocusedElementDetached,
+        });
+        return (
+          <div ref={ref} listeners={listener}>
+            {show && (
+              <div>
+                <input ref={innerRef} />
+              </div>
+            )}
+            <div ref={innerRef2} />
+          </div>
+        );
+      };
+
+      ReactDOM.render(<Component show={true} />, container);
+
+      const inner = innerRef.current;
+      const target = createEventTarget(inner);
+      target.keydown({key: 'Tab'});
+      target.focus();
+      expect(onBeforeFocusedElementDetached).toHaveBeenCalledTimes(0);
+      expect(onFocusedElementDetached).toHaveBeenCalledTimes(0);
+      ReactDOM.render(<Component show={false} />, container);
+      expect(onBeforeFocusedElementDetached).toHaveBeenCalledTimes(1);
+      expect(onFocusedElementDetached).toHaveBeenCalledTimes(1);
     });
   });
 

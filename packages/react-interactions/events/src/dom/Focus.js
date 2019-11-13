@@ -45,12 +45,7 @@ type FocusProps = {
   onFocusVisibleChange: boolean => void,
 };
 
-type FocusEventType =
-  | 'focus'
-  | 'blur'
-  | 'focuschange'
-  | 'focusvisiblechange'
-  | 'detachedvisiblenode';
+type FocusEventType = 'focus' | 'blur' | 'focuschange' | 'focusvisiblechange';
 
 type FocusWithinProps = {
   disabled?: boolean,
@@ -58,7 +53,8 @@ type FocusWithinProps = {
   onBlurWithin?: (e: FocusEvent) => void,
   onFocusWithinChange?: boolean => void,
   onFocusWithinVisibleChange?: boolean => void,
-  onDetachedVisibleNode?: (e: FocusEvent) => void,
+  onBeforeFocusedElementDetached?: (e: FocusEvent) => void,
+  onFocusedElementDetached?: (e: FocusEvent) => void,
 };
 
 type FocusWithinEventType =
@@ -66,7 +62,8 @@ type FocusWithinEventType =
   | 'focuswithinchange'
   | 'blurwithin'
   | 'focuswithin'
-  | 'detachedvisiblenode';
+  | 'focusedelementdetached'
+  | 'beforefocusedelementdetached';
 
 /**
  * Shared between Focus and FocusWithin
@@ -79,14 +76,22 @@ const isMac =
     ? /^Mac/.test(window.navigator.platform)
     : false;
 
-const targetEventTypes = ['focus', 'blur', 'detachedvisiblenode'];
+const targetEventTypes = ['focus', 'blur'];
 
 const hasPointerEvents =
   typeof window !== 'undefined' && window.PointerEvent != null;
 
 const rootEventTypes = hasPointerEvents
-  ? ['keydown', 'keyup', 'pointermove', 'pointerdown', 'pointerup']
-  : ['keydown', 'keyup', 'mousedown', 'touchmove', 'touchstart', 'touchend'];
+  ? ['keydown', 'keyup', 'pointermove', 'pointerdown', 'pointerup', 'blur']
+  : [
+      'keydown',
+      'keyup',
+      'mousedown',
+      'touchmove',
+      'touchstart',
+      'touchend',
+      'blur',
+    ];
 
 function isFunction(obj): boolean {
   return typeof obj === 'function';
@@ -504,6 +509,23 @@ const focusWithinResponderImpl = {
         break;
       }
       case 'blur': {
+        if ((nativeEvent: any).elementDetached === false) {
+          const onBeforeFocusedElementDetached = (props.onBeforeFocusedElementDetached: any);
+          if (isFunction(onBeforeFocusedElementDetached)) {
+            const syntheticEvent = createFocusEvent(
+              context,
+              'beforefocusedelementdetached',
+              event.target,
+              state.pointerType,
+            );
+            context.dispatchEvent(
+              syntheticEvent,
+              onBeforeFocusedElementDetached,
+              DiscreteEvent,
+            );
+          }
+          return;
+        }
         if (
           state.isFocused &&
           !context.isTargetWithinResponder(relatedTarget)
@@ -514,22 +536,6 @@ const focusWithinResponderImpl = {
         }
         break;
       }
-      case 'detachedvisiblenode': {
-        const onDetachedVisibleNode = (props.onDetachedVisibleNode: any);
-        if (isFunction(onDetachedVisibleNode)) {
-          const syntheticEvent = createFocusEvent(
-            context,
-            'detachedvisiblenode',
-            event.target,
-            state.pointerType,
-          );
-          context.dispatchEvent(
-            syntheticEvent,
-            onDetachedVisibleNode,
-            DiscreteEvent,
-          );
-        }
-      }
     }
   },
   onRootEvent(
@@ -538,6 +544,23 @@ const focusWithinResponderImpl = {
     props: FocusWithinProps,
     state: FocusState,
   ): void {
+    if ((event.nativeEvent: any).elementDetached === true) {
+      const onFocusedElementDetached = (props.onFocusedElementDetached: any);
+      if (isFunction(onFocusedElementDetached)) {
+        const syntheticEvent = createFocusEvent(
+          context,
+          'focusedelementdetached',
+          event.target,
+          state.pointerType,
+        );
+        context.dispatchEvent(
+          syntheticEvent,
+          onFocusedElementDetached,
+          DiscreteEvent,
+        );
+      }
+      return;
+    }
     handleRootEvent(event, context, state, isFocusVisible => {
       if (state.isFocused && state.isFocusVisible !== isFocusVisible) {
         state.isFocusVisible = isFocusVisible;

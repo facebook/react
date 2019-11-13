@@ -100,6 +100,8 @@ export function hasSelectionCapabilities(elem) {
 export function getSelectionInformation() {
   const focusedElem = getActiveElementDeep();
   return {
+    // Used by Flare
+    blurredActiveElement: null,
     focusedElem: focusedElem,
     selectionRange: hasSelectionCapabilities(focusedElem)
       ? getSelection(focusedElem)

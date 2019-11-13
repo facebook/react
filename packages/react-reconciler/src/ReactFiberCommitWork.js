@@ -105,6 +105,7 @@ import {
   updateFundamentalComponent,
   commitHydratedContainer,
   commitHydratedSuspenseInstance,
+  beforeRemoveInstance,
 } from './ReactFiberHostConfig';
 import {
   captureCommitPhaseError,
@@ -808,6 +809,7 @@ function commitUnmount(
             dependencies.responders = null;
           }
         }
+        beforeRemoveInstance(current.stateNode);
       }
       safelyDetachRef(current);
       return;
