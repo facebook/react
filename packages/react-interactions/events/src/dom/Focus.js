@@ -50,7 +50,8 @@ type FocusEventType =
   | 'blur'
   | 'focuschange'
   | 'focusvisiblechange'
-  | 'detachedvisiblenode';
+  | 'beforeactiveelementblur'
+  | 'activeelementblur';
 
 type FocusWithinProps = {
   disabled?: boolean,
@@ -58,7 +59,8 @@ type FocusWithinProps = {
   onBlurWithin?: (e: FocusEvent) => void,
   onFocusWithinChange?: boolean => void,
   onFocusWithinVisibleChange?: boolean => void,
-  onDetachedVisibleNode?: (e: FocusEvent) => void,
+  onBeforeActiveElementBlur?: (e: FocusEvent) => void,
+  onActiveElementBlur?: (e: FocusEvent) => void,
 };
 
 type FocusWithinEventType =
@@ -66,7 +68,8 @@ type FocusWithinEventType =
   | 'focuswithinchange'
   | 'blurwithin'
   | 'focuswithin'
-  | 'detachedvisiblenode';
+  | 'beforeactiveelementblur'
+  | 'activeelementblur';
 
 /**
  * Shared between Focus and FocusWithin
@@ -79,14 +82,29 @@ const isMac =
     ? /^Mac/.test(window.navigator.platform)
     : false;
 
-const targetEventTypes = ['focus', 'blur', 'detachedvisiblenode'];
+const targetEventTypes = ['focus', 'blur', 'beforeactiveelementblur'];
 
 const hasPointerEvents =
   typeof window !== 'undefined' && window.PointerEvent != null;
 
 const rootEventTypes = hasPointerEvents
-  ? ['keydown', 'keyup', 'pointermove', 'pointerdown', 'pointerup']
-  : ['keydown', 'keyup', 'mousedown', 'touchmove', 'touchstart', 'touchend'];
+  ? [
+      'keydown',
+      'keyup',
+      'pointermove',
+      'pointerdown',
+      'pointerup',
+      'activeelementblur',
+    ]
+  : [
+      'keydown',
+      'keyup',
+      'mousedown',
+      'touchmove',
+      'touchstart',
+      'touchend',
+      'activeelementblur',
+    ];
 
 function isFunction(obj): boolean {
   return typeof obj === 'function';
@@ -514,18 +532,18 @@ const focusWithinResponderImpl = {
         }
         break;
       }
-      case 'detachedvisiblenode': {
-        const onDetachedVisibleNode = (props.onDetachedVisibleNode: any);
-        if (isFunction(onDetachedVisibleNode)) {
+      case 'beforeactiveelementblur': {
+        const onBeforeActiveElementBlur = (props.onBeforeActiveElementBlur: any);
+        if (isFunction(onBeforeActiveElementBlur)) {
           const syntheticEvent = createFocusEvent(
             context,
-            'detachedvisiblenode',
+            'beforeactiveelementblur',
             event.target,
             state.pointerType,
           );
           context.dispatchEvent(
             syntheticEvent,
-            onDetachedVisibleNode,
+            onBeforeActiveElementBlur,
             DiscreteEvent,
           );
         }
@@ -538,6 +556,23 @@ const focusWithinResponderImpl = {
     props: FocusWithinProps,
     state: FocusState,
   ): void {
+    if (event.type === 'activeelementblur') {
+      const onActiveElementBlur = (props.onActiveElementBlur: any);
+      if (isFunction(onActiveElementBlur)) {
+        const syntheticEvent = createFocusEvent(
+          context,
+          'activeelementblur',
+          event.target,
+          state.pointerType,
+        );
+        context.dispatchEvent(
+          syntheticEvent,
+          onActiveElementBlur,
+          DiscreteEvent,
+        );
+      }
+      return;
+    }
     handleRootEvent(event, context, state, isFocusVisible => {
       if (state.isFocused && state.isFocusVisible !== isFocusVisible) {
         state.isFocusVisible = isFocusVisible;

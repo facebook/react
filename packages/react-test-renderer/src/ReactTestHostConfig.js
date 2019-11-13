@@ -367,3 +367,7 @@ export function getInstanceFromNode(mockNode: Object) {
   }
   return null;
 }
+
+export function beforeRemoveInstance(instance) {
+  // noop
+}

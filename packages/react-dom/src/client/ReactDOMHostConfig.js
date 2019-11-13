@@ -104,6 +104,12 @@ export type ChildSet = void; // Unused
 export type TimeoutHandle = TimeoutID;
 export type NoTimeout = -1;
 
+type SelectionInformation = {|
+  blurredActiveElement: null | HTMLElement,
+  focusedElem: null | HTMLElement,
+  selectionRange: mixed,
+|};
+
 import {
   enableSuspenseServerRenderer,
   enableFlareAPI,
@@ -127,7 +133,7 @@ const SUSPENSE_FALLBACK_START_DATA = '$!';
 const STYLE = 'style';
 
 let eventsEnabled: ?boolean = null;
-let selectionInformation: ?mixed = null;
+let selectionInformation: null | SelectionInformation = null;
 
 function shouldAutoFocusHostComponent(type: string, props: Props): boolean {
   switch (type) {
@@ -205,6 +211,13 @@ export function prepareForCommit(containerInfo: Container): void {
 
 export function resetAfterCommit(containerInfo: Container): void {
   restoreSelection(selectionInformation);
+  if (enableFlareAPI) {
+    const blurredActiveElement = (selectionInformation: any)
+      .blurredActiveElement;
+    if (blurredActiveElement !== null) {
+      dispatchActiveElementBlur(blurredActiveElement);
+    }
+  }
   selectionInformation = null;
   ReactBrowserEventEmitterSetEnabled(eventsEnabled);
   eventsEnabled = null;
@@ -452,30 +465,53 @@ export function insertInContainerBefore(
   }
 }
 
+function dispatchCustomFlareEvent(
+  type: string,
+  targetInstance: null | Object,
+  target: Element | Document,
+): void {
+  // Simlulate the custom event to the React Flare responder system.
+  dispatchEventForResponderEventSystem(
+    type,
+    targetInstance,
+    ({
+      target,
+      timeStamp: Date.now(),
+    }: any),
+    target,
+    RESPONDER_EVENT_SYSTEM | IS_PASSIVE,
+  );
+}
+
+function dispatchBeforeActiveElementBlur(element: HTMLElement): void {
+  const targtInstance = getClosestInstanceFromNode(element);
+  ((selectionInformation: any): SelectionInformation).blurredActiveElement = element;
+  dispatchCustomFlareEvent('beforeactiveelementblur', targtInstance, element);
+}
+
+function dispatchActiveElementBlur(
+  node: Instance | TextInstance | SuspenseInstance,
+): void {
+  dispatchCustomFlareEvent(
+    'activeelementblur',
+    null,
+    ((node: any): HTMLElement),
+  );
+}
+
 // This is a specific event for the React Flare
 // event system, so event responders can act
 // accordingly to a DOM node being unmounted that
 // previously had active document focus.
-function dispatchDetachedVisibleNodeEvent(
-  child: Instance | TextInstance | SuspenseInstance,
+export function beforeRemoveInstance(
+  instance: Instance | TextInstance | SuspenseInstance,
 ): void {
   if (
     enableFlareAPI &&
     selectionInformation &&
-    child === selectionInformation.focusedElem
+    instance === selectionInformation.focusedElem
   ) {
-    const targetFiber = getClosestInstanceFromNode(child);
-    // Simlulate a blur event to the React Flare responder system.
-    dispatchEventForResponderEventSystem(
-      'detachedvisiblenode',
-      targetFiber,
-      ({
-        target: child,
-        timeStamp: Date.now(),
-      }: any),
-      ((child: any): Document | Element),
-      RESPONDER_EVENT_SYSTEM | IS_PASSIVE,
-    );
+    dispatchBeforeActiveElementBlur(((instance: any): HTMLElement));
   }
 }
 
@@ -483,7 +519,6 @@ export function removeChild(
   parentInstance: Instance,
   child: Instance | TextInstance | SuspenseInstance,
 ): void {
-  dispatchDetachedVisibleNodeEvent(child);
   parentInstance.removeChild(child);
 }
 
@@ -494,7 +529,6 @@ export function removeChildFromContainer(
   if (container.nodeType === COMMENT_NODE) {
     (container.parentNode: any).removeChild(child);
   } else {
-    dispatchDetachedVisibleNodeEvent(child);
     container.removeChild(child);
   }
 }
