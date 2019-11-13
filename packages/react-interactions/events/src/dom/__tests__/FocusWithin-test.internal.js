@@ -262,16 +262,16 @@ describe.each(table)('FocusWithin responder', hasPointerEvents => {
     });
   });
 
-  describe('onBeforeActiveElementBlur/onActiveElementBlur', () => {
-    let onBeforeActiveElementBlur,
-      onActiveElementBlur,
+  describe('onBeforeFocusedElementDetached/onFocusedElementDetached', () => {
+    let onBeforeFocusedElementDetached,
+      onFocusedElementDetached,
       ref,
       innerRef,
       innerRef2;
 
     beforeEach(() => {
-      onBeforeActiveElementBlur = jest.fn();
-      onActiveElementBlur = jest.fn();
+      onBeforeFocusedElementDetached = jest.fn();
+      onFocusedElementDetached = jest.fn();
       ref = React.createRef();
       innerRef = React.createRef();
       innerRef2 = React.createRef();
@@ -280,8 +280,8 @@ describe.each(table)('FocusWithin responder', hasPointerEvents => {
     it('is called after a focused element is unmounted', () => {
       const Component = ({show}) => {
         const listener = useFocusWithin({
-          onBeforeActiveElementBlur,
-          onActiveElementBlur,
+          onBeforeFocusedElementDetached,
+          onFocusedElementDetached,
         });
         return (
           <div ref={ref} listeners={listener}>
@@ -297,18 +297,18 @@ describe.each(table)('FocusWithin responder', hasPointerEvents => {
       const target = createEventTarget(inner);
       target.keydown({key: 'Tab'});
       target.focus();
-      expect(onBeforeActiveElementBlur).toHaveBeenCalledTimes(0);
-      expect(onActiveElementBlur).toHaveBeenCalledTimes(0);
+      expect(onBeforeFocusedElementDetached).toHaveBeenCalledTimes(0);
+      expect(onFocusedElementDetached).toHaveBeenCalledTimes(0);
       ReactDOM.render(<Component show={false} />, container);
-      expect(onBeforeActiveElementBlur).toHaveBeenCalledTimes(1);
-      expect(onActiveElementBlur).toHaveBeenCalledTimes(1);
+      expect(onBeforeFocusedElementDetached).toHaveBeenCalledTimes(1);
+      expect(onFocusedElementDetached).toHaveBeenCalledTimes(1);
     });
 
     it('is called after a nested focused element is unmounted', () => {
       const Component = ({show}) => {
         const listener = useFocusWithin({
-          onBeforeActiveElementBlur,
-          onActiveElementBlur,
+          onBeforeFocusedElementDetached,
+          onFocusedElementDetached,
         });
         return (
           <div ref={ref} listeners={listener}>
@@ -328,11 +328,11 @@ describe.each(table)('FocusWithin responder', hasPointerEvents => {
       const target = createEventTarget(inner);
       target.keydown({key: 'Tab'});
       target.focus();
-      expect(onBeforeActiveElementBlur).toHaveBeenCalledTimes(0);
-      expect(onActiveElementBlur).toHaveBeenCalledTimes(0);
+      expect(onBeforeFocusedElementDetached).toHaveBeenCalledTimes(0);
+      expect(onFocusedElementDetached).toHaveBeenCalledTimes(0);
       ReactDOM.render(<Component show={false} />, container);
-      expect(onBeforeActiveElementBlur).toHaveBeenCalledTimes(1);
-      expect(onActiveElementBlur).toHaveBeenCalledTimes(1);
+      expect(onBeforeFocusedElementDetached).toHaveBeenCalledTimes(1);
+      expect(onFocusedElementDetached).toHaveBeenCalledTimes(1);
     });
   });
 

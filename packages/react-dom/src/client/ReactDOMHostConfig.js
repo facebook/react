@@ -465,16 +465,17 @@ export function insertInContainerBefore(
   }
 }
 
-function dispatchCustomFlareEvent(
-  type: string,
+function dispatchFlareDetachedBlurEvent(
+  elementDetached: boolean,
   targetInstance: null | Object,
   target: Element | Document,
 ): void {
   // Simlulate the custom event to the React Flare responder system.
   dispatchEventForResponderEventSystem(
-    type,
+    'blur',
     targetInstance,
     ({
+      elementDetached,
       target,
       timeStamp: Date.now(),
     }: any),
@@ -486,17 +487,13 @@ function dispatchCustomFlareEvent(
 function dispatchBeforeActiveElementBlur(element: HTMLElement): void {
   const targtInstance = getClosestInstanceFromNode(element);
   ((selectionInformation: any): SelectionInformation).blurredActiveElement = element;
-  dispatchCustomFlareEvent('beforeactiveelementblur', targtInstance, element);
+  dispatchFlareDetachedBlurEvent(false, targtInstance, element);
 }
 
 function dispatchActiveElementBlur(
   node: Instance | TextInstance | SuspenseInstance,
 ): void {
-  dispatchCustomFlareEvent(
-    'activeelementblur',
-    null,
-    ((node: any): HTMLElement),
-  );
+  dispatchFlareDetachedBlurEvent(true, null, ((node: any): HTMLElement));
 }
 
 // This is a specific event for the React Flare

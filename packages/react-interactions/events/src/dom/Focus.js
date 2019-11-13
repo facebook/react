@@ -45,13 +45,7 @@ type FocusProps = {
   onFocusVisibleChange: boolean => void,
 };
 
-type FocusEventType =
-  | 'focus'
-  | 'blur'
-  | 'focuschange'
-  | 'focusvisiblechange'
-  | 'beforeactiveelementblur'
-  | 'activeelementblur';
+type FocusEventType = 'focus' | 'blur' | 'focuschange' | 'focusvisiblechange';
 
 type FocusWithinProps = {
   disabled?: boolean,
@@ -59,8 +53,8 @@ type FocusWithinProps = {
   onBlurWithin?: (e: FocusEvent) => void,
   onFocusWithinChange?: boolean => void,
   onFocusWithinVisibleChange?: boolean => void,
-  onBeforeActiveElementBlur?: (e: FocusEvent) => void,
-  onActiveElementBlur?: (e: FocusEvent) => void,
+  onBeforeFocusedElementDetached?: (e: FocusEvent) => void,
+  onFocusedElementDetached?: (e: FocusEvent) => void,
 };
 
 type FocusWithinEventType =
@@ -68,8 +62,8 @@ type FocusWithinEventType =
   | 'focuswithinchange'
   | 'blurwithin'
   | 'focuswithin'
-  | 'beforeactiveelementblur'
-  | 'activeelementblur';
+  | 'focusedelementdetached'
+  | 'beforefocusedelementdetached';
 
 /**
  * Shared between Focus and FocusWithin
@@ -82,20 +76,13 @@ const isMac =
     ? /^Mac/.test(window.navigator.platform)
     : false;
 
-const targetEventTypes = ['focus', 'blur', 'beforeactiveelementblur'];
+const targetEventTypes = ['focus', 'blur'];
 
 const hasPointerEvents =
   typeof window !== 'undefined' && window.PointerEvent != null;
 
 const rootEventTypes = hasPointerEvents
-  ? [
-      'keydown',
-      'keyup',
-      'pointermove',
-      'pointerdown',
-      'pointerup',
-      'activeelementblur',
-    ]
+  ? ['keydown', 'keyup', 'pointermove', 'pointerdown', 'pointerup', 'blur']
   : [
       'keydown',
       'keyup',
@@ -103,7 +90,7 @@ const rootEventTypes = hasPointerEvents
       'touchmove',
       'touchstart',
       'touchend',
-      'activeelementblur',
+      'blur',
     ];
 
 function isFunction(obj): boolean {
@@ -522,6 +509,23 @@ const focusWithinResponderImpl = {
         break;
       }
       case 'blur': {
+        if ((nativeEvent: any).elementDetached === false) {
+          const onBeforeFocusedElementDetached = (props.onBeforeFocusedElementDetached: any);
+          if (isFunction(onBeforeFocusedElementDetached)) {
+            const syntheticEvent = createFocusEvent(
+              context,
+              'beforefocusedelementdetached',
+              event.target,
+              state.pointerType,
+            );
+            context.dispatchEvent(
+              syntheticEvent,
+              onBeforeFocusedElementDetached,
+              DiscreteEvent,
+            );
+          }
+          return;
+        }
         if (
           state.isFocused &&
           !context.isTargetWithinResponder(relatedTarget)
@@ -532,22 +536,6 @@ const focusWithinResponderImpl = {
         }
         break;
       }
-      case 'beforeactiveelementblur': {
-        const onBeforeActiveElementBlur = (props.onBeforeActiveElementBlur: any);
-        if (isFunction(onBeforeActiveElementBlur)) {
-          const syntheticEvent = createFocusEvent(
-            context,
-            'beforeactiveelementblur',
-            event.target,
-            state.pointerType,
-          );
-          context.dispatchEvent(
-            syntheticEvent,
-            onBeforeActiveElementBlur,
-            DiscreteEvent,
-          );
-        }
-      }
     }
   },
   onRootEvent(
@@ -556,18 +544,18 @@ const focusWithinResponderImpl = {
     props: FocusWithinProps,
     state: FocusState,
   ): void {
-    if (event.type === 'activeelementblur') {
-      const onActiveElementBlur = (props.onActiveElementBlur: any);
-      if (isFunction(onActiveElementBlur)) {
+    if ((event.nativeEvent: any).elementDetached === true) {
+      const onFocusedElementDetached = (props.onFocusedElementDetached: any);
+      if (isFunction(onFocusedElementDetached)) {
         const syntheticEvent = createFocusEvent(
           context,
-          'activeelementblur',
+          'focusedelementdetached',
           event.target,
           state.pointerType,
         );
         context.dispatchEvent(
           syntheticEvent,
-          onActiveElementBlur,
+          onFocusedElementDetached,
           DiscreteEvent,
         );
       }
