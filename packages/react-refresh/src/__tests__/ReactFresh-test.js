@@ -2870,6 +2870,42 @@ describe('ReactFresh', () => {
       });
       expect(container.innerHTML).toBe('');
       expect(ReactFreshRuntime.hasUnrecoverableErrors()).toBe(false);
+
+      // Mount a new container.
+      render(() => {
+        function Hello() {
+          return <h1>Hi</h1>;
+        }
+        $RefreshReg$(Hello, 'Hello');
+
+        return Hello;
+      });
+      expect(container.innerHTML).toBe('<h1>Hi</h1>');
+      expect(ReactFreshRuntime.hasUnrecoverableErrors()).toBe(false);
+
+      // Break again.
+      expect(() => {
+        patch(() => {
+          function Hello() {
+            throw new Error('Oops');
+          }
+          $RefreshReg$(Hello, 'Hello');
+        });
+      }).toThrow('Oops');
+      expect(container.innerHTML).toBe('');
+      expect(ReactFreshRuntime.hasUnrecoverableErrors()).toBe(false);
+
+      // Check we don't attempt to reverse an intentional unmount, even after an error.
+      ReactDOM.unmountComponentAtNode(container);
+      expect(container.innerHTML).toBe('');
+      patch(() => {
+        function Hello() {
+          return <h1>Never mind me!</h1>;
+        }
+        $RefreshReg$(Hello, 'Hello');
+      });
+      expect(container.innerHTML).toBe('');
+      expect(ReactFreshRuntime.hasUnrecoverableErrors()).toBe(false);
     }
   });
 
