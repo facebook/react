@@ -14,7 +14,7 @@
 
 ### React IS
 
-* Fix `lazy` and `memo` types being considered elements when they are not [@bvaughn](https://github.com/bvaughn) in [#17278](https://github.com/facebook/react/pull/17278)
+* Fix `lazy` and `memo` types considered elements instead of components [@bvaughn](https://github.com/bvaughn) in [#17278](https://github.com/facebook/react/pull/17278)
 
 ## 16.11.0 (October 22, 2019)
 
