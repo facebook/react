@@ -600,12 +600,10 @@ const pressResponderImpl = {
             state.activePointerId = touchEvent.identifier;
           }
 
-          // Ignore any device buttons except primary and touch/pen contact.
+          // Ignore any device buttons except primary/middle and touch/pen contact.
           // Additionally we ignore primary-button + ctrl-key with Macs as that
           // acts like right-click and opens the contextmenu.
           if (
-            // Ignore middle clicks
-            nativeEvent.button === 1 ||
             nativeEvent.buttons === 2 ||
             nativeEvent.buttons > 4 ||
             (isMac && isMouseEvent && nativeEvent.ctrlKey)
@@ -761,7 +759,7 @@ const pressResponderImpl = {
             }
             isKeyboardEvent = true;
             removeRootEventTypes(context, state);
-          } else if (buttons === 4) {
+          } else if (buttons === 4 || nativeEvent.button === 1) {
             // Remove the root events here as no 'click' event is dispatched when this 'button' is pressed.
             removeRootEventTypes(context, state);
           }
@@ -819,7 +817,11 @@ const pressResponderImpl = {
               }
             }
 
-            if (state.isPressWithinResponderRegion && buttons !== 4) {
+            if (
+              state.isPressWithinResponderRegion &&
+              buttons !== 4 &&
+              nativeEvent.button !== 1
+            ) {
               dispatchEvent(
                 event,
                 onPress,
