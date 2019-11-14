@@ -468,6 +468,10 @@ export function injectIntoGlobalHook(globalObject: any): void {
             // TODO: Maybe we could fix this as the same time as when we fix
             // DevTools to not depend on `alternate.memoizedState.element`.
             didSomeRootFailOnMount = true;
+          } else if (!didError && failedRoots.has(root)) {
+            // The error is fixed but the component is still unmounted.
+            // This means that the unmount was not caused by a failed refresh.
+            failedRoots.delete(root);
           }
         }
       } else {
