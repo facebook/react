@@ -319,6 +319,8 @@ const forks = Object.freeze({
           case 'react-native-renderer/fabric':
             // Use the RN fork which plays well with redbox.
             return 'react-reconciler/src/forks/ReactFiberErrorDialog.native.js';
+          case 'react-test-renderer':
+            return 'react-reconciler/src/forks/ReactFiberErrorDialog.test.js';
           default:
             return null;
         }
