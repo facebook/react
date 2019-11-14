@@ -1101,6 +1101,15 @@ function commitPlacement(finishedWork: Fiber): void {
       // down its children. Instead, we'll get insertions from each child in
       // the portal directly.
     } else if (node.child !== null) {
+      if (
+        node.tag === SuspenseComponent &&
+        node.memoizedState === null &&
+        typeof node.memoizedProps.unstable_do_not_use_getDOMNodes === 'function'
+      ) {
+        node.memoizedProps.unstable_do_not_use_getDOMNodes(
+          getChildrenOfSuspenseBoundary(finishedWork),
+        );
+      }
       node.child.return = node;
       node = node.child;
       continue;
@@ -1458,6 +1467,12 @@ function commitSuspenseComponent(finishedWork: Fiber) {
     markCommitTimeOfFallback();
   }
 
+  const unstableFragmentRef =
+    finishedWork.memoizedProps.unstable_do_not_use_getDOMNodes;
+  if (typeof unstableFragmentRef === 'function' && !newDidTimeout) {
+    unstableFragmentRef(getChildrenOfSuspenseBoundary(finishedWork));
+  }
+
   if (supportsMutation && primaryChildParent !== null) {
     hideOrUnhideAllChildren(primaryChildParent, newDidTimeout);
   }
@@ -1474,6 +1489,49 @@ function commitSuspenseComponent(finishedWork: Fiber) {
         warning(false, 'Unexpected type for suspenseCallback.');
       }
     }
+  }
+}
+
+function getChildrenOfSuspenseBoundary(suspenseBoundary) {
+  const children = [];
+  if (suspenseBoundary.child === null) {
+    return children;
+  }
+  // We only have the top Fiber that was inserted but we need to recurse down its
+  // children to find all the terminal nodes.
+  let node: Fiber = suspenseBoundary.child;
+  while (true) {
+    if (node.tag === HostComponent) {
+      children.push(node.stateNode);
+    } else if (node.tag === HostText) {
+      children.push(node.stateNode);
+    } else if (
+      node.tag === SuspenseComponent &&
+      node.memoizedState !== null &&
+      node.memoizedState.dehydrated === null
+    ) {
+      // Found a nested Suspense component that timed out. Skip over the
+      // primary child fragment.
+      const fallbackChildFragment: Fiber = (node.child: any).sibling;
+      fallbackChildFragment.return = node;
+      node = fallbackChildFragment;
+      continue;
+    } else if (node.child !== null) {
+      node.child.return = node;
+      node = node.child;
+      continue;
+    }
+    if (node === suspenseBoundary) {
+      return children;
+    }
+    while (node.sibling === null) {
+      if (node.return === null || node.return === suspenseBoundary) {
+        return children;
+      }
+      node = node.return;
+    }
+    node.sibling.return = node.return;
+    node = node.sibling;
   }
 }
 
