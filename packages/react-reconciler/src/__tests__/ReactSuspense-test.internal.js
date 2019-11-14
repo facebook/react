@@ -1322,4 +1322,161 @@ describe('ReactSuspense', () => {
       jest.advanceTimersByTime(1000);
     });
   });
+
+  it('calls unstable_do_not_use_getDOMNodes once when component unsuspends', () => {
+    let children;
+    let counter = 0;
+    function Child() {
+      return 'Hi';
+    }
+    function App() {
+      return (
+        <Suspense
+          fallback={'Loading'}
+          unstable_do_not_use_getDOMNodes={suspenseChildren => {
+            children = suspenseChildren;
+            counter++;
+          }}>
+          <AsyncText text="A" ms={1000} />
+          <Child />
+          <Suspense fallback={'Loading'}>
+            <AsyncText text="B" ms={2000} />
+          </Suspense>
+          <Suspense fallback={'Loading'}>
+            <AsyncText text="C" ms={500} />
+          </Suspense>
+        </Suspense>
+      );
+    }
+    const root = ReactTestRenderer.create(<App />);
+    expect(children).toEqual(undefined);
+    jest.advanceTimersByTime(1000);
+    expect(Scheduler).toHaveYielded([
+      'Suspend! [A]',
+      'Suspend! [B]',
+      'Suspend! [C]',
+      'Promise resolved [C]',
+      'Promise resolved [A]',
+    ]);
+    expect(Scheduler).toFlushAndYield(['A', 'C']);
+    expect(root).toMatchRenderedOutput('AHiLoadingC');
+    expect(children).toEqual([
+      {text: 'A', isHidden: false, tag: 'TEXT'},
+      {text: 'Hi', isHidden: false, tag: 'TEXT'},
+      {text: 'Loading', isHidden: false, tag: 'TEXT'},
+      {text: 'C', isHidden: false, tag: 'TEXT'},
+    ]);
+    jest.advanceTimersByTime(1000);
+    expect(Scheduler).toHaveYielded(['Promise resolved [B]']);
+    expect(Scheduler).toFlushAndYield(['B']);
+
+    // children should be equal to what it was the first time
+    expect(children).toEqual([
+      {text: 'A', isHidden: false, tag: 'TEXT'},
+      {text: 'Hi', isHidden: false, tag: 'TEXT'},
+      {text: 'Loading', isHidden: false, tag: 'TEXT'},
+      {text: 'C', isHidden: false, tag: 'TEXT'},
+    ]);
+
+    expect(counter).toEqual(1);
+  });
+
+  it('calls unstable_do_not_use_getDOMNodes on mount if the component never suspends', () => {
+    let children = [];
+    let counter = 0;
+    function App() {
+      return (
+        <Suspense
+          fallback={'Loading'}
+          unstable_do_not_use_getDOMNodes={suspenseChildren => {
+            children = suspenseChildren;
+            counter++;
+          }}>
+          <div>Hi</div>
+        </Suspense>
+      );
+    }
+    const root = ReactTestRenderer.create(<App />);
+    expect(root).toMatchRenderedOutput(<div>Hi</div>);
+    expect(children.length).toBe(1);
+    expect(counter).toEqual(1);
+    expect(children[0].type).toEqual('div');
+  });
+
+  it('calls unstable_do_not_use_getDOMNodes every time component unsuspends', () => {
+    let children = [];
+    let counter = 0;
+    let _setShowText;
+    function App() {
+      const [showText, setShowText] = React.useState(false);
+      _setShowText = setShowText;
+      return (
+        <Suspense
+          fallback={'Loading'}
+          unstable_do_not_use_getDOMNodes={suspenseChildren => {
+            children = suspenseChildren;
+            counter++;
+          }}>
+          <AsyncText text="A" ms={1000} />
+          {showText && <AsyncText text="B" ms={1000} />}
+        </Suspense>
+      );
+    }
+    const root = ReactTestRenderer.create(<App />);
+
+    expect(Scheduler).toHaveYielded(['Suspend! [A]']);
+    expect(root).toMatchRenderedOutput('Loading');
+    expect(children).toEqual([]);
+    jest.advanceTimersByTime(1000);
+    expect(Scheduler).toHaveYielded(['Promise resolved [A]']);
+    expect(Scheduler).toFlushAndYield(['A']);
+    expect(root).toMatchRenderedOutput('A');
+    expect(children).toEqual([{isHidden: false, tag: 'TEXT', text: 'A'}]);
+    expect(counter).toEqual(1);
+
+    act(() => _setShowText(true));
+    expect(Scheduler).toHaveYielded(['A', 'Suspend! [B]']);
+    expect(root).toMatchRenderedOutput('Loading');
+    expect(counter).toEqual(1);
+
+    jest.advanceTimersByTime(1000);
+    expect(Scheduler).toHaveYielded(['Promise resolved [B]']);
+    expect(Scheduler).toFlushAndYield(['B']);
+    expect(counter).toEqual(2);
+    expect(root).toMatchRenderedOutput('AB');
+    expect(children).toEqual([
+      {isHidden: false, tag: 'TEXT', text: 'A'},
+      {isHidden: false, tag: 'TEXT', text: 'B'},
+    ]);
+  });
+
+  it('does not unstable_do_not_use_getDOMNodes during updates if component does not suspend', () => {
+    let children = [];
+    let counter = 0;
+    let _setShowText;
+    function App() {
+      const [showText, setShowText] = React.useState(false);
+      _setShowText = setShowText;
+      return (
+        <Suspense
+          fallback={'Loading'}
+          unstable_do_not_use_getDOMNodes={suspenseChildren => {
+            children = suspenseChildren;
+            counter++;
+          }}>
+          {showText ? 'Hi' : 'Bye'}
+        </Suspense>
+      );
+    }
+    const root = ReactTestRenderer.create(<App />);
+
+    expect(root).toMatchRenderedOutput('Bye');
+    expect(children).toEqual([{isHidden: false, tag: 'TEXT', text: 'Bye'}]);
+    expect(counter).toEqual(1);
+
+    act(() => _setShowText(true));
+
+    expect(counter).toEqual(1);
+    expect(children).toEqual([{isHidden: false, tag: 'TEXT', text: 'Hi'}]);
+  });
 });
