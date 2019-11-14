@@ -105,7 +105,7 @@ export type TimeoutHandle = TimeoutID;
 export type NoTimeout = -1;
 
 type SelectionInformation = {|
-  blurredActiveElement: null | HTMLElement,
+  activeElementDetached: null | HTMLElement,
   focusedElem: null | HTMLElement,
   selectionRange: mixed,
 |};
@@ -212,10 +212,10 @@ export function prepareForCommit(containerInfo: Container): void {
 export function resetAfterCommit(containerInfo: Container): void {
   restoreSelection(selectionInformation);
   if (enableFlareAPI) {
-    const blurredActiveElement = (selectionInformation: any)
-      .blurredActiveElement;
-    if (blurredActiveElement !== null) {
-      dispatchActiveElementBlur(blurredActiveElement);
+    const activeElementDetached = (selectionInformation: any)
+      .activeElementDetached;
+    if (activeElementDetached !== null) {
+      dispatchDetachedBlur(activeElementDetached);
     }
   }
   selectionInformation = null;
@@ -465,17 +465,14 @@ export function insertInContainerBefore(
   }
 }
 
-function dispatchFlareDetachedBlurEvent(
-  elementDetached: boolean,
-  targetInstance: null | Object,
-  target: Element | Document,
-): void {
-  // Simlulate the custom event to the React Flare responder system.
+function dispatchBeforeDetachedBlur(target: HTMLElement): void {
+  const targetInstance = getClosestInstanceFromNode(target);
+  ((selectionInformation: any): SelectionInformation).activeElementDetached = target;
+
   dispatchEventForResponderEventSystem(
-    'blur',
+    'beforeblur',
     targetInstance,
     ({
-      elementDetached,
       target,
       timeStamp: Date.now(),
     }: any),
@@ -484,16 +481,19 @@ function dispatchFlareDetachedBlurEvent(
   );
 }
 
-function dispatchBeforeActiveElementBlur(element: HTMLElement): void {
-  const targtInstance = getClosestInstanceFromNode(element);
-  ((selectionInformation: any): SelectionInformation).blurredActiveElement = element;
-  dispatchFlareDetachedBlurEvent(false, targtInstance, element);
-}
-
-function dispatchActiveElementBlur(
-  node: Instance | TextInstance | SuspenseInstance,
-): void {
-  dispatchFlareDetachedBlurEvent(true, null, ((node: any): HTMLElement));
+function dispatchDetachedBlur(target: HTMLElement): void {
+  const targetInstance = getClosestInstanceFromNode(target);
+  dispatchEventForResponderEventSystem(
+    'blur',
+    targetInstance,
+    ({
+      isTargetAttached: false,
+      target,
+      timeStamp: Date.now(),
+    }: any),
+    target,
+    RESPONDER_EVENT_SYSTEM | IS_PASSIVE,
+  );
 }
 
 // This is a specific event for the React Flare
@@ -508,7 +508,7 @@ export function beforeRemoveInstance(
     selectionInformation &&
     instance === selectionInformation.focusedElem
   ) {
-    dispatchBeforeActiveElementBlur(((instance: any): HTMLElement));
+    dispatchBeforeDetachedBlur(((instance: any): HTMLElement));
   }
 }
 

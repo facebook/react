@@ -22,6 +22,7 @@ import {DiscreteEvent} from 'shared/ReactTypes';
  */
 
 type FocusEvent = {|
+  isTargetAttached: boolean,
   target: Element | Document,
   type: FocusEventType | FocusWithinEventType,
   pointerType: PointerType,
@@ -30,6 +31,7 @@ type FocusEvent = {|
 |};
 
 type FocusState = {
+  detachedTarget: null | Element | Document,
   focusTarget: null | Element | Document,
   isFocused: boolean,
   isFocusVisible: boolean,
@@ -50,11 +52,10 @@ type FocusEventType = 'focus' | 'blur' | 'focuschange' | 'focusvisiblechange';
 type FocusWithinProps = {
   disabled?: boolean,
   onFocusWithin?: (e: FocusEvent) => void,
+  onBeforeBlurWithin?: (e: FocusEvent) => void,
   onBlurWithin?: (e: FocusEvent) => void,
   onFocusWithinChange?: boolean => void,
   onFocusWithinVisibleChange?: boolean => void,
-  onBeforeFocusedElementDetached?: (e: FocusEvent) => void,
-  onFocusedElementDetached?: (e: FocusEvent) => void,
 };
 
 type FocusWithinEventType =
@@ -62,8 +63,7 @@ type FocusWithinEventType =
   | 'focuswithinchange'
   | 'blurwithin'
   | 'focuswithin'
-  | 'focusedelementdetached'
-  | 'beforefocusedelementdetached';
+  | 'beforeblurwithin';
 
 /**
  * Shared between Focus and FocusWithin
@@ -76,7 +76,7 @@ const isMac =
     ? /^Mac/.test(window.navigator.platform)
     : false;
 
-const targetEventTypes = ['focus', 'blur'];
+const targetEventTypes = ['focus', 'blur', 'beforeblur'];
 
 const hasPointerEvents =
   typeof window !== 'undefined' && window.PointerEvent != null;
@@ -102,8 +102,10 @@ function createFocusEvent(
   type: FocusEventType | FocusWithinEventType,
   target: Element | Document,
   pointerType: PointerType,
+  isTargetAttached: boolean,
 ): FocusEvent {
   return {
+    isTargetAttached,
     target,
     type,
     pointerType,
@@ -218,6 +220,7 @@ function dispatchFocusEvents(
       'focus',
       target,
       pointerType,
+      true,
     );
     context.dispatchEvent(syntheticEvent, onFocus, DiscreteEvent);
   }
@@ -241,6 +244,7 @@ function dispatchBlurEvents(
       'blur',
       target,
       pointerType,
+      true,
     );
     context.dispatchEvent(syntheticEvent, onBlur, DiscreteEvent);
   }
@@ -265,6 +269,7 @@ function dispatchFocusWithinEvents(
       'focuswithin',
       target,
       pointerType,
+      true,
     );
     context.dispatchEvent(syntheticEvent, onFocusWithin, DiscreteEvent);
   }
@@ -279,12 +284,14 @@ function dispatchBlurWithinEvents(
   const pointerType = state.pointerType;
   const target = ((state.focusTarget: any): Element | Document) || event.target;
   const onBlurWithin = (props.onBlurWithin: any);
+  const isTargetAttached = state.detachedTarget === null;
   if (isFunction(onBlurWithin)) {
     const syntheticEvent = createFocusEvent(
       context,
       'blurwithin',
       target,
       pointerType,
+      isTargetAttached,
     );
     context.dispatchEvent(syntheticEvent, onBlurWithin, DiscreteEvent);
   }
@@ -328,6 +335,7 @@ const focusResponderImpl = {
   rootEventTypes,
   getInitialState(): FocusState {
     return {
+      detachedTarget: null,
       focusTarget: null,
       isEmulatingMouseEvents: false,
       isFocused: false,
@@ -466,6 +474,7 @@ const focusWithinResponderImpl = {
   rootEventTypes,
   getInitialState(): FocusState {
     return {
+      detachedTarget: null,
       focusTarget: null,
       isEmulatingMouseEvents: false,
       isFocused: false,
@@ -509,23 +518,6 @@ const focusWithinResponderImpl = {
         break;
       }
       case 'blur': {
-        if ((nativeEvent: any).elementDetached === false) {
-          const onBeforeFocusedElementDetached = (props.onBeforeFocusedElementDetached: any);
-          if (isFunction(onBeforeFocusedElementDetached)) {
-            const syntheticEvent = createFocusEvent(
-              context,
-              'beforefocusedelementdetached',
-              event.target,
-              state.pointerType,
-            );
-            context.dispatchEvent(
-              syntheticEvent,
-              onBeforeFocusedElementDetached,
-              DiscreteEvent,
-            );
-          }
-          return;
-        }
         if (
           state.isFocused &&
           !context.isTargetWithinResponder(relatedTarget)
@@ -536,6 +528,24 @@ const focusWithinResponderImpl = {
         }
         break;
       }
+      case 'beforeblur': {
+        const onBeforeBlurWithin = (props.onBeforeBlurWithin: any);
+        if (isFunction(onBeforeBlurWithin)) {
+          const syntheticEvent = createFocusEvent(
+            context,
+            'beforeblurwithin',
+            event.target,
+            state.pointerType,
+            true,
+          );
+          state.detachedTarget = event.target;
+          context.dispatchEvent(
+            syntheticEvent,
+            onBeforeBlurWithin,
+            DiscreteEvent,
+          );
+        }
+      }
     }
   },
   onRootEvent(
@@ -544,20 +554,11 @@ const focusWithinResponderImpl = {
     props: FocusWithinProps,
     state: FocusState,
   ): void {
-    if ((event.nativeEvent: any).elementDetached === true) {
-      const onFocusedElementDetached = (props.onFocusedElementDetached: any);
-      if (isFunction(onFocusedElementDetached)) {
-        const syntheticEvent = createFocusEvent(
-          context,
-          'focusedelementdetached',
-          event.target,
-          state.pointerType,
-        );
-        context.dispatchEvent(
-          syntheticEvent,
-          onFocusedElementDetached,
-          DiscreteEvent,
-        );
+    if (event.type === 'blur') {
+      const detachedTarget = state.detachedTarget;
+      if (detachedTarget !== null && detachedTarget === event.target) {
+        dispatchBlurWithinEvents(context, event, props, state);
+        state.detachedTarget = null;
       }
       return;
     }
