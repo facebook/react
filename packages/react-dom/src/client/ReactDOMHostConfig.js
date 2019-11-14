@@ -211,6 +211,8 @@ export function prepareForCommit(containerInfo: Container): void {
 
 export function resetAfterCommit(containerInfo: Container): void {
   restoreSelection(selectionInformation);
+  ReactBrowserEventEmitterSetEnabled(eventsEnabled);
+  eventsEnabled = null;
   if (enableFlareAPI) {
     const activeElementDetached = (selectionInformation: any)
       .activeElementDetached;
@@ -219,8 +221,6 @@ export function resetAfterCommit(containerInfo: Container): void {
     }
   }
   selectionInformation = null;
-  ReactBrowserEventEmitterSetEnabled(eventsEnabled);
-  eventsEnabled = null;
 }
 
 export function createInstance(
