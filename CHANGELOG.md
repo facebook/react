@@ -6,6 +6,16 @@
   </summary>
 </details>
 
+## 16.12.0 (November 14, 2019)
+
+### React DOM
+
+* Fix passive effects (`useEffect`) not being fired in a multi-root app. ([@acdlite](https://github.com/acdlite) in [#17347](https://github.com/facebook/react/pull/17347))
+
+### React Is
+
+* Fix `lazy` and `memo` types considered elements instead of components ([@bvaughn](https://github.com/bvaughn) in [#17278](https://github.com/facebook/react/pull/17278))
+
 ## 16.11.0 (October 22, 2019)
 
 ### React DOM
