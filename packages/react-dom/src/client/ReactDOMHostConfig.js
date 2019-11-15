@@ -482,10 +482,9 @@ function dispatchBeforeDetachedBlur(target: HTMLElement): void {
 }
 
 function dispatchDetachedBlur(target: HTMLElement): void {
-  const targetInstance = getClosestInstanceFromNode(target);
   dispatchEventForResponderEventSystem(
     'blur',
-    targetInstance,
+    null,
     ({
       isTargetAttached: false,
       target,
