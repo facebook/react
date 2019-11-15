@@ -7,4 +7,4 @@
  * @flow
  */
 
-export * from 'react-dom/src/client/flight/ReactFlightDOMHostConfig';
+export * from 'react-flight/src/ReactFlightHostConfigBrowser';

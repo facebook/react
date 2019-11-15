@@ -24,8 +24,8 @@ describe('ReactFlightDOM', () => {
     jest.resetModules();
     Stream = require('stream');
     React = require('react');
-    ReactFlightDOMServer = require('react-dom/unstable-flight-server');
-    ReactFlightDOMClient = require('react-dom/unstable-flight-client');
+    ReactFlightDOMServer = require('react-flight-dom-webpack/server');
+    ReactFlightDOMClient = require('react-flight-dom-webpack');
   });
 
   function getTestStream() {

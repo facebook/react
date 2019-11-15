@@ -23,8 +23,8 @@ describe('ReactFlightDOMBrowser', () => {
   beforeEach(() => {
     jest.resetModules();
     React = require('react');
-    ReactFlightDOMServer = require('react-dom/unstable-flight-server.browser');
-    ReactFlightDOMClient = require('react-dom/unstable-flight-client');
+    ReactFlightDOMServer = require('react-flight-dom-webpack/server.browser');
+    ReactFlightDOMClient = require('react-flight-dom-webpack');
   });
 
   async function waitForSuspense(fn) {

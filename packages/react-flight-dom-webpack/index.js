@@ -9,7 +9,7 @@
 
 'use strict';
 
-const ReactFlightDOMClient = require('./src/client/flight/ReactFlightDOMClient');
+const ReactFlightDOMClient = require('./src/ReactFlightDOMClient');
 
 // TODO: decide on the top-level export form.
 // This is hacky but makes it work with both Rollup and Jest
