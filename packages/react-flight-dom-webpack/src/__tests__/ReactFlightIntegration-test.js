@@ -31,8 +31,8 @@ describe('ReactFlightIntegration', () => {
     Stream = require('stream');
     React = require('react');
     ReactDOM = require('react-dom');
-    ReactFlightDOMServer = require('react-dom/unstable-flight-server');
-    ReactFlightDOMClient = require('react-dom/unstable-flight-client');
+    ReactFlightDOMServer = require('react-flight-dom-webpack/server');
+    ReactFlightDOMClient = require('react-flight-dom-webpack');
   });
 
   function getTestStream() {
