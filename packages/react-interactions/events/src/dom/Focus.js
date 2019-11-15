@@ -544,6 +544,10 @@ const focusWithinResponderImpl = {
             onBeforeBlurWithin,
             DiscreteEvent,
           );
+        } else {
+          // We want to propagate to next focusWithin responder
+          // if this responder doesn't handle beforeblur
+          context.continuePropagation();
         }
       }
     }
