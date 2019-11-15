@@ -23,6 +23,7 @@ export const enableProfilerTimer = __PROFILE__;
 export const enableSchedulerTracing = __PROFILE__;
 export const enableSuspenseServerRenderer = false;
 export const enableSelectiveHydration = false;
+export const enableChunksAPI = false;
 export const exposeConcurrentModeAPIs = __EXPERIMENTAL__;
 export const warnAboutShorthandPropertyCollision = false;
 export const enableSchedulerDebugging = false;
