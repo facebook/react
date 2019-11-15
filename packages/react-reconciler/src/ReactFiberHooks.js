@@ -19,7 +19,6 @@ import type {HookEffectTag} from './ReactHookEffectTags';
 import type {SuspenseConfig} from './ReactFiberSuspenseConfig';
 import type {ReactPriorityLevel} from './SchedulerWithReactIntegration';
 
-import * as Scheduler from 'scheduler';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 
 import {NoWork} from './ReactFiberExpirationTime';
@@ -53,7 +52,12 @@ import getComponentName from 'shared/getComponentName';
 import is from 'shared/objectIs';
 import {markWorkInProgressReceivedUpdate} from './ReactFiberBeginWork';
 import {requestCurrentSuspenseConfig} from './ReactFiberSuspenseConfig';
-import {getCurrentPriorityLevel} from './SchedulerWithReactIntegration';
+import {
+  UserBlockingPriority,
+  NormalPriority,
+  runWithPriority,
+  getCurrentPriorityLevel,
+} from './SchedulerWithReactIntegration';
 
 const {ReactCurrentDispatcher, ReactCurrentBatchConfig} = ReactSharedInternals;
 
@@ -1135,15 +1139,13 @@ function mountDeferredValue<T>(
   const [prevValue, setValue] = mountState(value);
   mountEffect(
     () => {
-      Scheduler.unstable_next(() => {
-        const previousConfig = ReactCurrentBatchConfig.suspense;
-        ReactCurrentBatchConfig.suspense = config === undefined ? null : config;
-        try {
-          setValue(value);
-        } finally {
-          ReactCurrentBatchConfig.suspense = previousConfig;
-        }
-      });
+      const previousConfig = ReactCurrentBatchConfig.suspense;
+      ReactCurrentBatchConfig.suspense = config === undefined ? null : config;
+      try {
+        setValue(value);
+      } finally {
+        ReactCurrentBatchConfig.suspense = previousConfig;
+      }
     },
     [value, config],
   );
@@ -1157,65 +1159,62 @@ function updateDeferredValue<T>(
   const [prevValue, setValue] = updateState(value);
   updateEffect(
     () => {
-      Scheduler.unstable_next(() => {
-        const previousConfig = ReactCurrentBatchConfig.suspense;
-        ReactCurrentBatchConfig.suspense = config === undefined ? null : config;
-        try {
-          setValue(value);
-        } finally {
-          ReactCurrentBatchConfig.suspense = previousConfig;
-        }
-      });
+      const previousConfig = ReactCurrentBatchConfig.suspense;
+      ReactCurrentBatchConfig.suspense = config === undefined ? null : config;
+      try {
+        setValue(value);
+      } finally {
+        ReactCurrentBatchConfig.suspense = previousConfig;
+      }
     },
     [value, config],
   );
   return prevValue;
 }
 
+function startTransition(setPending, config, callback) {
+  const priorityLevel = getCurrentPriorityLevel();
+  runWithPriority(
+    priorityLevel < UserBlockingPriority ? UserBlockingPriority : priorityLevel,
+    () => {
+      setPending(true);
+    },
+  );
+  runWithPriority(
+    priorityLevel > NormalPriority ? NormalPriority : priorityLevel,
+    () => {
+      const previousConfig = ReactCurrentBatchConfig.suspense;
+      ReactCurrentBatchConfig.suspense = config === undefined ? null : config;
+      try {
+        setPending(false);
+        callback();
+      } finally {
+        ReactCurrentBatchConfig.suspense = previousConfig;
+      }
+    },
+  );
+}
+
 function mountTransition(
   config: SuspenseConfig | void | null,
 ): [(() => void) => void, boolean] {
   const [isPending, setPending] = mountState(false);
-  const startTransition = mountCallback(
-    callback => {
-      setPending(true);
-      Scheduler.unstable_next(() => {
-        const previousConfig = ReactCurrentBatchConfig.suspense;
-        ReactCurrentBatchConfig.suspense = config === undefined ? null : config;
-        try {
-          setPending(false);
-          callback();
-        } finally {
-          ReactCurrentBatchConfig.suspense = previousConfig;
-        }
-      });
-    },
-    [config, isPending],
-  );
-  return [startTransition, isPending];
+  const start = mountCallback(startTransition.bind(null, setPending, config), [
+    setPending,
+    config,
+  ]);
+  return [start, isPending];
 }
 
 function updateTransition(
   config: SuspenseConfig | void | null,
 ): [(() => void) => void, boolean] {
   const [isPending, setPending] = updateState(false);
-  const startTransition = updateCallback(
-    callback => {
-      setPending(true);
-      Scheduler.unstable_next(() => {
-        const previousConfig = ReactCurrentBatchConfig.suspense;
-        ReactCurrentBatchConfig.suspense = config === undefined ? null : config;
-        try {
-          setPending(false);
-          callback();
-        } finally {
-          ReactCurrentBatchConfig.suspense = previousConfig;
-        }
-      });
-    },
-    [config, isPending],
-  );
-  return [startTransition, isPending];
+  const start = updateCallback(startTransition.bind(null, setPending, config), [
+    setPending,
+    config,
+  ]);
+  return [start, isPending];
 }
 
 function dispatchAction<S, A>(
