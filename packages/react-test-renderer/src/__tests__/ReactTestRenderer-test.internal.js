@@ -494,6 +494,7 @@ describe('ReactTestRenderer', () => {
       </TestBoundary>,
     );
 
+    expect(spy).toHaveBeenCalledTimes(0);
     expect(spy).not.toHaveBeenCalledWith(
       expect.stringContaining(
         'The above error occurred in the <Angry> component',

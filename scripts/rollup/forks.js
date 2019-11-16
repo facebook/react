@@ -306,8 +306,13 @@ const forks = Object.freeze({
       case FB_WWW_DEV:
       case FB_WWW_PROD:
       case FB_WWW_PROFILING:
-        // Use the www fork which shows an error dialog.
-        return 'react-reconciler/src/forks/ReactFiberErrorDialog.www.js';
+        switch (entry) {
+          case 'react-test-renderer':
+            return 'react-reconciler/src/forks/ReactFiberErrorDialog.test.js';
+          default:
+            // Use the www fork which shows an error dialog.
+            return 'react-reconciler/src/forks/ReactFiberErrorDialog.www.js';
+        }
       case RN_OSS_DEV:
       case RN_OSS_PROD:
       case RN_OSS_PROFILING:
@@ -319,8 +324,6 @@ const forks = Object.freeze({
           case 'react-native-renderer/fabric':
             // Use the RN fork which plays well with redbox.
             return 'react-reconciler/src/forks/ReactFiberErrorDialog.native.js';
-          case 'react-test-renderer':
-            return 'react-reconciler/src/forks/ReactFiberErrorDialog.test.js';
           default:
             return null;
         }
