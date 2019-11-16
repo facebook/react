@@ -64,10 +64,12 @@ export default function chunk<Args, Props, Data>(
     }
   }
   return function(): Chunk<Props> {
+    let args = arguments;
     return {
       $$typeof: REACT_CHUNK_TYPE,
-      query: query,
-      args: arguments,
+      query: function() {
+        return query.apply(null, args);
+      },
       render: render,
     };
   };

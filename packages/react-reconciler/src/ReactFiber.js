@@ -58,6 +58,7 @@ import {
   LazyComponent,
   FundamentalComponent,
   ScopeComponent,
+  Chunk,
 } from 'shared/ReactWorkTags';
 import getComponentName from 'shared/getComponentName';
 
@@ -89,6 +90,7 @@ import {
   REACT_LAZY_TYPE,
   REACT_FUNDAMENTAL_TYPE,
   REACT_SCOPE_TYPE,
+  REACT_CHUNK_TYPE,
 } from 'shared/ReactSymbols';
 
 let hasBadMapPolyfill;
@@ -665,6 +667,9 @@ export function createFiberFromTypeAndProps(
             case REACT_LAZY_TYPE:
               fiberTag = LazyComponent;
               resolvedType = null;
+              break getTag;
+            case REACT_CHUNK_TYPE:
+              fiberTag = Chunk;
               break getTag;
             case REACT_FUNDAMENTAL_TYPE:
               if (enableFundamentalAPI) {
