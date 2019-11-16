@@ -10,6 +10,7 @@
 
 let React;
 let ReactNoop;
+let useState;
 let Suspense;
 let chunk;
 let readString;
@@ -22,6 +23,7 @@ describe('ReactChunks', () => {
     ReactNoop = require('react-noop-renderer');
 
     chunk = React.chunk;
+    useState = React.useState;
     Suspense = React.Suspense;
     let cache = new Map();
     readString = function(text) {
@@ -83,4 +85,57 @@ describe('ReactChunks', () => {
 
     expect(ReactNoop).toMatchRenderedOutput(<span>Name: Sebastian</span>);
   });
+
+  it.experimental(
+    'can receive updated data for the same component',
+    async () => {
+      function Query(firstName) {
+        return {
+          name: firstName,
+        };
+      }
+
+      function Render(props, data) {
+        let [initialName] = useState(data.name);
+        return (
+          <>
+            <span>Initial name: {initialName}</span>
+            <span>Latest name: {data.name}</span>
+          </>
+        );
+      }
+
+      let loadUser = chunk(Query, Render);
+
+      function App({User}) {
+        return (
+          <Suspense fallback={'Loading...'}>
+            <User title="Name" />
+          </Suspense>
+        );
+      }
+
+      await ReactNoop.act(async () => {
+        ReactNoop.render(<App User={loadUser('Sebastian')} />);
+      });
+
+      expect(ReactNoop).toMatchRenderedOutput(
+        <>
+          <span>Initial name: Sebastian</span>
+          <span>Latest name: Sebastian</span>
+        </>,
+      );
+
+      await ReactNoop.act(async () => {
+        ReactNoop.render(<App User={loadUser('Dan')} />);
+      });
+
+      expect(ReactNoop).toMatchRenderedOutput(
+        <>
+          <span>Initial name: Sebastian</span>
+          <span>Latest name: Dan</span>
+        </>,
+      );
+    },
+  );
 });
