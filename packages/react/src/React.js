@@ -28,6 +28,7 @@ import {createContext} from './ReactContext';
 import {lazy} from './ReactLazy';
 import forwardRef from './forwardRef';
 import memo from './memo';
+import chunk from './chunk';
 import {
   useCallback,
   useContext,
@@ -62,6 +63,7 @@ import {
   enableFundamentalAPI,
   enableScopeAPI,
   exposeConcurrentModeAPIs,
+  enableChunksAPI,
 } from 'shared/ReactFeatureFlags';
 const React = {
   Children: {
@@ -112,6 +114,10 @@ if (exposeConcurrentModeAPIs) {
   React.useDeferredValue = useDeferredValue;
   React.SuspenseList = REACT_SUSPENSE_LIST_TYPE;
   React.unstable_withSuspenseConfig = withSuspenseConfig;
+}
+
+if (enableChunksAPI) {
+  React.chunk = chunk;
 }
 
 if (enableDeprecatedFlareAPI) {
