@@ -38,6 +38,7 @@ export const disableLegacyContext = false;
 export const disableSchedulerTimeoutBasedOnReactExpirationTime = false;
 export const enableTrustedTypesIntegration = false;
 export const enableNativeTargetAsInstance = false;
+export const enableDoNotUseGetHostNodes = false;
 
 // Only used in www builds.
 export function addUserTimingListener() {
