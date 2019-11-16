@@ -33,6 +33,7 @@ import {
   enableFundamentalAPI,
   enableSuspenseCallback,
   enableScopeAPI,
+  enableDoNotUseGetHostNodes,
 } from 'shared/ReactFeatureFlags';
 import {
   FunctionComponent,
@@ -633,7 +634,9 @@ function commitLifeCycles(
   }
 }
 
-function hideOrUnhideAllChildren(finishedWork, isHidden) {
+function getAndToggleHideForChildren(finishedWork, isHidden) {
+  const children = [];
+
   if (supportsMutation) {
     // We only have the top Fiber that was inserted but we need to recurse down its
     // children to find all the terminal nodes.
@@ -641,17 +644,29 @@ function hideOrUnhideAllChildren(finishedWork, isHidden) {
     while (true) {
       if (node.tag === HostComponent) {
         const instance = node.stateNode;
-        if (isHidden) {
-          hideInstance(instance);
-        } else {
-          unhideInstance(node.stateNode, node.memoizedProps);
+        if (supportsMutation && isHidden !== undefined) {
+          if (isHidden) {
+            hideInstance(instance);
+          } else {
+            unhideInstance(instance, node.memoizedProps);
+          }
+        }
+
+        if (children !== null) {
+          children.push(instance);
         }
       } else if (node.tag === HostText) {
         const instance = node.stateNode;
-        if (isHidden) {
-          hideTextInstance(instance);
-        } else {
-          unhideTextInstance(instance, node.memoizedProps);
+        if (supportsMutation && isHidden !== undefined) {
+          if (isHidden) {
+            hideTextInstance(instance);
+          } else {
+            unhideTextInstance(instance, node.memoizedProps);
+          }
+        }
+
+        if (children !== null) {
+          children.push(instance);
         }
       } else if (
         node.tag === SuspenseComponent &&
@@ -670,14 +685,16 @@ function hideOrUnhideAllChildren(finishedWork, isHidden) {
         continue;
       }
       if (node === finishedWork) {
-        return;
+        return children;
       }
+
       while (node.sibling === null) {
         if (node.return === null || node.return === finishedWork) {
-          return;
+          return children;
         }
         node = node.return;
       }
+
       node.sibling.return = node.return;
       node = node.sibling;
     }
@@ -1102,13 +1119,17 @@ function commitPlacement(finishedWork: Fiber): void {
       // the portal directly.
     } else if (node.child !== null) {
       if (
+        enableDoNotUseGetHostNodes &&
         node.tag === SuspenseComponent &&
+        node.memoizedProps !== null &&
         node.memoizedState === null &&
-        typeof node.memoizedProps.unstable_do_not_use_getDOMNodes === 'function'
+        typeof node.memoizedProps.unstable_do_not_use_getHostNodes ===
+          'function'
       ) {
-        node.memoizedProps.unstable_do_not_use_getDOMNodes(
-          getChildrenOfSuspenseBoundary(finishedWork),
-        );
+        const getHostNodes =
+          node.memoizedProps.unstable_do_not_use_getHostNodes;
+
+        getHostNodes(getAndToggleHideForChildren(finishedWork, null));
       }
       node.child.return = node;
       node = node.child;
@@ -1467,14 +1488,20 @@ function commitSuspenseComponent(finishedWork: Fiber) {
     markCommitTimeOfFallback();
   }
 
-  const unstableFragmentRef =
-    finishedWork.memoizedProps.unstable_do_not_use_getDOMNodes;
-  if (typeof unstableFragmentRef === 'function' && !newDidTimeout) {
-    unstableFragmentRef(getChildrenOfSuspenseBoundary(finishedWork));
-  }
+  if (primaryChildParent !== null) {
+    const children = getAndToggleHideForChildren(
+      primaryChildParent,
+      newDidTimeout,
+    );
 
-  if (supportsMutation && primaryChildParent !== null) {
-    hideOrUnhideAllChildren(primaryChildParent, newDidTimeout);
+    if (enableDoNotUseGetHostNodes) {
+      const getHostNodes =
+        finishedWork.memoizedProps.unstable_do_not_use_getHostNodes;
+
+      if (typeof getHostNodes === 'function' && !newDidTimeout) {
+        getHostNodes(children);
+      }
+    }
   }
 
   if (enableSuspenseCallback && newState !== null) {
@@ -1489,49 +1516,6 @@ function commitSuspenseComponent(finishedWork: Fiber) {
         warning(false, 'Unexpected type for suspenseCallback.');
       }
     }
-  }
-}
-
-function getChildrenOfSuspenseBoundary(suspenseBoundary) {
-  const children = [];
-  if (suspenseBoundary.child === null) {
-    return children;
-  }
-  // We only have the top Fiber that was inserted but we need to recurse down its
-  // children to find all the terminal nodes.
-  let node: Fiber = suspenseBoundary.child;
-  while (true) {
-    if (node.tag === HostComponent) {
-      children.push(node.stateNode);
-    } else if (node.tag === HostText) {
-      children.push(node.stateNode);
-    } else if (
-      node.tag === SuspenseComponent &&
-      node.memoizedState !== null &&
-      node.memoizedState.dehydrated === null
-    ) {
-      // Found a nested Suspense component that timed out. Skip over the
-      // primary child fragment.
-      const fallbackChildFragment: Fiber = (node.child: any).sibling;
-      fallbackChildFragment.return = node;
-      node = fallbackChildFragment;
-      continue;
-    } else if (node.child !== null) {
-      node.child.return = node;
-      node = node.child;
-      continue;
-    }
-    if (node === suspenseBoundary) {
-      return children;
-    }
-    while (node.sibling === null) {
-      if (node.return === null || node.return === suspenseBoundary) {
-        return children;
-      }
-      node = node.return;
-    }
-    node.sibling.return = node.return;
-    node = node.sibling;
   }
 }
 

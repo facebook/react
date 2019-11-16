@@ -21,6 +21,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     ReactFeatureFlags.debugRenderPhaseSideEffectsForStrictMode = false;
     ReactFeatureFlags.replayFailedUnitOfWorkWithInvokeGuardedCallback = false;
     ReactFeatureFlags.flushSuspenseFallbacksInTests = false;
+    ReactFeatureFlags.enableDoNotUseGetHostNodes = true;
     React = require('react');
     Fragment = React.Fragment;
     ReactNoop = require('react-noop-renderer');
@@ -2629,5 +2630,214 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     });
 
     expect(root).toMatchRenderedOutput(<span prop="Foo" />);
+  });
+
+  it('calls unstable_do_not_use_getHostNodes once when component unsuspends', async () => {
+    let children;
+    let counter = 0;
+    function Child() {
+      return 'Hi';
+    }
+    function App() {
+      return (
+        <Suspense
+          fallback={'Loading'}
+          unstable_do_not_use_getHostNodes={suspenseChildren => {
+            children = suspenseChildren;
+            counter++;
+          }}>
+          <AsyncText text="A" ms={1000} />
+          <Child />
+          <Suspense fallback={'Loading'}>
+            <AsyncText text="B" ms={2000} />
+          </Suspense>
+          <Suspense fallback={'Loading'}>
+            <AsyncText text="C" ms={500} />
+          </Suspense>
+        </Suspense>
+      );
+    }
+    const root = ReactNoop.createRoot();
+    await ReactNoop.act(async () => {
+      root.render(<App />);
+    });
+    expect(children).toEqual(undefined);
+
+    await ReactNoop.act(async () => {
+      Scheduler.unstable_advanceTime(1000);
+      await advanceTimers(1000);
+    });
+
+    expect(Scheduler).toHaveYielded([
+      'Suspend! [A]',
+      'Suspend! [B]',
+      'Suspend! [C]',
+      'Promise resolved [C]',
+      'Promise resolved [A]',
+      'A',
+      'Suspend! [B]',
+      'C',
+    ]);
+    expect(root).toMatchRenderedOutput(
+      <React.Fragment>
+        <span prop="A" />
+        {'Hi'}
+        {'Loading'}
+        <span prop="C" />
+      </React.Fragment>,
+    );
+    expect(children).toEqual([
+      span('A'),
+      {text: 'Hi', hidden: false},
+      {text: 'Loading', hidden: false},
+      span('C'),
+    ]);
+
+    await ReactNoop.act(async () => {
+      Scheduler.unstable_advanceTime(1000);
+      await advanceTimers(1000);
+    });
+
+    expect(Scheduler).toHaveYielded(['Promise resolved [B]', 'B']);
+
+    // children should be equal to what it was the first time
+    expect(children).toEqual([
+      span('A'),
+      {text: 'Hi', hidden: false},
+      {text: 'Loading', hidden: false},
+      span('C'),
+    ]);
+
+    expect(counter).toEqual(1);
+  });
+
+  it('calls unstable_do_not_use_getHostNodes on mount if the component never suspends', async () => {
+    let children = [];
+    let counter = 0;
+    function App() {
+      return (
+        <Suspense
+          fallback={'Loading'}
+          unstable_do_not_use_getHostNodes={suspenseChildren => {
+            children = suspenseChildren;
+            counter++;
+          }}>
+          <span>Hi</span>
+        </Suspense>
+      );
+    }
+    const root = ReactNoop.createRoot();
+    await ReactNoop.act(async () => {
+      root.render(<App />);
+    });
+    expect(root).toMatchRenderedOutput(<span>Hi</span>);
+    expect(children.length).toBe(1);
+    expect(counter).toEqual(1);
+    expect(children).toEqual([span()]);
+  });
+
+  it('calls unstable_do_not_use_getHostNodes every time component unsuspends', async () => {
+    let children = [];
+    let counter = 0;
+    let _setShowText;
+    function App() {
+      const [showText, setShowText] = React.useState(false);
+      _setShowText = setShowText;
+      return (
+        <Suspense
+          fallback={'Loading'}
+          unstable_do_not_use_getHostNodes={suspenseChildren => {
+            children = suspenseChildren;
+            counter++;
+          }}>
+          <AsyncText text="A" ms={1000} />
+          {showText && <AsyncText text="B" ms={3000} />}
+        </Suspense>
+      );
+    }
+    const root = ReactNoop.createRoot();
+    await ReactNoop.act(async () => {
+      root.render(<App />);
+    });
+
+    expect(Scheduler).toHaveYielded(['Suspend! [A]']);
+    expect(root).toMatchRenderedOutput('Loading');
+    expect(children).toEqual([]);
+
+    await ReactNoop.act(async () => {
+      Scheduler.unstable_advanceTime(1000);
+      await advanceTimers(1000);
+    });
+
+    expect(Scheduler).toHaveYielded(['Promise resolved [A]', 'A']);
+    expect(root).toMatchRenderedOutput(<span prop="A" />);
+    expect(children).toEqual([span('A')]);
+    expect(counter).toEqual(1);
+
+    await ReactNoop.act(async () => _setShowText(true));
+
+    await ReactNoop.act(async () => {
+      Scheduler.unstable_advanceTime(2000);
+      await advanceTimers(2000);
+    });
+
+    expect(Scheduler).toHaveYielded(['A', 'Suspend! [B]']);
+    expect(counter).toEqual(1);
+    expect(root).toMatchRenderedOutput(
+      <React.Fragment>
+        <span hidden={true} prop="A" />
+        {'Loading'}
+      </React.Fragment>,
+    );
+    expect(children).toEqual([hiddenSpan('A')]);
+
+    await ReactNoop.act(async () => {
+      Scheduler.unstable_advanceTime(1000);
+      await advanceTimers(1000);
+    });
+
+    expect(Scheduler).toHaveYielded(['Promise resolved [B]', 'A', 'B']);
+    expect(counter).toEqual(2);
+    expect(root).toMatchRenderedOutput(
+      <React.Fragment>
+        <span prop="A" />
+        <span prop="B" />
+      </React.Fragment>,
+    );
+    expect(children).toEqual([span('A'), span('B')]);
+  });
+
+  it('does not call unstable_do_not_use_getHostNodes during updates if component does not suspend', async () => {
+    let children = [];
+    let counter = 0;
+    let _setShowText;
+    function App() {
+      const [showText, setShowText] = React.useState(false);
+      _setShowText = setShowText;
+      return (
+        <Suspense
+          fallback={'Loading'}
+          unstable_do_not_use_getHostNodes={suspenseChildren => {
+            children = suspenseChildren;
+            counter++;
+          }}>
+          {showText ? 'Hi' : 'Bye'}
+        </Suspense>
+      );
+    }
+
+    const root = ReactNoop.createRoot();
+    await ReactNoop.act(async () => {
+      root.render(<App />);
+    });
+
+    expect(root).toMatchRenderedOutput('Bye');
+    expect(children).toEqual([{hidden: false, text: 'Bye'}]);
+    expect(counter).toEqual(1);
+
+    ReactNoop.act(() => _setShowText(true));
+
+    expect(counter).toEqual(1);
+    expect(children).toEqual([{hidden: false, text: 'Hi'}]);
   });
 });
