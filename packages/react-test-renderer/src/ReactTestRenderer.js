@@ -50,9 +50,6 @@ import {ConcurrentRoot, LegacyRoot} from 'react-reconciler/src/ReactRootTags';
 
 type TestRendererOptions = {
   createNodeMock: (element: React$Element<any>) => any,
-  silenceErrors: boolean | {
-    errorBoundary: boolean
-  },
   unstable_isConcurrent: boolean,
   ...
 };

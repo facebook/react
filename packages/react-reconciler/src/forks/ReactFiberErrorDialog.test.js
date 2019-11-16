@@ -9,26 +9,8 @@
 
 import type {CapturedError} from '../ReactCapturedValue';
 
-export type Features = {
-  errorBoundary: boolean;
-}
-
-const silenced: $Exact<Features> = {
-  errorBoundary: true,
-};
-
-export function silenceErrors(features: boolean | Features) {
-  if (typeof features === 'boolean') {
-    Object.assign(silenced, {
-      errorBoundary: features,
-    });
-  } else {
-    Object.assign(silenced, features);
-  }
-}
-
 export function showErrorDialog(capturedError: CapturedError): boolean {
-  if (capturedError.errorBoundaryFound && silenced.errorBoundary) {
+  if (capturedError.errorBoundary) {
     return false;
   }
 

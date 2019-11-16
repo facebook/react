@@ -468,6 +468,33 @@ describe('ReactTestRenderer', () => {
     ]);
   });
 
+  it('silences error boundary logs', () => {
+    const spy = spyOnDevAndProd(console, 'error');
+
+    function Angry() {
+      throw new Error('Please, do not render me.');
+    }
+
+    class TestBoundary extends React.Component {
+      constructor(props) {
+        super(props);
+        this.state = { didError: false };
+      }
+      componentDidCatch(err) {
+        this.setState({ didError: true });
+      }
+      render() {
+        return this.state.didError ? null : this.props.children;
+      }
+    }
+
+    ReactTestRenderer.create(<TestBoundary><Angry /></TestBoundary>);
+
+    expect(spy).not.toHaveBeenCalledWith(
+      expect.stringContaining('The above error occurred in the <Angry> component')
+    );
+  });
+
   it('can update text nodes', () => {
     class Component extends React.Component {
       render() {
