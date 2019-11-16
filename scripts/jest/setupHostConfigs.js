@@ -86,17 +86,6 @@ inlinedHostConfigs.forEach(rendererInfo => {
       return require.requireActual(entryPoint);
     });
   });
-
-  if (rendererInfo.shortName === 'test') {
-    jest.mock('react-reconciler/src/ReactFiberErrorDialog', () => {
-      hasImportedShimmedConfig = true;
-      return require.requireActual(
-        `react-reconciler/src/forks/ReactFiberErrorDialog.${
-          rendererInfo.shortName
-        }.js`
-      );
-    });
-  }
 });
 
 // Make it possible to import this module inside

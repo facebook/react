@@ -478,20 +478,26 @@ describe('ReactTestRenderer', () => {
     class TestBoundary extends React.Component {
       constructor(props) {
         super(props);
-        this.state = { didError: false };
+        this.state = {didError: false};
       }
       componentDidCatch(err) {
-        this.setState({ didError: true });
+        this.setState({didError: true});
       }
       render() {
         return this.state.didError ? null : this.props.children;
       }
     }
 
-    ReactTestRenderer.create(<TestBoundary><Angry /></TestBoundary>);
+    ReactTestRenderer.create(
+      <TestBoundary>
+        <Angry />
+      </TestBoundary>,
+    );
 
     expect(spy).not.toHaveBeenCalledWith(
-      expect.stringContaining('The above error occurred in the <Angry> component')
+      expect.stringContaining(
+        'The above error occurred in the <Angry> component',
+      ),
     );
   });
 
