@@ -1,5 +1,5 @@
 import React, {PureComponent} from 'react';
-import {flushSync, unstable_createRoot} from 'react-dom';
+import {flushSync, createRoot} from 'react-dom';
 import Scheduler from 'scheduler';
 import _ from 'lodash';
 import Charts from './Charts';
@@ -107,9 +107,10 @@ class App extends PureComponent {
         this.debouncedHandleChange(value);
         break;
       case 'async':
-        unstable_scheduleCallback(() => {
+        // TODO: useTransition hook instead.
+        setTimeout(() => {
           this.setState({value});
-        });
+        }, 0);
         break;
       default:
         break;
@@ -146,5 +147,5 @@ class App extends PureComponent {
 }
 
 const container = document.getElementById('root');
-const root = ReactDOM.unstable_createRoot(container);
-root.render(<App />, container);
+const root = createRoot(container);
+root.render(<App />);
