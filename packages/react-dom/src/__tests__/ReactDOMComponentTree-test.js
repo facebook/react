@@ -184,7 +184,7 @@ describe('ReactDOMComponentTree', () => {
         'Decide between using a controlled or uncontrolled input ' +
         'element for the lifetime of the component. More info: https://fb.me/react-controlled-components\n' +
         '    in input (at **)' +
-        '\n' +
+        '\n' + 
         '    in Controlled (at **)',
     );
   });
