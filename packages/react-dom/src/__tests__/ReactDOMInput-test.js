@@ -1269,6 +1269,7 @@ describe('ReactDOMInput', () => {
     ReactDOM.render(stub, container);
     expect(() => ReactDOM.render(<input type="text" />, container)).toWarnDev(
       'Warning: A component is changing a controlled input of type text to be uncontrolled. ' +
+        "This can occur when an input's value changes from a defined value to undefined. " +
         'Input elements should not switch from controlled to uncontrolled (or vice versa). ' +
         'Decide between using a controlled or uncontrolled input ' +
         'element for the lifetime of the component. More info: https://fb.me/react-controlled-components\n' +
@@ -1287,6 +1288,7 @@ describe('ReactDOMInput', () => {
       '`value` prop on `input` should not be null. ' +
         'Consider using an empty string to clear the component or `undefined` for uncontrolled components',
       'Warning: A component is changing a controlled input of type text to be uncontrolled. ' +
+        "This can occur when an input's value changes from a defined value to undefined. " +
         'Input elements should not switch from controlled to uncontrolled (or vice versa). ' +
         'Decide between using a controlled or uncontrolled input ' +
         'element for the lifetime of the component. More info: https://fb.me/react-controlled-components\n' +
@@ -1306,7 +1308,7 @@ describe('ReactDOMInput', () => {
       ),
     ).toWarnDev(
       'Warning: A component is changing a controlled input of type text to be uncontrolled. ' +
-        "This can occur when an input's value changes from a defined value to undefined." +
+        "This can occur when an input's value changes from a defined value to undefined. " +
         'Input elements should not switch from controlled to uncontrolled (or vice versa). ' +
         'Decide between using a controlled or uncontrolled input ' +
         'element for the lifetime of the component. More info: https://fb.me/react-controlled-components\n' +
@@ -1321,7 +1323,7 @@ describe('ReactDOMInput', () => {
       ReactDOM.render(<input type="text" value="controlled" />, container),
     ).toWarnDev(
       'Warning: A component is changing an uncontrolled input of type text to be controlled. ' +
-        "This can occur when an input's value changes from undefined to a defined value." +
+        "This can occur when an input's value changes from undefined to a defined value. " +
         'Input elements should not switch from uncontrolled to controlled (or vice versa). ' +
         'Decide between using a controlled or uncontrolled input ' +
         'element for the lifetime of the component. More info: https://fb.me/react-controlled-components\n' +
@@ -1339,6 +1341,7 @@ describe('ReactDOMInput', () => {
       ReactDOM.render(<input type="text" value="controlled" />, container),
     ).toWarnDev(
       'Warning: A component is changing an uncontrolled input of type text to be controlled. ' +
+        "This can occur when an input's value changes from undefined to a defined value. " +
         'Input elements should not switch from uncontrolled to controlled (or vice versa). ' +
         'Decide between using a controlled or uncontrolled input ' +
         'element for the lifetime of the component. More info: https://fb.me/react-controlled-components\n' +
@@ -1355,6 +1358,7 @@ describe('ReactDOMInput', () => {
       ReactDOM.render(<input type="checkbox" />, container),
     ).toWarnDev(
       'Warning: A component is changing a controlled input of type checkbox to be uncontrolled. ' +
+        "This can occur when an input's value changes from a defined value to undefined. " +
         'Input elements should not switch from controlled to uncontrolled (or vice versa). ' +
         'Decide between using a controlled or uncontrolled input ' +
         'element for the lifetime of the component. More info: https://fb.me/react-controlled-components\n' +
@@ -1371,6 +1375,7 @@ describe('ReactDOMInput', () => {
       ReactDOM.render(<input type="checkbox" checked={null} />, container),
     ).toWarnDev(
       'Warning: A component is changing a controlled input of type checkbox to be uncontrolled. ' +
+        "This can occur when an input's value changes from a defined value to undefined. " +
         'Input elements should not switch from controlled to uncontrolled (or vice versa). ' +
         'Decide between using a controlled or uncontrolled input ' +
         'element for the lifetime of the component. More info: https://fb.me/react-controlled-components\n' +
@@ -1390,6 +1395,7 @@ describe('ReactDOMInput', () => {
       ),
     ).toWarnDev(
       'Warning: A component is changing a controlled input of type checkbox to be uncontrolled. ' +
+        "This can occur when an input's value changes from a defined value to undefined. " +
         'Input elements should not switch from controlled to uncontrolled (or vice versa). ' +
         'Decide between using a controlled or uncontrolled input ' +
         'element for the lifetime of the component. More info: https://fb.me/react-controlled-components\n' +
@@ -1404,6 +1410,7 @@ describe('ReactDOMInput', () => {
       ReactDOM.render(<input type="checkbox" checked={true} />, container),
     ).toWarnDev(
       'Warning: A component is changing an uncontrolled input of type checkbox to be controlled. ' +
+        "This can occur when an input's value changes from undefined to a defined value. " +
         'Input elements should not switch from uncontrolled to controlled (or vice versa). ' +
         'Decide between using a controlled or uncontrolled input ' +
         'element for the lifetime of the component. More info: https://fb.me/react-controlled-components\n' +
@@ -1418,6 +1425,7 @@ describe('ReactDOMInput', () => {
       ReactDOM.render(<input type="checkbox" checked={true} />, container),
     ).toWarnDev(
       'Warning: A component is changing an uncontrolled input of type checkbox to be controlled. ' +
+        "This can occur when an input's value changes from undefined to a defined value. " +
         'Input elements should not switch from uncontrolled to controlled (or vice versa). ' +
         'Decide between using a controlled or uncontrolled input ' +
         'element for the lifetime of the component. More info: https://fb.me/react-controlled-components\n' +
@@ -1430,6 +1438,7 @@ describe('ReactDOMInput', () => {
     ReactDOM.render(stub, container);
     expect(() => ReactDOM.render(<input type="radio" />, container)).toWarnDev(
       'Warning: A component is changing a controlled input of type radio to be uncontrolled. ' +
+        "This can occur when an input's value changes from a defined value to undefined. " +
         'Input elements should not switch from controlled to uncontrolled (or vice versa). ' +
         'Decide between using a controlled or uncontrolled input ' +
         'element for the lifetime of the component. More info: https://fb.me/react-controlled-components\n' +
@@ -1444,6 +1453,7 @@ describe('ReactDOMInput', () => {
       ReactDOM.render(<input type="radio" checked={null} />, container),
     ).toWarnDev(
       'Warning: A component is changing a controlled input of type radio to be uncontrolled. ' +
+        "This can occur when an input's value changes from a defined value to undefined. " +
         'Input elements should not switch from controlled to uncontrolled (or vice versa). ' +
         'Decide between using a controlled or uncontrolled input ' +
         'element for the lifetime of the component. More info: https://fb.me/react-controlled-components\n' +
@@ -1458,6 +1468,7 @@ describe('ReactDOMInput', () => {
       ReactDOM.render(<input type="radio" defaultChecked={true} />, container),
     ).toWarnDev(
       'Warning: A component is changing a controlled input of type radio to be uncontrolled. ' +
+        "This can occur when an input's value changes from a defined value to undefined. " +
         'Input elements should not switch from controlled to uncontrolled (or vice versa). ' +
         'Decide between using a controlled or uncontrolled input ' +
         'element for the lifetime of the component. More info: https://fb.me/react-controlled-components\n' +
@@ -1472,6 +1483,7 @@ describe('ReactDOMInput', () => {
       ReactDOM.render(<input type="radio" checked={true} />, container),
     ).toWarnDev(
       'Warning: A component is changing an uncontrolled input of type radio to be controlled. ' +
+        "This can occur when an input's value changes from undefined to a defined value. " +
         'Input elements should not switch from uncontrolled to controlled (or vice versa). ' +
         'Decide between using a controlled or uncontrolled input ' +
         'element for the lifetime of the component. More info: https://fb.me/react-controlled-components\n' +
@@ -1486,6 +1498,7 @@ describe('ReactDOMInput', () => {
       ReactDOM.render(<input type="radio" checked={true} />, container),
     ).toWarnDev(
       'Warning: A component is changing an uncontrolled input of type radio to be controlled. ' +
+        "This can occur when an input's value changes from undefined to a defined value. " +
         'Input elements should not switch from uncontrolled to controlled (or vice versa). ' +
         'Decide between using a controlled or uncontrolled input ' +
         'element for the lifetime of the component. More info: https://fb.me/react-controlled-components\n' +
@@ -1538,6 +1551,7 @@ describe('ReactDOMInput', () => {
       ReactDOM.render(<input type="radio" value="value" />, container),
     ).toWarnDev(
       'Warning: A component is changing a controlled input of type radio to be uncontrolled. ' +
+        "This can occur when an input's value changes from a defined value to undefined. " +
         'Input elements should not switch from controlled to uncontrolled (or vice versa). ' +
         'Decide between using a controlled or uncontrolled input ' +
         'element for the lifetime of the component. More info: https://fb.me/react-controlled-components\n' +
