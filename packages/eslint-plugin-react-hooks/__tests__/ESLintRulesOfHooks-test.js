@@ -142,6 +142,46 @@ const tests = {
       }
     `,
     `
+      // Valid because hooks can be used in anonymous arrow-function arguments
+      // to forwardRef.
+      const FancyButton = React.forwardRef((props, ref) => {
+        useHook();
+        return <button {...props} ref={ref} />
+      });
+    `,
+    `
+      // Valid because hooks can be used in anonymous function arguments to
+      // forwardRef.
+      const FancyButton = React.forwardRef(function (props, ref) {
+        useHook();
+        return <button {...props} ref={ref} />
+      });
+    `,
+    `
+      // Valid because hooks can be used in anonymous function arguments to
+      // forwardRef.
+      const FancyButton = forwardRef(function (props, ref) {
+        useHook();
+        return <button {...props} ref={ref} />
+      });
+    `,
+    `
+      // Valid because hooks can be used in anonymous function arguments to
+      // React.memo.
+      const MemoizedFunction = React.memo(props => {
+        useHook();
+        return <button {...props} />
+      });
+    `,
+    `
+      // Valid because hooks can be used in anonymous function arguments to
+      // memo.
+      const MemoizedFunction = memo(function (props) {
+        useHook();
+        return <button {...props} />
+      });
+    `,
+    `
       // Valid because classes can call functions.
       // We don't consider these to be hooks.
       class C {
@@ -261,6 +301,24 @@ const tests = {
           }
         });
       }
+    `,
+    `
+      // This is valid because "use"-prefixed functions called in
+      // unnamed function arguments are not assumed to be hooks.
+      React.unknownFunction((foo, bar) => {
+        if (foo) {
+          useNotAHook(bar)
+        }
+      });
+    `,
+    `
+      // This is valid because "use"-prefixed functions called in
+      // unnamed function arguments are not assumed to be hooks.
+      unknownFunction(function(foo, bar) {
+        if (foo) {
+          useNotAHook(bar)
+        }
+      });
     `,
     `
       // Regression test for incorrectly flagged valid code.
@@ -434,6 +492,32 @@ const tests = {
             });
           }
         }
+      `,
+      errors: [genericError('useHookInsideCallback')],
+    },
+    {
+      code: `
+        // Invalid because it's a common misunderstanding.
+        // We *could* make it valid but the runtime error could be confusing.
+        const ComponentWithHookInsideCallback = React.forwardRef((props, ref) => {
+          useEffect(() => {
+            useHookInsideCallback();
+          });
+          return <button {...props} ref={ref} />
+        });
+      `,
+      errors: [genericError('useHookInsideCallback')],
+    },
+    {
+      code: `
+        // Invalid because it's a common misunderstanding.
+        // We *could* make it valid but the runtime error could be confusing.
+        const ComponentWithHookInsideCallback = React.memo(props => {
+          useEffect(() => {
+            useHookInsideCallback();
+          });
+          return <button {...props} />
+        });
       `,
       errors: [genericError('useHookInsideCallback')],
     },
@@ -694,6 +778,55 @@ const tests = {
         // doesn't plan full support for ?? until it advances.
         // conditionalError('useState'),
       ],
+    },
+    {
+      code: `
+        // Invalid because it's dangerous and might not warn otherwise.
+        // This *must* be invalid.
+        const FancyButton = React.forwardRef((props, ref) => {
+          if (props.fancy) {
+            useCustomHook();
+          }
+          return <button ref={ref}>{props.children}</button>;
+        });
+      `,
+      errors: [conditionalError('useCustomHook')],
+    },
+    {
+      code: `
+        // Invalid because it's dangerous and might not warn otherwise.
+        // This *must* be invalid.
+        const FancyButton = forwardRef(function(props, ref) {
+          if (props.fancy) {
+            useCustomHook();
+          }
+          return <button ref={ref}>{props.children}</button>;
+        });
+      `,
+      errors: [conditionalError('useCustomHook')],
+    },
+    {
+      code: `
+        // Invalid because it's dangerous and might not warn otherwise.
+        // This *must* be invalid.
+        const MemoizedButton = memo(function(props) {
+          if (props.fancy) {
+            useCustomHook();
+          }
+          return <button>{props.children}</button>;
+        });
+      `,
+      errors: [conditionalError('useCustomHook')],
+    },
+    {
+      code: `
+        // This is invalid because "use"-prefixed functions used in named
+        // functions are assumed to be hooks.
+        React.unknownFunction(function notAComponent(foo, bar) {
+          useProbablyAHook(bar)
+        });
+      `,
+      errors: [functionError('useProbablyAHook', 'notAComponent')],
     },
     {
       code: `
