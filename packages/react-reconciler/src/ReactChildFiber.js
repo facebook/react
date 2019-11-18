@@ -417,7 +417,6 @@ function ChildReconciler(shouldTrackSideEffects) {
       ) {
         // Same as above but also update the .type field.
         const existing = useFiber(current, element.props, expirationTime);
-        existing.ref = coerceRef(returnFiber, current, element);
         existing.return = returnFiber;
         existing.type = element.type;
         if (__DEV__) {
