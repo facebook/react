@@ -60,7 +60,7 @@ describe('mixing responders with the heritage event system', () => {
         <div>
           <button
             ref={ref}
-            listeners={listener}
+            DEPRECATED_flareListeners={listener}
             onClick={() => {
               updateCounter(count => count + 1);
             }}>
@@ -129,7 +129,7 @@ describe('mixing responders with the heritage event system', () => {
         <div>
           <button
             ref={ref}
-            listeners={listener}
+            DEPRECATED_flareListeners={listener}
             onClick={() => {
               // This should flush synchronously
               ReactDOM.unstable_flushDiscreteUpdates();
@@ -210,7 +210,7 @@ describe('mixing responders with the heritage event system', () => {
         return (
           <div>
             <button
-              listeners={tap}
+              DEPRECATED_flareListeners={tap}
               ref={button}
               onClick={() => updateClicksCount(clicksCount + 1)}>
               Presses: {pressesCount}, Clicks: {clicksCount}
@@ -255,7 +255,7 @@ describe('mixing responders with the heritage event system', () => {
             type="text"
             ref={innerRef}
             value={controlledValue}
-            listeners={[inputListener, listeners]}
+            DEPRECATED_flareListeners={[inputListener, listeners]}
           />
         );
       }

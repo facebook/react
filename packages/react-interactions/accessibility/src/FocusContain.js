@@ -82,7 +82,9 @@ export default function FocusContain({
   );
 
   return (
-    <FocusContainScope ref={scopeRef} listeners={[keyboard, focusWithin]}>
+    <FocusContainScope
+      ref={scopeRef}
+      DEPRECATED_flareListeners={[keyboard, focusWithin]}>
       {children}
     </FocusContainScope>
   );

@@ -146,7 +146,7 @@ function updateEventListener(
   }
 }
 
-export function updateEventListeners(
+export function updateLegacyEventListeners(
   listeners: any,
   fiber: Fiber,
   rootContainerInstance: null | Container,

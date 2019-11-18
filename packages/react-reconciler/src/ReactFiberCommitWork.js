@@ -124,7 +124,7 @@ import {
 } from './ReactHookEffectTags';
 import {didWarnAboutReassigningProps} from './ReactFiberBeginWork';
 import {runWithPriority, NormalPriority} from './SchedulerWithReactIntegration';
-import {updateEventListeners} from './ReactFiberEvents';
+import {updateLegacyEventListeners} from './ReactFiberEvents';
 
 let didWarnAboutUndefinedSnapshotBeforeUpdate: Set<mixed> | null = null;
 if (__DEV__) {
@@ -1361,10 +1361,10 @@ function commitWork(current: Fiber | null, finishedWork: Fiber): void {
           );
         }
         if (enableFlareAPI) {
-          const prevListeners = oldProps.listeners;
-          const nextListeners = newProps.listeners;
+          const prevListeners = oldProps.DEPRECATED_flareListeners;
+          const nextListeners = newProps.DEPRECATED_flareListeners;
           if (prevListeners !== nextListeners) {
-            updateEventListeners(nextListeners, finishedWork, null);
+            updateLegacyEventListeners(nextListeners, finishedWork, null);
           }
         }
       }
@@ -1426,10 +1426,10 @@ function commitWork(current: Fiber | null, finishedWork: Fiber): void {
         if (enableFlareAPI) {
           const newProps = finishedWork.memoizedProps;
           const oldProps = current !== null ? current.memoizedProps : newProps;
-          const prevListeners = oldProps.listeners;
-          const nextListeners = newProps.listeners;
+          const prevListeners = oldProps.DEPRECATED_flareListeners;
+          const nextListeners = newProps.DEPRECATED_flareListeners;
           if (prevListeners !== nextListeners) {
-            updateEventListeners(nextListeners, finishedWork, null);
+            updateLegacyEventListeners(nextListeners, finishedWork, null);
           }
         }
       }

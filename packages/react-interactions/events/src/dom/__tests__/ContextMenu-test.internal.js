@@ -57,7 +57,7 @@ describe.each(table)('ContextMenu responder', hasPointerEvents => {
       const ref = React.createRef();
       const Component = () => {
         const listener = useContextMenu({onContextMenu});
-        return <div ref={ref} listeners={listener} />;
+        return <div ref={ref} DEPRECATED_flareListeners={listener} />;
       };
       ReactDOM.render(<Component />, container);
 
@@ -80,7 +80,7 @@ describe.each(table)('ContextMenu responder', hasPointerEvents => {
       const ref = React.createRef();
       const Component = () => {
         const listener = useContextMenu({onContextMenu});
-        return <div ref={ref} listeners={listener} />;
+        return <div ref={ref} DEPRECATED_flareListeners={listener} />;
       };
       ReactDOM.render(<Component />, container);
 
@@ -105,7 +105,7 @@ describe.each(table)('ContextMenu responder', hasPointerEvents => {
           onContextMenu,
           disabled: true,
         });
-        return <div ref={ref} listeners={listener} />;
+        return <div ref={ref} DEPRECATED_flareListeners={listener} />;
       };
       ReactDOM.render(<Component />, container);
 
@@ -123,7 +123,7 @@ describe.each(table)('ContextMenu responder', hasPointerEvents => {
           onContextMenu,
           preventDefault: false,
         });
-        return <div ref={ref} listeners={listener} />;
+        return <div ref={ref} DEPRECATED_flareListeners={listener} />;
       };
       ReactDOM.render(<Component />, container);
 
@@ -149,7 +149,7 @@ describe.each(table)('ContextMenu responder', hasPointerEvents => {
       const ref = React.createRef();
       const Component = () => {
         const listener = useContextMenu({onContextMenu});
-        return <div ref={ref} listeners={listener} />;
+        return <div ref={ref} DEPRECATED_flareListeners={listener} />;
       };
       ReactDOM.render(<Component />, container);
 
@@ -181,7 +181,7 @@ describe.each(table)('ContextMenu responder', hasPointerEvents => {
       const ref = React.createRef();
       const Component = () => {
         const listener = useContextMenu({onContextMenu});
-        return <div ref={ref} listeners={listener} />;
+        return <div ref={ref} DEPRECATED_flareListeners={listener} />;
       };
       ReactDOM.render(<Component />, container);
 

@@ -75,7 +75,7 @@ describe.each(environmentTable)('Press responder', hasPointerEvents => {
           onPress,
           onPressEnd,
         });
-        return <div ref={ref} listeners={listener} />;
+        return <div ref={ref} DEPRECATED_flareListeners={listener} />;
       };
       ReactDOM.render(<Component />, container);
       document.elementFromPoint = () => ref.current;
@@ -101,7 +101,7 @@ describe.each(environmentTable)('Press responder', hasPointerEvents => {
         const listener = usePress({
           onPressStart,
         });
-        return <div ref={ref} listeners={listener} />;
+        return <div ref={ref} DEPRECATED_flareListeners={listener} />;
       };
       ReactDOM.render(<Component />, container);
       document.elementFromPoint = () => ref.current;
@@ -201,7 +201,7 @@ describe.each(environmentTable)('Press responder', hasPointerEvents => {
         const listener = usePress({
           onPressEnd,
         });
-        return <div ref={ref} listeners={listener} />;
+        return <div ref={ref} DEPRECATED_flareListeners={listener} />;
       };
       ReactDOM.render(<Component />, container);
       document.elementFromPoint = () => ref.current;
@@ -299,7 +299,7 @@ describe.each(environmentTable)('Press responder', hasPointerEvents => {
         const listener = usePress({
           onPressChange,
         });
-        return <div ref={ref} listeners={listener} />;
+        return <div ref={ref} DEPRECATED_flareListeners={listener} />;
       };
       ReactDOM.render(<Component />, container);
       document.elementFromPoint = () => ref.current;
@@ -339,7 +339,7 @@ describe.each(environmentTable)('Press responder', hasPointerEvents => {
         const listener = usePress({
           onPress,
         });
-        return <div ref={ref} listeners={listener} />;
+        return <div ref={ref} DEPRECATED_flareListeners={listener} />;
       };
       ReactDOM.render(<Component />, container);
       ref.current.getBoundingClientRect = () => ({
@@ -388,7 +388,7 @@ describe.each(environmentTable)('Press responder', hasPointerEvents => {
       const inputRef = React.createRef();
       const Component = () => {
         const listener = usePress({onPress});
-        return <input ref={inputRef} listeners={listener} />;
+        return <input ref={inputRef} DEPRECATED_flareListeners={listener} />;
       };
       ReactDOM.render(<Component />, container);
       const target = createEventTarget(inputRef.current);
@@ -419,7 +419,7 @@ describe.each(environmentTable)('Press responder', hasPointerEvents => {
       const Component = () => {
         const listener = usePress({onPress});
         return (
-          <div ref={divRef} listeners={listener}>
+          <div ref={divRef} DEPRECATED_flareListeners={listener}>
             <button ref={buttonRef} />
           </div>
         );
@@ -459,7 +459,7 @@ describe.each(environmentTable)('Press responder', hasPointerEvents => {
         const listener = usePress({
           onPressMove,
         });
-        return <div ref={ref} listeners={listener} />;
+        return <div ref={ref} DEPRECATED_flareListeners={listener} />;
       };
       ReactDOM.render(<Component />, container);
       ref.current.getBoundingClientRect = () => ({
@@ -521,7 +521,7 @@ describe.each(environmentTable)('Press responder', hasPointerEvents => {
         });
         return (
           <div ref={outerRef}>
-            <div ref={ref} listeners={listener} />
+            <div ref={ref} DEPRECATED_flareListeners={listener} />
           </div>
         );
       };
@@ -610,7 +610,7 @@ describe.each(environmentTable)('Press responder', hasPointerEvents => {
             onPressEnd: createEventHandler('onPressEnd'),
             pressRetentionOffset,
           });
-          return <div ref={localRef} listeners={listener} />;
+          return <div ref={localRef} DEPRECATED_flareListeners={listener} />;
         };
         ReactDOM.render(<Component />, container);
 
@@ -756,7 +756,7 @@ describe.each(environmentTable)('Press responder', hasPointerEvents => {
           return (
             <div
               ref={ref}
-              listeners={listener}
+              DEPRECATED_flareListeners={listener}
               onPointerDown={createEventHandler('pointerdown')}
               onPointerUp={createEventHandler('pointerup')}
               onKeyDown={createEventHandler('keydown')}
@@ -774,7 +774,7 @@ describe.each(environmentTable)('Press responder', hasPointerEvents => {
             onPressEnd: createEventHandler('outer: onPressEnd'),
           });
           return (
-            <div listeners={listener}>
+            <div DEPRECATED_flareListeners={listener}>
               <Inner />
             </div>
           );
@@ -804,13 +804,13 @@ describe.each(environmentTable)('Press responder', hasPointerEvents => {
 
         const Inner = () => {
           const listener = usePress({onPress});
-          return <div ref={ref} listeners={listener} />;
+          return <div ref={ref} DEPRECATED_flareListeners={listener} />;
         };
 
         const Outer = () => {
           const listener = usePress({onPress});
           return (
-            <div listeners={listener}>
+            <div DEPRECATED_flareListeners={listener}>
               <Inner />
             </div>
           );
@@ -831,13 +831,13 @@ describe.each(environmentTable)('Press responder', hasPointerEvents => {
 
         const Inner = () => {
           const listener = usePress({onPressStart, onPressEnd});
-          return <div ref={ref} listeners={listener} />;
+          return <div ref={ref} DEPRECATED_flareListeners={listener} />;
         };
 
         const Outer = () => {
           const listener = usePress({onPressStart, onPressEnd});
           return (
-            <div listeners={listener}>
+            <div DEPRECATED_flareListeners={listener}>
               <Inner />
             </div>
           );
@@ -859,13 +859,13 @@ describe.each(environmentTable)('Press responder', hasPointerEvents => {
 
         const Inner = () => {
           const listener = usePress({onPressChange});
-          return <div ref={ref} listeners={listener} />;
+          return <div ref={ref} DEPRECATED_flareListeners={listener} />;
         };
 
         const Outer = () => {
           const listener = usePress({onPressChange});
           return (
-            <div listeners={listener}>
+            <div DEPRECATED_flareListeners={listener}>
               <Inner />
             </div>
           );
@@ -889,7 +889,7 @@ describe.each(environmentTable)('Press responder', hasPointerEvents => {
 
       const Component = () => {
         const listener = usePress({onPress});
-        return <a href="#" ref={ref} listeners={listener} />;
+        return <a href="#" ref={ref} DEPRECATED_flareListeners={listener} />;
       };
       ReactDOM.render(<Component />, container);
 
@@ -909,7 +909,7 @@ describe.each(environmentTable)('Press responder', hasPointerEvents => {
 
       const Component = () => {
         const listener = usePress({onPress});
-        return <a href="#" ref={ref} listeners={listener} />;
+        return <a href="#" ref={ref} DEPRECATED_flareListeners={listener} />;
       };
       ReactDOM.render(<Component />, container);
 
@@ -931,7 +931,7 @@ describe.each(environmentTable)('Press responder', hasPointerEvents => {
         const listener = usePress({onPress});
         return (
           <a href="#">
-            <button ref={buttonRef} listeners={listener} />
+            <button ref={buttonRef} DEPRECATED_flareListeners={listener} />
           </a>
         );
       };
@@ -951,7 +951,7 @@ describe.each(environmentTable)('Press responder', hasPointerEvents => {
       const Component = () => {
         const listener = usePress({onPress});
         return (
-          <a href="#" listeners={listener}>
+          <a href="#" DEPRECATED_flareListeners={listener}>
             <div ref={ref} />
           </a>
         );
@@ -974,7 +974,7 @@ describe.each(environmentTable)('Press responder', hasPointerEvents => {
 
       const Component = () => {
         const listener = usePress({onPress});
-        return <a href="#" ref={ref} listeners={listener} />;
+        return <a href="#" ref={ref} DEPRECATED_flareListeners={listener} />;
       };
       ReactDOM.render(<Component />, container);
 
@@ -996,7 +996,7 @@ describe.each(environmentTable)('Press responder', hasPointerEvents => {
 
       const Component = () => {
         const listener = usePress({onPress, preventDefault: false});
-        return <a href="#" ref={ref} listeners={listener} />;
+        return <a href="#" ref={ref} DEPRECATED_flareListeners={listener} />;
       };
       ReactDOM.render(<Component />, container);
 
@@ -1016,7 +1016,7 @@ describe.each(environmentTable)('Press responder', hasPointerEvents => {
 
       const Component = () => {
         const listener = usePress({onPress, preventDefault: false});
-        return <a href="#" ref={ref} listeners={listener} />;
+        return <a href="#" ref={ref} DEPRECATED_flareListeners={listener} />;
       };
       ReactDOM.render(<Component />, container);
 
@@ -1038,7 +1038,7 @@ describe.each(environmentTable)('Press responder', hasPointerEvents => {
 
       const Component = () => {
         const listener = usePress({onPressEnd});
-        return <a href="#" ref={ref} listeners={listener} />;
+        return <a href="#" ref={ref} DEPRECATED_flareListeners={listener} />;
       };
       ReactDOM.render(<Component />, container);
 
@@ -1055,7 +1055,7 @@ describe.each(environmentTable)('Press responder', hasPointerEvents => {
 
     const Component = () => {
       const listener = usePress({onPressEnd});
-      return <a href="#" ref={ref} listeners={listener} />;
+      return <a href="#" ref={ref} DEPRECATED_flareListeners={listener} />;
     };
     ReactDOM.render(<Component />, container);
 
@@ -1075,7 +1075,7 @@ describe.each(environmentTable)('Press responder', hasPointerEvents => {
       const listener = usePress({onPressEnd});
       return (
         <div ref={containerRef}>
-          <a ref={ref} listeners={listener} />
+          <a ref={ref} DEPRECATED_flareListeners={listener} />
         </div>
       );
     };
@@ -1097,7 +1097,7 @@ describe.each(environmentTable)('Press responder', hasPointerEvents => {
       const listener = usePress({onPressEnd});
       return (
         <div>
-          <a ref={ref} listeners={listener} />
+          <a ref={ref} DEPRECATED_flareListeners={listener} />
           <span ref={outsideRef} />
         </div>
       );
@@ -1120,7 +1120,7 @@ describe.each(environmentTable)('Press responder', hasPointerEvents => {
 
     const Component = () => {
       const listener = usePress();
-      return <button ref={ref} listeners={listener} />;
+      return <button ref={ref} DEPRECATED_flareListeners={listener} />;
     };
     ReactDOM.render(<Component />, container);
 
@@ -1140,7 +1140,7 @@ describe.each(environmentTable)('Press responder', hasPointerEvents => {
 
     const Component = () => {
       const listener = usePress({onPress, onPressStart, onPressEnd});
-      return <button ref={buttonRef} listeners={listener} />;
+      return <button ref={buttonRef} DEPRECATED_flareListeners={listener} />;
     };
     ReactDOM.render(<Component />, container);
 

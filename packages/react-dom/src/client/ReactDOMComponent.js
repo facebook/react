@@ -103,7 +103,7 @@ const AUTOFOCUS = 'autoFocus';
 const CHILDREN = 'children';
 const STYLE = 'style';
 const HTML = '__html';
-const LISTENERS = 'listeners';
+const DEPRECATED_flareListeners = 'DEPRECATED_flareListeners';
 
 const {html: HTML_NAMESPACE} = Namespaces;
 
@@ -346,7 +346,7 @@ function setInitialDOMProperties(
         setTextContent(domElement, '' + nextProp);
       }
     } else if (
-      (enableFlareAPI && propKey === LISTENERS) ||
+      (enableFlareAPI && propKey === DEPRECATED_flareListeners) ||
       propKey === SUPPRESS_CONTENT_EDITABLE_WARNING ||
       propKey === SUPPRESS_HYDRATION_WARNING
     ) {
@@ -715,7 +715,7 @@ export function diffProperties(
     } else if (propKey === DANGEROUSLY_SET_INNER_HTML || propKey === CHILDREN) {
       // Noop. This is handled by the clear text mechanism.
     } else if (
-      (enableFlareAPI && propKey === LISTENERS) ||
+      (enableFlareAPI && propKey === DEPRECATED_flareListeners) ||
       propKey === SUPPRESS_CONTENT_EDITABLE_WARNING ||
       propKey === SUPPRESS_HYDRATION_WARNING
     ) {
@@ -810,7 +810,7 @@ export function diffProperties(
         (updatePayload = updatePayload || []).push(propKey, '' + nextProp);
       }
     } else if (
-      (enableFlareAPI && propKey === LISTENERS) ||
+      (enableFlareAPI && propKey === DEPRECATED_flareListeners) ||
       propKey === SUPPRESS_CONTENT_EDITABLE_WARNING ||
       propKey === SUPPRESS_HYDRATION_WARNING
     ) {
@@ -1065,7 +1065,7 @@ export function diffHydratedProperties(
       if (suppressHydrationWarning) {
         // Don't bother comparing. We're ignoring all these warnings.
       } else if (
-        (enableFlareAPI && propKey === LISTENERS) ||
+        (enableFlareAPI && propKey === DEPRECATED_flareListeners) ||
         propKey === SUPPRESS_CONTENT_EDITABLE_WARNING ||
         propKey === SUPPRESS_HYDRATION_WARNING ||
         // Controlled attributes are not validated

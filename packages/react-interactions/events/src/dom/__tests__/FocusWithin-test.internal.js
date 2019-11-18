@@ -60,7 +60,7 @@ describe.each(table)('FocusWithin responder', hasPointerEvents => {
           onFocusWithinChange,
           onFocusWithinVisibleChange,
         });
-        return <div ref={ref} listeners={listener} />;
+        return <div ref={ref} DEPRECATED_flareListeners={listener} />;
       };
       ReactDOM.render(<Component />, container);
     });
@@ -82,7 +82,7 @@ describe.each(table)('FocusWithin responder', hasPointerEvents => {
         onFocusWithinChange,
       });
       return (
-        <div ref={ref} listeners={listener}>
+        <div ref={ref} DEPRECATED_flareListeners={listener}>
           {show && <input ref={innerRef} />}
           <div ref={innerRef2} />
         </div>
@@ -151,7 +151,7 @@ describe.each(table)('FocusWithin responder', hasPointerEvents => {
         onFocusWithinVisibleChange,
       });
       return (
-        <div ref={ref} listeners={listener}>
+        <div ref={ref} DEPRECATED_flareListeners={listener}>
           {show && <input ref={innerRef} />}
           <div ref={innerRef2} />
         </div>
@@ -280,7 +280,7 @@ describe.each(table)('FocusWithin responder', hasPointerEvents => {
           onBlurWithin,
         });
         return (
-          <div ref={ref} listeners={listener}>
+          <div ref={ref} DEPRECATED_flareListeners={listener}>
             {show && <input ref={innerRef} />}
             <div ref={innerRef2} />
           </div>
@@ -310,7 +310,7 @@ describe.each(table)('FocusWithin responder', hasPointerEvents => {
           onBlurWithin,
         });
         return (
-          <div ref={ref} listeners={listener}>
+          <div ref={ref} DEPRECATED_flareListeners={listener}>
             {show && (
               <div>
                 <input ref={innerRef} />

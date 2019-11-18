@@ -59,7 +59,7 @@ describe.each(table)('Focus responder', hasPointerEvents => {
           onBlur,
           onFocus,
         });
-        return <div ref={ref} listeners={listener} />;
+        return <div ref={ref} DEPRECATED_flareListeners={listener} />;
       };
       ReactDOM.render(<Component />, container);
     });
@@ -83,7 +83,7 @@ describe.each(table)('Focus responder', hasPointerEvents => {
         const listener = useFocus({
           onBlur,
         });
-        return <div ref={ref} listeners={listener} />;
+        return <div ref={ref} DEPRECATED_flareListeners={listener} />;
       };
       ReactDOM.render(<Component />, container);
     });
@@ -108,7 +108,7 @@ describe.each(table)('Focus responder', hasPointerEvents => {
           onFocus,
         });
         return (
-          <div ref={ref} listeners={listener}>
+          <div ref={ref} DEPRECATED_flareListeners={listener}>
             <a ref={innerRef} />
           </div>
         );
@@ -207,7 +207,7 @@ describe.each(table)('Focus responder', hasPointerEvents => {
           onFocusChange,
         });
         return (
-          <div ref={ref} listeners={listener}>
+          <div ref={ref} DEPRECATED_flareListeners={listener}>
             <div ref={innerRef} />
           </div>
         );
@@ -246,7 +246,7 @@ describe.each(table)('Focus responder', hasPointerEvents => {
           onFocusVisibleChange,
         });
         return (
-          <div ref={ref} listeners={listener}>
+          <div ref={ref} DEPRECATED_flareListeners={listener}>
             <div ref={innerRef} />
           </div>
         );
@@ -320,7 +320,7 @@ describe.each(table)('Focus responder', hasPointerEvents => {
           onFocus: createEventHandler('inner: onFocus'),
           onFocusChange: createEventHandler('inner: onFocusChange'),
         });
-        return <div ref={innerRef} listeners={listener} />;
+        return <div ref={innerRef} DEPRECATED_flareListeners={listener} />;
       };
 
       const Outer = () => {
@@ -330,7 +330,7 @@ describe.each(table)('Focus responder', hasPointerEvents => {
           onFocusChange: createEventHandler('outer: onFocusChange'),
         });
         return (
-          <div ref={outerRef} listeners={listener}>
+          <div ref={outerRef} DEPRECATED_flareListeners={listener}>
             <Inner />
           </div>
         );

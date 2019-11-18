@@ -19,7 +19,7 @@ const Button = (props) => {
   return (
     <button
       children={props.children}
-      listeners={focus}
+      DEPRECATED_flareListeners={focus}
       style={{
         ...(isFocusVisible && focusVisibleStyles)
       }}

@@ -343,7 +343,7 @@ describe('ReactScope', () => {
           onKeyDown,
         });
         return (
-          <TestScope listeners={listener}>
+          <TestScope DEPRECATED_flareListeners={listener}>
             <div ref={ref} />
           </TestScope>
         );
@@ -361,7 +361,7 @@ describe('ReactScope', () => {
         });
         return (
           <div>
-            <TestScope listeners={listener}>
+            <TestScope DEPRECATED_flareListeners={listener}>
               <div ref={ref} />
             </TestScope>
           </div>

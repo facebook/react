@@ -87,7 +87,7 @@ describeWithPointerEvent('Tap responder', hasPointerEvents => {
     const ref = React.createRef();
     const Component = () => {
       const listener = useTap();
-      return <button ref={ref} listeners={listener} />;
+      return <button ref={ref} DEPRECATED_flareListeners={listener} />;
     };
     ReactDOM.render(<Component />, container);
 
@@ -122,7 +122,7 @@ describeWithPointerEvent('Tap responder', hasPointerEvents => {
           onTapCancel,
           onTapEnd,
         });
-        return <div ref={ref} listeners={listener} />;
+        return <div ref={ref} DEPRECATED_flareListeners={listener} />;
       };
       ReactDOM.render(<Component />, container);
     });
@@ -145,7 +145,7 @@ describeWithPointerEvent('Tap responder', hasPointerEvents => {
     function render(props) {
       const Component = () => {
         const listener = useTap(props);
-        return <div ref={ref} listeners={listener} />;
+        return <div ref={ref} DEPRECATED_flareListeners={listener} />;
       };
       ReactDOM.render(<Component />, container);
       document.elementFromPoint = () => ref.current;
@@ -201,7 +201,7 @@ describeWithPointerEvent('Tap responder', hasPointerEvents => {
       ref = React.createRef();
       const Component = () => {
         const listener = useTap({onAuxiliaryTap});
-        return <div ref={ref} listeners={listener} />;
+        return <div ref={ref} DEPRECATED_flareListeners={listener} />;
       };
       ReactDOM.render(<Component />, container);
       document.elementFromPoint = () => ref.current;
@@ -234,7 +234,7 @@ describeWithPointerEvent('Tap responder', hasPointerEvents => {
       ref = React.createRef();
       const Component = () => {
         const listener = useTap({onTapStart});
-        return <div ref={ref} listeners={listener} />;
+        return <div ref={ref} DEPRECATED_flareListeners={listener} />;
       };
       ReactDOM.render(<Component />, container);
       document.elementFromPoint = () => ref.current;
@@ -338,7 +338,7 @@ describeWithPointerEvent('Tap responder', hasPointerEvents => {
       ref = React.createRef();
       const Component = () => {
         const listener = useTap({onTapEnd});
-        return <div ref={ref} listeners={listener} />;
+        return <div ref={ref} DEPRECATED_flareListeners={listener} />;
       };
       ReactDOM.render(<Component />, container);
       document.elementFromPoint = () => ref.current;
@@ -391,7 +391,7 @@ describeWithPointerEvent('Tap responder', hasPointerEvents => {
       const Component = () => {
         const listener = useTap({onTapEnd});
         return (
-          <div ref={targetRef} listeners={listener}>
+          <div ref={targetRef} DEPRECATED_flareListeners={listener}>
             <button ref={innerRef} />
           </div>
         );
@@ -480,7 +480,7 @@ describeWithPointerEvent('Tap responder', hasPointerEvents => {
       ref = React.createRef();
       const Component = () => {
         const listener = useTap({onTapUpdate});
-        return <div ref={ref} listeners={listener} />;
+        return <div ref={ref} DEPRECATED_flareListeners={listener} />;
       };
       ReactDOM.render(<Component />, container);
       document.elementFromPoint = () => ref.current;
@@ -592,7 +592,7 @@ describeWithPointerEvent('Tap responder', hasPointerEvents => {
           onTapEnd: logger('end'),
           onTapCancel: logger('cancel'),
         });
-        return <div ref={ref} listeners={listener} />;
+        return <div ref={ref} DEPRECATED_flareListeners={listener} />;
       };
       ReactDOM.render(<Component />, container);
       document.elementFromPoint = () => ref.current;
@@ -646,7 +646,7 @@ describeWithPointerEvent('Tap responder', hasPointerEvents => {
         const listener = useTap({onTapCancel, onTapUpdate});
         return (
           <div ref={parentRef}>
-            <div ref={ref} listeners={listener} />
+            <div ref={ref} DEPRECATED_flareListeners={listener} />
             <span ref={siblingRef} />
           </div>
         );
@@ -800,7 +800,7 @@ describeWithPointerEvent('Tap responder', hasPointerEvents => {
             preventDefault: shouldPreventDefault,
           });
           return (
-            <a href="#" ref={ref} listeners={listener}>
+            <a href="#" ref={ref} DEPRECATED_flareListeners={listener}>
               <div ref={innerRef} />
             </a>
           );
