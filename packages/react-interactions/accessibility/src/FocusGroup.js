@@ -217,7 +217,10 @@ export function createFocusGroup(
       },
     });
     return (
-      <TableScope listeners={keyboard} ref={scopeRef} type="item">
+      <TableScope
+        DEPRECATED_flareListeners={keyboard}
+        ref={scopeRef}
+        type="item">
         {children}
       </TableScope>
     );

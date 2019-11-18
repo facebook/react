@@ -29,7 +29,7 @@ describe('ReactHooksInspection', () => {
       const listener = React.unstable_useResponder(TestResponder, {
         preventDefault: false,
       });
-      return <div listeners={listener}>Hello world</div>;
+      return <div DEPRECATED_flareListeners={listener}>Hello world</div>;
     }
     let tree = ReactDebugTools.inspectHooks(Foo, {});
     expect(tree).toEqual([

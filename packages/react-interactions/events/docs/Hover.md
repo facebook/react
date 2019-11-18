@@ -18,7 +18,7 @@ const Link = (props) => (
     <a
       {...props}
       href={props.href}
-      listeners={hover}
+      DEPRECATED_flareListeners={hover}
       style={{
         ...props.style,
         textDecoration: isHovered ? 'underline': 'none'

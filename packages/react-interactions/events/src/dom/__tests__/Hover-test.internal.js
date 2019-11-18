@@ -63,7 +63,7 @@ describe.each(table)('Hover responder', hasPointerEvents => {
           onHoverMove,
           onHoverEnd,
         });
-        return <div ref={ref} listeners={listener} />;
+        return <div ref={ref} DEPRECATED_flareListeners={listener} />;
       };
       ReactDOM.render(<Component />, container);
     });
@@ -89,7 +89,7 @@ describe.each(table)('Hover responder', hasPointerEvents => {
         const listener = useHover({
           onHoverStart: onHoverStart,
         });
-        return <div ref={ref} listeners={listener} />;
+        return <div ref={ref} DEPRECATED_flareListeners={listener} />;
       };
       ReactDOM.render(<Component />, container);
     });
@@ -126,7 +126,7 @@ describe.each(table)('Hover responder', hasPointerEvents => {
         const listener = useHover({
           onHoverChange,
         });
-        return <div ref={ref} listeners={listener} />;
+        return <div ref={ref} DEPRECATED_flareListeners={listener} />;
       };
       ReactDOM.render(<Component />, container);
     });
@@ -159,7 +159,7 @@ describe.each(table)('Hover responder', hasPointerEvents => {
         const listener = useHover({
           onHoverEnd,
         });
-        return <div ref={ref} listeners={listener} />;
+        return <div ref={ref} DEPRECATED_flareListeners={listener} />;
       };
       ReactDOM.render(<Component />, container);
     });
@@ -203,7 +203,7 @@ describe.each(table)('Hover responder', hasPointerEvents => {
         const listener = useHover({
           onHoverMove,
         });
-        return <div ref={ref} listeners={listener} />;
+        return <div ref={ref} DEPRECATED_flareListeners={listener} />;
       };
       ReactDOM.render(<Component />, container);
 
@@ -233,7 +233,7 @@ describe.each(table)('Hover responder', hasPointerEvents => {
           onHoverEnd: createEventHandler('inner: onHoverEnd'),
           onHoverChange: createEventHandler('inner: onHoverChange'),
         });
-        return <div ref={innerRef} listeners={listener} />;
+        return <div ref={innerRef} DEPRECATED_flareListeners={listener} />;
       };
 
       const Outer = () => {
@@ -243,7 +243,7 @@ describe.each(table)('Hover responder', hasPointerEvents => {
           onHoverChange: createEventHandler('outer: onHoverChange'),
         });
         return (
-          <div ref={outerRef} listeners={listener}>
+          <div ref={outerRef} DEPRECATED_flareListeners={listener}>
             <Inner />
           </div>
         );
@@ -309,7 +309,7 @@ describe.each(table)('Hover responder', hasPointerEvents => {
         onHoverEnd: logEvent,
         onHoverMove: logEvent,
       });
-      return <div ref={ref} listeners={listener} />;
+      return <div ref={ref} DEPRECATED_flareListeners={listener} />;
     };
     ReactDOM.render(<Component />, container);
 

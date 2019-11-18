@@ -36,7 +36,7 @@ if (__DEV__) {
         props.readOnly ||
         props.disabled ||
         props[propName] == null ||
-        (enableFlareAPI && props.listeners)
+        (enableFlareAPI && props.DEPRECATED_flareListeners)
       ) {
         return null;
       }
@@ -53,7 +53,7 @@ if (__DEV__) {
         props.readOnly ||
         props.disabled ||
         props[propName] == null ||
-        (enableFlareAPI && props.listeners)
+        (enableFlareAPI && props.DEPRECATED_flareListeners)
       ) {
         return null;
       }

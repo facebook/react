@@ -149,11 +149,11 @@ export function createInstance(
 ): Instance {
   let propsToUse = props;
   if (enableFlareAPI) {
-    if (props.listeners != null) {
-      // We want to remove the "listeners" prop
+    if (props.DEPRECATED_flareListeners != null) {
+      // We want to remove the "DEPRECATED_flareListeners" prop
       // as we don't want it in the test renderer's
       // instance props.
-      const {listeners, ...otherProps} = props; // eslint-disable-line
+      const {DEPRECATED_flareListeners, ...otherProps} = props; // eslint-disable-line
       propsToUse = otherProps;
     }
   }
