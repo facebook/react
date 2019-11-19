@@ -118,6 +118,10 @@ type UpdateQueue<S, A> = {|
   lastRenderedState: S | null,
 |};
 
+type TransitionInstance = {|
+  pendingExpirationTime: ExpirationTime,
+|};
+
 export type HookType =
   | 'useState'
   | 'useReducer'
@@ -1204,21 +1208,74 @@ function rerenderDeferredValue<T>(
   return prevValue;
 }
 
-function startTransition(setPending, config, callback) {
+function startTransition(fiber, instance, config, callback) {
+  let resolvedConfig: SuspenseConfig | null =
+    config === undefined ? null : config;
+
+  // TODO: runWithPriority shouldn't be necessary here. React should manage its
+  // own concept of priority, and only consult Scheduler for updates that are
+  // scheduled from outside a React context.
   const priorityLevel = getCurrentPriorityLevel();
   runWithPriority(
     priorityLevel < UserBlockingPriority ? UserBlockingPriority : priorityLevel,
     () => {
-      setPending(true);
+      const currentTime = requestCurrentTimeForUpdate();
+      const expirationTime = computeExpirationForFiber(
+        currentTime,
+        fiber,
+        null,
+      );
+      scheduleWork(fiber, expirationTime);
     },
   );
   runWithPriority(
     priorityLevel > NormalPriority ? NormalPriority : priorityLevel,
     () => {
+      const currentTime = requestCurrentTimeForUpdate();
+      let expirationTime = computeExpirationForFiber(
+        currentTime,
+        fiber,
+        resolvedConfig,
+      );
+      // Set the expiration time at which the pending transition will finish.
+      // Because there's only a single transition per useTransition hook, we
+      // don't need a queue here; we can cheat by only tracking the most
+      // recently scheduled transition.
+      // TODO: This trick depends on transition expiration times being
+      // monotonically decreasing in priority, but since expiration times
+      // currently correspond to `timeoutMs`, that might not be true if
+      // `timeoutMs` changes to something smaller before the previous transition
+      // resolves. But this is a temporary edge case, since we're about to
+      // remove the correspondence between `timeoutMs` and the expiration time.
+      const oldPendingExpirationTime = instance.pendingExpirationTime;
+      while (
+        oldPendingExpirationTime !== NoWork &&
+        oldPendingExpirationTime <= expirationTime
+      ) {
+        // Temporary hack to make pendingExpirationTime monotonically decreasing
+        if (resolvedConfig === null) {
+          resolvedConfig = {
+            timeoutMs: 5250,
+          };
+        } else {
+          resolvedConfig = {
+            timeoutMs: (resolvedConfig.timeoutMs | 0 || 5000) + 250,
+            busyDelayMs: resolvedConfig.busyDelayMs,
+            busyMinDurationMs: resolvedConfig.busyMinDurationMs,
+          };
+        }
+        expirationTime = computeExpirationForFiber(
+          currentTime,
+          fiber,
+          resolvedConfig,
+        );
+      }
+      instance.pendingExpirationTime = expirationTime;
+
+      scheduleWork(fiber, expirationTime);
       const previousConfig = ReactCurrentBatchConfig.suspense;
-      ReactCurrentBatchConfig.suspense = config === undefined ? null : config;
+      ReactCurrentBatchConfig.suspense = resolvedConfig;
       try {
-        setPending(false);
         callback();
       } finally {
         ReactCurrentBatchConfig.suspense = previousConfig;
@@ -1230,34 +1287,136 @@ function startTransition(setPending, config, callback) {
 function mountTransition(
   config: SuspenseConfig | void | null,
 ): [(() => void) => void, boolean] {
-  const [isPending, setPending] = mountState(false);
-  const start = mountCallback(startTransition.bind(null, setPending, config), [
-    setPending,
-    config,
-  ]);
+  const hook = mountWorkInProgressHook();
+
+  const instance: TransitionInstance = {
+    pendingExpirationTime: NoWork,
+  };
+  // TODO: Intentionally storing this on the queue field to avoid adding a new/
+  // one; `queue` should be a union.
+  hook.queue = (instance: any);
+
+  const isPending = false;
+
+  // TODO: Consider passing `config` to `startTransition` instead of the hook.
+  // Then we don't have to recompute the callback whenever it changes. However,
+  // if we don't end up changing the API, we should at least optimize this
+  // to use the same hook instead of a separate hook just for the callback.
+  const start = mountCallback(
+    startTransition.bind(
+      null,
+      ((currentlyRenderingFiber: any): Fiber),
+      instance,
+      config,
+    ),
+    [config],
+  );
+
+  const resolvedExpirationTime = NoWork;
+  hook.memoizedState = {
+    isPending,
+
+    // Represents the last processed expiration time.
+    resolvedExpirationTime,
+  };
+
   return [start, isPending];
 }
 
 function updateTransition(
   config: SuspenseConfig | void | null,
 ): [(() => void) => void, boolean] {
-  const [isPending, setPending] = updateState(false);
-  const start = updateCallback(startTransition.bind(null, setPending, config), [
-    setPending,
-    config,
-  ]);
-  return [start, isPending];
-}
+  const hook = updateWorkInProgressHook();
 
-function rerenderTransition(
-  config: SuspenseConfig | void | null,
-): [(() => void) => void, boolean] {
-  const [isPending, setPending] = rerenderState(false);
-  const start = updateCallback(startTransition.bind(null, setPending, config), [
-    setPending,
-    config,
-  ]);
-  return [start, isPending];
+  const instance: TransitionInstance = (hook.queue: any);
+
+  const pendingExpirationTime = instance.pendingExpirationTime;
+  const oldState = hook.memoizedState;
+  const oldIsPending = oldState.isPending;
+  const oldResolvedExpirationTime = oldState.resolvedExpirationTime;
+
+  // Check if the most recent transition is pending. The following logic is
+  // a little confusing, but it conceptually maps to same logic used to process
+  // state update queues (see: updateReducer). We're cheating a bit because
+  // we know that there is only ever a single pending transition, and the last
+  // one always wins. So we don't need to maintain an actual queue of updates;
+  // we only need to track 1) which is the most recent pending level 2) did
+  // we already resolve
+  //
+  // Note: This could be even simpler if we used a commit effect to mark when a
+  // pending transition is resolved. The cleverness that follows is meant to
+  // avoid the overhead of an extra effect; however, if this ends up being *too*
+  // clever, an effect probably isn't that bad, since it would only fire once
+  // per transition.
+  let newIsPending;
+  let newResolvedExpirationTime;
+
+  if (pendingExpirationTime === NoWork) {
+    // There are no pending transitions. Reset all fields.
+    newIsPending = false;
+    newResolvedExpirationTime = NoWork;
+  } else {
+    // There is a pending transition. It may or may not have resolved. Compare
+    // the time at which we last resolved to the pending time. If the pending
+    // time is in the future, then we're still pending.
+    if (
+      oldResolvedExpirationTime === NoWork ||
+      oldResolvedExpirationTime > pendingExpirationTime
+    ) {
+      // We have not already resolved at the pending time. Check if this render
+      // includes the pending level.
+      if (renderExpirationTime <= pendingExpirationTime) {
+        // This render does include the pending level. Mark it as resolved.
+        newIsPending = false;
+        newResolvedExpirationTime = renderExpirationTime;
+      } else {
+        // This render does not include the pending level. Still pending.
+        newIsPending = true;
+        newResolvedExpirationTime = oldResolvedExpirationTime;
+
+        // Mark that there's still pending work on this queue
+        if (pendingExpirationTime > currentlyRenderingFiber.expirationTime) {
+          currentlyRenderingFiber.expirationTime = pendingExpirationTime;
+          markUnprocessedUpdateTime(pendingExpirationTime);
+        }
+      }
+    } else {
+      // Already resolved at this expiration time.
+      newIsPending = false;
+      newResolvedExpirationTime = oldResolvedExpirationTime;
+    }
+  }
+
+  if (newIsPending !== oldIsPending) {
+    markWorkInProgressReceivedUpdate();
+  } else if (oldIsPending === false) {
+    // This is a trick to mutate the instance without a commit effect. If
+    // neither the current nor work-in-progress hook are pending, and there's no
+    // pending transition at a lower priority (which we know because there can
+    // only be one pending level per useTransition hook), then we can be certain
+    // there are no pending transitions even if this render does not finish.
+    // It's similar to the trick we use for eager setState bailouts. Like that
+    // optimization, this should have no semantic effect.
+    instance.pendingExpirationTime = NoWork;
+    newResolvedExpirationTime = NoWork;
+  }
+
+  hook.memoizedState = {
+    isPending: newIsPending,
+    resolvedExpirationTime: newResolvedExpirationTime,
+  };
+
+  const start = updateCallback(
+    startTransition.bind(
+      null,
+      ((currentlyRenderingFiber: any): Fiber),
+      instance,
+      config,
+    ),
+    [config],
+  );
+
+  return [start, newIsPending];
 }
 
 function dispatchAction<S, A>(
@@ -1438,7 +1597,7 @@ const HooksDispatcherOnRerender: Dispatcher = {
   useDebugValue: updateDebugValue,
   useResponder: createDeprecatedResponderListener,
   useDeferredValue: rerenderDeferredValue,
-  useTransition: rerenderTransition,
+  useTransition: updateTransition,
 };
 
 let HooksDispatcherOnMountInDEV: Dispatcher | null = null;
@@ -1937,7 +2096,7 @@ if (__DEV__) {
     ): [(() => void) => void, boolean] {
       currentHookNameInDev = 'useTransition';
       updateHookTypesDev();
-      return rerenderTransition(config);
+      return updateTransition(config);
     },
   };
 
@@ -2330,7 +2489,7 @@ if (__DEV__) {
       currentHookNameInDev = 'useTransition';
       warnInvalidHookAccess();
       updateHookTypesDev();
-      return rerenderTransition(config);
+      return updateTransition(config);
     },
   };
 }
