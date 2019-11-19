@@ -88,8 +88,10 @@ describe('ReactTransition', () => {
         start();
 
         expect(Scheduler).toFlushAndYield([
+          // Render pending state
           'Pending...',
           '(empty)',
+          // Try rendering transition
           'Suspend! [Async]',
           'Loading...',
         ]);
@@ -100,6 +102,88 @@ describe('ReactTransition', () => {
       });
       expect(Scheduler).toHaveYielded(['Async']);
       expect(root).toMatchRenderedOutput('Async');
+    },
+  );
+
+  it.experimental(
+    'isPending turns off immediately if `startTransition` does not include any updates',
+    async () => {
+      let startTransition;
+      function App() {
+        const [_startTransition, isPending] = useTransition();
+        startTransition = _startTransition;
+        return <Text text={'Pending: ' + isPending} />;
+      }
+
+      const root = ReactNoop.createRoot();
+
+      await act(async () => {
+        root.render(<App />);
+      });
+      expect(Scheduler).toHaveYielded(['Pending: false']);
+      expect(root).toMatchRenderedOutput('Pending: false');
+
+      await act(async () => {
+        startTransition(() => {
+          // No-op
+        });
+      });
+      expect(Scheduler).toHaveYielded([
+        // Pending state is turned on then immediately back off
+        // TODO: As an optimization, we could avoid turning on the pending
+        // state entirely.
+        'Pending: true',
+        'Pending: false',
+      ]);
+      expect(root).toMatchRenderedOutput('Pending: false');
+    },
+  );
+
+  it.experimental(
+    'works if two transitions happen one right after the other',
+    async () => {
+      // Tests an implementation path where two transitions get batched into the
+      // same render. This is an edge case in our current expiration times
+      // implementation but will be the normal case if/when we replace expiration
+      // times with a different model that puts all transitions into the same
+      // batch by default.
+      const CONFIG = {
+        timeoutMs: 100000,
+      };
+
+      let setTab;
+      let startTransition;
+      function App() {
+        const [tab, _setTab] = useState(1);
+        const [_startTransition, isPending] = useTransition(CONFIG);
+        startTransition = _startTransition;
+        setTab = _setTab;
+        return (
+          <Text text={'Tab ' + tab + (isPending ? ' (pending...)' : '')} />
+        );
+      }
+
+      const root = ReactNoop.createRoot();
+
+      await act(async () => {
+        root.render(<App />);
+      });
+      expect(Scheduler).toHaveYielded(['Tab 1']);
+      expect(root).toMatchRenderedOutput('Tab 1');
+
+      await act(async () => {
+        startTransition(() => setTab(2));
+      });
+      expect(Scheduler).toHaveYielded(['Tab 1 (pending...)', 'Tab 2']);
+      expect(root).toMatchRenderedOutput('Tab 2');
+
+      // Because time has not advanced, this will fall into the same bucket
+      // as the previous transition.
+      await act(async () => {
+        startTransition(() => setTab(3));
+      });
+      expect(Scheduler).toHaveYielded(['Tab 2 (pending...)', 'Tab 3']);
+      expect(root).toMatchRenderedOutput('Tab 3');
     },
   );
 });
