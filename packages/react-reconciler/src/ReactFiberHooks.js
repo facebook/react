@@ -16,6 +16,7 @@ import type {Fiber} from './ReactFiber';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
 import type {HookEffectTag} from './ReactHookEffectTags';
 import type {SuspenseConfig} from './ReactFiberSuspenseConfig';
+import type {TransitionInstance} from './ReactFiberTransition';
 import type {ReactPriorityLevel} from './SchedulerWithReactIntegration';
 
 import ReactSharedInternals from 'shared/ReactSharedInternals';
@@ -51,11 +52,11 @@ import is from 'shared/objectIs';
 import {markWorkInProgressReceivedUpdate} from './ReactFiberBeginWork';
 import {requestCurrentSuspenseConfig} from './ReactFiberSuspenseConfig';
 import {
-  UserBlockingPriority,
-  NormalPriority,
-  runWithPriority,
-  getCurrentPriorityLevel,
-} from './SchedulerWithReactIntegration';
+  startTransition,
+  requestCurrentTransition,
+  cancelPendingTransition,
+} from './ReactFiberTransition';
+import {getCurrentPriorityLevel} from './SchedulerWithReactIntegration';
 
 const {ReactCurrentDispatcher, ReactCurrentBatchConfig} = ReactSharedInternals;
 
@@ -114,12 +115,9 @@ type Update<S, A> = {|
 type UpdateQueue<S, A> = {|
   pending: Update<S, A> | null,
   dispatch: (A => mixed) | null,
+  pendingTransition: TransitionInstance | null,
   lastRenderedReducer: ((S, A) => S) | null,
   lastRenderedState: S | null,
-|};
-
-type TransitionInstance = {|
-  pendingExpirationTime: ExpirationTime,
 |};
 
 export type HookType =
@@ -646,6 +644,7 @@ function mountReducer<S, I, A>(
   const queue = (hook.queue = {
     pending: null,
     dispatch: null,
+    pendingTransition: null,
     lastRenderedReducer: reducer,
     lastRenderedState: (initialState: any),
   });
@@ -853,6 +852,7 @@ function mountState<S>(
   const queue = (hook.queue = {
     pending: null,
     dispatch: null,
+    pendingTransition: null,
     lastRenderedReducer: basicStateReducer,
     lastRenderedState: (initialState: any),
   });
@@ -1208,89 +1208,14 @@ function rerenderDeferredValue<T>(
   return prevValue;
 }
 
-function startTransition(fiber, instance, config, callback) {
-  let resolvedConfig: SuspenseConfig | null =
-    config === undefined ? null : config;
-
-  // TODO: runWithPriority shouldn't be necessary here. React should manage its
-  // own concept of priority, and only consult Scheduler for updates that are
-  // scheduled from outside a React context.
-  const priorityLevel = getCurrentPriorityLevel();
-  runWithPriority(
-    priorityLevel < UserBlockingPriority ? UserBlockingPriority : priorityLevel,
-    () => {
-      const currentTime = requestCurrentTimeForUpdate();
-      const expirationTime = computeExpirationForFiber(
-        currentTime,
-        fiber,
-        null,
-      );
-      scheduleWork(fiber, expirationTime);
-    },
-  );
-  runWithPriority(
-    priorityLevel > NormalPriority ? NormalPriority : priorityLevel,
-    () => {
-      const currentTime = requestCurrentTimeForUpdate();
-      let expirationTime = computeExpirationForFiber(
-        currentTime,
-        fiber,
-        resolvedConfig,
-      );
-      // Set the expiration time at which the pending transition will finish.
-      // Because there's only a single transition per useTransition hook, we
-      // don't need a queue here; we can cheat by only tracking the most
-      // recently scheduled transition.
-      // TODO: This trick depends on transition expiration times being
-      // monotonically decreasing in priority, but since expiration times
-      // currently correspond to `timeoutMs`, that might not be true if
-      // `timeoutMs` changes to something smaller before the previous transition
-      // resolves. But this is a temporary edge case, since we're about to
-      // remove the correspondence between `timeoutMs` and the expiration time.
-      const oldPendingExpirationTime = instance.pendingExpirationTime;
-      while (
-        oldPendingExpirationTime !== NoWork &&
-        oldPendingExpirationTime <= expirationTime
-      ) {
-        // Temporary hack to make pendingExpirationTime monotonically decreasing
-        if (resolvedConfig === null) {
-          resolvedConfig = {
-            timeoutMs: 5250,
-          };
-        } else {
-          resolvedConfig = {
-            timeoutMs: (resolvedConfig.timeoutMs | 0 || 5000) + 250,
-            busyDelayMs: resolvedConfig.busyDelayMs,
-            busyMinDurationMs: resolvedConfig.busyMinDurationMs,
-          };
-        }
-        expirationTime = computeExpirationForFiber(
-          currentTime,
-          fiber,
-          resolvedConfig,
-        );
-      }
-      instance.pendingExpirationTime = expirationTime;
-
-      scheduleWork(fiber, expirationTime);
-      const previousConfig = ReactCurrentBatchConfig.suspense;
-      ReactCurrentBatchConfig.suspense = resolvedConfig;
-      try {
-        callback();
-      } finally {
-        ReactCurrentBatchConfig.suspense = previousConfig;
-      }
-    },
-  );
-}
-
 function mountTransition(
   config: SuspenseConfig | void | null,
 ): [(() => void) => void, boolean] {
   const hook = mountWorkInProgressHook();
-
+  const fiber = ((currentlyRenderingFiber: any): Fiber);
   const instance: TransitionInstance = {
     pendingExpirationTime: NoWork,
+    fiber,
   };
   // TODO: Intentionally storing this on the queue field to avoid adding a new/
   // one; `queue` should be a union.
@@ -1302,15 +1227,9 @@ function mountTransition(
   // Then we don't have to recompute the callback whenever it changes. However,
   // if we don't end up changing the API, we should at least optimize this
   // to use the same hook instead of a separate hook just for the callback.
-  const start = mountCallback(
-    startTransition.bind(
-      null,
-      ((currentlyRenderingFiber: any): Fiber),
-      instance,
-      config,
-    ),
-    [config],
-  );
+  const start = mountCallback(startTransition.bind(null, instance, config), [
+    config,
+  ]);
 
   const resolvedExpirationTime = NoWork;
   hook.memoizedState = {
@@ -1406,15 +1325,9 @@ function updateTransition(
     resolvedExpirationTime: newResolvedExpirationTime,
   };
 
-  const start = updateCallback(
-    startTransition.bind(
-      null,
-      ((currentlyRenderingFiber: any): Fiber),
-      instance,
-      config,
-    ),
-    [config],
-  );
+  const start = updateCallback(startTransition.bind(null, instance, config), [
+    config,
+  ]);
 
   return [start, newIsPending];
 }
@@ -1436,6 +1349,7 @@ function dispatchAction<S, A>(
 
   const currentTime = requestCurrentTimeForUpdate();
   const suspenseConfig = requestCurrentSuspenseConfig();
+  const transition = requestCurrentTransition();
   const expirationTime = computeExpirationForFiber(
     currentTime,
     fiber,
@@ -1465,6 +1379,19 @@ function dispatchAction<S, A>(
     pending.next = update;
   }
   queue.pending = update;
+
+  if (transition !== null) {
+    const prevPendingTransition = queue.pendingTransition;
+    if (transition !== prevPendingTransition) {
+      queue.pendingTransition = transition;
+      if (prevPendingTransition !== null) {
+        // There's already a pending transition on this queue. The new
+        // transition supersedes the old one. Turn of the `isPending` state
+        // of the previous transition.
+        cancelPendingTransition(prevPendingTransition);
+      }
+    }
+  }
 
   const alternate = fiber.alternate;
   if (
@@ -1524,6 +1451,7 @@ function dispatchAction<S, A>(
         warnIfNotCurrentlyActingUpdatesInDev(fiber);
       }
     }
+
     scheduleWork(fiber, expirationTime);
   }
 }
