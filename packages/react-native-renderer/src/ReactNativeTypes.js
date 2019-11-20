@@ -119,10 +119,7 @@ export type NativeMethods = {
 };
 
 export type NativeMethodsMixinType = NativeMethods;
-export type HostComponent<T> = AbstractComponent<
-  T,
-  $ReadOnly<$Exact<NativeMethods>>,
->;
+export type HostComponent<T> = AbstractComponent<T, $ReadOnly<NativeMethods>>;
 
 type SecretInternalsType = {
   NativeMethodsMixin: NativeMethodsMixinType,
