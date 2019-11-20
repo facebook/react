@@ -87,6 +87,7 @@
 import type {Fiber} from './ReactFiber';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
 import type {SuspenseConfig} from './ReactFiberSuspenseConfig';
+import type {TransitionInstance} from './ReactFiberTransition';
 import type {ReactPriorityLevel} from './SchedulerWithReactIntegration';
 
 import {NoWork, Sync} from './ReactFiberExpirationTime';
@@ -107,6 +108,11 @@ import {
 import invariant from 'shared/invariant';
 import {getCurrentPriorityLevel} from './SchedulerWithReactIntegration';
 
+import {
+  requestCurrentTransition,
+  cancelPendingTransition,
+} from './ReactFiberTransition';
+
 export type Update<State> = {|
   expirationTime: ExpirationTime,
   suspenseConfig: null | SuspenseConfig,
@@ -121,7 +127,10 @@ export type Update<State> = {|
   priority?: ReactPriorityLevel,
 |};
 
-type SharedQueue<State> = {|pending: Update<State> | null|};
+type SharedQueue<State> = {|
+  pending: Update<State> | null,
+  pendingTransition: TransitionInstance | null,
+|};
 
 export type UpdateQueue<State> = {|
   baseState: State,
@@ -157,6 +166,7 @@ export function initializeUpdateQueue<State>(fiber: Fiber): void {
     baseQueue: null,
     shared: {
       pending: null,
+      pendingTransition: null,
     },
     effects: null,
   };
@@ -219,6 +229,20 @@ export function enqueueUpdate<State>(fiber: Fiber, update: Update<State>) {
     pending.next = update;
   }
   sharedQueue.pending = update;
+
+  const transition = requestCurrentTransition();
+  if (transition !== null) {
+    const prevPendingTransition = sharedQueue.pendingTransition;
+    if (transition !== prevPendingTransition) {
+      sharedQueue.pendingTransition = transition;
+      if (prevPendingTransition !== null) {
+        // There's already a pending transition on this queue. The new
+        // transition supersedes the old one. Turn of the `isPending` state
+        // of the previous transition.
+        cancelPendingTransition(prevPendingTransition);
+      }
+    }
+  }
 
   if (__DEV__) {
     if (

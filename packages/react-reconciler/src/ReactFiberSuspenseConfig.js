@@ -9,6 +9,7 @@
 
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 
+// TODO: Remove React.unstable_withSuspenseConfig and move this to the renderer
 const {ReactCurrentBatchConfig} = ReactSharedInternals;
 
 export type SuspenseConfig = {|
