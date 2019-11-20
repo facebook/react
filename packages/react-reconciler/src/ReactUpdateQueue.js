@@ -87,6 +87,7 @@
 import type {Fiber} from './ReactFiber';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
 import type {SuspenseConfig} from './ReactFiberSuspenseConfig';
+import type {TransitionInstance} from './ReactFiberTransition';
 import type {ReactPriorityLevel} from './SchedulerWithReactIntegration';
 
 import {NoWork} from './ReactFiberExpirationTime';
@@ -108,6 +109,11 @@ import {
 import invariant from 'shared/invariant';
 import warningWithoutStack from 'shared/warningWithoutStack';
 import {getCurrentPriorityLevel} from './SchedulerWithReactIntegration';
+
+import {
+  requestCurrentTransition,
+  cancelPendingTransition,
+} from './ReactFiberTransition';
 
 export type Update<State> = {
   expirationTime: ExpirationTime,
@@ -138,6 +144,8 @@ export type UpdateQueue<State> = {
 
   firstCapturedEffect: Update<State> | null,
   lastCapturedEffect: Update<State> | null,
+
+  pendingTransition: TransitionInstance | null,
 };
 
 export const UpdateState = 0;
@@ -172,6 +180,7 @@ export function createUpdateQueue<State>(baseState: State): UpdateQueue<State> {
     lastEffect: null,
     firstCapturedEffect: null,
     lastCapturedEffect: null,
+    pendingTransition: null,
   };
   return queue;
 }
@@ -194,6 +203,8 @@ function cloneUpdateQueue<State>(
 
     firstCapturedEffect: null,
     lastCapturedEffect: null,
+
+    pendingTransition: currentQueue.pendingTransition,
   };
   return queue;
 }
@@ -286,6 +297,23 @@ export function enqueueUpdate<State>(fiber: Fiber, update: Update<State>) {
       appendUpdateToQueue(queue1, update);
       // But we still need to update the `lastUpdate` pointer of queue2.
       queue2.lastUpdate = update;
+    }
+  }
+
+  const transition = requestCurrentTransition();
+  if (transition !== null) {
+    const prevPendingTransition = queue1.pendingTransition;
+    if (transition !== prevPendingTransition) {
+      queue1.pendingTransition = transition;
+      if (queue2 !== null) {
+        queue2.pendingTransition = transition;
+      }
+      if (prevPendingTransition !== null) {
+        // There's already a pending transition on this queue. The new
+        // transition supersedes the old one. Turn of the `isPending` state
+        // of the previous transition.
+        cancelPendingTransition(prevPendingTransition);
+      }
     }
   }
 
