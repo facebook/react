@@ -97,13 +97,17 @@ import {
 } from './ReactFiberNewContext';
 import {Callback, ShouldCapture, DidCapture} from 'shared/ReactSideEffectTags';
 
-import {debugRenderPhaseSideEffectsForStrictMode} from 'shared/ReactFeatureFlags';
+import {
+  debugRenderPhaseSideEffectsForStrictMode,
+  preventIntermediateStates,
+} from 'shared/ReactFeatureFlags';
 
 import {StrictMode} from './ReactTypeOfMode';
 import {
   markRenderEventTimeAndConfig,
   markUnprocessedUpdateTime,
 } from './ReactFiberWorkLoop';
+import {SuspendOnTask} from './ReactFiberThrow';
 
 import invariant from 'shared/invariant';
 import {getCurrentPriorityLevel} from './SchedulerWithReactIntegration';
@@ -413,15 +417,18 @@ export function processUpdateQueue<State>(
 
     if (first !== null) {
       let update = first;
+      let lastProcessedTransitionTime = NoWork;
+      let lastSkippedTransitionTime = NoWork;
       do {
         const updateExpirationTime = update.expirationTime;
+        const suspenseConfig = update.suspenseConfig;
         if (updateExpirationTime < renderExpirationTime) {
           // Priority is insufficient. Skip this update. If this is the first
           // skipped update, the previous update/state is the new base
           // update/state.
           const clone: Update<State> = {
-            expirationTime: update.expirationTime,
-            suspenseConfig: update.suspenseConfig,
+            expirationTime: updateExpirationTime,
+            suspenseConfig,
 
             tag: update.tag,
             payload: update.payload,
@@ -438,6 +445,16 @@ export function processUpdateQueue<State>(
           // Update the remaining priority in the queue.
           if (updateExpirationTime > newExpirationTime) {
             newExpirationTime = updateExpirationTime;
+          }
+
+          if (suspenseConfig !== null) {
+            // This update is part of a transition
+            if (
+              lastSkippedTransitionTime === NoWork ||
+              lastSkippedTransitionTime > updateExpirationTime
+            ) {
+              lastSkippedTransitionTime = updateExpirationTime;
+            }
           }
         } else {
           // This update does have sufficient priority.
@@ -487,6 +504,17 @@ export function processUpdateQueue<State>(
             }
           }
         }
+
+        if (suspenseConfig !== null) {
+          // This update is part of a transition
+          if (
+            lastProcessedTransitionTime === NoWork ||
+            lastProcessedTransitionTime > updateExpirationTime
+          ) {
+            lastProcessedTransitionTime = updateExpirationTime;
+          }
+        }
+
         update = update.next;
         if (update === null || update === first) {
           pendingQueue = queue.shared.pending;
@@ -502,6 +530,17 @@ export function processUpdateQueue<State>(
           }
         }
       } while (true);
+
+      if (
+        preventIntermediateStates &&
+        lastProcessedTransitionTime !== NoWork &&
+        lastSkippedTransitionTime !== NoWork
+      ) {
+        // There are multiple updates scheduled on this queue, but only some of
+        // them were processed. To avoid showing an intermediate state, abort
+        // the current render and restart at a level that includes them all.
+        throw new SuspendOnTask(lastSkippedTransitionTime);
+      }
     }
 
     if (newBaseQueueLast === null) {
