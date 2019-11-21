@@ -47,6 +47,7 @@ export const enableTrainModelFix = false;
 export const enableTrustedTypesIntegration = false;
 export const disableCreateFactory = false;
 export const disableTextareaChildren = false;
+export const preventIntermediateStates = __EXPERIMENTAL__;
 
 // Only used in www builds.
 export function addUserTimingListener() {

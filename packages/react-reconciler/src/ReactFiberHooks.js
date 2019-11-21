@@ -19,6 +19,7 @@ import type {SuspenseConfig} from './ReactFiberSuspenseConfig';
 import type {TransitionInstance} from './ReactFiberTransition';
 import type {ReactPriorityLevel} from './SchedulerWithReactIntegration';
 
+import {preventIntermediateStates} from 'shared/ReactFeatureFlags';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 
 import {NoWork, Sync} from './ReactFiberExpirationTime';
@@ -50,6 +51,7 @@ import invariant from 'shared/invariant';
 import getComponentName from 'shared/getComponentName';
 import is from 'shared/objectIs';
 import {markWorkInProgressReceivedUpdate} from './ReactFiberBeginWork';
+import {SuspendOnTask} from './ReactFiberThrow';
 import {requestCurrentSuspenseConfig} from './ReactFiberSuspenseConfig';
 import {
   startTransition,
@@ -700,7 +702,10 @@ function updateReducer<S, I, A>(
     let newBaseQueueFirst = null;
     let newBaseQueueLast = null;
     let update = first;
+    let lastProcessedTransitionTime = NoWork;
+    let lastSkippedTransitionTime = NoWork;
     do {
+      const suspenseConfig = update.suspenseConfig;
       const updateExpirationTime = update.expirationTime;
       if (updateExpirationTime < renderExpirationTime) {
         // Priority is insufficient. Skip this update. If this is the first
@@ -725,6 +730,16 @@ function updateReducer<S, I, A>(
           currentlyRenderingFiber.expirationTime = updateExpirationTime;
           markUnprocessedUpdateTime(updateExpirationTime);
         }
+
+        if (suspenseConfig !== null) {
+          // This update is part of a transition
+          if (
+            lastSkippedTransitionTime === NoWork ||
+            lastSkippedTransitionTime > updateExpirationTime
+          ) {
+            lastSkippedTransitionTime = updateExpirationTime;
+          }
+        }
       } else {
         // This update does have sufficient priority.
 
@@ -746,10 +761,7 @@ function updateReducer<S, I, A>(
         // TODO: We should skip this update if it was already committed but currently
         // we have no way of detecting the difference between a committed and suspended
         // update here.
-        markRenderEventTimeAndConfig(
-          updateExpirationTime,
-          update.suspenseConfig,
-        );
+        markRenderEventTimeAndConfig(updateExpirationTime, suspenseConfig);
 
         // Process this update.
         if (update.eagerReducer === reducer) {
@@ -760,9 +772,30 @@ function updateReducer<S, I, A>(
           const action = update.action;
           newState = reducer(newState, action);
         }
+
+        if (suspenseConfig !== null) {
+          // This update is part of a transition
+          if (
+            lastProcessedTransitionTime === NoWork ||
+            lastProcessedTransitionTime > updateExpirationTime
+          ) {
+            lastProcessedTransitionTime = updateExpirationTime;
+          }
+        }
       }
       update = update.next;
     } while (update !== null && update !== first);
+
+    if (
+      preventIntermediateStates &&
+      lastProcessedTransitionTime !== NoWork &&
+      lastSkippedTransitionTime !== NoWork
+    ) {
+      // There are multiple updates scheduled on this queue, but only some of
+      // them were processed. To avoid showing an intermediate state, abort
+      // the current render and restart at a level that includes them all.
+      throw new SuspendOnTask(lastSkippedTransitionTime);
+    }
 
     if (newBaseQueueLast === null) {
       newBaseState = newState;

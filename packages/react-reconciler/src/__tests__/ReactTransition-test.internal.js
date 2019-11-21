@@ -506,4 +506,360 @@ describe('ReactTransition', () => {
       );
     },
   );
+
+  it.experimental(
+    'when multiple transitions update the same queue, only the most recent ' +
+      'one is allowed to finish (no intermediate states)',
+    async () => {
+      const CONFIG = {
+        timeoutMs: 100000,
+      };
+
+      const Tab = React.forwardRef(({label, setTab}, ref) => {
+        const [startTransition, isPending] = useTransition(CONFIG);
+
+        React.useImperativeHandle(
+          ref,
+          () => ({
+            go() {
+              startTransition(() => setTab(label));
+            },
+          }),
+          [label],
+        );
+
+        return (
+          <Text text={'Tab ' + label + (isPending ? ' (pending...)' : '')} />
+        );
+      });
+
+      const tabButtonA = React.createRef(null);
+      const tabButtonB = React.createRef(null);
+      const tabButtonC = React.createRef(null);
+
+      const ContentA = createAsyncText('A');
+      const ContentB = createAsyncText('B');
+      const ContentC = createAsyncText('C');
+
+      function App() {
+        Scheduler.unstable_yieldValue('App');
+
+        const [tab, setTab] = useState('A');
+
+        let content;
+        switch (tab) {
+          case 'A':
+            content = <ContentA />;
+            break;
+          case 'B':
+            content = <ContentB />;
+            break;
+          case 'C':
+            content = <ContentC />;
+            break;
+          default:
+            content = <ContentA />;
+            break;
+        }
+
+        return (
+          <>
+            <ul>
+              <li>
+                <Tab ref={tabButtonA} label="A" setTab={setTab} />
+              </li>
+              <li>
+                <Tab ref={tabButtonB} label="B" setTab={setTab} />
+              </li>
+              <li>
+                <Tab ref={tabButtonC} label="C" setTab={setTab} />
+              </li>
+            </ul>
+            <Suspense fallback={<Text text="Loading..." />}>{content}</Suspense>
+          </>
+        );
+      }
+
+      // Initial render
+      const root = ReactNoop.createRoot();
+      await act(async () => {
+        root.render(<App />);
+        await ContentA.resolve();
+      });
+      expect(Scheduler).toHaveYielded(['App', 'Tab A', 'Tab B', 'Tab C', 'A']);
+      expect(root).toMatchRenderedOutput(
+        <>
+          <ul>
+            <li>Tab A</li>
+            <li>Tab B</li>
+            <li>Tab C</li>
+          </ul>
+          A
+        </>,
+      );
+
+      // Navigate to tab B
+      await act(async () => {
+        tabButtonB.current.go();
+        expect(Scheduler).toFlushAndYieldThrough([
+          // Turn on B's pending state
+          'Tab B (pending...)',
+          // Partially render B
+          'App',
+          'Tab A',
+          'Tab B',
+        ]);
+
+        // While we're still in the middle of rendering B, switch to C.
+        tabButtonC.current.go();
+      });
+      expect(Scheduler).toHaveYielded([
+        // Toggle the pending flags
+        'Tab B',
+        'Tab C (pending...)',
+
+        // Start rendering B...
+        'App',
+        // ...but bail out, since C is more recent. These should not be logged:
+        // 'Tab A',
+        // 'Tab B',
+        // 'Tab C (pending...)',
+        // 'Suspend! [B]',
+        // 'Loading...',
+
+        // Now render C
+        'App',
+        'Tab A',
+        'Tab B',
+        'Tab C',
+        'Suspend! [C]',
+        'Loading...',
+      ]);
+      expect(root).toMatchRenderedOutput(
+        <>
+          <ul>
+            <li>Tab A</li>
+            <li>Tab B</li>
+            <li>Tab C (pending...)</li>
+          </ul>
+          A
+        </>,
+      );
+
+      // Finish loading B
+      await act(async () => {
+        ContentB.resolve();
+      });
+      // Should not switch to tab B because we've since clicked on C.
+      expect(Scheduler).toHaveYielded([]);
+      expect(root).toMatchRenderedOutput(
+        <>
+          <ul>
+            <li>Tab A</li>
+            <li>Tab B</li>
+            <li>Tab C (pending...)</li>
+          </ul>
+          A
+        </>,
+      );
+
+      // Finish loading C
+      await act(async () => {
+        ContentC.resolve();
+      });
+      expect(Scheduler).toHaveYielded(['App', 'Tab A', 'Tab B', 'Tab C', 'C']);
+      expect(root).toMatchRenderedOutput(
+        <>
+          <ul>
+            <li>Tab A</li>
+            <li>Tab B</li>
+            <li>Tab C</li>
+          </ul>
+          C
+        </>,
+      );
+    },
+  );
+
+  // Same as previous test, but for class update queue.
+  it.experimental(
+    'when multiple transitions update the same queue, only the most recent ' +
+      'one is allowed to finish (no intermediate states) (classes)',
+    async () => {
+      const CONFIG = {
+        timeoutMs: 100000,
+      };
+
+      const Tab = React.forwardRef(({label, setTab}, ref) => {
+        const [startTransition, isPending] = useTransition(CONFIG);
+
+        React.useImperativeHandle(
+          ref,
+          () => ({
+            go() {
+              startTransition(() => setTab(label));
+            },
+          }),
+          [label],
+        );
+
+        return (
+          <Text text={'Tab ' + label + (isPending ? ' (pending...)' : '')} />
+        );
+      });
+
+      const tabButtonA = React.createRef(null);
+      const tabButtonB = React.createRef(null);
+      const tabButtonC = React.createRef(null);
+
+      const ContentA = createAsyncText('A');
+      const ContentB = createAsyncText('B');
+      const ContentC = createAsyncText('C');
+
+      class App extends React.Component {
+        state = {tab: 'A'};
+        setTab = tab => this.setState({tab});
+        render() {
+          Scheduler.unstable_yieldValue('App');
+
+          let content;
+          switch (this.state.tab) {
+            case 'A':
+              content = <ContentA />;
+              break;
+            case 'B':
+              content = <ContentB />;
+              break;
+            case 'C':
+              content = <ContentC />;
+              break;
+            default:
+              content = <ContentA />;
+              break;
+          }
+
+          return (
+            <>
+              <ul>
+                <li>
+                  <Tab ref={tabButtonA} label="A" setTab={this.setTab} />
+                </li>
+                <li>
+                  <Tab ref={tabButtonB} label="B" setTab={this.setTab} />
+                </li>
+                <li>
+                  <Tab ref={tabButtonC} label="C" setTab={this.setTab} />
+                </li>
+              </ul>
+              <Suspense fallback={<Text text="Loading..." />}>
+                {content}
+              </Suspense>
+            </>
+          );
+        }
+      }
+
+      // Initial render
+      const root = ReactNoop.createRoot();
+      await act(async () => {
+        root.render(<App />);
+        await ContentA.resolve();
+      });
+      expect(Scheduler).toHaveYielded(['App', 'Tab A', 'Tab B', 'Tab C', 'A']);
+      expect(root).toMatchRenderedOutput(
+        <>
+          <ul>
+            <li>Tab A</li>
+            <li>Tab B</li>
+            <li>Tab C</li>
+          </ul>
+          A
+        </>,
+      );
+
+      // Navigate to tab B
+      await act(async () => {
+        tabButtonB.current.go();
+        expect(Scheduler).toFlushAndYieldThrough([
+          // Turn on B's pending state
+          'Tab B (pending...)',
+          // Partially render B
+          'App',
+          'Tab A',
+          'Tab B',
+        ]);
+
+        // While we're still in the middle of rendering B, switch to C.
+        tabButtonC.current.go();
+      });
+      expect(Scheduler).toHaveYielded([
+        // Toggle the pending flags
+        'Tab B',
+        'Tab C (pending...)',
+
+        // Start rendering B...
+        // NOTE: This doesn't get logged like in the hooks version of this
+        // test because the update queue bails out before entering the render
+        // method.
+        // 'App',
+        // ...but bail out, since C is more recent. These should not be logged:
+        // 'Tab A',
+        // 'Tab B',
+        // 'Tab C (pending...)',
+        // 'Suspend! [B]',
+        // 'Loading...',
+
+        // Now render C
+        'App',
+        'Tab A',
+        'Tab B',
+        'Tab C',
+        'Suspend! [C]',
+        'Loading...',
+      ]);
+      expect(root).toMatchRenderedOutput(
+        <>
+          <ul>
+            <li>Tab A</li>
+            <li>Tab B</li>
+            <li>Tab C (pending...)</li>
+          </ul>
+          A
+        </>,
+      );
+
+      // Finish loading B
+      await act(async () => {
+        ContentB.resolve();
+      });
+      // Should not switch to tab B because we've since clicked on C.
+      expect(Scheduler).toHaveYielded([]);
+      expect(root).toMatchRenderedOutput(
+        <>
+          <ul>
+            <li>Tab A</li>
+            <li>Tab B</li>
+            <li>Tab C (pending...)</li>
+          </ul>
+          A
+        </>,
+      );
+
+      // Finish loading C
+      await act(async () => {
+        ContentC.resolve();
+      });
+      expect(Scheduler).toHaveYielded(['App', 'Tab A', 'Tab B', 'Tab C', 'C']);
+      expect(root).toMatchRenderedOutput(
+        <>
+          <ul>
+            <li>Tab A</li>
+            <li>Tab B</li>
+            <li>Tab C</li>
+          </ul>
+          C
+        </>,
+      );
+    },
+  );
 });
