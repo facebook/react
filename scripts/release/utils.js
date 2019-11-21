@@ -57,7 +57,7 @@ const getArtifactsList = async buildID => {
     ? 'process_artifacts_experimental'
     : 'process_artifacts';
   const workflowID = buildMetadata.workflows.workflow_id;
-  const workflowMetadataURL = `https://circleci.com/api/v2/workflow/${workflowID}/jobs?circle-token=${
+  const workflowMetadataURL = `https://circleci.com/api/v2/workflow/${workflowID}/job?circle-token=${
     process.env.CIRCLE_CI_API_TOKEN
   }`;
   const workflowMetadata = await http.get(workflowMetadataURL, true);
