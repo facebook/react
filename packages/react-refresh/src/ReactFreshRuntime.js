@@ -195,8 +195,17 @@ export function performReactRefresh(): RefreshUpdate | null {
 
     let didError = false;
     let firstError = null;
-    failedRoots.forEach((element, root) => {
-      const helpers = helpersByRoot.get(root);
+
+    // We snapshot maps and sets that are mutated during commits.
+    // If we don't do this, there is a risk they will be mutated while
+    // we iterate over them. For example, trying to recover a failed root
+    // may cause another root to be added to the failed list -- an infinite loop.
+    let failedRootsSnapshot = new Map(failedRoots);
+    let mountedRootsSnapshot = new Set(mountedRoots);
+    let helpersByRootSnapshot = new Map(helpersByRoot);
+
+    failedRootsSnapshot.forEach((element, root) => {
+      const helpers = helpersByRootSnapshot.get(root);
       if (helpers === undefined) {
         throw new Error(
           'Could not find helpers for a root. This is a bug in React Refresh.',
@@ -212,8 +221,8 @@ export function performReactRefresh(): RefreshUpdate | null {
         // Keep trying other roots.
       }
     });
-    mountedRoots.forEach(root => {
-      const helpers = helpersByRoot.get(root);
+    mountedRootsSnapshot.forEach(root => {
+      const helpers = helpersByRootSnapshot.get(root);
       if (helpers === undefined) {
         throw new Error(
           'Could not find helpers for a root. This is a bug in React Refresh.',

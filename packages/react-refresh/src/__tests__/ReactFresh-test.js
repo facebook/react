@@ -2909,6 +2909,61 @@ describe('ReactFresh', () => {
     }
   });
 
+  it('regression test: does not get into an infinite loop', () => {
+    if (__DEV__) {
+      let containerA = document.createElement('div');
+      let containerB = document.createElement('div');
+
+      // Initially, nothing interesting.
+      let RootAV1 = () => {
+        return 'A1';
+      };
+      $RefreshReg$(RootAV1, 'RootA');
+      let RootBV1 = () => {
+        return 'B1';
+      };
+      $RefreshReg$(RootBV1, 'RootB');
+
+      act(() => {
+        ReactDOM.render(<RootAV1 />, containerA);
+        ReactDOM.render(<RootBV1 />, containerB);
+      });
+      expect(containerA.innerHTML).toBe('A1');
+      expect(containerB.innerHTML).toBe('B1');
+
+      // Then make the first root fail.
+      let RootAV2 = () => {
+        throw new Error('A2!');
+      };
+      $RefreshReg$(RootAV2, 'RootA');
+      expect(() => ReactFreshRuntime.performReactRefresh()).toThrow('A2!');
+      expect(containerA.innerHTML).toBe('');
+      expect(containerB.innerHTML).toBe('B1');
+
+      // Then patch the first root, but make it fail in the commit phase.
+      // This used to trigger an infinite loop due to a list of failed roots
+      // being mutated while it was being iterated on.
+      let RootAV3 = () => {
+        React.useLayoutEffect(() => {
+          throw new Error('A3!');
+        }, []);
+        return 'A3';
+      };
+      $RefreshReg$(RootAV3, 'RootA');
+      expect(() => ReactFreshRuntime.performReactRefresh()).toThrow('A3!');
+      expect(containerA.innerHTML).toBe('');
+      expect(containerB.innerHTML).toBe('B1');
+
+      let RootAV4 = () => {
+        return 'A4';
+      };
+      $RefreshReg$(RootAV4, 'RootA');
+      ReactFreshRuntime.performReactRefresh();
+      expect(containerA.innerHTML).toBe('A4');
+      expect(containerB.innerHTML).toBe('B1');
+    }
+  });
+
   it('remounts classes on every edit', () => {
     if (__DEV__) {
       let HelloV1 = render(() => {
