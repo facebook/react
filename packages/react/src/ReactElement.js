@@ -246,7 +246,11 @@ export function jsx(type, config, maybeKey) {
   if (type && type.defaultProps) {
     const defaultProps = type.defaultProps;
     for (propName in defaultProps) {
-      if (props[propName] === undefined) {
+      if (
+        props[propName] === undefined &&
+        propName !== 'ref' &&
+        propName !== 'key'
+      ) {
         props[propName] = defaultProps[propName];
       }
     }
