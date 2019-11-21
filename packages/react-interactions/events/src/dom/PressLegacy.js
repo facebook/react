@@ -489,6 +489,11 @@ function updateIsPressWithinResponderRegion(
 // clicks (NVDA, Jaws, VoiceOver) do not have co-ords associated with the click
 // event and "detail" is always 0 (where normal clicks are > 0)
 function isScreenReaderVirtualClick(nativeEvent): boolean {
+  // JAWS/NVDA with Firefox.
+  if (nativeEvent.mozInputSource === 0 && nativeEvent.isTrusted) {
+    return true;
+  }
+  // Chrome
   return (
     nativeEvent.detail === 0 &&
     nativeEvent.screenX === 0 &&
