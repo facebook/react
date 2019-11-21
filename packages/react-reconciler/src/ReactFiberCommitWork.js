@@ -100,7 +100,6 @@ import {
   hideTextInstance,
   unhideInstance,
   unhideTextInstance,
-  unmountResponderInstance,
   unmountFundamentalComponent,
   updateFundamentalComponent,
   commitHydratedContainer,
@@ -124,7 +123,10 @@ import {
 } from './ReactHookEffectTags';
 import {didWarnAboutReassigningProps} from './ReactFiberBeginWork';
 import {runWithPriority, NormalPriority} from './SchedulerWithReactIntegration';
-import {updateLegacyEventListeners} from './ReactFiberEvents';
+import {
+  updateLegacyEventListeners,
+  unmountResponderListeners,
+} from './ReactFiberEvents';
 
 let didWarnAboutUndefinedSnapshotBeforeUpdate: Set<mixed> | null = null;
 if (__DEV__) {
@@ -792,23 +794,7 @@ function commitUnmount(
     }
     case HostComponent: {
       if (enableFlareAPI) {
-        const dependencies = current.dependencies;
-
-        if (dependencies !== null) {
-          const respondersMap = dependencies.responders;
-          if (respondersMap !== null) {
-            const responderInstances = Array.from(respondersMap.values());
-            for (
-              let i = 0, length = responderInstances.length;
-              i < length;
-              i++
-            ) {
-              const responderInstance = responderInstances[i];
-              unmountResponderInstance(responderInstance);
-            }
-            dependencies.responders = null;
-          }
-        }
+        unmountResponderListeners(current);
         beforeRemoveInstance(current.stateNode);
       }
       safelyDetachRef(current);
@@ -848,6 +834,9 @@ function commitUnmount(
       return;
     }
     case ScopeComponent: {
+      if (enableFlareAPI) {
+        unmountResponderListeners(current);
+      }
       if (enableScopeAPI) {
         safelyDetachRef(current);
       }

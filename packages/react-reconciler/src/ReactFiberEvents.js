@@ -163,7 +163,7 @@ export function updateLegacyEventListeners(
     }
     let respondersMap = dependencies.responders;
     if (respondersMap === null) {
-      respondersMap = new Map();
+      dependencies.responders = respondersMap = new Map();
     }
     if (isArray(listeners)) {
       for (let i = 0, length = listeners.length; i < length; i++) {
@@ -217,4 +217,20 @@ export function createResponderListener(
     Object.freeze(eventResponderListener);
   }
   return eventResponderListener;
+}
+
+export function unmountResponderListeners(fiber: Fiber) {
+  const dependencies = fiber.dependencies;
+
+  if (dependencies !== null) {
+    const respondersMap = dependencies.responders;
+    if (respondersMap !== null) {
+      const responderInstances = Array.from(respondersMap.values());
+      for (let i = 0, length = responderInstances.length; i < length; i++) {
+        const responderInstance = responderInstances[i];
+        unmountResponderInstance(responderInstance);
+      }
+      dependencies.responders = null;
+    }
+  }
 }
