@@ -125,6 +125,7 @@ import {
   throwException,
   createRootErrorUpdate,
   createClassErrorUpdate,
+  SuspendOnTask,
 } from './ReactFiberThrow';
 import {
   commitBeforeMutationLifeCycles as commitBeforeMutationEffectOnFiber,
@@ -200,13 +201,14 @@ const LegacyUnbatchedContext = /*       */ 0b001000;
 const RenderContext = /*                */ 0b010000;
 const CommitContext = /*                */ 0b100000;
 
-type RootExitStatus = 0 | 1 | 2 | 3 | 4 | 5;
+type RootExitStatus = 0 | 1 | 2 | 3 | 4 | 5 | 6;
 const RootIncomplete = 0;
 const RootFatalErrored = 1;
 const RootErrored = 2;
 const RootSuspended = 3;
 const RootSuspendedWithDelay = 4;
-const RootCompleted = 5;
+const RootSuspendedOnTask = 5;
+const RootCompleted = 6;
 
 export type Thenable = {
   then(resolve: () => mixed, reject?: () => mixed): Thenable | void,
@@ -237,7 +239,7 @@ let workInProgressRootCanSuspendUsingConfig: null | SuspenseConfig = null;
 // The work left over by components that were visited during this render. Only
 // includes unprocessed updates, not work in bailed out children.
 let workInProgressRootNextUnprocessedUpdateTime: ExpirationTime = NoWork;
-
+let workInProgressRootRestartTime: ExpirationTime = NoWork;
 // If we're pinged while rendering we don't always restart immediately.
 // This flag determines if it might be worthwhile to restart if an opportunity
 // happens latere.
@@ -933,6 +935,13 @@ function finishConcurrentRender(
       commitRoot(root);
       break;
     }
+    case RootSuspendedOnTask: {
+      // Can't finish rendering at this level. Exit early and restart at the
+      // specified time.
+      markRootSuspendedAtTime(root, expirationTime);
+      root.nextKnownPendingLevel = workInProgressRootRestartTime;
+      break;
+    }
     case RootCompleted: {
       // The work completed. Ready to commit.
       if (
@@ -1262,6 +1271,7 @@ function prepareFreshStack(root, expirationTime) {
   workInProgressRootLatestSuspenseTimeout = Sync;
   workInProgressRootCanSuspendUsingConfig = null;
   workInProgressRootNextUnprocessedUpdateTime = NoWork;
+  workInProgressRootRestartTime = NoWork;
   workInProgressRootHasPendingPing = false;
 
   if (enableSchedulerTracing) {
@@ -1297,6 +1307,16 @@ function handleError(root, thrownValue) {
         // avoids inaccurate Profiler durations in the case of a
         // suspended render.
         stopProfilerTimerIfRunningAndRecordDelta(workInProgress, true);
+      }
+
+      // TODO: I think it's fine to use instanceof here because this exception
+      // is always thrown by the renderer? Alternatively, use a brand check.
+      if (thrownValue instanceof SuspendOnTask) {
+        // Can't finish rendering at this level. Exit early and restart at
+        // the specified time.
+        workInProgressRootExitStatus = RootSuspendedOnTask;
+        workInProgressRootRestartTime = thrownValue.expirationTime;
+        return null;
       }
 
       throwException(
