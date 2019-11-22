@@ -138,6 +138,9 @@ export type UpdateQueue<State> = {
 
   firstCapturedEffect: Update<State> | null,
   lastCapturedEffect: Update<State> | null,
+
+  rebaseTime: ExpirationTime,
+  rebaseEnd: Update<State> | null,
 };
 
 export const UpdateState = 0;
@@ -172,6 +175,8 @@ export function createUpdateQueue<State>(baseState: State): UpdateQueue<State> {
     lastEffect: null,
     firstCapturedEffect: null,
     lastCapturedEffect: null,
+    rebaseTime: NoWork,
+    rebaseEnd: null,
   };
   return queue;
 }
@@ -194,6 +199,9 @@ function cloneUpdateQueue<State>(
 
     firstCapturedEffect: null,
     lastCapturedEffect: null,
+
+    rebaseTime: currentQueue.rebaseTime,
+    rebaseEnd: currentQueue.rebaseEnd,
   };
   return queue;
 }
@@ -446,15 +454,36 @@ export function processUpdateQueue<State>(
   let newBaseState = queue.baseState;
   let newFirstUpdate = null;
   let newExpirationTime = NoWork;
+  let newRebaseTime = NoWork;
+  let newRebaseEnd = null;
+  let prevUpdate = null;
 
   // Iterate through the list of updates to compute the result.
   let update = queue.firstUpdate;
   let resultState = newBaseState;
+
+  // Track whether the update is part of a rebase.
+  // TODO: Should probably split this into two separate loops, instead of
+  // using a boolean.
+  const rebaseTime = queue.rebaseTime;
+  const rebaseEnd = queue.rebaseEnd;
+  let isRebasing = rebaseTime !== NoWork;
+
   while (update !== null) {
     const updateExpirationTime = update.expirationTime;
-    if (updateExpirationTime < renderExpirationTime) {
+    if (prevUpdate === rebaseEnd) {
+      isRebasing = false;
+    }
+    if (
+      // Check if this update should be skipped
+      updateExpirationTime < renderExpirationTime &&
+      // If we're currently rebasing, don't skip this update if we already
+      // committed it.
+      (!isRebasing || updateExpirationTime < rebaseTime)
+    ) {
       // This update does not have sufficient priority. Skip it.
-      if (newFirstUpdate === null) {
+      if (newRebaseTime === NoWork) {
+        newRebaseTime = renderExpirationTime;
         // This is the first skipped update. It will be the first update in
         // the new list.
         newFirstUpdate = update;
@@ -501,6 +530,7 @@ export function processUpdateQueue<State>(
       }
     }
     // Continue to the next update.
+    prevUpdate = update;
     update = update.next;
   }
 
@@ -508,6 +538,8 @@ export function processUpdateQueue<State>(
   let newFirstCapturedUpdate = null;
   update = queue.firstCapturedUpdate;
   while (update !== null) {
+    // TODO: Captured updates always have the current render expiration time.
+    // Shouldn't need this priority check, because they will never be skipped.
     const updateExpirationTime = update.expirationTime;
     if (updateExpirationTime < renderExpirationTime) {
       // This update does not have sufficient priority. Skip it.
@@ -565,11 +597,15 @@ export function processUpdateQueue<State>(
     // We processed every update, without skipping. That means the new base
     // state is the same as the result state.
     newBaseState = resultState;
+  } else {
+    newRebaseEnd = prevUpdate;
   }
 
   queue.baseState = newBaseState;
   queue.firstUpdate = newFirstUpdate;
   queue.firstCapturedUpdate = newFirstCapturedUpdate;
+  queue.rebaseEnd = newRebaseEnd;
+  queue.rebaseTime = newRebaseTime;
 
   // Set the remaining expiration time to be whatever is remaining in the queue.
   // This should be fine because the only two other things that contribute to

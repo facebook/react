@@ -144,8 +144,12 @@ if (__DEV__) {
 export type Hook = {
   memoizedState: any,
 
+  // TODO: These fields are only used by the state and reducer hooks. Consider
+  // moving them to a separate object.
   baseState: any,
   baseUpdate: Update<any, any> | null,
+  rebaseEnd: Update<any, any> | null,
+  rebaseTime: ExpirationTime,
   queue: UpdateQueue<any, any> | null,
 
   next: Hook | null,
@@ -580,6 +584,8 @@ function mountWorkInProgressHook(): Hook {
     baseState: null,
     queue: null,
     baseUpdate: null,
+    rebaseEnd: null,
+    rebaseTime: NoWork,
 
     next: null,
   };
@@ -621,6 +627,8 @@ function updateWorkInProgressHook(): Hook {
       baseState: currentHook.baseState,
       queue: currentHook.queue,
       baseUpdate: currentHook.baseUpdate,
+      rebaseEnd: currentHook.rebaseEnd,
+      rebaseTime: currentHook.rebaseTime,
 
       next: null,
     };
@@ -735,8 +743,10 @@ function updateReducer<S, I, A>(
   // The last update in the entire queue
   const last = queue.last;
   // The last update that is part of the base state.
-  const baseUpdate = hook.baseUpdate;
   const baseState = hook.baseState;
+  const baseUpdate = hook.baseUpdate;
+  const rebaseEnd = hook.rebaseEnd;
+  const rebaseTime = hook.rebaseTime;
 
   // Find the first unprocessed update.
   let first;
@@ -755,19 +765,35 @@ function updateReducer<S, I, A>(
     let newState = baseState;
     let newBaseState = null;
     let newBaseUpdate = null;
+    let newRebaseTime = NoWork;
+    let newRebaseEnd = null;
     let prevUpdate = baseUpdate;
     let update = first;
-    let didSkip = false;
+
+    // Track whether the update is part of a rebase.
+    // TODO: Should probably split this into two separate loops, instead of
+    // using a boolean.
+    let isRebasing = rebaseTime !== NoWork;
+
     do {
+      if (prevUpdate === rebaseEnd) {
+        isRebasing = false;
+      }
       const updateExpirationTime = update.expirationTime;
-      if (updateExpirationTime < renderExpirationTime) {
+      if (
+        // Check if this update should be skipped
+        updateExpirationTime < renderExpirationTime &&
+        // If we're currently rebasing, don't skip this update if we already
+        // committed it.
+        (!isRebasing || updateExpirationTime < rebaseTime)
+      ) {
         // Priority is insufficient. Skip this update. If this is the first
         // skipped update, the previous update/state is the new base
         // update/state.
-        if (!didSkip) {
-          didSkip = true;
+        if (newRebaseTime === NoWork) {
           newBaseUpdate = prevUpdate;
           newBaseState = newState;
+          newRebaseTime = renderExpirationTime;
         }
         // Update the remaining priority in the queue.
         if (updateExpirationTime > remainingExpirationTime) {
@@ -787,7 +813,6 @@ function updateReducer<S, I, A>(
           updateExpirationTime,
           update.suspenseConfig,
         );
-
         // Process this update.
         if (update.eagerReducer === reducer) {
           // If this update was processed eagerly, and its reducer matches the
@@ -802,9 +827,11 @@ function updateReducer<S, I, A>(
       update = update.next;
     } while (update !== null && update !== first);
 
-    if (!didSkip) {
-      newBaseUpdate = prevUpdate;
+    if (newRebaseTime === NoWork) {
       newBaseState = newState;
+      newBaseUpdate = prevUpdate;
+    } else {
+      newRebaseEnd = prevUpdate;
     }
 
     // Mark that the fiber performed work, but only if the new state is
@@ -814,8 +841,10 @@ function updateReducer<S, I, A>(
     }
 
     hook.memoizedState = newState;
-    hook.baseUpdate = newBaseUpdate;
     hook.baseState = newBaseState;
+    hook.baseUpdate = newBaseUpdate;
+    hook.rebaseEnd = newRebaseEnd;
+    hook.rebaseTime = newRebaseTime;
 
     queue.lastRenderedState = newState;
   }
