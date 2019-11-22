@@ -97,7 +97,10 @@ import {
 import {Callback, ShouldCapture, DidCapture} from 'shared/ReactSideEffectTags';
 import {ClassComponent} from 'shared/ReactWorkTags';
 
-import {debugRenderPhaseSideEffectsForStrictMode} from 'shared/ReactFeatureFlags';
+import {
+  debugRenderPhaseSideEffectsForStrictMode,
+  rebasedUpdatesNeverUncommit,
+} from 'shared/ReactFeatureFlags';
 
 import {StrictMode} from './ReactTypeOfMode';
 import {
@@ -479,7 +482,8 @@ export function processUpdateQueue<State>(
       updateExpirationTime < renderExpirationTime &&
       // If we're currently rebasing, don't skip this update if we already
       // committed it.
-      (!isRebasing || updateExpirationTime < rebaseTime)
+      (!rebasedUpdatesNeverUncommit ||
+        (!isRebasing || updateExpirationTime < rebaseTime))
     ) {
       // This update does not have sufficient priority. Skip it.
       if (newRebaseTime === NoWork) {

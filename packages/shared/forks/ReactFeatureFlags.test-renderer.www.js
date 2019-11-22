@@ -36,6 +36,7 @@ export const disableLegacyContext = false;
 export const disableSchedulerTimeoutBasedOnReactExpirationTime = false;
 export const enableTrustedTypesIntegration = false;
 export const enableNativeTargetAsInstance = false;
+export const rebasedUpdatesNeverUncommit = __EXPERIMENTAL__;
 
 // Only used in www builds.
 export function addUserTimingListener() {

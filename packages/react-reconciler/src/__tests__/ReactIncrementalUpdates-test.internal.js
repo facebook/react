@@ -654,127 +654,133 @@ describe('ReactIncrementalUpdates', () => {
     });
   });
 
-  it('when rebasing, does not exclude updates that were already committed, regardless of priority', async () => {
-    const {useState, useLayoutEffect} = React;
+  it.experimental(
+    'when rebasing, does not exclude updates that were already committed, regardless of priority',
+    async () => {
+      const {useState, useLayoutEffect} = React;
 
-    let pushToLog;
-    function App() {
-      const [log, setLog] = useState('');
-      pushToLog = msg => {
-        setLog(prevLog => prevLog + msg);
-      };
+      let pushToLog;
+      function App() {
+        const [log, setLog] = useState('');
+        pushToLog = msg => {
+          setLog(prevLog => prevLog + msg);
+        };
 
-      useLayoutEffect(
-        () => {
-          Scheduler.unstable_yieldValue('Committed: ' + log);
-          if (log === 'B') {
+        useLayoutEffect(
+          () => {
+            Scheduler.unstable_yieldValue('Committed: ' + log);
+            if (log === 'B') {
+              // Right after B commits, schedule additional updates.
+              Scheduler.unstable_runWithPriority(
+                Scheduler.unstable_UserBlockingPriority,
+                () => {
+                  pushToLog('C');
+                },
+              );
+              setLog(prevLog => prevLog + 'D');
+            }
+          },
+          [log],
+        );
+
+        return log;
+      }
+
+      const root = ReactNoop.createRoot();
+      await ReactNoop.act(async () => {
+        root.render(<App />);
+      });
+      expect(Scheduler).toHaveYielded(['Committed: ']);
+      expect(root).toMatchRenderedOutput('');
+
+      await ReactNoop.act(async () => {
+        pushToLog('A');
+        Scheduler.unstable_runWithPriority(
+          Scheduler.unstable_UserBlockingPriority,
+          () => {
+            pushToLog('B');
+          },
+        );
+      });
+      expect(Scheduler).toHaveYielded([
+        // A and B are pending. B is higher priority, so we'll render that first.
+        'Committed: B',
+        // Because A comes first in the queue, we're now in rebase mode. B must
+        // be rebased on top of A. Also, in a layout effect, we received two new
+        // updates: C and D. C is user-blocking and D is synchronous.
+        //
+        // First render the synchronous update. What we're testing here is that
+        // B *is not dropped* even though it has lower than sync priority. That's
+        // because we already committed it. However, this render should not
+        // include C, because that update wasn't already committed.
+        'Committed: BD',
+        'Committed: BCD',
+        'Committed: ABCD',
+      ]);
+      expect(root).toMatchRenderedOutput('ABCD');
+    },
+  );
+
+  it.experimental(
+    'when rebasing, does not exclude updates that were already committed, regardless of priority (classes)',
+    async () => {
+      let pushToLog;
+      class App extends React.Component {
+        state = {log: ''};
+        pushToLog = msg => {
+          this.setState(prevState => ({log: prevState.log + msg}));
+        };
+        componentDidUpdate() {
+          Scheduler.unstable_yieldValue('Committed: ' + this.state.log);
+          if (this.state.log === 'B') {
             // Right after B commits, schedule additional updates.
             Scheduler.unstable_runWithPriority(
               Scheduler.unstable_UserBlockingPriority,
               () => {
-                pushToLog('C');
+                this.pushToLog('C');
               },
             );
-            setLog(prevLog => prevLog + 'D');
+            this.pushToLog('D');
           }
-        },
-        [log],
-      );
-
-      return log;
-    }
-
-    const root = ReactNoop.createRoot();
-    await ReactNoop.act(async () => {
-      root.render(<App />);
-    });
-    expect(Scheduler).toHaveYielded(['Committed: ']);
-    expect(root).toMatchRenderedOutput('');
-
-    await ReactNoop.act(async () => {
-      pushToLog('A');
-      Scheduler.unstable_runWithPriority(
-        Scheduler.unstable_UserBlockingPriority,
-        () => {
-          pushToLog('B');
-        },
-      );
-    });
-    expect(Scheduler).toHaveYielded([
-      // A and B are pending. B is higher priority, so we'll render that first.
-      'Committed: B',
-      // Because A comes first in the queue, we're now in rebase mode. B must
-      // be rebased on top of A. Also, in a layout effect, we received two new
-      // updates: C and D. C is user-blocking and D is synchronous.
-      //
-      // First render the synchronous update. What we're testing here is that
-      // B *is not dropped* even though it has lower than sync priority. That's
-      // because we already committed it. However, this render should not
-      // include C, because that update wasn't already committed.
-      'Committed: BD',
-      'Committed: BCD',
-      'Committed: ABCD',
-    ]);
-    expect(root).toMatchRenderedOutput('ABCD');
-  });
-
-  it('when rebasing, does not exclude updates that were already committed, regardless of priority (classes)', async () => {
-    let pushToLog;
-    class App extends React.Component {
-      state = {log: ''};
-      pushToLog = msg => {
-        this.setState(prevState => ({log: prevState.log + msg}));
-      };
-      componentDidUpdate() {
-        Scheduler.unstable_yieldValue('Committed: ' + this.state.log);
-        if (this.state.log === 'B') {
-          // Right after B commits, schedule additional updates.
-          Scheduler.unstable_runWithPriority(
-            Scheduler.unstable_UserBlockingPriority,
-            () => {
-              this.pushToLog('C');
-            },
-          );
-          this.pushToLog('D');
+        }
+        render() {
+          pushToLog = this.pushToLog;
+          return this.state.log;
         }
       }
-      render() {
-        pushToLog = this.pushToLog;
-        return this.state.log;
-      }
-    }
 
-    const root = ReactNoop.createRoot();
-    await ReactNoop.act(async () => {
-      root.render(<App />);
-    });
-    expect(Scheduler).toHaveYielded([]);
-    expect(root).toMatchRenderedOutput('');
+      const root = ReactNoop.createRoot();
+      await ReactNoop.act(async () => {
+        root.render(<App />);
+      });
+      expect(Scheduler).toHaveYielded([]);
+      expect(root).toMatchRenderedOutput('');
 
-    await ReactNoop.act(async () => {
-      pushToLog('A');
-      Scheduler.unstable_runWithPriority(
-        Scheduler.unstable_UserBlockingPriority,
-        () => {
-          pushToLog('B');
-        },
-      );
-    });
-    expect(Scheduler).toHaveYielded([
-      // A and B are pending. B is higher priority, so we'll render that first.
-      'Committed: B',
-      // Because A comes first in the queue, we're now in rebase mode. B must
-      // be rebased on top of A. Also, in a layout effect, we received two new
-      // updates: C and D. C is user-blocking and D is synchronous.
-      //
-      // First render the synchronous update. What we're testing here is that
-      // B *is not dropped* even though it has lower than sync priority. That's
-      // because we already committed it. However, this render should not
-      // include C, because that update wasn't already committed.
-      'Committed: BD',
-      'Committed: BCD',
-      'Committed: ABCD',
-    ]);
-    expect(root).toMatchRenderedOutput('ABCD');
-  });
+      await ReactNoop.act(async () => {
+        pushToLog('A');
+        Scheduler.unstable_runWithPriority(
+          Scheduler.unstable_UserBlockingPriority,
+          () => {
+            pushToLog('B');
+          },
+        );
+      });
+      expect(Scheduler).toHaveYielded([
+        // A and B are pending. B is higher priority, so we'll render that first.
+        'Committed: B',
+        // Because A comes first in the queue, we're now in rebase mode. B must
+        // be rebased on top of A. Also, in a layout effect, we received two new
+        // updates: C and D. C is user-blocking and D is synchronous.
+        //
+        // First render the synchronous update. What we're testing here is that
+        // B *is not dropped* even though it has lower than sync priority. That's
+        // because we already committed it. However, this render should not
+        // include C, because that update wasn't already committed.
+        'Committed: BD',
+        'Committed: BCD',
+        'Committed: ABCD',
+      ]);
+      expect(root).toMatchRenderedOutput('ABCD');
+    },
+  );
 });

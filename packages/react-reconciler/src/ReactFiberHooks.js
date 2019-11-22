@@ -20,6 +20,7 @@ import type {SuspenseConfig} from './ReactFiberSuspenseConfig';
 import type {ReactPriorityLevel} from './SchedulerWithReactIntegration';
 
 import ReactSharedInternals from 'shared/ReactSharedInternals';
+import {rebasedUpdatesNeverUncommit} from 'shared/ReactFeatureFlags';
 
 import {NoWork} from './ReactFiberExpirationTime';
 import {readContext} from './ReactFiberNewContext';
@@ -776,16 +777,17 @@ function updateReducer<S, I, A>(
     let isRebasing = rebaseTime !== NoWork;
 
     do {
+      const updateExpirationTime = update.expirationTime;
       if (prevUpdate === rebaseEnd) {
         isRebasing = false;
       }
-      const updateExpirationTime = update.expirationTime;
       if (
         // Check if this update should be skipped
         updateExpirationTime < renderExpirationTime &&
         // If we're currently rebasing, don't skip this update if we already
         // committed it.
-        (!isRebasing || updateExpirationTime < rebaseTime)
+        (!rebasedUpdatesNeverUncommit ||
+          (!isRebasing || updateExpirationTime < rebaseTime))
       ) {
         // Priority is insufficient. Skip this update. If this is the first
         // skipped update, the previous update/state is the new base
