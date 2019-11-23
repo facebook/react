@@ -58,20 +58,22 @@ export function injectInternals(internals: Object): boolean {
     // We have successfully injected, so now it is safe to set up hooks.
     if (__DEV__) {
       // Only used by Fast Refresh
-      onScheduleFiberRoot = (root, children) => {
-        try {
-          hook.onScheduleFiberRoot(rendererID, root, children);
-        } catch (err) {
-          if (__DEV__ && !hasLoggedError) {
-            hasLoggedError = true;
-            warningWithoutStack(
-              false,
-              'React DevTools encountered an error: %s',
-              err,
-            );
+      if (typeof hook.onScheduleFiberRoot === 'function') {
+        onScheduleFiberRoot = (root, children) => {
+          try {
+            hook.onScheduleFiberRoot(rendererID, root, children);
+          } catch (err) {
+            if (__DEV__ && !hasLoggedError) {
+              hasLoggedError = true;
+              warningWithoutStack(
+                false,
+                'React DevTools encountered an error: %s',
+                err,
+              );
+            }
           }
-        }
-      };
+        };
+      }
     }
     onCommitFiberRoot = (root, expirationTime) => {
       try {
