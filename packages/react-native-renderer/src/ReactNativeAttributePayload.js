@@ -79,9 +79,6 @@ function restoreDeletedValuesInNestedArray(
       if (typeof nextProp === 'function') {
         nextProp = true;
       }
-      if (typeof nextProp === 'undefined') {
-        nextProp = null;
-      }
 
       if (typeof attributeConfig !== 'object') {
         // case: !Object is the default case
