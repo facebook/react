@@ -68,8 +68,13 @@ let helpersByRoot: Map<FiberRoot, RendererHelpers> = new Map();
 
 // We keep track of mounted roots so we can schedule updates.
 let mountedRoots: Set<FiberRoot> = new Set();
-// If a root captures an error, we add its element to this Map so we can retry on edit.
-let failedRoots: Map<FiberRoot, ReactNodeList> = new Map();
+// If a root captures an error, we remember it so we can retry on edit.
+let failedRoots: Set<FiberRoot> = new Set();
+// In environments that support WeakMap, we also remember the last element for every root.
+// $FlowIssue
+let rootElements: WeakMap<any, Family> | null = // $FlowIssue
+  typeof WeakMap === 'function' ? new WeakMap() : null;
+
 let didSomeRootFailOnMount = false;
 
 function computeFullKey(signature: Signature): string {
@@ -216,17 +221,24 @@ export function performReactRefresh(): RefreshUpdate | null {
     // If we don't do this, there is a risk they will be mutated while
     // we iterate over them. For example, trying to recover a failed root
     // may cause another root to be added to the failed list -- an infinite loop.
-    let failedRootsSnapshot = cloneMap(failedRoots);
+    let failedRootsSnapshot = cloneSet(failedRoots);
     let mountedRootsSnapshot = cloneSet(mountedRoots);
     let helpersByRootSnapshot = cloneMap(helpersByRoot);
 
-    failedRootsSnapshot.forEach((element, root) => {
+    failedRootsSnapshot.forEach(root => {
       const helpers = helpersByRootSnapshot.get(root);
       if (helpers === undefined) {
         throw new Error(
           'Could not find helpers for a root. This is a bug in React Refresh.',
         );
       }
+      if (rootElements === null) {
+        return;
+      }
+      if (!rootElements.has(root)) {
+        return;
+      }
+      const element = rootElements.get(root);
       try {
         helpers.scheduleRoot(root, element);
       } catch (err) {
@@ -411,7 +423,11 @@ export function injectIntoGlobalHook(globalObject: any): void {
         inject(injected) {
           return nextID++;
         },
-        onScheduleFiberRoot(id: number, root: FiberRoot, children: mixed) {},
+        onScheduleFiberRoot(
+          id: number,
+          root: FiberRoot,
+          children: ReactNodeList,
+        ) {},
         onCommitFiberRoot(
           id: number,
           root: FiberRoot,
@@ -447,6 +463,9 @@ export function injectIntoGlobalHook(globalObject: any): void {
       // If it was intentionally scheduled, don't attempt to restore.
       // This includes intentionally scheduled unmounts.
       failedRoots.delete(root);
+      if (rootElements !== null) {
+        rootElements.set(root, children);
+      }
       return oldOnScheduleFiberRoot.apply(this, arguments);
     };
     hook.onCommitFiberRoot = function(
@@ -488,8 +507,7 @@ export function injectIntoGlobalHook(globalObject: any): void {
           mountedRoots.delete(root);
           if (didError) {
             // We'll remount it on future edits.
-            // Remember what was rendered so we can restore it.
-            failedRoots.set(root, alternate.memoizedState.element);
+            failedRoots.add(root);
           } else {
             helpersByRoot.delete(root);
           }

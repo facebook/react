@@ -14,6 +14,7 @@ import {inferPriorityFromExpirationTime} from './ReactFiberExpirationTime';
 import type {Fiber} from './ReactFiber';
 import type {FiberRoot} from './ReactFiberRoot';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
+import type {ReactNodeList} from 'shared/ReactTypes';
 
 import {DidCapture} from 'shared/ReactSideEffectTags';
 import warningWithoutStack from 'shared/warningWithoutStack';
@@ -124,7 +125,7 @@ export function injectInternals(internals: Object): boolean {
   return true;
 }
 
-export function onScheduleRoot(root: FiberRoot, children: mixed) {
+export function onScheduleRoot(root: FiberRoot, children: ReactNodeList) {
   if (typeof onScheduleFiberRoot === 'function') {
     onScheduleFiberRoot(root, children);
   }
