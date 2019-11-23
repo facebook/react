@@ -347,7 +347,7 @@ class ReactTestInstance {
   findByType(type: any): ReactTestInstance {
     return expectOne(
       this.findAllByType(type, {deep: false}),
-      `with node type: "${getComponentName(type)}"`,
+      `with node type: "${getComponentName(type) || 'Unknown'}"`,
     );
   }
 
