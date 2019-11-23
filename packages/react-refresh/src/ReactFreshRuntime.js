@@ -411,6 +411,7 @@ export function injectIntoGlobalHook(globalObject: any): void {
         inject(injected) {
           return nextID++;
         },
+        onScheduleFiberRoot(id: number, root: FiberRoot, children: mixed) {},
         onCommitFiberRoot(
           id: number,
           root: FiberRoot,
@@ -437,6 +438,17 @@ export function injectIntoGlobalHook(globalObject: any): void {
 
     // We also want to track currently mounted roots.
     const oldOnCommitFiberRoot = hook.onCommitFiberRoot;
+    const oldOnScheduleFiberRoot = hook.onScheduleFiberRoot || (() => {});
+    hook.onScheduleFiberRoot = function(
+      id: number,
+      root: FiberRoot,
+      children: mixed,
+    ) {
+      // If it was intentionally scheduled, don't attempt to restore.
+      // This includes intentionally scheduled unmounts.
+      failedRoots.delete(root);
+      return oldOnScheduleFiberRoot.apply(this, arguments);
+    };
     hook.onCommitFiberRoot = function(
       id: number,
       root: FiberRoot,
@@ -493,10 +505,6 @@ export function injectIntoGlobalHook(globalObject: any): void {
             // TODO: Maybe we could fix this as the same time as when we fix
             // DevTools to not depend on `alternate.memoizedState.element`.
             didSomeRootFailOnMount = true;
-          } else if (!didError && failedRoots.has(root)) {
-            // The error is fixed but the component is still unmounted.
-            // This means that the unmount was not caused by a failed refresh.
-            failedRoots.delete(root);
           }
         }
       } else {
