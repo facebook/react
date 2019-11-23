@@ -229,6 +229,9 @@ export function updateContainer(
   parentComponent: ?React$Component<any, any>,
   callback: ?Function,
 ): ExpirationTime {
+  if (__DEV__) {
+    onScheduleRoot(container, element);
+  }
   const current = container.current;
   const currentTime = requestCurrentTimeForUpdate();
   if (__DEV__) {
@@ -288,9 +291,6 @@ export function updateContainer(
 
   enqueueUpdate(current, update);
   scheduleWork(current, expirationTime);
-  if (__DEV__) {
-    onScheduleRoot(container, element);
-  }
 
   return expirationTime;
 }

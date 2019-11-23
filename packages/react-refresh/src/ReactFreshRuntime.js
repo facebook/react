@@ -70,12 +70,15 @@ let helpersByRoot: Map<FiberRoot, RendererHelpers> = new Map();
 let mountedRoots: Set<FiberRoot> = new Set();
 // If a root captures an error, we remember it so we can retry on edit.
 let failedRoots: Set<FiberRoot> = new Set();
+
 // In environments that support WeakMap, we also remember the last element for every root.
+// It needs to be weak because we do this even for roots that failed to mount.
+// If there is no WeakMap, we won't attempt to do retrying.
 // $FlowIssue
 let rootElements: WeakMap<any, Family> | null = // $FlowIssue
   typeof WeakMap === 'function' ? new WeakMap() : null;
 
-let didSomeRootFailOnMount = false;
+let isPerformingRefresh = false;
 
 function computeFullKey(signature: Signature): string {
   if (signature.fullKey !== null) {
@@ -176,11 +179,20 @@ function cloneSet<T>(set: Set<T>): Set<T> {
 }
 
 export function performReactRefresh(): RefreshUpdate | null {
-  if (__DEV__) {
-    if (pendingUpdates.length === 0) {
-      return null;
-    }
+  if (!__DEV__) {
+    throw new Error(
+      'Unexpected call to React Refresh in a production environment.',
+    );
+  }
+  if (pendingUpdates.length === 0) {
+    return null;
+  }
+  if (isPerformingRefresh) {
+    return null;
+  }
 
+  isPerformingRefresh = true;
+  try {
     const staleFamilies = new Set();
     const updatedFamilies = new Set();
 
@@ -232,6 +244,9 @@ export function performReactRefresh(): RefreshUpdate | null {
           'Could not find helpers for a root. This is a bug in React Refresh.',
         );
       }
+      if (!failedRoots.has(root)) {
+        // No longer failed.
+      }
       if (rootElements === null) {
         return;
       }
@@ -256,6 +271,9 @@ export function performReactRefresh(): RefreshUpdate | null {
           'Could not find helpers for a root. This is a bug in React Refresh.',
         );
       }
+      if (!mountedRoots.has(root)) {
+        // No longer mounted.
+      }
       try {
         helpers.scheduleRefresh(root, update);
       } catch (err) {
@@ -270,10 +288,8 @@ export function performReactRefresh(): RefreshUpdate | null {
       throw firstError;
     }
     return update;
-  } else {
-    throw new Error(
-      'Unexpected call to React Refresh in a production environment.',
-    );
+  } finally {
+    isPerformingRefresh = false;
   }
 }
 
@@ -460,11 +476,13 @@ export function injectIntoGlobalHook(globalObject: any): void {
       root: FiberRoot,
       children: mixed,
     ) {
-      // If it was intentionally scheduled, don't attempt to restore.
-      // This includes intentionally scheduled unmounts.
-      failedRoots.delete(root);
-      if (rootElements !== null) {
-        rootElements.set(root, children);
+      if (!isPerformingRefresh) {
+        // If it was intentionally scheduled, don't attempt to restore.
+        // This includes intentionally scheduled unmounts.
+        failedRoots.delete(root);
+        if (rootElements !== null) {
+          rootElements.set(root, children);
+        }
       }
       return oldOnScheduleFiberRoot.apply(this, arguments);
     };
@@ -512,17 +530,9 @@ export function injectIntoGlobalHook(globalObject: any): void {
             helpersByRoot.delete(root);
           }
         } else if (!wasMounted && !isMounted) {
-          if (didError && !failedRoots.has(root)) {
-            // The root had an error during the initial mount.
-            // We can't read its last element from the memoized state
-            // because there was no previously committed alternate.
-            // Ideally, it would be nice if we had a way to extract
-            // the last attempted rendered element, but accessing the update queue
-            // would tie this package too closely to the reconciler version.
-            // So instead, we just set a flag.
-            // TODO: Maybe we could fix this as the same time as when we fix
-            // DevTools to not depend on `alternate.memoizedState.element`.
-            didSomeRootFailOnMount = true;
+          if (didError) {
+            // We'll remount it on future edits.
+            failedRoots.add(root);
           }
         }
       } else {
@@ -540,7 +550,8 @@ export function injectIntoGlobalHook(globalObject: any): void {
 }
 
 export function hasUnrecoverableErrors() {
-  return didSomeRootFailOnMount;
+  // TODO: delete this after removing dependency in RN.
+  return false;
 }
 
 // Exposed for testing.
