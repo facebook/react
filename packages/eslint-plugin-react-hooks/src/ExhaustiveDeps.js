@@ -54,12 +54,136 @@ export default {
     return {
       FunctionExpression: visitFunctionExpression,
       ArrowFunctionExpression: visitFunctionExpression,
+      ExpressionStatement: visitExpressionStatement,
     };
 
+    /**
+     * Visitor only for identifier callbacks
+     */
+    function visitExpressionStatement(node) {
+      if (
+        node.type === 'ExpressionStatement' &&
+        node.expression.type === 'CallExpression'
+      ) {
+        const callbackIndex = getReactiveHookCallbackIndex(
+          node.expression.callee,
+          options,
+        );
+        if (callbackIndex === null) {
+          return;
+        }
+        const reactiveHook = node.expression.callee;
+        const reactiveHookName = getNodeWithoutReactNamespace(reactiveHook)
+          .name;
+        const isEffect = reactiveHookName.endsWith('Effect');
+
+        // Get the declared dependencies for this reactive hook. If there is no
+        // second argument then the reactive callback will re-run on every render.
+        // So no need to check for dependency inclusion.
+        const depsIndex = callbackIndex + 1;
+        const declaredDependenciesNode = node.expression.arguments[depsIndex];
+        if (!declaredDependenciesNode && !isEffect) {
+          // These are only used for optimization.
+          if (
+            reactiveHookName === 'useMemo' ||
+            reactiveHookName === 'useCallback'
+          ) {
+            // TODO: Can this have an autofix?
+            context.report({
+              node: node.expression.callee,
+              message:
+                `React Hook ${reactiveHookName} does nothing when called with ` +
+                `only one argument. Did you forget to pass an array of ` +
+                `dependencies?`,
+            });
+          }
+          return;
+        }
+
+        const scope = context.getScope();
+        if (isEffect) {
+          const firstArgument = node.expression.arguments[0];
+          const secondArgument = node.expression.arguments[1];
+          if (firstArgument && secondArgument) {
+            if (firstArgument.type === 'Identifier') {
+              const nameIdentifier = firstArgument.name;
+              const firstArgumentIndex = scope.variables.findIndex(elem => {
+                return elem.name === nameIdentifier;
+              });
+              if (firstArgumentIndex === -1) {
+                return;
+              }
+              const identifierDefinitionArray =
+                scope.variables[firstArgumentIndex].identifiers;
+
+              const definitionNode = identifierDefinitionArray.find(
+                elem => elem.name === nameIdentifier,
+              );
+
+              // only check for variables whose value is result of
+              // function calls.
+              // const A = someFunctiongetter()
+              const isValidScenarioToCheck =
+                definitionNode.type === 'Identifier' &&
+                definitionNode.parent &&
+                definitionNode.parent.type === 'VariableDeclarator' &&
+                definitionNode.parent.init &&
+                definitionNode.parent.init.type === 'CallExpression';
+              if (
+                definitionNode.parent.type === 'FunctionDeclaration' ||
+                (definitionNode.parent.type === 'VariableDeclarator' &&
+                  (definitionNode.parent.init.type ===
+                    'ArrowFunctionExpression' ||
+                    definitionNode.parent.init.type === 'FunctionExpression'))
+                // Should check for non function reference based type ?.
+                // I think no as , the error will be thrown by react itself in that case
+              ) {
+                context.report({
+                  node: definitionNode.parent,
+                  message:
+                    `React Hook ${reactiveHookName} has a Identifier callback . ` +
+                    `Consider pulling ${nameIdentifier} logic into an inline function ` +
+                    `and pass it as the  first argument to the hook`,
+                });
+              }
+              // Nothing to do when it is not a valid scenario to check
+              if (!isValidScenarioToCheck) {
+                return;
+              }
+              if (secondArgument.type === 'ArrayExpression') {
+                let isIdentifierInDependencyArray =
+                  secondArgument.elements.findIndex(elem => {
+                    if (
+                      elem.type === 'Identifier' &&
+                      elem.name === nameIdentifier
+                    ) {
+                      return true;
+                    }
+                    return false;
+                  }) !== -1;
+
+                if (!isIdentifierInDependencyArray) {
+                  context.report({
+                    node: node.expression.callee,
+                    message:
+                      `React Hook ${reactiveHookName} has a missing dependency:` +
+                      `${nameIdentifier}. Either include it or remove the dependency array.`,
+                  });
+                }
+                // else {
+                //   // when things are right
+                // }
+              }
+            }
+          }
+        }
+      }
+    }
     /**
      * Visitor for both function expressions and arrow function expressions.
      */
     function visitFunctionExpression(node) {
+      // console.log('node.name', node.name);
       // We only want to lint nodes which are reactive hook callbacks.
       if (
         (node.type !== 'FunctionExpression' &&
@@ -73,10 +197,10 @@ export default {
         node.parent.callee,
         options,
       );
+
       if (node.parent.arguments[callbackIndex] !== node) {
         return;
       }
-
       // Get the reactive hook node.
       const reactiveHook = node.parent.callee;
       const reactiveHookName = getNodeWithoutReactNamespace(reactiveHook).name;
@@ -138,6 +262,7 @@ export default {
       let componentScope = null;
       {
         let currentScope = scope.upper;
+
         while (currentScope) {
           pureScopes.add(currentScope);
           if (currentScope.type === 'function') {
@@ -359,6 +484,11 @@ export default {
 
       function gatherDependenciesRecursively(currentScope) {
         for (const reference of currentScope.references) {
+          // console.log(
+          //   'TCL: gatherDependenciesRecursively -> reference',
+          //   reference,
+          // );
+
           // If this reference is not resolved or it is not declared in a pure
           // scope then we don't care about this reference.
           if (!reference.resolved) {
@@ -367,7 +497,6 @@ export default {
           if (!pureScopes.has(reference.resolved.scope)) {
             continue;
           }
-
           // Narrow the scope of a dependency if it is, say, a member expression.
           // Then normalize the narrowed dependency.
           const referenceNode = fastFindReferenceWithParent(

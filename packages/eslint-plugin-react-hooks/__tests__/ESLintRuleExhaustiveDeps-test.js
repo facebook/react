@@ -1055,6 +1055,16 @@ const tests = {
         }
       `,
     },
+    {
+      code: `
+        const FooContext = React.createContext(() => {});
+        function Example() {
+          const foo = useContext(FooContext);
+        
+          useEffect(foo, [foo]);
+        }
+      `,
+    },
   ],
   invalid: [
     {
@@ -5996,6 +6006,102 @@ const tests = {
             },
           ],
         },
+      ],
+    },
+    {
+      code: `
+        const FooContext = React.createContext(() => {});
+        function Example() {
+          const foo = useContext(FooContext);
+        
+          useEffect(foo, []);
+        }
+      `,
+      errors: [
+        'React Hook useEffect has a missing dependency:foo. ' +
+          `Either include it or remove the dependency array.`,
+      ],
+    },
+    {
+      code: `
+        function Example() {
+          const foo = someMemoizedFunctionGiver();
+          useEffect(foo, []);
+        }
+      `,
+      errors: [
+        'React Hook useEffect has a missing dependency:foo. ' +
+          `Either include it or remove the dependency array.`,
+      ],
+    },
+    {
+      code: `
+        function Example() {
+          const foo = someMemoizedFunctionGiver();
+          React.useEffect(foo, []);
+        }
+      `,
+      errors: [
+        'React Hook useEffect has a missing dependency:foo. ' +
+          `Either include it or remove the dependency array.`,
+      ],
+    },
+    {
+      code: `
+        const FooContext = React.createContext(() => {});
+        function Example() {
+          const foo = useContext(FooContext);
+          function A() {}
+          useEffect(A, []);
+        }
+      `,
+      errors: [
+        `React Hook useEffect has a Identifier callback . ` +
+          `Consider pulling A logic into an inline function and pass it as the  first argument to the hook`,
+      ],
+    },
+    {
+      code: `
+        const FooContext = React.createContext(() => {});
+        function Example() {
+          const foo = useContext(FooContext);
+          const A = function() {
+        
+          }
+          useEffect(A, [])
+        }
+      `,
+      errors: [
+        `React Hook useEffect has a Identifier callback . ` +
+          `Consider pulling A logic into an inline function and pass it as the  first argument to the hook`,
+      ],
+    },
+    {
+      code: `
+        const FooContext = React.createContext(() => {});
+        function Example() {
+          const foo = useContext(FooContext);
+          const A = () => {};
+          useEffect(A, []);
+        }
+      `,
+      errors: [
+        `React Hook useEffect has a Identifier callback . ` +
+          `Consider pulling A logic into an inline function and pass it as the  first argument to the hook`,
+      ],
+    },
+    {
+      code: `
+        const FooContext = React.createContext(() => {});
+        function Example() {
+          const foo = useContext(FooContext);
+          const A = () => {};
+          useEffect(A, []);
+        }
+      `,
+      errors: [
+        `React Hook useEffect has a Identifier callback . ` +
+          `Consider pulling A logic into an inline function and pass it as the  first argument to the hook`,
       ],
     },
   ],
