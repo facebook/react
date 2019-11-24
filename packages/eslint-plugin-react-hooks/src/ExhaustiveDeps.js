@@ -183,7 +183,6 @@ export default {
      * Visitor for both function expressions and arrow function expressions.
      */
     function visitFunctionExpression(node) {
-      // console.log('node.name', node.name);
       // We only want to lint nodes which are reactive hook callbacks.
       if (
         (node.type !== 'FunctionExpression' &&
@@ -484,11 +483,6 @@ export default {
 
       function gatherDependenciesRecursively(currentScope) {
         for (const reference of currentScope.references) {
-          // console.log(
-          //   'TCL: gatherDependenciesRecursively -> reference',
-          //   reference,
-          // );
-
           // If this reference is not resolved or it is not declared in a pure
           // scope then we don't care about this reference.
           if (!reference.resolved) {
