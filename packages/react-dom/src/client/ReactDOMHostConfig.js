@@ -7,7 +7,11 @@
  * @flow
  */
 
-import {precacheFiberNode, updateFiberProps} from './ReactDOMComponentTree';
+import {
+  precacheFiberNode,
+  updateFiberProps,
+  getClosestInstanceFromNode,
+} from './ReactDOMComponentTree';
 import {
   createElement,
   createTextNode,
@@ -51,6 +55,7 @@ import {
   addRootEventTypesForResponderInstance,
   mountEventResponder,
   unmountEventResponder,
+  dispatchEventForResponderEventSystem,
 } from '../events/DOMEventResponderSystem';
 import {retryIfBlockedOn} from '../events/ReactDOMEventReplaying';
 
@@ -99,11 +104,21 @@ export type ChildSet = void; // Unused
 export type TimeoutHandle = TimeoutID;
 export type NoTimeout = -1;
 
+type SelectionInformation = {|
+  activeElementDetached: null | HTMLElement,
+  focusedElem: null | HTMLElement,
+  selectionRange: mixed,
+|};
+
 import {
   enableSuspenseServerRenderer,
   enableFlareAPI,
   enableFundamentalAPI,
 } from 'shared/ReactFeatureFlags';
+import {
+  RESPONDER_EVENT_SYSTEM,
+  IS_PASSIVE,
+} from 'legacy-events/EventSystemFlags';
 
 let SUPPRESS_HYDRATION_WARNING;
 if (__DEV__) {
@@ -118,7 +133,7 @@ const SUSPENSE_FALLBACK_START_DATA = '$!';
 const STYLE = 'style';
 
 let eventsEnabled: ?boolean = null;
-let selectionInformation: ?mixed = null;
+let selectionInformation: null | SelectionInformation = null;
 
 function shouldAutoFocusHostComponent(type: string, props: Props): boolean {
   switch (type) {
@@ -196,9 +211,16 @@ export function prepareForCommit(containerInfo: Container): void {
 
 export function resetAfterCommit(containerInfo: Container): void {
   restoreSelection(selectionInformation);
-  selectionInformation = null;
   ReactBrowserEventEmitterSetEnabled(eventsEnabled);
   eventsEnabled = null;
+  if (enableFlareAPI) {
+    const activeElementDetached = (selectionInformation: any)
+      .activeElementDetached;
+    if (activeElementDetached !== null) {
+      dispatchDetachedBlur(activeElementDetached);
+    }
+  }
+  selectionInformation = null;
 }
 
 export function createInstance(
@@ -440,6 +462,52 @@ export function insertInContainerBefore(
     (container.parentNode: any).insertBefore(child, beforeChild);
   } else {
     container.insertBefore(child, beforeChild);
+  }
+}
+
+function dispatchBeforeDetachedBlur(target: HTMLElement): void {
+  const targetInstance = getClosestInstanceFromNode(target);
+  ((selectionInformation: any): SelectionInformation).activeElementDetached = target;
+
+  dispatchEventForResponderEventSystem(
+    'beforeblur',
+    targetInstance,
+    ({
+      target,
+      timeStamp: Date.now(),
+    }: any),
+    target,
+    RESPONDER_EVENT_SYSTEM | IS_PASSIVE,
+  );
+}
+
+function dispatchDetachedBlur(target: HTMLElement): void {
+  dispatchEventForResponderEventSystem(
+    'blur',
+    null,
+    ({
+      isTargetAttached: false,
+      target,
+      timeStamp: Date.now(),
+    }: any),
+    target,
+    RESPONDER_EVENT_SYSTEM | IS_PASSIVE,
+  );
+}
+
+// This is a specific event for the React Flare
+// event system, so event responders can act
+// accordingly to a DOM node being unmounted that
+// previously had active document focus.
+export function beforeRemoveInstance(
+  instance: Instance | TextInstance | SuspenseInstance,
+): void {
+  if (
+    enableFlareAPI &&
+    selectionInformation &&
+    instance === selectionInformation.focusedElem
+  ) {
+    dispatchBeforeDetachedBlur(((instance: any): HTMLElement));
   }
 }
 
@@ -975,4 +1043,8 @@ export function unmountFundamentalComponent(
       onUnmount(null, instance, props, state);
     }
   }
+}
+
+export function getInstanceFromNode(node: HTMLElement): null | Object {
+  return getClosestInstanceFromNode(node) || null;
 }

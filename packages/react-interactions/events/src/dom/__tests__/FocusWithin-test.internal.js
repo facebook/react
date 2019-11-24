@@ -60,7 +60,7 @@ describe.each(table)('FocusWithin responder', hasPointerEvents => {
           onFocusWithinChange,
           onFocusWithinVisibleChange,
         });
-        return <div ref={ref} listeners={listener} />;
+        return <div ref={ref} DEPRECATED_flareListeners={listener} />;
       };
       ReactDOM.render(<Component />, container);
     });
@@ -77,23 +77,24 @@ describe.each(table)('FocusWithin responder', hasPointerEvents => {
   describe('onFocusWithinChange', () => {
     let onFocusWithinChange, ref, innerRef, innerRef2;
 
+    const Component = ({show}) => {
+      const listener = useFocusWithin({
+        onFocusWithinChange,
+      });
+      return (
+        <div ref={ref} DEPRECATED_flareListeners={listener}>
+          {show && <input ref={innerRef} />}
+          <div ref={innerRef2} />
+        </div>
+      );
+    };
+
     beforeEach(() => {
       onFocusWithinChange = jest.fn();
       ref = React.createRef();
       innerRef = React.createRef();
       innerRef2 = React.createRef();
-      const Component = () => {
-        const listener = useFocusWithin({
-          onFocusWithinChange,
-        });
-        return (
-          <div ref={ref} listeners={listener}>
-            <div ref={innerRef} />
-            <div ref={innerRef2} />
-          </div>
-        );
-      };
-      ReactDOM.render(<Component />, container);
+      ReactDOM.render(<Component show={true} />, container);
     });
 
     it('is called after "blur" and "focus" events on focus target', () => {
@@ -145,23 +146,24 @@ describe.each(table)('FocusWithin responder', hasPointerEvents => {
   describe('onFocusWithinVisibleChange', () => {
     let onFocusWithinVisibleChange, ref, innerRef, innerRef2;
 
+    const Component = ({show}) => {
+      const listener = useFocusWithin({
+        onFocusWithinVisibleChange,
+      });
+      return (
+        <div ref={ref} DEPRECATED_flareListeners={listener}>
+          {show && <input ref={innerRef} />}
+          <div ref={innerRef2} />
+        </div>
+      );
+    };
+
     beforeEach(() => {
       onFocusWithinVisibleChange = jest.fn();
       ref = React.createRef();
       innerRef = React.createRef();
       innerRef2 = React.createRef();
-      const Component = () => {
-        const listener = useFocusWithin({
-          onFocusWithinVisibleChange,
-        });
-        return (
-          <div ref={ref} listeners={listener}>
-            <div ref={innerRef} />
-            <div ref={innerRef2} />
-          </div>
-        );
-      };
-      ReactDOM.render(<Component />, container);
+      ReactDOM.render(<Component show={true} />, container);
     });
 
     it('is called after "focus" and "blur" on focus target if keyboard was used', () => {
@@ -257,6 +259,82 @@ describe.each(table)('FocusWithin responder', hasPointerEvents => {
       innerTarget1.blur({relatedTarget: container});
       expect(onFocusWithinVisibleChange).toHaveBeenCalledTimes(2);
       expect(onFocusWithinVisibleChange).toHaveBeenCalledWith(false);
+    });
+  });
+
+  describe('onBeforeBlurWithin', () => {
+    let onBeforeBlurWithin, onBlurWithin, ref, innerRef, innerRef2;
+
+    beforeEach(() => {
+      onBeforeBlurWithin = jest.fn();
+      onBlurWithin = jest.fn();
+      ref = React.createRef();
+      innerRef = React.createRef();
+      innerRef2 = React.createRef();
+    });
+
+    it('is called after a focused element is unmounted', () => {
+      const Component = ({show}) => {
+        const listener = useFocusWithin({
+          onBeforeBlurWithin,
+          onBlurWithin,
+        });
+        return (
+          <div ref={ref} DEPRECATED_flareListeners={listener}>
+            {show && <input ref={innerRef} />}
+            <div ref={innerRef2} />
+          </div>
+        );
+      };
+
+      ReactDOM.render(<Component show={true} />, container);
+
+      const inner = innerRef.current;
+      const target = createEventTarget(inner);
+      target.keydown({key: 'Tab'});
+      target.focus();
+      expect(onBeforeBlurWithin).toHaveBeenCalledTimes(0);
+      expect(onBlurWithin).toHaveBeenCalledTimes(0);
+      ReactDOM.render(<Component show={false} />, container);
+      expect(onBeforeBlurWithin).toHaveBeenCalledTimes(1);
+      expect(onBlurWithin).toHaveBeenCalledTimes(1);
+      expect(onBlurWithin).toHaveBeenCalledWith(
+        expect.objectContaining({isTargetAttached: false}),
+      );
+    });
+
+    it('is called after a nested focused element is unmounted', () => {
+      const Component = ({show}) => {
+        const listener = useFocusWithin({
+          onBeforeBlurWithin,
+          onBlurWithin,
+        });
+        return (
+          <div ref={ref} DEPRECATED_flareListeners={listener}>
+            {show && (
+              <div>
+                <input ref={innerRef} />
+              </div>
+            )}
+            <div ref={innerRef2} />
+          </div>
+        );
+      };
+
+      ReactDOM.render(<Component show={true} />, container);
+
+      const inner = innerRef.current;
+      const target = createEventTarget(inner);
+      target.keydown({key: 'Tab'});
+      target.focus();
+      expect(onBeforeBlurWithin).toHaveBeenCalledTimes(0);
+      expect(onBlurWithin).toHaveBeenCalledTimes(0);
+      ReactDOM.render(<Component show={false} />, container);
+      expect(onBeforeBlurWithin).toHaveBeenCalledTimes(1);
+      expect(onBlurWithin).toHaveBeenCalledTimes(1);
+      expect(onBlurWithin).toHaveBeenCalledWith(
+        expect.objectContaining({isTargetAttached: false}),
+      );
     });
   });
 

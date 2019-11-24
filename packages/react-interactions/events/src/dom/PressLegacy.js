@@ -114,11 +114,18 @@ const DEFAULT_PRESS_RETENTION_OFFSET = {
 };
 
 const targetEventTypes = hasPointerEvents
-  ? ['keydown_active', 'pointerdown', 'click_active']
-  : ['keydown_active', 'touchstart', 'mousedown', 'click_active'];
+  ? ['keydown_active', 'pointerdown_active', 'click_active']
+  : ['keydown_active', 'touchstart', 'mousedown_active', 'click_active'];
 
 const rootEventTypes = hasPointerEvents
-  ? ['pointerup', 'pointermove', 'pointercancel', 'click', 'keyup', 'scroll']
+  ? [
+      'pointerup_active',
+      'pointermove',
+      'pointercancel',
+      'click',
+      'keyup',
+      'scroll',
+    ]
   : [
       'click',
       'keyup',
@@ -128,7 +135,7 @@ const rootEventTypes = hasPointerEvents
       'touchcancel',
       // Used as a 'cancel' signal for mouse interactions
       'dragstart',
-      'mouseup',
+      'mouseup_active',
       'touchend',
     ];
 
@@ -157,9 +164,10 @@ function createPressEvent(
   let ctrlKey = false;
   let metaKey = false;
   let shiftKey = false;
+  let nativeEvent;
 
   if (event) {
-    const nativeEvent = (event.nativeEvent: any);
+    nativeEvent = (event.nativeEvent: any);
     ({altKey, ctrlKey, metaKey, shiftKey} = nativeEvent);
     // Only check for one property, checking for all of them is costly. We can assume
     // if clientX exists, so do the rest.
@@ -169,7 +177,7 @@ function createPressEvent(
       ({clientX, clientY, pageX, pageY, screenX, screenY} = eventObject);
     }
   }
-  return {
+  const pressEvent = {
     altKey,
     buttons: state.buttons,
     clientX,
@@ -189,13 +197,10 @@ function createPressEvent(
     x: clientX,
     y: clientY,
     preventDefault() {
-      // NO-OP, we should remove this in the future
-      if (__DEV__) {
-        warning(
-          false,
-          'preventDefault is not available on event objects created from event responder modules (React Flare). ' +
-            'Try wrapping in a conditional, i.e. `if (event.type !== "press") { event.preventDefault() }`',
-        );
+      state.shouldPreventClick = true;
+      if (nativeEvent) {
+        pressEvent.defaultPrevented = true;
+        nativeEvent.preventDefault();
       }
     },
     stopPropagation() {
@@ -209,6 +214,7 @@ function createPressEvent(
       }
     },
   };
+  return pressEvent;
 }
 
 function dispatchEvent(
@@ -483,6 +489,11 @@ function updateIsPressWithinResponderRegion(
 // clicks (NVDA, Jaws, VoiceOver) do not have co-ords associated with the click
 // event and "detail" is always 0 (where normal clicks are > 0)
 function isScreenReaderVirtualClick(nativeEvent): boolean {
+  // JAWS/NVDA with Firefox.
+  if (nativeEvent.mozInputSource === 0 && nativeEvent.isTrusted) {
+    return true;
+  }
+  // Chrome
   return (
     nativeEvent.detail === 0 &&
     nativeEvent.screenX === 0 &&
@@ -564,15 +575,14 @@ const pressResponderImpl = {
                 metaKey,
                 shiftKey,
               } = (nativeEvent: MouseEvent);
-              if (nativeEvent.key === ' ') {
-                nativeEvent.preventDefault();
-              } else if (
+              if (
                 props.preventDefault !== false &&
                 !shiftKey &&
                 !metaKey &&
                 !ctrlKey &&
                 !altKey
               ) {
+                nativeEvent.preventDefault();
                 state.shouldPreventClick = true;
               }
             } else {

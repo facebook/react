@@ -36,7 +36,7 @@ import {
   enableScopeAPI,
 } from 'shared/ReactFeatureFlags';
 import {NoEffect, Placement} from 'shared/ReactSideEffectTags';
-import {ConcurrentRoot, BatchedRoot} from 'shared/ReactRootTags';
+import {ConcurrentRoot, BlockingRoot} from 'shared/ReactRootTags';
 import {
   IndeterminateComponent,
   ClassComponent,
@@ -74,7 +74,7 @@ import {
   ConcurrentMode,
   ProfileMode,
   StrictMode,
-  BatchedMode,
+  BlockingMode,
 } from './ReactTypeOfMode';
 import {
   REACT_FORWARD_REF_TYPE,
@@ -573,9 +573,9 @@ export function resetWorkInProgress(
 export function createHostRootFiber(tag: RootTag): Fiber {
   let mode;
   if (tag === ConcurrentRoot) {
-    mode = ConcurrentMode | BatchedMode | StrictMode;
-  } else if (tag === BatchedRoot) {
-    mode = BatchedMode | StrictMode;
+    mode = ConcurrentMode | BlockingMode | StrictMode;
+  } else if (tag === BlockingRoot) {
+    mode = BlockingMode | StrictMode;
   } else {
     mode = NoMode;
   }
@@ -627,7 +627,7 @@ export function createFiberFromTypeAndProps(
         );
       case REACT_CONCURRENT_MODE_TYPE:
         fiberTag = Mode;
-        mode |= ConcurrentMode | BatchedMode | StrictMode;
+        mode |= ConcurrentMode | BlockingMode | StrictMode;
         break;
       case REACT_STRICT_MODE_TYPE:
         fiberTag = Mode;

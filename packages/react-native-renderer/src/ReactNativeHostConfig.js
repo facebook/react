@@ -530,3 +530,11 @@ export function updateFundamentalComponent(fundamentalInstance) {
 export function unmountFundamentalComponent(fundamentalInstance) {
   throw new Error('Not yet implemented.');
 }
+
+export function getInstanceFromNode(node) {
+  throw new Error('Not yet implemented.');
+}
+
+export function beforeRemoveInstance(instance) {
+  // noop
+}

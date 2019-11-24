@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html style="width: 100%; height: 100%; overflow: hidden">
+  <head>
+    <meta charset="utf-8">
+    <title>Flight Example</title>
+  </head>
+  <body>
+    <h1>Flight Example</h1>
+    <div id="container">
+      <p>
+        To install React, follow the instructions on
+        <a href="https://github.com/facebook/react/">GitHub</a>.
+      </p>
+      <p>
+        If you can see this, React is <strong>not</strong> working right.
+        If you checked out the source from GitHub make sure to run <code>npm run build</code>.
+      </p>
+    </div>
+    <script src="../../build/dist/react.development.js"></script>
+    <script src="../../build/dist/react-dom.development.js"></script>
+    <script src="../../build/dist/react-dom-server.browser.development.js"></script>
+    <script src="../../build/dist/react-flight-dom-webpack-server.browser.development.js"></script>
+    <script src="../../build/dist/react-flight-dom-webpack.development.js"></script>
+    <script src="https://unpkg.com/babel-standalone@6/babel.js"></script>
+    <script type="text/babel">
+      let Suspense = React.Suspense;
+
+      function Text({children}) {
+        return <span>{children}</span>;
+      }
+      function HTML() {
+        return (
+          <div>
+            <Text>hello</Text>
+            <Text>world</Text>
+          </div>
+        );
+      }
+
+      let resolved = false;
+      let promise = new Promise(resolve => {
+        setTimeout(() => {
+          resolved = true;
+          resolve();
+        }, 100);
+      });
+      function read() {
+        if (!resolved) {
+          throw promise;
+        }
+      }
+
+      function Title() {
+        read();
+        return 'Title';
+      }
+
+      let model = {
+        title: <Title />,
+        content: {
+          __html: <HTML />,
+        }
+      };
+
+      let stream = ReactFlightDOMServer.renderToReadableStream(model);
+      let response = new Response(stream, {
+        headers: {'Content-Type': 'text/html'},
+      });
+      display(response);
+
+      async function display(responseToDisplay) {
+        let blob = await responseToDisplay.blob();
+        let url = URL.createObjectURL(blob);
+
+        let data = ReactFlightDOMClient.readFromFetch(
+          fetch(url)
+        );
+        // The client also supports XHR streaming.
+        // var xhr = new XMLHttpRequest();
+        // xhr.open('GET', url);
+        // let data = ReactFlightDOMClient.readFromXHR(xhr);
+        // xhr.send();
+
+        renderResult(data);
+      }
+
+      function Shell({ data }) {
+        let model = data.model;
+        return <div>
+          <Suspense fallback="...">
+            <h1>{model.title}</h1>
+          </Suspense>
+          <div dangerouslySetInnerHTML={model.content} />
+        </div>;
+      }
+
+      function renderResult(data) {
+        let container = document.getElementById('container');
+        ReactDOM.render(
+          <Suspense fallback="Loading...">
+            <Shell data={data} />
+          </Suspense>,
+          container
+        );
+      }
+    </script>
+  </body>
+</html>

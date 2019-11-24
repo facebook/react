@@ -67,7 +67,6 @@ Defines the DOM events to listen to on the root of the app.
 
 Defines the DOM events to listen to within the Event Responder subtree.
 
-
 ## ResponderContext
 
 The Event Responder Context is exposed via the `context` argument for certain methods
@@ -77,10 +76,6 @@ on the `EventResponder` object.
 
 This can be used to dynamically listen to events on the root of the app only
 when it is necessary to do so.
-
-### clearTimeout(id: Symbol): void
-
-Clear a timeout defined using `context.setTimeout`.
 
 ### dispatchEvent(propName: string, event: CustomEvent, { discrete: boolean })
 
@@ -109,7 +104,3 @@ is within the scope of the same responder, but owned by another Event Responder 
 ### removeRootEventTypes(eventTypes: Array<ResponderEventType>)
 
 Remove the root event types added with `addRootEventTypes`.
-
-### setTimeout(func: () => void, delay: number): Symbol
-
-This can be used to dispatch async events, e.g., those that fire after a delay.

@@ -22,6 +22,7 @@ import {DiscreteEvent} from 'shared/ReactTypes';
  */
 
 type FocusEvent = {|
+  isTargetAttached: boolean,
   target: Element | Document,
   type: FocusEventType | FocusWithinEventType,
   pointerType: PointerType,
@@ -30,6 +31,7 @@ type FocusEvent = {|
 |};
 
 type FocusState = {
+  detachedTarget: null | Element | Document,
   focusTarget: null | Element | Document,
   isFocused: boolean,
   isFocusVisible: boolean,
@@ -49,6 +51,8 @@ type FocusEventType = 'focus' | 'blur' | 'focuschange' | 'focusvisiblechange';
 
 type FocusWithinProps = {
   disabled?: boolean,
+  onFocusWithin?: (e: FocusEvent) => void,
+  onBeforeBlurWithin?: (e: FocusEvent) => void,
   onBlurWithin?: (e: FocusEvent) => void,
   onFocusWithinChange?: boolean => void,
   onFocusWithinVisibleChange?: boolean => void,
@@ -57,7 +61,9 @@ type FocusWithinProps = {
 type FocusWithinEventType =
   | 'focuswithinvisiblechange'
   | 'focuswithinchange'
-  | 'blurwithin';
+  | 'blurwithin'
+  | 'focuswithin'
+  | 'beforeblurwithin';
 
 /**
  * Shared between Focus and FocusWithin
@@ -70,14 +76,22 @@ const isMac =
     ? /^Mac/.test(window.navigator.platform)
     : false;
 
-const targetEventTypes = ['focus', 'blur'];
+const targetEventTypes = ['focus', 'blur', 'beforeblur'];
 
 const hasPointerEvents =
   typeof window !== 'undefined' && window.PointerEvent != null;
 
 const rootEventTypes = hasPointerEvents
-  ? ['keydown', 'keyup', 'pointermove', 'pointerdown', 'pointerup']
-  : ['keydown', 'keyup', 'mousedown', 'touchmove', 'touchstart', 'touchend'];
+  ? ['keydown', 'keyup', 'pointermove', 'pointerdown', 'pointerup', 'blur']
+  : [
+      'keydown',
+      'keyup',
+      'mousedown',
+      'touchmove',
+      'touchstart',
+      'touchend',
+      'blur',
+    ];
 
 function isFunction(obj): boolean {
   return typeof obj === 'function';
@@ -88,8 +102,10 @@ function createFocusEvent(
   type: FocusEventType | FocusWithinEventType,
   target: Element | Document,
   pointerType: PointerType,
+  isTargetAttached: boolean,
 ): FocusEvent {
   return {
+    isTargetAttached,
     target,
     type,
     pointerType,
@@ -149,11 +165,8 @@ function handleRootEvent(
     case 'keyup': {
       const nativeEvent = event.nativeEvent;
       const focusTarget = state.focusTarget;
-      const {key, metaKey, altKey, ctrlKey} = (nativeEvent: any);
-      const validKey =
-        key === 'Enter' ||
-        key === ' ' ||
-        (key === 'Tab' && !(metaKey || (!isMac && altKey) || ctrlKey));
+      const {metaKey, altKey, ctrlKey} = (nativeEvent: any);
+      const validKey = !(metaKey || (!isMac && altKey) || ctrlKey);
 
       if (validKey) {
         state.pointerType = 'keyboard';
@@ -207,6 +220,7 @@ function dispatchFocusEvents(
       'focus',
       target,
       pointerType,
+      true,
     );
     context.dispatchEvent(syntheticEvent, onFocus, DiscreteEvent);
   }
@@ -230,12 +244,34 @@ function dispatchBlurEvents(
       'blur',
       target,
       pointerType,
+      true,
     );
     context.dispatchEvent(syntheticEvent, onBlur, DiscreteEvent);
   }
   dispatchFocusChange(context, props, false);
   if (state.isFocusVisible) {
     dispatchFocusVisibleChangeEvent(context, props, false);
+  }
+}
+
+function dispatchFocusWithinEvents(
+  context: ReactDOMResponderContext,
+  event: ReactDOMResponderEvent,
+  props: FocusWithinProps,
+  state: FocusState,
+) {
+  const pointerType = state.pointerType;
+  const target = ((state.focusTarget: any): Element | Document) || event.target;
+  const onFocusWithin = (props.onFocusWithin: any);
+  if (isFunction(onFocusWithin)) {
+    const syntheticEvent = createFocusEvent(
+      context,
+      'focuswithin',
+      target,
+      pointerType,
+      true,
+    );
+    context.dispatchEvent(syntheticEvent, onFocusWithin, DiscreteEvent);
   }
 }
 
@@ -248,12 +284,14 @@ function dispatchBlurWithinEvents(
   const pointerType = state.pointerType;
   const target = ((state.focusTarget: any): Element | Document) || event.target;
   const onBlurWithin = (props.onBlurWithin: any);
+  const isTargetAttached = state.detachedTarget === null;
   if (isFunction(onBlurWithin)) {
     const syntheticEvent = createFocusEvent(
       context,
       'blurwithin',
       target,
       pointerType,
+      isTargetAttached,
     );
     context.dispatchEvent(syntheticEvent, onBlurWithin, DiscreteEvent);
   }
@@ -297,6 +335,7 @@ const focusResponderImpl = {
   rootEventTypes,
   getInitialState(): FocusState {
     return {
+      detachedTarget: null,
       focusTarget: null,
       isEmulatingMouseEvents: false,
       isFocused: false,
@@ -435,6 +474,7 @@ const focusWithinResponderImpl = {
   rootEventTypes,
   getInitialState(): FocusState {
     return {
+      detachedTarget: null,
       focusTarget: null,
       isEmulatingMouseEvents: false,
       isFocused: false,
@@ -474,6 +514,7 @@ const focusWithinResponderImpl = {
           state.isFocusVisible = isGlobalFocusVisible;
           dispatchFocusWithinVisibleChangeEvent(context, props, state, true);
         }
+        dispatchFocusWithinEvents(context, event, props, state);
         break;
       }
       case 'blur': {
@@ -487,6 +528,28 @@ const focusWithinResponderImpl = {
         }
         break;
       }
+      case 'beforeblur': {
+        const onBeforeBlurWithin = (props.onBeforeBlurWithin: any);
+        if (isFunction(onBeforeBlurWithin)) {
+          const syntheticEvent = createFocusEvent(
+            context,
+            'beforeblurwithin',
+            event.target,
+            state.pointerType,
+            true,
+          );
+          state.detachedTarget = event.target;
+          context.dispatchEvent(
+            syntheticEvent,
+            onBeforeBlurWithin,
+            DiscreteEvent,
+          );
+        } else {
+          // We want to propagate to next focusWithin responder
+          // if this responder doesn't handle beforeblur
+          context.continuePropagation();
+        }
+      }
     }
   },
   onRootEvent(
@@ -495,6 +558,14 @@ const focusWithinResponderImpl = {
     props: FocusWithinProps,
     state: FocusState,
   ): void {
+    if (event.type === 'blur') {
+      const detachedTarget = state.detachedTarget;
+      if (detachedTarget !== null && detachedTarget === event.target) {
+        dispatchBlurWithinEvents(context, event, props, state);
+        state.detachedTarget = null;
+      }
+      return;
+    }
     handleRootEvent(event, context, state, isFocusVisible => {
       if (state.isFocused && state.isFocusVisible !== isFocusVisible) {
         state.isFocusVisible = isFocusVisible;

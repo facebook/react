@@ -314,10 +314,10 @@ const run = function(config, hierarchyConfig, nativeEventConfig) {
   // Trigger the event
   const extractedEvents = ResponderEventPlugin.extractEvents(
     nativeEventConfig.topLevelType,
-    PLUGIN_EVENT_SYSTEM,
     nativeEventConfig.targetInst,
     nativeEventConfig.nativeEvent,
     nativeEventConfig.target,
+    PLUGIN_EVENT_SYSTEM,
   );
 
   // At this point the negotiation events have been dispatched as part of the

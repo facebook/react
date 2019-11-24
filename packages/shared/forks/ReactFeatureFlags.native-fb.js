@@ -12,9 +12,9 @@ import invariant from 'shared/invariant';
 import typeof * as FeatureFlagsType from 'shared/ReactFeatureFlags';
 import typeof * as FeatureFlagsShimType from './ReactFeatureFlags.native-fb';
 
-// Re-export dynamic flags from the fbsource version.
+// Uncomment to re-export dynamic flags from the fbsource version.
 export const {
-  debugRenderPhaseSideEffects,
+  enableNativeTargetAsInstance,
 } = require('../shims/ReactFeatureFlags');
 
 // The rest of the flags are static for better dead code elimination.
@@ -23,7 +23,7 @@ export const enableProfilerTimer = __PROFILE__;
 export const enableSchedulerTracing = __PROFILE__;
 export const enableSuspenseServerRenderer = false;
 export const enableSelectiveHydration = false;
-export const enableStableConcurrentModeAPIs = false;
+export const exposeConcurrentModeAPIs = __EXPERIMENTAL__;
 export const warnAboutShorthandPropertyCollision = false;
 export const enableSchedulerDebugging = false;
 export const debugRenderPhaseSideEffectsForStrictMode = true;
@@ -31,7 +31,6 @@ export const disableJavaScriptURLs = false;
 export const disableInputAttributeSyncing = false;
 export const replayFailedUnitOfWorkWithInvokeGuardedCallback = __DEV__;
 export const warnAboutDeprecatedLifecycles = true;
-export const warnAboutDeprecatedSetNativeProps = true;
 export const enableFlareAPI = false;
 export const enableFundamentalAPI = false;
 export const enableScopeAPI = false;

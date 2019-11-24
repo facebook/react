@@ -60,8 +60,9 @@ module.exports = Object.assign({}, baseConfig, {
       '../../packages/react-devtools-shared/src/__tests__/setupEnv.js'
     ),
   ],
-  // TODO (Jest v24) Rename "setupFilesAfterEnv" after Jest upgrade
-  setupTestFrameworkScriptFile: require.resolve(
-    '../../packages/react-devtools-shared/src/__tests__/setupTests.js'
-  ),
+  setupFilesAfterEnv: [
+    require.resolve(
+      '../../packages/react-devtools-shared/src/__tests__/setupTests.js'
+    ),
+  ],
 });

@@ -2394,7 +2394,7 @@ describe('ReactFresh', () => {
   });
 
   it('can hot reload offscreen components', () => {
-    if (__DEV__) {
+    if (__DEV__ && __EXPERIMENTAL__) {
       const AppV1 = prepare(() => {
         function Hello() {
           React.useLayoutEffect(() => {
@@ -2421,7 +2421,7 @@ describe('ReactFresh', () => {
         };
       });
 
-      const root = ReactDOM.unstable_createRoot(container);
+      const root = ReactDOM.createRoot(container);
       root.render(<AppV1 offscreen={true} />);
       expect(Scheduler).toFlushAndYieldThrough(['App#layout']);
       const el = container.firstChild;
@@ -2870,6 +2870,97 @@ describe('ReactFresh', () => {
       });
       expect(container.innerHTML).toBe('');
       expect(ReactFreshRuntime.hasUnrecoverableErrors()).toBe(false);
+
+      // Mount a new container.
+      render(() => {
+        function Hello() {
+          return <h1>Hi</h1>;
+        }
+        $RefreshReg$(Hello, 'Hello');
+
+        return Hello;
+      });
+      expect(container.innerHTML).toBe('<h1>Hi</h1>');
+      expect(ReactFreshRuntime.hasUnrecoverableErrors()).toBe(false);
+
+      // Break again.
+      expect(() => {
+        patch(() => {
+          function Hello() {
+            throw new Error('Oops');
+          }
+          $RefreshReg$(Hello, 'Hello');
+        });
+      }).toThrow('Oops');
+      expect(container.innerHTML).toBe('');
+      expect(ReactFreshRuntime.hasUnrecoverableErrors()).toBe(false);
+
+      // Check we don't attempt to reverse an intentional unmount, even after an error.
+      ReactDOM.unmountComponentAtNode(container);
+      expect(container.innerHTML).toBe('');
+      patch(() => {
+        function Hello() {
+          return <h1>Never mind me!</h1>;
+        }
+        $RefreshReg$(Hello, 'Hello');
+      });
+      expect(container.innerHTML).toBe('');
+      expect(ReactFreshRuntime.hasUnrecoverableErrors()).toBe(false);
+    }
+  });
+
+  it('regression test: does not get into an infinite loop', () => {
+    if (__DEV__) {
+      let containerA = document.createElement('div');
+      let containerB = document.createElement('div');
+
+      // Initially, nothing interesting.
+      let RootAV1 = () => {
+        return 'A1';
+      };
+      $RefreshReg$(RootAV1, 'RootA');
+      let RootBV1 = () => {
+        return 'B1';
+      };
+      $RefreshReg$(RootBV1, 'RootB');
+
+      act(() => {
+        ReactDOM.render(<RootAV1 />, containerA);
+        ReactDOM.render(<RootBV1 />, containerB);
+      });
+      expect(containerA.innerHTML).toBe('A1');
+      expect(containerB.innerHTML).toBe('B1');
+
+      // Then make the first root fail.
+      let RootAV2 = () => {
+        throw new Error('A2!');
+      };
+      $RefreshReg$(RootAV2, 'RootA');
+      expect(() => ReactFreshRuntime.performReactRefresh()).toThrow('A2!');
+      expect(containerA.innerHTML).toBe('');
+      expect(containerB.innerHTML).toBe('B1');
+
+      // Then patch the first root, but make it fail in the commit phase.
+      // This used to trigger an infinite loop due to a list of failed roots
+      // being mutated while it was being iterated on.
+      let RootAV3 = () => {
+        React.useLayoutEffect(() => {
+          throw new Error('A3!');
+        }, []);
+        return 'A3';
+      };
+      $RefreshReg$(RootAV3, 'RootA');
+      expect(() => ReactFreshRuntime.performReactRefresh()).toThrow('A3!');
+      expect(containerA.innerHTML).toBe('');
+      expect(containerB.innerHTML).toBe('B1');
+
+      let RootAV4 = () => {
+        return 'A4';
+      };
+      $RefreshReg$(RootAV4, 'RootA');
+      ReactFreshRuntime.performReactRefresh();
+      expect(containerA.innerHTML).toBe('A4');
+      expect(containerB.innerHTML).toBe('B1');
     }
   });
 

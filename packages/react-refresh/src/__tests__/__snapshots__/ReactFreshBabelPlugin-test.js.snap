@@ -574,6 +574,26 @@ $RefreshReg$(_c, "Hello");
 $RefreshReg$(_c2, "Bar");
 `;
 
+exports[`ReactFreshBabelPlugin uses custom identifiers for $RefreshReg$ and $RefreshSig$ 1`] = `
+var _s = import.meta.refreshSig();
+
+export default function Bar() {
+  _s();
+
+  useContext(X);
+  return <Foo />;
+}
+
+_s(Bar, "useContext{}");
+
+_c = Bar;
+;
+
+var _c;
+
+import.meta.refreshReg(_c, "Bar");
+`;
+
 exports[`ReactFreshBabelPlugin uses original function declaration if it get reassigned 1`] = `
 function Hello() {
   return <h1>Hi</h1>;

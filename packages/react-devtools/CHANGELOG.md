@@ -10,6 +10,14 @@
 
 </details>
 
+## 4.2.0 (October 3, 2019)
+#### Features
+* "Highlight updates" feature added for browser extensions and `react-devtools-inline` NPM package. ([bvaughn](https://github.com/bvaughn) in [#16989](https://github.com/facebook/react/pull/16989))
+
+## 4.1.3 (September 30, 2019)
+#### Bug fixes
+* Fixed regression where DevTools wouldn't properly connect with apps when using the `file://` protocol. ([linshunghuang](https://github.com/linshunghuang) in [#16953](https://github.com/facebook/react/pull/16953))
+
 ## 4.1.2 (September 27, 2019)
 #### Bug fixes
 * Fixed an infinite loop that occurred in some cases with prop values of `NaN`. ([bvaughn](https://github.com/bvaughn) in [#16934](https://github.com/facebook/react/pull/16934))

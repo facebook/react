@@ -34,6 +34,7 @@ const createEventTarget = node => ({
   },
   focus(payload) {
     node.dispatchEvent(domEvents.focus(payload));
+    node.focus();
   },
   scroll(payload) {
     node.dispatchEvent(domEvents.scroll(payload));

@@ -30,7 +30,6 @@ import {
 } from './NativeMethodsMixinUtils';
 
 import warningWithoutStack from 'shared/warningWithoutStack';
-import {warnAboutDeprecatedSetNativeProps} from 'shared/ReactFeatureFlags';
 
 export default function(
   findNodeHandle: any => ?number,
@@ -249,18 +248,6 @@ export default function(
           'Warning: setNativeProps is not currently supported in Fabric',
         );
         return;
-      }
-
-      if (__DEV__) {
-        if (warnAboutDeprecatedSetNativeProps) {
-          warningWithoutStack(
-            false,
-            'Warning: Calling ref.setNativeProps(nativeProps) ' +
-              'is deprecated and will be removed in a future release. ' +
-              'Use the setNativeProps export from the react-native package instead.' +
-              "\n\timport {setNativeProps} from 'react-native';\n\tsetNativeProps(ref, nativeProps);\n",
-          );
-        }
       }
 
       const nativeTag =

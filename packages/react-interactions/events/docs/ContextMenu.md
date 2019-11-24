@@ -12,7 +12,7 @@ const Button = (props) => {
   });
 
   return (
-    <div listeners={contextmenu}>
+    <div DEPRECATED_flareListeners={contextmenu}>
       {props.children}
     </div>
   );

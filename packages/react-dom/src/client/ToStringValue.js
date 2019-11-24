@@ -53,15 +53,14 @@ export opaque type TrustedValue: {toString(): string, valueOf(): string} = {
  */
 export let toStringOrTrustedType: any => string | TrustedValue = toString;
 if (enableTrustedTypesIntegration && typeof trustedTypes !== 'undefined') {
-  const isHTML = trustedTypes.isHTML;
-  const isScript = trustedTypes.isScript;
-  const isScriptURL = trustedTypes.isScriptURL;
-  // TrustedURLs are deprecated and will be removed soon: https://github.com/WICG/trusted-types/pull/204
-  const isURL = trustedTypes.isURL ? trustedTypes.isURL : value => false;
   toStringOrTrustedType = value => {
     if (
       typeof value === 'object' &&
-      (isHTML(value) || isScript(value) || isScriptURL(value) || isURL(value))
+      (trustedTypes.isHTML(value) ||
+        trustedTypes.isScript(value) ||
+        trustedTypes.isScriptURL(value) ||
+        /* TrustedURLs are deprecated and will be removed soon: https://github.com/WICG/trusted-types/pull/204 */
+        (trustedTypes.isURL && trustedTypes.isURL(value)))
     ) {
       // Pass Trusted Types through.
       return value;

@@ -141,9 +141,11 @@ type SecretInternalsFabricType = {
  */
 export type ReactNativeType = {
   NativeComponent: typeof ReactNativeComponent,
+  findHostInstance_DEPRECATED(
+    componentOrHandle: any,
+  ): ?ElementRef<HostComponent<mixed>>,
   findNodeHandle(componentOrHandle: any): ?number,
   dispatchCommand(handle: any, command: string, args: Array<any>): void,
-  setNativeProps(handle: any, nativeProps: Object): void,
   render(
     element: React$Element<any>,
     containerTag: any,
@@ -158,9 +160,9 @@ export type ReactNativeType = {
 
 export type ReactFabricType = {
   NativeComponent: typeof ReactNativeComponent,
+  findHostInstance_DEPRECATED(componentOrHandle: any): ?HostComponent<mixed>,
   findNodeHandle(componentOrHandle: any): ?number,
   dispatchCommand(handle: any, command: string, args: Array<any>): void,
-  setNativeProps(handle: any, nativeProps: Object): void,
   render(
     element: React$Element<any>,
     containerTag: any,
@@ -227,8 +229,6 @@ export type ReactNativeResponderContext = {
   ): void,
   addRootEventTypes: (rootEventTypes: Array<string>) => void,
   removeRootEventTypes: (rootEventTypes: Array<string>) => void,
-  setTimeout: (func: () => void, timeout: number) => number,
-  clearTimeout: (timerId: number) => void,
   getTimeStamp: () => number,
   getResponderNode(): ReactNativeEventTarget | null,
 };

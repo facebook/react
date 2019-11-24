@@ -12,7 +12,7 @@ import {
   // $FlowFixMe Flow does not yet know about flushSync()
   flushSync,
   // $FlowFixMe Flow does not yet know about createRoot()
-  unstable_createRoot as createRoot,
+  createRoot,
 } from 'react-dom';
 import Bridge from 'react-devtools-shared/src/bridge';
 import Store from 'react-devtools-shared/src/devtools/store';
@@ -143,9 +143,27 @@ function onError({code, message}) {
   safeUnmount();
 
   if (code === 'EADDRINUSE') {
-    node.innerHTML = `<div id="waiting"><h2>Another instance of DevTools is running</h2></div>`;
+    node.innerHTML = `
+      <div class="box">
+        <div class="box-header">
+          Another instance of DevTools is running.
+        </div>
+        <div class="box-content">
+          Only one copy of DevTools can be used at a time.
+        </div>
+      </div>
+    `;
   } else {
-    node.innerHTML = `<div id="waiting"><h2>Unknown error (${message})</h2></div>`;
+    node.innerHTML = `
+      <div class="box">
+        <div class="box-header">
+          Unknown error
+        </div>
+        <div class="box-content">
+          ${message}
+        </div>
+      </div>
+    `;
   }
 }
 

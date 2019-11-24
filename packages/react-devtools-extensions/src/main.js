@@ -1,7 +1,7 @@
 /* global chrome */
 
 import {createElement} from 'react';
-import {unstable_createRoot as createRoot, flushSync} from 'react-dom';
+import {createRoot, flushSync} from 'react-dom';
 import Bridge from 'react-devtools-shared/src/bridge';
 import Store from 'react-devtools-shared/src/devtools/store';
 import {
@@ -9,6 +9,7 @@ import {
   getBrowserName,
   getBrowserTheme,
 } from './utils';
+import {LOCAL_STORAGE_TRACE_UPDATES_ENABLED_KEY} from 'react-devtools-shared/src/constants';
 import {
   getSavedComponentFilters,
   getAppendComponentStack,
@@ -125,17 +126,28 @@ function createPanelIfReactLoaded() {
           profilingData = store.profilerStore.profilingData;
         }
 
+        bridge.addListener('extensionBackendInitialized', () => {
+          // Initialize the renderer's trace-updates setting.
+          // This handles the case of navigating to a new page after the DevTools have already been shown.
+          bridge.send(
+            'setTraceUpdatesEnabled',
+            localStorageGetItem(LOCAL_STORAGE_TRACE_UPDATES_ENABLED_KEY) ===
+              'true',
+          );
+        });
+
         store = new Store(bridge, {
           isProfiling,
           supportsReloadAndProfile: isChrome,
           supportsProfiling,
+          supportsTraceUpdates: true,
         });
         store.profilerStore.profilingData = profilingData;
 
         // Initialize the backend only once the Store has been initialized.
         // Otherwise the Store may miss important initial tree op codes.
         chrome.devtools.inspectedWindow.eval(
-          `window.postMessage({ source: 'react-devtools-inject-backend' }, window.origin);`,
+          `window.postMessage({ source: 'react-devtools-inject-backend' }, '*');`,
           function(response, evalError) {
             if (evalError) {
               console.error(evalError);

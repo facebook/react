@@ -30,11 +30,19 @@ export function markContainerAsRoot(hostRoot, node) {
   node[internalContainerInstanceKey] = hostRoot;
 }
 
+export function unmarkContainerAsRoot(node) {
+  node[internalContainerInstanceKey] = null;
+}
+
+export function isContainerMarkedAsRoot(node) {
+  return !!node[internalContainerInstanceKey];
+}
+
 // Given a DOM node, return the closest HostComponent or HostText fiber ancestor.
 // If the target node is part of a hydrated or not yet rendered subtree, then
 // this may also return a SuspenseComponent or HostRoot to indicate that.
 // Conceptually the HostRoot fiber is a child of the Container node. So if you
-// pass the Container node as the targetNode, you wiill not actually get the
+// pass the Container node as the targetNode, you will not actually get the
 // HostRoot back. To get to the HostRoot, you need to pass a child of it.
 // The same thing applies to Suspense boundaries.
 export function getClosestInstanceFromNode(targetNode) {

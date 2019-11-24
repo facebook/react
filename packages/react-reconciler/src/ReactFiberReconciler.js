@@ -19,7 +19,6 @@ import type {
 import {FundamentalComponent} from 'shared/ReactWorkTags';
 import type {ReactNodeList} from 'shared/ReactTypes';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
-import type {SuspenseConfig} from './ReactFiberSuspenseConfig';
 import type {
   SuspenseHydrationCallbacks,
   SuspenseState,
@@ -51,8 +50,7 @@ import {
 import {createFiberRoot} from './ReactFiberRoot';
 import {injectInternals} from './ReactFiberDevToolsHook';
 import {
-  computeUniqueAsyncExpiration,
-  requestCurrentTime,
+  requestCurrentTimeForUpdate,
   computeExpirationForFiber,
   scheduleWork,
   flushRoot,
@@ -78,7 +76,11 @@ import {
   current as ReactCurrentFiberCurrent,
 } from './ReactCurrentFiber';
 import {StrictMode} from './ReactTypeOfMode';
-import {Sync, computeInteractiveExpiration} from './ReactFiberExpirationTime';
+import {
+  Sync,
+  computeInteractiveExpiration,
+  computeContinuousHydrationExpiration,
+} from './ReactFiberExpirationTime';
 import {requestCurrentSuspenseConfig} from './ReactFiberSuspenseConfig';
 import {
   scheduleRefresh,
@@ -132,92 +134,6 @@ function getContextForSubtree(
   }
 
   return parentContext;
-}
-
-function scheduleRootUpdate(
-  current: Fiber,
-  element: ReactNodeList,
-  expirationTime: ExpirationTime,
-  suspenseConfig: null | SuspenseConfig,
-  callback: ?Function,
-) {
-  if (__DEV__) {
-    if (
-      ReactCurrentFiberPhase === 'render' &&
-      ReactCurrentFiberCurrent !== null &&
-      !didWarnAboutNestedUpdates
-    ) {
-      didWarnAboutNestedUpdates = true;
-      warningWithoutStack(
-        false,
-        'Render methods should be a pure function of props and state; ' +
-          'triggering nested component updates from render is not allowed. ' +
-          'If necessary, trigger nested updates in componentDidUpdate.\n\n' +
-          'Check the render method of %s.',
-        getComponentName(ReactCurrentFiberCurrent.type) || 'Unknown',
-      );
-    }
-  }
-
-  const update = createUpdate(expirationTime, suspenseConfig);
-  // Caution: React DevTools currently depends on this property
-  // being called "element".
-  update.payload = {element};
-
-  callback = callback === undefined ? null : callback;
-  if (callback !== null) {
-    warningWithoutStack(
-      typeof callback === 'function',
-      'render(...): Expected the last optional `callback` argument to be a ' +
-        'function. Instead received: %s.',
-      callback,
-    );
-    update.callback = callback;
-  }
-
-  enqueueUpdate(current, update);
-  scheduleWork(current, expirationTime);
-
-  return expirationTime;
-}
-
-export function updateContainerAtExpirationTime(
-  element: ReactNodeList,
-  container: OpaqueRoot,
-  parentComponent: ?React$Component<any, any>,
-  expirationTime: ExpirationTime,
-  suspenseConfig: null | SuspenseConfig,
-  callback: ?Function,
-) {
-  // TODO: If this is a nested container, this won't be the root.
-  const current = container.current;
-
-  if (__DEV__) {
-    if (ReactFiberInstrumentation.debugTool) {
-      if (current.alternate === null) {
-        ReactFiberInstrumentation.debugTool.onMountContainer(container);
-      } else if (element === null) {
-        ReactFiberInstrumentation.debugTool.onUnmountContainer(container);
-      } else {
-        ReactFiberInstrumentation.debugTool.onUpdateContainer(container);
-      }
-    }
-  }
-
-  const context = getContextForSubtree(parentComponent);
-  if (container.context === null) {
-    container.context = context;
-  } else {
-    container.pendingContext = context;
-  }
-
-  return scheduleRootUpdate(
-    current,
-    element,
-    expirationTime,
-    suspenseConfig,
-    callback,
-  );
 }
 
 function findHostInstance(component: Object): PublicInstance | null {
@@ -315,7 +231,7 @@ export function updateContainer(
   callback: ?Function,
 ): ExpirationTime {
   const current = container.current;
-  const currentTime = requestCurrentTime();
+  const currentTime = requestCurrentTimeForUpdate();
   if (__DEV__) {
     // $FlowExpectedError - jest isn't a global, and isn't recognized outside of tests
     if ('undefined' !== typeof jest) {
@@ -329,19 +245,67 @@ export function updateContainer(
     current,
     suspenseConfig,
   );
-  return updateContainerAtExpirationTime(
-    element,
-    container,
-    parentComponent,
-    expirationTime,
-    suspenseConfig,
-    callback,
-  );
+
+  if (__DEV__) {
+    if (ReactFiberInstrumentation.debugTool) {
+      if (current.alternate === null) {
+        ReactFiberInstrumentation.debugTool.onMountContainer(container);
+      } else if (element === null) {
+        ReactFiberInstrumentation.debugTool.onUnmountContainer(container);
+      } else {
+        ReactFiberInstrumentation.debugTool.onUpdateContainer(container);
+      }
+    }
+  }
+
+  const context = getContextForSubtree(parentComponent);
+  if (container.context === null) {
+    container.context = context;
+  } else {
+    container.pendingContext = context;
+  }
+
+  if (__DEV__) {
+    if (
+      ReactCurrentFiberPhase === 'render' &&
+      ReactCurrentFiberCurrent !== null &&
+      !didWarnAboutNestedUpdates
+    ) {
+      didWarnAboutNestedUpdates = true;
+      warningWithoutStack(
+        false,
+        'Render methods should be a pure function of props and state; ' +
+          'triggering nested component updates from render is not allowed. ' +
+          'If necessary, trigger nested updates in componentDidUpdate.\n\n' +
+          'Check the render method of %s.',
+        getComponentName(ReactCurrentFiberCurrent.type) || 'Unknown',
+      );
+    }
+  }
+
+  const update = createUpdate(expirationTime, suspenseConfig);
+  // Caution: React DevTools currently depends on this property
+  // being called "element".
+  update.payload = {element};
+
+  callback = callback === undefined ? null : callback;
+  if (callback !== null) {
+    warningWithoutStack(
+      typeof callback === 'function',
+      'render(...): Expected the last optional `callback` argument to be a ' +
+        'function. Instead received: %s.',
+      callback,
+    );
+    update.callback = callback;
+  }
+
+  enqueueUpdate(current, update);
+  scheduleWork(current, expirationTime);
+
+  return expirationTime;
 }
 
 export {
-  flushRoot,
-  computeUniqueAsyncExpiration,
   batchedEventUpdates,
   batchedUpdates,
   unbatchedUpdates,
@@ -384,7 +348,9 @@ export function attemptSynchronousHydration(fiber: Fiber): void {
       // If we're still blocked after this, we need to increase
       // the priority of any promises resolving within this
       // boundary so that they next attempt also has higher pri.
-      let retryExpTime = computeInteractiveExpiration(requestCurrentTime());
+      let retryExpTime = computeInteractiveExpiration(
+        requestCurrentTimeForUpdate(),
+      );
       markRetryTimeIfNotHydrated(fiber, retryExpTime);
       break;
   }
@@ -416,7 +382,34 @@ export function attemptUserBlockingHydration(fiber: Fiber): void {
     // Suspense.
     return;
   }
-  let expTime = computeInteractiveExpiration(requestCurrentTime());
+  let expTime = computeInteractiveExpiration(requestCurrentTimeForUpdate());
+  scheduleWork(fiber, expTime);
+  markRetryTimeIfNotHydrated(fiber, expTime);
+}
+
+export function attemptContinuousHydration(fiber: Fiber): void {
+  if (fiber.tag !== SuspenseComponent) {
+    // We ignore HostRoots here because we can't increase
+    // their priority and they should not suspend on I/O,
+    // since you have to wrap anything that might suspend in
+    // Suspense.
+    return;
+  }
+  let expTime = computeContinuousHydrationExpiration(
+    requestCurrentTimeForUpdate(),
+  );
+  scheduleWork(fiber, expTime);
+  markRetryTimeIfNotHydrated(fiber, expTime);
+}
+
+export function attemptHydrationAtCurrentPriority(fiber: Fiber): void {
+  if (fiber.tag !== SuspenseComponent) {
+    // We ignore HostRoots here because we can't increase
+    // their priority other than synchronously flush it.
+    return;
+  }
+  const currentTime = requestCurrentTimeForUpdate();
+  const expTime = computeExpirationForFiber(currentTime, fiber, null);
   scheduleWork(fiber, expTime);
   markRetryTimeIfNotHydrated(fiber, expTime);
 }

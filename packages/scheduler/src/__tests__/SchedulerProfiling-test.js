@@ -213,7 +213,8 @@ describe('Scheduler', () => {
 
     // Now we can render the tasks as a flamegraph.
     const labelColumnWidth = 30;
-    const msPerChar = 50;
+    // Scheduler event times are in microseconds
+    const microsecondsPerChar = 50000;
 
     let result = '';
 
@@ -221,7 +222,7 @@ describe('Scheduler', () => {
     let mainThreadTimelineColumn = '';
     let isMainThreadBusy = true;
     for (const time of mainThreadRuns) {
-      const index = time / msPerChar;
+      const index = time / microsecondsPerChar;
       mainThreadTimelineColumn += (isMainThreadBusy ? '█' : '░').repeat(
         index - mainThreadTimelineColumn.length,
       );
@@ -244,18 +245,18 @@ describe('Scheduler', () => {
       labelColumn += ' '.repeat(labelColumnWidth - labelColumn.length - 1);
 
       // Add empty space up until the start mark
-      let timelineColumn = ' '.repeat(task.start / msPerChar);
+      let timelineColumn = ' '.repeat(task.start / microsecondsPerChar);
 
       let isRunning = false;
       for (const time of task.runs) {
-        const index = time / msPerChar;
+        const index = time / microsecondsPerChar;
         timelineColumn += (isRunning ? '█' : '░').repeat(
           index - timelineColumn.length,
         );
         isRunning = !isRunning;
       }
 
-      const endIndex = task.end / msPerChar;
+      const endIndex = task.end / microsecondsPerChar;
       timelineColumn += (isRunning ? '█' : '░').repeat(
         endIndex - timelineColumn.length,
       );

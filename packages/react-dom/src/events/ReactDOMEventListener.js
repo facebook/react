@@ -178,10 +178,10 @@ function handleTopLevel(bookKeeping: BookKeepingInstance) {
 
     runExtractedPluginEventsInBatch(
       topLevelType,
-      bookKeeping.eventSystemFlags,
       targetInst,
       nativeEvent,
       eventTarget,
+      bookKeeping.eventSystemFlags,
     );
   }
 }

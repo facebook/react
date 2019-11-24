@@ -26,50 +26,28 @@ describe('ReactDOMRoot', () => {
     Scheduler = require('scheduler');
   });
 
+  if (!__EXPERIMENTAL__) {
+    it('createRoot is not exposed in stable build', () => {
+      expect(ReactDOM.createRoot).toBe(undefined);
+    });
+    return;
+  }
+
   it('renders children', () => {
-    const root = ReactDOM.unstable_createRoot(container);
+    const root = ReactDOM.createRoot(container);
     root.render(<div>Hi</div>);
     Scheduler.unstable_flushAll();
     expect(container.textContent).toEqual('Hi');
   });
 
   it('unmounts children', () => {
-    const root = ReactDOM.unstable_createRoot(container);
+    const root = ReactDOM.createRoot(container);
     root.render(<div>Hi</div>);
     Scheduler.unstable_flushAll();
     expect(container.textContent).toEqual('Hi');
     root.unmount();
     Scheduler.unstable_flushAll();
     expect(container.textContent).toEqual('');
-  });
-
-  it('`root.render` returns a thenable work object', () => {
-    const root = ReactDOM.unstable_createRoot(container);
-    const work = root.render('Hi');
-    let ops = [];
-    work.then(() => {
-      ops.push('inside callback: ' + container.textContent);
-    });
-    ops.push('before committing: ' + container.textContent);
-    Scheduler.unstable_flushAll();
-    ops.push('after committing: ' + container.textContent);
-    expect(ops).toEqual([
-      'before committing: ',
-      // `then` callback should fire during commit phase
-      'inside callback: Hi',
-      'after committing: Hi',
-    ]);
-  });
-
-  it('resolves `work.then` callback synchronously if the work already committed', () => {
-    const root = ReactDOM.unstable_createRoot(container);
-    const work = root.render('Hi');
-    Scheduler.unstable_flushAll();
-    let ops = [];
-    work.then(() => {
-      ops.push('inside callback');
-    });
-    expect(ops).toEqual(['inside callback']);
   });
 
   it('supports hydration', async () => {
@@ -86,7 +64,7 @@ describe('ReactDOMRoot', () => {
     // Does not hydrate by default
     const container1 = document.createElement('div');
     container1.innerHTML = markup;
-    const root1 = ReactDOM.unstable_createRoot(container1);
+    const root1 = ReactDOM.createRoot(container1);
     root1.render(
       <div>
         <span />
@@ -97,7 +75,7 @@ describe('ReactDOMRoot', () => {
     // Accepts `hydrate` option
     const container2 = document.createElement('div');
     container2.innerHTML = markup;
-    const root2 = ReactDOM.unstable_createRoot(container2, {hydrate: true});
+    const root2 = ReactDOM.createRoot(container2, {hydrate: true});
     root2.render(
       <div>
         <span />
@@ -110,7 +88,7 @@ describe('ReactDOMRoot', () => {
 
   it('does not clear existing children', async () => {
     container.innerHTML = '<div>a</div><div>b</div>';
-    const root = ReactDOM.unstable_createRoot(container);
+    const root = ReactDOM.createRoot(container);
     root.render(
       <div>
         <span>c</span>
@@ -129,210 +107,14 @@ describe('ReactDOMRoot', () => {
     expect(container.textContent).toEqual('abdc');
   });
 
-  it('can defer a commit by batching it', () => {
-    const root = ReactDOM.unstable_createRoot(container);
-    const batch = root.createBatch();
-    batch.render(<div>Hi</div>);
-    // Hasn't committed yet
-    expect(container.textContent).toEqual('');
-    // Commit
-    batch.commit();
-    expect(container.textContent).toEqual('Hi');
-  });
-
-  it('applies setState in componentDidMount synchronously in a batch', done => {
-    class App extends React.Component {
-      state = {mounted: false};
-      componentDidMount() {
-        this.setState({
-          mounted: true,
-        });
-      }
-      render() {
-        return this.state.mounted ? 'Hi' : 'Bye';
-      }
-    }
-
-    const root = ReactDOM.unstable_createRoot(container);
-    const batch = root.createBatch();
-    batch.render(<App />);
-
-    Scheduler.unstable_flushAll();
-
-    // Hasn't updated yet
-    expect(container.textContent).toEqual('');
-
-    let ops = [];
-    batch.then(() => {
-      // Still hasn't updated
-      ops.push(container.textContent);
-
-      // Should synchronously commit
-      batch.commit();
-      ops.push(container.textContent);
-
-      expect(ops).toEqual(['', 'Hi']);
-      done();
-    });
-  });
-
-  it('does not restart a completed batch when committing if there were no intervening updates', () => {
-    let ops = [];
-    function Foo(props) {
-      ops.push('Foo');
-      return props.children;
-    }
-    const root = ReactDOM.unstable_createRoot(container);
-    const batch = root.createBatch();
-    batch.render(<Foo>Hi</Foo>);
-    // Flush all async work.
-    Scheduler.unstable_flushAll();
-    // Root should complete without committing.
-    expect(ops).toEqual(['Foo']);
-    expect(container.textContent).toEqual('');
-
-    ops = [];
-
-    // Commit. Shouldn't re-render Foo.
-    batch.commit();
-    expect(ops).toEqual([]);
-    expect(container.textContent).toEqual('Hi');
-  });
-
-  it('can wait for a batch to finish', () => {
-    const root = ReactDOM.unstable_createRoot(container);
-    const batch = root.createBatch();
-    batch.render('Foo');
-
-    Scheduler.unstable_flushAll();
-
-    // Hasn't updated yet
-    expect(container.textContent).toEqual('');
-
-    let ops = [];
-    batch.then(() => {
-      // Still hasn't updated
-      ops.push(container.textContent);
-      // Should synchronously commit
-      batch.commit();
-      ops.push(container.textContent);
-    });
-
-    expect(ops).toEqual(['', 'Foo']);
-  });
-
-  it('`batch.render` returns a thenable work object', () => {
-    const root = ReactDOM.unstable_createRoot(container);
-    const batch = root.createBatch();
-    const work = batch.render('Hi');
-    let ops = [];
-    work.then(() => {
-      ops.push('inside callback: ' + container.textContent);
-    });
-    ops.push('before committing: ' + container.textContent);
-    batch.commit();
-    ops.push('after committing: ' + container.textContent);
-    expect(ops).toEqual([
-      'before committing: ',
-      // `then` callback should fire during commit phase
-      'inside callback: Hi',
-      'after committing: Hi',
-    ]);
-  });
-
-  it('can commit an empty batch', () => {
-    const root = ReactDOM.unstable_createRoot(container);
-    root.render(1);
-
-    Scheduler.unstable_advanceTime(2000);
-    // This batch has a later expiration time than the earlier update.
-    const batch = root.createBatch();
-
-    // This should not flush the earlier update.
-    batch.commit();
-    expect(container.textContent).toEqual('');
-
-    Scheduler.unstable_flushAll();
-    expect(container.textContent).toEqual('1');
-  });
-
-  it('two batches created simultaneously are committed separately', () => {
-    // (In other words, they have distinct expiration times)
-    const root = ReactDOM.unstable_createRoot(container);
-    const batch1 = root.createBatch();
-    batch1.render(1);
-    const batch2 = root.createBatch();
-    batch2.render(2);
-
-    expect(container.textContent).toEqual('');
-
-    batch1.commit();
-    expect(container.textContent).toEqual('1');
-
-    batch2.commit();
-    expect(container.textContent).toEqual('2');
-  });
-
-  it('commits an earlier batch without committing a later batch', () => {
-    const root = ReactDOM.unstable_createRoot(container);
-    const batch1 = root.createBatch();
-    batch1.render(1);
-
-    // This batch has a later expiration time
-    Scheduler.unstable_advanceTime(2000);
-    const batch2 = root.createBatch();
-    batch2.render(2);
-
-    expect(container.textContent).toEqual('');
-
-    batch1.commit();
-    expect(container.textContent).toEqual('1');
-
-    batch2.commit();
-    expect(container.textContent).toEqual('2');
-  });
-
-  it('commits a later batch without committing an earlier batch', () => {
-    const root = ReactDOM.unstable_createRoot(container);
-    const batch1 = root.createBatch();
-    batch1.render(1);
-
-    // This batch has a later expiration time
-    Scheduler.unstable_advanceTime(2000);
-    const batch2 = root.createBatch();
-    batch2.render(2);
-
-    expect(container.textContent).toEqual('');
-
-    batch2.commit();
-    expect(container.textContent).toEqual('2');
-
-    batch1.commit();
-    Scheduler.unstable_flushAll();
-    expect(container.textContent).toEqual('1');
-  });
-
-  it('handles fatal errors triggered by batch.commit()', () => {
-    const root = ReactDOM.unstable_createRoot(container);
-    const batch = root.createBatch();
-    const InvalidType = undefined;
-    expect(() => batch.render(<InvalidType />)).toWarnDev(
-      ['React.createElement: type is invalid'],
-      {withoutStack: true},
-    );
-    expect(() => batch.commit()).toThrow('Element type is invalid');
-  });
-
   it('throws a good message on invalid containers', () => {
     expect(() => {
-      ReactDOM.unstable_createRoot(<div>Hi</div>);
-    }).toThrow(
-      'unstable_createRoot(...): Target container is not a DOM element.',
-    );
+      ReactDOM.createRoot(<div>Hi</div>);
+    }).toThrow('createRoot(...): Target container is not a DOM element.');
   });
 
   it('warns when rendering with legacy API into createRoot() container', () => {
-    const root = ReactDOM.unstable_createRoot(container);
+    const root = ReactDOM.createRoot(container);
     root.render(<div>Hi</div>);
     Scheduler.unstable_flushAll();
     expect(container.textContent).toEqual('Hi');
@@ -342,7 +124,7 @@ describe('ReactDOMRoot', () => {
       [
         // We care about this warning:
         'You are calling ReactDOM.render() on a container that was previously ' +
-          'passed to ReactDOM.unstable_createRoot(). This is not supported. ' +
+          'passed to ReactDOM.createRoot(). This is not supported. ' +
           'Did you mean to call root.render(element)?',
         // This is more of a symptom but restructuring the code to avoid it isn't worth it:
         'Replacing React-rendered children with a new root component.',
@@ -355,7 +137,7 @@ describe('ReactDOMRoot', () => {
   });
 
   it('warns when hydrating with legacy API into createRoot() container', () => {
-    const root = ReactDOM.unstable_createRoot(container);
+    const root = ReactDOM.createRoot(container);
     root.render(<div>Hi</div>);
     Scheduler.unstable_flushAll();
     expect(container.textContent).toEqual('Hi');
@@ -365,7 +147,7 @@ describe('ReactDOMRoot', () => {
       [
         // We care about this warning:
         'You are calling ReactDOM.hydrate() on a container that was previously ' +
-          'passed to ReactDOM.unstable_createRoot(). This is not supported. ' +
+          'passed to ReactDOM.createRoot(). This is not supported. ' +
           'Did you mean to call createRoot(container, {hydrate: true}).render(element)?',
         // This is more of a symptom but restructuring the code to avoid it isn't worth it:
         'Replacing React-rendered children with a new root component.',
@@ -375,7 +157,7 @@ describe('ReactDOMRoot', () => {
   });
 
   it('warns when unmounting with legacy API (no previous content)', () => {
-    const root = ReactDOM.unstable_createRoot(container);
+    const root = ReactDOM.createRoot(container);
     root.render(<div>Hi</div>);
     Scheduler.unstable_flushAll();
     expect(container.textContent).toEqual('Hi');
@@ -386,7 +168,7 @@ describe('ReactDOMRoot', () => {
       [
         // We care about this warning:
         'You are calling ReactDOM.unmountComponentAtNode() on a container that was previously ' +
-          'passed to ReactDOM.unstable_createRoot(). This is not supported. Did you mean to call root.unmount()?',
+          'passed to ReactDOM.createRoot(). This is not supported. Did you mean to call root.unmount()?',
         // This is more of a symptom but restructuring the code to avoid it isn't worth it:
         "The node you're attempting to unmount was rendered by React and is not a top-level container.",
       ],
@@ -404,7 +186,7 @@ describe('ReactDOMRoot', () => {
     // Currently createRoot().render() doesn't clear this.
     container.appendChild(document.createElement('div'));
     // The rest is the same as test above.
-    const root = ReactDOM.unstable_createRoot(container);
+    const root = ReactDOM.createRoot(container);
     root.render(<div>Hi</div>);
     Scheduler.unstable_flushAll();
     expect(container.textContent).toEqual('Hi');
@@ -423,11 +205,30 @@ describe('ReactDOMRoot', () => {
   it('warns when passing legacy container to createRoot()', () => {
     ReactDOM.render(<div>Hi</div>, container);
     expect(() => {
-      ReactDOM.unstable_createRoot(container);
+      ReactDOM.createRoot(container);
     }).toWarnDev(
-      'You are calling ReactDOM.unstable_createRoot() on a container that was previously ' +
+      'You are calling ReactDOM.createRoot() on a container that was previously ' +
         'passed to ReactDOM.render(). This is not supported.',
       {withoutStack: true},
     );
+  });
+
+  it('warns when creating two roots managing the same container', () => {
+    ReactDOM.createRoot(container);
+    expect(() => {
+      ReactDOM.createRoot(container);
+    }).toWarnDev(
+      'You are calling ReactDOM.createRoot() on a container that ' +
+        'has already been passed to createRoot() before. Instead, call ' +
+        'root.render() on the existing root instead if you want to update it.',
+      {withoutStack: true},
+    );
+  });
+
+  it('does not warn when creating second root after first one is unmounted', () => {
+    const root = ReactDOM.createRoot(container);
+    root.unmount();
+    Scheduler.unstable_flushAll();
+    ReactDOM.createRoot(container); // No warning
   });
 });

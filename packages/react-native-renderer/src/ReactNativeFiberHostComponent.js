@@ -29,7 +29,6 @@ import {
 } from './NativeMethodsMixinUtils';
 
 import warningWithoutStack from 'shared/warningWithoutStack';
-import {warnAboutDeprecatedSetNativeProps} from 'shared/ReactFeatureFlags';
 
 /**
  * This component defines the same methods as NativeMethodsMixin but without the
@@ -83,15 +82,6 @@ class ReactNativeFiberHostComponent {
       relativeNode = relativeToNativeNode;
     } else if (relativeToNativeNode._nativeTag) {
       relativeNode = relativeToNativeNode._nativeTag;
-    } else if (
-      /* $FlowFixMe canonical doesn't exist on the node.
-       I think this branch is dead and will remove it in a followup */
-      relativeToNativeNode.canonical &&
-      relativeToNativeNode.canonical._nativeTag
-    ) {
-      /* $FlowFixMe canonical doesn't exist on the node.
-       I think this branch is dead and will remove it in a followup */
-      relativeNode = relativeToNativeNode.canonical._nativeTag;
     }
 
     if (relativeNode == null) {
@@ -113,15 +103,6 @@ class ReactNativeFiberHostComponent {
 
   setNativeProps(nativeProps: Object) {
     if (__DEV__) {
-      if (warnAboutDeprecatedSetNativeProps) {
-        warningWithoutStack(
-          false,
-          'Warning: Calling ref.setNativeProps(nativeProps) ' +
-            'is deprecated and will be removed in a future release. ' +
-            'Use the setNativeProps export from the react-native package instead.' +
-            "\n\timport {setNativeProps} from 'react-native';\n\tsetNativeProps(ref, nativeProps);\n",
-        );
-      }
       warnForStyleProps(nativeProps, this.viewConfig.validAttributes);
     }
 

@@ -97,7 +97,7 @@ function isValidKey(e): boolean {
   const {key, target} = e;
   const {tagName, isContentEditable} = (target: any);
   return (
-    (key === 'Enter' || key === ' ') &&
+    (key === 'Enter' || key === ' ' || key === 'Spacebar') &&
     (tagName !== 'INPUT' &&
       tagName !== 'TEXTAREA' &&
       isContentEditable !== true)
@@ -106,7 +106,10 @@ function isValidKey(e): boolean {
 
 function handlePreventDefault(preventDefault: ?boolean, e: any): void {
   const key = e.key;
-  if (preventDefault !== false && (key === ' ' || key === 'Enter')) {
+  if (
+    preventDefault !== false &&
+    (key === ' ' || key === 'Enter' || key === 'Spacebar')
+  ) {
     e.preventDefault();
   }
 }

@@ -33,10 +33,10 @@ const ReactNativeBridgeEventPlugin = {
    */
   extractEvents: function(
     topLevelType: TopLevelType,
-    eventSystemFlags: EventSystemFlags,
     targetInst: null | Object,
     nativeEvent: AnyNativeEvent,
-    nativeEventTarget: Object,
+    nativeEventTarget: null | Object,
+    eventSystemFlags: EventSystemFlags,
   ): ?Object {
     if (targetInst == null) {
       // Probably a node belonging to another renderer's tree.

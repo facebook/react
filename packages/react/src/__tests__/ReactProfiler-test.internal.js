@@ -30,7 +30,6 @@ function loadModules({
   useNoopRenderer = false,
 } = {}) {
   ReactFeatureFlags = require('shared/ReactFeatureFlags');
-  ReactFeatureFlags.debugRenderPhaseSideEffects = false;
   ReactFeatureFlags.debugRenderPhaseSideEffectsForStrictMode = false;
   ReactFeatureFlags.enableProfilerTimer = enableProfilerTimer;
   ReactFeatureFlags.enableSchedulerTracing = enableSchedulerTracing;
@@ -96,15 +95,6 @@ function loadModules({
     return text;
   };
 }
-
-const mockDevToolsForTest = () => {
-  jest.mock('react-reconciler/src/ReactFiberDevToolsHook', () => ({
-    injectInternals: () => {},
-    onCommitRoot: () => {},
-    onCommitUnmount: () => {},
-    isDevToolsPresent: true,
-  }));
-};
 
 describe('Profiler', () => {
   describe('works in profiling and non-profiling bundles', () => {
@@ -304,6 +294,79 @@ describe('Profiler', () => {
         );
       });
 
+      it('does not report work done on a sibling', () => {
+        const callback = jest.fn();
+
+        const DoesNotUpdate = React.memo(function DoesNotUpdateInner() {
+          Scheduler.unstable_advanceTime(10);
+          return null;
+        }, () => true);
+
+        let updateProfilerSibling;
+
+        function ProfilerSibling() {
+          const [count, setCount] = React.useState(0);
+          updateProfilerSibling = () => setCount(count + 1);
+          return null;
+        }
+
+        function App() {
+          return (
+            <React.Fragment>
+              <React.Profiler id="test" onRender={callback}>
+                <DoesNotUpdate />
+              </React.Profiler>
+              <ProfilerSibling />
+            </React.Fragment>
+          );
+        }
+
+        const renderer = ReactTestRenderer.create(<App />);
+
+        expect(callback).toHaveBeenCalledTimes(1);
+
+        let call = callback.mock.calls[0];
+
+        expect(call).toHaveLength(enableSchedulerTracing ? 7 : 6);
+        expect(call[0]).toBe('test');
+        expect(call[1]).toBe('mount');
+        expect(call[2]).toBe(10); // actual time
+        expect(call[3]).toBe(10); // base time
+        expect(call[4]).toBe(0); // start time
+        expect(call[5]).toBe(10); // commit time
+        expect(call[6]).toEqual(enableSchedulerTracing ? new Set() : undefined); // interaction events
+
+        callback.mockReset();
+
+        Scheduler.unstable_advanceTime(20); // 10 -> 30
+
+        // Updating a parent should report a re-render,
+        // since React technically did a little bit of work between the Profiler and the bailed out subtree.
+        renderer.update(<App />);
+
+        expect(callback).toHaveBeenCalledTimes(1);
+
+        call = callback.mock.calls[0];
+
+        expect(call).toHaveLength(enableSchedulerTracing ? 7 : 6);
+        expect(call[0]).toBe('test');
+        expect(call[1]).toBe('update');
+        expect(call[2]).toBe(0); // actual time
+        expect(call[3]).toBe(10); // base time
+        expect(call[4]).toBe(30); // start time
+        expect(call[5]).toBe(30); // commit time
+        expect(call[6]).toEqual(enableSchedulerTracing ? new Set() : undefined); // interaction events
+
+        callback.mockReset();
+
+        Scheduler.unstable_advanceTime(20); // 30 -> 50
+
+        // Updating a sibling should not report a re-render.
+        ReactTestRenderer.act(updateProfilerSibling);
+
+        expect(callback).not.toHaveBeenCalled();
+      });
+
       it('logs render times for both mount and update', () => {
         const callback = jest.fn();
 
@@ -381,7 +444,7 @@ describe('Profiler', () => {
         Scheduler.unstable_advanceTime(5); // 0 -> 5
 
         ReactTestRenderer.create(
-          <>
+          <React.Fragment>
             <React.Profiler id="parent" onRender={callback}>
               <AdvanceTime byAmount={10}>
                 <React.Profiler id="child" onRender={callback}>
@@ -389,7 +452,7 @@ describe('Profiler', () => {
                 </React.Profiler>
               </AdvanceTime>
             </React.Profiler>
-          </>,
+          </React.Fragment>,
         );
 
         expect(callback).toHaveBeenCalledTimes(2);
@@ -416,14 +479,14 @@ describe('Profiler', () => {
         Scheduler.unstable_advanceTime(5); // 0 -> 5
 
         ReactTestRenderer.create(
-          <>
+          <React.Fragment>
             <React.Profiler id="first" onRender={callback}>
               <AdvanceTime byAmount={20} />
             </React.Profiler>
             <React.Profiler id="second" onRender={callback}>
               <AdvanceTime byAmount={5} />
             </React.Profiler>
-          </>,
+          </React.Fragment>,
         );
 
         expect(callback).toHaveBeenCalledTimes(2);
@@ -449,13 +512,13 @@ describe('Profiler', () => {
         Scheduler.unstable_advanceTime(5); // 0 -> 5
 
         ReactTestRenderer.create(
-          <>
+          <React.Fragment>
             <AdvanceTime byAmount={20} />
             <React.Profiler id="test" onRender={callback}>
               <AdvanceTime byAmount={5} />
             </React.Profiler>
             <AdvanceTime byAmount={20} />
-          </>,
+          </React.Fragment>,
         );
 
         expect(callback).toHaveBeenCalledTimes(1);
@@ -480,28 +543,18 @@ describe('Profiler', () => {
           }
         }
 
-        class Pure extends React.PureComponent {
-          render() {
-            return this.props.children;
-          }
-        }
-
         const renderer = ReactTestRenderer.create(
           <React.Profiler id="outer" onRender={callback}>
             <Updater>
-              <React.Profiler id="middle" onRender={callback}>
-                <Pure>
-                  <React.Profiler id="inner" onRender={callback}>
-                    <div />
-                  </React.Profiler>
-                </Pure>
+              <React.Profiler id="inner" onRender={callback}>
+                <div />
               </React.Profiler>
             </Updater>
           </React.Profiler>,
         );
 
         // All profile callbacks are called for initial render
-        expect(callback).toHaveBeenCalledTimes(3);
+        expect(callback).toHaveBeenCalledTimes(2);
 
         callback.mockReset();
 
@@ -511,11 +564,11 @@ describe('Profiler', () => {
           });
         });
 
-        // Only call profile updates for paths that have re-rendered
-        // Since "inner" is beneath a pure component, it isn't called
-        expect(callback).toHaveBeenCalledTimes(2);
-        expect(callback.mock.calls[0][0]).toBe('middle');
-        expect(callback.mock.calls[1][0]).toBe('outer');
+        // Only call onRender for paths that have re-rendered.
+        // Since the Updater's props didn't change,
+        // React does not re-render its children.
+        expect(callback).toHaveBeenCalledTimes(1);
+        expect(callback.mock.calls[0][0]).toBe('outer');
       });
 
       it('decreases actual time but not base time when sCU prevents an update', () => {
@@ -1205,71 +1258,6 @@ describe('Profiler', () => {
     });
   });
 
-  it('should handle interleaved async yields and batched commits', () => {
-    jest.resetModules();
-    mockDevToolsForTest();
-    loadModules({useNoopRenderer: true});
-
-    const Child = ({duration, id}) => {
-      Scheduler.unstable_advanceTime(duration);
-      Scheduler.unstable_yieldValue(`Child:render:${id}`);
-      return null;
-    };
-
-    class Parent extends React.Component {
-      componentDidMount() {
-        Scheduler.unstable_yieldValue(
-          `Parent:componentDidMount:${this.props.id}`,
-        );
-      }
-      render() {
-        const {duration, id} = this.props;
-        return (
-          <>
-            <Child duration={duration} id={id} />
-            <Child duration={duration} id={id} />
-          </>
-        );
-      }
-    }
-
-    Scheduler.unstable_advanceTime(50);
-
-    ReactNoop.renderToRootWithID(<Parent duration={3} id="one" />, 'one');
-
-    // Process up to the <Parent> component, but yield before committing.
-    // This ensures that the profiler timer still has paused fibers.
-    const commitFirstRender = ReactNoop.flushWithoutCommitting(
-      ['Child:render:one', 'Child:render:one'],
-      'one',
-    );
-
-    expect(ReactNoop.getRoot('one').current.actualDuration).toBe(0);
-
-    Scheduler.unstable_advanceTime(100);
-
-    // Process some async work, but yield before committing it.
-    ReactNoop.renderToRootWithID(<Parent duration={7} id="two" />, 'two');
-    expect(Scheduler).toFlushAndYieldThrough(['Child:render:two']);
-
-    Scheduler.unstable_advanceTime(150);
-
-    // Commit the previously paused, batched work.
-    commitFirstRender(['Parent:componentDidMount:one']);
-
-    expect(ReactNoop.getRoot('one').current.actualDuration).toBe(6);
-    expect(ReactNoop.getRoot('two').current.actualDuration).toBe(0);
-
-    Scheduler.unstable_advanceTime(200);
-
-    expect(Scheduler).toFlushAndYield([
-      'Child:render:two',
-      'Parent:componentDidMount:two',
-    ]);
-
-    expect(ReactNoop.getRoot('two').current.actualDuration).toBe(14);
-  });
-
   describe('interaction tracing', () => {
     let onInteractionScheduledWorkCompleted;
     let onInteractionTraced;
@@ -1529,11 +1517,11 @@ describe('Profiler', () => {
         render() {
           instance = this;
           return (
-            <>
+            <React.Fragment>
               <Yield value="first" />
               {this.state.count}
               <Yield value="last" />
-            </>
+            </React.Fragment>
           );
         }
       }

@@ -29,6 +29,7 @@ export type Instance = {|
   props: Object,
   isHidden: boolean,
   children: Array<Instance | TextInstance>,
+  internalInstanceHandle: Object,
   rootContainerInstance: Container,
   tag: 'INSTANCE',
 |};
@@ -52,6 +53,8 @@ export * from 'shared/HostConfigWithNoHydration';
 const EVENT_COMPONENT_CONTEXT = {};
 const NO_CONTEXT = {};
 const UPDATE_SIGNAL = {};
+const nodeToInstanceMap = new WeakMap();
+
 if (__DEV__) {
   Object.freeze(NO_CONTEXT);
   Object.freeze(UPDATE_SIGNAL);
@@ -61,10 +64,14 @@ export function getPublicInstance(inst: Instance | TextInstance): * {
   switch (inst.tag) {
     case 'INSTANCE':
       const createNodeMock = inst.rootContainerInstance.createNodeMock;
-      return createNodeMock({
+      const mockNode = createNodeMock({
         type: inst.type,
         props: inst.props,
       });
+      if (typeof mockNode === 'object' && mockNode !== null) {
+        nodeToInstanceMap.set(mockNode, inst);
+      }
+      return mockNode;
     default:
       return inst;
   }
@@ -142,11 +149,11 @@ export function createInstance(
 ): Instance {
   let propsToUse = props;
   if (enableFlareAPI) {
-    if (props.listeners != null) {
-      // We want to remove the "listeners" prop
+    if (props.DEPRECATED_flareListeners != null) {
+      // We want to remove the "DEPRECATED_flareListeners" prop
       // as we don't want it in the test renderer's
       // instance props.
-      const {listeners, ...otherProps} = props; // eslint-disable-line
+      const {DEPRECATED_flareListeners, ...otherProps} = props; // eslint-disable-line
       propsToUse = otherProps;
     }
   }
@@ -155,6 +162,7 @@ export function createInstance(
     props: propsToUse,
     isHidden: false,
     children: [],
+    internalInstanceHandle,
     rootContainerInstance,
     tag: 'INSTANCE',
   };
@@ -350,4 +358,16 @@ export function unmountFundamentalComponent(
   if (onUnmount !== undefined) {
     onUnmount(null, instance, props, state);
   }
+}
+
+export function getInstanceFromNode(mockNode: Object) {
+  const instance = nodeToInstanceMap.get(mockNode);
+  if (instance !== undefined) {
+    return instance.internalInstanceHandle;
+  }
+  return null;
+}
+
+export function beforeRemoveInstance(instance) {
+  // noop
 }
