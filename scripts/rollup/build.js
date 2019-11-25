@@ -226,7 +226,7 @@ function getFilename(name, globalName, bundleType) {
     case UMD_PROFILING:
       return `${name}.profiling.min.js`;
     case ESM_DEV:
-        return `${name}.development.mjs`;
+      return `${name}.development.mjs`;
     case ESM_PROD:
       return `${name}.production.min.mjs`;
     case NODE_DEV:

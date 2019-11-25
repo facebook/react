@@ -106,7 +106,15 @@ const bundles = [
   /******* Test Utils *******/
   {
     moduleType: RENDERER_UTILS,
-    bundleTypes: [FB_WWW_DEV, NODE_DEV, NODE_PROD, UMD_DEV, UMD_PROD, ESM_DEV, ESM_PROD],
+    bundleTypes: [
+      FB_WWW_DEV,
+      NODE_DEV,
+      NODE_PROD,
+      UMD_DEV,
+      UMD_PROD,
+      ESM_DEV,
+      ESM_PROD,
+    ],
     entry: 'react-dom/test-utils',
     global: 'ReactTestUtils',
     externals: ['react', 'react-dom'],
@@ -175,7 +183,14 @@ const bundles = [
     externals: ['react', 'react-dom/server'],
   },
   {
-    bundleTypes: [NODE_DEV, NODE_PROD, FB_WWW_DEV, FB_WWW_PROD, ESM_DEV, ESM_PROD],
+    bundleTypes: [
+      NODE_DEV,
+      NODE_PROD,
+      FB_WWW_DEV,
+      FB_WWW_PROD,
+      ESM_DEV,
+      ESM_PROD,
+    ],
     moduleType: RENDERER,
     entry: 'react-dom/unstable-fizz.node',
     global: 'ReactDOMFizzServer',
@@ -191,7 +206,14 @@ const bundles = [
     externals: ['react', 'react-dom/server'],
   },
   {
-    bundleTypes: [NODE_DEV, NODE_PROD, FB_WWW_DEV, FB_WWW_PROD, ESM_DEV, ESM_PROD],
+    bundleTypes: [
+      NODE_DEV,
+      NODE_PROD,
+      FB_WWW_DEV,
+      FB_WWW_PROD,
+      ESM_DEV,
+      ESM_PROD,
+    ],
     moduleType: RENDERER,
     entry: 'react-flight-dom-webpack/server.node',
     global: 'ReactFlightDOMServer',
@@ -303,7 +325,15 @@ const bundles = [
 
   /******* React Test Renderer *******/
   {
-    bundleTypes: [FB_WWW_DEV, NODE_DEV, NODE_PROD, ESM_DEV, ESM_PROD, UMD_DEV, UMD_PROD],
+    bundleTypes: [
+      FB_WWW_DEV,
+      NODE_DEV,
+      NODE_PROD,
+      ESM_DEV,
+      ESM_PROD,
+      UMD_DEV,
+      UMD_PROD,
+    ],
     moduleType: RENDERER,
     entry: 'react-test-renderer',
     global: 'ReactTestRenderer',
@@ -316,7 +346,15 @@ const bundles = [
       }),
   },
   {
-    bundleTypes: [FB_WWW_DEV, NODE_DEV, NODE_PROD, ESM_DEV, ESM_PROD, UMD_DEV, UMD_PROD],
+    bundleTypes: [
+      FB_WWW_DEV,
+      NODE_DEV,
+      NODE_PROD,
+      ESM_DEV,
+      ESM_PROD,
+      UMD_DEV,
+      UMD_PROD,
+    ],
     moduleType: NON_FIBER_RENDERER,
     entry: 'react-test-renderer/shallow',
     global: 'ReactShallowRenderer',
@@ -570,7 +608,14 @@ const bundles = [
 
   /******* Jest React (experimental) *******/
   {
-    bundleTypes: [NODE_DEV, NODE_PROD, ESM_DEV, ESM_PROD, FB_WWW_DEV, FB_WWW_PROD],
+    bundleTypes: [
+      NODE_DEV,
+      NODE_PROD,
+      ESM_DEV,
+      ESM_PROD,
+      FB_WWW_DEV,
+      FB_WWW_PROD,
+    ],
     moduleType: ISOMORPHIC,
     entry: 'jest-react',
     global: 'JestReact',
