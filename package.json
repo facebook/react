@@ -4,7 +4,6 @@
     "packages/*"
   ],
   "devDependencies": {
-    "@ampproject/rollup-plugin-closure-compiler": "^0.13.0",
     "@babel/cli": "^7.0.0",
     "@babel/code-frame": "^7.0.0",
     "@babel/core": "^7.0.0",

@@ -2,7 +2,7 @@
 
 const rollup = require('rollup');
 const babel = require('rollup-plugin-babel');
-const closure = require('@ampproject/rollup-plugin-closure-compiler');
+const closure = require('./plugins/closure-plugin');
 const commonjs = require('rollup-plugin-commonjs');
 const prettier = require('rollup-plugin-prettier');
 const replace = require('rollup-plugin-replace');
@@ -99,6 +99,7 @@ const errorCodeOpts = {
 
 const closureOptions = {
   compilation_level: 'SIMPLE',
+  language_in: 'ECMASCRIPT5_STRICT',
   language_out: 'ECMASCRIPT5_STRICT',
   env: 'CUSTOM',
   warning_level: 'QUIET',
@@ -228,7 +229,7 @@ function getFilename(name, globalName, bundleType) {
     case ESM_DEV:
       return `${name}.development.mjs`;
     case ESM_PROD:
-      return `${name}.production.min.mjs`;
+      return `${name}.production.mjs`;
     case NODE_DEV:
       return `${name}.development.js`;
     case NODE_PROD:
@@ -274,6 +275,10 @@ function isProductionBundleType(bundleType) {
     default:
       throw new Error(`Unknown type: ${bundleType}`);
   }
+}
+
+function isMinifiable(bundleType) {
+  return isProductionBundleType(bundleType) && bundleType !== ESM_PROD;
 }
 
 function isProfilingBundleType(bundleType) {
@@ -330,6 +335,7 @@ function getPlugins(
   const findAndRecordErrorCodes = extractErrorCodes(errorCodeOpts);
   const forks = Modules.getForks(bundleType, entry, moduleType);
   const isProduction = isProductionBundleType(bundleType);
+  const isMinified = isMinifiable(bundleType);
   const isProfiling = isProfilingBundleType(bundleType);
   const isUMDBundle =
     bundleType === UMD_DEV ||
@@ -388,7 +394,7 @@ function getPlugins(
     // We still need CommonJS for external deps like object-assign.
     commonjs(),
     // Apply dead code elimination and/or minification.
-    isProduction &&
+    isMinified &&
       closure(
         Object.assign({}, closureOptions, {
           // Don't let it create global variables in the browser.
