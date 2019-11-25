@@ -1,6 +1,6 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
-import ReactFlightDOMClient from 'react-dom/unstable-flight-client';
+import ReactFlightDOMClient from 'react-flight-dom-webpack';
 import App from './App';
 
 let data = ReactFlightDOMClient.readFromFetch(fetch('http://localhost:3001'));

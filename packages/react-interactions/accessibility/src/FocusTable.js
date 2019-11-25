@@ -346,7 +346,7 @@ export function createFocusTable(
     });
     return (
       <TableScope
-        listeners={keyboard}
+        DEPRECATED_flareListeners={keyboard}
         ref={scopeRef}
         type="cell"
         colSpan={colSpan}>

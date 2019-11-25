@@ -8,6 +8,7 @@
  */
 
 import warning from 'shared/warning';
+import {enableFlareAPI} from 'shared/ReactFeatureFlags';
 
 type PropertyType = 0 | 1 | 2 | 3 | 4 | 5 | 6;
 
@@ -207,7 +208,7 @@ function PropertyInfoRecord(
 const properties = {};
 
 // These props are reserved by React. They shouldn't be written to the DOM.
-[
+const reservedProps = [
   'children',
   'dangerouslySetInnerHTML',
   // TODO: This prevents the assignment of defaultValue to regular
@@ -219,7 +220,12 @@ const properties = {};
   'suppressContentEditableWarning',
   'suppressHydrationWarning',
   'style',
-].forEach(name => {
+];
+if (enableFlareAPI) {
+  reservedProps.push('DEPRECATED_flareListeners');
+}
+
+reservedProps.forEach(name => {
   properties[name] = new PropertyInfoRecord(
     name,
     RESERVED,

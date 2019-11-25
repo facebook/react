@@ -24,15 +24,15 @@ let ReactDOM;
 let ReactFlightDOMServer;
 let ReactFlightDOMClient;
 
-describe('ReactFlightIntegration', () => {
+describe('ReactFlightDOM', () => {
   beforeEach(() => {
     jest.resetModules();
     act = require('react-dom/test-utils').act;
     Stream = require('stream');
     React = require('react');
     ReactDOM = require('react-dom');
-    ReactFlightDOMServer = require('react-dom/unstable-flight-server');
-    ReactFlightDOMClient = require('react-dom/unstable-flight-client');
+    ReactFlightDOMServer = require('react-flight-dom-webpack/server');
+    ReactFlightDOMClient = require('react-flight-dom-webpack');
   });
 
   function getTestStream() {
@@ -52,6 +52,50 @@ describe('ReactFlightIntegration', () => {
       readable,
     };
   }
+
+  async function waitForSuspense(fn) {
+    while (true) {
+      try {
+        return fn();
+      } catch (promise) {
+        if (typeof promise.then === 'function') {
+          await promise;
+        } else {
+          throw promise;
+        }
+      }
+    }
+  }
+
+  it('should resolve HTML using Node streams', async () => {
+    function Text({children}) {
+      return <span>{children}</span>;
+    }
+    function HTML() {
+      return (
+        <div>
+          <Text>hello</Text>
+          <Text>world</Text>
+        </div>
+      );
+    }
+
+    function App() {
+      let model = {
+        html: <HTML />,
+      };
+      return model;
+    }
+
+    let {writable, readable} = getTestStream();
+    ReactFlightDOMServer.pipeToNodeWritable(<App />, writable);
+    let result = ReactFlightDOMClient.readFromReadableStream(readable);
+    await waitForSuspense(() => {
+      expect(result.model).toEqual({
+        html: '<div><span>hello</span><span>world</span></div>',
+      });
+    });
+  });
 
   it.experimental('should resolve the root', async () => {
     let {Suspense} = React;

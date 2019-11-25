@@ -72,6 +72,7 @@ describe('DOMEventResponderSystem', () => {
     jest.resetModules();
     ReactFeatureFlags = require('shared/ReactFeatureFlags');
     ReactFeatureFlags.enableFlareAPI = true;
+    ReactFeatureFlags.enableScopeAPI = true;
     React = require('react');
     ReactDOM = require('react-dom');
     ReactDOMServer = require('react-dom/server');
@@ -96,7 +97,7 @@ describe('DOMEventResponderSystem', () => {
     function Test() {
       const listener = React.unstable_useResponder(TestResponder, {});
 
-      return <div listeners={listener}>Hello world</div>;
+      return <div DEPRECATED_flareListeners={listener}>Hello world</div>;
     }
     const renderer = ReactTestRenderer.create(<Test />);
     expect(renderer).toMatchRenderedOutput(<div>Hello world</div>);
@@ -108,7 +109,7 @@ describe('DOMEventResponderSystem', () => {
     function Test() {
       const listener = React.unstable_useResponder(TestResponder, {});
 
-      return <div listeners={listener}>Hello world</div>;
+      return <div DEPRECATED_flareListeners={listener}>Hello world</div>;
     }
     const output = ReactDOMServer.renderToString(<Test />);
     expect(output).toBe(`<div data-reactroot="">Hello world</div>`);
@@ -127,7 +128,7 @@ describe('DOMEventResponderSystem', () => {
 
       return (
         <div>
-          <span listeners={listener} ref={ref}>
+          <span DEPRECATED_flareListeners={listener} ref={ref}>
             Hello world
           </span>
         </div>
@@ -165,7 +166,7 @@ describe('DOMEventResponderSystem', () => {
       const listener = React.unstable_useResponder(TestResponder, {});
 
       return (
-        <button ref={buttonRef} listeners={listener}>
+        <button ref={buttonRef} DEPRECATED_flareListeners={listener}>
           Click me!
         </button>
       );
@@ -225,7 +226,7 @@ describe('DOMEventResponderSystem', () => {
       const listener = React.unstable_useResponder(TestResponder, {});
 
       return (
-        <button ref={buttonRef} listeners={listener}>
+        <button ref={buttonRef} DEPRECATED_flareListeners={listener}>
           Click me!
         </button>
       );
@@ -270,7 +271,9 @@ describe('DOMEventResponderSystem', () => {
       const listener2 = React.unstable_useResponder(TestResponder, {});
 
       return (
-        <button ref={buttonRef} listeners={[listener, listener2]}>
+        <button
+          ref={buttonRef}
+          DEPRECATED_flareListeners={[listener, listener2]}>
           Click me!
         </button>
       );
@@ -304,8 +307,8 @@ describe('DOMEventResponderSystem', () => {
       const listener = React.unstable_useResponder(TestResponder, {});
 
       return (
-        <div listeners={listener}>
-          <button ref={buttonRef} listeners={listener}>
+        <div DEPRECATED_flareListeners={listener}>
+          <button ref={buttonRef} DEPRECATED_flareListeners={listener}>
             Click me!
           </button>
         </div>
@@ -353,7 +356,9 @@ describe('DOMEventResponderSystem', () => {
       const listener2 = React.unstable_useResponder(TestResponderB, {});
 
       return (
-        <button ref={buttonRef} listeners={[listener, listener2]}>
+        <button
+          ref={buttonRef}
+          DEPRECATED_flareListeners={[listener, listener2]}>
           Click me!
         </button>
       );
@@ -374,8 +379,8 @@ describe('DOMEventResponderSystem', () => {
       const listener2 = React.unstable_useResponder(TestResponderB, {});
 
       return (
-        <div listeners={listener}>
-          <button ref={buttonRef} listeners={listener2}>
+        <div DEPRECATED_flareListeners={listener}>
+          <button ref={buttonRef} DEPRECATED_flareListeners={listener2}>
             Click me!
           </button>
         </div>
@@ -406,8 +411,8 @@ describe('DOMEventResponderSystem', () => {
       const listener = React.unstable_useResponder(TestResponder, {name: 'A'});
       const listener2 = React.unstable_useResponder(TestResponder, {name: 'B'});
       return (
-        <div listeners={listener}>
-          <button ref={buttonRef} listeners={listener2}>
+        <div DEPRECATED_flareListeners={listener}>
+          <button ref={buttonRef} DEPRECATED_flareListeners={listener2}>
             Click me!
           </button>
         </div>
@@ -454,7 +459,7 @@ describe('DOMEventResponderSystem', () => {
       });
 
       return (
-        <button ref={buttonRef} listeners={listener}>
+        <button ref={buttonRef} DEPRECATED_flareListeners={listener}>
           Click me!
         </button>
       );
@@ -490,9 +495,9 @@ describe('DOMEventResponderSystem', () => {
       const listener = React.unstable_useResponder(TestResponder, {});
       const listener2 = React.unstable_useResponder(TestResponder2, {});
       if (toggle) {
-        return <button listeners={[listener2, listener]} />;
+        return <button DEPRECATED_flareListeners={[listener2, listener]} />;
       }
-      return <button listeners={[listener, listener2]} />;
+      return <button DEPRECATED_flareListeners={[listener, listener2]} />;
     }
 
     ReactDOM.render(<Test />, container);
@@ -515,15 +520,62 @@ describe('DOMEventResponderSystem', () => {
     function Test({test}) {
       const listener = React.unstable_useResponder(TestResponder, {});
       if (test === 0) {
-        return <button listeners={[listener]} />;
+        return <button DEPRECATED_flareListeners={[listener]} />;
       } else if (test === 1) {
-        return <button listeners={null} />;
+        return <button DEPRECATED_flareListeners={null} />;
       } else if (test === 2) {
-        return <button listeners={[]} />;
+        return <button DEPRECATED_flareListeners={[]} />;
       } else if (test === 3) {
         return <button />;
       } else if (test === 4) {
-        return <button listeners={listener} />;
+        return <button DEPRECATED_flareListeners={listener} />;
+      }
+    }
+
+    ReactDOM.render(<Test test={0} />, container);
+    ReactDOM.render(null, container);
+    expect(onUnmountFired).toEqual(1);
+
+    ReactDOM.render(<Test test={0} />, container);
+    ReactDOM.render(<Test test={1} />, container);
+    expect(onUnmountFired).toEqual(2);
+
+    ReactDOM.render(<Test test={0} />, container);
+    ReactDOM.render(<Test test={2} />, container);
+    expect(onUnmountFired).toEqual(3);
+
+    ReactDOM.render(<Test test={0} />, container);
+    ReactDOM.render(<Test test={3} />, container);
+    expect(onUnmountFired).toEqual(4);
+
+    ReactDOM.render(<Test test={0} />, container);
+    ReactDOM.render(<Test test={4} />, container);
+    expect(onUnmountFired).toEqual(4);
+  });
+
+  it('the event responder onUnmount() function should fire using scopes', () => {
+    let onUnmountFired = 0;
+
+    const TestScope = React.unstable_createScope();
+    const TestResponder = createEventResponder({
+      targetEventTypes: [],
+      onUnmount: () => {
+        onUnmountFired++;
+      },
+    });
+
+    function Test({test}) {
+      const listener = React.unstable_useResponder(TestResponder, {});
+      if (test === 0) {
+        return <TestScope DEPRECATED_flareListeners={[listener]} />;
+      } else if (test === 1) {
+        return <TestScope DEPRECATED_flareListeners={null} />;
+      } else if (test === 2) {
+        return <TestScope DEPRECATED_flareListeners={[]} />;
+      } else if (test === 3) {
+        return <TestScope />;
+      } else if (test === 4) {
+        return <TestScope DEPRECATED_flareListeners={listener} />;
       }
     }
 
@@ -563,7 +615,7 @@ describe('DOMEventResponderSystem', () => {
 
     const Test = () => {
       const listener = React.unstable_useResponder(TestResponder, {});
-      return <button listeners={listener} />;
+      return <button DEPRECATED_flareListeners={listener} />;
     };
 
     ReactDOM.render(<Test />, container);
@@ -590,7 +642,7 @@ describe('DOMEventResponderSystem', () => {
 
     const Test = () => {
       const listener = React.unstable_useResponder(TestResponder, {});
-      return <button listeners={listener}>Click me!</button>;
+      return <button DEPRECATED_flareListeners={listener}>Click me!</button>;
     };
 
     ReactDOM.render(<Test />, container);
@@ -645,8 +697,8 @@ describe('DOMEventResponderSystem', () => {
       const listener2 = React.unstable_useResponder(TestResponderB, {});
 
       return (
-        <div listeners={listener}>
-          <button ref={buttonRef} listeners={listener2}>
+        <div DEPRECATED_flareListeners={listener}>
+          <button ref={buttonRef} DEPRECATED_flareListeners={listener2}>
             Click me!
           </button>
         </div>
@@ -709,8 +761,8 @@ describe('DOMEventResponderSystem', () => {
       const listener2 = React.unstable_useResponder(TestResponderB, {});
 
       return (
-        <div listeners={listener}>
-          <button listeners={listener2}>Click me!</button>
+        <div DEPRECATED_flareListeners={listener}>
+          <button DEPRECATED_flareListeners={listener2}>Click me!</button>
         </div>
       );
     };
@@ -759,7 +811,7 @@ describe('DOMEventResponderSystem', () => {
       });
 
       return (
-        <button listeners={listener} ref={buttonRef}>
+        <button DEPRECATED_flareListeners={listener} ref={buttonRef}>
           Click me!
         </button>
       );
@@ -823,7 +875,7 @@ describe('DOMEventResponderSystem', () => {
         onFoo: e => eventLogs.push('hook'),
       });
 
-      return <button ref={buttonRef} listeners={listener} />;
+      return <button ref={buttonRef} DEPRECATED_flareListeners={listener} />;
     };
 
     ReactDOM.render(<Test />, container);
@@ -838,7 +890,7 @@ describe('DOMEventResponderSystem', () => {
         onFoo: e => eventLogs.push('hook'),
       });
 
-      return <button ref={buttonRef} listeners={listener} />;
+      return <button ref={buttonRef} DEPRECATED_flareListeners={listener} />;
     };
 
     ReactDOM.render(<Test2 />, container);
@@ -859,7 +911,7 @@ describe('DOMEventResponderSystem', () => {
       const listener = React.unstable_useResponder(TestResponder, {counter});
       Scheduler.unstable_yieldValue('Test');
       return (
-        <button listeners={listener} ref={ref}>
+        <button DEPRECATED_flareListeners={listener} ref={ref}>
           Press me
         </button>
       );
@@ -927,7 +979,7 @@ describe('DOMEventResponderSystem', () => {
       const listener = React.unstable_useResponder(TestResponder, {
         onClick: logEvent,
       });
-      return <button ref={ref} listeners={listener} />;
+      return <button ref={ref} DEPRECATED_flareListeners={listener} />;
     };
     ReactDOM.render(<Component />, container);
     dispatchClickEvent(ref.current);
@@ -970,7 +1022,7 @@ describe('DOMEventResponderSystem', () => {
     const Component = () => {
       const listener = React.unstable_useResponder(TestResponder, {});
       return (
-        <div listeners={listener}>
+        <div DEPRECATED_flareListeners={listener}>
           {ReactDOM.createPortal(<button ref={buttonRef} />, domNode)}
         </div>
       );
@@ -994,7 +1046,7 @@ describe('DOMEventResponderSystem', () => {
     const Component = () => {
       const listener = React.unstable_useResponder(TestResponder, {});
       return (
-        <div listeners={listener}>
+        <div DEPRECATED_flareListeners={listener}>
           {ReactDOM.createPortal(<button ref={buttonRef} />, domNode)}
         </div>
       );

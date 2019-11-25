@@ -1,6 +1,6 @@
 'use strict';
 
-const ReactFlightDOMServer = require('react-dom/unstable-flight-server');
+const ReactFlightDOMServer = require('react-flight-dom-webpack/server');
 const React = require('react');
 const Stream = require('stream');
 

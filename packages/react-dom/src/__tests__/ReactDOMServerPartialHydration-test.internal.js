@@ -1892,7 +1892,7 @@ describe('ReactDOMServerPartialHydration', () => {
 
     function Button() {
       let listener = React.unstable_useResponder(TestResponder, {});
-      return <a listeners={listener}>Click me</a>;
+      return <a DEPRECATED_flareListeners={listener}>Click me</a>;
     }
 
     function App() {
@@ -2041,7 +2041,7 @@ describe('ReactDOMServerPartialHydration', () => {
 
     function Button() {
       let listener = React.unstable_useResponder(TestResponder, {});
-      return <a listeners={listener}>Click me</a>;
+      return <a DEPRECATED_flareListeners={listener}>Click me</a>;
     }
 
     function Child() {
@@ -2408,13 +2408,13 @@ describe('ReactDOMServerPartialHydration', () => {
       return (
         <div>
           <Suspense fallback="Loading First...">
-            <span listeners={listener1} />
+            <span DEPRECATED_flareListeners={listener1} />
             {/* We suspend after to test what happens when we eager
                 attach the listener. */}
             <First />
           </Suspense>
           <Suspense fallback="Loading Second...">
-            <span listeners={listener2}>
+            <span DEPRECATED_flareListeners={listener2}>
               <Second />
             </span>
           </Suspense>

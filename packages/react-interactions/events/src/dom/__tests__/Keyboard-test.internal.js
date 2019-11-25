@@ -60,8 +60,8 @@ describe('Keyboard responder', () => {
         onKeyUp: onKeyUpOuter,
       });
       return (
-        <div listeners={listenerOuter}>
-          <div ref={ref} listeners={listenerInner} />
+        <div DEPRECATED_flareListeners={listenerOuter}>
+          <div ref={ref} DEPRECATED_flareListeners={listenerInner} />
         </div>
       );
     };
@@ -130,7 +130,7 @@ describe('Keyboard responder', () => {
       ref = React.createRef();
       const Component = () => {
         const listener = useKeyboard({disabled: true, onKeyDown, onKeyUp});
-        return <div ref={ref} listeners={listener} />;
+        return <div ref={ref} DEPRECATED_flareListeners={listener} />;
       };
       ReactDOM.render(<Component />, container);
     });
@@ -154,7 +154,7 @@ describe('Keyboard responder', () => {
       ref = React.createRef();
       const Component = () => {
         const listener = useKeyboard({onClick});
-        return <div ref={ref} listeners={listener} />;
+        return <div ref={ref} DEPRECATED_flareListeners={listener} />;
       };
       ReactDOM.render(<Component />, container);
     });
@@ -232,7 +232,7 @@ describe('Keyboard responder', () => {
       ref = React.createRef();
       const Component = () => {
         const listener = useKeyboard({onKeyDown});
-        return <div ref={ref} listeners={listener} />;
+        return <div ref={ref} DEPRECATED_flareListeners={listener} />;
       };
       ReactDOM.render(<Component />, container);
     });
@@ -293,7 +293,7 @@ describe('Keyboard responder', () => {
       ref = React.createRef();
       const Component = () => {
         const listener = useKeyboard({onKeyUp});
-        return <div ref={ref} listeners={listener} />;
+        return <div ref={ref} DEPRECATED_flareListeners={listener} />;
       };
       ReactDOM.render(<Component />, container);
     });
@@ -353,7 +353,7 @@ describe('Keyboard responder', () => {
       const ref = React.createRef();
       const Component = () => {
         const listener = useKeyboard(props);
-        return <div ref={ref} listeners={listener} />;
+        return <div ref={ref} DEPRECATED_flareListeners={listener} />;
       };
       ReactDOM.render(<Component />, container);
       return ref;
@@ -398,7 +398,7 @@ describe('Keyboard responder', () => {
       const ref = React.createRef();
       const Component = () => {
         const listener = useKeyboard(props);
-        return <div ref={ref} listeners={listener} />;
+        return <div ref={ref} DEPRECATED_flareListeners={listener} />;
       };
       ReactDOM.render(<Component />, container);
       return ref;
