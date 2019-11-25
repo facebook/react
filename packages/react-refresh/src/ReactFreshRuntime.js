@@ -75,7 +75,7 @@ let failedRoots: Set<FiberRoot> = new Set();
 // It needs to be weak because we do this even for roots that failed to mount.
 // If there is no WeakMap, we won't attempt to do retrying.
 // $FlowIssue
-let rootElements: WeakMap<any, Family> | null = // $FlowIssue
+let rootElements: WeakMap<any, ReactNodeList> | null = // $FlowIssue
   typeof WeakMap === 'function' ? new WeakMap() : null;
 
 let isPerformingRefresh = false;
