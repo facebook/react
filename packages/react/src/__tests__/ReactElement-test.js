@@ -358,6 +358,21 @@ describe('ReactElement', () => {
     expect(instance.props.fruit).toBe('persimmon');
   });
 
+  it('should not map key property from default props', () => {
+    class Component extends React.Component {
+      render() {
+        return <div>{this.props.key}</div>;
+      }
+    }
+
+    Component.defaultProps = {key: 'test key'};
+
+    const container = document.createElement('div');
+    const instance = ReactDOM.render(<Component />, container);
+
+    expect(instance.props.key).toBe(undefined);
+  });
+
   // NOTE: We're explicitly not using JSX here. This is intended to test
   // classic JS without JSX.
   it('should normalize props with default values', () => {
