@@ -73,3 +73,11 @@ export type ReactDOMResponderContext = {
   enqueueStateRestore(Element | Document): void,
   getResponderNode(): Element | null,
 };
+
+export type ReactDOMListener = {|
+  callback: mixed => void,
+  capture: boolean,
+  type: string,
+  passive: boolean,
+  root: boolean,
+|};

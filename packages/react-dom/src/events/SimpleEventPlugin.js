@@ -236,15 +236,17 @@ const knownHTMLTopLevelTypes: Array<DOMTopLevelEventType> = [
   DOMTopLevelEventTypes.TOP_WAITING,
 ];
 
+export function getEventPriority(topLevelType: TopLevelType): EventPriority {
+  const config = topLevelEventsToDispatchConfig[topLevelType];
+  return config !== undefined ? config.eventPriority : ContinuousEvent;
+}
+
 const SimpleEventPlugin: PluginModule<MouseEvent> & {
   getEventPriority: (topLevelType: TopLevelType) => EventPriority,
 } = {
   eventTypes: eventTypes,
 
-  getEventPriority(topLevelType: TopLevelType): EventPriority {
-    const config = topLevelEventsToDispatchConfig[topLevelType];
-    return config !== undefined ? config.eventPriority : ContinuousEvent;
-  },
+  getEventPriority,
 
   extractEvents: function(
     topLevelType: TopLevelType,

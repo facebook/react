@@ -426,7 +426,7 @@ export function unhideTextInstance(textInstance, text): void {
   // Noop
 }
 
-export function mountResponderInstance(
+export function mountDeprecatedFlareResponderInstance(
   responder: ReactEventResponder<any, any>,
   responderInstance: ReactEventResponderInstance<any, any>,
   props: Object,
@@ -436,7 +436,7 @@ export function mountResponderInstance(
   throw new Error('Not yet implemented.');
 }
 
-export function unmountResponderInstance(
+export function unmountDeprecatedFlareResponderInstance(
   responderInstance: ReactEventResponderInstance<any, any>,
 ): void {
   throw new Error('Not yet implemented.');
@@ -468,4 +468,20 @@ export function getInstanceFromNode(node) {
 
 export function beforeRemoveInstance(instance) {
   // noop
+}
+
+export function prepareListener(listener: any, rootContainerInstance: any) {
+  throw new Error('Not yet implemented.');
+}
+
+export function diffListeners(pendingListener: any, memoizedListener: any) {
+  throw new Error('Not yet implemented.');
+}
+
+export function commitListenerInstance(listenerInstance: any) {
+  throw new Error('Not yet implemented.');
+}
+
+export function unmountListenerInstance(listenerInstance: any) {
+  throw new Error('Not yet implemented.');
 }

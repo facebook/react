@@ -182,3 +182,10 @@ export type ReactScopeInstance = {|
   fiber: Object,
   methods: null | ReactScopeMethods,
 |};
+
+export type ReactListenerInstance<L> = {|
+  currentTarget: null | Object,
+  listener: L,
+  next: null | ReactListenerInstance<L>,
+  propagationDepth: number,
+|};

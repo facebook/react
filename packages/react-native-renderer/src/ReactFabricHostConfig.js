@@ -78,6 +78,7 @@ type ReactNativeEventResponder = ReactEventResponder<
 >;
 
 type Node = Object;
+export type ReactListenerType = Object;
 export type Type = string;
 export type Props = Object;
 export type Instance = {
@@ -443,7 +444,7 @@ export function replaceContainerChildren(
   newChildren: ChildSet,
 ): void {}
 
-export function mountResponderInstance(
+export function mountDeprecatedFlareResponderInstance(
   responder: ReactNativeEventResponder,
   responderInstance: ReactNativeEventResponderInstance,
   props: Object,
@@ -459,7 +460,7 @@ export function mountResponderInstance(
   }
 }
 
-export function unmountResponderInstance(
+export function unmountDeprecatedFlareResponderInstance(
   responderInstance: ReactNativeEventResponderInstance,
 ): void {
   if (enableFlareAPI) {
@@ -498,4 +499,20 @@ export function getInstanceFromNode(node) {
 
 export function beforeRemoveInstance(instance) {
   // noop
+}
+
+export function prepareListener(listener: any, rootContainerInstance: any) {
+  throw new Error('Not yet implemented.');
+}
+
+export function diffListeners(pendingListener: any, memoizedListener: any) {
+  throw new Error('Not yet implemented.');
+}
+
+export function commitListenerInstance(listenerInstance: any) {
+  throw new Error('Not yet implemented.');
+}
+
+export function unmountListenerInstance(listenerInstance: any) {
+  throw new Error('Not yet implemented.');
 }

@@ -24,6 +24,7 @@ import {
 } from 'legacy-events/ReactGenericBatching';
 import {runExtractedPluginEventsInBatch} from 'legacy-events/EventPluginHub';
 import {dispatchEventForResponderEventSystem} from './DOMEventResponderSystem';
+import {dispatchEventForListenerEventSystem} from './DOMEventListenerSystem';
 import {
   isReplayableDiscreteEvent,
   queueDiscreteEvent,
@@ -49,6 +50,7 @@ import {
   IS_PASSIVE,
   IS_ACTIVE,
   PASSIVE_NOT_SUPPORTED,
+  LISTENER_EVENT_SYSTEM,
 } from 'legacy-events/EventSystemFlags';
 
 import {
@@ -58,11 +60,11 @@ import {
 } from './EventListener';
 import getEventTarget from './getEventTarget';
 import {getClosestInstanceFromNode} from '../client/ReactDOMComponentTree';
-import SimpleEventPlugin from './SimpleEventPlugin';
+import {getEventPriority} from './SimpleEventPlugin';
 import {getRawEventName} from './DOMTopLevelEventTypes';
 import {passiveBrowserEventsSupported} from './checkPassiveEvents';
 
-import {enableFlareAPI} from 'shared/ReactFeatureFlags';
+import {enableFlareAPI, enableListenerAPI} from 'shared/ReactFeatureFlags';
 import {
   UserBlockingEvent,
   ContinuousEvent,
@@ -73,8 +75,6 @@ const {
   unstable_UserBlockingPriority: UserBlockingPriority,
   unstable_runWithPriority: runWithPriority,
 } = Scheduler;
-
-const {getEventPriority} = SimpleEventPlugin;
 
 const CALLBACK_BOOKKEEPING_POOL_SIZE = 10;
 const callbackBookkeepingPool = [];
@@ -211,12 +211,12 @@ export function trapCapturedEvent(
   trapEventForPluginEventSystem(element, topLevelType, true);
 }
 
-export function addResponderEventSystemEvent(
+export function addListenerSystemEvent(
   document: Document,
   topLevelType: string,
   passive: boolean,
 ): any => void {
-  let eventFlags = RESPONDER_EVENT_SYSTEM;
+  let eventFlags = RESPONDER_EVENT_SYSTEM | LISTENER_EVENT_SYSTEM;
 
   // If passive option is not supported, then the event will be
   // active and not passive, but we flag it as using not being
@@ -252,7 +252,7 @@ export function addResponderEventSystemEvent(
   return listener;
 }
 
-export function removeActiveResponderEventSystemEvent(
+export function removeListenerSystemEvent(
   document: Document,
   topLevelType: string,
   listener: any => void,
@@ -396,7 +396,7 @@ export function dispatchEvent(
 
   // This is not replayable so we'll invoke it but without a target,
   // in case the event system needs to trace it.
-  if (enableFlareAPI) {
+  if (enableFlareAPI || enableListenerAPI) {
     if (eventSystemFlags & PLUGIN_EVENT_SYSTEM) {
       dispatchEventForPluginEventSystem(
         topLevelType,
@@ -412,6 +412,15 @@ export function dispatchEvent(
         null,
         nativeEvent,
         getEventTarget(nativeEvent),
+        eventSystemFlags,
+      );
+    }
+    if (eventSystemFlags & LISTENER_EVENT_SYSTEM) {
+      // React Listener event system
+      dispatchEventForListenerEventSystem(
+        (topLevelType: any),
+        null,
+        nativeEvent,
         eventSystemFlags,
       );
     }
@@ -474,7 +483,7 @@ export function attemptToDispatchEvent(
     }
   }
 
-  if (enableFlareAPI) {
+  if (enableFlareAPI || enableListenerAPI) {
     if (eventSystemFlags & PLUGIN_EVENT_SYSTEM) {
       dispatchEventForPluginEventSystem(
         topLevelType,
@@ -490,6 +499,15 @@ export function attemptToDispatchEvent(
         targetInst,
         nativeEvent,
         nativeEventTarget,
+        eventSystemFlags,
+      );
+    }
+    if (eventSystemFlags & LISTENER_EVENT_SYSTEM) {
+      // React Listener event system
+      dispatchEventForListenerEventSystem(
+        (topLevelType: any),
+        targetInst,
+        nativeEvent,
         eventSystemFlags,
       );
     }

@@ -383,6 +383,7 @@ export function readContext<T>(
         expirationTime: NoWork,
         firstContext: contextItem,
         responders: null,
+        listeners: null,
       };
     } else {
       // Append a new context item.

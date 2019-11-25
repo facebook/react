@@ -20,6 +20,11 @@ import {
   unmountComponentAtNode,
 } from './ReactDOMLegacy';
 import {createRoot, createBlockingRoot, isValidContainer} from './ReactDOMRoot';
+import {
+  createListener,
+  createRootListener,
+  setEventPriority,
+} from './ReactDOMListener';
 
 import {
   batchedEventUpdates,
@@ -55,7 +60,10 @@ import ReactVersion from 'shared/ReactVersion';
 import invariant from 'shared/invariant';
 import lowPriorityWarningWithoutStack from 'shared/lowPriorityWarningWithoutStack';
 import warningWithoutStack from 'shared/warningWithoutStack';
-import {exposeConcurrentModeAPIs} from 'shared/ReactFeatureFlags';
+import {
+  exposeConcurrentModeAPIs,
+  enableListenerAPI,
+} from 'shared/ReactFeatureFlags';
 
 import {
   getInstanceFromNode,
@@ -193,6 +201,12 @@ if (exposeConcurrentModeAPIs) {
       queueExplicitHydrationTarget(target);
     }
   };
+}
+
+if (enableListenerAPI) {
+  ReactDOM.unstable_createListener = createListener;
+  ReactDOM.unstable_createRootListener = createRootListener;
+  ReactDOM.unstable_setEventPriority = setEventPriority;
 }
 
 const foundDevTools = injectIntoDevTools({

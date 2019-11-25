@@ -22,7 +22,7 @@ import ReactSharedInternals from 'shared/ReactSharedInternals';
 
 import {NoWork} from './ReactFiberExpirationTime';
 import {readContext} from './ReactFiberNewContext';
-import {createResponderListener} from './ReactFiberEvents';
+import {createResponderListener} from './ReactFiberDeprecatedFlareEvents';
 import {
   Update as UpdateEffect,
   Passive as PassiveEffect,

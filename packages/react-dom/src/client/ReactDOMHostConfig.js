@@ -27,6 +27,7 @@ import {
   warnForInsertedHydratedElement,
   warnForInsertedHydratedText,
   listenToEventResponderEventTypes,
+  listenToReactListenerEvent,
 } from './ReactDOMComponent';
 import {getSelectionInformation, restoreSelection} from './ReactInputSelection';
 import setTextContent from './setTextContent';
@@ -45,11 +46,13 @@ import {
 } from '../shared/HTMLNodeType';
 import dangerousStyleValue from '../shared/dangerousStyleValue';
 
+import type {ReactListenerInstance} from 'shared/ReactTypes';
 import type {DOMContainer} from './ReactDOM';
 import type {
   ReactDOMEventResponder,
   ReactDOMEventResponderInstance,
   ReactDOMFundamentalComponentInstance,
+  ReactDOMListener,
 } from 'shared/ReactDOMTypes';
 import {
   addRootEventTypesForResponderInstance,
@@ -58,7 +61,24 @@ import {
   dispatchEventForResponderEventSystem,
 } from '../events/DOMEventResponderSystem';
 import {retryIfBlockedOn} from '../events/ReactDOMEventReplaying';
+import {
+  enableSuspenseServerRenderer,
+  enableFlareAPI,
+  enableFundamentalAPI,
+  enableListenerAPI,
+} from 'shared/ReactFeatureFlags';
+import {
+  RESPONDER_EVENT_SYSTEM,
+  LISTENER_EVENT_SYSTEM,
+  IS_PASSIVE,
+} from 'legacy-events/EventSystemFlags';
+import {
+  addRootListenerInstance,
+  removeRootListenerInstance,
+  dispatchEventForListenerEventSystem,
+} from '../events/DOMEventListenerSystem';
 
+export type ReactListenerType = ReactDOMListener;
 export type Type = string;
 export type Props = {
   autoFocus?: boolean,
@@ -109,16 +129,6 @@ type SelectionInformation = {|
   focusedElem: null | HTMLElement,
   selectionRange: mixed,
 |};
-
-import {
-  enableSuspenseServerRenderer,
-  enableFlareAPI,
-  enableFundamentalAPI,
-} from 'shared/ReactFeatureFlags';
-import {
-  RESPONDER_EVENT_SYSTEM,
-  IS_PASSIVE,
-} from 'legacy-events/EventSystemFlags';
 
 let SUPPRESS_HYDRATION_WARNING;
 if (__DEV__) {
@@ -213,7 +223,7 @@ export function resetAfterCommit(containerInfo: Container): void {
   restoreSelection(selectionInformation);
   ReactBrowserEventEmitterSetEnabled(eventsEnabled);
   eventsEnabled = null;
-  if (enableFlareAPI) {
+  if (enableFlareAPI || enableListenerAPI) {
     const activeElementDetached = (selectionInformation: any)
       .activeElementDetached;
     if (activeElementDetached !== null) {
@@ -469,33 +479,60 @@ function dispatchBeforeDetachedBlur(target: HTMLElement): void {
   const targetInstance = getClosestInstanceFromNode(target);
   ((selectionInformation: any): SelectionInformation).activeElementDetached = target;
 
-  dispatchEventForResponderEventSystem(
-    'beforeblur',
-    targetInstance,
-    ({
+  if (enableFlareAPI) {
+    dispatchEventForResponderEventSystem(
+      'beforeblur',
+      targetInstance,
+      ({
+        target,
+        timeStamp: Date.now(),
+      }: any),
       target,
-      timeStamp: Date.now(),
-    }: any),
-    target,
-    RESPONDER_EVENT_SYSTEM | IS_PASSIVE,
-  );
+      RESPONDER_EVENT_SYSTEM | IS_PASSIVE,
+    );
+  }
+  if (enableListenerAPI) {
+    dispatchEventForListenerEventSystem(
+      'beforeblur',
+      targetInstance,
+      ({
+        target,
+        timeStamp: Date.now(),
+      }: any),
+      LISTENER_EVENT_SYSTEM | IS_PASSIVE,
+    );
+  }
 }
 
 function dispatchDetachedBlur(target: HTMLElement): void {
-  dispatchEventForResponderEventSystem(
-    'blur',
-    null,
-    ({
-      isTargetAttached: false,
+  if (enableFlareAPI) {
+    dispatchEventForResponderEventSystem(
+      'blur',
+      null,
+      ({
+        isTargetAttached: false,
+        target,
+        timeStamp: Date.now(),
+      }: any),
       target,
-      timeStamp: Date.now(),
-    }: any),
-    target,
-    RESPONDER_EVENT_SYSTEM | IS_PASSIVE,
-  );
+      RESPONDER_EVENT_SYSTEM | IS_PASSIVE,
+    );
+  }
+  if (enableListenerAPI) {
+    dispatchEventForListenerEventSystem(
+      'blur',
+      null,
+      ({
+        isTargetAttached: false,
+        target,
+        timeStamp: Date.now(),
+      }: any),
+      LISTENER_EVENT_SYSTEM | IS_PASSIVE,
+    );
+  }
 }
 
-// This is a specific event for the React Flare
+// This is a specific event for the React Flare/Listener API
 // event system, so event responders can act
 // accordingly to a DOM node being unmounted that
 // previously had active document focus.
@@ -503,7 +540,7 @@ export function beforeRemoveInstance(
   instance: Instance | TextInstance | SuspenseInstance,
 ): void {
   if (
-    enableFlareAPI &&
+    (enableFlareAPI || enableListenerAPI) &&
     selectionInformation &&
     instance === selectionInformation.focusedElem
   ) {
@@ -945,7 +982,7 @@ export function didNotFindHydratableSuspenseInstance(
   }
 }
 
-export function mountResponderInstance(
+export function mountDeprecatedFlareResponderInstance(
   responder: ReactDOMEventResponder,
   responderInstance: ReactDOMEventResponderInstance,
   responderProps: Object,
@@ -974,7 +1011,7 @@ export function mountResponderInstance(
   return responderInstance;
 }
 
-export function unmountResponderInstance(
+export function unmountDeprecatedFlareResponderInstance(
   responderInstance: ReactDOMEventResponderInstance,
 ): void {
   if (enableFlareAPI) {
@@ -1047,4 +1084,44 @@ export function unmountFundamentalComponent(
 
 export function getInstanceFromNode(node: HTMLElement): null | Object {
   return getClosestInstanceFromNode(node) || null;
+}
+
+export function prepareListener(
+  listener: ReactDOMListener,
+  rootContainerInstance: Container,
+): boolean {
+  // Listen to events
+  const doc = rootContainerInstance.ownerDocument;
+  listenToReactListenerEvent(listener, doc);
+  // If this a root listener, we need to commit the root changes
+  return listener.root === true;
+}
+
+export function diffListeners(
+  pendingListener: ReactDOMListener,
+  memoizedListener: ReactDOMListener,
+): boolean {
+  return (
+    pendingListener.type !== memoizedListener.type ||
+    pendingListener.root !== memoizedListener.root ||
+    pendingListener.passive !== memoizedListener.passive ||
+    pendingListener.capture !== memoizedListener.capture ||
+    pendingListener.callback !== memoizedListener.callback
+  );
+}
+
+export function commitListenerInstance(
+  listenerInstance: ReactListenerInstance<ReactDOMListener>,
+): void {
+  const listener = listenerInstance.listener;
+  if (listener.root === true) {
+    addRootListenerInstance(listenerInstance);
+  }
+}
+
+export function unmountListenerInstance(listenerInstance: any) {
+  const listener = listenerInstance.listener;
+  if (listener.root === true) {
+    removeRootListenerInstance(listenerInstance);
+  }
 }

@@ -7,6 +7,8 @@
  * @flow
  */
 
+import type {ReactDOMListener} from 'shared/ReactDOMTypes';
+
 // TODO: direct imports like some-package/src/* are bad. Fix me.
 import {getCurrentFiberOwnerNameInDevOrNull} from 'react-reconciler/src/ReactCurrentFiber';
 import {registrationNameModules} from 'legacy-events/EventPluginRegistry';
@@ -65,8 +67,8 @@ import {
   getListenerMapForElement,
 } from '../events/ReactBrowserEventEmitter';
 import {
-  addResponderEventSystemEvent,
-  removeActiveResponderEventSystemEvent,
+  addListenerSystemEvent,
+  removeListenerSystemEvent,
 } from '../events/ReactDOMEventListener.js';
 import {mediaEventTypes} from '../events/DOMTopLevelEventTypes';
 import {
@@ -92,6 +94,7 @@ import {toStringOrTrustedType} from './ToStringValue';
 import {
   enableFlareAPI,
   enableTrustedTypesIntegration,
+  enableListenerAPI,
 } from 'shared/ReactFeatureFlags';
 
 let didWarnInvalidHydration = false;
@@ -106,6 +109,7 @@ const CHILDREN = 'children';
 const STYLE = 'style';
 const HTML = '__html';
 const DEPRECATED_flareListeners = 'DEPRECATED_flareListeners';
+const LISTENERS = 'listeners';
 
 const {html: HTML_NAMESPACE} = Namespaces;
 
@@ -718,6 +722,7 @@ export function diffProperties(
       // Noop. This is handled by the clear text mechanism.
     } else if (
       (enableFlareAPI && propKey === DEPRECATED_flareListeners) ||
+      (enableListenerAPI && propKey === LISTENERS) ||
       propKey === SUPPRESS_CONTENT_EDITABLE_WARNING ||
       propKey === SUPPRESS_HYDRATION_WARNING
     ) {
@@ -813,6 +818,7 @@ export function diffProperties(
       }
     } else if (
       (enableFlareAPI && propKey === DEPRECATED_flareListeners) ||
+      (enableListenerAPI && propKey === LISTENERS) ||
       propKey === SUPPRESS_CONTENT_EDITABLE_WARNING ||
       propKey === SUPPRESS_HYDRATION_WARNING
     ) {
@@ -1068,6 +1074,7 @@ export function diffHydratedProperties(
         // Don't bother comparing. We're ignoring all these warnings.
       } else if (
         (enableFlareAPI && propKey === DEPRECATED_flareListeners) ||
+        (enableListenerAPI && propKey === LISTENERS) ||
         propKey === SUPPRESS_CONTENT_EDITABLE_WARNING ||
         propKey === SUPPRESS_HYDRATION_WARNING ||
         // Controlled attributes are not validated
@@ -1340,20 +1347,56 @@ export function listenToEventResponderEventTypes(
           const passiveKey = targetEventType + '_passive';
           const passiveListener = listenerMap.get(passiveKey);
           if (passiveListener != null) {
-            removeActiveResponderEventSystemEvent(
+            removeListenerSystemEvent(
               document,
               targetEventType,
               passiveListener,
             );
           }
         }
-        const eventListener = addResponderEventSystemEvent(
+        const eventListener = addListenerSystemEvent(
           document,
           targetEventType,
           isPassive,
         );
         listenerMap.set(eventKey, eventListener);
       }
+    }
+  }
+}
+
+export function listenToReactListenerEvent(
+  listener: ReactDOMListener,
+  document: Document,
+): void {
+  if (enableListenerAPI) {
+    // Get the listening Map for this element. We use this to track
+    // what events we're listening to.
+    const listenerMap = getListenerMapForElement(document);
+    const {type, passive} = listener;
+    const passiveKey = type + '_passive';
+    const activeKey = type + '_active';
+    const eventKey = passive ? passiveKey : activeKey;
+
+    if (!listenerMap.has(eventKey)) {
+      if (passive) {
+        if (listenerMap.has(activeKey)) {
+          // If we have an active event listener, do not register
+          // a passive event listener. We use the same active event
+          // listener.
+          return;
+        } else {
+          // If we have a passive event listener, remove the
+          // existing passive event listener before we add the
+          // active event listener.
+          const passiveListener = listenerMap.get(passiveKey);
+          if (passiveListener != null) {
+            removeListenerSystemEvent(document, type, passiveListener);
+          }
+        }
+      }
+      const eventListener = addListenerSystemEvent(document, type, passive);
+      listenerMap.set(eventKey, eventListener);
     }
   }
 }

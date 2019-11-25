@@ -32,6 +32,7 @@ export const disableInputAttributeSyncing = false;
 export const replayFailedUnitOfWorkWithInvokeGuardedCallback = __DEV__;
 export const warnAboutDeprecatedLifecycles = true;
 export const enableFlareAPI = false;
+export const enableListenerAPI = false;
 export const enableFundamentalAPI = false;
 export const enableScopeAPI = false;
 export const enableJSXTransformAPI = false;

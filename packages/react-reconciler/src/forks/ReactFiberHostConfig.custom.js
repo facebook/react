@@ -61,8 +61,10 @@ export const warnsIfNotActing = $$$hostConfig.warnsIfNotActing;
 export const supportsMutation = $$$hostConfig.supportsMutation;
 export const supportsPersistence = $$$hostConfig.supportsPersistence;
 export const supportsHydration = $$$hostConfig.supportsHydration;
-export const mountResponderInstance = $$$hostConfig.mountResponderInstance;
-export const unmountResponderInstance = $$$hostConfig.unmountResponderInstance;
+export const mountDeprecatedFlareResponderInstance =
+  $$$hostConfig.mountDeprecatedFlareResponderInstance;
+export const unmountDeprecatedFlareResponderInstance =
+  $$$hostConfig.unmountDeprecatedFlareResponderInstance;
 export const getFundamentalComponentInstance =
   $$$hostConfig.getFundamentalComponentInstance;
 export const mountFundamentalComponent =
@@ -71,6 +73,9 @@ export const shouldUpdateFundamentalComponent =
   $$$hostConfig.shouldUpdateFundamentalComponent;
 export const getInstanceFromNode = $$$hostConfig.getInstanceFromNode;
 export const beforeRemoveInstance = $$$hostConfig.beforeRemoveInstance;
+export const prepareListener = $$$hostConfig.prepareListener;
+export const diffListeners = $$$hostConfig.diffListeners;
+export const ReactListenerType = $$$hostConfig.ReactListenerType;
 
 // -------------------
 //      Mutation
@@ -94,6 +99,8 @@ export const updateFundamentalComponent =
   $$$hostConfig.updateFundamentalComponent;
 export const unmountFundamentalComponent =
   $$$hostConfig.unmountFundamentalComponent;
+export const commitListenerInstance = $$$hostConfig.commitListenerInstance;
+export const unmountListenerInstance = $$$hostConfig.unmountListenerInstance;
 
 // -------------------
 //     Persistence

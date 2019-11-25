@@ -54,6 +54,9 @@ export const warnAboutShorthandPropertyCollision = false;
 // Experimental React Flare event system and event components support.
 export const enableFlareAPI = false;
 
+// Experimental Listener API and event system support.
+export const enableListenerAPI = false;
+
 // Experimental Host Component support.
 export const enableFundamentalAPI = false;
 

@@ -16,6 +16,7 @@ import type {
   ReactEventResponderInstance,
   ReactFundamentalComponent,
   ReactScope,
+  ReactListenerInstance,
 } from 'shared/ReactTypes';
 import type {RootTag} from 'shared/ReactRootTags';
 import type {WorkTag} from 'shared/ReactWorkTags';
@@ -62,6 +63,7 @@ import {
 } from 'shared/ReactWorkTags';
 import getComponentName from 'shared/getComponentName';
 
+import type {ReactListenerType} from './ReactFiberHostConfig';
 import {isDevToolsPresent} from './ReactFiberDevToolsHook';
 import {
   resolveClassForHotReloading,
@@ -118,6 +120,13 @@ export type Dependencies = {
     ReactEventResponder<any, any>,
     ReactEventResponderInstance<any, any>,
   > | null,
+  listeners: null | ListenersObject,
+};
+
+export type ListenersObject = {
+  firstInstance: ReactListenerInstance<ReactListenerType> | null,
+  memoized: Array<ReactListenerType> | null,
+  pending: Array<ReactListenerType> | null,
 };
 
 // A Fiber is work on a Component that needs to be done or was done. There can
@@ -461,7 +470,9 @@ export function createWorkInProgress(
       : {
           expirationTime: currentDependencies.expirationTime,
           firstContext: currentDependencies.firstContext,
+          // TODO remove responders once we remove React Flare
           responders: currentDependencies.responders,
+          listeners: currentDependencies.listeners,
         };
 
   // These will be overridden during the parent's reconciliation
@@ -556,7 +567,9 @@ export function resetWorkInProgress(
         : {
             expirationTime: currentDependencies.expirationTime,
             firstContext: currentDependencies.firstContext,
+            // TODO remove responders once we remove React Flare
             responders: currentDependencies.responders,
+            listeners: currentDependencies.listeners,
           };
 
     if (enableProfilerTimer) {

@@ -8,7 +8,7 @@
  */
 
 import warning from 'shared/warning';
-import {enableFlareAPI} from 'shared/ReactFeatureFlags';
+import {enableFlareAPI, enableListenerAPI} from 'shared/ReactFeatureFlags';
 
 type PropertyType = 0 | 1 | 2 | 3 | 4 | 5 | 6;
 
@@ -223,6 +223,9 @@ const reservedProps = [
 ];
 if (enableFlareAPI) {
   reservedProps.push('DEPRECATED_flareListeners');
+}
+if (enableListenerAPI) {
+  reservedProps.push('listeners');
 }
 
 reservedProps.forEach(name => {

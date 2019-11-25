@@ -7,7 +7,7 @@
 
 import checkPropTypes from 'prop-types/checkPropTypes';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
-import {enableFlareAPI} from 'shared/ReactFeatureFlags';
+import {enableFlareAPI, enableListenerAPI} from 'shared/ReactFeatureFlags';
 
 let ReactDebugCurrentFrame = null;
 
@@ -36,7 +36,8 @@ if (__DEV__) {
         props.readOnly ||
         props.disabled ||
         props[propName] == null ||
-        (enableFlareAPI && props.DEPRECATED_flareListeners)
+        (enableFlareAPI && props.DEPRECATED_flareListeners) ||
+        (enableListenerAPI && props.listeners)
       ) {
         return null;
       }
@@ -53,7 +54,8 @@ if (__DEV__) {
         props.readOnly ||
         props.disabled ||
         props[propName] == null ||
-        (enableFlareAPI && props.DEPRECATED_flareListeners)
+        (enableFlareAPI && props.DEPRECATED_flareListeners) ||
+        (enableListenerAPI && props.listeners)
       ) {
         return null;
       }

@@ -30,7 +30,7 @@ import {
 } from 'react-reconciler/reflection';
 import {
   attemptToDispatchEvent,
-  addResponderEventSystemEvent,
+  addListenerSystemEvent,
 } from './ReactDOMEventListener';
 import {
   getListenerMapForElement,
@@ -222,7 +222,7 @@ function trapReplayableEvent(
     const topLevelTypeString = unsafeCastDOMTopLevelTypeToString(topLevelType);
     const passiveEventKey = topLevelTypeString + '_passive';
     if (!listenerMap.has(passiveEventKey)) {
-      const listener = addResponderEventSystemEvent(
+      const listener = addListenerSystemEvent(
         document,
         topLevelTypeString,
         true,

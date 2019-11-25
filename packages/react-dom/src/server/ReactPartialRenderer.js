@@ -33,6 +33,7 @@ import {
   enableFundamentalAPI,
   enableFlareAPI,
   enableScopeAPI,
+  enableListenerAPI,
 } from 'shared/ReactFeatureFlags';
 
 import {
@@ -371,6 +372,9 @@ function createOpenTagMarkup(
       continue;
     }
     if (enableFlareAPI && propKey === 'DEPRECATED_flareListeners') {
+      continue;
+    }
+    if (enableListenerAPI && propKey === 'listeners') {
       continue;
     }
     let propValue = props[propKey];

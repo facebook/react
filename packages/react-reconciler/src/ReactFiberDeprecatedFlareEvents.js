@@ -16,8 +16,8 @@ import type {
 } from 'shared/ReactTypes';
 
 import {
-  mountResponderInstance,
-  unmountResponderInstance,
+  mountDeprecatedFlareResponderInstance,
+  unmountDeprecatedFlareResponderInstance,
 } from './ReactFiberHostConfig';
 import {NoWork} from './ReactFiberExpirationTime';
 
@@ -82,7 +82,7 @@ function mountEventResponder(
     }
   }
 
-  mountResponderInstance(
+  mountDeprecatedFlareResponderInstance(
     responder,
     responderInstance,
     responderProps,
@@ -159,6 +159,7 @@ export function updateLegacyEventListeners(
         expirationTime: NoWork,
         firstContext: null,
         responders: new Map(),
+        listeners: null,
       };
     }
     let respondersMap = dependencies.responders;
@@ -197,7 +198,7 @@ export function updateLegacyEventListeners(
           const responderInstance = ((respondersMap.get(
             mountedResponder,
           ): any): ReactEventResponderInstance<any, any>);
-          unmountResponderInstance(responderInstance);
+          unmountDeprecatedFlareResponderInstance(responderInstance);
           respondersMap.delete(mountedResponder);
         }
       }
@@ -228,7 +229,7 @@ export function unmountResponderListeners(fiber: Fiber) {
       const responderInstances = Array.from(respondersMap.values());
       for (let i = 0, length = responderInstances.length; i < length; i++) {
         const responderInstance = responderInstances[i];
-        unmountResponderInstance(responderInstance);
+        unmountDeprecatedFlareResponderInstance(responderInstance);
       }
       dependencies.responders = null;
     }

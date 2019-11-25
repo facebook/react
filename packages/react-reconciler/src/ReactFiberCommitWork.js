@@ -33,6 +33,7 @@ import {
   enableFundamentalAPI,
   enableSuspenseCallback,
   enableScopeAPI,
+  enableListenerAPI,
 } from 'shared/ReactFeatureFlags';
 import {
   FunctionComponent,
@@ -126,7 +127,8 @@ import {runWithPriority, NormalPriority} from './SchedulerWithReactIntegration';
 import {
   updateLegacyEventListeners,
   unmountResponderListeners,
-} from './ReactFiberEvents';
+} from './ReactFiberDeprecatedFlareEvents';
+import {commitListeners, unmountListeners} from './ReactFiberListenerEvents';
 
 let didWarnAboutUndefinedSnapshotBeforeUpdate: Set<mixed> | null = null;
 if (__DEV__) {
@@ -797,6 +799,9 @@ function commitUnmount(
         unmountResponderListeners(current);
         beforeRemoveInstance(current.stateNode);
       }
+      if (enableListenerAPI) {
+        unmountListeners(current);
+      }
       safelyDetachRef(current);
       return;
     }
@@ -836,6 +841,9 @@ function commitUnmount(
     case ScopeComponent: {
       if (enableFlareAPI) {
         unmountResponderListeners(current);
+      }
+      if (enableListenerAPI) {
+        unmountListeners(current);
       }
       if (enableScopeAPI) {
         safelyDetachRef(current);
@@ -1356,6 +1364,9 @@ function commitWork(current: Fiber | null, finishedWork: Fiber): void {
             updateLegacyEventListeners(nextListeners, finishedWork, null);
           }
         }
+        if (enableListenerAPI) {
+          commitListeners(finishedWork);
+        }
       }
       return;
     }
@@ -1420,6 +1431,9 @@ function commitWork(current: Fiber | null, finishedWork: Fiber): void {
           if (prevListeners !== nextListeners || current === null) {
             updateLegacyEventListeners(nextListeners, finishedWork, null);
           }
+        }
+        if (enableListenerAPI) {
+          commitListeners(finishedWork);
         }
       }
       return;

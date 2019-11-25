@@ -15,8 +15,9 @@ import type {
   ReactFundamentalComponentInstance,
 } from 'shared/ReactTypes';
 
-import {enableFlareAPI} from 'shared/ReactFeatureFlags';
+import {enableFlareAPI, enableListenerAPI} from 'shared/ReactFeatureFlags';
 
+export type ReactListenerType = Object;
 export type Type = string;
 export type Props = Object;
 export type Container = {|
@@ -154,6 +155,15 @@ export function createInstance(
       // as we don't want it in the test renderer's
       // instance props.
       const {DEPRECATED_flareListeners, ...otherProps} = props; // eslint-disable-line
+      propsToUse = otherProps;
+    }
+  }
+  if (enableListenerAPI) {
+    if (props.listeners != null) {
+      // We want to remove the "listeners" prop
+      // as we don't want it in the test renderer's
+      // instance props.
+      const {listeners, ...otherProps} = propsToUse; // eslint-disable-line
       propsToUse = otherProps;
     }
   }
@@ -298,7 +308,7 @@ export function unhideTextInstance(
   textInstance.isHidden = false;
 }
 
-export function mountResponderInstance(
+export function mountDeprecatedFlareResponderInstance(
   responder: ReactEventResponder<any, any>,
   responderInstance: ReactEventResponderInstance<any, any>,
   props: Object,
@@ -308,7 +318,7 @@ export function mountResponderInstance(
   // noop
 }
 
-export function unmountResponderInstance(
+export function unmountDeprecatedFlareResponderInstance(
   responderInstance: ReactEventResponderInstance<any, any>,
 ): void {
   // noop
@@ -369,5 +379,24 @@ export function getInstanceFromNode(mockNode: Object) {
 }
 
 export function beforeRemoveInstance(instance) {
+  // noop
+}
+
+export function prepareListener(listener: any, rootContainerInstance: any) {
+  // noop
+}
+
+export function diffListeners(
+  pendingListener: any,
+  memoizedListener: any,
+): boolean {
+  return true;
+}
+
+export function commitListenerInstance(listenerInstance: any): void {
+  // noop
+}
+
+export function unmountListenerInstance(listenerInstance: any) {
   // noop
 }

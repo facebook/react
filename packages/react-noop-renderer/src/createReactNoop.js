@@ -374,11 +374,11 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
     warnsIfNotActing: true,
     supportsHydration: false,
 
-    mountResponderInstance(): void {
+    mountDeprecatedFlareResponderInstance(): void {
       // NO-OP
     },
 
-    unmountResponderInstance(): void {
+    unmountDeprecatedFlareResponderInstance(): void {
       // NO-OP
     },
 
@@ -434,6 +434,22 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
     },
 
     getInstanceFromNode() {
+      throw new Error('Not yet implemented.');
+    },
+
+    prepareListener(listener: any, rootContainerInstance: any) {
+      throw new Error('Not yet implemented.');
+    },
+
+    diffListeners(pendingListener: any, memoizedListener: any) {
+      throw new Error('Not yet implemented.');
+    },
+
+    commitListenerInstance(listenerInstance: any) {
+      throw new Error('Not yet implemented.');
+    },
+
+    unmountListenerInstance(listenerInstance: any) {
       throw new Error('Not yet implemented.');
     },
   };

@@ -118,6 +118,7 @@ import {
   enableFlareAPI,
   enableFundamentalAPI,
   enableScopeAPI,
+  enableListenerAPI,
 } from 'shared/ReactFeatureFlags';
 import {
   markSpawnedWork,
@@ -129,6 +130,7 @@ import {createFundamentalStateInstance} from './ReactFiberFundamental';
 import {Never} from './ReactFiberExpirationTime';
 import {resetChildFibers} from './ReactChildFiber';
 import {createScopeMethods} from './ReactFiberScope';
+import {reconcileListeners} from './ReactFiberListenerEvents';
 
 function markUpdate(workInProgress: Fiber) {
   // Tag the fiber with an update effect. This turns a Placement into
@@ -675,6 +677,7 @@ function completeWork(
       popHostContext(workInProgress);
       const rootContainerInstance = getRootHostContainer();
       const type = workInProgress.type;
+
       if (current !== null && workInProgress.stateNode != null) {
         updateHostComponent(
           current,
@@ -773,6 +776,9 @@ function completeWork(
           // If there is a ref on a host node we need to schedule a callback
           markRef(workInProgress);
         }
+      }
+      if (enableListenerAPI) {
+        reconcileListeners(current, workInProgress, rootContainerInstance);
       }
       break;
     }
@@ -1267,21 +1273,22 @@ function completeWork(
             const prevListeners =
               current.memoizedProps.DEPRECATED_flareListeners;
             const nextListeners = newProps.DEPRECATED_flareListeners;
-            if (
-              prevListeners !== nextListeners ||
-              workInProgress.ref !== null
-            ) {
+            if (prevListeners !== nextListeners) {
               markUpdate(workInProgress);
             }
-          } else {
-            if (workInProgress.ref !== null) {
-              markUpdate(workInProgress);
-            }
+          }
+
+          if (workInProgress.ref !== null) {
+            markUpdate(workInProgress);
           }
           if (current.ref !== workInProgress.ref) {
             markRef(workInProgress);
           }
         }
+      }
+      if (enableListenerAPI) {
+        const rootContainerInstance = getRootHostContainer();
+        reconcileListeners(current, workInProgress, rootContainerInstance);
       }
       break;
     }
