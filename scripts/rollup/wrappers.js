@@ -9,6 +9,8 @@ const UMD_PROFILING = Bundles.bundleTypes.UMD_PROFILING;
 const NODE_DEV = Bundles.bundleTypes.NODE_DEV;
 const NODE_PROD = Bundles.bundleTypes.NODE_PROD;
 const NODE_PROFILING = Bundles.bundleTypes.NODE_PROFILING;
+const ESM_DEV = Bundles.bundleTypes.ESM_DEV;
+const ESM_PROD = Bundles.bundleTypes.ESM_PROD;
 const FB_WWW_DEV = Bundles.bundleTypes.FB_WWW_DEV;
 const FB_WWW_PROD = Bundles.bundleTypes.FB_WWW_PROD;
 const FB_WWW_PROFILING = Bundles.bundleTypes.FB_WWW_PROFILING;
@@ -122,6 +124,28 @@ ${
           `const regeneratorRuntime = require("regenerator-runtime");`
         : ``
     }
+${source}`;
+  },
+
+  /***************** ESM_DEV *****************/
+  [ESM_DEV](source, globalName, filename, moduleType) {
+    return `/** @license React v${reactVersion}
+ * ${filename}
+ *
+${license}
+ */
+
+'use strict';
+${source}
+`;
+  },
+  /***************** ESM_PROD *****************/
+  [ESM_PROD](source, globalName, filename, moduleType) {
+    return `/** @license React v${reactVersion}
+ * ${filename}
+ *
+${license}
+ */
 ${source}`;
   },
 

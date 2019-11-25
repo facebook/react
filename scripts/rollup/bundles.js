@@ -4,6 +4,8 @@ const bundleTypes = {
   UMD_DEV: 'UMD_DEV',
   UMD_PROD: 'UMD_PROD',
   UMD_PROFILING: 'UMD_PROFILING',
+  ESM_DEV: 'ESM_DEV',
+  ESM_PROD: 'ESM_PROD',
   NODE_DEV: 'NODE_DEV',
   NODE_PROD: 'NODE_PROD',
   NODE_PROFILING: 'NODE_PROFILING',
@@ -24,6 +26,8 @@ const {
   UMD_PROFILING,
   NODE_DEV,
   NODE_PROD,
+  ESM_DEV,
+  ESM_PROD,
   NODE_PROFILING,
   FB_WWW_DEV,
   FB_WWW_PROD,
@@ -64,6 +68,8 @@ const bundles = [
       UMD_DEV,
       UMD_PROD,
       UMD_PROFILING,
+      ESM_DEV,
+      ESM_PROD,
       NODE_DEV,
       NODE_PROD,
       FB_WWW_DEV,
@@ -82,6 +88,8 @@ const bundles = [
       UMD_DEV,
       UMD_PROD,
       UMD_PROFILING,
+      ESM_DEV,
+      ESM_PROD,
       NODE_DEV,
       NODE_PROD,
       NODE_PROFILING,
@@ -98,7 +106,7 @@ const bundles = [
   /******* Test Utils *******/
   {
     moduleType: RENDERER_UTILS,
-    bundleTypes: [FB_WWW_DEV, NODE_DEV, NODE_PROD, UMD_DEV, UMD_PROD],
+    bundleTypes: [FB_WWW_DEV, NODE_DEV, NODE_PROD, UMD_DEV, UMD_PROD, ESM_DEV, ESM_PROD],
     entry: 'react-dom/test-utils',
     global: 'ReactTestUtils',
     externals: ['react', 'react-dom'],
@@ -111,6 +119,8 @@ const bundles = [
       UMD_PROD,
       NODE_DEV,
       NODE_PROD,
+      ESM_DEV,
+      ESM_PROD,
       FB_WWW_DEV,
       FB_WWW_PROD,
     ],
@@ -127,6 +137,8 @@ const bundles = [
       UMD_PROD,
       NODE_DEV,
       NODE_PROD,
+      ESM_DEV,
+      ESM_PROD,
       FB_WWW_DEV,
       FB_WWW_PROD,
     ],
@@ -142,7 +154,7 @@ const bundles = [
       }),
   },
   {
-    bundleTypes: [NODE_DEV, NODE_PROD],
+    bundleTypes: [NODE_DEV, NODE_PROD, ESM_DEV, ESM_PROD],
     moduleType: NON_FIBER_RENDERER,
     entry: 'react-dom/server.node',
     externals: ['react', 'stream'],
@@ -156,14 +168,14 @@ const bundles = [
 
   /******* React DOM Fizz Server *******/
   {
-    bundleTypes: [NODE_DEV, NODE_PROD, UMD_DEV, UMD_PROD],
+    bundleTypes: [NODE_DEV, NODE_PROD, UMD_DEV, UMD_PROD, ESM_DEV, ESM_PROD],
     moduleType: RENDERER,
     entry: 'react-dom/unstable-fizz.browser',
     global: 'ReactDOMFizzServer',
     externals: ['react', 'react-dom/server'],
   },
   {
-    bundleTypes: [NODE_DEV, NODE_PROD, FB_WWW_DEV, FB_WWW_PROD],
+    bundleTypes: [NODE_DEV, NODE_PROD, FB_WWW_DEV, FB_WWW_PROD, ESM_DEV, ESM_PROD],
     moduleType: RENDERER,
     entry: 'react-dom/unstable-fizz.node',
     global: 'ReactDOMFizzServer',
@@ -172,14 +184,14 @@ const bundles = [
 
   /******* React DOM Flight Server Webpack *******/
   {
-    bundleTypes: [NODE_DEV, NODE_PROD, UMD_DEV, UMD_PROD],
+    bundleTypes: [NODE_DEV, NODE_PROD, UMD_DEV, UMD_PROD, ESM_DEV, ESM_PROD],
     moduleType: RENDERER,
     entry: 'react-flight-dom-webpack/server.browser',
     global: 'ReactFlightDOMServer',
     externals: ['react', 'react-dom/server'],
   },
   {
-    bundleTypes: [NODE_DEV, NODE_PROD, FB_WWW_DEV, FB_WWW_PROD],
+    bundleTypes: [NODE_DEV, NODE_PROD, FB_WWW_DEV, FB_WWW_PROD, ESM_DEV, ESM_PROD],
     moduleType: RENDERER,
     entry: 'react-flight-dom-webpack/server.node',
     global: 'ReactFlightDOMServer',
@@ -193,6 +205,8 @@ const bundles = [
       NODE_PROD,
       UMD_DEV,
       UMD_PROD,
+      ESM_DEV,
+      ESM_PROD,
       FB_WWW_DEV,
       FB_WWW_PROD,
     ],
@@ -209,6 +223,8 @@ const bundles = [
       UMD_PROD,
       NODE_DEV,
       NODE_PROD,
+      ESM_DEV,
+      ESM_PROD,
       FB_WWW_DEV,
       FB_WWW_PROD,
     ],
@@ -287,7 +303,7 @@ const bundles = [
 
   /******* React Test Renderer *******/
   {
-    bundleTypes: [FB_WWW_DEV, NODE_DEV, NODE_PROD, UMD_DEV, UMD_PROD],
+    bundleTypes: [FB_WWW_DEV, NODE_DEV, NODE_PROD, ESM_DEV, ESM_PROD, UMD_DEV, UMD_PROD],
     moduleType: RENDERER,
     entry: 'react-test-renderer',
     global: 'ReactTestRenderer',
@@ -300,7 +316,7 @@ const bundles = [
       }),
   },
   {
-    bundleTypes: [FB_WWW_DEV, NODE_DEV, NODE_PROD, UMD_DEV, UMD_PROD],
+    bundleTypes: [FB_WWW_DEV, NODE_DEV, NODE_PROD, ESM_DEV, ESM_PROD, UMD_DEV, UMD_PROD],
     moduleType: NON_FIBER_RENDERER,
     entry: 'react-test-renderer/shallow',
     global: 'ReactShallowRenderer',
@@ -315,7 +331,7 @@ const bundles = [
 
   /******* React Noop Renderer (used for tests) *******/
   {
-    bundleTypes: [NODE_DEV, NODE_PROD],
+    bundleTypes: [NODE_DEV, NODE_PROD, ESM_DEV, ESM_PROD],
     moduleType: RENDERER,
     entry: 'react-noop-renderer',
     global: 'ReactNoopRenderer',
@@ -324,7 +340,7 @@ const bundles = [
 
   /******* React Noop Persistent Renderer (used for tests) *******/
   {
-    bundleTypes: [NODE_DEV, NODE_PROD],
+    bundleTypes: [NODE_DEV, NODE_PROD, ESM_DEV, ESM_PROD],
     moduleType: RENDERER,
     entry: 'react-noop-renderer/persistent',
     global: 'ReactNoopRendererPersistent',
@@ -333,7 +349,7 @@ const bundles = [
 
   /******* React Noop Server Renderer (used for tests) *******/
   {
-    bundleTypes: [NODE_DEV, NODE_PROD],
+    bundleTypes: [NODE_DEV, NODE_PROD, ESM_DEV, ESM_PROD],
     moduleType: RENDERER,
     entry: 'react-noop-renderer/server',
     global: 'ReactNoopRendererServer',
@@ -342,7 +358,7 @@ const bundles = [
 
   /******* React Noop Flight Server (used for tests) *******/
   {
-    bundleTypes: [NODE_DEV, NODE_PROD],
+    bundleTypes: [NODE_DEV, NODE_PROD, ESM_DEV, ESM_PROD],
     moduleType: RENDERER,
     entry: 'react-noop-renderer/flight-server',
     global: 'ReactNoopFlightServer',
@@ -351,7 +367,7 @@ const bundles = [
 
   /******* React Noop Flight Client (used for tests) *******/
   {
-    bundleTypes: [NODE_DEV, NODE_PROD],
+    bundleTypes: [NODE_DEV, NODE_PROD, ESM_DEV, ESM_PROD],
     moduleType: RENDERER,
     entry: 'react-noop-renderer/flight-client',
     global: 'ReactNoopFlightClient',
@@ -360,7 +376,7 @@ const bundles = [
 
   /******* React Reconciler *******/
   {
-    bundleTypes: [NODE_DEV, NODE_PROD],
+    bundleTypes: [NODE_DEV, NODE_PROD, ESM_DEV, ESM_PROD],
     moduleType: RECONCILER,
     entry: 'react-reconciler',
     global: 'ReactReconciler',
@@ -369,7 +385,7 @@ const bundles = [
 
   /******* React Persistent Reconciler *******/
   {
-    bundleTypes: [NODE_DEV, NODE_PROD],
+    bundleTypes: [NODE_DEV, NODE_PROD, ESM_DEV, ESM_PROD],
     moduleType: RECONCILER,
     entry: 'react-reconciler/persistent',
     global: 'ReactPersistentReconciler',
@@ -378,7 +394,7 @@ const bundles = [
 
   /******* React Server *******/
   {
-    bundleTypes: [NODE_DEV, NODE_PROD],
+    bundleTypes: [NODE_DEV, NODE_PROD, ESM_DEV, ESM_PROD],
     moduleType: RECONCILER,
     entry: 'react-server',
     global: 'ReactServer',
@@ -387,7 +403,7 @@ const bundles = [
 
   /******* React Flight Server *******/
   {
-    bundleTypes: [NODE_DEV, NODE_PROD],
+    bundleTypes: [NODE_DEV, NODE_PROD, ESM_DEV, ESM_PROD],
     moduleType: RECONCILER,
     entry: 'react-server/flight',
     global: 'ReactFlightServer',
@@ -396,7 +412,7 @@ const bundles = [
 
   /******* React Flight Client *******/
   {
-    bundleTypes: [NODE_DEV, NODE_PROD],
+    bundleTypes: [NODE_DEV, NODE_PROD, ESM_DEV, ESM_PROD],
     moduleType: RECONCILER,
     entry: 'react-flight',
     global: 'ReactFlightClient',
@@ -406,7 +422,7 @@ const bundles = [
   /******* Reflection *******/
   {
     moduleType: RENDERER_UTILS,
-    bundleTypes: [NODE_DEV, NODE_PROD],
+    bundleTypes: [NODE_DEV, NODE_PROD, ESM_DEV, ESM_PROD],
     entry: 'react-reconciler/reflection',
     global: 'ReactFiberTreeReflection',
     externals: [],
@@ -417,6 +433,8 @@ const bundles = [
     bundleTypes: [
       NODE_DEV,
       NODE_PROD,
+      ESM_DEV,
+      ESM_PROD,
       FB_WWW_DEV,
       FB_WWW_PROD,
       UMD_DEV,
@@ -430,7 +448,7 @@ const bundles = [
 
   /******* React Debug Tools *******/
   {
-    bundleTypes: [NODE_DEV, NODE_PROD],
+    bundleTypes: [NODE_DEV, NODE_PROD, ESM_DEV, ESM_PROD],
     moduleType: ISOMORPHIC,
     entry: 'react-debug-tools',
     global: 'ReactDebugTools',
@@ -444,6 +462,8 @@ const bundles = [
       FB_WWW_PROD,
       NODE_DEV,
       NODE_PROD,
+      ESM_DEV,
+      ESM_PROD,
       UMD_DEV,
       UMD_PROD,
     ],
@@ -455,7 +475,7 @@ const bundles = [
 
   /******* createComponentWithSubscriptions *******/
   {
-    bundleTypes: [NODE_DEV, NODE_PROD],
+    bundleTypes: [NODE_DEV, NODE_PROD, ESM_DEV, ESM_PROD],
     moduleType: ISOMORPHIC,
     entry: 'create-subscription',
     global: 'createSubscription',
@@ -470,7 +490,7 @@ const bundles = [
 
   /******* Hook for managing subscriptions safely *******/
   {
-    bundleTypes: [NODE_DEV, NODE_PROD],
+    bundleTypes: [NODE_DEV, NODE_PROD, ESM_DEV, ESM_PROD],
     moduleType: ISOMORPHIC,
     entry: 'use-subscription',
     global: 'useSubscription',
@@ -482,6 +502,8 @@ const bundles = [
     bundleTypes: [
       NODE_DEV,
       NODE_PROD,
+      ESM_DEV,
+      ESM_PROD,
       FB_WWW_DEV,
       FB_WWW_PROD,
       FB_WWW_PROFILING,
@@ -499,6 +521,8 @@ const bundles = [
       UMD_PROD,
       NODE_DEV,
       NODE_PROD,
+      ESM_DEV,
+      ESM_PROD,
       FB_WWW_DEV,
       FB_WWW_PROD,
     ],
@@ -510,7 +534,7 @@ const bundles = [
 
   /******* Jest React (experimental) *******/
   {
-    bundleTypes: [NODE_DEV, NODE_PROD, FB_WWW_DEV, FB_WWW_PROD],
+    bundleTypes: [NODE_DEV, NODE_PROD, ESM_DEV, ESM_PROD, FB_WWW_DEV, FB_WWW_PROD],
     moduleType: ISOMORPHIC,
     entry: 'jest-react',
     global: 'JestReact',
@@ -523,7 +547,7 @@ const bundles = [
     // won't get copied. We also can't create just DEV bundle because it contains a
     // NODE_ENV check inside. We should probably tweak our build process to allow
     // "raw" packages that don't get bundled.
-    bundleTypes: [NODE_DEV, NODE_PROD],
+    bundleTypes: [NODE_DEV, NODE_PROD, ESM_DEV, ESM_PROD],
     moduleType: ISOMORPHIC,
     entry: 'eslint-plugin-react-hooks',
     global: 'ESLintPluginReactHooks',
@@ -532,14 +556,14 @@ const bundles = [
 
   /******* React Fresh *******/
   {
-    bundleTypes: [NODE_DEV, NODE_PROD],
+    bundleTypes: [NODE_DEV, NODE_PROD, ESM_DEV, ESM_PROD],
     moduleType: ISOMORPHIC,
     entry: 'react-refresh/babel',
     global: 'ReactFreshBabelPlugin',
     externals: [],
   },
   {
-    bundleTypes: [NODE_DEV, NODE_PROD, FB_WWW_DEV],
+    bundleTypes: [NODE_DEV, NODE_PROD, ESM_DEV, ESM_PROD, FB_WWW_DEV],
     moduleType: ISOMORPHIC,
     entry: 'react-refresh/runtime',
     global: 'ReactFreshRuntime',
@@ -554,6 +578,8 @@ const bundles = [
       NODE_DEV,
       NODE_PROD,
       NODE_PROFILING,
+      ESM_DEV,
+      ESM_PROD,
     ],
     moduleType: ISOMORPHIC,
     entry: 'scheduler/tracing',
@@ -569,6 +595,8 @@ const bundles = [
       UMD_PROD,
       NODE_DEV,
       NODE_PROD,
+      ESM_DEV,
+      ESM_PROD,
       FB_WWW_DEV,
       FB_WWW_PROD,
     ],
@@ -584,6 +612,8 @@ const bundles = [
       UMD_PROD,
       NODE_DEV,
       NODE_PROD,
+      ESM_DEV,
+      ESM_PROD,
       FB_WWW_DEV,
       FB_WWW_PROD,
     ],
@@ -599,6 +629,8 @@ const bundles = [
       UMD_PROD,
       NODE_DEV,
       NODE_PROD,
+      ESM_DEV,
+      ESM_PROD,
       FB_WWW_DEV,
       FB_WWW_PROD,
     ],
@@ -614,6 +646,8 @@ const bundles = [
       UMD_PROD,
       NODE_DEV,
       NODE_PROD,
+      ESM_DEV,
+      ESM_PROD,
       FB_WWW_DEV,
       FB_WWW_PROD,
     ],
@@ -629,6 +663,8 @@ const bundles = [
       UMD_PROD,
       NODE_DEV,
       NODE_PROD,
+      ESM_DEV,
+      ESM_PROD,
       FB_WWW_DEV,
       FB_WWW_PROD,
     ],
@@ -644,6 +680,8 @@ const bundles = [
       UMD_PROD,
       NODE_DEV,
       NODE_PROD,
+      ESM_DEV,
+      ESM_PROD,
       FB_WWW_DEV,
       FB_WWW_PROD,
     ],
@@ -659,6 +697,8 @@ const bundles = [
       UMD_PROD,
       NODE_DEV,
       NODE_PROD,
+      ESM_DEV,
+      ESM_PROD,
       FB_WWW_DEV,
       FB_WWW_PROD,
     ],
@@ -678,6 +718,8 @@ const bundles = [
       UMD_PROD,
       NODE_DEV,
       NODE_PROD,
+      ESM_DEV,
+      ESM_PROD,
       FB_WWW_DEV,
       FB_WWW_PROD,
     ],
@@ -693,6 +735,8 @@ const bundles = [
       UMD_PROD,
       NODE_DEV,
       NODE_PROD,
+      ESM_DEV,
+      ESM_PROD,
       FB_WWW_DEV,
       FB_WWW_PROD,
     ],
@@ -708,6 +752,8 @@ const bundles = [
       UMD_PROD,
       NODE_DEV,
       NODE_PROD,
+      ESM_DEV,
+      ESM_PROD,
       FB_WWW_DEV,
       FB_WWW_PROD,
     ],
@@ -723,6 +769,8 @@ const bundles = [
       UMD_PROD,
       NODE_DEV,
       NODE_PROD,
+      ESM_DEV,
+      ESM_PROD,
       FB_WWW_DEV,
       FB_WWW_PROD,
     ],

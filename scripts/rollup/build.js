@@ -2,7 +2,7 @@
 
 const rollup = require('rollup');
 const babel = require('rollup-plugin-babel');
-const closure = require('./plugins/closure-plugin');
+const closure = require('@ampproject/rollup-plugin-closure-compiler');
 const commonjs = require('rollup-plugin-commonjs');
 const prettier = require('rollup-plugin-prettier');
 const replace = require('rollup-plugin-replace');
@@ -48,6 +48,8 @@ const {
   UMD_DEV,
   UMD_PROD,
   UMD_PROFILING,
+  ESM_DEV,
+  ESM_PROD,
   NODE_DEV,
   NODE_PROD,
   NODE_PROFILING,
@@ -97,7 +99,6 @@ const errorCodeOpts = {
 
 const closureOptions = {
   compilation_level: 'SIMPLE',
-  language_in: 'ECMASCRIPT5_STRICT',
   language_out: 'ECMASCRIPT5_STRICT',
   env: 'CUSTOM',
   warning_level: 'QUIET',
@@ -195,6 +196,9 @@ function getFormat(bundleType) {
     case UMD_PROD:
     case UMD_PROFILING:
       return `umd`;
+    case ESM_DEV:
+    case ESM_PROD:
+      return 'es';
     case NODE_DEV:
     case NODE_PROD:
     case NODE_PROFILING:
@@ -221,6 +225,10 @@ function getFilename(name, globalName, bundleType) {
       return `${name}.production.min.js`;
     case UMD_PROFILING:
       return `${name}.profiling.min.js`;
+    case ESM_DEV:
+        return `${name}.development.mjs`;
+    case ESM_PROD:
+      return `${name}.production.min.mjs`;
     case NODE_DEV:
       return `${name}.development.js`;
     case NODE_PROD:
@@ -246,6 +254,7 @@ function isProductionBundleType(bundleType) {
   switch (bundleType) {
     case UMD_DEV:
     case NODE_DEV:
+    case ESM_DEV:
     case FB_WWW_DEV:
     case RN_OSS_DEV:
     case RN_FB_DEV:
@@ -254,6 +263,7 @@ function isProductionBundleType(bundleType) {
     case NODE_PROD:
     case UMD_PROFILING:
     case NODE_PROFILING:
+    case ESM_PROD:
     case FB_WWW_PROD:
     case FB_WWW_PROFILING:
     case RN_OSS_PROD:
@@ -278,6 +288,8 @@ function isProfilingBundleType(bundleType) {
     case RN_OSS_PROD:
     case UMD_DEV:
     case UMD_PROD:
+    case ESM_DEV:
+    case ESM_PROD:
       return false;
     case FB_WWW_PROFILING:
     case NODE_PROFILING:
@@ -663,6 +675,8 @@ async function buildEverything() {
       [bundle, NODE_DEV],
       [bundle, NODE_PROD],
       [bundle, NODE_PROFILING],
+      [bundle, ESM_DEV],
+      [bundle, ESM_PROD],
       [bundle, RN_OSS_DEV],
       [bundle, RN_OSS_PROD],
       [bundle, RN_OSS_PROFILING],

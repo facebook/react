@@ -22,6 +22,7 @@
     "build-info.json",
     "index.js",
     "cjs/",
-    "umd/"
+    "umd/",
+    "esm/"
   ]
 }
