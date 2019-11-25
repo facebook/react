@@ -6,13 +6,14 @@
   "main": "index.js",
   "dependencies": {
     "esutils": "^2.0.0"
-    
+
   },
   "files": [
     "README.md",
     "index.js",
     "build-info.json",
     "cjs/",
-    "umd/"
+    "umd/",
+    "esm/"
   ]
 }

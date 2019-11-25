@@ -14,7 +14,8 @@
     "README.md",
     "index.js",
     "flight.js",
-    "cjs/"
+    "cjs/",
+    "esm/"
   ],
   "main": "index.js",
   "repository": {

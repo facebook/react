@@ -12,7 +12,8 @@
     "README.md",
     "build-info.json",
     "index.js",
-    "cjs/"
+    "cjs/",
+    "esm/"
   ],
   "dependencies": {
     "object-assign": "^4.1.1"

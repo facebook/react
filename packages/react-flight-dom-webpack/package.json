@@ -17,7 +17,8 @@
     "server.browser.js",
     "server.node.js",
     "cjs/",
-    "umd/"
+    "umd/",
+    "esm/"
   ],
   "browser": {
     "./server.js": "./server.browser.js"

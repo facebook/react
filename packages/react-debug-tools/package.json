@@ -14,7 +14,8 @@
     "README.md",
     "build-info.json",
     "index.js",
-    "cjs/"
+    "cjs/",
+    "esm/"
   ],
   "main": "index.js",
   "repository": {

@@ -15,7 +15,8 @@
     "runtime.js",
     "build-info.json",
     "cjs/",
-    "umd/"
+    "umd/",
+    "esm/"
   ],
   "main": "index.js",
   "repository": {

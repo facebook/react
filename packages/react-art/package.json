@@ -38,6 +38,7 @@
     "build-info.json",
     "index.js",
     "cjs/",
+    "esm/",
     "umd/",
     "Circle.js",
     "Rectangle.js",

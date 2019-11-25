@@ -13,7 +13,8 @@
     "LICENSE",
     "README.md",
     "index.js",
-    "cjs/"
+    "cjs/",
+    "esm/"
   ],
   "main": "index.js",
   "repository": {

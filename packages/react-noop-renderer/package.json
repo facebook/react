@@ -30,6 +30,7 @@
     "server.js",
     "flight-client.js",
     "flight-server.js",
-    "cjs/"
+    "cjs/",
+    "esm/"
   ]
 }

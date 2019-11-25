@@ -41,7 +41,8 @@
     "unstable-fizz.node.js",
     "unstable-native-dependencies.js",
     "cjs/",
-    "umd/"
+    "umd/",
+    "esm/"
   ],
   "browser": {
     "./server.js": "./server.browser.js",

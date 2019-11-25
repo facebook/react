@@ -29,7 +29,8 @@
     "tracing-profiling.js",
     "unstable_mock.js",
     "cjs/",
-    "umd/"
+    "umd/",
+    "esm/"
   ],
   "browserify": {
     "transform": [
