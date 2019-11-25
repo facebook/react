@@ -376,7 +376,13 @@ const bundles = [
 
   /******* React Reconciler *******/
   {
-    bundleTypes: [NODE_DEV, NODE_PROD, ESM_DEV, ESM_PROD],
+    bundleTypes: [
+      NODE_DEV,
+      NODE_PROD,
+      // TODO: update reconcilers to be usable with esm
+      // ESM_DEV,
+      // ESM_PROD,
+    ],
     moduleType: RECONCILER,
     entry: 'react-reconciler',
     global: 'ReactReconciler',
@@ -385,7 +391,13 @@ const bundles = [
 
   /******* React Persistent Reconciler *******/
   {
-    bundleTypes: [NODE_DEV, NODE_PROD, ESM_DEV, ESM_PROD],
+    bundleTypes: [
+      NODE_DEV,
+      NODE_PROD,
+      // TODO: update reconcilers to be usable with esm
+      // ESM_DEV,
+      // ESM_PROD,
+    ],
     moduleType: RECONCILER,
     entry: 'react-reconciler/persistent',
     global: 'ReactPersistentReconciler',
@@ -394,7 +406,13 @@ const bundles = [
 
   /******* React Server *******/
   {
-    bundleTypes: [NODE_DEV, NODE_PROD, ESM_DEV, ESM_PROD],
+    bundleTypes: [
+      NODE_DEV,
+      NODE_PROD,
+      // TODO: update reconcilers to be usable with esm
+      // ESM_DEV,
+      // ESM_PROD,
+    ],
     moduleType: RECONCILER,
     entry: 'react-server',
     global: 'ReactServer',
@@ -403,7 +421,13 @@ const bundles = [
 
   /******* React Flight Server *******/
   {
-    bundleTypes: [NODE_DEV, NODE_PROD, ESM_DEV, ESM_PROD],
+    bundleTypes: [
+      NODE_DEV,
+      NODE_PROD,
+      // TODO: update reconcilers to be usable with esm
+      // ESM_DEV,
+      // ESM_PROD,
+    ],
     moduleType: RECONCILER,
     entry: 'react-server/flight',
     global: 'ReactFlightServer',
@@ -412,7 +436,13 @@ const bundles = [
 
   /******* React Flight Client *******/
   {
-    bundleTypes: [NODE_DEV, NODE_PROD, ESM_DEV, ESM_PROD],
+    bundleTypes: [
+      NODE_DEV,
+      NODE_PROD,
+      // TODO: update reconcilers to be usable with esm
+      // ESM_DEV,
+      // ESM_PROD,
+    ],
     moduleType: RECONCILER,
     entry: 'react-flight',
     global: 'ReactFlightClient',
@@ -422,7 +452,13 @@ const bundles = [
   /******* Reflection *******/
   {
     moduleType: RENDERER_UTILS,
-    bundleTypes: [NODE_DEV, NODE_PROD, ESM_DEV, ESM_PROD],
+    bundleTypes: [
+      NODE_DEV,
+      NODE_PROD,
+      // TODO: update reconcilers to be usable with esm
+      // ESM_DEV,
+      // ESM_PROD,
+    ],
     entry: 'react-reconciler/reflection',
     global: 'ReactFiberTreeReflection',
     externals: [],
