@@ -48,7 +48,7 @@ import {
   isContextProvider as isLegacyContextProvider,
 } from './ReactFiberContext';
 import {createFiberRoot} from './ReactFiberRoot';
-import {injectInternals} from './ReactFiberDevToolsHook';
+import {injectInternals, onScheduleRoot} from './ReactFiberDevToolsHook';
 import {
   requestCurrentTimeForUpdate,
   computeExpirationForFiber,
@@ -69,7 +69,6 @@ import {
   IsThisRendererActing,
 } from './ReactFiberWorkLoop';
 import {createUpdate, enqueueUpdate} from './ReactUpdateQueue';
-import ReactFiberInstrumentation from './ReactFiberInstrumentation';
 import {
   getStackByFiberInDevAndProd,
   phase as ReactCurrentFiberPhase,
@@ -230,6 +229,9 @@ export function updateContainer(
   parentComponent: ?React$Component<any, any>,
   callback: ?Function,
 ): ExpirationTime {
+  if (__DEV__) {
+    onScheduleRoot(container, element);
+  }
   const current = container.current;
   const currentTime = requestCurrentTimeForUpdate();
   if (__DEV__) {
@@ -245,18 +247,6 @@ export function updateContainer(
     current,
     suspenseConfig,
   );
-
-  if (__DEV__) {
-    if (ReactFiberInstrumentation.debugTool) {
-      if (current.alternate === null) {
-        ReactFiberInstrumentation.debugTool.onMountContainer(container);
-      } else if (element === null) {
-        ReactFiberInstrumentation.debugTool.onUnmountContainer(container);
-      } else {
-        ReactFiberInstrumentation.debugTool.onUpdateContainer(container);
-      }
-    }
-  }
 
   const context = getContextForSubtree(parentComponent);
   if (container.context === null) {
