@@ -2358,6 +2358,7 @@ function initSuspenseListRenderState(
     workInProgress.memoizedState = ({
       isBackwards: isBackwards,
       rendering: null,
+      renderingStartTime: 0,
       last: lastContentRow,
       tail: tail,
       tailExpiration: 0,
@@ -2368,6 +2369,7 @@ function initSuspenseListRenderState(
     // We can reuse the existing object from previous renders.
     renderState.isBackwards = isBackwards;
     renderState.rendering = null;
+    renderState.renderingStartTime = 0;
     renderState.last = lastContentRow;
     renderState.tail = tail;
     renderState.tailExpiration = 0;
