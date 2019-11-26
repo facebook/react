@@ -2633,8 +2633,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
   });
 
   it('calls unstable_do_not_use_getHostNodes once when component unsuspends', async () => {
-    let children;
-    let counter = 0;
+    const log = [];
     function Child() {
       return 'Hi';
     }
@@ -2643,8 +2642,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
         <Suspense
           fallback={'Loading'}
           unstable_do_not_use_getHostNodes={suspenseChildren => {
-            children = suspenseChildren;
-            counter++;
+            log.push(suspenseChildren);
           }}>
           <AsyncText text="A" ms={1000} />
           <Child />
@@ -2661,7 +2659,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     await ReactNoop.act(async () => {
       root.render(<App />);
     });
-    expect(children).toEqual(undefined);
+    expect(log).toEqual([]);
 
     await ReactNoop.act(async () => {
       Scheduler.unstable_advanceTime(1000);
@@ -2686,11 +2684,13 @@ describe('ReactSuspenseWithNoopRenderer', () => {
         <span prop="C" />
       </React.Fragment>,
     );
-    expect(children).toEqual([
-      span('A'),
-      {text: 'Hi', hidden: false},
-      {text: 'Loading', hidden: false},
-      span('C'),
+    expect(log).toEqual([
+      [
+        span('A'),
+        {text: 'Hi', hidden: false},
+        {text: 'Loading', hidden: false},
+        span('C'),
+      ],
     ]);
 
     await ReactNoop.act(async () => {
@@ -2701,26 +2701,24 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     expect(Scheduler).toHaveYielded(['Promise resolved [B]', 'B']);
 
     // children should be equal to what it was the first time
-    expect(children).toEqual([
-      span('A'),
-      {text: 'Hi', hidden: false},
-      {text: 'Loading', hidden: false},
-      span('C'),
+    expect(log).toEqual([
+      [
+        span('A'),
+        {text: 'Hi', hidden: false},
+        {text: 'Loading', hidden: false},
+        span('C'),
+      ],
     ]);
-
-    expect(counter).toEqual(1);
   });
 
   it('calls unstable_do_not_use_getHostNodes on mount if the component never suspends', async () => {
-    let children = [];
-    let counter = 0;
+    let log = [];
     function App() {
       return (
         <Suspense
           fallback={'Loading'}
           unstable_do_not_use_getHostNodes={suspenseChildren => {
-            children = suspenseChildren;
-            counter++;
+            log.push(suspenseChildren);
           }}>
           <span>Hi</span>
         </Suspense>
@@ -2731,14 +2729,11 @@ describe('ReactSuspenseWithNoopRenderer', () => {
       root.render(<App />);
     });
     expect(root).toMatchRenderedOutput(<span>Hi</span>);
-    expect(children.length).toBe(1);
-    expect(counter).toEqual(1);
-    expect(children).toEqual([span()]);
+    expect(log).toEqual([[span()]]);
   });
 
   it('calls unstable_do_not_use_getHostNodes every time component unsuspends', async () => {
-    let children = [];
-    let counter = 0;
+    let log = [];
     let _setShowText;
     function App() {
       const [showText, setShowText] = React.useState(false);
@@ -2747,8 +2742,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
         <Suspense
           fallback={'Loading'}
           unstable_do_not_use_getHostNodes={suspenseChildren => {
-            children = suspenseChildren;
-            counter++;
+            log.push(suspenseChildren);
           }}>
           <AsyncText text="A" ms={1000} />
           {showText && <AsyncText text="B" ms={3000} />}
@@ -2762,7 +2756,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
 
     expect(Scheduler).toHaveYielded(['Suspend! [A]']);
     expect(root).toMatchRenderedOutput('Loading');
-    expect(children).toEqual([]);
+    expect(log).toEqual([]);
 
     await ReactNoop.act(async () => {
       Scheduler.unstable_advanceTime(1000);
@@ -2771,8 +2765,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
 
     expect(Scheduler).toHaveYielded(['Promise resolved [A]', 'A']);
     expect(root).toMatchRenderedOutput(<span prop="A" />);
-    expect(children).toEqual([span('A')]);
-    expect(counter).toEqual(1);
+    expect(log).toEqual([[span('A')]]);
 
     await ReactNoop.act(async () => _setShowText(true));
 
@@ -2782,14 +2775,13 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     });
 
     expect(Scheduler).toHaveYielded(['A', 'Suspend! [B]']);
-    expect(counter).toEqual(1);
     expect(root).toMatchRenderedOutput(
       <React.Fragment>
         <span hidden={true} prop="A" />
         {'Loading'}
       </React.Fragment>,
     );
-    expect(children).toEqual([hiddenSpan('A')]);
+    expect(log).toEqual([[hiddenSpan('A')]]);
 
     await ReactNoop.act(async () => {
       Scheduler.unstable_advanceTime(1000);
@@ -2797,19 +2789,17 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     });
 
     expect(Scheduler).toHaveYielded(['Promise resolved [B]', 'A', 'B']);
-    expect(counter).toEqual(2);
     expect(root).toMatchRenderedOutput(
       <React.Fragment>
         <span prop="A" />
         <span prop="B" />
       </React.Fragment>,
     );
-    expect(children).toEqual([span('A'), span('B')]);
+    expect(log).toEqual([[span('A')], [span('A'), span('B')]]);
   });
 
   it('does not call unstable_do_not_use_getHostNodes during updates if component does not suspend', async () => {
-    let children = [];
-    let counter = 0;
+    let log = [];
     let _setShowText;
     function App() {
       const [showText, setShowText] = React.useState(false);
@@ -2818,8 +2808,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
         <Suspense
           fallback={'Loading'}
           unstable_do_not_use_getHostNodes={suspenseChildren => {
-            children = suspenseChildren;
-            counter++;
+            log.push(suspenseChildren);
           }}>
           {showText ? 'Hi' : 'Bye'}
         </Suspense>
@@ -2832,12 +2821,10 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     });
 
     expect(root).toMatchRenderedOutput('Bye');
-    expect(children).toEqual([{hidden: false, text: 'Bye'}]);
-    expect(counter).toEqual(1);
+    expect(log).toEqual([[{hidden: false, text: 'Bye'}]]);
 
     ReactNoop.act(() => _setShowText(true));
 
-    expect(counter).toEqual(1);
-    expect(children).toEqual([{hidden: false, text: 'Hi'}]);
+    expect(log).toEqual([[{hidden: false, text: 'Hi'}]]);
   });
 });
