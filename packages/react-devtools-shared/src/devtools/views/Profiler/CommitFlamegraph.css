@@ -8,3 +8,12 @@
   stroke: var(--color-commit-did-not-render-pattern);
   stroke-width: 1;
 }
+
+.FixedSizeList {
+  overflow-y: scroll;
+}
+
+.InnerElement {
+  /* since width is controlled by react-window, need to set !important or it will be overridden */
+  width: calc(100% - var(--scrollbar-width)) !important;
+}

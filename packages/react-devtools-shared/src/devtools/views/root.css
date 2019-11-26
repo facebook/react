@@ -169,6 +169,9 @@
   /* Constant values shared between JS and CSS */
   --interaction-commit-size: 10px;
   --interaction-label-width: 200px;
+
+  /* Scrollbar */
+  --scrollbar-width: 11px;
 }
 
 * {

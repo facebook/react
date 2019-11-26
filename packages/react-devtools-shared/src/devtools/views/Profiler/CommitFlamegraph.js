@@ -142,6 +142,7 @@ function CommitFlamegraph({chartData, commitTree, height, width}: Props) {
 
   return (
     <FixedSizeList
+      className={styles.FixedSizeList}
       height={height}
       innerElementType={InnerElementType}
       itemCount={chartData.depth}
@@ -154,7 +155,7 @@ function CommitFlamegraph({chartData, commitTree, height, width}: Props) {
 }
 
 const InnerElementType = forwardRef(({children, ...rest}, ref) => (
-  <svg ref={ref} {...rest}>
+  <svg ref={ref} className={styles.InnerElement} {...rest}>
     <defs>
       <pattern
         id="didNotRenderPattern"
