@@ -18,6 +18,7 @@ const Stats = require('./stats');
 const Sync = require('./sync');
 const sizes = require('./plugins/sizes-plugin');
 const useForks = require('./plugins/use-forks-plugin');
+const forbidFBJSImports = require('./plugins/forbid-fbjs');
 const stripUnusedImports = require('./plugins/strip-unused-imports');
 const extractErrorCodes = require('../error-codes/extract-errors');
 const Packaging = require('./packaging');
@@ -99,10 +100,9 @@ const errorCodeOpts = {
 
 const closureOptions = {
   compilation_level: 'SIMPLE',
-  language_in: 'ECMASCRIPT5_STRICT',
-  language_out: 'ECMASCRIPT5_STRICT',
   env: 'CUSTOM',
   warning_level: 'QUIET',
+  module_resolution: 'NODE',
   apply_input_source_maps: false,
   use_types_for_optimization: false,
   process_common_js_modules: false,
@@ -150,6 +150,8 @@ function getBabelConfig(updateBabelOptions, bundleType, filename) {
     case UMD_DEV:
     case UMD_PROD:
     case UMD_PROFILING:
+    case ESM_DEV:
+    case ESM_PROD:
     case NODE_DEV:
     case NODE_PROD:
     case NODE_PROFILING:
@@ -278,7 +280,20 @@ function isProductionBundleType(bundleType) {
 }
 
 function isMinifiable(bundleType) {
-  return isProductionBundleType(bundleType) && bundleType !== ESM_PROD;
+  // esm minification is TODO
+  return isProductionBundleType(bundleType) && !isEsmBundle(bundleType);
+}
+
+function isEsmBundle(bundleType) {
+  return bundleType === ESM_DEV || bundleType === ESM_PROD;
+}
+
+function getOutputType(bundleType) {
+  if (isEsmBundle) {
+    return 'ECMASCRIPT6_STRICT';
+  } else {
+    return 'ECMASCRIPT5_STRICT';
+  }
 }
 
 function isProfilingBundleType(bundleType) {
@@ -305,20 +320,6 @@ function isProfilingBundleType(bundleType) {
     default:
       throw new Error(`Unknown type: ${bundleType}`);
   }
-}
-
-function forbidFBJSImports() {
-  return {
-    name: 'forbidFBJSImports',
-    resolveId(importee, importer) {
-      if (/^fbjs\//.test(importee)) {
-        throw new Error(
-          `Don't import ${importee} (found in ${importer}). ` +
-            `Use the utilities in packages/shared/ instead.`
-        );
-      }
-    },
-  };
 }
 
 function getPlugins(
@@ -401,6 +402,7 @@ function getPlugins(
           // https://github.com/facebook/react/issues/10909
           assume_function_wrapper: !isUMDBundle,
           renaming: !shouldStayReadable,
+          language_out: getOutputType(bundleType),
         })
       ),
     // HACK to work around the fact that Rollup isn't removing unused, pure-module imports.
