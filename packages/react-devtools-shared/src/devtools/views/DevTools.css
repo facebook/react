@@ -52,3 +52,17 @@
     display: none;
   }
 }
+
+::-webkit-scrollbar-thumb  {
+  background-color: var(--color-scroll-thumb);
+  border-radius: 2px;
+}
+
+::-webkit-scrollbar-track {
+  background-color: var(--color-scroll-track);
+  border-left: 1px solid var(--color-border);
+}
+
+::-webkit-scrollbar {
+  width: 14px;
+}
