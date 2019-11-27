@@ -2,25 +2,17 @@ const {execSync} = require('child_process');
 const {readFileSync} = require('fs');
 const {resolve} = require('path');
 
+const GITHUB_URL = 'https://github.com/facebook/react';
+
 function getGitCommit() {
-  return execSync('git show -s --format=%h')
-    .toString()
-    .trim();
-}
-
-function getGitHubURL() {
-  // TODO potentially replace this with an fb.me URL (assuming it can forward the query params)
-  const url = execSync('git remote get-url origin')
-    .toString()
-    .trim();
-
-  if (url.startsWith('https://')) {
-    return url.replace('.git', '');
-  } else {
-    return url
-      .replace(':', '/')
-      .replace('git@', 'https://')
-      .replace('.git', '');
+  try {
+    return execSync('git show -s --format=%h')
+      .toString()
+      .trim();
+  } catch (error) {
+    // Mozilla runs this command from a git archive.
+    // In that context, there is no Git revision.
+    return null;
   }
 }
 
@@ -36,4 +28,8 @@ function getVersionString() {
   return `${packageVersion}-${commit}`;
 }
 
-module.exports = {getGitCommit, getGitHubURL, getVersionString};
+module.exports = {
+  GITHUB_URL,
+  getGitCommit,
+  getVersionString,
+};

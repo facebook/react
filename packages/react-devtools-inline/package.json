@@ -38,8 +38,8 @@
     "css-loader": "^1.0.1",
     "raw-loader": "^3.1.0",
     "style-loader": "^0.23.1",
-    "webpack": "^4.26.0",
-    "webpack-cli": "^3.1.2",
+    "webpack": "^4.41.2",
+    "webpack-cli": "^3.3.10",
     "webpack-dev-server": "^3.3.1"
   }
 }
