@@ -232,7 +232,6 @@ let workInProgressRootFatalError: mixed = null;
 // because we deal mostly with expiration times in the hot path, so this avoids
 // the conversion happening in the hot path.
 let workInProgressRootLatestProcessedExpirationTime: ExpirationTime = Sync;
-let workInProgressRootLatestSuspenseTimeout: ExpirationTime = Sync;
 let workInProgressRootCanSuspendUsingConfig: null | SuspenseConfig = null;
 // The work left over by components that were visited during this render. Only
 // includes unprocessed updates, not work in bailed out children.
@@ -882,11 +881,21 @@ function finishConcurrentRender(
         }
 
         let msUntilTimeout;
-        if (workInProgressRootLatestSuspenseTimeout !== Sync) {
+        if (workInProgressRootCanSuspendUsingConfig !== null) {
           // We have processed a suspense config whose expiration time we
           // can use as the timeout.
-          msUntilTimeout =
-            expirationTimeToMs(workInProgressRootLatestSuspenseTimeout) - now();
+          if (
+            typeof workInProgressRootCanSuspendUsingConfig.busyDelayMs ===
+              'number' &&
+            typeof workInProgressRootCanSuspendUsingConfig.busyMinDurationMs ===
+              'number'
+          ) {
+            msUntilTimeout =
+              workInProgressRootCanSuspendUsingConfig.busyDelayMs +
+              workInProgressRootCanSuspendUsingConfig.busyMinDurationMs;
+          } else {
+            msUntilTimeout = workInProgressRootCanSuspendUsingConfig.timeoutMs;
+          }
         } else if (workInProgressRootLatestProcessedExpirationTime === Sync) {
           // This should never normally happen because only new updates
           // cause delayed states, so we should have processed something.
@@ -1259,7 +1268,6 @@ function prepareFreshStack(root, expirationTime) {
   workInProgressRootExitStatus = RootIncomplete;
   workInProgressRootFatalError = null;
   workInProgressRootLatestProcessedExpirationTime = Sync;
-  workInProgressRootLatestSuspenseTimeout = Sync;
   workInProgressRootCanSuspendUsingConfig = null;
   workInProgressRootNextUnprocessedUpdateTime = NoWork;
   workInProgressRootHasPendingPing = false;
@@ -1364,14 +1372,8 @@ export function markRenderEventTimeAndConfig(
     workInProgressRootLatestProcessedExpirationTime = expirationTime;
   }
   if (suspenseConfig !== null) {
-    if (
-      expirationTime < workInProgressRootLatestSuspenseTimeout &&
-      expirationTime > Idle
-    ) {
-      workInProgressRootLatestSuspenseTimeout = expirationTime;
-      // Most of the time we only have one config and getting wrong is not bad.
-      workInProgressRootCanSuspendUsingConfig = suspenseConfig;
-    }
+    // Most of the time we only have one config and getting wrong is not bad.
+    workInProgressRootCanSuspendUsingConfig = suspenseConfig;
   }
 }
 
