@@ -9,6 +9,10 @@
 
 const helperModuleImports = require('@babel/helper-module-imports');
 
+/**
+ * This babel plugin will scan modules for usage of Object.assign and auto-insert
+ * a `require('object-assign')` statement in for polyfilling.
+ */
 module.exports = function autoImporter(babel) {
   function getAssignIdent(path, file, state) {
     if (state.id) {
