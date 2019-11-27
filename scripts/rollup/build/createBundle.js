@@ -12,13 +12,16 @@ const {
   isProductionBundleType,
   isSkippableBundle,
   isFatBundle,
-  isFacebookBundle
-} = require('./predicates')
-const getFilename = require('./getFilename')
-const getFormat = require('./getFormat')
-const { handleRollupWarning, handleRollupError } = require('./handleRollupIssues');
+  isFacebookBundle,
+} = require('./predicates');
+const getFilename = require('./getFilename');
+const getFormat = require('./getFormat');
+const {
+  handleRollupWarning,
+  handleRollupError,
+} = require('./handleRollupIssues');
 const getRollupPlugins = require('./getRollupPlugins');
-const { building, complete, fatal } = require('./messages')
+const {building, complete, fatal} = require('./messages');
 
 const isWatchMode = argv.watch;
 
@@ -108,7 +111,7 @@ module.exports = async function createBundle(bundle, bundleType) {
       pureExternalModules
     ),
     // We can't use getters in www.
-    legacy: isFacebookBundle(bundleType)
+    legacy: isFacebookBundle(bundleType),
   };
 
   const [mainOutputPath, ...otherOutputPaths] = Packaging.getBundleOutputPaths(

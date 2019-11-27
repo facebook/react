@@ -23,7 +23,11 @@ const {
   RN_FB_PROFILING,
 } = Bundles.bundleTypes;
 
-module.exports = function getBabelConfig(updateBabelOptions, bundleType, filename) {
+module.exports = function getBabelConfig(
+  updateBabelOptions,
+  bundleType,
+  filename
+) {
   let options = {
     exclude: '/**/node_modules/**',
     presets: [],

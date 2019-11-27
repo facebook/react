@@ -24,7 +24,7 @@ const {
   isEsmBundle,
   isProfilingBundleType,
   isExperimental,
-} = require('./predicates')
+} = require('./predicates');
 
 const {
   UMD_DEV,

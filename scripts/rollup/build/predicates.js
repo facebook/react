@@ -93,15 +93,19 @@ function isProfilingBundleType(bundleType) {
 }
 
 function isFatBundle(bundleType) {
-  return bundleType === UMD_DEV ||
-  bundleType === UMD_PROD ||
-  bundleType === UMD_PROFILING;
+  return (
+    bundleType === UMD_DEV ||
+    bundleType === UMD_PROD ||
+    bundleType === UMD_PROFILING
+  );
 }
 
 function isFacebookBundle(bundleType) {
-  return bundleType === FB_WWW_DEV ||
-  bundleType === FB_WWW_PROD ||
-  bundleType === FB_WWW_PROFILING;
+  return (
+    bundleType === FB_WWW_DEV ||
+    bundleType === FB_WWW_PROD ||
+    bundleType === FB_WWW_PROFILING
+  );
 }
 
 function isSkippableBundle(bundle, bundleType) {
@@ -166,5 +170,5 @@ module.exports = {
   isSkippableBundle,
   isFatBundle,
   isFacebookBundle,
-  isExperimental
-}
+  isExperimental,
+};

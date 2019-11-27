@@ -47,4 +47,4 @@ module.exports = function getFormat(bundleType) {
     case RN_FB_PROFILING:
       return `cjs`;
   }
-}
+};

@@ -75,4 +75,4 @@ function handleRollupError(error) {
 module.exports = {
   handleRollupError,
   handleRollupWarning,
-}
+};

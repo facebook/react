@@ -1,6 +1,6 @@
 'use strict';
 
-require('./handlePromiseErrors')
+require('./handlePromiseErrors');
 const argv = require('minimist')(process.argv.slice(2));
 const Stats = require('../stats');
 const Sync = require('../sync');

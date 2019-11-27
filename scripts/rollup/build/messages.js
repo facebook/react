@@ -17,5 +17,5 @@ function fatal(logKey) {
 module.exports = {
   building,
   complete,
-  fatal
+  fatal,
 };

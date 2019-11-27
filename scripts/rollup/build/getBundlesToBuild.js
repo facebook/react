@@ -1,6 +1,6 @@
 'use strict';
 
-const { isExperimental } = require('./predicates')
+const {isExperimental} = require('./predicates');
 const Bundles = require('../bundles');
 const {
   UMD_DEV,
@@ -53,4 +53,4 @@ module.exports = function getBundlesToBuild() {
     }
   }
   return bundles;
-}
+};
