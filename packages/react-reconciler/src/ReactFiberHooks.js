@@ -188,8 +188,6 @@ let workInProgressHook: Hook | null = null;
 let nextWorkInProgressHook: Hook | null = null;
 
 let remainingExpirationTime: ExpirationTime = NoWork;
-let componentUpdateQueue: FunctionComponentUpdateQueue | null = null;
-let sideEffectTag: SideEffectTag = 0;
 
 // Updates scheduled during render will trigger an immediate re-render at the
 // end of the current pass. We can't store these updates on the normal queue,
@@ -399,17 +397,17 @@ export function renderWithHooks(
       current !== null && current.type !== workInProgress.type;
   }
 
+  workInProgress.updateQueue = null;
+
   // The following should have already been reset
   // currentHook = null;
   // workInProgressHook = null;
 
   // remainingExpirationTime = NoWork;
-  // componentUpdateQueue = null;
 
   // didScheduleRenderPhaseUpdate = false;
   // renderPhaseUpdates = null;
   // numberOfReRenders = 0;
-  // sideEffectTag = 0;
 
   // TODO Warn if no hooks are used at all during mount, then some are used during update.
   // Currently we will identify the update render as a mount because nextCurrentHook === null.
@@ -456,7 +454,8 @@ export function renderWithHooks(
 
       currentHook = null;
       workInProgressHook = null;
-      componentUpdateQueue = null;
+
+      workInProgress.updateQueue = null;
 
       if (__DEV__) {
         // Also validate hook order for cascading updates.
@@ -482,8 +481,6 @@ export function renderWithHooks(
 
   renderedWork.memoizedState = firstWorkInProgressHook;
   renderedWork.expirationTime = remainingExpirationTime;
-  renderedWork.updateQueue = (componentUpdateQueue: any);
-  renderedWork.effectTag |= sideEffectTag;
 
   if (__DEV__) {
     renderedWork._debugHookTypes = hookTypesDev;
@@ -510,8 +507,6 @@ export function renderWithHooks(
   }
 
   remainingExpirationTime = NoWork;
-  componentUpdateQueue = null;
-  sideEffectTag = 0;
 
   // These were reset above
   // didScheduleRenderPhaseUpdate = false;
@@ -565,8 +560,6 @@ export function resetHooks(): void {
   }
 
   remainingExpirationTime = NoWork;
-  componentUpdateQueue = null;
-  sideEffectTag = 0;
 
   didScheduleRenderPhaseUpdate = false;
   renderPhaseUpdates = null;
@@ -864,8 +857,10 @@ function pushEffect(tag, create, destroy, deps) {
     // Circular
     next: (null: any),
   };
+  let fiber = ((currentlyRenderingFiber: any): Fiber);
+  let componentUpdateQueue: null | FunctionComponentUpdateQueue = (fiber.updateQueue: any);
   if (componentUpdateQueue === null) {
-    componentUpdateQueue = createFunctionComponentUpdateQueue();
+    (fiber: any).updateQueue = componentUpdateQueue = createFunctionComponentUpdateQueue();
     componentUpdateQueue.lastEffect = effect.next = effect;
   } else {
     const lastEffect = componentUpdateQueue.lastEffect;
@@ -899,7 +894,8 @@ function updateRef<T>(initialValue: T): {current: T} {
 function mountEffectImpl(fiberEffectTag, hookEffectTag, create, deps): void {
   const hook = mountWorkInProgressHook();
   const nextDeps = deps === undefined ? null : deps;
-  sideEffectTag |= fiberEffectTag;
+  let fiber = ((currentlyRenderingFiber: any): Fiber);
+  fiber.effectTag |= fiberEffectTag;
   hook.memoizedState = pushEffect(hookEffectTag, create, undefined, nextDeps);
 }
 
@@ -920,7 +916,9 @@ function updateEffectImpl(fiberEffectTag, hookEffectTag, create, deps): void {
     }
   }
 
-  sideEffectTag |= fiberEffectTag;
+  let fiber = ((currentlyRenderingFiber: any): Fiber);
+  fiber.effectTag |= fiberEffectTag;
+
   hook.memoizedState = pushEffect(hookEffectTag, create, destroy, nextDeps);
 }
 
