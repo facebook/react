@@ -11,6 +11,22 @@ function isExperimental() {
     : true;
 }
 
+function isWatchMode() {
+  return argv.watch;
+}
+
+function isUnsafePartialBuild() {
+  return argv['unsafe-partial']
+}
+
+function isPrettyOutput() {
+  return argv.pretty;
+}
+
+function shouldExtractErrors() {
+  return argv['extract-errors'];
+}
+
 const {
   UMD_DEV,
   UMD_PROD,
@@ -30,6 +46,10 @@ const {
   RN_FB_PROD,
   RN_FB_PROFILING,
 } = Bundles.bundleTypes;
+
+function isEsmEntryGenerator(bundleType) {
+  return bundleType === ESM_PROD;
+}
 
 function isProductionBundleType(bundleType) {
   switch (bundleType) {
@@ -171,4 +191,9 @@ module.exports = {
   isFatBundle,
   isFacebookBundle,
   isExperimental,
+  isEsmEntryGenerator,
+  isWatchMode,
+  isUnsafePartialBuild,
+  isPrettyOutput,
+  shouldExtractErrors
 };

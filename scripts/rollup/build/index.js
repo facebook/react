@@ -8,17 +8,21 @@ const Packaging = require('../packaging');
 const {asyncRimRaf} = require('../utils');
 const getBundlesToBuild = require('./getBundlesToBuild');
 const createBundle = require('./createBundle');
+const {
+  isUnsafePartialBuild,
+  isPrettyOutput,
+  isFBSourcePathSync,
+  shouldExtractErrors,
+} = require('./predicates');
 
-const forcePrettyOutput = argv.pretty;
 const syncFBSourcePath = argv['sync-fbsource'];
 const syncWWWPath = argv['sync-www'];
-const shouldExtractErrors = argv['extract-errors'];
 
 async function buildEverything() {
   /**
    * Remove the build directory unless the unsafe-partial CLI flag is set
    */
-  if (!argv['unsafe-partial']) {
+  if (!isUnsafePartialBuild()) {
     await asyncRimRaf('build');
   }
 
@@ -48,11 +52,11 @@ async function buildEverything() {
   }
 
   console.log(Stats.printResults());
-  if (!forcePrettyOutput) {
+  if (!isPrettyOutput()) {
     Stats.saveResults();
   }
 
-  if (shouldExtractErrors) {
+  if (shouldExtractErrors()) {
     console.warn(
       '\nWarning: this build was created with --extract-errors enabled.\n' +
         'this will result in extremely slow builds and should only be\n' +

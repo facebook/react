@@ -36,7 +36,7 @@ module.exports = function getFilename(name, globalName, bundleType) {
     case ESM_DEV:
       return `${name}.development.mjs`;
     case ESM_PROD:
-      return `${name}.production.mjs`;
+      return `${name}.production.min.mjs`;
     case NODE_DEV:
       return `${name}.development.js`;
     case NODE_PROD:
