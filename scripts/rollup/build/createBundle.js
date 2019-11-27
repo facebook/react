@@ -3,7 +3,7 @@
 const rollup = require('rollup');
 const chalk = require('chalk');
 const fs = require('fs');
-const path = require('path')
+const path = require('path');
 const argv = require('minimist')(process.argv.slice(2));
 const Modules = require('../modules');
 const Bundles = require('../bundles');
@@ -15,7 +15,7 @@ const {
   isFatBundle,
   isFacebookBundle,
   isEsmEntryGenerator,
-  isWatchMode
+  isWatchMode,
 } = require('./predicates');
 const getFilename = require('./getFilename');
 const getFormat = require('./getFormat');
@@ -101,7 +101,7 @@ module.exports = async function createBundle(bundle, bundleType) {
       const result = await rollup.rollup(rollupConfig);
       await result.write(rollupOutputOptions);
       if (isEsmEntryGenerator(bundleType)) {
-        writeEsmEntry(result, packageName)
+        writeEsmEntry(result, packageName);
       }
     } catch (error) {
       console.log(fatal(logKey));
@@ -170,31 +170,28 @@ function getRollupConfig(bundle, bundleType, packageName) {
     ),
     // We can't use getters in www.
     legacy: isFacebookBundle(bundleType),
-  }
+  };
 }
 
 function writeEsmEntry(bundle, packageName) {
-    const filepath = path.resolve(
-      `build/node_modules/${packageName}`,
-      'index.mjs'
-    );
-    // write esm entry point
-    fs.writeFileSync(
-      filepath,
-      genererateEsmEntry(packageName, bundle.exports)
-    );
+  const filepath = path.resolve(
+    `build/node_modules/${packageName}`,
+    'index.mjs'
+  );
+  // write esm entry point
+  fs.writeFileSync(filepath, genererateEsmEntry(packageName, bundle.exports));
 }
 
 function genererateEsmEntry(packageName, exports) {
   const exportStatements = exports.map(name => {
     const pickedBundle = `isProduction ? prod.${name} : dev.${name}`;
     if (name !== 'default') {
-      return `export const ${name} = ${pickedBundle};`
+      return `export const ${name} = ${pickedBundle};`;
     } else {
       return `
 const defaultExport = ${pickedBundle};
 export default defaultExport;
-      `
+      `;
     }
   });
 
@@ -203,6 +200,6 @@ import * as dev from "./esm/${packageName}.development.mjs";
 import * as prod from "./esm/${packageName}.production.min.mjs";
 
 const isProduction = process.env.NODE_ENV === 'production'
-${exportStatements.join("\n")}
+${exportStatements.join('\n')}
   `;
 }

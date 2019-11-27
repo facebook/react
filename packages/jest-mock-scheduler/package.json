@@ -4,6 +4,7 @@
   "version": "0.1.0",
   "description": "Jest matchers and utilities for testing the scheduler package.",
   "main": "index.js",
+  "module": "index.mjs",
   "repository": {
     "type" : "git",
     "url" : "https://github.com/facebook/react.git",

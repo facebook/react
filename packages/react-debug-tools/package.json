@@ -18,6 +18,7 @@
     "esm/"
   ],
   "main": "index.js",
+  "module": "index.mjs",
   "repository": {
     "type" : "git",
     "url" : "https://github.com/facebook/react.git",

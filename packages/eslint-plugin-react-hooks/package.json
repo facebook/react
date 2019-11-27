@@ -7,6 +7,8 @@
     "url": "https://github.com/facebook/react.git",
     "directory": "packages/eslint-plugin-react-hooks"
   },
+  "main": "index.js",
+  "module": "index.mjs",
   "files": [
     "LICENSE",
     "README.md",

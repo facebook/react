@@ -3,6 +3,7 @@
   "version": "16.12.0",
   "description": "React package for working with the DOM.",
   "main": "index.js",
+  "module": "index.mjs",
   "repository": {
     "type": "git",
     "url": "https://github.com/facebook/react.git",

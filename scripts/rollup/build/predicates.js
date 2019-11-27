@@ -16,7 +16,7 @@ function isWatchMode() {
 }
 
 function isUnsafePartialBuild() {
-  return argv['unsafe-partial']
+  return argv['unsafe-partial'];
 }
 
 function isPrettyOutput() {
@@ -195,5 +195,5 @@ module.exports = {
   isWatchMode,
   isUnsafePartialBuild,
   isPrettyOutput,
-  shouldExtractErrors
+  shouldExtractErrors,
 };
