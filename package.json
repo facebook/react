@@ -100,7 +100,7 @@
     "testRegex": "/scripts/jest/dont-run-jest-directly\\.js$"
   },
   "scripts": {
-    "build": "node ./scripts/rollup/build",
+    "build": "node --experimental-conditional-exports ./scripts/rollup/build",
     "linc": "node ./scripts/tasks/linc.js",
     "lint": "node ./scripts/tasks/eslint.js",
     "lint-build": "node ./scripts/rollup/validate/index.js",

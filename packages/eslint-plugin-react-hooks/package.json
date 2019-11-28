@@ -8,10 +8,6 @@
     "directory": "packages/eslint-plugin-react-hooks"
   },
   "main": "index.js",
-  "exports": {
-    "require": "./index.js",
-    "default": "./index.mjs"
-  },
   "files": [
     "LICENSE",
     "README.md",

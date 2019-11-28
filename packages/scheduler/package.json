@@ -3,10 +3,6 @@
   "version": "0.18.0",
   "description": "Cooperative scheduler for the browser environment.",
   "main": "index.js",
-  "exports": {
-    "require": "./index.js",
-    "default": "./index.mjs"
-  },
   "repository": {
     "type": "git",
     "url": "https://github.com/facebook/react.git",

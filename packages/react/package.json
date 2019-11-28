@@ -18,11 +18,7 @@
     "umd/",
     "esm/"
   ],
-  "main": "index.js",
-  "exports": {
-    "require": "./index.js",
-    "default": "./index.mjs"
-  },
+  "main": "./index.js",
   "repository": {
     "type": "git",
     "url": "https://github.com/facebook/react.git",

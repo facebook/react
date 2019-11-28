@@ -25,10 +25,6 @@
     "./server.js": "./server.browser.js"
   },
   "main": "index.js",
-  "exports": {
-    "require": "./index.js",
-    "default": "./index.mjs"
-  },
   "repository": {
     "type" : "git",
     "url" : "https://github.com/facebook/react.git",

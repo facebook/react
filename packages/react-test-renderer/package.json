@@ -3,10 +3,6 @@
   "version": "16.12.0",
   "description": "React package for snapshot testing.",
   "main": "index.js",
-  "exports": {
-    "require": "./index.js",
-    "default": "./index.mjs"
-  },
   "repository": {
     "type": "git",
     "url": "https://github.com/facebook/react.git",
