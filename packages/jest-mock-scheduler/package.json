@@ -28,6 +28,7 @@
     "README.md",
     "build-info.json",
     "index.js",
+    "index.mjs",
     "cjs/",
     "esm/"
   ]

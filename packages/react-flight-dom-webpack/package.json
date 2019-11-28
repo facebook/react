@@ -13,6 +13,7 @@
     "LICENSE",
     "README.md",
     "index.js",
+    "index.mjs",
     "server.js",
     "server.browser.js",
     "server.node.js",

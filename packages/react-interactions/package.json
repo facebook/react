@@ -27,7 +27,8 @@
     "build-info.json",
     "cjs/",
     "umd/",
-    "esm/"
+    "esm/",
+    "index.mjs"
   ],
   "main": "index.js",
   "module": "index.mjs",

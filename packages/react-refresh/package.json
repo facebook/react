@@ -11,6 +11,7 @@
   "files": [
     "LICENSE",
     "README.md",
+    "index.mjs",
     "babel.js",
     "runtime.js",
     "build-info.json",

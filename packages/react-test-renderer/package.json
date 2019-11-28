@@ -33,6 +33,7 @@
     "README.md",
     "build-info.json",
     "index.js",
+    "index.mjs",
     "shallow.js",
     "cjs/",
     "umd/",

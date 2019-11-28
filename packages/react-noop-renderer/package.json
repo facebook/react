@@ -27,6 +27,7 @@
     "README.md",
     "build-info.json",
     "index.js",
+    "index.mjs",
     "persistent.js",
     "server.js",
     "flight-client.js",

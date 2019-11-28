@@ -13,6 +13,7 @@
     "LICENSE",
     "README.md",
     "index.js",
+    "index.mjs",
     "cjs/",
     "esm/"
   ],

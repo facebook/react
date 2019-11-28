@@ -31,6 +31,7 @@
     "README.md",
     "build-info.json",
     "index.js",
+    "index.mjs",
     "profiling.js",
     "server.js",
     "server.browser.js",
