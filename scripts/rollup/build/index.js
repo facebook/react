@@ -11,7 +11,6 @@ const createBundle = require('./createBundle');
 const {
   isUnsafePartialBuild,
   isPrettyOutput,
-  isFBSourcePathSync,
   shouldExtractErrors,
 } = require('./predicates');
 

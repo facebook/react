@@ -51,6 +51,17 @@ function isEsmEntryGenerator(bundleType) {
   return bundleType === ESM_PROD;
 }
 
+function isReactNativeBundleType(bundleType) {
+  return (
+    bundleType === RN_OSS_DEV ||
+    bundleType === RN_OSS_PROD ||
+    bundleType === RN_OSS_PROFILING ||
+    bundleType === RN_FB_DEV ||
+    bundleType === RN_FB_PROD ||
+    bundleType === RN_FB_PROFILING
+  );
+}
+
 function isProductionBundleType(bundleType) {
   switch (bundleType) {
     case UMD_DEV:
@@ -128,6 +139,14 @@ function isFacebookBundle(bundleType) {
   );
 }
 
+function isUmdBundle(bundleType) {
+  return (
+    bundleType === UMD_DEV ||
+    bundleType === UMD_PROD ||
+    bundleType === UMD_PROFILING
+  );
+}
+
 function isSkippableBundle(bundle, bundleType) {
   const shouldSkipBundleType = bundle.bundleTypes.indexOf(bundleType) === -1;
   if (shouldSkipBundleType) {
@@ -195,5 +214,7 @@ module.exports = {
   isWatchMode,
   isUnsafePartialBuild,
   isPrettyOutput,
+  isUmdBundle,
   shouldExtractErrors,
+  isReactNativeBundleType,
 };

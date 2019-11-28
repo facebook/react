@@ -26,29 +26,6 @@ const {
 const getRollupPlugins = require('./getRollupPlugins');
 const {building, complete, fatal} = require('./messages');
 
-function getRollupOutputOptions(
-  outputPath,
-  format,
-  globals,
-  globalName,
-  bundleType
-) {
-  const isProduction = isProductionBundleType(bundleType);
-
-  return Object.assign(
-    {},
-    {
-      file: outputPath,
-      format,
-      globals,
-      freeze: !isProduction,
-      interop: false,
-      name: globalName,
-      sourcemap: false,
-    }
-  );
-}
-
 module.exports = async function createBundle(bundle, bundleType) {
   if (isSkippableBundle(bundle, bundleType)) {
     return;
@@ -73,6 +50,7 @@ module.exports = async function createBundle(bundle, bundleType) {
     bundle.global,
     bundleType
   );
+  console.log(`globals for ${packageName}`, peerGlobals);
 
   if (isWatchMode()) {
     rollupConfig.output = [rollupOutputOptions];
@@ -114,6 +92,28 @@ module.exports = async function createBundle(bundle, bundleType) {
     console.log(complete(logKey));
   }
 };
+
+function getRollupOutputOptions(
+  outputPath,
+  format,
+  globals,
+  globalName,
+  bundleType
+) {
+  const isProduction = isProductionBundleType(bundleType);
+  return Object.assign(
+    {},
+    {
+      file: outputPath,
+      format,
+      globals,
+      freeze: !isProduction,
+      interop: false,
+      name: globalName,
+      sourcemap: false,
+    }
+  );
+}
 
 function getRollupConfig(bundle, bundleType, packageName) {
   const filename = getFilename(bundle.entry, bundle.global, bundleType);

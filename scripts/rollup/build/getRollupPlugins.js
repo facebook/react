@@ -24,27 +24,10 @@ const {
   isEsmBundle,
   isProfilingBundleType,
   isExperimental,
+  isFacebookBundle,
+  isUmdBundle,
+  isReactNativeBundleType,
 } = require('./predicates');
-
-const {
-  UMD_DEV,
-  UMD_PROD,
-  UMD_PROFILING,
-  ESM_DEV,
-  ESM_PROD,
-  NODE_DEV,
-  NODE_PROD,
-  NODE_PROFILING,
-  FB_WWW_DEV,
-  FB_WWW_PROD,
-  FB_WWW_PROFILING,
-  RN_OSS_DEV,
-  RN_OSS_PROD,
-  RN_OSS_PROFILING,
-  RN_FB_DEV,
-  RN_FB_PROD,
-  RN_FB_PROFILING,
-} = Bundles.bundleTypes;
 
 const forcePrettyOutput = argv.pretty;
 const shouldExtractErrors = argv['extract-errors'];
@@ -87,21 +70,9 @@ module.exports = function getPlugins(
   const isProduction = isProductionBundleType(bundleType);
   const isMinified = isMinifiable(bundleType);
   const isProfiling = isProfilingBundleType(bundleType);
-  const isUMDBundle =
-    bundleType === UMD_DEV ||
-    bundleType === UMD_PROD ||
-    bundleType === UMD_PROFILING;
-  const isFBBundle =
-    bundleType === FB_WWW_DEV ||
-    bundleType === FB_WWW_PROD ||
-    bundleType === FB_WWW_PROFILING;
-  const isRNBundle =
-    bundleType === RN_OSS_DEV ||
-    bundleType === RN_OSS_PROD ||
-    bundleType === RN_OSS_PROFILING ||
-    bundleType === RN_FB_DEV ||
-    bundleType === RN_FB_PROD ||
-    bundleType === RN_FB_PROFILING;
+  const isUMDBundle = isUmdBundle(bundleType);
+  const isFBBundle = isFacebookBundle(bundleType);
+  const isRNBundle = isReactNativeBundleType(bundleType);
   const shouldStayReadable = isFBBundle || isRNBundle || forcePrettyOutput;
   return [
     // Extract error codes from invariant() messages into a file.
