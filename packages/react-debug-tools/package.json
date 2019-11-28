@@ -19,7 +19,10 @@
     "esm/"
   ],
   "main": "index.js",
-  "module": "index.mjs",
+  "exports": {
+    "require": "./index.js",
+    "default": "./index.mjs"
+  },
   "repository": {
     "type" : "git",
     "url" : "https://github.com/facebook/react.git",
