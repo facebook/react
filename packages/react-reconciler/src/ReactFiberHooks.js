@@ -187,8 +187,6 @@ let firstWorkInProgressHook: Hook | null = null;
 let workInProgressHook: Hook | null = null;
 let nextWorkInProgressHook: Hook | null = null;
 
-let remainingExpirationTime: ExpirationTime = NoWork;
-
 // Updates scheduled during render will trigger an immediate re-render at the
 // end of the current pass. We can't store these updates on the normal queue,
 // because if the work is aborted, they should be discarded. Because this is
@@ -398,12 +396,11 @@ export function renderWithHooks(
   }
 
   workInProgress.updateQueue = null;
+  workInProgress.expirationTime = NoWork;
 
   // The following should have already been reset
   // currentHook = null;
   // workInProgressHook = null;
-
-  // remainingExpirationTime = NoWork;
 
   // didScheduleRenderPhaseUpdate = false;
   // renderPhaseUpdates = null;
@@ -477,13 +474,8 @@ export function renderWithHooks(
   // at the beginning of the render phase and there's no re-entrancy.
   ReactCurrentDispatcher.current = ContextOnlyDispatcher;
 
-  const renderedWork: Fiber = workInProgress;
-
-  renderedWork.memoizedState = firstWorkInProgressHook;
-  renderedWork.expirationTime = remainingExpirationTime;
-
   if (__DEV__) {
-    renderedWork._debugHookTypes = hookTypesDev;
+    workInProgress._debugHookTypes = hookTypesDev;
   }
 
   // This check uses currentHook so that it works the same in DEV and prod bundles.
@@ -505,8 +497,6 @@ export function renderWithHooks(
     hookTypesDev = null;
     hookTypesUpdateIndexDev = -1;
   }
-
-  remainingExpirationTime = NoWork;
 
   // These were reset above
   // didScheduleRenderPhaseUpdate = false;
@@ -558,8 +548,6 @@ export function resetHooks(): void {
 
     currentHookNameInDev = null;
   }
-
-  remainingExpirationTime = NoWork;
 
   didScheduleRenderPhaseUpdate = false;
   renderPhaseUpdates = null;
@@ -763,9 +751,10 @@ function updateReducer<S, I, A>(
           newBaseState = newState;
         }
         // Update the remaining priority in the queue.
-        if (updateExpirationTime > remainingExpirationTime) {
-          remainingExpirationTime = updateExpirationTime;
-          markUnprocessedUpdateTime(remainingExpirationTime);
+        let fiber = ((currentlyRenderingFiber: any): Fiber);
+        if (updateExpirationTime > fiber.expirationTime) {
+          fiber.expirationTime = updateExpirationTime;
+          markUnprocessedUpdateTime(updateExpirationTime);
         }
       } else {
         // This update does have sufficient priority.
