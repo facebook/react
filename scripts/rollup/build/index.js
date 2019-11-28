@@ -27,7 +27,7 @@ async function buildEverything() {
 
   // Run bundle builds serially for better console output
   // and to avoid any potential race conditions.
-  const bundles = getBundlesToBuild();
+  let bundles = getBundlesToBuild();
 
   if (!shouldExtractErrors() && process.env.CIRCLE_NODE_TOTAL) {
     // In CI, parallelize bundles across multiple tasks.
