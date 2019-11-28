@@ -254,7 +254,7 @@ jobs:
             RELEASE_CHANNEL: stable
           command: yarn test-build --maxWorkers=2
 
-   test_package_structure:
+  test_package_structure:
     docker: *docker
     environment: *environment
     steps:
