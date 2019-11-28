@@ -50,7 +50,6 @@ module.exports = async function createBundle(bundle, bundleType) {
     bundle.global,
     bundleType
   );
-  console.log(`globals for ${packageName}`, peerGlobals);
 
   if (isWatchMode()) {
     rollupConfig.output = [rollupOutputOptions];
