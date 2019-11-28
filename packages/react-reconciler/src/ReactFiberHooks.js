@@ -181,9 +181,7 @@ let currentlyRenderingFiber: Fiber | null = null;
 // work-in-progress hook list is a new list that will be added to the
 // work-in-progress fiber.
 let currentHook: Hook | null = null;
-let nextCurrentHook: Hook | null = null;
 let workInProgressHook: Hook | null = null;
-let nextWorkInProgressHook: Hook | null = null;
 
 // Updates scheduled during render will trigger an immediate re-render at the
 // end of the current pass. We can't store these updates on the normal queue,
@@ -379,7 +377,6 @@ export function renderWithHooks(
 ): any {
   renderExpirationTime = nextRenderExpirationTime;
   currentlyRenderingFiber = workInProgress;
-  nextCurrentHook = current !== null ? current.memoizedState : null;
 
   if (__DEV__) {
     hookTypesDev =
@@ -404,14 +401,14 @@ export function renderWithHooks(
   // renderPhaseUpdates = null;
 
   // TODO Warn if no hooks are used at all during mount, then some are used during update.
-  // Currently we will identify the update render as a mount because nextCurrentHook === null.
+  // Currently we will identify the update render as a mount because memoizedState === null.
   // This is tricky because it's valid for certain types of components (e.g. React.lazy)
 
-  // Using nextCurrentHook to differentiate between mount/update only works if at least one stateful hook is used.
+  // Using memoizedState to differentiate between mount/update only works if at least one stateful hook is used.
   // Non-stateful hooks (e.g. context) don't get added to memoizedState,
-  // so nextCurrentHook would be null during updates and mounts.
+  // so memoizedState would be null during updates and mounts.
   if (__DEV__) {
-    if (nextCurrentHook !== null) {
+    if (current !== null && current.memoizedState !== null) {
       ReactCurrentDispatcher.current = HooksDispatcherOnUpdateInDEV;
     } else if (hookTypesDev !== null) {
       // This dispatcher handles an edge case where a component is updating,
@@ -425,7 +422,7 @@ export function renderWithHooks(
     }
   } else {
     ReactCurrentDispatcher.current =
-      nextCurrentHook === null
+      current === null || current.memoizedState === null
         ? HooksDispatcherOnMount
         : HooksDispatcherOnUpdate;
   }
@@ -452,9 +449,6 @@ export function renderWithHooks(
       }
 
       // Start over from the beginning of the list
-      nextCurrentHook = current !== null ? current.memoizedState : null;
-      nextWorkInProgressHook = workInProgress.memoizedState;
-
       currentHook = null;
       workInProgressHook = null;
 
@@ -492,9 +486,7 @@ export function renderWithHooks(
   currentlyRenderingFiber = null;
 
   currentHook = null;
-  nextCurrentHook = null;
   workInProgressHook = null;
-  nextWorkInProgressHook = null;
 
   if (__DEV__) {
     currentHookNameInDev = null;
@@ -540,9 +532,7 @@ export function resetHooks(): void {
   currentlyRenderingFiber = null;
 
   currentHook = null;
-  nextCurrentHook = null;
   workInProgressHook = null;
-  nextWorkInProgressHook = null;
 
   if (__DEV__) {
     hookTypesDev = null;
@@ -583,15 +573,36 @@ function updateWorkInProgressHook(): Hook {
   // clone, or a work-in-progress hook from a previous render pass that we can
   // use as a base. When we reach the end of the base list, we must switch to
   // the dispatcher used for mounts.
+  let nextCurrentHook: null | Hook;
+  if (currentHook === null) {
+    let fiber = ((currentlyRenderingFiber: any): Fiber);
+    let current = fiber.alternate;
+    if (current !== null) {
+      nextCurrentHook = current.memoizedState;
+    } else {
+      nextCurrentHook = null;
+    }
+  } else {
+    nextCurrentHook = currentHook.next;
+  }
+
+  let nextWorkInProgressHook: null | Hook;
+  if (workInProgressHook === null) {
+    let fiber = ((currentlyRenderingFiber: any): Fiber);
+    nextWorkInProgressHook = fiber.memoizedState;
+  } else {
+    nextWorkInProgressHook = workInProgressHook.next;
+  }
+
   if (nextWorkInProgressHook !== null) {
     // There's already a work-in-progress. Reuse it.
     workInProgressHook = nextWorkInProgressHook;
     nextWorkInProgressHook = workInProgressHook.next;
 
     currentHook = nextCurrentHook;
-    nextCurrentHook = currentHook !== null ? currentHook.next : null;
   } else {
     // Clone from the current hook.
+
     invariant(
       nextCurrentHook !== null,
       'Rendered more hooks than during the previous render.',
@@ -616,7 +627,6 @@ function updateWorkInProgressHook(): Hook {
       // Append to the end of the list.
       workInProgressHook = workInProgressHook.next = newHook;
     }
-    nextCurrentHook = currentHook.next;
   }
   return workInProgressHook;
 }
