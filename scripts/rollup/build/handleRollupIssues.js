@@ -5,6 +5,10 @@ const codeFrame = require('babel-code-frame');
 const loggedErrors = require('./handlePromiseErrors');
 
 function handleRollupWarning(warning) {
+  if (warning.code === "CIRCULAR_DEPENDENCY") {
+    // TODO: filter valid circular deps
+    return
+  }
   if (warning.code === 'UNUSED_EXTERNAL_IMPORT') {
     const match = warning.message.match(/external module '([^']+)'/);
     if (!match || typeof match[1] !== 'string') {
