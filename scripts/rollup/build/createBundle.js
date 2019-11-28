@@ -75,10 +75,10 @@ module.exports = async function createBundle(bundle, bundleType) {
   } else {
     console.log(building(logKey));
     try {
-      const result = await rollup.rollup(rollupConfig);
-      await result.write(rollupOutputOptions);
+      const spec = await rollup.rollup(rollupConfig);
+      const result = await spec.write(rollupOutputOptions);
       if (isEsmEntryGenerator(bundleType)) {
-        writeEsmEntry(result, packageName);
+        writeEsmEntry(result.output[0], packageName);
       }
     } catch (error) {
       console.log(fatal(logKey));
@@ -169,7 +169,8 @@ function getRollupConfig(bundle, bundleType, packageName) {
       pureExternalModules
     ),
     // We can't use getters in www.
-    legacy: isFacebookBundle(bundleType),
+    // TODO
+    // legacy: isFacebookBundle(bundleType),
   };
 }
 

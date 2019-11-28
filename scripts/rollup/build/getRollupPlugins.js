@@ -91,7 +91,7 @@ module.exports = function getPlugins(
     isFBBundle && replace(Bundles.fbBundleExternalsMap),
     // Use Node resolution mechanism.
     resolve({
-      skip: externals,
+      external: externals,
     }),
     // Remove license headers from individual modules
     stripBanner({
@@ -133,7 +133,7 @@ module.exports = function getPlugins(
     shouldStayReadable && prettier({parser: 'babylon'}),
     // License and haste headers, top-level `if` blocks.
     {
-      transformBundle(source) {
+      renderChunk(source) {
         return Wrappers.wrapBundle(
           source,
           bundleType,
