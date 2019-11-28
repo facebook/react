@@ -35,7 +35,9 @@ env.beforeEach(() => {
   // $FlowFixMe
   console.error = (...args) => {
     const firstArg = args[0];
-    if (firstArg === 'Warning: React DevTools encountered an error: %s') {
+    if (
+      firstArg === 'Warning: React instrumentation encountered an error: %s'
+    ) {
       // Rethrow errors from React.
       throw args[1];
     } else if (

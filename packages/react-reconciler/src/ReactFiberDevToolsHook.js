@@ -67,7 +67,7 @@ export function injectInternals(internals: Object): boolean {
               hasLoggedError = true;
               warningWithoutStack(
                 false,
-                'React DevTools encountered an error: %s',
+                'React instrumentation encountered an error: %s',
                 err,
               );
             }
@@ -93,7 +93,7 @@ export function injectInternals(internals: Object): boolean {
           hasLoggedError = true;
           warningWithoutStack(
             false,
-            'React DevTools encountered an error: %s',
+            'React instrumentation encountered an error: %s',
             err,
           );
         }
@@ -107,7 +107,7 @@ export function injectInternals(internals: Object): boolean {
           hasLoggedError = true;
           warningWithoutStack(
             false,
-            'React DevTools encountered an error: %s',
+            'React instrumentation encountered an error: %s',
             err,
           );
         }
@@ -118,7 +118,7 @@ export function injectInternals(internals: Object): boolean {
     if (__DEV__) {
       warningWithoutStack(
         false,
-        'React DevTools encountered an error: %s.',
+        'React instrumentation encountered an error: %s.',
         err,
       );
     }
