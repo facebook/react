@@ -35,6 +35,9 @@ module.exports = {
     // Flight
     Uint8Array: true,
     Promise: true,
+
+    // used by rollup generated code to determine global object
+    globalThis: true,
   },
   parserOptions: {
     ecmaVersion: 5,
