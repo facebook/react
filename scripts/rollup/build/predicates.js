@@ -198,7 +198,6 @@ function parseRequestedNames(names, toCase) {
 
 module.exports = {
   isProductionBundleType,
-  isMinifiable,
   isEsmBundle,
   isProfilingBundleType,
   isSkippableBundle,
