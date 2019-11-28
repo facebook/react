@@ -118,7 +118,8 @@ function getRollupOutputOptions(
 function getRollupConfig(bundle, bundleType, packageName) {
   const filename = getFilename(bundle.entry, bundle.global, bundleType);
   let resolvedEntry = require.resolve(bundle.entry);
-  const isFBBundle = isFacebookBundle();
+  const isFBBundle = isFacebookBundle(bundleType);
+
   if (isFBBundle) {
     const resolvedFBEntry = resolvedEntry.replace('.js', '.fb.js');
     if (fs.existsSync(resolvedFBEntry)) {
