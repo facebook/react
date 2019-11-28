@@ -29,7 +29,7 @@ async function buildEverything() {
   // and to avoid any potential race conditions.
   const bundles = getBundlesToBuild();
 
-  if (!shouldExtractErrors && process.env.CIRCLE_NODE_TOTAL) {
+  if (!shouldExtractErrors() && process.env.CIRCLE_NODE_TOTAL) {
     // In CI, parallelize bundles across multiple tasks.
     const nodeTotal = parseInt(process.env.CIRCLE_NODE_TOTAL, 10);
     const nodeIndex = parseInt(process.env.CIRCLE_NODE_INDEX, 10);

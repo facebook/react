@@ -27,9 +27,9 @@ const {
   isFacebookBundle,
   isUmdBundle,
   isReactNativeBundleType,
+  isPrettyOutput,
 } = require('./predicates');
 
-const forcePrettyOutput = argv.pretty;
 const shouldExtractErrors = argv['extract-errors'];
 const errorCodeOpts = {
   errorMapFilePath: 'scripts/error-codes/codes.json',
@@ -47,7 +47,7 @@ const closureOptions = {
 };
 
 function getOutputType(bundleType) {
-  if (isEsmBundle) {
+  if (isEsmBundle(bundleType)) {
     return 'ECMASCRIPT6_STRICT';
   } else {
     return 'ECMASCRIPT5_STRICT';
@@ -72,8 +72,9 @@ module.exports = function getPlugins(
   const isProfiling = isProfilingBundleType(bundleType);
   const isUMDBundle = isUmdBundle(bundleType);
   const isFBBundle = isFacebookBundle(bundleType);
-  const isRNBundle = isReactNativeBundleType(bundleType);
-  const shouldStayReadable = isFBBundle || isRNBundle || forcePrettyOutput;
+  const shouldStayReadable =
+    isFBBundle || isReactNativeBundleType(bundleType) || isPrettyOutput();
+
   return [
     // Extract error codes from invariant() messages into a file.
     shouldExtractErrors && {
@@ -110,7 +111,7 @@ module.exports = function getPlugins(
       __PROFILE__: isProfiling || !isProduction ? 'true' : 'false',
       __UMD__: isUMDBundle ? 'true' : 'false',
       'process.env.NODE_ENV': isProduction ? "'production'" : "'development'",
-      __EXPERIMENTAL__: isExperimental,
+      __EXPERIMENTAL__: isExperimental(),
     }),
     // We still need CommonJS for external deps like object-assign.
     commonjs(),
