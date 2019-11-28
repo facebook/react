@@ -11,7 +11,6 @@
   "files": [
     "LICENSE",
     "README.md",
-    "index.mjs",
     "babel.js",
     "runtime.js",
     "build-info.json",
@@ -19,8 +18,6 @@
     "umd/",
     "esm/"
   ],
-  "main": "index.js",
-  "module": "index.mjs",
   "repository": {
     "type": "git",
     "url": "https://github.com/facebook/react.git",
