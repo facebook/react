@@ -174,7 +174,7 @@ type Dispatch<A> = A => void;
 let renderExpirationTime: ExpirationTime = NoWork;
 // The work-in-progress fiber. I've named it differently to distinguish it from
 // the work-in-progress hook.
-let currentlyRenderingFiber: Fiber | null = null;
+let currentlyRenderingFiber: Fiber = (null: any);
 
 // Hooks are stored as a linked list on the fiber's memoizedState field. The
 // current hook list is the list that belongs to the current fiber. The
@@ -258,9 +258,7 @@ function checkDepsAreArrayDev(deps: mixed) {
 
 function warnOnHookMismatchInDev(currentHookName: HookType) {
   if (__DEV__) {
-    const componentName = getComponentName(
-      ((currentlyRenderingFiber: any): Fiber).type,
-    );
+    const componentName = getComponentName(currentlyRenderingFiber.type);
     if (!didWarnAboutMismatchedHooksForComponent.has(componentName)) {
       didWarnAboutMismatchedHooksForComponent.add(componentName);
 
@@ -483,7 +481,7 @@ export function renderWithHooks(
     currentHook !== null && currentHook.next !== null;
 
   renderExpirationTime = NoWork;
-  currentlyRenderingFiber = null;
+  currentlyRenderingFiber = (null: any);
 
   currentHook = null;
   workInProgressHook = null;
@@ -529,7 +527,7 @@ export function resetHooks(): void {
   // component is a module-style component.
 
   renderExpirationTime = NoWork;
-  currentlyRenderingFiber = null;
+  currentlyRenderingFiber = (null: any);
 
   currentHook = null;
   workInProgressHook = null;
@@ -558,8 +556,7 @@ function mountWorkInProgressHook(): Hook {
 
   if (workInProgressHook === null) {
     // This is the first hook in the list
-    let fiber = ((currentlyRenderingFiber: any): Fiber);
-    fiber.memoizedState = workInProgressHook = hook;
+    currentlyRenderingFiber.memoizedState = workInProgressHook = hook;
   } else {
     // Append to the end of the list
     workInProgressHook = workInProgressHook.next = hook;
@@ -575,8 +572,7 @@ function updateWorkInProgressHook(): Hook {
   // the dispatcher used for mounts.
   let nextCurrentHook: null | Hook;
   if (currentHook === null) {
-    let fiber = ((currentlyRenderingFiber: any): Fiber);
-    let current = fiber.alternate;
+    let current = currentlyRenderingFiber.alternate;
     if (current !== null) {
       nextCurrentHook = current.memoizedState;
     } else {
@@ -588,8 +584,7 @@ function updateWorkInProgressHook(): Hook {
 
   let nextWorkInProgressHook: null | Hook;
   if (workInProgressHook === null) {
-    let fiber = ((currentlyRenderingFiber: any): Fiber);
-    nextWorkInProgressHook = fiber.memoizedState;
+    nextWorkInProgressHook = currentlyRenderingFiber.memoizedState;
   } else {
     nextWorkInProgressHook = workInProgressHook.next;
   }
@@ -621,8 +616,7 @@ function updateWorkInProgressHook(): Hook {
 
     if (workInProgressHook === null) {
       // This is the first hook in the list.
-      let fiber = ((currentlyRenderingFiber: any): Fiber);
-      fiber.memoizedState = workInProgressHook = newHook;
+      currentlyRenderingFiber.memoizedState = workInProgressHook = newHook;
     } else {
       // Append to the end of the list.
       workInProgressHook = workInProgressHook.next = newHook;
@@ -662,8 +656,7 @@ function mountReducer<S, I, A>(
   });
   const dispatch: Dispatch<A> = (queue.dispatch = (dispatchAction.bind(
     null,
-    // Flow doesn't know this is non-null, but we do.
-    ((currentlyRenderingFiber: any): Fiber),
+    currentlyRenderingFiber,
     queue,
   ): any));
   return [hook.memoizedState, dispatch];
@@ -762,9 +755,8 @@ function updateReducer<S, I, A>(
           newBaseState = newState;
         }
         // Update the remaining priority in the queue.
-        let fiber = ((currentlyRenderingFiber: any): Fiber);
-        if (updateExpirationTime > fiber.expirationTime) {
-          fiber.expirationTime = updateExpirationTime;
+        if (updateExpirationTime > currentlyRenderingFiber.expirationTime) {
+          currentlyRenderingFiber.expirationTime = updateExpirationTime;
           markUnprocessedUpdateTime(updateExpirationTime);
         }
       } else {
@@ -835,8 +827,7 @@ function mountState<S>(
     BasicStateAction<S>,
   > = (queue.dispatch = (dispatchAction.bind(
     null,
-    // Flow doesn't know this is non-null, but we do.
-    ((currentlyRenderingFiber: any): Fiber),
+    currentlyRenderingFiber,
     queue,
   ): any));
   return [hook.memoizedState, dispatch];
@@ -857,10 +848,10 @@ function pushEffect(tag, create, destroy, deps) {
     // Circular
     next: (null: any),
   };
-  let fiber = ((currentlyRenderingFiber: any): Fiber);
-  let componentUpdateQueue: null | FunctionComponentUpdateQueue = (fiber.updateQueue: any);
+  let componentUpdateQueue: null | FunctionComponentUpdateQueue = (currentlyRenderingFiber.updateQueue: any);
   if (componentUpdateQueue === null) {
-    (fiber: any).updateQueue = componentUpdateQueue = createFunctionComponentUpdateQueue();
+    componentUpdateQueue = createFunctionComponentUpdateQueue();
+    currentlyRenderingFiber.updateQueue = (componentUpdateQueue: any);
     componentUpdateQueue.lastEffect = effect.next = effect;
   } else {
     const lastEffect = componentUpdateQueue.lastEffect;
@@ -894,8 +885,7 @@ function updateRef<T>(initialValue: T): {current: T} {
 function mountEffectImpl(fiberEffectTag, hookEffectTag, create, deps): void {
   const hook = mountWorkInProgressHook();
   const nextDeps = deps === undefined ? null : deps;
-  let fiber = ((currentlyRenderingFiber: any): Fiber);
-  fiber.effectTag |= fiberEffectTag;
+  currentlyRenderingFiber.effectTag |= fiberEffectTag;
   hook.memoizedState = pushEffect(hookEffectTag, create, undefined, nextDeps);
 }
 
@@ -916,8 +906,7 @@ function updateEffectImpl(fiberEffectTag, hookEffectTag, create, deps): void {
     }
   }
 
-  let fiber = ((currentlyRenderingFiber: any): Fiber);
-  fiber.effectTag |= fiberEffectTag;
+  currentlyRenderingFiber.effectTag |= fiberEffectTag;
 
   hook.memoizedState = pushEffect(hookEffectTag, create, destroy, nextDeps);
 }
@@ -929,9 +918,7 @@ function mountEffect(
   if (__DEV__) {
     // $FlowExpectedError - jest isn't a global, and isn't recognized outside of tests
     if ('undefined' !== typeof jest) {
-      warnIfNotCurrentlyActingEffectsInDEV(
-        ((currentlyRenderingFiber: any): Fiber),
-      );
+      warnIfNotCurrentlyActingEffectsInDEV(currentlyRenderingFiber);
     }
   }
   return mountEffectImpl(
@@ -949,9 +936,7 @@ function updateEffect(
   if (__DEV__) {
     // $FlowExpectedError - jest isn't a global, and isn't recognized outside of tests
     if ('undefined' !== typeof jest) {
-      warnIfNotCurrentlyActingEffectsInDEV(
-        ((currentlyRenderingFiber: any): Fiber),
-      );
+      warnIfNotCurrentlyActingEffectsInDEV(currentlyRenderingFiber);
     }
   }
   return updateEffectImpl(
