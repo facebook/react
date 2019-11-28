@@ -1,7 +1,8 @@
 'use strict';
 
-const {existsSync, readdirSync, unlinkSync} = require('fs');
+const {existsSync, readdirSync, unlinkSync, writeFileSync} = require('fs');
 const Bundles = require('./bundles');
+const path = require('path');
 const {
   asyncCopyTo,
   asyncExecuteCommand,
@@ -140,12 +141,30 @@ async function prepareNpmPackage(name) {
     ),
     asyncCopyTo(`packages/${name}/npm`, `build/node_modules/${name}`),
   ]);
+  await injectExportsMapInPackageJson(name);
   const tgzName = (await asyncExecuteCommand(
     `npm pack build/node_modules/${name}`
   )).trim();
+
   await asyncRimRaf(`build/node_modules/${name}`);
   await asyncExtractTar(getTarOptions(tgzName, name));
   unlinkSync(tgzName);
+}
+
+async function injectExportsMapInPackageJson(name) {
+  const pkgJsonPath = path.join(
+    __dirname,
+    '../..',
+    `build/node_modules/${name}/package.json`
+  );
+  const pkgJson = require(pkgJsonPath);
+  if (pkgJson.files.some(file => file === 'index.mjs')) {
+    pkgJson.exports = {
+      require: './index.js',
+      default: './index.mjs',
+    };
+    writeFileSync(pkgJsonPath, JSON.stringify(pkgJson, null, 2));
+  }
 }
 
 async function prepareNpmPackages() {

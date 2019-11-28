@@ -100,7 +100,7 @@
     "testRegex": "/scripts/jest/dont-run-jest-directly\\.js$"
   },
   "scripts": {
-    "build": "node --experimental-conditional-exports ./scripts/rollup/build",
+    "build": "node ./scripts/rollup/build",
     "linc": "node ./scripts/tasks/linc.js",
     "lint": "node ./scripts/tasks/eslint.js",
     "lint-build": "node ./scripts/rollup/validate/index.js",
@@ -115,7 +115,7 @@
     "test-build": "cross-env NODE_ENV=development jest --config ./scripts/jest/config.build.js",
     "test-build-prod": "cross-env NODE_ENV=production jest --config ./scripts/jest/config.build.js",
     "test-build-devtools": "cross-env NODE_ENV=development jest --config ./scripts/jest/config.build-devtools.js",
-    "test-package-structure": "node --experimental-conditional-exports ./scripts/tasks/package-check.js",
+    "test-package-structure": "node --experimental-conditional-exports ./build/node_modules/package-check.js",
     "debug-test-build-devtools": "cross-env NODE_ENV=development node --inspect-brk node_modules/.bin/jest --config ./scripts/jest/config.build-devtools.js",
     "test-dom-fixture": "cd fixtures/dom && yarn && yarn prestart && yarn test",
     "flow": "node ./scripts/tasks/flow.js",
