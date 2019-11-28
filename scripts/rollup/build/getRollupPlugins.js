@@ -6,6 +6,7 @@ const commonjs = require('rollup-plugin-commonjs');
 const prettier = require('rollup-plugin-prettier');
 const replace = require('rollup-plugin-replace');
 const stripBanner = require('rollup-plugin-strip-banner');
+const {terser} = require('rollup-plugin-terser');
 const resolve = require('rollup-plugin-node-resolve');
 const argv = require('minimist')(process.argv.slice(2));
 const Modules = require('../modules');
@@ -20,7 +21,6 @@ const Wrappers = require('../wrappers');
 const getBabelConfig = require('./getBabelConfig');
 const {
   isProductionBundleType,
-  isMinifiable,
   isEsmBundle,
   isProfilingBundleType,
   isExperimental,
@@ -68,7 +68,6 @@ module.exports = function getPlugins(
   const findAndRecordErrorCodes = extractErrorCodes(errorCodeOpts);
   const forks = Modules.getForks(bundleType, entry, moduleType);
   const isProduction = isProductionBundleType(bundleType);
-  const isMinified = isMinifiable(bundleType);
   const isProfiling = isProfilingBundleType(bundleType);
   const isUMDBundle = isUmdBundle(bundleType);
   const isFBBundle = isFacebookBundle(bundleType);
@@ -116,16 +115,20 @@ module.exports = function getPlugins(
     // We still need CommonJS for external deps like object-assign.
     commonjs(),
     // Apply dead code elimination and/or minification.
-    isMinified &&
-      closure(
-        Object.assign({}, closureOptions, {
-          // Don't let it create global variables in the browser.
-          // https://github.com/facebook/react/issues/10909
-          assume_function_wrapper: !isUMDBundle,
-          renaming: !shouldStayReadable,
-          language_out: getOutputType(bundleType),
-        })
-      ),
+    // TODO: using terser on ESM code is a stopgap until we can get
+    // closure compiler working on ESM
+    isProduction &&
+      (isEsmBundle(bundleType)
+        ? terser()
+        : closure(
+            Object.assign({}, closureOptions, {
+              // Don't let it create global variables in the browser.
+              // https://github.com/facebook/react/issues/10909
+              assume_function_wrapper: !isUMDBundle,
+              renaming: !shouldStayReadable,
+              language_out: getOutputType(bundleType),
+            })
+          )),
     // HACK to work around the fact that Rollup isn't removing unused, pure-module imports.
     // Note that this plugin must be called after closure applies DCE.
     isProduction && stripUnusedImports(pureExternalModules),

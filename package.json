@@ -83,6 +83,7 @@
     "rollup-plugin-prettier": "^0.6.0",
     "rollup-plugin-replace": "^2.2.0",
     "rollup-plugin-strip-banner": "^1.0.0",
+    "rollup-plugin-terser": "^5.1.2",
     "semver": "^5.5.0",
     "targz": "^1.0.1",
     "through2": "^2.0.0",

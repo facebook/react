@@ -88,11 +88,6 @@ function isProductionBundleType(bundleType) {
   }
 }
 
-function isMinifiable(bundleType) {
-  // esm minification is TODO
-  return isProductionBundleType(bundleType) && !isEsmBundle(bundleType);
-}
-
 function isEsmBundle(bundleType) {
   return bundleType === ESM_DEV || bundleType === ESM_PROD;
 }
