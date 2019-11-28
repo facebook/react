@@ -12,7 +12,6 @@ import type {
   ReactContext,
   ReactEventResponderListener,
 } from 'shared/ReactTypes';
-import type {SideEffectTag} from 'shared/ReactSideEffectTags';
 import type {Fiber} from './ReactFiber';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
 import type {HookEffectTag} from './ReactHookEffectTags';
@@ -183,7 +182,6 @@ let currentlyRenderingFiber: Fiber | null = null;
 // work-in-progress fiber.
 let currentHook: Hook | null = null;
 let nextCurrentHook: Hook | null = null;
-let firstWorkInProgressHook: Hook | null = null;
 let workInProgressHook: Hook | null = null;
 let nextWorkInProgressHook: Hook | null = null;
 
@@ -395,6 +393,7 @@ export function renderWithHooks(
       current !== null && current.type !== workInProgress.type;
   }
 
+  workInProgress.memoizedState = null;
   workInProgress.updateQueue = null;
   workInProgress.expirationTime = NoWork;
 
@@ -447,7 +446,7 @@ export function renderWithHooks(
 
       // Start over from the beginning of the list
       nextCurrentHook = current !== null ? current.memoizedState : null;
-      nextWorkInProgressHook = firstWorkInProgressHook;
+      nextWorkInProgressHook = workInProgress.memoizedState;
 
       currentHook = null;
       workInProgressHook = null;
@@ -488,7 +487,6 @@ export function renderWithHooks(
 
   currentHook = null;
   nextCurrentHook = null;
-  firstWorkInProgressHook = null;
   workInProgressHook = null;
   nextWorkInProgressHook = null;
 
@@ -538,7 +536,6 @@ export function resetHooks(): void {
 
   currentHook = null;
   nextCurrentHook = null;
-  firstWorkInProgressHook = null;
   workInProgressHook = null;
   nextWorkInProgressHook = null;
 
@@ -567,7 +564,8 @@ function mountWorkInProgressHook(): Hook {
 
   if (workInProgressHook === null) {
     // This is the first hook in the list
-    firstWorkInProgressHook = workInProgressHook = hook;
+    let fiber = ((currentlyRenderingFiber: any): Fiber);
+    fiber.memoizedState = workInProgressHook = hook;
   } else {
     // Append to the end of the list
     workInProgressHook = workInProgressHook.next = hook;
@@ -608,7 +606,8 @@ function updateWorkInProgressHook(): Hook {
 
     if (workInProgressHook === null) {
       // This is the first hook in the list.
-      workInProgressHook = firstWorkInProgressHook = newHook;
+      let fiber = ((currentlyRenderingFiber: any): Fiber);
+      fiber.memoizedState = workInProgressHook = newHook;
     } else {
       // Append to the end of the list.
       workInProgressHook = workInProgressHook.next = newHook;
