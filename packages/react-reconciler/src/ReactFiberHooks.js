@@ -200,8 +200,7 @@ let renderPhaseUpdates: Map<
   UpdateQueue<any, any>,
   Update<any, any>,
 > | null = null;
-// Counter to prevent infinite loops.
-let numberOfReRenders: number = 0;
+
 const RE_RENDER_LIMIT = 25;
 
 // In DEV, this is the name of the currently executing primitive hook
@@ -403,7 +402,6 @@ export function renderWithHooks(
 
   // didScheduleRenderPhaseUpdate = false;
   // renderPhaseUpdates = null;
-  // numberOfReRenders = 0;
 
   // TODO Warn if no hooks are used at all during mount, then some are used during update.
   // Currently we will identify the update render as a mount because nextCurrentHook === null.
@@ -435,8 +433,17 @@ export function renderWithHooks(
   let children = Component(props, refOrContext);
 
   if (didScheduleRenderPhaseUpdate) {
+    // Counter to prevent infinite loops.
+    let numberOfReRenders: number = 0;
     do {
       didScheduleRenderPhaseUpdate = false;
+
+      invariant(
+        numberOfReRenders < RE_RENDER_LIMIT,
+        'Too many re-renders. React limits the number of renders to prevent ' +
+          'an infinite loop.',
+      );
+
       numberOfReRenders += 1;
       if (__DEV__) {
         // Even when hot reloading, allow dependencies to stabilize
@@ -466,7 +473,6 @@ export function renderWithHooks(
     } while (didScheduleRenderPhaseUpdate);
 
     renderPhaseUpdates = null;
-    numberOfReRenders = 0;
   }
 
   // We can assume the previous dispatcher is always this one, since we set it
@@ -499,7 +505,6 @@ export function renderWithHooks(
   // These were reset above
   // didScheduleRenderPhaseUpdate = false;
   // renderPhaseUpdates = null;
-  // numberOfReRenders = 0;
 
   invariant(
     !didRenderTooFewHooks,
@@ -548,7 +553,6 @@ export function resetHooks(): void {
 
   didScheduleRenderPhaseUpdate = false;
   renderPhaseUpdates = null;
-  numberOfReRenders = 0;
 }
 
 function mountWorkInProgressHook(): Hook {
@@ -669,45 +673,43 @@ function updateReducer<S, I, A>(
 
   queue.lastRenderedReducer = reducer;
 
-  if (numberOfReRenders > 0) {
+  if (renderPhaseUpdates !== null) {
     // This is a re-render. Apply the new render phase updates to the previous
     // work-in-progress hook.
     const dispatch: Dispatch<A> = (queue.dispatch: any);
-    if (renderPhaseUpdates !== null) {
-      // Render phase updates are stored in a map of queue -> linked list
-      const firstRenderPhaseUpdate = renderPhaseUpdates.get(queue);
-      if (firstRenderPhaseUpdate !== undefined) {
-        renderPhaseUpdates.delete(queue);
-        let newState = hook.memoizedState;
-        let update = firstRenderPhaseUpdate;
-        do {
-          // Process this render phase update. We don't have to check the
-          // priority because it will always be the same as the current
-          // render's.
-          const action = update.action;
-          newState = reducer(newState, action);
-          update = update.next;
-        } while (update !== null);
+    // Render phase updates are stored in a map of queue -> linked list
+    const firstRenderPhaseUpdate = renderPhaseUpdates.get(queue);
+    if (firstRenderPhaseUpdate !== undefined) {
+      renderPhaseUpdates.delete(queue);
+      let newState = hook.memoizedState;
+      let update = firstRenderPhaseUpdate;
+      do {
+        // Process this render phase update. We don't have to check the
+        // priority because it will always be the same as the current
+        // render's.
+        const action = update.action;
+        newState = reducer(newState, action);
+        update = update.next;
+      } while (update !== null);
 
-        // Mark that the fiber performed work, but only if the new state is
-        // different from the current state.
-        if (!is(newState, hook.memoizedState)) {
-          markWorkInProgressReceivedUpdate();
-        }
-
-        hook.memoizedState = newState;
-        // Don't persist the state accumulated from the render phase updates to
-        // the base state unless the queue is empty.
-        // TODO: Not sure if this is the desired semantics, but it's what we
-        // do for gDSFP. I can't remember why.
-        if (hook.baseUpdate === queue.last) {
-          hook.baseState = newState;
-        }
-
-        queue.lastRenderedState = newState;
-
-        return [newState, dispatch];
+      // Mark that the fiber performed work, but only if the new state is
+      // different from the current state.
+      if (!is(newState, hook.memoizedState)) {
+        markWorkInProgressReceivedUpdate();
       }
+
+      hook.memoizedState = newState;
+      // Don't persist the state accumulated from the render phase updates to
+      // the base state unless the queue is empty.
+      // TODO: Not sure if this is the desired semantics, but it's what we
+      // do for gDSFP. I can't remember why.
+      if (hook.baseUpdate === queue.last) {
+        hook.baseState = newState;
+      }
+
+      queue.lastRenderedState = newState;
+
+      return [newState, dispatch];
     }
     return [hook.memoizedState, dispatch];
   }
@@ -1208,12 +1210,6 @@ function dispatchAction<S, A>(
   queue: UpdateQueue<S, A>,
   action: A,
 ) {
-  invariant(
-    numberOfReRenders < RE_RENDER_LIMIT,
-    'Too many re-renders. React limits the number of renders to prevent ' +
-      'an infinite loop.',
-  );
-
   if (__DEV__) {
     warning(
       typeof arguments[3] !== 'function',
