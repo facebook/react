@@ -12,7 +12,9 @@ module.exports = function sizes(options) {
   return {
     name: 'scripts/rollup/plugins/sizes-plugin',
     generateBundle(bundle, obj) {
-      const code = Object.keys(obj).map(key => obj[key].code).join('\n')
+      const code = Object.keys(obj)
+        .map(key => obj[key].code)
+        .join('\n');
 
       const size = Buffer.byteLength(code);
       const gzipSize = gzip.sync(code);
