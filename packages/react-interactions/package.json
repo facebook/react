@@ -27,11 +27,8 @@
     "build-info.json",
     "cjs/",
     "umd/",
-    "esm/",
-    "index.mjs"
+    "esm/"
   ],
-  "main": "index.js",
-  "module": "index.mjs",
   "repository": {
     "type": "git",
     "url": "https://github.com/facebook/react.git",
