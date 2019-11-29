@@ -482,7 +482,11 @@ function ChildReconciler(shouldTrackSideEffects) {
     newChild: any,
     expirationTime: ExpirationTime,
   ): Fiber | null {
-    if (typeof newChild === 'string' || typeof newChild === 'number' || newChild instanceof String) {
+    if (
+      typeof newChild === 'string' ||
+      typeof newChild === 'number' ||
+      newChild instanceof String
+    ) {
       // Text nodes don't have keys. If the previous node is implicitly keyed
       // we can continue to replace it without aborting even if it is not a text
       // node.
@@ -551,7 +555,11 @@ function ChildReconciler(shouldTrackSideEffects) {
 
     const key = oldFiber !== null ? oldFiber.key : null;
 
-    if (typeof newChild === 'string' || typeof newChild === 'number' || newChild instanceof String) {
+    if (
+      typeof newChild === 'string' ||
+      typeof newChild === 'number' ||
+      newChild instanceof String
+    ) {
       // Text nodes don't have keys. If the previous node is implicitly keyed
       // we can continue to replace it without aborting even if it is not a text
       // node.
@@ -636,7 +644,11 @@ function ChildReconciler(shouldTrackSideEffects) {
     newChild: any,
     expirationTime: ExpirationTime,
   ): Fiber | null {
-    if (typeof newChild === 'string' || typeof newChild === 'number' || newChild instanceof String) {
+    if (
+      typeof newChild === 'string' ||
+      typeof newChild === 'number' ||
+      newChild instanceof String
+    ) {
       // Text nodes don't have keys, so we neither have to check the old nor
       // new node for the key. If both are text nodes, they match.
       const matchedFiber = existingChildren.get(newIdx) || null;
@@ -1292,7 +1304,11 @@ function ChildReconciler(shouldTrackSideEffects) {
       }
     }
 
-    if (typeof newChild === 'string' || typeof newChild === 'number' || newChild instanceof String) {
+    if (
+      typeof newChild === 'string' ||
+      typeof newChild === 'number' ||
+      newChild instanceof String
+    ) {
       return placeSingleChild(
         reconcileSingleTextNode(
           returnFiber,
