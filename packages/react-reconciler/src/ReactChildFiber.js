@@ -485,7 +485,7 @@ function ChildReconciler(shouldTrackSideEffects) {
     if (
       typeof newChild === 'string' ||
       typeof newChild === 'number' ||
-      newChild instanceof String
+      (newChild && typeof newChild.valueOf() === 'string')
     ) {
       // Text nodes don't have keys. If the previous node is implicitly keyed
       // we can continue to replace it without aborting even if it is not a text
@@ -558,7 +558,7 @@ function ChildReconciler(shouldTrackSideEffects) {
     if (
       typeof newChild === 'string' ||
       typeof newChild === 'number' ||
-      newChild instanceof String
+      (newChild && typeof newChild.valueOf() === 'string')
     ) {
       // Text nodes don't have keys. If the previous node is implicitly keyed
       // we can continue to replace it without aborting even if it is not a text
@@ -647,7 +647,7 @@ function ChildReconciler(shouldTrackSideEffects) {
     if (
       typeof newChild === 'string' ||
       typeof newChild === 'number' ||
-      newChild instanceof String
+      (newChild && typeof newChild.valueOf() === 'string')
     ) {
       // Text nodes don't have keys, so we neither have to check the old nor
       // new node for the key. If both are text nodes, they match.
@@ -1307,7 +1307,7 @@ function ChildReconciler(shouldTrackSideEffects) {
     if (
       typeof newChild === 'string' ||
       typeof newChild === 'number' ||
-      newChild instanceof String
+      (newChild && typeof newChild.valueOf() === 'string')
     ) {
       return placeSingleChild(
         reconcileSingleTextNode(
