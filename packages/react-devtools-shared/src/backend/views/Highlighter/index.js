@@ -34,6 +34,10 @@ export default function setupHighlighter(
   bridge.addListener('startInspectingNative', startInspectingNative);
   bridge.addListener('stopInspectingNative', stopInspectingNative);
 
+  // Agent not only listen but should also be able to carry out these actions directly
+  agent.startInspectingNative = startInspectingNative;
+  agent.stopInspectingNative = stopInspectingNative;
+
   function startInspectingNative() {
     registerListenersOnWindow(window);
   }
