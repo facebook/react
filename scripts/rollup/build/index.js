@@ -4,8 +4,9 @@ require('./handlePromiseErrors');
 const argv = require('minimist')(process.argv.slice(2));
 const Stats = require('../stats');
 const Sync = require('../sync');
+const path = require('path');
 const Packaging = require('../packaging');
-const {asyncRimRaf} = require('../utils');
+const {asyncRimRaf, asyncCopyTo} = require('../utils');
 const getBundlesToBuild = require('./getBundlesToBuild');
 const createBundle = require('./createBundle');
 const {
@@ -24,6 +25,9 @@ async function buildEverything() {
   if (!isUnsafePartialBuild()) {
     await asyncRimRaf('build');
   }
+
+  // Copy the package-check script
+  asyncCopyTo(path.join(__dirname, '../../tasks/package-check.js'), path.join(__dirname, '../../../build/package-check.js'));
 
   // Run bundle builds serially for better console output
   // and to avoid any potential race conditions.
