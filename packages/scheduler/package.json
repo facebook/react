@@ -27,12 +27,28 @@
     "index.js",
     "index.mjs",
     "tracing.js",
+    "tracing.mjs",
     "tracing-profiling.js",
     "unstable_mock.js",
+    "unstable_mock.mjs",
     "cjs/",
     "umd/",
     "esm/"
   ],
+  "__exports": {
+    ".": {
+      "require": "./index.js",
+      "default": "./index.mjs"
+    },
+    "./unstable_mock": {
+      "require": "./unstable_mock.js",
+      "default": "./unstable_mock.mjs"
+    },
+    "./tracing": {
+      "require": "./tracing.js",
+      "default": "./tracing.mjs"
+    }
+  },
   "browserify": {
     "transform": [
       "loose-envify"

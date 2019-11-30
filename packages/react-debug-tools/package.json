@@ -15,8 +15,7 @@
     "build-info.json",
     "index.js",
     "index.mjs",
-    "cjs/",
-    "esm/"
+    "cjs/"
   ],
   "main": "index.js",
   "repository": {

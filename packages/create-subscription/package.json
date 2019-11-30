@@ -13,9 +13,7 @@
     "README.md",
     "build-info.json",
     "index.js",
-    "index.mjs",
-    "cjs/",
-    "esm/"
+    "cjs/"
   ],
   "peerDependencies": {
     "react": "^16.3.0"

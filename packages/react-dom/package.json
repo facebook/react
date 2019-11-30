@@ -30,7 +30,6 @@
     "README.md",
     "build-info.json",
     "index.js",
-    "index.mjs",
     "profiling.js",
     "server.js",
     "server.browser.js",
@@ -42,8 +41,7 @@
     "unstable-fizz.node.js",
     "unstable-native-dependencies.js",
     "cjs/",
-    "umd/",
-    "esm/"
+    "umd/"
   ],
   "browser": {
     "./server.js": "./server.browser.js",

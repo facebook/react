@@ -158,11 +158,14 @@ async function injectExportsMapInPackageJson(name) {
     `build/node_modules/${name}/package.json`
   );
   const pkgJson = require(pkgJsonPath);
+
+  // Copy the __exports into exports
+  // This is done because the exports map interferes with
+  // module resolution during builds. It is meant to be used
+  // with the built and packaged package.
   if (pkgJson.files.some(file => file === 'index.mjs')) {
-    pkgJson.exports = {
-      require: './index.js',
-      default: './index.mjs',
-    };
+    pkgJson.exports = pkgJson.__exports;
+    delete pkgJson.__exports;
     writeFileSync(pkgJsonPath, JSON.stringify(pkgJson, null, 2));
   }
 }
