@@ -76,10 +76,7 @@ module.exports = async function createBundle(bundle, bundleType) {
     console.log(building(logKey));
     try {
       const spec = await rollup.rollup(rollupConfig);
-      const result = await spec.write(rollupOutputOptions);
-      if (isEsmEntryGenerator(bundleType)) {
-        writeEsmEntry(result.output[0], packageName);
-      }
+      await spec.write(rollupOutputOptions);
     } catch (error) {
       console.log(fatal(logKey));
       handleRollupError(error);
@@ -172,35 +169,4 @@ function getRollupConfig(bundle, bundleType, packageName) {
     // TODO
     // legacy: isFacebookBundle(bundleType),
   };
-}
-
-function writeEsmEntry(bundle, packageName) {
-  const filepath = path.resolve(
-    `build/node_modules/${packageName}`,
-    'index.mjs'
-  );
-  // write esm entry point
-  fs.writeFileSync(filepath, genererateEsmEntry(packageName, bundle.exports));
-}
-
-function genererateEsmEntry(packageName, exports) {
-  const exportStatements = exports.map(name => {
-    const pickedBundle = `isProduction ? prod.${name} : dev.${name}`;
-    if (name !== 'default') {
-      return `export const ${name} = ${pickedBundle};`;
-    } else {
-      return `
-const defaultExport = ${pickedBundle};
-export default defaultExport;
-      `;
-    }
-  });
-
-  return `
-import * as dev from "./esm/${packageName}.development.mjs";
-import * as prod from "./esm/${packageName}.production.min.mjs";
-
-const isProduction = process.env.NODE_ENV === 'production'
-${exportStatements.join('\n')}
-  `;
 }
