@@ -24,8 +24,12 @@ global.window = window;
 global.document = window.document;
 global.navigator = window.navigator;
 
+const IGNORED_PACKAGES = {
+  'react-refresh': true,
+  'react-interactions': true,
+};
 const packagesDir = path.join(__dirname, 'node_modules');
-const packages = fs.readdirSync(packagesDir);
+const packages = fs.readdirSync(packagesDir).filter(t => !IGNORED_PACKAGES[t]);
 let errors = [];
 
 process.on('unhandledRejection', err => {
