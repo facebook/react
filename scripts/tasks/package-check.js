@@ -64,7 +64,7 @@ function check(key, predicate) {
 
 async function checkPackages() {
   for (let packageName of packages) {
-    console.log(`inspect ${packageName}`);
+    console.log(` 📦 ${chalk.bold.underline(packageName)}`);
     const packageDir = path.join(packagesDir, packageName);
     const packageJson = require(path.join(packageDir, 'package.json'));
     let mainFileName;
