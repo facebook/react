@@ -7,7 +7,7 @@
 'use strict';
 
 const babel = require('babel-core');
-const removeGetters = require('../remove-getters');
+const removeGetters = require('../transform-remove-getters');
 
 function transform(input) {
   return babel.transform(input, {
