@@ -47,7 +47,7 @@ module.exports = function getBabelConfig(
           // Wrap warning() calls in a __DEV__ check so they are stripped from production.
           require('../../babel/wrap-warning-with-env-check'),
           // Remove getters for IE8 support
-          require('../../babel/transform-remove-getters')
+          require('../../babel/transform-remove-getters'),
         ]),
       });
     case RN_OSS_DEV:
