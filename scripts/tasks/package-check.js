@@ -42,15 +42,15 @@ process.on('unhandledRejection', err => {
 });
 
 function ok(key) {
-  console.log(`\t${key} ${chalk.green('ok')}`);
+  console.log(`\t${chalk.green('✓')} ${key}`);
 }
 
 function fail(key, message) {
   errors.push({key, message});
   if (message) {
-    console.log(`\t${key} ${chalk.red('fail')}\n\t\t`, message);
+    console.log(`\t${chalk.red('x')} ${key}\n\t\t`, message);
   } else {
-    console.log(`\t${key} ${chalk.red('fail')}`);
+    console.log(`\t${chalk.red('x')} ${key}`);
   }
 }
 
