@@ -7,6 +7,7 @@ const commonjs = require('rollup-plugin-commonjs');
 const prettier = require('rollup-plugin-prettier');
 const replace = require('rollup-plugin-replace');
 const stripBanner = require('rollup-plugin-strip-banner');
+const rollupJsonParse = require('rollup-plugin-json-parse');
 const chalk = require('chalk');
 const path = require('path');
 const resolve = require('rollup-plugin-node-resolve');
@@ -359,6 +360,8 @@ function getPlugins(
     }),
     // Compile to ES5.
     babel(getBabelConfig(updateBabelOptions, bundleType)),
+    // Convert large compatible objects to a string inside `JSON.parse`
+    rollupJsonParse(),
     // Remove 'use strict' from individual source files.
     {
       transform(source) {
