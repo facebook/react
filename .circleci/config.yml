@@ -254,19 +254,6 @@ jobs:
             RELEASE_CHANNEL: stable
           command: yarn test-build --maxWorkers=2
 
-  test_package_structure:
-    docker: *docker
-    environment: *environment
-    steps:
-      - checkout
-      - attach_workspace: *attach_workspace
-      - *restore_yarn_cache
-      - *run_yarn
-      - run:
-          environment:
-            RELEASE_CHANNEL: stable
-          command: yarn test-package-structure
-
   test_build_experimental:
     docker: *docker
     environment: *environment
@@ -382,9 +369,6 @@ workflows:
           requires:
             - build
       - test_build:
-          requires:
-            - build
-      - test_package_structure:
           requires:
             - build
       - test_build_prod:
