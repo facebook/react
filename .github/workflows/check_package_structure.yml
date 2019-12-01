@@ -15,7 +15,27 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
 
+
+      - name: Get yarn cache path
+        id: yarn-cache
+        run: echo "::set-output name=dir::$(yarn cache dir)"
+
+      - uses: actions/cache@v1
+        name: Cache yarn cache
+        id: cache-yarn-cache
+        with:
+          path: ${{ steps.yarn-cache.outputs.dir }}
+          key: ${{ runner.os }}-${{ matrix.node-version }}-yarn-${{ hashFiles('**/yarn.lock') }}
+
+      - uses: actions/cache@v1
+        name: Cache node_modules
+        id: cache-node-modules
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-${{ matrix.node-version }}-nodemodules-${{ hashFiles('**/yarn.lock') }}
+
       - run: yarn install
+        if: steps.cache-yarn-cache.outputs.cache-hit != 'true' || steps.cache-node-modules.outputs.cache-hit != 'true'
         name: Install Dependencies
 
       - run: yarn build
