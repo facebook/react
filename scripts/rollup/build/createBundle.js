@@ -14,7 +14,6 @@ const {
   isSkippableBundle,
   isFatBundle,
   isFacebookBundle,
-  isEsmEntryGenerator,
   isWatchMode,
 } = require('./predicates');
 const getFilename = require('./getFilename');

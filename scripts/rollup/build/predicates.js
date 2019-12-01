@@ -47,10 +47,6 @@ const {
   RN_FB_PROFILING,
 } = Bundles.bundleTypes;
 
-function isEsmEntryGenerator(bundleType) {
-  return bundleType === ESM_PROD;
-}
-
 function isReactNativeBundleType(bundleType) {
   return (
     bundleType === RN_OSS_DEV ||
