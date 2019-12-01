@@ -10,9 +10,12 @@ const babel = require('babel-core');
 const removeGetters = require('../transform-remove-getters');
 
 function transform(input) {
-  return babel.transform(input, {
+  const result = babel.transform(input, {
+    babelrc: false,
+    presets: [],
     plugins: [removeGetters],
-  }).code;
+  });
+  return result.code;
 }
 
 function compare(input, output) {
@@ -28,7 +31,7 @@ describe('remove-getters', () => {
     return variable;
   }
 };`,
-      `const object = {
+      `var object = {
   prop: variable
 };`
     );
@@ -42,9 +45,9 @@ describe('remove-getters', () => {
     return 'bar';
   }
 };`,
-      `const object = {
+      `var object = {
   prop: 'foo',
-  method() {
+  method: function () {
     return 'bar';
   }
 };`

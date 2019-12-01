@@ -6,7 +6,9 @@
  */
 'use strict';
 
-module.exports = ({types: t}) => {
+module.exports = ({
+  types: {isIdentifier, isReturnStatement, objectProperty, identifier},
+}) => {
   return {
     visitor: {
       ObjectMethod: path => {
@@ -24,7 +26,7 @@ module.exports = ({types: t}) => {
         }
 
         const keyNode = path.node.key;
-        const isValidKey = t.isIdentifier(keyNode);
+        const isValidKey = isIdentifier(keyNode);
         if (!isValidKey) {
           throw path.buildCodeFrameError(
             'Getter key format not supported. Expected identifier.'
@@ -34,8 +36,8 @@ module.exports = ({types: t}) => {
         const bodyNode = path.node.body;
         const isValidBody =
           bodyNode.body.length === 1 &&
-          t.isReturnStatement(bodyNode.body[0]) &&
-          t.isIdentifier(bodyNode.body[0].argument);
+          isReturnStatement(bodyNode.body[0]) &&
+          isIdentifier(bodyNode.body[0].argument);
         if (!isValidBody) {
           throw path.buildCodeFrameError(
             'Getter body format not supported. Expected return of identifier.'
@@ -46,7 +48,7 @@ module.exports = ({types: t}) => {
         const variable = bodyNode.body[0].argument.name;
 
         path.replaceWith(
-          t.objectProperty(t.identifier(prop), t.identifier(variable))
+          objectProperty(identifier(prop), identifier(variable))
         );
       },
     },
