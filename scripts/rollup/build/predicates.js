@@ -200,7 +200,6 @@ module.exports = {
   isFatBundle,
   isFacebookBundle,
   isExperimental,
-  isEsmEntryGenerator,
   isWatchMode,
   isUnsafePartialBuild,
   isPrettyOutput,

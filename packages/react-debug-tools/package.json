@@ -15,6 +15,7 @@
     "build-info.json",
     "index.js",
     "index.mjs",
+    "esm/",
     "cjs/"
   ],
   "main": "index.js",
