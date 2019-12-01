@@ -31,5 +31,11 @@
   },
   "dependencies": {
     "error-stack-parser": "^2.0.2"
+  },
+  "__exports": {
+    ".": {
+      "require": "./index.js",
+      "default": "./index.mjs"
+    }
   }
 }

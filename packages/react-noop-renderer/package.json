@@ -33,5 +33,11 @@
     "flight-server.js",
     "cjs/",
     "esm/"
-  ]
+  ],
+  "__exports": {
+    ".": {
+      "require": "./index.js",
+      "default": "./index.mjs"
+    }
+  }
 }

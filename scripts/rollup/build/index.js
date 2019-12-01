@@ -27,7 +27,10 @@ async function buildEverything() {
   }
 
   // Copy the package-check script
-  asyncCopyTo(path.join(__dirname, '../../tasks/package-check.js'), path.join(__dirname, '../../../build/package-check.js'));
+  asyncCopyTo(
+    path.join(__dirname, '../../tasks/package-check.js'),
+    path.join(__dirname, '../../../build/package-check.js')
+  );
 
   // Run bundle builds serially for better console output
   // and to avoid any potential race conditions.

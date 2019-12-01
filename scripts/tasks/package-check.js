@@ -28,6 +28,10 @@ const IGNORED_PACKAGES = {
   'react-refresh': true,
   'react-interactions': true,
 };
+const IGONORED_FILES = {
+  'build-info.json': true,
+};
+
 const packagesDir = path.join(__dirname, 'node_modules');
 const packages = fs.readdirSync(packagesDir).filter(t => !IGNORED_PACKAGES[t]);
 let errors = [];
@@ -69,6 +73,13 @@ async function checkPackages() {
     if (packageJson.main) {
       mainFileName = path.join(packageDir, packageJson.main);
       check('pkg.main file exists', fs.existsSync(mainFileName));
+    }
+
+    for (let fileName of packageJson.files.filter(f => !IGONORED_FILES[f])) {
+      check(
+        `pkg.files@[${fileName}] exists`,
+        fs.existsSync(path.join(packageDir, fileName))
+      );
     }
 
     // check exports map file existence
@@ -122,7 +133,7 @@ function checkImport(importPath) {
   return import(importPath)
     .then(result => {
       check(
-        `import('${importPath}') has valid exports`,
+        `${chalk.yellow('import')}('${importPath}') has valid exports`,
         result && Object.keys(result).length > 0
       );
     })

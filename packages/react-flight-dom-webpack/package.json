@@ -46,5 +46,11 @@
     "transform": [
       "loose-envify"
     ]
+  },
+  "__exports": {
+    ".": {
+      "require": "./index.js",
+      "default": "./index.mjs"
+    }
   }
 }

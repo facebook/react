@@ -21,5 +21,11 @@
   ],
   "peerDependencies": {
     "react": "^16.3.0-alpha.1"
+  },
+  "__exports": {
+    ".": {
+      "require": "./index.js",
+      "default": "./index.mjs"
+    }
   }
 }
