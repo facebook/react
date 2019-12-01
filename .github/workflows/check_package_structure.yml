@@ -1,0 +1,37 @@
+name: Check Package Structure
+on: [push, pull_request]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [13.x]
+
+    steps:
+      - uses: actions/checkout@v1
+
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v1
+        with:
+          node-version: ${{ matrix.node-version }}
+
+      - name: Get yarn cache path
+        id: yarn-cache
+        run: echo "::set-output name=dir::$(yarn cache dir)"
+
+      - uses: actions/cache@v1
+        name: Cache yarn cache
+        id: cache-yarn-cache
+        with:
+          path: ${{ steps.yarn-cache.outputs.dir }}
+          key: ${{ runner.os }}-${{ matrix.node-version }}-yarn-${{ hashFiles('**/yarn.lock') }}
+
+      - run: yarn install
+        name: Install Dependencies
+        if: steps.cache-yarn-cache.outputs.cache-hit != 'true'
+
+      - run: yarn build
+        name: Build
+
+      - run: yarn test-package-structure
+        name: Verify Package Structure
