@@ -1512,6 +1512,165 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     );
   });
 
+  it('does not call lifecycles of a suspended component (hooks)', async () => {
+    function TextWithLifecycle(props) {
+      React.useLayoutEffect(
+        () => {
+          Scheduler.unstable_yieldValue(`Layout Effect [${props.text}]`);
+          return () => {
+            Scheduler.unstable_yieldValue(
+              `Destroy Layout Effect [${props.text}]`,
+            );
+          };
+        },
+        [props.text],
+      );
+      React.useEffect(
+        () => {
+          Scheduler.unstable_yieldValue(`Effect [${props.text}]`);
+          return () => {
+            Scheduler.unstable_yieldValue(`Destroy Effect [${props.text}]`);
+          };
+        },
+        [props.text],
+      );
+      return <Text {...props} />;
+    }
+
+    function AsyncTextWithLifecycle(props) {
+      React.useLayoutEffect(
+        () => {
+          Scheduler.unstable_yieldValue(`Layout Effect [${props.text}]`);
+          return () => {
+            Scheduler.unstable_yieldValue(
+              `Destroy Layout Effect [${props.text}]`,
+            );
+          };
+        },
+        [props.text],
+      );
+      React.useEffect(
+        () => {
+          Scheduler.unstable_yieldValue(`Effect [${props.text}]`);
+          return () => {
+            Scheduler.unstable_yieldValue(`Destroy Effect [${props.text}]`);
+          };
+        },
+        [props.text],
+      );
+      const text = props.text;
+      const ms = props.ms;
+      try {
+        TextResource.read([text, ms]);
+        Scheduler.unstable_yieldValue(text);
+        return <span prop={text} />;
+      } catch (promise) {
+        if (typeof promise.then === 'function') {
+          Scheduler.unstable_yieldValue(`Suspend! [${text}]`);
+        } else {
+          Scheduler.unstable_yieldValue(`Error! [${text}]`);
+        }
+        throw promise;
+      }
+    }
+
+    function App({text}) {
+      return (
+        <Suspense fallback={<TextWithLifecycle text="Loading..." />}>
+          <TextWithLifecycle text="A" />
+          <AsyncTextWithLifecycle ms={100} text={text} />
+          <TextWithLifecycle text="C" />
+        </Suspense>
+      );
+    }
+
+    ReactNoop.renderLegacySyncRoot(<App text="B" />, () =>
+      Scheduler.unstable_yieldValue('Commit root'),
+    );
+    expect(Scheduler).toHaveYielded([
+      'A',
+      'Suspend! [B]',
+      'C',
+      'Loading...',
+
+      'Layout Effect [A]',
+      // B's effect should not fire because it suspended
+      // 'Layout Effect [B]',
+      'Layout Effect [C]',
+      'Layout Effect [Loading...]',
+      'Commit root',
+    ]);
+
+    // Flush passive effects.
+    expect(Scheduler).toFlushAndYield([
+      'Effect [A]',
+      // B's effect should not fire because it suspended
+      // 'Effect [B]',
+      'Effect [C]',
+      'Effect [Loading...]',
+    ]);
+
+    expect(ReactNoop).toMatchRenderedOutput(
+      <>
+        <span hidden={true} prop="A" />
+        <span hidden={true} prop="C" />
+        <span prop="Loading..." />
+      </>,
+    );
+
+    Scheduler.unstable_advanceTime(500);
+    await advanceTimers(500);
+
+    expect(Scheduler).toHaveYielded(['Promise resolved [B]']);
+
+    expect(Scheduler).toFlushAndYield([
+      'B',
+      'Destroy Layout Effect [Loading...]',
+      'Destroy Effect [Loading...]',
+      'Layout Effect [B]',
+      'Effect [B]',
+    ]);
+
+    // Update
+    ReactNoop.renderLegacySyncRoot(<App text="B2" />, () =>
+      Scheduler.unstable_yieldValue('Commit root'),
+    );
+
+    expect(Scheduler).toHaveYielded([
+      'A',
+      'Suspend! [B2]',
+      'C',
+      'Loading...',
+
+      // B2's effect should not fire because it suspended
+      // 'Layout Effect [B2]',
+      'Layout Effect [Loading...]',
+      'Commit root',
+    ]);
+
+    // Flush passive effects.
+    expect(Scheduler).toFlushAndYield([
+      // B2's effect should not fire because it suspended
+      // 'Effect [B2]',
+      'Effect [Loading...]',
+    ]);
+
+    Scheduler.unstable_advanceTime(500);
+    await advanceTimers(500);
+
+    expect(Scheduler).toHaveYielded(['Promise resolved [B2]']);
+
+    expect(Scheduler).toFlushAndYield([
+      'B2',
+      'Destroy Layout Effect [Loading...]',
+      'Destroy Effect [Loading...]',
+      'Destroy Layout Effect [B]',
+      'Layout Effect [B2]',
+      'Destroy Effect [B]',
+      'Effect [B2]',
+    ]);
+  });
+
   it('suspends for longer if something took a long (CPU bound) time to render', async () => {
     function Foo({renderContent}) {
       Scheduler.unstable_yieldValue('Foo');
