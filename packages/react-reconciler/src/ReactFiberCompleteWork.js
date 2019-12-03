@@ -1114,6 +1114,8 @@ function completeWork(
               return null;
             }
           } else if (
+            // The time it took to render last row is greater than time until
+            // the expiration.
             now() * 2 - renderState.renderingStartTime >
               renderState.tailExpiration &&
             renderExpirationTime > Never
