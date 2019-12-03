@@ -1114,7 +1114,10 @@ function completeWork(
               return null;
             }
           } else if (
-            now() > renderState.tailExpiration &&
+            // The time it took to render last row is greater than time until
+            // the expiration.
+            now() * 2 - renderState.renderingStartTime >
+              renderState.tailExpiration &&
             renderExpirationTime > Never
           ) {
             // We have now passed our CPU deadline and we'll just give up further
@@ -1164,12 +1167,19 @@ function completeWork(
           // until we just give up and show what we have so far.
           const TAIL_EXPIRATION_TIMEOUT_MS = 500;
           renderState.tailExpiration = now() + TAIL_EXPIRATION_TIMEOUT_MS;
+          // TODO: This is meant to mimic the train model or JND but this
+          // is a per component value. It should really be since the start
+          // of the total render or last commit. Consider using something like
+          // globalMostRecentFallbackTime. That doesn't account for being
+          // suspended for part of the time or when it's a new render.
+          // It should probably use a global start time value instead.
         }
         // Pop a row.
         let next = renderState.tail;
         renderState.rendering = next;
         renderState.tail = next.sibling;
         renderState.lastEffect = workInProgress.lastEffect;
+        renderState.renderingStartTime = now();
         next.sibling = null;
 
         // Restore the context.

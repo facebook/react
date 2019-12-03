@@ -47,6 +47,8 @@ export type SuspenseListRenderState = {|
   isBackwards: boolean,
   // The currently rendering tail row.
   rendering: null | Fiber,
+  // The absolute time when we started rendering the tail row.
+  renderingStartTime: number,
   // The last of the already rendered children.
   last: null | Fiber,
   // Remaining rows on the tail of the list.
