@@ -12,7 +12,6 @@ import type {
   ReactContext,
   ReactEventResponderListener,
 } from 'shared/ReactTypes';
-import type {SideEffectTag} from 'shared/ReactSideEffectTags';
 import type {Fiber} from './ReactFiber';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
 import type {HookEffectTag} from './ReactHookEffectTags';
@@ -175,21 +174,14 @@ type Dispatch<A> = A => void;
 let renderExpirationTime: ExpirationTime = NoWork;
 // The work-in-progress fiber. I've named it differently to distinguish it from
 // the work-in-progress hook.
-let currentlyRenderingFiber: Fiber | null = null;
+let currentlyRenderingFiber: Fiber = (null: any);
 
 // Hooks are stored as a linked list on the fiber's memoizedState field. The
 // current hook list is the list that belongs to the current fiber. The
 // work-in-progress hook list is a new list that will be added to the
 // work-in-progress fiber.
 let currentHook: Hook | null = null;
-let nextCurrentHook: Hook | null = null;
-let firstWorkInProgressHook: Hook | null = null;
 let workInProgressHook: Hook | null = null;
-let nextWorkInProgressHook: Hook | null = null;
-
-let remainingExpirationTime: ExpirationTime = NoWork;
-let componentUpdateQueue: FunctionComponentUpdateQueue | null = null;
-let sideEffectTag: SideEffectTag = 0;
 
 // Updates scheduled during render will trigger an immediate re-render at the
 // end of the current pass. We can't store these updates on the normal queue,
@@ -206,8 +198,7 @@ let renderPhaseUpdates: Map<
   UpdateQueue<any, any>,
   Update<any, any>,
 > | null = null;
-// Counter to prevent infinite loops.
-let numberOfReRenders: number = 0;
+
 const RE_RENDER_LIMIT = 25;
 
 // In DEV, this is the name of the currently executing primitive hook
@@ -267,9 +258,7 @@ function checkDepsAreArrayDev(deps: mixed) {
 
 function warnOnHookMismatchInDev(currentHookName: HookType) {
   if (__DEV__) {
-    const componentName = getComponentName(
-      ((currentlyRenderingFiber: any): Fiber).type,
-    );
+    const componentName = getComponentName(currentlyRenderingFiber.type);
     if (!didWarnAboutMismatchedHooksForComponent.has(componentName)) {
       didWarnAboutMismatchedHooksForComponent.add(componentName);
 
@@ -386,7 +375,6 @@ export function renderWithHooks(
 ): any {
   renderExpirationTime = nextRenderExpirationTime;
   currentlyRenderingFiber = workInProgress;
-  nextCurrentHook = current !== null ? current.memoizedState : null;
 
   if (__DEV__) {
     hookTypesDev =
@@ -399,27 +387,26 @@ export function renderWithHooks(
       current !== null && current.type !== workInProgress.type;
   }
 
+  workInProgress.memoizedState = null;
+  workInProgress.updateQueue = null;
+  workInProgress.expirationTime = NoWork;
+
   // The following should have already been reset
   // currentHook = null;
   // workInProgressHook = null;
 
-  // remainingExpirationTime = NoWork;
-  // componentUpdateQueue = null;
-
   // didScheduleRenderPhaseUpdate = false;
   // renderPhaseUpdates = null;
-  // numberOfReRenders = 0;
-  // sideEffectTag = 0;
 
   // TODO Warn if no hooks are used at all during mount, then some are used during update.
-  // Currently we will identify the update render as a mount because nextCurrentHook === null.
+  // Currently we will identify the update render as a mount because memoizedState === null.
   // This is tricky because it's valid for certain types of components (e.g. React.lazy)
 
-  // Using nextCurrentHook to differentiate between mount/update only works if at least one stateful hook is used.
+  // Using memoizedState to differentiate between mount/update only works if at least one stateful hook is used.
   // Non-stateful hooks (e.g. context) don't get added to memoizedState,
-  // so nextCurrentHook would be null during updates and mounts.
+  // so memoizedState would be null during updates and mounts.
   if (__DEV__) {
-    if (nextCurrentHook !== null) {
+    if (current !== null && current.memoizedState !== null) {
       ReactCurrentDispatcher.current = HooksDispatcherOnUpdateInDEV;
     } else if (hookTypesDev !== null) {
       // This dispatcher handles an edge case where a component is updating,
@@ -433,7 +420,7 @@ export function renderWithHooks(
     }
   } else {
     ReactCurrentDispatcher.current =
-      nextCurrentHook === null
+      current === null || current.memoizedState === null
         ? HooksDispatcherOnMount
         : HooksDispatcherOnUpdate;
   }
@@ -441,8 +428,17 @@ export function renderWithHooks(
   let children = Component(props, refOrContext);
 
   if (didScheduleRenderPhaseUpdate) {
+    // Counter to prevent infinite loops.
+    let numberOfReRenders: number = 0;
     do {
       didScheduleRenderPhaseUpdate = false;
+
+      invariant(
+        numberOfReRenders < RE_RENDER_LIMIT,
+        'Too many re-renders. React limits the number of renders to prevent ' +
+          'an infinite loop.',
+      );
+
       numberOfReRenders += 1;
       if (__DEV__) {
         // Even when hot reloading, allow dependencies to stabilize
@@ -451,12 +447,10 @@ export function renderWithHooks(
       }
 
       // Start over from the beginning of the list
-      nextCurrentHook = current !== null ? current.memoizedState : null;
-      nextWorkInProgressHook = firstWorkInProgressHook;
-
       currentHook = null;
       workInProgressHook = null;
-      componentUpdateQueue = null;
+
+      workInProgress.updateQueue = null;
 
       if (__DEV__) {
         // Also validate hook order for cascading updates.
@@ -471,22 +465,14 @@ export function renderWithHooks(
     } while (didScheduleRenderPhaseUpdate);
 
     renderPhaseUpdates = null;
-    numberOfReRenders = 0;
   }
 
   // We can assume the previous dispatcher is always this one, since we set it
   // at the beginning of the render phase and there's no re-entrancy.
   ReactCurrentDispatcher.current = ContextOnlyDispatcher;
 
-  const renderedWork: Fiber = (currentlyRenderingFiber: any);
-
-  renderedWork.memoizedState = firstWorkInProgressHook;
-  renderedWork.expirationTime = remainingExpirationTime;
-  renderedWork.updateQueue = (componentUpdateQueue: any);
-  renderedWork.effectTag |= sideEffectTag;
-
   if (__DEV__) {
-    renderedWork._debugHookTypes = hookTypesDev;
+    workInProgress._debugHookTypes = hookTypesDev;
   }
 
   // This check uses currentHook so that it works the same in DEV and prod bundles.
@@ -495,13 +481,10 @@ export function renderWithHooks(
     currentHook !== null && currentHook.next !== null;
 
   renderExpirationTime = NoWork;
-  currentlyRenderingFiber = null;
+  currentlyRenderingFiber = (null: any);
 
   currentHook = null;
-  nextCurrentHook = null;
-  firstWorkInProgressHook = null;
   workInProgressHook = null;
-  nextWorkInProgressHook = null;
 
   if (__DEV__) {
     currentHookNameInDev = null;
@@ -509,14 +492,9 @@ export function renderWithHooks(
     hookTypesUpdateIndexDev = -1;
   }
 
-  remainingExpirationTime = NoWork;
-  componentUpdateQueue = null;
-  sideEffectTag = 0;
-
   // These were reset above
   // didScheduleRenderPhaseUpdate = false;
   // renderPhaseUpdates = null;
-  // numberOfReRenders = 0;
 
   invariant(
     !didRenderTooFewHooks,
@@ -549,13 +527,10 @@ export function resetHooks(): void {
   // component is a module-style component.
 
   renderExpirationTime = NoWork;
-  currentlyRenderingFiber = null;
+  currentlyRenderingFiber = (null: any);
 
   currentHook = null;
-  nextCurrentHook = null;
-  firstWorkInProgressHook = null;
   workInProgressHook = null;
-  nextWorkInProgressHook = null;
 
   if (__DEV__) {
     hookTypesDev = null;
@@ -564,13 +539,8 @@ export function resetHooks(): void {
     currentHookNameInDev = null;
   }
 
-  remainingExpirationTime = NoWork;
-  componentUpdateQueue = null;
-  sideEffectTag = 0;
-
   didScheduleRenderPhaseUpdate = false;
   renderPhaseUpdates = null;
-  numberOfReRenders = 0;
 }
 
 function mountWorkInProgressHook(): Hook {
@@ -586,7 +556,7 @@ function mountWorkInProgressHook(): Hook {
 
   if (workInProgressHook === null) {
     // This is the first hook in the list
-    firstWorkInProgressHook = workInProgressHook = hook;
+    currentlyRenderingFiber.memoizedState = workInProgressHook = hook;
   } else {
     // Append to the end of the list
     workInProgressHook = workInProgressHook.next = hook;
@@ -600,15 +570,34 @@ function updateWorkInProgressHook(): Hook {
   // clone, or a work-in-progress hook from a previous render pass that we can
   // use as a base. When we reach the end of the base list, we must switch to
   // the dispatcher used for mounts.
+  let nextCurrentHook: null | Hook;
+  if (currentHook === null) {
+    let current = currentlyRenderingFiber.alternate;
+    if (current !== null) {
+      nextCurrentHook = current.memoizedState;
+    } else {
+      nextCurrentHook = null;
+    }
+  } else {
+    nextCurrentHook = currentHook.next;
+  }
+
+  let nextWorkInProgressHook: null | Hook;
+  if (workInProgressHook === null) {
+    nextWorkInProgressHook = currentlyRenderingFiber.memoizedState;
+  } else {
+    nextWorkInProgressHook = workInProgressHook.next;
+  }
+
   if (nextWorkInProgressHook !== null) {
     // There's already a work-in-progress. Reuse it.
     workInProgressHook = nextWorkInProgressHook;
     nextWorkInProgressHook = workInProgressHook.next;
 
     currentHook = nextCurrentHook;
-    nextCurrentHook = currentHook !== null ? currentHook.next : null;
   } else {
     // Clone from the current hook.
+
     invariant(
       nextCurrentHook !== null,
       'Rendered more hooks than during the previous render.',
@@ -627,12 +616,11 @@ function updateWorkInProgressHook(): Hook {
 
     if (workInProgressHook === null) {
       // This is the first hook in the list.
-      workInProgressHook = firstWorkInProgressHook = newHook;
+      currentlyRenderingFiber.memoizedState = workInProgressHook = newHook;
     } else {
       // Append to the end of the list.
       workInProgressHook = workInProgressHook.next = newHook;
     }
-    nextCurrentHook = currentHook.next;
   }
   return workInProgressHook;
 }
@@ -668,8 +656,7 @@ function mountReducer<S, I, A>(
   });
   const dispatch: Dispatch<A> = (queue.dispatch = (dispatchAction.bind(
     null,
-    // Flow doesn't know this is non-null, but we do.
-    ((currentlyRenderingFiber: any): Fiber),
+    currentlyRenderingFiber,
     queue,
   ): any));
   return [hook.memoizedState, dispatch];
@@ -689,45 +676,43 @@ function updateReducer<S, I, A>(
 
   queue.lastRenderedReducer = reducer;
 
-  if (numberOfReRenders > 0) {
+  if (renderPhaseUpdates !== null) {
     // This is a re-render. Apply the new render phase updates to the previous
     // work-in-progress hook.
     const dispatch: Dispatch<A> = (queue.dispatch: any);
-    if (renderPhaseUpdates !== null) {
-      // Render phase updates are stored in a map of queue -> linked list
-      const firstRenderPhaseUpdate = renderPhaseUpdates.get(queue);
-      if (firstRenderPhaseUpdate !== undefined) {
-        renderPhaseUpdates.delete(queue);
-        let newState = hook.memoizedState;
-        let update = firstRenderPhaseUpdate;
-        do {
-          // Process this render phase update. We don't have to check the
-          // priority because it will always be the same as the current
-          // render's.
-          const action = update.action;
-          newState = reducer(newState, action);
-          update = update.next;
-        } while (update !== null);
+    // Render phase updates are stored in a map of queue -> linked list
+    const firstRenderPhaseUpdate = renderPhaseUpdates.get(queue);
+    if (firstRenderPhaseUpdate !== undefined) {
+      renderPhaseUpdates.delete(queue);
+      let newState = hook.memoizedState;
+      let update = firstRenderPhaseUpdate;
+      do {
+        // Process this render phase update. We don't have to check the
+        // priority because it will always be the same as the current
+        // render's.
+        const action = update.action;
+        newState = reducer(newState, action);
+        update = update.next;
+      } while (update !== null);
 
-        // Mark that the fiber performed work, but only if the new state is
-        // different from the current state.
-        if (!is(newState, hook.memoizedState)) {
-          markWorkInProgressReceivedUpdate();
-        }
-
-        hook.memoizedState = newState;
-        // Don't persist the state accumulated from the render phase updates to
-        // the base state unless the queue is empty.
-        // TODO: Not sure if this is the desired semantics, but it's what we
-        // do for gDSFP. I can't remember why.
-        if (hook.baseUpdate === queue.last) {
-          hook.baseState = newState;
-        }
-
-        queue.lastRenderedState = newState;
-
-        return [newState, dispatch];
+      // Mark that the fiber performed work, but only if the new state is
+      // different from the current state.
+      if (!is(newState, hook.memoizedState)) {
+        markWorkInProgressReceivedUpdate();
       }
+
+      hook.memoizedState = newState;
+      // Don't persist the state accumulated from the render phase updates to
+      // the base state unless the queue is empty.
+      // TODO: Not sure if this is the desired semantics, but it's what we
+      // do for gDSFP. I can't remember why.
+      if (hook.baseUpdate === queue.last) {
+        hook.baseState = newState;
+      }
+
+      queue.lastRenderedState = newState;
+
+      return [newState, dispatch];
     }
     return [hook.memoizedState, dispatch];
   }
@@ -770,9 +755,9 @@ function updateReducer<S, I, A>(
           newBaseState = newState;
         }
         // Update the remaining priority in the queue.
-        if (updateExpirationTime > remainingExpirationTime) {
-          remainingExpirationTime = updateExpirationTime;
-          markUnprocessedUpdateTime(remainingExpirationTime);
+        if (updateExpirationTime > currentlyRenderingFiber.expirationTime) {
+          currentlyRenderingFiber.expirationTime = updateExpirationTime;
+          markUnprocessedUpdateTime(updateExpirationTime);
         }
       } else {
         // This update does have sufficient priority.
@@ -842,8 +827,7 @@ function mountState<S>(
     BasicStateAction<S>,
   > = (queue.dispatch = (dispatchAction.bind(
     null,
-    // Flow doesn't know this is non-null, but we do.
-    ((currentlyRenderingFiber: any): Fiber),
+    currentlyRenderingFiber,
     queue,
   ): any));
   return [hook.memoizedState, dispatch];
@@ -864,8 +848,10 @@ function pushEffect(tag, create, destroy, deps) {
     // Circular
     next: (null: any),
   };
+  let componentUpdateQueue: null | FunctionComponentUpdateQueue = (currentlyRenderingFiber.updateQueue: any);
   if (componentUpdateQueue === null) {
     componentUpdateQueue = createFunctionComponentUpdateQueue();
+    currentlyRenderingFiber.updateQueue = (componentUpdateQueue: any);
     componentUpdateQueue.lastEffect = effect.next = effect;
   } else {
     const lastEffect = componentUpdateQueue.lastEffect;
@@ -899,7 +885,7 @@ function updateRef<T>(initialValue: T): {current: T} {
 function mountEffectImpl(fiberEffectTag, hookEffectTag, create, deps): void {
   const hook = mountWorkInProgressHook();
   const nextDeps = deps === undefined ? null : deps;
-  sideEffectTag |= fiberEffectTag;
+  currentlyRenderingFiber.effectTag |= fiberEffectTag;
   hook.memoizedState = pushEffect(hookEffectTag, create, undefined, nextDeps);
 }
 
@@ -920,7 +906,8 @@ function updateEffectImpl(fiberEffectTag, hookEffectTag, create, deps): void {
     }
   }
 
-  sideEffectTag |= fiberEffectTag;
+  currentlyRenderingFiber.effectTag |= fiberEffectTag;
+
   hook.memoizedState = pushEffect(hookEffectTag, create, destroy, nextDeps);
 }
 
@@ -931,9 +918,7 @@ function mountEffect(
   if (__DEV__) {
     // $FlowExpectedError - jest isn't a global, and isn't recognized outside of tests
     if ('undefined' !== typeof jest) {
-      warnIfNotCurrentlyActingEffectsInDEV(
-        ((currentlyRenderingFiber: any): Fiber),
-      );
+      warnIfNotCurrentlyActingEffectsInDEV(currentlyRenderingFiber);
     }
   }
   return mountEffectImpl(
@@ -951,9 +936,7 @@ function updateEffect(
   if (__DEV__) {
     // $FlowExpectedError - jest isn't a global, and isn't recognized outside of tests
     if ('undefined' !== typeof jest) {
-      warnIfNotCurrentlyActingEffectsInDEV(
-        ((currentlyRenderingFiber: any): Fiber),
-      );
+      warnIfNotCurrentlyActingEffectsInDEV(currentlyRenderingFiber);
     }
   }
   return updateEffectImpl(
@@ -1222,12 +1205,6 @@ function dispatchAction<S, A>(
   queue: UpdateQueue<S, A>,
   action: A,
 ) {
-  invariant(
-    numberOfReRenders < RE_RENDER_LIMIT,
-    'Too many re-renders. React limits the number of renders to prevent ' +
-      'an infinite loop.',
-  );
-
   if (__DEV__) {
     warning(
       typeof arguments[3] !== 'function',

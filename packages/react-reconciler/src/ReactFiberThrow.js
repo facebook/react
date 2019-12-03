@@ -195,6 +195,18 @@ function throwException(
     // This is a thenable.
     const thenable: Thenable = (value: any);
 
+    if ((sourceFiber.mode & BlockingMode) === NoMode) {
+      // Reset the memoizedState to what it was before we attempted
+      // to render it.
+      let currentSource = sourceFiber.alternate;
+      if (currentSource) {
+        sourceFiber.memoizedState = currentSource.memoizedState;
+        sourceFiber.expirationTime = currentSource.expirationTime;
+      } else {
+        sourceFiber.memoizedState = null;
+      }
+    }
+
     checkForWrongSuspensePriorityInDEV(sourceFiber);
 
     let hasInvisibleParentBoundary = hasSuspenseContext(
