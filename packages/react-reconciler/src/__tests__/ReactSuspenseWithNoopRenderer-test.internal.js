@@ -2222,7 +2222,8 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     Scheduler.unstable_runWithPriority(Scheduler.unstable_IdlePriority, () =>
       ReactNoop.render(<Foo renderContent={2} />),
     );
-    expect(Scheduler).toFlushAndYield(['Suspend! [A]', 'Loading A...']);
+    // We won't even work on Idle priority.
+    expect(Scheduler).toFlushAndYield([]);
 
     // We're still suspended.
     expect(ReactNoop.getChildren()).toEqual([]);
@@ -2788,5 +2789,117 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     });
 
     expect(root).toMatchRenderedOutput(<span prop="Foo" />);
+  });
+
+  it('should not render hidden content while suspended on higher pri', async () => {
+    function Offscreen() {
+      Scheduler.unstable_yieldValue('Offscreen');
+      return 'Offscreen';
+    }
+    function App({showContent}) {
+      React.useLayoutEffect(() => {
+        Scheduler.unstable_yieldValue('Commit');
+      });
+      return (
+        <>
+          <div hidden={true}>
+            <Offscreen />
+          </div>
+          <Suspense fallback={<Text text="Loading..." />}>
+            {showContent ? <AsyncText text="A" ms={2000} /> : null}
+          </Suspense>
+        </>
+      );
+    }
+
+    // Initial render.
+    ReactNoop.render(<App showContent={false} />);
+    expect(Scheduler).toFlushAndYieldThrough(['Commit']);
+    expect(ReactNoop).toMatchRenderedOutput(<div hidden={true} />);
+
+    // Start transition.
+    React.unstable_withSuspenseConfig(
+      () => {
+        ReactNoop.render(<App showContent={true} />);
+      },
+      {timeoutMs: 2000},
+    );
+
+    expect(Scheduler).toFlushAndYield(['Suspend! [A]', 'Loading...']);
+    Scheduler.unstable_advanceTime(2000);
+    await advanceTimers(2000);
+    expect(Scheduler).toHaveYielded(['Promise resolved [A]']);
+    expect(Scheduler).toFlushAndYieldThrough(['A', 'Commit']);
+    expect(ReactNoop).toMatchRenderedOutput(
+      <>
+        <div hidden={true} />
+        <span prop="A" />
+      </>,
+    );
+    expect(Scheduler).toFlushAndYield(['Offscreen']);
+    expect(ReactNoop).toMatchRenderedOutput(
+      <>
+        <div hidden={true}>Offscreen</div>
+        <span prop="A" />
+      </>,
+    );
+  });
+
+  it('should be able to unblock higher pri content before suspended hidden', async () => {
+    function Offscreen() {
+      Scheduler.unstable_yieldValue('Offscreen');
+      return 'Offscreen';
+    }
+    function App({showContent}) {
+      React.useLayoutEffect(() => {
+        Scheduler.unstable_yieldValue('Commit');
+      });
+      return (
+        <Suspense fallback={<Text text="Loading..." />}>
+          <div hidden={true}>
+            <AsyncText text="A" ms={2000} />
+            <Offscreen />
+          </div>
+          {showContent ? <AsyncText text="A" ms={2000} /> : null}
+        </Suspense>
+      );
+    }
+
+    // Initial render.
+    ReactNoop.render(<App showContent={false} />);
+    expect(Scheduler).toFlushAndYieldThrough(['Commit']);
+    expect(ReactNoop).toMatchRenderedOutput(<div hidden={true} />);
+
+    // Partially render through the hidden content.
+    expect(Scheduler).toFlushAndYieldThrough(['Suspend! [A]']);
+
+    // Start transition.
+    React.unstable_withSuspenseConfig(
+      () => {
+        ReactNoop.render(<App showContent={true} />);
+      },
+      {timeoutMs: 5000},
+    );
+
+    expect(Scheduler).toFlushAndYield(['Suspend! [A]', 'Loading...']);
+    Scheduler.unstable_advanceTime(2000);
+    await advanceTimers(2000);
+    expect(Scheduler).toHaveYielded(['Promise resolved [A]']);
+    expect(Scheduler).toFlushAndYieldThrough(['A', 'Commit']);
+    expect(ReactNoop).toMatchRenderedOutput(
+      <>
+        <div hidden={true} />
+        <span prop="A" />
+      </>,
+    );
+    expect(Scheduler).toFlushAndYield(['A', 'Offscreen']);
+    expect(ReactNoop).toMatchRenderedOutput(
+      <>
+        <div hidden={true}>
+          <span prop="A" />Offscreen
+        </div>
+        <span prop="A" />
+      </>,
+    );
   });
 });

@@ -25,6 +25,7 @@ import {
   warnAboutUnmockedScheduler,
   flushSuspenseFallbacksInTests,
   disableSchedulerTimeoutBasedOnReactExpirationTime,
+  enableTrainModelFix,
 } from 'shared/ReactFeatureFlags';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import invariant from 'shared/invariant';
@@ -539,9 +540,19 @@ function getNextRootExpirationTimeToWorkOn(root: FiberRoot): ExpirationTime {
   // on whichever is higher priority.
   const lastPingedTime = root.lastPingedTime;
   const nextKnownPendingLevel = root.nextKnownPendingLevel;
-  return lastPingedTime > nextKnownPendingLevel
-    ? lastPingedTime
-    : nextKnownPendingLevel;
+  const nextLevel =
+    lastPingedTime > nextKnownPendingLevel
+      ? lastPingedTime
+      : nextKnownPendingLevel;
+  if (
+    enableTrainModelFix &&
+    nextLevel <= Idle &&
+    firstPendingTime !== nextLevel
+  ) {
+    // Don't work on Idle/Never priority unless everything else is committed.
+    return NoWork;
+  }
+  return nextLevel;
 }
 
 // Use this function to schedule a task for a root. There's only one task per
@@ -2362,7 +2373,7 @@ export function pingSuspendedRoot(
   // Mark the time at which this ping was scheduled.
   root.lastPingedTime = suspendedTime;
 
-  if (root.finishedExpirationTime === suspendedTime) {
+  if (!enableTrainModelFix && root.finishedExpirationTime === suspendedTime) {
     // If there's a pending fallback waiting to commit, throw it away.
     root.finishedExpirationTime = NoWork;
     root.finishedWork = null;
