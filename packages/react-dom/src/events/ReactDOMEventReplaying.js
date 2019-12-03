@@ -30,10 +30,10 @@ import {
 } from 'react-reconciler/reflection';
 import {
   attemptToDispatchEvent,
-  trapEventForResponderEventSystem,
+  addResponderEventSystemEvent,
 } from './ReactDOMEventListener';
 import {
-  getListeningSetForElement,
+  getListenerMapForElement,
   listenToTopLevel,
 } from './ReactBrowserEventEmitter';
 import {
@@ -214,41 +214,33 @@ export function isReplayableDiscreteEvent(
 function trapReplayableEvent(
   topLevelType: DOMTopLevelEventType,
   document: Document,
-  listeningSet: Set<DOMTopLevelEventType | string>,
+  listenerMap: Map<DOMTopLevelEventType | string, null | (any => void)>,
 ) {
-  listenToTopLevel(topLevelType, document, listeningSet);
+  listenToTopLevel(topLevelType, document, listenerMap);
   if (enableFlareAPI) {
     // Trap events for the responder system.
-    const passiveEventKey =
-      unsafeCastDOMTopLevelTypeToString(topLevelType) + '_passive';
-    if (!listeningSet.has(passiveEventKey)) {
-      trapEventForResponderEventSystem(document, topLevelType, true);
-      listeningSet.add(passiveEventKey);
-    }
-    // TODO: This listens to all events as active which might have
-    // undesirable effects. It's also unnecessary to have both
-    // passive and active listeners. Instead, we could start with
-    // a passive and upgrade it to an active one if needed.
-    // For replaying purposes the active is never needed since we
-    // currently don't preventDefault.
-    const activeEventKey =
-      unsafeCastDOMTopLevelTypeToString(topLevelType) + '_active';
-    if (!listeningSet.has(activeEventKey)) {
-      trapEventForResponderEventSystem(document, topLevelType, false);
-      listeningSet.add(activeEventKey);
+    const topLevelTypeString = unsafeCastDOMTopLevelTypeToString(topLevelType);
+    const passiveEventKey = topLevelTypeString + '_passive';
+    if (!listenerMap.has(passiveEventKey)) {
+      const listener = addResponderEventSystemEvent(
+        document,
+        topLevelTypeString,
+        true,
+      );
+      listenerMap.set(passiveEventKey, listener);
     }
   }
 }
 
 export function eagerlyTrapReplayableEvents(document: Document) {
-  const listeningSet = getListeningSetForElement(document);
+  const listenerMap = getListenerMapForElement(document);
   // Discrete
   discreteReplayableEvents.forEach(topLevelType => {
-    trapReplayableEvent(topLevelType, document, listeningSet);
+    trapReplayableEvent(topLevelType, document, listenerMap);
   });
   // Continuous
   continuousReplayableEvents.forEach(topLevelType => {
-    trapReplayableEvent(topLevelType, document, listeningSet);
+    trapReplayableEvent(topLevelType, document, listenerMap);
   });
 }
 

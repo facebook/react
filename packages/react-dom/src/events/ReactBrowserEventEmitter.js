@@ -86,22 +86,22 @@ import isEventSupported from './isEventSupported';
  */
 
 const PossiblyWeakMap = typeof WeakMap === 'function' ? WeakMap : Map;
-const elementListeningSets:
+const elementListenerMap:
   | WeakMap
   | Map<
       Document | Element | Node,
-      Set<DOMTopLevelEventType | string>,
+      Map<DOMTopLevelEventType | string, null | (any => void)>,
     > = new PossiblyWeakMap();
 
-export function getListeningSetForElement(
+export function getListenerMapForElement(
   element: Document | Element | Node,
-): Set<DOMTopLevelEventType | string> {
-  let listeningSet = elementListeningSets.get(element);
-  if (listeningSet === undefined) {
-    listeningSet = new Set();
-    elementListeningSets.set(element, listeningSet);
+): Map<DOMTopLevelEventType | string, null | (any => void)> {
+  let listenerMap = elementListenerMap.get(element);
+  if (listenerMap === undefined) {
+    listenerMap = new Map();
+    elementListenerMap.set(element, listenerMap);
   }
-  return listeningSet;
+  return listenerMap;
 }
 
 /**
@@ -129,7 +129,7 @@ export function listenTo(
   registrationName: string,
   mountAt: Document | Element | Node,
 ): void {
-  const listeningSet = getListeningSetForElement(mountAt);
+  const listeningSet = getListenerMapForElement(mountAt);
   const dependencies = registrationNameDependencies[registrationName];
 
   for (let i = 0; i < dependencies.length; i++) {
@@ -141,9 +141,9 @@ export function listenTo(
 export function listenToTopLevel(
   topLevelType: DOMTopLevelEventType,
   mountAt: Document | Element | Node,
-  listeningSet: Set<DOMTopLevelEventType | string>,
+  listenerMap: Map<DOMTopLevelEventType | string, null | (any => void)>,
 ): void {
-  if (!listeningSet.has(topLevelType)) {
+  if (!listenerMap.has(topLevelType)) {
     switch (topLevelType) {
       case TOP_SCROLL:
         trapCapturedEvent(TOP_SCROLL, mountAt);
@@ -154,8 +154,8 @@ export function listenToTopLevel(
         trapCapturedEvent(TOP_BLUR, mountAt);
         // We set the flag for a single dependency later in this function,
         // but this ensures we mark both as attached rather than just one.
-        listeningSet.add(TOP_BLUR);
-        listeningSet.add(TOP_FOCUS);
+        listenerMap.set(TOP_BLUR, null);
+        listenerMap.set(TOP_FOCUS, null);
         break;
       case TOP_CANCEL:
       case TOP_CLOSE:
@@ -178,7 +178,7 @@ export function listenToTopLevel(
         }
         break;
     }
-    listeningSet.add(topLevelType);
+    listenerMap.set(topLevelType, null);
   }
 }
 
@@ -186,12 +186,12 @@ export function isListeningToAllDependencies(
   registrationName: string,
   mountAt: Document | Element,
 ): boolean {
-  const listeningSet = getListeningSetForElement(mountAt);
+  const listenerMap = getListenerMapForElement(mountAt);
   const dependencies = registrationNameDependencies[registrationName];
 
   for (let i = 0; i < dependencies.length; i++) {
     const dependency = dependencies[i];
-    if (!listeningSet.has(dependency)) {
+    if (!listenerMap.has(dependency)) {
       return false;
     }
   }

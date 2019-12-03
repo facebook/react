@@ -28,7 +28,6 @@ type ResponderEvent = {|
   pointerType: string,
   type: string,
   passive: boolean,
-  passiveSupported: boolean,
 |};
 
 type CustomEvent = {

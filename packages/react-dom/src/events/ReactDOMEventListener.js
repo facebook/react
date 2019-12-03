@@ -211,42 +211,59 @@ export function trapCapturedEvent(
   trapEventForPluginEventSystem(element, topLevelType, true);
 }
 
-export function trapEventForResponderEventSystem(
-  element: Document | Element | Node,
-  topLevelType: DOMTopLevelEventType,
+export function addResponderEventSystemEvent(
+  document: Document,
+  topLevelType: string,
   passive: boolean,
-): void {
-  if (enableFlareAPI) {
-    const rawEventName = getRawEventName(topLevelType);
-    let eventFlags = RESPONDER_EVENT_SYSTEM;
+): any => void {
+  let eventFlags = RESPONDER_EVENT_SYSTEM;
 
-    // If passive option is not supported, then the event will be
-    // active and not passive, but we flag it as using not being
-    // supported too. This way the responder event plugins know,
-    // and can provide polyfills if needed.
-    if (passive) {
-      if (passiveBrowserEventsSupported) {
-        eventFlags |= IS_PASSIVE;
-      } else {
-        eventFlags |= IS_ACTIVE;
-        eventFlags |= PASSIVE_NOT_SUPPORTED;
-        passive = false;
-      }
+  // If passive option is not supported, then the event will be
+  // active and not passive, but we flag it as using not being
+  // supported too. This way the responder event plugins know,
+  // and can provide polyfills if needed.
+  if (passive) {
+    if (passiveBrowserEventsSupported) {
+      eventFlags |= IS_PASSIVE;
     } else {
       eventFlags |= IS_ACTIVE;
+      eventFlags |= PASSIVE_NOT_SUPPORTED;
+      passive = false;
     }
-    // Check if interactive and wrap in discreteUpdates
-    const listener = dispatchEvent.bind(null, topLevelType, eventFlags);
-    if (passiveBrowserEventsSupported) {
-      addEventCaptureListenerWithPassiveFlag(
-        element,
-        rawEventName,
-        listener,
-        passive,
-      );
-    } else {
-      addEventCaptureListener(element, rawEventName, listener);
-    }
+  } else {
+    eventFlags |= IS_ACTIVE;
+  }
+  // Check if interactive and wrap in discreteUpdates
+  const listener = dispatchEvent.bind(
+    null,
+    ((topLevelType: any): DOMTopLevelEventType),
+    eventFlags,
+  );
+  if (passiveBrowserEventsSupported) {
+    addEventCaptureListenerWithPassiveFlag(
+      document,
+      topLevelType,
+      listener,
+      passive,
+    );
+  } else {
+    addEventCaptureListener(document, topLevelType, listener);
+  }
+  return listener;
+}
+
+export function removeActiveResponderEventSystemEvent(
+  document: Document,
+  topLevelType: string,
+  listener: any => void,
+) {
+  if (passiveBrowserEventsSupported) {
+    document.removeEventListener(topLevelType, listener, {
+      capture: true,
+      passive: false,
+    });
+  } else {
+    document.removeEventListener(topLevelType, listener, true);
   }
 }
 
