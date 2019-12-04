@@ -1352,7 +1352,7 @@ function commitWork(current: Fiber | null, finishedWork: Fiber): void {
         if (enableFlareAPI) {
           const prevListeners = oldProps.DEPRECATED_flareListeners;
           const nextListeners = newProps.DEPRECATED_flareListeners;
-          if (prevListeners !== nextListeners) {
+          if (prevListeners !== nextListeners || current === null) {
             updateLegacyEventListeners(nextListeners, finishedWork, null);
           }
         }
@@ -1417,7 +1417,7 @@ function commitWork(current: Fiber | null, finishedWork: Fiber): void {
           const oldProps = current !== null ? current.memoizedProps : newProps;
           const prevListeners = oldProps.DEPRECATED_flareListeners;
           const nextListeners = newProps.DEPRECATED_flareListeners;
-          if (prevListeners !== nextListeners) {
+          if (prevListeners !== nextListeners || current === null) {
             updateLegacyEventListeners(nextListeners, finishedWork, null);
           }
         }
