@@ -257,6 +257,23 @@ function checkDepsAreArrayDev(deps: mixed) {
   }
 }
 
+function checkArgumentIsFunctionDev(arg: mixed) {
+  if (__DEV__) {
+    if (typeof arg !== 'function') {
+      // Verify argument is a function, for example; useMemo cannot take an object as first argument.
+      // This wouldn't be a problem for those using a type checker, but it's not an obvious mistake.
+      // See https://github.com/facebook/react/issues/16589
+      warning(
+        false,
+        '%s received an argument that is not a function (instead, received `%s`). When ' +
+          'specified, this argument must be a function.',
+        currentHookNameInDev,
+        typeof arg,
+      );
+    }
+  }
+}
+
 function warnOnHookMismatchInDev(currentHookName: HookType) {
   if (__DEV__) {
     const componentName = getComponentName(currentlyRenderingFiber.type);
@@ -1474,6 +1491,7 @@ if (__DEV__) {
       currentHookNameInDev = 'useMemo';
       mountHookTypesDev();
       checkDepsAreArrayDev(deps);
+      checkArgumentIsFunctionDev(create);
       const prevDispatcher = ReactCurrentDispatcher.current;
       ReactCurrentDispatcher.current = InvalidNestedHooksDispatcherOnMountInDEV;
       try {
