@@ -69,6 +69,7 @@ const LEVEL_THRESHOLD = 2;
 type PropType =
   | 'array'
   | 'array_buffer'
+  | 'bigint'
   | 'boolean'
   | 'data_view'
   | 'date'
@@ -107,6 +108,8 @@ function getDataType(data: Object): PropType {
 
   const type = typeof data;
   switch (type) {
+    case 'bigint':
+      return 'bigint';
     case 'boolean':
       return 'boolean';
     case 'function':
@@ -230,6 +233,14 @@ export function dehydrate(
 
     case 'string':
       return data.length <= 500 ? data : data.slice(0, 500) + '...';
+
+    case 'bigint':
+      cleaned.push(path);
+      return {
+        inspectable: false,
+        name: data.toString(),
+        type,
+      };
 
     case 'symbol':
       cleaned.push(path);

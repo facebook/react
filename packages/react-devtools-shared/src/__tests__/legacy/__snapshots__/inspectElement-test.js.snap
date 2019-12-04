@@ -127,6 +127,7 @@ Object {
   "hooks": null,
   "props": {
     "array_buffer": {},
+    "big_int": {},
     "date": {},
     "fn": {},
     "html_element": {},
