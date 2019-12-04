@@ -128,7 +128,6 @@ import {
 import {createFundamentalStateInstance} from './ReactFiberFundamental';
 import {Never} from './ReactFiberExpirationTime';
 import {resetChildFibers} from './ReactChildFiber';
-import {updateLegacyEventListeners} from './ReactFiberEvents';
 import {createScopeMethods} from './ReactFiberScope';
 
 function markUpdate(workInProgress: Fiber) {
@@ -730,11 +729,7 @@ function completeWork(
           if (enableFlareAPI) {
             const listeners = newProps.DEPRECATED_flareListeners;
             if (listeners != null) {
-              updateLegacyEventListeners(
-                listeners,
-                workInProgress,
-                rootContainerInstance,
-              );
+              markUpdate(workInProgress);
             }
           }
         } else {
@@ -754,11 +749,7 @@ function completeWork(
           if (enableFlareAPI) {
             const listeners = newProps.DEPRECATED_flareListeners;
             if (listeners != null) {
-              updateLegacyEventListeners(
-                listeners,
-                workInProgress,
-                rootContainerInstance,
-              );
+              markUpdate(workInProgress);
             }
           }
 
@@ -1264,12 +1255,7 @@ function completeWork(
           if (enableFlareAPI) {
             const listeners = newProps.DEPRECATED_flareListeners;
             if (listeners != null) {
-              const rootContainerInstance = getRootHostContainer();
-              updateLegacyEventListeners(
-                listeners,
-                workInProgress,
-                rootContainerInstance,
-              );
+              markUpdate(workInProgress);
             }
           }
           if (workInProgress.ref !== null) {
