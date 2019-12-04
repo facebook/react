@@ -156,7 +156,6 @@ describe('DOMEventResponderSystem', () => {
         eventLog.push({
           name: event.type,
           passive: event.passive,
-          passiveSupported: event.passiveSupported,
           phase: 'bubble',
         });
       },
@@ -185,7 +184,6 @@ describe('DOMEventResponderSystem', () => {
       {
         name: 'click',
         passive: false,
-        passiveSupported: false,
         phase: 'bubble',
       },
     ]);
@@ -216,7 +214,6 @@ describe('DOMEventResponderSystem', () => {
         eventLog.push({
           name: event.type,
           passive: event.passive,
-          passiveSupported: event.passiveSupported,
           phase: 'bubble',
         });
       },
@@ -242,7 +239,6 @@ describe('DOMEventResponderSystem', () => {
       {
         name: 'click',
         passive: true,
-        passiveSupported: true,
         phase: 'bubble',
       },
     ]);
@@ -260,7 +256,6 @@ describe('DOMEventResponderSystem', () => {
         eventLog.push({
           name: event.type,
           passive: event.passive,
-          passiveSupported: event.passiveSupported,
           phase: 'bubble',
         });
       },
@@ -296,7 +291,6 @@ describe('DOMEventResponderSystem', () => {
       {
         name: 'click',
         passive: false,
-        passiveSupported: false,
         phase: 'bubble',
       },
     ]);
@@ -327,7 +321,6 @@ describe('DOMEventResponderSystem', () => {
       {
         name: 'click',
         passive: false,
-        passiveSupported: false,
         phase: 'bubble',
       },
     ]);
@@ -634,7 +627,6 @@ describe('DOMEventResponderSystem', () => {
         eventLog.push({
           name: event.type,
           passive: event.passive,
-          passiveSupported: event.passiveSupported,
           phase: 'root',
         });
       },
@@ -656,7 +648,6 @@ describe('DOMEventResponderSystem', () => {
       {
         name: 'click',
         passive: false,
-        passiveSupported: false,
         phase: 'root',
       },
     ]);
@@ -675,7 +666,6 @@ describe('DOMEventResponderSystem', () => {
         eventLog.push({
           name: event.type,
           passive: event.passive,
-          passiveSupported: event.passiveSupported,
         });
       },
     });
@@ -687,7 +677,6 @@ describe('DOMEventResponderSystem', () => {
         eventLog.push({
           name: event.type,
           passive: event.passive,
-          passiveSupported: event.passiveSupported,
         });
       },
     });
@@ -717,12 +706,10 @@ describe('DOMEventResponderSystem', () => {
       {
         name: 'click',
         passive: false,
-        passiveSupported: false,
       },
       {
         name: 'click',
         passive: false,
-        passiveSupported: true,
       },
     ]);
   });
@@ -739,7 +726,6 @@ describe('DOMEventResponderSystem', () => {
         eventLog.push({
           name: event.type,
           passive: event.passive,
-          passiveSupported: event.passiveSupported,
         });
       },
     });
@@ -751,7 +737,6 @@ describe('DOMEventResponderSystem', () => {
         eventLog.push({
           name: event.type,
           passive: event.passive,
-          passiveSupported: event.passiveSupported,
         });
       },
     });
@@ -778,12 +763,10 @@ describe('DOMEventResponderSystem', () => {
       {
         name: 'click',
         passive: false,
-        passiveSupported: false,
       },
       {
         name: 'click',
         passive: false,
-        passiveSupported: true,
       },
     ]);
 

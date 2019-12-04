@@ -14,7 +14,6 @@ import warning from 'shared/warning';
 import {canUseDOM} from 'shared/ExecutionEnvironment';
 import warningWithoutStack from 'shared/warningWithoutStack';
 import endsWith from 'shared/endsWith';
-import type {DOMTopLevelEventType} from 'legacy-events/TopLevelEventTypes';
 import {setListenToResponderEventTypes} from '../events/DOMEventResponderSystem';
 
 import {
@@ -63,9 +62,12 @@ import {
 import {
   listenTo,
   trapBubbledEvent,
-  getListeningSetForElement,
+  getListenerMapForElement,
 } from '../events/ReactBrowserEventEmitter';
-import {trapEventForResponderEventSystem} from '../events/ReactDOMEventListener.js';
+import {
+  addResponderEventSystemEvent,
+  removeActiveResponderEventSystemEvent,
+} from '../events/ReactDOMEventListener.js';
 import {mediaEventTypes} from '../events/DOMTopLevelEventTypes';
 import {
   createDangerousStringForStyles,
@@ -1307,12 +1309,12 @@ export function restoreControlledState(
 
 export function listenToEventResponderEventTypes(
   eventTypes: Array<string>,
-  element: Element | Document,
+  document: Document,
 ): void {
   if (enableFlareAPI) {
-    // Get the listening Set for this element. We use this to track
+    // Get the listening Map for this element. We use this to track
     // what events we're listening to.
-    const listeningSet = getListeningSetForElement(element);
+    const listenerMap = getListenerMapForElement(document);
 
     // Go through each target event type of the event responder
     for (let i = 0, length = eventTypes.length; i < length; ++i) {
@@ -1322,13 +1324,35 @@ export function listenToEventResponderEventTypes(
       const targetEventType = isPassive
         ? eventType
         : eventType.substring(0, eventType.length - 7);
-      if (!listeningSet.has(eventKey)) {
-        trapEventForResponderEventSystem(
-          element,
-          ((targetEventType: any): DOMTopLevelEventType),
+      if (!listenerMap.has(eventKey)) {
+        if (isPassive) {
+          const activeKey = targetEventType + '_active';
+          // If we have an active event listener, do not register
+          // a passive event listener. We use the same active event
+          // listener.
+          if (listenerMap.has(activeKey)) {
+            continue;
+          }
+        } else {
+          // If we have a passive event listener, remove the
+          // existing passive event listener before we add the
+          // active event listener.
+          const passiveKey = targetEventType + '_passive';
+          const passiveListener = listenerMap.get(passiveKey);
+          if (passiveListener != null) {
+            removeActiveResponderEventSystemEvent(
+              document,
+              targetEventType,
+              passiveListener,
+            );
+          }
+        }
+        const eventListener = addResponderEventSystemEvent(
+          document,
+          targetEventType,
           isPassive,
         );
-        listeningSet.add(eventKey);
+        listenerMap.set(eventKey, eventListener);
       }
     }
   }
