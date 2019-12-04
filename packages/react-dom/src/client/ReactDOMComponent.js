@@ -1312,7 +1312,7 @@ export function listenToEventResponderEventTypes(
   document: Document,
 ): void {
   if (enableFlareAPI) {
-    // Get the listening Set for this element. We use this to track
+    // Get the listening Map for this element. We use this to track
     // what events we're listening to.
     const listenerMap = getListenerMapForElement(document);
 
