@@ -2493,4 +2493,35 @@ describe('ReactHooksWithNoopRenderer', () => {
     expect(Scheduler).toHaveYielded(['Step: 5, Shadow: 5']);
     expect(ReactNoop).toMatchRenderedOutput('5');
   });
+
+  it('should process the rest pending updates after a render phase update', () => {
+    // Similar to previous test, except using a preceding render phase update
+    // instead of new props.
+    let updateA;
+    let updateC;
+    function App() {
+      const [a, setA] = useState(false);
+      const [b, setB] = useState(false);
+      if (a !== b) {
+        setB(a);
+      }
+      // Even though we called setB above,
+      // we should still apply the changes to C,
+      // during this render pass.
+      const [c, setC] = useState(false);
+      updateA = setA;
+      updateC = setC;
+      return `${a ? 'A' : 'a'}${b ? 'B' : 'b'}${c ? 'C' : 'c'}`;
+    }
+
+    act(() => ReactNoop.render(<App />));
+    expect(ReactNoop).toMatchRenderedOutput('abc');
+
+    act(() => {
+      updateA(true);
+      // This update should not get dropped.
+      updateC(true);
+    });
+    expect(ReactNoop).toMatchRenderedOutput('ABC');
+  });
 });
