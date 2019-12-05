@@ -10,6 +10,20 @@
 'use strict';
 
 module.exports = function(context) {
+  function traverseIf(node) {
+    switch (node.type) {
+      case 'Identifier':
+        return [node.name];
+      case 'LogicalExpression':
+        if (node.operator === '&&') {
+          return [...traverseIf(node.left), ...traverseIf(node.right)];
+        }
+        return [];
+      default:
+        return [];
+    }
+  }
+
   function hasIfInParents(node) {
     let done = false;
     while (!done) {
@@ -17,7 +31,10 @@ module.exports = function(context) {
         return false;
       }
       node = node.parent;
-      if (node.type === 'IfStatement' && node.test.name === '__DEV__') {
+      if (
+        node.type === 'IfStatement' &&
+        traverseIf(node.test).includes('__DEV__')
+      ) {
         return true;
       }
     }

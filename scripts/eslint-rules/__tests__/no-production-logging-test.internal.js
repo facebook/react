@@ -24,7 +24,11 @@ ruleTester.run('no-production-logging', rule, {
     },
     /* calls wrapped on an outer bound */
     {
-      code: 'if (__DEV__) { if (potato) { while (true) { warning(test) }}}',
+      code: 'if (__DEV__) { if (potato) { while (true) { warning(test) } } }',
+    },
+    /* calls wrapped on an if with && */
+    {
+      code: 'if (banana && __DEV__ && potato && kitten) { warning(test) }',
     },
     /* don't do anything to arbitrary fn's or invariants */
     {
@@ -44,7 +48,7 @@ ruleTester.run('no-production-logging', rule, {
       ],
     },
     {
-      code: 'if (potato) {warningWithoutStack(test)}',
+      code: 'if (potato) { warningWithoutStack(test) }',
       errors: [
         {
           message: 'Wrap warningWithoutStack in a `if (__DEV__)` check',
@@ -53,6 +57,14 @@ ruleTester.run('no-production-logging', rule, {
     },
     {
       code: 'warning(test)',
+      errors: [
+        {
+          message: 'Wrap warning in a `if (__DEV__)` check',
+        },
+      ],
+    },
+    {
+      code: 'if (__DEV__ || potato && true) { warning(test) }',
       errors: [
         {
           message: 'Wrap warning in a `if (__DEV__)` check',
