@@ -50,13 +50,8 @@ module.exports = function(babel, options) {
             newNode[SEEN_SYMBOL] = true;
             path.replaceWith(
               t.ifStatement(
-                DEV_EXPRESSION,
-                t.blockStatement([
-                  t.ifStatement(
-                    t.unaryExpression('!', condition),
-                    t.expressionStatement(newNode)
-                  ),
-                ])
+                t.unaryExpression('!', condition),
+                t.expressionStatement(newNode)
               )
             );
           }
