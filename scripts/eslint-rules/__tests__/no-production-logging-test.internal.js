@@ -28,6 +28,9 @@ ruleTester.run('no-production-logging', rule, {
       code: 'normalFunctionCall(test)',
     },
     {
+      code: 'invariant(test)',
+    },
+    {
       code: 'if (__DEV__) {normalFunctionCall(test)}',
     },
   ],
