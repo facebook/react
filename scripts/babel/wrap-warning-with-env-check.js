@@ -9,8 +9,6 @@
 module.exports = function(babel, options) {
   const t = babel.types;
 
-  const DEV_EXPRESSION = t.identifier('__DEV__');
-
   const SEEN_SYMBOL = Symbol('expression.seen');
 
   return {
