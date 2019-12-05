@@ -27,6 +27,9 @@ module.exports = function(context) {
     ['warning', 'warningWithoutStack'].includes(name);
 
   return {
+    meta: {
+      fixable: 'code',
+    },
     CallExpression: node => {
       if (!isLoggerNode(node.callee.name)) {
         return;
@@ -37,6 +40,12 @@ module.exports = function(context) {
           message: 'Wrap {{identifier}} in a `if (__DEV__)` check',
           data: {
             identifier: node.callee.name,
+          },
+          fix: function(fixer) {
+            return [
+              fixer.insertTextBefore(node.parent, 'if (__DEV__) {'),
+              fixer.insertTextAfter(node.parent, '}'),
+            ];
           },
         });
       }
