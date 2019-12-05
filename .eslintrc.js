@@ -93,7 +93,7 @@ module.exports = {
     'react-internal/no-primitive-constructors': ERROR,
     'react-internal/no-to-warn-dev-within-to-throw': ERROR,
     'react-internal/warning-and-invariant-args': ERROR,
-    'react-internal/no-production-logging': 1,
+    'react-internal/no-production-logging': ERROR,
   },
 
   overrides: [
