@@ -243,14 +243,12 @@ function warnOnFunctionType() {
   }
   ownerHasFunctionTypeWarning[currentComponentErrorInfo] = true;
 
-  if (__DEV__) {
-    warning(
-      false,
-      'Functions are not valid as a React child. This may happen if ' +
-        'you return a Component instead of <Component /> from render. ' +
-        'Or maybe you meant to call this function rather than return it.',
-    );
-  }
+  warning(
+    false,
+    'Functions are not valid as a React child. This may happen if ' +
+      'you return a Component instead of <Component /> from render. ' +
+      'Or maybe you meant to call this function rather than return it.',
+  );
 }
 
 // This wrapper function exists because I expect to clone the code in each path

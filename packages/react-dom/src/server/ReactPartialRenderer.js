@@ -687,14 +687,12 @@ function resolve(
             );
           }
         } else {
-          if (__DEV__) {
-            warningWithoutStack(
-              false,
-              '%s.getChildContext(): childContextTypes must be defined in order to ' +
-                'use getChildContext().',
-              getComponentName(Component) || 'Unknown',
-            );
-          }
+          warningWithoutStack(
+            false,
+            '%s.getChildContext(): childContextTypes must be defined in order to ' +
+              'use getChildContext().',
+            getComponentName(Component) || 'Unknown',
+          );
         }
       }
       if (childContext) {

@@ -49,25 +49,21 @@ function checkSelectPropTypes(props) {
     }
     const isArray = Array.isArray(props[propName]);
     if (props.multiple && !isArray) {
-      if (__DEV__) {
-        warning(
-          false,
-          'The `%s` prop supplied to <select> must be an array if ' +
-            '`multiple` is true.%s',
-          propName,
-          getDeclarationErrorAddendum(),
-        );
-      }
+      warning(
+        false,
+        'The `%s` prop supplied to <select> must be an array if ' +
+          '`multiple` is true.%s',
+        propName,
+        getDeclarationErrorAddendum(),
+      );
     } else if (!props.multiple && isArray) {
-      if (__DEV__) {
-        warning(
-          false,
-          'The `%s` prop supplied to <select> must be a scalar ' +
-            'value if `multiple` is false.%s',
-          propName,
-          getDeclarationErrorAddendum(),
-        );
-      }
+      warning(
+        false,
+        'The `%s` prop supplied to <select> must be a scalar ' +
+          'value if `multiple` is false.%s',
+        propName,
+        getDeclarationErrorAddendum(),
+      );
     }
   }
 }

@@ -280,14 +280,12 @@ export function updateContainer(
 
   callback = callback === undefined ? null : callback;
   if (callback !== null) {
-    if (__DEV__) {
-      warningWithoutStack(
-        typeof callback === 'function',
-        'render(...): Expected the last optional `callback` argument to be a ' +
-          'function. Instead received: %s.',
-        callback,
-      );
-    }
+    warningWithoutStack(
+      typeof callback === 'function',
+      'render(...): Expected the last optional `callback` argument to be a ' +
+        'function. Instead received: %s.',
+      callback,
+    );
     update.callback = callback;
   }
 

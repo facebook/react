@@ -50,16 +50,14 @@ function defineKeyPropWarningGetter(props, displayName) {
   const warnAboutAccessingKey = function() {
     if (!specialPropKeyWarningShown) {
       specialPropKeyWarningShown = true;
-      if (__DEV__) {
-        warningWithoutStack(
-          false,
-          '%s: `key` is not a prop. Trying to access it will result ' +
-            'in `undefined` being returned. If you need to access the same ' +
-            'value within the child component, you should pass it as a different ' +
-            'prop. (https://fb.me/react-special-props)',
-          displayName,
-        );
-      }
+      warningWithoutStack(
+        false,
+        '%s: `key` is not a prop. Trying to access it will result ' +
+          'in `undefined` being returned. If you need to access the same ' +
+          'value within the child component, you should pass it as a different ' +
+          'prop. (https://fb.me/react-special-props)',
+        displayName,
+      );
     }
   };
   warnAboutAccessingKey.isReactWarning = true;
@@ -73,16 +71,14 @@ function defineRefPropWarningGetter(props, displayName) {
   const warnAboutAccessingRef = function() {
     if (!specialPropRefWarningShown) {
       specialPropRefWarningShown = true;
-      if (__DEV__) {
-        warningWithoutStack(
-          false,
-          '%s: `ref` is not a prop. Trying to access it will result ' +
-            'in `undefined` being returned. If you need to access the same ' +
-            'value within the child component, you should pass it as a different ' +
-            'prop. (https://fb.me/react-special-props)',
-          displayName,
-        );
-      }
+      warningWithoutStack(
+        false,
+        '%s: `ref` is not a prop. Trying to access it will result ' +
+          'in `undefined` being returned. If you need to access the same ' +
+          'value within the child component, you should pass it as a different ' +
+          'prop. (https://fb.me/react-special-props)',
+        displayName,
+      );
     }
   };
   warnAboutAccessingRef.isReactWarning = true;

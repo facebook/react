@@ -17,25 +17,21 @@ export function validateProperties(type, props) {
   if (props != null && props.value === null && !didWarnValueNull) {
     didWarnValueNull = true;
     if (type === 'select' && props.multiple) {
-      if (__DEV__) {
-        warning(
-          false,
-          '`value` prop on `%s` should not be null. ' +
-            'Consider using an empty array when `multiple` is set to `true` ' +
-            'to clear the component or `undefined` for uncontrolled components.',
-          type,
-        );
-      }
+      warning(
+        false,
+        '`value` prop on `%s` should not be null. ' +
+          'Consider using an empty array when `multiple` is set to `true` ' +
+          'to clear the component or `undefined` for uncontrolled components.',
+        type,
+      );
     } else {
-      if (__DEV__) {
-        warning(
-          false,
-          '`value` prop on `%s` should not be null. ' +
-            'Consider using an empty string to clear the component or `undefined` ' +
-            'for uncontrolled components.',
-          type,
-        );
-      }
+      warning(
+        false,
+        '`value` prop on `%s` should not be null. ' +
+          'Consider using an empty string to clear the component or `undefined` ' +
+          'for uncontrolled components.',
+        type,
+      );
     }
   }
 }

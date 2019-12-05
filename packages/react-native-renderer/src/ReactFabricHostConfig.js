@@ -159,12 +159,10 @@ class ReactFabricHostComponent {
       typeof relativeToNativeNode === 'number' ||
       !(relativeToNativeNode instanceof ReactFabricHostComponent)
     ) {
-      if (__DEV__) {
-        warningWithoutStack(
-          false,
-          'Warning: ref.measureLayout must be called with a ref to a native component.',
-        );
-      }
+      warningWithoutStack(
+        false,
+        'Warning: ref.measureLayout must be called with a ref to a native component.',
+      );
 
       return;
     }
@@ -178,12 +176,10 @@ class ReactFabricHostComponent {
   }
 
   setNativeProps(nativeProps: Object) {
-    if (__DEV__) {
-      warningWithoutStack(
-        false,
-        'Warning: setNativeProps is not currently supported in Fabric',
-      );
-    }
+    warningWithoutStack(
+      false,
+      'Warning: setNativeProps is not currently supported in Fabric',
+    );
 
     return;
   }
