@@ -23,7 +23,8 @@ module.exports = function(context) {
     }
   }
 
-  const isLoggerNode = name => ['warning', 'warningWithoutStack'].includes(name);
+  const isLoggerNode = name =>
+    ['warning', 'warningWithoutStack'].includes(name);
 
   return {
     CallExpression: node => {
