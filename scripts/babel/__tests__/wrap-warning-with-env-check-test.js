@@ -36,14 +36,14 @@ describe('wrap-warning-with-env-check', () => {
   it('should wrap warning calls', () => {
     compare(
       "warning(condition, 'a %s b', 'c');",
-      "__DEV__ ? !condition ? warning(false, 'a %s b', 'c') : void 0 : void 0;"
+      "!condition ? warning(false, 'a %s b', 'c') : void 0;"
     );
   });
 
   it('should wrap warningWithoutStack calls', () => {
     compare(
       "warningWithoutStack(condition, 'a %s b', 'c');",
-      "__DEV__ ? !condition ? warningWithoutStack(false, 'a %s b', 'c') : void 0 : void 0;"
+      "!condition ? warningWithoutStack(false, 'a %s b', 'c') : void 0;"
     );
   });
 
