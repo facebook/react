@@ -13,48 +13,48 @@ const rule = require('../no-production-logging');
 const RuleTester = require('eslint').RuleTester;
 const ruleTester = new RuleTester();
 
-ruleTester.run("no-production-logging", rule, {
-	valid: [
-		{
-			code: "if (__DEV__) {consoleLog(test)}",
-		},
-		{
-			code: "if (__DEV__) {consoleError(test)}",
-		},
-		{
-			code: "if (__DEV__) { if (potato) { while (true) { consoleError(test) }}}",
-		},
-		{
-			code: "normalFunctionCall(test)",
-		},
-		{
-			code: "if (__DEV__) {normalFunctionCall(test)}",
-		},
-	],
-	invalid: [
-		{
-			code: "consoleLog(test)",
-			errors: [
-				{
-					message: "Wrap consoleLog in a `if (__DEV__)` check",
-				},
-			],
-		},
-		{
-			code: "if (potato) {consoleLog(test)}",
-			errors: [
-				{
-					message: "Wrap consoleLog in a `if (__DEV__)` check",
-				},
-			],
-		},
-		{
-			code: "consoleError(test)",
-			errors: [
-				{
-					message: "Wrap consoleError in a `if (__DEV__)` check",
-				},
-			],
-		},
-	],
+ruleTester.run('no-production-logging', rule, {
+  valid: [
+    {
+      code: 'if (__DEV__) {warningWithoutStack(test)}',
+    },
+    {
+      code: 'if (__DEV__) {warning(test)}',
+    },
+    {
+      code: 'if (__DEV__) { if (potato) { while (true) { warning(test) }}}',
+    },
+    {
+      code: 'normalFunctionCall(test)',
+    },
+    {
+      code: 'if (__DEV__) {normalFunctionCall(test)}',
+    },
+  ],
+  invalid: [
+    {
+      code: 'warningWithoutStack(test)',
+      errors: [
+        {
+          message: 'Wrap warningWithoutStack in a `if (__DEV__)` check',
+        },
+      ],
+    },
+    {
+      code: 'if (potato) {warningWithoutStack(test)}',
+      errors: [
+        {
+          message: 'Wrap warningWithoutStack in a `if (__DEV__)` check',
+        },
+      ],
+    },
+    {
+      code: 'warning(test)',
+      errors: [
+        {
+          message: 'Wrap warning in a `if (__DEV__)` check',
+        },
+      ],
+    },
+  ],
 });
