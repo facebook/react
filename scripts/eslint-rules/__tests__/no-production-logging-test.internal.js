@@ -43,7 +43,7 @@ ruleTester.run('no-production-logging', rule, {
       code: 'warningWithoutStack(test)',
       errors: [
         {
-          message: 'Wrap warningWithoutStack in a `if (__DEV__)` check',
+          message: `We don't emit warnings in production builds. Wrap warningWithoutStack() in an "if (__DEV__) {}" check`,
         },
       ],
     },
@@ -51,7 +51,7 @@ ruleTester.run('no-production-logging', rule, {
       code: 'if (potato) { warningWithoutStack(test) }',
       errors: [
         {
-          message: 'Wrap warningWithoutStack in a `if (__DEV__)` check',
+          message: `We don't emit warnings in production builds. Wrap warningWithoutStack() in an "if (__DEV__) {}" check`,
         },
       ],
     },
@@ -59,7 +59,7 @@ ruleTester.run('no-production-logging', rule, {
       code: 'warning(test)',
       errors: [
         {
-          message: 'Wrap warning in a `if (__DEV__)` check',
+          message: `We don't emit warnings in production builds. Wrap warning() in an "if (__DEV__) {}" check`,
         },
       ],
     },
@@ -67,7 +67,7 @@ ruleTester.run('no-production-logging', rule, {
       code: 'if (__DEV__ || potato && true) { warning(test) }',
       errors: [
         {
-          message: 'Wrap warning in a `if (__DEV__)` check',
+          message: `We don't emit warnings in production builds. Wrap warning() in an "if (__DEV__) {}" check`,
         },
       ],
     },
