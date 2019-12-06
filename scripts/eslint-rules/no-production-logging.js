@@ -35,16 +35,18 @@ module.exports = function(context) {
   function hasIfInParents(node) {
     let done = false;
     while (!done) {
-      if (!node.parent) {
+      let parent = node.parent;
+      if (!parent) {
         return false;
       }
-      node = node.parent;
       if (
-        node.type === 'IfStatement' &&
-        traverseIf(node.test).includes(DEV_EXPRESSION)
+        parent.type === 'IfStatement' &&
+        node === parent.consequent &&
+        traverseIf(parent.test).includes(DEV_EXPRESSION)
       ) {
         return true;
       }
+      node = parent;
     }
   }
 

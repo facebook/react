@@ -88,6 +88,18 @@ ruleTester.run('no-production-logging', rule, {
         }
       `,
     },
+    // This is OK because of the outer if.
+    {
+      code: `
+        if (__DEV__) {
+          if (foo) {
+            if (__DEV__) {
+            } else {
+              warning(test, 'Oh no');
+            }
+          }
+        }`,
+    },
   ],
   invalid: [
     {
@@ -174,6 +186,35 @@ ruleTester.run('no-production-logging', rule, {
       code: `
         if (foo || x && __DEV__) {
           warning(test);
+        }
+      `,
+      errors: [
+        {
+          message: `Wrap warning() in an "if (__DEV__) {}" check`,
+        },
+      ],
+    },
+    {
+      code: `
+        if (__DEV__) {
+        } else {
+          warning(test);
+        }
+      `,
+      errors: [
+        {
+          message: `Wrap warning() in an "if (__DEV__) {}" check`,
+        },
+      ],
+    },
+    {
+      code: `
+        if (__DEV__) {
+        } else {
+          if (__DEV__) {
+          } else {
+            warning(test);
+          }
         }
       `,
       errors: [
