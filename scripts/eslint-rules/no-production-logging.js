@@ -9,6 +9,14 @@
 
 'use strict';
 
+const LOGGER_FN_NAMES = [
+  'warning',
+  'warningWithoutStack',
+  'lowPriorityWarning',
+  'lowPriorityWarningWithoutStack',
+];
+const DEV_EXPRESSION = '__DEV__';
+
 module.exports = function(context) {
   function traverseIf(node) {
     switch (node.type) {
@@ -33,7 +41,7 @@ module.exports = function(context) {
       node = node.parent;
       if (
         node.type === 'IfStatement' &&
-        traverseIf(node.test).includes('__DEV__')
+        traverseIf(node.test).includes(DEV_EXPRESSION)
       ) {
         return true;
       }
@@ -43,21 +51,20 @@ module.exports = function(context) {
   function report(node) {
     context.report({
       node: node,
-      message: `We don't emit warnings in production builds. Wrap {{identifier}}() in an "if (__DEV__) {}" check`,
+      message: `We don't emit warnings in production builds. Wrap {{identifier}}() in an "if (${DEV_EXPRESSION}) {}" check`,
       data: {
         identifier: node.callee.name,
       },
       fix: function(fixer) {
         return [
-          fixer.insertTextBefore(node.parent, 'if (__DEV__) {'),
+          fixer.insertTextBefore(node.parent, `if (${DEV_EXPRESSION}) {`),
           fixer.insertTextAfter(node.parent, '}'),
         ];
       },
     });
   }
 
-  const isLoggerFunctionName = name =>
-    ['warning', 'warningWithoutStack'].includes(name);
+  const isLoggerFunctionName = name => LOGGER_FN_NAMES.includes(name);
 
   return {
     meta: {
