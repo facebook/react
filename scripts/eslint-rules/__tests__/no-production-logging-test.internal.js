@@ -15,27 +15,64 @@ const ruleTester = new RuleTester();
 
 ruleTester.run('no-production-logging', rule, {
   valid: [
-    /* wrapped calls */
     {
-      code: 'if (__DEV__) { warningWithoutStack(test) }',
+      code: `
+        if (__DEV__) {
+          warningWithoutStack(test, 'Oh no');
+        }
+      `,
     },
     {
-      code: 'if (__DEV__) { warning(test) }',
+      code: `
+        if (__DEV__) {
+          warning(test, 'Oh no');
+        }
+      `,
     },
-    /* calls wrapped on an outer bound */
+    // This is OK too because it's wrapped outside:
     {
-      code: 'if (__DEV__) { if (potato) { while (true) { warning(test) } } }',
+      code: `
+        if (__DEV__) {
+          if (potato) {
+            while (true) {
+              warning(test, 'Oh no');
+            }
+          }
+        }`,
     },
-    /* calls wrapped on an if with && */
     {
-      code: 'if (banana && __DEV__ && potato && kitten) { warning(test) }',
+      code: `
+        var f;
+        if (__DEV__) {
+          f = function() {
+            if (potato) {
+              while (true) {
+                warning(test, 'Oh no');
+              }
+            }
+          };
+        }`,
     },
-    /* don't do anything to arbitrary fn's or invariants */
     {
-      code: 'normalFunctionCall(test)',
+      code: `
+        if (banana && __DEV__ && potato && kitten) {
+          warning(test);
+        }
+      `,
+    },
+    // Don't do anything with these:
+    {
+      code: 'normalFunctionCall(test);',
     },
     {
-      code: 'invariant(test)',
+      code: 'invariant(test);',
+    },
+    {
+      code: `
+        if (__DEV__) {
+          normalFunctionCall(test);
+        }
+      `,
     },
   ],
   invalid: [
@@ -48,7 +85,11 @@ ruleTester.run('no-production-logging', rule, {
       ],
     },
     {
-      code: 'if (potato) { warningWithoutStack(test) }',
+      code: `
+        if (potato) {
+          warningWithoutStack(test);
+        }
+      `,
       errors: [
         {
           message: `We don't emit warnings in production builds. Wrap warningWithoutStack() in an "if (__DEV__) {}" check`,
@@ -56,7 +97,7 @@ ruleTester.run('no-production-logging', rule, {
       ],
     },
     {
-      code: 'warning(test)',
+      code: 'warning(test);',
       errors: [
         {
           message: `We don't emit warnings in production builds. Wrap warning() in an "if (__DEV__) {}" check`,
@@ -64,7 +105,11 @@ ruleTester.run('no-production-logging', rule, {
       ],
     },
     {
-      code: 'if (__DEV__ || potato && true) { warning(test) }',
+      code: `
+        if (__DEV__ || potato && true) {
+          warning(test);
+        }
+      `,
       errors: [
         {
           message: `We don't emit warnings in production builds. Wrap warning() in an "if (__DEV__) {}" check`,
