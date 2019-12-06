@@ -194,47 +194,45 @@ function validateChildKeys(node, parentType) {
  * @param {ReactElement} element
  */
 function validatePropTypes(element) {
-  const type = element.type;
-  if (type === null || type === undefined || typeof type === 'string') {
-    return;
-  }
-  const name = getComponentName(type);
-  let propTypes;
-  if (typeof type === 'function') {
-    propTypes = type.propTypes;
-  } else if (
-    typeof type === 'object' &&
-    (type.$$typeof === REACT_FORWARD_REF_TYPE ||
-      // Note: Memo only checks outer props here.
-      // Inner props are checked in the reconciler.
-      type.$$typeof === REACT_MEMO_TYPE)
-  ) {
-    propTypes = type.propTypes;
-  } else {
-    return;
-  }
-  if (propTypes) {
-    setCurrentlyValidatingElement(element);
-    checkPropTypes(
-      propTypes,
-      element.props,
-      'prop',
-      name,
-      ReactDebugCurrentFrame.getStackAddendum,
-    );
-    setCurrentlyValidatingElement(null);
-  } else if (type.PropTypes !== undefined && !propTypesMisspellWarningShown) {
-    propTypesMisspellWarningShown = true;
-    if (__DEV__) {
+  if (__DEV__) {
+    const type = element.type;
+    if (type === null || type === undefined || typeof type === 'string') {
+      return;
+    }
+    const name = getComponentName(type);
+    let propTypes;
+    if (typeof type === 'function') {
+      propTypes = type.propTypes;
+    } else if (
+      typeof type === 'object' &&
+      (type.$$typeof === REACT_FORWARD_REF_TYPE ||
+        // Note: Memo only checks outer props here.
+        // Inner props are checked in the reconciler.
+        type.$$typeof === REACT_MEMO_TYPE)
+    ) {
+      propTypes = type.propTypes;
+    } else {
+      return;
+    }
+    if (propTypes) {
+      setCurrentlyValidatingElement(element);
+      checkPropTypes(
+        propTypes,
+        element.props,
+        'prop',
+        name,
+        ReactDebugCurrentFrame.getStackAddendum,
+      );
+      setCurrentlyValidatingElement(null);
+    } else if (type.PropTypes !== undefined && !propTypesMisspellWarningShown) {
+      propTypesMisspellWarningShown = true;
       warningWithoutStack(
         false,
         'Component %s declared `PropTypes` instead of `propTypes`. Did you misspell the property assignment?',
         name || 'Unknown',
       );
     }
-  }
-  if (typeof type.getDefaultProps === 'function') {
-    if (__DEV__) {
+    if (typeof type.getDefaultProps === 'function') {
       warningWithoutStack(
         type.getDefaultProps.isReactClassApproved,
         'getDefaultProps is only used on classic React.createClass ' +
@@ -249,31 +247,29 @@ function validatePropTypes(element) {
  * @param {ReactElement} fragment
  */
 function validateFragmentProps(fragment) {
-  setCurrentlyValidatingElement(fragment);
+  if (__DEV__) {
+    setCurrentlyValidatingElement(fragment);
 
-  const keys = Object.keys(fragment.props);
-  for (let i = 0; i < keys.length; i++) {
-    const key = keys[i];
-    if (key !== 'children' && key !== 'key') {
-      if (__DEV__) {
+    const keys = Object.keys(fragment.props);
+    for (let i = 0; i < keys.length; i++) {
+      const key = keys[i];
+      if (key !== 'children' && key !== 'key') {
         warning(
           false,
           'Invalid prop `%s` supplied to `React.Fragment`. ' +
             'React.Fragment can only have `key` and `children` props.',
           key,
         );
+        break;
       }
-      break;
     }
-  }
 
-  if (fragment.ref !== null) {
-    if (__DEV__) {
+    if (fragment.ref !== null) {
       warning(false, 'Invalid attribute `ref` supplied to `React.Fragment`.');
     }
-  }
 
-  setCurrentlyValidatingElement(null);
+    setCurrentlyValidatingElement(null);
+  }
 }
 
 export function jsxWithValidation(

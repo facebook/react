@@ -18,68 +18,64 @@ const rARIACamel = new RegExp('^(aria)[A-Z][' + ATTRIBUTE_NAME_CHAR + ']*$');
 const hasOwnProperty = Object.prototype.hasOwnProperty;
 
 function validateProperty(tagName, name) {
-  if (hasOwnProperty.call(warnedProperties, name) && warnedProperties[name]) {
-    return true;
-  }
+  if (__DEV__) {
+    if (hasOwnProperty.call(warnedProperties, name) && warnedProperties[name]) {
+      return true;
+    }
 
-  if (rARIACamel.test(name)) {
-    const ariaName = 'aria-' + name.slice(4).toLowerCase();
-    const correctName = validAriaProperties.hasOwnProperty(ariaName)
-      ? ariaName
-      : null;
+    if (rARIACamel.test(name)) {
+      const ariaName = 'aria-' + name.slice(4).toLowerCase();
+      const correctName = validAriaProperties.hasOwnProperty(ariaName)
+        ? ariaName
+        : null;
 
-    // If this is an aria-* attribute, but is not listed in the known DOM
-    // DOM properties, then it is an invalid aria-* attribute.
-    if (correctName == null) {
-      if (__DEV__) {
+      // If this is an aria-* attribute, but is not listed in the known DOM
+      // DOM properties, then it is an invalid aria-* attribute.
+      if (correctName == null) {
         warning(
           false,
           'Invalid ARIA attribute `%s`. ARIA attributes follow the pattern aria-* and must be lowercase.',
           name,
         );
+        warnedProperties[name] = true;
+        return true;
       }
-      warnedProperties[name] = true;
-      return true;
-    }
-    // aria-* attributes should be lowercase; suggest the lowercase version.
-    if (name !== correctName) {
-      if (__DEV__) {
+      // aria-* attributes should be lowercase; suggest the lowercase version.
+      if (name !== correctName) {
         warning(
           false,
           'Invalid ARIA attribute `%s`. Did you mean `%s`?',
           name,
           correctName,
         );
+        warnedProperties[name] = true;
+        return true;
       }
-      warnedProperties[name] = true;
-      return true;
     }
-  }
 
-  if (rARIA.test(name)) {
-    const lowerCasedName = name.toLowerCase();
-    const standardName = validAriaProperties.hasOwnProperty(lowerCasedName)
-      ? lowerCasedName
-      : null;
+    if (rARIA.test(name)) {
+      const lowerCasedName = name.toLowerCase();
+      const standardName = validAriaProperties.hasOwnProperty(lowerCasedName)
+        ? lowerCasedName
+        : null;
 
-    // If this is an aria-* attribute, but is not listed in the known DOM
-    // DOM properties, then it is an invalid aria-* attribute.
-    if (standardName == null) {
-      warnedProperties[name] = true;
-      return false;
-    }
-    // aria-* attributes should be lowercase; suggest the lowercase version.
-    if (name !== standardName) {
-      if (__DEV__) {
+      // If this is an aria-* attribute, but is not listed in the known DOM
+      // DOM properties, then it is an invalid aria-* attribute.
+      if (standardName == null) {
+        warnedProperties[name] = true;
+        return false;
+      }
+      // aria-* attributes should be lowercase; suggest the lowercase version.
+      if (name !== standardName) {
         warning(
           false,
           'Unknown ARIA attribute `%s`. Did you mean `%s`?',
           name,
           standardName,
         );
+        warnedProperties[name] = true;
+        return true;
       }
-      warnedProperties[name] = true;
-      return true;
     }
   }
 
@@ -87,21 +83,21 @@ function validateProperty(tagName, name) {
 }
 
 function warnInvalidARIAProps(type, props) {
-  const invalidProps = [];
+  if (__DEV__) {
+    const invalidProps = [];
 
-  for (const key in props) {
-    const isValid = validateProperty(type, key);
-    if (!isValid) {
-      invalidProps.push(key);
+    for (const key in props) {
+      const isValid = validateProperty(type, key);
+      if (!isValid) {
+        invalidProps.push(key);
+      }
     }
-  }
 
-  const unknownPropString = invalidProps
-    .map(prop => '`' + prop + '`')
-    .join(', ');
+    const unknownPropString = invalidProps
+      .map(prop => '`' + prop + '`')
+      .join(', ');
 
-  if (invalidProps.length === 1) {
-    if (__DEV__) {
+    if (invalidProps.length === 1) {
       warning(
         false,
         'Invalid aria prop %s on <%s> tag. ' +
@@ -109,9 +105,7 @@ function warnInvalidARIAProps(type, props) {
         unknownPropString,
         type,
       );
-    }
-  } else if (invalidProps.length > 1) {
-    if (__DEV__) {
+    } else if (invalidProps.length > 1) {
       warning(
         false,
         'Invalid aria props %s on <%s> tag. ' +

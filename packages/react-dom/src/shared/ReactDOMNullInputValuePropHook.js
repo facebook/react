@@ -10,14 +10,14 @@ import warning from 'shared/warning';
 let didWarnValueNull = false;
 
 export function validateProperties(type, props) {
-  if (type !== 'input' && type !== 'textarea' && type !== 'select') {
-    return;
-  }
+  if (__DEV__) {
+    if (type !== 'input' && type !== 'textarea' && type !== 'select') {
+      return;
+    }
 
-  if (props != null && props.value === null && !didWarnValueNull) {
-    didWarnValueNull = true;
-    if (type === 'select' && props.multiple) {
-      if (__DEV__) {
+    if (props != null && props.value === null && !didWarnValueNull) {
+      didWarnValueNull = true;
+      if (type === 'select' && props.multiple) {
         warning(
           false,
           '`value` prop on `%s` should not be null. ' +
@@ -25,9 +25,7 @@ export function validateProperties(type, props) {
             'to clear the component or `undefined` for uncontrolled components.',
           type,
         );
-      }
-    } else {
-      if (__DEV__) {
+      } else {
         warning(
           false,
           '`value` prop on `%s` should not be null. ' +

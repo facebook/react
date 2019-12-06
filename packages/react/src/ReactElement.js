@@ -48,9 +48,9 @@ function hasValidKey(config) {
 
 function defineKeyPropWarningGetter(props, displayName) {
   const warnAboutAccessingKey = function() {
-    if (!specialPropKeyWarningShown) {
-      specialPropKeyWarningShown = true;
-      if (__DEV__) {
+    if (__DEV__) {
+      if (!specialPropKeyWarningShown) {
+        specialPropKeyWarningShown = true;
         warningWithoutStack(
           false,
           '%s: `key` is not a prop. Trying to access it will result ' +
@@ -71,9 +71,9 @@ function defineKeyPropWarningGetter(props, displayName) {
 
 function defineRefPropWarningGetter(props, displayName) {
   const warnAboutAccessingRef = function() {
-    if (!specialPropRefWarningShown) {
-      specialPropRefWarningShown = true;
-      if (__DEV__) {
+    if (__DEV__) {
+      if (!specialPropRefWarningShown) {
+        specialPropRefWarningShown = true;
         warningWithoutStack(
           false,
           '%s: `ref` is not a prop. Trying to access it will result ' +

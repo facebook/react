@@ -359,9 +359,9 @@ const ReactTestUtils = {
    * @return {object} the ReactTestUtils object (for chaining)
    */
   mockComponent: function(module, mockTagName) {
-    if (!hasWarnedAboutDeprecatedMockComponent) {
-      hasWarnedAboutDeprecatedMockComponent = true;
-      if (__DEV__) {
+    if (__DEV__) {
+      if (!hasWarnedAboutDeprecatedMockComponent) {
+        hasWarnedAboutDeprecatedMockComponent = true;
         lowPriorityWarningWithoutStack(
           false,
           'ReactTestUtils.mockComponent() is deprecated. ' +
