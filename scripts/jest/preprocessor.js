@@ -17,7 +17,7 @@ const pathToBabelPluginDevWithCode = require.resolve(
   '../error-codes/transform-error-messages'
 );
 const pathToBabelPluginWrapWarning = require.resolve(
-  '../babel/wrap-warning-with-env-check'
+  '../babel/lift-warning-conditional-argument'
 );
 const pathToBabelPluginAsyncToGenerator = require.resolve(
   '@babel/plugin-transform-async-to-generator'

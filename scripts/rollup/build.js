@@ -125,7 +125,7 @@ function getBabelConfig(updateBabelOptions, bundleType, filename) {
           // Minify invariant messages
           require('../error-codes/transform-error-messages'),
           // Wrap warning() calls in a __DEV__ check so they are stripped from production.
-          require('../babel/wrap-warning-with-env-check'),
+          require('../babel/lift-warning-conditional-argument'),
         ]),
       });
     case RN_OSS_DEV:
@@ -142,7 +142,7 @@ function getBabelConfig(updateBabelOptions, bundleType, filename) {
             {noMinify: true},
           ],
           // Wrap warning() calls in a __DEV__ check so they are stripped from production.
-          require('../babel/wrap-warning-with-env-check'),
+          require('../babel/lift-warning-conditional-argument'),
         ]),
       });
     case UMD_DEV:
@@ -158,7 +158,7 @@ function getBabelConfig(updateBabelOptions, bundleType, filename) {
           // Minify invariant messages
           require('../error-codes/transform-error-messages'),
           // Wrap warning() calls in a __DEV__ check so they are stripped from production.
-          require('../babel/wrap-warning-with-env-check'),
+          require('../babel/lift-warning-conditional-argument'),
         ]),
       });
     default:
