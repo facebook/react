@@ -69,8 +69,8 @@ function areHookInputsEqual(
           'its type cannot change between renders.',
         currentHookNameInDev,
       );
-      return false;
     }
+    return false;
   }
 
   if (__DEV__) {
