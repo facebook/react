@@ -546,8 +546,8 @@ function ChildReconciler(shouldTrackSideEffects) {
     oldFiber: Fiber | null,
     newChild: any,
     expirationTime: ExpirationTime,
-  ): Fiber | null {
-    // Update the fiber if the keys match, otherwise return null.
+  ): Fiber | null | false {
+    // Update the fiber if the keys match, otherwise return false.
 
     const key = oldFiber !== null ? oldFiber.key : null;
 
@@ -556,7 +556,7 @@ function ChildReconciler(shouldTrackSideEffects) {
       // we can continue to replace it without aborting even if it is not a text
       // node.
       if (key !== null) {
-        return null;
+        return false;
       }
       return updateTextNode(
         returnFiber,
@@ -586,7 +586,7 @@ function ChildReconciler(shouldTrackSideEffects) {
               expirationTime,
             );
           } else {
-            return null;
+            return false;
           }
         }
         case REACT_PORTAL_TYPE: {
@@ -598,14 +598,14 @@ function ChildReconciler(shouldTrackSideEffects) {
               expirationTime,
             );
           } else {
-            return null;
+            return false;
           }
         }
       }
 
       if (isArray(newChild) || getIteratorFn(newChild)) {
         if (key !== null) {
-          return null;
+          return false;
         }
 
         return updateFragment(
@@ -626,6 +626,9 @@ function ChildReconciler(shouldTrackSideEffects) {
       }
     }
 
+    if (key !== null) {
+      return false;
+    }
     return null;
   }
 
@@ -807,18 +810,21 @@ function ChildReconciler(shouldTrackSideEffects) {
         newChildren[newIdx],
         expirationTime,
       );
-      if (newFiber === null) {
-        // TODO: This breaks on empty slots like null children. That's
-        // unfortunate because it triggers the slow path all the time. We need
-        // a better way to communicate whether this was a miss or null,
-        // boolean, undefined, etc.
+      if (newFiber === false) {
         if (oldFiber === null) {
           oldFiber = nextOldFiber;
         }
         break;
       }
+      if (newFiber === null) {
+        if (shouldTrackSideEffects && oldFiber !== null) {
+          deleteChild(returnFiber, oldFiber);
+        }
+        oldFiber = nextOldFiber;
+        continue;
+      }
       if (shouldTrackSideEffects) {
-        if (oldFiber && newFiber.alternate === null) {
+        if (oldFiber !== null && newFiber.alternate === null) {
           // We matched the slot, but we didn't reuse the existing fiber, so we
           // need to delete the existing child.
           deleteChild(returnFiber, oldFiber);
@@ -1000,18 +1006,21 @@ function ChildReconciler(shouldTrackSideEffects) {
         step.value,
         expirationTime,
       );
-      if (newFiber === null) {
-        // TODO: This breaks on empty slots like null children. That's
-        // unfortunate because it triggers the slow path all the time. We need
-        // a better way to communicate whether this was a miss or null,
-        // boolean, undefined, etc.
+      if (newFiber === false) {
         if (oldFiber === null) {
           oldFiber = nextOldFiber;
         }
         break;
       }
+      if (newFiber === null) {
+        if (shouldTrackSideEffects && oldFiber !== null) {
+          deleteChild(returnFiber, oldFiber);
+        }
+        oldFiber = nextOldFiber;
+        continue;
+      }
       if (shouldTrackSideEffects) {
-        if (oldFiber && newFiber.alternate === null) {
+        if (oldFiber !== null && newFiber.alternate === null) {
           // We matched the slot, but we didn't reuse the existing fiber, so we
           // need to delete the existing child.
           deleteChild(returnFiber, oldFiber);
