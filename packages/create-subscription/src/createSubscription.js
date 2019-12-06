@@ -41,8 +41,6 @@ export function createSubscription<Property, Value>(
       typeof getCurrentValue === 'function',
       'Subscription must specify a getCurrentValue function',
     );
-  }
-  if (__DEV__) {
     warningWithoutStack(
       typeof subscribe === 'function',
       'Subscription must specify a subscribe function',

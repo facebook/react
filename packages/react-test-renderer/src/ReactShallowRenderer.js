@@ -69,14 +69,14 @@ function areHookInputsEqual(
           'its type cannot change between renders.',
         currentHookNameInDev,
       );
+      return false;
     }
-    return false;
   }
 
-  // Don't bother comparing lengths in prod because these arrays should be
-  // passed inline.
-  if (nextDeps.length !== prevDeps.length) {
-    if (__DEV__) {
+  if (__DEV__) {
+    // Don't bother comparing lengths in prod because these arrays should be
+    // passed inline.
+    if (nextDeps.length !== prevDeps.length) {
       warning(
         false,
         'The final argument passed to %s changed size between renders. The ' +

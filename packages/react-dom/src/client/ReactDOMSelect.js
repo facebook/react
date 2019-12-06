@@ -40,16 +40,16 @@ const valuePropNames = ['value', 'defaultValue'];
  * Validation function for `value` and `defaultValue`.
  */
 function checkSelectPropTypes(props) {
-  ReactControlledValuePropTypes.checkPropTypes('select', props);
+  if (__DEV__) {
+    ReactControlledValuePropTypes.checkPropTypes('select', props);
 
-  for (let i = 0; i < valuePropNames.length; i++) {
-    const propName = valuePropNames[i];
-    if (props[propName] == null) {
-      continue;
-    }
-    const isArray = Array.isArray(props[propName]);
-    if (props.multiple && !isArray) {
-      if (__DEV__) {
+    for (let i = 0; i < valuePropNames.length; i++) {
+      const propName = valuePropNames[i];
+      if (props[propName] == null) {
+        continue;
+      }
+      const isArray = Array.isArray(props[propName]);
+      if (props.multiple && !isArray) {
         warning(
           false,
           'The `%s` prop supplied to <select> must be an array if ' +
@@ -57,9 +57,7 @@ function checkSelectPropTypes(props) {
           propName,
           getDeclarationErrorAddendum(),
         );
-      }
-    } else if (!props.multiple && isArray) {
-      if (__DEV__) {
+      } else if (!props.multiple && isArray) {
         warning(
           false,
           'The `%s` prop supplied to <select> must be a scalar ' +

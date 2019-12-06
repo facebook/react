@@ -392,8 +392,6 @@ export function useLayoutEffect(
 ) {
   if (__DEV__) {
     currentHookNameInDev = 'useLayoutEffect';
-  }
-  if (__DEV__) {
     warning(
       false,
       'useLayoutEffect does nothing on the server, because its effect cannot ' +
