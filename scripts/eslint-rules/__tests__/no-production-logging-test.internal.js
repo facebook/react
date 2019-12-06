@@ -18,6 +18,13 @@ ruleTester.run('no-production-logging', rule, {
     {
       code: `
         if (__DEV__) {
+          warning(test, 'Oh no');
+        }
+      `,
+    },
+    {
+      code: `
+        if (__DEV__) {
           warningWithoutStack(test, 'Oh no');
         }
       `,
@@ -25,7 +32,14 @@ ruleTester.run('no-production-logging', rule, {
     {
       code: `
         if (__DEV__) {
-          warning(test, 'Oh no');
+          lowPriorityWarning(test, 'Oh no');
+        }
+      `,
+    },
+    {
+      code: `
+        if (__DEV__) {
+          lowPriorityWarningWithoutStack(test, 'Oh no');
         }
       `,
     },
@@ -77,10 +91,18 @@ ruleTester.run('no-production-logging', rule, {
   ],
   invalid: [
     {
+      code: 'warning(test);',
+      errors: [
+        {
+          message: `Wrap warning() in an "if (__DEV__) {}" check`,
+        },
+      ],
+    },
+    {
       code: 'warningWithoutStack(test)',
       errors: [
         {
-          message: `We don't emit warnings in production builds. Wrap warningWithoutStack() in an "if (__DEV__) {}" check`,
+          message: `Wrap warningWithoutStack() in an "if (__DEV__) {}" check`,
         },
       ],
     },
@@ -92,15 +114,35 @@ ruleTester.run('no-production-logging', rule, {
       `,
       errors: [
         {
-          message: `We don't emit warnings in production builds. Wrap warningWithoutStack() in an "if (__DEV__) {}" check`,
+          message: `Wrap warningWithoutStack() in an "if (__DEV__) {}" check`,
         },
       ],
     },
     {
-      code: 'warning(test);',
+      code: 'lowPriorityWarning(test);',
       errors: [
         {
-          message: `We don't emit warnings in production builds. Wrap warning() in an "if (__DEV__) {}" check`,
+          message: `Wrap lowPriorityWarning() in an "if (__DEV__) {}" check`,
+        },
+      ],
+    },
+    {
+      code: 'lowPriorityWarningWithoutStack(test)',
+      errors: [
+        {
+          message: `Wrap lowPriorityWarningWithoutStack() in an "if (__DEV__) {}" check`,
+        },
+      ],
+    },
+    {
+      code: `
+        if (potato) {
+          lowPriorityWarningWithoutStack(test);
+        }
+      `,
+      errors: [
+        {
+          message: `Wrap lowPriorityWarningWithoutStack() in an "if (__DEV__) {}" check`,
         },
       ],
     },
@@ -112,7 +154,31 @@ ruleTester.run('no-production-logging', rule, {
       `,
       errors: [
         {
-          message: `We don't emit warnings in production builds. Wrap warning() in an "if (__DEV__) {}" check`,
+          message: `Wrap warning() in an "if (__DEV__) {}" check`,
+        },
+      ],
+    },
+    {
+      code: `
+        if (!__DEV__) {
+          warning(test);
+        }
+      `,
+      errors: [
+        {
+          message: `Wrap warning() in an "if (__DEV__) {}" check`,
+        },
+      ],
+    },
+    {
+      code: `
+        if (foo || x && __DEV__) {
+          warning(test);
+        }
+      `,
+      errors: [
+        {
+          message: `Wrap warning() in an "if (__DEV__) {}" check`,
         },
       ],
     },

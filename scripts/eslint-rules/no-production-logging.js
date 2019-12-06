@@ -51,7 +51,7 @@ module.exports = function(context) {
   function report(node) {
     context.report({
       node: node,
-      message: `We don't emit warnings in production builds. Wrap {{identifier}}() in an "if (${DEV_EXPRESSION}) {}" check`,
+      message: `Wrap {{identifier}}() in an "if (${DEV_EXPRESSION}) {}" check`,
       data: {
         identifier: node.callee.name,
       },
