@@ -32,10 +32,8 @@ module.exports = function(babel, options) {
             //
             // into this:
             //
-            // if (__DEV__) {
-            //   if (!condition) {
-            //     warning(false, argument, argument);
-            //   }
+            // if (!condition) {
+            //   warning(false, argument, argument);
             // }
             //
             // The goal is to strip out warning calls entirely in production

@@ -8,7 +8,7 @@
 'use strict';
 
 let babel = require('@babel/core');
-let wrapWarningWithEnvCheck = require('../wrap-warning-with-env-check');
+let wrapWarningWithEnvCheck = require('../lift-warning-conditional-argument');
 
 function transform(input) {
   return babel.transform(input, {
@@ -23,7 +23,7 @@ function compare(input, output) {
 
 let oldEnv;
 
-describe('wrap-warning-with-env-check', () => {
+describe('lift-warning-conditional-argument', () => {
   beforeEach(() => {
     oldEnv = process.env.NODE_ENV;
     process.env.NODE_ENV = '';
