@@ -1089,12 +1089,14 @@ export function flushDiscreteUpdates() {
     (executionContext & (BatchedContext | RenderContext | CommitContext)) !==
     NoContext
   ) {
-    if (__DEV__ && (executionContext & RenderContext) !== NoContext) {
-      warning(
-        false,
-        'unstable_flushDiscreteUpdates: Cannot flush updates when React is ' +
-          'already rendering.',
-      );
+    if (__DEV__) {
+      if ((executionContext & RenderContext) !== NoContext) {
+        warning(
+          false,
+          'unstable_flushDiscreteUpdates: Cannot flush updates when React is ' +
+            'already rendering.',
+        );
+      }
     }
     // We're already rendering, so we can't synchronously flush pending work.
     // This is probably a nested event dispatch triggered by a lifecycle/effect,

@@ -214,13 +214,15 @@ export function createTextInstance(
   hostContext: Object,
   internalInstanceHandle: Object,
 ): TextInstance {
-  if (__DEV__ && enableFlareAPI) {
-    warning(
-      hostContext !== EVENT_COMPONENT_CONTEXT,
-      'validateDOMNesting: React event components cannot have text DOM nodes as children. ' +
-        'Wrap the child text "%s" in an element.',
-      text,
-    );
+  if (__DEV__) {
+    if (enableFlareAPI) {
+      warning(
+        hostContext !== EVENT_COMPONENT_CONTEXT,
+        'validateDOMNesting: React event components cannot have text DOM nodes as children. ' +
+          'Wrap the child text "%s" in an element.',
+        text,
+      );
+    }
   }
   return {
     text,

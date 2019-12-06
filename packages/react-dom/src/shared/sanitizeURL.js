@@ -38,15 +38,17 @@ function sanitizeURL(url: string) {
       'React has blocked a javascript: URL as a security precaution.%s',
       __DEV__ ? ReactDebugCurrentFrame.getStackAddendum() : '',
     );
-  } else if (__DEV__ && !didWarn && isJavaScriptProtocol.test(url)) {
-    didWarn = true;
-    warning(
-      false,
-      'A future version of React will block javascript: URLs as a security precaution. ' +
-        'Use event handlers instead if you can. If you need to generate unsafe HTML try ' +
-        'using dangerouslySetInnerHTML instead. React was passed %s.',
-      JSON.stringify(url),
-    );
+  } else if (__DEV__) {
+    if (!didWarn && isJavaScriptProtocol.test(url)) {
+      didWarn = true;
+      warning(
+        false,
+        'A future version of React will block javascript: URLs as a security precaution. ' +
+          'Use event handlers instead if you can. If you need to generate unsafe HTML try ' +
+          'using dangerouslySetInnerHTML instead. React was passed %s.',
+        JSON.stringify(url),
+      );
+    }
   }
 }
 

@@ -89,13 +89,15 @@ export function injectInternals(internals: Object): boolean {
           hook.onCommitFiberRoot(rendererID, root, undefined, didError);
         }
       } catch (err) {
-        if (__DEV__ && !hasLoggedError) {
-          hasLoggedError = true;
-          warningWithoutStack(
-            false,
-            'React instrumentation encountered an error: %s',
-            err,
-          );
+        if (__DEV__) {
+          if (!hasLoggedError) {
+            hasLoggedError = true;
+            warningWithoutStack(
+              false,
+              'React instrumentation encountered an error: %s',
+              err,
+            );
+          }
         }
       }
     };
@@ -103,13 +105,15 @@ export function injectInternals(internals: Object): boolean {
       try {
         hook.onCommitFiberUnmount(rendererID, fiber);
       } catch (err) {
-        if (__DEV__ && !hasLoggedError) {
-          hasLoggedError = true;
-          warningWithoutStack(
-            false,
-            'React instrumentation encountered an error: %s',
-            err,
-          );
+        if (__DEV__) {
+          if (!hasLoggedError) {
+            hasLoggedError = true;
+            warningWithoutStack(
+              false,
+              'React instrumentation encountered an error: %s',
+              err,
+            );
+          }
         }
       }
     };
