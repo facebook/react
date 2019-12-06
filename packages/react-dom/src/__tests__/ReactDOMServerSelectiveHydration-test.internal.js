@@ -481,8 +481,8 @@ describe('ReactDOMServerSelectiveHydration', () => {
     expect(Scheduler).toHaveYielded([]);
 
     // Increase priority of B and then C.
-    ReactDOM.unstable_scheduleHydration(spanB);
-    ReactDOM.unstable_scheduleHydration(spanC);
+    root.unstable_scheduleHydration(spanB);
+    root.unstable_scheduleHydration(spanC);
 
     // We should prioritize hydrating C first because the last added
     // gets highest priority followed by the next added.
