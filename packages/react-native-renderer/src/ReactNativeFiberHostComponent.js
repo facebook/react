@@ -85,10 +85,12 @@ class ReactNativeFiberHostComponent {
     }
 
     if (relativeNode == null) {
-      warningWithoutStack(
-        false,
-        'Warning: ref.measureLayout must be called with a node handle or a ref to a native component.',
-      );
+      if (__DEV__) {
+        warningWithoutStack(
+          false,
+          'Warning: ref.measureLayout must be called with a node handle or a ref to a native component.',
+        );
+      }
 
       return;
     }

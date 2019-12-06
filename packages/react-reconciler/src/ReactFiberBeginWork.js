@@ -1398,11 +1398,13 @@ function mountIndeterminateComponent(
 
 function validateFunctionComponentInDev(workInProgress: Fiber, Component: any) {
   if (Component) {
-    warningWithoutStack(
-      !Component.childContextTypes,
-      '%s(...): childContextTypes cannot be defined on a function component.',
-      Component.displayName || Component.name || 'Component',
-    );
+    if (__DEV__) {
+      warningWithoutStack(
+        !Component.childContextTypes,
+        '%s(...): childContextTypes cannot be defined on a function component.',
+        Component.displayName || Component.name || 'Component',
+      );
+    }
   }
   if (workInProgress.ref !== null) {
     let info = '';
@@ -1418,13 +1420,15 @@ function validateFunctionComponentInDev(workInProgress: Fiber, Component: any) {
     }
     if (!didWarnAboutFunctionRefs[warningKey]) {
       didWarnAboutFunctionRefs[warningKey] = true;
-      warning(
-        false,
-        'Function components cannot be given refs. ' +
-          'Attempts to access this ref will fail. ' +
-          'Did you mean to use React.forwardRef()?%s',
-        info,
-      );
+      if (__DEV__) {
+        warning(
+          false,
+          'Function components cannot be given refs. ' +
+            'Attempts to access this ref will fail. ' +
+            'Did you mean to use React.forwardRef()?%s',
+          info,
+        );
+      }
     }
   }
 
@@ -1435,12 +1439,14 @@ function validateFunctionComponentInDev(workInProgress: Fiber, Component: any) {
     const componentName = getComponentName(Component) || 'Unknown';
 
     if (!didWarnAboutDefaultPropsOnFunctionComponent[componentName]) {
-      warningWithoutStack(
-        false,
-        '%s: Support for defaultProps will be removed from function components ' +
-          'in a future major release. Use JavaScript default parameters instead.',
-        componentName,
-      );
+      if (__DEV__) {
+        warningWithoutStack(
+          false,
+          '%s: Support for defaultProps will be removed from function components ' +
+            'in a future major release. Use JavaScript default parameters instead.',
+          componentName,
+        );
+      }
       didWarnAboutDefaultPropsOnFunctionComponent[componentName] = true;
     }
   }
@@ -1449,11 +1455,13 @@ function validateFunctionComponentInDev(workInProgress: Fiber, Component: any) {
     const componentName = getComponentName(Component) || 'Unknown';
 
     if (!didWarnAboutGetDerivedStateOnFunctionComponent[componentName]) {
-      warningWithoutStack(
-        false,
-        '%s: Function components do not support getDerivedStateFromProps.',
-        componentName,
-      );
+      if (__DEV__) {
+        warningWithoutStack(
+          false,
+          '%s: Function components do not support getDerivedStateFromProps.',
+          componentName,
+        );
+      }
       didWarnAboutGetDerivedStateOnFunctionComponent[componentName] = true;
     }
   }
@@ -1465,11 +1473,13 @@ function validateFunctionComponentInDev(workInProgress: Fiber, Component: any) {
     const componentName = getComponentName(Component) || 'Unknown';
 
     if (!didWarnAboutContextTypeOnFunctionComponent[componentName]) {
-      warningWithoutStack(
-        false,
-        '%s: Function components do not support contextType.',
-        componentName,
-      );
+      if (__DEV__) {
+        warningWithoutStack(
+          false,
+          '%s: Function components do not support contextType.',
+          componentName,
+        );
+      }
       didWarnAboutContextTypeOnFunctionComponent[componentName] = true;
     }
   }
