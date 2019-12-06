@@ -15,24 +15,9 @@ const LOGGER_FN_NAMES = [
   'lowPriorityWarning',
   'lowPriorityWarningWithoutStack',
 ];
-const DEV_EXPRESSION = '__DEV__';
 
 module.exports = function(context) {
-  function traverseIf(node) {
-    switch (node.type) {
-      case 'Identifier':
-        return [node.name];
-      case 'LogicalExpression':
-        if (node.operator === '&&') {
-          return [...traverseIf(node.left), ...traverseIf(node.right)];
-        }
-        return [];
-      default:
-        return [];
-    }
-  }
-
-  function hasIfInParents(node) {
+  function isInDEVBlock(node) {
     let done = false;
     while (!done) {
       let parent = node.parent;
@@ -42,7 +27,10 @@ module.exports = function(context) {
       if (
         parent.type === 'IfStatement' &&
         node === parent.consequent &&
-        traverseIf(parent.test).includes(DEV_EXPRESSION)
+        parent.test.type === 'Identifier' &&
+        // This is intentionally strict so we can
+        // see blocks of DEV-only code at once.
+        parent.test.name === '__DEV__'
       ) {
         return true;
       }
@@ -53,13 +41,13 @@ module.exports = function(context) {
   function report(node) {
     context.report({
       node: node,
-      message: `Wrap {{identifier}}() in an "if (${DEV_EXPRESSION}) {}" check`,
+      message: `Wrap {{identifier}}() in an "if (__DEV__) {}" check`,
       data: {
         identifier: node.callee.name,
       },
       fix: function(fixer) {
         return [
-          fixer.insertTextBefore(node.parent, `if (${DEV_EXPRESSION}) {`),
+          fixer.insertTextBefore(node.parent, `if (__DEV__) {`),
           fixer.insertTextAfter(node.parent, '}'),
         ];
       },
@@ -76,7 +64,7 @@ module.exports = function(context) {
       if (!isLoggerFunctionName(node.callee.name)) {
         return;
       }
-      if (!hasIfInParents(node)) {
+      if (!isInDEVBlock(node)) {
         report(node);
       }
     },

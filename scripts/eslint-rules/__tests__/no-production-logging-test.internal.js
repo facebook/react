@@ -67,13 +67,6 @@ ruleTester.run('no-production-logging', rule, {
           };
         }`,
     },
-    {
-      code: `
-        if (banana && __DEV__ && potato && kitten) {
-          warning(test);
-        }
-      `,
-    },
     // Don't do anything with these:
     {
       code: 'normalFunctionCall(test);',
@@ -164,6 +157,20 @@ ruleTester.run('no-production-logging', rule, {
           warning(test);
         }
       `,
+      errors: [
+        {
+          message: `Wrap warning() in an "if (__DEV__) {}" check`,
+        },
+      ],
+    },
+    {
+      code: `
+        if (banana && __DEV__ && potato && kitten) {
+          warning(test);
+        }
+      `,
+      // Technically this code is valid but we prefer
+      // explicit standalone __DEV__ blocks that stand out.
       errors: [
         {
           message: `Wrap warning() in an "if (__DEV__) {}" check`,
