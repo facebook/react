@@ -225,18 +225,22 @@ function validatePropTypes(element) {
     setCurrentlyValidatingElement(null);
   } else if (type.PropTypes !== undefined && !propTypesMisspellWarningShown) {
     propTypesMisspellWarningShown = true;
-    warningWithoutStack(
-      false,
-      'Component %s declared `PropTypes` instead of `propTypes`. Did you misspell the property assignment?',
-      name || 'Unknown',
-    );
+    if (__DEV__) {
+      warningWithoutStack(
+        false,
+        'Component %s declared `PropTypes` instead of `propTypes`. Did you misspell the property assignment?',
+        name || 'Unknown',
+      );
+    }
   }
   if (typeof type.getDefaultProps === 'function') {
-    warningWithoutStack(
-      type.getDefaultProps.isReactClassApproved,
-      'getDefaultProps is only used on classic React.createClass ' +
-        'definitions. Use a static property named `defaultProps` instead.',
-    );
+    if (__DEV__) {
+      warningWithoutStack(
+        type.getDefaultProps.isReactClassApproved,
+        'getDefaultProps is only used on classic React.createClass ' +
+          'definitions. Use a static property named `defaultProps` instead.',
+      );
+    }
   }
 }
 
@@ -251,18 +255,22 @@ function validateFragmentProps(fragment) {
   for (let i = 0; i < keys.length; i++) {
     const key = keys[i];
     if (key !== 'children' && key !== 'key') {
-      warning(
-        false,
-        'Invalid prop `%s` supplied to `React.Fragment`. ' +
-          'React.Fragment can only have `key` and `children` props.',
-        key,
-      );
+      if (__DEV__) {
+        warning(
+          false,
+          'Invalid prop `%s` supplied to `React.Fragment`. ' +
+            'React.Fragment can only have `key` and `children` props.',
+          key,
+        );
+      }
       break;
     }
   }
 
   if (fragment.ref !== null) {
-    warning(false, 'Invalid attribute `ref` supplied to `React.Fragment`.');
+    if (__DEV__) {
+      warning(false, 'Invalid attribute `ref` supplied to `React.Fragment`.');
+    }
   }
 
   setCurrentlyValidatingElement(null);
@@ -313,14 +321,16 @@ export function jsxWithValidation(
       typeString = typeof type;
     }
 
-    warning(
-      false,
-      'React.jsx: type is invalid -- expected a string (for ' +
-        'built-in components) or a class/function (for composite ' +
-        'components) but got: %s.%s',
-      typeString,
-      info,
-    );
+    if (__DEV__) {
+      warning(
+        false,
+        'React.jsx: type is invalid -- expected a string (for ' +
+          'built-in components) or a class/function (for composite ' +
+          'components) but got: %s.%s',
+        typeString,
+        info,
+      );
+    }
   }
 
   const element = jsxDEV(type, props, key, source, self);
@@ -350,12 +360,14 @@ export function jsxWithValidation(
             Object.freeze(children);
           }
         } else {
-          warning(
-            false,
-            'React.jsx: Static children should always be an array. ' +
-              'You are likely explicitly calling React.jsxs or React.jsxDEV. ' +
-              'Use the Babel transform instead.',
-          );
+          if (__DEV__) {
+            warning(
+              false,
+              'React.jsx: Static children should always be an array. ' +
+                'You are likely explicitly calling React.jsxs or React.jsxDEV. ' +
+                'Use the Babel transform instead.',
+            );
+          }
         }
       } else {
         validateChildKeys(children, type);
@@ -364,12 +376,14 @@ export function jsxWithValidation(
   }
 
   if (hasOwnProperty.call(props, 'key')) {
-    warning(
-      false,
-      'React.jsx: Spreading a key to JSX is a deprecated pattern. ' +
-        'Explicitly pass a key after spreading props in your JSX call. ' +
-        'E.g. <ComponentName {...props} key={key} />',
-    );
+    if (__DEV__) {
+      warning(
+        false,
+        'React.jsx: Spreading a key to JSX is a deprecated pattern. ' +
+          'Explicitly pass a key after spreading props in your JSX call. ' +
+          'E.g. <ComponentName {...props} key={key} />',
+      );
+    }
   }
 
   if (type === REACT_FRAGMENT_TYPE) {
@@ -431,14 +445,16 @@ export function createElementWithValidation(type, props, children) {
       typeString = typeof type;
     }
 
-    warning(
-      false,
-      'React.createElement: type is invalid -- expected a string (for ' +
-        'built-in components) or a class/function (for composite ' +
-        'components) but got: %s.%s',
-      typeString,
-      info,
-    );
+    if (__DEV__) {
+      warning(
+        false,
+        'React.createElement: type is invalid -- expected a string (for ' +
+          'built-in components) or a class/function (for composite ' +
+          'components) but got: %s.%s',
+        typeString,
+        info,
+      );
+    }
   }
 
   const element = createElement.apply(this, arguments);

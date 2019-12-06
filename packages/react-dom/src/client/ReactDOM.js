@@ -142,15 +142,17 @@ const ReactDOM: Object = {
   // Temporary alias since we already shipped React 16 RC with it.
   // TODO: remove in React 17.
   unstable_createPortal(...args) {
-    if (!didWarnAboutUnstableCreatePortal) {
-      didWarnAboutUnstableCreatePortal = true;
-      lowPriorityWarningWithoutStack(
-        false,
-        'The ReactDOM.unstable_createPortal() alias has been deprecated, ' +
-          'and will be removed in React 17+. Update your code to use ' +
-          'ReactDOM.createPortal() instead. It has the exact same API, ' +
-          'but without the "unstable_" prefix.',
-      );
+    if (__DEV__) {
+      if (!didWarnAboutUnstableCreatePortal) {
+        didWarnAboutUnstableCreatePortal = true;
+        lowPriorityWarningWithoutStack(
+          false,
+          'The ReactDOM.unstable_createPortal() alias has been deprecated, ' +
+            'and will be removed in React 17+. Update your code to use ' +
+            'ReactDOM.createPortal() instead. It has the exact same API, ' +
+            'but without the "unstable_" prefix.',
+        );
+      }
     }
     return createPortal(...args);
   },

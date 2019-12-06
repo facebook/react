@@ -361,12 +361,14 @@ const ReactTestUtils = {
   mockComponent: function(module, mockTagName) {
     if (!hasWarnedAboutDeprecatedMockComponent) {
       hasWarnedAboutDeprecatedMockComponent = true;
-      lowPriorityWarningWithoutStack(
-        false,
-        'ReactTestUtils.mockComponent() is deprecated. ' +
-          'Use shallow rendering or jest.mock() instead.\n\n' +
-          'See https://fb.me/test-utils-mock-component for more information.',
-      );
+      if (__DEV__) {
+        lowPriorityWarningWithoutStack(
+          false,
+          'ReactTestUtils.mockComponent() is deprecated. ' +
+            'Use shallow rendering or jest.mock() instead.\n\n' +
+            'See https://fb.me/test-utils-mock-component for more information.',
+        );
+      }
     }
 
     mockTagName = mockTagName || module.mockTagName || 'div';
