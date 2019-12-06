@@ -194,49 +194,51 @@ function validateChildKeys(node, parentType) {
  * @param {ReactElement} element
  */
 function validatePropTypes(element) {
-  const type = element.type;
-  if (type === null || type === undefined || typeof type === 'string') {
-    return;
-  }
-  const name = getComponentName(type);
-  let propTypes;
-  if (typeof type === 'function') {
-    propTypes = type.propTypes;
-  } else if (
-    typeof type === 'object' &&
-    (type.$$typeof === REACT_FORWARD_REF_TYPE ||
-      // Note: Memo only checks outer props here.
-      // Inner props are checked in the reconciler.
-      type.$$typeof === REACT_MEMO_TYPE)
-  ) {
-    propTypes = type.propTypes;
-  } else {
-    return;
-  }
-  if (propTypes) {
-    setCurrentlyValidatingElement(element);
-    checkPropTypes(
-      propTypes,
-      element.props,
-      'prop',
-      name,
-      ReactDebugCurrentFrame.getStackAddendum,
-    );
-    setCurrentlyValidatingElement(null);
-  } else if (type.PropTypes !== undefined && !propTypesMisspellWarningShown) {
-    propTypesMisspellWarningShown = true;
-    warningWithoutStack(
-      false,
-      'Component %s declared `PropTypes` instead of `propTypes`. Did you misspell the property assignment?',
-      name || 'Unknown',
-    );
-  }
-  if (typeof type.getDefaultProps === 'function') {
-    warningWithoutStack(
-      type.getDefaultProps.isReactClassApproved,
-      'getDefaultProps is only used on classic React.createClass ' +
-        'definitions. Use a static property named `defaultProps` instead.',
-    );
+  if (__DEV__) {
+    const type = element.type;
+    if (type === null || type === undefined || typeof type === 'string') {
+      return;
+    }
+    const name = getComponentName(type);
+    let propTypes;
+    if (typeof type === 'function') {
+      propTypes = type.propTypes;
+    } else if (
+      typeof type === 'object' &&
+      (type.$$typeof === REACT_FORWARD_REF_TYPE ||
+        // Note: Memo only checks outer props here.
+        // Inner props are checked in the reconciler.
+        type.$$typeof === REACT_MEMO_TYPE)
+    ) {
+      propTypes = type.propTypes;
+    } else {
+      return;
+    }
+    if (propTypes) {
+      setCurrentlyValidatingElement(element);
+      checkPropTypes(
+        propTypes,
+        element.props,
+        'prop',
+        name,
+        ReactDebugCurrentFrame.getStackAddendum,
+      );
+      setCurrentlyValidatingElement(null);
+    } else if (type.PropTypes !== undefined && !propTypesMisspellWarningShown) {
+      propTypesMisspellWarningShown = true;
+      warningWithoutStack(
+        false,
+        'Component %s declared `PropTypes` instead of `propTypes`. Did you misspell the property assignment?',
+        name || 'Unknown',
+      );
+    }
+    if (typeof type.getDefaultProps === 'function') {
+      warningWithoutStack(
+        type.getDefaultProps.isReactClassApproved,
+        'getDefaultProps is only used on classic React.createClass ' +
+          'definitions. Use a static property named `defaultProps` instead.',
+      );
+    }
   }
 }
 
@@ -245,27 +247,29 @@ function validatePropTypes(element) {
  * @param {ReactElement} fragment
  */
 function validateFragmentProps(fragment) {
-  setCurrentlyValidatingElement(fragment);
+  if (__DEV__) {
+    setCurrentlyValidatingElement(fragment);
 
-  const keys = Object.keys(fragment.props);
-  for (let i = 0; i < keys.length; i++) {
-    const key = keys[i];
-    if (key !== 'children' && key !== 'key') {
-      warning(
-        false,
-        'Invalid prop `%s` supplied to `React.Fragment`. ' +
-          'React.Fragment can only have `key` and `children` props.',
-        key,
-      );
-      break;
+    const keys = Object.keys(fragment.props);
+    for (let i = 0; i < keys.length; i++) {
+      const key = keys[i];
+      if (key !== 'children' && key !== 'key') {
+        warning(
+          false,
+          'Invalid prop `%s` supplied to `React.Fragment`. ' +
+            'React.Fragment can only have `key` and `children` props.',
+          key,
+        );
+        break;
+      }
     }
-  }
 
-  if (fragment.ref !== null) {
-    warning(false, 'Invalid attribute `ref` supplied to `React.Fragment`.');
-  }
+    if (fragment.ref !== null) {
+      warning(false, 'Invalid attribute `ref` supplied to `React.Fragment`.');
+    }
 
-  setCurrentlyValidatingElement(null);
+    setCurrentlyValidatingElement(null);
+  }
 }
 
 export function jsxWithValidation(
@@ -313,14 +317,16 @@ export function jsxWithValidation(
       typeString = typeof type;
     }
 
-    warning(
-      false,
-      'React.jsx: type is invalid -- expected a string (for ' +
-        'built-in components) or a class/function (for composite ' +
-        'components) but got: %s.%s',
-      typeString,
-      info,
-    );
+    if (__DEV__) {
+      warning(
+        false,
+        'React.jsx: type is invalid -- expected a string (for ' +
+          'built-in components) or a class/function (for composite ' +
+          'components) but got: %s.%s',
+        typeString,
+        info,
+      );
+    }
   }
 
   const element = jsxDEV(type, props, key, source, self);
@@ -350,12 +356,14 @@ export function jsxWithValidation(
             Object.freeze(children);
           }
         } else {
-          warning(
-            false,
-            'React.jsx: Static children should always be an array. ' +
-              'You are likely explicitly calling React.jsxs or React.jsxDEV. ' +
-              'Use the Babel transform instead.',
-          );
+          if (__DEV__) {
+            warning(
+              false,
+              'React.jsx: Static children should always be an array. ' +
+                'You are likely explicitly calling React.jsxs or React.jsxDEV. ' +
+                'Use the Babel transform instead.',
+            );
+          }
         }
       } else {
         validateChildKeys(children, type);
@@ -364,12 +372,14 @@ export function jsxWithValidation(
   }
 
   if (hasOwnProperty.call(props, 'key')) {
-    warning(
-      false,
-      'React.jsx: Spreading a key to JSX is a deprecated pattern. ' +
-        'Explicitly pass a key after spreading props in your JSX call. ' +
-        'E.g. <ComponentName {...props} key={key} />',
-    );
+    if (__DEV__) {
+      warning(
+        false,
+        'React.jsx: Spreading a key to JSX is a deprecated pattern. ' +
+          'Explicitly pass a key after spreading props in your JSX call. ' +
+          'E.g. <ComponentName {...props} key={key} />',
+      );
+    }
   }
 
   if (type === REACT_FRAGMENT_TYPE) {
@@ -431,14 +441,16 @@ export function createElementWithValidation(type, props, children) {
       typeString = typeof type;
     }
 
-    warning(
-      false,
-      'React.createElement: type is invalid -- expected a string (for ' +
-        'built-in components) or a class/function (for composite ' +
-        'components) but got: %s.%s',
-      typeString,
-      info,
-    );
+    if (__DEV__) {
+      warning(
+        false,
+        'React.createElement: type is invalid -- expected a string (for ' +
+          'built-in components) or a class/function (for composite ' +
+          'components) but got: %s.%s',
+        typeString,
+        info,
+      );
+    }
   }
 
   const element = createElement.apply(this, arguments);

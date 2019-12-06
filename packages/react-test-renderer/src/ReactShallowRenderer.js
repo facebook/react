@@ -61,29 +61,33 @@ function areHookInputsEqual(
   prevDeps: Array<mixed> | null,
 ) {
   if (prevDeps === null) {
-    warning(
-      false,
-      '%s received a final argument during this render, but not during ' +
-        'the previous render. Even though the final argument is optional, ' +
-        'its type cannot change between renders.',
-      currentHookNameInDev,
-    );
+    if (__DEV__) {
+      warning(
+        false,
+        '%s received a final argument during this render, but not during ' +
+          'the previous render. Even though the final argument is optional, ' +
+          'its type cannot change between renders.',
+        currentHookNameInDev,
+      );
+    }
     return false;
   }
 
-  // Don't bother comparing lengths in prod because these arrays should be
-  // passed inline.
-  if (nextDeps.length !== prevDeps.length) {
-    warning(
-      false,
-      'The final argument passed to %s changed size between renders. The ' +
-        'order and size of this array must remain constant.\n\n' +
-        'Previous: %s\n' +
-        'Incoming: %s',
-      currentHookNameInDev,
-      `[${nextDeps.join(', ')}]`,
-      `[${prevDeps.join(', ')}]`,
-    );
+  if (__DEV__) {
+    // Don't bother comparing lengths in prod because these arrays should be
+    // passed inline.
+    if (nextDeps.length !== prevDeps.length) {
+      warning(
+        false,
+        'The final argument passed to %s changed size between renders. The ' +
+          'order and size of this array must remain constant.\n\n' +
+          'Previous: %s\n' +
+          'Incoming: %s',
+        currentHookNameInDev,
+        `[${nextDeps.join(', ')}]`,
+        `[${prevDeps.join(', ')}]`,
+      );
+    }
   }
   for (let i = 0; i < prevDeps.length && i < nextDeps.length; i++) {
     if (is(nextDeps[i], prevDeps[i])) {

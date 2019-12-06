@@ -1397,80 +1397,82 @@ function mountIndeterminateComponent(
 }
 
 function validateFunctionComponentInDev(workInProgress: Fiber, Component: any) {
-  if (Component) {
-    warningWithoutStack(
-      !Component.childContextTypes,
-      '%s(...): childContextTypes cannot be defined on a function component.',
-      Component.displayName || Component.name || 'Component',
-    );
-  }
-  if (workInProgress.ref !== null) {
-    let info = '';
-    const ownerName = getCurrentFiberOwnerNameInDevOrNull();
-    if (ownerName) {
-      info += '\n\nCheck the render method of `' + ownerName + '`.';
-    }
-
-    let warningKey = ownerName || workInProgress._debugID || '';
-    const debugSource = workInProgress._debugSource;
-    if (debugSource) {
-      warningKey = debugSource.fileName + ':' + debugSource.lineNumber;
-    }
-    if (!didWarnAboutFunctionRefs[warningKey]) {
-      didWarnAboutFunctionRefs[warningKey] = true;
-      warning(
-        false,
-        'Function components cannot be given refs. ' +
-          'Attempts to access this ref will fail. ' +
-          'Did you mean to use React.forwardRef()?%s',
-        info,
-      );
-    }
-  }
-
-  if (
-    warnAboutDefaultPropsOnFunctionComponents &&
-    Component.defaultProps !== undefined
-  ) {
-    const componentName = getComponentName(Component) || 'Unknown';
-
-    if (!didWarnAboutDefaultPropsOnFunctionComponent[componentName]) {
+  if (__DEV__) {
+    if (Component) {
       warningWithoutStack(
-        false,
-        '%s: Support for defaultProps will be removed from function components ' +
-          'in a future major release. Use JavaScript default parameters instead.',
-        componentName,
+        !Component.childContextTypes,
+        '%s(...): childContextTypes cannot be defined on a function component.',
+        Component.displayName || Component.name || 'Component',
       );
-      didWarnAboutDefaultPropsOnFunctionComponent[componentName] = true;
     }
-  }
+    if (workInProgress.ref !== null) {
+      let info = '';
+      const ownerName = getCurrentFiberOwnerNameInDevOrNull();
+      if (ownerName) {
+        info += '\n\nCheck the render method of `' + ownerName + '`.';
+      }
 
-  if (typeof Component.getDerivedStateFromProps === 'function') {
-    const componentName = getComponentName(Component) || 'Unknown';
-
-    if (!didWarnAboutGetDerivedStateOnFunctionComponent[componentName]) {
-      warningWithoutStack(
-        false,
-        '%s: Function components do not support getDerivedStateFromProps.',
-        componentName,
-      );
-      didWarnAboutGetDerivedStateOnFunctionComponent[componentName] = true;
+      let warningKey = ownerName || workInProgress._debugID || '';
+      const debugSource = workInProgress._debugSource;
+      if (debugSource) {
+        warningKey = debugSource.fileName + ':' + debugSource.lineNumber;
+      }
+      if (!didWarnAboutFunctionRefs[warningKey]) {
+        didWarnAboutFunctionRefs[warningKey] = true;
+        warning(
+          false,
+          'Function components cannot be given refs. ' +
+            'Attempts to access this ref will fail. ' +
+            'Did you mean to use React.forwardRef()?%s',
+          info,
+        );
+      }
     }
-  }
 
-  if (
-    typeof Component.contextType === 'object' &&
-    Component.contextType !== null
-  ) {
-    const componentName = getComponentName(Component) || 'Unknown';
+    if (
+      warnAboutDefaultPropsOnFunctionComponents &&
+      Component.defaultProps !== undefined
+    ) {
+      const componentName = getComponentName(Component) || 'Unknown';
 
-    if (!didWarnAboutContextTypeOnFunctionComponent[componentName]) {
-      warningWithoutStack(
-        false,
-        '%s: Function components do not support contextType.',
-        componentName,
-      );
-      didWarnAboutContextTypeOnFunctionComponent[componentName] = true;
+      if (!didWarnAboutDefaultPropsOnFunctionComponent[componentName]) {
+        warningWithoutStack(
+          false,
+          '%s: Support for defaultProps will be removed from function components ' +
+            'in a future major release. Use JavaScript default parameters instead.',
+          componentName,
+        );
+        didWarnAboutDefaultPropsOnFunctionComponent[componentName] = true;
+      }
+    }
+
+    if (typeof Component.getDerivedStateFromProps === 'function') {
+      const componentName = getComponentName(Component) || 'Unknown';
+
+      if (!didWarnAboutGetDerivedStateOnFunctionComponent[componentName]) {
+        warningWithoutStack(
+          false,
+          '%s: Function components do not support getDerivedStateFromProps.',
+          componentName,
+        );
+        didWarnAboutGetDerivedStateOnFunctionComponent[componentName] = true;
+      }
+    }
+
+    if (
+      typeof Component.contextType === 'object' &&
+      Component.contextType !== null
+    ) {
+      const componentName = getComponentName(Component) || 'Unknown';
+
+      if (!didWarnAboutContextTypeOnFunctionComponent[componentName]) {
+        warningWithoutStack(
+          false,
+          '%s: Function components do not support contextType.',
+          componentName,
+        );
+        didWarnAboutContextTypeOnFunctionComponent[componentName] = true;
+      }
     }
   }
 }

@@ -9,8 +9,6 @@
 module.exports = function(babel, options) {
   const t = babel.types;
 
-  const DEV_EXPRESSION = t.identifier('__DEV__');
-
   const SEEN_SYMBOL = Symbol('expression.seen');
 
   return {
@@ -34,10 +32,8 @@ module.exports = function(babel, options) {
             //
             // into this:
             //
-            // if (__DEV__) {
-            //   if (!condition) {
-            //     warning(false, argument, argument);
-            //   }
+            // if (!condition) {
+            //   warning(false, argument, argument);
             // }
             //
             // The goal is to strip out warning calls entirely in production
@@ -50,13 +46,8 @@ module.exports = function(babel, options) {
             newNode[SEEN_SYMBOL] = true;
             path.replaceWith(
               t.ifStatement(
-                DEV_EXPRESSION,
-                t.blockStatement([
-                  t.ifStatement(
-                    t.unaryExpression('!', condition),
-                    t.expressionStatement(newNode)
-                  ),
-                ])
+                t.unaryExpression('!', condition),
+                t.expressionStatement(newNode)
               )
             );
           }
