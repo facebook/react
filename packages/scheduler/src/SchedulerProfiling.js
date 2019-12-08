@@ -10,7 +10,7 @@
 import type {PriorityLevel} from './SchedulerPriorities';
 import type {PriorityLabel} from 'shared/RootEventsProfiling';
 import {enableProfiling, enableRootEventMarks} from './SchedulerFeatureFlags';
-import {schedulerStarted, schedulerStopped} from 'shared/RootEventsProfiling';
+import {schedulerStarted, schedulerStopped} from './RootEventsProfiling';
 
 import {
   ImmediatePriority,

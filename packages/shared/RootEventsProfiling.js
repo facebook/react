@@ -23,22 +23,6 @@ const supportsUserTiming =
 export type PriorityLabel = 'high' | 'normal' | 'low';
 export type WorkType = 'render' | 'state-update';
 
-export function schedulerStarted(priorityLabel: PriorityLabel): void {
-  if (enableRootEventMarks) {
-    if (supportsUserTiming) {
-      performance.mark(`--scheduler-start-${priorityLabel}`);
-    }
-  }
-}
-
-export function schedulerStopped(priorityLabel: PriorityLabel): void {
-  if (enableRootEventMarks) {
-    if (supportsUserTiming) {
-      performance.mark(`--scheduler-stop-${priorityLabel}`);
-    }
-  }
-}
-
 export function commitStarted(): void {
   if (enableRootEventMarks) {
     if (supportsUserTiming) {
