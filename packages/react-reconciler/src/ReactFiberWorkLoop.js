@@ -22,6 +22,7 @@ import {
   enableSuspenseServerRenderer,
   replayFailedUnitOfWorkWithInvokeGuardedCallback,
   enableProfilerTimer,
+  enableRootEventMarks,
   enableSchedulerTracing,
   warnAboutUnmockedScheduler,
   flushSuspenseFallbacksInTests,
@@ -30,6 +31,17 @@ import {
 } from 'shared/ReactFeatureFlags';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import invariant from 'shared/invariant';
+import {
+  commitStarted,
+  commitStopped,
+  layoutEffectsStarted,
+  layoutEffectsStopped,
+  passiveEffectsStarted,
+  passiveEffectsStopped,
+  renderAbandoned,
+  renderStarted,
+  renderStopped,
+} from 'shared/RootEventsProfiling';
 
 import {
   scheduleCallback,
@@ -684,6 +696,9 @@ function performConcurrentWorkOnRoot(root, didTimeout) {
       const prevDispatcher = pushDispatcher(root);
       const prevInteractions = pushInteractions(root);
       startWorkLoopTimer(workInProgress);
+      if (enableRootEventMarks) {
+        renderStarted();
+      }
       do {
         try {
           workLoopConcurrent();
@@ -1011,6 +1026,10 @@ function performSyncWorkOnRoot(root) {
     const prevDispatcher = pushDispatcher(root);
     const prevInteractions = pushInteractions(root);
     startWorkLoopTimer(workInProgress);
+
+    if (enableRootEventMarks) {
+      renderStarted();
+    }
 
     do {
       try {
@@ -1715,6 +1734,10 @@ function commitRoot(root) {
 }
 
 function commitRootImpl(root, renderPriorityLevel) {
+  if (enableRootEventMarks) {
+    commitStarted();
+  }
+
   do {
     // `flushPassiveEffects` will call `flushSyncUpdateQueue` at the end, which
     // means `flushPassiveEffects` will sometimes result in additional
@@ -1724,6 +1747,7 @@ function commitRootImpl(root, renderPriorityLevel) {
     // flush synchronous work at the end, to avoid factoring hazards like this.
     flushPassiveEffects();
   } while (rootWithPendingPassiveEffects !== null);
+
   flushRenderPhaseStrictModeWarningsInDEV();
 
   invariant(
@@ -1734,6 +1758,10 @@ function commitRootImpl(root, renderPriorityLevel) {
   const finishedWork = root.finishedWork;
   const expirationTime = root.finishedExpirationTime;
   if (finishedWork === null) {
+    if (enableRootEventMarks) {
+      commitStopped();
+    }
+
     return null;
   }
   root.finishedWork = null;
@@ -2018,6 +2046,10 @@ function commitRootImpl(root, renderPriorityLevel) {
   }
 
   if ((executionContext & LegacyUnbatchedContext) !== NoContext) {
+    if (enableRootEventMarks) {
+      commitStopped();
+    }
+
     // This is a legacy edge case. We just committed the initial mount of
     // a ReactDOM.render-ed root inside of batchedUpdates. The commit fired
     // synchronously, but layout updates should be deferred until the end
@@ -2027,6 +2059,11 @@ function commitRootImpl(root, renderPriorityLevel) {
 
   // If layout work was scheduled, flush it now.
   flushSyncCallbackQueue();
+
+  if (enableRootEventMarks) {
+    commitStopped();
+  }
+
   return null;
 }
 
@@ -2138,6 +2175,9 @@ function commitLayoutEffects(
   root: FiberRoot,
   committedExpirationTime: ExpirationTime,
 ) {
+  if (enableProfilerTimer) {
+    layoutEffectsStarted();
+  }
   // TODO: Should probably move the bulk of this function to commitWork.
   while (nextEffect !== null) {
     setCurrentDebugFiberInDEV(nextEffect);
@@ -2163,16 +2203,35 @@ function commitLayoutEffects(
     resetCurrentDebugFiberInDEV();
     nextEffect = nextEffect.nextEffect;
   }
+  if (enableProfilerTimer) {
+    layoutEffectsStopped();
+  }
 }
 
 export function flushPassiveEffects() {
-  if (pendingPassiveEffectsRenderPriority !== NoPriority) {
-    const priorityLevel =
-      pendingPassiveEffectsRenderPriority > NormalPriority
-        ? NormalPriority
-        : pendingPassiveEffectsRenderPriority;
-    pendingPassiveEffectsRenderPriority = NoPriority;
-    return runWithPriority(priorityLevel, flushPassiveEffectsImpl);
+  if (enableRootEventMarks) {
+    try {
+      passiveEffectsStarted();
+      if (pendingPassiveEffectsRenderPriority !== NoPriority) {
+        const priorityLevel =
+          pendingPassiveEffectsRenderPriority > NormalPriority
+            ? NormalPriority
+            : pendingPassiveEffectsRenderPriority;
+        pendingPassiveEffectsRenderPriority = NoPriority;
+        return runWithPriority(priorityLevel, flushPassiveEffectsImpl);
+      }
+    } finally {
+      passiveEffectsStopped();
+    }
+  } else {
+    if (pendingPassiveEffectsRenderPriority !== NoPriority) {
+      const priorityLevel =
+        pendingPassiveEffectsRenderPriority > NormalPriority
+          ? NormalPriority
+          : pendingPassiveEffectsRenderPriority;
+      pendingPassiveEffectsRenderPriority = NoPriority;
+      return runWithPriority(priorityLevel, flushPassiveEffectsImpl);
+    }
   }
 }
 
@@ -2545,6 +2604,9 @@ function flushRenderPhaseStrictModeWarningsInDEV() {
 function stopFinishedWorkLoopTimer() {
   const didCompleteRoot = true;
   stopWorkLoopTimer(interruptedBy, didCompleteRoot);
+  if (enableRootEventMarks) {
+    renderStopped(didCompleteRoot);
+  }
   interruptedBy = null;
 }
 
@@ -2552,6 +2614,9 @@ function stopInterruptedWorkLoopTimer() {
   // TODO: Track which fiber caused the interruption.
   const didCompleteRoot = false;
   stopWorkLoopTimer(interruptedBy, didCompleteRoot);
+  if (enableRootEventMarks) {
+    renderStopped(didCompleteRoot);
+  }
   interruptedBy = null;
 }
 
@@ -2565,6 +2630,11 @@ function checkForInterruption(
     updateExpirationTime > renderExpirationTime
   ) {
     interruptedBy = fiberThatReceivedUpdate;
+
+    // TODO (brian) Is this accurate? Should we compare WIP root to fiber's root?
+    if (enableRootEventMarks) {
+      renderAbandoned();
+    }
   }
 }
 

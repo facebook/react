@@ -16,8 +16,10 @@ import {Update, Snapshot} from 'shared/ReactSideEffectTags';
 import {
   debugRenderPhaseSideEffectsForStrictMode,
   disableLegacyContext,
+  enableRootEventMarks,
   warnAboutDeprecatedLifecycles,
 } from 'shared/ReactFeatureFlags';
+import {workScheduled} from 'shared/RootEventsProfiling';
 import ReactStrictModeWarnings from './ReactStrictModeWarnings';
 import {isMounted} from 'react-reconciler/reflection';
 import {get as getInstance, set as setInstance} from 'shared/ReactInstanceMap';
@@ -201,6 +203,10 @@ const classComponentUpdater = {
 
     enqueueUpdate(fiber, update);
     scheduleWork(fiber, expirationTime);
+
+    if (enableRootEventMarks) {
+      workScheduled('state-update', fiber);
+    }
   },
   enqueueReplaceState(inst, payload, callback) {
     const fiber = getInstance(inst);
@@ -225,6 +231,10 @@ const classComponentUpdater = {
 
     enqueueUpdate(fiber, update);
     scheduleWork(fiber, expirationTime);
+
+    if (enableRootEventMarks) {
+      workScheduled('state-update', fiber);
+    }
   },
   enqueueForceUpdate(inst, callback) {
     const fiber = getInstance(inst);
@@ -248,6 +258,10 @@ const classComponentUpdater = {
 
     enqueueUpdate(fiber, update);
     scheduleWork(fiber, expirationTime);
+
+    if (enableRootEventMarks) {
+      workScheduled('state-update', fiber);
+    }
   },
 };
 

@@ -19,6 +19,8 @@ import type {SuspenseConfig} from './ReactFiberSuspenseConfig';
 import type {ReactPriorityLevel} from './SchedulerWithReactIntegration';
 
 import ReactSharedInternals from 'shared/ReactSharedInternals';
+import {enableRootEventMarks} from 'shared/ReactFeatureFlags';
+import {workScheduled} from 'shared/RootEventsProfiling';
 
 import {NoWork, Sync} from './ReactFiberExpirationTime';
 import {readContext} from './ReactFiberNewContext';
@@ -1356,6 +1358,10 @@ function dispatchAction<S, A>(
       }
     }
     scheduleWork(fiber, expirationTime);
+
+    if (enableRootEventMarks) {
+      workScheduled('state-update', fiber);
+    }
   }
 }
 

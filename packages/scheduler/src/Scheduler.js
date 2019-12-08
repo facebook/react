@@ -121,7 +121,7 @@ function handleTimeout(currentTime) {
 
 function flushWork(hasTimeRemaining, initialTime) {
   if (enableProfiling) {
-    markSchedulerUnsuspended(initialTime);
+    markSchedulerUnsuspended(initialTime, currentPriorityLevel);
   }
 
   // We'll need a host callback the next time work is scheduled.
@@ -156,7 +156,7 @@ function flushWork(hasTimeRemaining, initialTime) {
     isPerformingWork = false;
     if (enableProfiling) {
       const currentTime = getCurrentTime();
-      markSchedulerSuspended(currentTime);
+      markSchedulerSuspended(currentTime, currentPriorityLevel);
     }
   }
 }

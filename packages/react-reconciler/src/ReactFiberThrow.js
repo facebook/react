@@ -15,6 +15,8 @@ import type {Update} from './ReactUpdateQueue';
 import type {Thenable} from './ReactFiberWorkLoop';
 import type {SuspenseContext} from './ReactFiberSuspenseContext';
 
+import {enableRootEventMarks} from 'shared/ReactFeatureFlags';
+import {componentSuspended} from 'shared/RootEventsProfiling';
 import getComponentName from 'shared/getComponentName';
 import {
   ClassComponent,
@@ -194,6 +196,10 @@ function throwException(
   ) {
     // This is a thenable.
     const thenable: Thenable = (value: any);
+
+    if (enableRootEventMarks) {
+      componentSuspended(sourceFiber);
+    }
 
     if ((sourceFiber.mode & BlockingMode) === NoMode) {
       // Reset the memoizedState to what it was before we attempted

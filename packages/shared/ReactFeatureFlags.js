@@ -23,6 +23,9 @@ export const warnAboutDeprecatedLifecycles = true;
 // Gather advanced timing metrics for Profiler subtrees.
 export const enableProfilerTimer = __PROFILE__;
 
+// Gather advanced timing metrics for React scheduler.
+export const enableRootEventMarks = __PROFILE__;
+
 // Trace which interactions trigger each commit.
 export const enableSchedulerTracing = __PROFILE__;
 

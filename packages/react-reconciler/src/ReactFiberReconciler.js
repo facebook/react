@@ -38,6 +38,8 @@ import {
 import getComponentName from 'shared/getComponentName';
 import invariant from 'shared/invariant';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
+import {enableRootEventMarks} from 'shared/ReactFeatureFlags';
+import {workScheduled} from 'shared/RootEventsProfiling';
 
 import {getPublicInstance} from './ReactFiberHostConfig';
 import {
@@ -226,9 +228,14 @@ export function updateContainer(
   parentComponent: ?React$Component<any, any>,
   callback: ?Function,
 ): ExpirationTime {
+  if (enableRootEventMarks) {
+    workScheduled('render', null);
+  }
+
   if (__DEV__) {
     onScheduleRoot(container, element);
   }
+
   const current = container.current;
   const currentTime = requestCurrentTimeForUpdate();
   if (__DEV__) {

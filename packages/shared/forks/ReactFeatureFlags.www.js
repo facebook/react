@@ -28,6 +28,7 @@ export const {
 export let enableUserTimingAPI = __DEV__;
 
 export const enableProfilerTimer = __PROFILE__;
+export const enableRootEventMarks = __PROFILE__;
 export const enableSchedulerTracing = __PROFILE__;
 export const enableSchedulerDebugging = true;
 

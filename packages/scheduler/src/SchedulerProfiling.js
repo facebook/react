@@ -8,9 +8,18 @@
  */
 
 import type {PriorityLevel} from './SchedulerPriorities';
-import {enableProfiling} from './SchedulerFeatureFlags';
+import type {PriorityLabel} from 'shared/RootEventsProfiling';
+import {enableProfiling, enableRootEventMarks} from './SchedulerFeatureFlags';
+import {schedulerStarted, schedulerStopped} from 'shared/RootEventsProfiling';
 
-import {NoPriority} from './SchedulerPriorities';
+import {
+  ImmediatePriority,
+  UserBlockingPriority,
+  NormalPriority,
+  LowPriority,
+  IdlePriority,
+  NoPriority,
+} from './SchedulerPriorities';
 
 let runIdCounter: number = 0;
 let mainThreadIdCounter: number = 0;
@@ -199,7 +208,25 @@ export function markTaskYield(task: {id: number}, ms: number) {
   }
 }
 
-export function markSchedulerSuspended(ms: number) {
+function priorityLevelToLabel(priorityLevel: PriorityLevel): PriorityLabel {
+  switch (priorityLevel) {
+    case ImmediatePriority:
+    case UserBlockingPriority:
+      return 'high';
+    case IdlePriority:
+      return 'low';
+    case NormalPriority:
+    case LowPriority:
+    default:
+      // Default case is to make Flow happy; we should never actually hit it.
+      return 'normal';
+  }
+}
+
+export function markSchedulerSuspended(
+  ms: number,
+  priorityLevel: PriorityLevel,
+) {
   if (enableProfiling) {
     mainThreadIdCounter++;
 
@@ -207,12 +234,21 @@ export function markSchedulerSuspended(ms: number) {
       logEvent([SchedulerSuspendEvent, ms * 1000, mainThreadIdCounter]);
     }
   }
+  if (enableRootEventMarks) {
+    schedulerStopped(priorityLevelToLabel(priorityLevel));
+  }
 }
 
-export function markSchedulerUnsuspended(ms: number) {
+export function markSchedulerUnsuspended(
+  ms: number,
+  priorityLevel: PriorityLevel,
+) {
   if (enableProfiling) {
     if (eventLog !== null) {
       logEvent([SchedulerResumeEvent, ms * 1000, mainThreadIdCounter]);
     }
+  }
+  if (enableRootEventMarks) {
+    schedulerStarted(priorityLevelToLabel(priorityLevel));
   }
 }
