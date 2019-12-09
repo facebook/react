@@ -262,8 +262,8 @@ function forceUnmountCurrentAndReconcile(
   );
   // In the second pass, we mount the new children. The trick here is that we
   // pass null in place of where we usually pass the current child set. This has
-  // the effect of remounting all children regardless of whether their their
-  // identity matches.
+  // the effect of remounting all children regardless of whether their
+  // identities match.
   workInProgress.child = reconcileChildFibers(
     workInProgress,
     null,
@@ -514,7 +514,7 @@ function updateSimpleMemoComponent(
     if (
       shallowEqual(prevProps, nextProps) &&
       current.ref === workInProgress.ref &&
-      // Prevent bailout if the implementation changed due to hot reload:
+      // Prevent bailout if the implementation changed due to hot reload.
       (__DEV__ ? workInProgress.type === current.type : true)
     ) {
       didReceiveUpdate = false;
@@ -728,7 +728,7 @@ function updateClassComponent(
   if (instance === null) {
     if (current !== null) {
       // An class component without an instance only mounts if it suspended
-      // inside a non- concurrent tree, in an inconsistent state. We want to
+      // inside a non-concurrent tree, in an inconsistent state. We want to
       // tree it like a new mount, even though an empty version of it already
       // committed. Disconnect the alternate pointers.
       current.alternate = null;
@@ -825,7 +825,7 @@ function finishClassComponent(
     didCaptureError &&
     typeof Component.getDerivedStateFromError !== 'function'
   ) {
-    // If we captured an error, but getDerivedStateFrom catch is not defined,
+    // If we captured an error, but getDerivedStateFromError is not defined,
     // unmount all the children. componentDidCatch will schedule an update to
     // re-render a fallback. This is temporary until we migrate everyone to
     // the new API.
@@ -990,7 +990,7 @@ function updateHostComponent(current, workInProgress, renderExpirationTime) {
   if (isDirectTextChild) {
     // We special case a direct text child of a host node. This is a common
     // case. We won't handle it as a reified child. We will instead handle
-    // this in the host environment that also have access to this prop. That
+    // this in the host environment that also has access to this prop. That
     // avoids allocating another HostText fiber and traversing it.
     nextChildren = null;
   } else if (prevProps !== null && shouldSetTextContent(type, prevProps)) {
@@ -1041,7 +1041,7 @@ function mountLazyComponent(
   renderExpirationTime,
 ) {
   if (_current !== null) {
-    // An lazy component only mounts if it suspended inside a non-
+    // A lazy component only mounts if it suspended inside a non-
     // concurrent tree, in an inconsistent state. We want to treat it like
     // a new mount, even though an empty version of it already committed.
     // Disconnect the alternate pointers.
@@ -1919,7 +1919,7 @@ function updateSuspenseComponent(
         workInProgress.child = primaryChildFragment;
         return fallbackChildFragment;
       } else {
-        // Still haven't timed out.  Continue rendering the children, like we
+        // Still haven't timed out. Continue rendering the children, like we
         // normally do.
         workInProgress.memoizedState = null;
         const nextPrimaryChildren = nextProps.children;
