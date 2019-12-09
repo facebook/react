@@ -95,7 +95,6 @@ import {
   exitDisallowedContextReadInDEV,
 } from './ReactFiberNewContext';
 import {Callback, ShouldCapture, DidCapture} from 'shared/ReactSideEffectTags';
-import {ClassComponent} from 'shared/ReactWorkTags';
 
 import {debugRenderPhaseSideEffectsForStrictMode} from 'shared/ReactFeatureFlags';
 
@@ -155,7 +154,7 @@ if (__DEV__) {
   };
 }
 
-function createUpdateQueue<State>(fiber: Fiber): UpdateQueue<State> {
+export function initializeUpdateQueue<State>(fiber: Fiber): void {
   const queue: UpdateQueue<State> = {
     baseState: fiber.memoizedState,
     baseQueue: null,
@@ -164,19 +163,25 @@ function createUpdateQueue<State>(fiber: Fiber): UpdateQueue<State> {
     },
     effects: null,
   };
-  return queue;
+  fiber.updateQueue = queue;
 }
 
-function cloneUpdateQueue<State>(
-  currentQueue: UpdateQueue<State>,
-): UpdateQueue<State> {
-  const queue: UpdateQueue<State> = {
-    baseState: currentQueue.baseState,
-    baseQueue: currentQueue.baseQueue,
-    shared: currentQueue.shared,
-    effects: null,
-  };
-  return queue;
+export function cloneUpdateQueue<State>(
+  current: Fiber,
+  workInProgress: Fiber,
+): void {
+  // Clone the update queue from current. Unless it's already a clone.
+  const queue: UpdateQueue<State> = (workInProgress.updateQueue: any);
+  const currentQueue: UpdateQueue<State> = (current.updateQueue: any);
+  if (queue === currentQueue) {
+    const clone: UpdateQueue<State> = {
+      baseState: currentQueue.baseState,
+      baseQueue: currentQueue.baseQueue,
+      shared: currentQueue.shared,
+      effects: currentQueue.effects,
+    };
+    workInProgress.updateQueue = clone;
+  }
 }
 
 export function createUpdate(
@@ -201,22 +206,13 @@ export function createUpdate(
 }
 
 export function enqueueUpdate<State>(fiber: Fiber, update: Update<State>) {
-  let sharedQueue;
-  let updateQueue = fiber.updateQueue;
+  const updateQueue = fiber.updateQueue;
   if (updateQueue === null) {
-    const alternate = fiber.alternate;
-    if (alternate === null) {
-      updateQueue = createUpdateQueue(fiber);
-    } else {
-      updateQueue = alternate.updateQueue;
-      if (updateQueue === null) {
-        updateQueue = alternate.updateQueue = createUpdateQueue(alternate);
-      }
-    }
-    fiber.updateQueue = updateQueue;
+    // Only occurs if the fiber has been unmounted.
+    return;
   }
-  sharedQueue = updateQueue.shared;
 
+  const sharedQueue = updateQueue.shared;
   const pending = sharedQueue.pending;
   if (pending === null) {
     // This is the first update. Create a circular list.
@@ -229,7 +225,6 @@ export function enqueueUpdate<State>(fiber: Fiber, update: Update<State>) {
 
   if (__DEV__) {
     if (
-      fiber.tag === ClassComponent &&
       currentlyProcessingQueue === sharedQueue &&
       !didWarnUpdateInsideUpdate
     ) {
@@ -249,46 +244,23 @@ export function enqueueCapturedUpdate<State>(
   workInProgress: Fiber,
   update: Update<State>,
 ) {
-  // Captured updates go only on the work-in-progress queue.
-  let workInProgressQueue = workInProgress.updateQueue;
-  if (workInProgressQueue === null) {
-    workInProgressQueue = workInProgress.updateQueue = createUpdateQueue(
-      workInProgress,
-    );
-  } else {
-    // TODO: I put this here rather than createWorkInProgress so that we don't
-    // clone the queue unnecessarily. There's probably a better way to
-    // structure this.
-    workInProgressQueue = ensureWorkInProgressQueueIsAClone(
-      workInProgress,
-      workInProgressQueue,
-    );
+  const current = workInProgress.alternate;
+  if (current !== null) {
+    // Ensure the work-in-progress queue is a clone
+    cloneUpdateQueue(current, workInProgress);
   }
 
+  // Captured updates go only on the work-in-progress queue.
+  const queue: UpdateQueue<State> = (workInProgress.updateQueue: any);
   // Append the update to the end of the list.
-  const last = workInProgressQueue.baseQueue;
+  const last = queue.baseQueue;
   if (last === null) {
-    workInProgressQueue.baseQueue = update.next = update;
+    queue.baseQueue = update.next = update;
     update.next = update;
   } else {
     update.next = last.next;
     last.next = update;
   }
-}
-
-function ensureWorkInProgressQueueIsAClone<State>(
-  workInProgress: Fiber,
-  queue: UpdateQueue<State>,
-): UpdateQueue<State> {
-  const current = workInProgress.alternate;
-  if (current !== null) {
-    // If the work-in-progress queue is equal to the current queue,
-    // we need to clone it first.
-    if (queue === current.updateQueue) {
-      queue = workInProgress.updateQueue = cloneUpdateQueue(queue);
-    }
-  }
-  return queue;
 }
 
 function getStateFromUpdate<State>(
@@ -366,14 +338,14 @@ function getStateFromUpdate<State>(
 
 export function processUpdateQueue<State>(
   workInProgress: Fiber,
-  queue: UpdateQueue<State>,
   props: any,
   instance: any,
   renderExpirationTime: ExpirationTime,
 ): void {
-  hasForceUpdate = false;
+  // This is always non-null on a ClassComponent or HostRoot
+  const queue: UpdateQueue<State> = (workInProgress.updateQueue: any);
 
-  queue = ensureWorkInProgressQueueIsAClone(workInProgress, queue);
+  hasForceUpdate = false;
 
   if (__DEV__) {
     currentlyProcessingQueue = queue.shared;
