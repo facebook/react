@@ -718,6 +718,66 @@ describe('ReactIncrementalUpdates', () => {
     expect(root).toMatchRenderedOutput('ABCD');
   });
 
+  it('when rebasing, does not exclude updates that were already committed, regardless of priority (classes)', async () => {
+    let pushToLog;
+    class App extends React.Component {
+      state = {log: ''};
+      pushToLog = msg => {
+        this.setState(prevState => ({log: prevState.log + msg}));
+      };
+      componentDidUpdate() {
+        Scheduler.unstable_yieldValue('Committed: ' + this.state.log);
+        if (this.state.log === 'B') {
+          // Right after B commits, schedule additional updates.
+          Scheduler.unstable_runWithPriority(
+            Scheduler.unstable_UserBlockingPriority,
+            () => {
+              this.pushToLog('C');
+            },
+          );
+          this.pushToLog('D');
+        }
+      }
+      render() {
+        pushToLog = this.pushToLog;
+        return this.state.log;
+      }
+    }
+
+    const root = ReactNoop.createRoot();
+    await ReactNoop.act(async () => {
+      root.render(<App />);
+    });
+    expect(Scheduler).toHaveYielded([]);
+    expect(root).toMatchRenderedOutput('');
+
+    await ReactNoop.act(async () => {
+      pushToLog('A');
+      Scheduler.unstable_runWithPriority(
+        Scheduler.unstable_UserBlockingPriority,
+        () => {
+          pushToLog('B');
+        },
+      );
+    });
+    expect(Scheduler).toHaveYielded([
+      // A and B are pending. B is higher priority, so we'll render that first.
+      'Committed: B',
+      // Because A comes first in the queue, we're now in rebase mode. B must
+      // be rebased on top of A. Also, in a layout effect, we received two new
+      // updates: C and D. C is user-blocking and D is synchronous.
+      //
+      // First render the synchronous update. What we're testing here is that
+      // B *is not dropped* even though it has lower than sync priority. That's
+      // because we already committed it. However, this render should not
+      // include C, because that update wasn't already committed.
+      'Committed: BD',
+      'Committed: BCD',
+      'Committed: ABCD',
+    ]);
+    expect(root).toMatchRenderedOutput('ABCD');
+  });
+
   it("base state of update queue is initialized to its fiber's memoized state", async () => {
     // This test is very weird because it tests an implementation detail but
     // is tested in terms of public APIs. When it was originally written, the

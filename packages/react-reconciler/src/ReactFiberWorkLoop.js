@@ -2860,7 +2860,7 @@ export function checkForWrongSuspensePriorityInDEV(sourceFiber: Fiber) {
               // has triggered any high priority updates
               const updateQueue = current.updateQueue;
               if (updateQueue !== null) {
-                let update = updateQueue.firstUpdate;
+                let update = updateQueue.baseQueue;
                 while (update !== null) {
                   const priorityLevel = update.priority;
                   if (
