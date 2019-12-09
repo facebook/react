@@ -1142,33 +1142,20 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
 
       function logUpdateQueue(updateQueue: UpdateQueue<mixed>, depth) {
         log('  '.repeat(depth + 1) + 'QUEUED UPDATES');
-        const last = updateQueue.baseQueue;
-        if (last === null) {
+        const firstUpdate = updateQueue.firstUpdate;
+        if (!firstUpdate) {
           return;
         }
-        const first = last.next;
-        let update = first;
-        if (update !== null) {
-          do {
-            log(
-              '  '.repeat(depth + 1) + '~',
-              '[' + update.expirationTime + ']',
-            );
-          } while (update !== null && update !== first);
-        }
 
-        const lastPending = updateQueue.shared.pending;
-        if (lastPending !== null) {
-          const firstPending = lastPending.next;
-          let pendingUpdate = firstPending;
-          if (pendingUpdate !== null) {
-            do {
-              log(
-                '  '.repeat(depth + 1) + '~',
-                '[' + pendingUpdate.expirationTime + ']',
-              );
-            } while (pendingUpdate !== null && pendingUpdate !== firstPending);
-          }
+        log(
+          '  '.repeat(depth + 1) + '~',
+          '[' + firstUpdate.expirationTime + ']',
+        );
+        while (firstUpdate.next) {
+          log(
+            '  '.repeat(depth + 1) + '~',
+            '[' + firstUpdate.expirationTime + ']',
+          );
         }
       }
 

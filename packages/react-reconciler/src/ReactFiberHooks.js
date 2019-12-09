@@ -20,7 +20,7 @@ import type {ReactPriorityLevel} from './SchedulerWithReactIntegration';
 
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 
-import {NoWork, Sync} from './ReactFiberExpirationTime';
+import {NoWork} from './ReactFiberExpirationTime';
 import {readContext} from './ReactFiberNewContext';
 import {createResponderListener} from './ReactFiberEvents';
 import {
@@ -108,13 +108,13 @@ type Update<S, A> = {
   action: A,
   eagerReducer: ((S, A) => S) | null,
   eagerState: S | null,
-  next: Update<S, A>,
+  next: Update<S, A> | null,
 
   priority?: ReactPriorityLevel,
 };
 
 type UpdateQueue<S, A> = {
-  pending: Update<S, A> | null,
+  last: Update<S, A> | null,
   dispatch: (A => mixed) | null,
   lastRenderedReducer: ((S, A) => S) | null,
   lastRenderedState: S | null,
@@ -144,7 +144,7 @@ export type Hook = {
   memoizedState: any,
 
   baseState: any,
-  baseQueue: Update<any, any> | null,
+  baseUpdate: Update<any, any> | null,
   queue: UpdateQueue<any, any> | null,
 
   next: Hook | null,
@@ -544,8 +544,8 @@ function mountWorkInProgressHook(): Hook {
     memoizedState: null,
 
     baseState: null,
-    baseQueue: null,
     queue: null,
+    baseUpdate: null,
 
     next: null,
   };
@@ -604,8 +604,8 @@ function updateWorkInProgressHook(): Hook {
       memoizedState: currentHook.memoizedState,
 
       baseState: currentHook.baseState,
-      baseQueue: currentHook.baseQueue,
       queue: currentHook.queue,
+      baseUpdate: currentHook.baseUpdate,
 
       next: null,
     };
@@ -645,7 +645,7 @@ function mountReducer<S, I, A>(
   }
   hook.memoizedState = hook.baseState = initialState;
   const queue = (hook.queue = {
-    pending: null,
+    last: null,
     dispatch: null,
     lastRenderedReducer: reducer,
     lastRenderedState: (initialState: any),
@@ -703,7 +703,7 @@ function updateReducer<S, I, A>(
         // the base state unless the queue is empty.
         // TODO: Not sure if this is the desired semantics, but it's what we
         // do for gDSFP. I can't remember why.
-        if (hook.baseQueue === null) {
+        if (hook.baseUpdate === queue.last) {
           hook.baseState = newState;
         }
 
@@ -715,55 +715,42 @@ function updateReducer<S, I, A>(
     return [hook.memoizedState, dispatch];
   }
 
-  const current: Hook = (currentHook: any);
+  // The last update in the entire queue
+  const last = queue.last;
+  // The last update that is part of the base state.
+  const baseUpdate = hook.baseUpdate;
+  const baseState = hook.baseState;
 
-  // The last rebase update that is NOT part of the base state.
-  let baseQueue = current.baseQueue;
-
-  // The last pending update that hasn't been processed yet.
-  let pendingQueue = queue.pending;
-  if (pendingQueue !== null) {
-    // We have new updates that haven't been processed yet.
-    // We'll add them to the base queue.
-    if (baseQueue !== null) {
-      // Merge the pending queue and the base queue.
-      let baseFirst = baseQueue.next;
-      let pendingFirst = pendingQueue.next;
-      baseQueue.next = pendingFirst;
-      pendingQueue.next = baseFirst;
+  // Find the first unprocessed update.
+  let first;
+  if (baseUpdate !== null) {
+    if (last !== null) {
+      // For the first update, the queue is a circular linked list where
+      // `queue.last.next = queue.first`. Once the first update commits, and
+      // the `baseUpdate` is no longer empty, we can unravel the list.
+      last.next = null;
     }
-    current.baseQueue = baseQueue = pendingQueue;
-    queue.pending = null;
+    first = baseUpdate.next;
+  } else {
+    first = last !== null ? last.next : null;
   }
-
-  if (baseQueue !== null) {
-    // We have a queue to process.
-    let first = baseQueue.next;
-    let newState = current.baseState;
-
+  if (first !== null) {
+    let newState = baseState;
     let newBaseState = null;
-    let newBaseQueueFirst = null;
-    let newBaseQueueLast = null;
+    let newBaseUpdate = null;
+    let prevUpdate = baseUpdate;
     let update = first;
+    let didSkip = false;
     do {
       const updateExpirationTime = update.expirationTime;
       if (updateExpirationTime < renderExpirationTime) {
         // Priority is insufficient. Skip this update. If this is the first
         // skipped update, the previous update/state is the new base
         // update/state.
-        const clone: Update<S, A> = {
-          expirationTime: update.expirationTime,
-          suspenseConfig: update.suspenseConfig,
-          action: update.action,
-          eagerReducer: update.eagerReducer,
-          eagerState: update.eagerState,
-          next: (null: any),
-        };
-        if (newBaseQueueLast === null) {
-          newBaseQueueFirst = newBaseQueueLast = clone;
+        if (!didSkip) {
+          didSkip = true;
+          newBaseUpdate = prevUpdate;
           newBaseState = newState;
-        } else {
-          newBaseQueueLast = newBaseQueueLast.next = clone;
         }
         // Update the remaining priority in the queue.
         if (updateExpirationTime > currentlyRenderingFiber.expirationTime) {
@@ -772,18 +759,6 @@ function updateReducer<S, I, A>(
         }
       } else {
         // This update does have sufficient priority.
-
-        if (newBaseQueueLast !== null) {
-          const clone: Update<S, A> = {
-            expirationTime: Sync, // This update is going to be committed so we never want uncommit it.
-            suspenseConfig: update.suspenseConfig,
-            action: update.action,
-            eagerReducer: update.eagerReducer,
-            eagerState: update.eagerState,
-            next: (null: any),
-          };
-          newBaseQueueLast = newBaseQueueLast.next = clone;
-        }
 
         // Mark the event time of this update as relevant to this render pass.
         // TODO: This should ideally use the true event time of this update rather than
@@ -806,13 +781,13 @@ function updateReducer<S, I, A>(
           newState = reducer(newState, action);
         }
       }
+      prevUpdate = update;
       update = update.next;
     } while (update !== null && update !== first);
 
-    if (newBaseQueueLast === null) {
+    if (!didSkip) {
+      newBaseUpdate = prevUpdate;
       newBaseState = newState;
-    } else {
-      newBaseQueueLast.next = (newBaseQueueFirst: any);
     }
 
     // Mark that the fiber performed work, but only if the new state is
@@ -822,8 +797,8 @@ function updateReducer<S, I, A>(
     }
 
     hook.memoizedState = newState;
+    hook.baseUpdate = newBaseUpdate;
     hook.baseState = newBaseState;
-    hook.baseQueue = newBaseQueueLast;
 
     queue.lastRenderedState = newState;
   }
@@ -841,7 +816,7 @@ function mountState<S>(
   }
   hook.memoizedState = hook.baseState = initialState;
   const queue = (hook.queue = {
-    pending: null,
+    last: null,
     dispatch: null,
     lastRenderedReducer: basicStateReducer,
     lastRenderedState: (initialState: any),
@@ -1258,7 +1233,7 @@ function dispatchAction<S, A>(
       action,
       eagerReducer: null,
       eagerState: null,
-      next: (null: any),
+      next: null,
     };
     if (__DEV__) {
       update.priority = getCurrentPriorityLevel();
@@ -1292,7 +1267,7 @@ function dispatchAction<S, A>(
       action,
       eagerReducer: null,
       eagerState: null,
-      next: (null: any),
+      next: null,
     };
 
     if (__DEV__) {
@@ -1300,15 +1275,19 @@ function dispatchAction<S, A>(
     }
 
     // Append the update to the end of the list.
-    const pending = queue.pending;
-    if (pending === null) {
+    const last = queue.last;
+    if (last === null) {
       // This is the first update. Create a circular list.
       update.next = update;
     } else {
-      update.next = pending.next;
-      pending.next = update;
+      const first = last.next;
+      if (first !== null) {
+        // Still circular.
+        update.next = first;
+      }
+      last.next = update;
     }
-    queue.pending = update;
+    queue.last = update;
 
     if (
       fiber.expirationTime === NoWork &&
