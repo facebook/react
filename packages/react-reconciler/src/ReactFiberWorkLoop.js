@@ -14,6 +14,7 @@ import type {ReactPriorityLevel} from './SchedulerWithReactIntegration';
 import type {Interaction} from 'scheduler/src/Tracing';
 import type {SuspenseConfig} from './ReactFiberSuspenseConfig';
 import type {SuspenseState} from './ReactFiberSuspenseComponent';
+import type {Hook} from './ReactFiberHooks';
 
 import {
   warnAboutDeprecatedLifecycles,
@@ -2859,7 +2860,7 @@ export function checkForWrongSuspensePriorityInDEV(sourceFiber: Fiber) {
               // has triggered any high priority updates
               const updateQueue = current.updateQueue;
               if (updateQueue !== null) {
-                let update = updateQueue.firstUpdate;
+                let update = updateQueue.baseQueue;
                 while (update !== null) {
                   const priorityLevel = update.priority;
                   if (
@@ -2883,12 +2884,11 @@ export function checkForWrongSuspensePriorityInDEV(sourceFiber: Fiber) {
               break;
             case FunctionComponent:
             case ForwardRef:
-            case SimpleMemoComponent:
-              if (
-                workInProgressNode.memoizedState !== null &&
-                workInProgressNode.memoizedState.baseUpdate !== null
-              ) {
-                let update = workInProgressNode.memoizedState.baseUpdate;
+            case SimpleMemoComponent: {
+              let firstHook: null | Hook = current.memoizedState;
+              // TODO: This just checks the first Hook. Isn't it suppose to check all Hooks?
+              if (firstHook !== null && firstHook.baseQueue !== null) {
+                let update = firstHook.baseQueue;
                 // Loop through the functional component's memoized state to see whether
                 // the component has triggered any high pri updates
                 while (update !== null) {
@@ -2908,15 +2908,14 @@ export function checkForWrongSuspensePriorityInDEV(sourceFiber: Fiber) {
                     }
                     break;
                   }
-                  if (
-                    update.next === workInProgressNode.memoizedState.baseUpdate
-                  ) {
+                  if (update.next === firstHook.baseQueue) {
                     break;
                   }
                   update = update.next;
                 }
               }
               break;
+            }
             default:
               break;
           }
