@@ -12,6 +12,7 @@
 import * as domEvents from './domEvents';
 import * as domEventSequences from './domEventSequences';
 import {
+  buttonType,
   buttonsType,
   hasPointerEvent,
   setPointerEvent,
@@ -160,6 +161,7 @@ function testWithPointerType(message, testFn) {
 }
 
 export {
+  buttonType,
   buttonsType,
   createEventTarget,
   describeWithPointerEvent,

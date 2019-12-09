@@ -10,6 +10,7 @@
 'use strict';
 
 import {
+  buttonType,
   buttonsType,
   createEventTarget,
   describeWithPointerEvent,
@@ -126,7 +127,30 @@ describeWithPointerEvent('Press responder', hasPointerEvents => {
     it('is called after middle-button pointer down', () => {
       const target = createEventTarget(ref.current);
       const pointerType = 'mouse';
-      target.pointerdown({buttons: buttonsType.auxiliary, pointerType});
+      target.pointerdown({
+        button: buttonType.auxiliary,
+        buttons: buttonsType.auxiliary,
+        pointerType,
+      });
+      target.pointerup({pointerType});
+      expect(onPressStart).toHaveBeenCalledTimes(1);
+      expect(onPressStart).toHaveBeenCalledWith(
+        expect.objectContaining({
+          buttons: buttonsType.auxiliary,
+          pointerType: 'mouse',
+          type: 'pressstart',
+        }),
+      );
+    });
+
+    it('is called after virtual middle-button pointer down', () => {
+      const target = createEventTarget(ref.current);
+      const pointerType = 'mouse';
+      target.pointerdown({
+        button: buttonType.auxiliary,
+        buttons: 0,
+        pointerType,
+      });
       target.pointerup({pointerType});
       expect(onPressStart).toHaveBeenCalledTimes(1);
       expect(onPressStart).toHaveBeenCalledWith(
@@ -212,7 +236,26 @@ describeWithPointerEvent('Press responder', hasPointerEvents => {
     it('is called after middle-button pointer up', () => {
       const target = createEventTarget(ref.current);
       target.pointerdown({
+        button: buttonType.auxiliary,
         buttons: buttonsType.auxiliary,
+        pointerType: 'mouse',
+      });
+      target.pointerup({pointerType: 'mouse'});
+      expect(onPressEnd).toHaveBeenCalledTimes(1);
+      expect(onPressEnd).toHaveBeenCalledWith(
+        expect.objectContaining({
+          buttons: buttonsType.auxiliary,
+          pointerType: 'mouse',
+          type: 'pressend',
+        }),
+      );
+    });
+
+    it('is called after virtual middle-button pointer up', () => {
+      const target = createEventTarget(ref.current);
+      target.pointerdown({
+        button: buttonType.auxiliary,
+        buttons: 0,
         pointerType: 'mouse',
       });
       target.pointerup({pointerType: 'mouse'});
@@ -356,7 +399,19 @@ describeWithPointerEvent('Press responder', hasPointerEvents => {
     it('is not called after middle-button press', () => {
       const target = createEventTarget(ref.current);
       target.pointerdown({
+        button: buttonType.auxiliary,
         buttons: buttonsType.auxiliary,
+        pointerType: 'mouse',
+      });
+      target.pointerup({pointerType: 'mouse'});
+      expect(onPress).not.toHaveBeenCalled();
+    });
+
+    it('is not called after virtual middle-button press', () => {
+      const target = createEventTarget(ref.current);
+      target.pointerdown({
+        button: buttonType.auxiliary,
+        buttons: 0,
         pointerType: 'mouse',
       });
       target.pointerup({pointerType: 'mouse'});

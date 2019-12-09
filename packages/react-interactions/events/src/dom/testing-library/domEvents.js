@@ -9,7 +9,7 @@
 
 'use strict';
 
-import {buttonsType} from './domEnvironment';
+import {buttonType, buttonsType} from './domEnvironment';
 
 /**
  * Native event object mocks for higher-level events.
@@ -65,6 +65,7 @@ function createPointerEvent(
   type,
   {
     altKey = false,
+    button = buttonType.none,
     buttons = buttonsType.none,
     ctrlKey = false,
     detail = 1,
@@ -98,6 +99,7 @@ function createPointerEvent(
 
   return createEvent(type, {
     altKey,
+    button,
     buttons,
     clientX: x,
     clientY: y,
@@ -164,6 +166,7 @@ function createMouseEvent(
   type,
   {
     altKey = false,
+    button = buttonType.none,
     buttons = buttonsType.none,
     ctrlKey = false,
     detail = 1,
@@ -187,6 +190,7 @@ function createMouseEvent(
 
   return createEvent(type, {
     altKey,
+    button,
     buttons,
     clientX: x,
     clientY: y,
@@ -297,7 +301,10 @@ export function blur({relatedTarget} = {}) {
 }
 
 export function click(payload) {
-  return createMouseEvent('click', payload);
+  return createMouseEvent('click', {
+    button: buttonType.primary,
+    ...payload,
+  });
 }
 
 export function contextmenu(payload) {
@@ -383,6 +390,7 @@ export function pointercancel(payload) {
 export function pointerdown(payload) {
   const isTouch = payload != null && payload.pointerType === 'touch';
   return createPointerEvent('pointerdown', {
+    button: buttonType.primary,
     buttons: buttonsType.primary,
     pressure: isTouch ? 1 : 0.5,
     ...payload,
@@ -398,7 +406,10 @@ export function pointerleave(payload) {
 }
 
 export function pointermove(payload) {
-  return createPointerEvent('pointermove', payload);
+  return createPointerEvent('pointermove', {
+    ...payload,
+    button: buttonType.none,
+  });
 }
 
 export function pointerout(payload) {
@@ -411,6 +422,7 @@ export function pointerover(payload) {
 
 export function pointerup(payload) {
   return createPointerEvent('pointerup', {
+    button: buttonType.primary,
     ...payload,
     buttons: buttonsType.none,
     pressure: 0,
@@ -422,13 +434,18 @@ export function pointerup(payload) {
  */
 
 export function mousedown(payload) {
-  // The value of 'buttons' for 'mousedown' must not be 0
+  // The value of 'button' and 'buttons' for 'mousedown' must not be none.
+  const button =
+    payload == null || payload.button === buttonType.none
+      ? buttonType.primary
+      : payload.button;
   const buttons =
-    payload == null || payload.buttons === 0
+    payload == null || payload.buttons === buttonsType.none
       ? buttonsType.primary
       : payload.buttons;
   return createMouseEvent('mousedown', {
     ...payload,
+    button,
     buttons,
   });
 }
@@ -455,6 +472,7 @@ export function mouseover(payload) {
 
 export function mouseup(payload) {
   return createMouseEvent('mouseup', {
+    button: buttonType.primary,
     ...payload,
     buttons: buttonsType.none,
   });
