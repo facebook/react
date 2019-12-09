@@ -717,4 +717,52 @@ describe('ReactIncrementalUpdates', () => {
     ]);
     expect(root).toMatchRenderedOutput('ABCD');
   });
+
+  it("base state of update queue is initialized to its fiber's memoized state", async () => {
+    // This test is very weird because it tests an implementation detail but
+    // is tested in terms of public APIs. When it was originally written, the
+    // test failed because the update queue was initialized to the state of
+    // the alternate fiber.
+    let app;
+    class App extends React.Component {
+      state = {prevProp: 'A', count: 0};
+      static getDerivedStateFromProps(props, state) {
+        // Add 100 whenever the label prop changes. The prev label is stored
+        // in state. If the state is dropped incorrectly, we'll fail to detect
+        // prop changes.
+        if (props.prop !== state.prevProp) {
+          return {
+            prevProp: props.prop,
+            count: state.count + 100,
+          };
+        }
+        return null;
+      }
+      render() {
+        app = this;
+        return this.state.count;
+      }
+    }
+
+    const root = ReactNoop.createRoot();
+    await ReactNoop.act(async () => {
+      root.render(<App prop="A" />);
+    });
+    expect(root).toMatchRenderedOutput('0');
+
+    // Changing the prop causes the count to increase by 100
+    await ReactNoop.act(async () => {
+      root.render(<App prop="B" />);
+    });
+    expect(root).toMatchRenderedOutput('100');
+
+    // Now increment the count by 1 with a state update. And, in the same
+    // batch, change the prop back to its original value.
+    await ReactNoop.act(async () => {
+      root.render(<App prop="A" />);
+      app.setState(state => ({count: state.count + 1}));
+    });
+    // There were two total prop changes, plus an increment.
+    expect(root).toMatchRenderedOutput('201');
+  });
 });
