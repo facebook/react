@@ -43,7 +43,9 @@ import {
   useResponder,
   useTransition,
   useDeferredValue,
+  unstable_avoidThisRender,
 } from './ReactHooks';
+
 import {withSuspenseConfig} from './ReactBatchConfig';
 import {
   createElementWithValidation,
@@ -64,6 +66,7 @@ import {
   enableScopeAPI,
   exposeConcurrentModeAPIs,
   enableChunksAPI,
+  enableAvoidThisRenderAPI,
 } from 'shared/ReactFeatureFlags';
 const React = {
   Children: {
@@ -149,6 +152,10 @@ if (enableJSXTransformAPI) {
     // for now we can ship identical prod functions
     React.jsxs = jsx;
   }
+}
+
+if (enableAvoidThisRenderAPI) {
+  React.unstable_avoidThisRender = unstable_avoidThisRender;
 }
 
 export default React;

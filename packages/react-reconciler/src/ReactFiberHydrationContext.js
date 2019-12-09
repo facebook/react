@@ -232,6 +232,8 @@ function tryHydrate(fiber, nextInstance) {
           const suspenseState: SuspenseState = {
             dehydrated: suspenseInstance,
             retryTime: Never,
+            // TODO - This doesn't seem right... But we add it to appease flow.
+            didAvoidRenderTime: Never,
           };
           fiber.memoizedState = suspenseState;
           // Store the dehydrated fragment as a child fiber.

@@ -11,6 +11,9 @@ import type {
   Dispatcher as DispatcherType,
   TimeoutConfig,
 } from 'react-reconciler/src/ReactFiberHooks';
+
+import type {Thenable} from 'react-reconciler/src/ReactFiberWorkLoop';
+
 import type {ThreadID} from './ReactThreadIDAllocator';
 import type {
   ReactContext,
@@ -499,4 +502,7 @@ export const Dispatcher: DispatcherType = {
   useResponder,
   useDeferredValue,
   useTransition,
+  avoidThisRender(thenable: Thenable) {
+    // todo: this should trigger a fallback on SSR
+  },
 };

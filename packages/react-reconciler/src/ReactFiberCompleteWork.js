@@ -60,6 +60,7 @@ import {
   NoEffect,
   DidCapture,
   Deletion,
+  SoftCapture,
 } from 'shared/ReactSideEffectTags';
 import invariant from 'shared/invariant';
 
@@ -870,6 +871,35 @@ function completeWork(
         workInProgress.expirationTime = renderExpirationTime;
         // Do not reset the effect list.
         return workInProgress;
+      } else if ((workInProgress.effectTag & SoftCapture) !== NoEffect) {
+        // something called avoidThisRender()
+        if (
+          current === null ||
+          (current.memoizedState &&
+            renderExpirationTime > current.memoizedState.didAvoidRenderTime)
+        ) {
+          // Something soft suspended, and this is the first "trigger rerender" pass.
+          // Re-render with the fallback children.
+          if (!workInProgress.memoizedState) {
+            // fallback isn't showing yet, trigger fallback pass
+            workInProgress.expirationTime = renderExpirationTime;
+            return workInProgress;
+          } else {
+            // TODO: we're never entering this branch because
+            // effectTag: SoftCapture is cleared after the previous pass
+            // does it matter?
+
+            // fallback's showing and we're in the
+            // render pass following the trigger pass
+            return null;
+          }
+        } else {
+          // second pass
+          // TODO: this doesn't actually delay right now?
+          renderDidSuspendDelayIfPossible();
+          // TODO: This also means SoftCapture tag isn't cleared from the fiber.
+          // does that matter?
+        }
       }
 
       const nextDidTimeout = nextState !== null;

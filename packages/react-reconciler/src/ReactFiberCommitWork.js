@@ -1461,6 +1461,7 @@ function commitSuspenseComponent(finishedWork: Fiber) {
   if (enableSuspenseCallback && newState !== null) {
     const suspenseCallback = finishedWork.memoizedProps.suspenseCallback;
     if (typeof suspenseCallback === 'function') {
+      // TODO - what should suspenseCallback do if it's only images/avoidedThenables?
       const thenables: Set<Thenable> | null = (finishedWork.updateQueue: any);
       if (thenables !== null) {
         suspenseCallback(new Set(thenables));

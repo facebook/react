@@ -40,6 +40,7 @@ export type SuspenseState = {|
   // Never is the default for dehydrated boundaries.
   // NoWork is the default for normal boundaries, which turns into "normal" pri.
   retryTime: ExpirationTime,
+  didAvoidRenderTime: ExpirationTime,
 |};
 
 export type SuspenseListTailMode = 'collapsed' | 'hidden' | void;

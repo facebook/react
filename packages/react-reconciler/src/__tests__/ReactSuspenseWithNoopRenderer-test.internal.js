@@ -95,6 +95,236 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     }
   }
 
+  describe('unstable_avoidThisRender', () => {
+    it.experimental('should suspend and render a fallback', async () => {
+      let resolved = false;
+      // eslint-disable-next-line no-unused-vars
+      let resolveThenable;
+      const thenable = new Promise(resolve => {
+        resolveThenable = () => {
+          resolved = true;
+          resolve();
+        };
+      });
+
+      function AvoidedRendering() {
+        if (resolved) {
+          Scheduler.unstable_yieldValue('render avoided');
+        } else {
+          Scheduler.unstable_yieldValue('suspend avoided');
+          React.unstable_avoidThisRender(thenable);
+        }
+        return 'avoided';
+      }
+
+      function Loading() {
+        Scheduler.unstable_yieldValue('render loading');
+        return 'loading...';
+      }
+
+      function App() {
+        Scheduler.unstable_yieldValue('App');
+        return (
+          <React.Suspense fallback={<Loading />}>
+            <AvoidedRendering />
+          </React.Suspense>
+        );
+      }
+
+      const root = ReactNoop.createRoot();
+
+      await ReactNoop.act(async () => {
+        root.render(<App />);
+      });
+
+      expect(Scheduler).toHaveYielded([
+        'App',
+        'suspend avoided',
+        'render loading',
+        'suspend avoided',
+      ]);
+
+      expect(root.getChildrenAsJSX()).toMatchInlineSnapshot(`"avoided"`);
+
+      // TODO - once we have a ref counting implementation for these thenables,
+      // these tests should pass
+      // expect(root.getChildrenAsJSX()).toMatchInlineSnapshot(`"loading..."`);
+
+      // await ReactNoop.act(async () => {
+      //   await resolveThenable();
+      // });
+
+      // await ReactNoop.act(async () => {
+      //   await advanceTimers(10000);
+      // });
+
+      // expect(Scheduler).toHaveYielded(['App', 'render avoided']);
+
+      // expect(root.getChildrenAsJSX()).toMatchInlineSnapshot(`"avoided"`);
+    });
+
+    it.experimental(
+      'should not re-render if something else has suspended',
+      async () => {
+        let dataResolved = false;
+        let imageResolved = false;
+        let resolveData, resolveImage;
+        const dataThenable = new Promise(resolve => {
+          resolveData = () => {
+            dataResolved = true;
+            resolve();
+          };
+        });
+
+        const imageThenable = new Promise(resolve => {
+          resolveImage = () => {
+            imageResolved = true;
+            resolve();
+          };
+        });
+
+        function ThrowingComponent() {
+          if (dataResolved) {
+            Scheduler.unstable_yieldValue('render throwing');
+            return 'throwing';
+          }
+          Scheduler.unstable_yieldValue('suspend throwing');
+          throw dataThenable;
+        }
+
+        function AvoidedRendering() {
+          if (imageResolved) {
+            Scheduler.unstable_yieldValue('render avoided');
+          } else {
+            Scheduler.unstable_yieldValue('suspend avoided');
+            React.unstable_avoidThisRender(imageThenable);
+          }
+          return 'avoided';
+        }
+
+        function App() {
+          Scheduler.unstable_yieldValue('App');
+          return (
+            <React.Suspense fallback="loading...">
+              <ThrowingComponent />
+              <AvoidedRendering />
+            </React.Suspense>
+          );
+        }
+
+        const root = ReactNoop.createRoot();
+
+        await ReactNoop.act(async () => {
+          root.render(<App />);
+        });
+
+        expect(Scheduler).toHaveYielded([
+          'App',
+          'suspend throwing',
+          'suspend avoided',
+        ]);
+
+        expect(root.getChildrenAsJSX()).toMatchInlineSnapshot(`"loading..."`);
+
+        await ReactNoop.act(async () => {
+          await resolveImage();
+        });
+
+        expect(Scheduler).toHaveYielded([]);
+
+        await ReactNoop.act(async () => {
+          await resolveData();
+        });
+
+        expect(Scheduler).toHaveYielded(['render throwing', 'render avoided']);
+
+        expect(root).toMatchRenderedOutput('throwingavoided');
+      },
+    );
+
+    it.experimental(
+      'should delay rendering on recovering from a transition',
+      async () => {
+        let resolved = false;
+        let resolveThenable;
+        const thenable = new Promise(resolve => {
+          resolveThenable = () => {
+            resolved = true;
+            resolve();
+          };
+        });
+
+        function AvoidedRendering() {
+          if (resolved) {
+            Scheduler.unstable_yieldValue('render avoided');
+          } else {
+            Scheduler.unstable_yieldValue('suspend avoided');
+            React.unstable_avoidThisRender(thenable);
+          }
+          return 'avoided';
+        }
+
+        let startTransition = null;
+        function Transition() {
+          Scheduler.unstable_yieldValue('Transition');
+          const [started, setStarted] = React.useState(false);
+          const [_startTransition] = React.useTransition();
+
+          startTransition = () => {
+            return _startTransition(() => {
+              setStarted(true);
+            });
+          };
+          return started ? <AvoidedRendering /> : 'before transition';
+        }
+
+        function App() {
+          Scheduler.unstable_yieldValue('App');
+          return (
+            <React.Suspense fallback="loading...">
+              <Transition />
+            </React.Suspense>
+          );
+        }
+
+        const root = ReactNoop.createRoot();
+
+        await ReactNoop.act(async () => {
+          root.render(<App />);
+        });
+
+        expect(Scheduler).toHaveYielded(['App', 'Transition']);
+
+        expect(root.getChildrenAsJSX()).toMatchInlineSnapshot(
+          `"before transition"`,
+        );
+
+        await ReactNoop.act(async () => {
+          startTransition();
+        });
+
+        // verify that 'old' content is still showing
+        expect(root.getChildrenAsJSX()).toMatchInlineSnapshot(
+          `"before transition"`,
+        );
+
+        // I'm not sure wh yTransition is called twice here.
+        // I suppose it's because of the 'rerender', but want to be sure.
+        expect(Scheduler).toHaveYielded([
+          'Transition',
+          'Transition',
+          'suspend avoided',
+        ]);
+
+        await ReactNoop.act(async () => {
+          await resolveThenable();
+        });
+
+        expect(root.getChildrenAsJSX()).toMatchInlineSnapshot(`"avoided"`);
+      },
+    );
+  });
+
   it('warns if the deprecated maxDuration option is used', () => {
     function Foo() {
       return (

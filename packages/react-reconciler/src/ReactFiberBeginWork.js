@@ -54,6 +54,7 @@ import {
   Update,
   Ref,
   Deletion,
+  SoftCapture,
 } from 'shared/ReactSideEffectTags';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import {
@@ -1563,6 +1564,7 @@ function validateFunctionComponentInDev(workInProgress: Fiber, Component: any) {
 const SUSPENDED_MARKER: SuspenseState = {
   dehydrated: null,
   retryTime: NoWork,
+  didAvoidRenderTime: NoWork,
 };
 
 function shouldRemainOnFallback(
@@ -1599,7 +1601,8 @@ function updateSuspenseComponent(
   let suspenseContext: SuspenseContext = suspenseStackCursor.current;
 
   let nextDidTimeout = false;
-  const didSuspend = (workInProgress.effectTag & DidCapture) !== NoEffect;
+  const didSuspend =
+    (workInProgress.effectTag & (SoftCapture | DidCapture)) !== NoEffect;
 
   if (
     didSuspend ||
@@ -1609,6 +1612,9 @@ function updateSuspenseComponent(
     // rendering the fallback children.
     nextDidTimeout = true;
     workInProgress.effectTag &= ~DidCapture;
+    // if SoftCapture is set, we don't clear it here
+    // since we read it later down below
+    // TODO: maybe it could be another module level global?
   } else {
     // Attempting the main content
     if (
@@ -1731,7 +1737,21 @@ function updateSuspenseComponent(
       primaryChildFragment.sibling = fallbackChildFragment;
       // Skip the primary children, and continue working on the
       // fallback children.
-      workInProgress.memoizedState = SUSPENDED_MARKER;
+
+      if (!(workInProgress.effectTag & SoftCapture)) {
+        workInProgress.memoizedState = SUSPENDED_MARKER;
+      } else {
+        workInProgress.effectTag &= ~SoftCapture;
+        const avoidedRenderExpiration = renderExpirationTime - 1; // verify/rename
+        // this means there's work to be done on this fiber "in the near future"
+        workInProgress.memoizedState = {
+          dehydrated: null,
+          retryTime: NoWork,
+          didAvoidRenderTime: avoidedRenderExpiration,
+        };
+
+        workInProgress.expirationTime = avoidedRenderExpiration;
+      }
       workInProgress.child = primaryChildFragment;
       return fallbackChildFragment;
     } else {
@@ -2996,6 +3016,7 @@ function beginWork(
             // whether to retry the primary children, or to skip over it and
             // go straight to the fallback. Check the priority of the primary
             // child fragment.
+
             const primaryChildFragment: Fiber = (workInProgress.child: any);
             const primaryChildExpirationTime =
               primaryChildFragment.childExpirationTime;

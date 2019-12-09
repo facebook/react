@@ -28,6 +28,7 @@ import {
   NoEffect,
   ShouldCapture,
   LifecycleEffectMask,
+  SoftCapture,
 } from 'shared/ReactSideEffectTags';
 import {NoMode, BlockingMode} from './ReactTypeOfMode';
 import {shouldCaptureSuspense} from './ReactFiberSuspenseComponent';
@@ -172,6 +173,64 @@ function attachPingListener(
       renderExpirationTime,
     );
     thenable.then(ping, ping);
+  }
+}
+
+// unstable_avoidThisRender is much like throwException(), with some exceptions (ha!)
+export function avoidThisRenderImpl(
+  root: FiberRoot,
+  returnFiber: Fiber,
+  sourceFiber: Fiber,
+  value: Thenable,
+  renderExpirationTime: ExpirationTime,
+) {
+  // no-op for non-concurrent mode
+  if ((sourceFiber.mode & BlockingMode) === NoMode) {
+    return;
+  }
+
+  // TODO: if OffScreen priority, call throwException() instead
+
+  const thenable: Thenable = (value: any);
+
+  checkForWrongSuspensePriorityInDEV(sourceFiber);
+
+  let hasInvisibleParentBoundary = hasSuspenseContext(
+    suspenseStackCursor.current,
+    (InvisibleParentSuspenseContext: SuspenseContext),
+  );
+
+  // Schedule the nearest Suspense to re-render the timed out view.
+  let workInProgress = returnFiber;
+  do {
+    if (
+      workInProgress.tag === SuspenseComponent &&
+      shouldCaptureSuspense(workInProgress, hasInvisibleParentBoundary)
+    ) {
+      // Found the nearest boundary.
+
+      attachPingListener(root, renderExpirationTime, thenable);
+      // TODO: what should actually happen if an image resolves
+      // before the tree is committed?
+      // It should probably no-op of we're waiting on other work
+      // or commit directly if not
+
+      // Like ShouldCapture/DidCapture, but softer. Like a puppy.
+      workInProgress.effectTag |= SoftCapture;
+      return;
+    }
+    // This boundary already captured during this render. Continue to the next
+    // boundary.
+    workInProgress = workInProgress.return;
+  } while (workInProgress !== null);
+
+  if (__DEV__) {
+    console.warn(
+      'unstable_avoidThisRender suspended while rendering, ' +
+        'but no fallback UI was specified.\n' +
+        'Add a <Suspense fallback=...> component higher in the tree to ' +
+        'provide a loading indicator or placeholder to display.',
+    );
   }
 }
 

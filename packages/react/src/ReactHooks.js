@@ -7,6 +7,7 @@
  * @flow
  */
 
+import type {Thenable} from 'react-reconciler/src/ReactFiberWorkLoop';
 import type {
   ReactContext,
   ReactEventResponder,
@@ -168,4 +169,12 @@ export function useTransition(
 export function useDeferredValue<T>(value: T, config: ?Object): T {
   const dispatcher = resolveDispatcher();
   return dispatcher.useDeferredValue(value, config);
+}
+
+export function unstable_avoidThisRender(thenable: Thenable) {
+  // this currently generates the wrong error message (ie, the hooks one)
+  // but we'll unify error messages later.
+  const dispatcher = resolveDispatcher();
+
+  return dispatcher.avoidThisRender(thenable);
 }
