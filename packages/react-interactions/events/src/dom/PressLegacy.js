@@ -626,6 +626,9 @@ const pressResponderImpl = {
           state.responderRegionOnDeactivation = null;
           state.isPressWithinResponderRegion = true;
           state.buttons = nativeEvent.buttons;
+          if (nativeEvent.button === 1) {
+            state.buttons = 4;
+          }
           dispatchPressStartEvents(event, context, props, state);
           addRootEventTypes(context, state);
         } else {
