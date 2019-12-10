@@ -364,8 +364,19 @@ export function getInternalReactConstants(
       case IndeterminateComponent:
         return getDisplayName(resolvedType);
       case ForwardRef:
+        // maybe set `displayName` after `React.forwardRef()`
+        //
+        // ```
+        // const Component = React.forwardRef(WrapComponent);
+        // Component.displayName = 'OtherName'
+        // ```
+        //
+        // `resolvedType` is `WrapComponent`
+        // `type` is Component
         return (
-          resolvedType.displayName || getDisplayName(resolvedType, 'Anonymous')
+          (type && type.displayName) ||
+          resolvedType.displayName ||
+          getDisplayName(resolvedType, 'Anonymous')
         );
       case HostRoot:
         return null;
