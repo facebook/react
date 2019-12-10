@@ -10,7 +10,7 @@ The easiest way to install this extension is as a browser add-on:
 
 You can also build and install this extension from source.
 
-DevTools embeds local versions of several NPM packages also in this workspae. If you have not already built them, you'll need to do that before getting started by running the following command in the root directory of this repository:
+DevTools embeds local versions of several NPM packages also in this workspace. If you have not already built them, you'll need to do that before getting started by running the following command in the root directory of this repository:
 ```sh
 yarn build -- react,react-dom,react-is,scheduler --type=NODE
 ```

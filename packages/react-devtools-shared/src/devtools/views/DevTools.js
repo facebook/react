@@ -24,8 +24,8 @@ import ViewElementSourceContext from './Components/ViewElementSourceContext';
 import {ProfilerContextController} from './Profiler/ProfilerContext';
 import {ModalDialogContextController} from './ModalDialog';
 import ReactLogo from './ReactLogo';
+import UnsupportedVersionDialog from './UnsupportedVersionDialog';
 import WarnIfLegacyBackendDetected from './WarnIfLegacyBackendDetected';
-import ShowWelcomeToTheNewDevToolsDialog from './ShowWelcomeToTheNewDevToolsDialog';
 
 import styles from './DevTools.css';
 
@@ -50,9 +50,9 @@ export type Props = {|
   canViewElementSourceFunction?: ?CanViewElementSource,
   defaultTab?: TabID,
   showTabBar?: boolean,
-  showWelcomeToTheNewDevToolsDialog?: boolean,
   store: Store,
   warnIfLegacyBackendDetected?: boolean,
+  warnIfUnsupportedVersionDetected?: boolean,
   viewElementSourceFunction?: ?ViewElementSource,
 
   // This property is used only by the web extension target.
@@ -92,9 +92,9 @@ export default function DevTools({
   overrideTab,
   profilerPortalContainer,
   showTabBar = false,
-  showWelcomeToTheNewDevToolsDialog = false,
   store,
   warnIfLegacyBackendDetected = false,
+  warnIfUnsupportedVersionDetected = false,
   viewElementSourceFunction,
 }: Props) {
   const [tab, setTab] = useState(defaultTab);
@@ -167,9 +167,7 @@ export default function DevTools({
             </ViewElementSourceContext.Provider>
           </SettingsContextController>
           {warnIfLegacyBackendDetected && <WarnIfLegacyBackendDetected />}
-          {showWelcomeToTheNewDevToolsDialog && (
-            <ShowWelcomeToTheNewDevToolsDialog />
-          )}
+          {warnIfUnsupportedVersionDetected && <UnsupportedVersionDialog />}
         </ModalDialogContextController>
       </StoreContext.Provider>
     </BridgeContext.Provider>

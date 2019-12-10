@@ -97,10 +97,7 @@ import {
 import {Callback, ShouldCapture, DidCapture} from 'shared/ReactSideEffectTags';
 import {ClassComponent} from 'shared/ReactWorkTags';
 
-import {
-  debugRenderPhaseSideEffects,
-  debugRenderPhaseSideEffectsForStrictMode,
-} from 'shared/ReactFeatureFlags';
+import {debugRenderPhaseSideEffectsForStrictMode} from 'shared/ReactFeatureFlags';
 
 import {StrictMode} from './ReactTypeOfMode';
 import {
@@ -373,9 +370,8 @@ function getStateFromUpdate<State>(
         if (__DEV__) {
           enterDisallowedContextReadInDEV();
           if (
-            debugRenderPhaseSideEffects ||
-            (debugRenderPhaseSideEffectsForStrictMode &&
-              workInProgress.mode & StrictMode)
+            debugRenderPhaseSideEffectsForStrictMode &&
+            workInProgress.mode & StrictMode
           ) {
             payload.call(instance, prevState, nextProps);
           }
@@ -402,9 +398,8 @@ function getStateFromUpdate<State>(
         if (__DEV__) {
           enterDisallowedContextReadInDEV();
           if (
-            debugRenderPhaseSideEffects ||
-            (debugRenderPhaseSideEffectsForStrictMode &&
-              workInProgress.mode & StrictMode)
+            debugRenderPhaseSideEffectsForStrictMode &&
+            workInProgress.mode & StrictMode
           ) {
             payload.call(instance, prevState, nextProps);
           }

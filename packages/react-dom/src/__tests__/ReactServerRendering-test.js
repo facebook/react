@@ -682,38 +682,40 @@ describe('ReactDOMServer', () => {
     expect(markup).toBe('<div></div>');
   });
 
-  it('throws for unsupported types on the server', () => {
-    expect(() => {
-      ReactDOMServer.renderToString(<React.Suspense />);
-    }).toThrow('ReactDOMServer does not yet support Suspense.');
+  if (!__EXPERIMENTAL__) {
+    it('throws for unsupported types on the server', () => {
+      expect(() => {
+        ReactDOMServer.renderToString(<React.Suspense />);
+      }).toThrow('ReactDOMServer does not yet support Suspense.');
 
-    async function fakeImport(result) {
-      return {default: result};
-    }
+      async function fakeImport(result) {
+        return {default: result};
+      }
 
-    expect(() => {
-      const LazyFoo = React.lazy(() =>
-        fakeImport(
-          new Promise(resolve =>
-            resolve(function Foo() {
-              return <div />;
-            }),
+      expect(() => {
+        const LazyFoo = React.lazy(() =>
+          fakeImport(
+            new Promise(resolve =>
+              resolve(function Foo() {
+                return <div />;
+              }),
+            ),
           ),
-        ),
-      );
-      ReactDOMServer.renderToString(<LazyFoo />);
-    }).toThrow('ReactDOMServer does not yet support lazy-loaded components.');
-  });
+        );
+        ReactDOMServer.renderToString(<LazyFoo />);
+      }).toThrow('ReactDOMServer does not yet support lazy-loaded components.');
+    });
 
-  it('throws when suspending on the server', () => {
-    function AsyncFoo() {
-      throw new Promise(() => {});
-    }
+    it('throws when suspending on the server', () => {
+      function AsyncFoo() {
+        throw new Promise(() => {});
+      }
 
-    expect(() => {
-      ReactDOMServer.renderToString(<AsyncFoo />);
-    }).toThrow('ReactDOMServer does not yet support Suspense.');
-  });
+      expect(() => {
+        ReactDOMServer.renderToString(<AsyncFoo />);
+      }).toThrow('ReactDOMServer does not yet support Suspense.');
+    });
+  }
 
   it('does not get confused by throwing null', () => {
     function Bad() {

@@ -53,6 +53,7 @@ type Config = {|
   supportsNativeInspection?: boolean,
   supportsReloadAndProfile?: boolean,
   supportsProfiling?: boolean,
+  supportsTraceUpdates?: boolean,
 |};
 
 export type Capabilities = {|
@@ -73,6 +74,7 @@ export default class Store extends EventEmitter<{|
   supportsNativeStyleEditor: [],
   supportsProfiling: [],
   supportsReloadAndProfile: [],
+  unsupportedRendererVersionDetected: [],
 |}> {
   _bridge: FrontendBridge;
 
@@ -124,6 +126,9 @@ export default class Store extends EventEmitter<{|
   _supportsNativeInspection: boolean = true;
   _supportsProfiling: boolean = false;
   _supportsReloadAndProfile: boolean = false;
+  _supportsTraceUpdates: boolean = false;
+
+  _unsupportedRendererVersionDetected: boolean = false;
 
   // Total number of visible elements (within all roots).
   // Used for windowing purposes.
@@ -154,6 +159,7 @@ export default class Store extends EventEmitter<{|
         supportsNativeInspection,
         supportsProfiling,
         supportsReloadAndProfile,
+        supportsTraceUpdates,
       } = config;
       this._supportsNativeInspection = supportsNativeInspection !== false;
       if (supportsProfiling) {
@@ -161,6 +167,9 @@ export default class Store extends EventEmitter<{|
       }
       if (supportsReloadAndProfile) {
         this._supportsReloadAndProfile = true;
+      }
+      if (supportsTraceUpdates) {
+        this._supportsTraceUpdates = true;
       }
     }
 
@@ -178,6 +187,10 @@ export default class Store extends EventEmitter<{|
     bridge.addListener(
       'isNativeStyleEditorSupported',
       this.onBridgeNativeStyleEditorSupported,
+    );
+    bridge.addListener(
+      'unsupportedRendererVersion',
+      this.onBridgeUnsupportedRendererVersion,
     );
 
     this._profilerStore = new ProfilerStore(bridge, this, isProfiling);
@@ -329,12 +342,19 @@ export default class Store extends EventEmitter<{|
   get supportsProfiling(): boolean {
     return this._supportsProfiling;
   }
-
   get supportsReloadAndProfile(): boolean {
     // Does the DevTools shell support reloading and eagerly injecting the renderer interface?
     // And if so, can the backend use the localStorage API?
     // Both of these are required for the reload-and-profile feature to work.
     return this._supportsReloadAndProfile && this._isBackendStorageAPISupported;
+  }
+
+  get supportsTraceUpdates(): boolean {
+    return this._supportsTraceUpdates;
+  }
+
+  get unsupportedRendererVersionDetected(): boolean {
+    return this._unsupportedRendererVersionDetected;
   }
 
   containsElement(id: number): boolean {
@@ -1008,5 +1028,11 @@ export default class Store extends EventEmitter<{|
     this._isBackendStorageAPISupported = isBackendStorageAPISupported;
 
     this.emit('supportsReloadAndProfile');
+  };
+
+  onBridgeUnsupportedRendererVersion = () => {
+    this._unsupportedRendererVersionDetected = true;
+
+    this.emit('unsupportedRendererVersionDetected');
   };
 }

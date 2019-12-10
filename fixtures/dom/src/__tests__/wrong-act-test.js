@@ -17,6 +17,7 @@ let TestRenderer;
 let ARTTest;
 
 global.__DEV__ = process.env.NODE_ENV !== 'production';
+global.__EXPERIMENTAL__ = process.env.RELEASE_CHANNEL === 'experimental';
 
 expect.extend(require('../toWarnDev'));
 
@@ -176,19 +177,21 @@ it("doesn't warn if you use nested acts from different renderers", () => {
   });
 });
 
-it('warns when using createRoot() + .render', () => {
-  const root = ReactDOM.unstable_createRoot(document.createElement('div'));
-  expect(() => {
-    TestRenderer.act(() => {
-      root.render(<App />);
-    });
-  }).toWarnDev(
-    [
-      'In Concurrent or Sync modes, the "scheduler" module needs to be mocked',
-      "It looks like you're using the wrong act()",
-    ],
-    {
-      withoutStack: true,
-    }
-  );
-});
+if (__EXPERIMENTAL__) {
+  it('warns when using createRoot() + .render', () => {
+    const root = ReactDOM.createRoot(document.createElement('div'));
+    expect(() => {
+      TestRenderer.act(() => {
+        root.render(<App />);
+      });
+    }).toWarnDev(
+      [
+        'In Concurrent or Sync modes, the "scheduler" module needs to be mocked',
+        "It looks like you're using the wrong act()",
+      ],
+      {
+        withoutStack: true,
+      }
+    );
+  });
+}

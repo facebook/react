@@ -9,6 +9,7 @@
 
 import type {Fiber} from 'react-reconciler/src/ReactFiber';
 
+import {PLUGIN_EVENT_SYSTEM} from 'legacy-events/EventSystemFlags';
 import {
   getListener,
   runExtractedPluginEventsInBatch,
@@ -17,7 +18,10 @@ import {registrationNameModules} from 'legacy-events/EventPluginRegistry';
 import {batchedUpdates} from 'legacy-events/ReactGenericBatching';
 
 import type {AnyNativeEvent} from 'legacy-events/PluginModuleType';
-import {enableFlareAPI} from 'shared/ReactFeatureFlags';
+import {
+  enableFlareAPI,
+  enableNativeTargetAsInstance,
+} from 'shared/ReactFeatureFlags';
 import type {TopLevelType} from 'legacy-events/TopLevelEventTypes';
 import {dispatchEventForResponderEventSystem} from './ReactFabricEventResponderSystem';
 
@@ -29,6 +33,7 @@ export function dispatchEvent(
   nativeEvent: AnyNativeEvent,
 ) {
   const targetFiber = (target: null | Fiber);
+
   if (enableFlareAPI) {
     // React Flare event system
     dispatchEventForResponderEventSystem(
@@ -37,13 +42,24 @@ export function dispatchEvent(
       (nativeEvent: any),
     );
   }
+
+  let eventTarget = null;
+  if (enableNativeTargetAsInstance) {
+    if (targetFiber != null) {
+      eventTarget = targetFiber.stateNode.canonical;
+    }
+  } else {
+    eventTarget = nativeEvent.target;
+  }
+
   batchedUpdates(function() {
     // Heritage plugin event system
     runExtractedPluginEventsInBatch(
       topLevelType,
       targetFiber,
       nativeEvent,
-      nativeEvent.target,
+      eventTarget,
+      PLUGIN_EVENT_SYSTEM,
     );
   });
   // React Native doesn't use ReactControlledComponent but if it did, here's

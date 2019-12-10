@@ -67,6 +67,10 @@ function setup(hook) {
 
   initBackend(hook, agent, window);
 
+  // Let the frontend know that the backend has attached listeners and is ready for messages.
+  // This covers the case of of syncing saved values after reloading/navigating while DevTools remain open.
+  bridge.send('extensionBackendInitialized');
+
   // Setup React Native style editor if a renderer like react-native-web has injected it.
   if (hook.resolveRNStyle) {
     setupNativeStyleEditor(

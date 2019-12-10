@@ -197,7 +197,7 @@ describe('ReactIncrementalErrorHandling', () => {
     expect(Scheduler).toFlushAndYieldThrough([
       'Indirection',
       // Now that the tree is complete, and there's no remaining work, React
-      // reverts to sync mode to retry one more time before handling the error.
+      // reverts to legacy mode to retry one more time before handling the error.
 
       'ErrorBoundary (try)',
       'Indirection',

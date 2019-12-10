@@ -507,6 +507,7 @@ const ResponderEventPlugin = {
     targetInst,
     nativeEvent,
     nativeEventTarget,
+    eventSystemFlags,
   ) {
     if (isStartish(topLevelType)) {
       trackedTouchCount += 1;

@@ -5,80 +5,123 @@
     <meta charset="utf8" />
     <style>
       html {
-        display: flex;
+        height: 100%;
         font-family: sans-serif;
       }
       body {
+        height: 100%;
         margin: 0;
         padding: 0;
-        flex: 1;
+        background-color: #fff;
+        color: #777d88;
+      }
+
+      .container {
+        height: 100%;
         display: flex;
-      }
-      #container {
-        display: flex;
-        position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background-color: white;
-      }
-      #logs {
-        position: fixed;
-        top: 0;
-        left: 0;
-        white-space: pre;
-      }
-      #waiting {
         flex-direction: column;
-        text-align: center;
-        font-family: sans-serif;
-        color: #aaa;
-        flex: 1;
+        align-items: center;
+        justify-content: center;
         overflow: auto;
+        padding: 1rem;
       }
-      #waiting h2 {
-        padding: 30px;
-      }
-      #waiting p {
+      p {
         padding: 0;
         margin: 0;
       }
+
       .input {
-        display: inline-block;
-        max-width: 100%;
+        display: block;
         font-weight: 100;
+        padding: 0 0.25rem;
         border: 1px solid #aaa;
-        padding: 0.125rem 0.25rem;
-        margin: 0.125rem;
+        background-color: #fff;
         color: #666;
       }
+
+      .link {
+        color: #1478fa;
+        text-decoration: none;
+      }
+      .link:hover {
+        text-decoration: underline;
+      }
+
+      .waiting-header {
+        padding: 0.5rem;
+        display: inline-block;
+        position: absolute;
+        right: 0.5rem;
+        top: 0.5rem;
+        border-radius: 0.25rem;
+        background-color: rgba(0,1,2,.6);
+        color: white;
+        border: none;
+        font-weight: 100;
+        font-style: italic;
+      }
+
+      .boxes {
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+        justify-content: center;
+      }
+      .box {
+        text-align: center;
+        border-radius: 0.5rem;
+        background-color: #f7f7f7;
+        border: 1px solid #eee;
+        color: #777d88;
+        padding: 1rem;
+        margin-top: 1rem;
+      }
+      .box:first-of-type {
+        margin-top: 0;
+      }
+
+      .box-header {
+        text-align: center;
+        color: #5f6673;
+        font-size: 1.25rem;
+        margin-bottom: 0.5rem;
+      }
+      .box-content {
+        line-height: 1.5rem;
+      }
+
       #loading-status {
-        margin-top: 10px;
+        text-align: center;
+        margin-top: 1rem;
       }
     </style>
   </head>
   <body>
-    <div id="container">
-      <div id="waiting" style="-webkit-user-select: none; -webkit-app-region: drag;">
-        <h2>Waiting for React to connect…</h2>
-        <div>
-          <h4>React Native</h4>
-          <div>The active app will automatically connect in a few seconds.</div>
-          <br />
-          <h4>React DOM</h4>
-          <div>
-            Add <span class="input" contenteditable="true" id="localhost"></span><br />
-            or <span class="input" contenteditable="true" id="byip"></span>
-          </div>
-          <div>
-            to the top of the page you want to debug,
-            <br />
-            <b>before</b> importing React DOM.
+    <div id="container" class="container" style="-webkit-user-select: none; -webkit-app-region: drag;">
+      <div class="waiting-header">Waiting for React to connect…</div>
+      <div class="boxes">
+        <div class="box">
+          <div class="box-header">React Native</div>
+          <div class="box-content">
+            Open the <a
+              id="rn-help-link"
+              class="link"
+              target="_blank"
+              href="https://facebook.github.io/react-native/docs/debugging#accessing-the-in-app-developer-menu"
+            >in-app developer menu</a> to connect.
           </div>
         </div>
-        <br />
-        <br />
+        <div class="box">
+          <div class="box-header">React DOM</div>
+          <div class="box-content">
+            Add one of the following:
+            <span class="input" contenteditable="true" id="localhost"></span>
+            <span class="input" contenteditable="true" id="byip"></span>
+            to the top of the page you want to debug,
+            <br />
+            <strong>before</strong> importing React DOM.
+          </div>
+        </div>
         <div id="loading-status">Starting the server…</div>
       </div>
     </div>
@@ -97,6 +140,12 @@
           selection.addRange(range);
         }
       }
+
+      const link = $('#rn-help-link');
+      link.addEventListener('click', event => {
+        event.preventDefault();
+        require('electron').shell.openExternal(link.href);
+      });
 
       const $localhost = $("#localhost");
       $localhost.innerText = `<script src="http://localhost:${port}"></` + 'script>';
@@ -121,7 +170,10 @@
       window.server = devtools
         .setContentDOMNode(document.getElementById("container"))
         .setStatusListener(function(status) {
-          document.getElementById("loading-status").innerText = status;
+          const element = document.getElementById("loading-status");
+          if (element) {
+            element.innerText = status;
+          }
         })
         .startServer(port);
     </script>

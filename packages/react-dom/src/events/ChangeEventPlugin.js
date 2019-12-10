@@ -265,6 +265,7 @@ const ChangeEventPlugin = {
     targetInst,
     nativeEvent,
     nativeEventTarget,
+    eventSystemFlags,
   ) {
     const targetNode = targetInst ? getNodeFromInstance(targetInst) : window;
 

@@ -15,7 +15,7 @@ import type {ReactProvider, ReactContext} from 'shared/ReactTypes';
 import React from 'react';
 import invariant from 'shared/invariant';
 import getComponentName from 'shared/getComponentName';
-import lowPriorityWarning from 'shared/lowPriorityWarning';
+import lowPriorityWarningWithoutStack from 'shared/lowPriorityWarningWithoutStack';
 import warning from 'shared/warning';
 import warningWithoutStack from 'shared/warningWithoutStack';
 import describeComponentFrame from 'shared/describeComponentFrame';
@@ -370,7 +370,7 @@ function createOpenTagMarkup(
     if (!hasOwnProperty.call(props, propKey)) {
       continue;
     }
-    if (enableFlareAPI && propKey === 'listeners') {
+    if (enableFlareAPI && propKey === 'DEPRECATED_flareListeners') {
       continue;
     }
     let propValue = props[propKey];
@@ -588,7 +588,7 @@ function resolve(
             const componentName = getComponentName(Component) || 'Unknown';
 
             if (!didWarnAboutDeprecatedWillMount[componentName]) {
-              lowPriorityWarning(
+              lowPriorityWarningWithoutStack(
                 false,
                 // keep this warning in sync with ReactStrictModeWarning.js
                 'componentWillMount has been renamed, and is not recommended for use. ' +
@@ -687,12 +687,14 @@ function resolve(
             );
           }
         } else {
-          warningWithoutStack(
-            false,
-            '%s.getChildContext(): childContextTypes must be defined in order to ' +
-              'use getChildContext().',
-            getComponentName(Component) || 'Unknown',
-          );
+          if (__DEV__) {
+            warningWithoutStack(
+              false,
+              '%s.getChildContext(): childContextTypes must be defined in order to ' +
+                'use getChildContext().',
+              getComponentName(Component) || 'Unknown',
+            );
+          }
         }
       }
       if (childContext) {

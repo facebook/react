@@ -25,9 +25,7 @@ let onWorkStopped;
 
 function loadModules() {
   ReactFeatureFlags = require('shared/ReactFeatureFlags');
-  ReactFeatureFlags.debugRenderPhaseSideEffects = false;
   ReactFeatureFlags.debugRenderPhaseSideEffectsForStrictMode = false;
-  ReactFeatureFlags.enableSuspenseServerRenderer = true;
   ReactFeatureFlags.enableProfilerTimer = true;
   ReactFeatureFlags.enableSchedulerTracing = true;
   ReactFeatureFlags.replayFailedUnitOfWorkWithInvokeGuardedCallback = false;
@@ -63,6 +61,11 @@ describe('ReactDOMTracing', () => {
 
     loadModules();
   });
+
+  if (!__EXPERIMENTAL__) {
+    it("empty test so Jest doesn't complain", () => {});
+    return;
+  }
 
   describe('interaction tracing', () => {
     describe('hidden', () => {
@@ -101,7 +104,7 @@ describe('ReactDOMTracing', () => {
         const onRender = jest.fn();
 
         const container = document.createElement('div');
-        const root = ReactDOM.unstable_createRoot(container);
+        const root = ReactDOM.createRoot(container);
         SchedulerTracing.unstable_trace('initialization', 0, () => {
           interaction = Array.from(SchedulerTracing.unstable_getCurrent())[0];
           TestUtils.act(() => {
@@ -134,7 +137,12 @@ describe('ReactDOMTracing', () => {
         expect(
           onInteractionScheduledWorkCompleted,
         ).toHaveBeenLastNotifiedOfInteraction(interaction);
-        expect(onRender).toHaveBeenCalledTimes(3);
+        // TODO: This is 4 instead of 3 because this update was scheduled at
+        // idle priority, and idle updates are slightly higher priority than
+        // offscreen work. So it takes two render passes to finish it. Profiler
+        // calls `onRender` for the first render even though everything
+        // bails out.
+        expect(onRender).toHaveBeenCalledTimes(4);
         expect(onRender).toHaveLastRenderedWithInteractions(
           new Set([interaction]),
         );
@@ -166,7 +174,7 @@ describe('ReactDOMTracing', () => {
         const onRender = jest.fn();
 
         const container = document.createElement('div');
-        const root = ReactDOM.unstable_createRoot(container);
+        const root = ReactDOM.createRoot(container);
         SchedulerTracing.unstable_trace('initialization', 0, () => {
           interaction = Array.from(SchedulerTracing.unstable_getCurrent())[0];
 
@@ -245,7 +253,7 @@ describe('ReactDOMTracing', () => {
         const onRender = jest.fn();
 
         const container = document.createElement('div');
-        const root = ReactDOM.unstable_createRoot(container);
+        const root = ReactDOM.createRoot(container);
         SchedulerTracing.unstable_trace('initialization', 0, () => {
           interaction = Array.from(SchedulerTracing.unstable_getCurrent())[0];
           TestUtils.act(() => {
@@ -281,7 +289,12 @@ describe('ReactDOMTracing', () => {
         expect(
           onInteractionScheduledWorkCompleted,
         ).toHaveBeenLastNotifiedOfInteraction(interaction);
-        expect(onRender).toHaveBeenCalledTimes(3);
+        // TODO: This is 4 instead of 3 because this update was scheduled at
+        // idle priority, and idle updates are slightly higher priority than
+        // offscreen work. So it takes two render passes to finish it. Profiler
+        // calls `onRender` for the first render even though everything
+        // bails out.
+        expect(onRender).toHaveBeenCalledTimes(4);
         expect(onRender).toHaveLastRenderedWithInteractions(
           new Set([interaction]),
         );
@@ -334,7 +347,7 @@ describe('ReactDOMTracing', () => {
 
         const onRender = jest.fn();
         const container = document.createElement('div');
-        const root = ReactDOM.unstable_createRoot(container);
+        const root = ReactDOM.createRoot(container);
 
         // Schedule some idle work without any interactions.
         TestUtils.act(() => {
@@ -438,7 +451,7 @@ describe('ReactDOMTracing', () => {
 
         const onRender = jest.fn();
         const container = document.createElement('div');
-        const root = ReactDOM.unstable_createRoot(container);
+        const root = ReactDOM.createRoot(container);
 
         TestUtils.act(() => {
           root.render(
@@ -509,7 +522,7 @@ describe('ReactDOMTracing', () => {
       });
 
       it('should properly trace interactions through a multi-pass SuspenseList render', () => {
-        const SuspenseList = React.unstable_SuspenseList;
+        const SuspenseList = React.SuspenseList;
         const Suspense = React.Suspense;
         function Text({text}) {
           Scheduler.unstable_yieldValue(text);
@@ -535,7 +548,7 @@ describe('ReactDOMTracing', () => {
         }
 
         const container = document.createElement('div');
-        const root = ReactDOM.unstable_createRoot(container);
+        const root = ReactDOM.createRoot(container);
 
         let interaction;
 
@@ -548,8 +561,8 @@ describe('ReactDOMTracing', () => {
 
           expect(Scheduler).toFlushAndYieldThrough(['A']);
 
-          Scheduler.unstable_advanceTime(300);
-          jest.advanceTimersByTime(300);
+          Scheduler.unstable_advanceTime(200);
+          jest.advanceTimersByTime(200);
 
           expect(Scheduler).toFlushAndYieldThrough(['B']);
 
@@ -617,7 +630,7 @@ describe('ReactDOMTracing', () => {
 
         let interaction;
 
-        const root = ReactDOM.unstable_createRoot(container, {hydrate: true});
+        const root = ReactDOM.createRoot(container, {hydrate: true});
 
         // Hydrate it.
         SchedulerTracing.unstable_trace('initialization', 0, () => {
@@ -676,7 +689,7 @@ describe('ReactDOMTracing', () => {
 
         let interaction;
 
-        const root = ReactDOM.unstable_createRoot(container, {hydrate: true});
+        const root = ReactDOM.createRoot(container, {hydrate: true});
 
         // Start hydrating but simulate blocking for suspense data.
         suspend = true;
@@ -745,7 +758,7 @@ describe('ReactDOMTracing', () => {
 
         let interaction;
 
-        const root = ReactDOM.unstable_createRoot(container, {hydrate: true});
+        const root = ReactDOM.createRoot(container, {hydrate: true});
 
         // Hydrate without suspending to fill in the client-rendered content.
         suspend = false;

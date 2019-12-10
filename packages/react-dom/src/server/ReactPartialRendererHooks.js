@@ -7,13 +7,16 @@
  * @flow
  */
 
-import type {Dispatcher as DispatcherType} from 'react-reconciler/src/ReactFiberHooks';
+import type {
+  Dispatcher as DispatcherType,
+  TimeoutConfig,
+} from 'react-reconciler/src/ReactFiberHooks';
 import type {ThreadID} from './ReactThreadIDAllocator';
 import type {
   ReactContext,
   ReactEventResponderListener,
 } from 'shared/ReactTypes';
-
+import type {SuspenseConfig} from 'react-reconciler/src/ReactFiberSuspenseConfig';
 import {validateContextBounds} from './ReactPartialRendererContext';
 
 import invariant from 'shared/invariant';
@@ -389,16 +392,16 @@ export function useLayoutEffect(
 ) {
   if (__DEV__) {
     currentHookNameInDev = 'useLayoutEffect';
+    warning(
+      false,
+      'useLayoutEffect does nothing on the server, because its effect cannot ' +
+        "be encoded into the server renderer's output format. This will lead " +
+        'to a mismatch between the initial, non-hydrated UI and the intended ' +
+        'UI. To avoid this, useLayoutEffect should only be used in ' +
+        'components that render exclusively on the client. ' +
+        'See https://fb.me/react-uselayouteffect-ssr for common fixes.',
+    );
   }
-  warning(
-    false,
-    'useLayoutEffect does nothing on the server, because its effect cannot ' +
-      "be encoded into the server renderer's output format. This will lead " +
-      'to a mismatch between the initial, non-hydrated UI and the intended ' +
-      'UI. To avoid this, useLayoutEffect should only be used in ' +
-      'components that render exclusively on the client. ' +
-      'See https://fb.me/react-uselayouteffect-ssr for common fixes.',
-  );
 }
 
 function dispatchAction<A>(
@@ -457,6 +460,21 @@ function useResponder(responder, props): ReactEventResponderListener<any, any> {
   };
 }
 
+function useDeferredValue<T>(value: T, config: TimeoutConfig | null | void): T {
+  resolveCurrentlyRenderingComponent();
+  return value;
+}
+
+function useTransition(
+  config: SuspenseConfig | null | void,
+): [(callback: () => void) => void, boolean] {
+  resolveCurrentlyRenderingComponent();
+  const startTransition = callback => {
+    callback();
+  };
+  return [startTransition, false];
+}
+
 function noop(): void {}
 
 export let currentThreadID: ThreadID = 0;
@@ -481,4 +499,6 @@ export const Dispatcher: DispatcherType = {
   // Debugging effect
   useDebugValue: noop,
   useResponder,
+  useDeferredValue,
+  useTransition,
 };

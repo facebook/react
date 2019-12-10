@@ -52,7 +52,7 @@ import {
   FundamentalComponent,
   ScopeComponent,
 } from 'shared/ReactWorkTags';
-import {NoMode, BatchedMode} from './ReactTypeOfMode';
+import {NoMode, BlockingMode} from './ReactTypeOfMode';
 import {
   Ref,
   Update,
@@ -128,7 +128,6 @@ import {
 import {createFundamentalStateInstance} from './ReactFiberFundamental';
 import {Never} from './ReactFiberExpirationTime';
 import {resetChildFibers} from './ReactChildFiber';
-import {updateEventListeners} from './ReactFiberEvents';
 import {createScopeMethods} from './ReactFiberScope';
 
 function markUpdate(workInProgress: Fiber) {
@@ -686,8 +685,8 @@ function completeWork(
         );
 
         if (enableFlareAPI) {
-          const prevListeners = current.memoizedProps.listeners;
-          const nextListeners = newProps.listeners;
+          const prevListeners = current.memoizedProps.DEPRECATED_flareListeners;
+          const nextListeners = newProps.DEPRECATED_flareListeners;
           if (prevListeners !== nextListeners) {
             markUpdate(workInProgress);
           }
@@ -728,13 +727,9 @@ function completeWork(
             markUpdate(workInProgress);
           }
           if (enableFlareAPI) {
-            const listeners = newProps.listeners;
+            const listeners = newProps.DEPRECATED_flareListeners;
             if (listeners != null) {
-              updateEventListeners(
-                listeners,
-                workInProgress,
-                rootContainerInstance,
-              );
+              markUpdate(workInProgress);
             }
           }
         } else {
@@ -752,13 +747,9 @@ function completeWork(
           workInProgress.stateNode = instance;
 
           if (enableFlareAPI) {
-            const listeners = newProps.listeners;
+            const listeners = newProps.DEPRECATED_flareListeners;
             if (listeners != null) {
-              updateEventListeners(
-                listeners,
-                workInProgress,
-                rootContainerInstance,
-              );
+              markUpdate(workInProgress);
             }
           }
 
@@ -870,10 +861,9 @@ function completeWork(
       const nextDidTimeout = nextState !== null;
       let prevDidTimeout = false;
       if (current === null) {
-        // In cases where we didn't find a suitable hydration boundary we never
-        // put this in dehydrated mode, but we still need to pop the hydration
-        // state since we might be inside the insertion tree.
-        popHydrationState(workInProgress);
+        if (workInProgress.memoizedProps.fallback !== undefined) {
+          popHydrationState(workInProgress);
+        }
       } else {
         const prevState: null | SuspenseState = current.memoizedState;
         prevDidTimeout = prevState !== null;
@@ -900,12 +890,12 @@ function completeWork(
       }
 
       if (nextDidTimeout && !prevDidTimeout) {
-        // If this subtreee is running in batched mode we can suspend,
+        // If this subtreee is running in blocking mode we can suspend,
         // otherwise we won't suspend.
         // TODO: This will still suspend a synchronous tree if anything
         // in the concurrent tree already suspended during this render.
         // This is a known bug.
-        if ((workInProgress.mode & BatchedMode) !== NoMode) {
+        if ((workInProgress.mode & BlockingMode) !== NoMode) {
           // TODO: Move this back to throwException because this is too late
           // if this is a large tree which is common for initial loads. We
           // don't know if we should restart a render or not until we get
@@ -1054,7 +1044,10 @@ function completeWork(
                 // Rerender the whole list, but this time, we'll force fallbacks
                 // to stay in place.
                 // Reset the effect list before doing the second pass since that's now invalid.
-                workInProgress.firstEffect = workInProgress.lastEffect = null;
+                if (renderState.lastEffect === null) {
+                  workInProgress.firstEffect = null;
+                }
+                workInProgress.lastEffect = renderState.lastEffect;
                 // Reset the child fibers to their original state.
                 resetChildFibers(workInProgress, renderExpirationTime);
 
@@ -1083,20 +1076,24 @@ function completeWork(
           if (suspended !== null) {
             workInProgress.effectTag |= DidCapture;
             didSuspendAlready = true;
+
+            // Ensure we transfer the update queue to the parent so that it doesn't
+            // get lost if this row ends up dropped during a second pass.
+            let newThennables = suspended.updateQueue;
+            if (newThennables !== null) {
+              workInProgress.updateQueue = newThennables;
+              workInProgress.effectTag |= Update;
+            }
+
             cutOffTailIfNeeded(renderState, true);
             // This might have been modified.
             if (
               renderState.tail === null &&
-              renderState.tailMode === 'hidden'
+              renderState.tailMode === 'hidden' &&
+              !renderedTail.alternate
             ) {
               // We need to delete the row we just rendered.
-              // Ensure we transfer the update queue to the parent.
-              let newThennables = suspended.updateQueue;
-              if (newThennables !== null) {
-                workInProgress.updateQueue = newThennables;
-                workInProgress.effectTag |= Update;
-              }
-              // Reset the effect list to what it w as before we rendered this
+              // Reset the effect list to what it was before we rendered this
               // child. The nested children have already appended themselves.
               let lastEffect = (workInProgress.lastEffect =
                 renderState.lastEffect);
@@ -1108,7 +1105,10 @@ function completeWork(
               return null;
             }
           } else if (
-            now() > renderState.tailExpiration &&
+            // The time it took to render last row is greater than time until
+            // the expiration.
+            now() * 2 - renderState.renderingStartTime >
+              renderState.tailExpiration &&
             renderExpirationTime > Never
           ) {
             // We have now passed our CPU deadline and we'll just give up further
@@ -1158,12 +1158,19 @@ function completeWork(
           // until we just give up and show what we have so far.
           const TAIL_EXPIRATION_TIMEOUT_MS = 500;
           renderState.tailExpiration = now() + TAIL_EXPIRATION_TIMEOUT_MS;
+          // TODO: This is meant to mimic the train model or JND but this
+          // is a per component value. It should really be since the start
+          // of the total render or last commit. Consider using something like
+          // globalMostRecentFallbackTime. That doesn't account for being
+          // suspended for part of the time or when it's a new render.
+          // It should probably use a global start time value instead.
         }
         // Pop a row.
         let next = renderState.tail;
         renderState.rendering = next;
         renderState.tail = next.sibling;
         renderState.lastEffect = workInProgress.lastEffect;
+        renderState.renderingStartTime = now();
         next.sibling = null;
 
         // Restore the context.
@@ -1246,14 +1253,9 @@ function completeWork(
           workInProgress.stateNode = scopeInstance;
           scopeInstance.methods = createScopeMethods(type, scopeInstance);
           if (enableFlareAPI) {
-            const listeners = newProps.listeners;
+            const listeners = newProps.DEPRECATED_flareListeners;
             if (listeners != null) {
-              const rootContainerInstance = getRootHostContainer();
-              updateEventListeners(
-                listeners,
-                workInProgress,
-                rootContainerInstance,
-              );
+              markUpdate(workInProgress);
             }
           }
           if (workInProgress.ref !== null) {
@@ -1262,8 +1264,9 @@ function completeWork(
           }
         } else {
           if (enableFlareAPI) {
-            const prevListeners = current.memoizedProps.listeners;
-            const nextListeners = newProps.listeners;
+            const prevListeners =
+              current.memoizedProps.DEPRECATED_flareListeners;
+            const nextListeners = newProps.DEPRECATED_flareListeners;
             if (
               prevListeners !== nextListeners ||
               workInProgress.ref !== null
@@ -1285,8 +1288,9 @@ function completeWork(
     default:
       invariant(
         false,
-        'Unknown unit of work tag. This error is likely caused by a bug in ' +
+        'Unknown unit of work tag (%s). This error is likely caused by a bug in ' +
           'React. Please file an issue.',
+        workInProgress.tag,
       );
   }
 

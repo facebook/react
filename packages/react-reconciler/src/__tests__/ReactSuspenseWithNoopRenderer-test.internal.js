@@ -10,6 +10,11 @@ let TextResource;
 let textResourceShouldFail;
 
 describe('ReactSuspenseWithNoopRenderer', () => {
+  if (!__EXPERIMENTAL__) {
+    it("empty test so Jest doesn't complain", () => {});
+    return;
+  }
+
   beforeEach(() => {
     jest.resetModules();
     ReactFeatureFlags = require('shared/ReactFeatureFlags');
@@ -1392,6 +1397,40 @@ describe('ReactSuspenseWithNoopRenderer', () => {
         expect(Scheduler).toFlushExpired(['Hi']);
       });
     }
+
+    it('handles errors in the return path of a component that suspends', async () => {
+      // Covers an edge case where an error is thrown inside the complete phase
+      // of a component that is in the return path of a component that suspends.
+      // The second error should also be handled (i.e. able to be captured by
+      // an error boundary.
+      class ErrorBoundary extends React.Component {
+        state = {error: null};
+        static getDerivedStateFromError(error, errorInfo) {
+          return {error};
+        }
+        render() {
+          if (this.state.error) {
+            return `Caught an error: ${this.state.error.message}`;
+          }
+          return this.props.children;
+        }
+      }
+
+      ReactNoop.renderLegacySyncRoot(
+        <ErrorBoundary>
+          <Suspense fallback="Loading...">
+            <errorInCompletePhase>
+              <AsyncText ms={1000} text="Async" />
+            </errorInCompletePhase>
+          </Suspense>
+        </ErrorBoundary>,
+      );
+
+      expect(Scheduler).toHaveYielded(['Suspend! [Async]']);
+      expect(ReactNoop).toMatchRenderedOutput(
+        'Caught an error: Error in host config.',
+      );
+    });
   });
 
   it('does not call lifecycles of a suspended component', async () => {
@@ -1471,6 +1510,165 @@ describe('ReactSuspenseWithNoopRenderer', () => {
         <span prop="Loading..." />
       </>,
     );
+  });
+
+  it('does not call lifecycles of a suspended component (hooks)', async () => {
+    function TextWithLifecycle(props) {
+      React.useLayoutEffect(
+        () => {
+          Scheduler.unstable_yieldValue(`Layout Effect [${props.text}]`);
+          return () => {
+            Scheduler.unstable_yieldValue(
+              `Destroy Layout Effect [${props.text}]`,
+            );
+          };
+        },
+        [props.text],
+      );
+      React.useEffect(
+        () => {
+          Scheduler.unstable_yieldValue(`Effect [${props.text}]`);
+          return () => {
+            Scheduler.unstable_yieldValue(`Destroy Effect [${props.text}]`);
+          };
+        },
+        [props.text],
+      );
+      return <Text {...props} />;
+    }
+
+    function AsyncTextWithLifecycle(props) {
+      React.useLayoutEffect(
+        () => {
+          Scheduler.unstable_yieldValue(`Layout Effect [${props.text}]`);
+          return () => {
+            Scheduler.unstable_yieldValue(
+              `Destroy Layout Effect [${props.text}]`,
+            );
+          };
+        },
+        [props.text],
+      );
+      React.useEffect(
+        () => {
+          Scheduler.unstable_yieldValue(`Effect [${props.text}]`);
+          return () => {
+            Scheduler.unstable_yieldValue(`Destroy Effect [${props.text}]`);
+          };
+        },
+        [props.text],
+      );
+      const text = props.text;
+      const ms = props.ms;
+      try {
+        TextResource.read([text, ms]);
+        Scheduler.unstable_yieldValue(text);
+        return <span prop={text} />;
+      } catch (promise) {
+        if (typeof promise.then === 'function') {
+          Scheduler.unstable_yieldValue(`Suspend! [${text}]`);
+        } else {
+          Scheduler.unstable_yieldValue(`Error! [${text}]`);
+        }
+        throw promise;
+      }
+    }
+
+    function App({text}) {
+      return (
+        <Suspense fallback={<TextWithLifecycle text="Loading..." />}>
+          <TextWithLifecycle text="A" />
+          <AsyncTextWithLifecycle ms={100} text={text} />
+          <TextWithLifecycle text="C" />
+        </Suspense>
+      );
+    }
+
+    ReactNoop.renderLegacySyncRoot(<App text="B" />, () =>
+      Scheduler.unstable_yieldValue('Commit root'),
+    );
+    expect(Scheduler).toHaveYielded([
+      'A',
+      'Suspend! [B]',
+      'C',
+      'Loading...',
+
+      'Layout Effect [A]',
+      // B's effect should not fire because it suspended
+      // 'Layout Effect [B]',
+      'Layout Effect [C]',
+      'Layout Effect [Loading...]',
+      'Commit root',
+    ]);
+
+    // Flush passive effects.
+    expect(Scheduler).toFlushAndYield([
+      'Effect [A]',
+      // B's effect should not fire because it suspended
+      // 'Effect [B]',
+      'Effect [C]',
+      'Effect [Loading...]',
+    ]);
+
+    expect(ReactNoop).toMatchRenderedOutput(
+      <>
+        <span hidden={true} prop="A" />
+        <span hidden={true} prop="C" />
+        <span prop="Loading..." />
+      </>,
+    );
+
+    Scheduler.unstable_advanceTime(500);
+    await advanceTimers(500);
+
+    expect(Scheduler).toHaveYielded(['Promise resolved [B]']);
+
+    expect(Scheduler).toFlushAndYield([
+      'B',
+      'Destroy Layout Effect [Loading...]',
+      'Destroy Effect [Loading...]',
+      'Layout Effect [B]',
+      'Effect [B]',
+    ]);
+
+    // Update
+    ReactNoop.renderLegacySyncRoot(<App text="B2" />, () =>
+      Scheduler.unstable_yieldValue('Commit root'),
+    );
+
+    expect(Scheduler).toHaveYielded([
+      'A',
+      'Suspend! [B2]',
+      'C',
+      'Loading...',
+
+      // B2's effect should not fire because it suspended
+      // 'Layout Effect [B2]',
+      'Layout Effect [Loading...]',
+      'Commit root',
+    ]);
+
+    // Flush passive effects.
+    expect(Scheduler).toFlushAndYield([
+      // B2's effect should not fire because it suspended
+      // 'Effect [B2]',
+      'Effect [Loading...]',
+    ]);
+
+    Scheduler.unstable_advanceTime(500);
+    await advanceTimers(500);
+
+    expect(Scheduler).toHaveYielded(['Promise resolved [B2]']);
+
+    expect(Scheduler).toFlushAndYield([
+      'B2',
+      'Destroy Layout Effect [Loading...]',
+      'Destroy Effect [Loading...]',
+      'Destroy Layout Effect [B]',
+      'Layout Effect [B2]',
+      'Destroy Effect [B]',
+      'Effect [B2]',
+    ]);
   });
 
   it('suspends for longer if something took a long (CPU bound) time to render', async () => {
@@ -2024,7 +2222,8 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     Scheduler.unstable_runWithPriority(Scheduler.unstable_IdlePriority, () =>
       ReactNoop.render(<Foo renderContent={2} />),
     );
-    expect(Scheduler).toFlushAndYield(['Suspend! [A]', 'Loading A...']);
+    // We won't even work on Idle priority.
+    expect(Scheduler).toFlushAndYield([]);
 
     // We're still suspended.
     expect(ReactNoop.getChildren()).toEqual([]);
@@ -2541,5 +2740,166 @@ describe('ReactSuspenseWithNoopRenderer', () => {
       // Should not display a fallback
       expect(root).toMatchRenderedOutput(<span prop="Initial" />);
     });
+  });
+
+  it('regression test: resets current "debug phase" after suspending', async () => {
+    function App() {
+      return (
+        <Suspense fallback="Loading...">
+          <Foo suspend={false} />
+        </Suspense>
+      );
+    }
+
+    const thenable = {then() {}};
+
+    let foo;
+    class Foo extends React.Component {
+      state = {suspend: false};
+      render() {
+        foo = this;
+
+        if (this.state.suspend) {
+          Scheduler.unstable_yieldValue('Suspend!');
+          throw thenable;
+        }
+
+        return <Text text="Foo" />;
+      }
+    }
+
+    const root = ReactNoop.createRoot();
+    await ReactNoop.act(async () => {
+      root.render(<App />);
+    });
+
+    expect(Scheduler).toHaveYielded(['Foo']);
+
+    await ReactNoop.act(async () => {
+      foo.setState({suspend: true});
+
+      // In the regression that this covers, we would neglect to reset the
+      // current debug phase after suspending (in the catch block), so React
+      // thinks we're still inside the render phase.
+      expect(Scheduler).toFlushAndYieldThrough(['Suspend!']);
+
+      // Then when this setState happens, React would incorrectly fire a warning
+      // about updates that happen the render phase (only fired by classes).
+      foo.setState({suspend: false});
+    });
+
+    expect(root).toMatchRenderedOutput(<span prop="Foo" />);
+  });
+
+  it('should not render hidden content while suspended on higher pri', async () => {
+    function Offscreen() {
+      Scheduler.unstable_yieldValue('Offscreen');
+      return 'Offscreen';
+    }
+    function App({showContent}) {
+      React.useLayoutEffect(() => {
+        Scheduler.unstable_yieldValue('Commit');
+      });
+      return (
+        <>
+          <div hidden={true}>
+            <Offscreen />
+          </div>
+          <Suspense fallback={<Text text="Loading..." />}>
+            {showContent ? <AsyncText text="A" ms={2000} /> : null}
+          </Suspense>
+        </>
+      );
+    }
+
+    // Initial render.
+    ReactNoop.render(<App showContent={false} />);
+    expect(Scheduler).toFlushAndYieldThrough(['Commit']);
+    expect(ReactNoop).toMatchRenderedOutput(<div hidden={true} />);
+
+    // Start transition.
+    React.unstable_withSuspenseConfig(
+      () => {
+        ReactNoop.render(<App showContent={true} />);
+      },
+      {timeoutMs: 2000},
+    );
+
+    expect(Scheduler).toFlushAndYield(['Suspend! [A]', 'Loading...']);
+    Scheduler.unstable_advanceTime(2000);
+    await advanceTimers(2000);
+    expect(Scheduler).toHaveYielded(['Promise resolved [A]']);
+    expect(Scheduler).toFlushAndYieldThrough(['A', 'Commit']);
+    expect(ReactNoop).toMatchRenderedOutput(
+      <>
+        <div hidden={true} />
+        <span prop="A" />
+      </>,
+    );
+    expect(Scheduler).toFlushAndYield(['Offscreen']);
+    expect(ReactNoop).toMatchRenderedOutput(
+      <>
+        <div hidden={true}>Offscreen</div>
+        <span prop="A" />
+      </>,
+    );
+  });
+
+  it('should be able to unblock higher pri content before suspended hidden', async () => {
+    function Offscreen() {
+      Scheduler.unstable_yieldValue('Offscreen');
+      return 'Offscreen';
+    }
+    function App({showContent}) {
+      React.useLayoutEffect(() => {
+        Scheduler.unstable_yieldValue('Commit');
+      });
+      return (
+        <Suspense fallback={<Text text="Loading..." />}>
+          <div hidden={true}>
+            <AsyncText text="A" ms={2000} />
+            <Offscreen />
+          </div>
+          {showContent ? <AsyncText text="A" ms={2000} /> : null}
+        </Suspense>
+      );
+    }
+
+    // Initial render.
+    ReactNoop.render(<App showContent={false} />);
+    expect(Scheduler).toFlushAndYieldThrough(['Commit']);
+    expect(ReactNoop).toMatchRenderedOutput(<div hidden={true} />);
+
+    // Partially render through the hidden content.
+    expect(Scheduler).toFlushAndYieldThrough(['Suspend! [A]']);
+
+    // Start transition.
+    React.unstable_withSuspenseConfig(
+      () => {
+        ReactNoop.render(<App showContent={true} />);
+      },
+      {timeoutMs: 5000},
+    );
+
+    expect(Scheduler).toFlushAndYield(['Suspend! [A]', 'Loading...']);
+    Scheduler.unstable_advanceTime(2000);
+    await advanceTimers(2000);
+    expect(Scheduler).toHaveYielded(['Promise resolved [A]']);
+    expect(Scheduler).toFlushAndYieldThrough(['A', 'Commit']);
+    expect(ReactNoop).toMatchRenderedOutput(
+      <>
+        <div hidden={true} />
+        <span prop="A" />
+      </>,
+    );
+    expect(Scheduler).toFlushAndYield(['A', 'Offscreen']);
+    expect(ReactNoop).toMatchRenderedOutput(
+      <>
+        <div hidden={true}>
+          <span prop="A" />Offscreen
+        </div>
+        <span prop="A" />
+      </>,
+    );
   });
 });

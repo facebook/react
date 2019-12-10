@@ -100,9 +100,11 @@ import {
   hideTextInstance,
   unhideInstance,
   unhideTextInstance,
-  unmountResponderInstance,
   unmountFundamentalComponent,
   updateFundamentalComponent,
+  commitHydratedContainer,
+  commitHydratedSuspenseInstance,
+  beforeRemoveInstance,
 } from './ReactFiberHostConfig';
 import {
   captureCommitPhaseError,
@@ -121,7 +123,10 @@ import {
 } from './ReactHookEffectTags';
 import {didWarnAboutReassigningProps} from './ReactFiberBeginWork';
 import {runWithPriority, NormalPriority} from './SchedulerWithReactIntegration';
-import {updateEventListeners} from './ReactFiberEvents';
+import {
+  updateLegacyEventListeners,
+  unmountResponderListeners,
+} from './ReactFiberEvents';
 
 let didWarnAboutUndefinedSnapshotBeforeUpdate: Set<mixed> | null = null;
 if (__DEV__) {
@@ -612,9 +617,7 @@ function commitLifeCycles(
       return;
     }
     case SuspenseComponent: {
-      if (enableSuspenseCallback) {
-        commitSuspenseHydrationCallbacks(finishedRoot, finishedWork);
-      }
+      commitSuspenseHydrationCallbacks(finishedRoot, finishedWork);
       return;
     }
     case SuspenseListComponent:
@@ -791,23 +794,8 @@ function commitUnmount(
     }
     case HostComponent: {
       if (enableFlareAPI) {
-        const dependencies = current.dependencies;
-
-        if (dependencies !== null) {
-          const respondersMap = dependencies.responders;
-          if (respondersMap !== null) {
-            const responderInstances = Array.from(respondersMap.values());
-            for (
-              let i = 0, length = responderInstances.length;
-              i < length;
-              i++
-            ) {
-              const responderInstance = responderInstances[i];
-              unmountResponderInstance(responderInstance);
-            }
-            dependencies.responders = null;
-          }
-        }
+        unmountResponderListeners(current);
+        beforeRemoveInstance(current.stateNode);
       }
       safelyDetachRef(current);
       return;
@@ -846,6 +834,9 @@ function commitUnmount(
       return;
     }
     case ScopeComponent: {
+      if (enableFlareAPI) {
+        unmountResponderListeners(current);
+      }
       if (enableScopeAPI) {
         safelyDetachRef(current);
       }
@@ -1306,11 +1297,12 @@ function commitWork(current: Fiber | null, finishedWork: Fiber): void {
         return;
       }
       case HostRoot: {
-        const root: FiberRoot = finishedWork.stateNode;
         if (supportsHydration) {
+          const root: FiberRoot = finishedWork.stateNode;
           if (root.hydrate) {
             // We've just hydrated. No need to hydrate again.
             root.hydrate = false;
+            commitHydratedContainer(root.containerInfo);
           }
         }
         break;
@@ -1358,10 +1350,10 @@ function commitWork(current: Fiber | null, finishedWork: Fiber): void {
           );
         }
         if (enableFlareAPI) {
-          const prevListeners = oldProps.listeners;
-          const nextListeners = newProps.listeners;
-          if (prevListeners !== nextListeners) {
-            updateEventListeners(nextListeners, finishedWork, null);
+          const prevListeners = oldProps.DEPRECATED_flareListeners;
+          const nextListeners = newProps.DEPRECATED_flareListeners;
+          if (prevListeners !== nextListeners || current === null) {
+            updateLegacyEventListeners(nextListeners, finishedWork, null);
           }
         }
       }
@@ -1384,11 +1376,12 @@ function commitWork(current: Fiber | null, finishedWork: Fiber): void {
       return;
     }
     case HostRoot: {
-      const root: FiberRoot = finishedWork.stateNode;
       if (supportsHydration) {
+        const root: FiberRoot = finishedWork.stateNode;
         if (root.hydrate) {
           // We've just hydrated. No need to hydrate again.
           root.hydrate = false;
+          commitHydratedContainer(root.containerInfo);
         }
       }
       return;
@@ -1422,10 +1415,10 @@ function commitWork(current: Fiber | null, finishedWork: Fiber): void {
         if (enableFlareAPI) {
           const newProps = finishedWork.memoizedProps;
           const oldProps = current !== null ? current.memoizedProps : newProps;
-          const prevListeners = oldProps.listeners;
-          const nextListeners = newProps.listeners;
-          if (prevListeners !== nextListeners) {
-            updateEventListeners(nextListeners, finishedWork, null);
+          const prevListeners = oldProps.DEPRECATED_flareListeners;
+          const nextListeners = newProps.DEPRECATED_flareListeners;
+          if (prevListeners !== nextListeners || current === null) {
+            updateLegacyEventListeners(nextListeners, finishedWork, null);
           }
         }
       }
@@ -1477,18 +1470,25 @@ function commitSuspenseHydrationCallbacks(
   finishedRoot: FiberRoot,
   finishedWork: Fiber,
 ) {
-  if (enableSuspenseCallback) {
-    const hydrationCallbacks = finishedRoot.hydrationCallbacks;
-    if (hydrationCallbacks !== null) {
-      const onHydrated = hydrationCallbacks.onHydrated;
-      if (onHydrated) {
-        const newState: SuspenseState | null = finishedWork.memoizedState;
-        if (newState === null) {
-          const current = finishedWork.alternate;
-          if (current !== null) {
-            const prevState: SuspenseState | null = current.memoizedState;
-            if (prevState !== null && prevState.dehydrated !== null) {
-              onHydrated(prevState.dehydrated);
+  if (!supportsHydration) {
+    return;
+  }
+  const newState: SuspenseState | null = finishedWork.memoizedState;
+  if (newState === null) {
+    const current = finishedWork.alternate;
+    if (current !== null) {
+      const prevState: SuspenseState | null = current.memoizedState;
+      if (prevState !== null) {
+        const suspenseInstance = prevState.dehydrated;
+        if (suspenseInstance !== null) {
+          commitHydratedSuspenseInstance(suspenseInstance);
+          if (enableSuspenseCallback) {
+            const hydrationCallbacks = finishedRoot.hydrationCallbacks;
+            if (hydrationCallbacks !== null) {
+              const onHydrated = hydrationCallbacks.onHydrated;
+              if (onHydrated) {
+                onHydrated(suspenseInstance);
+              }
             }
           }
         }

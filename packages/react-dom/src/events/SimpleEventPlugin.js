@@ -18,6 +18,7 @@ import type {
 } from 'legacy-events/ReactSyntheticEventType';
 import type {Fiber} from 'react-reconciler/src/ReactFiber';
 import type {EventTypes, PluginModule} from 'legacy-events/PluginModuleType';
+import type {EventSystemFlags} from 'legacy-events/EventSystemFlags';
 
 import {
   DiscreteEvent,
@@ -249,7 +250,8 @@ const SimpleEventPlugin: PluginModule<MouseEvent> & {
     topLevelType: TopLevelType,
     targetInst: null | Fiber,
     nativeEvent: MouseEvent,
-    nativeEventTarget: EventTarget,
+    nativeEventTarget: null | EventTarget,
+    eventSystemFlags: EventSystemFlags,
   ): null | ReactSyntheticEvent {
     const dispatchConfig = topLevelEventsToDispatchConfig[topLevelType];
     if (!dispatchConfig) {

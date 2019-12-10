@@ -12,7 +12,7 @@ import type {
   MeasureInWindowOnSuccessCallback,
   MeasureLayoutOnSuccessCallback,
   MeasureOnSuccessCallback,
-  NativeMethodsMixinType,
+  NativeMethods,
   ReactNativeBaseComponentViewConfig,
 } from './ReactNativeTypes';
 
@@ -27,7 +27,6 @@ import {create} from './ReactNativeAttributePayload';
 import {mountSafeCallback_NOT_REALLY_SAFE} from './NativeMethodsMixinUtils';
 
 import warningWithoutStack from 'shared/warningWithoutStack';
-import {warnAboutDeprecatedSetNativeProps} from 'shared/ReactFeatureFlags';
 
 export default function(
   findNodeHandle: any => ?number,
@@ -172,7 +171,7 @@ export default function(
     measureLayout(
       relativeToNativeNode: number | Object,
       onSuccess: MeasureLayoutOnSuccessCallback,
-      onFail: () => void /* currently unused */,
+      onFail?: () => void /* currently unused */,
     ): void {
       let maybeInstance;
 
@@ -191,12 +190,14 @@ export default function(
       }
 
       if (maybeInstance.canonical) {
-        warningWithoutStack(
-          false,
-          'Warning: measureLayout on components using NativeMethodsMixin ' +
-            'or ReactNative.NativeComponent is not currently supported in Fabric. ' +
-            'measureLayout must be called on a native ref. Consider using forwardRef.',
-        );
+        if (__DEV__) {
+          warningWithoutStack(
+            false,
+            'Warning: measureLayout on components using NativeMethodsMixin ' +
+              'or ReactNative.NativeComponent is not currently supported in Fabric. ' +
+              'measureLayout must be called on a native ref. Consider using forwardRef.',
+          );
+        }
         return;
       } else {
         let relativeNode;
@@ -209,10 +210,12 @@ export default function(
         }
 
         if (relativeNode == null) {
-          warningWithoutStack(
-            false,
-            'Warning: ref.measureLayout must be called with a node handle or a ref to a native component.',
-          );
+          if (__DEV__) {
+            warningWithoutStack(
+              false,
+              'Warning: ref.measureLayout must be called with a node handle or a ref to a native component.',
+            );
+          }
 
           return;
         }
@@ -255,23 +258,13 @@ export default function(
       }
 
       if (maybeInstance.canonical) {
-        warningWithoutStack(
-          false,
-          'Warning: setNativeProps is not currently supported in Fabric',
-        );
-        return;
-      }
-
-      if (__DEV__) {
-        if (warnAboutDeprecatedSetNativeProps) {
+        if (__DEV__) {
           warningWithoutStack(
             false,
-            'Warning: Calling ref.setNativeProps(nativeProps) ' +
-              'is deprecated and will be removed in a future release. ' +
-              'Use the setNativeProps export from the react-native package instead.' +
-              "\n\timport {setNativeProps} from 'react-native';\n\tsetNativeProps(ref, nativeProps);\n",
+            'Warning: setNativeProps is not currently supported in Fabric',
           );
         }
+        return;
       }
 
       const nativeTag =
@@ -295,7 +288,7 @@ export default function(
   }
 
   // eslint-disable-next-line no-unused-expressions
-  (ReactNativeComponent.prototype: NativeMethodsMixinType);
+  (ReactNativeComponent.prototype: NativeMethods);
 
   return ReactNativeComponent;
 }

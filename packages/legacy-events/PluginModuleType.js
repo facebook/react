@@ -13,6 +13,7 @@ import type {
   ReactSyntheticEvent,
 } from './ReactSyntheticEventType';
 import type {TopLevelType} from './TopLevelEventTypes';
+import type {EventSystemFlags} from 'legacy-events/EventSystemFlags';
 
 export type EventTypes = {[key: string]: DispatchConfig};
 
@@ -26,7 +27,8 @@ export type PluginModule<NativeEvent> = {
     topLevelType: TopLevelType,
     targetInst: null | Fiber,
     nativeTarget: NativeEvent,
-    nativeEventTarget: EventTarget,
+    nativeEventTarget: null | EventTarget,
+    eventSystemFlags: EventSystemFlags,
   ) => ?ReactSyntheticEvent,
   tapMoveThreshold?: number,
 };

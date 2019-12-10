@@ -1485,6 +1485,31 @@ describe('ReactHooks', () => {
       useStateHelper,
     ];
 
+    // We don't include useContext or useDebugValue in this set,
+    // because they aren't added to the hooks list and so won't throw.
+    let hooksInList = [
+      useCallbackHelper,
+      useEffectHelper,
+      useImperativeHandleHelper,
+      useLayoutEffectHelper,
+      useMemoHelper,
+      useReducerHelper,
+      useRefHelper,
+      useStateHelper,
+    ];
+
+    if (__EXPERIMENTAL__) {
+      const useTransitionHelper = () => React.useTransition({timeoutMs: 1000});
+      const useDeferredValueHelper = () =>
+        React.useDeferredValue(0, {timeoutMs: 1000});
+
+      orderedHooks.push(useTransitionHelper);
+      orderedHooks.push(useDeferredValueHelper);
+
+      hooksInList.push(useTransitionHelper);
+      hooksInList.push(useDeferredValueHelper);
+    }
+
     const formatHookNamesToMatchErrorMessage = (hookNameA, hookNameB) => {
       return `use${hookNameA}${' '.repeat(24 - hookNameA.length)}${
         hookNameB ? `use${hookNameB}` : undefined
@@ -1597,19 +1622,6 @@ describe('ReactHooks', () => {
         ]);
       });
     });
-
-    // We don't include useContext or useDebugValue in this set,
-    // because they aren't added to the hooks list and so won't throw.
-    let hooksInList = [
-      useCallbackHelper,
-      useEffectHelper,
-      useImperativeHandleHelper,
-      useLayoutEffectHelper,
-      useMemoHelper,
-      useReducerHelper,
-      useRefHelper,
-      useStateHelper,
-    ];
 
     hooksInList.forEach((firstHelper, index) => {
       const secondHelper =

@@ -12,7 +12,7 @@ import {
   // $FlowFixMe Flow does not yet know about flushSync()
   flushSync,
   // $FlowFixMe Flow does not yet know about createRoot()
-  unstable_createRoot as createRoot,
+  createRoot,
 } from 'react-dom';
 import Bridge from 'react-devtools-shared/src/bridge';
 import Store from 'react-devtools-shared/src/devtools/store';
@@ -40,11 +40,6 @@ let nodeWaitingToConnectHTML: string = '';
 let projectRoots: Array<string> = [];
 let statusListener: StatusListener = (message: string) => {};
 
-// Unlike browser extension users, people using the standalone have actively installed version 4,
-// So we probably don't need to show them a changelog notice.
-// We should give embedded users (e.g. Nuclide, Sonar) a way of showing this dialog though.
-let showWelcomeToTheNewDevToolsDialog: boolean = false;
-
 function setContentDOMNode(value: HTMLElement) {
   node = value;
 
@@ -60,11 +55,6 @@ function setProjectRoots(value: Array<string>) {
 
 function setStatusListener(value: StatusListener) {
   statusListener = value;
-  return DevtoolsUI;
-}
-
-function setShowWelcomeToTheNewDevToolsDialog(value: boolean) {
-  showWelcomeToTheNewDevToolsDialog = value;
   return DevtoolsUI;
 }
 
@@ -108,7 +98,6 @@ function reload() {
         bridge: ((bridge: any): FrontendBridge),
         canViewElementSourceFunction,
         showTabBar: true,
-        showWelcomeToTheNewDevToolsDialog,
         store: ((store: any): Store),
         warnIfLegacyBackendDetected: true,
         viewElementSourceFunction,
@@ -154,9 +143,27 @@ function onError({code, message}) {
   safeUnmount();
 
   if (code === 'EADDRINUSE') {
-    node.innerHTML = `<div id="waiting"><h2>Another instance of DevTools is running</h2></div>`;
+    node.innerHTML = `
+      <div class="box">
+        <div class="box-header">
+          Another instance of DevTools is running.
+        </div>
+        <div class="box-content">
+          Only one copy of DevTools can be used at a time.
+        </div>
+      </div>
+    `;
   } else {
-    node.innerHTML = `<div id="waiting"><h2>Unknown error (${message})</h2></div>`;
+    node.innerHTML = `
+      <div class="box">
+        <div class="box-header">
+          Unknown error
+        </div>
+        <div class="box-content">
+          ${message}
+        </div>
+      </div>
+    `;
   }
 }
 
@@ -318,7 +325,6 @@ const DevtoolsUI = {
   connectToSocket,
   setContentDOMNode,
   setProjectRoots,
-  setShowWelcomeToTheNewDevToolsDialog,
   setStatusListener,
   startServer,
 };

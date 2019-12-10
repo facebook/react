@@ -93,6 +93,7 @@ module.exports = {
     'react-internal/no-primitive-constructors': ERROR,
     'react-internal/no-to-warn-dev-within-to-throw': ERROR,
     'react-internal/warning-and-invariant-args': ERROR,
+    'react-internal/no-production-logging': ERROR,
   },
 
   overrides: [
@@ -149,6 +150,7 @@ module.exports = {
     spyOnProd: true,
     __PROFILE__: true,
     __UMD__: true,
+    __EXPERIMENTAL__: true,
     trustedTypes: true,
   },
 };

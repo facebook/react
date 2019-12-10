@@ -9,7 +9,7 @@
 
 'use strict';
 
-import {createEventTarget} from 'react-ui/events/src/dom/testing-library';
+import {createEventTarget} from 'react-interactions/events/src/dom/testing-library';
 
 let React;
 let ReactFeatureFlags;
@@ -38,8 +38,9 @@ describe('ReactScope', () => {
       container = null;
     });
 
-    it('getScopedNodes() works as intended', () => {
-      const TestScope = React.unstable_createScope((type, props) => true);
+    it('queryAllNodes() works as intended', () => {
+      const testScopeQuery = (type, props) => true;
+      const TestScope = React.unstable_createScope();
       const scopeRef = React.createRef();
       const divRef = React.createRef();
       const spanRef = React.createRef();
@@ -62,18 +63,148 @@ describe('ReactScope', () => {
       }
 
       ReactDOM.render(<Test toggle={true} />, container);
-      let nodes = scopeRef.current.getScopedNodes();
+      let nodes = scopeRef.current.queryAllNodes(testScopeQuery);
       expect(nodes).toEqual([divRef.current, spanRef.current, aRef.current]);
       ReactDOM.render(<Test toggle={false} />, container);
-      nodes = scopeRef.current.getScopedNodes();
+      nodes = scopeRef.current.queryAllNodes(testScopeQuery);
       expect(nodes).toEqual([aRef.current, divRef.current, spanRef.current]);
       ReactDOM.render(null, container);
       expect(scopeRef.current).toBe(null);
     });
 
-    it('mixed getParent() and getScopedNodes() works as intended', () => {
-      const TestScope = React.unstable_createScope((type, props) => true);
-      const TestScope2 = React.unstable_createScope((type, props) => true);
+    it('queryAllNodes() provides the correct host instance', () => {
+      const testScopeQuery = (type, props) => type === 'div';
+      const TestScope = React.unstable_createScope();
+      const scopeRef = React.createRef();
+      const divRef = React.createRef();
+      const spanRef = React.createRef();
+      const aRef = React.createRef();
+
+      function Test({toggle}) {
+        return toggle ? (
+          <TestScope ref={scopeRef}>
+            <div ref={divRef}>DIV</div>
+            <span ref={spanRef}>SPAN</span>
+            <a ref={aRef}>A</a>
+          </TestScope>
+        ) : (
+          <TestScope ref={scopeRef}>
+            <a ref={aRef}>A</a>
+            <div ref={divRef}>DIV</div>
+            <span ref={spanRef}>SPAN</span>
+          </TestScope>
+        );
+      }
+
+      ReactDOM.render(<Test toggle={true} />, container);
+      let nodes = scopeRef.current.queryAllNodes(testScopeQuery);
+      expect(nodes).toEqual([divRef.current]);
+      let filterQuery = (type, props, instance) =>
+        instance === spanRef.current || testScopeQuery(type, props);
+      nodes = scopeRef.current.queryAllNodes(filterQuery);
+      expect(nodes).toEqual([divRef.current, spanRef.current]);
+      filterQuery = (type, props, instance) =>
+        [spanRef.current, aRef.current].includes(instance) ||
+        testScopeQuery(type, props);
+      nodes = scopeRef.current.queryAllNodes(filterQuery);
+      expect(nodes).toEqual([divRef.current, spanRef.current, aRef.current]);
+      ReactDOM.render(<Test toggle={false} />, container);
+      filterQuery = (type, props, instance) =>
+        [spanRef.current, aRef.current].includes(instance) ||
+        testScopeQuery(type, props);
+      nodes = scopeRef.current.queryAllNodes(filterQuery);
+      expect(nodes).toEqual([aRef.current, divRef.current, spanRef.current]);
+      ReactDOM.render(null, container);
+      expect(scopeRef.current).toBe(null);
+    });
+
+    it('queryFirstNode() works as intended', () => {
+      const testScopeQuery = (type, props) => true;
+      const TestScope = React.unstable_createScope();
+      const scopeRef = React.createRef();
+      const divRef = React.createRef();
+      const spanRef = React.createRef();
+      const aRef = React.createRef();
+
+      function Test({toggle}) {
+        return toggle ? (
+          <TestScope ref={scopeRef}>
+            <div ref={divRef}>DIV</div>
+            <span ref={spanRef}>SPAN</span>
+            <a ref={aRef}>A</a>
+          </TestScope>
+        ) : (
+          <TestScope ref={scopeRef}>
+            <a ref={aRef}>A</a>
+            <div ref={divRef}>DIV</div>
+            <span ref={spanRef}>SPAN</span>
+          </TestScope>
+        );
+      }
+
+      ReactDOM.render(<Test toggle={true} />, container);
+      let node = scopeRef.current.queryFirstNode(testScopeQuery);
+      expect(node).toEqual(divRef.current);
+      ReactDOM.render(<Test toggle={false} />, container);
+      node = scopeRef.current.queryFirstNode(testScopeQuery);
+      expect(node).toEqual(aRef.current);
+      ReactDOM.render(null, container);
+      expect(scopeRef.current).toBe(null);
+    });
+
+    it('containsNode() works as intended', () => {
+      const TestScope = React.unstable_createScope();
+      const scopeRef = React.createRef();
+      const divRef = React.createRef();
+      const spanRef = React.createRef();
+      const aRef = React.createRef();
+      const outerSpan = React.createRef();
+      const emRef = React.createRef();
+
+      function Test({toggle}) {
+        return toggle ? (
+          <div>
+            <span ref={outerSpan}>SPAN</span>
+            <TestScope ref={scopeRef}>
+              <div ref={divRef}>DIV</div>
+              <span ref={spanRef}>SPAN</span>
+              <a ref={aRef}>A</a>
+            </TestScope>
+            <em ref={emRef}>EM</em>
+          </div>
+        ) : (
+          <div>
+            <TestScope ref={scopeRef}>
+              <a ref={aRef}>A</a>
+              <div ref={divRef}>DIV</div>
+              <span ref={spanRef}>SPAN</span>
+              <em ref={emRef}>EM</em>
+            </TestScope>
+            <span ref={outerSpan}>SPAN</span>
+          </div>
+        );
+      }
+
+      ReactDOM.render(<Test toggle={true} />, container);
+      expect(scopeRef.current.containsNode(divRef.current)).toBe(true);
+      expect(scopeRef.current.containsNode(spanRef.current)).toBe(true);
+      expect(scopeRef.current.containsNode(aRef.current)).toBe(true);
+      expect(scopeRef.current.containsNode(outerSpan.current)).toBe(false);
+      expect(scopeRef.current.containsNode(emRef.current)).toBe(false);
+      ReactDOM.render(<Test toggle={false} />, container);
+      expect(scopeRef.current.containsNode(divRef.current)).toBe(true);
+      expect(scopeRef.current.containsNode(spanRef.current)).toBe(true);
+      expect(scopeRef.current.containsNode(aRef.current)).toBe(true);
+      expect(scopeRef.current.containsNode(outerSpan.current)).toBe(false);
+      expect(scopeRef.current.containsNode(emRef.current)).toBe(true);
+      ReactDOM.render(<Test toggle={true} />, container);
+      expect(scopeRef.current.containsNode(emRef.current)).toBe(false);
+    });
+
+    it('mixed getParent() and queryAllNodes() works as intended', () => {
+      const testScopeQuery = (type, props) => true;
+      const TestScope = React.unstable_createScope();
+      const TestScope2 = React.unstable_createScope();
       const refA = React.createRef();
       const refB = React.createRef();
       const refC = React.createRef();
@@ -108,14 +239,14 @@ describe('ReactScope', () => {
       ReactDOM.render(<Test />, container);
       const dParent = refD.current.getParent();
       expect(dParent).not.toBe(null);
-      expect(dParent.getScopedNodes()).toEqual([
+      expect(dParent.queryAllNodes(testScopeQuery)).toEqual([
         divA.current,
         spanB.current,
         divB.current,
       ]);
       const cParent = refC.current.getParent();
       expect(cParent).not.toBe(null);
-      expect(cParent.getScopedNodes()).toEqual([
+      expect(cParent.queryAllNodes(testScopeQuery)).toEqual([
         spanA.current,
         divA.current,
         spanB.current,
@@ -126,8 +257,8 @@ describe('ReactScope', () => {
     });
 
     it('getChildren() works as intended', () => {
-      const TestScope = React.unstable_createScope((type, props) => true);
-      const TestScope2 = React.unstable_createScope((type, props) => true);
+      const TestScope = React.unstable_createScope();
+      const TestScope2 = React.unstable_createScope();
       const refA = React.createRef();
       const refB = React.createRef();
       const refC = React.createRef();
@@ -171,7 +302,7 @@ describe('ReactScope', () => {
     });
 
     it('scopes support server-side rendering and hydration', () => {
-      const TestScope = React.unstable_createScope((type, props) => true);
+      const TestScope = React.unstable_createScope();
       const ReactDOMServer = require('react-dom/server');
       const scopeRef = React.createRef();
       const divRef = React.createRef();
@@ -196,21 +327,23 @@ describe('ReactScope', () => {
       );
       container.innerHTML = html;
       ReactDOM.hydrate(<Test />, container);
-      const nodes = scopeRef.current.getScopedNodes();
+      const testScopeQuery = (type, props) => true;
+      const nodes = scopeRef.current.queryAllNodes(testScopeQuery);
       expect(nodes).toEqual([divRef.current, spanRef.current, aRef.current]);
     });
 
     it('event responders can be attached to scopes', () => {
       let onKeyDown = jest.fn();
-      const TestScope = React.unstable_createScope((type, props) => true);
+      const TestScope = React.unstable_createScope();
       const ref = React.createRef();
-      const useKeyboard = require('react-ui/events/keyboard').useKeyboard;
+      const useKeyboard = require('react-interactions/events/keyboard')
+        .useKeyboard;
       let Component = () => {
         const listener = useKeyboard({
           onKeyDown,
         });
         return (
-          <TestScope listeners={listener}>
+          <TestScope DEPRECATED_flareListeners={listener}>
             <div ref={ref} />
           </TestScope>
         );
@@ -228,7 +361,7 @@ describe('ReactScope', () => {
         });
         return (
           <div>
-            <TestScope listeners={listener}>
+            <TestScope DEPRECATED_flareListeners={listener}>
               <div ref={ref} />
             </TestScope>
           </div>
@@ -249,8 +382,9 @@ describe('ReactScope', () => {
       ReactTestRenderer = require('react-test-renderer');
     });
 
-    it('getScopedNodes() works as intended', () => {
-      const TestScope = React.unstable_createScope((type, props) => true);
+    it('queryAllNodes() works as intended', () => {
+      const testScopeQuery = (type, props) => true;
+      const TestScope = React.unstable_createScope();
       const scopeRef = React.createRef();
       const divRef = React.createRef();
       const spanRef = React.createRef();
@@ -277,16 +411,106 @@ describe('ReactScope', () => {
           return element;
         },
       });
-      let nodes = scopeRef.current.getScopedNodes();
+      let nodes = scopeRef.current.queryAllNodes(testScopeQuery);
       expect(nodes).toEqual([divRef.current, spanRef.current, aRef.current]);
       renderer.update(<Test toggle={false} />);
-      nodes = scopeRef.current.getScopedNodes();
+      nodes = scopeRef.current.queryAllNodes(testScopeQuery);
       expect(nodes).toEqual([aRef.current, divRef.current, spanRef.current]);
     });
 
-    it('mixed getParent() and getScopedNodes() works as intended', () => {
-      const TestScope = React.unstable_createScope((type, props) => true);
-      const TestScope2 = React.unstable_createScope((type, props) => true);
+    it('queryFirstNode() works as intended', () => {
+      const testScopeQuery = (type, props) => true;
+      const TestScope = React.unstable_createScope();
+      const scopeRef = React.createRef();
+      const divRef = React.createRef();
+      const spanRef = React.createRef();
+      const aRef = React.createRef();
+
+      function Test({toggle}) {
+        return toggle ? (
+          <TestScope ref={scopeRef}>
+            <div ref={divRef}>DIV</div>
+            <span ref={spanRef}>SPAN</span>
+            <a ref={aRef}>A</a>
+          </TestScope>
+        ) : (
+          <TestScope ref={scopeRef}>
+            <a ref={aRef}>A</a>
+            <div ref={divRef}>DIV</div>
+            <span ref={spanRef}>SPAN</span>
+          </TestScope>
+        );
+      }
+
+      const renderer = ReactTestRenderer.create(<Test toggle={true} />, {
+        createNodeMock: element => {
+          return element;
+        },
+      });
+      let node = scopeRef.current.queryFirstNode(testScopeQuery);
+      expect(node).toEqual(divRef.current);
+      renderer.update(<Test toggle={false} />);
+      node = scopeRef.current.queryFirstNode(testScopeQuery);
+      expect(node).toEqual(aRef.current);
+    });
+
+    it('containsNode() works as intended', () => {
+      const TestScope = React.unstable_createScope();
+      const scopeRef = React.createRef();
+      const divRef = React.createRef();
+      const spanRef = React.createRef();
+      const aRef = React.createRef();
+      const outerSpan = React.createRef();
+      const emRef = React.createRef();
+
+      function Test({toggle}) {
+        return toggle ? (
+          <div>
+            <span ref={outerSpan}>SPAN</span>
+            <TestScope ref={scopeRef}>
+              <div ref={divRef}>DIV</div>
+              <span ref={spanRef}>SPAN</span>
+              <a ref={aRef}>A</a>
+            </TestScope>
+            <em ref={emRef}>EM</em>
+          </div>
+        ) : (
+          <div>
+            <TestScope ref={scopeRef}>
+              <a ref={aRef}>A</a>
+              <div ref={divRef}>DIV</div>
+              <span ref={spanRef}>SPAN</span>
+              <em ref={emRef}>EM</em>
+            </TestScope>
+            <span ref={outerSpan}>SPAN</span>
+          </div>
+        );
+      }
+
+      const renderer = ReactTestRenderer.create(<Test toggle={true} />, {
+        createNodeMock: element => {
+          return element;
+        },
+      });
+      expect(scopeRef.current.containsNode(divRef.current)).toBe(true);
+      expect(scopeRef.current.containsNode(spanRef.current)).toBe(true);
+      expect(scopeRef.current.containsNode(aRef.current)).toBe(true);
+      expect(scopeRef.current.containsNode(outerSpan.current)).toBe(false);
+      expect(scopeRef.current.containsNode(emRef.current)).toBe(false);
+      renderer.update(<Test toggle={false} />);
+      expect(scopeRef.current.containsNode(divRef.current)).toBe(true);
+      expect(scopeRef.current.containsNode(spanRef.current)).toBe(true);
+      expect(scopeRef.current.containsNode(aRef.current)).toBe(true);
+      expect(scopeRef.current.containsNode(outerSpan.current)).toBe(false);
+      expect(scopeRef.current.containsNode(emRef.current)).toBe(true);
+      renderer.update(<Test toggle={true} />);
+      expect(scopeRef.current.containsNode(emRef.current)).toBe(false);
+    });
+
+    it('mixed getParent() and queryAllNodes() works as intended', () => {
+      const testScopeQuery = (type, props) => true;
+      const TestScope = React.unstable_createScope();
+      const TestScope2 = React.unstable_createScope();
       const refA = React.createRef();
       const refB = React.createRef();
       const refC = React.createRef();
@@ -325,14 +549,14 @@ describe('ReactScope', () => {
       });
       const dParent = refD.current.getParent();
       expect(dParent).not.toBe(null);
-      expect(dParent.getScopedNodes()).toEqual([
+      expect(dParent.queryAllNodes(testScopeQuery)).toEqual([
         divA.current,
         spanB.current,
         divB.current,
       ]);
       const cParent = refC.current.getParent();
       expect(cParent).not.toBe(null);
-      expect(cParent.getScopedNodes()).toEqual([
+      expect(cParent.queryAllNodes(testScopeQuery)).toEqual([
         spanA.current,
         divA.current,
         spanB.current,
@@ -343,8 +567,8 @@ describe('ReactScope', () => {
     });
 
     it('getChildren() works as intended', () => {
-      const TestScope = React.unstable_createScope((type, props) => true);
-      const TestScope2 = React.unstable_createScope((type, props) => true);
+      const TestScope = React.unstable_createScope();
+      const TestScope2 = React.unstable_createScope();
       const refA = React.createRef();
       const refB = React.createRef();
       const refC = React.createRef();

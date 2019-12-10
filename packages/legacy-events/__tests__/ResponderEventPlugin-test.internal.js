@@ -10,6 +10,7 @@
 'use strict';
 
 const {HostComponent} = require('shared/ReactWorkTags');
+const {PLUGIN_EVENT_SYSTEM} = require('legacy-events/EventSystemFlags');
 
 let EventBatching;
 let EventPluginUtils;
@@ -316,6 +317,7 @@ const run = function(config, hierarchyConfig, nativeEventConfig) {
     nativeEventConfig.targetInst,
     nativeEventConfig.nativeEvent,
     nativeEventConfig.target,
+    PLUGIN_EVENT_SYSTEM,
   );
 
   // At this point the negotiation events have been dispatched as part of the

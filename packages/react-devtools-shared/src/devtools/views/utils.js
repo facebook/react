@@ -107,6 +107,8 @@ export function getMetaValueLabel(data: Object): string | null {
     case 'date':
     case 'symbol':
       return name;
+    case 'bigint':
+      return `${name}n`;
     case 'iterator':
       return `${name}(…)`;
     case 'array_buffer':

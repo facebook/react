@@ -912,6 +912,10 @@ export function attach(
     // Not implemented.
   }
 
+  function setTraceUpdatesEnabled(enabled: boolean) {
+    // Not implemented.
+  }
+
   function setTrackedPath(path: Array<PathFrame> | null) {
     // Not implemented.
   }
@@ -945,6 +949,7 @@ export function attach(
     setInHook,
     setInProps,
     setInState,
+    setTraceUpdatesEnabled,
     setTrackedPath,
     startProfiling,
     stopProfiling,

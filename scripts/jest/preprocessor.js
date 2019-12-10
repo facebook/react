@@ -17,7 +17,7 @@ const pathToBabelPluginDevWithCode = require.resolve(
   '../error-codes/transform-error-messages'
 );
 const pathToBabelPluginWrapWarning = require.resolve(
-  '../babel/wrap-warning-with-env-check'
+  '../babel/lift-warning-conditional-argument'
 );
 const pathToBabelPluginAsyncToGenerator = require.resolve(
   '@babel/plugin-transform-async-to-generator'
@@ -61,6 +61,9 @@ module.exports = {
     }
     if (filePath.match(/\.ts$/) && !filePath.match(/\.d\.ts$/)) {
       return tsPreprocessor.compile(src, filePath);
+    }
+    if (filePath.match(/\.json$/)) {
+      return src;
     }
     if (!filePath.match(/\/third_party\//)) {
       // for test files, we also apply the async-await transform, but we want to

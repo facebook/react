@@ -69,6 +69,8 @@ export const mountFundamentalComponent =
   $$$hostConfig.mountFundamentalComponent;
 export const shouldUpdateFundamentalComponent =
   $$$hostConfig.shouldUpdateFundamentalComponent;
+export const getInstanceFromNode = $$$hostConfig.getInstanceFromNode;
+export const beforeRemoveInstance = $$$hostConfig.beforeRemoveInstance;
 
 // -------------------
 //      Mutation
@@ -129,6 +131,9 @@ export const hydrateTextInstance = $$$hostConfig.hydrateTextInstance;
 export const hydrateSuspenseInstance = $$$hostConfig.hydrateSuspenseInstance;
 export const getNextHydratableInstanceAfterSuspenseInstance =
   $$$hostConfig.getNextHydratableInstanceAfterSuspenseInstance;
+export const commitHydratedContainer = $$$hostConfig.commitHydratedContainer;
+export const commitHydratedSuspenseInstance =
+  $$$hostConfig.commitHydratedSuspenseInstance;
 export const clearSuspenseBoundary = $$$hostConfig.clearSuspenseBoundary;
 export const clearSuspenseBoundaryFromContainer =
   $$$hostConfig.clearSuspenseBoundaryFromContainer;

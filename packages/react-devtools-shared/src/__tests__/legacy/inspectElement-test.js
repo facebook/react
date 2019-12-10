@@ -167,6 +167,8 @@ describe('InspectedElementContext', () => {
       ReactDOM.render(
         <Example
           array_buffer={typedArray.buffer}
+          // eslint-disable-next-line no-undef
+          big_int={BigInt(123)}
           date={new Date()}
           fn={exampleFunction}
           html_element={div}
@@ -190,6 +192,7 @@ describe('InspectedElementContext', () => {
 
     const {
       array_buffer,
+      big_int,
       date,
       fn,
       html_element,
@@ -207,6 +210,10 @@ describe('InspectedElementContext', () => {
     expect(array_buffer[meta.inspectable]).toBe(false);
     expect(array_buffer[meta.name]).toBe('ArrayBuffer');
     expect(array_buffer[meta.type]).toBe('array_buffer');
+
+    expect(big_int[meta.inspectable]).toBe(false);
+    expect(big_int[meta.name]).toBe('123');
+    expect(big_int[meta.type]).toBe('bigint');
 
     expect(date[meta.inspectable]).toBe(false);
     expect(date[meta.type]).toBe('date');

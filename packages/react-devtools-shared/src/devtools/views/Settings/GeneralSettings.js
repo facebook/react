@@ -9,31 +9,33 @@
 
 import React, {useContext} from 'react';
 import {SettingsContext} from './SettingsContext';
+import {StoreContext} from '../context';
 import {CHANGE_LOG_URL} from 'react-devtools-shared/src/constants';
 
 import styles from './SettingsShared.css';
 
 export default function GeneralSettings(_: {||}) {
   const {
-    displayDensity,
-    setDisplayDensity,
-    theme,
-    setTheme,
     appendComponentStack,
+    displayDensity,
     setAppendComponentStack,
+    setDisplayDensity,
+    setTheme,
+    setTraceUpdatesEnabled,
+    theme,
+    traceUpdatesEnabled,
   } = useContext(SettingsContext);
 
-  const updateDisplayDensity = ({currentTarget}) =>
-    setDisplayDensity(currentTarget.value);
-  const updateTheme = ({currentTarget}) => setTheme(currentTarget.value);
-  const updateappendComponentStack = ({currentTarget}) =>
-    setAppendComponentStack(currentTarget.checked);
+  const {supportsTraceUpdates} = useContext(StoreContext);
 
   return (
     <div className={styles.Settings}>
       <div className={styles.Setting}>
         <div className={styles.RadioLabel}>Theme</div>
-        <select className={styles.Select} value={theme} onChange={updateTheme}>
+        <select
+          className={styles.Select}
+          value={theme}
+          onChange={({currentTarget}) => setTheme(currentTarget.value)}>
           <option value="auto">Auto</option>
           <option value="light">Light</option>
           <option value="dark">Dark</option>
@@ -45,18 +47,37 @@ export default function GeneralSettings(_: {||}) {
         <select
           className={styles.Select}
           value={displayDensity}
-          onChange={updateDisplayDensity}>
+          onChange={({currentTarget}) =>
+            setDisplayDensity(currentTarget.value)
+          }>
           <option value="compact">Compact</option>
           <option value="comfortable">Comfortable</option>
         </select>
       </div>
+
+      {supportsTraceUpdates && (
+        <div className={styles.Setting}>
+          <label>
+            <input
+              type="checkbox"
+              checked={traceUpdatesEnabled}
+              onChange={({currentTarget}) =>
+                setTraceUpdatesEnabled(currentTarget.checked)
+              }
+            />{' '}
+            Highlight updates when components render.
+          </label>
+        </div>
+      )}
 
       <div className={styles.Setting}>
         <label>
           <input
             type="checkbox"
             checked={appendComponentStack}
-            onChange={updateappendComponentStack}
+            onChange={({currentTarget}) =>
+              setAppendComponentStack(currentTarget.checked)
+            }
           />{' '}
           Append component stacks to console warnings and errors.
         </label>
