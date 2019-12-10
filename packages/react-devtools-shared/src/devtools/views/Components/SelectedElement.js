@@ -7,6 +7,7 @@
  * @flow
  */
 
+import {copy} from 'clipboard-js';
 import React, {useCallback, useContext} from 'react';
 import {TreeDispatcherContext, TreeStateContext} from './TreeContext';
 import {BridgeContext, StoreContext} from '../context';
@@ -272,6 +273,7 @@ function InspectedElementView({
     hooks,
     owners,
     props,
+    source,
     state,
   } = inspectedElement;
 
@@ -403,6 +405,54 @@ function InspectedElementView({
             ))}
           </div>
         )}
+
+      {source !== null && (
+        <Source fileName={source.fileName} lineNumber={source.lineNumber} />
+      )}
+    </div>
+  );
+}
+
+// This function is based on packages/shared/describeComponentFrame.js
+function formatSourceForDisplay(fileName: string, lineNumber: string) {
+  const BEFORE_SLASH_RE = /^(.*)[\\\/]/;
+
+  let nameOnly = fileName.replace(BEFORE_SLASH_RE, '');
+
+  // In DEV, include code for a common special case:
+  // prefer "folder/index.js" instead of just "index.js".
+  if (/^index\./.test(nameOnly)) {
+    const match = fileName.match(BEFORE_SLASH_RE);
+    if (match) {
+      const pathBeforeSlash = match[1];
+      if (pathBeforeSlash) {
+        const folderName = pathBeforeSlash.replace(BEFORE_SLASH_RE, '');
+        nameOnly = folderName + '/' + nameOnly;
+      }
+    }
+  }
+
+  return `${nameOnly}:${lineNumber}`;
+}
+
+type SourceProps = {|
+  fileName: string,
+  lineNumber: string,
+|};
+
+function Source({fileName, lineNumber}: SourceProps) {
+  const handleCopy = () => copy(`${fileName}:${lineNumber}`);
+  return (
+    <div className={styles.Source}>
+      <div className={styles.SourceHeaderRow}>
+        <div className={styles.SourceHeader}>source</div>
+        <Button onClick={handleCopy} title="Copy to clipboard">
+          <ButtonIcon type="copy" />
+        </Button>
+      </div>
+      <div className={styles.SourceOneLiner}>
+        {formatSourceForDisplay(fileName, lineNumber)}
+      </div>
     </div>
   );
 }
