@@ -6,4 +6,9 @@
  */
 
 // This "lowPriorityWarning" is an external module
-export default require('lowPriorityWarning');
+const lowPriorityWarning = require('lowPriorityWarning');
+
+export default function(...args) {
+  // eslint-disable-next-line react-internal/warning-args, react-internal/no-production-logging
+  return lowPriorityWarning(false, args);
+}
