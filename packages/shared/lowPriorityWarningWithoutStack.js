@@ -36,16 +36,15 @@ if (__DEV__) {
     } catch (x) {}
   };
 
-  lowPriorityWarningWithoutStack = function(condition, format, ...args) {
+  lowPriorityWarningWithoutStack = function(format, ...args) {
     if (format === undefined) {
       throw new Error(
         '`lowPriorityWarningWithoutStack(condition, format, ...args)` requires a warning ' +
           'message argument',
       );
     }
-    if (!condition) {
-      printWarning(format, ...args);
-    }
+
+    printWarning(format, ...args);
   };
 }
 

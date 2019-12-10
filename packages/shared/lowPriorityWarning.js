@@ -18,13 +18,10 @@ import ReactSharedInternals from 'shared/ReactSharedInternals';
 let lowPriorityWarning = lowPriorityWarningWithoutStack;
 
 if (__DEV__) {
-  lowPriorityWarning = function(condition, format, ...args) {
-    if (condition) {
-      return;
-    }
+  lowPriorityWarning = function(format, ...args) {
     const ReactDebugCurrentFrame = ReactSharedInternals.ReactDebugCurrentFrame;
     const stack = ReactDebugCurrentFrame.getStackAddendum();
-    // eslint-disable-next-line react-internal/warning-and-invariant-args
+    // eslint-disable-next-line react-internal/warning-args
     lowPriorityWarningWithoutStack(false, format + '%s', ...args, stack);
   };
 }
