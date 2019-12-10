@@ -17,8 +17,47 @@ module.exports = function(fileInfo, {jscodeshift: j}) {
         return newFunction;
       }
 
+      let returnable = j.unaryExpression('!', conditional);
+      if (
+        conditional.type === 'BinaryExpression' &&
+        conditional.left.type === 'Identifier' &&
+        conditional.right.type === 'Identifier'
+      ) {
+        let newOperator;
+        switch (conditional.operator) {
+          case '===': {
+            newOperator = '!==';
+            break;
+          }
+          case '!==': {
+            newOperator = '===';
+            break;
+          }
+          case '<=': {
+            newOperator = '>';
+            break;
+          }
+          case '<': {
+            newOperator = '>=';
+            break;
+          }
+          case '>': {
+            newOperator = '<=';
+            break;
+          }
+          case '>=': {
+            newOperator = '<';
+            break;
+          }
+          default: {
+            throw conditional.operator;
+          }
+        }
+        returnable = {...conditional, operator: newOperator};
+      }
+
       return j.ifStatement(
-        j.unaryExpression('!', conditional),
+        returnable,
         j.blockStatement([j.expressionStatement(newFunction)])
       );
     })
