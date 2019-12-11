@@ -5,6 +5,62 @@ const calls = [
   'lowPriorityWarningWithoutStack',
 ];
 
+function simplify(thing) {
+  if (!thing) {
+    return thing;
+  }
+  if (thing.type === 'UnaryExpression' && thing.operator === '!') {
+    if (
+      thing.argument.type === 'UnaryExpression' &&
+      thing.argument.operator === '!'
+    ) {
+      return thing.argument.argument;
+    }
+    if (thing.argument.type === 'BinaryExpression') {
+      let newOperator;
+      switch (thing.argument.operator) {
+        case '===': {
+          newOperator = '!==';
+          break;
+        }
+        case '!==': {
+          newOperator = '===';
+          break;
+        }
+        case '==': {
+          newOperator = '!=';
+          break;
+        }
+        case '!=': {
+          newOperator = '==';
+          break;
+        }
+        case '<=': {
+          newOperator = '>';
+          break;
+        }
+        case '<': {
+          newOperator = '>=';
+          break;
+        }
+        case '>': {
+          newOperator = '<=';
+          break;
+        }
+        case '>=': {
+          newOperator = '<';
+          break;
+        }
+        default: {
+          throw thing.argument.operator;
+        }
+      }
+      return {...thing.argument, operator: newOperator};
+    }
+  }
+  return thing;
+}
+
 module.exports = function(fileInfo, {jscodeshift: j}) {
   return j(fileInfo.source)
     .find('CallExpression')
@@ -18,58 +74,30 @@ module.exports = function(fileInfo, {jscodeshift: j}) {
       }
 
       let returnable = j.unaryExpression('!', conditional);
-      if (
-        conditional.type === 'BinaryExpression'
-      ) {
-        let newOperator;
+      if (conditional.type === 'LogicalExpression') {
         switch (conditional.operator) {
-          case '===': {
-            newOperator = '!==';
+          case '||':
+            if (conditional.left.type !== 'LogicalExpression') {
+              returnable = j.logicalExpression(
+                '&&',
+                simplify(j.unaryExpression('!', conditional.left)),
+                simplify(j.unaryExpression('!', conditional.right))
+              );
+            }
             break;
-          }
-          case '!==': {
-            newOperator = '===';
+          case '&&':
+            if (conditional.left.type !== 'LogicalExpression') {
+              returnable = j.logicalExpression(
+                '||',
+                simplify(j.unaryExpression('!', conditional.left)),
+                simplify(j.unaryExpression('!', conditional.right))
+              );
+            }
             break;
-          }
-          case '==': {
-            newOperator = '!=';
-            break;
-          }
-          case '!=': {
-            newOperator = '==';
-            break;
-          }
-          case '<=': {
-            newOperator = '>';
-            break;
-          }
-          case '<': {
-            newOperator = '>=';
-            break;
-          }
-          case '>': {
-            newOperator = '<=';
-            break;
-          }
-          case '>=': {
-            newOperator = '<';
-            break;
-          }
-          default: {
-            throw conditional.operator;
-          }
         }
-        returnable = {...conditional, operator: newOperator};
       }
-      if (
-        conditional.type === 'UnaryExpression' &&
-        conditional.operator === '!'
-      ) {
-        returnable = conditional.argument;
-      }
-
       return j.ifStatement(
-        returnable,
+        simplify(returnable),
         j.blockStatement([j.expressionStatement(newFunction)])
       );
     })
