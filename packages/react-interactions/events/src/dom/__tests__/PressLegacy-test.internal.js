@@ -10,6 +10,7 @@
 'use strict';
 
 import {
+  buttonType,
   buttonsType,
   createEventTarget,
   setPointerEvent,
@@ -122,6 +123,7 @@ describe.each(environmentTable)('Press responder', hasPointerEvents => {
     it('is called after middle-button pointer down', () => {
       const target = createEventTarget(ref.current);
       target.pointerdown({
+        button: buttonType.auxiliary,
         buttons: buttonsType.auxiliary,
         pointerType: 'mouse',
       });
@@ -140,6 +142,7 @@ describe.each(environmentTable)('Press responder', hasPointerEvents => {
       const target = createEventTarget(node);
       target.setBoundingClientRect({x: 0, y: 0, width: 100, height: 100});
       target.pointerdown({
+        button: buttonType.auxiliary,
         buttons: buttonsType.auxiliary,
         pointerType: 'mouse',
       });
@@ -368,6 +371,17 @@ describe.each(environmentTable)('Press responder', hasPointerEvents => {
       const target = createEventTarget(ref.current);
       target.pointerdown({
         buttons: buttonsType.auxiliary,
+        pointerType: 'mouse',
+      });
+      target.pointerup({pointerType: 'mouse'});
+      expect(onPress).not.toHaveBeenCalled();
+    });
+
+    it('is not called after virtual middle-button press', () => {
+      const target = createEventTarget(ref.current);
+      target.pointerdown({
+        button: buttonType.auxiliary,
+        buttons: 0,
         pointerType: 'mouse',
       });
       target.pointerup({pointerType: 'mouse'});

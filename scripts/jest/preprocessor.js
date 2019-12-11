@@ -16,9 +16,6 @@ const pathToBabel = path.join(
 const pathToBabelPluginDevWithCode = require.resolve(
   '../error-codes/transform-error-messages'
 );
-const pathToBabelPluginWrapWarning = require.resolve(
-  '../babel/lift-warning-conditional-argument'
-);
 const pathToBabelPluginAsyncToGenerator = require.resolve(
   '@babel/plugin-transform-async-to-generator'
 );
@@ -34,7 +31,6 @@ const babelOptions = {
     require.resolve('@babel/plugin-transform-modules-commonjs'),
 
     pathToBabelPluginDevWithCode,
-    pathToBabelPluginWrapWarning,
 
     // Keep stacks detailed in tests.
     // Don't put this in .babelrc so that we don't embed filenames
@@ -92,7 +88,6 @@ module.exports = {
     pathToBabel,
     pathToBabelrc,
     pathToBabelPluginDevWithCode,
-    pathToBabelPluginWrapWarning,
     pathToTransformInfiniteLoops,
     pathToErrorCodes,
   ]),

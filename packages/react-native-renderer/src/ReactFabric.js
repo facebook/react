@@ -49,15 +49,16 @@ function findHostInstance_DEPRECATED(
   if (__DEV__) {
     const owner = ReactCurrentOwner.current;
     if (owner !== null && owner.stateNode !== null) {
-      warningWithoutStack(
-        owner.stateNode._warnedAboutRefsInRender,
-        '%s is accessing findNodeHandle inside its render(). ' +
-          'render() should be a pure function of props and state. It should ' +
-          'never access something that requires stale data from the previous ' +
-          'render, such as refs. Move this logic to componentDidMount and ' +
-          'componentDidUpdate instead.',
-        getComponentName(owner.type) || 'A component',
-      );
+      if (!owner.stateNode._warnedAboutRefsInRender) {
+        warningWithoutStack(
+          '%s is accessing findNodeHandle inside its render(). ' +
+            'render() should be a pure function of props and state. It should ' +
+            'never access something that requires stale data from the previous ' +
+            'render, such as refs. Move this logic to componentDidMount and ' +
+            'componentDidUpdate instead.',
+          getComponentName(owner.type) || 'A component',
+        );
+      }
 
       owner.stateNode._warnedAboutRefsInRender = true;
     }
@@ -95,15 +96,16 @@ function findNodeHandle(componentOrHandle: any): ?number {
   if (__DEV__) {
     const owner = ReactCurrentOwner.current;
     if (owner !== null && owner.stateNode !== null) {
-      warningWithoutStack(
-        owner.stateNode._warnedAboutRefsInRender,
-        '%s is accessing findNodeHandle inside its render(). ' +
-          'render() should be a pure function of props and state. It should ' +
-          'never access something that requires stale data from the previous ' +
-          'render, such as refs. Move this logic to componentDidMount and ' +
-          'componentDidUpdate instead.',
-        getComponentName(owner.type) || 'A component',
-      );
+      if (!owner.stateNode._warnedAboutRefsInRender) {
+        warningWithoutStack(
+          '%s is accessing findNodeHandle inside its render(). ' +
+            'render() should be a pure function of props and state. It should ' +
+            'never access something that requires stale data from the previous ' +
+            'render, such as refs. Move this logic to componentDidMount and ' +
+            'componentDidUpdate instead.',
+          getComponentName(owner.type) || 'A component',
+        );
+      }
 
       owner.stateNode._warnedAboutRefsInRender = true;
     }
@@ -166,11 +168,12 @@ const ReactFabric: ReactFabricType = {
 
     if (invalid) {
       if (__DEV__) {
-        warningWithoutStack(
-          !invalid,
-          "dispatchCommand was called with a ref that isn't a " +
-            'native component. Use React.forwardRef to get access to the underlying native component',
-        );
+        if (invalid) {
+          warningWithoutStack(
+            "dispatchCommand was called with a ref that isn't a " +
+              'native component. Use React.forwardRef to get access to the underlying native component',
+          );
+        }
       }
       return;
     }

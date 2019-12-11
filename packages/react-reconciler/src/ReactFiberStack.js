@@ -38,14 +38,14 @@ function isEmpty(): boolean {
 function pop<T>(cursor: StackCursor<T>, fiber: Fiber): void {
   if (index < 0) {
     if (__DEV__) {
-      warningWithoutStack(false, 'Unexpected pop.');
+      warningWithoutStack('Unexpected pop.');
     }
     return;
   }
 
   if (__DEV__) {
     if (fiber !== fiberStack[index]) {
-      warningWithoutStack(false, 'Unexpected Fiber popped.');
+      warningWithoutStack('Unexpected Fiber popped.');
     }
   }
 
@@ -76,7 +76,6 @@ function checkThatStackIsEmpty() {
   if (__DEV__) {
     if (index !== -1) {
       warningWithoutStack(
-        false,
         'Expected an empty stack. Something was not reset properly.',
       );
     }

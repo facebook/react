@@ -162,12 +162,13 @@ function traverseAllChildrenImpl(
       if (__DEV__) {
         // Warn about using Maps as children
         if (iteratorFn === children.entries) {
-          warning(
-            didWarnAboutMaps,
-            'Using Maps as children is unsupported and will likely yield ' +
-              'unexpected results. Convert it to a sequence/iterable of keyed ' +
-              'ReactElements instead.',
-          );
+          if (!didWarnAboutMaps) {
+            warning(
+              'Using Maps as children is unsupported and will likely yield ' +
+                'unexpected results. Convert it to a sequence/iterable of keyed ' +
+                'ReactElements instead.',
+            );
+          }
           didWarnAboutMaps = true;
         }
       }

@@ -43,12 +43,9 @@ module.exports = function(context) {
     CallExpression: function(node) {
       // This could be a little smarter by checking context.getScope() to see
       // how warning/invariant was defined.
-      const isWarningOrInvariant =
-        node.callee.type === 'Identifier' &&
-        (node.callee.name === 'warning' ||
-          node.callee.name === 'warningWithoutStack' ||
-          node.callee.name === 'invariant');
-      if (!isWarningOrInvariant) {
+      const isInvariant =
+        node.callee.type === 'Identifier' && node.callee.name === 'invariant';
+      if (!isInvariant) {
         return;
       }
       if (node.arguments.length < 2) {
@@ -90,19 +87,17 @@ module.exports = function(context) {
         );
       }
 
-      if (node.callee.name === 'invariant') {
-        if (!messages.has(format)) {
-          context.report(
-            node,
-            'Error message does not have a corresponding production ' +
-              'error code.\n\n' +
-              'Run `yarn extract-errors` to add the message to error code ' +
-              'map, so it can be stripped from the production builds. ' +
-              "Alternatively, if you're updating an existing error " +
-              'message, you can modify ' +
-              '`scripts/error-codes/codes.json` directly.'
-          );
-        }
+      if (!messages.has(format)) {
+        context.report(
+          node,
+          'Error message does not have a corresponding production ' +
+            'error code.\n\n' +
+            'Run `yarn extract-errors` to add the message to error code ' +
+            'map, so it can be stripped from the production builds. ' +
+            "Alternatively, if you're updating an existing error " +
+            'message, you can modify ' +
+            '`scripts/error-codes/codes.json` directly.'
+        );
       }
     },
   };

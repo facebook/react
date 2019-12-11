@@ -20,7 +20,7 @@ import type {ReactPriorityLevel} from './SchedulerWithReactIntegration';
 
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 
-import {NoWork} from './ReactFiberExpirationTime';
+import {NoWork, Sync} from './ReactFiberExpirationTime';
 import {readContext} from './ReactFiberNewContext';
 import {createResponderListener} from './ReactFiberEvents';
 import {
@@ -108,13 +108,13 @@ type Update<S, A> = {
   action: A,
   eagerReducer: ((S, A) => S) | null,
   eagerState: S | null,
-  next: Update<S, A> | null,
+  next: Update<S, A>,
 
   priority?: ReactPriorityLevel,
 };
 
 type UpdateQueue<S, A> = {
-  last: Update<S, A> | null,
+  pending: Update<S, A> | null,
   dispatch: (A => mixed) | null,
   lastRenderedReducer: ((S, A) => S) | null,
   lastRenderedState: S | null,
@@ -144,7 +144,7 @@ export type Hook = {
   memoizedState: any,
 
   baseState: any,
-  baseUpdate: Update<any, any> | null,
+  baseQueue: Update<any, any> | null,
   queue: UpdateQueue<any, any> | null,
 
   next: Hook | null,
@@ -247,7 +247,6 @@ function checkDepsAreArrayDev(deps: mixed) {
       // Verify deps, but only on mount to avoid extra checks.
       // It's unlikely their type would change as usually you define them inline.
       warning(
-        false,
         '%s received a final argument that is not an array (instead, received `%s`). When ' +
           'specified, the final argument must be an array.',
         currentHookNameInDev,
@@ -289,7 +288,6 @@ function warnOnHookMismatchInDev(currentHookName: HookType) {
         }
 
         warning(
-          false,
           'React has detected a change in the order of Hooks called by %s. ' +
             'This will lead to bugs and errors if not fixed. ' +
             'For more information, read the Rules of Hooks: https://fb.me/rules-of-hooks\n\n' +
@@ -331,7 +329,6 @@ function areHookInputsEqual(
   if (prevDeps === null) {
     if (__DEV__) {
       warning(
-        false,
         '%s received a final argument during this render, but not during ' +
           'the previous render. Even though the final argument is optional, ' +
           'its type cannot change between renders.',
@@ -346,7 +343,6 @@ function areHookInputsEqual(
     // passed inline.
     if (nextDeps.length !== prevDeps.length) {
       warning(
-        false,
         'The final argument passed to %s changed size between renders. The ' +
           'order and size of this array must remain constant.\n\n' +
           'Previous: %s\n' +
@@ -544,8 +540,8 @@ function mountWorkInProgressHook(): Hook {
     memoizedState: null,
 
     baseState: null,
+    baseQueue: null,
     queue: null,
-    baseUpdate: null,
 
     next: null,
   };
@@ -604,8 +600,8 @@ function updateWorkInProgressHook(): Hook {
       memoizedState: currentHook.memoizedState,
 
       baseState: currentHook.baseState,
+      baseQueue: currentHook.baseQueue,
       queue: currentHook.queue,
-      baseUpdate: currentHook.baseUpdate,
 
       next: null,
     };
@@ -645,7 +641,7 @@ function mountReducer<S, I, A>(
   }
   hook.memoizedState = hook.baseState = initialState;
   const queue = (hook.queue = {
-    last: null,
+    pending: null,
     dispatch: null,
     lastRenderedReducer: reducer,
     lastRenderedState: (initialState: any),
@@ -703,7 +699,7 @@ function updateReducer<S, I, A>(
         // the base state unless the queue is empty.
         // TODO: Not sure if this is the desired semantics, but it's what we
         // do for gDSFP. I can't remember why.
-        if (hook.baseUpdate === queue.last) {
+        if (hook.baseQueue === null) {
           hook.baseState = newState;
         }
 
@@ -715,42 +711,55 @@ function updateReducer<S, I, A>(
     return [hook.memoizedState, dispatch];
   }
 
-  // The last update in the entire queue
-  const last = queue.last;
-  // The last update that is part of the base state.
-  const baseUpdate = hook.baseUpdate;
-  const baseState = hook.baseState;
+  const current: Hook = (currentHook: any);
 
-  // Find the first unprocessed update.
-  let first;
-  if (baseUpdate !== null) {
-    if (last !== null) {
-      // For the first update, the queue is a circular linked list where
-      // `queue.last.next = queue.first`. Once the first update commits, and
-      // the `baseUpdate` is no longer empty, we can unravel the list.
-      last.next = null;
+  // The last rebase update that is NOT part of the base state.
+  let baseQueue = current.baseQueue;
+
+  // The last pending update that hasn't been processed yet.
+  let pendingQueue = queue.pending;
+  if (pendingQueue !== null) {
+    // We have new updates that haven't been processed yet.
+    // We'll add them to the base queue.
+    if (baseQueue !== null) {
+      // Merge the pending queue and the base queue.
+      let baseFirst = baseQueue.next;
+      let pendingFirst = pendingQueue.next;
+      baseQueue.next = pendingFirst;
+      pendingQueue.next = baseFirst;
     }
-    first = baseUpdate.next;
-  } else {
-    first = last !== null ? last.next : null;
+    current.baseQueue = baseQueue = pendingQueue;
+    queue.pending = null;
   }
-  if (first !== null) {
-    let newState = baseState;
+
+  if (baseQueue !== null) {
+    // We have a queue to process.
+    let first = baseQueue.next;
+    let newState = current.baseState;
+
     let newBaseState = null;
-    let newBaseUpdate = null;
-    let prevUpdate = baseUpdate;
+    let newBaseQueueFirst = null;
+    let newBaseQueueLast = null;
     let update = first;
-    let didSkip = false;
     do {
       const updateExpirationTime = update.expirationTime;
       if (updateExpirationTime < renderExpirationTime) {
         // Priority is insufficient. Skip this update. If this is the first
         // skipped update, the previous update/state is the new base
         // update/state.
-        if (!didSkip) {
-          didSkip = true;
-          newBaseUpdate = prevUpdate;
+        const clone: Update<S, A> = {
+          expirationTime: update.expirationTime,
+          suspenseConfig: update.suspenseConfig,
+          action: update.action,
+          eagerReducer: update.eagerReducer,
+          eagerState: update.eagerState,
+          next: (null: any),
+        };
+        if (newBaseQueueLast === null) {
+          newBaseQueueFirst = newBaseQueueLast = clone;
           newBaseState = newState;
+        } else {
+          newBaseQueueLast = newBaseQueueLast.next = clone;
         }
         // Update the remaining priority in the queue.
         if (updateExpirationTime > currentlyRenderingFiber.expirationTime) {
@@ -759,6 +768,18 @@ function updateReducer<S, I, A>(
         }
       } else {
         // This update does have sufficient priority.
+
+        if (newBaseQueueLast !== null) {
+          const clone: Update<S, A> = {
+            expirationTime: Sync, // This update is going to be committed so we never want uncommit it.
+            suspenseConfig: update.suspenseConfig,
+            action: update.action,
+            eagerReducer: update.eagerReducer,
+            eagerState: update.eagerState,
+            next: (null: any),
+          };
+          newBaseQueueLast = newBaseQueueLast.next = clone;
+        }
 
         // Mark the event time of this update as relevant to this render pass.
         // TODO: This should ideally use the true event time of this update rather than
@@ -781,13 +802,13 @@ function updateReducer<S, I, A>(
           newState = reducer(newState, action);
         }
       }
-      prevUpdate = update;
       update = update.next;
     } while (update !== null && update !== first);
 
-    if (!didSkip) {
-      newBaseUpdate = prevUpdate;
+    if (newBaseQueueLast === null) {
       newBaseState = newState;
+    } else {
+      newBaseQueueLast.next = (newBaseQueueFirst: any);
     }
 
     // Mark that the fiber performed work, but only if the new state is
@@ -797,8 +818,8 @@ function updateReducer<S, I, A>(
     }
 
     hook.memoizedState = newState;
-    hook.baseUpdate = newBaseUpdate;
     hook.baseState = newBaseState;
+    hook.baseQueue = newBaseQueueLast;
 
     queue.lastRenderedState = newState;
   }
@@ -816,7 +837,7 @@ function mountState<S>(
   }
   hook.memoizedState = hook.baseState = initialState;
   const queue = (hook.queue = {
-    last: null,
+    pending: null,
     dispatch: null,
     lastRenderedReducer: basicStateReducer,
     lastRenderedState: (initialState: any),
@@ -983,12 +1004,13 @@ function imperativeHandleEffect<T>(
   } else if (ref !== null && ref !== undefined) {
     const refObject = ref;
     if (__DEV__) {
-      warning(
-        refObject.hasOwnProperty('current'),
-        'Expected useImperativeHandle() first argument to either be a ' +
-          'ref callback or React.createRef() object. Instead received: %s.',
-        'an object with keys {' + Object.keys(refObject).join(', ') + '}',
-      );
+      if (!refObject.hasOwnProperty('current')) {
+        warning(
+          'Expected useImperativeHandle() first argument to either be a ' +
+            'ref callback or React.createRef() object. Instead received: %s.',
+          'an object with keys {' + Object.keys(refObject).join(', ') + '}',
+        );
+      }
     }
     const inst = create();
     refObject.current = inst;
@@ -1004,12 +1026,13 @@ function mountImperativeHandle<T>(
   deps: Array<mixed> | void | null,
 ): void {
   if (__DEV__) {
-    warning(
-      typeof create === 'function',
-      'Expected useImperativeHandle() second argument to be a function ' +
-        'that creates a handle. Instead received: %s.',
-      create !== null ? typeof create : 'null',
-    );
+    if (typeof create !== 'function') {
+      warning(
+        'Expected useImperativeHandle() second argument to be a function ' +
+          'that creates a handle. Instead received: %s.',
+        create !== null ? typeof create : 'null',
+      );
+    }
   }
 
   // TODO: If deps are provided, should we skip comparing the ref itself?
@@ -1030,12 +1053,13 @@ function updateImperativeHandle<T>(
   deps: Array<mixed> | void | null,
 ): void {
   if (__DEV__) {
-    warning(
-      typeof create === 'function',
-      'Expected useImperativeHandle() second argument to be a function ' +
-        'that creates a handle. Instead received: %s.',
-      create !== null ? typeof create : 'null',
-    );
+    if (typeof create !== 'function') {
+      warning(
+        'Expected useImperativeHandle() second argument to be a function ' +
+          'that creates a handle. Instead received: %s.',
+        create !== null ? typeof create : 'null',
+      );
+    }
   }
 
   // TODO: If deps are provided, should we skip comparing the ref itself?
@@ -1210,12 +1234,13 @@ function dispatchAction<S, A>(
   );
 
   if (__DEV__) {
-    warning(
-      typeof arguments[3] !== 'function',
-      "State updates from the useState() and useReducer() Hooks don't support the " +
-        'second callback argument. To execute a side effect after ' +
-        'rendering, declare it in the component body with useEffect().',
-    );
+    if (typeof arguments[3] === 'function') {
+      warning(
+        "State updates from the useState() and useReducer() Hooks don't support the " +
+          'second callback argument. To execute a side effect after ' +
+          'rendering, declare it in the component body with useEffect().',
+      );
+    }
   }
 
   const alternate = fiber.alternate;
@@ -1233,7 +1258,7 @@ function dispatchAction<S, A>(
       action,
       eagerReducer: null,
       eagerState: null,
-      next: null,
+      next: (null: any),
     };
     if (__DEV__) {
       update.priority = getCurrentPriorityLevel();
@@ -1267,7 +1292,7 @@ function dispatchAction<S, A>(
       action,
       eagerReducer: null,
       eagerState: null,
-      next: null,
+      next: (null: any),
     };
 
     if (__DEV__) {
@@ -1275,19 +1300,15 @@ function dispatchAction<S, A>(
     }
 
     // Append the update to the end of the list.
-    const last = queue.last;
-    if (last === null) {
+    const pending = queue.pending;
+    if (pending === null) {
       // This is the first update. Create a circular list.
       update.next = update;
     } else {
-      const first = last.next;
-      if (first !== null) {
-        // Still circular.
-        update.next = first;
-      }
-      last.next = update;
+      update.next = pending.next;
+      pending.next = update;
     }
-    queue.last = update;
+    queue.pending = update;
 
     if (
       fiber.expirationTime === NoWork &&
@@ -1402,7 +1423,6 @@ let InvalidNestedHooksDispatcherOnUpdateInDEV: Dispatcher | null = null;
 if (__DEV__) {
   const warnInvalidContextAccess = () => {
     warning(
-      false,
       'Context can only be read while React is rendering. ' +
         'In classes, you can read it in the render method or getDerivedStateFromProps. ' +
         'In function components, you can read it directly in the function body, but not ' +
@@ -1412,7 +1432,6 @@ if (__DEV__) {
 
   const warnInvalidHookAccess = () => {
     warning(
-      false,
       'Do not call Hooks inside useEffect(...), useMemo(...), or other built-in Hooks. ' +
         'You can only call Hooks at the top level of your React function. ' +
         'For more information, see ' +

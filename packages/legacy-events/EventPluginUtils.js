@@ -22,11 +22,12 @@ export function setComponentTree(
   getInstanceFromNode = getInstanceFromNodeImpl;
   getNodeFromInstance = getNodeFromInstanceImpl;
   if (__DEV__) {
-    warningWithoutStack(
-      getNodeFromInstance && getInstanceFromNode,
-      'EventPluginUtils.setComponentTree(...): Injected ' +
-        'module is missing getNodeFromInstance or getInstanceFromNode.',
-    );
+    if (!getNodeFromInstance || !getInstanceFromNode) {
+      warningWithoutStack(
+        'EventPluginUtils.setComponentTree(...): Injected ' +
+          'module is missing getNodeFromInstance or getInstanceFromNode.',
+      );
+    }
   }
 }
 
@@ -50,10 +51,9 @@ if (__DEV__) {
         ? 1
         : 0;
 
-    warningWithoutStack(
-      instancesIsArr === listenersIsArr && instancesLen === listenersLen,
-      'EventPluginUtils: Invalid `event`.',
-    );
+    if (instancesIsArr !== listenersIsArr || instancesLen !== listenersLen) {
+      warningWithoutStack('EventPluginUtils: Invalid `event`.');
+    }
   };
 }
 

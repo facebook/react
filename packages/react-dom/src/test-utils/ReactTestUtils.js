@@ -363,7 +363,6 @@ const ReactTestUtils = {
       if (!hasWarnedAboutDeprecatedMockComponent) {
         hasWarnedAboutDeprecatedMockComponent = true;
         lowPriorityWarningWithoutStack(
-          false,
           'ReactTestUtils.mockComponent() is deprecated. ' +
             'Use shallow rendering or jest.mock() instead.\n\n' +
             'See https://fb.me/test-utils-mock-component for more information.',

@@ -37,14 +37,14 @@ export function createSubscription<Property, Value>(
   const {getCurrentValue, subscribe} = config;
 
   if (__DEV__) {
-    warningWithoutStack(
-      typeof getCurrentValue === 'function',
-      'Subscription must specify a getCurrentValue function',
-    );
-    warningWithoutStack(
-      typeof subscribe === 'function',
-      'Subscription must specify a subscribe function',
-    );
+    if (typeof getCurrentValue !== 'function') {
+      warningWithoutStack(
+        'Subscription must specify a getCurrentValue function',
+      );
+    }
+    if (typeof subscribe !== 'function') {
+      warningWithoutStack('Subscription must specify a subscribe function');
+    }
   }
 
   type Props = {

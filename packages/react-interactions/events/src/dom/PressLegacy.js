@@ -207,7 +207,6 @@ function createPressEvent(
       // NO-OP, we should remove this in the future
       if (__DEV__) {
         warning(
-          false,
           'stopPropagation is not available on event objects created from event responder modules (React Flare). ' +
             'Try wrapping in a conditional, i.e. `if (event.type !== "press") { event.stopPropagation() }`',
         );
@@ -626,6 +625,9 @@ const pressResponderImpl = {
           state.responderRegionOnDeactivation = null;
           state.isPressWithinResponderRegion = true;
           state.buttons = nativeEvent.buttons;
+          if (nativeEvent.button === 1) {
+            state.buttons = 4;
+          }
           dispatchPressStartEvents(event, context, props, state);
           addRootEventTypes(context, state);
         } else {

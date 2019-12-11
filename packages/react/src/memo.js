@@ -17,7 +17,6 @@ export default function memo<Props>(
   if (__DEV__) {
     if (!isValidElementType(type)) {
       warningWithoutStack(
-        false,
         'memo: The first argument must be a component. Instead ' +
           'received: %s',
         type === null ? 'null' : typeof type,

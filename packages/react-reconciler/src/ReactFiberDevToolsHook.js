@@ -44,7 +44,6 @@ export function injectInternals(internals: Object): boolean {
   if (!hook.supportsFiber) {
     if (__DEV__) {
       warningWithoutStack(
-        false,
         'The installed version of React DevTools is too old and will not work ' +
           'with the current version of React. Please update React DevTools. ' +
           'https://fb.me/react-devtools',
@@ -66,7 +65,6 @@ export function injectInternals(internals: Object): boolean {
             if (__DEV__ && !hasLoggedError) {
               hasLoggedError = true;
               warningWithoutStack(
-                false,
                 'React instrumentation encountered an error: %s',
                 err,
               );
@@ -93,7 +91,6 @@ export function injectInternals(internals: Object): boolean {
           if (!hasLoggedError) {
             hasLoggedError = true;
             warningWithoutStack(
-              false,
               'React instrumentation encountered an error: %s',
               err,
             );
@@ -109,7 +106,6 @@ export function injectInternals(internals: Object): boolean {
           if (!hasLoggedError) {
             hasLoggedError = true;
             warningWithoutStack(
-              false,
               'React instrumentation encountered an error: %s',
               err,
             );
@@ -121,7 +117,6 @@ export function injectInternals(internals: Object): boolean {
     // Catch all errors because it is unsafe to throw during initialization.
     if (__DEV__) {
       warningWithoutStack(
-        false,
         'React instrumentation encountered an error: %s.',
         err,
       );

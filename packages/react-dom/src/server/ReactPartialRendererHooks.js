@@ -71,13 +71,14 @@ function resolveCurrentlyRenderingComponent(): Object {
       'See https://fb.me/react-invalid-hook-call for tips about how to debug and fix this problem.',
   );
   if (__DEV__) {
-    warning(
-      !isInHookUserCodeInDev,
-      'Do not call Hooks inside useEffect(...), useMemo(...), or other built-in Hooks. ' +
-        'You can only call Hooks at the top level of your React function. ' +
-        'For more information, see ' +
-        'https://fb.me/rules-of-hooks',
-    );
+    if (isInHookUserCodeInDev) {
+      warning(
+        'Do not call Hooks inside useEffect(...), useMemo(...), or other built-in Hooks. ' +
+          'You can only call Hooks at the top level of your React function. ' +
+          'For more information, see ' +
+          'https://fb.me/rules-of-hooks',
+      );
+    }
   }
   return currentlyRenderingComponent;
 }
@@ -89,7 +90,6 @@ function areHookInputsEqual(
   if (prevDeps === null) {
     if (__DEV__) {
       warning(
-        false,
         '%s received a final argument during this render, but not during ' +
           'the previous render. Even though the final argument is optional, ' +
           'its type cannot change between renders.',
@@ -104,7 +104,6 @@ function areHookInputsEqual(
     // passed inline.
     if (nextDeps.length !== prevDeps.length) {
       warning(
-        false,
         'The final argument passed to %s changed size between renders. The ' +
           'order and size of this array must remain constant.\n\n' +
           'Previous: %s\n' +
@@ -223,13 +222,14 @@ function readContext<T>(
   let threadID = currentThreadID;
   validateContextBounds(context, threadID);
   if (__DEV__) {
-    warning(
-      !isInHookUserCodeInDev,
-      'Context can only be read while React is rendering. ' +
-        'In classes, you can read it in the render method or getDerivedStateFromProps. ' +
-        'In function components, you can read it directly in the function body, but not ' +
-        'inside Hooks like useReducer() or useMemo().',
-    );
+    if (isInHookUserCodeInDev) {
+      warning(
+        'Context can only be read while React is rendering. ' +
+          'In classes, you can read it in the render method or getDerivedStateFromProps. ' +
+          'In function components, you can read it directly in the function body, but not ' +
+          'inside Hooks like useReducer() or useMemo().',
+      );
+    }
   }
   return context[threadID];
 }
@@ -393,7 +393,6 @@ export function useLayoutEffect(
   if (__DEV__) {
     currentHookNameInDev = 'useLayoutEffect';
     warning(
-      false,
       'useLayoutEffect does nothing on the server, because its effect cannot ' +
         "be encoded into the server renderer's output format. This will lead " +
         'to a mismatch between the initial, non-hydrated UI and the intended ' +

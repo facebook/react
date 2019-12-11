@@ -806,7 +806,6 @@ function createFiberFromProfiler(
       typeof pendingProps.onRender !== 'function'
     ) {
       warningWithoutStack(
-        false,
         'Profiler must specify an "id" string and "onRender" function as props',
       );
     }

@@ -65,6 +65,34 @@ export const platform = {
 };
 
 /**
+ * Button property
+ * This property only guarantees to indicate which buttons are pressed during events caused by pressing or
+ * releasing one or multiple buttons. As such, it is not reliable for events such as 'mouseenter', 'mouseleave',
+ * 'mouseover', 'mouseout' or 'mousemove'. Furthermore, the semantics differ for PointerEvent, where the value
+ * for 'pointermove' will always be -1.
+ */
+
+export const buttonType = {
+  // no change since last event
+  none: -1,
+  // left-mouse
+  // touch contact
+  // pen contact
+  primary: 0,
+  // right-mouse
+  // pen barrel button
+  secondary: 2,
+  // middle mouse
+  auxiliary: 1,
+  // back mouse
+  back: 3,
+  // forward mouse
+  forward: 4,
+  // pen eraser
+  eraser: 5,
+};
+
+/**
  * Buttons bitmask
  */
 
