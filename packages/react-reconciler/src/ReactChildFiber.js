@@ -546,8 +546,8 @@ function ChildReconciler(shouldTrackSideEffects) {
     oldFiber: Fiber | null,
     newChild: any,
     expirationTime: ExpirationTime,
-  ): Fiber | null | false {
-    // Update the fiber if the keys match, otherwise return false.
+  ): Fiber | null | void {
+    // Update the fiber if the keys match, otherwise return undefined.
 
     const key = oldFiber !== null ? oldFiber.key : null;
 
@@ -556,7 +556,7 @@ function ChildReconciler(shouldTrackSideEffects) {
       // we can continue to replace it without aborting even if it is not a text
       // node.
       if (key !== null) {
-        return false;
+        return undefined;
       }
       return updateTextNode(
         returnFiber,
@@ -586,7 +586,7 @@ function ChildReconciler(shouldTrackSideEffects) {
               expirationTime,
             );
           } else {
-            return false;
+            return undefined;
           }
         }
         case REACT_PORTAL_TYPE: {
@@ -598,14 +598,14 @@ function ChildReconciler(shouldTrackSideEffects) {
               expirationTime,
             );
           } else {
-            return false;
+            return undefined;
           }
         }
       }
 
       if (isArray(newChild) || getIteratorFn(newChild)) {
         if (key !== null) {
-          return false;
+          return undefined;
         }
 
         return updateFragment(
@@ -627,7 +627,7 @@ function ChildReconciler(shouldTrackSideEffects) {
     }
 
     if (key !== null) {
-      return false;
+      return undefined;
     }
     return null;
   }
@@ -810,7 +810,7 @@ function ChildReconciler(shouldTrackSideEffects) {
         newChildren[newIdx],
         expirationTime,
       );
-      if (newFiber === false) {
+      if (newFiber === undefined) {
         if (oldFiber === null) {
           oldFiber = nextOldFiber;
         }
@@ -1006,7 +1006,7 @@ function ChildReconciler(shouldTrackSideEffects) {
         step.value,
         expirationTime,
       );
-      if (newFiber === false) {
+      if (newFiber === undefined) {
         if (oldFiber === null) {
           oldFiber = nextOldFiber;
         }
