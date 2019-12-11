@@ -72,7 +72,6 @@ export function initWrapperState(element: Element, props: Object) {
       !didWarnValDefaultVal
     ) {
       warning(
-        false,
         '%s contains a textarea with both value and defaultValue props. ' +
           'Textarea elements must be either controlled or uncontrolled ' +
           '(specify either the value prop, or the defaultValue prop, but not ' +
@@ -95,7 +94,6 @@ export function initWrapperState(element: Element, props: Object) {
     if (children != null) {
       if (__DEV__) {
         warning(
-          false,
           'Use the `defaultValue` or `value` props instead of setting ' +
             'children on <textarea>.',
         );

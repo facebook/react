@@ -207,7 +207,6 @@ function createPressEvent(
       // NO-OP, we should remove this in the future
       if (__DEV__) {
         warning(
-          false,
           'stopPropagation is not available on event objects created from event responder modules (React Flare). ' +
             'Try wrapping in a conditional, i.e. `if (event.type !== "press") { event.stopPropagation() }`',
         );

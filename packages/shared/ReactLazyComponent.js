@@ -53,7 +53,6 @@ export function initializeLazyComponentType(
           if (__DEV__) {
             if (defaultExport === undefined) {
               warning(
-                false,
                 'lazy: Expected the result of a dynamic import() call. ' +
                   'Instead received: %s\n\nYour code should look like: \n  ' +
                   "const MyComponent = lazy(() => import('./MyComponent'))",

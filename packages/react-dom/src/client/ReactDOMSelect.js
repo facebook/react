@@ -51,7 +51,6 @@ function checkSelectPropTypes(props) {
       const isArray = Array.isArray(props[propName]);
       if (props.multiple && !isArray) {
         warning(
-          false,
           'The `%s` prop supplied to <select> must be an array if ' +
             '`multiple` is true.%s',
           propName,
@@ -59,7 +58,6 @@ function checkSelectPropTypes(props) {
         );
       } else if (!props.multiple && isArray) {
         warning(
-          false,
           'The `%s` prop supplied to <select> must be a scalar ' +
             'value if `multiple` is false.%s',
           propName,
@@ -159,7 +157,6 @@ export function initWrapperState(element: Element, props: Object) {
       !didWarnValueDefaultValue
     ) {
       warning(
-        false,
         'Select elements must be either controlled or uncontrolled ' +
           '(specify either the value prop, or the defaultValue prop, but not ' +
           'both). Decide between using a controlled or uncontrolled select ' +

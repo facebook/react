@@ -1093,7 +1093,6 @@ export function flushDiscreteUpdates() {
     if (__DEV__) {
       if ((executionContext & RenderContext) !== NoContext) {
         warning(
-          false,
           'unstable_flushDiscreteUpdates: Cannot flush updates when React is ' +
             'already rendering.',
         );
@@ -2525,7 +2524,6 @@ function checkForNestedUpdates() {
     if (nestedPassiveUpdateCount > NESTED_PASSIVE_UPDATE_LIMIT) {
       nestedPassiveUpdateCount = 0;
       warning(
-        false,
         'Maximum update depth exceeded. This can happen when a component ' +
           "calls setState inside useEffect, but useEffect either doesn't " +
           'have a dependency array, or one of the dependencies changes on ' +
@@ -2598,7 +2596,6 @@ function warnAboutUpdateOnUnmountedFiberInDEV(fiber) {
       didWarnStateUpdateForUnmountedComponent = new Set([componentName]);
     }
     warningWithoutStack(
-      false,
       "Can't perform a React state update on an unmounted component. This " +
         'is a no-op, but it indicates a memory leak in your application. To ' +
         'fix, cancel all subscriptions and asynchronous tasks in %s.%s',
@@ -2690,7 +2687,6 @@ function warnAboutInvalidUpdatesOnClassComponentsInDEV(fiber) {
             return;
           }
           warningWithoutStack(
-            false,
             'setState(...): Cannot call setState() inside getChildContext()',
           );
           didWarnAboutUpdateInGetChildContext = true;
@@ -2700,7 +2696,6 @@ function warnAboutInvalidUpdatesOnClassComponentsInDEV(fiber) {
             return;
           }
           warningWithoutStack(
-            false,
             'Cannot update during an existing state transition (such as ' +
               'within `render`). Render methods should be a pure function of ' +
               'props and state.',
@@ -2723,7 +2718,6 @@ export function warnIfNotScopedWithMatchingAct(fiber: Fiber): void {
       IsThisRendererActing.current !== true
     ) {
       warningWithoutStack(
-        false,
         "It looks like you're using the wrong act() around your test interactions.\n" +
           'Be sure to use the matching version of act() corresponding to your renderer:\n\n' +
           '// for react-dom:\n' +
@@ -2751,7 +2745,6 @@ export function warnIfNotCurrentlyActingEffectsInDEV(fiber: Fiber): void {
       IsThisRendererActing.current === false
     ) {
       warningWithoutStack(
-        false,
         'An update to %s ran an effect, but was not wrapped in act(...).\n\n' +
           'When testing, code that causes React state updates should be ' +
           'wrapped into act(...):\n\n' +
@@ -2779,7 +2772,6 @@ function warnIfNotCurrentlyActingUpdatesInDEV(fiber: Fiber): void {
       IsThisRendererActing.current === false
     ) {
       warningWithoutStack(
-        false,
         'An update to %s inside a test was not wrapped in act(...).\n\n' +
           'When testing, code that causes React state updates should be ' +
           'wrapped into act(...):\n\n' +
@@ -2816,7 +2808,6 @@ export function warnIfUnmockedScheduler(fiber: Fiber) {
       if (fiber.mode & BlockingMode || fiber.mode & ConcurrentMode) {
         didWarnAboutUnmockedScheduler = true;
         warningWithoutStack(
-          false,
           'In Concurrent or Sync modes, the "scheduler" module needs to be mocked ' +
             'to guarantee consistent behaviour across tests and browsers. ' +
             'For example, with jest: \n' +
@@ -2826,7 +2817,6 @@ export function warnIfUnmockedScheduler(fiber: Fiber) {
       } else if (warnAboutUnmockedScheduler === true) {
         didWarnAboutUnmockedScheduler = true;
         warningWithoutStack(
-          false,
           'Starting from React v17, the "scheduler" module will need to be mocked ' +
             'to guarantee consistent behaviour across tests and browsers. ' +
             'For example, with jest: \n' +
@@ -2937,7 +2927,6 @@ function flushSuspensePriorityWarningInDEV() {
 
       if (componentNames.length > 0) {
         warningWithoutStack(
-          false,
           '%s triggered a user-blocking update that suspended.' +
             '\n\n' +
             'The fix is to split the update into multiple parts: a user-blocking ' +
@@ -2945,8 +2934,7 @@ function flushSuspensePriorityWarningInDEV() {
             'triggers the bulk of the changes.' +
             '\n\n' +
             'Refer to the documentation for useTransition to learn how ' +
-            'to implement this pattern.',
-          // TODO: Add link to React docs with more information, once it exists
+            'to implement this pattern.', // TODO: Add link to React docs with more information, once it exists
           componentNames.sort().join(', '),
         );
       }

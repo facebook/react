@@ -150,7 +150,6 @@ export function validateShorthandPropertyCollisionInDev(
         }
         warnedAbout[warningKey] = true;
         warning(
-          false,
           '%s a style property during rerender (%s) when a ' +
             'conflicting property is set (%s) can lead to styling bugs. To ' +
             "avoid this, don't mix shorthand and non-shorthand properties " +

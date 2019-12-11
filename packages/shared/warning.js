@@ -22,7 +22,7 @@ if (__DEV__) {
     const ReactDebugCurrentFrame = ReactSharedInternals.ReactDebugCurrentFrame;
     const stack = ReactDebugCurrentFrame.getStackAddendum();
     // eslint-disable-next-line react-internal/warning-args
-    warningWithoutStack(false, format + '%s', ...args, stack);
+    warningWithoutStack(format + '%s', ...args, stack);
   };
 }
 

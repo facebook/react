@@ -106,7 +106,6 @@ if (__DEV__) {
     Object.defineProperty(Component.prototype, methodName, {
       get: function() {
         lowPriorityWarningWithoutStack(
-          false,
           '%s(...) is deprecated in plain JavaScript React classes. %s',
           info[0],
           info[1],

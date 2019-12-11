@@ -229,7 +229,6 @@ export function enqueueUpdate<State>(fiber: Fiber, update: Update<State>) {
       !didWarnUpdateInsideUpdate
     ) {
       warningWithoutStack(
-        false,
         'An update (setState, replaceState, or forceUpdate) was scheduled ' +
           'from inside an update function. Update functions should be pure, ' +
           'with zero side-effects. Consider using componentDidUpdate or a ' +
