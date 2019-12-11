@@ -9,6 +9,7 @@
 
 import type {Fiber} from './ReactFiber';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
+import type {UpdateQueue} from './ReactUpdateQueue';
 
 import React from 'react';
 import {Update, Snapshot} from 'shared/ReactSideEffectTags';
@@ -38,6 +39,8 @@ import {
   createUpdate,
   ReplaceState,
   ForceUpdate,
+  initializeUpdateQueue,
+  cloneUpdateQueue,
 } from './ReactUpdateQueue';
 import {NoWork} from './ReactFiberExpirationTime';
 import {
@@ -171,8 +174,9 @@ export function applyDerivedStateFromProps(
 
   // Once the update queue is empty, persist the derived state onto the
   // base state.
-  const updateQueue = workInProgress.updateQueue;
-  if (updateQueue !== null && workInProgress.expirationTime === NoWork) {
+  if (workInProgress.expirationTime === NoWork) {
+    // Queue is always non-null for classes
+    const updateQueue: UpdateQueue<any> = (workInProgress.updateQueue: any);
     updateQueue.baseState = memoizedState;
   }
 }
@@ -789,6 +793,8 @@ function mountClassInstance(
   instance.state = workInProgress.memoizedState;
   instance.refs = emptyRefsObject;
 
+  initializeUpdateQueue(workInProgress);
+
   const contextType = ctor.contextType;
   if (typeof contextType === 'object' && contextType !== null) {
     instance.context = readContext(contextType);
@@ -829,17 +835,8 @@ function mountClassInstance(
     }
   }
 
-  let updateQueue = workInProgress.updateQueue;
-  if (updateQueue !== null) {
-    processUpdateQueue(
-      workInProgress,
-      updateQueue,
-      newProps,
-      instance,
-      renderExpirationTime,
-    );
-    instance.state = workInProgress.memoizedState;
-  }
+  processUpdateQueue(workInProgress, newProps, instance, renderExpirationTime);
+  instance.state = workInProgress.memoizedState;
 
   const getDerivedStateFromProps = ctor.getDerivedStateFromProps;
   if (typeof getDerivedStateFromProps === 'function') {
@@ -863,17 +860,13 @@ function mountClassInstance(
     callComponentWillMount(workInProgress, instance);
     // If we had additional state updates during this life-cycle, let's
     // process them now.
-    updateQueue = workInProgress.updateQueue;
-    if (updateQueue !== null) {
-      processUpdateQueue(
-        workInProgress,
-        updateQueue,
-        newProps,
-        instance,
-        renderExpirationTime,
-      );
-      instance.state = workInProgress.memoizedState;
-    }
+    processUpdateQueue(
+      workInProgress,
+      newProps,
+      instance,
+      renderExpirationTime,
+    );
+    instance.state = workInProgress.memoizedState;
   }
 
   if (typeof instance.componentDidMount === 'function') {
@@ -936,17 +929,8 @@ function resumeMountClassInstance(
 
   const oldState = workInProgress.memoizedState;
   let newState = (instance.state = oldState);
-  let updateQueue = workInProgress.updateQueue;
-  if (updateQueue !== null) {
-    processUpdateQueue(
-      workInProgress,
-      updateQueue,
-      newProps,
-      instance,
-      renderExpirationTime,
-    );
-    newState = workInProgress.memoizedState;
-  }
+  processUpdateQueue(workInProgress, newProps, instance, renderExpirationTime);
+  newState = workInProgress.memoizedState;
   if (
     oldProps === newProps &&
     oldState === newState &&
@@ -1035,6 +1019,8 @@ function updateClassInstance(
 ): boolean {
   const instance = workInProgress.stateNode;
 
+  cloneUpdateQueue(current, workInProgress);
+
   const oldProps = workInProgress.memoizedProps;
   instance.props =
     workInProgress.type === workInProgress.elementType
@@ -1081,17 +1067,8 @@ function updateClassInstance(
 
   const oldState = workInProgress.memoizedState;
   let newState = (instance.state = oldState);
-  let updateQueue = workInProgress.updateQueue;
-  if (updateQueue !== null) {
-    processUpdateQueue(
-      workInProgress,
-      updateQueue,
-      newProps,
-      instance,
-      renderExpirationTime,
-    );
-    newState = workInProgress.memoizedState;
-  }
+  processUpdateQueue(workInProgress, newProps, instance, renderExpirationTime);
+  newState = workInProgress.memoizedState;
 
   if (
     oldProps === newProps &&
