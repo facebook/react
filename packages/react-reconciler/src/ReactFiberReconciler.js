@@ -182,7 +182,6 @@ function findHostInstanceWithWarning(
         didWarnAboutFindNodeInStrictMode[componentName] = true;
         if (fiber.mode & StrictMode) {
           warningWithoutStack(
-            false,
             '%s is deprecated in StrictMode. ' +
               '%s was passed an instance of %s which is inside StrictMode. ' +
               'Instead, add a ref directly to the element you want to reference. ' +
@@ -195,7 +194,6 @@ function findHostInstanceWithWarning(
           );
         } else {
           warningWithoutStack(
-            false,
             '%s is deprecated in StrictMode. ' +
               '%s was passed an instance of %s which renders StrictMode children. ' +
               'Instead, add a ref directly to the element you want to reference. ' +
@@ -263,7 +261,6 @@ export function updateContainer(
     ) {
       didWarnAboutNestedUpdates = true;
       warningWithoutStack(
-        false,
         'Render methods should be a pure function of props and state; ' +
           'triggering nested component updates from render is not allowed. ' +
           'If necessary, trigger nested updates in componentDidUpdate.\n\n' +
@@ -281,12 +278,13 @@ export function updateContainer(
   callback = callback === undefined ? null : callback;
   if (callback !== null) {
     if (__DEV__) {
-      warningWithoutStack(
-        typeof callback === 'function',
-        'render(...): Expected the last optional `callback` argument to be a ' +
-          'function. Instead received: %s.',
-        callback,
-      );
+      if (typeof callback !== 'function') {
+        warningWithoutStack(
+          'render(...): Expected the last optional `callback` argument to be a ' +
+            'function. Instead received: %s.',
+          callback,
+        );
+      }
     }
     update.callback = callback;
   }

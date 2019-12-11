@@ -5,5 +5,9 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-// This "lowPriorityWarning" is an external module
-export default require('lowPriorityWarning');
+// This refers to a WWW module.
+const lowPriorityWarningWWW = require('lowPriorityWarning');
+
+export default function lowPriorityWarningWithoutStack(format, ...args) {
+  return lowPriorityWarningWWW(false, format, ...args);
+}

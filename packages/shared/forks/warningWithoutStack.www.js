@@ -5,4 +5,9 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-export default require('warning');
+// This refers to a WWW module.
+const warningWWW = require('warning');
+
+export default function warningWithoutStack(format, ...args) {
+  return warningWWW(false, format, ...args);
+}

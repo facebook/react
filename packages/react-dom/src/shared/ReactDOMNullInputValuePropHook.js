@@ -19,7 +19,6 @@ export function validateProperties(type, props) {
       didWarnValueNull = true;
       if (type === 'select' && props.multiple) {
         warning(
-          false,
           '`value` prop on `%s` should not be null. ' +
             'Consider using an empty array when `multiple` is set to `true` ' +
             'to clear the component or `undefined` for uncontrolled components.',
@@ -27,7 +26,6 @@ export function validateProperties(type, props) {
         );
       } else {
         warning(
-          false,
           '`value` prop on `%s` should not be null. ' +
             'Consider using an empty string to clear the component or `undefined` ' +
             'for uncontrolled components.',

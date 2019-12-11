@@ -119,7 +119,6 @@ function updateEventListener(
     // show warning
     if (__DEV__) {
       warning(
-        false,
         'Duplicate event responder "%s" found in event listeners. ' +
           'Event listeners passed to elements cannot use the same event responder more than once.',
         responder.displayName,

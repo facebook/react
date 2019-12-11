@@ -103,7 +103,6 @@ function act(callback: () => Thenable) {
       if (actingUpdatesScopeDepth > previousActingUpdatesScopeDepth) {
         // if it's _less than_ previousActingUpdatesScopeDepth, then we can assume the 'other' one has warned
         warningWithoutStack(
-          null,
           'You seem to have overlapping act() calls, this is not supported. ' +
             'Be sure to await previous act() calls before making a new one. ',
         );
@@ -136,7 +135,6 @@ function act(callback: () => Thenable) {
           .then(() => {
             if (called === false) {
               warningWithoutStack(
-                null,
                 'You called act(async () => ...) without await. ' +
                   'This could lead to unexpected testing behaviour, interleaving multiple act ' +
                   'calls and mixing their scopes. You should - await act(async () => ...);',
@@ -183,12 +181,13 @@ function act(callback: () => Thenable) {
     };
   } else {
     if (__DEV__) {
-      warningWithoutStack(
-        result === undefined,
-        'The callback passed to act(...) function ' +
-          'must return undefined, or a Promise. You returned %s',
-        result,
-      );
+      if (result !== undefined) {
+        warningWithoutStack(
+          'The callback passed to act(...) function ' +
+            'must return undefined, or a Promise. You returned %s',
+          result,
+        );
+      }
     }
 
     // flush effects until none remain, and cleanup
@@ -212,7 +211,6 @@ function act(callback: () => Thenable) {
       then(resolve: () => void) {
         if (__DEV__) {
           warningWithoutStack(
-            false,
             'Do not await the result of calling act(...) with sync logic, it is not a Promise.',
           );
         }

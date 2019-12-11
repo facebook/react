@@ -93,7 +93,6 @@ if (__DEV__) {
     typeof Set.prototype.forEach !== 'function'
   ) {
     warningWithoutStack(
-      false,
       'React depends on Map and Set built-in types. Make sure that you load a ' +
         'polyfill in older browsers. https://fb.me/react-polyfills',
     );
@@ -146,7 +145,6 @@ const ReactDOM: Object = {
       if (!didWarnAboutUnstableCreatePortal) {
         didWarnAboutUnstableCreatePortal = true;
         lowPriorityWarningWithoutStack(
-          false,
           'The ReactDOM.unstable_createPortal() alias has been deprecated, ' +
             'and will be removed in React 17+. Update your code to use ' +
             'ReactDOM.createPortal() instead. It has the exact same API, ' +

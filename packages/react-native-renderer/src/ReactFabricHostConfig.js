@@ -161,7 +161,6 @@ class ReactFabricHostComponent {
     ) {
       if (__DEV__) {
         warningWithoutStack(
-          false,
           'Warning: ref.measureLayout must be called with a ref to a native component.',
         );
       }
@@ -180,7 +179,6 @@ class ReactFabricHostComponent {
   setNativeProps(nativeProps: Object) {
     if (__DEV__) {
       warningWithoutStack(
-        false,
         'Warning: setNativeProps is not currently supported in Fabric',
       );
     }

@@ -124,8 +124,6 @@ function getBabelConfig(updateBabelOptions, bundleType, filename) {
         plugins: options.plugins.concat([
           // Minify invariant messages
           require('../error-codes/transform-error-messages'),
-          // Wrap warning() calls in a __DEV__ check so they are stripped from production.
-          require('../babel/lift-warning-conditional-argument'),
         ]),
       });
     case RN_OSS_DEV:
@@ -141,8 +139,6 @@ function getBabelConfig(updateBabelOptions, bundleType, filename) {
             // Preserve full error messages in React Native build
             {noMinify: true},
           ],
-          // Wrap warning() calls in a __DEV__ check so they are stripped from production.
-          require('../babel/lift-warning-conditional-argument'),
         ]),
       });
     case UMD_DEV:
@@ -157,8 +153,6 @@ function getBabelConfig(updateBabelOptions, bundleType, filename) {
           path.resolve('./scripts/babel/transform-object-assign-require'),
           // Minify invariant messages
           require('../error-codes/transform-error-messages'),
-          // Wrap warning() calls in a __DEV__ check so they are stripped from production.
-          require('../babel/lift-warning-conditional-argument'),
         ]),
       });
     default:

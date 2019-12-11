@@ -39,7 +39,6 @@ if (__DEV__) {
     const lowerCasedName = name.toLowerCase();
     if (lowerCasedName === 'onfocusin' || lowerCasedName === 'onfocusout') {
       warning(
-        false,
         'React uses onFocus and onBlur instead of onFocusIn and onFocusOut. ' +
           'All React events are normalized to bubble, so onFocusIn and onFocusOut ' +
           'are not needed/supported by React.',
@@ -60,7 +59,6 @@ if (__DEV__) {
         : null;
       if (registrationName != null) {
         warning(
-          false,
           'Invalid event handler property `%s`. Did you mean `%s`?',
           name,
           registrationName,
@@ -70,7 +68,6 @@ if (__DEV__) {
       }
       if (EVENT_NAME_REGEX.test(name)) {
         warning(
-          false,
           'Unknown event handler property `%s`. It will be ignored.',
           name,
         );
@@ -83,7 +80,6 @@ if (__DEV__) {
       // out known bad ones like `onclick`. We can't suggest a specific replacement though.
       if (INVALID_EVENT_NAME_REGEX.test(name)) {
         warning(
-          false,
           'Invalid event handler property `%s`. ' +
             'React events use the camelCase naming convention, for example `onClick`.',
           name,
@@ -100,7 +96,6 @@ if (__DEV__) {
 
     if (lowerCasedName === 'innerhtml') {
       warning(
-        false,
         'Directly setting property `innerHTML` is not permitted. ' +
           'For more information, lookup documentation on `dangerouslySetInnerHTML`.',
       );
@@ -110,7 +105,6 @@ if (__DEV__) {
 
     if (lowerCasedName === 'aria') {
       warning(
-        false,
         'The `aria` attribute is reserved for future use in React. ' +
           'Pass individual `aria-` attributes instead.',
       );
@@ -125,7 +119,6 @@ if (__DEV__) {
       typeof value !== 'string'
     ) {
       warning(
-        false,
         'Received a `%s` for a string attribute `is`. If this is expected, cast ' +
           'the value to a string.',
         typeof value,
@@ -136,7 +129,6 @@ if (__DEV__) {
 
     if (typeof value === 'number' && isNaN(value)) {
       warning(
-        false,
         'Received NaN for the `%s` attribute. If this is expected, cast ' +
           'the value to a string.',
         name,
@@ -153,7 +145,6 @@ if (__DEV__) {
       const standardName = possibleStandardNames[lowerCasedName];
       if (standardName !== name) {
         warning(
-          false,
           'Invalid DOM property `%s`. Did you mean `%s`?',
           name,
           standardName,
@@ -165,7 +156,6 @@ if (__DEV__) {
       // Unknown attributes should have lowercase casing since that's how they
       // will be cased anyway with server rendering.
       warning(
-        false,
         'React does not recognize the `%s` prop on a DOM element. If you ' +
           'intentionally want it to appear in the DOM as a custom ' +
           'attribute, spell it as lowercase `%s` instead. ' +
@@ -184,7 +174,6 @@ if (__DEV__) {
     ) {
       if (value) {
         warning(
-          false,
           'Received `%s` for a non-boolean attribute `%s`.\n\n' +
             'If you want to write it to the DOM, pass a string instead: ' +
             '%s="%s" or %s={value.toString()}.',
@@ -196,7 +185,6 @@ if (__DEV__) {
         );
       } else {
         warning(
-          false,
           'Received `%s` for a non-boolean attribute `%s`.\n\n' +
             'If you want to write it to the DOM, pass a string instead: ' +
             '%s="%s" or %s={value.toString()}.\n\n' +
@@ -234,7 +222,6 @@ if (__DEV__) {
       propertyInfo.type === BOOLEAN
     ) {
       warning(
-        false,
         'Received the string `%s` for the boolean attribute `%s`. ' +
           '%s ' +
           'Did you mean %s={%s}?',
@@ -274,7 +261,6 @@ const warnUnknownProperties = function(type, props, canUseEventSystem) {
       .join(', ');
     if (unknownProps.length === 1) {
       warning(
-        false,
         'Invalid value for prop %s on <%s> tag. Either remove it from the element, ' +
           'or pass a string or number value to keep it in the DOM. ' +
           'For details, see https://fb.me/react-attribute-behavior',
@@ -283,7 +269,6 @@ const warnUnknownProperties = function(type, props, canUseEventSystem) {
       );
     } else if (unknownProps.length > 1) {
       warning(
-        false,
         'Invalid values for props %s on <%s> tag. Either remove them from the element, ' +
           'or pass a string or number value to keep them in the DOM. ' +
           'For details, see https://fb.me/react-attribute-behavior',

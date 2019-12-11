@@ -45,7 +45,6 @@ function getComponentName(type: mixed): string | null {
   if (__DEV__) {
     if (typeof (type: any).tag === 'number') {
       warningWithoutStack(
-        false,
         'Received an unexpected object in getComponentName(). ' +
           'This is likely a bug in React. Please file an issue.',
       );

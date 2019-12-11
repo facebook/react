@@ -199,7 +199,6 @@ function processChildContext(
         if (!warnedAboutMissingGetChildContext[componentName]) {
           warnedAboutMissingGetChildContext[componentName] = true;
           warningWithoutStack(
-            false,
             '%s.childContextTypes is specified but there is no getChildContext() method ' +
               'on the instance. You can either define getChildContext() on %s or remove ' +
               'childContextTypes from it.',

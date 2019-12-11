@@ -134,7 +134,6 @@ function validateExplicitKey(element, parentType) {
   setCurrentlyValidatingElement(element);
   if (__DEV__) {
     warning(
-      false,
       'Each child in a list should have a unique "key" prop.' +
         '%s%s See https://fb.me/react-warning-keys for more information.',
       currentComponentErrorInfo,
@@ -227,14 +226,15 @@ function validatePropTypes(element) {
     } else if (type.PropTypes !== undefined && !propTypesMisspellWarningShown) {
       propTypesMisspellWarningShown = true;
       warningWithoutStack(
-        false,
         'Component %s declared `PropTypes` instead of `propTypes`. Did you misspell the property assignment?',
         name || 'Unknown',
       );
     }
-    if (typeof type.getDefaultProps === 'function') {
+    if (
+      typeof type.getDefaultProps === 'function' &&
+      !type.getDefaultProps.isReactClassApproved
+    ) {
       warningWithoutStack(
-        type.getDefaultProps.isReactClassApproved,
         'getDefaultProps is only used on classic React.createClass ' +
           'definitions. Use a static property named `defaultProps` instead.',
       );
@@ -255,7 +255,6 @@ function validateFragmentProps(fragment) {
       const key = keys[i];
       if (key !== 'children' && key !== 'key') {
         warning(
-          false,
           'Invalid prop `%s` supplied to `React.Fragment`. ' +
             'React.Fragment can only have `key` and `children` props.',
           key,
@@ -265,7 +264,7 @@ function validateFragmentProps(fragment) {
     }
 
     if (fragment.ref !== null) {
-      warning(false, 'Invalid attribute `ref` supplied to `React.Fragment`.');
+      warning('Invalid attribute `ref` supplied to `React.Fragment`.');
     }
 
     setCurrentlyValidatingElement(null);
@@ -319,7 +318,6 @@ export function jsxWithValidation(
 
     if (__DEV__) {
       warning(
-        false,
         'React.jsx: type is invalid -- expected a string (for ' +
           'built-in components) or a class/function (for composite ' +
           'components) but got: %s.%s',
@@ -358,7 +356,6 @@ export function jsxWithValidation(
         } else {
           if (__DEV__) {
             warning(
-              false,
               'React.jsx: Static children should always be an array. ' +
                 'You are likely explicitly calling React.jsxs or React.jsxDEV. ' +
                 'Use the Babel transform instead.',
@@ -374,7 +371,6 @@ export function jsxWithValidation(
   if (hasOwnProperty.call(props, 'key')) {
     if (__DEV__) {
       warning(
-        false,
         'React.jsx: Spreading a key to JSX is a deprecated pattern. ' +
           'Explicitly pass a key after spreading props in your JSX call. ' +
           'E.g. <ComponentName {...props} key={key} />',
@@ -443,7 +439,6 @@ export function createElementWithValidation(type, props, children) {
 
     if (__DEV__) {
       warning(
-        false,
         'React.createElement: type is invalid -- expected a string (for ' +
           'built-in components) or a class/function (for composite ' +
           'components) but got: %s.%s',
@@ -490,7 +485,6 @@ export function createFactoryWithValidation(type) {
       enumerable: false,
       get: function() {
         lowPriorityWarningWithoutStack(
-          false,
           'Factory.type is deprecated. Access the class directly ' +
             'before passing it to createFactory.',
         );
