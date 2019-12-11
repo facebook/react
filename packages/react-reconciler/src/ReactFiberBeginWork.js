@@ -731,9 +731,9 @@ function updateClassComponent(
   let shouldUpdate;
   if (instance === null) {
     if (current !== null) {
-      // An class component without an instance only mounts if it suspended
+      // A class component without an instance only mounts if it suspended
       // inside a non-concurrent tree, in an inconsistent state. We want to
-      // tree it like a new mount, even though an empty version of it already
+      // treet it like a new mount, even though an empty version of it already
       // committed. Disconnect the alternate pointers.
       current.alternate = null;
       workInProgress.alternate = null;
