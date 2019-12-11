@@ -315,11 +315,11 @@ function checkClassInstance(workInProgress: Fiber, ctor: any, newProps: any) {
       }
     }
 
-    const noGetInitialStateOnES6 =
-      !instance.getInitialState ||
-      instance.getInitialState.isReactClassApproved ||
-      instance.state;
-    if (!noGetInitialStateOnES6) {
+    if (
+      instance.getInitialState &&
+      !instance.getInitialState.isReactClassApproved &&
+      !instance.state
+    ) {
       warningWithoutStack(
         'getInitialState was defined on %s, a plain JavaScript class. ' +
           'This is only supported for classes created using React.createClass. ' +
@@ -327,10 +327,10 @@ function checkClassInstance(workInProgress: Fiber, ctor: any, newProps: any) {
         name,
       );
     }
-    const noGetDefaultPropsOnES6 =
-      !instance.getDefaultProps ||
-      instance.getDefaultProps.isReactClassApproved;
-    if (!noGetDefaultPropsOnES6) {
+    if (
+      instance.getDefaultProps &&
+      !instance.getDefaultProps.isReactClassApproved
+    ) {
       warningWithoutStack(
         'getDefaultProps was defined on %s, a plain JavaScript class. ' +
           'This is only supported for classes created using React.createClass. ' +
@@ -338,16 +338,14 @@ function checkClassInstance(workInProgress: Fiber, ctor: any, newProps: any) {
         name,
       );
     }
-    const noInstancePropTypes = !instance.propTypes;
-    if (!noInstancePropTypes) {
+    if (instance.propTypes) {
       warningWithoutStack(
         'propTypes was defined as an instance property on %s. Use a static ' +
           'property to define propTypes instead.',
         name,
       );
     }
-    const noInstanceContextType = !instance.contextType;
-    if (!noInstanceContextType) {
+    if (instance.contextType) {
       warningWithoutStack(
         'contextType was defined as an instance property on %s. Use a static ' +
           'property to define contextType instead.',
@@ -371,8 +369,7 @@ function checkClassInstance(workInProgress: Fiber, ctor: any, newProps: any) {
         );
       }
     } else {
-      const noInstanceContextTypes = !instance.contextTypes;
-      if (!noInstanceContextTypes) {
+      if (instance.contextTypes) {
         warningWithoutStack(
           'contextTypes was defined as an instance property on %s. Use a static ' +
             'property to define contextTypes instead.',
@@ -394,9 +391,7 @@ function checkClassInstance(workInProgress: Fiber, ctor: any, newProps: any) {
       }
     }
 
-    const noComponentShouldUpdate =
-      typeof instance.componentShouldUpdate !== 'function';
-    if (!noComponentShouldUpdate) {
+    if (typeof instance.componentShouldUpdate === 'function') {
       warningWithoutStack(
         '%s has a method called ' +
           'componentShouldUpdate(). Did you mean shouldComponentUpdate()? ' +
@@ -417,9 +412,7 @@ function checkClassInstance(workInProgress: Fiber, ctor: any, newProps: any) {
         getComponentName(ctor) || 'A pure component',
       );
     }
-    const noComponentDidUnmount =
-      typeof instance.componentDidUnmount !== 'function';
-    if (!noComponentDidUnmount) {
+    if (typeof instance.componentDidUnmount === 'function') {
       warningWithoutStack(
         '%s has a method called ' +
           'componentDidUnmount(). But there is no such lifecycle method. ' +
@@ -427,9 +420,7 @@ function checkClassInstance(workInProgress: Fiber, ctor: any, newProps: any) {
         name,
       );
     }
-    const noComponentDidReceiveProps =
-      typeof instance.componentDidReceiveProps !== 'function';
-    if (!noComponentDidReceiveProps) {
+    if (typeof instance.componentDidReceiveProps === 'function') {
       warningWithoutStack(
         '%s has a method called ' +
           'componentDidReceiveProps(). But there is no such lifecycle method. ' +
@@ -439,18 +430,14 @@ function checkClassInstance(workInProgress: Fiber, ctor: any, newProps: any) {
         name,
       );
     }
-    const noComponentWillRecieveProps =
-      typeof instance.componentWillRecieveProps !== 'function';
-    if (!noComponentWillRecieveProps) {
+    if (typeof instance.componentWillRecieveProps === 'function') {
       warningWithoutStack(
         '%s has a method called ' +
           'componentWillRecieveProps(). Did you mean componentWillReceiveProps()?',
         name,
       );
     }
-    const noUnsafeComponentWillRecieveProps =
-      typeof instance.UNSAFE_componentWillRecieveProps !== 'function';
-    if (!noUnsafeComponentWillRecieveProps) {
+    if (typeof instance.UNSAFE_componentWillRecieveProps === 'function') {
       warningWithoutStack(
         '%s has a method called ' +
           'UNSAFE_componentWillRecieveProps(). Did you mean UNSAFE_componentWillReceiveProps()?',
@@ -466,8 +453,7 @@ function checkClassInstance(workInProgress: Fiber, ctor: any, newProps: any) {
         name,
       );
     }
-    const noInstanceDefaultProps = !instance.defaultProps;
-    if (!noInstanceDefaultProps) {
+    if (instance.defaultProps) {
       warningWithoutStack(
         'Setting defaultProps as an instance property on %s is not supported and will be ignored.' +
           ' Instead, define defaultProps as a static property on %s.',
@@ -489,27 +475,21 @@ function checkClassInstance(workInProgress: Fiber, ctor: any, newProps: any) {
       );
     }
 
-    const noInstanceGetDerivedStateFromProps =
-      typeof instance.getDerivedStateFromProps !== 'function';
-    if (!noInstanceGetDerivedStateFromProps) {
+    if (typeof instance.getDerivedStateFromProps === 'function') {
       warningWithoutStack(
         '%s: getDerivedStateFromProps() is defined as an instance method ' +
           'and will be ignored. Instead, declare it as a static method.',
         name,
       );
     }
-    const noInstanceGetDerivedStateFromCatch =
-      typeof instance.getDerivedStateFromError !== 'function';
-    if (!noInstanceGetDerivedStateFromCatch) {
+    if (typeof instance.getDerivedStateFromError === 'function') {
       warningWithoutStack(
         '%s: getDerivedStateFromError() is defined as an instance method ' +
           'and will be ignored. Instead, declare it as a static method.',
         name,
       );
     }
-    const noStaticGetSnapshotBeforeUpdate =
-      typeof ctor.getSnapshotBeforeUpdate !== 'function';
-    if (!noStaticGetSnapshotBeforeUpdate) {
+    if (typeof ctor.getSnapshotBeforeUpdate === 'function') {
       warningWithoutStack(
         '%s: getSnapshotBeforeUpdate() is defined as a static method ' +
           'and will be ignored. Instead, declare it as an instance method.',
@@ -520,14 +500,15 @@ function checkClassInstance(workInProgress: Fiber, ctor: any, newProps: any) {
     if (state && (typeof state !== 'object' || isArray(state))) {
       warningWithoutStack('%s.state: must be set to an object or null', name);
     }
-    if (typeof instance.getChildContext === 'function') {
-      if (typeof ctor.childContextTypes !== 'object') {
-        warningWithoutStack(
-          '%s.getChildContext(): childContextTypes must be defined in order to ' +
-            'use getChildContext().',
-          name,
-        );
-      }
+    if (
+      typeof instance.getChildContext === 'function' &&
+      typeof ctor.childContextTypes !== 'object'
+    ) {
+      warningWithoutStack(
+        '%s.getChildContext(): childContextTypes must be defined in order to ' +
+          'use getChildContext().',
+        name,
+      );
     }
   }
 }

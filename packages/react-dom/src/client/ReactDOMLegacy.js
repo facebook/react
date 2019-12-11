@@ -80,11 +80,9 @@ if (__DEV__) {
     }
 
     if (
-      !(
-        container.nodeType !== ELEMENT_NODE ||
-        !((container: any): Element).tagName ||
-        ((container: any): Element).tagName.toUpperCase() !== 'BODY'
-      )
+      container.nodeType === ELEMENT_NODE &&
+      ((container: any): Element).tagName &&
+      ((container: any): Element).tagName.toUpperCase() === 'BODY'
     ) {
       warningWithoutStack(
         'render(): Rendering components directly into document.body is ' +

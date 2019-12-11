@@ -49,11 +49,9 @@ function assertValidProps(tag: string, props: ?Object) {
   }
   if (__DEV__) {
     if (
-      !(
-        props.suppressContentEditableWarning ||
-        !props.contentEditable ||
-        props.children == null
-      )
+      !props.suppressContentEditableWarning &&
+      props.contentEditable &&
+      props.children != null
     ) {
       warning(
         'A component is `contentEditable` and contains `children` managed by ' +

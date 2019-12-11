@@ -65,13 +65,11 @@ function readContext(Context, observedBits) {
 function identityHashFn(input) {
   if (__DEV__) {
     if (
-      !(
-        typeof input === 'string' ||
-        typeof input === 'number' ||
-        typeof input === 'boolean' ||
-        input === undefined ||
-        input === null
-      )
+      typeof input !== 'string' &&
+      typeof input !== 'number' &&
+      typeof input !== 'boolean' &&
+      input !== undefined &&
+      input !== null
     ) {
       warningWithoutStack(
         'Invalid key type. Expected a string, number, symbol, or boolean, ' +

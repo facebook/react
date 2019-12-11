@@ -796,7 +796,7 @@ class ReactDOMServerRenderer {
   popProvider<T>(provider: ReactProvider<T>): void {
     const index = this.contextIndex;
     if (__DEV__) {
-      if (index <= -1 || provider !== (this.contextProviderStack: any)[index]) {
+      if (index < 0 || provider !== (this.contextProviderStack: any)[index]) {
         warningWithoutStack('Unexpected pop.');
       }
     }

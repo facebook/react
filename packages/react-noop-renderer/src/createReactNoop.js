@@ -661,12 +661,10 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       if (__DEV__) {
         if (actingUpdatesScopeDepth > previousActingUpdatesScopeDepth) {
           // if it's _less than_ previousActingUpdatesScopeDepth, then we can assume the 'other' one has warned
-          if (!null) {
-            warningWithoutStack(
-              'You seem to have overlapping act() calls, this is not supported. ' +
-                'Be sure to await previous act() calls before making a new one. ',
-            );
-          }
+          warningWithoutStack(
+            'You seem to have overlapping act() calls, this is not supported. ' +
+              'Be sure to await previous act() calls before making a new one. ',
+          );
         }
       }
     }
@@ -695,13 +693,11 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
             .then(() => {})
             .then(() => {
               if (called === false) {
-                if (!null) {
-                  warningWithoutStack(
-                    'You called act(async () => ...) without await. ' +
-                      'This could lead to unexpected testing behaviour, interleaving multiple act ' +
-                      'calls and mixing their scopes. You should - await act(async () => ...);',
-                  );
-                }
+                warningWithoutStack(
+                  'You called act(async () => ...) without await. ' +
+                    'This could lead to unexpected testing behaviour, interleaving multiple act ' +
+                    'calls and mixing their scopes. You should - await act(async () => ...);',
+                );
               }
             });
         }

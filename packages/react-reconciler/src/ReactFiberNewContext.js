@@ -86,11 +86,9 @@ export function pushProvider<T>(providerFiber: Fiber, nextValue: T): void {
     context._currentValue = nextValue;
     if (__DEV__) {
       if (
-        !(
-          context._currentRenderer === undefined ||
-          context._currentRenderer === null ||
-          context._currentRenderer === rendererSigil
-        )
+        context._currentRenderer !== undefined &&
+        context._currentRenderer !== null &&
+        context._currentRenderer !== rendererSigil
       ) {
         warningWithoutStack(
           'Detected multiple renderers concurrently rendering the ' +
@@ -105,11 +103,9 @@ export function pushProvider<T>(providerFiber: Fiber, nextValue: T): void {
     context._currentValue2 = nextValue;
     if (__DEV__) {
       if (
-        !(
-          context._currentRenderer2 === undefined ||
-          context._currentRenderer2 === null ||
-          context._currentRenderer2 === rendererSigil
-        )
+        context._currentRenderer2 !== undefined &&
+        context._currentRenderer2 !== null &&
+        context._currentRenderer2 !== rendererSigil
       ) {
         warningWithoutStack(
           'Detected multiple renderers concurrently rendering the ' +
