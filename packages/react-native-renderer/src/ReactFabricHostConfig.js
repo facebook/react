@@ -29,7 +29,6 @@ import warningWithoutStack from 'shared/warningWithoutStack';
 
 import {dispatchEvent} from './ReactFabricEventEmitter';
 import {
-  addRootEventTypesForResponderInstance,
   mountEventResponder,
   unmountEventResponder,
 } from './ReactFabricEventResponderSystem';
@@ -453,10 +452,6 @@ export function mountResponderInstance(
   instance: Instance,
 ) {
   if (enableFlareAPI) {
-    const {rootEventTypes} = responder;
-    if (rootEventTypes !== null) {
-      addRootEventTypesForResponderInstance(responderInstance, rootEventTypes);
-    }
     mountEventResponder(responder, responderInstance, props, state);
   }
 }

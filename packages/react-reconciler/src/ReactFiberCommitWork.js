@@ -1357,7 +1357,7 @@ function commitWork(current: Fiber | null, finishedWork: Fiber): void {
         if (enableFlareAPI) {
           const prevListeners = oldProps.DEPRECATED_flareListeners;
           const nextListeners = newProps.DEPRECATED_flareListeners;
-          if (prevListeners !== nextListeners || current === null) {
+          if (prevListeners !== nextListeners) {
             updateLegacyEventListeners(nextListeners, finishedWork, null);
           }
         }

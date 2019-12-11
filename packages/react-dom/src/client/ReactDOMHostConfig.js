@@ -52,7 +52,6 @@ import type {
   ReactDOMFundamentalComponentInstance,
 } from 'shared/ReactDOMTypes';
 import {
-  addRootEventTypesForResponderInstance,
   mountEventResponder,
   unmountEventResponder,
   dispatchEventForResponderEventSystem,
@@ -954,16 +953,9 @@ export function mountResponderInstance(
 ): ReactDOMEventResponderInstance {
   // Listen to events
   const doc = instance.ownerDocument;
-  const {
-    rootEventTypes,
-    targetEventTypes,
-  } = ((responder: any): ReactDOMEventResponder);
+  const {targetEventTypes} = ((responder: any): ReactDOMEventResponder);
   if (targetEventTypes !== null) {
     listenToEventResponderEventTypes(targetEventTypes, doc);
-  }
-  if (rootEventTypes !== null) {
-    addRootEventTypesForResponderInstance(responderInstance, rootEventTypes);
-    listenToEventResponderEventTypes(rootEventTypes, doc);
   }
   mountEventResponder(
     responder,
