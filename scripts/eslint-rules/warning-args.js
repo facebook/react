@@ -46,7 +46,9 @@ module.exports = function(context) {
       const isWarning =
         node.callee.type === 'Identifier' &&
         (node.callee.name === 'warning' ||
-          node.callee.name === 'warningWithoutStack');
+          node.callee.name === 'warningWithoutStack' ||
+          node.callee.name === 'lowPriorityWarning' ||
+          node.callee.name === 'lowPriorityWarningWithoutStack');
       if (!isWarning) {
         return;
       }
