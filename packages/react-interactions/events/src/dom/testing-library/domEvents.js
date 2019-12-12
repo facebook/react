@@ -273,7 +273,7 @@ function createTouchEvent(type, payload) {
     },
   );
 
-  const activeTouches = type !== 'touchend' ? touches : null;
+  const activeTouches = type !== 'touchend' ? touches : [];
 
   return createEvent(type, {
     altKey,
