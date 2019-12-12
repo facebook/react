@@ -15,3 +15,4 @@ export const IS_PASSIVE = 1 << 2;
 export const IS_ACTIVE = 1 << 3;
 export const PASSIVE_NOT_SUPPORTED = 1 << 4;
 export const IS_REPLAYED = 1 << 5;
+export const IS_FIRST_ANCESTOR = 1 << 6;
