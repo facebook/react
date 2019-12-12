@@ -127,7 +127,11 @@ Object {
   "hooks": null,
   "props": {
     "array_buffer": {},
+    "array_of_arrays": [
+      {}
+    ],
     "big_int": {},
+    "data_view": {},
     "date": {},
     "fn": {},
     "html_element": {},
@@ -143,6 +147,9 @@ Object {
     "map_of_maps": {
       "0": {},
       "1": {}
+    },
+    "object_of_objects": {
+      "inner": {}
     },
     "react_element": {},
     "set": {

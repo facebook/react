@@ -147,13 +147,19 @@ describe('InspectedElementContext', () => {
 
     const Example = () => null;
 
+    const arrayOfArrays = [[['abc', 123, true], []]];
     const div = document.createElement('div');
     const exampleFunction = () => {};
     const setShallow = new Set(['abc', 123]);
     const mapShallow = new Map([['name', 'Brian'], ['food', 'sushi']]);
     const setOfSets = new Set([new Set(['a', 'b', 'c']), new Set([1, 2, 3])]);
     const mapOfMaps = new Map([['first', mapShallow], ['second', mapShallow]]);
+    const objectOfObjects = {
+      inner: {string: 'abc', number: 213, boolean: true},
+    };
     const typedArray = Int8Array.from([100, -100, 0]);
+    const arrayBuffer = typedArray.buffer;
+    const dataView = new DataView(arrayBuffer);
     const immutableMap = Immutable.fromJS({
       a: [{hello: 'there'}, 'fixed', true],
       b: 123,
@@ -166,15 +172,18 @@ describe('InspectedElementContext', () => {
     act(() =>
       ReactDOM.render(
         <Example
-          array_buffer={typedArray.buffer}
+          array_buffer={arrayBuffer}
+          array_of_arrays={arrayOfArrays}
           // eslint-disable-next-line no-undef
           big_int={BigInt(123)}
-          date={new Date()}
+          data_view={dataView}
+          date={new Date(123)}
           fn={exampleFunction}
           html_element={div}
           immutable={immutableMap}
           map={mapShallow}
           map_of_maps={mapOfMaps}
+          object_of_objects={objectOfObjects}
           react_element={<span />}
           set={setShallow}
           set_of_sets={setOfSets}
@@ -192,13 +201,16 @@ describe('InspectedElementContext', () => {
 
     const {
       array_buffer,
+      array_of_arrays,
       big_int,
+      data_view,
       date,
       fn,
       html_element,
       immutable,
       map,
       map_of_maps,
+      object_of_objects,
       react_element,
       set,
       set_of_sets,
@@ -210,10 +222,24 @@ describe('InspectedElementContext', () => {
     expect(array_buffer[meta.inspectable]).toBe(false);
     expect(array_buffer[meta.name]).toBe('ArrayBuffer');
     expect(array_buffer[meta.type]).toBe('array_buffer');
+    expect(array_buffer[meta.preview_short]).toBe('ArrayBuffer(3)');
+    expect(array_buffer[meta.preview_long]).toBe('ArrayBuffer(3)');
+
+    expect(array_of_arrays[0][meta.size]).toBe(2);
+    expect(array_of_arrays[0][meta.inspectable]).toBe(true);
+    expect(array_of_arrays[0][meta.name]).toBe('Array');
+    expect(array_of_arrays[0][meta.type]).toBe('array');
+    expect(array_of_arrays[0][meta.preview_long]).toBe('[Array(3), Array(0)]');
+    expect(array_of_arrays[0][meta.preview_short]).toBe('Array(2)');
 
     expect(big_int[meta.inspectable]).toBe(false);
     expect(big_int[meta.name]).toBe('123');
     expect(big_int[meta.type]).toBe('bigint');
+
+    expect(data_view[meta.size]).toBe(3);
+    expect(data_view[meta.inspectable]).toBe(false);
+    expect(data_view[meta.name]).toBe('DataView');
+    expect(data_view[meta.type]).toBe('data_view');
 
     expect(date[meta.inspectable]).toBe(false);
     expect(date[meta.type]).toBe('date');
@@ -239,6 +265,15 @@ describe('InspectedElementContext', () => {
     expect(map_of_maps[meta.name]).toBe('Map');
     expect(map_of_maps[meta.type]).toBe('iterator');
     expect(map_of_maps[0][meta.type]).toBe('array');
+
+    expect(object_of_objects.inner[meta.size]).toBe(3);
+    expect(object_of_objects.inner[meta.inspectable]).toBe(true);
+    expect(object_of_objects.inner[meta.name]).toBe('');
+    expect(object_of_objects.inner[meta.type]).toBe('object');
+    expect(object_of_objects.inner[meta.preview_long]).toBe(
+      '{boolean: true, number: 213, string: "abc"}',
+    );
+    expect(object_of_objects.inner[meta.preview_short]).toBe('{…}');
 
     expect(react_element[meta.inspectable]).toBe(false);
     expect(react_element[meta.name]).toBe('span');
