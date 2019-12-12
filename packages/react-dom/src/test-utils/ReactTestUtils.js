@@ -17,7 +17,6 @@ import {
 } from 'shared/ReactWorkTags';
 import SyntheticEvent from 'legacy-events/SyntheticEvent';
 import invariant from 'shared/invariant';
-import lowPriorityWarning from 'shared/lowPriorityWarning';
 import {ELEMENT_NODE} from '../shared/HTMLNodeType';
 import * as DOMTopLevelEventTypes from '../events/DOMTopLevelEventTypes';
 import {PLUGIN_EVENT_SYSTEM} from 'legacy-events/EventSystemFlags';
@@ -362,7 +361,7 @@ const ReactTestUtils = {
     if (__DEV__) {
       if (!hasWarnedAboutDeprecatedMockComponent) {
         hasWarnedAboutDeprecatedMockComponent = true;
-        lowPriorityWarning(
+        console.warn(
           'ReactTestUtils.mockComponent() is deprecated. ' +
             'Use shallow rendering or jest.mock() instead.\n\n' +
             'See https://fb.me/test-utils-mock-component for more information.',

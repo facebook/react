@@ -71,7 +71,6 @@ import getComponentName from 'shared/getComponentName';
 import ReactStrictModeWarnings from './ReactStrictModeWarnings';
 import {refineResolvedLazyComponent} from 'shared/ReactLazyComponent';
 import {REACT_LAZY_TYPE, getIteratorFn} from 'shared/ReactSymbols';
-import warning from 'shared/warning';
 import {
   setCurrentPhase,
   getCurrentFiberOwnerNameInDevOrNull,
@@ -782,7 +781,7 @@ function updateClassComponent(
     let inst = workInProgress.stateNode;
     if (inst.props !== nextProps) {
       if (!didWarnAboutReassigningProps) {
-        warning(
+        console.error(
           'It looks like %s is reassigning its own `this.props` while rendering. ' +
             'This is not supported and can lead to confusing bugs.',
           getComponentName(workInProgress.type) || 'a component',
@@ -1256,7 +1255,7 @@ function mountIndeterminateComponent(
       const componentName = getComponentName(Component) || 'Unknown';
 
       if (!didWarnAboutBadClass[componentName]) {
-        warning(
+        console.error(
           "The <%s /> component appears to have a render method, but doesn't extend React.Component. " +
             'This is likely to cause errors. Change %s to extend React.Component instead.',
           componentName,
@@ -1301,7 +1300,7 @@ function mountIndeterminateComponent(
     if (__DEV__) {
       const componentName = getComponentName(Component) || 'Unknown';
       if (!didWarnAboutModulePatternComponent[componentName]) {
-        warning(
+        console.error(
           'The <%s /> component appears to be a function component that returns a class instance. ' +
             'Change %s to a class that extends React.Component instead. ' +
             "If you can't use a class try assigning the prototype on the function as a workaround. " +
@@ -1363,7 +1362,7 @@ function mountIndeterminateComponent(
     workInProgress.tag = FunctionComponent;
     if (__DEV__) {
       if (disableLegacyContext && Component.contextTypes) {
-        warning(
+        console.error(
           '%s uses the legacy contextTypes API which is no longer supported. ' +
             'Use React.createContext() with React.useContext() instead.',
           getComponentName(Component) || 'Unknown',
@@ -1399,7 +1398,7 @@ function validateFunctionComponentInDev(workInProgress: Fiber, Component: any) {
   if (__DEV__) {
     if (Component) {
       if (Component.childContextTypes) {
-        warning(
+        console.error(
           '%s(...): childContextTypes cannot be defined on a function component.',
           Component.displayName || Component.name || 'Component',
         );
@@ -1419,7 +1418,7 @@ function validateFunctionComponentInDev(workInProgress: Fiber, Component: any) {
       }
       if (!didWarnAboutFunctionRefs[warningKey]) {
         didWarnAboutFunctionRefs[warningKey] = true;
-        warning(
+        console.error(
           'Function components cannot be given refs. ' +
             'Attempts to access this ref will fail. ' +
             'Did you mean to use React.forwardRef()?%s',
@@ -1435,7 +1434,7 @@ function validateFunctionComponentInDev(workInProgress: Fiber, Component: any) {
       const componentName = getComponentName(Component) || 'Unknown';
 
       if (!didWarnAboutDefaultPropsOnFunctionComponent[componentName]) {
-        warning(
+        console.error(
           '%s: Support for defaultProps will be removed from function components ' +
             'in a future major release. Use JavaScript default parameters instead.',
           componentName,
@@ -1448,7 +1447,7 @@ function validateFunctionComponentInDev(workInProgress: Fiber, Component: any) {
       const componentName = getComponentName(Component) || 'Unknown';
 
       if (!didWarnAboutGetDerivedStateOnFunctionComponent[componentName]) {
-        warning(
+        console.error(
           '%s: Function components do not support getDerivedStateFromProps.',
           componentName,
         );
@@ -1463,7 +1462,7 @@ function validateFunctionComponentInDev(workInProgress: Fiber, Component: any) {
       const componentName = getComponentName(Component) || 'Unknown';
 
       if (!didWarnAboutContextTypeOnFunctionComponent[componentName]) {
-        warning(
+        console.error(
           '%s: Function components do not support contextType.',
           componentName,
         );
@@ -1553,7 +1552,7 @@ function updateSuspenseComponent(
     if ('maxDuration' in nextProps) {
       if (!didWarnAboutMaxDuration) {
         didWarnAboutMaxDuration = true;
-        warning(
+        console.error(
           'maxDuration has been removed from React. ' +
             'Remove the maxDuration prop.',
         );
@@ -1960,7 +1959,7 @@ function mountDehydratedSuspenseComponent(
   // Instead, we'll leave the content in place and try to hydrate it later.
   if ((workInProgress.mode & BlockingMode) === NoMode) {
     if (__DEV__) {
-      warning(
+      console.error(
         'Cannot hydrate Suspense in legacy mode. Switch from ' +
           'ReactDOM.hydrate(element, container) to ' +
           'ReactDOM.createBlockingRoot(container, { hydrate: true })' +
@@ -2205,7 +2204,7 @@ function validateRevealOrder(revealOrder: SuspenseListRevealOrder) {
           case 'together':
           case 'forwards':
           case 'backwards': {
-            warning(
+            console.error(
               '"%s" is not a valid value for revealOrder on <SuspenseList />. ' +
                 'Use lowercase "%s" instead.',
               revealOrder,
@@ -2215,7 +2214,7 @@ function validateRevealOrder(revealOrder: SuspenseListRevealOrder) {
           }
           case 'forward':
           case 'backward': {
-            warning(
+            console.error(
               '"%s" is not a valid value for revealOrder on <SuspenseList />. ' +
                 'React uses the -s suffix in the spelling. Use "%ss" instead.',
               revealOrder,
@@ -2224,7 +2223,7 @@ function validateRevealOrder(revealOrder: SuspenseListRevealOrder) {
             break;
           }
           default:
-            warning(
+            console.error(
               '"%s" is not a supported revealOrder on <SuspenseList />. ' +
                 'Did you mean "together", "forwards" or "backwards"?',
               revealOrder,
@@ -2232,7 +2231,7 @@ function validateRevealOrder(revealOrder: SuspenseListRevealOrder) {
             break;
         }
       } else {
-        warning(
+        console.error(
           '%s is not a supported value for revealOrder on <SuspenseList />. ' +
             'Did you mean "together", "forwards" or "backwards"?',
           revealOrder,
@@ -2250,14 +2249,14 @@ function validateTailOptions(
     if (tailMode !== undefined && !didWarnAboutTailOptions[tailMode]) {
       if (tailMode !== 'collapsed' && tailMode !== 'hidden') {
         didWarnAboutTailOptions[tailMode] = true;
-        warning(
+        console.error(
           '"%s" is not a supported value for tail on <SuspenseList />. ' +
             'Did you mean "collapsed" or "hidden"?',
           tailMode,
         );
       } else if (revealOrder !== 'forwards' && revealOrder !== 'backwards') {
         didWarnAboutTailOptions[tailMode] = true;
-        warning(
+        console.error(
           '<SuspenseList tail="%s" /> is only valid if revealOrder is ' +
             '"forwards" or "backwards". ' +
             'Did you mean to specify revealOrder="forwards"?',
@@ -2274,7 +2273,7 @@ function validateSuspenseListNestedChild(childSlot: mixed, index: number) {
     let isIterable = !isArray && typeof getIteratorFn(childSlot) === 'function';
     if (isArray || isIterable) {
       let type = isArray ? 'array' : 'iterable';
-      warning(
+      console.error(
         'A nested %s was passed to row #%s in <SuspenseList />. Wrap it in ' +
           'an additional SuspenseList to configure its revealOrder: ' +
           '<SuspenseList revealOrder=...> ... ' +
@@ -2320,7 +2319,7 @@ function validateSuspenseListChildren(
             }
           }
         } else {
-          warning(
+          console.error(
             'A single row was passed to a <SuspenseList revealOrder="%s" />. ' +
               'This is not useful since it needs multiple rows. ' +
               'Did you mean to pass multiple children or an array?',
@@ -2615,7 +2614,7 @@ function updateContextConsumer(
       if (context !== context.Consumer) {
         if (!hasWarnedAboutUsingContextAsConsumer) {
           hasWarnedAboutUsingContextAsConsumer = true;
-          warning(
+          console.error(
             'Rendering <Context> directly is not supported and will be removed in ' +
               'a future major release. Did you mean to render <Context.Consumer> instead?',
           );
@@ -2630,7 +2629,7 @@ function updateContextConsumer(
 
   if (__DEV__) {
     if (typeof render !== 'function') {
-      warning(
+      console.error(
         'A context consumer was rendered with multiple children, or a child ' +
           "that isn't a function. A context consumer expects a single child " +
           'that is a function. If you did pass a function, make sure there ' +

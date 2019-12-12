@@ -15,7 +15,6 @@ import shallowEqual from 'shared/shallowEqual';
 import invariant from 'shared/invariant';
 import checkPropTypes from 'prop-types/checkPropTypes';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
-import warning from 'shared/warning';
 import is from 'shared/objectIs';
 
 import type {Dispatcher as DispatcherType} from 'react-reconciler/src/ReactFiberHooks';
@@ -62,7 +61,7 @@ function areHookInputsEqual(
 ) {
   if (prevDeps === null) {
     if (__DEV__) {
-      warning(
+      console.error(
         '%s received a final argument during this render, but not during ' +
           'the previous render. Even though the final argument is optional, ' +
           'its type cannot change between renders.',
@@ -76,7 +75,7 @@ function areHookInputsEqual(
     // Don't bother comparing lengths in prod because these arrays should be
     // passed inline.
     if (nextDeps.length !== prevDeps.length) {
-      warning(
+      console.error(
         'The final argument passed to %s changed size between renders. The ' +
           'order and size of this array must remain constant.\n\n' +
           'Previous: %s\n' +

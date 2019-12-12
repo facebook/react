@@ -9,7 +9,6 @@
 
 import type {LazyComponent} from 'shared/ReactLazyComponent';
 
-import warning from 'shared/warning';
 import {
   REACT_CONTEXT_TYPE,
   REACT_FORWARD_REF_TYPE,
@@ -44,7 +43,7 @@ function getComponentName(type: mixed): string | null {
   }
   if (__DEV__) {
     if (typeof (type: any).tag === 'number') {
-      warning(
+      console.error(
         'Received an unexpected object in getComponentName(). ' +
           'This is likely a bug in React. Please file an issue.',
       );

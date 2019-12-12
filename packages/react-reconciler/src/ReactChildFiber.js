@@ -28,7 +28,6 @@ import {
   Fragment,
 } from 'shared/ReactWorkTags';
 import invariant from 'shared/invariant';
-import warning from 'shared/warning';
 import {warnAboutStringRefs} from 'shared/ReactFeatureFlags';
 
 import {
@@ -91,7 +90,7 @@ if (__DEV__) {
     }
     ownerHasKeyUseWarning[currentComponentErrorInfo] = true;
 
-    warning(
+    console.error(
       'Each child in a list should have a unique ' +
         '"key" prop. See https://fb.me/react-warning-keys for ' +
         'more information.',
@@ -119,7 +118,7 @@ function coerceRef(
         const componentName = getComponentName(returnFiber.type) || 'Component';
         if (!didWarnAboutStringRefs[componentName]) {
           if (warnAboutStringRefs) {
-            warning(
+            console.error(
               'Component "%s" contains the string ref "%s". Support for string refs ' +
                 'will be removed in a future major release. We recommend using ' +
                 'useRef() or createRef() instead. ' +
@@ -130,7 +129,7 @@ function coerceRef(
               getStackByFiberInDevAndProd(returnFiber),
             );
           } else {
-            warning(
+            console.error(
               'A string ref, "%s", has been found within a strict mode tree. ' +
                 'String refs are a source of potential bugs and should be avoided. ' +
                 'We recommend using useRef() or createRef() instead. ' +
@@ -240,7 +239,7 @@ function warnOnFunctionType() {
     }
     ownerHasFunctionTypeWarning[currentComponentErrorInfo] = true;
 
-    warning(
+    console.error(
       'Functions are not valid as a React child. This may happen if ' +
         'you return a Component instead of <Component /> from render. ' +
         'Or maybe you meant to call this function rather than return it.',
@@ -733,7 +732,7 @@ function ChildReconciler(shouldTrackSideEffects) {
             knownKeys.add(key);
             break;
           }
-          warning(
+          console.error(
             'Encountered two children with the same key, `%s`. ' +
               'Keys should be unique so that components maintain their identity ' +
               'across updates. Non-unique keys may cause children to be ' +
@@ -933,7 +932,7 @@ function ChildReconciler(shouldTrackSideEffects) {
         newChildrenIterable[Symbol.toStringTag] === 'Generator'
       ) {
         if (!didWarnAboutGenerators) {
-          warning(
+          console.error(
             'Using Generators as children is unsupported and will likely yield ' +
               'unexpected results because enumerating a generator mutates it. ' +
               'You may convert it to an array with `Array.from()` or the ' +
@@ -947,7 +946,7 @@ function ChildReconciler(shouldTrackSideEffects) {
       // Warn about using Maps as children
       if ((newChildrenIterable: any).entries === iteratorFn) {
         if (!didWarnAboutMaps) {
-          warning(
+          console.error(
             'Using Maps as children is unsupported and will likely yield ' +
               'unexpected results. Convert it to a sequence/iterable of keyed ' +
               'ReactElements instead.',

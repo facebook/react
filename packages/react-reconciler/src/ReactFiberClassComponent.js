@@ -24,7 +24,6 @@ import {get as getInstance, set as setInstance} from 'shared/ReactInstanceMap';
 import shallowEqual from 'shared/shallowEqual';
 import getComponentName from 'shared/getComponentName';
 import invariant from 'shared/invariant';
-import warning from 'shared/warning';
 import {REACT_CONTEXT_TYPE, REACT_PROVIDER_TYPE} from 'shared/ReactSymbols';
 
 import {startPhaseTimer, stopPhaseTimer} from './ReactDebugFiberPerf';
@@ -95,7 +94,7 @@ if (__DEV__) {
     const key = `${callerName}_${(callback: any)}`;
     if (!didWarnOnInvalidCallback.has(key)) {
       didWarnOnInvalidCallback.add(key);
-      warning(
+      console.error(
         '%s(...): Expected the last optional `callback` argument to be a ' +
           'function. Instead received: %s.',
         callerName,
@@ -109,7 +108,7 @@ if (__DEV__) {
       const componentName = getComponentName(type) || 'Component';
       if (!didWarnAboutUndefinedDerivedState.has(componentName)) {
         didWarnAboutUndefinedDerivedState.add(componentName);
-        warning(
+        console.error(
           '%s.getDerivedStateFromProps(): A valid state object (or null) must be returned. ' +
             'You have returned undefined.',
           componentName,
@@ -273,7 +272,7 @@ function checkShouldComponentUpdate(
 
     if (__DEV__) {
       if (shouldUpdate === undefined) {
-        warning(
+        console.error(
           '%s.shouldComponentUpdate(): Returned undefined instead of a ' +
             'boolean value. Make sure to return true or false.',
           getComponentName(ctor) || 'Component',
@@ -301,13 +300,13 @@ function checkClassInstance(workInProgress: Fiber, ctor: any, newProps: any) {
 
     if (!renderPresent) {
       if (ctor.prototype && typeof ctor.prototype.render === 'function') {
-        warning(
+        console.error(
           '%s(...): No `render` method found on the returned component ' +
             'instance: did you accidentally return an object from the constructor?',
           name,
         );
       } else {
-        warning(
+        console.error(
           '%s(...): No `render` method found on the returned component ' +
             'instance: you may have forgotten to define `render`.',
           name,
@@ -320,7 +319,7 @@ function checkClassInstance(workInProgress: Fiber, ctor: any, newProps: any) {
       !instance.getInitialState.isReactClassApproved &&
       !instance.state
     ) {
-      warning(
+      console.error(
         'getInitialState was defined on %s, a plain JavaScript class. ' +
           'This is only supported for classes created using React.createClass. ' +
           'Did you mean to define a state property instead?',
@@ -331,7 +330,7 @@ function checkClassInstance(workInProgress: Fiber, ctor: any, newProps: any) {
       instance.getDefaultProps &&
       !instance.getDefaultProps.isReactClassApproved
     ) {
-      warning(
+      console.error(
         'getDefaultProps was defined on %s, a plain JavaScript class. ' +
           'This is only supported for classes created using React.createClass. ' +
           'Use a static property to define defaultProps instead.',
@@ -339,14 +338,14 @@ function checkClassInstance(workInProgress: Fiber, ctor: any, newProps: any) {
       );
     }
     if (instance.propTypes) {
-      warning(
+      console.error(
         'propTypes was defined as an instance property on %s. Use a static ' +
           'property to define propTypes instead.',
         name,
       );
     }
     if (instance.contextType) {
-      warning(
+      console.error(
         'contextType was defined as an instance property on %s. Use a static ' +
           'property to define contextType instead.',
         name,
@@ -355,14 +354,14 @@ function checkClassInstance(workInProgress: Fiber, ctor: any, newProps: any) {
 
     if (disableLegacyContext) {
       if (ctor.childContextTypes) {
-        warning(
+        console.error(
           '%s uses the legacy childContextTypes API which is no longer supported. ' +
             'Use React.createContext() instead.',
           name,
         );
       }
       if (ctor.contextTypes) {
-        warning(
+        console.error(
           '%s uses the legacy contextTypes API which is no longer supported. ' +
             'Use React.createContext() with static contextType instead.',
           name,
@@ -370,7 +369,7 @@ function checkClassInstance(workInProgress: Fiber, ctor: any, newProps: any) {
       }
     } else {
       if (instance.contextTypes) {
-        warning(
+        console.error(
           'contextTypes was defined as an instance property on %s. Use a static ' +
             'property to define contextTypes instead.',
           name,
@@ -383,7 +382,7 @@ function checkClassInstance(workInProgress: Fiber, ctor: any, newProps: any) {
         !didWarnAboutContextTypeAndContextTypes.has(ctor)
       ) {
         didWarnAboutContextTypeAndContextTypes.add(ctor);
-        warning(
+        console.error(
           '%s declares both contextTypes and contextType static properties. ' +
             'The legacy contextTypes property will be ignored.',
           name,
@@ -392,7 +391,7 @@ function checkClassInstance(workInProgress: Fiber, ctor: any, newProps: any) {
     }
 
     if (typeof instance.componentShouldUpdate === 'function') {
-      warning(
+      console.error(
         '%s has a method called ' +
           'componentShouldUpdate(). Did you mean shouldComponentUpdate()? ' +
           'The name is phrased as a question because the function is ' +
@@ -405,7 +404,7 @@ function checkClassInstance(workInProgress: Fiber, ctor: any, newProps: any) {
       ctor.prototype.isPureReactComponent &&
       typeof instance.shouldComponentUpdate !== 'undefined'
     ) {
-      warning(
+      console.error(
         '%s has a method called shouldComponentUpdate(). ' +
           'shouldComponentUpdate should not be used when extending React.PureComponent. ' +
           'Please extend React.Component if shouldComponentUpdate is used.',
@@ -413,7 +412,7 @@ function checkClassInstance(workInProgress: Fiber, ctor: any, newProps: any) {
       );
     }
     if (typeof instance.componentDidUnmount === 'function') {
-      warning(
+      console.error(
         '%s has a method called ' +
           'componentDidUnmount(). But there is no such lifecycle method. ' +
           'Did you mean componentWillUnmount()?',
@@ -421,7 +420,7 @@ function checkClassInstance(workInProgress: Fiber, ctor: any, newProps: any) {
       );
     }
     if (typeof instance.componentDidReceiveProps === 'function') {
-      warning(
+      console.error(
         '%s has a method called ' +
           'componentDidReceiveProps(). But there is no such lifecycle method. ' +
           'If you meant to update the state in response to changing props, ' +
@@ -431,14 +430,14 @@ function checkClassInstance(workInProgress: Fiber, ctor: any, newProps: any) {
       );
     }
     if (typeof instance.componentWillRecieveProps === 'function') {
-      warning(
+      console.error(
         '%s has a method called ' +
           'componentWillRecieveProps(). Did you mean componentWillReceiveProps()?',
         name,
       );
     }
     if (typeof instance.UNSAFE_componentWillRecieveProps === 'function') {
-      warning(
+      console.error(
         '%s has a method called ' +
           'UNSAFE_componentWillRecieveProps(). Did you mean UNSAFE_componentWillReceiveProps()?',
         name,
@@ -446,7 +445,7 @@ function checkClassInstance(workInProgress: Fiber, ctor: any, newProps: any) {
     }
     const hasMutatedProps = instance.props !== newProps;
     if (instance.props !== undefined && hasMutatedProps) {
-      warning(
+      console.error(
         '%s(...): When calling super() in `%s`, make sure to pass ' +
           "up the same props that your component's constructor was passed.",
         name,
@@ -454,7 +453,7 @@ function checkClassInstance(workInProgress: Fiber, ctor: any, newProps: any) {
       );
     }
     if (instance.defaultProps) {
-      warning(
+      console.error(
         'Setting defaultProps as an instance property on %s is not supported and will be ignored.' +
           ' Instead, define defaultProps as a static property on %s.',
         name,
@@ -468,7 +467,7 @@ function checkClassInstance(workInProgress: Fiber, ctor: any, newProps: any) {
       !didWarnAboutGetSnapshotBeforeUpdateWithoutDidUpdate.has(ctor)
     ) {
       didWarnAboutGetSnapshotBeforeUpdateWithoutDidUpdate.add(ctor);
-      warning(
+      console.error(
         '%s: getSnapshotBeforeUpdate() should be used with componentDidUpdate(). ' +
           'This component defines getSnapshotBeforeUpdate() only.',
         getComponentName(ctor),
@@ -476,21 +475,21 @@ function checkClassInstance(workInProgress: Fiber, ctor: any, newProps: any) {
     }
 
     if (typeof instance.getDerivedStateFromProps === 'function') {
-      warning(
+      console.error(
         '%s: getDerivedStateFromProps() is defined as an instance method ' +
           'and will be ignored. Instead, declare it as a static method.',
         name,
       );
     }
     if (typeof instance.getDerivedStateFromError === 'function') {
-      warning(
+      console.error(
         '%s: getDerivedStateFromError() is defined as an instance method ' +
           'and will be ignored. Instead, declare it as a static method.',
         name,
       );
     }
     if (typeof ctor.getSnapshotBeforeUpdate === 'function') {
-      warning(
+      console.error(
         '%s: getSnapshotBeforeUpdate() is defined as a static method ' +
           'and will be ignored. Instead, declare it as an instance method.',
         name,
@@ -498,13 +497,13 @@ function checkClassInstance(workInProgress: Fiber, ctor: any, newProps: any) {
     }
     const state = instance.state;
     if (state && (typeof state !== 'object' || isArray(state))) {
-      warning('%s.state: must be set to an object or null', name);
+      console.error('%s.state: must be set to an object or null', name);
     }
     if (
       typeof instance.getChildContext === 'function' &&
       typeof ctor.childContextTypes !== 'object'
     ) {
-      warning(
+      console.error(
         '%s.getChildContext(): childContextTypes must be defined in order to ' +
           'use getChildContext().',
         name,
@@ -566,7 +565,7 @@ function constructClassInstance(
             Object.keys(contextType).join(', ') +
             '}.';
         }
-        warning(
+        console.error(
           '%s defines an invalid contextType. ' +
             'contextType should point to the Context object returned by React.createContext().%s',
           getComponentName(ctor) || 'Component',
@@ -610,7 +609,7 @@ function constructClassInstance(
       const componentName = getComponentName(ctor) || 'Component';
       if (!didWarnAboutUninitializedState.has(componentName)) {
         didWarnAboutUninitializedState.add(componentName);
-        warning(
+        console.error(
           '`%s` uses `getDerivedStateFromProps` but its initial state is ' +
             '%s. This is not recommended. Instead, define the initial state by ' +
             'assigning an object to `this.state` in the constructor of `%s`. ' +
@@ -670,7 +669,7 @@ function constructClassInstance(
             : 'getSnapshotBeforeUpdate()';
         if (!didWarnAboutLegacyLifecyclesAndDerivedState.has(componentName)) {
           didWarnAboutLegacyLifecyclesAndDerivedState.add(componentName);
-          warning(
+          console.error(
             'Unsafe legacy lifecycles will not be called for components using new component APIs.\n\n' +
               '%s uses %s but also contains the following legacy lifecycles:%s%s%s\n\n' +
               'The above lifecycles should be removed. Learn more about this warning here:\n' +
@@ -712,7 +711,7 @@ function callComponentWillMount(workInProgress, instance) {
 
   if (oldState !== instance.state) {
     if (__DEV__) {
-      warning(
+      console.error(
         '%s.componentWillMount(): Assigning directly to this.state is ' +
           "deprecated (except inside a component's " +
           'constructor). Use setState instead.',
@@ -745,7 +744,7 @@ function callComponentWillReceiveProps(
         getComponentName(workInProgress.type) || 'Component';
       if (!didWarnAboutStateAssignmentForComponent.has(componentName)) {
         didWarnAboutStateAssignmentForComponent.add(componentName);
-        warning(
+        console.error(
           '%s.componentWillReceiveProps(): Assigning directly to ' +
             "this.state is deprecated (except inside a component's " +
             'constructor). Use setState instead.',
@@ -790,7 +789,7 @@ function mountClassInstance(
       const componentName = getComponentName(ctor) || 'Component';
       if (!didWarnAboutDirectlyAssigningPropsToState.has(componentName)) {
         didWarnAboutDirectlyAssigningPropsToState.add(componentName);
-        warning(
+        console.error(
           '%s: It is not recommended to assign props directly to state ' +
             "because updates to props won't be reflected in state. " +
             'In most cases, it is better to use props directly.',

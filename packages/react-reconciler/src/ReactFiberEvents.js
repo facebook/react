@@ -21,7 +21,6 @@ import {
 } from './ReactFiberHostConfig';
 import {NoWork} from './ReactFiberExpirationTime';
 
-import warning from 'shared/warning';
 import {REACT_RESPONDER_TYPE} from 'shared/ReactSymbols';
 
 import invariant from 'shared/invariant';
@@ -118,7 +117,7 @@ function updateEventListener(
   if (visistedResponders.has(responder)) {
     // show warning
     if (__DEV__) {
-      warning(
+      console.error(
         'Duplicate event responder "%s" found in event listeners. ' +
           'Event listeners passed to elements cannot use the same event responder more than once.',
         responder.displayName,

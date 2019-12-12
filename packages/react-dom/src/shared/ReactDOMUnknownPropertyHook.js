@@ -9,7 +9,6 @@ import {
   registrationNameModules,
   possibleRegistrationNames,
 } from 'legacy-events/EventPluginRegistry';
-import warning from 'shared/warning';
 
 import {
   ATTRIBUTE_NAME_CHAR,
@@ -38,7 +37,7 @@ if (__DEV__) {
 
     const lowerCasedName = name.toLowerCase();
     if (lowerCasedName === 'onfocusin' || lowerCasedName === 'onfocusout') {
-      warning(
+      console.error(
         'React uses onFocus and onBlur instead of onFocusIn and onFocusOut. ' +
           'All React events are normalized to bubble, so onFocusIn and onFocusOut ' +
           'are not needed/supported by React.',
@@ -58,7 +57,7 @@ if (__DEV__) {
         ? possibleRegistrationNames[lowerCasedName]
         : null;
       if (registrationName != null) {
-        warning(
+        console.error(
           'Invalid event handler property `%s`. Did you mean `%s`?',
           name,
           registrationName,
@@ -67,7 +66,7 @@ if (__DEV__) {
         return true;
       }
       if (EVENT_NAME_REGEX.test(name)) {
-        warning(
+        console.error(
           'Unknown event handler property `%s`. It will be ignored.',
           name,
         );
@@ -79,7 +78,7 @@ if (__DEV__) {
       // So we can't tell if the event name is correct for sure, but we can filter
       // out known bad ones like `onclick`. We can't suggest a specific replacement though.
       if (INVALID_EVENT_NAME_REGEX.test(name)) {
-        warning(
+        console.error(
           'Invalid event handler property `%s`. ' +
             'React events use the camelCase naming convention, for example `onClick`.',
           name,
@@ -95,7 +94,7 @@ if (__DEV__) {
     }
 
     if (lowerCasedName === 'innerhtml') {
-      warning(
+      console.error(
         'Directly setting property `innerHTML` is not permitted. ' +
           'For more information, lookup documentation on `dangerouslySetInnerHTML`.',
       );
@@ -104,7 +103,7 @@ if (__DEV__) {
     }
 
     if (lowerCasedName === 'aria') {
-      warning(
+      console.error(
         'The `aria` attribute is reserved for future use in React. ' +
           'Pass individual `aria-` attributes instead.',
       );
@@ -118,7 +117,7 @@ if (__DEV__) {
       value !== undefined &&
       typeof value !== 'string'
     ) {
-      warning(
+      console.error(
         'Received a `%s` for a string attribute `is`. If this is expected, cast ' +
           'the value to a string.',
         typeof value,
@@ -128,7 +127,7 @@ if (__DEV__) {
     }
 
     if (typeof value === 'number' && isNaN(value)) {
-      warning(
+      console.error(
         'Received NaN for the `%s` attribute. If this is expected, cast ' +
           'the value to a string.',
         name,
@@ -144,7 +143,7 @@ if (__DEV__) {
     if (possibleStandardNames.hasOwnProperty(lowerCasedName)) {
       const standardName = possibleStandardNames[lowerCasedName];
       if (standardName !== name) {
-        warning(
+        console.error(
           'Invalid DOM property `%s`. Did you mean `%s`?',
           name,
           standardName,
@@ -155,7 +154,7 @@ if (__DEV__) {
     } else if (!isReserved && name !== lowerCasedName) {
       // Unknown attributes should have lowercase casing since that's how they
       // will be cased anyway with server rendering.
-      warning(
+      console.error(
         'React does not recognize the `%s` prop on a DOM element. If you ' +
           'intentionally want it to appear in the DOM as a custom ' +
           'attribute, spell it as lowercase `%s` instead. ' +
@@ -173,7 +172,7 @@ if (__DEV__) {
       shouldRemoveAttributeWithWarning(name, value, propertyInfo, false)
     ) {
       if (value) {
-        warning(
+        console.error(
           'Received `%s` for a non-boolean attribute `%s`.\n\n' +
             'If you want to write it to the DOM, pass a string instead: ' +
             '%s="%s" or %s={value.toString()}.',
@@ -184,7 +183,7 @@ if (__DEV__) {
           name,
         );
       } else {
-        warning(
+        console.error(
           'Received `%s` for a non-boolean attribute `%s`.\n\n' +
             'If you want to write it to the DOM, pass a string instead: ' +
             '%s="%s" or %s={value.toString()}.\n\n' +
@@ -221,7 +220,7 @@ if (__DEV__) {
       propertyInfo !== null &&
       propertyInfo.type === BOOLEAN
     ) {
-      warning(
+      console.error(
         'Received the string `%s` for the boolean attribute `%s`. ' +
           '%s ' +
           'Did you mean %s={%s}?',
@@ -260,7 +259,7 @@ const warnUnknownProperties = function(type, props, canUseEventSystem) {
       .map(prop => '`' + prop + '`')
       .join(', ');
     if (unknownProps.length === 1) {
-      warning(
+      console.error(
         'Invalid value for prop %s on <%s> tag. Either remove it from the element, ' +
           'or pass a string or number value to keep it in the DOM. ' +
           'For details, see https://fb.me/react-attribute-behavior',
@@ -268,7 +267,7 @@ const warnUnknownProperties = function(type, props, canUseEventSystem) {
         type,
       );
     } else if (unknownProps.length > 1) {
-      warning(
+      console.error(
         'Invalid values for props %s on <%s> tag. Either remove them from the element, ' +
           'or pass a string or number value to keep them in the DOM. ' +
           'For details, see https://fb.me/react-attribute-behavior',

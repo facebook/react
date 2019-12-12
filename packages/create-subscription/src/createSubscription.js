@@ -9,7 +9,6 @@
 
 import React from 'react';
 import invariant from 'shared/invariant';
-import warning from 'shared/warning';
 
 type Unsubscribe = () => void;
 
@@ -38,10 +37,10 @@ export function createSubscription<Property, Value>(
 
   if (__DEV__) {
     if (typeof getCurrentValue !== 'function') {
-      warning('Subscription must specify a getCurrentValue function');
+      console.error('Subscription must specify a getCurrentValue function');
     }
     if (typeof subscribe !== 'function') {
-      warning('Subscription must specify a subscribe function');
+      console.error('Subscription must specify a subscribe function');
     }
   }
 

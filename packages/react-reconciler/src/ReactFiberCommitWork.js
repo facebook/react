@@ -67,7 +67,6 @@ import {
 } from 'shared/ReactSideEffectTags';
 import getComponentName from 'shared/getComponentName';
 import invariant from 'shared/invariant';
-import warning from 'shared/warning';
 
 import {onCommitUnmount} from './ReactFiberDevToolsHook';
 import {startPhaseTimer, stopPhaseTimer} from './ReactDebugFiberPerf';
@@ -268,7 +267,7 @@ function commitBeforeMutationLifeCycles(
               !didWarnAboutReassigningProps
             ) {
               if (instance.props !== finishedWork.memoizedProps) {
-                warning(
+                console.error(
                   'Expected %s props to match memoized props before ' +
                     'getSnapshotBeforeUpdate. ' +
                     'This might either be because of a bug in React, or because ' +
@@ -278,7 +277,7 @@ function commitBeforeMutationLifeCycles(
                 );
               }
               if (instance.state !== finishedWork.memoizedState) {
-                warning(
+                console.error(
                   'Expected %s state to match memoized state before ' +
                     'getSnapshotBeforeUpdate. ' +
                     'This might either be because of a bug in React, or because ' +
@@ -301,7 +300,7 @@ function commitBeforeMutationLifeCycles(
             >);
             if (snapshot === undefined && !didWarnSet.has(finishedWork.type)) {
               didWarnSet.add(finishedWork.type);
-              warning(
+              console.error(
                 '%s.getSnapshotBeforeUpdate(): A snapshot value (or null) ' +
                   'must be returned. You have returned undefined.',
                 getComponentName(finishedWork.type),
@@ -380,7 +379,7 @@ function commitHookEffectList(
             } else {
               addendum = ' You returned: ' + destroy;
             }
-            warning(
+            console.error(
               'An effect function must not return anything besides a function, ' +
                 'which is used for clean-up.%s%s',
               addendum,
@@ -437,7 +436,7 @@ function commitLifeCycles(
               !didWarnAboutReassigningProps
             ) {
               if (instance.props !== finishedWork.memoizedProps) {
-                warning(
+                console.error(
                   'Expected %s props to match memoized props before ' +
                     'componentDidMount. ' +
                     'This might either be because of a bug in React, or because ' +
@@ -447,7 +446,7 @@ function commitLifeCycles(
                 );
               }
               if (instance.state !== finishedWork.memoizedState) {
-                warning(
+                console.error(
                   'Expected %s state to match memoized state before ' +
                     'componentDidMount. ' +
                     'This might either be because of a bug in React, or because ' +
@@ -476,7 +475,7 @@ function commitLifeCycles(
               !didWarnAboutReassigningProps
             ) {
               if (instance.props !== finishedWork.memoizedProps) {
-                warning(
+                console.error(
                   'Expected %s props to match memoized props before ' +
                     'componentDidUpdate. ' +
                     'This might either be because of a bug in React, or because ' +
@@ -486,7 +485,7 @@ function commitLifeCycles(
                 );
               }
               if (instance.state !== finishedWork.memoizedState) {
-                warning(
+                console.error(
                   'Expected %s state to match memoized state before ' +
                     'componentDidUpdate. ' +
                     'This might either be because of a bug in React, or because ' +
@@ -513,7 +512,7 @@ function commitLifeCycles(
             !didWarnAboutReassigningProps
           ) {
             if (instance.props !== finishedWork.memoizedProps) {
-              warning(
+              console.error(
                 'Expected %s props to match memoized props before ' +
                   'processing the update queue. ' +
                   'This might either be because of a bug in React, or because ' +
@@ -523,7 +522,7 @@ function commitLifeCycles(
               );
             }
             if (instance.state !== finishedWork.memoizedState) {
-              warning(
+              console.error(
                 'Expected %s state to match memoized state before ' +
                   'processing the update queue. ' +
                   'This might either be because of a bug in React, or because ' +
@@ -712,7 +711,7 @@ function commitAttachRef(finishedWork: Fiber) {
     } else {
       if (__DEV__) {
         if (!ref.hasOwnProperty('current')) {
-          warning(
+          console.error(
             'Unexpected ref object provided for %s. ' +
               'Use either a ref-setter function or React.createRef().%s',
             getComponentName(finishedWork.type),
@@ -1464,7 +1463,7 @@ function commitSuspenseComponent(finishedWork: Fiber) {
       }
     } else if (__DEV__) {
       if (suspenseCallback !== undefined) {
-        warning('Unexpected type for suspenseCallback.');
+        console.error('Unexpected type for suspenseCallback.');
       }
     }
   }

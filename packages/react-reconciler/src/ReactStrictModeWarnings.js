@@ -13,8 +13,6 @@ import {getStackByFiberInDevAndProd} from './ReactCurrentFiber';
 
 import getComponentName from 'shared/getComponentName';
 import {StrictMode} from './ReactTypeOfMode';
-import lowPriorityWarning from 'shared/lowPriorityWarning';
-import warning from 'shared/warning';
 
 type FiberArray = Array<Fiber>;
 type FiberToFiberComponentsMap = Map<Fiber, FiberArray>;
@@ -191,7 +189,7 @@ if (__DEV__) {
       const sortedNames = setToSortedString(
         UNSAFE_componentWillMountUniqueNames,
       );
-      warning(
+      console.error(
         'Using UNSAFE_componentWillMount in strict mode is not recommended and may indicate bugs in your code. ' +
           'See https://fb.me/react-unsafe-component-lifecycles for details.\n\n' +
           '* Move code with side effects to componentDidMount, and set initial state in the constructor.\n' +
@@ -204,7 +202,7 @@ if (__DEV__) {
       const sortedNames = setToSortedString(
         UNSAFE_componentWillReceivePropsUniqueNames,
       );
-      warning(
+      console.error(
         'Using UNSAFE_componentWillReceiveProps in strict mode is not recommended ' +
           'and may indicate bugs in your code. ' +
           'See https://fb.me/react-unsafe-component-lifecycles for details.\n\n' +
@@ -221,7 +219,7 @@ if (__DEV__) {
       const sortedNames = setToSortedString(
         UNSAFE_componentWillUpdateUniqueNames,
       );
-      warning(
+      console.error(
         'Using UNSAFE_componentWillUpdate in strict mode is not recommended ' +
           'and may indicate bugs in your code. ' +
           'See https://fb.me/react-unsafe-component-lifecycles for details.\n\n' +
@@ -234,7 +232,7 @@ if (__DEV__) {
     if (componentWillMountUniqueNames.size > 0) {
       const sortedNames = setToSortedString(componentWillMountUniqueNames);
 
-      lowPriorityWarning(
+      console.warn(
         'componentWillMount has been renamed, and is not recommended for use. ' +
           'See https://fb.me/react-unsafe-component-lifecycles for details.\n\n' +
           '* Move code with side effects to componentDidMount, and set initial state in the constructor.\n' +
@@ -252,7 +250,7 @@ if (__DEV__) {
         componentWillReceivePropsUniqueNames,
       );
 
-      lowPriorityWarning(
+      console.warn(
         'componentWillReceiveProps has been renamed, and is not recommended for use. ' +
           'See https://fb.me/react-unsafe-component-lifecycles for details.\n\n' +
           '* Move data fetching code or side effects to componentDidUpdate.\n' +
@@ -271,7 +269,7 @@ if (__DEV__) {
     if (componentWillUpdateUniqueNames.size > 0) {
       const sortedNames = setToSortedString(componentWillUpdateUniqueNames);
 
-      lowPriorityWarning(
+      console.warn(
         'componentWillUpdate has been renamed, and is not recommended for use. ' +
           'See https://fb.me/react-unsafe-component-lifecycles for details.\n\n' +
           '* Move data fetching code or side effects to componentDidUpdate.\n' +
@@ -296,7 +294,7 @@ if (__DEV__) {
   ) => {
     const strictRoot = findStrictRoot(fiber);
     if (strictRoot === null) {
-      warning(
+      console.error(
         'Expected to find a StrictMode component in a strict mode tree. ' +
           'This error is likely caused by a bug in React. Please file an issue.',
       );
@@ -337,7 +335,7 @@ if (__DEV__) {
           strictRoot,
         );
 
-        warning(
+        console.error(
           'Legacy context API has been detected within a strict-mode tree.' +
             '\n\nThe old API will be supported in all 16.x releases, but applications ' +
             'using it should migrate to the new version.' +
