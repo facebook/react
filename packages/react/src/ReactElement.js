@@ -6,7 +6,7 @@
  */
 
 import invariant from 'shared/invariant';
-import warningWithoutStack from 'shared/warningWithoutStack';
+import warning from 'shared/warning';
 import {REACT_ELEMENT_TYPE} from 'shared/ReactSymbols';
 
 import ReactCurrentOwner from './ReactCurrentOwner';
@@ -51,7 +51,7 @@ function defineKeyPropWarningGetter(props, displayName) {
     if (__DEV__) {
       if (!specialPropKeyWarningShown) {
         specialPropKeyWarningShown = true;
-        warningWithoutStack(
+        warning(
           '%s: `key` is not a prop. Trying to access it will result ' +
             'in `undefined` being returned. If you need to access the same ' +
             'value within the child component, you should pass it as a different ' +
@@ -73,7 +73,7 @@ function defineRefPropWarningGetter(props, displayName) {
     if (__DEV__) {
       if (!specialPropRefWarningShown) {
         specialPropRefWarningShown = true;
-        warningWithoutStack(
+        warning(
           '%s: `ref` is not a prop. Trying to access it will result ' +
             'in `undefined` being returned. If you need to access the same ' +
             'value within the child component, you should pass it as a different ' +

@@ -12,7 +12,7 @@
  * that support it.
  */
 
-import lowPriorityWarningWithoutStack from 'shared/lowPriorityWarningWithoutStack';
+import lowPriorityWarning from 'shared/lowPriorityWarning';
 import isValidElementType from 'shared/isValidElementType';
 import getComponentName from 'shared/getComponentName';
 import {
@@ -24,7 +24,6 @@ import {
 } from 'shared/ReactSymbols';
 import checkPropTypes from 'prop-types/checkPropTypes';
 import warning from 'shared/warning';
-import warningWithoutStack from 'shared/warningWithoutStack';
 
 import ReactCurrentOwner from './ReactCurrentOwner';
 import {
@@ -225,7 +224,7 @@ function validatePropTypes(element) {
       setCurrentlyValidatingElement(null);
     } else if (type.PropTypes !== undefined && !propTypesMisspellWarningShown) {
       propTypesMisspellWarningShown = true;
-      warningWithoutStack(
+      warning(
         'Component %s declared `PropTypes` instead of `propTypes`. Did you misspell the property assignment?',
         name || 'Unknown',
       );
@@ -234,7 +233,7 @@ function validatePropTypes(element) {
       typeof type.getDefaultProps === 'function' &&
       !type.getDefaultProps.isReactClassApproved
     ) {
-      warningWithoutStack(
+      warning(
         'getDefaultProps is only used on classic React.createClass ' +
           'definitions. Use a static property named `defaultProps` instead.',
       );
@@ -484,7 +483,7 @@ export function createFactoryWithValidation(type) {
     Object.defineProperty(validatedFactory, 'type', {
       enumerable: false,
       get: function() {
-        lowPriorityWarningWithoutStack(
+        lowPriorityWarning(
           'Factory.type is deprecated. Access the class directly ' +
             'before passing it to createFactory.',
         );

@@ -72,7 +72,6 @@ import ReactStrictModeWarnings from './ReactStrictModeWarnings';
 import {refineResolvedLazyComponent} from 'shared/ReactLazyComponent';
 import {REACT_LAZY_TYPE, getIteratorFn} from 'shared/ReactSymbols';
 import warning from 'shared/warning';
-import warningWithoutStack from 'shared/warningWithoutStack';
 import {
   setCurrentPhase,
   getCurrentFiberOwnerNameInDevOrNull,
@@ -1257,7 +1256,7 @@ function mountIndeterminateComponent(
       const componentName = getComponentName(Component) || 'Unknown';
 
       if (!didWarnAboutBadClass[componentName]) {
-        warningWithoutStack(
+        warning(
           "The <%s /> component appears to have a render method, but doesn't extend React.Component. " +
             'This is likely to cause errors. Change %s to extend React.Component instead.',
           componentName,
@@ -1302,7 +1301,7 @@ function mountIndeterminateComponent(
     if (__DEV__) {
       const componentName = getComponentName(Component) || 'Unknown';
       if (!didWarnAboutModulePatternComponent[componentName]) {
-        warningWithoutStack(
+        warning(
           'The <%s /> component appears to be a function component that returns a class instance. ' +
             'Change %s to a class that extends React.Component instead. ' +
             "If you can't use a class try assigning the prototype on the function as a workaround. " +
@@ -1363,7 +1362,7 @@ function mountIndeterminateComponent(
     workInProgress.tag = FunctionComponent;
     if (__DEV__) {
       if (disableLegacyContext && Component.contextTypes) {
-        warningWithoutStack(
+        warning(
           '%s uses the legacy contextTypes API which is no longer supported. ' +
             'Use React.createContext() with React.useContext() instead.',
           getComponentName(Component) || 'Unknown',
@@ -1399,7 +1398,7 @@ function validateFunctionComponentInDev(workInProgress: Fiber, Component: any) {
   if (__DEV__) {
     if (Component) {
       if (Component.childContextTypes) {
-        warningWithoutStack(
+        warning(
           '%s(...): childContextTypes cannot be defined on a function component.',
           Component.displayName || Component.name || 'Component',
         );
@@ -1435,7 +1434,7 @@ function validateFunctionComponentInDev(workInProgress: Fiber, Component: any) {
       const componentName = getComponentName(Component) || 'Unknown';
 
       if (!didWarnAboutDefaultPropsOnFunctionComponent[componentName]) {
-        warningWithoutStack(
+        warning(
           '%s: Support for defaultProps will be removed from function components ' +
             'in a future major release. Use JavaScript default parameters instead.',
           componentName,
@@ -1448,7 +1447,7 @@ function validateFunctionComponentInDev(workInProgress: Fiber, Component: any) {
       const componentName = getComponentName(Component) || 'Unknown';
 
       if (!didWarnAboutGetDerivedStateOnFunctionComponent[componentName]) {
-        warningWithoutStack(
+        warning(
           '%s: Function components do not support getDerivedStateFromProps.',
           componentName,
         );
@@ -1463,7 +1462,7 @@ function validateFunctionComponentInDev(workInProgress: Fiber, Component: any) {
       const componentName = getComponentName(Component) || 'Unknown';
 
       if (!didWarnAboutContextTypeOnFunctionComponent[componentName]) {
-        warningWithoutStack(
+        warning(
           '%s: Function components do not support contextType.',
           componentName,
         );
@@ -2630,7 +2629,7 @@ function updateContextConsumer(
 
   if (__DEV__) {
     if (typeof render !== 'function') {
-      warningWithoutStack(
+      warning(
         'A context consumer was rendered with multiple children, or a child ' +
           "that isn't a function. A context consumer expects a single child " +
           'that is a function. If you did pass a function, make sure there ' +

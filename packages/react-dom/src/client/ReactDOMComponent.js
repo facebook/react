@@ -10,9 +10,8 @@
 // TODO: direct imports like some-package/src/* are bad. Fix me.
 import {getCurrentFiberOwnerNameInDevOrNull} from 'react-reconciler/src/ReactCurrentFiber';
 import {registrationNameModules} from 'legacy-events/EventPluginRegistry';
-import warning from 'shared/warning';
 import {canUseDOM} from 'shared/ExecutionEnvironment';
-import warningWithoutStack from 'shared/warningWithoutStack';
+import warning from 'shared/warning';
 import endsWith from 'shared/endsWith';
 import {setListenToResponderEventTypes} from '../events/DOMEventResponderSystem';
 
@@ -184,7 +183,7 @@ if (__DEV__) {
       return;
     }
     didWarnInvalidHydration = true;
-    warningWithoutStack(
+    warning(
       'Text content did not match. Server: "%s" Client: "%s"',
       normalizedServerText,
       normalizedClientText,
@@ -209,7 +208,7 @@ if (__DEV__) {
       return;
     }
     didWarnInvalidHydration = true;
-    warningWithoutStack(
+    warning(
       'Prop `%s` did not match. Server: %s Client: %s',
       propName,
       JSON.stringify(normalizedServerValue),
@@ -226,7 +225,7 @@ if (__DEV__) {
     attributeNames.forEach(function(name) {
       names.push(name);
     });
-    warningWithoutStack('Extra attributes from the server: %s', names);
+    warning('Extra attributes from the server: %s', names);
   };
 
   warnForInvalidEventListener = function(registrationName, listener) {
@@ -1211,7 +1210,7 @@ export function warnForDeletedHydratableElement(
       return;
     }
     didWarnInvalidHydration = true;
-    warningWithoutStack(
+    warning(
       'Did not expect server HTML to contain a <%s> in <%s>.',
       child.nodeName.toLowerCase(),
       parentNode.nodeName.toLowerCase(),
@@ -1228,7 +1227,7 @@ export function warnForDeletedHydratableText(
       return;
     }
     didWarnInvalidHydration = true;
-    warningWithoutStack(
+    warning(
       'Did not expect server HTML to contain the text node "%s" in <%s>.',
       child.nodeValue,
       parentNode.nodeName.toLowerCase(),
@@ -1246,7 +1245,7 @@ export function warnForInsertedHydratedElement(
       return;
     }
     didWarnInvalidHydration = true;
-    warningWithoutStack(
+    warning(
       'Expected server HTML to contain a matching <%s> in <%s>.',
       tag,
       parentNode.nodeName.toLowerCase(),
@@ -1270,7 +1269,7 @@ export function warnForInsertedHydratedText(
       return;
     }
     didWarnInvalidHydration = true;
-    warningWithoutStack(
+    warning(
       'Expected server HTML to contain a matching text node for "%s" in <%s>.',
       text,
       parentNode.nodeName.toLowerCase(),

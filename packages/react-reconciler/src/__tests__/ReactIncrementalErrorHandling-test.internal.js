@@ -1657,7 +1657,7 @@ describe('ReactIncrementalErrorHandling', () => {
           'applications using it should migrate to the new version.\n\n' +
           'Please update the following components: Provider',
       ],
-      {withoutStack: true},
+      {withoutStack: 1},
     );
   });
 });

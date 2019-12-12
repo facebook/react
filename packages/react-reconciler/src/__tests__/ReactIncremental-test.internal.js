@@ -2051,7 +2051,7 @@ describe('ReactIncremental', () => {
           'using it should migrate to the new version.\n\n' +
           'Please update the following components: Recurse',
       ],
-      {withoutStack: true},
+      {withoutStack: 1},
     );
     expect(ops).toEqual([
       'Recurse {}',
@@ -2426,7 +2426,6 @@ describe('ReactIncremental', () => {
     });
     expect(() => expect(Scheduler).toFlushWithoutYielding()).toWarnDev(
       'Error boundaries should implement getDerivedStateFromError()',
-      {withoutStack: true},
     );
   });
 

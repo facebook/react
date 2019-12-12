@@ -332,7 +332,7 @@ describe('ReactTypeScriptClass', function() {
         'component instance: you may have forgotten to define `render`.',
       'Warning: Empty(...): No `render` method found on the returned ' +
         'component instance: you may have forgotten to define `render`.',
-    ], {withoutStack: true});
+    ]);
   });
 
   it('renders a simple stateless component with prop', function() {
@@ -392,8 +392,7 @@ describe('ReactTypeScriptClass', function() {
       ReactDOM.render(React.createElement(Foo, {foo: 'foo'}), container);
     }).toWarnDev(
       'Foo: getDerivedStateFromProps() is defined as an instance method ' +
-        'and will be ignored. Instead, declare it as a static method.',
-        {withoutStack: true}
+        'and will be ignored. Instead, declare it as a static method.'
     );
   });
 
@@ -410,8 +409,7 @@ describe('ReactTypeScriptClass', function() {
       ReactDOM.render(React.createElement(Foo, {foo: 'foo'}), container);
     }).toWarnDev(
       'Foo: getDerivedStateFromError() is defined as an instance method ' +
-        'and will be ignored. Instead, declare it as a static method.',
-        {withoutStack: true}
+        'and will be ignored. Instead, declare it as a static method.'
     );
   });
 
@@ -427,8 +425,7 @@ describe('ReactTypeScriptClass', function() {
       ReactDOM.render(React.createElement(Foo, {foo: 'foo'}), container);
     }).toWarnDev(
       'Foo: getSnapshotBeforeUpdate() is defined as a static method ' +
-        'and will be ignored. Instead, declare it as an instance method.',
-        {withoutStack: true}
+        'and will be ignored. Instead, declare it as an instance method.'
     );
   });
 
@@ -452,8 +449,7 @@ describe('ReactTypeScriptClass', function() {
       '`Foo` uses `getDerivedStateFromProps` but its initial state is ' +
       'undefined. This is not recommended. Instead, define the initial state by ' +
       'assigning an object to `this.state` in the constructor of `Foo`. ' +
-      'This ensures that `getDerivedStateFromProps` arguments have a consistent shape.',
-        {withoutStack: true}
+      'This ensures that `getDerivedStateFromProps` arguments have a consistent shape.'
     );
   });
 
@@ -510,16 +506,13 @@ describe('ReactTypeScriptClass', function() {
 
   it('should warn with non-object in the initial state property', function() {
     expect(() => test(React.createElement(ArrayState), 'SPAN', '')).toWarnDev(
-      'ArrayState.state: must be set to an object or null',
-      {withoutStack: true}
+      'ArrayState.state: must be set to an object or null'
     );
     expect(() => test(React.createElement(StringState), 'SPAN', '')).toWarnDev(
-      'StringState.state: must be set to an object or null',
-      {withoutStack: true}
+      'StringState.state: must be set to an object or null'
     );
     expect(() => test(React.createElement(NumberState), 'SPAN', '')).toWarnDev(
-      'NumberState.state: must be set to an object or null',
-      {withoutStack: true}
+      'NumberState.state: must be set to an object or null'
     );
   });
 
@@ -596,7 +589,7 @@ describe('ReactTypeScriptClass', function() {
         'propTypes was defined as an instance property on ClassicProperties.',
         'contextTypes was defined as an instance property on ClassicProperties.',
         'contextType was defined as an instance property on ClassicProperties.',
-      ], {withoutStack: true});
+      ]);
       expect(getInitialStateWasCalled).toBe(false);
       expect(getDefaultPropsWasCalled).toBe(false);
     }
@@ -627,8 +620,7 @@ describe('ReactTypeScriptClass', function() {
       'Warning: ' +
         'MisspelledComponent1 has a method called componentShouldUpdate(). Did ' +
         'you mean shouldComponentUpdate()? The name is phrased as a question ' +
-        'because the function is expected to return a value.',
-        {withoutStack: true}
+        'because the function is expected to return a value.'
     );
   });
 
@@ -638,8 +630,7 @@ describe('ReactTypeScriptClass', function() {
     ).toWarnDev(
       'Warning: ' +
         'MisspelledComponent2 has a method called componentWillRecieveProps(). ' +
-        'Did you mean componentWillReceiveProps()?',
-        {withoutStack: true}
+        'Did you mean componentWillReceiveProps()?'
     );
   });
 
@@ -649,8 +640,7 @@ describe('ReactTypeScriptClass', function() {
     ).toWarnDev(
       'Warning: ' +
         'MisspelledComponent3 has a method called UNSAFE_componentWillRecieveProps(). ' +
-        'Did you mean UNSAFE_componentWillReceiveProps()?',
-        {withoutStack: true}
+        'Did you mean UNSAFE_componentWillReceiveProps()?'
     );
   });
 

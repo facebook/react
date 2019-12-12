@@ -25,7 +25,7 @@ import {mountSafeCallback_NOT_REALLY_SAFE} from './NativeMethodsMixinUtils';
 import {create, diff} from './ReactNativeAttributePayload';
 
 import invariant from 'shared/invariant';
-import warningWithoutStack from 'shared/warningWithoutStack';
+import warning from 'shared/warning';
 
 import {dispatchEvent} from './ReactFabricEventEmitter';
 import {
@@ -159,7 +159,7 @@ class ReactFabricHostComponent {
       !(relativeToNativeNode instanceof ReactFabricHostComponent)
     ) {
       if (__DEV__) {
-        warningWithoutStack(
+        warning(
           'Warning: ref.measureLayout must be called with a ref to a native component.',
         );
       }
@@ -177,9 +177,7 @@ class ReactFabricHostComponent {
 
   setNativeProps(nativeProps: Object) {
     if (__DEV__) {
-      warningWithoutStack(
-        'Warning: setNativeProps is not currently supported in Fabric',
-      );
+      warning('Warning: setNativeProps is not currently supported in Fabric');
     }
 
     return;

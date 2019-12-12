@@ -19,10 +19,24 @@ let lowPriorityWarning = lowPriorityWarningWithoutStack;
 
 if (__DEV__) {
   lowPriorityWarning = function(format, ...args) {
-    const ReactDebugCurrentFrame = ReactSharedInternals.ReactDebugCurrentFrame;
-    const stack = ReactDebugCurrentFrame.getStackAddendum();
+    let finalFormat = format;
+    let finalArgs = args;
+
+    const hasExistingStack =
+      args.length > 0 &&
+      typeof args[args.length - 1] === 'string' &&
+      args[args.length - 1].indexOf('\n    in') === 0;
+
+    if (!hasExistingStack) {
+      const ReactDebugCurrentFrame =
+        ReactSharedInternals.ReactDebugCurrentFrame;
+      const stack = ReactDebugCurrentFrame.getStackAddendum();
+      finalFormat += '%s';
+      finalArgs.push(stack);
+    }
+
     // eslint-disable-next-line react-internal/warning-args
-    lowPriorityWarningWithoutStack(format + '%s', ...args, stack);
+    lowPriorityWarningWithoutStack(finalFormat, ...finalArgs);
   };
 }
 

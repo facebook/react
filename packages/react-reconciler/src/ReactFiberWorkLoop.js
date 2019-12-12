@@ -30,7 +30,6 @@ import {
 } from 'shared/ReactFeatureFlags';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import invariant from 'shared/invariant';
-import warning from 'shared/warning';
 
 import {
   scheduleCallback,
@@ -151,7 +150,7 @@ import {
 } from './ReactProfilerTimer';
 
 // DEV stuff
-import warningWithoutStack from 'shared/warningWithoutStack';
+import warning from 'shared/warning';
 import getComponentName from 'shared/getComponentName';
 import ReactStrictModeWarnings from './ReactStrictModeWarnings';
 import {
@@ -2595,7 +2594,7 @@ function warnAboutUpdateOnUnmountedFiberInDEV(fiber) {
     } else {
       didWarnStateUpdateForUnmountedComponent = new Set([componentName]);
     }
-    warningWithoutStack(
+    warning(
       "Can't perform a React state update on an unmounted component. This " +
         'is a no-op, but it indicates a memory leak in your application. To ' +
         'fix, cancel all subscriptions and asynchronous tasks in %s.%s',
@@ -2686,7 +2685,7 @@ function warnAboutInvalidUpdatesOnClassComponentsInDEV(fiber) {
           if (didWarnAboutUpdateInGetChildContext) {
             return;
           }
-          warningWithoutStack(
+          warning(
             'setState(...): Cannot call setState() inside getChildContext()',
           );
           didWarnAboutUpdateInGetChildContext = true;
@@ -2695,7 +2694,7 @@ function warnAboutInvalidUpdatesOnClassComponentsInDEV(fiber) {
           if (didWarnAboutUpdateInRender) {
             return;
           }
-          warningWithoutStack(
+          warning(
             'Cannot update during an existing state transition (such as ' +
               'within `render`). Render methods should be a pure function of ' +
               'props and state.',
@@ -2717,7 +2716,7 @@ export function warnIfNotScopedWithMatchingAct(fiber: Fiber): void {
       IsSomeRendererActing.current === true &&
       IsThisRendererActing.current !== true
     ) {
-      warningWithoutStack(
+      warning(
         "It looks like you're using the wrong act() around your test interactions.\n" +
           'Be sure to use the matching version of act() corresponding to your renderer:\n\n' +
           '// for react-dom:\n' +
@@ -2744,7 +2743,7 @@ export function warnIfNotCurrentlyActingEffectsInDEV(fiber: Fiber): void {
       IsSomeRendererActing.current === false &&
       IsThisRendererActing.current === false
     ) {
-      warningWithoutStack(
+      warning(
         'An update to %s ran an effect, but was not wrapped in act(...).\n\n' +
           'When testing, code that causes React state updates should be ' +
           'wrapped into act(...):\n\n' +
@@ -2771,7 +2770,7 @@ function warnIfNotCurrentlyActingUpdatesInDEV(fiber: Fiber): void {
       IsSomeRendererActing.current === false &&
       IsThisRendererActing.current === false
     ) {
-      warningWithoutStack(
+      warning(
         'An update to %s inside a test was not wrapped in act(...).\n\n' +
           'When testing, code that causes React state updates should be ' +
           'wrapped into act(...):\n\n' +
@@ -2807,7 +2806,7 @@ export function warnIfUnmockedScheduler(fiber: Fiber) {
     ) {
       if (fiber.mode & BlockingMode || fiber.mode & ConcurrentMode) {
         didWarnAboutUnmockedScheduler = true;
-        warningWithoutStack(
+        warning(
           'In Concurrent or Sync modes, the "scheduler" module needs to be mocked ' +
             'to guarantee consistent behaviour across tests and browsers. ' +
             'For example, with jest: \n' +
@@ -2816,7 +2815,7 @@ export function warnIfUnmockedScheduler(fiber: Fiber) {
         );
       } else if (warnAboutUnmockedScheduler === true) {
         didWarnAboutUnmockedScheduler = true;
-        warningWithoutStack(
+        warning(
           'Starting from React v17, the "scheduler" module will need to be mocked ' +
             'to guarantee consistent behaviour across tests and browsers. ' +
             'For example, with jest: \n' +
@@ -2926,7 +2925,7 @@ function flushSuspensePriorityWarningInDEV() {
       componentsThatTriggeredHighPriSuspend = null;
 
       if (componentNames.length > 0) {
-        warningWithoutStack(
+        warning(
           '%s triggered a user-blocking update that suspended.' +
             '\n\n' +
             'The fix is to split the update into multiple parts: a user-blocking ' +

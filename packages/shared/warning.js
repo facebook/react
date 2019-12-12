@@ -19,10 +19,24 @@ let warning = warningWithoutStack;
 
 if (__DEV__) {
   warning = function(format, ...args) {
-    const ReactDebugCurrentFrame = ReactSharedInternals.ReactDebugCurrentFrame;
-    const stack = ReactDebugCurrentFrame.getStackAddendum();
+    let finalFormat = format;
+    let finalArgs = args;
+
+    const hasExistingStack =
+      args.length > 0 &&
+      typeof args[args.length - 1] === 'string' &&
+      args[args.length - 1].indexOf('\n    in') === 0;
+
+    if (!hasExistingStack) {
+      const ReactDebugCurrentFrame =
+        ReactSharedInternals.ReactDebugCurrentFrame;
+      const stack = ReactDebugCurrentFrame.getStackAddendum();
+      finalFormat += '%s';
+      finalArgs.push(stack);
+    }
+
     // eslint-disable-next-line react-internal/warning-args
-    warningWithoutStack(format + '%s', ...args, stack);
+    warningWithoutStack(finalFormat, ...finalArgs);
   };
 }
 

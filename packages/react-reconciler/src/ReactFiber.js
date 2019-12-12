@@ -28,7 +28,7 @@ import type {HookType} from './ReactFiberHooks';
 import type {SuspenseInstance} from './ReactFiberHostConfig';
 
 import invariant from 'shared/invariant';
-import warningWithoutStack from 'shared/warningWithoutStack';
+import warning from 'shared/warning';
 import {
   enableProfilerTimer,
   enableFundamentalAPI,
@@ -805,7 +805,7 @@ function createFiberFromProfiler(
       typeof pendingProps.id !== 'string' ||
       typeof pendingProps.onRender !== 'function'
     ) {
-      warningWithoutStack(
+      warning(
         'Profiler must specify an "id" string and "onRender" function as props',
       );
     }

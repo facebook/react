@@ -201,7 +201,6 @@ describe('ReactHooksWithNoopRenderer', () => {
         "If you can't use a class try assigning the prototype on the function as a workaround. " +
         '`Counter.prototype = React.Component.prototype`. ' +
         "Don't use an arrow function since it cannot be called with `new` by React.",
-      {withoutStack: true},
     );
 
     // Confirm that a subsequent hook works properly.

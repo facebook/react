@@ -105,7 +105,7 @@ import {
 } from './ReactFiberWorkLoop';
 
 import invariant from 'shared/invariant';
-import warningWithoutStack from 'shared/warningWithoutStack';
+import warning from 'shared/warning';
 import {getCurrentPriorityLevel} from './SchedulerWithReactIntegration';
 
 export type Update<State> = {
@@ -228,7 +228,7 @@ export function enqueueUpdate<State>(fiber: Fiber, update: Update<State>) {
       currentlyProcessingQueue === sharedQueue &&
       !didWarnUpdateInsideUpdate
     ) {
-      warningWithoutStack(
+      warning(
         'An update (setState, replaceState, or forceUpdate) was scheduled ' +
           'from inside an update function. Update functions should be pure, ' +
           'with zero side-effects. Consider using componentDidUpdate or a ' +

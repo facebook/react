@@ -137,7 +137,6 @@ describe('ReactMount', () => {
 
     expect(() => ReactDOM.hydrate(<div />, container)).toWarnDev(
       'Did not expect server HTML to contain the text node " " in <container>.',
-      {withoutStack: true},
     );
   });
 
@@ -175,7 +174,6 @@ describe('ReactMount', () => {
     ).toWarnDev(
       'Server: "This markup contains an nbsp entity:   server text" ' +
         'Client: "This markup contains an nbsp entity:   client text"',
-      {withoutStack: true},
     );
   });
 

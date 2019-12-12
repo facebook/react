@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import warningWithoutStack from 'shared/warningWithoutStack';
+import warning from 'shared/warning';
 
 const didWarnStateUpdateForUnmountedComponent = {};
 
@@ -19,7 +19,7 @@ function warnNoop(publicInstance, callerName) {
     if (didWarnStateUpdateForUnmountedComponent[warningKey]) {
       return;
     }
-    warningWithoutStack(
+    warning(
       "Can't call %s on a component that is not yet mounted. " +
         'This is a no-op, but it might indicate a bug in your application. ' +
         'Instead, assign to `this.state` directly or define a `state = {};` ' +

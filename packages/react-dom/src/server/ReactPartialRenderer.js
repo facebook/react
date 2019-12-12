@@ -15,9 +15,8 @@ import type {ReactProvider, ReactContext} from 'shared/ReactTypes';
 import React from 'react';
 import invariant from 'shared/invariant';
 import getComponentName from 'shared/getComponentName';
-import lowPriorityWarningWithoutStack from 'shared/lowPriorityWarningWithoutStack';
+import lowPriorityWarning from 'shared/lowPriorityWarning';
 import warning from 'shared/warning';
-import warningWithoutStack from 'shared/warningWithoutStack';
 import describeComponentFrame from 'shared/describeComponentFrame';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import {
@@ -270,7 +269,7 @@ function warnNoop(
       return;
     }
 
-    warningWithoutStack(
+    warning(
       '%s(...): Can only update a mounting component. ' +
         'This usually means you called %s() outside componentWillMount() on the server. ' +
         'This is a no-op.\n\nPlease check the code for the %s component.',
@@ -473,7 +472,7 @@ function resolve(
           if (inst.state === null || inst.state === undefined) {
             const componentName = getComponentName(Component) || 'Unknown';
             if (!didWarnAboutUninitializedState[componentName]) {
-              warningWithoutStack(
+              warning(
                 '`%s` uses `getDerivedStateFromProps` but its initial state is ' +
                   '%s. This is not recommended. Instead, define the initial state by ' +
                   'assigning an object to `this.state` in the constructor of `%s`. ' +
@@ -497,7 +496,7 @@ function resolve(
           if (partialState === undefined) {
             const componentName = getComponentName(Component) || 'Unknown';
             if (!didWarnAboutUndefinedDerivedState[componentName]) {
-              warningWithoutStack(
+              warning(
                 '%s.getDerivedStateFromProps(): A valid state object (or null) must be returned. ' +
                   'You have returned undefined.',
                 componentName,
@@ -520,7 +519,7 @@ function resolve(
           const componentName = getComponentName(Component) || 'Unknown';
 
           if (!didWarnAboutBadClass[componentName]) {
-            warningWithoutStack(
+            warning(
               "The <%s /> component appears to have a render method, but doesn't extend React.Component. " +
                 'This is likely to cause errors. Change %s to extend React.Component instead.',
               componentName,
@@ -544,7 +543,7 @@ function resolve(
       if (__DEV__) {
         const componentName = getComponentName(Component) || 'Unknown';
         if (!didWarnAboutModulePatternComponent[componentName]) {
-          warningWithoutStack(
+          warning(
             'The <%s /> component appears to be a function component that returns a class instance. ' +
               'Change %s to a class that extends React.Component instead. ' +
               "If you can't use a class try assigning the prototype on the function as a workaround. " +
@@ -580,7 +579,7 @@ function resolve(
             const componentName = getComponentName(Component) || 'Unknown';
 
             if (!didWarnAboutDeprecatedWillMount[componentName]) {
-              lowPriorityWarningWithoutStack(
+              lowPriorityWarning(
                 // keep this warning in sync with ReactStrictModeWarning.js
                 'componentWillMount has been renamed, and is not recommended for use. ' +
                   'See https://fb.me/react-unsafe-component-lifecycles for details.\n\n' +
@@ -656,7 +655,7 @@ function resolve(
       if (__DEV__) {
         let childContextTypes = Component.childContextTypes;
         if (childContextTypes !== undefined) {
-          warningWithoutStack(
+          warning(
             '%s uses the legacy childContextTypes API which is no longer supported. ' +
               'Use React.createContext() instead.',
             getComponentName(Component) || 'Unknown',
@@ -678,7 +677,7 @@ function resolve(
           }
         } else {
           if (__DEV__) {
-            warningWithoutStack(
+            warning(
               '%s.getChildContext(): childContextTypes must be defined in order to ' +
                 'use getChildContext().',
               getComponentName(Component) || 'Unknown',
@@ -797,7 +796,7 @@ class ReactDOMServerRenderer {
     const index = this.contextIndex;
     if (__DEV__) {
       if (index < 0 || provider !== (this.contextProviderStack: any)[index]) {
-        warningWithoutStack('Unexpected pop.');
+        warning('Unexpected pop.');
       }
     }
 

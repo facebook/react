@@ -37,7 +37,7 @@ import {
 } from 'shared/ReactWorkTags';
 import getComponentName from 'shared/getComponentName';
 import invariant from 'shared/invariant';
-import warningWithoutStack from 'shared/warningWithoutStack';
+import warning from 'shared/warning';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 
 import {getPublicInstance} from './ReactFiberHostConfig';
@@ -181,7 +181,7 @@ function findHostInstanceWithWarning(
       if (!didWarnAboutFindNodeInStrictMode[componentName]) {
         didWarnAboutFindNodeInStrictMode[componentName] = true;
         if (fiber.mode & StrictMode) {
-          warningWithoutStack(
+          warning(
             '%s is deprecated in StrictMode. ' +
               '%s was passed an instance of %s which is inside StrictMode. ' +
               'Instead, add a ref directly to the element you want to reference. ' +
@@ -193,7 +193,7 @@ function findHostInstanceWithWarning(
             getStackByFiberInDevAndProd(hostFiber),
           );
         } else {
-          warningWithoutStack(
+          warning(
             '%s is deprecated in StrictMode. ' +
               '%s was passed an instance of %s which renders StrictMode children. ' +
               'Instead, add a ref directly to the element you want to reference. ' +
@@ -260,7 +260,7 @@ export function updateContainer(
       !didWarnAboutNestedUpdates
     ) {
       didWarnAboutNestedUpdates = true;
-      warningWithoutStack(
+      warning(
         'Render methods should be a pure function of props and state; ' +
           'triggering nested component updates from render is not allowed. ' +
           'If necessary, trigger nested updates in componentDidUpdate.\n\n' +
@@ -279,7 +279,7 @@ export function updateContainer(
   if (callback !== null) {
     if (__DEV__) {
       if (typeof callback !== 'function') {
-        warningWithoutStack(
+        warning(
           'render(...): Expected the last optional `callback` argument to be a ' +
             'function. Instead received: %s.',
           callback,
