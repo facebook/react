@@ -544,7 +544,7 @@ Task 1 [Normal]              │                    █████████�
     }
 
     expect(console.error).toHaveBeenCalledTimes(1);
-    expect(console.error.calls.argsFor(0)[0]).toBe(
+    expect(console.error.calls.argsFor(0)[0]).toContain(
       "Scheduler Profiling: Event log exceeded maximum size. Don't forget " +
         'to call `stopLoggingProfilingEvents()`.',
     );

@@ -8,7 +8,6 @@
  */
 
 import React from 'react';
-import warning from 'shared/warning';
 import {getToStringValue, toString} from './ToStringValue';
 
 let didWarnSelectedSetOnOption = false;
@@ -58,7 +57,7 @@ export function validateProps(element: Element, props: Object) {
         }
         if (!didWarnInvalidChild) {
           didWarnInvalidChild = true;
-          warning(
+          console.error(
             'Only strings and numbers are supported as <option> children.',
           );
         }
@@ -67,7 +66,7 @@ export function validateProps(element: Element, props: Object) {
 
     // TODO: Remove support for `selected` in <option>.
     if (props.selected != null && !didWarnSelectedSetOnOption) {
-      warning(
+      console.error(
         'Use the `defaultValue` or `value` props on <select> instead of ' +
           'setting `selected` on <option>.',
       );

@@ -8,7 +8,6 @@
 import type {LazyComponent, Thenable} from 'shared/ReactLazyComponent';
 
 import {REACT_LAZY_TYPE} from 'shared/ReactSymbols';
-import warning from 'shared/warning';
 
 export function lazy<T, R>(ctor: () => Thenable<T, R>): LazyComponent<T> {
   let lazyType = {
@@ -30,7 +29,7 @@ export function lazy<T, R>(ctor: () => Thenable<T, R>): LazyComponent<T> {
           return defaultProps;
         },
         set(newDefaultProps) {
-          warning(
+          console.error(
             'React.lazy(...): It is not supported to assign `defaultProps` to ' +
               'a lazy component import. Either specify them where the component ' +
               'is defined, or create a wrapping component around it.',
@@ -48,7 +47,7 @@ export function lazy<T, R>(ctor: () => Thenable<T, R>): LazyComponent<T> {
           return propTypes;
         },
         set(newPropTypes) {
-          warning(
+          console.error(
             'React.lazy(...): It is not supported to assign `propTypes` to ' +
               'a lazy component import. Either specify them where the component ' +
               'is defined, or create a wrapping component around it.',

@@ -150,7 +150,6 @@ import {
 } from './ReactProfilerTimer';
 
 // DEV stuff
-import warning from 'shared/warning';
 import getComponentName from 'shared/getComponentName';
 import ReactStrictModeWarnings from './ReactStrictModeWarnings';
 import {
@@ -1091,7 +1090,7 @@ export function flushDiscreteUpdates() {
   ) {
     if (__DEV__) {
       if ((executionContext & RenderContext) !== NoContext) {
-        warning(
+        console.error(
           'unstable_flushDiscreteUpdates: Cannot flush updates when React is ' +
             'already rendering.',
         );
@@ -2522,7 +2521,7 @@ function checkForNestedUpdates() {
   if (__DEV__) {
     if (nestedPassiveUpdateCount > NESTED_PASSIVE_UPDATE_LIMIT) {
       nestedPassiveUpdateCount = 0;
-      warning(
+      console.error(
         'Maximum update depth exceeded. This can happen when a component ' +
           "calls setState inside useEffect, but useEffect either doesn't " +
           'have a dependency array, or one of the dependencies changes on ' +
@@ -2594,7 +2593,7 @@ function warnAboutUpdateOnUnmountedFiberInDEV(fiber) {
     } else {
       didWarnStateUpdateForUnmountedComponent = new Set([componentName]);
     }
-    warning(
+    console.error(
       "Can't perform a React state update on an unmounted component. This " +
         'is a no-op, but it indicates a memory leak in your application. To ' +
         'fix, cancel all subscriptions and asynchronous tasks in %s.%s',
@@ -2685,7 +2684,7 @@ function warnAboutInvalidUpdatesOnClassComponentsInDEV(fiber) {
           if (didWarnAboutUpdateInGetChildContext) {
             return;
           }
-          warning(
+          console.error(
             'setState(...): Cannot call setState() inside getChildContext()',
           );
           didWarnAboutUpdateInGetChildContext = true;
@@ -2694,7 +2693,7 @@ function warnAboutInvalidUpdatesOnClassComponentsInDEV(fiber) {
           if (didWarnAboutUpdateInRender) {
             return;
           }
-          warning(
+          console.error(
             'Cannot update during an existing state transition (such as ' +
               'within `render`). Render methods should be a pure function of ' +
               'props and state.',
@@ -2716,7 +2715,7 @@ export function warnIfNotScopedWithMatchingAct(fiber: Fiber): void {
       IsSomeRendererActing.current === true &&
       IsThisRendererActing.current !== true
     ) {
-      warning(
+      console.error(
         "It looks like you're using the wrong act() around your test interactions.\n" +
           'Be sure to use the matching version of act() corresponding to your renderer:\n\n' +
           '// for react-dom:\n' +
@@ -2743,7 +2742,7 @@ export function warnIfNotCurrentlyActingEffectsInDEV(fiber: Fiber): void {
       IsSomeRendererActing.current === false &&
       IsThisRendererActing.current === false
     ) {
-      warning(
+      console.error(
         'An update to %s ran an effect, but was not wrapped in act(...).\n\n' +
           'When testing, code that causes React state updates should be ' +
           'wrapped into act(...):\n\n' +
@@ -2770,7 +2769,7 @@ function warnIfNotCurrentlyActingUpdatesInDEV(fiber: Fiber): void {
       IsSomeRendererActing.current === false &&
       IsThisRendererActing.current === false
     ) {
-      warning(
+      console.error(
         'An update to %s inside a test was not wrapped in act(...).\n\n' +
           'When testing, code that causes React state updates should be ' +
           'wrapped into act(...):\n\n' +
@@ -2806,7 +2805,7 @@ export function warnIfUnmockedScheduler(fiber: Fiber) {
     ) {
       if (fiber.mode & BlockingMode || fiber.mode & ConcurrentMode) {
         didWarnAboutUnmockedScheduler = true;
-        warning(
+        console.error(
           'In Concurrent or Sync modes, the "scheduler" module needs to be mocked ' +
             'to guarantee consistent behaviour across tests and browsers. ' +
             'For example, with jest: \n' +
@@ -2815,7 +2814,7 @@ export function warnIfUnmockedScheduler(fiber: Fiber) {
         );
       } else if (warnAboutUnmockedScheduler === true) {
         didWarnAboutUnmockedScheduler = true;
-        warning(
+        console.error(
           'Starting from React v17, the "scheduler" module will need to be mocked ' +
             'to guarantee consistent behaviour across tests and browsers. ' +
             'For example, with jest: \n' +
@@ -2925,7 +2924,7 @@ function flushSuspensePriorityWarningInDEV() {
       componentsThatTriggeredHighPriSuspend = null;
 
       if (componentNames.length > 0) {
-        warning(
+        console.error(
           '%s triggered a user-blocking update that suspended.' +
             '\n\n' +
             'The fix is to split the update into multiple parts: a user-blocking ' +

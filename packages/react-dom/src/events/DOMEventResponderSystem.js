@@ -29,7 +29,6 @@ import {
 } from 'legacy-events/ReactGenericBatching';
 import {enqueueStateRestore} from 'legacy-events/ReactControlledComponent';
 import type {Fiber} from 'react-reconciler/src/ReactFiber';
-import warning from 'shared/warning';
 import {enableFlareAPI} from 'shared/ReactFeatureFlags';
 import invariant from 'shared/invariant';
 
@@ -234,7 +233,7 @@ function validateEventValue(eventValue: any): void {
     }
     const showWarning = name => {
       if (__DEV__) {
-        warning(
+        console.error(
           '%s is not available on event objects created from event responder modules (React Flare). ' +
             'Try wrapping in a conditional, i.e. `if (event.type !== "press") { event.%s }`',
           name,

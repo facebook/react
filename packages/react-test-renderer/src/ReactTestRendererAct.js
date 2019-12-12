@@ -14,7 +14,6 @@ import {
   IsThisRendererActing,
 } from 'react-reconciler/inline.test';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
-import warning from 'shared/warning';
 import enqueueTask from 'shared/enqueueTask';
 import * as Scheduler from 'scheduler';
 
@@ -83,7 +82,7 @@ function act(callback: () => Thenable) {
     if (__DEV__) {
       if (actingUpdatesScopeDepth > previousActingUpdatesScopeDepth) {
         // if it's _less than_ previousActingUpdatesScopeDepth, then we can assume the 'other' one has warned
-        warning(
+        console.error(
           'You seem to have overlapping act() calls, this is not supported. ' +
             'Be sure to await previous act() calls before making a new one. ',
         );
@@ -115,7 +114,7 @@ function act(callback: () => Thenable) {
           .then(() => {})
           .then(() => {
             if (called === false) {
-              warning(
+              console.error(
                 'You called act(async () => ...) without await. ' +
                   'This could lead to unexpected testing behaviour, interleaving multiple act ' +
                   'calls and mixing their scopes. You should - await act(async () => ...);',
@@ -163,7 +162,7 @@ function act(callback: () => Thenable) {
   } else {
     if (__DEV__) {
       if (result !== undefined) {
-        warning(
+        console.error(
           'The callback passed to act(...) function ' +
             'must return undefined, or a Promise. You returned %s',
           result,
@@ -191,7 +190,7 @@ function act(callback: () => Thenable) {
     return {
       then(resolve: () => void) {
         if (__DEV__) {
-          warning(
+          console.error(
             'Do not await the result of calling act(...) with sync logic, it is not a Promise.',
           );
         }

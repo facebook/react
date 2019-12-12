@@ -7,8 +7,6 @@
  * @flow
  */
 
-import warning from 'shared/warning';
-
 export type Thenable<T, R> = {
   then(resolve: (T) => mixed, reject: (mixed) => mixed): R,
 };
@@ -52,7 +50,7 @@ export function initializeLazyComponentType(
           const defaultExport = moduleObject.default;
           if (__DEV__) {
             if (defaultExport === undefined) {
-              warning(
+              console.error(
                 'lazy: Expected the result of a dynamic import() call. ' +
                   'Instead received: %s\n\nYour code should look like: \n  ' +
                   "const MyComponent = lazy(() => import('./MyComponent'))",

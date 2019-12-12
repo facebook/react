@@ -46,7 +46,6 @@ import {
 } from './ReactFiberWorkLoop';
 
 import invariant from 'shared/invariant';
-import warning from 'shared/warning';
 import getComponentName from 'shared/getComponentName';
 import is from 'shared/objectIs';
 import {markWorkInProgressReceivedUpdate} from './ReactFiberBeginWork';
@@ -246,7 +245,7 @@ function checkDepsAreArrayDev(deps: mixed) {
     if (deps !== undefined && deps !== null && !Array.isArray(deps)) {
       // Verify deps, but only on mount to avoid extra checks.
       // It's unlikely their type would change as usually you define them inline.
-      warning(
+      console.error(
         '%s received a final argument that is not an array (instead, received `%s`). When ' +
           'specified, the final argument must be an array.',
         currentHookNameInDev,
@@ -287,7 +286,7 @@ function warnOnHookMismatchInDev(currentHookName: HookType) {
           table += row;
         }
 
-        warning(
+        console.error(
           'React has detected a change in the order of Hooks called by %s. ' +
             'This will lead to bugs and errors if not fixed. ' +
             'For more information, read the Rules of Hooks: https://fb.me/rules-of-hooks\n\n' +
@@ -328,7 +327,7 @@ function areHookInputsEqual(
 
   if (prevDeps === null) {
     if (__DEV__) {
-      warning(
+      console.error(
         '%s received a final argument during this render, but not during ' +
           'the previous render. Even though the final argument is optional, ' +
           'its type cannot change between renders.',
@@ -342,7 +341,7 @@ function areHookInputsEqual(
     // Don't bother comparing lengths in prod because these arrays should be
     // passed inline.
     if (nextDeps.length !== prevDeps.length) {
-      warning(
+      console.error(
         'The final argument passed to %s changed size between renders. The ' +
           'order and size of this array must remain constant.\n\n' +
           'Previous: %s\n' +
@@ -1005,7 +1004,7 @@ function imperativeHandleEffect<T>(
     const refObject = ref;
     if (__DEV__) {
       if (!refObject.hasOwnProperty('current')) {
-        warning(
+        console.error(
           'Expected useImperativeHandle() first argument to either be a ' +
             'ref callback or React.createRef() object. Instead received: %s.',
           'an object with keys {' + Object.keys(refObject).join(', ') + '}',
@@ -1027,7 +1026,7 @@ function mountImperativeHandle<T>(
 ): void {
   if (__DEV__) {
     if (typeof create !== 'function') {
-      warning(
+      console.error(
         'Expected useImperativeHandle() second argument to be a function ' +
           'that creates a handle. Instead received: %s.',
         create !== null ? typeof create : 'null',
@@ -1054,7 +1053,7 @@ function updateImperativeHandle<T>(
 ): void {
   if (__DEV__) {
     if (typeof create !== 'function') {
-      warning(
+      console.error(
         'Expected useImperativeHandle() second argument to be a function ' +
           'that creates a handle. Instead received: %s.',
         create !== null ? typeof create : 'null',
@@ -1235,7 +1234,7 @@ function dispatchAction<S, A>(
 
   if (__DEV__) {
     if (typeof arguments[3] === 'function') {
-      warning(
+      console.error(
         "State updates from the useState() and useReducer() Hooks don't support the " +
           'second callback argument. To execute a side effect after ' +
           'rendering, declare it in the component body with useEffect().',
@@ -1422,7 +1421,7 @@ let InvalidNestedHooksDispatcherOnUpdateInDEV: Dispatcher | null = null;
 
 if (__DEV__) {
   const warnInvalidContextAccess = () => {
-    warning(
+    console.error(
       'Context can only be read while React is rendering. ' +
         'In classes, you can read it in the render method or getDerivedStateFromProps. ' +
         'In function components, you can read it directly in the function body, but not ' +
@@ -1431,7 +1430,7 @@ if (__DEV__) {
   };
 
   const warnInvalidHookAccess = () => {
-    warning(
+    console.error(
       'Do not call Hooks inside useEffect(...), useMemo(...), or other built-in Hooks. ' +
         'You can only call Hooks at the top level of your React function. ' +
         'For more information, see ' +
