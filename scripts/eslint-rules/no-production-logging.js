@@ -9,13 +9,6 @@
 
 'use strict';
 
-const LOGGER_FN_NAMES = [
-  'warning',
-  'warningWithoutStack',
-  'lowPriorityWarning',
-  'lowPriorityWarningWithoutStack',
-];
-
 module.exports = function(context) {
   function isInDEVBlock(node) {
     let done = false;
@@ -38,12 +31,12 @@ module.exports = function(context) {
     }
   }
 
-  function report(node) {
+  function reportWrapInDEV(node) {
     context.report({
       node: node,
-      message: `Wrap {{identifier}}() in an "if (__DEV__) {}" check`,
+      message: `Wrap console.{{identifier}}() in an "if (__DEV__) {}" check`,
       data: {
-        identifier: node.callee.name,
+        identifier: node.property.name,
       },
       fix: function(fixer) {
         return [
@@ -54,18 +47,36 @@ module.exports = function(context) {
     });
   }
 
-  const isLoggerFunctionName = name => LOGGER_FN_NAMES.includes(name);
+  function reportUnexpectedConsole(node) {
+    context.report({
+      node: node,
+      message: `Unexpected use of console`,
+    });
+  }
 
   return {
     meta: {
       fixable: 'code',
     },
-    CallExpression: function(node) {
-      if (!isLoggerFunctionName(node.callee.name)) {
-        return;
-      }
-      if (!isInDEVBlock(node)) {
-        report(node);
+    MemberExpression: function(node) {
+      if (
+        node.object.type === 'Identifier' &&
+        node.object.name === 'console' &&
+        node.property.type === 'Identifier'
+      ) {
+        switch (node.property.name) {
+          case 'error':
+          case 'warn': {
+            if (!isInDEVBlock(node)) {
+              reportWrapInDEV(node);
+            }
+            break;
+          }
+          default: {
+            reportUnexpectedConsole(node);
+            break;
+          }
+        }
       }
     },
   };

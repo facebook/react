@@ -211,6 +211,7 @@ if (__DEV__) {
       const protocol = window.location.protocol;
       // Don't warn in exotic cases like chrome-extension://.
       if (/^(https?|file):$/.test(protocol)) {
+        // eslint-disable-next-line react-internal/no-production-logging
         console.info(
           '%cDownload the React DevTools ' +
             'for a better development experience: ' +

@@ -22,7 +22,9 @@ export function hasPointerEvent() {
 export function setPointerEvent(bool) {
   const pointerCaptureFn = name => id => {
     if (typeof id !== 'number') {
-      console.error(`A pointerId must be passed to "${name}"`);
+      if (__DEV__) {
+        console.error('A pointerId must be passed to "%s"', name);
+      }
     }
   };
   global.PointerEvent = bool ? emptyFunction : undefined;
