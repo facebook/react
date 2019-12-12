@@ -129,12 +129,15 @@ function recordTouchMove(touch: Touch): void {
     touchRecord.currentTimeStamp = timestampForTouch(touch);
     touchHistory.mostRecentTimeStamp = timestampForTouch(touch);
   } else {
-    console.warn(
-      'Cannot record touch move without a touch start.\n' + 'Touch Move: %s\n',
-      'Touch Bank: %s',
-      printTouch(touch),
-      printTouchBank(),
-    );
+    if (__DEV__) {
+      console.warn(
+        'Cannot record touch move without a touch start.\n' +
+          'Touch Move: %s\n' +
+          'Touch Bank: %s',
+        printTouch(touch),
+        printTouchBank(),
+      );
+    }
   }
 }
 
@@ -150,12 +153,15 @@ function recordTouchEnd(touch: Touch): void {
     touchRecord.currentTimeStamp = timestampForTouch(touch);
     touchHistory.mostRecentTimeStamp = timestampForTouch(touch);
   } else {
-    console.warn(
-      'Cannot record touch end without a touch start.\n' + 'Touch End: %s\n',
-      'Touch Bank: %s',
-      printTouch(touch),
-      printTouchBank(),
-    );
+    if (__DEV__) {
+      console.warn(
+        'Cannot record touch end without a touch start.\n' +
+          'Touch End: %s\n' +
+          'Touch Bank: %s',
+        printTouch(touch),
+        printTouchBank(),
+      );
+    }
   }
 }
 

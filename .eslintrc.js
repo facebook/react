@@ -33,7 +33,8 @@ module.exports = {
     'comma-dangle': [ERROR, 'always-multiline'],
     'consistent-return': OFF,
     'dot-location': [ERROR, 'property'],
-    'dot-notation': ERROR,
+    // We use console['error']() as a signal to not transform it:
+    'dot-notation': [ERROR, {allowPattern: '^(error|warn)$'}],
     'eol-last': ERROR,
     eqeqeq: [ERROR, 'allow-null'],
     indent: OFF,
@@ -133,6 +134,18 @@ module.exports = {
         'jest/no-focused-tests': ERROR,
         'jest/valid-expect': ERROR,
         'jest/valid-expect-in-promise': ERROR,
+      },
+    },
+    {
+      files: [
+        '**/__tests__/**/*.js',
+        'scripts/**/*.js',
+        'packages/*/npm/**/*.js',
+        'packages/react-devtools*/**/*.js'
+      ],
+      rules: {
+        'react-internal/no-production-logging': OFF,
+        'react-internal/warning-args': OFF,
       },
     },
     {

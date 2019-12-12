@@ -44,17 +44,19 @@ module.exports = function(context) {
       // This could be a little smarter by checking context.getScope() to see
       // how warning/invariant was defined.
       const isWarning =
-        node.callee.type === 'Identifier' &&
-        (node.callee.name === 'warning' ||
-          node.callee.name === 'warningWithoutStack' ||
-          node.callee.name === 'lowPriorityWarning' ||
-          node.callee.name === 'lowPriorityWarningWithoutStack');
+        node.callee.type === 'MemberExpression' &&
+        node.callee.object.type === 'Identifier' &&
+        node.callee.object.name === 'console' &&
+        node.callee.property.type === 'Identifier' &&
+        (node.callee.property.name === 'error' ||
+          node.callee.property.name === 'warn');
       if (!isWarning) {
         return;
       }
+      const name = 'console.' + node.callee.property.name;
       if (node.arguments.length < 1) {
         context.report(node, '{{name}} takes at least one argument', {
-          name: node.callee.name,
+          name,
         });
         return;
       }
@@ -63,7 +65,7 @@ module.exports = function(context) {
         context.report(
           node,
           'The first argument to {{name}} must be a string literal',
-          {name: node.callee.name}
+          {name}
         );
         return;
       }
@@ -71,8 +73,8 @@ module.exports = function(context) {
         context.report(
           node,
           'The {{name}} format should be able to uniquely identify this ' +
-            '{{name}}. Please, use a more descriptive format than: {{format}}',
-          {name: node.callee.name, format: format}
+            'warning. Please, use a more descriptive format than: {{format}}',
+          {name, format}
         );
         return;
       }
@@ -85,7 +87,7 @@ module.exports = function(context) {
             'the number of "%s" substitutions, but got {{length}}',
           {
             expectedNArgs: expectedNArgs,
-            name: node.callee.name,
+            name,
             length: node.arguments.length,
           }
         );
