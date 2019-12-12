@@ -28,7 +28,7 @@ import {
   warnForStyleProps,
 } from './NativeMethodsMixinUtils';
 
-import warningWithoutStack from 'shared/warningWithoutStack';
+import warning from 'shared/warning';
 
 /**
  * This component defines the same methods as NativeMethodsMixin but without the
@@ -86,7 +86,7 @@ class ReactNativeFiberHostComponent {
 
     if (relativeNode == null) {
       if (__DEV__) {
-        warningWithoutStack(
+        warning(
           'Warning: ref.measureLayout must be called with a node handle or a ref to a native component.',
         );
       }

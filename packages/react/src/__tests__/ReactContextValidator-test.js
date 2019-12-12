@@ -296,7 +296,6 @@ describe('ReactContextValidator', () => {
       'Warning: ComponentA.childContextTypes is specified but there is no ' +
         'getChildContext() method on the instance. You can either define ' +
         'getChildContext() on ComponentA or remove childContextTypes from it.',
-      {withoutStack: true},
     );
 
     // Warnings should be deduped by component type
@@ -306,7 +305,6 @@ describe('ReactContextValidator', () => {
       'Warning: ComponentB.childContextTypes is specified but there is no ' +
         'getChildContext() method on the instance. You can either define ' +
         'getChildContext() on ComponentB or remove childContextTypes from it.',
-      {withoutStack: true},
     );
   });
 
@@ -350,16 +348,13 @@ describe('ReactContextValidator', () => {
 
     expect(() =>
       ReactTestUtils.renderIntoDocument(<ParentContextProvider />),
-    ).toWarnDev(
-      [
-        'Warning: MiddleMissingContext.childContextTypes is specified but there is no ' +
-          'getChildContext() method on the instance. You can either define getChildContext() ' +
-          'on MiddleMissingContext or remove childContextTypes from it.',
-        'Warning: Failed context type: The context `bar` is marked as required ' +
-          'in `ChildContextConsumer`, but its value is `undefined`.',
-      ],
-      {withoutStack: 1},
-    );
+    ).toWarnDev([
+      'Warning: MiddleMissingContext.childContextTypes is specified but there is no ' +
+        'getChildContext() method on the instance. You can either define getChildContext() ' +
+        'on MiddleMissingContext or remove childContextTypes from it.',
+      'Warning: Failed context type: The context `bar` is marked as required ' +
+        'in `ChildContextConsumer`, but its value is `undefined`.',
+    ]);
     expect(childContext.bar).toBeUndefined();
     expect(childContext.foo).toBe('FOO');
   });
@@ -516,7 +511,6 @@ describe('ReactContextValidator', () => {
     ).toWarnDev(
       'Warning: ComponentA declares both contextTypes and contextType static properties. ' +
         'The legacy contextTypes property will be ignored.',
-      {withoutStack: true},
     );
 
     // Warnings should be deduped by component type
@@ -535,7 +529,6 @@ describe('ReactContextValidator', () => {
     ).toWarnDev(
       'Warning: ComponentB declares both contextTypes and contextType static properties. ' +
         'The legacy contextTypes property will be ignored.',
-      {withoutStack: true},
     );
   });
 
@@ -562,7 +555,6 @@ describe('ReactContextValidator', () => {
       'Warning: ComponentA defines an invalid contextType. ' +
         'contextType should point to the Context object returned by React.createContext(). ' +
         'Did you accidentally pass the Context.Consumer instead?',
-      {withoutStack: true},
     );
 
     // Warnings should be deduped by component type
@@ -574,7 +566,6 @@ describe('ReactContextValidator', () => {
       'Warning: ComponentB defines an invalid contextType. ' +
         'contextType should point to the Context object returned by React.createContext(). ' +
         'Did you accidentally pass the Context.Provider instead?',
-      {withoutStack: true},
     );
   });
 
@@ -611,7 +602,6 @@ describe('ReactContextValidator', () => {
         'This can be caused by a typo or by mixing up named and default imports. ' +
         'This can also happen due to a circular dependency, ' +
         'so try moving the createContext() call to a separate file.',
-      {withoutStack: true},
     );
   });
 
@@ -635,7 +625,6 @@ describe('ReactContextValidator', () => {
       'Foo defines an invalid contextType. ' +
         'contextType should point to the Context object returned by React.createContext(). ' +
         'However, it is set to an object with keys {x, y}.',
-      {withoutStack: true},
     );
   });
 
@@ -655,7 +644,6 @@ describe('ReactContextValidator', () => {
       'Foo defines an invalid contextType. ' +
         'contextType should point to the Context object returned by React.createContext(). ' +
         'However, it is set to a string.',
-      {withoutStack: true},
     );
   });
 
@@ -674,7 +662,6 @@ describe('ReactContextValidator', () => {
 
     expect(() => ReactTestUtils.renderIntoDocument(<ComponentA />)).toWarnDev(
       'Warning: ComponentA: Function components do not support contextType.',
-      {withoutStack: true},
     );
 
     // Warnings should be deduped by component type
@@ -682,7 +669,6 @@ describe('ReactContextValidator', () => {
 
     expect(() => ReactTestUtils.renderIntoDocument(<ComponentB />)).toWarnDev(
       'Warning: ComponentB: Function components do not support contextType.',
-      {withoutStack: true},
     );
   });
 });

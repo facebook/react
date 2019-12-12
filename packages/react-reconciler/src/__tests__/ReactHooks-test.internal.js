@@ -1349,7 +1349,6 @@ describe('ReactHooks', () => {
         "If you can't use a class try assigning the prototype on the function as a workaround. " +
         '`Factory.prototype = React.Component.prototype`. ' +
         "Don't use an arrow function since it cannot be called with `new` by React.",
-      {withoutStack: true},
     );
     expect(renderCount).toBe(1);
     renderCount = 0;

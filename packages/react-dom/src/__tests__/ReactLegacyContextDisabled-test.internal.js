@@ -90,17 +90,14 @@ describe('ReactLegacyContextDisabled', () => {
         </LegacyProvider>,
         container,
       );
-    }).toWarnDev(
-      [
-        'LegacyProvider uses the legacy childContextTypes API which is no longer supported. ' +
-          'Use React.createContext() instead.',
-        'LegacyClsConsumer uses the legacy contextTypes API which is no longer supported. ' +
-          'Use React.createContext() with static contextType instead.',
-        'LegacyFnConsumer uses the legacy contextTypes API which is no longer supported. ' +
-          'Use React.createContext() with React.useContext() instead.',
-      ],
-      {withoutStack: true},
-    );
+    }).toWarnDev([
+      'LegacyProvider uses the legacy childContextTypes API which is no longer supported. ' +
+        'Use React.createContext() instead.',
+      'LegacyClsConsumer uses the legacy contextTypes API which is no longer supported. ' +
+        'Use React.createContext() with static contextType instead.',
+      'LegacyFnConsumer uses the legacy contextTypes API which is no longer supported. ' +
+        'Use React.createContext() with React.useContext() instead.',
+    ]);
     expect(container.textContent).toBe('{}undefinedundefined');
     expect(lifecycleContextLog).toEqual([]);
 

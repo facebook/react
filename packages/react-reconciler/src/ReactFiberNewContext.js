@@ -18,7 +18,6 @@ export type ContextDependency<T> = {
   next: ContextDependency<mixed> | null,
 };
 
-import warningWithoutStack from 'shared/warningWithoutStack';
 import {isPrimaryRenderer} from './ReactFiberHostConfig';
 import {createCursor, push, pop} from './ReactFiberStack';
 import MAX_SIGNED_31_BIT_INT from './maxSigned31BitInt';
@@ -90,7 +89,7 @@ export function pushProvider<T>(providerFiber: Fiber, nextValue: T): void {
         context._currentRenderer !== null &&
         context._currentRenderer !== rendererSigil
       ) {
-        warningWithoutStack(
+        warning(
           'Detected multiple renderers concurrently rendering the ' +
             'same context provider. This is currently unsupported.',
         );
@@ -107,7 +106,7 @@ export function pushProvider<T>(providerFiber: Fiber, nextValue: T): void {
         context._currentRenderer2 !== null &&
         context._currentRenderer2 !== rendererSigil
       ) {
-        warningWithoutStack(
+        warning(
           'Detected multiple renderers concurrently rendering the ' +
             'same context provider. This is currently unsupported.',
         );

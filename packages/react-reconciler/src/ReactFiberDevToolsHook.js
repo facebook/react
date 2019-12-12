@@ -17,7 +17,7 @@ import type {ExpirationTime} from './ReactFiberExpirationTime';
 import type {ReactNodeList} from 'shared/ReactTypes';
 
 import {DidCapture} from 'shared/ReactSideEffectTags';
-import warningWithoutStack from 'shared/warningWithoutStack';
+import warning from 'shared/warning';
 
 declare var __REACT_DEVTOOLS_GLOBAL_HOOK__: Object | void;
 
@@ -43,7 +43,7 @@ export function injectInternals(internals: Object): boolean {
   }
   if (!hook.supportsFiber) {
     if (__DEV__) {
-      warningWithoutStack(
+      warning(
         'The installed version of React DevTools is too old and will not work ' +
           'with the current version of React. Please update React DevTools. ' +
           'https://fb.me/react-devtools',
@@ -64,10 +64,7 @@ export function injectInternals(internals: Object): boolean {
           } catch (err) {
             if (__DEV__ && !hasLoggedError) {
               hasLoggedError = true;
-              warningWithoutStack(
-                'React instrumentation encountered an error: %s',
-                err,
-              );
+              warning('React instrumentation encountered an error: %s', err);
             }
           }
         };
@@ -90,10 +87,7 @@ export function injectInternals(internals: Object): boolean {
         if (__DEV__) {
           if (!hasLoggedError) {
             hasLoggedError = true;
-            warningWithoutStack(
-              'React instrumentation encountered an error: %s',
-              err,
-            );
+            warning('React instrumentation encountered an error: %s', err);
           }
         }
       }
@@ -105,10 +99,7 @@ export function injectInternals(internals: Object): boolean {
         if (__DEV__) {
           if (!hasLoggedError) {
             hasLoggedError = true;
-            warningWithoutStack(
-              'React instrumentation encountered an error: %s',
-              err,
-            );
+            warning('React instrumentation encountered an error: %s', err);
           }
         }
       }
@@ -116,10 +107,7 @@ export function injectInternals(internals: Object): boolean {
   } catch (err) {
     // Catch all errors because it is unsafe to throw during initialization.
     if (__DEV__) {
-      warningWithoutStack(
-        'React instrumentation encountered an error: %s.',
-        err,
-      );
+      warning('React instrumentation encountered an error: %s.', err);
     }
   }
   // DevTools exists

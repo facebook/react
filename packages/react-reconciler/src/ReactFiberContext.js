@@ -15,7 +15,7 @@ import {disableLegacyContext} from 'shared/ReactFeatureFlags';
 import {ClassComponent, HostRoot} from 'shared/ReactWorkTags';
 import getComponentName from 'shared/getComponentName';
 import invariant from 'shared/invariant';
-import warningWithoutStack from 'shared/warningWithoutStack';
+import warning from 'shared/warning';
 import checkPropTypes from 'prop-types/checkPropTypes';
 
 import {setCurrentPhase, getCurrentFiberStackInDev} from './ReactCurrentFiber';
@@ -198,7 +198,7 @@ function processChildContext(
 
         if (!warnedAboutMissingGetChildContext[componentName]) {
           warnedAboutMissingGetChildContext[componentName] = true;
-          warningWithoutStack(
+          warning(
             '%s.childContextTypes is specified but there is no getChildContext() method ' +
               'on the instance. You can either define getChildContext() on %s or remove ' +
               'childContextTypes from it.',

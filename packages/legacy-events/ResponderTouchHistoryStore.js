@@ -8,7 +8,7 @@
  */
 
 import invariant from 'shared/invariant';
-import warningWithoutStack from 'shared/warningWithoutStack';
+import warning from 'shared/warning';
 
 import {isStartish, isMoveish, isEndish} from './ResponderTopLevelEventTypes';
 
@@ -96,7 +96,7 @@ function getTouchIdentifier({identifier}: Touch): number {
   invariant(identifier != null, 'Touch object is missing identifier.');
   if (__DEV__) {
     if (identifier > MAX_TOUCH_BANK) {
-      warningWithoutStack(
+      warning(
         'Touch identifier %s is greater than maximum supported %s which causes ' +
           'performance issues backfilling array locations for all of the indices.',
         identifier,
@@ -202,7 +202,7 @@ const ResponderTouchHistoryStore = {
         if (__DEV__) {
           const activeRecord = touchBank[touchHistory.indexOfSingleActiveTouch];
           if (activeRecord == null || !activeRecord.touchActive) {
-            warningWithoutStack('Cannot find single active touch.');
+            warning('Cannot find single active touch.');
           }
         }
       }

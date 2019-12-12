@@ -29,7 +29,7 @@ import {
   warnForStyleProps,
 } from './NativeMethodsMixinUtils';
 
-import warningWithoutStack from 'shared/warningWithoutStack';
+import warning from 'shared/warning';
 
 export default function(
   findNodeHandle: any => ?number,
@@ -180,7 +180,7 @@ export default function(
 
       if (maybeInstance.canonical) {
         if (__DEV__) {
-          warningWithoutStack(
+          warning(
             'Warning: measureLayout on components using NativeMethodsMixin ' +
               'or ReactNative.NativeComponent is not currently supported in Fabric. ' +
               'measureLayout must be called on a native ref. Consider using forwardRef.',
@@ -199,7 +199,7 @@ export default function(
 
         if (relativeNode == null) {
           if (__DEV__) {
-            warningWithoutStack(
+            warning(
               'Warning: ref.measureLayout must be called with a node handle or a ref to a native component.',
             );
           }
@@ -246,7 +246,7 @@ export default function(
 
       if (maybeInstance.canonical) {
         if (__DEV__) {
-          warningWithoutStack(
+          warning(
             'Warning: setNativeProps is not currently supported in Fabric',
           );
         }

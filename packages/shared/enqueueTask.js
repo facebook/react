@@ -7,7 +7,7 @@
  * @flow
  */
 
-import warningWithoutStack from './warningWithoutStack';
+import warningWithoutStack from 'shared/warningWithoutStack';
 
 let didWarnAboutMessageChannel = false;
 let enqueueTask;

@@ -37,7 +37,7 @@ import {getInspectorDataForViewTag} from './ReactNativeFiberInspector';
 import {LegacyRoot} from 'shared/ReactRootTags';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import getComponentName from 'shared/getComponentName';
-import warningWithoutStack from 'shared/warningWithoutStack';
+import warning from 'shared/warning';
 
 const {dispatchCommand: fabricDispatchCommand} = nativeFabricUIManager;
 
@@ -50,7 +50,7 @@ function findHostInstance_DEPRECATED(
     const owner = ReactCurrentOwner.current;
     if (owner !== null && owner.stateNode !== null) {
       if (!owner.stateNode._warnedAboutRefsInRender) {
-        warningWithoutStack(
+        warning(
           '%s is accessing findNodeHandle inside its render(). ' +
             'render() should be a pure function of props and state. It should ' +
             'never access something that requires stale data from the previous ' +
@@ -97,7 +97,7 @@ function findNodeHandle(componentOrHandle: any): ?number {
     const owner = ReactCurrentOwner.current;
     if (owner !== null && owner.stateNode !== null) {
       if (!owner.stateNode._warnedAboutRefsInRender) {
-        warningWithoutStack(
+        warning(
           '%s is accessing findNodeHandle inside its render(). ' +
             'render() should be a pure function of props and state. It should ' +
             'never access something that requires stale data from the previous ' +
@@ -169,7 +169,7 @@ const ReactFabric: ReactFabricType = {
     if (invalid) {
       if (__DEV__) {
         if (invalid) {
-          warningWithoutStack(
+          warning(
             "dispatchCommand was called with a ref that isn't a " +
               'native component. Use React.forwardRef to get access to the underlying native component',
           );

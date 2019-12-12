@@ -456,7 +456,6 @@ describe('create-react-class-integration', () => {
     ).toWarnDev(
       'Foo: getDerivedStateFromProps() is defined as an instance method ' +
         'and will be ignored. Instead, declare it as a static method.',
-      {withoutStack: true},
     );
   });
 
@@ -475,7 +474,6 @@ describe('create-react-class-integration', () => {
     ).toWarnDev(
       'Foo: getDerivedStateFromError() is defined as an instance method ' +
         'and will be ignored. Instead, declare it as a static method.',
-      {withoutStack: true},
     );
   });
 
@@ -496,7 +494,6 @@ describe('create-react-class-integration', () => {
     ).toWarnDev(
       'Foo: getSnapshotBeforeUpdate() is defined as a static method ' +
         'and will be ignored. Instead, declare it as an instance method.',
-      {withoutStack: true},
     );
   });
 
@@ -519,9 +516,6 @@ describe('create-react-class-integration', () => {
         'null. This is not recommended. Instead, define the initial state by ' +
         'assigning an object to `this.state` in the constructor of `Component`. ' +
         'This ensures that `getDerivedStateFromProps` arguments have a consistent shape.',
-      {
-        withoutStack: true,
-      },
     );
   });
 
@@ -560,7 +554,6 @@ describe('create-react-class-integration', () => {
           '  componentWillUpdate\n\n' +
           'The above lifecycles should be removed. Learn more about this warning here:\n' +
           'https://fb.me/react-unsafe-component-lifecycles',
-        {withoutStack: true},
       );
     }).toLowPriorityWarnDev(
       [
@@ -604,7 +597,6 @@ describe('create-react-class-integration', () => {
           '  componentWillUpdate\n\n' +
           'The above lifecycles should be removed. Learn more about this warning here:\n' +
           'https://fb.me/react-unsafe-component-lifecycles',
-        {withoutStack: true},
       );
     }).toLowPriorityWarnDev(
       [

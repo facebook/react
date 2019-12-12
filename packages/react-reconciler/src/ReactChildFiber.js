@@ -29,7 +29,6 @@ import {
 } from 'shared/ReactWorkTags';
 import invariant from 'shared/invariant';
 import warning from 'shared/warning';
-import warningWithoutStack from 'shared/warningWithoutStack';
 import {warnAboutStringRefs} from 'shared/ReactFeatureFlags';
 
 import {
@@ -120,7 +119,7 @@ function coerceRef(
         const componentName = getComponentName(returnFiber.type) || 'Component';
         if (!didWarnAboutStringRefs[componentName]) {
           if (warnAboutStringRefs) {
-            warningWithoutStack(
+            warning(
               'Component "%s" contains the string ref "%s". Support for string refs ' +
                 'will be removed in a future major release. We recommend using ' +
                 'useRef() or createRef() instead. ' +
@@ -131,7 +130,7 @@ function coerceRef(
               getStackByFiberInDevAndProd(returnFiber),
             );
           } else {
-            warningWithoutStack(
+            warning(
               'A string ref, "%s", has been found within a strict mode tree. ' +
                 'String refs are a source of potential bugs and should be avoided. ' +
                 'We recommend using useRef() or createRef() instead. ' +

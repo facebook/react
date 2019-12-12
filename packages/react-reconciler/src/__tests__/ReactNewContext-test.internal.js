@@ -1481,15 +1481,10 @@ describe('ReactNewContext', () => {
       }
 
       ReactNoop.render(<Cls />);
-      expect(() => expect(Scheduler).toFlushWithoutYielding()).toWarnDev(
-        [
-          'Context can only be read while React is rendering',
-          'Cannot update during an existing state transition',
-        ],
-        {
-          withoutStack: 1,
-        },
-      );
+      expect(() => expect(Scheduler).toFlushWithoutYielding()).toWarnDev([
+        'Context can only be read while React is rendering',
+        'Cannot update during an existing state transition',
+      ]);
     });
   });
 

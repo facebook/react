@@ -111,7 +111,6 @@ describe('ReactFunctionComponent', () => {
     ).toWarnDev(
       'FunctionComponentWithChildContext: Function ' +
         'components do not support getDerivedStateFromProps.',
-      {withoutStack: true},
     );
   });
 
@@ -134,7 +133,6 @@ describe('ReactFunctionComponent', () => {
     ).toWarnDev(
       'FunctionComponentWithChildContext(...): childContextTypes cannot ' +
         'be defined on a function component.',
-      {withoutStack: true},
     );
   });
 
