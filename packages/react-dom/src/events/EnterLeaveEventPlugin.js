@@ -42,11 +42,11 @@ const eventTypes = {
   },
 };
 
-// We track the lastNativeEvent to ensure that when we encounter
-// cases where we process the same nativeEvent multiple times,
-// which can happen when have multiple ancestors, that we don't
-// duplicate enter
-let lastNativeEvent;
+// We track the native events we've seen to ensure that when we encounter cases
+// where we process the same nativeEvent multiple times, which can happen when
+// have multiple ancestors, that we don't duplicate enter.
+const seenNativeEvents =
+  typeof WeakSet === 'function' ? new WeakSet() : new Set();
 
 const EnterLeaveEventPlugin = {
   eventTypes: eventTypes,
@@ -169,11 +169,18 @@ const EnterLeaveEventPlugin = {
 
     accumulateEnterLeaveDispatches(leave, enter, from, to);
 
-    if (nativeEvent === lastNativeEvent) {
-      lastNativeEvent = null;
+    if (seenNativeEvents.has(nativeEvent)) {
+      if (seenNativeEvents instanceof Set) {
+        seenNativeEvents.clear();
+      } else {
+        seenNativeEvents.delete(nativeEvent);
+      }
       return [leave];
     }
-    lastNativeEvent = nativeEvent;
+    if (seenNativeEvents instanceof Set) {
+      seenNativeEvents.clear();
+    }
+    seenNativeEvents.add(nativeEvent);
 
     return [leave, enter];
   },
