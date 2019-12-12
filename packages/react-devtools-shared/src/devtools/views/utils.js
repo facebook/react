@@ -9,6 +9,7 @@
 
 import escapeStringRegExp from 'escape-string-regexp';
 import {meta} from '../../hydration';
+import {formatDataForPreview} from '../../utils';
 
 import type {HooksTree} from 'react-debug-tools/src/ReactDebugHooks';
 
@@ -92,32 +93,10 @@ export function createRegExp(string: string): RegExp {
 }
 
 export function getMetaValueLabel(data: Object): string | null {
-  const name = data[meta.name];
-  const type = data[meta.type];
-
-  switch (type) {
-    case 'html_element':
-      return name ? `<${name.toLowerCase()} />` : '';
-    case 'react_element':
-      return `<${name} />`;
-    case 'function':
-      return `${name || 'fn'}()`;
-    case 'object':
-      return 'Object';
-    case 'date':
-    case 'symbol':
-      return name;
-    case 'bigint':
-      return `${name}n`;
-    case 'iterator':
-      return `${name}(…)`;
-    case 'array_buffer':
-    case 'data_view':
-    case 'array':
-    case 'typed_array':
-      return `${name}[${data[meta.size]}]`;
-    default:
-      return null;
+  if (data.hasOwnProperty(meta.preview_long)) {
+    return data[meta.preview_long];
+  } else {
+    return formatDataForPreview(data, true);
   }
 }
 

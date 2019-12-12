@@ -133,6 +133,7 @@ export default function KeyValue({
   } else {
     if (Array.isArray(value)) {
       const hasChildren = value.length > 0;
+      const displayName = getMetaValueLabel(value);
 
       children = value.map((innerValue, index) => (
         <KeyValue
@@ -164,10 +165,7 @@ export default function KeyValue({
             onClick={hasChildren ? toggleIsOpen : undefined}>
             {name}
           </span>
-          <span>
-            Array{' '}
-            {hasChildren ? '' : <span className={styles.Empty}>(empty)</span>}
-          </span>
+          <span className={styles.Value}>{displayName}</span>
         </div>,
       );
     } else {
@@ -180,9 +178,7 @@ export default function KeyValue({
       }
 
       const hasChildren = entries.length > 0;
-      const displayName = value.hasOwnProperty(meta.unserializable)
-        ? getMetaValueLabel(value)
-        : 'Object';
+      const displayName = getMetaValueLabel(value);
 
       let areChildrenReadOnly = isReadOnly || !!value[meta.readonly];
       children = entries.map<Element<any>>(([key, keyValue]) => (
@@ -215,10 +211,7 @@ export default function KeyValue({
             onClick={hasChildren ? toggleIsOpen : undefined}>
             {name}
           </span>
-          <span>
-            {`${displayName || ''} `}
-            {hasChildren ? '' : <span className={styles.Empty}>(empty)</span>}
-          </span>
+          <span className={styles.Value}>{displayName}</span>
         </div>,
       );
     }
