@@ -448,14 +448,11 @@ export function getDisplayNameForReactElement(
   }
 }
 
-const STRINGIFY_OPTIONS = {
-  inlineCharacterLimit: 50,
-  singleQuotes: false,
-};
+const MAX_PREVIEW_STRING_LENGTH = 50;
 
 function truncateForDisplay(
   string: string,
-  length: number = STRINGIFY_OPTIONS.inlineCharacterLimit,
+  length: number = MAX_PREVIEW_STRING_LENGTH,
 ) {
   if (string.length > length) {
     return string.substr(0, length) + '…';
@@ -519,11 +516,18 @@ export function formatDataForPreview(
       return `DataView(${data.buffer.byteLength})`;
     case 'array':
       if (showFormattedValue) {
-        const formatted = [];
+        let formatted = '';
         for (let i = 0; i < data.length; i++) {
-          formatted[i] = formatDataForPreview(data[i], false);
+          if (i > 0) {
+            formatted += ', ';
+          }
+          formatted += formatDataForPreview(data[i], false);
+          if (formatted.length > MAX_PREVIEW_STRING_LENGTH) {
+            // Prevent doing a lot of unnecessary iteration...
+            break;
+          }
         }
-        return `[${truncateForDisplay(formatted.join(', '))}]`;
+        return `[${truncateForDisplay(formatted)}]`;
       } else {
         const length = data.hasOwnProperty(meta.size)
           ? data[meta.size]
@@ -533,24 +537,38 @@ export function formatDataForPreview(
     case 'typed_array':
       const shortName = `${data.constructor.name}(${data.length})`;
       if (showFormattedValue) {
-        return `${shortName} [${truncateForDisplay(
-          data
-            .toString()
-            .split(',')
-            .join(', '),
-        )}]`;
+        let formatted = '';
+        for (let i = 0; i < data.length; i++) {
+          if (i > 0) {
+            formatted += ', ';
+          }
+          formatted += data[i];
+          if (formatted.length > MAX_PREVIEW_STRING_LENGTH) {
+            // Prevent doing a lot of unnecessary iteration...
+            break;
+          }
+        }
+        return `${shortName} [${truncateForDisplay(formatted)}]`;
       } else {
         return shortName;
       }
     case 'iterator':
       const name = data.constructor.name;
       if (showFormattedValue) {
-        const valueStrings = [];
         // TRICKY
         // Don't use [...spread] syntax for this purpose.
         // This project uses @babel/plugin-transform-spread in "loose" mode which only works with Array values.
         // Other types (e.g. typed arrays, Sets) will not spread correctly.
-        Array.from(data).forEach(entryOrEntries => {
+        const array = Array.from(data);
+
+        let formatted = '';
+        for (let i = 0; i < array.length; i++) {
+          const entryOrEntries = array[i];
+
+          if (i > 0) {
+            formatted += ', ';
+          }
+
           // TRICKY
           // Browsers display Maps and Sets differently.
           // To mimic their behavior, detect if we've been given an entries tuple.
@@ -559,14 +577,18 @@ export function formatDataForPreview(
           if (Array.isArray(entryOrEntries)) {
             const key = formatDataForPreview(entryOrEntries[0], true);
             const value = formatDataForPreview(entryOrEntries[1], false);
-            valueStrings.push(`${key} => ${value}`);
+            formatted += `${key} => ${value}`;
           } else {
-            valueStrings.push(formatDataForPreview(entryOrEntries, false));
+            formatted += formatDataForPreview(entryOrEntries, false);
           }
-        });
-        return `${name}(${data.size}) {${truncateForDisplay(
-          valueStrings.join(', '),
-        )}}`;
+
+          if (formatted.length > MAX_PREVIEW_STRING_LENGTH) {
+            // Prevent doing a lot of unnecessary iteration...
+            break;
+          }
+        }
+
+        return `${name}(${data.size}) {${truncateForDisplay(formatted)}}`;
       } else {
         return `${name}(${data.size})`;
       }
@@ -574,13 +596,21 @@ export function formatDataForPreview(
       return data.toString();
     case 'object':
       if (showFormattedValue) {
-        const formatted = [];
-        Object.keys(data)
-          .sort(alphaSortEntries)
-          .forEach(key => {
-            formatted.push(`${key}: ${formatDataForPreview(data[key], false)}`);
-          });
-        return `{${truncateForDisplay(formatted.join(', '))}}`;
+        const keys = Object.keys(data).sort(alphaSortEntries);
+
+        let formatted = '';
+        for (let i = 0; i < keys.length; i++) {
+          const key = keys[i];
+          if (i > 0) {
+            formatted += ', ';
+          }
+          formatted += `${key}: ${formatDataForPreview(data[key], false)}`;
+          if (formatted.length > MAX_PREVIEW_STRING_LENGTH) {
+            // Prevent doing a lot of unnecessary iteration...
+            break;
+          }
+        }
+        return `{${truncateForDisplay(formatted)}}`;
       } else {
         return '{…}';
       }
