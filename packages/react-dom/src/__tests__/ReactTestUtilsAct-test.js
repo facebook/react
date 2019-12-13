@@ -742,7 +742,10 @@ function runActTests(label, render, unmount, rerender) {
             throw promise;
           }
 
+          let startTransition;
           function App(props) {
+            const [_startTransition] = React.useTransition({timeoutMs: 5000});
+            startTransition = _startTransition;
             return (
               <React.Suspense
                 fallback={<span data-test-id="spinner">loading...</span>}>
@@ -771,14 +774,9 @@ function runActTests(label, render, unmount, rerender) {
           expect(document.querySelector('[data-test-id=spinner]')).toBeNull();
 
           // trigger a suspendy update with a delay
-          React.unstable_withSuspenseConfig(
-            () => {
-              act(() => {
-                rerender(<App suspend={true} />);
-              });
-            },
-            {timeout: 5000},
-          );
+          act(() => {
+            startTransition(() => rerender(<App suspend={true} />));
+          });
           // the spinner shows up regardless
           expect(
             document.querySelector('[data-test-id=spinner]'),

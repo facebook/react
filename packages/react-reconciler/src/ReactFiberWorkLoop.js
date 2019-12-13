@@ -12,7 +12,7 @@ import type {FiberRoot} from './ReactFiberRoot';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
 import type {ReactPriorityLevel} from './SchedulerWithReactIntegration';
 import type {Interaction} from 'scheduler/src/Tracing';
-import type {SuspenseConfig} from './ReactFiberSuspenseConfig';
+import type {SuspenseConfig} from './ReactFiberTransition';
 import type {SuspenseState} from './ReactFiberSuspenseComponent';
 import type {Hook} from './ReactFiberHooks';
 

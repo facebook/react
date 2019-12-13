@@ -78,6 +78,7 @@ describe('ReactDOMServerPartialHydration', () => {
     ReactFeatureFlags.enableSuspenseCallback = true;
     ReactFeatureFlags.enableFlareAPI = true;
     ReactFeatureFlags.debugRenderPhaseSideEffectsForStrictMode = false;
+    ReactFeatureFlags.flushSuspenseFallbacksInTests = false;
 
     React = require('react');
     ReactDOM = require('react-dom');
@@ -784,11 +785,17 @@ describe('ReactDOMServerPartialHydration', () => {
       }
     }
 
-    function App({text, className}) {
+    let setText;
+    let startTransition;
+    function App() {
+      const [text, _setText] = React.useState('Hello');
+      const [_startTransition] = React.useTransition({timeoutMs: 5000});
+      setText = _setText;
+      startTransition = _startTransition;
       return (
         <div>
           <Suspense fallback="Loading...">
-            <span ref={ref} className={className}>
+            <span ref={ref} className={text}>
               <Child text={text} />
             </span>
           </Suspense>
@@ -797,9 +804,7 @@ describe('ReactDOMServerPartialHydration', () => {
     }
 
     suspend = false;
-    let finalHTML = ReactDOMServer.renderToString(
-      <App text="Hello" className="hello" />,
-    );
+    let finalHTML = ReactDOMServer.renderToString(<App />);
     let container = document.createElement('div');
     container.innerHTML = finalHTML;
 
@@ -809,7 +814,7 @@ describe('ReactDOMServerPartialHydration', () => {
     // hydrating anyway.
     suspend = true;
     let root = ReactDOM.createRoot(container, {hydrate: true});
-    root.render(<App text="Hello" className="hello" />);
+    root.render(<App />);
     Scheduler.unstable_flushAll();
     jest.runAllTimers();
 
@@ -817,37 +822,36 @@ describe('ReactDOMServerPartialHydration', () => {
     expect(container.textContent).toBe('Hello');
 
     // Render an update with a long timeout.
-    React.unstable_withSuspenseConfig(
-      () => root.render(<App text="Hi" className="hi" />),
-      {timeoutMs: 5000},
-    );
+    await act(async () => {
+      startTransition(() => setText('Hi'));
 
-    // This shouldn't force the fallback yet.
-    Scheduler.unstable_flushAll();
+      // This shouldn't force the fallback yet.
+      Scheduler.unstable_flushAll();
 
-    expect(ref.current).toBe(null);
-    expect(container.textContent).toBe('Hello');
+      expect(ref.current).toBe(null);
+      expect(container.textContent).toBe('Hello');
 
-    // Resolving the promise so that rendering can complete.
-    suspend = false;
-    resolve();
-    await promise;
+      // Resolving the promise so that rendering can complete.
+      suspend = false;
+      resolve();
+      await promise;
 
-    // This should first complete the hydration and then flush the update onto the hydrated state.
-    Scheduler.unstable_flushAll();
-    jest.runAllTimers();
+      // This should first complete the hydration and then flush the update onto the hydrated state.
+      Scheduler.unstable_flushAll();
+      jest.runAllTimers();
 
-    // The new span should be the same since we should have successfully hydrated
-    // before changing it.
-    let newSpan = container.getElementsByTagName('span')[0];
-    expect(span).toBe(newSpan);
+      // The new span should be the same since we should have successfully hydrated
+      // before changing it.
+      let newSpan = container.getElementsByTagName('span')[0];
+      expect(span).toBe(newSpan);
 
-    // We should now have fully rendered with a ref on the new span.
-    expect(ref.current).toBe(span);
-    expect(container.textContent).toBe('Hi');
-    // If we ended up hydrating the existing content, we won't have properly
-    // patched up the tree, which might mean we haven't patched the className.
-    expect(span.className).toBe('hi');
+      // We should now have fully rendered with a ref on the new span.
+      expect(ref.current).toBe(span);
+      expect(container.textContent).toBe('Hi');
+      // If we ended up hydrating the existing content, we won't have properly
+      // patched up the tree, which might mean we haven't patched the className.
+      expect(span.className).toBe('Hi');
+    });
   });
 
   it('blocks the update to hydrate first if context has changed', async () => {

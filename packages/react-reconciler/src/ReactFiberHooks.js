@@ -15,7 +15,7 @@ import type {
 import type {Fiber} from './ReactFiber';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
 import type {HookEffectTag} from './ReactHookEffectTags';
-import type {SuspenseConfig} from './ReactFiberSuspenseConfig';
+import type {SuspenseConfig} from './ReactFiberTransition';
 import type {ReactPriorityLevel} from './SchedulerWithReactIntegration';
 
 import ReactSharedInternals from 'shared/ReactSharedInternals';
@@ -50,7 +50,10 @@ import warning from 'shared/warning';
 import getComponentName from 'shared/getComponentName';
 import is from 'shared/objectIs';
 import {markWorkInProgressReceivedUpdate} from './ReactFiberBeginWork';
-import {requestCurrentSuspenseConfig} from './ReactFiberSuspenseConfig';
+import {
+  setCurrentSuspenseConfig,
+  getCurrentSuspenseConfig,
+} from './ReactFiberTransition';
 import {
   UserBlockingPriority,
   NormalPriority,
@@ -58,7 +61,7 @@ import {
   getCurrentPriorityLevel,
 } from './SchedulerWithReactIntegration';
 
-const {ReactCurrentDispatcher, ReactCurrentBatchConfig} = ReactSharedInternals;
+const {ReactCurrentDispatcher} = ReactSharedInternals;
 
 export type Dispatcher = {
   readContext<T>(
@@ -1144,12 +1147,15 @@ function mountDeferredValue<T>(
   const [prevValue, setValue] = mountState(value);
   mountEffect(
     () => {
-      const previousConfig = ReactCurrentBatchConfig.suspense;
-      ReactCurrentBatchConfig.suspense = config === undefined ? null : config;
+      const previousConfig = getCurrentSuspenseConfig();
+      // $FlowFixMe Beats me why Flow doesn't like this
+      const resolvedConfig: SuspenseConfig =
+        config === undefined ? null : config;
+      setCurrentSuspenseConfig(resolvedConfig);
       try {
         setValue(value);
       } finally {
-        ReactCurrentBatchConfig.suspense = previousConfig;
+        setCurrentSuspenseConfig(previousConfig);
       }
     },
     [value, config],
@@ -1164,12 +1170,15 @@ function updateDeferredValue<T>(
   const [prevValue, setValue] = updateState(value);
   updateEffect(
     () => {
-      const previousConfig = ReactCurrentBatchConfig.suspense;
-      ReactCurrentBatchConfig.suspense = config === undefined ? null : config;
+      const previousConfig = getCurrentSuspenseConfig();
+      // $FlowFixMe Beats me why Flow doesn't like this
+      const resolvedConfig: SuspenseConfig =
+        config === undefined ? null : config;
+      setCurrentSuspenseConfig(resolvedConfig);
       try {
         setValue(value);
       } finally {
-        ReactCurrentBatchConfig.suspense = previousConfig;
+        setCurrentSuspenseConfig(previousConfig);
       }
     },
     [value, config],
@@ -1188,13 +1197,13 @@ function startTransition(setPending, config, callback) {
   runWithPriority(
     priorityLevel > NormalPriority ? NormalPriority : priorityLevel,
     () => {
-      const previousConfig = ReactCurrentBatchConfig.suspense;
-      ReactCurrentBatchConfig.suspense = config === undefined ? null : config;
+      const previousConfig = getCurrentSuspenseConfig();
+      setCurrentSuspenseConfig(config === undefined ? null : config);
       try {
         setPending(false);
         callback();
       } finally {
-        ReactCurrentBatchConfig.suspense = previousConfig;
+        setCurrentSuspenseConfig(previousConfig);
       }
     },
   );
@@ -1279,7 +1288,7 @@ function dispatchAction<S, A>(
     }
   } else {
     const currentTime = requestCurrentTimeForUpdate();
-    const suspenseConfig = requestCurrentSuspenseConfig();
+    const suspenseConfig = getCurrentSuspenseConfig();
     const expirationTime = computeExpirationForFiber(
       currentTime,
       fiber,

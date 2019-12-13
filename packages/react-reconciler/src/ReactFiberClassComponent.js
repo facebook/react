@@ -56,7 +56,7 @@ import {
   computeExpirationForFiber,
   scheduleWork,
 } from './ReactFiberWorkLoop';
-import {requestCurrentSuspenseConfig} from './ReactFiberSuspenseConfig';
+import {getCurrentSuspenseConfig} from './ReactFiberTransition';
 
 const fakeInternalInstance = {};
 const isArray = Array.isArray;
@@ -184,7 +184,7 @@ const classComponentUpdater = {
   enqueueSetState(inst, payload, callback) {
     const fiber = getInstance(inst);
     const currentTime = requestCurrentTimeForUpdate();
-    const suspenseConfig = requestCurrentSuspenseConfig();
+    const suspenseConfig = getCurrentSuspenseConfig();
     const expirationTime = computeExpirationForFiber(
       currentTime,
       fiber,
@@ -206,7 +206,7 @@ const classComponentUpdater = {
   enqueueReplaceState(inst, payload, callback) {
     const fiber = getInstance(inst);
     const currentTime = requestCurrentTimeForUpdate();
-    const suspenseConfig = requestCurrentSuspenseConfig();
+    const suspenseConfig = getCurrentSuspenseConfig();
     const expirationTime = computeExpirationForFiber(
       currentTime,
       fiber,
@@ -230,7 +230,7 @@ const classComponentUpdater = {
   enqueueForceUpdate(inst, callback) {
     const fiber = getInstance(inst);
     const currentTime = requestCurrentTimeForUpdate();
-    const suspenseConfig = requestCurrentSuspenseConfig();
+    const suspenseConfig = getCurrentSuspenseConfig();
     const expirationTime = computeExpirationForFiber(
       currentTime,
       fiber,

@@ -80,7 +80,7 @@ import {
   computeInteractiveExpiration,
   computeContinuousHydrationExpiration,
 } from './ReactFiberExpirationTime';
-import {requestCurrentSuspenseConfig} from './ReactFiberSuspenseConfig';
+import {getCurrentSuspenseConfig} from './ReactFiberTransition';
 import {
   scheduleRefresh,
   scheduleRoot,
@@ -239,7 +239,7 @@ export function updateContainer(
       warnIfNotScopedWithMatchingAct(current);
     }
   }
-  const suspenseConfig = requestCurrentSuspenseConfig();
+  const suspenseConfig = getCurrentSuspenseConfig();
   const expirationTime = computeExpirationForFiber(
     currentTime,
     current,

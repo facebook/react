@@ -43,7 +43,6 @@ import {
   useTransition,
   useDeferredValue,
 } from './ReactHooks';
-import {withSuspenseConfig} from './ReactBatchConfig';
 import {
   createElementWithValidation,
   createFactoryWithValidation,
@@ -111,7 +110,6 @@ if (exposeConcurrentModeAPIs) {
   React.useTransition = useTransition;
   React.useDeferredValue = useDeferredValue;
   React.SuspenseList = REACT_SUSPENSE_LIST_TYPE;
-  React.unstable_withSuspenseConfig = withSuspenseConfig;
 }
 
 if (enableFlareAPI) {

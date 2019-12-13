@@ -7,16 +7,18 @@
  * @flow
  */
 
-import ReactSharedInternals from 'shared/ReactSharedInternals';
-
-const {ReactCurrentBatchConfig} = ReactSharedInternals;
-
 export type SuspenseConfig = {|
   timeoutMs: number,
   busyDelayMs?: number,
   busyMinDurationMs?: number,
 |};
 
-export function requestCurrentSuspenseConfig(): null | SuspenseConfig {
-  return ReactCurrentBatchConfig.suspense;
+let currentSuspenseConfig: SuspenseConfig | null = null;
+
+export function setCurrentSuspenseConfig(config: SuspenseConfig | null): void {
+  currentSuspenseConfig = config;
+}
+
+export function getCurrentSuspenseConfig(): SuspenseConfig | null {
+  return currentSuspenseConfig;
 }
