@@ -49,6 +49,7 @@ import {
   IS_PASSIVE,
   IS_ACTIVE,
   PASSIVE_NOT_SUPPORTED,
+  IS_FIRST_ANCESTOR,
 } from 'legacy-events/EventSystemFlags';
 
 import {
@@ -175,13 +176,19 @@ function handleTopLevel(bookKeeping: BookKeepingInstance) {
     const eventTarget = getEventTarget(bookKeeping.nativeEvent);
     const topLevelType = ((bookKeeping.topLevelType: any): DOMTopLevelEventType);
     const nativeEvent = ((bookKeeping.nativeEvent: any): AnyNativeEvent);
+    let eventSystemFlags = bookKeeping.eventSystemFlags;
+
+    // If this is the first ancestor, we mark it on the system flags
+    if (i === 0) {
+      eventSystemFlags |= IS_FIRST_ANCESTOR;
+    }
 
     runExtractedPluginEventsInBatch(
       topLevelType,
       targetInst,
       nativeEvent,
       eventTarget,
-      bookKeeping.eventSystemFlags,
+      eventSystemFlags,
     );
   }
 }
