@@ -193,12 +193,9 @@ let workInProgressHook: Hook | null = null;
 
 // Whether an update was scheduled during the currently executing render pass.
 let didScheduleRenderPhaseUpdate: boolean = false;
-// Lazily created map of render-phase updates
-let renderPhaseUpdates: Map<
-  UpdateQueue<any, any>,
-  Update<any, any>,
-> | null = null;
 // Counter to prevent infinite loops.
+// TODO: This is only global so that we can detect whether we're currently
+// re-rendering. Use a custom dispatcher instead and make this local.
 let numberOfReRenders: number = 0;
 const RE_RENDER_LIMIT = 25;
 
@@ -393,7 +390,6 @@ export function renderWithHooks(
   // workInProgressHook = null;
 
   // didScheduleRenderPhaseUpdate = false;
-  // renderPhaseUpdates = null;
   // numberOfReRenders = 0;
 
   // TODO Warn if no hooks are used at all during mount, then some are used during update.
@@ -453,7 +449,6 @@ export function renderWithHooks(
       children = Component(props, refOrContext);
     } while (didScheduleRenderPhaseUpdate);
 
-    renderPhaseUpdates = null;
     numberOfReRenders = 0;
   }
 
@@ -484,7 +479,6 @@ export function renderWithHooks(
 
   // These were reset above
   // didScheduleRenderPhaseUpdate = false;
-  // renderPhaseUpdates = null;
   // numberOfReRenders = 0;
 
   invariant(
@@ -531,7 +525,6 @@ export function resetHooks(): void {
   }
 
   didScheduleRenderPhaseUpdate = false;
-  renderPhaseUpdates = null;
   numberOfReRenders = 0;
 }
 
@@ -672,43 +665,41 @@ function updateReducer<S, I, A>(
     // This is a re-render. Apply the new render phase updates to the previous
     // work-in-progress hook.
     const dispatch: Dispatch<A> = (queue.dispatch: any);
-    if (renderPhaseUpdates !== null) {
-      // Render phase updates are stored in a map of queue -> linked list
-      const firstRenderPhaseUpdate = renderPhaseUpdates.get(queue);
-      if (firstRenderPhaseUpdate !== undefined) {
-        renderPhaseUpdates.delete(queue);
-        let newState = hook.memoizedState;
-        let update = firstRenderPhaseUpdate;
-        do {
-          // Process this render phase update. We don't have to check the
-          // priority because it will always be the same as the current
-          // render's.
-          const action = update.action;
-          newState = reducer(newState, action);
-          update = update.next;
-        } while (update !== null);
+    const lastRenderPhaseUpdate = queue.pending;
+    let newState = hook.memoizedState;
+    if (lastRenderPhaseUpdate !== null) {
+      // The queue doesn't persist past this render pass.
+      queue.pending = null;
 
-        // Mark that the fiber performed work, but only if the new state is
-        // different from the current state.
-        if (!is(newState, hook.memoizedState)) {
-          markWorkInProgressReceivedUpdate();
-        }
+      const firstRenderPhaseUpdate = lastRenderPhaseUpdate.next;
+      let update = firstRenderPhaseUpdate;
+      do {
+        // Process this render phase update. We don't have to check the
+        // priority because it will always be the same as the current
+        // render's.
+        const action = update.action;
+        newState = reducer(newState, action);
+        update = update.next;
+      } while (update !== firstRenderPhaseUpdate);
 
-        hook.memoizedState = newState;
-        // Don't persist the state accumulated from the render phase updates to
-        // the base state unless the queue is empty.
-        // TODO: Not sure if this is the desired semantics, but it's what we
-        // do for gDSFP. I can't remember why.
-        if (hook.baseQueue === null) {
-          hook.baseState = newState;
-        }
-
-        queue.lastRenderedState = newState;
-
-        return [newState, dispatch];
+      // Mark that the fiber performed work, but only if the new state is
+      // different from the current state.
+      if (!is(newState, hook.memoizedState)) {
+        markWorkInProgressReceivedUpdate();
       }
+
+      hook.memoizedState = newState;
+      // Don't persist the state accumulated from the render phase updates to
+      // the base state unless the queue is empty.
+      // TODO: Not sure if this is the desired semantics, but it's what we
+      // do for gDSFP. I can't remember why.
+      if (hook.baseQueue === null) {
+        hook.baseState = newState;
+      }
+
+      queue.lastRenderedState = newState;
     }
-    return [hook.memoizedState, dispatch];
+    return [newState, dispatch];
   }
 
   const current: Hook = (currentHook: any);
@@ -1243,6 +1234,38 @@ function dispatchAction<S, A>(
     }
   }
 
+  const currentTime = requestCurrentTimeForUpdate();
+  const suspenseConfig = requestCurrentSuspenseConfig();
+  const expirationTime = computeExpirationForFiber(
+    currentTime,
+    fiber,
+    suspenseConfig,
+  );
+
+  const update: Update<S, A> = {
+    expirationTime,
+    suspenseConfig,
+    action,
+    eagerReducer: null,
+    eagerState: null,
+    next: (null: any),
+  };
+
+  if (__DEV__) {
+    update.priority = getCurrentPriorityLevel();
+  }
+
+  // Append the update to the end of the list.
+  const pending = queue.pending;
+  if (pending === null) {
+    // This is the first update. Create a circular list.
+    update.next = update;
+  } else {
+    update.next = pending.next;
+    pending.next = update;
+  }
+  queue.pending = update;
+
   const alternate = fiber.alternate;
   if (
     fiber === currentlyRenderingFiber ||
@@ -1252,64 +1275,8 @@ function dispatchAction<S, A>(
     // queue -> linked list of updates. After this render pass, we'll restart
     // and apply the stashed updates on top of the work-in-progress hook.
     didScheduleRenderPhaseUpdate = true;
-    const update: Update<S, A> = {
-      expirationTime: renderExpirationTime,
-      suspenseConfig: null,
-      action,
-      eagerReducer: null,
-      eagerState: null,
-      next: (null: any),
-    };
-    if (__DEV__) {
-      update.priority = getCurrentPriorityLevel();
-    }
-    if (renderPhaseUpdates === null) {
-      renderPhaseUpdates = new Map();
-    }
-    const firstRenderPhaseUpdate = renderPhaseUpdates.get(queue);
-    if (firstRenderPhaseUpdate === undefined) {
-      renderPhaseUpdates.set(queue, update);
-    } else {
-      // Append the update to the end of the list.
-      let lastRenderPhaseUpdate = firstRenderPhaseUpdate;
-      while (lastRenderPhaseUpdate.next !== null) {
-        lastRenderPhaseUpdate = lastRenderPhaseUpdate.next;
-      }
-      lastRenderPhaseUpdate.next = update;
-    }
+    update.expirationTime = renderExpirationTime;
   } else {
-    const currentTime = requestCurrentTimeForUpdate();
-    const suspenseConfig = requestCurrentSuspenseConfig();
-    const expirationTime = computeExpirationForFiber(
-      currentTime,
-      fiber,
-      suspenseConfig,
-    );
-
-    const update: Update<S, A> = {
-      expirationTime,
-      suspenseConfig,
-      action,
-      eagerReducer: null,
-      eagerState: null,
-      next: (null: any),
-    };
-
-    if (__DEV__) {
-      update.priority = getCurrentPriorityLevel();
-    }
-
-    // Append the update to the end of the list.
-    const pending = queue.pending;
-    if (pending === null) {
-      // This is the first update. Create a circular list.
-      update.next = update;
-    } else {
-      update.next = pending.next;
-      pending.next = update;
-    }
-    queue.pending = update;
-
     if (
       fiber.expirationTime === NoWork &&
       (alternate === null || alternate.expirationTime === NoWork)
