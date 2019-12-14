@@ -10,7 +10,7 @@ const helperModuleImports = require('@babel/helper-module-imports');
 
 module.exports = function replaceConsoleCalls(babel) {
   let consoleErrors = new WeakMap();
-  function getConsoleError(path, file, opts) {
+  function getConsoleError(path, file) {
     if (!consoleErrors.has(file)) {
       consoleErrors.set(
         file,
@@ -26,7 +26,7 @@ module.exports = function replaceConsoleCalls(babel) {
   }
 
   let consoleWarns = new WeakMap();
-  function getConsoleWarn(path, file, opts) {
+  function getConsoleWarn(path, file) {
     if (!consoleWarns.has(file)) {
       consoleWarns.set(
         file,
@@ -53,11 +53,27 @@ module.exports = function replaceConsoleCalls(babel) {
           return;
         }
         if (path.get('callee').matchesPattern('console.error')) {
-          const id = getConsoleError(path, pass.file, this.opts);
+          if (this.opts.shouldError) {
+            throw path.buildCodeFrameError(
+              "This module has no access to the React object, so it can't " +
+                'use console.error() with automatically appended stack. ' +
+                "As a workaround, you can use console['error'] which won't " +
+                'be transformed.'
+            );
+          }
+          const id = getConsoleError(path, pass.file);
           path.node.callee = id;
         }
         if (path.get('callee').matchesPattern('console.warn')) {
-          const id = getConsoleWarn(path, pass.file, this.opts);
+          if (this.opts.shouldError) {
+            throw path.buildCodeFrameError(
+              "This module has no access to the React object, so it can't " +
+                'use console.warn() with automatically appended stack. ' +
+                "As a workaround, you can use console['warn'] which won't " +
+                'be transformed.'
+            );
+          }
+          const id = getConsoleWarn(path, pass.file);
           path.node.callee = id;
         }
       },

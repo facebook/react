@@ -87,7 +87,8 @@ export function isAsyncMode(object: any) {
   if (__DEV__) {
     if (!hasWarnedAboutDeprecatedIsAsyncMode) {
       hasWarnedAboutDeprecatedIsAsyncMode = true;
-      console.warn(
+      // Using console['warn'] to evade Babel and ESLint
+      console['warn'](
         'The ReactIs.isAsyncMode() alias has been deprecated, ' +
           'and will be removed in React 17+. Update your code to use ' +
           'ReactIs.isConcurrentMode() instead. It has the exact same API.',

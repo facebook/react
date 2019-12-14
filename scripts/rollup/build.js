@@ -121,10 +121,15 @@ function getBabelConfig(
     presets: [],
     plugins: [],
   };
-  if (isDevelopment && canAccessReactObject) {
+  if (isDevelopment) {
     options.plugins.push(
       // Turn console.error/warn() into a custom wrapper
-      require('../babel/transform-replace-console-calls')
+      [
+        require('../babel/transform-replace-console-calls'),
+        {
+          shouldError: !canAccessReactObject,
+        },
+      ]
     );
   }
   if (updateBabelOptions) {
