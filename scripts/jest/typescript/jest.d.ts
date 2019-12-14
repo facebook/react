@@ -21,7 +21,7 @@ interface Expect {
   not: Expect
   toThrow(message?: string): void
   toThrowError(message?: string): void
-  toWarnDev(message?: string | Array<string>, options?: any): void
+  toErrorDev(message?: string | Array<string>, options?: any): void
   toLowPriorityWarnDev(message?: string | Array<string>, options?: any): void
   toBe(value: any): void
   toEqual(value: any): void
