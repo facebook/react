@@ -55,7 +55,7 @@ describe 'ReactCoffeeScriptClass', ->
       # A failed component renders twice in DEV
       'No `render` method found on the returned component instance',
       'No `render` method found on the returned component instance',
-    ], {withoutStack: true})
+    ])
     undefined
 
   it 'renders a simple stateless component with prop', ->
@@ -126,7 +126,7 @@ describe 'ReactCoffeeScriptClass', ->
         {}
     expect(->
       ReactDOM.render(React.createElement(Foo, foo: 'foo'), container)
-    ).toWarnDev 'Foo: getDerivedStateFromProps() is defined as an instance method and will be ignored. Instead, declare it as a static method.', {withoutStack: true}
+    ).toWarnDev 'Foo: getDerivedStateFromProps() is defined as an instance method and will be ignored. Instead, declare it as a static method.'
     undefined
 
   it 'warns if getDerivedStateFromError is not static', ->
@@ -137,7 +137,7 @@ describe 'ReactCoffeeScriptClass', ->
         {}
     expect(->
       ReactDOM.render(React.createElement(Foo, foo: 'foo'), container)
-    ).toWarnDev 'Foo: getDerivedStateFromError() is defined as an instance method and will be ignored. Instead, declare it as a static method.', {withoutStack: true}
+    ).toWarnDev 'Foo: getDerivedStateFromError() is defined as an instance method and will be ignored. Instead, declare it as a static method.'
     undefined
 
   it 'warns if getSnapshotBeforeUpdate is static', ->
@@ -148,7 +148,7 @@ describe 'ReactCoffeeScriptClass', ->
       {}
     expect(->
       ReactDOM.render(React.createElement(Foo, foo: 'foo'), container)
-    ).toWarnDev 'Foo: getSnapshotBeforeUpdate() is defined as a static method and will be ignored. Instead, declare it as an instance method.', {withoutStack: true}
+    ).toWarnDev 'Foo: getSnapshotBeforeUpdate() is defined as a static method and will be ignored. Instead, declare it as an instance method.'
     undefined
 
   it 'warns if state not initialized before static getDerivedStateFromProps', ->
@@ -168,7 +168,7 @@ describe 'ReactCoffeeScriptClass', ->
       'undefined. This is not recommended. Instead, define the initial state by ' +
       'assigning an object to `this.state` in the constructor of `Foo`. ' +
       'This ensures that `getDerivedStateFromProps` arguments have a consistent shape.'
-    ), {withoutStack: true}
+    )
     undefined
 
   it 'updates initial state with values returned by static getDerivedStateFromProps', ->
@@ -267,7 +267,7 @@ describe 'ReactCoffeeScriptClass', ->
 
       expect(->
         test React.createElement(Foo), 'SPAN', ''
-      ).toWarnDev('Foo.state: must be set to an object or null', {withoutStack: true})
+      ).toWarnDev('Foo.state: must be set to an object or null')
     undefined
 
   it 'should render with null in the initial state property', ->
@@ -415,7 +415,7 @@ describe 'ReactCoffeeScriptClass', ->
       'propTypes was defined as an instance property on Foo.',
       'contextTypes was defined as an instance property on Foo.',
       'contextType was defined as an instance property on Foo.',
-    ], {withoutStack: true})
+    ])
     expect(getInitialStateWasCalled).toBe false
     expect(getDefaultPropsWasCalled).toBe false
     undefined
@@ -451,8 +451,7 @@ describe 'ReactCoffeeScriptClass', ->
     ).toWarnDev(
       'Warning: NamedComponent has a method called componentShouldUpdate().
        Did you mean shouldComponentUpdate()? The name is phrased as a
-       question because the function is expected to return a value.',
-       {withoutStack: true}
+       question because the function is expected to return a value.'
     )
     undefined
 
@@ -469,8 +468,7 @@ describe 'ReactCoffeeScriptClass', ->
       test React.createElement(NamedComponent), 'SPAN', 'foo'
     ).toWarnDev(
       'Warning: NamedComponent has a method called componentWillRecieveProps().
-       Did you mean componentWillReceiveProps()?',
-       {withoutStack: true}
+       Did you mean componentWillReceiveProps()?'
     )
     undefined
 
@@ -487,8 +485,7 @@ describe 'ReactCoffeeScriptClass', ->
       test React.createElement(NamedComponent), 'SPAN', 'foo'
     ).toWarnDev(
       'Warning: NamedComponent has a method called UNSAFE_componentWillRecieveProps().
-       Did you mean UNSAFE_componentWillReceiveProps()?',
-       {withoutStack: true}
+       Did you mean UNSAFE_componentWillReceiveProps()?'
     )
     undefined
 

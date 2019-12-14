@@ -66,10 +66,11 @@ let isHydrating: boolean = false;
 
 function warnIfHydrating() {
   if (__DEV__) {
-    warning(
-      !isHydrating,
-      'We should not be hydrating here. This is a bug in React. Please file a bug.',
-    );
+    if (isHydrating) {
+      warning(
+        'We should not be hydrating here. This is a bug in React. Please file a bug.',
+      );
+    }
   }
 }
 

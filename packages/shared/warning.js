@@ -18,14 +18,25 @@ import ReactSharedInternals from 'shared/ReactSharedInternals';
 let warning = warningWithoutStack;
 
 if (__DEV__) {
-  warning = function(condition, format, ...args) {
-    if (condition) {
-      return;
+  warning = function(format, ...args) {
+    let finalFormat = format;
+    let finalArgs = args;
+
+    const hasExistingStack =
+      args.length > 0 &&
+      typeof args[args.length - 1] === 'string' &&
+      args[args.length - 1].indexOf('\n    in') === 0;
+
+    if (!hasExistingStack) {
+      const ReactDebugCurrentFrame =
+        ReactSharedInternals.ReactDebugCurrentFrame;
+      const stack = ReactDebugCurrentFrame.getStackAddendum();
+      finalFormat += '%s';
+      finalArgs.push(stack);
     }
-    const ReactDebugCurrentFrame = ReactSharedInternals.ReactDebugCurrentFrame;
-    const stack = ReactDebugCurrentFrame.getStackAddendum();
-    // eslint-disable-next-line react-internal/warning-and-invariant-args
-    warningWithoutStack(false, format + '%s', ...args, stack);
+
+    // eslint-disable-next-line react-internal/warning-args
+    warningWithoutStack(finalFormat, ...finalArgs);
   };
 }
 

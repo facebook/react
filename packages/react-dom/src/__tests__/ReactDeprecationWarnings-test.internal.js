@@ -44,7 +44,6 @@ describe('ReactDeprecationWarnings', () => {
       'Warning: FunctionalComponent: Support for defaultProps ' +
         'will be removed from function components in a future major ' +
         'release. Use JavaScript default parameters instead.',
-      {withoutStack: true},
     );
   });
 

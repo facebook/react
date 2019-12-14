@@ -201,7 +201,6 @@ describe('ReactHooksWithNoopRenderer', () => {
         "If you can't use a class try assigning the prototype on the function as a workaround. " +
         '`Counter.prototype = React.Component.prototype`. ' +
         "Don't use an arrow function since it cannot be called with `new` by React.",
-      {withoutStack: true},
     );
 
     // Confirm that a subsequent hook works properly.
@@ -542,6 +541,50 @@ describe('ReactHooksWithNoopRenderer', () => {
         22,
       ]);
       expect(ReactNoop.getChildren()).toEqual([span(22)]);
+    });
+
+    it('discards render phase updates if something suspends', () => {
+      const thenable = {then() {}};
+      function Foo({signal}) {
+        return (
+          <Suspense fallback="Loading...">
+            <Bar signal={signal} />
+          </Suspense>
+        );
+      }
+
+      function Bar({signal: newSignal}) {
+        let [counter, setCounter] = useState(0);
+        let [signal, setSignal] = useState(true);
+
+        // Increment a counter every time the signal changes
+        if (signal !== newSignal) {
+          setCounter(c => c + 1);
+          setSignal(newSignal);
+          if (counter === 0) {
+            // We're suspending during a render that includes render phase
+            // updates. Those updates should not persist to the next render.
+            Scheduler.unstable_yieldValue('Suspend!');
+            throw thenable;
+          }
+        }
+
+        return <Text text={counter} />;
+      }
+
+      const root = ReactNoop.createRoot();
+      root.render(<Foo signal={true} />);
+
+      expect(Scheduler).toFlushAndYield([0]);
+      expect(root).toMatchRenderedOutput(<span prop={0} />);
+
+      root.render(<Foo signal={false} />);
+      expect(Scheduler).toFlushAndYield(['Suspend!']);
+      expect(root).toMatchRenderedOutput(<span prop={0} />);
+
+      // Rendering again should suspend again.
+      root.render(<Foo signal={false} />);
+      expect(Scheduler).toFlushAndYield(['Suspend!']);
     });
   });
 
@@ -2492,5 +2535,36 @@ describe('ReactHooksWithNoopRenderer', () => {
     act(() => dispatch());
     expect(Scheduler).toHaveYielded(['Step: 5, Shadow: 5']);
     expect(ReactNoop).toMatchRenderedOutput('5');
+  });
+
+  it('should process the rest pending updates after a render phase update', () => {
+    // Similar to previous test, except using a preceding render phase update
+    // instead of new props.
+    let updateA;
+    let updateC;
+    function App() {
+      const [a, setA] = useState(false);
+      const [b, setB] = useState(false);
+      if (a !== b) {
+        setB(a);
+      }
+      // Even though we called setB above,
+      // we should still apply the changes to C,
+      // during this render pass.
+      const [c, setC] = useState(false);
+      updateA = setA;
+      updateC = setC;
+      return `${a ? 'A' : 'a'}${b ? 'B' : 'b'}${c ? 'C' : 'c'}`;
+    }
+
+    act(() => ReactNoop.render(<App />));
+    expect(ReactNoop).toMatchRenderedOutput('abc');
+
+    act(() => {
+      updateA(true);
+      // This update should not get dropped.
+      updateC(true);
+    });
+    expect(ReactNoop).toMatchRenderedOutput('ABC');
   });
 });

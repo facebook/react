@@ -72,7 +72,6 @@ import ReactStrictModeWarnings from './ReactStrictModeWarnings';
 import {refineResolvedLazyComponent} from 'shared/ReactLazyComponent';
 import {REACT_LAZY_TYPE, getIteratorFn} from 'shared/ReactSymbols';
 import warning from 'shared/warning';
-import warningWithoutStack from 'shared/warningWithoutStack';
 import {
   setCurrentPhase,
   getCurrentFiberOwnerNameInDevOrNull,
@@ -90,7 +89,11 @@ import {
   reconcileChildFibers,
   cloneChildFibers,
 } from './ReactChildFiber';
-import {processUpdateQueue} from './ReactUpdateQueue';
+import {
+  processUpdateQueue,
+  cloneUpdateQueue,
+  initializeUpdateQueue,
+} from './ReactUpdateQueue';
 import {
   NoWork,
   Never,
@@ -133,7 +136,7 @@ import {
   calculateChangedBits,
   scheduleWorkOnParentPath,
 } from './ReactFiberNewContext';
-import {resetHooks, renderWithHooks, bailoutHooks} from './ReactFiberHooks';
+import {renderWithHooks, bailoutHooks} from './ReactFiberHooks';
 import {stopProfilerTimerIfRunning} from './ReactProfilerTimer';
 import {
   getMaskedContext,
@@ -778,12 +781,13 @@ function updateClassComponent(
   if (__DEV__) {
     let inst = workInProgress.stateNode;
     if (inst.props !== nextProps) {
-      warning(
-        didWarnAboutReassigningProps,
-        'It looks like %s is reassigning its own `this.props` while rendering. ' +
-          'This is not supported and can lead to confusing bugs.',
-        getComponentName(workInProgress.type) || 'a component',
-      );
+      if (!didWarnAboutReassigningProps) {
+        warning(
+          'It looks like %s is reassigning its own `this.props` while rendering. ' +
+            'This is not supported and can lead to confusing bugs.',
+          getComponentName(workInProgress.type) || 'a component',
+        );
+      }
       didWarnAboutReassigningProps = true;
     }
   }
@@ -904,7 +908,7 @@ function updateHostRoot(current, workInProgress, renderExpirationTime) {
   pushHostRootContext(workInProgress);
   const updateQueue = workInProgress.updateQueue;
   invariant(
-    updateQueue !== null,
+    current !== null && updateQueue !== null,
     'If the root does not have an updateQueue, we should have already ' +
       'bailed out. This error is likely caused by a bug in React. Please ' +
       'file an issue.',
@@ -912,13 +916,8 @@ function updateHostRoot(current, workInProgress, renderExpirationTime) {
   const nextProps = workInProgress.pendingProps;
   const prevState = workInProgress.memoizedState;
   const prevChildren = prevState !== null ? prevState.element : null;
-  processUpdateQueue(
-    workInProgress,
-    updateQueue,
-    nextProps,
-    null,
-    renderExpirationTime,
-  );
+  cloneUpdateQueue(current, workInProgress);
+  processUpdateQueue(workInProgress, nextProps, null, renderExpirationTime);
   const nextState = workInProgress.memoizedState;
   // Caution: React DevTools currently depends on this property
   // being called "element".
@@ -1257,8 +1256,7 @@ function mountIndeterminateComponent(
       const componentName = getComponentName(Component) || 'Unknown';
 
       if (!didWarnAboutBadClass[componentName]) {
-        warningWithoutStack(
-          false,
+        warning(
           "The <%s /> component appears to have a render method, but doesn't extend React.Component. " +
             'This is likely to cause errors. Change %s to extend React.Component instead.',
           componentName,
@@ -1303,8 +1301,7 @@ function mountIndeterminateComponent(
     if (__DEV__) {
       const componentName = getComponentName(Component) || 'Unknown';
       if (!didWarnAboutModulePatternComponent[componentName]) {
-        warningWithoutStack(
-          false,
+        warning(
           'The <%s /> component appears to be a function component that returns a class instance. ' +
             'Change %s to a class that extends React.Component instead. ' +
             "If you can't use a class try assigning the prototype on the function as a workaround. " +
@@ -1322,7 +1319,8 @@ function mountIndeterminateComponent(
     workInProgress.tag = ClassComponent;
 
     // Throw out any hooks that were used.
-    resetHooks();
+    workInProgress.memoizedState = null;
+    workInProgress.updateQueue = null;
 
     // Push context providers early to prevent context stack mismatches.
     // During mounting we don't know the child context yet as the instance doesn't exist.
@@ -1337,6 +1335,8 @@ function mountIndeterminateComponent(
 
     workInProgress.memoizedState =
       value.state !== null && value.state !== undefined ? value.state : null;
+
+    initializeUpdateQueue(workInProgress);
 
     const getDerivedStateFromProps = Component.getDerivedStateFromProps;
     if (typeof getDerivedStateFromProps === 'function') {
@@ -1363,8 +1363,7 @@ function mountIndeterminateComponent(
     workInProgress.tag = FunctionComponent;
     if (__DEV__) {
       if (disableLegacyContext && Component.contextTypes) {
-        warningWithoutStack(
-          false,
+        warning(
           '%s uses the legacy contextTypes API which is no longer supported. ' +
             'Use React.createContext() with React.useContext() instead.',
           getComponentName(Component) || 'Unknown',
@@ -1397,80 +1396,79 @@ function mountIndeterminateComponent(
 }
 
 function validateFunctionComponentInDev(workInProgress: Fiber, Component: any) {
-  if (Component) {
-    warningWithoutStack(
-      !Component.childContextTypes,
-      '%s(...): childContextTypes cannot be defined on a function component.',
-      Component.displayName || Component.name || 'Component',
-    );
-  }
-  if (workInProgress.ref !== null) {
-    let info = '';
-    const ownerName = getCurrentFiberOwnerNameInDevOrNull();
-    if (ownerName) {
-      info += '\n\nCheck the render method of `' + ownerName + '`.';
+  if (__DEV__) {
+    if (Component) {
+      if (Component.childContextTypes) {
+        warning(
+          '%s(...): childContextTypes cannot be defined on a function component.',
+          Component.displayName || Component.name || 'Component',
+        );
+      }
+    }
+    if (workInProgress.ref !== null) {
+      let info = '';
+      const ownerName = getCurrentFiberOwnerNameInDevOrNull();
+      if (ownerName) {
+        info += '\n\nCheck the render method of `' + ownerName + '`.';
+      }
+
+      let warningKey = ownerName || workInProgress._debugID || '';
+      const debugSource = workInProgress._debugSource;
+      if (debugSource) {
+        warningKey = debugSource.fileName + ':' + debugSource.lineNumber;
+      }
+      if (!didWarnAboutFunctionRefs[warningKey]) {
+        didWarnAboutFunctionRefs[warningKey] = true;
+        warning(
+          'Function components cannot be given refs. ' +
+            'Attempts to access this ref will fail. ' +
+            'Did you mean to use React.forwardRef()?%s',
+          info,
+        );
+      }
     }
 
-    let warningKey = ownerName || workInProgress._debugID || '';
-    const debugSource = workInProgress._debugSource;
-    if (debugSource) {
-      warningKey = debugSource.fileName + ':' + debugSource.lineNumber;
+    if (
+      warnAboutDefaultPropsOnFunctionComponents &&
+      Component.defaultProps !== undefined
+    ) {
+      const componentName = getComponentName(Component) || 'Unknown';
+
+      if (!didWarnAboutDefaultPropsOnFunctionComponent[componentName]) {
+        warning(
+          '%s: Support for defaultProps will be removed from function components ' +
+            'in a future major release. Use JavaScript default parameters instead.',
+          componentName,
+        );
+        didWarnAboutDefaultPropsOnFunctionComponent[componentName] = true;
+      }
     }
-    if (!didWarnAboutFunctionRefs[warningKey]) {
-      didWarnAboutFunctionRefs[warningKey] = true;
-      warning(
-        false,
-        'Function components cannot be given refs. ' +
-          'Attempts to access this ref will fail. ' +
-          'Did you mean to use React.forwardRef()?%s',
-        info,
-      );
+
+    if (typeof Component.getDerivedStateFromProps === 'function') {
+      const componentName = getComponentName(Component) || 'Unknown';
+
+      if (!didWarnAboutGetDerivedStateOnFunctionComponent[componentName]) {
+        warning(
+          '%s: Function components do not support getDerivedStateFromProps.',
+          componentName,
+        );
+        didWarnAboutGetDerivedStateOnFunctionComponent[componentName] = true;
+      }
     }
-  }
 
-  if (
-    warnAboutDefaultPropsOnFunctionComponents &&
-    Component.defaultProps !== undefined
-  ) {
-    const componentName = getComponentName(Component) || 'Unknown';
+    if (
+      typeof Component.contextType === 'object' &&
+      Component.contextType !== null
+    ) {
+      const componentName = getComponentName(Component) || 'Unknown';
 
-    if (!didWarnAboutDefaultPropsOnFunctionComponent[componentName]) {
-      warningWithoutStack(
-        false,
-        '%s: Support for defaultProps will be removed from function components ' +
-          'in a future major release. Use JavaScript default parameters instead.',
-        componentName,
-      );
-      didWarnAboutDefaultPropsOnFunctionComponent[componentName] = true;
-    }
-  }
-
-  if (typeof Component.getDerivedStateFromProps === 'function') {
-    const componentName = getComponentName(Component) || 'Unknown';
-
-    if (!didWarnAboutGetDerivedStateOnFunctionComponent[componentName]) {
-      warningWithoutStack(
-        false,
-        '%s: Function components do not support getDerivedStateFromProps.',
-        componentName,
-      );
-      didWarnAboutGetDerivedStateOnFunctionComponent[componentName] = true;
-    }
-  }
-
-  if (
-    typeof Component.contextType === 'object' &&
-    Component.contextType !== null
-  ) {
-    const componentName = getComponentName(Component) || 'Unknown';
-
-    if (!didWarnAboutContextTypeOnFunctionComponent[componentName]) {
-      warningWithoutStack(
-        false,
-        '%s: Function components do not support contextType.',
-        componentName,
-      );
-      didWarnAboutContextTypeOnFunctionComponent[componentName] = true;
+      if (!didWarnAboutContextTypeOnFunctionComponent[componentName]) {
+        warning(
+          '%s: Function components do not support contextType.',
+          componentName,
+        );
+        didWarnAboutContextTypeOnFunctionComponent[componentName] = true;
+      }
     }
   }
 }
@@ -1556,7 +1554,6 @@ function updateSuspenseComponent(
       if (!didWarnAboutMaxDuration) {
         didWarnAboutMaxDuration = true;
         warning(
-          false,
           'maxDuration has been removed from React. ' +
             'Remove the maxDuration prop.',
         );
@@ -1964,7 +1961,6 @@ function mountDehydratedSuspenseComponent(
   if ((workInProgress.mode & BlockingMode) === NoMode) {
     if (__DEV__) {
       warning(
-        false,
         'Cannot hydrate Suspense in legacy mode. Switch from ' +
           'ReactDOM.hydrate(element, container) to ' +
           'ReactDOM.createBlockingRoot(container, { hydrate: true })' +
@@ -2210,7 +2206,6 @@ function validateRevealOrder(revealOrder: SuspenseListRevealOrder) {
           case 'forwards':
           case 'backwards': {
             warning(
-              false,
               '"%s" is not a valid value for revealOrder on <SuspenseList />. ' +
                 'Use lowercase "%s" instead.',
               revealOrder,
@@ -2221,7 +2216,6 @@ function validateRevealOrder(revealOrder: SuspenseListRevealOrder) {
           case 'forward':
           case 'backward': {
             warning(
-              false,
               '"%s" is not a valid value for revealOrder on <SuspenseList />. ' +
                 'React uses the -s suffix in the spelling. Use "%ss" instead.',
               revealOrder,
@@ -2231,7 +2225,6 @@ function validateRevealOrder(revealOrder: SuspenseListRevealOrder) {
           }
           default:
             warning(
-              false,
               '"%s" is not a supported revealOrder on <SuspenseList />. ' +
                 'Did you mean "together", "forwards" or "backwards"?',
               revealOrder,
@@ -2240,7 +2233,6 @@ function validateRevealOrder(revealOrder: SuspenseListRevealOrder) {
         }
       } else {
         warning(
-          false,
           '%s is not a supported value for revealOrder on <SuspenseList />. ' +
             'Did you mean "together", "forwards" or "backwards"?',
           revealOrder,
@@ -2259,7 +2251,6 @@ function validateTailOptions(
       if (tailMode !== 'collapsed' && tailMode !== 'hidden') {
         didWarnAboutTailOptions[tailMode] = true;
         warning(
-          false,
           '"%s" is not a supported value for tail on <SuspenseList />. ' +
             'Did you mean "collapsed" or "hidden"?',
           tailMode,
@@ -2267,7 +2258,6 @@ function validateTailOptions(
       } else if (revealOrder !== 'forwards' && revealOrder !== 'backwards') {
         didWarnAboutTailOptions[tailMode] = true;
         warning(
-          false,
           '<SuspenseList tail="%s" /> is only valid if revealOrder is ' +
             '"forwards" or "backwards". ' +
             'Did you mean to specify revealOrder="forwards"?',
@@ -2285,7 +2275,6 @@ function validateSuspenseListNestedChild(childSlot: mixed, index: number) {
     if (isArray || isIterable) {
       let type = isArray ? 'array' : 'iterable';
       warning(
-        false,
         'A nested %s was passed to row #%s in <SuspenseList />. Wrap it in ' +
           'an additional SuspenseList to configure its revealOrder: ' +
           '<SuspenseList revealOrder=...> ... ' +
@@ -2332,7 +2321,6 @@ function validateSuspenseListChildren(
           }
         } else {
           warning(
-            false,
             'A single row was passed to a <SuspenseList revealOrder="%s" />. ' +
               'This is not useful since it needs multiple rows. ' +
               'Did you mean to pass multiple children or an array?',
@@ -2358,6 +2346,7 @@ function initSuspenseListRenderState(
     workInProgress.memoizedState = ({
       isBackwards: isBackwards,
       rendering: null,
+      renderingStartTime: 0,
       last: lastContentRow,
       tail: tail,
       tailExpiration: 0,
@@ -2368,6 +2357,7 @@ function initSuspenseListRenderState(
     // We can reuse the existing object from previous renders.
     renderState.isBackwards = isBackwards;
     renderState.rendering = null;
+    renderState.renderingStartTime = 0;
     renderState.last = lastContentRow;
     renderState.tail = tail;
     renderState.tailExpiration = 0;
@@ -2626,7 +2616,6 @@ function updateContextConsumer(
         if (!hasWarnedAboutUsingContextAsConsumer) {
           hasWarnedAboutUsingContextAsConsumer = true;
           warning(
-            false,
             'Rendering <Context> directly is not supported and will be removed in ' +
               'a future major release. Did you mean to render <Context.Consumer> instead?',
           );
@@ -2640,13 +2629,14 @@ function updateContextConsumer(
   const render = newProps.children;
 
   if (__DEV__) {
-    warningWithoutStack(
-      typeof render === 'function',
-      'A context consumer was rendered with multiple children, or a child ' +
-        "that isn't a function. A context consumer expects a single child " +
-        'that is a function. If you did pass a function, make sure there ' +
-        'is no trailing or leading whitespace around it.',
-    );
+    if (typeof render !== 'function') {
+      warning(
+        'A context consumer was rendered with multiple children, or a child ' +
+          "that isn't a function. A context consumer expects a single child " +
+          'that is a function. If you did pass a function, make sure there ' +
+          'is no trailing or leading whitespace around it.',
+      );
+    }
   }
 
   prepareToReadContext(workInProgress, renderExpirationTime);

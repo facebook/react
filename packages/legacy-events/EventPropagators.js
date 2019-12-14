@@ -10,7 +10,7 @@ import {
   traverseTwoPhase,
   traverseEnterLeave,
 } from 'shared/ReactTreeTraversal';
-import warningWithoutStack from 'shared/warningWithoutStack';
+import warning from 'shared/warning';
 
 import {getListener} from './EventPluginHub';
 import accumulateInto from './accumulateInto';
@@ -46,7 +46,9 @@ function listenerAtPhase(inst, event, propagationPhase: PropagationPhases) {
  */
 function accumulateDirectionalDispatches(inst, phase, event) {
   if (__DEV__) {
-    warningWithoutStack(inst, 'Dispatching inst must not be null');
+    if (!inst) {
+      warning('Dispatching inst must not be null');
+    }
   }
   const listener = listenerAtPhase(inst, event, phase);
   if (listener) {

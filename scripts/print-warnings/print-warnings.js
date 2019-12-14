@@ -61,7 +61,7 @@ function transform(file, enc, cb) {
             // warning messages can be concatenated (`+`) at runtime, so here's
             // a trivial partial evaluator that interprets the literal value
             try {
-              const warningMsgLiteral = evalToString(node.arguments[1]);
+              const warningMsgLiteral = evalToString(node.arguments[0]);
               warnings.add(JSON.stringify(warningMsgLiteral));
             } catch (error) {
               console.error(

@@ -59,16 +59,13 @@ describe('ReactES6Class', () => {
     class Foo extends React.Component {}
     expect(() =>
       expect(() => ReactDOM.render(<Foo />, container)).toThrow(),
-    ).toWarnDev(
-      [
-        // A failed component renders twice in DEV
-        'Warning: Foo(...): No `render` method found on the returned component ' +
-          'instance: you may have forgotten to define `render`.',
-        'Warning: Foo(...): No `render` method found on the returned component ' +
-          'instance: you may have forgotten to define `render`.',
-      ],
-      {withoutStack: true},
-    );
+    ).toWarnDev([
+      // A failed component renders twice in DEV
+      'Warning: Foo(...): No `render` method found on the returned component ' +
+        'instance: you may have forgotten to define `render`.',
+      'Warning: Foo(...): No `render` method found on the returned component ' +
+        'instance: you may have forgotten to define `render`.',
+    ]);
   });
 
   it('renders a simple stateless component with prop', () => {
@@ -143,7 +140,6 @@ describe('ReactES6Class', () => {
     expect(() => ReactDOM.render(<Foo foo="foo" />, container)).toWarnDev(
       'Foo: getDerivedStateFromProps() is defined as an instance method ' +
         'and will be ignored. Instead, declare it as a static method.',
-      {withoutStack: true},
     );
   });
 
@@ -159,7 +155,6 @@ describe('ReactES6Class', () => {
     expect(() => ReactDOM.render(<Foo foo="foo" />, container)).toWarnDev(
       'Foo: getDerivedStateFromError() is defined as an instance method ' +
         'and will be ignored. Instead, declare it as a static method.',
-      {withoutStack: true},
     );
   });
 
@@ -173,7 +168,6 @@ describe('ReactES6Class', () => {
     expect(() => ReactDOM.render(<Foo foo="foo" />, container)).toWarnDev(
       'Foo: getSnapshotBeforeUpdate() is defined as a static method ' +
         'and will be ignored. Instead, declare it as an instance method.',
-      {withoutStack: true},
     );
   });
 
@@ -194,7 +188,6 @@ describe('ReactES6Class', () => {
         'undefined. This is not recommended. Instead, define the initial state by ' +
         'assigning an object to `this.state` in the constructor of `Foo`. ' +
         'This ensures that `getDerivedStateFromProps` arguments have a consistent shape.',
-      {withoutStack: true},
     );
   });
 
@@ -300,7 +293,6 @@ describe('ReactES6Class', () => {
       }
       expect(() => test(<Foo />, 'SPAN', '')).toWarnDev(
         'Foo.state: must be set to an object or null',
-        {withoutStack: true},
       );
     });
   });
@@ -451,16 +443,13 @@ describe('ReactES6Class', () => {
       }
     }
 
-    expect(() => test(<Foo />, 'SPAN', 'foo')).toWarnDev(
-      [
-        'getInitialState was defined on Foo, a plain JavaScript class.',
-        'getDefaultProps was defined on Foo, a plain JavaScript class.',
-        'propTypes was defined as an instance property on Foo.',
-        'contextType was defined as an instance property on Foo.',
-        'contextTypes was defined as an instance property on Foo.',
-      ],
-      {withoutStack: true},
-    );
+    expect(() => test(<Foo />, 'SPAN', 'foo')).toWarnDev([
+      'getInitialState was defined on Foo, a plain JavaScript class.',
+      'getDefaultProps was defined on Foo, a plain JavaScript class.',
+      'propTypes was defined as an instance property on Foo.',
+      'contextType was defined as an instance property on Foo.',
+      'contextTypes was defined as an instance property on Foo.',
+    ]);
     expect(getInitialStateWasCalled).toBe(false);
     expect(getDefaultPropsWasCalled).toBe(false);
   });
@@ -493,7 +482,6 @@ describe('ReactES6Class', () => {
         'NamedComponent has a method called componentShouldUpdate(). Did you ' +
         'mean shouldComponentUpdate()? The name is phrased as a question ' +
         'because the function is expected to return a value.',
-      {withoutStack: true},
     );
   });
 
@@ -511,7 +499,6 @@ describe('ReactES6Class', () => {
       'Warning: ' +
         'NamedComponent has a method called componentWillRecieveProps(). Did ' +
         'you mean componentWillReceiveProps()?',
-      {withoutStack: true},
     );
   });
 
@@ -529,7 +516,6 @@ describe('ReactES6Class', () => {
       'Warning: ' +
         'NamedComponent has a method called UNSAFE_componentWillRecieveProps(). ' +
         'Did you mean UNSAFE_componentWillReceiveProps()?',
-      {withoutStack: true},
     );
   });
 

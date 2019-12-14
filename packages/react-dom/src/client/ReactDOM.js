@@ -53,8 +53,8 @@ import {
 } from 'legacy-events/EventPropagators';
 import ReactVersion from 'shared/ReactVersion';
 import invariant from 'shared/invariant';
-import lowPriorityWarningWithoutStack from 'shared/lowPriorityWarningWithoutStack';
-import warningWithoutStack from 'shared/warningWithoutStack';
+import lowPriorityWarning from 'shared/lowPriorityWarning';
+import warning from 'shared/warning';
 import {exposeConcurrentModeAPIs} from 'shared/ReactFeatureFlags';
 
 import {
@@ -92,8 +92,7 @@ if (__DEV__) {
     typeof Set.prototype.clear !== 'function' ||
     typeof Set.prototype.forEach !== 'function'
   ) {
-    warningWithoutStack(
-      false,
+    warning(
       'React depends on Map and Set built-in types. Make sure that you load a ' +
         'polyfill in older browsers. https://fb.me/react-polyfills',
     );
@@ -142,15 +141,16 @@ const ReactDOM: Object = {
   // Temporary alias since we already shipped React 16 RC with it.
   // TODO: remove in React 17.
   unstable_createPortal(...args) {
-    if (!didWarnAboutUnstableCreatePortal) {
-      didWarnAboutUnstableCreatePortal = true;
-      lowPriorityWarningWithoutStack(
-        false,
-        'The ReactDOM.unstable_createPortal() alias has been deprecated, ' +
-          'and will be removed in React 17+. Update your code to use ' +
-          'ReactDOM.createPortal() instead. It has the exact same API, ' +
-          'but without the "unstable_" prefix.',
-      );
+    if (__DEV__) {
+      if (!didWarnAboutUnstableCreatePortal) {
+        didWarnAboutUnstableCreatePortal = true;
+        lowPriorityWarning(
+          'The ReactDOM.unstable_createPortal() alias has been deprecated, ' +
+            'and will be removed in React 17+. Update your code to use ' +
+            'ReactDOM.createPortal() instead. It has the exact same API, ' +
+            'but without the "unstable_" prefix.',
+        );
+      }
     }
     return createPortal(...args);
   },

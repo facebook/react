@@ -31,7 +31,6 @@ export function lazy<T, R>(ctor: () => Thenable<T, R>): LazyComponent<T> {
         },
         set(newDefaultProps) {
           warning(
-            false,
             'React.lazy(...): It is not supported to assign `defaultProps` to ' +
               'a lazy component import. Either specify them where the component ' +
               'is defined, or create a wrapping component around it.',
@@ -50,7 +49,6 @@ export function lazy<T, R>(ctor: () => Thenable<T, R>): LazyComponent<T> {
         },
         set(newPropTypes) {
           warning(
-            false,
             'React.lazy(...): It is not supported to assign `propTypes` to ' +
               'a lazy component import. Either specify them where the component ' +
               'is defined, or create a wrapping component around it.',

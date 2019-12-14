@@ -17,7 +17,7 @@ import {
 } from 'shared/ReactWorkTags';
 import SyntheticEvent from 'legacy-events/SyntheticEvent';
 import invariant from 'shared/invariant';
-import lowPriorityWarningWithoutStack from 'shared/lowPriorityWarningWithoutStack';
+import lowPriorityWarning from 'shared/lowPriorityWarning';
 import {ELEMENT_NODE} from '../shared/HTMLNodeType';
 import * as DOMTopLevelEventTypes from '../events/DOMTopLevelEventTypes';
 import {PLUGIN_EVENT_SYSTEM} from 'legacy-events/EventSystemFlags';
@@ -359,14 +359,15 @@ const ReactTestUtils = {
    * @return {object} the ReactTestUtils object (for chaining)
    */
   mockComponent: function(module, mockTagName) {
-    if (!hasWarnedAboutDeprecatedMockComponent) {
-      hasWarnedAboutDeprecatedMockComponent = true;
-      lowPriorityWarningWithoutStack(
-        false,
-        'ReactTestUtils.mockComponent() is deprecated. ' +
-          'Use shallow rendering or jest.mock() instead.\n\n' +
-          'See https://fb.me/test-utils-mock-component for more information.',
-      );
+    if (__DEV__) {
+      if (!hasWarnedAboutDeprecatedMockComponent) {
+        hasWarnedAboutDeprecatedMockComponent = true;
+        lowPriorityWarning(
+          'ReactTestUtils.mockComponent() is deprecated. ' +
+            'Use shallow rendering or jest.mock() instead.\n\n' +
+            'See https://fb.me/test-utils-mock-component for more information.',
+        );
+      }
     }
 
     mockTagName = mockTagName || module.mockTagName || 'div';

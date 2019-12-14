@@ -6,7 +6,6 @@
  */
 
 /**
- * Similar to invariant but only logs a warning if the condition is not met.
  * This can be used to log issues in development environments in critical
  * paths. Removing the logging code for production environments will keep the
  * same logic and follow the same code paths.
@@ -15,7 +14,7 @@
 let warningWithoutStack = () => {};
 
 if (__DEV__) {
-  warningWithoutStack = function(condition, format, ...args) {
+  warningWithoutStack = function(format, ...args) {
     if (format === undefined) {
       throw new Error(
         '`warningWithoutStack(condition, format, ...args)` requires a warning ' +
@@ -27,9 +26,6 @@ if (__DEV__) {
       throw new Error(
         'warningWithoutStack() currently supports at most 8 arguments.',
       );
-    }
-    if (condition) {
-      return;
     }
     if (typeof console !== 'undefined') {
       const argsWithFormat = args.map(item => '' + item);

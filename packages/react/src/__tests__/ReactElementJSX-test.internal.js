@@ -211,7 +211,6 @@ describe('ReactElement.jsx', () => {
         'in `undefined` being returned. If you need to access the same ' +
         'value within the child component, you should pass it as a different ' +
         'prop. (https://fb.me/react-special-props)',
-      {withoutStack: true},
     );
   });
 
@@ -257,7 +256,6 @@ describe('ReactElement.jsx', () => {
         'in `undefined` being returned. If you need to access the same ' +
         'value within the child component, you should pass it as a different ' +
         'prop. (https://fb.me/react-special-props)',
-      {withoutStack: true},
     );
   });
 

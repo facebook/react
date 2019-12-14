@@ -25,7 +25,7 @@ import {createPortal} from 'shared/ReactPortal';
 import {REACT_FRAGMENT_TYPE, REACT_ELEMENT_TYPE} from 'shared/ReactSymbols';
 import enqueueTask from 'shared/enqueueTask';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
-import warningWithoutStack from 'shared/warningWithoutStack';
+import warning from 'shared/warning';
 import {ConcurrentRoot, BlockingRoot, LegacyRoot} from 'shared/ReactRootTags';
 
 type Container = {
@@ -661,8 +661,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       if (__DEV__) {
         if (actingUpdatesScopeDepth > previousActingUpdatesScopeDepth) {
           // if it's _less than_ previousActingUpdatesScopeDepth, then we can assume the 'other' one has warned
-          warningWithoutStack(
-            null,
+          warning(
             'You seem to have overlapping act() calls, this is not supported. ' +
               'Be sure to await previous act() calls before making a new one. ',
           );
@@ -694,8 +693,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
             .then(() => {})
             .then(() => {
               if (called === false) {
-                warningWithoutStack(
-                  null,
+                warning(
                   'You called act(async () => ...) without await. ' +
                     'This could lead to unexpected testing behaviour, interleaving multiple act ' +
                     'calls and mixing their scopes. You should - await act(async () => ...);',
@@ -742,12 +740,13 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       };
     } else {
       if (__DEV__) {
-        warningWithoutStack(
-          result === undefined,
-          'The callback passed to act(...) function ' +
-            'must return undefined, or a Promise. You returned %s',
-          result,
-        );
+        if (result !== undefined) {
+          warning(
+            'The callback passed to act(...) function ' +
+              'must return undefined, or a Promise. You returned %s',
+            result,
+          );
+        }
       }
 
       // flush effects until none remain, and cleanup
@@ -771,8 +770,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       return {
         then(resolve: () => void) {
           if (__DEV__) {
-            warningWithoutStack(
-              false,
+            warning(
               'Do not await the result of calling act(...) with sync logic, it is not a Promise.',
             );
           }
@@ -1142,20 +1140,33 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
 
       function logUpdateQueue(updateQueue: UpdateQueue<mixed>, depth) {
         log('  '.repeat(depth + 1) + 'QUEUED UPDATES');
-        const firstUpdate = updateQueue.firstUpdate;
-        if (!firstUpdate) {
+        const last = updateQueue.baseQueue;
+        if (last === null) {
           return;
         }
+        const first = last.next;
+        let update = first;
+        if (update !== null) {
+          do {
+            log(
+              '  '.repeat(depth + 1) + '~',
+              '[' + update.expirationTime + ']',
+            );
+          } while (update !== null && update !== first);
+        }
 
-        log(
-          '  '.repeat(depth + 1) + '~',
-          '[' + firstUpdate.expirationTime + ']',
-        );
-        while (firstUpdate.next) {
-          log(
-            '  '.repeat(depth + 1) + '~',
-            '[' + firstUpdate.expirationTime + ']',
-          );
+        const lastPending = updateQueue.shared.pending;
+        if (lastPending !== null) {
+          const firstPending = lastPending.next;
+          let pendingUpdate = firstPending;
+          if (pendingUpdate !== null) {
+            do {
+              log(
+                '  '.repeat(depth + 1) + '~',
+                '[' + pendingUpdate.expirationTime + ']',
+              );
+            } while (pendingUpdate !== null && pendingUpdate !== firstPending);
+          }
         }
       }
 

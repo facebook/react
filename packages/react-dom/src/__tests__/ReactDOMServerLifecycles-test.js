@@ -183,7 +183,6 @@ describe('ReactDOMServerLifecycles', () => {
     expect(() => ReactDOMServer.renderToString(<Component />)).toWarnDev(
       'Component.getDerivedStateFromProps(): A valid state object (or null) must ' +
         'be returned. You have returned undefined.',
-      {withoutStack: true},
     );
 
     // De-duped
@@ -205,7 +204,6 @@ describe('ReactDOMServerLifecycles', () => {
         'undefined. This is not recommended. Instead, define the initial state by ' +
         'assigning an object to `this.state` in the constructor of `Component`. ' +
         'This ensures that `getDerivedStateFromProps` arguments have a consistent shape.',
-      {withoutStack: true},
     );
 
     // De-duped
@@ -229,9 +227,7 @@ describe('ReactDOMServerLifecycles', () => {
 
     expect(() =>
       ReactDOMServer.renderToString(<Component />),
-    ).toLowPriorityWarnDev('componentWillMount has been renamed', {
-      withoutStack: true,
-    });
+    ).toLowPriorityWarnDev('componentWillMount has been renamed');
     expect(log).toEqual(['componentWillMount', 'UNSAFE_componentWillMount']);
   });
 
@@ -266,7 +262,6 @@ describe('ReactDOMServerLifecycles', () => {
         'usually means you called setState() outside componentWillMount() on ' +
         'the server. This is a no-op.\n\n' +
         'Please check the code for the Outer component.',
-      {withoutStack: true},
     );
   });
 
@@ -286,9 +281,7 @@ describe('ReactDOMServerLifecycles', () => {
 
     expect(() =>
       ReactDOMServer.renderToString(<Component />),
-    ).toLowPriorityWarnDev('componentWillMount has been renamed', {
-      withoutStack: true,
-    });
+    ).toLowPriorityWarnDev('componentWillMount has been renamed');
   });
 
   it('should warn about deprecated lifecycle hooks', () => {
@@ -301,9 +294,7 @@ describe('ReactDOMServerLifecycles', () => {
 
     expect(() =>
       ReactDOMServer.renderToString(<Component />),
-    ).toLowPriorityWarnDev('componentWillMount has been renamed', {
-      withoutStack: true,
-    });
+    ).toLowPriorityWarnDev('componentWillMount has been renamed');
 
     // De-duped
     ReactDOMServer.renderToString(<Component />);

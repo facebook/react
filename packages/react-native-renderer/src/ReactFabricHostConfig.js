@@ -25,11 +25,10 @@ import {mountSafeCallback_NOT_REALLY_SAFE} from './NativeMethodsMixinUtils';
 import {create, diff} from './ReactNativeAttributePayload';
 
 import invariant from 'shared/invariant';
-import warningWithoutStack from 'shared/warningWithoutStack';
+import warning from 'shared/warning';
 
 import {dispatchEvent} from './ReactFabricEventEmitter';
 import {
-  addRootEventTypesForResponderInstance,
   mountEventResponder,
   unmountEventResponder,
 } from './ReactFabricEventResponderSystem';
@@ -159,10 +158,11 @@ class ReactFabricHostComponent {
       typeof relativeToNativeNode === 'number' ||
       !(relativeToNativeNode instanceof ReactFabricHostComponent)
     ) {
-      warningWithoutStack(
-        false,
-        'Warning: ref.measureLayout must be called with a ref to a native component.',
-      );
+      if (__DEV__) {
+        warning(
+          'Warning: ref.measureLayout must be called with a ref to a native component.',
+        );
+      }
 
       return;
     }
@@ -176,10 +176,9 @@ class ReactFabricHostComponent {
   }
 
   setNativeProps(nativeProps: Object) {
-    warningWithoutStack(
-      false,
-      'Warning: setNativeProps is not currently supported in Fabric',
-    );
+    if (__DEV__) {
+      warning('Warning: setNativeProps is not currently supported in Fabric');
+    }
 
     return;
   }
@@ -451,10 +450,6 @@ export function mountResponderInstance(
   instance: Instance,
 ) {
   if (enableFlareAPI) {
-    const {rootEventTypes} = responder;
-    if (rootEventTypes !== null) {
-      addRootEventTypesForResponderInstance(responderInstance, rootEventTypes);
-    }
     mountEventResponder(responder, responderInstance, props, state);
   }
 }

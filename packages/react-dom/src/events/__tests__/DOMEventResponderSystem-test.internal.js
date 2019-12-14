@@ -23,7 +23,6 @@ const DiscreteEvent = 0;
 function createEventResponder({
   onEvent,
   onRootEvent,
-  rootEventTypes,
   targetEventTypes,
   onMount,
   onUnmount,
@@ -32,7 +31,6 @@ function createEventResponder({
 }) {
   return React.unstable_createResponder('TestEventResponder', {
     targetEventTypes,
-    rootEventTypes,
     onEvent,
     onRootEvent,
     onMount,
@@ -156,7 +154,6 @@ describe('DOMEventResponderSystem', () => {
         eventLog.push({
           name: event.type,
           passive: event.passive,
-          passiveSupported: event.passiveSupported,
           phase: 'bubble',
         });
       },
@@ -185,7 +182,6 @@ describe('DOMEventResponderSystem', () => {
       {
         name: 'click',
         passive: false,
-        passiveSupported: false,
         phase: 'bubble',
       },
     ]);
@@ -216,7 +212,6 @@ describe('DOMEventResponderSystem', () => {
         eventLog.push({
           name: event.type,
           passive: event.passive,
-          passiveSupported: event.passiveSupported,
           phase: 'bubble',
         });
       },
@@ -242,7 +237,6 @@ describe('DOMEventResponderSystem', () => {
       {
         name: 'click',
         passive: true,
-        passiveSupported: true,
         phase: 'bubble',
       },
     ]);
@@ -260,7 +254,6 @@ describe('DOMEventResponderSystem', () => {
         eventLog.push({
           name: event.type,
           passive: event.passive,
-          passiveSupported: event.passiveSupported,
           phase: 'bubble',
         });
       },
@@ -296,7 +289,6 @@ describe('DOMEventResponderSystem', () => {
       {
         name: 'click',
         passive: false,
-        passiveSupported: false,
         phase: 'bubble',
       },
     ]);
@@ -327,7 +319,6 @@ describe('DOMEventResponderSystem', () => {
       {
         name: 'click',
         passive: false,
-        passiveSupported: false,
         phase: 'bubble',
       },
     ]);
@@ -623,45 +614,6 @@ describe('DOMEventResponderSystem', () => {
     expect(counter).toEqual(5);
   });
 
-  it('the event responder root listeners should fire on a root click event', () => {
-    let eventResponderFiredCount = 0;
-    let eventLog = [];
-
-    const TestResponder = createEventResponder({
-      rootEventTypes: ['click'],
-      onRootEvent: event => {
-        eventResponderFiredCount++;
-        eventLog.push({
-          name: event.type,
-          passive: event.passive,
-          passiveSupported: event.passiveSupported,
-          phase: 'root',
-        });
-      },
-    });
-
-    const Test = () => {
-      const listener = React.unstable_useResponder(TestResponder, {});
-      return <button DEPRECATED_flareListeners={listener}>Click me!</button>;
-    };
-
-    ReactDOM.render(<Test />, container);
-    expect(container.innerHTML).toBe('<button>Click me!</button>');
-
-    // Clicking the button should trigger the event responder onEvent() twice
-    dispatchClickEvent(document.body);
-    expect(eventResponderFiredCount).toBe(1);
-    expect(eventLog.length).toBe(1);
-    expect(eventLog).toEqual([
-      {
-        name: 'click',
-        passive: false,
-        passiveSupported: false,
-        phase: 'root',
-      },
-    ]);
-  });
-
   it('the event responder target listeners should correctly fire for only their events', () => {
     let clickEventComponent1Fired = 0;
     let clickEventComponent2Fired = 0;
@@ -675,7 +627,6 @@ describe('DOMEventResponderSystem', () => {
         eventLog.push({
           name: event.type,
           passive: event.passive,
-          passiveSupported: event.passiveSupported,
         });
       },
     });
@@ -687,7 +638,6 @@ describe('DOMEventResponderSystem', () => {
         eventLog.push({
           name: event.type,
           passive: event.passive,
-          passiveSupported: event.passiveSupported,
         });
       },
     });
@@ -717,77 +667,12 @@ describe('DOMEventResponderSystem', () => {
       {
         name: 'click',
         passive: false,
-        passiveSupported: false,
       },
       {
         name: 'click',
         passive: false,
-        passiveSupported: true,
       },
     ]);
-  });
-
-  it('the event responder root listeners should correctly fire for only their events', () => {
-    let clickEventComponent1Fired = 0;
-    let clickEventComponent2Fired = 0;
-    let eventLog = [];
-
-    const TestResponderA = createEventResponder({
-      rootEventTypes: ['click_active'],
-      onRootEvent: event => {
-        clickEventComponent1Fired++;
-        eventLog.push({
-          name: event.type,
-          passive: event.passive,
-          passiveSupported: event.passiveSupported,
-        });
-      },
-    });
-
-    const TestResponderB = createEventResponder({
-      rootEventTypes: ['click'],
-      onRootEvent: event => {
-        clickEventComponent2Fired++;
-        eventLog.push({
-          name: event.type,
-          passive: event.passive,
-          passiveSupported: event.passiveSupported,
-        });
-      },
-    });
-
-    const Test = () => {
-      const listener = React.unstable_useResponder(TestResponderA, {});
-      const listener2 = React.unstable_useResponder(TestResponderB, {});
-
-      return (
-        <div DEPRECATED_flareListeners={listener}>
-          <button DEPRECATED_flareListeners={listener2}>Click me!</button>
-        </div>
-      );
-    };
-
-    ReactDOM.render(<Test />, container);
-
-    dispatchClickEvent(document.body);
-
-    expect(clickEventComponent1Fired).toBe(1);
-    expect(clickEventComponent2Fired).toBe(1);
-    expect(eventLog.length).toBe(2);
-    expect(eventLog).toEqual([
-      {
-        name: 'click',
-        passive: false,
-        passiveSupported: false,
-      },
-      {
-        name: 'click',
-        passive: false,
-        passiveSupported: true,
-      },
-    ]);
-
-    ReactDOM.render(<Test />, container);
   });
 
   it('the event responder system should warn on accessing invalid properties', () => {

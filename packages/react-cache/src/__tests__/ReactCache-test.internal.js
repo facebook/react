@@ -172,15 +172,12 @@ describe('ReactCache', () => {
     if (__DEV__) {
       expect(() => {
         expect(Scheduler).toFlushAndYield(['App', 'Loading...']);
-      }).toWarnDev(
-        [
-          'Invalid key type. Expected a string, number, symbol, or ' +
-            'boolean, but instead received: Hi,100\n\n' +
-            'To use non-primitive values as keys, you must pass a hash ' +
-            'function as the second argument to createResource().',
-        ],
-        {withoutStack: true},
-      );
+      }).toWarnDev([
+        'Invalid key type. Expected a string, number, symbol, or ' +
+          'boolean, but instead received: Hi,100\n\n' +
+          'To use non-primitive values as keys, you must pass a hash ' +
+          'function as the second argument to createResource().',
+      ]);
     } else {
       expect(Scheduler).toFlushAndYield(['App', 'Loading...']);
     }

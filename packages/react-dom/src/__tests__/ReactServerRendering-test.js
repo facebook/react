@@ -856,7 +856,6 @@ describe('ReactDOMServer', () => {
       'Warning: The <ClassWithRenderNotExtended /> component appears to have a render method, ' +
         "but doesn't extend React.Component. This is likely to cause errors. " +
         'Change ClassWithRenderNotExtended to extend React.Component instead.',
-      {withoutStack: true},
     );
 
     // Test deduplication
@@ -1022,7 +1021,6 @@ describe('ReactDOMServer', () => {
       'Warning: ComponentA defines an invalid contextType. ' +
         'contextType should point to the Context object returned by React.createContext(). ' +
         'Did you accidentally pass the Context.Consumer instead?',
-      {withoutStack: true},
     );
 
     // Warnings should be deduped by component type
@@ -1034,7 +1032,6 @@ describe('ReactDOMServer', () => {
       'Warning: ComponentB defines an invalid contextType. ' +
         'contextType should point to the Context object returned by React.createContext(). ' +
         'Did you accidentally pass the Context.Provider instead?',
-      {withoutStack: true},
     );
   });
 
@@ -1072,7 +1069,6 @@ describe('ReactDOMServer', () => {
         'This can be caused by a typo or by mixing up named and default imports. ' +
         'This can also happen due to a circular dependency, ' +
         'so try moving the createContext() call to a separate file.',
-      {withoutStack: true},
     );
   });
 
@@ -1096,7 +1092,6 @@ describe('ReactDOMServer', () => {
       'Foo defines an invalid contextType. ' +
         'contextType should point to the Context object returned by React.createContext(). ' +
         'However, it is set to an object with keys {x, y}.',
-      {withoutStack: true},
     );
   });
 
@@ -1116,7 +1111,6 @@ describe('ReactDOMServer', () => {
       'Foo defines an invalid contextType. ' +
         'contextType should point to the Context object returned by React.createContext(). ' +
         'However, it is set to a string.',
-      {withoutStack: true},
     );
   });
 });

@@ -14,6 +14,7 @@ import type {ReactPriorityLevel} from './SchedulerWithReactIntegration';
 import type {Interaction} from 'scheduler/src/Tracing';
 import type {SuspenseConfig} from './ReactFiberSuspenseConfig';
 import type {SuspenseState} from './ReactFiberSuspenseComponent';
+import type {Hook} from './ReactFiberHooks';
 
 import {
   warnAboutDeprecatedLifecycles,
@@ -25,10 +26,10 @@ import {
   warnAboutUnmockedScheduler,
   flushSuspenseFallbacksInTests,
   disableSchedulerTimeoutBasedOnReactExpirationTime,
+  enableTrainModelFix,
 } from 'shared/ReactFeatureFlags';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import invariant from 'shared/invariant';
-import warning from 'shared/warning';
 
 import {
   scheduleCallback,
@@ -139,7 +140,7 @@ import {
 } from './ReactFiberCommitWork';
 import {enqueueUpdate} from './ReactUpdateQueue';
 import {resetContextDependencies} from './ReactFiberNewContext';
-import {resetHooks, ContextOnlyDispatcher} from './ReactFiberHooks';
+import {resetHooksAfterThrow, ContextOnlyDispatcher} from './ReactFiberHooks';
 import {createCapturedValue} from './ReactCapturedValue';
 
 import {
@@ -149,7 +150,7 @@ import {
 } from './ReactProfilerTimer';
 
 // DEV stuff
-import warningWithoutStack from 'shared/warningWithoutStack';
+import warning from 'shared/warning';
 import getComponentName from 'shared/getComponentName';
 import ReactStrictModeWarnings from './ReactStrictModeWarnings';
 import {
@@ -539,9 +540,19 @@ function getNextRootExpirationTimeToWorkOn(root: FiberRoot): ExpirationTime {
   // on whichever is higher priority.
   const lastPingedTime = root.lastPingedTime;
   const nextKnownPendingLevel = root.nextKnownPendingLevel;
-  return lastPingedTime > nextKnownPendingLevel
-    ? lastPingedTime
-    : nextKnownPendingLevel;
+  const nextLevel =
+    lastPingedTime > nextKnownPendingLevel
+      ? lastPingedTime
+      : nextKnownPendingLevel;
+  if (
+    enableTrainModelFix &&
+    nextLevel <= Idle &&
+    firstPendingTime !== nextLevel
+  ) {
+    // Don't work on Idle/Never priority unless everything else is committed.
+    return NoWork;
+  }
+  return nextLevel;
 }
 
 // Use this function to schedule a task for a root. There's only one task per
@@ -978,82 +989,72 @@ function performSyncWorkOnRoot(root) {
   // Check if there's expired work on this root. Otherwise, render at Sync.
   const lastExpiredTime = root.lastExpiredTime;
   const expirationTime = lastExpiredTime !== NoWork ? lastExpiredTime : Sync;
-  if (root.finishedExpirationTime === expirationTime) {
-    // There's already a pending commit at this expiration time.
-    // TODO: This is poorly factored. This case only exists for the
-    // batch.commit() API.
-    commitRoot(root);
-  } else {
-    invariant(
-      (executionContext & (RenderContext | CommitContext)) === NoContext,
-      'Should not already be working.',
-    );
+  invariant(
+    (executionContext & (RenderContext | CommitContext)) === NoContext,
+    'Should not already be working.',
+  );
 
-    flushPassiveEffects();
+  flushPassiveEffects();
 
-    // If the root or expiration time have changed, throw out the existing stack
-    // and prepare a fresh one. Otherwise we'll continue where we left off.
-    if (
-      root !== workInProgressRoot ||
-      expirationTime !== renderExpirationTime
-    ) {
+  // If the root or expiration time have changed, throw out the existing stack
+  // and prepare a fresh one. Otherwise we'll continue where we left off.
+  if (root !== workInProgressRoot || expirationTime !== renderExpirationTime) {
+    prepareFreshStack(root, expirationTime);
+    startWorkOnPendingInteractions(root, expirationTime);
+  }
+
+  // If we have a work-in-progress fiber, it means there's still work to do
+  // in this root.
+  if (workInProgress !== null) {
+    const prevExecutionContext = executionContext;
+    executionContext |= RenderContext;
+    const prevDispatcher = pushDispatcher(root);
+    const prevInteractions = pushInteractions(root);
+    startWorkLoopTimer(workInProgress);
+
+    do {
+      try {
+        workLoopSync();
+        break;
+      } catch (thrownValue) {
+        handleError(root, thrownValue);
+      }
+    } while (true);
+    resetContextDependencies();
+    executionContext = prevExecutionContext;
+    popDispatcher(prevDispatcher);
+    if (enableSchedulerTracing) {
+      popInteractions(((prevInteractions: any): Set<Interaction>));
+    }
+
+    if (workInProgressRootExitStatus === RootFatalErrored) {
+      const fatalError = workInProgressRootFatalError;
+      stopInterruptedWorkLoopTimer();
       prepareFreshStack(root, expirationTime);
-      startWorkOnPendingInteractions(root, expirationTime);
-    }
-
-    // If we have a work-in-progress fiber, it means there's still work to do
-    // in this root.
-    if (workInProgress !== null) {
-      const prevExecutionContext = executionContext;
-      executionContext |= RenderContext;
-      const prevDispatcher = pushDispatcher(root);
-      const prevInteractions = pushInteractions(root);
-      startWorkLoopTimer(workInProgress);
-
-      do {
-        try {
-          workLoopSync();
-          break;
-        } catch (thrownValue) {
-          handleError(root, thrownValue);
-        }
-      } while (true);
-      resetContextDependencies();
-      executionContext = prevExecutionContext;
-      popDispatcher(prevDispatcher);
-      if (enableSchedulerTracing) {
-        popInteractions(((prevInteractions: any): Set<Interaction>));
-      }
-
-      if (workInProgressRootExitStatus === RootFatalErrored) {
-        const fatalError = workInProgressRootFatalError;
-        stopInterruptedWorkLoopTimer();
-        prepareFreshStack(root, expirationTime);
-        markRootSuspendedAtTime(root, expirationTime);
-        ensureRootIsScheduled(root);
-        throw fatalError;
-      }
-
-      if (workInProgress !== null) {
-        // This is a sync render, so we should have finished the whole tree.
-        invariant(
-          false,
-          'Cannot commit an incomplete root. This error is likely caused by a ' +
-            'bug in React. Please file an issue.',
-        );
-      } else {
-        // We now have a consistent tree. Because this is a sync render, we
-        // will commit it even if something suspended.
-        stopFinishedWorkLoopTimer();
-        root.finishedWork = (root.current.alternate: any);
-        root.finishedExpirationTime = expirationTime;
-        finishSyncRender(root, workInProgressRootExitStatus, expirationTime);
-      }
-
-      // Before exiting, make sure there's a callback scheduled for the next
-      // pending level.
+      markRootSuspendedAtTime(root, expirationTime);
       ensureRootIsScheduled(root);
+      throw fatalError;
     }
+
+    if (workInProgress !== null) {
+      // This is a sync render, so we should have finished the whole tree.
+      invariant(
+        false,
+        'Cannot commit an incomplete root. This error is likely caused by a ' +
+          'bug in React. Please file an issue.',
+      );
+    } else {
+      // We now have a consistent tree. Because this is a sync render, we
+      // will commit it even if something suspended.
+      stopFinishedWorkLoopTimer();
+      root.finishedWork = (root.current.alternate: any);
+      root.finishedExpirationTime = expirationTime;
+      finishSyncRender(root, workInProgressRootExitStatus, expirationTime);
+    }
+
+    // Before exiting, make sure there's a callback scheduled for the next
+    // pending level.
+    ensureRootIsScheduled(root);
   }
 
   return null;
@@ -1088,12 +1089,13 @@ export function flushDiscreteUpdates() {
     (executionContext & (BatchedContext | RenderContext | CommitContext)) !==
     NoContext
   ) {
-    if (__DEV__ && (executionContext & RenderContext) !== NoContext) {
-      warning(
-        false,
-        'unstable_flushDiscreteUpdates: Cannot flush updates when React is ' +
-          'already rendering.',
-      );
+    if (__DEV__) {
+      if ((executionContext & RenderContext) !== NoContext) {
+        warning(
+          'unstable_flushDiscreteUpdates: Cannot flush updates when React is ' +
+            'already rendering.',
+        );
+      }
     }
     // We're already rendering, so we can't synchronously flush pending work.
     // This is probably a nested event dispatch triggered by a lifecycle/effect,
@@ -1279,7 +1281,7 @@ function handleError(root, thrownValue) {
     try {
       // Reset module-level state that was set during the render phase.
       resetContextDependencies();
-      resetHooks();
+      resetHooksAfterThrow();
       resetCurrentDebugFiberInDEV();
 
       if (workInProgress === null || workInProgress.return === null) {
@@ -2372,7 +2374,7 @@ export function pingSuspendedRoot(
   // Mark the time at which this ping was scheduled.
   root.lastPingedTime = suspendedTime;
 
-  if (root.finishedExpirationTime === suspendedTime) {
+  if (!enableTrainModelFix && root.finishedExpirationTime === suspendedTime) {
     // If there's a pending fallback waiting to commit, throw it away.
     root.finishedExpirationTime = NoWork;
     root.finishedWork = null;
@@ -2521,7 +2523,6 @@ function checkForNestedUpdates() {
     if (nestedPassiveUpdateCount > NESTED_PASSIVE_UPDATE_LIMIT) {
       nestedPassiveUpdateCount = 0;
       warning(
-        false,
         'Maximum update depth exceeded. This can happen when a component ' +
           "calls setState inside useEffect, but useEffect either doesn't " +
           'have a dependency array, or one of the dependencies changes on ' +
@@ -2593,8 +2594,7 @@ function warnAboutUpdateOnUnmountedFiberInDEV(fiber) {
     } else {
       didWarnStateUpdateForUnmountedComponent = new Set([componentName]);
     }
-    warningWithoutStack(
-      false,
+    warning(
       "Can't perform a React state update on an unmounted component. This " +
         'is a no-op, but it indicates a memory leak in your application. To ' +
         'fix, cancel all subscriptions and asynchronous tasks in %s.%s',
@@ -2635,7 +2635,7 @@ if (__DEV__ && replayFailedUnitOfWorkWithInvokeGuardedCallback) {
       // Keep this code in sync with handleError; any changes here must have
       // corresponding changes there.
       resetContextDependencies();
-      resetHooks();
+      resetHooksAfterThrow();
       // Don't reset current debug fiber, since we're about to work on the
       // same fiber again.
 
@@ -2685,8 +2685,7 @@ function warnAboutInvalidUpdatesOnClassComponentsInDEV(fiber) {
           if (didWarnAboutUpdateInGetChildContext) {
             return;
           }
-          warningWithoutStack(
-            false,
+          warning(
             'setState(...): Cannot call setState() inside getChildContext()',
           );
           didWarnAboutUpdateInGetChildContext = true;
@@ -2695,8 +2694,7 @@ function warnAboutInvalidUpdatesOnClassComponentsInDEV(fiber) {
           if (didWarnAboutUpdateInRender) {
             return;
           }
-          warningWithoutStack(
-            false,
+          warning(
             'Cannot update during an existing state transition (such as ' +
               'within `render`). Render methods should be a pure function of ' +
               'props and state.',
@@ -2718,8 +2716,7 @@ export function warnIfNotScopedWithMatchingAct(fiber: Fiber): void {
       IsSomeRendererActing.current === true &&
       IsThisRendererActing.current !== true
     ) {
-      warningWithoutStack(
-        false,
+      warning(
         "It looks like you're using the wrong act() around your test interactions.\n" +
           'Be sure to use the matching version of act() corresponding to your renderer:\n\n' +
           '// for react-dom:\n' +
@@ -2746,8 +2743,7 @@ export function warnIfNotCurrentlyActingEffectsInDEV(fiber: Fiber): void {
       IsSomeRendererActing.current === false &&
       IsThisRendererActing.current === false
     ) {
-      warningWithoutStack(
-        false,
+      warning(
         'An update to %s ran an effect, but was not wrapped in act(...).\n\n' +
           'When testing, code that causes React state updates should be ' +
           'wrapped into act(...):\n\n' +
@@ -2774,8 +2770,7 @@ function warnIfNotCurrentlyActingUpdatesInDEV(fiber: Fiber): void {
       IsSomeRendererActing.current === false &&
       IsThisRendererActing.current === false
     ) {
-      warningWithoutStack(
-        false,
+      warning(
         'An update to %s inside a test was not wrapped in act(...).\n\n' +
           'When testing, code that causes React state updates should be ' +
           'wrapped into act(...):\n\n' +
@@ -2811,8 +2806,7 @@ export function warnIfUnmockedScheduler(fiber: Fiber) {
     ) {
       if (fiber.mode & BlockingMode || fiber.mode & ConcurrentMode) {
         didWarnAboutUnmockedScheduler = true;
-        warningWithoutStack(
-          false,
+        warning(
           'In Concurrent or Sync modes, the "scheduler" module needs to be mocked ' +
             'to guarantee consistent behaviour across tests and browsers. ' +
             'For example, with jest: \n' +
@@ -2821,8 +2815,7 @@ export function warnIfUnmockedScheduler(fiber: Fiber) {
         );
       } else if (warnAboutUnmockedScheduler === true) {
         didWarnAboutUnmockedScheduler = true;
-        warningWithoutStack(
-          false,
+        warning(
           'Starting from React v17, the "scheduler" module will need to be mocked ' +
             'to guarantee consistent behaviour across tests and browsers. ' +
             'For example, with jest: \n' +
@@ -2856,7 +2849,7 @@ export function checkForWrongSuspensePriorityInDEV(sourceFiber: Fiber) {
               // has triggered any high priority updates
               const updateQueue = current.updateQueue;
               if (updateQueue !== null) {
-                let update = updateQueue.firstUpdate;
+                let update = updateQueue.baseQueue;
                 while (update !== null) {
                   const priorityLevel = update.priority;
                   if (
@@ -2880,12 +2873,11 @@ export function checkForWrongSuspensePriorityInDEV(sourceFiber: Fiber) {
               break;
             case FunctionComponent:
             case ForwardRef:
-            case SimpleMemoComponent:
-              if (
-                workInProgressNode.memoizedState !== null &&
-                workInProgressNode.memoizedState.baseUpdate !== null
-              ) {
-                let update = workInProgressNode.memoizedState.baseUpdate;
+            case SimpleMemoComponent: {
+              let firstHook: null | Hook = current.memoizedState;
+              // TODO: This just checks the first Hook. Isn't it suppose to check all Hooks?
+              if (firstHook !== null && firstHook.baseQueue !== null) {
+                let update = firstHook.baseQueue;
                 // Loop through the functional component's memoized state to see whether
                 // the component has triggered any high pri updates
                 while (update !== null) {
@@ -2905,15 +2897,14 @@ export function checkForWrongSuspensePriorityInDEV(sourceFiber: Fiber) {
                     }
                     break;
                   }
-                  if (
-                    update.next === workInProgressNode.memoizedState.baseUpdate
-                  ) {
+                  if (update.next === firstHook.baseQueue) {
                     break;
                   }
                   update = update.next;
                 }
               }
               break;
+            }
             default:
               break;
           }
@@ -2934,8 +2925,7 @@ function flushSuspensePriorityWarningInDEV() {
       componentsThatTriggeredHighPriSuspend = null;
 
       if (componentNames.length > 0) {
-        warningWithoutStack(
-          false,
+        warning(
           '%s triggered a user-blocking update that suspended.' +
             '\n\n' +
             'The fix is to split the update into multiple parts: a user-blocking ' +
@@ -2943,8 +2933,7 @@ function flushSuspensePriorityWarningInDEV() {
             'triggers the bulk of the changes.' +
             '\n\n' +
             'Refer to the documentation for useTransition to learn how ' +
-            'to implement this pattern.',
-          // TODO: Add link to React docs with more information, once it exists
+            'to implement this pattern.', // TODO: Add link to React docs with more information, once it exists
           componentNames.sort().join(', '),
         );
       }

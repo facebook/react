@@ -520,10 +520,14 @@ const responderImpl = {
           }
 
           const activate = shouldActivate(event);
-          const activateAuxiliary = isAuxiliary(nativeEvent.buttons, event);
+          const buttons =
+            nativeEvent.button === 1
+              ? buttonsEnum.auxiliary
+              : nativeEvent.buttons;
+          const activateAuxiliary = isAuxiliary(buttons, event);
 
           if (activate || activateAuxiliary) {
-            state.buttons = nativeEvent.buttons;
+            state.buttons = buttons;
             state.pointerType = event.pointerType;
             state.responderTarget = context.getResponderNode();
             addRootEventTypes(rootEventTypes, context, state);

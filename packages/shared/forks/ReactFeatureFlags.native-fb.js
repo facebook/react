@@ -42,6 +42,7 @@ export const warnAboutDefaultPropsOnFunctionComponents = false;
 export const warnAboutStringRefs = false;
 export const disableLegacyContext = false;
 export const disableSchedulerTimeoutBasedOnReactExpirationTime = false;
+export const enableTrainModelFix = false;
 export const enableTrustedTypesIntegration = false;
 
 // Only used in www builds.

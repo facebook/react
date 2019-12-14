@@ -8,7 +8,7 @@
  */
 
 import React from 'react';
-import warningWithoutStack from 'shared/warningWithoutStack';
+import warning from 'shared/warning';
 
 import {createLRU} from './LRU';
 
@@ -64,18 +64,21 @@ function readContext(Context, observedBits) {
 
 function identityHashFn(input) {
   if (__DEV__) {
-    warningWithoutStack(
-      typeof input === 'string' ||
-        typeof input === 'number' ||
-        typeof input === 'boolean' ||
-        input === undefined ||
-        input === null,
-      'Invalid key type. Expected a string, number, symbol, or boolean, ' +
-        'but instead received: %s' +
-        '\n\nTo use non-primitive values as keys, you must pass a hash ' +
-        'function as the second argument to createResource().',
-      input,
-    );
+    if (
+      typeof input !== 'string' &&
+      typeof input !== 'number' &&
+      typeof input !== 'boolean' &&
+      input !== undefined &&
+      input !== null
+    ) {
+      warning(
+        'Invalid key type. Expected a string, number, symbol, or boolean, ' +
+          'but instead received: %s' +
+          '\n\nTo use non-primitive values as keys, you must pass a hash ' +
+          'function as the second argument to createResource().',
+        input,
+      );
+    }
   }
   return input;
 }

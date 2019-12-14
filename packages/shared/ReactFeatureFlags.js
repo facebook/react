@@ -88,6 +88,8 @@ export const disableLegacyContext = false;
 
 export const disableSchedulerTimeoutBasedOnReactExpirationTime = false;
 
+export const enableTrainModelFix = __EXPERIMENTAL__;
+
 export const enableTrustedTypesIntegration = false;
 
 // Flag to turn event.target and event.currentTarget in ReactNative from a reactTag to a component instance

@@ -44,7 +44,7 @@ import {
 
 import {createContainer, updateContainer} from 'react-reconciler/inline.dom';
 import invariant from 'shared/invariant';
-import warningWithoutStack from 'shared/warningWithoutStack';
+import warning from 'shared/warning';
 import {BlockingRoot, ConcurrentRoot, LegacyRoot} from 'shared/ReactRootTags';
 
 function ReactDOMRoot(container: DOMContainer, options: void | RootOptions) {
@@ -156,13 +156,14 @@ export function warnOnInvalidCallback(
   callerName: string,
 ): void {
   if (__DEV__) {
-    warningWithoutStack(
-      callback === null || typeof callback === 'function',
-      '%s(...): Expected the last optional `callback` argument to be a ' +
-        'function. Instead received: %s.',
-      callerName,
-      callback,
-    );
+    if (callback !== null && typeof callback !== 'function') {
+      warning(
+        '%s(...): Expected the last optional `callback` argument to be a ' +
+          'function. Instead received: %s.',
+        callerName,
+        callback,
+      );
+    }
   }
 }
 
@@ -170,14 +171,12 @@ function warnIfReactDOMContainerInDEV(container) {
   if (__DEV__) {
     if (isContainerMarkedAsRoot(container)) {
       if (container._reactRootContainer) {
-        warningWithoutStack(
-          false,
+        warning(
           'You are calling ReactDOM.createRoot() on a container that was previously ' +
             'passed to ReactDOM.render(). This is not supported.',
         );
       } else {
-        warningWithoutStack(
-          false,
+        warning(
           'You are calling ReactDOM.createRoot() on a container that ' +
             'has already been passed to createRoot() before. Instead, call ' +
             'root.render() on the existing root instead if you want to update it.',

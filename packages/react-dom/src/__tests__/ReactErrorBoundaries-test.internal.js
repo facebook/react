@@ -815,7 +815,6 @@ describe('ReactErrorBoundaries', () => {
         "If you can't use a class try assigning the prototype on the function as a workaround. " +
         '`BrokenComponentWillMountWithContext.prototype = React.Component.prototype`. ' +
         "Don't use an arrow function since it cannot be called with `new` by React.",
-      {withoutStack: true},
     );
 
     expect(container.firstChild.textContent).toBe('Caught an error: Hello.');
@@ -2244,7 +2243,6 @@ describe('ReactErrorBoundaries', () => {
     }).toWarnDev(
       'InvalidErrorBoundary: Error boundaries should implement getDerivedStateFromError(). ' +
         'In that method, return a state update to display an error message or fallback UI.',
-      {withoutStack: true},
     );
     expect(container.textContent).toBe('');
   });

@@ -27,7 +27,6 @@ export type PointerType =
 export type ReactDOMResponderEvent = {
   nativeEvent: AnyNativeEvent,
   passive: boolean,
-  passiveSupported: boolean,
   pointerType: PointerType,
   target: Element | Document,
   type: string,

@@ -10,7 +10,12 @@
 'use strict';
 
 import * as domEvents from './domEvents';
-import {buttonsType, hasPointerEvent, platform} from './domEnvironment';
+import {
+  buttonType,
+  buttonsType,
+  hasPointerEvent,
+  platform,
+} from './domEnvironment';
 
 function emptyFunction() {}
 
@@ -33,31 +38,45 @@ export function contextmenu(
   if (pointerType === 'touch') {
     if (hasPointerEvent()) {
       dispatch(
-        domEvents.pointerdown({buttons: buttonsType.primary, pointerType}),
+        domEvents.pointerdown({
+          button: buttonType.primary,
+          buttons: buttonsType.primary,
+          pointerType,
+        }),
       );
     }
     dispatch(domEvents.touchstart());
     dispatch(
-      domEvents.contextmenu({buttons: buttonsType.none, preventDefault}),
+      domEvents.contextmenu({
+        button: buttonType.primary,
+        buttons: buttonsType.none,
+        preventDefault,
+      }),
     );
   } else if (pointerType === 'mouse') {
     if (modified === true) {
+      const button = buttonType.primary;
       const buttons = buttonsType.primary;
       const ctrlKey = true;
       if (hasPointerEvent()) {
-        dispatch(domEvents.pointerdown({buttons, ctrlKey, pointerType}));
+        dispatch(
+          domEvents.pointerdown({button, buttons, ctrlKey, pointerType}),
+        );
       }
-      dispatch(domEvents.mousedown({buttons, ctrlKey}));
+      dispatch(domEvents.mousedown({button, buttons, ctrlKey}));
       if (platform.get() === 'mac') {
-        dispatch(domEvents.contextmenu({buttons, ctrlKey, preventDefault}));
+        dispatch(
+          domEvents.contextmenu({button, buttons, ctrlKey, preventDefault}),
+        );
       }
     } else {
+      const button = buttonType.secondary;
       const buttons = buttonsType.secondary;
       if (hasPointerEvent()) {
-        dispatch(domEvents.pointerdown({buttons, pointerType}));
+        dispatch(domEvents.pointerdown({button, buttons, pointerType}));
       }
-      dispatch(domEvents.mousedown({buttons}));
-      dispatch(domEvents.contextmenu({buttons, preventDefault}));
+      dispatch(domEvents.mousedown({button, buttons}));
+      dispatch(domEvents.contextmenu({button, buttons, preventDefault}));
     }
   }
 }
@@ -84,7 +103,11 @@ export function pointerdown(target, defaultPayload) {
     // Arrays are for multi-touch only
     dispatch(domEvents.touchstart(defaultPayload));
   } else {
-    const payload = {buttons: buttonsType.primary, ...defaultPayload};
+    const payload = {
+      button: buttonType.primary,
+      buttons: buttonsType.primary,
+      ...defaultPayload,
+    };
     if (pointerType === 'mouse') {
       if (hasPointerEvent()) {
         dispatch(domEvents.pointerover(payload));

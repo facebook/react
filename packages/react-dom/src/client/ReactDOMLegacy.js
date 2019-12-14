@@ -38,8 +38,8 @@ import {
 } from 'react-reconciler/inline.dom';
 import getComponentName from 'shared/getComponentName';
 import invariant from 'shared/invariant';
-import lowPriorityWarningWithoutStack from 'shared/lowPriorityWarningWithoutStack';
-import warningWithoutStack from 'shared/warningWithoutStack';
+import lowPriorityWarning from 'shared/lowPriorityWarning';
+import warning from 'shared/warning';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import {has as hasInstance} from 'shared/ReactInstanceMap';
 
@@ -55,13 +55,14 @@ if (__DEV__) {
         container._reactRootContainer._internalRoot.current,
       );
       if (hostInstance) {
-        warningWithoutStack(
-          hostInstance.parentNode === container,
-          'render(...): It looks like the React-rendered content of this ' +
-            'container was removed without using React. This is not ' +
-            'supported and will cause errors. Instead, call ' +
-            'ReactDOM.unmountComponentAtNode to empty a container.',
-        );
+        if (hostInstance.parentNode !== container) {
+          warning(
+            'render(...): It looks like the React-rendered content of this ' +
+              'container was removed without using React. This is not ' +
+              'supported and will cause errors. Instead, call ' +
+              'ReactDOM.unmountComponentAtNode to empty a container.',
+          );
+        }
       }
     }
 
@@ -69,24 +70,28 @@ if (__DEV__) {
     const rootEl = getReactRootElementInContainer(container);
     const hasNonRootReactChild = !!(rootEl && getInstanceFromNode(rootEl));
 
-    warningWithoutStack(
-      !hasNonRootReactChild || isRootRenderedBySomeReact,
-      'render(...): Replacing React-rendered children with a new root ' +
-        'component. If you intended to update the children of this node, ' +
-        'you should instead have the existing children update their state ' +
-        'and render the new components instead of calling ReactDOM.render.',
-    );
+    if (hasNonRootReactChild && !isRootRenderedBySomeReact) {
+      warning(
+        'render(...): Replacing React-rendered children with a new root ' +
+          'component. If you intended to update the children of this node, ' +
+          'you should instead have the existing children update their state ' +
+          'and render the new components instead of calling ReactDOM.render.',
+      );
+    }
 
-    warningWithoutStack(
-      container.nodeType !== ELEMENT_NODE ||
-        !((container: any): Element).tagName ||
-        ((container: any): Element).tagName.toUpperCase() !== 'BODY',
-      'render(): Rendering components directly into document.body is ' +
-        'discouraged, since its children are often manipulated by third-party ' +
-        'scripts and browser extensions. This may lead to subtle ' +
-        'reconciliation issues. Try rendering into a container element created ' +
-        'for your app.',
-    );
+    if (
+      container.nodeType === ELEMENT_NODE &&
+      ((container: any): Element).tagName &&
+      ((container: any): Element).tagName.toUpperCase() === 'BODY'
+    ) {
+      warning(
+        'render(): Rendering components directly into document.body is ' +
+          'discouraged, since its children are often manipulated by third-party ' +
+          'scripts and browser extensions. This may lead to subtle ' +
+          'reconciliation issues. Try rendering into a container element created ' +
+          'for your app.',
+      );
+    }
   };
 }
 
@@ -129,8 +134,7 @@ function legacyCreateRootFromDOMContainer(
           (rootSibling: any).hasAttribute(ROOT_ATTRIBUTE_NAME)
         ) {
           warned = true;
-          warningWithoutStack(
-            false,
+          warning(
             'render(): Target node has markup rendered by React, but there ' +
               'are unrelated nodes as well. This is most commonly caused by ' +
               'white-space inserted around server-rendered markup.',
@@ -143,8 +147,7 @@ function legacyCreateRootFromDOMContainer(
   if (__DEV__) {
     if (shouldHydrate && !forceHydrate && !warnedAboutHydrateAPI) {
       warnedAboutHydrateAPI = true;
-      lowPriorityWarningWithoutStack(
-        false,
+      lowPriorityWarning(
         'render(): Calling ReactDOM.render() to hydrate server-rendered markup ' +
           'will stop working in React v17. Replace the ReactDOM.render() call ' +
           'with ReactDOM.hydrate() if you want React to attach to the server HTML.',
@@ -218,15 +221,16 @@ export function findDOMNode(
     let owner = (ReactCurrentOwner.current: any);
     if (owner !== null && owner.stateNode !== null) {
       const warnedAboutRefsInRender = owner.stateNode._warnedAboutRefsInRender;
-      warningWithoutStack(
-        warnedAboutRefsInRender,
-        '%s is accessing findDOMNode inside its render(). ' +
-          'render() should be a pure function of props and state. It should ' +
-          'never access something that requires stale data from the previous ' +
-          'render, such as refs. Move this logic to componentDidMount and ' +
-          'componentDidUpdate instead.',
-        getComponentName(owner.type) || 'A component',
-      );
+      if (!warnedAboutRefsInRender) {
+        warning(
+          '%s is accessing findDOMNode inside its render(). ' +
+            'render() should be a pure function of props and state. It should ' +
+            'never access something that requires stale data from the previous ' +
+            'render, such as refs. Move this logic to componentDidMount and ' +
+            'componentDidUpdate instead.',
+          getComponentName(owner.type) || 'A component',
+        );
+      }
       owner.stateNode._warnedAboutRefsInRender = true;
     }
   }
@@ -256,8 +260,7 @@ export function hydrate(
       isContainerMarkedAsRoot(container) &&
       container._reactRootContainer === undefined;
     if (isModernRoot) {
-      warningWithoutStack(
-        false,
+      warning(
         'You are calling ReactDOM.hydrate() on a container that was previously ' +
           'passed to ReactDOM.createRoot(). This is not supported. ' +
           'Did you mean to call createRoot(container, {hydrate: true}).render(element)?',
@@ -288,8 +291,7 @@ export function render(
       isContainerMarkedAsRoot(container) &&
       container._reactRootContainer === undefined;
     if (isModernRoot) {
-      warningWithoutStack(
-        false,
+      warning(
         'You are calling ReactDOM.render() on a container that was previously ' +
           'passed to ReactDOM.createRoot(). This is not supported. ' +
           'Did you mean to call root.render(element)?',
@@ -339,8 +341,7 @@ export function unmountComponentAtNode(container: DOMContainer) {
       isContainerMarkedAsRoot(container) &&
       container._reactRootContainer === undefined;
     if (isModernRoot) {
-      warningWithoutStack(
-        false,
+      warning(
         'You are calling ReactDOM.unmountComponentAtNode() on a container that was previously ' +
           'passed to ReactDOM.createRoot(). This is not supported. Did you mean to call root.unmount()?',
       );
@@ -351,11 +352,12 @@ export function unmountComponentAtNode(container: DOMContainer) {
     if (__DEV__) {
       const rootEl = getReactRootElementInContainer(container);
       const renderedByDifferentReact = rootEl && !getInstanceFromNode(rootEl);
-      warningWithoutStack(
-        !renderedByDifferentReact,
-        "unmountComponentAtNode(): The node you're attempting to unmount " +
-          'was rendered by another copy of React.',
-      );
+      if (renderedByDifferentReact) {
+        warning(
+          "unmountComponentAtNode(): The node you're attempting to unmount " +
+            'was rendered by another copy of React.',
+        );
+      }
     }
 
     // Unmount should not be batched.
@@ -379,16 +381,17 @@ export function unmountComponentAtNode(container: DOMContainer) {
         isValidContainer(container.parentNode) &&
         !!container.parentNode._reactRootContainer;
 
-      warningWithoutStack(
-        !hasNonRootReactChild,
-        "unmountComponentAtNode(): The node you're attempting to unmount " +
-          'was rendered by React and is not a top-level container. %s',
-        isContainerReactRoot
-          ? 'You may have accidentally passed in a React root node instead ' +
-            'of its container.'
-          : 'Instead, have the parent component update its state and ' +
-            'rerender in order to remove this component.',
-      );
+      if (hasNonRootReactChild) {
+        warning(
+          "unmountComponentAtNode(): The node you're attempting to unmount " +
+            'was rendered by React and is not a top-level container. %s',
+          isContainerReactRoot
+            ? 'You may have accidentally passed in a React root node instead ' +
+              'of its container.'
+            : 'Instead, have the parent component update its state and ' +
+              'rerender in order to remove this component.',
+        );
+      }
     }
 
     return false;

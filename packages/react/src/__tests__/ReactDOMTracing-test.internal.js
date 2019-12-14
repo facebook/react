@@ -561,8 +561,8 @@ describe('ReactDOMTracing', () => {
 
           expect(Scheduler).toFlushAndYieldThrough(['A']);
 
-          Scheduler.unstable_advanceTime(300);
-          jest.advanceTimersByTime(300);
+          Scheduler.unstable_advanceTime(200);
+          jest.advanceTimersByTime(200);
 
           expect(Scheduler).toFlushAndYieldThrough(['B']);
 

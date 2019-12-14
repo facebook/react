@@ -235,7 +235,6 @@ function validateEventValue(eventValue: any): void {
     const showWarning = name => {
       if (__DEV__) {
         warning(
-          false,
           '%s is not available on event objects created from event responder modules (React Flare). ' +
             'Try wrapping in a conditional, i.e. `if (event.type !== "press") { event.%s }`',
           name,
@@ -290,7 +289,6 @@ function createDOMResponderEvent(
   nativeEvent: AnyNativeEvent,
   nativeEventTarget: Element | Document,
   passive: boolean,
-  passiveSupported: boolean,
 ): ReactDOMResponderEvent {
   const {buttons, pointerType} = (nativeEvent: any);
   let eventPointerType = '';
@@ -308,7 +306,6 @@ function createDOMResponderEvent(
   return {
     nativeEvent: nativeEvent,
     passive,
-    passiveSupported,
     pointerType: eventPointerType,
     target: nativeEventTarget,
     type: topLevelType,
@@ -318,9 +315,11 @@ function createDOMResponderEvent(
 function responderEventTypesContainType(
   eventTypes: Array<string>,
   type: string,
+  isPassive: boolean,
 ): boolean {
   for (let i = 0, len = eventTypes.length; i < len; i++) {
-    if (eventTypes[i] === type) {
+    const eventType = eventTypes[i];
+    if (eventType === type || (!isPassive && eventType === type + '_active')) {
       return true;
     }
   }
@@ -330,11 +329,16 @@ function responderEventTypesContainType(
 function validateResponderTargetEventTypes(
   eventType: string,
   responder: ReactDOMEventResponder,
+  isPassive: boolean,
 ): boolean {
   const {targetEventTypes} = responder;
   // Validate the target event type exists on the responder
   if (targetEventTypes !== null) {
-    return responderEventTypesContainType(targetEventTypes, eventType);
+    return responderEventTypesContainType(
+      targetEventTypes,
+      eventType,
+      isPassive,
+    );
   }
   return false;
 }
@@ -349,7 +353,6 @@ function traverseAndHandleEventResponderInstances(
   const isPassiveEvent = (eventSystemFlags & IS_PASSIVE) !== 0;
   const isPassiveSupported = (eventSystemFlags & PASSIVE_NOT_SUPPORTED) === 0;
   const isPassive = isPassiveEvent || !isPassiveSupported;
-  const eventType = isPassive ? topLevelType : topLevelType + '_active';
 
   // Trigger event responders in this order:
   // - Bubble target responder phase
@@ -361,7 +364,6 @@ function traverseAndHandleEventResponderInstances(
     nativeEvent,
     nativeEventTarget,
     isPassiveEvent,
-    isPassiveSupported,
   );
   let node = targetFiber;
   let insidePortal = false;
@@ -381,7 +383,11 @@ function traverseAndHandleEventResponderInstances(
           const {props, responder, state} = responderInstance;
           if (
             !visitedResponders.has(responder) &&
-            validateResponderTargetEventTypes(eventType, responder) &&
+            validateResponderTargetEventTypes(
+              topLevelType,
+              responder,
+              isPassive,
+            ) &&
             (!insidePortal || responder.targetPortalPropagation)
           ) {
             visitedResponders.add(responder);
@@ -401,10 +407,20 @@ function traverseAndHandleEventResponderInstances(
     node = node.return;
   }
   // Root phase
-  const rootEventResponderInstances = rootEventTypesToEventResponderInstances.get(
-    eventType,
-  );
-  if (rootEventResponderInstances !== undefined) {
+  const passive = rootEventTypesToEventResponderInstances.get(topLevelType);
+  const rootEventResponderInstances = [];
+  if (passive !== undefined) {
+    rootEventResponderInstances.push(...Array.from(passive));
+  }
+  if (!isPassive) {
+    const active = rootEventTypesToEventResponderInstances.get(
+      topLevelType + '_active',
+    );
+    if (active !== undefined) {
+      rootEventResponderInstances.push(...Array.from(active));
+    }
+  }
+  if (rootEventResponderInstances.length > 0) {
     const responderInstances = Array.from(rootEventResponderInstances);
 
     for (let i = 0; i < responderInstances.length; i++) {
