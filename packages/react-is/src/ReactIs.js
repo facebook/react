@@ -25,7 +25,6 @@ import {
   REACT_SUSPENSE_TYPE,
 } from 'shared/ReactSymbols';
 import isValidElementType from 'shared/isValidElementType';
-import lowPriorityWarningWithoutStack from 'shared/lowPriorityWarningWithoutStack';
 
 export function typeOf(object: any) {
   if (typeof object === 'object' && object !== null) {
@@ -88,7 +87,8 @@ export function isAsyncMode(object: any) {
   if (__DEV__) {
     if (!hasWarnedAboutDeprecatedIsAsyncMode) {
       hasWarnedAboutDeprecatedIsAsyncMode = true;
-      lowPriorityWarningWithoutStack(
+      // Using console['warn'] to evade Babel and ESLint
+      console['warn'](
         'The ReactIs.isAsyncMode() alias has been deprecated, ' +
           'and will be removed in React 17+. Update your code to use ' +
           'ReactIs.isConcurrentMode() instead. It has the exact same API.',

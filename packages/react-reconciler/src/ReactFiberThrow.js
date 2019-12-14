@@ -16,7 +16,6 @@ import type {Thenable} from './ReactFiberWorkLoop';
 import type {SuspenseContext} from './ReactFiberSuspenseContext';
 
 import getComponentName from 'shared/getComponentName';
-import warning from 'shared/warning';
 import {
   ClassComponent,
   HostRoot,
@@ -125,7 +124,7 @@ function createClassErrorUpdate(
           // then it needs to call setState to recover from errors.
           // If no state update is scheduled then the boundary will swallow the error.
           if (fiber.expirationTime !== Sync) {
-            warning(
+            console.error(
               '%s: Error boundaries should implement getDerivedStateFromError(). ' +
                 'In that method, return a state update to display an error message or fallback UI.',
               getComponentName(fiber.type) || 'Unknown',

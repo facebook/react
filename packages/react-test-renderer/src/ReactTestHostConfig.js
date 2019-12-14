@@ -7,8 +7,6 @@
  * @flow
  */
 
-import warning from 'shared/warning';
-
 import type {
   ReactEventResponder,
   ReactEventResponderInstance,
@@ -83,7 +81,7 @@ export function appendChild(
 ): void {
   if (__DEV__) {
     if (!Array.isArray(parentInstance.children)) {
-      warning(
+      console.error(
         'An invalid container has been provided. ' +
           'This may indicate that another renderer is being used in addition to the test renderer. ' +
           '(For example, ReactDOM.createPortal inside of a ReactTestRenderer tree.) ' +
@@ -218,7 +216,7 @@ export function createTextInstance(
   if (__DEV__) {
     if (enableFlareAPI) {
       if (hostContext === EVENT_COMPONENT_CONTEXT) {
-        warning(
+        console.error(
           'validateDOMNesting: React event components cannot have text DOM nodes as children. ' +
             'Wrap the child text "%s" in an element.',
           text,

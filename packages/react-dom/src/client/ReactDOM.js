@@ -53,8 +53,6 @@ import {
 } from 'legacy-events/EventPropagators';
 import ReactVersion from 'shared/ReactVersion';
 import invariant from 'shared/invariant';
-import lowPriorityWarning from 'shared/lowPriorityWarning';
-import warning from 'shared/warning';
 import {exposeConcurrentModeAPIs} from 'shared/ReactFeatureFlags';
 
 import {
@@ -92,7 +90,7 @@ if (__DEV__) {
     typeof Set.prototype.clear !== 'function' ||
     typeof Set.prototype.forEach !== 'function'
   ) {
-    warning(
+    console.error(
       'React depends on Map and Set built-in types. Make sure that you load a ' +
         'polyfill in older browsers. https://fb.me/react-polyfills',
     );
@@ -144,7 +142,7 @@ const ReactDOM: Object = {
     if (__DEV__) {
       if (!didWarnAboutUnstableCreatePortal) {
         didWarnAboutUnstableCreatePortal = true;
-        lowPriorityWarning(
+        console.warn(
           'The ReactDOM.unstable_createPortal() alias has been deprecated, ' +
             'and will be removed in React 17+. Update your code to use ' +
             'ReactDOM.createPortal() instead. It has the exact same API, ' +
@@ -213,6 +211,7 @@ if (__DEV__) {
       const protocol = window.location.protocol;
       // Don't warn in exotic cases like chrome-extension://.
       if (/^(https?|file):$/.test(protocol)) {
+        // eslint-disable-next-line react-internal/no-production-logging
         console.info(
           '%cDownload the React DevTools ' +
             'for a better development experience: ' +

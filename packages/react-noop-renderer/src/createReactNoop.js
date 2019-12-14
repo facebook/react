@@ -25,7 +25,6 @@ import {createPortal} from 'shared/ReactPortal';
 import {REACT_FRAGMENT_TYPE, REACT_ELEMENT_TYPE} from 'shared/ReactSymbols';
 import enqueueTask from 'shared/enqueueTask';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
-import warning from 'shared/warning';
 import {ConcurrentRoot, BlockingRoot, LegacyRoot} from 'shared/ReactRootTags';
 
 type Container = {
@@ -639,6 +638,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
     if (!__DEV__) {
       if (didWarnAboutUsingActInProd === false) {
         didWarnAboutUsingActInProd = true;
+        // eslint-disable-next-line react-internal/no-production-logging
         console.error(
           'act(...) is not supported in production builds of React, and might not behave as expected.',
         );
@@ -661,7 +661,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       if (__DEV__) {
         if (actingUpdatesScopeDepth > previousActingUpdatesScopeDepth) {
           // if it's _less than_ previousActingUpdatesScopeDepth, then we can assume the 'other' one has warned
-          warning(
+          console.error(
             'You seem to have overlapping act() calls, this is not supported. ' +
               'Be sure to await previous act() calls before making a new one. ',
           );
@@ -693,7 +693,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
             .then(() => {})
             .then(() => {
               if (called === false) {
-                warning(
+                console.error(
                   'You called act(async () => ...) without await. ' +
                     'This could lead to unexpected testing behaviour, interleaving multiple act ' +
                     'calls and mixing their scopes. You should - await act(async () => ...);',
@@ -741,7 +741,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
     } else {
       if (__DEV__) {
         if (result !== undefined) {
-          warning(
+          console.error(
             'The callback passed to act(...) function ' +
               'must return undefined, or a Promise. You returned %s',
             result,
@@ -770,7 +770,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       return {
         then(resolve: () => void) {
           if (__DEV__) {
-            warning(
+            console.error(
               'Do not await the result of calling act(...) with sync logic, it is not a Promise.',
             );
           }
@@ -1107,6 +1107,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       const root = roots.get(rootID);
       const rootContainer = rootContainers.get(rootID);
       if (!root || !rootContainer) {
+        // eslint-disable-next-line react-internal/no-production-logging
         console.log('Nothing rendered yet.');
         return;
       }
@@ -1209,6 +1210,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       log('FIBERS:');
       logFiber(root.current, 0);
 
+      // eslint-disable-next-line react-internal/no-production-logging
       console.log(...bufferedLog);
     },
 

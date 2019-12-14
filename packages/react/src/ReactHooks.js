@@ -13,7 +13,6 @@ import type {
   ReactEventResponderListener,
 } from 'shared/ReactTypes';
 import invariant from 'shared/invariant';
-import warning from 'shared/warning';
 import {REACT_RESPONDER_TYPE} from 'shared/ReactSymbols';
 
 import ReactCurrentDispatcher from './ReactCurrentDispatcher';
@@ -39,7 +38,7 @@ export function useContext<T>(
   const dispatcher = resolveDispatcher();
   if (__DEV__) {
     if (unstable_observedBits !== undefined) {
-      warning(
+      console.error(
         'useContext() second argument is reserved for future ' +
           'use in React. Passing it is not supported. ' +
           'You passed: %s.%s',
@@ -58,12 +57,12 @@ export function useContext<T>(
       // Don't deduplicate because this legitimately causes bugs
       // and nobody should be using this in existing code.
       if (realContext.Consumer === Context) {
-        warning(
+        console.error(
           'Calling useContext(Context.Consumer) is not supported, may cause bugs, and will be ' +
             'removed in a future major release. Did you mean to call useContext(Context) instead?',
         );
       } else if (realContext.Provider === Context) {
-        warning(
+        console.error(
           'Calling useContext(Context.Provider) is not supported. ' +
             'Did you mean to call useContext(Context) instead?',
         );
@@ -149,7 +148,7 @@ export function useResponder(
   const dispatcher = resolveDispatcher();
   if (__DEV__) {
     if (responder == null || responder.$$typeof !== REACT_RESPONDER_TYPE) {
-      warning(
+      console.error(
         'useResponder: invalid first argument. Expected an event responder, but instead got %s',
         responder,
       );

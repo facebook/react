@@ -107,12 +107,31 @@ const closureOptions = {
   rewrite_polyfills: false,
 };
 
-function getBabelConfig(updateBabelOptions, bundleType, filename) {
+function getBabelConfig(
+  updateBabelOptions,
+  bundleType,
+  packageName,
+  externals,
+  isDevelopment
+) {
+  const canAccessReactObject =
+    packageName === 'react' || externals.indexOf('react') !== -1;
   let options = {
     exclude: '/**/node_modules/**',
     presets: [],
     plugins: [],
   };
+  if (isDevelopment) {
+    options.plugins.push(
+      // Turn console.error/warn() into a custom wrapper
+      [
+        require('../babel/transform-replace-console-calls'),
+        {
+          shouldError: !canAccessReactObject,
+        },
+      ]
+    );
+  }
   if (updateBabelOptions) {
     options = updateBabelOptions(options);
   }
@@ -352,7 +371,15 @@ function getPlugins(
       exclude: 'node_modules/**/*',
     }),
     // Compile to ES5.
-    babel(getBabelConfig(updateBabelOptions, bundleType)),
+    babel(
+      getBabelConfig(
+        updateBabelOptions,
+        bundleType,
+        packageName,
+        externals,
+        !isProduction
+      )
+    ),
     // Remove 'use strict' from individual source files.
     {
       transform(source) {

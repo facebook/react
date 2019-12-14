@@ -8,7 +8,6 @@
  */
 
 import invariant from 'shared/invariant';
-import warning from 'shared/warning';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import {disableJavaScriptURLs} from 'shared/ReactFeatureFlags';
 
@@ -41,7 +40,7 @@ function sanitizeURL(url: string) {
   } else if (__DEV__) {
     if (!didWarn && isJavaScriptProtocol.test(url)) {
       didWarn = true;
-      warning(
+      console.error(
         'A future version of React will block javascript: URLs as a security precaution. ' +
           'Use event handlers instead if you can. If you need to generate unsafe HTML try ' +
           'using dangerouslySetInnerHTML instead. React was passed %s.',
