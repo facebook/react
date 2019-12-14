@@ -7,6 +7,7 @@
  * @flow
  */
 
+import {copy} from 'clipboard-js';
 import {
   ElementTypeClass,
   ElementTypeFunction,
@@ -15,8 +16,8 @@ import {
   ElementTypeOtherOrUnknown,
 } from 'react-devtools-shared/src/types';
 import {getUID, utfEncodeString, printOperationsArray} from '../../utils';
-import {cleanForBridge, copyWithSet} from '../utils';
-import {getDisplayName} from 'react-devtools-shared/src/utils';
+import {cleanForBridge, copyWithSet, safeSerialize} from '../utils';
+import {getDisplayName, getInObject} from 'react-devtools-shared/src/utils';
 import {
   __DEBUG__,
   TREE_OPERATION_ADD,
@@ -649,6 +650,15 @@ export function attach(
     }
   }
 
+  function copyElementPath(id: number, path: Array<string | number>): void {
+    const inspectedElement = inspectElementRaw(id);
+    if (inspectedElement !== null) {
+      const value = getInObject(inspectedElement, path);
+
+      copy(safeSerialize(value));
+    }
+  }
+
   function inspectElement(
     id: number,
     path?: Array<string | number>,
@@ -927,6 +937,7 @@ export function attach(
 
   return {
     cleanup,
+    copyElementPath,
     flushInitialOperations,
     getBestMatchForTrackedPath,
     getFiberIDForNative: getInternalIDForNative,

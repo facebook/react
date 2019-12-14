@@ -52,3 +52,16 @@ export function copyWithSet(
   updated[key] = copyWithSet(obj[key], path, value, index + 1);
   return updated;
 }
+
+export function safeSerialize(data: any): string {
+  const cache = new Set();
+  return JSON.stringify(data, (key, value) => {
+    if (typeof value === 'object' && value !== null) {
+      if (cache.has(value)) {
+        return;
+      }
+      cache.add(value);
+    }
+    return value;
+  });
+}

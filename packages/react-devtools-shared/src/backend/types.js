@@ -225,6 +225,7 @@ export type InstanceAndStyle = {|
 
 export type RendererInterface = {
   cleanup: () => void,
+  copyElementPath: (id: number, path: Array<string | number>) => void,
   findNativeNodesForFiberID: FindNativeNodesForFiberID,
   flushInitialOperations: () => void,
   getBestMatchForTrackedPath: () => PathMatch | null,

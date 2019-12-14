@@ -51,6 +51,11 @@ type OverrideSuspense = {|
   forceFallback: boolean,
 |};
 
+type CopyElementPathParams = {|
+  ...ElementAndRendererID,
+  path: Array<string | number>,
+|};
+
 type InspectElementParams = {|
   ...ElementAndRendererID,
   path?: Array<string | number>,
@@ -95,6 +100,7 @@ type BackendEvents = {|
 
 type FrontendEvents = {|
   clearNativeElementHighlight: [],
+  copyElementPath: [CopyElementPathParams],
   getOwnersList: [ElementAndRendererID],
   getProfilingData: [{|rendererID: RendererID|}],
   getProfilingStatus: [],

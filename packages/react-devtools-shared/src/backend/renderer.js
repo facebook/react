@@ -8,6 +8,7 @@
  */
 
 import {gte} from 'semver';
+import {copy} from 'clipboard-js';
 import {
   ComponentFilterDisplayName,
   ComponentFilterElementType,
@@ -34,7 +35,7 @@ import {
   utfEncodeString,
 } from 'react-devtools-shared/src/utils';
 import {sessionStorageGetItem} from 'react-devtools-shared/src/storage';
-import {cleanForBridge, copyWithSet} from './utils';
+import {cleanForBridge, copyWithSet, safeSerialize} from './utils';
 import {
   __DEBUG__,
   SESSION_STORAGE_RELOAD_AND_PROFILE_KEY,
@@ -2488,6 +2489,19 @@ export function attach(
     }
   }
 
+  function copyElementPath(id: number, path: Array<string | number>): void {
+    const isCurrent = isMostRecentlyInspectedElementCurrent(id);
+
+    if (isCurrent) {
+      const value = getInObject(
+        ((mostRecentlyInspectedElement: any): InspectedElement),
+        path,
+      );
+
+      copy(safeSerialize(value));
+    }
+  }
+
   function inspectElement(
     id: number,
     path?: Array<string | number>,
@@ -3129,6 +3143,7 @@ export function attach(
 
   return {
     cleanup,
+    copyElementPath,
     findNativeNodesForFiberID,
     flushInitialOperations,
     getBestMatchForTrackedPath,

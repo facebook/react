@@ -55,6 +55,12 @@ type ElementAndRendererID = {|
   rendererID: number,
 |};
 
+type CopyElementParams = {|
+  id: number,
+  path: Array<string | number>,
+  rendererID: number,
+|};
+
 type InspectElementParams = {|
   id: number,
   path?: Array<string | number>,
@@ -126,6 +132,7 @@ export default class Agent extends EventEmitter<{|
 
     this._bridge = bridge;
 
+    bridge.addListener('copyElementPath', this.copyElementPath);
     bridge.addListener('getProfilingData', this.getProfilingData);
     bridge.addListener('getProfilingStatus', this.getProfilingStatus);
     bridge.addListener('getOwnersList', this.getOwnersList);
@@ -172,6 +179,15 @@ export default class Agent extends EventEmitter<{|
   get rendererInterfaces(): {[key: RendererID]: RendererInterface} {
     return this._rendererInterfaces;
   }
+
+  copyElementPath = ({id, path, rendererID}: CopyElementParams) => {
+    const renderer = this._rendererInterfaces[rendererID];
+    if (renderer == null) {
+      console.warn(`Invalid renderer id "${rendererID}" for element "${id}"`);
+    } else {
+      renderer.copyElementPath(id, path);
+    }
+  };
 
   getInstanceAndStyle({
     id,
