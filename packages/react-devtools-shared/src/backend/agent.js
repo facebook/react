@@ -55,6 +55,12 @@ type ElementAndRendererID = {|
   rendererID: number,
 |};
 
+type StoreAsGlobalParams = {|
+  id: number,
+  path: Array<string | number>,
+  rendererID: number,
+|};
+
 type CopyElementParams = {|
   id: number,
   path: Array<string | number>,
@@ -147,6 +153,7 @@ export default class Agent extends EventEmitter<{|
     bridge.addListener('setTraceUpdatesEnabled', this.setTraceUpdatesEnabled);
     bridge.addListener('startProfiling', this.startProfiling);
     bridge.addListener('stopProfiling', this.stopProfiling);
+    bridge.addListener('storeAsGlobal', this.storeAsGlobal);
     bridge.addListener(
       'syncSelectionFromNativeElementsPanel',
       this.syncSelectionFromNativeElementsPanel,
@@ -423,6 +430,15 @@ export default class Agent extends EventEmitter<{|
       renderer.stopProfiling();
     }
     this._bridge.send('profilingStatus', this._isProfiling);
+  };
+
+  storeAsGlobal = ({id, path, rendererID}: StoreAsGlobalParams) => {
+    const renderer = this._rendererInterfaces[rendererID];
+    if (renderer == null) {
+      console.warn(`Invalid renderer id "${rendererID}" for element "${id}"`);
+    } else {
+      renderer.storeAsGlobal(id, path);
+    }
   };
 
   updateAppendComponentStack = (appendComponentStack: boolean) => {

@@ -61,6 +61,11 @@ type InspectElementParams = {|
   path?: Array<string | number>,
 |};
 
+type StoreAsGlobalParams = {|
+  ...ElementAndRendererID,
+  path: Array<string | number>,
+|};
+
 type NativeStyleEditor_RenameAttributeParams = {|
   ...ElementAndRendererID,
   oldName: string,
@@ -121,6 +126,7 @@ type FrontendEvents = {|
   startProfiling: [boolean],
   stopInspectingNative: [boolean],
   stopProfiling: [],
+  storeAsGlobal: [StoreAsGlobalParams],
   updateAppendComponentStack: [boolean],
   updateComponentFilters: [Array<ComponentFilter>],
   viewElementSource: [ElementAndRendererID],

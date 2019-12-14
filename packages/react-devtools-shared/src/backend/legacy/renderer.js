@@ -650,6 +650,18 @@ export function attach(
     }
   }
 
+  function storeAsGlobal(id: number, path: Array<string | number>): void {
+    const inspectedElement = inspectElementRaw(id);
+    if (inspectedElement !== null) {
+      const value = getInObject(inspectedElement, path);
+
+      window.$reactTemp = value;
+
+      console.log('$reactTemp');
+      console.log(value);
+    }
+  }
+
   function copyElementPath(id: number, path: Array<string | number>): void {
     const inspectedElement = inspectElementRaw(id);
     if (inspectedElement !== null) {
@@ -964,6 +976,7 @@ export function attach(
     setTrackedPath,
     startProfiling,
     stopProfiling,
+    storeAsGlobal,
     updateComponentFilters,
   };
 }

@@ -2489,6 +2489,22 @@ export function attach(
     }
   }
 
+  function storeAsGlobal(id: number, path: Array<string | number>): void {
+    const isCurrent = isMostRecentlyInspectedElementCurrent(id);
+
+    if (isCurrent) {
+      const value = getInObject(
+        ((mostRecentlyInspectedElement: any): InspectedElement),
+        path,
+      );
+
+      window.$reactTemp = value;
+
+      console.log('$reactTemp');
+      console.log(value);
+    }
+  }
+
   function copyElementPath(id: number, path: Array<string | number>): void {
     const isCurrent = isMostRecentlyInspectedElementCurrent(id);
 
@@ -3167,6 +3183,7 @@ export function attach(
     setTrackedPath,
     startProfiling,
     stopProfiling,
+    storeAsGlobal,
     updateComponentFilters,
   };
 }
