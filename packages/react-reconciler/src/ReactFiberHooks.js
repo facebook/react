@@ -504,14 +504,31 @@ export function bailoutHooks(
   }
 }
 
-export function resetHooks(): void {
+export function resetHooksAfterThrow(): void {
   // We can assume the previous dispatcher is always this one, since we set it
   // at the beginning of the render phase and there's no re-entrancy.
   ReactCurrentDispatcher.current = ContextOnlyDispatcher;
 
-  // This is used to reset the state of this module when a component throws.
-  // It's also called inside mountIndeterminateComponent if we determine the
-  // component is a module-style component.
+  if (didScheduleRenderPhaseUpdate) {
+    const current = (currentlyRenderingFiber: any).alternate;
+    if (current !== null) {
+      // There were render phase updates. These are only valid for this render
+      // pass, which we are now aborting. Remove the updates from the queues so
+      // they do not persist to the next render. We already did a single pass
+      // through the whole list of hooks, so we know that any pending updates
+      // must have been dispatched during the render phase. The ones that were
+      // dispatched before we started rendering were already transferred to the
+      // current hook's queue.
+      let hook: Hook | null = current.memoizedState;
+      while (hook !== null) {
+        const queue = hook.queue;
+        if (queue !== null) {
+          queue.pending = null;
+        }
+        hook = hook.next;
+      }
+    }
+  }
 
   renderExpirationTime = NoWork;
   currentlyRenderingFiber = (null: any);
