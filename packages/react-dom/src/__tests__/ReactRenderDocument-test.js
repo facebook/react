@@ -35,7 +35,7 @@ describe('rendering React components at document', () => {
 
   describe('with old implicit hydration API', () => {
     function expectDeprecationWarningWithFiber(callback) {
-      expect(callback).toLowPriorityWarnDev(
+      expect(callback).toWarnDev(
         'render(): Calling ReactDOM.render() to hydrate server-rendered markup ' +
           'will stop working in React v17. Replace the ReactDOM.render() call ' +
           'with ReactDOM.hydrate() if you want React to attach to the server HTML.',
@@ -197,7 +197,7 @@ describe('rendering React components at document', () => {
       expect(() => {
         expect(() =>
           ReactDOM.render(<Component text="Hello world" />, testDocument),
-        ).toLowPriorityWarnDev(
+        ).toWarnDev(
           'render(): Calling ReactDOM.render() to hydrate server-rendered markup ' +
             'will stop working in React v17. Replace the ReactDOM.render() call ' +
             'with ReactDOM.hydrate() if you want React to attach to the server HTML.',

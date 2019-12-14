@@ -555,7 +555,7 @@ describe('create-react-class-integration', () => {
           'The above lifecycles should be removed. Learn more about this warning here:\n' +
           'https://fb.me/react-unsafe-component-lifecycles',
       );
-    }).toLowPriorityWarnDev(
+    }).toWarnDev(
       [
         'componentWillMount has been renamed',
         'componentWillReceiveProps has been renamed',
@@ -598,7 +598,7 @@ describe('create-react-class-integration', () => {
           'The above lifecycles should be removed. Learn more about this warning here:\n' +
           'https://fb.me/react-unsafe-component-lifecycles',
       );
-    }).toLowPriorityWarnDev(
+    }).toWarnDev(
       [
         'componentWillMount has been renamed',
         'componentWillReceiveProps has been renamed',
@@ -641,9 +641,7 @@ describe('create-react-class-integration', () => {
     });
 
     const div = document.createElement('div');
-    expect(() =>
-      ReactDOM.render(<Component foo="bar" />, div),
-    ).toLowPriorityWarnDev(
+    expect(() => ReactDOM.render(<Component foo="bar" />, div)).toWarnDev(
       [
         'componentWillMount has been renamed',
         'componentWillReceiveProps has been renamed',

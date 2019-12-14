@@ -258,7 +258,6 @@ const createMatcherFor = (consoleMethod, matcherName) =>
   };
 
 module.exports = {
-  // TODO: rename this one.
-  toLowPriorityWarnDev: createMatcherFor('warn', 'toLowPriorityWarnDev'),
+  toWarnDev: createMatcherFor('warn', 'toWarnDev'),
   toErrorDev: createMatcherFor('error', 'toErrorDev'),
 };

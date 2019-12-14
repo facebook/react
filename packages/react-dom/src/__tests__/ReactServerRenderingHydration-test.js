@@ -81,7 +81,7 @@ describe('ReactDOMServerHydration', () => {
 
       expect(() => {
         instance = ReactDOM.render(<TestComponent name="x" />, element);
-      }).toLowPriorityWarnDev(
+      }).toWarnDev(
         'render(): Calling ReactDOM.render() to hydrate server-rendered markup ' +
           'will stop working in React v17. Replace the ReactDOM.render() call ' +
           'with ReactDOM.hydrate() if you want React to attach to the server HTML.',
@@ -355,12 +355,12 @@ describe('ReactDOMServerHydration', () => {
     const element = document.createElement('div');
     expect(() => {
       element.innerHTML = ReactDOMServer.renderToString(markup);
-    }).toLowPriorityWarnDev('componentWillMount has been renamed');
+    }).toWarnDev('componentWillMount has been renamed');
     expect(element.textContent).toBe('Hi');
 
     expect(() => {
       ReactDOM.hydrate(markup, element);
-    }).toLowPriorityWarnDev('componentWillMount has been renamed', {
+    }).toWarnDev('componentWillMount has been renamed', {
       withoutStack: true,
     });
     expect(element.textContent).toBe('Hi');

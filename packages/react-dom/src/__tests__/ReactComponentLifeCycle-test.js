@@ -697,7 +697,7 @@ describe('ReactComponentLifeCycle', () => {
       expect(() => ReactDOM.render(<Component />, container)).toErrorDev(
         'Unsafe legacy lifecycles will not be called for components using new component APIs.',
       );
-    }).toLowPriorityWarnDev(
+    }).toWarnDev(
       [
         'componentWillMount has been renamed',
         'componentWillReceiveProps has been renamed',
@@ -735,7 +735,7 @@ describe('ReactComponentLifeCycle', () => {
       ).toErrorDev(
         'Unsafe legacy lifecycles will not be called for components using new component APIs.',
       );
-    }).toLowPriorityWarnDev(
+    }).toWarnDev(
       [
         'componentWillMount has been renamed',
         'componentWillReceiveProps has been renamed',
@@ -803,7 +803,7 @@ describe('ReactComponentLifeCycle', () => {
           'The above lifecycles should be removed. Learn more about this warning here:\n' +
           'https://fb.me/react-unsafe-component-lifecycles',
       );
-    }).toLowPriorityWarnDev(
+    }).toWarnDev(
       [
         'componentWillMount has been renamed',
         'componentWillUpdate has been renamed',
@@ -853,7 +853,7 @@ describe('ReactComponentLifeCycle', () => {
           'The above lifecycles should be removed. Learn more about this warning here:\n' +
           'https://fb.me/react-unsafe-component-lifecycles',
       );
-    }).toLowPriorityWarnDev(['componentWillMount has been renamed'], {
+    }).toWarnDev(['componentWillMount has been renamed'], {
       withoutStack: true,
     });
 
@@ -876,7 +876,7 @@ describe('ReactComponentLifeCycle', () => {
           'The above lifecycles should be removed. Learn more about this warning here:\n' +
           'https://fb.me/react-unsafe-component-lifecycles',
       );
-    }).toLowPriorityWarnDev(['componentWillReceiveProps has been renamed'], {
+    }).toWarnDev(['componentWillReceiveProps has been renamed'], {
       withoutStack: true,
     });
   });
@@ -908,7 +908,7 @@ describe('ReactComponentLifeCycle', () => {
           'The above lifecycles should be removed. Learn more about this warning here:\n' +
           'https://fb.me/react-unsafe-component-lifecycles',
       );
-    }).toLowPriorityWarnDev(
+    }).toWarnDev(
       [
         'componentWillMount has been renamed',
         'componentWillUpdate has been renamed',
@@ -956,7 +956,7 @@ describe('ReactComponentLifeCycle', () => {
           'The above lifecycles should be removed. Learn more about this warning here:\n' +
           'https://fb.me/react-unsafe-component-lifecycles',
       );
-    }).toLowPriorityWarnDev(['componentWillMount has been renamed'], {
+    }).toWarnDev(['componentWillMount has been renamed'], {
       withoutStack: true,
     });
 
@@ -978,7 +978,7 @@ describe('ReactComponentLifeCycle', () => {
           'The above lifecycles should be removed. Learn more about this warning here:\n' +
           'https://fb.me/react-unsafe-component-lifecycles',
       );
-    }).toLowPriorityWarnDev(['componentWillReceiveProps has been renamed'], {
+    }).toWarnDev(['componentWillReceiveProps has been renamed'], {
       withoutStack: true,
     });
   });
@@ -1111,9 +1111,7 @@ describe('ReactComponentLifeCycle', () => {
     }
 
     const div = document.createElement('div');
-    expect(() =>
-      ReactDOM.render(<MyComponent foo="bar" />, div),
-    ).toLowPriorityWarnDev(
+    expect(() => ReactDOM.render(<MyComponent foo="bar" />, div)).toWarnDev(
       [
         'componentWillMount has been renamed',
         'componentWillReceiveProps has been renamed',
@@ -1382,9 +1380,7 @@ describe('ReactComponentLifeCycle', () => {
     }
 
     const container = document.createElement('div');
-    expect(() =>
-      ReactDOM.render(<MyComponent x={1} />, container),
-    ).toLowPriorityWarnDev(
+    expect(() => ReactDOM.render(<MyComponent x={1} />, container)).toWarnDev(
       [
         /* eslint-disable max-len */
         `Warning: componentWillMount has been renamed, and is not recommended for use. See https://fb.me/react-unsafe-component-lifecycles for details.

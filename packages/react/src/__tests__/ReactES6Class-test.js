@@ -521,15 +521,11 @@ describe('ReactES6Class', () => {
 
   it('should throw AND warn when trying to access classic APIs', () => {
     const instance = test(<Inner name="foo" />, 'DIV', 'foo');
-    expect(() =>
-      expect(() => instance.replaceState({})).toThrow(),
-    ).toLowPriorityWarnDev(
+    expect(() => expect(() => instance.replaceState({})).toThrow()).toWarnDev(
       'replaceState(...) is deprecated in plain JavaScript React classes',
       {withoutStack: true},
     );
-    expect(() =>
-      expect(() => instance.isMounted()).toThrow(),
-    ).toLowPriorityWarnDev(
+    expect(() => expect(() => instance.isMounted()).toThrow()).toWarnDev(
       'isMounted(...) is deprecated in plain JavaScript React classes',
       {withoutStack: true},
     );

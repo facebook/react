@@ -257,7 +257,7 @@ describe('ReactDOMFiber', () => {
         </div>,
         container,
       ),
-    ).toLowPriorityWarnDev(
+    ).toWarnDev(
       'The ReactDOM.unstable_createPortal() alias has been deprecated, ' +
         'and will be removed in React 17+. Update your code to use ' +
         'ReactDOM.createPortal() instead. It has the exact same API, ' +

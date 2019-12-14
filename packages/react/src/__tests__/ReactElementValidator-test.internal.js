@@ -439,7 +439,7 @@ describe('ReactElementValidator', () => {
     }
 
     let TestFactory = React.createFactory(TestComponent);
-    expect(() => TestFactory.type).toLowPriorityWarnDev(
+    expect(() => TestFactory.type).toWarnDev(
       'Warning: Factory.type is deprecated. Access the class directly before ' +
         'passing it to createFactory.',
       {withoutStack: true},

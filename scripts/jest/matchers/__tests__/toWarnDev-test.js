@@ -211,13 +211,13 @@ describe('toErrorDev', () => {
   }
 });
 
-describe('toLowPriorityWarnDev', () => {
+describe('toWarnDev', () => {
   it('does not fail if a warning contains a stack', () => {
     expect(() => {
       if (__DEV__) {
         console.warn('Hello\n    in div');
       }
-    }).toLowPriorityWarnDev('Hello');
+    }).toWarnDev('Hello');
   });
 
   it('does not fail if all warnings contain a stack', () => {
@@ -227,7 +227,7 @@ describe('toLowPriorityWarnDev', () => {
         console.warn('Good day\n    in div');
         console.warn('Bye\n    in div');
       }
-    }).toLowPriorityWarnDev(['Hello', 'Good day', 'Bye']);
+    }).toWarnDev(['Hello', 'Good day', 'Bye']);
   });
 
   it('does not fail if warnings without stack explicitly opt out', () => {
@@ -235,14 +235,14 @@ describe('toLowPriorityWarnDev', () => {
       if (__DEV__) {
         console.warn('Hello');
       }
-    }).toLowPriorityWarnDev('Hello', {withoutStack: true});
+    }).toWarnDev('Hello', {withoutStack: true});
     expect(() => {
       if (__DEV__) {
         console.warn('Hello');
         console.warn('Good day');
         console.warn('Bye');
       }
-    }).toLowPriorityWarnDev(['Hello', 'Good day', 'Bye'], {withoutStack: true});
+    }).toWarnDev(['Hello', 'Good day', 'Bye'], {withoutStack: true});
   });
 
   it('does not fail when expected stack-less warning number matches the actual one', () => {
@@ -252,7 +252,7 @@ describe('toLowPriorityWarnDev', () => {
         console.warn('Good day');
         console.warn('Bye\n    in div');
       }
-    }).toLowPriorityWarnDev(['Hello', 'Good day', 'Bye'], {withoutStack: 1});
+    }).toWarnDev(['Hello', 'Good day', 'Bye'], {withoutStack: 1});
   });
 
   if (__DEV__) {
@@ -273,7 +273,7 @@ describe('toLowPriorityWarnDev', () => {
       expectToWarnAndToThrow(() => {
         expect(() => {
           console.warn('Hello');
-        }).toLowPriorityWarnDev('Hello');
+        }).toWarnDev('Hello');
       }, 'Received warning unexpectedly does not include a component stack');
     });
 
@@ -283,28 +283,28 @@ describe('toLowPriorityWarnDev', () => {
           console.warn('Hello\n    in div');
           console.warn('Good day\n    in div');
           console.warn('Bye');
-        }).toLowPriorityWarnDev(['Hello', 'Good day', 'Bye']);
+        }).toWarnDev(['Hello', 'Good day', 'Bye']);
       }, 'Received warning unexpectedly does not include a component stack');
       expectToWarnAndToThrow(() => {
         expect(() => {
           console.warn('Hello');
           console.warn('Good day\n    in div');
           console.warn('Bye\n    in div');
-        }).toLowPriorityWarnDev(['Hello', 'Good day', 'Bye']);
+        }).toWarnDev(['Hello', 'Good day', 'Bye']);
       }, 'Received warning unexpectedly does not include a component stack');
       expectToWarnAndToThrow(() => {
         expect(() => {
           console.warn('Hello\n    in div');
           console.warn('Good day');
           console.warn('Bye\n    in div');
-        }).toLowPriorityWarnDev(['Hello', 'Good day', 'Bye']);
+        }).toWarnDev(['Hello', 'Good day', 'Bye']);
       }, 'Received warning unexpectedly does not include a component stack');
       expectToWarnAndToThrow(() => {
         expect(() => {
           console.warn('Hello');
           console.warn('Good day');
           console.warn('Bye');
-        }).toLowPriorityWarnDev(['Hello', 'Good day', 'Bye']);
+        }).toWarnDev(['Hello', 'Good day', 'Bye']);
       }, 'Received warning unexpectedly does not include a component stack');
     });
 
@@ -312,14 +312,14 @@ describe('toLowPriorityWarnDev', () => {
       expectToWarnAndToThrow(() => {
         expect(() => {
           console.warn('Hello\n    in div');
-        }).toLowPriorityWarnDev('Hello', {withoutStack: true});
+        }).toWarnDev('Hello', {withoutStack: true});
       }, 'Received warning unexpectedly includes a component stack');
       expectToWarnAndToThrow(() => {
         expect(() => {
           console.warn('Hello\n    in div');
           console.warn('Good day');
           console.warn('Bye\n    in div');
-        }).toLowPriorityWarnDev(['Hello', 'Good day', 'Bye'], {
+        }).toWarnDev(['Hello', 'Good day', 'Bye'], {
           withoutStack: true,
         });
       }, 'Received warning unexpectedly includes a component stack');
@@ -331,7 +331,7 @@ describe('toLowPriorityWarnDev', () => {
           console.warn('Hello\n    in div');
           console.warn('Good day');
           console.warn('Bye\n    in div');
-        }).toLowPriorityWarnDev(['Hello', 'Good day', 'Bye'], {
+        }).toWarnDev(['Hello', 'Good day', 'Bye'], {
           withoutStack: 4,
         });
       }, 'Expected 4 warnings without a component stack but received 1');
@@ -341,17 +341,17 @@ describe('toLowPriorityWarnDev', () => {
       expectToWarnAndToThrow(() => {
         expect(() => {
           console.warn('Hi');
-        }).toLowPriorityWarnDev('Hi', {withoutStack: null});
+        }).toWarnDev('Hi', {withoutStack: null});
       }, 'Instead received object');
       expectToWarnAndToThrow(() => {
         expect(() => {
           console.warn('Hi');
-        }).toLowPriorityWarnDev('Hi', {withoutStack: {}});
+        }).toWarnDev('Hi', {withoutStack: {}});
       }, 'Instead received object');
       expectToWarnAndToThrow(() => {
         expect(() => {
           console.warn('Hi');
-        }).toLowPriorityWarnDev('Hi', {withoutStack: 'haha'});
+        }).toWarnDev('Hi', {withoutStack: 'haha'});
       }, 'Instead received string');
     });
 
@@ -359,13 +359,13 @@ describe('toLowPriorityWarnDev', () => {
       expectToWarnAndToThrow(() => {
         expect(() => {
           console.warn('Hi %s', 'Sara', 'extra');
-        }).toLowPriorityWarnDev('Hi', {withoutStack: true});
+        }).toWarnDev('Hi', {withoutStack: true});
       }, 'Received 2 arguments for a message with 1 placeholders');
 
       expectToWarnAndToThrow(() => {
         expect(() => {
           console.warn('Hi %s');
-        }).toLowPriorityWarnDev('Hi', {withoutStack: true});
+        }).toWarnDev('Hi', {withoutStack: true});
       }, 'Received 0 arguments for a message with 1 placeholders');
     });
 
@@ -373,7 +373,7 @@ describe('toLowPriorityWarnDev', () => {
       expectToWarnAndToThrow(() => {
         expect(() => {
           console.warn('Hi %s%s', '\n    in div', '\n    in div');
-        }).toLowPriorityWarnDev('Hi');
+        }).toWarnDev('Hi');
       }, 'Received more than one component stack for a warning');
     });
 
@@ -381,28 +381,28 @@ describe('toLowPriorityWarnDev', () => {
       expectToWarnAndToThrow(() => {
         expect(() => {
           console.warn('Hi \n    in div');
-        }).toLowPriorityWarnDev('Hi', 'Bye');
-      }, 'toLowPriorityWarnDev() second argument, when present, should be an object');
+        }).toWarnDev('Hi', 'Bye');
+      }, 'toWarnDev() second argument, when present, should be an object');
       expectToWarnAndToThrow(() => {
         expect(() => {
           console.warn('Hi \n    in div');
           console.warn('Bye \n    in div');
-        }).toLowPriorityWarnDev('Hi', 'Bye');
-      }, 'toLowPriorityWarnDev() second argument, when present, should be an object');
-      expectToWarnAndToThrow(() => {
-        expect(() => {
-          console.warn('Hi \n    in div');
-          console.warn('Wow \n    in div');
-          console.warn('Bye \n    in div');
-        }).toLowPriorityWarnDev('Hi', 'Bye');
-      }, 'toLowPriorityWarnDev() second argument, when present, should be an object');
+        }).toWarnDev('Hi', 'Bye');
+      }, 'toWarnDev() second argument, when present, should be an object');
       expectToWarnAndToThrow(() => {
         expect(() => {
           console.warn('Hi \n    in div');
           console.warn('Wow \n    in div');
           console.warn('Bye \n    in div');
-        }).toLowPriorityWarnDev('Hi', 'Wow', 'Bye');
-      }, 'toLowPriorityWarnDev() second argument, when present, should be an object');
+        }).toWarnDev('Hi', 'Bye');
+      }, 'toWarnDev() second argument, when present, should be an object');
+      expectToWarnAndToThrow(() => {
+        expect(() => {
+          console.warn('Hi \n    in div');
+          console.warn('Wow \n    in div');
+          console.warn('Bye \n    in div');
+        }).toWarnDev('Hi', 'Wow', 'Bye');
+      }, 'toWarnDev() second argument, when present, should be an object');
     });
 
     it('fails on more than two arguments', () => {
@@ -411,8 +411,8 @@ describe('toLowPriorityWarnDev', () => {
           console.warn('Hi \n    in div');
           console.warn('Wow \n    in div');
           console.warn('Bye \n    in div');
-        }).toLowPriorityWarnDev('Hi', undefined, 'Bye');
-      }, 'toLowPriorityWarnDev() received more than two arguments.');
+        }).toWarnDev('Hi', undefined, 'Bye');
+      }, 'toWarnDev() received more than two arguments.');
     });
   }
 });

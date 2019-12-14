@@ -652,13 +652,13 @@ describe('ReactTypeScriptClass', function() {
     );
     expect(() =>
       expect(() => instance.replaceState({})).toThrow()
-    ).toLowPriorityWarnDev(
+    ).toWarnDev(
       'replaceState(...) is deprecated in plain JavaScript React classes',
       {withoutStack: true}
     );
     expect(() =>
       expect(() => instance.isMounted()).toThrow()
-    ).toLowPriorityWarnDev(
+    ).toWarnDev(
       'isMounted(...) is deprecated in plain JavaScript React classes',
       {withoutStack: true}
     );

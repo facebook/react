@@ -480,7 +480,7 @@ Please update the following components: AsyncRoot`,
         ],
         {withoutStack: true},
       );
-    }).toLowPriorityWarnDev(
+    }).toWarnDev(
       [
         /* eslint-disable max-len */
         `Warning: componentWillMount has been renamed, and is not recommended for use. See https://fb.me/react-unsafe-component-lifecycles for details.
