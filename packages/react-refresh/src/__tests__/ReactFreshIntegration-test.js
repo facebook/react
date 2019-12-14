@@ -1317,7 +1317,7 @@ describe('ReactFreshIntegration', () => {
 
             export default Parent;
           `);
-        }).toWarnDev(
+        }).toErrorDev(
           'The <Parent /> component appears to be a function component ' +
             'that returns a class instance.',
         );

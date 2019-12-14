@@ -269,7 +269,7 @@ describe('ReactHooks', () => {
           throw new Error('Expected to ignore the callback.');
         }),
       );
-    }).toWarnDev(
+    }).toErrorDev(
       'State updates from the useState() and useReducer() Hooks ' +
         "don't support the second callback argument. " +
         'To execute a side effect after rendering, ' +
@@ -303,7 +303,7 @@ describe('ReactHooks', () => {
           throw new Error('Expected to ignore the callback.');
         }),
       );
-    }).toWarnDev(
+    }).toErrorDev(
       'State updates from the useState() and useReducer() Hooks ' +
         "don't support the second callback argument. " +
         'To execute a side effect after rendering, ' +
@@ -613,7 +613,7 @@ describe('ReactHooks', () => {
     expect(Scheduler).toHaveYielded(['Did commit: A']);
     expect(() => {
       root.update(<App dependencies={['A', 'B']} />);
-    }).toWarnDev([
+    }).toErrorDev([
       'Warning: The final argument passed to useLayoutEffect changed size ' +
         'between renders. The order and size of this array must remain ' +
         'constant.\n\n' +
@@ -639,7 +639,7 @@ describe('ReactHooks', () => {
 
     expect(() => {
       root.update(<App text="Hello" hasDeps={false} />);
-    }).toWarnDev([
+    }).toErrorDev([
       'Warning: useMemo received a final argument during this render, but ' +
         'not during the previous render. Even though the final argument is ' +
         'optional, its type cannot change between renders.',
@@ -661,7 +661,7 @@ describe('ReactHooks', () => {
       act(() => {
         ReactTestRenderer.create(<App deps={'hello'} />);
       });
-    }).toWarnDev([
+    }).toErrorDev([
       'Warning: useEffect received a final argument that is not an array (instead, received `string`). ' +
         'When specified, the final argument must be an array.',
       'Warning: useLayoutEffect received a final argument that is not an array (instead, received `string`). ' +
@@ -675,7 +675,7 @@ describe('ReactHooks', () => {
       act(() => {
         ReactTestRenderer.create(<App deps={100500} />);
       });
-    }).toWarnDev([
+    }).toErrorDev([
       'Warning: useEffect received a final argument that is not an array (instead, received `number`). ' +
         'When specified, the final argument must be an array.',
       'Warning: useLayoutEffect received a final argument that is not an array (instead, received `number`). ' +
@@ -689,7 +689,7 @@ describe('ReactHooks', () => {
       act(() => {
         ReactTestRenderer.create(<App deps={{}} />);
       });
-    }).toWarnDev([
+    }).toErrorDev([
       'Warning: useEffect received a final argument that is not an array (instead, received `object`). ' +
         'When specified, the final argument must be an array.',
       'Warning: useLayoutEffect received a final argument that is not an array (instead, received `object`). ' +
@@ -717,7 +717,7 @@ describe('ReactHooks', () => {
 
     expect(() => {
       ReactTestRenderer.create(<App deps={'hello'} />);
-    }).toWarnDev([
+    }).toErrorDev([
       'Warning: useImperativeHandle received a final argument that is not an array (instead, received `string`). ' +
         'When specified, the final argument must be an array.',
     ]);
@@ -737,20 +737,20 @@ describe('ReactHooks', () => {
     }
 
     const root1 = ReactTestRenderer.create(null);
-    expect(() => root1.update(<App return={17} />)).toWarnDev([
+    expect(() => root1.update(<App return={17} />)).toErrorDev([
       'Warning: An effect function must not return anything besides a ' +
         'function, which is used for clean-up. You returned: 17',
     ]);
 
     const root2 = ReactTestRenderer.create(null);
-    expect(() => root2.update(<App return={null} />)).toWarnDev([
+    expect(() => root2.update(<App return={null} />)).toErrorDev([
       'Warning: An effect function must not return anything besides a ' +
         'function, which is used for clean-up. You returned null. If your ' +
         'effect does not require clean up, return undefined (or nothing).',
     ]);
 
     const root3 = ReactTestRenderer.create(null);
-    expect(() => root3.update(<App return={Promise.resolve()} />)).toWarnDev([
+    expect(() => root3.update(<App return={Promise.resolve()} />)).toErrorDev([
       'Warning: An effect function must not return anything besides a ' +
         'function, which is used for clean-up.\n\n' +
         'It looks like you wrote useEffect(async () => ...) or returned a Promise.',
@@ -845,7 +845,7 @@ describe('ReactHooks', () => {
       expect(() => {
         ReactTestRenderer.create(<App />);
       }).toThrow('create is not a function');
-    }).toWarnDev([
+    }).toErrorDev([
       'Expected useImperativeHandle() first argument to either be a ' +
         'ref callback or React.createRef() object. ' +
         'Instead received: an object with keys {focus}.',
@@ -865,7 +865,7 @@ describe('ReactHooks', () => {
 
     expect(() => {
       ReactTestRenderer.create(<App />);
-    }).toWarnDev([
+    }).toErrorDev([
       'Expected useImperativeHandle() second argument to be a function ' +
         'that creates a handle. Instead received: object.',
     ]);
@@ -933,7 +933,7 @@ describe('ReactHooks', () => {
       });
       return null;
     }
-    expect(() => ReactTestRenderer.create(<App />)).toWarnDev(
+    expect(() => ReactTestRenderer.create(<App />)).toErrorDev(
       'Do not call Hooks inside useEffect(...), useMemo(...), or other built-in Hooks.',
     );
   });
@@ -951,7 +951,7 @@ describe('ReactHooks', () => {
       }, []);
     }
 
-    expect(() => ReactTestRenderer.create(<App />)).toWarnDev(
+    expect(() => ReactTestRenderer.create(<App />)).toErrorDev(
       'Context can only be read while React is rendering',
     );
   });
@@ -973,7 +973,7 @@ describe('ReactHooks', () => {
       }, []);
     }
 
-    expect(() => ReactTestRenderer.create(<App />)).toWarnDev(
+    expect(() => ReactTestRenderer.create(<App />)).toErrorDev(
       'Context can only be read while React is rendering',
     );
     expect(firstRead).toBe('light');
@@ -1044,7 +1044,7 @@ describe('ReactHooks', () => {
       return null;
     }
 
-    expect(() => ReactTestRenderer.create(<App />)).toWarnDev([
+    expect(() => ReactTestRenderer.create(<App />)).toErrorDev([
       'Context can only be read while React is rendering',
     ]);
   });
@@ -1082,7 +1082,7 @@ describe('ReactHooks', () => {
           <Cls />
         </>,
       ),
-    ).toWarnDev(['Context can only be read while React is rendering']);
+    ).toErrorDev(['Context can only be read while React is rendering']);
   });
 
   it('warns when calling hooks inside useReducer', () => {
@@ -1104,7 +1104,7 @@ describe('ReactHooks', () => {
       expect(() => {
         ReactTestRenderer.create(<App />);
       }).toThrow('Rendered more hooks than during the previous render.');
-    }).toWarnDev([
+    }).toErrorDev([
       'Do not call Hooks inside useEffect(...), useMemo(...), or other built-in Hooks',
       'Do not call Hooks inside useEffect(...), useMemo(...), or other built-in Hooks',
       'Warning: React has detected a change in the order of Hooks called by App. ' +
@@ -1127,7 +1127,7 @@ describe('ReactHooks', () => {
       });
       return null;
     }
-    expect(() => ReactTestRenderer.create(<App />)).toWarnDev(
+    expect(() => ReactTestRenderer.create(<App />)).toErrorDev(
       'Do not call Hooks inside useEffect(...), useMemo(...), or other built-in Hooks.',
     );
   });
@@ -1167,7 +1167,7 @@ describe('ReactHooks', () => {
           <App />
         </Boundary>,
       );
-    }).toWarnDev([
+    }).toErrorDev([
       // We see it twice due to replay
       'Context can only be read while React is rendering',
       'Do not call Hooks inside useEffect(...), useMemo(...), or other built-in Hooks',
@@ -1202,7 +1202,7 @@ describe('ReactHooks', () => {
           <App />
         </Boundary>,
       );
-    }).toWarnDev([
+    }).toErrorDev([
       // We see it twice due to replay
       'Context can only be read while React is rendering',
       'Do not call Hooks inside useEffect(...), useMemo(...), or other built-in Hooks',
@@ -1224,7 +1224,7 @@ describe('ReactHooks', () => {
       }, []);
     }
 
-    expect(() => ReactTestRenderer.create(<App />)).toWarnDev(
+    expect(() => ReactTestRenderer.create(<App />)).toErrorDev(
       'Context can only be read while React is rendering',
     );
   });
@@ -1343,7 +1343,7 @@ describe('ReactHooks', () => {
     expect(renderCount).toBe(1);
 
     renderCount = 0;
-    expect(() => renderer.update(<Factory />)).toWarnDev(
+    expect(() => renderer.update(<Factory />)).toErrorDev(
       'Warning: The <Factory /> component appears to be a function component that returns a class instance. ' +
         'Change Factory to a class that extends React.Component instead. ' +
         "If you can't use a class try assigning the prototype on the function as a workaround. " +
@@ -1557,7 +1557,7 @@ describe('ReactHooks', () => {
             // This is okay as far as this test is concerned.
             // We just want to verify that warnings are always logged.
           }
-        }).toWarnDev([
+        }).toErrorDev([
           'Warning: React has detected a change in the order of Hooks called by App. ' +
             'This will lead to bugs and errors if not fixed. For more information, ' +
             'read the Rules of Hooks: https://fb.me/rules-of-hooks\n\n' +
@@ -1608,7 +1608,7 @@ describe('ReactHooks', () => {
             // This is okay as far as this test is concerned.
             // We just want to verify that warnings are always logged.
           }
-        }).toWarnDev([
+        }).toErrorDev([
           'Warning: React has detected a change in the order of Hooks called by App. ' +
             'This will lead to bugs and errors if not fixed. For more information, ' +
             'read the Rules of Hooks: https://fb.me/rules-of-hooks\n\n' +
@@ -1688,7 +1688,7 @@ describe('ReactHooks', () => {
             // This is okay as far as this test is concerned.
             // We just want to verify that warnings are always logged.
           }
-        }).toWarnDev([
+        }).toErrorDev([
           'Warning: React has detected a change in the order of Hooks called by App. ' +
             'This will lead to bugs and errors if not fixed. For more information, ' +
             'read the Rules of Hooks: https://fb.me/rules-of-hooks\n\n' +
@@ -1730,7 +1730,7 @@ describe('ReactHooks', () => {
         expect(() => root.update(<App update={true} />)).toThrow(
           'custom error',
         );
-      }).toWarnDev([
+      }).toErrorDev([
         'Warning: React has detected a change in the order of Hooks called by App. ' +
           'This will lead to bugs and errors if not fixed. For more information, ' +
           'read the Rules of Hooks: https://fb.me/rules-of-hooks\n\n' +
@@ -1816,7 +1816,7 @@ describe('ReactHooks', () => {
     expect(() => {
       globalListener();
       globalListener();
-    }).toWarnDev([
+    }).toErrorDev([
       'An update to C inside a test was not wrapped in act',
       'An update to C inside a test was not wrapped in act',
       // Note: should *not* warn about updates on unmounted component.

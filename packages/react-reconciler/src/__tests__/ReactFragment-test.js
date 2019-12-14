@@ -708,7 +708,7 @@ describe('ReactFragment', () => {
     expect(Scheduler).toFlushWithoutYielding();
 
     ReactNoop.render(<Foo condition={false} />);
-    expect(() => expect(Scheduler).toFlushWithoutYielding()).toWarnDev(
+    expect(() => expect(Scheduler).toFlushWithoutYielding()).toErrorDev(
       'Each child in a list should have a unique "key" prop.',
     );
 
@@ -752,12 +752,12 @@ describe('ReactFragment', () => {
     }
 
     ReactNoop.render(<Foo condition={true} />);
-    expect(() => expect(Scheduler).toFlushWithoutYielding()).toWarnDev(
+    expect(() => expect(Scheduler).toFlushWithoutYielding()).toErrorDev(
       'Each child in a list should have a unique "key" prop.',
     );
 
     ReactNoop.render(<Foo condition={false} />);
-    expect(() => expect(Scheduler).toFlushWithoutYielding()).toWarnDev(
+    expect(() => expect(Scheduler).toFlushWithoutYielding()).toErrorDev(
       'Each child in a list should have a unique "key" prop.',
     );
 
@@ -765,7 +765,7 @@ describe('ReactFragment', () => {
     expect(ReactNoop.getChildren()).toEqual([span(), div()]);
 
     ReactNoop.render(<Foo condition={true} />);
-    expect(() => expect(Scheduler).toFlushWithoutYielding()).toWarnDev(
+    expect(() => expect(Scheduler).toFlushWithoutYielding()).toErrorDev(
       'Each child in a list should have a unique "key" prop.',
     );
 

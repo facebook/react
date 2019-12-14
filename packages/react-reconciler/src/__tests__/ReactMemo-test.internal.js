@@ -56,7 +56,7 @@ describe('memo', () => {
       return <App ref={() => {}} />;
     }
     ReactNoop.render(<Outer />);
-    expect(() => expect(Scheduler).toFlushWithoutYielding()).toWarnDev([
+    expect(() => expect(Scheduler).toFlushWithoutYielding()).toErrorDev([
       'Warning: Function components cannot be given refs. Attempts to access ' +
         'this ref will fail.',
     ]);
@@ -74,7 +74,7 @@ describe('memo', () => {
       return <App ref={() => {}} />;
     }
     ReactNoop.render(<Outer />);
-    expect(() => expect(Scheduler).toFlushWithoutYielding()).toWarnDev([
+    expect(() => expect(Scheduler).toFlushWithoutYielding()).toErrorDev([
       'Warning: Function components cannot be given refs. Attempts to access ' +
         'this ref will fail.',
     ]);
@@ -311,7 +311,7 @@ describe('memo', () => {
       });
 
       it('warns if the first argument is undefined', () => {
-        expect(() => memo()).toWarnDev(
+        expect(() => memo()).toErrorDev(
           'memo: The first argument must be a component. Instead ' +
             'received: undefined',
           {withoutStack: true},
@@ -319,7 +319,7 @@ describe('memo', () => {
       });
 
       it('warns if the first argument is null', () => {
-        expect(() => memo(null)).toWarnDev(
+        expect(() => memo(null)).toErrorDev(
           'memo: The first argument must be a component. Instead ' +
             'received: null',
           {withoutStack: true},
@@ -337,7 +337,7 @@ describe('memo', () => {
         expect(() => {
           ReactNoop.render(<Fn inner="2" />);
           expect(Scheduler).toFlushWithoutYielding();
-        }).toWarnDev(
+        }).toErrorDev(
           'Invalid prop `inner` of type `string` supplied to `FnInner`, expected `number`.',
         );
 
@@ -345,7 +345,7 @@ describe('memo', () => {
         expect(() => {
           ReactNoop.render(<Fn inner={false} />);
           expect(Scheduler).toFlushWithoutYielding();
-        }).toWarnDev(
+        }).toErrorDev(
           'Invalid prop `inner` of type `boolean` supplied to `FnInner`, expected `number`.',
         );
       });
@@ -361,7 +361,7 @@ describe('memo', () => {
         expect(() => {
           ReactNoop.render(<Fn outer="3" />);
           expect(Scheduler).toFlushWithoutYielding();
-        }).toWarnDev(
+        }).toErrorDev(
           // Outer props are checked in createElement
           'Invalid prop `outer` of type `string` supplied to `FnInner`, expected `number`.',
         );
@@ -370,7 +370,7 @@ describe('memo', () => {
         expect(() => {
           ReactNoop.render(<Fn outer={false} />);
           expect(Scheduler).toFlushWithoutYielding();
-        }).toWarnDev(
+        }).toErrorDev(
           // Outer props are checked in createElement
           'Invalid prop `outer` of type `boolean` supplied to `FnInner`, expected `number`.',
         );
@@ -397,7 +397,7 @@ describe('memo', () => {
         expect(() => {
           ReactNoop.render(<Outer inner="2" middle="3" outer="4" />);
           expect(Scheduler).toFlushWithoutYielding();
-        }).toWarnDev([
+        }).toErrorDev([
           'Invalid prop `outer` of type `string` supplied to `Inner`, expected `number`.',
           'Invalid prop `middle` of type `string` supplied to `Inner`, expected `number`.',
           'Invalid prop `inner` of type `string` supplied to `Inner`, expected `number`.',
@@ -409,7 +409,7 @@ describe('memo', () => {
             <Outer inner={false} middle={false} outer={false} />,
           );
           expect(Scheduler).toFlushWithoutYielding();
-        }).toWarnDev([
+        }).toErrorDev([
           'Invalid prop `outer` of type `boolean` supplied to `Inner`, expected `number`.',
           'Invalid prop `middle` of type `boolean` supplied to `Inner`, expected `number`.',
           'Invalid prop `inner` of type `boolean` supplied to `Inner`, expected `number`.',

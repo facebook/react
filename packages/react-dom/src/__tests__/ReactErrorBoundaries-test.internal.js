@@ -653,7 +653,7 @@ describe('ReactErrorBoundaries', () => {
         </ErrorBoundary>,
         container,
       ),
-    ).toWarnDev('The above error occurred in the <BrokenRender> component:', {
+    ).toErrorDev('The above error occurred in the <BrokenRender> component:', {
       logAllErrors: true,
     });
 
@@ -808,7 +808,7 @@ describe('ReactErrorBoundaries', () => {
         </ErrorBoundary>,
         container,
       ),
-    ).toWarnDev(
+    ).toErrorDev(
       'Warning: The <BrokenComponentWillMountWithContext /> component appears to be a function component that ' +
         'returns a class instance. ' +
         'Change BrokenComponentWillMountWithContext to a class that extends React.Component instead. ' +
@@ -2072,7 +2072,7 @@ describe('ReactErrorBoundaries', () => {
 
     try {
       let container = document.createElement('div');
-      expect(() => ReactDOM.render(<X />, container)).toWarnDev(
+      expect(() => ReactDOM.render(<X />, container)).toErrorDev(
         'React.createElement: type is invalid -- expected a string ' +
           '(for built-in components) or a class/function ' +
           '(for composite components) but got: null.',
@@ -2082,7 +2082,7 @@ describe('ReactErrorBoundaries', () => {
     }
     try {
       let container = document.createElement('div');
-      expect(() => ReactDOM.render(<Y />, container)).toWarnDev(
+      expect(() => ReactDOM.render(<Y />, container)).toErrorDev(
         'React.createElement: type is invalid -- expected a string ' +
           '(for built-in components) or a class/function ' +
           '(for composite components) but got: undefined.',
@@ -2240,7 +2240,7 @@ describe('ReactErrorBoundaries', () => {
         </InvalidErrorBoundary>,
         container,
       );
-    }).toWarnDev(
+    }).toErrorDev(
       'InvalidErrorBoundary: Error boundaries should implement getDerivedStateFromError(). ' +
         'In that method, return a state update to display an error message or fallback UI.',
     );

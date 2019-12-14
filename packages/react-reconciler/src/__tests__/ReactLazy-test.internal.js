@@ -525,7 +525,7 @@ describe('ReactLazy', () => {
     const LazyText = lazy(() => fakeImport(T));
     expect(() => {
       LazyText.defaultProps = {outer: 'Bye'};
-    }).toWarnDev(
+    }).toErrorDev(
       'React.lazy(...): It is not supported to assign `defaultProps` to ' +
         'a lazy component import. Either specify them where the component ' +
         'is defined, or create a wrapping component around it.',
@@ -626,7 +626,7 @@ describe('ReactLazy', () => {
     const LazyText = lazy(() => fakeImport(Text));
     expect(() => {
       LazyText.propTypes = {hello: () => {}};
-    }).toWarnDev(
+    }).toErrorDev(
       'React.lazy(...): It is not supported to assign `propTypes` to ' +
         'a lazy component import. Either specify them where the component ' +
         'is defined, or create a wrapping component around it.',
@@ -638,7 +638,7 @@ describe('ReactLazy', () => {
     const LazyAdd = lazy(() => fakeImport(Add));
     expect(() => {
       LazyAdd.propTypes = {};
-    }).toWarnDev(
+    }).toErrorDev(
       'React.lazy(...): It is not supported to assign `propTypes` to ' +
         'a lazy component import. Either specify them where the component ' +
         'is defined, or create a wrapping component around it.',
@@ -661,7 +661,7 @@ describe('ReactLazy', () => {
     await Promise.resolve();
     expect(() => {
       Scheduler.unstable_flushAll();
-    }).toWarnDev([
+    }).toErrorDev([
       'Invalid prop `inner` of type `string` supplied to `Add`, expected `number`.',
     ]);
     expect(root).toMatchRenderedOutput('22');
@@ -674,7 +674,7 @@ describe('ReactLazy', () => {
         </Suspense>,
       );
       expect(Scheduler).toFlushWithoutYielding();
-    }).toWarnDev(
+    }).toErrorDev(
       'Invalid prop `inner` of type `boolean` supplied to `Add`, expected `number`.',
     );
     expect(root).toMatchRenderedOutput('0');
@@ -846,7 +846,7 @@ describe('ReactLazy', () => {
     await Promise.resolve();
     expect(() => {
       expect(Scheduler).toFlushAndYield(['Inner default text']);
-    }).toWarnDev(
+    }).toErrorDev(
       'The prop `text` is marked as required in `T`, but its value is `undefined`',
     );
     expect(root).toMatchRenderedOutput('Inner default text');
@@ -859,7 +859,7 @@ describe('ReactLazy', () => {
         </Suspense>,
       );
       expect(Scheduler).toFlushAndYield([null]);
-    }).toWarnDev(
+    }).toErrorDev(
       'The prop `text` is marked as required in `T`, but its value is `null`',
     );
     expect(root).toMatchRenderedOutput(null);
@@ -888,7 +888,7 @@ describe('ReactLazy', () => {
 
     expect(() => {
       expect(Scheduler).toFlushAndYield(['A', 'B']);
-    }).toWarnDev('    in Text (at **)\n' + '    in Foo (at **)');
+    }).toErrorDev('    in Text (at **)\n' + '    in Foo (at **)');
     expect(root).toMatchRenderedOutput(<div>AB</div>);
   });
 
@@ -1086,6 +1086,6 @@ describe('ReactLazy', () => {
     await Promise.resolve();
     expect(() => {
       expect(Scheduler).toFlushAndYield([]);
-    }).toWarnDev('Function components cannot be given refs');
+    }).toErrorDev('Function components cannot be given refs');
   });
 });

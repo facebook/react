@@ -341,7 +341,7 @@ describe('ReactDOMServerPartialHydration', () => {
       act(() => {
         ReactDOM.hydrate(<App />, container);
       });
-    }).toWarnDev(
+    }).toErrorDev(
       'Warning: Cannot hydrate Suspense in legacy mode. Switch from ' +
         'ReactDOM.hydrate(element, container) to ' +
         'ReactDOM.createBlockingRoot(container, { hydrate: true })' +

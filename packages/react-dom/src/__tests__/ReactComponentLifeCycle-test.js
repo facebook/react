@@ -211,7 +211,7 @@ describe('ReactComponentLifeCycle', () => {
 
     expect(() => {
       ReactTestUtils.renderIntoDocument(<StatefulComponent />);
-    }).toWarnDev(
+    }).toErrorDev(
       'StatefulComponent: It is not recommended to assign props directly to state ' +
         "because updates to props won't be reflected in state. " +
         'In most cases, it is better to use props directly.',
@@ -234,7 +234,7 @@ describe('ReactComponentLifeCycle', () => {
 
     expect(() => {
       ReactTestUtils.renderIntoDocument(<StatefulComponent />);
-    }).toWarnDev(
+    }).toErrorDev(
       "Warning: Can't call setState on a component that is not yet mounted. " +
         'This is a no-op, but it might indicate a bug in your application. ' +
         'Instead, assign to `this.state` directly or define a `state = {};` ' +
@@ -269,7 +269,7 @@ describe('ReactComponentLifeCycle', () => {
     expect(() => {
       const instance = ReactTestUtils.renderIntoDocument(element);
       expect(instance._isMounted()).toBeTruthy();
-    }).toWarnDev('Component is accessing isMounted inside its render()');
+    }).toErrorDev('Component is accessing isMounted inside its render()');
   });
 
   it('should correctly determine if a null component is mounted', () => {
@@ -296,7 +296,7 @@ describe('ReactComponentLifeCycle', () => {
     expect(() => {
       const instance = ReactTestUtils.renderIntoDocument(element);
       expect(instance._isMounted()).toBeTruthy();
-    }).toWarnDev('Component is accessing isMounted inside its render()');
+    }).toErrorDev('Component is accessing isMounted inside its render()');
   });
 
   it('isMounted should return false when unmounted', () => {
@@ -334,7 +334,7 @@ describe('ReactComponentLifeCycle', () => {
 
     expect(() => {
       ReactTestUtils.renderIntoDocument(<Component />);
-    }).toWarnDev('Component is accessing findDOMNode inside its render()');
+    }).toErrorDev('Component is accessing findDOMNode inside its render()');
   });
 
   it('should carry through each of the phases of setup', () => {
@@ -398,7 +398,7 @@ describe('ReactComponentLifeCycle', () => {
     let instance;
     expect(() => {
       instance = ReactDOM.render(<LifeCycleComponent />, container);
-    }).toWarnDev(
+    }).toErrorDev(
       'LifeCycleComponent is accessing isMounted inside its render() function',
     );
 
@@ -694,7 +694,7 @@ describe('ReactComponentLifeCycle', () => {
 
     const container = document.createElement('div');
     expect(() => {
-      expect(() => ReactDOM.render(<Component />, container)).toWarnDev(
+      expect(() => ReactDOM.render(<Component />, container)).toErrorDev(
         'Unsafe legacy lifecycles will not be called for components using new component APIs.',
       );
     }).toLowPriorityWarnDev(
@@ -732,7 +732,7 @@ describe('ReactComponentLifeCycle', () => {
     expect(() => {
       expect(() =>
         ReactDOM.render(<Component value={1} />, container),
-      ).toWarnDev(
+      ).toErrorDev(
         'Unsafe legacy lifecycles will not be called for components using new component APIs.',
       );
     }).toLowPriorityWarnDev(
@@ -767,7 +767,9 @@ describe('ReactComponentLifeCycle', () => {
     }
 
     const container = document.createElement('div');
-    expect(() => ReactDOM.render(<Component value={1} />, container)).toWarnDev(
+    expect(() =>
+      ReactDOM.render(<Component value={1} />, container),
+    ).toErrorDev(
       'Unsafe legacy lifecycles will not be called for components using new component APIs.',
     );
     ReactDOM.render(<Component value={2} />, container);
@@ -792,7 +794,7 @@ describe('ReactComponentLifeCycle', () => {
     expect(() => {
       expect(() =>
         ReactDOM.render(<AllLegacyLifecycles />, container),
-      ).toWarnDev(
+      ).toErrorDev(
         'Unsafe legacy lifecycles will not be called for components using new component APIs.\n\n' +
           'AllLegacyLifecycles uses getDerivedStateFromProps() but also contains the following legacy lifecycles:\n' +
           '  componentWillMount\n' +
@@ -820,7 +822,7 @@ describe('ReactComponentLifeCycle', () => {
       }
     }
 
-    expect(() => ReactDOM.render(<WillMount />, container)).toWarnDev(
+    expect(() => ReactDOM.render(<WillMount />, container)).toErrorDev(
       'Unsafe legacy lifecycles will not be called for components using new component APIs.\n\n' +
         'WillMount uses getDerivedStateFromProps() but also contains the following legacy lifecycles:\n' +
         '  UNSAFE_componentWillMount\n\n' +
@@ -843,7 +845,7 @@ describe('ReactComponentLifeCycle', () => {
     expect(() => {
       expect(() =>
         ReactDOM.render(<WillMountAndUpdate />, container),
-      ).toWarnDev(
+      ).toErrorDev(
         'Unsafe legacy lifecycles will not be called for components using new component APIs.\n\n' +
           'WillMountAndUpdate uses getDerivedStateFromProps() but also contains the following legacy lifecycles:\n' +
           '  componentWillMount\n' +
@@ -867,7 +869,7 @@ describe('ReactComponentLifeCycle', () => {
     }
 
     expect(() => {
-      expect(() => ReactDOM.render(<WillReceiveProps />, container)).toWarnDev(
+      expect(() => ReactDOM.render(<WillReceiveProps />, container)).toErrorDev(
         'Unsafe legacy lifecycles will not be called for components using new component APIs.\n\n' +
           'WillReceiveProps uses getDerivedStateFromProps() but also contains the following legacy lifecycles:\n' +
           '  componentWillReceiveProps\n\n' +
@@ -897,7 +899,7 @@ describe('ReactComponentLifeCycle', () => {
     expect(() => {
       expect(() =>
         ReactDOM.render(<AllLegacyLifecycles />, container),
-      ).toWarnDev(
+      ).toErrorDev(
         'Unsafe legacy lifecycles will not be called for components using new component APIs.\n\n' +
           'AllLegacyLifecycles uses getSnapshotBeforeUpdate() but also contains the following legacy lifecycles:\n' +
           '  componentWillMount\n' +
@@ -924,7 +926,7 @@ describe('ReactComponentLifeCycle', () => {
       }
     }
 
-    expect(() => ReactDOM.render(<WillMount />, container)).toWarnDev(
+    expect(() => ReactDOM.render(<WillMount />, container)).toErrorDev(
       'Unsafe legacy lifecycles will not be called for components using new component APIs.\n\n' +
         'WillMount uses getSnapshotBeforeUpdate() but also contains the following legacy lifecycles:\n' +
         '  UNSAFE_componentWillMount\n\n' +
@@ -946,7 +948,7 @@ describe('ReactComponentLifeCycle', () => {
     expect(() => {
       expect(() =>
         ReactDOM.render(<WillMountAndUpdate />, container),
-      ).toWarnDev(
+      ).toErrorDev(
         'Unsafe legacy lifecycles will not be called for components using new component APIs.\n\n' +
           'WillMountAndUpdate uses getSnapshotBeforeUpdate() but also contains the following legacy lifecycles:\n' +
           '  componentWillMount\n' +
@@ -969,7 +971,7 @@ describe('ReactComponentLifeCycle', () => {
     }
 
     expect(() => {
-      expect(() => ReactDOM.render(<WillReceiveProps />, container)).toWarnDev(
+      expect(() => ReactDOM.render(<WillReceiveProps />, container)).toErrorDev(
         'Unsafe legacy lifecycles will not be called for components using new component APIs.\n\n' +
           'WillReceiveProps uses getSnapshotBeforeUpdate() but also contains the following legacy lifecycles:\n' +
           '  componentWillReceiveProps\n\n' +
@@ -1019,7 +1021,7 @@ describe('ReactComponentLifeCycle', () => {
     const div = document.createElement('div');
     expect(() =>
       ReactDOM.render(<Parent ref={c => c && log.push('ref')} />, div),
-    ).toWarnDev(
+    ).toErrorDev(
       'Warning: The <Parent /> component appears to be a function component that returns a class instance. ' +
         'Change Parent to a class that extends React.Component instead. ' +
         "If you can't use a class try assigning the prototype on the function as a workaround. " +
@@ -1050,7 +1052,7 @@ describe('ReactComponentLifeCycle', () => {
     }
 
     const div = document.createElement('div');
-    expect(() => ReactDOM.render(<MyComponent />, div)).toWarnDev(
+    expect(() => ReactDOM.render(<MyComponent />, div)).toErrorDev(
       'MyComponent.getDerivedStateFromProps(): A valid state object (or null) must ' +
         'be returned. You have returned undefined.',
     );
@@ -1070,7 +1072,7 @@ describe('ReactComponentLifeCycle', () => {
     }
 
     const div = document.createElement('div');
-    expect(() => ReactDOM.render(<MyComponent />, div)).toWarnDev(
+    expect(() => ReactDOM.render(<MyComponent />, div)).toErrorDev(
       '`MyComponent` uses `getDerivedStateFromProps` but its initial state is ' +
         'undefined. This is not recommended. Instead, define the initial state by ' +
         'assigning an object to `this.state` in the constructor of `MyComponent`. ' +
@@ -1340,7 +1342,7 @@ describe('ReactComponentLifeCycle', () => {
 
     const div = document.createElement('div');
     ReactDOM.render(<MyComponent value="foo" />, div);
-    expect(() => ReactDOM.render(<MyComponent value="bar" />, div)).toWarnDev(
+    expect(() => ReactDOM.render(<MyComponent value="bar" />, div)).toErrorDev(
       'MyComponent.getSnapshotBeforeUpdate(): A snapshot value (or null) must ' +
         'be returned. You have returned undefined.',
     );
@@ -1360,7 +1362,7 @@ describe('ReactComponentLifeCycle', () => {
     }
 
     const div = document.createElement('div');
-    expect(() => ReactDOM.render(<MyComponent />, div)).toWarnDev(
+    expect(() => ReactDOM.render(<MyComponent />, div)).toErrorDev(
       'MyComponent: getSnapshotBeforeUpdate() should be used with componentDidUpdate(). ' +
         'This component defines getSnapshotBeforeUpdate() only.',
     );

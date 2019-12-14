@@ -90,7 +90,7 @@ describe('ReactLegacyContextDisabled', () => {
         </LegacyProvider>,
         container,
       );
-    }).toWarnDev([
+    }).toErrorDev([
       'LegacyProvider uses the legacy childContextTypes API which is no longer supported. ' +
         'Use React.createContext() instead.',
       'LegacyClsConsumer uses the legacy contextTypes API which is no longer supported. ' +
