@@ -8,7 +8,6 @@
  */
 
 import {gte} from 'semver';
-import {copy} from 'clipboard-js';
 import {
   ComponentFilterDisplayName,
   ComponentFilterElementType,
@@ -35,7 +34,7 @@ import {
   utfEncodeString,
 } from 'react-devtools-shared/src/utils';
 import {sessionStorageGetItem} from 'react-devtools-shared/src/storage';
-import {cleanForBridge, copyWithSet, safeSerialize} from './utils';
+import {cleanForBridge, copyToClipboard, copyWithSet} from './utils';
 import {
   __DEBUG__,
   SESSION_STORAGE_RELOAD_AND_PROFILE_KEY,
@@ -2509,12 +2508,12 @@ export function attach(
     const isCurrent = isMostRecentlyInspectedElementCurrent(id);
 
     if (isCurrent) {
-      const value = getInObject(
-        ((mostRecentlyInspectedElement: any): InspectedElement),
-        path,
+      copyToClipboard(
+        getInObject(
+          ((mostRecentlyInspectedElement: any): InspectedElement),
+          path,
+        ),
       );
-
-      copy(safeSerialize(value));
     }
   }
 

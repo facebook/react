@@ -7,7 +7,6 @@
  * @flow
  */
 
-import {copy} from 'clipboard-js';
 import {
   ElementTypeClass,
   ElementTypeFunction,
@@ -16,7 +15,7 @@ import {
   ElementTypeOtherOrUnknown,
 } from 'react-devtools-shared/src/types';
 import {getUID, utfEncodeString, printOperationsArray} from '../../utils';
-import {cleanForBridge, copyWithSet, safeSerialize} from '../utils';
+import {cleanForBridge, copyToClipboard, copyWithSet} from '../utils';
 import {getDisplayName, getInObject} from 'react-devtools-shared/src/utils';
 import {
   __DEBUG__,
@@ -665,9 +664,7 @@ export function attach(
   function copyElementPath(id: number, path: Array<string | number>): void {
     const inspectedElement = inspectElementRaw(id);
     if (inspectedElement !== null) {
-      const value = getInObject(inspectedElement, path);
-
-      copy(safeSerialize(value));
+      copyToClipboard(getInObject(inspectedElement, path));
     }
   }
 

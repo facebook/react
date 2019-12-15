@@ -7,6 +7,7 @@
  * @flow
  */
 
+import {copy} from 'clipboard-js';
 import {dehydrate} from '../hydration';
 
 import type {DehydratedData} from 'react-devtools-shared/src/devtools/views/Components/types';
@@ -35,6 +36,11 @@ export function cleanForBridge(
   } else {
     return null;
   }
+}
+
+export function copyToClipboard(value: any): void {
+  const safeToCopy = safeSerialize(value);
+  copy(safeToCopy === undefined ? 'undefined' : safeToCopy);
 }
 
 export function copyWithSet(
