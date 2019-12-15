@@ -2488,7 +2488,11 @@ export function attach(
     }
   }
 
-  function storeAsGlobal(id: number, path: Array<string | number>): void {
+  function storeAsGlobal(
+    id: number,
+    path: Array<string | number>,
+    count: number,
+  ): void {
     const isCurrent = isMostRecentlyInspectedElementCurrent(id);
 
     if (isCurrent) {
@@ -2496,10 +2500,11 @@ export function attach(
         ((mostRecentlyInspectedElement: any): InspectedElement),
         path,
       );
+      const key = `$reactTemp${count}`;
 
-      window.$reactTemp = value;
+      window[key] = value;
 
-      console.log('$reactTemp');
+      console.log(key);
       console.log(value);
     }
   }

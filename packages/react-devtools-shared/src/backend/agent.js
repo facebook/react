@@ -56,6 +56,7 @@ type ElementAndRendererID = {|
 |};
 
 type StoreAsGlobalParams = {|
+  count: number,
   id: number,
   path: Array<string | number>,
   rendererID: number,
@@ -432,12 +433,12 @@ export default class Agent extends EventEmitter<{|
     this._bridge.send('profilingStatus', this._isProfiling);
   };
 
-  storeAsGlobal = ({id, path, rendererID}: StoreAsGlobalParams) => {
+  storeAsGlobal = ({count, id, path, rendererID}: StoreAsGlobalParams) => {
     const renderer = this._rendererInterfaces[rendererID];
     if (renderer == null) {
       console.warn(`Invalid renderer id "${rendererID}" for element "${id}"`);
     } else {
-      renderer.storeAsGlobal(id, path);
+      renderer.storeAsGlobal(id, path, count);
     }
   };
 

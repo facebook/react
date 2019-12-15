@@ -649,14 +649,19 @@ export function attach(
     }
   }
 
-  function storeAsGlobal(id: number, path: Array<string | number>): void {
+  function storeAsGlobal(
+    id: number,
+    path: Array<string | number>,
+    count: number,
+  ): void {
     const inspectedElement = inspectElementRaw(id);
     if (inspectedElement !== null) {
       const value = getInObject(inspectedElement, path);
+      const key = `$reactTemp${count}`;
 
-      window.$reactTemp = value;
+      window[key] = value;
 
-      console.log('$reactTemp');
+      console.log(key);
       console.log(value);
     }
   }

@@ -63,6 +63,7 @@ type InspectElementParams = {|
 
 type StoreAsGlobalParams = {|
   ...ElementAndRendererID,
+  count: number,
   path: Array<string | number>,
 |};
 

@@ -13,6 +13,7 @@ import React, {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from 'react';
 import {unstable_batchedUpdates as batchedUpdates} from 'react-dom';
@@ -98,12 +99,19 @@ function InspectedElementContextController({children}: Props) {
   const bridge = useContext(BridgeContext);
   const store = useContext(StoreContext);
 
+  const storeAsGlobalCount = useRef(1);
+
   // Ask the backend to store the value at the specified path as a global variable.
   const storeAsGlobal = useCallback<GetInspectedElementPath>(
     (id: number, path: Array<string | number>) => {
       const rendererID = store.getRendererIDForElement(id);
       if (rendererID !== null) {
-        bridge.send('storeAsGlobal', {id, path, rendererID});
+        bridge.send('storeAsGlobal', {
+          count: storeAsGlobalCount.current++,
+          id,
+          path,
+          rendererID,
+        });
       }
     },
     [bridge, store],

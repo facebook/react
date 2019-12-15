@@ -257,7 +257,11 @@ export type RendererInterface = {
   setTrackedPath: (path: Array<PathFrame> | null) => void,
   startProfiling: (recordChangeDescriptions: boolean) => void,
   stopProfiling: () => void,
-  storeAsGlobal: (id: number, path: Array<string | number>) => void,
+  storeAsGlobal: (
+    id: number,
+    path: Array<string | number>,
+    count: number,
+  ) => void,
   updateComponentFilters: (componentFilters: Array<ComponentFilter>) => void,
 };
 
