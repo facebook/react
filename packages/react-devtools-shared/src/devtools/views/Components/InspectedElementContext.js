@@ -33,17 +33,27 @@ import type {
 } from 'react-devtools-shared/src/devtools/views/Components/types';
 import type {Resource, Thenable} from '../../cache';
 
+export type StoreAsGlobal = (id: number, path: Array<string | number>) => void;
+
+export type CopyInspectedElementPath = (
+  id: number,
+  path: Array<string | number>,
+) => void;
+
 export type GetInspectedElementPath = (
   id: number,
   path: Array<string | number>,
 ) => void;
+
 export type GetInspectedElement = (
   id: number,
 ) => InspectedElementFrontend | null;
 
 type Context = {|
+  copyInspectedElementPath: CopyInspectedElementPath,
   getInspectedElementPath: GetInspectedElementPath,
   getInspectedElement: GetInspectedElement,
+  storeAsGlobal: StoreAsGlobal,
 |};
 
 const InspectedElementContext = createContext<Context>(((null: any): Context));
@@ -87,6 +97,28 @@ type Props = {|
 function InspectedElementContextController({children}: Props) {
   const bridge = useContext(BridgeContext);
   const store = useContext(StoreContext);
+
+  // Ask the backend to store the value at the specified path as a global variable.
+  const storeAsGlobal = useCallback<GetInspectedElementPath>(
+    (id: number, path: Array<string | number>) => {
+      const rendererID = store.getRendererIDForElement(id);
+      if (rendererID !== null) {
+        bridge.send('storeAsGlobal', {id, path, rendererID});
+      }
+    },
+    [bridge, store],
+  );
+
+  // Ask the backend to copy the specified path to the clipboard.
+  const copyInspectedElementPath = useCallback<GetInspectedElementPath>(
+    (id: number, path: Array<string | number>) => {
+      const rendererID = store.getRendererIDForElement(id);
+      if (rendererID !== null) {
+        bridge.send('copyElementPath', {id, path, rendererID});
+      }
+    },
+    [bridge, store],
+  );
 
   // Ask the backend to fill in a "dehydrated" path; this will result in a "inspectedElement".
   const getInspectedElementPath = useCallback<GetInspectedElementPath>(
@@ -287,9 +319,20 @@ function InspectedElementContextController({children}: Props) {
   );
 
   const value = useMemo(
-    () => ({getInspectedElement, getInspectedElementPath}),
+    () => ({
+      copyInspectedElementPath,
+      getInspectedElement,
+      getInspectedElementPath,
+      storeAsGlobal,
+    }),
     // InspectedElement is used to invalidate the cache and schedule an update with React.
-    [currentlyInspectedElement, getInspectedElement, getInspectedElementPath],
+    [
+      copyInspectedElementPath,
+      currentlyInspectedElement,
+      getInspectedElement,
+      getInspectedElementPath,
+      storeAsGlobal,
+    ],
   );
 
   return (

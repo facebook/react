@@ -12,7 +12,9 @@ import styles from './Icon.css';
 
 export type IconType =
   | 'arrow'
+  | 'code'
   | 'components'
+  | 'copy'
   | 'flame-chart'
   | 'interactions'
   | 'profiler'
@@ -31,8 +33,14 @@ export default function Icon({className = '', type}: Props) {
     case 'arrow':
       pathData = PATH_ARROW;
       break;
+    case 'code':
+      pathData = PATH_CODE;
+      break;
     case 'components':
       pathData = PATH_COMPONENTS;
+      break;
+    case 'copy':
+      pathData = PATH_COPY;
       break;
     case 'flame-chart':
       pathData = PATH_FLAME_CHART;
@@ -72,8 +80,17 @@ export default function Icon({className = '', type}: Props) {
 
 const PATH_ARROW = 'M8 5v14l11-7z';
 
+const PATH_CODE = `
+  M9.4 16.6L4.8 12l4.6-4.6L8 6l-6 6 6 6 1.4-1.4zm5.2 0l4.6-4.6-4.6-4.6L16 6l6 6-6 6-1.4-1.4z
+  `;
+
 const PATH_COMPONENTS =
   'M9.4 16.6L4.8 12l4.6-4.6L8 6l-6 6 6 6 1.4-1.4zm5.2 0l4.6-4.6-4.6-4.6L16 6l6 6-6 6-1.4-1.4z';
+
+const PATH_COPY = `
+  M3 13h2v-2H3v2zm0 4h2v-2H3v2zm2 4v-2H3a2 2 0 0 0 2 2zM3 9h2V7H3v2zm12 12h2v-2h-2v2zm4-18H9a2 2 0 0 0-2
+  2v10a2 2 0 0 0 2 2h10c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 12H9V5h10v10zm-8 6h2v-2h-2v2zm-4 0h2v-2H7v2z
+`;
 
 const PATH_FLAME_CHART = `
   M10.0650893,21.5040462 C7.14020814,20.6850349 5,18.0558698 5,14.9390244 C5,14.017627
