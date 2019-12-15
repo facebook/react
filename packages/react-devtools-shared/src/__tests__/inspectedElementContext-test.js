@@ -8,7 +8,11 @@
  */
 
 import typeof ReactTestRenderer from 'react-test-renderer';
-import type {GetInspectedElementPath} from 'react-devtools-shared/src/devtools/views/Components/InspectedElementContext';
+import type {
+  CopyInspectedElementPath,
+  GetInspectedElementPath,
+  StoreAsGlobal,
+} from 'react-devtools-shared/src/devtools/views/Components/InspectedElementContext';
 import type {FrontendBridge} from 'react-devtools-shared/src/bridge';
 import type Store from 'react-devtools-shared/src/devtools/store';
 
@@ -1200,6 +1204,141 @@ describe('InspectedElementContext', () => {
       false,
     );
     expect(didFinish).toBe(true);
+
+    done();
+  });
+
+  it('should enable inspected values to be stored as global variables', async done => {
+    const Example = () => null;
+
+    const nestedObject = {
+      a: {
+        value: 1,
+        b: {
+          value: 1,
+          c: {
+            value: 1,
+          },
+        },
+      },
+    };
+
+    await utils.actAsync(() =>
+      ReactDOM.render(
+        <Example nestedObject={nestedObject} />,
+        document.createElement('div'),
+      ),
+    );
+
+    const id = ((store.getElementIDAtIndex(0): any): number);
+
+    let storeAsGlobal: StoreAsGlobal = ((null: any): StoreAsGlobal);
+
+    function Suspender({target}) {
+      const context = React.useContext(InspectedElementContext);
+      storeAsGlobal = context.storeAsGlobal;
+      return null;
+    }
+
+    await utils.actAsync(
+      () =>
+        TestRenderer.create(
+          <Contexts
+            defaultSelectedElementID={id}
+            defaultSelectedElementIndex={0}>
+            <React.Suspense fallback={null}>
+              <Suspender target={id} />
+            </React.Suspense>
+          </Contexts>,
+        ),
+      false,
+    );
+    expect(storeAsGlobal).not.toBeNull();
+
+    const logSpy = jest.fn();
+    spyOn(console, 'log').and.callFake(logSpy);
+
+    // Should store the whole value (not just the hydrated parts)
+    storeAsGlobal(id, ['props', 'nestedObject']);
+    jest.runOnlyPendingTimers();
+    expect(logSpy).toHaveBeenCalledWith('$reactTemp1');
+    expect(global.$reactTemp1).toBe(nestedObject);
+
+    logSpy.mockReset();
+
+    // Should store the nested property specified (not just the outer value)
+    storeAsGlobal(id, ['props', 'nestedObject', 'a', 'b']);
+    jest.runOnlyPendingTimers();
+    expect(logSpy).toHaveBeenCalledWith('$reactTemp2');
+    expect(global.$reactTemp2).toBe(nestedObject.a.b);
+
+    done();
+  });
+
+  it('should enable inspected values to be copied to the clipboard', async done => {
+    const Example = () => null;
+
+    const nestedObject = {
+      a: {
+        value: 1,
+        b: {
+          value: 1,
+          c: {
+            value: 1,
+          },
+        },
+      },
+    };
+
+    await utils.actAsync(() =>
+      ReactDOM.render(
+        <Example nestedObject={nestedObject} />,
+        document.createElement('div'),
+      ),
+    );
+
+    const id = ((store.getElementIDAtIndex(0): any): number);
+
+    let copyPath: CopyInspectedElementPath = ((null: any): CopyInspectedElementPath);
+
+    function Suspender({target}) {
+      const context = React.useContext(InspectedElementContext);
+      copyPath = context.copyInspectedElementPath;
+      return null;
+    }
+
+    await utils.actAsync(
+      () =>
+        TestRenderer.create(
+          <Contexts
+            defaultSelectedElementID={id}
+            defaultSelectedElementIndex={0}>
+            <React.Suspense fallback={null}>
+              <Suspender target={id} />
+            </React.Suspense>
+          </Contexts>,
+        ),
+      false,
+    );
+    expect(copyPath).not.toBeNull();
+
+    // Should copy the whole value (not just the hydrated parts)
+    copyPath(id, ['props', 'nestedObject']);
+    jest.runOnlyPendingTimers();
+    expect(global.mockClipboardCopy).toHaveBeenCalledTimes(1);
+    expect(global.mockClipboardCopy).toHaveBeenCalledWith(
+      JSON.stringify(nestedObject),
+    );
+
+    global.mockClipboardCopy.mockReset();
+
+    // Should copy the nested property specified (not just the outer value)
+    copyPath(id, ['props', 'nestedObject', 'a', 'b']);
+    jest.runOnlyPendingTimers();
+    expect(global.mockClipboardCopy).toHaveBeenCalledTimes(1);
+    expect(global.mockClipboardCopy).toHaveBeenCalledWith(
+      JSON.stringify(nestedObject.a.b),
+    );
 
     done();
   });
