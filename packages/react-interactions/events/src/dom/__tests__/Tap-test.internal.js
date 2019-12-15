@@ -16,7 +16,8 @@ import {
   describeWithPointerEvent,
   setPointerEvent,
   testWithPointerType,
-} from '../testing-library';
+  resetActivePointers,
+} from '../event-testing-library';
 
 let React;
 let ReactFeatureFlags;
@@ -82,6 +83,7 @@ describeWithPointerEvent('Tap responder', hasPointerEvents => {
     ReactDOM.render(null, container);
     document.body.removeChild(container);
     container = null;
+    resetActivePointers();
   });
 
   test('supports repeated use', () => {
@@ -295,12 +297,7 @@ describeWithPointerEvent('Tap responder', hasPointerEvents => {
       const buttons = buttonsType.primary;
       target.pointerdown({button, buttons, pointerId: 1, pointerType});
       expect(onTapStart).toHaveBeenCalledTimes(1);
-      if (hasPointerEvents) {
-        target.pointerdown({button, buttons, pointerId: 2, pointerType});
-      } else {
-        // TouchEvents
-        target.pointerdown([{pointerId: 1}, {pointerId: 2}]);
-      }
+      target.pointerdown({button, buttons, pointerId: 2, pointerType});
       expect(onTapStart).toHaveBeenCalledTimes(1);
     });
 
@@ -313,28 +310,28 @@ describeWithPointerEvent('Tap responder', hasPointerEvents => {
           buttons: buttonsType.secondary,
           pointerType,
         });
-        target.pointerup();
+        target.pointerup({pointerType});
         // middle-click
         target.pointerdown({
           button: buttonType.auxiliary,
           buttons: buttonsType.auxiliary,
           pointerType,
         });
-        target.pointerup();
+        target.pointerup({pointerType});
         // virtual middle-click with misleading 'buttons' value
         target.pointerdown({
           button: buttonType.auxiliary,
           buttons: 0,
           pointerType,
         });
-        target.pointerup();
+        target.pointerup({pointerType});
         // pen eraser
         target.pointerdown({
           button: buttonType.eraser,
           buttons: buttonsType.eraser,
           pointerType,
         });
-        target.pointerup();
+        target.pointerup({pointerType});
       }
       // alt-click
       target.pointerdown({
@@ -343,7 +340,7 @@ describeWithPointerEvent('Tap responder', hasPointerEvents => {
         altKey: true,
         pointerType,
       });
-      target.pointerup();
+      target.pointerup({pointerType});
       // ctrl-click
       target.pointerdown({
         button: buttonType.primary,
@@ -351,7 +348,7 @@ describeWithPointerEvent('Tap responder', hasPointerEvents => {
         ctrlKey: true,
         pointerType,
       });
-      target.pointerup();
+      target.pointerup({pointerType});
       // meta-click
       target.pointerdown({
         button: buttonType.primary,
@@ -359,7 +356,7 @@ describeWithPointerEvent('Tap responder', hasPointerEvents => {
         metaKey: true,
         pointerType,
       });
-      target.pointerup();
+      target.pointerup({pointerType});
       // shift-click
       target.pointerdown({
         button: buttonType.primary,
@@ -367,7 +364,7 @@ describeWithPointerEvent('Tap responder', hasPointerEvents => {
         shiftKey: true,
         pointerType,
       });
-      target.pointerup();
+      target.pointerup({pointerType});
 
       expect(onTapStart).toHaveBeenCalledTimes(0);
     });
@@ -565,8 +562,10 @@ describeWithPointerEvent('Tap responder', hasPointerEvents => {
     testWithPointerType('requires activation', pointerType => {
       const target = createEventTarget(ref.current);
       target.setBoundingClientRect(rect);
-      target.pointerhover({pointerType, ...coordinates});
-      target.pointermove({pointerType, ...coordinates});
+      if (pointerType !== 'touch') {
+        target.pointerhover({pointerType, ...coordinates});
+        target.pointermove({pointerType, ...coordinates});
+      }
       expect(onTapUpdate).not.toBeCalled();
     });
 
@@ -771,12 +770,7 @@ describeWithPointerEvent('Tap responder', hasPointerEvents => {
       const button = buttonType.primary;
       const buttons = buttonsType.primary;
       target.pointerdown({button, buttons, pointerId: 1, pointerType});
-      if (hasPointerEvents) {
-        target.pointerdown({button, buttons, pointerId: 2, pointerType});
-      } else {
-        // TouchEvents
-        target.pointerdown([{pointerId: 1}, {pointerId: 2}]);
-      }
+      target.pointerdown({button, buttons, pointerId: 2, pointerType});
       expect(onTapCancel).toHaveBeenCalledTimes(1);
     });
 

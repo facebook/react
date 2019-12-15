@@ -7,7 +7,7 @@
  * @flow
  */
 
-import {createEventTarget} from 'react-interactions/events/src/dom/testing-library';
+import {createEventTarget} from 'react-interactions/events/src/dom/event-testing-library';
 import {emulateBrowserTab} from '../shared/emulateBrowserTab';
 
 let React;

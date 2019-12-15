@@ -9,7 +9,12 @@
 
 'use strict';
 
-import {buttonType, buttonsType} from './domEnvironment';
+import {
+  buttonType,
+  buttonsType,
+  defaultPointerSize,
+  defaultBrowserChromeSize,
+} from './constants';
 
 /**
  * Native event object mocks for higher-level events.
@@ -25,9 +30,6 @@ import {buttonType, buttonsType} from './domEnvironment';
  *
  * 3. PointerEvent and TouchEvent fields are normalized (e.g., 'rotationAngle' -> 'twist')
  */
-
-const defaultPointerSize = 23;
-const defaultBrowserChromeSize = 50;
 
 function emptyFunction() {}
 
@@ -77,7 +79,7 @@ function createPointerEvent(
     offsetY = 0,
     pageX,
     pageY,
-    pointerId = 1,
+    pointerId,
     pressure = 0,
     preventDefault = emptyFunction,
     pointerType = 'mouse',
@@ -215,80 +217,12 @@ function createMouseEvent(
 }
 
 function createTouchEvent(type, payload) {
-  const touchesPayload = Array.isArray(payload) ? payload : [payload];
-  const firstTouch = touchesPayload[0];
-  let altKey = false;
-  let ctrlKey = false;
-  let metaKey = false;
-  let preventDefault = emptyFunction;
-  let shiftKey = false;
-  let timeStamp;
-
-  if (firstTouch != null) {
-    if (firstTouch.altKey != null) {
-      altKey = firstTouch.altKey;
-    }
-    if (firstTouch.ctrlKey != null) {
-      ctrlKey = firstTouch.ctrlKey;
-    }
-    if (firstTouch.metaKey != null) {
-      metaKey = firstTouch.metaKey;
-    }
-    if (firstTouch.preventDefault != null) {
-      preventDefault = firstTouch.preventDefault;
-    }
-    if (firstTouch.shiftKey != null) {
-      shiftKey = firstTouch.shiftKey;
-    }
-    if (firstTouch.timeStamp != null) {
-      timeStamp = firstTouch.timeStamp;
-    }
-  }
-
-  const touches = touchesPayload.map(
-    ({
-      height = defaultPointerSize,
-      pageX,
-      pageY,
-      pointerId = 1,
-      pressure = 1,
-      twist = 0,
-      width = defaultPointerSize,
-      x = 0,
-      y = 0,
-    } = {}) => {
-      return {
-        clientX: x,
-        clientY: y,
-        force: pressure,
-        identifier: pointerId,
-        pageX: pageX || x,
-        pageY: pageY || y,
-        radiusX: width / 2,
-        radiusY: height / 2,
-        rotationAngle: twist,
-        screenX: x,
-        screenY: y + defaultBrowserChromeSize,
-      };
-    },
-  );
-
-  const activeTouches = type !== 'touchend' ? touches : [];
-
   return createEvent(type, {
-    altKey,
-    changedTouches: touches,
-    ctrlKey,
+    ...payload,
     detail: 0,
-    metaKey,
-    preventDefault,
-    shiftKey,
     sourceCapabilities: {
       firesTouchEvents: true,
     },
-    targetTouches: activeTouches,
-    timeStamp,
-    touches: activeTouches,
   });
 }
 

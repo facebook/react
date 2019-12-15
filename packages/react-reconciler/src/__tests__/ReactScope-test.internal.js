@@ -9,7 +9,7 @@
 
 'use strict';
 
-import {createEventTarget} from 'react-interactions/events/src/dom/testing-library';
+import {createEventTarget} from 'react-interactions/events/src/dom/event-testing-library';
 
 let React;
 let ReactFeatureFlags;

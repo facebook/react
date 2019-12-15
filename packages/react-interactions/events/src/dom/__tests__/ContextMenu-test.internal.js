@@ -14,7 +14,7 @@ import {
   createEventTarget,
   platform,
   setPointerEvent,
-} from '../testing-library';
+} from '../event-testing-library';
 
 let React;
 let ReactFeatureFlags;

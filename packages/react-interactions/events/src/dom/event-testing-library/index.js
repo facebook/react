@@ -9,15 +9,11 @@
 
 'use strict';
 
+import {buttonType, buttonsType} from './constants';
 import * as domEvents from './domEvents';
 import * as domEventSequences from './domEventSequences';
-import {
-  buttonType,
-  buttonsType,
-  hasPointerEvent,
-  setPointerEvent,
-  platform,
-} from './domEnvironment';
+import {hasPointerEvent, setPointerEvent, platform} from './domEnvironment';
+import {describeWithPointerEvent, testWithPointerType} from './testHelpers';
 
 const createEventTarget = node => ({
   node,
@@ -51,32 +47,6 @@ const createEventTarget = node => ({
   },
   virtualclick(payload) {
     node.dispatchEvent(domEvents.virtualclick(payload));
-  },
-  tabNext() {
-    node.dispatchEvent(
-      domEvents.keydown({
-        key: 'Tab',
-      }),
-    );
-    node.dispatchEvent(
-      domEvents.keyup({
-        key: 'Tab',
-      }),
-    );
-  },
-  tabPrevious() {
-    node.dispatchEvent(
-      domEvents.keydown({
-        key: 'Tab',
-        shiftKey: true,
-      }),
-    );
-    node.dispatchEvent(
-      domEvents.keyup({
-        key: 'Tab',
-        shiftKey: true,
-      }),
-    );
   },
   /**
    * PointerEvent abstraction.
@@ -137,28 +107,7 @@ const createEventTarget = node => ({
   },
 });
 
-function describeWithPointerEvent(message, describeFn) {
-  const pointerEvent = 'PointerEvent';
-  const fallback = 'MouseEvent/TouchEvent';
-  describe.each`
-    value    | name
-    ${true}  | ${pointerEvent}
-    ${false} | ${fallback}
-  `(`${message}: $name`, entry => {
-    const hasPointerEvents = entry.value;
-    setPointerEvent(hasPointerEvents);
-    describeFn(hasPointerEvents);
-  });
-}
-
-function testWithPointerType(message, testFn) {
-  const table = hasPointerEvent()
-    ? ['mouse', 'touch', 'pen']
-    : ['mouse', 'touch'];
-  test.each(table)(`${message}: %s`, pointerType => {
-    testFn(pointerType);
-  });
-}
+const resetActivePointers = domEventSequences.resetActivePointers;
 
 export {
   buttonType,
@@ -167,6 +116,7 @@ export {
   describeWithPointerEvent,
   platform,
   hasPointerEvent,
+  resetActivePointers,
   setPointerEvent,
   testWithPointerType,
 };
