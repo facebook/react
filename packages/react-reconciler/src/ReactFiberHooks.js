@@ -1187,6 +1187,23 @@ function updateDeferredValue<T>(
   return prevValue;
 }
 
+function rerenderDeferredValue<T>(
+  value: T,
+  config: TimeoutConfig | void | null,
+): T {
+  const [prevValue, setValue] = rerenderState(value);
+  updateEffect(() => {
+    const previousConfig = ReactCurrentBatchConfig.suspense;
+    ReactCurrentBatchConfig.suspense = config === undefined ? null : config;
+    try {
+      setValue(value);
+    } finally {
+      ReactCurrentBatchConfig.suspense = previousConfig;
+    }
+  }, [value, config]);
+  return prevValue;
+}
+
 function startTransition(setPending, config, callback) {
   const priorityLevel = getCurrentPriorityLevel();
   runWithPriority(
@@ -1225,6 +1242,17 @@ function updateTransition(
   config: SuspenseConfig | void | null,
 ): [(() => void) => void, boolean] {
   const [isPending, setPending] = updateState(false);
+  const start = updateCallback(startTransition.bind(null, setPending, config), [
+    setPending,
+    config,
+  ]);
+  return [start, isPending];
+}
+
+function rerenderTransition(
+  config: SuspenseConfig | void | null,
+): [(() => void) => void, boolean] {
+  const [isPending, setPending] = rerenderState(false);
   const start = updateCallback(startTransition.bind(null, setPending, config), [
     setPending,
     config,
@@ -1409,8 +1437,8 @@ const HooksDispatcherOnRerender: Dispatcher = {
   useState: rerenderState,
   useDebugValue: updateDebugValue,
   useResponder: createDeprecatedResponderListener,
-  useDeferredValue: updateDeferredValue,
-  useTransition: updateTransition,
+  useDeferredValue: rerenderDeferredValue,
+  useTransition: rerenderTransition,
 };
 
 let HooksDispatcherOnMountInDEV: Dispatcher | null = null;
@@ -1902,14 +1930,14 @@ if (__DEV__) {
     useDeferredValue<T>(value: T, config: TimeoutConfig | void | null): T {
       currentHookNameInDev = 'useDeferredValue';
       updateHookTypesDev();
-      return updateDeferredValue(value, config);
+      return rerenderDeferredValue(value, config);
     },
     useTransition(
       config: SuspenseConfig | void | null,
     ): [(() => void) => void, boolean] {
       currentHookNameInDev = 'useTransition';
       updateHookTypesDev();
-      return updateTransition(config);
+      return rerenderTransition(config);
     },
   };
 
@@ -2294,7 +2322,7 @@ if (__DEV__) {
       currentHookNameInDev = 'useDeferredValue';
       warnInvalidHookAccess();
       updateHookTypesDev();
-      return updateDeferredValue(value, config);
+      return rerenderDeferredValue(value, config);
     },
     useTransition(
       config: SuspenseConfig | void | null,
@@ -2302,7 +2330,7 @@ if (__DEV__) {
       currentHookNameInDev = 'useTransition';
       warnInvalidHookAccess();
       updateHookTypesDev();
-      return updateTransition(config);
+      return rerenderTransition(config);
     },
   };
 }
