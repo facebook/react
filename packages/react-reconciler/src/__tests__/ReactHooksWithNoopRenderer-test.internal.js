@@ -589,6 +589,65 @@ describe('ReactHooksWithNoopRenderer', () => {
       root.render(<Foo signal={false} />);
       expect(Scheduler).toFlushAndYield(['Suspend!']);
     });
+
+    it('discards render phase updates if something suspends, but not other updates in the same component', async () => {
+      const thenable = {then() {}};
+      function Foo({signal}) {
+        return (
+          <Suspense fallback="Loading...">
+            <Bar signal={signal} />
+          </Suspense>
+        );
+      }
+
+      let setLabel;
+      function Bar({signal: newSignal}) {
+        let [counter, setCounter] = useState(0);
+
+        if (counter === 1) {
+          // We're suspending during a render that includes render phase
+          // updates. Those updates should not persist to the next render.
+          Scheduler.unstable_yieldValue('Suspend!');
+          throw thenable;
+        }
+
+        let [signal, setSignal] = useState(true);
+
+        // Increment a counter every time the signal changes
+        if (signal !== newSignal) {
+          setCounter(c => c + 1);
+          setSignal(newSignal);
+        }
+
+        let [label, _setLabel] = useState('A');
+        setLabel = _setLabel;
+
+        return <Text text={`${label}:${counter}`} />;
+      }
+
+      const root = ReactNoop.createRoot();
+      root.render(<Foo signal={true} />);
+
+      expect(Scheduler).toFlushAndYield(['A:0']);
+      expect(root).toMatchRenderedOutput(<span prop="A:0" />);
+
+      await ReactNoop.act(async () => {
+        root.render(<Foo signal={false} />);
+        setLabel('B');
+      });
+      expect(Scheduler).toHaveYielded(['Suspend!']);
+      expect(root).toMatchRenderedOutput(<span prop="A:0" />);
+
+      // Rendering again should suspend again.
+      root.render(<Foo signal={false} />);
+      expect(Scheduler).toFlushAndYield(['Suspend!']);
+
+      // Flip the signal back to "cancel" the update. However, the update to
+      // label should still proceed. It shouldn't have been dropped.
+      root.render(<Foo signal={true} />);
+      expect(Scheduler).toFlushAndYield(['B:0']);
+      expect(root).toMatchRenderedOutput(<span prop="B:0" />);
+    });
   });
 
   describe('useReducer', () => {
