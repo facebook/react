@@ -274,7 +274,7 @@ describe('DOMEventResponderSystem', () => {
 
     expect(() => {
       ReactDOM.render(<Test />, container);
-    }).toWarnDev(
+    }).toErrorDev(
       'Duplicate event responder "TestEventResponder" found in event listeners. ' +
         'Event listeners passed to elements cannot use the same event responder more than once.',
     );
@@ -707,7 +707,7 @@ describe('DOMEventResponderSystem', () => {
       };
       ReactDOM.render(<Test />, container);
       dispatchClickEvent(buttonRef.current);
-    }).toWarnDev(
+    }).toErrorDev(
       'Warning: isDefaultPrevented() is not available on event objects created from event responder modules ' +
         '(React Flare).' +
         ' Try wrapping in a conditional, i.e. `if (event.type !== "press") { event.isDefaultPrevented() }`',
@@ -719,7 +719,7 @@ describe('DOMEventResponderSystem', () => {
       };
       ReactDOM.render(<Test />, container);
       dispatchClickEvent(buttonRef.current);
-    }).toWarnDev(
+    }).toErrorDev(
       'Warning: isPropagationStopped() is not available on event objects created from event responder modules ' +
         '(React Flare).' +
         ' Try wrapping in a conditional, i.e. `if (event.type !== "press") { event.isPropagationStopped() }`',
@@ -731,7 +731,7 @@ describe('DOMEventResponderSystem', () => {
       };
       ReactDOM.render(<Test />, container);
       dispatchClickEvent(buttonRef.current);
-    }).toWarnDev(
+    }).toErrorDev(
       'Warning: nativeEvent is not available on event objects created from event responder modules ' +
         '(React Flare).' +
         ' Try wrapping in a conditional, i.e. `if (event.type !== "press") { event.nativeEvent }`',

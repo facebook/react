@@ -1195,7 +1195,7 @@ describe('ReactShallowRenderer', () => {
     }
 
     const shallowRenderer = createRenderer();
-    expect(() => shallowRenderer.render(<SimpleComponent />)).toWarnDev(
+    expect(() => shallowRenderer.render(<SimpleComponent />)).toErrorDev(
       'Warning: Failed context type: The context `name` is marked as ' +
         'required in `SimpleComponent`, but its value is `undefined`.\n' +
         '    in SimpleComponent (at **)',
@@ -1216,7 +1216,7 @@ describe('ReactShallowRenderer', () => {
     const shallowRenderer = createRenderer();
     expect(() =>
       shallowRenderer.render(React.createElement(SimpleComponent, {name: 123})),
-    ).toWarnDev(
+    ).toErrorDev(
       'Warning: Failed prop type: Invalid prop `name` of type `number` ' +
         'supplied to `SimpleComponent`, expected `string`.\n' +
         '    in SimpleComponent',
@@ -1344,7 +1344,7 @@ describe('ReactShallowRenderer', () => {
 
     const renderAndVerifyWarningAndError = (Component, typeString) => {
       expect(() => {
-        expect(() => shallowRenderer.render(<Component />)).toWarnDev(
+        expect(() => shallowRenderer.render(<Component />)).toErrorDev(
           'React.createElement: type is invalid -- expected a string ' +
             '(for built-in components) or a class/function (for composite components) ' +
             `but got: ${typeString}.`,
@@ -1555,7 +1555,7 @@ describe('ReactShallowRenderer', () => {
       expect(() => {
         const SomeComponent = React.forwardRef(SomeMemoComponent);
         shallowRenderer.render(<SomeComponent ref={testRef} />);
-      }).toWarnDev(
+      }).toErrorDev(
         'Warning: forwardRef requires a render function but received ' +
           'a `memo` component. Instead of forwardRef(memo(...)), use ' +
           'memo(forwardRef(...))',

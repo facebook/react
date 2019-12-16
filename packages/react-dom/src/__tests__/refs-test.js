@@ -169,7 +169,7 @@ describe('factory components', () => {
     let inst;
     expect(
       () => (inst = ReactTestUtils.renderIntoDocument(<Comp />)),
-    ).toWarnDev(
+    ).toErrorDev(
       'Warning: The <Comp /> component appears to be a function component that returns a class instance. ' +
         'Change Comp to a class that extends React.Component instead. ' +
         "If you can't use a class try assigning the prototype on the function as a workaround. " +

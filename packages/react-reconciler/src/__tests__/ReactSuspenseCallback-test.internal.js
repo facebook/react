@@ -60,7 +60,7 @@ describe('ReactSuspense', () => {
     );
 
     ReactNoop.render(elementBadType);
-    expect(() => Scheduler.unstable_flushAll()).toWarnDev([
+    expect(() => Scheduler.unstable_flushAll()).toErrorDev([
       'Warning: Unexpected type for suspenseCallback.',
     ]);
 
@@ -71,7 +71,7 @@ describe('ReactSuspense', () => {
     );
 
     ReactNoop.render(elementMissingCallback);
-    expect(() => Scheduler.unstable_flushAll()).toWarnDev([]);
+    expect(() => Scheduler.unstable_flushAll()).toErrorDev([]);
   });
 
   it('1 then 0 suspense callback', () => {

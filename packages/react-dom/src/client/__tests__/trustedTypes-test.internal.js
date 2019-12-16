@@ -216,7 +216,7 @@ describe('when Trusted Types are available in global object', () => {
       }
       expect(() => {
         ReactDOM.render(<Component />, container);
-      }).toWarnDev(
+      }).toErrorDev(
         "Warning: Using 'dangerouslySetInnerHTML' in an svg element with " +
           'Trusted Types enabled in an Internet Explorer will cause ' +
           'the trusted value to be converted to string. Assigning string ' +
@@ -231,7 +231,7 @@ describe('when Trusted Types are available in global object', () => {
   it('should warn once when rendering script tag in jsx on client', () => {
     expect(() => {
       ReactDOM.render(<script>alert("I am not executed")</script>, container);
-    }).toWarnDev(
+    }).toErrorDev(
       'Warning: Encountered a script tag while rendering React component. ' +
         'Scripts inside React components are never executed when rendering ' +
         'on the client. Consider using template tag instead ' +

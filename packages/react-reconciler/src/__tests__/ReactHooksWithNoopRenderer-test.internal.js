@@ -195,7 +195,7 @@ describe('ReactHooksWithNoopRenderer', () => {
           '3. You might have more than one copy of React in the same app\n' +
           'See https://fb.me/react-invalid-hook-call for tips about how to debug and fix this problem.',
       ),
-    ).toWarnDev(
+    ).toErrorDev(
       'Warning: The <Counter /> component appears to be a function component that returns a class instance. ' +
         'Change Counter to a class that extends React.Component instead. ' +
         "If you can't use a class try assigning the prototype on the function as a workaround. " +
@@ -319,7 +319,7 @@ describe('ReactHooksWithNoopRenderer', () => {
       expect(Scheduler).toFlushWithoutYielding();
       ReactNoop.render(null);
       expect(Scheduler).toFlushWithoutYielding();
-      expect(() => act(() => _updateCount(1))).toWarnDev(
+      expect(() => act(() => _updateCount(1))).toErrorDev(
         "Warning: Can't perform a React state update on an unmounted " +
           'component. This is a no-op, but it indicates a memory leak in your ' +
           'application. To fix, cancel all subscriptions and asynchronous ' +
@@ -986,7 +986,7 @@ describe('ReactHooksWithNoopRenderer', () => {
         );
         expect(Scheduler).toFlushAndYieldThrough(['Count: 0', 'Sync effect']);
         expect(ReactNoop.getChildren()).toEqual([span('Count: 0')]);
-      }).toWarnDev(['An update to Counter ran an effect']);
+      }).toErrorDev(['An update to Counter ran an effect']);
 
       // A discrete event forces the passive effect to be flushed --
       // updateCount(1) happens first, so 2 wins.
@@ -1000,7 +1000,7 @@ describe('ReactHooksWithNoopRenderer', () => {
       expect(Scheduler).toHaveYielded(['Will set count to 1']);
       expect(() => {
         expect(Scheduler).toFlushAndYield(['Count: 2']);
-      }).toWarnDev([
+      }).toErrorDev([
         'An update to Counter ran an effect',
         'An update to Counter ran an effect',
       ]);
@@ -1049,7 +1049,7 @@ describe('ReactHooksWithNoopRenderer', () => {
         );
         expect(Scheduler).toFlushAndYieldThrough(['Count: 0', 'Sync effect']);
         expect(ReactNoop.getChildren()).toEqual([span('Count: 0')]);
-      }).toWarnDev(['An update to Counter ran an effect']);
+      }).toErrorDev(['An update to Counter ran an effect']);
 
       expect(onInteractionScheduledWorkCompleted).toHaveBeenCalledTimes(0);
 
@@ -1065,7 +1065,7 @@ describe('ReactHooksWithNoopRenderer', () => {
       expect(Scheduler).toHaveYielded(['Will set count to 1']);
       expect(() => {
         expect(Scheduler).toFlushAndYield(['Count: 2']);
-      }).toWarnDev([
+      }).toErrorDev([
         'An update to Counter ran an effect',
         'An update to Counter ran an effect',
       ]);
@@ -2271,7 +2271,7 @@ describe('ReactHooksWithNoopRenderer', () => {
         expect(() => {
           expect(Scheduler).toFlushAndYield(['A: 2, B: 3, C: 0']);
         }).toThrow('Rendered more hooks than during the previous render');
-      }).toWarnDev([
+      }).toErrorDev([
         'Warning: React has detected a change in the order of Hooks called by App. ' +
           'This will lead to bugs and errors if not fixed. For more information, ' +
           'read the Rules of Hooks: https://fb.me/rules-of-hooks\n\n' +
@@ -2367,7 +2367,7 @@ describe('ReactHooksWithNoopRenderer', () => {
           expect(() => {
             expect(Scheduler).toFlushAndYield([]);
           }).toThrow('Rendered more hooks than during the previous render');
-        }).toWarnDev([
+        }).toErrorDev([
           'Warning: React has detected a change in the order of Hooks called by App. ' +
             'This will lead to bugs and errors if not fixed. For more information, ' +
             'read the Rules of Hooks: https://fb.me/rules-of-hooks\n\n' +

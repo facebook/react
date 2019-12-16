@@ -117,7 +117,7 @@ describe('Profiler', () => {
             it('should warn if required params are missing', () => {
               expect(() => {
                 ReactTestRenderer.create(<React.Profiler />);
-              }).toWarnDev(
+              }).toErrorDev(
                 'Profiler must specify an "id" string and "onRender" function as props',
                 {withoutStack: true},
               );

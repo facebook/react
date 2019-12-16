@@ -58,7 +58,7 @@ describe('ReactSuspenseList', () => {
 
     ReactNoop.render(<Foo />);
 
-    expect(() => Scheduler.unstable_flushAll()).toWarnDev([
+    expect(() => Scheduler.unstable_flushAll()).toErrorDev([
       'Warning: "something" is not a supported revealOrder on ' +
         '<SuspenseList />. Did you mean "together", "forwards" or "backwards"?' +
         '\n    in SuspenseList (at **)' +
@@ -77,7 +77,7 @@ describe('ReactSuspenseList', () => {
 
     ReactNoop.render(<Foo />);
 
-    expect(() => Scheduler.unstable_flushAll()).toWarnDev([
+    expect(() => Scheduler.unstable_flushAll()).toErrorDev([
       'Warning: "TOGETHER" is not a valid value for revealOrder on ' +
         '<SuspenseList />. Use lowercase "together" instead.' +
         '\n    in SuspenseList (at **)' +
@@ -96,7 +96,7 @@ describe('ReactSuspenseList', () => {
 
     ReactNoop.render(<Foo />);
 
-    expect(() => Scheduler.unstable_flushAll()).toWarnDev([
+    expect(() => Scheduler.unstable_flushAll()).toErrorDev([
       'Warning: "forward" is not a valid value for revealOrder on ' +
         '<SuspenseList />. React uses the -s suffix in the spelling. ' +
         'Use "forwards" instead.' +
@@ -128,7 +128,7 @@ describe('ReactSuspenseList', () => {
       </Foo>,
     );
 
-    expect(() => Scheduler.unstable_flushAll()).toWarnDev([
+    expect(() => Scheduler.unstable_flushAll()).toErrorDev([
       'Warning: A single row was passed to a <SuspenseList revealOrder="forwards" />. ' +
         'This is not useful since it needs multiple rows. ' +
         'Did you mean to pass multiple children or an array?' +
@@ -148,7 +148,7 @@ describe('ReactSuspenseList', () => {
 
     ReactNoop.render(<Foo />);
 
-    expect(() => Scheduler.unstable_flushAll()).toWarnDev([
+    expect(() => Scheduler.unstable_flushAll()).toErrorDev([
       'Warning: A single row was passed to a <SuspenseList revealOrder="backwards" />. ' +
         'This is not useful since it needs multiple rows. ' +
         'Did you mean to pass multiple children or an array?' +
@@ -173,7 +173,7 @@ describe('ReactSuspenseList', () => {
 
     ReactNoop.render(<Foo items={['A', 'B']} />);
 
-    expect(() => Scheduler.unstable_flushAll()).toWarnDev([
+    expect(() => Scheduler.unstable_flushAll()).toErrorDev([
       'Warning: A nested array was passed to row #0 in <SuspenseList />. ' +
         'Wrap it in an additional SuspenseList to configure its revealOrder: ' +
         '<SuspenseList revealOrder=...> ... ' +
@@ -1354,7 +1354,7 @@ describe('ReactSuspenseList', () => {
 
     ReactNoop.render(<Foo />);
 
-    expect(() => Scheduler.unstable_flushAll()).toWarnDev([
+    expect(() => Scheduler.unstable_flushAll()).toErrorDev([
       'Warning: "collapse" is not a supported value for tail on ' +
         '<SuspenseList />. Did you mean "collapsed" or "hidden"?' +
         '\n    in SuspenseList (at **)' +
@@ -1373,7 +1373,7 @@ describe('ReactSuspenseList', () => {
 
     ReactNoop.render(<Foo />);
 
-    expect(() => Scheduler.unstable_flushAll()).toWarnDev([
+    expect(() => Scheduler.unstable_flushAll()).toErrorDev([
       'Warning: <SuspenseList tail="collapsed" /> is only valid if ' +
         'revealOrder is "forwards" or "backwards". ' +
         'Did you mean to specify revealOrder="forwards"?' +

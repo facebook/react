@@ -27,7 +27,7 @@ describe('ReactDOMShorthandCSSPropertyCollision', () => {
     ReactDOM.render(<div style={{font: 'foo', fontStyle: 'bar'}} />, container);
     expect(() =>
       ReactDOM.render(<div style={{font: 'foo'}} />, container),
-    ).toWarnDev(
+    ).toErrorDev(
       'Warning: Removing a style property during rerender (fontStyle) ' +
         'when a conflicting property is set (font) can lead to styling ' +
         "bugs. To avoid this, don't mix shorthand and non-shorthand " +
@@ -45,7 +45,7 @@ describe('ReactDOMShorthandCSSPropertyCollision', () => {
         <div style={{font: 'qux', fontStyle: 'baz'}} />,
         container,
       ),
-    ).toWarnDev(
+    ).toErrorDev(
       'Warning: Updating a style property during rerender (font) when ' +
         'a conflicting property is set (fontStyle) can lead to styling ' +
         "bugs. To avoid this, don't mix shorthand and non-shorthand " +
@@ -55,7 +55,7 @@ describe('ReactDOMShorthandCSSPropertyCollision', () => {
     );
     expect(() =>
       ReactDOM.render(<div style={{fontStyle: 'baz'}} />, container),
-    ).toWarnDev(
+    ).toErrorDev(
       'Warning: Removing a style property during rerender (font) when ' +
         'a conflicting property is set (fontStyle) can lead to styling ' +
         "bugs. To avoid this, don't mix shorthand and non-shorthand " +
@@ -72,7 +72,7 @@ describe('ReactDOMShorthandCSSPropertyCollision', () => {
     );
     expect(() =>
       ReactDOM.render(<div style={{background: 'yellow'}} />, container),
-    ).toWarnDev(
+    ).toErrorDev(
       'Warning: Removing a style property during rerender ' +
         '(backgroundPosition) when a conflicting property is set ' +
         "(background) can lead to styling bugs. To avoid this, don't mix " +
@@ -91,7 +91,7 @@ describe('ReactDOMShorthandCSSPropertyCollision', () => {
     );
     expect(() =>
       ReactDOM.render(<div style={{backgroundPosition: 'top'}} />, container),
-    ).toWarnDev(
+    ).toErrorDev(
       'Warning: Removing a style property during rerender (background) ' +
         'when a conflicting property is set (backgroundPosition) can lead ' +
         "to styling bugs. To avoid this, don't mix shorthand and " +
@@ -107,7 +107,7 @@ describe('ReactDOMShorthandCSSPropertyCollision', () => {
     );
     expect(() =>
       ReactDOM.render(<div style={{borderLeft: '1px solid red'}} />, container),
-    ).toWarnDev(
+    ).toErrorDev(
       'Warning: Removing a style property during rerender (borderStyle) ' +
         'when a conflicting property is set (borderLeft) can lead to ' +
         "styling bugs. To avoid this, don't mix shorthand and " +
@@ -120,7 +120,7 @@ describe('ReactDOMShorthandCSSPropertyCollision', () => {
         <div style={{borderStyle: 'dashed', borderLeft: '1px solid red'}} />,
         container,
       ),
-    ).toWarnDev(
+    ).toErrorDev(
       'Warning: Updating a style property during rerender (borderStyle) ' +
         'when a conflicting property is set (borderLeft) can lead to ' +
         "styling bugs. To avoid this, don't mix shorthand and " +
@@ -135,7 +135,7 @@ describe('ReactDOMShorthandCSSPropertyCollision', () => {
     );
     expect(() =>
       ReactDOM.render(<div style={{borderStyle: 'dotted'}} />, container),
-    ).toWarnDev(
+    ).toErrorDev(
       'Warning: Removing a style property during rerender (borderLeft) ' +
         'when a conflicting property is set (borderStyle) can lead to ' +
         "styling bugs. To avoid this, don't mix shorthand and " +

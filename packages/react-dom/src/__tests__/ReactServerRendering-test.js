@@ -188,7 +188,7 @@ describe('ReactDOMServer', () => {
               <span unknown="test" />
             </div>,
           )),
-      ).toWarnDev(['React does not recognize the `hasOwnProperty` prop']);
+      ).toErrorDev(['React does not recognize the `hasOwnProperty` prop']);
       expect(html).toContain('<span unknown="test">');
     });
   });
@@ -644,7 +644,7 @@ describe('ReactDOMServer', () => {
     }
 
     ReactDOMServer.renderToString(<Foo />);
-    expect(() => jest.runOnlyPendingTimers()).toWarnDev(
+    expect(() => jest.runOnlyPendingTimers()).toErrorDev(
       'Warning: setState(...): Can only update a mounting component.' +
         ' This usually means you called setState() outside componentWillMount() on the server.' +
         ' This is a no-op.\n\nPlease check the code for the Foo component.',
@@ -672,7 +672,7 @@ describe('ReactDOMServer', () => {
     }
 
     ReactDOMServer.renderToString(<Baz />);
-    expect(() => jest.runOnlyPendingTimers()).toWarnDev(
+    expect(() => jest.runOnlyPendingTimers()).toErrorDev(
       'Warning: forceUpdate(...): Can only update a mounting component. ' +
         'This usually means you called forceUpdate() outside componentWillMount() on the server. ' +
         'This is a no-op.\n\nPlease check the code for the Baz component.',
@@ -819,7 +819,7 @@ describe('ReactDOMServer', () => {
           </svg>
         </div>,
       ),
-    ).toWarnDev([
+    ).toErrorDev([
       'Warning: <inPUT /> is using incorrect casing. ' +
         'Use PascalCase for React components, ' +
         'or lowercase for HTML elements.',
@@ -833,7 +833,7 @@ describe('ReactDOMServer', () => {
   it('should warn about contentEditable and children', () => {
     expect(() =>
       ReactDOMServer.renderToString(<div contentEditable={true} children="" />),
-    ).toWarnDev(
+    ).toErrorDev(
       'Warning: A component is `contentEditable` and contains `children` ' +
         'managed by React. It is now your responsibility to guarantee that ' +
         'none of those nodes are unexpectedly modified or duplicated. This ' +
@@ -852,7 +852,7 @@ describe('ReactDOMServer', () => {
       expect(() =>
         ReactDOMServer.renderToString(<ClassWithRenderNotExtended />),
       ).toThrow(TypeError);
-    }).toWarnDev(
+    }).toErrorDev(
       'Warning: The <ClassWithRenderNotExtended /> component appears to have a render method, ' +
         "but doesn't extend React.Component. This is likely to cause errors. " +
         'Change ClassWithRenderNotExtended to extend React.Component instead.',
@@ -921,7 +921,7 @@ describe('ReactDOMServer', () => {
       );
     }
 
-    expect(() => ReactDOMServer.renderToString(<App />)).toWarnDev([
+    expect(() => ReactDOMServer.renderToString(<App />)).toErrorDev([
       'Invalid ARIA attribute `ariaTypo`. ARIA attributes follow the pattern aria-* and must be lowercase.\n' +
         '    in span (at **)\n' +
         '    in b (at **)\n' +
@@ -970,7 +970,7 @@ describe('ReactDOMServer', () => {
       );
     }
 
-    expect(() => ReactDOMServer.renderToString(<App />)).toWarnDev([
+    expect(() => ReactDOMServer.renderToString(<App />)).toErrorDev([
       // ReactDOMServer(App > div > span)
       'Invalid ARIA attribute `ariaTypo`. ARIA attributes follow the pattern aria-* and must be lowercase.\n' +
         '    in span (at **)\n' +
@@ -1017,7 +1017,7 @@ describe('ReactDOMServer', () => {
 
     expect(() => {
       ReactDOMServer.renderToString(<ComponentA />);
-    }).toWarnDev(
+    }).toErrorDev(
       'Warning: ComponentA defines an invalid contextType. ' +
         'contextType should point to the Context object returned by React.createContext(). ' +
         'Did you accidentally pass the Context.Consumer instead?',
@@ -1028,7 +1028,7 @@ describe('ReactDOMServer', () => {
 
     expect(() => {
       ReactDOMServer.renderToString(<ComponentB />);
-    }).toWarnDev(
+    }).toErrorDev(
       'Warning: ComponentB defines an invalid contextType. ' +
         'contextType should point to the Context object returned by React.createContext(). ' +
         'Did you accidentally pass the Context.Provider instead?',
@@ -1062,7 +1062,7 @@ describe('ReactDOMServer', () => {
       expect(() => {
         ReactDOMServer.renderToString(<Foo />);
       }).toThrow("Cannot read property 'world' of undefined");
-    }).toWarnDev(
+    }).toErrorDev(
       'Foo defines an invalid contextType. ' +
         'contextType should point to the Context object returned by React.createContext(). ' +
         'However, it is set to undefined. ' +
@@ -1088,7 +1088,7 @@ describe('ReactDOMServer', () => {
       expect(() => {
         ReactDOMServer.renderToString(<Foo />);
       }).toThrow("Cannot read property 'hello' of undefined");
-    }).toWarnDev(
+    }).toErrorDev(
       'Foo defines an invalid contextType. ' +
         'contextType should point to the Context object returned by React.createContext(). ' +
         'However, it is set to an object with keys {x, y}.',
@@ -1107,7 +1107,7 @@ describe('ReactDOMServer', () => {
       expect(() => {
         ReactDOMServer.renderToString(<Foo />);
       }).toThrow("Cannot read property 'world' of undefined");
-    }).toWarnDev(
+    }).toErrorDev(
       'Foo defines an invalid contextType. ' +
         'contextType should point to the Context object returned by React.createContext(). ' +
         'However, it is set to a string.',

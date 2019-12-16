@@ -1148,7 +1148,7 @@ describe('ReactIncrementalErrorHandling', () => {
         <Connector />
       </Provider>,
     );
-    expect(() => expect(Scheduler).toFlushWithoutYielding()).toWarnDev(
+    expect(() => expect(Scheduler).toFlushWithoutYielding()).toErrorDev(
       'Legacy context API has been detected within a strict-mode tree.\n\n' +
         'The old API will be supported in all 16.x releases, but ' +
         'applications using it should migrate to the new version.\n\n' +
@@ -1183,7 +1183,7 @@ describe('ReactIncrementalErrorHandling', () => {
         <BrokenRender />
       </ErrorBoundary>,
     );
-    expect(() => expect(Scheduler).toFlushWithoutYielding()).toWarnDev([
+    expect(() => expect(Scheduler).toFlushWithoutYielding()).toErrorDev([
       'Warning: React.createElement: type is invalid -- expected a string',
       // React retries once on error
       'Warning: React.createElement: type is invalid -- expected a string',
@@ -1232,7 +1232,7 @@ describe('ReactIncrementalErrorHandling', () => {
         <BrokenRender fail={true} />
       </ErrorBoundary>,
     );
-    expect(() => expect(Scheduler).toFlushWithoutYielding()).toWarnDev([
+    expect(() => expect(Scheduler).toFlushWithoutYielding()).toErrorDev([
       'Warning: React.createElement: type is invalid -- expected a string',
       // React retries once on error
       'Warning: React.createElement: type is invalid -- expected a string',
@@ -1252,7 +1252,7 @@ describe('ReactIncrementalErrorHandling', () => {
 
   it('recovers from uncaught reconciler errors', () => {
     const InvalidType = undefined;
-    expect(() => ReactNoop.render(<InvalidType />)).toWarnDev(
+    expect(() => ReactNoop.render(<InvalidType />)).toErrorDev(
       'Warning: React.createElement: type is invalid -- expected a string',
       {withoutStack: true},
     );
@@ -1645,7 +1645,7 @@ describe('ReactIncrementalErrorHandling', () => {
     ReactNoop.render(<Provider />);
     expect(() => {
       expect(Scheduler).toFlushAndThrow('Oops!');
-    }).toWarnDev(
+    }).toErrorDev(
       [
         'Warning: The <Provider /> component appears to be a function component that returns a class instance. ' +
           'Change Provider to a class that extends React.Component instead. ' +
