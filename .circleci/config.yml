@@ -277,7 +277,7 @@ jobs:
       - *run_yarn
       - run:
           environment:
-            RELEASE_CHANNEL: stable
+            RELEASE_CHANNEL: experimental
           command: yarn test-build-devtools --maxWorkers=2
 
   test_dom_fixtures:
