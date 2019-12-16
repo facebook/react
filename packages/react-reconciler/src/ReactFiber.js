@@ -96,6 +96,7 @@ let hasBadMapPolyfill;
 if (__DEV__) {
   hasBadMapPolyfill = false;
   try {
+    console.log('why')
     const nonExtensibleObject = Object.preventExtensions({});
     const testMap = new Map([[nonExtensibleObject, null]]);
     const testSet = new Set([nonExtensibleObject]);
