@@ -542,50 +542,6 @@ describe('ReactHooksWithNoopRenderer', () => {
       ]);
       expect(ReactNoop.getChildren()).toEqual([span(22)]);
     });
-
-    it('discards render phase updates if something suspends', () => {
-      const thenable = {then() {}};
-      function Foo({signal}) {
-        return (
-          <Suspense fallback="Loading...">
-            <Bar signal={signal} />
-          </Suspense>
-        );
-      }
-
-      function Bar({signal: newSignal}) {
-        let [counter, setCounter] = useState(0);
-        let [signal, setSignal] = useState(true);
-
-        // Increment a counter every time the signal changes
-        if (signal !== newSignal) {
-          setCounter(c => c + 1);
-          setSignal(newSignal);
-          if (counter === 0) {
-            // We're suspending during a render that includes render phase
-            // updates. Those updates should not persist to the next render.
-            Scheduler.unstable_yieldValue('Suspend!');
-            throw thenable;
-          }
-        }
-
-        return <Text text={counter} />;
-      }
-
-      const root = ReactNoop.createRoot();
-      root.render(<Foo signal={true} />);
-
-      expect(Scheduler).toFlushAndYield([0]);
-      expect(root).toMatchRenderedOutput(<span prop={0} />);
-
-      root.render(<Foo signal={false} />);
-      expect(Scheduler).toFlushAndYield(['Suspend!']);
-      expect(root).toMatchRenderedOutput(<span prop={0} />);
-
-      // Rendering again should suspend again.
-      root.render(<Foo signal={false} />);
-      expect(Scheduler).toFlushAndYield(['Suspend!']);
-    });
   });
 
   describe('useReducer', () => {
