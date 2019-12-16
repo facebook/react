@@ -177,15 +177,10 @@ let currentlyRenderingFiber: Fiber = (null: any);
 let currentHook: Hook | null = null;
 let workInProgressHook: Hook | null = null;
 
-// Updates scheduled during render will trigger an immediate re-render at the
-// end of the current pass. We can't store these updates on the normal queue,
-// because if the work is aborted, they should be discarded. Because this is
-// a relatively rare case, we also don't want to add an additional field to
-// either the hook or queue object types. So we store them in a lazily create
-// map of queue -> render-phase updates, which are discarded once the component
-// completes without re-rendering.
-
-// Whether an update was scheduled during the currently executing render pass.
+// Whether an update was scheduled at any point during the render phase. This
+// does not get reset if we do another render pass; only when we're completely
+// finished evaluating this component. This is an optimization so we know
+// whether we need to clear render phase updates after a throw.
 let didScheduleRenderPhaseUpdate: boolean = false;
 
 const RE_RENDER_LIMIT = 25;
@@ -411,11 +406,13 @@ export function renderWithHooks(
 
   let children = Component(props, secondArg);
 
-  if (didScheduleRenderPhaseUpdate) {
-    // Counter to prevent infinite loops.
+  // Check if there was a render phase update
+  if (workInProgress.expirationTime === renderExpirationTime) {
+    // Keep rendering in a loop for as long as render phase updates continue to
+    // be scheduled. Use a counter to prevent infinite loops.
     let numberOfReRenders: number = 0;
     do {
-      didScheduleRenderPhaseUpdate = false;
+      workInProgress.expirationTime = NoWork;
 
       invariant(
         numberOfReRenders < RE_RENDER_LIMIT,
@@ -446,7 +443,7 @@ export function renderWithHooks(
         : HooksDispatcherOnRerender;
 
       children = Component(props, secondArg);
-    } while (didScheduleRenderPhaseUpdate);
+    } while (workInProgress.expirationTime === renderExpirationTime);
   }
 
   // We can assume the previous dispatcher is always this one, since we set it
@@ -474,8 +471,7 @@ export function renderWithHooks(
     hookTypesUpdateIndexDev = -1;
   }
 
-  // These were reset above
-  // didScheduleRenderPhaseUpdate = false;
+  didScheduleRenderPhaseUpdate = false;
 
   invariant(
     !didRenderTooFewHooks,
@@ -504,23 +500,21 @@ export function resetHooksAfterThrow(): void {
   ReactCurrentDispatcher.current = ContextOnlyDispatcher;
 
   if (didScheduleRenderPhaseUpdate) {
-    const current = (currentlyRenderingFiber: any).alternate;
-    if (current !== null) {
-      // There were render phase updates. These are only valid for this render
-      // pass, which we are now aborting. Remove the updates from the queues so
-      // they do not persist to the next render. We already did a single pass
-      // through the whole list of hooks, so we know that any pending updates
-      // must have been dispatched during the render phase. The ones that were
-      // dispatched before we started rendering were already transferred to the
-      // current hook's queue.
-      let hook: Hook | null = current.memoizedState;
-      while (hook !== null) {
-        const queue = hook.queue;
-        if (queue !== null) {
-          queue.pending = null;
-        }
-        hook = hook.next;
+    // There were render phase updates. These are only valid for this render
+    // phase, which we are now aborting. Remove the updates from the queues so
+    // they do not persist to the next render. Do not remove updates from hooks
+    // that weren't processed.
+    //
+    // Only reset the updates from the queue if it has a clone. If it does
+    // not have a clone, that means it wasn't processed, and the updates were
+    // scheduled before we entered the render phase.
+    let hook: Hook | null = currentlyRenderingFiber.memoizedState;
+    while (hook !== null) {
+      const queue = hook.queue;
+      if (queue !== null) {
+        queue.pending = null;
       }
+      hook = hook.next;
     }
   }
 
@@ -1295,6 +1289,7 @@ function dispatchAction<S, A>(
     // and apply the stashed updates on top of the work-in-progress hook.
     didScheduleRenderPhaseUpdate = true;
     update.expirationTime = renderExpirationTime;
+    currentlyRenderingFiber.expirationTime = renderExpirationTime;
   } else {
     if (
       fiber.expirationTime === NoWork &&
