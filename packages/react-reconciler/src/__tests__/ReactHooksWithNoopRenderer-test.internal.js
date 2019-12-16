@@ -648,6 +648,29 @@ describe('ReactHooksWithNoopRenderer', () => {
       expect(Scheduler).toFlushAndYield(['B:0']);
       expect(root).toMatchRenderedOutput(<span prop="B:0" />);
     });
+
+    // TODO: This should probably warn
+    it.experimental('calling startTransition inside render phase', async () => {
+      let startTransition;
+      function App() {
+        let [counter, setCounter] = useState(0);
+        let [_startTransition] = useTransition();
+        startTransition = _startTransition;
+
+        if (counter === 0) {
+          startTransition(() => {
+            setCounter(c => c + 1);
+          });
+        }
+
+        return <Text text={counter} />;
+      }
+
+      const root = ReactNoop.createRoot();
+      root.render(<App />);
+      expect(Scheduler).toFlushAndYield([1]);
+      expect(root).toMatchRenderedOutput(<span prop={1} />);
+    });
   });
 
   describe('useReducer', () => {
