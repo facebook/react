@@ -128,10 +128,17 @@ const getPublicPackages = () => {
 
     const packagePath = join(packagesRoot, dir, 'package.json');
 
-    if (dir.charAt(0) !== '.' && statSync(packagePath).isFile()) {
-      const packageJSON = JSON.parse(readFileSync(packagePath));
-
-      return packageJSON.private !== true;
+    if (dir.charAt(0) !== '.') {
+      let stat;
+      try {
+        stat = statSync(packagePath);
+      } catch (err) {
+        return false;
+      }
+      if (stat.isFile()) {
+        const packageJSON = JSON.parse(readFileSync(packagePath));
+        return packageJSON.private !== true;
+      }
     }
 
     return false;
