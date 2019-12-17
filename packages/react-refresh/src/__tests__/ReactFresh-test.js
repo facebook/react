@@ -42,6 +42,7 @@ describe('ReactFresh', () => {
 
   afterEach(() => {
     if (__DEV__) {
+      delete global.__REACT_DEVTOOLS_GLOBAL_HOOK__;
       document.body.removeChild(container);
     }
   });
@@ -3705,6 +3706,82 @@ describe('ReactFresh', () => {
       const family = update.updatedFamilies.values().next().value;
       expect(family.current.name).toBe('HelloV2');
       // For example, we can use this to print a log of what was updated.
+    }
+  });
+
+  // This simulates the scenario in https://github.com/facebook/react/issues/17626.
+  it('can inject the runtime after the renderer executes', () => {
+    if (__DEV__) {
+      // This is a minimal shim for the global hook installed by DevTools.
+      // The real one is in packages/react-devtools-shared/src/hook.js.
+      let idCounter = 0;
+      let renderers = new Map();
+      global.__REACT_DEVTOOLS_GLOBAL_HOOK__ = {
+        renderers,
+        supportsFiber: true,
+        inject(renderer) {
+          const id = ++idCounter;
+          renderers.set(id, renderer);
+          return id;
+        },
+        onCommitFiberRoot() {},
+        onCommitFiberUnmount() {},
+      };
+
+      // Load these first, as if they're coming from a CDN.
+      jest.resetModules();
+      React = require('react');
+      ReactDOM = require('react-dom');
+      Scheduler = require('scheduler');
+      act = require('react-dom/test-utils').act;
+
+      // Important! Inject into the global hook *after* ReactDOM runs:
+      ReactFreshRuntime = require('react-refresh/runtime');
+      ReactFreshRuntime.injectIntoGlobalHook(global);
+
+      // We're verifying that we're able to track roots mounted after this point.
+      // The rest of this test is taken from the simplest first test case.
+
+      render(() => {
+        function Hello() {
+          const [val, setVal] = React.useState(0);
+          return (
+            <p style={{color: 'blue'}} onClick={() => setVal(val + 1)}>
+              {val}
+            </p>
+          );
+        }
+        $RefreshReg$(Hello, 'Hello');
+        return Hello;
+      });
+
+      // Bump the state before patching.
+      const el = container.firstChild;
+      expect(el.textContent).toBe('0');
+      expect(el.style.color).toBe('blue');
+      act(() => {
+        el.dispatchEvent(new MouseEvent('click', {bubbles: true}));
+      });
+      expect(el.textContent).toBe('1');
+
+      // Perform a hot update.
+      patch(() => {
+        function Hello() {
+          const [val, setVal] = React.useState(0);
+          return (
+            <p style={{color: 'red'}} onClick={() => setVal(val + 1)}>
+              {val}
+            </p>
+          );
+        }
+        $RefreshReg$(Hello, 'Hello');
+        return Hello;
+      });
+
+      // Assert the state was preserved but color changed.
+      expect(container.firstChild).toBe(el);
+      expect(el.textContent).toBe('1');
+      expect(el.style.color).toBe('red');
     }
   });
 });
