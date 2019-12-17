@@ -514,6 +514,7 @@ describe('InspectedElementContext', () => {
     const arrayOfArrays = [[['abc', 123, true], []]];
     const div = document.createElement('div');
     const exampleFunction = () => {};
+    const exampleDateISO = '2019-12-31T23:42:42.000Z';
     const setShallow = new Set(['abc', 123]);
     const mapShallow = new Map([['name', 'Brian'], ['food', 'sushi']]);
     const setOfSets = new Set([new Set(['a', 'b', 'c']), new Set([1, 2, 3])]);
@@ -542,7 +543,7 @@ describe('InspectedElementContext', () => {
           // eslint-disable-next-line no-undef
           big_int={BigInt(123)}
           data_view={dataView}
-          date={new Date(123)}
+          date={new Date(exampleDateISO)}
           fn={exampleFunction}
           html_element={div}
           immutable={immutableMap}
@@ -634,11 +635,11 @@ describe('InspectedElementContext', () => {
 
     expect(date[meta.inspectable]).toBe(false);
     expect(date[meta.type]).toBe('date');
-    expect(date[meta.preview_long]).toBe(
-      'Wed Dec 31 1969 16:00:00 GMT-0800 (Pacific Standard Time)',
+    expect(new Date(date[meta.preview_long]).toISOString()).toBe(
+      exampleDateISO,
     );
-    expect(date[meta.preview_short]).toBe(
-      'Wed Dec 31 1969 16:00:00 GMT-0800 (Pacific Standard Time)',
+    expect(new Date(date[meta.preview_short]).toISOString()).toBe(
+      exampleDateISO,
     );
 
     expect(fn[meta.inspectable]).toBe(false);

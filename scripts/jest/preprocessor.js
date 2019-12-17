@@ -68,11 +68,14 @@ module.exports = {
       // for test files, we also apply the async-await transform, but we want to
       // make sure we don't accidentally apply that transform to product code.
       const isTestFile = !!filePath.match(/\/__tests__\//);
+      const isInDevToolsPackages = !!filePath.match(
+        /\/packages\/react-devtools.*\//
+      );
       const testOnlyPlugins = [pathToBabelPluginAsyncToGenerator];
-      const sourceOnlyPlugins =
-        process.env.NODE_ENV === 'development'
-          ? [pathToBabelPluginReplaceConsoleCalls]
-          : [];
+      const sourceOnlyPlugins = [];
+      if (process.env.NODE_ENV === 'development' && !isInDevToolsPackages) {
+        sourceOnlyPlugins.push(pathToBabelPluginReplaceConsoleCalls);
+      }
       const plugins = (isTestFile ? testOnlyPlugins : sourceOnlyPlugins).concat(
         babelOptions.plugins
       );
