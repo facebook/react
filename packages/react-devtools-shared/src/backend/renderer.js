@@ -364,18 +364,9 @@ export function getInternalReactConstants(
       case IndeterminateComponent:
         return getDisplayName(resolvedType);
       case ForwardRef:
-        // maybe set `displayName` after `React.forwardRef()`
-        //
-        // ```
-        // const Component = React.forwardRef(WrapComponent);
-        // Component.displayName = 'OtherName'
-        // ```
-        //
-        // `resolvedType` is `WrapComponent`
-        // `type` is Component
+        // Mirror https://github.com/facebook/react/blob/7c21bf72ace77094fd1910cc350a548287ef8350/packages/shared/getComponentName.js#L27-L37
         return (
           (type && type.displayName) ||
-          resolvedType.displayName ||
           getDisplayName(resolvedType, 'Anonymous')
         );
       case HostRoot:
@@ -388,11 +379,7 @@ export function getInternalReactConstants(
         return null;
       case MemoComponent:
       case SimpleMemoComponent:
-        if (elementType.displayName) {
-          return elementType.displayName;
-        } else {
-          return getDisplayName(resolvedType, 'Anonymous');
-        }
+        return getDisplayName(resolvedType, 'Anonymous');
       case SuspenseComponent:
         return 'Suspense';
       case SuspenseListComponent:
