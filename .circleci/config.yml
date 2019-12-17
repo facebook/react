@@ -374,9 +374,6 @@ workflows:
       - test_build_prod:
           requires:
             - build
-      - test_build_devtools:
-          requires:
-            - build_experimental
       - test_dom_fixtures:
           requires:
             - build
@@ -403,6 +400,9 @@ workflows:
           requires:
             - build_experimental
       - lint_build:
+          requires:
+            - build_experimental
+      - test_build_devtools:
           requires:
             - build_experimental
 
