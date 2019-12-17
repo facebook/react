@@ -26,6 +26,8 @@ export function error(format, ...args) {
 }
 
 function printWarning(level, format, args) {
+  // When changing this logic, you might want to also
+  // update consoleWithStackDev.www.js as well.
   if (__DEV__) {
     const hasExistingStack =
       args.length > 0 &&
