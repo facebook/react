@@ -435,6 +435,7 @@ export function injectIntoGlobalHook(globalObject: any): void {
       // Otherwise, the renderer will think that there is no global hook, and won't do the injection.
       let nextID = 0;
       globalObject.__REACT_DEVTOOLS_GLOBAL_HOOK__ = hook = {
+        renderers: new Map(),
         supportsFiber: true,
         inject(injected) {
           return nextID++;
@@ -467,6 +468,19 @@ export function injectIntoGlobalHook(globalObject: any): void {
       }
       return id;
     };
+
+    // Do the same for any already injected roots.
+    // This is useful if ReactDOM has already been initialized.
+    // https://github.com/facebook/react/issues/17626
+    hook.renderers.forEach((injected, id) => {
+      if (
+        typeof injected.scheduleRefresh === 'function' &&
+        typeof injected.setRefreshHandler === 'function'
+      ) {
+        // This version supports React Refresh.
+        helpersByRendererID.set(id, ((injected: any): RendererHelpers));
+      }
+    });
 
     // We also want to track currently mounted roots.
     const oldOnCommitFiberRoot = hook.onCommitFiberRoot;
