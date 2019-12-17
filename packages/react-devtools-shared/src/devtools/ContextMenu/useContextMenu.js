@@ -12,9 +12,9 @@ export default function useContextMenu({data, id, ref}) {
           event.stopPropagation();
 
           const pageX =
-            event.clientX || (event.touches && event.touches[0].pageX);
+            event.pageX || (event.touches && event.touches[0].pageX);
           const pageY =
-            event.clientY || (event.touches && event.touches[0].pageY);
+            event.pageY || (event.touches && event.touches[0].pageY);
 
           showMenu({data, id, pageX, pageY});
         };

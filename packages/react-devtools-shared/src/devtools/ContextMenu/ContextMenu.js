@@ -11,8 +11,9 @@ import {DataContext, RegistryContext} from './Contexts';
 import styles from './ContextMenu.css';
 
 function respositionToFit(element, pageX, pageY) {
+  const ownerWindow = element.ownerDocument.defaultView;
   if (element !== null) {
-    if (pageY + element.offsetHeight >= window.innerHeight) {
+    if (pageY + element.offsetHeight >= ownerWindow.innerHeight) {
       if (pageY - element.offsetHeight > 0) {
         element.style.top = `${pageY - element.offsetHeight}px`;
       } else {
@@ -22,7 +23,7 @@ function respositionToFit(element, pageX, pageY) {
       element.style.top = `${pageY}px`;
     }
 
-    if (pageX + element.offsetWidth >= window.innerWidth) {
+    if (pageX + element.offsetWidth >= ownerWindow.innerWidth) {
       if (pageX - element.offsetWidth > 0) {
         element.style.left = `${pageX - element.offsetWidth}px`;
       } else {
@@ -51,14 +52,16 @@ export default function ContextMenu({children, id}: Props) {
 
   const [state, setState] = useState(HIDDEN_STATE);
 
+  const bodyAccessorRef = useRef(null);
   const containerRef = useRef(null);
   const menuRef = useRef(null);
 
   useEffect(() => {
-    containerRef.current = document.createElement('div');
-    document.body.appendChild(containerRef.current);
+    const ownerDocument = bodyAccessorRef.current.ownerDocument;
+    containerRef.current = ownerDocument.createElement('div');
+    ownerDocument.body.appendChild(containerRef.current);
     return () => {
-      document.body.removeChild(containerRef.current);
+      ownerDocument.body.removeChild(containerRef.current);
     };
   }, []);
 
@@ -81,33 +84,39 @@ export default function ContextMenu({children, id}: Props) {
 
       const menu = menuRef.current;
 
-      const hide = event => {
+      const hideUnlessContains = event => {
         if (!menu.contains(event.target)) {
           setState(HIDDEN_STATE);
         }
       };
 
-      document.addEventListener('mousedown', hide);
-      document.addEventListener('touchstart', hide);
-      document.addEventListener('keydown', hide);
+      const hide = event => {
+        setState(HIDDEN_STATE);
+      };
 
-      window.addEventListener('resize', hide);
+      const ownerDocument = containerRef.current.ownerDocument;
+      ownerDocument.addEventListener('mousedown', hideUnlessContains);
+      ownerDocument.addEventListener('touchstart', hideUnlessContains);
+      ownerDocument.addEventListener('keydown', hideUnlessContains);
+
+      const ownerWindow = ownerDocument.defaultView;
+      ownerWindow.addEventListener('resize', hide);
 
       respositionToFit(menu, state.pageX, state.pageY);
 
       return () => {
-        document.removeEventListener('mousedown', hide);
-        document.removeEventListener('touchstart', hide);
-        document.removeEventListener('keydown', hide);
+        ownerDocument.removeEventListener('mousedown', hideUnlessContains);
+        ownerDocument.removeEventListener('touchstart', hideUnlessContains);
+        ownerDocument.removeEventListener('keydown', hideUnlessContains);
 
-        window.removeEventListener('resize', hide);
+        ownerWindow.removeEventListener('resize', hide);
       };
     },
     [state],
   );
 
   if (!state.isVisible) {
-    return null;
+    return <div ref={bodyAccessorRef} />;
   } else {
     return createPortal(
       <div ref={menuRef} className={styles.ContextMenu}>
