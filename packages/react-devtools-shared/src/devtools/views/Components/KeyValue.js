@@ -127,7 +127,11 @@ export default function KeyValue({
           onClick={isInspectable ? toggleIsOpen : undefined}>
           {name}
         </span>
-        <span className={styles.Value}>{getMetaValueLabel(value)}</span>
+        <span
+          className={styles.Value}
+          onClick={isInspectable ? toggleIsOpen : undefined}>
+          {getMetaValueLabel(value)}
+        </span>
       </div>
     );
   } else {
@@ -165,7 +169,11 @@ export default function KeyValue({
             onClick={hasChildren ? toggleIsOpen : undefined}>
             {name}
           </span>
-          <span className={styles.Value}>{displayName}</span>
+          <span
+            className={styles.Value}
+            onClick={hasChildren ? toggleIsOpen : undefined}>
+            {displayName}
+          </span>
         </div>,
       );
     } else {
@@ -211,7 +219,11 @@ export default function KeyValue({
             onClick={hasChildren ? toggleIsOpen : undefined}>
             {name}
           </span>
-          <span className={styles.Value}>{displayName}</span>
+          <span
+            className={styles.Value}
+            onClick={hasChildren ? toggleIsOpen : undefined}>
+            {displayName}
+          </span>
         </div>,
       );
     }

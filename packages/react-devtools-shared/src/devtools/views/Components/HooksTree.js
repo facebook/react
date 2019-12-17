@@ -208,7 +208,9 @@ function HookView({canEditHooks, hook, id, inspectPath, path}: HookViewProps) {
               {name || 'Anonymous'}
             </span>{' '}
             {/* $FlowFixMe */}
-            <span className={styles.Value}>{displayValue}</span>
+            <span className={styles.Value} onClick={toggleIsOpen}>
+              {displayValue}
+            </span>
           </div>
           <div className={styles.Children} hidden={!isOpen}>
             {subHooksView}
