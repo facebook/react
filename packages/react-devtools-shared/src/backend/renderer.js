@@ -347,7 +347,7 @@ export function getInternalReactConstants(
 
   // NOTICE Keep in sync with shouldFilterFiber() and other get*ForFiber methods
   function getDisplayNameForFiber(fiber: Fiber): string | null {
-    const {elementType, type, tag} = fiber;
+    const {type, tag} = fiber;
 
     let resolvedType = type;
     if (typeof type === 'object' && type !== null) {
