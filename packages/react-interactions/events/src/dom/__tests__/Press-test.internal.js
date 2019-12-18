@@ -14,8 +14,9 @@ import {
   buttonsType,
   createEventTarget,
   describeWithPointerEvent,
+  resetActivePointers,
   setPointerEvent,
-} from '../testing-library';
+} from '../event-testing-library';
 
 let React;
 let ReactFeatureFlags;
@@ -47,6 +48,7 @@ describeWithPointerEvent('Press responder', hasPointerEvents => {
     ReactDOM.render(null, container);
     document.body.removeChild(container);
     container = null;
+    resetActivePointers();
   });
 
   describe('disabled', () => {

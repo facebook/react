@@ -7,12 +7,22 @@
  * @flow
  */
 
-import {createEventTarget} from 'react-interactions/events/src/dom/testing-library';
+import {createEventTarget} from 'react-interactions/events/src/dom/event-testing-library';
 
 let React;
 let ReactFeatureFlags;
 let FocusContain;
 let tabbableScopeQuery;
+
+function tabNext(target) {
+  target.keydown({key: 'Tab'});
+  target.keyup({key: 'Tab'});
+}
+
+function tabPrevious(target) {
+  target.keydown({key: 'Tab', shiftKey: true});
+  target.keyup({key: 'Tab', shiftKey: true});
+}
 
 describe('FocusContain', () => {
   beforeEach(() => {
@@ -59,13 +69,13 @@ describe('FocusContain', () => {
 
       ReactDOM.render(<Test />, container);
       expect(document.activeElement).toBe(inputRef.current);
-      createEventTarget(document.activeElement).tabNext();
+      tabNext(createEventTarget(document.activeElement));
       expect(document.activeElement).toBe(buttonRef.current);
-      createEventTarget(document.activeElement).tabNext();
+      tabNext(createEventTarget(document.activeElement));
       expect(document.activeElement).toBe(divRef.current);
-      createEventTarget(document.activeElement).tabNext();
+      tabNext(createEventTarget(document.activeElement));
       expect(document.activeElement).toBe(button2Ref.current);
-      createEventTarget(document.activeElement).tabPrevious();
+      tabPrevious(createEventTarget(document.activeElement));
       expect(document.activeElement).toBe(divRef.current);
     });
 
@@ -90,15 +100,15 @@ describe('FocusContain', () => {
 
       ReactDOM.render(<Test />, container);
       buttonRef.current.focus();
-      createEventTarget(document.activeElement).tabNext();
+      tabNext(createEventTarget(document.activeElement));
       expect(document.activeElement).toBe(button2Ref.current);
-      createEventTarget(document.activeElement).tabNext();
+      tabNext(createEventTarget(document.activeElement));
       expect(document.activeElement).toBe(buttonRef.current);
-      createEventTarget(document.activeElement).tabNext();
+      tabNext(createEventTarget(document.activeElement));
       expect(document.activeElement).toBe(button2Ref.current);
-      createEventTarget(document.activeElement).tabPrevious();
+      tabPrevious(createEventTarget(document.activeElement));
       expect(document.activeElement).toBe(buttonRef.current);
-      createEventTarget(document.activeElement).tabPrevious();
+      tabPrevious(createEventTarget(document.activeElement));
       expect(document.activeElement).toBe(button2Ref.current);
       // Focus should be restored to the contained area
       const rAF = window.requestAnimationFrame;
@@ -132,15 +142,15 @@ describe('FocusContain', () => {
 
       ReactDOM.render(<Test />, container);
       expect(document.activeElement).toBe(buttonRef.current);
-      createEventTarget(document.activeElement).tabNext();
+      tabNext(createEventTarget(document.activeElement));
       expect(document.activeElement).toBe(button2Ref.current);
-      createEventTarget(document.activeElement).tabNext();
+      tabNext(createEventTarget(document.activeElement));
       expect(document.activeElement).toBe(button3Ref.current);
-      createEventTarget(document.activeElement).tabNext();
+      tabNext(createEventTarget(document.activeElement));
       expect(document.activeElement).toBe(button4Ref.current);
-      createEventTarget(document.activeElement).tabPrevious();
+      tabPrevious(createEventTarget(document.activeElement));
       expect(document.activeElement).toBe(button3Ref.current);
-      createEventTarget(document.activeElement).tabPrevious();
+      tabPrevious(createEventTarget(document.activeElement));
       expect(document.activeElement).toBe(button2Ref.current);
     });
 
@@ -167,13 +177,13 @@ describe('FocusContain', () => {
 
       ReactDOM.render(<Test />, container);
       expect(document.activeElement).toBe(button2Ref.current);
-      createEventTarget(document.activeElement).tabNext();
+      tabNext(createEventTarget(document.activeElement));
       expect(document.activeElement).toBe(button3Ref.current);
-      createEventTarget(document.activeElement).tabNext();
+      tabNext(createEventTarget(document.activeElement));
       expect(document.activeElement).toBe(button2Ref.current);
-      createEventTarget(document.activeElement).tabPrevious();
+      tabPrevious(createEventTarget(document.activeElement));
       expect(document.activeElement).toBe(button3Ref.current);
-      createEventTarget(document.activeElement).tabPrevious();
+      tabPrevious(createEventTarget(document.activeElement));
       expect(document.activeElement).toBe(button2Ref.current);
     });
 
@@ -213,15 +223,15 @@ describe('FocusContain', () => {
       ReactDOM.render(<Test />, container);
       buttonRef.current.focus();
       expect(document.activeElement).toBe(buttonRef.current);
-      createEventTarget(document.activeElement).tabNext();
+      tabNext(createEventTarget(document.activeElement));
       expect(document.activeElement).toBe(button2Ref.current);
-      createEventTarget(document.activeElement).tabNext();
+      tabNext(createEventTarget(document.activeElement));
       expect(document.activeElement).toBe(button3Ref.current);
-      createEventTarget(document.activeElement).tabNext();
+      tabNext(createEventTarget(document.activeElement));
       expect(document.activeElement).toBe(button4Ref.current);
-      createEventTarget(document.activeElement).tabPrevious();
+      tabPrevious(createEventTarget(document.activeElement));
       expect(document.activeElement).toBe(button3Ref.current);
-      createEventTarget(document.activeElement).tabPrevious();
+      tabPrevious(createEventTarget(document.activeElement));
       expect(document.activeElement).toBe(button2Ref.current);
     });
   });
