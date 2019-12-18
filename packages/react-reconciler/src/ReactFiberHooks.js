@@ -366,7 +366,7 @@ export function renderWithHooks(
   workInProgress: Fiber,
   Component: any,
   props: any,
-  refOrContext: any,
+  secondArg: any,
   nextRenderExpirationTime: ExpirationTime,
 ): any {
   renderExpirationTime = nextRenderExpirationTime;
@@ -422,7 +422,7 @@ export function renderWithHooks(
         : HooksDispatcherOnUpdate;
   }
 
-  let children = Component(props, refOrContext);
+  let children = Component(props, secondArg);
 
   if (didScheduleRenderPhaseUpdate) {
     do {
@@ -449,7 +449,7 @@ export function renderWithHooks(
         ? HooksDispatcherOnUpdateInDEV
         : HooksDispatcherOnUpdate;
 
-      children = Component(props, refOrContext);
+      children = Component(props, secondArg);
     } while (didScheduleRenderPhaseUpdate);
 
     renderPhaseUpdates = null;
