@@ -72,11 +72,17 @@
 }
 
 .InspectedElement {
-  overflow-x: hidden;
+  flex: 1 1 auto;
+  overflow-x: auto;
   overflow-y: auto;
   font-family: var(--font-family-monospace);
   font-size: var(--font-size-monospace-normal);
   line-height: var(--line-height-data);
+}
+
+.InspectedElementContent {
+  width: 100%;
+  min-width: max-content;
 }
 
 .Owner {

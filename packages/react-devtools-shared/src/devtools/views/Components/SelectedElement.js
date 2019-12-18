@@ -353,62 +353,64 @@ function InspectedElementView({
 
   return (
     <div className={styles.InspectedElement}>
-      <HocBadges element={element} />
-      <InspectedElementTree
-        label="props"
-        data={props}
-        inspectPath={inspectPropsPath}
-        overrideValueFn={overridePropsFn}
-        showWhenEmpty={true}
-        canAddEntries={typeof overridePropsFn === 'function'}
-      />
-      {type === ElementTypeSuspense ? (
+      <div className={styles.InspectedElementContent}>
+        <HocBadges element={element} />
         <InspectedElementTree
-          label="suspense"
-          data={{
-            [IS_SUSPENDED]: state !== null,
-          }}
-          overrideValueFn={overrideSuspenseFn}
+          label="props"
+          data={props}
+          inspectPath={inspectPropsPath}
+          overrideValueFn={overridePropsFn}
+          showWhenEmpty={true}
+          canAddEntries={typeof overridePropsFn === 'function'}
         />
-      ) : (
-        <InspectedElementTree
-          label="state"
-          data={state}
-          inspectPath={inspectStatePath}
-          overrideValueFn={overrideStateFn}
-        />
-      )}
-      <HooksTree canEditHooks={canEditHooks} hooks={hooks} id={id} />
-      <InspectedElementTree
-        label={hasLegacyContext ? 'legacy context' : 'context'}
-        data={context}
-        inspectPath={inspectContextPath}
-        overrideValueFn={overrideContextFn}
-      />
-
-      <NativeStyleEditor />
-
-      {ownerID === null &&
-        owners !== null &&
-        owners.length > 0 && (
-          <div className={styles.Owners}>
-            <div className={styles.OwnersHeader}>rendered by</div>
-            {owners.map(owner => (
-              <OwnerView
-                key={owner.id}
-                displayName={owner.displayName || 'Anonymous'}
-                hocDisplayNames={owner.hocDisplayNames}
-                id={owner.id}
-                isInStore={store.containsElement(owner.id)}
-                type={owner.type}
-              />
-            ))}
-          </div>
+        {type === ElementTypeSuspense ? (
+          <InspectedElementTree
+            label="suspense"
+            data={{
+              [IS_SUSPENDED]: state !== null,
+            }}
+            overrideValueFn={overrideSuspenseFn}
+          />
+        ) : (
+          <InspectedElementTree
+            label="state"
+            data={state}
+            inspectPath={inspectStatePath}
+            overrideValueFn={overrideStateFn}
+          />
         )}
+        <HooksTree canEditHooks={canEditHooks} hooks={hooks} id={id} />
+        <InspectedElementTree
+          label={hasLegacyContext ? 'legacy context' : 'context'}
+          data={context}
+          inspectPath={inspectContextPath}
+          overrideValueFn={overrideContextFn}
+        />
 
-      {source !== null && (
-        <Source fileName={source.fileName} lineNumber={source.lineNumber} />
-      )}
+        <NativeStyleEditor />
+
+        {ownerID === null &&
+          owners !== null &&
+          owners.length > 0 && (
+            <div className={styles.Owners}>
+              <div className={styles.OwnersHeader}>rendered by</div>
+              {owners.map(owner => (
+                <OwnerView
+                  key={owner.id}
+                  displayName={owner.displayName || 'Anonymous'}
+                  hocDisplayNames={owner.hocDisplayNames}
+                  id={owner.id}
+                  isInStore={store.containsElement(owner.id)}
+                  type={owner.type}
+                />
+              ))}
+            </div>
+          )}
+
+        {source !== null && (
+          <Source fileName={source.fileName} lineNumber={source.lineNumber} />
+        )}
+      </div>
     </div>
   );
 }
