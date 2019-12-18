@@ -16,7 +16,7 @@ import {
   describeWithPointerEvent,
   resetActivePointers,
   setPointerEvent,
-} from '../event-testing-library';
+} from 'dom-event-testing-library';
 
 let React;
 let ReactFeatureFlags;

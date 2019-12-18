@@ -9,7 +9,7 @@
 
 'use strict';
 
-import {createEventTarget} from 'react-interactions/events/src/dom/event-testing-library';
+import {createEventTarget} from 'dom-event-testing-library';
 
 // This function is used by the a11y modules for testing
 export function emulateBrowserTab(backwards: boolean): void {
