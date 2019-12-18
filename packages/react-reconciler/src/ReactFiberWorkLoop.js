@@ -87,6 +87,7 @@ import {
   ForwardRef,
   MemoComponent,
   SimpleMemoComponent,
+  Chunk,
 } from 'shared/ReactWorkTags';
 import {
   NoEffect,
@@ -2577,7 +2578,8 @@ function warnAboutUpdateOnUnmountedFiberInDEV(fiber) {
       tag !== FunctionComponent &&
       tag !== ForwardRef &&
       tag !== MemoComponent &&
-      tag !== SimpleMemoComponent
+      tag !== SimpleMemoComponent &&
+      tag !== Chunk
     ) {
       // Only warn for user-defined components, not internal ones like Suspense.
       return;
@@ -2872,7 +2874,8 @@ export function checkForWrongSuspensePriorityInDEV(sourceFiber: Fiber) {
               break;
             case FunctionComponent:
             case ForwardRef:
-            case SimpleMemoComponent: {
+            case SimpleMemoComponent:
+            case Chunk: {
               let firstHook: null | Hook = current.memoizedState;
               // TODO: This just checks the first Hook. Isn't it suppose to check all Hooks?
               if (firstHook !== null && firstHook.baseQueue !== null) {

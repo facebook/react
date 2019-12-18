@@ -42,6 +42,7 @@ import {
   IncompleteClassComponent,
   FundamentalComponent,
   ScopeComponent,
+  Chunk,
 } from 'shared/ReactWorkTags';
 import {
   NoEffect,
@@ -64,6 +65,7 @@ import {
   enableFundamentalAPI,
   warnAboutDefaultPropsOnFunctionComponents,
   enableScopeAPI,
+  enableChunksAPI,
 } from 'shared/ReactFeatureFlags';
 import invariant from 'shared/invariant';
 import shallowEqual from 'shared/shallowEqual';
@@ -689,6 +691,82 @@ function updateFunctionComponent(
   return workInProgress.child;
 }
 
+function updateChunk(
+  current: Fiber | null,
+  workInProgress: Fiber,
+  chunk: any,
+  nextProps: any,
+  renderExpirationTime: ExpirationTime,
+) {
+  // TODO: current can be non-null here even if the component
+  // hasn't yet mounted. This happens after the first render suspends.
+  // We'll need to figure out if this is fine or can cause issues.
+
+  const render = chunk.render;
+  const data = chunk.query();
+
+  // The rest is a fork of updateFunctionComponent
+  let nextChildren;
+  prepareToReadContext(workInProgress, renderExpirationTime);
+  if (__DEV__) {
+    ReactCurrentOwner.current = workInProgress;
+    setCurrentPhase('render');
+    nextChildren = renderWithHooks(
+      current,
+      workInProgress,
+      render,
+      nextProps,
+      data,
+      renderExpirationTime,
+    );
+    if (
+      debugRenderPhaseSideEffectsForStrictMode &&
+      workInProgress.mode & StrictMode
+    ) {
+      // Only double-render components with Hooks
+      if (workInProgress.memoizedState !== null) {
+        nextChildren = renderWithHooks(
+          current,
+          workInProgress,
+          render,
+          nextProps,
+          data,
+          renderExpirationTime,
+        );
+      }
+    }
+    setCurrentPhase(null);
+  } else {
+    nextChildren = renderWithHooks(
+      current,
+      workInProgress,
+      render,
+      nextProps,
+      data,
+      renderExpirationTime,
+    );
+  }
+
+  if (current !== null && !didReceiveUpdate) {
+    bailoutHooks(current, workInProgress, renderExpirationTime);
+    return bailoutOnAlreadyFinishedWork(
+      current,
+      workInProgress,
+      renderExpirationTime,
+    );
+  }
+
+  // React DevTools reads this flag.
+  workInProgress.effectTag |= PerformedWork;
+  reconcileChildren(
+    current,
+    workInProgress,
+    nextChildren,
+    renderExpirationTime,
+  );
+  return workInProgress.child;
+}
+
 function updateClassComponent(
   current: Fiber | null,
   workInProgress: Fiber,
@@ -1131,6 +1209,20 @@ function mountLazyComponent(
         renderExpirationTime,
       );
       return child;
+    }
+    case Chunk: {
+      if (enableChunksAPI) {
+        // TODO: Resolve for Hot Reloading.
+        child = updateChunk(
+          null,
+          workInProgress,
+          Component,
+          props,
+          renderExpirationTime,
+        );
+        return child;
+      }
+      break;
     }
   }
   let hint = '';
@@ -3187,6 +3279,20 @@ function beginWork(
         return updateScopeComponent(
           current,
           workInProgress,
+          renderExpirationTime,
+        );
+      }
+      break;
+    }
+    case Chunk: {
+      if (enableChunksAPI) {
+        const chunk = workInProgress.type;
+        const props = workInProgress.pendingProps;
+        return updateChunk(
+          current,
+          workInProgress,
+          chunk,
+          props,
           renderExpirationTime,
         );
       }

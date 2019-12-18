@@ -21,6 +21,7 @@ import {
   REACT_SUSPENSE_TYPE,
   REACT_SUSPENSE_LIST_TYPE,
   REACT_LAZY_TYPE,
+  REACT_CHUNK_TYPE,
 } from 'shared/ReactSymbols';
 import {refineResolvedLazyComponent} from 'shared/ReactLazyComponent';
 
@@ -79,6 +80,8 @@ function getComponentName(type: mixed): string | null {
         return getWrappedName(type, type.render, 'ForwardRef');
       case REACT_MEMO_TYPE:
         return getComponentName(type.type);
+      case REACT_CHUNK_TYPE:
+        return getComponentName(type.render);
       case REACT_LAZY_TYPE: {
         const thenable: LazyComponent<mixed> = (type: any);
         const resolvedThenable = refineResolvedLazyComponent(thenable);
