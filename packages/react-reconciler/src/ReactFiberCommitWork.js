@@ -781,7 +781,7 @@ function commitUnmount(
           });
         }
       }
-      break;
+      return;
     }
     case ClassComponent: {
       safelyDetachRef(current);
@@ -839,6 +839,7 @@ function commitUnmount(
       if (enableScopeAPI) {
         safelyDetachRef(current);
       }
+      return;
     }
   }
 }
@@ -1402,8 +1403,9 @@ function commitWork(current: Fiber | null, finishedWork: Fiber): void {
       if (enableFundamentalAPI) {
         const fundamentalInstance = finishedWork.stateNode;
         updateFundamentalComponent(fundamentalInstance);
+        return;
       }
-      return;
+      break;
     }
     case ScopeComponent: {
       if (enableScopeAPI) {
@@ -1418,8 +1420,9 @@ function commitWork(current: Fiber | null, finishedWork: Fiber): void {
             updateDeprecatedEventListeners(nextListeners, finishedWork, null);
           }
         }
+        return;
       }
-      return;
+      break;
     }
   }
   invariant(

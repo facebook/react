@@ -1240,8 +1240,9 @@ function completeWork(
             markUpdate(workInProgress);
           }
         }
+        return null;
       }
-      return null;
+      break;
     }
     case ScopeComponent: {
       if (enableScopeAPI) {
@@ -1288,8 +1289,9 @@ function completeWork(
             markRef(workInProgress);
           }
         }
+        return null;
       }
-      return null;
+      break;
     }
   }
   invariant(
