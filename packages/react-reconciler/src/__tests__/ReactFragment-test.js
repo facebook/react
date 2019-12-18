@@ -722,10 +722,10 @@ describe('ReactFragment', () => {
     expect(ReactNoop.getChildren()).toEqual([div(div(), span())]);
   });
 
-  it('should not preserve state when switching a nested fragment to a passthrough component', function() {
+  it('should not preserve state when switching a nested unkeyed fragment to a passthrough component', function() {
     const ops = [];
 
-    function ReturnChildren({children}) {
+    function Passthrough({children}) {
       return children;
     }
 
@@ -748,9 +748,103 @@ describe('ReactFragment', () => {
         </>
       ) : (
         <>
-          <ReturnChildren>
+          <Passthrough>
             <Stateful />
-          </ReturnChildren>
+          </Passthrough>
+        </>
+      );
+    }
+
+    ReactNoop.render(<Foo condition={true} />);
+    expect(Scheduler).toFlushWithoutYielding();
+
+    ReactNoop.render(<Foo condition={false} />);
+    expect(Scheduler).toFlushWithoutYielding();
+
+    expect(ops).toEqual([]);
+    expect(ReactNoop.getChildren()).toEqual([div()]);
+
+    ReactNoop.render(<Foo condition={true} />);
+    expect(Scheduler).toFlushWithoutYielding();
+
+    expect(ops).toEqual([]);
+    expect(ReactNoop.getChildren()).toEqual([div()]);
+  });
+
+  it('should not preserve state when switching a nested keyed fragment to a passthrough component', function() {
+    const ops = [];
+
+    function Passthrough({children}) {
+      return children;
+    }
+
+    class Stateful extends React.Component {
+      componentDidUpdate() {
+        ops.push('Update Stateful');
+      }
+
+      render() {
+        return <div>Hello</div>;
+      }
+    }
+
+    function Foo({condition}) {
+      return condition ? (
+        <>
+          <React.Fragment key="a">
+            <Stateful />
+          </React.Fragment>
+        </>
+      ) : (
+        <>
+          <Passthrough>
+            <Stateful />
+          </Passthrough>
+        </>
+      );
+    }
+
+    ReactNoop.render(<Foo condition={true} />);
+    expect(Scheduler).toFlushWithoutYielding();
+
+    ReactNoop.render(<Foo condition={false} />);
+    expect(Scheduler).toFlushWithoutYielding();
+
+    expect(ops).toEqual([]);
+    expect(ReactNoop.getChildren()).toEqual([div()]);
+
+    ReactNoop.render(<Foo condition={true} />);
+    expect(Scheduler).toFlushWithoutYielding();
+
+    expect(ops).toEqual([]);
+    expect(ReactNoop.getChildren()).toEqual([div()]);
+  });
+
+  it('should not preserve state when switching a nested keyed array to a passthrough component', function() {
+    const ops = [];
+
+    function Passthrough({children}) {
+      return children;
+    }
+
+    class Stateful extends React.Component {
+      componentDidUpdate() {
+        ops.push('Update Stateful');
+      }
+
+      render() {
+        return <div>Hello</div>;
+      }
+    }
+
+    function Foo({condition}) {
+      return condition ? (
+        <>{[<Stateful key="a" />]}</>
+      ) : (
+        <>
+          <Passthrough>
+            <Stateful />
+          </Passthrough>
         </>
       );
     }
