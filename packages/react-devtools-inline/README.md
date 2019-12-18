@@ -154,7 +154,7 @@ iframe.onload = () => {
 ```
 
 ## Local development
-You can also build and install this extension from source.
+You can also build and test this package from source.
 
 ### Prerequisite steps
 DevTools depends on local versions of several NPM packages<sup>1</sup> also in this workspace. You'll need to either build or download those packages first.
@@ -164,10 +164,7 @@ DevTools depends on local versions of several NPM packages<sup>1</sup> also in t
 #### Build from source
 To build dependencies from source, run the following command from the root of the repository:
 ```sh
-RELEASE_CHANNEL=experimental \
-  yarn build \
-    -- react/index,react-dom,react-is,react-debug-tools,scheduler \
-    --type=NODE
+yarn build-for-devtools
 ```
 #### Download from CI
 To use the latest build from CI, run the following command from the root of the repository:
@@ -179,3 +176,5 @@ Once the above packages have been built or downloaded, you can watch for changes
 ```sh
 yarn start
 ```
+
+To test package changes, refer to the [`react-devtools-shell` README](https://github.com/facebook/react/blob/master/packages/react-devtools-shell/README.md).

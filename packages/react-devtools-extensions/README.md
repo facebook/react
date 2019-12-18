@@ -6,7 +6,7 @@ The easiest way to install this extension is as a browser add-on:
 * [Chrome web store](https://chrome.google.com/webstore/detail/react-developer-tools/fmkadmapgofadopljbjfkapdkoienihi?hl=en)
 * [Firefox Add-ons](https://addons.mozilla.org/en-US/firefox/addon/react-devtools/)
 
-## Development
+## Local development
 You can also build and install this extension from source.
 
 ### Prerequisite steps
@@ -17,10 +17,7 @@ DevTools depends on local versions of several NPM packages<sup>1</sup> also in t
 #### Build from source
 To build dependencies from source, run the following command from the root of the repository:
 ```sh
-RELEASE_CHANNEL=experimental \
-  yarn build \
-    -- react/index,react-dom,react-is,react-debug-tools,scheduler \
-    --type=NODE
+yarn build-for-devtools
 ```
 #### Download from CI
 To use the latest build from CI, run the following command from the root of the repository:
