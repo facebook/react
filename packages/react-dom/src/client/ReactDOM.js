@@ -60,6 +60,7 @@ import {
   disableUnstableRenderSubtreeIntoContainer,
   warnUnstableRenderSubtreeIntoContainer,
   isTestEnvironment,
+  enableListenerAPI,
 } from 'shared/ReactFeatureFlags';
 
 import {
@@ -77,6 +78,7 @@ import {
   setAttemptHydrationAtCurrentPriority,
   queueExplicitHydrationTarget,
 } from '../events/ReactDOMEventReplaying';
+import {useEvent} from './ReactDOMEventListenerHooks';
 
 setAttemptSynchronousHydration(attemptSynchronousHydration);
 setAttemptUserBlockingHydration(attemptUserBlockingHydration);
@@ -217,6 +219,10 @@ if (!disableUnstableCreatePortal) {
     }
     return createPortal(...args);
   };
+}
+
+if (enableListenerAPI) {
+  ReactDOM.unstable_useEvent = useEvent;
 }
 
 const foundDevTools = injectIntoDevTools({

@@ -240,6 +240,17 @@ function useResponder(
   };
 }
 
+const noOp = () => {};
+
+function useEvent(options: any): any {
+  hookLog.push({primitive: 'Event', stackError: new Error(), value: options});
+  return {
+    clear: noOp,
+    listen: noOp,
+    unlisten: noOp,
+  };
+}
+
 function useTransition(
   config: SuspenseConfig | null | void,
 ): [(() => void) => void, boolean] {
@@ -277,6 +288,7 @@ const Dispatcher: DispatcherType = {
   useResponder,
   useTransition,
   useDeferredValue,
+  useEvent,
 };
 
 // Inspect

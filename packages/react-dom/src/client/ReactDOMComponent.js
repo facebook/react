@@ -65,6 +65,8 @@ import {
 import {
   addResponderEventSystemEvent,
   removeActiveResponderEventSystemEvent,
+  addListenerSystemEvent,
+  removeListenerSystemEvent,
 } from '../events/ReactDOMEventListener.js';
 import {mediaEventTypes} from '../events/DOMTopLevelEventTypes';
 import {
@@ -89,6 +91,7 @@ import {validateProperties as validateUnknownProperties} from '../shared/ReactDO
 import {
   enableDeprecatedFlareAPI,
   enableTrustedTypesIntegration,
+  enableListenerAPI,
 } from 'shared/ReactFeatureFlags';
 
 let didWarnInvalidHydration = false;
@@ -1337,6 +1340,42 @@ export function listenToEventResponderEventTypes(
         );
         listenerMap.set(eventKey, eventListener);
       }
+    }
+  }
+}
+
+export function listenToEventListener(
+  type: string,
+  passive: boolean,
+  document: Document,
+): void {
+  if (enableListenerAPI) {
+    // Get the listening Map for this element. We use this to track
+    // what events we're listening to.
+    const listenerMap = getListenerMapForElement(document);
+    const passiveKey = type + '_passive';
+    const activeKey = type + '_active';
+    const eventKey = passive ? passiveKey : activeKey;
+
+    if (!listenerMap.has(eventKey)) {
+      if (passive) {
+        if (listenerMap.has(activeKey)) {
+          // If we have an active event listener, do not register
+          // a passive event listener. We use the same active event
+          // listener.
+          return;
+        } else {
+          // If we have a passive event listener, remove the
+          // existing passive event listener before we add the
+          // active event listener.
+          const passiveListener = listenerMap.get(passiveKey);
+          if (passiveListener != null) {
+            removeListenerSystemEvent(document, type, passiveListener);
+          }
+        }
+      }
+      const eventListener = addListenerSystemEvent(document, type, passive);
+      listenerMap.set(eventKey, eventListener);
     }
   }
 }

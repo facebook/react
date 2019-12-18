@@ -17,6 +17,12 @@ import type {ExpirationTime} from './ReactFiberExpirationTime';
 import type {HookEffectTag} from './ReactHookEffectTags';
 import type {SuspenseConfig} from './ReactFiberSuspenseConfig';
 import type {ReactPriorityLevel} from './SchedulerWithReactIntegration';
+import type {
+  ReactListenerEvent,
+  ReactListenerMap,
+  ReactListener,
+  Container,
+} from './ReactFiberHostConfig';
 
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 
@@ -54,6 +60,15 @@ import {
   runWithPriority,
   getCurrentPriorityLevel,
 } from './SchedulerWithReactIntegration';
+import {
+  registerListenerEvent,
+  attachListenerToInstance,
+  detachListenerFromInstance,
+  validateReactListenerMapListener,
+  validateReactListenerDeleteListener,
+} from './ReactFiberHostConfig';
+import {getRootHostContainer} from './ReactFiberHostContext';
+import {enableListenerAPI} from 'shared/ReactFeatureFlags';
 
 const {ReactCurrentDispatcher, ReactCurrentBatchConfig} = ReactSharedInternals;
 
@@ -97,6 +112,7 @@ export type Dispatcher = {|
   useTransition(
     config: SuspenseConfig | void | null,
   ): [(() => void) => void, boolean],
+  useEvent(event: ReactListenerEvent): ReactListenerMap,
 |};
 
 type Update<S, A> = {|
@@ -129,7 +145,8 @@ export type HookType =
   | 'useDebugValue'
   | 'useResponder'
   | 'useDeferredValue'
-  | 'useTransition';
+  | 'useTransition'
+  | 'useEvent';
 
 let didWarnAboutMismatchedHooksForComponent;
 if (__DEV__) {
@@ -1260,6 +1277,143 @@ function rerenderTransition(
   return [start, isPending];
 }
 
+function createReactListener(
+  event: ReactListenerEvent,
+  callback: Event => void,
+  instance: Container,
+  destroy: Container => void,
+): ReactListener {
+  return {
+    callback,
+    depth: 0,
+    destroy,
+    instance,
+    event,
+  };
+}
+
+const noOpMount = () => {};
+
+function validateNotInFunctionRender(): boolean {
+  if (currentlyRenderingFiber === null) {
+    return true;
+  }
+  if (__DEV__) {
+    console.warn(
+      'Event listener methods from useEvent() cannot be used during render.' +
+        ' These methods should be called in an effect or event callback outside the render.',
+    );
+  }
+  return false;
+}
+
+export function mountEventListener(
+  event: ReactListenerEvent,
+): ReactListenerMap {
+  if (enableListenerAPI) {
+    const hook = mountWorkInProgressHook();
+    const rootContainerInstance = getRootHostContainer();
+    registerListenerEvent(event, rootContainerInstance);
+
+    let listenerMap: Map<Container, ReactListener> = new Map();
+
+    const clear = (): void => {
+      if (validateNotInFunctionRender()) {
+        const listeners = Array.from(listenerMap.values());
+        for (let i = 0; i < listeners.length; i++) {
+          detachListenerFromInstance(listeners[i]);
+        }
+        listenerMap.clear();
+      }
+    };
+
+    const destroy = (instance: Container) => {
+      listenerMap.delete(instance);
+    };
+
+    const reactListenerMap: ReactListenerMap = {
+      clear,
+      deleteListener(instance: Container): void {
+        if (
+          validateNotInFunctionRender() &&
+          validateReactListenerDeleteListener(instance)
+        ) {
+          const listener = listenerMap.get(instance);
+          if (listener !== undefined) {
+            listenerMap.delete(instance);
+            detachListenerFromInstance(listener);
+          }
+        }
+      },
+      setListener(instance: Container, callback: Event => void): void {
+        if (
+          validateNotInFunctionRender() &&
+          validateReactListenerMapListener(instance, callback)
+        ) {
+          let listener = listenerMap.get(instance);
+          if (listener === undefined) {
+            listener = createReactListener(event, callback, instance, destroy);
+            listenerMap.set(instance, listener);
+          } else {
+            listener.callback = callback;
+          }
+          attachListenerToInstance(listener);
+        }
+      },
+    };
+    // In order to clear up upon the hook unmounting,
+    /// we ensure we push an effect that handles the use-case.
+    currentlyRenderingFiber.effectTag |= UpdateEffect;
+    pushEffect(NoHookEffect, noOpMount, clear, null);
+    hook.memoizedState = [reactListenerMap, event, clear];
+    return reactListenerMap;
+  }
+  // To make Flow not complain
+  return (undefined: any);
+}
+
+export function updateEventListener(
+  event: ReactListenerEvent,
+): ReactListenerMap {
+  if (enableListenerAPI) {
+    const hook = updateWorkInProgressHook();
+    const [reactListenerMap, memoizedEvent, clear] = hook.memoizedState;
+    if (__DEV__) {
+      if (memoizedEvent.type !== event.type) {
+        console.warn(
+          'The event type argument passed to the useEvent() hook was different between renders.' +
+            ' The event type is static and should never change between renders.',
+        );
+      }
+      if (memoizedEvent.capture !== event.capture) {
+        console.warn(
+          'The "capture" option passed to the useEvent() hook was different between renders.' +
+            ' The "capture" option is static and should never change between renders.',
+        );
+      }
+      if (memoizedEvent.priority !== event.priority) {
+        console.warn(
+          'The "priority" option passed to the useEvent() hook was different between renders.' +
+            ' The "priority" option is static and should never change between renders.',
+        );
+      }
+      if (memoizedEvent.passive !== event.passive) {
+        console.warn(
+          'The "passive" option passed to the useEvent() hook was different between renders.' +
+            ' The "passive" option is static and should never change between renders.',
+        );
+      }
+    }
+    // In order to clear up upon the hook unmounting,
+    /// we ensure we push an effect that handles the use-case.
+    currentlyRenderingFiber.effectTag |= UpdateEffect;
+    pushEffect(NoHookEffect, noOpMount, clear, null);
+    return reactListenerMap;
+  }
+  // To make Flow not complain
+  return (undefined: any);
+}
+
 function dispatchAction<S, A>(
   fiber: Fiber,
   queue: UpdateQueue<S, A>,
@@ -1385,6 +1539,7 @@ export const ContextOnlyDispatcher: Dispatcher = {
   useResponder: throwInvalidHookError,
   useDeferredValue: throwInvalidHookError,
   useTransition: throwInvalidHookError,
+  useEvent: throwInvalidHookError,
 };
 
 const HooksDispatcherOnMount: Dispatcher = {
@@ -1403,6 +1558,7 @@ const HooksDispatcherOnMount: Dispatcher = {
   useResponder: createDeprecatedResponderListener,
   useDeferredValue: mountDeferredValue,
   useTransition: mountTransition,
+  useEvent: mountEventListener,
 };
 
 const HooksDispatcherOnUpdate: Dispatcher = {
@@ -1421,6 +1577,7 @@ const HooksDispatcherOnUpdate: Dispatcher = {
   useResponder: createDeprecatedResponderListener,
   useDeferredValue: updateDeferredValue,
   useTransition: updateTransition,
+  useEvent: updateEventListener,
 };
 
 const HooksDispatcherOnRerender: Dispatcher = {
@@ -1588,6 +1745,11 @@ if (__DEV__) {
       mountHookTypesDev();
       return mountTransition(config);
     },
+    useEvent(event: ReactListenerEvent): ReactListenerMap {
+      currentHookNameInDev = 'useEvent';
+      mountHookTypesDev();
+      return mountEventListener(event);
+    },
   };
 
   HooksDispatcherOnMountWithHookTypesInDEV = {
@@ -1705,6 +1867,11 @@ if (__DEV__) {
       updateHookTypesDev();
       return mountTransition(config);
     },
+    useEvent(event: ReactListenerEvent): ReactListenerMap {
+      currentHookNameInDev = 'useEvent';
+      updateHookTypesDev();
+      return mountEventListener(event);
+    },
   };
 
   HooksDispatcherOnUpdateInDEV = {
@@ -1821,6 +1988,11 @@ if (__DEV__) {
       currentHookNameInDev = 'useTransition';
       updateHookTypesDev();
       return updateTransition(config);
+    },
+    useEvent(event: ReactListenerEvent): ReactListenerMap {
+      currentHookNameInDev = 'useEvent';
+      updateHookTypesDev();
+      return updateEventListener(event);
     },
   };
 
@@ -2070,6 +2242,12 @@ if (__DEV__) {
       mountHookTypesDev();
       return mountTransition(config);
     },
+    useEvent(event: ReactListenerEvent): ReactListenerMap {
+      currentHookNameInDev = 'useEvent';
+      warnInvalidHookAccess();
+      mountHookTypesDev();
+      return mountEventListener(event);
+    },
   };
 
   InvalidNestedHooksDispatcherOnUpdateInDEV = {
@@ -2200,6 +2378,12 @@ if (__DEV__) {
       warnInvalidHookAccess();
       updateHookTypesDev();
       return updateTransition(config);
+    },
+    useEvent(event: ReactListenerEvent): ReactListenerMap {
+      currentHookNameInDev = 'useEvent';
+      warnInvalidHookAccess();
+      mountHookTypesDev();
+      return updateEventListener(event);
     },
   };
 

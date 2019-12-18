@@ -11,6 +11,7 @@ import {
   precacheFiberNode,
   updateFiberProps,
   getClosestInstanceFromNode,
+  getListenersFromNode,
 } from './ReactDOMComponentTree';
 import {
   createElement,
@@ -27,6 +28,7 @@ import {
   warnForInsertedHydratedElement,
   warnForInsertedHydratedText,
   listenToEventResponderEventTypes,
+  listenToEventListener,
 } from './ReactDOMComponent';
 import {getSelectionInformation, restoreSelection} from './ReactInputSelection';
 import setTextContent from './setTextContent';
@@ -50,6 +52,9 @@ import type {
   ReactDOMEventResponder,
   ReactDOMEventResponderInstance,
   ReactDOMFundamentalComponentInstance,
+  ReactDOMListener,
+  ReactDOMListenerEvent,
+  ReactDOMListenerMap,
 } from 'shared/ReactDOMTypes';
 import {
   mountEventResponder,
@@ -57,6 +62,10 @@ import {
   DEPRECATED_dispatchEventForResponderEventSystem,
 } from '../events/DeprecatedDOMEventResponderSystem';
 import {retryIfBlockedOn} from '../events/ReactDOMEventReplaying';
+
+export type ReactListenerEvent = ReactDOMListenerEvent;
+export type ReactListenerMap = ReactDOMListenerMap;
+export type ReactListener = ReactDOMListener;
 
 export type Type = string;
 export type Props = {
@@ -116,11 +125,18 @@ import {
   enableSuspenseServerRenderer,
   enableDeprecatedFlareAPI,
   enableFundamentalAPI,
+  enableListenerAPI,
 } from 'shared/ReactFeatureFlags';
 import {
   RESPONDER_EVENT_SYSTEM,
   IS_PASSIVE,
 } from 'legacy-events/EventSystemFlags';
+import {
+  attachElementListener,
+  detachElementListener,
+  attachDocumentListener,
+  detachDocumentListener,
+} from '../events/DOMEventListenerSystem';
 
 let SUPPRESS_HYDRATION_WARNING;
 if (__DEV__) {
@@ -510,6 +526,22 @@ export function beforeRemoveInstance(
     instance === selectionInformation.focusedElem
   ) {
     dispatchBeforeDetachedBlur(((instance: any): HTMLElement));
+  }
+  if (enableListenerAPI) {
+    // It's unfortunate that we have to do this cleanup, but
+    // it's necessary otherwise we will leak the host instances
+    // from the useEvent hook instances Map. We call destroy
+    // on each listener to ensure we properly remove the instance
+    // from the instances Map. Note: we have this Map so that we
+    // can properly unmount instances when the function component
+    // that the hook is attached to gets unmounted.
+    const listenersSet = getListenersFromNode(instance);
+    if (listenersSet !== null) {
+      const listeners = Array.from(listenersSet);
+      for (let i = 0; i < listeners.length; i++) {
+        listeners[i].destroy();
+      }
+    }
   }
 }
 
@@ -1040,6 +1072,84 @@ export function unmountFundamentalComponent(
   }
 }
 
-export function getInstanceFromNode(node: HTMLElement): null | Object {
+export function getInstanceFromNode(node: Instance): null | Object {
   return getClosestInstanceFromNode(node) || null;
+}
+
+export function registerListenerEvent(
+  event: ReactDOMListenerEvent,
+  rootContainerInstance: Container,
+): void {
+  if (enableListenerAPI) {
+    const {type, passive} = event;
+    const doc = rootContainerInstance.ownerDocument;
+    listenToEventListener(type, passive, doc);
+  }
+}
+
+export function attachListenerToInstance(listener: ReactDOMListener): void {
+  if (enableListenerAPI) {
+    const {instance} = listener;
+    if (instance.nodeType === DOCUMENT_NODE) {
+      attachDocumentListener(listener);
+    } else {
+      attachElementListener(listener);
+    }
+  }
+}
+
+export function detachListenerFromInstance(listener: ReactDOMListener): void {
+  if (enableListenerAPI) {
+    const {instance} = listener;
+    if (instance.nodeType === DOCUMENT_NODE) {
+      detachDocumentListener(listener);
+    } else {
+      detachElementListener(listener);
+    }
+  }
+}
+
+function validateListenerInstance(instance, methodString): boolean {
+  if (
+    instance &&
+    (instance.nodeType === DOCUMENT_NODE ||
+      getClosestInstanceFromNode(instance))
+  ) {
+    return true;
+  }
+  if (__DEV__) {
+    console.warn(
+      'Event listener method %s() from useEvent() hook requires the first argument to be a valid' +
+        ' DOM node that was rendered and managed by React. If this is from a ref, ensure' +
+        ' the ref value has been set before attaching.',
+      methodString,
+    );
+  }
+  return false;
+}
+
+export function validateReactListenerDeleteListener(
+  instance: Container,
+): boolean {
+  return validateListenerInstance(instance, 'deleteListener');
+}
+
+export function validateReactListenerMapListener(
+  instance: Container,
+  listener: Event => void,
+): boolean {
+  if (enableListenerAPI) {
+    if (validateListenerInstance(instance, 'setListener')) {
+      if (typeof listener === 'function') {
+        return true;
+      }
+      if (__DEV__) {
+        console.warn(
+          'Event listener method setListener() from useEvent() hook requires the second argument' +
+            ' to be valid function callback.',
+        );
+      }
+    }
+  }
+  return false;
 }

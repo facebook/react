@@ -10,7 +10,10 @@ import {
   restoreStateIfNeeded,
 } from './ReactControlledComponent';
 
-import {enableDeprecatedFlareAPI} from 'shared/ReactFeatureFlags';
+import {
+  enableDeprecatedFlareAPI,
+  enableListenerAPI,
+} from 'shared/ReactFeatureFlags';
 import {invokeGuardedCallbackAndCatchFirstError} from 'shared/ReactErrorUtils';
 
 // Used as a way to call batchedUpdates when we don't have a reference to
@@ -118,9 +121,8 @@ export function flushDiscreteUpdatesIfNeeded(timeStamp: number) {
   // behaviour as we had before this change, so the risks are low.
   if (
     !isInsideEventHandler &&
-    (!enableDeprecatedFlareAPI ||
-      timeStamp === 0 ||
-      lastFlushedEventTimeStamp !== timeStamp)
+    ((!enableDeprecatedFlareAPI && !enableListenerAPI) ||
+      (timeStamp === 0 || lastFlushedEventTimeStamp !== timeStamp))
   ) {
     lastFlushedEventTimeStamp = timeStamp;
     flushDiscreteUpdatesImpl();

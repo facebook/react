@@ -46,6 +46,7 @@ import {
   type EventSystemFlags,
   PLUGIN_EVENT_SYSTEM,
   RESPONDER_EVENT_SYSTEM,
+  LISTENER_EVENT_SYSTEM,
   IS_PASSIVE,
   IS_ACTIVE,
   PASSIVE_NOT_SUPPORTED,
@@ -62,13 +63,17 @@ import {getClosestInstanceFromNode} from '../client/ReactDOMComponentTree';
 import {getRawEventName} from './DOMTopLevelEventTypes';
 import {passiveBrowserEventsSupported} from './checkPassiveEvents';
 
-import {enableDeprecatedFlareAPI} from 'shared/ReactFeatureFlags';
+import {
+  enableDeprecatedFlareAPI,
+  enableListenerAPI,
+} from 'shared/ReactFeatureFlags';
 import {
   UserBlockingEvent,
   ContinuousEvent,
   DiscreteEvent,
 } from 'shared/ReactTypes';
 import {getEventPriorityForPluginSystem} from './DOMEventProperties';
+import {dispatchEventForListenerEventSystem} from './DOMEventListenerSystem';
 
 const {
   unstable_UserBlockingPriority: UserBlockingPriority,
@@ -272,6 +277,62 @@ export function removeActiveResponderEventSystemEvent(
   }
 }
 
+export function addListenerSystemEvent(
+  document: Document,
+  topLevelType: string,
+  passive: boolean,
+): any => void {
+  let eventFlags = RESPONDER_EVENT_SYSTEM | LISTENER_EVENT_SYSTEM;
+
+  // If passive option is not supported, then the event will be
+  // active and not passive, but we flag it as using not being
+  // supported too. This way the responder event plugins know,
+  // and can provide polyfills if needed.
+  if (passive) {
+    if (passiveBrowserEventsSupported) {
+      eventFlags |= IS_PASSIVE;
+    } else {
+      eventFlags |= IS_ACTIVE;
+      eventFlags |= PASSIVE_NOT_SUPPORTED;
+      passive = false;
+    }
+  } else {
+    eventFlags |= IS_ACTIVE;
+  }
+  // Check if interactive and wrap in discreteUpdates
+  const listener = dispatchEvent.bind(
+    null,
+    ((topLevelType: any): DOMTopLevelEventType),
+    eventFlags,
+  );
+  if (passiveBrowserEventsSupported) {
+    addEventCaptureListenerWithPassiveFlag(
+      document,
+      topLevelType,
+      listener,
+      passive,
+    );
+  } else {
+    addEventCaptureListener(document, topLevelType, listener);
+  }
+  return listener;
+}
+
+export function removeListenerSystemEvent(
+  document: Document,
+  topLevelType: string,
+  listener: any => void,
+) {
+  if (passiveBrowserEventsSupported) {
+    document.removeEventListener(topLevelType, listener, {
+      capture: true,
+      passive: false,
+    });
+  } else {
+    document.removeEventListener(topLevelType, listener, true);
+  }
+}
+
 function trapEventForPluginEventSystem(
   element: Document | Element | Node,
   topLevelType: DOMTopLevelEventType,
@@ -401,7 +462,7 @@ export function dispatchEvent(
 
   // This is not replayable so we'll invoke it but without a target,
   // in case the event system needs to trace it.
-  if (enableDeprecatedFlareAPI) {
+  if (enableDeprecatedFlareAPI || enableListenerAPI) {
     if (eventSystemFlags & PLUGIN_EVENT_SYSTEM) {
       dispatchEventForPluginEventSystem(
         topLevelType,
@@ -418,6 +479,14 @@ export function dispatchEvent(
         nativeEvent,
         getEventTarget(nativeEvent),
         eventSystemFlags,
+      );
+    }
+    if (eventSystemFlags & LISTENER_EVENT_SYSTEM) {
+      // React Listener event system
+      dispatchEventForListenerEventSystem(
+        (topLevelType: any),
+        null,
+        nativeEvent,
       );
     }
   } else {
@@ -479,7 +548,7 @@ export function attemptToDispatchEvent(
     }
   }
 
-  if (enableDeprecatedFlareAPI) {
+  if (enableDeprecatedFlareAPI || enableListenerAPI) {
     if (eventSystemFlags & PLUGIN_EVENT_SYSTEM) {
       dispatchEventForPluginEventSystem(
         topLevelType,
@@ -496,6 +565,14 @@ export function attemptToDispatchEvent(
         nativeEvent,
         nativeEventTarget,
         eventSystemFlags,
+      );
+    }
+    if (eventSystemFlags & LISTENER_EVENT_SYSTEM) {
+      // React Listener event system
+      dispatchEventForListenerEventSystem(
+        (topLevelType: any),
+        targetInst,
+        nativeEvent,
       );
     }
   } else {

@@ -469,3 +469,26 @@ export function getInstanceFromNode(node) {
 export function beforeRemoveInstance(instance) {
   // noop
 }
+
+export function registerListenerEvent(
+  event: any,
+  rootContainerInstance: Container,
+): void {
+  // noop
+}
+
+export function attachListenerToInstance(listener: any): any {
+  // noop
+}
+
+export function detachListenerFromInstance(listener: any): any {
+  // noop
+}
+
+export function validateReactListenerDeleteListener(instance): void {
+  // noop
+}
+
+export function validateReactListenerMapListener(instance, listener): void {
+  // noop
+}

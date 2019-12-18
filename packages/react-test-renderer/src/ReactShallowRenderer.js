@@ -397,6 +397,14 @@ class ReactShallowRenderer {
       return value;
     };
 
+    const useEvent = () => {
+      return {
+        clear: noOp,
+        deleteListener: noOp,
+        setListener: noOp,
+      };
+    };
+
     return {
       readContext,
       useCallback: (identity: any),
@@ -415,6 +423,7 @@ class ReactShallowRenderer {
       useResponder,
       useTransition,
       useDeferredValue,
+      useEvent,
     };
   }
 

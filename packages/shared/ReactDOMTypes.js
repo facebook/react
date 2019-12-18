@@ -75,3 +75,29 @@ export type ReactDOMResponderContext = {
   getResponderNode(): Element | null,
   ...
 };
+
+export type RefObject = {current: null | mixed};
+
+export type ReactDOMListenerEvent = {|
+  capture: boolean,
+  passive: boolean,
+  priority: number,
+  type: string,
+|};
+
+export type ReactDOMListenerMap = {|
+  clear: () => void,
+  setListener: (
+    instance: Document | HTMLElement,
+    callback: (Event) => void,
+  ) => void,
+  deleteListener: (instance: Document | HTMLElement) => void,
+|};
+
+export type ReactDOMListener = {|
+  callback: Event => void,
+  depth: number,
+  destroy: Document | (Element => void),
+  event: ReactDOMListenerEvent,
+  instance: Document | Element,
+|};

@@ -27,6 +27,7 @@ export const exposeConcurrentModeAPIs = __EXPERIMENTAL__;
 export const warnAboutShorthandPropertyCollision = false;
 export const enableSchedulerDebugging = false;
 export const enableDeprecatedFlareAPI = false;
+export const enableListenerAPI = false;
 export const enableFundamentalAPI = false;
 export const enableScopeAPI = false;
 export const enableJSXTransformAPI = false;

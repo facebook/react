@@ -20,6 +20,7 @@ const randomKey = Math.random()
   .slice(2);
 const internalInstanceKey = '__reactInternalInstance$' + randomKey;
 const internalEventHandlersKey = '__reactEventHandlers$' + randomKey;
+const internalEventListenersKey = '__reactEventListeners$' + randomKey;
 const internalContainerInstanceKey = '__reactContainere$' + randomKey;
 
 export function precacheFiberNode(hostInst, node) {
@@ -163,4 +164,12 @@ export function getFiberCurrentPropsFromNode(node) {
 
 export function updateFiberProps(node, props) {
   node[internalEventHandlersKey] = props;
+}
+
+export function getListenersFromNode(node) {
+  return node[internalEventListenersKey] || null;
+}
+
+export function initListenersSet(node, value) {
+  node[internalEventListenersKey] = value;
 }

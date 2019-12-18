@@ -78,6 +78,8 @@ function updateFlagOutsideOfReactCallStack() {
 
 export const enableDeprecatedFlareAPI = true;
 
+export const enableListenerAPI = true;
+
 export const enableFundamentalAPI = false;
 
 export const enableScopeAPI = true;

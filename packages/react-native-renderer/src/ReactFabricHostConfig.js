@@ -54,6 +54,11 @@ const {get: getViewConfigForType} = ReactNativeViewConfigRegistry;
 let nextReactTag = 2;
 
 type Node = Object;
+
+export type ReactListenerEvent = Object;
+export type ReactListenerMap = Object;
+export type ReactListener = Object;
+
 export type Type = string;
 export type Props = Object;
 export type Instance = {
@@ -465,5 +470,25 @@ export function getInstanceFromNode(node: any) {
 }
 
 export function beforeRemoveInstance(instance: any) {
+  // noop
+}
+
+export function registerListenerEvent(instance, event, callback): void {
+  // noop
+}
+
+export function attachListenerToInstance(linstance, event, callback): any {
+  // noop
+}
+
+export function detachListenerFromInstance(instance, event, callback): any {
+  // noop
+}
+
+export function validateReactListenerDeleteListener(instance): void {
+  // noop
+}
+
+export function validateReactListenerMapListener(instance, listener): void {
   // noop
 }
