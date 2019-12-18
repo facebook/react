@@ -17,6 +17,10 @@ RELEASE_CHANNEL=experimental \
     -- react/index,react-dom,react-is,react-debug-tools,scheduler \
     --type=NODE
 ```
+If you would like to skip generating a local build, you can also download the latest experimental release from CI instead:
+```sh
+./scripts/release/download-experimental-build.js
+```
 Note that at this time, an _experimental_ build is required because DevTools depends on the `createRoot` API.
 
 Once the above packages have been built, you can build the extension by running:
