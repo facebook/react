@@ -490,7 +490,7 @@ const focusResponderImpl = {
   },
 };
 
-export const FocusResponder = React.unstable_createResponder(
+export const FocusResponder = React.DEPRECATED_createResponder(
   'Focus',
   focusResponderImpl,
 );
@@ -498,7 +498,7 @@ export const FocusResponder = React.unstable_createResponder(
 export function useFocus(
   props: FocusProps,
 ): ReactEventResponderListener<any, any> {
-  return React.unstable_useResponder(FocusResponder, props);
+  return React.DEPRECATED_useResponder(FocusResponder, props);
 }
 
 /**
@@ -670,7 +670,7 @@ const focusWithinResponderImpl = {
   },
 };
 
-export const FocusWithinResponder = React.unstable_createResponder(
+export const FocusWithinResponder = React.DEPRECATED_createResponder(
   'FocusWithin',
   focusWithinResponderImpl,
 );
@@ -678,5 +678,5 @@ export const FocusWithinResponder = React.unstable_createResponder(
 export function useFocusWithin(
   props: FocusWithinProps,
 ): ReactEventResponderListener<any, any> {
-  return React.unstable_useResponder(FocusWithinResponder, props);
+  return React.DEPRECATED_useResponder(FocusWithinResponder, props);
 }

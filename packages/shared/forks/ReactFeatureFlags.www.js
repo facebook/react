@@ -72,7 +72,7 @@ function updateFlagOutsideOfReactCallStack() {
   }
 }
 
-export const enableFlareAPI = true;
+export const enableDeprecatedFlareAPI = true;
 
 export const enableFundamentalAPI = false;
 

@@ -52,7 +52,7 @@ export const exposeConcurrentModeAPIs = __EXPERIMENTAL__;
 export const warnAboutShorthandPropertyCollision = false;
 
 // Experimental React Flare event system and event components support.
-export const enableFlareAPI = false;
+export const enableDeprecatedFlareAPI = false;
 
 // Experimental Host Component support.
 export const enableFundamentalAPI = false;

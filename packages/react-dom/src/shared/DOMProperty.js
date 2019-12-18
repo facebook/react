@@ -7,7 +7,7 @@
  * @flow
  */
 
-import {enableFlareAPI} from 'shared/ReactFeatureFlags';
+import {enableDeprecatedFlareAPI} from 'shared/ReactFeatureFlags';
 
 type PropertyType = 0 | 1 | 2 | 3 | 4 | 5 | 6;
 
@@ -220,7 +220,7 @@ const reservedProps = [
   'suppressHydrationWarning',
   'style',
 ];
-if (enableFlareAPI) {
+if (enableDeprecatedFlareAPI) {
   reservedProps.push('DEPRECATED_flareListeners');
 }
 

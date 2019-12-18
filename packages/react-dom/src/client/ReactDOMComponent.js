@@ -12,7 +12,7 @@ import {getCurrentFiberOwnerNameInDevOrNull} from 'react-reconciler/src/ReactCur
 import {registrationNameModules} from 'legacy-events/EventPluginRegistry';
 import {canUseDOM} from 'shared/ExecutionEnvironment';
 import endsWith from 'shared/endsWith';
-import {setListenToResponderEventTypes} from '../events/DOMEventResponderSystem';
+import {setListenToResponderEventTypes} from '../events/DeprecatedDOMEventResponderSystem';
 
 import {
   getValueForAttribute,
@@ -88,7 +88,7 @@ import {validateProperties as validateUnknownProperties} from '../shared/ReactDO
 import {toStringOrTrustedType} from './ToStringValue';
 
 import {
-  enableFlareAPI,
+  enableDeprecatedFlareAPI,
   enableTrustedTypesIntegration,
 } from 'shared/ReactFeatureFlags';
 
@@ -342,7 +342,7 @@ function setInitialDOMProperties(
         setTextContent(domElement, '' + nextProp);
       }
     } else if (
-      (enableFlareAPI && propKey === DEPRECATED_flareListeners) ||
+      (enableDeprecatedFlareAPI && propKey === DEPRECATED_flareListeners) ||
       propKey === SUPPRESS_CONTENT_EDITABLE_WARNING ||
       propKey === SUPPRESS_HYDRATION_WARNING
     ) {
@@ -709,7 +709,7 @@ export function diffProperties(
     } else if (propKey === DANGEROUSLY_SET_INNER_HTML || propKey === CHILDREN) {
       // Noop. This is handled by the clear text mechanism.
     } else if (
-      (enableFlareAPI && propKey === DEPRECATED_flareListeners) ||
+      (enableDeprecatedFlareAPI && propKey === DEPRECATED_flareListeners) ||
       propKey === SUPPRESS_CONTENT_EDITABLE_WARNING ||
       propKey === SUPPRESS_HYDRATION_WARNING
     ) {
@@ -804,7 +804,7 @@ export function diffProperties(
         (updatePayload = updatePayload || []).push(propKey, '' + nextProp);
       }
     } else if (
-      (enableFlareAPI && propKey === DEPRECATED_flareListeners) ||
+      (enableDeprecatedFlareAPI && propKey === DEPRECATED_flareListeners) ||
       propKey === SUPPRESS_CONTENT_EDITABLE_WARNING ||
       propKey === SUPPRESS_HYDRATION_WARNING
     ) {
@@ -1058,7 +1058,7 @@ export function diffHydratedProperties(
       if (suppressHydrationWarning) {
         // Don't bother comparing. We're ignoring all these warnings.
       } else if (
-        (enableFlareAPI && propKey === DEPRECATED_flareListeners) ||
+        (enableDeprecatedFlareAPI && propKey === DEPRECATED_flareListeners) ||
         propKey === SUPPRESS_CONTENT_EDITABLE_WARNING ||
         propKey === SUPPRESS_HYDRATION_WARNING ||
         // Controlled attributes are not validated
@@ -1298,7 +1298,7 @@ export function listenToEventResponderEventTypes(
   eventTypes: Array<string>,
   document: Document,
 ): void {
-  if (enableFlareAPI) {
+  if (enableDeprecatedFlareAPI) {
     // Get the listening Map for this element. We use this to track
     // what events we're listening to.
     const listenerMap = getListenerMapForElement(document);
@@ -1346,6 +1346,6 @@ export function listenToEventResponderEventTypes(
 }
 
 // We can remove this once the event API is stable and out of a flag
-if (enableFlareAPI) {
+if (enableDeprecatedFlareAPI) {
   setListenToResponderEventTypes(listenToEventResponderEventTypes);
 }

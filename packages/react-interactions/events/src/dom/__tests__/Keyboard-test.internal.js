@@ -19,7 +19,7 @@ import {createEventTarget} from '../testing-library';
 function initializeModules(hasPointerEvents) {
   jest.resetModules();
   ReactFeatureFlags = require('shared/ReactFeatureFlags');
-  ReactFeatureFlags.enableFlareAPI = true;
+  ReactFeatureFlags.enableDeprecatedFlareAPI = true;
   React = require('react');
   ReactDOM = require('react-dom');
   useKeyboard = require('react-interactions/events/keyboard').useKeyboard;

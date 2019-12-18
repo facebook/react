@@ -20,7 +20,7 @@ describe('FocusTable', () => {
     jest.resetModules();
     ReactFeatureFlags = require('shared/ReactFeatureFlags');
     ReactFeatureFlags.enableScopeAPI = true;
-    ReactFeatureFlags.enableFlareAPI = true;
+    ReactFeatureFlags.enableDeprecatedFlareAPI = true;
     createFocusTable = require('../FocusTable').createFocusTable;
     tabbableScopeQuery = require('../TabbableScopeQuery').default;
     React = require('react');

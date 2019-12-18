@@ -373,11 +373,11 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
     warnsIfNotActing: true,
     supportsHydration: false,
 
-    mountResponderInstance(): void {
+    DEPRECATED_mountResponderInstance(): void {
       // NO-OP
     },
 
-    unmountResponderInstance(): void {
+    DEPRECATED_unmountResponderInstance(): void {
       // NO-OP
     },
 

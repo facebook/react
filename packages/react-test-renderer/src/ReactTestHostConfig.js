@@ -13,7 +13,7 @@ import type {
   ReactFundamentalComponentInstance,
 } from 'shared/ReactTypes';
 
-import {enableFlareAPI} from 'shared/ReactFeatureFlags';
+import {enableDeprecatedFlareAPI} from 'shared/ReactFeatureFlags';
 
 export type Type = string;
 export type Props = Object;
@@ -147,7 +147,7 @@ export function createInstance(
   internalInstanceHandle: Object,
 ): Instance {
   let propsToUse = props;
-  if (enableFlareAPI) {
+  if (enableDeprecatedFlareAPI) {
     if (props.DEPRECATED_flareListeners != null) {
       // We want to remove the "DEPRECATED_flareListeners" prop
       // as we don't want it in the test renderer's
@@ -214,7 +214,7 @@ export function createTextInstance(
   internalInstanceHandle: Object,
 ): TextInstance {
   if (__DEV__) {
-    if (enableFlareAPI) {
+    if (enableDeprecatedFlareAPI) {
       if (hostContext === EVENT_COMPONENT_CONTEXT) {
         console.error(
           'validateDOMNesting: React event components cannot have text DOM nodes as children. ' +
@@ -300,7 +300,7 @@ export function unhideTextInstance(
   textInstance.isHidden = false;
 }
 
-export function mountResponderInstance(
+export function DEPRECATED_mountResponderInstance(
   responder: ReactEventResponder<any, any>,
   responderInstance: ReactEventResponderInstance<any, any>,
   props: Object,
@@ -310,7 +310,7 @@ export function mountResponderInstance(
   // noop
 }
 
-export function unmountResponderInstance(
+export function DEPRECATED_unmountResponderInstance(
   responderInstance: ReactEventResponderInstance<any, any>,
 ): void {
   // noop
