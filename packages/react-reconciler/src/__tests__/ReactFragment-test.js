@@ -722,6 +722,55 @@ describe('ReactFragment', () => {
     expect(ReactNoop.getChildren()).toEqual([div(div(), span())]);
   });
 
+  it('should not preserve state when switching a nested fragment to a passthrough component', function() {
+    const ops = [];
+
+    function ReturnChildren({children}) {
+      return children;
+    }
+
+    class Stateful extends React.Component {
+      componentDidUpdate() {
+        ops.push('Update Stateful');
+      }
+
+      render() {
+        return <div>Hello</div>;
+      }
+    }
+
+    function Foo({condition}) {
+      return condition ? (
+        <>
+          <>
+            <Stateful />
+          </>
+        </>
+      ) : (
+        <>
+          <ReturnChildren>
+            <Stateful />
+          </ReturnChildren>
+        </>
+      );
+    }
+
+    ReactNoop.render(<Foo condition={true} />);
+    expect(Scheduler).toFlushWithoutYielding();
+
+    ReactNoop.render(<Foo condition={false} />);
+    expect(Scheduler).toFlushWithoutYielding();
+
+    expect(ops).toEqual([]);
+    expect(ReactNoop.getChildren()).toEqual([div()]);
+
+    ReactNoop.render(<Foo condition={true} />);
+    expect(Scheduler).toFlushWithoutYielding();
+
+    expect(ops).toEqual([]);
+    expect(ReactNoop.getChildren()).toEqual([div()]);
+  });
+
   it('should preserve state when it does not change positions', function() {
     const ops = [];
 
