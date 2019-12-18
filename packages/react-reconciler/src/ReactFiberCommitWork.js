@@ -320,14 +320,12 @@ function commitBeforeMutationLifeCycles(
     case IncompleteClassComponent:
       // Nothing to do for these component types
       return;
-    default: {
-      invariant(
-        false,
-        'This unit of work tag should not have side-effects. This error is ' +
-          'likely caused by a bug in React. Please file an issue.',
-      );
-    }
   }
+  invariant(
+    false,
+    'This unit of work tag should not have side-effects. This error is ' +
+      'likely caused by a bug in React. Please file an issue.',
+  );
 }
 
 function commitHookEffectList(
@@ -420,7 +418,7 @@ function commitLifeCycles(
     case ForwardRef:
     case SimpleMemoComponent: {
       commitHookEffectList(UnmountLayout, MountLayout, finishedWork);
-      break;
+      return;
     }
     case ClassComponent: {
       const instance = finishedWork.stateNode;
@@ -629,14 +627,12 @@ function commitLifeCycles(
     case FundamentalComponent:
     case ScopeComponent:
       return;
-    default: {
-      invariant(
-        false,
-        'This unit of work tag should not have side-effects. This error is ' +
-          'likely caused by a bug in React. Please file an issue.',
-      );
-    }
   }
+  invariant(
+    false,
+    'This unit of work tag should not have side-effects. This error is ' +
+      'likely caused by a bug in React. Please file an issue.',
+  );
 }
 
 function hideOrUnhideAllChildren(finishedWork, isHidden) {
@@ -785,7 +781,7 @@ function commitUnmount(
           });
         }
       }
-      break;
+      return;
     }
     case ClassComponent: {
       safelyDetachRef(current);
@@ -843,6 +839,7 @@ function commitUnmount(
       if (enableScopeAPI) {
         safelyDetachRef(current);
       }
+      return;
     }
   }
 }
@@ -943,14 +940,12 @@ function commitContainer(finishedWork: Fiber) {
       replaceContainerChildren(containerInfo, pendingChildren);
       return;
     }
-    default: {
-      invariant(
-        false,
-        'This unit of work tag should not have side-effects. This error is ' +
-          'likely caused by a bug in React. Please file an issue.',
-      );
-    }
   }
+  invariant(
+    false,
+    'This unit of work tag should not have side-effects. This error is ' +
+      'likely caused by a bug in React. Please file an issue.',
+  );
 }
 
 function getHostParentFiber(fiber: Fiber): Fiber {
@@ -1408,8 +1403,9 @@ function commitWork(current: Fiber | null, finishedWork: Fiber): void {
       if (enableFundamentalAPI) {
         const fundamentalInstance = finishedWork.stateNode;
         updateFundamentalComponent(fundamentalInstance);
+        return;
       }
-      return;
+      break;
     }
     case ScopeComponent: {
       if (enableScopeAPI) {
@@ -1424,17 +1420,16 @@ function commitWork(current: Fiber | null, finishedWork: Fiber): void {
             updateDeprecatedEventListeners(nextListeners, finishedWork, null);
           }
         }
+        return;
       }
-      return;
-    }
-    default: {
-      invariant(
-        false,
-        'This unit of work tag should not have side-effects. This error is ' +
-          'likely caused by a bug in React. Please file an issue.',
-      );
+      break;
     }
   }
+  invariant(
+    false,
+    'This unit of work tag should not have side-effects. This error is ' +
+      'likely caused by a bug in React. Please file an issue.',
+  );
 }
 
 function commitSuspenseComponent(finishedWork: Fiber) {

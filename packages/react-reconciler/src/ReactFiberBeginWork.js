@@ -1075,7 +1075,7 @@ function mountLazyComponent(
         resolvedProps,
         renderExpirationTime,
       );
-      break;
+      return child;
     }
     case ClassComponent: {
       if (__DEV__) {
@@ -1090,7 +1090,7 @@ function mountLazyComponent(
         resolvedProps,
         renderExpirationTime,
       );
-      break;
+      return child;
     }
     case ForwardRef: {
       if (__DEV__) {
@@ -1105,7 +1105,7 @@ function mountLazyComponent(
         resolvedProps,
         renderExpirationTime,
       );
-      break;
+      return child;
     }
     case MemoComponent: {
       if (__DEV__) {
@@ -1130,32 +1130,29 @@ function mountLazyComponent(
         updateExpirationTime,
         renderExpirationTime,
       );
-      break;
-    }
-    default: {
-      let hint = '';
-      if (__DEV__) {
-        if (
-          Component !== null &&
-          typeof Component === 'object' &&
-          Component.$$typeof === REACT_LAZY_TYPE
-        ) {
-          hint = ' Did you wrap a component in React.lazy() more than once?';
-        }
-      }
-      // This message intentionally doesn't mention ForwardRef or MemoComponent
-      // because the fact that it's a separate type of work is an
-      // implementation detail.
-      invariant(
-        false,
-        'Element type is invalid. Received a promise that resolves to: %s. ' +
-          'Lazy element type must resolve to a class or function.%s',
-        Component,
-        hint,
-      );
+      return child;
     }
   }
-  return child;
+  let hint = '';
+  if (__DEV__) {
+    if (
+      Component !== null &&
+      typeof Component === 'object' &&
+      Component.$$typeof === REACT_LAZY_TYPE
+    ) {
+      hint = ' Did you wrap a component in React.lazy() more than once?';
+    }
+  }
+  // This message intentionally doesn't mention ForwardRef or MemoComponent
+  // because the fact that it's a separate type of work is an
+  // implementation detail.
+  invariant(
+    false,
+    'Element type is invalid. Received a promise that resolves to: %s. ' +
+      'Lazy element type must resolve to a class or function.%s',
+    Component,
+    hint,
+  );
 }
 
 function mountIncompleteClassComponent(
