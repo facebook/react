@@ -392,4 +392,109 @@ describe('InspectedElementContext', () => {
 
     done();
   });
+
+  it('should enable inspected values to be stored as global variables', () => {
+    const Example = () => null;
+
+    const nestedObject = {
+      a: {
+        value: 1,
+        b: {
+          value: 1,
+          c: {
+            value: 1,
+          },
+        },
+      },
+    };
+
+    act(() =>
+      ReactDOM.render(
+        <Example nestedObject={nestedObject} />,
+        document.createElement('div'),
+      ),
+    );
+
+    const id = ((store.getElementIDAtIndex(0): any): number);
+    const rendererID = ((store.getRendererIDForElement(id): any): number);
+
+    const logSpy = jest.fn();
+    spyOn(console, 'log').and.callFake(logSpy);
+
+    // Should store the whole value (not just the hydrated parts)
+    bridge.send('storeAsGlobal', {
+      count: 1,
+      id,
+      path: ['props', 'nestedObject'],
+      rendererID,
+    });
+    jest.runOnlyPendingTimers();
+    expect(logSpy).toHaveBeenCalledWith('$reactTemp1');
+    expect(global.$reactTemp1).toBe(nestedObject);
+
+    logSpy.mockReset();
+
+    // Should store the nested property specified (not just the outer value)
+    bridge.send('storeAsGlobal', {
+      count: 2,
+      id,
+      path: ['props', 'nestedObject', 'a', 'b'],
+      rendererID,
+    });
+    jest.runOnlyPendingTimers();
+    expect(logSpy).toHaveBeenCalledWith('$reactTemp2');
+    expect(global.$reactTemp2).toBe(nestedObject.a.b);
+  });
+
+  it('should enable inspected values to be copied to the clipboard', () => {
+    const Example = () => null;
+
+    const nestedObject = {
+      a: {
+        value: 1,
+        b: {
+          value: 1,
+          c: {
+            value: 1,
+          },
+        },
+      },
+    };
+
+    act(() =>
+      ReactDOM.render(
+        <Example nestedObject={nestedObject} />,
+        document.createElement('div'),
+      ),
+    );
+
+    const id = ((store.getElementIDAtIndex(0): any): number);
+    const rendererID = ((store.getRendererIDForElement(id): any): number);
+
+    // Should copy the whole value (not just the hydrated parts)
+    bridge.send('copyElementPath', {
+      id,
+      path: ['props', 'nestedObject'],
+      rendererID,
+    });
+    jest.runOnlyPendingTimers();
+    expect(global.mockClipboardCopy).toHaveBeenCalledTimes(1);
+    expect(global.mockClipboardCopy).toHaveBeenCalledWith(
+      JSON.stringify(nestedObject),
+    );
+
+    global.mockClipboardCopy.mockReset();
+
+    // Should copy the nested property specified (not just the outer value)
+    bridge.send('copyElementPath', {
+      id,
+      path: ['props', 'nestedObject', 'a', 'b'],
+      rendererID,
+    });
+    jest.runOnlyPendingTimers();
+    expect(global.mockClipboardCopy).toHaveBeenCalledTimes(1);
+    expect(global.mockClipboardCopy).toHaveBeenCalledWith(
+      JSON.stringify(nestedObject.a.b),
+    );
+  });
 });

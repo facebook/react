@@ -34,7 +34,7 @@ import {
   utfEncodeString,
 } from 'react-devtools-shared/src/utils';
 import {sessionStorageGetItem} from 'react-devtools-shared/src/storage';
-import {cleanForBridge, copyWithSet} from './utils';
+import {cleanForBridge, copyToClipboard, copyWithSet} from './utils';
 import {
   __DEBUG__,
   SESSION_STORAGE_RELOAD_AND_PROFILE_KEY,
@@ -2113,6 +2113,19 @@ export function attach(
   }
   // END copied code
 
+  function prepareViewAttributeSource(
+    id: number,
+    path: Array<string | number>,
+  ): void {
+    const isCurrent = isMostRecentlyInspectedElementCurrent(id);
+    if (isCurrent) {
+      window.$attribute = getInObject(
+        ((mostRecentlyInspectedElement: any): InspectedElement),
+        path,
+      );
+    }
+  }
+
   function prepareViewElementSource(id: number): void {
     let fiber = idToFiberMap.get(id);
     if (fiber == null) {
@@ -2485,6 +2498,40 @@ export function attach(
       default:
         global.$r = null;
         break;
+    }
+  }
+
+  function storeAsGlobal(
+    id: number,
+    path: Array<string | number>,
+    count: number,
+  ): void {
+    const isCurrent = isMostRecentlyInspectedElementCurrent(id);
+
+    if (isCurrent) {
+      const value = getInObject(
+        ((mostRecentlyInspectedElement: any): InspectedElement),
+        path,
+      );
+      const key = `$reactTemp${count}`;
+
+      window[key] = value;
+
+      console.log(key);
+      console.log(value);
+    }
+  }
+
+  function copyElementPath(id: number, path: Array<string | number>): void {
+    const isCurrent = isMostRecentlyInspectedElementCurrent(id);
+
+    if (isCurrent) {
+      copyToClipboard(
+        getInObject(
+          ((mostRecentlyInspectedElement: any): InspectedElement),
+          path,
+        ),
+      );
     }
   }
 
@@ -3129,6 +3176,7 @@ export function attach(
 
   return {
     cleanup,
+    copyElementPath,
     findNativeNodesForFiberID,
     flushInitialOperations,
     getBestMatchForTrackedPath,
@@ -3141,6 +3189,7 @@ export function attach(
     handleCommitFiberUnmount,
     inspectElement,
     logElementToConsole,
+    prepareViewAttributeSource,
     prepareViewElementSource,
     overrideSuspense,
     renderer,
@@ -3152,6 +3201,7 @@ export function attach(
     setTrackedPath,
     startProfiling,
     stopProfiling,
+    storeAsGlobal,
     updateComponentFilters,
   };
 }

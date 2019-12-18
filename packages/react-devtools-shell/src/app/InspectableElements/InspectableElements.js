@@ -9,6 +9,7 @@
 
 import React, {Fragment} from 'react';
 import UnserializableProps from './UnserializableProps';
+import CircularReferences from './CircularReferences';
 import Contexts from './Contexts';
 import CustomHooks from './CustomHooks';
 import CustomObject from './CustomObject';
@@ -27,6 +28,7 @@ export default function InspectableElements() {
       <Contexts />
       <CustomHooks />
       <CustomObject />
+      <CircularReferences />
     </Fragment>
   );
 }

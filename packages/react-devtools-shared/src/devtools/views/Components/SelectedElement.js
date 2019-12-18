@@ -8,11 +8,14 @@
  */
 
 import {copy} from 'clipboard-js';
-import React, {useCallback, useContext} from 'react';
+import React, {Fragment, useCallback, useContext} from 'react';
 import {TreeDispatcherContext, TreeStateContext} from './TreeContext';
-import {BridgeContext, StoreContext} from '../context';
+import {BridgeContext, ContextMenuContext, StoreContext} from '../context';
+import ContextMenu from '../../ContextMenu/ContextMenu';
+import ContextMenuItem from '../../ContextMenu/ContextMenuItem';
 import Button from '../Button';
 import ButtonIcon from '../ButtonIcon';
+import Icon from '../Icon';
 import HooksTree from './HooksTree';
 import {ModalDialogContext} from '../ModalDialog';
 import HocBadges from './HocBadges';
@@ -33,7 +36,11 @@ import {
 
 import styles from './SelectedElement.css';
 
-import type {GetInspectedElementPath} from './InspectedElementContext';
+import type {
+  CopyInspectedElementPath,
+  GetInspectedElementPath,
+  StoreAsGlobal,
+} from './InspectedElementContext';
 import type {Element, InspectedElement} from './types';
 import type {ElementType} from 'react-devtools-shared/src/types';
 
@@ -49,9 +56,13 @@ export default function SelectedElement(_: Props) {
   const store = useContext(StoreContext);
   const {dispatch: modalDialogDispatch} = useContext(ModalDialogContext);
 
-  const {getInspectedElementPath, getInspectedElement} = useContext(
-    InspectedElementContext,
-  );
+  const {
+    copyInspectedElementPath,
+    getInspectedElementPath,
+    getInspectedElement,
+    storeAsGlobal,
+    viewInspectedElementPath,
+  } = useContext(InspectedElementContext);
 
   const element =
     inspectedElementID !== null
@@ -239,29 +250,38 @@ export default function SelectedElement(_: Props) {
           key={
             inspectedElementID /* Force reset when seleted Element changes */
           }
+          copyInspectedElementPath={copyInspectedElementPath}
           element={element}
           getInspectedElementPath={getInspectedElementPath}
           inspectedElement={inspectedElement}
+          storeAsGlobal={storeAsGlobal}
+          viewInspectedElementPath={viewInspectedElementPath}
         />
       )}
     </div>
   );
 }
 
+export type CopyPath = (path: Array<string | number>) => void;
 export type InspectPath = (path: Array<string | number>) => void;
 
 type InspectedElementViewProps = {|
+  copyInspectedElementPath: CopyInspectedElementPath,
   element: Element,
   getInspectedElementPath: GetInspectedElementPath,
   inspectedElement: InspectedElement,
+  storeAsGlobal: StoreAsGlobal,
 |};
 
 const IS_SUSPENDED = 'Suspended';
 
 function InspectedElementView({
+  copyInspectedElementPath,
   element,
   getInspectedElementPath,
   inspectedElement,
+  storeAsGlobal,
+  viewInspectedElementPath,
 }: InspectedElementViewProps) {
   const {id, type} = element;
   const {
@@ -280,6 +300,11 @@ function InspectedElementView({
   const {ownerID} = useContext(TreeStateContext);
   const bridge = useContext(BridgeContext);
   const store = useContext(StoreContext);
+
+  const {
+    isEnabledForInspectedElement,
+    viewAttributeSourceFunction,
+  } = useContext(ContextMenuContext);
 
   const inspectContextPath = useCallback(
     (path: Array<string | number>) => {
@@ -352,64 +377,102 @@ function InspectedElementView({
   }
 
   return (
-    <div className={styles.InspectedElement}>
-      <HocBadges element={element} />
-      <InspectedElementTree
-        label="props"
-        data={props}
-        inspectPath={inspectPropsPath}
-        overrideValueFn={overridePropsFn}
-        showWhenEmpty={true}
-        canAddEntries={typeof overridePropsFn === 'function'}
-      />
-      {type === ElementTypeSuspense ? (
+    <Fragment>
+      <div className={styles.InspectedElement}>
+        <HocBadges element={element} />
         <InspectedElementTree
-          label="suspense"
-          data={{
-            [IS_SUSPENDED]: state !== null,
-          }}
-          overrideValueFn={overrideSuspenseFn}
+          label="props"
+          data={props}
+          inspectPath={inspectPropsPath}
+          overrideValueFn={overridePropsFn}
+          pathRoot="props"
+          showWhenEmpty={true}
+          canAddEntries={typeof overridePropsFn === 'function'}
         />
-      ) : (
-        <InspectedElementTree
-          label="state"
-          data={state}
-          inspectPath={inspectStatePath}
-          overrideValueFn={overrideStateFn}
-        />
-      )}
-      <HooksTree canEditHooks={canEditHooks} hooks={hooks} id={id} />
-      <InspectedElementTree
-        label={hasLegacyContext ? 'legacy context' : 'context'}
-        data={context}
-        inspectPath={inspectContextPath}
-        overrideValueFn={overrideContextFn}
-      />
-
-      <NativeStyleEditor />
-
-      {ownerID === null &&
-        owners !== null &&
-        owners.length > 0 && (
-          <div className={styles.Owners}>
-            <div className={styles.OwnersHeader}>rendered by</div>
-            {owners.map(owner => (
-              <OwnerView
-                key={owner.id}
-                displayName={owner.displayName || 'Anonymous'}
-                hocDisplayNames={owner.hocDisplayNames}
-                id={owner.id}
-                isInStore={store.containsElement(owner.id)}
-                type={owner.type}
-              />
-            ))}
-          </div>
+        {type === ElementTypeSuspense ? (
+          <InspectedElementTree
+            label="suspense"
+            data={{
+              [IS_SUSPENDED]: state !== null,
+            }}
+            overrideValueFn={overrideSuspenseFn}
+          />
+        ) : (
+          <InspectedElementTree
+            label="state"
+            data={state}
+            inspectPath={inspectStatePath}
+            overrideValueFn={overrideStateFn}
+            pathRoot="state"
+          />
         )}
+        <HooksTree canEditHooks={canEditHooks} hooks={hooks} id={id} />
+        <InspectedElementTree
+          label={hasLegacyContext ? 'legacy context' : 'context'}
+          data={context}
+          inspectPath={inspectContextPath}
+          overrideValueFn={overrideContextFn}
+          pathRoot="context"
+        />
 
-      {source !== null && (
-        <Source fileName={source.fileName} lineNumber={source.lineNumber} />
+        <NativeStyleEditor />
+
+        {ownerID === null &&
+          owners !== null &&
+          owners.length > 0 && (
+            <div className={styles.Owners}>
+              <div className={styles.OwnersHeader}>rendered by</div>
+              {owners.map(owner => (
+                <OwnerView
+                  key={owner.id}
+                  displayName={owner.displayName || 'Anonymous'}
+                  hocDisplayNames={owner.hocDisplayNames}
+                  id={owner.id}
+                  isInStore={store.containsElement(owner.id)}
+                  type={owner.type}
+                />
+              ))}
+            </div>
+          )}
+
+        {source !== null && (
+          <Source fileName={source.fileName} lineNumber={source.lineNumber} />
+        )}
+      </div>
+
+      {isEnabledForInspectedElement && (
+        <ContextMenu id="SelectedElement">
+          {data => (
+            <Fragment>
+              <ContextMenuItem
+                onClick={() => copyInspectedElementPath(id, data.path)}
+                title="Copy value to clipboard">
+                <Icon className={styles.ContextMenuIcon} type="copy" /> Copy
+                value to clipboard
+              </ContextMenuItem>
+              <ContextMenuItem
+                onClick={() => storeAsGlobal(id, data.path)}
+                title="Store as global variable">
+                <Icon
+                  className={styles.ContextMenuIcon}
+                  type="store-as-global-variable"
+                />{' '}
+                Store as global variable
+              </ContextMenuItem>
+              {viewAttributeSourceFunction !== null &&
+                data.type === 'function' && (
+                  <ContextMenuItem
+                    onClick={() => viewAttributeSourceFunction(id, data.path)}
+                    title="Go to definition">
+                    <Icon className={styles.ContextMenuIcon} type="code" /> Go
+                    to definition
+                  </ContextMenuItem>
+                )}
+            </Fragment>
+          )}
+        </ContextMenu>
       )}
-    </div>
+    </Fragment>
   );
 }
 

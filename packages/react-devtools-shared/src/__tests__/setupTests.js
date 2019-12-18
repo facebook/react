@@ -14,6 +14,13 @@ import type {
 
 const env = jasmine.getEnv();
 env.beforeEach(() => {
+  global.mockClipboardCopy = jest.fn();
+
+  // Test environment doesn't support document methods like execCommand()
+  // Also once the backend components below have been required,
+  // it's too late for a test to mock the clipboard-js modules.
+  jest.mock('clipboard-js', () => ({copy: global.mockClipboardCopy}));
+
   // These files should be required (and re-reuired) before each test,
   // rather than imported at the head of the module.
   // That's because we reset modules between tests,

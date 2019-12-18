@@ -9,6 +9,8 @@
 
 import React from 'react';
 
+function noop() {}
+
 export default function SimpleValues() {
   return (
     <ChildComponent
@@ -21,6 +23,7 @@ export default function SimpleValues() {
       infinity={Infinity}
       true={true}
       false={false}
+      function={noop}
     />
   );
 }
