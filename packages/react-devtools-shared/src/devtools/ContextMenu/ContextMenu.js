@@ -6,7 +6,7 @@ import React, {
   useState,
 } from 'react';
 import {createPortal} from 'react-dom';
-import {DataContext, RegistryContext} from './Contexts';
+import {RegistryContext} from './Contexts';
 
 import styles from './ContextMenu.css';
 
@@ -120,9 +120,7 @@ export default function ContextMenu({children, id}: Props) {
   } else {
     return createPortal(
       <div ref={menuRef} className={styles.ContextMenu}>
-        <DataContext.Provider value={state.data}>
-          {children}
-        </DataContext.Provider>
+        {children(state.data)}
       </div>,
       containerRef.current,
     );

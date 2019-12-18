@@ -56,6 +56,11 @@ type CopyElementPathParams = {|
   path: Array<string | number>,
 |};
 
+type ViewAttributeSourceParams = {|
+  ...ElementAndRendererID,
+  path: Array<string | number>,
+|};
+
 type InspectElementParams = {|
   ...ElementAndRendererID,
   path?: Array<string | number>,
@@ -130,6 +135,7 @@ type FrontendEvents = {|
   storeAsGlobal: [StoreAsGlobalParams],
   updateAppendComponentStack: [boolean],
   updateComponentFilters: [Array<ComponentFilter>],
+  viewAttributeSource: [ViewAttributeSourceParams],
   viewElementSource: [ElementAndRendererID],
 
   // React Native style editor plug-in.

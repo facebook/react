@@ -242,6 +242,10 @@ export type RendererInterface = {
   ) => InspectedElementPayload,
   logElementToConsole: (id: number) => void,
   overrideSuspense: (id: number, forceFallback: boolean) => void,
+  prepareViewAttributeSource: (
+    id: number,
+    path: Array<string | number>,
+  ) => void,
   prepareViewElementSource: (id: number) => void,
   renderer: ReactRenderer | null,
   setInContext: (id: number, path: Array<string | number>, value: any) => void,

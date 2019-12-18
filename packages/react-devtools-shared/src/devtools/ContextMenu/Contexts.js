@@ -51,5 +51,3 @@ export const RegistryContext = createContext({
   showMenu,
   registerMenu,
 });
-
-export const DataContext = createContext(null);

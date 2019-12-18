@@ -117,7 +117,15 @@ function HookView({canEditHooks, hook, id, inspectPath, path}: HookViewProps) {
   const contextMenuTriggerRef = useRef(null);
 
   useContextMenu({
-    data: ['hooks', ...path],
+    data: {
+      path: ['hooks', ...path],
+      type:
+        hook !== null &&
+        typeof hook === 'object' &&
+        hook.hasOwnProperty(meta.type)
+          ? hook[meta.type]
+          : typeof value,
+    },
     id: 'SelectedElement',
     ref: contextMenuTriggerRef,
   });

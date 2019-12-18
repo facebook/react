@@ -10,7 +10,7 @@
 import {copy} from 'clipboard-js';
 import React, {Fragment, useCallback, useContext} from 'react';
 import {TreeDispatcherContext, TreeStateContext} from './TreeContext';
-import {BridgeContext, StoreContext} from '../context';
+import {BridgeContext, ContextMenuContext, StoreContext} from '../context';
 import ContextMenu from '../../ContextMenu/ContextMenu';
 import ContextMenuItem from '../../ContextMenu/ContextMenuItem';
 import Button from '../Button';
@@ -61,6 +61,7 @@ export default function SelectedElement(_: Props) {
     getInspectedElementPath,
     getInspectedElement,
     storeAsGlobal,
+    viewInspectedElementPath,
   } = useContext(InspectedElementContext);
 
   const element =
@@ -254,6 +255,7 @@ export default function SelectedElement(_: Props) {
           getInspectedElementPath={getInspectedElementPath}
           inspectedElement={inspectedElement}
           storeAsGlobal={storeAsGlobal}
+          viewInspectedElementPath={viewInspectedElementPath}
         />
       )}
     </div>
@@ -279,6 +281,7 @@ function InspectedElementView({
   getInspectedElementPath,
   inspectedElement,
   storeAsGlobal,
+  viewInspectedElementPath,
 }: InspectedElementViewProps) {
   const {id, type} = element;
   const {
@@ -297,6 +300,11 @@ function InspectedElementView({
   const {ownerID} = useContext(TreeStateContext);
   const bridge = useContext(BridgeContext);
   const store = useContext(StoreContext);
+
+  const {
+    isEnabledForInspectedElement,
+    viewAttributeSourceFunction,
+  } = useContext(ContextMenuContext);
 
   const inspectContextPath = useCallback(
     (path: Array<string | number>) => {
@@ -432,20 +440,38 @@ function InspectedElementView({
         )}
       </div>
 
-      <ContextMenu id="SelectedElement">
-        <ContextMenuItem
-          onClick={path => copyInspectedElementPath(id, path)}
-          title="Copy value to clipboard">
-          <Icon className={styles.ContextMenuIcon} type="copy" /> Copy value to
-          clipboard
-        </ContextMenuItem>
-        <ContextMenuItem
-          onClick={path => storeAsGlobal(id, path)}
-          title="Store as global variable">
-          <Icon className={styles.ContextMenuIcon} type="code" /> Store as
-          global variable
-        </ContextMenuItem>
-      </ContextMenu>
+      {isEnabledForInspectedElement && (
+        <ContextMenu id="SelectedElement">
+          {data => (
+            <Fragment>
+              <ContextMenuItem
+                onClick={() => copyInspectedElementPath(id, data.path)}
+                title="Copy value to clipboard">
+                <Icon className={styles.ContextMenuIcon} type="copy" /> Copy
+                value to clipboard
+              </ContextMenuItem>
+              <ContextMenuItem
+                onClick={() => storeAsGlobal(id, data.path)}
+                title="Store as global variable">
+                <Icon
+                  className={styles.ContextMenuIcon}
+                  type="store-as-global-variable"
+                />{' '}
+                Store as global variable
+              </ContextMenuItem>
+              {viewAttributeSourceFunction !== null &&
+                data.type === 'function' && (
+                  <ContextMenuItem
+                    onClick={() => viewAttributeSourceFunction(id, data.path)}
+                    title="Go to definition">
+                    <Icon className={styles.ContextMenuIcon} type="code" /> Go
+                    to definition
+                  </ContextMenuItem>
+                )}
+            </Fragment>
+          )}
+        </ContextMenu>
+      )}
     </Fragment>
   );
 }

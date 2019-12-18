@@ -14,7 +14,7 @@ import '@reach/tooltip/styles.css';
 
 import React, {useEffect, useMemo, useState} from 'react';
 import Store from '../store';
-import {BridgeContext, StoreContext} from './context';
+import {BridgeContext, ContextMenuContext, StoreContext} from './context';
 import Components from './Components/Components';
 import Profiler from './Profiler/Profiler';
 import TabBar from './TabBar';
@@ -40,6 +40,10 @@ export type ViewElementSource = (
   id: number,
   inspectedElement: InspectedElement,
 ) => void;
+export type ViewAttributeSource = (
+  id: number,
+  path: Array<string | number>,
+) => void;
 export type CanViewElementSource = (
   inspectedElement: InspectedElement,
 ) => boolean;
@@ -49,10 +53,12 @@ export type Props = {|
   browserTheme?: BrowserTheme,
   canViewElementSourceFunction?: ?CanViewElementSource,
   defaultTab?: TabID,
+  enabledInspectedElementContextMenu?: boolean,
   showTabBar?: boolean,
   store: Store,
   warnIfLegacyBackendDetected?: boolean,
   warnIfUnsupportedVersionDetected?: boolean,
+  viewAttributeSourceFunction?: ?ViewAttributeSource,
   viewElementSourceFunction?: ?ViewElementSource,
 
   // This property is used only by the web extension target.
@@ -87,14 +93,16 @@ export default function DevTools({
   bridge,
   browserTheme = 'light',
   canViewElementSourceFunction,
-  defaultTab = 'components',
   componentsPortalContainer,
+  defaultTab = 'components',
+  enabledInspectedElementContextMenu = false,
   overrideTab,
   profilerPortalContainer,
   showTabBar = false,
   store,
   warnIfLegacyBackendDetected = false,
   warnIfUnsupportedVersionDetected = false,
+  viewAttributeSourceFunction,
   viewElementSourceFunction,
 }: Props) {
   const [tab, setTab] = useState(defaultTab);
@@ -108,6 +116,14 @@ export default function DevTools({
       viewElementSourceFunction: viewElementSourceFunction || null,
     }),
     [canViewElementSourceFunction, viewElementSourceFunction],
+  );
+
+  const contextMenu = useMemo(
+    () => ({
+      isEnabledForInspectedElement: enabledInspectedElementContextMenu,
+      viewAttributeSourceFunction: viewAttributeSourceFunction || null,
+    }),
+    [enabledInspectedElementContextMenu, viewAttributeSourceFunction],
   );
 
   useEffect(
@@ -126,49 +142,53 @@ export default function DevTools({
   return (
     <BridgeContext.Provider value={bridge}>
       <StoreContext.Provider value={store}>
-        <ModalDialogContextController>
-          <SettingsContextController
-            browserTheme={browserTheme}
-            componentsPortalContainer={componentsPortalContainer}
-            profilerPortalContainer={profilerPortalContainer}>
-            <ViewElementSourceContext.Provider value={viewElementSource}>
-              <TreeContextController>
-                <ProfilerContextController>
-                  <div className={styles.DevTools}>
-                    {showTabBar && (
-                      <div className={styles.TabBar}>
-                        <ReactLogo />
-                        <span className={styles.DevToolsVersion}>
-                          {process.env.DEVTOOLS_VERSION}
-                        </span>
-                        <div className={styles.Spacer} />
-                        <TabBar
-                          currentTab={tab}
-                          id="DevTools"
-                          selectTab={setTab}
-                          tabs={tabs}
-                          type="navigation"
+        <ContextMenuContext.Provider value={contextMenu}>
+          <ModalDialogContextController>
+            <SettingsContextController
+              browserTheme={browserTheme}
+              componentsPortalContainer={componentsPortalContainer}
+              profilerPortalContainer={profilerPortalContainer}>
+              <ViewElementSourceContext.Provider value={viewElementSource}>
+                <TreeContextController>
+                  <ProfilerContextController>
+                    <div className={styles.DevTools}>
+                      {showTabBar && (
+                        <div className={styles.TabBar}>
+                          <ReactLogo />
+                          <span className={styles.DevToolsVersion}>
+                            {process.env.DEVTOOLS_VERSION}
+                          </span>
+                          <div className={styles.Spacer} />
+                          <TabBar
+                            currentTab={tab}
+                            id="DevTools"
+                            selectTab={setTab}
+                            tabs={tabs}
+                            type="navigation"
+                          />
+                        </div>
+                      )}
+                      <div
+                        className={styles.TabContent}
+                        hidden={tab !== 'components'}>
+                        <Components
+                          portalContainer={componentsPortalContainer}
                         />
                       </div>
-                    )}
-                    <div
-                      className={styles.TabContent}
-                      hidden={tab !== 'components'}>
-                      <Components portalContainer={componentsPortalContainer} />
+                      <div
+                        className={styles.TabContent}
+                        hidden={tab !== 'profiler'}>
+                        <Profiler portalContainer={profilerPortalContainer} />
+                      </div>
                     </div>
-                    <div
-                      className={styles.TabContent}
-                      hidden={tab !== 'profiler'}>
-                      <Profiler portalContainer={profilerPortalContainer} />
-                    </div>
-                  </div>
-                </ProfilerContextController>
-              </TreeContextController>
-            </ViewElementSourceContext.Provider>
-          </SettingsContextController>
-          {warnIfLegacyBackendDetected && <WarnIfLegacyBackendDetected />}
-          {warnIfUnsupportedVersionDetected && <UnsupportedVersionDialog />}
-        </ModalDialogContextController>
+                  </ProfilerContextController>
+                </TreeContextController>
+              </ViewElementSourceContext.Provider>
+            </SettingsContextController>
+            {warnIfLegacyBackendDetected && <WarnIfLegacyBackendDetected />}
+            {warnIfUnsupportedVersionDetected && <UnsupportedVersionDialog />}
+          </ModalDialogContextController>
+        </ContextMenuContext.Provider>
       </StoreContext.Provider>
     </BridgeContext.Provider>
   );

@@ -1,5 +1,5 @@
 import React, {useContext} from 'react';
-import {DataContext, RegistryContext} from './Contexts';
+import {RegistryContext} from './Contexts';
 
 import styles from './ContextMenuItem.css';
 
@@ -10,11 +10,10 @@ type Props = {|
 |};
 
 export default function ContextMenuItem({children, onClick, title}: Props) {
-  const data = useContext(DataContext);
   const {hideMenu} = useContext(RegistryContext);
 
   const handleClick = event => {
-    onClick(data);
+    onClick();
     hideMenu();
   };
 

@@ -165,6 +165,7 @@ export default class Agent extends EventEmitter<{|
       this.updateAppendComponentStack,
     );
     bridge.addListener('updateComponentFilters', this.updateComponentFilters);
+    bridge.addListener('viewAttributeSource', this.viewAttributeSource);
     bridge.addListener('viewElementSource', this.viewElementSource);
 
     if (this._isProfiling) {
@@ -460,6 +461,15 @@ export default class Agent extends EventEmitter<{|
         (rendererID: any)
       ]: any): RendererInterface);
       renderer.updateComponentFilters(componentFilters);
+    }
+  };
+
+  viewAttributeSource = ({id, path, rendererID}: CopyElementParams) => {
+    const renderer = this._rendererInterfaces[rendererID];
+    if (renderer == null) {
+      console.warn(`Invalid renderer id "${rendererID}" for element "${id}"`);
+    } else {
+      renderer.prepareViewAttributeSource(id, path);
     }
   };
 

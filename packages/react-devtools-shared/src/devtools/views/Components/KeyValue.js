@@ -73,7 +73,15 @@ export default function KeyValue({
   const toggleIsOpen = () => setIsOpen(prevIsOpen => !prevIsOpen);
 
   useContextMenu({
-    data: [pathRoot, ...path],
+    data: {
+      path: [pathRoot, ...path],
+      type:
+        value !== null &&
+        typeof value === 'object' &&
+        value.hasOwnProperty(meta.type)
+          ? value[meta.type]
+          : typeof value,
+    },
     id: 'SelectedElement',
     ref: contextMenuTriggerRef,
   });

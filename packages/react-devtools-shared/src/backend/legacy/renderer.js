@@ -836,6 +836,16 @@ export function attach(
     }
   }
 
+  function prepareViewAttributeSource(
+    id: number,
+    path: Array<string | number>,
+  ): void {
+    const inspectedElement = inspectElementRaw(id);
+    if (inspectedElement !== null) {
+      window.$attribute = getInObject(inspectedElement, path);
+    }
+  }
+
   function prepareViewElementSource(id: number): void {
     const internalInstance = idToInternalInstanceMap.get(id);
     if (internalInstance == null) {
@@ -968,6 +978,7 @@ export function attach(
     inspectElement,
     logElementToConsole,
     overrideSuspense,
+    prepareViewAttributeSource,
     prepareViewElementSource,
     renderer,
     setInContext,

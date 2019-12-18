@@ -2113,6 +2113,19 @@ export function attach(
   }
   // END copied code
 
+  function prepareViewAttributeSource(
+    id: number,
+    path: Array<string | number>,
+  ): void {
+    const isCurrent = isMostRecentlyInspectedElementCurrent(id);
+    if (isCurrent) {
+      window.$attribute = getInObject(
+        ((mostRecentlyInspectedElement: any): InspectedElement),
+        path,
+      );
+    }
+  }
+
   function prepareViewElementSource(id: number): void {
     let fiber = idToFiberMap.get(id);
     if (fiber == null) {
@@ -3176,6 +3189,7 @@ export function attach(
     handleCommitFiberUnmount,
     inspectElement,
     logElementToConsole,
+    prepareViewAttributeSource,
     prepareViewElementSource,
     overrideSuspense,
     renderer,
