@@ -1157,18 +1157,21 @@ function ChildReconciler(shouldTrackSideEffects) {
       if (child.key === key) {
         switch (child.tag) {
           case Fragment: {
-            deleteRemainingChildren(returnFiber, child.sibling);
-            const existing = useFiber(
-              child,
-              element.props.children,
-              expirationTime,
-            );
-            existing.return = returnFiber;
-            if (__DEV__) {
-              existing._debugSource = element._source;
-              existing._debugOwner = element._owner;
+            if (element.type === REACT_FRAGMENT_TYPE) {
+              deleteRemainingChildren(returnFiber, child.sibling);
+              const existing = useFiber(
+                child,
+                element.props.children,
+                expirationTime,
+              );
+              existing.return = returnFiber;
+              if (__DEV__) {
+                existing._debugSource = element._source;
+                existing._debugOwner = element._owner;
+              }
+              return existing;
             }
-            return existing;
+            break;
           }
           case Chunk:
             if (enableChunksAPI) {
@@ -1207,6 +1210,7 @@ function ChildReconciler(shouldTrackSideEffects) {
               }
               return existing;
             }
+            break;
           }
         }
         // Didn't match.
