@@ -39,7 +39,7 @@ export function cleanForBridge(
 }
 
 export function copyToClipboard(value: any): void {
-  const safeToCopy = safeSerialize(value);
+  const safeToCopy = serializeToString(value);
   copy(safeToCopy === undefined ? 'undefined' : safeToCopy);
 }
 
@@ -59,8 +59,9 @@ export function copyWithSet(
   return updated;
 }
 
-export function safeSerialize(data: any): string {
+export function serializeToString(data: any): string {
   const cache = new Set();
+  // Use a custom replacer function to protect against circular references.
   return JSON.stringify(data, (key, value) => {
     if (typeof value === 'object' && value !== null) {
       if (cache.has(value)) {
