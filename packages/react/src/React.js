@@ -58,7 +58,7 @@ import createResponder from 'shared/createEventResponder';
 import createScope from 'shared/createScope';
 import {
   enableJSXTransformAPI,
-  enableFlareAPI,
+  enableDeprecatedFlareAPI,
   enableFundamentalAPI,
   enableScopeAPI,
   exposeConcurrentModeAPIs,
@@ -114,9 +114,9 @@ if (exposeConcurrentModeAPIs) {
   React.unstable_withSuspenseConfig = withSuspenseConfig;
 }
 
-if (enableFlareAPI) {
-  React.unstable_useResponder = useResponder;
-  React.unstable_createResponder = createResponder;
+if (enableDeprecatedFlareAPI) {
+  React.DEPRECATED_useResponder = useResponder;
+  React.DEPRECATED_createResponder = createResponder;
 }
 
 if (enableFundamentalAPI) {

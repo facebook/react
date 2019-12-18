@@ -115,7 +115,7 @@ import {
   enableSchedulerTracing,
   enableSuspenseCallback,
   enableSuspenseServerRenderer,
-  enableFlareAPI,
+  enableDeprecatedFlareAPI,
   enableFundamentalAPI,
   enableScopeAPI,
 } from 'shared/ReactFeatureFlags';
@@ -128,7 +128,7 @@ import {
 import {createFundamentalStateInstance} from './ReactFiberFundamental';
 import {Never} from './ReactFiberExpirationTime';
 import {resetChildFibers} from './ReactChildFiber';
-import {updateLegacyEventListeners} from './ReactFiberEvents';
+import {updateDeprecatedEventListeners} from './ReactFiberDeprecatedEvents';
 import {createScopeMethods} from './ReactFiberScope';
 
 function markUpdate(workInProgress: Fiber) {
@@ -685,7 +685,7 @@ function completeWork(
           rootContainerInstance,
         );
 
-        if (enableFlareAPI) {
+        if (enableDeprecatedFlareAPI) {
           const prevListeners = current.memoizedProps.DEPRECATED_flareListeners;
           const nextListeners = newProps.DEPRECATED_flareListeners;
           if (prevListeners !== nextListeners) {
@@ -727,10 +727,10 @@ function completeWork(
             // commit-phase we mark this as such.
             markUpdate(workInProgress);
           }
-          if (enableFlareAPI) {
+          if (enableDeprecatedFlareAPI) {
             const listeners = newProps.DEPRECATED_flareListeners;
             if (listeners != null) {
-              updateLegacyEventListeners(
+              updateDeprecatedEventListeners(
                 listeners,
                 workInProgress,
                 rootContainerInstance,
@@ -751,10 +751,10 @@ function completeWork(
           // This needs to be set before we mount Flare event listeners
           workInProgress.stateNode = instance;
 
-          if (enableFlareAPI) {
+          if (enableDeprecatedFlareAPI) {
             const listeners = newProps.DEPRECATED_flareListeners;
             if (listeners != null) {
-              updateLegacyEventListeners(
+              updateDeprecatedEventListeners(
                 listeners,
                 workInProgress,
                 rootContainerInstance,
@@ -1261,11 +1261,11 @@ function completeWork(
           };
           workInProgress.stateNode = scopeInstance;
           scopeInstance.methods = createScopeMethods(type, scopeInstance);
-          if (enableFlareAPI) {
+          if (enableDeprecatedFlareAPI) {
             const listeners = newProps.DEPRECATED_flareListeners;
             if (listeners != null) {
               const rootContainerInstance = getRootHostContainer();
-              updateLegacyEventListeners(
+              updateDeprecatedEventListeners(
                 listeners,
                 workInProgress,
                 rootContainerInstance,
@@ -1277,7 +1277,7 @@ function completeWork(
             markUpdate(workInProgress);
           }
         } else {
-          if (enableFlareAPI) {
+          if (enableDeprecatedFlareAPI) {
             const prevListeners =
               current.memoizedProps.DEPRECATED_flareListeners;
             const nextListeners = newProps.DEPRECATED_flareListeners;

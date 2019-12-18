@@ -21,7 +21,7 @@ function initializeModules(hasPointerEvents) {
   setPointerEvent(hasPointerEvents);
   jest.resetModules();
   ReactFeatureFlags = require('shared/ReactFeatureFlags');
-  ReactFeatureFlags.enableFlareAPI = true;
+  ReactFeatureFlags.enableDeprecatedFlareAPI = true;
   React = require('react');
   ReactDOM = require('react-dom');
   FocusResponder = require('react-interactions/events/focus').FocusResponder;

@@ -22,7 +22,7 @@ import ReactSharedInternals from 'shared/ReactSharedInternals';
 
 import {NoWork, Sync} from './ReactFiberExpirationTime';
 import {readContext} from './ReactFiberNewContext';
-import {createResponderListener} from './ReactFiberEvents';
+import {createDeprecatedResponderListener} from './ReactFiberDeprecatedEvents';
 import {
   Update as UpdateEffect,
   Passive as PassiveEffect,
@@ -1390,7 +1390,7 @@ const HooksDispatcherOnMount: Dispatcher = {
   useRef: mountRef,
   useState: mountState,
   useDebugValue: mountDebugValue,
-  useResponder: createResponderListener,
+  useResponder: createDeprecatedResponderListener,
   useDeferredValue: mountDeferredValue,
   useTransition: mountTransition,
 };
@@ -1408,7 +1408,7 @@ const HooksDispatcherOnUpdate: Dispatcher = {
   useRef: updateRef,
   useState: updateState,
   useDebugValue: updateDebugValue,
-  useResponder: createResponderListener,
+  useResponder: createDeprecatedResponderListener,
   useDeferredValue: updateDeferredValue,
   useTransition: updateTransition,
 };
@@ -1544,7 +1544,7 @@ if (__DEV__) {
     ): ReactEventResponderListener<E, C> {
       currentHookNameInDev = 'useResponder';
       mountHookTypesDev();
-      return createResponderListener(responder, props);
+      return createDeprecatedResponderListener(responder, props);
     },
     useDeferredValue<T>(value: T, config: TimeoutConfig | void | null): T {
       currentHookNameInDev = 'useDeferredValue';
@@ -1661,7 +1661,7 @@ if (__DEV__) {
     ): ReactEventResponderListener<E, C> {
       currentHookNameInDev = 'useResponder';
       updateHookTypesDev();
-      return createResponderListener(responder, props);
+      return createDeprecatedResponderListener(responder, props);
     },
     useDeferredValue<T>(value: T, config: TimeoutConfig | void | null): T {
       currentHookNameInDev = 'useDeferredValue';
@@ -1778,7 +1778,7 @@ if (__DEV__) {
     ): ReactEventResponderListener<E, C> {
       currentHookNameInDev = 'useResponder';
       updateHookTypesDev();
-      return createResponderListener(responder, props);
+      return createDeprecatedResponderListener(responder, props);
     },
     useDeferredValue<T>(value: T, config: TimeoutConfig | void | null): T {
       currentHookNameInDev = 'useDeferredValue';
@@ -1907,7 +1907,7 @@ if (__DEV__) {
       currentHookNameInDev = 'useResponder';
       warnInvalidHookAccess();
       mountHookTypesDev();
-      return createResponderListener(responder, props);
+      return createDeprecatedResponderListener(responder, props);
     },
     useDeferredValue<T>(value: T, config: TimeoutConfig | void | null): T {
       currentHookNameInDev = 'useDeferredValue';
@@ -2038,7 +2038,7 @@ if (__DEV__) {
       currentHookNameInDev = 'useResponder';
       warnInvalidHookAccess();
       updateHookTypesDev();
-      return createResponderListener(responder, props);
+      return createDeprecatedResponderListener(responder, props);
     },
     useDeferredValue<T>(value: T, config: TimeoutConfig | void | null): T {
       currentHookNameInDev = 'useDeferredValue';

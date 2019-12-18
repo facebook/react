@@ -14,7 +14,7 @@ import type {EventSystemFlags} from 'legacy-events/EventSystemFlags';
 import type {FiberRoot} from 'react-reconciler/src/ReactFiberRoot';
 
 import {
-  enableFlareAPI,
+  enableDeprecatedFlareAPI,
   enableSelectiveHydration,
 } from 'shared/ReactFeatureFlags';
 import {
@@ -217,7 +217,7 @@ function trapReplayableEvent(
   listenerMap: Map<DOMTopLevelEventType | string, null | (any => void)>,
 ) {
   listenToTopLevel(topLevelType, document, listenerMap);
-  if (enableFlareAPI) {
+  if (enableDeprecatedFlareAPI) {
     // Trap events for the responder system.
     const topLevelTypeString = unsafeCastDOMTopLevelTypeToString(topLevelType);
     const passiveEventKey = topLevelTypeString + '_passive';

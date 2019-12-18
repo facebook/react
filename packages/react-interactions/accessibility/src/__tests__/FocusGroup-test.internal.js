@@ -20,7 +20,7 @@ describe('FocusGroup', () => {
     jest.resetModules();
     ReactFeatureFlags = require('shared/ReactFeatureFlags');
     ReactFeatureFlags.enableScopeAPI = true;
-    ReactFeatureFlags.enableFlareAPI = true;
+    ReactFeatureFlags.enableDeprecatedFlareAPI = true;
     createFocusGroup = require('../FocusGroup').createFocusGroup;
     tabbableScopeQuery = require('../TabbableScopeQuery').default;
     React = require('react');

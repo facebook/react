@@ -27,7 +27,7 @@ function initializeModules(hasPointerEvents) {
   jest.resetModules();
   setPointerEvent(hasPointerEvents);
   ReactFeatureFlags = require('shared/ReactFeatureFlags');
-  ReactFeatureFlags.enableFlareAPI = true;
+  ReactFeatureFlags.enableDeprecatedFlareAPI = true;
   React = require('react');
   ReactDOM = require('react-dom');
   useTap = require('react-interactions/events/tap').useTap;

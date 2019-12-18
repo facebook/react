@@ -276,7 +276,7 @@ const swipeResponderImpl = {
   },
 };
 
-export const SwipeResponder = React.unstable_createResponder(
+export const SwipeResponder = React.DEPRECATED_createResponder(
   'Swipe',
   swipeResponderImpl,
 );
@@ -284,5 +284,5 @@ export const SwipeResponder = React.unstable_createResponder(
 export function useSwipe(
   props: SwipeProps,
 ): ReactEventResponderListener<any, any> {
-  return React.unstable_useResponder(SwipeResponder, props);
+  return React.DEPRECATED_useResponder(SwipeResponder, props);
 }

@@ -21,7 +21,7 @@ function initializeModules(hasPointerEvents) {
   jest.resetModules();
   setPointerEvent(hasPointerEvents);
   ReactFeatureFlags = require('shared/ReactFeatureFlags');
-  ReactFeatureFlags.enableFlareAPI = true;
+  ReactFeatureFlags.enableDeprecatedFlareAPI = true;
   React = require('react');
   ReactDOM = require('react-dom');
   HoverResponder = require('react-interactions/events/hover').HoverResponder;

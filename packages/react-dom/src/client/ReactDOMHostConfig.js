@@ -54,8 +54,8 @@ import type {
 import {
   mountEventResponder,
   unmountEventResponder,
-  dispatchEventForResponderEventSystem,
-} from '../events/DOMEventResponderSystem';
+  DEPRECATED_dispatchEventForResponderEventSystem,
+} from '../events/DeprecatedDOMEventResponderSystem';
 import {retryIfBlockedOn} from '../events/ReactDOMEventReplaying';
 
 export type Type = string;
@@ -111,7 +111,7 @@ type SelectionInformation = {|
 
 import {
   enableSuspenseServerRenderer,
-  enableFlareAPI,
+  enableDeprecatedFlareAPI,
   enableFundamentalAPI,
 } from 'shared/ReactFeatureFlags';
 import {
@@ -212,7 +212,7 @@ export function resetAfterCommit(containerInfo: Container): void {
   restoreSelection(selectionInformation);
   ReactBrowserEventEmitterSetEnabled(eventsEnabled);
   eventsEnabled = null;
-  if (enableFlareAPI) {
+  if (enableDeprecatedFlareAPI) {
     const activeElementDetached = (selectionInformation: any)
       .activeElementDetached;
     if (activeElementDetached !== null) {
@@ -468,7 +468,7 @@ function dispatchBeforeDetachedBlur(target: HTMLElement): void {
   const targetInstance = getClosestInstanceFromNode(target);
   ((selectionInformation: any): SelectionInformation).activeElementDetached = target;
 
-  dispatchEventForResponderEventSystem(
+  DEPRECATED_dispatchEventForResponderEventSystem(
     'beforeblur',
     targetInstance,
     ({
@@ -481,7 +481,7 @@ function dispatchBeforeDetachedBlur(target: HTMLElement): void {
 }
 
 function dispatchDetachedBlur(target: HTMLElement): void {
-  dispatchEventForResponderEventSystem(
+  DEPRECATED_dispatchEventForResponderEventSystem(
     'blur',
     null,
     ({
@@ -502,7 +502,7 @@ export function beforeRemoveInstance(
   instance: Instance | TextInstance | SuspenseInstance,
 ): void {
   if (
-    enableFlareAPI &&
+    enableDeprecatedFlareAPI &&
     selectionInformation &&
     instance === selectionInformation.focusedElem
   ) {
@@ -944,7 +944,7 @@ export function didNotFindHydratableSuspenseInstance(
   }
 }
 
-export function mountResponderInstance(
+export function DEPRECATED_mountResponderInstance(
   responder: ReactDOMEventResponder,
   responderInstance: ReactDOMEventResponderInstance,
   responderProps: Object,
@@ -966,10 +966,10 @@ export function mountResponderInstance(
   return responderInstance;
 }
 
-export function unmountResponderInstance(
+export function DEPRECATED_unmountResponderInstance(
   responderInstance: ReactDOMEventResponderInstance,
 ): void {
-  if (enableFlareAPI) {
+  if (enableDeprecatedFlareAPI) {
     // TODO stop listening to targetEventTypes
     unmountEventResponder(responderInstance);
   }

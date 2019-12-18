@@ -12,7 +12,7 @@ can be found [here](./docs).
 
 ## Event Responder Interface
 
-Note: React Responders require the internal React flag `enableFlareAPI`.
+Note: React Responders require the internal React flag `enableDeprecatedFlareAPI`.
 
 An Event Responder Interface is defined using an object. Each responder can define DOM
 events to listen to, handle the synthetic responder events, dispatch custom

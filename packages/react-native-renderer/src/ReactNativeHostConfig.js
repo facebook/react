@@ -7,15 +7,7 @@
  * @flow
  */
 
-import type {
-  ReactNativeBaseComponentViewConfig,
-  ReactNativeResponderEvent,
-  ReactNativeResponderContext,
-} from './ReactNativeTypes';
-import type {
-  ReactEventResponder,
-  ReactEventResponderInstance,
-} from 'shared/ReactTypes';
+import type {ReactNativeBaseComponentViewConfig} from './ReactNativeTypes';
 
 import invariant from 'shared/invariant';
 
@@ -35,16 +27,6 @@ import {
 import ReactNativeFiberHostComponent from './ReactNativeFiberHostComponent';
 
 const {get: getViewConfigForType} = ReactNativeViewConfigRegistry;
-
-type ReactNativeEventResponderInstance = ReactEventResponderInstance<
-  ReactNativeResponderEvent,
-  ReactNativeResponderContext,
->;
-
-type ReactNativeEventResponder = ReactEventResponder<
-  ReactNativeResponderEvent,
-  ReactNativeResponderContext,
->;
 
 export type Type = string;
 export type Props = Object;
@@ -495,9 +477,9 @@ export function unhideTextInstance(
   throw new Error('Not yet implemented.');
 }
 
-export function mountResponderInstance(
-  responder: ReactNativeEventResponder,
-  responderInstance: ReactNativeEventResponderInstance,
+export function DEPRECATED_mountResponderInstance(
+  responder: any,
+  responderInstance: any,
   props: Object,
   state: Object,
   instance: Instance,
@@ -505,8 +487,8 @@ export function mountResponderInstance(
   throw new Error('Not yet implemented.');
 }
 
-export function unmountResponderInstance(
-  responderInstance: ReactNativeEventResponderInstance,
+export function DEPRECATED_unmountResponderInstance(
+  responderInstance: any,
 ): void {
   throw new Error('Not yet implemented.');
 }

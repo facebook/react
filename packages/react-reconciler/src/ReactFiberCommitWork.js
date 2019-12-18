@@ -29,7 +29,7 @@ import {
   enableSchedulerTracing,
   enableProfilerTimer,
   enableSuspenseServerRenderer,
-  enableFlareAPI,
+  enableDeprecatedFlareAPI,
   enableFundamentalAPI,
   enableSuspenseCallback,
   enableScopeAPI,
@@ -122,9 +122,9 @@ import {
 import {didWarnAboutReassigningProps} from './ReactFiberBeginWork';
 import {runWithPriority, NormalPriority} from './SchedulerWithReactIntegration';
 import {
-  updateLegacyEventListeners,
-  unmountResponderListeners,
-} from './ReactFiberEvents';
+  updateDeprecatedEventListeners,
+  unmountDeprecatedResponderListeners,
+} from './ReactFiberDeprecatedEvents';
 
 let didWarnAboutUndefinedSnapshotBeforeUpdate: Set<mixed> | null = null;
 if (__DEV__) {
@@ -796,8 +796,8 @@ function commitUnmount(
       return;
     }
     case HostComponent: {
-      if (enableFlareAPI) {
-        unmountResponderListeners(current);
+      if (enableDeprecatedFlareAPI) {
+        unmountDeprecatedResponderListeners(current);
         beforeRemoveInstance(current.stateNode);
       }
       safelyDetachRef(current);
@@ -837,8 +837,8 @@ function commitUnmount(
       return;
     }
     case ScopeComponent: {
-      if (enableFlareAPI) {
-        unmountResponderListeners(current);
+      if (enableDeprecatedFlareAPI) {
+        unmountDeprecatedResponderListeners(current);
       }
       if (enableScopeAPI) {
         safelyDetachRef(current);
@@ -1352,11 +1352,11 @@ function commitWork(current: Fiber | null, finishedWork: Fiber): void {
             finishedWork,
           );
         }
-        if (enableFlareAPI) {
+        if (enableDeprecatedFlareAPI) {
           const prevListeners = oldProps.DEPRECATED_flareListeners;
           const nextListeners = newProps.DEPRECATED_flareListeners;
           if (prevListeners !== nextListeners) {
-            updateLegacyEventListeners(nextListeners, finishedWork, null);
+            updateDeprecatedEventListeners(nextListeners, finishedWork, null);
           }
         }
       }
@@ -1415,13 +1415,13 @@ function commitWork(current: Fiber | null, finishedWork: Fiber): void {
       if (enableScopeAPI) {
         const scopeInstance = finishedWork.stateNode;
         scopeInstance.fiber = finishedWork;
-        if (enableFlareAPI) {
+        if (enableDeprecatedFlareAPI) {
           const newProps = finishedWork.memoizedProps;
           const oldProps = current !== null ? current.memoizedProps : newProps;
           const prevListeners = oldProps.DEPRECATED_flareListeners;
           const nextListeners = newProps.DEPRECATED_flareListeners;
           if (prevListeners !== nextListeners || current === null) {
-            updateLegacyEventListeners(nextListeners, finishedWork, null);
+            updateDeprecatedEventListeners(nextListeners, finishedWork, null);
           }
         }
       }

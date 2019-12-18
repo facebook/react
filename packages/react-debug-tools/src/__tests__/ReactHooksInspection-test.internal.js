@@ -17,16 +17,16 @@ describe('ReactHooksInspection', () => {
   beforeEach(() => {
     jest.resetModules();
     const ReactFeatureFlags = require('shared/ReactFeatureFlags');
-    ReactFeatureFlags.enableFlareAPI = true;
+    ReactFeatureFlags.enableDeprecatedFlareAPI = true;
     React = require('react');
     ReactDebugTools = require('react-debug-tools');
   });
 
   it('should inspect a simple useResponder hook', () => {
-    const TestResponder = React.unstable_createResponder('TestResponder', {});
+    const TestResponder = React.DEPRECATED_createResponder('TestResponder', {});
 
     function Foo(props) {
-      const listener = React.unstable_useResponder(TestResponder, {
+      const listener = React.DEPRECATED_useResponder(TestResponder, {
         preventDefault: false,
       });
       return <div DEPRECATED_flareListeners={listener}>Hello world</div>;

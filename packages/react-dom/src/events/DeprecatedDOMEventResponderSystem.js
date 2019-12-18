@@ -29,7 +29,7 @@ import {
 } from 'legacy-events/ReactGenericBatching';
 import {enqueueStateRestore} from 'legacy-events/ReactControlledComponent';
 import type {Fiber} from 'react-reconciler/src/ReactFiber';
-import {enableFlareAPI} from 'shared/ReactFeatureFlags';
+import {enableDeprecatedFlareAPI} from 'shared/ReactFeatureFlags';
 import invariant from 'shared/invariant';
 
 import {getClosestInstanceFromNode} from '../client/ReactDOMComponentTree';
@@ -164,7 +164,7 @@ const eventResponderContext: ReactDOMResponderContext = {
     for (let i = 0; i < rootEventTypes.length; i++) {
       const rootEventType = rootEventTypes[i];
       const eventResponderInstance = ((currentInstance: any): ReactDOMEventResponderInstance);
-      registerRootEventType(rootEventType, eventResponderInstance);
+      DEPRECATED_registerRootEventType(rootEventType, eventResponderInstance);
     }
   },
   removeRootEventTypes(rootEventTypes: Array<string>): void {
@@ -494,14 +494,14 @@ function validateResponderContext(): void {
   );
 }
 
-export function dispatchEventForResponderEventSystem(
+export function DEPRECATED_dispatchEventForResponderEventSystem(
   topLevelType: string,
   targetFiber: null | Fiber,
   nativeEvent: AnyNativeEvent,
   nativeEventTarget: Document | Element,
   eventSystemFlags: EventSystemFlags,
 ): void {
-  if (enableFlareAPI) {
+  if (enableDeprecatedFlareAPI) {
     const previousInstance = currentInstance;
     const previousTimeStamp = currentTimeStamp;
     const previousDocument = currentDocument;
@@ -539,11 +539,11 @@ export function addRootEventTypesForResponderInstance(
 ): void {
   for (let i = 0; i < rootEventTypes.length; i++) {
     const rootEventType = rootEventTypes[i];
-    registerRootEventType(rootEventType, responderInstance);
+    DEPRECATED_registerRootEventType(rootEventType, responderInstance);
   }
 }
 
-function registerRootEventType(
+function DEPRECATED_registerRootEventType(
   rootEventType: string,
   eventResponderInstance: ReactDOMEventResponderInstance,
 ): void {

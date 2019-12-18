@@ -19,7 +19,7 @@ describe('ReactScope', () => {
     jest.resetModules();
     ReactFeatureFlags = require('shared/ReactFeatureFlags');
     ReactFeatureFlags.enableScopeAPI = true;
-    ReactFeatureFlags.enableFlareAPI = true;
+    ReactFeatureFlags.enableDeprecatedFlareAPI = true;
     React = require('react');
   });
 

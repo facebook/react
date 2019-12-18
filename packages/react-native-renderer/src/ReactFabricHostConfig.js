@@ -13,13 +13,7 @@ import type {
   MeasureOnSuccessCallback,
   NativeMethods,
   ReactNativeBaseComponentViewConfig,
-  ReactNativeResponderEvent,
-  ReactNativeResponderContext,
 } from './ReactNativeTypes';
-import type {
-  ReactEventResponder,
-  ReactEventResponderInstance,
-} from 'shared/ReactTypes';
 
 import {mountSafeCallback_NOT_REALLY_SAFE} from './NativeMethodsMixinUtils';
 import {create, diff} from './ReactNativeAttributePayload';
@@ -27,12 +21,6 @@ import {create, diff} from './ReactNativeAttributePayload';
 import invariant from 'shared/invariant';
 
 import {dispatchEvent} from './ReactFabricEventEmitter';
-import {
-  mountEventResponder,
-  unmountEventResponder,
-} from './ReactFabricEventResponderSystem';
-
-import {enableFlareAPI} from 'shared/ReactFeatureFlags';
 
 // Modules provided by RN:
 import {
@@ -64,16 +52,6 @@ const {get: getViewConfigForType} = ReactNativeViewConfigRegistry;
 // % 2 === 0 means it is a Fabric tag.
 // This means that they never overlap.
 let nextReactTag = 2;
-
-type ReactNativeEventResponderInstance = ReactEventResponderInstance<
-  ReactNativeResponderEvent,
-  ReactNativeResponderContext,
->;
-
-type ReactNativeEventResponder = ReactEventResponder<
-  ReactNativeResponderEvent,
-  ReactNativeResponderContext,
->;
 
 type Node = Object;
 export type Type = string;
@@ -443,25 +421,20 @@ export function replaceContainerChildren(
   newChildren: ChildSet,
 ): void {}
 
-export function mountResponderInstance(
-  responder: ReactNativeEventResponder,
-  responderInstance: ReactNativeEventResponderInstance,
+export function DEPRECATED_mountResponderInstance(
+  responder: any,
+  responderInstance: any,
   props: Object,
   state: Object,
   instance: Instance,
 ) {
-  if (enableFlareAPI) {
-    mountEventResponder(responder, responderInstance, props, state);
-  }
+  throw new Error('Not yet implemented.');
 }
 
-export function unmountResponderInstance(
-  responderInstance: ReactNativeEventResponderInstance,
+export function DEPRECATED_unmountResponderInstance(
+  responderInstance: any,
 ): void {
-  if (enableFlareAPI) {
-    // TODO stop listening to targetEventTypes
-    unmountEventResponder(responderInstance);
-  }
+  throw new Error('Not yet implemented.');
 }
 
 export function getFundamentalComponentInstance(fundamentalInstance) {

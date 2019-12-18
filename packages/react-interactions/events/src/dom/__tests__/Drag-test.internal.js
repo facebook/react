@@ -20,7 +20,7 @@ describe('Drag event responder', () => {
   beforeEach(() => {
     jest.resetModules();
     ReactFeatureFlags = require('shared/ReactFeatureFlags');
-    ReactFeatureFlags.enableFlareAPI = true;
+    ReactFeatureFlags.enableDeprecatedFlareAPI = true;
     React = require('react');
     ReactDOM = require('react-dom');
     useDrag = require('react-interactions/events/drag').useDrag;
