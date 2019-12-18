@@ -3296,6 +3296,7 @@ function beginWork(
           renderExpirationTime,
         );
       }
+      break;
     }
   }
   invariant(

@@ -51,6 +51,7 @@ import {
   SuspenseListComponent,
   FundamentalComponent,
   ScopeComponent,
+  Chunk,
 } from 'shared/ReactWorkTags';
 import {
   invokeGuardedCallback,
@@ -247,7 +248,8 @@ function commitBeforeMutationLifeCycles(
   switch (finishedWork.tag) {
     case FunctionComponent:
     case ForwardRef:
-    case SimpleMemoComponent: {
+    case SimpleMemoComponent:
+    case Chunk: {
       commitHookEffectList(UnmountSnapshot, NoHookEffect, finishedWork);
       return;
     }
@@ -396,7 +398,8 @@ export function commitPassiveHookEffects(finishedWork: Fiber): void {
     switch (finishedWork.tag) {
       case FunctionComponent:
       case ForwardRef:
-      case SimpleMemoComponent: {
+      case SimpleMemoComponent:
+      case Chunk: {
         commitHookEffectList(UnmountPassive, NoHookEffect, finishedWork);
         commitHookEffectList(NoHookEffect, MountPassive, finishedWork);
         break;
@@ -416,7 +419,8 @@ function commitLifeCycles(
   switch (finishedWork.tag) {
     case FunctionComponent:
     case ForwardRef:
-    case SimpleMemoComponent: {
+    case SimpleMemoComponent:
+    case Chunk: {
       commitHookEffectList(UnmountLayout, MountLayout, finishedWork);
       return;
     }
@@ -746,7 +750,8 @@ function commitUnmount(
     case FunctionComponent:
     case ForwardRef:
     case MemoComponent:
-    case SimpleMemoComponent: {
+    case SimpleMemoComponent:
+    case Chunk: {
       const updateQueue: FunctionComponentUpdateQueue | null = (current.updateQueue: any);
       if (updateQueue !== null) {
         const lastEffect = updateQueue.lastEffect;
@@ -1276,7 +1281,8 @@ function commitWork(current: Fiber | null, finishedWork: Fiber): void {
       case FunctionComponent:
       case ForwardRef:
       case MemoComponent:
-      case SimpleMemoComponent: {
+      case SimpleMemoComponent:
+      case Chunk: {
         // Note: We currently never use MountMutation, but useLayout uses
         // UnmountMutation.
         commitHookEffectList(UnmountMutation, MountMutation, finishedWork);
@@ -1315,7 +1321,8 @@ function commitWork(current: Fiber | null, finishedWork: Fiber): void {
     case FunctionComponent:
     case ForwardRef:
     case MemoComponent:
-    case SimpleMemoComponent: {
+    case SimpleMemoComponent:
+    case Chunk: {
       // Note: We currently never use MountMutation, but useLayout uses
       // UnmountMutation.
       commitHookEffectList(UnmountMutation, MountMutation, finishedWork);
