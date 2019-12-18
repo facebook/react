@@ -9,9 +9,7 @@ const checkEnvironmentVariables = require('./shared-commands/check-environment-v
 const downloadBuildArtifacts = require('./shared-commands/download-build-artifacts');
 const getLatestMasterBuildNumber = require('./shared-commands/get-latest-master-build-number');
 const parseParams = require('./shared-commands/parse-params');
-const printPrereleaseSummary = require('./shared-commands/print-prerelease-summary');
-const testPackagingFixture = require('./shared-commands/test-packaging-fixture');
-const testTracingFixture = require('./shared-commands/test-tracing-fixture');
+const printSummary = require('./download-experimental-build-commands/print-summary');
 
 const run = async () => {
   try {
@@ -20,18 +18,13 @@ const run = async () => {
     params.packages = await getPublicPackages();
 
     if (!params.build) {
-      params.build = await getLatestMasterBuildNumber(false);
+      params.build = await getLatestMasterBuildNumber(true);
     }
 
     await checkEnvironmentVariables(params);
     await downloadBuildArtifacts(params);
 
-    if (!params.skipTests) {
-      await testPackagingFixture(params);
-      await testTracingFixture(params);
-    }
-
-    await printPrereleaseSummary(params, false);
+    printSummary(params);
   } catch (error) {
     handleError(error);
   }
