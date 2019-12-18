@@ -33,6 +33,7 @@ import {
   enableFundamentalAPI,
   enableUserTimingAPI,
   enableScopeAPI,
+  enableChunksAPI,
 } from 'shared/ReactFeatureFlags';
 import {NoEffect, Placement} from 'shared/ReactSideEffectTags';
 import {ConcurrentRoot, BlockingRoot} from 'shared/ReactRootTags';
@@ -385,6 +386,11 @@ export function resolveLazyComponentTag(Component: Function): WorkTag {
     }
     if ($$typeof === REACT_MEMO_TYPE) {
       return MemoComponent;
+    }
+    if (enableChunksAPI) {
+      if ($$typeof === REACT_CHUNK_TYPE) {
+        return Chunk;
+      }
     }
   }
   return IndeterminateComponent;

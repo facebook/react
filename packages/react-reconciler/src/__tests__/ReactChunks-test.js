@@ -86,6 +86,65 @@ describe('ReactChunks', () => {
     expect(ReactNoop).toMatchRenderedOutput(<span>Name: Sebastian</span>);
   });
 
+  it.experimental('supports a lazy wrapper around a chunk', async () => {
+    function Query(id) {
+      return {
+        id: id,
+        name: readString('Sebastian'),
+      };
+    }
+
+    function Render(props, data) {
+      return (
+        <span>
+          {props.title}: {data.name}
+        </span>
+      );
+    }
+
+    let loadUser = chunk(Query, Render);
+
+    function App({User}) {
+      return (
+        <Suspense fallback={'Loading...'}>
+          <User title="Name" />
+        </Suspense>
+      );
+    }
+
+    let resolveLazy;
+    let LazyUser = React.lazy(
+      () =>
+        new Promise(resolve => {
+          resolveLazy = function() {
+            resolve({
+              default: loadUser(123),
+            });
+          };
+        }),
+    );
+
+    await ReactNoop.act(async () => {
+      ReactNoop.render(<App User={LazyUser} />);
+    });
+
+    expect(ReactNoop).toMatchRenderedOutput('Loading...');
+
+    // Resolve the component.
+    await ReactNoop.act(async () => {
+      await resolveLazy();
+    });
+
+    // We're still waiting on the data.
+    expect(ReactNoop).toMatchRenderedOutput('Loading...');
+
+    await ReactNoop.act(async () => {
+      jest.advanceTimersByTime(1000);
+    });
+
+    expect(ReactNoop).toMatchRenderedOutput(<span>Name: Sebastian</span>);
+  });
+
   it.experimental(
     'can receive updated data for the same component',
     async () => {
