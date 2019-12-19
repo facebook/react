@@ -905,6 +905,7 @@ function detachFiber(current: Fiber) {
   current.lastEffect = null;
   current.pendingProps = null;
   current.memoizedProps = null;
+  current.stateNode = null;
   if (alternate !== null) {
     detachFiber(alternate);
   }
