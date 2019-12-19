@@ -211,12 +211,15 @@ function createPanelIfReactLoaded() {
               browserTheme: getBrowserTheme(),
               componentsPortalContainer,
               enabledInspectedElementContextMenu: true,
+              enabledInspectedElementContextMenuCopy: isChrome,
               overrideTab,
               profilerPortalContainer,
               showTabBar: false,
               store,
               warnIfUnsupportedVersionDetected: true,
-              viewAttributeSourceFunction,
+              viewAttributeSourceFunction: isChrome
+                ? viewAttributeSourceFunction
+                : null,
               viewElementSourceFunction,
             }),
           );
