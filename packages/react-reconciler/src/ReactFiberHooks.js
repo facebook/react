@@ -101,7 +101,10 @@ export type Dispatcher = {|
   ): [(() => void) => void, boolean],
 |};
 
-type Update<S, A> = {|
+export type Update<S, A> = {|
+  // TODO: Temporary field. Will remove this by storing a map of
+  // transition -> start time on the root.
+  eventTime: ExpirationTime,
   expirationTime: ExpirationTime,
   suspenseConfig: null | SuspenseConfig,
   action: A,
@@ -699,14 +702,16 @@ function updateReducer<S, I, A>(
     let newBaseQueueLast = null;
     let update = first;
     do {
+      const suspenseConfig = update.suspenseConfig;
       const updateExpirationTime = update.expirationTime;
       if (updateExpirationTime < renderExpirationTime) {
         // Priority is insufficient. Skip this update. If this is the first
         // skipped update, the previous update/state is the new base
         // update/state.
         const clone: Update<S, A> = {
-          expirationTime: update.expirationTime,
-          suspenseConfig: update.suspenseConfig,
+          eventTime: update.eventTime,
+          expirationTime: updateExpirationTime,
+          suspenseConfig: suspenseConfig,
           action: update.action,
           eagerReducer: update.eagerReducer,
           eagerState: update.eagerState,
@@ -726,8 +731,10 @@ function updateReducer<S, I, A>(
       } else {
         // This update does have sufficient priority.
 
+        const eventTime = update.eventTime;
         if (newBaseQueueLast !== null) {
           const clone: Update<S, A> = {
+            eventTime,
             expirationTime: Sync, // This update is going to be committed so we never want uncommit it.
             suspenseConfig: update.suspenseConfig,
             action: update.action,
@@ -744,10 +751,7 @@ function updateReducer<S, I, A>(
         // TODO: We should skip this update if it was already committed but currently
         // we have no way of detecting the difference between a committed and suspended
         // update here.
-        markRenderEventTimeAndConfig(
-          updateExpirationTime,
-          update.suspenseConfig,
-        );
+        markRenderEventTimeAndConfig(eventTime, suspenseConfig);
 
         // Process this update.
         if (update.eagerReducer === reducer) {
@@ -1286,6 +1290,7 @@ function dispatchAction<S, A>(
   );
 
   const update: Update<S, A> = {
+    eventTime: currentTime,
     expirationTime,
     suspenseConfig,
     action,

@@ -108,6 +108,9 @@ import invariant from 'shared/invariant';
 import {getCurrentPriorityLevel} from './SchedulerWithReactIntegration';
 
 export type Update<State> = {|
+  // TODO: Temporary field. Will remove this by storing a map of
+  // transition -> event time on the root.
+  eventTime: ExpirationTime,
   expirationTime: ExpirationTime,
   suspenseConfig: null | SuspenseConfig,
 
@@ -121,7 +124,9 @@ export type Update<State> = {|
   priority?: ReactPriorityLevel,
 |};
 
-type SharedQueue<State> = {|pending: Update<State> | null|};
+type SharedQueue<State> = {|
+  pending: Update<State> | null,
+|};
 
 export type UpdateQueue<State> = {|
   baseState: State,
@@ -182,10 +187,12 @@ export function cloneUpdateQueue<State>(
 }
 
 export function createUpdate(
+  eventTime: ExpirationTime,
   expirationTime: ExpirationTime,
   suspenseConfig: null | SuspenseConfig,
 ): Update<*> {
   let update: Update<*> = {
+    eventTime,
     expirationTime,
     suspenseConfig,
 
@@ -396,7 +403,8 @@ export function processUpdateQueue<State>(
           // skipped update, the previous update/state is the new base
           // update/state.
           const clone: Update<State> = {
-            expirationTime: update.expirationTime,
+            eventTime: update.eventTime,
+            expirationTime: updateExpirationTime,
             suspenseConfig: update.suspenseConfig,
 
             tag: update.tag,
@@ -417,9 +425,10 @@ export function processUpdateQueue<State>(
           }
         } else {
           // This update does have sufficient priority.
-
+          const eventTime = update.eventTime;
           if (newBaseQueueLast !== null) {
             const clone: Update<State> = {
+              eventTime,
               expirationTime: Sync, // This update is going to be committed so we never want uncommit it.
               suspenseConfig: update.suspenseConfig,
 
@@ -438,10 +447,7 @@ export function processUpdateQueue<State>(
           // TODO: We should skip this update if it was already committed but currently
           // we have no way of detecting the difference between a committed and suspended
           // update here.
-          markRenderEventTimeAndConfig(
-            updateExpirationTime,
-            update.suspenseConfig,
-          );
+          markRenderEventTimeAndConfig(eventTime, update.suspenseConfig);
 
           // Process this update.
           newState = getStateFromUpdate(
