@@ -14,7 +14,7 @@ let ReactFeatureFlags;
 let ReactDOM;
 let useKeyboard;
 
-import {createEventTarget} from '../event-testing-library';
+import {createEventTarget} from 'dom-event-testing-library';
 
 function initializeModules(hasPointerEvents) {
   jest.resetModules();

@@ -141,6 +141,7 @@ module.exports = {
         '**/__tests__/**/*.js',
         'scripts/**/*.js',
         'packages/*/npm/**/*.js',
+        'packages/dom-event-testing-library/**/*.js',
         'packages/react-devtools*/**/*.js'
       ],
       rules: {

@@ -25,7 +25,6 @@ export function addTouch(touch) {
   }
   if (activeTouches.get(target).get(identifier)) {
     // Do not allow existing touches to be overwritten
-    // eslint-disable-next-line react-internal/no-production-logging
     console.error(
       'Touch with identifier %s already exists. Did not record touch start.',
       identifier,
@@ -41,7 +40,6 @@ export function updateTouch(touch) {
   if (activeTouches.get(target) != null) {
     activeTouches.get(target).set(identifier, touch);
   } else {
-    // eslint-disable-next-line react-internal/no-production-logging
     console.error(
       'Touch with identifier %s does not exist. Cannot record touch move without a touch start.',
       identifier,
@@ -56,7 +54,6 @@ export function removeTouch(touch) {
     if (activeTouches.get(target).has(identifier)) {
       activeTouches.get(target).delete(identifier);
     } else {
-      // eslint-disable-next-line react-internal/no-production-logging
       console.error(
         'Touch with identifier %s does not exist. Cannot record touch end without a touch start.',
         identifier,

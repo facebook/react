@@ -9,7 +9,7 @@
 
 'use strict';
 
-import {createEventTarget, setPointerEvent} from '../event-testing-library';
+import {createEventTarget, setPointerEvent} from 'dom-event-testing-library';
 
 let React;
 let ReactFeatureFlags;
