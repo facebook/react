@@ -445,9 +445,7 @@ export function mountEventResponder(
     const previousInstance = currentInstance;
     currentInstance = responderInstance;
     try {
-      batchedEventUpdates(() => {
-        onMount(eventResponderContext, props, state);
-      });
+      onMount(eventResponderContext, props, state);
     } finally {
       currentInstance = previousInstance;
     }
@@ -464,9 +462,7 @@ export function unmountEventResponder(
     const previousInstance = currentInstance;
     currentInstance = responderInstance;
     try {
-      batchedEventUpdates(() => {
-        onUnmount(eventResponderContext, props, state);
-      });
+      onUnmount(eventResponderContext, props, state);
     } finally {
       currentInstance = previousInstance;
     }
