@@ -190,7 +190,7 @@ const classComponentUpdater = {
       suspenseConfig,
     );
 
-    const update = createUpdate(expirationTime, suspenseConfig);
+    const update = createUpdate(currentTime, expirationTime, suspenseConfig);
     update.payload = payload;
     if (callback !== undefined && callback !== null) {
       if (__DEV__) {
@@ -212,7 +212,7 @@ const classComponentUpdater = {
       suspenseConfig,
     );
 
-    const update = createUpdate(expirationTime, suspenseConfig);
+    const update = createUpdate(currentTime, expirationTime, suspenseConfig);
     update.tag = ReplaceState;
     update.payload = payload;
 
@@ -236,7 +236,7 @@ const classComponentUpdater = {
       suspenseConfig,
     );
 
-    const update = createUpdate(expirationTime, suspenseConfig);
+    const update = createUpdate(currentTime, expirationTime, suspenseConfig);
     update.tag = ForceUpdate;
 
     if (callback !== undefined && callback !== null) {

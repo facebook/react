@@ -85,16 +85,13 @@ export function computeAsyncExpiration(
   );
 }
 
-export function computeSuspenseExpiration(
+export function computeSuspenseTimeout(
   currentTime: ExpirationTime,
   timeoutMs: number,
 ): ExpirationTime {
-  // TODO: Should we warn if timeoutMs is lower than the normal pri expiration time?
-  return computeExpirationBucket(
-    currentTime,
-    timeoutMs,
-    LOW_PRIORITY_BATCH_SIZE,
-  );
+  const currentTimeMs = expirationTimeToMs(currentTime);
+  const deadlineMs = currentTimeMs + timeoutMs;
+  return msToExpirationTime(deadlineMs);
 }
 
 // We intentionally set a higher expiration time for interactive updates in

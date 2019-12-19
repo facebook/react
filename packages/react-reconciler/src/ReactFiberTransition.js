@@ -53,8 +53,10 @@ export function startTransition(
 ) {
   const fiber = transitionInstance.fiber;
 
-  let resolvedConfig: SuspenseConfig | null =
+  const resolvedConfig: SuspenseConfig | null =
     config === undefined ? null : config;
+
+  const currentTime = requestCurrentTimeForUpdate();
 
   // TODO: runWithPriority shouldn't be necessary here. React should manage its
   // own concept of priority, and only consult Scheduler for updates that are
@@ -63,7 +65,6 @@ export function startTransition(
   runWithPriority(
     priorityLevel < UserBlockingPriority ? UserBlockingPriority : priorityLevel,
     () => {
-      const currentTime = requestCurrentTimeForUpdate();
       userBlockingExpirationTime = computeExpirationForFiber(
         currentTime,
         fiber,
@@ -75,7 +76,6 @@ export function startTransition(
   runWithPriority(
     priorityLevel > NormalPriority ? NormalPriority : priorityLevel,
     () => {
-      const currentTime = requestCurrentTimeForUpdate();
       let expirationTime = computeExpirationForFiber(
         currentTime,
         fiber,
@@ -85,34 +85,9 @@ export function startTransition(
       // Because there's only a single transition per useTransition hook, we
       // don't need a queue here; we can cheat by only tracking the most
       // recently scheduled transition.
-      // TODO: This trick depends on transition expiration times being
-      // monotonically decreasing in priority, but since expiration times
-      // currently correspond to `timeoutMs`, that might not be true if
-      // `timeoutMs` changes to something smaller before the previous transition
-      // resolves. But this is a temporary edge case, since we're about to
-      // remove the correspondence between `timeoutMs` and the expiration time.
       const oldPendingExpirationTime = transitionInstance.pendingExpirationTime;
-      while (
-        oldPendingExpirationTime !== NoWork &&
-        oldPendingExpirationTime <= expirationTime
-      ) {
-        // Temporary hack to make pendingExpirationTime monotonically decreasing
-        if (resolvedConfig === null) {
-          resolvedConfig = {
-            timeoutMs: 5250,
-          };
-        } else {
-          resolvedConfig = {
-            timeoutMs: (resolvedConfig.timeoutMs | 0 || 5000) + 250,
-            busyDelayMs: resolvedConfig.busyDelayMs,
-            busyMinDurationMs: resolvedConfig.busyMinDurationMs,
-          };
-        }
-        expirationTime = computeExpirationForFiber(
-          currentTime,
-          fiber,
-          resolvedConfig,
-        );
+      if (oldPendingExpirationTime === expirationTime) {
+        expirationTime -= 1;
       }
       transitionInstance.pendingExpirationTime = expirationTime;
 
