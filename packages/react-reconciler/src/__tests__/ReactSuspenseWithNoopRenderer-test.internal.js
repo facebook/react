@@ -2489,12 +2489,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
       },
       {timeoutMs: 2000},
     );
-    expect(Scheduler).toFlushAndYield([
-      'Suspend! [C]',
-      'Loading...',
-      'Suspend! [C]',
-      'Loading...',
-    ]);
+    expect(Scheduler).toFlushAndYield(['Suspend! [C]', 'Loading...']);
     expect(ReactNoop.getChildren()).toEqual([span('B')]);
     Scheduler.unstable_advanceTime(1200);
     await advanceTimers(1200);
@@ -2605,23 +2600,6 @@ describe('ReactSuspenseWithNoopRenderer', () => {
   });
 
   it('supports delaying a busy spinner from disappearing', async () => {
-    function useLoadingIndicator(config) {
-      let [isLoading, setLoading] = React.useState(false);
-      let start = React.useCallback(
-        cb => {
-          setLoading(true);
-          Scheduler.unstable_next(() =>
-            React.unstable_withSuspenseConfig(() => {
-              setLoading(false);
-              cb();
-            }, config),
-          );
-        },
-        [setLoading, config],
-      );
-      return [isLoading, start];
-    }
-
     const SUSPENSE_CONFIG = {
       timeoutMs: 10000,
       busyDelayMs: 500,
@@ -2632,12 +2610,12 @@ describe('ReactSuspenseWithNoopRenderer', () => {
 
     function App() {
       let [page, setPage] = React.useState('A');
-      let [isLoading, startLoading] = useLoadingIndicator(SUSPENSE_CONFIG);
-      transitionToPage = nextPage => startLoading(() => setPage(nextPage));
+      let [startTransition, isPending] = React.useTransition(SUSPENSE_CONFIG);
+      transitionToPage = nextPage => startTransition(() => setPage(nextPage));
       return (
         <Fragment>
           <Text text={page} />
-          {isLoading ? <Text text="L" /> : null}
+          {isPending ? <Text text="L" /> : null}
         </Fragment>
       );
     }
@@ -2663,7 +2641,8 @@ describe('ReactSuspenseWithNoopRenderer', () => {
       // the loading indicator.
       Scheduler.unstable_advanceTime(600);
       await advanceTimers(600);
-      expect(Scheduler).toFlushAndYield(['B', 'L', 'C']);
+      expect(Scheduler).toHaveYielded(['B', 'L']);
+      expect(Scheduler).toFlushAndYield(['C']);
       // We're technically done now but we haven't shown the
       // loading indicator for long enough yet so we'll suspend
       // while we keep it on the screen a bit longer.
@@ -2679,7 +2658,8 @@ describe('ReactSuspenseWithNoopRenderer', () => {
       // the loading indicator.
       Scheduler.unstable_advanceTime(1000);
       await advanceTimers(1000);
-      expect(Scheduler).toFlushAndYield(['C', 'L', 'D']);
+      expect(Scheduler).toHaveYielded(['C', 'L']);
+      expect(Scheduler).toFlushAndYield(['D']);
       // However, since we exceeded the minimum time to show
       // the loading indicator, we commit immediately.
       expect(ReactNoop.getChildren()).toEqual([span('D')]);
@@ -2813,7 +2793,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
       () => {
         ReactNoop.render(<App showContent={true} />);
       },
-      {timeoutMs: 2000},
+      {timeoutMs: 2500},
     );
 
     expect(Scheduler).toFlushAndYield(['Suspend! [A]', 'Loading...']);
