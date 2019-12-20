@@ -59,7 +59,6 @@ import {
 } from './EventListener';
 import getEventTarget from './getEventTarget';
 import {getClosestInstanceFromNode} from '../client/ReactDOMComponentTree';
-import SimpleEventPlugin from './SimpleEventPlugin';
 import {getRawEventName} from './DOMTopLevelEventTypes';
 import {passiveBrowserEventsSupported} from './checkPassiveEvents';
 
@@ -69,13 +68,12 @@ import {
   ContinuousEvent,
   DiscreteEvent,
 } from 'shared/ReactTypes';
+import {getEventPriorityForPluginSystem} from './DOMEventProperties';
 
 const {
   unstable_UserBlockingPriority: UserBlockingPriority,
   unstable_runWithPriority: runWithPriority,
 } = Scheduler;
-
-const {getEventPriority} = SimpleEventPlugin;
 
 const CALLBACK_BOOKKEEPING_POOL_SIZE = 10;
 const callbackBookkeepingPool = [];
@@ -280,7 +278,7 @@ function trapEventForPluginEventSystem(
   capture: boolean,
 ): void {
   let listener;
-  switch (getEventPriority(topLevelType)) {
+  switch (getEventPriorityForPluginSystem(topLevelType)) {
     case DiscreteEvent:
       listener = dispatchDiscreteEvent.bind(
         null,
