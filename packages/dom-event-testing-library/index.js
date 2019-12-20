@@ -18,7 +18,7 @@ import {describeWithPointerEvent, testWithPointerType} from './testHelpers';
 const createEventTarget = node => ({
   node,
   /**
-   * General events abstraction.
+   * Simple events abstraction.
    */
   blur(payload) {
     node.dispatchEvent(domEvents.blur(payload));
@@ -26,24 +26,18 @@ const createEventTarget = node => ({
   click(payload) {
     node.dispatchEvent(domEvents.click(payload));
   },
-  contextmenu(payload, options) {
-    domEventSequences.contextmenu(node, payload, options);
-  },
   focus(payload) {
     node.dispatchEvent(domEvents.focus(payload));
     node.focus();
   },
-  scroll(payload) {
-    node.dispatchEvent(domEvents.scroll(payload));
-  },
-  /**
-   * KeyboardEvent abstraction.
-   */
   keydown(payload) {
     node.dispatchEvent(domEvents.keydown(payload));
   },
   keyup(payload) {
     node.dispatchEvent(domEvents.keyup(payload));
+  },
+  scroll(payload) {
+    node.dispatchEvent(domEvents.scroll(payload));
   },
   virtualclick(payload) {
     node.dispatchEvent(domEvents.virtualclick(payload));
@@ -53,6 +47,9 @@ const createEventTarget = node => ({
    * Dispatches the expected sequence of PointerEvents, MouseEvents, and
    * TouchEvents for a given environment.
    */
+  contextmenu(payload, options) {
+    domEventSequences.contextmenu(node, payload, options);
+  },
   // node no longer receives events for the pointer
   pointercancel(payload) {
     domEventSequences.pointercancel(node, payload);

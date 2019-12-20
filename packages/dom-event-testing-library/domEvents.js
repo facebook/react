@@ -231,7 +231,7 @@ function createTouchEvent(type, payload) {
  */
 
 export function blur({relatedTarget} = {}) {
-  return createEvent('blur', {relatedTarget});
+  return new FocusEvent('blur', {relatedTarget});
 }
 
 export function click(payload) {
@@ -256,7 +256,7 @@ export function dragstart(payload) {
 }
 
 export function focus({relatedTarget} = {}) {
-  return createEvent('focus', {relatedTarget});
+  return new FocusEvent('focus', {relatedTarget});
 }
 
 export function scroll() {
@@ -265,6 +265,7 @@ export function scroll() {
 
 export function virtualclick(payload) {
   return createMouseEvent('click', {
+    button: 0,
     ...payload,
     buttons: 0,
     detail: 0,
