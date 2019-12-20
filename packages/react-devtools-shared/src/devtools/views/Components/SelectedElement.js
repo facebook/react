@@ -303,6 +303,7 @@ function InspectedElementView({
 
   const {
     isEnabledForInspectedElement,
+    supportsCopyOperation,
     viewAttributeSourceFunction,
   } = useContext(ContextMenuContext);
 
@@ -444,12 +445,14 @@ function InspectedElementView({
         <ContextMenu id="SelectedElement">
           {data => (
             <Fragment>
-              <ContextMenuItem
-                onClick={() => copyInspectedElementPath(id, data.path)}
-                title="Copy value to clipboard">
-                <Icon className={styles.ContextMenuIcon} type="copy" /> Copy
-                value to clipboard
-              </ContextMenuItem>
+              {supportsCopyOperation && (
+                <ContextMenuItem
+                  onClick={() => copyInspectedElementPath(id, data.path)}
+                  title="Copy value to clipboard">
+                  <Icon className={styles.ContextMenuIcon} type="copy" /> Copy
+                  value to clipboard
+                </ContextMenuItem>
+              )}
               <ContextMenuItem
                 onClick={() => storeAsGlobal(id, data.path)}
                 title="Store as global variable">

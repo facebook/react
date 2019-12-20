@@ -56,6 +56,7 @@ inject('dist/app.js', () => {
         createElement(DevTools, {
           browserTheme: 'light',
           enabledInspectedElementContextMenu: true,
+          enabledInspectedElementContextMenuCopy: true,
           showTabBar: true,
           warnIfLegacyBackendDetected: true,
           warnIfUnsupportedVersionDetected: true,
