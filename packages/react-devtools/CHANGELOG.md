@@ -7,6 +7,10 @@
   </summary>
   
   <!-- Upcoming changes go here -->
+
+</details>
+
+## 4.3.0 (December 20, 2019)
 #### Features
 * Show component location for selected element in bottom/right panel ([bvaughn](https://github.com/bvaughn) in [#17567](https://github.com/facebook/react/pull/17567))
 * Improved inspected element values with inline previews ([bvaughn](https://github.com/bvaughn) in [#17579](https://github.com/facebook/react/pull/17579))
@@ -15,7 +19,6 @@
 #### Bug fixes
 * Fix serialization for `BigInt` type so that it does not break inspection panel. ([nutboltu](https://github.com/nutboltu) in [#17233](https://github.com/facebook/react/pull/17233))
 * Fix display name logic for `forwardRef`s that use `displayName` property ([zthxxx](https://github.com/zthxxx) in [#17613](https://github.com/facebook/react/pull/17613))
-</details>
 
 ## 4.2.1 (November 27, 2019)
 #### Bug fixes
