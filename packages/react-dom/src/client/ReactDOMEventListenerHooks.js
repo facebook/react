@@ -7,6 +7,7 @@
  * @flow
  */
 
+import type {EventPriority} from 'shared/ReactTypes';
 import type {
   ReactDOMListenerEvent,
   ReactDOMListenerMap,
@@ -23,7 +24,7 @@ const ReactCurrentDispatcher =
 type EventOptions = {|
   capture?: boolean,
   passive?: boolean,
-  priority?: number,
+  priority?: EventPriority,
 |};
 
 function resolveDispatcher() {
@@ -50,9 +51,9 @@ export function useEvent(
   let priority = getEventPriorityForListenerSystem((type: any));
 
   if (options != null) {
-    const optionsCapture = options && options.capture;
-    const optionsPassive = options && options.passive;
-    const optionsPriority = options && options.priority;
+    const optionsCapture = options.capture;
+    const optionsPassive = options.passive;
+    const optionsPriority = options.priority;
 
     if (typeof optionsCapture === 'boolean') {
       capture = optionsCapture;

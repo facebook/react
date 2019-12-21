@@ -282,7 +282,7 @@ export function addListenerSystemEvent(
   topLevelType: string,
   passive: boolean,
 ): any => void {
-  let eventFlags = RESPONDER_EVENT_SYSTEM | LISTENER_EVENT_SYSTEM;
+  let eventFlags = LISTENER_EVENT_SYSTEM;
 
   // If passive option is not supported, then the event will be
   // active and not passive, but we flag it as using not being
@@ -307,13 +307,13 @@ export function addListenerSystemEvent(
   );
   if (passiveBrowserEventsSupported) {
     addEventCaptureListenerWithPassiveFlag(
-      document,
+      window,
       topLevelType,
       listener,
       passive,
     );
   } else {
-    addEventCaptureListener(document, topLevelType, listener);
+    addEventCaptureListener(window, topLevelType, listener);
   }
   return listener;
 }
@@ -324,12 +324,12 @@ export function removeListenerSystemEvent(
   listener: any => void,
 ) {
   if (passiveBrowserEventsSupported) {
-    document.removeEventListener(topLevelType, listener, {
+    window.removeEventListener(topLevelType, listener, {
       capture: true,
       passive: false,
     });
   } else {
-    document.removeEventListener(topLevelType, listener, true);
+    window.removeEventListener(topLevelType, listener, true);
   }
 }
 

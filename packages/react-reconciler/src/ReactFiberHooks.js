@@ -21,7 +21,6 @@ import type {
   ReactListenerEvent,
   ReactListenerMap,
   ReactListener,
-  Container,
 } from './ReactFiberHostConfig';
 
 import ReactSharedInternals from 'shared/ReactSharedInternals';
@@ -67,7 +66,6 @@ import {
   validateReactListenerMapListener,
   validateReactListenerDeleteListener,
 } from './ReactFiberHostConfig';
-import {getRootHostContainer} from './ReactFiberHostContext';
 import {enableListenerAPI} from 'shared/ReactFeatureFlags';
 
 const {ReactCurrentDispatcher, ReactCurrentBatchConfig} = ReactSharedInternals;
@@ -1280,8 +1278,8 @@ function rerenderTransition(
 function createReactListener(
   event: ReactListenerEvent,
   callback: Event => void,
-  instance: Container,
-  destroy: Container => void,
+  instance: EventTarget,
+  destroy: EventTarget => void,
 ): ReactListener {
   return {
     callback,
@@ -1312,10 +1310,9 @@ export function mountEventListener(
 ): ReactListenerMap {
   if (enableListenerAPI) {
     const hook = mountWorkInProgressHook();
-    const rootContainerInstance = getRootHostContainer();
-    registerListenerEvent(event, rootContainerInstance);
+    registerListenerEvent(event);
 
-    let listenerMap: Map<Container, ReactListener> = new Map();
+    let listenerMap: Map<EventTarget, ReactListener> = new Map();
 
     const clear = (): void => {
       if (validateNotInFunctionRender()) {
@@ -1327,13 +1324,25 @@ export function mountEventListener(
       }
     };
 
-    const destroy = (instance: Container) => {
+    const destroy = (instance: EventTarget) => {
+      // We don't need to call detachListenerFromInstance
+      // here as this method should only ever be called
+      // from renderers that need to remove the instance
+      // from the map representing an instance that still
+      // holds a reference to the listenerMap. This means
+      // things like "window" listeners on ReactDOM should
+      // never enter this call path as the the instance in
+      // those cases would be that of "window", which
+      // should be handled via an optimized route in the
+      // renderer, making less overhead here. If we change
+      // this heuristic we should update this path to make
+      // sure we call detachListenerFromInstance.
       listenerMap.delete(instance);
     };
 
     const reactListenerMap: ReactListenerMap = {
       clear,
-      deleteListener(instance: Container): void {
+      deleteListener(instance: EventTarget): void {
         if (
           validateNotInFunctionRender() &&
           validateReactListenerDeleteListener(instance)
@@ -1345,7 +1354,7 @@ export function mountEventListener(
           }
         }
       },
-      setListener(instance: Container, callback: Event => void): void {
+      setListener(instance: EventTarget, callback: Event => void): void {
         if (
           validateNotInFunctionRender() &&
           validateReactListenerMapListener(instance, callback)
@@ -2382,7 +2391,7 @@ if (__DEV__) {
     useEvent(event: ReactListenerEvent): ReactListenerMap {
       currentHookNameInDev = 'useEvent';
       warnInvalidHookAccess();
-      mountHookTypesDev();
+      updateHookTypesDev();
       return updateEventListener(event);
     },
   };

@@ -10,11 +10,7 @@ import type {Fiber} from 'react-reconciler/src/ReactFiber';
 import type {ReactDOMListener} from 'shared/ReactDOMTypes';
 import type {AnyNativeEvent} from 'legacy-events/PluginModuleType';
 
-import {
-  ContinuousEvent,
-  UserBlockingEvent,
-  DiscreteEvent,
-} from 'shared/ReactTypes';
+import {UserBlockingEvent, DiscreteEvent} from 'shared/ReactTypes';
 import {HostComponent} from 'shared/ReactWorkTags';
 import {
   batchedEventUpdates,
@@ -39,14 +35,14 @@ const {
 const arrayFrom = Array.from;
 
 type EventProperties = {|
-  currentTarget: null | Document | Element,
+  currentTarget: null | EventTarget,
   eventPhase: number,
   stopImmediatePropagation: boolean,
   stopPropagation: boolean,
 |};
 
-const documentCaptureListeners = new Map();
-const documentBubbleListeners = new Map();
+const windowCaptureListeners = new Map();
+const windowBubbleListeners = new Map();
 
 function monkeyPatchNativeEvent(nativeEvent: any): EventProperties {
   if (nativeEvent._reactEventProperties) {
@@ -121,23 +117,23 @@ function getElementListeners(
   return [captureListeners, bubbleListeners];
 }
 
-function getDocumentListenerSet(
+function getWindowListenerSet(
   type: string,
   capture: boolean,
 ): Set<ReactDOMListener> {
-  const delegatedEventListeners = capture
-    ? documentCaptureListeners
-    : documentBubbleListeners;
-  let listenersSet = delegatedEventListeners.get(type);
+  const windowEventListeners = capture
+    ? windowCaptureListeners
+    : windowBubbleListeners;
+  let listenersSet = windowEventListeners.get(type);
 
   if (listenersSet === undefined) {
     listenersSet = new Set();
-    delegatedEventListeners.set(type, listenersSet);
+    windowEventListeners.set(type, listenersSet);
   }
   return listenersSet;
 }
 
-function dispatchListener(
+function processListener(
   listener: ReactDOMListener,
   eventProperties: EventProperties,
   nativeEvent: AnyNativeEvent,
@@ -147,7 +143,7 @@ function dispatchListener(
   executeUserEventHandler(callback, nativeEvent);
 }
 
-function dispatchListenerAtPriority(
+function processListenerAtPriority(
   listener: ReactDOMListener,
   eventProperties: EventProperties,
   nativeEvent: AnyNativeEvent,
@@ -156,24 +152,21 @@ function dispatchListenerAtPriority(
   if (listener.callback == null) {
     return;
   }
-  switch (listener.event.priority) {
-    case DiscreteEvent: {
-      flushDiscreteUpdatesIfNeeded(nativeEvent.timeStamp);
-      discreteUpdates(() =>
-        dispatchListener(listener, eventProperties, nativeEvent),
-      );
-      break;
-    }
-    case UserBlockingEvent: {
-      runWithPriority(UserBlockingPriority, () =>
-        dispatchListener(listener, eventProperties, nativeEvent),
-      );
-      break;
-    }
-    case ContinuousEvent: {
-      dispatchListener(listener, eventProperties, nativeEvent);
-      break;
-    }
+  const priority = listener.event.priority;
+
+  if (priority === DiscreteEvent) {
+    flushDiscreteUpdatesIfNeeded(nativeEvent.timeStamp);
+    discreteUpdates(() =>
+      processListener(listener, eventProperties, nativeEvent),
+    );
+  } else if (priority === UserBlockingEvent) {
+    runWithPriority(UserBlockingPriority, () =>
+      processListener(listener, eventProperties, nativeEvent),
+    );
+  } else {
+    // Otherwise it is a ContinuousEvent or a prioriy we do not
+    // know, which means we should fallback to this anyway.
+    processListener(listener, eventProperties, nativeEvent);
   }
 }
 
@@ -189,93 +182,68 @@ function shouldStopPropagation(
   );
 }
 
-function dispatchCaptureListeners(
+function processCaptureListeners(
   eventProperties: EventProperties,
   listeners: Array<ReactDOMListener>,
   nativeEvent: AnyNativeEvent,
-  isDocumentListener: boolean,
 ) {
   const end = listeners.length - 1;
   let lastPropagationDepth;
   for (let i = end; i >= 0; i--) {
     const listener = listeners[i];
     const {depth} = listener;
-    if (
-      (!isDocumentListener || i === end) &&
-      shouldStopPropagation(eventProperties, lastPropagationDepth, depth)
-    ) {
+    if (shouldStopPropagation(eventProperties, lastPropagationDepth, depth)) {
       return;
     }
-    dispatchListenerAtPriority(listener, eventProperties, nativeEvent);
+    processListenerAtPriority(listener, eventProperties, nativeEvent);
     lastPropagationDepth = depth;
   }
 }
 
-function dispatchBubbleListeners(
+function processBubbleListeners(
   eventProperties: EventProperties,
   listeners: Array<ReactDOMListener>,
   nativeEvent: AnyNativeEvent,
-  isDocumentListener: boolean,
 ) {
   const length = listeners.length;
   let lastPropagationDepth;
   for (let i = 0; i < length; i++) {
     const listener = listeners[i];
     const {depth} = listener;
-    if (
-      // When document is not null, we know its a delegated event
-      (!isDocumentListener || i === 0) &&
-      shouldStopPropagation(eventProperties, lastPropagationDepth, depth)
-    ) {
+    if (shouldStopPropagation(eventProperties, lastPropagationDepth, depth)) {
       return;
     }
-    dispatchListenerAtPriority(listener, eventProperties, nativeEvent);
+    processListenerAtPriority(listener, eventProperties, nativeEvent);
     lastPropagationDepth = depth;
   }
 }
 
-function dispatchListenersByPhase(
+function processListenersByPhase(
   captureElementListeners: Array<ReactDOMListener>,
   bubbleElementListeners: Array<ReactDOMListener>,
-  captureDocumentListeners: Array<ReactDOMListener>,
-  bubbleDocumentListeners: Array<ReactDOMListener>,
+  captureWindowListeners: Array<ReactDOMListener>,
+  bubbleWindowListeners: Array<ReactDOMListener>,
   nativeEvent: AnyNativeEvent,
 ): void {
   const eventProperties = monkeyPatchNativeEvent(nativeEvent);
   // Capture phase
   eventProperties.eventPhase = 1;
-  // Dispatch capture delegated event listeners
-  dispatchCaptureListeners(
-    eventProperties,
-    captureDocumentListeners,
-    nativeEvent,
-    true,
-  );
+  // Dispatch capture window event listeners
+  processCaptureListeners(eventProperties, captureWindowListeners, nativeEvent);
   // Dispatch capture target event listeners
-  dispatchCaptureListeners(
+  processCaptureListeners(
     eventProperties,
     captureElementListeners,
     nativeEvent,
-    false,
   );
   eventProperties.stopPropagation = false;
   eventProperties.stopImmediatePropagation = false;
   // Bubble phase
   eventProperties.eventPhase = 3;
   // Dispatch bubble target event listeners
-  dispatchBubbleListeners(
-    eventProperties,
-    bubbleElementListeners,
-    nativeEvent,
-    false,
-  );
-  // Dispatch bubble delegated event listeners
-  dispatchBubbleListeners(
-    eventProperties,
-    bubbleDocumentListeners,
-    nativeEvent,
-    true,
-  );
+  processBubbleListeners(eventProperties, bubbleElementListeners, nativeEvent);
+  // Dispatch bubble window event listeners
+  processBubbleListeners(eventProperties, bubbleWindowListeners, nativeEvent);
 }
 
 export function dispatchEventForListenerEventSystem(
@@ -289,25 +257,25 @@ export function dispatchEventForListenerEventSystem(
       captureElementListeners,
       bubbleElementListeners,
     ] = getElementListeners(eventType, targetFiber);
-    const captureDocumentListeners = arrayFrom(
-      getDocumentListenerSet(eventType, true),
+    const captureWindowListeners = arrayFrom(
+      getWindowListenerSet(eventType, true),
     );
-    const bubbleDocumentListeners = arrayFrom(
-      getDocumentListenerSet(eventType, false),
+    const bubbleWindowListeners = arrayFrom(
+      getWindowListenerSet(eventType, false),
     );
 
     if (
       captureElementListeners.length !== 0 ||
       bubbleElementListeners.length !== 0 ||
-      captureDocumentListeners.length !== 0 ||
-      bubbleDocumentListeners.length !== 0
+      captureWindowListeners.length !== 0 ||
+      bubbleWindowListeners.length !== 0
     ) {
       batchedEventUpdates(() =>
-        dispatchListenersByPhase(
+        processListenersByPhase(
           captureElementListeners,
           bubbleElementListeners,
-          captureDocumentListeners,
-          bubbleDocumentListeners,
+          captureWindowListeners,
+          bubbleWindowListeners,
           nativeEvent,
         ),
       );
@@ -315,21 +283,21 @@ export function dispatchEventForListenerEventSystem(
   }
 }
 
-function getDocumentListenerSetForListener(
+function getWindowListenerSetForListener(
   listener: ReactDOMListener,
 ): Set<ReactDOMListener> {
   const {capture, type} = listener.event;
-  return getDocumentListenerSet(type, capture);
+  return getWindowListenerSet(type, capture);
 }
 
-export function attachDocumentListener(listener: ReactDOMListener): void {
-  const documentListenersSet = getDocumentListenerSetForListener(listener);
-  documentListenersSet.add(listener);
+export function attachWindowListener(listener: ReactDOMListener): void {
+  const windowListenersSet = getWindowListenerSetForListener(listener);
+  windowListenersSet.add(listener);
 }
 
-export function detachDocumentListener(listener: ReactDOMListener): void {
-  const documentListenersSet = getDocumentListenerSetForListener(listener);
-  documentListenersSet.delete(listener);
+export function detachWindowListener(listener: ReactDOMListener): void {
+  const windowListenersSet = getWindowListenerSetForListener(listener);
+  windowListenersSet.delete(listener);
 }
 
 export function attachElementListener(listener: ReactDOMListener): void {

@@ -380,7 +380,7 @@ export function beforeRemoveInstance(instance: any) {
   // noop
 }
 
-export function registerListenerEvent(instance, event, callback): void {
+export function registerListenerEvent(event): void {
   // noop
 }
 

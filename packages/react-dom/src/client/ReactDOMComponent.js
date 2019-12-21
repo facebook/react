@@ -1344,15 +1344,14 @@ export function listenToEventResponderEventTypes(
   }
 }
 
-export function listenToEventListener(
+export function listenToListenerSystemEvent(
   type: string,
   passive: boolean,
-  document: Document,
 ): void {
   if (enableListenerAPI) {
     // Get the listening Map for this element. We use this to track
     // what events we're listening to.
-    const listenerMap = getListenerMapForElement(document);
+    const listenerMap = getListenerMapForElement(window);
     const passiveKey = type + '_passive';
     const activeKey = type + '_active';
     const eventKey = passive ? passiveKey : activeKey;
@@ -1374,7 +1373,7 @@ export function listenToEventListener(
           }
         }
       }
-      const eventListener = addListenerSystemEvent(document, type, passive);
+      const eventListener = addListenerSystemEvent(window, type, passive);
       listenerMap.set(eventKey, eventListener);
     }
   }

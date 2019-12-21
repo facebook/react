@@ -31,6 +31,7 @@ import {
   enableProfilerTimer,
   enableSuspenseServerRenderer,
   enableDeprecatedFlareAPI,
+  enableListenerAPI,
   enableFundamentalAPI,
   enableSuspenseCallback,
   enableScopeAPI,
@@ -824,6 +825,8 @@ function commitUnmount(
     case HostComponent: {
       if (enableDeprecatedFlareAPI) {
         unmountDeprecatedResponderListeners(current);
+      }
+      if (enableDeprecatedFlareAPI || enableListenerAPI) {
         beforeRemoveInstance(current.stateNode);
       }
       safelyDetachRef(current);

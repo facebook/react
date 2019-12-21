@@ -312,7 +312,7 @@ describe('DOMEventListenerSystem', () => {
     expect(targetListerner4).toHaveBeenCalledTimes(2);
   });
 
-  it('should correctly work for a basic "click" document listener', () => {
+  it('should correctly work for a basic "click" window listener', () => {
     const log = [];
     const clickEvent = jest.fn(event => {
       log.push({
@@ -327,7 +327,7 @@ describe('DOMEventListenerSystem', () => {
       const click = ReactDOM.unstable_useEvent('click');
 
       React.useEffect(() => {
-        click.setListener(document, clickEvent);
+        click.setListener(window, clickEvent);
       });
 
       return <button>Click anything!</button>;
@@ -342,7 +342,7 @@ describe('DOMEventListenerSystem', () => {
     expect(log[0]).toEqual({
       eventPhase: 3,
       type: 'click',
-      currentTarget: document,
+      currentTarget: window,
       target: document.body,
     });
 
@@ -367,7 +367,7 @@ describe('DOMEventListenerSystem', () => {
     const log = [];
 
     function Test() {
-      // Document
+      // Window
       const click1 = ReactDOM.unstable_useEvent('click', {capture: true});
       const click2 = ReactDOM.unstable_useEvent('click');
       // Div
@@ -378,7 +378,7 @@ describe('DOMEventListenerSystem', () => {
       const click6 = ReactDOM.unstable_useEvent('click', {capture: true});
 
       React.useEffect(() => {
-        click1.setListener(document, e => {
+        click1.setListener(window, e => {
           log.push({
             bound: false,
             delegated: true,
@@ -387,7 +387,7 @@ describe('DOMEventListenerSystem', () => {
             target: e.target,
           });
         });
-        click2.setListener(document, e => {
+        click2.setListener(window, e => {
           log.push({
             bound: false,
             delegated: true,
@@ -452,7 +452,7 @@ describe('DOMEventListenerSystem', () => {
         bound: false,
         delegated: true,
         eventPhase: 1,
-        currentTarget: document,
+        currentTarget: window,
         target: divRef.current,
       },
       {
@@ -487,7 +487,7 @@ describe('DOMEventListenerSystem', () => {
         bound: false,
         delegated: true,
         eventPhase: 3,
-        currentTarget: document,
+        currentTarget: window,
         target: divRef.current,
       },
     ]);
@@ -507,7 +507,7 @@ describe('DOMEventListenerSystem', () => {
       React.useEffect(() => {
         click1.setListener(buttonRef.current, targetListerner1);
         click2.setListener(buttonRef.current, targetListerner2);
-        click3.setListener(document, targetListerner1);
+        click3.setListener(window, targetListerner1);
       });
 
       return <button ref={buttonRef}>Click me!</button>;
@@ -638,9 +638,9 @@ describe('DOMEventListenerSystem', () => {
       const click4 = ReactDOM.unstable_useEvent('click');
 
       React.useEffect(() => {
-        click1.setListener(document, rootListerner1);
+        click1.setListener(window, rootListerner1);
         click2.setListener(buttonRef.current, targetListerner1);
-        click3.setListener(document, rootListerner2);
+        click3.setListener(window, rootListerner2);
         click4.setListener(buttonRef.current, targetListerner2);
       });
 
@@ -672,10 +672,10 @@ describe('DOMEventListenerSystem', () => {
       const click4 = ReactDOM.unstable_useEvent('click');
 
       React.useEffect(() => {
-        click1.setListener(document, rootListerner1);
-        click2.setListener(document, rootListerner2);
-        click3.setListener(document, rootListerner3);
-        click4.setListener(document, rootListerner4);
+        click1.setListener(window, rootListerner1);
+        click2.setListener(window, rootListerner2);
+        click3.setListener(window, rootListerner3);
+        click4.setListener(window, rootListerner4);
       });
 
       return <button ref={buttonRef}>Click me!</button>;

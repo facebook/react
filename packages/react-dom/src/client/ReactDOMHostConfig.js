@@ -28,7 +28,7 @@ import {
   warnForInsertedHydratedElement,
   warnForInsertedHydratedText,
   listenToEventResponderEventTypes,
-  listenToEventListener,
+  listenToListenerSystemEvent,
 } from './ReactDOMComponent';
 import {getSelectionInformation, restoreSelection} from './ReactInputSelection';
 import setTextContent from './setTextContent';
@@ -134,8 +134,8 @@ import {
 import {
   attachElementListener,
   detachElementListener,
-  attachDocumentListener,
-  detachDocumentListener,
+  attachWindowListener,
+  detachWindowListener,
 } from '../events/DOMEventListenerSystem';
 
 let SUPPRESS_HYDRATION_WARNING;
@@ -1076,22 +1076,18 @@ export function getInstanceFromNode(node: Instance): null | Object {
   return getClosestInstanceFromNode(node) || null;
 }
 
-export function registerListenerEvent(
-  event: ReactDOMListenerEvent,
-  rootContainerInstance: Container,
-): void {
+export function registerListenerEvent(event: ReactDOMListenerEvent): void {
   if (enableListenerAPI) {
     const {type, passive} = event;
-    const doc = rootContainerInstance.ownerDocument;
-    listenToEventListener(type, passive, doc);
+    listenToListenerSystemEvent(type, passive);
   }
 }
 
 export function attachListenerToInstance(listener: ReactDOMListener): void {
   if (enableListenerAPI) {
     const {instance} = listener;
-    if (instance.nodeType === DOCUMENT_NODE) {
-      attachDocumentListener(listener);
+    if (instance === window) {
+      attachWindowListener(listener);
     } else {
       attachElementListener(listener);
     }
@@ -1101,8 +1097,8 @@ export function attachListenerToInstance(listener: ReactDOMListener): void {
 export function detachListenerFromInstance(listener: ReactDOMListener): void {
   if (enableListenerAPI) {
     const {instance} = listener;
-    if (instance.nodeType === DOCUMENT_NODE) {
-      detachDocumentListener(listener);
+    if (instance === window) {
+      detachWindowListener(listener);
     } else {
       detachElementListener(listener);
     }
@@ -1112,30 +1108,38 @@ export function detachListenerFromInstance(listener: ReactDOMListener): void {
 function validateListenerInstance(instance, methodString): boolean {
   if (
     instance &&
-    (instance.nodeType === DOCUMENT_NODE ||
-      getClosestInstanceFromNode(instance))
+    (instance === window || getClosestInstanceFromNode(instance))
   ) {
     return true;
   }
   if (__DEV__) {
-    console.warn(
-      'Event listener method %s() from useEvent() hook requires the first argument to be a valid' +
-        ' DOM node that was rendered and managed by React. If this is from a ref, ensure' +
-        ' the ref value has been set before attaching.',
-      methodString,
-    );
+    if (instance && (instance: any).nodeType === DOCUMENT_NODE) {
+      console.warn(
+        'Event listener method %s() from useEvent() hook requires the first argument to be a valid' +
+          ' DOM node that was rendered and managed by React or a "window" object. It looks like' +
+          ' you supplied a "document" node, instead use the "window" object.',
+        methodString,
+      );
+    } else {
+      console.warn(
+        'Event listener method %s() from useEvent() hook requires the first argument to be a valid' +
+          ' DOM node that was rendered and managed by React or a "window" object. If this is' +
+          ' from a ref, ensure the ref value has been set before attaching.',
+        methodString,
+      );
+    }
   }
   return false;
 }
 
 export function validateReactListenerDeleteListener(
-  instance: Container,
+  instance: EventTarget,
 ): boolean {
   return validateListenerInstance(instance, 'deleteListener');
 }
 
 export function validateReactListenerMapListener(
-  instance: Container,
+  instance: EventTarget,
   listener: Event => void,
 ): boolean {
   if (enableListenerAPI) {

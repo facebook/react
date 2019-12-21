@@ -242,8 +242,8 @@ function useResponder(
 
 const noOp = () => {};
 
-function useEvent(options: any): any {
-  hookLog.push({primitive: 'Event', stackError: new Error(), value: options});
+function useEvent(event: any): any {
+  hookLog.push({primitive: 'Event', stackError: new Error(), value: event});
   return {
     clear: noOp,
     listen: noOp,

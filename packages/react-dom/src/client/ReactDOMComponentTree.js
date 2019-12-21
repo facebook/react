@@ -5,6 +5,8 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import type {ReactDOMListener} from 'shared/ReactDOMTypes';
+
 import {
   HostComponent,
   HostText,
@@ -166,10 +168,15 @@ export function updateFiberProps(node, props) {
   node[internalEventHandlersKey] = props;
 }
 
-export function getListenersFromNode(node) {
+export function getListenersFromNode(
+  node: HTMLElement | Document,
+): null | ReactDOMListener {
   return node[internalEventListenersKey] || null;
 }
 
-export function initListenersSet(node, value) {
+export function initListenersSet(
+  node: HTMLElement | Document,
+  value: Set<ReactDOMListener>,
+): void {
   node[internalEventListenersKey] = value;
 }

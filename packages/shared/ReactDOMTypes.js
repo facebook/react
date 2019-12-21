@@ -81,17 +81,14 @@ export type RefObject = {current: null | mixed};
 export type ReactDOMListenerEvent = {|
   capture: boolean,
   passive: boolean,
-  priority: number,
+  priority: EventPriority,
   type: string,
 |};
 
 export type ReactDOMListenerMap = {|
   clear: () => void,
-  setListener: (
-    instance: Document | HTMLElement,
-    callback: (Event) => void,
-  ) => void,
-  deleteListener: (instance: Document | HTMLElement) => void,
+  setListener: (instance: EventTarget, callback: (Event) => void) => void,
+  deleteListener: (instance: EventTarget) => void,
 |};
 
 export type ReactDOMListener = {|
@@ -99,5 +96,5 @@ export type ReactDOMListener = {|
   depth: number,
   destroy: Document | (Element => void),
   event: ReactDOMListenerEvent,
-  instance: Document | Element,
+  instance: EventTarget,
 |};
