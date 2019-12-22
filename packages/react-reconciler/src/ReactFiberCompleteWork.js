@@ -716,7 +716,7 @@ function completeWork(
         const currentHostContext = getHostContext();
         // TODO: Move createInstance to beginWork and keep it on a context
         // "stack" as the parent. Then append children as we go in beginWork
-        // or completeWork depending on we want to add then top->down or
+        // or completeWork depending on whether we want to add them top->down or
         // bottom->up. Top->down is faster in IE11.
         let wasHydrated = popHydrationState(workInProgress);
         if (wasHydrated) {
@@ -729,7 +729,7 @@ function completeWork(
               currentHostContext,
             )
           ) {
-            // If changes to the hydrated node needs to be applied at the
+            // If changes to the hydrated node need to be applied at the
             // commit-phase we mark this as such.
             markUpdate(workInProgress);
           }
@@ -846,15 +846,14 @@ function completeWork(
           } else {
             // We should never have been in a hydration state if we didn't have a current.
             // However, in some of those paths, we might have reentered a hydration state
-            // and then we might be inside a hydration state. In that case, we'll need to
-            // exit out of it.
+            // and then we might be inside a hydration state. In that case, we'll need to exit out of it.
             resetHydrationState();
             if ((workInProgress.effectTag & DidCapture) === NoEffect) {
               // This boundary did not suspend so it's now hydrated and unsuspended.
               workInProgress.memoizedState = null;
             }
             // If nothing suspended, we need to schedule an effect to mark this boundary
-            // as having hydrated so events know that they're free be invoked.
+            // as having hydrated so events know that they're free to be invoked.
             // It's also a signal to replay events and the suspense callback.
             // If something suspended, schedule an effect to attach retry listeners.
             // So we might as well always mark this.
@@ -941,7 +940,7 @@ function completeWork(
         // TODO: Only schedule updates if not prevDidTimeout.
         if (nextDidTimeout) {
           // If this boundary just timed out, schedule an effect to attach a
-          // retry listener to the proimse. This flag is also used to hide the
+          // retry listener to the promise. This flag is also used to hide the
           // primary children.
           workInProgress.effectTag |= Update;
         }
@@ -950,9 +949,9 @@ function completeWork(
         // TODO: Only schedule updates if these values are non equal, i.e. it changed.
         if (nextDidTimeout || prevDidTimeout) {
           // If this boundary just timed out, schedule an effect to attach a
-          // retry listener to the proimse. This flag is also used to hide the
+          // retry listener to the promise. This flag is also used to hide the
           // primary children. In mutation mode, we also need the flag to
-          // *unhide* children that were previously hidden, so check if the
+          // *unhide* children that were previously hidden, so check if this
           // is currently timed out, too.
           workInProgress.effectTag |= Update;
         }
@@ -991,8 +990,8 @@ function completeWork(
         workInProgress.memoizedState;
 
       if (renderState === null) {
-        // We're running in the default, "independent" mode. We don't do anything
-        // in this mode.
+        // We're running in the default, "independent" mode.
+        // We don't do anything in this mode.
         return null;
       }
 
