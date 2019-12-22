@@ -9,20 +9,16 @@
 
 'use strict';
 
+import {buttonType, buttonsType} from './constants';
 import * as domEvents from './domEvents';
 import * as domEventSequences from './domEventSequences';
-import {
-  buttonType,
-  buttonsType,
-  hasPointerEvent,
-  setPointerEvent,
-  platform,
-} from './domEnvironment';
+import {hasPointerEvent, setPointerEvent, platform} from './domEnvironment';
+import {describeWithPointerEvent, testWithPointerType} from './testHelpers';
 
 const createEventTarget = node => ({
   node,
   /**
-   * General events abstraction.
+   * Simple events abstraction.
    */
   blur(payload) {
     node.dispatchEvent(domEvents.blur(payload));
@@ -30,59 +26,30 @@ const createEventTarget = node => ({
   click(payload) {
     node.dispatchEvent(domEvents.click(payload));
   },
-  contextmenu(payload, options) {
-    domEventSequences.contextmenu(node, payload, options);
-  },
   focus(payload) {
     node.dispatchEvent(domEvents.focus(payload));
     node.focus();
   },
-  scroll(payload) {
-    node.dispatchEvent(domEvents.scroll(payload));
-  },
-  /**
-   * KeyboardEvent abstraction.
-   */
   keydown(payload) {
     node.dispatchEvent(domEvents.keydown(payload));
   },
   keyup(payload) {
     node.dispatchEvent(domEvents.keyup(payload));
   },
+  scroll(payload) {
+    node.dispatchEvent(domEvents.scroll(payload));
+  },
   virtualclick(payload) {
     node.dispatchEvent(domEvents.virtualclick(payload));
-  },
-  tabNext() {
-    node.dispatchEvent(
-      domEvents.keydown({
-        key: 'Tab',
-      }),
-    );
-    node.dispatchEvent(
-      domEvents.keyup({
-        key: 'Tab',
-      }),
-    );
-  },
-  tabPrevious() {
-    node.dispatchEvent(
-      domEvents.keydown({
-        key: 'Tab',
-        shiftKey: true,
-      }),
-    );
-    node.dispatchEvent(
-      domEvents.keyup({
-        key: 'Tab',
-        shiftKey: true,
-      }),
-    );
   },
   /**
    * PointerEvent abstraction.
    * Dispatches the expected sequence of PointerEvents, MouseEvents, and
    * TouchEvents for a given environment.
    */
+  contextmenu(payload, options) {
+    domEventSequences.contextmenu(node, payload, options);
+  },
   // node no longer receives events for the pointer
   pointercancel(payload) {
     domEventSequences.pointercancel(node, payload);
@@ -137,28 +104,7 @@ const createEventTarget = node => ({
   },
 });
 
-function describeWithPointerEvent(message, describeFn) {
-  const pointerEvent = 'PointerEvent';
-  const fallback = 'MouseEvent/TouchEvent';
-  describe.each`
-    value    | name
-    ${true}  | ${pointerEvent}
-    ${false} | ${fallback}
-  `(`${message}: $name`, entry => {
-    const hasPointerEvents = entry.value;
-    setPointerEvent(hasPointerEvents);
-    describeFn(hasPointerEvents);
-  });
-}
-
-function testWithPointerType(message, testFn) {
-  const table = hasPointerEvent()
-    ? ['mouse', 'touch', 'pen']
-    : ['mouse', 'touch'];
-  test.each(table)(`${message}: %s`, pointerType => {
-    testFn(pointerType);
-  });
-}
+const resetActivePointers = domEventSequences.resetActivePointers;
 
 export {
   buttonType,
@@ -167,6 +113,7 @@ export {
   describeWithPointerEvent,
   platform,
   hasPointerEvent,
+  resetActivePointers,
   setPointerEvent,
   testWithPointerType,
 };

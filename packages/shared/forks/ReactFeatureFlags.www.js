@@ -43,6 +43,8 @@ export const exposeConcurrentModeAPIs = __EXPERIMENTAL__;
 
 export const enableSuspenseServerRenderer = true;
 
+export const enableChunksAPI = __EXPERIMENTAL__;
+
 export const disableJavaScriptURLs = true;
 
 let refCount = 0;
@@ -72,7 +74,7 @@ function updateFlagOutsideOfReactCallStack() {
   }
 }
 
-export const enableFlareAPI = true;
+export const enableDeprecatedFlareAPI = true;
 
 export const enableFundamentalAPI = false;
 

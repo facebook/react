@@ -277,8 +277,8 @@ jobs:
       - *run_yarn
       - run:
           environment:
-            RELEASE_CHANNEL: stable
-          command: yarn test-build --maxWorkers=2
+            RELEASE_CHANNEL: experimental
+          command: yarn test-build-devtools --maxWorkers=2
 
   test_dom_fixtures:
     docker: *docker
@@ -374,9 +374,6 @@ workflows:
       - test_build_prod:
           requires:
             - build
-      - test_build_devtools:
-          requires:
-            - build
       - test_dom_fixtures:
           requires:
             - build
@@ -403,6 +400,9 @@ workflows:
           requires:
             - build_experimental
       - lint_build:
+          requires:
+            - build_experimental
+      - test_build_devtools:
           requires:
             - build_experimental
 

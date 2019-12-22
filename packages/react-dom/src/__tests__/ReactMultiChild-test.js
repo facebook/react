@@ -204,7 +204,7 @@ describe('ReactMultiChild', () => {
           <Parent>{[<div key="1" />, <div key="1" />]}</Parent>,
           container,
         ),
-      ).toWarnDev(
+      ).toErrorDev(
         'Encountered two children with the same key, `1`. ' +
           'Keys should be unique so that components maintain their identity ' +
           'across updates. Non-unique keys may cause children to be ' +
@@ -264,7 +264,7 @@ describe('ReactMultiChild', () => {
           <Parent>{createIterable([<div key="1" />, <div key="1" />])}</Parent>,
           container,
         ),
-      ).toWarnDev(
+      ).toErrorDev(
         'Encountered two children with the same key, `1`. ' +
           'Keys should be unique so that components maintain their identity ' +
           'across updates. Non-unique keys may cause children to be ' +
@@ -285,7 +285,7 @@ describe('ReactMultiChild', () => {
       }
     }
     const container = document.createElement('div');
-    expect(() => ReactDOM.render(<Parent />, container)).toWarnDev(
+    expect(() => ReactDOM.render(<Parent />, container)).toErrorDev(
       'Warning: Using Maps as children is unsupported and will likely yield ' +
         'unexpected results. Convert it to a sequence/iterable of keyed ' +
         'ReactElements instead.\n' +
@@ -303,7 +303,7 @@ describe('ReactMultiChild', () => {
     const div = document.createElement('div');
     expect(() => {
       ReactDOM.render(<Foo />, div);
-    }).toWarnDev(
+    }).toErrorDev(
       'Using Generators as children is unsupported and will likely yield ' +
         'unexpected results because enumerating a generator mutates it. You may ' +
         'convert it to an array with `Array.from()` or the `[...spread]` operator ' +

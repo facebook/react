@@ -97,7 +97,6 @@ export type ReactEventResponder<E, C> = {
   displayName: string,
   targetEventTypes: null | Array<string>,
   targetPortalPropagation: boolean,
-  rootEventTypes: null | Array<string>,
   getInitialState: null | ((props: Object) => Object),
   onEvent:
     | null

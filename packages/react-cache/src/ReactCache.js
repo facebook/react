@@ -8,7 +8,6 @@
  */
 
 import React from 'react';
-import warningWithoutStack from 'shared/warningWithoutStack';
 
 import {createLRU} from './LRU';
 
@@ -71,7 +70,7 @@ function identityHashFn(input) {
       input !== undefined &&
       input !== null
     ) {
-      warningWithoutStack(
+      console.error(
         'Invalid key type. Expected a string, number, symbol, or boolean, ' +
           'but instead received: %s' +
           '\n\nTo use non-primitive values as keys, you must pass a hash ' +

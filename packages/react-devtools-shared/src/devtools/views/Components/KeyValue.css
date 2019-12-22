@@ -5,12 +5,12 @@
 .Name {
   color: var(--color-dim);
   flex: 0 0 auto;
-  user-select: none;
+  cursor: default;
 }
 .EditableName {
   color: var(--color-attribute-name);
   flex: 0 0 auto;
-  user-select: none;
+  cursor: default;
 }
 .EditableName:after,
 .Name:after {
@@ -24,6 +24,7 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  cursor: default;
 }
 
 .None {

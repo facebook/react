@@ -103,7 +103,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
 
     ReactNoop.render(<Foo />);
 
-    expect(() => Scheduler.unstable_flushAll()).toWarnDev([
+    expect(() => Scheduler.unstable_flushAll()).toErrorDev([
       'Warning: maxDuration has been removed from React. ' +
         'Remove the maxDuration prop.' +
         '\n    in Suspense (at **)' +
@@ -1898,7 +1898,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
           () => _setShow(true),
         );
       });
-    }).toWarnDev(
+    }).toErrorDev(
       'Warning: App triggered a user-blocking update that suspended.' + '\n\n',
       {withoutStack: true},
     );
@@ -1930,7 +1930,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
           () => show(),
         );
       });
-    }).toWarnDev(
+    }).toErrorDev(
       'Warning: App triggered a user-blocking update that suspended.' + '\n\n',
       {withoutStack: true},
     );
@@ -1997,7 +1997,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
             () => _setShow(true),
           );
         });
-      }).toWarnDev(
+      }).toErrorDev(
         'Warning: A triggered a user-blocking update that suspended.' + '\n\n',
         {withoutStack: true},
       );

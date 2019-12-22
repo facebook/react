@@ -43,7 +43,6 @@ import {getInspectorDataForViewTag} from './ReactNativeFiberInspector';
 import {LegacyRoot} from 'shared/ReactRootTags';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import getComponentName from 'shared/getComponentName';
-import warningWithoutStack from 'shared/warningWithoutStack';
 
 const ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
 
@@ -54,7 +53,7 @@ function findHostInstance_DEPRECATED(
     const owner = ReactCurrentOwner.current;
     if (owner !== null && owner.stateNode !== null) {
       if (!owner.stateNode._warnedAboutRefsInRender) {
-        warningWithoutStack(
+        console.error(
           '%s is accessing findNodeHandle inside its render(). ' +
             'render() should be a pure function of props and state. It should ' +
             'never access something that requires stale data from the previous ' +
@@ -101,7 +100,7 @@ function findNodeHandle(componentOrHandle: any): ?number {
     const owner = ReactCurrentOwner.current;
     if (owner !== null && owner.stateNode !== null) {
       if (!owner.stateNode._warnedAboutRefsInRender) {
-        warningWithoutStack(
+        console.error(
           '%s is accessing findNodeHandle inside its render(). ' +
             'render() should be a pure function of props and state. It should ' +
             'never access something that requires stale data from the previous ' +
@@ -176,7 +175,7 @@ const ReactNativeRenderer: ReactNativeType = {
     if (handle._nativeTag == null) {
       if (__DEV__) {
         if (handle._nativeTag == null) {
-          warningWithoutStack(
+          console.error(
             "dispatchCommand was called with a ref that isn't a " +
               'native component. Use React.forwardRef to get access to the underlying native component',
           );

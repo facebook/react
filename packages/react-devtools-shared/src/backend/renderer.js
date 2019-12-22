@@ -34,7 +34,7 @@ import {
   utfEncodeString,
 } from 'react-devtools-shared/src/utils';
 import {sessionStorageGetItem} from 'react-devtools-shared/src/storage';
-import {cleanForBridge, copyWithSet} from './utils';
+import {cleanForBridge, copyToClipboard, copyWithSet} from './utils';
 import {
   __DEBUG__,
   SESSION_STORAGE_RELOAD_AND_PROFILE_KEY,
@@ -347,7 +347,7 @@ export function getInternalReactConstants(
 
   // NOTICE Keep in sync with shouldFilterFiber() and other get*ForFiber methods
   function getDisplayNameForFiber(fiber: Fiber): string | null {
-    const {elementType, type, tag} = fiber;
+    const {type, tag} = fiber;
 
     let resolvedType = type;
     if (typeof type === 'object' && type !== null) {
@@ -364,8 +364,10 @@ export function getInternalReactConstants(
       case IndeterminateComponent:
         return getDisplayName(resolvedType);
       case ForwardRef:
+        // Mirror https://github.com/facebook/react/blob/7c21bf72ace77094fd1910cc350a548287ef8350/packages/shared/getComponentName.js#L27-L37
         return (
-          resolvedType.displayName || getDisplayName(resolvedType, 'Anonymous')
+          (type && type.displayName) ||
+          getDisplayName(resolvedType, 'Anonymous')
         );
       case HostRoot:
         return null;
@@ -377,11 +379,7 @@ export function getInternalReactConstants(
         return null;
       case MemoComponent:
       case SimpleMemoComponent:
-        if (elementType.displayName) {
-          return elementType.displayName;
-        } else {
-          return getDisplayName(resolvedType, 'Anonymous');
-        }
+        return getDisplayName(resolvedType, 'Anonymous');
       case SuspenseComponent:
         return 'Suspense';
       case SuspenseListComponent:
@@ -2115,6 +2113,19 @@ export function attach(
   }
   // END copied code
 
+  function prepareViewAttributeSource(
+    id: number,
+    path: Array<string | number>,
+  ): void {
+    const isCurrent = isMostRecentlyInspectedElementCurrent(id);
+    if (isCurrent) {
+      window.$attribute = getInObject(
+        ((mostRecentlyInspectedElement: any): InspectedElement),
+        path,
+      );
+    }
+  }
+
   function prepareViewElementSource(id: number): void {
     let fiber = idToFiberMap.get(id);
     if (fiber == null) {
@@ -2487,6 +2498,40 @@ export function attach(
       default:
         global.$r = null;
         break;
+    }
+  }
+
+  function storeAsGlobal(
+    id: number,
+    path: Array<string | number>,
+    count: number,
+  ): void {
+    const isCurrent = isMostRecentlyInspectedElementCurrent(id);
+
+    if (isCurrent) {
+      const value = getInObject(
+        ((mostRecentlyInspectedElement: any): InspectedElement),
+        path,
+      );
+      const key = `$reactTemp${count}`;
+
+      window[key] = value;
+
+      console.log(key);
+      console.log(value);
+    }
+  }
+
+  function copyElementPath(id: number, path: Array<string | number>): void {
+    const isCurrent = isMostRecentlyInspectedElementCurrent(id);
+
+    if (isCurrent) {
+      copyToClipboard(
+        getInObject(
+          ((mostRecentlyInspectedElement: any): InspectedElement),
+          path,
+        ),
+      );
     }
   }
 
@@ -3131,6 +3176,7 @@ export function attach(
 
   return {
     cleanup,
+    copyElementPath,
     findNativeNodesForFiberID,
     flushInitialOperations,
     getBestMatchForTrackedPath,
@@ -3143,6 +3189,7 @@ export function attach(
     handleCommitFiberUnmount,
     inspectElement,
     logElementToConsole,
+    prepareViewAttributeSource,
     prepareViewElementSource,
     overrideSuspense,
     renderer,
@@ -3154,6 +3201,7 @@ export function attach(
     setTrackedPath,
     startProfiling,
     stopProfiling,
+    storeAsGlobal,
     updateComponentFilters,
   };
 }

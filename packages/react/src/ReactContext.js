@@ -11,9 +11,6 @@ import {REACT_PROVIDER_TYPE, REACT_CONTEXT_TYPE} from 'shared/ReactSymbols';
 
 import type {ReactContext} from 'shared/ReactTypes';
 
-import warningWithoutStack from 'shared/warningWithoutStack';
-import warning from 'shared/warning';
-
 export function createContext<T>(
   defaultValue: T,
   calculateChangedBits: ?(a: T, b: T) => number,
@@ -26,7 +23,7 @@ export function createContext<T>(
         calculateChangedBits !== null &&
         typeof calculateChangedBits !== 'function'
       ) {
-        warningWithoutStack(
+        console.error(
           'createContext: Expected the optional second argument to be a ' +
             'function. Instead received: %s',
           calculateChangedBits,
@@ -76,7 +73,7 @@ export function createContext<T>(
         get() {
           if (!hasWarnedAboutUsingConsumerProvider) {
             hasWarnedAboutUsingConsumerProvider = true;
-            warning(
+            console.error(
               'Rendering <Context.Consumer.Provider> is not supported and will be removed in ' +
                 'a future major release. Did you mean to render <Context.Provider> instead?',
             );
@@ -115,7 +112,7 @@ export function createContext<T>(
         get() {
           if (!hasWarnedAboutUsingNestedContextConsumers) {
             hasWarnedAboutUsingNestedContextConsumers = true;
-            warning(
+            console.error(
               'Rendering <Context.Consumer.Consumer> is not supported and will be removed in ' +
                 'a future major release. Did you mean to render <Context.Consumer> instead?',
             );

@@ -61,8 +61,10 @@ export const warnsIfNotActing = $$$hostConfig.warnsIfNotActing;
 export const supportsMutation = $$$hostConfig.supportsMutation;
 export const supportsPersistence = $$$hostConfig.supportsPersistence;
 export const supportsHydration = $$$hostConfig.supportsHydration;
-export const mountResponderInstance = $$$hostConfig.mountResponderInstance;
-export const unmountResponderInstance = $$$hostConfig.unmountResponderInstance;
+export const DEPRECATED_mountResponderInstance =
+  $$$hostConfig.DEPRECATED_mountResponderInstance;
+export const DEPRECATED_unmountResponderInstance =
+  $$$hostConfig.DEPRECATED_unmountResponderInstance;
 export const getFundamentalComponentInstance =
   $$$hostConfig.getFundamentalComponentInstance;
 export const mountFundamentalComponent =

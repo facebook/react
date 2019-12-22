@@ -51,6 +51,7 @@ import {
   IncompleteClassComponent,
   FundamentalComponent,
   ScopeComponent,
+  Chunk,
 } from 'shared/ReactWorkTags';
 import {NoMode, BlockingMode} from './ReactTypeOfMode';
 import {
@@ -115,9 +116,10 @@ import {
   enableSchedulerTracing,
   enableSuspenseCallback,
   enableSuspenseServerRenderer,
-  enableFlareAPI,
+  enableDeprecatedFlareAPI,
   enableFundamentalAPI,
   enableScopeAPI,
+  enableChunksAPI,
 } from 'shared/ReactFeatureFlags';
 import {
   markSpawnedWork,
@@ -128,6 +130,7 @@ import {
 import {createFundamentalStateInstance} from './ReactFiberFundamental';
 import {Never} from './ReactFiberExpirationTime';
 import {resetChildFibers} from './ReactChildFiber';
+import {updateDeprecatedEventListeners} from './ReactFiberDeprecatedEvents';
 import {createScopeMethods} from './ReactFiberScope';
 
 function markUpdate(workInProgress: Fiber) {
@@ -637,18 +640,22 @@ function completeWork(
 
   switch (workInProgress.tag) {
     case IndeterminateComponent:
-      break;
     case LazyComponent:
-      break;
     case SimpleMemoComponent:
     case FunctionComponent:
-      break;
+    case ForwardRef:
+    case Fragment:
+    case Mode:
+    case Profiler:
+    case ContextConsumer:
+    case MemoComponent:
+      return null;
     case ClassComponent: {
       const Component = workInProgress.type;
       if (isLegacyContextProvider(Component)) {
         popLegacyContext(workInProgress);
       }
-      break;
+      return null;
     }
     case HostRoot: {
       popHostContainer(workInProgress);
@@ -669,7 +676,7 @@ function completeWork(
         }
       }
       updateHostContainer(workInProgress);
-      break;
+      return null;
     }
     case HostComponent: {
       popHostContext(workInProgress);
@@ -684,7 +691,7 @@ function completeWork(
           rootContainerInstance,
         );
 
-        if (enableFlareAPI) {
+        if (enableDeprecatedFlareAPI) {
           const prevListeners = current.memoizedProps.DEPRECATED_flareListeners;
           const nextListeners = newProps.DEPRECATED_flareListeners;
           if (prevListeners !== nextListeners) {
@@ -703,7 +710,7 @@ function completeWork(
               'caused by a bug in React. Please file an issue.',
           );
           // This can happen when we abort work.
-          break;
+          return null;
         }
 
         const currentHostContext = getHostContext();
@@ -726,10 +733,14 @@ function completeWork(
             // commit-phase we mark this as such.
             markUpdate(workInProgress);
           }
-          if (enableFlareAPI) {
+          if (enableDeprecatedFlareAPI) {
             const listeners = newProps.DEPRECATED_flareListeners;
             if (listeners != null) {
-              markUpdate(workInProgress);
+              updateDeprecatedEventListeners(
+                listeners,
+                workInProgress,
+                rootContainerInstance,
+              );
             }
           }
         } else {
@@ -746,10 +757,14 @@ function completeWork(
           // This needs to be set before we mount Flare event listeners
           workInProgress.stateNode = instance;
 
-          if (enableFlareAPI) {
+          if (enableDeprecatedFlareAPI) {
             const listeners = newProps.DEPRECATED_flareListeners;
             if (listeners != null) {
-              markUpdate(workInProgress);
+              updateDeprecatedEventListeners(
+                listeners,
+                workInProgress,
+                rootContainerInstance,
+              );
             }
           }
 
@@ -774,7 +789,7 @@ function completeWork(
           markRef(workInProgress);
         }
       }
-      break;
+      return null;
     }
     case HostText: {
       let newText = newProps;
@@ -808,10 +823,8 @@ function completeWork(
           );
         }
       }
-      break;
+      return null;
     }
-    case ForwardRef:
-      break;
     case SuspenseComponent: {
       popSuspenseContext(workInProgress);
       const nextState: null | SuspenseState = workInProgress.memoizedState;
@@ -951,26 +964,16 @@ function completeWork(
         // Always notify the callback
         workInProgress.effectTag |= Update;
       }
-      break;
+      return null;
     }
-    case Fragment:
-      break;
-    case Mode:
-      break;
-    case Profiler:
-      break;
     case HostPortal:
       popHostContainer(workInProgress);
       updateHostContainer(workInProgress);
-      break;
+      return null;
     case ContextProvider:
       // Pop provider fiber
       popProvider(workInProgress);
-      break;
-    case ContextConsumer:
-      break;
-    case MemoComponent:
-      break;
+      return null;
     case IncompleteClassComponent: {
       // Same as class component case. I put it down here so that the tags are
       // sequential to ensure this switch is compiled to a jump table.
@@ -978,7 +981,7 @@ function completeWork(
       if (isLegacyContextProvider(Component)) {
         popLegacyContext(workInProgress);
       }
-      break;
+      return null;
     }
     case SuspenseListComponent: {
       popSuspenseContext(workInProgress);
@@ -987,8 +990,9 @@ function completeWork(
         workInProgress.memoizedState;
 
       if (renderState === null) {
-        // We're running in the default, "independent" mode. We don't do anything in this mode.
-        break;
+        // We're running in the default, "independent" mode.
+        // We don't do anything in this mode.
+        return null;
       }
 
       let didSuspendAlready =
@@ -1187,7 +1191,7 @@ function completeWork(
         // Do a pass over the next row.
         return next;
       }
-      break;
+      return null;
     }
     case FundamentalComponent: {
       if (enableFundamentalAPI) {
@@ -1237,6 +1241,7 @@ function completeWork(
             markUpdate(workInProgress);
           }
         }
+        return null;
       }
       break;
     }
@@ -1250,10 +1255,15 @@ function completeWork(
           };
           workInProgress.stateNode = scopeInstance;
           scopeInstance.methods = createScopeMethods(type, scopeInstance);
-          if (enableFlareAPI) {
+          if (enableDeprecatedFlareAPI) {
             const listeners = newProps.DEPRECATED_flareListeners;
             if (listeners != null) {
-              markUpdate(workInProgress);
+              const rootContainerInstance = getRootHostContainer();
+              updateDeprecatedEventListeners(
+                listeners,
+                workInProgress,
+                rootContainerInstance,
+              );
             }
           }
           if (workInProgress.ref !== null) {
@@ -1261,7 +1271,7 @@ function completeWork(
             markUpdate(workInProgress);
           }
         } else {
-          if (enableFlareAPI) {
+          if (enableDeprecatedFlareAPI) {
             const prevListeners =
               current.memoizedProps.DEPRECATED_flareListeners;
             const nextListeners = newProps.DEPRECATED_flareListeners;
@@ -1280,19 +1290,22 @@ function completeWork(
             markRef(workInProgress);
           }
         }
+        return null;
       }
       break;
     }
-    default:
-      invariant(
-        false,
-        'Unknown unit of work tag (%s). This error is likely caused by a bug in ' +
-          'React. Please file an issue.',
-        workInProgress.tag,
-      );
+    case Chunk:
+      if (enableChunksAPI) {
+        return null;
+      }
+      break;
   }
-
-  return null;
+  invariant(
+    false,
+    'Unknown unit of work tag (%s). This error is likely caused by a bug in ' +
+      'React. Please file an issue.',
+    workInProgress.tag,
+  );
 }
 
 export {completeWork};

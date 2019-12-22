@@ -28,8 +28,6 @@ import {
   warnForStyleProps,
 } from './NativeMethodsMixinUtils';
 
-import warningWithoutStack from 'shared/warningWithoutStack';
-
 /**
  * This component defines the same methods as NativeMethodsMixin but without the
  * findNodeHandle wrapper. This wrapper is unnecessary for HostComponent views
@@ -86,7 +84,7 @@ class ReactNativeFiberHostComponent {
 
     if (relativeNode == null) {
       if (__DEV__) {
-        warningWithoutStack(
+        console.error(
           'Warning: ref.measureLayout must be called with a node handle or a ref to a native component.',
         );
       }

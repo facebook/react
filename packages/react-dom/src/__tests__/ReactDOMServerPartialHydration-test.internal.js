@@ -76,7 +76,7 @@ describe('ReactDOMServerPartialHydration', () => {
 
     ReactFeatureFlags = require('shared/ReactFeatureFlags');
     ReactFeatureFlags.enableSuspenseCallback = true;
-    ReactFeatureFlags.enableFlareAPI = true;
+    ReactFeatureFlags.enableDeprecatedFlareAPI = true;
     ReactFeatureFlags.debugRenderPhaseSideEffectsForStrictMode = false;
 
     React = require('react');
@@ -341,7 +341,7 @@ describe('ReactDOMServerPartialHydration', () => {
       act(() => {
         ReactDOM.hydrate(<App />, container);
       });
-    }).toWarnDev(
+    }).toErrorDev(
       'Warning: Cannot hydrate Suspense in legacy mode. Switch from ' +
         'ReactDOM.hydrate(element, container) to ' +
         'ReactDOM.createBlockingRoot(container, { hydrate: true })' +
@@ -1885,13 +1885,16 @@ describe('ReactDOMServerPartialHydration', () => {
     }
 
     const onEvent = jest.fn();
-    const TestResponder = React.unstable_createResponder('TestEventResponder', {
-      targetEventTypes: ['click'],
-      onEvent,
-    });
+    const TestResponder = React.DEPRECATED_createResponder(
+      'TestEventResponder',
+      {
+        targetEventTypes: ['click'],
+        onEvent,
+      },
+    );
 
     function Button() {
-      let listener = React.unstable_useResponder(TestResponder, {});
+      let listener = React.DEPRECATED_useResponder(TestResponder, {});
       return <a DEPRECATED_flareListeners={listener}>Click me</a>;
     }
 
@@ -2034,13 +2037,16 @@ describe('ReactDOMServerPartialHydration', () => {
     let promise = new Promise(resolvePromise => (resolve = resolvePromise));
 
     const onEvent = jest.fn();
-    const TestResponder = React.unstable_createResponder('TestEventResponder', {
-      targetEventTypes: ['click'],
-      onEvent,
-    });
+    const TestResponder = React.DEPRECATED_createResponder(
+      'TestEventResponder',
+      {
+        targetEventTypes: ['click'],
+        onEvent,
+      },
+    );
 
     function Button() {
-      let listener = React.unstable_useResponder(TestResponder, {});
+      let listener = React.DEPRECATED_useResponder(TestResponder, {});
       return <a DEPRECATED_flareListeners={listener}>Click me</a>;
     }
 

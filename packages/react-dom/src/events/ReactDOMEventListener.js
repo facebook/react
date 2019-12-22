@@ -23,7 +23,7 @@ import {
   flushDiscreteUpdatesIfNeeded,
 } from 'legacy-events/ReactGenericBatching';
 import {runExtractedPluginEventsInBatch} from 'legacy-events/EventPluginHub';
-import {dispatchEventForResponderEventSystem} from './DOMEventResponderSystem';
+import {DEPRECATED_dispatchEventForResponderEventSystem} from './DeprecatedDOMEventResponderSystem';
 import {
   isReplayableDiscreteEvent,
   queueDiscreteEvent,
@@ -49,6 +49,7 @@ import {
   IS_PASSIVE,
   IS_ACTIVE,
   PASSIVE_NOT_SUPPORTED,
+  IS_FIRST_ANCESTOR,
 } from 'legacy-events/EventSystemFlags';
 
 import {
@@ -58,23 +59,21 @@ import {
 } from './EventListener';
 import getEventTarget from './getEventTarget';
 import {getClosestInstanceFromNode} from '../client/ReactDOMComponentTree';
-import SimpleEventPlugin from './SimpleEventPlugin';
 import {getRawEventName} from './DOMTopLevelEventTypes';
 import {passiveBrowserEventsSupported} from './checkPassiveEvents';
 
-import {enableFlareAPI} from 'shared/ReactFeatureFlags';
+import {enableDeprecatedFlareAPI} from 'shared/ReactFeatureFlags';
 import {
   UserBlockingEvent,
   ContinuousEvent,
   DiscreteEvent,
 } from 'shared/ReactTypes';
+import {getEventPriorityForPluginSystem} from './DOMEventProperties';
 
 const {
   unstable_UserBlockingPriority: UserBlockingPriority,
   unstable_runWithPriority: runWithPriority,
 } = Scheduler;
-
-const {getEventPriority} = SimpleEventPlugin;
 
 const CALLBACK_BOOKKEEPING_POOL_SIZE = 10;
 const callbackBookkeepingPool = [];
@@ -175,13 +174,19 @@ function handleTopLevel(bookKeeping: BookKeepingInstance) {
     const eventTarget = getEventTarget(bookKeeping.nativeEvent);
     const topLevelType = ((bookKeeping.topLevelType: any): DOMTopLevelEventType);
     const nativeEvent = ((bookKeeping.nativeEvent: any): AnyNativeEvent);
+    let eventSystemFlags = bookKeeping.eventSystemFlags;
+
+    // If this is the first ancestor, we mark it on the system flags
+    if (i === 0) {
+      eventSystemFlags |= IS_FIRST_ANCESTOR;
+    }
 
     runExtractedPluginEventsInBatch(
       topLevelType,
       targetInst,
       nativeEvent,
       eventTarget,
-      bookKeeping.eventSystemFlags,
+      eventSystemFlags,
     );
   }
 }
@@ -273,7 +278,7 @@ function trapEventForPluginEventSystem(
   capture: boolean,
 ): void {
   let listener;
-  switch (getEventPriority(topLevelType)) {
+  switch (getEventPriorityForPluginSystem(topLevelType)) {
     case DiscreteEvent:
       listener = dispatchDiscreteEvent.bind(
         null,
@@ -396,7 +401,7 @@ export function dispatchEvent(
 
   // This is not replayable so we'll invoke it but without a target,
   // in case the event system needs to trace it.
-  if (enableFlareAPI) {
+  if (enableDeprecatedFlareAPI) {
     if (eventSystemFlags & PLUGIN_EVENT_SYSTEM) {
       dispatchEventForPluginEventSystem(
         topLevelType,
@@ -407,7 +412,7 @@ export function dispatchEvent(
     }
     if (eventSystemFlags & RESPONDER_EVENT_SYSTEM) {
       // React Flare event system
-      dispatchEventForResponderEventSystem(
+      DEPRECATED_dispatchEventForResponderEventSystem(
         (topLevelType: any),
         null,
         nativeEvent,
@@ -474,7 +479,7 @@ export function attemptToDispatchEvent(
     }
   }
 
-  if (enableFlareAPI) {
+  if (enableDeprecatedFlareAPI) {
     if (eventSystemFlags & PLUGIN_EVENT_SYSTEM) {
       dispatchEventForPluginEventSystem(
         topLevelType,
@@ -485,7 +490,7 @@ export function attemptToDispatchEvent(
     }
     if (eventSystemFlags & RESPONDER_EVENT_SYSTEM) {
       // React Flare event system
-      dispatchEventForResponderEventSystem(
+      DEPRECATED_dispatchEventForResponderEventSystem(
         (topLevelType: any),
         targetInst,
         nativeEvent,

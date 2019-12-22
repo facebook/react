@@ -18,7 +18,6 @@ export type ContextDependency<T> = {
   next: ContextDependency<mixed> | null,
 };
 
-import warningWithoutStack from 'shared/warningWithoutStack';
 import {isPrimaryRenderer} from './ReactFiberHostConfig';
 import {createCursor, push, pop} from './ReactFiberStack';
 import MAX_SIGNED_31_BIT_INT from './maxSigned31BitInt';
@@ -29,7 +28,6 @@ import {
 } from 'shared/ReactWorkTags';
 
 import invariant from 'shared/invariant';
-import warning from 'shared/warning';
 import is from 'shared/objectIs';
 import {
   createUpdate,
@@ -90,7 +88,7 @@ export function pushProvider<T>(providerFiber: Fiber, nextValue: T): void {
         context._currentRenderer !== null &&
         context._currentRenderer !== rendererSigil
       ) {
-        warningWithoutStack(
+        console.error(
           'Detected multiple renderers concurrently rendering the ' +
             'same context provider. This is currently unsupported.',
         );
@@ -107,7 +105,7 @@ export function pushProvider<T>(providerFiber: Fiber, nextValue: T): void {
         context._currentRenderer2 !== null &&
         context._currentRenderer2 !== rendererSigil
       ) {
-        warningWithoutStack(
+        console.error(
           'Detected multiple renderers concurrently rendering the ' +
             'same context provider. This is currently unsupported.',
         );
@@ -146,7 +144,7 @@ export function calculateChangedBits<T>(
 
     if (__DEV__) {
       if ((changedBits & MAX_SIGNED_31_BIT_INT) !== changedBits) {
-        warning(
+        console.error(
           'calculateChangedBits: Expected the return value to be a ' +
             '31-bit integer. Instead received: %s',
           changedBits,
@@ -344,7 +342,7 @@ export function readContext<T>(
     // This warning would fire if you read context inside a Hook like useMemo.
     // Unlike the class check below, it's not enforced in production for perf.
     if (isDisallowedContextReadInDEV) {
-      warning(
+      console.error(
         'Context can only be read while React is rendering. ' +
           'In classes, you can read it in the render method or getDerivedStateFromProps. ' +
           'In function components, you can read it directly in the function body, but not ' +

@@ -14,7 +14,7 @@ import {
   createEventTarget,
   platform,
   setPointerEvent,
-} from '../testing-library';
+} from 'dom-event-testing-library';
 
 let React;
 let ReactFeatureFlags;
@@ -25,7 +25,7 @@ function initializeModules(hasPointerEvents) {
   setPointerEvent(hasPointerEvents);
   jest.resetModules();
   ReactFeatureFlags = require('shared/ReactFeatureFlags');
-  ReactFeatureFlags.enableFlareAPI = true;
+  ReactFeatureFlags.enableDeprecatedFlareAPI = true;
   React = require('react');
   ReactDOM = require('react-dom');
   useContextMenu = require('react-interactions/events/context-menu')

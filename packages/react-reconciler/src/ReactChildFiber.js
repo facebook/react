@@ -19,6 +19,7 @@ import {
   REACT_ELEMENT_TYPE,
   REACT_FRAGMENT_TYPE,
   REACT_PORTAL_TYPE,
+  REACT_CHUNK_TYPE,
 } from 'shared/ReactSymbols';
 import {
   FunctionComponent,
@@ -26,11 +27,10 @@ import {
   HostText,
   HostPortal,
   Fragment,
+  Chunk,
 } from 'shared/ReactWorkTags';
 import invariant from 'shared/invariant';
-import warning from 'shared/warning';
-import warningWithoutStack from 'shared/warningWithoutStack';
-import {warnAboutStringRefs} from 'shared/ReactFeatureFlags';
+import {warnAboutStringRefs, enableChunksAPI} from 'shared/ReactFeatureFlags';
 
 import {
   createWorkInProgress,
@@ -92,7 +92,7 @@ if (__DEV__) {
     }
     ownerHasKeyUseWarning[currentComponentErrorInfo] = true;
 
-    warning(
+    console.error(
       'Each child in a list should have a unique ' +
         '"key" prop. See https://fb.me/react-warning-keys for ' +
         'more information.',
@@ -120,7 +120,7 @@ function coerceRef(
         const componentName = getComponentName(returnFiber.type) || 'Component';
         if (!didWarnAboutStringRefs[componentName]) {
           if (warnAboutStringRefs) {
-            warningWithoutStack(
+            console.error(
               'Component "%s" contains the string ref "%s". Support for string refs ' +
                 'will be removed in a future major release. We recommend using ' +
                 'useRef() or createRef() instead. ' +
@@ -131,7 +131,7 @@ function coerceRef(
               getStackByFiberInDevAndProd(returnFiber),
             );
           } else {
-            warningWithoutStack(
+            console.error(
               'A string ref, "%s", has been found within a strict mode tree. ' +
                 'String refs are a source of potential bugs and should be avoided. ' +
                 'We recommend using useRef() or createRef() instead. ' +
@@ -241,7 +241,7 @@ function warnOnFunctionType() {
     }
     ownerHasFunctionTypeWarning[currentComponentErrorInfo] = true;
 
-    warning(
+    console.error(
       'Functions are not valid as a React child. This may happen if ' +
         'you return a Component instead of <Component /> from render. ' +
         'Or maybe you meant to call this function rather than return it.',
@@ -394,32 +394,47 @@ function ChildReconciler(shouldTrackSideEffects) {
     element: ReactElement,
     expirationTime: ExpirationTime,
   ): Fiber {
-    if (
-      current !== null &&
-      (current.elementType === element.type ||
+    if (current !== null) {
+      if (
+        current.elementType === element.type ||
         // Keep this check inline so it only runs on the false path:
-        (__DEV__ ? isCompatibleFamilyForHotReloading(current, element) : false))
-    ) {
-      // Move based on index
-      const existing = useFiber(current, element.props, expirationTime);
-      existing.ref = coerceRef(returnFiber, current, element);
-      existing.return = returnFiber;
-      if (__DEV__) {
-        existing._debugSource = element._source;
-        existing._debugOwner = element._owner;
+        (__DEV__ ? isCompatibleFamilyForHotReloading(current, element) : false)
+      ) {
+        // Move based on index
+        const existing = useFiber(current, element.props, expirationTime);
+        existing.ref = coerceRef(returnFiber, current, element);
+        existing.return = returnFiber;
+        if (__DEV__) {
+          existing._debugSource = element._source;
+          existing._debugOwner = element._owner;
+        }
+        return existing;
+      } else if (
+        enableChunksAPI &&
+        current.tag === Chunk &&
+        element.type.$$typeof === REACT_CHUNK_TYPE &&
+        element.type.render === current.type.render
+      ) {
+        // Same as above but also update the .type field.
+        const existing = useFiber(current, element.props, expirationTime);
+        existing.return = returnFiber;
+        existing.type = element.type;
+        if (__DEV__) {
+          existing._debugSource = element._source;
+          existing._debugOwner = element._owner;
+        }
+        return existing;
       }
-      return existing;
-    } else {
-      // Insert
-      const created = createFiberFromElement(
-        element,
-        returnFiber.mode,
-        expirationTime,
-      );
-      created.ref = coerceRef(returnFiber, current, element);
-      created.return = returnFiber;
-      return created;
     }
+    // Insert
+    const created = createFiberFromElement(
+      element,
+      returnFiber.mode,
+      expirationTime,
+    );
+    created.ref = coerceRef(returnFiber, current, element);
+    created.return = returnFiber;
+    return created;
   }
 
   function updatePortal(
@@ -734,7 +749,7 @@ function ChildReconciler(shouldTrackSideEffects) {
             knownKeys.add(key);
             break;
           }
-          warning(
+          console.error(
             'Encountered two children with the same key, `%s`. ' +
               'Keys should be unique so that components maintain their identity ' +
               'across updates. Non-unique keys may cause children to be ' +
@@ -934,7 +949,7 @@ function ChildReconciler(shouldTrackSideEffects) {
         newChildrenIterable[Symbol.toStringTag] === 'Generator'
       ) {
         if (!didWarnAboutGenerators) {
-          warning(
+          console.error(
             'Using Generators as children is unsupported and will likely yield ' +
               'unexpected results because enumerating a generator mutates it. ' +
               'You may convert it to an array with `Array.from()` or the ' +
@@ -948,7 +963,7 @@ function ChildReconciler(shouldTrackSideEffects) {
       // Warn about using Maps as children
       if ((newChildrenIterable: any).entries === iteratorFn) {
         if (!didWarnAboutMaps) {
-          warning(
+          console.error(
             'Using Maps as children is unsupported and will likely yield ' +
               'unexpected results. Convert it to a sequence/iterable of keyed ' +
               'ReactElements instead.',
@@ -1140,34 +1155,67 @@ function ChildReconciler(shouldTrackSideEffects) {
       // TODO: If key === null and child.key === null, then this only applies to
       // the first item in the list.
       if (child.key === key) {
-        if (
-          child.tag === Fragment
-            ? element.type === REACT_FRAGMENT_TYPE
-            : child.elementType === element.type ||
+        switch (child.tag) {
+          case Fragment: {
+            if (element.type === REACT_FRAGMENT_TYPE) {
+              deleteRemainingChildren(returnFiber, child.sibling);
+              const existing = useFiber(
+                child,
+                element.props.children,
+                expirationTime,
+              );
+              existing.return = returnFiber;
+              if (__DEV__) {
+                existing._debugSource = element._source;
+                existing._debugOwner = element._owner;
+              }
+              return existing;
+            }
+            break;
+          }
+          case Chunk:
+            if (enableChunksAPI) {
+              if (
+                element.type.$$typeof === REACT_CHUNK_TYPE &&
+                element.type.render === child.type.render
+              ) {
+                deleteRemainingChildren(returnFiber, child.sibling);
+                const existing = useFiber(child, element.props, expirationTime);
+                existing.type = element.type;
+                existing.return = returnFiber;
+                if (__DEV__) {
+                  existing._debugSource = element._source;
+                  existing._debugOwner = element._owner;
+                }
+                return existing;
+              }
+            }
+          // We intentionally fallthrough here if enableChunksAPI is not on.
+          // eslint-disable-next-lined no-fallthrough
+          default: {
+            if (
+              child.elementType === element.type ||
               // Keep this check inline so it only runs on the false path:
               (__DEV__
                 ? isCompatibleFamilyForHotReloading(child, element)
                 : false)
-        ) {
-          deleteRemainingChildren(returnFiber, child.sibling);
-          const existing = useFiber(
-            child,
-            element.type === REACT_FRAGMENT_TYPE
-              ? element.props.children
-              : element.props,
-            expirationTime,
-          );
-          existing.ref = coerceRef(returnFiber, child, element);
-          existing.return = returnFiber;
-          if (__DEV__) {
-            existing._debugSource = element._source;
-            existing._debugOwner = element._owner;
+            ) {
+              deleteRemainingChildren(returnFiber, child.sibling);
+              const existing = useFiber(child, element.props, expirationTime);
+              existing.ref = coerceRef(returnFiber, child, element);
+              existing.return = returnFiber;
+              if (__DEV__) {
+                existing._debugSource = element._source;
+                existing._debugOwner = element._owner;
+              }
+              return existing;
+            }
+            break;
           }
-          return existing;
-        } else {
-          deleteRemainingChildren(returnFiber, child);
-          break;
         }
+        // Didn't match.
+        deleteRemainingChildren(returnFiber, child);
+        break;
       } else {
         deleteChild(returnFiber, child);
       }
