@@ -77,10 +77,8 @@ export const shouldUpdateFundamentalComponent =
 export const getInstanceFromNode = $$$hostConfig.getInstanceFromNode;
 export const beforeRemoveInstance = $$$hostConfig.beforeRemoveInstance;
 export const registerListenerEvent = $$$hostConfig.registerListenerEvent;
-export const validateReactListenerDeleteListener =
-  $$$hostConfig.validateReactListenerDeleteListener;
-export const validateReactListenerMapListener =
-  $$$hostConfig.validateReactListenerMapListener;
+export const validateReactListenerMapSetListener =
+  $$$hostConfig.validateReactListenerMapSetListener;
 
 // -------------------
 //      Mutation

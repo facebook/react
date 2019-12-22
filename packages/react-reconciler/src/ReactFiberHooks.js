@@ -63,8 +63,7 @@ import {
   registerListenerEvent,
   attachListenerToInstance,
   detachListenerFromInstance,
-  validateReactListenerMapListener,
-  validateReactListenerDeleteListener,
+  validateReactListenerMapSetListener,
 } from './ReactFiberHostConfig';
 import {enableListenerAPI} from 'shared/ReactFeatureFlags';
 
@@ -1342,28 +1341,24 @@ export function mountEventListener(
 
     const reactListenerMap: ReactListenerMap = {
       clear,
-      deleteListener(instance: EventTarget): void {
+      setListener(instance: EventTarget, callback: ?(Event) => void): void {
         if (
           validateNotInFunctionRender() &&
-          validateReactListenerDeleteListener(instance)
-        ) {
-          const listener = listenerMap.get(instance);
-          if (listener !== undefined) {
-            listenerMap.delete(instance);
-            detachListenerFromInstance(listener);
-          }
-        }
-      },
-      setListener(instance: EventTarget, callback: Event => void): void {
-        if (
-          validateNotInFunctionRender() &&
-          validateReactListenerMapListener(instance, callback)
+          validateReactListenerMapSetListener(instance, callback)
         ) {
           let listener = listenerMap.get(instance);
           if (listener === undefined) {
+            if (callback == null) {
+              return;
+            }
             listener = createReactListener(event, callback, instance, destroy);
             listenerMap.set(instance, listener);
           } else {
+            if (callback == null) {
+              listenerMap.delete(instance);
+              detachListenerFromInstance(listener);
+              return;
+            }
             listener.callback = callback;
           }
           attachListenerToInstance(listener);

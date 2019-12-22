@@ -477,7 +477,6 @@ function useTransition(
 function useEvent(event: any): any {
   return {
     clear: noop,
-    deleteListener: noop,
     setListener: noop,
   };
 }

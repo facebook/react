@@ -1105,52 +1105,37 @@ export function detachListenerFromInstance(listener: ReactDOMListener): void {
   }
 }
 
-function validateListenerInstance(instance, methodString): boolean {
-  if (
-    instance &&
-    (instance === window || getClosestInstanceFromNode(instance))
-  ) {
-    return true;
-  }
-  if (__DEV__) {
-    if (instance && (instance: any).nodeType === DOCUMENT_NODE) {
-      console.warn(
-        'Event listener method %s() from useEvent() hook requires the first argument to be a valid' +
-          ' DOM node that was rendered and managed by React or a "window" object. It looks like' +
-          ' you supplied a "document" node, instead use the "window" object.',
-        methodString,
-      );
-    } else {
-      console.warn(
-        'Event listener method %s() from useEvent() hook requires the first argument to be a valid' +
-          ' DOM node that was rendered and managed by React or a "window" object. If this is' +
-          ' from a ref, ensure the ref value has been set before attaching.',
-        methodString,
-      );
-    }
-  }
-  return false;
-}
-
-export function validateReactListenerDeleteListener(
+export function validateReactListenerMapSetListener(
   instance: EventTarget,
-): boolean {
-  return validateListenerInstance(instance, 'deleteListener');
-}
-
-export function validateReactListenerMapListener(
-  instance: EventTarget,
-  listener: Event => void,
+  listener: ?(Event) => void,
 ): boolean {
   if (enableListenerAPI) {
-    if (validateListenerInstance(instance, 'setListener')) {
-      if (typeof listener === 'function') {
+    if (
+      instance &&
+      (instance === window || getClosestInstanceFromNode(instance))
+    ) {
+      if (listener == null || typeof listener === 'function') {
         return true;
       }
       if (__DEV__) {
         console.warn(
           'Event listener method setListener() from useEvent() hook requires the second argument' +
-            ' to be valid function callback.',
+            ' to be either a valid function callback or null/undefined.',
+        );
+      }
+    }
+    if (__DEV__) {
+      if (instance && (instance: any).nodeType === DOCUMENT_NODE) {
+        console.warn(
+          'Event listener method setListener() from useEvent() hook requires the first argument to be a valid' +
+            ' DOM node that was rendered and managed by React or a "window" object. It looks like' +
+            ' you supplied a "document" node, instead use the "window" object.',
+        );
+      } else {
+        console.warn(
+          'Event listener method setListener() from useEvent() hook requires the first argument to be a valid' +
+            ' DOM node that was rendered and managed by React or a "window" object. If this is' +
+            ' from a ref, ensure the ref value has been set before attaching.',
         );
       }
     }

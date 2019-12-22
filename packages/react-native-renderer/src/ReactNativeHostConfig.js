@@ -537,10 +537,6 @@ export function detachListenerFromInstance(instance, event, callback): any {
   // noop
 }
 
-export function validateReactListenerDeleteListener(instance): void {
-  // noop
-}
-
-export function validateReactListenerMapListener(instance, listener): void {
+export function validateReactListenerMapSetListener(instance, listener): void {
   // noop
 }

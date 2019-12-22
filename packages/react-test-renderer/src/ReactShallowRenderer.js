@@ -400,7 +400,6 @@ class ReactShallowRenderer {
     const useEvent = () => {
       return {
         clear: noOp,
-        deleteListener: noOp,
         setListener: noOp,
       };
     };

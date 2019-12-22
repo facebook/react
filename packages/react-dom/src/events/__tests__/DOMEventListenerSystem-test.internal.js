@@ -190,6 +190,58 @@ describe('DOMEventListenerSystem', () => {
     expect(clickEvent2).toBeCalledTimes(1);
   });
 
+  it('should correctly work for setting and clearing a basic "click" listener', () => {
+    const log = [];
+    const clickEvent = jest.fn(event => {
+      log.push({
+        eventPhase: event.eventPhase,
+        type: event.type,
+        currentTarget: event.currentTarget,
+        target: event.target,
+      });
+    });
+    const divRef = React.createRef();
+    const buttonRef = React.createRef();
+
+    function Test({off}) {
+      const click = ReactDOM.unstable_useEvent('click');
+
+      React.useEffect(() => {
+        click.setListener(buttonRef.current, clickEvent);
+      });
+
+      React.useEffect(
+        () => {
+          if (off) {
+            click.setListener(buttonRef.current, null);
+          }
+        },
+        [off],
+      );
+
+      return (
+        <button ref={buttonRef}>
+          <div ref={divRef}>Click me!</div>
+        </button>
+      );
+    }
+
+    ReactDOM.render(<Test off={false} />, container);
+    Scheduler.unstable_flushAll();
+
+    let divElement = divRef.current;
+    dispatchClickEvent(divElement);
+    expect(clickEvent).toBeCalledTimes(1);
+
+    // The listener should get unmounted in the second effect
+    ReactDOM.render(<Test off={true} />, container);
+    Scheduler.unstable_flushAll();
+
+    divElement = divRef.current;
+    dispatchClickEvent(divElement);
+    expect(clickEvent).toBeCalledTimes(1);
+  });
+
   it('should correctly work for a basic "click" listener on the outer target', () => {
     const log = [];
     const clickEvent = jest.fn(event => {

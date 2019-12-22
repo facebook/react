@@ -87,8 +87,7 @@ export type ReactDOMListenerEvent = {|
 
 export type ReactDOMListenerMap = {|
   clear: () => void,
-  setListener: (instance: EventTarget, callback: (Event) => void) => void,
-  deleteListener: (instance: EventTarget) => void,
+  setListener: (instance: EventTarget, callback: ?(Event) => void) => void,
 |};
 
 export type ReactDOMListener = {|
