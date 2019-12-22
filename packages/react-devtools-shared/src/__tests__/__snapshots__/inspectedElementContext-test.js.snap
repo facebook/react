@@ -511,6 +511,7 @@ exports[`InspectedElementContext should support complex data types: 1: Inspected
       "inner": {}
     },
     "react_element": {},
+    "regexp": {},
     "set": {
       "0": "abc",
       "1": 123

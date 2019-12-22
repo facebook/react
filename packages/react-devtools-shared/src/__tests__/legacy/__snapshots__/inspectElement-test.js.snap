@@ -152,6 +152,7 @@ Object {
       "inner": {}
     },
     "react_element": {},
+    "regexp": {},
     "set": {
       "0": "abc",
       "1": 123
