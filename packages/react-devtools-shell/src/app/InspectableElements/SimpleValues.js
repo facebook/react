@@ -24,6 +24,7 @@ export default function SimpleValues() {
       true={true}
       false={false}
       function={noop}
+      regex={/abc[123]+/i}
     />
   );
 }

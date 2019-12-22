@@ -185,6 +185,7 @@ describe('InspectedElementContext', () => {
           map_of_maps={mapOfMaps}
           object_of_objects={objectOfObjects}
           react_element={<span />}
+          regexp={/abc/giu}
           set={setShallow}
           set_of_sets={setOfSets}
           symbol={Symbol('symbol')}
@@ -212,6 +213,7 @@ describe('InspectedElementContext', () => {
       map_of_maps,
       object_of_objects,
       react_element,
+      regexp,
       set,
       set_of_sets,
       symbol,
@@ -278,6 +280,12 @@ describe('InspectedElementContext', () => {
     expect(react_element[meta.inspectable]).toBe(false);
     expect(react_element[meta.name]).toBe('span');
     expect(react_element[meta.type]).toBe('react_element');
+
+    expect(regexp[meta.inspectable]).toBe(false);
+    expect(regexp[meta.name]).toBe('/abc/giu');
+    expect(regexp[meta.preview_long]).toBe('/abc/giu');
+    expect(regexp[meta.preview_short]).toBe('/abc/giu');
+    expect(regexp[meta.type]).toBe('regexp');
 
     expect(set[meta.inspectable]).toBeUndefined(); // Complex type
     expect(set[meta.name]).toBe('Set');

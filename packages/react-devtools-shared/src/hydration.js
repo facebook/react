@@ -271,6 +271,16 @@ export function dehydrate(
         type,
       };
 
+    case 'regexp':
+      cleaned.push(path);
+      return {
+        inspectable: false,
+        preview_short: formatDataForPreview(data, false),
+        preview_long: formatDataForPreview(data, true),
+        name: data.toString(),
+        type,
+      };
+
     case 'object':
       isPathWhitelistedCheck = isPathWhitelisted(path);
       if (level >= LEVEL_THRESHOLD && !isPathWhitelistedCheck) {
