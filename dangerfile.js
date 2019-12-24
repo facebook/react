@@ -32,13 +32,13 @@ const {generateResultsArray} = require('./scripts/rollup/stats');
 const {existsSync, readFileSync} = require('fs');
 const {exec} = require('child_process');
 
+const isExperimental = process.env.RELEASE_CHANNEL === 'experimental';
+
 // This must match the name of the CI job that creates the build artifacts
-const RELEASE_CHANNEL =
-  process.env.RELEASE_CHANNEL === 'experimental' ? 'experimental' : 'stable';
-const artifactsJobName =
-  process.env.RELEASE_CHANNEL === 'experimental'
-    ? 'process_artifacts_experimental'
-    : 'process_artifacts';
+const RELEASE_CHANNEL = isExperimental ? 'experimental' : 'stable';
+const artifactsJobName = isExperimental
+  ? 'process_artifacts_experimental'
+  : 'process_artifacts';
 
 if (!existsSync('./build/bundle-sizes.json')) {
   // This indicates the build failed previously.
@@ -80,24 +80,25 @@ function addPercent(change, includeEmoji) {
     // When a new package is created
     return 'n/a';
   }
+
   const formatted = (change * 100).toFixed(1);
   if (/^-|^0(?:\.0+)$/.test(formatted)) {
     return `${formatted}%`;
-  } else {
-    if (includeEmoji) {
-      return `:small_red_triangle:+${formatted}%`;
-    } else {
-      return `+${formatted}%`;
-    }
   }
+
+  if (includeEmoji) {
+    return `:small_red_triangle:+${formatted}%`;
+  }
+
+  return `+${formatted}%`;
 }
 
 function setBoldness(row, isBold) {
   if (isBold) {
     return row.map(element => `**${element}**`);
-  } else {
-    return row;
   }
+
+  return row;
 }
 
 /**
@@ -106,12 +107,12 @@ function setBoldness(row, isBold) {
  */
 function git(args) {
   return new Promise(res => {
-    exec('git ' + args, (err, stdout, stderr) => {
+    exec('git ' + args, (err, stdout) => {
       if (err) {
         throw err;
-      } else {
-        res(stdout.trim());
       }
+
+      res(stdout.trim());
     });
   });
 }
