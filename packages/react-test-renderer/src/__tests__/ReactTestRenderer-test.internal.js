@@ -1032,4 +1032,30 @@ describe('ReactTestRenderer', () => {
       renderer.root.findByType(NonComponent);
     }).toThrowError(`No instances found with node type: "Unknown"`);
   });
+
+  it('supports SimpleMemoComponent with findByType', () => {
+    const App = () => null;
+    const SimpleMemoApp = React.memo(App);
+
+    const renderer = ReactTestRenderer.create(<SimpleMemoApp />);
+
+    const child = renderer.root.findByType(SimpleMemoApp);
+
+    expect(child.type).toBe(SimpleMemoApp);
+  });
+
+  it('supports MemoComponent with findByType', () => {
+    class App extends React.Component {
+      render() {
+        return null;
+      }
+    }
+    const MemoApp = React.memo(App);
+
+    const renderer = ReactTestRenderer.create(<MemoApp />);
+
+    const child = renderer.root.findByType(MemoApp);
+
+    expect(child.type).toBe(MemoApp);
+  });
 });

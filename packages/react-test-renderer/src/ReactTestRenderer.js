@@ -307,6 +307,10 @@ class ReactTestInstance {
   }
 
   get type() {
+    if (this._fiber.tag === SimpleMemoComponent) {
+      return this._fiber.elementType;
+    }
+
     return this._fiber.type;
   }
 
