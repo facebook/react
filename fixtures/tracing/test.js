@@ -95,7 +95,7 @@ trace('initial_render', performance.now(), () => {
   root.render(
     createElement(TestApp),
     wrap(() => {
-      log.app('commited');
+      log.app('committed');
     })
   );
 });
