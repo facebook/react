@@ -2,22 +2,19 @@
 
 set -e
 
-if [ -z $CI_PULL_REQUEST ] && [ -n "$BUILD_SERVER_ENDPOINT" ]; then
+if [ -z "$CI_PULL_REQUEST" ] && [ -n "$BUILD_SERVER_ENDPOINT" ]; then
   curl \
-    -F "react=@build/react.js" \
-    -F "react.min=@build/react.min.js" \
-    -F "react-with-addons=@build/react-with-addons.js" \
-    -F "react-with-addons.min=@build/react-with-addons.min.js" \
-    -F "react-dom=@build/react-dom.js" \
-    -F "react-dom.min=@build/react-dom.min.js" \
-    -F "react-dom-server=@build/react-dom-server.js" \
-    -F "react-dom-server.min=@build/react-dom-server.min.js" \
-    -F "npm-react=@build/packages/react.tgz" \
-    -F "npm-react-dom=@build/packages/react-dom.tgz" \
+    -F "react.development=@build/dist/react.development.js" \
+    -F "react.production.min=@build/dist/react.production.min.js" \
+    -F "react-dom.development=@build/dist/react-dom.development.js" \
+    -F "react-dom.production.min=@build/dist/react-dom.production.min.js" \
+    -F "react-dom-server.browser.development=@build/dist/react-dom-server.browser.development.js" \
+    -F "react-dom-server.browser.production.min=@build/dist/react-dom-server.browser.production.min.js" \
+    -F "results.json=@build/../build/bundle-sizes.json" \
     -F "commit=$CIRCLE_SHA1" \
-    -F "date=`git log --format='%ct' -1`" \
+    -F "date=$(git log --format='%ct' -1)" \
     -F "pull_request=false" \
     -F "token=$BUILD_SERVER_TOKEN" \
     -F "branch=$CIRCLE_BRANCH" \
-    $BUILD_SERVER_ENDPOINT
+    "$BUILD_SERVER_ENDPOINT"
 fi

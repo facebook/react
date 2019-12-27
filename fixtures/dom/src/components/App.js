@@ -1,20 +1,18 @@
-const React = window.React;
 import Header from './Header';
 import Fixtures from './fixtures';
-
 import '../style.css';
 
-const App = React.createClass({
+const React = window.React;
+
+class App extends React.Component {
   render() {
     return (
       <div>
         <Header />
-        <div className="container" >
-          <Fixtures />
-        </div>
+        <Fixtures />
       </div>
     );
-  },
-});
+  }
+}
 
 export default App;

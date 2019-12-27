@@ -1,0 +1,608 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`ReactFreshBabelPlugin can handle implicit arrow returns 1`] = `
+var _s = $RefreshSig$(),
+    _s2 = $RefreshSig$(),
+    _s3 = $RefreshSig$(),
+    _s4 = $RefreshSig$(),
+    _s5 = $RefreshSig$(),
+    _s6 = $RefreshSig$();
+
+export default _s(() => {
+  _s();
+
+  return useContext(X);
+}, "useContext{}");
+export const Foo = () => {
+  _s2();
+
+  return useContext(X);
+};
+
+_s2(Foo, "useContext{}");
+
+_c = Foo;
+module.exports = _s3(() => {
+  _s3();
+
+  return useContext(X);
+}, "useContext{}");
+
+const Bar = () => {
+  _s4();
+
+  return useContext(X);
+};
+
+_s4(Bar, "useContext{}");
+
+_c2 = Bar;
+
+const Baz = _c4 = memo(_c3 = _s5(() => {
+  _s5();
+
+  return useContext(X);
+}, "useContext{}"));
+
+const Qux = () => {
+  _s6();
+
+  return 0, useContext(X);
+};
+
+_s6(Qux, "useContext{}");
+
+_c5 = Qux;
+
+var _c, _c2, _c3, _c4, _c5;
+
+$RefreshReg$(_c, "Foo");
+$RefreshReg$(_c2, "Bar");
+$RefreshReg$(_c3, "Baz$memo");
+$RefreshReg$(_c4, "Baz");
+$RefreshReg$(_c5, "Qux");
+`;
+
+exports[`ReactFreshBabelPlugin does not consider require-like methods to be HOCs 1`] = `
+const A = require('A');
+
+const B = foo ? require('X') : require('Y');
+const C = requireCond(gk, 'C');
+const D = import('D');
+export default function App() {
+  return <div>
+              <A />
+              <B />
+              <C />
+              <D />
+            </div>;
+}
+_c = App;
+
+var _c;
+
+$RefreshReg$(_c, "App");
+`;
+
+exports[`ReactFreshBabelPlugin generates signatures for function declarations calling hooks 1`] = `
+var _s = $RefreshSig$();
+
+export default function App() {
+  _s();
+
+  const [foo, setFoo] = useState(0);
+  React.useEffect(() => {});
+  return <h1>{foo}</h1>;
+}
+
+_s(App, "useState{[foo, setFoo](0)}\\nuseEffect{}");
+
+_c = App;
+
+var _c;
+
+$RefreshReg$(_c, "App");
+`;
+
+exports[`ReactFreshBabelPlugin generates signatures for function expressions calling hooks 1`] = `
+var _s = $RefreshSig$(),
+    _s2 = $RefreshSig$();
+
+export const A = _c3 = React.memo(_c2 = React.forwardRef(_c = _s((props, ref) => {
+  _s();
+
+  const [foo, setFoo] = useState(0);
+  React.useEffect(() => {});
+  return <h1 ref={ref}>{foo}</h1>;
+}, "useState{[foo, setFoo](0)}\\nuseEffect{}")));
+export const B = _c6 = React.memo(_c5 = React.forwardRef(_c4 = _s2(function (props, ref) {
+  _s2();
+
+  const [foo, setFoo] = useState(0);
+  React.useEffect(() => {});
+  return <h1 ref={ref}>{foo}</h1>;
+}, "useState{[foo, setFoo](0)}\\nuseEffect{}")));
+
+function hoc() {
+  var _s3 = $RefreshSig$();
+
+  return _s3(function Inner() {
+    _s3();
+
+    const [foo, setFoo] = useState(0);
+    React.useEffect(() => {});
+    return <h1 ref={ref}>{foo}</h1>;
+  }, "useState{[foo, setFoo](0)}\\nuseEffect{}");
+}
+
+export let C = hoc();
+
+var _c, _c2, _c3, _c4, _c5, _c6;
+
+$RefreshReg$(_c, "A$React.memo$React.forwardRef");
+$RefreshReg$(_c2, "A$React.memo");
+$RefreshReg$(_c3, "A");
+$RefreshReg$(_c4, "B$React.memo$React.forwardRef");
+$RefreshReg$(_c5, "B$React.memo");
+$RefreshReg$(_c6, "B");
+`;
+
+exports[`ReactFreshBabelPlugin generates valid signature for exotic ways to call Hooks 1`] = `
+var _s2 = $RefreshSig$();
+
+import FancyHook from 'fancy';
+export default function App() {
+  _s2();
+
+  var _s = $RefreshSig$();
+
+  function useFancyState() {
+    _s();
+
+    const [foo, setFoo] = React.useState(0);
+    useFancyEffect();
+    return foo;
+  }
+
+  _s(useFancyState, "useState{[foo, setFoo](0)}\\nuseFancyEffect{}", true);
+
+  const bar = useFancyState();
+  const baz = FancyHook.useThing();
+  React.useState();
+  useThePlatform();
+  return <h1>{bar}{baz}</h1>;
+}
+
+_s2(App, "useFancyState{bar}\\nuseThing{baz}\\nuseState{}\\nuseThePlatform{}", true, function () {
+  return [FancyHook.useThing];
+});
+
+_c = App;
+
+var _c;
+
+$RefreshReg$(_c, "App");
+`;
+
+exports[`ReactFreshBabelPlugin ignores HOC definitions 1`] = `
+let connect = () => {
+  function Comp() {
+    const handleClick = () => {};
+
+    return <h1 onClick={handleClick}>Hi</h1>;
+  }
+
+  return Comp;
+};
+
+function withRouter() {
+  return function Child() {
+    const handleClick = () => {};
+
+    return <h1 onClick={handleClick}>Hi</h1>;
+  };
+}
+
+;
+`;
+
+exports[`ReactFreshBabelPlugin ignores complex definitions 1`] = `
+let A = foo ? () => {
+  return <h1>Hi</h1>;
+} : null;
+
+const B = function Foo() {
+  return <h1>Hi</h1>;
+}();
+
+let C = () => () => {
+  return <h1>Hi</h1>;
+};
+
+let D = bar && (() => {
+  return <h1>Hi</h1>;
+});
+`;
+
+exports[`ReactFreshBabelPlugin ignores higher-order functions that are not HOCs 1`] = `
+const throttledAlert = throttle(function () {
+  alert('Hi');
+});
+
+const TooComplex = function () {
+  return hello;
+}(() => {});
+
+if (cond) {
+  const Foo = thing(() => {});
+}
+`;
+
+exports[`ReactFreshBabelPlugin ignores unnamed function declarations 1`] = `export default function () {}`;
+
+exports[`ReactFreshBabelPlugin includes custom hooks into the signatures 1`] = `
+var _s = $RefreshSig$(),
+    _s2 = $RefreshSig$(),
+    _s3 = $RefreshSig$();
+
+function useFancyState() {
+  _s();
+
+  const [foo, setFoo] = React.useState(0);
+  useFancyEffect();
+  return foo;
+}
+
+_s(useFancyState, "useState{[foo, setFoo](0)}\\nuseFancyEffect{}", false, function () {
+  return [useFancyEffect];
+});
+
+const useFancyEffect = () => {
+  _s2();
+
+  React.useEffect(() => {});
+};
+
+_s2(useFancyEffect, "useEffect{}");
+
+export default function App() {
+  _s3();
+
+  const bar = useFancyState();
+  return <h1>{bar}</h1>;
+}
+
+_s3(App, "useFancyState{bar}", false, function () {
+  return [useFancyState];
+});
+
+_c = App;
+
+var _c;
+
+$RefreshReg$(_c, "App");
+`;
+
+exports[`ReactFreshBabelPlugin includes custom hooks into the signatures when commonjs target is used 1`] = `
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _s = $RefreshSig$();
+
+exports.default = App;
+
+var _hooks = require("./hooks");
+
+function App() {
+  _s();
+
+  const bar = (0, _hooks.useFancyState)();
+  return <h1>{bar}</h1>;
+}
+
+_s(App, "useFancyState{bar}", false, function () {
+  return [_hooks.useFancyState];
+});
+
+_c = App;
+
+var _c;
+
+$RefreshReg$(_c, "App");
+`;
+
+exports[`ReactFreshBabelPlugin only registers pascal case functions 1`] = `
+function hello() {
+  return 2 * 2;
+}
+`;
+
+exports[`ReactFreshBabelPlugin registers capitalized identifiers in HOC calls 1`] = `
+function Foo() {
+  return <h1>Hi</h1>;
+}
+
+_c = Foo;
+export default _c2 = hoc(Foo);
+export const A = _c3 = hoc(Foo);
+
+const B = _c4 = hoc(Foo);
+
+var _c, _c2, _c3, _c4;
+
+$RefreshReg$(_c, "Foo");
+$RefreshReg$(_c2, "%default%");
+$RefreshReg$(_c3, "A");
+$RefreshReg$(_c4, "B");
+`;
+
+exports[`ReactFreshBabelPlugin registers identifiers used in JSX at definition site 1`] = `
+import A from './A';
+import Store from './Store';
+Store.subscribe();
+const Header = _c = styled.div\`color: red\`;
+const Factory = funny.factory\`\`;
+let Alias1 = A;
+let Alias2 = A.Foo;
+const Dict = {};
+
+function Foo() {
+  return <div><A /><B /><Alias1 /><Alias2 /><Header /><Dict.X /></div>;
+}
+
+_c2 = Foo;
+
+const B = _c3 = hoc(A); // This is currently registered as a false positive:
+
+
+const NotAComponent = _c4 = wow(A); // We could avoid it but it also doesn't hurt.
+
+
+var _c, _c2, _c3, _c4;
+
+$RefreshReg$(_c, "Header");
+$RefreshReg$(_c2, "Foo");
+$RefreshReg$(_c3, "B");
+$RefreshReg$(_c4, "NotAComponent");
+`;
+
+exports[`ReactFreshBabelPlugin registers identifiers used in React.createElement at definition site 1`] = `
+import A from './A';
+import Store from './Store';
+Store.subscribe();
+const Header = _c = styled.div\`color: red\`;
+const Factory = funny.factory\`\`;
+let Alias1 = A;
+let Alias2 = A.Foo;
+const Dict = {};
+
+function Foo() {
+  return [React.createElement(A), React.createElement(B), React.createElement(Alias1), React.createElement(Alias2), jsx(Header), React.createElement(Dict.X)];
+}
+
+_c2 = Foo;
+React.createContext(Store);
+
+const B = _c3 = hoc(A); // This is currently registered as a false positive:
+
+
+const NotAComponent = _c4 = wow(A); // We could avoid it but it also doesn't hurt.
+
+
+var _c, _c2, _c3, _c4;
+
+$RefreshReg$(_c, "Header");
+$RefreshReg$(_c2, "Foo");
+$RefreshReg$(_c3, "B");
+$RefreshReg$(_c4, "NotAComponent");
+`;
+
+exports[`ReactFreshBabelPlugin registers likely HOCs with inline functions 1`] = `
+const A = _c2 = forwardRef(_c = function () {
+  return <h1>Foo</h1>;
+});
+
+const B = _c5 = memo(_c4 = React.forwardRef(_c3 = () => {
+  return <h1>Foo</h1>;
+}));
+
+export default _c8 = React.memo(_c7 = forwardRef(_c6 = (props, ref) => {
+  return <h1>Foo</h1>;
+}));
+
+var _c, _c2, _c3, _c4, _c5, _c6, _c7, _c8;
+
+$RefreshReg$(_c, "A$forwardRef");
+$RefreshReg$(_c2, "A");
+$RefreshReg$(_c3, "B$memo$React.forwardRef");
+$RefreshReg$(_c4, "B$memo");
+$RefreshReg$(_c5, "B");
+$RefreshReg$(_c6, "%default%$React.memo$forwardRef");
+$RefreshReg$(_c7, "%default%$React.memo");
+$RefreshReg$(_c8, "%default%");
+`;
+
+exports[`ReactFreshBabelPlugin registers likely HOCs with inline functions 2`] = `
+export default _c3 = React.memo(_c2 = forwardRef(_c = function (props, ref) {
+  return <h1>Foo</h1>;
+}));
+
+var _c, _c2, _c3;
+
+$RefreshReg$(_c, "%default%$React.memo$forwardRef");
+$RefreshReg$(_c2, "%default%$React.memo");
+$RefreshReg$(_c3, "%default%");
+`;
+
+exports[`ReactFreshBabelPlugin registers likely HOCs with inline functions 3`] = `
+export default _c3 = React.memo(_c2 = forwardRef(_c = function Named(props, ref) {
+  return <h1>Foo</h1>;
+}));
+
+var _c, _c2, _c3;
+
+$RefreshReg$(_c, "%default%$React.memo$forwardRef");
+$RefreshReg$(_c2, "%default%$React.memo");
+$RefreshReg$(_c3, "%default%");
+`;
+
+exports[`ReactFreshBabelPlugin registers top-level exported function declarations 1`] = `
+export function Hello() {
+  function handleClick() {}
+
+  return <h1 onClick={handleClick}>Hi</h1>;
+}
+_c = Hello;
+export default function Bar() {
+  return <Hello />;
+}
+_c2 = Bar;
+
+function Baz() {
+  return <h1>OK</h1>;
+}
+
+_c3 = Baz;
+const NotAComp = 'hi';
+export { Baz, NotAComp };
+export function sum() {}
+export const Bad = 42;
+
+var _c, _c2, _c3;
+
+$RefreshReg$(_c, "Hello");
+$RefreshReg$(_c2, "Bar");
+$RefreshReg$(_c3, "Baz");
+`;
+
+exports[`ReactFreshBabelPlugin registers top-level exported named arrow functions 1`] = `
+export const Hello = () => {
+  function handleClick() {}
+
+  return <h1 onClick={handleClick}>Hi</h1>;
+};
+_c = Hello;
+export let Bar = props => <Hello />;
+_c2 = Bar;
+export default (() => {
+  // This one should be ignored.
+  // You should name your components.
+  return <Hello />;
+});
+
+var _c, _c2;
+
+$RefreshReg$(_c, "Hello");
+$RefreshReg$(_c2, "Bar");
+`;
+
+exports[`ReactFreshBabelPlugin registers top-level function declarations 1`] = `
+function Hello() {
+  function handleClick() {}
+
+  return <h1 onClick={handleClick}>Hi</h1>;
+}
+
+_c = Hello;
+
+function Bar() {
+  return <Hello />;
+}
+
+_c2 = Bar;
+
+var _c, _c2;
+
+$RefreshReg$(_c, "Hello");
+$RefreshReg$(_c2, "Bar");
+`;
+
+exports[`ReactFreshBabelPlugin registers top-level variable declarations with arrow functions 1`] = `
+let Hello = () => {
+  const handleClick = () => {};
+
+  return <h1 onClick={handleClick}>Hi</h1>;
+};
+
+_c = Hello;
+
+const Bar = () => {
+  return <Hello />;
+};
+
+_c2 = Bar;
+
+var Baz = () => <div />;
+
+_c3 = Baz;
+
+var sum = () => {};
+
+var _c, _c2, _c3;
+
+$RefreshReg$(_c, "Hello");
+$RefreshReg$(_c2, "Bar");
+$RefreshReg$(_c3, "Baz");
+`;
+
+exports[`ReactFreshBabelPlugin registers top-level variable declarations with function expressions 1`] = `
+let Hello = function () {
+  function handleClick() {}
+
+  return <h1 onClick={handleClick}>Hi</h1>;
+};
+
+_c = Hello;
+
+const Bar = function Baz() {
+  return <Hello />;
+};
+
+_c2 = Bar;
+
+function sum() {}
+
+let Baz = 10;
+var Qux;
+
+var _c, _c2;
+
+$RefreshReg$(_c, "Hello");
+$RefreshReg$(_c2, "Bar");
+`;
+
+exports[`ReactFreshBabelPlugin uses custom identifiers for $RefreshReg$ and $RefreshSig$ 1`] = `
+var _s = import.meta.refreshSig();
+
+export default function Bar() {
+  _s();
+
+  useContext(X);
+  return <Foo />;
+}
+
+_s(Bar, "useContext{}");
+
+_c = Bar;
+;
+
+var _c;
+
+import.meta.refreshReg(_c, "Bar");
+`;
+
+exports[`ReactFreshBabelPlugin uses original function declaration if it get reassigned 1`] = `
+function Hello() {
+  return <h1>Hi</h1>;
+}
+
+_c = Hello;
+Hello = connect(Hello);
+
+var _c;
+
+$RefreshReg$(_c, "Hello");
+`;

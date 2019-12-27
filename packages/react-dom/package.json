@@ -1,34 +1,52 @@
 {
   "name": "react-dom",
-  "version": "16.0.0-alpha.3",
+  "version": "16.12.0",
   "description": "React package for working with the DOM.",
   "main": "index.js",
-  "repository": "facebook/react",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/facebook/react.git",
+    "directory": "packages/react-dom"
+  },
   "keywords": [
     "react"
   ],
-  "license": "BSD-3-Clause",
+  "license": "MIT",
   "bugs": {
     "url": "https://github.com/facebook/react/issues"
   },
-  "homepage": "https://facebook.github.io/react/",
+  "homepage": "https://reactjs.org/",
   "dependencies": {
-    "fbjs": "^0.8.9",
     "loose-envify": "^1.1.0",
-    "object-assign": "^4.1.0"
+    "object-assign": "^4.1.1",
+    "prop-types": "^15.6.2",
+    "scheduler": "^0.18.0"
   },
   "peerDependencies": {
-    "react": "^16.0.0-alpha.3"
+    "react": "^16.0.0"
   },
   "files": [
     "LICENSE",
-    "PATENTS",
     "README.md",
-    "dist/",
-    "lib/",
+    "build-info.json",
     "index.js",
-    "server.js"
+    "profiling.js",
+    "server.js",
+    "server.browser.js",
+    "server.node.js",
+    "test-utils.js",
+    "unstable-fire.js",
+    "unstable-fizz.js",
+    "unstable-fizz.browser.js",
+    "unstable-fizz.node.js",
+    "unstable-native-dependencies.js",
+    "cjs/",
+    "umd/"
   ],
+  "browser": {
+    "./server.js": "./server.browser.js",
+    "./unstable-fizz.js": "./unstable-fizz.browser.js"
+  },
   "browserify": {
     "transform": [
       "loose-envify"

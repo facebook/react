@@ -1,28 +1,62 @@
 const React = window.React;
-import RangeInputFixtures from './range-inputs';
-import TextInputFixtures from './text-inputs';
-import SelectFixtures from './selects';
-import TextAreaFixtures from './textareas/';
+const fixturePath = window.location.pathname;
 
 /**
  * A simple routing component that renders the appropriate
  * fixture based on the location pathname.
  */
-const FixturesPage = React.createClass({
-  render() {
-    switch (window.location.pathname) {
-      case '/text-inputs':
-        return <TextInputFixtures />;
-      case '/range-inputs':
-        return <RangeInputFixtures />;
-      case '/selects':
-        return <SelectFixtures />;
-      case '/textareas':
-        return <TextAreaFixtures />;
-      default:
-        return <p>Please select a test fixture.</p>;
-    }
-  },
-});
+class FixturesPage extends React.Component {
+  static defaultProps = {
+    fixturePath: fixturePath === '/' ? '/home' : fixturePath,
+  };
 
-module.exports = FixturesPage;
+  state = {
+    isLoading: true,
+    error: null,
+    Fixture: null,
+  };
+
+  componentDidMount() {
+    this.loadFixture();
+  }
+
+  async loadFixture() {
+    const {fixturePath} = this.props;
+
+    try {
+      const module = await import(`.${fixturePath}`);
+
+      this.setState({Fixture: module.default});
+    } catch (error) {
+      console.error(error);
+      this.setState({error});
+    } finally {
+      this.setState({isLoading: false});
+    }
+  }
+
+  render() {
+    const {Fixture, error, isLoading} = this.state;
+
+    if (isLoading) {
+      return null;
+    }
+
+    if (error) {
+      return <FixtureError error={error} />;
+    }
+
+    return <Fixture />;
+  }
+}
+
+function FixtureError({error}) {
+  return (
+    <section>
+      <h2>Error loading fixture</h2>
+      <p>{error.message}</p>
+    </section>
+  );
+}
+
+export default FixturesPage;
