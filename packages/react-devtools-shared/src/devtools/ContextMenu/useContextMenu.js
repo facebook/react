@@ -1,7 +1,26 @@
+/**
+ * Copyright (c) Facebook, Inc. and its affiliates.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ *
+ * @flow
+ */
+
 import {useContext, useEffect} from 'react';
 import {RegistryContext} from './Contexts';
 
-export default function useContextMenu({data, id, ref}) {
+import type {ElementRef} from 'react';
+
+export default function useContextMenu({
+  data,
+  id,
+  ref,
+}: {|
+  data: Object,
+  id: string,
+  ref: ElementRef<HTMLElement>,
+|}) {
   const {showMenu} = useContext(RegistryContext);
 
   useEffect(

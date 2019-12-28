@@ -1,10 +1,19 @@
+/**
+ * Copyright (c) Facebook, Inc. and its affiliates.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ *
+ * @flow
+ */
+
 import {createContext} from 'react';
 
-export type ShowFn = ({data: Object, pageX: number, pageY: number}) => void;
+export type ShowFn = ({|data: Object, pageX: number, pageY: number|}) => void;
 export type HideFn = () => void;
 
-const idToShowFnMap = new Map();
-const idToHideFnMap = new Map();
+const idToShowFnMap = new Map<string, ShowFn>();
+const idToHideFnMap = new Map<string, HideFn>();
 
 let currentHideFn = null;
 
@@ -41,8 +50,8 @@ function registerMenu(id: string, showFn: ShowFn, hideFn: HideFn) {
   idToHideFnMap.set(id, hideFn);
 
   return function unregisterMenu() {
-    idToShowFnMap.delete(id, showFn);
-    idToHideFnMap.delete(id, hideFn);
+    idToShowFnMap.delete(id);
+    idToHideFnMap.delete(id);
   };
 }
 
