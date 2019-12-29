@@ -40,7 +40,19 @@ export function cleanForBridge(
 
 export function copyToClipboard(value: any): void {
   const safeToCopy = serializeToString(value);
-  copy(safeToCopy === undefined ? 'undefined' : safeToCopy);
+  const text = safeToCopy === undefined ? 'undefined' : safeToCopy;
+  const {clipboardCopyText} = window.__REACT_DEVTOOLS_GLOBAL_HOOK__;
+
+  // On Firefox navigator.clipboard.writeText has to be called from
+  // the content script js code (because it requires the clipboardWrite
+  // permission to be allowed out of a "user handling" callback),
+  // clipboardCopyText is an helper injected into the page from.
+  // injectGlobalHook.
+  if (typeof clipboardCopyText === 'function') {
+    clipboardCopyText(text).catch(err => {});
+  } else {
+    copy(text);
+  }
 }
 
 export function copyWithSet(
