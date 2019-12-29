@@ -54,7 +54,6 @@ export type Props = {|
   canViewElementSourceFunction?: ?CanViewElementSource,
   defaultTab?: TabID,
   enabledInspectedElementContextMenu?: boolean,
-  enabledInspectedElementContextMenuCopy?: boolean,
   showTabBar?: boolean,
   store: Store,
   warnIfLegacyBackendDetected?: boolean,
@@ -97,7 +96,6 @@ export default function DevTools({
   componentsPortalContainer,
   defaultTab = 'components',
   enabledInspectedElementContextMenu = false,
-  enabledInspectedElementContextMenuCopy = false,
   overrideTab,
   profilerPortalContainer,
   showTabBar = false,
@@ -123,14 +121,9 @@ export default function DevTools({
   const contextMenu = useMemo(
     () => ({
       isEnabledForInspectedElement: enabledInspectedElementContextMenu,
-      supportsCopyOperation: enabledInspectedElementContextMenuCopy,
       viewAttributeSourceFunction: viewAttributeSourceFunction || null,
     }),
-    [
-      enabledInspectedElementContextMenu,
-      enabledInspectedElementContextMenuCopy,
-      viewAttributeSourceFunction,
-    ],
+    [enabledInspectedElementContextMenu, viewAttributeSourceFunction],
   );
 
   useEffect(
