@@ -211,7 +211,6 @@ function createPanelIfReactLoaded() {
               browserTheme: getBrowserTheme(),
               componentsPortalContainer,
               enabledInspectedElementContextMenu: true,
-              enabledInspectedElementContextMenuCopy: isChrome,
               overrideTab,
               profilerPortalContainer,
               showTabBar: false,
