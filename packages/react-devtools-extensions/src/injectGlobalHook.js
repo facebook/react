@@ -86,8 +86,14 @@ if (sessionStorageGetItem(SESSION_STORAGE_RELOAD_AND_PROFILE_KEY) === 'true') {
   injectCode(rendererCode);
 }
 
-// Inject a `__REACT_DEVTOOLS_GLOBAL_HOOK__` global so that React can detect that the
-// devtools are installed (and skip its suggestion to install the devtools).
-injectCode(
-  ';(' + installHook.toString() + '(window))' + saveNativeValues + detectReact,
-);
+// Inject a __REACT_DEVTOOLS_GLOBAL_HOOK__ global for React to interact with.
+// Only do this for HTML documents though, to avoid e.g. breaking syntax highlighting for XML docs.
+if (document.contentType === 'text/html') {
+  injectCode(
+    ';(' +
+      installHook.toString() +
+      '(window))' +
+      saveNativeValues +
+      detectReact,
+  );
+}
