@@ -1,3 +1,12 @@
+/**
+ * Copyright (c) Facebook, Inc. and its affiliates.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ *
+ * @flow
+ */
+
 import React, {
   useContext,
   useEffect,
@@ -10,7 +19,7 @@ import {RegistryContext} from './Contexts';
 
 import styles from './ContextMenu.css';
 
-function respositionToFit(element, pageX, pageY) {
+function respositionToFit(element: HTMLElement, pageX: number, pageY: number) {
   const ownerWindow = element.ownerDocument.defaultView;
   if (element !== null) {
     if (pageY + element.offsetHeight >= ownerWindow.innerHeight) {
@@ -43,7 +52,7 @@ const HIDDEN_STATE = {
 };
 
 type Props = {|
-  children: React$Node,
+  children: (data: Object) => React$Node,
   id: string,
 |};
 
