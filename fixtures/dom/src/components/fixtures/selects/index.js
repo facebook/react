@@ -172,7 +172,7 @@ class SelectFixture extends React.Component {
                 <option value="monkey">monkey</option>
                 <option value="lion">lion</option>
                 <option value="mongoose">mongoose</option>
-                <option value="tiger">tiget</option>
+                <option value="tiger">tiger</option>
               </select>
             </form>
           </div>
