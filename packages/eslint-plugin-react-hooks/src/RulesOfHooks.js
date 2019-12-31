@@ -469,9 +469,9 @@ export default {
                 `function "${context.getSource(codePathFunctionName)}" ` +
                 'that is neither a React function component nor a custom ' +
                 'React Hook function.' +
-                `If you are using ${context.getSource(
+                `If you are using "${context.getSource(
                   hook,
-                )} inside a functional component, make sure the function name starts with an uppercase letter`;
+                )}" inside a functional component, make sure the function name starts with an uppercase letter`;
               context.report({node: hook, message});
             } else if (codePathNode.type === 'Program') {
               // These are dangerous if you have inline requires enabled.

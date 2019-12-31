@@ -895,7 +895,7 @@ function functionError(hook, fn) {
       `function "${fn}" ` +
       'that is neither a React function component nor a custom ' +
       'React Hook function.' +
-      `If you are using ${hook} inside a functional component, make sure the function name starts with an uppercase letter`,
+      `If you are using "${hook}" inside a functional component, make sure the function name starts with an uppercase letter`,
   };
 }
 
