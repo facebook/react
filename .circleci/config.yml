@@ -193,6 +193,22 @@ jobs:
             - dist
             - sizes/*.json
 
+  build_devtools_and_process_artifacts:
+    docker: *docker
+    environment: *environment
+    parallelism: 20
+    steps:
+      - checkout
+      - attach_workspace: *attach_workspace
+      - *restore_yarn_cache
+      - *run_yarn
+      - run:
+          environment:
+            RELEASE_CHANNEL: experimental
+          command: ./scripts/circleci/pack_and_store_devtools_artifacts.sh
+      - store_artifacts:
+          path: ./build/devtools.tgz
+
   # These jobs are named differently so we can distinguish the stable and
   # and experimental artifacts
   process_artifacts: *process_artifacts
@@ -267,7 +283,7 @@ jobs:
             RELEASE_CHANNEL: experimental
           command: yarn test-build --maxWorkers=2
 
-  test_build_devtools:
+  test_devtools:
     docker: *docker
     environment: *environment
     steps:
@@ -402,7 +418,10 @@ workflows:
       - lint_build:
           requires:
             - build_experimental
-      - test_build_devtools:
+      - test_devtools:
+          requires:
+            - build_experimental
+      - build_devtools_and_process_artifacts:
           requires:
             - build_experimental
 
