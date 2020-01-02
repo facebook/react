@@ -388,7 +388,7 @@ export function getDataType(data: Object): DataType {
         return data.constructor.hasOwnProperty('BYTES_PER_ELEMENT')
           ? 'typed_array'
           : 'data_view';
-      } else if (data.constructor.name === 'ArrayBuffer') {
+      } else if (data.constructor && data.constructor.name === 'ArrayBuffer') {
         // HACK This ArrayBuffer check is gross; is there a better way?
         // We could try to create a new DataView with the value.
         // If it doesn't error, we know it's an ArrayBuffer,
@@ -396,7 +396,7 @@ export function getDataType(data: Object): DataType {
         return 'array_buffer';
       } else if (typeof data[Symbol.iterator] === 'function') {
         return 'iterator';
-      } else if (data.constructor.name === 'RegExp') {
+      } else if (data.constructor && data.constructor.name === 'RegExp') {
         return 'regexp';
       } else if (Object.prototype.toString.call(data) === '[object Date]') {
         return 'date';
