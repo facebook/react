@@ -155,7 +155,7 @@ describe('InspectedElementContext', () => {
     const setOfSets = new Set([new Set(['a', 'b', 'c']), new Set([1, 2, 3])]);
     const mapOfMaps = new Map([['first', mapShallow], ['second', mapShallow]]);
     const objectOfObjects = {
-      inner: {string: 'abc', number: 213, boolean: true},
+      inner: {string: 'abc', number: 123, boolean: true},
     };
     const typedArray = Int8Array.from([100, -100, 0]);
     const arrayBuffer = typedArray.buffer;
@@ -168,6 +168,10 @@ describe('InspectedElementContext', () => {
         xyz: 1,
       },
     });
+    const objectWithNullProto = Object.create(null);
+    objectWithNullProto.string = 'abc';
+    objectWithNullProto.number = 123;
+    objectWithNullProto.boolean = true;
 
     act(() =>
       ReactDOM.render(
@@ -184,6 +188,7 @@ describe('InspectedElementContext', () => {
           map={mapShallow}
           map_of_maps={mapOfMaps}
           object_of_objects={objectOfObjects}
+          object_with_null_proto={objectWithNullProto}
           react_element={<span />}
           regexp={/abc/giu}
           set={setShallow}
@@ -212,6 +217,7 @@ describe('InspectedElementContext', () => {
       map,
       map_of_maps,
       object_of_objects,
+      object_with_null_proto,
       react_element,
       regexp,
       set,
@@ -273,9 +279,15 @@ describe('InspectedElementContext', () => {
     expect(object_of_objects.inner[meta.name]).toBe('');
     expect(object_of_objects.inner[meta.type]).toBe('object');
     expect(object_of_objects.inner[meta.preview_long]).toBe(
-      '{boolean: true, number: 213, string: "abc"}',
+      '{boolean: true, number: 123, string: "abc"}',
     );
     expect(object_of_objects.inner[meta.preview_short]).toBe('{…}');
+
+    expect(object_with_null_proto).toEqual({
+      boolean: true,
+      number: 123,
+      string: 'abc',
+    });
 
     expect(react_element[meta.inspectable]).toBe(false);
     expect(react_element[meta.name]).toBe('span');

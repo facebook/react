@@ -510,6 +510,11 @@ exports[`InspectedElementContext should support complex data types: 1: Inspected
     "object_of_objects": {
       "inner": {}
     },
+    "object_with_null_proto": {
+      "string": "abc",
+      "number": 123,
+      "boolean": true
+    },
     "react_element": {},
     "regexp": {},
     "set": {
