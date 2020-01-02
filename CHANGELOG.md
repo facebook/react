@@ -6,6 +6,23 @@
   </summary>
 </details>
 
+## 16.12.0 (November 14, 2019)
+
+### React DOM
+
+* Fix passive effects (`useEffect`) not being fired in a multi-root app. ([@acdlite](https://github.com/acdlite) in [#17347](https://github.com/facebook/react/pull/17347))
+
+### React Is
+
+* Fix `lazy` and `memo` types considered elements instead of components ([@bvaughn](https://github.com/bvaughn) in [#17278](https://github.com/facebook/react/pull/17278))
+
+## 16.11.0 (October 22, 2019)
+
+### React DOM
+
+* Fix `mouseenter` handlers from firing twice inside nested React containers. [@yuanoook](https://github.com/yuanoook) in [#16928](https://github.com/facebook/react/pull/16928)
+* Remove `unstable_createRoot` and `unstable_createSyncRoot` experimental APIs. (These are available in the Experimental channel as `createRoot` and `createSyncRoot`.) ([@acdlite](http://github.com/acdlite) in [#17088](https://github.com/facebook/react/pull/17088))
+
 ## 16.10.2 (October 3, 2019)
 
 ### React DOM
@@ -517,7 +534,7 @@ This release was published in a broken state and should be skipped.
 * Fix an issue with `this.state` of different components getting mixed up. ([@sophiebits](https://github.com/sophiebits) in [#12323](https://github.com/facebook/react/pull/12323))
 * Provide a better message when component type is undefined. ([@HeroProtagonist](https://github.com/HeroProtagonist) in [#11966](https://github.com/facebook/react/pull/11966))
 
-## React Test Renderer
+### React Test Renderer
 
 * Fix handling of fragments in `toTree()`. ([@maciej-ka](https://github.com/maciej-ka) in [#12107](https://github.com/facebook/react/pull/12107) and [@gaearon](https://github.com/gaearon) in [#12154](https://github.com/facebook/react/pull/12154))
 * Shallow renderer should assign state to `null` for components that don't set it. ([@jwbay](https://github.com/jwbay) in [#11965](https://github.com/facebook/react/pull/11965))

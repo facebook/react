@@ -7,7 +7,7 @@
  * @flow
  */
 
-describe('StoreStress (Sync Mode)', () => {
+describe('StoreStress (Legacy Mode)', () => {
   let React;
   let ReactDOM;
   let act;
@@ -29,7 +29,7 @@ describe('StoreStress (Sync Mode)', () => {
 
   // This is a stress test for the tree mount/update/unmount traversal.
   // It renders different trees that should produce the same output.
-  it('should handle a stress test with different tree operations (Sync Mode)', () => {
+  it('should handle a stress test with different tree operations (Legacy Mode)', () => {
     let setShowX;
     const A = () => 'a';
     const B = () => 'b';
@@ -170,7 +170,7 @@ describe('StoreStress (Sync Mode)', () => {
     expect(print(store)).toBe('');
   });
 
-  it('should handle stress test with reordering (Sync Mode)', () => {
+  it('should handle stress test with reordering (Legacy Mode)', () => {
     const A = () => 'a';
     const B = () => 'b';
     const C = () => 'c';
@@ -270,7 +270,7 @@ describe('StoreStress (Sync Mode)', () => {
     }
   });
 
-  it('should handle a stress test for Suspense (Sync Mode)', async () => {
+  it('should handle a stress test for Suspense (Legacy Mode)', async () => {
     const A = () => 'a';
     const B = () => 'b';
     const C = () => 'c';
@@ -663,7 +663,7 @@ describe('StoreStress (Sync Mode)', () => {
     }
   });
 
-  it('should handle a stress test for Suspense without type change (Sync Mode)', () => {
+  it('should handle a stress test for Suspense without type change (Legacy Mode)', () => {
     const A = () => 'a';
     const B = () => 'b';
     const C = () => 'c';

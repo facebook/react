@@ -79,4 +79,44 @@ describe('ProfilerStore', () => {
     store.profilerStore.profilingData = fauxProfilingData;
     expect(store.profilerStore.profilingData).toBe(fauxProfilingData);
   });
+
+  // This test covers current broken behavior (arguably) with the synthetic event system.
+  it('should filter empty commits', () => {
+    const inputRef = React.createRef();
+    const ControlledInput = () => {
+      const [name, setName] = React.useState('foo');
+      const handleChange = event => setName(event.target.value);
+      return <input ref={inputRef} value={name} onChange={handleChange} />;
+    };
+
+    const container = document.createElement('div');
+
+    // This element has to be in the <body> for the event system to work.
+    document.body.appendChild(container);
+
+    // It's important that this test uses legacy sync mode.
+    // The root API does not trigger this particular failing case.
+    ReactDOM.render(<ControlledInput />, container);
+
+    utils.act(() => store.profilerStore.startProfiling());
+
+    // Sets a value in a way that React doesn't see,
+    // so that a subsequent "change" event will trigger the event handler.
+    const setUntrackedValue = Object.getOwnPropertyDescriptor(
+      HTMLInputElement.prototype,
+      'value',
+    ).set;
+
+    const target = inputRef.current;
+    setUntrackedValue.call(target, 'bar');
+    target.dispatchEvent(new Event('input', {bubbles: true, cancelable: true}));
+    expect(target.value).toBe('bar');
+
+    utils.act(() => store.profilerStore.stopProfiling());
+
+    // Only one commit should have been recorded (in response to the "change" event).
+    const root = store.roots[0];
+    const data = store.profilerStore.getDataForRoot(root);
+    expect(data.commitData).toHaveLength(1);
+  });
 });

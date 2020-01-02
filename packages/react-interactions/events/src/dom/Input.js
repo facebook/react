@@ -211,7 +211,7 @@ const inputResponderImpl = {
   },
 };
 
-export const InputResponder = React.unstable_createResponder(
+export const InputResponder = React.DEPRECATED_createResponder(
   'Input',
   inputResponderImpl,
 );
@@ -219,5 +219,5 @@ export const InputResponder = React.unstable_createResponder(
 export function useInput(
   props: InputResponderProps,
 ): ReactEventResponderListener<any, any> {
-  return React.unstable_useResponder(InputResponder, props);
+  return React.DEPRECATED_useResponder(InputResponder, props);
 }

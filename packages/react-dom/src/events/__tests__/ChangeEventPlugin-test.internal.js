@@ -485,8 +485,8 @@ describe('ChangeEventPlugin', () => {
       Scheduler = require('scheduler');
     });
 
-    it('text input', () => {
-      const root = ReactDOM.unstable_createRoot(container);
+    it.experimental('text input', () => {
+      const root = ReactDOM.createRoot(container);
       let input;
 
       let ops = [];
@@ -532,8 +532,8 @@ describe('ChangeEventPlugin', () => {
       expect(input.value).toBe('changed [!]');
     });
 
-    it('checkbox input', () => {
-      const root = ReactDOM.unstable_createRoot(container);
+    it.experimental('checkbox input', () => {
+      const root = ReactDOM.createRoot(container);
       let input;
 
       let ops = [];
@@ -594,8 +594,8 @@ describe('ChangeEventPlugin', () => {
       expect(input.checked).toBe(false);
     });
 
-    it('textarea', () => {
-      const root = ReactDOM.unstable_createRoot(container);
+    it.experimental('textarea', () => {
+      const root = ReactDOM.createRoot(container);
       let textarea;
 
       let ops = [];
@@ -641,8 +641,8 @@ describe('ChangeEventPlugin', () => {
       expect(textarea.value).toBe('changed [!]');
     });
 
-    it('parent of input', () => {
-      const root = ReactDOM.unstable_createRoot(container);
+    it.experimental('parent of input', () => {
+      const root = ReactDOM.createRoot(container);
       let input;
 
       let ops = [];
@@ -692,8 +692,8 @@ describe('ChangeEventPlugin', () => {
       expect(input.value).toBe('changed [!]');
     });
 
-    it('is async for non-input events', () => {
-      const root = ReactDOM.unstable_createRoot(container);
+    it.experimental('is async for non-input events', () => {
+      const root = ReactDOM.createRoot(container);
       let input;
 
       let ops = [];
@@ -747,46 +747,49 @@ describe('ChangeEventPlugin', () => {
       expect(input.value).toBe('');
     });
 
-    it('mouse enter/leave should be user-blocking but not discrete', async () => {
-      // This is currently behind a feature flag
-      jest.resetModules();
-      React = require('react');
-      ReactDOM = require('react-dom');
-      TestUtils = require('react-dom/test-utils');
-      Scheduler = require('scheduler');
+    it.experimental(
+      'mouse enter/leave should be user-blocking but not discrete',
+      async () => {
+        // This is currently behind a feature flag
+        jest.resetModules();
+        React = require('react');
+        ReactDOM = require('react-dom');
+        TestUtils = require('react-dom/test-utils');
+        Scheduler = require('scheduler');
 
-      const {act} = TestUtils;
-      const {useState} = React;
+        const {act} = TestUtils;
+        const {useState} = React;
 
-      const root = ReactDOM.unstable_createRoot(container);
+        const root = ReactDOM.createRoot(container);
 
-      const target = React.createRef(null);
-      function Foo() {
-        const [isHover, setHover] = useState(false);
-        return (
-          <div
-            ref={target}
-            onMouseEnter={() => setHover(true)}
-            onMouseLeave={() => setHover(false)}>
-            {isHover ? 'hovered' : 'not hovered'}
-          </div>
-        );
-      }
+        const target = React.createRef(null);
+        function Foo() {
+          const [isHover, setHover] = useState(false);
+          return (
+            <div
+              ref={target}
+              onMouseEnter={() => setHover(true)}
+              onMouseLeave={() => setHover(false)}>
+              {isHover ? 'hovered' : 'not hovered'}
+            </div>
+          );
+        }
 
-      await act(async () => {
-        root.render(<Foo />);
-      });
-      expect(container.textContent).toEqual('not hovered');
+        await act(async () => {
+          root.render(<Foo />);
+        });
+        expect(container.textContent).toEqual('not hovered');
 
-      await act(async () => {
-        const mouseOverEvent = document.createEvent('MouseEvents');
-        mouseOverEvent.initEvent('mouseover', true, true);
-        target.current.dispatchEvent(mouseOverEvent);
+        await act(async () => {
+          const mouseOverEvent = document.createEvent('MouseEvents');
+          mouseOverEvent.initEvent('mouseover', true, true);
+          target.current.dispatchEvent(mouseOverEvent);
 
-        // 3s should be enough to expire the updates
-        Scheduler.unstable_advanceTime(3000);
-        expect(container.textContent).toEqual('hovered');
-      });
-    });
+          // 3s should be enough to expire the updates
+          Scheduler.unstable_advanceTime(3000);
+          expect(container.textContent).toEqual('hovered');
+        });
+      },
+    );
   });
 });

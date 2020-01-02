@@ -324,7 +324,7 @@ describe('ReactDebugFiberPerf', () => {
       </Parent>,
     );
     addComment('Should not print a warning');
-    expect(() => expect(Scheduler).toFlushWithoutYielding()).toWarnDev(
+    expect(() => expect(Scheduler).toFlushWithoutYielding()).toErrorDev(
       [
         'Using UNSAFE_componentWillMount in strict mode is not recommended',
         'Using UNSAFE_componentWillReceiveProps in strict mode is not recommended',
@@ -364,7 +364,7 @@ describe('ReactDebugFiberPerf', () => {
     }
     ReactNoop.render(<AllLifecycles />);
     addComment('Mount');
-    expect(() => expect(Scheduler).toFlushWithoutYielding()).toWarnDev(
+    expect(() => expect(Scheduler).toFlushWithoutYielding()).toErrorDev(
       [
         'Using UNSAFE_componentWillMount in strict mode is not recommended',
         'Using UNSAFE_componentWillReceiveProps in strict mode is not recommended',

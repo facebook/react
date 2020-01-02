@@ -27,7 +27,7 @@ describe('EventPluginHub', () => {
       node = ReactTestUtils.renderIntoDocument(
         <div onClick="not a function" />,
       );
-    }).toWarnDev(
+    }).toErrorDev(
       'Expected `onClick` listener to be a function, instead got a value of `string` type.',
     );
     expect(() => ReactTestUtils.SimulateNative.click(node)).toThrowError(

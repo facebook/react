@@ -9,8 +9,6 @@
 
 import type {Fiber} from './ReactFiber';
 
-import warningWithoutStack from 'shared/warningWithoutStack';
-
 export type StackCursor<T> = {
   current: T,
 };
@@ -38,14 +36,14 @@ function isEmpty(): boolean {
 function pop<T>(cursor: StackCursor<T>, fiber: Fiber): void {
   if (index < 0) {
     if (__DEV__) {
-      warningWithoutStack(false, 'Unexpected pop.');
+      console.error('Unexpected pop.');
     }
     return;
   }
 
   if (__DEV__) {
     if (fiber !== fiberStack[index]) {
-      warningWithoutStack(false, 'Unexpected Fiber popped.');
+      console.error('Unexpected Fiber popped.');
     }
   }
 
@@ -75,8 +73,7 @@ function push<T>(cursor: StackCursor<T>, value: T, fiber: Fiber): void {
 function checkThatStackIsEmpty() {
   if (__DEV__) {
     if (index !== -1) {
-      warningWithoutStack(
-        false,
+      console.error(
         'Expected an empty stack. Something was not reset properly.',
       );
     }

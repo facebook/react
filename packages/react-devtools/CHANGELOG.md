@@ -8,7 +8,30 @@
   
   <!-- Upcoming changes go here -->
 
+#### Features
+* Re-enabled "copy" prop/state/hooks context menu option for Firefox ([bvaughn](https://github.com/bvaughn),[rpl](https://github.com/rpl) in [#17740](https://github.com/facebook/react/pull/17740))
+* Shift+Enter focuses previous search result in Components tree ([Bo-Duke](https://github.com/Bo-Duke) in [#17005](https://github.com/facebook/react/pull/17005))
+* Properly display formatted `RegExp` values in props/state panel([bvaughn](https://github.com/bvaughn) in [#17690](https://github.com/facebook/react/pull/17690))
+#### Bugfix
+* Check `document.contentType` before injecting hook to avoid breaking XML file syntax highlighting in Firefox ([bvaughn](https://github.com/bvaughn) in [#17739](https://github.com/facebook/react/pull/17739))
+* Fix standalone UI not responding to mouse interactions due to `webkit-app-region` style ([cwatson88](https://github.com/cwatson88) in [#17584](https://github.com/facebook/react/pull/17584))
 </details>
+
+## 4.3.0 (December 20, 2019)
+#### Features
+* Show component location for selected element in bottom/right panel ([bvaughn](https://github.com/bvaughn) in [#17567](https://github.com/facebook/react/pull/17567))
+* Improved inspected element values with inline previews ([bvaughn](https://github.com/bvaughn) in [#17579](https://github.com/facebook/react/pull/17579))
+* Improved selection and toggling for inspected element panel ([bvaughn](https://github.com/bvaughn) in [#17588](https://github.com/facebook/react/pull/17588))
+* Copy context menu for inspecting and copying props/state/hooks/context values ([bvaughn](https://github.com/bvaughn) in [#17608](https://github.com/facebook/react/pull/17608))
+#### Bug fixes
+* Fix serialization for `BigInt` type so that it does not break inspection panel. ([nutboltu](https://github.com/nutboltu) in [#17233](https://github.com/facebook/react/pull/17233))
+* Fix display name logic for `forwardRef`s that use `displayName` property ([zthxxx](https://github.com/zthxxx) in [#17613](https://github.com/facebook/react/pull/17613))
+
+## 4.2.1 (November 27, 2019)
+#### Bug fixes
+* Profiler automatically filters certain types of empty (no work) commits. ([bvaughn](https://github.com/bvaughn) in [#17253](https://github.com/facebook/react/pull/17253))
+* Fix memoized components showing as "Anonymous" in Components tab. ([wsmd](https://github.com/wsmd) in [#17274](https://github.com/facebook/react/pull/17274))
+* Edge-case bugfix for non-string element keys. ([bvaughn](https://github.com/bvaughn) in [#17164](https://github.com/facebook/react/pull/17164))
 
 ## 4.2.0 (October 3, 2019)
 #### Features

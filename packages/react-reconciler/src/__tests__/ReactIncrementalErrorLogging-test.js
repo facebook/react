@@ -22,7 +22,7 @@ describe('ReactIncrementalErrorLogging', () => {
     Scheduler = require('scheduler');
   });
 
-  // Note: in this test file we won't be using toWarnDev() matchers
+  // Note: in this test file we won't be using toErrorDev() matchers
   // because they filter out precisely the messages we want to test for.
   let oldConsoleError;
   beforeEach(() => {

@@ -239,7 +239,7 @@ const dragResponderImpl = {
   },
 };
 
-export const DragResponder = React.unstable_createResponder(
+export const DragResponder = React.DEPRECATED_createResponder(
   'Drag',
   dragResponderImpl,
 );
@@ -247,5 +247,5 @@ export const DragResponder = React.unstable_createResponder(
 export function useDrag(
   props: DragProps,
 ): ReactEventResponderListener<any, any> {
-  return React.unstable_useResponder(DragResponder, props);
+  return React.DEPRECATED_useResponder(DragResponder, props);
 }

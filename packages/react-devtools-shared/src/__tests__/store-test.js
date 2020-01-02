@@ -342,6 +342,39 @@ describe('Store', () => {
       expect(store).toMatchSnapshot('13: third child is suspended');
     });
 
+    it('should display a partially rendered SuspenseList', () => {
+      const Loading = () => <div>Loading...</div>;
+      const SuspendingComponent = () => {
+        throw new Promise(() => {});
+      };
+      const Component = () => {
+        return <div>Hello</div>;
+      };
+      const Wrapper = ({shouldSuspense}) => (
+        <React.Fragment>
+          <React.SuspenseList revealOrder="forwards" tail="collapsed">
+            <Component key="A" />
+            <React.Suspense fallback={<Loading />}>
+              {shouldSuspense ? <SuspendingComponent /> : <Component key="B" />}
+            </React.Suspense>
+            <Component key="C" />
+          </React.SuspenseList>
+        </React.Fragment>
+      );
+
+      const container = document.createElement('div');
+      const root = ReactDOM.createRoot(container);
+      act(() => {
+        root.render(<Wrapper shouldSuspense={true} />);
+      });
+      expect(store).toMatchSnapshot('1: loading');
+
+      act(() => {
+        root.render(<Wrapper shouldSuspense={false} />);
+      });
+      expect(store).toMatchSnapshot('2: resolved');
+    });
+
     it('should support collapsing parts of the tree', () => {
       const Grandparent = ({count}) => (
         <React.Fragment>
@@ -803,5 +836,63 @@ describe('Store', () => {
 
     act(() => ReactDOM.unmountComponentAtNode(containerB));
     expect(store.supportsProfiling).toBe(false);
+  });
+
+  it('should properly serialize non-string key values', () => {
+    const Child = () => null;
+
+    // Bypass React element's automatic stringifying of keys intentionally.
+    // This is pretty hacky.
+    const fauxElement = Object.assign({}, <Child />, {key: 123});
+
+    act(() => ReactDOM.render([fauxElement], document.createElement('div')));
+    expect(store).toMatchSnapshot('1: mount');
+  });
+
+  it('should show the right display names for special component types', async done => {
+    async function fakeImport(result) {
+      return {default: result};
+    }
+
+    const MyComponent = (props, ref) => null;
+    const FowardRefComponent = React.forwardRef(MyComponent);
+    const FowardRefComponentWithAnonymousFunction = React.forwardRef(() => (
+      <MyComponent />
+    ));
+    const FowardRefComponentWithCustomDisplayName = React.forwardRef(
+      MyComponent,
+    );
+    FowardRefComponentWithCustomDisplayName.displayName = 'Custom';
+    const MemoComponent = React.memo(MyComponent);
+    const MemoForwardRefComponent = React.memo(FowardRefComponent);
+    const LazyComponent = React.lazy(() => fakeImport(MyComponent));
+
+    const App = () => (
+      <React.Fragment>
+        <MyComponent />
+        <FowardRefComponent />
+        <FowardRefComponentWithAnonymousFunction />
+        <FowardRefComponentWithCustomDisplayName />
+        <MemoComponent />
+        <MemoForwardRefComponent />
+        <React.Suspense fallback="Loading...">
+          <LazyComponent />
+        </React.Suspense>
+      </React.Fragment>
+    );
+
+    const container = document.createElement('div');
+
+    // Render once to start fetching the lazy component
+    act(() => ReactDOM.render(<App />, container));
+
+    await Promise.resolve();
+
+    // Render again after it resolves
+    act(() => ReactDOM.render(<App />, container));
+
+    expect(store).toMatchSnapshot();
+
+    done();
   });
 });

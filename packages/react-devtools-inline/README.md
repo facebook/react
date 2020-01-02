@@ -60,7 +60,7 @@ const contentWindow = iframe.contentWindow;
 const DevTools = initialize(contentWindow);
 ```
 
-<sup>3</sup> Because the DevTools interface makes use of several new React APIs (e.g. suspense, concurrent mode) it should be rendered using either `ReactDOM.unstable_createRoot` or `ReactDOM.unstable_createSyncRoot`. **It should not be rendered with `ReactDOM.render`.**
+<sup>3</sup> Because the DevTools interface makes use of several new React APIs (e.g. suspense, concurrent mode) it should be rendered using either `ReactDOM.createRoot` or `ReactDOM.createSyncRoot`. **It should not be rendered with `ReactDOM.render`.**
 
 ## Examples
 
@@ -92,8 +92,8 @@ initializeBackend(contentWindow);
 const DevTools = initializeFrontend(contentWindow);
 
 // <DevTools /> interface can be rendered in the parent window at any time now...
-// Be sure to use either ReactDOM.unstable_createRoot()
-// or ReactDOM.unstable_createSyncRoot() to render this component.
+// Be sure to use either ReactDOM.createRoot()
+// or ReactDOM.createSyncRoot() to render this component.
 
 // Let the backend know the frontend is ready and listening.
 activateBackend(contentWindow);
@@ -136,8 +136,8 @@ const { contentWindow } = iframe;
 
 // Initialize DevTools UI to listen to the iframe.
 // This returns a React component we can render anywhere in the main window.
-// Be sure to use either ReactDOM.unstable_createRoot()
-// or ReactDOM.unstable_createSyncRoot() to render this component.
+// Be sure to use either ReactDOM.createRoot()
+// or ReactDOM.createSyncRoot() to render this component.
 const DevTools = initialize(contentWindow);
 
 // Let the backend know to initialize itself.
@@ -153,9 +153,28 @@ iframe.onload = () => {
 };
 ```
 
-## Development
+## Local development
+You can also build and test this package from source.
 
-Watch for changes made to the source code and rebuild:
+### Prerequisite steps
+DevTools depends on local versions of several NPM packages<sup>1</sup> also in this workspace. You'll need to either build or download those packages first.
+
+<sup>1</sup> Note that at this time, an _experimental_ build is required because DevTools depends on the `createRoot` API.
+
+#### Build from source
+To build dependencies from source, run the following command from the root of the repository:
+```sh
+yarn build-for-devtools
+```
+#### Download from CI
+To use the latest build from CI, run the following command from the root of the repository:
+```sh
+./scripts/release/download-experimental-build.js
+```
+### Build steps
+Once the above packages have been built or downloaded, you can watch for changes made to the source code and automatically rebuild by running:
 ```sh
 yarn start
 ```
+
+To test package changes, refer to the [`react-devtools-shell` README](https://github.com/facebook/react/blob/master/packages/react-devtools-shell/README.md).

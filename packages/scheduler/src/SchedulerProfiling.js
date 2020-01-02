@@ -69,7 +69,8 @@ function logEvent(entries) {
     if (eventLogIndex + 1 > eventLogSize) {
       eventLogSize *= 2;
       if (eventLogSize > MAX_EVENT_LOG_SIZE) {
-        console.error(
+        // Using console['error'] to evade Babel and ESLint
+        console['error'](
           "Scheduler Profiling: Event log exceeded maximum size. Don't " +
             'forget to call `stopLoggingProfilingEvents()`.',
         );

@@ -9,7 +9,6 @@
 
 // TODO: direct imports like some-package/src/* are bad. Fix me.
 import {getCurrentFiberOwnerNameInDevOrNull} from 'react-reconciler/src/ReactCurrentFiber';
-import warning from 'shared/warning';
 
 import ReactControlledValuePropTypes from '../shared/ReactControlledValuePropTypes';
 import {getToStringValue, toString} from './ToStringValue';
@@ -40,30 +39,30 @@ const valuePropNames = ['value', 'defaultValue'];
  * Validation function for `value` and `defaultValue`.
  */
 function checkSelectPropTypes(props) {
-  ReactControlledValuePropTypes.checkPropTypes('select', props);
+  if (__DEV__) {
+    ReactControlledValuePropTypes.checkPropTypes('select', props);
 
-  for (let i = 0; i < valuePropNames.length; i++) {
-    const propName = valuePropNames[i];
-    if (props[propName] == null) {
-      continue;
-    }
-    const isArray = Array.isArray(props[propName]);
-    if (props.multiple && !isArray) {
-      warning(
-        false,
-        'The `%s` prop supplied to <select> must be an array if ' +
-          '`multiple` is true.%s',
-        propName,
-        getDeclarationErrorAddendum(),
-      );
-    } else if (!props.multiple && isArray) {
-      warning(
-        false,
-        'The `%s` prop supplied to <select> must be a scalar ' +
-          'value if `multiple` is false.%s',
-        propName,
-        getDeclarationErrorAddendum(),
-      );
+    for (let i = 0; i < valuePropNames.length; i++) {
+      const propName = valuePropNames[i];
+      if (props[propName] == null) {
+        continue;
+      }
+      const isArray = Array.isArray(props[propName]);
+      if (props.multiple && !isArray) {
+        console.error(
+          'The `%s` prop supplied to <select> must be an array if ' +
+            '`multiple` is true.%s',
+          propName,
+          getDeclarationErrorAddendum(),
+        );
+      } else if (!props.multiple && isArray) {
+        console.error(
+          'The `%s` prop supplied to <select> must be a scalar ' +
+            'value if `multiple` is false.%s',
+          propName,
+          getDeclarationErrorAddendum(),
+        );
+      }
     }
   }
 }
@@ -156,8 +155,7 @@ export function initWrapperState(element: Element, props: Object) {
       props.defaultValue !== undefined &&
       !didWarnValueDefaultValue
     ) {
-      warning(
-        false,
+      console.error(
         'Select elements must be either controlled or uncontrolled ' +
           '(specify either the value prop, or the defaultValue prop, but not ' +
           'both). Decide between using a controlled or uncontrolled select ' +

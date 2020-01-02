@@ -486,6 +486,11 @@ exports[`InspectedElementContext should support complex data types: 1: Inspected
   "hooks": null,
   "props": {
     "array_buffer": {},
+    "array_of_arrays": [
+      {}
+    ],
+    "big_int": {},
+    "data_view": {},
     "date": {},
     "fn": {},
     "html_element": {},
@@ -502,7 +507,11 @@ exports[`InspectedElementContext should support complex data types: 1: Inspected
       "0": {},
       "1": {}
     },
+    "object_of_objects": {
+      "inner": {}
+    },
     "react_element": {},
+    "regexp": {},
     "set": {
       "0": "abc",
       "1": 123

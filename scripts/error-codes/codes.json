@@ -297,7 +297,7 @@
   "296": "Log of yielded values is not empty. Call expect(ReactTestRenderer).unstable_toHaveYielded(...) first.",
   "297": "The matcher `unstable_toHaveYielded` expects an instance of React Test Renderer.\n\nTry: expect(ReactTestRenderer).unstable_toHaveYielded(expectedYields)",
   "298": "Hooks can only be called inside the body of a function component.",
-  "299": "%s(...): Target container is not a DOM element.",
+  "299": "createRoot(...): Target container is not a DOM element.",
   "300": "Rendered fewer hooks than expected. This may be caused by an accidental early return statement.",
   "301": "Too many re-renders. React limits the number of renders to prevent an infinite loop.",
   "302": "It is not supported to run the profiling version of a renderer (for example, `react-dom/profiling`) without also replacing the `scheduler/tracing` module with `scheduler/tracing-profiling`. Your bundler might have a setting for aliasing both modules. Learn more at http://fb.me/react-profiling",

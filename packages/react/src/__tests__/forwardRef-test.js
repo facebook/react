@@ -118,7 +118,7 @@ describe('forwardRef', () => {
 
     expect(() =>
       ReactNoop.render(<RefForwardingComponent ref={ref} optional="foo" />),
-    ).toWarnDev(
+    ).toErrorDev(
       'Warning: Failed prop type: The prop `required` is marked as required in ' +
         '`ForwardRef(NamedFunction)`, but its value is `undefined`.\n' +
         '    in ForwardRef(NamedFunction) (at **)',
@@ -126,22 +126,22 @@ describe('forwardRef', () => {
   });
 
   it('should warn if not provided a callback during creation', () => {
-    expect(() => React.forwardRef(undefined)).toWarnDev(
+    expect(() => React.forwardRef(undefined)).toErrorDev(
       'forwardRef requires a render function but was given undefined.',
       {withoutStack: true},
     );
-    expect(() => React.forwardRef(null)).toWarnDev(
+    expect(() => React.forwardRef(null)).toErrorDev(
       'forwardRef requires a render function but was given null.',
       {withoutStack: true},
     );
-    expect(() => React.forwardRef('foo')).toWarnDev(
+    expect(() => React.forwardRef('foo')).toErrorDev(
       'forwardRef requires a render function but was given string.',
       {withoutStack: true},
     );
   });
 
   it('should warn if no render function is provided', () => {
-    expect(React.forwardRef).toWarnDev(
+    expect(React.forwardRef).toErrorDev(
       'forwardRef requires a render function but was given undefined.',
       {withoutStack: true},
     );
@@ -158,12 +158,12 @@ describe('forwardRef', () => {
     }
     renderWithDefaultProps.defaultProps = {};
 
-    expect(() => React.forwardRef(renderWithPropTypes)).toWarnDev(
+    expect(() => React.forwardRef(renderWithPropTypes)).toErrorDev(
       'forwardRef render functions do not support propTypes or defaultProps. ' +
         'Did you accidentally pass a React component?',
       {withoutStack: true},
     );
-    expect(() => React.forwardRef(renderWithDefaultProps)).toWarnDev(
+    expect(() => React.forwardRef(renderWithDefaultProps)).toErrorDev(
       'forwardRef render functions do not support propTypes or defaultProps. ' +
         'Did you accidentally pass a React component?',
       {withoutStack: true},
@@ -179,7 +179,7 @@ describe('forwardRef', () => {
   it('should warn if the render function provided does not use the forwarded ref parameter', () => {
     const arityOfOne = props => <div {...props} />;
 
-    expect(() => React.forwardRef(arityOfOne)).toWarnDev(
+    expect(() => React.forwardRef(arityOfOne)).toErrorDev(
       'forwardRef render functions accept exactly two parameters: props and ref. ' +
         'Did you forget to use the ref parameter?',
       {withoutStack: true},
@@ -194,7 +194,7 @@ describe('forwardRef', () => {
   it('should warn if the render function provided expects to use more than two parameters', () => {
     const arityOfThree = (props, ref, x) => <div {...props} ref={ref} x={x} />;
 
-    expect(() => React.forwardRef(arityOfThree)).toWarnDev(
+    expect(() => React.forwardRef(arityOfThree)).toErrorDev(
       'forwardRef render functions accept exactly two parameters: props and ref. ' +
         'Any additional parameter will be undefined.',
       {withoutStack: true},
@@ -223,7 +223,7 @@ describe('forwardRef', () => {
 
     expect(() =>
       ReactNoop.render(<RefForwardingComponent ref={ref} optional="foo" />),
-    ).toWarnDev(
+    ).toErrorDev(
       'Warning: Failed prop type: The prop `required` is marked as required in ' +
         '`Foo`, but its value is `undefined`.\n' +
         '    in Foo (at **)',
@@ -364,7 +364,7 @@ describe('forwardRef', () => {
           return null;
         }),
       );
-    }).toWarnDev(
+    }).toErrorDev(
       [
         'Warning: forwardRef requires a render function but received a `memo` ' +
           'component. Instead of forwardRef(memo(...)), use ' +

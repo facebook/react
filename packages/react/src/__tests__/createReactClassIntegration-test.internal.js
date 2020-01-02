@@ -50,7 +50,7 @@ describe('create-react-class-integration', () => {
         render: () => null,
       });
 
-      expect(() => ReactNative.render(<View />, 1)).toLowPriorityWarnDev(
+      expect(() => ReactNative.render(<View />, 1)).toWarnDev(
         'componentWillMount has been renamed',
         {withoutStack: true},
       );
@@ -64,7 +64,7 @@ describe('create-react-class-integration', () => {
         render: () => null,
       });
 
-      expect(() => ReactNative.render(<View />, 1)).toLowPriorityWarnDev(
+      expect(() => ReactNative.render(<View />, 1)).toWarnDev(
         'componentWillReceiveProps has been renamed',
         {withoutStack: true},
       );

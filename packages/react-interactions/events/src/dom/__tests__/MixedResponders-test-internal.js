@@ -9,7 +9,7 @@
 
 'use strict';
 
-import {createEventTarget} from '../testing-library';
+import {createEventTarget} from 'dom-event-testing-library';
 
 let React;
 let ReactFeatureFlags;
@@ -21,7 +21,7 @@ describe('mixing responders with the heritage event system', () => {
 
   beforeEach(() => {
     ReactFeatureFlags = require('shared/ReactFeatureFlags');
-    ReactFeatureFlags.enableFlareAPI = true;
+    ReactFeatureFlags.enableDeprecatedFlareAPI = true;
     React = require('react');
     ReactDOM = require('react-dom');
     Scheduler = require('scheduler');
@@ -33,6 +33,11 @@ describe('mixing responders with the heritage event system', () => {
     document.body.removeChild(container);
     container = null;
   });
+
+  if (!__EXPERIMENTAL__) {
+    it("empty test so Jest doesn't complain", () => {});
+    return;
+  }
 
   it('should properly only flush sync once when the event systems are mixed', () => {
     const useTap = require('react-interactions/events/tap').useTap;
@@ -55,7 +60,7 @@ describe('mixing responders with the heritage event system', () => {
         <div>
           <button
             ref={ref}
-            listeners={listener}
+            DEPRECATED_flareListeners={listener}
             onClick={() => {
               updateCounter(count => count + 1);
             }}>
@@ -66,7 +71,7 @@ describe('mixing responders with the heritage event system', () => {
     }
 
     const newContainer = document.createElement('div');
-    const root = ReactDOM.unstable_createRoot(newContainer);
+    const root = ReactDOM.createRoot(newContainer);
     document.body.appendChild(newContainer);
     root.render(<MyComponent />);
     Scheduler.unstable_flushAll();
@@ -124,7 +129,7 @@ describe('mixing responders with the heritage event system', () => {
         <div>
           <button
             ref={ref}
-            listeners={listener}
+            DEPRECATED_flareListeners={listener}
             onClick={() => {
               // This should flush synchronously
               ReactDOM.unstable_flushDiscreteUpdates();
@@ -137,7 +142,7 @@ describe('mixing responders with the heritage event system', () => {
     }
 
     const newContainer = document.createElement('div');
-    const root = ReactDOM.unstable_createRoot(newContainer);
+    const root = ReactDOM.createRoot(newContainer);
     document.body.appendChild(newContainer);
     root.render(<MyComponent />);
     Scheduler.unstable_flushAll();
@@ -205,7 +210,7 @@ describe('mixing responders with the heritage event system', () => {
         return (
           <div>
             <button
-              listeners={tap}
+              DEPRECATED_flareListeners={tap}
               ref={button}
               onClick={() => updateClicksCount(clicksCount + 1)}>
               Presses: {pressesCount}, Clicks: {clicksCount}
@@ -216,7 +221,7 @@ describe('mixing responders with the heritage event system', () => {
 
       const newContainer = document.createElement('div');
       document.body.appendChild(newContainer);
-      const root = ReactDOM.unstable_createRoot(newContainer);
+      const root = ReactDOM.createRoot(newContainer);
 
       root.render(<MyComponent />);
       Scheduler.unstable_flushAll();
@@ -238,7 +243,7 @@ describe('mixing responders with the heritage event system', () => {
       ReactFeatureFlags.debugRenderPhaseSideEffectsForStrictMode = false;
       const useTap = require('react-interactions/events/tap').useTap;
       const useInput = require('react-interactions/events/input').useInput;
-      const root = ReactDOM.unstable_createRoot(container);
+      const root = ReactDOM.createRoot(container);
       let input;
 
       let ops = [];
@@ -250,7 +255,7 @@ describe('mixing responders with the heritage event system', () => {
             type="text"
             ref={innerRef}
             value={controlledValue}
-            listeners={[inputListener, listeners]}
+            DEPRECATED_flareListeners={[inputListener, listeners]}
           />
         );
       }

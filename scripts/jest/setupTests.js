@@ -108,14 +108,24 @@ if (process.env.REACT_CLASS_EQUIVALENCE_TEST) {
               .join('\n')}`
         );
 
+        let expectedMatcher;
+        switch (methodName) {
+          case 'warn':
+            expectedMatcher = 'toWarnDev';
+            break;
+          case 'error':
+            expectedMatcher = 'toErrorDev';
+            break;
+          default:
+            throw new Error('No matcher for ' + methodName);
+        }
         const message =
           `Expected test not to call ${chalk.bold(
             `console.${methodName}()`
           )}.\n\n` +
           'If the warning is expected, test for it explicitly by:\n' +
-          `1. Using the ${chalk.bold('.toWarnDev()')} / ${chalk.bold(
-            '.toLowPriorityWarnDev()'
-          )} matchers, or...\n` +
+          `1. Using the ${chalk.bold('.' + expectedMatcher + '()')} ` +
+          `matcher, or...\n` +
           `2. Mock it out using ${chalk.bold(
             'spyOnDev'
           )}(console, '${methodName}') or ${chalk.bold(
@@ -203,6 +213,59 @@ if (process.env.REACT_CLASS_EQUIVALENCE_TEST) {
     });
     ErrorProxy.OriginalError = OriginalError;
     global.Error = ErrorProxy;
+  }
+
+  const expectExperimentalToFail = async callback => {
+    if (callback.length > 0) {
+      throw Error(
+        'Experimental test helpers do not support `done` callback. Return a ' +
+          'promise instead.'
+      );
+    }
+    try {
+      const maybePromise = callback();
+      if (
+        maybePromise !== undefined &&
+        maybePromise !== null &&
+        typeof maybePromise.then === 'function'
+      ) {
+        await maybePromise;
+      }
+    } catch (error) {
+      // Failed as expected
+      return;
+    }
+    throw Error(
+      'Tests marked experimental are expected to fail, but this one passed.'
+    );
+  };
+
+  const it = global.it;
+  const fit = global.fit;
+  const xit = global.xit;
+  if (__EXPERIMENTAL__) {
+    it.experimental = it;
+    fit.experimental = it.only.experimental = it.experimental.only = fit;
+    xit.experimental = it.skip.experimental = it.experimental.skip = xit;
+  } else {
+    it.experimental = (message, callback) => {
+      it(`[EXPERIMENTAL, SHOULD FAIL] ${message}`, () =>
+        expectExperimentalToFail(callback));
+    };
+    fit.experimental = it.only.experimental = it.experimental.only = (
+      message,
+      callback
+    ) => {
+      fit(`[EXPERIMENTAL, SHOULD FAIL] ${message}`, () =>
+        expectExperimentalToFail(callback));
+    };
+    xit.experimental = it.skip.experimental = it.experimental.skip = (
+      message,
+      callback
+    ) => {
+      xit(`[EXPERIMENTAL, SHOULD FAIL] ${message}`, () =>
+        expectExperimentalToFail(callback));
+    };
   }
 
   require('jasmine-check').install();

@@ -7,7 +7,6 @@
 
 import {invokeGuardedCallbackAndCatchFirstError} from 'shared/ReactErrorUtils';
 import invariant from 'shared/invariant';
-import warningWithoutStack from 'shared/warningWithoutStack';
 
 export let getFiberCurrentPropsFromNode = null;
 export let getInstanceFromNode = null;
@@ -22,11 +21,12 @@ export function setComponentTree(
   getInstanceFromNode = getInstanceFromNodeImpl;
   getNodeFromInstance = getNodeFromInstanceImpl;
   if (__DEV__) {
-    warningWithoutStack(
-      getNodeFromInstance && getInstanceFromNode,
-      'EventPluginUtils.setComponentTree(...): Injected ' +
-        'module is missing getNodeFromInstance or getInstanceFromNode.',
-    );
+    if (!getNodeFromInstance || !getInstanceFromNode) {
+      console.error(
+        'EventPluginUtils.setComponentTree(...): Injected ' +
+          'module is missing getNodeFromInstance or getInstanceFromNode.',
+      );
+    }
   }
 }
 
@@ -50,10 +50,9 @@ if (__DEV__) {
         ? 1
         : 0;
 
-    warningWithoutStack(
-      instancesIsArr === listenersIsArr && instancesLen === listenersLen,
-      'EventPluginUtils: Invalid `event`.',
-    );
+    if (instancesIsArr !== listenersIsArr || instancesLen !== listenersLen) {
+      console.error('EventPluginUtils: Invalid `event`.');
+    }
   };
 }
 

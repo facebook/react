@@ -20,7 +20,7 @@ describe('Drag event responder', () => {
   beforeEach(() => {
     jest.resetModules();
     ReactFeatureFlags = require('shared/ReactFeatureFlags');
-    ReactFeatureFlags.enableFlareAPI = true;
+    ReactFeatureFlags.enableDeprecatedFlareAPI = true;
     React = require('react');
     ReactDOM = require('react-dom');
     useDrag = require('react-interactions/events/drag').useDrag;
@@ -48,7 +48,7 @@ describe('Drag event responder', () => {
         onDragChange: handleOnDrag,
       });
       return (
-        <div ref={divRef} listeners={listener}>
+        <div ref={divRef} DEPRECATED_flareListeners={listener}>
           Drag me!
         </div>
       );
@@ -105,7 +105,7 @@ describe('Drag event responder', () => {
         onDragEnd: handleDragEnd,
       });
       return (
-        <div ref={divRef} listeners={listener}>
+        <div ref={divRef} DEPRECATED_flareListeners={listener}>
           Drag me!
         </div>
       );
@@ -157,7 +157,7 @@ describe('Drag event responder', () => {
         onDragMove: handleDragMove,
       });
       return (
-        <div ref={divRef} listeners={listener}>
+        <div ref={divRef} DEPRECATED_flareListeners={listener}>
           Drag me!
         </div>
       );

@@ -97,7 +97,6 @@ export type ReactEventResponder<E, C> = {
   displayName: string,
   targetEventTypes: null | Array<string>,
   targetPortalPropagation: boolean,
-  rootEventTypes: null | Array<string>,
   getInitialState: null | ((props: Object) => Object),
   onEvent:
     | null
@@ -162,7 +161,6 @@ export type ReactFundamentalComponent<C, H> = {|
 
 export type ReactScope = {|
   $$typeof: Symbol | number,
-  fn: (type: string | Object, props: Object) => boolean,
 |};
 
 export type ReactScopeMethods = {|
@@ -170,8 +168,12 @@ export type ReactScopeMethods = {|
   getChildrenFromRoot(): null | Array<ReactScopeMethods>,
   getParent(): null | ReactScopeMethods,
   getProps(): Object,
-  getAllNodes(): null | Array<Object>,
-  getFirstNode(): null | Object,
+  queryAllNodes(
+    (type: string | Object, props: Object, instance: Object) => boolean,
+  ): null | Array<Object>,
+  queryFirstNode(
+    (type: string | Object, props: Object, instance: Object) => boolean,
+  ): null | Object,
   containsNode(Object): boolean,
 |};
 

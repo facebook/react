@@ -13,7 +13,7 @@ import {
   TOP_POINTER_OUT,
   TOP_POINTER_OVER,
 } from './DOMTopLevelEventTypes';
-import {IS_REPLAYED} from 'legacy-events/EventSystemFlags';
+import {IS_REPLAYED, IS_FIRST_ANCESTOR} from 'legacy-events/EventSystemFlags';
 import SyntheticMouseEvent from './SyntheticMouseEvent';
 import SyntheticPointerEvent from './SyntheticPointerEvent';
 import {
@@ -41,12 +41,6 @@ const eventTypes = {
     dependencies: [TOP_POINTER_OUT, TOP_POINTER_OVER],
   },
 };
-
-// We track the lastNativeEvent to ensure that when we encounter
-// cases where we process the same nativeEvent multiple times,
-// which can happen when have multiple ancestors, that we don't
-// duplicate enter
-let lastNativeEvent;
 
 const EnterLeaveEventPlugin = {
   eventTypes: eventTypes,
@@ -169,11 +163,12 @@ const EnterLeaveEventPlugin = {
 
     accumulateEnterLeaveDispatches(leave, enter, from, to);
 
-    if (nativeEvent === lastNativeEvent) {
-      lastNativeEvent = null;
+    // If we are not processing the first ancestor, then we
+    // should not process the same nativeEvent again, as we
+    // will have already processed it in the first ancestor.
+    if ((eventSystemFlags & IS_FIRST_ANCESTOR) === 0) {
       return [leave];
     }
-    lastNativeEvent = nativeEvent;
 
     return [leave, enter];
   },

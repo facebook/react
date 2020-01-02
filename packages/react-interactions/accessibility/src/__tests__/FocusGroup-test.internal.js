@@ -7,22 +7,22 @@
  * @flow
  */
 
-import {createEventTarget} from 'react-interactions/events/src/dom/testing-library';
+import {createEventTarget} from 'dom-event-testing-library';
 import {emulateBrowserTab} from '../shared/emulateBrowserTab';
 
 let React;
 let ReactFeatureFlags;
 let createFocusGroup;
-let TabbableScope;
+let tabbableScopeQuery;
 
 describe('FocusGroup', () => {
   beforeEach(() => {
     jest.resetModules();
     ReactFeatureFlags = require('shared/ReactFeatureFlags');
     ReactFeatureFlags.enableScopeAPI = true;
-    ReactFeatureFlags.enableFlareAPI = true;
+    ReactFeatureFlags.enableDeprecatedFlareAPI = true;
     createFocusGroup = require('../FocusGroup').createFocusGroup;
-    TabbableScope = require('../TabbableScope').default;
+    tabbableScopeQuery = require('../TabbableScopeQuery').default;
     React = require('react');
   });
 
@@ -42,7 +42,7 @@ describe('FocusGroup', () => {
     });
 
     function createFocusGroupComponent() {
-      const [FocusGroup, FocusItem] = createFocusGroup(TabbableScope);
+      const [FocusGroup, FocusItem] = createFocusGroup(tabbableScopeQuery);
 
       return ({portrait, wrap, allowModifiers}) => (
         <FocusGroup
@@ -185,7 +185,7 @@ describe('FocusGroup', () => {
     });
 
     it('handles keyboard arrow operations mixed with tabbing', () => {
-      const [FocusGroup, FocusItem] = createFocusGroup(TabbableScope);
+      const [FocusGroup, FocusItem] = createFocusGroup(tabbableScopeQuery);
       const beforeRef = React.createRef();
       const afterRef = React.createRef();
 
@@ -193,7 +193,7 @@ describe('FocusGroup', () => {
         return (
           <>
             <input placeholder="Before" ref={beforeRef} />
-            <FocusGroup tabScope={TabbableScope} portrait={true}>
+            <FocusGroup tabScopeQuery={tabbableScopeQuery} portrait={true}>
               <ul>
                 <FocusItem>
                   <li>

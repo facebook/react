@@ -28,15 +28,15 @@ import type {HookType} from './ReactFiberHooks';
 import type {SuspenseInstance} from './ReactFiberHostConfig';
 
 import invariant from 'shared/invariant';
-import warningWithoutStack from 'shared/warningWithoutStack';
 import {
   enableProfilerTimer,
   enableFundamentalAPI,
   enableUserTimingAPI,
   enableScopeAPI,
+  enableChunksAPI,
 } from 'shared/ReactFeatureFlags';
 import {NoEffect, Placement} from 'shared/ReactSideEffectTags';
-import {ConcurrentRoot, BatchedRoot} from 'shared/ReactRootTags';
+import {ConcurrentRoot, BlockingRoot} from 'shared/ReactRootTags';
 import {
   IndeterminateComponent,
   ClassComponent,
@@ -59,6 +59,7 @@ import {
   LazyComponent,
   FundamentalComponent,
   ScopeComponent,
+  Chunk,
 } from 'shared/ReactWorkTags';
 import getComponentName from 'shared/getComponentName';
 
@@ -74,7 +75,7 @@ import {
   ConcurrentMode,
   ProfileMode,
   StrictMode,
-  BatchedMode,
+  BlockingMode,
 } from './ReactTypeOfMode';
 import {
   REACT_FORWARD_REF_TYPE,
@@ -90,6 +91,7 @@ import {
   REACT_LAZY_TYPE,
   REACT_FUNDAMENTAL_TYPE,
   REACT_SCOPE_TYPE,
+  REACT_CHUNK_TYPE,
 } from 'shared/ReactSymbols';
 
 let hasBadMapPolyfill;
@@ -385,6 +387,11 @@ export function resolveLazyComponentTag(Component: Function): WorkTag {
     if ($$typeof === REACT_MEMO_TYPE) {
       return MemoComponent;
     }
+    if (enableChunksAPI) {
+      if ($$typeof === REACT_CHUNK_TYPE) {
+        return Chunk;
+      }
+    }
   }
   return IndeterminateComponent;
 }
@@ -573,9 +580,9 @@ export function resetWorkInProgress(
 export function createHostRootFiber(tag: RootTag): Fiber {
   let mode;
   if (tag === ConcurrentRoot) {
-    mode = ConcurrentMode | BatchedMode | StrictMode;
-  } else if (tag === BatchedRoot) {
-    mode = BatchedMode | StrictMode;
+    mode = ConcurrentMode | BlockingMode | StrictMode;
+  } else if (tag === BlockingRoot) {
+    mode = BlockingMode | StrictMode;
   } else {
     mode = NoMode;
   }
@@ -627,7 +634,7 @@ export function createFiberFromTypeAndProps(
         );
       case REACT_CONCURRENT_MODE_TYPE:
         fiberTag = Mode;
-        mode |= ConcurrentMode | BatchedMode | StrictMode;
+        mode |= ConcurrentMode | BlockingMode | StrictMode;
         break;
       case REACT_STRICT_MODE_TYPE:
         fiberTag = Mode;
@@ -666,6 +673,9 @@ export function createFiberFromTypeAndProps(
             case REACT_LAZY_TYPE:
               fiberTag = LazyComponent;
               resolvedType = null;
+              break getTag;
+            case REACT_CHUNK_TYPE:
+              fiberTag = Chunk;
               break getTag;
             case REACT_FUNDAMENTAL_TYPE:
               if (enableFundamentalAPI) {
@@ -805,8 +815,7 @@ function createFiberFromProfiler(
       typeof pendingProps.id !== 'string' ||
       typeof pendingProps.onRender !== 'function'
     ) {
-      warningWithoutStack(
-        false,
+      console.error(
         'Profiler must specify an "id" string and "onRender" function as props',
       );
     }

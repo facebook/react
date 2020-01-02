@@ -13,28 +13,14 @@ import type {
   MeasureOnSuccessCallback,
   NativeMethods,
   ReactNativeBaseComponentViewConfig,
-  ReactNativeResponderEvent,
-  ReactNativeResponderContext,
 } from './ReactNativeTypes';
-import type {
-  ReactEventResponder,
-  ReactEventResponderInstance,
-} from 'shared/ReactTypes';
 
 import {mountSafeCallback_NOT_REALLY_SAFE} from './NativeMethodsMixinUtils';
 import {create, diff} from './ReactNativeAttributePayload';
 
 import invariant from 'shared/invariant';
-import warningWithoutStack from 'shared/warningWithoutStack';
 
 import {dispatchEvent} from './ReactFabricEventEmitter';
-import {
-  addRootEventTypesForResponderInstance,
-  mountEventResponder,
-  unmountEventResponder,
-} from './ReactFabricEventResponderSystem';
-
-import {enableFlareAPI} from 'shared/ReactFeatureFlags';
 
 // Modules provided by RN:
 import {
@@ -66,16 +52,6 @@ const {get: getViewConfigForType} = ReactNativeViewConfigRegistry;
 // % 2 === 0 means it is a Fabric tag.
 // This means that they never overlap.
 let nextReactTag = 2;
-
-type ReactNativeEventResponderInstance = ReactEventResponderInstance<
-  ReactNativeResponderEvent,
-  ReactNativeResponderContext,
->;
-
-type ReactNativeEventResponder = ReactEventResponder<
-  ReactNativeResponderEvent,
-  ReactNativeResponderContext,
->;
 
 type Node = Object;
 export type Type = string;
@@ -159,10 +135,11 @@ class ReactFabricHostComponent {
       typeof relativeToNativeNode === 'number' ||
       !(relativeToNativeNode instanceof ReactFabricHostComponent)
     ) {
-      warningWithoutStack(
-        false,
-        'Warning: ref.measureLayout must be called with a ref to a native component.',
-      );
+      if (__DEV__) {
+        console.error(
+          'Warning: ref.measureLayout must be called with a ref to a native component.',
+        );
+      }
 
       return;
     }
@@ -176,10 +153,11 @@ class ReactFabricHostComponent {
   }
 
   setNativeProps(nativeProps: Object) {
-    warningWithoutStack(
-      false,
-      'Warning: setNativeProps is not currently supported in Fabric',
-    );
+    if (__DEV__) {
+      console.error(
+        'Warning: setNativeProps is not currently supported in Fabric',
+      );
+    }
 
     return;
   }
@@ -443,29 +421,20 @@ export function replaceContainerChildren(
   newChildren: ChildSet,
 ): void {}
 
-export function mountResponderInstance(
-  responder: ReactNativeEventResponder,
-  responderInstance: ReactNativeEventResponderInstance,
+export function DEPRECATED_mountResponderInstance(
+  responder: any,
+  responderInstance: any,
   props: Object,
   state: Object,
   instance: Instance,
 ) {
-  if (enableFlareAPI) {
-    const {rootEventTypes} = responder;
-    if (rootEventTypes !== null) {
-      addRootEventTypesForResponderInstance(responderInstance, rootEventTypes);
-    }
-    mountEventResponder(responder, responderInstance, props, state);
-  }
+  throw new Error('Not yet implemented.');
 }
 
-export function unmountResponderInstance(
-  responderInstance: ReactNativeEventResponderInstance,
+export function DEPRECATED_unmountResponderInstance(
+  responderInstance: any,
 ): void {
-  if (enableFlareAPI) {
-    // TODO stop listening to targetEventTypes
-    unmountEventResponder(responderInstance);
-  }
+  throw new Error('Not yet implemented.');
 }
 
 export function getFundamentalComponentInstance(fundamentalInstance) {
@@ -494,4 +463,8 @@ export function cloneFundamentalInstance(fundamentalInstance) {
 
 export function getInstanceFromNode(node) {
   throw new Error('Not yet implemented.');
+}
+
+export function beforeRemoveInstance(instance) {
+  // noop
 }

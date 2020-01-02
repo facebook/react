@@ -37,7 +37,6 @@ import {
 } from 'shared/ReactWorkTags';
 import getComponentName from 'shared/getComponentName';
 import invariant from 'shared/invariant';
-import warningWithoutStack from 'shared/warningWithoutStack';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 
 import {getPublicInstance} from './ReactFiberHostConfig';
@@ -48,9 +47,9 @@ import {
   isContextProvider as isLegacyContextProvider,
 } from './ReactFiberContext';
 import {createFiberRoot} from './ReactFiberRoot';
-import {injectInternals} from './ReactFiberDevToolsHook';
+import {injectInternals, onScheduleRoot} from './ReactFiberDevToolsHook';
 import {
-  requestCurrentTime,
+  requestCurrentTimeForUpdate,
   computeExpirationForFiber,
   scheduleWork,
   flushRoot,
@@ -69,7 +68,6 @@ import {
   IsThisRendererActing,
 } from './ReactFiberWorkLoop';
 import {createUpdate, enqueueUpdate} from './ReactUpdateQueue';
-import ReactFiberInstrumentation from './ReactFiberInstrumentation';
 import {
   getStackByFiberInDevAndProd,
   phase as ReactCurrentFiberPhase,
@@ -182,8 +180,7 @@ function findHostInstanceWithWarning(
       if (!didWarnAboutFindNodeInStrictMode[componentName]) {
         didWarnAboutFindNodeInStrictMode[componentName] = true;
         if (fiber.mode & StrictMode) {
-          warningWithoutStack(
-            false,
+          console.error(
             '%s is deprecated in StrictMode. ' +
               '%s was passed an instance of %s which is inside StrictMode. ' +
               'Instead, add a ref directly to the element you want to reference. ' +
@@ -195,8 +192,7 @@ function findHostInstanceWithWarning(
             getStackByFiberInDevAndProd(hostFiber),
           );
         } else {
-          warningWithoutStack(
-            false,
+          console.error(
             '%s is deprecated in StrictMode. ' +
               '%s was passed an instance of %s which renders StrictMode children. ' +
               'Instead, add a ref directly to the element you want to reference. ' +
@@ -230,8 +226,11 @@ export function updateContainer(
   parentComponent: ?React$Component<any, any>,
   callback: ?Function,
 ): ExpirationTime {
+  if (__DEV__) {
+    onScheduleRoot(container, element);
+  }
   const current = container.current;
-  const currentTime = requestCurrentTime();
+  const currentTime = requestCurrentTimeForUpdate();
   if (__DEV__) {
     // $FlowExpectedError - jest isn't a global, and isn't recognized outside of tests
     if ('undefined' !== typeof jest) {
@@ -245,18 +244,6 @@ export function updateContainer(
     current,
     suspenseConfig,
   );
-
-  if (__DEV__) {
-    if (ReactFiberInstrumentation.debugTool) {
-      if (current.alternate === null) {
-        ReactFiberInstrumentation.debugTool.onMountContainer(container);
-      } else if (element === null) {
-        ReactFiberInstrumentation.debugTool.onUnmountContainer(container);
-      } else {
-        ReactFiberInstrumentation.debugTool.onUpdateContainer(container);
-      }
-    }
-  }
 
   const context = getContextForSubtree(parentComponent);
   if (container.context === null) {
@@ -272,8 +259,7 @@ export function updateContainer(
       !didWarnAboutNestedUpdates
     ) {
       didWarnAboutNestedUpdates = true;
-      warningWithoutStack(
-        false,
+      console.error(
         'Render methods should be a pure function of props and state; ' +
           'triggering nested component updates from render is not allowed. ' +
           'If necessary, trigger nested updates in componentDidUpdate.\n\n' +
@@ -290,12 +276,15 @@ export function updateContainer(
 
   callback = callback === undefined ? null : callback;
   if (callback !== null) {
-    warningWithoutStack(
-      typeof callback === 'function',
-      'render(...): Expected the last optional `callback` argument to be a ' +
-        'function. Instead received: %s.',
-      callback,
-    );
+    if (__DEV__) {
+      if (typeof callback !== 'function') {
+        console.error(
+          'render(...): Expected the last optional `callback` argument to be a ' +
+            'function. Instead received: %s.',
+          callback,
+        );
+      }
+    }
     update.callback = callback;
   }
 
@@ -348,7 +337,9 @@ export function attemptSynchronousHydration(fiber: Fiber): void {
       // If we're still blocked after this, we need to increase
       // the priority of any promises resolving within this
       // boundary so that they next attempt also has higher pri.
-      let retryExpTime = computeInteractiveExpiration(requestCurrentTime());
+      let retryExpTime = computeInteractiveExpiration(
+        requestCurrentTimeForUpdate(),
+      );
       markRetryTimeIfNotHydrated(fiber, retryExpTime);
       break;
   }
@@ -380,7 +371,7 @@ export function attemptUserBlockingHydration(fiber: Fiber): void {
     // Suspense.
     return;
   }
-  let expTime = computeInteractiveExpiration(requestCurrentTime());
+  let expTime = computeInteractiveExpiration(requestCurrentTimeForUpdate());
   scheduleWork(fiber, expTime);
   markRetryTimeIfNotHydrated(fiber, expTime);
 }
@@ -393,7 +384,9 @@ export function attemptContinuousHydration(fiber: Fiber): void {
     // Suspense.
     return;
   }
-  let expTime = computeContinuousHydrationExpiration(requestCurrentTime());
+  let expTime = computeContinuousHydrationExpiration(
+    requestCurrentTimeForUpdate(),
+  );
   scheduleWork(fiber, expTime);
   markRetryTimeIfNotHydrated(fiber, expTime);
 }
@@ -404,7 +397,7 @@ export function attemptHydrationAtCurrentPriority(fiber: Fiber): void {
     // their priority other than synchronously flush it.
     return;
   }
-  const currentTime = requestCurrentTime();
+  const currentTime = requestCurrentTimeForUpdate();
   const expTime = computeExpirationForFiber(currentTime, fiber, null);
   scheduleWork(fiber, expTime);
   markRetryTimeIfNotHydrated(fiber, expTime);

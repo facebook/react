@@ -17,7 +17,6 @@ let Scheduler;
 
 function loadModules() {
   ReactFeatureFlags = require('shared/ReactFeatureFlags');
-  ReactFeatureFlags.debugRenderPhaseSideEffects = false;
   ReactFeatureFlags.debugRenderPhaseSideEffectsForStrictMode = false;
   ReactFeatureFlags.enableProfilerTimer = true;
   ReactFeatureFlags.enableSchedulerTracing = true;
@@ -54,6 +53,11 @@ describe('ProfilerDOM', () => {
     return props.text;
   }
 
+  if (!__EXPERIMENTAL__) {
+    it("empty test so Jest doesn't complain", () => {});
+    return;
+  }
+
   it('should correctly trace interactions for async roots', async () => {
     let resolve;
     let thenable = {
@@ -75,7 +79,7 @@ describe('ProfilerDOM', () => {
     }
 
     const element = document.createElement('div');
-    const root = ReactDOM.unstable_createRoot(element);
+    const root = ReactDOM.createRoot(element);
 
     let interaction;
     let wrappedResolve;

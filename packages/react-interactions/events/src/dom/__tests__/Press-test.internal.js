@@ -10,11 +10,13 @@
 'use strict';
 
 import {
+  buttonType,
   buttonsType,
   createEventTarget,
   describeWithPointerEvent,
+  resetActivePointers,
   setPointerEvent,
-} from '../testing-library';
+} from 'dom-event-testing-library';
 
 let React;
 let ReactFeatureFlags;
@@ -25,7 +27,7 @@ function initializeModules(hasPointerEvents) {
   jest.resetModules();
   setPointerEvent(hasPointerEvents);
   ReactFeatureFlags = require('shared/ReactFeatureFlags');
-  ReactFeatureFlags.enableFlareAPI = true;
+  ReactFeatureFlags.enableDeprecatedFlareAPI = true;
   React = require('react');
   ReactDOM = require('react-dom');
   usePress = require('react-interactions/events/press').usePress;
@@ -46,6 +48,7 @@ describeWithPointerEvent('Press responder', hasPointerEvents => {
     ReactDOM.render(null, container);
     document.body.removeChild(container);
     container = null;
+    resetActivePointers();
   });
 
   describe('disabled', () => {
@@ -67,7 +70,7 @@ describeWithPointerEvent('Press responder', hasPointerEvents => {
           onPressEnd,
           onPress,
         });
-        return <div ref={ref} listeners={listener} />;
+        return <div ref={ref} DEPRECATED_flareListeners={listener} />;
       };
       ReactDOM.render(<Component />, container);
     });
@@ -105,7 +108,7 @@ describeWithPointerEvent('Press responder', hasPointerEvents => {
         const listener = usePress({
           onPressStart,
         });
-        return <div ref={ref} listeners={listener} />;
+        return <div ref={ref} DEPRECATED_flareListeners={listener} />;
       };
       ReactDOM.render(<Component />, container);
       document.elementFromPoint = () => ref.current;
@@ -126,7 +129,30 @@ describeWithPointerEvent('Press responder', hasPointerEvents => {
     it('is called after middle-button pointer down', () => {
       const target = createEventTarget(ref.current);
       const pointerType = 'mouse';
-      target.pointerdown({buttons: buttonsType.auxiliary, pointerType});
+      target.pointerdown({
+        button: buttonType.auxiliary,
+        buttons: buttonsType.auxiliary,
+        pointerType,
+      });
+      target.pointerup({pointerType});
+      expect(onPressStart).toHaveBeenCalledTimes(1);
+      expect(onPressStart).toHaveBeenCalledWith(
+        expect.objectContaining({
+          buttons: buttonsType.auxiliary,
+          pointerType: 'mouse',
+          type: 'pressstart',
+        }),
+      );
+    });
+
+    it('is called after virtual middle-button pointer down', () => {
+      const target = createEventTarget(ref.current);
+      const pointerType = 'mouse';
+      target.pointerdown({
+        button: buttonType.auxiliary,
+        buttons: 0,
+        pointerType,
+      });
       target.pointerup({pointerType});
       expect(onPressStart).toHaveBeenCalledTimes(1);
       expect(onPressStart).toHaveBeenCalledWith(
@@ -190,7 +216,7 @@ describeWithPointerEvent('Press responder', hasPointerEvents => {
         const listener = usePress({
           onPressEnd,
         });
-        return <div ref={ref} listeners={listener} />;
+        return <div ref={ref} DEPRECATED_flareListeners={listener} />;
       };
       ReactDOM.render(<Component />, container);
       document.elementFromPoint = () => ref.current;
@@ -212,7 +238,26 @@ describeWithPointerEvent('Press responder', hasPointerEvents => {
     it('is called after middle-button pointer up', () => {
       const target = createEventTarget(ref.current);
       target.pointerdown({
+        button: buttonType.auxiliary,
         buttons: buttonsType.auxiliary,
+        pointerType: 'mouse',
+      });
+      target.pointerup({pointerType: 'mouse'});
+      expect(onPressEnd).toHaveBeenCalledTimes(1);
+      expect(onPressEnd).toHaveBeenCalledWith(
+        expect.objectContaining({
+          buttons: buttonsType.auxiliary,
+          pointerType: 'mouse',
+          type: 'pressend',
+        }),
+      );
+    });
+
+    it('is called after virtual middle-button pointer up', () => {
+      const target = createEventTarget(ref.current);
+      target.pointerdown({
+        button: buttonType.auxiliary,
+        buttons: 0,
         pointerType: 'mouse',
       });
       target.pointerup({pointerType: 'mouse'});
@@ -288,7 +333,7 @@ describeWithPointerEvent('Press responder', hasPointerEvents => {
         const listener = usePress({
           onPressChange,
         });
-        return <div ref={ref} listeners={listener} />;
+        return <div ref={ref} DEPRECATED_flareListeners={listener} />;
       };
       ReactDOM.render(<Component />, container);
       document.elementFromPoint = () => ref.current;
@@ -328,7 +373,7 @@ describeWithPointerEvent('Press responder', hasPointerEvents => {
         const listener = usePress({
           onPress,
         });
-        return <div ref={ref} listeners={listener} />;
+        return <div ref={ref} DEPRECATED_flareListeners={listener} />;
       };
       ReactDOM.render(<Component />, container);
       ref.current.getBoundingClientRect = () => ({
@@ -356,7 +401,19 @@ describeWithPointerEvent('Press responder', hasPointerEvents => {
     it('is not called after middle-button press', () => {
       const target = createEventTarget(ref.current);
       target.pointerdown({
+        button: buttonType.auxiliary,
         buttons: buttonsType.auxiliary,
+        pointerType: 'mouse',
+      });
+      target.pointerup({pointerType: 'mouse'});
+      expect(onPress).not.toHaveBeenCalled();
+    });
+
+    it('is not called after virtual middle-button press', () => {
+      const target = createEventTarget(ref.current);
+      target.pointerdown({
+        button: buttonType.auxiliary,
+        buttons: 0,
         pointerType: 'mouse',
       });
       target.pointerup({pointerType: 'mouse'});
@@ -377,7 +434,7 @@ describeWithPointerEvent('Press responder', hasPointerEvents => {
       const inputRef = React.createRef();
       const Component = () => {
         const listener = usePress({onPress});
-        return <input ref={inputRef} listeners={listener} />;
+        return <input ref={inputRef} DEPRECATED_flareListeners={listener} />;
       };
       ReactDOM.render(<Component />, container);
       const target = createEventTarget(inputRef.current);
@@ -426,7 +483,7 @@ describeWithPointerEvent('Press responder', hasPointerEvents => {
         const listener = usePress({
           onPressMove,
         });
-        return <div ref={ref} listeners={listener} />;
+        return <div ref={ref} DEPRECATED_flareListeners={listener} />;
       };
       ReactDOM.render(<Component />, container);
       ref.current.getBoundingClientRect = () => ({
@@ -476,7 +533,7 @@ describeWithPointerEvent('Press responder', hasPointerEvents => {
 
       const Component = () => {
         const listener = usePress({onPress});
-        return <a href="#" ref={ref} listeners={listener} />;
+        return <a href="#" ref={ref} DEPRECATED_flareListeners={listener} />;
       };
       ReactDOM.render(<Component />, container);
 
@@ -497,7 +554,7 @@ describeWithPointerEvent('Press responder', hasPointerEvents => {
 
       const Component = () => {
         const listener = usePress({onPress});
-        return <a href="#" ref={ref} listeners={listener} />;
+        return <a href="#" ref={ref} DEPRECATED_flareListeners={listener} />;
       };
       ReactDOM.render(<Component />, container);
 
@@ -522,7 +579,7 @@ describeWithPointerEvent('Press responder', hasPointerEvents => {
         const listener = usePress({onPress});
         return (
           <a href="#">
-            <button ref={buttonRef} listeners={listener} />
+            <button ref={buttonRef} DEPRECATED_flareListeners={listener} />
           </a>
         );
       };
@@ -542,7 +599,7 @@ describeWithPointerEvent('Press responder', hasPointerEvents => {
       const Component = () => {
         const listener = usePress({onPress});
         return (
-          <a href="#" listeners={listener}>
+          <a href="#" DEPRECATED_flareListeners={listener}>
             <div ref={ref} />
           </a>
         );
@@ -565,7 +622,7 @@ describeWithPointerEvent('Press responder', hasPointerEvents => {
 
       const Component = () => {
         const listener = usePress({onPress});
-        return <a href="#" ref={ref} listeners={listener} />;
+        return <a href="#" ref={ref} DEPRECATED_flareListeners={listener} />;
       };
       ReactDOM.render(<Component />, container);
 
@@ -587,7 +644,7 @@ describeWithPointerEvent('Press responder', hasPointerEvents => {
 
       const Component = () => {
         const listener = usePress({onPress, preventDefault: false});
-        return <a href="#" ref={ref} listeners={listener} />;
+        return <a href="#" ref={ref} DEPRECATED_flareListeners={listener} />;
       };
       ReactDOM.render(<Component />, container);
 
@@ -607,7 +664,7 @@ describeWithPointerEvent('Press responder', hasPointerEvents => {
 
       const Component = () => {
         const listener = usePress({onPress, preventDefault: false});
-        return <a href="#" ref={ref} listeners={listener} />;
+        return <a href="#" ref={ref} DEPRECATED_flareListeners={listener} />;
       };
       ReactDOM.render(<Component />, container);
 
@@ -628,7 +685,7 @@ describeWithPointerEvent('Press responder', hasPointerEvents => {
 
     const Component = () => {
       const listener = usePress();
-      return <button ref={ref} listeners={listener} />;
+      return <button ref={ref} DEPRECATED_flareListeners={listener} />;
     };
     ReactDOM.render(<Component />, container);
 

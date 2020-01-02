@@ -28,6 +28,7 @@ import {createContext} from './ReactContext';
 import {lazy} from './ReactLazy';
 import forwardRef from './forwardRef';
 import memo from './memo';
+import chunk from './chunk';
 import {
   useCallback,
   useContext,
@@ -40,6 +41,8 @@ import {
   useRef,
   useState,
   useResponder,
+  useTransition,
+  useDeferredValue,
 } from './ReactHooks';
 import {withSuspenseConfig} from './ReactBatchConfig';
 import {
@@ -56,9 +59,11 @@ import createResponder from 'shared/createEventResponder';
 import createScope from 'shared/createScope';
 import {
   enableJSXTransformAPI,
-  enableFlareAPI,
+  enableDeprecatedFlareAPI,
   enableFundamentalAPI,
   enableScopeAPI,
+  exposeConcurrentModeAPIs,
+  enableChunksAPI,
 } from 'shared/ReactFeatureFlags';
 const React = {
   Children: {
@@ -93,7 +98,6 @@ const React = {
   Profiler: REACT_PROFILER_TYPE,
   StrictMode: REACT_STRICT_MODE_TYPE,
   Suspense: REACT_SUSPENSE_TYPE,
-  unstable_SuspenseList: REACT_SUSPENSE_LIST_TYPE,
 
   createElement: __DEV__ ? createElementWithValidation : createElement,
   cloneElement: __DEV__ ? cloneElementWithValidation : cloneElement,
@@ -102,14 +106,23 @@ const React = {
 
   version: ReactVersion,
 
-  unstable_withSuspenseConfig: withSuspenseConfig,
-
   __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED: ReactSharedInternals,
 };
 
-if (enableFlareAPI) {
-  React.unstable_useResponder = useResponder;
-  React.unstable_createResponder = createResponder;
+if (exposeConcurrentModeAPIs) {
+  React.useTransition = useTransition;
+  React.useDeferredValue = useDeferredValue;
+  React.SuspenseList = REACT_SUSPENSE_LIST_TYPE;
+  React.unstable_withSuspenseConfig = withSuspenseConfig;
+}
+
+if (enableChunksAPI) {
+  React.chunk = chunk;
+}
+
+if (enableDeprecatedFlareAPI) {
+  React.DEPRECATED_useResponder = useResponder;
+  React.DEPRECATED_createResponder = createResponder;
 }
 
 if (enableFundamentalAPI) {

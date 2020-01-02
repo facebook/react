@@ -7,8 +7,6 @@
  * @flow
  */
 
-import warningWithoutStack from './warningWithoutStack';
-
 let didWarnAboutMessageChannel = false;
 let enqueueTask;
 try {
@@ -27,13 +25,14 @@ try {
     if (__DEV__) {
       if (didWarnAboutMessageChannel === false) {
         didWarnAboutMessageChannel = true;
-        warningWithoutStack(
-          typeof MessageChannel !== 'undefined',
-          'This browser does not have a MessageChannel implementation, ' +
-            'so enqueuing tasks via await act(async () => ...) will fail. ' +
-            'Please file an issue at https://github.com/facebook/react/issues ' +
-            'if you encounter this warning.',
-        );
+        if (typeof MessageChannel === 'undefined') {
+          console.error(
+            'This browser does not have a MessageChannel implementation, ' +
+              'so enqueuing tasks via await act(async () => ...) will fail. ' +
+              'Please file an issue at https://github.com/facebook/react/issues ' +
+              'if you encounter this warning.',
+          );
+        }
       }
     }
     const channel = new MessageChannel();

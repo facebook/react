@@ -177,7 +177,7 @@ describe('ReactDOMComponentTree', () => {
 
     const component = <Controlled />;
     const instance = ReactDOM.render(component, container);
-    expect(() => simulateInput(instance.a, finishValue)).toWarnDev(
+    expect(() => simulateInput(instance.a, finishValue)).toErrorDev(
       'Warning: A component is changing an uncontrolled input to be ' +
         'controlled. This is likely caused by the value changing from ' +
         'a defined to undefined, which should not happen. ' +
@@ -190,7 +190,7 @@ describe('ReactDOMComponentTree', () => {
   it('finds instance of node that is attempted to be unmounted', () => {
     const component = <div />;
     const node = ReactDOM.render(<div>{component}</div>, container);
-    expect(() => ReactDOM.unmountComponentAtNode(node)).toWarnDev(
+    expect(() => ReactDOM.unmountComponentAtNode(node)).toErrorDev(
       "unmountComponentAtNode(): The node you're attempting to unmount " +
         'was rendered by React and is not a top-level container. You may ' +
         'have accidentally passed in a React root node instead of its ' +
@@ -207,7 +207,7 @@ describe('ReactDOMComponentTree', () => {
     );
     const anotherComponent = <div />;
     const instance = ReactDOM.render(component, container);
-    expect(() => ReactDOM.render(anotherComponent, instance)).toWarnDev(
+    expect(() => ReactDOM.render(anotherComponent, instance)).toErrorDev(
       'render(...): Replacing React-rendered children with a new root ' +
         'component. If you intended to update the children of this node, ' +
         'you should instead have the existing children update their state ' +

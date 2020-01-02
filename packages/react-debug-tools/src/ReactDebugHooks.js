@@ -14,8 +14,9 @@ import type {
   ReactEventResponderListener,
 } from 'shared/ReactTypes';
 import type {Fiber} from 'react-reconciler/src/ReactFiber';
-import type {Hook} from 'react-reconciler/src/ReactFiberHooks';
+import type {Hook, TimeoutConfig} from 'react-reconciler/src/ReactFiberHooks';
 import type {Dispatcher as DispatcherType} from 'react-reconciler/src/ReactFiberHooks';
+import type {SuspenseConfig} from 'react-reconciler/src/ReactFiberSuspenseConfig';
 
 import ErrorStackParser from 'error-stack-parser';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
@@ -24,6 +25,7 @@ import {
   SimpleMemoComponent,
   ContextProvider,
   ForwardRef,
+  Chunk,
 } from 'shared/ReactWorkTags';
 
 type CurrentDispatcherRef = typeof ReactSharedInternals.ReactCurrentDispatcher;
@@ -236,6 +238,28 @@ function useResponder(
   };
 }
 
+function useTransition(
+  config: SuspenseConfig | null | void,
+): [(() => void) => void, boolean] {
+  nextHook();
+  hookLog.push({
+    primitive: 'Transition',
+    stackError: new Error(),
+    value: config,
+  });
+  return [callback => {}, false];
+}
+
+function useDeferredValue<T>(value: T, config: TimeoutConfig | null | void): T {
+  nextHook();
+  hookLog.push({
+    primitive: 'DeferredValue',
+    stackError: new Error(),
+    value,
+  });
+  return value;
+}
+
 const Dispatcher: DispatcherType = {
   readContext,
   useCallback,
@@ -249,6 +273,8 @@ const Dispatcher: DispatcherType = {
   useRef,
   useState,
   useResponder,
+  useTransition,
+  useDeferredValue,
 };
 
 // Inspect
@@ -598,7 +624,8 @@ export function inspectHooksOfFiber(
   if (
     fiber.tag !== FunctionComponent &&
     fiber.tag !== SimpleMemoComponent &&
-    fiber.tag !== ForwardRef
+    fiber.tag !== ForwardRef &&
+    fiber.tag !== Chunk
   ) {
     throw new Error(
       'Unknown Fiber. Needs to be a function component to inspect hooks.',

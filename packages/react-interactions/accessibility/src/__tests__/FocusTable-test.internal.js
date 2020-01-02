@@ -7,22 +7,22 @@
  * @flow
  */
 
-import {createEventTarget} from 'react-interactions/events/src/dom/testing-library';
+import {createEventTarget} from 'dom-event-testing-library';
 import {emulateBrowserTab} from '../shared/emulateBrowserTab';
 
 let React;
 let ReactFeatureFlags;
 let createFocusTable;
-let TabbableScope;
+let tabbableScopeQuery;
 
 describe('FocusTable', () => {
   beforeEach(() => {
     jest.resetModules();
     ReactFeatureFlags = require('shared/ReactFeatureFlags');
     ReactFeatureFlags.enableScopeAPI = true;
-    ReactFeatureFlags.enableFlareAPI = true;
+    ReactFeatureFlags.enableDeprecatedFlareAPI = true;
     createFocusTable = require('../FocusTable').createFocusTable;
-    TabbableScope = require('../TabbableScope').default;
+    tabbableScopeQuery = require('../TabbableScopeQuery').default;
     React = require('react');
   });
 
@@ -43,7 +43,7 @@ describe('FocusTable', () => {
 
     function createFocusTableComponent() {
       const [FocusTable, FocusTableRow, FocusTableCell] = createFocusTable(
-        TabbableScope,
+        tabbableScopeQuery,
       );
 
       return ({onKeyboardOut, wrapX, wrapY, allowModifiers}) => (
@@ -186,7 +186,7 @@ describe('FocusTable', () => {
         MainFocusTable,
         MainFocusTableRow,
         MainFocusTableCell,
-      ] = createFocusTable(TabbableScope);
+      ] = createFocusTable(tabbableScopeQuery);
       const SubFocusTable = createFocusTableComponent();
       const onKeyboardOut = jest.fn((direction, event) =>
         event.continuePropagation(),
@@ -283,10 +283,12 @@ describe('FocusTable', () => {
     });
 
     it('handles nested tables correctly', () => {
-      const CustomScope = React.unstable_createScope((type, props) => {
+      const customScopeQuery = (type, props) => {
         return type === 'input';
-      });
-      const [FocusTable, FocusRow, FocusCell] = createFocusTable(CustomScope);
+      };
+      const [FocusTable, FocusRow, FocusCell] = createFocusTable(
+        customScopeQuery,
+      );
       const firstRef = React.createRef();
 
       function Test() {
@@ -414,7 +416,9 @@ describe('FocusTable', () => {
     });
 
     it('handles keyboard arrow operations mixed with tabbing', () => {
-      const [FocusTable, FocusRow, FocusCell] = createFocusTable(TabbableScope);
+      const [FocusTable, FocusRow, FocusCell] = createFocusTable(
+        tabbableScopeQuery,
+      );
       const beforeRef = React.createRef();
       const afterRef = React.createRef();
 
@@ -422,7 +426,7 @@ describe('FocusTable', () => {
         return (
           <>
             <input placeholder="Before" ref={beforeRef} />
-            <FocusTable tabScope={TabbableScope}>
+            <FocusTable tabScopeQuery={tabbableScopeQuery}>
               <div>
                 <FocusRow>
                   <FocusCell>
@@ -478,12 +482,14 @@ describe('FocusTable', () => {
 
     it('handles keyboard arrow operations with colSpan', () => {
       const firstRef = React.createRef();
-      const [FocusTable, FocusRow, FocusCell] = createFocusTable(TabbableScope);
+      const [FocusTable, FocusRow, FocusCell] = createFocusTable(
+        tabbableScopeQuery,
+      );
 
       function Test() {
         return (
           <>
-            <FocusTable tabScope={TabbableScope}>
+            <FocusTable tabScopeQuery={tabbableScopeQuery}>
               <div>
                 <FocusRow>
                   <FocusCell>
