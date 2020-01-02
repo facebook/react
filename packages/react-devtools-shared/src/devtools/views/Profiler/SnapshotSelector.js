@@ -95,20 +95,20 @@ export default function SnapshotSelector(_: Props) {
 
   const viewNextCommit = useCallback(
     () => {
-      const nextCommitIndex = Math.min(
-        ((selectedFilteredCommitIndex: any): number) + 1,
-        filteredCommitIndices.length - 1,
-      );
+      let nextCommitIndex = ((selectedFilteredCommitIndex: any): number) + 1;
+      if (nextCommitIndex === filteredCommitIndices.length) {
+        nextCommitIndex = 0;
+      }
       selectCommitIndex(filteredCommitIndices[nextCommitIndex]);
     },
     [selectedFilteredCommitIndex, filteredCommitIndices, selectCommitIndex],
   );
   const viewPrevCommit = useCallback(
     () => {
-      const nextCommitIndex = Math.max(
-        ((selectedFilteredCommitIndex: any): number) - 1,
-        0,
-      );
+      let nextCommitIndex = ((selectedFilteredCommitIndex: any): number) - 1;
+      if (nextCommitIndex < 0) {
+        nextCommitIndex = filteredCommitIndices.length - 1;
+      }
       selectCommitIndex(filteredCommitIndices[nextCommitIndex]);
     },
     [selectedFilteredCommitIndex, filteredCommitIndices, selectCommitIndex],
@@ -141,7 +141,7 @@ export default function SnapshotSelector(_: Props) {
       <span className={styles.IndexLabel}>{label}</span>
       <Button
         className={styles.Button}
-        disabled={selectedFilteredCommitIndex === 0 || numFilteredCommits === 0}
+        disabled={numFilteredCommits === 0}
         onClick={viewPrevCommit}
         title="Select previous commit">
         <ButtonIcon type="previous" />
@@ -173,10 +173,7 @@ export default function SnapshotSelector(_: Props) {
       </div>
       <Button
         className={styles.Button}
-        disabled={
-          selectedFilteredCommitIndex === null ||
-          selectedFilteredCommitIndex >= numFilteredCommits - 1
-        }
+        disabled={numFilteredCommits === 0}
         onClick={viewNextCommit}
         title="Select next commit">
         <ButtonIcon type="next" />
