@@ -1021,10 +1021,30 @@ export function attach(
       pendingSimulatedUnmountedIDs.length === 0 &&
       pendingUnmountedRootID === null
     ) {
-      // If we're currently profiling, send an "operations" method even if there are no mutations to the tree.
-      // The frontend needs this no-op info to know how to reconstruct the tree for each commit,
-      // even if a particular commit didn't change the shape of the tree.
+      // If we aren't profiling, we can just bail out here.
+      // No use sending an empty update over the bridge.
       if (!isProfiling) {
+        return;
+      }
+
+      const current = root.current;
+      const alternate = current.alternate;
+
+      // Certain types of updates bail out at the root without doing any actual render work.
+      // React should probably not call the DevTools commit hook in this case,
+      // but if it does- we can detect it and filter them out from the profiler.
+      // NOTE: Keep this logic in sync with the one in handleCommitFiberRoot()
+      const didBailoutAtRoot =
+        alternate !== null &&
+        alternate.expirationTime === 0 &&
+        alternate.childExpirationTime === 0;
+
+      // The Profiler stores metadata for each commit and reconstructs the app tree per commit using:
+      // (1) an initial tree snapshot and
+      // (2) the operations array for each commit
+      // Because of this, it's important that the operations and metadata arrays align,
+      // So the logic that skips metadata for bailout commits should also apply to filter operations.
+      if (didBailoutAtRoot) {
         return;
       }
     }
@@ -1758,6 +1778,7 @@ export function attach(
     // Certain types of updates bail out at the root without doing any actual render work.
     // React should probably not call the DevTools commit hook in this case,
     // but if it does- we can detect it and filter them out from the profiler.
+    // NOTE: Keep this logic in sync with the one in flushPendingEvents()
     const didBailoutAtRoot =
       alternate !== null &&
       alternate.expirationTime === 0 &&
