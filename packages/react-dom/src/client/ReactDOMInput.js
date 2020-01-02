@@ -142,8 +142,8 @@ export function updateWrapper(element: Element, props: Object) {
     ) {
       console.error(
         'A component is changing an uncontrolled input to be controlled. ' +
-          'This is likely caused by the value changing from a defined to ' +
-          'undefined, which should not happen. ' +
+          'This is likely caused by the value changing from undefined to ' +
+          'a defined value, which should not happen. ' +
           'Decide between using a controlled or uncontrolled input ' +
           'element for the lifetime of the component. More info: https://fb.me/react-controlled-components',
       );
@@ -156,8 +156,8 @@ export function updateWrapper(element: Element, props: Object) {
     ) {
       console.error(
         'A component is changing a controlled input to be uncontrolled. ' +
-          'This is likely caused by the value changing from undefined to ' +
-          'a defined value, which should not happen. ' +
+          'This is likely caused by the value changing from a defined to ' +
+          'undefined, which should not happen. ' +
           'Decide between using a controlled or uncontrolled input ' +
           'element for the lifetime of the component. More info: https://fb.me/react-controlled-components',
       );
