@@ -51,7 +51,7 @@ describe 'ReactCoffeeScriptClass', ->
       expect(->
         ReactDOM.render React.createElement(Foo), container
       ).toThrow()
-    ).toWarnDev([
+    ).toErrorDev([
       # A failed component renders twice in DEV
       'No `render` method found on the returned component instance',
       'No `render` method found on the returned component instance',
@@ -126,7 +126,7 @@ describe 'ReactCoffeeScriptClass', ->
         {}
     expect(->
       ReactDOM.render(React.createElement(Foo, foo: 'foo'), container)
-    ).toWarnDev 'Foo: getDerivedStateFromProps() is defined as an instance method and will be ignored. Instead, declare it as a static method.'
+    ).toErrorDev 'Foo: getDerivedStateFromProps() is defined as an instance method and will be ignored. Instead, declare it as a static method.'
     undefined
 
   it 'warns if getDerivedStateFromError is not static', ->
@@ -137,7 +137,7 @@ describe 'ReactCoffeeScriptClass', ->
         {}
     expect(->
       ReactDOM.render(React.createElement(Foo, foo: 'foo'), container)
-    ).toWarnDev 'Foo: getDerivedStateFromError() is defined as an instance method and will be ignored. Instead, declare it as a static method.'
+    ).toErrorDev 'Foo: getDerivedStateFromError() is defined as an instance method and will be ignored. Instead, declare it as a static method.'
     undefined
 
   it 'warns if getSnapshotBeforeUpdate is static', ->
@@ -148,7 +148,7 @@ describe 'ReactCoffeeScriptClass', ->
       {}
     expect(->
       ReactDOM.render(React.createElement(Foo, foo: 'foo'), container)
-    ).toWarnDev 'Foo: getSnapshotBeforeUpdate() is defined as a static method and will be ignored. Instead, declare it as an instance method.'
+    ).toErrorDev 'Foo: getSnapshotBeforeUpdate() is defined as a static method and will be ignored. Instead, declare it as an instance method.'
     undefined
 
   it 'warns if state not initialized before static getDerivedStateFromProps', ->
@@ -163,7 +163,7 @@ describe 'ReactCoffeeScriptClass', ->
       }
     expect(->
       ReactDOM.render(React.createElement(Foo, foo: 'foo'), container)
-    ).toWarnDev (
+    ).toErrorDev (
       '`Foo` uses `getDerivedStateFromProps` but its initial state is ' +
       'undefined. This is not recommended. Instead, define the initial state by ' +
       'assigning an object to `this.state` in the constructor of `Foo`. ' +
@@ -267,7 +267,7 @@ describe 'ReactCoffeeScriptClass', ->
 
       expect(->
         test React.createElement(Foo), 'SPAN', ''
-      ).toWarnDev('Foo.state: must be set to an object or null')
+      ).toErrorDev('Foo.state: must be set to an object or null')
     undefined
 
   it 'should render with null in the initial state property', ->
@@ -409,7 +409,7 @@ describe 'ReactCoffeeScriptClass', ->
 
     expect(->
       test React.createElement(Foo), 'SPAN', 'foo'
-    ).toWarnDev([
+    ).toErrorDev([
       'getInitialState was defined on Foo, a plain JavaScript class.',
       'getDefaultProps was defined on Foo, a plain JavaScript class.',
       'propTypes was defined as an instance property on Foo.',
@@ -448,7 +448,7 @@ describe 'ReactCoffeeScriptClass', ->
 
     expect(->
       test React.createElement(NamedComponent), 'SPAN', 'foo'
-    ).toWarnDev(
+    ).toErrorDev(
       'Warning: NamedComponent has a method called componentShouldUpdate().
        Did you mean shouldComponentUpdate()? The name is phrased as a
        question because the function is expected to return a value.'
@@ -466,7 +466,7 @@ describe 'ReactCoffeeScriptClass', ->
 
     expect(->
       test React.createElement(NamedComponent), 'SPAN', 'foo'
-    ).toWarnDev(
+    ).toErrorDev(
       'Warning: NamedComponent has a method called componentWillRecieveProps().
        Did you mean componentWillReceiveProps()?'
     )
@@ -483,7 +483,7 @@ describe 'ReactCoffeeScriptClass', ->
 
     expect(->
       test React.createElement(NamedComponent), 'SPAN', 'foo'
-    ).toWarnDev(
+    ).toErrorDev(
       'Warning: NamedComponent has a method called UNSAFE_componentWillRecieveProps().
        Did you mean UNSAFE_componentWillReceiveProps()?'
     )
@@ -494,13 +494,13 @@ describe 'ReactCoffeeScriptClass', ->
       test Inner(name: 'foo'), 'DIV', 'foo'
     expect(->
       expect(-> instance.replaceState {}).toThrow()
-    ).toLowPriorityWarnDev(
+    ).toWarnDev(
       'replaceState(...) is deprecated in plain JavaScript React classes',
       {withoutStack: true}
     )
     expect(->
       expect(-> instance.isMounted()).toThrow()
-    ).toLowPriorityWarnDev(
+    ).toWarnDev(
       'isMounted(...) is deprecated in plain JavaScript React classes',
       {withoutStack: true}
     )

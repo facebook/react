@@ -3155,6 +3155,37 @@ const tests = {
       ],
     },
     {
+      code: `
+        function MyComponent() {
+          const myRef = useRef();
+          useLayoutEffect_SAFE_FOR_SSR(() => {
+            const handleMove = () => {};
+            myRef.current.addEventListener('mousemove', handleMove);
+            return () => myRef.current.removeEventListener('mousemove', handleMove);
+          });
+          return <div ref={myRef} />;
+        }
+      `,
+      output: `
+        function MyComponent() {
+          const myRef = useRef();
+          useLayoutEffect_SAFE_FOR_SSR(() => {
+            const handleMove = () => {};
+            myRef.current.addEventListener('mousemove', handleMove);
+            return () => myRef.current.removeEventListener('mousemove', handleMove);
+          });
+          return <div ref={myRef} />;
+        }
+      `,
+      errors: [
+        `The ref value 'myRef.current' will likely have changed by the time ` +
+          `this effect cleanup function runs. If this ref points to a node ` +
+          `rendered by React, copy 'myRef.current' to a variable inside the effect, ` +
+          `and use that variable in the cleanup function.`,
+      ],
+      options: [{additionalHooks: 'useLayoutEffect_SAFE_FOR_SSR'}],
+    },
+    {
       // Autofix ignores constant primitives (leaving the ones that are there).
       code: `
       function MyComponent() {

@@ -28,6 +28,7 @@ import {createContext} from './ReactContext';
 import {lazy} from './ReactLazy';
 import forwardRef from './forwardRef';
 import memo from './memo';
+import chunk from './chunk';
 import {
   useCallback,
   useContext,
@@ -58,10 +59,11 @@ import createResponder from 'shared/createEventResponder';
 import createScope from 'shared/createScope';
 import {
   enableJSXTransformAPI,
-  enableFlareAPI,
+  enableDeprecatedFlareAPI,
   enableFundamentalAPI,
   enableScopeAPI,
   exposeConcurrentModeAPIs,
+  enableChunksAPI,
 } from 'shared/ReactFeatureFlags';
 const React = {
   Children: {
@@ -114,9 +116,13 @@ if (exposeConcurrentModeAPIs) {
   React.unstable_withSuspenseConfig = withSuspenseConfig;
 }
 
-if (enableFlareAPI) {
-  React.unstable_useResponder = useResponder;
-  React.unstable_createResponder = createResponder;
+if (enableChunksAPI) {
+  React.chunk = chunk;
+}
+
+if (enableDeprecatedFlareAPI) {
+  React.DEPRECATED_useResponder = useResponder;
+  React.DEPRECATED_createResponder = createResponder;
 }
 
 if (enableFundamentalAPI) {

@@ -340,6 +340,7 @@ export type DataType =
   | 'number'
   | 'object'
   | 'react_element'
+  | 'regexp'
   | 'string'
   | 'symbol'
   | 'typed_array'
@@ -395,6 +396,8 @@ export function getDataType(data: Object): DataType {
         return 'array_buffer';
       } else if (typeof data[Symbol.iterator] === 'function') {
         return 'iterator';
+      } else if (data.constructor.name === 'RegExp') {
+        return 'regexp';
       } else if (Object.prototype.toString.call(data) === '[object Date]') {
         return 'date';
       }
@@ -504,6 +507,8 @@ export function formatDataForPreview(
       return `"${data}"`;
     case 'bigint':
       return truncateForDisplay(data.toString() + 'n');
+    case 'regexp':
+      return truncateForDisplay(data.toString());
     case 'symbol':
       return truncateForDisplay(data.toString());
     case 'react_element':

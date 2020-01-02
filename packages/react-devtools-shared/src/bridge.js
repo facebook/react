@@ -51,9 +51,25 @@ type OverrideSuspense = {|
   forceFallback: boolean,
 |};
 
+type CopyElementPathParams = {|
+  ...ElementAndRendererID,
+  path: Array<string | number>,
+|};
+
+type ViewAttributeSourceParams = {|
+  ...ElementAndRendererID,
+  path: Array<string | number>,
+|};
+
 type InspectElementParams = {|
   ...ElementAndRendererID,
   path?: Array<string | number>,
+|};
+
+type StoreAsGlobalParams = {|
+  ...ElementAndRendererID,
+  count: number,
+  path: Array<string | number>,
 |};
 
 type NativeStyleEditor_RenameAttributeParams = {|
@@ -95,6 +111,7 @@ type BackendEvents = {|
 
 type FrontendEvents = {|
   clearNativeElementHighlight: [],
+  copyElementPath: [CopyElementPathParams],
   getOwnersList: [ElementAndRendererID],
   getProfilingData: [{|rendererID: RendererID|}],
   getProfilingStatus: [],
@@ -115,8 +132,10 @@ type FrontendEvents = {|
   startProfiling: [boolean],
   stopInspectingNative: [boolean],
   stopProfiling: [],
+  storeAsGlobal: [StoreAsGlobalParams],
   updateAppendComponentStack: [boolean],
   updateComponentFilters: [Array<ComponentFilter>],
+  viewAttributeSource: [ViewAttributeSourceParams],
   viewElementSource: [ElementAndRendererID],
 
   // React Native style editor plug-in.

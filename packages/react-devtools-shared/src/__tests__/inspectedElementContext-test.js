@@ -8,7 +8,11 @@
  */
 
 import typeof ReactTestRenderer from 'react-test-renderer';
-import type {GetInspectedElementPath} from 'react-devtools-shared/src/devtools/views/Components/InspectedElementContext';
+import type {
+  CopyInspectedElementPath,
+  GetInspectedElementPath,
+  StoreAsGlobal,
+} from 'react-devtools-shared/src/devtools/views/Components/InspectedElementContext';
 import type {FrontendBridge} from 'react-devtools-shared/src/bridge';
 import type Store from 'react-devtools-shared/src/devtools/store';
 
@@ -514,6 +518,7 @@ describe('InspectedElementContext', () => {
     const arrayOfArrays = [[['abc', 123, true], []]];
     const div = document.createElement('div');
     const exampleFunction = () => {};
+    const exampleDateISO = '2019-12-31T23:42:42.000Z';
     const setShallow = new Set(['abc', 123]);
     const mapShallow = new Map([['name', 'Brian'], ['food', 'sushi']]);
     const setOfSets = new Set([new Set(['a', 'b', 'c']), new Set([1, 2, 3])]);
@@ -542,7 +547,7 @@ describe('InspectedElementContext', () => {
           // eslint-disable-next-line no-undef
           big_int={BigInt(123)}
           data_view={dataView}
-          date={new Date(123)}
+          date={new Date(exampleDateISO)}
           fn={exampleFunction}
           html_element={div}
           immutable={immutableMap}
@@ -550,6 +555,7 @@ describe('InspectedElementContext', () => {
           map_of_maps={mapOfMaps}
           object_of_objects={objectOfObjects}
           react_element={<span />}
+          regexp={/abc/giu}
           set={setShallow}
           set_of_sets={setOfSets}
           symbol={Symbol('symbol')}
@@ -599,6 +605,7 @@ describe('InspectedElementContext', () => {
       map_of_maps,
       object_of_objects,
       react_element,
+      regexp,
       set,
       set_of_sets,
       symbol,
@@ -634,11 +641,11 @@ describe('InspectedElementContext', () => {
 
     expect(date[meta.inspectable]).toBe(false);
     expect(date[meta.type]).toBe('date');
-    expect(date[meta.preview_long]).toBe(
-      'Wed Dec 31 1969 16:00:00 GMT-0800 (Pacific Standard Time)',
+    expect(new Date(date[meta.preview_long]).toISOString()).toBe(
+      exampleDateISO,
     );
-    expect(date[meta.preview_short]).toBe(
-      'Wed Dec 31 1969 16:00:00 GMT-0800 (Pacific Standard Time)',
+    expect(new Date(date[meta.preview_short]).toISOString()).toBe(
+      exampleDateISO,
     );
 
     expect(fn[meta.inspectable]).toBe(false);
@@ -693,6 +700,12 @@ describe('InspectedElementContext', () => {
     expect(react_element[meta.type]).toBe('react_element');
     expect(react_element[meta.preview_long]).toBe('<span />');
     expect(react_element[meta.preview_short]).toBe('<span />');
+
+    expect(regexp[meta.inspectable]).toBe(false);
+    expect(regexp[meta.name]).toBe('/abc/giu');
+    expect(regexp[meta.preview_long]).toBe('/abc/giu');
+    expect(regexp[meta.preview_short]).toBe('/abc/giu');
+    expect(regexp[meta.type]).toBe('regexp');
 
     expect(set[meta.inspectable]).toBeUndefined(); // Complex type
     expect(set[meta.name]).toBe('Set');
@@ -1199,6 +1212,141 @@ describe('InspectedElementContext', () => {
       false,
     );
     expect(didFinish).toBe(true);
+
+    done();
+  });
+
+  it('should enable inspected values to be stored as global variables', async done => {
+    const Example = () => null;
+
+    const nestedObject = {
+      a: {
+        value: 1,
+        b: {
+          value: 1,
+          c: {
+            value: 1,
+          },
+        },
+      },
+    };
+
+    await utils.actAsync(() =>
+      ReactDOM.render(
+        <Example nestedObject={nestedObject} />,
+        document.createElement('div'),
+      ),
+    );
+
+    const id = ((store.getElementIDAtIndex(0): any): number);
+
+    let storeAsGlobal: StoreAsGlobal = ((null: any): StoreAsGlobal);
+
+    function Suspender({target}) {
+      const context = React.useContext(InspectedElementContext);
+      storeAsGlobal = context.storeAsGlobal;
+      return null;
+    }
+
+    await utils.actAsync(
+      () =>
+        TestRenderer.create(
+          <Contexts
+            defaultSelectedElementID={id}
+            defaultSelectedElementIndex={0}>
+            <React.Suspense fallback={null}>
+              <Suspender target={id} />
+            </React.Suspense>
+          </Contexts>,
+        ),
+      false,
+    );
+    expect(storeAsGlobal).not.toBeNull();
+
+    const logSpy = jest.fn();
+    spyOn(console, 'log').and.callFake(logSpy);
+
+    // Should store the whole value (not just the hydrated parts)
+    storeAsGlobal(id, ['props', 'nestedObject']);
+    jest.runOnlyPendingTimers();
+    expect(logSpy).toHaveBeenCalledWith('$reactTemp1');
+    expect(global.$reactTemp1).toBe(nestedObject);
+
+    logSpy.mockReset();
+
+    // Should store the nested property specified (not just the outer value)
+    storeAsGlobal(id, ['props', 'nestedObject', 'a', 'b']);
+    jest.runOnlyPendingTimers();
+    expect(logSpy).toHaveBeenCalledWith('$reactTemp2');
+    expect(global.$reactTemp2).toBe(nestedObject.a.b);
+
+    done();
+  });
+
+  it('should enable inspected values to be copied to the clipboard', async done => {
+    const Example = () => null;
+
+    const nestedObject = {
+      a: {
+        value: 1,
+        b: {
+          value: 1,
+          c: {
+            value: 1,
+          },
+        },
+      },
+    };
+
+    await utils.actAsync(() =>
+      ReactDOM.render(
+        <Example nestedObject={nestedObject} />,
+        document.createElement('div'),
+      ),
+    );
+
+    const id = ((store.getElementIDAtIndex(0): any): number);
+
+    let copyPath: CopyInspectedElementPath = ((null: any): CopyInspectedElementPath);
+
+    function Suspender({target}) {
+      const context = React.useContext(InspectedElementContext);
+      copyPath = context.copyInspectedElementPath;
+      return null;
+    }
+
+    await utils.actAsync(
+      () =>
+        TestRenderer.create(
+          <Contexts
+            defaultSelectedElementID={id}
+            defaultSelectedElementIndex={0}>
+            <React.Suspense fallback={null}>
+              <Suspender target={id} />
+            </React.Suspense>
+          </Contexts>,
+        ),
+      false,
+    );
+    expect(copyPath).not.toBeNull();
+
+    // Should copy the whole value (not just the hydrated parts)
+    copyPath(id, ['props', 'nestedObject']);
+    jest.runOnlyPendingTimers();
+    expect(global.mockClipboardCopy).toHaveBeenCalledTimes(1);
+    expect(global.mockClipboardCopy).toHaveBeenCalledWith(
+      JSON.stringify(nestedObject),
+    );
+
+    global.mockClipboardCopy.mockReset();
+
+    // Should copy the nested property specified (not just the outer value)
+    copyPath(id, ['props', 'nestedObject', 'a', 'b']);
+    jest.runOnlyPendingTimers();
+    expect(global.mockClipboardCopy).toHaveBeenCalledTimes(1);
+    expect(global.mockClipboardCopy).toHaveBeenCalledWith(
+      JSON.stringify(nestedObject.a.b),
+    );
 
     done();
   });

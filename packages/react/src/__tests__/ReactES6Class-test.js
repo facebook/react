@@ -59,7 +59,7 @@ describe('ReactES6Class', () => {
     class Foo extends React.Component {}
     expect(() =>
       expect(() => ReactDOM.render(<Foo />, container)).toThrow(),
-    ).toWarnDev([
+    ).toErrorDev([
       // A failed component renders twice in DEV
       'Warning: Foo(...): No `render` method found on the returned component ' +
         'instance: you may have forgotten to define `render`.',
@@ -137,7 +137,7 @@ describe('ReactES6Class', () => {
         return <div />;
       }
     }
-    expect(() => ReactDOM.render(<Foo foo="foo" />, container)).toWarnDev(
+    expect(() => ReactDOM.render(<Foo foo="foo" />, container)).toErrorDev(
       'Foo: getDerivedStateFromProps() is defined as an instance method ' +
         'and will be ignored. Instead, declare it as a static method.',
     );
@@ -152,7 +152,7 @@ describe('ReactES6Class', () => {
         return <div />;
       }
     }
-    expect(() => ReactDOM.render(<Foo foo="foo" />, container)).toWarnDev(
+    expect(() => ReactDOM.render(<Foo foo="foo" />, container)).toErrorDev(
       'Foo: getDerivedStateFromError() is defined as an instance method ' +
         'and will be ignored. Instead, declare it as a static method.',
     );
@@ -165,7 +165,7 @@ describe('ReactES6Class', () => {
         return <div />;
       }
     }
-    expect(() => ReactDOM.render(<Foo foo="foo" />, container)).toWarnDev(
+    expect(() => ReactDOM.render(<Foo foo="foo" />, container)).toErrorDev(
       'Foo: getSnapshotBeforeUpdate() is defined as a static method ' +
         'and will be ignored. Instead, declare it as an instance method.',
     );
@@ -183,7 +183,7 @@ describe('ReactES6Class', () => {
         return <div className={`${this.state.foo} ${this.state.bar}`} />;
       }
     }
-    expect(() => ReactDOM.render(<Foo foo="foo" />, container)).toWarnDev(
+    expect(() => ReactDOM.render(<Foo foo="foo" />, container)).toErrorDev(
       '`Foo` uses `getDerivedStateFromProps` but its initial state is ' +
         'undefined. This is not recommended. Instead, define the initial state by ' +
         'assigning an object to `this.state` in the constructor of `Foo`. ' +
@@ -291,7 +291,7 @@ describe('ReactES6Class', () => {
           return <span />;
         }
       }
-      expect(() => test(<Foo />, 'SPAN', '')).toWarnDev(
+      expect(() => test(<Foo />, 'SPAN', '')).toErrorDev(
         'Foo.state: must be set to an object or null',
       );
     });
@@ -443,7 +443,7 @@ describe('ReactES6Class', () => {
       }
     }
 
-    expect(() => test(<Foo />, 'SPAN', 'foo')).toWarnDev([
+    expect(() => test(<Foo />, 'SPAN', 'foo')).toErrorDev([
       'getInitialState was defined on Foo, a plain JavaScript class.',
       'getDefaultProps was defined on Foo, a plain JavaScript class.',
       'propTypes was defined as an instance property on Foo.',
@@ -477,7 +477,7 @@ describe('ReactES6Class', () => {
       }
     }
 
-    expect(() => test(<NamedComponent />, 'SPAN', 'foo')).toWarnDev(
+    expect(() => test(<NamedComponent />, 'SPAN', 'foo')).toErrorDev(
       'Warning: ' +
         'NamedComponent has a method called componentShouldUpdate(). Did you ' +
         'mean shouldComponentUpdate()? The name is phrased as a question ' +
@@ -495,7 +495,7 @@ describe('ReactES6Class', () => {
       }
     }
 
-    expect(() => test(<NamedComponent />, 'SPAN', 'foo')).toWarnDev(
+    expect(() => test(<NamedComponent />, 'SPAN', 'foo')).toErrorDev(
       'Warning: ' +
         'NamedComponent has a method called componentWillRecieveProps(). Did ' +
         'you mean componentWillReceiveProps()?',
@@ -512,7 +512,7 @@ describe('ReactES6Class', () => {
       }
     }
 
-    expect(() => test(<NamedComponent />, 'SPAN', 'foo')).toWarnDev(
+    expect(() => test(<NamedComponent />, 'SPAN', 'foo')).toErrorDev(
       'Warning: ' +
         'NamedComponent has a method called UNSAFE_componentWillRecieveProps(). ' +
         'Did you mean UNSAFE_componentWillReceiveProps()?',
@@ -521,15 +521,11 @@ describe('ReactES6Class', () => {
 
   it('should throw AND warn when trying to access classic APIs', () => {
     const instance = test(<Inner name="foo" />, 'DIV', 'foo');
-    expect(() =>
-      expect(() => instance.replaceState({})).toThrow(),
-    ).toLowPriorityWarnDev(
+    expect(() => expect(() => instance.replaceState({})).toThrow()).toWarnDev(
       'replaceState(...) is deprecated in plain JavaScript React classes',
       {withoutStack: true},
     );
-    expect(() =>
-      expect(() => instance.isMounted()).toThrow(),
-    ).toLowPriorityWarnDev(
+    expect(() => expect(() => instance.isMounted()).toThrow()).toWarnDev(
       'isMounted(...) is deprecated in plain JavaScript React classes',
       {withoutStack: true},
     );

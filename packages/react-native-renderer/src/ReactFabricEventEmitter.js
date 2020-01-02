@@ -18,12 +18,8 @@ import {registrationNameModules} from 'legacy-events/EventPluginRegistry';
 import {batchedUpdates} from 'legacy-events/ReactGenericBatching';
 
 import type {AnyNativeEvent} from 'legacy-events/PluginModuleType';
-import {
-  enableFlareAPI,
-  enableNativeTargetAsInstance,
-} from 'shared/ReactFeatureFlags';
+import {enableNativeTargetAsInstance} from 'shared/ReactFeatureFlags';
 import type {TopLevelType} from 'legacy-events/TopLevelEventTypes';
-import {dispatchEventForResponderEventSystem} from './ReactFabricEventResponderSystem';
 
 export {getListener, registrationNameModules as registrationNames};
 
@@ -33,15 +29,6 @@ export function dispatchEvent(
   nativeEvent: AnyNativeEvent,
 ) {
   const targetFiber = (target: null | Fiber);
-
-  if (enableFlareAPI) {
-    // React Flare event system
-    dispatchEventForResponderEventSystem(
-      (topLevelType: any),
-      target,
-      (nativeEvent: any),
-    );
-  }
 
   let eventTarget = null;
   if (enableNativeTargetAsInstance) {

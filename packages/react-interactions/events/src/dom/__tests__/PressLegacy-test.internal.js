@@ -13,8 +13,9 @@ import {
   buttonType,
   buttonsType,
   createEventTarget,
+  resetActivePointers,
   setPointerEvent,
-} from '../testing-library';
+} from 'dom-event-testing-library';
 
 let React;
 let ReactFeatureFlags;
@@ -26,7 +27,7 @@ function initializeModules(hasPointerEvents) {
   jest.resetModules();
   setPointerEvent(hasPointerEvents);
   ReactFeatureFlags = require('shared/ReactFeatureFlags');
-  ReactFeatureFlags.enableFlareAPI = true;
+  ReactFeatureFlags.enableDeprecatedFlareAPI = true;
   React = require('react');
   ReactDOM = require('react-dom');
   PressResponder = require('react-interactions/events/press-legacy')
@@ -59,6 +60,7 @@ describe.each(environmentTable)('Press responder', hasPointerEvents => {
     ReactDOM.render(null, container);
     document.body.removeChild(container);
     container = null;
+    resetActivePointers();
   });
 
   describe('disabled', () => {

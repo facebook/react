@@ -30,6 +30,9 @@ export const enableSchedulerTracing = __PROFILE__;
 export const enableSuspenseServerRenderer = __EXPERIMENTAL__;
 export const enableSelectiveHydration = __EXPERIMENTAL__;
 
+// Flight experiments
+export const enableChunksAPI = __EXPERIMENTAL__;
+
 // Only used in www builds.
 export const enableSchedulerDebugging = false;
 
@@ -52,7 +55,7 @@ export const exposeConcurrentModeAPIs = __EXPERIMENTAL__;
 export const warnAboutShorthandPropertyCollision = false;
 
 // Experimental React Flare event system and event components support.
-export const enableFlareAPI = false;
+export const enableDeprecatedFlareAPI = false;
 
 // Experimental Host Component support.
 export const enableFundamentalAPI = false;

@@ -25,6 +25,7 @@ import {
   SimpleMemoComponent,
   ContextProvider,
   ForwardRef,
+  Chunk,
 } from 'shared/ReactWorkTags';
 
 type CurrentDispatcherRef = typeof ReactSharedInternals.ReactCurrentDispatcher;
@@ -623,7 +624,8 @@ export function inspectHooksOfFiber(
   if (
     fiber.tag !== FunctionComponent &&
     fiber.tag !== SimpleMemoComponent &&
-    fiber.tag !== ForwardRef
+    fiber.tag !== ForwardRef &&
+    fiber.tag !== Chunk
   ) {
     throw new Error(
       'Unknown Fiber. Needs to be a function component to inspect hooks.',

@@ -12,7 +12,6 @@ import type {Container, SuspenseInstance} from './ReactFiberHostConfig';
 import type {SuspenseState} from './ReactFiberSuspenseComponent';
 
 import invariant from 'shared/invariant';
-import warning from 'shared/warning';
 
 import {get as getInstance} from 'shared/ReactInstanceMap';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
@@ -98,7 +97,7 @@ export function isMounted(component: React$Component<any, any>): boolean {
       const ownerFiber: Fiber = owner;
       const instance = ownerFiber.stateNode;
       if (!instance._warnedAboutRefsInRender) {
-        warning(
+        console.error(
           '%s is accessing isMounted inside its render() function. ' +
             'render() should be a pure function of props and state. It should ' +
             'never access something that requires stale data from the previous ' +

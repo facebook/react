@@ -7,8 +7,7 @@
  * @flow
  */
 
-import warning from 'shared/warning';
-import {enableFlareAPI} from 'shared/ReactFeatureFlags';
+import {enableDeprecatedFlareAPI} from 'shared/ReactFeatureFlags';
 
 type PropertyType = 0 | 1 | 2 | 3 | 4 | 5 | 6;
 
@@ -85,7 +84,7 @@ export function isAttributeNameSafe(attributeName: string): boolean {
   }
   illegalAttributeNameCache[attributeName] = true;
   if (__DEV__) {
-    warning('Invalid attribute name: `%s`', attributeName);
+    console.error('Invalid attribute name: `%s`', attributeName);
   }
   return false;
 }
@@ -221,7 +220,7 @@ const reservedProps = [
   'suppressHydrationWarning',
   'style',
 ];
-if (enableFlareAPI) {
+if (enableDeprecatedFlareAPI) {
   reservedProps.push('DEPRECATED_flareListeners');
 }
 

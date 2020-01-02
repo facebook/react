@@ -16,12 +16,11 @@ import type {
 } from 'shared/ReactTypes';
 
 import {
-  mountResponderInstance,
-  unmountResponderInstance,
+  DEPRECATED_mountResponderInstance,
+  DEPRECATED_unmountResponderInstance,
 } from './ReactFiberHostConfig';
 import {NoWork} from './ReactFiberExpirationTime';
 
-import warning from 'shared/warning';
 import {REACT_RESPONDER_TYPE} from 'shared/ReactSymbols';
 
 import invariant from 'shared/invariant';
@@ -82,7 +81,7 @@ function mountEventResponder(
     }
   }
 
-  mountResponderInstance(
+  DEPRECATED_mountResponderInstance(
     responder,
     responderInstance,
     responderProps,
@@ -118,7 +117,7 @@ function updateEventListener(
   if (visistedResponders.has(responder)) {
     // show warning
     if (__DEV__) {
-      warning(
+      console.error(
         'Duplicate event responder "%s" found in event listeners. ' +
           'Event listeners passed to elements cannot use the same event responder more than once.',
         responder.displayName,
@@ -145,7 +144,7 @@ function updateEventListener(
   }
 }
 
-export function updateLegacyEventListeners(
+export function updateDeprecatedEventListeners(
   listeners: any,
   fiber: Fiber,
   rootContainerInstance: null | Container,
@@ -196,7 +195,7 @@ export function updateLegacyEventListeners(
           const responderInstance = ((respondersMap.get(
             mountedResponder,
           ): any): ReactEventResponderInstance<any, any>);
-          unmountResponderInstance(responderInstance);
+          DEPRECATED_unmountResponderInstance(responderInstance);
           respondersMap.delete(mountedResponder);
         }
       }
@@ -204,7 +203,7 @@ export function updateLegacyEventListeners(
   }
 }
 
-export function createResponderListener(
+export function createDeprecatedResponderListener(
   responder: ReactEventResponder<any, any>,
   props: Object,
 ): ReactEventResponderListener<any, any> {
@@ -218,7 +217,7 @@ export function createResponderListener(
   return eventResponderListener;
 }
 
-export function unmountResponderListeners(fiber: Fiber) {
+export function unmountDeprecatedResponderListeners(fiber: Fiber) {
   const dependencies = fiber.dependencies;
 
   if (dependencies !== null) {
@@ -227,7 +226,7 @@ export function unmountResponderListeners(fiber: Fiber) {
       const responderInstances = Array.from(respondersMap.values());
       for (let i = 0, length = responderInstances.length; i < length; i++) {
         const responderInstance = responderInstances[i];
-        unmountResponderInstance(responderInstance);
+        DEPRECATED_unmountResponderInstance(responderInstance);
       }
       dependencies.responders = null;
     }

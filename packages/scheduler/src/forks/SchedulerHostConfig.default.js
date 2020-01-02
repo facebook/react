@@ -81,14 +81,16 @@ if (
     const cancelAnimationFrame = window.cancelAnimationFrame;
     // TODO: Remove fb.me link
     if (typeof requestAnimationFrame !== 'function') {
-      console.error(
+      // Using console['error'] to evade Babel and ESLint
+      console['error'](
         "This browser doesn't support requestAnimationFrame. " +
           'Make sure that you load a ' +
           'polyfill in older browsers. https://fb.me/react-polyfills',
       );
     }
     if (typeof cancelAnimationFrame !== 'function') {
-      console.error(
+      // Using console['error'] to evade Babel and ESLint
+      console['error'](
         "This browser doesn't support cancelAnimationFrame. " +
           'Make sure that you load a ' +
           'polyfill in older browsers. https://fb.me/react-polyfills',
@@ -169,7 +171,8 @@ if (
 
   forceFrameRate = function(fps) {
     if (fps < 0 || fps > 125) {
-      console.error(
+      // Using console['error'] to evade Babel and ESLint
+      console['error'](
         'forceFrameRate takes a positive int between 0 and 125, ' +
           'forcing framerates higher than 125 fps is not unsupported',
       );

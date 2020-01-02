@@ -33,7 +33,7 @@ const setUntrackedTextareaValue = Object.getOwnPropertyDescriptor(
 
 const modulesInit = () => {
   ReactFeatureFlags = require('shared/ReactFeatureFlags');
-  ReactFeatureFlags.enableFlareAPI = true;
+  ReactFeatureFlags.enableDeprecatedFlareAPI = true;
   ReactFeatureFlags.debugRenderPhaseSideEffectsForStrictMode = false;
   React = require('react');
   ReactDOM = require('react-dom');

@@ -9,7 +9,6 @@
 
 import {Namespaces} from '../shared/DOMNamespaces';
 import createMicrosoftUnsafeLocalFunction from '../shared/createMicrosoftUnsafeLocalFunction';
-import warning from 'shared/warning';
 import type {TrustedValue} from './ToStringValue';
 import {enableTrustedTypesIntegration} from 'shared/ReactFeatureFlags';
 
@@ -33,7 +32,7 @@ const setInnerHTML = createMicrosoftUnsafeLocalFunction(function(
         // TODO: reconsider the text of this warning and when it should show
         // before enabling the feature flag.
         if (typeof trustedTypes !== 'undefined') {
-          warning(
+          console.error(
             "Using 'dangerouslySetInnerHTML' in an svg element with " +
               'Trusted Types enabled in an Internet Explorer will cause ' +
               'the trusted value to be converted to string. Assigning string ' +

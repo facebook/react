@@ -863,7 +863,7 @@ describe('ReactUpdates', () => {
     let component = ReactTestUtils.renderIntoDocument(<A />);
 
     expect(() => {
-      expect(() => component.setState({}, 'no')).toWarnDev(
+      expect(() => component.setState({}, 'no')).toErrorDev(
         'setState(...): Expected the last optional `callback` argument to be ' +
           'a function. Instead received: no.',
       );
@@ -873,7 +873,7 @@ describe('ReactUpdates', () => {
     );
     component = ReactTestUtils.renderIntoDocument(<A />);
     expect(() => {
-      expect(() => component.setState({}, {foo: 'bar'})).toWarnDev(
+      expect(() => component.setState({}, {foo: 'bar'})).toErrorDev(
         'setState(...): Expected the last optional `callback` argument to be ' +
           'a function. Instead received: [object Object].',
       );
@@ -906,7 +906,7 @@ describe('ReactUpdates', () => {
     let component = ReactTestUtils.renderIntoDocument(<A />);
 
     expect(() => {
-      expect(() => component.forceUpdate('no')).toWarnDev(
+      expect(() => component.forceUpdate('no')).toErrorDev(
         'forceUpdate(...): Expected the last optional `callback` argument to be ' +
           'a function. Instead received: no.',
       );
@@ -916,7 +916,7 @@ describe('ReactUpdates', () => {
     );
     component = ReactTestUtils.renderIntoDocument(<A />);
     expect(() => {
-      expect(() => component.forceUpdate({foo: 'bar'})).toWarnDev(
+      expect(() => component.forceUpdate({foo: 'bar'})).toErrorDev(
         'forceUpdate(...): Expected the last optional `callback` argument to be ' +
           'a function. Instead received: [object Object].',
       );
@@ -1229,7 +1229,7 @@ describe('ReactUpdates', () => {
     }
 
     const container = document.createElement('div');
-    expect(() => ReactDOM.render(<Foo />, container)).toWarnDev(
+    expect(() => ReactDOM.render(<Foo />, container)).toErrorDev(
       'Cannot update during an existing state transition',
     );
     expect(ops).toEqual(['base: 0, memoized: 0', 'base: 1, memoized: 1']);

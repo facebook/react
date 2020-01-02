@@ -225,6 +225,7 @@ export type InstanceAndStyle = {|
 
 export type RendererInterface = {
   cleanup: () => void,
+  copyElementPath: (id: number, path: Array<string | number>) => void,
   findNativeNodesForFiberID: FindNativeNodesForFiberID,
   flushInitialOperations: () => void,
   getBestMatchForTrackedPath: () => PathMatch | null,
@@ -241,6 +242,10 @@ export type RendererInterface = {
   ) => InspectedElementPayload,
   logElementToConsole: (id: number) => void,
   overrideSuspense: (id: number, forceFallback: boolean) => void,
+  prepareViewAttributeSource: (
+    id: number,
+    path: Array<string | number>,
+  ) => void,
   prepareViewElementSource: (id: number) => void,
   renderer: ReactRenderer | null,
   setInContext: (id: number, path: Array<string | number>, value: any) => void,
@@ -256,6 +261,11 @@ export type RendererInterface = {
   setTrackedPath: (path: Array<PathFrame> | null) => void,
   startProfiling: (recordChangeDescriptions: boolean) => void,
   stopProfiling: () => void,
+  storeAsGlobal: (
+    id: number,
+    path: Array<string | number>,
+    count: number,
+  ) => void,
   updateComponentFilters: (componentFilters: Array<ComponentFilter>) => void,
 };
 

@@ -16,6 +16,9 @@ const pathToBabel = path.join(
 const pathToBabelPluginDevWithCode = require.resolve(
   '../error-codes/transform-error-messages'
 );
+const pathToBabelPluginReplaceConsoleCalls = require.resolve(
+  '../babel/transform-replace-console-calls'
+);
 const pathToBabelPluginAsyncToGenerator = require.resolve(
   '@babel/plugin-transform-async-to-generator'
 );
@@ -65,18 +68,25 @@ module.exports = {
       // for test files, we also apply the async-await transform, but we want to
       // make sure we don't accidentally apply that transform to product code.
       const isTestFile = !!filePath.match(/\/__tests__\//);
+      const isInDevToolsPackages = !!filePath.match(
+        /\/packages\/react-devtools.*\//
+      );
+      const testOnlyPlugins = [pathToBabelPluginAsyncToGenerator];
+      const sourceOnlyPlugins = [];
+      if (process.env.NODE_ENV === 'development' && !isInDevToolsPackages) {
+        sourceOnlyPlugins.push(pathToBabelPluginReplaceConsoleCalls);
+      }
+      const plugins = (isTestFile ? testOnlyPlugins : sourceOnlyPlugins).concat(
+        babelOptions.plugins
+      );
       return babel.transform(
         src,
         Object.assign(
           {filename: path.relative(process.cwd(), filePath)},
           babelOptions,
-          isTestFile
-            ? {
-                plugins: [pathToBabelPluginAsyncToGenerator].concat(
-                  babelOptions.plugins
-                ),
-              }
-            : {}
+          {
+            plugins,
+          }
         )
       );
     }

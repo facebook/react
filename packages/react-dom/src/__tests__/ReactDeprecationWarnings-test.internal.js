@@ -40,7 +40,7 @@ describe('ReactDeprecationWarnings', () => {
     };
 
     ReactNoop.render(<FunctionalComponent />);
-    expect(() => expect(Scheduler).toFlushWithoutYielding()).toWarnDev(
+    expect(() => expect(Scheduler).toFlushWithoutYielding()).toErrorDev(
       'Warning: FunctionalComponent: Support for defaultProps ' +
         'will be removed from function components in a future major ' +
         'release. Use JavaScript default parameters instead.',
@@ -60,7 +60,7 @@ describe('ReactDeprecationWarnings', () => {
     }
 
     ReactNoop.render(<Component />);
-    expect(() => expect(Scheduler).toFlushWithoutYielding()).toWarnDev(
+    expect(() => expect(Scheduler).toFlushWithoutYielding()).toErrorDev(
       'Warning: Component "Component" contains the string ref "refComponent". ' +
         'Support for string refs will be removed in a future major release. ' +
         'We recommend using useRef() or createRef() instead. ' +

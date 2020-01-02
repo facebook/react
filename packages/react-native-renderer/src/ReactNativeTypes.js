@@ -119,10 +119,7 @@ export type NativeMethods = {
 };
 
 export type NativeMethodsMixinType = NativeMethods;
-export type HostComponent<T> = AbstractComponent<
-  T,
-  $ReadOnly<$Exact<NativeMethods>>,
->;
+export type HostComponent<T> = AbstractComponent<T, $ReadOnly<NativeMethods>>;
 
 type SecretInternalsType = {
   NativeMethodsMixin: NativeMethodsMixinType,
@@ -201,48 +198,3 @@ export type ReactFaricEvent = {
   targetTouches: Array<ReactFaricEventTouch>,
   target: number,
 };
-
-export type ReactNativeResponderEvent = {
-  nativeEvent: ReactFaricEvent,
-  target: null | ReactNativeEventTarget,
-  type: string,
-};
-
-export type ReactNativeResponderContext = {
-  dispatchEvent: (
-    eventValue: any,
-    listener: (any) => void,
-    eventPriority: EventPriority,
-  ) => void,
-  isTargetWithinNode: (
-    childTarget: ReactNativeEventTarget,
-    parentTarget: ReactNativeEventTarget,
-  ) => boolean,
-  getTargetBoundingRect(
-    target: ReactNativeEventTarget,
-    cb: ({
-      left: number,
-      right: number,
-      top: number,
-      bottom: number,
-    }) => void,
-  ): void,
-  addRootEventTypes: (rootEventTypes: Array<string>) => void,
-  removeRootEventTypes: (rootEventTypes: Array<string>) => void,
-  getTimeStamp: () => number,
-  getResponderNode(): ReactNativeEventTarget | null,
-};
-
-export type PointerType =
-  | ''
-  | 'mouse'
-  | 'keyboard'
-  | 'pen'
-  | 'touch'
-  | 'trackpad';
-
-export type EventPriority = 0 | 1 | 2;
-
-export const DiscreteEvent: EventPriority = 0;
-export const UserBlockingEvent: EventPriority = 1;
-export const ContinuousEvent: EventPriority = 2;

@@ -14,7 +14,6 @@ import {
 } from 'legacy-events/EventPluginHub';
 import {registrationNameModules} from 'legacy-events/EventPluginRegistry';
 import {batchedUpdates} from 'legacy-events/ReactGenericBatching';
-import warning from 'shared/warning';
 import {enableNativeTargetAsInstance} from 'shared/ReactFeatureFlags';
 
 import {getInstanceFromNode} from './ReactNativeComponentTree';
@@ -184,7 +183,9 @@ export function receiveTouches(
     if (target !== null && target !== undefined) {
       if (target < 1) {
         if (__DEV__) {
-          warning('A view is reporting that a touch occurred on tag zero.');
+          console.error(
+            'A view is reporting that a touch occurred on tag zero.',
+          );
         }
       } else {
         rootNodeID = target;

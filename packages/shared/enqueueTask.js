@@ -7,8 +7,6 @@
  * @flow
  */
 
-import warningWithoutStack from 'shared/warningWithoutStack';
-
 let didWarnAboutMessageChannel = false;
 let enqueueTask;
 try {
@@ -28,7 +26,7 @@ try {
       if (didWarnAboutMessageChannel === false) {
         didWarnAboutMessageChannel = true;
         if (typeof MessageChannel === 'undefined') {
-          warningWithoutStack(
+          console.error(
             'This browser does not have a MessageChannel implementation, ' +
               'so enqueuing tasks via await act(async () => ...) will fail. ' +
               'Please file an issue at https://github.com/facebook/react/issues ' +

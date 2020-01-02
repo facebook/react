@@ -6,7 +6,6 @@
  */
 
 import invariant from 'shared/invariant';
-import warning from 'shared/warning';
 // TODO: We can remove this if we add invariantWithStack()
 // or add stack by default to invariants where possible.
 import ReactSharedInternals from 'shared/ReactSharedInternals';
@@ -53,7 +52,7 @@ function assertValidProps(tag: string, props: ?Object) {
       props.contentEditable &&
       props.children != null
     ) {
-      warning(
+      console.error(
         'A component is `contentEditable` and contains `children` managed by ' +
           'React. It is now your responsibility to guarantee that none of ' +
           'those nodes are unexpectedly modified or duplicated. This is ' +

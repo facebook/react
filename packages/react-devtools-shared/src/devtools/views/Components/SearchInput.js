@@ -53,9 +53,13 @@ export default function SearchInput(props: Props) {
   );
 
   const handleInputKeyPress = useCallback(
-    ({key}) => {
+    ({key, shiftKey}) => {
       if (key === 'Enter') {
-        dispatch({type: 'GO_TO_NEXT_SEARCH_RESULT'});
+        if (shiftKey) {
+          dispatch({type: 'GO_TO_PREVIOUS_SEARCH_RESULT'});
+        } else {
+          dispatch({type: 'GO_TO_NEXT_SEARCH_RESULT'});
+        }
       }
     },
     [dispatch],

@@ -74,7 +74,7 @@ describe('ReactPureComponent', () => {
     }
 
     const container = document.createElement('div');
-    expect(() => ReactDOM.render(<Component />, container)).toWarnDev(
+    expect(() => ReactDOM.render(<Component />, container)).toErrorDev(
       'Warning: ' +
         'Component has a method called shouldComponentUpdate(). ' +
         'shouldComponentUpdate should not be used when extending React.PureComponent. ' +
@@ -108,7 +108,7 @@ describe('ReactPureComponent', () => {
       }
     }
     const container = document.createElement('div');
-    expect(() => ReactDOM.render(<PureComponent />, container)).toWarnDev(
+    expect(() => ReactDOM.render(<PureComponent />, container)).toErrorDev(
       'Warning: ' +
         'PureComponent has a method called shouldComponentUpdate(). ' +
         'shouldComponentUpdate should not be used when extending React.PureComponent. ' +

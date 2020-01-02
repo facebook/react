@@ -319,7 +319,7 @@ describe('ReactChildren', () => {
     });
 
     let instance;
-    expect(() => (instance = <div>{threeDivIterable}</div>)).toWarnDev(
+    expect(() => (instance = <div>{threeDivIterable}</div>)).toErrorDev(
       'Warning: Each child in a list should have a unique "key" prop.',
     );
 
@@ -903,7 +903,7 @@ describe('ReactChildren', () => {
 
       expect(() =>
         ReactTestUtils.renderIntoDocument(<ComponentReturningArray />),
-      ).toWarnDev(
+      ).toErrorDev(
         'Warning: ' +
           'Each child in a list should have a unique "key" prop.' +
           ' See https://fb.me/react-warning-keys for more information.' +
@@ -924,7 +924,7 @@ describe('ReactChildren', () => {
     it('warns for keys for arrays at the top level', () => {
       expect(() =>
         ReactTestUtils.renderIntoDocument([<div />, <div />]),
-      ).toWarnDev(
+      ).toErrorDev(
         'Warning: ' +
           'Each child in a list should have a unique "key" prop.' +
           ' See https://fb.me/react-warning-keys for more information.',

@@ -277,6 +277,8 @@ export function installHook(target: any): DevToolsHook | null {
   const hook: DevToolsHook = {
     rendererInterfaces,
     listeners,
+
+    // Fast Refresh for web relies on this.
     renderers,
 
     emit,

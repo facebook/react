@@ -108,14 +108,24 @@ if (process.env.REACT_CLASS_EQUIVALENCE_TEST) {
               .join('\n')}`
         );
 
+        let expectedMatcher;
+        switch (methodName) {
+          case 'warn':
+            expectedMatcher = 'toWarnDev';
+            break;
+          case 'error':
+            expectedMatcher = 'toErrorDev';
+            break;
+          default:
+            throw new Error('No matcher for ' + methodName);
+        }
         const message =
           `Expected test not to call ${chalk.bold(
             `console.${methodName}()`
           )}.\n\n` +
           'If the warning is expected, test for it explicitly by:\n' +
-          `1. Using the ${chalk.bold('.toWarnDev()')} / ${chalk.bold(
-            '.toLowPriorityWarnDev()'
-          )} matchers, or...\n` +
+          `1. Using the ${chalk.bold('.' + expectedMatcher + '()')} ` +
+          `matcher, or...\n` +
           `2. Mock it out using ${chalk.bold(
             'spyOnDev'
           )}(console, '${methodName}') or ${chalk.bold(

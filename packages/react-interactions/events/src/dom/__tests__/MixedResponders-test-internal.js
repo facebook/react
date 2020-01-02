@@ -9,7 +9,7 @@
 
 'use strict';
 
-import {createEventTarget} from '../testing-library';
+import {createEventTarget} from 'dom-event-testing-library';
 
 let React;
 let ReactFeatureFlags;
@@ -21,7 +21,7 @@ describe('mixing responders with the heritage event system', () => {
 
   beforeEach(() => {
     ReactFeatureFlags = require('shared/ReactFeatureFlags');
-    ReactFeatureFlags.enableFlareAPI = true;
+    ReactFeatureFlags.enableDeprecatedFlareAPI = true;
     React = require('react');
     ReactDOM = require('react-dom');
     Scheduler = require('scheduler');

@@ -206,7 +206,7 @@ describe('ReactElement.jsx', () => {
         });
       }
     }
-    expect(() => ReactDOM.render(React.jsx(Parent, {}), container)).toWarnDev(
+    expect(() => ReactDOM.render(React.jsx(Parent, {}), container)).toErrorDev(
       'Child: `key` is not a prop. Trying to access it will result ' +
         'in `undefined` being returned. If you need to access the same ' +
         'value within the child component, you should pass it as a different ' +
@@ -218,7 +218,7 @@ describe('ReactElement.jsx', () => {
     const container = document.createElement('div');
     expect(() =>
       ReactDOM.render(React.jsxs('div', {children: 'foo'}, null), container),
-    ).toWarnDev(
+    ).toErrorDev(
       'React.jsx: Static children should always be an array. ' +
         'You are likely explicitly calling React.jsxs or React.jsxDEV. ' +
         'Use the Babel transform instead.',
@@ -228,7 +228,7 @@ describe('ReactElement.jsx', () => {
 
   it('should warn when `key` is being accessed on a host element', () => {
     const element = React.jsxs('div', {}, '3');
-    expect(() => void element.props.key).toWarnDev(
+    expect(() => void element.props.key).toErrorDev(
       'div: `key` is not a prop. Trying to access it will result ' +
         'in `undefined` being returned. If you need to access the same ' +
         'value within the child component, you should pass it as a different ' +
@@ -251,7 +251,7 @@ describe('ReactElement.jsx', () => {
         });
       }
     }
-    expect(() => ReactDOM.render(React.jsx(Parent, {}), container)).toWarnDev(
+    expect(() => ReactDOM.render(React.jsx(Parent, {}), container)).toErrorDev(
       'Child: `ref` is not a prop. Trying to access it will result ' +
         'in `undefined` being returned. If you need to access the same ' +
         'value within the child component, you should pass it as a different ' +
@@ -321,7 +321,7 @@ describe('ReactElement.jsx', () => {
         });
       }
     }
-    expect(() => ReactDOM.render(React.jsx(Parent, {}), container)).toWarnDev(
+    expect(() => ReactDOM.render(React.jsx(Parent, {}), container)).toErrorDev(
       'Warning: Each child in a list should have a unique "key" prop.\n\n' +
         'Check the render method of `Parent`. See https://fb.me/react-warning-keys for more information.\n' +
         '    in Child (created by Parent)\n' +
@@ -343,7 +343,7 @@ describe('ReactElement.jsx', () => {
         });
       }
     }
-    expect(() => ReactDOM.render(React.jsx(Parent, {}), container)).toWarnDev(
+    expect(() => ReactDOM.render(React.jsx(Parent, {}), container)).toErrorDev(
       'Warning: React.jsx: Spreading a key to JSX is a deprecated pattern. ' +
         'Explicitly pass a key after spreading props in your JSX call. ' +
         'E.g. <ComponentName {...props} key={key} />',

@@ -313,6 +313,16 @@ function updateThemeVariables(
     'color-component-badge-count-inverted',
     documentElements,
   );
+  updateStyleHelper(theme, 'color-context-background', documentElements);
+  updateStyleHelper(theme, 'color-context-background-hover', documentElements);
+  updateStyleHelper(
+    theme,
+    'color-context-background-selected',
+    documentElements,
+  );
+  updateStyleHelper(theme, 'color-context-border', documentElements);
+  updateStyleHelper(theme, 'color-context-text', documentElements);
+  updateStyleHelper(theme, 'color-context-text-selected', documentElements);
   updateStyleHelper(theme, 'color-dim', documentElements);
   updateStyleHelper(theme, 'color-dimmer', documentElements);
   updateStyleHelper(theme, 'color-dimmest', documentElements);
