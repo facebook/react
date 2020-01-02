@@ -150,7 +150,6 @@ export function updateWrapper(element: Element, props: Object) {
           'undefined, which should not happen. ' +
           'Decide between using a controlled or uncontrolled input ' +
           'element for the lifetime of the component. More info: https://fb.me/react-controlled-components',
-        props.type,
       );
       didWarnUncontrolledToControlled = true;
     }
@@ -166,7 +165,6 @@ export function updateWrapper(element: Element, props: Object) {
           'a defined value, which should not happen. ' +
           'Decide between using a controlled or uncontrolled input ' +
           'element for the lifetime of the component. More info: https://fb.me/react-controlled-components',
-        props.type,
       );
       didWarnControlledToUncontrolled = true;
     }
