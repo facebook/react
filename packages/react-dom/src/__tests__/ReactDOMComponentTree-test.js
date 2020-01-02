@@ -178,9 +178,9 @@ describe('ReactDOMComponentTree', () => {
     const component = <Controlled />;
     const instance = ReactDOM.render(component, container);
     expect(() => simulateInput(instance.a, finishValue)).toErrorDev(
-      'Warning: A component is changing an uncontrolled input to be ' +
-        'controlled. This is likely caused by the value changing from ' +
-        'a defined to undefined, which should not happen. ' +
+      'Warning: A component is changing an uncontrolled input to be controlled. ' +
+        'This is likely caused by the value changing from undefined to ' +
+        'a defined value, which should not happen. ' +
         'Decide between using a controlled or uncontrolled input ' +
         'element for the lifetime of the component. More info: ' +
         'https://fb.me/react-controlled-components',
