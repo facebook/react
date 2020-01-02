@@ -145,8 +145,9 @@ export function updateWrapper(element: Element, props: Object) {
     ) {
       warning(
         false,
-        'An input was created with a %s value, but was later passed a value. ' +
-          'This changes it from an uncontrolled to controlled input, which should not happen. ' +
+        'A component is changing an uncontrolled input to be controlled. ' +
+          'This is likely caused by the value changing from a defined to ' +
+          'undefined, which should not happen. ' +
           'Decide between using a controlled or uncontrolled input ' +
           'element for the lifetime of the component. More info: https://fb.me/react-controlled-components',
         props.type,
@@ -160,8 +161,9 @@ export function updateWrapper(element: Element, props: Object) {
     ) {
       warning(
         false,
-        'A component is changing a controlled input of type %s to be uncontrolled. ' +
-          'Input elements should not switch from controlled to uncontrolled (or vice versa). ' +
+        'A component is changing a controlled input to be uncontrolled. ' +
+          'This is likely caused by the value changing from undefined to ' +
+          'a defined value, which should not happen. ' +
           'Decide between using a controlled or uncontrolled input ' +
           'element for the lifetime of the component. More info: https://fb.me/react-controlled-components',
         props.type,
