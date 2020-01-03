@@ -385,7 +385,7 @@ export function getDataType(data: Object): DataType {
       if (Array.isArray(data)) {
         return 'array';
       } else if (ArrayBuffer.isView(data)) {
-        return data.constructor.hasOwnProperty('BYTES_PER_ELEMENT')
+        return hasOwnProperty.call(data.constructor, 'BYTES_PER_ELEMENT')
           ? 'typed_array'
           : 'data_view';
       } else if (data.constructor && data.constructor.name === 'ArrayBuffer') {
@@ -490,7 +490,7 @@ export function formatDataForPreview(
   data: any,
   showFormattedValue: boolean,
 ): string {
-  if (data != null && data.hasOwnProperty(meta.type)) {
+  if (data != null && hasOwnProperty.call(data, meta.type)) {
     return showFormattedValue
       ? data[meta.preview_long]
       : data[meta.preview_short];
@@ -534,7 +534,7 @@ export function formatDataForPreview(
         }
         return `[${truncateForDisplay(formatted)}]`;
       } else {
-        const length = data.hasOwnProperty(meta.size)
+        const length = hasOwnProperty.call(data, meta.size)
           ? data[meta.size]
           : data.length;
         return `Array(${length})`;

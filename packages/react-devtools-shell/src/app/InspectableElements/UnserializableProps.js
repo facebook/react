@@ -25,9 +25,6 @@ const immutable = Immutable.fromJS({
     xyz: 1,
   },
 });
-const objectWithNullProto = Object.create(null);
-objectWithNullProto.foo = 'abc';
-objectWithNullProto.bar = 123;
 
 export default function UnserializableProps() {
   return (
@@ -40,7 +37,6 @@ export default function UnserializableProps() {
       setOfSets={setOfSets}
       typedArray={typedArray}
       immutable={immutable}
-      objectWithNullProto={objectWithNullProto}
     />
   );
 }

@@ -78,7 +78,7 @@ export default function KeyValue({
       type:
         value !== null &&
         typeof value === 'object' &&
-        value.hasOwnProperty(meta.type)
+        hasOwnProperty.call(value, meta.type)
           ? value[meta.type]
           : typeof value,
     },
@@ -136,8 +136,8 @@ export default function KeyValue({
       </div>
     );
   } else if (
-    value.hasOwnProperty(meta.type) &&
-    !value.hasOwnProperty(meta.unserializable)
+    hasOwnProperty.call(value, meta.type) &&
+    !hasOwnProperty.call(value, meta.unserializable)
   ) {
     children = (
       <div
