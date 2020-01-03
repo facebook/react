@@ -539,6 +539,8 @@ if (supportsMutation) {
       // We'll have to mark it as having an effect, even though we won't use the effect for anything.
       // This lets the parents know that at least one of their children has changed.
       markUpdate(workInProgress);
+    } else {
+      workInProgress.stateNode = current.stateNode;
     }
   };
 } else {
