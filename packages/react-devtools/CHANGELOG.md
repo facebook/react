@@ -8,14 +8,21 @@
   
   <!-- Upcoming changes go here -->
 
+
+</details>
+
+## 4.4.0 (January 3, 2020)
 #### Features
 * Re-enabled "copy" prop/state/hooks context menu option for Firefox ([bvaughn](https://github.com/bvaughn),[rpl](https://github.com/rpl) in [#17740](https://github.com/facebook/react/pull/17740))
 * Shift+Enter focuses previous search result in Components tree ([Bo-Duke](https://github.com/Bo-Duke) in [#17005](https://github.com/facebook/react/pull/17005))
 * Properly display formatted `RegExp` values in props/state panel([bvaughn](https://github.com/bvaughn) in [#17690](https://github.com/facebook/react/pull/17690))
+* Profiler commit selector wraps around for easier navigation of large profiles ([bvaughn](https://github.com/bvaughn) in [#17760](https://github.com/facebook/react/pull/17760))
 #### Bugfix
 * Check `document.contentType` before injecting hook to avoid breaking XML file syntax highlighting in Firefox ([bvaughn](https://github.com/bvaughn) in [#17739](https://github.com/facebook/react/pull/17739))
 * Fix standalone UI not responding to mouse interactions due to `webkit-app-region` style ([cwatson88](https://github.com/cwatson88) in [#17584](https://github.com/facebook/react/pull/17584))
-</details>
+* Support inspecting object values with null protos ([bvaughn](https://github.com/bvaughn) in [#17757](https://github.com/facebook/react/pull/17757))
+* Support inspecting values that have overridden `hasOwnProperty` attribute ([bvaughn](https://github.com/bvaughn) in [#17768](https://github.com/facebook/react/pull/17768))
+* Fixed regression that made Profiler "Could not find node…" error happen more frequently ([bvaughn](https://github.com/bvaughn) in [#17759](https://github.com/facebook/react/pull/17759))
 
 ## 4.3.0 (December 20, 2019)
 #### Features
