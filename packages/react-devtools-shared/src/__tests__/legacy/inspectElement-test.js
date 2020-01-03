@@ -168,10 +168,6 @@ describe('InspectedElementContext', () => {
         xyz: 1,
       },
     });
-    const objectWithNullProto = Object.create(null);
-    objectWithNullProto.string = 'abc';
-    objectWithNullProto.number = 123;
-    objectWithNullProto.boolean = true;
 
     act(() =>
       ReactDOM.render(
@@ -188,7 +184,6 @@ describe('InspectedElementContext', () => {
           map={mapShallow}
           map_of_maps={mapOfMaps}
           object_of_objects={objectOfObjects}
-          object_with_null_proto={objectWithNullProto}
           react_element={<span />}
           regexp={/abc/giu}
           set={setShallow}
@@ -217,7 +212,6 @@ describe('InspectedElementContext', () => {
       map,
       map_of_maps,
       object_of_objects,
-      object_with_null_proto,
       react_element,
       regexp,
       set,
@@ -283,12 +277,6 @@ describe('InspectedElementContext', () => {
     );
     expect(object_of_objects.inner[meta.preview_short]).toBe('{…}');
 
-    expect(object_with_null_proto).toEqual({
-      boolean: true,
-      number: 123,
-      string: 'abc',
-    });
-
     expect(react_element[meta.inspectable]).toBe(false);
     expect(react_element[meta.name]).toBe('span');
     expect(react_element[meta.type]).toBe('react_element');
@@ -321,6 +309,61 @@ describe('InspectedElementContext', () => {
     expect(typed_array[0]).toBe(100);
     expect(typed_array[1]).toBe(-100);
     expect(typed_array[2]).toBe(0);
+
+    done();
+  });
+
+  it('should support objects with no prototype', async done => {
+    const Example = () => null;
+
+    const object = Object.create(null);
+    object.string = 'abc';
+    object.number = 123;
+    object.boolean = true;
+
+    act(() =>
+      ReactDOM.render(
+        <Example object={object} />,
+        document.createElement('div'),
+      ),
+    );
+
+    const id = ((store.getElementIDAtIndex(0): any): number);
+    const inspectedElement = await read(id);
+
+    expect(inspectedElement).toMatchSnapshot('1: Initial inspection');
+    expect(inspectedElement.value.props.object).toEqual({
+      boolean: true,
+      number: 123,
+      string: 'abc',
+    });
+
+    done();
+  });
+
+  it('should support objects with overridden hasOwnProperty', async done => {
+    const Example = () => null;
+
+    const object = {
+      name: 'blah',
+      hasOwnProperty: true,
+    };
+
+    act(() =>
+      ReactDOM.render(
+        <Example object={object} />,
+        document.createElement('div'),
+      ),
+    );
+
+    const id = ((store.getElementIDAtIndex(0): any): number);
+    const inspectedElement = await read(id);
+
+    expect(inspectedElement).toMatchSnapshot('1: Initial inspection');
+    expect(inspectedElement.value.props.object).toEqual({
+      name: 'blah',
+      hasOwnProperty: true,
+    });
 
     done();
   });

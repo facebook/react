@@ -151,11 +151,6 @@ Object {
     "object_of_objects": {
       "inner": {}
     },
-    "object_with_null_proto": {
-      "string": "abc",
-      "number": 123,
-      "boolean": true
-    },
     "react_element": {},
     "regexp": {},
     "set": {
@@ -191,6 +186,47 @@ Object {
     "data": {
       "_number": 42,
       "number": 42
+    }
+  },
+  "state": null
+},
+}
+`;
+
+exports[`InspectedElementContext should support objects with no prototype: 1: Initial inspection 1`] = `
+Object {
+  "id": 2,
+  "type": "full-data",
+  "value": {
+  "id": 2,
+  "owners": null,
+  "context": {},
+  "hooks": null,
+  "props": {
+    "object": {
+      "string": "abc",
+      "number": 123,
+      "boolean": true
+    }
+  },
+  "state": null
+},
+}
+`;
+
+exports[`InspectedElementContext should support objects with overridden hasOwnProperty: 1: Initial inspection 1`] = `
+Object {
+  "id": 2,
+  "type": "full-data",
+  "value": {
+  "id": 2,
+  "owners": null,
+  "context": {},
+  "hooks": null,
+  "props": {
+    "object": {
+      "name": "blah",
+      "hasOwnProperty": true
     }
   },
   "state": null
