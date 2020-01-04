@@ -85,7 +85,6 @@ import possibleStandardNames from '../shared/possibleStandardNames';
 import {validateProperties as validateARIAProperties} from '../shared/ReactDOMInvalidARIAHook';
 import {validateProperties as validateInputProperties} from '../shared/ReactDOMNullInputValuePropHook';
 import {validateProperties as validateUnknownProperties} from '../shared/ReactDOMUnknownPropertyHook';
-import {toStringOrTrustedType} from './ToStringValue';
 
 import {
   enableDeprecatedFlareAPI,
@@ -787,10 +786,7 @@ export function diffProperties(
       const lastHtml = lastProp ? lastProp[HTML] : undefined;
       if (nextHtml != null) {
         if (lastHtml !== nextHtml) {
-          (updatePayload = updatePayload || []).push(
-            propKey,
-            toStringOrTrustedType(nextHtml),
-          );
+          (updatePayload = updatePayload || []).push(propKey, nextHtml);
         }
       } else {
         // TODO: It might be too late to clear this if we have children
