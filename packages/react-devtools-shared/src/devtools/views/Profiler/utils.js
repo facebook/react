@@ -60,26 +60,54 @@ export function prepareProfilingDataFrontendFromBackendAndStore(
           throw Error(`Could not find profiling snapshots for root ${rootID}`);
         }
 
+        const filteredCommitData = [];
+        const filteredOperations = [];
+
+        // Filter empty commits from the profiler data.
+        // It is very important to keep operations and commit data arrays perfect in sync.
+        // So we must use the same criteria to filter both.
+        // If these two arrays were to get out of sync, the profiler would runtime error.
+        // We choose to filter on commit metadata, rather than the operations array,
+        // because the latter may have false positives,
+        // (e.g. a commit that re-rendered a component with the same treeBaseDuration as before).
+        commitData.forEach((commitDataBackend, commitIndex) => {
+          if (commitDataBackend.fiberActualDurations.length > 0) {
+            filteredCommitData.push({
+              changeDescriptions:
+                commitDataBackend.changeDescriptions != null
+                  ? new Map(commitDataBackend.changeDescriptions)
+                  : null,
+              duration: commitDataBackend.duration,
+              fiberActualDurations: new Map(
+                commitDataBackend.fiberActualDurations,
+              ),
+              fiberSelfDurations: new Map(commitDataBackend.fiberSelfDurations),
+              interactionIDs: commitDataBackend.interactionIDs,
+              priorityLevel: commitDataBackend.priorityLevel,
+              timestamp: commitDataBackend.timestamp,
+            });
+            filteredOperations.push(operations[commitIndex]);
+          }
+        });
+
         dataForRoots.set(rootID, {
-          commitData: commitData.map((commitDataBackend, commitIndex) => ({
-            changeDescriptions:
-              commitDataBackend.changeDescriptions != null
-                ? new Map(commitDataBackend.changeDescriptions)
-                : null,
-            duration: commitDataBackend.duration,
-            fiberActualDurations: new Map(
-              commitDataBackend.fiberActualDurations,
-            ),
-            fiberSelfDurations: new Map(commitDataBackend.fiberSelfDurations),
-            interactionIDs: commitDataBackend.interactionIDs,
-            priorityLevel: commitDataBackend.priorityLevel,
-            timestamp: commitDataBackend.timestamp,
-          })),
+          commitData: filteredCommitData,
           displayName,
           initialTreeBaseDurations: new Map(initialTreeBaseDurations),
           interactionCommits: new Map(interactionCommits),
           interactions: new Map(interactions),
-          operations,
+          operations: filteredOperations,
+          rootID,
+          snapshots,
+        });
+
+        dataForRoots.set(rootID, {
+          commitData: filteredCommitData,
+          displayName,
+          initialTreeBaseDurations: new Map(initialTreeBaseDurations),
+          interactionCommits: new Map(interactionCommits),
+          interactions: new Map(interactions),
+          operations: filteredOperations,
           rootID,
           snapshots,
         });
