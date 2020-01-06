@@ -118,5 +118,6 @@ describe('ProfilerStore', () => {
     const root = store.roots[0];
     const data = store.profilerStore.getDataForRoot(root);
     expect(data.commitData).toHaveLength(1);
+    expect(data.operations).toHaveLength(1);
   });
 });

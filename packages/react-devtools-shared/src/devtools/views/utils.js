@@ -93,7 +93,7 @@ export function createRegExp(string: string): RegExp {
 }
 
 export function getMetaValueLabel(data: Object): string | null {
-  if (data.hasOwnProperty(meta.preview_long)) {
+  if (hasOwnProperty.call(data, meta.preview_long)) {
     return data[meta.preview_long];
   } else {
     return formatDataForPreview(data, true);

@@ -1021,9 +1021,14 @@ export function attach(
       pendingSimulatedUnmountedIDs.length === 0 &&
       pendingUnmountedRootID === null
     ) {
-      // If we're currently profiling, send an "operations" method even if there are no mutations to the tree.
-      // The frontend needs this no-op info to know how to reconstruct the tree for each commit,
-      // even if a particular commit didn't change the shape of the tree.
+      // If we aren't profiling, we can just bail out here.
+      // No use sending an empty update over the bridge.
+      //
+      // The Profiler stores metadata for each commit and reconstructs the app tree per commit using:
+      // (1) an initial tree snapshot and
+      // (2) the operations array for each commit
+      // Because of this, it's important that the operations and metadata arrays align,
+      // So it's important not to ommit even empty operations while profiing is active.
       if (!isProfiling) {
         return;
       }
@@ -1368,6 +1373,8 @@ export function attach(
     if (isProfiling) {
       const {alternate} = fiber;
 
+      // It's important to update treeBaseDuration even if the current Fiber did not render,
+      // becuase it's possible that one of its descednants did.
       if (
         alternate == null ||
         treeBaseDuration !== alternate.treeBaseDuration
@@ -1755,14 +1762,6 @@ export function attach(
     const current = root.current;
     const alternate = current.alternate;
 
-    // Certain types of updates bail out at the root without doing any actual render work.
-    // React should probably not call the DevTools commit hook in this case,
-    // but if it does- we can detect it and filter them out from the profiler.
-    const didBailoutAtRoot =
-      alternate !== null &&
-      alternate.expirationTime === 0 &&
-      alternate.childExpirationTime === 0;
-
     currentRootID = getFiberID(getPrimaryFiber(current));
 
     // Before the traversals, remember to start tracking
@@ -1779,7 +1778,7 @@ export function attach(
     // where some v16 renderers support profiling and others don't.
     const isProfilingSupported = root.memoizedInteractions != null;
 
-    if (isProfiling && isProfilingSupported && !didBailoutAtRoot) {
+    if (isProfiling && isProfilingSupported) {
       // If profiling is active, store commit time and duration, and the current interactions.
       // The frontend may request this information after profiling has stopped.
       currentCommitProfilingMetadata = {
@@ -1823,7 +1822,7 @@ export function attach(
       mountFiberRecursively(current, null, false, false);
     }
 
-    if (isProfiling && isProfilingSupported && !didBailoutAtRoot) {
+    if (isProfiling && isProfilingSupported) {
       const commitProfilingMetadata = ((rootToCommitProfilingMetadataMap: any): CommitProfilingMetadataMap).get(
         currentRootID,
       );

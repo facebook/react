@@ -13,6 +13,7 @@ import CircularReferences from './CircularReferences';
 import Contexts from './Contexts';
 import CustomHooks from './CustomHooks';
 import CustomObject from './CustomObject';
+import EdgeCaseObjects from './EdgeCaseObjects.js';
 import NestedProps from './NestedProps';
 import SimpleValues from './SimpleValues';
 
@@ -28,6 +29,7 @@ export default function InspectableElements() {
       <Contexts />
       <CustomHooks />
       <CustomObject />
+      <EdgeCaseObjects />
       <CircularReferences />
     </Fragment>
   );

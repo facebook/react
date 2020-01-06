@@ -155,7 +155,7 @@ describe('InspectedElementContext', () => {
     const setOfSets = new Set([new Set(['a', 'b', 'c']), new Set([1, 2, 3])]);
     const mapOfMaps = new Map([['first', mapShallow], ['second', mapShallow]]);
     const objectOfObjects = {
-      inner: {string: 'abc', number: 213, boolean: true},
+      inner: {string: 'abc', number: 123, boolean: true},
     };
     const typedArray = Int8Array.from([100, -100, 0]);
     const arrayBuffer = typedArray.buffer;
@@ -273,7 +273,7 @@ describe('InspectedElementContext', () => {
     expect(object_of_objects.inner[meta.name]).toBe('');
     expect(object_of_objects.inner[meta.type]).toBe('object');
     expect(object_of_objects.inner[meta.preview_long]).toBe(
-      '{boolean: true, number: 213, string: "abc"}',
+      '{boolean: true, number: 123, string: "abc"}',
     );
     expect(object_of_objects.inner[meta.preview_short]).toBe('{…}');
 
@@ -309,6 +309,61 @@ describe('InspectedElementContext', () => {
     expect(typed_array[0]).toBe(100);
     expect(typed_array[1]).toBe(-100);
     expect(typed_array[2]).toBe(0);
+
+    done();
+  });
+
+  it('should support objects with no prototype', async done => {
+    const Example = () => null;
+
+    const object = Object.create(null);
+    object.string = 'abc';
+    object.number = 123;
+    object.boolean = true;
+
+    act(() =>
+      ReactDOM.render(
+        <Example object={object} />,
+        document.createElement('div'),
+      ),
+    );
+
+    const id = ((store.getElementIDAtIndex(0): any): number);
+    const inspectedElement = await read(id);
+
+    expect(inspectedElement).toMatchSnapshot('1: Initial inspection');
+    expect(inspectedElement.value.props.object).toEqual({
+      boolean: true,
+      number: 123,
+      string: 'abc',
+    });
+
+    done();
+  });
+
+  it('should support objects with overridden hasOwnProperty', async done => {
+    const Example = () => null;
+
+    const object = {
+      name: 'blah',
+      hasOwnProperty: true,
+    };
+
+    act(() =>
+      ReactDOM.render(
+        <Example object={object} />,
+        document.createElement('div'),
+      ),
+    );
+
+    const id = ((store.getElementIDAtIndex(0): any): number);
+    const inspectedElement = await read(id);
+
+    expect(inspectedElement).toMatchSnapshot('1: Initial inspection');
+    expect(inspectedElement.value.props.object).toEqual({
+      name: 'blah',
+      hasOwnProperty: true,
+    });
 
     done();
   });

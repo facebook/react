@@ -1500,17 +1500,7 @@ Object {
 
 exports[`ProfilingCache should collect data for each root (including ones added or mounted after profiling started): Data for root Parent 3`] = `
 Object {
-  "commitData": Array [
-    Object {
-      "changeDescriptions": Map {},
-      "duration": 0,
-      "fiberActualDurations": Map {},
-      "fiberSelfDurations": Map {},
-      "interactionIDs": Array [],
-      "priorityLevel": "Immediate",
-      "timestamp": 34,
-    },
-  ],
+  "commitData": Array [],
   "displayName": "Parent",
   "initialTreeBaseDurations": Map {
     6 => 11,
@@ -1520,19 +1510,7 @@ Object {
   },
   "interactionCommits": Map {},
   "interactions": Map {},
-  "operations": Array [
-    Array [
-      1,
-      6,
-      0,
-      2,
-      4,
-      9,
-      8,
-      7,
-      6,
-    ],
-  ],
+  "operations": Array [],
   "rootID": 6,
   "snapshots": Map {
     6 => Object {
@@ -2066,17 +2044,7 @@ Object {
       "snapshots": Array [],
     },
     Object {
-      "commitData": Array [
-        Object {
-          "changeDescriptions": Array [],
-          "duration": 0,
-          "fiberActualDurations": Array [],
-          "fiberSelfDurations": Array [],
-          "interactionIDs": Array [],
-          "priorityLevel": "Immediate",
-          "timestamp": 34,
-        },
-      ],
+      "commitData": Array [],
       "displayName": "Parent",
       "initialTreeBaseDurations": Array [
         Array [
@@ -2098,19 +2066,7 @@ Object {
       ],
       "interactionCommits": Array [],
       "interactions": Array [],
-      "operations": Array [
-        Array [
-          1,
-          6,
-          0,
-          2,
-          4,
-          9,
-          8,
-          7,
-          6,
-        ],
-      ],
+      "operations": Array [],
       "rootID": 6,
       "snapshots": Array [
         Array [

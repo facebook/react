@@ -547,6 +547,39 @@ exports[`InspectedElementContext should support custom objects with enumerable p
 }
 `;
 
+exports[`InspectedElementContext should support objects with no prototype: 1: Inspected element 2 1`] = `
+{
+  "id": 2,
+  "owners": null,
+  "context": null,
+  "hooks": null,
+  "props": {
+    "object": {
+      "string": "abc",
+      "number": 123,
+      "boolean": true
+    }
+  },
+  "state": null
+}
+`;
+
+exports[`InspectedElementContext should support objects with overridden hasOwnProperty: 1: Inspected element 2 1`] = `
+{
+  "id": 2,
+  "owners": null,
+  "context": null,
+  "hooks": null,
+  "props": {
+    "object": {
+      "name": "blah",
+      "hasOwnProperty": true
+    }
+  },
+  "state": null
+}
+`;
+
 exports[`InspectedElementContext should support simple data types: 1: Initial inspection 1`] = `
 {
   "id": 2,

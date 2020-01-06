@@ -524,7 +524,7 @@ describe('InspectedElementContext', () => {
     const setOfSets = new Set([new Set(['a', 'b', 'c']), new Set([1, 2, 3])]);
     const mapOfMaps = new Map([['first', mapShallow], ['second', mapShallow]]);
     const objectOfObjects = {
-      inner: {string: 'abc', number: 213, boolean: true},
+      inner: {string: 'abc', number: 123, boolean: true},
     };
     const typedArray = Int8Array.from([100, -100, 0]);
     const arrayBuffer = typedArray.buffer;
@@ -691,7 +691,7 @@ describe('InspectedElementContext', () => {
     expect(object_of_objects.inner[meta.name]).toBe('');
     expect(object_of_objects.inner[meta.type]).toBe('object');
     expect(object_of_objects.inner[meta.preview_long]).toBe(
-      '{boolean: true, number: 213, string: "abc"}',
+      '{boolean: true, number: 123, string: "abc"}',
     );
     expect(object_of_objects.inner[meta.preview_short]).toBe('{…}');
 
@@ -737,6 +737,101 @@ describe('InspectedElementContext', () => {
     expect(typed_array[2]).toBe(0);
     expect(typed_array[meta.preview_long]).toBe('Int8Array(3) [100, -100, 0]');
     expect(typed_array[meta.preview_short]).toBe('Int8Array(3)');
+
+    done();
+  });
+
+  it('should support objects with no prototype', async done => {
+    const Example = () => null;
+
+    const object = Object.create(null);
+    object.string = 'abc';
+    object.number = 123;
+    object.boolean = true;
+
+    const container = document.createElement('div');
+    await utils.actAsync(() =>
+      ReactDOM.render(<Example object={object} />, container),
+    );
+
+    const id = ((store.getElementIDAtIndex(0): any): number);
+
+    let inspectedElement = null;
+
+    function Suspender({target}) {
+      const {getInspectedElement} = React.useContext(InspectedElementContext);
+      inspectedElement = getInspectedElement(id);
+      return null;
+    }
+
+    await utils.actAsync(
+      () =>
+        TestRenderer.create(
+          <Contexts
+            defaultSelectedElementID={id}
+            defaultSelectedElementIndex={0}>
+            <React.Suspense fallback={null}>
+              <Suspender target={id} />
+            </React.Suspense>
+          </Contexts>,
+        ),
+      false,
+    );
+
+    expect(inspectedElement).not.toBeNull();
+    expect(inspectedElement).toMatchSnapshot(`1: Inspected element ${id}`);
+    expect(inspectedElement.props.object).toEqual({
+      boolean: true,
+      number: 123,
+      string: 'abc',
+    });
+
+    done();
+  });
+
+  it('should support objects with overridden hasOwnProperty', async done => {
+    const Example = () => null;
+
+    const object = {
+      name: 'blah',
+      hasOwnProperty: true,
+    };
+
+    const container = document.createElement('div');
+    await utils.actAsync(() =>
+      ReactDOM.render(<Example object={object} />, container),
+    );
+
+    const id = ((store.getElementIDAtIndex(0): any): number);
+
+    let inspectedElement = null;
+
+    function Suspender({target}) {
+      const {getInspectedElement} = React.useContext(InspectedElementContext);
+      inspectedElement = getInspectedElement(id);
+      return null;
+    }
+
+    await utils.actAsync(
+      () =>
+        TestRenderer.create(
+          <Contexts
+            defaultSelectedElementID={id}
+            defaultSelectedElementIndex={0}>
+            <React.Suspense fallback={null}>
+              <Suspender target={id} />
+            </React.Suspense>
+          </Contexts>,
+        ),
+      false,
+    );
+
+    expect(inspectedElement).not.toBeNull();
+    expect(inspectedElement).toMatchSnapshot(`1: Inspected element ${id}`);
+    expect(inspectedElement.props.object).toEqual({
+      name: 'blah',
+      hasOwnProperty: true,
+    });
 
     done();
   });

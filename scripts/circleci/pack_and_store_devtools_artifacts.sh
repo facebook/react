@@ -22,4 +22,5 @@ mv ./chrome/build/ReactDevTools.zip ../../build/devtools/chrome-extension.zip
 mv ./firefox/build/ReactDevTools.zip ../../build/devtools/firefox-extension.zip
 
 # Compress all DevTools artifacts into a single tarball for easy download
-tar -zcvf ../../build/devtools.tgz ../../build/devtools
+cd ../../build/devtools
+tar -zcvf ../devtools.tgz .
