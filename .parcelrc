@@ -1,0 +1,6 @@
+{
+  "extends": "@parcel/config-default",
+  "transforms": {
+    "url:*": ["@parcel/transformer-raw"]
+  }
+}

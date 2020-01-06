@@ -1,0 +1,27 @@
+{
+  "name": "scheduling-profiler-prototype",
+  "version": "0.0.1",
+  "scripts": {
+    "build": "parcel build index.html",
+    "prettier": "prettier --write '**/*.{js,json,css}'",
+    "start": "parcel index.html"
+  },
+  "author": "Brian Vaughn <bvaughn@fb.com>",
+  "license": "MIT",
+  "dependencies": {
+    "array-binsearch": "^1.0.1",
+    "d3-hierarchy": "^1.1.9",
+    "lodash.clonedeep": "^4.5.0",
+    "memoize-one": "^5.1.1",
+    "pretty-ms": "^5.1.0",
+    "react": "^16.12.0",
+    "react-dom": "^16.12.0",
+    "react-virtualized-auto-sizer": "^1.0.2",
+    "scheduler": "^0.18.0"
+  },
+  "devDependencies": {
+    "parcel": "2.0.0-alpha.3.2",
+    "prettier": "^1.19.1",
+    "postcss-modules": "^1.4.1"
+  }
+}

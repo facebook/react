@@ -1,0 +1,11 @@
+.SelectedEvent {
+  height: auto;
+  max-height: 100px;
+  overflow: auto;
+  background: #fff;
+  padding: 0 0.5rem;
+}
+
+.ComponentStack {
+  font-size: 10px;
+}

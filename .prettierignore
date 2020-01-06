@@ -1,0 +1,7 @@
+package-lock.json
+yarn.lock
+.parcel-cache/*
+node_modules/*
+static/*
+src/speedscope/*
+src/tracerbench/*
