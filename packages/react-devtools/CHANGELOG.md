@@ -8,7 +8,11 @@
   
   <!-- Upcoming changes go here -->
 
-
+#### Features
+* Improve function props display for inspected elements ([bvaughn](https://github.com/bvaughn) in [#17789](https://github.com/facebook/react/pull/17789))
+#### Bugfix
+* Improve how empty commits are filtered ([bvaughn](https://github.com/bvaughn) in [#17771](https://github.com/facebook/react/pull/17771))
+* Renamed "backend.js" to "react_devtools_backend.js" to reduce potential confusion from profiling ([bvaughn](https://github.com/bvaughn) in [#17790](https://github.com/facebook/react/pull/17790))
 </details>
 
 ## 4.4.0 (January 3, 2020)
