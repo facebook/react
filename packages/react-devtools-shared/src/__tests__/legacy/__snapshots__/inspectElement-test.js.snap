@@ -126,11 +126,13 @@ Object {
   "context": {},
   "hooks": null,
   "props": {
+    "anonymous_fn": {},
     "array_buffer": {},
     "array_of_arrays": [
       {}
     ],
     "big_int": {},
+    "bound_fn": {},
     "data_view": {},
     "date": {},
     "fn": {},

@@ -169,13 +169,20 @@ describe('InspectedElementContext', () => {
       },
     });
 
+    class Class {
+      anonymousFunction = () => {};
+    }
+    const instance = new Class();
+
     act(() =>
       ReactDOM.render(
         <Example
+          anonymous_fn={instance.anonymousFunction}
           array_buffer={arrayBuffer}
           array_of_arrays={arrayOfArrays}
           // eslint-disable-next-line no-undef
           big_int={BigInt(123)}
+          bound_fn={exampleFunction.bind(this)}
           data_view={dataView}
           date={new Date(123)}
           fn={exampleFunction}
@@ -201,9 +208,11 @@ describe('InspectedElementContext', () => {
     expect(inspectedElement).toMatchSnapshot('1: Initial inspection');
 
     const {
+      anonymous_fn,
       array_buffer,
       array_of_arrays,
       big_int,
+      bound_fn,
       data_view,
       date,
       fn,
@@ -219,6 +228,12 @@ describe('InspectedElementContext', () => {
       symbol,
       typed_array,
     } = inspectedElement.value.props;
+
+    expect(anonymous_fn[meta.inspectable]).toBe(false);
+    expect(anonymous_fn[meta.name]).toBe('function');
+    expect(anonymous_fn[meta.type]).toBe('function');
+    expect(anonymous_fn[meta.preview_long]).toBe('ƒ () {}');
+    expect(anonymous_fn[meta.preview_short]).toBe('ƒ () {}');
 
     expect(array_buffer[meta.size]).toBe(3);
     expect(array_buffer[meta.inspectable]).toBe(false);
@@ -238,6 +253,12 @@ describe('InspectedElementContext', () => {
     expect(big_int[meta.name]).toBe('123');
     expect(big_int[meta.type]).toBe('bigint');
 
+    expect(bound_fn[meta.inspectable]).toBe(false);
+    expect(bound_fn[meta.name]).toBe('bound exampleFunction');
+    expect(bound_fn[meta.type]).toBe('function');
+    expect(bound_fn[meta.preview_long]).toBe('ƒ bound exampleFunction() {}');
+    expect(bound_fn[meta.preview_short]).toBe('ƒ bound exampleFunction() {}');
+
     expect(data_view[meta.size]).toBe(3);
     expect(data_view[meta.inspectable]).toBe(false);
     expect(data_view[meta.name]).toBe('DataView');
@@ -249,6 +270,8 @@ describe('InspectedElementContext', () => {
     expect(fn[meta.inspectable]).toBe(false);
     expect(fn[meta.name]).toBe('exampleFunction');
     expect(fn[meta.type]).toBe('function');
+    expect(fn[meta.preview_long]).toBe('ƒ exampleFunction() {}');
+    expect(fn[meta.preview_short]).toBe('ƒ exampleFunction() {}');
 
     expect(html_element[meta.inspectable]).toBe(false);
     expect(html_element[meta.name]).toBe('DIV');

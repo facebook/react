@@ -502,7 +502,7 @@ export function formatDataForPreview(
     case 'html_element':
       return `<${truncateForDisplay(data.tagName.toLowerCase())} />`;
     case 'function':
-      return truncateForDisplay(data.name);
+      return truncateForDisplay(`ƒ ${data.name}() {}`);
     case 'string':
       return `"${data}"`;
     case 'bigint':
