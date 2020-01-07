@@ -174,12 +174,10 @@ const ReactNativeRenderer: ReactNativeType = {
   dispatchCommand(handle: any, command: string, args: Array<any>) {
     if (handle._nativeTag == null) {
       if (__DEV__) {
-        if (handle._nativeTag == null) {
-          console.error(
-            "dispatchCommand was called with a ref that isn't a " +
-              'native component. Use React.forwardRef to get access to the underlying native component',
-          );
-        }
+        console.error(
+          "dispatchCommand was called with a ref that isn't a " +
+            'native component. Use React.forwardRef to get access to the underlying native component',
+        );
       }
       return;
     }
