@@ -173,7 +173,10 @@ function getHoveredEvent(data, flamechart, state) {
   } else {
     if (flamechart !== null) {
       const layerIndex = Math.floor(
-        (canvasMouseY + offsetY - HEADER_HEIGHT_FIXED - REACT_DEVTOOLS_CANVAS_HEIGHT) /
+        (canvasMouseY +
+          offsetY -
+          HEADER_HEIGHT_FIXED -
+          REACT_DEVTOOLS_CANVAS_HEIGHT) /
           FLAMECHART_FRAME_HEIGHT
       );
       const layer = flamechart.layers[layerIndex];
@@ -574,13 +577,13 @@ const renderCanvas = memoize(
             const trimmedName = trimFlamegraphText(
               context,
               name,
-              width - FLAMECHART_TEXT_PADDING * 2
+              width - FLAMECHART_TEXT_PADDING * 2 + (x < 0 ? x : 0)
             );
             if (trimmedName !== null) {
               context.fillStyle = COLORS.PRIORITY_LABEL;
               context.fillText(
                 trimmedName,
-                x + FLAMECHART_TEXT_PADDING,
+                x + FLAMECHART_TEXT_PADDING - (x < 0 ? x : 0),
                 y + FLAMECHART_FRAME_HEIGHT / 2
               );
             }
@@ -688,6 +691,7 @@ function App() {
         // I would not expect to have to do either of this,
         // but some of the data being passed in requires it.
         data = data.filter(Boolean).sort((a, b) => (a.ts > b.ts ? 1 : -1));
+
         if (data.length > 0) {
           unstable_batchedUpdates(() => {
             const processedData = preprocessData(data);

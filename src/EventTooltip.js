@@ -1,7 +1,7 @@
 // @flow
 
 import prettyMilliseconds from 'pretty-ms';
-import React, { useLayoutEffect, useRef } from 'react';
+import React, { Fragment, useLayoutEffect, useRef } from 'react';
 import { COLORS } from './constants';
 import { getBatchRange } from './utils';
 import useSmartTooltip from './useSmartTooltip';
@@ -91,6 +91,10 @@ export default function EventTooltip({ data, hoveredEvent, state }) {
 }
 
 function formatComponentStack(componentStack) {
+  if (componentStack == null) {
+    return null;
+  }
+
   const lines = componentStack.split('\n').map(line => line.trim());
   lines.shift();
 
@@ -158,10 +162,14 @@ const TooltipReactEvent = ({ color, data, event, tooltipRef }) => {
       <div className={styles.DetailsGrid}>
         <div className={styles.DetailsGridLabel}>Timestamp:</div>
         {prettyMilliseconds(timestamp)}
-        <div className={styles.DetailsGridLabel}>Component stack:</div>
-        <pre className={styles.ComponentStack}>
-          {formatComponentStack(componentStack)}
-        </pre>
+        {componentStack && (
+          <Fragment>
+            <div className={styles.DetailsGridLabel}>Component stack:</div>
+            <pre className={styles.ComponentStack}>
+              {formatComponentStack(componentStack)}
+            </pre>
+          </Fragment>
+        )}
       </div>
     </div>
   );

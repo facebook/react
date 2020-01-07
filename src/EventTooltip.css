@@ -2,6 +2,7 @@
   position: absolute;
   display: inline-block;
   border-radius: 0.125rem;
+  max-width: 300px;
   padding: 0.25rem;
   user-select: none;
   pointer-events: none;
@@ -31,9 +32,6 @@
 }
 
 .Duration {
-}
-
-.ComponentName {
 }
 
 .ComponentName {
