@@ -18,9 +18,9 @@ import {getParentSuspenseInstance} from './ReactDOMHostConfig';
 const randomKey = Math.random()
   .toString(36)
   .slice(2);
-const internalInstanceKey = '__reactInternalInstance$' + randomKey;
-const internalEventHandlersKey = '__reactEventHandlers$' + randomKey;
-const internalContainerInstanceKey = '__reactContainere$' + randomKey;
+const internalInstanceKey = '__reactFiber$' + randomKey;
+const internalEventHandlersKey = '__reactEvents$' + randomKey;
+const internalContainerInstanceKey = '__reactContainer$' + randomKey;
 
 export function precacheFiberNode(hostInst, node) {
   node[internalInstanceKey] = hostInst;
