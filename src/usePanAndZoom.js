@@ -23,6 +23,7 @@ const initialState = {
   unscaledContentHeight: 0,
   unscaledContentWidth: 0,
   zoomLevel: 1,
+  zoomTo: null,
 };
 
 // TODO Account for fixed label width
@@ -179,6 +180,19 @@ function reducer(state, action) {
         }
       }
       break;
+    case 'zoom-to':
+      const { startTime, stopTime } = payload;
+      const { canvasWidth, fixedColumnWidth } = state;
+
+      const availableWidth = canvasWidth - fixedColumnWidth;
+      const newZoomLevel = availableWidth / (stopTime - startTime);
+
+      return {
+        ...state,
+        offsetX: newZoomLevel * startTime,
+        zoomLevel: newZoomLevel,
+      };
+      break;
     default:
       throw Error(`Unexpected type "${type}"`);
   }
@@ -203,7 +217,17 @@ export default function usePanAndZoom({
   unscaledContentWidth,
   unscaledContentHeight,
 }) {
-  const [state, dispatch] = useReducer(reducer, initialState);
+  const [state, dispatch] = useReducer(reducer, {
+    ...initialState,
+    zoomTo: (startTime, stopTime) =>
+      dispatch({
+        type: 'zoom-to',
+        payload: {
+          startTime,
+          stopTime,
+        },
+      }),
+  });
 
   // TODO This effect should run any time width or unscaledContentWidth changes
   useEffect(() => {

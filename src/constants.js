@@ -12,7 +12,20 @@ export const EVENT_SIZE = 6;
 export const MIN_BAR_WIDTH = 1;
 export const SECTION_GUTTER_SIZE = 4;
 
-export const INTERVAL_TIMES = [10, 20, 50, 100, 200, 500, 1000, 2000, 5000];
+export const INTERVAL_TIMES = [
+  1,
+  2,
+  5,
+  10,
+  20,
+  50,
+  100,
+  200,
+  500,
+  1000,
+  2000,
+  5000,
+];
 export const MIN_INTERVAL_SIZE_PX = 70;
 export const MAX_INTERVAL_SIZE_PX = 140;
 

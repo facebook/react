@@ -23,6 +23,7 @@
   padding-top: 5px;
   grid-gap: 2px 5px;
   grid-template-columns: min-content auto;
+  word-break: break-word;
 }
 
 .DetailsGridLabel {

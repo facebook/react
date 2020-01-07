@@ -1,5 +1,6 @@
 // @flow
 
+import { copy } from 'clipboard-js';
 import React, {
   Fragment,
   useEffect,
@@ -11,6 +12,8 @@ import { unstable_batchedUpdates } from 'react-dom';
 import memoize from 'memoize-one';
 import usePanAndZoom from './usePanAndZoom';
 import { getCanvasContext } from './canvasUtils';
+import prettyMilliseconds from 'pretty-ms';
+import { getBatchRange } from './utils';
 import {
   durationToWidth,
   positionToTimestamp,
@@ -39,8 +42,16 @@ import {
   MARKER_HEIGHT,
   MARKER_TICK_HEIGHT,
 } from './constants';
+import {
+  ContextMenu,
+  ContextMenuItem,
+  RegistryContext,
+  useContextMenu,
+} from './context';
 
 import JSON_PATH from 'url:../static/small-devtools.json';
+
+const CONTEXT_MENU_ID = 'canvas';
 
 import type {
   FlamechartData,
@@ -720,6 +731,28 @@ function App() {
   );
 }
 
+const copySummary = (data, measure) => {
+  const { batchUID, duration, priority, timestamp, type } = measure;
+
+  const [startTime, stopTime] = getBatchRange(batchUID, priority, data);
+
+  copy(
+    JSON.stringify({
+      type,
+      timestamp: prettyMilliseconds(timestamp),
+      duration: prettyMilliseconds(duration),
+      batchDuration: prettyMilliseconds(stopTime - startTime),
+    })
+  );
+};
+
+const zoomToBatch = (data, measure, state) => {
+  const { batchUID, priority } = measure;
+  const [startTime, stopTime] = getBatchRange(batchUID, priority, data);
+
+  state.zoomTo(startTime, stopTime);
+};
+
 function AutoSizedCanvas({ data, flamechart, height, width }) {
   const canvasRef = useRef();
 
@@ -738,6 +771,19 @@ function AutoSizedCanvas({ data, flamechart, height, width }) {
   });
 
   const hoveredEvent = getHoveredEvent(data, flamechart, state);
+  const [isContextMenuShown, setIsContextMenuShown] = useState<boolean>(false);
+
+  useContextMenu({
+    data: {
+      data,
+      flamechart,
+      hoveredEvent,
+      state,
+    },
+    id: CONTEXT_MENU_ID,
+    onChange: setIsContextMenuShown,
+    ref: canvasRef,
+  });
 
   useLayoutEffect(() => {
     renderCanvas(
@@ -759,7 +805,61 @@ function AutoSizedCanvas({ data, flamechart, height, width }) {
         height={height}
         width={width}
       />
-      <EventTooltip data={data} hoveredEvent={hoveredEvent} state={state} />
+      <ContextMenu id={CONTEXT_MENU_ID}>
+        {({ data, hoveredEvent }) => {
+          if (hoveredEvent == null) {
+            return null;
+          }
+          const { event, flamechartNode, measure } = hoveredEvent;
+          return (
+            <Fragment>
+              {event !== null && (
+                <ContextMenuItem
+                  onClick={() => copy(event.componentName)}
+                  title="Copy component name"
+                >
+                  Copy component name
+                </ContextMenuItem>
+              )}
+              {event !== null && (
+                <ContextMenuItem
+                  onClick={() => copy(event.componentStack)}
+                  title="Copy component stack"
+                >
+                  Copy component stack
+                </ContextMenuItem>
+              )}
+              {measure !== null && (
+                <ContextMenuItem
+                  onClick={() => zoomToBatch(data, measure, state)}
+                  title="Zoom to batch"
+                >
+                  Zoom to batch
+                </ContextMenuItem>
+              )}
+              {measure !== null && (
+                <ContextMenuItem
+                  onClick={() => copySummary(data, measure)}
+                  title="Copy summary"
+                >
+                  Copy summary
+                </ContextMenuItem>
+              )}
+              {flamechartNode !== null && (
+                <ContextMenuItem
+                  onClick={() => copy(flamechartNode.node.frame.file)}
+                  title="Copy file path"
+                >
+                  Copy file path
+                </ContextMenuItem>
+              )}
+            </Fragment>
+          );
+        }}
+      </ContextMenu>
+      {!isContextMenuShown && (
+        <EventTooltip data={data} hoveredEvent={hoveredEvent} state={state} />
+      )}
     </Fragment>
   );
 }
