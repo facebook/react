@@ -2,6 +2,7 @@ package-lock.json
 yarn.lock
 .parcel-cache/*
 node_modules/*
+dist/*
 static/*
 src/speedscope/*
 src/tracerbench/*

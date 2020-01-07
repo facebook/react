@@ -10,6 +10,7 @@
   "license": "MIT",
   "dependencies": {
     "array-binsearch": "^1.0.1",
+    "clipboard-js": "^0.3.6",
     "d3-hierarchy": "^1.1.9",
     "lodash.clonedeep": "^4.5.0",
     "memoize-one": "^5.1.1",
@@ -21,7 +22,7 @@
   },
   "devDependencies": {
     "parcel": "2.0.0-alpha.3.2",
-    "prettier": "^1.19.1",
-    "postcss-modules": "^1.4.1"
+    "postcss-modules": "^1.4.1",
+    "prettier": "^1.19.1"
   }
 }
