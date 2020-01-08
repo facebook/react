@@ -29,6 +29,9 @@ import {createPortal} from 'shared/ReactPortal';
 import {setBatchingImplementation} from 'legacy-events/ReactGenericBatching';
 import ReactVersion from 'shared/ReactVersion';
 
+// Module provided by RN:
+import {UIManager} from 'react-native/Libraries/ReactPrivate/ReactNativePrivateInterface';
+
 import NativeMethodsMixin from './NativeMethodsMixin';
 import ReactNativeComponent from './ReactNativeComponent';
 import {getClosestInstanceFromNode} from './ReactFabricComponentTree';
@@ -37,8 +40,6 @@ import {getInspectorDataForViewTag} from './ReactNativeFiberInspector';
 import {LegacyRoot} from 'shared/ReactRootTags';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import getComponentName from 'shared/getComponentName';
-
-const {dispatchCommand: fabricDispatchCommand} = nativeFabricUIManager;
 
 const ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
 
@@ -162,26 +163,26 @@ const ReactFabric: ReactFabricType = {
   findNodeHandle,
 
   dispatchCommand(handle: any, command: string, args: Array<any>) {
-    const invalid =
-      handle._nativeTag == null || handle._internalInstanceHandle == null;
-
-    if (invalid) {
+    if (handle._nativeTag == null) {
       if (__DEV__) {
-        if (invalid) {
-          console.error(
-            "dispatchCommand was called with a ref that isn't a " +
-              'native component. Use React.forwardRef to get access to the underlying native component',
-          );
-        }
+        console.error(
+          "dispatchCommand was called with a ref that isn't a " +
+            'native component. Use React.forwardRef to get access to the underlying native component',
+        );
       }
+
       return;
     }
 
-    fabricDispatchCommand(
-      handle._internalInstanceHandle.stateNode.node,
-      command,
-      args,
-    );
+    if (handle._internalInstanceHandle) {
+      nativeFabricUIManager.dispatchCommand(
+        handle._internalInstanceHandle.stateNode.node,
+        command,
+        args,
+      );
+    } else {
+      UIManager.dispatchViewManagerCommand(handle._nativeTag, command, args);
+    }
   },
 
   render(element: React$Element<any>, containerTag: any, callback: ?Function) {
