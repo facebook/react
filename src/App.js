@@ -49,7 +49,7 @@ import {
   useContextMenu,
 } from './context';
 
-import JSON_PATH from 'url:../static/small-devtools.json';
+import JSON_PATH from 'url:../static/ads-manager-1.json';
 
 const CONTEXT_MENU_ID = 'canvas';
 
@@ -707,6 +707,8 @@ function App() {
           unstable_batchedUpdates(() => {
             const processedData = preprocessData(data);
             setData(processedData);
+            console.log(data);
+            console.log(processedData);
 
             const flamechart = preprocessFlamechart(data);
             setFlamechart(flamechart);
@@ -851,6 +853,18 @@ function AutoSizedCanvas({ data, flamechart, height, width }) {
                   title="Copy file path"
                 >
                   Copy file path
+                </ContextMenuItem>
+              )}
+              {flamechartNode !== null && (
+                <ContextMenuItem
+                  onClick={() =>
+                    copy(
+                      `line ${flamechartNode.node.frame.line}, column ${flamechartNode.node.frame.col}`
+                    )
+                  }
+                  title="Copy location"
+                >
+                  Copy location
                 </ContextMenuItem>
               )}
             </Fragment>

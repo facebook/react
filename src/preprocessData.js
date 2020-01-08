@@ -226,7 +226,7 @@ export default function reactProfilerProcessor(
         name === '--layout-effects-start'
           ? 'layout-effects'
           : 'passive-effects';
-      throwIfIncomplete(type);
+      //throwIfIncomplete(type);
       markWorkStarted(type, startTime);
     } else if (
       name === '--layout-effects-stop' ||

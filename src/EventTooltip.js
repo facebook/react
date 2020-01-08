@@ -106,7 +106,7 @@ function formatComponentStack(componentStack) {
 
 const TooltipFlamechartNode = ({ data, flamechartNode, tooltipRef }) => {
   const { end, node, start } = flamechartNode;
-  const { name, file } = node.frame;
+  const { col, file, line, name } = node.frame;
   return (
     <div
       className={styles.Tooltip}
@@ -118,8 +118,9 @@ const TooltipFlamechartNode = ({ data, flamechartNode, tooltipRef }) => {
     >
       {prettyMilliseconds((end - start) / 1000)} {name}
       <div className={styles.DetailsGrid}>
-        <div className={styles.DetailsGridLabel}>Script URL:</div>
-        {file}
+        <div className={styles.DetailsGridLabel}>Script URL:</div> {file}
+        <div className={styles.DetailsGridLabel}>Location:</div>
+        line {line}, column {col}
       </div>
     </div>
   );
