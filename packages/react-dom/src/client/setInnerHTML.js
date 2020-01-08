@@ -9,7 +9,6 @@
 
 import {Namespaces} from '../shared/DOMNamespaces';
 import createMicrosoftUnsafeLocalFunction from '../shared/createMicrosoftUnsafeLocalFunction';
-import type {TrustedValue} from './ToStringValue';
 import {enableTrustedTypesIntegration} from 'shared/ReactFeatureFlags';
 
 // SVG temp container for IE lacking innerHTML
@@ -24,7 +23,7 @@ let reusableSVGContainer;
  */
 const setInnerHTML = createMicrosoftUnsafeLocalFunction(function(
   node: Element,
-  html: string | TrustedValue,
+  html: {valueOf(): {toString(): string}},
 ): void {
   if (node.namespaceURI === Namespaces.svg) {
     if (__DEV__) {
