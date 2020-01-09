@@ -137,7 +137,7 @@ type SecretInternalsFabricType = {
  * Provide minimal Flow typing for the high-level RN API and call it a day.
  */
 export type ReactNativeType = {
-  NativeComponent: typeof ReactNativeComponent,
+  NativeComponent: _InternalReactNativeComponentClass<{...}>,
   findHostInstance_DEPRECATED(
     componentOrHandle: any,
   ): ?ElementRef<HostComponent<mixed>>,
@@ -156,7 +156,7 @@ export type ReactNativeType = {
 };
 
 export type ReactFabricType = {
-  NativeComponent: typeof ReactNativeComponent,
+  NativeComponent: _InternalReactNativeComponentClass<{...}>,
   findHostInstance_DEPRECATED(componentOrHandle: any): ?HostComponent<mixed>,
   findNodeHandle(componentOrHandle: any): ?number,
   dispatchCommand(handle: any, command: string, args: Array<any>): void,

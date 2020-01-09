@@ -86,7 +86,9 @@ import isEventSupported from './isEventSupported';
  */
 
 const PossiblyWeakMap = typeof WeakMap === 'function' ? WeakMap : Map;
+// prettier-ignore
 const elementListenerMap:
+  // $FlowFixMe Work around Flow bug
   | WeakMap
   | Map<
       Document | Element | Node,
