@@ -403,8 +403,7 @@ describe('ReactSchedulerIntegration', () => {
     expect(Scheduler).toHaveYielded(['Hidden: B']);
     expect(root).toMatchRenderedOutput(
       <>
-        Visible: B
-        <div hidden={true}>Hidden: B</div>
+        Visible: B<div hidden={true}>Hidden: B</div>
       </>,
     );
   });

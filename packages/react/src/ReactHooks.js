@@ -45,8 +45,8 @@ export function useContext<T>(
         unstable_observedBits,
         typeof unstable_observedBits === 'number' && Array.isArray(arguments[2])
           ? '\n\nDid you call array.map(useContext)? ' +
-            'Calling Hooks inside a loop is not supported. ' +
-            'Learn more at https://fb.me/rules-of-hooks'
+              'Calling Hooks inside a loop is not supported. ' +
+              'Learn more at https://fb.me/rules-of-hooks'
           : '',
       );
     }

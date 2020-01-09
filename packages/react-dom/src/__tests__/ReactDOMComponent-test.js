@@ -182,24 +182,21 @@ describe('ReactDOMComponent', () => {
     it('should warn for unknown string event handlers', () => {
       const container = document.createElement('div');
       expect(() =>
-        ReactDOM.render(<div onUnknown="alert(&quot;hack&quot;)" />, container),
+        ReactDOM.render(<div onUnknown='alert("hack")' />, container),
       ).toErrorDev(
         'Warning: Unknown event handler property `onUnknown`. It will be ignored.\n    in div (at **)',
       );
       expect(container.firstChild.hasAttribute('onUnknown')).toBe(false);
       expect(container.firstChild.onUnknown).toBe(undefined);
       expect(() =>
-        ReactDOM.render(<div onunknown="alert(&quot;hack&quot;)" />, container),
+        ReactDOM.render(<div onunknown='alert("hack")' />, container),
       ).toErrorDev(
         'Warning: Unknown event handler property `onunknown`. It will be ignored.\n    in div (at **)',
       );
       expect(container.firstChild.hasAttribute('onunknown')).toBe(false);
       expect(container.firstChild.onunknown).toBe(undefined);
       expect(() =>
-        ReactDOM.render(
-          <div on-unknown="alert(&quot;hack&quot;)" />,
-          container,
-        ),
+        ReactDOM.render(<div on-unknown='alert("hack")' />, container),
       ).toErrorDev(
         'Warning: Unknown event handler property `on-unknown`. It will be ignored.\n    in div (at **)',
       );

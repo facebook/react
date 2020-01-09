@@ -28,19 +28,22 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     ReactCache = require('react-cache');
     Suspense = React.Suspense;
 
-    TextResource = ReactCache.unstable_createResource(([text, ms = 0]) => {
-      return new Promise((resolve, reject) =>
-        setTimeout(() => {
-          if (textResourceShouldFail) {
-            Scheduler.unstable_yieldValue(`Promise rejected [${text}]`);
-            reject(new Error('Failed to load: ' + text));
-          } else {
-            Scheduler.unstable_yieldValue(`Promise resolved [${text}]`);
-            resolve(text);
-          }
-        }, ms),
-      );
-    }, ([text, ms]) => text);
+    TextResource = ReactCache.unstable_createResource(
+      ([text, ms = 0]) => {
+        return new Promise((resolve, reject) =>
+          setTimeout(() => {
+            if (textResourceShouldFail) {
+              Scheduler.unstable_yieldValue(`Promise rejected [${text}]`);
+              reject(new Error('Failed to load: ' + text));
+            } else {
+              Scheduler.unstable_yieldValue(`Promise resolved [${text}]`);
+              resolve(text);
+            }
+          }, ms),
+        );
+      },
+      ([text, ms]) => text,
+    );
     textResourceShouldFail = false;
   });
 
@@ -1514,50 +1517,38 @@ describe('ReactSuspenseWithNoopRenderer', () => {
 
   it('does not call lifecycles of a suspended component (hooks)', async () => {
     function TextWithLifecycle(props) {
-      React.useLayoutEffect(
-        () => {
-          Scheduler.unstable_yieldValue(`Layout Effect [${props.text}]`);
-          return () => {
-            Scheduler.unstable_yieldValue(
-              `Destroy Layout Effect [${props.text}]`,
-            );
-          };
-        },
-        [props.text],
-      );
-      React.useEffect(
-        () => {
-          Scheduler.unstable_yieldValue(`Effect [${props.text}]`);
-          return () => {
-            Scheduler.unstable_yieldValue(`Destroy Effect [${props.text}]`);
-          };
-        },
-        [props.text],
-      );
+      React.useLayoutEffect(() => {
+        Scheduler.unstable_yieldValue(`Layout Effect [${props.text}]`);
+        return () => {
+          Scheduler.unstable_yieldValue(
+            `Destroy Layout Effect [${props.text}]`,
+          );
+        };
+      }, [props.text]);
+      React.useEffect(() => {
+        Scheduler.unstable_yieldValue(`Effect [${props.text}]`);
+        return () => {
+          Scheduler.unstable_yieldValue(`Destroy Effect [${props.text}]`);
+        };
+      }, [props.text]);
       return <Text {...props} />;
     }
 
     function AsyncTextWithLifecycle(props) {
-      React.useLayoutEffect(
-        () => {
-          Scheduler.unstable_yieldValue(`Layout Effect [${props.text}]`);
-          return () => {
-            Scheduler.unstable_yieldValue(
-              `Destroy Layout Effect [${props.text}]`,
-            );
-          };
-        },
-        [props.text],
-      );
-      React.useEffect(
-        () => {
-          Scheduler.unstable_yieldValue(`Effect [${props.text}]`);
-          return () => {
-            Scheduler.unstable_yieldValue(`Destroy Effect [${props.text}]`);
-          };
-        },
-        [props.text],
-      );
+      React.useLayoutEffect(() => {
+        Scheduler.unstable_yieldValue(`Layout Effect [${props.text}]`);
+        return () => {
+          Scheduler.unstable_yieldValue(
+            `Destroy Layout Effect [${props.text}]`,
+          );
+        };
+      }, [props.text]);
+      React.useEffect(() => {
+        Scheduler.unstable_yieldValue(`Effect [${props.text}]`);
+        return () => {
+          Scheduler.unstable_yieldValue(`Destroy Effect [${props.text}]`);
+        };
+      }, [props.text]);
       const text = props.text;
       const ms = props.ms;
       try {
@@ -2896,7 +2887,8 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     expect(ReactNoop).toMatchRenderedOutput(
       <>
         <div hidden={true}>
-          <span prop="A" />Offscreen
+          <span prop="A" />
+          Offscreen
         </div>
         <span prop="A" />
       </>,

@@ -2384,7 +2384,9 @@ function validateSuspenseListChildren(
   if (__DEV__) {
     if (
       (revealOrder === 'forwards' || revealOrder === 'backwards') &&
-      (children !== undefined && children !== null && children !== false)
+      children !== undefined &&
+      children !== null &&
+      children !== false
     ) {
       if (Array.isArray(children)) {
         for (let i = 0; i < children.length; i++) {

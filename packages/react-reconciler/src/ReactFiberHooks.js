@@ -1141,18 +1141,15 @@ function mountDeferredValue<T>(
   config: TimeoutConfig | void | null,
 ): T {
   const [prevValue, setValue] = mountState(value);
-  mountEffect(
-    () => {
-      const previousConfig = ReactCurrentBatchConfig.suspense;
-      ReactCurrentBatchConfig.suspense = config === undefined ? null : config;
-      try {
-        setValue(value);
-      } finally {
-        ReactCurrentBatchConfig.suspense = previousConfig;
-      }
-    },
-    [value, config],
-  );
+  mountEffect(() => {
+    const previousConfig = ReactCurrentBatchConfig.suspense;
+    ReactCurrentBatchConfig.suspense = config === undefined ? null : config;
+    try {
+      setValue(value);
+    } finally {
+      ReactCurrentBatchConfig.suspense = previousConfig;
+    }
+  }, [value, config]);
   return prevValue;
 }
 
@@ -1161,18 +1158,15 @@ function updateDeferredValue<T>(
   config: TimeoutConfig | void | null,
 ): T {
   const [prevValue, setValue] = updateState(value);
-  updateEffect(
-    () => {
-      const previousConfig = ReactCurrentBatchConfig.suspense;
-      ReactCurrentBatchConfig.suspense = config === undefined ? null : config;
-      try {
-        setValue(value);
-      } finally {
-        ReactCurrentBatchConfig.suspense = previousConfig;
-      }
-    },
-    [value, config],
-  );
+  updateEffect(() => {
+    const previousConfig = ReactCurrentBatchConfig.suspense;
+    ReactCurrentBatchConfig.suspense = config === undefined ? null : config;
+    try {
+      setValue(value);
+    } finally {
+      ReactCurrentBatchConfig.suspense = previousConfig;
+    }
+  }, [value, config]);
   return prevValue;
 }
 

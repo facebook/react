@@ -55,20 +55,17 @@ export default function KeyValue({
     value[meta.inspectable] &&
     value[meta.size] !== 0;
 
-  useEffect(
-    () => {
-      if (
-        isInspectable &&
-        isOpen &&
-        !prevIsOpenRef.current &&
-        typeof inspectPath === 'function'
-      ) {
-        inspectPath(path);
-      }
-      prevIsOpenRef.current = isOpen;
-    },
-    [inspectPath, isInspectable, isOpen, path],
-  );
+  useEffect(() => {
+    if (
+      isInspectable &&
+      isOpen &&
+      !prevIsOpenRef.current &&
+      typeof inspectPath === 'function'
+    ) {
+      inspectPath(path);
+    }
+    prevIsOpenRef.current = isOpen;
+  }, [inspectPath, isInspectable, isOpen, path]);
 
   const toggleIsOpen = () => setIsOpen(prevIsOpen => !prevIsOpen);
 

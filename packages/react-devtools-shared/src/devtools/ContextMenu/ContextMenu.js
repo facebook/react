@@ -74,55 +74,49 @@ export default function ContextMenu({children, id}: Props) {
     };
   }, []);
 
-  useEffect(
-    () => {
-      const showMenu = ({data, pageX, pageY}) => {
-        setState({data, isVisible: true, pageX, pageY});
-      };
-      const hideMenu = () => setState(HIDDEN_STATE);
-      return registerMenu(id, showMenu, hideMenu);
-    },
-    [id],
-  );
+  useEffect(() => {
+    const showMenu = ({data, pageX, pageY}) => {
+      setState({data, isVisible: true, pageX, pageY});
+    };
+    const hideMenu = () => setState(HIDDEN_STATE);
+    return registerMenu(id, showMenu, hideMenu);
+  }, [id]);
 
-  useLayoutEffect(
-    () => {
-      if (!state.isVisible) {
-        return;
-      }
+  useLayoutEffect(() => {
+    if (!state.isVisible) {
+      return;
+    }
 
-      const menu = menuRef.current;
+    const menu = menuRef.current;
 
-      const hideUnlessContains = event => {
-        if (!menu.contains(event.target)) {
-          setState(HIDDEN_STATE);
-        }
-      };
-
-      const hide = event => {
+    const hideUnlessContains = event => {
+      if (!menu.contains(event.target)) {
         setState(HIDDEN_STATE);
-      };
+      }
+    };
 
-      const ownerDocument = containerRef.current.ownerDocument;
-      ownerDocument.addEventListener('mousedown', hideUnlessContains);
-      ownerDocument.addEventListener('touchstart', hideUnlessContains);
-      ownerDocument.addEventListener('keydown', hideUnlessContains);
+    const hide = event => {
+      setState(HIDDEN_STATE);
+    };
 
-      const ownerWindow = ownerDocument.defaultView;
-      ownerWindow.addEventListener('resize', hide);
+    const ownerDocument = containerRef.current.ownerDocument;
+    ownerDocument.addEventListener('mousedown', hideUnlessContains);
+    ownerDocument.addEventListener('touchstart', hideUnlessContains);
+    ownerDocument.addEventListener('keydown', hideUnlessContains);
 
-      respositionToFit(menu, state.pageX, state.pageY);
+    const ownerWindow = ownerDocument.defaultView;
+    ownerWindow.addEventListener('resize', hide);
 
-      return () => {
-        ownerDocument.removeEventListener('mousedown', hideUnlessContains);
-        ownerDocument.removeEventListener('touchstart', hideUnlessContains);
-        ownerDocument.removeEventListener('keydown', hideUnlessContains);
+    respositionToFit(menu, state.pageX, state.pageY);
 
-        ownerWindow.removeEventListener('resize', hide);
-      };
-    },
-    [state],
-  );
+    return () => {
+      ownerDocument.removeEventListener('mousedown', hideUnlessContains);
+      ownerDocument.removeEventListener('touchstart', hideUnlessContains);
+      ownerDocument.removeEventListener('keydown', hideUnlessContains);
+
+      ownerWindow.removeEventListener('resize', hide);
+    };
+  }, [state]);
 
   if (!state.isVisible) {
     return <div ref={bodyAccessorRef} />;

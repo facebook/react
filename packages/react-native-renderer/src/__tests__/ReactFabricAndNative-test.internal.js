@@ -87,11 +87,9 @@ describe('created with ReactFabric called with ReactNative', () => {
     expect(nativeFabricUIManager.dispatchCommand).not.toBeCalled();
     ReactNative.dispatchCommand(ref.current, 'myCommand', [10, 20]);
     expect(nativeFabricUIManager.dispatchCommand).toHaveBeenCalledTimes(1);
-    expect(nativeFabricUIManager.dispatchCommand).toHaveBeenCalledWith(
-      expect.any(Object),
-      'myCommand',
-      [10, 20],
-    );
+    expect(
+      nativeFabricUIManager.dispatchCommand,
+    ).toHaveBeenCalledWith(expect.any(Object), 'myCommand', [10, 20]);
     expect(UIManager.dispatchViewManagerCommand).not.toBeCalled();
   });
 });
@@ -167,11 +165,9 @@ describe('created with ReactNative called with ReactFabric', () => {
     expect(UIManager.dispatchViewManagerCommand).not.toBeCalled();
     ReactFabric.dispatchCommand(ref.current, 'myCommand', [10, 20]);
     expect(UIManager.dispatchViewManagerCommand).toHaveBeenCalledTimes(1);
-    expect(UIManager.dispatchViewManagerCommand).toHaveBeenCalledWith(
-      expect.any(Number),
-      'myCommand',
-      [10, 20],
-    );
+    expect(
+      UIManager.dispatchViewManagerCommand,
+    ).toHaveBeenCalledWith(expect.any(Number), 'myCommand', [10, 20]);
 
     expect(nativeFabricUIManager.dispatchCommand).not.toBeCalled();
   });

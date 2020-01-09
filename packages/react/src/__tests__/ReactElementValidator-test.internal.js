@@ -439,7 +439,9 @@ describe('ReactElementValidator', () => {
     }
 
     let TestFactory = React.createFactory(TestComponent);
-    expect(() => TestFactory.type).toWarnDev(
+    expect(
+      () => TestFactory.type,
+    ).toWarnDev(
       'Warning: Factory.type is deprecated. Access the class directly before ' +
         'passing it to createFactory.',
       {withoutStack: true},
@@ -489,7 +491,7 @@ describe('ReactElementValidator', () => {
     // shouldn't blow up either.
 
     const child = {
-      $$typeof: <div />.$$typeof,
+      $$typeof: (<div />).$$typeof,
       type: 'span',
       key: null,
       ref: null,
@@ -497,13 +499,13 @@ describe('ReactElementValidator', () => {
       _owner: null,
     };
 
-    void <div>{[child]}</div>;
+    void (<div>{[child]}</div>);
   });
 
   it('does not blow up on key warning with undefined type', () => {
     const Foo = undefined;
     expect(() => {
-      void <Foo>{[<div />]}</Foo>;
+      void (<Foo>{[<div />]}</Foo>);
     }).toErrorDev(
       'Warning: React.createElement: type is invalid -- expected a string ' +
         '(for built-in components) or a class/function (for composite ' +

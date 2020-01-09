@@ -23,8 +23,8 @@ describe('ReactFragment', () => {
   });
 
   function div(...children) {
-    children = children.map(
-      c => (typeof c === 'string' ? {text: c, hidden: false} : c),
+    children = children.map(c =>
+      typeof c === 'string' ? {text: c, hidden: false} : c,
     );
     return {type: 'div', children, prop: undefined, hidden: false};
   }

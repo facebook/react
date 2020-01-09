@@ -66,34 +66,30 @@ export default function SearchInput(props: Props) {
   );
 
   // Auto-focus search input
-  useEffect(
-    () => {
-      if (inputRef.current === null) {
-        return () => {};
-      }
+  useEffect(() => {
+    if (inputRef.current === null) {
+      return () => {};
+    }
 
-      const handleWindowKey = (event: KeyboardEvent) => {
-        const {key, metaKey} = event;
-        if (key === 'f' && metaKey) {
-          if (inputRef.current !== null) {
-            inputRef.current.focus();
-            event.preventDefault();
-            event.stopPropagation();
-          }
+    const handleWindowKey = (event: KeyboardEvent) => {
+      const {key, metaKey} = event;
+      if (key === 'f' && metaKey) {
+        if (inputRef.current !== null) {
+          inputRef.current.focus();
+          event.preventDefault();
+          event.stopPropagation();
         }
-      };
+      }
+    };
 
-      // It's important to listen to the ownerDocument to support the browser extension.
-      // Here we use portals to render individual tabs (e.g. Profiler),
-      // and the root document might belong to a different window.
-      const ownerDocument = inputRef.current.ownerDocument;
-      ownerDocument.addEventListener('keydown', handleWindowKey);
+    // It's important to listen to the ownerDocument to support the browser extension.
+    // Here we use portals to render individual tabs (e.g. Profiler),
+    // and the root document might belong to a different window.
+    const ownerDocument = inputRef.current.ownerDocument;
+    ownerDocument.addEventListener('keydown', handleWindowKey);
 
-      return () =>
-        ownerDocument.removeEventListener('keydown', handleWindowKey);
-    },
-    [inputRef],
-  );
+    return () => ownerDocument.removeEventListener('keydown', handleWindowKey);
+  }, [inputRef]);
 
   return (
     <div className={styles.SearchInput}>

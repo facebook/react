@@ -33,9 +33,7 @@ installHook(window);
 
 const hook: DevToolsHook = window.__REACT_DEVTOOLS_GLOBAL_HOOK__;
 
-let savedComponentFilters: Array<
-  ComponentFilter,
-> = getDefaultComponentFilters();
+let savedComponentFilters: Array<ComponentFilter> = getDefaultComponentFilters();
 
 function debug(methodName: string, ...args) {
   if (__DEBUG__) {
@@ -56,8 +54,7 @@ export function connectToDevTools(options: ?ConnectOptions) {
     websocket,
     resolveRNStyle = null,
     isAppActive = () => true,
-  } =
-    options || {};
+  } = options || {};
 
   let retryTimeoutID: TimeoutID | null = null;
 

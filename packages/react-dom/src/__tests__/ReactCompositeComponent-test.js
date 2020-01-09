@@ -165,7 +165,9 @@ describe('ReactCompositeComponent', () => {
     // Old API based on heuristic
     let container = document.createElement('div');
     container.innerHTML = markup;
-    expect(() => ReactDOM.render(<Parent />, container)).toWarnDev(
+    expect(() =>
+      ReactDOM.render(<Parent />, container),
+    ).toWarnDev(
       'render(): Calling ReactDOM.render() to hydrate server-rendered markup ' +
         'will stop working in React v17. Replace the ReactDOM.render() call ' +
         'with ReactDOM.hydrate() if you want React to attach to the server HTML.',

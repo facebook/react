@@ -1148,9 +1148,11 @@ describe('ReactComponentLifeCycle', () => {
       render() {
         childInstance = this;
         return (
-          <div onClick={this.updateState} ref={divRef}>{`remote:${
-            this.state.remote
-          }, local:${this.state.local}`}</div>
+          <div
+            onClick={this.updateState}
+            ref={
+              divRef
+            }>{`remote:${this.state.remote}, local:${this.state.local}`}</div>
         );
       }
     }
@@ -1197,17 +1199,13 @@ describe('ReactComponentLifeCycle', () => {
       }
       getSnapshotBeforeUpdate(prevProps, prevState) {
         log.push(
-          `getSnapshotBeforeUpdate() prevProps:${prevProps.value} prevState:${
-            prevState.value
-          }`,
+          `getSnapshotBeforeUpdate() prevProps:${prevProps.value} prevState:${prevState.value}`,
         );
         return 'abc';
       }
       componentDidUpdate(prevProps, prevState, snapshot) {
         log.push(
-          `componentDidUpdate() prevProps:${prevProps.value} prevState:${
-            prevState.value
-          } snapshot:${snapshot}`,
+          `componentDidUpdate() prevProps:${prevProps.value} prevState:${prevState.value} snapshot:${snapshot}`,
         );
       }
       render() {

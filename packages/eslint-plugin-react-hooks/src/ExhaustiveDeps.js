@@ -613,21 +613,15 @@ export default {
                   context.report({
                     node: declaredDependencyNode,
                     message:
-                      `The ${
-                        declaredDependencyNode.raw
-                      } literal is not a valid dependency ` +
+                      `The ${declaredDependencyNode.raw} literal is not a valid dependency ` +
                       `because it never changes. ` +
-                      `Did you mean to include ${
-                        declaredDependencyNode.value
-                      } in the array instead?`,
+                      `Did you mean to include ${declaredDependencyNode.value} in the array instead?`,
                   });
                 } else {
                   context.report({
                     node: declaredDependencyNode,
                     message:
-                      `The ${
-                        declaredDependencyNode.raw
-                      } literal is not a valid dependency ` +
+                      `The ${declaredDependencyNode.raw} literal is not a valid dependency ` +
                       'because it never changes. You can safely remove it.',
                   });
                 }
@@ -697,22 +691,16 @@ export default {
         bareFunctions.forEach(({fn, suggestUseCallback}) => {
           let message =
             `The '${fn.name.name}' function makes the dependencies of ` +
-            `${reactiveHookName} Hook (at line ${
-              declaredDependenciesNode.loc.start.line
-            }) ` +
+            `${reactiveHookName} Hook (at line ${declaredDependenciesNode.loc.start.line}) ` +
             `change on every render.`;
           if (suggestUseCallback) {
             message +=
               ` To fix this, ` +
-              `wrap the '${
-                fn.name.name
-              }' definition into its own useCallback() Hook.`;
+              `wrap the '${fn.name.name}' definition into its own useCallback() Hook.`;
           } else {
             message +=
               ` Move it inside the ${reactiveHookName} callback. ` +
-              `Alternatively, wrap the '${
-                fn.name.name
-              }' definition into its own useCallback() Hook.`;
+              `Alternatively, wrap the '${fn.name.name}' definition into its own useCallback() Hook.`;
           }
           // TODO: What if the function needs to change on every render anyway?
           // Should we suggest removing effect deps as an appropriate fix too?

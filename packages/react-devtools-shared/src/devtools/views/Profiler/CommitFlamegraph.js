@@ -94,32 +94,26 @@ function CommitFlamegraph({chartData, commitTree, height, width}: Props) {
   const {lineHeight} = useContext(SettingsContext);
   const {selectFiber, selectedFiberID} = useContext(ProfilerContext);
 
-  const selectedChartNodeIndex = useMemo<number>(
-    () => {
-      if (selectedFiberID === null) {
-        return 0;
-      }
-      // The selected node might not be in the tree for this commit,
-      // so it's important that we have a fallback plan.
-      const depth = chartData.idToDepthMap.get(selectedFiberID);
-      return depth !== undefined ? depth - 1 : 0;
-    },
-    [chartData, selectedFiberID],
-  );
+  const selectedChartNodeIndex = useMemo<number>(() => {
+    if (selectedFiberID === null) {
+      return 0;
+    }
+    // The selected node might not be in the tree for this commit,
+    // so it's important that we have a fallback plan.
+    const depth = chartData.idToDepthMap.get(selectedFiberID);
+    return depth !== undefined ? depth - 1 : 0;
+  }, [chartData, selectedFiberID]);
 
-  const selectedChartNode = useMemo(
-    () => {
-      if (selectedFiberID !== null) {
-        return (
-          chartData.rows[selectedChartNodeIndex].find(
-            chartNode => chartNode.id === selectedFiberID,
-          ) || null
-        );
-      }
-      return null;
-    },
-    [chartData, selectedFiberID, selectedChartNodeIndex],
-  );
+  const selectedChartNode = useMemo(() => {
+    if (selectedFiberID !== null) {
+      return (
+        chartData.rows[selectedChartNodeIndex].find(
+          chartNode => chartNode.id === selectedFiberID,
+        ) || null
+      );
+    }
+    return null;
+  }, [chartData, selectedFiberID, selectedChartNodeIndex]);
 
   const itemData = useMemo<ItemData>(
     () => ({

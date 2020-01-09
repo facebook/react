@@ -41,12 +41,9 @@ function InteractionListItem({data: itemData, index, style}: Props) {
     throw Error(`Could not find interaction #${index}`);
   }
 
-  const handleClick = useCallback(
-    () => {
-      selectInteraction(interaction.id);
-    },
-    [interaction, selectInteraction],
-  );
+  const handleClick = useCallback(() => {
+    selectInteraction(interaction.id);
+  }, [interaction, selectInteraction]);
 
   const commits = interactionCommits.get(interaction.id) || [];
 

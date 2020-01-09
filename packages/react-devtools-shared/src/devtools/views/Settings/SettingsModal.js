@@ -75,14 +75,11 @@ function SettingsModalImpl(_: {||}) {
   const modalRef = useRef<HTMLDivElement | null>(null);
   useModalDismissSignal(modalRef, dismissModal);
 
-  useEffect(
-    () => {
-      if (modalRef.current !== null) {
-        modalRef.current.focus();
-      }
-    },
-    [modalRef],
-  );
+  useEffect(() => {
+    if (modalRef.current !== null) {
+      modalRef.current.focus();
+    }
+  }, [modalRef]);
 
   let view = null;
   switch (selectedTabID) {

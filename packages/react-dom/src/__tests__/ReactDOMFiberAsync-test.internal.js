@@ -593,14 +593,11 @@ describe('ReactDOMFiberAsync', () => {
 
     function App({label}) {
       const [step, setStep] = useState(0);
-      useEffect(
-        () => {
-          if (step < 3) {
-            setStep(step + 1);
-          }
-        },
-        [step],
-      );
+      useEffect(() => {
+        if (step < 3) {
+          setStep(step + 1);
+        }
+      }, [step]);
 
       // The component should keep re-rendering itself until `step` is 3.
       return step === 3 ? 'Finished' : 'Unresolved';

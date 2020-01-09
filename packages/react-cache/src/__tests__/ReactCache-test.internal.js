@@ -33,46 +33,53 @@ describe('ReactCache', () => {
     ReactTestRenderer = require('react-test-renderer');
     Scheduler = require('scheduler');
 
-    TextResource = createResource(([text, ms = 0]) => {
-      let listeners = null;
-      let status = 'pending';
-      let value = null;
-      return {
-        then(resolve, reject) {
-          switch (status) {
-            case 'pending': {
-              if (listeners === null) {
-                listeners = [{resolve, reject}];
-                setTimeout(() => {
-                  if (textResourceShouldFail) {
-                    Scheduler.unstable_yieldValue(`Promise rejected [${text}]`);
-                    status = 'rejected';
-                    value = new Error('Failed to load: ' + text);
-                    listeners.forEach(listener => listener.reject(value));
-                  } else {
-                    Scheduler.unstable_yieldValue(`Promise resolved [${text}]`);
-                    status = 'resolved';
-                    value = text;
-                    listeners.forEach(listener => listener.resolve(value));
-                  }
-                }, ms);
-              } else {
-                listeners.push({resolve, reject});
+    TextResource = createResource(
+      ([text, ms = 0]) => {
+        let listeners = null;
+        let status = 'pending';
+        let value = null;
+        return {
+          then(resolve, reject) {
+            switch (status) {
+              case 'pending': {
+                if (listeners === null) {
+                  listeners = [{resolve, reject}];
+                  setTimeout(() => {
+                    if (textResourceShouldFail) {
+                      Scheduler.unstable_yieldValue(
+                        `Promise rejected [${text}]`,
+                      );
+                      status = 'rejected';
+                      value = new Error('Failed to load: ' + text);
+                      listeners.forEach(listener => listener.reject(value));
+                    } else {
+                      Scheduler.unstable_yieldValue(
+                        `Promise resolved [${text}]`,
+                      );
+                      status = 'resolved';
+                      value = text;
+                      listeners.forEach(listener => listener.resolve(value));
+                    }
+                  }, ms);
+                } else {
+                  listeners.push({resolve, reject});
+                }
+                break;
               }
-              break;
+              case 'resolved': {
+                resolve(value);
+                break;
+              }
+              case 'rejected': {
+                reject(value);
+                break;
+              }
             }
-            case 'resolved': {
-              resolve(value);
-              break;
-            }
-            case 'rejected': {
-              reject(value);
-              break;
-            }
-          }
-        },
-      };
-    }, ([text, ms]) => text);
+          },
+        };
+      },
+      ([text, ms]) => text,
+    );
 
     textResourceShouldFail = false;
   });
@@ -293,26 +300,29 @@ describe('ReactCache', () => {
 
   it('if a thenable resolves multiple times, does not update the first cached value', () => {
     let resolveThenable;
-    const BadTextResource = createResource(([text, ms = 0]) => {
-      let listeners = null;
-      let value = null;
-      return {
-        then(resolve, reject) {
-          if (value !== null) {
-            resolve(value);
-          } else {
-            if (listeners === null) {
-              listeners = [resolve];
-              resolveThenable = v => {
-                listeners.forEach(listener => listener(v));
-              };
+    const BadTextResource = createResource(
+      ([text, ms = 0]) => {
+        let listeners = null;
+        let value = null;
+        return {
+          then(resolve, reject) {
+            if (value !== null) {
+              resolve(value);
             } else {
-              listeners.push(resolve);
+              if (listeners === null) {
+                listeners = [resolve];
+                resolveThenable = v => {
+                  listeners.forEach(listener => listener(v));
+                };
+              } else {
+                listeners.push(resolve);
+              }
             }
-          }
-        },
-      };
-    }, ([text, ms]) => text);
+          },
+        };
+      },
+      ([text, ms]) => text,
+    );
 
     function BadAsyncText(props) {
       const text = props.text;

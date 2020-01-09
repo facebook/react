@@ -102,94 +102,88 @@ function NativeStyleContextController({children}: Props) {
   ] = useState<StyleAndLayoutFrontend | null>(null);
 
   // This effect handler invalidates the suspense cache and schedules rendering updates with React.
-  useEffect(
-    () => {
-      const onStyleAndLayout = ({id, layout, style}: StyleAndLayoutBackend) => {
-        let element = store.getElementByID(id);
-        if (element !== null) {
-          const styleAndLayout: StyleAndLayoutFrontend = {
-            layout,
-            style,
-          };
-          const request = inProgressRequests.get(element);
-          if (request != null) {
-            inProgressRequests.delete(element);
-            batchedUpdates(() => {
-              request.resolveFn(styleAndLayout);
-              setCurrentStyleAndLayout(styleAndLayout);
-            });
-          } else {
-            resource.write(element, styleAndLayout);
+  useEffect(() => {
+    const onStyleAndLayout = ({id, layout, style}: StyleAndLayoutBackend) => {
+      let element = store.getElementByID(id);
+      if (element !== null) {
+        const styleAndLayout: StyleAndLayoutFrontend = {
+          layout,
+          style,
+        };
+        const request = inProgressRequests.get(element);
+        if (request != null) {
+          inProgressRequests.delete(element);
+          batchedUpdates(() => {
+            request.resolveFn(styleAndLayout);
+            setCurrentStyleAndLayout(styleAndLayout);
+          });
+        } else {
+          resource.write(element, styleAndLayout);
 
-            // Schedule update with React if the currently-selected element has been invalidated.
-            if (id === selectedElementID) {
-              setCurrentStyleAndLayout(styleAndLayout);
-            }
+          // Schedule update with React if the currently-selected element has been invalidated.
+          if (id === selectedElementID) {
+            setCurrentStyleAndLayout(styleAndLayout);
           }
         }
-      };
+      }
+    };
 
-      bridge.addListener('NativeStyleEditor_styleAndLayout', onStyleAndLayout);
-      return () =>
-        bridge.removeListener(
-          'NativeStyleEditor_styleAndLayout',
-          onStyleAndLayout,
-        );
-    },
-    [bridge, currentStyleAndLayout, selectedElementID, store],
-  );
+    bridge.addListener('NativeStyleEditor_styleAndLayout', onStyleAndLayout);
+    return () =>
+      bridge.removeListener(
+        'NativeStyleEditor_styleAndLayout',
+        onStyleAndLayout,
+      );
+  }, [bridge, currentStyleAndLayout, selectedElementID, store]);
 
   // This effect handler polls for updates on the currently selected element.
-  useEffect(
-    () => {
-      if (selectedElementID === null) {
-        return () => {};
+  useEffect(() => {
+    if (selectedElementID === null) {
+      return () => {};
+    }
+
+    const rendererID = store.getRendererIDForElement(selectedElementID);
+
+    let timeoutID: TimeoutID | null = null;
+
+    const sendRequest = () => {
+      timeoutID = null;
+
+      if (rendererID !== null) {
+        bridge.send('NativeStyleEditor_measure', {
+          id: selectedElementID,
+          rendererID,
+        });
       }
+    };
 
-      const rendererID = store.getRendererIDForElement(selectedElementID);
+    // Send the initial measurement request.
+    // We'll poll for an update in the response handler below.
+    sendRequest();
 
-      let timeoutID: TimeoutID | null = null;
-
-      const sendRequest = () => {
-        timeoutID = null;
-
-        if (rendererID !== null) {
-          bridge.send('NativeStyleEditor_measure', {
-            id: selectedElementID,
-            rendererID,
-          });
-        }
-      };
-
-      // Send the initial measurement request.
-      // We'll poll for an update in the response handler below.
-      sendRequest();
-
-      const onStyleAndLayout = ({id}: StyleAndLayoutBackend) => {
-        // If this is the element we requested, wait a little bit and then ask for another update.
-        if (id === selectedElementID) {
-          if (timeoutID !== null) {
-            clearTimeout(timeoutID);
-          }
-          timeoutID = setTimeout(sendRequest, 1000);
-        }
-      };
-
-      bridge.addListener('NativeStyleEditor_styleAndLayout', onStyleAndLayout);
-
-      return () => {
-        bridge.removeListener(
-          'NativeStyleEditor_styleAndLayout',
-          onStyleAndLayout,
-        );
-
+    const onStyleAndLayout = ({id}: StyleAndLayoutBackend) => {
+      // If this is the element we requested, wait a little bit and then ask for another update.
+      if (id === selectedElementID) {
         if (timeoutID !== null) {
           clearTimeout(timeoutID);
         }
-      };
-    },
-    [bridge, selectedElementID, store],
-  );
+        timeoutID = setTimeout(sendRequest, 1000);
+      }
+    };
+
+    bridge.addListener('NativeStyleEditor_styleAndLayout', onStyleAndLayout);
+
+    return () => {
+      bridge.removeListener(
+        'NativeStyleEditor_styleAndLayout',
+        onStyleAndLayout,
+      );
+
+      if (timeoutID !== null) {
+        clearTimeout(timeoutID);
+      }
+    };
+  }, [bridge, selectedElementID, store]);
 
   const value = useMemo(
     () => ({getStyleAndLayout}),

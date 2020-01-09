@@ -2000,7 +2000,9 @@ describe('ReactIncremental', () => {
     }
 
     ReactNoop.render(<Recurse />);
-    expect(() => expect(Scheduler).toFlushWithoutYielding()).toErrorDev(
+    expect(() =>
+      expect(Scheduler).toFlushWithoutYielding(),
+    ).toErrorDev(
       'Legacy context API has been detected within a strict-mode tree.\n\n' +
         'The old API will be supported in all 16.x releases, but applications ' +
         'using it should migrate to the new version.\n\n' +
@@ -2194,7 +2196,9 @@ describe('ReactIncremental', () => {
         </IndirectionFn>
       </Intl>,
     );
-    expect(() => expect(Scheduler).toFlushWithoutYielding()).toErrorDev(
+    expect(() =>
+      expect(Scheduler).toFlushWithoutYielding(),
+    ).toErrorDev(
       'Legacy context API has been detected within a strict-mode tree.\n\n' +
         'The old API will be supported in all 16.x releases, but applications ' +
         'using it should migrate to the new version.\n\n' +
@@ -2288,7 +2292,9 @@ describe('ReactIncremental', () => {
         </IndirectionFn>
       </Stateful>,
     );
-    expect(() => expect(Scheduler).toFlushWithoutYielding()).toErrorDev(
+    expect(() =>
+      expect(Scheduler).toFlushWithoutYielding(),
+    ).toErrorDev(
       'Legacy context API has been detected within a strict-mode tree.\n\n' +
         'The old API will be supported in all 16.x releases, but applications ' +
         'using it should migrate to the new version.\n\n' +
@@ -2359,7 +2365,9 @@ describe('ReactIncremental', () => {
 
     // Init
     ReactNoop.render(<Root />);
-    expect(() => expect(Scheduler).toFlushWithoutYielding()).toErrorDev(
+    expect(() =>
+      expect(Scheduler).toFlushWithoutYielding(),
+    ).toErrorDev(
       'Legacy context API has been detected within a strict-mode tree.\n\n' +
         'The old API will be supported in all 16.x releases, but applications ' +
         'using it should migrate to the new version.\n\n' +
@@ -2411,7 +2419,9 @@ describe('ReactIncremental', () => {
 
     // Init
     ReactNoop.render(<Root />);
-    expect(() => expect(Scheduler).toFlushWithoutYielding()).toErrorDev(
+    expect(() =>
+      expect(Scheduler).toFlushWithoutYielding(),
+    ).toErrorDev(
       'Legacy context API has been detected within a strict-mode tree.\n\n' +
         'The old API will be supported in all 16.x releases, but applications ' +
         'using it should migrate to the new version.\n\n' +
@@ -2612,7 +2622,9 @@ describe('ReactIncremental', () => {
       </TopContextProvider>,
     );
 
-    expect(() => expect(Scheduler).toFlushWithoutYielding()).toErrorDev(
+    expect(() =>
+      expect(Scheduler).toFlushWithoutYielding(),
+    ).toErrorDev(
       'Legacy context API has been detected within a strict-mode tree.\n\n' +
         'The old API will be supported in all 16.x releases, but applications ' +
         'using it should migrate to the new version.\n\n' +
@@ -2676,7 +2688,9 @@ describe('ReactIncremental', () => {
       </TopContextProvider>,
     );
 
-    expect(() => expect(Scheduler).toFlushWithoutYielding()).toErrorDev(
+    expect(() =>
+      expect(Scheduler).toFlushWithoutYielding(),
+    ).toErrorDev(
       'Legacy context API has been detected within a strict-mode tree.\n\n' +
         'The old API will be supported in all 16.x releases, but applications ' +
         'using it should migrate to the new version.\n\n' +
@@ -2749,7 +2763,9 @@ describe('ReactIncremental', () => {
       </TopContextProvider>,
     );
 
-    expect(() => expect(Scheduler).toFlushWithoutYielding()).toErrorDev(
+    expect(() =>
+      expect(Scheduler).toFlushWithoutYielding(),
+    ).toErrorDev(
       'Legacy context API has been detected within a strict-mode tree.\n\n' +
         'The old API will be supported in all 16.x releases, but applications ' +
         'using it should migrate to the new version.\n\n' +
@@ -2832,7 +2848,9 @@ describe('ReactIncremental', () => {
       </TopContextProvider>,
     );
 
-    expect(() => expect(Scheduler).toFlushWithoutYielding()).toErrorDev(
+    expect(() =>
+      expect(Scheduler).toFlushWithoutYielding(),
+    ).toErrorDev(
       'Legacy context API has been detected within a strict-mode tree.\n\n' +
         'The old API will be supported in all 16.x releases, but applications ' +
         'using it should migrate to the new version.\n\n' +

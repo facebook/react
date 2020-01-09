@@ -57,9 +57,7 @@ inlinedHostConfigs.forEach(rendererInfo => {
     jest.mock(shimHostConfigPath, () => {
       hasImportedShimmedConfig = true;
       return require.requireActual(
-        `react-reconciler/src/forks/ReactFiberHostConfig.${
-          rendererInfo.shortName
-        }.js`
+        `react-reconciler/src/forks/ReactFiberHostConfig.${rendererInfo.shortName}.js`
       );
     });
 
@@ -88,17 +86,13 @@ inlinedHostConfigs.forEach(rendererInfo => {
       jest.mock(shimServerHostConfigPath, () => {
         hasImportedShimmedConfig = true;
         return require.requireActual(
-          `react-server/src/forks/ReactServerHostConfig.${
-            rendererInfo.shortName
-          }.js`
+          `react-server/src/forks/ReactServerHostConfig.${rendererInfo.shortName}.js`
         );
       });
       jest.mock(shimServerFormatConfigPath, () => {
         hasImportedShimmedConfig = true;
         return require.requireActual(
-          `react-server/src/forks/ReactServerFormatConfig.${
-            rendererInfo.shortName
-          }.js`
+          `react-server/src/forks/ReactServerFormatConfig.${rendererInfo.shortName}.js`
         );
       });
 
@@ -126,17 +120,13 @@ inlinedHostConfigs.forEach(rendererInfo => {
       jest.mock(shimServerHostConfigPath, () => {
         hasImportedShimmedConfig = true;
         return require.requireActual(
-          `react-server/src/forks/ReactServerHostConfig.${
-            rendererInfo.shortName
-          }.js`
+          `react-server/src/forks/ReactServerHostConfig.${rendererInfo.shortName}.js`
         );
       });
       jest.mock(shimServerFormatConfigPath, () => {
         hasImportedShimmedConfig = true;
         return require.requireActual(
-          `react-server/src/forks/ReactServerFormatConfig.${
-            rendererInfo.shortName
-          }.js`
+          `react-server/src/forks/ReactServerFormatConfig.${rendererInfo.shortName}.js`
         );
       });
 
@@ -164,9 +154,7 @@ inlinedHostConfigs.forEach(rendererInfo => {
       jest.mock(shimFlightClientHostConfigPath, () => {
         hasImportedShimmedConfig = true;
         return require.requireActual(
-          `react-flight/src/forks/ReactFlightClientHostConfig.${
-            rendererInfo.shortName
-          }.js`
+          `react-flight/src/forks/ReactFlightClientHostConfig.${rendererInfo.shortName}.js`
         );
       });
 

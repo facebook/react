@@ -295,9 +295,10 @@ class ReactShallowRenderer {
           first: null,
           dispatch: null,
         });
-        const dispatch: Dispatch<
-          A,
-        > = (queue.dispatch = (this._dispatchAction.bind(this, queue): any));
+        const dispatch: Dispatch<A> = (queue.dispatch = (this._dispatchAction.bind(
+          this,
+          queue,
+        ): any));
         return [workInProgressHook.memoizedState, dispatch];
       }
     };
@@ -529,7 +530,7 @@ class ReactShallowRenderer {
       'ReactShallowRenderer render(): Invalid component element.%s',
       typeof element === 'function'
         ? ' Instead of passing a component class, make sure to instantiate ' +
-          'it by passing it to React.createElement.'
+            'it by passing it to React.createElement.'
         : '',
     );
     element = ((element: any): ReactElement);
@@ -543,14 +544,15 @@ class ReactShallowRenderer {
     );
     invariant(
       isForwardRef(element) ||
-        (typeof element.type === 'function' || isMemo(element)),
+        typeof element.type === 'function' ||
+        isMemo(element),
       'ReactShallowRenderer render(): Shallow rendering works only with custom ' +
         'components, but the provided element type was `%s`.',
       Array.isArray(element.type)
         ? 'array'
         : element.type === null
-          ? 'null'
-          : typeof element.type,
+        ? 'null'
+        : typeof element.type,
     );
 
     if (this._rendering) {

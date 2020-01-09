@@ -625,10 +625,13 @@ describe('ReactHooks', () => {
   it('warns if switching from dependencies to no dependencies', () => {
     const {useMemo} = React;
     function App({text, hasDeps}) {
-      const resolvedText = useMemo(() => {
-        Scheduler.unstable_yieldValue('Compute');
-        return text.toUpperCase();
-      }, hasDeps ? null : [text]);
+      const resolvedText = useMemo(
+        () => {
+          Scheduler.unstable_yieldValue('Compute');
+          return text.toUpperCase();
+        },
+        hasDeps ? null : [text],
+      );
       return resolvedText;
     }
 
@@ -1183,7 +1186,10 @@ describe('ReactHooks', () => {
       React.useLayoutEffect(() => {});
       React.useCallback(() => {});
       React.useRef();
-      React.useImperativeHandle(() => {}, () => {});
+      React.useImperativeHandle(
+        () => {},
+        () => {},
+      );
       if (__DEV__) {
         React.useDebugValue();
       }

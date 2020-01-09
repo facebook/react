@@ -64,22 +64,19 @@ export default function FocusContain({
       }
     },
   });
-  useLayoutEffect(
-    () => {
-      const scope = scopeRef.current;
-      if (
-        scope !== null &&
-        disabled !== true &&
-        !scope.containsNode(document.activeElement)
-      ) {
-        const fistElem = scope.queryFirstNode(scopeQuery);
-        if (fistElem !== null) {
-          fistElem.focus();
-        }
+  useLayoutEffect(() => {
+    const scope = scopeRef.current;
+    if (
+      scope !== null &&
+      disabled !== true &&
+      !scope.containsNode(document.activeElement)
+    ) {
+      const fistElem = scope.queryFirstNode(scopeQuery);
+      if (fistElem !== null) {
+        fistElem.focus();
       }
-    },
-    [disabled],
-  );
+    }
+  }, [disabled]);
 
   return (
     <FocusContainScope

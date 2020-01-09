@@ -59,7 +59,7 @@ describe('ReactNewContext', () => {
         }).toErrorDev(
           observedBits !== undefined
             ? 'useContext() second argument is reserved for future use in React. ' +
-              `Passing it is not supported. You passed: ${observedBits}.`
+                `Passing it is not supported. You passed: ${observedBits}.`
             : [],
         );
         const render = props.children;
@@ -75,7 +75,7 @@ describe('ReactNewContext', () => {
       }).toErrorDev(
         observedBits !== undefined
           ? 'useContext() second argument is reserved for future use in React. ' +
-            `Passing it is not supported. You passed: ${observedBits}.`
+              `Passing it is not supported. You passed: ${observedBits}.`
           : [],
       );
       const render = props.children;
@@ -91,7 +91,7 @@ describe('ReactNewContext', () => {
       }).toErrorDev(
         observedBits !== undefined
           ? 'useContext() second argument is reserved for future use in React. ' +
-            `Passing it is not supported. You passed: ${observedBits}.`
+              `Passing it is not supported. You passed: ${observedBits}.`
           : [],
       );
       const render = props.children;
@@ -811,9 +811,7 @@ describe('ReactNewContext', () => {
             Scheduler.unstable_yieldValue('Child');
             return (
               <span
-                prop={`Context: ${this.props.context}, Step: ${
-                  this.state.step
-                }`}
+                prop={`Context: ${this.props.context}, Step: ${this.state.step}`}
               />
             );
           }
