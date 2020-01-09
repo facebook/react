@@ -110,11 +110,14 @@ import {getCurrentPriorityLevel} from './SchedulerWithReactIntegration';
 export type Update<State> = {|
   expirationTime: ExpirationTime,
   suspenseConfig: null | SuspenseConfig,
+
   tag: 0 | 1 | 2 | 3,
   payload: any,
   callback: (() => mixed) | null,
+
   next: Update<State>,
-  //DEV only
+
+  // DEV only
   priority?: ReactPriorityLevel,
 |};
 

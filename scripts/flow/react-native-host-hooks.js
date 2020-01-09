@@ -106,6 +106,7 @@ declare module 'react-native/Libraries/ReactPrivate/ReactNativePrivateInterface'
     customBubblingEventTypes: Object,
     customDirectEventTypes: Object,
     eventTypes: Object,
+
     register: (name: string, callback: ViewConfigGetter) => string,
     get: (name: string) => ReactNativeBaseComponentViewConfig,
     ...
@@ -130,6 +131,7 @@ declare var nativeFabricUIManager: {
   cloneNodeWithNewProps: (node: Object, newProps: ?Object) => Object,
   cloneNodeWithNewChildrenAndProps: (node: Object, newProps: ?Object) => Object,
   appendChild: (node: Object, childNode: Object) => void,
+
   createChildSet: (rootTag: number) => Object,
   appendChildToSet: (childSet: Object, childNode: Object) => void,
   completeRoot: (rootTag: number, childSet: Object) => void,
@@ -140,7 +142,9 @@ declare var nativeFabricUIManager: {
       payload: Object,
     ) => void,
   ) => void,
+
   dispatchCommand: (node: Object, command: string, args: Array<any>) => void,
+
   measure: (node: Node, callback: MeasureOnSuccessCallback) => void,
   measureInWindow: (
     node: Node,

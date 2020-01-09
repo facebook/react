@@ -271,6 +271,7 @@ export type DevToolsHook = {
   listeners: {[key: string]: Array<Handler>, ...},
   rendererInterfaces: Map<RendererID, RendererInterface>,
   renderers: Map<RendererID, ReactRenderer>,
+
   emit: (event: string, data: any) => void,
   getFiberRoots: (rendererID: RendererID) => Set<Object>,
   inject: (renderer: ReactRenderer) => number | null,
@@ -278,9 +279,11 @@ export type DevToolsHook = {
   off: (event: string, handler: Handler) => void,
   reactDevtoolsAgent?: ?Object,
   sub: (event: string, handler: Handler) => () => void,
+
   // Used by react-native-web and Flipper/Inspector
   resolveRNStyle?: ResolveNativeStyle,
   nativeStyleEditorValidAttributes?: $ReadOnlyArray<string>,
+
   // React uses these methods.
   checkDCE: (fn: Function) => void,
   onCommitFiberUnmount: (rendererID: RendererID, fiber: Object) => void,

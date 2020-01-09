@@ -18,8 +18,9 @@ export type ReactElement = {|
   key: any,
   ref: any,
   props: any,
-  // ReactInstance or ReactFiber
+  // ReactFiber
   _owner: any,
+
   // __DEV__
   _store: {validated: boolean, ...},
   _self: React$Element<any>,
