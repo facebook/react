@@ -19,19 +19,13 @@ type Props = {|
 |};
 
 function ListItem({item, removeItem, toggleItem}: Props) {
-  const handleDelete = useCallback(
-    () => {
-      removeItem(item);
-    },
-    [item, removeItem],
-  );
+  const handleDelete = useCallback(() => {
+    removeItem(item);
+  }, [item, removeItem]);
 
-  const handleToggle = useCallback(
-    () => {
-      toggleItem(item);
-    },
-    [item, toggleItem],
-  );
+  const handleToggle = useCallback(() => {
+    toggleItem(item);
+  }, [item, toggleItem]);
 
   return (
     <li className={styles.ListItem}>

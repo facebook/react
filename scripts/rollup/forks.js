@@ -278,9 +278,7 @@ const forks = Object.freeze({
     // eslint-disable-next-line no-for-of-loops/no-for-of-loops
     for (let rendererInfo of inlinedHostConfigs) {
       if (rendererInfo.entryPoints.indexOf(entry) !== -1) {
-        return `react-reconciler/src/forks/ReactFiberHostConfig.${
-          rendererInfo.shortName
-        }.js`;
+        return `react-reconciler/src/forks/ReactFiberHostConfig.${rendererInfo.shortName}.js`;
       }
     }
     throw new Error(
@@ -308,9 +306,7 @@ const forks = Object.freeze({
         if (!rendererInfo.isServerSupported) {
           return null;
         }
-        return `react-server/src/forks/ReactServerHostConfig.${
-          rendererInfo.shortName
-        }.js`;
+        return `react-server/src/forks/ReactServerHostConfig.${rendererInfo.shortName}.js`;
       }
     }
     throw new Error(
@@ -338,9 +334,7 @@ const forks = Object.freeze({
         if (!rendererInfo.isServerSupported) {
           return null;
         }
-        return `react-server/src/forks/ReactServerFormatConfig.${
-          rendererInfo.shortName
-        }.js`;
+        return `react-server/src/forks/ReactServerFormatConfig.${rendererInfo.shortName}.js`;
       }
     }
     throw new Error(
@@ -368,9 +362,7 @@ const forks = Object.freeze({
         if (!rendererInfo.isServerSupported) {
           return null;
         }
-        return `react-flight/src/forks/ReactFlightClientHostConfig.${
-          rendererInfo.shortName
-        }.js`;
+        return `react-flight/src/forks/ReactFlightClientHostConfig.${rendererInfo.shortName}.js`;
       }
     }
     throw new Error(

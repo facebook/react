@@ -143,7 +143,7 @@ describe('ReactJSXElementValidator', () => {
   });
 
   it('does not warn when the child array contains non-elements', () => {
-    void <Component>{[{}, {}]}</Component>;
+    void (<Component>{[{}, {}]}</Component>);
   });
 
   it('should give context for PropType errors in nested components.', () => {
@@ -210,7 +210,9 @@ describe('ReactJSXElementValidator', () => {
     const Null = null;
     const True = true;
     const Div = 'div';
-    expect(() => void <Undefined />).toErrorDev(
+    expect(
+      () => void (<Undefined />),
+    ).toErrorDev(
       'Warning: React.createElement: type is invalid -- expected a string ' +
         '(for built-in components) or a class/function (for composite ' +
         'components) but got: undefined. You likely forgot to export your ' +
@@ -219,14 +221,18 @@ describe('ReactJSXElementValidator', () => {
         '\n\nCheck your code at **.',
       {withoutStack: true},
     );
-    expect(() => void <Null />).toErrorDev(
+    expect(
+      () => void (<Null />),
+    ).toErrorDev(
       'Warning: React.createElement: type is invalid -- expected a string ' +
         '(for built-in components) or a class/function (for composite ' +
         'components) but got: null.' +
         '\n\nCheck your code at **.',
       {withoutStack: true},
     );
-    expect(() => void <True />).toErrorDev(
+    expect(
+      () => void (<True />),
+    ).toErrorDev(
       'Warning: React.createElement: type is invalid -- expected a string ' +
         '(for built-in components) or a class/function (for composite ' +
         'components) but got: boolean.' +
@@ -234,7 +240,7 @@ describe('ReactJSXElementValidator', () => {
       {withoutStack: true},
     );
     // No error expected
-    void <Div />;
+    void (<Div />);
   });
 
   it('should check default prop values', () => {

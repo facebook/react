@@ -29,15 +29,12 @@ export default function InspectHostNodesToggle() {
     [bridge],
   );
 
-  useEffect(
-    () => {
-      const onStopInspectingNative = () => setIsInspecting(false);
-      bridge.addListener('stopInspectingNative', onStopInspectingNative);
-      return () =>
-        bridge.removeListener('stopInspectingNative', onStopInspectingNative);
-    },
-    [bridge],
-  );
+  useEffect(() => {
+    const onStopInspectingNative = () => setIsInspecting(false);
+    bridge.addListener('stopInspectingNative', onStopInspectingNative);
+    return () =>
+      bridge.removeListener('stopInspectingNative', onStopInspectingNative);
+  }, [bridge]);
 
   return (
     <Toggle

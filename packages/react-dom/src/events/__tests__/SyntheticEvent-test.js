@@ -151,18 +151,15 @@ describe('SyntheticEvent', () => {
       'See https://fb.me/react-event-pooling for more information.';
 
     // once for each property accessed
-    expect(() => expect(syntheticEvent.type).toBe(null)).toErrorDev(
-      getExpectedWarning('type'),
-      {withoutStack: true},
-    );
-    expect(() => expect(syntheticEvent.nativeEvent).toBe(null)).toErrorDev(
-      getExpectedWarning('nativeEvent'),
-      {withoutStack: true},
-    );
-    expect(() => expect(syntheticEvent.target).toBe(null)).toErrorDev(
-      getExpectedWarning('target'),
-      {withoutStack: true},
-    );
+    expect(() =>
+      expect(syntheticEvent.type).toBe(null),
+    ).toErrorDev(getExpectedWarning('type'), {withoutStack: true});
+    expect(() =>
+      expect(syntheticEvent.nativeEvent).toBe(null),
+    ).toErrorDev(getExpectedWarning('nativeEvent'), {withoutStack: true});
+    expect(() =>
+      expect(syntheticEvent.target).toBe(null),
+    ).toErrorDev(getExpectedWarning('target'), {withoutStack: true});
 
     expect(expectedCount).toBe(1);
   });
@@ -211,7 +208,9 @@ describe('SyntheticEvent', () => {
     event.initEvent('click', true, true);
     node.dispatchEvent(event);
 
-    expect(() => syntheticEvent.preventDefault()).toErrorDev(
+    expect(() =>
+      syntheticEvent.preventDefault(),
+    ).toErrorDev(
       'Warning: This synthetic event is reused for performance reasons. If ' +
         "you're seeing this, you're accessing the method `preventDefault` on a " +
         'released/nullified synthetic event. This is a no-op function. If you must ' +
@@ -238,7 +237,9 @@ describe('SyntheticEvent', () => {
 
     node.dispatchEvent(event);
 
-    expect(() => syntheticEvent.stopPropagation()).toErrorDev(
+    expect(() =>
+      syntheticEvent.stopPropagation(),
+    ).toErrorDev(
       'Warning: This synthetic event is reused for performance reasons. If ' +
         "you're seeing this, you're accessing the method `stopPropagation` on a " +
         'released/nullified synthetic event. This is a no-op function. If you must ' +

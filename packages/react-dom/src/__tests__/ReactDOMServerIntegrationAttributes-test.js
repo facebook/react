@@ -636,10 +636,7 @@ describe('ReactDOMServerIntegration', () => {
     });
 
     itRenders('no unknown events', async render => {
-      const e = await render(
-        <div onunknownevent="alert(&quot;hack&quot;)" />,
-        1,
-      );
+      const e = await render(<div onunknownevent='alert("hack")' />, 1);
       expect(e.getAttribute('onunknownevent')).toBe(null);
     });
 

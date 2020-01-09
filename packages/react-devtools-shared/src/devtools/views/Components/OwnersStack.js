@@ -128,30 +128,27 @@ export default function OwnerStack() {
 
   const selectedOwner = owners[selectedIndex];
 
-  useLayoutEffect(
-    () => {
-      // If we're already overflowing, then we don't need to re-measure items.
-      // That's because once the owners stack is open, it can only get larger (by driling in).
-      // A totally new stack can only be reached by exiting this mode and re-entering it.
-      if (elementsBarRef.current === null || isOverflowing) {
-        return () => {};
-      }
+  useLayoutEffect(() => {
+    // If we're already overflowing, then we don't need to re-measure items.
+    // That's because once the owners stack is open, it can only get larger (by driling in).
+    // A totally new stack can only be reached by exiting this mode and re-entering it.
+    if (elementsBarRef.current === null || isOverflowing) {
+      return () => {};
+    }
 
-      let totalWidth = 0;
-      for (let i = 0; i < owners.length; i++) {
-        const element = elementsBarRef.current.children[i];
-        const computedStyle = getComputedStyle(element);
+    let totalWidth = 0;
+    for (let i = 0; i < owners.length; i++) {
+      const element = elementsBarRef.current.children[i];
+      const computedStyle = getComputedStyle(element);
 
-        totalWidth +=
-          element.offsetWidth +
-          parseInt(computedStyle.marginLeft, 10) +
-          parseInt(computedStyle.marginRight, 10);
-      }
+      totalWidth +=
+        element.offsetWidth +
+        parseInt(computedStyle.marginLeft, 10) +
+        parseInt(computedStyle.marginRight, 10);
+    }
 
-      setElementsTotalWidth(totalWidth);
-    },
-    [elementsBarRef, isOverflowing, owners.length],
-  );
+    setElementsTotalWidth(totalWidth);
+  }, [elementsBarRef, isOverflowing, owners.length]);
 
   return (
     <div className={styles.OwnerStack}>
@@ -255,14 +252,11 @@ function ElementView({isSelected, owner, selectOwner}: ElementViewProps) {
   const {displayName, hocDisplayNames, type} = owner;
   const isInStore = store.containsElement(owner.id);
 
-  const handleChange = useCallback(
-    () => {
-      if (isInStore) {
-        selectOwner(owner);
-      }
-    },
-    [isInStore, selectOwner, owner],
-  );
+  const handleChange = useCallback(() => {
+    if (isInStore) {
+      selectOwner(owner);
+    }
+  }, [isInStore, selectOwner, owner]);
 
   return (
     <Toggle

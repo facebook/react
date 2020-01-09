@@ -28,23 +28,20 @@ export default function List(props: Props) {
   ]);
   const [uid, setUID] = useState<number>(4);
 
-  const handleClick = useCallback(
-    () => {
-      if (newItemText !== '') {
-        setItems([
-          ...items,
-          {
-            id: uid,
-            isComplete: false,
-            text: newItemText,
-          },
-        ]);
-        setUID(uid + 1);
-        setNewItemText('');
-      }
-    },
-    [newItemText, items, uid],
-  );
+  const handleClick = useCallback(() => {
+    if (newItemText !== '') {
+      setItems([
+        ...items,
+        {
+          id: uid,
+          isComplete: false,
+          text: newItemText,
+        },
+      ]);
+      setUID(uid + 1);
+      setNewItemText('');
+    }
+  }, [newItemText, items, uid]);
 
   const handleKeyPress = useCallback(
     event => {

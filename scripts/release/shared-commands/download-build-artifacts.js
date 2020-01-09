@@ -40,18 +40,14 @@ const run = async ({build, cwd}) => {
   const compressedPackages = readdirSync(join(cwd, 'build/node_modules/'));
   for (let i = 0; i < compressedPackages.length; i++) {
     await exec(
-      `tar zxvf ./build/node_modules/${
-        compressedPackages[i]
-      } -C ./build/node_modules/`,
+      `tar zxvf ./build/node_modules/${compressedPackages[i]} -C ./build/node_modules/`,
       {cwd}
     );
     const packageJSON = readJsonSync(
       join(cwd, `/build/node_modules/package/package.json`)
     );
     await exec(
-      `mv ./build/node_modules/package ./build/node_modules/${
-        packageJSON.name
-      }`,
+      `mv ./build/node_modules/package ./build/node_modules/${packageJSON.name}`,
       {cwd}
     );
   }

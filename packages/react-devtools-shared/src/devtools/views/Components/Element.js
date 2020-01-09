@@ -193,12 +193,9 @@ type DisplayNameProps = {|
 
 function DisplayName({displayName, id}: DisplayNameProps) {
   const {searchIndex, searchResults, searchText} = useContext(TreeStateContext);
-  const isSearchResult = useMemo(
-    () => {
-      return searchResults.includes(id);
-    },
-    [id, searchResults],
-  );
+  const isSearchResult = useMemo(() => {
+    return searchResults.includes(id);
+  }, [id, searchResults]);
   const isCurrentResult =
     searchIndex !== null && id === searchResults[searchIndex];
 

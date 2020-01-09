@@ -339,9 +339,9 @@ function isValidKeyboardEvent(nativeEvent: Object): boolean {
   // "Spacebar" is for IE 11
   return (
     (key === 'Enter' || key === ' ' || key === 'Spacebar') &&
-    (tagName !== 'INPUT' &&
-      tagName !== 'TEXTAREA' &&
-      isContentEditable !== true)
+    tagName !== 'INPUT' &&
+    tagName !== 'TEXTAREA' &&
+    isContentEditable !== true
   );
 }
 
@@ -480,7 +480,10 @@ function updateIsPressWithinResponderRegion(
     bottom != null &&
     x !== null &&
     y !== null &&
-    (x >= left && x <= right && y >= top && y <= bottom);
+    x >= left &&
+    x <= right &&
+    y >= top &&
+    y <= bottom;
 }
 
 // After some investigation work, screen reader virtual

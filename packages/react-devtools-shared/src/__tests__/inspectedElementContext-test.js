@@ -520,9 +520,15 @@ describe('InspectedElementContext', () => {
     const exampleFunction = () => {};
     const exampleDateISO = '2019-12-31T23:42:42.000Z';
     const setShallow = new Set(['abc', 123]);
-    const mapShallow = new Map([['name', 'Brian'], ['food', 'sushi']]);
+    const mapShallow = new Map([
+      ['name', 'Brian'],
+      ['food', 'sushi'],
+    ]);
     const setOfSets = new Set([new Set(['a', 'b', 'c']), new Set([1, 2, 3])]);
-    const mapOfMaps = new Map([['first', mapShallow], ['second', mapShallow]]);
+    const mapOfMaps = new Map([
+      ['first', mapShallow],
+      ['second', mapShallow],
+    ]);
     const objectOfObjects = {
       inner: {string: 'abc', number: 123, boolean: true},
     };

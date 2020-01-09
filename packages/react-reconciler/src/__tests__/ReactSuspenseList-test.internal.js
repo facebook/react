@@ -925,7 +925,14 @@ describe('ReactSuspenseList', () => {
     await B.resolve();
     await D.resolve();
 
-    ReactNoop.render(<Foo items={[['B', B], ['D', D]]} />);
+    ReactNoop.render(
+      <Foo
+        items={[
+          ['B', B],
+          ['D', D],
+        ]}
+      />,
+    );
 
     expect(Scheduler).toFlushAndYield(['B', 'D']);
 
@@ -939,7 +946,14 @@ describe('ReactSuspenseList', () => {
     // Insert items in the beginning, middle and end.
     ReactNoop.render(
       <Foo
-        items={[['A', A], ['B', B], ['C', C], ['D', D], ['E', E], ['F', F]]}
+        items={[
+          ['A', A],
+          ['B', B],
+          ['C', C],
+          ['D', D],
+          ['E', E],
+          ['F', F],
+        ]}
       />,
     );
 
@@ -1021,7 +1035,15 @@ describe('ReactSuspenseList', () => {
     await F.resolve();
 
     // We can also delete some items.
-    ReactNoop.render(<Foo items={[['D', D], ['E', E], ['F', F]]} />);
+    ReactNoop.render(
+      <Foo
+        items={[
+          ['D', D],
+          ['E', E],
+          ['F', F],
+        ]}
+      />,
+    );
 
     expect(Scheduler).toFlushAndYield(['D', 'E', 'F']);
 
@@ -1093,7 +1115,14 @@ describe('ReactSuspenseList', () => {
     // Update items in the beginning, middle and end to start suspending.
     ReactNoop.render(
       <Foo
-        items={[['A', A], ['B', B], ['C', Cs], ['D', D], ['E', Es], ['F', F]]}
+        items={[
+          ['A', A],
+          ['B', B],
+          ['C', Cs],
+          ['D', D],
+          ['E', Es],
+          ['F', F],
+        ]}
       />,
     );
 
@@ -1468,7 +1497,14 @@ describe('ReactSuspenseList', () => {
       );
     }
 
-    ReactNoop.render(<Foo items={[['A', A], ['D', D]]} />);
+    ReactNoop.render(
+      <Foo
+        items={[
+          ['A', A],
+          ['D', D],
+        ]}
+      />,
+    );
 
     await A.resolve();
     await D.resolve();
@@ -1486,7 +1522,14 @@ describe('ReactSuspenseList', () => {
     // For the second render, we're going to insert items in the middle and end.
     ReactNoop.render(
       <Foo
-        items={[['A', A], ['B', B], ['C', C], ['D', D], ['E', E], ['F', F]]}
+        items={[
+          ['A', A],
+          ['B', B],
+          ['C', C],
+          ['D', D],
+          ['E', E],
+          ['F', F],
+        ]}
       />,
     );
 
@@ -1596,7 +1639,14 @@ describe('ReactSuspenseList', () => {
       );
     }
 
-    ReactNoop.render(<Foo items={[['C', C], ['F', F]]} />);
+    ReactNoop.render(
+      <Foo
+        items={[
+          ['C', C],
+          ['F', F],
+        ]}
+      />,
+    );
 
     await C.resolve();
     await F.resolve();
@@ -1614,7 +1664,14 @@ describe('ReactSuspenseList', () => {
     // For the second render, we're going to insert items in the middle and end.
     ReactNoop.render(
       <Foo
-        items={[['A', A], ['B', B], ['C', C], ['D', D], ['E', E], ['F', F]]}
+        items={[
+          ['A', A],
+          ['B', B],
+          ['C', C],
+          ['D', D],
+          ['E', E],
+          ['F', F],
+        ]}
       />,
     );
 
@@ -1733,7 +1790,14 @@ describe('ReactSuspenseList', () => {
       );
     }
 
-    ReactNoop.render(<Foo items={[['A', A], ['D', SyncD]]} />);
+    ReactNoop.render(
+      <Foo
+        items={[
+          ['A', A],
+          ['D', SyncD],
+        ]}
+      />,
+    );
 
     await A.resolve();
 
@@ -1751,7 +1815,14 @@ describe('ReactSuspenseList', () => {
     // Note that D now suspends even though it didn't in the first pass.
     ReactNoop.render(
       <Foo
-        items={[['A', A], ['B', B], ['C', C], ['D', D], ['E', E], ['F', F]]}
+        items={[
+          ['A', A],
+          ['B', B],
+          ['C', C],
+          ['D', D],
+          ['E', E],
+          ['F', F],
+        ]}
       />,
     );
 

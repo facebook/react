@@ -125,11 +125,9 @@ describe('ReactNative', () => {
       expect(UIManager.dispatchViewManagerCommand).not.toBeCalled();
       ReactNative.dispatchCommand(viewRef, 'updateCommand', [10, 20]);
       expect(UIManager.dispatchViewManagerCommand).toHaveBeenCalledTimes(1);
-      expect(UIManager.dispatchViewManagerCommand).toHaveBeenCalledWith(
-        expect.any(Number),
-        'updateCommand',
-        [10, 20],
-      );
+      expect(
+        UIManager.dispatchViewManagerCommand,
+      ).toHaveBeenCalledWith(expect.any(Number), 'updateCommand', [10, 20]);
     });
   });
 
@@ -436,7 +434,11 @@ describe('ReactNative', () => {
       render() {
         const chars = this.props.chars.split('');
         return (
-          <View>{chars.map(text => <View key={text} title={text} />)}</View>
+          <View>
+            {chars.map(text => (
+              <View key={text} title={text} />
+            ))}
+          </View>
         );
       }
     }

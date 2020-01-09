@@ -214,7 +214,9 @@ describe('ReactART', () => {
         const chars = this.props.chars.split('');
         return (
           <Surface>
-            {chars.map(text => <Shape key={text} title={text} />)}
+            {chars.map(text => (
+              <Shape key={text} title={text} />
+            ))}
           </Surface>
         );
       }

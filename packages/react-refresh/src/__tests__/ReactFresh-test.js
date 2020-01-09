@@ -1817,12 +1817,14 @@ describe('ReactFresh', () => {
             <span />
             Hello
             <span />
-          </HelloV1>,
+          </HelloV1>
+          ,
           <HelloV1>
             <>
               <HelloV1 />
             </>
-          </HelloV1>,
+          </HelloV1>
+          ,
         </div>,
         <HelloV1>
           <HelloV1>
