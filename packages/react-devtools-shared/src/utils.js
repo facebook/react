@@ -108,7 +108,7 @@ export function printOperationsArray(operations: Array<number>) {
   const rendererID = operations[0];
   const rootID = operations[1];
 
-  const logs = [`opertions for renderer:${rendererID} and root:${rootID}`];
+  const logs = [`operations for renderer:${rendererID} and root:${rootID}`];
 
   let i = 2;
 
