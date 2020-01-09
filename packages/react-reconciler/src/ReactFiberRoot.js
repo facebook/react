@@ -100,6 +100,7 @@ export type FiberRoot = {
   ...BaseFiberRootProperties,
   ...ProfilingOnlyFiberRootProperties,
   ...SuspenseCallbackOnlyFiberRootProperties,
+  ...
 };
 
 function FiberRootNode(containerInfo, tag, hydrate) {

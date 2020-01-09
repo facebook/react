@@ -38,7 +38,7 @@ const DEFAULT_INDENTATION_SIZE = 12;
 export type ItemData = {|
   numElements: number,
   isNavigatingWithKeyboard: boolean,
-  lastScrolledIDRef: {current: number | null},
+  lastScrolledIDRef: {current: number | null, ...},
   onElementMouseEnter: (id: number) => void,
   treeFocused: boolean,
 |};

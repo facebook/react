@@ -19,6 +19,7 @@ type Props = {
   data: ItemData,
   index: number,
   style: Object,
+  ...
 };
 
 function SnapshotCommitListItem({data: itemData, index, style}: Props) {

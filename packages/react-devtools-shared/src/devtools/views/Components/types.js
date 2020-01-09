@@ -99,6 +99,6 @@ export type DehydratedData = {|
     | Unserializable
     | Array<Dehydrated>
     | Array<Unserializable>
-    | {[key: string]: string | Dehydrated | Unserializable},
+    | {[key: string]: string | Dehydrated | Unserializable, ...},
   unserializable: Array<Array<string | number>>,
 |};

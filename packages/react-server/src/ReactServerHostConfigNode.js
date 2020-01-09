@@ -11,7 +11,9 @@ import type {Writable} from 'stream';
 
 type MightBeFlushable = {
   flush?: () => void,
-  flushHeaders?: () => void, // Legacy
+  // Legacy
+  flushHeaders?: () => void,
+  ...
 };
 
 export type Destination = Writable & MightBeFlushable;

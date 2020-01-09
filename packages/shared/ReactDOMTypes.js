@@ -30,6 +30,7 @@ export type ReactDOMResponderEvent = {
   pointerType: PointerType,
   target: Element | Document,
   type: string,
+  ...
 };
 
 export type ReactDOMEventResponder = ReactEventResponder<
@@ -72,4 +73,5 @@ export type ReactDOMResponderContext = {
   // Used for controller components
   enqueueStateRestore(Element | Document): void,
   getResponderNode(): Element | null,
+  ...
 };

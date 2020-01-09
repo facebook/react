@@ -106,12 +106,8 @@ setBatchingImplementation(
 );
 
 export type DOMContainer =
-  | (Element & {
-      _reactRootContainer: ?RootType,
-    })
-  | (Document & {
-      _reactRootContainer: ?RootType,
-    });
+  | (Element & {_reactRootContainer: ?RootType, ...})
+  | (Document & {_reactRootContainer: ?RootType, ...});
 
 function createPortal(
   children: ReactNodeList,

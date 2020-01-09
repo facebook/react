@@ -65,13 +65,12 @@ export type Props = {
   hidden?: boolean,
   suppressHydrationWarning?: boolean,
   dangerouslySetInnerHTML?: mixed,
-  style?: {
-    display?: string,
-  },
+  style?: {display?: string, ...},
   bottom?: null | number,
   left?: null | number,
   right?: null | number,
   top?: null | number,
+  ...
 };
 export type EventTargetChildElement = {
   type: string,
@@ -83,18 +82,22 @@ export type EventTargetChildElement = {
       left?: string,
       right?: string,
       top?: string,
+      ...
     },
+    ...
   },
+  ...
 };
 export type Container = Element | Document;
 export type Instance = Element;
 export type TextInstance = Text;
-export type SuspenseInstance = Comment & {_reactRetry?: () => void};
+export type SuspenseInstance = Comment & {_reactRetry?: () => void, ...};
 export type HydratableInstance = Instance | TextInstance | SuspenseInstance;
 export type PublicInstance = Element | Text;
 type HostContextDev = {
   namespace: string,
   ancestorInfo: mixed,
+  ...
 };
 type HostContextProd = string;
 export type HostContext = HostContextDev | HostContextProd;

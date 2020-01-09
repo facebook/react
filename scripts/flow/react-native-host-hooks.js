@@ -37,17 +37,18 @@ declare module 'react-native/Libraries/ReactPrivate/ReactNativePrivateInterface'
   declare export function flattenStyle(style: any): any;
   declare export var RCTEventEmitter: {
     register: (eventEmitter: mixed) => void,
+    ...
   };
   declare export var TextInputState: {
     blurTextInput: (object: any) => void,
     focusTextInput: (object: any) => void,
+    ...
   };
   declare export var ReactFiberErrorDialog: {
     showErrorDialog: (error: CapturedError) => boolean,
+    ...
   };
-  declare export var Platform: {
-    OS: string,
-  };
+  declare export var Platform: {OS: string, ...};
   declare export var UIManager: {
     customBubblingEventTypes: Object,
     customDirectEventTypes: Object,
@@ -90,13 +91,16 @@ declare module 'react-native/Libraries/ReactPrivate/ReactNativePrivateInterface'
         height?: number,
         format?: 'png' | 'jpeg',
         quality?: number,
+        ...
       },
     ) => Promise<any>,
     setJSResponder: (reactTag: number, blockNativeResponder: boolean) => void,
     clearJSResponder: () => void,
+    ...
   };
   declare export var BatchedBridge: {
     registerCallableModule: (name: string, module: Object) => void,
+    ...
   };
   declare export var ReactNativeViewConfigRegistry: {
     customBubblingEventTypes: Object,
@@ -105,6 +109,7 @@ declare module 'react-native/Libraries/ReactPrivate/ReactNativePrivateInterface'
 
     register: (name: string, callback: ViewConfigGetter) => string,
     get: (name: string) => ReactNativeBaseComponentViewConfig,
+    ...
   };
 }
 
@@ -151,6 +156,7 @@ declare var nativeFabricUIManager: {
     onFail: () => void,
     onSuccess: MeasureLayoutOnSuccessCallback,
   ) => void,
+  ...
 };
 
 declare module 'View' {

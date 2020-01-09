@@ -23,6 +23,7 @@ type InputResponderProps = {
   onBeforeChange: (e: InputEvent) => void,
   onChange: (e: InputEvent) => void,
   onValueChange: (value: string | boolean) => void,
+  ...
 };
 
 type InputEvent = {|

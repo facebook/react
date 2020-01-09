@@ -20,7 +20,12 @@ export type ReactModelRoot<T> = {|
   model: T,
 |};
 
-type JSONValue = number | null | boolean | string | {[key: string]: JSONValue};
+type JSONValue =
+  | number
+  | null
+  | boolean
+  | string
+  | {[key: string]: JSONValue, ...};
 
 const PENDING = 0;
 const RESOLVED = 1;
@@ -49,10 +54,12 @@ type OpaqueResponseWithoutDecoder = {
   modelRoot: ReactModelRoot<any>,
   chunks: Map<number, Chunk>,
   fromJSON: (key: string, value: JSONValue) => any,
+  ...
 };
 
 type OpaqueResponse = OpaqueResponseWithoutDecoder & {
   stringDecoder: StringDecoder,
+  ...
 };
 
 export function createResponse(source: Source): OpaqueResponse {

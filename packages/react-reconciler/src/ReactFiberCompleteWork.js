@@ -435,6 +435,7 @@ if (supportsMutation) {
     const portalOrRoot: {
       containerInfo: Container,
       pendingChildren: ChildSet,
+      ...
     } = workInProgress.stateNode;
     const childrenUnchanged = workInProgress.firstEffect === null;
     if (childrenUnchanged) {

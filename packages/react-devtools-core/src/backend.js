@@ -27,6 +27,7 @@ type ConnectOptions = {
   resolveRNStyle?: ResolveNativeStyle,
   isAppActive?: () => boolean,
   websocket?: ?WebSocket,
+  ...
 };
 
 installHook(window);
@@ -120,7 +121,7 @@ export function connectToDevTools(options: ?ConnectOptions) {
     });
     bridge.addListener(
       'inspectElement',
-      ({id, rendererID}: {id: number, rendererID: number}) => {
+      ({id, rendererID}: {id: number, rendererID: number, ...}) => {
         const renderer = agent.rendererInterfaces[rendererID];
         if (renderer != null) {
           // Send event for RN to highlight.

@@ -23,7 +23,7 @@ let reusableSVGContainer;
  */
 const setInnerHTML = createMicrosoftUnsafeLocalFunction(function(
   node: Element,
-  html: {valueOf(): {toString(): string}},
+  html: {valueOf(): {toString(): string, ...}, ...},
 ): void {
   if (node.namespaceURI === Namespaces.svg) {
     if (__DEV__) {

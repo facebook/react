@@ -26,6 +26,7 @@ type OpaqueRequest = {
   children: ReactNodeList,
   completedChunks: Array<Uint8Array>,
   flowing: boolean,
+  ...
 };
 
 export function createRequest(

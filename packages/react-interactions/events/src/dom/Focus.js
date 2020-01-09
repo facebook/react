@@ -36,6 +36,7 @@ type FocusState = {
   isFocused: boolean,
   isFocusVisible: boolean,
   pointerType: PointerType,
+  ...
 };
 
 type FocusProps = {
@@ -44,6 +45,7 @@ type FocusProps = {
   onFocus: (e: FocusEvent) => void,
   onFocusChange: boolean => void,
   onFocusVisibleChange: boolean => void,
+  ...
 };
 
 type FocusEventType = 'focus' | 'blur' | 'focuschange' | 'focusvisiblechange';
@@ -55,6 +57,7 @@ type FocusWithinProps = {
   onBlurWithin?: (e: FocusEvent) => void,
   onFocusWithinChange?: boolean => void,
   onFocusWithinVisibleChange?: boolean => void,
+  ...
 };
 
 type FocusWithinEventType =

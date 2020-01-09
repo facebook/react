@@ -95,6 +95,7 @@ export default function setupHighlighter(
     openNativeElementsPanel: boolean,
     rendererID: number,
     scrollIntoView: boolean,
+    ...
   }) {
     const renderer = agent.rendererInterfaces[rendererID];
     if (renderer == null) {

@@ -20,6 +20,7 @@ import {
 export type SuspenseHydrationCallbacks = {
   onHydrated?: (suspenseInstance: SuspenseInstance) => void,
   onDeleted?: (suspenseInstance: SuspenseInstance) => void,
+  ...
 };
 
 // A null SuspenseState represents an unsuspended normal Suspense boundary.

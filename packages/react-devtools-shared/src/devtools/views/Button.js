@@ -17,6 +17,7 @@ type Props = {
   children: React$Node,
   className?: string,
   title?: string,
+  ...
 };
 
 export default function Button({

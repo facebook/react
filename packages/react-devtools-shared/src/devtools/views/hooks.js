@@ -106,7 +106,7 @@ export function useEditableValue(
 }
 
 export function useIsOverflowing(
-  containerRef: {current: HTMLDivElement | null},
+  containerRef: {current: HTMLDivElement | null, ...},
   totalChildWidth: number,
 ): boolean {
   const [isOverflowing, setIsOverflowing] = useState<boolean>(false);
@@ -195,7 +195,7 @@ export function useLocalStorage<T>(
 }
 
 export function useModalDismissSignal(
-  modalRef: {current: HTMLDivElement | null},
+  modalRef: {current: HTMLDivElement | null, ...},
   dismissCallback: () => void,
   dismissOnClickOutside?: boolean = true,
 ): void {

@@ -29,6 +29,7 @@ type DragProps = {
   onDragMove: (e: DragEvent) => void,
   onDragEnd: (e: DragEvent) => void,
   onDragChange: boolean => void,
+  ...
 };
 
 type DragState = {|
@@ -57,6 +58,7 @@ if (typeof window !== 'undefined' && window.PointerEvent === undefined) {
 type EventData = {
   diffX: number,
   diffY: number,
+  ...
 };
 type DragEventType = 'dragstart' | 'dragend' | 'dragchange' | 'dragmove';
 

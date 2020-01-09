@@ -18,11 +18,10 @@ type FocusCellProps = {
   children?: React.Node,
   onKeyDown?: KeyboardEvent => void,
   colSpan?: number,
+  ...
 };
 
-type FocusRowProps = {
-  children: React.Node,
-};
+type FocusRowProps = {children: React.Node, ...};
 
 type FocusTableProps = {|
   children: React.Node,

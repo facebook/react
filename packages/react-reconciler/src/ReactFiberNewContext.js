@@ -16,6 +16,7 @@ export type ContextDependency<T> = {
   context: ReactContext<T>,
   observedBits: number,
   next: ContextDependency<mixed> | null,
+  ...
 };
 
 import {isPrimaryRenderer} from './ReactFiberHostConfig';

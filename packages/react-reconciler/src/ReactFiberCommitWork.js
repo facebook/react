@@ -914,8 +914,11 @@ function emptyPortalContainer(current: Fiber) {
     return;
   }
 
-  const portal: {containerInfo: Container, pendingChildren: ChildSet} =
-    current.stateNode;
+  const portal: {
+    containerInfo: Container,
+    pendingChildren: ChildSet,
+    ...
+  } = current.stateNode;
   const {containerInfo} = portal;
   const emptyChildSet = createContainerChildSet(containerInfo);
   replaceContainerChildren(containerInfo, emptyChildSet);
@@ -938,6 +941,7 @@ function commitContainer(finishedWork: Fiber) {
       const portalOrRoot: {
         containerInfo: Container,
         pendingChildren: ChildSet,
+        ...
       } = finishedWork.stateNode;
       const {containerInfo, pendingChildren} = portalOrRoot;
       replaceContainerChildren(containerInfo, pendingChildren);

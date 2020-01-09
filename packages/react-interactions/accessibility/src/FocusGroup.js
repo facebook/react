@@ -17,6 +17,7 @@ import setElementCanTab from './shared/setElementCanTab';
 type FocusItemProps = {
   children?: React.Node,
   onKeyDown?: KeyboardEvent => void,
+  ...
 };
 
 type FocusGroupProps = {|

@@ -9,9 +9,7 @@
 
 import type {Fiber} from './ReactFiber';
 
-export type StackCursor<T> = {
-  current: T,
-};
+export type StackCursor<T> = {|current: T|};
 
 const valueStack: Array<any> = [];
 

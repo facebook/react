@@ -52,6 +52,7 @@ export type Unserializable = {
   size?: number,
   type: string,
   unserializable: boolean,
+  ...
 };
 
 // This threshold determines the depth at which the bridge "dehydrates" nested data.
@@ -129,7 +130,7 @@ export function dehydrate(
   | Unserializable
   | Array<Dehydrated>
   | Array<Unserializable>
-  | {[key: string]: string | Dehydrated | Unserializable} {
+  | {[key: string]: string | Dehydrated | Unserializable, ...} {
   const type = getDataType(data);
 
   let isPathWhitelistedCheck;
@@ -375,7 +376,7 @@ export function hydrate(
       parent[last] = undefined;
     } else {
       // Replace the string keys with Symbols so they're non-enumerable.
-      const replaced: {[key: Symbol]: boolean | string} = {};
+      const replaced: {[key: Symbol]: boolean | string, ...} = {};
       replaced[meta.inspectable] = !!value.inspectable;
       replaced[meta.inspected] = false;
       replaced[meta.name] = value.name;

@@ -12,17 +12,17 @@ import type {Fiber} from 'react-reconciler/src/ReactFiber';
 import type {EventPriority} from 'shared/ReactTypes';
 import type {TopLevelType} from './TopLevelEventTypes';
 
-export type DispatchConfig = {
+export type DispatchConfig = {|
   dependencies: Array<TopLevelType>,
-  phasedRegistrationNames?: {
+  phasedRegistrationNames?: {|
     bubbled: string,
     captured: string,
-  },
+  |},
   registrationName?: string,
   eventPriority: EventPriority,
-};
+|};
 
-export type ReactSyntheticEvent = {
+export type ReactSyntheticEvent = {|
   dispatchConfig: DispatchConfig,
   getPooled: (
     dispatchConfig: DispatchConfig,
@@ -31,4 +31,4 @@ export type ReactSyntheticEvent = {
     nativeEventTarget: EventTarget,
   ) => ReactSyntheticEvent,
   isPersistent: () => boolean,
-} & SyntheticEvent<>;
+|} & SyntheticEvent<>;
