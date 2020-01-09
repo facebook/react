@@ -25,7 +25,9 @@ type InputWithWrapperState = HTMLInputElement & {
     initialValue: ToStringValue,
     initialChecked: ?boolean,
     controlled?: boolean,
+    ...
   },
+  ...
 };
 
 let didWarnValueDefaultValue = false;

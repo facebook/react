@@ -15,6 +15,7 @@ export type CapturedValue<T> = {
   value: T,
   source: Fiber | null,
   stack: string | null,
+  ...
 };
 
 export type CapturedError = {
@@ -25,6 +26,7 @@ export type CapturedError = {
   errorBoundaryFound: boolean,
   errorBoundaryName: string | null,
   willRetry: boolean,
+  ...
 };
 
 export function createCapturedValue<T>(

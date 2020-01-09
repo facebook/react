@@ -24,6 +24,7 @@ type Props = {
   data: ItemData,
   index: number,
   style: Object,
+  ...
 };
 
 export default function ElementView({data, index, style}: Props) {

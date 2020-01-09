@@ -30,17 +30,20 @@ type Dispatch<A> = A => void;
 type Update<A> = {
   action: A,
   next: Update<A> | null,
+  ...
 };
 
 type UpdateQueue<A> = {
   first: Update<A> | null,
   dispatch: any,
+  ...
 };
 
 type Hook = {
   memoizedState: any,
   queue: UpdateQueue<any> | null,
   next: Hook | null,
+  ...
 };
 
 const {ReactCurrentDispatcher} = ReactSharedInternals;
@@ -340,7 +343,7 @@ class ReactShallowRenderer {
       return nextValue;
     };
 
-    const useRef = <T>(initialValue: T): {current: T} => {
+    const useRef = <T>(initialValue: T): {current: T, ...} => {
       this._validateCurrentlyRenderingComponent();
       this._createWorkInProgressHook();
       const previousRef = (this._workInProgressHook: any).memoizedState;

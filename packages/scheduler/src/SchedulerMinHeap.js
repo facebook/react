@@ -11,6 +11,7 @@ type Heap = Array<Node>;
 type Node = {
   id: number,
   sortIndex: number,
+  ...
 };
 
 export function push(heap: Heap, node: Node): void {

@@ -27,6 +27,7 @@ type PressProps = {|
     right: number,
     bottom: number,
     left: number,
+    ...
   },
   preventDefault: boolean,
   onPress: (e: PressEvent) => void,
@@ -65,6 +66,7 @@ type PressState = {
   activePointerId: null | number,
   shouldPreventClick: boolean,
   touchEvent: null | Touch,
+  ...
 };
 
 type PressEventType =

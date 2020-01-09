@@ -31,6 +31,7 @@ type Container = {
   rootID: string,
   children: Array<Instance | TextInstance>,
   pendingChildren: Array<Instance | TextInstance>,
+  ...
 };
 type Props = {
   prop: any,
@@ -40,6 +41,7 @@ type Props = {
   left?: null | number,
   right?: null | number,
   top?: null | number,
+  ...
 };
 type Instance = {|
   type: string,
@@ -315,7 +317,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       type: string,
       oldProps: Props,
       newProps: Props,
-    ): null | {} {
+    ): null | {...} {
       if (type === 'errorInCompletePhase') {
         throw new Error('Error in host config.');
       }

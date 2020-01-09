@@ -20,9 +20,8 @@ if (__DEV__) {
 }
 
 type SelectWithWrapperState = HTMLSelectElement & {
-  _wrapperState: {
-    wasMultiple: boolean,
-  },
+  _wrapperState: {wasMultiple: boolean, ...},
+  ...
 };
 
 function getDeclarationErrorAddendum() {
@@ -75,6 +74,7 @@ function updateOptions(
 ) {
   type IndexableHTMLOptionsCollection = HTMLOptionsCollection & {
     [key: number]: HTMLOptionElement,
+    ...,
   };
   const options: IndexableHTMLOptionsCollection = node.options;
 

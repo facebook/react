@@ -195,7 +195,7 @@ export function prepareUpdate(
   newProps: Props,
   rootContainerInstance: Container,
   hostContext: Object,
-): null | {} {
+): null | {...} {
   return UPDATE_SIGNAL;
 }
 
@@ -246,7 +246,7 @@ export const supportsMutation = true;
 
 export function commitUpdate(
   instance: Instance,
-  updatePayload: {},
+  updatePayload: {...},
   type: string,
   oldProps: Props,
   newProps: Props,

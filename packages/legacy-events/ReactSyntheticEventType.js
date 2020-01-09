@@ -17,9 +17,11 @@ export type DispatchConfig = {
   phasedRegistrationNames?: {
     bubbled: string,
     captured: string,
+    ...
   },
   registrationName?: string,
   eventPriority: EventPriority,
+  ...
 };
 
 export type ReactSyntheticEvent = {
@@ -31,4 +33,5 @@ export type ReactSyntheticEvent = {
     nativeEventTarget: EventTarget,
   ) => ReactSyntheticEvent,
   isPersistent: () => boolean,
+  ...
 } & SyntheticEvent<>;

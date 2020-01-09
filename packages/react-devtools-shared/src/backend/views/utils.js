@@ -14,6 +14,7 @@ export type Rect = {
   right: number,
   top: number,
   width: number,
+  ...
 };
 
 // Get the window object for the document that a node belongs to,

@@ -211,9 +211,9 @@ const RootCompleted = 5;
 
 export type Thenable = {
   then(resolve: () => mixed, reject?: () => mixed): Thenable | void,
-
   // Special flag to opt out of tracing interactions across a Suspense boundary.
   __reactDoNotTraceInteractions?: boolean,
+  ...
 };
 
 // Describes where we are in the React execution stack

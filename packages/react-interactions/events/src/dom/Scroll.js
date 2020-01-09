@@ -25,6 +25,7 @@ type ScrollProps = {
   onScroll: ScrollEvent => void,
   onScrollDragStart: ScrollEvent => void,
   onScrollDragEnd: ScrollEvent => void,
+  ...
 };
 
 type ScrollState = {
@@ -35,6 +36,7 @@ type ScrollState = {
   isTouching: boolean,
   scrollLeft: number,
   scrollTop: number,
+  ...
 };
 
 type ScrollEventType =

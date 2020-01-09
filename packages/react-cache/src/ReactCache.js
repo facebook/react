@@ -13,11 +13,10 @@ import {createLRU} from './LRU';
 
 type Thenable<T> = {
   then(resolve: (T) => mixed, reject: (mixed) => mixed): mixed,
+  ...
 };
 
-type Suspender = {
-  then(resolve: () => mixed, reject: () => mixed): mixed,
-};
+type Suspender = {then(resolve: () => mixed, reject: () => mixed): mixed, ...};
 
 type PendingResult = {|
   status: 0,
@@ -39,6 +38,7 @@ type Result<V> = PendingResult | ResolvedResult<V> | RejectedResult;
 type Resource<I, V> = {
   read(I): V,
   preload(I): void,
+  ...
 };
 
 const Pending = 0;

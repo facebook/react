@@ -23,9 +23,7 @@ type ContextMenuProps = {|
   preventDefault: boolean,
 |};
 
-type ContextMenuState = {
-  pointerType: PointerType,
-};
+type ContextMenuState = {pointerType: PointerType, ...};
 
 type ContextMenuEvent = {|
   altKey: boolean,

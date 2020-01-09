@@ -37,17 +37,18 @@ declare module 'react-native/Libraries/ReactPrivate/ReactNativePrivateInterface'
   declare export function flattenStyle(style: any): any;
   declare export var RCTEventEmitter: {
     register: (eventEmitter: mixed) => void,
+    ...
   };
   declare export var TextInputState: {
     blurTextInput: (object: any) => void,
     focusTextInput: (object: any) => void,
+    ...
   };
   declare export var ReactFiberErrorDialog: {
     showErrorDialog: (error: CapturedError) => boolean,
+    ...
   };
-  declare export var Platform: {
-    OS: string,
-  };
+  declare export var Platform: {OS: string, ...};
   declare export var UIManager: {
     customBubblingEventTypes: Object,
     customDirectEventTypes: Object,
@@ -90,21 +91,24 @@ declare module 'react-native/Libraries/ReactPrivate/ReactNativePrivateInterface'
         height?: number,
         format?: 'png' | 'jpeg',
         quality?: number,
+        ...
       },
     ) => Promise<any>,
     setJSResponder: (reactTag: number, blockNativeResponder: boolean) => void,
     clearJSResponder: () => void,
+    ...
   };
   declare export var BatchedBridge: {
     registerCallableModule: (name: string, module: Object) => void,
+    ...
   };
   declare export var ReactNativeViewConfigRegistry: {
     customBubblingEventTypes: Object,
     customDirectEventTypes: Object,
     eventTypes: Object,
-
     register: (name: string, callback: ViewConfigGetter) => string,
     get: (name: string) => ReactNativeBaseComponentViewConfig,
+    ...
   };
 }
 
@@ -126,7 +130,6 @@ declare var nativeFabricUIManager: {
   cloneNodeWithNewProps: (node: Object, newProps: ?Object) => Object,
   cloneNodeWithNewChildrenAndProps: (node: Object, newProps: ?Object) => Object,
   appendChild: (node: Object, childNode: Object) => void,
-
   createChildSet: (rootTag: number) => Object,
   appendChildToSet: (childSet: Object, childNode: Object) => void,
   completeRoot: (rootTag: number, childSet: Object) => void,
@@ -137,9 +140,7 @@ declare var nativeFabricUIManager: {
       payload: Object,
     ) => void,
   ) => void,
-
   dispatchCommand: (node: Object, command: string, args: Array<any>) => void,
-
   measure: (node: Node, callback: MeasureOnSuccessCallback) => void,
   measureInWindow: (
     node: Node,
@@ -151,6 +152,7 @@ declare var nativeFabricUIManager: {
     onFail: () => void,
     onSuccess: MeasureLayoutOnSuccessCallback,
   ) => void,
+  ...
 };
 
 declare module 'View' {

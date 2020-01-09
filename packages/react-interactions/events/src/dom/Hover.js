@@ -24,6 +24,7 @@ type HoverProps = {
   onHoverEnd: (e: HoverEvent) => void,
   onHoverMove: (e: HoverEvent) => void,
   onHoverStart: (e: HoverEvent) => void,
+  ...
 };
 
 type HoverState = {
@@ -32,6 +33,7 @@ type HoverState = {
   isHovered: boolean,
   isTouched?: boolean,
   ignoreEmulatedMouseEvents?: boolean,
+  ...
 };
 
 type HoverEventType = 'hoverstart' | 'hoverend' | 'hoverchange' | 'hovermove';

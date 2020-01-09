@@ -15,6 +15,7 @@ type Props = {
   onFocus?: (event: FocusEvent) => void,
   placeholder?: string,
   value: any,
+  ...
 };
 
 export default function AutoSizeInput({

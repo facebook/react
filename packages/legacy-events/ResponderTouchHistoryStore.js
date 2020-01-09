@@ -27,6 +27,7 @@ type TouchRecord = {
   previousPageX: number,
   previousPageY: number,
   previousTimeStamp: number,
+  ...
 };
 
 const MAX_TOUCH_BANK = 20;
@@ -46,10 +47,12 @@ type Touch = {
   pageX: number,
   pageY: number,
   timestamp: number,
+  ...
 };
 type TouchEvent = {
   changedTouches: Array<Touch>,
   touches: Array<Touch>,
+  ...
 };
 
 function timestampForTouch(touch: Touch): number {

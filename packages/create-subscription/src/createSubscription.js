@@ -32,6 +32,7 @@ export function createSubscription<Property, Value>(
 ): React$ComponentType<{
   children: (value: Value | void) => React$Node,
   source: Property,
+  ...
 }> {
   const {getCurrentValue, subscribe} = config;
 
@@ -47,10 +48,12 @@ export function createSubscription<Property, Value>(
   type Props = {
     children: (value: Value) => React$Element<any>,
     source: Property,
+    ...
   };
   type State = {
     source: Property,
     value: Value | void,
+    ...
   };
 
   // Reference: https://gist.github.com/bvaughn/d569177d70b50b58bff69c3c4a5353f3

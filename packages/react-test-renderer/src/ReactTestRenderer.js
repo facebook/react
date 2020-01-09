@@ -50,11 +50,12 @@ import {ConcurrentRoot, LegacyRoot} from 'shared/ReactRootTags';
 type TestRendererOptions = {
   createNodeMock: (element: React$Element<any>) => any,
   unstable_isConcurrent: boolean,
+  ...
 };
 
 type ReactTestRendererJSON = {|
   type: string,
-  props: {[propName: string]: any},
+  props: {[propName: string]: any, ...},
   children: null | Array<ReactTestRendererNode>,
   $$typeof?: Symbol, // Optional because we add it with defineProperty().
 |};
@@ -64,6 +65,7 @@ type FindOptions = $Shape<{
   // performs a "greedy" search: if a matching node is found, will continue
   // to search within the matching node's children. (default: true)
   deep: boolean,
+  ...
 }>;
 
 export type Predicate = (node: ReactTestInstance) => ?boolean;

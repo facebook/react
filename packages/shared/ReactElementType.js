@@ -10,6 +10,7 @@
 export type Source = {
   fileName: string,
   lineNumber: number,
+  ...
 };
 
 export type ReactElement = {
@@ -18,13 +19,12 @@ export type ReactElement = {
   key: any,
   ref: any,
   props: any,
-  _owner: any, // ReactInstance or ReactFiber
-
+  // ReactInstance or ReactFiber
+  _owner: any,
   // __DEV__
-  _store: {
-    validated: boolean,
-  },
+  _store: {validated: boolean, ...},
   _self: React$Element<any>,
   _shadowChildren: any,
   _source: Source,
+  ...
 };

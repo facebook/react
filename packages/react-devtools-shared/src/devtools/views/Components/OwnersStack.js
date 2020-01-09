@@ -199,6 +199,7 @@ type ElementsDropdownProps = {
   owners: Array<Owner>,
   selectedIndex: number,
   selectOwner: SelectOwner,
+  ...
 };
 function ElementsDropdown({
   owners,
@@ -245,6 +246,7 @@ type ElementViewProps = {
   isSelected: boolean,
   owner: Owner,
   selectOwner: SelectOwner,
+  ...
 };
 function ElementView({isSelected, owner, selectOwner}: ElementViewProps) {
   const store = useContext(StoreContext);

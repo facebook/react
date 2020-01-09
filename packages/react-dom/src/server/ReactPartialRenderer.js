@@ -701,11 +701,10 @@ type Frame = {
   childIndex: number,
   context: Object,
   footer: string,
+  ...
 };
 
-type FrameDev = Frame & {
-  debugElementStack: Array<ReactElement>,
-};
+type FrameDev = Frame & {debugElementStack: Array<ReactElement>, ...};
 
 class ReactDOMServerRenderer {
   threadID: ThreadID;

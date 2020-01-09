@@ -59,10 +59,9 @@ export type Props = Object;
 export type Instance = {
   node: Node,
   canonical: ReactFabricHostComponent,
+  ...
 };
-export type TextInstance = {
-  node: Node,
-};
+export type TextInstance = {node: Node, ...};
 export type HydratableInstance = Instance | TextInstance;
 export type PublicInstance = ReactFabricHostComponent;
 export type Container = number;

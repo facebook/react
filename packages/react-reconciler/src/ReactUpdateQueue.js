@@ -110,26 +110,23 @@ import {getCurrentPriorityLevel} from './SchedulerWithReactIntegration';
 export type Update<State> = {
   expirationTime: ExpirationTime,
   suspenseConfig: null | SuspenseConfig,
-
   tag: 0 | 1 | 2 | 3,
   payload: any,
   callback: (() => mixed) | null,
-
   next: Update<State>,
-
   //DEV only
   priority?: ReactPriorityLevel,
+  ...
 };
 
-type SharedQueue<State> = {
-  pending: Update<State> | null,
-};
+type SharedQueue<State> = {pending: Update<State> | null, ...};
 
 export type UpdateQueue<State> = {
   baseState: State,
   baseQueue: Update<State> | null,
   shared: SharedQueue<State>,
   effects: Array<Update<State>> | null,
+  ...
 };
 
 export const UpdateState = 0;

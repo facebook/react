@@ -94,6 +94,7 @@ type ReactSymbolsType = {
   STRICT_MODE_SYMBOL_STRING: string,
   SCOPE_NUMBER: number,
   SCOPE_SYMBOL_STRING: string,
+  ...
 };
 
 type ReactPriorityLevelsType = {|
