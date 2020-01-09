@@ -1766,7 +1766,7 @@ describe('ReactSuspenseList', () => {
     );
   });
 
-  it('adding to the middle of committeed tail does not collapse insertions', async () => {
+  it('adding to the middle of committed tail does not collapse insertions', async () => {
     let A = createAsyncText('A');
     let B = createAsyncText('B');
     let C = createAsyncText('C');
