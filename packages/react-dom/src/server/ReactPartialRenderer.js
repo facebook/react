@@ -704,7 +704,7 @@ type Frame = {
   ...
 };
 
-type FrameDev = Frame & {debugElementStack: Array<ReactElement>, ...};
+type FrameDev = Frame & {|debugElementStack: Array<ReactElement>|};
 
 class ReactDOMServerRenderer {
   threadID: ThreadID;

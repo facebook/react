@@ -16,7 +16,7 @@ import {isStartish, isMoveish, isEndish} from './ResponderTopLevelEventTypes';
  * should typically only see IDs in the range of 1-20 because IDs get recycled
  * when touches end and start again.
  */
-type TouchRecord = {
+type TouchRecord = {|
   touchActive: boolean,
   startPageX: number,
   startPageY: number,
@@ -27,8 +27,7 @@ type TouchRecord = {
   previousPageX: number,
   previousPageY: number,
   previousTimeStamp: number,
-  ...
-};
+|};
 
 const MAX_TOUCH_BANK = 20;
 const touchBank: Array<TouchRecord> = [];

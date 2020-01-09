@@ -43,9 +43,9 @@ export type Subscriber = {
   ...
 };
 
-export type InteractionsRef = {current: Set<Interaction>, ...};
+export type InteractionsRef = {|current: Set<Interaction>|};
 
-export type SubscriberRef = {current: Subscriber | null, ...};
+export type SubscriberRef = {|current: Subscriber | null|};
 
 const DEFAULT_THREAD_ID = 0;
 
