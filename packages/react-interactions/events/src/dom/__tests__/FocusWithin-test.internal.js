@@ -9,7 +9,7 @@
 
 'use strict';
 
-import {createEventTarget, setPointerEvent} from '../testing-library';
+import {createEventTarget, setPointerEvent} from 'dom-event-testing-library';
 
 let React;
 let ReactFeatureFlags;
@@ -21,7 +21,7 @@ const initializeModules = hasPointerEvents => {
   setPointerEvent(hasPointerEvents);
   jest.resetModules();
   ReactFeatureFlags = require('shared/ReactFeatureFlags');
-  ReactFeatureFlags.enableFlareAPI = true;
+  ReactFeatureFlags.enableDeprecatedFlareAPI = true;
   React = require('react');
   ReactDOM = require('react-dom');
   FocusWithinResponder = require('react-interactions/events/focus')
@@ -60,7 +60,7 @@ describe.each(table)('FocusWithin responder', hasPointerEvents => {
           onFocusWithinChange,
           onFocusWithinVisibleChange,
         });
-        return <div ref={ref} listeners={listener} />;
+        return <div ref={ref} DEPRECATED_flareListeners={listener} />;
       };
       ReactDOM.render(<Component />, container);
     });
@@ -82,7 +82,7 @@ describe.each(table)('FocusWithin responder', hasPointerEvents => {
         onFocusWithinChange,
       });
       return (
-        <div ref={ref} listeners={listener}>
+        <div ref={ref} DEPRECATED_flareListeners={listener}>
           {show && <input ref={innerRef} />}
           <div ref={innerRef2} />
         </div>
@@ -141,16 +141,6 @@ describe.each(table)('FocusWithin responder', hasPointerEvents => {
       expect(onFocusWithinChange).toHaveBeenCalledTimes(2);
       expect(onFocusWithinChange).toHaveBeenCalledWith(false);
     });
-
-    it('is called after a focused element is unmounted', () => {
-      const target = createEventTarget(innerRef.current);
-      target.focus();
-      expect(onFocusWithinChange).toHaveBeenCalledTimes(1);
-      expect(onFocusWithinChange).toHaveBeenCalledWith(true);
-      ReactDOM.render(<Component show={false} />, container);
-      expect(onFocusWithinChange).toHaveBeenCalledTimes(2);
-      expect(onFocusWithinChange).toHaveBeenCalledWith(false);
-    });
   });
 
   describe('onFocusWithinVisibleChange', () => {
@@ -161,7 +151,7 @@ describe.each(table)('FocusWithin responder', hasPointerEvents => {
         onFocusWithinVisibleChange,
       });
       return (
-        <div ref={ref} listeners={listener}>
+        <div ref={ref} DEPRECATED_flareListeners={listener}>
           {show && <input ref={innerRef} />}
           <div ref={innerRef2} />
         </div>
@@ -270,17 +260,81 @@ describe.each(table)('FocusWithin responder', hasPointerEvents => {
       expect(onFocusWithinVisibleChange).toHaveBeenCalledTimes(2);
       expect(onFocusWithinVisibleChange).toHaveBeenCalledWith(false);
     });
+  });
+
+  describe('onBeforeBlurWithin', () => {
+    let onBeforeBlurWithin, onBlurWithin, ref, innerRef, innerRef2;
+
+    beforeEach(() => {
+      onBeforeBlurWithin = jest.fn();
+      onBlurWithin = jest.fn();
+      ref = React.createRef();
+      innerRef = React.createRef();
+      innerRef2 = React.createRef();
+    });
 
     it('is called after a focused element is unmounted', () => {
+      const Component = ({show}) => {
+        const listener = useFocusWithin({
+          onBeforeBlurWithin,
+          onBlurWithin,
+        });
+        return (
+          <div ref={ref} DEPRECATED_flareListeners={listener}>
+            {show && <input ref={innerRef} />}
+            <div ref={innerRef2} />
+          </div>
+        );
+      };
+
+      ReactDOM.render(<Component show={true} />, container);
+
       const inner = innerRef.current;
       const target = createEventTarget(inner);
       target.keydown({key: 'Tab'});
       target.focus();
-      expect(onFocusWithinVisibleChange).toHaveBeenCalledTimes(1);
-      expect(onFocusWithinVisibleChange).toHaveBeenCalledWith(true);
+      expect(onBeforeBlurWithin).toHaveBeenCalledTimes(0);
+      expect(onBlurWithin).toHaveBeenCalledTimes(0);
       ReactDOM.render(<Component show={false} />, container);
-      expect(onFocusWithinVisibleChange).toHaveBeenCalledTimes(2);
-      expect(onFocusWithinVisibleChange).toHaveBeenCalledWith(false);
+      expect(onBeforeBlurWithin).toHaveBeenCalledTimes(1);
+      expect(onBlurWithin).toHaveBeenCalledTimes(1);
+      expect(onBlurWithin).toHaveBeenCalledWith(
+        expect.objectContaining({isTargetAttached: false}),
+      );
+    });
+
+    it('is called after a nested focused element is unmounted', () => {
+      const Component = ({show}) => {
+        const listener = useFocusWithin({
+          onBeforeBlurWithin,
+          onBlurWithin,
+        });
+        return (
+          <div ref={ref} DEPRECATED_flareListeners={listener}>
+            {show && (
+              <div>
+                <input ref={innerRef} />
+              </div>
+            )}
+            <div ref={innerRef2} />
+          </div>
+        );
+      };
+
+      ReactDOM.render(<Component show={true} />, container);
+
+      const inner = innerRef.current;
+      const target = createEventTarget(inner);
+      target.keydown({key: 'Tab'});
+      target.focus();
+      expect(onBeforeBlurWithin).toHaveBeenCalledTimes(0);
+      expect(onBlurWithin).toHaveBeenCalledTimes(0);
+      ReactDOM.render(<Component show={false} />, container);
+      expect(onBeforeBlurWithin).toHaveBeenCalledTimes(1);
+      expect(onBlurWithin).toHaveBeenCalledTimes(1);
+      expect(onBlurWithin).toHaveBeenCalledWith(
+        expect.objectContaining({isTargetAttached: false}),
+      );
     });
   });
 

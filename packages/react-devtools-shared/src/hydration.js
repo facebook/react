@@ -9,22 +9,12 @@
 
 import Symbol from 'es6-symbol';
 import {
-  isElement,
-  typeOf,
-  AsyncMode,
-  ConcurrentMode,
-  ContextConsumer,
-  ContextProvider,
-  ForwardRef,
-  Fragment,
-  Lazy,
-  Memo,
-  Portal,
-  Profiler,
-  StrictMode,
-  Suspense,
-} from 'react-is';
-import {getDisplayName, getInObject, setInObject} from './utils';
+  getDataType,
+  getDisplayNameForReactElement,
+  getInObject,
+  formatDataForPreview,
+  setInObject,
+} from './utils';
 
 import type {DehydratedData} from 'react-devtools-shared/src/devtools/views/Components/types';
 
@@ -32,6 +22,8 @@ export const meta = {
   inspectable: Symbol('inspectable'),
   inspected: Symbol('inspected'),
   name: Symbol('name'),
+  preview_long: Symbol('preview_long'),
+  preview_short: Symbol('preview_short'),
   readonly: Symbol('readonly'),
   size: Symbol('size'),
   type: Symbol('type'),
@@ -41,6 +33,8 @@ export const meta = {
 export type Dehydrated = {|
   inspectable: boolean,
   name: string | null,
+  preview_long: string | null,
+  preview_short: string | null,
   readonly?: boolean,
   size?: number,
   type: string,
@@ -52,10 +46,13 @@ export type Dehydrated = {|
 // while preserving the original type and name.
 export type Unserializable = {
   name: string | null,
+  preview_long: string | null,
+  preview_short: string | null,
   readonly?: boolean,
   size?: number,
   type: string,
   unserializable: boolean,
+  ...
 };
 
 // This threshold determines the depth at which the bridge "dehydrates" nested data.
@@ -65,81 +62,6 @@ export type Unserializable = {
 // Reducing this threshold will improve the speed of initial component inspection,
 // but may decrease the responsiveness of expanding objects/arrays to inspect further.
 const LEVEL_THRESHOLD = 2;
-
-type PropType =
-  | 'array'
-  | 'array_buffer'
-  | 'boolean'
-  | 'data_view'
-  | 'date'
-  | 'function'
-  | 'html_element'
-  | 'infinity'
-  | 'iterator'
-  | 'nan'
-  | 'null'
-  | 'number'
-  | 'object'
-  | 'react_element'
-  | 'string'
-  | 'symbol'
-  | 'typed_array'
-  | 'undefined'
-  | 'unknown';
-
-/**
- * Get a enhanced/artificial type string based on the object instance
- */
-function getDataType(data: Object): PropType {
-  if (data === null) {
-    return 'null';
-  } else if (data === undefined) {
-    return 'undefined';
-  }
-
-  if (isElement(data)) {
-    return 'react_element';
-  }
-
-  if (typeof HTMLElement !== 'undefined' && data instanceof HTMLElement) {
-    return 'html_element';
-  }
-
-  const type = typeof data;
-  switch (type) {
-    case 'boolean':
-      return 'boolean';
-    case 'function':
-      return 'function';
-    case 'number':
-      if (Number.isNaN(data)) {
-        return 'nan';
-      } else if (!Number.isFinite(data)) {
-        return 'infinity';
-      } else {
-        return 'number';
-      }
-    case 'object':
-      if (Array.isArray(data)) {
-        return 'array';
-      } else if (ArrayBuffer.isView(data)) {
-        return data instanceof DataView ? 'data_view' : 'typed_array';
-      } else if (data instanceof ArrayBuffer) {
-        return 'array_buffer';
-      } else if (typeof data[Symbol.iterator] === 'function') {
-        return 'iterator';
-      } else if (Object.prototype.toString.call(data) === '[object Date]') {
-        return 'date';
-      }
-      return 'object';
-    case 'string':
-      return 'string';
-    case 'symbol':
-      return 'symbol';
-    default:
-      return 'unknown';
-  }
-}
 
 /**
  * Generate the dehydrated metadata for complex object instances
@@ -156,6 +78,8 @@ function createDehydrated(
   const dehydrated: Dehydrated = {
     inspectable,
     type,
+    preview_long: formatDataForPreview(data, true),
+    preview_short: formatDataForPreview(data, false),
     name:
       !data.constructor || data.constructor.name === 'Object'
         ? ''
@@ -206,7 +130,7 @@ export function dehydrate(
   | Unserializable
   | Array<Dehydrated>
   | Array<Unserializable>
-  | {[key: string]: string | Dehydrated | Unserializable} {
+  | {[key: string]: string | Dehydrated | Unserializable, ...} {
   const type = getDataType(data);
 
   let isPathWhitelistedCheck;
@@ -216,6 +140,8 @@ export function dehydrate(
       cleaned.push(path);
       return {
         inspectable: false,
+        preview_short: formatDataForPreview(data, false),
+        preview_long: formatDataForPreview(data, true),
         name: data.tagName,
         type,
       };
@@ -224,17 +150,31 @@ export function dehydrate(
       cleaned.push(path);
       return {
         inspectable: false,
-        name: data.name,
+        preview_short: formatDataForPreview(data, false),
+        preview_long: formatDataForPreview(data, true),
+        name: data.name || 'function',
         type,
       };
 
     case 'string':
       return data.length <= 500 ? data : data.slice(0, 500) + '...';
 
+    case 'bigint':
+      cleaned.push(path);
+      return {
+        inspectable: false,
+        preview_short: formatDataForPreview(data, false),
+        preview_long: formatDataForPreview(data, true),
+        name: data.toString(),
+        type,
+      };
+
     case 'symbol':
       cleaned.push(path);
       return {
         inspectable: false,
+        preview_short: formatDataForPreview(data, false),
+        preview_long: formatDataForPreview(data, true),
         name: data.toString(),
         type,
       };
@@ -245,7 +185,9 @@ export function dehydrate(
       cleaned.push(path);
       return {
         inspectable: false,
-        name: getDisplayNameForReactElement(data),
+        preview_short: formatDataForPreview(data, false),
+        preview_long: formatDataForPreview(data, true),
+        name: getDisplayNameForReactElement(data) || 'Unknown',
         type,
       };
 
@@ -255,6 +197,8 @@ export function dehydrate(
       cleaned.push(path);
       return {
         inspectable: false,
+        preview_short: formatDataForPreview(data, false),
+        preview_long: formatDataForPreview(data, true),
         name: type === 'data_view' ? 'DataView' : 'ArrayBuffer',
         size: data.byteLength,
         type,
@@ -287,6 +231,8 @@ export function dehydrate(
           type: type,
           readonly: true,
           size: type === 'typed_array' ? data.length : undefined,
+          preview_short: formatDataForPreview(data, false),
+          preview_long: formatDataForPreview(data, true),
           name:
             !data.constructor || data.constructor.name === 'Object'
               ? ''
@@ -320,6 +266,18 @@ export function dehydrate(
       cleaned.push(path);
       return {
         inspectable: false,
+        preview_short: formatDataForPreview(data, false),
+        preview_long: formatDataForPreview(data, true),
+        name: data.toString(),
+        type,
+      };
+
+    case 'regexp':
+      cleaned.push(path);
+      return {
+        inspectable: false,
+        preview_short: formatDataForPreview(data, false),
+        preview_long: formatDataForPreview(data, true),
         name: data.toString(),
         type,
       };
@@ -370,6 +328,8 @@ export function fillInPath(
       delete target[meta.inspectable];
       delete target[meta.inspected];
       delete target[meta.name];
+      delete target[meta.preview_long];
+      delete target[meta.preview_short];
       delete target[meta.readonly];
       delete target[meta.size];
       delete target[meta.type];
@@ -416,10 +376,12 @@ export function hydrate(
       parent[last] = undefined;
     } else {
       // Replace the string keys with Symbols so they're non-enumerable.
-      const replaced: {[key: Symbol]: boolean | string} = {};
+      const replaced: {[key: Symbol]: boolean | string, ...} = {};
       replaced[meta.inspectable] = !!value.inspectable;
       replaced[meta.inspected] = false;
       replaced[meta.name] = value.name;
+      replaced[meta.preview_long] = value.preview_long;
+      replaced[meta.preview_short] = value.preview_short;
       replaced[meta.size] = value.size;
       replaced[meta.readonly] = !!value.readonly;
       replaced[meta.type] = value.type;
@@ -460,6 +422,16 @@ function upgradeUnserializable(destination: Object, source: Object) {
       enumerable: false,
       value: source.name,
     },
+    [meta.preview_long]: {
+      configurable: true,
+      enumerable: false,
+      value: source.preview_long,
+    },
+    [meta.preview_short]: {
+      configurable: true,
+      enumerable: false,
+      value: source.preview_short,
+    },
     [meta.size]: {
       configurable: true,
       enumerable: false,
@@ -484,48 +456,10 @@ function upgradeUnserializable(destination: Object, source: Object) {
 
   delete destination.inspected;
   delete destination.name;
+  delete destination.preview_long;
+  delete destination.preview_short;
   delete destination.size;
   delete destination.readonly;
   delete destination.type;
   delete destination.unserializable;
-}
-
-export function getDisplayNameForReactElement(
-  element: React$Element<any>,
-): string | null {
-  const elementType = typeOf(element);
-  switch (elementType) {
-    case AsyncMode:
-    case ConcurrentMode:
-      return 'ConcurrentMode';
-    case ContextConsumer:
-      return 'ContextConsumer';
-    case ContextProvider:
-      return 'ContextProvider';
-    case ForwardRef:
-      return 'ForwardRef';
-    case Fragment:
-      return 'Fragment';
-    case Lazy:
-      return 'Lazy';
-    case Memo:
-      return 'Memo';
-    case Portal:
-      return 'Portal';
-    case Profiler:
-      return 'Profiler';
-    case StrictMode:
-      return 'StrictMode';
-    case Suspense:
-      return 'Suspense';
-    default:
-      const {type} = element;
-      if (typeof type === 'string') {
-        return type;
-      } else if (type != null) {
-        return getDisplayName(type, 'Anonymous');
-      } else {
-        return 'Element';
-      }
-  }
 }

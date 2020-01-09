@@ -17,7 +17,7 @@ describe('FocusManager', () => {
     jest.resetModules();
     ReactFeatureFlags = require('shared/ReactFeatureFlags');
     ReactFeatureFlags.enableScopeAPI = true;
-    ReactFeatureFlags.enableFlareAPI = true;
+    ReactFeatureFlags.enableDeprecatedFlareAPI = true;
     FocusManager = require('../FocusManager');
     tabbableScopeQuery = require('../TabbableScopeQuery').default;
     React = require('react');

@@ -95,6 +95,7 @@ export default function setupHighlighter(
     openNativeElementsPanel: boolean,
     rendererID: number,
     scrollIntoView: boolean,
+    ...
   }) {
     const renderer = agent.rendererInterfaces[rendererID];
     if (renderer == null) {
@@ -103,9 +104,9 @@ export default function setupHighlighter(
 
     let nodes: ?Array<HTMLElement> = null;
     if (renderer !== null) {
-      nodes = ((renderer.findNativeNodesForFiberID(id): any): ?Array<
-        HTMLElement,
-      >);
+      nodes = ((renderer.findNativeNodesForFiberID(
+        id,
+      ): any): ?Array<HTMLElement>);
     }
 
     if (nodes != null && nodes[0] != null) {

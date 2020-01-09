@@ -146,7 +146,7 @@ describe('ReactDOMServerIntegration', () => {
         // so that it gets deduplicated later, and doesn't fail the test.
         expect(() => {
           ReactDOM.render(<nonstandard />, document.createElement('div'));
-        }).toWarnDev('The tag <nonstandard> is unrecognized in this browser.');
+        }).toErrorDev('The tag <nonstandard> is unrecognized in this browser.');
 
         const e = await render(<nonstandard>Text</nonstandard>);
         expect(e.tagName).toBe('NONSTANDARD');
@@ -258,8 +258,7 @@ describe('ReactDOMServerIntegration', () => {
           <div>
             {[['a'], 'b']}
             <div>
-              <X key="1" />
-              d
+              <X key="1" />d
             </div>
             e
           </div>,
@@ -493,11 +492,13 @@ describe('ReactDOMServerIntegration', () => {
       // Put dangerouslySetInnerHTML one level deeper because otherwise
       // hydrating from a bad markup would cause a mismatch (since we don't
       // patch dangerouslySetInnerHTML as text content).
-      const e = (await render(
-        <div>
-          <span dangerouslySetInnerHTML={{__html: 0}} />
-        </div>,
-      )).firstChild;
+      const e = (
+        await render(
+          <div>
+            <span dangerouslySetInnerHTML={{__html: 0}} />
+          </div>,
+        )
+      ).firstChild;
       expect(e.childNodes.length).toBe(1);
       expect(e.firstChild.nodeType).toBe(TEXT_NODE_TYPE);
       expect(e.textContent).toBe('0');
@@ -507,11 +508,13 @@ describe('ReactDOMServerIntegration', () => {
       // Put dangerouslySetInnerHTML one level deeper because otherwise
       // hydrating from a bad markup would cause a mismatch (since we don't
       // patch dangerouslySetInnerHTML as text content).
-      const e = (await render(
-        <div>
-          <span dangerouslySetInnerHTML={{__html: false}} />
-        </div>,
-      )).firstChild;
+      const e = (
+        await render(
+          <div>
+            <span dangerouslySetInnerHTML={{__html: false}} />
+          </div>,
+        )
+      ).firstChild;
       expect(e.childNodes.length).toBe(1);
       expect(e.firstChild.nodeType).toBe(TEXT_NODE_TYPE);
       expect(e.firstChild.data).toBe('false');
@@ -523,11 +526,13 @@ describe('ReactDOMServerIntegration', () => {
         // Put dangerouslySetInnerHTML one level deeper because otherwise
         // hydrating from a bad markup would cause a mismatch (since we don't
         // patch dangerouslySetInnerHTML as text content).
-        const e = (await render(
-          <div>
-            <span dangerouslySetInnerHTML={{__html: 'hello'}} />
-          </div>,
-        )).firstChild;
+        const e = (
+          await render(
+            <div>
+              <span dangerouslySetInnerHTML={{__html: 'hello'}} />
+            </div>,
+          )
+        ).firstChild;
         expect(e.childNodes.length).toBe(1);
         expect(e.firstChild.nodeType).toBe(TEXT_NODE_TYPE);
         expect(e.textContent).toBe('hello');
@@ -982,7 +987,7 @@ describe('ReactDOMServerIntegration', () => {
           let EmptyComponent = {};
           expect(() => {
             EmptyComponent = <EmptyComponent />;
-          }).toWarnDev(
+          }).toErrorDev(
             'Warning: React.createElement: type is invalid -- expected a string ' +
               '(for built-in components) or a class/function (for composite ' +
               'components) but got: object. You likely forgot to export your ' +
@@ -1006,7 +1011,7 @@ describe('ReactDOMServerIntegration', () => {
           let NullComponent = null;
           expect(() => {
             NullComponent = <NullComponent />;
-          }).toWarnDev(
+          }).toErrorDev(
             'Warning: React.createElement: type is invalid -- expected a string ' +
               '(for built-in components) or a class/function (for composite ' +
               'components) but got: null.',
@@ -1024,7 +1029,7 @@ describe('ReactDOMServerIntegration', () => {
           let UndefinedComponent = undefined;
           expect(() => {
             UndefinedComponent = <UndefinedComponent />;
-          }).toWarnDev(
+          }).toErrorDev(
             'Warning: React.createElement: type is invalid -- expected a string ' +
               '(for built-in components) or a class/function (for composite ' +
               'components) but got: undefined. You likely forgot to export your ' +

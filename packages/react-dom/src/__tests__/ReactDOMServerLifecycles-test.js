@@ -180,10 +180,9 @@ describe('ReactDOMServerLifecycles', () => {
       }
     }
 
-    expect(() => ReactDOMServer.renderToString(<Component />)).toWarnDev(
+    expect(() => ReactDOMServer.renderToString(<Component />)).toErrorDev(
       'Component.getDerivedStateFromProps(): A valid state object (or null) must ' +
         'be returned. You have returned undefined.',
-      {withoutStack: true},
     );
 
     // De-duped
@@ -200,12 +199,11 @@ describe('ReactDOMServerLifecycles', () => {
       }
     }
 
-    expect(() => ReactDOMServer.renderToString(<Component />)).toWarnDev(
+    expect(() => ReactDOMServer.renderToString(<Component />)).toErrorDev(
       '`Component` uses `getDerivedStateFromProps` but its initial state is ' +
         'undefined. This is not recommended. Instead, define the initial state by ' +
         'assigning an object to `this.state` in the constructor of `Component`. ' +
         'This ensures that `getDerivedStateFromProps` arguments have a consistent shape.',
-      {withoutStack: true},
     );
 
     // De-duped
@@ -227,11 +225,9 @@ describe('ReactDOMServerLifecycles', () => {
       }
     }
 
-    expect(() =>
-      ReactDOMServer.renderToString(<Component />),
-    ).toLowPriorityWarnDev('componentWillMount has been renamed', {
-      withoutStack: true,
-    });
+    expect(() => ReactDOMServer.renderToString(<Component />)).toWarnDev(
+      'componentWillMount has been renamed',
+    );
     expect(log).toEqual(['componentWillMount', 'UNSAFE_componentWillMount']);
   });
 
@@ -261,12 +257,11 @@ describe('ReactDOMServerLifecycles', () => {
       expect(ReactDOMServer.renderToStaticMarkup(<Outer />)).toBe(
         '<div>1-2</div>',
       );
-    }).toWarnDev(
+    }).toErrorDev(
       'Warning: setState(...): Can only update a mounting component. This ' +
         'usually means you called setState() outside componentWillMount() on ' +
         'the server. This is a no-op.\n\n' +
         'Please check the code for the Outer component.',
-      {withoutStack: true},
     );
   });
 
@@ -284,11 +279,9 @@ describe('ReactDOMServerLifecycles', () => {
       }
     }
 
-    expect(() =>
-      ReactDOMServer.renderToString(<Component />),
-    ).toLowPriorityWarnDev('componentWillMount has been renamed', {
-      withoutStack: true,
-    });
+    expect(() => ReactDOMServer.renderToString(<Component />)).toWarnDev(
+      'componentWillMount has been renamed',
+    );
   });
 
   it('should warn about deprecated lifecycle hooks', () => {
@@ -299,11 +292,9 @@ describe('ReactDOMServerLifecycles', () => {
       }
     }
 
-    expect(() =>
-      ReactDOMServer.renderToString(<Component />),
-    ).toLowPriorityWarnDev('componentWillMount has been renamed', {
-      withoutStack: true,
-    });
+    expect(() => ReactDOMServer.renderToString(<Component />)).toWarnDev(
+      'componentWillMount has been renamed',
+    );
 
     // De-duped
     ReactDOMServer.renderToString(<Component />);

@@ -18,14 +18,17 @@ describe('ReactBlockingMode', () => {
     ReactCache = require('react-cache');
     Suspense = React.Suspense;
 
-    TextResource = ReactCache.unstable_createResource(([text, ms = 0]) => {
-      return new Promise((resolve, reject) =>
-        setTimeout(() => {
-          Scheduler.unstable_yieldValue(`Promise resolved [${text}]`);
-          resolve(text);
-        }, ms),
-      );
-    }, ([text, ms]) => text);
+    TextResource = ReactCache.unstable_createResource(
+      ([text, ms = 0]) => {
+        return new Promise((resolve, reject) =>
+          setTimeout(() => {
+            Scheduler.unstable_yieldValue(`Promise resolved [${text}]`);
+            resolve(text);
+          }, ms),
+        );
+      },
+      ([text, ms]) => text,
+    );
   });
 
   function Text(props) {

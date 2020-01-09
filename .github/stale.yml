@@ -1,0 +1,31 @@
+# Configuration for probot-stale - https://github.com/probot/stale
+# Number of days of inactivity before an issue becomes stale
+daysUntilStale: 90
+# Number of days of inactivity before a stale issue is closed
+daysUntilClose: 7
+# Issues with these labels will never be considered stale
+exemptLabels:
+  - "Partner"
+  - "React Core Team"
+  - "Resolution: Backlog"
+  - "Type: Bug"
+  - "Type: Discussion"
+  - "Type: Regression"
+# Label to use when marking an issue as stale
+staleLabel: "Resolution: Stale"
+issues:
+  # Comment to post when marking an issue as stale.
+  markComment: >
+    This issue has been automatically marked as stale because it has not had recent activity. It will be closed if no further activity occurs.
+    Thank you for your contribution.
+  # Comment to post when closing a stale issue.
+  closeComment: >
+    Closing this issue after a prolonged period of inactivity. If this issue is still present in the latest release, please create a new issue with up-to-date information. Thank you!
+pulls:
+  # Comment to post when marking a pull request as stale.
+  markComment: >
+    This pull request has been automatically marked as stale because it has not had recent activity. It will be closed if no further activity occurs.
+    Thank you for your contribution.
+  # Comment to post when closing a stale pull request.
+  closeComment: >
+    Closing this pull request after a prolonged period of inactivity. If this issue is still present in the latest release, please ask for this pull request to be reopened. Thank you!

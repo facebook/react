@@ -12,7 +12,6 @@ import type {PointerType} from 'shared/ReactDOMTypes';
 import React from 'react';
 import {useTap} from 'react-interactions/events/tap';
 import {useKeyboard} from 'react-interactions/events/keyboard';
-import warning from 'shared/warning';
 
 const emptyObject = {};
 
@@ -73,8 +72,7 @@ function createGestureState(e: any, type: PressEventType): PressEvent {
     preventDefault() {
       // NO-OP, we should remove this in the future
       if (__DEV__) {
-        warning(
-          false,
+        console.error(
           'preventDefault is not available on event objects created from event responder modules (React Flare). ' +
             'Try wrapping in a conditional, i.e. `if (event.type !== "press") { event.preventDefault() }`',
         );
@@ -83,8 +81,7 @@ function createGestureState(e: any, type: PressEventType): PressEvent {
     stopPropagation() {
       // NO-OP, we should remove this in the future
       if (__DEV__) {
-        warning(
-          false,
+        console.error(
           'stopPropagation is not available on event objects created from event responder modules (React Flare). ' +
             'Try wrapping in a conditional, i.e. `if (event.type !== "press") { event.stopPropagation() }`',
         );
@@ -98,9 +95,9 @@ function isValidKey(e): boolean {
   const {tagName, isContentEditable} = (target: any);
   return (
     (key === 'Enter' || key === ' ' || key === 'Spacebar') &&
-    (tagName !== 'INPUT' &&
-      tagName !== 'TEXTAREA' &&
-      isContentEditable !== true)
+    tagName !== 'INPUT' &&
+    tagName !== 'TEXTAREA' &&
+    isContentEditable !== true
   );
 }
 

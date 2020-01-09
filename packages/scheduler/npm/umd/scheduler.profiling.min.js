@@ -16,8 +16,8 @@
   typeof exports === 'object' && typeof module !== 'undefined'
     ? (module.exports = factory(require('react')))
     : typeof define === 'function' && define.amd // eslint-disable-line no-undef
-      ? define(['react'], factory) // eslint-disable-line no-undef
-      : (global.Scheduler = factory(global));
+    ? define(['react'], factory) // eslint-disable-line no-undef
+    : (global.Scheduler = factory(global));
 })(this, function(global) {
   function unstable_now() {
     return global.React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.Scheduler.unstable_now.apply(

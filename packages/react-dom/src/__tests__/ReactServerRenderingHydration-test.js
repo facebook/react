@@ -81,7 +81,7 @@ describe('ReactDOMServerHydration', () => {
 
       expect(() => {
         instance = ReactDOM.render(<TestComponent name="x" />, element);
-      }).toLowPriorityWarnDev(
+      }).toWarnDev(
         'render(): Calling ReactDOM.render() to hydrate server-rendered markup ' +
           'will stop working in React v17. Replace the ReactDOM.render() call ' +
           'with ReactDOM.hydrate() if you want React to attach to the server HTML.',
@@ -104,9 +104,7 @@ describe('ReactDOMServerHydration', () => {
       element.innerHTML = lastMarkup;
       expect(() => {
         instance = ReactDOM.render(<TestComponent name="y" />, element);
-      }).toWarnDev('Text content did not match. Server: "x" Client: "y"', {
-        withoutStack: true,
-      });
+      }).toErrorDev('Text content did not match. Server: "x" Client: "y"');
       expect(mountCount).toEqual(4);
       expect(element.innerHTML.length > 0).toBe(true);
       expect(element.innerHTML).not.toEqual(lastMarkup);
@@ -189,9 +187,7 @@ describe('ReactDOMServerHydration', () => {
       element.innerHTML = lastMarkup;
       expect(() => {
         instance = ReactDOM.hydrate(<TestComponent name="y" />, element);
-      }).toWarnDev('Text content did not match. Server: "x" Client: "y"', {
-        withoutStack: true,
-      });
+      }).toErrorDev('Text content did not match. Server: "x" Client: "y"');
       expect(mountCount).toEqual(4);
       expect(element.innerHTML.length > 0).toBe(true);
       expect(element.innerHTML).not.toEqual(lastMarkup);
@@ -252,9 +248,8 @@ describe('ReactDOMServerHydration', () => {
 
     expect(() =>
       ReactDOM.hydrate(<button autoFocus={false}>client</button>, element),
-    ).toWarnDev(
+    ).toErrorDev(
       'Warning: Text content did not match. Server: "server" Client: "client"',
-      {withoutStack: true},
     );
 
     expect(element.firstChild.focus).not.toHaveBeenCalled();
@@ -275,11 +270,10 @@ describe('ReactDOMServerHydration', () => {
         />,
         element,
       ),
-    ).toWarnDev(
+    ).toErrorDev(
       'Warning: Prop `style` did not match. Server: ' +
         '"text-decoration:none;color:black;height:10px" Client: ' +
         '"text-decoration:none;color:white;height:10px"',
-      {withoutStack: true},
     );
   });
 
@@ -323,11 +317,10 @@ describe('ReactDOMServerHydration', () => {
         />,
         element,
       ),
-    ).toWarnDev(
+    ).toErrorDev(
       'Warning: Prop `style` did not match. Server: ' +
         '"text-decoration: none; color: black; height: 10px;" Client: ' +
         '"text-decoration:none;color:black;height:10px"',
-      {withoutStack: true},
     );
   });
 
@@ -362,14 +355,12 @@ describe('ReactDOMServerHydration', () => {
     const element = document.createElement('div');
     expect(() => {
       element.innerHTML = ReactDOMServer.renderToString(markup);
-    }).toLowPriorityWarnDev(['componentWillMount has been renamed'], {
-      withoutStack: true,
-    });
+    }).toWarnDev('componentWillMount has been renamed');
     expect(element.textContent).toBe('Hi');
 
     expect(() => {
       ReactDOM.hydrate(markup, element);
-    }).toLowPriorityWarnDev(['componentWillMount has been renamed'], {
+    }).toWarnDev('componentWillMount has been renamed', {
       withoutStack: true,
     });
     expect(element.textContent).toBe('Hi');
@@ -530,7 +521,7 @@ describe('ReactDOMServerHydration', () => {
         </React.Suspense>,
         element,
       ),
-    ).toWarnDev(
+    ).toErrorDev(
       'Warning: Did not expect server HTML to contain a <div> in <div>.',
       {withoutStack: true},
     );

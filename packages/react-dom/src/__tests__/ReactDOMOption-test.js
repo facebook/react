@@ -41,7 +41,7 @@ describe('ReactDOMOption', () => {
     let node;
     expect(() => {
       node = ReactTestUtils.renderIntoDocument(el);
-    }).toWarnDev(
+    }).toErrorDev(
       'Only strings and numbers are supported as <option> children.\n' +
         '    in option (at **)',
     );
@@ -118,7 +118,7 @@ describe('ReactDOMOption', () => {
           <span />
         </option>,
       );
-    }).toWarnDev(
+    }).toErrorDev(
       'Only strings and numbers are supported as <option> children.',
     );
     expect(node.innerHTML).toBe('hello[object Object]');

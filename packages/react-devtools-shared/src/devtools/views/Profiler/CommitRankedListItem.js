@@ -20,6 +20,7 @@ type Props = {
   data: ItemData,
   index: number,
   style: Object,
+  ...
 };
 
 function CommitRankedListItem({data, index, style}: Props) {

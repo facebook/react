@@ -9,7 +9,7 @@
 
 'use strict';
 
-import {createEventTarget} from 'react-interactions/events/src/dom/testing-library';
+import {createEventTarget} from 'dom-event-testing-library';
 
 let React;
 let ReactFeatureFlags;
@@ -19,7 +19,7 @@ describe('ReactScope', () => {
     jest.resetModules();
     ReactFeatureFlags = require('shared/ReactFeatureFlags');
     ReactFeatureFlags.enableScopeAPI = true;
-    ReactFeatureFlags.enableFlareAPI = true;
+    ReactFeatureFlags.enableDeprecatedFlareAPI = true;
     React = require('react');
   });
 
@@ -67,6 +67,52 @@ describe('ReactScope', () => {
       expect(nodes).toEqual([divRef.current, spanRef.current, aRef.current]);
       ReactDOM.render(<Test toggle={false} />, container);
       nodes = scopeRef.current.queryAllNodes(testScopeQuery);
+      expect(nodes).toEqual([aRef.current, divRef.current, spanRef.current]);
+      ReactDOM.render(null, container);
+      expect(scopeRef.current).toBe(null);
+    });
+
+    it('queryAllNodes() provides the correct host instance', () => {
+      const testScopeQuery = (type, props) => type === 'div';
+      const TestScope = React.unstable_createScope();
+      const scopeRef = React.createRef();
+      const divRef = React.createRef();
+      const spanRef = React.createRef();
+      const aRef = React.createRef();
+
+      function Test({toggle}) {
+        return toggle ? (
+          <TestScope ref={scopeRef}>
+            <div ref={divRef}>DIV</div>
+            <span ref={spanRef}>SPAN</span>
+            <a ref={aRef}>A</a>
+          </TestScope>
+        ) : (
+          <TestScope ref={scopeRef}>
+            <a ref={aRef}>A</a>
+            <div ref={divRef}>DIV</div>
+            <span ref={spanRef}>SPAN</span>
+          </TestScope>
+        );
+      }
+
+      ReactDOM.render(<Test toggle={true} />, container);
+      let nodes = scopeRef.current.queryAllNodes(testScopeQuery);
+      expect(nodes).toEqual([divRef.current]);
+      let filterQuery = (type, props, instance) =>
+        instance === spanRef.current || testScopeQuery(type, props);
+      nodes = scopeRef.current.queryAllNodes(filterQuery);
+      expect(nodes).toEqual([divRef.current, spanRef.current]);
+      filterQuery = (type, props, instance) =>
+        [spanRef.current, aRef.current].includes(instance) ||
+        testScopeQuery(type, props);
+      nodes = scopeRef.current.queryAllNodes(filterQuery);
+      expect(nodes).toEqual([divRef.current, spanRef.current, aRef.current]);
+      ReactDOM.render(<Test toggle={false} />, container);
+      filterQuery = (type, props, instance) =>
+        [spanRef.current, aRef.current].includes(instance) ||
+        testScopeQuery(type, props);
+      nodes = scopeRef.current.queryAllNodes(filterQuery);
       expect(nodes).toEqual([aRef.current, divRef.current, spanRef.current]);
       ReactDOM.render(null, container);
       expect(scopeRef.current).toBe(null);
@@ -297,7 +343,7 @@ describe('ReactScope', () => {
           onKeyDown,
         });
         return (
-          <TestScope listeners={listener}>
+          <TestScope DEPRECATED_flareListeners={listener}>
             <div ref={ref} />
           </TestScope>
         );
@@ -315,7 +361,7 @@ describe('ReactScope', () => {
         });
         return (
           <div>
-            <TestScope listeners={listener}>
+            <TestScope DEPRECATED_flareListeners={listener}>
               <div ref={ref} />
             </TestScope>
           </div>

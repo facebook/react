@@ -95,14 +95,13 @@ type ReactJSONValue =
   | Array<ReactModel>
   | ReactModelObject;
 
-type ReactModelObject = {
-  +[key: string]: ReactModel,
-};
+type ReactModelObject = {+[key: string]: ReactModel, ...};
 
 type Segment = {
   id: number,
   model: ReactModel,
   ping: () => void,
+  ...
 };
 
 type OpaqueRequest = {
@@ -114,6 +113,7 @@ type OpaqueRequest = {
   completedErrorChunks: Array<Uint8Array>,
   flowing: boolean,
   toJSON: (key: string, value: ReactModel) => ReactJSONValue,
+  ...
 };
 
 export function createRequest(

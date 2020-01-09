@@ -35,14 +35,18 @@ const emptyObject = {};
 
 function collectScopedNodes(
   node: Fiber,
-  fn: (type: string | Object, props: Object) => boolean,
+  fn: (type: string | Object, props: Object, instance: Object) => boolean,
   scopedNodes: Array<any>,
 ): void {
   if (enableScopeAPI) {
     if (node.tag === HostComponent) {
-      const {type, memoizedProps} = node;
-      if (fn(type, memoizedProps || emptyObject) === true) {
-        scopedNodes.push(getPublicInstance(node.stateNode));
+      const {type, memoizedProps, stateNode} = node;
+      const instance = getPublicInstance(stateNode);
+      if (
+        instance !== null &&
+        fn(type, memoizedProps || emptyObject, instance) === true
+      ) {
+        scopedNodes.push(instance);
       }
     }
     let child = node.child;
@@ -58,13 +62,14 @@ function collectScopedNodes(
 
 function collectFirstScopedNode(
   node: Fiber,
-  fn: (type: string | Object, props: Object) => boolean,
+  fn: (type: string | Object, props: Object, instance: Object) => boolean,
 ): null | Object {
   if (enableScopeAPI) {
     if (node.tag === HostComponent) {
-      const {type, memoizedProps} = node;
-      if (fn(type, memoizedProps) === true) {
-        return getPublicInstance(node.stateNode);
+      const {type, memoizedProps, stateNode} = node;
+      const instance = getPublicInstance(stateNode);
+      if (instance !== null && fn(type, memoizedProps, instance) === true) {
+        return instance;
       }
     }
     let child = node.child;
@@ -81,7 +86,7 @@ function collectFirstScopedNode(
 
 function collectScopedNodesFromChildren(
   startingChild: Fiber,
-  fn: (type: string | Object, props: Object) => boolean,
+  fn: (type: string | Object, props: Object, instance: Object) => boolean,
   scopedNodes: Array<any>,
 ): void {
   let child = startingChild;
@@ -93,7 +98,7 @@ function collectScopedNodesFromChildren(
 
 function collectFirstScopedNodeFromChildren(
   startingChild: Fiber,
-  fn: (type: string | Object, props: Object) => boolean,
+  fn: (type: string | Object, props: Object, instance: Object) => boolean,
 ): Object | null {
   let child = startingChild;
   while (child !== null) {
@@ -191,7 +196,7 @@ export function createScopeMethods(
       return currentFiber.memoizedProps;
     },
     queryAllNodes(
-      fn: (type: string | Object, props: Object) => boolean,
+      fn: (type: string | Object, props: Object, instance: Object) => boolean,
     ): null | Array<Object> {
       const currentFiber = ((instance.fiber: any): Fiber);
       const child = currentFiber.child;
@@ -202,7 +207,7 @@ export function createScopeMethods(
       return scopedNodes.length === 0 ? null : scopedNodes;
     },
     queryFirstNode(
-      fn: (type: string | Object, props: Object) => boolean,
+      fn: (type: string | Object, props: Object, instance: Object) => boolean,
     ): null | Object {
       const currentFiber = ((instance.fiber: any): Fiber);
       const child = currentFiber.child;

@@ -1,6 +1,6 @@
 {
   "name": "react-dom",
-  "version": "16.11.0",
+  "version": "16.12.0",
   "description": "React package for working with the DOM.",
   "main": "index.js",
   "repository": {
@@ -20,7 +20,7 @@
     "loose-envify": "^1.1.0",
     "object-assign": "^4.1.1",
     "prop-types": "^15.6.2",
-    "scheduler": "^0.17.0"
+    "scheduler": "^0.18.0"
   },
   "peerDependencies": {
     "react": "^16.0.0"
@@ -39,18 +39,13 @@
     "unstable-fizz.js",
     "unstable-fizz.browser.js",
     "unstable-fizz.node.js",
-    "unstable-flight-client.js",
-    "unstable-flight-server.js",
-    "unstable-flight-server.browser.js",
-    "unstable-flight-server.node.js",
     "unstable-native-dependencies.js",
     "cjs/",
     "umd/"
   ],
   "browser": {
     "./server.js": "./server.browser.js",
-    "./unstable-fizz.js": "./unstable-fizz.browser.js",
-    "./unstable-flight-server.js": "./unstable-flight-server.browser.js"
+    "./unstable-fizz.js": "./unstable-fizz.browser.js"
   },
   "browserify": {
     "transform": [

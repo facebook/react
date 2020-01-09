@@ -6,7 +6,7 @@
  */
 'use strict';
 
-const babylon = require('babylon');
+const babelParser = require('@babel/parser');
 const fs = require('fs');
 const through = require('through2');
 const traverse = require('@babel/traverse').default;
@@ -14,9 +14,9 @@ const gs = require('glob-stream');
 
 const evalToString = require('../shared/evalToString');
 
-const babylonOptions = {
+const parserOptions = {
   sourceType: 'module',
-  // As a parser, babylon has its own options and we can't directly
+  // babelParser has its own options and we can't directly
   // import/require a babel preset. It should be kept **the same** as
   // the `babel-plugin-syntax-*` ones specified in
   // https://github.com/facebook/fbjs/blob/master/packages/babel-preset-fbjs/configure.js
@@ -40,7 +40,7 @@ function transform(file, enc, cb) {
 
     let ast;
     try {
-      ast = babylon.parse(source, babylonOptions);
+      ast = babelParser.parse(source, parserOptions);
     } catch (error) {
       console.error('Failed to parse source file:', file.path);
       throw error;
@@ -51,17 +51,20 @@ function transform(file, enc, cb) {
         exit: function(astPath) {
           const callee = astPath.get('callee');
           if (
-            callee.isIdentifier({name: 'warning'}) ||
-            callee.isIdentifier({name: 'warningWithoutStack'}) ||
-            callee.isIdentifier({name: 'lowPriorityWarning'}) ||
-            callee.isIdentifier({name: 'lowPriorityWarningWithoutStack'})
+            callee.matchesPattern('console.warn') ||
+            callee.matchesPattern('console.error')
           ) {
             const node = astPath.node;
-
+            if (node.callee.type !== 'MemberExpression') {
+              return;
+            }
+            if (node.callee.property.type !== 'Identifier') {
+              return;
+            }
             // warning messages can be concatenated (`+`) at runtime, so here's
             // a trivial partial evaluator that interprets the literal value
             try {
-              const warningMsgLiteral = evalToString(node.arguments[1]);
+              const warningMsgLiteral = evalToString(node.arguments[0]);
               warnings.add(JSON.stringify(warningMsgLiteral));
             } catch (error) {
               console.error(
@@ -82,8 +85,8 @@ function transform(file, enc, cb) {
 
 gs([
   'packages/**/*.js',
-  '!packages/shared/warning.js',
-  '!packages/shared/lowPriorityWarning.js',
+  '!packages/*/npm/**/*.js',
+  '!packages/shared/consoleWithStackDev.js',
   '!packages/react-devtools*/**/*.js',
   '!**/__tests__/**/*.js',
   '!**/__mocks__/**/*.js',

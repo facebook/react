@@ -8,7 +8,7 @@
  * @flow strict-local
  */
 
-/* eslint-disable react-internal/warning-and-invariant-args */
+/* eslint-disable react-internal/invariant-args */
 
 'use strict';
 
@@ -27,11 +27,13 @@ const customBubblingEventTypes: {
       bubbled: string,
     |}>,
   |}>,
+  ...,
 } = {};
 const customDirectEventTypes: {
   [eventName: string]: $ReadOnly<{|
     registrationName: string,
   |}>,
+  ...,
 } = {};
 
 exports.customBubblingEventTypes = customBubblingEventTypes;

@@ -26,6 +26,7 @@ type SwipeProps = {
   onSwipeEnd: (e: SwipeEvent) => void,
   onSwipeLeft: (e: SwipeEvent) => void,
   onSwipeRight: (e: SwipeEvent) => void,
+  ...
 };
 
 const targetEventTypes = ['pointerdown'];
@@ -47,6 +48,7 @@ if (typeof window !== 'undefined' && window.PointerEvent === undefined) {
 type EventData = {
   diffX: number,
   diffY: number,
+  ...
 };
 type SwipeEventType = 'swipeleft' | 'swiperight' | 'swipeend' | 'swipemove';
 
@@ -101,6 +103,7 @@ type SwipeState = {
   swipeTarget: null | Element | Document,
   x: number,
   y: number,
+  ...
 };
 
 const swipeResponderImpl = {
@@ -276,7 +279,7 @@ const swipeResponderImpl = {
   },
 };
 
-export const SwipeResponder = React.unstable_createResponder(
+export const SwipeResponder = React.DEPRECATED_createResponder(
   'Swipe',
   swipeResponderImpl,
 );
@@ -284,5 +287,5 @@ export const SwipeResponder = React.unstable_createResponder(
 export function useSwipe(
   props: SwipeProps,
 ): ReactEventResponderListener<any, any> {
-  return React.unstable_useResponder(SwipeResponder, props);
+  return React.DEPRECATED_useResponder(SwipeResponder, props);
 }

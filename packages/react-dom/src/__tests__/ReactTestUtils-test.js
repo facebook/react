@@ -55,7 +55,7 @@ describe('ReactTestUtils', () => {
     // Patch it up so it returns its children.
     expect(() =>
       ReactTestUtils.mockComponent(MockedComponent),
-    ).toLowPriorityWarnDev(
+    ).toWarnDev(
       'ReactTestUtils.mockComponent() is deprecated. ' +
         'Use shallow rendering or jest.mock() instead.\n\n' +
         'See https://fb.me/test-utils-mock-component for more information.',

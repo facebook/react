@@ -606,7 +606,7 @@ describe('ReactDOMServerIntegration', () => {
         // so that it gets deduplicated later, and doesn't fail the test.
         expect(() => {
           ReactDOM.render(<nonstandard />, document.createElement('div'));
-        }).toWarnDev('The tag <nonstandard> is unrecognized in this browser.');
+        }).toErrorDev('The tag <nonstandard> is unrecognized in this browser.');
 
         const e = await render(<nonstandard foo="bar" />);
         expect(e.getAttribute('foo')).toBe('bar');
@@ -636,10 +636,7 @@ describe('ReactDOMServerIntegration', () => {
     });
 
     itRenders('no unknown events', async render => {
-      const e = await render(
-        <div onunknownevent="alert(&quot;hack&quot;)" />,
-        1,
-      );
+      const e = await render(<div onunknownevent='alert("hack")' />, 1);
       expect(e.getAttribute('onunknownevent')).toBe(null);
     });
 

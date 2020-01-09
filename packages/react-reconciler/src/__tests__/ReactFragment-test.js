@@ -23,8 +23,8 @@ describe('ReactFragment', () => {
   });
 
   function div(...children) {
-    children = children.map(
-      c => (typeof c === 'string' ? {text: c, hidden: false} : c),
+    children = children.map(c =>
+      typeof c === 'string' ? {text: c, hidden: false} : c,
     );
     return {type: 'div', children, prop: undefined, hidden: false};
   }
@@ -708,7 +708,7 @@ describe('ReactFragment', () => {
     expect(Scheduler).toFlushWithoutYielding();
 
     ReactNoop.render(<Foo condition={false} />);
-    expect(() => expect(Scheduler).toFlushWithoutYielding()).toWarnDev(
+    expect(() => expect(Scheduler).toFlushWithoutYielding()).toErrorDev(
       'Each child in a list should have a unique "key" prop.',
     );
 
@@ -720,6 +720,149 @@ describe('ReactFragment', () => {
 
     expect(ops).toEqual([]);
     expect(ReactNoop.getChildren()).toEqual([div(div(), span())]);
+  });
+
+  it('should not preserve state when switching a nested unkeyed fragment to a passthrough component', function() {
+    const ops = [];
+
+    function Passthrough({children}) {
+      return children;
+    }
+
+    class Stateful extends React.Component {
+      componentDidUpdate() {
+        ops.push('Update Stateful');
+      }
+
+      render() {
+        return <div>Hello</div>;
+      }
+    }
+
+    function Foo({condition}) {
+      return condition ? (
+        <>
+          <>
+            <Stateful />
+          </>
+        </>
+      ) : (
+        <>
+          <Passthrough>
+            <Stateful />
+          </Passthrough>
+        </>
+      );
+    }
+
+    ReactNoop.render(<Foo condition={true} />);
+    expect(Scheduler).toFlushWithoutYielding();
+
+    ReactNoop.render(<Foo condition={false} />);
+    expect(Scheduler).toFlushWithoutYielding();
+
+    expect(ops).toEqual([]);
+    expect(ReactNoop.getChildren()).toEqual([div()]);
+
+    ReactNoop.render(<Foo condition={true} />);
+    expect(Scheduler).toFlushWithoutYielding();
+
+    expect(ops).toEqual([]);
+    expect(ReactNoop.getChildren()).toEqual([div()]);
+  });
+
+  it('should not preserve state when switching a nested keyed fragment to a passthrough component', function() {
+    const ops = [];
+
+    function Passthrough({children}) {
+      return children;
+    }
+
+    class Stateful extends React.Component {
+      componentDidUpdate() {
+        ops.push('Update Stateful');
+      }
+
+      render() {
+        return <div>Hello</div>;
+      }
+    }
+
+    function Foo({condition}) {
+      return condition ? (
+        <>
+          <React.Fragment key="a">
+            <Stateful />
+          </React.Fragment>
+        </>
+      ) : (
+        <>
+          <Passthrough>
+            <Stateful />
+          </Passthrough>
+        </>
+      );
+    }
+
+    ReactNoop.render(<Foo condition={true} />);
+    expect(Scheduler).toFlushWithoutYielding();
+
+    ReactNoop.render(<Foo condition={false} />);
+    expect(Scheduler).toFlushWithoutYielding();
+
+    expect(ops).toEqual([]);
+    expect(ReactNoop.getChildren()).toEqual([div()]);
+
+    ReactNoop.render(<Foo condition={true} />);
+    expect(Scheduler).toFlushWithoutYielding();
+
+    expect(ops).toEqual([]);
+    expect(ReactNoop.getChildren()).toEqual([div()]);
+  });
+
+  it('should not preserve state when switching a nested keyed array to a passthrough component', function() {
+    const ops = [];
+
+    function Passthrough({children}) {
+      return children;
+    }
+
+    class Stateful extends React.Component {
+      componentDidUpdate() {
+        ops.push('Update Stateful');
+      }
+
+      render() {
+        return <div>Hello</div>;
+      }
+    }
+
+    function Foo({condition}) {
+      return condition ? (
+        <>{[<Stateful key="a" />]}</>
+      ) : (
+        <>
+          <Passthrough>
+            <Stateful />
+          </Passthrough>
+        </>
+      );
+    }
+
+    ReactNoop.render(<Foo condition={true} />);
+    expect(Scheduler).toFlushWithoutYielding();
+
+    ReactNoop.render(<Foo condition={false} />);
+    expect(Scheduler).toFlushWithoutYielding();
+
+    expect(ops).toEqual([]);
+    expect(ReactNoop.getChildren()).toEqual([div()]);
+
+    ReactNoop.render(<Foo condition={true} />);
+    expect(Scheduler).toFlushWithoutYielding();
+
+    expect(ops).toEqual([]);
+    expect(ReactNoop.getChildren()).toEqual([div()]);
   });
 
   it('should preserve state when it does not change positions', function() {
@@ -752,12 +895,12 @@ describe('ReactFragment', () => {
     }
 
     ReactNoop.render(<Foo condition={true} />);
-    expect(() => expect(Scheduler).toFlushWithoutYielding()).toWarnDev(
+    expect(() => expect(Scheduler).toFlushWithoutYielding()).toErrorDev(
       'Each child in a list should have a unique "key" prop.',
     );
 
     ReactNoop.render(<Foo condition={false} />);
-    expect(() => expect(Scheduler).toFlushWithoutYielding()).toWarnDev(
+    expect(() => expect(Scheduler).toFlushWithoutYielding()).toErrorDev(
       'Each child in a list should have a unique "key" prop.',
     );
 
@@ -765,7 +908,7 @@ describe('ReactFragment', () => {
     expect(ReactNoop.getChildren()).toEqual([span(), div()]);
 
     ReactNoop.render(<Foo condition={true} />);
-    expect(() => expect(Scheduler).toFlushWithoutYielding()).toWarnDev(
+    expect(() => expect(Scheduler).toFlushWithoutYielding()).toErrorDev(
       'Each child in a list should have a unique "key" prop.',
     );
 

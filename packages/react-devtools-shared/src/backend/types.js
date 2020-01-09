@@ -48,13 +48,13 @@ export type FindNativeNodesForFiberID = (id: number) => ?Array<NativeType>;
 export type ReactProviderType<T> = {
   $$typeof: Symbol | number,
   _context: ReactContext<T>,
+  ...
 };
 
 export type ReactRenderer = {
   findFiberByHostInstance: (hostInstance: NativeType) => ?Fiber,
   version: string,
   bundleType: BundleType,
-
   // 16.9+
   overrideHookState?: ?(
     fiber: Object,
@@ -62,30 +62,25 @@ export type ReactRenderer = {
     path: Array<string | number>,
     value: any,
   ) => void,
-
   // 16.7+
   overrideProps?: ?(
     fiber: Object,
     path: Array<string | number>,
     value: any,
   ) => void,
-
   // 16.9+
   scheduleUpdate?: ?(fiber: Object) => void,
   setSuspenseHandler?: ?(shouldSuspend: (fiber: Object) => boolean) => void,
-
   // Only injected by React v16.8+ in order to support hooks inspection.
   currentDispatcherRef?: {|current: null | Dispatcher|},
-
   // Only injected by React v16.9+ in DEV mode.
   // Enables DevTools to append owners-only component stack to error messages.
   getCurrentFiber?: () => Fiber | null,
-
   // Uniquely identifies React DOM v15.
   ComponentTree?: any,
-
   // Present for React DOM v12 (possibly earlier) through v15.
   Mount?: any,
+  ...
 };
 
 export type ChangeDescription = {|
@@ -225,6 +220,7 @@ export type InstanceAndStyle = {|
 
 export type RendererInterface = {
   cleanup: () => void,
+  copyElementPath: (id: number, path: Array<string | number>) => void,
   findNativeNodesForFiberID: FindNativeNodesForFiberID,
   flushInitialOperations: () => void,
   getBestMatchForTrackedPath: () => PathMatch | null,
@@ -241,6 +237,10 @@ export type RendererInterface = {
   ) => InspectedElementPayload,
   logElementToConsole: (id: number) => void,
   overrideSuspense: (id: number, forceFallback: boolean) => void,
+  prepareViewAttributeSource: (
+    id: number,
+    path: Array<string | number>,
+  ) => void,
   prepareViewElementSource: (id: number) => void,
   renderer: ReactRenderer | null,
   setInContext: (id: number, path: Array<string | number>, value: any) => void,
@@ -256,13 +256,19 @@ export type RendererInterface = {
   setTrackedPath: (path: Array<PathFrame> | null) => void,
   startProfiling: (recordChangeDescriptions: boolean) => void,
   stopProfiling: () => void,
+  storeAsGlobal: (
+    id: number,
+    path: Array<string | number>,
+    count: number,
+  ) => void,
   updateComponentFilters: (componentFilters: Array<ComponentFilter>) => void,
+  ...
 };
 
 export type Handler = (data: any) => void;
 
 export type DevToolsHook = {
-  listeners: {[key: string]: Array<Handler>},
+  listeners: {[key: string]: Array<Handler>, ...},
   rendererInterfaces: Map<RendererID, RendererInterface>,
   renderers: Map<RendererID, ReactRenderer>,
 
@@ -289,4 +295,5 @@ export type DevToolsHook = {
     // Added in v16.9 to support Fast Refresh
     didError?: boolean,
   ) => void,
+  ...
 };

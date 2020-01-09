@@ -34,7 +34,7 @@ import {
   utfEncodeString,
 } from 'react-devtools-shared/src/utils';
 import {sessionStorageGetItem} from 'react-devtools-shared/src/storage';
-import {cleanForBridge, copyWithSet} from './utils';
+import {cleanForBridge, copyToClipboard, copyWithSet} from './utils';
 import {
   __DEBUG__,
   SESSION_STORAGE_RELOAD_AND_PROFILE_KEY,
@@ -76,7 +76,7 @@ import type {
 type getDisplayNameForFiberType = (fiber: Fiber) => string | null;
 type getTypeSymbolType = (type: any) => Symbol | number;
 
-type ReactSymbolsType = {
+type ReactSymbolsType = {|
   CONCURRENT_MODE_NUMBER: number,
   CONCURRENT_MODE_SYMBOL_STRING: string,
   DEPRECATED_ASYNC_MODE_SYMBOL_STRING: string,
@@ -94,7 +94,7 @@ type ReactSymbolsType = {
   STRICT_MODE_SYMBOL_STRING: string,
   SCOPE_NUMBER: number,
   SCOPE_SYMBOL_STRING: string,
-};
+|};
 
 type ReactPriorityLevelsType = {|
   ImmediatePriority: number,
@@ -347,7 +347,7 @@ export function getInternalReactConstants(
 
   // NOTICE Keep in sync with shouldFilterFiber() and other get*ForFiber methods
   function getDisplayNameForFiber(fiber: Fiber): string | null {
-    const {elementType, type, tag} = fiber;
+    const {type, tag} = fiber;
 
     let resolvedType = type;
     if (typeof type === 'object' && type !== null) {
@@ -364,8 +364,10 @@ export function getInternalReactConstants(
       case IndeterminateComponent:
         return getDisplayName(resolvedType);
       case ForwardRef:
+        // Mirror https://github.com/facebook/react/blob/7c21bf72ace77094fd1910cc350a548287ef8350/packages/shared/getComponentName.js#L27-L37
         return (
-          resolvedType.displayName || getDisplayName(resolvedType, 'Anonymous')
+          (type && type.displayName) ||
+          getDisplayName(resolvedType, 'Anonymous')
         );
       case HostRoot:
         return null;
@@ -377,11 +379,7 @@ export function getInternalReactConstants(
         return null;
       case MemoComponent:
       case SimpleMemoComponent:
-        if (elementType.displayName) {
-          return elementType.displayName;
-        } else {
-          return getDisplayName(resolvedType, 'Anonymous');
-        }
+        return getDisplayName(resolvedType, 'Anonymous');
       case SuspenseComponent:
         return 'Suspense';
       case SuspenseListComponent:
@@ -1023,9 +1021,14 @@ export function attach(
       pendingSimulatedUnmountedIDs.length === 0 &&
       pendingUnmountedRootID === null
     ) {
-      // If we're currently profiling, send an "operations" method even if there are no mutations to the tree.
-      // The frontend needs this no-op info to know how to reconstruct the tree for each commit,
-      // even if a particular commit didn't change the shape of the tree.
+      // If we aren't profiling, we can just bail out here.
+      // No use sending an empty update over the bridge.
+      //
+      // The Profiler stores metadata for each commit and reconstructs the app tree per commit using:
+      // (1) an initial tree snapshot and
+      // (2) the operations array for each commit
+      // Because of this, it's important that the operations and metadata arrays align,
+      // So it's important not to ommit even empty operations while profiing is active.
       if (!isProfiling) {
         return;
       }
@@ -1370,6 +1373,8 @@ export function attach(
     if (isProfiling) {
       const {alternate} = fiber;
 
+      // It's important to update treeBaseDuration even if the current Fiber did not render,
+      // becuase it's possible that one of its descednants did.
       if (
         alternate == null ||
         treeBaseDuration !== alternate.treeBaseDuration
@@ -1757,14 +1762,6 @@ export function attach(
     const current = root.current;
     const alternate = current.alternate;
 
-    // Certain types of updates bail out at the root without doing any actual render work.
-    // React should probably not call the DevTools commit hook in this case,
-    // but if it does- we can detect it and filter them out from the profiler.
-    const didBailoutAtRoot =
-      alternate !== null &&
-      alternate.expirationTime === 0 &&
-      alternate.childExpirationTime === 0;
-
     currentRootID = getFiberID(getPrimaryFiber(current));
 
     // Before the traversals, remember to start tracking
@@ -1781,7 +1778,7 @@ export function attach(
     // where some v16 renderers support profiling and others don't.
     const isProfilingSupported = root.memoizedInteractions != null;
 
-    if (isProfiling && isProfilingSupported && !didBailoutAtRoot) {
+    if (isProfiling && isProfilingSupported) {
       // If profiling is active, store commit time and duration, and the current interactions.
       // The frontend may request this information after profiling has stopped.
       currentCommitProfilingMetadata = {
@@ -1825,7 +1822,7 @@ export function attach(
       mountFiberRecursively(current, null, false, false);
     }
 
-    if (isProfiling && isProfilingSupported && !didBailoutAtRoot) {
+    if (isProfiling && isProfilingSupported) {
       const commitProfilingMetadata = ((rootToCommitProfilingMetadataMap: any): CommitProfilingMetadataMap).get(
         currentRootID,
       );
@@ -2114,6 +2111,19 @@ export function attach(
     return alternate;
   }
   // END copied code
+
+  function prepareViewAttributeSource(
+    id: number,
+    path: Array<string | number>,
+  ): void {
+    const isCurrent = isMostRecentlyInspectedElementCurrent(id);
+    if (isCurrent) {
+      window.$attribute = getInObject(
+        ((mostRecentlyInspectedElement: any): InspectedElement),
+        path,
+      );
+    }
+  }
 
   function prepareViewElementSource(id: number): void {
     let fiber = idToFiberMap.get(id);
@@ -2487,6 +2497,40 @@ export function attach(
       default:
         global.$r = null;
         break;
+    }
+  }
+
+  function storeAsGlobal(
+    id: number,
+    path: Array<string | number>,
+    count: number,
+  ): void {
+    const isCurrent = isMostRecentlyInspectedElementCurrent(id);
+
+    if (isCurrent) {
+      const value = getInObject(
+        ((mostRecentlyInspectedElement: any): InspectedElement),
+        path,
+      );
+      const key = `$reactTemp${count}`;
+
+      window[key] = value;
+
+      console.log(key);
+      console.log(value);
+    }
+  }
+
+  function copyElementPath(id: number, path: Array<string | number>): void {
+    const isCurrent = isMostRecentlyInspectedElementCurrent(id);
+
+    if (isCurrent) {
+      copyToClipboard(
+        getInObject(
+          ((mostRecentlyInspectedElement: any): InspectedElement),
+          path,
+        ),
+      );
     }
   }
 
@@ -3131,6 +3175,7 @@ export function attach(
 
   return {
     cleanup,
+    copyElementPath,
     findNativeNodesForFiberID,
     flushInitialOperations,
     getBestMatchForTrackedPath,
@@ -3143,6 +3188,7 @@ export function attach(
     handleCommitFiberUnmount,
     inspectElement,
     logElementToConsole,
+    prepareViewAttributeSource,
     prepareViewElementSource,
     overrideSuspense,
     renderer,
@@ -3154,6 +3200,7 @@ export function attach(
     setTrackedPath,
     startProfiling,
     stopProfiling,
+    storeAsGlobal,
     updateComponentFilters,
   };
 }

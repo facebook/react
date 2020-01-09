@@ -388,9 +388,7 @@ describe('SimpleEventPlugin', function() {
       class Button extends React.Component {
         state = {lowPriCount: 0};
         render() {
-          const text = `High-pri count: ${
-            this.props.highPriCount
-          }, Low-pri count: ${this.state.lowPriCount}`;
+          const text = `High-pri count: ${this.props.highPriCount}, Low-pri count: ${this.state.lowPriCount}`;
           Scheduler.unstable_yieldValue(text);
           return (
             <button

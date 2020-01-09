@@ -170,23 +170,23 @@ const bundles = [
     externals: ['react', 'react-dom/server'],
   },
 
-  /******* React DOM Flight Server *******/
+  /******* React DOM Flight Server Webpack *******/
   {
     bundleTypes: [NODE_DEV, NODE_PROD, UMD_DEV, UMD_PROD],
     moduleType: RENDERER,
-    entry: 'react-dom/unstable-flight-server.browser',
+    entry: 'react-flight-dom-webpack/server.browser',
     global: 'ReactFlightDOMServer',
     externals: ['react', 'react-dom/server'],
   },
   {
     bundleTypes: [NODE_DEV, NODE_PROD, FB_WWW_DEV, FB_WWW_PROD],
     moduleType: RENDERER,
-    entry: 'react-dom/unstable-flight-server.node',
+    entry: 'react-flight-dom-webpack/server.node',
     global: 'ReactFlightDOMServer',
     externals: ['react', 'react-dom/server'],
   },
 
-  /******* React DOM Flight Client *******/
+  /******* React DOM Flight Client Webpack *******/
   {
     bundleTypes: [
       NODE_DEV,
@@ -197,7 +197,7 @@ const bundles = [
       FB_WWW_PROD,
     ],
     moduleType: RENDERER,
-    entry: 'react-dom/unstable-flight-client',
+    entry: 'react-flight-dom-webpack',
     global: 'ReactFlightDOMClient',
     externals: ['react'],
   },

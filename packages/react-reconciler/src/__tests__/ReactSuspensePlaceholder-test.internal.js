@@ -34,46 +34,53 @@ describe('ReactSuspensePlaceholder', () => {
     Profiler = React.Profiler;
     Suspense = React.Suspense;
 
-    TextResource = ReactCache.unstable_createResource(([text, ms = 0]) => {
-      let listeners = null;
-      let status = 'pending';
-      let value = null;
-      return {
-        then(resolve, reject) {
-          switch (status) {
-            case 'pending': {
-              if (listeners === null) {
-                listeners = [{resolve, reject}];
-                setTimeout(() => {
-                  if (textResourceShouldFail) {
-                    Scheduler.unstable_yieldValue(`Promise rejected [${text}]`);
-                    status = 'rejected';
-                    value = new Error('Failed to load: ' + text);
-                    listeners.forEach(listener => listener.reject(value));
-                  } else {
-                    Scheduler.unstable_yieldValue(`Promise resolved [${text}]`);
-                    status = 'resolved';
-                    value = text;
-                    listeners.forEach(listener => listener.resolve(value));
-                  }
-                }, ms);
-              } else {
-                listeners.push({resolve, reject});
+    TextResource = ReactCache.unstable_createResource(
+      ([text, ms = 0]) => {
+        let listeners = null;
+        let status = 'pending';
+        let value = null;
+        return {
+          then(resolve, reject) {
+            switch (status) {
+              case 'pending': {
+                if (listeners === null) {
+                  listeners = [{resolve, reject}];
+                  setTimeout(() => {
+                    if (textResourceShouldFail) {
+                      Scheduler.unstable_yieldValue(
+                        `Promise rejected [${text}]`,
+                      );
+                      status = 'rejected';
+                      value = new Error('Failed to load: ' + text);
+                      listeners.forEach(listener => listener.reject(value));
+                    } else {
+                      Scheduler.unstable_yieldValue(
+                        `Promise resolved [${text}]`,
+                      );
+                      status = 'resolved';
+                      value = text;
+                      listeners.forEach(listener => listener.resolve(value));
+                    }
+                  }, ms);
+                } else {
+                  listeners.push({resolve, reject});
+                }
+                break;
               }
-              break;
+              case 'resolved': {
+                resolve(value);
+                break;
+              }
+              case 'rejected': {
+                reject(value);
+                break;
+              }
             }
-            case 'resolved': {
-              resolve(value);
-              break;
-            }
-            case 'rejected': {
-              reject(value);
-              break;
-            }
-          }
-        },
-      };
-    }, ([text, ms]) => text);
+          },
+        };
+      },
+      ([text, ms]) => text,
+    );
     textResourceShouldFail = false;
   });
 

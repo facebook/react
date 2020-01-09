@@ -28,15 +28,15 @@ import type {HookType} from './ReactFiberHooks';
 import type {SuspenseInstance} from './ReactFiberHostConfig';
 
 import invariant from 'shared/invariant';
-import warningWithoutStack from 'shared/warningWithoutStack';
 import {
   enableProfilerTimer,
   enableFundamentalAPI,
   enableUserTimingAPI,
   enableScopeAPI,
+  enableChunksAPI,
 } from 'shared/ReactFeatureFlags';
 import {NoEffect, Placement} from 'shared/ReactSideEffectTags';
-import {ConcurrentRoot, BatchedRoot} from 'shared/ReactRootTags';
+import {ConcurrentRoot, BlockingRoot} from 'shared/ReactRootTags';
 import {
   IndeterminateComponent,
   ClassComponent,
@@ -59,6 +59,7 @@ import {
   LazyComponent,
   FundamentalComponent,
   ScopeComponent,
+  Chunk,
 } from 'shared/ReactWorkTags';
 import getComponentName from 'shared/getComponentName';
 
@@ -90,6 +91,7 @@ import {
   REACT_LAZY_TYPE,
   REACT_FUNDAMENTAL_TYPE,
   REACT_SCOPE_TYPE,
+  REACT_CHUNK_TYPE,
 } from 'shared/ReactSymbols';
 
 let hasBadMapPolyfill;
@@ -118,6 +120,7 @@ export type Dependencies = {
     ReactEventResponder<any, any>,
     ReactEventResponderInstance<any, any>,
   > | null,
+  ...
 };
 
 // A Fiber is work on a Component that needs to be done or was done. There can
@@ -168,7 +171,10 @@ export type Fiber = {|
 
   // The ref last used to attach this node.
   // I'll avoid adding an owner field for prod and model that as functions.
-  ref: null | (((handle: mixed) => void) & {_stringRef: ?string}) | RefObject,
+  ref:
+    | null
+    | (((handle: mixed) => void) & {_stringRef: ?string, ...})
+    | RefObject,
 
   // Input is the data coming into process this fiber. Arguments. Props.
   pendingProps: any, // This type will be more specific once we overload the tag.
@@ -385,6 +391,11 @@ export function resolveLazyComponentTag(Component: Function): WorkTag {
     if ($$typeof === REACT_MEMO_TYPE) {
       return MemoComponent;
     }
+    if (enableChunksAPI) {
+      if ($$typeof === REACT_CHUNK_TYPE) {
+        return Chunk;
+      }
+    }
   }
   return IndeterminateComponent;
 }
@@ -574,7 +585,7 @@ export function createHostRootFiber(tag: RootTag): Fiber {
   let mode;
   if (tag === ConcurrentRoot) {
     mode = ConcurrentMode | BlockingMode | StrictMode;
-  } else if (tag === BatchedRoot) {
+  } else if (tag === BlockingRoot) {
     mode = BlockingMode | StrictMode;
   } else {
     mode = NoMode;
@@ -666,6 +677,9 @@ export function createFiberFromTypeAndProps(
             case REACT_LAZY_TYPE:
               fiberTag = LazyComponent;
               resolvedType = null;
+              break getTag;
+            case REACT_CHUNK_TYPE:
+              fiberTag = Chunk;
               break getTag;
             case REACT_FUNDAMENTAL_TYPE:
               if (enableFundamentalAPI) {
@@ -805,8 +819,7 @@ function createFiberFromProfiler(
       typeof pendingProps.id !== 'string' ||
       typeof pendingProps.onRender !== 'function'
     ) {
-      warningWithoutStack(
-        false,
+      console.error(
         'Profiler must specify an "id" string and "onRender" function as props',
       );
     }

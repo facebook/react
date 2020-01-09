@@ -73,17 +73,14 @@ describe('ReactDOMTracing', () => {
         const Child = () => {
           const [didMount, setDidMount] = React.useState(false);
           Scheduler.unstable_yieldValue('Child');
-          React.useEffect(
-            () => {
-              if (didMount) {
-                Scheduler.unstable_yieldValue('Child:update');
-              } else {
-                Scheduler.unstable_yieldValue('Child:mount');
-                setDidMount(true);
-              }
-            },
-            [didMount],
-          );
+          React.useEffect(() => {
+            if (didMount) {
+              Scheduler.unstable_yieldValue('Child:update');
+            } else {
+              Scheduler.unstable_yieldValue('Child:mount');
+              setDidMount(true);
+            }
+          }, [didMount]);
           return <div />;
         };
 
@@ -219,20 +216,17 @@ describe('ReactDOMTracing', () => {
         const Child = () => {
           const [didMount, setDidMount] = React.useState(false);
           Scheduler.unstable_yieldValue('Child');
-          React.useLayoutEffect(
-            () => {
-              if (didMount) {
-                Scheduler.unstable_yieldValue('Child:update');
-              } else {
-                Scheduler.unstable_yieldValue('Child:mount');
-                Scheduler.unstable_runWithPriority(
-                  Scheduler.unstable_IdlePriority,
-                  () => setDidMount(true),
-                );
-              }
-            },
-            [didMount],
-          );
+          React.useLayoutEffect(() => {
+            if (didMount) {
+              Scheduler.unstable_yieldValue('Child:update');
+            } else {
+              Scheduler.unstable_yieldValue('Child:mount');
+              Scheduler.unstable_runWithPriority(
+                Scheduler.unstable_IdlePriority,
+                () => setDidMount(true),
+              );
+            }
+          }, [didMount]);
           return <div />;
         };
 
@@ -561,8 +555,8 @@ describe('ReactDOMTracing', () => {
 
           expect(Scheduler).toFlushAndYieldThrough(['A']);
 
-          Scheduler.unstable_advanceTime(300);
-          jest.advanceTimersByTime(300);
+          Scheduler.unstable_advanceTime(200);
+          jest.advanceTimersByTime(200);
 
           expect(Scheduler).toFlushAndYieldThrough(['B']);
 

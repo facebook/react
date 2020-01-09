@@ -9,7 +9,7 @@
 
 'use strict';
 
-import {createEventTarget, setPointerEvent} from '../testing-library';
+import {createEventTarget, setPointerEvent} from 'dom-event-testing-library';
 
 let React;
 let ReactFeatureFlags;
@@ -23,7 +23,7 @@ const initializeModules = hasPointerEvents => {
   setPointerEvent(hasPointerEvents);
   jest.resetModules();
   ReactFeatureFlags = require('shared/ReactFeatureFlags');
-  ReactFeatureFlags.enableFlareAPI = true;
+  ReactFeatureFlags.enableDeprecatedFlareAPI = true;
   React = require('react');
   ReactDOM = require('react-dom');
   useScroll = require('react-interactions/events/scroll').useScroll;
@@ -55,7 +55,7 @@ describe.each(table)('Scroll responder', hasPointerEvents => {
           disabled: true,
           onScroll,
         });
-        return <div ref={ref} listeners={listener} />;
+        return <div ref={ref} DEPRECATED_flareListeners={listener} />;
       };
       ReactDOM.render(<Component />, container);
     });
@@ -77,7 +77,7 @@ describe.each(table)('Scroll responder', hasPointerEvents => {
         const listener = useScroll({
           onScroll,
         });
-        return <div ref={ref} listeners={listener} />;
+        return <div ref={ref} DEPRECATED_flareListeners={listener} />;
       };
       ReactDOM.render(<Component />, container);
     });
@@ -148,7 +148,7 @@ describe.each(table)('Scroll responder', hasPointerEvents => {
         const listener = useScroll({
           onScrollDragStart,
         });
-        return <div ref={ref} listeners={listener} />;
+        return <div ref={ref} DEPRECATED_flareListeners={listener} />;
       };
       ReactDOM.render(<Component />, container);
     });
@@ -178,7 +178,7 @@ describe.each(table)('Scroll responder', hasPointerEvents => {
         const listener = useScroll({
           onScrollDragEnd,
         });
-        return <div ref={ref} listeners={listener} />;
+        return <div ref={ref} DEPRECATED_flareListeners={listener} />;
       };
       ReactDOM.render(<Component />, container);
     });

@@ -28,7 +28,7 @@ function expectWarnings(tags, warnings = [], withoutStack = 0) {
     element = <Tag>{element}</Tag>;
   }
 
-  expect(() => ReactDOM.render(element, container)).toWarnDev(warnings, {
+  expect(() => ReactDOM.render(element, container)).toErrorDev(warnings, {
     withoutStack,
   });
 }

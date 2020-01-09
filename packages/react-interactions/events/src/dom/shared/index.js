@@ -79,5 +79,9 @@ export function hasModifierKey(event: ReactDOMResponderEvent): boolean {
 // where only the "virtual" click lacks a pointerType field.
 export function isVirtualClick(event: ReactDOMResponderEvent): boolean {
   const nativeEvent: any = event.nativeEvent;
+  // JAWS/NVDA with Firefox.
+  if (nativeEvent.mozInputSource === 0 && nativeEvent.isTrusted) {
+    return true;
+  }
   return nativeEvent.detail === 0 && !nativeEvent.pointerType;
 }

@@ -22,6 +22,8 @@ export default function(babel, opts = {}) {
   }
 
   const {types: t} = babel;
+  const refreshReg = t.identifier(opts.refreshReg || '$RefreshReg$');
+  const refreshSig = t.identifier(opts.refreshSig || '$RefreshSig$');
 
   const registrationsByProgramPath = new Map();
   function createRegistration(programPath, persistentID) {
@@ -517,7 +519,7 @@ export default function(babel, opts = {}) {
           const sigCallID = path.scope.generateUidIdentifier('_s');
           path.scope.parent.push({
             id: sigCallID,
-            init: t.callExpression(t.identifier('$RefreshSig$'), []),
+            init: t.callExpression(refreshSig, []),
           });
 
           // The signature call is split in two parts. One part is called inside the function.
@@ -579,7 +581,7 @@ export default function(babel, opts = {}) {
           const sigCallID = path.scope.generateUidIdentifier('_s');
           path.scope.parent.push({
             id: sigCallID,
-            init: t.callExpression(t.identifier('$RefreshSig$'), []),
+            init: t.callExpression(refreshSig, []),
           });
 
           // The signature call is split in two parts. One part is called inside the function.
@@ -743,7 +745,7 @@ export default function(babel, opts = {}) {
             path.pushContainer(
               'body',
               t.expressionStatement(
-                t.callExpression(t.identifier('$RefreshReg$'), [
+                t.callExpression(refreshReg, [
                   handle,
                   t.stringLiteral(persistentID),
                 ]),

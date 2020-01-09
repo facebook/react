@@ -26,8 +26,8 @@ describe('ReactIncrementalSideEffects', () => {
   });
 
   function div(...children) {
-    children = children.map(
-      c => (typeof c === 'string' ? {text: c, hidden: false} : c),
+    children = children.map(c =>
+      typeof c === 'string' ? {text: c, hidden: false} : c,
     );
     return {type: 'div', children, prop: undefined, hidden: false};
   }
@@ -75,8 +75,8 @@ describe('ReactIncrementalSideEffects', () => {
           {props.text === 'World'
             ? [<Bar key="a" text={props.text} />, <div key="b" />]
             : props.text === 'Hi'
-              ? [<div key="b" />, <Bar key="a" text={props.text} />]
-              : null}
+            ? [<div key="b" />, <Bar key="a" text={props.text} />]
+            : null}
           <span prop="test" />
         </div>
       );
@@ -1201,7 +1201,7 @@ describe('ReactIncrementalSideEffects', () => {
     }
 
     ReactNoop.render(<Foo show={true} />);
-    expect(() => expect(Scheduler).toFlushWithoutYielding()).toWarnDev(
+    expect(() => expect(Scheduler).toFlushWithoutYielding()).toErrorDev(
       'Warning: Function components cannot be given refs. ' +
         'Attempts to access this ref will fail. ' +
         'Did you mean to use React.forwardRef()?\n\n' +
@@ -1265,7 +1265,7 @@ describe('ReactIncrementalSideEffects', () => {
     }
 
     ReactNoop.render(<Foo />);
-    expect(() => expect(Scheduler).toFlushWithoutYielding()).toWarnDev(
+    expect(() => expect(Scheduler).toFlushWithoutYielding()).toErrorDev(
       'Warning: A string ref, "bar", has been found within a strict mode tree.',
     );
 

@@ -10,7 +10,7 @@
 /**
  * @see http://www.whatwg.org/specs/web-apps/current-work/multipage/the-input-element.html#input-type-attr-summary
  */
-const supportedInputTypes: {[key: string]: true | void} = {
+const supportedInputTypes: {[key: string]: true | void, ...} = {
   color: true,
   date: true,
   datetime: true,

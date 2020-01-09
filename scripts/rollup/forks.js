@@ -57,9 +57,7 @@ const forks = Object.freeze({
           'from "' +
           entry +
           '" because it does not declare "react" in the package ' +
-          'dependencies or peerDependencies. For example, this can happen if you use ' +
-          'warning() instead of warningWithoutStack() in a package that does not ' +
-          'depend on React.'
+          'dependencies or peerDependencies.'
       );
     }
     return null;
@@ -180,25 +178,10 @@ const forks = Object.freeze({
     return 'scheduler/src/forks/SchedulerHostConfig.default';
   },
 
-  // This logic is forked on www to ignore some warnings.
-  'shared/lowPriorityWarningWithoutStack': (bundleType, entry) => {
+  'shared/consoleWithStackDev': (bundleType, entry) => {
     switch (bundleType) {
       case FB_WWW_DEV:
-      case FB_WWW_PROD:
-      case FB_WWW_PROFILING:
-        return 'shared/forks/lowPriorityWarningWithoutStack.www.js';
-      default:
-        return null;
-    }
-  },
-
-  // This logic is forked on www to ignore some warnings.
-  'shared/warningWithoutStack': (bundleType, entry) => {
-    switch (bundleType) {
-      case FB_WWW_DEV:
-      case FB_WWW_PROD:
-      case FB_WWW_PROFILING:
-        return 'shared/forks/warningWithoutStack.www.js';
+        return 'shared/forks/consoleWithStackDev.www.js';
       default:
         return null;
     }
@@ -295,9 +278,7 @@ const forks = Object.freeze({
     // eslint-disable-next-line no-for-of-loops/no-for-of-loops
     for (let rendererInfo of inlinedHostConfigs) {
       if (rendererInfo.entryPoints.indexOf(entry) !== -1) {
-        return `react-reconciler/src/forks/ReactFiberHostConfig.${
-          rendererInfo.shortName
-        }.js`;
+        return `react-reconciler/src/forks/ReactFiberHostConfig.${rendererInfo.shortName}.js`;
       }
     }
     throw new Error(
@@ -325,9 +306,7 @@ const forks = Object.freeze({
         if (!rendererInfo.isServerSupported) {
           return null;
         }
-        return `react-server/src/forks/ReactServerHostConfig.${
-          rendererInfo.shortName
-        }.js`;
+        return `react-server/src/forks/ReactServerHostConfig.${rendererInfo.shortName}.js`;
       }
     }
     throw new Error(
@@ -355,9 +334,7 @@ const forks = Object.freeze({
         if (!rendererInfo.isServerSupported) {
           return null;
         }
-        return `react-server/src/forks/ReactServerFormatConfig.${
-          rendererInfo.shortName
-        }.js`;
+        return `react-server/src/forks/ReactServerFormatConfig.${rendererInfo.shortName}.js`;
       }
     }
     throw new Error(
@@ -385,9 +362,7 @@ const forks = Object.freeze({
         if (!rendererInfo.isServerSupported) {
           return null;
         }
-        return `react-flight/src/forks/ReactFlightClientHostConfig.${
-          rendererInfo.shortName
-        }.js`;
+        return `react-flight/src/forks/ReactFlightClientHostConfig.${rendererInfo.shortName}.js`;
       }
     }
     throw new Error(

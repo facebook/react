@@ -52,11 +52,10 @@ import type {
   ReactDOMFundamentalComponentInstance,
 } from 'shared/ReactDOMTypes';
 import {
-  addRootEventTypesForResponderInstance,
   mountEventResponder,
   unmountEventResponder,
-  dispatchEventForResponderEventSystem,
-} from '../events/DOMEventResponderSystem';
+  DEPRECATED_dispatchEventForResponderEventSystem,
+} from '../events/DeprecatedDOMEventResponderSystem';
 import {retryIfBlockedOn} from '../events/ReactDOMEventReplaying';
 
 export type Type = string;
@@ -66,13 +65,12 @@ export type Props = {
   hidden?: boolean,
   suppressHydrationWarning?: boolean,
   dangerouslySetInnerHTML?: mixed,
-  style?: {
-    display?: string,
-  },
+  style?: {display?: string, ...},
   bottom?: null | number,
   left?: null | number,
   right?: null | number,
   top?: null | number,
+  ...
 };
 export type EventTargetChildElement = {
   type: string,
@@ -84,18 +82,22 @@ export type EventTargetChildElement = {
       left?: string,
       right?: string,
       top?: string,
+      ...
     },
+    ...
   },
+  ...
 };
 export type Container = Element | Document;
 export type Instance = Element;
 export type TextInstance = Text;
-export type SuspenseInstance = Comment & {_reactRetry?: () => void};
+export type SuspenseInstance = Comment & {_reactRetry?: () => void, ...};
 export type HydratableInstance = Instance | TextInstance | SuspenseInstance;
 export type PublicInstance = Element | Text;
 type HostContextDev = {
   namespace: string,
   ancestorInfo: mixed,
+  ...
 };
 type HostContextProd = string;
 export type HostContext = HostContextDev | HostContextProd;
@@ -104,9 +106,15 @@ export type ChildSet = void; // Unused
 export type TimeoutHandle = TimeoutID;
 export type NoTimeout = -1;
 
+type SelectionInformation = {|
+  activeElementDetached: null | HTMLElement,
+  focusedElem: null | HTMLElement,
+  selectionRange: mixed,
+|};
+
 import {
   enableSuspenseServerRenderer,
-  enableFlareAPI,
+  enableDeprecatedFlareAPI,
   enableFundamentalAPI,
 } from 'shared/ReactFeatureFlags';
 import {
@@ -127,7 +135,7 @@ const SUSPENSE_FALLBACK_START_DATA = '$!';
 const STYLE = 'style';
 
 let eventsEnabled: ?boolean = null;
-let selectionInformation: ?mixed = null;
+let selectionInformation: null | SelectionInformation = null;
 
 function shouldAutoFocusHostComponent(type: string, props: Props): boolean {
   switch (type) {
@@ -205,9 +213,16 @@ export function prepareForCommit(containerInfo: Container): void {
 
 export function resetAfterCommit(containerInfo: Container): void {
   restoreSelection(selectionInformation);
-  selectionInformation = null;
   ReactBrowserEventEmitterSetEnabled(eventsEnabled);
   eventsEnabled = null;
+  if (enableDeprecatedFlareAPI) {
+    const activeElementDetached = (selectionInformation: any)
+      .activeElementDetached;
+    if (activeElementDetached !== null) {
+      dispatchDetachedBlur(activeElementDetached);
+    }
+  }
+  selectionInformation = null;
 }
 
 export function createInstance(
@@ -452,28 +467,49 @@ export function insertInContainerBefore(
   }
 }
 
-function handleSimulateChildBlur(
-  child: Instance | TextInstance | SuspenseInstance,
+function dispatchBeforeDetachedBlur(target: HTMLElement): void {
+  const targetInstance = getClosestInstanceFromNode(target);
+  ((selectionInformation: any): SelectionInformation).activeElementDetached = target;
+
+  DEPRECATED_dispatchEventForResponderEventSystem(
+    'beforeblur',
+    targetInstance,
+    ({
+      target,
+      timeStamp: Date.now(),
+    }: any),
+    target,
+    RESPONDER_EVENT_SYSTEM | IS_PASSIVE,
+  );
+}
+
+function dispatchDetachedBlur(target: HTMLElement): void {
+  DEPRECATED_dispatchEventForResponderEventSystem(
+    'blur',
+    null,
+    ({
+      isTargetAttached: false,
+      target,
+      timeStamp: Date.now(),
+    }: any),
+    target,
+    RESPONDER_EVENT_SYSTEM | IS_PASSIVE,
+  );
+}
+
+// This is a specific event for the React Flare
+// event system, so event responders can act
+// accordingly to a DOM node being unmounted that
+// previously had active document focus.
+export function beforeRemoveInstance(
+  instance: Instance | TextInstance | SuspenseInstance,
 ): void {
   if (
-    enableFlareAPI &&
+    enableDeprecatedFlareAPI &&
     selectionInformation &&
-    child === selectionInformation.focusedElem
+    instance === selectionInformation.focusedElem
   ) {
-    const targetFiber = getClosestInstanceFromNode(child);
-    // Simlulate a blur event to the React Flare responder system.
-    dispatchEventForResponderEventSystem(
-      'blur',
-      targetFiber,
-      ({
-        relatedTarget: null,
-        target: child,
-        timeStamp: Date.now(),
-        type: 'blur',
-      }: any),
-      ((child: any): Document | Element),
-      RESPONDER_EVENT_SYSTEM | IS_PASSIVE,
-    );
+    dispatchBeforeDetachedBlur(((instance: any): HTMLElement));
   }
 }
 
@@ -481,7 +517,6 @@ export function removeChild(
   parentInstance: Instance,
   child: Instance | TextInstance | SuspenseInstance,
 ): void {
-  handleSimulateChildBlur(child);
   parentInstance.removeChild(child);
 }
 
@@ -492,7 +527,6 @@ export function removeChildFromContainer(
   if (container.nodeType === COMMENT_NODE) {
     (container.parentNode: any).removeChild(child);
   } else {
-    handleSimulateChildBlur(child);
     container.removeChild(child);
   }
 }
@@ -913,7 +947,7 @@ export function didNotFindHydratableSuspenseInstance(
   }
 }
 
-export function mountResponderInstance(
+export function DEPRECATED_mountResponderInstance(
   responder: ReactDOMEventResponder,
   responderInstance: ReactDOMEventResponderInstance,
   responderProps: Object,
@@ -922,16 +956,9 @@ export function mountResponderInstance(
 ): ReactDOMEventResponderInstance {
   // Listen to events
   const doc = instance.ownerDocument;
-  const {
-    rootEventTypes,
-    targetEventTypes,
-  } = ((responder: any): ReactDOMEventResponder);
+  const {targetEventTypes} = ((responder: any): ReactDOMEventResponder);
   if (targetEventTypes !== null) {
     listenToEventResponderEventTypes(targetEventTypes, doc);
-  }
-  if (rootEventTypes !== null) {
-    addRootEventTypesForResponderInstance(responderInstance, rootEventTypes);
-    listenToEventResponderEventTypes(rootEventTypes, doc);
   }
   mountEventResponder(
     responder,
@@ -942,10 +969,10 @@ export function mountResponderInstance(
   return responderInstance;
 }
 
-export function unmountResponderInstance(
+export function DEPRECATED_unmountResponderInstance(
   responderInstance: ReactDOMEventResponderInstance,
 ): void {
-  if (enableFlareAPI) {
+  if (enableDeprecatedFlareAPI) {
     // TODO stop listening to targetEventTypes
     unmountEventResponder(responderInstance);
   }

@@ -11,10 +11,18 @@ import React from 'react';
 import Immutable from 'immutable';
 
 const set = new Set(['abc', 123]);
-const map = new Map([['name', 'Brian'], ['food', 'sushi']]);
+const map = new Map([
+  ['name', 'Brian'],
+  ['food', 'sushi'],
+]);
 const setOfSets = new Set([new Set(['a', 'b', 'c']), new Set([1, 2, 3])]);
-const mapOfMaps = new Map([['first', map], ['second', map]]);
+const mapOfMaps = new Map([
+  ['first', map],
+  ['second', map],
+]);
 const typedArray = Int8Array.from([100, -100, 0]);
+const arrayBuffer = typedArray.buffer;
+const dataView = new DataView(arrayBuffer);
 const immutable = Immutable.fromJS({
   a: [{hello: 'there'}, 'fixed', true],
   b: 123,
@@ -27,6 +35,8 @@ const immutable = Immutable.fromJS({
 export default function UnserializableProps() {
   return (
     <ChildComponent
+      arrayBuffer={arrayBuffer}
+      dataView={dataView}
       map={map}
       set={set}
       mapOfMaps={mapOfMaps}

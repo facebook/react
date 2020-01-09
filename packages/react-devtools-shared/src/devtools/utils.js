@@ -90,9 +90,7 @@ export function printStore(store: Store, includeWeight: boolean = false) {
   // Make sure the pretty-printed test align with the Store's reported number of total rows.
   if (rootWeight !== store.numElements) {
     throw Error(
-      `Inconsistent Store state. Individual root weights (${rootWeight}) do not match total weight (${
-        store.numElements
-      })`,
+      `Inconsistent Store state. Individual root weights (${rootWeight}) do not match total weight (${store.numElements})`,
     );
   }
 

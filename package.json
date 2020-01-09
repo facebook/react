@@ -8,6 +8,7 @@
     "@babel/code-frame": "^7.0.0",
     "@babel/core": "^7.0.0",
     "@babel/helper-module-imports": "^7.0.0",
+    "@babel/parser": "^7.0.0",
     "@babel/plugin-external-helpers": "^7.0.0",
     "@babel/plugin-proposal-class-properties": "^7.0.0",
     "@babel/plugin-proposal-object-rest-spread": "^7.0.0",
@@ -36,7 +37,6 @@
     "art": "^0.10.1",
     "babel-eslint": "^10.0.0",
     "babel-plugin-syntax-trailing-function-commas": "^6.5.0",
-    "babylon": "6.18.0",
     "chalk": "^1.1.3",
     "cli-table": "^0.3.1",
     "coffee-script": "^1.8.0",
@@ -56,7 +56,7 @@
     "eslint-plugin-react-internal": "link:./scripts/eslint-rules",
     "fbjs-scripts": "^0.8.3",
     "filesize": "^3.5.6",
-    "flow-bin": "^0.72.0",
+    "flow-bin": "^0.84.0",
     "glob": "^6.0.4",
     "glob-stream": "^6.1.0",
     "google-closure-compiler": "20190301.0.0",
@@ -71,7 +71,7 @@
     "ncp": "^2.0.0",
     "object-assign": "^4.1.1",
     "pacote": "^9.5.6",
-    "prettier": "1.13.7",
+    "prettier": "1.19.1",
     "prop-types": "^15.6.2",
     "random-seed": "^0.3.0",
     "react-lifecycles-compat": "^3.0.2",
@@ -87,7 +87,8 @@
     "targz": "^1.0.1",
     "through2": "^2.0.0",
     "tmp": "~0.0.28",
-    "typescript": "~1.8.10"
+    "typescript": "~1.8.10",
+    "webpack": "^4.41.2"
   },
   "devEngines": {
     "node": "8.x || 9.x || 10.x || 11.x || 12.x"
@@ -97,6 +98,7 @@
   },
   "scripts": {
     "build": "node ./scripts/rollup/build.js",
+    "build-for-devtools": "cross-env RELEASE_CHANNEL=experimental yarn build -- react/index,react-dom,react-is,react-debug-tools,scheduler,react-test-renderer --type=NODE",
     "linc": "node ./scripts/tasks/linc.js",
     "lint": "node ./scripts/tasks/eslint.js",
     "lint-build": "node ./scripts/rollup/validate/index.js",

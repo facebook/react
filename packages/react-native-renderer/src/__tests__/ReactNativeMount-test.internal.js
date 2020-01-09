@@ -125,11 +125,9 @@ describe('ReactNative', () => {
       expect(UIManager.dispatchViewManagerCommand).not.toBeCalled();
       ReactNative.dispatchCommand(viewRef, 'updateCommand', [10, 20]);
       expect(UIManager.dispatchViewManagerCommand).toHaveBeenCalledTimes(1);
-      expect(UIManager.dispatchViewManagerCommand).toHaveBeenCalledWith(
-        expect.any(Number),
-        'updateCommand',
-        [10, 20],
-      );
+      expect(
+        UIManager.dispatchViewManagerCommand,
+      ).toHaveBeenCalledWith(expect.any(Number), 'updateCommand', [10, 20]);
     });
   });
 
@@ -174,7 +172,7 @@ describe('ReactNative', () => {
       expect(UIManager.dispatchViewManagerCommand).not.toBeCalled();
       expect(() => {
         ReactNative.dispatchCommand(viewRef, 'updateCommand', [10, 20]);
-      }).toWarnDev([DISPATCH_COMMAND_REQUIRES_HOST_COMPONENT], {
+      }).toErrorDev([DISPATCH_COMMAND_REQUIRES_HOST_COMPONENT], {
         withoutStack: true,
       });
 
@@ -436,7 +434,11 @@ describe('ReactNative', () => {
       render() {
         const chars = this.props.chars.split('');
         return (
-          <View>{chars.map(text => <View key={text} title={text} />)}</View>
+          <View>
+            {chars.map(text => (
+              <View key={text} title={text} />
+            ))}
+          </View>
         );
       }
     }
@@ -565,7 +567,7 @@ describe('ReactNative', () => {
     let match;
     expect(
       () => (match = ReactNative.findHostInstance_DEPRECATED(parent)),
-    ).toWarnDev([
+    ).toErrorDev([
       'Warning: findHostInstance_DEPRECATED is deprecated in StrictMode. ' +
         'findHostInstance_DEPRECATED was passed an instance of ContainsStrictModeChild which renders StrictMode children. ' +
         'Instead, add a ref directly to the element you want to reference. ' +
@@ -603,7 +605,7 @@ describe('ReactNative', () => {
     let match;
     expect(
       () => (match = ReactNative.findHostInstance_DEPRECATED(parent)),
-    ).toWarnDev([
+    ).toErrorDev([
       'Warning: findHostInstance_DEPRECATED is deprecated in StrictMode. ' +
         'findHostInstance_DEPRECATED was passed an instance of IsInStrictMode which is inside StrictMode. ' +
         'Instead, add a ref directly to the element you want to reference. ' +
@@ -638,7 +640,7 @@ describe('ReactNative', () => {
     ReactNative.render(<ContainsStrictModeChild ref={n => (parent = n)} />, 11);
 
     let match;
-    expect(() => (match = ReactNative.findNodeHandle(parent))).toWarnDev([
+    expect(() => (match = ReactNative.findNodeHandle(parent))).toErrorDev([
       'Warning: findNodeHandle is deprecated in StrictMode. ' +
         'findNodeHandle was passed an instance of ContainsStrictModeChild which renders StrictMode children. ' +
         'Instead, add a ref directly to the element you want to reference. ' +
@@ -674,7 +676,7 @@ describe('ReactNative', () => {
     );
 
     let match;
-    expect(() => (match = ReactNative.findNodeHandle(parent))).toWarnDev([
+    expect(() => (match = ReactNative.findNodeHandle(parent))).toErrorDev([
       'Warning: findNodeHandle is deprecated in StrictMode. ' +
         'findNodeHandle was passed an instance of IsInStrictMode which is inside StrictMode. ' +
         'Instead, add a ref directly to the element you want to reference. ' +
