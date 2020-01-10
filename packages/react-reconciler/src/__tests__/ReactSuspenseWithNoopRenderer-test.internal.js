@@ -7,6 +7,7 @@ let ReactCache;
 let Suspense;
 
 let TextResource;
+let resolveText;
 let textResourceShouldFail;
 
 describe('ReactSuspenseWithNoopRenderer', () => {
@@ -28,22 +29,37 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     ReactCache = require('react-cache');
     Suspense = React.Suspense;
 
+    const textCache = new Map();
+
+    resolveText = text => {
+      const resolvers = textCache.get(text);
+      if (resolvers !== undefined) {
+        textCache.delete(text);
+        const [resolve, reject] = resolvers;
+        if (textResourceShouldFail) {
+          Scheduler.unstable_yieldValue(`Promise rejected [${text}]`);
+          reject(new Error('Failed to load: ' + text));
+        } else {
+          Scheduler.unstable_yieldValue(`Promise resolved [${text}]`);
+          resolve(text);
+        }
+      }
+    };
+
     TextResource = ReactCache.unstable_createResource(
-      ([text, ms = 0]) => {
-        return new Promise((resolve, reject) =>
-          setTimeout(() => {
-            if (textResourceShouldFail) {
-              Scheduler.unstable_yieldValue(`Promise rejected [${text}]`);
-              reject(new Error('Failed to load: ' + text));
-            } else {
-              Scheduler.unstable_yieldValue(`Promise resolved [${text}]`);
-              resolve(text);
-            }
-          }, ms),
-        );
+      ([text, ms]) => {
+        return new Promise((resolve, reject) => {
+          textCache.set(text, [resolve, reject]);
+          if (typeof ms === 'number') {
+            setTimeout(() => {
+              resolveText(text);
+            }, ms);
+          }
+        });
       },
       ([text, ms]) => text,
     );
+
     textResourceShouldFail = false;
   });
 
@@ -297,7 +313,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     expect(ReactNoop.getChildren()).toEqual([]);
 
     // Wait for data to resolve
-    await advanceTimers(100);
+    await resolveText('B');
     // Renders successfully
     expect(Scheduler).toHaveYielded(['Promise resolved [B]']);
     expect(Scheduler).toFlushAndYield(['A', 'B', 'C', 'D']);
@@ -434,7 +450,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     // Initial mount
     ReactNoop.render(<App highPri="A" lowPri="1" />);
     expect(Scheduler).toFlushAndYield(['A', 'Suspend! [1]', 'Loading...']);
-    await advanceTimers(0);
+    await resolveText('1');
     expect(Scheduler).toHaveYielded(['Promise resolved [1]']);
     expect(Scheduler).toFlushAndYield(['A', '1']);
     expect(ReactNoop.getChildren()).toEqual([span('A'), span('1')]);
@@ -457,12 +473,14 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     expect(ReactNoop.getChildren()).toEqual([span('B'), span('1')]);
 
     // Unblock the low-pri text and finish
-    await advanceTimers(0);
+    await resolveText('2');
     expect(Scheduler).toHaveYielded(['Promise resolved [2]']);
     expect(ReactNoop.getChildren()).toEqual([span('B'), span('1')]);
   });
 
-  it('keeps working on lower priority work after being pinged', async () => {
+  // TODO: This tests the old expiration times model. Doesn't make sense in
+  // new model. Probably should delete.
+  it.skip('keeps working on lower priority work after being pinged', async () => {
     // Advance the virtual time so that we're close to the edge of a bucket.
     ReactNoop.expire(149);
 
@@ -526,7 +544,9 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     expect(ReactNoop.getChildren()).toEqual([span('(empty)')]);
   });
 
-  it('tries each subsequent level after suspending', async () => {
+  // TODO: This tests the old expiration times model. Doesn't make sense in
+  // new model. Probably should delete.
+  it.skip('tries each subsequent level after suspending', async () => {
     const root = ReactNoop.createRoot();
 
     function App({step, shouldSuspend}) {
@@ -704,7 +724,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     ]);
   });
 
-  it('renders an expiration boundary synchronously', async () => {
+  it('renders an Suspense boundary synchronously', async () => {
     spyOnDev(console, 'error');
     // Synchronously render a tree that suspends
     ReactNoop.flushSync(() =>
@@ -729,13 +749,13 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     expect(ReactNoop.getChildren()).toEqual([span('Loading...'), span('Sync')]);
 
     // Once the promise resolves, we render the suspended view
-    await advanceTimers(0);
+    await resolveText('Async');
     expect(Scheduler).toHaveYielded(['Promise resolved [Async]']);
     expect(Scheduler).toFlushAndYield(['Async']);
     expect(ReactNoop.getChildren()).toEqual([span('Async'), span('Sync')]);
   });
 
-  it('suspending inside an expired expiration boundary will bubble to the next one', async () => {
+  it('suspending inside an expired Suspense boundary will bubble to the next one', async () => {
     ReactNoop.flushSync(() =>
       ReactNoop.render(
         <Fragment>
@@ -2018,8 +2038,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     await ReactNoop.act(async () => show(true));
 
     expect(Scheduler).toHaveYielded(['Suspend! [A]']);
-    Scheduler.unstable_advanceTime(100);
-    await advanceTimers(100);
+    await resolveText('A');
 
     expect(Scheduler).toHaveYielded(['Promise resolved [A]']);
   });
@@ -2044,8 +2063,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     await ReactNoop.act(async () => _setShow(true));
 
     expect(Scheduler).toHaveYielded(['Suspend! [A]']);
-    Scheduler.unstable_advanceTime(100);
-    await advanceTimers(100);
+    await resolveText('A');
 
     expect(Scheduler).toHaveYielded(['Promise resolved [A]']);
   });
@@ -2076,8 +2094,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     expect(ReactNoop.getChildren()).toEqual([span('Initial load...')]);
 
     // Eventually we resolve and show the data.
-    Scheduler.unstable_advanceTime(5000);
-    await advanceTimers(5000);
+    await resolveText('A');
     expect(Scheduler).toHaveYielded(['Promise resolved [A]']);
     expect(Scheduler).toFlushAndYield(['A', 'B']);
     expect(ReactNoop.getChildren()).toEqual([span('A'), span('B')]);
@@ -2103,8 +2120,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     ]);
 
     // Later we load the data.
-    Scheduler.unstable_advanceTime(5000);
-    await advanceTimers(5000);
+    await resolveText('C');
     expect(Scheduler).toHaveYielded(['Promise resolved [C]']);
     expect(Scheduler).toFlushAndYield(['A', 'C']);
     expect(ReactNoop.getChildren()).toEqual([span('A'), span('C'), span('B')]);
@@ -2260,8 +2276,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
       expect(ReactNoop.getChildren()).toEqual([span('Loading...')]);
 
       // Later we load the data.
-      Scheduler.unstable_advanceTime(5000);
-      await advanceTimers(5000);
+      await resolveText('A');
       expect(Scheduler).toHaveYielded(['Promise resolved [A]']);
       expect(Scheduler).toFlushAndYield(['A']);
       expect(ReactNoop.getChildren()).toEqual([span('A')]);
@@ -2285,8 +2300,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
         span('Loading...'),
       ]);
       // Later we load the data.
-      Scheduler.unstable_advanceTime(3000);
-      await advanceTimers(3000);
+      await resolveText('B');
       expect(Scheduler).toHaveYielded(['Promise resolved [B]']);
       expect(Scheduler).toFlushAndYield(['B']);
       expect(ReactNoop.getChildren()).toEqual([span('B')]);
@@ -2325,8 +2339,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
       });
 
       // Later we load the data.
-      Scheduler.unstable_advanceTime(5000);
-      await advanceTimers(5000);
+      await resolveText('A');
       expect(Scheduler).toHaveYielded(['Promise resolved [A]']);
       expect(Scheduler).toFlushAndYield(['A']);
       expect(ReactNoop.getChildren()).toEqual([span('A')]);
@@ -2352,8 +2365,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
         ]);
       });
       // Later we load the data.
-      Scheduler.unstable_advanceTime(3000);
-      await advanceTimers(3000);
+      await resolveText('B');
       expect(Scheduler).toHaveYielded(['Promise resolved [B]']);
       expect(Scheduler).toFlushAndYield(['B']);
       expect(ReactNoop.getChildren()).toEqual([span('B')]);
@@ -2371,7 +2383,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
           }
           return (
             <Suspense fallback={<Text text="Loading..." />}>
-              <AsyncText text={page} ms={5000} />
+              <AsyncText text={page} />
             </Suspense>
           );
         }
@@ -2395,8 +2407,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
       });
 
       // Later we load the data.
-      Scheduler.unstable_advanceTime(5000);
-      await advanceTimers(5000);
+      await resolveText('A');
       expect(Scheduler).toHaveYielded(['Promise resolved [A]']);
       expect(Scheduler).toFlushAndYield(['A']);
       expect(ReactNoop.getChildren()).toEqual([span('A')]);
@@ -2422,8 +2433,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
         ]);
       });
       // Later we load the data.
-      Scheduler.unstable_advanceTime(3000);
-      await advanceTimers(3000);
+      await resolveText('B');
       expect(Scheduler).toHaveYielded(['Promise resolved [B]']);
       expect(Scheduler).toFlushAndYield(['B']);
       expect(ReactNoop.getChildren()).toEqual([span('B')]);
@@ -2434,7 +2444,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     function App({page}) {
       return (
         <Suspense fallback={<Text text="Loading..." />}>
-          <AsyncText text={page} ms={2000} />
+          <AsyncText text={page} />
         </Suspense>
       );
     }
@@ -2442,8 +2452,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     // Initial render.
     ReactNoop.render(<App page="A" />);
     expect(Scheduler).toFlushAndYield(['Suspend! [A]', 'Loading...']);
-    Scheduler.unstable_advanceTime(2000);
-    await advanceTimers(2000);
+    await resolveText('A');
     expect(Scheduler).toHaveYielded(['Promise resolved [A]']);
     expect(Scheduler).toFlushAndYield(['A']);
     expect(ReactNoop.getChildren()).toEqual([span('A')]);
@@ -2471,8 +2480,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
       span('Loading...'),
     ]);
 
-    Scheduler.unstable_advanceTime(2000);
-    await advanceTimers(2000);
+    await resolveText('B');
     expect(Scheduler).toHaveYielded(['Promise resolved [B]']);
     expect(Scheduler).toFlushAndYield(['B']);
     expect(ReactNoop.getChildren()).toEqual([span('B')]);
@@ -2512,7 +2520,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
           <Suspense
             fallback={<Text text={'Loading ' + page + '...'} />}
             unstable_avoidThisFallback={true}>
-            <AsyncText text={page} ms={3000} />
+            <AsyncText text={page} />
           </Suspense>
         </Suspense>
       );
@@ -2521,8 +2529,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     // Initial render.
     ReactNoop.render(<App page="A" />);
     expect(Scheduler).toFlushAndYield(['Hi!', 'Suspend! [A]', 'Loading...']);
-    Scheduler.unstable_advanceTime(3000);
-    await advanceTimers(3000);
+    await resolveText('A');
     expect(Scheduler).toHaveYielded(['Promise resolved [A]']);
     expect(Scheduler).toFlushAndYield(['Hi!', 'A']);
     expect(ReactNoop.getChildren()).toEqual([span('Hi!'), span('A')]);
@@ -2544,7 +2551,6 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     expect(ReactNoop.getChildren()).toEqual([span('Hi!'), span('A')]);
     Scheduler.unstable_advanceTime(1500);
     await advanceTimers(1500);
-    expect(Scheduler).toHaveYielded(['Promise resolved [B]']);
     expect(ReactNoop.getChildren()).toEqual([
       span('Hi!'),
       hiddenSpan('A'),

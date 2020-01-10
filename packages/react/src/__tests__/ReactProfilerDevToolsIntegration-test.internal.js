@@ -178,6 +178,8 @@ describe('ReactProfiler DevTools integration', () => {
     ]);
   });
 
+  // TODO: This tests the old expiration times model. Doesn't make sense in
+  // new model. Probably should delete.
   it('regression test: #17159', () => {
     function Text({text}) {
       Scheduler.unstable_yieldValue(text);

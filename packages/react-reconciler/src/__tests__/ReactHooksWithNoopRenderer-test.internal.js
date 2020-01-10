@@ -15,6 +15,7 @@
 let React;
 let ReactCache;
 let TextResource;
+let resolveText;
 let ReactFeatureFlags;
 let ReactNoop;
 let Scheduler;
@@ -63,14 +64,27 @@ describe('ReactHooksWithNoopRenderer', () => {
     Suspense = React.Suspense;
     act = ReactNoop.act;
 
+    const textCache = new Map();
+
+    resolveText = text => {
+      const resolve = textCache.get(text);
+      if (resolve !== undefined) {
+        textCache.delete(text);
+        Scheduler.unstable_yieldValue(`Promise resolved [${text}]`);
+        resolve();
+      }
+    };
+
     TextResource = ReactCache.unstable_createResource(
-      ([text, ms = 0]) => {
-        return new Promise((resolve, reject) =>
-          setTimeout(() => {
-            Scheduler.unstable_yieldValue(`Promise resolved [${text}]`);
-            resolve(text);
-          }, ms),
-        );
+      ([text, ms]) => {
+        return new Promise(resolve => {
+          textCache.set(text, resolve);
+          if (typeof ms === 'number') {
+            setTimeout(() => {
+              resolveText(text);
+            }, ms);
+          }
+        });
       },
       ([text, ms]) => text,
     );
@@ -2231,7 +2245,7 @@ describe('ReactHooksWithNoopRenderer', () => {
   describe('useDeferredValue', () => {
     it.experimental('defers text value until specified timeout', async () => {
       function TextBox({text}) {
-        return <AsyncText ms={1000} text={text} />;
+        return <AsyncText text={text} />;
       }
 
       let _setText;
@@ -2258,8 +2272,7 @@ describe('ReactHooksWithNoopRenderer', () => {
       expect(Scheduler).toHaveYielded(['A', 'Suspend! [A]', 'Loading']);
       expect(ReactNoop.getChildren()).toEqual([span('A'), span('Loading')]);
 
-      Scheduler.unstable_advanceTime(1000);
-      await advanceTimers(1000);
+      await resolveText('A');
       expect(Scheduler).toHaveYielded(['Promise resolved [A]']);
       expect(Scheduler).toFlushAndYield(['A']);
       expect(ReactNoop.getChildren()).toEqual([span('A'), span('A')]);
@@ -2290,8 +2303,7 @@ describe('ReactHooksWithNoopRenderer', () => {
         span('Loading'),
       ]);
 
-      Scheduler.unstable_advanceTime(250);
-      await advanceTimers(250);
+      await resolveText('B');
       expect(Scheduler).toHaveYielded(['Promise resolved [B]']);
 
       act(() => {

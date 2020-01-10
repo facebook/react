@@ -328,8 +328,9 @@ describe('ReactSuspense', () => {
       'a parent',
     () => {
       function interrupt() {
-        // React has a heuristic to batch all updates that occur within the same
-        // event. This is a trick to circumvent that heuristic.
+        // Perform a sync render on a different, abitrary root. This is a trick
+        // to interrupt an in-progress async render so that it's forced to
+        // start over.
         ReactTestRenderer.create('whatever');
       }
 
@@ -361,11 +362,11 @@ describe('ReactSuspense', () => {
       Scheduler.unstable_advanceTime(1000);
       // Do a bit of work, then interrupt to trigger a restart.
       expect(Scheduler).toFlushAndYieldThrough(['A1']);
-      interrupt();
-
-      // Schedule another update. This will have lower priority because of
-      // the interrupt trick above.
+      // Schedule another update. This will have lower priority than the
+      // currently in progress render.
       root.update(<App shouldSuspend={false} step={2} />);
+
+      interrupt();
 
       expect(Scheduler).toFlushAndYieldThrough([
         // Should have restarted the first update, because of the interruption
