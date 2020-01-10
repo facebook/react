@@ -199,7 +199,13 @@ const ReactFabric: ReactFabricType = {
     return getPublicRootInstance(root);
   },
 
+  // Deprecated - this function is being renamed to stopSurface, use that instead.
+  // TODO (T47576999): Delete this once it's no longer called from native code.
   unmountComponentAtNode(containerTag: number) {
+    this.stopSurface(containerTag);
+  },
+
+  stopSurface(containerTag: number) {
     const root = roots.get(containerTag);
     if (root) {
       // TODO: Is it safe to reset this now or should I wait since this unmount could be deferred?
