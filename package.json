@@ -24,6 +24,7 @@
     "@babel/plugin-transform-for-of": "^7.0.0",
     "@babel/plugin-transform-literals": "^7.0.0",
     "@babel/plugin-transform-modules-commonjs": "^7.0.0",
+    "@babel/plugin-transform-modules-umd": "^7.7.0",
     "@babel/plugin-transform-object-super": "^7.0.0",
     "@babel/plugin-transform-parameters": "^7.0.0",
     "@babel/plugin-transform-react-jsx-source": "^7.0.0",
