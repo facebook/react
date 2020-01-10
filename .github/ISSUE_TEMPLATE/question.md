@@ -2,7 +2,7 @@
 name: "🤔 Questions and Help"
 about: This issue tracker is not for questions. Please ask questions at https://stackoverflow.com/questions/tagged/react.
 title: 'Question: '
-labels: 'Resolution: Invalid', 'Type: Question'
+labels: 'Resolution: Invalid, Type: Question'
 
 ---
 
@@ -12,18 +12,18 @@ As it happens, support requests that are created as issues are likely to be clos
 
 ## Coding Questions
 
-### https://stackoverflow.com/questions/tagged/react
-
 If you have a coding question related to React and React DOM, it might be better suited for Stack Overflow. It's a great place to browse through frequent questions about using React, as well as ask for help with specific questions.
+
+https://stackoverflow.com/questions/tagged/react
 
 ## Talk to other React developers
 
-### https://www.reactiflux.com/
+There are many online forums which are a great place for discussion about best practices and application architecture as well as the future of React.
 
-Reactiflux is an active community of React and React Native developers. If you are looking for immediate assistance or have a general question about React, the #help-react channel is a good place to start.
+https://reactjs.org/community/support.html#popular-discussion-forums
 
 ## Proposals
 
-### https://github.com/reactjs/rfcs
-
 If you'd like to discuss topics related to the future of React, or would like to propose a new feature or change before sending a pull request, please check out the discussions and proposals repository.
+
+https://github.com/reactjs/rfcs
