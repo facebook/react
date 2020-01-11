@@ -95,7 +95,7 @@ export function useEffect(
   const dispatcher = resolveDispatcher();
 
   if (__DEV__) {
-    warning(
+    invariant(
       create != null,
       'useEffect must be called with a create function, but null or undefined was passed.',
     );
@@ -111,7 +111,7 @@ export function useLayoutEffect(
   const dispatcher = resolveDispatcher();
 
   if (__DEV__) {
-    warning(
+    invariant(
       create != null,
       'useLayoutEffect must be called with a create function, but null or undefined was passed.',
     );
