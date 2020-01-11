@@ -7,9 +7,13 @@
  * @flow
  */
 
-import type {ReactContext} from 'shared/ReactTypes';
+import type {
+  ReactContext,
+  ReactEventResponder,
+  ReactEventResponderListener,
+} from 'shared/ReactTypes';
 import invariant from 'shared/invariant';
-import warning from 'shared/warning';
+import {REACT_RESPONDER_TYPE} from 'shared/ReactSymbols';
 
 import ReactCurrentDispatcher from './ReactCurrentDispatcher';
 
@@ -33,18 +37,19 @@ export function useContext<T>(
 ) {
   const dispatcher = resolveDispatcher();
   if (__DEV__) {
-    warning(
-      unstable_observedBits === undefined,
-      'useContext() second argument is reserved for future ' +
-        'use in React. Passing it is not supported. ' +
-        'You passed: %s.%s',
-      unstable_observedBits,
-      typeof unstable_observedBits === 'number' && Array.isArray(arguments[2])
-        ? '\n\nDid you call array.map(useContext)? ' +
-          'Calling Hooks inside a loop is not supported. ' +
-          'Learn more at https://fb.me/rules-of-hooks'
-        : '',
-    );
+    if (unstable_observedBits !== undefined) {
+      console.error(
+        'useContext() second argument is reserved for future ' +
+          'use in React. Passing it is not supported. ' +
+          'You passed: %s.%s',
+        unstable_observedBits,
+        typeof unstable_observedBits === 'number' && Array.isArray(arguments[2])
+          ? '\n\nDid you call array.map(useContext)? ' +
+              'Calling Hooks inside a loop is not supported. ' +
+              'Learn more at https://fb.me/rules-of-hooks'
+          : '',
+      );
+    }
 
     // TODO: add a more generic warning for invalid values.
     if ((Context: any)._context !== undefined) {
@@ -52,14 +57,12 @@ export function useContext<T>(
       // Don't deduplicate because this legitimately causes bugs
       // and nobody should be using this in existing code.
       if (realContext.Consumer === Context) {
-        warning(
-          false,
+        console.error(
           'Calling useContext(Context.Consumer) is not supported, may cause bugs, and will be ' +
             'removed in a future major release. Did you mean to call useContext(Context) instead?',
         );
       } else if (realContext.Provider === Context) {
-        warning(
-          false,
+        console.error(
           'Calling useContext(Context.Provider) is not supported. ' +
             'Did you mean to call useContext(Context) instead?',
         );
@@ -83,7 +86,7 @@ export function useReducer<S, I, A>(
   return dispatcher.useReducer(reducer, initialArg, init);
 }
 
-export function useRef<T>(initialValue: T): {current: T} {
+export function useRef<T>(initialValue: T): {|current: T|} {
   const dispatcher = resolveDispatcher();
   return dispatcher.useRef(initialValue);
 }
@@ -137,7 +140,7 @@ export function useMemo(
 }
 
 export function useImperativeHandle<T>(
-  ref: {current: T | null} | ((inst: T | null) => mixed) | null | void,
+  ref: {|current: T | null|} | ((inst: T | null) => mixed) | null | void,
   create: () => T,
   inputs: Array<mixed> | void | null,
 ): void {
@@ -150,4 +153,35 @@ export function useDebugValue(value: any, formatterFn: ?(value: any) => any) {
     const dispatcher = resolveDispatcher();
     return dispatcher.useDebugValue(value, formatterFn);
   }
+}
+
+export const emptyObject = {};
+
+export function useResponder(
+  responder: ReactEventResponder<any, any>,
+  listenerProps: ?Object,
+): ?ReactEventResponderListener<any, any> {
+  const dispatcher = resolveDispatcher();
+  if (__DEV__) {
+    if (responder == null || responder.$$typeof !== REACT_RESPONDER_TYPE) {
+      console.error(
+        'useResponder: invalid first argument. Expected an event responder, but instead got %s',
+        responder,
+      );
+      return;
+    }
+  }
+  return dispatcher.useResponder(responder, listenerProps || emptyObject);
+}
+
+export function useTransition(
+  config: ?Object,
+): [(() => void) => void, boolean] {
+  const dispatcher = resolveDispatcher();
+  return dispatcher.useTransition(config);
+}
+
+export function useDeferredValue<T>(value: T, config: ?Object): T {
+  const dispatcher = resolveDispatcher();
+  return dispatcher.useDeferredValue(value, config);
 }

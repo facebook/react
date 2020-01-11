@@ -44,7 +44,8 @@ if (process.env.REACT_CLASS_EQUIVALENCE_TEST) {
   }
 
   expect.extend({
-    ...require('./matchers/interactionTracing'),
+    ...require('./matchers/interactionTracingMatchers'),
+    ...require('./matchers/profilerMatchers'),
     ...require('./matchers/toWarnDev'),
     ...require('./matchers/reactTestMatchers'),
   });
@@ -107,14 +108,24 @@ if (process.env.REACT_CLASS_EQUIVALENCE_TEST) {
               .join('\n')}`
         );
 
+        let expectedMatcher;
+        switch (methodName) {
+          case 'warn':
+            expectedMatcher = 'toWarnDev';
+            break;
+          case 'error':
+            expectedMatcher = 'toErrorDev';
+            break;
+          default:
+            throw new Error('No matcher for ' + methodName);
+        }
         const message =
           `Expected test not to call ${chalk.bold(
             `console.${methodName}()`
           )}.\n\n` +
           'If the warning is expected, test for it explicitly by:\n' +
-          `1. Using the ${chalk.bold('.toWarnDev()')} / ${chalk.bold(
-            '.toLowPriorityWarnDev()'
-          )} matchers, or...\n` +
+          `1. Using the ${chalk.bold('.' + expectedMatcher + '()')} ` +
+          `matcher, or...\n` +
           `2. Mock it out using ${chalk.bold(
             'spyOnDev'
           )}(console, '${methodName}') or ${chalk.bold(
@@ -129,6 +140,10 @@ if (process.env.REACT_CLASS_EQUIVALENCE_TEST) {
   if (process.env.NODE_ENV === 'production') {
     // In production, we strip error messages and turn them into codes.
     // This decodes them back so that the test assertions on them work.
+    // 1. `ErrorProxy` decodes error messages at Error construction time and
+    //    also proxies error instances with `proxyErrorInstance`.
+    // 2. `proxyErrorInstance` decodes error messages when the `message`
+    //    property is changed.
     const decodeErrorMessage = function(message) {
       if (!message) {
         return message;
@@ -149,20 +164,108 @@ if (process.env.REACT_CLASS_EQUIVALENCE_TEST) {
       return format.replace(/%s/g, () => args[argIndex++]);
     };
     const OriginalError = global.Error;
+    // V8's Error.captureStackTrace (used in Jest) fails if the error object is
+    // a Proxy, so we need to pass it the unproxied instance.
+    const originalErrorInstances = new WeakMap();
+    const captureStackTrace = function(error, ...args) {
+      return OriginalError.captureStackTrace.call(
+        this,
+        originalErrorInstances.get(error) ||
+          // Sometimes this wrapper receives an already-unproxied instance.
+          error,
+        ...args
+      );
+    };
+    const proxyErrorInstance = error => {
+      const proxy = new Proxy(error, {
+        set(target, key, value, receiver) {
+          if (key === 'message') {
+            return Reflect.set(
+              target,
+              key,
+              decodeErrorMessage(value),
+              receiver
+            );
+          }
+          return Reflect.set(target, key, value, receiver);
+        },
+      });
+      originalErrorInstances.set(proxy, error);
+      return proxy;
+    };
     const ErrorProxy = new Proxy(OriginalError, {
       apply(target, thisArg, argumentsList) {
         const error = Reflect.apply(target, thisArg, argumentsList);
         error.message = decodeErrorMessage(error.message);
-        return error;
+        return proxyErrorInstance(error);
       },
       construct(target, argumentsList, newTarget) {
         const error = Reflect.construct(target, argumentsList, newTarget);
         error.message = decodeErrorMessage(error.message);
-        return error;
+        return proxyErrorInstance(error);
+      },
+      get(target, key, receiver) {
+        if (key === 'captureStackTrace') {
+          return captureStackTrace;
+        }
+        return Reflect.get(target, key, receiver);
       },
     });
     ErrorProxy.OriginalError = OriginalError;
     global.Error = ErrorProxy;
+  }
+
+  const expectExperimentalToFail = async callback => {
+    if (callback.length > 0) {
+      throw Error(
+        'Experimental test helpers do not support `done` callback. Return a ' +
+          'promise instead.'
+      );
+    }
+    try {
+      const maybePromise = callback();
+      if (
+        maybePromise !== undefined &&
+        maybePromise !== null &&
+        typeof maybePromise.then === 'function'
+      ) {
+        await maybePromise;
+      }
+    } catch (error) {
+      // Failed as expected
+      return;
+    }
+    throw Error(
+      'Tests marked experimental are expected to fail, but this one passed.'
+    );
+  };
+
+  const it = global.it;
+  const fit = global.fit;
+  const xit = global.xit;
+  if (__EXPERIMENTAL__) {
+    it.experimental = it;
+    fit.experimental = it.only.experimental = it.experimental.only = fit;
+    xit.experimental = it.skip.experimental = it.experimental.skip = xit;
+  } else {
+    it.experimental = (message, callback) => {
+      it(`[EXPERIMENTAL, SHOULD FAIL] ${message}`, () =>
+        expectExperimentalToFail(callback));
+    };
+    fit.experimental = it.only.experimental = it.experimental.only = (
+      message,
+      callback
+    ) => {
+      fit(`[EXPERIMENTAL, SHOULD FAIL] ${message}`, () =>
+        expectExperimentalToFail(callback));
+    };
+    xit.experimental = it.skip.experimental = it.experimental.skip = (
+      message,
+      callback
+    ) => {
+      xit(`[EXPERIMENTAL, SHOULD FAIL] ${message}`, () =>
+        expectExperimentalToFail(callback));
+    };
   }
 
   require('jasmine-check').install();

@@ -231,4 +231,44 @@ describe('ReactNativeAttributePayload', () => {
       ),
     ).toEqual({a: null, c: true});
   });
+
+  it('should skip changed functions', () => {
+    expect(
+      diff(
+        {
+          a: function() {
+            return 1;
+          },
+        },
+        {
+          a: function() {
+            return 9;
+          },
+        },
+        {a: true},
+      ),
+    ).toEqual(null);
+  });
+
+  it('should skip deeply-nested changed functions', () => {
+    expect(
+      diff(
+        {
+          wrapper: {
+            a: function() {
+              return 1;
+            },
+          },
+        },
+        {
+          wrapper: {
+            a: function() {
+              return 9;
+            },
+          },
+        },
+        {wrapper: true},
+      ),
+    ).toEqual(null);
+  });
 });

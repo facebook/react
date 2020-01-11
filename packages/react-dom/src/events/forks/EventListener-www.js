@@ -12,8 +12,6 @@ const EventListenerWWW = require('EventListener');
 import typeof * as EventListenerType from '../EventListener';
 import typeof * as EventListenerShimType from './EventListener-www';
 
-const NORMAL_PRIORITY = 0;
-
 export function addEventBubbleListener(
   element: Element,
   eventType: string,
@@ -30,18 +28,17 @@ export function addEventCaptureListener(
   EventListenerWWW.capture(element, eventType, listener);
 }
 
-export function addEventListener(
+export function addEventCaptureListenerWithPassiveFlag(
   element: Element,
   eventType: string,
   listener: Function,
-  options: {passive: boolean},
+  passive: boolean,
 ): void {
-  EventListenerWWW.listen(
+  EventListenerWWW.captureWithPassiveFlag(
     element,
     eventType,
     listener,
-    NORMAL_PRIORITY,
-    options,
+    passive,
   );
 }
 

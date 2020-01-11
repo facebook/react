@@ -1,0 +1,46 @@
+.CheckboxLabel {
+  flex: 1 1 100%;
+  display: flex;
+}
+.CheckboxLabel:focus-within {
+  background-color: var(--color-button-background-focus);
+}
+
+.Checkbox:focus {
+  outline: none;
+}
+
+.Input {
+  flex: 1 1;
+  background: none;
+  border: 1px solid transparent;
+  color: var(--color-attribute-editable-value);
+  border-radius: 0.125rem;
+  font-family: var(--font-family-monospace);
+  font-size: var(--font-size-monospace-normal);
+}
+
+.Invalid {
+  flex: 1 1;
+  background: none;
+  border: 1px solid transparent;
+  color: var(--color-attribute-editable-value);
+  border-radius: 0.125rem;
+  font-family: var(--font-family-monospace);
+  font-size: var(--font-size-monospace-normal);
+  background-color: var(--color-background-invalid);
+  color: var(--color-text-invalid);
+
+  --color-border: var(--color-text-invalid);
+}
+
+.Input:focus,
+.Invalid:focus {
+  background-color: var(--color-button-background-focus);
+  outline: none;
+}
+
+.ResetButton {
+  flex: 0 0 auto;
+  padding: 0 0.5rem;
+}

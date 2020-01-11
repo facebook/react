@@ -7,8 +7,8 @@
  * @flow
  */
 
-import {registrationNameDependencies} from 'events/EventPluginRegistry';
-import type {DOMTopLevelEventType} from 'events/TopLevelEventTypes';
+import {registrationNameDependencies} from 'legacy-events/EventPluginRegistry';
+import type {DOMTopLevelEventType} from 'legacy-events/TopLevelEventTypes';
 import {
   TOP_BLUR,
   TOP_CANCEL,
@@ -86,22 +86,24 @@ import isEventSupported from './isEventSupported';
  */
 
 const PossiblyWeakMap = typeof WeakMap === 'function' ? WeakMap : Map;
-const elementListeningSets:
+// prettier-ignore
+const elementListenerMap:
+  // $FlowFixMe Work around Flow bug
   | WeakMap
   | Map<
       Document | Element | Node,
-      Set<DOMTopLevelEventType | string>,
+      Map<DOMTopLevelEventType | string, null | (any => void)>,
     > = new PossiblyWeakMap();
 
-export function getListeningSetForElement(
+export function getListenerMapForElement(
   element: Document | Element | Node,
-): Set<DOMTopLevelEventType | string> {
-  let listeningSet = elementListeningSets.get(element);
-  if (listeningSet === undefined) {
-    listeningSet = new Set();
-    elementListeningSets.set(element, listeningSet);
+): Map<DOMTopLevelEventType | string, null | (any => void)> {
+  let listenerMap = elementListenerMap.get(element);
+  if (listenerMap === undefined) {
+    listenerMap = new Map();
+    elementListenerMap.set(element, listenerMap);
   }
-  return listeningSet;
+  return listenerMap;
 }
 
 /**
@@ -129,48 +131,56 @@ export function listenTo(
   registrationName: string,
   mountAt: Document | Element | Node,
 ): void {
-  const listeningSet = getListeningSetForElement(mountAt);
+  const listeningSet = getListenerMapForElement(mountAt);
   const dependencies = registrationNameDependencies[registrationName];
 
   for (let i = 0; i < dependencies.length; i++) {
     const dependency = dependencies[i];
-    if (!listeningSet.has(dependency)) {
-      switch (dependency) {
-        case TOP_SCROLL:
-          trapCapturedEvent(TOP_SCROLL, mountAt);
-          break;
-        case TOP_FOCUS:
-        case TOP_BLUR:
-          trapCapturedEvent(TOP_FOCUS, mountAt);
-          trapCapturedEvent(TOP_BLUR, mountAt);
-          // We set the flag for a single dependency later in this function,
-          // but this ensures we mark both as attached rather than just one.
-          listeningSet.add(TOP_BLUR);
-          listeningSet.add(TOP_FOCUS);
-          break;
-        case TOP_CANCEL:
-        case TOP_CLOSE:
-          if (isEventSupported(getRawEventName(dependency))) {
-            trapCapturedEvent(dependency, mountAt);
-          }
-          break;
-        case TOP_INVALID:
-        case TOP_SUBMIT:
-        case TOP_RESET:
-          // We listen to them on the target DOM elements.
-          // Some of them bubble so we don't want them to fire twice.
-          break;
-        default:
-          // By default, listen on the top level to all non-media events.
-          // Media events don't bubble so adding the listener wouldn't do anything.
-          const isMediaEvent = mediaEventTypes.indexOf(dependency) !== -1;
-          if (!isMediaEvent) {
-            trapBubbledEvent(dependency, mountAt);
-          }
-          break;
-      }
-      listeningSet.add(dependency);
+    listenToTopLevel(dependency, mountAt, listeningSet);
+  }
+}
+
+export function listenToTopLevel(
+  topLevelType: DOMTopLevelEventType,
+  mountAt: Document | Element | Node,
+  listenerMap: Map<DOMTopLevelEventType | string, null | (any => void)>,
+): void {
+  if (!listenerMap.has(topLevelType)) {
+    switch (topLevelType) {
+      case TOP_SCROLL:
+        trapCapturedEvent(TOP_SCROLL, mountAt);
+        break;
+      case TOP_FOCUS:
+      case TOP_BLUR:
+        trapCapturedEvent(TOP_FOCUS, mountAt);
+        trapCapturedEvent(TOP_BLUR, mountAt);
+        // We set the flag for a single dependency later in this function,
+        // but this ensures we mark both as attached rather than just one.
+        listenerMap.set(TOP_BLUR, null);
+        listenerMap.set(TOP_FOCUS, null);
+        break;
+      case TOP_CANCEL:
+      case TOP_CLOSE:
+        if (isEventSupported(getRawEventName(topLevelType))) {
+          trapCapturedEvent(topLevelType, mountAt);
+        }
+        break;
+      case TOP_INVALID:
+      case TOP_SUBMIT:
+      case TOP_RESET:
+        // We listen to them on the target DOM elements.
+        // Some of them bubble so we don't want them to fire twice.
+        break;
+      default:
+        // By default, listen on the top level to all non-media events.
+        // Media events don't bubble so adding the listener wouldn't do anything.
+        const isMediaEvent = mediaEventTypes.indexOf(topLevelType) !== -1;
+        if (!isMediaEvent) {
+          trapBubbledEvent(topLevelType, mountAt);
+        }
+        break;
     }
+    listenerMap.set(topLevelType, null);
   }
 }
 
@@ -178,12 +188,12 @@ export function isListeningToAllDependencies(
   registrationName: string,
   mountAt: Document | Element,
 ): boolean {
-  const listeningSet = getListeningSetForElement(mountAt);
+  const listenerMap = getListenerMapForElement(mountAt);
   const dependencies = registrationNameDependencies[registrationName];
 
   for (let i = 0; i < dependencies.length; i++) {
     const dependency = dependencies[i];
-    if (!listeningSet.has(dependency)) {
+    if (!listenerMap.has(dependency)) {
       return false;
     }
   }

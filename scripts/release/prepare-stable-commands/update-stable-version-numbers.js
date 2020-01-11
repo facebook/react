@@ -90,9 +90,7 @@ const run = async ({cwd, packages, version}, versionsMap) => {
       for (let dependencyName in maybeDependency) {
         if (packages.includes(dependencyName)) {
           console.log(
-            theme`• {package ${dependencyName}} {version ${
-              maybeDependency[dependencyName]
-            }} {dimmed ${label}}`
+            theme`• {package ${dependencyName}} {version ${maybeDependency[dependencyName]}} {dimmed ${label}}`
           );
         }
       }

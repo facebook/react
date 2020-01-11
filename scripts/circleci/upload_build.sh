@@ -10,7 +10,7 @@ if [ -z "$CI_PULL_REQUEST" ] && [ -n "$BUILD_SERVER_ENDPOINT" ]; then
     -F "react-dom.production.min=@build/dist/react-dom.production.min.js" \
     -F "react-dom-server.browser.development=@build/dist/react-dom-server.browser.development.js" \
     -F "react-dom-server.browser.production.min=@build/dist/react-dom-server.browser.production.min.js" \
-    -F "results.json=@build/../scripts/rollup/results.json" \
+    -F "results.json=@build/../build/bundle-sizes.json" \
     -F "commit=$CIRCLE_SHA1" \
     -F "date=$(git log --format='%ct' -1)" \
     -F "pull_request=false" \

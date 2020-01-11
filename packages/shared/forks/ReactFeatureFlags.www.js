@@ -12,15 +12,11 @@ import typeof * as FeatureFlagsShimType from './ReactFeatureFlags.www';
 
 // Re-export dynamic flags from the www version.
 export const {
-  debugRenderPhaseSideEffects,
   debugRenderPhaseSideEffectsForStrictMode,
-  replayFailedUnitOfWorkWithInvokeGuardedCallback,
-  warnAboutDeprecatedLifecycles,
-  disableJavaScriptURLs,
-  disableYielding,
   disableInputAttributeSyncing,
-  warnAboutShorthandPropertyCollision,
-  warnAboutDeprecatedSetNativeProps,
+  enableTrustedTypesIntegration,
+  enableSelectiveHydration,
+  enableTrainModelFix,
 } = require('ReactFeatureFlags');
 
 // In www, we have experimental support for gathering data
@@ -35,14 +31,21 @@ export const enableProfilerTimer = __PROFILE__;
 export const enableSchedulerTracing = __PROFILE__;
 export const enableSchedulerDebugging = true;
 
-export const enableStableConcurrentModeAPIs = false;
+export const replayFailedUnitOfWorkWithInvokeGuardedCallback = false;
+export const warnAboutDeprecatedLifecycles = true;
+export const warnAboutShorthandPropertyCollision = false;
+export const disableLegacyContext = false;
+export const warnAboutStringRefs = false;
+export const warnAboutDefaultPropsOnFunctionComponents = false;
+export const disableSchedulerTimeoutBasedOnReactExpirationTime = false;
+
+export const exposeConcurrentModeAPIs = __EXPERIMENTAL__;
 
 export const enableSuspenseServerRenderer = true;
 
-// I've chosen to make this a static flag instead of a dynamic flag controlled
-// by a GK so that it doesn't increase bundle size. It should still be easy
-// to rollback by reverting the commit that turns this on.
-export const enableNewScheduler = false;
+export const enableChunksAPI = __EXPERIMENTAL__;
+
+export const disableJavaScriptURLs = true;
 
 let refCount = 0;
 export function addUserTimingListener() {
@@ -71,7 +74,21 @@ function updateFlagOutsideOfReactCallStack() {
   }
 }
 
-export const enableEventAPI = true;
+export const enableDeprecatedFlareAPI = true;
+
+export const enableFundamentalAPI = false;
+
+export const enableScopeAPI = true;
+
+export const enableJSXTransformAPI = true;
+
+export const warnAboutUnmockedScheduler = true;
+
+export const enableSuspenseCallback = true;
+
+export const flushSuspenseFallbacksInTests = true;
+
+export const enableNativeTargetAsInstance = false;
 
 // Flow magic to verify the exports of this file match the original version.
 // eslint-disable-next-line no-unused-vars

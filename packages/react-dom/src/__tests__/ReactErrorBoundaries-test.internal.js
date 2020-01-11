@@ -12,8 +12,8 @@
 let PropTypes;
 let React;
 let ReactDOM;
+let act;
 let ReactFeatureFlags;
-let Scheduler;
 
 describe('ReactErrorBoundaries', () => {
   let log;
@@ -45,7 +45,7 @@ describe('ReactErrorBoundaries', () => {
     ReactFeatureFlags.replayFailedUnitOfWorkWithInvokeGuardedCallback = false;
     ReactDOM = require('react-dom');
     React = require('react');
-    Scheduler = require('scheduler');
+    act = require('react-dom/test-utils').act;
 
     log = [];
 
@@ -644,6 +644,39 @@ describe('ReactErrorBoundaries', () => {
     expect(container3.firstChild).toBe(null);
   });
 
+  it('logs a single error when using error boundary', () => {
+    const container = document.createElement('div');
+    expect(() =>
+      ReactDOM.render(
+        <ErrorBoundary>
+          <BrokenRender />
+        </ErrorBoundary>,
+        container,
+      ),
+    ).toErrorDev('The above error occurred in the <BrokenRender> component:', {
+      logAllErrors: true,
+    });
+
+    expect(container.firstChild.textContent).toBe('Caught an error: Hello.');
+    expect(log).toEqual([
+      'ErrorBoundary constructor',
+      'ErrorBoundary componentWillMount',
+      'ErrorBoundary render success',
+      'BrokenRender constructor',
+      'BrokenRender componentWillMount',
+      'BrokenRender render [!]',
+      // Catch and render an error message
+      'ErrorBoundary static getDerivedStateFromError',
+      'ErrorBoundary componentWillMount',
+      'ErrorBoundary render error',
+      'ErrorBoundary componentDidMount',
+    ]);
+
+    log.length = 0;
+    ReactDOM.unmountComponentAtNode(container);
+    expect(log).toEqual(['ErrorBoundary componentWillUnmount']);
+  });
+
   it('renders an error state if child throws in render', () => {
     const container = document.createElement('div');
     ReactDOM.render(
@@ -775,14 +808,13 @@ describe('ReactErrorBoundaries', () => {
         </ErrorBoundary>,
         container,
       ),
-    ).toWarnDev(
+    ).toErrorDev(
       'Warning: The <BrokenComponentWillMountWithContext /> component appears to be a function component that ' +
         'returns a class instance. ' +
         'Change BrokenComponentWillMountWithContext to a class that extends React.Component instead. ' +
         "If you can't use a class try assigning the prototype on the function as a workaround. " +
         '`BrokenComponentWillMountWithContext.prototype = React.Component.prototype`. ' +
         "Don't use an arrow function since it cannot be called with `new` by React.",
-      {withoutStack: true},
     );
 
     expect(container.firstChild.textContent).toBe('Caught an error: Hello.');
@@ -1835,25 +1867,26 @@ describe('ReactErrorBoundaries', () => {
 
   it('catches errors in useEffect', () => {
     const container = document.createElement('div');
-    ReactDOM.render(
-      <ErrorBoundary>
-        <BrokenUseEffect>Initial value</BrokenUseEffect>
-      </ErrorBoundary>,
-      container,
-    );
-    expect(log).toEqual([
-      'ErrorBoundary constructor',
-      'ErrorBoundary componentWillMount',
-      'ErrorBoundary render success',
-      'BrokenUseEffect render',
-      'ErrorBoundary componentDidMount',
-    ]);
+    act(() => {
+      ReactDOM.render(
+        <ErrorBoundary>
+          <BrokenUseEffect>Initial value</BrokenUseEffect>
+        </ErrorBoundary>,
+        container,
+      );
+      expect(log).toEqual([
+        'ErrorBoundary constructor',
+        'ErrorBoundary componentWillMount',
+        'ErrorBoundary render success',
+        'BrokenUseEffect render',
+        'ErrorBoundary componentDidMount',
+      ]);
 
-    expect(container.firstChild.textContent).toBe('Initial value');
-    log.length = 0;
+      expect(container.firstChild.textContent).toBe('Initial value');
+      log.length = 0;
+    });
 
-    // Flush passive effects and handle the error
-    Scheduler.flushAll();
+    // verify flushed passive effects and handle the error
     expect(log).toEqual([
       'BrokenUseEffect useEffect [!]',
       // Handle the error
@@ -2039,7 +2072,7 @@ describe('ReactErrorBoundaries', () => {
 
     try {
       let container = document.createElement('div');
-      expect(() => ReactDOM.render(<X />, container)).toWarnDev(
+      expect(() => ReactDOM.render(<X />, container)).toErrorDev(
         'React.createElement: type is invalid -- expected a string ' +
           '(for built-in components) or a class/function ' +
           '(for composite components) but got: null.',
@@ -2049,7 +2082,7 @@ describe('ReactErrorBoundaries', () => {
     }
     try {
       let container = document.createElement('div');
-      expect(() => ReactDOM.render(<Y />, container)).toWarnDev(
+      expect(() => ReactDOM.render(<Y />, container)).toErrorDev(
         'React.createElement: type is invalid -- expected a string ' +
           '(for built-in components) or a class/function ' +
           '(for composite components) but got: undefined.',
@@ -2207,10 +2240,9 @@ describe('ReactErrorBoundaries', () => {
         </InvalidErrorBoundary>,
         container,
       );
-    }).toWarnDev(
+    }).toErrorDev(
       'InvalidErrorBoundary: Error boundaries should implement getDerivedStateFromError(). ' +
         'In that method, return a state update to display an error message or fallback UI.',
-      {withoutStack: true},
     );
     expect(container.textContent).toBe('');
   });

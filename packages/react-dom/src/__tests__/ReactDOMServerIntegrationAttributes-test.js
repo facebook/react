@@ -13,6 +13,7 @@ const ReactDOMServerIntegrationUtils = require('./utils/ReactDOMServerIntegratio
 
 let React;
 let ReactDOM;
+let ReactTestUtils;
 let ReactDOMServer;
 
 function initModules() {
@@ -21,11 +22,13 @@ function initModules() {
   React = require('react');
   ReactDOM = require('react-dom');
   ReactDOMServer = require('react-dom/server');
+  ReactTestUtils = require('react-dom/test-utils');
 
   // Make them available to the helpers.
   return {
     ReactDOM,
     ReactDOMServer,
+    ReactTestUtils,
   };
 }
 
@@ -398,6 +401,11 @@ describe('ReactDOMServerIntegration', () => {
         expect(e.style.Foo).toBe('5');
       });
 
+      itRenders('camel cased custom properties', async render => {
+        const e = await render(<div style={{'--someColor': '#000000'}} />);
+        expect(e.style.SomeColor).toBe('#000000');
+      });
+
       itRenders('no undefined styles', async render => {
         const e = await render(
           <div style={{color: undefined, width: '30px'}} />,
@@ -598,7 +606,7 @@ describe('ReactDOMServerIntegration', () => {
         // so that it gets deduplicated later, and doesn't fail the test.
         expect(() => {
           ReactDOM.render(<nonstandard />, document.createElement('div'));
-        }).toWarnDev('The tag <nonstandard> is unrecognized in this browser.');
+        }).toErrorDev('The tag <nonstandard> is unrecognized in this browser.');
 
         const e = await render(<nonstandard foo="bar" />);
         expect(e.getAttribute('foo')).toBe('bar');
@@ -628,10 +636,7 @@ describe('ReactDOMServerIntegration', () => {
     });
 
     itRenders('no unknown events', async render => {
-      const e = await render(
-        <div onunknownevent="alert(&quot;hack&quot;)" />,
-        1,
-      );
+      const e = await render(<div onunknownevent='alert("hack")' />, 1);
       expect(e.getAttribute('onunknownevent')).toBe(null);
     });
 

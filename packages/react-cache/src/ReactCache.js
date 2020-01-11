@@ -8,17 +8,15 @@
  */
 
 import React from 'react';
-import warningWithoutStack from 'shared/warningWithoutStack';
 
 import {createLRU} from './LRU';
 
 type Thenable<T> = {
   then(resolve: (T) => mixed, reject: (mixed) => mixed): mixed,
+  ...
 };
 
-type Suspender = {
-  then(resolve: () => mixed, reject: () => mixed): mixed,
-};
+type Suspender = {then(resolve: () => mixed, reject: () => mixed): mixed, ...};
 
 type PendingResult = {|
   status: 0,
@@ -40,6 +38,7 @@ type Result<V> = PendingResult | ResolvedResult<V> | RejectedResult;
 type Resource<I, V> = {
   read(I): V,
   preload(I): void,
+  ...
 };
 
 const Pending = 0;
@@ -64,18 +63,21 @@ function readContext(Context, observedBits) {
 
 function identityHashFn(input) {
   if (__DEV__) {
-    warningWithoutStack(
-      typeof input === 'string' ||
-        typeof input === 'number' ||
-        typeof input === 'boolean' ||
-        input === undefined ||
-        input === null,
-      'Invalid key type. Expected a string, number, symbol, or boolean, ' +
-        'but instead received: %s' +
-        '\n\nTo use non-primitive values as keys, you must pass a hash ' +
-        'function as the second argument to createResource().',
-      input,
-    );
+    if (
+      typeof input !== 'string' &&
+      typeof input !== 'number' &&
+      typeof input !== 'boolean' &&
+      input !== undefined &&
+      input !== null
+    ) {
+      console.error(
+        'Invalid key type. Expected a string, number, symbol, or boolean, ' +
+          'but instead received: %s' +
+          '\n\nTo use non-primitive values as keys, you must pass a hash ' +
+          'function as the second argument to createResource().',
+        input,
+      );
+    }
   }
   return input;
 }

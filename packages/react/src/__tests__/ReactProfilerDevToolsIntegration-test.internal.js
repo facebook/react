@@ -47,7 +47,7 @@ describe('ReactProfiler DevTools integration', () => {
       }
       render() {
         // Simulate time passing when this component is rendered
-        Scheduler.advanceTime(this.props.byAmount);
+        Scheduler.unstable_advanceTime(this.props.byAmount);
         return this.props.children || null;
       }
     };
@@ -55,7 +55,7 @@ describe('ReactProfiler DevTools integration', () => {
 
   it('should auto-Profile all fibers if the DevTools hook is detected', () => {
     const App = ({multiplier}) => {
-      Scheduler.advanceTime(2);
+      Scheduler.unstable_advanceTime(2);
       return (
         <React.Profiler id="Profiler" onRender={onRender}>
           <AdvanceTime byAmount={3 * multiplier} shouldComponentUpdate={true} />
@@ -121,7 +121,7 @@ describe('ReactProfiler DevTools integration', () => {
   });
 
   it('should reset the fiber stack correctly after an error when profiling host roots', () => {
-    Scheduler.advanceTime(20);
+    Scheduler.unstable_advanceTime(20);
 
     const rendered = ReactTestRenderer.create(
       <div>
@@ -129,7 +129,7 @@ describe('ReactProfiler DevTools integration', () => {
       </div>,
     );
 
-    Scheduler.advanceTime(20);
+    Scheduler.unstable_advanceTime(20);
 
     expect(() => {
       rendered.update(
@@ -139,7 +139,7 @@ describe('ReactProfiler DevTools integration', () => {
       );
     }).toThrow();
 
-    Scheduler.advanceTime(20);
+    Scheduler.unstable_advanceTime(20);
 
     // But this should render correctly, if the profiler's fiber stack has been reset.
     rendered.update(
@@ -164,7 +164,7 @@ describe('ReactProfiler DevTools integration', () => {
     const root = rendered.root._currentFiber().return;
     expect(root.stateNode.memoizedInteractions).toContainNoInteractions();
 
-    Scheduler.advanceTime(10);
+    Scheduler.unstable_advanceTime(10);
 
     const eventTime = Scheduler.unstable_now();
 
@@ -176,5 +176,31 @@ describe('ReactProfiler DevTools integration', () => {
     expect(root.stateNode.memoizedInteractions).toMatchInteractions([
       {name: 'some event', timestamp: eventTime},
     ]);
+  });
+
+  it('regression test: #17159', () => {
+    function Text({text}) {
+      Scheduler.unstable_yieldValue(text);
+      return text;
+    }
+
+    const root = ReactTestRenderer.create(null, {unstable_isConcurrent: true});
+
+    // Commit something
+    root.update(<Text text="A" />);
+    expect(Scheduler).toFlushAndYield(['A']);
+    expect(root).toMatchRenderedOutput('A');
+
+    // Advance time by many seconds, larger than the default expiration time
+    // for updates.
+    Scheduler.unstable_advanceTime(10000);
+    // Schedule an update.
+    root.update(<Text text="B" />);
+
+    // Update B should not instantly expire.
+    expect(Scheduler).toFlushExpired([]);
+
+    expect(Scheduler).toFlushAndYield(['B']);
+    expect(root).toMatchRenderedOutput('B');
   });
 });

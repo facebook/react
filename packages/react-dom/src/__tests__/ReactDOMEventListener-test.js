@@ -446,4 +446,31 @@ describe('ReactDOMEventListener', () => {
       document.body.removeChild(container);
     }
   });
+
+  it('should dispatch load for embed elements', () => {
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+
+    try {
+      const ref = React.createRef();
+      const handleLoad = jest.fn();
+
+      ReactDOM.render(
+        <div>
+          <embed ref={ref} onLoad={handleLoad} />
+        </div>,
+        container,
+      );
+
+      ref.current.dispatchEvent(
+        new ProgressEvent('load', {
+          bubbles: false,
+        }),
+      );
+
+      expect(handleLoad).toHaveBeenCalledTimes(1);
+    } finally {
+      document.body.removeChild(container);
+    }
+  });
 });

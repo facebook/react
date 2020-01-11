@@ -23,6 +23,7 @@ export type ProfilerTimer = {
   startProfilerTimer(fiber: Fiber): void,
   stopProfilerTimerIfRunning(fiber: Fiber): void,
   stopProfilerTimerIfRunningAndRecordDelta(fiber: Fiber): void,
+  ...
 };
 
 let commitTime: number = 0;

@@ -23,11 +23,14 @@ export function addEventCaptureListener(
   element.addEventListener(eventType, listener, true);
 }
 
-export function addEventListener(
+export function addEventCaptureListenerWithPassiveFlag(
   element: Document | Element | Node,
   eventType: string,
   listener: Function,
-  options: {passive: boolean},
+  passive: boolean,
 ): void {
-  element.addEventListener(eventType, listener, (options: any));
+  element.addEventListener(eventType, listener, {
+    capture: true,
+    passive,
+  });
 }

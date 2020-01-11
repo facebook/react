@@ -57,9 +57,7 @@ const forks = Object.freeze({
           'from "' +
           entry +
           '" because it does not declare "react" in the package ' +
-          'dependencies or peerDependencies. For example, this can happen if you use ' +
-          'warning() instead of warningWithoutStack() in a package that does not ' +
-          'depend on React.'
+          'dependencies or peerDependencies.'
       );
     }
     return null;
@@ -180,25 +178,10 @@ const forks = Object.freeze({
     return 'scheduler/src/forks/SchedulerHostConfig.default';
   },
 
-  // This logic is forked on www to ignore some warnings.
-  'shared/lowPriorityWarning': (bundleType, entry) => {
+  'shared/consoleWithStackDev': (bundleType, entry) => {
     switch (bundleType) {
       case FB_WWW_DEV:
-      case FB_WWW_PROD:
-      case FB_WWW_PROFILING:
-        return 'shared/forks/lowPriorityWarning.www.js';
-      default:
-        return null;
-    }
-  },
-
-  // This logic is forked on www to ignore some warnings.
-  'shared/warningWithoutStack': (bundleType, entry) => {
-    switch (bundleType) {
-      case FB_WWW_DEV:
-      case FB_WWW_PROD:
-      case FB_WWW_PROFILING:
-        return 'shared/forks/warningWithoutStack.www.js';
+        return 'shared/forks/consoleWithStackDev.www.js';
       default:
         return null;
     }
@@ -225,6 +208,17 @@ const forks = Object.freeze({
       case FB_WWW_PROD:
       case FB_WWW_PROFILING:
         return 'react/src/forks/ReactCurrentDispatcher.www.js';
+      default:
+        return null;
+    }
+  },
+
+  'react/src/ReactSharedInternals.js': (bundleType, entry) => {
+    switch (bundleType) {
+      case UMD_DEV:
+      case UMD_PROD:
+      case UMD_PROFILING:
+        return 'react/src/forks/ReactSharedInternals.umd.js';
       default:
         return null;
     }
@@ -284,9 +278,7 @@ const forks = Object.freeze({
     // eslint-disable-next-line no-for-of-loops/no-for-of-loops
     for (let rendererInfo of inlinedHostConfigs) {
       if (rendererInfo.entryPoints.indexOf(entry) !== -1) {
-        return `react-reconciler/src/forks/ReactFiberHostConfig.${
-          rendererInfo.shortName
-        }.js`;
+        return `react-reconciler/src/forks/ReactFiberHostConfig.${rendererInfo.shortName}.js`;
       }
     }
     throw new Error(
@@ -296,13 +288,13 @@ const forks = Object.freeze({
     );
   },
 
-  'react-stream/src/ReactFizzHostConfig': (
+  'react-server/src/ReactServerHostConfig': (
     bundleType,
     entry,
     dependencies,
     moduleType
   ) => {
-    if (dependencies.indexOf('react-stream') !== -1) {
+    if (dependencies.indexOf('react-server') !== -1) {
       return null;
     }
     if (moduleType !== RENDERER && moduleType !== RECONCILER) {
@@ -311,28 +303,26 @@ const forks = Object.freeze({
     // eslint-disable-next-line no-for-of-loops/no-for-of-loops
     for (let rendererInfo of inlinedHostConfigs) {
       if (rendererInfo.entryPoints.indexOf(entry) !== -1) {
-        if (!rendererInfo.isFizzSupported) {
+        if (!rendererInfo.isServerSupported) {
           return null;
         }
-        return `react-stream/src/forks/ReactFizzHostConfig.${
-          rendererInfo.shortName
-        }.js`;
+        return `react-server/src/forks/ReactServerHostConfig.${rendererInfo.shortName}.js`;
       }
     }
     throw new Error(
-      'Expected ReactFizzHostConfig to always be replaced with a shim, but ' +
+      'Expected ReactServerHostConfig to always be replaced with a shim, but ' +
         `found no mention of "${entry}" entry point in ./scripts/shared/inlinedHostConfigs.js. ` +
         'Did you mean to add it there to associate it with a specific renderer?'
     );
   },
 
-  'react-stream/src/ReactFizzFormatConfig': (
+  'react-server/src/ReactServerFormatConfig': (
     bundleType,
     entry,
     dependencies,
     moduleType
   ) => {
-    if (dependencies.indexOf('react-stream') !== -1) {
+    if (dependencies.indexOf('react-server') !== -1) {
       return null;
     }
     if (moduleType !== RENDERER && moduleType !== RECONCILER) {
@@ -341,16 +331,42 @@ const forks = Object.freeze({
     // eslint-disable-next-line no-for-of-loops/no-for-of-loops
     for (let rendererInfo of inlinedHostConfigs) {
       if (rendererInfo.entryPoints.indexOf(entry) !== -1) {
-        if (!rendererInfo.isFizzSupported) {
+        if (!rendererInfo.isServerSupported) {
           return null;
         }
-        return `react-stream/src/forks/ReactFizzFormatConfig.${
-          rendererInfo.shortName
-        }.js`;
+        return `react-server/src/forks/ReactServerFormatConfig.${rendererInfo.shortName}.js`;
       }
     }
     throw new Error(
-      'Expected ReactFizzFormatConfig to always be replaced with a shim, but ' +
+      'Expected ReactServerFormatConfig to always be replaced with a shim, but ' +
+        `found no mention of "${entry}" entry point in ./scripts/shared/inlinedHostConfigs.js. ` +
+        'Did you mean to add it there to associate it with a specific renderer?'
+    );
+  },
+
+  'react-flight/src/ReactFlightClientHostConfig': (
+    bundleType,
+    entry,
+    dependencies,
+    moduleType
+  ) => {
+    if (dependencies.indexOf('react-flight') !== -1) {
+      return null;
+    }
+    if (moduleType !== RENDERER && moduleType !== RECONCILER) {
+      return null;
+    }
+    // eslint-disable-next-line no-for-of-loops/no-for-of-loops
+    for (let rendererInfo of inlinedHostConfigs) {
+      if (rendererInfo.entryPoints.indexOf(entry) !== -1) {
+        if (!rendererInfo.isServerSupported) {
+          return null;
+        }
+        return `react-flight/src/forks/ReactFlightClientHostConfig.${rendererInfo.shortName}.js`;
+      }
+    }
+    throw new Error(
+      'Expected ReactFlightClientHostConfig to always be replaced with a shim, but ' +
         `found no mention of "${entry}" entry point in ./scripts/shared/inlinedHostConfigs.js. ` +
         'Did you mean to add it there to associate it with a specific renderer?'
     );
@@ -370,9 +386,9 @@ const forks = Object.freeze({
   },
 
   // React DOM uses different top level event names and supports mouse events.
-  'events/ResponderTopLevelEventTypes': (bundleType, entry) => {
+  'legacy-events/ResponderTopLevelEventTypes': (bundleType, entry) => {
     if (entry === 'react-dom' || entry.startsWith('react-dom/')) {
-      return 'events/forks/ResponderTopLevelEventTypes.dom.js';
+      return 'legacy-events/forks/ResponderTopLevelEventTypes.dom.js';
     }
     return null;
   },

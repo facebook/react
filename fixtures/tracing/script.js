@@ -176,7 +176,7 @@ function checkEndToEndIntegration() {
       SchedulerTracing.unstable_trace('render', 123, () => {
         ReactDOM.render(
           React.createElement(
-            React.unstable_Profiler,
+            React.Profiler,
             {id: 'profiler', onRender},
             React.createElement('div', null, 'hi')
           ),

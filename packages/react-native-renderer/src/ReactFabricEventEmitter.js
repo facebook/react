@@ -9,12 +9,17 @@
 
 import type {Fiber} from 'react-reconciler/src/ReactFiber';
 
-import {getListener, runExtractedEventsInBatch} from 'events/EventPluginHub';
-import {registrationNameModules} from 'events/EventPluginRegistry';
-import {batchedUpdates} from 'events/ReactGenericBatching';
+import {PLUGIN_EVENT_SYSTEM} from 'legacy-events/EventSystemFlags';
+import {
+  getListener,
+  runExtractedPluginEventsInBatch,
+} from 'legacy-events/EventPluginHub';
+import {registrationNameModules} from 'legacy-events/EventPluginRegistry';
+import {batchedUpdates} from 'legacy-events/ReactGenericBatching';
 
-import type {AnyNativeEvent} from 'events/PluginModuleType';
-import type {TopLevelType} from 'events/TopLevelEventTypes';
+import type {AnyNativeEvent} from 'legacy-events/PluginModuleType';
+import {enableNativeTargetAsInstance} from 'shared/ReactFeatureFlags';
+import type {TopLevelType} from 'legacy-events/TopLevelEventTypes';
 
 export {getListener, registrationNameModules as registrationNames};
 
@@ -24,12 +29,24 @@ export function dispatchEvent(
   nativeEvent: AnyNativeEvent,
 ) {
   const targetFiber = (target: null | Fiber);
+
+  let eventTarget = null;
+  if (enableNativeTargetAsInstance) {
+    if (targetFiber != null) {
+      eventTarget = targetFiber.stateNode.canonical;
+    }
+  } else {
+    eventTarget = nativeEvent.target;
+  }
+
   batchedUpdates(function() {
-    runExtractedEventsInBatch(
+    // Heritage plugin event system
+    runExtractedPluginEventsInBatch(
       topLevelType,
       targetFiber,
       nativeEvent,
-      nativeEvent.target,
+      eventTarget,
+      PLUGIN_EVENT_SYSTEM,
     );
   });
   // React Native doesn't use ReactControlledComponent but if it did, here's

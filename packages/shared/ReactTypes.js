@@ -13,9 +13,7 @@ export type ReactNode =
   | ReactText
   | ReactFragment
   | ReactProvider<any>
-  | ReactConsumer<any>
-  | ReactEventComponent
-  | ReactEventTarget;
+  | ReactConsumer<any>;
 
 export type ReactEmpty = null | void | boolean;
 
@@ -33,12 +31,15 @@ export type ReactProvider<T> = {
   props: {
     value: T,
     children?: ReactNodeList,
+    ...
   },
+  ...
 };
 
 export type ReactProviderType<T> = {
   $$typeof: Symbol | number,
   _context: ReactContext<T>,
+  ...
 };
 
 export type ReactConsumer<T> = {
@@ -49,23 +50,23 @@ export type ReactConsumer<T> = {
   props: {
     children: (value: T) => ReactNodeList,
     unstable_observedBits?: number,
+    ...
   },
+  ...
 };
 
 export type ReactContext<T> = {
   $$typeof: Symbol | number,
   Consumer: ReactContext<T>,
   Provider: ReactProviderType<T>,
-
   _calculateChangedBits: ((a: T, b: T) => number) | null,
-
   _currentValue: T,
   _currentValue2: T,
   _threadCount: number,
-
   // DEV only
   _currentRenderer?: Object | null,
   _currentRenderer2?: Object | null,
+  ...
 };
 
 export type ReactPortal = {
@@ -75,29 +76,115 @@ export type ReactPortal = {
   children: ReactNodeList,
   // TODO: figure out the API for cross-renderer implementation.
   implementation: any,
+  ...
 };
 
 export type RefObject = {|
   current: any,
 |};
 
-export type ReactEventResponderEventType =
-  | string
-  | {name: string, passive?: boolean, capture?: boolean};
-
-export type ReactEventResponder = {
-  targetEventTypes: Array<ReactEventResponderEventType>,
-  createInitialState?: (props: Object) => Object,
-  handleEvent: (context: Object, props: Object, state: Object) => void,
-};
-
-export type ReactEventComponent = {|
-  $$typeof: Symbol | number,
-  props: null | Object,
-  responder: ReactEventResponder,
+export type ReactEventResponderInstance<E, C> = {|
+  fiber: Object,
+  props: Object,
+  responder: ReactEventResponder<E, C>,
+  rootEventTypes: null | Set<string>,
+  state: Object,
 |};
 
-export type ReactEventTarget = {|
+export type ReactEventResponderListener<E, C> = {|
+  props: Object,
+  responder: ReactEventResponder<E, C>,
+|};
+
+export type ReactEventResponder<E, C> = {
   $$typeof: Symbol | number,
-  type: Symbol | number,
+  displayName: string,
+  targetEventTypes: null | Array<string>,
+  targetPortalPropagation: boolean,
+  rootEventTypes: null | Array<string>,
+  getInitialState: null | ((props: Object) => Object),
+  onEvent:
+    | null
+    | ((event: E, context: C, props: Object, state: Object) => void),
+  onRootEvent:
+    | null
+    | ((event: E, context: C, props: Object, state: Object) => void),
+  onMount: null | ((context: C, props: Object, state: Object) => void),
+  onUnmount: null | ((context: C, props: Object, state: Object) => void),
+  ...
+};
+
+export type EventPriority = 0 | 1 | 2;
+
+export const DiscreteEvent: EventPriority = 0;
+export const UserBlockingEvent: EventPriority = 1;
+export const ContinuousEvent: EventPriority = 2;
+
+export type ReactFundamentalComponentInstance<C, H> = {|
+  currentFiber: mixed,
+  instance: mixed,
+  prevProps: null | Object,
+  props: Object,
+  impl: ReactFundamentalImpl<C, H>,
+  state: Object,
+|};
+
+export type ReactFundamentalImpl<C, H> = {
+  displayName: string,
+  reconcileChildren: boolean,
+  getInitialState?: (props: Object) => Object,
+  getInstance: (context: C, props: Object, state: Object) => H,
+  getServerSideString?: (context: C, props: Object) => string,
+  getServerSideStringClose?: (context: C, props: Object) => string,
+  onMount: (context: C, instance: mixed, props: Object, state: Object) => void,
+  shouldUpdate?: (
+    context: C,
+    prevProps: null | Object,
+    nextProps: Object,
+    state: Object,
+  ) => boolean,
+  onUpdate?: (
+    context: C,
+    instance: mixed,
+    prevProps: null | Object,
+    nextProps: Object,
+    state: Object,
+  ) => void,
+  onUnmount?: (
+    context: C,
+    instance: mixed,
+    props: Object,
+    state: Object,
+  ) => void,
+  onHydrate?: (context: C, props: Object, state: Object) => boolean,
+  onFocus?: (context: C, props: Object, state: Object) => boolean,
+  ...
+};
+
+export type ReactFundamentalComponent<C, H> = {|
+  $$typeof: Symbol | number,
+  impl: ReactFundamentalImpl<C, H>,
+|};
+
+export type ReactScope = {|
+  $$typeof: Symbol | number,
+|};
+
+export type ReactScopeMethods = {|
+  getChildren(): null | Array<ReactScopeMethods>,
+  getChildrenFromRoot(): null | Array<ReactScopeMethods>,
+  getParent(): null | ReactScopeMethods,
+  getProps(): Object,
+  queryAllNodes(
+    (type: string | Object, props: Object, instance: Object) => boolean,
+  ): null | Array<Object>,
+  queryFirstNode(
+    (type: string | Object, props: Object, instance: Object) => boolean,
+  ): null | Object,
+  containsNode(Object): boolean,
+|};
+
+export type ReactScopeInstance = {|
+  fiber: Object,
+  methods: null | ReactScopeMethods,
 |};

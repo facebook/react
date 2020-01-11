@@ -12,7 +12,7 @@ const ReactHooksESLintPlugin = require('eslint-plugin-react-hooks');
 const ReactHooksESLintRule = ReactHooksESLintPlugin.rules['exhaustive-deps'];
 
 ESLintTester.setDefaultConfig({
-  parser: 'babel-eslint',
+  parser: require.resolve('babel-eslint'),
   parserOptions: {
     ecmaVersion: 6,
     sourceType: 'module',
@@ -270,6 +270,16 @@ const tests = {
       options: [{additionalHooks: 'useCustomEffect'}],
     },
     {
+      code: `
+        function MyComponent(props) {
+          useCustomEffect(() => {
+            console.log(props.foo);
+          }, []);
+        }
+      `,
+      options: [{additionalHooks: 'useAnotherEffect'}],
+    },
+    {
       // Valid because we don't care about hooks outside of components.
       code: `
         const local = {};
@@ -511,7 +521,6 @@ const tests = {
       // Valid because the ref is captured.
       code: `
         function useMyThing(myRef) {
-          const myRef = useRef();
           useEffect(() => {
             const handleMove = () => {};
             const node = myRef.current;
@@ -1001,6 +1010,38 @@ const tests = {
             window.addEventListener('resize', handleResize);
             return () => window.removeEventListener('resize', handleResize);
           });
+        }
+      `,
+    },
+    // Ignore Generic Type Variables for arrow functions
+    {
+      code: `
+        function Example({ prop }) {
+          const bar = useEffect(<T>(a: T): Hello => {
+            prop();
+          }, [prop]);
+        }
+      `,
+    },
+    // Ignore arguments keyword for arrow functions.
+    {
+      code: `
+        function Example() {
+          useEffect(() => {
+            arguments
+          }, [])
+        }
+      `,
+    },
+    {
+      code: `
+        function Example() {
+          useEffect(() => {
+            const bar = () => {
+              arguments;
+            };
+            bar();
+          }, [])
         }
       `,
     },
@@ -3112,6 +3153,37 @@ const tests = {
           `rendered by React, copy 'myRef.current' to a variable inside the effect, ` +
           `and use that variable in the cleanup function.`,
       ],
+    },
+    {
+      code: `
+        function MyComponent() {
+          const myRef = useRef();
+          useLayoutEffect_SAFE_FOR_SSR(() => {
+            const handleMove = () => {};
+            myRef.current.addEventListener('mousemove', handleMove);
+            return () => myRef.current.removeEventListener('mousemove', handleMove);
+          });
+          return <div ref={myRef} />;
+        }
+      `,
+      output: `
+        function MyComponent() {
+          const myRef = useRef();
+          useLayoutEffect_SAFE_FOR_SSR(() => {
+            const handleMove = () => {};
+            myRef.current.addEventListener('mousemove', handleMove);
+            return () => myRef.current.removeEventListener('mousemove', handleMove);
+          });
+          return <div ref={myRef} />;
+        }
+      `,
+      errors: [
+        `The ref value 'myRef.current' will likely have changed by the time ` +
+          `this effect cleanup function runs. If this ref points to a node ` +
+          `rendered by React, copy 'myRef.current' to a variable inside the effect, ` +
+          `and use that variable in the cleanup function.`,
+      ],
+      options: [{additionalHooks: 'useLayoutEffect_SAFE_FOR_SSR'}],
     },
     {
       // Autofix ignores constant primitives (leaving the ones that are there).

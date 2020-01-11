@@ -1,0 +1,118 @@
+.SelectedElement {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+  border-left: 1px solid var(--color-border);
+  border-top: 1px solid var(--color-border);
+}
+
+.TitleRow {
+  flex: 0 0 42px;
+  display: flex;
+  align-items: center;
+  font-size: var(--font-size-monospace-large);
+  border-bottom: 1px solid var(--color-border);
+  padding: 0.5rem;
+}
+
+.SelectedComponentName {
+  flex: 1 1 auto;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.Owners {
+  padding: 0.25rem;
+  border-top: 1px solid var(--color-border);
+}
+
+.OwnersHeader {
+  font-family: var(--font-family-sans);
+}
+
+.Source {
+  padding: 0.25rem;
+  border-top: 1px solid var(--color-border);
+}
+
+.SourceHeaderRow {
+  display: flex;
+  align-items: center;
+}
+
+.SourceHeader {
+  flex: 1 1;
+  font-family: var(--font-family-sans);
+}
+
+.SourceOneLiner {
+  font-family: var(--font-family-monospace);
+  font-size: var(--font-size-monospace-normal);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+  margin-left: 1rem;
+}
+
+.Component,
+.Owner {
+  color: var(--color-component-name);
+  font-family: var(--font-family-monospace);
+  font-size: var(--font-size-monospace-normal);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+.Component {
+  flex: 1 1 auto;
+}
+
+.InspectedElement {
+  overflow-x: hidden;
+  overflow-y: auto;
+  font-family: var(--font-family-monospace);
+  font-size: var(--font-size-monospace-normal);
+  line-height: var(--line-height-data);
+}
+
+.Owner {
+  border-radius: 0.25rem;
+  padding: 0.125rem 0.25rem;
+  cursor: pointer;
+  background: none;
+  border: none;
+  display: block;
+}
+.Owner:focus {
+  outline: none;
+  background-color: var(--color-button-background-focus);
+}
+
+.Loading {
+  padding: 0.25rem;
+  color: var(--color-dimmer);
+  font-style: italic;
+}
+
+.CannotSuspendWarningMessage {
+}
+
+.NotInStore {
+  color: var(--color-dim);
+  cursor: default;
+}
+
+.OwnerButton {
+  display: flex;
+  align-items: center;
+  margin-left: 0.5rem;
+  padding: 0;
+}
+
+.ContextMenuIcon {
+  margin-right: 0.5rem;
+}

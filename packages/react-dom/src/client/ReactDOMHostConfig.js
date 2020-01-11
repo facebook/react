@@ -7,9 +7,11 @@
  * @flow
  */
 
-import * as Scheduler from 'scheduler';
-
-import {precacheFiberNode, updateFiberProps} from './ReactDOMComponentTree';
+import {
+  precacheFiberNode,
+  updateFiberProps,
+  getClosestInstanceFromNode,
+} from './ReactDOMComponentTree';
 import {
   createElement,
   createTextNode,
@@ -24,7 +26,7 @@ import {
   warnForDeletedHydratableText,
   warnForInsertedHydratedElement,
   warnForInsertedHydratedText,
-  listenToEventResponderEvents,
+  listenToEventResponderEventTypes,
 } from './ReactDOMComponent';
 import {getSelectionInformation, restoreSelection} from './ReactInputSelection';
 import setTextContent from './setTextContent';
@@ -44,13 +46,17 @@ import {
 import dangerousStyleValue from '../shared/dangerousStyleValue';
 
 import type {DOMContainer} from './ReactDOM';
-import type {ReactEventResponder} from 'shared/ReactTypes';
+import type {
+  ReactDOMEventResponder,
+  ReactDOMEventResponderInstance,
+  ReactDOMFundamentalComponentInstance,
+} from 'shared/ReactDOMTypes';
 import {
-  REACT_EVENT_COMPONENT_TYPE,
-  REACT_EVENT_TARGET_TYPE,
-  REACT_EVENT_TARGET_TOUCH_HIT,
-} from 'shared/ReactSymbols';
-import getElementFromTouchHitTarget from 'shared/getElementFromTouchHitTarget';
+  mountEventResponder,
+  unmountEventResponder,
+  DEPRECATED_dispatchEventForResponderEventSystem,
+} from '../events/DeprecatedDOMEventResponderSystem';
+import {retryIfBlockedOn} from '../events/ReactDOMEventReplaying';
 
 export type Type = string;
 export type Props = {
@@ -59,23 +65,39 @@ export type Props = {
   hidden?: boolean,
   suppressHydrationWarning?: boolean,
   dangerouslySetInnerHTML?: mixed,
-  style?: {
-    display?: string,
+  style?: {display?: string, ...},
+  bottom?: null | number,
+  left?: null | number,
+  right?: null | number,
+  top?: null | number,
+  ...
+};
+export type EventTargetChildElement = {
+  type: string,
+  props: null | {
+    style?: {
+      position?: string,
+      zIndex?: number,
+      bottom?: string,
+      left?: string,
+      right?: string,
+      top?: string,
+      ...
+    },
+    ...
   },
+  ...
 };
 export type Container = Element | Document;
 export type Instance = Element;
 export type TextInstance = Text;
-export type SuspenseInstance = Comment & {_reactRetry?: () => void};
+export type SuspenseInstance = Comment & {_reactRetry?: () => void, ...};
 export type HydratableInstance = Instance | TextInstance | SuspenseInstance;
 export type PublicInstance = Element | Text;
 type HostContextDev = {
   namespace: string,
   ancestorInfo: mixed,
-  eventData: null | {|
-    isEventComponent?: boolean,
-    isEventTarget?: boolean,
-  |},
+  ...
 };
 type HostContextProd = string;
 export type HostContext = HostContextDev | HostContextProd;
@@ -84,22 +106,21 @@ export type ChildSet = void; // Unused
 export type TimeoutHandle = TimeoutID;
 export type NoTimeout = -1;
 
+type SelectionInformation = {|
+  activeElementDetached: null | HTMLElement,
+  focusedElem: null | HTMLElement,
+  selectionRange: mixed,
+|};
+
 import {
   enableSuspenseServerRenderer,
-  enableEventAPI,
+  enableDeprecatedFlareAPI,
+  enableFundamentalAPI,
 } from 'shared/ReactFeatureFlags';
-import warning from 'shared/warning';
-
-// Intentionally not named imports because Rollup would
-// use dynamic dispatch for CommonJS interop named imports.
-const {
-  unstable_now: now,
-  unstable_scheduleCallback: scheduleDeferredCallback,
-  unstable_shouldYield: shouldYield,
-  unstable_cancelCallback: cancelDeferredCallback,
-} = Scheduler;
-
-export {now, scheduleDeferredCallback, shouldYield, cancelDeferredCallback};
+import {
+  RESPONDER_EVENT_SYSTEM,
+  IS_PASSIVE,
+} from 'legacy-events/EventSystemFlags';
 
 let SUPPRESS_HYDRATION_WARNING;
 if (__DEV__) {
@@ -114,7 +135,7 @@ const SUSPENSE_FALLBACK_START_DATA = '$!';
 const STYLE = 'style';
 
 let eventsEnabled: ?boolean = null;
-let selectionInformation: ?mixed = null;
+let selectionInformation: null | SelectionInformation = null;
 
 function shouldAutoFocusHostComponent(type: string, props: Props): boolean {
   switch (type) {
@@ -157,7 +178,7 @@ export function getRootHostContext(
   if (__DEV__) {
     const validatedTag = type.toLowerCase();
     const ancestorInfo = updatedAncestorInfo(null, validatedTag);
-    return {namespace, ancestorInfo, eventData: null};
+    return {namespace, ancestorInfo};
   }
   return namespace;
 }
@@ -174,40 +195,10 @@ export function getChildHostContext(
       parentHostContextDev.ancestorInfo,
       type,
     );
-    return {namespace, ancestorInfo, eventData: null};
+    return {namespace, ancestorInfo};
   }
   const parentNamespace = ((parentHostContext: any): HostContextProd);
   return getChildNamespace(parentNamespace, type);
-}
-
-export function getChildHostContextForEvent(
-  parentHostContext: HostContext,
-  type: Symbol | number,
-): HostContext {
-  if (__DEV__) {
-    const parentHostContextDev = ((parentHostContext: any): HostContextDev);
-    const {namespace, ancestorInfo} = parentHostContextDev;
-    let eventData = null;
-
-    if (type === REACT_EVENT_COMPONENT_TYPE) {
-      eventData = {
-        isEventComponent: true,
-        isEventTarget: false,
-      };
-    } else if (type === REACT_EVENT_TARGET_TYPE) {
-      warning(
-        parentHostContextDev.eventData !== null &&
-          parentHostContextDev.eventData.isEventComponent,
-        'validateDOMNesting: React event targets must be direct children of event components.',
-      );
-      eventData = {
-        isEventComponent: false,
-        isEventTarget: true,
-      };
-    }
-    return {namespace, ancestorInfo, eventData};
-  }
-  return parentHostContext;
 }
 
 export function getPublicInstance(instance: Instance): * {
@@ -222,9 +213,16 @@ export function prepareForCommit(containerInfo: Container): void {
 
 export function resetAfterCommit(containerInfo: Container): void {
   restoreSelection(selectionInformation);
-  selectionInformation = null;
   ReactBrowserEventEmitterSetEnabled(eventsEnabled);
   eventsEnabled = null;
+  if (enableDeprecatedFlareAPI) {
+    const activeElementDetached = (selectionInformation: any)
+      .activeElementDetached;
+    if (activeElementDetached !== null) {
+      dispatchDetachedBlur(activeElementDetached);
+    }
+  }
+  selectionInformation = null;
 }
 
 export function createInstance(
@@ -341,23 +339,6 @@ export function createTextInstance(
   if (__DEV__) {
     const hostContextDev = ((hostContext: any): HostContextDev);
     validateDOMNesting(null, text, hostContextDev.ancestorInfo);
-    if (enableEventAPI) {
-      const eventData = hostContextDev.eventData;
-      if (eventData !== null) {
-        warning(
-          !eventData.isEventComponent,
-          'validateDOMNesting: React event components cannot have text DOM nodes as children. ' +
-            'Wrap the child text "%s" in an element.',
-          text,
-        );
-        warning(
-          !eventData.isEventTarget,
-          'validateDOMNesting: React event targets cannot have text DOM nodes as children. ' +
-            'Wrap the child text "%s" in an element.',
-          text,
-        );
-      }
-    }
   }
   const textNode: TextInstance = createTextNode(text, rootContainerInstance);
   precacheFiberNode(internalInstanceHandle, textNode);
@@ -365,6 +346,7 @@ export function createTextInstance(
 }
 
 export const isPrimaryRenderer = true;
+export const warnsIfNotActing = true;
 // This initialization code may run even on server environments
 // if a component just imports ReactDOM (e.g. for findDOMNode).
 // Some environments might not have setTimeout or clearTimeout.
@@ -485,6 +467,52 @@ export function insertInContainerBefore(
   }
 }
 
+function dispatchBeforeDetachedBlur(target: HTMLElement): void {
+  const targetInstance = getClosestInstanceFromNode(target);
+  ((selectionInformation: any): SelectionInformation).activeElementDetached = target;
+
+  DEPRECATED_dispatchEventForResponderEventSystem(
+    'beforeblur',
+    targetInstance,
+    ({
+      target,
+      timeStamp: Date.now(),
+    }: any),
+    target,
+    RESPONDER_EVENT_SYSTEM | IS_PASSIVE,
+  );
+}
+
+function dispatchDetachedBlur(target: HTMLElement): void {
+  DEPRECATED_dispatchEventForResponderEventSystem(
+    'blur',
+    null,
+    ({
+      isTargetAttached: false,
+      target,
+      timeStamp: Date.now(),
+    }: any),
+    target,
+    RESPONDER_EVENT_SYSTEM | IS_PASSIVE,
+  );
+}
+
+// This is a specific event for the React Flare
+// event system, so event responders can act
+// accordingly to a DOM node being unmounted that
+// previously had active document focus.
+export function beforeRemoveInstance(
+  instance: Instance | TextInstance | SuspenseInstance,
+): void {
+  if (
+    enableDeprecatedFlareAPI &&
+    selectionInformation &&
+    instance === selectionInformation.focusedElem
+  ) {
+    dispatchBeforeDetachedBlur(((instance: any): HTMLElement));
+  }
+}
+
 export function removeChild(
   parentInstance: Instance,
   child: Instance | TextInstance | SuspenseInstance,
@@ -520,6 +548,8 @@ export function clearSuspenseBoundary(
       if (data === SUSPENSE_END_DATA) {
         if (depth === 0) {
           parentInstance.removeChild(nextNode);
+          // Retry if any event replaying was blocked on this.
+          retryIfBlockedOn(suspenseInstance);
           return;
         } else {
           depth--;
@@ -535,6 +565,8 @@ export function clearSuspenseBoundary(
     node = nextNode;
   } while (node);
   // TODO: Warn, we didn't find the end comment boundary.
+  // Retry if any event replaying was blocked on this.
+  retryIfBlockedOn(suspenseInstance);
 }
 
 export function clearSuspenseBoundaryFromContainer(
@@ -548,13 +580,20 @@ export function clearSuspenseBoundaryFromContainer(
   } else {
     // Document nodes should never contain suspense boundaries.
   }
+  // Retry if any event replaying was blocked on this.
+  retryIfBlockedOn(container);
 }
 
 export function hideInstance(instance: Instance): void {
   // TODO: Does this work for all element types? What about MathML? Should we
   // pass host context to this method?
   instance = ((instance: any): HTMLElement);
-  instance.style.display = 'none';
+  const style = instance.style;
+  if (typeof style.setProperty === 'function') {
+    style.setProperty('display', 'none', 'important');
+  } else {
+    style.display = 'none';
+  }
 }
 
 export function hideTextInstance(textInstance: TextInstance): void {
@@ -639,44 +678,39 @@ export function registerSuspenseInstanceRetry(
   instance._reactRetry = callback;
 }
 
+function getNextHydratable(node) {
+  // Skip non-hydratable nodes.
+  for (; node != null; node = node.nextSibling) {
+    const nodeType = node.nodeType;
+    if (nodeType === ELEMENT_NODE || nodeType === TEXT_NODE) {
+      break;
+    }
+    if (enableSuspenseServerRenderer) {
+      if (nodeType === COMMENT_NODE) {
+        const nodeData = (node: any).data;
+        if (
+          nodeData === SUSPENSE_START_DATA ||
+          nodeData === SUSPENSE_FALLBACK_START_DATA ||
+          nodeData === SUSPENSE_PENDING_START_DATA
+        ) {
+          break;
+        }
+      }
+    }
+  }
+  return (node: any);
+}
+
 export function getNextHydratableSibling(
   instance: HydratableInstance,
 ): null | HydratableInstance {
-  let node = instance.nextSibling;
-  // Skip non-hydratable nodes.
-  while (
-    node &&
-    node.nodeType !== ELEMENT_NODE &&
-    node.nodeType !== TEXT_NODE &&
-    (!enableSuspenseServerRenderer ||
-      node.nodeType !== COMMENT_NODE ||
-      ((node: any).data !== SUSPENSE_START_DATA &&
-        (node: any).data !== SUSPENSE_PENDING_START_DATA &&
-        (node: any).data !== SUSPENSE_FALLBACK_START_DATA))
-  ) {
-    node = node.nextSibling;
-  }
-  return (node: any);
+  return getNextHydratable(instance.nextSibling);
 }
 
 export function getFirstHydratableChild(
   parentInstance: Container | Instance,
 ): null | HydratableInstance {
-  let next = parentInstance.firstChild;
-  // Skip non-hydratable nodes.
-  while (
-    next &&
-    next.nodeType !== ELEMENT_NODE &&
-    next.nodeType !== TEXT_NODE &&
-    (!enableSuspenseServerRenderer ||
-      next.nodeType !== COMMENT_NODE ||
-      ((next: any).data !== SUSPENSE_START_DATA &&
-        (next: any).data !== SUSPENSE_FALLBACK_START_DATA &&
-        (next: any).data !== SUSPENSE_PENDING_START_DATA))
-  ) {
-    next = next.nextSibling;
-  }
-  return (next: any);
+  return getNextHydratable(parentInstance.firstChild);
 }
 
 export function hydrateInstance(
@@ -716,6 +750,13 @@ export function hydrateTextInstance(
   return diffHydratedText(textInstance, text);
 }
 
+export function hydrateSuspenseInstance(
+  suspenseInstance: SuspenseInstance,
+  internalInstanceHandle: Object,
+) {
+  precacheFiberNode(internalInstanceHandle, suspenseInstance);
+}
+
 export function getNextHydratableInstanceAfterSuspenseInstance(
   suspenseInstance: SuspenseInstance,
 ): null | HydratableInstance {
@@ -733,7 +774,11 @@ export function getNextHydratableInstanceAfterSuspenseInstance(
         } else {
           depth--;
         }
-      } else if (data === SUSPENSE_START_DATA) {
+      } else if (
+        data === SUSPENSE_START_DATA ||
+        data === SUSPENSE_FALLBACK_START_DATA ||
+        data === SUSPENSE_PENDING_START_DATA
+      ) {
         depth++;
       }
     }
@@ -741,6 +786,51 @@ export function getNextHydratableInstanceAfterSuspenseInstance(
   }
   // TODO: Warn, we didn't find the end comment boundary.
   return null;
+}
+
+// Returns the SuspenseInstance if this node is a direct child of a
+// SuspenseInstance. I.e. if its previous sibling is a Comment with
+// SUSPENSE_x_START_DATA. Otherwise, null.
+export function getParentSuspenseInstance(
+  targetInstance: Instance,
+): null | SuspenseInstance {
+  let node = targetInstance.previousSibling;
+  // Skip past all nodes within this suspense boundary.
+  // There might be nested nodes so we need to keep track of how
+  // deep we are and only break out when we're back on top.
+  let depth = 0;
+  while (node) {
+    if (node.nodeType === COMMENT_NODE) {
+      let data = ((node: any).data: string);
+      if (
+        data === SUSPENSE_START_DATA ||
+        data === SUSPENSE_FALLBACK_START_DATA ||
+        data === SUSPENSE_PENDING_START_DATA
+      ) {
+        if (depth === 0) {
+          return ((node: any): SuspenseInstance);
+        } else {
+          depth--;
+        }
+      } else if (data === SUSPENSE_END_DATA) {
+        depth++;
+      }
+    }
+    node = node.previousSibling;
+  }
+  return null;
+}
+
+export function commitHydratedContainer(container: Container): void {
+  // Retry if any event replaying was blocked on this.
+  retryIfBlockedOn(container);
+}
+
+export function commitHydratedSuspenseInstance(
+  suspenseInstance: SuspenseInstance,
+): void {
+  // Retry if any event replaying was blocked on this.
+  retryIfBlockedOn(suspenseInstance);
 }
 
 export function didNotMatchHydratedContainerTextInstance(
@@ -857,35 +947,99 @@ export function didNotFindHydratableSuspenseInstance(
   }
 }
 
-export function handleEventComponent(
-  eventResponder: ReactEventResponder,
-  rootContainerInstance: Container,
-  internalInstanceHandle: Object,
-): void {
-  const rootElement = rootContainerInstance.ownerDocument;
-  listenToEventResponderEvents(eventResponder, rootElement);
+export function DEPRECATED_mountResponderInstance(
+  responder: ReactDOMEventResponder,
+  responderInstance: ReactDOMEventResponderInstance,
+  responderProps: Object,
+  responderState: Object,
+  instance: Instance,
+): ReactDOMEventResponderInstance {
+  // Listen to events
+  const doc = instance.ownerDocument;
+  const {targetEventTypes} = ((responder: any): ReactDOMEventResponder);
+  if (targetEventTypes !== null) {
+    listenToEventResponderEventTypes(targetEventTypes, doc);
+  }
+  mountEventResponder(
+    responder,
+    responderInstance,
+    responderProps,
+    responderState,
+  );
+  return responderInstance;
 }
 
-export function handleEventTarget(
-  type: Symbol | number,
-  props: Props,
-  internalInstanceHandle: Object,
+export function DEPRECATED_unmountResponderInstance(
+  responderInstance: ReactDOMEventResponderInstance,
 ): void {
-  // Touch target hit slop handling
-  if (type === REACT_EVENT_TARGET_TOUCH_HIT) {
-    // Validates that there is a single element
-    const element = getElementFromTouchHitTarget(internalInstanceHandle);
-    if (element !== null) {
-      // We update the event target state node to be that of the element.
-      // We can then diff this entry to determine if we need to add the
-      // hit slop element, or change the dimensions of the hit slop.
-      const lastElement = internalInstanceHandle.stateNode;
-      if (lastElement !== element) {
-        internalInstanceHandle.stateNode = element;
-        // TODO: Create the hit slop element and attach it to the element
-      } else {
-        // TODO: Diff the left, top, right, bottom props
-      }
+  if (enableDeprecatedFlareAPI) {
+    // TODO stop listening to targetEventTypes
+    unmountEventResponder(responderInstance);
+  }
+}
+
+export function getFundamentalComponentInstance(
+  fundamentalInstance: ReactDOMFundamentalComponentInstance,
+): Instance {
+  if (enableFundamentalAPI) {
+    const {currentFiber, impl, props, state} = fundamentalInstance;
+    const instance = impl.getInstance(null, props, state);
+    precacheFiberNode(currentFiber, instance);
+    return instance;
+  }
+  // Because of the flag above, this gets around the Flow error;
+  return (null: any);
+}
+
+export function mountFundamentalComponent(
+  fundamentalInstance: ReactDOMFundamentalComponentInstance,
+): void {
+  if (enableFundamentalAPI) {
+    const {impl, instance, props, state} = fundamentalInstance;
+    const onMount = impl.onMount;
+    if (onMount !== undefined) {
+      onMount(null, instance, props, state);
     }
   }
+}
+
+export function shouldUpdateFundamentalComponent(
+  fundamentalInstance: ReactDOMFundamentalComponentInstance,
+): boolean {
+  if (enableFundamentalAPI) {
+    const {impl, prevProps, props, state} = fundamentalInstance;
+    const shouldUpdate = impl.shouldUpdate;
+    if (shouldUpdate !== undefined) {
+      return shouldUpdate(null, prevProps, props, state);
+    }
+  }
+  return true;
+}
+
+export function updateFundamentalComponent(
+  fundamentalInstance: ReactDOMFundamentalComponentInstance,
+): void {
+  if (enableFundamentalAPI) {
+    const {impl, instance, prevProps, props, state} = fundamentalInstance;
+    const onUpdate = impl.onUpdate;
+    if (onUpdate !== undefined) {
+      onUpdate(null, instance, prevProps, props, state);
+    }
+  }
+}
+
+export function unmountFundamentalComponent(
+  fundamentalInstance: ReactDOMFundamentalComponentInstance,
+): void {
+  if (enableFundamentalAPI) {
+    const {impl, instance, props, state} = fundamentalInstance;
+    const onUnmount = impl.onUnmount;
+    if (onUnmount !== undefined) {
+      onUnmount(null, instance, props, state);
+    }
+  }
+}
+
+export function getInstanceFromNode(node: HTMLElement): null | Object {
+  return getClosestInstanceFromNode(node) || null;
 }

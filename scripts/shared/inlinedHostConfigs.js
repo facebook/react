@@ -9,53 +9,59 @@
 module.exports = [
   {
     shortName: 'dom',
-    entryPoints: ['react-dom', 'react-dom/unstable-fizz.node'],
+    entryPoints: [
+      'react-dom',
+      'react-dom/unstable-fizz.node',
+      'react-flight-dom-webpack/server.node',
+      'react-flight-dom-webpack',
+    ],
     isFlowTyped: true,
-    isFizzSupported: true,
+    isServerSupported: true,
   },
   {
     shortName: 'dom-browser',
-    entryPoints: ['react-dom/unstable-fizz.browser'],
+    entryPoints: [
+      'react-dom/unstable-fizz.browser',
+      'react-flight-dom-webpack/server.browser',
+      'react-flight-dom-webpack',
+    ],
     isFlowTyped: true,
-    isFizzSupported: true,
-  },
-  {
-    shortName: 'fire',
-    entryPoints: ['react-dom/unstable-fire'],
-    isFlowTyped: true,
+    isServerSupported: true,
   },
   {
     shortName: 'art',
     entryPoints: ['react-art'],
     isFlowTyped: false, // TODO: type it.
-    isFizzSupported: false,
+    isServerSupported: false,
   },
   {
     shortName: 'native',
     entryPoints: ['react-native-renderer'],
     isFlowTyped: true,
-    isFizzSupported: false,
+    isServerSupported: false,
   },
   {
     shortName: 'fabric',
     entryPoints: ['react-native-renderer/fabric'],
     isFlowTyped: true,
-    isFizzSupported: false,
+    isServerSupported: false,
   },
   {
     shortName: 'test',
     entryPoints: ['react-test-renderer'],
     isFlowTyped: true,
-    isFizzSupported: false,
+    isServerSupported: false,
   },
   {
     shortName: 'custom',
     entryPoints: [
       'react-reconciler',
       'react-reconciler/persistent',
-      'react-stream',
+      'react-flight',
+      'react-server',
+      'react-server/flight',
     ],
     isFlowTyped: true,
-    isFizzSupported: true,
+    isServerSupported: true,
   },
 ];

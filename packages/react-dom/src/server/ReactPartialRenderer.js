@@ -9,19 +9,27 @@
 
 import type {ThreadID} from './ReactThreadIDAllocator';
 import type {ReactElement} from 'shared/ReactElementType';
+import type {LazyComponent} from 'shared/ReactLazyComponent';
 import type {ReactProvider, ReactContext} from 'shared/ReactTypes';
 
 import React from 'react';
 import invariant from 'shared/invariant';
 import getComponentName from 'shared/getComponentName';
-import lowPriorityWarning from 'shared/lowPriorityWarning';
-import warning from 'shared/warning';
-import warningWithoutStack from 'shared/warningWithoutStack';
 import describeComponentFrame from 'shared/describeComponentFrame';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import {
+  Resolved,
+  Rejected,
+  Pending,
+  initializeLazyComponentType,
+} from 'shared/ReactLazyComponent';
+import {
   warnAboutDeprecatedLifecycles,
+  disableLegacyContext,
   enableSuspenseServerRenderer,
+  enableFundamentalAPI,
+  enableDeprecatedFlareAPI,
+  enableScopeAPI,
 } from 'shared/ReactFeatureFlags';
 
 import {
@@ -30,12 +38,15 @@ import {
   REACT_STRICT_MODE_TYPE,
   REACT_CONCURRENT_MODE_TYPE,
   REACT_SUSPENSE_TYPE,
+  REACT_SUSPENSE_LIST_TYPE,
   REACT_PORTAL_TYPE,
   REACT_PROFILER_TYPE,
   REACT_PROVIDER_TYPE,
   REACT_CONTEXT_TYPE,
   REACT_LAZY_TYPE,
   REACT_MEMO_TYPE,
+  REACT_FUNDAMENTAL_TYPE,
+  REACT_SCOPE_TYPE,
 } from 'shared/ReactSymbols';
 
 import {
@@ -227,7 +238,10 @@ function createMarkupForStyles(styles): string | null {
       }
     }
     if (styleValue != null) {
-      serialized += delimiter + processStyleName(styleName) + ':';
+      serialized +=
+        delimiter +
+        (isCustomProperty ? styleName : processStyleName(styleName)) +
+        ':';
       serialized += dangerousStyleValue(
         styleName,
         styleValue,
@@ -253,8 +267,7 @@ function warnNoop(
       return;
     }
 
-    warningWithoutStack(
-      false,
+    console.error(
       '%s(...): Can only update a mounting component. ' +
         'This usually means you called %s() outside componentWillMount() on the server. ' +
         'This is a no-op.\n\nPlease check the code for the %s component.',
@@ -320,8 +333,7 @@ function flattenOptionChildren(children: mixed): ?string {
         typeof child !== 'number'
       ) {
         didWarnInvalidOptionChildren = true;
-        warning(
-          false,
+        console.error(
           'Only strings and numbers are supported as <option> children.',
         );
       }
@@ -351,6 +363,9 @@ function createOpenTagMarkup(
 
   for (const propKey in props) {
     if (!hasOwnProperty.call(props, propKey)) {
+      continue;
+    }
+    if (enableDeprecatedFlareAPI && propKey === 'DEPRECATED_flareListeners') {
       continue;
     }
     let propValue = props[propKey];
@@ -420,7 +435,8 @@ function resolve(
 
   // Extra closure so queue and replace can be captured properly
   function processChild(element, Component) {
-    let publicContext = processContext(Component, context, threadID);
+    const isClass = shouldConstruct(Component);
+    const publicContext = processContext(Component, context, threadID, isClass);
 
     let queue = [];
     let replace = false;
@@ -448,7 +464,7 @@ function resolve(
     };
 
     let inst;
-    if (shouldConstruct(Component)) {
+    if (isClass) {
       inst = new Component(element.props, publicContext, updater);
 
       if (typeof Component.getDerivedStateFromProps === 'function') {
@@ -456,8 +472,7 @@ function resolve(
           if (inst.state === null || inst.state === undefined) {
             const componentName = getComponentName(Component) || 'Unknown';
             if (!didWarnAboutUninitializedState[componentName]) {
-              warningWithoutStack(
-                false,
+              console.error(
                 '`%s` uses `getDerivedStateFromProps` but its initial state is ' +
                   '%s. This is not recommended. Instead, define the initial state by ' +
                   'assigning an object to `this.state` in the constructor of `%s`. ' +
@@ -481,8 +496,7 @@ function resolve(
           if (partialState === undefined) {
             const componentName = getComponentName(Component) || 'Unknown';
             if (!didWarnAboutUndefinedDerivedState[componentName]) {
-              warningWithoutStack(
-                false,
+              console.error(
                 '%s.getDerivedStateFromProps(): A valid state object (or null) must be returned. ' +
                   'You have returned undefined.',
                 componentName,
@@ -505,8 +519,7 @@ function resolve(
           const componentName = getComponentName(Component) || 'Unknown';
 
           if (!didWarnAboutBadClass[componentName]) {
-            warningWithoutStack(
-              false,
+            console.error(
               "The <%s /> component appears to have a render method, but doesn't extend React.Component. " +
                 'This is likely to cause errors. Change %s to extend React.Component instead.',
               componentName,
@@ -530,8 +543,7 @@ function resolve(
       if (__DEV__) {
         const componentName = getComponentName(Component) || 'Unknown';
         if (!didWarnAboutModulePatternComponent[componentName]) {
-          warningWithoutStack(
-            false,
+          console.error(
             'The <%s /> component appears to be a function component that returns a class instance. ' +
               'Change %s to a class that extends React.Component instead. ' +
               "If you can't use a class try assigning the prototype on the function as a workaround. " +
@@ -567,15 +579,13 @@ function resolve(
             const componentName = getComponentName(Component) || 'Unknown';
 
             if (!didWarnAboutDeprecatedWillMount[componentName]) {
-              lowPriorityWarning(
-                false,
-                '%s: componentWillMount() is deprecated and will be ' +
-                  'removed in the next major version. Read about the motivations ' +
-                  'behind this change: ' +
-                  'https://fb.me/react-async-component-lifecycle-hooks' +
-                  '\n\n' +
-                  'As a temporary workaround, you can rename to ' +
-                  'UNSAFE_componentWillMount instead.',
+              console.warn(
+                // keep this warning in sync with ReactStrictModeWarning.js
+                'componentWillMount has been renamed, and is not recommended for use. ' +
+                  'See https://fb.me/react-unsafe-component-lifecycles for details.\n\n' +
+                  '* Move code from componentWillMount to componentDidMount (preferred in most cases) ' +
+                  'or the constructor.\n' +
+                  '\nPlease update the following components: %s',
                 componentName,
               );
               didWarnAboutDeprecatedWillMount[componentName] = true;
@@ -641,29 +651,43 @@ function resolve(
     validateRenderResult(child, Component);
 
     let childContext;
-    if (typeof inst.getChildContext === 'function') {
-      let childContextTypes = Component.childContextTypes;
-      if (typeof childContextTypes === 'object') {
-        childContext = inst.getChildContext();
-        for (let contextKey in childContext) {
-          invariant(
-            contextKey in childContextTypes,
-            '%s.getChildContext(): key "%s" is not defined in childContextTypes.',
+    if (disableLegacyContext) {
+      if (__DEV__) {
+        let childContextTypes = Component.childContextTypes;
+        if (childContextTypes !== undefined) {
+          console.error(
+            '%s uses the legacy childContextTypes API which is no longer supported. ' +
+              'Use React.createContext() instead.',
             getComponentName(Component) || 'Unknown',
-            contextKey,
           );
         }
-      } else {
-        warningWithoutStack(
-          false,
-          '%s.getChildContext(): childContextTypes must be defined in order to ' +
-            'use getChildContext().',
-          getComponentName(Component) || 'Unknown',
-        );
       }
-    }
-    if (childContext) {
-      context = Object.assign({}, context, childContext);
+    } else {
+      if (typeof inst.getChildContext === 'function') {
+        let childContextTypes = Component.childContextTypes;
+        if (typeof childContextTypes === 'object') {
+          childContext = inst.getChildContext();
+          for (let contextKey in childContext) {
+            invariant(
+              contextKey in childContextTypes,
+              '%s.getChildContext(): key "%s" is not defined in childContextTypes.',
+              getComponentName(Component) || 'Unknown',
+              contextKey,
+            );
+          }
+        } else {
+          if (__DEV__) {
+            console.error(
+              '%s.getChildContext(): childContextTypes must be defined in order to ' +
+                'use getChildContext().',
+              getComponentName(Component) || 'Unknown',
+            );
+          }
+        }
+      }
+      if (childContext) {
+        context = Object.assign({}, context, childContext);
+      }
     }
   }
   return {child, context};
@@ -677,11 +701,10 @@ type Frame = {
   childIndex: number,
   context: Object,
   footer: string,
+  ...
 };
 
-type FrameDev = Frame & {
-  debugElementStack: Array<ReactElement>,
-};
+type FrameDev = Frame & {|debugElementStack: Array<ReactElement>|};
 
 class ReactDOMServerRenderer {
   threadID: ThreadID;
@@ -771,10 +794,9 @@ class ReactDOMServerRenderer {
   popProvider<T>(provider: ReactProvider<T>): void {
     const index = this.contextIndex;
     if (__DEV__) {
-      warningWithoutStack(
-        index > -1 && provider === (this.contextProviderStack: any)[index],
-        'Unexpected pop.',
-      );
+      if (index < 0 || provider !== (this.contextProviderStack: any)[index]) {
+        console.error('Unexpected pop.');
+      }
     }
 
     const context: ReactContext<any> = this.contextStack[index];
@@ -851,7 +873,8 @@ class ReactDOMServerRenderer {
               const fallbackFrame = frame.fallbackFrame;
               invariant(
                 fallbackFrame,
-                'suspense fallback not found, something is broken',
+                'ReactDOMServer did not find an internal fallback frame for Suspense. ' +
+                  'This is a bug in React. Please file an issue.',
               );
               this.stack.push(fallbackFrame);
               out[this.suspenseDepth] += '<!--$!-->';
@@ -877,8 +900,20 @@ class ReactDOMServerRenderer {
         try {
           outBuffer += this.render(child, frame.context, frame.domNamespace);
         } catch (err) {
-          if (enableSuspenseServerRenderer && typeof err.then === 'function') {
-            suspended = true;
+          if (err != null && typeof err.then === 'function') {
+            if (enableSuspenseServerRenderer) {
+              invariant(
+                this.suspenseDepth > 0,
+                // TODO: include component name. This is a bit tricky with current factoring.
+                'A React component suspended while rendering, but no fallback UI was specified.\n' +
+                  '\n' +
+                  'Add a <Suspense fallback=...> component higher in the tree to ' +
+                  'provide a loading indicator or placeholder to display.',
+              );
+              suspended = true;
+            } else {
+              invariant(false, 'ReactDOMServer does not yet support Suspense.');
+            }
           } else {
             throw err;
           }
@@ -966,6 +1001,7 @@ class ReactDOMServerRenderer {
         case REACT_STRICT_MODE_TYPE:
         case REACT_CONCURRENT_MODE_TYPE:
         case REACT_PROFILER_TYPE:
+        case REACT_SUSPENSE_LIST_TYPE:
         case REACT_FRAGMENT_TYPE: {
           const nextChildren = toArray(
             ((nextChild: any): ReactElement).props.children,
@@ -1131,8 +1167,7 @@ class ReactDOMServerRenderer {
                 if (reactContext !== reactContext.Consumer) {
                   if (!hasWarnedAboutUsingContextAsConsumer) {
                     hasWarnedAboutUsingContextAsConsumer = true;
-                    warning(
-                      false,
+                    console.error(
                       'Rendering <Context> directly is not supported and will be removed in ' +
                         'a future major release. Did you mean to render <Context.Consumer> instead?',
                     );
@@ -1162,11 +1197,108 @@ class ReactDOMServerRenderer {
             this.stack.push(frame);
             return '';
           }
-          case REACT_LAZY_TYPE:
+          // eslint-disable-next-line-no-fallthrough
+          case REACT_FUNDAMENTAL_TYPE: {
+            if (enableFundamentalAPI) {
+              const fundamentalImpl = elementType.impl;
+              const open = fundamentalImpl.getServerSideString(
+                null,
+                nextElement.props,
+              );
+              const getServerSideStringClose =
+                fundamentalImpl.getServerSideStringClose;
+              const close =
+                getServerSideStringClose !== undefined
+                  ? getServerSideStringClose(null, nextElement.props)
+                  : '';
+              const nextChildren =
+                fundamentalImpl.reconcileChildren !== false
+                  ? toArray(((nextChild: any): ReactElement).props.children)
+                  : [];
+              const frame: Frame = {
+                type: null,
+                domNamespace: parentNamespace,
+                children: nextChildren,
+                childIndex: 0,
+                context: context,
+                footer: close,
+              };
+              if (__DEV__) {
+                ((frame: any): FrameDev).debugElementStack = [];
+              }
+              this.stack.push(frame);
+              return open;
+            }
             invariant(
               false,
-              'ReactDOMServer does not yet support lazy-loaded components.',
+              'ReactDOMServer does not yet support the fundamental API.',
             );
+          }
+          // eslint-disable-next-line-no-fallthrough
+          case REACT_LAZY_TYPE: {
+            const element: ReactElement = (nextChild: any);
+            const lazyComponent: LazyComponent<any> = (nextChild: any).type;
+            // Attempt to initialize lazy component regardless of whether the
+            // suspense server-side renderer is enabled so synchronously
+            // resolved constructors are supported.
+            initializeLazyComponentType(lazyComponent);
+            switch (lazyComponent._status) {
+              case Resolved: {
+                const nextChildren = [
+                  React.createElement(
+                    lazyComponent._result,
+                    Object.assign({ref: element.ref}, element.props),
+                  ),
+                ];
+                const frame: Frame = {
+                  type: null,
+                  domNamespace: parentNamespace,
+                  children: nextChildren,
+                  childIndex: 0,
+                  context: context,
+                  footer: '',
+                };
+                if (__DEV__) {
+                  ((frame: any): FrameDev).debugElementStack = [];
+                }
+                this.stack.push(frame);
+                return '';
+              }
+              case Rejected:
+                throw lazyComponent._result;
+              case Pending:
+              default:
+                invariant(
+                  false,
+                  'ReactDOMServer does not yet support lazy-loaded components.',
+                );
+            }
+          }
+          // eslint-disable-next-line-no-fallthrough
+          case REACT_SCOPE_TYPE: {
+            if (enableScopeAPI) {
+              const nextChildren = toArray(
+                ((nextChild: any): ReactElement).props.children,
+              );
+              const frame: Frame = {
+                type: null,
+                domNamespace: parentNamespace,
+                children: nextChildren,
+                childIndex: 0,
+                context: context,
+                footer: '',
+              };
+              if (__DEV__) {
+                ((frame: any): FrameDev).debugElementStack = [];
+              }
+              this.stack.push(frame);
+              return '';
+            }
+            invariant(
+              false,
+              'ReactDOMServer does not yet support scope components.',
+            );
+          }
         }
       }
 
@@ -1216,13 +1348,14 @@ class ReactDOMServerRenderer {
       if (namespace === Namespaces.html) {
         // Should this check be gated by parent namespace? Not sure we want to
         // allow <SVG> or <mATH>.
-        warning(
-          tag === element.type,
-          '<%s /> is using incorrect casing. ' +
-            'Use PascalCase for React components, ' +
-            'or lowercase for HTML elements.',
-          element.type,
-        );
+        if (tag !== element.type) {
+          console.error(
+            '<%s /> is using incorrect casing. ' +
+              'Use PascalCase for React components, ' +
+              'or lowercase for HTML elements.',
+            element.type,
+          );
+        }
       }
     }
 
@@ -1238,8 +1371,7 @@ class ReactDOMServerRenderer {
           props.defaultChecked !== undefined &&
           !didWarnDefaultChecked
         ) {
-          warning(
-            false,
+          console.error(
             '%s contains an input of type %s with both checked and defaultChecked props. ' +
               'Input elements must be either controlled or uncontrolled ' +
               '(specify either the checked prop, or the defaultChecked prop, but not ' +
@@ -1256,8 +1388,7 @@ class ReactDOMServerRenderer {
           props.defaultValue !== undefined &&
           !didWarnDefaultInputValue
         ) {
-          warning(
-            false,
+          console.error(
             '%s contains an input of type %s with both value and defaultValue props. ' +
               'Input elements must be either controlled or uncontrolled ' +
               '(specify either the value prop, or the defaultValue prop, but not ' +
@@ -1291,8 +1422,7 @@ class ReactDOMServerRenderer {
           props.defaultValue !== undefined &&
           !didWarnDefaultTextareaValue
         ) {
-          warning(
-            false,
+          console.error(
             'Textarea elements must be either controlled or uncontrolled ' +
               '(specify either the value prop, or the defaultValue prop, but not ' +
               'both). Decide between using a controlled or uncontrolled textarea ' +
@@ -1310,8 +1440,7 @@ class ReactDOMServerRenderer {
         let textareaChildren = props.children;
         if (textareaChildren != null) {
           if (__DEV__) {
-            warning(
-              false,
+            console.error(
               'Use the `defaultValue` or `value` props instead of setting ' +
                 'children on <textarea>.',
             );
@@ -1351,15 +1480,13 @@ class ReactDOMServerRenderer {
           }
           const isArray = Array.isArray(props[propName]);
           if (props.multiple && !isArray) {
-            warning(
-              false,
+            console.error(
               'The `%s` prop supplied to <select> must be an array if ' +
                 '`multiple` is true.',
               propName,
             );
           } else if (!props.multiple && isArray) {
-            warning(
-              false,
+            console.error(
               'The `%s` prop supplied to <select> must be a scalar ' +
                 'value if `multiple` is false.',
               propName,
@@ -1372,8 +1499,7 @@ class ReactDOMServerRenderer {
           props.defaultValue !== undefined &&
           !didWarnDefaultSelectValue
         ) {
-          warning(
-            false,
+          console.error(
             'Select elements must be either controlled or uncontrolled ' +
               '(specify either the value prop, or the defaultValue prop, but not ' +
               'both). Decide between using a controlled or uncontrolled select ' +
@@ -1451,7 +1577,10 @@ class ReactDOMServerRenderer {
     const innerMarkup = getNonChildrenInnerMarkup(props);
     if (innerMarkup != null) {
       children = [];
-      if (newlineEatingTags[tag] && innerMarkup.charAt(0) === '\n') {
+      if (
+        newlineEatingTags.hasOwnProperty(tag) &&
+        innerMarkup.charAt(0) === '\n'
+      ) {
         // text/html ignores the first character in these tags if it's a newline
         // Prefer to break application/xml over text/html (for now) by adding
         // a newline specifically to get eaten by the parser. (Alternately for

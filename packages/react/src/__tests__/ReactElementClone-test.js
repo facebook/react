@@ -259,7 +259,7 @@ describe('ReactElementClone', () => {
   it('warns for keys for arrays of elements in rest args', () => {
     expect(() =>
       React.cloneElement(<div />, null, [<div />, <div />]),
-    ).toWarnDev('Each child in a list should have a unique "key" prop.');
+    ).toErrorDev('Each child in a list should have a unique "key" prop.');
   });
 
   it('does not warns for arrays of elements with keys', () => {
@@ -297,7 +297,7 @@ describe('ReactElementClone', () => {
     }
     expect(() =>
       ReactTestUtils.renderIntoDocument(React.createElement(GrandParent)),
-    ).toWarnDev(
+    ).toErrorDev(
       'Warning: Failed prop type: ' +
         'Invalid prop `color` of type `number` supplied to `Component`, ' +
         'expected `string`.\n' +

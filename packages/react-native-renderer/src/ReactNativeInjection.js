@@ -14,13 +14,13 @@ import {
   getInstanceFromNode,
   getNodeFromInstance,
 } from './ReactNativeComponentTree';
-import {setComponentTree} from 'events/EventPluginUtils';
+import {setComponentTree} from 'legacy-events/EventPluginUtils';
 import {receiveEvent, receiveTouches} from './ReactNativeEventEmitter';
 import ReactNativeGlobalResponderHandler from './ReactNativeGlobalResponderHandler';
-import ResponderEventPlugin from 'events/ResponderEventPlugin';
+import ResponderEventPlugin from 'legacy-events/ResponderEventPlugin';
 
 // Module provided by RN:
-import RCTEventEmitter from 'RCTEventEmitter';
+import {RCTEventEmitter} from 'react-native/Libraries/ReactPrivate/ReactNativePrivateInterface';
 
 /**
  * Register the event emitter with the native bridge

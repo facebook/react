@@ -26,8 +26,8 @@ describe('ReactIncrementalReflection', () => {
   });
 
   function div(...children) {
-    children = children.map(
-      c => (typeof c === 'string' ? {text: c, hidden: false} : c),
+    children = children.map(c =>
+      typeof c === 'string' ? {text: c, hidden: false} : c,
     );
     return {type: 'div', children, prop: undefined, hidden: false};
   }
@@ -47,10 +47,14 @@ describe('ReactIncrementalReflection', () => {
       }
       UNSAFE_componentWillMount() {
         instances.push(this);
-        Scheduler.yieldValue('componentWillMount: ' + this._isMounted());
+        Scheduler.unstable_yieldValue(
+          'componentWillMount: ' + this._isMounted(),
+        );
       }
       componentDidMount() {
-        Scheduler.yieldValue('componentDidMount: ' + this._isMounted());
+        Scheduler.unstable_yieldValue(
+          'componentDidMount: ' + this._isMounted(),
+        );
       }
       render() {
         return <span />;
@@ -71,9 +75,8 @@ describe('ReactIncrementalReflection', () => {
     // Render the rest and commit the updates.
     expect(() =>
       expect(Scheduler).toFlushAndYield(['componentDidMount: true']),
-    ).toWarnDev(
-      'componentWillMount: Please update the following components ' +
-        'to use componentDidMount instead: Component',
+    ).toErrorDev(
+      'Using UNSAFE_componentWillMount in strict mode is not recommended',
       {withoutStack: true},
     );
 
@@ -91,16 +94,18 @@ describe('ReactIncrementalReflection', () => {
         instances.push(this);
       }
       componentWillUnmount() {
-        Scheduler.yieldValue('componentWillUnmount: ' + this._isMounted());
+        Scheduler.unstable_yieldValue(
+          'componentWillUnmount: ' + this._isMounted(),
+        );
       }
       render() {
-        Scheduler.yieldValue('Component');
+        Scheduler.unstable_yieldValue('Component');
         return <span />;
       }
     }
 
     function Other() {
-      Scheduler.yieldValue('Other');
+      Scheduler.unstable_yieldValue('Other');
       return <span />;
     }
 
@@ -109,9 +114,10 @@ describe('ReactIncrementalReflection', () => {
     }
 
     ReactNoop.render(<Foo mount={true} />);
-    expect(() => expect(Scheduler).toFlushAndYield(['Component'])).toWarnDev(
-      'componentWillMount: Please update the following components ' +
-        'to use componentDidMount instead: Component',
+    expect(() =>
+      expect(Scheduler).toFlushAndYield(['Component']),
+    ).toErrorDev(
+      'Using UNSAFE_componentWillMount in strict mode is not recommended',
       {withoutStack: true},
     );
 
@@ -149,22 +155,37 @@ describe('ReactIncrementalReflection', () => {
     class Component extends React.Component {
       UNSAFE_componentWillMount() {
         classInstance = this;
-        Scheduler.yieldValue(['componentWillMount', findInstance(this)]);
+        Scheduler.unstable_yieldValue([
+          'componentWillMount',
+          findInstance(this),
+        ]);
       }
       componentDidMount() {
-        Scheduler.yieldValue(['componentDidMount', findInstance(this)]);
+        Scheduler.unstable_yieldValue([
+          'componentDidMount',
+          findInstance(this),
+        ]);
       }
       UNSAFE_componentWillUpdate() {
-        Scheduler.yieldValue(['componentWillUpdate', findInstance(this)]);
+        Scheduler.unstable_yieldValue([
+          'componentWillUpdate',
+          findInstance(this),
+        ]);
       }
       componentDidUpdate() {
-        Scheduler.yieldValue(['componentDidUpdate', findInstance(this)]);
+        Scheduler.unstable_yieldValue([
+          'componentDidUpdate',
+          findInstance(this),
+        ]);
       }
       componentWillUnmount() {
-        Scheduler.yieldValue(['componentWillUnmount', findInstance(this)]);
+        Scheduler.unstable_yieldValue([
+          'componentWillUnmount',
+          findInstance(this),
+        ]);
       }
       render() {
-        Scheduler.yieldValue('render');
+        Scheduler.unstable_yieldValue('render');
         return this.props.step < 2 ? (
           <span ref={ref => (this.span = ref)} />
         ) : this.props.step === 2 ? (
@@ -177,7 +198,7 @@ describe('ReactIncrementalReflection', () => {
 
     function Sibling() {
       // Sibling is used to assert that we've rendered past the first component.
-      Scheduler.yieldValue('render sibling');
+      Scheduler.unstable_yieldValue('render sibling');
       return <span />;
     }
 
@@ -200,11 +221,11 @@ describe('ReactIncrementalReflection', () => {
 
     expect(() =>
       expect(Scheduler).toFlushAndYield([['componentDidMount', span()]]),
-    ).toWarnDev(
-      'componentWillMount: Please update the following components ' +
-        'to use componentDidMount instead: Component' +
-        '\n\ncomponentWillUpdate: Please update the following components ' +
-        'to use componentDidUpdate instead: Component',
+    ).toErrorDev(
+      [
+        'Using UNSAFE_componentWillMount in strict mode is not recommended',
+        'Using UNSAFE_componentWillUpdate in strict mode is not recommended',
+      ],
       {withoutStack: true},
     );
 

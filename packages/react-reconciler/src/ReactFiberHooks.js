@@ -7,16 +7,22 @@
  * @flow
  */
 
-import type {ReactContext} from 'shared/ReactTypes';
-import type {SideEffectTag} from 'shared/ReactSideEffectTags';
+import type {
+  ReactEventResponder,
+  ReactContext,
+  ReactEventResponderListener,
+} from 'shared/ReactTypes';
 import type {Fiber} from './ReactFiber';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
 import type {HookEffectTag} from './ReactHookEffectTags';
+import type {SuspenseConfig} from './ReactFiberSuspenseConfig';
+import type {ReactPriorityLevel} from './SchedulerWithReactIntegration';
 
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 
-import {NoWork} from './ReactFiberExpirationTime';
+import {NoWork, Sync} from './ReactFiberExpirationTime';
 import {readContext} from './ReactFiberNewContext';
+import {createDeprecatedResponderListener} from './ReactFiberDeprecatedEvents';
 import {
   Update as UpdateEffect,
   Passive as PassiveEffect,
@@ -30,21 +36,30 @@ import {
 } from './ReactHookEffectTags';
 import {
   scheduleWork,
-  warnIfNotCurrentlyBatchingInDev,
   computeExpirationForFiber,
-  flushPassiveEffects,
-  requestCurrentTime,
-} from './ReactFiberScheduler';
+  requestCurrentTimeForUpdate,
+  warnIfNotCurrentlyActingEffectsInDEV,
+  warnIfNotCurrentlyActingUpdatesInDev,
+  warnIfNotScopedWithMatchingAct,
+  markRenderEventTimeAndConfig,
+  markUnprocessedUpdateTime,
+} from './ReactFiberWorkLoop';
 
 import invariant from 'shared/invariant';
-import warning from 'shared/warning';
 import getComponentName from 'shared/getComponentName';
 import is from 'shared/objectIs';
 import {markWorkInProgressReceivedUpdate} from './ReactFiberBeginWork';
+import {requestCurrentSuspenseConfig} from './ReactFiberSuspenseConfig';
+import {
+  UserBlockingPriority,
+  NormalPriority,
+  runWithPriority,
+  getCurrentPriorityLevel,
+} from './SchedulerWithReactIntegration';
 
-const {ReactCurrentDispatcher} = ReactSharedInternals;
+const {ReactCurrentDispatcher, ReactCurrentBatchConfig} = ReactSharedInternals;
 
-export type Dispatcher = {
+export type Dispatcher = {|
   readContext<T>(
     context: ReactContext<T>,
     observedBits: void | number | boolean,
@@ -59,7 +74,7 @@ export type Dispatcher = {
     context: ReactContext<T>,
     observedBits: void | number | boolean,
   ): T,
-  useRef<T>(initialValue: T): {current: T},
+  useRef<T>(initialValue: T): {|current: T|},
   useEffect(
     create: () => (() => void) | void,
     deps: Array<mixed> | void | null,
@@ -71,27 +86,37 @@ export type Dispatcher = {
   useCallback<T>(callback: T, deps: Array<mixed> | void | null): T,
   useMemo<T>(nextCreate: () => T, deps: Array<mixed> | void | null): T,
   useImperativeHandle<T>(
-    ref: {current: T | null} | ((inst: T | null) => mixed) | null | void,
+    ref: {|current: T | null|} | ((inst: T | null) => mixed) | null | void,
     create: () => T,
     deps: Array<mixed> | void | null,
   ): void,
   useDebugValue<T>(value: T, formatterFn: ?(value: T) => mixed): void,
-};
+  useResponder<E, C>(
+    responder: ReactEventResponder<E, C>,
+    props: Object,
+  ): ReactEventResponderListener<E, C>,
+  useDeferredValue<T>(value: T, config: TimeoutConfig | void | null): T,
+  useTransition(
+    config: SuspenseConfig | void | null,
+  ): [(() => void) => void, boolean],
+|};
 
-type Update<S, A> = {
+type Update<S, A> = {|
   expirationTime: ExpirationTime,
+  suspenseConfig: null | SuspenseConfig,
   action: A,
   eagerReducer: ((S, A) => S) | null,
   eagerState: S | null,
-  next: Update<S, A> | null,
-};
+  next: Update<S, A>,
+  priority?: ReactPriorityLevel,
+|};
 
-type UpdateQueue<S, A> = {
-  last: Update<S, A> | null,
+type UpdateQueue<S, A> = {|
+  pending: Update<S, A> | null,
   dispatch: (A => mixed) | null,
   lastRenderedReducer: ((S, A) => S) | null,
   lastRenderedState: S | null,
-};
+|};
 
 export type HookType =
   | 'useState'
@@ -103,34 +128,37 @@ export type HookType =
   | 'useCallback'
   | 'useMemo'
   | 'useImperativeHandle'
-  | 'useDebugValue';
+  | 'useDebugValue'
+  | 'useResponder'
+  | 'useDeferredValue'
+  | 'useTransition';
 
 let didWarnAboutMismatchedHooksForComponent;
 if (__DEV__) {
   didWarnAboutMismatchedHooksForComponent = new Set();
 }
 
-export type Hook = {
+export type Hook = {|
   memoizedState: any,
-
   baseState: any,
-  baseUpdate: Update<any, any> | null,
+  baseQueue: Update<any, any> | null,
   queue: UpdateQueue<any, any> | null,
-
   next: Hook | null,
-};
+|};
 
-type Effect = {
+type Effect = {|
   tag: HookEffectTag,
   create: () => (() => void) | void,
   destroy: (() => void) | void,
   deps: Array<mixed> | null,
   next: Effect,
-};
+|};
 
-export type FunctionComponentUpdateQueue = {
-  lastEffect: Effect | null,
-};
+export type FunctionComponentUpdateQueue = {|lastEffect: Effect | null|};
+
+export type TimeoutConfig = {|
+  timeoutMs: number,
+|};
 
 type BasicStateAction<S> = (S => S) | S;
 
@@ -140,21 +168,14 @@ type Dispatch<A> = A => void;
 let renderExpirationTime: ExpirationTime = NoWork;
 // The work-in-progress fiber. I've named it differently to distinguish it from
 // the work-in-progress hook.
-let currentlyRenderingFiber: Fiber | null = null;
+let currentlyRenderingFiber: Fiber = (null: any);
 
 // Hooks are stored as a linked list on the fiber's memoizedState field. The
 // current hook list is the list that belongs to the current fiber. The
 // work-in-progress hook list is a new list that will be added to the
 // work-in-progress fiber.
 let currentHook: Hook | null = null;
-let nextCurrentHook: Hook | null = null;
-let firstWorkInProgressHook: Hook | null = null;
 let workInProgressHook: Hook | null = null;
-let nextWorkInProgressHook: Hook | null = null;
-
-let remainingExpirationTime: ExpirationTime = NoWork;
-let componentUpdateQueue: FunctionComponentUpdateQueue | null = null;
-let sideEffectTag: SideEffectTag = 0;
 
 // Updates scheduled during render will trigger an immediate re-render at the
 // end of the current pass. We can't store these updates on the normal queue,
@@ -183,6 +204,11 @@ let currentHookNameInDev: ?HookType = null;
 // Subsequent renders (updates) reference this list.
 let hookTypesDev: Array<HookType> | null = null;
 let hookTypesUpdateIndexDev: number = -1;
+
+// In DEV, this tracks whether currently rendering component needs to ignore
+// the dependencies for Hooks that need them (e.g. useEffect or useMemo).
+// When true, such Hooks will always be "remounted". Only used during hot reload.
+let ignorePreviousDependencies: boolean = false;
 
 function mountHookTypesDev() {
   if (__DEV__) {
@@ -214,8 +240,7 @@ function checkDepsAreArrayDev(deps: mixed) {
     if (deps !== undefined && deps !== null && !Array.isArray(deps)) {
       // Verify deps, but only on mount to avoid extra checks.
       // It's unlikely their type would change as usually you define them inline.
-      warning(
-        false,
+      console.error(
         '%s received a final argument that is not an array (instead, received `%s`). When ' +
           'specified, the final argument must be an array.',
         currentHookNameInDev,
@@ -227,9 +252,7 @@ function checkDepsAreArrayDev(deps: mixed) {
 
 function warnOnHookMismatchInDev(currentHookName: HookType) {
   if (__DEV__) {
-    const componentName = getComponentName(
-      ((currentlyRenderingFiber: any): Fiber).type,
-    );
+    const componentName = getComponentName(currentlyRenderingFiber.type);
     if (!didWarnAboutMismatchedHooksForComponent.has(componentName)) {
       didWarnAboutMismatchedHooksForComponent.add(componentName);
 
@@ -258,8 +281,7 @@ function warnOnHookMismatchInDev(currentHookName: HookType) {
           table += row;
         }
 
-        warning(
-          false,
+        console.error(
           'React has detected a change in the order of Hooks called by %s. ' +
             'This will lead to bugs and errors if not fixed. ' +
             'For more information, read the Rules of Hooks: https://fb.me/rules-of-hooks\n\n' +
@@ -291,10 +313,16 @@ function areHookInputsEqual(
   nextDeps: Array<mixed>,
   prevDeps: Array<mixed> | null,
 ) {
+  if (__DEV__) {
+    if (ignorePreviousDependencies) {
+      // Only true when this component is being hot reloaded.
+      return false;
+    }
+  }
+
   if (prevDeps === null) {
     if (__DEV__) {
-      warning(
-        false,
+      console.error(
         '%s received a final argument during this render, but not during ' +
           'the previous render. Even though the final argument is optional, ' +
           'its type cannot change between renders.',
@@ -308,15 +336,14 @@ function areHookInputsEqual(
     // Don't bother comparing lengths in prod because these arrays should be
     // passed inline.
     if (nextDeps.length !== prevDeps.length) {
-      warning(
-        false,
+      console.error(
         'The final argument passed to %s changed size between renders. The ' +
           'order and size of this array must remain constant.\n\n' +
           'Previous: %s\n' +
           'Incoming: %s',
         currentHookNameInDev,
-        `[${nextDeps.join(', ')}]`,
         `[${prevDeps.join(', ')}]`,
+        `[${nextDeps.join(', ')}]`,
       );
     }
   }
@@ -334,12 +361,11 @@ export function renderWithHooks(
   workInProgress: Fiber,
   Component: any,
   props: any,
-  refOrContext: any,
+  secondArg: any,
   nextRenderExpirationTime: ExpirationTime,
 ): any {
   renderExpirationTime = nextRenderExpirationTime;
   currentlyRenderingFiber = workInProgress;
-  nextCurrentHook = current !== null ? current.memoizedState : null;
 
   if (__DEV__) {
     hookTypesDev =
@@ -347,29 +373,32 @@ export function renderWithHooks(
         ? ((current._debugHookTypes: any): Array<HookType>)
         : null;
     hookTypesUpdateIndexDev = -1;
+    // Used for hot reloading:
+    ignorePreviousDependencies =
+      current !== null && current.type !== workInProgress.type;
   }
+
+  workInProgress.memoizedState = null;
+  workInProgress.updateQueue = null;
+  workInProgress.expirationTime = NoWork;
 
   // The following should have already been reset
   // currentHook = null;
   // workInProgressHook = null;
 
-  // remainingExpirationTime = NoWork;
-  // componentUpdateQueue = null;
-
   // didScheduleRenderPhaseUpdate = false;
   // renderPhaseUpdates = null;
   // numberOfReRenders = 0;
-  // sideEffectTag = 0;
 
   // TODO Warn if no hooks are used at all during mount, then some are used during update.
-  // Currently we will identify the update render as a mount because nextCurrentHook === null.
+  // Currently we will identify the update render as a mount because memoizedState === null.
   // This is tricky because it's valid for certain types of components (e.g. React.lazy)
 
-  // Using nextCurrentHook to differentiate between mount/update only works if at least one stateful hook is used.
+  // Using memoizedState to differentiate between mount/update only works if at least one stateful hook is used.
   // Non-stateful hooks (e.g. context) don't get added to memoizedState,
-  // so nextCurrentHook would be null during updates and mounts.
+  // so memoizedState would be null during updates and mounts.
   if (__DEV__) {
-    if (nextCurrentHook !== null) {
+    if (current !== null && current.memoizedState !== null) {
       ReactCurrentDispatcher.current = HooksDispatcherOnUpdateInDEV;
     } else if (hookTypesDev !== null) {
       // This dispatcher handles an edge case where a component is updating,
@@ -383,25 +412,28 @@ export function renderWithHooks(
     }
   } else {
     ReactCurrentDispatcher.current =
-      nextCurrentHook === null
+      current === null || current.memoizedState === null
         ? HooksDispatcherOnMount
         : HooksDispatcherOnUpdate;
   }
 
-  let children = Component(props, refOrContext);
+  let children = Component(props, secondArg);
 
   if (didScheduleRenderPhaseUpdate) {
     do {
       didScheduleRenderPhaseUpdate = false;
       numberOfReRenders += 1;
+      if (__DEV__) {
+        // Even when hot reloading, allow dependencies to stabilize
+        // after first render to prevent infinite render phase updates.
+        ignorePreviousDependencies = false;
+      }
 
       // Start over from the beginning of the list
-      nextCurrentHook = current !== null ? current.memoizedState : null;
-      nextWorkInProgressHook = firstWorkInProgressHook;
-
       currentHook = null;
       workInProgressHook = null;
-      componentUpdateQueue = null;
+
+      workInProgress.updateQueue = null;
 
       if (__DEV__) {
         // Also validate hook order for cascading updates.
@@ -412,7 +444,7 @@ export function renderWithHooks(
         ? HooksDispatcherOnUpdateInDEV
         : HooksDispatcherOnUpdate;
 
-      children = Component(props, refOrContext);
+      children = Component(props, secondArg);
     } while (didScheduleRenderPhaseUpdate);
 
     renderPhaseUpdates = null;
@@ -423,15 +455,8 @@ export function renderWithHooks(
   // at the beginning of the render phase and there's no re-entrancy.
   ReactCurrentDispatcher.current = ContextOnlyDispatcher;
 
-  const renderedWork: Fiber = (currentlyRenderingFiber: any);
-
-  renderedWork.memoizedState = firstWorkInProgressHook;
-  renderedWork.expirationTime = remainingExpirationTime;
-  renderedWork.updateQueue = (componentUpdateQueue: any);
-  renderedWork.effectTag |= sideEffectTag;
-
   if (__DEV__) {
-    renderedWork._debugHookTypes = hookTypesDev;
+    workInProgress._debugHookTypes = hookTypesDev;
   }
 
   // This check uses currentHook so that it works the same in DEV and prod bundles.
@@ -440,23 +465,16 @@ export function renderWithHooks(
     currentHook !== null && currentHook.next !== null;
 
   renderExpirationTime = NoWork;
-  currentlyRenderingFiber = null;
+  currentlyRenderingFiber = (null: any);
 
   currentHook = null;
-  nextCurrentHook = null;
-  firstWorkInProgressHook = null;
   workInProgressHook = null;
-  nextWorkInProgressHook = null;
 
   if (__DEV__) {
     currentHookNameInDev = null;
     hookTypesDev = null;
     hookTypesUpdateIndexDev = -1;
   }
-
-  remainingExpirationTime = NoWork;
-  componentUpdateQueue = null;
-  sideEffectTag = 0;
 
   // These were reset above
   // didScheduleRenderPhaseUpdate = false;
@@ -492,14 +510,12 @@ export function resetHooks(): void {
   // This is used to reset the state of this module when a component throws.
   // It's also called inside mountIndeterminateComponent if we determine the
   // component is a module-style component.
+
   renderExpirationTime = NoWork;
-  currentlyRenderingFiber = null;
+  currentlyRenderingFiber = (null: any);
 
   currentHook = null;
-  nextCurrentHook = null;
-  firstWorkInProgressHook = null;
   workInProgressHook = null;
-  nextWorkInProgressHook = null;
 
   if (__DEV__) {
     hookTypesDev = null;
@@ -507,10 +523,6 @@ export function resetHooks(): void {
 
     currentHookNameInDev = null;
   }
-
-  remainingExpirationTime = NoWork;
-  componentUpdateQueue = null;
-  sideEffectTag = 0;
 
   didScheduleRenderPhaseUpdate = false;
   renderPhaseUpdates = null;
@@ -522,15 +534,15 @@ function mountWorkInProgressHook(): Hook {
     memoizedState: null,
 
     baseState: null,
+    baseQueue: null,
     queue: null,
-    baseUpdate: null,
 
     next: null,
   };
 
   if (workInProgressHook === null) {
     // This is the first hook in the list
-    firstWorkInProgressHook = workInProgressHook = hook;
+    currentlyRenderingFiber.memoizedState = workInProgressHook = hook;
   } else {
     // Append to the end of the list
     workInProgressHook = workInProgressHook.next = hook;
@@ -544,15 +556,34 @@ function updateWorkInProgressHook(): Hook {
   // clone, or a work-in-progress hook from a previous render pass that we can
   // use as a base. When we reach the end of the base list, we must switch to
   // the dispatcher used for mounts.
+  let nextCurrentHook: null | Hook;
+  if (currentHook === null) {
+    let current = currentlyRenderingFiber.alternate;
+    if (current !== null) {
+      nextCurrentHook = current.memoizedState;
+    } else {
+      nextCurrentHook = null;
+    }
+  } else {
+    nextCurrentHook = currentHook.next;
+  }
+
+  let nextWorkInProgressHook: null | Hook;
+  if (workInProgressHook === null) {
+    nextWorkInProgressHook = currentlyRenderingFiber.memoizedState;
+  } else {
+    nextWorkInProgressHook = workInProgressHook.next;
+  }
+
   if (nextWorkInProgressHook !== null) {
     // There's already a work-in-progress. Reuse it.
     workInProgressHook = nextWorkInProgressHook;
     nextWorkInProgressHook = workInProgressHook.next;
 
     currentHook = nextCurrentHook;
-    nextCurrentHook = currentHook !== null ? currentHook.next : null;
   } else {
     // Clone from the current hook.
+
     invariant(
       nextCurrentHook !== null,
       'Rendered more hooks than during the previous render.',
@@ -563,20 +594,19 @@ function updateWorkInProgressHook(): Hook {
       memoizedState: currentHook.memoizedState,
 
       baseState: currentHook.baseState,
+      baseQueue: currentHook.baseQueue,
       queue: currentHook.queue,
-      baseUpdate: currentHook.baseUpdate,
 
       next: null,
     };
 
     if (workInProgressHook === null) {
       // This is the first hook in the list.
-      workInProgressHook = firstWorkInProgressHook = newHook;
+      currentlyRenderingFiber.memoizedState = workInProgressHook = newHook;
     } else {
       // Append to the end of the list.
       workInProgressHook = workInProgressHook.next = newHook;
     }
-    nextCurrentHook = currentHook.next;
   }
   return workInProgressHook;
 }
@@ -605,15 +635,14 @@ function mountReducer<S, I, A>(
   }
   hook.memoizedState = hook.baseState = initialState;
   const queue = (hook.queue = {
-    last: null,
+    pending: null,
     dispatch: null,
     lastRenderedReducer: reducer,
     lastRenderedState: (initialState: any),
   });
   const dispatch: Dispatch<A> = (queue.dispatch = (dispatchAction.bind(
     null,
-    // Flow doesn't know this is non-null, but we do.
-    ((currentlyRenderingFiber: any): Fiber),
+    currentlyRenderingFiber,
     queue,
   ): any));
   return [hook.memoizedState, dispatch];
@@ -660,11 +689,11 @@ function updateReducer<S, I, A>(
         }
 
         hook.memoizedState = newState;
-        // Don't persist the state accumlated from the render phase updates to
+        // Don't persist the state accumulated from the render phase updates to
         // the base state unless the queue is empty.
         // TODO: Not sure if this is the desired semantics, but it's what we
         // do for gDSFP. I can't remember why.
-        if (hook.baseUpdate === queue.last) {
+        if (hook.baseQueue === null) {
           hook.baseState = newState;
         }
 
@@ -676,48 +705,87 @@ function updateReducer<S, I, A>(
     return [hook.memoizedState, dispatch];
   }
 
-  // The last update in the entire queue
-  const last = queue.last;
-  // The last update that is part of the base state.
-  const baseUpdate = hook.baseUpdate;
-  const baseState = hook.baseState;
+  const current: Hook = (currentHook: any);
 
-  // Find the first unprocessed update.
-  let first;
-  if (baseUpdate !== null) {
-    if (last !== null) {
-      // For the first update, the queue is a circular linked list where
-      // `queue.last.next = queue.first`. Once the first update commits, and
-      // the `baseUpdate` is no longer empty, we can unravel the list.
-      last.next = null;
+  // The last rebase update that is NOT part of the base state.
+  let baseQueue = current.baseQueue;
+
+  // The last pending update that hasn't been processed yet.
+  let pendingQueue = queue.pending;
+  if (pendingQueue !== null) {
+    // We have new updates that haven't been processed yet.
+    // We'll add them to the base queue.
+    if (baseQueue !== null) {
+      // Merge the pending queue and the base queue.
+      let baseFirst = baseQueue.next;
+      let pendingFirst = pendingQueue.next;
+      baseQueue.next = pendingFirst;
+      pendingQueue.next = baseFirst;
     }
-    first = baseUpdate.next;
-  } else {
-    first = last !== null ? last.next : null;
+    current.baseQueue = baseQueue = pendingQueue;
+    queue.pending = null;
   }
-  if (first !== null) {
-    let newState = baseState;
+
+  if (baseQueue !== null) {
+    // We have a queue to process.
+    let first = baseQueue.next;
+    let newState = current.baseState;
+
     let newBaseState = null;
-    let newBaseUpdate = null;
-    let prevUpdate = baseUpdate;
+    let newBaseQueueFirst = null;
+    let newBaseQueueLast = null;
     let update = first;
-    let didSkip = false;
     do {
       const updateExpirationTime = update.expirationTime;
       if (updateExpirationTime < renderExpirationTime) {
         // Priority is insufficient. Skip this update. If this is the first
         // skipped update, the previous update/state is the new base
         // update/state.
-        if (!didSkip) {
-          didSkip = true;
-          newBaseUpdate = prevUpdate;
+        const clone: Update<S, A> = {
+          expirationTime: update.expirationTime,
+          suspenseConfig: update.suspenseConfig,
+          action: update.action,
+          eagerReducer: update.eagerReducer,
+          eagerState: update.eagerState,
+          next: (null: any),
+        };
+        if (newBaseQueueLast === null) {
+          newBaseQueueFirst = newBaseQueueLast = clone;
           newBaseState = newState;
+        } else {
+          newBaseQueueLast = newBaseQueueLast.next = clone;
         }
         // Update the remaining priority in the queue.
-        if (updateExpirationTime > remainingExpirationTime) {
-          remainingExpirationTime = updateExpirationTime;
+        if (updateExpirationTime > currentlyRenderingFiber.expirationTime) {
+          currentlyRenderingFiber.expirationTime = updateExpirationTime;
+          markUnprocessedUpdateTime(updateExpirationTime);
         }
       } else {
+        // This update does have sufficient priority.
+
+        if (newBaseQueueLast !== null) {
+          const clone: Update<S, A> = {
+            expirationTime: Sync, // This update is going to be committed so we never want uncommit it.
+            suspenseConfig: update.suspenseConfig,
+            action: update.action,
+            eagerReducer: update.eagerReducer,
+            eagerState: update.eagerState,
+            next: (null: any),
+          };
+          newBaseQueueLast = newBaseQueueLast.next = clone;
+        }
+
+        // Mark the event time of this update as relevant to this render pass.
+        // TODO: This should ideally use the true event time of this update rather than
+        // its priority which is a derived and not reverseable value.
+        // TODO: We should skip this update if it was already committed but currently
+        // we have no way of detecting the difference between a committed and suspended
+        // update here.
+        markRenderEventTimeAndConfig(
+          updateExpirationTime,
+          update.suspenseConfig,
+        );
+
         // Process this update.
         if (update.eagerReducer === reducer) {
           // If this update was processed eagerly, and its reducer matches the
@@ -728,13 +796,13 @@ function updateReducer<S, I, A>(
           newState = reducer(newState, action);
         }
       }
-      prevUpdate = update;
       update = update.next;
     } while (update !== null && update !== first);
 
-    if (!didSkip) {
-      newBaseUpdate = prevUpdate;
+    if (newBaseQueueLast === null) {
       newBaseState = newState;
+    } else {
+      newBaseQueueLast.next = (newBaseQueueFirst: any);
     }
 
     // Mark that the fiber performed work, but only if the new state is
@@ -744,8 +812,8 @@ function updateReducer<S, I, A>(
     }
 
     hook.memoizedState = newState;
-    hook.baseUpdate = newBaseUpdate;
     hook.baseState = newBaseState;
+    hook.baseQueue = newBaseQueueLast;
 
     queue.lastRenderedState = newState;
   }
@@ -763,7 +831,7 @@ function mountState<S>(
   }
   hook.memoizedState = hook.baseState = initialState;
   const queue = (hook.queue = {
-    last: null,
+    pending: null,
     dispatch: null,
     lastRenderedReducer: basicStateReducer,
     lastRenderedState: (initialState: any),
@@ -772,8 +840,7 @@ function mountState<S>(
     BasicStateAction<S>,
   > = (queue.dispatch = (dispatchAction.bind(
     null,
-    // Flow doesn't know this is non-null, but we do.
-    ((currentlyRenderingFiber: any): Fiber),
+    currentlyRenderingFiber,
     queue,
   ): any));
   return [hook.memoizedState, dispatch];
@@ -794,8 +861,10 @@ function pushEffect(tag, create, destroy, deps) {
     // Circular
     next: (null: any),
   };
+  let componentUpdateQueue: null | FunctionComponentUpdateQueue = (currentlyRenderingFiber.updateQueue: any);
   if (componentUpdateQueue === null) {
     componentUpdateQueue = createFunctionComponentUpdateQueue();
+    currentlyRenderingFiber.updateQueue = (componentUpdateQueue: any);
     componentUpdateQueue.lastEffect = effect.next = effect;
   } else {
     const lastEffect = componentUpdateQueue.lastEffect;
@@ -811,7 +880,7 @@ function pushEffect(tag, create, destroy, deps) {
   return effect;
 }
 
-function mountRef<T>(initialValue: T): {current: T} {
+function mountRef<T>(initialValue: T): {|current: T|} {
   const hook = mountWorkInProgressHook();
   const ref = {current: initialValue};
   if (__DEV__) {
@@ -821,7 +890,7 @@ function mountRef<T>(initialValue: T): {current: T} {
   return ref;
 }
 
-function updateRef<T>(initialValue: T): {current: T} {
+function updateRef<T>(initialValue: T): {|current: T|} {
   const hook = updateWorkInProgressHook();
   return hook.memoizedState;
 }
@@ -829,7 +898,7 @@ function updateRef<T>(initialValue: T): {current: T} {
 function mountEffectImpl(fiberEffectTag, hookEffectTag, create, deps): void {
   const hook = mountWorkInProgressHook();
   const nextDeps = deps === undefined ? null : deps;
-  sideEffectTag |= fiberEffectTag;
+  currentlyRenderingFiber.effectTag |= fiberEffectTag;
   hook.memoizedState = pushEffect(hookEffectTag, create, undefined, nextDeps);
 }
 
@@ -850,7 +919,8 @@ function updateEffectImpl(fiberEffectTag, hookEffectTag, create, deps): void {
     }
   }
 
-  sideEffectTag |= fiberEffectTag;
+  currentlyRenderingFiber.effectTag |= fiberEffectTag;
+
   hook.memoizedState = pushEffect(hookEffectTag, create, destroy, nextDeps);
 }
 
@@ -858,6 +928,12 @@ function mountEffect(
   create: () => (() => void) | void,
   deps: Array<mixed> | void | null,
 ): void {
+  if (__DEV__) {
+    // $FlowExpectedError - jest isn't a global, and isn't recognized outside of tests
+    if ('undefined' !== typeof jest) {
+      warnIfNotCurrentlyActingEffectsInDEV(currentlyRenderingFiber);
+    }
+  }
   return mountEffectImpl(
     UpdateEffect | PassiveEffect,
     UnmountPassive | MountPassive,
@@ -870,6 +946,12 @@ function updateEffect(
   create: () => (() => void) | void,
   deps: Array<mixed> | void | null,
 ): void {
+  if (__DEV__) {
+    // $FlowExpectedError - jest isn't a global, and isn't recognized outside of tests
+    if ('undefined' !== typeof jest) {
+      warnIfNotCurrentlyActingEffectsInDEV(currentlyRenderingFiber);
+    }
+  }
   return updateEffectImpl(
     UpdateEffect | PassiveEffect,
     UnmountPassive | MountPassive,
@@ -904,7 +986,7 @@ function updateLayoutEffect(
 
 function imperativeHandleEffect<T>(
   create: () => T,
-  ref: {current: T | null} | ((inst: T | null) => mixed) | null | void,
+  ref: {|current: T | null|} | ((inst: T | null) => mixed) | null | void,
 ) {
   if (typeof ref === 'function') {
     const refCallback = ref;
@@ -916,12 +998,13 @@ function imperativeHandleEffect<T>(
   } else if (ref !== null && ref !== undefined) {
     const refObject = ref;
     if (__DEV__) {
-      warning(
-        refObject.hasOwnProperty('current'),
-        'Expected useImperativeHandle() first argument to either be a ' +
-          'ref callback or React.createRef() object. Instead received: %s.',
-        'an object with keys {' + Object.keys(refObject).join(', ') + '}',
-      );
+      if (!refObject.hasOwnProperty('current')) {
+        console.error(
+          'Expected useImperativeHandle() first argument to either be a ' +
+            'ref callback or React.createRef() object. Instead received: %s.',
+          'an object with keys {' + Object.keys(refObject).join(', ') + '}',
+        );
+      }
     }
     const inst = create();
     refObject.current = inst;
@@ -932,17 +1015,18 @@ function imperativeHandleEffect<T>(
 }
 
 function mountImperativeHandle<T>(
-  ref: {current: T | null} | ((inst: T | null) => mixed) | null | void,
+  ref: {|current: T | null|} | ((inst: T | null) => mixed) | null | void,
   create: () => T,
   deps: Array<mixed> | void | null,
 ): void {
   if (__DEV__) {
-    warning(
-      typeof create === 'function',
-      'Expected useImperativeHandle() second argument to be a function ' +
-        'that creates a handle. Instead received: %s.',
-      create !== null ? typeof create : 'null',
-    );
+    if (typeof create !== 'function') {
+      console.error(
+        'Expected useImperativeHandle() second argument to be a function ' +
+          'that creates a handle. Instead received: %s.',
+        create !== null ? typeof create : 'null',
+      );
+    }
   }
 
   // TODO: If deps are provided, should we skip comparing the ref itself?
@@ -958,17 +1042,18 @@ function mountImperativeHandle<T>(
 }
 
 function updateImperativeHandle<T>(
-  ref: {current: T | null} | ((inst: T | null) => mixed) | null | void,
+  ref: {|current: T | null|} | ((inst: T | null) => mixed) | null | void,
   create: () => T,
   deps: Array<mixed> | void | null,
 ): void {
   if (__DEV__) {
-    warning(
-      typeof create === 'function',
-      'Expected useImperativeHandle() second argument to be a function ' +
-        'that creates a handle. Instead received: %s.',
-      create !== null ? typeof create : 'null',
-    );
+    if (typeof create !== 'function') {
+      console.error(
+        'Expected useImperativeHandle() second argument to be a function ' +
+          'that creates a handle. Instead received: %s.',
+        create !== null ? typeof create : 'null',
+      );
+    }
   }
 
   // TODO: If deps are provided, should we skip comparing the ref itself?
@@ -1046,17 +1131,83 @@ function updateMemo<T>(
   return nextValue;
 }
 
-// in a test-like environment, we want to warn if dispatchAction()
-// is called outside of a batchedUpdates/TestUtils.act(...) call.
-let shouldWarnForUnbatchedSetState = false;
+function mountDeferredValue<T>(
+  value: T,
+  config: TimeoutConfig | void | null,
+): T {
+  const [prevValue, setValue] = mountState(value);
+  mountEffect(() => {
+    const previousConfig = ReactCurrentBatchConfig.suspense;
+    ReactCurrentBatchConfig.suspense = config === undefined ? null : config;
+    try {
+      setValue(value);
+    } finally {
+      ReactCurrentBatchConfig.suspense = previousConfig;
+    }
+  }, [value, config]);
+  return prevValue;
+}
 
-if (__DEV__) {
-  // jest isn't a 'global', it's just exposed to tests via a wrapped function
-  // further, this isn't a test file, so flow doesn't recognize the symbol. So...
-  // $FlowExpectedError - because requirements don't give a damn about your type sigs.
-  if ('undefined' !== typeof jest) {
-    shouldWarnForUnbatchedSetState = true;
-  }
+function updateDeferredValue<T>(
+  value: T,
+  config: TimeoutConfig | void | null,
+): T {
+  const [prevValue, setValue] = updateState(value);
+  updateEffect(() => {
+    const previousConfig = ReactCurrentBatchConfig.suspense;
+    ReactCurrentBatchConfig.suspense = config === undefined ? null : config;
+    try {
+      setValue(value);
+    } finally {
+      ReactCurrentBatchConfig.suspense = previousConfig;
+    }
+  }, [value, config]);
+  return prevValue;
+}
+
+function startTransition(setPending, config, callback) {
+  const priorityLevel = getCurrentPriorityLevel();
+  runWithPriority(
+    priorityLevel < UserBlockingPriority ? UserBlockingPriority : priorityLevel,
+    () => {
+      setPending(true);
+    },
+  );
+  runWithPriority(
+    priorityLevel > NormalPriority ? NormalPriority : priorityLevel,
+    () => {
+      const previousConfig = ReactCurrentBatchConfig.suspense;
+      ReactCurrentBatchConfig.suspense = config === undefined ? null : config;
+      try {
+        setPending(false);
+        callback();
+      } finally {
+        ReactCurrentBatchConfig.suspense = previousConfig;
+      }
+    },
+  );
+}
+
+function mountTransition(
+  config: SuspenseConfig | void | null,
+): [(() => void) => void, boolean] {
+  const [isPending, setPending] = mountState(false);
+  const start = mountCallback(startTransition.bind(null, setPending, config), [
+    setPending,
+    config,
+  ]);
+  return [start, isPending];
+}
+
+function updateTransition(
+  config: SuspenseConfig | void | null,
+): [(() => void) => void, boolean] {
+  const [isPending, setPending] = updateState(false);
+  const start = updateCallback(startTransition.bind(null, setPending, config), [
+    setPending,
+    config,
+  ]);
+  return [start, isPending];
 }
 
 function dispatchAction<S, A>(
@@ -1071,12 +1222,13 @@ function dispatchAction<S, A>(
   );
 
   if (__DEV__) {
-    warning(
-      arguments.length <= 3,
-      "State updates from the useState() and useReducer() Hooks don't support the " +
-        'second callback argument. To execute a side effect after ' +
-        'rendering, declare it in the component body with useEffect().',
-    );
+    if (typeof arguments[3] === 'function') {
+      console.error(
+        "State updates from the useState() and useReducer() Hooks don't support the " +
+          'second callback argument. To execute a side effect after ' +
+          'rendering, declare it in the component body with useEffect().',
+      );
+    }
   }
 
   const alternate = fiber.alternate;
@@ -1090,11 +1242,15 @@ function dispatchAction<S, A>(
     didScheduleRenderPhaseUpdate = true;
     const update: Update<S, A> = {
       expirationTime: renderExpirationTime,
+      suspenseConfig: null,
       action,
       eagerReducer: null,
       eagerState: null,
-      next: null,
+      next: (null: any),
     };
+    if (__DEV__) {
+      update.priority = getCurrentPriorityLevel();
+    }
     if (renderPhaseUpdates === null) {
       renderPhaseUpdates = new Map();
     }
@@ -1110,33 +1266,37 @@ function dispatchAction<S, A>(
       lastRenderPhaseUpdate.next = update;
     }
   } else {
-    flushPassiveEffects();
-
-    const currentTime = requestCurrentTime();
-    const expirationTime = computeExpirationForFiber(currentTime, fiber);
+    const currentTime = requestCurrentTimeForUpdate();
+    const suspenseConfig = requestCurrentSuspenseConfig();
+    const expirationTime = computeExpirationForFiber(
+      currentTime,
+      fiber,
+      suspenseConfig,
+    );
 
     const update: Update<S, A> = {
       expirationTime,
+      suspenseConfig,
       action,
       eagerReducer: null,
       eagerState: null,
-      next: null,
+      next: (null: any),
     };
 
+    if (__DEV__) {
+      update.priority = getCurrentPriorityLevel();
+    }
+
     // Append the update to the end of the list.
-    const last = queue.last;
-    if (last === null) {
+    const pending = queue.pending;
+    if (pending === null) {
       // This is the first update. Create a circular list.
       update.next = update;
     } else {
-      const first = last.next;
-      if (first !== null) {
-        // Still circular.
-        update.next = first;
-      }
-      last.next = update;
+      update.next = pending.next;
+      pending.next = update;
     }
-    queue.last = update;
+    queue.pending = update;
 
     if (
       fiber.expirationTime === NoWork &&
@@ -1178,8 +1338,10 @@ function dispatchAction<S, A>(
       }
     }
     if (__DEV__) {
-      if (shouldWarnForUnbatchedSetState === true) {
-        warnIfNotCurrentlyBatchingInDev(fiber);
+      // $FlowExpectedError - jest isn't a global, and isn't recognized outside of tests
+      if ('undefined' !== typeof jest) {
+        warnIfNotScopedWithMatchingAct(fiber);
+        warnIfNotCurrentlyActingUpdatesInDev(fiber);
       }
     }
     scheduleWork(fiber, expirationTime);
@@ -1199,6 +1361,9 @@ export const ContextOnlyDispatcher: Dispatcher = {
   useRef: throwInvalidHookError,
   useState: throwInvalidHookError,
   useDebugValue: throwInvalidHookError,
+  useResponder: throwInvalidHookError,
+  useDeferredValue: throwInvalidHookError,
+  useTransition: throwInvalidHookError,
 };
 
 const HooksDispatcherOnMount: Dispatcher = {
@@ -1214,6 +1379,9 @@ const HooksDispatcherOnMount: Dispatcher = {
   useRef: mountRef,
   useState: mountState,
   useDebugValue: mountDebugValue,
+  useResponder: createDeprecatedResponderListener,
+  useDeferredValue: mountDeferredValue,
+  useTransition: mountTransition,
 };
 
 const HooksDispatcherOnUpdate: Dispatcher = {
@@ -1229,6 +1397,9 @@ const HooksDispatcherOnUpdate: Dispatcher = {
   useRef: updateRef,
   useState: updateState,
   useDebugValue: updateDebugValue,
+  useResponder: createDeprecatedResponderListener,
+  useDeferredValue: updateDeferredValue,
+  useTransition: updateTransition,
 };
 
 let HooksDispatcherOnMountInDEV: Dispatcher | null = null;
@@ -1239,8 +1410,7 @@ let InvalidNestedHooksDispatcherOnUpdateInDEV: Dispatcher | null = null;
 
 if (__DEV__) {
   const warnInvalidContextAccess = () => {
-    warning(
-      false,
+    console.error(
       'Context can only be read while React is rendering. ' +
         'In classes, you can read it in the render method or getDerivedStateFromProps. ' +
         'In function components, you can read it directly in the function body, but not ' +
@@ -1249,8 +1419,7 @@ if (__DEV__) {
   };
 
   const warnInvalidHookAccess = () => {
-    warning(
-      false,
+    console.error(
       'Do not call Hooks inside useEffect(...), useMemo(...), or other built-in Hooks. ' +
         'You can only call Hooks at the top level of your React function. ' +
         'For more information, see ' +
@@ -1290,7 +1459,7 @@ if (__DEV__) {
       return mountEffect(create, deps);
     },
     useImperativeHandle<T>(
-      ref: {current: T | null} | ((inst: T | null) => mixed) | null | void,
+      ref: {|current: T | null|} | ((inst: T | null) => mixed) | null | void,
       create: () => T,
       deps: Array<mixed> | void | null,
     ): void {
@@ -1335,7 +1504,7 @@ if (__DEV__) {
         ReactCurrentDispatcher.current = prevDispatcher;
       }
     },
-    useRef<T>(initialValue: T): {current: T} {
+    useRef<T>(initialValue: T): {|current: T|} {
       currentHookNameInDev = 'useRef';
       mountHookTypesDev();
       return mountRef(initialValue);
@@ -1357,6 +1526,26 @@ if (__DEV__) {
       currentHookNameInDev = 'useDebugValue';
       mountHookTypesDev();
       return mountDebugValue(value, formatterFn);
+    },
+    useResponder<E, C>(
+      responder: ReactEventResponder<E, C>,
+      props,
+    ): ReactEventResponderListener<E, C> {
+      currentHookNameInDev = 'useResponder';
+      mountHookTypesDev();
+      return createDeprecatedResponderListener(responder, props);
+    },
+    useDeferredValue<T>(value: T, config: TimeoutConfig | void | null): T {
+      currentHookNameInDev = 'useDeferredValue';
+      mountHookTypesDev();
+      return mountDeferredValue(value, config);
+    },
+    useTransition(
+      config: SuspenseConfig | void | null,
+    ): [(() => void) => void, boolean] {
+      currentHookNameInDev = 'useTransition';
+      mountHookTypesDev();
+      return mountTransition(config);
     },
   };
 
@@ -1390,7 +1579,7 @@ if (__DEV__) {
       return mountEffect(create, deps);
     },
     useImperativeHandle<T>(
-      ref: {current: T | null} | ((inst: T | null) => mixed) | null | void,
+      ref: {|current: T | null|} | ((inst: T | null) => mixed) | null | void,
       create: () => T,
       deps: Array<mixed> | void | null,
     ): void {
@@ -1432,7 +1621,7 @@ if (__DEV__) {
         ReactCurrentDispatcher.current = prevDispatcher;
       }
     },
-    useRef<T>(initialValue: T): {current: T} {
+    useRef<T>(initialValue: T): {|current: T|} {
       currentHookNameInDev = 'useRef';
       updateHookTypesDev();
       return mountRef(initialValue);
@@ -1454,6 +1643,26 @@ if (__DEV__) {
       currentHookNameInDev = 'useDebugValue';
       updateHookTypesDev();
       return mountDebugValue(value, formatterFn);
+    },
+    useResponder<E, C>(
+      responder: ReactEventResponder<E, C>,
+      props,
+    ): ReactEventResponderListener<E, C> {
+      currentHookNameInDev = 'useResponder';
+      updateHookTypesDev();
+      return createDeprecatedResponderListener(responder, props);
+    },
+    useDeferredValue<T>(value: T, config: TimeoutConfig | void | null): T {
+      currentHookNameInDev = 'useDeferredValue';
+      updateHookTypesDev();
+      return mountDeferredValue(value, config);
+    },
+    useTransition(
+      config: SuspenseConfig | void | null,
+    ): [(() => void) => void, boolean] {
+      currentHookNameInDev = 'useTransition';
+      updateHookTypesDev();
+      return mountTransition(config);
     },
   };
 
@@ -1487,7 +1696,7 @@ if (__DEV__) {
       return updateEffect(create, deps);
     },
     useImperativeHandle<T>(
-      ref: {current: T | null} | ((inst: T | null) => mixed) | null | void,
+      ref: {|current: T | null|} | ((inst: T | null) => mixed) | null | void,
       create: () => T,
       deps: Array<mixed> | void | null,
     ): void {
@@ -1529,7 +1738,7 @@ if (__DEV__) {
         ReactCurrentDispatcher.current = prevDispatcher;
       }
     },
-    useRef<T>(initialValue: T): {current: T} {
+    useRef<T>(initialValue: T): {|current: T|} {
       currentHookNameInDev = 'useRef';
       updateHookTypesDev();
       return updateRef(initialValue);
@@ -1551,6 +1760,26 @@ if (__DEV__) {
       currentHookNameInDev = 'useDebugValue';
       updateHookTypesDev();
       return updateDebugValue(value, formatterFn);
+    },
+    useResponder<E, C>(
+      responder: ReactEventResponder<E, C>,
+      props,
+    ): ReactEventResponderListener<E, C> {
+      currentHookNameInDev = 'useResponder';
+      updateHookTypesDev();
+      return createDeprecatedResponderListener(responder, props);
+    },
+    useDeferredValue<T>(value: T, config: TimeoutConfig | void | null): T {
+      currentHookNameInDev = 'useDeferredValue';
+      updateHookTypesDev();
+      return updateDeferredValue(value, config);
+    },
+    useTransition(
+      config: SuspenseConfig | void | null,
+    ): [(() => void) => void, boolean] {
+      currentHookNameInDev = 'useTransition';
+      updateHookTypesDev();
+      return updateTransition(config);
     },
   };
 
@@ -1588,7 +1817,7 @@ if (__DEV__) {
       return mountEffect(create, deps);
     },
     useImperativeHandle<T>(
-      ref: {current: T | null} | ((inst: T | null) => mixed) | null | void,
+      ref: {|current: T | null|} | ((inst: T | null) => mixed) | null | void,
       create: () => T,
       deps: Array<mixed> | void | null,
     ): void {
@@ -1634,7 +1863,7 @@ if (__DEV__) {
         ReactCurrentDispatcher.current = prevDispatcher;
       }
     },
-    useRef<T>(initialValue: T): {current: T} {
+    useRef<T>(initialValue: T): {|current: T|} {
       currentHookNameInDev = 'useRef';
       warnInvalidHookAccess();
       mountHookTypesDev();
@@ -1659,6 +1888,29 @@ if (__DEV__) {
       warnInvalidHookAccess();
       mountHookTypesDev();
       return mountDebugValue(value, formatterFn);
+    },
+    useResponder<E, C>(
+      responder: ReactEventResponder<E, C>,
+      props,
+    ): ReactEventResponderListener<E, C> {
+      currentHookNameInDev = 'useResponder';
+      warnInvalidHookAccess();
+      mountHookTypesDev();
+      return createDeprecatedResponderListener(responder, props);
+    },
+    useDeferredValue<T>(value: T, config: TimeoutConfig | void | null): T {
+      currentHookNameInDev = 'useDeferredValue';
+      warnInvalidHookAccess();
+      mountHookTypesDev();
+      return mountDeferredValue(value, config);
+    },
+    useTransition(
+      config: SuspenseConfig | void | null,
+    ): [(() => void) => void, boolean] {
+      currentHookNameInDev = 'useTransition';
+      warnInvalidHookAccess();
+      mountHookTypesDev();
+      return mountTransition(config);
     },
   };
 
@@ -1696,7 +1948,7 @@ if (__DEV__) {
       return updateEffect(create, deps);
     },
     useImperativeHandle<T>(
-      ref: {current: T | null} | ((inst: T | null) => mixed) | null | void,
+      ref: {|current: T | null|} | ((inst: T | null) => mixed) | null | void,
       create: () => T,
       deps: Array<mixed> | void | null,
     ): void {
@@ -1742,7 +1994,7 @@ if (__DEV__) {
         ReactCurrentDispatcher.current = prevDispatcher;
       }
     },
-    useRef<T>(initialValue: T): {current: T} {
+    useRef<T>(initialValue: T): {|current: T|} {
       currentHookNameInDev = 'useRef';
       warnInvalidHookAccess();
       updateHookTypesDev();
@@ -1767,6 +2019,29 @@ if (__DEV__) {
       warnInvalidHookAccess();
       updateHookTypesDev();
       return updateDebugValue(value, formatterFn);
+    },
+    useResponder<E, C>(
+      responder: ReactEventResponder<E, C>,
+      props,
+    ): ReactEventResponderListener<E, C> {
+      currentHookNameInDev = 'useResponder';
+      warnInvalidHookAccess();
+      updateHookTypesDev();
+      return createDeprecatedResponderListener(responder, props);
+    },
+    useDeferredValue<T>(value: T, config: TimeoutConfig | void | null): T {
+      currentHookNameInDev = 'useDeferredValue';
+      warnInvalidHookAccess();
+      updateHookTypesDev();
+      return updateDeferredValue(value, config);
+    },
+    useTransition(
+      config: SuspenseConfig | void | null,
+    ): [(() => void) => void, boolean] {
+      currentHookNameInDev = 'useTransition';
+      warnInvalidHookAccess();
+      updateHookTypesDev();
+      return updateTransition(config);
     },
   };
 }

@@ -6,17 +6,17 @@
  */
 'use strict';
 
-const babylon = require('babylon');
+const babelParser = require('@babel/parser');
 const fs = require('fs');
 const through = require('through2');
-const traverse = require('babel-traverse').default;
+const traverse = require('@babel/traverse').default;
 const gs = require('glob-stream');
 
 const evalToString = require('../shared/evalToString');
 
-const babylonOptions = {
+const parserOptions = {
   sourceType: 'module',
-  // As a parser, babylon has its own options and we can't directly
+  // babelParser has its own options and we can't directly
   // import/require a babel preset. It should be kept **the same** as
   // the `babel-plugin-syntax-*` ones specified in
   // https://github.com/facebook/fbjs/blob/master/packages/babel-preset-fbjs/configure.js
@@ -38,22 +38,42 @@ function transform(file, enc, cb) {
       return;
     }
 
-    const ast = babylon.parse(source, babylonOptions);
+    let ast;
+    try {
+      ast = babelParser.parse(source, parserOptions);
+    } catch (error) {
+      console.error('Failed to parse source file:', file.path);
+      throw error;
+    }
+
     traverse(ast, {
       CallExpression: {
         exit: function(astPath) {
           const callee = astPath.get('callee');
           if (
-            callee.isIdentifier({name: 'warning'}) ||
-            callee.isIdentifier({name: 'warningWithoutStack'}) ||
-            callee.isIdentifier({name: 'lowPriorityWarning'})
+            callee.matchesPattern('console.warn') ||
+            callee.matchesPattern('console.error')
           ) {
             const node = astPath.node;
-
+            if (node.callee.type !== 'MemberExpression') {
+              return;
+            }
+            if (node.callee.property.type !== 'Identifier') {
+              return;
+            }
             // warning messages can be concatenated (`+`) at runtime, so here's
             // a trivial partial evaluator that interprets the literal value
-            const warningMsgLiteral = evalToString(node.arguments[1]);
-            warnings.add(JSON.stringify(warningMsgLiteral));
+            try {
+              const warningMsgLiteral = evalToString(node.arguments[0]);
+              warnings.add(JSON.stringify(warningMsgLiteral));
+            } catch (error) {
+              console.error(
+                'Failed to extract warning message from',
+                file.path
+              );
+              console.error(astPath.node.loc);
+              throw error;
+            }
           }
         },
       },
@@ -65,7 +85,9 @@ function transform(file, enc, cb) {
 
 gs([
   'packages/**/*.js',
-  '!packages/shared/warning.js',
+  '!packages/*/npm/**/*.js',
+  '!packages/shared/consoleWithStackDev.js',
+  '!packages/react-devtools*/**/*.js',
   '!**/__tests__/**/*.js',
   '!**/__mocks__/**/*.js',
 ]).pipe(

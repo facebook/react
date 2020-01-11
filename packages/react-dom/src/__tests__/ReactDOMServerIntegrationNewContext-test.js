@@ -14,6 +14,7 @@ const ReactDOMServerIntegrationUtils = require('./utils/ReactDOMServerIntegratio
 let React;
 let ReactDOM;
 let ReactDOMServer;
+let ReactTestUtils;
 
 function initModules() {
   // Reset warning cache.
@@ -21,11 +22,13 @@ function initModules() {
   React = require('react');
   ReactDOM = require('react-dom');
   ReactDOMServer = require('react-dom/server');
+  ReactTestUtils = require('react-dom/test-utils');
 
   // Make them available to the helpers.
   return {
     ReactDOM,
     ReactDOMServer,
+    ReactTestUtils,
   };
 }
 
@@ -267,12 +270,12 @@ describe('ReactDOMServerIntegration', () => {
                   </Theme.Provider>
                   <Language.Consumer>
                     {language => (
-                      <React.Fragment>
+                      <>
                         <Theme.Consumer>
                           {theme => <div id="theme3">{theme}</div>}
                         </Theme.Consumer>
                         <div id="language2">{language}</div>
-                      </React.Fragment>
+                      </>
                     )}
                   </Language.Consumer>
                 </Theme.Provider>

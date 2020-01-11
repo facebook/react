@@ -1,0 +1,34 @@
+{
+  "name": "react-devtools-core",
+  "version": "4.4.0",
+  "description": "Use react-devtools outside of the browser",
+  "license": "MIT",
+  "main": "./dist/backend.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/facebook/react.git",
+    "directory": "packages/react-devtools-core"
+  },
+  "files": [
+    "dist",
+    "backend.js",
+    "build-info.json",
+    "standalone.js"
+  ],
+  "scripts": {
+    "build": "yarn build:backend && yarn build:standalone",
+    "build:backend": "cross-env NODE_ENV=production webpack --config webpack.backend.js",
+    "build:standalone": "cross-env NODE_ENV=production webpack --config webpack.standalone.js",
+    "prepublish": "yarn run build",
+    "start:backend": "cross-env NODE_ENV=development webpack --config webpack.backend.js --watch",
+    "start:standalone": "cross-env NODE_ENV=development webpack --config webpack.standalone.js --watch"
+  },
+  "dependencies": {
+    "es6-symbol": "^3",
+    "shell-quote": "^1.6.1",
+    "ws": "^7"
+  },
+  "devDependencies": {
+    "cross-env": "^3.1.4"
+  }
+}

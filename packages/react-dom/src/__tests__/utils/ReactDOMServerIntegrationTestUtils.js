@@ -14,9 +14,10 @@ const stream = require('stream');
 module.exports = function(initModules) {
   let ReactDOM;
   let ReactDOMServer;
+  let ReactTestUtils;
 
   function resetModules() {
-    ({ReactDOM, ReactDOMServer} = initModules());
+    ({ReactDOM, ReactDOMServer, ReactTestUtils} = initModules());
   }
 
   function shouldUseDocument(reactElement) {
@@ -48,9 +49,13 @@ module.exports = function(initModules) {
   function asyncReactDOMRender(reactElement, domElement, forceHydrate) {
     return new Promise(resolve => {
       if (forceHydrate) {
-        ReactDOM.hydrate(reactElement, domElement);
+        ReactTestUtils.act(() => {
+          ReactDOM.hydrate(reactElement, domElement);
+        });
       } else {
-        ReactDOM.render(reactElement, domElement);
+        ReactTestUtils.act(() => {
+          ReactDOM.render(reactElement, domElement);
+        });
       }
       // We can't use the callback for resolution because that will not catch
       // errors. They're thrown.
@@ -64,7 +69,7 @@ module.exports = function(initModules) {
       console.error.calls.reset();
     } else {
       // TODO: Rewrite tests that use this helper to enumerate expected errors.
-      // This will enable the helper to use the .toWarnDev() matcher instead of spying.
+      // This will enable the helper to use the .toErrorDev() matcher instead of spying.
       spyOnDev(console, 'error');
     }
 

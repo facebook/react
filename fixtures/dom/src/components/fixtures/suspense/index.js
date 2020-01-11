@@ -46,7 +46,7 @@ class SuspendyTreeChild extends React.Component {
 
   render() {
     return (
-      <React.Fragment>
+      <>
         <Suspense fallback={<div>(display: none)</div>}>
           <div>
             <AsyncStep text={`${this.state.step} + ${this.id}`} ms={500} />
@@ -54,7 +54,7 @@ class SuspendyTreeChild extends React.Component {
           </div>
         </Suspense>
         <button onClick={this.increment}>Hide</button>
-      </React.Fragment>
+      </>
     );
   }
 }
@@ -86,22 +86,22 @@ class SuspendyTree extends React.Component {
   };
   render() {
     return (
-      <React.Fragment>
+      <>
         <div ref={this.parentContainer}>
           <div ref={this.container} />
         </div>
         <div>
           {this.container.current !== null
             ? ReactDOM.createPortal(
-                <React.Fragment>
+                <>
                   <SuspendyTreeChild>{this.props.children}</SuspendyTreeChild>
                   <button onClick={this.removeAndRestore}>Remove</button>
-                </React.Fragment>,
+                </>,
                 this.container.current
               )
             : null}
         </div>
-      </React.Fragment>
+      </>
     );
   }
 }
@@ -169,7 +169,7 @@ class TextInputFixtures extends React.Component {
               the "Go" button.
             </li>
             <li>
-              Intead of clicking "Go", which switches focus, press Command +
+              Instead of clicking "Go", which switches focus, press Command +
               Enter (or Control + Enter on Windows, Linux).
             </li>
           </TestCase.Steps>
@@ -213,8 +213,8 @@ class TextInputFixtures extends React.Component {
 
           <Fixture>
             <SuspendyTree>
-              <img src="https://upload.wikimedia.org/wikipedia/commons/e/ee/Atom_%282%29.png" />React
-              is cool
+              <img src="https://upload.wikimedia.org/wikipedia/commons/e/ee/Atom_%282%29.png" />
+              React is cool
             </SuspendyTree>
           </Fixture>
         </TestCase>
@@ -308,7 +308,9 @@ class TextInputFixtures extends React.Component {
               <div style={{height: 200, overflow: 'scroll'}}>
                 {Array(20)
                   .fill()
-                  .map((_, i) => <h2 key={i}>{i + 1}</h2>)}
+                  .map((_, i) => (
+                    <h2 key={i}>{i + 1}</h2>
+                  ))}
               </div>
             </SuspendyTree>
           </Fixture>

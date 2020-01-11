@@ -16,6 +16,7 @@ const {
   unstable_now,
   unstable_scheduleCallback,
   unstable_shouldYield,
+  unstable_requestPaint,
   unstable_getFirstCallbackNode,
   unstable_runWithPriority,
   unstable_next,
@@ -27,6 +28,11 @@ const {
   unstable_NormalPriority,
   unstable_LowPriority,
   unstable_IdlePriority,
+  unstable_forceFrameRate,
+
+  // this doesn't actually exist on the scheduler, but it *does*
+  // on scheduler/unstable_mock, which we'll need inside act().
+  unstable_flushAllWithoutAsserting,
 } = ReactInternals.Scheduler;
 
 export {
@@ -34,6 +40,7 @@ export {
   unstable_now,
   unstable_scheduleCallback,
   unstable_shouldYield,
+  unstable_requestPaint,
   unstable_getFirstCallbackNode,
   unstable_runWithPriority,
   unstable_next,
@@ -45,4 +52,6 @@ export {
   unstable_NormalPriority,
   unstable_LowPriority,
   unstable_IdlePriority,
+  unstable_forceFrameRate,
+  unstable_flushAllWithoutAsserting,
 };

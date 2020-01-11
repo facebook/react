@@ -10,9 +10,11 @@
 
 'use strict';
 
+import {ReactNativeViewConfigRegistry} from 'react-native/Libraries/ReactPrivate/ReactNativePrivateInterface';
+
 import type {ViewConfigGetter} from './ReactNativeTypes';
 
-const {register} = require('ReactNativeViewConfigRegistry');
+const {register} = ReactNativeViewConfigRegistry;
 
 /**
  * Creates a renderable ReactNative host component.

@@ -10,20 +10,21 @@ const packages = readdirSync(packagesRoot).filter(dir => {
   if (dir.charAt(0) === '.') {
     return false;
   }
-  if (dir === 'events') {
-    // There's an actual Node package called "events"
-    // that's used by jsdom so we don't want to alias that.
+  const packagePath = join(packagesRoot, dir, 'package.json');
+  let stat;
+  try {
+    stat = statSync(packagePath);
+  } catch (err) {
     return false;
   }
-  const packagePath = join(packagesRoot, dir, 'package.json');
-  return statSync(packagePath).isFile();
+  return stat.isFile();
 });
 
 // Create a module map to point React packages to the build output
 const moduleNameMapper = {};
 
 // Allow bundle tests to read (but not write!) default feature flags.
-// This lets us determine whether we're running in Fire mode
+// This lets us determine whether we're running in different modes
 // without making relevant tests internal-only.
 moduleNameMapper[
   '^shared/ReactFeatureFlags'
@@ -42,6 +43,10 @@ packages.forEach(name => {
 module.exports = Object.assign({}, baseConfig, {
   // Redirect imports to the compiled bundles
   moduleNameMapper,
+  modulePathIgnorePatterns: [
+    ...baseConfig.modulePathIgnorePatterns,
+    'packages/react-devtools-shared',
+  ],
   // Don't run bundle tests on -test.internal.* files
   testPathIgnorePatterns: ['/node_modules/', '-test.internal.js$'],
   // Exclude the build output from transforms

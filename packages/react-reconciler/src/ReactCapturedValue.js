@@ -11,13 +11,13 @@ import type {Fiber} from './ReactFiber';
 
 import {getStackByFiberInDevAndProd} from './ReactCurrentFiber';
 
-export type CapturedValue<T> = {
+export type CapturedValue<T> = {|
   value: T,
   source: Fiber | null,
   stack: string | null,
-};
+|};
 
-export type CapturedError = {
+export type CapturedError = {|
   componentName: ?string,
   componentStack: string,
   error: mixed,
@@ -25,7 +25,7 @@ export type CapturedError = {
   errorBoundaryFound: boolean,
   errorBoundaryName: string | null,
   willRetry: boolean,
-};
+|};
 
 export function createCapturedValue<T>(
   value: T,

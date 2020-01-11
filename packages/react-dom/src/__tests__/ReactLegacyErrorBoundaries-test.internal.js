@@ -30,6 +30,7 @@ describe('ReactLegacyErrorBoundaries', () => {
   let BrokenComponentDidMountErrorBoundary;
   let BrokenRender;
   let ErrorBoundary;
+  let BothErrorBoundaries;
   let ErrorMessage;
   let NoopErrorBoundary;
   let RetryErrorBoundary;
@@ -486,6 +487,57 @@ describe('ReactLegacyErrorBoundaries', () => {
       },
     };
 
+    BothErrorBoundaries = class extends React.Component {
+      constructor(props) {
+        super(props);
+        this.state = {error: null};
+        log.push('BothErrorBoundaries constructor');
+      }
+
+      static getDerivedStateFromError(error) {
+        log.push('BothErrorBoundaries static getDerivedStateFromError');
+        return {error};
+      }
+
+      render() {
+        if (this.state.error) {
+          log.push('BothErrorBoundaries render error');
+          return <div>Caught an error: {this.state.error.message}.</div>;
+        }
+        log.push('BothErrorBoundaries render success');
+        return <div>{this.props.children}</div>;
+      }
+
+      componentDidCatch(error) {
+        log.push('BothErrorBoundaries componentDidCatch');
+        this.setState({error});
+      }
+
+      UNSAFE_componentWillMount() {
+        log.push('BothErrorBoundaries componentWillMount');
+      }
+
+      componentDidMount() {
+        log.push('BothErrorBoundaries componentDidMount');
+      }
+
+      UNSAFE_componentWillReceiveProps() {
+        log.push('BothErrorBoundaries componentWillReceiveProps');
+      }
+
+      UNSAFE_componentWillUpdate() {
+        log.push('BothErrorBoundaries componentWillUpdate');
+      }
+
+      componentDidUpdate() {
+        log.push('BothErrorBoundaries componentDidUpdate');
+      }
+
+      componentWillUnmount() {
+        log.push('BothErrorBoundaries componentWillUnmount');
+      }
+    };
+
     RetryErrorBoundary = class extends React.Component {
       constructor(props) {
         super(props);
@@ -612,6 +664,45 @@ describe('ReactLegacyErrorBoundaries', () => {
     expect(container1.firstChild).toBe(null);
     expect(container2.firstChild).toBe(null);
     expect(container3.firstChild).toBe(null);
+  });
+
+  it('logs a single error using both error boundaries', () => {
+    const container = document.createElement('div');
+    expect(() =>
+      ReactDOM.render(
+        <BothErrorBoundaries>
+          <BrokenRender />
+        </BothErrorBoundaries>,
+        container,
+      ),
+    ).toErrorDev('The above error occurred in the <BrokenRender> component', {
+      logAllErrors: true,
+    });
+
+    expect(container.firstChild.textContent).toBe('Caught an error: Hello.');
+    expect(log).toEqual([
+      'BothErrorBoundaries constructor',
+      'BothErrorBoundaries componentWillMount',
+      'BothErrorBoundaries render success',
+      'BrokenRender constructor',
+      'BrokenRender componentWillMount',
+      'BrokenRender render [!]',
+      // Both getDerivedStateFromError and componentDidCatch should be called
+      'BothErrorBoundaries static getDerivedStateFromError',
+      'BothErrorBoundaries componentWillMount',
+      'BothErrorBoundaries render error',
+      // Fiber mounts with null children before capturing error
+      'BothErrorBoundaries componentDidMount',
+      // Catch and render an error message
+      'BothErrorBoundaries componentDidCatch',
+      'BothErrorBoundaries componentWillUpdate',
+      'BothErrorBoundaries render error',
+      'BothErrorBoundaries componentDidUpdate',
+    ]);
+
+    log.length = 0;
+    ReactDOM.unmountComponentAtNode(container);
+    expect(log).toEqual(['BothErrorBoundaries componentWillUnmount']);
   });
 
   it('renders an error state if child throws in render', () => {
@@ -749,14 +840,13 @@ describe('ReactLegacyErrorBoundaries', () => {
         </ErrorBoundary>,
         container,
       ),
-    ).toWarnDev(
+    ).toErrorDev(
       'Warning: The <BrokenComponentWillMountWithContext /> component appears to be a function component that ' +
         'returns a class instance. ' +
         'Change BrokenComponentWillMountWithContext to a class that extends React.Component instead. ' +
         "If you can't use a class try assigning the prototype on the function as a workaround. " +
         '`BrokenComponentWillMountWithContext.prototype = React.Component.prototype`. ' +
         "Don't use an arrow function since it cannot be called with `new` by React.",
-      {withoutStack: true},
     );
     expect(container.firstChild.textContent).toBe('Caught an error: Hello.');
   });
@@ -1989,7 +2079,7 @@ describe('ReactLegacyErrorBoundaries', () => {
 
     try {
       let container = document.createElement('div');
-      expect(() => ReactDOM.render(<X />, container)).toWarnDev(
+      expect(() => ReactDOM.render(<X />, container)).toErrorDev(
         'React.createElement: type is invalid -- expected a string ' +
           '(for built-in components) or a class/function ' +
           '(for composite components) but got: null.',
@@ -1999,7 +2089,7 @@ describe('ReactLegacyErrorBoundaries', () => {
     }
     try {
       let container = document.createElement('div');
-      expect(() => ReactDOM.render(<Y />, container)).toWarnDev(
+      expect(() => ReactDOM.render(<Y />, container)).toErrorDev(
         'React.createElement: type is invalid -- expected a string ' +
           '(for built-in components) or a class/function ' +
           '(for composite components) but got: undefined.',
@@ -2024,9 +2114,8 @@ describe('ReactLegacyErrorBoundaries', () => {
         </div>,
         container,
       );
-    }).toWarnDev(
+    }).toErrorDev(
       'ErrorBoundary: Error boundaries should implement getDerivedStateFromError()',
-      {withoutStack: true},
     );
     expect(container.firstChild.textContent).toBe('Sibling');
     expect(log).toEqual([

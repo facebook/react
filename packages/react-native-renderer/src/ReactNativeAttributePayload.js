@@ -8,8 +8,10 @@
  */
 
 // Modules provided by RN:
-import deepDiffer from 'deepDiffer';
-import flattenStyle from 'flattenStyle';
+import {
+  deepDiffer,
+  flattenStyle,
+} from 'react-native/Libraries/ReactPrivate/ReactNativePrivateInterface';
 
 import type {AttributeConfiguration} from './ReactNativeTypes';
 
@@ -30,13 +32,17 @@ type NestedNode = Array<NestedNode> | Object;
 let removedKeys = null;
 let removedKeyCount = 0;
 
+const deepDifferOptions = {
+  unsafelyIgnoreFunctions: true,
+};
+
 function defaultDiffer(prevProp: mixed, nextProp: mixed): boolean {
   if (typeof nextProp !== 'object' || nextProp === null) {
     // Scalars have already been checked for equality
     return true;
   } else {
     // For objects and arrays, the default diffing algorithm is a deep compare
-    return deepDiffer(prevProp, nextProp);
+    return deepDiffer(prevProp, nextProp, deepDifferOptions);
   }
 }
 

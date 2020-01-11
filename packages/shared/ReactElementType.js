@@ -7,24 +7,23 @@
  * @flow
  */
 
-export type Source = {
+export type Source = {|
   fileName: string,
   lineNumber: number,
-};
+|};
 
-export type ReactElement = {
+export type ReactElement = {|
   $$typeof: any,
   type: any,
   key: any,
   ref: any,
   props: any,
-  _owner: any, // ReactInstance or ReactFiber
+  // ReactFiber
+  _owner: any,
 
   // __DEV__
-  _store: {
-    validated: boolean,
-  },
+  _store: {validated: boolean, ...},
   _self: React$Element<any>,
   _shadowChildren: any,
   _source: Source,
-};
+|};

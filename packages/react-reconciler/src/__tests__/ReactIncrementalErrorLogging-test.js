@@ -22,7 +22,7 @@ describe('ReactIncrementalErrorLogging', () => {
     Scheduler = require('scheduler');
   });
 
-  // Note: in this test file we won't be using toWarnDev() matchers
+  // Note: in this test file we won't be using toErrorDev() matchers
   // because they filter out precisely the messages we want to test for.
   let oldConsoleError;
   beforeEach(() => {
@@ -167,10 +167,12 @@ describe('ReactIncrementalErrorLogging', () => {
         this.setState({step: 1});
       }
       componentWillUnmount() {
-        Scheduler.yieldValue('componentWillUnmount: ' + this.state.step);
+        Scheduler.unstable_yieldValue(
+          'componentWillUnmount: ' + this.state.step,
+        );
       }
       render() {
-        Scheduler.yieldValue('render: ' + this.state.step);
+        Scheduler.unstable_yieldValue('render: ' + this.state.step);
         if (this.state.step > 0) {
           throw new Error('oops');
         }

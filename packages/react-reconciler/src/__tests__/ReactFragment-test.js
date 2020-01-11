@@ -23,8 +23,8 @@ describe('ReactFragment', () => {
   });
 
   function div(...children) {
-    children = children.map(
-      c => (typeof c === 'string' ? {text: c, hidden: false} : c),
+    children = children.map(c =>
+      typeof c === 'string' ? {text: c, hidden: false} : c,
     );
     return {type: 'div', children, prop: undefined, hidden: false};
   }
@@ -39,9 +39,9 @@ describe('ReactFragment', () => {
 
   it('should render a single child via noop renderer', () => {
     const element = (
-      <React.Fragment>
+      <>
         <span>foo</span>
-      </React.Fragment>
+      </>
     );
 
     ReactNoop.render(element);
@@ -61,9 +61,9 @@ describe('ReactFragment', () => {
 
   it('should render multiple children via noop renderer', () => {
     const element = (
-      <React.Fragment>
+      <>
         hello <span>world</span>
-      </React.Fragment>
+      </>
     );
 
     ReactNoop.render(element);
@@ -74,9 +74,7 @@ describe('ReactFragment', () => {
 
   it('should render an iterable via noop renderer', () => {
     const element = (
-      <React.Fragment>
-        {new Set([<span key="a">hi</span>, <span key="b">bye</span>])}
-      </React.Fragment>
+      <>{new Set([<span key="a">hi</span>, <span key="b">bye</span>])}</>
     );
 
     ReactNoop.render(element);
@@ -102,10 +100,10 @@ describe('ReactFragment', () => {
       return condition ? (
         <Stateful key="a" />
       ) : (
-        <React.Fragment>
+        <>
           <Stateful key="a" />
           <div key="b">World</div>
-        </React.Fragment>
+        </>
       );
     }
 
@@ -140,13 +138,13 @@ describe('ReactFragment', () => {
 
     function Foo({condition}) {
       return condition ? (
-        <React.Fragment>
+        <>
           <Stateful />
-        </React.Fragment>
+        </>
       ) : (
-        <React.Fragment>
+        <>
           <Stateful />
-        </React.Fragment>
+        </>
       );
     }
 
@@ -181,22 +179,22 @@ describe('ReactFragment', () => {
 
     function Foo({condition}) {
       return condition ? (
-        <React.Fragment>
-          <React.Fragment>
-            <React.Fragment>
+        <>
+          <>
+            <>
               <Stateful key="a" />
-            </React.Fragment>
-          </React.Fragment>
-        </React.Fragment>
+            </>
+          </>
+        </>
       ) : (
-        <React.Fragment>
-          <React.Fragment>
-            <React.Fragment>
+        <>
+          <>
+            <>
               <div />
               <Stateful key="a" />
-            </React.Fragment>
-          </React.Fragment>
-        </React.Fragment>
+            </>
+          </>
+        </>
       );
     }
 
@@ -231,15 +229,15 @@ describe('ReactFragment', () => {
 
     function Foo({condition}) {
       return condition ? (
-        <React.Fragment>
-          <React.Fragment>
+        <>
+          <>
             <Stateful key="a" />
-          </React.Fragment>
-        </React.Fragment>
+          </>
+        </>
       ) : (
-        <React.Fragment>
+        <>
           <Stateful key="a" />
-        </React.Fragment>
+        </>
       );
     }
 
@@ -276,11 +274,11 @@ describe('ReactFragment', () => {
       return condition ? (
         <Stateful key="a" />
       ) : (
-        <React.Fragment>
-          <React.Fragment>
+        <>
+          <>
             <Stateful key="a" />
-          </React.Fragment>
-        </React.Fragment>
+          </>
+        </>
       );
     }
 
@@ -317,12 +315,12 @@ describe('ReactFragment', () => {
       return condition ? (
         <Stateful key="a" />
       ) : (
-        <React.Fragment>
-          <React.Fragment>
+        <>
+          <>
             <Stateful key="a" />
-          </React.Fragment>
+          </>
           <div />
-        </React.Fragment>
+        </>
       );
     }
 
@@ -357,11 +355,11 @@ describe('ReactFragment', () => {
 
     function Foo({condition}) {
       return condition ? (
-        <React.Fragment>
+        <>
           <Stateful key="a" />
-        </React.Fragment>
+        </>
       ) : (
-        <React.Fragment>{[<Stateful key="a" />]}</React.Fragment>
+        <>{[<Stateful key="a" />]}</>
       );
     }
 
@@ -398,9 +396,9 @@ describe('ReactFragment', () => {
       return condition ? (
         [<Stateful key="a" />]
       ) : (
-        <React.Fragment>
+        <>
           <Stateful key="a" />
-        </React.Fragment>
+        </>
       );
     }
 
@@ -435,13 +433,13 @@ describe('ReactFragment', () => {
 
     function Foo({condition}) {
       return condition ? (
-        <React.Fragment>{[<Stateful key="a" />]}</React.Fragment>
+        <>{[<Stateful key="a" />]}</>
       ) : (
-        <React.Fragment>
-          <React.Fragment>
+        <>
+          <>
             <Stateful key="a" />
-          </React.Fragment>
-        </React.Fragment>
+          </>
+        </>
       );
     }
 
@@ -476,7 +474,7 @@ describe('ReactFragment', () => {
 
     function Foo({condition}) {
       return condition ? (
-        <React.Fragment>{[<Stateful key="a" />]}</React.Fragment>
+        <>{[<Stateful key="a" />]}</>
       ) : (
         [[<Stateful key="a" />]]
       );
@@ -513,11 +511,11 @@ describe('ReactFragment', () => {
 
     function Foo({condition}) {
       return condition ? (
-        <React.Fragment>
-          <React.Fragment>
+        <>
+          <>
             <Stateful key="a" />
-          </React.Fragment>
-        </React.Fragment>
+          </>
+        </>
       ) : (
         [[<Stateful key="a" />]]
       );
@@ -600,9 +598,9 @@ describe('ReactFragment', () => {
           <Stateful />
         </React.Fragment>
       ) : (
-        <React.Fragment>
+        <>
           <Stateful />
-        </React.Fragment>
+        </>
       );
     }
 
@@ -710,7 +708,7 @@ describe('ReactFragment', () => {
     expect(Scheduler).toFlushWithoutYielding();
 
     ReactNoop.render(<Foo condition={false} />);
-    expect(() => expect(Scheduler).toFlushWithoutYielding()).toWarnDev(
+    expect(() => expect(Scheduler).toFlushWithoutYielding()).toErrorDev(
       'Each child in a list should have a unique "key" prop.',
     );
 
@@ -722,6 +720,149 @@ describe('ReactFragment', () => {
 
     expect(ops).toEqual([]);
     expect(ReactNoop.getChildren()).toEqual([div(div(), span())]);
+  });
+
+  it('should not preserve state when switching a nested unkeyed fragment to a passthrough component', function() {
+    const ops = [];
+
+    function Passthrough({children}) {
+      return children;
+    }
+
+    class Stateful extends React.Component {
+      componentDidUpdate() {
+        ops.push('Update Stateful');
+      }
+
+      render() {
+        return <div>Hello</div>;
+      }
+    }
+
+    function Foo({condition}) {
+      return condition ? (
+        <>
+          <>
+            <Stateful />
+          </>
+        </>
+      ) : (
+        <>
+          <Passthrough>
+            <Stateful />
+          </Passthrough>
+        </>
+      );
+    }
+
+    ReactNoop.render(<Foo condition={true} />);
+    expect(Scheduler).toFlushWithoutYielding();
+
+    ReactNoop.render(<Foo condition={false} />);
+    expect(Scheduler).toFlushWithoutYielding();
+
+    expect(ops).toEqual([]);
+    expect(ReactNoop.getChildren()).toEqual([div()]);
+
+    ReactNoop.render(<Foo condition={true} />);
+    expect(Scheduler).toFlushWithoutYielding();
+
+    expect(ops).toEqual([]);
+    expect(ReactNoop.getChildren()).toEqual([div()]);
+  });
+
+  it('should not preserve state when switching a nested keyed fragment to a passthrough component', function() {
+    const ops = [];
+
+    function Passthrough({children}) {
+      return children;
+    }
+
+    class Stateful extends React.Component {
+      componentDidUpdate() {
+        ops.push('Update Stateful');
+      }
+
+      render() {
+        return <div>Hello</div>;
+      }
+    }
+
+    function Foo({condition}) {
+      return condition ? (
+        <>
+          <React.Fragment key="a">
+            <Stateful />
+          </React.Fragment>
+        </>
+      ) : (
+        <>
+          <Passthrough>
+            <Stateful />
+          </Passthrough>
+        </>
+      );
+    }
+
+    ReactNoop.render(<Foo condition={true} />);
+    expect(Scheduler).toFlushWithoutYielding();
+
+    ReactNoop.render(<Foo condition={false} />);
+    expect(Scheduler).toFlushWithoutYielding();
+
+    expect(ops).toEqual([]);
+    expect(ReactNoop.getChildren()).toEqual([div()]);
+
+    ReactNoop.render(<Foo condition={true} />);
+    expect(Scheduler).toFlushWithoutYielding();
+
+    expect(ops).toEqual([]);
+    expect(ReactNoop.getChildren()).toEqual([div()]);
+  });
+
+  it('should not preserve state when switching a nested keyed array to a passthrough component', function() {
+    const ops = [];
+
+    function Passthrough({children}) {
+      return children;
+    }
+
+    class Stateful extends React.Component {
+      componentDidUpdate() {
+        ops.push('Update Stateful');
+      }
+
+      render() {
+        return <div>Hello</div>;
+      }
+    }
+
+    function Foo({condition}) {
+      return condition ? (
+        <>{[<Stateful key="a" />]}</>
+      ) : (
+        <>
+          <Passthrough>
+            <Stateful />
+          </Passthrough>
+        </>
+      );
+    }
+
+    ReactNoop.render(<Foo condition={true} />);
+    expect(Scheduler).toFlushWithoutYielding();
+
+    ReactNoop.render(<Foo condition={false} />);
+    expect(Scheduler).toFlushWithoutYielding();
+
+    expect(ops).toEqual([]);
+    expect(ReactNoop.getChildren()).toEqual([div()]);
+
+    ReactNoop.render(<Foo condition={true} />);
+    expect(Scheduler).toFlushWithoutYielding();
+
+    expect(ops).toEqual([]);
+    expect(ReactNoop.getChildren()).toEqual([div()]);
   });
 
   it('should preserve state when it does not change positions', function() {
@@ -741,25 +882,25 @@ describe('ReactFragment', () => {
       return condition
         ? [
             <span />,
-            <React.Fragment>
+            <>
               <Stateful />
-            </React.Fragment>,
+            </>,
           ]
         : [
             <span />,
-            <React.Fragment>
+            <>
               <Stateful />
-            </React.Fragment>,
+            </>,
           ];
     }
 
     ReactNoop.render(<Foo condition={true} />);
-    expect(() => expect(Scheduler).toFlushWithoutYielding()).toWarnDev(
+    expect(() => expect(Scheduler).toFlushWithoutYielding()).toErrorDev(
       'Each child in a list should have a unique "key" prop.',
     );
 
     ReactNoop.render(<Foo condition={false} />);
-    expect(() => expect(Scheduler).toFlushWithoutYielding()).toWarnDev(
+    expect(() => expect(Scheduler).toFlushWithoutYielding()).toErrorDev(
       'Each child in a list should have a unique "key" prop.',
     );
 
@@ -767,7 +908,7 @@ describe('ReactFragment', () => {
     expect(ReactNoop.getChildren()).toEqual([span(), div()]);
 
     ReactNoop.render(<Foo condition={true} />);
-    expect(() => expect(Scheduler).toFlushWithoutYielding()).toWarnDev(
+    expect(() => expect(Scheduler).toFlushWithoutYielding()).toErrorDev(
       'Each child in a list should have a unique "key" prop.',
     );
 

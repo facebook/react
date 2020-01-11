@@ -14,10 +14,11 @@ const ReactDOMServerIntegrationUtils = require('./utils/ReactDOMServerIntegratio
 let React;
 let ReactDOM;
 let ReactDOMServer;
+let ReactTestUtils;
 let forwardRef;
 let memo;
 let yieldedValues;
-let yieldValue;
+let unstable_yieldValue;
 let clearYields;
 
 function initModules() {
@@ -26,11 +27,12 @@ function initModules() {
   React = require('react');
   ReactDOM = require('react-dom');
   ReactDOMServer = require('react-dom/server');
+  ReactTestUtils = require('react-dom/test-utils');
   forwardRef = React.forwardRef;
   memo = React.memo;
 
   yieldedValues = [];
-  yieldValue = value => {
+  unstable_yieldValue = value => {
     yieldedValues.push(value);
   };
   clearYields = () => {
@@ -43,6 +45,7 @@ function initModules() {
   return {
     ReactDOM,
     ReactDOMServer,
+    ReactTestUtils,
   };
 }
 
@@ -89,7 +92,7 @@ describe('ReactDOMServerIntegration', () => {
     });
 
     function Text({text}) {
-      yieldValue(text);
+      unstable_yieldValue(text);
       return <span>{text}</span>;
     }
 
@@ -124,7 +127,7 @@ describe('ReactDOMServerIntegration', () => {
       'comparator functions are not invoked on the server',
       async render => {
         const MemoCounter = React.memo(Counter, (oldProps, newProps) => {
-          yieldValue(
+          unstable_yieldValue(
             `Old count: ${oldProps.count}, New count: ${newProps.count}`,
           );
           return oldProps.count === newProps.count;

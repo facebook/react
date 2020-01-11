@@ -14,6 +14,7 @@ const printPrereleaseSummary = require('./shared-commands/print-prerelease-summa
 const testPackagingFixture = require('./shared-commands/test-packaging-fixture');
 const testTracingFixture = require('./shared-commands/test-tracing-fixture');
 const updateStableVersionNumbers = require('./prepare-stable-commands/update-stable-version-numbers');
+const theme = require('./theme');
 
 const run = async () => {
   try {
@@ -28,6 +29,13 @@ const run = async () => {
 
     if (!params.version) {
       params.version = await getLatestCanaryVersion();
+    }
+
+    if (params.version.includes('experimental')) {
+      console.error(
+        theme.error`Cannot promote an experimental build to stable.`
+      );
+      process.exit(1);
     }
 
     await checkOutPackages(params);
