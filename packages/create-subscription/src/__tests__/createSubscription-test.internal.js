@@ -118,7 +118,10 @@ describe('createSubscription', () => {
       const Subscription = createSubscription({
         getCurrentValue: source => undefined,
         subscribe: (source, callback) => {
-          source.then(value => callback(value), value => callback(value));
+          source.then(
+            value => callback(value),
+            value => callback(value),
+          );
           // (Can't unsubscribe from a Promise)
           return () => {};
         },
@@ -196,7 +199,10 @@ describe('createSubscription', () => {
       const Subscription = createSubscription({
         getCurrentValue: source => undefined,
         subscribe: (source, callback) => {
-          source.then(value => callback(value), value => callback(value));
+          source.then(
+            value => callback(value),
+            value => callback(value),
+          );
           // (Can't unsubscribe from a Promise)
           return () => {};
         },

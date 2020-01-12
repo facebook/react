@@ -65,15 +65,18 @@ function loadModules({
 
   resourcePromise = null;
 
-  TextResource = ReactCache.unstable_createResource(([text, ms = 0]) => {
-    resourcePromise = new Promise((resolve, reject) =>
-      setTimeout(() => {
-        Scheduler.unstable_yieldValue(`Promise resolved [${text}]`);
-        resolve(text);
-      }, ms),
-    );
-    return resourcePromise;
-  }, ([text, ms]) => text);
+  TextResource = ReactCache.unstable_createResource(
+    ([text, ms = 0]) => {
+      resourcePromise = new Promise((resolve, reject) =>
+        setTimeout(() => {
+          Scheduler.unstable_yieldValue(`Promise resolved [${text}]`);
+          resolve(text);
+        }, ms),
+      );
+      return resourcePromise;
+    },
+    ([text, ms]) => text,
+  );
 
   AsyncText = ({ms, text}) => {
     try {
@@ -297,10 +300,13 @@ describe('Profiler', () => {
       it('does not report work done on a sibling', () => {
         const callback = jest.fn();
 
-        const DoesNotUpdate = React.memo(function DoesNotUpdateInner() {
-          Scheduler.unstable_advanceTime(10);
-          return null;
-        }, () => true);
+        const DoesNotUpdate = React.memo(
+          function DoesNotUpdateInner() {
+            Scheduler.unstable_advanceTime(10);
+            return null;
+          },
+          () => true,
+        );
 
         let updateProfilerSibling;
 

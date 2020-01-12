@@ -30,6 +30,7 @@ export function initBackend(
         id: number,
         renderer: ReactRenderer,
         rendererInterface: RendererInterface,
+        ...
       }) => {
         agent.setRendererInterface(id, rendererInterface);
 
@@ -91,7 +92,7 @@ export function initBackend(
   subs.push(
     hook.sub(
       'renderer',
-      ({id, renderer}: {id: number, renderer: ReactRenderer}) => {
+      ({id, renderer}: {id: number, renderer: ReactRenderer, ...}) => {
         attachRenderer(id, renderer);
       },
     ),

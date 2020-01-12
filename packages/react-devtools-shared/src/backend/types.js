@@ -48,13 +48,13 @@ export type FindNativeNodesForFiberID = (id: number) => ?Array<NativeType>;
 export type ReactProviderType<T> = {
   $$typeof: Symbol | number,
   _context: ReactContext<T>,
+  ...
 };
 
 export type ReactRenderer = {
   findFiberByHostInstance: (hostInstance: NativeType) => ?Fiber,
   version: string,
   bundleType: BundleType,
-
   // 16.9+
   overrideHookState?: ?(
     fiber: Object,
@@ -62,30 +62,25 @@ export type ReactRenderer = {
     path: Array<string | number>,
     value: any,
   ) => void,
-
   // 16.7+
   overrideProps?: ?(
     fiber: Object,
     path: Array<string | number>,
     value: any,
   ) => void,
-
   // 16.9+
   scheduleUpdate?: ?(fiber: Object) => void,
   setSuspenseHandler?: ?(shouldSuspend: (fiber: Object) => boolean) => void,
-
   // Only injected by React v16.8+ in order to support hooks inspection.
   currentDispatcherRef?: {|current: null | Dispatcher|},
-
   // Only injected by React v16.9+ in DEV mode.
   // Enables DevTools to append owners-only component stack to error messages.
   getCurrentFiber?: () => Fiber | null,
-
   // Uniquely identifies React DOM v15.
   ComponentTree?: any,
-
   // Present for React DOM v12 (possibly earlier) through v15.
   Mount?: any,
+  ...
 };
 
 export type ChangeDescription = {|
@@ -267,12 +262,13 @@ export type RendererInterface = {
     count: number,
   ) => void,
   updateComponentFilters: (componentFilters: Array<ComponentFilter>) => void,
+  ...
 };
 
 export type Handler = (data: any) => void;
 
 export type DevToolsHook = {
-  listeners: {[key: string]: Array<Handler>},
+  listeners: {[key: string]: Array<Handler>, ...},
   rendererInterfaces: Map<RendererID, RendererInterface>,
   renderers: Map<RendererID, ReactRenderer>,
 
@@ -299,4 +295,5 @@ export type DevToolsHook = {
     // Added in v16.9 to support Fast Refresh
     didError?: boolean,
   ) => void,
+  ...
 };

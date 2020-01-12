@@ -19,11 +19,9 @@ if (__DEV__) {
   didWarnValueDefaultValue = false;
 }
 
-type SelectWithWrapperState = HTMLSelectElement & {
-  _wrapperState: {
-    wasMultiple: boolean,
-  },
-};
+type SelectWithWrapperState = HTMLSelectElement & {|
+  _wrapperState: {|wasMultiple: boolean|},
+|};
 
 function getDeclarationErrorAddendum() {
   const ownerName = getCurrentFiberOwnerNameInDevOrNull();
@@ -75,6 +73,7 @@ function updateOptions(
 ) {
   type IndexableHTMLOptionsCollection = HTMLOptionsCollection & {
     [key: number]: HTMLOptionElement,
+    ...,
   };
   const options: IndexableHTMLOptionsCollection = node.options;
 

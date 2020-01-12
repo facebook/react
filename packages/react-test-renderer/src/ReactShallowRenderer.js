@@ -27,21 +27,21 @@ import type {ReactElement} from 'shared/ReactElementType';
 type BasicStateAction<S> = (S => S) | S;
 type Dispatch<A> = A => void;
 
-type Update<A> = {
+type Update<A> = {|
   action: A,
   next: Update<A> | null,
-};
+|};
 
-type UpdateQueue<A> = {
+type UpdateQueue<A> = {|
   first: Update<A> | null,
   dispatch: any,
-};
+|};
 
-type Hook = {
+type Hook = {|
   memoizedState: any,
   queue: UpdateQueue<any> | null,
   next: Hook | null,
-};
+|};
 
 const {ReactCurrentDispatcher} = ReactSharedInternals;
 
@@ -295,9 +295,10 @@ class ReactShallowRenderer {
           first: null,
           dispatch: null,
         });
-        const dispatch: Dispatch<
-          A,
-        > = (queue.dispatch = (this._dispatchAction.bind(this, queue): any));
+        const dispatch: Dispatch<A> = (queue.dispatch = (this._dispatchAction.bind(
+          this,
+          queue,
+        ): any));
         return [workInProgressHook.memoizedState, dispatch];
       }
     };
@@ -339,7 +340,7 @@ class ReactShallowRenderer {
       return nextValue;
     };
 
-    const useRef = <T>(initialValue: T): {current: T} => {
+    const useRef = <T>(initialValue: T): {|current: T|} => {
       this._validateCurrentlyRenderingComponent();
       this._createWorkInProgressHook();
       const previousRef = (this._workInProgressHook: any).memoizedState;
@@ -529,7 +530,7 @@ class ReactShallowRenderer {
       'ReactShallowRenderer render(): Invalid component element.%s',
       typeof element === 'function'
         ? ' Instead of passing a component class, make sure to instantiate ' +
-          'it by passing it to React.createElement.'
+            'it by passing it to React.createElement.'
         : '',
     );
     element = ((element: any): ReactElement);
@@ -543,14 +544,15 @@ class ReactShallowRenderer {
     );
     invariant(
       isForwardRef(element) ||
-        (typeof element.type === 'function' || isMemo(element)),
+        typeof element.type === 'function' ||
+        isMemo(element),
       'ReactShallowRenderer render(): Shallow rendering works only with custom ' +
         'components, but the provided element type was `%s`.',
       Array.isArray(element.type)
         ? 'array'
         : element.type === null
-          ? 'null'
-          : typeof element.type,
+        ? 'null'
+        : typeof element.type,
     );
 
     if (this._rendering) {

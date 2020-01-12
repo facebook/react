@@ -17,8 +17,8 @@ import type {FiberRoot} from 'react-reconciler/src/ReactFiberRoot';
 export type RootType = {
   render(children: ReactNodeList, callback: ?() => mixed): void,
   unmount(callback: ?() => mixed): void,
-
   _internalRoot: FiberRoot,
+  ...
 };
 
 export type RootOptions = {
@@ -26,7 +26,9 @@ export type RootOptions = {
   hydrationOptions?: {
     onHydrated?: (suspenseNode: Comment) => void,
     onDeleted?: (suspenseNode: Comment) => void,
+    ...
   },
+  ...
 };
 
 import {

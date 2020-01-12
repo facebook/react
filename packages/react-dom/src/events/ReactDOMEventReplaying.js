@@ -74,6 +74,7 @@ export function setAttemptHydrationAtCurrentPriority(
 type PointerEvent = Event & {
   pointerId: number,
   relatedTarget: EventTarget | null,
+  ...
 };
 
 import {

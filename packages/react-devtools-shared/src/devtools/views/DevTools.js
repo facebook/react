@@ -126,18 +126,15 @@ export default function DevTools({
     [enabledInspectedElementContextMenu, viewAttributeSourceFunction],
   );
 
-  useEffect(
-    () => {
-      return () => {
-        try {
-          bridge.shutdown();
-        } catch (error) {
-          // Attempting to use a disconnected port.
-        }
-      };
-    },
-    [bridge],
-  );
+  useEffect(() => {
+    return () => {
+      try {
+        bridge.shutdown();
+      } catch (error) {
+        // Attempting to use a disconnected port.
+      }
+    };
+  }, [bridge]);
 
   return (
     <BridgeContext.Provider value={bridge}>

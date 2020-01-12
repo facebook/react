@@ -20,6 +20,7 @@ type Props = {
   data: ItemData,
   index: number,
   style: Object,
+  ...
 };
 
 function CommitFlamegraphListItem({data, index, style}: Props) {

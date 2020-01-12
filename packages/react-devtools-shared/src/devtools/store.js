@@ -364,9 +364,7 @@ export default class Store extends EventEmitter<{|
   getElementAtIndex(index: number): Element | null {
     if (index < 0 || index >= this.numElements) {
       console.warn(
-        `Invalid index ${index} specified; store contains ${
-          this.numElements
-        } items.`,
+        `Invalid index ${index} specified; store contains ${this.numElements} items.`,
       );
 
       return null;

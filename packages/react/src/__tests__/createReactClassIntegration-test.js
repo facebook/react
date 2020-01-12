@@ -361,7 +361,9 @@ describe('create-react-class-integration', () => {
       },
     });
 
-    expect(() => expect(() => Component()).toThrow()).toErrorDev(
+    expect(() =>
+      expect(() => Component()).toThrow(),
+    ).toErrorDev(
       'Warning: Something is calling a React component directly. Use a ' +
         'factory or JSX instead. See: https://fb.me/react-legacyfactory',
       {withoutStack: true},
@@ -717,7 +719,9 @@ describe('create-react-class-integration', () => {
 
     const container = document.createElement('div');
 
-    expect(() => ReactDOM.render(<Component />, container)).toErrorDev(
+    expect(() =>
+      ReactDOM.render(<Component />, container),
+    ).toErrorDev(
       'Warning: MyComponent: isMounted is deprecated. Instead, make sure to ' +
         'clean up subscriptions and pending requests in componentWillUnmount ' +
         'to prevent memory leaks.',

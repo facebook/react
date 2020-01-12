@@ -488,7 +488,7 @@ export function injectIntoGlobalHook(globalObject: any): void {
     hook.onScheduleFiberRoot = function(
       id: number,
       root: FiberRoot,
-      children: mixed,
+      children: ReactNodeList,
     ) {
       if (!isPerformingRefresh) {
         // If it was intentionally scheduled, don't attempt to restore.

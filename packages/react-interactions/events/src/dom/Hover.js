@@ -24,6 +24,7 @@ type HoverProps = {
   onHoverEnd: (e: HoverEvent) => void,
   onHoverMove: (e: HoverEvent) => void,
   onHoverStart: (e: HoverEvent) => void,
+  ...
 };
 
 type HoverState = {
@@ -32,6 +33,7 @@ type HoverState = {
   isHovered: boolean,
   isTouched?: boolean,
   ignoreEmulatedMouseEvents?: boolean,
+  ...
 };
 
 type HoverEventType = 'hoverstart' | 'hoverend' | 'hoverchange' | 'hovermove';
@@ -112,14 +114,14 @@ function dispatchHoverStartEvents(
   context: ReactDOMResponderContext,
   props: HoverProps,
   state: HoverState,
-): void {
+): boolean {
   const target = state.hoverTarget;
   if (event !== null) {
     const {nativeEvent} = event;
     if (
       context.isTargetWithinResponderScope((nativeEvent: any).relatedTarget)
     ) {
-      return;
+      return false;
     }
   }
 
@@ -139,6 +141,7 @@ function dispatchHoverStartEvents(
     }
     dispatchHoverChangeEvent(event, context, props, state);
   }
+  return true;
 }
 
 function dispatchHoverMoveEvent(event, context, props, state) {
@@ -160,14 +163,14 @@ function dispatchHoverEndEvents(
   context: ReactDOMResponderContext,
   props: HoverProps,
   state: HoverState,
-) {
+): boolean {
   const target = state.hoverTarget;
   if (event !== null) {
     const {nativeEvent} = event;
     if (
       context.isTargetWithinResponderScope((nativeEvent: any).relatedTarget)
     ) {
-      return;
+      return false;
     }
   }
 
@@ -189,6 +192,7 @@ function dispatchHoverEndEvents(
     state.hoverTarget = null;
     state.isTouched = false;
   }
+  return true;
 }
 
 function unmountResponder(
@@ -201,13 +205,10 @@ function unmountResponder(
   }
 }
 
+const rootPointerEventTypes = ['pointerout', 'pointermove', 'pointercancel'];
+
 const hoverResponderImpl = {
-  targetEventTypes: [
-    'pointerover',
-    'pointermove',
-    'pointerout',
-    'pointercancel',
-  ],
+  targetEventTypes: ['pointerover'],
   getInitialState() {
     return {
       isActiveHovered: false,
@@ -216,6 +217,38 @@ const hoverResponderImpl = {
   },
   allowMultipleHostChildren: false,
   allowEventHooks: true,
+  onRootEvent(
+    event: ReactDOMResponderEvent,
+    context: ReactDOMResponderContext,
+    props: HoverProps,
+    state: HoverState,
+  ): void {
+    const {type} = event;
+
+    switch (type) {
+      // MOVE
+      case 'pointermove': {
+        if (state.isHovered && state.hoverTarget !== null) {
+          dispatchHoverMoveEvent(event, context, props, state);
+        }
+        break;
+      }
+
+      // END
+      case 'pointercancel':
+      case 'pointerout': {
+        if (state.isHovered) {
+          if (
+            dispatchHoverEndEvents(event, context, props, state) ||
+            type === 'pointercancel'
+          ) {
+            context.removeRootEventTypes(rootPointerEventTypes);
+          }
+        }
+        break;
+      }
+    }
+  },
   onEvent(
     event: ReactDOMResponderEvent,
     context: ReactDOMResponderContext,
@@ -226,6 +259,7 @@ const hoverResponderImpl = {
 
     if (props.disabled) {
       if (state.isHovered) {
+        context.removeRootEventTypes(rootPointerEventTypes);
         dispatchHoverEndEvents(event, context, props, state);
       }
       return;
@@ -236,24 +270,9 @@ const hoverResponderImpl = {
       case 'pointerover': {
         if (!state.isHovered && pointerType !== 'touch') {
           state.hoverTarget = context.getResponderNode();
-          dispatchHoverStartEvents(event, context, props, state);
-        }
-        break;
-      }
-
-      // MOVE
-      case 'pointermove': {
-        if (state.isHovered && state.hoverTarget !== null) {
-          dispatchHoverMoveEvent(event, context, props, state);
-        }
-        break;
-      }
-
-      // END
-      case 'pointerout':
-      case 'pointercancel': {
-        if (state.isHovered) {
-          dispatchHoverEndEvents(event, context, props, state);
+          if (dispatchHoverStartEvents(event, context, props, state)) {
+            context.addRootEventTypes(rootPointerEventTypes);
+          }
         }
         break;
       }
@@ -262,8 +281,10 @@ const hoverResponderImpl = {
   onUnmount: unmountResponder,
 };
 
+const rootMouseEventTypes = ['mousemove', 'mouseout'];
+
 const hoverResponderFallbackImpl = {
-  targetEventTypes: ['mouseover', 'mousemove', 'mouseout', 'touchstart'],
+  targetEventTypes: ['mouseover', 'mousemove', 'touchstart'],
   getInitialState() {
     return {
       isActiveHovered: false,
@@ -274,6 +295,38 @@ const hoverResponderFallbackImpl = {
   },
   allowMultipleHostChildren: false,
   allowEventHooks: true,
+  onRootEvent(
+    event: ReactDOMResponderEvent,
+    context: ReactDOMResponderContext,
+    props: HoverProps,
+    state: HoverState,
+  ): void {
+    const {type} = event;
+
+    switch (type) {
+      // MOVE
+      case 'mousemove': {
+        if (
+          state.isHovered &&
+          state.hoverTarget !== null &&
+          !state.ignoreEmulatedMouseEvents
+        ) {
+          dispatchHoverMoveEvent(event, context, props, state);
+        }
+        break;
+      }
+
+      // END
+      case 'mouseout': {
+        if (state.isHovered) {
+          if (dispatchHoverEndEvents(event, context, props, state)) {
+            context.removeRootEventTypes(rootMouseEventTypes);
+          }
+        }
+        break;
+      }
+    }
+  },
   onEvent(
     event: ReactDOMResponderEvent,
     context: ReactDOMResponderContext,
@@ -284,6 +337,7 @@ const hoverResponderFallbackImpl = {
 
     if (props.disabled) {
       if (state.isHovered) {
+        context.removeRootEventTypes(rootMouseEventTypes);
         dispatchHoverEndEvents(event, context, props, state);
         state.ignoreEmulatedMouseEvents = false;
       }
@@ -296,30 +350,18 @@ const hoverResponderFallbackImpl = {
       case 'mouseover': {
         if (!state.isHovered && !state.ignoreEmulatedMouseEvents) {
           state.hoverTarget = context.getResponderNode();
-          dispatchHoverStartEvents(event, context, props, state);
+          if (dispatchHoverStartEvents(event, context, props, state)) {
+            context.addRootEventTypes(rootMouseEventTypes);
+          }
         }
         break;
       }
 
       // MOVE
       case 'mousemove': {
-        if (
-          state.isHovered &&
-          state.hoverTarget !== null &&
-          !state.ignoreEmulatedMouseEvents
-        ) {
-          dispatchHoverMoveEvent(event, context, props, state);
-        } else if (!state.isHovered && type === 'mousemove') {
+        if (!state.isHovered && type === 'mousemove') {
           state.ignoreEmulatedMouseEvents = false;
           state.isTouched = false;
-        }
-        break;
-      }
-
-      // END
-      case 'mouseout': {
-        if (state.isHovered) {
-          dispatchHoverEndEvents(event, context, props, state);
         }
         break;
       }

@@ -16,11 +16,9 @@ import type {ToStringValue} from './ToStringValue';
 
 let didWarnValDefaultVal = false;
 
-type TextAreaWithWrapperState = HTMLTextAreaElement & {
-  _wrapperState: {
-    initialValue: ToStringValue,
-  },
-};
+type TextAreaWithWrapperState = HTMLTextAreaElement & {|
+  _wrapperState: {|initialValue: ToStringValue|},
+|};
 
 /**
  * Implements a <textarea> host component that allows setting `value`, and

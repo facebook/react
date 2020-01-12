@@ -466,9 +466,7 @@ describe('ReactLazy', () => {
 
       UNSAFE_componentWillReceiveProps(nextProps) {
         Scheduler.unstable_yieldValue(
-          `UNSAFE_componentWillReceiveProps: ${this.props.text} -> ${
-            nextProps.text
-          }`,
+          `UNSAFE_componentWillReceiveProps: ${this.props.text} -> ${nextProps.text}`,
         );
       }
 

@@ -72,51 +72,42 @@ export default function SelectedElement(_: Props) {
   const inspectedElement =
     inspectedElementID != null ? getInspectedElement(inspectedElementID) : null;
 
-  const highlightElement = useCallback(
-    () => {
-      if (element !== null && inspectedElementID !== null) {
-        const rendererID = store.getRendererIDForElement(inspectedElementID);
-        if (rendererID !== null) {
-          bridge.send('highlightNativeElement', {
-            displayName: element.displayName,
-            hideAfterTimeout: true,
-            id: inspectedElementID,
-            openNativeElementsPanel: true,
-            rendererID,
-            scrollIntoView: true,
-          });
-        }
+  const highlightElement = useCallback(() => {
+    if (element !== null && inspectedElementID !== null) {
+      const rendererID = store.getRendererIDForElement(inspectedElementID);
+      if (rendererID !== null) {
+        bridge.send('highlightNativeElement', {
+          displayName: element.displayName,
+          hideAfterTimeout: true,
+          id: inspectedElementID,
+          openNativeElementsPanel: true,
+          rendererID,
+          scrollIntoView: true,
+        });
       }
-    },
-    [bridge, element, inspectedElementID, store],
-  );
+    }
+  }, [bridge, element, inspectedElementID, store]);
 
-  const logElement = useCallback(
-    () => {
-      if (inspectedElementID !== null) {
-        const rendererID = store.getRendererIDForElement(inspectedElementID);
-        if (rendererID !== null) {
-          bridge.send('logElementToConsole', {
-            id: inspectedElementID,
-            rendererID,
-          });
-        }
+  const logElement = useCallback(() => {
+    if (inspectedElementID !== null) {
+      const rendererID = store.getRendererIDForElement(inspectedElementID);
+      if (rendererID !== null) {
+        bridge.send('logElementToConsole', {
+          id: inspectedElementID,
+          rendererID,
+        });
       }
-    },
-    [bridge, inspectedElementID, store],
-  );
+    }
+  }, [bridge, inspectedElementID, store]);
 
-  const viewSource = useCallback(
-    () => {
-      if (viewElementSourceFunction != null && inspectedElement !== null) {
-        viewElementSourceFunction(
-          inspectedElement.id,
-          ((inspectedElement: any): InspectedElement),
-        );
-      }
-    },
-    [inspectedElement, viewElementSourceFunction],
-  );
+  const viewSource = useCallback(() => {
+    if (viewElementSourceFunction != null && inspectedElement !== null) {
+      viewElementSourceFunction(
+        inspectedElement.id,
+        ((inspectedElement: any): InspectedElement),
+      );
+    }
+  }, [inspectedElement, viewElementSourceFunction]);
 
   // In some cases (e.g. FB internal usage) the standalone shell might not be able to view the source.
   // To detect this case, we defer to an injected helper function (if present).
@@ -137,56 +128,53 @@ export default function SelectedElement(_: Props) {
     inspectedElement != null && inspectedElement.canToggleSuspense;
 
   // TODO (suspense toggle) Would be nice to eventually use a two setState pattern here as well.
-  const toggleSuspended = useCallback(
-    () => {
-      let nearestSuspenseElement = null;
-      let currentElement = element;
-      while (currentElement !== null) {
-        if (currentElement.type === ElementTypeSuspense) {
-          nearestSuspenseElement = currentElement;
-          break;
-        } else if (currentElement.parentID > 0) {
-          currentElement = store.getElementByID(currentElement.parentID);
-        } else {
-          currentElement = null;
-        }
-      }
-
-      // If we didn't find a Suspense ancestor, we can't suspend.
-      // Instead we can show a warning to the user.
-      if (nearestSuspenseElement === null) {
-        modalDialogDispatch({
-          type: 'SHOW',
-          content: <CannotSuspendWarningMessage />,
-        });
+  const toggleSuspended = useCallback(() => {
+    let nearestSuspenseElement = null;
+    let currentElement = element;
+    while (currentElement !== null) {
+      if (currentElement.type === ElementTypeSuspense) {
+        nearestSuspenseElement = currentElement;
+        break;
+      } else if (currentElement.parentID > 0) {
+        currentElement = store.getElementByID(currentElement.parentID);
       } else {
-        const nearestSuspenseElementID = nearestSuspenseElement.id;
-
-        // If we're suspending from an arbitary (non-Suspense) component, select the nearest Suspense element in the Tree.
-        // This way when the fallback UI is shown and the current element is hidden, something meaningful is selected.
-        if (nearestSuspenseElement !== element) {
-          dispatch({
-            type: 'SELECT_ELEMENT_BY_ID',
-            payload: nearestSuspenseElementID,
-          });
-        }
-
-        const rendererID = store.getRendererIDForElement(
-          nearestSuspenseElementID,
-        );
-
-        // Toggle suspended
-        if (rendererID !== null) {
-          bridge.send('overrideSuspense', {
-            id: nearestSuspenseElementID,
-            rendererID,
-            forceFallback: !isSuspended,
-          });
-        }
+        currentElement = null;
       }
-    },
-    [bridge, dispatch, element, isSuspended, modalDialogDispatch, store],
-  );
+    }
+
+    // If we didn't find a Suspense ancestor, we can't suspend.
+    // Instead we can show a warning to the user.
+    if (nearestSuspenseElement === null) {
+      modalDialogDispatch({
+        type: 'SHOW',
+        content: <CannotSuspendWarningMessage />,
+      });
+    } else {
+      const nearestSuspenseElementID = nearestSuspenseElement.id;
+
+      // If we're suspending from an arbitary (non-Suspense) component, select the nearest Suspense element in the Tree.
+      // This way when the fallback UI is shown and the current element is hidden, something meaningful is selected.
+      if (nearestSuspenseElement !== element) {
+        dispatch({
+          type: 'SELECT_ELEMENT_BY_ID',
+          payload: nearestSuspenseElementID,
+        });
+      }
+
+      const rendererID = store.getRendererIDForElement(
+        nearestSuspenseElementID,
+      );
+
+      // Toggle suspended
+      if (rendererID !== null) {
+        bridge.send('overrideSuspense', {
+          id: nearestSuspenseElementID,
+          rendererID,
+          forceFallback: !isSuspended,
+        });
+      }
+    }
+  }, [bridge, dispatch, element, isSuspended, modalDialogDispatch, store]);
 
   if (element === null) {
     return (
@@ -417,23 +405,21 @@ function InspectedElementView({
 
         <NativeStyleEditor />
 
-        {ownerID === null &&
-          owners !== null &&
-          owners.length > 0 && (
-            <div className={styles.Owners}>
-              <div className={styles.OwnersHeader}>rendered by</div>
-              {owners.map(owner => (
-                <OwnerView
-                  key={owner.id}
-                  displayName={owner.displayName || 'Anonymous'}
-                  hocDisplayNames={owner.hocDisplayNames}
-                  id={owner.id}
-                  isInStore={store.containsElement(owner.id)}
-                  type={owner.type}
-                />
-              ))}
-            </div>
-          )}
+        {ownerID === null && owners !== null && owners.length > 0 && (
+          <div className={styles.Owners}>
+            <div className={styles.OwnersHeader}>rendered by</div>
+            {owners.map(owner => (
+              <OwnerView
+                key={owner.id}
+                displayName={owner.displayName || 'Anonymous'}
+                hocDisplayNames={owner.hocDisplayNames}
+                id={owner.id}
+                isInStore={store.containsElement(owner.id)}
+                type={owner.type}
+              />
+            ))}
+          </div>
+        )}
 
         {source !== null && (
           <Source fileName={source.fileName} lineNumber={source.lineNumber} />

@@ -205,9 +205,7 @@ const createMatcherFor = consoleMethod =>
           if (withoutStack !== warningsWithoutComponentStack.length) {
             return {
               message: () =>
-                `Expected ${withoutStack} warnings without a component stack but received ${
-                  warningsWithoutComponentStack.length
-                }:\n` +
+                `Expected ${withoutStack} warnings without a component stack but received ${warningsWithoutComponentStack.length}:\n` +
                 warningsWithoutComponentStack.map(warning =>
                   this.utils.printReceived(warning)
                 ),

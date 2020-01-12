@@ -25,7 +25,9 @@ type InputWithWrapperState = HTMLInputElement & {
     initialValue: ToStringValue,
     initialChecked: ?boolean,
     controlled?: boolean,
+    ...
   },
+  ...
 };
 
 let didWarnValueDefaultValue = false;
@@ -178,10 +180,10 @@ export function updateWrapper(element: Element, props: Object) {
         // eslint-disable-next-line
         node.value != (value: any)
       ) {
-        node.value = toString(value);
+        node.value = toString((value: any));
       }
-    } else if (node.value !== toString(value)) {
-      node.value = toString(value);
+    } else if (node.value !== toString((value: any))) {
+      node.value = toString((value: any));
     }
   } else if (type === 'submit' || type === 'reset') {
     // Submit/reset inputs need the attribute removed completely to avoid

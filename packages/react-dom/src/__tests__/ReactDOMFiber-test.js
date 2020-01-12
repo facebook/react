@@ -1151,7 +1151,9 @@ describe('ReactDOMFiber', () => {
     expect(container.innerHTML).toBe('<div>bar</div>');
     // then we mess with the DOM before an update
     container.innerHTML = '<div>MEOW.</div>';
-    expect(() => ReactDOM.render(<div>baz</div>, container)).toErrorDev(
+    expect(() =>
+      ReactDOM.render(<div>baz</div>, container),
+    ).toErrorDev(
       'render(...): ' +
         'It looks like the React-rendered content of this container was ' +
         'removed without using React. This is not supported and will ' +
@@ -1168,7 +1170,9 @@ describe('ReactDOMFiber', () => {
     expect(container.innerHTML).toBe('<div>bar</div>');
     // then we mess with the DOM before an update
     container.innerHTML = '';
-    expect(() => ReactDOM.render(<div>baz</div>, container)).toErrorDev(
+    expect(() =>
+      ReactDOM.render(<div>baz</div>, container),
+    ).toErrorDev(
       'render(...): ' +
         'It looks like the React-rendered content of this container was ' +
         'removed without using React. This is not supported and will ' +

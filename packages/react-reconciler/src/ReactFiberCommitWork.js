@@ -297,9 +297,7 @@ function commitBeforeMutationLifeCycles(
             prevState,
           );
           if (__DEV__) {
-            const didWarnSet = ((didWarnAboutUndefinedSnapshotBeforeUpdate: any): Set<
-              mixed,
-            >);
+            const didWarnSet = ((didWarnAboutUndefinedSnapshotBeforeUpdate: any): Set<mixed>);
             if (snapshot === undefined && !didWarnSet.has(finishedWork.type)) {
               didWarnSet.add(finishedWork.type);
               console.error(
@@ -916,8 +914,11 @@ function emptyPortalContainer(current: Fiber) {
     return;
   }
 
-  const portal: {containerInfo: Container, pendingChildren: ChildSet} =
-    current.stateNode;
+  const portal: {
+    containerInfo: Container,
+    pendingChildren: ChildSet,
+    ...
+  } = current.stateNode;
   const {containerInfo} = portal;
   const emptyChildSet = createContainerChildSet(containerInfo);
   replaceContainerChildren(containerInfo, emptyChildSet);
@@ -940,8 +941,8 @@ function commitContainer(finishedWork: Fiber) {
       const portalOrRoot: {
         containerInfo: Container,
         pendingChildren: ChildSet,
-      } =
-        finishedWork.stateNode;
+        ...
+      } = finishedWork.stateNode;
       const {containerInfo, pendingChildren} = portalOrRoot;
       replaceContainerChildren(containerInfo, pendingChildren);
       return;

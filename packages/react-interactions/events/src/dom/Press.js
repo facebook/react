@@ -95,9 +95,9 @@ function isValidKey(e): boolean {
   const {tagName, isContentEditable} = (target: any);
   return (
     (key === 'Enter' || key === ' ' || key === 'Spacebar') &&
-    (tagName !== 'INPUT' &&
-      tagName !== 'TEXTAREA' &&
-      isContentEditable !== true)
+    tagName !== 'INPUT' &&
+    tagName !== 'TEXTAREA' &&
+    isContentEditable !== true
   );
 }
 

@@ -35,7 +35,7 @@ window.addEventListener('message', function(evt) {
     chrome.runtime.sendMessage(lastDetectionResult);
   } else if (evt.data.source === 'react-devtools-inject-backend') {
     const script = document.createElement('script');
-    script.src = chrome.runtime.getURL('build/backend.js');
+    script.src = chrome.runtime.getURL('build/react_devtools_backend.js');
     document.documentElement.appendChild(script);
     script.parentNode.removeChild(script);
   }

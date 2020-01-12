@@ -345,7 +345,9 @@ describe('ReactIncrementalUpdates', () => {
       }
     }
     ReactNoop.render(<Foo />);
-    expect(() => expect(Scheduler).toFlushWithoutYielding()).toErrorDev(
+    expect(() =>
+      expect(Scheduler).toFlushWithoutYielding(),
+    ).toErrorDev(
       'Using UNSAFE_componentWillReceiveProps in strict mode is not recommended',
       {withoutStack: true},
     );
@@ -663,22 +665,19 @@ describe('ReactIncrementalUpdates', () => {
         setLog(prevLog => prevLog + msg);
       };
 
-      useLayoutEffect(
-        () => {
-          Scheduler.unstable_yieldValue('Committed: ' + log);
-          if (log === 'B') {
-            // Right after B commits, schedule additional updates.
-            Scheduler.unstable_runWithPriority(
-              Scheduler.unstable_UserBlockingPriority,
-              () => {
-                pushToLog('C');
-              },
-            );
-            setLog(prevLog => prevLog + 'D');
-          }
-        },
-        [log],
-      );
+      useLayoutEffect(() => {
+        Scheduler.unstable_yieldValue('Committed: ' + log);
+        if (log === 'B') {
+          // Right after B commits, schedule additional updates.
+          Scheduler.unstable_runWithPriority(
+            Scheduler.unstable_UserBlockingPriority,
+            () => {
+              pushToLog('C');
+            },
+          );
+          setLog(prevLog => prevLog + 'D');
+        }
+      }, [log]);
 
       return log;
     }

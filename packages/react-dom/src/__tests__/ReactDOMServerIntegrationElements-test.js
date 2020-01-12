@@ -258,8 +258,7 @@ describe('ReactDOMServerIntegration', () => {
           <div>
             {[['a'], 'b']}
             <div>
-              <X key="1" />
-              d
+              <X key="1" />d
             </div>
             e
           </div>,
@@ -493,11 +492,13 @@ describe('ReactDOMServerIntegration', () => {
       // Put dangerouslySetInnerHTML one level deeper because otherwise
       // hydrating from a bad markup would cause a mismatch (since we don't
       // patch dangerouslySetInnerHTML as text content).
-      const e = (await render(
-        <div>
-          <span dangerouslySetInnerHTML={{__html: 0}} />
-        </div>,
-      )).firstChild;
+      const e = (
+        await render(
+          <div>
+            <span dangerouslySetInnerHTML={{__html: 0}} />
+          </div>,
+        )
+      ).firstChild;
       expect(e.childNodes.length).toBe(1);
       expect(e.firstChild.nodeType).toBe(TEXT_NODE_TYPE);
       expect(e.textContent).toBe('0');
@@ -507,11 +508,13 @@ describe('ReactDOMServerIntegration', () => {
       // Put dangerouslySetInnerHTML one level deeper because otherwise
       // hydrating from a bad markup would cause a mismatch (since we don't
       // patch dangerouslySetInnerHTML as text content).
-      const e = (await render(
-        <div>
-          <span dangerouslySetInnerHTML={{__html: false}} />
-        </div>,
-      )).firstChild;
+      const e = (
+        await render(
+          <div>
+            <span dangerouslySetInnerHTML={{__html: false}} />
+          </div>,
+        )
+      ).firstChild;
       expect(e.childNodes.length).toBe(1);
       expect(e.firstChild.nodeType).toBe(TEXT_NODE_TYPE);
       expect(e.firstChild.data).toBe('false');
@@ -523,11 +526,13 @@ describe('ReactDOMServerIntegration', () => {
         // Put dangerouslySetInnerHTML one level deeper because otherwise
         // hydrating from a bad markup would cause a mismatch (since we don't
         // patch dangerouslySetInnerHTML as text content).
-        const e = (await render(
-          <div>
-            <span dangerouslySetInnerHTML={{__html: 'hello'}} />
-          </div>,
-        )).firstChild;
+        const e = (
+          await render(
+            <div>
+              <span dangerouslySetInnerHTML={{__html: 'hello'}} />
+            </div>,
+          )
+        ).firstChild;
         expect(e.childNodes.length).toBe(1);
         expect(e.firstChild.nodeType).toBe(TEXT_NODE_TYPE);
         expect(e.textContent).toBe('hello');

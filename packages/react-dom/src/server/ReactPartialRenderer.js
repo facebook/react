@@ -701,11 +701,10 @@ type Frame = {
   childIndex: number,
   context: Object,
   footer: string,
+  ...
 };
 
-type FrameDev = Frame & {
-  debugElementStack: Array<ReactElement>,
-};
+type FrameDev = Frame & {|debugElementStack: Array<ReactElement>|};
 
 class ReactDOMServerRenderer {
   threadID: ThreadID;
@@ -1578,7 +1577,10 @@ class ReactDOMServerRenderer {
     const innerMarkup = getNonChildrenInnerMarkup(props);
     if (innerMarkup != null) {
       children = [];
-      if (newlineEatingTags[tag] && innerMarkup.charAt(0) === '\n') {
+      if (
+        newlineEatingTags.hasOwnProperty(tag) &&
+        innerMarkup.charAt(0) === '\n'
+      ) {
         // text/html ignores the first character in these tags if it's a newline
         // Prefer to break application/xml over text/html (for now) by adding
         // a newline specifically to get eaten by the parser. (Alternately for

@@ -109,7 +109,7 @@ export default class Agent extends EventEmitter<{|
   _bridge: BackendBridge;
   _isProfiling: boolean = false;
   _recordChangeDescriptions: boolean = false;
-  _rendererInterfaces: {[key: RendererID]: RendererInterface} = {};
+  _rendererInterfaces: {[key: RendererID]: RendererInterface, ...} = {};
   _persistedSelection: PersistedSelection | null = null;
   _persistedSelectionMatch: PathMatch | null = null;
   _traceUpdatesEnabled: boolean = false;
@@ -185,7 +185,7 @@ export default class Agent extends EventEmitter<{|
     setupTraceUpdates(this);
   }
 
-  get rendererInterfaces(): {[key: RendererID]: RendererInterface} {
+  get rendererInterfaces(): {[key: RendererID]: RendererInterface, ...} {
     return this._rendererInterfaces;
   }
 

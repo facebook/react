@@ -27,11 +27,13 @@ const customBubblingEventTypes: {
       bubbled: string,
     |}>,
   |}>,
+  ...,
 } = {};
 const customDirectEventTypes: {
   [eventName: string]: $ReadOnly<{|
     registrationName: string,
   |}>,
+  ...,
 } = {};
 
 exports.customBubblingEventTypes = customBubblingEventTypes;

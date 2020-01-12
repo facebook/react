@@ -485,11 +485,13 @@ exports[`InspectedElementContext should support complex data types: 1: Inspected
   "context": null,
   "hooks": null,
   "props": {
+    "anonymous_fn": {},
     "array_buffer": {},
     "array_of_arrays": [
       {}
     ],
     "big_int": {},
+    "bound_fn": {},
     "data_view": {},
     "date": {},
     "fn": {},

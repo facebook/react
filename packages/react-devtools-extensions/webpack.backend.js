@@ -24,7 +24,7 @@ module.exports = {
   },
   output: {
     path: __dirname + '/build',
-    filename: '[name].js',
+    filename: 'react_devtools_backend.js',
   },
   resolve: {
     alias: {

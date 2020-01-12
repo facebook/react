@@ -45,8 +45,8 @@ export function useContext<T>(
         unstable_observedBits,
         typeof unstable_observedBits === 'number' && Array.isArray(arguments[2])
           ? '\n\nDid you call array.map(useContext)? ' +
-            'Calling Hooks inside a loop is not supported. ' +
-            'Learn more at https://fb.me/rules-of-hooks'
+              'Calling Hooks inside a loop is not supported. ' +
+              'Learn more at https://fb.me/rules-of-hooks'
           : '',
       );
     }
@@ -86,7 +86,7 @@ export function useReducer<S, I, A>(
   return dispatcher.useReducer(reducer, initialArg, init);
 }
 
-export function useRef<T>(initialValue: T): {current: T} {
+export function useRef<T>(initialValue: T): {|current: T|} {
   const dispatcher = resolveDispatcher();
   return dispatcher.useRef(initialValue);
 }
@@ -124,7 +124,7 @@ export function useMemo(
 }
 
 export function useImperativeHandle<T>(
-  ref: {current: T | null} | ((inst: T | null) => mixed) | null | void,
+  ref: {|current: T | null|} | ((inst: T | null) => mixed) | null | void,
   create: () => T,
   inputs: Array<mixed> | void | null,
 ): void {

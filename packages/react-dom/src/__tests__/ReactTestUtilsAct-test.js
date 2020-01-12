@@ -337,12 +337,9 @@ function runActTests(label, render, unmount, rerender) {
               await null;
               setState(x => x + 1);
             }
-            React.useEffect(
-              () => {
-                ticker();
-              },
-              [Math.min(state, 4)],
-            );
+            React.useEffect(() => {
+              ticker();
+            }, [Math.min(state, 4)]);
             return state;
           }
 
@@ -521,13 +518,10 @@ function runActTests(label, render, unmount, rerender) {
             await null;
             setState(x => x + 1);
           }
-          React.useEffect(
-            () => {
-              Scheduler.unstable_yieldValue(state);
-              ticker();
-            },
-            [Math.min(state, 4)],
-          );
+          React.useEffect(() => {
+            Scheduler.unstable_yieldValue(state);
+            ticker();
+          }, [Math.min(state, 4)]);
           return state;
         }
 

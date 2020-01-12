@@ -35,6 +35,7 @@ export type Instance = {
   _children: Array<Instance | number>,
   _nativeTag: number,
   viewConfig: ReactNativeBaseComponentViewConfig<>,
+  ...
 };
 export type TextInstance = number;
 export type HydratableInstance = Instance | TextInstance;
@@ -163,11 +164,10 @@ export function finalizeInitialChildren(
 
   // Map from child objects to native tags.
   // Either way we need to pass a copy of the Array to prevent it from being frozen.
-  const nativeTags = parentInstance._children.map(
-    child =>
-      typeof child === 'number'
-        ? child // Leaf node (eg text)
-        : child._nativeTag,
+  const nativeTags = parentInstance._children.map(child =>
+    typeof child === 'number'
+      ? child // Leaf node (eg text)
+      : child._nativeTag,
   );
 
   UIManager.setChildren(

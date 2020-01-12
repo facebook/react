@@ -11,7 +11,7 @@ import invariant from 'shared/invariant';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import {disableJavaScriptURLs} from 'shared/ReactFeatureFlags';
 
-let ReactDebugCurrentFrame = ((null: any): {getStackAddendum(): string});
+let ReactDebugCurrentFrame = ((null: any): {getStackAddendum(): string, ...});
 if (__DEV__) {
   ReactDebugCurrentFrame = ReactSharedInternals.ReactDebugCurrentFrame;
 }

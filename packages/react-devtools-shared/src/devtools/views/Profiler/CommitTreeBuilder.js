@@ -51,9 +51,9 @@ export function getCommitTree({
     rootToCommitTreeMap.set(rootID, []);
   }
 
-  const commitTrees = ((rootToCommitTreeMap.get(rootID): any): Array<
-    CommitTree,
-  >);
+  const commitTrees = ((rootToCommitTreeMap.get(
+    rootID,
+  ): any): Array<CommitTree>);
 
   if (commitIndex < commitTrees.length) {
     return commitTrees[commitIndex];

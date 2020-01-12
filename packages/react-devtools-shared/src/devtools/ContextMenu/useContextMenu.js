@@ -23,29 +23,24 @@ export default function useContextMenu({
 |}) {
   const {showMenu} = useContext(RegistryContext);
 
-  useEffect(
-    () => {
-      if (ref.current !== null) {
-        const handleContextMenu = event => {
-          event.preventDefault();
-          event.stopPropagation();
+  useEffect(() => {
+    if (ref.current !== null) {
+      const handleContextMenu = event => {
+        event.preventDefault();
+        event.stopPropagation();
 
-          const pageX =
-            event.pageX || (event.touches && event.touches[0].pageX);
-          const pageY =
-            event.pageY || (event.touches && event.touches[0].pageY);
+        const pageX = event.pageX || (event.touches && event.touches[0].pageX);
+        const pageY = event.pageY || (event.touches && event.touches[0].pageY);
 
-          showMenu({data, id, pageX, pageY});
-        };
+        showMenu({data, id, pageX, pageY});
+      };
 
-        const trigger = ref.current;
-        trigger.addEventListener('contextmenu', handleContextMenu);
+      const trigger = ref.current;
+      trigger.addEventListener('contextmenu', handleContextMenu);
 
-        return () => {
-          trigger.removeEventListener('contextmenu', handleContextMenu);
-        };
-      }
-    },
-    [data, id, showMenu],
-  );
+      return () => {
+        trigger.removeEventListener('contextmenu', handleContextMenu);
+      };
+    }
+  }, [data, id, showMenu]);
 }

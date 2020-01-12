@@ -41,9 +41,7 @@ const execRead = async (command, options) => {
 };
 
 const getArtifactsList = async buildID => {
-  const buildMetadataURL = `https://circleci.com/api/v1.1/project/github/facebook/react/${buildID}?circle-token=${
-    process.env.CIRCLE_CI_API_TOKEN
-  }`;
+  const buildMetadataURL = `https://circleci.com/api/v1.1/project/github/facebook/react/${buildID}?circle-token=${process.env.CIRCLE_CI_API_TOKEN}`;
   const buildMetadata = await http.get(buildMetadataURL, true);
   if (!buildMetadata.workflows || !buildMetadata.workflows.workflow_id) {
     console.log(
@@ -57,9 +55,7 @@ const getArtifactsList = async buildID => {
     ? 'process_artifacts_experimental'
     : 'process_artifacts';
   const workflowID = buildMetadata.workflows.workflow_id;
-  const workflowMetadataURL = `https://circleci.com/api/v2/workflow/${workflowID}/job?circle-token=${
-    process.env.CIRCLE_CI_API_TOKEN
-  }`;
+  const workflowMetadataURL = `https://circleci.com/api/v2/workflow/${workflowID}/job?circle-token=${process.env.CIRCLE_CI_API_TOKEN}`;
   const workflowMetadata = await http.get(workflowMetadataURL, true);
   const job = workflowMetadata.items.find(
     ({name}) => name === artifactsJobName
@@ -71,9 +67,7 @@ const getArtifactsList = async buildID => {
     process.exit(1);
   }
 
-  const jobArtifactsURL = `https://circleci.com/api/v1.1/project/github/facebook/react/${
-    job.job_number
-  }/artifacts?circle-token=${process.env.CIRCLE_CI_API_TOKEN}`;
+  const jobArtifactsURL = `https://circleci.com/api/v1.1/project/github/facebook/react/${job.job_number}/artifacts?circle-token=${process.env.CIRCLE_CI_API_TOKEN}`;
   const jobArtifacts = await http.get(jobArtifactsURL, true);
 
   return jobArtifacts;
