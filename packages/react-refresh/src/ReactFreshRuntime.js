@@ -601,9 +601,14 @@ export function _getMountedRootCount() {
 //   'useState{[foo, setFoo]}(0)',
 //   () => [useCustomHook], /* Lazy to avoid triggering inline requires */
 // );
+type SignatureStatus = 'needsSignature' | 'needsCustomHooks' | 'resolved';
 export function createSignatureFunctionForTransform() {
   if (__DEV__) {
-    let call = 0;
+    // We'll fill in the signature in two steps.
+    // First, we'll know the signature itself. This happens outside the component.
+    // Then, we'll know the references to custom Hooks. This happens inside the component.
+    // After that, the returned function will be a fast path no-op.
+    let status: SignatureStatus = 'needsSignature';
     let savedType;
     let hasCustomHooks;
     return function<T>(
@@ -612,16 +617,25 @@ export function createSignatureFunctionForTransform() {
       forceReset?: boolean,
       getCustomHooks?: () => Array<Function>,
     ): T {
-      switch (call++) {
-        case 0:
-          savedType = type;
-          hasCustomHooks = typeof getCustomHooks === 'function';
-          setSignature(type, key, forceReset, getCustomHooks);
+      switch (status) {
+        case 'needsSignature':
+          if (type !== undefined) {
+            // If we received an argument, this is the initial registration call.
+            savedType = type;
+            hasCustomHooks = typeof getCustomHooks === 'function';
+            setSignature(type, key, forceReset, getCustomHooks);
+            // The next call we expect is from inside a function, to fill in the custom Hooks.
+            status = 'needsCustomHooks';
+          }
           break;
-        case 1:
+        case 'needsCustomHooks':
           if (hasCustomHooks) {
             collectCustomHooksForSignature(savedType);
           }
+          status = 'resolved';
+          break;
+        case 'resolved':
+          // Do nothing. Fast path for all future renders.
           break;
       }
       return type;
