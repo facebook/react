@@ -9,7 +9,10 @@ const OFF = 0;
 const ERROR = 2;
 
 module.exports = {
-  extends: 'fbjs',
+  extends: [
+    'fbjs',
+    'prettier'
+  ],
 
   // Stop ESLint from looking for a configuration file in parent folders
   root: true,
@@ -30,7 +33,6 @@ module.exports = {
   rules: {
     'accessor-pairs': OFF,
     'brace-style': [ERROR, '1tbs'],
-    'comma-dangle': [ERROR, 'always-multiline'],
     'consistent-return': OFF,
     'dot-location': [ERROR, 'property'],
     // We use console['error']() as a signal to not transform it:
