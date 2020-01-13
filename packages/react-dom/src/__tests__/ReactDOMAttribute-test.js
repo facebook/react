@@ -133,7 +133,6 @@ describe('ReactDOM unknown attribute', () => {
       ReactDOM.render(<div helloWorld={undefined} />, el);
 
       expect(el.firstChild.getAttribute('helloworld')).toBeNull();
-      expect(el.firstChild.getAttribute('helloWorld')).toBeNull();
     });
   });
 });
