@@ -1907,6 +1907,11 @@ export function attach(
     }
   }
 
+  function getDisplayNameForFiberID(id) {
+    const fiber = idToFiberMap.get(id);
+    return fiber != null ? getDisplayNameForFiber(((fiber: any): Fiber)) : null;
+  }
+
   function getFiberIDForNative(
     hostInstance,
     findNearestUnfilteredAncestor = false,
@@ -3179,6 +3184,7 @@ export function attach(
     findNativeNodesForFiberID,
     flushInitialOperations,
     getBestMatchForTrackedPath,
+    getDisplayNameForFiberID,
     getFiberIDForNative,
     getInstanceAndStyle,
     getOwnersList,
