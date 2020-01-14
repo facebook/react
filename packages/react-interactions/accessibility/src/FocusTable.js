@@ -42,7 +42,7 @@ function focusScope(
   cell: ReactScopeMethods,
   event?: KeyboardEvent,
 ): void {
-  const firstScopedNode = cell.queryFirstNode(scopeQuery);
+  const firstScopedNode = cell.DO_NOT_USE_queryFirstNode(scopeQuery);
   if (firstScopedNode !== null) {
     firstScopedNode.focus();
     if (event) {
@@ -58,13 +58,13 @@ function focusCellByColumnIndex(
   columnIndex: number,
   event?: KeyboardEvent,
 ): void {
-  const cells = row.getChildren();
+  const cells = row.DO_NOT_USE_getChildren();
   if (cells !== null) {
     let colSize = 0;
     for (let i = 0; i < cells.length; i++) {
       const cell = cells[i];
       if (cell) {
-        colSize += cell.getProps().colSpan || 1;
+        colSize += cell.DO_NOT_USE_getProps().colSpan || 1;
         if (colSize > columnIndex) {
           focusScope(scopeQuery, cell, event);
           return;
@@ -84,7 +84,7 @@ function getCellIndexes(
     if (cell === currentCell) {
       return [i, i + totalColSpan];
     }
-    const colSpan = cell.getProps().colSpan;
+    const colSpan = cell.DO_NOT_USE_getProps().colSpan;
     if (colSpan) {
       totalColSpan += colSpan - 1;
     }
@@ -93,9 +93,9 @@ function getCellIndexes(
 }
 
 function getRowCells(currentCell: ReactScopeMethods) {
-  const row = currentCell.getParent();
-  if (row !== null && row.getProps().type === 'row') {
-    const cells = row.getChildren();
+  const row = currentCell.DO_NOT_USE_getParent();
+  if (row !== null && row.DO_NOT_USE_getProps().type === 'row') {
+    const cells = row.DO_NOT_USE_getChildren();
     if (cells !== null) {
       const [rowIndex, rowIndexWithColSpan] = getCellIndexes(
         cells,
@@ -108,11 +108,11 @@ function getRowCells(currentCell: ReactScopeMethods) {
 }
 
 function getRows(currentCell: ReactScopeMethods) {
-  const row = currentCell.getParent();
-  if (row !== null && row.getProps().type === 'row') {
-    const table = row.getParent();
-    if (table !== null && table.getProps().type === 'table') {
-      const rows = table.getChildren();
+  const row = currentCell.DO_NOT_USE_getParent();
+  if (row !== null && row.DO_NOT_USE_getProps().type === 'row') {
+    const table = row.DO_NOT_USE_getParent();
+    if (table !== null && table.DO_NOT_USE_getProps().type === 'table') {
+      const rows = table.DO_NOT_USE_getChildren();
       if (rows !== null) {
         const columnIndex = rows.indexOf(row);
         return [rows, columnIndex];
@@ -127,11 +127,11 @@ function triggerNavigateOut(
   direction: 'left' | 'right' | 'up' | 'down',
   event,
 ): void {
-  const row = currentCell.getParent();
-  if (row !== null && row.getProps().type === 'row') {
-    const table = row.getParent();
+  const row = currentCell.DO_NOT_USE_getParent();
+  if (row !== null && row.DO_NOT_USE_getProps().type === 'row') {
+    const table = row.DO_NOT_USE_getParent();
     if (table !== null) {
-      const props = table.getProps();
+      const props = table.DO_NOT_USE_getProps();
       const onKeyboardOut = props.onKeyboardOut;
       if (props.type === 'table' && typeof onKeyboardOut === 'function') {
         onKeyboardOut(direction, event);
@@ -143,11 +143,11 @@ function triggerNavigateOut(
 }
 
 function getTableProps(currentCell: ReactScopeMethods): Object {
-  const row = currentCell.getParent();
-  if (row !== null && row.getProps().type === 'row') {
-    const table = row.getParent();
+  const row = currentCell.DO_NOT_USE_getParent();
+  if (row !== null && row.DO_NOT_USE_getProps().type === 'row') {
+    const table = row.DO_NOT_USE_getParent();
     if (table !== null) {
-      return table.getProps();
+      return table.DO_NOT_USE_getProps();
     }
   }
   return {};
@@ -207,12 +207,14 @@ export function createFocusTable(
         if (key === 'Tab') {
           const tabScopeQuery = getTableProps(currentCell).tabScopeQuery;
           if (tabScopeQuery) {
-            const rowScope = currentCell.getParent();
+            const rowScope = currentCell.DO_NOT_USE_getParent();
             if (rowScope) {
-              const tableScope = rowScope.getParent();
+              const tableScope = rowScope.DO_NOT_USE_getParent();
               if (tableScope) {
                 const activeNode = document.activeElement;
-                const nodes = tableScope.queryAllNodes(tabScopeQuery);
+                const nodes = tableScope.DO_NOT_USE_queryAllNodes(
+                  tabScopeQuery,
+                );
                 for (let i = 0; i < nodes.length; i++) {
                   const node = nodes[i];
                   if (node !== activeNode) {

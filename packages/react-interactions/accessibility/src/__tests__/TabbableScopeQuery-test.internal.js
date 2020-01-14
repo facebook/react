@@ -35,7 +35,7 @@ describe('TabbableScopeQuery', () => {
       container = null;
     });
 
-    it('queryAllNodes() works as intended', () => {
+    it('DO_NOT_USE_queryAllNodes() works as intended', () => {
       const scopeRef = React.createRef();
       const nodeRefA = React.createRef();
       const nodeRefB = React.createRef();
@@ -60,7 +60,7 @@ describe('TabbableScopeQuery', () => {
       }
 
       ReactDOM.render(<Test />, container);
-      let nodes = scopeRef.current.queryAllNodes(tabbableScopeQuery);
+      let nodes = scopeRef.current.DO_NOT_USE_queryAllNodes(tabbableScopeQuery);
       expect(nodes).toEqual([
         nodeRefA.current,
         nodeRefB.current,

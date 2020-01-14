@@ -35,7 +35,7 @@ function focusGroupItem(
   cell: ReactScopeMethods,
   event: KeyboardEvent,
 ): void {
-  const firstScopedNode = cell.queryFirstNode(scopeQuery);
+  const firstScopedNode = cell.DO_NOT_USE_queryFirstNode(scopeQuery);
   if (firstScopedNode !== null) {
     firstScopedNode.focus();
     event.preventDefault();
@@ -46,7 +46,7 @@ function getPreviousGroupItem(
   group: ReactScopeMethods,
   currentItem: ReactScopeMethods,
 ): null | ReactScopeMethods {
-  const items = group.getChildren();
+  const items = group.DO_NOT_USE_getChildren();
   if (items !== null) {
     const currentItemIndex = items.indexOf(currentItem);
     const wrap = getGroupProps(currentItem).wrap;
@@ -63,7 +63,7 @@ function getNextGroupItem(
   group: ReactScopeMethods,
   currentItem: ReactScopeMethods,
 ): null | ReactScopeMethods {
-  const items = group.getChildren();
+  const items = group.DO_NOT_USE_getChildren();
   if (items !== null) {
     const currentItemIndex = items.indexOf(currentItem);
     const wrap = getGroupProps(currentItem).wrap;
@@ -78,9 +78,9 @@ function getNextGroupItem(
 }
 
 function getGroupProps(currentCell: ReactScopeMethods): Object {
-  const group = currentCell.getParent();
+  const group = currentCell.DO_NOT_USE_getParent();
   if (group !== null) {
-    const groupProps = group.getProps();
+    const groupProps = group.DO_NOT_USE_getProps();
     if (groupProps && groupProps.type === 'group') {
       return groupProps;
     }
@@ -125,8 +125,8 @@ export function createFocusGroup(
       onKeyDown(event: KeyboardEvent): void {
         const currentItem = scopeRef.current;
         if (currentItem !== null) {
-          const group = currentItem.getParent();
-          const groupProps = group && group.getProps();
+          const group = currentItem.DO_NOT_USE_getParent();
+          const groupProps = group && group.DO_NOT_USE_getProps();
           if (group !== null && groupProps.type === 'group') {
             const portrait = groupProps.portrait;
             const key = event.key;
@@ -134,10 +134,12 @@ export function createFocusGroup(
             if (key === 'Tab') {
               const tabScopeQuery = getGroupProps(currentItem).tabScopeQuery;
               if (tabScopeQuery) {
-                const groupScope = currentItem.getParent();
+                const groupScope = currentItem.DO_NOT_USE_getParent();
                 if (groupScope) {
                   const activeNode = document.activeElement;
-                  const nodes = groupScope.queryAllNodes(tabScopeQuery);
+                  const nodes = groupScope.DO_NOT_USE_queryAllNodes(
+                    tabScopeQuery,
+                  );
                   for (let i = 0; i < nodes.length; i++) {
                     const node = nodes[i];
                     if (node !== activeNode) {
