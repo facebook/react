@@ -777,6 +777,7 @@ const pressResponderImpl = {
 
           // Determine whether to call preventDefault on subsequent native events.
           if (
+            target !== null &&
             context.isTargetWithinResponder(target) &&
             context.isTargetWithinHostComponent(target, 'a')
           ) {
@@ -808,6 +809,7 @@ const pressResponderImpl = {
             if (
               !isKeyboardEvent &&
               pressTarget !== null &&
+              target !== null &&
               !targetIsDocument(pressTarget)
             ) {
               if (

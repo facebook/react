@@ -17,6 +17,10 @@ declare var __REACT_DEVTOOLS_GLOBAL_HOOK__: any; /*?{
   inject: ?((stuff: Object) => void)
 };*/
 
+declare module 'create-react-class' {
+  declare var exports: React$CreateClass;
+}
+
 declare var trustedTypes: {|
   isHTML: (value: any) => boolean,
   isScript: (value: any) => boolean,
