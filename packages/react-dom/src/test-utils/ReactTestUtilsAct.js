@@ -31,8 +31,11 @@ const [
   runEventsInBatch,
   /* eslint-enable no-unused-vars */
   flushPassiveEffects,
-  IsThisRendererActing,
 ] = ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.Events;
+
+const [
+  IsThisRendererActing,
+] = ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.Tests;
 
 const batchedUpdates = ReactDOM.unstable_batchedUpdates;
 

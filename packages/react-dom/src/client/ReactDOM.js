@@ -169,8 +169,8 @@ const ReactDOM: Object = {
       dispatchEvent,
       runEventsInBatch,
       flushPassiveEffects,
-      IsThisRendererActing,
     ],
+    Tests: [IsThisRendererActing],
   },
 };
 

@@ -41,9 +41,14 @@ const [
   runEventsInBatch,
   /* eslint-disable no-unused-vars */
   flushPassiveEffects,
-  IsThisRendererActing,
   /* eslint-enable no-unused-vars */
 ] = ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.Events;
+
+/* eslint-disable no-unused-vars */
+const [
+  IsThisRendererActing,
+] = ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.Tests;
+/* eslint-enable no-unused-vars */
 
 function Event(suffix) {}
 
