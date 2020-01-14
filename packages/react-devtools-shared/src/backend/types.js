@@ -39,6 +39,11 @@ export type RendererID = number;
 
 type Dispatcher = any;
 
+export type GetDisplayNameForFiberID = (
+  id: number,
+  findNearestUnfilteredAncestor?: boolean,
+) => string | null;
+
 export type GetFiberIDForNative = (
   component: NativeType,
   findNearestUnfilteredAncestor?: boolean,
@@ -225,6 +230,7 @@ export type RendererInterface = {
   flushInitialOperations: () => void,
   getBestMatchForTrackedPath: () => PathMatch | null,
   getFiberIDForNative: GetFiberIDForNative,
+  getDisplayNameForFiberID: GetDisplayNameForFiberID,
   getInstanceAndStyle(id: number): InstanceAndStyle,
   getProfilingData(): ProfilingDataBackend,
   getOwnersList: (id: number) => Array<Owner> | null,

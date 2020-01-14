@@ -10,6 +10,7 @@
 import assign from 'object-assign';
 import {getElementDimensions, getNestedBoundingClientRect} from '../utils';
 
+import type {DevToolsHook} from 'react-devtools-shared/src/backend/types';
 import type {Rect} from '../utils';
 
 type Box = {|top: number, left: number, width: number, height: number|};
@@ -226,9 +227,24 @@ export default class Overlay {
 
     if (!name) {
       name = elements[0].nodeName.toLowerCase();
-      const ownerName = getOwnerDisplayName(elements[0]);
-      if (ownerName) {
-        name += ' (in ' + ownerName + ')';
+
+      const node = elements[0];
+      const hook: DevToolsHook =
+        node.ownerDocument.defaultView.__REACT_DEVTOOLS_GLOBAL_HOOK__;
+      if (hook != null && hook.rendererInterfaces != null) {
+        let ownerName = null;
+        // eslint-disable-next-line no-for-of-loops/no-for-of-loops
+        for (const rendererInterface of hook.rendererInterfaces.values()) {
+          const id = rendererInterface.getFiberIDForNative(node, true);
+          if (id !== null) {
+            ownerName = rendererInterface.getDisplayNameForFiberID(id, true);
+            break;
+          }
+        }
+
+        if (ownerName) {
+          name += ' (in ' + ownerName + ')';
+        }
       }
     }
 
@@ -257,37 +273,6 @@ export default class Overlay {
       },
     );
   }
-}
-
-function getOwnerDisplayName(node) {
-  const fiber = getFiber(node);
-  if (fiber === null) {
-    return null;
-  }
-  const owner = fiber._debugOwner;
-  if (owner && owner.type) {
-    const ownerName = owner.type.displayName || owner.type.name;
-    return ownerName || null;
-  }
-  return null;
-}
-
-let lastFoundInternalKey = null;
-function getFiber(node) {
-  if (
-    lastFoundInternalKey !== null &&
-    node.hasOwnProperty(lastFoundInternalKey)
-  ) {
-    return (node: any)[lastFoundInternalKey];
-  }
-  let internalKey = Object.keys(node).find(
-    key => key.indexOf('__reactInternalInstance') === 0,
-  );
-  if (internalKey) {
-    lastFoundInternalKey = internalKey;
-    return (node: any)[lastFoundInternalKey];
-  }
-  return null;
 }
 
 function findTipPos(dims, bounds, tipSize) {

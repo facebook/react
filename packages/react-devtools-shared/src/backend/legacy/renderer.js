@@ -159,6 +159,11 @@ export function attach(
     };
   }
 
+  function getDisplayNameForFiberID(id: number): string | null {
+    const internalInstance = idToInternalInstanceMap.get(id);
+    return internalInstance ? getData(internalInstance).displayName : null;
+  }
+
   function getID(internalInstance: InternalInstance): number {
     if (typeof internalInstance !== 'object') {
       throw new Error('Invalid internal instance: ' + internalInstance);
@@ -964,6 +969,7 @@ export function attach(
     copyElementPath,
     flushInitialOperations,
     getBestMatchForTrackedPath,
+    getDisplayNameForFiberID,
     getFiberIDForNative: getInternalIDForNative,
     getInstanceAndStyle,
     findNativeNodesForFiberID: (id: number) => {
