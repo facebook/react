@@ -472,7 +472,17 @@ export function injectIntoGlobalHook(globalObject: any): void {
     // Do the same for any already injected roots.
     // This is useful if ReactDOM has already been initialized.
     // https://github.com/facebook/react/issues/17626
-    const renderers = hook.renderers || hook._renderers; // DevTools v4 || v3
+    let renderers = hook.renderers;
+    if (renderers === undefined && hook._renderers != null) {
+      // DevTools v3
+      renderers = new Map();
+      for (let key in hook._renderers) {
+        if (hook._renderers.hasOwnProperty(key)) {
+          renderers.set(key, hook._renderers[key]);
+        }
+      }
+    }
+
     renderers.forEach((injected, id) => {
       if (
         typeof injected.scheduleRefresh === 'function' &&
