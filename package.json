@@ -88,7 +88,7 @@
     "targz": "^1.0.1",
     "through2": "^2.0.0",
     "tmp": "~0.0.28",
-    "typescript": "~1.8.10",
+    "typescript": "^3.7.4",
     "webpack": "^4.41.2"
   },
   "devEngines": {
