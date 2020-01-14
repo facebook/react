@@ -216,9 +216,7 @@ function createPanelIfReactLoaded() {
               showTabBar: false,
               store,
               warnIfUnsupportedVersionDetected: true,
-              viewAttributeSourceFunction: isChrome
-                ? viewAttributeSourceFunction
-                : null,
+              viewAttributeSourceFunction,
               viewElementSourceFunction,
             }),
           );
