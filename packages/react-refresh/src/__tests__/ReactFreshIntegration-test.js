@@ -605,6 +605,86 @@ describe('ReactFreshIntegration', () => {
       }
     });
 
+    it('does not get confused when component is called early', () => {
+      if (__DEV__) {
+        render(`
+          // This isn't really a valid pattern but it's close enough
+          // to simulate what happens when you call ReactDOM.render
+          // in the same file. We want to ensure this doesn't confuse
+          // the runtime.
+          App();
+
+          function App() {
+            const [x, setX] = useFancyState('X');
+            const [y, setY] = useFancyState('Y');
+            return <h1>A{x}{y}</h1>;
+          };
+
+          function useFancyState(initialState) {
+            // No real Hook calls to avoid triggering invalid call invariant.
+            // We only want to verify that we can still call this function early.
+            return initialState;
+          }
+
+          export default App;
+        `);
+        let el = container.firstChild;
+        expect(el.textContent).toBe('AXY');
+
+        patch(`
+          // This isn't really a valid pattern but it's close enough
+          // to simulate what happens when you call ReactDOM.render
+          // in the same file. We want to ensure this doesn't confuse
+          // the runtime.
+          App();
+
+          function App() {
+            const [x, setX] = useFancyState('X');
+            const [y, setY] = useFancyState('Y');
+            return <h1>B{x}{y}</h1>;
+          };
+
+          function useFancyState(initialState) {
+            // No real Hook calls to avoid triggering invalid call invariant.
+            // We only want to verify that we can still call this function early.
+            return initialState;
+          }
+
+          export default App;
+        `);
+        // Same state variables, so no remount.
+        expect(container.firstChild).toBe(el);
+        expect(el.textContent).toBe('BXY');
+
+        patch(`
+          // This isn't really a valid pattern but it's close enough
+          // to simulate what happens when you call ReactDOM.render
+          // in the same file. We want to ensure this doesn't confuse
+          // the runtime.
+          App();
+
+          function App() {
+            const [y, setY] = useFancyState('Y');
+            const [x, setX] = useFancyState('X');
+            return <h1>B{x}{y}</h1>;
+          };
+
+          function useFancyState(initialState) {
+            // No real Hook calls to avoid triggering invalid call invariant.
+            // We only want to verify that we can still call this function early.
+            return initialState;
+          }
+
+          export default App;
+        `);
+        // Hooks were re-ordered. This causes a remount.
+        // Therefore, Hook calls don't accidentally share state.
+        expect(container.firstChild).not.toBe(el);
+        el = container.firstChild;
+        expect(el.textContent).toBe('BXY');
+      }
+    });
+
     it('does not get confused by Hooks defined inline', () => {
       // This is not a recommended pattern but at least it shouldn't break.
       if (__DEV__) {

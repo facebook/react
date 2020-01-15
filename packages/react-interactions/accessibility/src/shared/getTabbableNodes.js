@@ -19,7 +19,7 @@ export default function getTabbableNodes(
   number,
   null | HTMLElement,
 ] {
-  const tabbableNodes = scope.queryAllNodes(scopeQuery);
+  const tabbableNodes = scope.DO_NOT_USE_queryAllNodes(scopeQuery);
   if (tabbableNodes === null || tabbableNodes.length === 0) {
     return [null, null, null, 0, null];
   }

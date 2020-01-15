@@ -171,17 +171,18 @@ export type ReactScope = {|
 |};
 
 export type ReactScopeMethods = {|
-  getChildren(): null | Array<ReactScopeMethods>,
-  getChildrenFromRoot(): null | Array<ReactScopeMethods>,
-  getParent(): null | ReactScopeMethods,
-  getProps(): Object,
-  queryAllNodes(
+  DO_NOT_USE_getChildren(): null | Array<ReactScopeMethods>,
+  DO_NOT_USE_getChildrenFromRoot(): null | Array<ReactScopeMethods>,
+  DO_NOT_USE_getParent(): null | ReactScopeMethods,
+  DO_NOT_USE_getProps(): Object,
+  DO_NOT_USE_queryAllNodes(
     (type: string | Object, props: Object, instance: Object) => boolean,
   ): null | Array<Object>,
-  queryFirstNode(
+  DO_NOT_USE_queryFirstNode(
     (type: string | Object, props: Object, instance: Object) => boolean,
   ): null | Object,
   containsNode(Object): boolean,
+  getChildContextValues: <T>(context: ReactContext<T>) => Array<T>,
 |};
 
 export type ReactScopeInstance = {|

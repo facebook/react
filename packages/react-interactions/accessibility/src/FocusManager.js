@@ -16,7 +16,7 @@ export function focusFirst(
   scopeQuery: (type: string | Object, props: Object) => boolean,
   scope: ReactScopeMethods,
 ): void {
-  const firstNode = scope.queryFirstNode(scopeQuery);
+  const firstNode = scope.DO_NOT_USE_queryFirstNode(scopeQuery);
   if (firstNode) {
     focusElem(firstNode);
   }
@@ -101,7 +101,7 @@ export function focusPrevious(
 export function getNextScope(
   scope: ReactScopeMethods,
 ): null | ReactScopeMethods {
-  const allScopes = scope.getChildrenFromRoot();
+  const allScopes = scope.DO_NOT_USE_getChildrenFromRoot();
   if (allScopes === null) {
     return null;
   }
@@ -115,7 +115,7 @@ export function getNextScope(
 export function getPreviousScope(
   scope: ReactScopeMethods,
 ): null | ReactScopeMethods {
-  const allScopes = scope.getChildrenFromRoot();
+  const allScopes = scope.DO_NOT_USE_getChildrenFromRoot();
   if (allScopes === null) {
     return null;
   }
