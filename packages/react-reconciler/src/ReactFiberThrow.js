@@ -87,16 +87,21 @@ function createClassErrorUpdate(
 ): Update<mixed> {
   const update = createUpdate(expirationTime, null);
   update.tag = CaptureUpdate;
+  const inst = fiber.stateNode;
   const getDerivedStateFromError = fiber.type.getDerivedStateFromError;
   if (typeof getDerivedStateFromError === 'function') {
     const error = errorInfo.value;
+    const stack = errorInfo.stack;
+    const errorPartialInfo = {
+      componentStack: stack !== null ? stack : '',
+    };
+    const state = inst !== null ? inst.state : null;
     update.payload = () => {
       logError(fiber, errorInfo);
-      return getDerivedStateFromError(error);
+      return getDerivedStateFromError(error, errorPartialInfo, state);
     };
   }
 
-  const inst = fiber.stateNode;
   if (inst !== null && typeof inst.componentDidCatch === 'function') {
     update.callback = function callback() {
       if (__DEV__) {
@@ -115,9 +120,10 @@ function createClassErrorUpdate(
       }
       const error = errorInfo.value;
       const stack = errorInfo.stack;
-      this.componentDidCatch(error, {
+      const errorPartialInfo = {
         componentStack: stack !== null ? stack : '',
-      });
+      };
+      this.componentDidCatch(error, errorPartialInfo);
       if (__DEV__) {
         if (typeof getDerivedStateFromError !== 'function') {
           // If componentDidCatch is the only error boundary method defined,

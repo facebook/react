@@ -1600,16 +1600,23 @@ describe('ReactIncrementalErrorHandling', () => {
     ]);
   });
 
-  it('does not provide component stack to the error boundary with getDerivedStateFromError', () => {
+  it('provides component stack and state to the error boundary with getDerivedStateFromError', () => {
     class ErrorBoundary extends React.Component {
-      state = {error: null};
-      static getDerivedStateFromError(error, errorInfo) {
-        expect(errorInfo).toBeUndefined();
-        return {error};
+      state = {error: null, foo: 'foo'};
+      static getDerivedStateFromError(error, errorInfo, prevState) {
+        expect(error.message).toBe('Hello');
+        expect(prevState.foo).toBe('foo');
+        return {error, errorInfo, foo: prevState.foo.toUpperCase()};
       }
       render() {
-        if (this.state.error) {
-          return <span prop={`Caught an error: ${this.state.error.message}`} />;
+        if (this.state.errorInfo) {
+          return (
+            <span
+              prop={`Caught an error:${normalizeCodeLocInfo(
+                this.state.errorInfo.componentStack,
+              )}. Derived foo: ${this.state.foo}.`}
+            />
+          );
         }
         return this.props.children;
       }
@@ -1625,7 +1632,18 @@ describe('ReactIncrementalErrorHandling', () => {
       </ErrorBoundary>,
     );
     expect(Scheduler).toFlushWithoutYielding();
-    expect(ReactNoop.getChildren()).toEqual([span('Caught an error: Hello')]);
+    expect(ReactNoop.getChildren()).toEqual([
+      span(
+        'Caught an error:\n' +
+          (__DEV__
+            ? '    in BrokenRender (at **)\n'
+            : '    in BrokenRender\n') +
+          (__DEV__
+            ? '    in ErrorBoundary (at **).'
+            : '    in ErrorBoundary.') +
+          ' Derived foo: FOO.',
+      ),
+    ]);
   });
 
   it('handles error thrown inside getDerivedStateFromProps of a module-style context provider', () => {
