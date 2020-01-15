@@ -44,7 +44,6 @@ import {
   ElementTypeMemo,
 } from 'react-devtools-shared/src/types';
 import {localStorageGetItem, localStorageSetItem} from './storage';
-import {alphaSortEntries} from './devtools/views/utils';
 import {meta} from './hydration';
 
 import type {ComponentFilter, ElementType} from './types';
@@ -54,6 +53,16 @@ const cachedDisplayNames: WeakMap<Function, string> = new WeakMap();
 // On large trees, encoding takes significant time.
 // Try to reuse the already encoded strings.
 let encodedStringCache = new LRU({max: 1000});
+
+export function alphaSortKeys(a: string, b: string): number {
+  if (a > b) {
+    return 1;
+  } else if (b > a) {
+    return -1;
+  } else {
+    return 0;
+  }
+}
 
 export function getDisplayName(
   type: Function,
@@ -601,7 +610,7 @@ export function formatDataForPreview(
       return data.toString();
     case 'object':
       if (showFormattedValue) {
-        const keys = Object.keys(data).sort(alphaSortEntries);
+        const keys = Object.keys(data).sort(alphaSortKeys);
 
         let formatted = '';
         for (let i = 0; i < keys.length; i++) {
