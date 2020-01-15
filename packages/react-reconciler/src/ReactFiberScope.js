@@ -12,6 +12,7 @@ import type {
   ReactScope,
   ReactScopeInstance,
   ReactScopeMethods,
+  ReactContext,
 } from 'shared/ReactTypes';
 
 import {getPublicInstance, getInstanceFromNode} from './ReactFiberHostConfig';
@@ -20,6 +21,7 @@ import {
   HostComponent,
   SuspenseComponent,
   ScopeComponent,
+  ContextProvider,
 } from 'shared/ReactWorkTags';
 import {enableScopeAPI} from 'shared/ReactFeatureFlags';
 
@@ -142,6 +144,38 @@ function collectNearestChildScopeMethods(
   }
 }
 
+function collectNearestContextValues<T>(
+  node: Fiber,
+  context: ReactContext<T>,
+  childContextValues: Array<T>,
+): void {
+  if (node.tag === ContextProvider && node.type._context === context) {
+    const contextValue = node.memoizedProps.value;
+    childContextValues.push(contextValue);
+  } else {
+    let child = node.child;
+
+    if (isFiberSuspenseAndTimedOut(node)) {
+      child = getSuspenseFallbackChild(node);
+    }
+    if (child !== null) {
+      collectNearestChildContextValues(child, context, childContextValues);
+    }
+  }
+}
+
+function collectNearestChildContextValues<T>(
+  startingChild: Fiber | null,
+  context: ReactContext<T>,
+  childContextValues: Array<T>,
+): void {
+  let child = startingChild;
+  while (child !== null) {
+    collectNearestContextValues(child, context, childContextValues);
+    child = child.sibling;
+  }
+}
+
 function isValidScopeNode(node, scope) {
   return (
     node.tag === ScopeComponent &&
@@ -155,7 +189,7 @@ export function createScopeMethods(
   instance: ReactScopeInstance,
 ): ReactScopeMethods {
   return {
-    getChildren(): null | Array<ReactScopeMethods> {
+    DO_NOT_USE_getChildren(): null | Array<ReactScopeMethods> {
       const currentFiber = ((instance.fiber: any): Fiber);
       const child = currentFiber.child;
       const childrenScopes = [];
@@ -164,7 +198,7 @@ export function createScopeMethods(
       }
       return childrenScopes.length === 0 ? null : childrenScopes;
     },
-    getChildrenFromRoot(): null | Array<ReactScopeMethods> {
+    DO_NOT_USE_getChildrenFromRoot(): null | Array<ReactScopeMethods> {
       const currentFiber = ((instance.fiber: any): Fiber);
       let node = currentFiber;
       while (node !== null) {
@@ -181,7 +215,7 @@ export function createScopeMethods(
       collectNearestChildScopeMethods(node.child, scope, childrenScopes);
       return childrenScopes.length === 0 ? null : childrenScopes;
     },
-    getParent(): null | ReactScopeMethods {
+    DO_NOT_USE_getParent(): null | ReactScopeMethods {
       let node = ((instance.fiber: any): Fiber).return;
       while (node !== null) {
         if (node.tag === ScopeComponent && node.type === scope) {
@@ -191,11 +225,11 @@ export function createScopeMethods(
       }
       return null;
     },
-    getProps(): Object {
+    DO_NOT_USE_getProps(): Object {
       const currentFiber = ((instance.fiber: any): Fiber);
       return currentFiber.memoizedProps;
     },
-    queryAllNodes(
+    DO_NOT_USE_queryAllNodes(
       fn: (type: string | Object, props: Object, instance: Object) => boolean,
     ): null | Array<Object> {
       const currentFiber = ((instance.fiber: any): Fiber);
@@ -206,7 +240,7 @@ export function createScopeMethods(
       }
       return scopedNodes.length === 0 ? null : scopedNodes;
     },
-    queryFirstNode(
+    DO_NOT_USE_queryFirstNode(
       fn: (type: string | Object, props: Object, instance: Object) => boolean,
     ): null | Object {
       const currentFiber = ((instance.fiber: any): Fiber);
@@ -229,6 +263,15 @@ export function createScopeMethods(
         fiber = fiber.return;
       }
       return false;
+    },
+    getChildContextValues<T>(context: ReactContext<T>): Array<T> {
+      const currentFiber = ((instance.fiber: any): Fiber);
+      const child = currentFiber.child;
+      const childContextValues = [];
+      if (child !== null) {
+        collectNearestChildContextValues(child, context, childContextValues);
+      }
+      return childContextValues;
     },
   };
 }
