@@ -669,17 +669,17 @@ export function isLikelyComponentType(type: any): boolean {
       return typeof name === 'string' && /^[A-Z]/.test(name);
     }
     case 'object': {
-      if (type != null) {
-        switch (type.$$typeof) {
-          case REACT_FORWARD_REF_TYPE:
-          case REACT_MEMO_TYPE:
-            // Definitely React components.
-            return true;
-          default:
-            return false;
-        }
+      if (type == null) {
+        return false
       }
-      return false;
+      switch (type.$$typeof) {
+        case REACT_FORWARD_REF_TYPE:
+        case REACT_MEMO_TYPE:
+          // Definitely React components.
+          return true;
+        default:
+          return false;
+      }
     }
     default: {
       return false;
