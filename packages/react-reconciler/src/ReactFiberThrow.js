@@ -61,12 +61,6 @@ import {Sync, NoWork} from './ReactFiberExpirationTime';
 
 const PossiblyWeakMap = typeof WeakMap === 'function' ? WeakMap : Map;
 
-// Throw an object with this type to abort the current render and restart at
-// a different level.
-export function SuspendOnTask(expirationTime: ExpirationTime) {
-  this.retryTime = expirationTime;
-}
-
 function createRootErrorUpdate(
   fiber: Fiber,
   errorInfo: CapturedValue<mixed>,

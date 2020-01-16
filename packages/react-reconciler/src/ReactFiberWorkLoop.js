@@ -127,7 +127,6 @@ import {
   throwException,
   createRootErrorUpdate,
   createClassErrorUpdate,
-  SuspendOnTask,
 } from './ReactFiberThrow';
 import {
   commitBeforeMutationLifeCycles as commitBeforeMutationEffectOnFiber,
@@ -183,7 +182,10 @@ import {
   clearCaughtError,
 } from 'shared/ReactErrorUtils';
 import {onCommitRoot} from './ReactFiberDevToolsHook';
-import {requestCurrentTransition} from './ReactFiberTransition';
+import {
+  setRenderPhaseDispatchImpl,
+  restoreDispatchImpl,
+} from './ReactFiberTransition';
 
 const ceil = Math.ceil;
 
@@ -203,14 +205,13 @@ const LegacyUnbatchedContext = /*       */ 0b001000;
 const RenderContext = /*                */ 0b010000;
 const CommitContext = /*                */ 0b100000;
 
-type RootExitStatus = 0 | 1 | 2 | 3 | 4 | 5 | 6;
+type RootExitStatus = 0 | 1 | 2 | 3 | 4 | 5;
 const RootIncomplete = 0;
 const RootFatalErrored = 1;
-const RootSuspendedOnTask = 2;
-const RootErrored = 3;
-const RootSuspended = 4;
-const RootSuspendedWithDelay = 5;
-const RootCompleted = 6;
+const RootErrored = 2;
+const RootSuspended = 3;
+const RootSuspendedWithDelay = 4;
+const RootCompleted = 5;
 
 export type Thenable = {
   then(resolve: () => mixed, reject?: () => mixed): Thenable | void,
@@ -241,7 +242,7 @@ let workInProgressRootCanSuspendUsingConfig: null | SuspenseConfig = null;
 // The work left over by components that were visited during this render. Only
 // includes unprocessed updates, not work in bailed out children.
 let workInProgressRootNextUnprocessedUpdateTime: ExpirationTime = NoWork;
-let workInProgressRootRestartTime: ExpirationTime = NoWork;
+
 // If we're pinged while rendering we don't always restart immediately.
 // This flag determines if it might be worthwhile to restart if an opportunity
 // happens latere.
@@ -334,13 +335,9 @@ export function computeExpirationForFiber(
 
   let expirationTime;
   if (suspenseConfig !== null) {
-    // This is a transition
-    const transitionInstance = requestCurrentTransition();
-    if (transitionInstance !== null) {
-      expirationTime = transitionInstance.pendingExpirationTime;
-    } else {
-      expirationTime = computeAsyncExpiration(currentTime);
-    }
+    // If there's a SuspenseConfig, treat this as a concurrent update regardless
+    // of the priority.
+    expirationTime = computeAsyncExpiration(currentTime);
   } else {
     // Compute an expiration time based on the Scheduler priority.
     switch (priorityLevel) {
@@ -687,6 +684,7 @@ function performConcurrentWorkOnRoot(root, didTimeout) {
       const prevExecutionContext = executionContext;
       executionContext |= RenderContext;
       const prevDispatcher = pushDispatcher(root);
+      const prevDispatchImpl = setRenderPhaseDispatchImpl();
       const prevInteractions = pushInteractions(root);
       startWorkLoopTimer(workInProgress);
       do {
@@ -700,6 +698,7 @@ function performConcurrentWorkOnRoot(root, didTimeout) {
       resetContextDependencies();
       executionContext = prevExecutionContext;
       popDispatcher(prevDispatcher);
+      restoreDispatchImpl(prevDispatchImpl);
       if (enableSchedulerTracing) {
         popInteractions(((prevInteractions: any): Set<Interaction>));
       }
@@ -713,12 +712,7 @@ function performConcurrentWorkOnRoot(root, didTimeout) {
         throw fatalError;
       }
 
-      if (workInProgressRootExitStatus === RootSuspendedOnTask) {
-        // Can't finish rendering at this level. Exit early and restart at the
-        // specified time.
-        markRootSuspendedAtTime(root, expirationTime);
-        root.nextKnownPendingLevel = workInProgressRootRestartTime;
-      } else if (workInProgress !== null) {
+      if (workInProgress !== null) {
         // There's still work left over. Exit without committing.
         stopInterruptedWorkLoopTimer();
       } else {
@@ -759,8 +753,7 @@ function finishConcurrentRender(
 
   switch (exitStatus) {
     case RootIncomplete:
-    case RootFatalErrored:
-    case RootSuspendedOnTask: {
+    case RootFatalErrored: {
       invariant(false, 'Root did not complete. This is a bug in React.');
     }
     // Flow knows about invariant, so it complains if I add a break
@@ -1006,6 +999,7 @@ function performSyncWorkOnRoot(root) {
     executionContext |= RenderContext;
     const prevDispatcher = pushDispatcher(root);
     const prevInteractions = pushInteractions(root);
+    const prevDispatchImpl = setRenderPhaseDispatchImpl();
     startWorkLoopTimer(workInProgress);
 
     do {
@@ -1019,6 +1013,7 @@ function performSyncWorkOnRoot(root) {
     resetContextDependencies();
     executionContext = prevExecutionContext;
     popDispatcher(prevDispatcher);
+    restoreDispatchImpl(prevDispatchImpl);
     if (enableSchedulerTracing) {
       popInteractions(((prevInteractions: any): Set<Interaction>));
     }
@@ -1032,12 +1027,7 @@ function performSyncWorkOnRoot(root) {
       throw fatalError;
     }
 
-    if (workInProgressRootExitStatus === RootSuspendedOnTask) {
-      // Can't finish rendering at this level. Exit early and restart at the
-      // specified time.
-      markRootSuspendedAtTime(root, expirationTime);
-      root.nextKnownPendingLevel = workInProgressRootRestartTime;
-    } else if (workInProgress !== null) {
+    if (workInProgress !== null) {
       // This is a sync render, so we should have finished the whole tree.
       invariant(
         false,
@@ -1265,7 +1255,6 @@ function prepareFreshStack(root, expirationTime) {
   workInProgressRootLatestSuspenseTimeout = Sync;
   workInProgressRootCanSuspendUsingConfig = null;
   workInProgressRootNextUnprocessedUpdateTime = NoWork;
-  workInProgressRootRestartTime = NoWork;
   workInProgressRootHasPendingPing = false;
 
   if (enableSchedulerTracing) {
@@ -1285,20 +1274,6 @@ function handleError(root, thrownValue) {
       resetContextDependencies();
       resetHooksAfterThrow();
       resetCurrentDebugFiberInDEV();
-
-      // Check if this is a SuspendOnTask exception. This is the one type of
-      // exception that is allowed to happen at the root.
-      // TODO: I think instanceof is OK here? A brand check seems unnecessary
-      // since this is always thrown by the renderer and not across realms
-      // or packages.
-      if (thrownValue instanceof SuspendOnTask) {
-        // Can't finish rendering at this level. Exit early and restart at
-        // the specified time.
-        workInProgressRootExitStatus = RootSuspendedOnTask;
-        workInProgressRootRestartTime = thrownValue.retryTime;
-        workInProgress = null;
-        return;
-      }
 
       if (workInProgress === null || workInProgress.return === null) {
         // Expected to be working on a non-root fiber. This is a fatal error
@@ -2623,17 +2598,15 @@ if (__DEV__ && replayFailedUnitOfWorkWithInvokeGuardedCallback) {
     try {
       return originalBeginWork(current, unitOfWork, expirationTime);
     } catch (originalError) {
-      // Filter out special exception types
       if (
         originalError !== null &&
         typeof originalError === 'object' &&
-        // Promise
-        (typeof originalError.then === 'function' ||
-          // SuspendOnTask exception
-          originalError instanceof SuspendOnTask)
+        typeof originalError.then === 'function'
       ) {
+        // Don't replay promises. Treat everything else like an error.
         throw originalError;
       }
+
       // Keep this code in sync with handleError; any changes here must have
       // corresponding changes there.
       resetContextDependencies();

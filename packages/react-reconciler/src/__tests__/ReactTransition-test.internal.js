@@ -106,7 +106,7 @@ describe('ReactTransition', () => {
   );
 
   it.experimental(
-    'isPending turns off immediately if `startTransition` does not include any updates',
+    'nothing is scheduled if `startTransition` does not include any updates',
     async () => {
       let startTransition;
       function App() {
@@ -128,13 +128,8 @@ describe('ReactTransition', () => {
           // No-op
         });
       });
-      expect(Scheduler).toHaveYielded([
-        // Pending state is turned on then immediately back off
-        // TODO: As an optimization, we could avoid turning on the pending
-        // state entirely.
-        'Pending: true',
-        'Pending: false',
-      ]);
+      // Nothing is scheduled
+      expect(Scheduler).toHaveYielded([]);
       expect(root).toMatchRenderedOutput('Pending: false');
     },
   );
@@ -598,76 +593,60 @@ describe('ReactTransition', () => {
         </>,
       );
 
-      // Navigate to tab B
       await act(async () => {
+        // Navigate to tab B
         tabButtonB.current.go();
-        expect(Scheduler).toFlushAndYieldThrough([
+        expect(Scheduler).toFlushAndYield([
           // Turn on B's pending state
           'Tab B (pending...)',
+          'App',
+          'Tab A',
+          'Tab B',
+          'Tab C',
+          'Suspend! [B]',
+          'Loading...',
+        ]);
+
+        jest.advanceTimersByTime(2000);
+        Scheduler.unstable_advanceTime(2000);
+
+        // Navigate to tab C
+        tabButtonC.current.go();
+        expect(Scheduler).toFlushAndYield([
+          // Turn off B's pending state, and turn on C's
+          'Tab B',
+          'Tab C (pending...)',
           // Partially render B
           'App',
           'Tab A',
           'Tab B',
+          'Tab C',
+          'Suspend! [C]',
+          'Loading...',
         ]);
 
-        // While we're still in the middle of rendering B, switch to C.
-        tabButtonC.current.go();
+        // Finish loading B.
+        await ContentB.resolve();
+        // B is not able to finish because C is in the same batch.
+        expect(Scheduler).toFlushAndYield([
+          'App',
+          'Tab A',
+          'Tab B',
+          'Tab C',
+          'Suspend! [C]',
+          'Loading...',
+        ]);
+
+        // Finish loading C.
+        await ContentC.resolve();
+        expect(Scheduler).toFlushAndYield([
+          'App',
+          'Tab A',
+          'Tab B',
+          'Tab C',
+          'C',
+        ]);
       });
-      expect(Scheduler).toHaveYielded([
-        // Toggle the pending flags
-        'Tab B',
-        'Tab C (pending...)',
-
-        // Start rendering B...
-        'App',
-        // ...but bail out, since C is more recent. These should not be logged:
-        // 'Tab A',
-        // 'Tab B',
-        // 'Tab C (pending...)',
-        // 'Suspend! [B]',
-        // 'Loading...',
-
-        // Now render C
-        'App',
-        'Tab A',
-        'Tab B',
-        'Tab C',
-        'Suspend! [C]',
-        'Loading...',
-      ]);
-      expect(root).toMatchRenderedOutput(
-        <>
-          <ul>
-            <li>Tab A</li>
-            <li>Tab B</li>
-            <li>Tab C (pending...)</li>
-          </ul>
-          A
-        </>,
-      );
-
-      // Finish loading B
-      await act(async () => {
-        ContentB.resolve();
-      });
-      // Should not switch to tab B because we've since clicked on C.
-      expect(Scheduler).toHaveYielded([]);
-      expect(root).toMatchRenderedOutput(
-        <>
-          <ul>
-            <li>Tab A</li>
-            <li>Tab B</li>
-            <li>Tab C (pending...)</li>
-          </ul>
-          A
-        </>,
-      );
-
-      // Finish loading C
-      await act(async () => {
-        ContentC.resolve();
-      });
-      expect(Scheduler).toHaveYielded(['App', 'Tab A', 'Tab B', 'Tab C', 'C']);
       expect(root).toMatchRenderedOutput(
         <>
           <ul>
@@ -777,79 +756,60 @@ describe('ReactTransition', () => {
         </>,
       );
 
-      // Navigate to tab B
       await act(async () => {
+        // Navigate to tab B
         tabButtonB.current.go();
-        expect(Scheduler).toFlushAndYieldThrough([
+        expect(Scheduler).toFlushAndYield([
           // Turn on B's pending state
           'Tab B (pending...)',
+          'App',
+          'Tab A',
+          'Tab B',
+          'Tab C',
+          'Suspend! [B]',
+          'Loading...',
+        ]);
+
+        jest.advanceTimersByTime(2000);
+        Scheduler.unstable_advanceTime(2000);
+
+        // Navigate to tab C
+        tabButtonC.current.go();
+        expect(Scheduler).toFlushAndYield([
+          // Turn off B's pending state, and turn on C's
+          'Tab B',
+          'Tab C (pending...)',
           // Partially render B
           'App',
           'Tab A',
           'Tab B',
+          'Tab C',
+          'Suspend! [C]',
+          'Loading...',
         ]);
 
-        // While we're still in the middle of rendering B, switch to C.
-        tabButtonC.current.go();
+        // Finish loading B.
+        await ContentB.resolve();
+        // B is not able to finish because C is in the same batch.
+        expect(Scheduler).toFlushAndYield([
+          'App',
+          'Tab A',
+          'Tab B',
+          'Tab C',
+          'Suspend! [C]',
+          'Loading...',
+        ]);
+
+        // Finish loading C.
+        await ContentC.resolve();
+        expect(Scheduler).toFlushAndYield([
+          'App',
+          'Tab A',
+          'Tab B',
+          'Tab C',
+          'C',
+        ]);
       });
-      expect(Scheduler).toHaveYielded([
-        // Toggle the pending flags
-        'Tab B',
-        'Tab C (pending...)',
-
-        // Start rendering B...
-        // NOTE: This doesn't get logged like in the hooks version of this
-        // test because the update queue bails out before entering the render
-        // method.
-        // 'App',
-        // ...but bail out, since C is more recent. These should not be logged:
-        // 'Tab A',
-        // 'Tab B',
-        // 'Tab C (pending...)',
-        // 'Suspend! [B]',
-        // 'Loading...',
-
-        // Now render C
-        'App',
-        'Tab A',
-        'Tab B',
-        'Tab C',
-        'Suspend! [C]',
-        'Loading...',
-      ]);
-      expect(root).toMatchRenderedOutput(
-        <>
-          <ul>
-            <li>Tab A</li>
-            <li>Tab B</li>
-            <li>Tab C (pending...)</li>
-          </ul>
-          A
-        </>,
-      );
-
-      // Finish loading B
-      await act(async () => {
-        ContentB.resolve();
-      });
-      // Should not switch to tab B because we've since clicked on C.
-      expect(Scheduler).toHaveYielded([]);
-      expect(root).toMatchRenderedOutput(
-        <>
-          <ul>
-            <li>Tab A</li>
-            <li>Tab B</li>
-            <li>Tab C (pending...)</li>
-          </ul>
-          A
-        </>,
-      );
-
-      // Finish loading C
-      await act(async () => {
-        ContentC.resolve();
-      });
-      expect(Scheduler).toHaveYielded(['App', 'Tab A', 'Tab B', 'Tab C', 'C']);
       expect(root).toMatchRenderedOutput(
         <>
           <ul>

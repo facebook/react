@@ -19,8 +19,7 @@ import {
   warnAboutDeprecatedLifecycles,
 } from 'shared/ReactFeatureFlags';
 import ReactStrictModeWarnings from './ReactStrictModeWarnings';
-import {isMounted} from 'react-reconciler/reflection';
-import {get as getInstance, set as setInstance} from 'shared/ReactInstanceMap';
+import {set as setInstance} from 'shared/ReactInstanceMap';
 import shallowEqual from 'shared/shallowEqual';
 import getComponentName from 'shared/getComponentName';
 import invariant from 'shared/invariant';
@@ -31,13 +30,9 @@ import {resolveDefaultProps} from './ReactFiberLazyComponent';
 import {StrictMode} from './ReactTypeOfMode';
 
 import {
-  enqueueUpdate,
   processUpdateQueue,
   checkHasForceUpdateAfterProcessing,
   resetHasForceUpdateBeforeProcessing,
-  createUpdate,
-  ReplaceState,
-  ForceUpdate,
   initializeUpdateQueue,
   cloneUpdateQueue,
 } from './ReactUpdateQueue';
@@ -50,12 +45,7 @@ import {
   emptyContextObject,
 } from './ReactFiberContext';
 import {readContext} from './ReactFiberNewContext';
-import {
-  requestCurrentTimeForUpdate,
-  computeExpirationForFiber,
-  scheduleWork,
-} from './ReactFiberWorkLoop';
-import {requestCurrentSuspenseConfig} from './ReactFiberSuspenseConfig';
+import {classComponentUpdater} from './ReactFiberTransition';
 
 const fakeInternalInstance = {};
 const isArray = Array.isArray;
@@ -70,7 +60,6 @@ let didWarnAboutGetSnapshotBeforeUpdateWithoutDidUpdate;
 let didWarnAboutLegacyLifecyclesAndDerivedState;
 let didWarnAboutUndefinedDerivedState;
 let warnOnUndefinedDerivedState;
-let warnOnInvalidCallback;
 let didWarnAboutDirectlyAssigningPropsToState;
 let didWarnAboutContextTypeAndContextTypes;
 let didWarnAboutInvalidateContextType;
@@ -84,24 +73,6 @@ if (__DEV__) {
   didWarnAboutUndefinedDerivedState = new Set();
   didWarnAboutContextTypeAndContextTypes = new Set();
   didWarnAboutInvalidateContextType = new Set();
-
-  const didWarnOnInvalidCallback = new Set();
-
-  warnOnInvalidCallback = function(callback: mixed, callerName: string) {
-    if (callback === null || typeof callback === 'function') {
-      return;
-    }
-    const key = `${callerName}_${(callback: any)}`;
-    if (!didWarnOnInvalidCallback.has(key)) {
-      didWarnOnInvalidCallback.add(key);
-      console.error(
-        '%s(...): Expected the last optional `callback` argument to be a ' +
-          'function. Instead received: %s.',
-        callerName,
-        callback,
-      );
-    }
-  };
 
   warnOnUndefinedDerivedState = function(type, partialState) {
     if (partialState === undefined) {
@@ -177,79 +148,6 @@ export function applyDerivedStateFromProps(
     updateQueue.baseState = memoizedState;
   }
 }
-
-const classComponentUpdater = {
-  isMounted,
-  enqueueSetState(inst, payload, callback) {
-    const fiber = getInstance(inst);
-    const currentTime = requestCurrentTimeForUpdate();
-    const suspenseConfig = requestCurrentSuspenseConfig();
-    const expirationTime = computeExpirationForFiber(
-      currentTime,
-      fiber,
-      suspenseConfig,
-    );
-
-    const update = createUpdate(currentTime, expirationTime, suspenseConfig);
-    update.payload = payload;
-    if (callback !== undefined && callback !== null) {
-      if (__DEV__) {
-        warnOnInvalidCallback(callback, 'setState');
-      }
-      update.callback = callback;
-    }
-
-    enqueueUpdate(fiber, update);
-    scheduleWork(fiber, expirationTime);
-  },
-  enqueueReplaceState(inst, payload, callback) {
-    const fiber = getInstance(inst);
-    const currentTime = requestCurrentTimeForUpdate();
-    const suspenseConfig = requestCurrentSuspenseConfig();
-    const expirationTime = computeExpirationForFiber(
-      currentTime,
-      fiber,
-      suspenseConfig,
-    );
-
-    const update = createUpdate(currentTime, expirationTime, suspenseConfig);
-    update.tag = ReplaceState;
-    update.payload = payload;
-
-    if (callback !== undefined && callback !== null) {
-      if (__DEV__) {
-        warnOnInvalidCallback(callback, 'replaceState');
-      }
-      update.callback = callback;
-    }
-
-    enqueueUpdate(fiber, update);
-    scheduleWork(fiber, expirationTime);
-  },
-  enqueueForceUpdate(inst, callback) {
-    const fiber = getInstance(inst);
-    const currentTime = requestCurrentTimeForUpdate();
-    const suspenseConfig = requestCurrentSuspenseConfig();
-    const expirationTime = computeExpirationForFiber(
-      currentTime,
-      fiber,
-      suspenseConfig,
-    );
-
-    const update = createUpdate(currentTime, expirationTime, suspenseConfig);
-    update.tag = ForceUpdate;
-
-    if (callback !== undefined && callback !== null) {
-      if (__DEV__) {
-        warnOnInvalidCallback(callback, 'forceUpdate');
-      }
-      update.callback = callback;
-    }
-
-    enqueueUpdate(fiber, update);
-    scheduleWork(fiber, expirationTime);
-  },
-};
 
 function checkShouldComponentUpdate(
   workInProgress,
