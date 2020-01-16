@@ -670,7 +670,7 @@ export function isLikelyComponentType(type: any): boolean {
     }
     case 'object': {
       if (type == null) {
-        return false
+        return false;
       }
       switch (type.$$typeof) {
         case REACT_FORWARD_REF_TYPE:
