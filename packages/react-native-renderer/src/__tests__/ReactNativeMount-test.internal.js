@@ -17,6 +17,7 @@ let createReactClass;
 let createReactNativeComponentClass;
 let UIManager;
 let NativeMethodsMixin;
+let TextInputState;
 
 const DISPATCH_COMMAND_REQUIRES_HOST_COMPONENT =
   "Warning: dispatchCommand was called with a ref that isn't a " +
@@ -41,6 +42,8 @@ describe('ReactNative', () => {
     NativeMethodsMixin =
       ReactNative.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED
         .NativeMethodsMixin;
+    TextInputState = require('react-native/Libraries/ReactPrivate/ReactNativePrivateInterface')
+      .TextInputState;
   });
 
   it('should be able to create and render a native component', () => {
@@ -687,5 +690,115 @@ describe('ReactNative', () => {
         '\n    in StrictMode (at **)',
     ]);
     expect(match).toBe(child._nativeTag);
+  });
+
+  it('blur on host component calls TextInputState', () => {
+    const View = createReactNativeComponentClass('RCTView', () => ({
+      validAttributes: {foo: true},
+      uiViewClassName: 'RCTView',
+    }));
+
+    let viewRef = React.createRef();
+    ReactNative.render(<View ref={viewRef} />, 11);
+
+    expect(TextInputState.blurTextInput).not.toBeCalled();
+
+    viewRef.current.blur();
+
+    expect(TextInputState.blurTextInput).toHaveBeenCalledTimes(1);
+    expect(TextInputState.blurTextInput).toHaveBeenCalledWith(viewRef.current);
+  });
+
+  it('focus on host component calls TextInputState', () => {
+    const View = createReactNativeComponentClass('RCTView', () => ({
+      validAttributes: {foo: true},
+      uiViewClassName: 'RCTView',
+    }));
+
+    let viewRef = React.createRef();
+    ReactNative.render(<View ref={viewRef} />, 11);
+
+    expect(TextInputState.focusTextInput).not.toBeCalled();
+
+    viewRef.current.focus();
+
+    expect(TextInputState.focusTextInput).toHaveBeenCalledTimes(1);
+    expect(TextInputState.focusTextInput).toHaveBeenCalledWith(viewRef.current);
+  });
+
+  it('blur on JS components is deprecated', () => {
+    const View = createReactNativeComponentClass('RCTView', () => ({
+      validAttributes: {foo: true},
+      uiViewClassName: 'RCTView',
+    }));
+
+    class Subclass extends ReactNative.NativeComponent {
+      render() {
+        return <View />;
+      }
+    }
+
+    const CreateClass = createReactClass({
+      mixins: [NativeMethodsMixin],
+      render: () => {
+        return <View />;
+      },
+    });
+
+    [Subclass, CreateClass].forEach(Component => {
+      TextInputState.blurTextInput.mockReset();
+
+      let viewRef = React.createRef();
+      ReactNative.render(<Component ref={viewRef} />, 11);
+
+      expect(
+      () => viewRef.current.blur(),
+    ).toErrorDev([
+      'focus and blur are no longer supported on NativeMethodsMixin or ReactNative.NativeComponent. ' +
+            'Call focus and blur on a ref to a native component',
+    ], {
+      withoutStack: true,
+    });
+
+      expect(TextInputState.blurTextInput).not.toBeCalled();
+    });
+  });
+
+  it('focus on JS components is deprecated', () => {
+    const View = createReactNativeComponentClass('RCTView', () => ({
+      validAttributes: {foo: true},
+      uiViewClassName: 'RCTView',
+    }));
+
+    class Subclass extends ReactNative.NativeComponent {
+      render() {
+        return <View />;
+      }
+    }
+
+    const CreateClass = createReactClass({
+      mixins: [NativeMethodsMixin],
+      render: () => {
+        return <View />;
+      },
+    });
+
+    [Subclass, CreateClass].forEach(Component => {
+      TextInputState.focusTextInput.mockReset();
+
+      let viewRef = React.createRef();
+      ReactNative.render(<Component ref={viewRef} />, 11);
+
+      expect(
+      () => viewRef.current.focus(),
+    ).toErrorDev([
+      'focus and blur are no longer supported on NativeMethodsMixin or ReactNative.NativeComponent. ' +
+            'Call focus and blur on a ref to a native component',
+    ], {
+      withoutStack: true,
+    });
+
+      expect(TextInputState.focusTextInput).not.toBeCalled();
+    });
   });
 });

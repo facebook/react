@@ -279,14 +279,28 @@ export default function(
      * will depend on the platform and type of view.
      */
     focus: function() {
-      TextInputState.focusTextInput(findNodeHandle(this));
+      if (__DEV__) {
+        console.error(
+          'focus and blur are no longer supported on NativeMethodsMixin or ReactNative.NativeComponent. ' +
+            'Call focus and blur on a ref to a native component.',
+        );
+      }
+
+      return;
     },
 
     /**
      * Removes focus from an input or view. This is the opposite of `focus()`.
      */
     blur: function() {
-      TextInputState.blurTextInput(findNodeHandle(this));
+      if (__DEV__) {
+        console.error(
+          'focus and blur are no longer supported on NativeMethodsMixin or ReactNative.NativeComponent. ' +
+            'Call focus and blur on a ref to a native component.',
+        );
+      }
+
+      return;
     },
   };
 
