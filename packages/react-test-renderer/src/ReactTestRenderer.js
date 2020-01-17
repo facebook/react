@@ -36,7 +36,9 @@ import {
   Profiler,
   MemoComponent,
   SimpleMemoComponent,
+  Chunk,
   IncompleteClassComponent,
+  ScopeComponent,
 } from 'shared/ReactWorkTags';
 import invariant from 'shared/invariant';
 import ReactVersion from 'shared/ReactVersion';
@@ -48,11 +50,12 @@ import {ConcurrentRoot, LegacyRoot} from 'shared/ReactRootTags';
 type TestRendererOptions = {
   createNodeMock: (element: React$Element<any>) => any,
   unstable_isConcurrent: boolean,
+  ...
 };
 
 type ReactTestRendererJSON = {|
   type: string,
-  props: {[propName: string]: any},
+  props: {[propName: string]: any, ...},
   children: null | Array<ReactTestRendererNode>,
   $$typeof?: Symbol, // Optional because we add it with defineProperty().
 |};
@@ -62,6 +65,7 @@ type FindOptions = $Shape<{
   // performs a "greedy" search: if a matching node is found, will continue
   // to search within the matching node's children. (default: true)
   deep: boolean,
+  ...
 }>;
 
 export type Predicate = (node: ReactTestInstance) => ?boolean;
@@ -184,6 +188,14 @@ function toTree(node: ?Fiber) {
         instance: null,
         rendered: childrenToTree(node.child),
       };
+    case Chunk:
+      return {
+        nodeType: 'chunk',
+        type: node.type,
+        props: {...node.memoizedProps},
+        instance: null,
+        rendered: childrenToTree(node.child),
+      };
     case HostComponent: {
       return {
         nodeType: 'host',
@@ -203,6 +215,7 @@ function toTree(node: ?Fiber) {
     case ForwardRef:
     case MemoComponent:
     case IncompleteClassComponent:
+    case ScopeComponent:
       return childrenToTree(node.child);
     default:
       invariant(
@@ -220,6 +233,7 @@ const validWrapperTypes = new Set([
   ForwardRef,
   MemoComponent,
   SimpleMemoComponent,
+  Chunk,
   // Normally skipped, but used when there's more than one root child.
   HostRoot,
 ]);
@@ -442,6 +456,7 @@ const ReactTestRendererFiber = {
       container,
       isConcurrent ? ConcurrentRoot : LegacyRoot,
       false,
+      null,
     );
     invariant(root != null, 'something went wrong');
     updateContainer(element, root, null, null);

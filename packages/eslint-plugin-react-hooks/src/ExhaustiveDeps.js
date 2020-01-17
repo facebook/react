@@ -81,7 +81,7 @@ export default {
       // Get the reactive hook node.
       const reactiveHook = node.parent.callee;
       const reactiveHookName = getNodeWithoutReactNamespace(reactiveHook).name;
-      const isEffect = reactiveHookName.endsWith('Effect');
+      const isEffect = /Effect($|[^a-z])/g.test(reactiveHookName);
 
       // Get the declared dependencies for this reactive hook. If there is no
       // second argument then the reactive callback will re-run on every render.
@@ -397,13 +397,14 @@ export default {
             });
           }
 
-          // Ignore references to the function itself as it's not defined yet.
           const def = reference.resolved.defs[0];
-          if (
-            def != null &&
-            def.node != null &&
-            def.node.init === node.parent
-          ) {
+
+          if (def == null) {
+            continue;
+          }
+
+          // Ignore references to the function itself as it's not defined yet.
+          if (def.node != null && def.node.init === node.parent) {
             continue;
           }
 
@@ -612,21 +613,15 @@ export default {
                   context.report({
                     node: declaredDependencyNode,
                     message:
-                      `The ${
-                        declaredDependencyNode.raw
-                      } literal is not a valid dependency ` +
+                      `The ${declaredDependencyNode.raw} literal is not a valid dependency ` +
                       `because it never changes. ` +
-                      `Did you mean to include ${
-                        declaredDependencyNode.value
-                      } in the array instead?`,
+                      `Did you mean to include ${declaredDependencyNode.value} in the array instead?`,
                   });
                 } else {
                   context.report({
                     node: declaredDependencyNode,
                     message:
-                      `The ${
-                        declaredDependencyNode.raw
-                      } literal is not a valid dependency ` +
+                      `The ${declaredDependencyNode.raw} literal is not a valid dependency ` +
                       'because it never changes. You can safely remove it.',
                   });
                 }
@@ -696,22 +691,16 @@ export default {
         bareFunctions.forEach(({fn, suggestUseCallback}) => {
           let message =
             `The '${fn.name.name}' function makes the dependencies of ` +
-            `${reactiveHookName} Hook (at line ${
-              declaredDependenciesNode.loc.start.line
-            }) ` +
+            `${reactiveHookName} Hook (at line ${declaredDependenciesNode.loc.start.line}) ` +
             `change on every render.`;
           if (suggestUseCallback) {
             message +=
               ` To fix this, ` +
-              `wrap the '${
-                fn.name.name
-              }' definition into its own useCallback() Hook.`;
+              `wrap the '${fn.name.name}' definition into its own useCallback() Hook.`;
           } else {
             message +=
               ` Move it inside the ${reactiveHookName} callback. ` +
-              `Alternatively, wrap the '${
-                fn.name.name
-              }' definition into its own useCallback() Hook.`;
+              `Alternatively, wrap the '${fn.name.name}' definition into its own useCallback() Hook.`;
           }
           // TODO: What if the function needs to change on every render anyway?
           // Should we suggest removing effect deps as an appropriate fix too?

@@ -15,6 +15,7 @@ import type {
   ReactEventResponder,
   ReactEventResponderInstance,
   ReactFundamentalComponent,
+  ReactScope,
 } from 'shared/ReactTypes';
 import type {RootTag} from 'shared/ReactRootTags';
 import type {WorkTag} from 'shared/ReactWorkTags';
@@ -27,14 +28,15 @@ import type {HookType} from './ReactFiberHooks';
 import type {SuspenseInstance} from './ReactFiberHostConfig';
 
 import invariant from 'shared/invariant';
-import warningWithoutStack from 'shared/warningWithoutStack';
 import {
   enableProfilerTimer,
   enableFundamentalAPI,
   enableUserTimingAPI,
+  enableScopeAPI,
+  enableChunksAPI,
 } from 'shared/ReactFeatureFlags';
 import {NoEffect, Placement} from 'shared/ReactSideEffectTags';
-import {ConcurrentRoot, BatchedRoot} from 'shared/ReactRootTags';
+import {ConcurrentRoot, BlockingRoot} from 'shared/ReactRootTags';
 import {
   IndeterminateComponent,
   ClassComponent,
@@ -56,6 +58,8 @@ import {
   SimpleMemoComponent,
   LazyComponent,
   FundamentalComponent,
+  ScopeComponent,
+  Chunk,
 } from 'shared/ReactWorkTags';
 import getComponentName from 'shared/getComponentName';
 
@@ -71,7 +75,7 @@ import {
   ConcurrentMode,
   ProfileMode,
   StrictMode,
-  BatchedMode,
+  BlockingMode,
 } from './ReactTypeOfMode';
 import {
   REACT_FORWARD_REF_TYPE,
@@ -86,6 +90,8 @@ import {
   REACT_MEMO_TYPE,
   REACT_LAZY_TYPE,
   REACT_FUNDAMENTAL_TYPE,
+  REACT_SCOPE_TYPE,
+  REACT_CHUNK_TYPE,
 } from 'shared/ReactSymbols';
 
 let hasBadMapPolyfill;
@@ -114,6 +120,7 @@ export type Dependencies = {
     ReactEventResponder<any, any>,
     ReactEventResponderInstance<any, any>,
   > | null,
+  ...
 };
 
 // A Fiber is work on a Component that needs to be done or was done. There can
@@ -164,7 +171,10 @@ export type Fiber = {|
 
   // The ref last used to attach this node.
   // I'll avoid adding an owner field for prod and model that as functions.
-  ref: null | (((handle: mixed) => void) & {_stringRef: ?string}) | RefObject,
+  ref:
+    | null
+    | (((handle: mixed) => void) & {_stringRef: ?string, ...})
+    | RefObject,
 
   // Input is the data coming into process this fiber. Arguments. Props.
   pendingProps: any, // This type will be more specific once we overload the tag.
@@ -381,6 +391,11 @@ export function resolveLazyComponentTag(Component: Function): WorkTag {
     if ($$typeof === REACT_MEMO_TYPE) {
       return MemoComponent;
     }
+    if (enableChunksAPI) {
+      if ($$typeof === REACT_CHUNK_TYPE) {
+        return Chunk;
+      }
+    }
   }
   return IndeterminateComponent;
 }
@@ -569,9 +584,9 @@ export function resetWorkInProgress(
 export function createHostRootFiber(tag: RootTag): Fiber {
   let mode;
   if (tag === ConcurrentRoot) {
-    mode = ConcurrentMode | BatchedMode | StrictMode;
-  } else if (tag === BatchedRoot) {
-    mode = BatchedMode | StrictMode;
+    mode = ConcurrentMode | BlockingMode | StrictMode;
+  } else if (tag === BlockingRoot) {
+    mode = BlockingMode | StrictMode;
   } else {
     mode = NoMode;
   }
@@ -623,7 +638,7 @@ export function createFiberFromTypeAndProps(
         );
       case REACT_CONCURRENT_MODE_TYPE:
         fiberTag = Mode;
-        mode |= ConcurrentMode | BatchedMode | StrictMode;
+        mode |= ConcurrentMode | BlockingMode | StrictMode;
         break;
       case REACT_STRICT_MODE_TYPE:
         fiberTag = Mode;
@@ -663,6 +678,9 @@ export function createFiberFromTypeAndProps(
               fiberTag = LazyComponent;
               resolvedType = null;
               break getTag;
+            case REACT_CHUNK_TYPE:
+              fiberTag = Chunk;
+              break getTag;
             case REACT_FUNDAMENTAL_TYPE:
               if (enableFundamentalAPI) {
                 return createFiberFromFundamental(
@@ -674,6 +692,16 @@ export function createFiberFromTypeAndProps(
                 );
               }
               break;
+            case REACT_SCOPE_TYPE:
+              if (enableScopeAPI) {
+                return createFiberFromScope(
+                  type,
+                  pendingProps,
+                  mode,
+                  expirationTime,
+                  key,
+                );
+              }
           }
         }
         let info = '';
@@ -766,6 +794,20 @@ export function createFiberFromFundamental(
   return fiber;
 }
 
+function createFiberFromScope(
+  scope: ReactScope,
+  pendingProps: any,
+  mode: TypeOfMode,
+  expirationTime: ExpirationTime,
+  key: null | string,
+) {
+  const fiber = createFiber(ScopeComponent, pendingProps, key, mode);
+  fiber.type = scope;
+  fiber.elementType = scope;
+  fiber.expirationTime = expirationTime;
+  return fiber;
+}
+
 function createFiberFromProfiler(
   pendingProps: any,
   mode: TypeOfMode,
@@ -777,8 +819,7 @@ function createFiberFromProfiler(
       typeof pendingProps.id !== 'string' ||
       typeof pendingProps.onRender !== 'function'
     ) {
-      warningWithoutStack(
-        false,
+      console.error(
         'Profiler must specify an "id" string and "onRender" function as props',
       );
     }

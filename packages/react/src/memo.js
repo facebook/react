@@ -8,7 +8,6 @@
 import {REACT_MEMO_TYPE} from 'shared/ReactSymbols';
 
 import isValidElementType from 'shared/isValidElementType';
-import warningWithoutStack from 'shared/warningWithoutStack';
 
 export default function memo<Props>(
   type: React$ElementType,
@@ -16,8 +15,7 @@ export default function memo<Props>(
 ) {
   if (__DEV__) {
     if (!isValidElementType(type)) {
-      warningWithoutStack(
-        false,
+      console.error(
         'memo: The first argument must be a component. Instead ' +
           'received: %s',
         type === null ? 'null' : typeof type,

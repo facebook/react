@@ -60,7 +60,7 @@ describe('ReactFreshIntegration', () => {
         babelrc: false,
         presets: ['@babel/react'],
         plugins: [
-          freshPlugin,
+          [freshPlugin, {skipEnvCheck: true}],
           '@babel/plugin-transform-modules-commonjs',
           compileDestructuring && '@babel/plugin-transform-destructuring',
         ].filter(Boolean),
@@ -594,6 +594,86 @@ describe('ReactFreshIntegration', () => {
             const [x, setX] = useFancyState('X');
             return <h1>B{x}{y}</h1>;
           };
+
+          export default App;
+        `);
+        // Hooks were re-ordered. This causes a remount.
+        // Therefore, Hook calls don't accidentally share state.
+        expect(container.firstChild).not.toBe(el);
+        el = container.firstChild;
+        expect(el.textContent).toBe('BXY');
+      }
+    });
+
+    it('does not get confused when component is called early', () => {
+      if (__DEV__) {
+        render(`
+          // This isn't really a valid pattern but it's close enough
+          // to simulate what happens when you call ReactDOM.render
+          // in the same file. We want to ensure this doesn't confuse
+          // the runtime.
+          App();
+
+          function App() {
+            const [x, setX] = useFancyState('X');
+            const [y, setY] = useFancyState('Y');
+            return <h1>A{x}{y}</h1>;
+          };
+
+          function useFancyState(initialState) {
+            // No real Hook calls to avoid triggering invalid call invariant.
+            // We only want to verify that we can still call this function early.
+            return initialState;
+          }
+
+          export default App;
+        `);
+        let el = container.firstChild;
+        expect(el.textContent).toBe('AXY');
+
+        patch(`
+          // This isn't really a valid pattern but it's close enough
+          // to simulate what happens when you call ReactDOM.render
+          // in the same file. We want to ensure this doesn't confuse
+          // the runtime.
+          App();
+
+          function App() {
+            const [x, setX] = useFancyState('X');
+            const [y, setY] = useFancyState('Y');
+            return <h1>B{x}{y}</h1>;
+          };
+
+          function useFancyState(initialState) {
+            // No real Hook calls to avoid triggering invalid call invariant.
+            // We only want to verify that we can still call this function early.
+            return initialState;
+          }
+
+          export default App;
+        `);
+        // Same state variables, so no remount.
+        expect(container.firstChild).toBe(el);
+        expect(el.textContent).toBe('BXY');
+
+        patch(`
+          // This isn't really a valid pattern but it's close enough
+          // to simulate what happens when you call ReactDOM.render
+          // in the same file. We want to ensure this doesn't confuse
+          // the runtime.
+          App();
+
+          function App() {
+            const [y, setY] = useFancyState('Y');
+            const [x, setX] = useFancyState('X');
+            return <h1>B{x}{y}</h1>;
+          };
+
+          function useFancyState(initialState) {
+            // No real Hook calls to avoid triggering invalid call invariant.
+            // We only want to verify that we can still call this function early.
+            return initialState;
+          }
 
           export default App;
         `);
@@ -1296,6 +1376,52 @@ describe('ReactFreshIntegration', () => {
         `);
         expect(container.firstChild).toBe(el);
         expect(el.textContent).toBe('C2');
+      }
+    });
+
+    it('remounts deprecated factory components', () => {
+      if (__DEV__) {
+        expect(() => {
+          render(`
+            function Parent() {
+              return {
+                render() {
+                  return <Child prop="A" />;
+                }
+              };
+            };
+
+            function Child({prop}) {
+              return <h1>{prop}1</h1>;
+            };
+
+            export default Parent;
+          `);
+        }).toErrorDev(
+          'The <Parent /> component appears to be a function component ' +
+            'that returns a class instance.',
+        );
+        const el = container.firstChild;
+        expect(el.textContent).toBe('A1');
+        patch(`
+          function Parent() {
+            return {
+              render() {
+                return <Child prop="B" />;
+              }
+            };
+          };
+
+          function Child({prop}) {
+            return <h1>{prop}2</h1>;
+          };
+
+          export default Parent;
+        `);
+        // Like classes, factory components always remount.
+        expect(container.firstChild).not.toBe(el);
+        const newEl = container.firstChild;
+        expect(newEl.textContent).toBe('B2');
       }
     });
 

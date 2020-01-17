@@ -28,17 +28,17 @@ afterEach(() => {
   ReactFeatureFlags.warnAboutUnmockedScheduler = false;
 });
 
-it('should warn in sync mode', () => {
+it('should warn in legacy mode', () => {
   expect(() => {
     ReactDOM.render(<App />, document.createElement('div'));
-  }).toWarnDev(
+  }).toErrorDev(
     ['Starting from React v17, the "scheduler" module will need to be mocked'],
     {withoutStack: true},
   );
   // does not warn twice
   expect(() => {
     ReactDOM.render(<App />, document.createElement('div'));
-  }).toWarnDev([]);
+  }).toErrorDev([]);
 });
 
 it('does not warn if Scheduler is mocked', () => {
@@ -52,5 +52,5 @@ it('does not warn if Scheduler is mocked', () => {
   // This should not warn
   expect(() => {
     ReactDOM.render(<App />, document.createElement('div'));
-  }).toWarnDev([]);
+  }).toErrorDev([]);
 });

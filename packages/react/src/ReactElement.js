@@ -6,7 +6,6 @@
  */
 
 import invariant from 'shared/invariant';
-import warningWithoutStack from 'shared/warningWithoutStack';
 import {REACT_ELEMENT_TYPE} from 'shared/ReactSymbols';
 
 import ReactCurrentOwner from './ReactCurrentOwner';
@@ -48,16 +47,17 @@ function hasValidKey(config) {
 
 function defineKeyPropWarningGetter(props, displayName) {
   const warnAboutAccessingKey = function() {
-    if (!specialPropKeyWarningShown) {
-      specialPropKeyWarningShown = true;
-      warningWithoutStack(
-        false,
-        '%s: `key` is not a prop. Trying to access it will result ' +
-          'in `undefined` being returned. If you need to access the same ' +
-          'value within the child component, you should pass it as a different ' +
-          'prop. (https://fb.me/react-special-props)',
-        displayName,
-      );
+    if (__DEV__) {
+      if (!specialPropKeyWarningShown) {
+        specialPropKeyWarningShown = true;
+        console.error(
+          '%s: `key` is not a prop. Trying to access it will result ' +
+            'in `undefined` being returned. If you need to access the same ' +
+            'value within the child component, you should pass it as a different ' +
+            'prop. (https://fb.me/react-special-props)',
+          displayName,
+        );
+      }
     }
   };
   warnAboutAccessingKey.isReactWarning = true;
@@ -69,16 +69,17 @@ function defineKeyPropWarningGetter(props, displayName) {
 
 function defineRefPropWarningGetter(props, displayName) {
   const warnAboutAccessingRef = function() {
-    if (!specialPropRefWarningShown) {
-      specialPropRefWarningShown = true;
-      warningWithoutStack(
-        false,
-        '%s: `ref` is not a prop. Trying to access it will result ' +
-          'in `undefined` being returned. If you need to access the same ' +
-          'value within the child component, you should pass it as a different ' +
-          'prop. (https://fb.me/react-special-props)',
-        displayName,
-      );
+    if (__DEV__) {
+      if (!specialPropRefWarningShown) {
+        specialPropRefWarningShown = true;
+        console.error(
+          '%s: `ref` is not a prop. Trying to access it will result ' +
+            'in `undefined` being returned. If you need to access the same ' +
+            'value within the child component, you should pass it as a different ' +
+            'prop. (https://fb.me/react-special-props)',
+          displayName,
+        );
+      }
     }
   };
   warnAboutAccessingRef.isReactWarning = true;
@@ -90,8 +91,8 @@ function defineRefPropWarningGetter(props, displayName) {
 
 /**
  * Factory method to create a new React element. This no longer adheres to
- * the class pattern, so do not use new to call it. Also, no instanceof check
- * will work. Instead test $$typeof field against Symbol.for('react.element') to check
+ * the class pattern, so do not use new to call it. Also, instanceof check
+ * will not work. Instead test $$typeof field against Symbol.for('react.element') to check
  * if something is a React Element.
  *
  * @param {*} type
@@ -179,12 +180,22 @@ export function jsx(type, config, maybeKey) {
   let key = null;
   let ref = null;
 
-  if (hasValidRef(config)) {
-    ref = config.ref;
+  // Currently, key can be spread in as a prop. This causes a potential
+  // issue if key is also explicitly declared (ie. <div {...props} key="Hi" />
+  // or <div key="Hi" {...props} /> ). We want to deprecate key spread,
+  // but as an intermediary step, we will use jsxDEV for everything except
+  // <div {...props} key="Hi" />, because we aren't currently able to tell if
+  // key is explicitly declared to be undefined or not.
+  if (maybeKey !== undefined) {
+    key = '' + maybeKey;
   }
 
   if (hasValidKey(config)) {
     key = '' + config.key;
+  }
+
+  if (hasValidRef(config)) {
+    ref = config.ref;
   }
 
   // Remaining properties are added to a new props object
@@ -195,12 +206,6 @@ export function jsx(type, config, maybeKey) {
     ) {
       props[propName] = config[propName];
     }
-  }
-
-  // intentionally not checking if key was set above
-  // this key is higher priority as it's static
-  if (maybeKey !== undefined) {
-    key = '' + maybeKey;
   }
 
   // Resolve default props
@@ -239,12 +244,22 @@ export function jsxDEV(type, config, maybeKey, source, self) {
   let key = null;
   let ref = null;
 
-  if (hasValidRef(config)) {
-    ref = config.ref;
+  // Currently, key can be spread in as a prop. This causes a potential
+  // issue if key is also explicitly declared (ie. <div {...props} key="Hi" />
+  // or <div key="Hi" {...props} /> ). We want to deprecate key spread,
+  // but as an intermediary step, we will use jsxDEV for everything except
+  // <div {...props} key="Hi" />, because we aren't currently able to tell if
+  // key is explicitly declared to be undefined or not.
+  if (maybeKey !== undefined) {
+    key = '' + maybeKey;
   }
 
   if (hasValidKey(config)) {
     key = '' + config.key;
+  }
+
+  if (hasValidRef(config)) {
+    ref = config.ref;
   }
 
   // Remaining properties are added to a new props object
@@ -255,12 +270,6 @@ export function jsxDEV(type, config, maybeKey, source, self) {
     ) {
       props[propName] = config[propName];
     }
-  }
-
-  // intentionally not checking if key was set above
-  // this key is higher priority as it's static
-  if (maybeKey !== undefined) {
-    key = '' + maybeKey;
   }
 
   // Resolve default props

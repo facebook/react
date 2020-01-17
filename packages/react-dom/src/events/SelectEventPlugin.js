@@ -5,9 +5,9 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import {accumulateTwoPhaseDispatches} from 'events/EventPropagators';
+import {accumulateTwoPhaseDispatches} from 'legacy-events/EventPropagators';
 import {canUseDOM} from 'shared/ExecutionEnvironment';
-import SyntheticEvent from 'events/SyntheticEvent';
+import SyntheticEvent from 'legacy-events/SyntheticEvent';
 import isTextInputElement from 'shared/isTextInputElement';
 import shallowEqual from 'shared/shallowEqual';
 
@@ -94,8 +94,8 @@ function getEventTargetDocument(eventTarget) {
   return eventTarget.window === eventTarget
     ? eventTarget.document
     : eventTarget.nodeType === DOCUMENT_NODE
-      ? eventTarget
-      : eventTarget.ownerDocument;
+    ? eventTarget
+    : eventTarget.ownerDocument;
 }
 
 /**
@@ -165,6 +165,7 @@ const SelectEventPlugin = {
     targetInst,
     nativeEvent,
     nativeEventTarget,
+    eventSystemFlags,
   ) {
     const doc = getEventTargetDocument(nativeEventTarget);
     // Track whether all listeners exists for this plugin. If none exist, we do

@@ -863,7 +863,7 @@ describe('ReactUpdates', () => {
     let component = ReactTestUtils.renderIntoDocument(<A />);
 
     expect(() => {
-      expect(() => component.setState({}, 'no')).toWarnDev(
+      expect(() => component.setState({}, 'no')).toErrorDev(
         'setState(...): Expected the last optional `callback` argument to be ' +
           'a function. Instead received: no.',
       );
@@ -873,7 +873,7 @@ describe('ReactUpdates', () => {
     );
     component = ReactTestUtils.renderIntoDocument(<A />);
     expect(() => {
-      expect(() => component.setState({}, {foo: 'bar'})).toWarnDev(
+      expect(() => component.setState({}, {foo: 'bar'})).toErrorDev(
         'setState(...): Expected the last optional `callback` argument to be ' +
           'a function. Instead received: [object Object].',
       );
@@ -906,7 +906,7 @@ describe('ReactUpdates', () => {
     let component = ReactTestUtils.renderIntoDocument(<A />);
 
     expect(() => {
-      expect(() => component.forceUpdate('no')).toWarnDev(
+      expect(() => component.forceUpdate('no')).toErrorDev(
         'forceUpdate(...): Expected the last optional `callback` argument to be ' +
           'a function. Instead received: no.',
       );
@@ -916,7 +916,7 @@ describe('ReactUpdates', () => {
     );
     component = ReactTestUtils.renderIntoDocument(<A />);
     expect(() => {
-      expect(() => component.forceUpdate({foo: 'bar'})).toWarnDev(
+      expect(() => component.forceUpdate({foo: 'bar'})).toErrorDev(
         'forceUpdate(...): Expected the last optional `callback` argument to be ' +
           'a function. Instead received: [object Object].',
       );
@@ -1099,7 +1099,7 @@ describe('ReactUpdates', () => {
   });
 
   it(
-    'in sync mode, updates in componentWillUpdate and componentDidUpdate ' +
+    'in legacy mode, updates in componentWillUpdate and componentDidUpdate ' +
       'should both flush in the immediately subsequent commit',
     () => {
       let ops = [];
@@ -1142,7 +1142,7 @@ describe('ReactUpdates', () => {
   );
 
   it(
-    'in sync mode, updates in componentWillUpdate and componentDidUpdate ' +
+    'in legacy mode, updates in componentWillUpdate and componentDidUpdate ' +
       '(on a sibling) should both flush in the immediately subsequent commit',
     () => {
       let ops = [];
@@ -1229,9 +1229,8 @@ describe('ReactUpdates', () => {
     }
 
     const container = document.createElement('div');
-    expect(() => ReactDOM.render(<Foo />, container)).toWarnDev(
+    expect(() => ReactDOM.render(<Foo />, container)).toErrorDev(
       'Cannot update during an existing state transition',
-      {withoutStack: true},
     );
     expect(ops).toEqual(['base: 0, memoized: 0', 'base: 1, memoized: 1']);
   });
@@ -1292,78 +1291,85 @@ describe('ReactUpdates', () => {
     expect(ops).toEqual(['Foo', 'Bar', 'Baz']);
   });
 
-  it('delays sync updates inside hidden subtrees in Concurrent Mode', () => {
-    const container = document.createElement('div');
+  it.experimental(
+    'delays sync updates inside hidden subtrees in Concurrent Mode',
+    () => {
+      const container = document.createElement('div');
 
-    function Baz() {
-      Scheduler.unstable_yieldValue('Baz');
-      return <p>baz</p>;
-    }
-
-    let setCounter;
-    function Bar() {
-      const [counter, _setCounter] = React.useState(0);
-      setCounter = _setCounter;
-      Scheduler.unstable_yieldValue('Bar');
-      return <p>bar {counter}</p>;
-    }
-
-    function Foo() {
-      Scheduler.unstable_yieldValue('Foo');
-      React.useEffect(() => {
-        Scheduler.unstable_yieldValue('Foo#effect');
-      });
-      return (
-        <div>
-          <div hidden={true}>
-            <Bar />
-          </div>
-          <Baz />
-        </div>
-      );
-    }
-
-    const root = ReactDOM.unstable_createRoot(container);
-    let hiddenDiv;
-    act(() => {
-      root.render(<Foo />);
-      if (__DEV__) {
-        expect(Scheduler).toFlushAndYieldThrough([
-          'Foo',
-          'Foo',
-          'Baz',
-          'Foo#effect',
-        ]);
-      } else {
-        expect(Scheduler).toFlushAndYieldThrough(['Foo', 'Baz', 'Foo#effect']);
+      function Baz() {
+        Scheduler.unstable_yieldValue('Baz');
+        return <p>baz</p>;
       }
-      hiddenDiv = container.firstChild.firstChild;
-      expect(hiddenDiv.hidden).toBe(true);
-      expect(hiddenDiv.innerHTML).toBe('');
+
+      let setCounter;
+      function Bar() {
+        const [counter, _setCounter] = React.useState(0);
+        setCounter = _setCounter;
+        Scheduler.unstable_yieldValue('Bar');
+        return <p>bar {counter}</p>;
+      }
+
+      function Foo() {
+        Scheduler.unstable_yieldValue('Foo');
+        React.useEffect(() => {
+          Scheduler.unstable_yieldValue('Foo#effect');
+        });
+        return (
+          <div>
+            <div hidden={true}>
+              <Bar />
+            </div>
+            <Baz />
+          </div>
+        );
+      }
+
+      const root = ReactDOM.createRoot(container);
+      let hiddenDiv;
+      act(() => {
+        root.render(<Foo />);
+        if (__DEV__) {
+          expect(Scheduler).toFlushAndYieldThrough([
+            'Foo',
+            'Foo',
+            'Baz',
+            'Foo#effect',
+          ]);
+        } else {
+          expect(Scheduler).toFlushAndYieldThrough([
+            'Foo',
+            'Baz',
+            'Foo#effect',
+          ]);
+        }
+        hiddenDiv = container.firstChild.firstChild;
+        expect(hiddenDiv.hidden).toBe(true);
+        expect(hiddenDiv.innerHTML).toBe('');
+        // Run offscreen update
+        if (__DEV__) {
+          expect(Scheduler).toFlushAndYield(['Bar', 'Bar']);
+        } else {
+          expect(Scheduler).toFlushAndYield(['Bar']);
+        }
+        expect(hiddenDiv.hidden).toBe(true);
+        expect(hiddenDiv.innerHTML).toBe('<p>bar 0</p>');
+      });
+
+      ReactDOM.flushSync(() => {
+        setCounter(1);
+      });
+      // Should not flush yet
+      expect(hiddenDiv.innerHTML).toBe('<p>bar 0</p>');
+
       // Run offscreen update
       if (__DEV__) {
         expect(Scheduler).toFlushAndYield(['Bar', 'Bar']);
       } else {
         expect(Scheduler).toFlushAndYield(['Bar']);
       }
-      expect(hiddenDiv.hidden).toBe(true);
-      expect(hiddenDiv.innerHTML).toBe('<p>bar 0</p>');
-    });
-
-    ReactDOM.flushSync(() => {
-      setCounter(1);
-    });
-    // Should not flush yet
-    expect(hiddenDiv.innerHTML).toBe('<p>bar 0</p>');
-
-    // Run offscreen update
-    if (__DEV__) {
-      expect(Scheduler).toFlushAndYield(['Bar', 'Bar']);
-    } else {
-      expect(Scheduler).toFlushAndYield(['Bar']);
-    }
-    expect(hiddenDiv.innerHTML).toBe('<p>bar 1</p>');
-  });
+      expect(hiddenDiv.innerHTML).toBe('<p>bar 1</p>');
+    },
+  );
 
   it('can render ridiculously large number of roots without triggering infinite update loop error', () => {
     class Foo extends React.Component {

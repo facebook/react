@@ -7,7 +7,11 @@
  * @flow
  */
 
-import {precacheFiberNode, updateFiberProps} from './ReactDOMComponentTree';
+import {
+  precacheFiberNode,
+  updateFiberProps,
+  getClosestInstanceFromNode,
+} from './ReactDOMComponentTree';
 import {
   createElement,
   createTextNode,
@@ -48,10 +52,11 @@ import type {
   ReactDOMFundamentalComponentInstance,
 } from 'shared/ReactDOMTypes';
 import {
-  addRootEventTypesForResponderInstance,
   mountEventResponder,
   unmountEventResponder,
-} from '../events/DOMEventResponderSystem';
+  DEPRECATED_dispatchEventForResponderEventSystem,
+} from '../events/DeprecatedDOMEventResponderSystem';
+import {retryIfBlockedOn} from '../events/ReactDOMEventReplaying';
 
 export type Type = string;
 export type Props = {
@@ -60,13 +65,12 @@ export type Props = {
   hidden?: boolean,
   suppressHydrationWarning?: boolean,
   dangerouslySetInnerHTML?: mixed,
-  style?: {
-    display?: string,
-  },
+  style?: {display?: string, ...},
   bottom?: null | number,
   left?: null | number,
   right?: null | number,
   top?: null | number,
+  ...
 };
 export type EventTargetChildElement = {
   type: string,
@@ -78,18 +82,22 @@ export type EventTargetChildElement = {
       left?: string,
       right?: string,
       top?: string,
+      ...
     },
+    ...
   },
+  ...
 };
 export type Container = Element | Document;
 export type Instance = Element;
 export type TextInstance = Text;
-export type SuspenseInstance = Comment & {_reactRetry?: () => void};
+export type SuspenseInstance = Comment & {_reactRetry?: () => void, ...};
 export type HydratableInstance = Instance | TextInstance | SuspenseInstance;
 export type PublicInstance = Element | Text;
 type HostContextDev = {
   namespace: string,
   ancestorInfo: mixed,
+  ...
 };
 type HostContextProd = string;
 export type HostContext = HostContextDev | HostContextProd;
@@ -98,11 +106,21 @@ export type ChildSet = void; // Unused
 export type TimeoutHandle = TimeoutID;
 export type NoTimeout = -1;
 
+type SelectionInformation = {|
+  activeElementDetached: null | HTMLElement,
+  focusedElem: null | HTMLElement,
+  selectionRange: mixed,
+|};
+
 import {
   enableSuspenseServerRenderer,
-  enableFlareAPI,
+  enableDeprecatedFlareAPI,
   enableFundamentalAPI,
 } from 'shared/ReactFeatureFlags';
+import {
+  RESPONDER_EVENT_SYSTEM,
+  IS_PASSIVE,
+} from 'legacy-events/EventSystemFlags';
 
 let SUPPRESS_HYDRATION_WARNING;
 if (__DEV__) {
@@ -117,7 +135,7 @@ const SUSPENSE_FALLBACK_START_DATA = '$!';
 const STYLE = 'style';
 
 let eventsEnabled: ?boolean = null;
-let selectionInformation: ?mixed = null;
+let selectionInformation: null | SelectionInformation = null;
 
 function shouldAutoFocusHostComponent(type: string, props: Props): boolean {
   switch (type) {
@@ -195,9 +213,16 @@ export function prepareForCommit(containerInfo: Container): void {
 
 export function resetAfterCommit(containerInfo: Container): void {
   restoreSelection(selectionInformation);
-  selectionInformation = null;
   ReactBrowserEventEmitterSetEnabled(eventsEnabled);
   eventsEnabled = null;
+  if (enableDeprecatedFlareAPI) {
+    const activeElementDetached = (selectionInformation: any)
+      .activeElementDetached;
+    if (activeElementDetached !== null) {
+      dispatchDetachedBlur(activeElementDetached);
+    }
+  }
+  selectionInformation = null;
 }
 
 export function createInstance(
@@ -442,6 +467,52 @@ export function insertInContainerBefore(
   }
 }
 
+function dispatchBeforeDetachedBlur(target: HTMLElement): void {
+  const targetInstance = getClosestInstanceFromNode(target);
+  ((selectionInformation: any): SelectionInformation).activeElementDetached = target;
+
+  DEPRECATED_dispatchEventForResponderEventSystem(
+    'beforeblur',
+    targetInstance,
+    ({
+      target,
+      timeStamp: Date.now(),
+    }: any),
+    target,
+    RESPONDER_EVENT_SYSTEM | IS_PASSIVE,
+  );
+}
+
+function dispatchDetachedBlur(target: HTMLElement): void {
+  DEPRECATED_dispatchEventForResponderEventSystem(
+    'blur',
+    null,
+    ({
+      isTargetAttached: false,
+      target,
+      timeStamp: Date.now(),
+    }: any),
+    target,
+    RESPONDER_EVENT_SYSTEM | IS_PASSIVE,
+  );
+}
+
+// This is a specific event for the React Flare
+// event system, so event responders can act
+// accordingly to a DOM node being unmounted that
+// previously had active document focus.
+export function beforeRemoveInstance(
+  instance: Instance | TextInstance | SuspenseInstance,
+): void {
+  if (
+    enableDeprecatedFlareAPI &&
+    selectionInformation &&
+    instance === selectionInformation.focusedElem
+  ) {
+    dispatchBeforeDetachedBlur(((instance: any): HTMLElement));
+  }
+}
+
 export function removeChild(
   parentInstance: Instance,
   child: Instance | TextInstance | SuspenseInstance,
@@ -477,6 +548,8 @@ export function clearSuspenseBoundary(
       if (data === SUSPENSE_END_DATA) {
         if (depth === 0) {
           parentInstance.removeChild(nextNode);
+          // Retry if any event replaying was blocked on this.
+          retryIfBlockedOn(suspenseInstance);
           return;
         } else {
           depth--;
@@ -492,6 +565,8 @@ export function clearSuspenseBoundary(
     node = nextNode;
   } while (node);
   // TODO: Warn, we didn't find the end comment boundary.
+  // Retry if any event replaying was blocked on this.
+  retryIfBlockedOn(suspenseInstance);
 }
 
 export function clearSuspenseBoundaryFromContainer(
@@ -505,6 +580,8 @@ export function clearSuspenseBoundaryFromContainer(
   } else {
     // Document nodes should never contain suspense boundaries.
   }
+  // Retry if any event replaying was blocked on this.
+  retryIfBlockedOn(container);
 }
 
 export function hideInstance(instance: Instance): void {
@@ -673,6 +750,13 @@ export function hydrateTextInstance(
   return diffHydratedText(textInstance, text);
 }
 
+export function hydrateSuspenseInstance(
+  suspenseInstance: SuspenseInstance,
+  internalInstanceHandle: Object,
+) {
+  precacheFiberNode(internalInstanceHandle, suspenseInstance);
+}
+
 export function getNextHydratableInstanceAfterSuspenseInstance(
   suspenseInstance: SuspenseInstance,
 ): null | HydratableInstance {
@@ -702,6 +786,51 @@ export function getNextHydratableInstanceAfterSuspenseInstance(
   }
   // TODO: Warn, we didn't find the end comment boundary.
   return null;
+}
+
+// Returns the SuspenseInstance if this node is a direct child of a
+// SuspenseInstance. I.e. if its previous sibling is a Comment with
+// SUSPENSE_x_START_DATA. Otherwise, null.
+export function getParentSuspenseInstance(
+  targetInstance: Instance,
+): null | SuspenseInstance {
+  let node = targetInstance.previousSibling;
+  // Skip past all nodes within this suspense boundary.
+  // There might be nested nodes so we need to keep track of how
+  // deep we are and only break out when we're back on top.
+  let depth = 0;
+  while (node) {
+    if (node.nodeType === COMMENT_NODE) {
+      let data = ((node: any).data: string);
+      if (
+        data === SUSPENSE_START_DATA ||
+        data === SUSPENSE_FALLBACK_START_DATA ||
+        data === SUSPENSE_PENDING_START_DATA
+      ) {
+        if (depth === 0) {
+          return ((node: any): SuspenseInstance);
+        } else {
+          depth--;
+        }
+      } else if (data === SUSPENSE_END_DATA) {
+        depth++;
+      }
+    }
+    node = node.previousSibling;
+  }
+  return null;
+}
+
+export function commitHydratedContainer(container: Container): void {
+  // Retry if any event replaying was blocked on this.
+  retryIfBlockedOn(container);
+}
+
+export function commitHydratedSuspenseInstance(
+  suspenseInstance: SuspenseInstance,
+): void {
+  // Retry if any event replaying was blocked on this.
+  retryIfBlockedOn(suspenseInstance);
 }
 
 export function didNotMatchHydratedContainerTextInstance(
@@ -818,27 +947,18 @@ export function didNotFindHydratableSuspenseInstance(
   }
 }
 
-export function mountResponderInstance(
+export function DEPRECATED_mountResponderInstance(
   responder: ReactDOMEventResponder,
   responderInstance: ReactDOMEventResponderInstance,
   responderProps: Object,
   responderState: Object,
   instance: Instance,
-  rootContainerInstance: Container,
 ): ReactDOMEventResponderInstance {
   // Listen to events
-  const doc = rootContainerInstance.ownerDocument;
-  const documentBody = doc.body || doc;
-  const {
-    rootEventTypes,
-    targetEventTypes,
-  } = ((responder: any): ReactDOMEventResponder);
+  const doc = instance.ownerDocument;
+  const {targetEventTypes} = ((responder: any): ReactDOMEventResponder);
   if (targetEventTypes !== null) {
-    listenToEventResponderEventTypes(targetEventTypes, documentBody);
-  }
-  if (rootEventTypes !== null) {
-    addRootEventTypesForResponderInstance(responderInstance, rootEventTypes);
-    listenToEventResponderEventTypes(rootEventTypes, documentBody);
+    listenToEventResponderEventTypes(targetEventTypes, doc);
   }
   mountEventResponder(
     responder,
@@ -849,10 +969,10 @@ export function mountResponderInstance(
   return responderInstance;
 }
 
-export function unmountResponderInstance(
+export function DEPRECATED_unmountResponderInstance(
   responderInstance: ReactDOMEventResponderInstance,
 ): void {
-  if (enableFlareAPI) {
+  if (enableDeprecatedFlareAPI) {
     // TODO stop listening to targetEventTypes
     unmountEventResponder(responderInstance);
   }
@@ -918,4 +1038,8 @@ export function unmountFundamentalComponent(
       onUnmount(null, instance, props, state);
     }
   }
+}
+
+export function getInstanceFromNode(node: HTMLElement): null | Object {
+  return getClosestInstanceFromNode(node) || null;
 }

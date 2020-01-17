@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>React Developer Tools</title>
+    <meta charset="utf8" />
+    <style>
+      html {
+        height: 100%;
+        font-family: sans-serif;
+      }
+      body {
+        height: 100%;
+        margin: 0;
+        padding: 0;
+        background-color: #fff;
+        color: #777d88;
+      }
+
+      .container {
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        overflow: auto;
+      }
+
+      p {
+        padding: 0;
+        margin: 0;
+      }
+
+      .input {
+        display: block;
+        font-weight: 100;
+        padding: 0 0.25rem;
+        border: 1px solid #aaa;
+        background-color: #fff;
+        color: #666;
+      }
+
+      .link {
+        color: #1478fa;
+        text-decoration: none;
+      }
+      .link:hover {
+        text-decoration: underline;
+      }
+
+      .waiting-header {
+        padding: 0.5rem;
+        display: inline-block;
+        position: absolute;
+        right: 0.5rem;
+        top: 0.5rem;
+        border-radius: 0.25rem;
+        background-color: rgba(0,1,2,.6);
+        color: white;
+        border: none;
+        font-weight: 100;
+        font-style: italic;
+      }
+
+      .boxes {
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+        justify-content: center;
+        padding: 1rem;
+      }
+      .box {
+        text-align: center;
+        border-radius: 0.5rem;
+        background-color: #f7f7f7;
+        border: 1px solid #eee;
+        color: #777d88;
+        padding: 1rem;
+        margin-top: 1rem;
+      }
+      .box:first-of-type {
+        margin-top: 0;
+      }
+
+      .box-header {
+        text-align: center;
+        color: #5f6673;
+        font-size: 1.25rem;
+        margin-bottom: 0.5rem;
+      }
+      .box-content {
+        line-height: 1.5rem;
+      }
+
+      #loading-status {
+        text-align: center;
+        margin-top: 1rem;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="container" class="container" style="-webkit-user-select: none; -webkit-app-region: drag;">
+      <div class="waiting-header">Waiting for React to connect…</div>
+      <div class="boxes">
+        <div class="box">
+          <div class="box-header">React Native</div>
+          <div class="box-content">
+            Open the <a
+              id="rn-help-link"
+              class="link"
+              target="_blank"
+              href="https://facebook.github.io/react-native/docs/debugging#accessing-the-in-app-developer-menu"
+            >in-app developer menu</a> to connect.
+          </div>
+        </div>
+        <div class="box">
+          <div class="box-header">React DOM</div>
+          <div class="box-content">
+            Add one of the following:
+            <span class="input" contenteditable="true" id="localhost"></span>
+            <span class="input" contenteditable="true" id="byip"></span>
+            to the top of the page you want to debug,
+            <br />
+            <strong>before</strong> importing React DOM.
+          </div>
+        </div>
+        <div id="loading-status">Starting the server…</div>
+      </div>
+    </div>
+    <script>
+      const port = process.env.PORT || 8097;
+      const localIp = require("ip").address();
+      const $ = document.querySelector.bind(document);
+
+      function selectAll(event) {
+        const element = event.target;
+        if (window.getSelection) {
+          const selection = window.getSelection();        
+          const range = document.createRange();
+          range.selectNodeContents(element);
+          selection.removeAllRanges();
+          selection.addRange(range);
+        }
+      }
+
+      const link = $('#rn-help-link');
+      link.addEventListener('click', event => {
+        event.preventDefault();
+        require('electron').shell.openExternal(link.href);
+      });
+
+      const $localhost = $("#localhost");
+      $localhost.innerText = `<script src="http://localhost:${port}"></` + 'script>';
+      $localhost.addEventListener('click', selectAll);
+      $localhost.addEventListener('focus', selectAll);
+
+      const $byIp = $("#byip");
+      $byIp.innerText = `<script src="http://${localIp}:${port}"></` + 'script>';
+      $byIp.addEventListener('click', selectAll);
+      $byIp.addEventListener('focus', selectAll);
+
+      let devtools;
+      try {
+        devtools = require("react-devtools-core/standalone").default;
+      } catch (err) {
+        alert(
+          err.toString() +
+            "\n\nDid you run `yarn` and `yarn run build` in packages/react-devtools-core?"
+        );
+      }
+      window.devtools = devtools;
+      window.server = devtools
+        .setContentDOMNode(document.getElementById("container"))
+        .setStatusListener(function(status) {
+          const element = document.getElementById("loading-status");
+          if (element) {
+            element.innerText = status;
+          }
+        })
+        .startServer(port);
+    </script>
+  </body>
+</html>

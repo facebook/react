@@ -170,7 +170,7 @@ describe('ReactDOMServerIntegration - Untrusted URLs', () => {
   });
 
   runTests(itRenders, itRenders, fn =>
-    expect(fn).toWarnDev(
+    expect(fn).toErrorDev(
       'Warning: A future version of React will block javascript: URLs as a security precaution. ' +
         'Use event handlers instead if you can. If you need to generate unsafe HTML try using ' +
         'dangerouslySetInnerHTML instead. React was passed "javascript:notfine".\n' +

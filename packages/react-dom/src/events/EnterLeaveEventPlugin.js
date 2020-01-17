@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import {accumulateEnterLeaveDispatches} from 'events/EventPropagators';
+import {accumulateEnterLeaveDispatches} from 'legacy-events/EventPropagators';
 
 import {
   TOP_MOUSE_OUT,
@@ -13,12 +13,15 @@ import {
   TOP_POINTER_OUT,
   TOP_POINTER_OVER,
 } from './DOMTopLevelEventTypes';
+import {IS_REPLAYED, IS_FIRST_ANCESTOR} from 'legacy-events/EventSystemFlags';
 import SyntheticMouseEvent from './SyntheticMouseEvent';
 import SyntheticPointerEvent from './SyntheticPointerEvent';
 import {
   getClosestInstanceFromNode,
   getNodeFromInstance,
 } from '../client/ReactDOMComponentTree';
+import {HostComponent, HostText} from 'shared/ReactWorkTags';
+import {getNearestMountedFiber} from 'react-reconciler/reflection';
 
 const eventTypes = {
   mouseEnter: {
@@ -54,13 +57,22 @@ const EnterLeaveEventPlugin = {
     targetInst,
     nativeEvent,
     nativeEventTarget,
+    eventSystemFlags,
   ) {
     const isOverEvent =
       topLevelType === TOP_MOUSE_OVER || topLevelType === TOP_POINTER_OVER;
     const isOutEvent =
       topLevelType === TOP_MOUSE_OUT || topLevelType === TOP_POINTER_OUT;
 
-    if (isOverEvent && (nativeEvent.relatedTarget || nativeEvent.fromElement)) {
+    if (
+      isOverEvent &&
+      (eventSystemFlags & IS_REPLAYED) === 0 &&
+      (nativeEvent.relatedTarget || nativeEvent.fromElement)
+    ) {
+      // If this is an over event with a target, then we've already dispatched
+      // the event in the out event of the other target. If this is replayed,
+      // then it's because we couldn't dispatch against this target previously
+      // so we have to do it now instead.
       return null;
     }
 
@@ -89,6 +101,15 @@ const EnterLeaveEventPlugin = {
       from = targetInst;
       const related = nativeEvent.relatedTarget || nativeEvent.toElement;
       to = related ? getClosestInstanceFromNode(related) : null;
+      if (to !== null) {
+        const nearestMounted = getNearestMountedFiber(to);
+        if (
+          to !== nearestMounted ||
+          (to.tag !== HostComponent && to.tag !== HostText)
+        ) {
+          to = null;
+        }
+      }
     } else {
       // Moving to a node from outside the window.
       from = null;
@@ -141,6 +162,13 @@ const EnterLeaveEventPlugin = {
     enter.relatedTarget = fromNode;
 
     accumulateEnterLeaveDispatches(leave, enter, from, to);
+
+    // If we are not processing the first ancestor, then we
+    // should not process the same nativeEvent again, as we
+    // will have already processed it in the first ancestor.
+    if ((eventSystemFlags & IS_FIRST_ANCESTOR) === 0) {
+      return [leave];
+    }
 
     return [leave, enter];
   },

@@ -16,8 +16,8 @@
 // Module provided by RN:
 import 'react-native/Libraries/ReactPrivate/ReactNativePrivateInitializeCore';
 
-import {injection as EventPluginHubInjection} from 'events/EventPluginHub';
-import ResponderEventPlugin from 'events/ResponderEventPlugin';
+import {injection as EventPluginHubInjection} from 'legacy-events/EventPluginHub';
+import ResponderEventPlugin from 'legacy-events/ResponderEventPlugin';
 
 import ReactNativeBridgeEventPlugin from './ReactNativeBridgeEventPlugin';
 import ReactNativeEventPluginOrder from './ReactNativeEventPluginOrder';

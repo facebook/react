@@ -7,15 +7,7 @@
  * @flow
  */
 
-import type {
-  ReactNativeBaseComponentViewConfig,
-  ReactNativeResponderEvent,
-  ReactNativeResponderContext,
-} from './ReactNativeTypes';
-import type {
-  ReactEventResponder,
-  ReactEventResponderInstance,
-} from 'shared/ReactTypes';
+import type {ReactNativeBaseComponentViewConfig} from './ReactNativeTypes';
 
 import invariant from 'shared/invariant';
 
@@ -36,16 +28,6 @@ import ReactNativeFiberHostComponent from './ReactNativeFiberHostComponent';
 
 const {get: getViewConfigForType} = ReactNativeViewConfigRegistry;
 
-type ReactNativeEventResponderInstance = ReactEventResponderInstance<
-  ReactNativeResponderEvent,
-  ReactNativeResponderContext,
->;
-
-type ReactNativeEventResponder = ReactEventResponder<
-  ReactNativeResponderEvent,
-  ReactNativeResponderContext,
->;
-
 export type Type = string;
 export type Props = Object;
 export type Container = number;
@@ -53,6 +35,7 @@ export type Instance = {
   _children: Array<Instance | number>,
   _nativeTag: number,
   viewConfig: ReactNativeBaseComponentViewConfig<>,
+  ...
 };
 export type TextInstance = number;
 export type HydratableInstance = Instance | TextInstance;
@@ -181,11 +164,10 @@ export function finalizeInitialChildren(
 
   // Map from child objects to native tags.
   // Either way we need to pass a copy of the Array to prevent it from being frozen.
-  const nativeTags = parentInstance._children.map(
-    child =>
-      typeof child === 'number'
-        ? child // Leaf node (eg text)
-        : child._nativeTag,
+  const nativeTags = parentInstance._children.map(child =>
+    typeof child === 'number'
+      ? child // Leaf node (eg text)
+      : child._nativeTag,
   );
 
   UIManager.setChildren(
@@ -495,19 +477,18 @@ export function unhideTextInstance(
   throw new Error('Not yet implemented.');
 }
 
-export function mountResponderInstance(
-  responder: ReactNativeEventResponder,
-  responderInstance: ReactNativeEventResponderInstance,
+export function DEPRECATED_mountResponderInstance(
+  responder: any,
+  responderInstance: any,
   props: Object,
   state: Object,
   instance: Instance,
-  rootContainerInstance: Container,
 ) {
   throw new Error('Not yet implemented.');
 }
 
-export function unmountResponderInstance(
-  responderInstance: ReactNativeEventResponderInstance,
+export function DEPRECATED_unmountResponderInstance(
+  responderInstance: any,
 ): void {
   throw new Error('Not yet implemented.');
 }
@@ -530,4 +511,12 @@ export function updateFundamentalComponent(fundamentalInstance) {
 
 export function unmountFundamentalComponent(fundamentalInstance) {
   throw new Error('Not yet implemented.');
+}
+
+export function getInstanceFromNode(node) {
+  throw new Error('Not yet implemented.');
+}
+
+export function beforeRemoveInstance(instance) {
+  // noop
 }

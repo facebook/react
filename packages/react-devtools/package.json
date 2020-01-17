@@ -1,0 +1,33 @@
+{
+  "name": "react-devtools",
+  "version": "4.4.0",
+  "description": "Use react-devtools outside of the browser",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/facebook/react.git",
+    "directory": "packages/react-devtools"
+  },
+  "bin": {
+    "react-devtools": "./bin.js"
+  },
+  "files": [
+    "bin.js",
+    "build-info.json",
+    "app.html",
+    "app.js",
+    "index.js",
+    "icons"
+  ],
+  "scripts": {
+    "start": "node bin.js"
+  },
+  "dependencies": {
+    "cross-spawn": "^5.0.1",
+    "electron": "^5.0.0",
+    "ip": "^1.1.4",
+    "minimist": "^1.2.0",
+    "react-devtools-core": "4.4.0",
+    "update-notifier": "^2.1.0"
+  }
+}

@@ -21,6 +21,8 @@ module.exports = {
     // Fabric. See https://github.com/facebook/react/pull/15490
     // for more information
     nativeFabricUIManager: true,
+    // Trusted Types
+    trustedTypes: true,
 
     // Scheduler profiling
     SharedArrayBuffer: true,

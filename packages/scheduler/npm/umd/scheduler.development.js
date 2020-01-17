@@ -16,8 +16,8 @@
   typeof exports === 'object' && typeof module !== 'undefined'
     ? (module.exports = factory(require('react')))
     : typeof define === 'function' && define.amd // eslint-disable-line no-undef
-      ? define(['react'], factory) // eslint-disable-line no-undef
-      : (global.Scheduler = factory(global));
+    ? define(['react'], factory) // eslint-disable-line no-undef
+    : (global.Scheduler = factory(global));
 })(this, function(global) {
   function unstable_now() {
     return global.React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.Scheduler.unstable_now.apply(
@@ -110,20 +110,6 @@
     );
   }
 
-  function unstable_startLoggingProfilingEvents() {
-    return global.React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.Scheduler.unstable_startLoggingProfilingEvents.apply(
-      this,
-      arguments
-    );
-  }
-
-  function unstable_stopLoggingProfilingEvents() {
-    return global.React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.Scheduler.unstable_stopLoggingProfilingEvents.apply(
-      this,
-      arguments
-    );
-  }
-
   return Object.freeze({
     unstable_now: unstable_now,
     unstable_scheduleCallback: unstable_scheduleCallback,
@@ -138,8 +124,6 @@
     unstable_pauseExecution: unstable_pauseExecution,
     unstable_getFirstCallbackNode: unstable_getFirstCallbackNode,
     unstable_forceFrameRate: unstable_forceFrameRate,
-    unstable_startLoggingProfilingEvents: unstable_startLoggingProfilingEvents,
-    unstable_stopLoggingProfilingEvents: unstable_stopLoggingProfilingEvents,
     get unstable_IdlePriority() {
       return global.React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED
         .Scheduler.unstable_IdlePriority;
@@ -160,9 +144,9 @@
       return global.React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED
         .Scheduler.unstable_UserBlockingPriority;
     },
-    get unstable_sharedProfilingBuffer() {
+    get unstable_Profiling() {
       return global.React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED
-        .Scheduler.unstable_getFirstCallbackNode;
+        .Scheduler.unstable_Profiling;
     },
   });
 });

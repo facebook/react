@@ -22,6 +22,9 @@ describe('useSubscription', () => {
     jest.resetModules();
     jest.mock('scheduler', () => require('scheduler/unstable_mock'));
 
+    const ReactFeatureFlags = require('shared/ReactFeatureFlags');
+    ReactFeatureFlags.debugRenderPhaseSideEffectsForStrictMode = false;
+
     useSubscription = require('use-subscription').useSubscription;
     React = require('react');
     ReactTestRenderer = require('react-test-renderer');
@@ -559,5 +562,66 @@ describe('useSubscription', () => {
 
     act(() => renderer.update(<Subscription subscription={subscription2} />));
     Scheduler.unstable_flushAll();
+  });
+
+  it('should not tear if a mutation occurs during a concurrent update', () => {
+    const input = document.createElement('input');
+
+    const mutate = value => {
+      input.value = value;
+      input.dispatchEvent(new Event('change'));
+    };
+
+    const subscription = {
+      getCurrentValue: () => input.value,
+      subscribe: callback => {
+        input.addEventListener('change', callback);
+        return () => input.removeEventListener('change', callback);
+      },
+    };
+
+    const Subscriber = ({id}) => {
+      const value = useSubscription(subscription);
+      Scheduler.unstable_yieldValue(`render:${id}:${value}`);
+      return value;
+    };
+
+    act(() => {
+      // Initial render of "A"
+      mutate('A');
+      ReactTestRenderer.create(
+        <React.Fragment>
+          <Subscriber id="first" />
+          <Subscriber id="second" />
+        </React.Fragment>,
+        {unstable_isConcurrent: true},
+      );
+      expect(Scheduler).toFlushAndYield(['render:first:A', 'render:second:A']);
+
+      // Update state "A" -> "B"
+      // This update will be eagerly evaluated,
+      // so the tearing case this test is guarding against would not happen.
+      mutate('B');
+      expect(Scheduler).toFlushAndYield(['render:first:B', 'render:second:B']);
+
+      // No more pending updates
+      jest.runAllTimers();
+
+      // Partial update "B" -> "C"
+      // Interrupt with a second mutation "C" -> "D".
+      // This update will not be eagerly evaluated,
+      // but useSubscription() should eagerly close over the updated value to avoid tearing.
+      mutate('C');
+      expect(Scheduler).toFlushAndYieldThrough(['render:first:C']);
+      mutate('D');
+      expect(Scheduler).toFlushAndYield([
+        'render:second:C',
+        'render:first:D',
+        'render:second:D',
+      ]);
+
+      // No more pending updates
+      jest.runAllTimers();
+    });
   });
 });

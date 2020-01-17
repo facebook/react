@@ -29,9 +29,6 @@ import {
   warnForStyleProps,
 } from './NativeMethodsMixinUtils';
 
-import warningWithoutStack from 'shared/warningWithoutStack';
-import {warnAboutDeprecatedSetNativeProps} from 'shared/ReactFeatureFlags';
-
 export default function(
   findNodeHandle: any => ?number,
   findHostInstance: any => any,
@@ -161,7 +158,7 @@ export default function(
     measureLayout: function(
       relativeToNativeNode: number | Object,
       onSuccess: MeasureLayoutOnSuccessCallback,
-      onFail: () => void /* currently unused */,
+      onFail?: () => void /* currently unused */,
     ) {
       let maybeInstance;
 
@@ -180,12 +177,13 @@ export default function(
       }
 
       if (maybeInstance.canonical) {
-        warningWithoutStack(
-          false,
-          'Warning: measureLayout on components using NativeMethodsMixin ' +
-            'or ReactNative.NativeComponent is not currently supported in Fabric. ' +
-            'measureLayout must be called on a native ref. Consider using forwardRef.',
-        );
+        if (__DEV__) {
+          console.error(
+            'Warning: measureLayout on components using NativeMethodsMixin ' +
+              'or ReactNative.NativeComponent is not currently supported in Fabric. ' +
+              'measureLayout must be called on a native ref. Consider using forwardRef.',
+          );
+        }
         return;
       } else {
         let relativeNode;
@@ -198,10 +196,11 @@ export default function(
         }
 
         if (relativeNode == null) {
-          warningWithoutStack(
-            false,
-            'Warning: ref.measureLayout must be called with a node handle or a ref to a native component.',
-          );
+          if (__DEV__) {
+            console.error(
+              'Warning: ref.measureLayout must be called with a node handle or a ref to a native component.',
+            );
+          }
 
           return;
         }
@@ -244,23 +243,12 @@ export default function(
       }
 
       if (maybeInstance.canonical) {
-        warningWithoutStack(
-          false,
-          'Warning: setNativeProps is not currently supported in Fabric',
-        );
-        return;
-      }
-
-      if (__DEV__) {
-        if (warnAboutDeprecatedSetNativeProps) {
-          warningWithoutStack(
-            false,
-            'Warning: Calling ref.setNativeProps(nativeProps) ' +
-              'is deprecated and will be removed in a future release. ' +
-              'Use the setNativeProps export from the react-native package instead.' +
-              "\n\timport {setNativeProps} from 'react-native';\n\tsetNativeProps(ref, nativeProps);\n",
+        if (__DEV__) {
+          console.error(
+            'Warning: setNativeProps is not currently supported in Fabric',
           );
         }
+        return;
       }
 
       const nativeTag =

@@ -1,0 +1,629 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Store collapseNodesByDefault:false should display Suspense nodes properly in various states: 1: loading 1`] = `
+[root]
+  ▾ <Wrapper>
+      <Component key="Outside">
+    ▾ <Suspense>
+        <Loading>
+`;
+
+exports[`Store collapseNodesByDefault:false should display Suspense nodes properly in various states: 2: resolved 1`] = `
+[root]
+  ▾ <Wrapper>
+      <Component key="Outside">
+    ▾ <Suspense>
+        <Component key="Inside">
+`;
+
+exports[`Store collapseNodesByDefault:false should display a partially rendered SuspenseList: 1: loading 1`] = `
+[root]
+  ▾ <Wrapper>
+    ▾ <SuspenseList>
+        <Component key="A">
+      ▾ <Suspense>
+          <Loading>
+`;
+
+exports[`Store collapseNodesByDefault:false should display a partially rendered SuspenseList: 2: resolved 1`] = `
+[root]
+  ▾ <Wrapper>
+    ▾ <SuspenseList>
+        <Component key="A">
+      ▾ <Suspense>
+          <Component key="B">
+        <Component key="C">
+`;
+
+exports[`Store collapseNodesByDefault:false should filter DOM nodes from the store tree: 1: mount 1`] = `
+[root]
+  ▾ <Grandparent>
+    ▾ <Parent>
+        <Child>
+    ▾ <Parent>
+        <Child>
+`;
+
+exports[`Store collapseNodesByDefault:false should support collapsing parts of the tree: 1: mount 1`] = `
+[root]
+  ▾ <Grandparent>
+    ▾ <Parent>
+        <Child key="0">
+        <Child key="1">
+    ▾ <Parent>
+        <Child key="0">
+        <Child key="1">
+`;
+
+exports[`Store collapseNodesByDefault:false should support collapsing parts of the tree: 2: collapse first Parent 1`] = `
+[root]
+  ▾ <Grandparent>
+    ▸ <Parent>
+    ▾ <Parent>
+        <Child key="0">
+        <Child key="1">
+`;
+
+exports[`Store collapseNodesByDefault:false should support collapsing parts of the tree: 3: collapse second Parent 1`] = `
+[root]
+  ▾ <Grandparent>
+    ▸ <Parent>
+    ▸ <Parent>
+`;
+
+exports[`Store collapseNodesByDefault:false should support collapsing parts of the tree: 4: expand first Parent 1`] = `
+[root]
+  ▾ <Grandparent>
+    ▾ <Parent>
+        <Child key="0">
+        <Child key="1">
+    ▸ <Parent>
+`;
+
+exports[`Store collapseNodesByDefault:false should support collapsing parts of the tree: 5: collapse Grandparent 1`] = `
+[root]
+  ▸ <Grandparent>
+`;
+
+exports[`Store collapseNodesByDefault:false should support collapsing parts of the tree: 6: expand Grandparent 1`] = `
+[root]
+  ▾ <Grandparent>
+    ▾ <Parent>
+        <Child key="0">
+        <Child key="1">
+    ▸ <Parent>
+`;
+
+exports[`Store collapseNodesByDefault:false should support mount and update operations for multiple roots: 1: mount 1`] = `
+[root]
+  ▾ <Parent key="A">
+      <Child key="0">
+      <Child key="1">
+      <Child key="2">
+[root]
+  ▾ <Parent key="B">
+      <Child key="0">
+      <Child key="1">
+`;
+
+exports[`Store collapseNodesByDefault:false should support mount and update operations for multiple roots: 2: update 1`] = `
+[root]
+  ▾ <Parent key="A">
+      <Child key="0">
+      <Child key="1">
+      <Child key="2">
+      <Child key="3">
+[root]
+  ▾ <Parent key="B">
+      <Child key="0">
+`;
+
+exports[`Store collapseNodesByDefault:false should support mount and update operations for multiple roots: 3: unmount B 1`] = `
+[root]
+  ▾ <Parent key="A">
+      <Child key="0">
+      <Child key="1">
+      <Child key="2">
+      <Child key="3">
+`;
+
+exports[`Store collapseNodesByDefault:false should support mount and update operations for multiple roots: 4: unmount A 1`] = ``;
+
+exports[`Store collapseNodesByDefault:false should support mount and update operations: 1: mount 1`] = `
+[root]
+  ▾ <Grandparent>
+    ▾ <Parent>
+        <Child key="0">
+        <Child key="1">
+        <Child key="2">
+        <Child key="3">
+    ▾ <Parent>
+        <Child key="0">
+        <Child key="1">
+        <Child key="2">
+        <Child key="3">
+`;
+
+exports[`Store collapseNodesByDefault:false should support mount and update operations: 2: update 1`] = `
+[root]
+  ▾ <Grandparent>
+    ▾ <Parent>
+        <Child key="0">
+        <Child key="1">
+    ▾ <Parent>
+        <Child key="0">
+        <Child key="1">
+`;
+
+exports[`Store collapseNodesByDefault:false should support mount and update operations: 3: unmount 1`] = ``;
+
+exports[`Store collapseNodesByDefault:false should support nested Suspense nodes: 1: third child is suspended 1`] = `
+[root]
+  ▾ <Wrapper>
+      <Component key="Outside">
+    ▾ <Suspense>
+        <Component key="Unrelated at Start">
+      ▾ <Suspense>
+          <Component key="Suspense 1 Content">
+      ▾ <Suspense>
+          <Component key="Suspense 2 Content">
+      ▾ <Suspense>
+          <Loading key="Suspense 3 Fallback">
+        <Component key="Unrelated at End">
+`;
+
+exports[`Store collapseNodesByDefault:false should support nested Suspense nodes: 2: first and third child are suspended 1`] = `
+[root]
+  ▾ <Wrapper>
+      <Component key="Outside">
+    ▾ <Suspense>
+        <Component key="Unrelated at Start">
+      ▾ <Suspense>
+          <Loading key="Suspense 1 Fallback">
+      ▾ <Suspense>
+          <Component key="Suspense 2 Content">
+      ▾ <Suspense>
+          <Loading key="Suspense 3 Fallback">
+        <Component key="Unrelated at End">
+`;
+
+exports[`Store collapseNodesByDefault:false should support nested Suspense nodes: 3: second and third child are suspended 1`] = `
+[root]
+  ▾ <Wrapper>
+      <Component key="Outside">
+    ▾ <Suspense>
+        <Component key="Unrelated at Start">
+      ▾ <Suspense>
+          <Component key="Suspense 1 Content">
+      ▾ <Suspense>
+          <Loading key="Suspense 2 Fallback">
+      ▾ <Suspense>
+          <Loading key="Suspense 3 Fallback">
+        <Component key="Unrelated at End">
+`;
+
+exports[`Store collapseNodesByDefault:false should support nested Suspense nodes: 4: first and third child are suspended 1`] = `
+[root]
+  ▾ <Wrapper>
+      <Component key="Outside">
+    ▾ <Suspense>
+        <Component key="Unrelated at Start">
+      ▾ <Suspense>
+          <Loading key="Suspense 1 Fallback">
+      ▾ <Suspense>
+          <Component key="Suspense 2 Content">
+      ▾ <Suspense>
+          <Loading key="Suspense 3 Fallback">
+        <Component key="Unrelated at End">
+`;
+
+exports[`Store collapseNodesByDefault:false should support nested Suspense nodes: 5: parent is suspended 1`] = `
+[root]
+  ▾ <Wrapper>
+      <Component key="Outside">
+    ▾ <Suspense>
+        <Loading key="Parent Fallback">
+`;
+
+exports[`Store collapseNodesByDefault:false should support nested Suspense nodes: 6: all children are suspended 1`] = `
+[root]
+  ▾ <Wrapper>
+      <Component key="Outside">
+    ▾ <Suspense>
+        <Component key="Unrelated at Start">
+      ▾ <Suspense>
+          <Loading key="Suspense 1 Fallback">
+      ▾ <Suspense>
+          <Loading key="Suspense 2 Fallback">
+      ▾ <Suspense>
+          <Loading key="Suspense 3 Fallback">
+        <Component key="Unrelated at End">
+`;
+
+exports[`Store collapseNodesByDefault:false should support nested Suspense nodes: 7: only third child is suspended 1`] = `
+[root]
+  ▾ <Wrapper>
+      <Component key="Outside">
+    ▾ <Suspense>
+        <Component key="Unrelated at Start">
+      ▾ <Suspense>
+          <Component key="Suspense 1 Content">
+      ▾ <Suspense>
+          <Component key="Suspense 2 Content">
+      ▾ <Suspense>
+          <Loading key="Suspense 3 Fallback">
+        <Component key="Unrelated at End">
+`;
+
+exports[`Store collapseNodesByDefault:false should support nested Suspense nodes: 8: first and third child are suspended 1`] = `
+[root]
+  ▾ <Wrapper>
+      <Component key="Outside">
+    ▾ <Suspense>
+        <Component key="Unrelated at Start">
+      ▾ <Suspense>
+          <Loading key="Suspense 1 Fallback">
+      ▾ <Suspense>
+          <Component key="Suspense 2 Content">
+      ▾ <Suspense>
+          <Loading key="Suspense 3 Fallback">
+        <Component key="Unrelated at End">
+`;
+
+exports[`Store collapseNodesByDefault:false should support nested Suspense nodes: 9: parent is suspended 1`] = `
+[root]
+  ▾ <Wrapper>
+      <Component key="Outside">
+    ▾ <Suspense>
+        <Loading key="Parent Fallback">
+`;
+
+exports[`Store collapseNodesByDefault:false should support nested Suspense nodes: 10: parent is suspended 1`] = `
+[root]
+  ▾ <Wrapper>
+      <Component key="Outside">
+    ▾ <Suspense>
+        <Loading key="Parent Fallback">
+`;
+
+exports[`Store collapseNodesByDefault:false should support nested Suspense nodes: 11: all children are suspended 1`] = `
+[root]
+  ▾ <Wrapper>
+      <Component key="Outside">
+    ▾ <Suspense>
+        <Component key="Unrelated at Start">
+      ▾ <Suspense>
+          <Loading key="Suspense 1 Fallback">
+      ▾ <Suspense>
+          <Loading key="Suspense 2 Fallback">
+      ▾ <Suspense>
+          <Loading key="Suspense 3 Fallback">
+        <Component key="Unrelated at End">
+`;
+
+exports[`Store collapseNodesByDefault:false should support nested Suspense nodes: 12: all children are suspended 1`] = `
+[root]
+  ▾ <Wrapper>
+      <Component key="Outside">
+    ▾ <Suspense>
+        <Component key="Unrelated at Start">
+      ▾ <Suspense>
+          <Loading key="Suspense 1 Fallback">
+      ▾ <Suspense>
+          <Loading key="Suspense 2 Fallback">
+      ▾ <Suspense>
+          <Loading key="Suspense 3 Fallback">
+        <Component key="Unrelated at End">
+`;
+
+exports[`Store collapseNodesByDefault:false should support nested Suspense nodes: 13: third child is suspended 1`] = `
+[root]
+  ▾ <Wrapper>
+      <Component key="Outside">
+    ▾ <Suspense>
+        <Component key="Unrelated at Start">
+      ▾ <Suspense>
+          <Component key="Suspense 1 Content">
+      ▾ <Suspense>
+          <Component key="Suspense 2 Content">
+      ▾ <Suspense>
+          <Loading key="Suspense 3 Fallback">
+        <Component key="Unrelated at End">
+`;
+
+exports[`Store collapseNodesByDefault:false should support reordering of children: 1: mount 1`] = `
+[root]
+  ▾ <Root>
+    ▾ <Foo key="foo">
+        <Component key="0">
+    ▾ <Bar key="bar">
+        <Component key="0">
+        <Component key="1">
+`;
+
+exports[`Store collapseNodesByDefault:false should support reordering of children: 3: reorder children 1`] = `
+[root]
+  ▾ <Root>
+    ▾ <Bar key="bar">
+        <Component key="0">
+        <Component key="1">
+    ▾ <Foo key="foo">
+        <Component key="0">
+`;
+
+exports[`Store collapseNodesByDefault:false should support reordering of children: 4: collapse root 1`] = `
+[root]
+  ▸ <Root>
+`;
+
+exports[`Store collapseNodesByDefault:false should support reordering of children: 5: expand root 1`] = `
+[root]
+  ▾ <Root>
+    ▾ <Bar key="bar">
+        <Component key="0">
+        <Component key="1">
+    ▾ <Foo key="foo">
+        <Component key="0">
+`;
+
+exports[`Store collapseNodesByDefault:true should display Suspense nodes properly in various states: 1: loading 1`] = `
+[root]
+  ▸ <Wrapper>
+`;
+
+exports[`Store collapseNodesByDefault:true should display Suspense nodes properly in various states: 2: expand Wrapper and Suspense 1`] = `
+[root]
+  ▾ <Wrapper>
+      <Component key="Outside">
+    ▾ <Suspense>
+        <Loading>
+`;
+
+exports[`Store collapseNodesByDefault:true should display Suspense nodes properly in various states: 2: resolved 1`] = `
+[root]
+  ▾ <Wrapper>
+      <Component key="Outside">
+    ▾ <Suspense>
+        <Component key="Inside">
+`;
+
+exports[`Store collapseNodesByDefault:true should filter DOM nodes from the store tree: 1: mount 1`] = `
+[root]
+  ▸ <Grandparent>
+`;
+
+exports[`Store collapseNodesByDefault:true should filter DOM nodes from the store tree: 2: expand Grandparent 1`] = `
+[root]
+  ▾ <Grandparent>
+    ▸ <Parent>
+    ▸ <Parent>
+`;
+
+exports[`Store collapseNodesByDefault:true should filter DOM nodes from the store tree: 3: expand Parent 1`] = `
+[root]
+  ▾ <Grandparent>
+    ▾ <Parent>
+        <Child>
+    ▸ <Parent>
+`;
+
+exports[`Store collapseNodesByDefault:true should not add new nodes when suspense is toggled: 1: mount 1`] = `
+[root]
+  ▸ <SuspenseTree>
+`;
+
+exports[`Store collapseNodesByDefault:true should not add new nodes when suspense is toggled: 2: expand tree 1`] = `
+[root]
+  ▾ <SuspenseTree>
+    ▾ <Suspense>
+      ▸ <Parent>
+`;
+
+exports[`Store collapseNodesByDefault:true should not add new nodes when suspense is toggled: 3: toggle fallback on 1`] = `
+[root]
+  ▾ <SuspenseTree>
+    ▾ <Suspense>
+        <Fallback>
+`;
+
+exports[`Store collapseNodesByDefault:true should not add new nodes when suspense is toggled: 4: toggle fallback on 1`] = `
+[root]
+  ▾ <SuspenseTree>
+    ▾ <Suspense>
+      ▸ <Parent>
+`;
+
+exports[`Store collapseNodesByDefault:true should support expanding deep parts of the tree: 1: mount 1`] = `
+[root]
+  ▸ <Wrapper>
+`;
+
+exports[`Store collapseNodesByDefault:true should support expanding deep parts of the tree: 2: expand deepest node 1`] = `
+[root]
+  ▾ <Wrapper>
+    ▾ <Nested>
+      ▾ <Nested>
+        ▾ <Nested>
+            <Nested>
+`;
+
+exports[`Store collapseNodesByDefault:true should support expanding deep parts of the tree: 3: collapse root 1`] = `
+[root]
+  ▸ <Wrapper>
+`;
+
+exports[`Store collapseNodesByDefault:true should support expanding deep parts of the tree: 4: expand root 1`] = `
+[root]
+  ▾ <Wrapper>
+    ▾ <Nested>
+      ▾ <Nested>
+        ▾ <Nested>
+            <Nested>
+`;
+
+exports[`Store collapseNodesByDefault:true should support expanding deep parts of the tree: 5: collapse middle node 1`] = `
+[root]
+  ▾ <Wrapper>
+    ▸ <Nested>
+`;
+
+exports[`Store collapseNodesByDefault:true should support expanding deep parts of the tree: 6: expand middle node 1`] = `
+[root]
+  ▾ <Wrapper>
+    ▾ <Nested>
+      ▾ <Nested>
+        ▾ <Nested>
+            <Nested>
+`;
+
+exports[`Store collapseNodesByDefault:true should support expanding parts of the tree: 1: mount 1`] = `
+[root]
+  ▸ <Grandparent>
+`;
+
+exports[`Store collapseNodesByDefault:true should support expanding parts of the tree: 2: expand Grandparent 1`] = `
+[root]
+  ▾ <Grandparent>
+    ▸ <Parent>
+    ▸ <Parent>
+`;
+
+exports[`Store collapseNodesByDefault:true should support expanding parts of the tree: 3: expand first Parent 1`] = `
+[root]
+  ▾ <Grandparent>
+    ▾ <Parent>
+        <Child key="0">
+        <Child key="1">
+    ▸ <Parent>
+`;
+
+exports[`Store collapseNodesByDefault:true should support expanding parts of the tree: 4: expand second Parent 1`] = `
+[root]
+  ▾ <Grandparent>
+    ▾ <Parent>
+        <Child key="0">
+        <Child key="1">
+    ▾ <Parent>
+        <Child key="0">
+        <Child key="1">
+`;
+
+exports[`Store collapseNodesByDefault:true should support expanding parts of the tree: 5: collapse first Parent 1`] = `
+[root]
+  ▾ <Grandparent>
+    ▸ <Parent>
+    ▾ <Parent>
+        <Child key="0">
+        <Child key="1">
+`;
+
+exports[`Store collapseNodesByDefault:true should support expanding parts of the tree: 6: collapse second Parent 1`] = `
+[root]
+  ▾ <Grandparent>
+    ▸ <Parent>
+    ▸ <Parent>
+`;
+
+exports[`Store collapseNodesByDefault:true should support expanding parts of the tree: 7: collapse Grandparent 1`] = `
+[root]
+  ▸ <Grandparent>
+`;
+
+exports[`Store collapseNodesByDefault:true should support mount and update operations for multiple roots: 1: mount 1`] = `
+[root]
+  ▸ <Parent key="A">
+[root]
+  ▸ <Parent key="B">
+`;
+
+exports[`Store collapseNodesByDefault:true should support mount and update operations for multiple roots: 2: update 1`] = `
+[root]
+  ▸ <Parent key="A">
+[root]
+  ▸ <Parent key="B">
+`;
+
+exports[`Store collapseNodesByDefault:true should support mount and update operations for multiple roots: 3: unmount B 1`] = `
+[root]
+  ▸ <Parent key="A">
+`;
+
+exports[`Store collapseNodesByDefault:true should support mount and update operations for multiple roots: 4: unmount A 1`] = ``;
+
+exports[`Store collapseNodesByDefault:true should support mount and update operations: 1: mount 1`] = `
+[root]
+  ▸ <Parent>
+  ▸ <Parent>
+`;
+
+exports[`Store collapseNodesByDefault:true should support mount and update operations: 2: update 1`] = `
+[root]
+  ▸ <Parent>
+  ▸ <Parent>
+`;
+
+exports[`Store collapseNodesByDefault:true should support mount and update operations: 3: unmount 1`] = ``;
+
+exports[`Store collapseNodesByDefault:true should support reordering of children: 1: mount 1`] = `
+[root]
+  ▸ <Root>
+`;
+
+exports[`Store collapseNodesByDefault:true should support reordering of children: 3: reorder children 1`] = `
+[root]
+  ▸ <Root>
+`;
+
+exports[`Store collapseNodesByDefault:true should support reordering of children: 4: expand root 1`] = `
+[root]
+  ▾ <Root>
+    ▸ <Bar key="bar">
+    ▸ <Foo key="foo">
+`;
+
+exports[`Store collapseNodesByDefault:true should support reordering of children: 5: expand leaves 1`] = `
+[root]
+  ▾ <Root>
+    ▾ <Bar key="bar">
+        <Component key="0">
+        <Component key="1">
+    ▾ <Foo key="foo">
+        <Component key="0">
+`;
+
+exports[`Store collapseNodesByDefault:true should support reordering of children: 6: collapse root 1`] = `
+[root]
+  ▸ <Root>
+`;
+
+exports[`Store should not allow a root node to be collapsed: 1: mount 1`] = `
+[root]
+    <Component>
+`;
+
+exports[`Store should properly handle a root with no visible nodes: 1: mount 1`] = `
+[root]
+    <Root>
+`;
+
+exports[`Store should properly handle a root with no visible nodes: 2: add host nodes 1`] = `[root]`;
+
+exports[`Store should properly serialize non-string key values: 1: mount 1`] = `
+[root]
+    <Child key="123">
+`;
+
+exports[`Store should show the right display names for special component types 1`] = `
+[root]
+  ▾ <App>
+      <MyComponent>
+      <MyComponent> [ForwardRef]
+    ▾ <Anonymous> [ForwardRef]
+        <MyComponent>
+      <Custom> [ForwardRef]
+      <MyComponent> [Memo]
+    ▾ <MyComponent> [Memo]
+        <MyComponent> [ForwardRef]
+    ▾ <Suspense>
+        <MyComponent>
+`;

@@ -265,6 +265,50 @@ describe('ReactSchedulerIntegration', () => {
     expect(Scheduler).toHaveYielded(['Effect clean-up priority: Idle']);
   });
 
+  it('passive effects are called before Normal-pri scheduled in layout effects', async () => {
+    const {useEffect, useLayoutEffect} = React;
+    function Effects({step}) {
+      useLayoutEffect(() => {
+        Scheduler.unstable_yieldValue('Layout Effect');
+        Scheduler.unstable_scheduleCallback(NormalPriority, () =>
+          Scheduler.unstable_yieldValue(
+            'Scheduled Normal Callback from Layout Effect',
+          ),
+        );
+      });
+      useEffect(() => {
+        Scheduler.unstable_yieldValue('Passive Effect');
+      });
+      return null;
+    }
+    function CleanupEffect() {
+      useLayoutEffect(() => () => {
+        Scheduler.unstable_yieldValue('Cleanup Layout Effect');
+        Scheduler.unstable_scheduleCallback(NormalPriority, () =>
+          Scheduler.unstable_yieldValue(
+            'Scheduled Normal Callback from Cleanup Layout Effect',
+          ),
+        );
+      });
+      return null;
+    }
+    await ReactNoop.act(async () => {
+      ReactNoop.render(<CleanupEffect />);
+    });
+    expect(Scheduler).toHaveYielded([]);
+    await ReactNoop.act(async () => {
+      ReactNoop.render(<Effects />);
+    });
+    expect(Scheduler).toHaveYielded([
+      'Cleanup Layout Effect',
+      'Layout Effect',
+      'Passive Effect',
+      // These callbacks should be scheduled after the passive effects.
+      'Scheduled Normal Callback from Cleanup Layout Effect',
+      'Scheduled Normal Callback from Layout Effect',
+    ]);
+  });
+
   it('after completing a level of work, infers priority of the next batch based on its expiration time', () => {
     function App({label}) {
       Scheduler.unstable_yieldValue(
@@ -307,5 +351,60 @@ describe('ReactSchedulerIntegration', () => {
     // React commit.
     Scheduler.unstable_flushUntilNextPaint();
     expect(Scheduler).toHaveYielded(['A', 'B', 'C']);
+  });
+
+  it('idle updates are not blocked by offscreen work', async () => {
+    function Text({text}) {
+      Scheduler.unstable_yieldValue(text);
+      return text;
+    }
+
+    function App({label}) {
+      return (
+        <>
+          <Text text={`Visible: ` + label} />
+          <div hidden={true}>
+            <Text text={`Hidden: ` + label} />
+          </div>
+        </>
+      );
+    }
+
+    const root = ReactNoop.createRoot();
+    await ReactNoop.act(async () => {
+      root.render(<App label="A" />);
+
+      // Commit the visible content
+      expect(Scheduler).toFlushUntilNextPaint(['Visible: A']);
+      expect(root).toMatchRenderedOutput(
+        <>
+          Visible: A
+          <div hidden={true} />
+        </>,
+      );
+
+      // Before the hidden content has a chance to render, schedule an
+      // idle update
+      runWithPriority(IdlePriority, () => {
+        root.render(<App label="B" />);
+      });
+
+      // The next commit should only include the visible content
+      expect(Scheduler).toFlushUntilNextPaint(['Visible: B']);
+      expect(root).toMatchRenderedOutput(
+        <>
+          Visible: B
+          <div hidden={true} />
+        </>,
+      );
+    });
+
+    // The hidden content commits later
+    expect(Scheduler).toHaveYielded(['Hidden: B']);
+    expect(root).toMatchRenderedOutput(
+      <>
+        Visible: B<div hidden={true}>Hidden: B</div>
+      </>,
+    );
   });
 });

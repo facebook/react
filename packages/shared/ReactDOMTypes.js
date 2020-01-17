@@ -27,12 +27,10 @@ export type PointerType =
 export type ReactDOMResponderEvent = {
   nativeEvent: AnyNativeEvent,
   passive: boolean,
-  passiveSupported: boolean,
-  pointerId: null | number,
   pointerType: PointerType,
-  responderTarget: null | Element | Document,
   target: Element | Document,
   type: string,
+  ...
 };
 
 export type ReactDOMEventResponder = ReactEventResponder<
@@ -60,16 +58,10 @@ export type ReactDOMResponderContext = {
     childTarget: Element | Document,
     parentTarget: Element | Document,
   ) => boolean,
-  isTargetWithinResponder: (Element | Document) => boolean,
-  isTargetWithinResponderScope: (Element | Document) => boolean,
+  isTargetWithinResponder: (null | Element | Document) => boolean,
+  isTargetWithinResponderScope: (null | Element | Document) => boolean,
   addRootEventTypes: (rootEventTypes: Array<string>) => void,
   removeRootEventTypes: (rootEventTypes: Array<string>) => void,
-  hasOwnership: () => boolean,
-  requestGlobalOwnership: () => boolean,
-  releaseOwnership: () => boolean,
-  setTimeout: (func: () => void, timeout: number) => number,
-  clearTimeout: (timerId: number) => void,
-  getFocusableElementsInScope(deep: boolean): Array<HTMLElement>,
   getActiveDocument(): Document,
   objectAssign: Function,
   getTimeStamp: () => number,
@@ -77,6 +69,9 @@ export type ReactDOMResponderContext = {
     target: Element | Document,
     elementType: string,
   ) => boolean,
+  continuePropagation(): void,
   // Used for controller components
   enqueueStateRestore(Element | Document): void,
+  getResponderNode(): Element | null,
+  ...
 };

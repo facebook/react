@@ -25,6 +25,15 @@ const {asyncCopyTo, asyncRimRaf} = require('./utils');
 const codeFrame = require('babel-code-frame');
 const Wrappers = require('./wrappers');
 
+const RELEASE_CHANNEL = process.env.RELEASE_CHANNEL;
+
+// Default to building in experimental mode. If the release channel is set via
+// an environment variable, then check if it's "experimental".
+const __EXPERIMENTAL__ =
+  typeof RELEASE_CHANNEL === 'string'
+    ? RELEASE_CHANNEL === 'experimental'
+    : true;
+
 // Errors in promises should be fatal.
 let loggedErrors = new Set();
 process.on('unhandledRejection', err => {
@@ -98,12 +107,31 @@ const closureOptions = {
   rewrite_polyfills: false,
 };
 
-function getBabelConfig(updateBabelOptions, bundleType, filename) {
+function getBabelConfig(
+  updateBabelOptions,
+  bundleType,
+  packageName,
+  externals,
+  isDevelopment
+) {
+  const canAccessReactObject =
+    packageName === 'react' || externals.indexOf('react') !== -1;
   let options = {
     exclude: '/**/node_modules/**',
     presets: [],
     plugins: [],
   };
+  if (isDevelopment) {
+    options.plugins.push(
+      // Turn console.error/warn() into a custom wrapper
+      [
+        require('../babel/transform-replace-console-calls'),
+        {
+          shouldError: !canAccessReactObject,
+        },
+      ]
+    );
+  }
   if (updateBabelOptions) {
     options = updateBabelOptions(options);
   }
@@ -115,8 +143,6 @@ function getBabelConfig(updateBabelOptions, bundleType, filename) {
         plugins: options.plugins.concat([
           // Minify invariant messages
           require('../error-codes/transform-error-messages'),
-          // Wrap warning() calls in a __DEV__ check so they are stripped from production.
-          require('../babel/wrap-warning-with-env-check'),
         ]),
       });
     case RN_OSS_DEV:
@@ -132,8 +158,6 @@ function getBabelConfig(updateBabelOptions, bundleType, filename) {
             // Preserve full error messages in React Native build
             {noMinify: true},
           ],
-          // Wrap warning() calls in a __DEV__ check so they are stripped from production.
-          require('../babel/wrap-warning-with-env-check'),
         ]),
       });
     case UMD_DEV:
@@ -148,8 +172,6 @@ function getBabelConfig(updateBabelOptions, bundleType, filename) {
           path.resolve('./scripts/babel/transform-object-assign-require'),
           // Minify invariant messages
           require('../error-codes/transform-error-messages'),
-          // Wrap warning() calls in a __DEV__ check so they are stripped from production.
-          require('../babel/wrap-warning-with-env-check'),
         ]),
       });
     default:
@@ -338,6 +360,8 @@ function getPlugins(
     useForks(forks),
     // Ensure we don't try to bundle any fbjs modules.
     forbidFBJSImports(),
+    // Replace any externals with their valid internal FB mappings
+    isFBBundle && replace(Bundles.fbBundleExternalsMap),
     // Use Node resolution mechanism.
     resolve({
       skip: externals,
@@ -347,11 +371,19 @@ function getPlugins(
       exclude: 'node_modules/**/*',
     }),
     // Compile to ES5.
-    babel(getBabelConfig(updateBabelOptions, bundleType)),
+    babel(
+      getBabelConfig(
+        updateBabelOptions,
+        bundleType,
+        packageName,
+        externals,
+        !isProduction
+      )
+    ),
     // Remove 'use strict' from individual source files.
     {
       transform(source) {
-        return source.replace(/['"]use strict['"']/g, '');
+        return source.replace(/['"]use strict["']/g, '');
       },
     },
     // Turn __DEV__ and process.env checks into constants.
@@ -360,6 +392,7 @@ function getPlugins(
       __PROFILE__: isProfiling || !isProduction ? 'true' : 'false',
       __UMD__: isUMDBundle ? 'true' : 'false',
       'process.env.NODE_ENV': isProduction ? "'production'" : "'development'",
+      __EXPERIMENTAL__,
     }),
     // We still need CommonJS for external deps like object-assign.
     commonjs(),
@@ -452,11 +485,11 @@ async function createBundle(bundle, bundleType) {
   const packageName = Packaging.getPackageName(bundle.entry);
 
   let resolvedEntry = require.resolve(bundle.entry);
-  if (
+  const isFBBundle =
     bundleType === FB_WWW_DEV ||
     bundleType === FB_WWW_PROD ||
-    bundleType === FB_WWW_PROFILING
-  ) {
+    bundleType === FB_WWW_PROFILING;
+  if (isFBBundle) {
     const resolvedFBEntry = resolvedEntry.replace('.js', '.fb.js');
     if (fs.existsSync(resolvedFBEntry)) {
       resolvedEntry = resolvedFBEntry;
@@ -472,6 +505,10 @@ async function createBundle(bundle, bundleType) {
   if (!shouldBundleDependencies) {
     const deps = Modules.getDependencies(bundleType, bundle.entry);
     externals = externals.concat(deps);
+  }
+  if (isFBBundle) {
+    // Add any mapped fb bundle externals
+    externals = externals.concat(Object.values(Bundles.fbBundleExternalsMap));
   }
 
   const importSideEffects = Modules.getImportSideEffects();
@@ -630,7 +667,9 @@ function handleRollupError(error) {
 }
 
 async function buildEverything() {
-  await asyncRimRaf('build');
+  if (!argv['unsafe-partial']) {
+    await asyncRimRaf('build');
+  }
 
   // Run them serially for better console output
   // and to avoid any potential race conditions.
@@ -645,16 +684,22 @@ async function buildEverything() {
       [bundle, NODE_DEV],
       [bundle, NODE_PROD],
       [bundle, NODE_PROFILING],
-      [bundle, FB_WWW_DEV],
-      [bundle, FB_WWW_PROD],
-      [bundle, FB_WWW_PROFILING],
       [bundle, RN_OSS_DEV],
       [bundle, RN_OSS_PROD],
-      [bundle, RN_OSS_PROFILING],
-      [bundle, RN_FB_DEV],
-      [bundle, RN_FB_PROD],
-      [bundle, RN_FB_PROFILING]
+      [bundle, RN_OSS_PROFILING]
     );
+
+    if (__EXPERIMENTAL__) {
+      // FB specific builds are experimental-only.
+      bundles.push(
+        [bundle, FB_WWW_DEV],
+        [bundle, FB_WWW_PROD],
+        [bundle, FB_WWW_PROFILING],
+        [bundle, RN_FB_DEV],
+        [bundle, RN_FB_PROD],
+        [bundle, RN_FB_PROFILING]
+      );
+    }
   }
 
   if (!shouldExtractErrors && process.env.CIRCLE_NODE_TOTAL) {

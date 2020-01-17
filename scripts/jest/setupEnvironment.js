@@ -8,6 +8,15 @@ global.__DEV__ = NODE_ENV === 'development';
 global.__PROFILE__ = NODE_ENV === 'development';
 global.__UMD__ = false;
 
+const RELEASE_CHANNEL = process.env.RELEASE_CHANNEL;
+
+// Default to running tests in experimental mode. If the release channel is
+// set via an environment variable, then check if it's "experimental".
+global.__EXPERIMENTAL__ =
+  typeof RELEASE_CHANNEL === 'string'
+    ? RELEASE_CHANNEL === 'experimental'
+    : true;
+
 if (typeof window !== 'undefined') {
   global.requestIdleCallback = function(callback) {
     return setTimeout(() => {

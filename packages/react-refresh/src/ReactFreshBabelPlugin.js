@@ -7,21 +7,23 @@
 
 'use strict';
 
-export default function(babel) {
+export default function(babel, opts = {}) {
   if (typeof babel.getEnv === 'function') {
     // Only available in Babel 7.
     const env = babel.getEnv();
-    if (env !== 'development' && typeof expect !== 'function') {
+    if (env !== 'development' && !opts.skipEnvCheck) {
       throw new Error(
         'React Refresh Babel transform should only be enabled in development environment. ' +
           'Instead, the environment is: "' +
           env +
-          '".',
+          '". If you want to override this check, pass {skipEnvCheck: true} as plugin options.',
       );
     }
   }
 
   const {types: t} = babel;
+  const refreshReg = t.identifier(opts.refreshReg || '$RefreshReg$');
+  const refreshSig = t.identifier(opts.refreshSig || '$RefreshSig$');
 
   const registrationsByProgramPath = new Map();
   function createRegistration(programPath, persistentID) {
@@ -300,7 +302,20 @@ export default function(babel) {
       }
     });
 
-    const args = [node, t.stringLiteral(key)];
+    let finalKey = key;
+    if (typeof require === 'function' && !opts.emitFullSignatures) {
+      // Prefer to hash when we can (e.g. outside of ASTExplorer).
+      // This makes it deterministically compact, even if there's
+      // e.g. a useState ininitalizer with some code inside.
+      // We also need it for www that has transforms like cx()
+      // that don't understand if something is part of a string.
+      finalKey = require('crypto')
+        .createHash('sha1')
+        .update(key)
+        .digest('base64');
+    }
+
+    const args = [node, t.stringLiteral(finalKey)];
     if (forceReset || customHooksInScope.length > 0) {
       args.push(t.booleanLiteral(forceReset));
     }
@@ -504,7 +519,7 @@ export default function(babel) {
           const sigCallID = path.scope.generateUidIdentifier('_s');
           path.scope.parent.push({
             id: sigCallID,
-            init: t.callExpression(t.identifier('$RefreshSig$'), []),
+            init: t.callExpression(refreshSig, []),
           });
 
           // The signature call is split in two parts. One part is called inside the function.
@@ -566,11 +581,16 @@ export default function(babel) {
           const sigCallID = path.scope.generateUidIdentifier('_s');
           path.scope.parent.push({
             id: sigCallID,
-            init: t.callExpression(t.identifier('$RefreshSig$'), []),
+            init: t.callExpression(refreshSig, []),
           });
 
           // The signature call is split in two parts. One part is called inside the function.
           // This is used to signal when first render happens.
+          if (path.node.body.type !== 'BlockStatement') {
+            path.node.body = t.blockStatement([
+              t.returnStatement(path.node.body),
+            ]);
+          }
           path
             .get('body')
             .unshiftContainer(
@@ -725,7 +745,7 @@ export default function(babel) {
             path.pushContainer(
               'body',
               t.expressionStatement(
-                t.callExpression(t.identifier('$RefreshReg$'), [
+                t.callExpression(refreshReg, [
                   handle,
                   t.stringLiteral(persistentID),
                 ]),

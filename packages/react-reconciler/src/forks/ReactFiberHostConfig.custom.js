@@ -61,14 +61,18 @@ export const warnsIfNotActing = $$$hostConfig.warnsIfNotActing;
 export const supportsMutation = $$$hostConfig.supportsMutation;
 export const supportsPersistence = $$$hostConfig.supportsPersistence;
 export const supportsHydration = $$$hostConfig.supportsHydration;
-export const mountResponderInstance = $$$hostConfig.mountResponderInstance;
-export const unmountResponderInstance = $$$hostConfig.unmountResponderInstance;
+export const DEPRECATED_mountResponderInstance =
+  $$$hostConfig.DEPRECATED_mountResponderInstance;
+export const DEPRECATED_unmountResponderInstance =
+  $$$hostConfig.DEPRECATED_unmountResponderInstance;
 export const getFundamentalComponentInstance =
   $$$hostConfig.getFundamentalComponentInstance;
 export const mountFundamentalComponent =
   $$$hostConfig.mountFundamentalComponent;
 export const shouldUpdateFundamentalComponent =
   $$$hostConfig.shouldUpdateFundamentalComponent;
+export const getInstanceFromNode = $$$hostConfig.getInstanceFromNode;
+export const beforeRemoveInstance = $$$hostConfig.beforeRemoveInstance;
 
 // -------------------
 //      Mutation
@@ -126,8 +130,12 @@ export const getNextHydratableSibling = $$$hostConfig.getNextHydratableSibling;
 export const getFirstHydratableChild = $$$hostConfig.getFirstHydratableChild;
 export const hydrateInstance = $$$hostConfig.hydrateInstance;
 export const hydrateTextInstance = $$$hostConfig.hydrateTextInstance;
+export const hydrateSuspenseInstance = $$$hostConfig.hydrateSuspenseInstance;
 export const getNextHydratableInstanceAfterSuspenseInstance =
   $$$hostConfig.getNextHydratableInstanceAfterSuspenseInstance;
+export const commitHydratedContainer = $$$hostConfig.commitHydratedContainer;
+export const commitHydratedSuspenseInstance =
+  $$$hostConfig.commitHydratedSuspenseInstance;
 export const clearSuspenseBoundary = $$$hostConfig.clearSuspenseBoundary;
 export const clearSuspenseBoundaryFromContainer =
   $$$hostConfig.clearSuspenseBoundaryFromContainer;
