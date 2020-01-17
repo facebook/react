@@ -525,18 +525,29 @@ export function beforeRemoveInstance(instance: any) {
   // noop
 }
 
-export function registerListenerEvent(event): void {
+export function registerListenerEvent(event: any): void {
   // noop
 }
 
-export function attachListenerToInstance(linstance, event, callback): any {
+export function attachListenerToInstance(
+  linstance: any,
+  event: any,
+  callback: any,
+): any {
   // noop
 }
 
-export function detachListenerFromInstance(instance, event, callback): any {
+export function detachListenerFromInstance(
+  instance: any,
+  event: any,
+  callback: any,
+): any {
   // noop
 }
 
-export function validateReactListenerMapSetListener(instance, listener): void {
+export function validateReactListenerMapSetListener(
+  instance: any,
+  listener: any,
+): void {
   // noop
 }

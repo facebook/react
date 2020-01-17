@@ -33,6 +33,7 @@ import {
   Passive as PassiveEffect,
 } from 'shared/ReactSideEffectTags';
 import {
+  NoEffect as NoHookEffect,
   HasEffect as HookHasEffect,
   Layout as HookLayout,
   Passive as HookPassive,
@@ -1600,6 +1601,7 @@ const HooksDispatcherOnRerender: Dispatcher = {
   useResponder: createDeprecatedResponderListener,
   useDeferredValue: rerenderDeferredValue,
   useTransition: rerenderTransition,
+  useEvent: updateEventListener,
 };
 
 let HooksDispatcherOnMountInDEV: Dispatcher | null = null;
@@ -2115,6 +2117,11 @@ if (__DEV__) {
       updateHookTypesDev();
       return rerenderTransition(config);
     },
+    useEvent(event: ReactListenerEvent): ReactListenerMap {
+      currentHookNameInDev = 'useEvent';
+      updateHookTypesDev();
+      return updateEventListener(event);
+    },
   };
 
   InvalidNestedHooksDispatcherOnMountInDEV = {
@@ -2519,6 +2526,12 @@ if (__DEV__) {
       warnInvalidHookAccess();
       updateHookTypesDev();
       return rerenderTransition(config);
+    },
+    useEvent(event: ReactListenerEvent): ReactListenerMap {
+      currentHookNameInDev = 'useEvent';
+      warnInvalidHookAccess();
+      updateHookTypesDev();
+      return updateEventListener(event);
     },
   };
 }

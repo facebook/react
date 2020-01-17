@@ -210,14 +210,11 @@ describe('DOMEventListenerSystem', () => {
         click.setListener(buttonRef.current, clickEvent);
       });
 
-      React.useEffect(
-        () => {
-          if (off) {
-            click.setListener(buttonRef.current, null);
-          }
-        },
-        [off],
-      );
+      React.useEffect(() => {
+        if (off) {
+          click.setListener(buttonRef.current, null);
+        }
+      }, [off]);
 
       return (
         <button ref={buttonRef}>

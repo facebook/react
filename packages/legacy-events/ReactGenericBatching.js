@@ -122,12 +122,8 @@ export function flushDiscreteUpdatesIfNeeded(timeStamp: number) {
   if (
     !isInsideEventHandler &&
     ((!enableDeprecatedFlareAPI && !enableListenerAPI) ||
-<<<<<<< HEAD
-      (timeStamp === 0 || lastFlushedEventTimeStamp !== timeStamp))
-=======
       timeStamp === 0 ||
       lastFlushedEventTimeStamp !== timeStamp)
->>>>>>> Fix prettier
   ) {
     lastFlushedEventTimeStamp = timeStamp;
     flushDiscreteUpdatesImpl();
