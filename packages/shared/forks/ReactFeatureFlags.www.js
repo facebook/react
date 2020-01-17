@@ -95,3 +95,5 @@ export const enableNativeTargetAsInstance = false;
 type Check<_X, Y: _X, X: Y = _X> = null;
 // eslint-disable-next-line no-unused-expressions
 (null: Check<FeatureFlagsShimType, FeatureFlagsType>);
+
+export const enableAvoidThisRenderAPI = __EXPERIMENTAL__;

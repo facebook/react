@@ -13,6 +13,7 @@ import type {
   ReactEventResponderListener,
 } from 'shared/ReactTypes';
 import type {Fiber} from './ReactFiber';
+import type {Thenable} from './ReactFiberWorkLoop';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
 import type {HookEffectTag} from './ReactHookEffectTags';
 import type {SuspenseConfig} from './ReactFiberSuspenseConfig';
@@ -43,6 +44,7 @@ import {
   warnIfNotScopedWithMatchingAct,
   markRenderEventTimeAndConfig,
   markUnprocessedUpdateTime,
+  avoidThisRender,
 } from './ReactFiberWorkLoop';
 
 import invariant from 'shared/invariant';
@@ -99,6 +101,8 @@ export type Dispatcher = {|
   useTransition(
     config: SuspenseConfig | void | null,
   ): [(() => void) => void, boolean],
+
+  avoidThisRender: (thenable: Thenable) => void,
 |};
 
 type Update<S, A> = {|
@@ -295,6 +299,14 @@ function throwInvalidHookError() {
       '2. You might be breaking the Rules of Hooks\n' +
       '3. You might have more than one copy of React in the same app\n' +
       'See https://fb.me/react-invalid-hook-call for tips about how to debug and fix this problem.',
+  );
+}
+
+function throwInvalidAvoidThisRenderError() {
+  invariant(
+    false,
+    'unstable_avoidThisRender can only be called inside of the ' +
+      'body of a function component, or during render() of a class component.',
   );
 }
 
@@ -1385,6 +1397,8 @@ export const ContextOnlyDispatcher: Dispatcher = {
   useResponder: throwInvalidHookError,
   useDeferredValue: throwInvalidHookError,
   useTransition: throwInvalidHookError,
+
+  avoidThisRender: throwInvalidAvoidThisRenderError,
 };
 
 const HooksDispatcherOnMount: Dispatcher = {
@@ -1403,6 +1417,8 @@ const HooksDispatcherOnMount: Dispatcher = {
   useResponder: createDeprecatedResponderListener,
   useDeferredValue: mountDeferredValue,
   useTransition: mountTransition,
+
+  avoidThisRender,
 };
 
 const HooksDispatcherOnUpdate: Dispatcher = {
@@ -1421,6 +1437,8 @@ const HooksDispatcherOnUpdate: Dispatcher = {
   useResponder: createDeprecatedResponderListener,
   useDeferredValue: updateDeferredValue,
   useTransition: updateTransition,
+
+  avoidThisRender,
 };
 
 const HooksDispatcherOnRerender: Dispatcher = {
@@ -1465,6 +1483,14 @@ if (__DEV__) {
         'You can only call Hooks at the top level of your React function. ' +
         'For more information, see ' +
         'https://fb.me/rules-of-hooks',
+    );
+  };
+
+  const warnInvalidAvoidThisRender = () => {
+    console.error(
+      'Do not call unstable_avoidThisRender() inside useEffect(...), useMemo(...), or other built-in Hooks. ' +
+        'You can only call unstable_avoidThisRender inside the body of a functional component, ' +
+        'or during render() in a React Class.',
     );
   };
 
@@ -1588,6 +1614,8 @@ if (__DEV__) {
       mountHookTypesDev();
       return mountTransition(config);
     },
+
+    avoidThisRender,
   };
 
   HooksDispatcherOnMountWithHookTypesInDEV = {
@@ -1705,6 +1733,8 @@ if (__DEV__) {
       updateHookTypesDev();
       return mountTransition(config);
     },
+
+    avoidThisRender,
   };
 
   HooksDispatcherOnUpdateInDEV = {
@@ -1822,6 +1852,8 @@ if (__DEV__) {
       updateHookTypesDev();
       return updateTransition(config);
     },
+
+    avoidThisRender,
   };
 
   HooksDispatcherOnRerenderInDEV = {
@@ -2070,6 +2102,8 @@ if (__DEV__) {
       mountHookTypesDev();
       return mountTransition(config);
     },
+
+    avoidThisRender,
   };
 
   InvalidNestedHooksDispatcherOnUpdateInDEV = {
@@ -2200,6 +2234,11 @@ if (__DEV__) {
       warnInvalidHookAccess();
       updateHookTypesDev();
       return updateTransition(config);
+    },
+
+    avoidThisRender(thenable: Thenable) {
+      warnInvalidAvoidThisRender();
+      return avoidThisRender(thenable);
     },
   };
 

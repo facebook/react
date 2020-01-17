@@ -127,6 +127,7 @@ import {
   throwException,
   createRootErrorUpdate,
   createClassErrorUpdate,
+  avoidThisRenderImpl,
 } from './ReactFiberThrow';
 import {
   commitBeforeMutationLifeCycles as commitBeforeMutationEffectOnFiber,
@@ -448,7 +449,10 @@ export const scheduleWork = scheduleUpdateOnFiber;
 // work without treating it as a typical update that originates from an event;
 // e.g. retrying a Suspense boundary isn't an update, but it does schedule work
 // on a fiber.
-function markUpdateTimeFromFiberToRoot(fiber, expirationTime) {
+function markUpdateTimeFromFiberToRoot(
+  fiber: Fiber,
+  expirationTime: ExpirationTime,
+) {
   // Update the source fiber's expiration time
   if (fiber.expirationTime < expirationTime) {
     fiber.expirationTime = expirationTime;
@@ -1274,6 +1278,23 @@ function prepareFreshStack(root, expirationTime) {
     ReactStrictModeWarnings.discardPendingWarnings();
     componentsThatTriggeredHighPriSuspend = null;
   }
+}
+
+export function avoidThisRender(value: Thenable) {
+  invariant(
+    workInProgressRoot !== null &&
+      workInProgress !== null &&
+      workInProgress.return !== null,
+    'unstable_avoidThisRender() should not be called outside render. ' +
+      'This is likely a bug in React. Please file an issue.',
+  );
+  avoidThisRenderImpl(
+    workInProgressRoot,
+    workInProgress.return,
+    workInProgress,
+    value,
+    renderExpirationTime,
+  );
 }
 
 function handleError(root, thrownValue) {

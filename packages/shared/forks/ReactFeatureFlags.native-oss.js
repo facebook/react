@@ -41,6 +41,8 @@ export const enableTrainModelFix = false;
 export const enableTrustedTypesIntegration = false;
 export const enableNativeTargetAsInstance = false;
 
+export const enableAvoidThisRenderAPI = false;
+
 // Only used in www builds.
 export function addUserTimingListener() {
   invariant(false, 'Not implemented.');

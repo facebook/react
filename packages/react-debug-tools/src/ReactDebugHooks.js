@@ -7,6 +7,8 @@
  * @flow
  */
 
+import type {Thenable} from 'react-reconciler/src/ReactFiberWorkLoop';
+
 import type {
   ReactContext,
   ReactProviderType,
@@ -276,6 +278,10 @@ const Dispatcher: DispatcherType = {
   useResponder,
   useTransition,
   useDeferredValue,
+
+  avoidThisRender(thenable: Thenable) {
+    // no-op
+  },
 };
 
 // Inspect

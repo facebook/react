@@ -7,6 +7,8 @@
  * @flow
  */
 
+import type {Thenable} from 'react-reconciler/src/ReactFiberWorkLoop';
+
 import React from 'react';
 import {isForwardRef, isMemo, ForwardRef} from 'react-is';
 import describeComponentFrame from 'shared/describeComponentFrame';
@@ -414,6 +416,10 @@ class ReactShallowRenderer {
       useResponder,
       useTransition,
       useDeferredValue,
+      avoidThisRender(thenable: Thenable) {
+        // no op for the shallow renderer, for now
+        // this is actually a problem because tests won't match actual behaviour.
+      },
     };
   }
 
