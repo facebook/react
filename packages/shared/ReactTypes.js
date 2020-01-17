@@ -170,17 +170,15 @@ export type ReactScope = {|
   $$typeof: Symbol | number,
 |};
 
+export type ReactScopeQuery = (
+  type: string,
+  props: {[string]: mixed, ...},
+  instance: mixed,
+) => boolean;
+
 export type ReactScopeMethods = {|
-  DO_NOT_USE_getChildren(): null | Array<ReactScopeMethods>,
-  DO_NOT_USE_getChildrenFromRoot(): null | Array<ReactScopeMethods>,
-  DO_NOT_USE_getParent(): null | ReactScopeMethods,
-  DO_NOT_USE_getProps(): Object,
-  DO_NOT_USE_queryAllNodes(
-    (type: string | Object, props: Object, instance: Object) => boolean,
-  ): null | Array<Object>,
-  DO_NOT_USE_queryFirstNode(
-    (type: string | Object, props: Object, instance: Object) => boolean,
-  ): null | Object,
+  DO_NOT_USE_queryAllNodes(ReactScopeQuery): null | Array<Object>,
+  DO_NOT_USE_queryFirstNode(ReactScopeQuery): null | Object,
   containsNode(Object): boolean,
   getChildContextValues: <T>(context: ReactContext<T>) => Array<T>,
 |};
