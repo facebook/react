@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import getComponentName from 'shared/getComponentName';
 import invariant from 'shared/invariant';
 import {REACT_ELEMENT_TYPE} from 'shared/ReactSymbols';
 
@@ -19,7 +20,13 @@ const RESERVED_PROPS = {
   __source: true,
 };
 
-let specialPropKeyWarningShown, specialPropRefWarningShown;
+let specialPropKeyWarningShown,
+  specialPropRefWarningShown,
+  didWarnAboutStringRefs;
+
+if (__DEV__) {
+  didWarnAboutStringRefs = {};
+}
 
 function hasValidRef(config) {
   if (__DEV__) {
@@ -87,6 +94,33 @@ function defineRefPropWarningGetter(props, displayName) {
     get: warnAboutAccessingRef,
     configurable: true,
   });
+}
+
+function warnIfStringRefCannotBeAutoConverted(config) {
+  if (__DEV__) {
+    if (
+      typeof config.ref === 'string' &&
+      ReactCurrentOwner.current &&
+      config.__self &&
+      ReactCurrentOwner.current.stateNode !== config.__self
+    ) {
+      const componentName = getComponentName(ReactCurrentOwner.current.type);
+
+      if (!didWarnAboutStringRefs[componentName]) {
+        console.error(
+          'Component "%s" contains the string ref "%s". ' +
+            'Support for string refs will be removed in a future major release. ' +
+            'This case cannot be automatically converted to an arrow function. ' +
+            'We ask you to manually fix this case by using useRef() or createRef() instead. ' +
+            'Learn more about using refs safely here: ' +
+            'https://fb.me/react-strict-mode-string-ref',
+          getComponentName(ReactCurrentOwner.current.type),
+          config.ref,
+        );
+        didWarnAboutStringRefs[componentName] = true;
+      }
+    }
+  }
 }
 
 /**
@@ -260,6 +294,7 @@ export function jsxDEV(type, config, maybeKey, source, self) {
 
   if (hasValidRef(config)) {
     ref = config.ref;
+    warnIfStringRefCannotBeAutoConverted(config);
   }
 
   // Remaining properties are added to a new props object
@@ -324,6 +359,10 @@ export function createElement(type, config, children) {
   if (config != null) {
     if (hasValidRef(config)) {
       ref = config.ref;
+
+      if (__DEV__) {
+        warnIfStringRefCannotBeAutoConverted(config);
+      }
     }
     if (hasValidKey(config)) {
       key = '' + config.key;
