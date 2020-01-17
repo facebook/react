@@ -17,6 +17,7 @@ export const {
   enableTrustedTypesIntegration,
   enableSelectiveHydration,
   enableTrainModelFix,
+  preventIntermediateStates,
 } = require('ReactFeatureFlags');
 
 // In www, we have experimental support for gathering data

@@ -87,6 +87,7 @@
 import type {Fiber} from './ReactFiber';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
 import type {SuspenseConfig} from './ReactFiberSuspenseConfig';
+import type {TransitionInstance} from './ReactFiberTransition';
 import type {ReactPriorityLevel} from './SchedulerWithReactIntegration';
 
 import {NoWork, Sync} from './ReactFiberExpirationTime';
@@ -96,18 +97,30 @@ import {
 } from './ReactFiberNewContext';
 import {Callback, ShouldCapture, DidCapture} from 'shared/ReactSideEffectTags';
 
-import {debugRenderPhaseSideEffectsForStrictMode} from 'shared/ReactFeatureFlags';
+import {
+  debugRenderPhaseSideEffectsForStrictMode,
+  preventIntermediateStates,
+} from 'shared/ReactFeatureFlags';
 
 import {StrictMode} from './ReactTypeOfMode';
 import {
   markRenderEventTimeAndConfig,
   markUnprocessedUpdateTime,
 } from './ReactFiberWorkLoop';
+import {SuspendOnTask} from './ReactFiberThrow';
 
 import invariant from 'shared/invariant';
 import {getCurrentPriorityLevel} from './SchedulerWithReactIntegration';
 
+import {
+  requestCurrentTransition,
+  cancelPendingTransition,
+} from './ReactFiberTransition';
+
 export type Update<State> = {|
+  // TODO: Temporary field. Will remove this by storing a map of
+  // transition -> event time on the root.
+  eventTime: ExpirationTime,
   expirationTime: ExpirationTime,
   suspenseConfig: null | SuspenseConfig,
 
@@ -121,7 +134,10 @@ export type Update<State> = {|
   priority?: ReactPriorityLevel,
 |};
 
-type SharedQueue<State> = {|pending: Update<State> | null|};
+type SharedQueue<State> = {|
+  pending: Update<State> | null,
+  pendingTransition: TransitionInstance | null,
+|};
 
 export type UpdateQueue<State> = {|
   baseState: State,
@@ -157,6 +173,7 @@ export function initializeUpdateQueue<State>(fiber: Fiber): void {
     baseQueue: null,
     shared: {
       pending: null,
+      pendingTransition: null,
     },
     effects: null,
   };
@@ -182,10 +199,12 @@ export function cloneUpdateQueue<State>(
 }
 
 export function createUpdate(
+  eventTime: ExpirationTime,
   expirationTime: ExpirationTime,
   suspenseConfig: null | SuspenseConfig,
 ): Update<*> {
   let update: Update<*> = {
+    eventTime,
     expirationTime,
     suspenseConfig,
 
@@ -219,6 +238,20 @@ export function enqueueUpdate<State>(fiber: Fiber, update: Update<State>) {
     pending.next = update;
   }
   sharedQueue.pending = update;
+
+  const transition = requestCurrentTransition();
+  if (transition !== null) {
+    const prevPendingTransition = sharedQueue.pendingTransition;
+    if (transition !== prevPendingTransition) {
+      sharedQueue.pendingTransition = transition;
+      if (prevPendingTransition !== null) {
+        // There's already a pending transition on this queue. The new
+        // transition supersedes the old one. Turn of the `isPending` state
+        // of the previous transition.
+        cancelPendingTransition(prevPendingTransition);
+      }
+    }
+  }
 
   if (__DEV__) {
     if (
@@ -389,15 +422,19 @@ export function processUpdateQueue<State>(
 
     if (first !== null) {
       let update = first;
+      let lastProcessedTransitionTime = NoWork;
+      let lastSkippedTransitionTime = NoWork;
       do {
         const updateExpirationTime = update.expirationTime;
+        const suspenseConfig = update.suspenseConfig;
         if (updateExpirationTime < renderExpirationTime) {
           // Priority is insufficient. Skip this update. If this is the first
           // skipped update, the previous update/state is the new base
           // update/state.
           const clone: Update<State> = {
-            expirationTime: update.expirationTime,
-            suspenseConfig: update.suspenseConfig,
+            eventTime: update.eventTime,
+            expirationTime: updateExpirationTime,
+            suspenseConfig,
 
             tag: update.tag,
             payload: update.payload,
@@ -415,11 +452,22 @@ export function processUpdateQueue<State>(
           if (updateExpirationTime > newExpirationTime) {
             newExpirationTime = updateExpirationTime;
           }
+
+          if (suspenseConfig !== null) {
+            // This update is part of a transition
+            if (
+              lastSkippedTransitionTime === NoWork ||
+              lastSkippedTransitionTime > updateExpirationTime
+            ) {
+              lastSkippedTransitionTime = updateExpirationTime;
+            }
+          }
         } else {
           // This update does have sufficient priority.
-
+          const eventTime = update.eventTime;
           if (newBaseQueueLast !== null) {
             const clone: Update<State> = {
+              eventTime,
               expirationTime: Sync, // This update is going to be committed so we never want uncommit it.
               suspenseConfig: update.suspenseConfig,
 
@@ -438,10 +486,7 @@ export function processUpdateQueue<State>(
           // TODO: We should skip this update if it was already committed but currently
           // we have no way of detecting the difference between a committed and suspended
           // update here.
-          markRenderEventTimeAndConfig(
-            updateExpirationTime,
-            update.suspenseConfig,
-          );
+          markRenderEventTimeAndConfig(eventTime, update.suspenseConfig);
 
           // Process this update.
           newState = getStateFromUpdate(
@@ -463,6 +508,17 @@ export function processUpdateQueue<State>(
             }
           }
         }
+
+        if (suspenseConfig !== null) {
+          // This update is part of a transition
+          if (
+            lastProcessedTransitionTime === NoWork ||
+            lastProcessedTransitionTime > updateExpirationTime
+          ) {
+            lastProcessedTransitionTime = updateExpirationTime;
+          }
+        }
+
         update = update.next;
         if (update === null || update === first) {
           pendingQueue = queue.shared.pending;
@@ -478,6 +534,17 @@ export function processUpdateQueue<State>(
           }
         }
       } while (true);
+
+      if (
+        preventIntermediateStates &&
+        lastProcessedTransitionTime !== NoWork &&
+        lastSkippedTransitionTime !== NoWork
+      ) {
+        // There are multiple updates scheduled on this queue, but only some of
+        // them were processed. To avoid showing an intermediate state, abort
+        // the current render and restart at a level that includes them all.
+        throw new SuspendOnTask(lastSkippedTransitionTime);
+      }
     }
 
     if (newBaseQueueLast === null) {

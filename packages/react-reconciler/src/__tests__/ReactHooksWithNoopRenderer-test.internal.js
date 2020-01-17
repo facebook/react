@@ -15,6 +15,7 @@
 let React;
 let ReactCache;
 let TextResource;
+let resolveText;
 let ReactFeatureFlags;
 let ReactNoop;
 let Scheduler;
@@ -63,14 +64,27 @@ describe('ReactHooksWithNoopRenderer', () => {
     Suspense = React.Suspense;
     act = ReactNoop.act;
 
+    const textCache = new Map();
+
+    resolveText = text => {
+      const resolve = textCache.get(text);
+      if (resolve !== undefined) {
+        textCache.delete(text);
+        Scheduler.unstable_yieldValue(`Promise resolved [${text}]`);
+        resolve();
+      }
+    };
+
     TextResource = ReactCache.unstable_createResource(
-      ([text, ms = 0]) => {
-        return new Promise((resolve, reject) =>
-          setTimeout(() => {
-            Scheduler.unstable_yieldValue(`Promise resolved [${text}]`);
-            resolve(text);
-          }, ms),
-        );
+      ([text, ms]) => {
+        return new Promise(resolve => {
+          textCache.set(text, resolve);
+          if (typeof ms === 'number') {
+            setTimeout(() => {
+              resolveText(text);
+            }, ms);
+          }
+        });
       },
       ([text, ms]) => text,
     );
@@ -544,6 +558,132 @@ describe('ReactHooksWithNoopRenderer', () => {
         22,
       ]);
       expect(ReactNoop.getChildren()).toEqual([span(22)]);
+    });
+
+    it('discards render phase updates if something suspends', () => {
+      const thenable = {then() {}};
+      function Foo({signal}) {
+        return (
+          <Suspense fallback="Loading...">
+            <Bar signal={signal} />
+          </Suspense>
+        );
+      }
+
+      function Bar({signal: newSignal}) {
+        let [counter, setCounter] = useState(0);
+        let [signal, setSignal] = useState(true);
+
+        // Increment a counter every time the signal changes
+        if (signal !== newSignal) {
+          setCounter(c => c + 1);
+          setSignal(newSignal);
+          if (counter === 0) {
+            // We're suspending during a render that includes render phase
+            // updates. Those updates should not persist to the next render.
+            Scheduler.unstable_yieldValue('Suspend!');
+            throw thenable;
+          }
+        }
+
+        return <Text text={counter} />;
+      }
+
+      const root = ReactNoop.createRoot();
+      root.render(<Foo signal={true} />);
+
+      expect(Scheduler).toFlushAndYield([0]);
+      expect(root).toMatchRenderedOutput(<span prop={0} />);
+
+      root.render(<Foo signal={false} />);
+      expect(Scheduler).toFlushAndYield(['Suspend!']);
+      expect(root).toMatchRenderedOutput(<span prop={0} />);
+
+      // Rendering again should suspend again.
+      root.render(<Foo signal={false} />);
+      expect(Scheduler).toFlushAndYield(['Suspend!']);
+    });
+
+    it('discards render phase updates if something suspends, but not other updates in the same component', async () => {
+      const thenable = {then() {}};
+      function Foo({signal}) {
+        return (
+          <Suspense fallback="Loading...">
+            <Bar signal={signal} />
+          </Suspense>
+        );
+      }
+
+      let setLabel;
+      function Bar({signal: newSignal}) {
+        let [counter, setCounter] = useState(0);
+
+        if (counter === 1) {
+          // We're suspending during a render that includes render phase
+          // updates. Those updates should not persist to the next render.
+          Scheduler.unstable_yieldValue('Suspend!');
+          throw thenable;
+        }
+
+        let [signal, setSignal] = useState(true);
+
+        // Increment a counter every time the signal changes
+        if (signal !== newSignal) {
+          setCounter(c => c + 1);
+          setSignal(newSignal);
+        }
+
+        let [label, _setLabel] = useState('A');
+        setLabel = _setLabel;
+
+        return <Text text={`${label}:${counter}`} />;
+      }
+
+      const root = ReactNoop.createRoot();
+      root.render(<Foo signal={true} />);
+
+      expect(Scheduler).toFlushAndYield(['A:0']);
+      expect(root).toMatchRenderedOutput(<span prop="A:0" />);
+
+      await ReactNoop.act(async () => {
+        root.render(<Foo signal={false} />);
+        setLabel('B');
+      });
+      expect(Scheduler).toHaveYielded(['Suspend!']);
+      expect(root).toMatchRenderedOutput(<span prop="A:0" />);
+
+      // Rendering again should suspend again.
+      root.render(<Foo signal={false} />);
+      expect(Scheduler).toFlushAndYield(['Suspend!']);
+
+      // Flip the signal back to "cancel" the update. However, the update to
+      // label should still proceed. It shouldn't have been dropped.
+      root.render(<Foo signal={true} />);
+      expect(Scheduler).toFlushAndYield(['B:0']);
+      expect(root).toMatchRenderedOutput(<span prop="B:0" />);
+    });
+
+    // TODO: This should probably warn
+    it.experimental('calling startTransition inside render phase', async () => {
+      let startTransition;
+      function App() {
+        let [counter, setCounter] = useState(0);
+        let [_startTransition] = useTransition();
+        startTransition = _startTransition;
+
+        if (counter === 0) {
+          startTransition(() => {
+            setCounter(c => c + 1);
+          });
+        }
+
+        return <Text text={counter} />;
+      }
+
+      const root = ReactNoop.createRoot();
+      root.render(<App />);
+      expect(Scheduler).toFlushAndYield([1]);
+      expect(root).toMatchRenderedOutput(<span prop={1} />);
     });
   });
 
@@ -2073,6 +2213,9 @@ describe('ReactHooksWithNoopRenderer', () => {
           span('Before... Pending: true'),
         ]);
 
+        // Resolve the promise. The whole tree has now completed. However,
+        // because we exceeded the busy threshold, we won't commit the
+        // result yet.
         Scheduler.unstable_advanceTime(1000);
         await advanceTimers(1000);
         expect(Scheduler).toHaveYielded([
@@ -2083,13 +2226,16 @@ describe('ReactHooksWithNoopRenderer', () => {
           span('Before... Pending: true'),
         ]);
 
-        Scheduler.unstable_advanceTime(1000);
-        await advanceTimers(1000);
+        // Advance time until just before the `busyMinDuration` threshold.
+        Scheduler.unstable_advanceTime(999);
+        await advanceTimers(999);
         expect(ReactNoop.getChildren()).toEqual([
           span('Before... Pending: true'),
         ]);
-        Scheduler.unstable_advanceTime(250);
-        await advanceTimers(250);
+
+        // Advance time just a bit more. Now we complete the transition.
+        Scheduler.unstable_advanceTime(1);
+        await advanceTimers(1);
         expect(ReactNoop.getChildren()).toEqual([
           span('After... Pending: false'),
         ]);
@@ -2099,7 +2245,7 @@ describe('ReactHooksWithNoopRenderer', () => {
   describe('useDeferredValue', () => {
     it.experimental('defers text value until specified timeout', async () => {
       function TextBox({text}) {
-        return <AsyncText ms={1000} text={text} />;
+        return <AsyncText text={text} />;
       }
 
       let _setText;
@@ -2126,8 +2272,7 @@ describe('ReactHooksWithNoopRenderer', () => {
       expect(Scheduler).toHaveYielded(['A', 'Suspend! [A]', 'Loading']);
       expect(ReactNoop.getChildren()).toEqual([span('A'), span('Loading')]);
 
-      Scheduler.unstable_advanceTime(1000);
-      await advanceTimers(1000);
+      await resolveText('A');
       expect(Scheduler).toHaveYielded(['Promise resolved [A]']);
       expect(Scheduler).toFlushAndYield(['A']);
       expect(ReactNoop.getChildren()).toEqual([span('A'), span('A')]);
@@ -2158,8 +2303,7 @@ describe('ReactHooksWithNoopRenderer', () => {
         span('Loading'),
       ]);
 
-      Scheduler.unstable_advanceTime(250);
-      await advanceTimers(250);
+      await resolveText('B');
       expect(Scheduler).toHaveYielded(['Promise resolved [B]']);
 
       act(() => {

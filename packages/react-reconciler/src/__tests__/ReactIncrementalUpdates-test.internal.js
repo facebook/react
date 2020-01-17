@@ -457,7 +457,9 @@ describe('ReactIncrementalUpdates', () => {
     expect(ReactNoop.getChildren()).toEqual([span('derived state')]);
   });
 
-  it('flushes all expired updates in a single batch', () => {
+  // TODO: This tests the old expiration times model. Doesn't make sense in
+  // new model. Probably should delete.
+  it.skip('flushes all expired updates in a single batch', () => {
     const {useEffect} = React;
 
     function App({label}) {
@@ -546,7 +548,9 @@ describe('ReactIncrementalUpdates', () => {
     });
   });
 
-  it('flushes all expired updates in a single batch across multiple roots', () => {
+  // TODO: This tests the old expiration times model. Doesn't make sense in
+  // new model. Probably should delete.
+  it.skip('flushes all expired updates in a single batch across multiple roots', () => {
     // Same as previous test, but with two roots.
     const {useEffect} = React;
 

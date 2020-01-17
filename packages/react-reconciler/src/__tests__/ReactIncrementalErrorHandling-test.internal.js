@@ -230,18 +230,19 @@ describe('ReactIncrementalErrorHandling', () => {
     }
 
     function interrupt() {
+      // Perform a sync render on a different, abitrary root. This is a trick
+      // to interrupt an in-progress async render so that it's forced to
+      // start over.
       ReactNoop.flushSync(() => {
         ReactNoop.renderToRootWithID(null, 'other-root');
       });
     }
 
     ReactNoop.render(<App isBroken={true} />, onCommit);
-    Scheduler.unstable_advanceTime(1000);
     expect(Scheduler).toFlushAndYieldThrough(['error']);
-    interrupt();
-
     // This update is in a separate batch
     ReactNoop.render(<App isBroken={false} />, onCommit);
+    interrupt();
 
     expect(Scheduler).toFlushAndYieldThrough([
       // The first render fails. But because there's a lower priority pending
@@ -287,6 +288,9 @@ describe('ReactIncrementalErrorHandling', () => {
     }
 
     function interrupt() {
+      // Perform a sync render on a different, abitrary root. This is a trick
+      // to interrupt an in-progress async render so that it's forced to
+      // start over.
       ReactNoop.flushSync(() => {
         ReactNoop.renderToRootWithID(null, 'other-root');
       });
@@ -295,12 +299,10 @@ describe('ReactIncrementalErrorHandling', () => {
     ReactNoop.render(<App isBroken={true} />, onCommit);
     Scheduler.unstable_advanceTime(1000);
     expect(Scheduler).toFlushAndYieldThrough(['error']);
-    interrupt();
-
     expect(ReactNoop).toMatchRenderedOutput(null);
-
     // This update is in a separate batch
     ReactNoop.render(<App isBroken={false} />, onCommit);
+    interrupt();
 
     expect(Scheduler).toFlushAndYieldThrough([
       // The first render fails. But because there's a lower priority pending

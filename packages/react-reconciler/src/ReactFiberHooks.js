@@ -16,8 +16,10 @@ import type {Fiber} from './ReactFiber';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
 import type {HookEffectTag} from './ReactHookEffectTags';
 import type {SuspenseConfig} from './ReactFiberSuspenseConfig';
+import type {TransitionInstance} from './ReactFiberTransition';
 import type {ReactPriorityLevel} from './SchedulerWithReactIntegration';
 
+import {preventIntermediateStates} from 'shared/ReactFeatureFlags';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 
 import {NoWork, Sync} from './ReactFiberExpirationTime';
@@ -49,13 +51,14 @@ import invariant from 'shared/invariant';
 import getComponentName from 'shared/getComponentName';
 import is from 'shared/objectIs';
 import {markWorkInProgressReceivedUpdate} from './ReactFiberBeginWork';
+import {SuspendOnTask} from './ReactFiberThrow';
 import {requestCurrentSuspenseConfig} from './ReactFiberSuspenseConfig';
 import {
-  UserBlockingPriority,
-  NormalPriority,
-  runWithPriority,
-  getCurrentPriorityLevel,
-} from './SchedulerWithReactIntegration';
+  startTransition,
+  requestCurrentTransition,
+  cancelPendingTransition,
+} from './ReactFiberTransition';
+import {getCurrentPriorityLevel} from './SchedulerWithReactIntegration';
 
 const {ReactCurrentDispatcher, ReactCurrentBatchConfig} = ReactSharedInternals;
 
@@ -102,6 +105,9 @@ export type Dispatcher = {|
 |};
 
 type Update<S, A> = {|
+  // TODO: Temporary field. Will remove this by storing a map of
+  // transition -> start time on the root.
+  eventTime: ExpirationTime,
   expirationTime: ExpirationTime,
   suspenseConfig: null | SuspenseConfig,
   action: A,
@@ -114,6 +120,7 @@ type Update<S, A> = {|
 type UpdateQueue<S, A> = {|
   pending: Update<S, A> | null,
   dispatch: (A => mixed) | null,
+  pendingTransition: TransitionInstance | null,
   lastRenderedReducer: ((S, A) => S) | null,
   lastRenderedState: S | null,
 |};
@@ -177,23 +184,12 @@ let currentlyRenderingFiber: Fiber = (null: any);
 let currentHook: Hook | null = null;
 let workInProgressHook: Hook | null = null;
 
-// Updates scheduled during render will trigger an immediate re-render at the
-// end of the current pass. We can't store these updates on the normal queue,
-// because if the work is aborted, they should be discarded. Because this is
-// a relatively rare case, we also don't want to add an additional field to
-// either the hook or queue object types. So we store them in a lazily create
-// map of queue -> render-phase updates, which are discarded once the component
-// completes without re-rendering.
-
-// Whether an update was scheduled during the currently executing render pass.
+// Whether an update was scheduled at any point during the render phase. This
+// does not get reset if we do another render pass; only when we're completely
+// finished evaluating this component. This is an optimization so we know
+// whether we need to clear render phase updates after a throw.
 let didScheduleRenderPhaseUpdate: boolean = false;
-// Lazily created map of render-phase updates
-let renderPhaseUpdates: Map<
-  UpdateQueue<any, any>,
-  Update<any, any>,
-> | null = null;
-// Counter to prevent infinite loops.
-let numberOfReRenders: number = 0;
+
 const RE_RENDER_LIMIT = 25;
 
 // In DEV, this is the name of the currently executing primitive hook
@@ -387,8 +383,6 @@ export function renderWithHooks(
   // workInProgressHook = null;
 
   // didScheduleRenderPhaseUpdate = false;
-  // renderPhaseUpdates = null;
-  // numberOfReRenders = 0;
 
   // TODO Warn if no hooks are used at all during mount, then some are used during update.
   // Currently we will identify the update render as a mount because memoizedState === null.
@@ -419,9 +413,20 @@ export function renderWithHooks(
 
   let children = Component(props, secondArg);
 
-  if (didScheduleRenderPhaseUpdate) {
+  // Check if there was a render phase update
+  if (workInProgress.expirationTime === renderExpirationTime) {
+    // Keep rendering in a loop for as long as render phase updates continue to
+    // be scheduled. Use a counter to prevent infinite loops.
+    let numberOfReRenders: number = 0;
     do {
-      didScheduleRenderPhaseUpdate = false;
+      workInProgress.expirationTime = NoWork;
+
+      invariant(
+        numberOfReRenders < RE_RENDER_LIMIT,
+        'Too many re-renders. React limits the number of renders to prevent ' +
+          'an infinite loop.',
+      );
+
       numberOfReRenders += 1;
       if (__DEV__) {
         // Even when hot reloading, allow dependencies to stabilize
@@ -441,14 +446,11 @@ export function renderWithHooks(
       }
 
       ReactCurrentDispatcher.current = __DEV__
-        ? HooksDispatcherOnUpdateInDEV
-        : HooksDispatcherOnUpdate;
+        ? HooksDispatcherOnRerenderInDEV
+        : HooksDispatcherOnRerender;
 
       children = Component(props, secondArg);
-    } while (didScheduleRenderPhaseUpdate);
-
-    renderPhaseUpdates = null;
-    numberOfReRenders = 0;
+    } while (workInProgress.expirationTime === renderExpirationTime);
   }
 
   // We can assume the previous dispatcher is always this one, since we set it
@@ -476,10 +478,7 @@ export function renderWithHooks(
     hookTypesUpdateIndexDev = -1;
   }
 
-  // These were reset above
-  // didScheduleRenderPhaseUpdate = false;
-  // renderPhaseUpdates = null;
-  // numberOfReRenders = 0;
+  didScheduleRenderPhaseUpdate = false;
 
   invariant(
     !didRenderTooFewHooks,
@@ -502,14 +501,29 @@ export function bailoutHooks(
   }
 }
 
-export function resetHooks(): void {
+export function resetHooksAfterThrow(): void {
   // We can assume the previous dispatcher is always this one, since we set it
   // at the beginning of the render phase and there's no re-entrancy.
   ReactCurrentDispatcher.current = ContextOnlyDispatcher;
 
-  // This is used to reset the state of this module when a component throws.
-  // It's also called inside mountIndeterminateComponent if we determine the
-  // component is a module-style component.
+  if (didScheduleRenderPhaseUpdate) {
+    // There were render phase updates. These are only valid for this render
+    // phase, which we are now aborting. Remove the updates from the queues so
+    // they do not persist to the next render. Do not remove updates from hooks
+    // that weren't processed.
+    //
+    // Only reset the updates from the queue if it has a clone. If it does
+    // not have a clone, that means it wasn't processed, and the updates were
+    // scheduled before we entered the render phase.
+    let hook: Hook | null = currentlyRenderingFiber.memoizedState;
+    while (hook !== null) {
+      const queue = hook.queue;
+      if (queue !== null) {
+        queue.pending = null;
+      }
+      hook = hook.next;
+    }
+  }
 
   renderExpirationTime = NoWork;
   currentlyRenderingFiber = (null: any);
@@ -525,8 +539,6 @@ export function resetHooks(): void {
   }
 
   didScheduleRenderPhaseUpdate = false;
-  renderPhaseUpdates = null;
-  numberOfReRenders = 0;
 }
 
 function mountWorkInProgressHook(): Hook {
@@ -637,6 +649,7 @@ function mountReducer<S, I, A>(
   const queue = (hook.queue = {
     pending: null,
     dispatch: null,
+    pendingTransition: null,
     lastRenderedReducer: reducer,
     lastRenderedState: (initialState: any),
   });
@@ -661,49 +674,6 @@ function updateReducer<S, I, A>(
   );
 
   queue.lastRenderedReducer = reducer;
-
-  if (numberOfReRenders > 0) {
-    // This is a re-render. Apply the new render phase updates to the previous
-    // work-in-progress hook.
-    const dispatch: Dispatch<A> = (queue.dispatch: any);
-    if (renderPhaseUpdates !== null) {
-      // Render phase updates are stored in a map of queue -> linked list
-      const firstRenderPhaseUpdate = renderPhaseUpdates.get(queue);
-      if (firstRenderPhaseUpdate !== undefined) {
-        renderPhaseUpdates.delete(queue);
-        let newState = hook.memoizedState;
-        let update = firstRenderPhaseUpdate;
-        do {
-          // Process this render phase update. We don't have to check the
-          // priority because it will always be the same as the current
-          // render's.
-          const action = update.action;
-          newState = reducer(newState, action);
-          update = update.next;
-        } while (update !== null);
-
-        // Mark that the fiber performed work, but only if the new state is
-        // different from the current state.
-        if (!is(newState, hook.memoizedState)) {
-          markWorkInProgressReceivedUpdate();
-        }
-
-        hook.memoizedState = newState;
-        // Don't persist the state accumulated from the render phase updates to
-        // the base state unless the queue is empty.
-        // TODO: Not sure if this is the desired semantics, but it's what we
-        // do for gDSFP. I can't remember why.
-        if (hook.baseQueue === null) {
-          hook.baseState = newState;
-        }
-
-        queue.lastRenderedState = newState;
-
-        return [newState, dispatch];
-      }
-    }
-    return [hook.memoizedState, dispatch];
-  }
 
   const current: Hook = (currentHook: any);
 
@@ -735,13 +705,17 @@ function updateReducer<S, I, A>(
     let newBaseQueueFirst = null;
     let newBaseQueueLast = null;
     let update = first;
+    let lastProcessedTransitionTime = NoWork;
+    let lastSkippedTransitionTime = NoWork;
     do {
+      const suspenseConfig = update.suspenseConfig;
       const updateExpirationTime = update.expirationTime;
       if (updateExpirationTime < renderExpirationTime) {
         // Priority is insufficient. Skip this update. If this is the first
         // skipped update, the previous update/state is the new base
         // update/state.
         const clone: Update<S, A> = {
+          eventTime: update.eventTime,
           expirationTime: update.expirationTime,
           suspenseConfig: update.suspenseConfig,
           action: update.action,
@@ -760,11 +734,23 @@ function updateReducer<S, I, A>(
           currentlyRenderingFiber.expirationTime = updateExpirationTime;
           markUnprocessedUpdateTime(updateExpirationTime);
         }
+
+        if (suspenseConfig !== null) {
+          // This update is part of a transition
+          if (
+            lastSkippedTransitionTime === NoWork ||
+            lastSkippedTransitionTime > updateExpirationTime
+          ) {
+            lastSkippedTransitionTime = updateExpirationTime;
+          }
+        }
       } else {
         // This update does have sufficient priority.
 
+        const eventTime = update.eventTime;
         if (newBaseQueueLast !== null) {
           const clone: Update<S, A> = {
+            eventTime,
             expirationTime: Sync, // This update is going to be committed so we never want uncommit it.
             suspenseConfig: update.suspenseConfig,
             action: update.action,
@@ -781,10 +767,7 @@ function updateReducer<S, I, A>(
         // TODO: We should skip this update if it was already committed but currently
         // we have no way of detecting the difference between a committed and suspended
         // update here.
-        markRenderEventTimeAndConfig(
-          updateExpirationTime,
-          update.suspenseConfig,
-        );
+        markRenderEventTimeAndConfig(eventTime, suspenseConfig);
 
         // Process this update.
         if (update.eagerReducer === reducer) {
@@ -795,9 +778,30 @@ function updateReducer<S, I, A>(
           const action = update.action;
           newState = reducer(newState, action);
         }
+
+        if (suspenseConfig !== null) {
+          // This update is part of a transition
+          if (
+            lastProcessedTransitionTime === NoWork ||
+            lastProcessedTransitionTime > updateExpirationTime
+          ) {
+            lastProcessedTransitionTime = updateExpirationTime;
+          }
+        }
       }
       update = update.next;
     } while (update !== null && update !== first);
+
+    if (
+      preventIntermediateStates &&
+      lastProcessedTransitionTime !== NoWork &&
+      lastSkippedTransitionTime !== NoWork
+    ) {
+      // There are multiple updates scheduled on this queue, but only some of
+      // them were processed. To avoid showing an intermediate state, abort
+      // the current render and restart at a level that includes them all.
+      throw new SuspendOnTask(lastSkippedTransitionTime);
+    }
 
     if (newBaseQueueLast === null) {
       newBaseState = newState;
@@ -822,6 +826,60 @@ function updateReducer<S, I, A>(
   return [hook.memoizedState, dispatch];
 }
 
+function rerenderReducer<S, I, A>(
+  reducer: (S, A) => S,
+  initialArg: I,
+  init?: I => S,
+): [S, Dispatch<A>] {
+  const hook = updateWorkInProgressHook();
+  const queue = hook.queue;
+  invariant(
+    queue !== null,
+    'Should have a queue. This is likely a bug in React. Please file an issue.',
+  );
+
+  queue.lastRenderedReducer = reducer;
+
+  // This is a re-render. Apply the new render phase updates to the previous
+  // work-in-progress hook.
+  const dispatch: Dispatch<A> = (queue.dispatch: any);
+  const lastRenderPhaseUpdate = queue.pending;
+  let newState = hook.memoizedState;
+  if (lastRenderPhaseUpdate !== null) {
+    // The queue doesn't persist past this render pass.
+    queue.pending = null;
+
+    const firstRenderPhaseUpdate = lastRenderPhaseUpdate.next;
+    let update = firstRenderPhaseUpdate;
+    do {
+      // Process this render phase update. We don't have to check the
+      // priority because it will always be the same as the current
+      // render's.
+      const action = update.action;
+      newState = reducer(newState, action);
+      update = update.next;
+    } while (update !== firstRenderPhaseUpdate);
+
+    // Mark that the fiber performed work, but only if the new state is
+    // different from the current state.
+    if (!is(newState, hook.memoizedState)) {
+      markWorkInProgressReceivedUpdate();
+    }
+
+    hook.memoizedState = newState;
+    // Don't persist the state accumulated from the render phase updates to
+    // the base state unless the queue is empty.
+    // TODO: Not sure if this is the desired semantics, but it's what we
+    // do for gDSFP. I can't remember why.
+    if (hook.baseQueue === null) {
+      hook.baseState = newState;
+    }
+
+    queue.lastRenderedState = newState;
+  }
+  return [newState, dispatch];
+}
+
 function mountState<S>(
   initialState: (() => S) | S,
 ): [S, Dispatch<BasicStateAction<S>>] {
@@ -833,6 +891,7 @@ function mountState<S>(
   const queue = (hook.queue = {
     pending: null,
     dispatch: null,
+    pendingTransition: null,
     lastRenderedReducer: basicStateReducer,
     lastRenderedState: (initialState: any),
   });
@@ -850,6 +909,12 @@ function updateState<S>(
   initialState: (() => S) | S,
 ): [S, Dispatch<BasicStateAction<S>>] {
   return updateReducer(basicStateReducer, (initialState: any));
+}
+
+function rerenderState<S>(
+  initialState: (() => S) | S,
+): [S, Dispatch<BasicStateAction<S>>] {
+  return rerenderReducer(basicStateReducer, (initialState: any));
 }
 
 function pushEffect(tag, create, destroy, deps) {
@@ -1165,49 +1230,145 @@ function updateDeferredValue<T>(
   return prevValue;
 }
 
-function startTransition(setPending, config, callback) {
-  const priorityLevel = getCurrentPriorityLevel();
-  runWithPriority(
-    priorityLevel < UserBlockingPriority ? UserBlockingPriority : priorityLevel,
-    () => {
-      setPending(true);
-    },
-  );
-  runWithPriority(
-    priorityLevel > NormalPriority ? NormalPriority : priorityLevel,
-    () => {
-      const previousConfig = ReactCurrentBatchConfig.suspense;
-      ReactCurrentBatchConfig.suspense = config === undefined ? null : config;
-      try {
-        setPending(false);
-        callback();
-      } finally {
-        ReactCurrentBatchConfig.suspense = previousConfig;
-      }
-    },
-  );
+function rerenderDeferredValue<T>(
+  value: T,
+  config: TimeoutConfig | void | null,
+): T {
+  const [prevValue, setValue] = rerenderState(value);
+  updateEffect(() => {
+    const previousConfig = ReactCurrentBatchConfig.suspense;
+    ReactCurrentBatchConfig.suspense = config === undefined ? null : config;
+    try {
+      setValue(value);
+    } finally {
+      ReactCurrentBatchConfig.suspense = previousConfig;
+    }
+  }, [value, config]);
+  return prevValue;
 }
 
 function mountTransition(
   config: SuspenseConfig | void | null,
 ): [(() => void) => void, boolean] {
-  const [isPending, setPending] = mountState(false);
-  const start = mountCallback(startTransition.bind(null, setPending, config), [
-    setPending,
+  const hook = mountWorkInProgressHook();
+  const fiber = ((currentlyRenderingFiber: any): Fiber);
+  const instance: TransitionInstance = {
+    pendingExpirationTime: NoWork,
+    fiber,
+  };
+  // TODO: Intentionally storing this on the queue field to avoid adding a new/
+  // one; `queue` should be a union.
+  hook.queue = (instance: any);
+
+  const isPending = false;
+
+  // TODO: Consider passing `config` to `startTransition` instead of the hook.
+  // Then we don't have to recompute the callback whenever it changes. However,
+  // if we don't end up changing the API, we should at least optimize this
+  // to use the same hook instead of a separate hook just for the callback.
+  const start = mountCallback(startTransition.bind(null, instance, config), [
     config,
   ]);
+
+  const resolvedExpirationTime = NoWork;
+  hook.memoizedState = {
+    isPending,
+
+    // Represents the last processed expiration time.
+    resolvedExpirationTime,
+  };
+
   return [start, isPending];
 }
 
 function updateTransition(
   config: SuspenseConfig | void | null,
 ): [(() => void) => void, boolean] {
-  const [isPending, setPending] = updateState(false);
-  const start = updateCallback(startTransition.bind(null, setPending, config), [
-    setPending,
+  const hook = updateWorkInProgressHook();
+
+  const instance: TransitionInstance = (hook.queue: any);
+
+  const pendingExpirationTime = instance.pendingExpirationTime;
+  const oldState = hook.memoizedState;
+  const oldIsPending = oldState.isPending;
+  const oldResolvedExpirationTime = oldState.resolvedExpirationTime;
+
+  // Check if the most recent transition is pending. The following logic is
+  // a little confusing, but it conceptually maps to same logic used to process
+  // state update queues (see: updateReducer). We're cheating a bit because
+  // we know that there is only ever a single pending transition, and the last
+  // one always wins. So we don't need to maintain an actual queue of updates;
+  // we only need to track 1) which is the most recent pending level 2) did
+  // we already resolve
+  //
+  // Note: This could be even simpler if we used a commit effect to mark when a
+  // pending transition is resolved. The cleverness that follows is meant to
+  // avoid the overhead of an extra effect; however, if this ends up being *too*
+  // clever, an effect probably isn't that bad, since it would only fire once
+  // per transition.
+  let newIsPending;
+  let newResolvedExpirationTime;
+
+  if (pendingExpirationTime === NoWork) {
+    // There are no pending transitions. Reset all fields.
+    newIsPending = false;
+    newResolvedExpirationTime = NoWork;
+  } else {
+    // There is a pending transition. It may or may not have resolved. Compare
+    // the time at which we last resolved to the pending time. If the pending
+    // time is in the future, then we're still pending.
+    if (
+      oldResolvedExpirationTime === NoWork ||
+      oldResolvedExpirationTime > pendingExpirationTime
+    ) {
+      // We have not already resolved at the pending time. Check if this render
+      // includes the pending level.
+      if (renderExpirationTime <= pendingExpirationTime) {
+        // This render does include the pending level. Mark it as resolved.
+        newIsPending = false;
+        newResolvedExpirationTime = renderExpirationTime;
+      } else {
+        // This render does not include the pending level. Still pending.
+        newIsPending = true;
+        newResolvedExpirationTime = oldResolvedExpirationTime;
+
+        // Mark that there's still pending work on this queue
+        if (pendingExpirationTime > currentlyRenderingFiber.expirationTime) {
+          currentlyRenderingFiber.expirationTime = pendingExpirationTime;
+          markUnprocessedUpdateTime(pendingExpirationTime);
+        }
+      }
+    } else {
+      // Already resolved at this expiration time.
+      newIsPending = false;
+      newResolvedExpirationTime = oldResolvedExpirationTime;
+    }
+  }
+
+  if (newIsPending !== oldIsPending) {
+    markWorkInProgressReceivedUpdate();
+  } else if (oldIsPending === false) {
+    // This is a trick to mutate the instance without a commit effect. If
+    // neither the current nor work-in-progress hook are pending, and there's no
+    // pending transition at a lower priority (which we know because there can
+    // only be one pending level per useTransition hook), then we can be certain
+    // there are no pending transitions even if this render does not finish.
+    // It's similar to the trick we use for eager setState bailouts. Like that
+    // optimization, this should have no semantic effect.
+    instance.pendingExpirationTime = NoWork;
+    newResolvedExpirationTime = NoWork;
+  }
+
+  hook.memoizedState = {
+    isPending: newIsPending,
+    resolvedExpirationTime: newResolvedExpirationTime,
+  };
+
+  const start = updateCallback(startTransition.bind(null, instance, config), [
     config,
   ]);
-  return [start, isPending];
+
+  return [start, newIsPending];
 }
 
 function dispatchAction<S, A>(
@@ -1215,12 +1376,6 @@ function dispatchAction<S, A>(
   queue: UpdateQueue<S, A>,
   action: A,
 ) {
-  invariant(
-    numberOfReRenders < RE_RENDER_LIMIT,
-    'Too many re-renders. React limits the number of renders to prevent ' +
-      'an infinite loop.',
-  );
-
   if (__DEV__) {
     if (typeof arguments[3] === 'function') {
       console.error(
@@ -1228,6 +1383,53 @@ function dispatchAction<S, A>(
           'second callback argument. To execute a side effect after ' +
           'rendering, declare it in the component body with useEffect().',
       );
+    }
+  }
+
+  const currentTime = requestCurrentTimeForUpdate();
+  const suspenseConfig = requestCurrentSuspenseConfig();
+  const transition = requestCurrentTransition();
+  const expirationTime = computeExpirationForFiber(
+    currentTime,
+    fiber,
+    suspenseConfig,
+  );
+
+  const update: Update<S, A> = {
+    eventTime: currentTime,
+    expirationTime,
+    suspenseConfig,
+    action,
+    eagerReducer: null,
+    eagerState: null,
+    next: (null: any),
+  };
+
+  if (__DEV__) {
+    update.priority = getCurrentPriorityLevel();
+  }
+
+  // Append the update to the end of the list.
+  const pending = queue.pending;
+  if (pending === null) {
+    // This is the first update. Create a circular list.
+    update.next = update;
+  } else {
+    update.next = pending.next;
+    pending.next = update;
+  }
+  queue.pending = update;
+
+  if (transition !== null) {
+    const prevPendingTransition = queue.pendingTransition;
+    if (transition !== prevPendingTransition) {
+      queue.pendingTransition = transition;
+      if (prevPendingTransition !== null) {
+        // There's already a pending transition on this queue. The new
+        // transition supersedes the old one. Turn of the `isPending` state
+        // of the previous transition.
+        cancelPendingTransition(prevPendingTransition);
+      }
     }
   }
 
@@ -1240,64 +1442,9 @@ function dispatchAction<S, A>(
     // queue -> linked list of updates. After this render pass, we'll restart
     // and apply the stashed updates on top of the work-in-progress hook.
     didScheduleRenderPhaseUpdate = true;
-    const update: Update<S, A> = {
-      expirationTime: renderExpirationTime,
-      suspenseConfig: null,
-      action,
-      eagerReducer: null,
-      eagerState: null,
-      next: (null: any),
-    };
-    if (__DEV__) {
-      update.priority = getCurrentPriorityLevel();
-    }
-    if (renderPhaseUpdates === null) {
-      renderPhaseUpdates = new Map();
-    }
-    const firstRenderPhaseUpdate = renderPhaseUpdates.get(queue);
-    if (firstRenderPhaseUpdate === undefined) {
-      renderPhaseUpdates.set(queue, update);
-    } else {
-      // Append the update to the end of the list.
-      let lastRenderPhaseUpdate = firstRenderPhaseUpdate;
-      while (lastRenderPhaseUpdate.next !== null) {
-        lastRenderPhaseUpdate = lastRenderPhaseUpdate.next;
-      }
-      lastRenderPhaseUpdate.next = update;
-    }
+    update.expirationTime = renderExpirationTime;
+    currentlyRenderingFiber.expirationTime = renderExpirationTime;
   } else {
-    const currentTime = requestCurrentTimeForUpdate();
-    const suspenseConfig = requestCurrentSuspenseConfig();
-    const expirationTime = computeExpirationForFiber(
-      currentTime,
-      fiber,
-      suspenseConfig,
-    );
-
-    const update: Update<S, A> = {
-      expirationTime,
-      suspenseConfig,
-      action,
-      eagerReducer: null,
-      eagerState: null,
-      next: (null: any),
-    };
-
-    if (__DEV__) {
-      update.priority = getCurrentPriorityLevel();
-    }
-
-    // Append the update to the end of the list.
-    const pending = queue.pending;
-    if (pending === null) {
-      // This is the first update. Create a circular list.
-      update.next = update;
-    } else {
-      update.next = pending.next;
-      pending.next = update;
-    }
-    queue.pending = update;
-
     if (
       fiber.expirationTime === NoWork &&
       (alternate === null || alternate.expirationTime === NoWork)
@@ -1344,6 +1491,7 @@ function dispatchAction<S, A>(
         warnIfNotCurrentlyActingUpdatesInDev(fiber);
       }
     }
+
     scheduleWork(fiber, expirationTime);
   }
 }
@@ -1402,11 +1550,31 @@ const HooksDispatcherOnUpdate: Dispatcher = {
   useTransition: updateTransition,
 };
 
+const HooksDispatcherOnRerender: Dispatcher = {
+  readContext,
+
+  useCallback: updateCallback,
+  useContext: readContext,
+  useEffect: updateEffect,
+  useImperativeHandle: updateImperativeHandle,
+  useLayoutEffect: updateLayoutEffect,
+  useMemo: updateMemo,
+  useReducer: rerenderReducer,
+  useRef: updateRef,
+  useState: rerenderState,
+  useDebugValue: updateDebugValue,
+  useResponder: createDeprecatedResponderListener,
+  useDeferredValue: rerenderDeferredValue,
+  useTransition: updateTransition,
+};
+
 let HooksDispatcherOnMountInDEV: Dispatcher | null = null;
 let HooksDispatcherOnMountWithHookTypesInDEV: Dispatcher | null = null;
 let HooksDispatcherOnUpdateInDEV: Dispatcher | null = null;
+let HooksDispatcherOnRerenderInDEV: Dispatcher | null = null;
 let InvalidNestedHooksDispatcherOnMountInDEV: Dispatcher | null = null;
 let InvalidNestedHooksDispatcherOnUpdateInDEV: Dispatcher | null = null;
+let InvalidNestedHooksDispatcherOnRerenderInDEV: Dispatcher | null = null;
 
 if (__DEV__) {
   const warnInvalidContextAccess = () => {
@@ -1783,6 +1951,123 @@ if (__DEV__) {
     },
   };
 
+  HooksDispatcherOnRerenderInDEV = {
+    readContext<T>(
+      context: ReactContext<T>,
+      observedBits: void | number | boolean,
+    ): T {
+      return readContext(context, observedBits);
+    },
+
+    useCallback<T>(callback: T, deps: Array<mixed> | void | null): T {
+      currentHookNameInDev = 'useCallback';
+      updateHookTypesDev();
+      return updateCallback(callback, deps);
+    },
+    useContext<T>(
+      context: ReactContext<T>,
+      observedBits: void | number | boolean,
+    ): T {
+      currentHookNameInDev = 'useContext';
+      updateHookTypesDev();
+      return readContext(context, observedBits);
+    },
+    useEffect(
+      create: () => (() => void) | void,
+      deps: Array<mixed> | void | null,
+    ): void {
+      currentHookNameInDev = 'useEffect';
+      updateHookTypesDev();
+      return updateEffect(create, deps);
+    },
+    useImperativeHandle<T>(
+      ref: {|current: T | null|} | ((inst: T | null) => mixed) | null | void,
+      create: () => T,
+      deps: Array<mixed> | void | null,
+    ): void {
+      currentHookNameInDev = 'useImperativeHandle';
+      updateHookTypesDev();
+      return updateImperativeHandle(ref, create, deps);
+    },
+    useLayoutEffect(
+      create: () => (() => void) | void,
+      deps: Array<mixed> | void | null,
+    ): void {
+      currentHookNameInDev = 'useLayoutEffect';
+      updateHookTypesDev();
+      return updateLayoutEffect(create, deps);
+    },
+    useMemo<T>(create: () => T, deps: Array<mixed> | void | null): T {
+      currentHookNameInDev = 'useMemo';
+      updateHookTypesDev();
+      const prevDispatcher = ReactCurrentDispatcher.current;
+      ReactCurrentDispatcher.current = InvalidNestedHooksDispatcherOnRerenderInDEV;
+      try {
+        return updateMemo(create, deps);
+      } finally {
+        ReactCurrentDispatcher.current = prevDispatcher;
+      }
+    },
+    useReducer<S, I, A>(
+      reducer: (S, A) => S,
+      initialArg: I,
+      init?: I => S,
+    ): [S, Dispatch<A>] {
+      currentHookNameInDev = 'useReducer';
+      updateHookTypesDev();
+      const prevDispatcher = ReactCurrentDispatcher.current;
+      ReactCurrentDispatcher.current = InvalidNestedHooksDispatcherOnRerenderInDEV;
+      try {
+        return rerenderReducer(reducer, initialArg, init);
+      } finally {
+        ReactCurrentDispatcher.current = prevDispatcher;
+      }
+    },
+    useRef<T>(initialValue: T): {|current: T|} {
+      currentHookNameInDev = 'useRef';
+      updateHookTypesDev();
+      return updateRef(initialValue);
+    },
+    useState<S>(
+      initialState: (() => S) | S,
+    ): [S, Dispatch<BasicStateAction<S>>] {
+      currentHookNameInDev = 'useState';
+      updateHookTypesDev();
+      const prevDispatcher = ReactCurrentDispatcher.current;
+      ReactCurrentDispatcher.current = InvalidNestedHooksDispatcherOnRerenderInDEV;
+      try {
+        return rerenderState(initialState);
+      } finally {
+        ReactCurrentDispatcher.current = prevDispatcher;
+      }
+    },
+    useDebugValue<T>(value: T, formatterFn: ?(value: T) => mixed): void {
+      currentHookNameInDev = 'useDebugValue';
+      updateHookTypesDev();
+      return updateDebugValue(value, formatterFn);
+    },
+    useResponder<E, C>(
+      responder: ReactEventResponder<E, C>,
+      props,
+    ): ReactEventResponderListener<E, C> {
+      currentHookNameInDev = 'useResponder';
+      updateHookTypesDev();
+      return createDeprecatedResponderListener(responder, props);
+    },
+    useDeferredValue<T>(value: T, config: TimeoutConfig | void | null): T {
+      currentHookNameInDev = 'useDeferredValue';
+      updateHookTypesDev();
+      return rerenderDeferredValue(value, config);
+    },
+    useTransition(
+      config: SuspenseConfig | void | null,
+    ): [(() => void) => void, boolean] {
+      currentHookNameInDev = 'useTransition';
+      updateHookTypesDev();
+      return updateTransition(config);
+    },
+  };
+
   InvalidNestedHooksDispatcherOnMountInDEV = {
     readContext<T>(
       context: ReactContext<T>,
@@ -2034,6 +2319,137 @@ if (__DEV__) {
       warnInvalidHookAccess();
       updateHookTypesDev();
       return updateDeferredValue(value, config);
+    },
+    useTransition(
+      config: SuspenseConfig | void | null,
+    ): [(() => void) => void, boolean] {
+      currentHookNameInDev = 'useTransition';
+      warnInvalidHookAccess();
+      updateHookTypesDev();
+      return updateTransition(config);
+    },
+  };
+
+  InvalidNestedHooksDispatcherOnRerenderInDEV = {
+    readContext<T>(
+      context: ReactContext<T>,
+      observedBits: void | number | boolean,
+    ): T {
+      warnInvalidContextAccess();
+      return readContext(context, observedBits);
+    },
+
+    useCallback<T>(callback: T, deps: Array<mixed> | void | null): T {
+      currentHookNameInDev = 'useCallback';
+      warnInvalidHookAccess();
+      updateHookTypesDev();
+      return updateCallback(callback, deps);
+    },
+    useContext<T>(
+      context: ReactContext<T>,
+      observedBits: void | number | boolean,
+    ): T {
+      currentHookNameInDev = 'useContext';
+      warnInvalidHookAccess();
+      updateHookTypesDev();
+      return readContext(context, observedBits);
+    },
+    useEffect(
+      create: () => (() => void) | void,
+      deps: Array<mixed> | void | null,
+    ): void {
+      currentHookNameInDev = 'useEffect';
+      warnInvalidHookAccess();
+      updateHookTypesDev();
+      return updateEffect(create, deps);
+    },
+    useImperativeHandle<T>(
+      ref: {|current: T | null|} | ((inst: T | null) => mixed) | null | void,
+      create: () => T,
+      deps: Array<mixed> | void | null,
+    ): void {
+      currentHookNameInDev = 'useImperativeHandle';
+      warnInvalidHookAccess();
+      updateHookTypesDev();
+      return updateImperativeHandle(ref, create, deps);
+    },
+    useLayoutEffect(
+      create: () => (() => void) | void,
+      deps: Array<mixed> | void | null,
+    ): void {
+      currentHookNameInDev = 'useLayoutEffect';
+      warnInvalidHookAccess();
+      updateHookTypesDev();
+      return updateLayoutEffect(create, deps);
+    },
+    useMemo<T>(create: () => T, deps: Array<mixed> | void | null): T {
+      currentHookNameInDev = 'useMemo';
+      warnInvalidHookAccess();
+      updateHookTypesDev();
+      const prevDispatcher = ReactCurrentDispatcher.current;
+      ReactCurrentDispatcher.current = InvalidNestedHooksDispatcherOnUpdateInDEV;
+      try {
+        return updateMemo(create, deps);
+      } finally {
+        ReactCurrentDispatcher.current = prevDispatcher;
+      }
+    },
+    useReducer<S, I, A>(
+      reducer: (S, A) => S,
+      initialArg: I,
+      init?: I => S,
+    ): [S, Dispatch<A>] {
+      currentHookNameInDev = 'useReducer';
+      warnInvalidHookAccess();
+      updateHookTypesDev();
+      const prevDispatcher = ReactCurrentDispatcher.current;
+      ReactCurrentDispatcher.current = InvalidNestedHooksDispatcherOnUpdateInDEV;
+      try {
+        return rerenderReducer(reducer, initialArg, init);
+      } finally {
+        ReactCurrentDispatcher.current = prevDispatcher;
+      }
+    },
+    useRef<T>(initialValue: T): {|current: T|} {
+      currentHookNameInDev = 'useRef';
+      warnInvalidHookAccess();
+      updateHookTypesDev();
+      return updateRef(initialValue);
+    },
+    useState<S>(
+      initialState: (() => S) | S,
+    ): [S, Dispatch<BasicStateAction<S>>] {
+      currentHookNameInDev = 'useState';
+      warnInvalidHookAccess();
+      updateHookTypesDev();
+      const prevDispatcher = ReactCurrentDispatcher.current;
+      ReactCurrentDispatcher.current = InvalidNestedHooksDispatcherOnUpdateInDEV;
+      try {
+        return rerenderState(initialState);
+      } finally {
+        ReactCurrentDispatcher.current = prevDispatcher;
+      }
+    },
+    useDebugValue<T>(value: T, formatterFn: ?(value: T) => mixed): void {
+      currentHookNameInDev = 'useDebugValue';
+      warnInvalidHookAccess();
+      updateHookTypesDev();
+      return updateDebugValue(value, formatterFn);
+    },
+    useResponder<E, C>(
+      responder: ReactEventResponder<E, C>,
+      props,
+    ): ReactEventResponderListener<E, C> {
+      currentHookNameInDev = 'useResponder';
+      warnInvalidHookAccess();
+      updateHookTypesDev();
+      return createDeprecatedResponderListener(responder, props);
+    },
+    useDeferredValue<T>(value: T, config: TimeoutConfig | void | null): T {
+      currentHookNameInDev = 'useDeferredValue';
+      warnInvalidHookAccess();
+      updateHookTypesDev();
+      return rerenderDeferredValue(value, config);
     },
     useTransition(
       config: SuspenseConfig | void | null,
