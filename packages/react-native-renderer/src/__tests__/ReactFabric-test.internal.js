@@ -53,7 +53,7 @@ describe('ReactFabric', () => {
     NativeMethodsMixin =
       ReactFabric.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED
         .NativeMethodsMixin;
-      TextInputState = require('react-native/Libraries/ReactPrivate/ReactNativePrivateInterface')
+    TextInputState = require('react-native/Libraries/ReactPrivate/ReactNativePrivateInterface')
       .TextInputState;
   });
 
@@ -1195,14 +1195,15 @@ describe('ReactFabric', () => {
       let viewRef = React.createRef();
       ReactFabric.render(<Component ref={viewRef} />, 11);
 
-      expect(
-      () => viewRef.current.blur(),
-    ).toErrorDev([
-      'focus and blur are no longer supported on NativeMethodsMixin or ReactNative.NativeComponent. ' +
+      expect(() => viewRef.current.blur()).toErrorDev(
+        [
+          'focus and blur are no longer supported on NativeMethodsMixin or ReactNative.NativeComponent. ' +
             'Call focus and blur on a ref to a native component',
-    ], {
-      withoutStack: true,
-    });
+        ],
+        {
+          withoutStack: true,
+        },
+      );
 
       expect(TextInputState.blurTextInput).not.toBeCalled();
     });
@@ -1233,14 +1234,15 @@ describe('ReactFabric', () => {
       let viewRef = React.createRef();
       ReactFabric.render(<Component ref={viewRef} />, 11);
 
-      expect(
-      () => viewRef.current.focus(),
-    ).toErrorDev([
-      'focus and blur are no longer supported on NativeMethodsMixin or ReactNative.NativeComponent. ' +
+      expect(() => viewRef.current.focus()).toErrorDev(
+        [
+          'focus and blur are no longer supported on NativeMethodsMixin or ReactNative.NativeComponent. ' +
             'Call focus and blur on a ref to a native component',
-    ], {
-      withoutStack: true,
-    });
+        ],
+        {
+          withoutStack: true,
+        },
+      );
 
       expect(TextInputState.focusTextInput).not.toBeCalled();
     });

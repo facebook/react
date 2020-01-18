@@ -18,10 +18,7 @@ import type {
 
 import React from 'react';
 // Modules provided by RN:
-import {
-  TextInputState,
-  UIManager,
-} from 'react-native/Libraries/ReactPrivate/ReactNativePrivateInterface';
+import {UIManager} from 'react-native/Libraries/ReactPrivate/ReactNativePrivateInterface';
 
 import {create} from './ReactNativeAttributePayload';
 import {mountSafeCallback_NOT_REALLY_SAFE} from './NativeMethodsMixinUtils';

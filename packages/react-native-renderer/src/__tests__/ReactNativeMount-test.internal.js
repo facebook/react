@@ -751,14 +751,15 @@ describe('ReactNative', () => {
       let viewRef = React.createRef();
       ReactNative.render(<Component ref={viewRef} />, 11);
 
-      expect(
-      () => viewRef.current.blur(),
-    ).toErrorDev([
-      'focus and blur are no longer supported on NativeMethodsMixin or ReactNative.NativeComponent. ' +
+      expect(() => viewRef.current.blur()).toErrorDev(
+        [
+          'focus and blur are no longer supported on NativeMethodsMixin or ReactNative.NativeComponent. ' +
             'Call focus and blur on a ref to a native component',
-    ], {
-      withoutStack: true,
-    });
+        ],
+        {
+          withoutStack: true,
+        },
+      );
 
       expect(TextInputState.blurTextInput).not.toBeCalled();
     });
@@ -789,14 +790,15 @@ describe('ReactNative', () => {
       let viewRef = React.createRef();
       ReactNative.render(<Component ref={viewRef} />, 11);
 
-      expect(
-      () => viewRef.current.focus(),
-    ).toErrorDev([
-      'focus and blur are no longer supported on NativeMethodsMixin or ReactNative.NativeComponent. ' +
+      expect(() => viewRef.current.focus()).toErrorDev(
+        [
+          'focus and blur are no longer supported on NativeMethodsMixin or ReactNative.NativeComponent. ' +
             'Call focus and blur on a ref to a native component',
-    ], {
-      withoutStack: true,
-    });
+        ],
+        {
+          withoutStack: true,
+        },
+      );
 
       expect(TextInputState.focusTextInput).not.toBeCalled();
     });
