@@ -44,10 +44,6 @@ export function addUserTimingListener() {
 // Disable javascript: URL strings in href for XSS protection.
 export const disableJavaScriptURLs = false;
 
-// React Fire: prevent the value and checked attributes from syncing
-// with their related DOM properties
-export const disableInputAttributeSyncing = false;
-
 // These APIs will no longer be "unstable" in the upcoming 16.7 release,
 // Control this behavior with a flag to support 16.6 minor releases in the meanwhile.
 export const exposeConcurrentModeAPIs = __EXPERIMENTAL__;
@@ -85,9 +81,6 @@ export const enableSuspenseCallback = false;
 // from React.createElement to React.jsx
 // https://github.com/reactjs/rfcs/blob/createlement-rfc/text/0000-create-element-changes.md
 export const warnAboutDefaultPropsOnFunctionComponents = false;
-export const warnAboutStringRefs = false;
-
-export const disableLegacyContext = false;
 
 export const disableSchedulerTimeoutBasedOnReactExpirationTime = false;
 
@@ -97,3 +90,18 @@ export const enableTrustedTypesIntegration = false;
 
 // Flag to turn event.target and event.currentTarget in ReactNative from a reactTag to a component instance
 export const enableNativeTargetAsInstance = false;
+
+// --------------------------
+// Future APIs to be deprecated
+// --------------------------
+
+// Prevent the value and checked attributes from syncing
+// with their related DOM properties
+export const disableInputAttributeSyncing = false;
+
+export const warnAboutStringRefs = false;
+
+export const disableLegacyContext = false;
+
+// Disables React.createFactory
+export const disableCreateFactory = false;

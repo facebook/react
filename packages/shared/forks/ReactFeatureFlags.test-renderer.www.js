@@ -38,6 +38,7 @@ export const disableSchedulerTimeoutBasedOnReactExpirationTime = false;
 export const enableTrainModelFix = false;
 export const enableTrustedTypesIntegration = false;
 export const enableNativeTargetAsInstance = false;
+export const disableCreateFactory = false;
 
 // Only used in www builds.
 export function addUserTimingListener() {

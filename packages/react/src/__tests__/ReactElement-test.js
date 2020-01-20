@@ -13,6 +13,8 @@ let React;
 let ReactDOM;
 let ReactTestUtils;
 
+const ReactFeatureFlags = require('shared/ReactFeatureFlags');
+
 describe('ReactElement', () => {
   let ComponentClass;
   let originalSymbol;
@@ -46,7 +48,7 @@ describe('ReactElement', () => {
   });
 
   it('returns a complete element according to spec', () => {
-    const element = React.createFactory(ComponentClass)();
+    const element = React.createElement(ComponentClass);
     expect(element.type).toBe(ComponentClass);
     expect(element.key).toBe(null);
     expect(element.ref).toBe(null);
@@ -121,7 +123,7 @@ describe('ReactElement', () => {
   });
 
   it('allows a string to be passed as the type', () => {
-    const element = React.createFactory('div')();
+    const element = React.createElement('div');
     expect(element.type).toBe('div');
     expect(element.key).toBe(null);
     expect(element.ref).toBe(null);
@@ -133,7 +135,7 @@ describe('ReactElement', () => {
   });
 
   it('returns an immutable element', () => {
-    const element = React.createFactory(ComponentClass)();
+    const element = React.createElement(ComponentClass);
     if (__DEV__) {
       expect(() => (element.type = 'div')).toThrow();
     } else {
@@ -143,7 +145,7 @@ describe('ReactElement', () => {
 
   it('does not reuse the original config object', () => {
     const config = {foo: 1};
-    const element = React.createFactory(ComponentClass)(config);
+    const element = React.createElement(ComponentClass, config);
     expect(element.props.foo).toBe(1);
     config.foo = 2;
     expect(element.props.foo).toBe(1);
@@ -151,12 +153,12 @@ describe('ReactElement', () => {
 
   it('does not fail if config has no prototype', () => {
     const config = Object.create(null, {foo: {value: 1, enumerable: true}});
-    const element = React.createFactory(ComponentClass)(config);
+    const element = React.createElement(ComponentClass, config);
     expect(element.props.foo).toBe(1);
   });
 
   it('extracts key and ref from the config', () => {
-    const element = React.createFactory(ComponentClass)({
+    const element = React.createElement(ComponentClass, {
       key: '12',
       ref: '34',
       foo: '56',
@@ -172,7 +174,7 @@ describe('ReactElement', () => {
   });
 
   it('extracts null key and ref', () => {
-    const element = React.createFactory(ComponentClass)({
+    const element = React.createElement(ComponentClass, {
       key: null,
       ref: null,
       foo: '12',
@@ -193,7 +195,7 @@ describe('ReactElement', () => {
       key: undefined,
       ref: undefined,
     };
-    const element = React.createFactory(ComponentClass)(props);
+    const element = React.createElement(ComponentClass, props);
     expect(element.type).toBe(ComponentClass);
     expect(element.key).toBe(null);
     expect(element.ref).toBe(null);
@@ -212,7 +214,7 @@ describe('ReactElement', () => {
   });
 
   it('coerces the key to a string', () => {
-    const element = React.createFactory(ComponentClass)({
+    const element = React.createElement(ComponentClass, {
       key: 12,
       foo: '56',
     });
@@ -227,12 +229,11 @@ describe('ReactElement', () => {
   });
 
   it('preserves the owner on the element', () => {
-    const Component = React.createFactory(ComponentClass);
     let element;
 
     class Wrapper extends React.Component {
       render() {
-        element = Component();
+        element = React.createElement(ComponentClass);
         return element;
       }
     }
@@ -245,7 +246,8 @@ describe('ReactElement', () => {
 
   it('merges an additional argument onto the children prop', () => {
     const a = 1;
-    const element = React.createFactory(ComponentClass)(
+    const element = React.createElement(
+      ComponentClass,
       {
         children: 'text',
       },
@@ -255,14 +257,15 @@ describe('ReactElement', () => {
   });
 
   it('does not override children if no rest args are provided', () => {
-    const element = React.createFactory(ComponentClass)({
+    const element = React.createElement(ComponentClass, {
       children: 'text',
     });
     expect(element.props.children).toBe('text');
   });
 
   it('overrides children if null is provided as an argument', () => {
-    const element = React.createFactory(ComponentClass)(
+    const element = React.createElement(
+      ComponentClass,
       {
         children: 'text',
       },
@@ -275,7 +278,7 @@ describe('ReactElement', () => {
     const a = 1;
     const b = 2;
     const c = 3;
-    const element = React.createFactory(ComponentClass)(null, a, b, c);
+    const element = React.createElement(ComponentClass, null, a, b, c);
     expect(element.props.children).toEqual([1, 2, 3]);
   });
 
@@ -309,7 +312,9 @@ describe('ReactElement', () => {
     expect(React.isValidElement(true)).toEqual(false);
     expect(React.isValidElement({})).toEqual(false);
     expect(React.isValidElement('string')).toEqual(false);
-    expect(React.isValidElement(React.createFactory('div'))).toEqual(false);
+    if (!ReactFeatureFlags.disableCreateFactory) {
+      expect(React.isValidElement(React.createFactory('div'))).toEqual(false);
+    }
     expect(React.isValidElement(Component)).toEqual(false);
     expect(React.isValidElement({type: 'div', props: {}})).toEqual(false);
 
@@ -467,7 +472,9 @@ describe('ReactElement', () => {
     expect(React.isValidElement(true)).toEqual(false);
     expect(React.isValidElement({})).toEqual(false);
     expect(React.isValidElement('string')).toEqual(false);
-    expect(React.isValidElement(React.createFactory('div'))).toEqual(false);
+    if (!ReactFeatureFlags.disableCreateFactory) {
+      expect(React.isValidElement(React.createFactory('div'))).toEqual(false);
+    }
     expect(React.isValidElement(Component)).toEqual(false);
     expect(React.isValidElement({type: 'div', props: {}})).toEqual(false);
 

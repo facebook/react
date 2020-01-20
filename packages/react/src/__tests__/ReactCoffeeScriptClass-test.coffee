@@ -10,10 +10,8 @@ ReactDOM = null
 PropTypes = null
 
 describe 'ReactCoffeeScriptClass', ->
-  div = null
-  span = null
   container = null
-  Inner = null
+  InnerComponent = null
   attachedListener = null;
   renderedName = null;
 
@@ -24,15 +22,12 @@ describe 'ReactCoffeeScriptClass', ->
     container = document.createElement 'div'
     attachedListener = null
     renderedName = null
-    div = React.createFactory 'div'
-    span = React.createFactory 'span'
-    class InnerComponent extends React.Component
+    InnerComponent = class extends React.Component
       getName: -> this.props.name
       render: ->
         attachedListener = this.props.onClick
         renderedName = this.props.name
-        return div className: this.props.name
-    Inner = React.createFactory InnerComponent
+        return React.createElement('div', className: this.props.name)
 
   test = (element, expectedTag, expectedClassName) ->
     instance = ReactDOM.render(element, container)
@@ -61,8 +56,9 @@ describe 'ReactCoffeeScriptClass', ->
   it 'renders a simple stateless component with prop', ->
     class Foo extends React.Component
       render: ->
-        Inner
+        React.createElement(InnerComponent,
           name: @props.bar
+        )
 
     test React.createElement(Foo, bar: 'foo'), 'DIV', 'foo'
     test React.createElement(Foo, bar: 'bar'), 'DIV', 'bar'
@@ -75,8 +71,9 @@ describe 'ReactCoffeeScriptClass', ->
         @state = bar: @props.initialValue
 
       render: ->
-        span
+        React.createElement('span',
           className: @state.bar
+        )
 
     test React.createElement(Foo, initialValue: 'foo'), 'SPAN', 'foo'
     undefined
@@ -91,11 +88,12 @@ describe 'ReactCoffeeScriptClass', ->
 
       render: ->
         if @state.bar is 'foo'
-          return div(
+          return React.createElement('div',
             className: 'foo'
           )
-        span
+        React.createElement('span',
           className: @state.bar
+        )
 
     instance = test React.createElement(Foo, initialValue: 'foo'), 'DIV', 'foo'
     instance.changeState()
@@ -108,8 +106,9 @@ describe 'ReactCoffeeScriptClass', ->
         super props
         @state = foo: null
       render: ->
-        div
+        React.createElement('div',
           className: "#{@state.foo} #{@state.bar}"
+        )
     Foo.getDerivedStateFromProps = (nextProps, prevState) ->
       {
         foo: nextProps.foo
@@ -121,7 +120,7 @@ describe 'ReactCoffeeScriptClass', ->
   it 'warns if getDerivedStateFromProps is not static', ->
     class Foo extends React.Component
       render: ->
-        div()
+        React.createElement('div')
       getDerivedStateFromProps: ->
         {}
     expect(->
@@ -132,7 +131,7 @@ describe 'ReactCoffeeScriptClass', ->
   it 'warns if getDerivedStateFromError is not static', ->
     class Foo extends React.Component
       render: ->
-        div()
+        React.createElement('div')
       getDerivedStateFromError: ->
         {}
     expect(->
@@ -143,7 +142,7 @@ describe 'ReactCoffeeScriptClass', ->
   it 'warns if getSnapshotBeforeUpdate is static', ->
     class Foo extends React.Component
       render: ->
-        div()
+        React.createElement('div')
     Foo.getSnapshotBeforeUpdate = () ->
       {}
     expect(->
@@ -154,8 +153,9 @@ describe 'ReactCoffeeScriptClass', ->
   it 'warns if state not initialized before static getDerivedStateFromProps', ->
     class Foo extends React.Component
       render: ->
-        div
+        React.createElement('div',
           className: "#{@state.foo} #{@state.bar}"
+        )
     Foo.getDerivedStateFromProps = (nextProps, prevState) ->
       {
         foo: nextProps.foo
@@ -179,8 +179,9 @@ describe 'ReactCoffeeScriptClass', ->
           foo: 'foo'
           bar: 'bar'
       render: ->
-        div
+        React.createElement('div',
           className: "#{@state.foo} #{@state.bar}"
+        )
     Foo.getDerivedStateFromProps = (nextProps, prevState) ->
       {
         foo: "not-#{prevState.foo}"
@@ -195,8 +196,9 @@ describe 'ReactCoffeeScriptClass', ->
         @state =
           value: 'initial'
       render: ->
-        div
+        React.createElement('div',
           className: @state.value
+        )
     Foo.getDerivedStateFromProps = (nextProps, prevState) ->
       if nextProps.update
         return {
@@ -250,7 +252,7 @@ describe 'ReactCoffeeScriptClass', ->
 
       render: ->
         renderCount++
-        span className: @state.bar
+        React.createElement('span', className: @state.bar)
 
     test React.createElement(Foo, initialValue: 'foo'), 'SPAN', 'bar'
     expect(renderCount).toBe 1
@@ -263,7 +265,7 @@ describe 'ReactCoffeeScriptClass', ->
           @state = state
 
         render: ->
-          span()
+          React.createElement('span')
 
       expect(->
         test React.createElement(Foo), 'SPAN', ''
@@ -276,7 +278,7 @@ describe 'ReactCoffeeScriptClass', ->
         @state = null
 
       render: ->
-        span()
+        React.createElement('span')
 
     test React.createElement(Foo), 'SPAN', ''
     undefined
@@ -290,9 +292,10 @@ describe 'ReactCoffeeScriptClass', ->
         @setState bar: 'bar'
 
       render: ->
-        Inner
+        React.createElement(InnerComponent,
           name: @state.bar
           onClick: @handleClick
+        )
 
     test React.createElement(Foo, initialValue: 'foo'), 'DIV', 'foo'
     attachedListener()
@@ -308,9 +311,10 @@ describe 'ReactCoffeeScriptClass', ->
         @setState bar: 'bar'
 
       render: ->
-        Inner
+        React.createElement(InnerComponent,
           name: @state.bar
           onClick: @handleClick
+        )
 
     test React.createElement(Foo, initialValue: 'foo'), 'DIV', 'foo'
     expect(attachedListener).toThrow()
@@ -326,9 +330,10 @@ describe 'ReactCoffeeScriptClass', ->
         @forceUpdate()
 
       render: ->
-        Inner
+        React.createElement(InnerComponent,
           name: @mutativeValue
           onClick: @handleClick
+        )
 
     test React.createElement(Foo, initialValue: 'foo'), 'DIV', 'foo'
     attachedListener()
@@ -364,8 +369,9 @@ describe 'ReactCoffeeScriptClass', ->
         lifeCycles.push 'will-unmount'
 
       render: ->
-        span
+        React.createElement('span',
           className: @props.value
+        )
 
     test React.createElement(Foo, value: 'foo'), 'SPAN', 'foo'
     expect(lifeCycles).toEqual [
@@ -404,8 +410,9 @@ describe 'ReactCoffeeScriptClass', ->
         {}
 
       render: ->
-        span
+        React.createElement('span',
           className: 'foo'
+        )
 
     expect(->
       test React.createElement(Foo), 'SPAN', 'foo'
@@ -431,8 +438,9 @@ describe 'ReactCoffeeScriptClass', ->
         {}
 
       render: ->
-        span
+        React.createElement('span',
           className: 'foo'
+        )
 
     test React.createElement(Foo), 'SPAN', 'foo'
     undefined
@@ -443,8 +451,9 @@ describe 'ReactCoffeeScriptClass', ->
         false
 
       render: ->
-        span
+        React.createElement('span',
           className: 'foo'
+        )
 
     expect(->
       test React.createElement(NamedComponent), 'SPAN', 'foo'
@@ -461,8 +470,9 @@ describe 'ReactCoffeeScriptClass', ->
         false
 
       render: ->
-        span
+        React.createElement('span',
           className: 'foo'
+        )
 
     expect(->
       test React.createElement(NamedComponent), 'SPAN', 'foo'
@@ -478,8 +488,9 @@ describe 'ReactCoffeeScriptClass', ->
         false
 
       render: ->
-        span
+        React.createElement('span',
           className: 'foo'
+        )
 
     expect(->
       test React.createElement(NamedComponent), 'SPAN', 'foo'
@@ -491,7 +502,7 @@ describe 'ReactCoffeeScriptClass', ->
 
   it 'should throw AND warn when trying to access classic APIs', ->
     instance =
-      test Inner(name: 'foo'), 'DIV', 'foo'
+      test React.createElement(InnerComponent, name: 'foo'), 'DIV', 'foo'
     expect(->
       expect(-> instance.replaceState {}).toThrow()
     ).toWarnDev(
@@ -511,7 +522,7 @@ describe 'ReactCoffeeScriptClass', ->
       @contextTypes:
         bar: PropTypes.string
       render: ->
-        div className: @context.bar
+        React.createElement('div', className: @context.bar)
 
     class Foo extends React.Component
       @childContextTypes:
@@ -527,16 +538,17 @@ describe 'ReactCoffeeScriptClass', ->
   it 'supports classic refs', ->
     class Foo extends React.Component
       render: ->
-        Inner
+        React.createElement(InnerComponent,
           name: 'foo'
           ref: 'inner'
+        )
 
     instance = test(React.createElement(Foo), 'DIV', 'foo')
     expect(instance.refs.inner.getName()).toBe 'foo'
     undefined
 
   it 'supports drilling through to the DOM using findDOMNode', ->
-    instance = test Inner(name: 'foo'), 'DIV', 'foo'
+    instance = test React.createElement(InnerComponent, name: 'foo'), 'DIV', 'foo'
     node = ReactDOM.findDOMNode(instance)
     expect(node).toBe container.firstChild
     undefined
