@@ -105,3 +105,6 @@ export const disableLegacyContext = false;
 
 // Disables React.createFactory
 export const disableCreateFactory = false;
+
+// Disables children for <textarea> elements
+export const disableTextareaChildren = false;
