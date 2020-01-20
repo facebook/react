@@ -11,8 +11,9 @@
 
 let React;
 let ReactDOM;
-let ReactFeatureFlags;
 let ReactTestUtils;
+
+let ReactFeatureFlags = require('shared/ReactFeatureFlags');
 
 // NOTE: We're explicitly not using JSX here. This is intended to test
 // a new React.jsx api which does not have a JSX transformer yet.
@@ -67,7 +68,9 @@ describe('ReactElement.jsx', () => {
     expect(React.isValidElement(true)).toEqual(false);
     expect(React.isValidElement({})).toEqual(false);
     expect(React.isValidElement('string')).toEqual(false);
-    expect(React.isValidElement(React.createFactory('div'))).toEqual(false);
+    if (!ReactFeatureFlags.disableCreateFactory) {
+      expect(React.isValidElement(React.createFactory('div'))).toEqual(false);
+    }
     expect(React.isValidElement(Component)).toEqual(false);
     expect(React.isValidElement({type: 'div', props: {}})).toEqual(false);
 
@@ -297,7 +300,9 @@ describe('ReactElement.jsx', () => {
     expect(React.isValidElement(true)).toEqual(false);
     expect(React.isValidElement({})).toEqual(false);
     expect(React.isValidElement('string')).toEqual(false);
-    expect(React.isValidElement(React.createFactory('div'))).toEqual(false);
+    if (!ReactFeatureFlags.disableCreateFactory) {
+      expect(React.isValidElement(React.createFactory('div'))).toEqual(false);
+    }
     expect(React.isValidElement(Component)).toEqual(false);
     expect(React.isValidElement({type: 'div', props: {}})).toEqual(false);
 

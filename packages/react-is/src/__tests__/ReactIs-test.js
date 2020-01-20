@@ -13,6 +13,8 @@ let React;
 let ReactDOM;
 let ReactIs;
 
+const ReactFeatureFlags = require('shared/ReactFeatureFlags');
+
 describe('ReactIs', () => {
   beforeEach(() => {
     jest.resetModules();
@@ -54,9 +56,11 @@ describe('ReactIs', () => {
     expect(ReactIs.isValidElementType(MemoComponent)).toEqual(true);
     expect(ReactIs.isValidElementType(Context.Provider)).toEqual(true);
     expect(ReactIs.isValidElementType(Context.Consumer)).toEqual(true);
-    expect(ReactIs.isValidElementType(React.createFactory('div'))).toEqual(
-      true,
-    );
+    if (!ReactFeatureFlags.disableCreateFactory) {
+      expect(ReactIs.isValidElementType(React.createFactory('div'))).toEqual(
+        true,
+      );
+    }
     expect(ReactIs.isValidElementType(React.Fragment)).toEqual(true);
     expect(ReactIs.isValidElementType(React.StrictMode)).toEqual(true);
     expect(ReactIs.isValidElementType(React.Suspense)).toEqual(true);

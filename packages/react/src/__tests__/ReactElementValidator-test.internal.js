@@ -13,10 +13,11 @@
 // classic JS without JSX.
 
 let PropTypes;
-let ReactFeatureFlags;
 let React;
 let ReactDOM;
 let ReactTestUtils;
+
+let ReactFeatureFlags = require('shared/ReactFeatureFlags');
 
 describe('ReactElementValidator', () => {
   let ComponentClass;
@@ -38,27 +39,29 @@ describe('ReactElementValidator', () => {
   });
 
   it('warns for keys for arrays of elements in rest args', () => {
-    const Component = React.createFactory(ComponentClass);
-
     expect(() => {
-      Component(null, [Component(), Component()]);
+      React.createElement(ComponentClass, null, [
+        React.createElement(ComponentClass),
+        React.createElement(ComponentClass),
+      ]);
     }).toErrorDev('Each child in a list should have a unique "key" prop.');
   });
 
   it('warns for keys for arrays of elements with owner info', () => {
-    const Component = React.createFactory(ComponentClass);
-
     class InnerClass extends React.Component {
       render() {
-        return Component(null, this.props.childSet);
+        return React.createElement(ComponentClass, null, this.props.childSet);
       }
     }
 
-    const InnerComponent = React.createFactory(InnerClass);
-
     class ComponentWrapper extends React.Component {
       render() {
-        return InnerComponent({childSet: [Component(), Component()]});
+        return React.createElement(InnerClass, {
+          childSet: [
+            React.createElement(ComponentClass),
+            React.createElement(ComponentClass),
+          ],
+        });
       }
     }
 
@@ -144,34 +147,6 @@ describe('ReactElementValidator', () => {
   });
 
   it('warns for keys for iterables of elements in rest args', () => {
-    const Component = React.createFactory(ComponentClass);
-
-    const iterable = {
-      '@@iterator': function() {
-        let i = 0;
-        return {
-          next: function() {
-            const done = ++i > 2;
-            return {value: done ? undefined : Component(), done: done};
-          },
-        };
-      },
-    };
-
-    expect(() => Component(null, iterable)).toErrorDev(
-      'Each child in a list should have a unique "key" prop.',
-    );
-  });
-
-  it('does not warns for arrays of elements with keys', () => {
-    const Component = React.createFactory(ComponentClass);
-
-    Component(null, [Component({key: '#1'}), Component({key: '#2'})]);
-  });
-
-  it('does not warns for iterable elements with keys', () => {
-    const Component = React.createFactory(ComponentClass);
-
     const iterable = {
       '@@iterator': function() {
         let i = 0;
@@ -179,7 +154,7 @@ describe('ReactElementValidator', () => {
           next: function() {
             const done = ++i > 2;
             return {
-              value: done ? undefined : Component({key: '#' + i}),
+              value: done ? undefined : React.createElement(ComponentClass),
               done: done,
             };
           },
@@ -187,19 +162,50 @@ describe('ReactElementValidator', () => {
       },
     };
 
-    Component(null, iterable);
+    expect(() =>
+      React.createElement(ComponentClass, null, iterable),
+    ).toErrorDev('Each child in a list should have a unique "key" prop.');
+  });
+
+  it('does not warns for arrays of elements with keys', () => {
+    React.createElement(ComponentClass, null, [
+      React.createElement(ComponentClass, {key: '#1'}),
+      React.createElement(ComponentClass, {key: '#2'}),
+    ]);
+  });
+
+  it('does not warns for iterable elements with keys', () => {
+    const iterable = {
+      '@@iterator': function() {
+        let i = 0;
+        return {
+          next: function() {
+            const done = ++i > 2;
+            return {
+              value: done
+                ? undefined
+                : React.createElement(ComponentClass, {key: '#' + i}),
+              done: done,
+            };
+          },
+        };
+      },
+    };
+
+    React.createElement(ComponentClass, null, iterable);
   });
 
   it('does not warn when the element is directly in rest args', () => {
-    const Component = React.createFactory(ComponentClass);
-
-    Component(null, Component(), Component());
+    React.createElement(
+      ComponentClass,
+      null,
+      React.createElement(ComponentClass),
+      React.createElement(ComponentClass),
+    );
   });
 
   it('does not warn when the array contains a non-element', () => {
-    const Component = React.createFactory(ComponentClass);
-
-    Component(null, [{}, {}]);
+    React.createElement(ComponentClass, null, [{}, {}]);
   });
 
   it('should give context for PropType errors in nested components.', () => {
@@ -433,23 +439,25 @@ describe('ReactElementValidator', () => {
     );
   });
 
-  it('should warn when accessing .type on an element factory', () => {
-    function TestComponent() {
-      return <div />;
-    }
+  if (!ReactFeatureFlags.disableCreateFactory) {
+    it('should warn when accessing .type on an element factory', () => {
+      function TestComponent() {
+        return <div />;
+      }
 
-    let TestFactory = React.createFactory(TestComponent);
-    expect(
-      () => TestFactory.type,
-    ).toWarnDev(
-      'Warning: Factory.type is deprecated. Access the class directly before ' +
-        'passing it to createFactory.',
-      {withoutStack: true},
-    );
+      let TestFactory = React.createFactory(TestComponent);
+      expect(
+        () => TestFactory.type,
+      ).toWarnDev(
+        'Warning: Factory.type is deprecated. Access the class directly before ' +
+          'passing it to createFactory.',
+        {withoutStack: true},
+      );
 
-    // Warn once, not again
-    expect(TestFactory.type).toBe(TestComponent);
-  });
+      // Warn once, not again
+      expect(TestFactory.type).toBe(TestComponent);
+    });
+  }
 
   it('does not warn when using DOM node as children', () => {
     class DOMContainer extends React.Component {
