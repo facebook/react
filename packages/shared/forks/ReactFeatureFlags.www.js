@@ -14,6 +14,7 @@ import typeof * as FeatureFlagsShimType from './ReactFeatureFlags.www';
 export const {
   debugRenderPhaseSideEffectsForStrictMode,
   disableInputAttributeSyncing,
+  disableLegacyContext,
   enableTrustedTypesIntegration,
   enableSelectiveHydration,
   enableTrainModelFix,
@@ -34,7 +35,6 @@ export const enableSchedulerDebugging = true;
 export const replayFailedUnitOfWorkWithInvokeGuardedCallback = false;
 export const warnAboutDeprecatedLifecycles = true;
 export const warnAboutShorthandPropertyCollision = false;
-export const disableLegacyContext = false;
 export const warnAboutStringRefs = false;
 export const warnAboutDefaultPropsOnFunctionComponents = false;
 export const disableSchedulerTimeoutBasedOnReactExpirationTime = false;
