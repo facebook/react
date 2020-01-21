@@ -313,7 +313,16 @@ describe('ReactElement', () => {
     expect(React.isValidElement({})).toEqual(false);
     expect(React.isValidElement('string')).toEqual(false);
     if (!ReactFeatureFlags.disableCreateFactory) {
-      expect(React.isValidElement(React.createFactory('div'))).toEqual(false);
+      let factory;
+      expect(() => {
+        factory = React.createFactory('div');
+      }).toWarnDev(
+        'Warning: React.createFactory() is deprecated and will be removed in a ' +
+          'future major release. Consider using JSX or use React.createElement() ' +
+          'directly instead.',
+        {withoutStack: true},
+      );
+      expect(React.isValidElement(factory)).toEqual(false);
     }
     expect(React.isValidElement(Component)).toEqual(false);
     expect(React.isValidElement({type: 'div', props: {}})).toEqual(false);
@@ -473,7 +482,16 @@ describe('ReactElement', () => {
     expect(React.isValidElement({})).toEqual(false);
     expect(React.isValidElement('string')).toEqual(false);
     if (!ReactFeatureFlags.disableCreateFactory) {
-      expect(React.isValidElement(React.createFactory('div'))).toEqual(false);
+      let factory;
+      expect(() => {
+        factory = React.createFactory('div');
+      }).toWarnDev(
+        'Warning: React.createFactory() is deprecated and will be removed in a ' +
+          'future major release. Consider using JSX or use React.createElement() ' +
+          'directly instead.',
+        {withoutStack: true},
+      );
+      expect(React.isValidElement(factory)).toEqual(false);
     }
     expect(React.isValidElement(Component)).toEqual(false);
     expect(React.isValidElement({type: 'div', props: {}})).toEqual(false);
