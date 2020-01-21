@@ -108,3 +108,9 @@ export const disableCreateFactory = false;
 
 // Disables children for <textarea> elements
 export const disableTextareaChildren = false;
+
+// Disables ReactDOM.unstable_renderSubtreeIntoContainer
+export const disableUnstableRenderSubtreeIntoContainer = false;
+
+// Disables ReactDOM.unstable_createPortal
+export const disableUnstableCreatePortal = false;

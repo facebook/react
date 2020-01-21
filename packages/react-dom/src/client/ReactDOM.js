@@ -53,7 +53,11 @@ import {
 } from 'legacy-events/EventPropagators';
 import ReactVersion from 'shared/ReactVersion';
 import invariant from 'shared/invariant';
-import {exposeConcurrentModeAPIs} from 'shared/ReactFeatureFlags';
+import {
+  exposeConcurrentModeAPIs,
+  disableUnstableCreatePortal,
+  disableUnstableRenderSubtreeIntoContainer,
+} from 'shared/ReactFeatureFlags';
 
 import {
   getInstanceFromNode,
@@ -77,6 +81,7 @@ setAttemptContinuousHydration(attemptContinuousHydration);
 setAttemptHydrationAtCurrentPriority(attemptHydrationAtCurrentPriority);
 
 let didWarnAboutUnstableCreatePortal = false;
+let didWarnAboutUnstableRenderSubtreeIntoContainer = false;
 
 if (__DEV__) {
   if (
@@ -129,25 +134,7 @@ const ReactDOM: Object = {
   findDOMNode,
   hydrate,
   render,
-  unstable_renderSubtreeIntoContainer,
   unmountComponentAtNode,
-
-  // Temporary alias since we already shipped React 16 RC with it.
-  // TODO: remove in React 17.
-  unstable_createPortal(...args) {
-    if (__DEV__) {
-      if (!didWarnAboutUnstableCreatePortal) {
-        didWarnAboutUnstableCreatePortal = true;
-        console.warn(
-          'The ReactDOM.unstable_createPortal() alias has been deprecated, ' +
-            'and will be removed in React 17+. Update your code to use ' +
-            'ReactDOM.createPortal() instead. It has the exact same API, ' +
-            'but without the "unstable_" prefix.',
-        );
-      }
-    }
-    return createPortal(...args);
-  },
 
   unstable_batchedUpdates: batchedUpdates,
 
@@ -186,6 +173,41 @@ if (exposeConcurrentModeAPIs) {
     if (target) {
       queueExplicitHydrationTarget(target);
     }
+  };
+}
+
+if (!disableUnstableRenderSubtreeIntoContainer) {
+  ReactDOM.unstable_renderSubtreeIntoContainer = function(...args) {
+    if (__DEV__) {
+      if (!didWarnAboutUnstableRenderSubtreeIntoContainer) {
+        didWarnAboutUnstableRenderSubtreeIntoContainer = true;
+        console.warn(
+          'ReactDOM.unstable_renderSubtreeIntoContainer() is deprecated ' +
+            'and will be removed in a future major release. Consider using ' +
+            'React Portals instead.',
+        );
+      }
+    }
+    return unstable_renderSubtreeIntoContainer(...args);
+  };
+}
+
+if (!disableUnstableCreatePortal) {
+  // Temporary alias since we already shipped React 16 RC with it.
+  // TODO: remove in React 17.
+  ReactDOM.unstable_createPortal = function(...args) {
+    if (__DEV__) {
+      if (!didWarnAboutUnstableCreatePortal) {
+        didWarnAboutUnstableCreatePortal = true;
+        console.warn(
+          'The ReactDOM.unstable_createPortal() alias has been deprecated, ' +
+            'and will be removed in React 17+. Update your code to use ' +
+            'ReactDOM.createPortal() instead. It has the exact same API, ' +
+            'but without the "unstable_" prefix.',
+        );
+      }
+    }
+    return createPortal(...args);
   };
 }
 

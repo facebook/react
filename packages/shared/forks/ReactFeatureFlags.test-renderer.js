@@ -42,6 +42,8 @@ export const enableTrustedTypesIntegration = false;
 export const enableNativeTargetAsInstance = false;
 export const disableCreateFactory = false;
 export const disableTextareaChildren = false;
+export const disableUnstableRenderSubtreeIntoContainer = false;
+export const disableUnstableCreatePortal = false;
 
 // Only used in www builds.
 export function addUserTimingListener() {
