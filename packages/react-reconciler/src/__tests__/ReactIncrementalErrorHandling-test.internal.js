@@ -1152,7 +1152,7 @@ describe('ReactIncrementalErrorHandling', () => {
       'Legacy context API has been detected within a strict-mode tree.\n\n' +
         'The old API will be supported in all 16.x releases, but ' +
         'applications using it should migrate to the new version.\n\n' +
-        'Please update the following component: Provider',
+        'Please update the following components: Provider, Connector',
     );
 
     // If the context stack does not unwind, span will get 'abcde'
@@ -1655,7 +1655,7 @@ describe('ReactIncrementalErrorHandling', () => {
       'Legacy context API has been detected within a strict-mode tree.\n\n' +
         'The old API will be supported in all 16.x releases, but ' +
         'applications using it should migrate to the new version.\n\n' +
-        'Please update the following component: Provider',
+        'Please update the following components: Provider',
     ]);
   });
 });
