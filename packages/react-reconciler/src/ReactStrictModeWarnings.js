@@ -287,7 +287,6 @@ if (__DEV__) {
 
   // Tracks components we have already warned about.
   const didWarnAboutLegacyContext = new Set();
-
   ReactStrictModeWarnings.recordLegacyContextWarning = (
     fiber: Fiber,
     instance: any,
@@ -305,7 +304,6 @@ if (__DEV__) {
     if (didWarnAboutLegacyContext.has(fiber.type)) {
       return;
     }
-
     let warningsForRoot = pendingLegacyContextWarning.get(strictRoot);
 
     if (
@@ -324,26 +322,46 @@ if (__DEV__) {
   ReactStrictModeWarnings.flushLegacyContextWarning = () => {
     ((pendingLegacyContextWarning: any): FiberToFiberComponentsMap).forEach(
       (fiberArray: FiberArray, strictRoot) => {
-        const uniqueNames = new Set();
+        const componentStacks = new Map();
+
         fiberArray.forEach(fiber => {
-          uniqueNames.add(getComponentName(fiber.type) || 'Component');
+          const componentName = getComponentName(fiber.type) || 'Component';
+          const componentStack = getStackByFiberInDevAndProd(fiber);
+          let count = 0;
+          if (componentStacks.has(componentStack)) {
+            ({count} = (componentStacks.get(componentStack): any));
+          }
+          // Increase count by 1
+          componentStacks.set(componentStack, {
+            count: count + 1,
+            name: componentName,
+          });
           didWarnAboutLegacyContext.add(fiber.type);
         });
 
-        const sortedNames = setToSortedString(uniqueNames);
-        const strictRootComponentStack = getStackByFiberInDevAndProd(
-          strictRoot,
-        );
+        const stacks = Array.from(componentStacks.keys());
+        // Find the most frequently found component stack and use that
+        let currentCount = 0;
+        let mostFrequentStack = null;
+
+        for (let i = 0; i < stacks.length; i++) {
+          const stack = stacks[i];
+          let {count} = (componentStacks.get(stack): any);
+          if (count > currentCount || mostFrequentStack === null) {
+            currentCount = count;
+            mostFrequentStack = stack;
+          }
+        }
 
         console.error(
           'Legacy context API has been detected within a strict-mode tree.' +
             '\n\nThe old API will be supported in all 16.x releases, but applications ' +
             'using it should migrate to the new version.' +
-            '\n\nPlease update the following components: %s' +
+            '\n\nPlease update the following component: %s' +
             '\n\nLearn more about this warning here: https://fb.me/react-legacy-context' +
             '%s',
-          sortedNames,
-          strictRootComponentStack,
+          (componentStacks.get(mostFrequentStack): any).name,
+          mostFrequentStack,
         );
       },
     );

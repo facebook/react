@@ -874,10 +874,11 @@ describe('context legacy', () => {
       'Warning: Legacy context API has been detected within a strict-mode tree.' +
         '\n\nThe old API will be supported in all 16.x releases, but applications ' +
         'using it should migrate to the new version.' +
-        '\n\nPlease update the following components: ' +
-        'FunctionalLegacyContextConsumer, LegacyContextConsumer, LegacyContextProvider' +
+        '\n\nPlease update the following component: ' +
+        'LegacyContextProvider' +
         '\n\nLearn more about this warning here: ' +
         'https://fb.me/react-legacy-context' +
+        '\n    in LegacyContextProvider (at **)' +
         '\n    in StrictMode (at **)' +
         '\n    in div (at **)' +
         '\n    in Root (at **)',
