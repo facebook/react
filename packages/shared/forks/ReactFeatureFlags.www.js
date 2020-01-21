@@ -15,8 +15,6 @@ export const {
   debugRenderPhaseSideEffectsForStrictMode,
   disableInputAttributeSyncing,
   enableTrustedTypesIntegration,
-  enableSelectiveHydration,
-  enableTrainModelFix,
 } = require('ReactFeatureFlags');
 
 // In www, we have experimental support for gathering data
@@ -39,9 +37,12 @@ export const warnAboutStringRefs = false;
 export const warnAboutDefaultPropsOnFunctionComponents = false;
 export const disableSchedulerTimeoutBasedOnReactExpirationTime = false;
 
+export const enableTrainModelFix = true;
+
 export const exposeConcurrentModeAPIs = __EXPERIMENTAL__;
 
 export const enableSuspenseServerRenderer = true;
+export const enableSelectiveHydration = true;
 
 export const enableChunksAPI = __EXPERIMENTAL__;
 
