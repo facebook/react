@@ -416,6 +416,7 @@ function resolve(
   child: mixed,
   context: Object,
   threadID: ThreadID,
+  makeStaticMarkup: Boolean
 ): {|
   child: mixed,
   context: Object,
@@ -430,11 +431,11 @@ function resolve(
     if (typeof Component !== 'function') {
       break;
     }
-    processChild(element, Component);
+    processChild(element, Component, makeStaticMarkup);
   }
 
   // Extra closure so queue and replace can be captured properly
-  function processChild(element, Component) {
+  function processChild(element, Component, makeStaticMarkup) {
     const isClass = shouldConstruct(Component);
     const publicContext = processContext(Component, context, threadID, isClass);
 
@@ -532,7 +533,9 @@ function resolve(
       const componentIdentity = {};
       prepareToUseHooks(componentIdentity);
       inst = Component(element.props, publicContext, updater);
-      inst = finishHooks(Component, element.props, inst, publicContext);
+      if (!makeStaticMarkup) {
+        inst = finishHooks(Component, element.props, inst, publicContext);
+      }
 
       if (inst == null || inst.render == null) {
         child = inst;
@@ -954,7 +957,7 @@ class ReactDOMServerRenderer {
       return escapeTextForBrowser(text);
     } else {
       let nextChild;
-      ({child: nextChild, context} = resolve(child, context, this.threadID));
+      ({child: nextChild, context} = resolve(child, context, this.threadID, this.makeStaticMarkup));
       if (nextChild === null || nextChild === false) {
         return '';
       } else if (!React.isValidElement(nextChild)) {
