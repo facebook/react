@@ -51,7 +51,7 @@ function getComponentName(type: mixed): string | null {
     }
   }
   if (typeof type === 'function') {
-    return type.displayName || type.name || null;
+    return (type: any).displayName || type.name || null;
   }
   if (typeof type === 'string') {
     return type;
