@@ -416,7 +416,7 @@ function resolve(
   child: mixed,
   context: Object,
   threadID: ThreadID,
-  makeStaticMarkup: Boolean
+  makeStaticMarkup: boolean
 ): {|
   child: mixed,
   context: Object,
