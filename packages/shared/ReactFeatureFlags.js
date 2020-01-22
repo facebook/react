@@ -84,7 +84,7 @@ export const warnAboutDefaultPropsOnFunctionComponents = false;
 
 export const disableSchedulerTimeoutBasedOnReactExpirationTime = false;
 
-export const enableTrainModelFix = __EXPERIMENTAL__;
+export const enableTrainModelFix = true;
 
 export const enableTrustedTypesIntegration = false;
 
