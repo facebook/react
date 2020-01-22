@@ -416,7 +416,7 @@ function resolve(
   child: mixed,
   context: Object,
   threadID: ThreadID,
-  makeStaticMarkup: boolean
+  makeStaticMarkup: boolean,
 ): {|
   child: mixed,
   context: Object,
@@ -957,7 +957,12 @@ class ReactDOMServerRenderer {
       return escapeTextForBrowser(text);
     } else {
       let nextChild;
-      ({child: nextChild, context} = resolve(child, context, this.threadID, this.makeStaticMarkup));
+      ({child: nextChild, context} = resolve(
+        child,
+        context,
+        this.threadID,
+        this.makeStaticMarkup,
+      ));
       if (nextChild === null || nextChild === false) {
         return '';
       } else if (!React.isValidElement(nextChild)) {
