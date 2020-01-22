@@ -431,11 +431,11 @@ function resolve(
     if (typeof Component !== 'function') {
       break;
     }
-    processChild(element, Component, makeStaticMarkup);
+    processChild(element, Component);
   }
 
   // Extra closure so queue and replace can be captured properly
-  function processChild(element, Component, makeStaticMarkup) {
+  function processChild(element, Component) {
     const isClass = shouldConstruct(Component);
     const publicContext = processContext(Component, context, threadID, isClass);
 
