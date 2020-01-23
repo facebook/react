@@ -43,6 +43,32 @@ if (process.env.REACT_CLASS_EQUIVALENCE_TEST) {
     global.spyOnDevAndProd = spyOn;
   }
 
+  const expect = global.expect;
+
+  // We create a new expect that supports handling React Element
+  // introspection, so we don't trigger loads of warnings.
+  const expectWithReactIntrospection = (...args) => {
+    const {introspectReact} = require('react/src/ReactElement');
+    const matchers = introspectReact(() => expect(...args));
+    for (let matcher in matchers) {
+      const matcherFn = matchers[matcher];
+      if (!matcherFn._replaced) {
+        const newMatcherFn = (...subArgs) =>
+          introspectReact(() => matcherFn(...subArgs));
+        for (let prop in matcherFn) {
+          newMatcherFn[prop] = matcherFn[prop];
+        }
+        matchers[matcher] = newMatcherFn;
+      }
+    }
+    return matchers;
+  };
+
+  for (let prop in expect) {
+    expectWithReactIntrospection[prop] = expect[prop];
+  }
+  global.expect = expectWithReactIntrospection;
+
   expect.extend({
     ...require('./matchers/interactionTracingMatchers'),
     ...require('./matchers/profilerMatchers'),

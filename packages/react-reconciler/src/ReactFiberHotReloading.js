@@ -36,6 +36,7 @@ import {
   REACT_MEMO_TYPE,
   REACT_LAZY_TYPE,
 } from 'shared/ReactSymbols';
+import {introspectReactElement} from 'react/src/ReactElement';
 
 export type Family = {|
   current: any,
@@ -139,7 +140,9 @@ export function isCompatibleFamilyForHotReloading(
     }
 
     const prevType = fiber.elementType;
-    const nextType = element.type;
+    const {type: nextType} = __DEV__
+      ? introspectReactElement(element)
+      : element;
 
     // If we got here, we know types aren't === equal.
     let needsCompareFamilies = false;

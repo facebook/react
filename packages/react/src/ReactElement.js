@@ -8,6 +8,7 @@
 import getComponentName from 'shared/getComponentName';
 import invariant from 'shared/invariant';
 import {REACT_ELEMENT_TYPE} from 'shared/ReactSymbols';
+import {warnReactElementIntrospection} from 'shared/ReactFeatureFlags';
 
 import ReactCurrentOwner from './ReactCurrentOwner';
 
@@ -123,6 +124,30 @@ function warnIfStringRefCannotBeAutoConverted(config) {
   }
 }
 
+export let introspectReactElement;
+export let introspectReact;
+
+let isInternalReactUsage = false;
+
+if (__DEV__) {
+  introspectReactElement = element => {
+    let previousIsInternalReactUsage = isInternalReactUsage;
+    isInternalReactUsage = true;
+    const {type, props, ref, key} = element;
+    isInternalReactUsage = previousIsInternalReactUsage;
+    return {type, props, ref, key};
+  };
+  introspectReact = f => {
+    let previousIsInternalReactUsage = isInternalReactUsage;
+    try {
+      isInternalReactUsage = true;
+      return f();
+    } finally {
+      isInternalReactUsage = previousIsInternalReactUsage;
+    }
+  };
+}
+
 /**
  * Factory method to create a new React element. This no longer adheres to
  * the class pattern, so do not use new to call it. Also, instanceof check
@@ -165,6 +190,53 @@ const ReactElement = function(type, key, ref, self, source, owner, props) {
     // commonly used development environments.
     element._store = {};
 
+    if (warnReactElementIntrospection) {
+      const warning = field => {
+        if (!isInternalReactUsage) {
+          debugger;
+          // console.error(
+          //   'Accessing property "%s" on a React Element is not recommended and should be avoided. ' +
+          //     'React Elements are objects owned by React and their internals are private and not ' +
+          //     'intended for introspection.',
+          //   field,
+          // );
+        }
+      };
+
+      Object.defineProperty(element, 'type', {
+        configurable: false,
+        enumerable: true,
+        get() {
+          warning('type');
+          return type;
+        },
+      });
+      Object.defineProperty(element, 'props', {
+        configurable: false,
+        enumerable: true,
+        get() {
+          warning('props');
+          return props;
+        },
+      });
+      Object.defineProperty(element, 'ref', {
+        configurable: false,
+        enumerable: true,
+        get() {
+          warning('ref');
+          return ref;
+        },
+      });
+      Object.defineProperty(element, 'key', {
+        configurable: false,
+        enumerable: true,
+        get() {
+          warning('key');
+          return key;
+        },
+      });
+    }
+
     // To make comparing ReactElements easier for testing purposes, we make
     // the validation flag non-enumerable (where possible, which should
     // include every environment we run tests in), so the test framework
@@ -191,7 +263,7 @@ const ReactElement = function(type, key, ref, self, source, owner, props) {
       value: source,
     });
     if (Object.freeze) {
-      Object.freeze(element.props);
+      Object.freeze(props);
       Object.freeze(element);
     }
   }
@@ -449,14 +521,17 @@ export function createFactory(type) {
 }
 
 export function cloneAndReplaceKey(oldElement, newKey) {
+  const {ref, type, props} = __DEV__
+    ? introspectReactElement(oldElement)
+    : oldElement;
   const newElement = ReactElement(
-    oldElement.type,
+    type,
     newKey,
-    oldElement.ref,
+    ref,
     oldElement._self,
     oldElement._source,
     oldElement._owner,
-    oldElement.props,
+    props,
   );
 
   return newElement;

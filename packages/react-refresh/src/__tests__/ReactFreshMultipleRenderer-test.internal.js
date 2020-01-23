@@ -16,13 +16,10 @@ if (__DEV__) {
   ReactFreshRuntime = require('react-refresh/runtime');
   ReactFreshRuntime.injectIntoGlobalHook(global);
 }
-let ReactDOM = require('react-dom');
-
-jest.resetModules();
-let ReactART = require('react-art');
-let ARTSVGMode = require('art/modes/svg');
-let ARTCurrentMode = require('art/modes/current');
-ARTCurrentMode.setCurrent(ARTSVGMode);
+let ReactDOM;
+let ReactART;
+let ARTSVGMode;
+let ARTCurrentMode;
 
 describe('ReactFresh', () => {
   let container;
@@ -44,7 +41,8 @@ describe('ReactFresh', () => {
   it('can update components managd by different renderers independently', () => {
     if (__DEV__) {
       let InnerV1 = function() {
-        return <ReactART.Shape fill="blue" />;
+        const [fill] = React.useState('blue');
+        return <ReactART.Shape fill={fill} />;
       };
       ReactFreshRuntime.register(InnerV1, 'Inner');
 
@@ -59,7 +57,19 @@ describe('ReactFresh', () => {
       };
       ReactFreshRuntime.register(OuterV1, 'Outer');
 
+      jest.isolateModules(() => {
+        ReactDOM = require('react-dom');
+      });
+
+      jest.isolateModules(() => {
+        ReactART = require('react-art');
+        ARTSVGMode = require('art/modes/svg');
+        ARTCurrentMode = require('art/modes/current');
+        ARTCurrentMode.setCurrent(ARTSVGMode);
+      });
+
       ReactDOM.render(<OuterV1 />, container);
+
       const el = container.firstChild;
       const pathEl = el.querySelector('path');
       expect(el.style.color).toBe('blue');

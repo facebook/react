@@ -114,3 +114,6 @@ export const disableUnstableRenderSubtreeIntoContainer = false;
 
 // Disables ReactDOM.unstable_createPortal
 export const disableUnstableCreatePortal = false;
+
+// Disables ReactDOM.unstable_createPortal
+export const warnReactElementIntrospection = true;

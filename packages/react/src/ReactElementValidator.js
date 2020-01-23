@@ -29,6 +29,7 @@ import {
   createElement,
   cloneElement,
   jsxDEV,
+  introspectReactElement,
 } from './ReactElement';
 import ReactDebugCurrentFrame, {
   setCurrentlyValidatingElement,
@@ -102,7 +103,8 @@ function getCurrentComponentErrorInfo(parentType) {
  * @param {*} parentType element's parent's type.
  */
 function validateExplicitKey(element, parentType) {
-  if (!element._store || element._store.validated || element.key != null) {
+  const {key} = __DEV__ ? introspectReactElement(element) : element;
+  if (!element._store || element._store.validated || key != null) {
     return;
   }
   element._store.validated = true;
@@ -191,7 +193,7 @@ function validateChildKeys(node, parentType) {
  */
 function validatePropTypes(element) {
   if (__DEV__) {
-    const type = element.type;
+    const {type, props} = introspectReactElement(element);
     if (type === null || type === undefined || typeof type === 'string') {
       return;
     }
@@ -214,7 +216,7 @@ function validatePropTypes(element) {
       setCurrentlyValidatingElement(element);
       checkPropTypes(
         propTypes,
-        element.props,
+        props,
         'prop',
         name,
         ReactDebugCurrentFrame.getStackAddendum,
@@ -246,8 +248,8 @@ function validatePropTypes(element) {
 function validateFragmentProps(fragment) {
   if (__DEV__) {
     setCurrentlyValidatingElement(fragment);
-
-    const keys = Object.keys(fragment.props);
+    const {props, ref} = __DEV__ ? introspectReactElement(fragment) : fragment;
+    const keys = Object.keys(props);
     for (let i = 0; i < keys.length; i++) {
       const key = keys[i];
       if (key !== 'children' && key !== 'key') {
@@ -260,7 +262,7 @@ function validateFragmentProps(fragment) {
       }
     }
 
-    if (fragment.ref !== null) {
+    if (ref !== null) {
       console.error('Invalid attribute `ref` supplied to `React.Fragment`.');
     }
 

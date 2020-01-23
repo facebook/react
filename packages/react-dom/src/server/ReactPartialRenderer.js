@@ -83,6 +83,7 @@ import warnValidStyle from '../shared/warnValidStyle';
 import {validateProperties as validateARIAProperties} from '../shared/ReactDOMInvalidARIAHook';
 import {validateProperties as validateInputProperties} from '../shared/ReactDOMNullInputValuePropHook';
 import {validateProperties as validateUnknownProperties} from '../shared/ReactDOMUnknownPropertyHook';
+import {introspectReactElement} from 'react/src/ReactElement';
 
 // Based on reading the React.Children implementation. TODO: type this somewhere?
 type ReactNode = string | number | ReactElement;
@@ -303,10 +304,11 @@ function flattenTopLevelChildren(children: mixed): FlatReactChildren {
     return toArray(children);
   }
   const element = ((children: any): ReactElement);
-  if (element.type !== REACT_FRAGMENT_TYPE) {
+  const {type, props} = __DEV__ ? introspectReactElement(element) : element;
+  if (type !== REACT_FRAGMENT_TYPE) {
     return [element];
   }
-  const fragmentChildren = element.props.children;
+  const fragmentChildren = props.children;
   if (!React.isValidElement(fragmentChildren)) {
     return toArray(fragmentChildren);
   }
@@ -423,7 +425,9 @@ function resolve(
   while (React.isValidElement(child)) {
     // Safe because we just checked it's an element.
     let element: ReactElement = (child: any);
-    let Component = element.type;
+    const {type: Component} = __DEV__
+      ? introspectReactElement(element)
+      : element;
     if (__DEV__) {
       pushElementToDebugStack(element);
     }
@@ -464,8 +468,9 @@ function resolve(
     };
 
     let inst;
+    const {props} = __DEV__ ? introspectReactElement(element) : element;
     if (isClass) {
-      inst = new Component(element.props, publicContext, updater);
+      inst = new Component(props, publicContext, updater);
 
       if (typeof Component.getDerivedStateFromProps === 'function') {
         if (__DEV__) {
@@ -488,7 +493,7 @@ function resolve(
 
         let partialState = Component.getDerivedStateFromProps.call(
           null,
-          element.props,
+          props,
           inst.state,
         );
 
@@ -531,8 +536,8 @@ function resolve(
       }
       const componentIdentity = {};
       prepareToUseHooks(componentIdentity);
-      inst = Component(element.props, publicContext, updater);
-      inst = finishHooks(Component, element.props, inst, publicContext);
+      inst = Component(props, publicContext, updater);
+      inst = finishHooks(Component, props, inst, publicContext);
 
       if (inst == null || inst.render == null) {
         child = inst;
@@ -558,7 +563,7 @@ function resolve(
       }
     }
 
-    inst.props = element.props;
+    inst.props = props;
     inst.context = publicContext;
     inst.updater = updater;
 
@@ -622,7 +627,7 @@ function resolve(
             let partial = oldQueue[i];
             let partialState =
               typeof partial === 'function'
-                ? partial.call(inst, nextState, element.props, publicContext)
+                ? partial.call(inst, nextState, props, publicContext)
                 : partial;
             if (partialState != null) {
               if (dontMutate) {
@@ -991,7 +996,10 @@ class ReactDOMServerRenderer {
       }
       // Safe because we just checked it's an element.
       const nextElement = ((nextChild: any): ReactElement);
-      const elementType = nextElement.type;
+      const {type} = __DEV__
+        ? introspectReactElement(nextElement)
+        : nextElement;
+      const elementType = type;
 
       if (typeof elementType === 'string') {
         return this.renderDOM(nextElement, context, parentNamespace);
@@ -1003,9 +1011,9 @@ class ReactDOMServerRenderer {
         case REACT_PROFILER_TYPE:
         case REACT_SUSPENSE_LIST_TYPE:
         case REACT_FRAGMENT_TYPE: {
-          const nextChildren = toArray(
-            ((nextChild: any): ReactElement).props.children,
-          );
+          const element: ReactElement = ((nextChild: any): ReactElement);
+          const {props} = __DEV__ ? introspectReactElement(element) : element;
+          const nextChildren = toArray(props.children);
           const frame: Frame = {
             type: null,
             domNamespace: parentNamespace,
@@ -1043,9 +1051,9 @@ class ReactDOMServerRenderer {
               return '';
             }
             const fallbackChildren = toArray(fallback);
-            const nextChildren = toArray(
-              ((nextChild: any): ReactElement).props.children,
-            );
+            const element: ReactElement = ((nextChild: any): ReactElement);
+            const {props} = __DEV__ ? introspectReactElement(element) : element;
+            const nextChildren = toArray(props.children);
             const fallbackFrame: Frame = {
               type: null,
               domNamespace: parentNamespace,
@@ -1085,12 +1093,15 @@ class ReactDOMServerRenderer {
             let nextChildren;
             const componentIdentity = {};
             prepareToUseHooks(componentIdentity);
-            nextChildren = elementType.render(element.props, element.ref);
+            const {props, ref} = __DEV__
+              ? introspectReactElement(element)
+              : element;
+            nextChildren = elementType.render(props, ref);
             nextChildren = finishHooks(
               elementType.render,
-              element.props,
+              props,
               nextChildren,
-              element.ref,
+              ref,
             );
             nextChildren = toArray(nextChildren);
             const frame: Frame = {
@@ -1109,10 +1120,11 @@ class ReactDOMServerRenderer {
           }
           case REACT_MEMO_TYPE: {
             const element: ReactElement = ((nextChild: any): ReactElement);
+            const {props} = __DEV__ ? introspectReactElement(element) : element;
             let nextChildren = [
               React.createElement(
                 elementType.type,
-                Object.assign({ref: element.ref}, element.props),
+                Object.assign({ref: element.ref}, props),
               ),
             ];
             const frame: Frame = {
@@ -1200,20 +1212,23 @@ class ReactDOMServerRenderer {
           // eslint-disable-next-line-no-fallthrough
           case REACT_FUNDAMENTAL_TYPE: {
             if (enableFundamentalAPI) {
+              const {props} = __DEV__
+                ? introspectReactElement(nextElement)
+                : nextElement;
               const fundamentalImpl = elementType.impl;
-              const open = fundamentalImpl.getServerSideString(
-                null,
-                nextElement.props,
-              );
+              const open = fundamentalImpl.getServerSideString(null, props);
               const getServerSideStringClose =
                 fundamentalImpl.getServerSideStringClose;
               const close =
                 getServerSideStringClose !== undefined
-                  ? getServerSideStringClose(null, nextElement.props)
+                  ? getServerSideStringClose(null, props)
                   : '';
+              const {props: childProps} = __DEV__
+                ? introspectReactElement((nextChild: any))
+                : (nextChild: any);
               const nextChildren =
                 fundamentalImpl.reconcileChildren !== false
-                  ? toArray(((nextChild: any): ReactElement).props.children)
+                  ? toArray(childProps.children)
                   : [];
               const frame: Frame = {
                 type: null,
@@ -1277,9 +1292,11 @@ class ReactDOMServerRenderer {
           // eslint-disable-next-line-no-fallthrough
           case REACT_SCOPE_TYPE: {
             if (enableScopeAPI) {
-              const nextChildren = toArray(
-                ((nextChild: any): ReactElement).props.children,
-              );
+              const element: ReactElement = (nextChild: any);
+              const {props} = __DEV__
+                ? introspectReactElement(element)
+                : element;
+              const nextChildren = toArray(props.children);
               const frame: Frame = {
                 type: null,
                 domNamespace: parentNamespace,
@@ -1337,7 +1354,8 @@ class ReactDOMServerRenderer {
     context: Object,
     parentNamespace: string,
   ): string {
-    const tag = element.type.toLowerCase();
+    let {type, props} = __DEV__ ? introspectReactElement(element) : element;
+    const tag = type.toLowerCase();
 
     let namespace = parentNamespace;
     if (parentNamespace === Namespaces.html) {
@@ -1348,12 +1366,12 @@ class ReactDOMServerRenderer {
       if (namespace === Namespaces.html) {
         // Should this check be gated by parent namespace? Not sure we want to
         // allow <SVG> or <mATH>.
-        if (tag !== element.type) {
+        if (tag !== type) {
           console.error(
             '<%s /> is using incorrect casing. ' +
               'Use PascalCase for React components, ' +
               'or lowercase for HTML elements.',
-            element.type,
+            type,
           );
         }
       }
@@ -1361,7 +1379,6 @@ class ReactDOMServerRenderer {
 
     validateDangerousTag(tag);
 
-    let props = element.props;
     if (tag === 'input') {
       if (__DEV__) {
         ReactControlledValuePropTypes.checkPropTypes('input', props);
@@ -1559,7 +1576,7 @@ class ReactDOMServerRenderer {
     assertValidProps(tag, props);
 
     let out = createOpenTagMarkup(
-      element.type,
+      type,
       tag,
       props,
       namespace,
@@ -1571,7 +1588,7 @@ class ReactDOMServerRenderer {
       out += '/>';
     } else {
       out += '>';
-      footer = '</' + element.type + '>';
+      footer = '</' + type + '>';
     }
     let children;
     const innerMarkup = getNonChildrenInnerMarkup(props);
@@ -1598,7 +1615,7 @@ class ReactDOMServerRenderer {
       children = toArray(props.children);
     }
     const frame = {
-      domNamespace: getChildNamespace(parentNamespace, element.type),
+      domNamespace: getChildNamespace(parentNamespace, type),
       type: tag,
       children,
       childIndex: 0,

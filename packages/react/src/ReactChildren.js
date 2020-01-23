@@ -12,7 +12,11 @@ import {
   REACT_PORTAL_TYPE,
 } from 'shared/ReactSymbols';
 
-import {isValidElement, cloneAndReplaceKey} from './ReactElement';
+import {
+  isValidElement,
+  cloneAndReplaceKey,
+  introspectReactElement,
+} from './ReactElement';
 import ReactDebugCurrentFrame from './ReactDebugCurrentFrame';
 
 const SEPARATOR = '.';
@@ -242,13 +246,13 @@ function traverseAllChildren(children, callback, traverseContext) {
 function getComponentKey(component, index) {
   // Do some typechecking here since we call this blindly. We want to ensure
   // that we don't block potential future ES APIs.
-  if (
-    typeof component === 'object' &&
-    component !== null &&
-    component.key != null
-  ) {
-    // Explicit key
-    return escape(component.key);
+  const isObject = typeof component === 'object' && component !== null;
+  if (isObject) {
+    const {key} = __DEV__ ? introspectReactElement(component) : component;
+    if (key != null) {
+      // Explicit key
+      return escape(key);
+    }
   }
   // Implicit key determined by the index in the set
   return index.toString(36);
@@ -293,13 +297,14 @@ function mapSingleChildIntoContext(bookKeeping, child, childKey) {
     mapIntoWithKeyPrefixInternal(mappedChild, result, childKey, c => c);
   } else if (mappedChild != null) {
     if (isValidElement(mappedChild)) {
+      const {key} = __DEV__ ? introspectReactElement(mappedChild) : mappedChild;
       mappedChild = cloneAndReplaceKey(
         mappedChild,
         // Keep both the (mapped) and old keys if they differ, just as
         // traverseAllChildren used to do for objects as children
         keyPrefix +
-          (mappedChild.key && (!child || child.key !== mappedChild.key)
-            ? escapeUserProvidedKey(mappedChild.key) + '/'
+          (key && (!child || child.key !== key)
+            ? escapeUserProvidedKey(key) + '/'
             : '') +
           childKey,
       );

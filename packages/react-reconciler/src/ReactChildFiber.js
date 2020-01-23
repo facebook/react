@@ -48,6 +48,8 @@ import {
 import {isCompatibleFamilyForHotReloading} from './ReactFiberHotReloading';
 import {StrictMode} from './ReactTypeOfMode';
 
+import {introspectReactElement} from 'react/src/ReactElement';
+
 let didWarnAboutMaps;
 let didWarnAboutGenerators;
 let didWarnAboutStringRefs;
@@ -72,7 +74,8 @@ if (__DEV__) {
     if (child === null || typeof child !== 'object') {
       return;
     }
-    if (!child._store || child._store.validated || child.key != null) {
+    const {key} = __DEV__ ? introspectReactElement(child) : child;
+    if (!child._store || child._store.validated || key != null) {
       return;
     }
     invariant(
@@ -107,7 +110,8 @@ function coerceRef(
   current: Fiber | null,
   element: ReactElement,
 ) {
-  let mixedRef = element.ref;
+  const {ref: elementRef} = __DEV__ ? introspectReactElement(element) : element;
+  let mixedRef = elementRef;
   if (
     mixedRef !== null &&
     typeof mixedRef !== 'function' &&
@@ -405,13 +409,14 @@ function ChildReconciler(shouldTrackSideEffects) {
     expirationTime: ExpirationTime,
   ): Fiber {
     if (current !== null) {
+      const {type, props} = __DEV__ ? introspectReactElement(element) : element;
       if (
-        current.elementType === element.type ||
+        current.elementType === type ||
         // Keep this check inline so it only runs on the false path:
         (__DEV__ ? isCompatibleFamilyForHotReloading(current, element) : false)
       ) {
         // Move based on index
-        const existing = useFiber(current, element.props, expirationTime);
+        const existing = useFiber(current, props, expirationTime);
         existing.ref = coerceRef(returnFiber, current, element);
         existing.return = returnFiber;
         if (__DEV__) {
@@ -422,13 +427,13 @@ function ChildReconciler(shouldTrackSideEffects) {
       } else if (
         enableChunksAPI &&
         current.tag === Chunk &&
-        element.type.$$typeof === REACT_CHUNK_TYPE &&
-        element.type.render === current.type.render
+        type.$$typeof === REACT_CHUNK_TYPE &&
+        type.render === current.type.render
       ) {
         // Same as above but also update the .type field.
-        const existing = useFiber(current, element.props, expirationTime);
+        const existing = useFiber(current, props, expirationTime);
         existing.return = returnFiber;
-        existing.type = element.type;
+        existing.type = type;
         if (__DEV__) {
           existing._debugSource = element._source;
           existing._debugOwner = element._owner;
@@ -588,16 +593,19 @@ function ChildReconciler(shouldTrackSideEffects) {
         expirationTime,
       );
     }
-
     if (typeof newChild === 'object' && newChild !== null) {
+      const {key: childKey, type: childType, props: childProps} = __DEV__
+        ? introspectReactElement(newChild)
+        : newChild;
+
       switch (newChild.$$typeof) {
         case REACT_ELEMENT_TYPE: {
-          if (newChild.key === key) {
-            if (newChild.type === REACT_FRAGMENT_TYPE) {
+          if (childKey === key) {
+            if (childType === REACT_FRAGMENT_TYPE) {
               return updateFragment(
                 returnFiber,
                 oldFiber,
-                newChild.props.children,
+                childProps.children,
                 expirationTime,
                 key,
               );
@@ -613,7 +621,7 @@ function ChildReconciler(shouldTrackSideEffects) {
           }
         }
         case REACT_PORTAL_TYPE: {
-          if (newChild.key === key) {
+          if (childKey === key) {
             return updatePortal(
               returnFiber,
               oldFiber,
@@ -670,21 +678,22 @@ function ChildReconciler(shouldTrackSideEffects) {
         expirationTime,
       );
     }
-
     if (typeof newChild === 'object' && newChild !== null) {
+      const {key: childKey, type: childType, props: childProps} = __DEV__
+        ? introspectReactElement(newChild)
+        : newChild;
+
       switch (newChild.$$typeof) {
         case REACT_ELEMENT_TYPE: {
           const matchedFiber =
-            existingChildren.get(
-              newChild.key === null ? newIdx : newChild.key,
-            ) || null;
-          if (newChild.type === REACT_FRAGMENT_TYPE) {
+            existingChildren.get(childKey === null ? newIdx : childKey) || null;
+          if (childType === REACT_FRAGMENT_TYPE) {
             return updateFragment(
               returnFiber,
               matchedFiber,
-              newChild.props.children,
+              childProps.children,
               expirationTime,
-              newChild.key,
+              childKey,
             );
           }
           return updateElement(
@@ -696,9 +705,7 @@ function ChildReconciler(shouldTrackSideEffects) {
         }
         case REACT_PORTAL_TYPE: {
           const matchedFiber =
-            existingChildren.get(
-              newChild.key === null ? newIdx : newChild.key,
-            ) || null;
+            existingChildren.get(childKey === null ? newIdx : childKey) || null;
           return updatePortal(
             returnFiber,
             matchedFiber,
@@ -746,7 +753,7 @@ function ChildReconciler(shouldTrackSideEffects) {
         case REACT_ELEMENT_TYPE:
         case REACT_PORTAL_TYPE:
           warnForMissingKey(child);
-          const key = child.key;
+          const {key} = __DEV__ ? introspectReactElement(child) : child;
           if (typeof key !== 'string') {
             break;
           }
@@ -1159,19 +1166,22 @@ function ChildReconciler(shouldTrackSideEffects) {
     element: ReactElement,
     expirationTime: ExpirationTime,
   ): Fiber {
-    const key = element.key;
+    const {key: elementKey, type: elementType, props: elementProps} = __DEV__
+      ? introspectReactElement(element)
+      : element;
+
     let child = currentFirstChild;
     while (child !== null) {
       // TODO: If key === null and child.key === null, then this only applies to
       // the first item in the list.
-      if (child.key === key) {
+      if (child.key === elementKey) {
         switch (child.tag) {
           case Fragment: {
-            if (element.type === REACT_FRAGMENT_TYPE) {
+            if (elementType === REACT_FRAGMENT_TYPE) {
               deleteRemainingChildren(returnFiber, child.sibling);
               const existing = useFiber(
                 child,
-                element.props.children,
+                elementProps.children,
                 expirationTime,
               );
               existing.return = returnFiber;
@@ -1186,12 +1196,12 @@ function ChildReconciler(shouldTrackSideEffects) {
           case Chunk:
             if (enableChunksAPI) {
               if (
-                element.type.$$typeof === REACT_CHUNK_TYPE &&
-                element.type.render === child.type.render
+                elementType.$$typeof === REACT_CHUNK_TYPE &&
+                elementType.render === child.type.render
               ) {
                 deleteRemainingChildren(returnFiber, child.sibling);
-                const existing = useFiber(child, element.props, expirationTime);
-                existing.type = element.type;
+                const existing = useFiber(child, elementProps, expirationTime);
+                existing.type = elementType;
                 existing.return = returnFiber;
                 if (__DEV__) {
                   existing._debugSource = element._source;
@@ -1204,14 +1214,14 @@ function ChildReconciler(shouldTrackSideEffects) {
           // eslint-disable-next-lined no-fallthrough
           default: {
             if (
-              child.elementType === element.type ||
+              child.elementType === elementType ||
               // Keep this check inline so it only runs on the false path:
               (__DEV__
                 ? isCompatibleFamilyForHotReloading(child, element)
                 : false)
             ) {
               deleteRemainingChildren(returnFiber, child.sibling);
-              const existing = useFiber(child, element.props, expirationTime);
+              const existing = useFiber(child, elementProps, expirationTime);
               existing.ref = coerceRef(returnFiber, child, element);
               existing.return = returnFiber;
               if (__DEV__) {
@@ -1232,12 +1242,12 @@ function ChildReconciler(shouldTrackSideEffects) {
       child = child.sibling;
     }
 
-    if (element.type === REACT_FRAGMENT_TYPE) {
+    if (elementType === REACT_FRAGMENT_TYPE) {
       const created = createFiberFromFragment(
-        element.props.children,
+        elementProps.children,
         returnFiber.mode,
         expirationTime,
-        element.key,
+        elementKey,
       );
       created.return = returnFiber;
       return created;
@@ -1311,41 +1321,47 @@ function ChildReconciler(shouldTrackSideEffects) {
     // not as a fragment. Nested arrays on the other hand will be treated as
     // fragment nodes. Recursion happens at the normal flow.
 
-    // Handle top level unkeyed fragments as if they were arrays.
-    // This leads to an ambiguity between <>{[...]}</> and <>...</>.
-    // We treat the ambiguous cases above the same.
-    const isUnkeyedTopLevelFragment =
-      typeof newChild === 'object' &&
-      newChild !== null &&
-      newChild.type === REACT_FRAGMENT_TYPE &&
-      newChild.key === null;
-    if (isUnkeyedTopLevelFragment) {
-      newChild = newChild.props.children;
-    }
-
     // Handle object types
-    const isObject = typeof newChild === 'object' && newChild !== null;
+    let isObject = typeof newChild === 'object' && newChild !== null;
+    let childKey, childType, childProps;
+    let isUnkeyedTopLevelFragment = false;
 
     if (isObject) {
-      switch (newChild.$$typeof) {
-        case REACT_ELEMENT_TYPE:
-          return placeSingleChild(
-            reconcileSingleElement(
-              returnFiber,
-              currentFirstChild,
-              newChild,
-              expirationTime,
-            ),
-          );
-        case REACT_PORTAL_TYPE:
-          return placeSingleChild(
-            reconcileSinglePortal(
-              returnFiber,
-              currentFirstChild,
-              newChild,
-              expirationTime,
-            ),
-          );
+      ({key: childKey, type: childType, props: childProps} = __DEV__
+        ? introspectReactElement(newChild)
+        : newChild);
+
+      // Handle top level unkeyed fragments as if they were arrays.
+      // This leads to an ambiguity between <>{[...]}</> and <>...</>.
+      // We treat the ambiguous cases above the same.
+      isUnkeyedTopLevelFragment =
+        childType === REACT_FRAGMENT_TYPE && childKey === null;
+      if (isUnkeyedTopLevelFragment) {
+        newChild = childProps.children;
+        isObject = typeof newChild === 'object' && newChild !== null;
+      }
+
+      if (isObject) {
+        switch (newChild.$$typeof) {
+          case REACT_ELEMENT_TYPE:
+            return placeSingleChild(
+              reconcileSingleElement(
+                returnFiber,
+                currentFirstChild,
+                newChild,
+                expirationTime,
+              ),
+            );
+          case REACT_PORTAL_TYPE:
+            return placeSingleChild(
+              reconcileSinglePortal(
+                returnFiber,
+                currentFirstChild,
+                newChild,
+                expirationTime,
+              ),
+            );
+        }
       }
     }
 

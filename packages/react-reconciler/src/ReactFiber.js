@@ -93,6 +93,7 @@ import {
   REACT_SCOPE_TYPE,
   REACT_CHUNK_TYPE,
 } from 'shared/ReactSymbols';
+import {introspectReactElement} from 'react/src/ReactElement';
 
 let hasBadMapPolyfill;
 
@@ -751,9 +752,12 @@ export function createFiberFromElement(
   if (__DEV__) {
     owner = element._owner;
   }
-  const type = element.type;
-  const key = element.key;
-  const pendingProps = element.props;
+  const {key: elementKey, type: elementType, props: elementProps} = __DEV__
+    ? introspectReactElement(element)
+    : element;
+  const type = elementType;
+  const key = elementKey;
+  const pendingProps = elementProps;
   const fiber = createFiberFromTypeAndProps(
     type,
     key,
