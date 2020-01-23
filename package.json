@@ -89,7 +89,7 @@
     "through2": "^3.0.1",
     "tmp": "^0.1.0",
     "typescript": "^3.7.5",
-    "webpack": "^4.41.5"
+    "webpack": "^4.41.2"
   },
   "devEngines": {
     "node": "8.x || 9.x || 10.x || 11.x || 12.x || 13.x"
