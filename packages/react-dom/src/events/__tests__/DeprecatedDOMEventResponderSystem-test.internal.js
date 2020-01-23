@@ -177,11 +177,10 @@ describe('DOMEventResponderSystem', () => {
     dispatchClickEvent(buttonElement);
     expect(eventResponderFiredCount).toBe(1);
     expect(eventLog.length).toBe(1);
-    // JSDOM does not support passive events, so this will be false
     expect(eventLog).toEqual([
       {
         name: 'click',
-        passive: false,
+        passive: true,
         phase: 'bubble',
       },
     ]);
@@ -284,11 +283,10 @@ describe('DOMEventResponderSystem', () => {
     dispatchClickEvent(buttonElement);
     expect(eventResponderFiredCount).toBe(1);
     expect(eventLog.length).toBe(1);
-    // JSDOM does not support passive events, so this will be false
     expect(eventLog).toEqual([
       {
         name: 'click',
-        passive: false,
+        passive: true,
         phase: 'bubble',
       },
     ]);
@@ -318,7 +316,7 @@ describe('DOMEventResponderSystem', () => {
     expect(eventLog).toEqual([
       {
         name: 'click',
-        passive: false,
+        passive: true,
         phase: 'bubble',
       },
     ]);
