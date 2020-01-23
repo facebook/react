@@ -9,4 +9,6 @@
 
 'use strict';
 
-export * from './src/ReactIs';
+const ReactIs = require('./src/ReactIs');
+
+module.exports = ReactIs;

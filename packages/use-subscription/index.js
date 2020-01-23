@@ -9,4 +9,6 @@
 
 'use strict';
 
-export * from './src/useSubscription';
+const useSubscription = require('./src/useSubscription');
+
+module.exports = useSubscription;

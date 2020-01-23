@@ -7,4 +7,6 @@
 
 'use strict';
 
-export * from './src/Scheduler';
+const Scheduler = require('./src/Scheduler');
+
+module.exports = Scheduler;

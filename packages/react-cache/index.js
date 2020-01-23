@@ -9,4 +9,6 @@
 
 'use strict';
 
-export * from './src/ReactCache';
+const ReactCache = require('./src/ReactCache');
+
+module.exports = ReactCache;
