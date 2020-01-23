@@ -286,6 +286,7 @@ if (__DEV__) {
   let pendingLegacyContextWarning: FiberToFiberComponentsMap = new Map();
 
   // Tracks components we have already warned about.
+  const legacyContextCounts = new Map();
   const didWarnAboutLegacyContext = new Set();
 
   ReactStrictModeWarnings.recordLegacyContextWarning = (
@@ -300,17 +301,23 @@ if (__DEV__) {
       );
       return;
     }
+    const type = fiber.type;
 
-    // Dedup strategy: Warn once per component.
-    if (didWarnAboutLegacyContext.has(fiber.type)) {
+    // Update legacy context counts
+    const warningCount = legacyContextCounts.get(type) || 0;
+    // Increase warning count by 1
+    legacyContextCounts.set(type, warningCount + 1);
+
+    // Dedup strategy: Warn once per component
+    if (didWarnAboutLegacyContext.has(type)) {
       return;
     }
 
     let warningsForRoot = pendingLegacyContextWarning.get(strictRoot);
 
     if (
-      fiber.type.contextTypes != null ||
-      fiber.type.childContextTypes != null ||
+      type.contextTypes != null ||
+      type.childContextTypes != null ||
       (instance !== null && typeof instance.getChildContext === 'function')
     ) {
       if (warningsForRoot === undefined) {
@@ -324,49 +331,41 @@ if (__DEV__) {
   ReactStrictModeWarnings.flushLegacyContextWarning = () => {
     ((pendingLegacyContextWarning: any): FiberToFiberComponentsMap).forEach(
       (fiberArray: FiberArray, strictRoot) => {
-        const componentStacks = new Map();
+        const fibers = fiberArray.length;
+        let componentNames = '';
 
-        fiberArray.forEach(fiber => {
-          const componentName = getComponentName(fiber.type) || 'Component';
-          const componentStack = getStackByFiberInDevAndProd(fiber);
-          let count = 0;
-          if (componentStacks.has(componentStack)) {
-            ({count} = (componentStacks.get(componentStack): any));
-          }
-          // Increase count by 1
-          componentStacks.set(componentStack, {
-            count: count + 1,
-            name: componentName,
-            stack: componentStack,
+        fiberArray
+          .sort((a, b) => {
+            const aCount = legacyContextCounts.get(a.type) || 0;
+            const bCount = legacyContextCounts.get(b.type) || 0;
+            return bCount - aCount;
+          })
+          .forEach((fiber, i) => {
+            const type = fiber.type;
+            if (didWarnAboutLegacyContext.has(type)) {
+              return;
+            }
+            didWarnAboutLegacyContext.add(type);
+            // Build up the string of comma separated component names
+            componentNames +=
+              (getComponentName(fiber.type) || 'Component') +
+              (i === fibers - 1 ? '' : ', ');
           });
-          didWarnAboutLegacyContext.add(fiber.type);
-        });
+        const mostFrequentFiber = fiberArray[0];
+        const stack = mostFrequentFiber
+          ? getStackByFiberInDevAndProd(mostFrequentFiber)
+          : '';
 
-        // Get the stacks from our componentStacks Map
-        const stacks = Array.from(componentStacks.values());
-
-        // Sort the stacks by their counts
-        stacks.sort((a, b) => b.count - a.count);
-
-        const mostFrequentStack = stacks[0];
-
-        if (mostFrequentStack) {
-          // We map to a Set to remove duplicate component names
-          const componentNames = Array.from(
-            new Set(stacks.map(stack => stack.name)),
-          ).join(', ');
-
-          console.error(
-            'Legacy context API has been detected within a strict-mode tree.' +
-              '\n\nThe old API will be supported in all 16.x releases, but applications ' +
-              'using it should migrate to the new version.' +
-              '\n\nPlease update the following components: %s' +
-              '\n\nLearn more about this warning here: https://fb.me/react-legacy-context' +
-              '%s',
-            componentNames,
-            mostFrequentStack.stack,
-          );
-        }
+        console.error(
+          'Legacy context API has been detected within a strict-mode tree.' +
+            '\n\nThe old API will be supported in all 16.x releases, but applications ' +
+            'using it should migrate to the new version.' +
+            '\n\nPlease update the following components: %s' +
+            '\n\nLearn more about this warning here: https://fb.me/react-legacy-context' +
+            '%s',
+          componentNames,
+          stack,
+        );
       },
     );
   };

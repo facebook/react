@@ -2036,20 +2036,17 @@ describe('ReactIncremental', () => {
     };
 
     ReactNoop.render(<Recurse />);
-    expect(() => expect(Scheduler).toFlushWithoutYielding()).toErrorDev(
-      [
-        'Warning: The <Recurse /> component appears to be a function component that returns a class instance. ' +
-          'Change Recurse to a class that extends React.Component instead. ' +
-          "If you can't use a class try assigning the prototype on the function as a workaround. " +
-          '`Recurse.prototype = React.Component.prototype`. ' +
-          "Don't use an arrow function since it cannot be called with `new` by React.",
-        'Legacy context API has been detected within a strict-mode tree.\n\n' +
-          'The old API will be supported in all 16.x releases, but applications ' +
-          'using it should migrate to the new version.\n\n' +
-          'Please update the following components: Recurse',
-      ],
-      {withoutStack: 0},
-    );
+    expect(() => expect(Scheduler).toFlushWithoutYielding()).toErrorDev([
+      'Warning: The <Recurse /> component appears to be a function component that returns a class instance. ' +
+        'Change Recurse to a class that extends React.Component instead. ' +
+        "If you can't use a class try assigning the prototype on the function as a workaround. " +
+        '`Recurse.prototype = React.Component.prototype`. ' +
+        "Don't use an arrow function since it cannot be called with `new` by React.",
+      'Legacy context API has been detected within a strict-mode tree.\n\n' +
+        'The old API will be supported in all 16.x releases, but applications ' +
+        'using it should migrate to the new version.\n\n' +
+        'Please update the following components: Recurse',
+    ]);
     expect(ops).toEqual([
       'Recurse {}',
       'Recurse {"n":2}',
@@ -2114,7 +2111,7 @@ describe('ReactIncremental', () => {
       'Legacy context API has been detected within a strict-mode tree.\n\n' +
         'The old API will be supported in all 16.x releases, but applications ' +
         'using it should migrate to the new version.\n\n' +
-        'Please update the following components: Intl, ShowLocale',
+        'Please update the following components: ShowLocale, Intl',
     );
   });
 
