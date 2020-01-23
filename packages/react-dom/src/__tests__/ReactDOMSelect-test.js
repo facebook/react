@@ -362,7 +362,7 @@ describe('ReactDOMSelect', () => {
     expect(node.options[2].selected).toBe(true); // gorilla
   });
 
-  it('does not select an item when size is initially set to greater than 1', () => {
+  it.only('does not select an item when size is initially set to greater than 1', () => {
     const stub = (
       <select size="2">
         <option value="monkey">A monkey!</option>
@@ -377,14 +377,7 @@ describe('ReactDOMSelect', () => {
     expect(select.options[1].selected).toBe(false);
     expect(select.options[2].selected).toBe(false);
 
-    // Note: There is an inconsistency between JSDOM and Chrome where
-    // Chrome reports an empty string when no value is selected for a
-    // single-select with a size greater than 0. JSDOM reports the first
-    // value
-    //
-    // This assertion exists only for clarity of JSDOM behavior:
-    expect(select.value).toBe('monkey'); // "" in Chrome
-    // Despite this, the selection index is correct:
+    expect(select.value).toBe('');
     expect(select.selectedIndex).toBe(-1);
   });
 
