@@ -362,7 +362,7 @@ describe('ReactDOMSelect', () => {
     expect(node.options[2].selected).toBe(true); // gorilla
   });
 
-  it.only('does not select an item when size is initially set to greater than 1', () => {
+  it('does not select an item when size is initially set to greater than 1', () => {
     const stub = (
       <select size="2">
         <option value="monkey">A monkey!</option>
