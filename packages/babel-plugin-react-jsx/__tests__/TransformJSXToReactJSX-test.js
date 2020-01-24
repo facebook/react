@@ -292,11 +292,11 @@ describe('transform react to jsx', () => {
     }
     expect(_error).toEqual(
       new SyntaxError(
-        'undefined: Spread children are not supported in React.' +
+        'unknown: Spread children are not supported in React.' +
           '\n' +
           codeFrame.codeFrameColumns(
             code,
-            {start: {line: 1, column: 6}},
+            {start: {line: 1, column: 6}, end: {line: 1, column: 19}},
             {highlightCode: true}
           )
       )
@@ -446,13 +446,13 @@ describe('transform react to jsx', () => {
     }
     expect(_error).toEqual(
       new SyntaxError(
-        "undefined: Namespace tags are not supported by default. React's " +
+        "unknown: Namespace tags are not supported by default. React's " +
           "JSX doesn't support namespace tags. You can turn on the " +
           "'throwIfNamespace' flag to bypass this warning." +
           '\n' +
           codeFrame.codeFrameColumns(
             code,
-            {start: {line: 1, column: 2}},
+            {start: {line: 1, column: 2}, end: {line: 1, column: 9}},
             {highlightCode: true}
           )
       )
