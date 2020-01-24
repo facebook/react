@@ -303,15 +303,15 @@ if (__DEV__) {
     }
     const type = fiber.type;
 
-    // Update legacy context counts
-    const warningCount = legacyContextCounts.get(type) || 0;
-    // Increase warning count by 1
-    legacyContextCounts.set(type, warningCount + 1);
-
     // Dedup strategy: Warn once per component
     if (didWarnAboutLegacyContext.has(type)) {
       return;
     }
+
+    // Update legacy context counts
+    const warningCount = legacyContextCounts.get(type) || 0;
+    // Increase warning count by 1
+    legacyContextCounts.set(type, warningCount + 1);
 
     let warningsForRoot = pendingLegacyContextWarning.get(strictRoot);
 
