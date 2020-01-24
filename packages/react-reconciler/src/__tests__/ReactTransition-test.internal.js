@@ -506,4 +506,325 @@ describe('ReactTransition', () => {
       );
     },
   );
+
+  it.experimental(
+    'when multiple transitions update the same queue, only the most recent ' +
+      'one is allowed to finish (no intermediate states)',
+    async () => {
+      const CONFIG = {
+        timeoutMs: 100000,
+      };
+
+      const Tab = React.forwardRef(({label, setTab}, ref) => {
+        const [startTransition, isPending] = useTransition(CONFIG);
+
+        React.useImperativeHandle(
+          ref,
+          () => ({
+            go() {
+              startTransition(() => setTab(label));
+            },
+          }),
+          [label],
+        );
+
+        return (
+          <Text text={'Tab ' + label + (isPending ? ' (pending...)' : '')} />
+        );
+      });
+
+      const tabButtonA = React.createRef(null);
+      const tabButtonB = React.createRef(null);
+      const tabButtonC = React.createRef(null);
+
+      const ContentA = createAsyncText('A');
+      const ContentB = createAsyncText('B');
+      const ContentC = createAsyncText('C');
+
+      function App() {
+        Scheduler.unstable_yieldValue('App');
+
+        const [tab, setTab] = useState('A');
+
+        let content;
+        switch (tab) {
+          case 'A':
+            content = <ContentA />;
+            break;
+          case 'B':
+            content = <ContentB />;
+            break;
+          case 'C':
+            content = <ContentC />;
+            break;
+          default:
+            content = <ContentA />;
+            break;
+        }
+
+        return (
+          <>
+            <ul>
+              <li>
+                <Tab ref={tabButtonA} label="A" setTab={setTab} />
+              </li>
+              <li>
+                <Tab ref={tabButtonB} label="B" setTab={setTab} />
+              </li>
+              <li>
+                <Tab ref={tabButtonC} label="C" setTab={setTab} />
+              </li>
+            </ul>
+            <Suspense fallback={<Text text="Loading..." />}>{content}</Suspense>
+          </>
+        );
+      }
+
+      // Initial render
+      const root = ReactNoop.createRoot();
+      await act(async () => {
+        root.render(<App />);
+        await ContentA.resolve();
+      });
+      expect(Scheduler).toHaveYielded(['App', 'Tab A', 'Tab B', 'Tab C', 'A']);
+      expect(root).toMatchRenderedOutput(
+        <>
+          <ul>
+            <li>Tab A</li>
+            <li>Tab B</li>
+            <li>Tab C</li>
+          </ul>
+          A
+        </>,
+      );
+
+      await act(async () => {
+        // Navigate to tab B
+        tabButtonB.current.go();
+        expect(Scheduler).toFlushAndYield([
+          // Turn on B's pending state
+          'Tab B (pending...)',
+          'App',
+          'Tab A',
+          'Tab B',
+          'Tab C',
+          'Suspend! [B]',
+          'Loading...',
+        ]);
+
+        jest.advanceTimersByTime(2000);
+        Scheduler.unstable_advanceTime(2000);
+
+        // Navigate to tab C
+        tabButtonC.current.go();
+        expect(Scheduler).toFlushAndYield([
+          // Turn off B's pending state, and turn on C's
+          'Tab B',
+          'Tab C (pending...)',
+          // Partially render B
+          'App',
+          'Tab A',
+          'Tab B',
+          'Tab C',
+          'Suspend! [C]',
+          'Loading...',
+        ]);
+
+        // Finish loading B.
+        await ContentB.resolve();
+        // B is not able to finish because C is in the same batch.
+        expect(Scheduler).toFlushAndYield([
+          'App',
+          'Tab A',
+          'Tab B',
+          'Tab C',
+          'Suspend! [C]',
+          'Loading...',
+        ]);
+
+        // Finish loading C.
+        await ContentC.resolve();
+        expect(Scheduler).toFlushAndYield([
+          'App',
+          'Tab A',
+          'Tab B',
+          'Tab C',
+          'C',
+        ]);
+      });
+      expect(root).toMatchRenderedOutput(
+        <>
+          <ul>
+            <li>Tab A</li>
+            <li>Tab B</li>
+            <li>Tab C</li>
+          </ul>
+          C
+        </>,
+      );
+    },
+  );
+
+  // Same as previous test, but for class update queue.
+  it.experimental(
+    'when multiple transitions update the same queue, only the most recent ' +
+      'one is allowed to finish (no intermediate states) (classes)',
+    async () => {
+      const CONFIG = {
+        timeoutMs: 100000,
+      };
+
+      const Tab = React.forwardRef(({label, setTab}, ref) => {
+        const [startTransition, isPending] = useTransition(CONFIG);
+
+        React.useImperativeHandle(
+          ref,
+          () => ({
+            go() {
+              startTransition(() => setTab(label));
+            },
+          }),
+          [label],
+        );
+
+        return (
+          <Text text={'Tab ' + label + (isPending ? ' (pending...)' : '')} />
+        );
+      });
+
+      const tabButtonA = React.createRef(null);
+      const tabButtonB = React.createRef(null);
+      const tabButtonC = React.createRef(null);
+
+      const ContentA = createAsyncText('A');
+      const ContentB = createAsyncText('B');
+      const ContentC = createAsyncText('C');
+
+      class App extends React.Component {
+        state = {tab: 'A'};
+        setTab = tab => this.setState({tab});
+        render() {
+          Scheduler.unstable_yieldValue('App');
+
+          let content;
+          switch (this.state.tab) {
+            case 'A':
+              content = <ContentA />;
+              break;
+            case 'B':
+              content = <ContentB />;
+              break;
+            case 'C':
+              content = <ContentC />;
+              break;
+            default:
+              content = <ContentA />;
+              break;
+          }
+
+          return (
+            <>
+              <ul>
+                <li>
+                  <Tab ref={tabButtonA} label="A" setTab={this.setTab} />
+                </li>
+                <li>
+                  <Tab ref={tabButtonB} label="B" setTab={this.setTab} />
+                </li>
+                <li>
+                  <Tab ref={tabButtonC} label="C" setTab={this.setTab} />
+                </li>
+              </ul>
+              <Suspense fallback={<Text text="Loading..." />}>
+                {content}
+              </Suspense>
+            </>
+          );
+        }
+      }
+
+      // Initial render
+      const root = ReactNoop.createRoot();
+      await act(async () => {
+        root.render(<App />);
+        await ContentA.resolve();
+      });
+      expect(Scheduler).toHaveYielded(['App', 'Tab A', 'Tab B', 'Tab C', 'A']);
+      expect(root).toMatchRenderedOutput(
+        <>
+          <ul>
+            <li>Tab A</li>
+            <li>Tab B</li>
+            <li>Tab C</li>
+          </ul>
+          A
+        </>,
+      );
+
+      await act(async () => {
+        // Navigate to tab B
+        tabButtonB.current.go();
+        expect(Scheduler).toFlushAndYield([
+          // Turn on B's pending state
+          'Tab B (pending...)',
+          'App',
+          'Tab A',
+          'Tab B',
+          'Tab C',
+          'Suspend! [B]',
+          'Loading...',
+        ]);
+
+        jest.advanceTimersByTime(2000);
+        Scheduler.unstable_advanceTime(2000);
+
+        // Navigate to tab C
+        tabButtonC.current.go();
+        expect(Scheduler).toFlushAndYield([
+          // Turn off B's pending state, and turn on C's
+          'Tab B',
+          'Tab C (pending...)',
+          // Partially render B
+          'App',
+          'Tab A',
+          'Tab B',
+          'Tab C',
+          'Suspend! [C]',
+          'Loading...',
+        ]);
+
+        // Finish loading B.
+        await ContentB.resolve();
+        // B is not able to finish because C is in the same batch.
+        expect(Scheduler).toFlushAndYield([
+          'App',
+          'Tab A',
+          'Tab B',
+          'Tab C',
+          'Suspend! [C]',
+          'Loading...',
+        ]);
+
+        // Finish loading C.
+        await ContentC.resolve();
+        expect(Scheduler).toFlushAndYield([
+          'App',
+          'Tab A',
+          'Tab B',
+          'Tab C',
+          'C',
+        ]);
+      });
+      expect(root).toMatchRenderedOutput(
+        <>
+          <ul>
+            <li>Tab A</li>
+            <li>Tab B</li>
+            <li>Tab C</li>
+          </ul>
+          C
+        </>,
+      );
+    },
+  );
 });

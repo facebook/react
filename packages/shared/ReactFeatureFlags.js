@@ -91,6 +91,8 @@ export const enableTrustedTypesIntegration = false;
 // Flag to turn event.target and event.currentTarget in ReactNative from a reactTag to a component instance
 export const enableNativeTargetAsInstance = false;
 
+export const preventIntermediateStates = __EXPERIMENTAL__;
+
 // --------------------------
 // Future APIs to be deprecated
 // --------------------------

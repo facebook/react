@@ -65,11 +65,12 @@ import {
 
 import {createWorkInProgress, assignFiberPropertiesInDEV} from './ReactFiber';
 import {
-  isRootSuspendedAtTime,
   markRootSuspendedAtTime,
   markRootFinishedAtTime,
   markRootUpdatedAtTime,
   markRootExpiredAtTime,
+  getNextRootExpirationTimeToWorkOn,
+  markRootPingedAtTime,
 } from './ReactFiberRoot';
 import {
   NoMode,
@@ -515,44 +516,6 @@ function markUpdateTimeFromFiberToRoot(fiber, expirationTime) {
   }
 
   return root;
-}
-
-function getNextRootExpirationTimeToWorkOn(root: FiberRoot): ExpirationTime {
-  // Determines the next expiration time that the root should render, taking
-  // into account levels that may be suspended, or levels that may have
-  // received a ping.
-
-  const lastExpiredTime = root.lastExpiredTime;
-  if (lastExpiredTime !== NoWork) {
-    return lastExpiredTime;
-  }
-
-  // "Pending" refers to any update that hasn't committed yet, including if it
-  // suspended. The "suspended" range is therefore a subset.
-  const firstPendingTime = root.firstPendingTime;
-  if (!isRootSuspendedAtTime(root, firstPendingTime)) {
-    // The highest priority pending time is not suspended. Let's work on that.
-    return firstPendingTime;
-  }
-
-  // If the first pending time is suspended, check if there's a lower priority
-  // pending level that we know about. Or check if we received a ping. Work
-  // on whichever is higher priority.
-  const lastPingedTime = root.lastPingedTime;
-  const nextKnownPendingLevel = root.nextKnownPendingLevel;
-  const nextLevel =
-    lastPingedTime > nextKnownPendingLevel
-      ? lastPingedTime
-      : nextKnownPendingLevel;
-  if (
-    enableTrainModelFix &&
-    nextLevel <= Idle &&
-    firstPendingTime !== nextLevel
-  ) {
-    // Don't work on Idle/Never priority unless everything else is committed.
-    return NoWork;
-  }
-  return nextLevel;
 }
 
 // Use this function to schedule a task for a root. There's only one task per
@@ -2331,19 +2294,7 @@ export function pingSuspendedRoot(
     return;
   }
 
-  if (!isRootSuspendedAtTime(root, suspendedTime)) {
-    // The root is no longer suspended at this time.
-    return;
-  }
-
-  const lastPingedTime = root.lastPingedTime;
-  if (lastPingedTime !== NoWork && lastPingedTime < suspendedTime) {
-    // There's already a lower priority ping scheduled.
-    return;
-  }
-
-  // Mark the time at which this ping was scheduled.
-  root.lastPingedTime = suspendedTime;
+  markRootPingedAtTime(root, suspendedTime);
 
   if (!enableTrainModelFix && root.finishedExpirationTime === suspendedTime) {
     // If there's a pending fallback waiting to commit, throw it away.

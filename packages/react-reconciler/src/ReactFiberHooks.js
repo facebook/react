@@ -56,6 +56,7 @@ import {
   NormalPriority,
 } from './SchedulerWithReactIntegration';
 import {requestCurrentSuspenseConfig} from './ReactFiberSuspenseConfig';
+import {preventIntermediateStates} from 'shared/ReactFeatureFlags';
 
 const {ReactCurrentDispatcher, ReactCurrentBatchConfig} = ReactSharedInternals;
 
@@ -221,6 +222,9 @@ let currentTransitionEventTime: ExpirationTime = NoWork;
 let currentTransitionPendingTime: ExpirationTime = NoWork;
 // The expiration time of the current transition.
 let currentTransitionResolvedTime: ExpirationTime = NoWork;
+// The expiration time of the transitions that were superseded by the current
+// transition. This is accumulated during `startTransition`.
+let currentTransitionSupersededTime: ExpirationTime = NoWork;
 
 function mountHookTypesDev() {
   if (__DEV__) {
@@ -1522,7 +1526,7 @@ function startTransition(
     },
   );
 
-  scheduleUpdateOnFiber(fiber, currentTransitionPendingTime);
+  const root = scheduleUpdateOnFiber(fiber, currentTransitionPendingTime);
 
   runWithPriority(
     priorityLevel > NormalPriority ? NormalPriority : priorityLevel,
@@ -1546,6 +1550,18 @@ function startTransition(
         transitionInstance.pendingTime = currentTransitionPendingTime;
         transitionInstance.resolvedTime = currentTransitionResolvedTime;
         transitionInstance.version++;
+
+        if (
+          preventIntermediateStates &&
+          currentTransitionSupersededTime !== NoWork &&
+          root !== null
+        ) {
+          markTransitionRange(
+            root,
+            currentTransitionSupersededTime,
+            currentTransitionResolvedTime,
+          );
+        }
 
         ReactCurrentBatchConfig.suspense = previousConfig;
         currentTransition = previousTransition;
@@ -1577,6 +1593,15 @@ export function setTransition(
       // There's already a pending transition on this queue. The new transition
       // supersedes the old one.
 
+      // Track the expiration time of the superseded transition. If there are
+      // multiple, choose the highest priority one.
+      if (preventIntermediateStates) {
+        const resolvedTime = prevTransition.resolvedTime;
+        if (currentTransitionSupersededTime < resolvedTime) {
+          currentTransitionSupersededTime = resolvedTime;
+        }
+      }
+
       // Turn off the `isPending` state of the previous transition, at the same
       // priority we use to turn on the `isPending` state of the
       // current transition.
@@ -1584,6 +1609,41 @@ export function setTransition(
       prevTransition.version++;
       scheduleUpdateOnFiber(prevTransition.fiber, currentTransitionPendingTime);
     }
+  }
+}
+
+function markTransitionRange(root, start, end) {
+  // This transition supersedes one or more previous ones. We must prevent the
+  // earlier transitions from committing independently of the new ones. Track
+  // the ranges of expiration times that must commit in a single batch. These
+  // will be removed when the root finishes.
+  const pendingRanges = root.pendingRanges;
+  if (pendingRanges === null) {
+    root.pendingRanges = [start, end];
+  } else {
+    // Check if the new range overlaps with an existing range. No two ranges
+    // should ever overlap.
+    for (let i = 0; i < pendingRanges.length; ) {
+      const start2 = pendingRanges[i];
+      const end2 = pendingRanges[i + 1];
+      if (start >= end2 && end <= start2) {
+        // Found an overlapping range. Combine them.
+        start = start > start2 ? start : start2;
+        end = end < end2 ? end : end2;
+        // There could be multiple overlapping ranges. Remove this one and keep
+        // iterating. We'll add a single, combined range at the end.
+        pendingRanges.splice(i, 2);
+        // Continue searching for overlapping ranges. We don't need to check the
+        // ranges from earlier in the list -- we know they don't overlap with
+        // either of the ranges we just combined, so it follows they don't
+        // overlap with the combined range.
+      } else {
+        // Only increment if we didn't remove the range in the block above.
+        i += 2;
+      }
+    }
+    // Add the range to the list.
+    pendingRanges.push(start, end);
   }
 }
 

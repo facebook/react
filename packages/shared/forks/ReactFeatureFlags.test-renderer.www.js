@@ -42,6 +42,7 @@ export const disableCreateFactory = false;
 export const disableTextareaChildren = false;
 export const disableUnstableRenderSubtreeIntoContainer = false;
 export const disableUnstableCreatePortal = false;
+export const preventIntermediateStates = __EXPERIMENTAL__;
 
 // Only used in www builds.
 export function addUserTimingListener() {
