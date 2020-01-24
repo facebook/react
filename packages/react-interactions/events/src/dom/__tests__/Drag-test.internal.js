@@ -9,6 +9,8 @@
 
 'use strict';
 
+import {createEventTarget} from 'dom-event-testing-library';
+
 let React;
 let ReactFeatureFlags;
 let ReactDOM;
@@ -77,9 +79,8 @@ describe('Drag event responder', () => {
     }
     divRef.current.dispatchEvent(mouseMoveEvent);
 
-    const mouseUpEvent = document.createEvent('MouseEvents');
-    mouseUpEvent.initEvent('mouseup', true, true);
-    divRef.current.dispatchEvent(mouseUpEvent);
+    const target = createEventTarget(divRef.current);
+    target.pointerup();
 
     expect(events).toHaveLength(2);
     expect(events).toEqual(
@@ -113,30 +114,17 @@ describe('Drag event responder', () => {
 
     ReactDOM.render(<Component />, container);
 
-    const mouseOverEvent = document.createEvent('MouseEvents');
-    mouseOverEvent.initEvent('mousedown', true, true);
-    divRef.current.dispatchEvent(mouseOverEvent);
+    const target = createEventTarget(divRef.current);
+    target.pointerdown();
 
-    const mouseMoveEvent = document.createEvent('MouseEvents');
     for (let index = 0; index <= 20; index++) {
-      mouseMoveEvent.initMouseEvent(
-        'mousemove',
-        true,
-        true,
-        window,
-        1,
-        index,
-        index,
-        50,
-        50,
-      );
-      divRef.current.dispatchEvent(mouseMoveEvent);
+      target.pointermove({
+        x: index,
+        y: index,
+      });
     }
-    divRef.current.dispatchEvent(mouseMoveEvent);
 
-    const mouseUpEvent = document.createEvent('MouseEvents');
-    mouseUpEvent.initEvent('mouseup', true, true);
-    divRef.current.dispatchEvent(mouseUpEvent);
+    target.pointerup();
 
     expect(events).toEqual(['dragstart', 'dragend']);
   });
@@ -165,29 +153,19 @@ describe('Drag event responder', () => {
 
     ReactDOM.render(<Component />, container);
 
-    const mouseOverEvent = document.createEvent('MouseEvents');
-    mouseOverEvent.initEvent('mousedown', true, true, window, 1, 0, 0);
-    divRef.current.dispatchEvent(mouseOverEvent);
+    const target = createEventTarget(divRef.current);
 
-    const mouseMoveEvent = document.createEvent('MouseEvents');
+    target.pointerdown();
+
     for (let index = 0; index <= 20; index++) {
-      mouseMoveEvent.initMouseEvent(
-        'mousemove',
-        true,
-        true,
-        window,
-        1,
-        index + 1,
-        index + 1,
-        50,
-        50,
-      );
-      divRef.current.dispatchEvent(mouseMoveEvent);
+      target.pointermove({
+        x: index + 1,
+        y: index + 1,
+      });
     }
 
-    const mouseUpEvent = document.createEvent('MouseEvents');
-    mouseUpEvent.initEvent('mouseup', true, true);
-    divRef.current.dispatchEvent(mouseUpEvent);
+    target.pointerup();
+
     expect(events).toHaveLength(20);
     expect(events).toEqual(
       expect.arrayContaining([
