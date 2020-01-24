@@ -87,6 +87,7 @@
 import type {Fiber} from './ReactFiber';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
 import type {SuspenseConfig} from './ReactFiberSuspenseConfig';
+import type {TransitionInstance} from './ReactFiberHooks';
 import type {ReactPriorityLevel} from './SchedulerWithReactIntegration';
 
 import {NoWork, Sync} from './ReactFiberExpirationTime';
@@ -126,6 +127,7 @@ export type Update<State> = {|
 
 type SharedQueue<State> = {|
   pending: Update<State> | null,
+  pendingTransition: TransitionInstance | null,
 |};
 
 export type UpdateQueue<State> = {|
@@ -162,6 +164,7 @@ export function initializeUpdateQueue<State>(fiber: Fiber): void {
     baseQueue: null,
     shared: {
       pending: null,
+      pendingTransition: null,
     },
     effects: null,
   };

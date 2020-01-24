@@ -53,9 +53,15 @@ import {readContext} from './ReactFiberNewContext';
 import {
   requestCurrentTimeForUpdate,
   computeExpirationForFiber,
-  scheduleWork,
+  scheduleUpdateOnFiber,
 } from './ReactFiberWorkLoop';
 import {requestCurrentSuspenseConfig} from './ReactFiberSuspenseConfig';
+import {
+  getCurrentTransition,
+  getCurrentTransitionEventTime,
+  getCurrentTransitionResolvedTime,
+  setTransition,
+} from './ReactFiberHooks';
 
 const fakeInternalInstance = {};
 const isArray = Array.isArray;
@@ -91,7 +97,7 @@ if (__DEV__) {
     if (callback === null || typeof callback === 'function') {
       return;
     }
-    const key = `${callerName}_${(callback: any)}`;
+    const key = callerName + '_' + (callback: any);
     if (!didWarnOnInvalidCallback.has(key)) {
       didWarnOnInvalidCallback.add(key);
       console.error(
@@ -178,19 +184,36 @@ export function applyDerivedStateFromProps(
   }
 }
 
-const classComponentUpdater = {
+export const classComponentUpdater = {
   isMounted,
-  enqueueSetState(inst, payload, callback) {
+  enqueueSetState(inst: any, payload: mixed, callback: ?() => mixed) {
     const fiber = getInstance(inst);
-    const currentTime = requestCurrentTimeForUpdate();
-    const suspenseConfig = requestCurrentSuspenseConfig();
-    const expirationTime = computeExpirationForFiber(
-      currentTime,
-      fiber,
-      suspenseConfig,
-    );
 
-    const update = createUpdate(currentTime, expirationTime, suspenseConfig);
+    const suspenseConfig = requestCurrentSuspenseConfig();
+    const currentTransition = getCurrentTransition();
+
+    let eventTime;
+    let expirationTime;
+    if (currentTransition !== null) {
+      eventTime = getCurrentTransitionEventTime();
+      expirationTime = getCurrentTransitionResolvedTime();
+      const updateQueue = fiber.updateQueue;
+      const sharedQueue = updateQueue !== null ? updateQueue.shared : null;
+      if (sharedQueue === null) {
+        // TODO: Fire warning for update on unmounted component
+        return;
+      }
+      setTransition(sharedQueue, currentTransition);
+    } else {
+      eventTime = requestCurrentTimeForUpdate();
+      expirationTime = computeExpirationForFiber(
+        eventTime,
+        fiber,
+        suspenseConfig,
+      );
+    }
+
+    const update = createUpdate(eventTime, expirationTime, suspenseConfig);
     update.payload = payload;
     if (callback !== undefined && callback !== null) {
       if (__DEV__) {
@@ -198,56 +221,85 @@ const classComponentUpdater = {
       }
       update.callback = callback;
     }
-
     enqueueUpdate(fiber, update);
-    scheduleWork(fiber, expirationTime);
+    scheduleUpdateOnFiber(fiber, expirationTime);
   },
-  enqueueReplaceState(inst, payload, callback) {
+  enqueueReplaceState(inst: any, payload: mixed, callback: ?() => mixed) {
     const fiber = getInstance(inst);
-    const currentTime = requestCurrentTimeForUpdate();
-    const suspenseConfig = requestCurrentSuspenseConfig();
-    const expirationTime = computeExpirationForFiber(
-      currentTime,
-      fiber,
-      suspenseConfig,
-    );
 
-    const update = createUpdate(currentTime, expirationTime, suspenseConfig);
+    const suspenseConfig = requestCurrentSuspenseConfig();
+    const currentTransition = getCurrentTransition();
+
+    let eventTime;
+    let expirationTime;
+    if (currentTransition !== null) {
+      eventTime = getCurrentTransitionEventTime();
+      expirationTime = getCurrentTransitionResolvedTime();
+      const updateQueue = fiber.updateQueue;
+      const sharedQueue = updateQueue !== null ? updateQueue.shared : null;
+      if (sharedQueue === null) {
+        // TODO: Fire warning for update on unmounted component
+        return;
+      }
+      setTransition(sharedQueue, currentTransition);
+    } else {
+      eventTime = requestCurrentTimeForUpdate();
+      expirationTime = computeExpirationForFiber(
+        eventTime,
+        fiber,
+        suspenseConfig,
+      );
+    }
+
+    const update = createUpdate(eventTime, expirationTime, suspenseConfig);
     update.tag = ReplaceState;
     update.payload = payload;
-
     if (callback !== undefined && callback !== null) {
       if (__DEV__) {
         warnOnInvalidCallback(callback, 'replaceState');
       }
       update.callback = callback;
     }
-
     enqueueUpdate(fiber, update);
-    scheduleWork(fiber, expirationTime);
+    scheduleUpdateOnFiber(fiber, expirationTime);
   },
-  enqueueForceUpdate(inst, callback) {
+  enqueueForceUpdate(inst: any, callback: ?() => mixed) {
     const fiber = getInstance(inst);
-    const currentTime = requestCurrentTimeForUpdate();
+
     const suspenseConfig = requestCurrentSuspenseConfig();
-    const expirationTime = computeExpirationForFiber(
-      currentTime,
-      fiber,
-      suspenseConfig,
-    );
+    const currentTransition = getCurrentTransition();
 
-    const update = createUpdate(currentTime, expirationTime, suspenseConfig);
+    let eventTime;
+    let expirationTime;
+    if (currentTransition !== null) {
+      eventTime = getCurrentTransitionEventTime();
+      expirationTime = getCurrentTransitionResolvedTime();
+      const updateQueue = fiber.updateQueue;
+      const sharedQueue = updateQueue !== null ? updateQueue.shared : null;
+      if (sharedQueue === null) {
+        // TODO: Fire warning for update on unmounted component
+        return;
+      }
+      setTransition(sharedQueue, currentTransition);
+    } else {
+      eventTime = requestCurrentTimeForUpdate();
+      expirationTime = computeExpirationForFiber(
+        eventTime,
+        fiber,
+        suspenseConfig,
+      );
+    }
+
+    const update = createUpdate(eventTime, expirationTime, suspenseConfig);
     update.tag = ForceUpdate;
-
     if (callback !== undefined && callback !== null) {
       if (__DEV__) {
         warnOnInvalidCallback(callback, 'forceUpdate');
       }
       update.callback = callback;
     }
-
     enqueueUpdate(fiber, update);
-    scheduleWork(fiber, expirationTime);
+    scheduleUpdateOnFiber(fiber, expirationTime);
   },
 };
 
