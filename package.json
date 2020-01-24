@@ -63,7 +63,7 @@
     "google-closure-compiler": "20190301.0.0",
     "gzip-size": "^3.0.0",
     "jasmine-check": "^1.0.0-rc.0",
-    "jest": "^24.9.0",
+    "jest": "^25.1.0",
     "jest-diff": "^24.9.0",
     "jest-snapshot-serializer-raw": "^1.1.0",
     "minimatch": "^3.0.4",
