@@ -139,6 +139,7 @@ import {
   commitDeletion,
   commitDetachRef,
   commitAttachRef,
+  commitPassiveEffectDurations,
   commitResetTextContent,
 } from './ReactFiberCommitWork';
 import {enqueueUpdate} from './ReactUpdateQueue';
@@ -148,6 +149,8 @@ import {createCapturedValue} from './ReactCapturedValue';
 
 import {
   recordCommitTime,
+  recordPassiveEffectDuration,
+  startPassiveEffectTimer,
   startProfilerTimer,
   stopProfilerTimerIfRunningAndRecordDelta,
 } from './ReactProfilerTimer';
@@ -261,6 +264,7 @@ let pendingPassiveEffectsRenderPriority: ReactPriorityLevel = NoPriority;
 let pendingPassiveEffectsExpirationTime: ExpirationTime = NoWork;
 let pendingPassiveHookEffectsMount: Array<HookEffect | Fiber> = [];
 let pendingPassiveHookEffectsUnmount: Array<HookEffect | Fiber> = [];
+let pendingPassiveProfilerEffects: Array<Fiber> = [];
 
 let rootsWithPendingDiscreteUpdates: Map<
   FiberRoot,
@@ -2179,6 +2183,19 @@ export function flushPassiveEffects() {
   }
 }
 
+export function enqueuePendingPassiveProfilerEffect(fiber: Fiber): void {
+  if (enableProfilerTimer) {
+    pendingPassiveProfilerEffects.push(fiber);
+    if (!rootDoesHavePassiveEffects) {
+      rootDoesHavePassiveEffects = true;
+      scheduleCallback(NormalPriority, () => {
+        flushPassiveEffects();
+        return null;
+      });
+    }
+  }
+}
+
 export function enqueuePendingPassiveHookEffectMount(
   fiber: Fiber,
   effect: HookEffect,
@@ -2220,6 +2237,7 @@ function flushPassiveEffectsImpl() {
   if (rootWithPendingPassiveEffects === null) {
     return false;
   }
+
   const root = rootWithPendingPassiveEffects;
   const expirationTime = pendingPassiveEffectsExpirationTime;
   rootWithPendingPassiveEffects = null;
@@ -2252,7 +2270,13 @@ function flushPassiveEffectsImpl() {
       if (typeof destroy === 'function') {
         if (__DEV__) {
           setCurrentDebugFiberInDEV(fiber);
-          invokeGuardedCallback(null, destroy, null);
+          if (enableProfilerTimer && fiber.mode & ProfileMode) {
+            startPassiveEffectTimer();
+            invokeGuardedCallback(null, destroy, null);
+            recordPassiveEffectDuration(fiber);
+          } else {
+            invokeGuardedCallback(null, destroy, null);
+          }
           if (hasCaughtError()) {
             invariant(fiber !== null, 'Should be working on an effect.');
             const error = clearCaughtError();
@@ -2261,7 +2285,16 @@ function flushPassiveEffectsImpl() {
           resetCurrentDebugFiberInDEV();
         } else {
           try {
-            destroy();
+            if (enableProfilerTimer && fiber.mode & ProfileMode) {
+              try {
+                startPassiveEffectTimer();
+                destroy();
+              } finally {
+                recordPassiveEffectDuration(fiber);
+              }
+            } else {
+              destroy();
+            }
           } catch (error) {
             invariant(fiber !== null, 'Should be working on an effect.');
             captureCommitPhaseError(fiber, error);
@@ -2269,7 +2302,6 @@ function flushPassiveEffectsImpl() {
         }
       }
     }
-
     // Second pass: Create new passive effects.
     let mountEffects = pendingPassiveHookEffectsMount;
     pendingPassiveHookEffectsMount = [];
@@ -2278,7 +2310,13 @@ function flushPassiveEffectsImpl() {
       const fiber = ((mountEffects[i + 1]: any): Fiber);
       if (__DEV__) {
         setCurrentDebugFiberInDEV(fiber);
-        invokeGuardedCallback(null, invokePassiveEffectCreate, null, effect);
+        if (enableProfilerTimer && fiber.mode & ProfileMode) {
+          startPassiveEffectTimer();
+          invokeGuardedCallback(null, invokePassiveEffectCreate, null, effect);
+          recordPassiveEffectDuration(fiber);
+        } else {
+          invokeGuardedCallback(null, invokePassiveEffectCreate, null, effect);
+        }
         if (hasCaughtError()) {
           invariant(fiber !== null, 'Should be working on an effect.');
           const error = clearCaughtError();
@@ -2288,7 +2326,16 @@ function flushPassiveEffectsImpl() {
       } else {
         try {
           const create = effect.create;
-          effect.destroy = create();
+          if (enableProfilerTimer && fiber.mode & ProfileMode) {
+            try {
+              startPassiveEffectTimer();
+              effect.destroy = create();
+            } finally {
+              recordPassiveEffectDuration(fiber);
+            }
+          } else {
+            effect.destroy = create();
+          }
         } catch (error) {
           invariant(fiber !== null, 'Should be working on an effect.');
           captureCommitPhaseError(fiber, error);
@@ -2318,10 +2365,20 @@ function flushPassiveEffectsImpl() {
           captureCommitPhaseError(effect, error);
         }
       }
+
       const nextNextEffect = effect.nextEffect;
       // Remove nextEffect pointer to assist GC
       effect.nextEffect = null;
       effect = nextNextEffect;
+    }
+  }
+
+  if (enableProfilerTimer) {
+    let profilerEffects = pendingPassiveProfilerEffects;
+    pendingPassiveProfilerEffects = [];
+    for (let i = 0; i < profilerEffects.length; i++) {
+      const fiber = ((profilerEffects[i]: any): Fiber);
+      commitPassiveEffectDurations(root, fiber);
     }
   }
 

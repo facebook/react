@@ -813,13 +813,8 @@ function createFiberFromProfiler(
   key: null | string,
 ): Fiber {
   if (__DEV__) {
-    if (
-      typeof pendingProps.id !== 'string' ||
-      typeof pendingProps.onRender !== 'function'
-    ) {
-      console.error(
-        'Profiler must specify an "id" string and "onRender" function as props',
-      );
+    if (typeof pendingProps.id !== 'string') {
+      console.error('Profiler must specify an "id" as a prop');
     }
   }
 
@@ -828,6 +823,13 @@ function createFiberFromProfiler(
   fiber.elementType = REACT_PROFILER_TYPE;
   fiber.type = REACT_PROFILER_TYPE;
   fiber.expirationTime = expirationTime;
+
+  if (enableProfilerTimer) {
+    fiber.stateNode = {
+      effectDuration: 0,
+      passiveEffectDuration: 0,
+    };
+  }
 
   return fiber;
 }
