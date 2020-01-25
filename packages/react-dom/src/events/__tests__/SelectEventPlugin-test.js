@@ -43,7 +43,6 @@ describe('SelectEventPlugin', () => {
       <input type="text" onMouseDown={function() {}} />,
       container,
     );
-    node.focus();
 
     // Trigger `mousedown` and `mouseup`. Note that
     // React is not currently listening to `mouseup`.
