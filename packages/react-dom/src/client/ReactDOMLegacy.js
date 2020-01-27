@@ -16,11 +16,7 @@ import {
   isContainerMarkedAsRoot,
   unmarkContainerAsRoot,
 } from './ReactDOMComponentTree';
-import {
-  createLegacyRoot,
-  isValidContainer,
-  warnOnInvalidCallback,
-} from './ReactDOMRoot';
+import {createLegacyRoot, isValidContainer} from './ReactDOMRoot';
 import {ROOT_ATTRIBUTE_NAME} from '../shared/DOMProperty';
 import {
   DOCUMENT_NODE,
@@ -161,6 +157,19 @@ function legacyCreateRootFromDOMContainer(
         }
       : undefined,
   );
+}
+
+function warnOnInvalidCallback(callback: mixed, callerName: string): void {
+  if (__DEV__) {
+    if (callback !== null && typeof callback !== 'function') {
+      console.error(
+        '%s(...): Expected the last optional `callback` argument to be a ' +
+          'function. Instead received: %s.',
+        callerName,
+        callback,
+      );
+    }
+  }
 }
 
 function legacyRenderSubtreeIntoContainer(
