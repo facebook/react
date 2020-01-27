@@ -122,3 +122,5 @@ export const warnUnstableRenderSubtreeIntoContainer = false;
 
 // Disables ReactDOM.unstable_createPortal
 export const disableUnstableCreatePortal = false;
+
+export const isTestEnvironment = false;

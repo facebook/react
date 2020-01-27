@@ -46,6 +46,7 @@ export const disableUnstableRenderSubtreeIntoContainer = false;
 export const warnUnstableRenderSubtreeIntoContainer = false;
 export const disableUnstableCreatePortal = false;
 export const deferPassiveEffectCleanupDuringUnmount = false;
+export const isTestEnvironment = false;
 
 // Only used in www builds.
 export function addUserTimingListener() {

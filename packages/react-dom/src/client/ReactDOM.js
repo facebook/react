@@ -35,6 +35,7 @@ import {
   attemptUserBlockingHydration,
   attemptContinuousHydration,
   attemptHydrationAtCurrentPriority,
+  act,
 } from 'react-reconciler/inline.dom';
 import {createPortal as createPortalImpl} from 'shared/ReactPortal';
 import {canUseDOM} from 'shared/ExecutionEnvironment';
@@ -58,6 +59,7 @@ import {
   disableUnstableCreatePortal,
   disableUnstableRenderSubtreeIntoContainer,
   warnUnstableRenderSubtreeIntoContainer,
+  isTestEnvironment,
 } from 'shared/ReactFeatureFlags';
 
 import {
@@ -249,6 +251,10 @@ if (__DEV__) {
       }
     }
   }
+}
+
+if (isTestEnvironment) {
+  ReactDOM.act = act;
 }
 
 export default ReactDOM;
