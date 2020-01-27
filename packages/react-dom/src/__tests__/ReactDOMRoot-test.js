@@ -40,6 +40,35 @@ describe('ReactDOMRoot', () => {
     expect(container.textContent).toEqual('Hi');
   });
 
+  it('warns if a callback parameter is provided to render', () => {
+    const callback = jest.fn();
+    const root = ReactDOM.createRoot(container);
+    expect(() =>
+      root.render(<div>Hi</div>, callback),
+    ).toErrorDev(
+      'render(...): does not support the second callback argument. ' +
+        'To execute a side effect after rendering, declare it in a component body with useEffect().',
+      {withoutStack: true},
+    );
+    Scheduler.unstable_flushAll();
+    expect(callback).not.toHaveBeenCalled();
+  });
+
+  it('warns if a callback parameter is provided to unmount', () => {
+    const callback = jest.fn();
+    const root = ReactDOM.createRoot(container);
+    root.render(<div>Hi</div>);
+    expect(() =>
+      root.unmount(callback),
+    ).toErrorDev(
+      'unmount(...): does not support a callback argument. ' +
+        'To execute a side effect after rendering, declare it in a component body with useEffect().',
+      {withoutStack: true},
+    );
+    Scheduler.unstable_flushAll();
+    expect(callback).not.toHaveBeenCalled();
+  });
+
   it('unmounts children', () => {
     const root = ReactDOM.createRoot(container);
     root.render(<div>Hi</div>);
