@@ -235,6 +235,7 @@ describe('SimpleEventPlugin', function() {
       jest.resetModules();
       ReactFeatureFlags = require('shared/ReactFeatureFlags');
       ReactFeatureFlags.debugRenderPhaseSideEffectsForStrictMode = false;
+      React = require('react');
       ReactDOM = require('react-dom');
       Scheduler = require('scheduler');
     });

@@ -194,12 +194,12 @@ const ReactElement = function(type, key, ref, self, source, owner, props) {
       const warning = field => {
         if (!isInternalReactUsage) {
           debugger;
-          // console.error(
-          //   'Accessing property "%s" on a React Element is not recommended and should be avoided. ' +
-          //     'React Elements are objects owned by React and their internals are private and not ' +
-          //     'intended for introspection.',
-          //   field,
-          // );
+          console.error(
+            'Accessing property "%s" on a React Element is not recommended and should be avoided. ' +
+              'React Elements are objects owned by React and their internals are private and not ' +
+              'intended for introspection.',
+            field,
+          );
         }
       };
 

@@ -15,14 +15,15 @@ module.exports = function(initModules) {
   let ReactDOM;
   let ReactDOMServer;
   let ReactTestUtils;
+  let introspectReactElement;
 
   function resetModules() {
-    ({ReactDOM, ReactDOMServer, ReactTestUtils} = initModules());
+    ({introspectReactElement, ReactDOM, ReactDOMServer, ReactTestUtils} = initModules());
   }
 
   function shouldUseDocument(reactElement) {
     // Used for whole document tests.
-    return reactElement && reactElement.type === 'html';
+    return reactElement && introspectReactElement(reactElement).type === 'html';
   }
 
   function getContainerFromMarkup(reactElement, markup) {

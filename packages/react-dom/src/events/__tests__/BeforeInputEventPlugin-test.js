@@ -20,6 +20,7 @@ describe('BeforeInputEventPlugin', () => {
     if (envSimulator) {
       envSimulator();
     }
+    React = require('react');
     return require('react-dom');
   }
 

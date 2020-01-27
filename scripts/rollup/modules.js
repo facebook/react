@@ -18,6 +18,7 @@ const importSideEffects = Object.freeze({
   scheduler: HAS_NO_SIDE_EFFECTS_ON_IMPORT,
   'scheduler/tracing': HAS_NO_SIDE_EFFECTS_ON_IMPORT,
   'react-dom/server': HAS_NO_SIDE_EFFECTS_ON_IMPORT,
+  'react/src/ReactElement': HAS_NO_SIDE_EFFECTS_ON_IMPORT,
 });
 
 // Bundles exporting globals that other modules rely on.

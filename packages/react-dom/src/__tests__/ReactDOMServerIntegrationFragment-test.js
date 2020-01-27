@@ -15,6 +15,7 @@ let React;
 let ReactDOM;
 let ReactDOMServer;
 let ReactTestUtils;
+let introspectReactElement;
 
 function initModules() {
   // Reset warning cache.
@@ -23,12 +24,15 @@ function initModules() {
   ReactDOM = require('react-dom');
   ReactDOMServer = require('react-dom/server');
   ReactTestUtils = require('react-dom/test-utils');
+  ({introspectReactElement} = require('react/src/ReactElement'))
 
   // Make them available to the helpers.
   return {
+    React,
     ReactDOM,
     ReactDOMServer,
     ReactTestUtils,
+    introspectReactElement,
   };
 }
 
