@@ -655,6 +655,116 @@ describe('ReactIncrementalUpdates', () => {
     });
   });
 
+  it('does not throw out partially completed tree if it expires midway through', () => {
+    function Text({text}) {
+      Scheduler.unstable_yieldValue(text);
+      return text;
+    }
+
+    function App({step}) {
+      return (
+        <>
+          <Text text={`A${step}`} />
+          <Text text={`B${step}`} />
+          <Text text={`C${step}`} />
+        </>
+      );
+    }
+
+    function interrupt() {
+      ReactNoop.flushSync(() => {
+        ReactNoop.renderToRootWithID(null, 'other-root');
+      });
+    }
+
+    // First, as a sanity check, assert what happens when four low pri
+    // updates in separate batches are all flushed in the same callback
+    ReactNoop.act(() => {
+      ReactNoop.render(<App step={1} />);
+      Scheduler.unstable_advanceTime(1000);
+      expect(Scheduler).toFlushAndYieldThrough(['A1']);
+
+      interrupt();
+
+      ReactNoop.render(<App step={2} />);
+      Scheduler.unstable_advanceTime(1000);
+      expect(Scheduler).toFlushAndYieldThrough(['A1']);
+
+      interrupt();
+
+      ReactNoop.render(<App step={3} />);
+      Scheduler.unstable_advanceTime(1000);
+      expect(Scheduler).toFlushAndYieldThrough(['A1']);
+
+      interrupt();
+
+      ReactNoop.render(<App step={4} />);
+      Scheduler.unstable_advanceTime(1000);
+      expect(Scheduler).toFlushAndYieldThrough(['A1']);
+
+      // Each update flushes in a separate commit.
+      // Note: This isn't necessarily the ideal behavior. It might be better to
+      // batch all of these updates together. The fact that they don't is an
+      // implementation detail. The important part of this unit test is what
+      // happens when they expire, in which case they really should be batched to
+      // avoid blocking the main thread for a long time.
+      expect(Scheduler).toFlushAndYield([
+        // A1 already completed. Finish rendering the first level.
+        'B1',
+        'C1',
+        // The remaining two levels complete sequentially.
+        'A2',
+        'B2',
+        'C2',
+        'A3',
+        'B3',
+        'C3',
+        'A4',
+        'B4',
+        'C4',
+      ]);
+    });
+
+    ReactNoop.act(() => {
+      // Now do the same thing over again, but this time, expire all the updates
+      // instead of flushing them normally.
+      ReactNoop.render(<App step={1} />);
+      Scheduler.unstable_advanceTime(1000);
+      expect(Scheduler).toFlushAndYieldThrough(['A1']);
+
+      interrupt();
+
+      ReactNoop.render(<App step={2} />);
+      Scheduler.unstable_advanceTime(1000);
+      expect(Scheduler).toFlushAndYieldThrough(['A1']);
+
+      interrupt();
+
+      ReactNoop.render(<App step={3} />);
+      Scheduler.unstable_advanceTime(1000);
+      expect(Scheduler).toFlushAndYieldThrough(['A1']);
+
+      interrupt();
+
+      ReactNoop.render(<App step={4} />);
+      Scheduler.unstable_advanceTime(1000);
+      expect(Scheduler).toFlushAndYieldThrough(['A1']);
+
+      // Expire all the updates
+      ReactNoop.expire(10000);
+
+      expect(Scheduler).toHaveYielded([
+        // A1 already completed. Finish rendering the first level.
+        'B1',
+        'C1',
+        // Then render the remaining two levels in a single batch
+        'A4',
+        'B4',
+        'C4',
+      ]);
+    });
+  });
+
   it('when rebasing, does not exclude updates that were already committed, regardless of priority', async () => {
     const {useState, useLayoutEffect} = React;
 
