@@ -8,8 +8,6 @@
  */
 
 import React, {Fragment, useRef} from 'react';
-import Button from '../Button';
-import ButtonIcon from '../ButtonIcon';
 import styles from './EditableValue.css';
 import {useEditableValue} from '../hooks';
 
@@ -61,11 +59,6 @@ export default function EditableValue({
     }
   };
 
-  const handleBlur = event => {
-    event.stopPropagation();
-    applyChanges();
-  };
-
   const applyChanges = () => {
     if (isValid && hasPendingChanges) {
       overrideValueFn(path, parsedValue);
@@ -84,22 +77,14 @@ export default function EditableValue({
       <input
         autoComplete="new-password"
         className={`${isValid ? styles.Input : styles.Invalid} ${className}`}
+        onBlur={applyChanges}
         onChange={handleChange}
         onKeyDown={handleKeyDown}
-        onBlur={handleBlur}
         placeholder={placeholder}
         ref={inputRef}
         type="text"
         value={editableValue}
       />
-      {hasPendingChanges && (
-        <Button
-          className={styles.ResetButton}
-          onClick={reset}
-          title="Reset value">
-          <ButtonIcon type="undo" />
-        </Button>
-      )}
     </Fragment>
   );
 }
