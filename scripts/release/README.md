@@ -35,7 +35,7 @@ scripts/release/prepare-canary.js --build=13471
 
 Once the canary has been checked out and tested locally, you're ready to publish it:
 ```sh
-scripts/release/publish.js --tags canary
+scripts/release/publish.js --tags next
 ```
 
 <sup>1: You can omit the `build` param if you just want to release the latest commit as a canary.</sup>
