@@ -381,6 +381,55 @@ describe('ReactIncrementalErrorHandling', () => {
     expect(ReactNoop.getChildren()).toEqual([]);
   });
 
+  it('retries one more time if an error occurs during a render that expires midway through the tree', () => {
+    function Oops() {
+      Scheduler.unstable_yieldValue('Oops');
+      throw new Error('Oops');
+    }
+
+    function Text({text}) {
+      Scheduler.unstable_yieldValue(text);
+      return text;
+    }
+
+    function App() {
+      return (
+        <>
+          <Text text="A" />
+          <Text text="B" />
+          <Oops />
+          <Text text="C" />
+          <Text text="D" />
+        </>
+      );
+    }
+
+    ReactNoop.render(<App />);
+
+    // Render part of the tree
+    expect(Scheduler).toFlushAndYieldThrough(['A', 'B']);
+
+    // Expire the render midway through
+    expect(() => ReactNoop.expire(10000)).toThrow('Oops');
+
+    expect(Scheduler).toHaveYielded([
+      // The render expired, but we shouldn't throw out the partial work.
+      // Finish the current level.
+      'Oops',
+      'C',
+      'D',
+
+      // Since the error occured during a partially concurrent render, we should
+      // retry one more time, synchonrously.
+      'A',
+      'B',
+      'Oops',
+      'C',
+      'D',
+    ]);
+    expect(ReactNoop.getChildren()).toEqual([]);
+  });
+
   it('calls componentDidCatch multiple times for multiple errors', () => {
     let id = 0;
     class BadMount extends React.Component {
