@@ -38,6 +38,8 @@ Once the canary has been checked out and tested locally, you're ready to publish
 scripts/release/publish.js --tags next
 ```
 
+If the OTP code expires while publishing, re-run this command and answer "y" to the questions about whether it was expected for already published packages.
+
 <sup>1: You can omit the `build` param if you just want to release the latest commit as a canary.</sup>
 
 ## Publishing an Experimental Canary
@@ -51,6 +53,8 @@ When publishing an experimental canary, use the `experimental` tag:
 ```sh
 scripts/release/publish.js --tags experimental
 ```
+
+If the OTP code expires while publishing, re-run this command and answer "y" to the questions about whether it was expected for already published packages.
 
 ## Publishing a Stable Release
 
@@ -69,6 +73,8 @@ Once this step is complete, you're ready to publish the release:
 ```sh
 scripts/release/publish.js --tags next latest
 ```
+
+If the OTP code expires while publishing, re-run this command and answer "y" to the questions about whether it was expected for already published packages.
 
 After successfully publishing the release, follow the on-screen instructions to ensure that all of the appropriate post-release steps are executed.
 
