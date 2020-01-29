@@ -1198,7 +1198,6 @@ describe('ReactNewContext', () => {
           'The old API will be supported in all 16.x releases, but applications ' +
           'using it should migrate to the new version.\n\n' +
           'Please update the following components: LegacyProvider',
-        {withoutStack: true},
       );
       expect(ReactNoop.getChildren()).toEqual([span('Child')]);
 

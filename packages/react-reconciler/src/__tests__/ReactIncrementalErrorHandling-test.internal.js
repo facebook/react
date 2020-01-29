@@ -1148,14 +1148,11 @@ describe('ReactIncrementalErrorHandling', () => {
         <Connector />
       </Provider>,
     );
-    expect(() =>
-      expect(Scheduler).toFlushWithoutYielding(),
-    ).toErrorDev(
+    expect(() => expect(Scheduler).toFlushWithoutYielding()).toErrorDev(
       'Legacy context API has been detected within a strict-mode tree.\n\n' +
         'The old API will be supported in all 16.x releases, but ' +
         'applications using it should migrate to the new version.\n\n' +
         'Please update the following components: Connector, Provider',
-      {withoutStack: true},
     );
 
     // If the context stack does not unwind, span will get 'abcde'
@@ -1649,19 +1646,16 @@ describe('ReactIncrementalErrorHandling', () => {
     ReactNoop.render(<Provider />);
     expect(() => {
       expect(Scheduler).toFlushAndThrow('Oops!');
-    }).toErrorDev(
-      [
-        'Warning: The <Provider /> component appears to be a function component that returns a class instance. ' +
-          'Change Provider to a class that extends React.Component instead. ' +
-          "If you can't use a class try assigning the prototype on the function as a workaround. " +
-          '`Provider.prototype = React.Component.prototype`. ' +
-          "Don't use an arrow function since it cannot be called with `new` by React.",
-        'Legacy context API has been detected within a strict-mode tree.\n\n' +
-          'The old API will be supported in all 16.x releases, but ' +
-          'applications using it should migrate to the new version.\n\n' +
-          'Please update the following components: Provider',
-      ],
-      {withoutStack: 1},
-    );
+    }).toErrorDev([
+      'Warning: The <Provider /> component appears to be a function component that returns a class instance. ' +
+        'Change Provider to a class that extends React.Component instead. ' +
+        "If you can't use a class try assigning the prototype on the function as a workaround. " +
+        '`Provider.prototype = React.Component.prototype`. ' +
+        "Don't use an arrow function since it cannot be called with `new` by React.",
+      'Legacy context API has been detected within a strict-mode tree.\n\n' +
+        'The old API will be supported in all 16.x releases, but ' +
+        'applications using it should migrate to the new version.\n\n' +
+        'Please update the following components: Provider',
+    ]);
   });
 });
