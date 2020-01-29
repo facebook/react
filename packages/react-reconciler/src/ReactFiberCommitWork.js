@@ -26,6 +26,7 @@ import type {ReactPriorityLevel} from './SchedulerWithReactIntegration';
 
 import {unstable_wrap as Schedule_tracing_wrap} from 'scheduler/tracing';
 import {
+  deferPassiveEffectCleanupDuringUnmount,
   enableSchedulerTracing,
   enableProfilerTimer,
   enableSuspenseServerRenderer,
@@ -109,9 +110,11 @@ import {
   captureCommitPhaseError,
   resolveRetryThenable,
   markCommitTimeOfFallback,
+  enqueuePendingPassiveEffectDestroyFn,
 } from './ReactFiberWorkLoop';
 import {
   NoEffect as NoHookEffect,
+  NoEffectPassiveUnmountFiber,
   UnmountSnapshot,
   UnmountMutation,
   MountMutation,
@@ -756,32 +759,50 @@ function commitUnmount(
         if (lastEffect !== null) {
           const firstEffect = lastEffect.next;
 
-          // When the owner fiber is deleted, the destroy function of a passive
-          // effect hook is called during the synchronous commit phase. This is
-          // a concession to implementation complexity. Calling it in the
-          // passive effect phase (like they usually are, when dependencies
-          // change during an update) would require either traversing the
-          // children of the deleted fiber again, or including unmount effects
-          // as part of the fiber effect list.
-          //
-          // Because this is during the sync commit phase, we need to change
-          // the priority.
-          //
-          // TODO: Reconsider this implementation trade off.
-          const priorityLevel =
-            renderPriorityLevel > NormalPriority
-              ? NormalPriority
-              : renderPriorityLevel;
-          runWithPriority(priorityLevel, () => {
+          if (deferPassiveEffectCleanupDuringUnmount) {
             let effect = firstEffect;
             do {
-              const destroy = effect.destroy;
+              const {destroy, tag} = effect;
               if (destroy !== undefined) {
-                safelyCallDestroy(current, destroy);
+                if (
+                  (tag & UnmountPassive) !== NoHookEffect ||
+                  (tag & NoEffectPassiveUnmountFiber) !== NoHookEffect
+                ) {
+                  enqueuePendingPassiveEffectDestroyFn(destroy);
+                } else {
+                  safelyCallDestroy(current, destroy);
+                }
               }
               effect = effect.next;
             } while (effect !== firstEffect);
-          });
+          } else {
+            // When the owner fiber is deleted, the destroy function of a passive
+            // effect hook is called during the synchronous commit phase. This is
+            // a concession to implementation complexity. Calling it in the
+            // passive effect phase (like they usually are, when dependencies
+            // change during an update) would require either traversing the
+            // children of the deleted fiber again, or including unmount effects
+            // as part of the fiber effect list.
+            //
+            // Because this is during the sync commit phase, we need to change
+            // the priority.
+            //
+            // TODO: Reconsider this implementation trade off.
+            const priorityLevel =
+              renderPriorityLevel > NormalPriority
+                ? NormalPriority
+                : renderPriorityLevel;
+            runWithPriority(priorityLevel, () => {
+              let effect = firstEffect;
+              do {
+                const destroy = effect.destroy;
+                if (destroy !== undefined) {
+                  safelyCallDestroy(current, destroy);
+                }
+                effect = effect.next;
+              } while (effect !== firstEffect);
+            });
+          }
         }
       }
       return;
@@ -1285,8 +1306,10 @@ function commitWork(current: Fiber | null, finishedWork: Fiber): void {
       case MemoComponent:
       case SimpleMemoComponent:
       case Chunk: {
-        // Note: We currently never use MountMutation, but useLayout uses
-        // UnmountMutation.
+        // Note: We currently never use MountMutation, but useLayoutEffect uses UnmountMutation.
+        // This is to ensure ALL destroy fns are run before create fns,
+        // without requiring us to traverse the effects list an extra time during commit.
+        // This sequence prevents sibling destroy and create fns from interfering with each other.
         commitHookEffectList(UnmountMutation, MountMutation, finishedWork);
         return;
       }
@@ -1325,8 +1348,10 @@ function commitWork(current: Fiber | null, finishedWork: Fiber): void {
     case MemoComponent:
     case SimpleMemoComponent:
     case Chunk: {
-      // Note: We currently never use MountMutation, but useLayout uses
-      // UnmountMutation.
+      // Note: We currently never use MountMutation, but useLayoutEffect uses UnmountMutation.
+      // This is to ensure ALL destroy fns are run before create fns,
+      // without requiring us to traverse the effects list an extra time during commit.
+      // This sequence prevents sibling destroy and create fns from interfering with each other.
       commitHookEffectList(UnmountMutation, MountMutation, finishedWork);
       return;
     }

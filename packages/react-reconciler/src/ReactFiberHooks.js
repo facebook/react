@@ -29,6 +29,7 @@ import {
 } from 'shared/ReactSideEffectTags';
 import {
   NoEffect as NoHookEffect,
+  NoEffectPassiveUnmountFiber,
   UnmountMutation,
   MountLayout,
   UnmountPassive,
@@ -926,7 +927,13 @@ function mountEffectImpl(fiberEffectTag, hookEffectTag, create, deps): void {
   hook.memoizedState = pushEffect(hookEffectTag, create, undefined, nextDeps);
 }
 
-function updateEffectImpl(fiberEffectTag, hookEffectTag, create, deps): void {
+function updateEffectImpl(
+  fiberEffectTag,
+  hookEffectTag,
+  noWorkUnmountFiberHookEffectTag,
+  create,
+  deps,
+): void {
   const hook = updateWorkInProgressHook();
   const nextDeps = deps === undefined ? null : deps;
   let destroy = undefined;
@@ -937,7 +944,7 @@ function updateEffectImpl(fiberEffectTag, hookEffectTag, create, deps): void {
     if (nextDeps !== null) {
       const prevDeps = prevEffect.deps;
       if (areHookInputsEqual(nextDeps, prevDeps)) {
-        pushEffect(NoHookEffect, create, destroy, nextDeps);
+        pushEffect(noWorkUnmountFiberHookEffectTag, create, destroy, nextDeps);
         return;
       }
     }
@@ -979,6 +986,7 @@ function updateEffect(
   return updateEffectImpl(
     UpdateEffect | PassiveEffect,
     UnmountPassive | MountPassive,
+    NoEffectPassiveUnmountFiber,
     create,
     deps,
   );
@@ -1000,9 +1008,12 @@ function updateLayoutEffect(
   create: () => (() => void) | void,
   deps: Array<mixed> | void | null,
 ): void {
+  // Layout effects use UnmountMutation to ensure all destroy fns are run before create fns.
+  // This optimization lets us avoid traversing the effects list an extra time during the layout phase.
   return updateEffectImpl(
     UpdateEffect,
     UnmountMutation | MountLayout,
+    NoHookEffect,
     create,
     deps,
   );
@@ -1087,6 +1098,7 @@ function updateImperativeHandle<T>(
   return updateEffectImpl(
     UpdateEffect,
     UnmountMutation | MountLayout,
+    NoHookEffect,
     imperativeHandleEffect.bind(null, create, ref),
     effectDeps,
   );
