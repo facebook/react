@@ -2183,11 +2183,13 @@ export function enqueuePendingPassiveEffectDestroyFn(
 ): void {
   if (deferPassiveEffectCleanupDuringUnmount) {
     pendingUnmountedPassiveEffectDestroyFunctions.push(destroy);
-    rootDoesHavePassiveEffects = true;
-    scheduleCallback(NormalPriority, () => {
-      flushPassiveEffects();
-      return null;
-    });
+    if (!rootDoesHavePassiveEffects) {
+      rootDoesHavePassiveEffects = true;
+      scheduleCallback(NormalPriority, () => {
+        flushPassiveEffects();
+        return null;
+      });
+    }
   }
 }
 
