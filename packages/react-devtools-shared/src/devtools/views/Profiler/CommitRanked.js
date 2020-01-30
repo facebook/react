@@ -14,7 +14,7 @@ import {ProfilerContext} from './ProfilerContext';
 import NoCommitData from './NoCommitData';
 import CommitRankedListItem from './CommitRankedListItem';
 import {scale} from './utils';
-import {StoreContext} from '../context';
+import {BridgeContext, StoreContext} from '../context';
 import {SettingsContext} from '../Settings/SettingsContext';
 
 import styles from './CommitRanked.css';
@@ -24,6 +24,7 @@ import type {CommitTree} from './types';
 
 export type ItemData = {|
   chartData: ChartData,
+  onElementMouseEnter: (id: number) => void,
   scaleX: (value: number, fallbackValue: number) => number,
   selectedFiberID: number | null,
   selectedFiberIndex: number,
@@ -91,15 +92,44 @@ type Props = {|
 function CommitRanked({chartData, commitTree, height, width}: Props) {
   const {lineHeight} = useContext(SettingsContext);
   const {selectedFiberID, selectFiber} = useContext(ProfilerContext);
+  const store = useContext(StoreContext);
+  const bridge = useContext(BridgeContext);
 
   const selectedFiberIndex = useMemo(
     () => getNodeIndex(chartData, selectedFiberID),
     [chartData, selectedFiberID],
   );
 
+  const highlightNativeElement = useCallback(
+    (id: number) => {
+      const element = store.getElementByID(id);
+      const rendererID = store.getRendererIDForElement(id);
+      if (element !== null && rendererID !== null) {
+        bridge.send('highlightNativeElement', {
+          displayName: element.displayName,
+          hideAfterTimeout: false,
+          id,
+          openNativeElementsPanel: false,
+          rendererID,
+          scrollIntoView: false,
+        });
+      }
+    },
+    [store, bridge],
+  );
+
+  // Highlight last hovered element.
+  const handleElementMouseEnter = useCallback(
+    id => {
+        highlightNativeElement(id);
+    },
+    [ highlightNativeElement],
+  );
+
   const itemData = useMemo<ItemData>(
     () => ({
       chartData,
+      onElementMouseEnter: handleElementMouseEnter,
       scaleX: scale(0, chartData.nodes[selectedFiberIndex].value, 0, width),
       selectedFiberID,
       selectedFiberIndex,

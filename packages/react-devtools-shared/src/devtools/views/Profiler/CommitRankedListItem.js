@@ -7,7 +7,7 @@
  * @flow
  */
 
-import React, {memo, useCallback, useContext} from 'react';
+import React, {memo, useCallback, useContext, useState} from 'react';
 import {areEqual} from 'react-window';
 import {minBarWidth} from './constants';
 import {getGradientColor} from './utils';
@@ -24,7 +24,9 @@ type Props = {
 };
 
 function CommitRankedListItem({data, index, style}: Props) {
-  const {chartData, scaleX, selectedFiberIndex, selectFiber, width} = data;
+  const [isHovered, setIsHovered] = useState(false);
+  const {chartData,
+    onElementMouseEnter, scaleX, selectedFiberIndex, selectFiber, width} = data;
 
   const node = chartData.nodes[index];
 
@@ -38,6 +40,18 @@ function CommitRankedListItem({data, index, style}: Props) {
     [node, selectFiber],
   );
 
+  const handleMouseEnter = (id: number) => {
+    setIsHovered(true);
+
+    if (id !== null) {
+      onElementMouseEnter(id);
+    }
+  };
+
+  const handleMouseLeave = (id: number) => {
+    setIsHovered(false);
+  };
+
   // List items are absolutely positioned using the CSS "top" attribute.
   // The "left" value will always be 0.
   // Since height is fixed, and width is based on the node's duration,
@@ -49,9 +63,12 @@ function CommitRankedListItem({data, index, style}: Props) {
       color={getGradientColor(node.value / chartData.maxValue)}
       height={lineHeight}
       isDimmed={index < selectedFiberIndex}
+      isHovered={isHovered}
       key={node.id}
       label={node.label}
       onClick={handleClick}
+      onMouseEnter={() => handleMouseEnter(node.id)}
+      onMouseLeave={() => handleMouseLeave(node. id)}
       width={Math.max(minBarWidth, scaleX(node.value, width))}
       x={0}
       y={top}
