@@ -76,7 +76,7 @@ function setup(hook) {
   bridge.send('extensionBackendInitialized');
 
   // Setup React Native style editor if a renderer like react-native-web has injected it.
-  if (hook.resolveRNStyle) {
+  if (hook && hook.resolveRNStyle) {
     setupNativeStyleEditor(
       bridge,
       agent,
