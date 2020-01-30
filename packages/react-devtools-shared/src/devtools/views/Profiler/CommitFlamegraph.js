@@ -14,7 +14,7 @@ import {ProfilerContext} from './ProfilerContext';
 import NoCommitData from './NoCommitData';
 import CommitFlamegraphListItem from './CommitFlamegraphListItem';
 import {scale} from './utils';
-import {StoreContext} from '../context';
+import {BridgeContext, StoreContext} from '../context';
 import {SettingsContext} from '../Settings/SettingsContext';
 
 import styles from './CommitFlamegraph.css';
@@ -93,6 +93,8 @@ type Props = {|
 function CommitFlamegraph({chartData, commitTree, height, width}: Props) {
   const {lineHeight} = useContext(SettingsContext);
   const {selectFiber, selectedFiberID} = useContext(ProfilerContext);
+  const store = useContext(StoreContext);
+  const bridge = useContext(BridgeContext);
 
   const selectedChartNodeIndex = useMemo<number>(() => {
     if (selectedFiberID === null) {
@@ -115,9 +117,37 @@ function CommitFlamegraph({chartData, commitTree, height, width}: Props) {
     return null;
   }, [chartData, selectedFiberID, selectedChartNodeIndex]);
 
+
+  const highlightNativeElement = useCallback(
+    (id: number) => {
+      const element = store.getElementByID(id);
+      const rendererID = store.getRendererIDForElement(id);
+      if (element !== null && rendererID !== null) {
+        bridge.send('highlightNativeElement', {
+          displayName: element.displayName,
+          hideAfterTimeout: false,
+          id,
+          openNativeElementsPanel: false,
+          rendererID,
+          scrollIntoView: false,
+        });
+      }
+    },
+    [store, bridge],
+  );
+
+  // Highlight last hovered element.
+  const handleElementMouseEnter = useCallback(
+    id => {
+        highlightNativeElement(id);
+    },
+    [ highlightNativeElement],
+  );
+
   const itemData = useMemo<ItemData>(
     () => ({
       chartData,
+      onElementMouseEnter: handleElementMouseEnter,
       scaleX: scale(
         0,
         selectedChartNode !== null

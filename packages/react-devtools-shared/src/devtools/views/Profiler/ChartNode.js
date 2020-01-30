@@ -15,9 +15,12 @@ type Props = {|
   color: string,
   height: number,
   isDimmed?: boolean,
+  isHovered?: boolean,
   label: string,
   onClick: (event: SyntheticMouseEvent<*>) => mixed,
   onDoubleClick?: (event: SyntheticMouseEvent<*>) => mixed,
+  onMouseEnter?: (event: SyntheticMouseEvent<*>) => mixed,
+  onMouseLeave?: (event: SyntheticMouseEvent<*>) => mixed,
   placeLabelAboveNode?: boolean,
   textStyle?: Object,
   width: number,
@@ -31,14 +34,25 @@ export default function ChartNode({
   color,
   height,
   isDimmed = false,
+  isHovered = false,
   label,
   onClick,
   onDoubleClick,
+  onMouseEnter,
+  onMouseLeave,
   textStyle,
   width,
   x,
   y,
 }: Props) {
+
+  let opacity = 1;
+  if (isHovered) {
+    opacity = 0.75;
+  } else if (isDimmed) {
+    opacity = 0.5;
+  }
+
   return (
     <g className={styles.Group} transform={`translate(${x},${y})`}>
       <title>{label}</title>
@@ -48,9 +62,11 @@ export default function ChartNode({
         fill={color}
         onClick={onClick}
         onDoubleClick={onDoubleClick}
+        onMouseEnter={onMouseEnter}
+        onMouseLeave={onMouseLeave}
         className={styles.Rect}
         style={{
-          opacity: isDimmed ? 0.5 : 1,
+          opacity,
         }}
       />
       {width >= minWidthToDisplay && (

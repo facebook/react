@@ -7,7 +7,7 @@
  * @flow
  */
 
-import React, {Fragment, memo, useCallback, useContext} from 'react';
+import React, {Fragment, memo, useCallback, useContext, useState} from 'react';
 import {areEqual} from 'react-window';
 import {barWidthThreshold} from './constants';
 import {getGradientColor} from './utils';
@@ -24,8 +24,11 @@ type Props = {
 };
 
 function CommitFlamegraphListItem({data, index, style}: Props) {
+  const [isHovered, setIsHovered] = useState(false);
+
   const {
     chartData,
+    onElementMouseEnter,
     scaleX,
     selectedChartNode,
     selectedChartNodeIndex,
@@ -42,6 +45,19 @@ function CommitFlamegraphListItem({data, index, style}: Props) {
     },
     [selectFiber],
   );
+
+  const handleMouseEnter = (id: number) => {
+    setIsHovered(true);
+
+    if (id !== null) {
+      onElementMouseEnter(id);
+    }
+  };
+
+  const handleMouseLeave = (id: number) => {
+    setIsHovered(false);
+  };
+
 
   // List items are absolutely positioned using the CSS "top" attribute.
   // The "left" value will always be 0.
@@ -101,9 +117,12 @@ function CommitFlamegraphListItem({data, index, style}: Props) {
             color={color}
             height={lineHeight}
             isDimmed={index < selectedChartNodeIndex}
+            isHovered={isHovered}
             key={id}
             label={label}
             onClick={event => handleClick(event, id, name)}
+            onMouseEnter={() => handleMouseEnter(id)}
+            onMouseLeave={() => handleMouseLeave(id)}
             textStyle={{color: textColor}}
             width={nodeWidth}
             x={nodeOffset - selectedNodeOffset}
