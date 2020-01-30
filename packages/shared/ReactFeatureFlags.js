@@ -111,6 +111,8 @@ export const disableTextareaChildren = false;
 
 // Disables ReactDOM.unstable_renderSubtreeIntoContainer
 export const disableUnstableRenderSubtreeIntoContainer = false;
+// We should remove this flag once the above flag becomes enabled
+export const warnUnstableRenderSubtreeIntoContainer = false;
 
 // Disables ReactDOM.unstable_createPortal
 export const disableUnstableCreatePortal = false;
