@@ -644,16 +644,9 @@ function performConcurrentWorkOnRoot(root, didTimeout) {
   // event time. The next update will compute a new event time.
   currentEventTime = NoWork;
 
-  // Check if the render expired. If so, restart at the current time so that we
-  // can finish all the expired work in a single batch. However, we should only
-  // do this if we're starting a new tree. If we're in the middle of an existing
-  // tree, we'll continue working on that (without yielding) so that the work
-  // doesn't get dropped. If there's another expired level after that, we'll hit
-  // this path again, at which point we can batch all the subsequent levels
-  // together.
-  if (didTimeout && workInProgress === null) {
-    // Mark the current time as expired to synchronously render all expired work
-    // in a single batch.
+  if (didTimeout) {
+    // The render task took too long to complete. Mark the current time as
+    // expired to synchronously render all expired work in a single batch.
     const currentTime = requestCurrentTimeForUpdate();
     markRootExpiredAtTime(root, currentTime);
     // This will schedule a synchronous callback.
