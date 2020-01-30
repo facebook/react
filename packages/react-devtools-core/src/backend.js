@@ -158,6 +158,8 @@ export function connectToDevTools(options: ?ConnectOptions) {
 
     // TODO (npm-packages) Warn if "isBackendStorageAPISupported"
     const agent = new Agent(bridge);
+    if (hook == null) return;
+
     agent.addListener('shutdown', () => {
       // If we received 'shutdown' from `agent`, we assume the `bridge` is already shutting down,
       // and that caused the 'shutdown' event on the `agent`, so we don't need to call `bridge.shutdown()` here.

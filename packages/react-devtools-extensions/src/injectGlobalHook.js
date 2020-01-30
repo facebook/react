@@ -88,7 +88,7 @@ if (sessionStorageGetItem(SESSION_STORAGE_RELOAD_AND_PROFILE_KEY) === 'true') {
 
 // Inject a __REACT_DEVTOOLS_GLOBAL_HOOK__ global for React to interact with.
 // Only do this for HTML documents though, to avoid e.g. breaking syntax highlighting for XML docs.
-if (['text/html', 'text/plain'].includes(document.contentType)) {
+if ('text/html' === document.contentType) {
   injectCode(
     ';(' +
       installHook.toString() +
