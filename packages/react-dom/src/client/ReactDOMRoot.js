@@ -13,6 +13,7 @@ import type {ReactNodeList} from 'shared/ReactTypes';
 // TODO: This type is shared between the reconciler and ReactDOM, but will
 // eventually be lifted out to the renderer.
 import type {FiberRoot} from 'react-reconciler/src/ReactFiberRoot';
+import {findHostInstanceWithNoPortals} from 'react-reconciler/inline.dom';
 
 export type RootType = {
   render(children: ReactNodeList): void,
@@ -63,6 +64,7 @@ function ReactDOMBlockingRoot(
 ReactDOMRoot.prototype.render = ReactDOMBlockingRoot.prototype.render = function(
   children: ReactNodeList,
 ): void {
+  const root = this._internalRoot;
   if (__DEV__) {
     if (typeof arguments[1] === 'function') {
       console.error(
@@ -70,8 +72,22 @@ ReactDOMRoot.prototype.render = ReactDOMBlockingRoot.prototype.render = function
           'To execute a side effect after rendering, declare it in a component body with useEffect().',
       );
     }
+    const container = root.containerInfo;
+
+    if (container.nodeType !== COMMENT_NODE) {
+      const hostInstance = findHostInstanceWithNoPortals(root.current);
+      if (hostInstance) {
+        if (hostInstance.parentNode !== container) {
+          console.error(
+            'render(...): It looks like the React-rendered content of the ' +
+              'root container was removed without using React. This is not ' +
+              'supported and will cause errors. Instead, call ' +
+              "root.unmount() to empty a root's container.",
+          );
+        }
+      }
+    }
   }
-  const root = this._internalRoot;
   updateContainer(children, root, null, null);
 };
 
@@ -156,6 +172,19 @@ export function isValidContainer(node: mixed): boolean {
 
 function warnIfReactDOMContainerInDEV(container) {
   if (__DEV__) {
+    if (
+      container.nodeType === ELEMENT_NODE &&
+      ((container: any): Element).tagName &&
+      ((container: any): Element).tagName.toUpperCase() === 'BODY'
+    ) {
+      console.error(
+        'createRoot(): Creating roots directly with document.body is ' +
+          'discouraged, since its children are often manipulated by third-party ' +
+          'scripts and browser extensions. This may lead to subtle ' +
+          'reconciliation issues. Try using a container element created ' +
+          'for your app.',
+      );
+    }
     if (isContainerMarkedAsRoot(container)) {
       if (container._reactRootContainer) {
         console.error(
