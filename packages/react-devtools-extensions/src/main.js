@@ -355,11 +355,9 @@ function createPanelIfReactLoaded() {
 
         // It's easiest to recreate the DevTools panel (to clean up potential stale state).
         // We can revisit this in the future as a small optimization.
-        flushSync(() => {
-          root.unmount(() => {
-            initBridgeAndStore();
-          });
-        });
+        flushSync(() => root.unmount());
+
+        initBridgeAndStore();
       });
     },
   );
