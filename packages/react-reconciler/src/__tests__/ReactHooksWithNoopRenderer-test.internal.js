@@ -974,70 +974,69 @@ describe('ReactHooksWithNoopRenderer', () => {
     );
 
     it('defers passive effect destroy functions during unmount', () => {
-      function Child({count}) {
+      function Child({bar, foo}) {
         React.useEffect(() => {
-          Scheduler.unstable_yieldValue('passive create (no dependencies)');
+          Scheduler.unstable_yieldValue('passive bar create');
           return () => {
-            Scheduler.unstable_yieldValue('passive destroy (no dependencies)');
+            Scheduler.unstable_yieldValue('passive bar destroy');
           };
-        }, []);
+        }, [bar]);
         React.useLayoutEffect(() => {
-          Scheduler.unstable_yieldValue('layout create (no dependencies)');
+          Scheduler.unstable_yieldValue('layout bar create');
           return () => {
-            Scheduler.unstable_yieldValue('layout destroy (no dependencies)');
+            Scheduler.unstable_yieldValue('layout bar destroy');
           };
-        }, []);
+        }, [bar]);
         React.useEffect(() => {
-          Scheduler.unstable_yieldValue('passive create');
+          Scheduler.unstable_yieldValue('passive foo create');
           return () => {
-            Scheduler.unstable_yieldValue('passive destroy');
+            Scheduler.unstable_yieldValue('passive foo destroy');
           };
-        }, [count]);
+        }, [foo]);
         React.useLayoutEffect(() => {
-          Scheduler.unstable_yieldValue('layout create');
+          Scheduler.unstable_yieldValue('layout foo create');
           return () => {
-            Scheduler.unstable_yieldValue('layout destroy');
+            Scheduler.unstable_yieldValue('layout foo destroy');
           };
-        }, [count]);
+        }, [foo]);
         Scheduler.unstable_yieldValue('render');
         return null;
       }
 
       act(() => {
-        ReactNoop.render(<Child count={1} />, () =>
+        ReactNoop.render(<Child bar={1} foo={1} />, () =>
           Scheduler.unstable_yieldValue('Sync effect'),
         );
         expect(Scheduler).toFlushAndYieldThrough([
           'render',
-          'layout create (no dependencies)',
-          'layout create',
+          'layout bar create',
+          'layout foo create',
           'Sync effect',
         ]);
         // Effects are deferred until after the commit
         expect(Scheduler).toFlushAndYield([
-          'passive create (no dependencies)',
-          'passive create',
+          'passive bar create',
+          'passive foo create',
         ]);
       });
 
-      // HACK
-      // This update is kind of gross since it exists to test an internal implementation detail:
+      // This update is exists to test an internal implementation detail:
       // Effects without updating dependencies lose their layout/passive tag during an update.
       // A special type of no-update tag (NoEffectPassiveUnmountFiber) is used to track these for later.
       act(() => {
-        ReactNoop.render(<Child count={2} />, () =>
+        ReactNoop.render(<Child bar={1} foo={2} />, () =>
           Scheduler.unstable_yieldValue('Sync effect'),
         );
         expect(Scheduler).toFlushAndYieldThrough([
           'render',
-          'layout destroy',
-          'layout create',
+          'layout foo destroy',
+          'layout foo create',
           'Sync effect',
         ]);
         // Effects are deferred until after the commit
         expect(Scheduler).toFlushAndYield([
-          'passive destroy',
-          'passive create',
+          'passive foo destroy',
+          'passive foo create',
         ]);
       });
 
@@ -1047,14 +1046,14 @@ describe('ReactHooksWithNoopRenderer', () => {
           Scheduler.unstable_yieldValue('Sync effect'),
         );
         expect(Scheduler).toFlushAndYieldThrough([
-          'layout destroy (no dependencies)',
-          'layout destroy',
+          'layout bar destroy',
+          'layout foo destroy',
           'Sync effect',
         ]);
         // Effects are deferred until after the commit
         expect(Scheduler).toFlushAndYield([
-          'passive destroy (no dependencies)',
-          'passive destroy',
+          'passive bar destroy',
+          'passive foo destroy',
         ]);
       });
     });
