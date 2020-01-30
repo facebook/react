@@ -878,6 +878,7 @@ describe('context legacy', () => {
         'FunctionalLegacyContextConsumer, LegacyContextConsumer, LegacyContextProvider' +
         '\n\nLearn more about this warning here: ' +
         'https://fb.me/react-legacy-context' +
+        '\n    in LegacyContextProvider (at **)' +
         '\n    in StrictMode (at **)' +
         '\n    in div (at **)' +
         '\n    in Root (at **)',

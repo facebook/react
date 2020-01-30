@@ -15,8 +15,8 @@ import type {ReactNodeList} from 'shared/ReactTypes';
 import type {FiberRoot} from 'react-reconciler/src/ReactFiberRoot';
 
 export type RootType = {
-  render(children: ReactNodeList, callback: ?() => mixed): void,
-  unmount(callback: ?() => mixed): void,
+  render(children: ReactNodeList): void,
+  unmount(): void,
   _internalRoot: FiberRoot,
   ...
 };
@@ -62,30 +62,32 @@ function ReactDOMBlockingRoot(
 
 ReactDOMRoot.prototype.render = ReactDOMBlockingRoot.prototype.render = function(
   children: ReactNodeList,
-  callback: ?() => mixed,
 ): void {
-  const root = this._internalRoot;
-  const cb = callback === undefined ? null : callback;
   if (__DEV__) {
-    warnOnInvalidCallback(cb, 'render');
+    if (typeof arguments[1] === 'function') {
+      console.error(
+        'render(...): does not support the second callback argument. ' +
+          'To execute a side effect after rendering, declare it in a component body with useEffect().',
+      );
+    }
   }
-  updateContainer(children, root, null, cb);
+  const root = this._internalRoot;
+  updateContainer(children, root, null, null);
 };
 
-ReactDOMRoot.prototype.unmount = ReactDOMBlockingRoot.prototype.unmount = function(
-  callback: ?() => mixed,
-): void {
-  const root = this._internalRoot;
-  const cb = callback === undefined ? null : callback;
+ReactDOMRoot.prototype.unmount = ReactDOMBlockingRoot.prototype.unmount = function(): void {
   if (__DEV__) {
-    warnOnInvalidCallback(cb, 'render');
+    if (typeof arguments[0] === 'function') {
+      console.error(
+        'unmount(...): does not support a callback argument. ' +
+          'To execute a side effect after rendering, declare it in a component body with useEffect().',
+      );
+    }
   }
+  const root = this._internalRoot;
   const container = root.containerInfo;
   updateContainer(null, root, null, () => {
     unmarkContainerAsRoot(container);
-    if (cb !== null) {
-      cb();
-    }
   });
 };
 
@@ -150,22 +152,6 @@ export function isValidContainer(node: mixed): boolean {
       (node.nodeType === COMMENT_NODE &&
         (node: any).nodeValue === ' react-mount-point-unstable '))
   );
-}
-
-export function warnOnInvalidCallback(
-  callback: mixed,
-  callerName: string,
-): void {
-  if (__DEV__) {
-    if (callback !== null && typeof callback !== 'function') {
-      console.error(
-        '%s(...): Expected the last optional `callback` argument to be a ' +
-          'function. Instead received: %s.',
-        callerName,
-        callback,
-      );
-    }
-  }
 }
 
 function warnIfReactDOMContainerInDEV(container) {

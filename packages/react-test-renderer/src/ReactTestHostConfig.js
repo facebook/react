@@ -316,7 +316,9 @@ export function DEPRECATED_unmountResponderInstance(
   // noop
 }
 
-export function getFundamentalComponentInstance(fundamentalInstance): Instance {
+export function getFundamentalComponentInstance(
+  fundamentalInstance: ReactFundamentalComponentInstance<any, any>,
+): Instance {
   const {impl, props, state} = fundamentalInstance;
   return impl.getInstance(null, props, state);
 }
@@ -370,6 +372,6 @@ export function getInstanceFromNode(mockNode: Object) {
   return null;
 }
 
-export function beforeRemoveInstance(instance) {
+export function beforeRemoveInstance(instance: any) {
   // noop
 }

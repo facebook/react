@@ -493,30 +493,30 @@ export function DEPRECATED_unmountResponderInstance(
   throw new Error('Not yet implemented.');
 }
 
-export function getFundamentalComponentInstance(fundamentalInstance) {
+export function getFundamentalComponentInstance(fundamentalInstance: any) {
   throw new Error('Not yet implemented.');
 }
 
-export function mountFundamentalComponent(fundamentalInstance) {
+export function mountFundamentalComponent(fundamentalInstance: any) {
   throw new Error('Not yet implemented.');
 }
 
-export function shouldUpdateFundamentalComponent(fundamentalInstance) {
+export function shouldUpdateFundamentalComponent(fundamentalInstance: any) {
   throw new Error('Not yet implemented.');
 }
 
-export function updateFundamentalComponent(fundamentalInstance) {
+export function updateFundamentalComponent(fundamentalInstance: any) {
   throw new Error('Not yet implemented.');
 }
 
-export function unmountFundamentalComponent(fundamentalInstance) {
+export function unmountFundamentalComponent(fundamentalInstance: any) {
   throw new Error('Not yet implemented.');
 }
 
-export function getInstanceFromNode(node) {
+export function getInstanceFromNode(node: any) {
   throw new Error('Not yet implemented.');
 }
 
-export function beforeRemoveInstance(instance) {
+export function beforeRemoveInstance(instance: any) {
   // noop
 }
