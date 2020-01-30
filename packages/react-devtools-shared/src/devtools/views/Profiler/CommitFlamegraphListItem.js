@@ -58,7 +58,6 @@ function CommitFlamegraphListItem({data, index, style}: Props) {
     setIsHovered(false);
   };
 
-
   // List items are absolutely positioned using the CSS "top" attribute.
   // The "left" value will always be 0.
   // Since height is fixed, and width is based on the node's duration,
