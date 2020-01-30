@@ -221,14 +221,18 @@ function trapReplayableEvent(
   if (enableDeprecatedFlareAPI) {
     // Trap events for the responder system.
     const topLevelTypeString = unsafeCastDOMTopLevelTypeToString(topLevelType);
-    const passiveEventKey = topLevelTypeString + '_passive';
-    if (!listenerMap.has(passiveEventKey)) {
+    // TODO: Ideally we shouldn't need these to be active but
+    // if we only have a passive listener, we at least need it
+    // to still pretend to be active so that Flare gets those
+    // events.
+    const activeEventKey = topLevelTypeString + '_active';
+    if (!listenerMap.has(activeEventKey)) {
       const listener = addResponderEventSystemEvent(
         document,
         topLevelTypeString,
-        true,
+        false,
       );
-      listenerMap.set(passiveEventKey, listener);
+      listenerMap.set(activeEventKey, listener);
     }
   }
 }
