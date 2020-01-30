@@ -97,6 +97,8 @@ export const disableTextareaChildren = false;
 
 export const disableUnstableRenderSubtreeIntoContainer = false;
 
+export const warnUnstableRenderSubtreeIntoContainer = false;
+
 export const disableUnstableCreatePortal = false;
 
 // Flow magic to verify the exports of this file match the original version.

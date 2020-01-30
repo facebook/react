@@ -57,6 +57,7 @@ import {
   exposeConcurrentModeAPIs,
   disableUnstableCreatePortal,
   disableUnstableRenderSubtreeIntoContainer,
+  warnUnstableRenderSubtreeIntoContainer,
 } from 'shared/ReactFeatureFlags';
 
 import {
@@ -179,7 +180,10 @@ if (exposeConcurrentModeAPIs) {
 if (!disableUnstableRenderSubtreeIntoContainer) {
   ReactDOM.unstable_renderSubtreeIntoContainer = function(...args) {
     if (__DEV__) {
-      if (!didWarnAboutUnstableRenderSubtreeIntoContainer) {
+      if (
+        warnUnstableRenderSubtreeIntoContainer &&
+        !didWarnAboutUnstableRenderSubtreeIntoContainer
+      ) {
         didWarnAboutUnstableRenderSubtreeIntoContainer = true;
         console.warn(
           'ReactDOM.unstable_renderSubtreeIntoContainer() is deprecated ' +

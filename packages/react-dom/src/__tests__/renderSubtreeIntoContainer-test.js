@@ -56,14 +56,18 @@ if (ReactFeatureFlags.disableUnstableRenderSubtreeIntoContainer) {
         }
 
         componentDidMount() {
-          expect(
-            function() {
-              renderSubtreeIntoContainer(this, <Component />, portal);
-            }.bind(this),
-          ).toWarnDev(
-            'ReactDOM.unstable_renderSubtreeIntoContainer() is deprecated and ' +
-              'will be removed in a future major release. Consider using React Portals instead.',
-          );
+          if (ReactFeatureFlags.warnUnstableRenderSubtreeIntoContainer) {
+            expect(
+              function() {
+                renderSubtreeIntoContainer(this, <Component />, portal);
+              }.bind(this),
+            ).toWarnDev(
+              'ReactDOM.unstable_renderSubtreeIntoContainer() is deprecated and ' +
+                'will be removed in a future major release. Consider using React Portals instead.',
+            );
+          } else {
+            renderSubtreeIntoContainer(this, <Component />, portal);
+          }
         }
       }
 
