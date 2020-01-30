@@ -138,6 +138,7 @@ describe('ReactStrictMode', () => {
         'getDerivedStateFromProps',
         'getDerivedStateFromProps',
         'shouldComponentUpdate',
+        'shouldComponentUpdate',
         'render',
         'render',
         'componentDidUpdate',
@@ -165,6 +166,7 @@ describe('ReactStrictMode', () => {
       expect(log).toEqual([
         'getDerivedStateFromProps',
         'getDerivedStateFromProps',
+        'shouldComponentUpdate',
         'shouldComponentUpdate',
       ]);
     } else {
@@ -283,6 +285,7 @@ describe('ReactStrictMode', () => {
         'getDerivedStateFromProps',
         'getDerivedStateFromProps',
         'shouldComponentUpdate',
+        'shouldComponentUpdate',
         'render',
         'render',
         'componentDidUpdate',
@@ -304,6 +307,7 @@ describe('ReactStrictMode', () => {
       expect(log).toEqual([
         'getDerivedStateFromProps',
         'getDerivedStateFromProps',
+        'shouldComponentUpdate',
         'shouldComponentUpdate',
       ]);
     } else {
