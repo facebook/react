@@ -21,7 +21,7 @@ export function initBackend(
 ): () => void {
   if (hook == null) {
     // DevTools didn't get injected into this page (maybe b'c of the contentType).
-    return;
+    return () => {};
   }
   const subs = [
     hook.sub(
