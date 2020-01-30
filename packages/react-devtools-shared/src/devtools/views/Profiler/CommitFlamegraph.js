@@ -118,7 +118,6 @@ function CommitFlamegraph({chartData, commitTree, height, width}: Props) {
     return null;
   }, [chartData, selectedFiberID, selectedChartNodeIndex]);
 
-
   const highlightNativeElement = useCallback(
     (id: number) => {
       const element = store.getElementByID(id);
@@ -140,9 +139,9 @@ function CommitFlamegraph({chartData, commitTree, height, width}: Props) {
   // Highlight last hovered element.
   const handleElementMouseEnter = useCallback(
     id => {
-        highlightNativeElement(id);
+      highlightNativeElement(id);
     },
-    [ highlightNativeElement],
+    [highlightNativeElement],
   );
 
   const itemData = useMemo<ItemData>(

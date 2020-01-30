@@ -121,9 +121,9 @@ function CommitRanked({chartData, commitTree, height, width}: Props) {
   // Highlight last hovered element.
   const handleElementMouseEnter = useCallback(
     id => {
-        highlightNativeElement(id);
+      highlightNativeElement(id);
     },
-    [ highlightNativeElement],
+    [highlightNativeElement],
   );
 
   const itemData = useMemo<ItemData>(

@@ -25,8 +25,14 @@ type Props = {
 
 function CommitRankedListItem({data, index, style}: Props) {
   const [isHovered, setIsHovered] = useState(false);
-  const {chartData,
-    onElementMouseEnter, scaleX, selectedFiberIndex, selectFiber, width} = data;
+  const {
+    chartData,
+    onElementMouseEnter,
+    scaleX,
+    selectedFiberIndex,
+    selectFiber,
+    width,
+  } = data;
 
   const node = chartData.nodes[index];
 
@@ -68,7 +74,7 @@ function CommitRankedListItem({data, index, style}: Props) {
       label={node.label}
       onClick={handleClick}
       onMouseEnter={() => handleMouseEnter(node.id)}
-      onMouseLeave={() => handleMouseLeave(node. id)}
+      onMouseLeave={() => handleMouseLeave(node.id)}
       width={Math.max(minBarWidth, scaleX(node.value, width))}
       x={0}
       y={top}

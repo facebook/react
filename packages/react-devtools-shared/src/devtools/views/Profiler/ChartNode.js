@@ -45,7 +45,6 @@ export default function ChartNode({
   x,
   y,
 }: Props) {
-
   let opacity = 1;
   if (isHovered) {
     opacity = 0.75;
