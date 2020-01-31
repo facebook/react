@@ -643,18 +643,21 @@ function performConcurrentWorkOnRoot(root, didTimeout) {
   // event time. The next update will compute a new event time.
   currentEventTime = NoWork;
 
-  // Check if the render expired. If so, restart at the current time so that we
-  // can finish all the expired work in a single batch. However, we should only
-  // do this if we're starting a new tree. If we're in the middle of an existing
-  // tree, we'll continue working on that (without yielding) so that the work
-  // doesn't get dropped. If there's another expired level after that, we'll hit
-  // this path again, at which point we can batch all the subsequent levels
-  // together.
-  if (didTimeout && workInProgress === null) {
-    // Mark the current time as expired to synchronously render all expired work
-    // in a single batch.
-    const currentTime = requestCurrentTimeForUpdate();
-    markRootExpiredAtTime(root, currentTime);
+  // Check if the render expired.
+  const expirationTime = getNextRootExpirationTimeToWorkOn(root);
+  if (didTimeout) {
+    if (workInProgressRoot === root && renderExpirationTime !== NoWork) {
+      // We're already in the middle of working on this tree. Expire the tree at
+      // the already-rendering time so we don't throw out the partial work. If
+      // there's another expired level after that, we'll hit the `else` branch
+      // of this condition, which will batch together the remaining levels.
+      markRootExpiredAtTime(root, renderExpirationTime);
+    } else {
+      // This is a new tree. Expire the tree at the current time so that we
+      // render all the expired work in a single batch.
+      const currentTime = requestCurrentTimeForUpdate();
+      markRootExpiredAtTime(root, currentTime);
+    }
     // This will schedule a synchronous callback.
     ensureRootIsScheduled(root);
     return null;
@@ -662,7 +665,6 @@ function performConcurrentWorkOnRoot(root, didTimeout) {
 
   // Determine the next expiration time to work on, using the fields stored
   // on the root.
-  const expirationTime = getNextRootExpirationTimeToWorkOn(root);
   if (expirationTime !== NoWork) {
     const originalCallbackNode = root.callbackNode;
     invariant(
