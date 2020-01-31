@@ -1022,7 +1022,6 @@ describe('ReactHooksWithNoopRenderer', () => {
 
       // This update is exists to test an internal implementation detail:
       // Effects without updating dependencies lose their layout/passive tag during an update.
-      // A special type of no-update tag (NoEffectPassiveUnmountFiber) is used to track these for later.
       act(() => {
         ReactNoop.render(<Child bar={1} foo={2} />, () =>
           Scheduler.unstable_yieldValue('Sync effect'),

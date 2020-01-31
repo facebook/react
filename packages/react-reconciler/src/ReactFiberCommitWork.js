@@ -114,14 +114,9 @@ import {
 } from './ReactFiberWorkLoop';
 import {
   NoEffect as NoHookEffect,
-  NoEffectPassiveUnmountFiber,
-  UnmountSnapshot,
-  UnmountMutation,
-  MountMutation,
-  UnmountLayout,
-  MountLayout,
-  UnmountPassive,
-  MountPassive,
+  HasEffect as HookHasEffect,
+  Layout as HookLayout,
+  Passive as HookPassive,
 } from './ReactHookEffectTags';
 import {didWarnAboutReassigningProps} from './ReactFiberBeginWork';
 import {runWithPriority, NormalPriority} from './SchedulerWithReactIntegration';
@@ -253,7 +248,6 @@ function commitBeforeMutationLifeCycles(
     case ForwardRef:
     case SimpleMemoComponent:
     case Chunk: {
-      commitHookEffectList(UnmountSnapshot, NoHookEffect, finishedWork);
       return;
     }
     case ClassComponent: {
@@ -342,7 +336,10 @@ function commitHookEffectList(
     const firstEffect = lastEffect.next;
     let effect = firstEffect;
     do {
-      if ((effect.tag & unmountTag) !== NoHookEffect) {
+      if (
+        (effect.tag & HookHasEffect) !== NoHookEffect &&
+        (effect.tag & unmountTag) !== NoHookEffect
+      ) {
         // Unmount
         const destroy = effect.destroy;
         effect.destroy = undefined;
@@ -350,7 +347,10 @@ function commitHookEffectList(
           destroy();
         }
       }
-      if ((effect.tag & mountTag) !== NoHookEffect) {
+      if (
+        (effect.tag & HookHasEffect) !== NoHookEffect &&
+        (effect.tag & mountTag) !== NoHookEffect
+      ) {
         // Mount
         const create = effect.create;
         effect.destroy = create();
@@ -401,8 +401,11 @@ export function commitPassiveHookEffects(finishedWork: Fiber): void {
       case ForwardRef:
       case SimpleMemoComponent:
       case Chunk: {
-        commitHookEffectList(UnmountPassive, NoHookEffect, finishedWork);
-        commitHookEffectList(NoHookEffect, MountPassive, finishedWork);
+        // TODO (#17945) We should call all passive destroy functions (for all fibers)
+        // before calling any create functions. The current approach only serializes
+        // these for a single fiber.
+        commitHookEffectList(HookPassive, NoHookEffect, finishedWork);
+        commitHookEffectList(NoHookEffect, HookPassive, finishedWork);
         break;
       }
       default:
@@ -422,7 +425,11 @@ function commitLifeCycles(
     case ForwardRef:
     case SimpleMemoComponent:
     case Chunk: {
-      commitHookEffectList(UnmountLayout, MountLayout, finishedWork);
+      // At this point layout effects have already been destroyed (during mutation phase).
+      // This is done to prevent sibling component effects from interfering with each other,
+      // e.g. a destroy function in one component should never override a ref set
+      // by a create function in another component during the same commit.
+      commitHookEffectList(NoHookEffect, HookLayout, finishedWork);
       return;
     }
     case ClassComponent: {
@@ -764,10 +771,7 @@ function commitUnmount(
             do {
               const {destroy, tag} = effect;
               if (destroy !== undefined) {
-                if (
-                  (tag & UnmountPassive) !== NoHookEffect ||
-                  (tag & NoEffectPassiveUnmountFiber) !== NoHookEffect
-                ) {
+                if ((tag & HookPassive) !== NoHookEffect) {
                   enqueuePendingPassiveEffectDestroyFn(destroy);
                 } else {
                   safelyCallDestroy(current, destroy);
@@ -1306,11 +1310,12 @@ function commitWork(current: Fiber | null, finishedWork: Fiber): void {
       case MemoComponent:
       case SimpleMemoComponent:
       case Chunk: {
-        // Note: We currently never use MountMutation, but useLayoutEffect uses UnmountMutation.
-        // This is to ensure ALL destroy fns are run before create fns,
-        // without requiring us to traverse the effects list an extra time during commit.
-        // This sequence prevents sibling destroy and create fns from interfering with each other.
-        commitHookEffectList(UnmountMutation, MountMutation, finishedWork);
+        // Layout effects are destroyed during the mutation phase so that all
+        // destroy functions for all fibers are called before any create functions.
+        // This prevents sibling component effects from interfering with each other,
+        // e.g. a destroy function in one component should never override a ref set
+        // by a create function in another component during the same commit.
+        commitHookEffectList(HookLayout, NoHookEffect, finishedWork);
         return;
       }
       case Profiler: {
@@ -1348,11 +1353,12 @@ function commitWork(current: Fiber | null, finishedWork: Fiber): void {
     case MemoComponent:
     case SimpleMemoComponent:
     case Chunk: {
-      // Note: We currently never use MountMutation, but useLayoutEffect uses UnmountMutation.
-      // This is to ensure ALL destroy fns are run before create fns,
-      // without requiring us to traverse the effects list an extra time during commit.
-      // This sequence prevents sibling destroy and create fns from interfering with each other.
-      commitHookEffectList(UnmountMutation, MountMutation, finishedWork);
+      // Layout effects are destroyed during the mutation phase so that all
+      // destroy functions for all fibers are called before any create functions.
+      // This prevents sibling component effects from interfering with each other,
+      // e.g. a destroy function in one component should never override a ref set
+      // by a create function in another component during the same commit.
+      commitHookEffectList(HookLayout, NoHookEffect, finishedWork);
       return;
     }
     case ClassComponent: {
