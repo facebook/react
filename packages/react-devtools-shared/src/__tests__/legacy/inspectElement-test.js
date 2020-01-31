@@ -589,4 +589,91 @@ describe('InspectedElementContext', () => {
       JSON.stringify(nestedObject.a.b),
     );
   });
+
+  it('should enable complex values to be copied to the clipboard', () => {
+    const Immutable = require('immutable');
+
+    const Example = () => null;
+
+    const set = new Set(['abc', 123]);
+    const map = new Map([
+      ['name', 'Brian'],
+      ['food', 'sushi'],
+    ]);
+    const setOfSets = new Set([new Set(['a', 'b', 'c']), new Set([1, 2, 3])]);
+    const mapOfMaps = new Map([
+      ['first', map],
+      ['second', map],
+    ]);
+    const typedArray = Int8Array.from([100, -100, 0]);
+    const arrayBuffer = typedArray.buffer;
+    const dataView = new DataView(arrayBuffer);
+    const immutable = Immutable.fromJS({
+      a: [{hello: 'there'}, 'fixed', true],
+      b: 123,
+      c: {
+        '1': 'xyz',
+        xyz: 1,
+      },
+    });
+    // $FlowFixMe
+    const bigInt = BigInt(123); // eslint-disable-line no-undef
+
+    act(() =>
+      ReactDOM.render(
+        <Example
+          arrayBuffer={arrayBuffer}
+          dataView={dataView}
+          map={map}
+          set={set}
+          mapOfMaps={mapOfMaps}
+          setOfSets={setOfSets}
+          typedArray={typedArray}
+          immutable={immutable}
+          bigInt={bigInt}
+        />,
+        document.createElement('div'),
+      ),
+    );
+
+    const id = ((store.getElementIDAtIndex(0): any): number);
+    const rendererID = ((store.getRendererIDForElement(id): any): number);
+
+    // Should copy the whole value (not just the hydrated parts)
+    bridge.send('copyElementPath', {
+      id,
+      path: ['props'],
+      rendererID,
+    });
+    jest.runOnlyPendingTimers();
+    // Should not error despite lots of unserialized values.
+
+    global.mockClipboardCopy.mockReset();
+
+    // Should copy the nested property specified (not just the outer value)
+    bridge.send('copyElementPath', {
+      id,
+      path: ['props', 'bigInt'],
+      rendererID,
+    });
+    jest.runOnlyPendingTimers();
+    expect(global.mockClipboardCopy).toHaveBeenCalledTimes(1);
+    expect(global.mockClipboardCopy).toHaveBeenCalledWith(
+      JSON.stringify('123n'),
+    );
+
+    global.mockClipboardCopy.mockReset();
+
+    // Should copy the nested property specified (not just the outer value)
+    bridge.send('copyElementPath', {
+      id,
+      path: ['props', 'typedArray'],
+      rendererID,
+    });
+    jest.runOnlyPendingTimers();
+    expect(global.mockClipboardCopy).toHaveBeenCalledTimes(1);
+    expect(global.mockClipboardCopy).toHaveBeenCalledWith(
+      JSON.stringify({0: 100, 1: -100, 2: 0}),
+    );
+  });
 });
