@@ -585,7 +585,7 @@ describe('ReactDOMServerSelectiveHydration', () => {
     document.body.removeChild(container);
   });
 
-  it('hydrates the last target as higher priority for continuous events', async () => {
+  it('hydrates the hovered targets as higher priority for continuous events', async () => {
     let suspend = false;
     let resolve;
     let promise = new Promise(resolvePromise => (resolve = resolvePromise));
@@ -669,17 +669,103 @@ describe('ReactDOMServerSelectiveHydration', () => {
 
     // We should prioritize hydrating D first because we clicked it.
     // Next we should hydrate C since that's the current hover target.
-    // Next it doesn't matter if we hydrate A or B first but as an
-    // implementation detail we're currently hydrating B first since
-    // we at one point hovered over it and we never deprioritized it.
+    // To simplify implementation details we hydrate both B and C at
+    // the same time since B was already scheduled.
+    // This is ok because it will at least not continue for nested
+    // boundary. See the next test below.
     expect(Scheduler).toFlushAndYield([
       'D',
       'Clicked D',
+      'B', // Ideally this should be later.
       'C',
       'Hover C',
-      'B',
       'A',
     ]);
+
+    document.body.removeChild(container);
+  });
+
+  it('hydrates the last target path first for continuous events', async () => {
+    let suspend = false;
+    let resolve;
+    let promise = new Promise(resolvePromise => (resolve = resolvePromise));
+
+    function Child({text}) {
+      if ((text === 'A' || text === 'D') && suspend) {
+        throw promise;
+      }
+      Scheduler.unstable_yieldValue(text);
+      return (
+        <span
+          onMouseEnter={e => {
+            e.preventDefault();
+            Scheduler.unstable_yieldValue('Hover ' + text);
+          }}>
+          {text}
+        </span>
+      );
+    }
+
+    function App() {
+      Scheduler.unstable_yieldValue('App');
+      return (
+        <div>
+          <Suspense fallback="Loading...">
+            <Child text="A" />
+          </Suspense>
+          <Suspense fallback="Loading...">
+            <div>
+              <Suspense fallback="Loading...">
+                <Child text="B" />
+              </Suspense>
+            </div>
+            <Child text="C" />
+          </Suspense>
+          <Suspense fallback="Loading...">
+            <Child text="D" />
+          </Suspense>
+        </div>
+      );
+    }
+
+    let finalHTML = ReactDOMServer.renderToString(<App />);
+
+    expect(Scheduler).toHaveYielded(['App', 'A', 'B', 'C', 'D']);
+
+    let container = document.createElement('div');
+    // We need this to be in the document since we'll dispatch events on it.
+    document.body.appendChild(container);
+
+    container.innerHTML = finalHTML;
+
+    let spanB = container.getElementsByTagName('span')[1];
+    let spanC = container.getElementsByTagName('span')[2];
+    let spanD = container.getElementsByTagName('span')[3];
+
+    suspend = true;
+
+    // A and D will be suspended. We'll click on D which should take
+    // priority, after we unsuspend.
+    let root = ReactDOM.createRoot(container, {hydrate: true});
+    root.render(<App />);
+
+    // Nothing has been hydrated so far.
+    expect(Scheduler).toHaveYielded([]);
+
+    // Hover over B and then C.
+    dispatchMouseHoverEvent(spanB, spanD);
+    dispatchMouseHoverEvent(spanC, spanB);
+
+    suspend = false;
+    resolve();
+    await promise;
+
+    // We should prioritize hydrating D first because we clicked it.
+    // Next we should hydrate C since that's the current hover target.
+    // Next it doesn't matter if we hydrate A or B first but as an
+    // implementation detail we're currently hydrating B first since
+    // we at one point hovered over it and we never deprioritized it.
+    expect(Scheduler).toFlushAndYield(['App', 'C', 'Hover C', 'A', 'B', 'D']);
 
     document.body.removeChild(container);
   });

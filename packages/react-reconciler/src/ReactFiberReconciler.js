@@ -76,8 +76,8 @@ import {
 import {StrictMode} from './ReactTypeOfMode';
 import {
   Sync,
+  ContinuousHydration,
   computeInteractiveExpiration,
-  computeContinuousHydrationExpiration,
 } from './ReactFiberExpirationTime';
 import {requestCurrentSuspenseConfig} from './ReactFiberSuspenseConfig';
 import {
@@ -384,11 +384,8 @@ export function attemptContinuousHydration(fiber: Fiber): void {
     // Suspense.
     return;
   }
-  let expTime = computeContinuousHydrationExpiration(
-    requestCurrentTimeForUpdate(),
-  );
-  scheduleWork(fiber, expTime);
-  markRetryTimeIfNotHydrated(fiber, expTime);
+  scheduleWork(fiber, ContinuousHydration);
+  markRetryTimeIfNotHydrated(fiber, ContinuousHydration);
 }
 
 export function attemptHydrationAtCurrentPriority(fiber: Fiber): void {
