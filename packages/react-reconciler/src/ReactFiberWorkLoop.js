@@ -90,6 +90,7 @@ import {
   SimpleMemoComponent,
   Block,
 } from 'shared/ReactWorkTags';
+import {LegacyRoot} from 'shared/ReactRootTags';
 import {
   NoEffect,
   PerformedWork,
@@ -646,7 +647,10 @@ function performConcurrentWorkOnRoot(root, didTimeout) {
   // Check if the render expired.
   const expirationTime = getNextRootExpirationTimeToWorkOn(root);
   if (didTimeout) {
-    if (workInProgressRoot === root && renderExpirationTime !== NoWork) {
+    if (
+      root === workInProgressRoot &&
+      expirationTime === renderExpirationTime
+    ) {
       // We're already in the middle of working on this tree. Expire the tree at
       // the already-rendering time so we don't throw out the partial work. If
       // there's another expired level after that, we'll hit the `else` branch
@@ -775,6 +779,7 @@ function finishConcurrentRender(
         root,
         expirationTime > Idle ? Idle : expirationTime,
       );
+      root.didError = true;
       // We assume that this second render pass will be synchronous
       // and therefore not hit this path again.
       break;
@@ -1055,7 +1060,7 @@ function performSyncWorkOnRoot(root) {
       stopFinishedWorkLoopTimer();
       root.finishedWork = (root.current.alternate: any);
       root.finishedExpirationTime = expirationTime;
-      finishSyncRender(root);
+      finishSyncRender(root, workInProgressRootExitStatus);
     }
 
     // Before exiting, make sure there's a callback scheduled for the next
@@ -1069,7 +1074,28 @@ function performSyncWorkOnRoot(root) {
 function finishSyncRender(root) {
   // Set this to null to indicate there's no in-progress render.
   workInProgressRoot = null;
-  commitRoot(root);
+
+  // Try rendering one more time, synchronously, to see if the error goes away.
+  // If there are lower priority updates, let's include those, too, in case they
+  // fix the inconsistency. Render at Idle to include all updates. If it was
+  // Idle or Never or some not-yet-invented time, render at that time.
+  if (
+    workInProgressRootExitStatus === RootErrored &&
+    // Legacy mode shouldn't retry, only blocking and concurrent mode
+    root.tag !== LegacyRoot &&
+    // Don't retry more than once.
+    !root.didError
+  ) {
+    root.didError = true;
+    markRootExpiredAtTime(
+      root,
+      renderExpirationTime > Idle ? Idle : renderExpirationTime,
+    );
+  } else {
+    // In all other cases, since this was a synchronous render,
+    // commit immediately.
+    commitRoot(root);
+  }
 }
 
 export function flushRoot(root: FiberRoot, expirationTime: ExpirationTime) {
