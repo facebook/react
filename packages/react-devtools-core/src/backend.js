@@ -32,7 +32,7 @@ type ConnectOptions = {
 
 installHook(window);
 
-const hook: DevToolsHook = window.__REACT_DEVTOOLS_GLOBAL_HOOK__;
+const hook: ?DevToolsHook = window.__REACT_DEVTOOLS_GLOBAL_HOOK__;
 
 let savedComponentFilters: Array<ComponentFilter> = getDefaultComponentFilters();
 
@@ -48,6 +48,10 @@ function debug(methodName: string, ...args) {
 }
 
 export function connectToDevTools(options: ?ConnectOptions) {
+  if (hook == null) {
+    // DevTools didn't get injected into this page (maybe b'c of the contentType).
+    return;
+  }
   const {
     host = 'localhost',
     nativeStyleEditorValidAttributes,
@@ -158,8 +162,6 @@ export function connectToDevTools(options: ?ConnectOptions) {
 
     // TODO (npm-packages) Warn if "isBackendStorageAPISupported"
     const agent = new Agent(bridge);
-    if (hook == null) return;
-
     agent.addListener('shutdown', () => {
       // If we received 'shutdown' from `agent`, we assume the `bridge` is already shutting down,
       // and that caused the 'shutdown' event on the `agent`, so we don't need to call `bridge.shutdown()` here.
