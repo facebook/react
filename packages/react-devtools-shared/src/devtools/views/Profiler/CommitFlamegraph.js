@@ -14,7 +14,8 @@ import {ProfilerContext} from './ProfilerContext';
 import NoCommitData from './NoCommitData';
 import CommitFlamegraphListItem from './CommitFlamegraphListItem';
 import {scale} from './utils';
-import {BridgeContext, StoreContext} from '../context';
+import {useNativeElementHighlighter} from '../hooks';
+import {StoreContext} from '../context';
 import {SettingsContext} from '../Settings/SettingsContext';
 
 import styles from './CommitFlamegraph.css';
@@ -38,6 +39,7 @@ export default function CommitFlamegraphAutoSizer(_: {||}) {
     ProfilerContext,
   );
   const {profilingCache} = profilerStore;
+  const {clearNativeElementHighlight} = useNativeElementHighlighter();
 
   const deselectCurrentFiber = useCallback(
     event => {
@@ -94,8 +96,10 @@ type Props = {|
 function CommitFlamegraph({chartData, commitTree, height, width}: Props) {
   const {lineHeight} = useContext(SettingsContext);
   const {selectFiber, selectedFiberID} = useContext(ProfilerContext);
-  const store = useContext(StoreContext);
-  const bridge = useContext(BridgeContext);
+  const {
+    highlightNativeElement,
+    clearNativeElementHighlight,
+  } = useNativeElementHighlighter();
 
   const selectedChartNodeIndex = useMemo<number>(() => {
     if (selectedFiberID === null) {
@@ -118,36 +122,21 @@ function CommitFlamegraph({chartData, commitTree, height, width}: Props) {
     return null;
   }, [chartData, selectedFiberID, selectedChartNodeIndex]);
 
-  const highlightNativeElement = useCallback(
-    (id: number) => {
-      const element = store.getElementByID(id);
-      const rendererID = store.getRendererIDForElement(id);
-      if (element !== null && rendererID !== null) {
-        bridge.send('highlightNativeElement', {
-          displayName: element.displayName,
-          hideAfterTimeout: false,
-          id,
-          openNativeElementsPanel: false,
-          rendererID,
-          scrollIntoView: false,
-        });
-      }
-    },
-    [store, bridge],
-  );
-
   // Highlight last hovered element.
-  const handleElementMouseEnter = useCallback(
-    id => {
-      highlightNativeElement(id);
-    },
-    [highlightNativeElement],
-  );
+  const handleElementMouseEnter = id => {
+    highlightNativeElement(id);
+  };
+
+  // remove highlighting of element on mouse leave
+  const handleElementMouseLeave = () => {
+    clearNativeElementHighlight();
+  };
 
   const itemData = useMemo<ItemData>(
     () => ({
       chartData,
       onElementMouseEnter: handleElementMouseEnter,
+      onElementMouseLeave: handleElementMouseLeave,
       scaleX: scale(
         0,
         selectedChartNode !== null
