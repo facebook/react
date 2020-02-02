@@ -19,6 +19,10 @@ export function initBackend(
   agent: Agent,
   global: Object,
 ): () => void {
+  if (hook == null) {
+    // DevTools didn't get injected into this page (maybe b'c of the contentType).
+    return () => {};
+  }
   const subs = [
     hook.sub(
       'renderer-attached',
