@@ -14,8 +14,9 @@ import {ProfilerContext} from './ProfilerContext';
 import NoCommitData from './NoCommitData';
 import CommitRankedListItem from './CommitRankedListItem';
 import {scale} from './utils';
-import {BridgeContext, StoreContext} from '../context';
+import {StoreContext} from '../context';
 import {SettingsContext} from '../Settings/SettingsContext';
+import {useNativeElementHighlighter} from '../hooks';
 
 import styles from './CommitRanked.css';
 
@@ -92,44 +93,28 @@ type Props = {|
 function CommitRanked({chartData, commitTree, height, width}: Props) {
   const {lineHeight} = useContext(SettingsContext);
   const {selectedFiberID, selectFiber} = useContext(ProfilerContext);
-  const store = useContext(StoreContext);
-  const bridge = useContext(BridgeContext);
+  const {highlightNativeElement, clearNativeElementHighlight} = useNativeElementHighlighter();
 
   const selectedFiberIndex = useMemo(
     () => getNodeIndex(chartData, selectedFiberID),
     [chartData, selectedFiberID],
   );
 
-  const highlightNativeElement = useCallback(
-    (id: number) => {
-      const element = store.getElementByID(id);
-      const rendererID = store.getRendererIDForElement(id);
-      if (element !== null && rendererID !== null) {
-        bridge.send('highlightNativeElement', {
-          displayName: element.displayName,
-          hideAfterTimeout: false,
-          id,
-          openNativeElementsPanel: false,
-          rendererID,
-          scrollIntoView: false,
-        });
-      }
-    },
-    [store, bridge],
-  );
-
   // Highlight last hovered element.
-  const handleElementMouseEnter = useCallback(
-    id => {
-      highlightNativeElement(id);
-    },
-    [highlightNativeElement],
-  );
+  const handleElementMouseEnter = id => {
+    highlightNativeElement(id);
+  };
+
+  // remove highlighting of element on mouse leave
+  const handleElementMouseLeave = () => {
+    clearNativeElementHighlight()
+  }
 
   const itemData = useMemo<ItemData>(
     () => ({
       chartData,
       onElementMouseEnter: handleElementMouseEnter,
+      onElementMouseLeave: handleElementMouseLeave,
       scaleX: scale(0, chartData.nodes[selectedFiberIndex].value, 0, width),
       selectedFiberID,
       selectedFiberIndex,

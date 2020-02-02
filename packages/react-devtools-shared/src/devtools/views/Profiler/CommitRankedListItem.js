@@ -28,6 +28,7 @@ function CommitRankedListItem({data, index, style}: Props) {
   const {
     chartData,
     onElementMouseEnter,
+    onElementMouseLeave,
     scaleX,
     selectedFiberIndex,
     selectFiber,
@@ -54,8 +55,9 @@ function CommitRankedListItem({data, index, style}: Props) {
     }
   };
 
-  const handleMouseLeave = (id: number) => {
+  const handleMouseLeave = () => {
     setIsHovered(false);
+    onElementMouseLeave()
   };
 
   // List items are absolutely positioned using the CSS "top" attribute.
@@ -74,7 +76,7 @@ function CommitRankedListItem({data, index, style}: Props) {
       label={node.label}
       onClick={handleClick}
       onMouseEnter={() => handleMouseEnter(node.id)}
-      onMouseLeave={() => handleMouseLeave(node.id)}
+      onMouseLeave={handleMouseLeave}
       width={Math.max(minBarWidth, scaleX(node.value, width))}
       x={0}
       y={top}
