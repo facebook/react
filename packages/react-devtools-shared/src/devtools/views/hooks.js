@@ -14,12 +14,14 @@ import {
   useLayoutEffect,
   useReducer,
   useState,
+  useContext,
 } from 'react';
 import {
   localStorageGetItem,
   localStorageSetItem,
 } from 'react-devtools-shared/src/storage';
 import {sanitizeForParse, smartParse, smartStringify} from '../utils';
+import {BridgeContext, StoreContext} from './context';
 
 type ACTION_RESET = {|
   type: 'RESET',
@@ -299,4 +301,30 @@ export function useSubscription<Value>({
   }, [getCurrentValue, subscribe]);
 
   return state.value;
+}
+
+// provides highlighting and clearing highlights of elements based on ID
+export function useNativeElementHighlighter() {
+  const store = useContext(StoreContext);
+  const bridge = useContext(BridgeContext);
+
+  const highlightNativeElement = (id: number) => {
+    const element = store.getElementByID(id);
+    const rendererID = store.getRendererIDForElement(id);
+    if (element !== null && rendererID !== null) {
+      bridge.send('highlightNativeElement', {
+        displayName: element.displayName,
+        hideAfterTimeout: false,
+        id,
+        openNativeElementsPanel: false,
+        rendererID,
+        scrollIntoView: false,
+      });
+    }
+  };
+
+  const clearNativeElementHighlight = () => {
+    bridge.send('clearNativeElementHighlight');
+  };
+  return {highlightNativeElement, clearNativeElementHighlight};
 }
