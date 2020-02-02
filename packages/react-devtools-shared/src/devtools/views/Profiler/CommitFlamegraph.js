@@ -26,6 +26,7 @@ import type {CommitTree} from './types';
 export type ItemData = {|
   chartData: ChartData,
   onElementMouseEnter: (id: number) => void,
+  onElementMouseLeave: () => void,
   scaleX: (value: number, fallbackValue: number) => number,
   selectedChartNode: ChartNode | null,
   selectedChartNodeIndex: number,
