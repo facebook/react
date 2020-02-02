@@ -93,7 +93,10 @@ type Props = {|
 function CommitRanked({chartData, commitTree, height, width}: Props) {
   const {lineHeight} = useContext(SettingsContext);
   const {selectedFiberID, selectFiber} = useContext(ProfilerContext);
-  const {highlightNativeElement, clearNativeElementHighlight} = useNativeElementHighlighter();
+  const {
+    highlightNativeElement,
+    clearNativeElementHighlight,
+  } = useNativeElementHighlighter();
 
   const selectedFiberIndex = useMemo(
     () => getNodeIndex(chartData, selectedFiberID),
@@ -112,7 +115,7 @@ function CommitRanked({chartData, commitTree, height, width}: Props) {
     } else {
       clearNativeElementHighlight();
     }
-  }
+  };
 
   const itemData = useMemo<ItemData>(
     () => ({

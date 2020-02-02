@@ -57,7 +57,7 @@ function CommitRankedListItem({data, index, style}: Props) {
 
   const handleMouseLeave = () => {
     setIsHovered(false);
-    onElementMouseLeave()
+    onElementMouseLeave();
   };
 
   // List items are absolutely positioned using the CSS "top" attribute.

@@ -225,7 +225,7 @@ export default function Tree(props: Props) {
       if (selectedElementID !== null) {
         highlightNativeElement(selectedElementID);
       } else {
-        clearNativeElementHighlight()
+        clearNativeElementHighlight();
       }
     }
   }, [
