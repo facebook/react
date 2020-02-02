@@ -39,7 +39,6 @@ export default function CommitFlamegraphAutoSizer(_: {||}) {
     ProfilerContext,
   );
   const {profilingCache} = profilerStore;
-  const {clearNativeElementHighlight} = useNativeElementHighlighter();
 
   const deselectCurrentFiber = useCallback(
     event => {
@@ -129,7 +128,11 @@ function CommitFlamegraph({chartData, commitTree, height, width}: Props) {
 
   // remove highlighting of element on mouse leave
   const handleElementMouseLeave = () => {
-    clearNativeElementHighlight();
+    if (selectedFiberID) {
+      highlightNativeElement(selectedFiberID);
+    } else {
+      clearNativeElementHighlight();
+    }
   };
 
   const itemData = useMemo<ItemData>(
