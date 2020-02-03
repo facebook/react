@@ -325,21 +325,14 @@ function commitBeforeMutationLifeCycles(
   );
 }
 
-function commitHookEffectList(
-  unmountTag: number,
-  mountTag: number,
-  finishedWork: Fiber,
-) {
+function commitHookEffectListUnmount(tag: number, finishedWork: Fiber) {
   const updateQueue: FunctionComponentUpdateQueue | null = (finishedWork.updateQueue: any);
   let lastEffect = updateQueue !== null ? updateQueue.lastEffect : null;
   if (lastEffect !== null) {
     const firstEffect = lastEffect.next;
     let effect = firstEffect;
     do {
-      if (
-        (effect.tag & HookHasEffect) !== NoHookEffect &&
-        (effect.tag & unmountTag) !== NoHookEffect
-      ) {
+      if ((effect.tag & tag) === tag) {
         // Unmount
         const destroy = effect.destroy;
         effect.destroy = undefined;
@@ -347,10 +340,19 @@ function commitHookEffectList(
           destroy();
         }
       }
-      if (
-        (effect.tag & HookHasEffect) !== NoHookEffect &&
-        (effect.tag & mountTag) !== NoHookEffect
-      ) {
+      effect = effect.next;
+    } while (effect !== firstEffect);
+  }
+}
+
+function commitHookEffectListMount(tag: number, finishedWork: Fiber) {
+  const updateQueue: FunctionComponentUpdateQueue | null = (finishedWork.updateQueue: any);
+  let lastEffect = updateQueue !== null ? updateQueue.lastEffect : null;
+  if (lastEffect !== null) {
+    const firstEffect = lastEffect.next;
+    let effect = firstEffect;
+    do {
+      if ((effect.tag & tag) === tag) {
         // Mount
         const create = effect.create;
         effect.destroy = create();
@@ -404,8 +406,8 @@ export function commitPassiveHookEffects(finishedWork: Fiber): void {
         // TODO (#17945) We should call all passive destroy functions (for all fibers)
         // before calling any create functions. The current approach only serializes
         // these for a single fiber.
-        commitHookEffectList(HookPassive, NoHookEffect, finishedWork);
-        commitHookEffectList(NoHookEffect, HookPassive, finishedWork);
+        commitHookEffectListUnmount(HookPassive | HookHasEffect, finishedWork);
+        commitHookEffectListMount(HookPassive | HookHasEffect, finishedWork);
         break;
       }
       default:
@@ -429,7 +431,7 @@ function commitLifeCycles(
       // This is done to prevent sibling component effects from interfering with each other,
       // e.g. a destroy function in one component should never override a ref set
       // by a create function in another component during the same commit.
-      commitHookEffectList(NoHookEffect, HookLayout, finishedWork);
+      commitHookEffectListMount(HookLayout | HookHasEffect, finishedWork);
       return;
     }
     case ClassComponent: {
@@ -1315,7 +1317,7 @@ function commitWork(current: Fiber | null, finishedWork: Fiber): void {
         // This prevents sibling component effects from interfering with each other,
         // e.g. a destroy function in one component should never override a ref set
         // by a create function in another component during the same commit.
-        commitHookEffectList(HookLayout, NoHookEffect, finishedWork);
+        commitHookEffectListUnmount(HookLayout | HookHasEffect, finishedWork);
         return;
       }
       case Profiler: {
@@ -1358,7 +1360,7 @@ function commitWork(current: Fiber | null, finishedWork: Fiber): void {
       // This prevents sibling component effects from interfering with each other,
       // e.g. a destroy function in one component should never override a ref set
       // by a create function in another component during the same commit.
-      commitHookEffectList(HookLayout, NoHookEffect, finishedWork);
+      commitHookEffectListUnmount(HookLayout | HookHasEffect, finishedWork);
       return;
     }
     case ClassComponent: {
