@@ -95,7 +95,7 @@ export const enableNativeTargetAsInstance = false;
 // Previously these functions were run during commit (along with layout effects).
 // Ideally we should delay these until after commit for performance reasons.
 // This flag provides a killswitch if that proves to break existing code somehow.
-export const deferPassiveEffectCleanupDuringUnmount = true;
+export const deferPassiveEffectCleanupDuringUnmount = false;
 
 // --------------------------
 // Future APIs to be deprecated
