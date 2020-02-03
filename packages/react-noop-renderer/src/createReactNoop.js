@@ -437,6 +437,10 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
     getInstanceFromNode() {
       throw new Error('Not yet implemented.');
     },
+
+    beforeRemoveInstance(instance: any): void {
+      // NO-OP
+    },
   };
 
   const hostConfig = useMutation
