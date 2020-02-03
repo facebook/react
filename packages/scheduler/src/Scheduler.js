@@ -396,17 +396,53 @@ function unstable_getCurrentPriorityLevel() {
 }
 
 function unstable_shouldYield() {
+  // Note: In general, we should bias toward returning `false` instead of
+  // `true`, since in the extreme cases, the consequences of yielding too much
+  // (indefinite starvation) are worse than the consequences of blocking the
+  // main thread (temporary unresponsiveness).
+
+  if (currentTask === null) {
+    // There's no currently running task.
+    // TODO: Is this desirable behavior? Maybe we should pretend unscheduled
+    // work has default priority.
+    return false;
+  }
+
+  // Check if the current task expired.
   const currentTime = getCurrentTime();
+  const currentExpiration = currentTask.expirationTime;
+  if (currentExpiration <= currentTime) {
+    // Never yield from an expired task, even if there is a pending main thread
+    // task or a higher priority task in the queue.
+    return false;
+  }
+
+  // Check if there's a pending main thread task.
+  if (shouldYieldToHost()) {
+    return true;
+  }
+
+  // Check a higher priority task was scheduled. But first, check if any timers
+  // have elapsed since we started working on this task. If so, this transfers
+  // them to the task queue.
   advanceTimers(currentTime);
+
+  // Now compare the priority of the current task to the highest priority task.
   const firstTask = peek(taskQueue);
   return (
-    (firstTask !== currentTask &&
-      currentTask !== null &&
-      firstTask !== null &&
-      firstTask.callback !== null &&
-      firstTask.startTime <= currentTime &&
-      firstTask.expirationTime < currentTask.expirationTime) ||
-    shouldYieldToHost()
+    firstTask !== null &&
+    firstTask.expirationTime < currentExpiration &&
+    // TODO: This checks if the highest-priority callback was canceled. But
+    // there could be another high priority callback between the current task
+    // and the head of the queue. This is an edge case, but we can solve by
+    // removing canceled tasks from the head of the queue in `cancelTask`.
+    // Either way, it's probably not a big deal because you only hit this case
+    // if you schedule a high pri task inside another task, and then cancel it
+    // before the next `shouldYield`.
+    firstTask.callback !== null &&
+    // Defensive coding to make absolutely sure we don't yield to the currently
+    // running task, which could cause an infinite loop.
+    firstTask !== currentTask
   );
 }
 

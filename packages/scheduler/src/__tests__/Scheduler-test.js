@@ -191,6 +191,135 @@ describe('Scheduler', () => {
     expect(Scheduler).toFlushAndYield(['C2', 'C3', 'D', 'E']);
   });
 
+  it("shouldYield returns false if task has expired, even if there's a pending higher priority task", () => {
+    let step = 0;
+    function workLoop() {
+      while (step < 4) {
+        step += 1;
+        Scheduler.unstable_yieldValue('Step ' + step);
+        if (step === 2) {
+          // This schedules a high pri task
+          scheduleCallback(Scheduler.unstable_ImmediatePriority, () => {
+            Scheduler.unstable_yieldValue('High-pri task');
+          });
+          // This expires the current task
+          Scheduler.unstable_yieldValue('Expire!');
+          Scheduler.unstable_advanceTime(10000);
+        }
+        if (shouldYield()) {
+          // We should never hit this path, because should have already expired.
+          Scheduler.unstable_yieldValue('Yield!');
+          return workLoop;
+        }
+      }
+    }
+
+    scheduleCallback(NormalPriority, workLoop);
+    expect(Scheduler).toFlushAndYield([
+      'Step 1',
+      'Step 2',
+      'Expire!',
+      'Step 3',
+      'Step 4',
+      'High-pri task',
+    ]);
+  });
+
+  it(
+    "shouldYield returns false if task has expired, even if there's a " +
+      'pending main thread task (e.g. requestPaint)',
+    () => {
+      let step = 0;
+      function workLoop() {
+        while (step < 4) {
+          step += 1;
+          Scheduler.unstable_yieldValue('Step ' + step);
+          if (step === 2) {
+            // This asks Scheduler to yield to the main thread
+            Scheduler.unstable_requestPaint();
+            // This expires the current task
+            Scheduler.unstable_yieldValue('Expire!');
+            Scheduler.unstable_advanceTime(10000);
+          }
+          if (shouldYield()) {
+            // We should never hit this path, because should have already expired.
+            Scheduler.unstable_yieldValue('Yield!');
+            return workLoop;
+          }
+        }
+      }
+
+      scheduleCallback(NormalPriority, workLoop);
+      expect(Scheduler).toFlushUntilNextPaint([
+        'Step 1',
+        'Step 2',
+        'Expire!',
+        'Step 3',
+        'Step 4',
+      ]);
+    },
+  );
+
+  it(
+    'shouldYield returns false if there are higher priority tasks that were ' +
+      'already canceled.',
+    () => {
+      let step = 0;
+      function workLoop() {
+        while (step < 4) {
+          step += 1;
+          Scheduler.unstable_yieldValue('Step ' + step);
+          if (step === 2) {
+            // This asks Scheduler to yield to the main thread
+            const task1 = scheduleCallback(
+              Scheduler.unstable_ImmediatePriority,
+              () => {
+                Scheduler.unstable_yieldValue('High-pri task 1');
+              },
+            );
+            const task2 = scheduleCallback(
+              Scheduler.unstable_ImmediatePriority,
+              () => {
+                Scheduler.unstable_yieldValue('High-pri task 2');
+              },
+            );
+            // TODO: What if task1 is canceled but not task2?
+            cancelCallback(task1);
+            cancelCallback(task2);
+          }
+          if (shouldYield()) {
+            // We should never hit this path, because should have already expired.
+            Scheduler.unstable_yieldValue('Yield!');
+            return workLoop;
+          }
+        }
+      }
+
+      scheduleCallback(NormalPriority, workLoop);
+      expect(Scheduler).toFlushAndYield([
+        'Step 1',
+        'Step 2',
+        'Step 3',
+        'Step 4',
+      ]);
+    },
+  );
+
+  it('shouldYield returns false if there are no pending tasks', () => {
+    expect(Scheduler.unstable_shouldYield()).toBe(false);
+  });
+
+  // TODO: Is this desirable behavior? Maybe we should pretend unscheduled
+  // work has default priority.
+  it(
+    'shouldYield returns false if called outside of a Scheduler task, even ' +
+      'if there are pending tasks',
+    () => {
+      scheduleCallback(ImmediatePriority, () => {});
+      expect(Scheduler.unstable_shouldYield()).toBe(false);
+    },
+  );
+
   it('continuation callbacks inherit the expiration of the previous callback', () => {
     const tasks = [
       ['A', 125],
