@@ -18,6 +18,7 @@ import type {Hook} from './ReactFiberHooks';
 
 import {
   warnAboutDeprecatedLifecycles,
+  deferPassiveEffectCleanupDuringUnmount,
   enableUserTimingAPI,
   enableSuspenseServerRenderer,
   replayFailedUnitOfWorkWithInvokeGuardedCallback,
@@ -257,6 +258,7 @@ let rootDoesHavePassiveEffects: boolean = false;
 let rootWithPendingPassiveEffects: FiberRoot | null = null;
 let pendingPassiveEffectsRenderPriority: ReactPriorityLevel = NoPriority;
 let pendingPassiveEffectsExpirationTime: ExpirationTime = NoWork;
+let pendingUnmountedPassiveEffectDestroyFunctions: Array<() => void> = [];
 
 let rootsWithPendingDiscreteUpdates: Map<
   FiberRoot,
@@ -2176,6 +2178,21 @@ export function flushPassiveEffects() {
   }
 }
 
+export function enqueuePendingPassiveEffectDestroyFn(
+  destroy: () => void,
+): void {
+  if (deferPassiveEffectCleanupDuringUnmount) {
+    pendingUnmountedPassiveEffectDestroyFunctions.push(destroy);
+    if (!rootDoesHavePassiveEffects) {
+      rootDoesHavePassiveEffects = true;
+      scheduleCallback(NormalPriority, () => {
+        flushPassiveEffects();
+        return null;
+      });
+    }
+  }
+}
+
 function flushPassiveEffectsImpl() {
   if (rootWithPendingPassiveEffects === null) {
     return false;
@@ -2192,6 +2209,20 @@ function flushPassiveEffectsImpl() {
   const prevExecutionContext = executionContext;
   executionContext |= CommitContext;
   const prevInteractions = pushInteractions(root);
+
+  if (deferPassiveEffectCleanupDuringUnmount) {
+    // Flush any pending passive effect destroy functions that belong to
+    // components that were unmounted during the most recent commit.
+    for (
+      let i = 0;
+      i < pendingUnmountedPassiveEffectDestroyFunctions.length;
+      i++
+    ) {
+      const destroy = pendingUnmountedPassiveEffectDestroyFunctions[i];
+      invokeGuardedCallback(null, destroy, null);
+    }
+    pendingUnmountedPassiveEffectDestroyFunctions.length = 0;
+  }
 
   // Note: This currently assumes there are no passive effects on the root
   // fiber, because the root is not part of its own effect list. This could

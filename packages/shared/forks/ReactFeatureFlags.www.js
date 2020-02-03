@@ -15,6 +15,7 @@ export const {
   debugRenderPhaseSideEffectsForStrictMode,
   disableInputAttributeSyncing,
   enableTrustedTypesIntegration,
+  deferPassiveEffectCleanupDuringUnmount,
 } = require('ReactFeatureFlags');
 
 // In www, we have experimental support for gathering data

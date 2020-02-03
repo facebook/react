@@ -9,11 +9,11 @@
 
 export type HookEffectTag = number;
 
-export const NoEffect = /*             */ 0b00000000;
-export const UnmountSnapshot = /*      */ 0b00000010;
-export const UnmountMutation = /*      */ 0b00000100;
-export const MountMutation = /*        */ 0b00001000;
-export const UnmountLayout = /*        */ 0b00010000;
-export const MountLayout = /*          */ 0b00100000;
-export const MountPassive = /*         */ 0b01000000;
-export const UnmountPassive = /*       */ 0b10000000;
+export const NoEffect = /*  */ 0b000;
+
+// Represents whether effect should fire.
+export const HasEffect = /* */ 0b001;
+
+// Represents the phase in which the effect (not the clean-up) fires.
+export const Layout = /*    */ 0b010;
+export const Passive = /*   */ 0b100;

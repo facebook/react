@@ -43,6 +43,7 @@ describe('ReactHooksWithNoopRenderer', () => {
     ReactFeatureFlags.debugRenderPhaseSideEffectsForStrictMode = false;
     ReactFeatureFlags.enableSchedulerTracing = true;
     ReactFeatureFlags.flushSuspenseFallbacksInTests = false;
+    ReactFeatureFlags.deferPassiveEffectCleanupDuringUnmount = true;
     React = require('react');
     ReactNoop = require('react-noop-renderer');
     Scheduler = require('scheduler');
@@ -972,6 +973,90 @@ describe('ReactHooksWithNoopRenderer', () => {
       },
     );
 
+    it('defers passive effect destroy functions during unmount', () => {
+      function Child({bar, foo}) {
+        React.useEffect(() => {
+          Scheduler.unstable_yieldValue('passive bar create');
+          return () => {
+            Scheduler.unstable_yieldValue('passive bar destroy');
+          };
+        }, [bar]);
+        React.useLayoutEffect(() => {
+          Scheduler.unstable_yieldValue('layout bar create');
+          return () => {
+            Scheduler.unstable_yieldValue('layout bar destroy');
+          };
+        }, [bar]);
+        React.useEffect(() => {
+          Scheduler.unstable_yieldValue('passive foo create');
+          return () => {
+            Scheduler.unstable_yieldValue('passive foo destroy');
+          };
+        }, [foo]);
+        React.useLayoutEffect(() => {
+          Scheduler.unstable_yieldValue('layout foo create');
+          return () => {
+            Scheduler.unstable_yieldValue('layout foo destroy');
+          };
+        }, [foo]);
+        Scheduler.unstable_yieldValue('render');
+        return null;
+      }
+
+      act(() => {
+        ReactNoop.render(<Child bar={1} foo={1} />, () =>
+          Scheduler.unstable_yieldValue('Sync effect'),
+        );
+        expect(Scheduler).toFlushAndYieldThrough([
+          'render',
+          'layout bar create',
+          'layout foo create',
+          'Sync effect',
+        ]);
+        // Effects are deferred until after the commit
+        expect(Scheduler).toFlushAndYield([
+          'passive bar create',
+          'passive foo create',
+        ]);
+      });
+
+      // This update is exists to test an internal implementation detail:
+      // Effects without updating dependencies lose their layout/passive tag during an update.
+      act(() => {
+        ReactNoop.render(<Child bar={1} foo={2} />, () =>
+          Scheduler.unstable_yieldValue('Sync effect'),
+        );
+        expect(Scheduler).toFlushAndYieldThrough([
+          'render',
+          'layout foo destroy',
+          'layout foo create',
+          'Sync effect',
+        ]);
+        // Effects are deferred until after the commit
+        expect(Scheduler).toFlushAndYield([
+          'passive foo destroy',
+          'passive foo create',
+        ]);
+      });
+
+      // Unmount the component and verify that passive destroy functions are deferred until post-commit.
+      act(() => {
+        ReactNoop.render(null, () =>
+          Scheduler.unstable_yieldValue('Sync effect'),
+        );
+        expect(Scheduler).toFlushAndYieldThrough([
+          'layout bar destroy',
+          'layout foo destroy',
+          'Sync effect',
+        ]);
+        // Effects are deferred until after the commit
+        expect(Scheduler).toFlushAndYield([
+          'passive bar destroy',
+          'passive foo destroy',
+        ]);
+      });
+    });
+
     it('updates have async priority', () => {
       function Counter(props) {
         const [count, updateCount] = useState('(empty)');
@@ -1554,12 +1639,14 @@ describe('ReactHooksWithNoopRenderer', () => {
           'Unmount B [0]',
           'Mount A [1]',
           'Oops!',
-          // Clean up effect A. There's no effect B to clean-up, because it
-          // never mounted.
-          'Unmount A [1]',
         ]);
         expect(ReactNoop.getChildren()).toEqual([]);
       });
+      expect(Scheduler).toHaveYielded([
+        // Clean up effect A runs passively on unmount.
+        // There's no effect B to clean-up, because it never mounted.
+        'Unmount A [1]',
+      ]);
     });
 
     it('handles errors on unmount', () => {
@@ -1599,13 +1686,12 @@ describe('ReactHooksWithNoopRenderer', () => {
         expect(Scheduler).toFlushAndYieldThrough(['Count: 1', 'Sync effect']);
         expect(ReactNoop.getChildren()).toEqual([span('Count: 1')]);
         expect(() => ReactNoop.flushPassiveEffects()).toThrow('Oops');
-        expect(Scheduler).toHaveYielded([
-          'Oops!',
-          // B unmounts even though an error was thrown in the previous effect
-          'Unmount B [0]',
-        ]);
-        expect(ReactNoop.getChildren()).toEqual([]);
+        expect(Scheduler).toHaveYielded(['Oops!']);
       });
+      // B unmounts even though an error was thrown in the previous effect
+      // B's destroy function runs later on unmount though, since it's passive
+      expect(Scheduler).toHaveYielded(['Unmount B [0]']);
+      expect(ReactNoop.getChildren()).toEqual([]);
     });
 
     it('works with memo', () => {

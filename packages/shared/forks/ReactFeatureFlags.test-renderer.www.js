@@ -43,6 +43,7 @@ export const disableTextareaChildren = false;
 export const disableUnstableRenderSubtreeIntoContainer = false;
 export const warnUnstableRenderSubtreeIntoContainer = false;
 export const disableUnstableCreatePortal = false;
+export const deferPassiveEffectCleanupDuringUnmount = false;
 
 // Only used in www builds.
 export function addUserTimingListener() {

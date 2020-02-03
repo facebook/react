@@ -28,11 +28,9 @@ import {
   Passive as PassiveEffect,
 } from 'shared/ReactSideEffectTags';
 import {
-  NoEffect as NoHookEffect,
-  UnmountMutation,
-  MountLayout,
-  UnmountPassive,
-  MountPassive,
+  HasEffect as HookHasEffect,
+  Layout as HookLayout,
+  Passive as HookPassive,
 } from './ReactHookEffectTags';
 import {
   scheduleWork,
@@ -923,7 +921,12 @@ function mountEffectImpl(fiberEffectTag, hookEffectTag, create, deps): void {
   const hook = mountWorkInProgressHook();
   const nextDeps = deps === undefined ? null : deps;
   currentlyRenderingFiber.effectTag |= fiberEffectTag;
-  hook.memoizedState = pushEffect(hookEffectTag, create, undefined, nextDeps);
+  hook.memoizedState = pushEffect(
+    HookHasEffect | hookEffectTag,
+    create,
+    undefined,
+    nextDeps,
+  );
 }
 
 function updateEffectImpl(fiberEffectTag, hookEffectTag, create, deps): void {
@@ -937,7 +940,7 @@ function updateEffectImpl(fiberEffectTag, hookEffectTag, create, deps): void {
     if (nextDeps !== null) {
       const prevDeps = prevEffect.deps;
       if (areHookInputsEqual(nextDeps, prevDeps)) {
-        pushEffect(NoHookEffect, create, destroy, nextDeps);
+        pushEffect(hookEffectTag, create, destroy, nextDeps);
         return;
       }
     }
@@ -945,7 +948,12 @@ function updateEffectImpl(fiberEffectTag, hookEffectTag, create, deps): void {
 
   currentlyRenderingFiber.effectTag |= fiberEffectTag;
 
-  hook.memoizedState = pushEffect(hookEffectTag, create, destroy, nextDeps);
+  hook.memoizedState = pushEffect(
+    HookHasEffect | hookEffectTag,
+    create,
+    destroy,
+    nextDeps,
+  );
 }
 
 function mountEffect(
@@ -960,7 +968,7 @@ function mountEffect(
   }
   return mountEffectImpl(
     UpdateEffect | PassiveEffect,
-    UnmountPassive | MountPassive,
+    HookPassive,
     create,
     deps,
   );
@@ -978,7 +986,7 @@ function updateEffect(
   }
   return updateEffectImpl(
     UpdateEffect | PassiveEffect,
-    UnmountPassive | MountPassive,
+    HookPassive,
     create,
     deps,
   );
@@ -988,24 +996,14 @@ function mountLayoutEffect(
   create: () => (() => void) | void,
   deps: Array<mixed> | void | null,
 ): void {
-  return mountEffectImpl(
-    UpdateEffect,
-    UnmountMutation | MountLayout,
-    create,
-    deps,
-  );
+  return mountEffectImpl(UpdateEffect, HookLayout, create, deps);
 }
 
 function updateLayoutEffect(
   create: () => (() => void) | void,
   deps: Array<mixed> | void | null,
 ): void {
-  return updateEffectImpl(
-    UpdateEffect,
-    UnmountMutation | MountLayout,
-    create,
-    deps,
-  );
+  return updateEffectImpl(UpdateEffect, HookLayout, create, deps);
 }
 
 function imperativeHandleEffect<T>(
@@ -1059,7 +1057,7 @@ function mountImperativeHandle<T>(
 
   return mountEffectImpl(
     UpdateEffect,
-    UnmountMutation | MountLayout,
+    HookLayout,
     imperativeHandleEffect.bind(null, create, ref),
     effectDeps,
   );
@@ -1086,7 +1084,7 @@ function updateImperativeHandle<T>(
 
   return updateEffectImpl(
     UpdateEffect,
-    UnmountMutation | MountLayout,
+    HookLayout,
     imperativeHandleEffect.bind(null, create, ref),
     effectDeps,
   );

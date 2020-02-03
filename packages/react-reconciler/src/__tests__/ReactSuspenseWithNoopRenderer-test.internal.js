@@ -21,6 +21,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     ReactFeatureFlags.debugRenderPhaseSideEffectsForStrictMode = false;
     ReactFeatureFlags.replayFailedUnitOfWorkWithInvokeGuardedCallback = false;
     ReactFeatureFlags.flushSuspenseFallbacksInTests = false;
+    ReactFeatureFlags.deferPassiveEffectCleanupDuringUnmount = true;
     React = require('react');
     Fragment = React.Fragment;
     ReactNoop = require('react-noop-renderer');
@@ -1617,8 +1618,8 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     expect(Scheduler).toFlushAndYield([
       'B',
       'Destroy Layout Effect [Loading...]',
-      'Destroy Effect [Loading...]',
       'Layout Effect [B]',
+      'Destroy Effect [Loading...]',
       'Effect [B]',
     ]);
 
@@ -1654,9 +1655,9 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     expect(Scheduler).toFlushAndYield([
       'B2',
       'Destroy Layout Effect [Loading...]',
-      'Destroy Effect [Loading...]',
       'Destroy Layout Effect [B]',
       'Layout Effect [B2]',
+      'Destroy Effect [Loading...]',
       'Destroy Effect [B]',
       'Effect [B2]',
     ]);

@@ -91,6 +91,12 @@ export const enableTrustedTypesIntegration = false;
 // Flag to turn event.target and event.currentTarget in ReactNative from a reactTag to a component instance
 export const enableNativeTargetAsInstance = false;
 
+// Controls behavior of deferred effect destroy functions during unmount.
+// Previously these functions were run during commit (along with layout effects).
+// Ideally we should delay these until after commit for performance reasons.
+// This flag provides a killswitch if that proves to break existing code somehow.
+export const deferPassiveEffectCleanupDuringUnmount = false;
+
 // --------------------------
 // Future APIs to be deprecated
 // --------------------------
