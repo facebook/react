@@ -848,7 +848,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
       </Suspense>,
     );
     Scheduler.unstable_advanceTime(10000);
-    expect(Scheduler).toHaveYielded([
+    expect(Scheduler).toFlushExpired([
       'Suspend! [A]',
       'Suspend! [B]',
       'Loading...',
@@ -987,7 +987,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     Scheduler.unstable_advanceTime(10000);
     jest.advanceTimersByTime(10000);
 
-    expect(Scheduler).toHaveYielded([
+    expect(Scheduler).toFlushExpired([
       'Suspend! [goodbye]',
       'Loading...',
       'Commit: goodbye',
