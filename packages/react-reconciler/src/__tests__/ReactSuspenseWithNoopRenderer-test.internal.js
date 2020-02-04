@@ -1867,7 +1867,8 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     expect(ReactNoop.getChildren()).toEqual([span('Loading...')]);
   });
 
-  it('warns when a low priority update suspends inside a high priority update for functional components', async () => {
+  // TODO: flip to "warns" when this is implemented again.
+  it('does not warn when a low priority update suspends inside a high priority update for functional components', async () => {
     let _setShow;
     function App() {
       let [show, setShow] = React.useState(false);
@@ -1883,20 +1884,17 @@ describe('ReactSuspenseWithNoopRenderer', () => {
       ReactNoop.render(<App />);
     });
 
-    expect(() => {
-      ReactNoop.act(() => {
-        Scheduler.unstable_runWithPriority(
-          Scheduler.unstable_UserBlockingPriority,
-          () => _setShow(true),
-        );
-      });
-    }).toErrorDev(
-      'Warning: App triggered a user-blocking update that suspended.' + '\n\n',
-      {withoutStack: true},
-    );
+    // TODO: assert toErrorDev() when the warning is implemented again.
+    ReactNoop.act(() => {
+      Scheduler.unstable_runWithPriority(
+        Scheduler.unstable_UserBlockingPriority,
+        () => _setShow(true),
+      );
+    });
   });
 
-  it('warns when a low priority update suspends inside a high priority update for class components', async () => {
+  // TODO: flip to "warns" when this is implemented again.
+  it('does not warn when a low priority update suspends inside a high priority update for class components', async () => {
     let show;
     class App extends React.Component {
       state = {show: false};
@@ -1915,17 +1913,13 @@ describe('ReactSuspenseWithNoopRenderer', () => {
       ReactNoop.render(<App />);
     });
 
-    expect(() => {
-      ReactNoop.act(() => {
-        Scheduler.unstable_runWithPriority(
-          Scheduler.unstable_UserBlockingPriority,
-          () => show(),
-        );
-      });
-    }).toErrorDev(
-      'Warning: App triggered a user-blocking update that suspended.' + '\n\n',
-      {withoutStack: true},
-    );
+    // TODO: assert toErrorDev() when the warning is implemented again.
+    ReactNoop.act(() => {
+      Scheduler.unstable_runWithPriority(
+        Scheduler.unstable_UserBlockingPriority,
+        () => show(),
+      );
+    });
   });
 
   it('does not warn about wrong Suspense priority if no new fallbacks are shown', async () => {
@@ -1961,8 +1955,9 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     expect(Scheduler).toHaveYielded(['Suspend! [A]', 'Suspend! [B]']);
   });
 
+  // TODO: flip to "warns" when this is implemented again.
   it(
-    'warns when component that triggered user-blocking update is between Suspense boundary ' +
+    'does not warn when component that triggered user-blocking update is between Suspense boundary ' +
       'and component that suspended',
     async () => {
       let _setShow;
@@ -1982,17 +1977,13 @@ describe('ReactSuspenseWithNoopRenderer', () => {
         ReactNoop.render(<App />);
       });
 
-      expect(() => {
-        ReactNoop.act(() => {
-          Scheduler.unstable_runWithPriority(
-            Scheduler.unstable_UserBlockingPriority,
-            () => _setShow(true),
-          );
-        });
-      }).toErrorDev(
-        'Warning: A triggered a user-blocking update that suspended.' + '\n\n',
-        {withoutStack: true},
-      );
+      // TODO: assert toErrorDev() when the warning is implemented again.
+      ReactNoop.act(() => {
+        Scheduler.unstable_runWithPriority(
+          Scheduler.unstable_UserBlockingPriority,
+          () => _setShow(true),
+        );
+      });
     },
   );
 

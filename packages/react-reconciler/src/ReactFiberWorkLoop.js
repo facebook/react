@@ -14,7 +14,6 @@ import type {ReactPriorityLevel} from './SchedulerWithReactIntegration';
 import type {Interaction} from 'scheduler/src/Tracing';
 import type {SuspenseConfig} from './ReactFiberSuspenseConfig';
 import type {SuspenseState} from './ReactFiberSuspenseComponent';
-import type {Hook} from './ReactFiberHooks';
 
 import {
   warnAboutDeprecatedLifecycles,
@@ -779,7 +778,6 @@ function finishConcurrentRender(
       if (expirationTime === lastSuspendedTime) {
         root.nextKnownPendingLevel = getRemainingExpirationTime(finishedWork);
       }
-      flushSuspensePriorityWarningInDEV();
 
       // We have an acceptable loading state. We need to figure out if we
       // should immediately commit it or wait a bit.
@@ -855,7 +853,6 @@ function finishConcurrentRender(
       if (expirationTime === lastSuspendedTime) {
         root.nextKnownPendingLevel = getRemainingExpirationTime(finishedWork);
       }
-      flushSuspensePriorityWarningInDEV();
 
       if (
         // do not delay if we're inside an act() scope
@@ -1051,7 +1048,7 @@ function performSyncWorkOnRoot(root) {
       stopFinishedWorkLoopTimer();
       root.finishedWork = (root.current.alternate: any);
       root.finishedExpirationTime = expirationTime;
-      finishSyncRender(root, workInProgressRootExitStatus, expirationTime);
+      finishSyncRender(root);
     }
 
     // Before exiting, make sure there's a callback scheduled for the next
@@ -1062,15 +1059,9 @@ function performSyncWorkOnRoot(root) {
   return null;
 }
 
-function finishSyncRender(root, exitStatus, expirationTime) {
+function finishSyncRender(root) {
   // Set this to null to indicate there's no in-progress render.
   workInProgressRoot = null;
-
-  if (__DEV__) {
-    if (exitStatus === RootSuspended || exitStatus === RootSuspendedWithDelay) {
-      flushSuspensePriorityWarningInDEV();
-    }
-  }
   commitRoot(root);
 }
 
@@ -1274,7 +1265,6 @@ function prepareFreshStack(root, expirationTime) {
 
   if (__DEV__) {
     ReactStrictModeWarnings.discardPendingWarnings();
-    componentsThatTriggeredHighPriSuspend = null;
   }
 }
 
@@ -2853,121 +2843,6 @@ export function warnIfUnmockedScheduler(fiber: Fiber) {
             'For example, with jest: \n' +
             "jest.mock('scheduler', () => require('scheduler/unstable_mock'));\n\n" +
             'For more info, visit https://fb.me/react-mock-scheduler',
-        );
-      }
-    }
-  }
-}
-
-let componentsThatTriggeredHighPriSuspend = null;
-export function checkForWrongSuspensePriorityInDEV(sourceFiber: Fiber) {
-  if (__DEV__) {
-    const currentPriorityLevel = getCurrentPriorityLevel();
-    if (
-      (sourceFiber.mode & ConcurrentMode) !== NoEffect &&
-      (currentPriorityLevel === UserBlockingPriority ||
-        currentPriorityLevel === ImmediatePriority)
-    ) {
-      let workInProgressNode = sourceFiber;
-      while (workInProgressNode !== null) {
-        // Add the component that triggered the suspense
-        const current = workInProgressNode.alternate;
-        if (current !== null) {
-          // TODO: warn component that triggers the high priority
-          // suspend is the HostRoot
-          switch (workInProgressNode.tag) {
-            case ClassComponent:
-              // Loop through the component's update queue and see whether the component
-              // has triggered any high priority updates
-              const updateQueue = current.updateQueue;
-              if (updateQueue !== null) {
-                let update = updateQueue.baseQueue;
-                while (update !== null) {
-                  const priorityLevel = update.priority;
-                  if (
-                    priorityLevel === UserBlockingPriority ||
-                    priorityLevel === ImmediatePriority
-                  ) {
-                    if (componentsThatTriggeredHighPriSuspend === null) {
-                      componentsThatTriggeredHighPriSuspend = new Set([
-                        getComponentName(workInProgressNode.type),
-                      ]);
-                    } else {
-                      componentsThatTriggeredHighPriSuspend.add(
-                        getComponentName(workInProgressNode.type),
-                      );
-                    }
-                    break;
-                  }
-                  update = update.next;
-                }
-              }
-              break;
-            case FunctionComponent:
-            case ForwardRef:
-            case SimpleMemoComponent:
-            case Chunk: {
-              let firstHook: null | Hook = current.memoizedState;
-              // TODO: This just checks the first Hook. Isn't it suppose to check all Hooks?
-              if (firstHook !== null && firstHook.baseQueue !== null) {
-                let update = firstHook.baseQueue;
-                // Loop through the functional component's memoized state to see whether
-                // the component has triggered any high pri updates
-                while (update !== null) {
-                  const priority = update.priority;
-                  if (
-                    priority === UserBlockingPriority ||
-                    priority === ImmediatePriority
-                  ) {
-                    if (componentsThatTriggeredHighPriSuspend === null) {
-                      componentsThatTriggeredHighPriSuspend = new Set([
-                        getComponentName(workInProgressNode.type),
-                      ]);
-                    } else {
-                      componentsThatTriggeredHighPriSuspend.add(
-                        getComponentName(workInProgressNode.type),
-                      );
-                    }
-                    break;
-                  }
-                  if (update.next === firstHook.baseQueue) {
-                    break;
-                  }
-                  update = update.next;
-                }
-              }
-              break;
-            }
-            default:
-              break;
-          }
-        }
-        workInProgressNode = workInProgressNode.return;
-      }
-    }
-  }
-}
-
-function flushSuspensePriorityWarningInDEV() {
-  if (__DEV__) {
-    if (componentsThatTriggeredHighPriSuspend !== null) {
-      const componentNames = [];
-      componentsThatTriggeredHighPriSuspend.forEach(name =>
-        componentNames.push(name),
-      );
-      componentsThatTriggeredHighPriSuspend = null;
-
-      if (componentNames.length > 0) {
-        console.error(
-          '%s triggered a user-blocking update that suspended.' +
-            '\n\n' +
-            'The fix is to split the update into multiple parts: a user-blocking ' +
-            'update to provide immediate feedback, and another update that ' +
-            'triggers the bulk of the changes.' +
-            '\n\n' +
-            'Refer to the documentation for useTransition to learn how ' +
-            'to implement this pattern.', // TODO: Add link to React docs with more information, once it exists
-          componentNames.sort().join(', '),
         );
       }
     }
