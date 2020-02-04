@@ -975,13 +975,12 @@ class ReactDOMServerRenderer {
         if (nextChild != null && nextChild.$$typeof != null) {
           // Catch unexpected special types early.
           const $$typeof = nextChild.$$typeof;
-          // LUNA
           if ($$typeof === REACT_PORTAL_TYPE) {
             if (enableSuspenseServerRenderer) {
               throw $$typeof;
             } else {
               invariant(
-                $$typeof !== REACT_PORTAL_TYPE,
+                false,
                 'Portals are not currently supported by the server renderer. ' +
                   'Render them conditionally so that they only appear on the client render.',
               );
