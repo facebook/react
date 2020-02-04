@@ -11,8 +11,8 @@ const theme = require('../theme');
 
 const run = async ({build, cwd}) => {
   const artifacts = await getArtifactsList(build);
-  const nodeModulesArtifact = artifacts.find(
-    entry => entry.path.endsWith('node_modules.tgz')
+  const nodeModulesArtifact = artifacts.find(entry =>
+    entry.path.endsWith('node_modules.tgz')
   );
 
   if (!nodeModulesArtifact) {
