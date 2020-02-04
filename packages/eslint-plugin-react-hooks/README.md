@@ -34,6 +34,17 @@ Then add it to your ESLint configuration:
 }
 ```
 
+You can achieve the configuratin above by simply extending the recommended configuration:
+
+```js
+{
+  "extends": [
+    // ...
+    "plugin:react-hooks/recommended"
+  ]
+}
+```
+
 ## Valid and Invalid Examples
 
 Please refer to the [Rules of Hooks](https://reactjs.org/docs/hooks-rules.html) documentation and the [Hooks FAQ](https://reactjs.org/docs/hooks-faq.html#what-exactly-do-the-lint-rules-enforce) to learn more about this rule.
