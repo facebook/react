@@ -1753,6 +1753,7 @@ describe('ReactHooksWithNoopRenderer', () => {
         // not block the subsequent create functions from being run.
         expect(Scheduler).toHaveYielded([
           'Oops!',
+          'Unmount B [0]',
           'Mount A [1]',
           'Mount B [1]',
         ]);

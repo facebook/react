@@ -144,7 +144,7 @@ export type Hook = {|
   next: Hook | null,
 |};
 
-type Effect = {|
+export type Effect = {|
   tag: HookEffectTag,
   create: () => (() => void) | void,
   destroy: (() => void) | void,
