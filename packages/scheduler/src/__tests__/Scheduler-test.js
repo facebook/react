@@ -283,7 +283,6 @@ describe('Scheduler', () => {
                 Scheduler.unstable_yieldValue('High-pri task 2');
               },
             );
-            // TODO: What if task1 is canceled but not task2?
             cancelCallback(task1);
             cancelCallback(task2);
           }
@@ -299,6 +298,52 @@ describe('Scheduler', () => {
       expect(Scheduler).toFlushAndYield([
         'Step 1',
         'Step 2',
+        'Step 3',
+        'Step 4',
+      ]);
+    },
+  );
+
+  it(
+    'shouldYield returns true if there are higher priority tasks, some of ' +
+      'which were canceled, but not all of them',
+    () => {
+      // Tests an implementation-specific edge case. Canceled are not always
+      // removed from the queue when they are canceled, since removal of an
+      // arbitrary node from a binary heap is O(log n).
+      let step = 0;
+      function workLoop() {
+        while (step < 4) {
+          step += 1;
+          Scheduler.unstable_yieldValue('Step ' + step);
+          if (step === 2) {
+            // This asks Scheduler to yield to the main thread
+            const task1 = scheduleCallback(
+              Scheduler.unstable_ImmediatePriority,
+              () => {
+                Scheduler.unstable_yieldValue('High-pri task 1');
+              },
+            );
+            scheduleCallback(Scheduler.unstable_ImmediatePriority, () => {
+              Scheduler.unstable_yieldValue('High-pri task 2');
+            });
+            // Cancel the first task, but not the second one.
+            cancelCallback(task1);
+          }
+          if (shouldYield()) {
+            // We should never hit this path, because should have already expired.
+            Scheduler.unstable_yieldValue('Yield!');
+            return workLoop;
+          }
+        }
+      }
+
+      scheduleCallback(NormalPriority, workLoop);
+      expect(Scheduler).toFlushUntilNextPaint([
+        'Step 1',
+        'Step 2',
+        'Yield!',
+        'High-pri task 2',
         'Step 3',
         'Step 4',
       ]);

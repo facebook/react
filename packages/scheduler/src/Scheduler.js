@@ -428,22 +428,26 @@ function unstable_shouldYield() {
   advanceTimers(currentTime);
 
   // Now compare the priority of the current task to the highest priority task.
-  const firstTask = peek(taskQueue);
-  return (
-    firstTask !== null &&
-    firstTask.expirationTime < currentExpiration &&
-    // TODO: This checks if the highest-priority callback was canceled. But
-    // there could be another high priority callback between the current task
-    // and the head of the queue. This is an edge case, but we can solve by
-    // removing canceled tasks from the head of the queue in `cancelTask`.
-    // Either way, it's probably not a big deal because you only hit this case
-    // if you schedule a high pri task inside another task, and then cancel it
-    // before the next `shouldYield`.
-    firstTask.callback !== null &&
-    // Defensive coding to make absolutely sure we don't yield to the currently
-    // running task, which could cause an infinite loop.
-    firstTask !== currentTask
-  );
+  // This equivalent to checking if the current task is the head of the queue.
+  let firstTask = peek(taskQueue);
+  while (firstTask !== currentTask && firstTask !== null) {
+    if (firstTask.callback !== null) {
+      // There's a higher priority task. Yield.
+      return true;
+    } else {
+      // There's a higher priority task, but it was canceled. This happens
+      // because tasks are not always removed from the queue immediately when
+      // they are canceled, since removal of an arbitrary node from a binary
+      // heap is O(log n). Instead, we null out the `callback` field and remove
+      // it the next time we traverse the queue.
+      //
+      // Pop the canceled task from the queue and proceed to the next task.
+      pop(taskQueue);
+      firstTask = peek(taskQueue);
+    }
+  }
+  // There's no higher priority task.
+  return false;
 }
 
 const unstable_requestPaint = requestPaint;
