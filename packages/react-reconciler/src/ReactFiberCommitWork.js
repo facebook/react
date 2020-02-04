@@ -416,6 +416,38 @@ export function commitPassiveHookEffects(finishedWork: Fiber): void {
   }
 }
 
+export function commitPassiveHookUnmountEffects(finishedWork: Fiber): void {
+  if ((finishedWork.effectTag & Passive) !== NoEffect) {
+    switch (finishedWork.tag) {
+      case FunctionComponent:
+      case ForwardRef:
+      case SimpleMemoComponent:
+      case Chunk: {
+        commitHookEffectListUnmount(HookPassive | HookHasEffect, finishedWork);
+        break;
+      }
+      default:
+        break;
+    }
+  }
+}
+
+export function commitPassiveHookMountEffects(finishedWork: Fiber): void {
+  if ((finishedWork.effectTag & Passive) !== NoEffect) {
+    switch (finishedWork.tag) {
+      case FunctionComponent:
+      case ForwardRef:
+      case SimpleMemoComponent:
+      case Chunk: {
+        commitHookEffectListMount(HookPassive | HookHasEffect, finishedWork);
+        break;
+      }
+      default:
+        break;
+    }
+  }
+}
+
 function commitLifeCycles(
   finishedRoot: FiberRoot,
   current: Fiber | null,
