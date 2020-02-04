@@ -324,17 +324,19 @@ describe('ReactDOMServerHydration', () => {
     );
   });
 
-  it('should throw rendering portals on the server', () => {
-    const div = document.createElement('div');
-    expect(() => {
-      ReactDOMServer.renderToString(
-        <div>{ReactDOM.createPortal(<div />, div)}</div>,
+  if (!__EXPERIMENTAL__) {
+    it('should throw rendering portals on the server', () => {
+      const div = document.createElement('div');
+      expect(() => {
+        ReactDOMServer.renderToString(
+          <div>{ReactDOM.createPortal(<div />, div)}</div>,
+        );
+      }).toThrow(
+        'Portals are not currently supported by the server renderer. ' +
+          'Render them conditionally so that they only appear on the client render.',
       );
-    }).toThrow(
-      'Portals are not currently supported by the server renderer. ' +
-        'Render them conditionally so that they only appear on the client render.',
-    );
-  });
+    });
+  }
 
   it('should be able to render and hydrate Mode components', () => {
     class ComponentWithWarning extends React.Component {

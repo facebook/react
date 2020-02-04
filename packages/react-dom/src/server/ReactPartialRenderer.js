@@ -900,16 +900,29 @@ class ReactDOMServerRenderer {
         try {
           outBuffer += this.render(child, frame.context, frame.domNamespace);
         } catch (err) {
-          if (err != null && typeof err.then === 'function') {
+          if (
+            err != null &&
+            (typeof err.then === 'function' || err === REACT_PORTAL_TYPE)
+          ) {
             if (enableSuspenseServerRenderer) {
-              invariant(
-                this.suspenseDepth > 0,
-                // TODO: include component name. This is a bit tricky with current factoring.
-                'A React component suspended while rendering, but no fallback UI was specified.\n' +
-                  '\n' +
-                  'Add a <Suspense fallback=...> component higher in the tree to ' +
-                  'provide a loading indicator or placeholder to display.',
-              );
+              if (err === REACT_PORTAL_TYPE) {
+                invariant(
+                  this.suspenseDepth > 0,
+                  'Portals must have a fallback UI when being rendered on the server.\n' +
+                    '\n' +
+                    'Add a <Suspense fallback=...> component higher in the tree to ' +
+                    'provide a loading indicator or placeholder to display.',
+                );
+              } else {
+                invariant(
+                  this.suspenseDepth > 0,
+                  // TODO: include component name. This is a bit tricky with current factoring.
+                  'A React component suspended while rendering, but no fallback UI was specified.\n' +
+                    '\n' +
+                    'Add a <Suspense fallback=...> component higher in the tree to ' +
+                    'provide a loading indicator or placeholder to display.',
+                );
+              }
               suspended = true;
             } else {
               invariant(false, 'ReactDOMServer does not yet support Suspense.');
@@ -961,11 +974,17 @@ class ReactDOMServerRenderer {
         if (nextChild != null && nextChild.$$typeof != null) {
           // Catch unexpected special types early.
           const $$typeof = nextChild.$$typeof;
-          invariant(
-            $$typeof !== REACT_PORTAL_TYPE,
-            'Portals are not currently supported by the server renderer. ' +
-              'Render them conditionally so that they only appear on the client render.',
-          );
+          if ($$typeof === REACT_PORTAL_TYPE) {
+            if (enableSuspenseServerRenderer) {
+              throw $$typeof;
+            } else {
+              invariant(
+                false,
+                'Portals are not currently supported by the server renderer. ' +
+                  'Render them conditionally so that they only appear on the client render.',
+              );
+            }
+          }
           // Catch-all to prevent an infinite loop if React.Children.toArray() supports some new type.
           invariant(
             false,

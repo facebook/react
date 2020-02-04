@@ -78,6 +78,7 @@ describe('ReactDOMServerPartialHydration', () => {
     ReactFeatureFlags.enableSuspenseCallback = true;
     ReactFeatureFlags.enableDeprecatedFlareAPI = true;
     ReactFeatureFlags.debugRenderPhaseSideEffectsForStrictMode = false;
+    ReactFeatureFlags.enableSuspenseServerRenderer = true;
 
     React = require('react');
     ReactDOM = require('react-dom');
@@ -2562,5 +2563,50 @@ describe('ReactDOMServerPartialHydration', () => {
 
     // Now we're hydrated.
     expect(ref.current).not.toBe(null);
+  });
+
+  it('should return fallback during server rendering when Portal has a suspense boundary ', () => {
+    const portalContainer = document.createElement('div');
+    function App() {
+      return (
+        <div>
+          <React.Suspense fallback={'Loading...'}>
+            {ReactDOM.createPortal(<div>{'Portal'}</div>, portalContainer)}
+          </React.Suspense>
+        </div>
+      );
+    }
+
+    const markup = ReactDOMServer.renderToString(<App />);
+    expect(markup).toContain('Loading...');
+    expect(portalContainer.textContent).toBe('');
+
+    const container = document.createElement('div');
+    container.innerHTML = markup;
+
+    // Hydrating this cames the fallback to be removed and the Portal to be added.
+    const root = ReactDOM.createRoot(container, {hydrate: true});
+    act(() => {
+      root.render(<App />);
+    });
+    expect(portalContainer.textContent).toBe('Portal');
+    expect(container.textContent).toBe('');
+  });
+
+  it('should error during server rendering when Portal does not have a Suspense boundary', () => {
+    const portalContainer = document.createElement('div');
+    function App() {
+      return (
+        <div>
+          {ReactDOM.createPortal(<div>{'Portal'}</div>, portalContainer)}
+        </div>
+      );
+    }
+
+    expect(() => ReactDOMServer.renderToString(<App />)).toThrow(
+      'Portals must have a fallback UI when being rendered on the server.\n\n' +
+        'Add a <Suspense fallback=...> component higher in the tree to provide a ' +
+        'loading indicator or placeholder to display.',
+    );
   });
 });
