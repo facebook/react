@@ -908,7 +908,6 @@ class ReactDOMServerRenderer {
               if (err === REACT_PORTAL_TYPE) {
                 invariant(
                   this.suspenseDepth > 0,
-                  // TODO: include component name. This is a bit tricky with current factoring.
                   'Portals must have a fallback UI when being rendered on the server.\n' +
                     '\n' +
                     'Add a <Suspense fallback=...> component higher in the tree to ' +
