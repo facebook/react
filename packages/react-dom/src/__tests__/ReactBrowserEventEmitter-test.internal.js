@@ -37,6 +37,7 @@ const ON_MOUSE_ENTER_KEY = 'onMouseEnter';
 let GRANDPARENT;
 let PARENT;
 let CHILD;
+let BUTTON;
 
 let getListener;
 let putListener;
@@ -71,6 +72,7 @@ describe('ReactBrowserEventEmitter', () => {
     let GRANDPARENT_PROPS = {};
     let PARENT_PROPS = {};
     let CHILD_PROPS = {};
+    let BUTTON_PROPS = {};
 
     function Child(props) {
       return <div ref={c => (CHILD = c)} {...props} />;
@@ -87,6 +89,7 @@ describe('ReactBrowserEventEmitter', () => {
         <div ref={c => (GRANDPARENT = c)} {...GRANDPARENT_PROPS}>
           <div ref={c => (PARENT = c)} {...PARENT_PROPS}>
             <ChildWrapper {...CHILD_PROPS} />
+            <button disabled={true} ref={c => (BUTTON = c)} {...BUTTON_PROPS} />
           </div>
         </div>,
         container,
@@ -110,6 +113,9 @@ describe('ReactBrowserEventEmitter', () => {
         case GRANDPARENT:
           GRANDPARENT_PROPS[eventName] = listener;
           break;
+        case BUTTON:
+          BUTTON_PROPS[eventName] = listener;
+          break;
       }
       // Rerender with new event listeners
       renderTree();
@@ -124,6 +130,9 @@ describe('ReactBrowserEventEmitter', () => {
           break;
         case GRANDPARENT:
           GRANDPARENT_PROPS = {};
+          break;
+        case BUTTON:
+          BUTTON_PROPS = {};
           break;
       }
       renderTree();
@@ -147,6 +156,12 @@ describe('ReactBrowserEventEmitter', () => {
     registerSimpleTestHandler();
     const listener = getListener(CHILD, ON_CLICK_KEY);
     expect(listener).toEqual(LISTENER);
+  });
+
+  it('should not retrieve listeners on a disabled interactive element', () => {
+    putListener(BUTTON, ON_MOUSE_ENTER_KEY, recordID.bind(null, BUTTON));
+    const listener = getListener(BUTTON, ON_MOUSE_ENTER_KEY);
+    expect(listener).toBe(null);
   });
 
   it('should clear all handlers when asked to', () => {
