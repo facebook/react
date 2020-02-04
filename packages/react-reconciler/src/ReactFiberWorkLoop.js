@@ -647,21 +647,10 @@ function performConcurrentWorkOnRoot(root, didTimeout) {
   // Check if the render expired.
   const expirationTime = getNextRootExpirationTimeToWorkOn(root);
   if (didTimeout) {
-    if (
-      root === workInProgressRoot &&
-      expirationTime === renderExpirationTime
-    ) {
-      // We're already in the middle of working on this tree. Expire the tree at
-      // the already-rendering time so we don't throw out the partial work. If
-      // there's another expired level after that, we'll hit the `else` branch
-      // of this condition, which will batch together the remaining levels.
-      markRootExpiredAtTime(root, renderExpirationTime);
-    } else {
-      // This is a new tree. Expire the tree at the current time so that we
-      // render all the expired work in a single batch.
-      const currentTime = requestCurrentTimeForUpdate();
-      markRootExpiredAtTime(root, currentTime);
-    }
+    // The render task took too long to complete. Mark the current time as
+    // expired to synchronously render all expired work in a single batch.
+    const currentTime = requestCurrentTimeForUpdate();
+    markRootExpiredAtTime(root, currentTime);
     // This will schedule a synchronous callback.
     ensureRootIsScheduled(root);
     return null;
@@ -997,9 +986,6 @@ function finishConcurrentRender(
 // This is the entry point for synchronous tasks that don't go
 // through Scheduler
 function performSyncWorkOnRoot(root) {
-  // Check if there's expired work on this root. Otherwise, render at Sync.
-  const lastExpiredTime = root.lastExpiredTime;
-  const expirationTime = lastExpiredTime !== NoWork ? lastExpiredTime : Sync;
   invariant(
     (executionContext & (RenderContext | CommitContext)) === NoContext,
     'Should not already be working.',
@@ -1007,9 +993,29 @@ function performSyncWorkOnRoot(root) {
 
   flushPassiveEffects();
 
-  // If the root or expiration time have changed, throw out the existing stack
-  // and prepare a fresh one. Otherwise we'll continue where we left off.
-  if (root !== workInProgressRoot || expirationTime !== renderExpirationTime) {
+  const lastExpiredTime = root.lastExpiredTime;
+
+  let expirationTime;
+  if (lastExpiredTime !== NoWork) {
+    // There's expired work on this root. Check if we have a partial tree
+    // that we can reuse.
+    if (
+      root === workInProgressRoot &&
+      renderExpirationTime >= lastExpiredTime
+    ) {
+      // There's a partial tree with equal or greater than priority than the
+      // expired level. Finish rendering it before rendering the rest of the
+      // expired work.
+      expirationTime = renderExpirationTime;
+    } else {
+      // Start a fresh tree.
+      expirationTime = lastExpiredTime;
+      prepareFreshStack(root, expirationTime);
+      startWorkOnPendingInteractions(root, expirationTime);
+    }
+  } else {
+    // There's no expired work. This must be a new, synchronous render.
+    expirationTime = Sync;
     prepareFreshStack(root, expirationTime);
     startWorkOnPendingInteractions(root, expirationTime);
   }
@@ -1060,7 +1066,7 @@ function performSyncWorkOnRoot(root) {
       stopFinishedWorkLoopTimer();
       root.finishedWork = (root.current.alternate: any);
       root.finishedExpirationTime = expirationTime;
-      finishSyncRender(root, workInProgressRootExitStatus);
+      finishSyncRender(root);
     }
 
     // Before exiting, make sure there's a callback scheduled for the next
