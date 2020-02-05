@@ -111,11 +111,7 @@ function CommitRanked({chartData, commitTree, height, width}: Props) {
 
   // remove highlighting of element on mouse leave
   const handleElementMouseLeave = () => {
-    if (selectedFiberID) {
-      highlightNativeElement(selectedFiberID);
-    } else {
-      clearNativeElementHighlight();
-    }
+    clearNativeElementHighlight();
   };
 
   const itemData = useMemo<ItemData>(
