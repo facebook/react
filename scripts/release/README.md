@@ -142,7 +142,7 @@ Checks out a "next" release from NPM and prepares it to be published as a stable
 
 This script prompts for new (stable) release versions for each public package and updates the package contents (both `package.json` and inline version numbers) to match. It also updates inter-package dependencies to account for the new versions.
 
-Next release have already been tested but it is still a good idea to **manually test and verify a release** before publishing to ensure that e.g. version numbers are correct. Upon completion, this script prints manual testing instructions.
+"Next" releases have already been tested but it is still a good idea to **manually test and verify a release** before publishing to ensure that e.g. version numbers are correct. Upon completion, this script prints manual testing instructions.
 
 #### Example usage
 To promote the "next" release `0.0.0-241c4467e` (aka commit [241c4467e](https://github.com/facebook/react/commit/241c4467e)) to stable:
