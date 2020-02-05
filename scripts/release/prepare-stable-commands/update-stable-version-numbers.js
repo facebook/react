@@ -47,7 +47,7 @@ const run = async ({cwd, packages, version}, versionsMap) => {
           // (e.g. scheduler@^0.11.0 becomes scheduler@^0.12.0 when we release scheduler 0.12.0).
           // Otherwise we leave the constraint alone (e.g. react@^16.0.0 doesn't change between releases).
           // Note that in both cases, we must update the target package JSON,
-          // since canary releases are all locked to the canary version (e.g. 0.0.0-ddaf2b07c).
+          // since "next" releases are all locked to the version (e.g. 0.0.0-ddaf2b07c).
           if (
             sourceDependencyVersion ===
             sourceDependencyConstraint.replace(/^[\^\~]/, '')
@@ -69,7 +69,7 @@ const run = async ({cwd, packages, version}, versionsMap) => {
   // Update all package JSON versions and their dependencies/peerDependencies.
   // This must be done in a way that respects semver constraints (e.g. 16.7.0, ^16.7.0, ^16.0.0).
   // To do this, we use the dependencies defined in the source package JSONs,
-  // because the canary dependencies have already been flattened to an exact match (e.g. 0.0.0-ddaf2b07c).
+  // because the "next" dependencies have already been flattened to an exact match (e.g. 0.0.0-ddaf2b07c).
   for (let i = 0; i < packages.length; i++) {
     const packageName = packages[i];
     const packageJSONPath = join(nodeModulesPath, packageName, 'package.json');
@@ -114,14 +114,14 @@ const run = async ({cwd, packages, version}, versionsMap) => {
 
   // A separate "React version" is used for the embedded renderer version to support DevTools,
   // since it needs to distinguish between different version ranges of React.
-  // We need to replace it as well as the canary version number.
+  // We need to replace it as well as the "next" version number.
   const buildInfoPath = join(nodeModulesPath, 'react', 'build-info.json');
   const {reactVersion} = await readJson(buildInfoPath);
 
   if (!reactVersion) {
     console.error(
       theme`{error Unsupported or invalid build metadata in} {path build/node_modules/react/build-info.json}` +
-        theme`{error . This could indicate that you have specified an outdated canary version.}`
+        theme`{error . This could indicate that you have specified an outdated "next" version.}`
     );
     process.exit(1);
   }
@@ -146,7 +146,7 @@ const run = async ({cwd, packages, version}, versionsMap) => {
       const newStableVersion = versionsMap.get(packageName);
       const beforeContents = readFileSync(path, 'utf8', {cwd});
       let afterContents = beforeContents;
-      // Replace all canary version numbers (e.g. header @license).
+      // Replace all "next" version numbers (e.g. header @license).
       while (afterContents.indexOf(version) >= 0) {
         afterContents = afterContents.replace(version, newStableVersion);
       }

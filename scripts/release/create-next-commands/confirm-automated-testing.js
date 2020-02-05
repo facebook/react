@@ -12,7 +12,7 @@ const run = async () => {
   console.log(
     theme.caution(
       'This script does not run any automated tests.' +
-        'You should run them manually before creating a canary release.'
+        'You should run them manually before creating a "next" release.'
     )
   );
 

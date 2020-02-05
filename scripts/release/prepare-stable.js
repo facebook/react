@@ -7,7 +7,7 @@ const {getPublicPackages, handleError} = require('./utils');
 
 const checkOutPackages = require('./prepare-stable-commands/check-out-packages');
 const confirmStableVersionNumbers = require('./prepare-stable-commands/confirm-stable-version-numbers');
-const getLatestCanaryVersion = require('./prepare-stable-commands/get-latest-canary-version');
+const getLatestNextVersion = require('./prepare-stable-commands/get-latest-next-version');
 const guessStableVersionNumbers = require('./prepare-stable-commands/guess-stable-version-numbers');
 const parseParams = require('./prepare-stable-commands/parse-params');
 const printPrereleaseSummary = require('./shared-commands/print-prerelease-summary');
@@ -28,7 +28,7 @@ const run = async () => {
     const versionsMap = new Map();
 
     if (!params.version) {
-      params.version = await getLatestCanaryVersion();
+      params.version = await getLatestNextVersion();
     }
 
     if (params.version.includes('experimental')) {

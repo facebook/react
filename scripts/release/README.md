@@ -4,12 +4,12 @@ The release process consists of several phases, each one represented by one of t
 
 A typical release goes like this:
 1. When a commit is pushed to the React repo, [Circle CI](https://circleci.com/gh/facebook/react/) will build all release bundles and run unit tests against both the source code and the built bundles.
-2. Next the release is [**published as a canary**](#publishing-a-canary) using the [`prepare-canary`](#prepare-canary) and [`publish`](#publish) scripts. (Currently this process is manual but might be automated in the future using [GitHub "actions"](https://github.com/features/actions).)
-3. Finally, a canary releases can be [**promoted to stable**](#publishing-a-stable-release)<sup>1</sup> using the [`prepare-stable`](#prepare-stable) and [`publish`](#publish) scripts. (This process is always manual.)
+2. The release is then [**published to the `next` channel**](#publishing-next) using the [`prepare-next`](#prepare-next) and [`publish`](#publish) scripts. (Currently this process is manual but might be automated in the future using [GitHub "actions"](https://github.com/features/actions).)
+3. Finally, a "next" release can be [**promoted to stable**](#publishing-a-stable-release)<sup>1</sup> using the [`prepare-stable`](#prepare-stable) and [`publish`](#publish) scripts. (This process is always manual.)
 
 The high level process of creating releases is [documented below](#process). Individual scripts are documented as well:
-* [`create-canary`](#create-canary)
-* [`prepare-canary`](#prepare-canary)
+* [`create-next`](#create-next)
+* [`prepare-next`](#prepare-next)
 * [`prepare-stable`](#prepare-stable)
 * [`publish`](#publish)
 
@@ -19,36 +19,39 @@ The high level process of creating releases is [documented below](#process). Ind
 
 If this is your first time running the release scripts, go to the `scripts/release` directory and run `yarn` to install the dependencies.
 
-## Publishing a Canary
+## Publishing Next
 
-Canaries are meant to be lightweight and published often. In most cases, canaries can be published using artifacts built by Circle CI.
+"Next" builds are meant to be lightweight and published often. In most cases, they can be published using artifacts built by Circle CI.
 
-To prepare a canary for a particular commit:
+To prepare a build for a particular commit:
 1. Choose a commit from [the commit log](https://github.com/facebook/react/commits/master).
 2. Click the "“✓" icon and click the Circle CI "Details" link.
-3. Select the `build` job (**not** the `build_experimental` job; see the next section). If it's still pending, you'll need to wait for it to finish. (Note: This is the most awkward part of cutting a release right now. We have plans to improve it.)
-4. Copy the build ID from the URL (e.g. the build ID for [circleci.com/gh/facebook/react/13471](https://circleci.com/gh/facebook/react/13471) is  **13471**).
-5. Run the [`prepare-canary`](#prepare-canary) script with the build ID you found <sup>1</sup>:
+3. Select the `build` job (**not** the `build_experimental` job; see the next section).
+   * If it's still pending, you'll need to wait for it to finish. <sup>1</sup>
+4. Copy the build ID from the URL
+   * e.g. the build ID for commit [241c4467](https://github.com/facebook/react/commit/241c4467eef7c2a8858c96d5dfe4e8ef84c47bad) is [**80592**](https://circleci.com/gh/facebook/react/80592)
+5. Run the [`prepare-next`](#prepare-next) script with the build ID <sup>2</sup> you found:
 ```sh
-scripts/release/prepare-canary.js --build=13471
+scripts/release/prepare-next.js --build=80592
 ```
 
-Once the canary has been checked out and tested locally, you're ready to publish it:
+Once the build has been checked out and tested locally, you're ready to publish it:
 ```sh
 scripts/release/publish.js --tags next
 ```
 
 If the OTP code expires while publishing, re-run this command and answer "y" to the questions about whether it was expected for already published packages.
 
-<sup>1: You can omit the `build` param if you just want to release the latest commit as a canary.</sup>
+<sup>1: This is the most awkward part of cutting a release right now. We have plans to improve it.</sup><br/>
+<sup>2: You can omit the `build` param if you just want to release the latest commit as to "next".</sup>
 
-## Publishing an Experimental Canary
+## Publishing an Experimental Release
 
-Experimental canaries are special releases with additional features turned on.
+Experimental releases are special because they have additional features turned on.
 
-The steps for publishing an experimental canary are almost the same as for publishing a normal canary, except in step 3 you should choose the `build_experimental` job instead of `build`. (I know this is awkward; we have plans to make it less so. Ideally these canaries would get published by a cron job.)
+The steps for publishing an experimental release are almost the same as for publishing a "next" release, except in step 3 you should choose the `build_experimental` job instead of `build` <sup>1</sup> For example, the experimental build ID for commit [241c4467](https://github.com/facebook/react/commit/241c4467eef7c2a8858c96d5dfe4e8ef84c47bad) is [**80590**](https://circleci.com/gh/facebook/react/80590):
 
-When publishing an experimental canary, use the `experimental` tag:
+When publishing an experimental release, use the `experimental` tag:
 
 ```sh
 scripts/release/publish.js --tags experimental
@@ -56,14 +59,16 @@ scripts/release/publish.js --tags experimental
 
 If the OTP code expires while publishing, re-run this command and answer "y" to the questions about whether it was expected for already published packages.
 
+<sup>1: We have plans to make this less awkward. Ideally these releases will be published by a cron job.</sup>
+
 ## Publishing a Stable Release
 
-Stable releases should always be created from a previously-released canary. This encourages better testing of the actual release artifacts and reduces the chance of unintended changes accidentally being included in a stable release.
+Stable releases should always be created from the "next" channel. This encourages better testing of the actual release artifacts and reduces the chance of unintended changes accidentally being included in a stable release.
 
-To prepare a stable release, choose a canary version and  run the [`prepare-stable`](#prepare-stable) script <sup>1</sup>:
+To prepare a stable release, choose a "next" version and run the [`prepare-stable`](#prepare-stable) script <sup>1</sup>:
 
 ```sh
-scripts/release/prepare-stable.js --version=0.0.0-5bf84d292
+scripts/release/prepare-stable.js --version=0.0.0-241c4467e
 ```
 
 This script will prompt you to select stable version numbers for each of the packages. It will update the package JSON versions (and dependencies) based on the numbers you select.
@@ -71,14 +76,14 @@ This script will prompt you to select stable version numbers for each of the pac
 Once this step is complete, you're ready to publish the release:
 
 ```sh
-scripts/release/publish.js --tags next latest
+scripts/release/publish.js --tags latest
 ```
 
 If the OTP code expires while publishing, re-run this command and answer "y" to the questions about whether it was expected for already published packages.
 
 After successfully publishing the release, follow the on-screen instructions to ensure that all of the appropriate post-release steps are executed.
 
-<sup>1: You can omit the `version` param if you just want to promote the latest canary to stable.</sup>
+<sup>1: You can omit the `version` param if you just want to promote the latest "next" candidate to stable.</sup>
 
 ## Creating a Patch Release
 
@@ -96,53 +101,53 @@ Next cherry pick any changes from master that you want to include in the release
 git cherry-pick <commit-hash>
 ```
 
-Once you have cherry picked all of the commits you want to include in the release, push your feature branch and create a Pull Request (so that Circle CI will create a canary):
+Once you have cherry picked all of the commits you want to include in the release, push your feature branch and create a Pull Request (so that Circle CI will create a build):
 
 ```sh
 git push origin 16.8.3
 ```
 
-Once CI is complete, follow the regular [**canary**](#publishing-a-canary) and [**promote to stable**](#publishing-a-stable-release) processes.
+Once CI is complete, follow the regular [**next**](#publishing-next) and [**promote to stable**](#publishing-a-stable-release) processes.
 
 <sup>1: The `build-info.json` artifact can also be used to identify the appropriate commit (e.g. [unpkg.com/react@16.8.3/build-info.json](https://unpkg.com/react@16.8.3/build-info.json) shows us that react version 16.8.3 was created from commit [`29b7b775f`](https://github.com/facebook/react/commit/29b7b775f)).</sup>
 
 # Scripts
 
-## `create-canary`
-Creates a canary build from the current (local) Git revision.
+## `create-next`
+Creates a "next" build from the current (local) Git revision.
 
-**This script is an escape hatch.** It allows a canary release to be created without pushing a commit to be verified by Circle CI. **It does not run any automated unit tests.** Testing is solely the responsibility of the release engineer.
+**This script is an escape hatch.** It allows a release to be created without pushing a commit to be verified by Circle CI. **It does not run any automated unit tests.** Testing is solely the responsibility of the release engineer.
 
 Note that this script git-archives the React repo (at the current revision) to a temporary directory before building, so **uncommitted changes are not included in the build**.
 
 #### Example usage
-To create a canary from the current branch and revision:
+To create a build from the current branch and revision:
 ```sh
-scripts/release/create-canary.js
+scripts/release/create-next.js
 ```
 
-## `prepare-canary`
-Downloads build artifacts from Circle CI in preparation to be published to NPM as a canary release.
+## `prepare-next`
+Downloads build artifacts from Circle CI in preparation to be published to NPM as a "next" release.
 
-All artifacts built by Circle CI have already been unit-tested (both source and bundles) but canaries should **always be manually tested** before being published. Upon completion, this script prints manual testing instructions.
+All artifacts built by Circle CI have already been unit-tested (both source and bundles) but these candidates should **always be manually tested** before being published. Upon completion, this script prints manual testing instructions.
 
 #### Example usage
-To prepare the artifacts created by [Circle CI build 12677](https://circleci.com/gh/facebook/react/12677#artifacts/containers/0) you would run:
+To prepare the artifacts created by [Circle CI build 80592](https://circleci.com/gh/facebook/react/80592#artifacts/containers/0) you would run:
 ```sh
-scripts/release/prepare-canary.js --build=12677
+scripts/release/prepare-next.js --build=80592
 ```
 
 ## `prepare-stable`
-Checks out a canary release from NPM and prepares it to be published as a stable release.
+Checks out a "next" release from NPM and prepares it to be published as a stable release.
 
 This script prompts for new (stable) release versions for each public package and updates the package contents (both `package.json` and inline version numbers) to match. It also updates inter-package dependencies to account for the new versions.
 
-Canary release have already been tested but it is still a good idea to **manually test and verify a release** before publishing to ensure that e.g. version numbers are correct. Upon completion, this script prints manual testing instructions.
+"Next" releases have already been tested but it is still a good idea to **manually test and verify a release** before publishing to ensure that e.g. version numbers are correct. Upon completion, this script prints manual testing instructions.
 
 #### Example usage
-To promote the canary release `0.0.0-5bf84d292` (aka commit [5bf84d292](https://github.com/facebook/react/commit/5bf84d292)) to stable:
+To promote the "next" release `0.0.0-241c4467e` (aka commit [241c4467e](https://github.com/facebook/react/commit/241c4467e)) to stable:
 ```sh
-scripts/release/prepare-stable.js --version=0.0.0-5bf84d292
+scripts/release/prepare-stable.js --version=0.0.0-241c4467e
 ```
 
 ## `publish`
@@ -157,5 +162,5 @@ Upon completion, this script provides instructions for tagging the Git commit th
 #### Example usage
 To publish a release to NPM as both `next` and `latest`:
 ```sh
-scripts/release/publish.js --tags next latest
+scripts/release/publish.js --tags latest
 ```

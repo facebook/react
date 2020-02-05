@@ -28,9 +28,9 @@ const run = async ({cwd, packages, tags}) => {
 
   clear();
 
-  if (tags.length === 1 && tags[0] === 'canary') {
+  if (tags.length === 1 && tags[0] === 'next') {
     console.log(
-      theme`{header A canary release} {version ${version}} {header has been published!}`
+      theme`{header A "next" release} {version ${version}} {header has been published!}`
     );
   } else {
     const nodeModulesPath = join(cwd, 'build/node_modules');
