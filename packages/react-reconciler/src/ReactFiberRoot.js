@@ -74,10 +74,6 @@ type BaseFiberRootProperties = {|
   // render again
   lastPingedTime: ExpirationTime,
   lastExpiredTime: ExpirationTime,
-
-  // Set to true when the root completes with an error. We'll try rendering
-  // again. This field ensures we don't retry more than once.
-  didError: boolean,
 |};
 
 // The following attributes are only used by interaction tracing builds.
@@ -127,7 +123,6 @@ function FiberRootNode(containerInfo, tag, hydrate) {
   this.nextKnownPendingLevel = NoWork;
   this.lastPingedTime = NoWork;
   this.lastExpiredTime = NoWork;
-  this.didError = false;
 
   if (enableSchedulerTracing) {
     this.interactionThreadID = unstable_getThreadID();
@@ -254,8 +249,6 @@ export function markRootFinishedAtTime(
     // Clear the expired time
     root.lastExpiredTime = NoWork;
   }
-
-  root.didError = false;
 }
 
 export function markRootExpiredAtTime(
