@@ -4,7 +4,7 @@ The release process consists of several phases, each one represented by one of t
 
 A typical release goes like this:
 1. When a commit is pushed to the React repo, [Circle CI](https://circleci.com/gh/facebook/react/) will build all release bundles and run unit tests against both the source code and the built bundles.
-2. Next the release is [**published to the `next` channel**](#publishing-next) using the [`prepare-next`](#prepare-next) and [`publish`](#publish) scripts. (Currently this process is manual but might be automated in the future using [GitHub "actions"](https://github.com/features/actions).)
+2. The release is then [**published to the `next` channel**](#publishing-next) using the [`prepare-next`](#prepare-next) and [`publish`](#publish) scripts. (Currently this process is manual but might be automated in the future using [GitHub "actions"](https://github.com/features/actions).)
 3. Finally, a "next" release can be [**promoted to stable**](#publishing-a-stable-release)<sup>1</sup> using the [`prepare-stable`](#prepare-stable) and [`publish`](#publish) scripts. (This process is always manual.)
 
 The high level process of creating releases is [documented below](#process). Individual scripts are documented as well:
