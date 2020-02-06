@@ -11,6 +11,7 @@ import {
   REACT_ELEMENT_TYPE,
   REACT_PORTAL_TYPE,
 } from 'shared/ReactSymbols';
+import {disableMapsAsChildren} from 'shared/ReactFeatureFlags';
 
 import {isValidElement, cloneAndReplaceKey} from './ReactElement';
 import ReactDebugCurrentFrame from './ReactDebugCurrentFrame';
@@ -158,14 +159,22 @@ function traverseAllChildrenImpl(
   } else {
     const iteratorFn = getIteratorFn(children);
     if (typeof iteratorFn === 'function') {
-      if (__DEV__) {
+      if (iteratorFn === children.entries) {
+        if (disableMapsAsChildren) {
+          invariant(
+            false,
+            'Maps are not valid as a React child (found: %s). Consider converting ' +
+              'children to an array of keyed ReactElements instead.',
+            children,
+          );
+        }
         // Warn about using Maps as children
-        if (iteratorFn === children.entries) {
+        if (__DEV__) {
           if (!didWarnAboutMaps) {
-            console.error(
-              'Using Maps as children is unsupported and will likely yield ' +
-                'unexpected results. Convert it to a sequence/iterable of keyed ' +
-                'ReactElements instead.',
+            console.warn(
+              'Using Maps as children is deprecated and will be removed in ' +
+                'a future major release. Consider converting children to ' +
+                'an array of keyed ReactElements instead.',
             );
           }
           didWarnAboutMaps = true;

@@ -47,6 +47,7 @@ export const enableTrainModelFix = true;
 export const enableTrustedTypesIntegration = false;
 export const disableCreateFactory = false;
 export const disableTextareaChildren = false;
+export const disableMapsAsChildren = false;
 export const disableUnstableRenderSubtreeIntoContainer = false;
 export const warnUnstableRenderSubtreeIntoContainer = false;
 export const disableUnstableCreatePortal = false;

@@ -96,6 +96,8 @@ export const disableCreateFactory = false;
 
 export const disableTextareaChildren = false;
 
+export const disableMapsAsChildren = false;
+
 export const disableUnstableRenderSubtreeIntoContainer = false;
 
 export const warnUnstableRenderSubtreeIntoContainer = false;
