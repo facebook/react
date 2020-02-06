@@ -4,58 +4,131 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *
- * @flow
+ * @flow strict
  */
 
-import invariant from 'shared/invariant';
+/*
+  SYNC WITH ReactFeatureFlags.js
+  except isTestEnvironment = true
+*/
 
-import typeof * as FeatureFlagsType from 'shared/ReactFeatureFlags';
-import typeof * as PersistentFeatureFlagsType from './ReactFeatureFlags.persistent';
-
-export const debugRenderPhaseSideEffectsForStrictMode = false;
 export const enableUserTimingAPI = __DEV__;
+
+// Helps identify side effects in render-phase lifecycle hooks and setState
+// reducers by double invoking them in Strict Mode.
+export const debugRenderPhaseSideEffectsForStrictMode = __DEV__;
+
+// To preserve the "Pause on caught exceptions" behavior of the debugger, we
+// replay the begin phase of a failed component inside invokeGuardedCallback.
+export const replayFailedUnitOfWorkWithInvokeGuardedCallback = __DEV__;
+
+// Warn about deprecated, async-unsafe lifecycles; relates to RFC #6:
 export const warnAboutDeprecatedLifecycles = true;
-export const replayFailedUnitOfWorkWithInvokeGuardedCallback = false;
+
+// Gather advanced timing metrics for Profiler subtrees.
 export const enableProfilerTimer = __PROFILE__;
+
+// Trace which interactions trigger each commit.
 export const enableSchedulerTracing = __PROFILE__;
-export const enableSuspenseServerRenderer = false;
-export const enableSelectiveHydration = false;
-export const enableChunksAPI = false;
-export const disableJavaScriptURLs = false;
-export const disableInputAttributeSyncing = false;
-export const exposeConcurrentModeAPIs = __EXPERIMENTAL__;
-export const warnAboutShorthandPropertyCollision = false;
+
+// SSR experiments
+export const enableSuspenseServerRenderer = __EXPERIMENTAL__;
+export const enableSelectiveHydration = __EXPERIMENTAL__;
+
+// Flight experiments
+export const enableChunksAPI = __EXPERIMENTAL__;
+
+// Only used in www builds.
 export const enableSchedulerDebugging = false;
-export const enableDeprecatedFlareAPI = false;
-export const enableFundamentalAPI = false;
-export const enableScopeAPI = false;
-export const enableJSXTransformAPI = false;
-export const warnAboutUnmockedScheduler = false;
-export const flushSuspenseFallbacksInTests = true;
-export const enableSuspenseCallback = false;
-export const warnAboutDefaultPropsOnFunctionComponents = false;
-export const warnAboutStringRefs = false;
-export const disableLegacyContext = false;
-export const disableSchedulerTimeoutBasedOnReactExpirationTime = false;
-export const enableTrainModelFix = true;
-export const enableTrustedTypesIntegration = false;
-export const enableNativeTargetAsInstance = false;
-export const disableCreateFactory = false;
-export const disableTextareaChildren = false;
-export const disableMapsAsChildren = false;
-export const disableUnstableRenderSubtreeIntoContainer = false;
-export const warnUnstableRenderSubtreeIntoContainer = false;
-export const disableUnstableCreatePortal = false;
-export const deferPassiveEffectCleanupDuringUnmount = false;
-export const isTestEnvironment = true;
 
 // Only used in www builds.
 export function addUserTimingListener() {
-  invariant(false, 'Not implemented.');
+  throw new Error('Not implemented.');
 }
 
-// Flow magic to verify the exports of this file match the original version.
-// eslint-disable-next-line no-unused-vars
-type Check<_X, Y: _X, X: Y = _X> = null;
-// eslint-disable-next-line no-unused-expressions
-(null: Check<PersistentFeatureFlagsType, FeatureFlagsType>);
+// Disable javascript: URL strings in href for XSS protection.
+export const disableJavaScriptURLs = false;
+
+// These APIs will no longer be "unstable" in the upcoming 16.7 release,
+// Control this behavior with a flag to support 16.6 minor releases in the meanwhile.
+export const exposeConcurrentModeAPIs = __EXPERIMENTAL__;
+
+export const warnAboutShorthandPropertyCollision = false;
+
+// Experimental React Flare event system and event components support.
+export const enableDeprecatedFlareAPI = false;
+
+// Experimental Host Component support.
+export const enableFundamentalAPI = false;
+
+// Experimental Scope support.
+export const enableScopeAPI = false;
+
+// New API for JSX transforms to target - https://github.com/reactjs/rfcs/pull/107
+export const enableJSXTransformAPI = false;
+
+// We will enforce mocking scheduler with scheduler/unstable_mock at some point. (v17?)
+// Till then, we warn about the missing mock, but still fallback to a legacy mode compatible version
+export const warnAboutUnmockedScheduler = false;
+
+// For tests, we flush suspense fallbacks in an act scope;
+// *except* in some of our own tests, where we test incremental loading states.
+export const flushSuspenseFallbacksInTests = true;
+
+// Add a callback property to suspense to notify which promises are currently
+// in the update queue. This allows reporting and tracing of what is causing
+// the user to see a loading state.
+// Also allows hydration callbacks to fire when a dehydrated boundary gets
+// hydrated or deleted.
+export const enableSuspenseCallback = false;
+
+// Part of the simplification of React.createElement so we can eventually move
+// from React.createElement to React.jsx
+// https://github.com/reactjs/rfcs/blob/createlement-rfc/text/0000-create-element-changes.md
+export const warnAboutDefaultPropsOnFunctionComponents = false;
+
+export const disableSchedulerTimeoutBasedOnReactExpirationTime = false;
+
+export const enableTrainModelFix = true;
+
+export const enableTrustedTypesIntegration = false;
+
+// Flag to turn event.target and event.currentTarget in ReactNative from a reactTag to a component instance
+export const enableNativeTargetAsInstance = false;
+
+// Controls behavior of deferred effect destroy functions during unmount.
+// Previously these functions were run during commit (along with layout effects).
+// Ideally we should delay these until after commit for performance reasons.
+// This flag provides a killswitch if that proves to break existing code somehow.
+export const deferPassiveEffectCleanupDuringUnmount = false;
+
+export const isTestEnvironment = true;
+
+// --------------------------
+// Future APIs to be deprecated
+// --------------------------
+
+// Prevent the value and checked attributes from syncing
+// with their related DOM properties
+export const disableInputAttributeSyncing = false;
+
+export const warnAboutStringRefs = false;
+
+export const disableLegacyContext = false;
+
+// Disables React.createFactory
+export const disableCreateFactory = false;
+
+// Disables children for <textarea> elements
+export const disableTextareaChildren = false;
+
+// Disables Maps as ReactElement children
+export const disableMapsAsChildren = false;
+
+// Disables ReactDOM.unstable_renderSubtreeIntoContainer
+export const disableUnstableRenderSubtreeIntoContainer = false;
+// We should remove this flag once the above flag becomes enabled
+export const warnUnstableRenderSubtreeIntoContainer = false;
+
+// Disables ReactDOM.unstable_createPortal
+export const disableUnstableCreatePortal = false;

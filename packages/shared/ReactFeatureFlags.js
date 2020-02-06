@@ -7,6 +7,11 @@
  * @flow strict
  */
 
+/*
+  SYNC WITH forks/ReactFeatureFlags.testing.js
+  except isTestEnvironment = true
+*/
+
 export const enableUserTimingAPI = __DEV__;
 
 // Helps identify side effects in render-phase lifecycle hooks and setState

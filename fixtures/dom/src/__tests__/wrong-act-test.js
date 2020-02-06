@@ -18,10 +18,7 @@ let ARTTest;
 global.__DEV__ = process.env.NODE_ENV !== 'production';
 global.__EXPERIMENTAL__ = process.env.RELEASE_CHANNEL === 'experimental';
 
-jest.mock('react-dom', () =>
-  require.requireActual('react-dom/cjs/react-dom-testing.development.js')
-);
-// we'll replace the above with react/testing and react-dom/testing right before the next minor
+jest.mock('react-dom', () => require.requireActual('react-dom/testing'));
 
 expect.extend(require('../toWarnDev'));
 

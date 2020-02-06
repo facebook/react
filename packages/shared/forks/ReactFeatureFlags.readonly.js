@@ -9,4 +9,4 @@
 // It lets us determine whether we're running in Fire mode without making tests internal.
 const ReactFeatureFlags = require('../ReactFeatureFlags');
 // Forbid writes because this wouldn't work with bundle tests.
-module.exports = Object.freeze({...ReactFeatureFlags});
+module.exports = Object.freeze({...ReactFeatureFlags, isTestEnvironment: true});

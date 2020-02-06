@@ -30,6 +30,7 @@
     "README.md",
     "build-info.json",
     "index.js",
+    "testing.js",
     "profiling.js",
     "server.js",
     "server.browser.js",

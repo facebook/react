@@ -8,8 +8,8 @@
  */
 
 /*
-  SYNC WITH forks/ReactFeatureFlags.testing.www.js
-  except isTestEnvironment = false
+  SYNC WITH forks/ReactFeatureFlags.www.js
+  except isTestEnvironment = true
 */
 
 import typeof * as FeatureFlagsType from 'shared/ReactFeatureFlags';
@@ -109,7 +109,7 @@ export const warnUnstableRenderSubtreeIntoContainer = false;
 
 export const disableUnstableCreatePortal = false;
 
-export const isTestEnvironment = false;
+export const isTestEnvironment = true;
 
 // Flow magic to verify the exports of this file match the original version.
 // eslint-disable-next-line no-unused-vars
