@@ -21,7 +21,7 @@ function getEventTarget(nativeEvent) {
   // This is for solve the webcomponent event not working issue. And it will works on all the browsers which are all support the shadowDom.
   // https://github.com/facebook/react/issues/9242
   let targetPath = nativeEvent.path || (nativeEvent.composedPath && nativeEvent.composedPath());
-  if(target.shadowRoot && (targetPath && targetPath.length) ){
+  if (target.shadowRoot && (targetPath && targetPath.length)) {
     target = targetPath[0];
   }
 
