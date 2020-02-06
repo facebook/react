@@ -100,17 +100,6 @@ export function prepareProfilingDataFrontendFromBackendAndStore(
           rootID,
           snapshots,
         });
-
-        dataForRoots.set(rootID, {
-          commitData: filteredCommitData,
-          displayName,
-          initialTreeBaseDurations: new Map(initialTreeBaseDurations),
-          interactionCommits: new Map(interactionCommits),
-          interactions: new Map(interactions),
-          operations: filteredOperations,
-          rootID,
-          snapshots,
-        });
       },
     );
   });
