@@ -97,6 +97,8 @@ export const enableNativeTargetAsInstance = false;
 // This flag provides a killswitch if that proves to break existing code somehow.
 export const deferPassiveEffectCleanupDuringUnmount = false;
 
+export const isTestEnvironment = false;
+
 // --------------------------
 // Future APIs to be deprecated
 // --------------------------
@@ -115,6 +117,9 @@ export const disableCreateFactory = false;
 // Disables children for <textarea> elements
 export const disableTextareaChildren = false;
 
+// Disables Maps as ReactElement children
+export const disableMapsAsChildren = false;
+
 // Disables ReactDOM.unstable_renderSubtreeIntoContainer
 export const disableUnstableRenderSubtreeIntoContainer = false;
 // We should remove this flag once the above flag becomes enabled
@@ -122,5 +127,3 @@ export const warnUnstableRenderSubtreeIntoContainer = false;
 
 // Disables ReactDOM.unstable_createPortal
 export const disableUnstableCreatePortal = false;
-
-export const isTestEnvironment = false;
