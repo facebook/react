@@ -41,16 +41,12 @@ export default function(
    *
    * @abstract
    */
-  class ReactNativeComponent<Props, State = void> extends React.Component<
-    Props,
-    State,
-  > {
+  class ReactNativeComponent<Props> extends React.Component<Props> {
     /**
      * Due to bugs in Flow's handling of React.createClass, some fields already
      * declared in the base class need to be redeclared below.
      */
     props: Props;
-    state: State;
 
     /**
      * Removes focus. This is the opposite of `focus()`.
