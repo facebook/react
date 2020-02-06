@@ -373,15 +373,10 @@ jobs:
             - v2-win-node-{{ arch }}-{{ .Branch }}-
             - v2-win-node-{{ arch }}-
       - run:
-          command: nvm install 10.18.1
-      - run:
-          command: nvm use 10.18.1
-      - run:
           command: node --version
       - run:
           command: choco install yarn
-      - run:
-          command: yarn install --frozen-lockfile
+      - *run_yarn
       - save_cache:
           key: v2-win-node-{{ arch }}-{{ .Branch }}-{{ checksum "yarn.lock" }}
           paths:
