@@ -1196,150 +1196,154 @@ function insertOrAppendPlacementNode(
 }
 
 function unmountHostComponents(
-  finishedRoot,
-  current,
-  renderPriorityLevel,
+  finishedRoot: FiberRoot,
+  current: Fiber,
+  renderPriorityLevel: ReactPriorityLevel,
 ): void {
   // We only have the top Fiber that was deleted but we need to recurse down its
   // children to find all the terminal nodes.
-  let node: Fiber = current;
-
-  // Each iteration, currentParent is populated with node's host parent if not
-  // currentParentIsValid.
-  let currentParentIsValid = false;
-
   // Note: these two variables *must* always be updated together.
   let currentParent;
   let currentParentIsContainer;
 
-  while (true) {
-    if (!currentParentIsValid) {
-      let parent = node.return;
-      findParent: while (true) {
-        invariant(
-          parent !== null,
-          'Expected to find a host parent. This error is likely caused by ' +
-            'a bug in React. Please file an issue.',
-        );
-        const parentStateNode = parent.stateNode;
-        switch (parent.tag) {
-          case HostComponent:
-            currentParent = parentStateNode;
-            currentParentIsContainer = false;
-            break findParent;
-          case HostRoot:
-            currentParent = parentStateNode.containerInfo;
-            currentParentIsContainer = true;
-            break findParent;
-          case HostPortal:
-            currentParent = parentStateNode.containerInfo;
-            currentParentIsContainer = true;
-            break findParent;
-          case FundamentalComponent:
-            if (enableFundamentalAPI) {
-              currentParent = parentStateNode.instance;
-              currentParentIsContainer = false;
-            }
-        }
-        parent = parent.return;
-      }
-      currentParentIsValid = true;
-    }
-
-    if (node.tag === HostComponent || node.tag === HostText) {
-      commitNestedUnmounts(finishedRoot, node, renderPriorityLevel);
-      // After all the children have unmounted, it is now safe to remove the
-      // node from the tree.
-      if (currentParentIsContainer) {
-        removeChildFromContainer(
-          ((currentParent: any): Container),
-          (node.stateNode: Instance | TextInstance),
-        );
-      } else {
-        removeChild(
-          ((currentParent: any): Instance),
-          (node.stateNode: Instance | TextInstance),
-        );
-      }
-      // Don't visit children because we already visited them.
-    } else if (enableFundamentalAPI && node.tag === FundamentalComponent) {
-      const fundamentalNode = node.stateNode.instance;
-      commitNestedUnmounts(finishedRoot, node, renderPriorityLevel);
-      // After all the children have unmounted, it is now safe to remove the
-      // node from the tree.
-      if (currentParentIsContainer) {
-        removeChildFromContainer(
-          ((currentParent: any): Container),
-          (fundamentalNode: Instance),
-        );
-      } else {
-        removeChild(
-          ((currentParent: any): Instance),
-          (fundamentalNode: Instance),
-        );
-      }
-    } else if (
-      enableSuspenseServerRenderer &&
-      node.tag === DehydratedFragment
-    ) {
-      if (enableSuspenseCallback) {
-        const hydrationCallbacks = finishedRoot.hydrationCallbacks;
-        if (hydrationCallbacks !== null) {
-          const onDeleted = hydrationCallbacks.onDeleted;
-          if (onDeleted) {
-            onDeleted((node.stateNode: SuspenseInstance));
-          }
-        }
-      }
-
-      // Delete the dehydrated suspense boundary and all of its content.
-      if (currentParentIsContainer) {
-        clearSuspenseBoundaryFromContainer(
-          ((currentParent: any): Container),
-          (node.stateNode: SuspenseInstance),
-        );
-      } else {
-        clearSuspenseBoundary(
-          ((currentParent: any): Instance),
-          (node.stateNode: SuspenseInstance),
-        );
-      }
-    } else if (node.tag === HostPortal) {
-      if (node.child !== null) {
-        // When we go into a portal, it becomes the parent to remove from.
-        // We will reassign it back when we pop the portal on the way up.
-        currentParent = node.stateNode.containerInfo;
+  let parent = current.return;
+  findParent: while (true) {
+    invariant(
+      parent !== null,
+      'Expected to find a host parent. This error is likely caused by ' +
+        'a bug in React. Please file an issue.',
+    );
+    const parentStateNode = parent.stateNode;
+    switch (parent.tag) {
+      case HostComponent:
+        currentParent = parentStateNode;
+        currentParentIsContainer = false;
+        break findParent;
+      case HostRoot:
+        currentParent = parentStateNode.containerInfo;
         currentParentIsContainer = true;
-        // Visit children because portals might contain host components.
-        node.child.return = node;
-        node = node.child;
-        continue;
-      }
+        break findParent;
+      case HostPortal:
+        currentParent = parentStateNode.containerInfo;
+        currentParentIsContainer = true;
+        break findParent;
+      case FundamentalComponent:
+        if (enableFundamentalAPI) {
+          currentParent = parentStateNode.instance;
+          currentParentIsContainer = false;
+        }
+    }
+    parent = parent.return;
+  }
+  recursivelyUnmountHostNode(
+    current,
+    // These fields can never be uninitiated because of the above
+    // loop and invariant
+    ((currentParent: any): Instance),
+    ((currentParentIsContainer: any): boolean),
+    finishedRoot,
+    renderPriorityLevel,
+  );
+}
+
+function recursivelyUnmountHostNode(
+  node: Fiber,
+  currentParent: Instance,
+  currentParentIsContainer: boolean,
+  finishedRoot: FiberRoot,
+  renderPriorityLevel: ReactPriorityLevel,
+): void {
+  const {stateNode, tag} = node;
+  if (tag === HostComponent || tag === HostText) {
+    commitNestedUnmounts(finishedRoot, node, renderPriorityLevel);
+    // After all the children have unmounted, it is now safe to remove the
+    // node from the tree.
+    if (currentParentIsContainer) {
+      removeChildFromContainer(currentParent, stateNode);
     } else {
-      commitUnmount(finishedRoot, node, renderPriorityLevel);
-      // Visit children because we may find more host components below.
-      if (node.child !== null) {
-        node.child.return = node;
-        node = node.child;
-        continue;
+      removeChild(currentParent, stateNode);
+    }
+    // Don't visit children because we already visited them.
+  } else if (enableFundamentalAPI && tag === FundamentalComponent) {
+    const fundamentalNode = node.stateNode.instance;
+    commitNestedUnmounts(finishedRoot, node, renderPriorityLevel);
+    // After all the children have unmounted, it is now safe to remove the
+    // node from the tree.
+    if (currentParentIsContainer) {
+      removeChildFromContainer(currentParent, fundamentalNode);
+    } else {
+      removeChild(currentParent, fundamentalNode);
+    }
+  } else if (enableSuspenseServerRenderer && tag === DehydratedFragment) {
+    if (enableSuspenseCallback) {
+      const hydrationCallbacks = finishedRoot.hydrationCallbacks;
+      if (hydrationCallbacks !== null) {
+        const onDeleted = hydrationCallbacks.onDeleted;
+        if (onDeleted) {
+          onDeleted(stateNode);
+        }
       }
     }
-    if (node === current) {
-      return;
+    // Delete the dehydrated suspense boundary and all of its content.
+    if (currentParentIsContainer) {
+      clearSuspenseBoundaryFromContainer(currentParent, stateNode);
+    } else {
+      clearSuspenseBoundary(currentParent, stateNode);
     }
-    while (node.sibling === null) {
-      if (node.return === null || node.return === current) {
-        return;
-      }
-      node = node.return;
-      if (node.tag === HostPortal) {
-        // When we go out of the portal, we need to restore the parent.
-        // Since we don't keep a stack of them, we will search for it.
-        currentParentIsValid = false;
-      }
+  } else if (tag === HostPortal) {
+    const child = node.child;
+    if (child !== null) {
+      // When we go into a portal, it becomes the parent to remove from.
+      const childParent = stateNode.containerInfo;
+      const childParentIsContainer = true;
+      recursivelyUnmountHostNodeChildren(
+        child,
+        childParent,
+        childParentIsContainer,
+        finishedRoot,
+        renderPriorityLevel,
+      );
     }
-    node.sibling.return = node.return;
-    node = node.sibling;
+  } else {
+    commitUnmount(finishedRoot, node, renderPriorityLevel);
+    // Visit children because we may find more host components below.
+    const child = node.child;
+    if (child !== null) {
+      recursivelyUnmountHostNodeChildren(
+        child,
+        currentParent,
+        currentParentIsContainer,
+        finishedRoot,
+        renderPriorityLevel,
+      );
+    }
+  }
+}
+
+function recursivelyUnmountHostNodeChildren(
+  child: Fiber,
+  currentParent: Instance,
+  currentParentIsContainer: boolean,
+  finishedRoot: FiberRoot,
+  renderPriorityLevel: ReactPriorityLevel,
+): void {
+  recursivelyUnmountHostNode(
+    child,
+    currentParent,
+    currentParentIsContainer,
+    finishedRoot,
+    renderPriorityLevel,
+  );
+  let sibling = child.sibling;
+  while (sibling !== null) {
+    recursivelyUnmountHostNode(
+      sibling,
+      currentParent,
+      currentParentIsContainer,
+      finishedRoot,
+      renderPriorityLevel,
+    );
+    sibling = sibling.sibling;
   }
 }
 

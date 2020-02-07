@@ -421,12 +421,12 @@ export function removeChild(
 }
 
 export function removeChildFromContainer(
-  parentInstance: Container,
+  parentInstance: Instance | Container,
   child: Instance | TextInstance,
 ): void {
   recursivelyUncacheFiberNode(child);
   UIManager.manageChildren(
-    parentInstance, // containerID
+    ((parentInstance: any): Container), // containerID
     [], // moveFromIndices
     [], // moveToIndices
     [], // addChildReactTags
