@@ -159,17 +159,18 @@ function traverseAllChildrenImpl(
   } else {
     const iteratorFn = getIteratorFn(children);
     if (typeof iteratorFn === 'function') {
-      if (iteratorFn === children.entries) {
-        if (disableMapsAsChildren) {
-          invariant(
-            false,
-            'Maps are not valid as a React child (found: %s). Consider converting ' +
-              'children to an array of keyed ReactElements instead.',
-            children,
-          );
-        }
+      if (disableMapsAsChildren) {
+        invariant(
+          iteratorFn !== children.entries,
+          'Maps are not valid as a React child (found: %s). Consider converting ' +
+            'children to an array of keyed ReactElements instead.',
+          children,
+        );
+      }
+
+      if (__DEV__) {
         // Warn about using Maps as children
-        if (__DEV__) {
+        if (iteratorFn === children.entries) {
           if (!didWarnAboutMaps) {
             console.warn(
               'Using Maps as children is deprecated and will be removed in ' +
