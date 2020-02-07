@@ -10,6 +10,7 @@
 .*/node_modules/chrome-devtools-frontend/.*
 .*/node_modules/devtools-timeline-model/.*
 .*/node_modules/create-react-class/.*
+.*/node_modules/react-native-web/.*
 .*/__mocks__/.*
 .*/__tests__/.*
 
