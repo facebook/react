@@ -113,8 +113,14 @@ setBatchingImplementation(
   batchedEventUpdates,
 );
 
+export type DOMInstance = Element & {_reactRootContainer: ?RootType, ...};
+export type DOMHTMLInstance = HTMLElement & {
+  _reactRootContainer: ?RootType,
+  ...
+};
+
 export type DOMContainer =
-  | (Element & {_reactRootContainer: ?RootType, ...})
+  | DOMInstance
   | (Document & {_reactRootContainer: ?RootType, ...});
 
 function createPortal(

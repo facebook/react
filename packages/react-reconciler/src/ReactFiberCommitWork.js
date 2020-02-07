@@ -1099,44 +1099,45 @@ function commitPlacement(finishedWork: Fiber): void {
   const before = getHostSibling(finishedWork);
   // We only have the top Fiber that was inserted but we need to recurse down its
   // children to find all the terminal nodes.
-  let node: Fiber = finishedWork;
-  while (true) {
-    const isHost = node.tag === HostComponent || node.tag === HostText;
-    if (isHost || (enableFundamentalAPI && node.tag === FundamentalComponent)) {
-      const stateNode = isHost ? node.stateNode : node.stateNode.instance;
-      if (before) {
-        if (isContainer) {
-          insertInContainerBefore(parent, stateNode, before);
-        } else {
-          insertBefore(parent, stateNode, before);
-        }
+  insertOrAppendPlacementNode(finishedWork, before, parent, isContainer);
+}
+
+function insertOrAppendPlacementNode(
+  node: Fiber,
+  before: ?Instance,
+  parent: Instance,
+  isContainer: boolean,
+): void {
+  const isHost = node.tag === HostComponent || node.tag === HostText;
+  if (isHost || (enableFundamentalAPI && node.tag === FundamentalComponent)) {
+    const stateNode = isHost ? node.stateNode : node.stateNode.instance;
+    if (before) {
+      if (isContainer) {
+        insertInContainerBefore(parent, stateNode, before);
       } else {
-        if (isContainer) {
-          appendChildToContainer(parent, stateNode);
-        } else {
-          appendChild(parent, stateNode);
-        }
+        insertBefore(parent, stateNode, before);
       }
-    } else if (node.tag === HostPortal) {
-      // If the insertion itself is a portal, then we don't want to traverse
-      // down its children. Instead, we'll get insertions from each child in
-      // the portal directly.
-    } else if (node.child !== null) {
-      node.child.return = node;
-      node = node.child;
-      continue;
-    }
-    if (node === finishedWork) {
-      return;
-    }
-    while (node.sibling === null) {
-      if (node.return === null || node.return === finishedWork) {
-        return;
+    } else {
+      if (isContainer) {
+        appendChildToContainer(parent, stateNode);
+      } else {
+        appendChild(parent, stateNode);
       }
-      node = node.return;
     }
-    node.sibling.return = node.return;
-    node = node.sibling;
+  } else if (node.tag === HostPortal) {
+    // If the insertion itself is a portal, then we don't want to traverse
+    // down its children. Instead, we'll get insertions from each child in
+    // the portal directly.
+  } else {
+    const child = node.child;
+    if (child !== null) {
+      insertOrAppendPlacementNode(child, before, parent, isContainer);
+      let sibling = child.sibling;
+      while (sibling !== null) {
+        insertOrAppendPlacementNode(sibling, before, parent, isContainer);
+        sibling = sibling.sibling;
+      }
+    }
   }
 }
 
