@@ -48,7 +48,7 @@ export const disableJavaScriptURLs = false;
 // Control this behavior with a flag to support 16.6 minor releases in the meanwhile.
 export const exposeConcurrentModeAPIs = __EXPERIMENTAL__;
 
-export const warnAboutShorthandPropertyCollision = false;
+export const warnAboutShorthandPropertyCollision = true;
 
 // Experimental React Flare event system and event components support.
 export const enableDeprecatedFlareAPI = false;
