@@ -45,7 +45,7 @@ import {
 } from '../shared/HTMLNodeType';
 import dangerousStyleValue from '../shared/dangerousStyleValue';
 
-import type {DOMContainer, DOMInstance, DOMHTMLInstance} from './ReactDOM';
+import type {DOMContainer} from './ReactDOM';
 import type {
   ReactDOMEventResponder,
   ReactDOMEventResponderInstance,
@@ -89,7 +89,7 @@ export type EventTargetChildElement = {
   ...
 };
 export type Container = DOMContainer;
-export type Instance = DOMInstance;
+export type Instance = Element;
 export type TextInstance = Text;
 export type SuspenseInstance = Comment & {_reactRetry?: () => void, ...};
 export type HydratableInstance = Instance | TextInstance | SuspenseInstance;
@@ -252,7 +252,7 @@ export function createInstance(
   } else {
     parentNamespace = ((hostContext: any): HostContextProd);
   }
-  const domElement = createElement(
+  const domElement: Instance = createElement(
     type,
     props,
     rootContainerInstance,
@@ -260,7 +260,7 @@ export function createInstance(
   );
   precacheFiberNode(internalInstanceHandle, domElement);
   updateFiberProps(domElement, props);
-  return ((domElement: any): DOMInstance);
+  return domElement;
 }
 
 export function appendInitialChild(
@@ -398,7 +398,7 @@ export function commitUpdate(
   updateProperties(domElement, updatePayload, type, oldProps, newProps);
 }
 
-export function resetTextContent(domElement: DOMInstance): void {
+export function resetTextContent(domElement: Instance): void {
   setTextContent(domElement, '');
 }
 
@@ -411,15 +411,15 @@ export function commitTextUpdate(
 }
 
 export function appendChild(
-  parentInstance: DOMInstance,
-  child: DOMInstance | TextInstance,
+  parentInstance: Instance,
+  child: Instance | TextInstance,
 ): void {
   parentInstance.appendChild(child);
 }
 
 export function appendChildToContainer(
-  container: DOMInstance,
-  child: DOMInstance | TextInstance,
+  container: DOMContainer,
+  child: Instance | TextInstance,
 ): void {
   let parentNode;
   if (container.nodeType === COMMENT_NODE) {
@@ -448,17 +448,17 @@ export function appendChildToContainer(
 }
 
 export function insertBefore(
-  parentInstance: DOMContainer,
-  child: DOMInstance | TextInstance,
-  beforeChild: DOMInstance | TextInstance | SuspenseInstance,
+  parentInstance: Instance,
+  child: Instance | TextInstance,
+  beforeChild: Instance | TextInstance | SuspenseInstance,
 ): void {
   parentInstance.insertBefore(child, beforeChild);
 }
 
 export function insertInContainerBefore(
-  container: DOMContainer,
-  child: DOMInstance | TextInstance,
-  beforeChild: DOMInstance | TextInstance | SuspenseInstance,
+  container: Container,
+  child: Instance | TextInstance,
+  beforeChild: Instance | TextInstance | SuspenseInstance,
 ): void {
   if (container.nodeType === COMMENT_NODE) {
     (container.parentNode: any).insertBefore(child, beforeChild);
@@ -587,7 +587,7 @@ export function clearSuspenseBoundaryFromContainer(
 export function hideInstance(instance: Instance): void {
   // TODO: Does this work for all element types? What about MathML? Should we
   // pass host context to this method?
-  instance = ((instance: any): DOMHTMLInstance);
+  instance = ((instance: any): HTMLElement);
   const style = instance.style;
   if (typeof style.setProperty === 'function') {
     style.setProperty('display', 'none', 'important');
@@ -601,7 +601,7 @@ export function hideTextInstance(textInstance: TextInstance): void {
 }
 
 export function unhideInstance(instance: Instance, props: Props): void {
-  instance = ((instance: any): DOMHTMLInstance);
+  instance = ((instance: any): HTMLElement);
   const styleProp = props[STYLE];
   const display =
     styleProp !== undefined &&

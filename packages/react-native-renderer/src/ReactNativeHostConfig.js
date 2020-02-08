@@ -289,12 +289,12 @@ export function appendChild(
 }
 
 export function appendChildToContainer(
-  parentInstance: Instance | Container,
+  parentInstance: Container,
   child: Instance | TextInstance,
 ): void {
   const childTag = typeof child === 'number' ? child : child._nativeTag;
   UIManager.setChildren(
-    ((parentInstance: any): Container), // containerTag
+    parentInstance, // containerTag
     [childTag], // reactTags
   );
 }
@@ -386,7 +386,7 @@ export function insertBefore(
 }
 
 export function insertInContainerBefore(
-  parentInstance: Instance | Container,
+  parentInstance: Container,
   child: Instance | TextInstance,
   beforeChild: Instance | TextInstance,
 ): void {
