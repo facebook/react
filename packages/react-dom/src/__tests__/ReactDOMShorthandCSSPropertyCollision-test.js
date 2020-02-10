@@ -10,14 +10,11 @@
 'use strict';
 
 describe('ReactDOMShorthandCSSPropertyCollision', () => {
-  let ReactFeatureFlags;
   let React;
   let ReactDOM;
 
   beforeEach(() => {
     jest.resetModules();
-    ReactFeatureFlags = require('shared/ReactFeatureFlags');
-    ReactFeatureFlags.warnAboutShorthandPropertyCollision = true;
     React = require('react');
     ReactDOM = require('react-dom');
   });
