@@ -8,7 +8,7 @@
  */
 
 import typeof * as FeatureFlagsType from 'shared/ReactFeatureFlags';
-import typeof * as FeatureFlagsShimType from './ReactFeatureFlags.www';
+import typeof * as FeatureFlagsShimType from './ReactFeatureFlags.www-classic';
 
 // Re-export dynamic flags from the www version.
 export const {

@@ -121,10 +121,11 @@ const forks = Object.freeze({
           case FB_WWW_DEV:
           case FB_WWW_PROD:
           case FB_WWW_PROFILING:
+            return 'shared/forks/ReactFeatureFlags.www-classic.js';
           case FB_WWW_MODERN_DEV:
           case FB_WWW_MODERN_PROD:
           case FB_WWW_MODERN_PROFILING:
-            return 'shared/forks/ReactFeatureFlags.www.js';
+            return 'shared/forks/ReactFeatureFlags.www-modern.js';
         }
     }
     return null;
