@@ -520,7 +520,10 @@ async function createBundle(bundle, bundleType) {
     bundleType === FB_WWW_MODERN_PROD ||
     bundleType === FB_WWW_MODERN_PROFILING;
   const isFBBundle = isFBClassicBundle || isFBModernBundle;
-  if (isFBBundle) {
+
+  if (isFBClassicBundle) {
+    // Only do this for the classis bundles so that modern entry points
+    // match the ones we use in the open source.
     const resolvedFBEntry = resolvedEntry.replace('.js', '.fb.js');
     if (fs.existsSync(resolvedFBEntry)) {
       resolvedEntry = resolvedFBEntry;
