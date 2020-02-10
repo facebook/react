@@ -10,6 +10,9 @@ const {
   FB_WWW_DEV,
   FB_WWW_PROD,
   FB_WWW_PROFILING,
+  FB_WWW_MODERN_DEV,
+  FB_WWW_MODERN_PROD,
+  FB_WWW_MODERN_PROFILING,
   RN_OSS_DEV,
   RN_OSS_PROD,
   RN_OSS_PROFILING,
@@ -103,6 +106,9 @@ const forks = Object.freeze({
           case FB_WWW_DEV:
           case FB_WWW_PROD:
           case FB_WWW_PROFILING:
+          case FB_WWW_MODERN_DEV:
+          case FB_WWW_MODERN_PROD:
+          case FB_WWW_MODERN_PROFILING:
             return 'shared/forks/ReactFeatureFlags.test-renderer.www.js';
         }
         return 'shared/forks/ReactFeatureFlags.test-renderer.js';
@@ -115,6 +121,9 @@ const forks = Object.freeze({
           case FB_WWW_DEV:
           case FB_WWW_PROD:
           case FB_WWW_PROFILING:
+          case FB_WWW_MODERN_DEV:
+          case FB_WWW_MODERN_PROD:
+          case FB_WWW_MODERN_PROFILING:
             return 'shared/forks/ReactFeatureFlags.www.js';
         }
     }
@@ -163,7 +172,10 @@ const forks = Object.freeze({
     if (
       bundleType === FB_WWW_DEV ||
       bundleType === FB_WWW_PROD ||
-      bundleType === FB_WWW_PROFILING
+      bundleType === FB_WWW_PROFILING ||
+      bundleType === FB_WWW_MODERN_DEV ||
+      bundleType === FB_WWW_MODERN_PROD ||
+      bundleType === FB_WWW_MODERN_PROFILING
     ) {
       return 'scheduler/src/forks/SchedulerFeatureFlags.www.js';
     }
@@ -185,6 +197,7 @@ const forks = Object.freeze({
   'shared/consoleWithStackDev': (bundleType, entry) => {
     switch (bundleType) {
       case FB_WWW_DEV:
+      case FB_WWW_MODERN_DEV:
         return 'shared/forks/consoleWithStackDev.www.js';
       default:
         return null;
@@ -198,6 +211,9 @@ const forks = Object.freeze({
       case FB_WWW_DEV:
       case FB_WWW_PROD:
       case FB_WWW_PROFILING:
+      case FB_WWW_MODERN_DEV:
+      case FB_WWW_MODERN_PROD:
+      case FB_WWW_MODERN_PROFILING:
         return 'react/src/forks/ReactCurrentOwner.www.js';
       default:
         return null;
@@ -211,6 +227,9 @@ const forks = Object.freeze({
       case FB_WWW_DEV:
       case FB_WWW_PROD:
       case FB_WWW_PROFILING:
+      case FB_WWW_MODERN_DEV:
+      case FB_WWW_MODERN_PROD:
+      case FB_WWW_MODERN_PROFILING:
         return 'react/src/forks/ReactCurrentDispatcher.www.js';
       default:
         return null;
@@ -234,6 +253,9 @@ const forks = Object.freeze({
       case FB_WWW_DEV:
       case FB_WWW_PROD:
       case FB_WWW_PROFILING:
+      case FB_WWW_MODERN_DEV:
+      case FB_WWW_MODERN_PROD:
+      case FB_WWW_MODERN_PROFILING:
         return 'shared/forks/invokeGuardedCallbackImpl.www.js';
       default:
         return null;
@@ -246,6 +268,9 @@ const forks = Object.freeze({
       case FB_WWW_DEV:
       case FB_WWW_PROD:
       case FB_WWW_PROFILING:
+      case FB_WWW_MODERN_DEV:
+      case FB_WWW_MODERN_PROD:
+      case FB_WWW_MODERN_PROFILING:
         // Use the www fork which shows an error dialog.
         return 'react-reconciler/src/forks/ReactFiberErrorDialog.www.js';
       case RN_OSS_DEV:
@@ -382,6 +407,9 @@ const forks = Object.freeze({
       case FB_WWW_DEV:
       case FB_WWW_PROD:
       case FB_WWW_PROFILING:
+      case FB_WWW_MODERN_DEV:
+      case FB_WWW_MODERN_PROD:
+      case FB_WWW_MODERN_PROFILING:
         // Use the www fork which is integrated with TimeSlice profiling.
         return 'react-dom/src/events/forks/EventListener-www.js';
       default:

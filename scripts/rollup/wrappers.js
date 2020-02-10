@@ -13,6 +13,9 @@ const {
   FB_WWW_DEV,
   FB_WWW_PROD,
   FB_WWW_PROFILING,
+  FB_WWW_MODERN_DEV,
+  FB_WWW_MODERN_PROD,
+  FB_WWW_MODERN_PROFILING,
   RN_OSS_DEV,
   RN_OSS_PROD,
   RN_OSS_PROFILING,
@@ -161,6 +164,51 @@ ${source}`;
 
   /****************** FB_WWW_PROFILING ******************/
   [FB_WWW_PROFILING](source, globalName, filename, moduleType) {
+    return `/**
+${license}
+ *
+ * @noflow
+ * @preventMunge
+ * @preserve-invariant-messages
+ */
+
+${source}`;
+  },
+
+  /****************** FB_WWW_MODERN_DEV ******************/
+  [FB_WWW_MODERN_DEV](source, globalName, filename, moduleType) {
+    return `/**
+${license}
+ *
+ * @noflow
+ * @preventMunge
+ * @preserve-invariant-messages
+ */
+
+'use strict';
+
+if (__DEV__) {
+  (function() {
+${source}
+  })();
+}`;
+  },
+
+  /****************** FB_WWW_MODERN_PROD ******************/
+  [FB_WWW_MODERN_PROD](source, globalName, filename, moduleType) {
+    return `/**
+${license}
+ *
+ * @noflow
+ * @preventMunge
+ * @preserve-invariant-messages
+ */
+
+${source}`;
+  },
+
+  /****************** FB_WWW_MODERN_PROFILING ******************/
+  [FB_WWW_MODERN_PROFILING](source, globalName, filename, moduleType) {
     return `/**
 ${license}
  *
