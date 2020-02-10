@@ -19,6 +19,9 @@ const {
   FB_WWW_DEV,
   FB_WWW_PROD,
   FB_WWW_PROFILING,
+  FB_WWW_MODERN_DEV,
+  FB_WWW_MODERN_PROD,
+  FB_WWW_MODERN_PROFILING,
   RN_OSS_DEV,
   RN_OSS_PROD,
   RN_OSS_PROFILING,
@@ -50,6 +53,9 @@ function getBundleOutputPaths(bundleType, filename, packageName) {
     case FB_WWW_DEV:
     case FB_WWW_PROD:
     case FB_WWW_PROFILING:
+    case FB_WWW_MODERN_DEV:
+    case FB_WWW_MODERN_PROD:
+    case FB_WWW_MODERN_PROFILING:
       return [`build/facebook-www/${filename}`];
     case RN_OSS_DEV:
     case RN_OSS_PROD:

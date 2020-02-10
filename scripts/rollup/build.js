@@ -54,6 +54,9 @@ const {
   FB_WWW_DEV,
   FB_WWW_PROD,
   FB_WWW_PROFILING,
+  FB_WWW_MODERN_DEV,
+  FB_WWW_MODERN_PROD,
+  FB_WWW_MODERN_PROFILING,
   RN_OSS_DEV,
   RN_OSS_PROD,
   RN_OSS_PROFILING,
@@ -139,6 +142,9 @@ function getBabelConfig(
     case FB_WWW_DEV:
     case FB_WWW_PROD:
     case FB_WWW_PROFILING:
+    case FB_WWW_MODERN_DEV:
+    case FB_WWW_MODERN_PROD:
+    case FB_WWW_MODERN_PROFILING:
       return Object.assign({}, options, {
         plugins: options.plugins.concat([
           // Minify invariant messages
@@ -214,6 +220,9 @@ function getFormat(bundleType) {
     case FB_WWW_DEV:
     case FB_WWW_PROD:
     case FB_WWW_PROFILING:
+    case FB_WWW_MODERN_DEV:
+    case FB_WWW_MODERN_PROD:
+    case FB_WWW_MODERN_PROFILING:
     case RN_OSS_DEV:
     case RN_OSS_PROD:
     case RN_OSS_PROFILING:
@@ -244,14 +253,20 @@ function getFilename(name, globalName, bundleType) {
     case RN_OSS_DEV:
     case RN_FB_DEV:
       return `${globalName}-dev.js`;
+    case FB_WWW_MODERN_DEV:
+      return `${globalName}Modern-dev.js`;
     case FB_WWW_PROD:
     case RN_OSS_PROD:
     case RN_FB_PROD:
       return `${globalName}-prod.js`;
+    case FB_WWW_MODERN_PROD:
+      return `${globalName}Modern-prod.js`;
     case FB_WWW_PROFILING:
     case RN_FB_PROFILING:
     case RN_OSS_PROFILING:
       return `${globalName}-profiling.js`;
+    case FB_WWW_MODERN_PROFILING:
+      return `${globalName}Modern-profiling.js`;
   }
 }
 
@@ -260,6 +275,7 @@ function isProductionBundleType(bundleType) {
     case UMD_DEV:
     case NODE_DEV:
     case FB_WWW_DEV:
+    case FB_WWW_MODERN_DEV:
     case RN_OSS_DEV:
     case RN_FB_DEV:
       return false;
@@ -269,6 +285,8 @@ function isProductionBundleType(bundleType) {
     case NODE_PROFILING:
     case FB_WWW_PROD:
     case FB_WWW_PROFILING:
+    case FB_WWW_MODERN_PROD:
+    case FB_WWW_MODERN_PROFILING:
     case RN_OSS_PROD:
     case RN_OSS_PROFILING:
     case RN_FB_PROD:
@@ -283,6 +301,8 @@ function isProfilingBundleType(bundleType) {
   switch (bundleType) {
     case FB_WWW_DEV:
     case FB_WWW_PROD:
+    case FB_WWW_MODERN_DEV:
+    case FB_WWW_MODERN_PROD:
     case NODE_DEV:
     case NODE_PROD:
     case RN_FB_DEV:
@@ -293,6 +313,7 @@ function isProfilingBundleType(bundleType) {
     case UMD_PROD:
       return false;
     case FB_WWW_PROFILING:
+    case FB_WWW_MODERN_PROFILING:
     case NODE_PROFILING:
     case RN_FB_PROFILING:
     case RN_OSS_PROFILING:
@@ -336,10 +357,15 @@ function getPlugins(
     bundleType === UMD_DEV ||
     bundleType === UMD_PROD ||
     bundleType === UMD_PROFILING;
-  const isFBBundle =
+  const isFBClassicBundle =
     bundleType === FB_WWW_DEV ||
     bundleType === FB_WWW_PROD ||
     bundleType === FB_WWW_PROFILING;
+  const isFBModernBundle =
+    bundleType === FB_WWW_MODERN_DEV ||
+    bundleType === FB_WWW_MODERN_PROD ||
+    bundleType === FB_WWW_MODERN_PROFILING;
+  const isFBBundle = isFBClassicBundle || isFBModernBundle;
   const isRNBundle =
     bundleType === RN_OSS_DEV ||
     bundleType === RN_OSS_PROD ||
@@ -485,10 +511,15 @@ async function createBundle(bundle, bundleType) {
   const packageName = Packaging.getPackageName(bundle.entry);
 
   let resolvedEntry = require.resolve(bundle.entry);
-  const isFBBundle =
+  const isFBClassicBundle =
     bundleType === FB_WWW_DEV ||
     bundleType === FB_WWW_PROD ||
     bundleType === FB_WWW_PROFILING;
+  const isFBModernBundle =
+    bundleType === FB_WWW_MODERN_DEV ||
+    bundleType === FB_WWW_MODERN_PROD ||
+    bundleType === FB_WWW_MODERN_PROFILING;
+  const isFBBundle = isFBClassicBundle || isFBModernBundle;
   if (isFBBundle) {
     const resolvedFBEntry = resolvedEntry.replace('.js', '.fb.js');
     if (fs.existsSync(resolvedFBEntry)) {
@@ -545,7 +576,10 @@ async function createBundle(bundle, bundleType) {
     legacy:
       bundleType === FB_WWW_DEV ||
       bundleType === FB_WWW_PROD ||
-      bundleType === FB_WWW_PROFILING,
+      bundleType === FB_WWW_PROFILING ||
+      bundleType === FB_WWW_MODERN_DEV ||
+      bundleType === FB_WWW_MODERN_PROD ||
+      bundleType === FB_WWW_MODERN_PROFILING,
   };
   const [mainOutputPath, ...otherOutputPaths] = Packaging.getBundleOutputPaths(
     bundleType,
@@ -695,6 +729,9 @@ async function buildEverything() {
         [bundle, FB_WWW_DEV],
         [bundle, FB_WWW_PROD],
         [bundle, FB_WWW_PROFILING],
+        [bundle, FB_WWW_MODERN_DEV],
+        [bundle, FB_WWW_MODERN_PROD],
+        [bundle, FB_WWW_MODERN_PROFILING],
         [bundle, RN_FB_DEV],
         [bundle, RN_FB_PROD],
         [bundle, RN_FB_PROFILING]
