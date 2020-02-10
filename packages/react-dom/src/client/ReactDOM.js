@@ -37,6 +37,7 @@ import {
   attemptHydrationAtCurrentPriority,
   act,
 } from 'react-reconciler/inline.dom';
+import {getIsHydrating} from 'react-reconciler/src/ReactFiberHydrationContext';
 import {createPortal as createPortalImpl} from 'shared/ReactPortal';
 import {canUseDOM} from 'shared/ExecutionEnvironment';
 import {setBatchingImplementation} from 'legacy-events/ReactGenericBatching';
@@ -179,6 +180,8 @@ if (exposeConcurrentModeAPIs) {
       queueExplicitHydrationTarget(target);
     }
   };
+
+  ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.getIsHydrating = getIsHydrating;
 }
 
 if (!disableUnstableRenderSubtreeIntoContainer) {
