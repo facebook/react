@@ -88,7 +88,7 @@ export type EventTargetChildElement = {
   },
   ...
 };
-export type Container = Element | Document;
+export type Container = DOMContainer;
 export type Instance = Element;
 export type TextInstance = Text;
 export type SuspenseInstance = Comment & {_reactRetry?: () => void, ...};
