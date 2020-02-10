@@ -10,7 +10,7 @@
 const EventListenerWWW = require('EventListener');
 
 import typeof * as EventListenerType from '../EventListener';
-import typeof * as EventListenerShimType from './EventListener-www';
+import typeof * as EventListenerShimType from './EventListener.www-classic';
 
 export function addEventBubbleListener(
   element: Element,

@@ -401,17 +401,14 @@ const forks = Object.freeze({
     );
   },
 
-  // We wrap top-level listeners into guards on www.
+  // We wrap top-level listeners into guards on www classic builds.
   'react-dom/src/events/EventListener': (bundleType, entry) => {
     switch (bundleType) {
       case FB_WWW_DEV:
       case FB_WWW_PROD:
       case FB_WWW_PROFILING:
-      case FB_WWW_MODERN_DEV:
-      case FB_WWW_MODERN_PROD:
-      case FB_WWW_MODERN_PROFILING:
         // Use the www fork which is integrated with TimeSlice profiling.
-        return 'react-dom/src/events/forks/EventListener-www.js';
+        return 'react-dom/src/events/forks/EventListener.www-classic.js';
       default:
         return null;
     }
