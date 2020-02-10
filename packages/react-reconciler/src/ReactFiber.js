@@ -425,7 +425,9 @@ export function createWorkInProgress(
 
     if (__DEV__) {
       // DEV-only fields
-      workInProgress._debugID = current._debugID;
+      if (enableUserTimingAPI) {
+        workInProgress._debugID = current._debugID;
+      }
       workInProgress._debugSource = current._debugSource;
       workInProgress._debugOwner = current._debugOwner;
       workInProgress._debugHookTypes = current._debugHookTypes;
@@ -958,7 +960,9 @@ export function assignFiberPropertiesInDEV(
     target.selfBaseDuration = source.selfBaseDuration;
     target.treeBaseDuration = source.treeBaseDuration;
   }
-  target._debugID = source._debugID;
+  if (enableUserTimingAPI) {
+    target._debugID = source._debugID;
+  }
   target._debugSource = source._debugSource;
   target._debugOwner = source._debugOwner;
   target._debugIsCurrentlyTiming = source._debugIsCurrentlyTiming;
