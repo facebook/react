@@ -65,6 +65,8 @@ export const enableNativeTargetAsInstance = false;
 
 export const disableCreateFactory = false;
 
+export const disableLegacyReactDOMAPIs = true;
+
 export const disableTextareaChildren = true;
 
 export const disableMapsAsChildren = true;

@@ -57,6 +57,7 @@ import ReactVersion from 'shared/ReactVersion';
 import invariant from 'shared/invariant';
 import {
   exposeConcurrentModeAPIs,
+  disableLegacyReactDOMAPIs,
   disableUnstableCreatePortal,
   disableUnstableRenderSubtreeIntoContainer,
   warnUnstableRenderSubtreeIntoContainer,
@@ -134,12 +135,6 @@ function createPortal(
 const ReactDOM: Object = {
   createPortal,
 
-  // Legacy
-  findDOMNode,
-  hydrate,
-  render,
-  unmountComponentAtNode,
-
   unstable_batchedUpdates: batchedUpdates,
 
   flushSync: flushSync,
@@ -166,6 +161,13 @@ const ReactDOM: Object = {
 
   version: ReactVersion,
 };
+
+if (!disableLegacyReactDOMAPIs) {
+  ReactDOM.findDOMNode = findDOMNode;
+  ReactDOM.hydrate = hydrate;
+  ReactDOM.render = render;
+  ReactDOM.unmountComponentAtNode = unmountComponentAtNode;
+}
 
 if (exposeConcurrentModeAPIs) {
   ReactDOM.createRoot = createRoot;
