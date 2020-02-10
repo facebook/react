@@ -7,9 +7,7 @@
  * @flow
  */
 
-import {findCurrentFiberUsingSlowPath} from 'react-reconciler/reflection';
 import {getIsHydrating} from 'react-reconciler/src/ReactFiberHydrationContext';
-import {get as getInstance} from 'shared/ReactInstanceMap';
 import {addUserTimingListener} from 'shared/ReactFeatureFlags';
 
 import ReactDOM from './ReactDOM';
@@ -23,14 +21,8 @@ Object.assign(
     ReactBrowserEventEmitter: {
       isEnabled,
     },
-    ReactFiberTreeReflection: {
-      findCurrentFiberUsingSlowPath,
-    },
     ReactDOMComponentTree: {
       getClosestInstanceFromNode,
-    },
-    ReactInstanceMap: {
-      get: getInstance,
     },
     // Perf experiment
     addUserTimingListener,
