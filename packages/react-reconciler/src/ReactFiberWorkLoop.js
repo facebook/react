@@ -14,6 +14,7 @@ import type {ReactPriorityLevel} from './SchedulerWithReactIntegration';
 import type {Interaction} from 'scheduler/src/Tracing';
 import type {SuspenseConfig} from './ReactFiberSuspenseConfig';
 import type {SuspenseState} from './ReactFiberSuspenseComponent';
+import type {Effect as HookEffect} from './ReactFiberHooks';
 
 import {
   warnAboutDeprecatedLifecycles,
@@ -257,7 +258,8 @@ let rootDoesHavePassiveEffects: boolean = false;
 let rootWithPendingPassiveEffects: FiberRoot | null = null;
 let pendingPassiveEffectsRenderPriority: ReactPriorityLevel = NoPriority;
 let pendingPassiveEffectsExpirationTime: ExpirationTime = NoWork;
-let pendingUnmountedPassiveEffectDestroyFunctions: Array<() => void> = [];
+let pendingPassiveHookEffectsMount: Array<HookEffect | Fiber> = [];
+let pendingPassiveHookEffectsUnmount: Array<HookEffect | Fiber> = [];
 
 let rootsWithPendingDiscreteUpdates: Map<
   FiberRoot,
@@ -2168,11 +2170,12 @@ export function flushPassiveEffects() {
   }
 }
 
-export function enqueuePendingPassiveEffectDestroyFn(
-  destroy: () => void,
+export function enqueuePendingPassiveHookEffectMount(
+  fiber: Fiber,
+  effect: HookEffect,
 ): void {
   if (deferPassiveEffectCleanupDuringUnmount) {
-    pendingUnmountedPassiveEffectDestroyFunctions.push(destroy);
+    pendingPassiveHookEffectsMount.push(effect, fiber);
     if (!rootDoesHavePassiveEffects) {
       rootDoesHavePassiveEffects = true;
       scheduleCallback(NormalPriority, () => {
@@ -2181,6 +2184,27 @@ export function enqueuePendingPassiveEffectDestroyFn(
       });
     }
   }
+}
+
+export function enqueuePendingPassiveHookEffectUnmount(
+  fiber: Fiber,
+  effect: HookEffect,
+): void {
+  if (deferPassiveEffectCleanupDuringUnmount) {
+    pendingPassiveHookEffectsUnmount.push(effect, fiber);
+    if (!rootDoesHavePassiveEffects) {
+      rootDoesHavePassiveEffects = true;
+      scheduleCallback(NormalPriority, () => {
+        flushPassiveEffects();
+        return null;
+      });
+    }
+  }
+}
+
+function invokePassiveEffectCreate(effect: HookEffect): void {
+  const create = effect.create;
+  effect.destroy = create();
 }
 
 function flushPassiveEffectsImpl() {
@@ -2201,45 +2225,95 @@ function flushPassiveEffectsImpl() {
   const prevInteractions = pushInteractions(root);
 
   if (deferPassiveEffectCleanupDuringUnmount) {
-    // Flush any pending passive effect destroy functions that belong to
-    // components that were unmounted during the most recent commit.
-    for (
-      let i = 0;
-      i < pendingUnmountedPassiveEffectDestroyFunctions.length;
-      i++
-    ) {
-      const destroy = pendingUnmountedPassiveEffectDestroyFunctions[i];
-      invokeGuardedCallback(null, destroy, null);
-    }
-    pendingUnmountedPassiveEffectDestroyFunctions.length = 0;
-  }
+    // It's important that ALL pending passive effect destroy functions are called
+    // before ANY passive effect create functions are called.
+    // Otherwise effects in sibling components might interfere with each other.
+    // e.g. a destroy function in one component may unintentionally override a ref
+    // value set by a create function in another component.
+    // Layout effects have the same constraint.
 
-  // Note: This currently assumes there are no passive effects on the root
-  // fiber, because the root is not part of its own effect list. This could
-  // change in the future.
-  let effect = root.current.firstEffect;
-  while (effect !== null) {
-    if (__DEV__) {
-      setCurrentDebugFiberInDEV(effect);
-      invokeGuardedCallback(null, commitPassiveHookEffects, null, effect);
-      if (hasCaughtError()) {
-        invariant(effect !== null, 'Should be working on an effect.');
-        const error = clearCaughtError();
-        captureCommitPhaseError(effect, error);
-      }
-      resetCurrentDebugFiberInDEV();
-    } else {
-      try {
-        commitPassiveHookEffects(effect);
-      } catch (error) {
-        invariant(effect !== null, 'Should be working on an effect.');
-        captureCommitPhaseError(effect, error);
+    // First pass: Destroy stale passive effects.
+    let unmountEffects = pendingPassiveHookEffectsUnmount;
+    pendingPassiveHookEffectsUnmount = [];
+    for (let i = 0; i < unmountEffects.length; i += 2) {
+      const effect = ((unmountEffects[i]: any): HookEffect);
+      const fiber = ((unmountEffects[i + 1]: any): Fiber);
+      const destroy = effect.destroy;
+      effect.destroy = undefined;
+      if (typeof destroy === 'function') {
+        if (__DEV__) {
+          setCurrentDebugFiberInDEV(fiber);
+          invokeGuardedCallback(null, destroy, null);
+          if (hasCaughtError()) {
+            invariant(fiber !== null, 'Should be working on an effect.');
+            const error = clearCaughtError();
+            captureCommitPhaseError(fiber, error);
+          }
+          resetCurrentDebugFiberInDEV();
+        } else {
+          try {
+            destroy();
+          } catch (error) {
+            invariant(fiber !== null, 'Should be working on an effect.');
+            captureCommitPhaseError(fiber, error);
+          }
+        }
       }
     }
-    const nextNextEffect = effect.nextEffect;
-    // Remove nextEffect pointer to assist GC
-    effect.nextEffect = null;
-    effect = nextNextEffect;
+
+    // Second pass: Create new passive effects.
+    let mountEffects = pendingPassiveHookEffectsMount;
+    pendingPassiveHookEffectsMount = [];
+    for (let i = 0; i < mountEffects.length; i += 2) {
+      const effect = ((mountEffects[i]: any): HookEffect);
+      const fiber = ((mountEffects[i + 1]: any): Fiber);
+      if (__DEV__) {
+        setCurrentDebugFiberInDEV(fiber);
+        invokeGuardedCallback(null, invokePassiveEffectCreate, null, effect);
+        if (hasCaughtError()) {
+          invariant(fiber !== null, 'Should be working on an effect.');
+          const error = clearCaughtError();
+          captureCommitPhaseError(fiber, error);
+        }
+        resetCurrentDebugFiberInDEV();
+      } else {
+        try {
+          const create = effect.create;
+          effect.destroy = create();
+        } catch (error) {
+          invariant(fiber !== null, 'Should be working on an effect.');
+          captureCommitPhaseError(fiber, error);
+        }
+      }
+    }
+  } else {
+    // Note: This currently assumes there are no passive effects on the root fiber
+    // because the root is not part of its own effect list.
+    // This could change in the future.
+    let effect = root.current.firstEffect;
+    while (effect !== null) {
+      if (__DEV__) {
+        setCurrentDebugFiberInDEV(effect);
+        invokeGuardedCallback(null, commitPassiveHookEffects, null, effect);
+        if (hasCaughtError()) {
+          invariant(effect !== null, 'Should be working on an effect.');
+          const error = clearCaughtError();
+          captureCommitPhaseError(effect, error);
+        }
+        resetCurrentDebugFiberInDEV();
+      } else {
+        try {
+          commitPassiveHookEffects(effect);
+        } catch (error) {
+          invariant(effect !== null, 'Should be working on an effect.');
+          captureCommitPhaseError(effect, error);
+        }
+      }
+      const nextNextEffect = effect.nextEffect;
+      // Remove nextEffect pointer to assist GC
+      effect.nextEffect = null;
+      effect = nextNextEffect;
+    }
   }
 
   if (enableSchedulerTracing) {

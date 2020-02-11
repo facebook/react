@@ -110,7 +110,8 @@ import {
   captureCommitPhaseError,
   resolveRetryThenable,
   markCommitTimeOfFallback,
-  enqueuePendingPassiveEffectDestroyFn,
+  enqueuePendingPassiveHookEffectMount,
+  enqueuePendingPassiveHookEffectUnmount,
 } from './ReactFiberWorkLoop';
 import {
   NoEffect as NoHookEffect,
@@ -396,6 +397,28 @@ function commitHookEffectListMount(tag: number, finishedWork: Fiber) {
   }
 }
 
+function schedulePassiveEffects(finishedWork: Fiber) {
+  if (deferPassiveEffectCleanupDuringUnmount) {
+    const updateQueue: FunctionComponentUpdateQueue | null = (finishedWork.updateQueue: any);
+    let lastEffect = updateQueue !== null ? updateQueue.lastEffect : null;
+    if (lastEffect !== null) {
+      const firstEffect = lastEffect.next;
+      let effect = firstEffect;
+      do {
+        const {next, tag} = effect;
+        if (
+          (tag & HookPassive) !== NoHookEffect &&
+          (tag & HookHasEffect) !== NoHookEffect
+        ) {
+          enqueuePendingPassiveHookEffectUnmount(finishedWork, effect);
+          enqueuePendingPassiveHookEffectMount(finishedWork, effect);
+        }
+        effect = next;
+      } while (effect !== firstEffect);
+    }
+  }
+}
+
 export function commitPassiveHookEffects(finishedWork: Fiber): void {
   if ((finishedWork.effectTag & Passive) !== NoEffect) {
     switch (finishedWork.tag) {
@@ -432,6 +455,10 @@ function commitLifeCycles(
       // e.g. a destroy function in one component should never override a ref set
       // by a create function in another component during the same commit.
       commitHookEffectListMount(HookLayout | HookHasEffect, finishedWork);
+
+      if (deferPassiveEffectCleanupDuringUnmount) {
+        schedulePassiveEffects(finishedWork);
+      }
       return;
     }
     case ClassComponent: {
@@ -774,7 +801,7 @@ function commitUnmount(
               const {destroy, tag} = effect;
               if (destroy !== undefined) {
                 if ((tag & HookPassive) !== NoHookEffect) {
-                  enqueuePendingPassiveEffectDestroyFn(destroy);
+                  enqueuePendingPassiveHookEffectUnmount(current, effect);
                 } else {
                   safelyCallDestroy(current, destroy);
                 }
