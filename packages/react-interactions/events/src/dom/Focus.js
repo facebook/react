@@ -81,7 +81,7 @@ const isMac =
     ? /^Mac/.test(window.navigator.platform)
     : false;
 
-export let passiveBrowserEventsSupported = false;
+let passiveBrowserEventsSupported = false;
 
 const canUseDOM: boolean = !!(
   typeof window !== 'undefined' &&
