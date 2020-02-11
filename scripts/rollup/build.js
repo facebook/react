@@ -410,7 +410,7 @@ function getPlugins(
     // Note that this plugin must be called after closure applies DCE.
     isProduction && stripUnusedImports(pureExternalModules),
     // Add the whitespace back if necessary.
-    shouldStayReadable && prettier({parser: 'babylon'}),
+    shouldStayReadable && prettier({parser: 'babel'}),
     // License and haste headers, top-level `if` blocks.
     {
       transformBundle(source) {
