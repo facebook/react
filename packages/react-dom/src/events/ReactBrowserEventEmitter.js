@@ -42,13 +42,13 @@ import isEventSupported from './isEventSupported';
  *    may be done in the worker thread.
  *
  *  - Forward these native events (with the associated top-level type used to
- *    trap it) to `EventPluginHub`, which in turn will ask plugins if they want
+ *    trap it) to `EventPluginRegistry`, which in turn will ask plugins if they want
  *    to extract any synthetic events.
  *
- *  - The `EventPluginHub` will then process each event by annotating them with
+ *  - The `EventPluginRegistry` will then process each event by annotating them with
  *    "dispatches", a sequence of listeners and IDs that care about that event.
  *
- *  - The `EventPluginHub` then dispatches the events.
+ *  - The `EventPluginRegistry` then dispatches the events.
  *
  * Overview of React and the event system:
  *
@@ -65,7 +65,7 @@ import isEventSupported from './isEventSupported';
  *       |           .               |         |Plugin     |
  * +-----|------+    .               v         +-----------+
  * |     |      |    .    +--------------+                    +------------+
- * |     +-----------.--->|EventPluginHub|                    |    Event   |
+ * |     +-----------.--->|PluginRegistry|                    |    Event   |
  * |            |    .    |              |     +-----------+  | Propagators|
  * | ReactEvent |    .    |              |     |TapEvent   |  |------------|
  * |  Emitter   |    .    |              |<---+|Plugin     |  |other plugin|

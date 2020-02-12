@@ -11,7 +11,7 @@
 
 jest.mock('../events/isEventSupported');
 
-describe('EventPluginHub', () => {
+describe('InvalidEventListeners', () => {
   let React;
   let ReactTestUtils;
 

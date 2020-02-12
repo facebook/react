@@ -8,7 +8,6 @@
  */
 
 import type {AnyNativeEvent} from 'legacy-events/PluginModuleType';
-import type {Fiber} from 'react-reconciler/src/ReactFiber';
 import type {FiberRoot} from 'react-reconciler/src/ReactFiberRoot';
 import type {Container, SuspenseInstance} from '../client/ReactDOMHostConfig';
 import type {DOMTopLevelEventType} from 'legacy-events/TopLevelEventTypes';
@@ -18,11 +17,9 @@ import type {DOMTopLevelEventType} from 'legacy-events/TopLevelEventTypes';
 import * as Scheduler from 'scheduler';
 
 import {
-  batchedEventUpdates,
   discreteUpdates,
   flushDiscreteUpdatesIfNeeded,
 } from 'legacy-events/ReactGenericBatching';
-import {runExtractedPluginEventsInBatch} from 'legacy-events/EventPluginHub';
 import {DEPRECATED_dispatchEventForResponderEventSystem} from './DeprecatedDOMEventResponderSystem';
 import {
   isReplayableDiscreteEvent,
@@ -36,12 +33,7 @@ import {
   getContainerFromFiber,
   getSuspenseInstanceFromFiber,
 } from 'react-reconciler/reflection';
-import {
-  HostRoot,
-  SuspenseComponent,
-  HostComponent,
-  HostText,
-} from 'shared/ReactWorkTags';
+import {HostRoot, SuspenseComponent} from 'shared/ReactWorkTags';
 import {
   type EventSystemFlags,
   PLUGIN_EVENT_SYSTEM,
@@ -49,7 +41,6 @@ import {
   IS_PASSIVE,
   IS_ACTIVE,
   PASSIVE_NOT_SUPPORTED,
-  IS_FIRST_ANCESTOR,
 } from 'legacy-events/EventSystemFlags';
 
 import {
@@ -69,127 +60,12 @@ import {
   DiscreteEvent,
 } from 'shared/ReactTypes';
 import {getEventPriorityForPluginSystem} from './DOMEventProperties';
+import {dispatchEventForPluginEventSystem} from './DOMEventPluginSystem';
 
 const {
   unstable_UserBlockingPriority: UserBlockingPriority,
   unstable_runWithPriority: runWithPriority,
 } = Scheduler;
-
-const CALLBACK_BOOKKEEPING_POOL_SIZE = 10;
-const callbackBookkeepingPool = [];
-
-type BookKeepingInstance = {|
-  topLevelType: DOMTopLevelEventType | null,
-  eventSystemFlags: EventSystemFlags,
-  nativeEvent: AnyNativeEvent | null,
-  targetInst: Fiber | null,
-  ancestors: Array<Fiber | null>,
-|};
-
-/**
- * Find the deepest React component completely containing the root of the
- * passed-in instance (for use when entire React trees are nested within each
- * other). If React trees are not nested, returns null.
- */
-function findRootContainerNode(inst) {
-  if (inst.tag === HostRoot) {
-    return inst.stateNode.containerInfo;
-  }
-  // TODO: It may be a good idea to cache this to prevent unnecessary DOM
-  // traversal, but caching is difficult to do correctly without using a
-  // mutation observer to listen for all DOM changes.
-  while (inst.return) {
-    inst = inst.return;
-  }
-  if (inst.tag !== HostRoot) {
-    // This can happen if we're in a detached tree.
-    return null;
-  }
-  return inst.stateNode.containerInfo;
-}
-
-// Used to store ancestor hierarchy in top level callback
-function getTopLevelCallbackBookKeeping(
-  topLevelType: DOMTopLevelEventType,
-  nativeEvent: AnyNativeEvent,
-  targetInst: Fiber | null,
-  eventSystemFlags: EventSystemFlags,
-): BookKeepingInstance {
-  if (callbackBookkeepingPool.length) {
-    const instance = callbackBookkeepingPool.pop();
-    instance.topLevelType = topLevelType;
-    instance.eventSystemFlags = eventSystemFlags;
-    instance.nativeEvent = nativeEvent;
-    instance.targetInst = targetInst;
-    return instance;
-  }
-  return {
-    topLevelType,
-    eventSystemFlags,
-    nativeEvent,
-    targetInst,
-    ancestors: [],
-  };
-}
-
-function releaseTopLevelCallbackBookKeeping(
-  instance: BookKeepingInstance,
-): void {
-  instance.topLevelType = null;
-  instance.nativeEvent = null;
-  instance.targetInst = null;
-  instance.ancestors.length = 0;
-  if (callbackBookkeepingPool.length < CALLBACK_BOOKKEEPING_POOL_SIZE) {
-    callbackBookkeepingPool.push(instance);
-  }
-}
-
-function handleTopLevel(bookKeeping: BookKeepingInstance) {
-  let targetInst = bookKeeping.targetInst;
-
-  // Loop through the hierarchy, in case there's any nested components.
-  // It's important that we build the array of ancestors before calling any
-  // event handlers, because event handlers can modify the DOM, leading to
-  // inconsistencies with ReactMount's node cache. See #1105.
-  let ancestor = targetInst;
-  do {
-    if (!ancestor) {
-      const ancestors = bookKeeping.ancestors;
-      ((ancestors: any): Array<Fiber | null>).push(ancestor);
-      break;
-    }
-    const root = findRootContainerNode(ancestor);
-    if (!root) {
-      break;
-    }
-    const tag = ancestor.tag;
-    if (tag === HostComponent || tag === HostText) {
-      bookKeeping.ancestors.push(ancestor);
-    }
-    ancestor = getClosestInstanceFromNode(root);
-  } while (ancestor);
-
-  for (let i = 0; i < bookKeeping.ancestors.length; i++) {
-    targetInst = bookKeeping.ancestors[i];
-    const eventTarget = getEventTarget(bookKeeping.nativeEvent);
-    const topLevelType = ((bookKeeping.topLevelType: any): DOMTopLevelEventType);
-    const nativeEvent = ((bookKeeping.nativeEvent: any): AnyNativeEvent);
-    let eventSystemFlags = bookKeeping.eventSystemFlags;
-
-    // If this is the first ancestor, we mark it on the system flags
-    if (i === 0) {
-      eventSystemFlags |= IS_FIRST_ANCESTOR;
-    }
-
-    runExtractedPluginEventsInBatch(
-      topLevelType,
-      targetInst,
-      nativeEvent,
-      eventTarget,
-      eventSystemFlags,
-    );
-  }
-}
 
 // TODO: can we stop exporting these?
 export let _enabled = true;
@@ -321,28 +197,6 @@ function dispatchUserBlockingUpdate(
     UserBlockingPriority,
     dispatchEvent.bind(null, topLevelType, eventSystemFlags, nativeEvent),
   );
-}
-
-function dispatchEventForPluginEventSystem(
-  topLevelType: DOMTopLevelEventType,
-  eventSystemFlags: EventSystemFlags,
-  nativeEvent: AnyNativeEvent,
-  targetInst: null | Fiber,
-): void {
-  const bookKeeping = getTopLevelCallbackBookKeeping(
-    topLevelType,
-    nativeEvent,
-    targetInst,
-    eventSystemFlags,
-  );
-
-  try {
-    // Event queue being processed in the same cycle allows
-    // `preventDefault`.
-    batchedEventUpdates(handleTopLevel, bookKeeping);
-  } finally {
-    releaseTopLevelCallbackBookKeeping(bookKeeping);
-  }
 }
 
 export function dispatchEvent(
