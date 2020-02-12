@@ -19,13 +19,16 @@ export const {
   warnAboutShorthandPropertyCollision,
 } = require('ReactFeatureFlags');
 
+// On WWW, __EXPERIMENTAL__ is used for a new modern build.
+// It's not used anywhere in production yet.
+
 // In www, we have experimental support for gathering data
 // from User Timing API calls in production. By default, we
 // only emit performance.mark/measure calls in __DEV__. But if
 // somebody calls addUserTimingListener() which is exposed as an
 // experimental FB-only export, we call performance.mark/measure
 // as long as there is more than a single listener.
-export let enableUserTimingAPI = __DEV__;
+export let enableUserTimingAPI = !__EXPERIMENTAL__;
 
 export const enableProfilerTimer = __PROFILE__;
 export const enableSchedulerTracing = __PROFILE__;
@@ -33,7 +36,7 @@ export const enableSchedulerDebugging = true;
 
 export const replayFailedUnitOfWorkWithInvokeGuardedCallback = false;
 export const warnAboutDeprecatedLifecycles = true;
-export const disableLegacyContext = false;
+export const disableLegacyContext = __EXPERIMENTAL__;
 export const warnAboutStringRefs = false;
 export const warnAboutDefaultPropsOnFunctionComponents = false;
 export const disableSchedulerTimeoutBasedOnReactExpirationTime = false;
@@ -92,17 +95,17 @@ export const flushSuspenseFallbacksInTests = true;
 
 export const enableNativeTargetAsInstance = false;
 
-export const disableCreateFactory = false;
+export const disableCreateFactory = __EXPERIMENTAL__;
 
-export const disableTextareaChildren = false;
+export const disableTextareaChildren = __EXPERIMENTAL__;
 
-export const disableMapsAsChildren = false;
+export const disableMapsAsChildren = __EXPERIMENTAL__;
 
-export const disableUnstableRenderSubtreeIntoContainer = false;
+export const disableUnstableRenderSubtreeIntoContainer = __EXPERIMENTAL__;
 
 export const warnUnstableRenderSubtreeIntoContainer = false;
 
-export const disableUnstableCreatePortal = false;
+export const disableUnstableCreatePortal = __EXPERIMENTAL__;
 
 export const isTestEnvironment = false;
 
