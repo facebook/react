@@ -684,7 +684,7 @@ async function buildEverything() {
       [bundle, FB_WWW_PROFILING],
       [bundle, RN_OSS_DEV],
       [bundle, RN_OSS_PROD],
-      [bundle, RN_OSS_PROFILING],
+      [bundle, RN_OSS_PROFILING]
     );
 
     if (__EXPERIMENTAL__) {

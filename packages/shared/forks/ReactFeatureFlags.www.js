@@ -40,12 +40,12 @@ export const disableSchedulerTimeoutBasedOnReactExpirationTime = false;
 
 export const enableTrainModelFix = true;
 
-export const exposeConcurrentModeAPIs = __EXPERIMENTAL__;
+export const exposeConcurrentModeAPIs = true;
 
 export const enableSuspenseServerRenderer = true;
 export const enableSelectiveHydration = true;
 
-export const enableChunksAPI = __EXPERIMENTAL__;
+export const enableChunksAPI = true;
 
 export const disableJavaScriptURLs = true;
 
