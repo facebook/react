@@ -103,7 +103,7 @@ export const runAllPassiveEffectDestroysBeforeCreates = false;
 // Ideally we should delay these until after commit for performance reasons.
 // This flag provides a killswitch if that proves to break existing code somehow.
 //
-// WARNING Only enable this flag in conjunction with runAllPassiveEffectDestroysBeforeCreates.
+// WARNING This flag only has an affect if used with runAllPassiveEffectDestroysBeforeCreates.
 export const deferPassiveEffectCleanupDuringUnmount = false;
 
 export const isTestEnvironment = false;

@@ -45,15 +45,8 @@ function loadModules({
   textResourceShouldFail = false;
 }
 
-[
-  [true, true],
-  [false, true],
-  [false, false],
-].forEach(
-  ([
-    deferPassiveEffectCleanupDuringUnmount,
-    runAllPassiveEffectDestroysBeforeCreates,
-  ]) => {
+[true, false].forEach(deferPassiveEffectCleanupDuringUnmount => {
+  [true, false].forEach(runAllPassiveEffectDestroysBeforeCreates => {
     describe(`ReactSuspenseWithNoopRenderer deferPassiveEffectCleanupDuringUnmount:${deferPassiveEffectCleanupDuringUnmount} runAllPassiveEffectDestroysBeforeCreates:${runAllPassiveEffectDestroysBeforeCreates}`, () => {
       if (!__EXPERIMENTAL__) {
         it("empty test so Jest doesn't complain", () => {});
@@ -1654,7 +1647,10 @@ function loadModules({
 
         expect(Scheduler).toHaveYielded(['Promise resolved [B]']);
 
-        if (ReactFeatureFlags.deferPassiveEffectCleanupDuringUnmount) {
+        if (
+          ReactFeatureFlags.deferPassiveEffectCleanupDuringUnmount &&
+          ReactFeatureFlags.runAllPassiveEffectDestroysBeforeCreates
+        ) {
           expect(Scheduler).toFlushAndYield([
             'B',
             'Destroy Layout Effect [Loading...]',
@@ -1701,7 +1697,10 @@ function loadModules({
 
         expect(Scheduler).toHaveYielded(['Promise resolved [B2]']);
 
-        if (ReactFeatureFlags.deferPassiveEffectCleanupDuringUnmount) {
+        if (
+          ReactFeatureFlags.deferPassiveEffectCleanupDuringUnmount &&
+          ReactFeatureFlags.runAllPassiveEffectDestroysBeforeCreates
+        ) {
           expect(Scheduler).toFlushAndYield([
             'B2',
             'Destroy Layout Effect [Loading...]',
@@ -2971,5 +2970,5 @@ function loadModules({
         );
       });
     });
-  },
-);
+  });
+});

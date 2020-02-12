@@ -65,15 +65,8 @@ function loadModules({
   act = ReactNoop.act;
 }
 
-[
-  [true, true],
-  [false, true],
-  [false, false],
-].forEach(
-  ([
-    deferPassiveEffectCleanupDuringUnmount,
-    runAllPassiveEffectDestroysBeforeCreates,
-  ]) => {
+[true, false].forEach(deferPassiveEffectCleanupDuringUnmount => {
+  [true, false].forEach(runAllPassiveEffectDestroysBeforeCreates => {
     describe(`ReactHooksWithNoopRenderer deferPassiveEffectCleanupDuringUnmount:${deferPassiveEffectCleanupDuringUnmount} runAllPassiveEffectDestroysBeforeCreates:${runAllPassiveEffectDestroysBeforeCreates}`, () => {
       beforeEach(() => {
         jest.resetModules();
@@ -1020,7 +1013,10 @@ function loadModules({
           },
         );
 
-        if (deferPassiveEffectCleanupDuringUnmount) {
+        if (
+          deferPassiveEffectCleanupDuringUnmount &&
+          runAllPassiveEffectDestroysBeforeCreates
+        ) {
           it('defers passive effect destroy functions during unmount', () => {
             function Child({bar, foo}) {
               React.useEffect(() => {
@@ -1840,7 +1836,8 @@ function loadModules({
             expect(ReactNoop.getChildren()).toEqual([span('Count: 1')]);
             expect(() => ReactNoop.flushPassiveEffects()).toThrow('Oops');
             expect(Scheduler).toHaveYielded(
-              deferPassiveEffectCleanupDuringUnmount
+              deferPassiveEffectCleanupDuringUnmount &&
+                runAllPassiveEffectDestroysBeforeCreates
                 ? ['Unmount A [0]', 'Unmount B [0]', 'Mount A [1]', 'Oops!']
                 : [
                     'Unmount A [0]',
@@ -1852,7 +1849,10 @@ function loadModules({
             );
             expect(ReactNoop.getChildren()).toEqual([]);
           });
-          if (deferPassiveEffectCleanupDuringUnmount) {
+          if (
+            deferPassiveEffectCleanupDuringUnmount &&
+            runAllPassiveEffectDestroysBeforeCreates
+          ) {
             expect(Scheduler).toHaveYielded([
               // Clean up effect A runs passively on unmount.
               // There's no effect B to clean-up, because it never mounted.
@@ -1894,7 +1894,10 @@ function loadModules({
             expect(Scheduler).toHaveYielded(['Mount A [0]', 'Mount B [0]']);
           });
 
-          if (deferPassiveEffectCleanupDuringUnmount) {
+          if (
+            deferPassiveEffectCleanupDuringUnmount &&
+            runAllPassiveEffectDestroysBeforeCreates
+          ) {
             act(() => {
               // This update will trigger an error during passive effect unmount
               ReactNoop.render(<Counter count={1} />, () =>
@@ -2979,5 +2982,5 @@ function loadModules({
         expect(ReactNoop).toMatchRenderedOutput('ABC');
       });
     });
-  },
-);
+  });
+});

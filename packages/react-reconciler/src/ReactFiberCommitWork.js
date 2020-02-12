@@ -796,7 +796,10 @@ function commitUnmount(
         if (lastEffect !== null) {
           const firstEffect = lastEffect.next;
 
-          if (deferPassiveEffectCleanupDuringUnmount) {
+          if (
+            deferPassiveEffectCleanupDuringUnmount &&
+            runAllPassiveEffectDestroysBeforeCreates
+          ) {
             let effect = firstEffect;
             do {
               const {destroy, tag} = effect;
