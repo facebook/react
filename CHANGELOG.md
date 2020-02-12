@@ -1,11 +1,3 @@
-## [Unreleased]
-<details>
-  <summary>
-    Changes that have landed in master but are not yet released.
-    Click to see more.
-  </summary>
-</details>
-
 ## 16.12.0 (November 14, 2019)
 
 ### React DOM
