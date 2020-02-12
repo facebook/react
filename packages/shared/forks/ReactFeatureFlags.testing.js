@@ -41,6 +41,7 @@ export const enableTrainModelFix = true;
 export const enableTrustedTypesIntegration = false;
 export const enableNativeTargetAsInstance = false;
 export const disableCreateFactory = false;
+export const disableLegacyReactDOMAPIs = false;
 export const disableTextareaChildren = false;
 export const disableMapsAsChildren = false;
 export const disableUnstableRenderSubtreeIntoContainer = false;

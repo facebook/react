@@ -114,6 +114,9 @@ export const disableLegacyContext = false;
 // Disables React.createFactory
 export const disableCreateFactory = false;
 
+// Disables hydrate, render, findDOMNode, unmountComponentAtNode
+export const disableLegacyReactDOMAPIs = false;
+
 // Disables children for <textarea> elements
 export const disableTextareaChildren = false;
 
