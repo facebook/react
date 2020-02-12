@@ -1285,6 +1285,7 @@ function handleError(root, thrownValue) {
         // boundary.
         workInProgressRootExitStatus = RootFatalErrored;
         workInProgressRootFatalError = thrownValue;
+        workInProgress = null;
         return null;
       }
 

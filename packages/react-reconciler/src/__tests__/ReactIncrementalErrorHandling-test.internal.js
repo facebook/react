@@ -1658,4 +1658,16 @@ describe('ReactIncrementalErrorHandling', () => {
         'Please update the following components: Provider',
     ]);
   });
+
+  if (global.__PERSISTENT__) {
+    it('regression test: should fatal if error is thrown at the root', () => {
+      const root = ReactNoop.createRoot();
+      root.render('Error when completing root');
+      expect(Scheduler).toFlushAndThrow('Error when completing root');
+
+      const blockingRoot = ReactNoop.createBlockingRoot();
+      blockingRoot.render('Error when completing root');
+      expect(Scheduler).toFlushAndThrow('Error when completing root');
+    });
+  }
 });
