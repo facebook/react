@@ -28,7 +28,7 @@ export const {
 // somebody calls addUserTimingListener() which is exposed as an
 // experimental FB-only export, we call performance.mark/measure
 // as long as there is more than a single listener.
-export let enableUserTimingAPI = !__EXPERIMENTAL__;
+export let enableUserTimingAPI = __DEV__ && !__EXPERIMENTAL__;
 
 export const enableProfilerTimer = __PROFILE__;
 export const enableSchedulerTracing = __PROFILE__;
