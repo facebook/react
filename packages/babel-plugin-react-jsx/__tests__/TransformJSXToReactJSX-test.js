@@ -40,6 +40,34 @@ function transform(input, pluginOpts, babelOpts) {
 }
 
 describe('transform react to jsx', () => {
+  it('auto import pragma overrides regular pragma', () => {
+    expect(
+      transform(
+        `/** @jsxAutoImport defaultExport */
+          var x = <div><span /></div>
+        `,
+        {
+          autoImport: 'namespace',
+          importSource: 'foobar',
+        }
+      )
+    ).toMatchSnapshot();
+  });
+
+  it('import source pragma overrides regular pragma', () => {
+    expect(
+      transform(
+        `/** @jsxImportSource baz */
+          var x = <div><span /></div>
+        `,
+        {
+          autoImport: 'namespace',
+          importSource: 'foobar',
+        }
+      )
+    ).toMatchSnapshot();
+  });
+
   it('throws error when sourceType is module and autoImport is require', () => {
     const code = `var x = <div><span /></div>`;
     expect(() => {

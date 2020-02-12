@@ -194,6 +194,15 @@ var x = React.jsx(React.Fragment, {
 });
 `;
 
+exports[`transform react to jsx auto import pragma overrides regular pragma 1`] = `
+import _default from "foobar";
+
+/** @jsxAutoImport defaultExport */
+var x = _default.jsx("div", {
+  children: _default.jsx("span", {})
+});
+`;
+
 exports[`transform react to jsx auto import require 1`] = `
 var _react = require("react");
 
@@ -385,6 +394,15 @@ var x = React.jsxDEV(React.Fragment, {
 `;
 
 exports[`transform react to jsx fragments to set keys 1`] = `var x = React.jsx(React.Fragment, {}, "foo");`;
+
+exports[`transform react to jsx import source pragma overrides regular pragma 1`] = `
+import * as _baz from "baz";
+
+/** @jsxImportSource baz */
+var x = _baz.jsx("div", {
+  children: _baz.jsx("span", {})
+});
+`;
 
 exports[`transform react to jsx nonStatic children 1`] = `
 var _jsxFileName = "";

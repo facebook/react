@@ -41,6 +41,9 @@ const IMPORT_TYPES = {
   namedExports: 'namedExports', // import { jsx } from "react";
 };
 
+const JSX_AUTO_IMPORT_ANNOTATION_REGEX = /\*?\s*@jsxAutoImport\s+([^\s]+)/;
+const JSX_IMPORT_SOURCE_ANNOTATION_REGEX = /\*?\s*@jsxImportSource\s+([^\s]+)/;
+
 // We want to use React.createElement, even in the case of
 // jsx, for <div {...props} key={key} /> to distinguish it
 // from <div key={key} {...props} />. This is an intermediary
@@ -896,21 +899,41 @@ module.exports = function(babel) {
 
   visitor.Program = {
     enter(path, state) {
-      const AUTO_IMPORT = state.opts.autoImport || 'none';
-      const SOURCE = state.opts.importSource || 'react';
+      let autoImport = state.opts.autoImport || 'none';
+      let source = state.opts.importSource || 'react';
       const CACHE_IMPORT_FNS = state.opts.shouldCacheImportFns || false;
+      const {file} = state;
+
+      if (file.ast.comments) {
+        for (const comment of (file.ast.comments: Array<Object>)) {
+          const jsxAutoImportMatches = JSX_AUTO_IMPORT_ANNOTATION_REGEX.exec(
+            comment.value,
+          );
+          if (jsxAutoImportMatches) {
+            autoImport = jsxAutoImportMatches[1];
+          }
+          const jsxImportSourceMatches = JSX_IMPORT_SOURCE_ANNOTATION_REGEX.exec(
+            comment.value,
+          );
+          if (jsxImportSourceMatches) {
+            source = jsxImportSourceMatches[1];
+          }
+        }
+      }
+
       const importName = addAutoImports(path, {
         ...state.opts,
-        autoImport: AUTO_IMPORT,
-        source: SOURCE,
+        autoImport,
+        source,
         shouldCacheImportFns: CACHE_IMPORT_FNS,
       });
+
       state.set(
         'oldJSXIdentifier',
         createIdentifierParser(
           createIdentifierName(
             path,
-            AUTO_IMPORT,
+            autoImport,
             CACHE_IMPORT_FNS,
             'createElement',
             importName,
@@ -923,7 +946,7 @@ module.exports = function(babel) {
         createIdentifierParser(
           createIdentifierName(
             path,
-            AUTO_IMPORT,
+            autoImport,
             CACHE_IMPORT_FNS,
             state.opts.development ? 'jsxDEV' : 'jsx',
             importName,
@@ -936,7 +959,7 @@ module.exports = function(babel) {
         createIdentifierParser(
           createIdentifierName(
             path,
-            AUTO_IMPORT,
+            autoImport,
             CACHE_IMPORT_FNS,
             state.opts.development ? 'jsxDEV' : 'jsxs',
             importName,
@@ -949,7 +972,7 @@ module.exports = function(babel) {
         createIdentifierParser(
           createIdentifierName(
             path,
-            AUTO_IMPORT,
+            autoImport,
             CACHE_IMPORT_FNS,
             'Fragment',
             importName,
