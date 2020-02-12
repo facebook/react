@@ -7,7 +7,6 @@
  * @flow
  */
 
-import {getIsHydrating} from 'react-reconciler/src/ReactFiberHydrationContext';
 import {addUserTimingListener} from 'shared/ReactFeatureFlags';
 
 import ReactDOM from './ReactDOM';
@@ -26,8 +25,6 @@ Object.assign(
     },
     // Perf experiment
     addUserTimingListener,
-
-    getIsHydrating,
   },
 );
 
