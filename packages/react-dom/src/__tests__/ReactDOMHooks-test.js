@@ -105,8 +105,9 @@ describe('ReactDOMHooks', () => {
     expect(labelRef.current.innerHTML).toBe('abc');
   });
 
-  if (__EXPERIMENTAL__) {
-    it('should not bail out when an update is scheduled from within an event handler in Concurrent Mode', () => {
+  it.experimental(
+    'should not bail out when an update is scheduled from within an event handler in Concurrent Mode',
+    () => {
       const {createRef, useCallback, useState} = React;
 
       const Example = ({inputRef, labelRef}) => {
@@ -139,6 +140,6 @@ describe('ReactDOMHooks', () => {
       Scheduler.unstable_flushAll();
 
       expect(labelRef.current.innerHTML).toBe('abc');
-    });
-  }
+    },
+  );
 });

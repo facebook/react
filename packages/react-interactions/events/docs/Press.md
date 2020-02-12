@@ -21,7 +21,7 @@ const Button = (props) => (
   return (
     <div
       {...props}
-      listeners={press}
+      DEPRECATED_flareListeners={press}
       role="button"
       tabIndex={0}
       style={

@@ -12,11 +12,11 @@ import typeof * as FeatureFlagsShimType from './ReactFeatureFlags.www';
 
 // Re-export dynamic flags from the www version.
 export const {
-  debugRenderPhaseSideEffects,
   debugRenderPhaseSideEffectsForStrictMode,
   disableInputAttributeSyncing,
   enableTrustedTypesIntegration,
   enableSelectiveHydration,
+  enableTrainModelFix,
 } = require('ReactFeatureFlags');
 
 // In www, we have experimental support for gathering data
@@ -42,6 +42,8 @@ export const disableSchedulerTimeoutBasedOnReactExpirationTime = false;
 export const exposeConcurrentModeAPIs = __EXPERIMENTAL__;
 
 export const enableSuspenseServerRenderer = true;
+
+export const enableChunksAPI = __EXPERIMENTAL__;
 
 export const disableJavaScriptURLs = true;
 
@@ -72,7 +74,7 @@ function updateFlagOutsideOfReactCallStack() {
   }
 }
 
-export const enableFlareAPI = true;
+export const enableDeprecatedFlareAPI = true;
 
 export const enableFundamentalAPI = false;
 
@@ -85,6 +87,8 @@ export const warnAboutUnmockedScheduler = true;
 export const enableSuspenseCallback = true;
 
 export const flushSuspenseFallbacksInTests = true;
+
+export const enableNativeTargetAsInstance = false;
 
 // Flow magic to verify the exports of this file match the original version.
 // eslint-disable-next-line no-unused-vars

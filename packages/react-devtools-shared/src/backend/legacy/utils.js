@@ -19,7 +19,7 @@ export function decorate(object: Object, attr: string, fn: Function): Function {
 
 export function decorateMany(
   source: Object,
-  fns: {[attr: string]: Function},
+  fns: {[attr: string]: Function, ...},
 ): Object {
   const olds = {};
   for (const name in fns) {

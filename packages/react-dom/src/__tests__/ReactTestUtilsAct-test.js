@@ -108,7 +108,7 @@ describe('ReactTestUtils.act()', () => {
     it('does not warn in legacy mode', () => {
       expect(() => {
         ReactDOM.render(<App />, document.createElement('div'));
-      }).toWarnDev([]);
+      }).toErrorDev([]);
     });
 
     it('warns in strict mode', () => {
@@ -119,37 +119,33 @@ describe('ReactTestUtils.act()', () => {
           </React.StrictMode>,
           document.createElement('div'),
         );
-      }).toWarnDev([
+      }).toErrorDev([
         'An update to App ran an effect, but was not wrapped in act(...)',
         'An update to App ran an effect, but was not wrapped in act(...)',
       ]);
     });
 
-    if (__EXPERIMENTAL__) {
-      it('warns in blocking mode', () => {
-        expect(() => {
-          const root = ReactDOM.createBlockingRoot(
-            document.createElement('div'),
-          );
-          root.render(<App />);
-          Scheduler.unstable_flushAll();
-        }).toWarnDev([
-          'An update to App ran an effect, but was not wrapped in act(...)',
-          'An update to App ran an effect, but was not wrapped in act(...)',
-        ]);
-      });
+    it.experimental('warns in blocking mode', () => {
+      expect(() => {
+        const root = ReactDOM.createBlockingRoot(document.createElement('div'));
+        root.render(<App />);
+        Scheduler.unstable_flushAll();
+      }).toErrorDev([
+        'An update to App ran an effect, but was not wrapped in act(...)',
+        'An update to App ran an effect, but was not wrapped in act(...)',
+      ]);
+    });
 
-      it('warns in concurrent mode', () => {
-        expect(() => {
-          const root = ReactDOM.createRoot(document.createElement('div'));
-          root.render(<App />);
-          Scheduler.unstable_flushAll();
-        }).toWarnDev([
-          'An update to App ran an effect, but was not wrapped in act(...)',
-          'An update to App ran an effect, but was not wrapped in act(...)',
-        ]);
-      });
-    }
+    it.experimental('warns in concurrent mode', () => {
+      expect(() => {
+        const root = ReactDOM.createRoot(document.createElement('div'));
+        root.render(<App />);
+        Scheduler.unstable_flushAll();
+      }).toErrorDev([
+        'An update to App ran an effect, but was not wrapped in act(...)',
+        'An update to App ran an effect, but was not wrapped in act(...)',
+      ]);
+    });
   });
 });
 
@@ -274,7 +270,7 @@ function runActTests(label, render, unmount, rerender) {
           render(<App />, container);
         });
 
-        expect(() => setValue(1)).toWarnDev([
+        expect(() => setValue(1)).toErrorDev([
           'An update to App inside a test was not wrapped in act(...).',
         ]);
       });
@@ -341,12 +337,9 @@ function runActTests(label, render, unmount, rerender) {
               await null;
               setState(x => x + 1);
             }
-            React.useEffect(
-              () => {
-                ticker();
-              },
-              [Math.min(state, 4)],
-            );
+            React.useEffect(() => {
+              ticker();
+            }, [Math.min(state, 4)]);
             return state;
           }
 
@@ -388,13 +381,13 @@ function runActTests(label, render, unmount, rerender) {
       });
 
       it('warns if you return a value inside act', () => {
-        expect(() => act(() => null)).toWarnDev(
+        expect(() => act(() => null)).toErrorDev(
           [
             'The callback passed to act(...) function must return undefined, or a Promise.',
           ],
           {withoutStack: true},
         );
-        expect(() => act(() => 123)).toWarnDev(
+        expect(() => act(() => 123)).toErrorDev(
           [
             'The callback passed to act(...) function must return undefined, or a Promise.',
           ],
@@ -403,7 +396,7 @@ function runActTests(label, render, unmount, rerender) {
       });
 
       it('warns if you try to await a sync .act call', () => {
-        expect(() => act(() => {}).then(() => {})).toWarnDev(
+        expect(() => act(() => {}).then(() => {})).toErrorDev(
           [
             'Do not await the result of calling act(...) with sync logic, it is not a Promise.',
           ],
@@ -525,13 +518,10 @@ function runActTests(label, render, unmount, rerender) {
             await null;
             setState(x => x + 1);
           }
-          React.useEffect(
-            () => {
-              Scheduler.unstable_yieldValue(state);
-              ticker();
-            },
-            [Math.min(state, 4)],
-          );
+          React.useEffect(() => {
+            Scheduler.unstable_yieldValue(state);
+            ticker();
+          }, [Math.min(state, 4)]);
           return state;
         }
 

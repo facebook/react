@@ -308,6 +308,130 @@ describe('ProfilingCache', () => {
     }
   });
 
+  it('should properly detect changed hooks', () => {
+    const Context = React.createContext(0);
+
+    function reducer(state, action) {
+      switch (action.type) {
+        case 'invert':
+          return {value: !state.value};
+        default:
+          throw new Error();
+      }
+    }
+
+    let dispatch = null;
+    let setState = null;
+
+    const Component = ({count, string}) => {
+      // These hooks may change and initiate re-renders.
+      setState = React.useState('abc')[1];
+      dispatch = React.useReducer(reducer, {value: true})[1];
+
+      // This hook's return value may change between renders,
+      // but the hook itself isn't stateful.
+      React.useContext(Context);
+
+      // These hooks and their dependencies may not change between renders.
+      // We're using them to ensure that they don't trigger false positives.
+      React.useCallback(() => () => {}, [string]);
+      React.useMemo(() => string, [string]);
+
+      // These hooks never "change".
+      React.useEffect(() => {}, [string]);
+      React.useLayoutEffect(() => {}, [string]);
+
+      return null;
+    };
+
+    const container = document.createElement('div');
+
+    utils.act(() => store.profilerStore.startProfiling());
+    utils.act(() =>
+      ReactDOM.render(
+        <Context.Provider value={true}>
+          <Component count={1} />
+        </Context.Provider>,
+        container,
+      ),
+    );
+
+    // Second render has no changed hooks, only changed props.
+    utils.act(() =>
+      ReactDOM.render(
+        <Context.Provider value={true}>
+          <Component count={2} />
+        </Context.Provider>,
+        container,
+      ),
+    );
+
+    // Third render has a changed reducer hook
+    utils.act(() => dispatch({type: 'invert'}));
+
+    // Fourth render has a changed state hook
+    utils.act(() => setState('def'));
+
+    // Fifth render has a changed context value, but no changed hook.
+    // Technically, DevTools will miss this "context" change since it only tracks legacy context.
+    utils.act(() =>
+      ReactDOM.render(
+        <Context.Provider value={false}>
+          <Component count={2} />
+        </Context.Provider>,
+        container,
+      ),
+    );
+
+    utils.act(() => store.profilerStore.stopProfiling());
+
+    const allCommitData = [];
+
+    function Validator({commitIndex, previousCommitDetails, rootID}) {
+      const commitData = store.profilerStore.getCommitData(rootID, commitIndex);
+      if (previousCommitDetails != null) {
+        expect(commitData).toEqual(previousCommitDetails);
+      } else {
+        allCommitData.push(commitData);
+        expect(commitData).toMatchSnapshot(
+          `CommitDetails commitIndex: ${commitIndex}`,
+        );
+      }
+      return null;
+    }
+
+    const rootID = store.roots[0];
+
+    for (let commitIndex = 0; commitIndex < 5; commitIndex++) {
+      utils.act(() => {
+        TestRenderer.create(
+          <Validator
+            commitIndex={commitIndex}
+            previousCommitDetails={null}
+            rootID={rootID}
+          />,
+        );
+      });
+    }
+
+    expect(allCommitData).toHaveLength(5);
+
+    // Export and re-import profile data and make sure it is retained.
+    utils.exportImportHelper(bridge, store);
+
+    for (let commitIndex = 0; commitIndex < 5; commitIndex++) {
+      utils.act(() => {
+        TestRenderer.create(
+          <Validator
+            commitIndex={commitIndex}
+            previousCommitDetails={allCommitData[commitIndex]}
+            rootID={rootID}
+          />,
+        );
+      });
+    }
+  });
+
   it('should calculate a self duration based on actual children (not filtered children)', () => {
     store.componentFilters = [utils.createDisplayNameFilter('^Parent$')];
 

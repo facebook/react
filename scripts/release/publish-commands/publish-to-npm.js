@@ -44,17 +44,13 @@ const run = async ({cwd, dry, packages, tags}, otp) => {
       for (let j = 1; j < tags.length; j++) {
         if (!dry) {
           await exec(
-            `npm dist-tag add ${packageName}@${version} ${
-              tags[j]
-            } --otp=${otp}`,
+            `npm dist-tag add ${packageName}@${version} ${tags[j]} --otp=${otp}`,
             {cwd: packagePath}
           );
         }
         console.log(
           theme.command(
-            `  npm dist-tag add ${packageName}@${version} ${
-              tags[j]
-            } --otp=${otp}`
+            `  npm dist-tag add ${packageName}@${version} ${tags[j]} --otp=${otp}`
           )
         );
       }

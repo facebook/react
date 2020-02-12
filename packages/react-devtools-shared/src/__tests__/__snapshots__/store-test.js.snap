@@ -612,3 +612,18 @@ exports[`Store should properly serialize non-string key values: 1: mount 1`] = `
 [root]
     <Child key="123">
 `;
+
+exports[`Store should show the right display names for special component types 1`] = `
+[root]
+  ▾ <App>
+      <MyComponent>
+      <MyComponent> [ForwardRef]
+    ▾ <Anonymous> [ForwardRef]
+        <MyComponent>
+      <Custom> [ForwardRef]
+      <MyComponent> [Memo]
+    ▾ <MyComponent> [Memo]
+        <MyComponent> [ForwardRef]
+    ▾ <Suspense>
+        <MyComponent>
+`;

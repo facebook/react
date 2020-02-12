@@ -20,27 +20,26 @@ import type {SuspenseConfig} from 'react-reconciler/src/ReactFiberSuspenseConfig
 import {validateContextBounds} from './ReactPartialRendererContext';
 
 import invariant from 'shared/invariant';
-import warning from 'shared/warning';
 import is from 'shared/objectIs';
 
 type BasicStateAction<S> = (S => S) | S;
 type Dispatch<A> = A => void;
 
-type Update<A> = {
+type Update<A> = {|
   action: A,
   next: Update<A> | null,
-};
+|};
 
-type UpdateQueue<A> = {
+type UpdateQueue<A> = {|
   last: Update<A> | null,
   dispatch: any,
-};
+|};
 
-type Hook = {
+type Hook = {|
   memoizedState: any,
   queue: UpdateQueue<any> | null,
   next: Hook | null,
-};
+|};
 
 let currentlyRenderingComponent: Object | null = null;
 let firstWorkInProgressHook: Hook | null = null;
@@ -71,13 +70,14 @@ function resolveCurrentlyRenderingComponent(): Object {
       'See https://fb.me/react-invalid-hook-call for tips about how to debug and fix this problem.',
   );
   if (__DEV__) {
-    warning(
-      !isInHookUserCodeInDev,
-      'Do not call Hooks inside useEffect(...), useMemo(...), or other built-in Hooks. ' +
-        'You can only call Hooks at the top level of your React function. ' +
-        'For more information, see ' +
-        'https://fb.me/rules-of-hooks',
-    );
+    if (isInHookUserCodeInDev) {
+      console.error(
+        'Do not call Hooks inside useEffect(...), useMemo(...), or other built-in Hooks. ' +
+          'You can only call Hooks at the top level of your React function. ' +
+          'For more information, see ' +
+          'https://fb.me/rules-of-hooks',
+      );
+    }
   }
   return currentlyRenderingComponent;
 }
@@ -88,8 +88,7 @@ function areHookInputsEqual(
 ) {
   if (prevDeps === null) {
     if (__DEV__) {
-      warning(
-        false,
+      console.error(
         '%s received a final argument during this render, but not during ' +
           'the previous render. Even though the final argument is optional, ' +
           'its type cannot change between renders.',
@@ -103,8 +102,7 @@ function areHookInputsEqual(
     // Don't bother comparing lengths in prod because these arrays should be
     // passed inline.
     if (nextDeps.length !== prevDeps.length) {
-      warning(
-        false,
+      console.error(
         'The final argument passed to %s changed size between renders. The ' +
           'order and size of this array must remain constant.\n\n' +
           'Previous: %s\n' +
@@ -223,13 +221,14 @@ function readContext<T>(
   let threadID = currentThreadID;
   validateContextBounds(context, threadID);
   if (__DEV__) {
-    warning(
-      !isInHookUserCodeInDev,
-      'Context can only be read while React is rendering. ' +
-        'In classes, you can read it in the render method or getDerivedStateFromProps. ' +
-        'In function components, you can read it directly in the function body, but not ' +
-        'inside Hooks like useReducer() or useMemo().',
-    );
+    if (isInHookUserCodeInDev) {
+      console.error(
+        'Context can only be read while React is rendering. ' +
+          'In classes, you can read it in the render method or getDerivedStateFromProps. ' +
+          'In function components, you can read it directly in the function body, but not ' +
+          'inside Hooks like useReducer() or useMemo().',
+      );
+    }
   }
   return context[threadID];
 }
@@ -370,7 +369,7 @@ function useMemo<T>(nextCreate: () => T, deps: Array<mixed> | void | null): T {
   return nextValue;
 }
 
-function useRef<T>(initialValue: T): {current: T} {
+function useRef<T>(initialValue: T): {|current: T|} {
   currentlyRenderingComponent = resolveCurrentlyRenderingComponent();
   workInProgressHook = createWorkInProgressHook();
   const previousRef = workInProgressHook.memoizedState;
@@ -392,16 +391,15 @@ export function useLayoutEffect(
 ) {
   if (__DEV__) {
     currentHookNameInDev = 'useLayoutEffect';
+    console.error(
+      'useLayoutEffect does nothing on the server, because its effect cannot ' +
+        "be encoded into the server renderer's output format. This will lead " +
+        'to a mismatch between the initial, non-hydrated UI and the intended ' +
+        'UI. To avoid this, useLayoutEffect should only be used in ' +
+        'components that render exclusively on the client. ' +
+        'See https://fb.me/react-uselayouteffect-ssr for common fixes.',
+    );
   }
-  warning(
-    false,
-    'useLayoutEffect does nothing on the server, because its effect cannot ' +
-      "be encoded into the server renderer's output format. This will lead " +
-      'to a mismatch between the initial, non-hydrated UI and the intended ' +
-      'UI. To avoid this, useLayoutEffect should only be used in ' +
-      'components that render exclusively on the client. ' +
-      'See https://fb.me/react-uselayouteffect-ssr for common fixes.',
-  );
 }
 
 function dispatchAction<A>(

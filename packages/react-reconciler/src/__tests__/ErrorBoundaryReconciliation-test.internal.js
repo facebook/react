@@ -68,7 +68,7 @@ describe('ErrorBoundaryReconciliation', () => {
           </ErrorBoundary>,
         );
         Scheduler.unstable_flushAll();
-      }).toWarnDev(isConcurrent ? ['invalid', 'invalid'] : ['invalid']);
+      }).toErrorDev(isConcurrent ? ['invalid', 'invalid'] : ['invalid']);
       const Fallback = fallbackTagName;
       expect(renderer).toMatchRenderedOutput(<Fallback prop="ErrorBoundary" />);
     }

@@ -58,7 +58,7 @@ describe('ReactSuspenseList', () => {
 
     ReactNoop.render(<Foo />);
 
-    expect(() => Scheduler.unstable_flushAll()).toWarnDev([
+    expect(() => Scheduler.unstable_flushAll()).toErrorDev([
       'Warning: "something" is not a supported revealOrder on ' +
         '<SuspenseList />. Did you mean "together", "forwards" or "backwards"?' +
         '\n    in SuspenseList (at **)' +
@@ -77,7 +77,7 @@ describe('ReactSuspenseList', () => {
 
     ReactNoop.render(<Foo />);
 
-    expect(() => Scheduler.unstable_flushAll()).toWarnDev([
+    expect(() => Scheduler.unstable_flushAll()).toErrorDev([
       'Warning: "TOGETHER" is not a valid value for revealOrder on ' +
         '<SuspenseList />. Use lowercase "together" instead.' +
         '\n    in SuspenseList (at **)' +
@@ -96,7 +96,7 @@ describe('ReactSuspenseList', () => {
 
     ReactNoop.render(<Foo />);
 
-    expect(() => Scheduler.unstable_flushAll()).toWarnDev([
+    expect(() => Scheduler.unstable_flushAll()).toErrorDev([
       'Warning: "forward" is not a valid value for revealOrder on ' +
         '<SuspenseList />. React uses the -s suffix in the spelling. ' +
         'Use "forwards" instead.' +
@@ -128,7 +128,7 @@ describe('ReactSuspenseList', () => {
       </Foo>,
     );
 
-    expect(() => Scheduler.unstable_flushAll()).toWarnDev([
+    expect(() => Scheduler.unstable_flushAll()).toErrorDev([
       'Warning: A single row was passed to a <SuspenseList revealOrder="forwards" />. ' +
         'This is not useful since it needs multiple rows. ' +
         'Did you mean to pass multiple children or an array?' +
@@ -148,7 +148,7 @@ describe('ReactSuspenseList', () => {
 
     ReactNoop.render(<Foo />);
 
-    expect(() => Scheduler.unstable_flushAll()).toWarnDev([
+    expect(() => Scheduler.unstable_flushAll()).toErrorDev([
       'Warning: A single row was passed to a <SuspenseList revealOrder="backwards" />. ' +
         'This is not useful since it needs multiple rows. ' +
         'Did you mean to pass multiple children or an array?' +
@@ -173,7 +173,7 @@ describe('ReactSuspenseList', () => {
 
     ReactNoop.render(<Foo items={['A', 'B']} />);
 
-    expect(() => Scheduler.unstable_flushAll()).toWarnDev([
+    expect(() => Scheduler.unstable_flushAll()).toErrorDev([
       'Warning: A nested array was passed to row #0 in <SuspenseList />. ' +
         'Wrap it in an additional SuspenseList to configure its revealOrder: ' +
         '<SuspenseList revealOrder=...> ... ' +
@@ -925,7 +925,14 @@ describe('ReactSuspenseList', () => {
     await B.resolve();
     await D.resolve();
 
-    ReactNoop.render(<Foo items={[['B', B], ['D', D]]} />);
+    ReactNoop.render(
+      <Foo
+        items={[
+          ['B', B],
+          ['D', D],
+        ]}
+      />,
+    );
 
     expect(Scheduler).toFlushAndYield(['B', 'D']);
 
@@ -939,7 +946,14 @@ describe('ReactSuspenseList', () => {
     // Insert items in the beginning, middle and end.
     ReactNoop.render(
       <Foo
-        items={[['A', A], ['B', B], ['C', C], ['D', D], ['E', E], ['F', F]]}
+        items={[
+          ['A', A],
+          ['B', B],
+          ['C', C],
+          ['D', D],
+          ['E', E],
+          ['F', F],
+        ]}
       />,
     );
 
@@ -1021,7 +1035,15 @@ describe('ReactSuspenseList', () => {
     await F.resolve();
 
     // We can also delete some items.
-    ReactNoop.render(<Foo items={[['D', D], ['E', E], ['F', F]]} />);
+    ReactNoop.render(
+      <Foo
+        items={[
+          ['D', D],
+          ['E', E],
+          ['F', F],
+        ]}
+      />,
+    );
 
     expect(Scheduler).toFlushAndYield(['D', 'E', 'F']);
 
@@ -1093,7 +1115,14 @@ describe('ReactSuspenseList', () => {
     // Update items in the beginning, middle and end to start suspending.
     ReactNoop.render(
       <Foo
-        items={[['A', A], ['B', B], ['C', Cs], ['D', D], ['E', Es], ['F', F]]}
+        items={[
+          ['A', A],
+          ['B', B],
+          ['C', Cs],
+          ['D', D],
+          ['E', Es],
+          ['F', F],
+        ]}
       />,
     );
 
@@ -1233,8 +1262,8 @@ describe('ReactSuspenseList', () => {
 
     expect(Scheduler).toFlushAndYieldThrough(['A']);
 
-    Scheduler.unstable_advanceTime(300);
-    jest.advanceTimersByTime(300);
+    Scheduler.unstable_advanceTime(200);
+    jest.advanceTimersByTime(200);
 
     expect(Scheduler).toFlushAndYieldThrough(['B']);
 
@@ -1354,7 +1383,7 @@ describe('ReactSuspenseList', () => {
 
     ReactNoop.render(<Foo />);
 
-    expect(() => Scheduler.unstable_flushAll()).toWarnDev([
+    expect(() => Scheduler.unstable_flushAll()).toErrorDev([
       'Warning: "collapse" is not a supported value for tail on ' +
         '<SuspenseList />. Did you mean "collapsed" or "hidden"?' +
         '\n    in SuspenseList (at **)' +
@@ -1373,7 +1402,7 @@ describe('ReactSuspenseList', () => {
 
     ReactNoop.render(<Foo />);
 
-    expect(() => Scheduler.unstable_flushAll()).toWarnDev([
+    expect(() => Scheduler.unstable_flushAll()).toErrorDev([
       'Warning: <SuspenseList tail="collapsed" /> is only valid if ' +
         'revealOrder is "forwards" or "backwards". ' +
         'Did you mean to specify revealOrder="forwards"?' +
@@ -1407,8 +1436,8 @@ describe('ReactSuspenseList', () => {
 
     expect(Scheduler).toFlushAndYieldThrough(['A']);
 
-    Scheduler.unstable_advanceTime(300);
-    jest.advanceTimersByTime(300);
+    Scheduler.unstable_advanceTime(200);
+    jest.advanceTimersByTime(200);
 
     expect(Scheduler).toFlushAndYieldThrough(['B']);
 
@@ -1468,7 +1497,14 @@ describe('ReactSuspenseList', () => {
       );
     }
 
-    ReactNoop.render(<Foo items={[['A', A], ['D', D]]} />);
+    ReactNoop.render(
+      <Foo
+        items={[
+          ['A', A],
+          ['D', D],
+        ]}
+      />,
+    );
 
     await A.resolve();
     await D.resolve();
@@ -1486,7 +1522,14 @@ describe('ReactSuspenseList', () => {
     // For the second render, we're going to insert items in the middle and end.
     ReactNoop.render(
       <Foo
-        items={[['A', A], ['B', B], ['C', C], ['D', D], ['E', E], ['F', F]]}
+        items={[
+          ['A', A],
+          ['B', B],
+          ['C', C],
+          ['D', D],
+          ['E', E],
+          ['F', F],
+        ]}
       />,
     );
 
@@ -1596,7 +1639,14 @@ describe('ReactSuspenseList', () => {
       );
     }
 
-    ReactNoop.render(<Foo items={[['C', C], ['F', F]]} />);
+    ReactNoop.render(
+      <Foo
+        items={[
+          ['C', C],
+          ['F', F],
+        ]}
+      />,
+    );
 
     await C.resolve();
     await F.resolve();
@@ -1614,7 +1664,14 @@ describe('ReactSuspenseList', () => {
     // For the second render, we're going to insert items in the middle and end.
     ReactNoop.render(
       <Foo
-        items={[['A', A], ['B', B], ['C', C], ['D', D], ['E', E], ['F', F]]}
+        items={[
+          ['A', A],
+          ['B', B],
+          ['C', C],
+          ['D', D],
+          ['E', E],
+          ['F', F],
+        ]}
       />,
     );
 
@@ -1709,7 +1766,7 @@ describe('ReactSuspenseList', () => {
     );
   });
 
-  it('adding to the middle of committeed tail does not collapse insertions', async () => {
+  it('adding to the middle of committed tail does not collapse insertions', async () => {
     let A = createAsyncText('A');
     let B = createAsyncText('B');
     let C = createAsyncText('C');
@@ -1733,7 +1790,14 @@ describe('ReactSuspenseList', () => {
       );
     }
 
-    ReactNoop.render(<Foo items={[['A', A], ['D', SyncD]]} />);
+    ReactNoop.render(
+      <Foo
+        items={[
+          ['A', A],
+          ['D', SyncD],
+        ]}
+      />,
+    );
 
     await A.resolve();
 
@@ -1751,7 +1815,14 @@ describe('ReactSuspenseList', () => {
     // Note that D now suspends even though it didn't in the first pass.
     ReactNoop.render(
       <Foo
-        items={[['A', A], ['B', B], ['C', C], ['D', D], ['E', E], ['F', F]]}
+        items={[
+          ['A', A],
+          ['B', B],
+          ['C', C],
+          ['D', D],
+          ['E', E],
+          ['F', F],
+        ]}
       />,
     );
 
@@ -2023,7 +2094,7 @@ describe('ReactSuspenseList', () => {
     );
   });
 
-  it('eventually resolves two nested forwards suspense list with a hidden tail', async () => {
+  it('eventually resolves two nested forwards suspense lists with a hidden tail', async () => {
     let B = createAsyncText('B');
 
     function Foo({showB}) {
@@ -2134,5 +2205,93 @@ describe('ReactSuspenseList', () => {
         <span>C</span>
       </div>,
     );
+  });
+
+  it('is able to re-suspend the last rows during an update with hidden', async () => {
+    let AsyncB = createAsyncText('B');
+
+    let setAsyncB;
+
+    function B() {
+      let [shouldBeAsync, setAsync] = React.useState(false);
+      setAsyncB = setAsync;
+
+      return shouldBeAsync ? (
+        <Suspense fallback={<Text text="Loading B" />}>
+          <AsyncB />
+        </Suspense>
+      ) : (
+        <Text text="Sync B" />
+      );
+    }
+
+    function Foo({updateList}) {
+      return (
+        <SuspenseList revealOrder="forwards" tail="hidden">
+          <Suspense key="A" fallback={<Text text="Loading A" />}>
+            <Text text="A" />
+          </Suspense>
+          <B key="B" updateList={updateList} />
+        </SuspenseList>
+      );
+    }
+
+    ReactNoop.render(<Foo />);
+
+    expect(Scheduler).toFlushAndYield(['A', 'Sync B']);
+
+    expect(ReactNoop).toMatchRenderedOutput(
+      <>
+        <span>A</span>
+        <span>Sync B</span>
+      </>,
+    );
+
+    let previousInst = setAsyncB;
+
+    // During an update we suspend on B.
+    ReactNoop.act(() => setAsyncB(true));
+
+    expect(Scheduler).toHaveYielded([
+      'Suspend! [B]',
+      'Loading B',
+      // The second pass is the "force hide" pass
+      'Loading B',
+    ]);
+
+    expect(ReactNoop).toMatchRenderedOutput(
+      <>
+        <span>A</span>
+        <span>Loading B</span>
+      </>,
+    );
+
+    // Before we resolve we'll rerender the whole list.
+    // This should leave the tree intact.
+    ReactNoop.act(() => ReactNoop.render(<Foo updateList={true} />));
+
+    expect(Scheduler).toHaveYielded(['A', 'Suspend! [B]', 'Loading B']);
+
+    expect(ReactNoop).toMatchRenderedOutput(
+      <>
+        <span>A</span>
+        <span>Loading B</span>
+      </>,
+    );
+
+    await AsyncB.resolve();
+
+    expect(Scheduler).toFlushAndYield(['B']);
+
+    expect(ReactNoop).toMatchRenderedOutput(
+      <>
+        <span>A</span>
+        <span>B</span>
+      </>,
+    );
+
+    // This should be the same instance. I.e. it didn't
+    // remount.
+    expect(previousInst).toBe(setAsyncB);
   });
 });

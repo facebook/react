@@ -10,6 +10,22 @@
 import Symbol from 'es6-symbol';
 import LRU from 'lru-cache';
 import {
+  isElement,
+  typeOf,
+  AsyncMode,
+  ConcurrentMode,
+  ContextConsumer,
+  ContextProvider,
+  ForwardRef,
+  Fragment,
+  Lazy,
+  Memo,
+  Portal,
+  Profiler,
+  StrictMode,
+  Suspense,
+} from 'react-is';
+import {
   TREE_OPERATION_ADD,
   TREE_OPERATION_REMOVE,
   TREE_OPERATION_REORDER_CHILDREN,
@@ -28,6 +44,7 @@ import {
   ElementTypeMemo,
 } from 'react-devtools-shared/src/types';
 import {localStorageGetItem, localStorageSetItem} from './storage';
+import {meta} from './hydration';
 
 import type {ComponentFilter, ElementType} from './types';
 
@@ -36,6 +53,16 @@ const cachedDisplayNames: WeakMap<Function, string> = new WeakMap();
 // On large trees, encoding takes significant time.
 // Try to reuse the already encoded strings.
 let encodedStringCache = new LRU({max: 1000});
+
+export function alphaSortKeys(a: string, b: string): number {
+  if (a > b) {
+    return 1;
+  } else if (b > a) {
+    return -1;
+  } else {
+    return 0;
+  }
+}
 
 export function getDisplayName(
   type: Function,
@@ -90,7 +117,7 @@ export function printOperationsArray(operations: Array<number>) {
   const rendererID = operations[0];
   const rootID = operations[1];
 
-  const logs = [`opertions for renderer:${rendererID} and root:${rootID}`];
+  const logs = [`operations for renderer:${rendererID} and root:${rootID}`];
 
   let i = 2;
 
@@ -303,5 +330,316 @@ export function setInObject(
     if (parent) {
       parent[last] = value;
     }
+  }
+}
+
+export type DataType =
+  | 'array'
+  | 'array_buffer'
+  | 'bigint'
+  | 'boolean'
+  | 'data_view'
+  | 'date'
+  | 'function'
+  | 'html_element'
+  | 'infinity'
+  | 'iterator'
+  | 'nan'
+  | 'null'
+  | 'number'
+  | 'object'
+  | 'react_element'
+  | 'regexp'
+  | 'string'
+  | 'symbol'
+  | 'typed_array'
+  | 'undefined'
+  | 'unknown';
+
+/**
+ * Get a enhanced/artificial type string based on the object instance
+ */
+export function getDataType(data: Object): DataType {
+  if (data === null) {
+    return 'null';
+  } else if (data === undefined) {
+    return 'undefined';
+  }
+
+  if (isElement(data)) {
+    return 'react_element';
+  }
+
+  if (typeof HTMLElement !== 'undefined' && data instanceof HTMLElement) {
+    return 'html_element';
+  }
+
+  const type = typeof data;
+  switch (type) {
+    case 'bigint':
+      return 'bigint';
+    case 'boolean':
+      return 'boolean';
+    case 'function':
+      return 'function';
+    case 'number':
+      if (Number.isNaN(data)) {
+        return 'nan';
+      } else if (!Number.isFinite(data)) {
+        return 'infinity';
+      } else {
+        return 'number';
+      }
+    case 'object':
+      if (Array.isArray(data)) {
+        return 'array';
+      } else if (ArrayBuffer.isView(data)) {
+        return hasOwnProperty.call(data.constructor, 'BYTES_PER_ELEMENT')
+          ? 'typed_array'
+          : 'data_view';
+      } else if (data.constructor && data.constructor.name === 'ArrayBuffer') {
+        // HACK This ArrayBuffer check is gross; is there a better way?
+        // We could try to create a new DataView with the value.
+        // If it doesn't error, we know it's an ArrayBuffer,
+        // but this seems kind of awkward and expensive.
+        return 'array_buffer';
+      } else if (typeof data[Symbol.iterator] === 'function') {
+        return 'iterator';
+      } else if (data.constructor && data.constructor.name === 'RegExp') {
+        return 'regexp';
+      } else if (Object.prototype.toString.call(data) === '[object Date]') {
+        return 'date';
+      }
+      return 'object';
+    case 'string':
+      return 'string';
+    case 'symbol':
+      return 'symbol';
+    default:
+      return 'unknown';
+  }
+}
+
+export function getDisplayNameForReactElement(
+  element: React$Element<any>,
+): string | null {
+  const elementType = typeOf(element);
+  switch (elementType) {
+    case AsyncMode:
+    case ConcurrentMode:
+      return 'ConcurrentMode';
+    case ContextConsumer:
+      return 'ContextConsumer';
+    case ContextProvider:
+      return 'ContextProvider';
+    case ForwardRef:
+      return 'ForwardRef';
+    case Fragment:
+      return 'Fragment';
+    case Lazy:
+      return 'Lazy';
+    case Memo:
+      return 'Memo';
+    case Portal:
+      return 'Portal';
+    case Profiler:
+      return 'Profiler';
+    case StrictMode:
+      return 'StrictMode';
+    case Suspense:
+      return 'Suspense';
+    default:
+      const {type} = element;
+      if (typeof type === 'string') {
+        return type;
+      } else if (type != null) {
+        return getDisplayName(type, 'Anonymous');
+      } else {
+        return 'Element';
+      }
+  }
+}
+
+const MAX_PREVIEW_STRING_LENGTH = 50;
+
+function truncateForDisplay(
+  string: string,
+  length: number = MAX_PREVIEW_STRING_LENGTH,
+) {
+  if (string.length > length) {
+    return string.substr(0, length) + '…';
+  } else {
+    return string;
+  }
+}
+
+// Attempts to mimic Chrome's inline preview for values.
+// For example, the following value...
+//   {
+//      foo: 123,
+//      bar: "abc",
+//      baz: [true, false],
+//      qux: { ab: 1, cd: 2 }
+//   };
+//
+// Would show a preview of...
+//   {foo: 123, bar: "abc", baz: Array(2), qux: {…}}
+//
+// And the following value...
+//   [
+//     123,
+//     "abc",
+//     [true, false],
+//     { foo: 123, bar: "abc" }
+//   ];
+//
+// Would show a preview of...
+//   [123, "abc", Array(2), {…}]
+export function formatDataForPreview(
+  data: any,
+  showFormattedValue: boolean,
+): string {
+  if (data != null && hasOwnProperty.call(data, meta.type)) {
+    return showFormattedValue
+      ? data[meta.preview_long]
+      : data[meta.preview_short];
+  }
+
+  const type = getDataType(data);
+
+  switch (type) {
+    case 'html_element':
+      return `<${truncateForDisplay(data.tagName.toLowerCase())} />`;
+    case 'function':
+      return truncateForDisplay(`ƒ ${data.name}() {}`);
+    case 'string':
+      return `"${data}"`;
+    case 'bigint':
+      return truncateForDisplay(data.toString() + 'n');
+    case 'regexp':
+      return truncateForDisplay(data.toString());
+    case 'symbol':
+      return truncateForDisplay(data.toString());
+    case 'react_element':
+      return `<${truncateForDisplay(
+        getDisplayNameForReactElement(data) || 'Unknown',
+      )} />`;
+    case 'array_buffer':
+      return `ArrayBuffer(${data.byteLength})`;
+    case 'data_view':
+      return `DataView(${data.buffer.byteLength})`;
+    case 'array':
+      if (showFormattedValue) {
+        let formatted = '';
+        for (let i = 0; i < data.length; i++) {
+          if (i > 0) {
+            formatted += ', ';
+          }
+          formatted += formatDataForPreview(data[i], false);
+          if (formatted.length > MAX_PREVIEW_STRING_LENGTH) {
+            // Prevent doing a lot of unnecessary iteration...
+            break;
+          }
+        }
+        return `[${truncateForDisplay(formatted)}]`;
+      } else {
+        const length = hasOwnProperty.call(data, meta.size)
+          ? data[meta.size]
+          : data.length;
+        return `Array(${length})`;
+      }
+    case 'typed_array':
+      const shortName = `${data.constructor.name}(${data.length})`;
+      if (showFormattedValue) {
+        let formatted = '';
+        for (let i = 0; i < data.length; i++) {
+          if (i > 0) {
+            formatted += ', ';
+          }
+          formatted += data[i];
+          if (formatted.length > MAX_PREVIEW_STRING_LENGTH) {
+            // Prevent doing a lot of unnecessary iteration...
+            break;
+          }
+        }
+        return `${shortName} [${truncateForDisplay(formatted)}]`;
+      } else {
+        return shortName;
+      }
+    case 'iterator':
+      const name = data.constructor.name;
+      if (showFormattedValue) {
+        // TRICKY
+        // Don't use [...spread] syntax for this purpose.
+        // This project uses @babel/plugin-transform-spread in "loose" mode which only works with Array values.
+        // Other types (e.g. typed arrays, Sets) will not spread correctly.
+        const array = Array.from(data);
+
+        let formatted = '';
+        for (let i = 0; i < array.length; i++) {
+          const entryOrEntries = array[i];
+
+          if (i > 0) {
+            formatted += ', ';
+          }
+
+          // TRICKY
+          // Browsers display Maps and Sets differently.
+          // To mimic their behavior, detect if we've been given an entries tuple.
+          //   Map(2) {"abc" => 123, "def" => 123}
+          //   Set(2) {"abc", 123}
+          if (Array.isArray(entryOrEntries)) {
+            const key = formatDataForPreview(entryOrEntries[0], true);
+            const value = formatDataForPreview(entryOrEntries[1], false);
+            formatted += `${key} => ${value}`;
+          } else {
+            formatted += formatDataForPreview(entryOrEntries, false);
+          }
+
+          if (formatted.length > MAX_PREVIEW_STRING_LENGTH) {
+            // Prevent doing a lot of unnecessary iteration...
+            break;
+          }
+        }
+
+        return `${name}(${data.size}) {${truncateForDisplay(formatted)}}`;
+      } else {
+        return `${name}(${data.size})`;
+      }
+    case 'date':
+      return data.toString();
+    case 'object':
+      if (showFormattedValue) {
+        const keys = Object.keys(data).sort(alphaSortKeys);
+
+        let formatted = '';
+        for (let i = 0; i < keys.length; i++) {
+          const key = keys[i];
+          if (i > 0) {
+            formatted += ', ';
+          }
+          formatted += `${key}: ${formatDataForPreview(data[key], false)}`;
+          if (formatted.length > MAX_PREVIEW_STRING_LENGTH) {
+            // Prevent doing a lot of unnecessary iteration...
+            break;
+          }
+        }
+        return `{${truncateForDisplay(formatted)}}`;
+      } else {
+        return '{…}';
+      }
+    case 'boolean':
+    case 'number':
+    case 'infinity':
+    case 'nan':
+    case 'null':
+    case 'undefined':
+      return data;
+    default:
+      try {
+        return truncateForDisplay('' + data);
+      } catch (error) {
+        return 'unserializable';
+      }
   }
 }

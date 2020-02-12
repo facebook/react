@@ -10,12 +10,14 @@
 'use strict';
 
 import {
+  buttonType,
   buttonsType,
   createEventTarget,
   describeWithPointerEvent,
   setPointerEvent,
   testWithPointerType,
-} from '../testing-library';
+  resetActivePointers,
+} from 'dom-event-testing-library';
 
 let React;
 let ReactFeatureFlags;
@@ -26,7 +28,7 @@ function initializeModules(hasPointerEvents) {
   jest.resetModules();
   setPointerEvent(hasPointerEvents);
   ReactFeatureFlags = require('shared/ReactFeatureFlags');
-  ReactFeatureFlags.enableFlareAPI = true;
+  ReactFeatureFlags.enableDeprecatedFlareAPI = true;
   React = require('react');
   ReactDOM = require('react-dom');
   useTap = require('react-interactions/events/tap').useTap;
@@ -81,13 +83,14 @@ describeWithPointerEvent('Tap responder', hasPointerEvents => {
     ReactDOM.render(null, container);
     document.body.removeChild(container);
     container = null;
+    resetActivePointers();
   });
 
   test('supports repeated use', () => {
     const ref = React.createRef();
     const Component = () => {
       const listener = useTap();
-      return <button ref={ref} listeners={listener} />;
+      return <button ref={ref} DEPRECATED_flareListeners={listener} />;
     };
     ReactDOM.render(<Component />, container);
 
@@ -122,7 +125,7 @@ describeWithPointerEvent('Tap responder', hasPointerEvents => {
           onTapCancel,
           onTapEnd,
         });
-        return <div ref={ref} listeners={listener} />;
+        return <div ref={ref} DEPRECATED_flareListeners={listener} />;
       };
       ReactDOM.render(<Component />, container);
     });
@@ -145,7 +148,7 @@ describeWithPointerEvent('Tap responder', hasPointerEvents => {
     function render(props) {
       const Component = () => {
         const listener = useTap(props);
-        return <div ref={ref} listeners={listener} />;
+        return <div ref={ref} DEPRECATED_flareListeners={listener} />;
       };
       ReactDOM.render(<Component />, container);
       document.elementFromPoint = () => ref.current;
@@ -201,7 +204,7 @@ describeWithPointerEvent('Tap responder', hasPointerEvents => {
       ref = React.createRef();
       const Component = () => {
         const listener = useTap({onAuxiliaryTap});
-        return <div ref={ref} listeners={listener} />;
+        return <div ref={ref} DEPRECATED_flareListeners={listener} />;
       };
       ReactDOM.render(<Component />, container);
       document.elementFromPoint = () => ref.current;
@@ -209,19 +212,21 @@ describeWithPointerEvent('Tap responder', hasPointerEvents => {
 
     test('auxiliary-button pointer up', () => {
       const pointerType = 'mouse';
+      const button = buttonType.auxiliary;
       const buttons = buttonsType.auxiliary;
       const target = createEventTarget(ref.current);
-      target.pointerdown({buttons, pointerType});
-      target.pointerup({buttons, pointerType});
+      target.pointerdown({button, buttons, pointerType});
+      target.pointerup({button, buttons, pointerType});
       expect(onAuxiliaryTap).toHaveBeenCalledTimes(1);
     });
 
     test('modifier-button pointer up', () => {
       const pointerType = 'mouse';
+      const button = buttonType.primary;
       const buttons = buttonsType.primary;
       const target = createEventTarget(ref.current);
-      target.pointerdown({buttons, pointerType});
-      target.pointerup({buttons, metaKey: true, pointerType});
+      target.pointerdown({button, buttons, pointerType});
+      target.pointerup({button, buttons, metaKey: true, pointerType});
       expect(onAuxiliaryTap).toHaveBeenCalledTimes(1);
     });
   });
@@ -234,7 +239,7 @@ describeWithPointerEvent('Tap responder', hasPointerEvents => {
       ref = React.createRef();
       const Component = () => {
         const listener = useTap({onTapStart});
-        return <div ref={ref} listeners={listener} />;
+        return <div ref={ref} DEPRECATED_flareListeners={listener} />;
       };
       ReactDOM.render(<Component />, container);
       document.elementFromPoint = () => ref.current;
@@ -243,6 +248,7 @@ describeWithPointerEvent('Tap responder', hasPointerEvents => {
     testWithPointerType('pointer down', pointerType => {
       const target = createEventTarget(ref.current);
       const nativeEvent = {
+        button: buttonType.primary,
         buttons: buttonsType.primary,
         pageX: 10,
         pageY: 10,
@@ -287,44 +293,78 @@ describeWithPointerEvent('Tap responder', hasPointerEvents => {
     test('second pointer on target', () => {
       const pointerType = 'touch';
       const target = createEventTarget(ref.current);
+      const button = buttonType.primary;
       const buttons = buttonsType.primary;
-      target.pointerdown({buttons, pointerId: 1, pointerType});
+      target.pointerdown({button, buttons, pointerId: 1, pointerType});
       expect(onTapStart).toHaveBeenCalledTimes(1);
-      if (hasPointerEvents) {
-        target.pointerdown({buttons, pointerId: 2, pointerType});
-      } else {
-        // TouchEvents
-        target.pointerdown([{pointerId: 1}, {pointerId: 2}]);
-      }
+      target.pointerdown({button, buttons, pointerId: 2, pointerType});
       expect(onTapStart).toHaveBeenCalledTimes(1);
     });
 
     testWithPointerType('ignored buttons and modifiers', pointerType => {
       const target = createEventTarget(ref.current);
-      const {auxiliary, eraser, primary, secondary} = buttonsType;
       if (pointerType !== 'touch') {
         // right-click
-        target.pointerdown({buttons: secondary, pointerType});
-        target.pointerup();
+        target.pointerdown({
+          button: buttonType.secondary,
+          buttons: buttonsType.secondary,
+          pointerType,
+        });
+        target.pointerup({pointerType});
         // middle-click
-        target.pointerdown({buttons: auxiliary, pointerType});
-        target.pointerup();
+        target.pointerdown({
+          button: buttonType.auxiliary,
+          buttons: buttonsType.auxiliary,
+          pointerType,
+        });
+        target.pointerup({pointerType});
+        // virtual middle-click with misleading 'buttons' value
+        target.pointerdown({
+          button: buttonType.auxiliary,
+          buttons: 0,
+          pointerType,
+        });
+        target.pointerup({pointerType});
         // pen eraser
-        target.pointerdown({buttons: eraser, pointerType});
-        target.pointerup();
+        target.pointerdown({
+          button: buttonType.eraser,
+          buttons: buttonsType.eraser,
+          pointerType,
+        });
+        target.pointerup({pointerType});
       }
       // alt-click
-      target.pointerdown({buttons: primary, altKey: true, pointerType});
-      target.pointerup();
+      target.pointerdown({
+        button: buttonType.primary,
+        buttons: buttonsType.primary,
+        altKey: true,
+        pointerType,
+      });
+      target.pointerup({pointerType});
       // ctrl-click
-      target.pointerdown({buttons: primary, ctrlKey: true, pointerType});
-      target.pointerup();
+      target.pointerdown({
+        button: buttonType.primary,
+        buttons: buttonsType.primary,
+        ctrlKey: true,
+        pointerType,
+      });
+      target.pointerup({pointerType});
       // meta-click
-      target.pointerdown({buttons: primary, metaKey: true, pointerType});
-      target.pointerup();
+      target.pointerdown({
+        button: buttonType.primary,
+        buttons: buttonsType.primary,
+        metaKey: true,
+        pointerType,
+      });
+      target.pointerup({pointerType});
       // shift-click
-      target.pointerdown({buttons: primary, shiftKey: true, pointerType});
-      target.pointerup();
+      target.pointerdown({
+        button: buttonType.primary,
+        buttons: buttonsType.primary,
+        shiftKey: true,
+        pointerType,
+      });
+      target.pointerup({pointerType});
 
       expect(onTapStart).toHaveBeenCalledTimes(0);
     });
@@ -338,7 +378,7 @@ describeWithPointerEvent('Tap responder', hasPointerEvents => {
       ref = React.createRef();
       const Component = () => {
         const listener = useTap({onTapEnd});
-        return <div ref={ref} listeners={listener} />;
+        return <div ref={ref} DEPRECATED_flareListeners={listener} />;
       };
       ReactDOM.render(<Component />, container);
       document.elementFromPoint = () => ref.current;
@@ -346,9 +386,11 @@ describeWithPointerEvent('Tap responder', hasPointerEvents => {
 
     testWithPointerType('pointer up', pointerType => {
       const target = createEventTarget(ref.current);
+      const button = buttonType.primary;
       const buttons = buttonsType.primary;
-      target.pointerdown({buttons, pointerType});
+      target.pointerdown({button, buttons, pointerType});
       target.pointerup({
+        button,
         buttons,
         pageX: 10,
         pageY: 10,
@@ -391,7 +433,7 @@ describeWithPointerEvent('Tap responder', hasPointerEvents => {
       const Component = () => {
         const listener = useTap({onTapEnd});
         return (
-          <div ref={targetRef} listeners={listener}>
+          <div ref={targetRef} DEPRECATED_flareListeners={listener}>
             <button ref={innerRef} />
           </div>
         );
@@ -424,11 +466,13 @@ describeWithPointerEvent('Tap responder', hasPointerEvents => {
         const pointerType = 'touch';
         const target = createEventTarget(ref.current);
         const offTarget = createEventTarget(container);
+        const button = buttonType.primary;
         const buttons = buttonsType.primary;
 
-        target.pointerdown({buttons, pointerId: 1, pointerType});
-        offTarget.pointerdown({buttons, pointerId: 2, pointerType});
+        target.pointerdown({button, buttons, pointerId: 1, pointerType});
+        offTarget.pointerdown({button, buttons, pointerId: 2, pointerType});
         offTarget.pointerup({
+          button,
           buttons,
           pageX: 10,
           pageY: 10,
@@ -443,28 +487,57 @@ describeWithPointerEvent('Tap responder', hasPointerEvents => {
 
     test('ignored buttons and modifiers', () => {
       const target = createEventTarget(ref.current);
-      const primary = buttonsType.primary;
       // right-click
-      target.pointerdown({buttons: buttonsType.secondary});
-      target.pointerup({buttons: buttonsType.secondary});
+      target.pointerdown({
+        button: buttonType.secondary,
+        buttons: buttonsType.secondary,
+      });
+      target.pointerup({
+        button: buttonType.secondary,
+        buttons: buttonsType.secondary,
+      });
       // middle-click
-      target.pointerdown({buttons: buttonsType.auxiliary});
-      target.pointerup({buttons: buttonsType.auxiliary});
+      target.pointerdown({
+        button: buttonType.auxiliary,
+        buttons: buttonsType.auxiliary,
+      });
+      target.pointerup({
+        button: buttonType.auxiliary,
+        buttons: buttonsType.auxiliary,
+      });
       // pen eraser
-      target.pointerdown({buttons: buttonsType.eraser});
-      target.pointerup({buttons: buttonsType.eraser});
+      target.pointerdown({
+        button: buttonType.eraser,
+        buttons: buttonsType.eraser,
+      });
+      target.pointerup({
+        button: buttonType.eraser,
+        buttons: buttonsType.eraser,
+      });
       // alt-click
-      target.pointerdown({buttons: primary});
-      target.pointerup({altKey: true});
+      target.pointerdown({
+        button: buttonType.primary,
+        buttons: buttonsType.primary,
+      });
+      target.pointerup({altKey: true, button: buttonType.primary});
       // ctrl-click
-      target.pointerdown({buttons: primary});
-      target.pointerup({ctrlKey: true});
+      target.pointerdown({
+        button: buttonType.primary,
+        buttons: buttonsType.primary,
+      });
+      target.pointerup({ctrlKey: true, button: buttonType.primary});
       // meta-click
-      target.pointerdown({buttons: primary});
-      target.pointerup({metaKey: true});
+      target.pointerdown({
+        button: buttonType.primary,
+        buttons: buttonsType.primary,
+      });
+      target.pointerup({metaKey: true, button: buttonType.primary});
       // shift-click
-      target.pointerdown({buttons: primary});
-      target.pointerup({shiftKey: true});
+      target.pointerdown({
+        button: buttonType.primary,
+        buttons: buttonsType.primary,
+      });
+      target.pointerup({shiftKey: true, button: buttonType.primary});
 
       expect(onTapEnd).toHaveBeenCalledTimes(0);
     });
@@ -480,7 +553,7 @@ describeWithPointerEvent('Tap responder', hasPointerEvents => {
       ref = React.createRef();
       const Component = () => {
         const listener = useTap({onTapUpdate});
-        return <div ref={ref} listeners={listener} />;
+        return <div ref={ref} DEPRECATED_flareListeners={listener} />;
       };
       ReactDOM.render(<Component />, container);
       document.elementFromPoint = () => ref.current;
@@ -489,8 +562,10 @@ describeWithPointerEvent('Tap responder', hasPointerEvents => {
     testWithPointerType('requires activation', pointerType => {
       const target = createEventTarget(ref.current);
       target.setBoundingClientRect(rect);
-      target.pointerhover({pointerType, ...coordinates});
-      target.pointermove({pointerType, ...coordinates});
+      if (pointerType !== 'touch') {
+        target.pointerhover({pointerType, ...coordinates});
+        target.pointermove({pointerType, ...coordinates});
+      }
       expect(onTapUpdate).not.toBeCalled();
     });
 
@@ -560,9 +635,10 @@ describeWithPointerEvent('Tap responder', hasPointerEvents => {
         const pointerType = 'touch';
         const target = createEventTarget(ref.current);
         const offTarget = createEventTarget(container);
+        const button = buttonType.primary;
         const buttons = buttonsType.primary;
-        target.pointerdown({buttons, pointerId: 1, pointerType});
-        offTarget.pointerdown({buttons, pointerId: 2, pointerType});
+        target.pointerdown({button, buttons, pointerId: 1, pointerType});
+        offTarget.pointerdown({button, buttons, pointerId: 2, pointerType});
         target.pointermove({pointerId: 1, pointerType, x: 10, y: 10});
         expect(onTapUpdate).toHaveBeenCalledTimes(1);
         offTarget.pointermove({pointerId: 2, pointerType, x: 10, y: 10});
@@ -592,7 +668,7 @@ describeWithPointerEvent('Tap responder', hasPointerEvents => {
           onTapEnd: logger('end'),
           onTapCancel: logger('cancel'),
         });
-        return <div ref={ref} listeners={listener} />;
+        return <div ref={ref} DEPRECATED_flareListeners={listener} />;
       };
       ReactDOM.render(<Component />, container);
       document.elementFromPoint = () => ref.current;
@@ -646,7 +722,7 @@ describeWithPointerEvent('Tap responder', hasPointerEvents => {
         const listener = useTap({onTapCancel, onTapUpdate});
         return (
           <div ref={parentRef}>
-            <div ref={ref} listeners={listener} />
+            <div ref={ref} DEPRECATED_flareListeners={listener} />
             <span ref={siblingRef} />
           </div>
         );
@@ -691,14 +767,10 @@ describeWithPointerEvent('Tap responder', hasPointerEvents => {
     test('second pointer on target', () => {
       const pointerType = 'touch';
       const target = createEventTarget(ref.current);
+      const button = buttonType.primary;
       const buttons = buttonsType.primary;
-      target.pointerdown({buttons, pointerId: 1, pointerType});
-      if (hasPointerEvents) {
-        target.pointerdown({buttons, pointerId: 2, pointerType});
-      } else {
-        // TouchEvents
-        target.pointerdown([{pointerId: 1}, {pointerId: 2}]);
-      }
+      target.pointerdown({button, buttons, pointerId: 1, pointerType});
+      target.pointerdown({button, buttons, pointerId: 2, pointerType});
       expect(onTapCancel).toHaveBeenCalledTimes(1);
     });
 
@@ -707,9 +779,10 @@ describeWithPointerEvent('Tap responder', hasPointerEvents => {
         const pointerType = 'touch';
         const target = createEventTarget(ref.current);
         const offTarget = createEventTarget(container);
+        const button = buttonType.primary;
         const buttons = buttonsType.primary;
-        target.pointerdown({buttons, pointerId: 1, pointerType});
-        offTarget.pointerdown({buttons, pointerId: 2, pointerType});
+        target.pointerdown({button, buttons, pointerId: 1, pointerType});
+        offTarget.pointerdown({button, buttons, pointerId: 2, pointerType});
         expect(onTapCancel).toHaveBeenCalledTimes(0);
       });
     }
@@ -728,19 +801,20 @@ describeWithPointerEvent('Tap responder', hasPointerEvents => {
 
     test('ignored modifiers', () => {
       const target = createEventTarget(ref.current);
-      const primary = buttonsType.primary;
+      const button = buttonType.primary;
+      const buttons = buttonsType.primary;
       // alt-click
-      target.pointerdown({buttons: primary});
-      target.pointerup({altKey: true});
+      target.pointerdown({button, buttons});
+      target.pointerup({altKey: true, button});
       // ctrl-click
-      target.pointerdown({buttons: primary});
-      target.pointerup({ctrlKey: true});
+      target.pointerdown({button, buttons});
+      target.pointerup({ctrlKey: true, button});
       // meta-click
-      target.pointerdown({buttons: primary});
-      target.pointerup({metaKey: true});
+      target.pointerdown({button, buttons});
+      target.pointerup({metaKey: true, button});
       // shift-click
-      target.pointerdown({buttons: primary});
-      target.pointerup({shiftKey: true});
+      target.pointerdown({buttons});
+      target.pointerup({shiftKey: true, button});
 
       expect(onTapCancel).toHaveBeenCalledTimes(4);
     });
@@ -800,7 +874,7 @@ describeWithPointerEvent('Tap responder', hasPointerEvents => {
             preventDefault: shouldPreventDefault,
           });
           return (
-            <a href="#" ref={ref} listeners={listener}>
+            <a href="#" ref={ref} DEPRECATED_flareListeners={listener}>
               <div ref={innerRef} />
             </a>
           );

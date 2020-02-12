@@ -213,8 +213,8 @@ class TextInputFixtures extends React.Component {
 
           <Fixture>
             <SuspendyTree>
-              <img src="https://upload.wikimedia.org/wikipedia/commons/e/ee/Atom_%282%29.png" />React
-              is cool
+              <img src="https://upload.wikimedia.org/wikipedia/commons/e/ee/Atom_%282%29.png" />
+              React is cool
             </SuspendyTree>
           </Fixture>
         </TestCase>
@@ -308,7 +308,9 @@ class TextInputFixtures extends React.Component {
               <div style={{height: 200, overflow: 'scroll'}}>
                 {Array(20)
                   .fill()
-                  .map((_, i) => <h2 key={i}>{i + 1}</h2>)}
+                  .map((_, i) => (
+                    <h2 key={i}>{i + 1}</h2>
+                  ))}
               </div>
             </SuspendyTree>
           </Fixture>

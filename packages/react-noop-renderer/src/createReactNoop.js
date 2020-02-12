@@ -25,13 +25,13 @@ import {createPortal} from 'shared/ReactPortal';
 import {REACT_FRAGMENT_TYPE, REACT_ELEMENT_TYPE} from 'shared/ReactSymbols';
 import enqueueTask from 'shared/enqueueTask';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
-import warningWithoutStack from 'shared/warningWithoutStack';
-import {ConcurrentRoot, BatchedRoot, LegacyRoot} from 'shared/ReactRootTags';
+import {ConcurrentRoot, BlockingRoot, LegacyRoot} from 'shared/ReactRootTags';
 
 type Container = {
   rootID: string,
   children: Array<Instance | TextInstance>,
   pendingChildren: Array<Instance | TextInstance>,
+  ...
 };
 type Props = {
   prop: any,
@@ -41,6 +41,7 @@ type Props = {
   left?: null | number,
   right?: null | number,
   top?: null | number,
+  ...
 };
 type Instance = {|
   type: string,
@@ -316,7 +317,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       type: string,
       oldProps: Props,
       newProps: Props,
-    ): null | {} {
+    ): null | {...} {
       if (type === 'errorInCompletePhase') {
         throw new Error('Error in host config.');
       }
@@ -374,11 +375,11 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
     warnsIfNotActing: true,
     supportsHydration: false,
 
-    mountResponderInstance(): void {
+    DEPRECATED_mountResponderInstance(): void {
       // NO-OP
     },
 
-    unmountResponderInstance(): void {
+    DEPRECATED_unmountResponderInstance(): void {
       // NO-OP
     },
 
@@ -639,6 +640,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
     if (!__DEV__) {
       if (didWarnAboutUsingActInProd === false) {
         didWarnAboutUsingActInProd = true;
+        // eslint-disable-next-line react-internal/no-production-logging
         console.error(
           'act(...) is not supported in production builds of React, and might not behave as expected.',
         );
@@ -661,8 +663,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       if (__DEV__) {
         if (actingUpdatesScopeDepth > previousActingUpdatesScopeDepth) {
           // if it's _less than_ previousActingUpdatesScopeDepth, then we can assume the 'other' one has warned
-          warningWithoutStack(
-            null,
+          console.error(
             'You seem to have overlapping act() calls, this is not supported. ' +
               'Be sure to await previous act() calls before making a new one. ',
           );
@@ -694,8 +695,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
             .then(() => {})
             .then(() => {
               if (called === false) {
-                warningWithoutStack(
-                  null,
+                console.error(
                   'You called act(async () => ...) without await. ' +
                     'This could lead to unexpected testing behaviour, interleaving multiple act ' +
                     'calls and mixing their scopes. You should - await act(async () => ...);',
@@ -742,12 +742,13 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       };
     } else {
       if (__DEV__) {
-        warningWithoutStack(
-          result === undefined,
-          'The callback passed to act(...) function ' +
-            'must return undefined, or a Promise. You returned %s',
-          result,
-        );
+        if (result !== undefined) {
+          console.error(
+            'The callback passed to act(...) function ' +
+              'must return undefined, or a Promise. You returned %s',
+            result,
+          );
+        }
       }
 
       // flush effects until none remain, and cleanup
@@ -771,8 +772,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       return {
         then(resolve: () => void) {
           if (__DEV__) {
-            warningWithoutStack(
-              false,
+            console.error(
               'Do not await the result of calling act(...) with sync logic, it is not a Promise.',
             );
           }
@@ -952,7 +952,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       };
       const fiberRoot = NoopRenderer.createContainer(
         container,
-        BatchedRoot,
+        BlockingRoot,
         false,
         null,
       );
@@ -1109,6 +1109,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       const root = roots.get(rootID);
       const rootContainer = rootContainers.get(rootID);
       if (!root || !rootContainer) {
+        // eslint-disable-next-line react-internal/no-production-logging
         console.log('Nothing rendered yet.');
         return;
       }
@@ -1142,20 +1143,33 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
 
       function logUpdateQueue(updateQueue: UpdateQueue<mixed>, depth) {
         log('  '.repeat(depth + 1) + 'QUEUED UPDATES');
-        const firstUpdate = updateQueue.firstUpdate;
-        if (!firstUpdate) {
+        const last = updateQueue.baseQueue;
+        if (last === null) {
           return;
         }
+        const first = last.next;
+        let update = first;
+        if (update !== null) {
+          do {
+            log(
+              '  '.repeat(depth + 1) + '~',
+              '[' + update.expirationTime + ']',
+            );
+          } while (update !== null && update !== first);
+        }
 
-        log(
-          '  '.repeat(depth + 1) + '~',
-          '[' + firstUpdate.expirationTime + ']',
-        );
-        while (firstUpdate.next) {
-          log(
-            '  '.repeat(depth + 1) + '~',
-            '[' + firstUpdate.expirationTime + ']',
-          );
+        const lastPending = updateQueue.shared.pending;
+        if (lastPending !== null) {
+          const firstPending = lastPending.next;
+          let pendingUpdate = firstPending;
+          if (pendingUpdate !== null) {
+            do {
+              log(
+                '  '.repeat(depth + 1) + '~',
+                '[' + pendingUpdate.expirationTime + ']',
+              );
+            } while (pendingUpdate !== null && pendingUpdate !== firstPending);
+          }
         }
       }
 
@@ -1198,6 +1212,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       log('FIBERS:');
       logFiber(root.current, 0);
 
+      // eslint-disable-next-line react-internal/no-production-logging
       console.log(...bufferedLog);
     },
 

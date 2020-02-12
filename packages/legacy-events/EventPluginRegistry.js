@@ -16,7 +16,7 @@ import type {
 
 import invariant from 'shared/invariant';
 
-type NamesToPlugins = {[key: PluginName]: PluginModule<AnyNativeEvent>};
+type NamesToPlugins = {[key: PluginName]: PluginModule<AnyNativeEvent>, ...};
 type EventPluginOrder = null | Array<PluginName>;
 
 /**

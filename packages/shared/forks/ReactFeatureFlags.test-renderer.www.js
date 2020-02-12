@@ -12,7 +12,6 @@ import invariant from 'shared/invariant';
 import typeof * as FeatureFlagsType from 'shared/ReactFeatureFlags';
 import typeof * as PersistentFeatureFlagsType from './ReactFeatureFlags.persistent';
 
-export const debugRenderPhaseSideEffects = false;
 export const debugRenderPhaseSideEffectsForStrictMode = false;
 export const enableUserTimingAPI = __DEV__;
 export const warnAboutDeprecatedLifecycles = true;
@@ -21,10 +20,11 @@ export const enableProfilerTimer = __PROFILE__;
 export const enableSchedulerTracing = __PROFILE__;
 export const enableSuspenseServerRenderer = false;
 export const enableSelectiveHydration = false;
+export const enableChunksAPI = false;
 export const exposeConcurrentModeAPIs = __EXPERIMENTAL__;
 export const enableSchedulerDebugging = false;
 export const disableJavaScriptURLs = false;
-export const enableFlareAPI = true;
+export const enableDeprecatedFlareAPI = true;
 export const enableFundamentalAPI = false;
 export const enableScopeAPI = true;
 export const enableJSXTransformAPI = true;
@@ -35,7 +35,9 @@ export const warnAboutDefaultPropsOnFunctionComponents = false;
 export const warnAboutStringRefs = false;
 export const disableLegacyContext = false;
 export const disableSchedulerTimeoutBasedOnReactExpirationTime = false;
+export const enableTrainModelFix = false;
 export const enableTrustedTypesIntegration = false;
+export const enableNativeTargetAsInstance = false;
 
 // Only used in www builds.
 export function addUserTimingListener() {

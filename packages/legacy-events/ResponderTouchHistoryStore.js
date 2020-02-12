@@ -8,7 +8,6 @@
  */
 
 import invariant from 'shared/invariant';
-import warningWithoutStack from 'shared/warningWithoutStack';
 
 import {isStartish, isMoveish, isEndish} from './ResponderTopLevelEventTypes';
 
@@ -17,7 +16,7 @@ import {isStartish, isMoveish, isEndish} from './ResponderTopLevelEventTypes';
  * should typically only see IDs in the range of 1-20 because IDs get recycled
  * when touches end and start again.
  */
-type TouchRecord = {
+type TouchRecord = {|
   touchActive: boolean,
   startPageX: number,
   startPageY: number,
@@ -28,7 +27,7 @@ type TouchRecord = {
   previousPageX: number,
   previousPageY: number,
   previousTimeStamp: number,
-};
+|};
 
 const MAX_TOUCH_BANK = 20;
 const touchBank: Array<TouchRecord> = [];
@@ -47,10 +46,12 @@ type Touch = {
   pageX: number,
   pageY: number,
   timestamp: number,
+  ...
 };
 type TouchEvent = {
   changedTouches: Array<Touch>,
   touches: Array<Touch>,
+  ...
 };
 
 function timestampForTouch(touch: Touch): number {
@@ -95,13 +96,14 @@ function resetTouchRecord(touchRecord: TouchRecord, touch: Touch): void {
 function getTouchIdentifier({identifier}: Touch): number {
   invariant(identifier != null, 'Touch object is missing identifier.');
   if (__DEV__) {
-    warningWithoutStack(
-      identifier <= MAX_TOUCH_BANK,
-      'Touch identifier %s is greater than maximum supported %s which causes ' +
-        'performance issues backfilling array locations for all of the indices.',
-      identifier,
-      MAX_TOUCH_BANK,
-    );
+    if (identifier > MAX_TOUCH_BANK) {
+      console.error(
+        'Touch identifier %s is greater than maximum supported %s which causes ' +
+          'performance issues backfilling array locations for all of the indices.',
+        identifier,
+        MAX_TOUCH_BANK,
+      );
+    }
   }
   return identifier;
 }
@@ -129,12 +131,15 @@ function recordTouchMove(touch: Touch): void {
     touchRecord.currentTimeStamp = timestampForTouch(touch);
     touchHistory.mostRecentTimeStamp = timestampForTouch(touch);
   } else {
-    console.warn(
-      'Cannot record touch move without a touch start.\n' + 'Touch Move: %s\n',
-      'Touch Bank: %s',
-      printTouch(touch),
-      printTouchBank(),
-    );
+    if (__DEV__) {
+      console.warn(
+        'Cannot record touch move without a touch start.\n' +
+          'Touch Move: %s\n' +
+          'Touch Bank: %s',
+        printTouch(touch),
+        printTouchBank(),
+      );
+    }
   }
 }
 
@@ -150,12 +155,15 @@ function recordTouchEnd(touch: Touch): void {
     touchRecord.currentTimeStamp = timestampForTouch(touch);
     touchHistory.mostRecentTimeStamp = timestampForTouch(touch);
   } else {
-    console.warn(
-      'Cannot record touch end without a touch start.\n' + 'Touch End: %s\n',
-      'Touch Bank: %s',
-      printTouch(touch),
-      printTouchBank(),
-    );
+    if (__DEV__) {
+      console.warn(
+        'Cannot record touch end without a touch start.\n' +
+          'Touch End: %s\n' +
+          'Touch Bank: %s',
+        printTouch(touch),
+        printTouchBank(),
+      );
+    }
   }
 }
 
@@ -200,10 +208,9 @@ const ResponderTouchHistoryStore = {
         }
         if (__DEV__) {
           const activeRecord = touchBank[touchHistory.indexOfSingleActiveTouch];
-          warningWithoutStack(
-            activeRecord != null && activeRecord.touchActive,
-            'Cannot find single active touch.',
-          );
+          if (activeRecord == null || !activeRecord.touchActive) {
+            console.error('Cannot find single active touch.');
+          }
         }
       }
     }

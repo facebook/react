@@ -1,0 +1,37 @@
+{
+  "name": "flight",
+  "version": "0.1.0",
+  "private": true,
+  "dependencies": {
+    "@babel/register": "^7.7.0",
+    "concurrently": "^5.0.0",
+    "express": "^4.17.1",
+    "react-scripts": "3.2.0"
+  },
+  "scripts": {
+    "prestart": "cp -r ../../build/node_modules/* ./node_modules/",
+    "prebuild": "cp -r ../../build/node_modules/* ./node_modules/",
+    "start": "concurrently \"npm run start:server\" \"npm run start:client\"",
+    "start:client": "react-scripts start",
+    "start:server": "NODE_ENV=development node server",
+    "start:prod": "react-scripts build && NODE_ENV=production node server",
+    "build": "react-scripts build",
+    "test": "react-scripts test --env=jsdom",
+    "eject": "react-scripts eject"
+  },
+  "eslintConfig": {
+    "extends": "react-app"
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  }
+}

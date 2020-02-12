@@ -42,7 +42,7 @@ describe('ReactElement', () => {
   });
 
   it('uses the fallback value when in an environment without Symbol', () => {
-    expect(<div />.$$typeof).toBe(0xeac7);
+    expect((<div />).$$typeof).toBe(0xeac7);
   });
 
   it('returns a complete element according to spec', () => {
@@ -75,18 +75,19 @@ describe('ReactElement', () => {
         );
       }
     }
-    expect(() => ReactDOM.render(<Parent />, container)).toWarnDev(
+    expect(() => ReactDOM.render(<Parent />, container)).toErrorDev(
       'Child: `key` is not a prop. Trying to access it will result ' +
         'in `undefined` being returned. If you need to access the same ' +
         'value within the child component, you should pass it as a different ' +
         'prop. (https://fb.me/react-special-props)',
-      {withoutStack: true},
     );
   });
 
   it('should warn when `key` is being accessed on a host element', () => {
     const element = <div key="3" />;
-    expect(() => void element.props.key).toWarnDev(
+    expect(
+      () => void element.props.key,
+    ).toErrorDev(
       'div: `key` is not a prop. Trying to access it will result ' +
         'in `undefined` being returned. If you need to access the same ' +
         'value within the child component, you should pass it as a different ' +
@@ -111,12 +112,11 @@ describe('ReactElement', () => {
         );
       }
     }
-    expect(() => ReactDOM.render(<Parent />, container)).toWarnDev(
+    expect(() => ReactDOM.render(<Parent />, container)).toErrorDev(
       'Child: `ref` is not a prop. Trying to access it will result ' +
         'in `undefined` being returned. If you need to access the same ' +
         'value within the child component, you should pass it as a different ' +
         'prop. (https://fb.me/react-special-props)',
-      {withoutStack: true},
     );
   });
 

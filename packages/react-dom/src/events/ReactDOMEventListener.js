@@ -23,7 +23,7 @@ import {
   flushDiscreteUpdatesIfNeeded,
 } from 'legacy-events/ReactGenericBatching';
 import {runExtractedPluginEventsInBatch} from 'legacy-events/EventPluginHub';
-import {dispatchEventForResponderEventSystem} from './DOMEventResponderSystem';
+import {DEPRECATED_dispatchEventForResponderEventSystem} from './DeprecatedDOMEventResponderSystem';
 import {
   isReplayableDiscreteEvent,
   queueDiscreteEvent,
@@ -49,6 +49,7 @@ import {
   IS_PASSIVE,
   IS_ACTIVE,
   PASSIVE_NOT_SUPPORTED,
+  IS_FIRST_ANCESTOR,
 } from 'legacy-events/EventSystemFlags';
 
 import {
@@ -58,23 +59,21 @@ import {
 } from './EventListener';
 import getEventTarget from './getEventTarget';
 import {getClosestInstanceFromNode} from '../client/ReactDOMComponentTree';
-import SimpleEventPlugin from './SimpleEventPlugin';
 import {getRawEventName} from './DOMTopLevelEventTypes';
 import {passiveBrowserEventsSupported} from './checkPassiveEvents';
 
-import {enableFlareAPI} from 'shared/ReactFeatureFlags';
+import {enableDeprecatedFlareAPI} from 'shared/ReactFeatureFlags';
 import {
   UserBlockingEvent,
   ContinuousEvent,
   DiscreteEvent,
 } from 'shared/ReactTypes';
+import {getEventPriorityForPluginSystem} from './DOMEventProperties';
 
 const {
   unstable_UserBlockingPriority: UserBlockingPriority,
   unstable_runWithPriority: runWithPriority,
 } = Scheduler;
-
-const {getEventPriority} = SimpleEventPlugin;
 
 const CALLBACK_BOOKKEEPING_POOL_SIZE = 10;
 const callbackBookkeepingPool = [];
@@ -175,13 +174,19 @@ function handleTopLevel(bookKeeping: BookKeepingInstance) {
     const eventTarget = getEventTarget(bookKeeping.nativeEvent);
     const topLevelType = ((bookKeeping.topLevelType: any): DOMTopLevelEventType);
     const nativeEvent = ((bookKeeping.nativeEvent: any): AnyNativeEvent);
+    let eventSystemFlags = bookKeeping.eventSystemFlags;
+
+    // If this is the first ancestor, we mark it on the system flags
+    if (i === 0) {
+      eventSystemFlags |= IS_FIRST_ANCESTOR;
+    }
 
     runExtractedPluginEventsInBatch(
       topLevelType,
       targetInst,
       nativeEvent,
       eventTarget,
-      bookKeeping.eventSystemFlags,
+      eventSystemFlags,
     );
   }
 }
@@ -211,42 +216,59 @@ export function trapCapturedEvent(
   trapEventForPluginEventSystem(element, topLevelType, true);
 }
 
-export function trapEventForResponderEventSystem(
-  element: Document | Element | Node,
-  topLevelType: DOMTopLevelEventType,
+export function addResponderEventSystemEvent(
+  document: Document,
+  topLevelType: string,
   passive: boolean,
-): void {
-  if (enableFlareAPI) {
-    const rawEventName = getRawEventName(topLevelType);
-    let eventFlags = RESPONDER_EVENT_SYSTEM;
+): any => void {
+  let eventFlags = RESPONDER_EVENT_SYSTEM;
 
-    // If passive option is not supported, then the event will be
-    // active and not passive, but we flag it as using not being
-    // supported too. This way the responder event plugins know,
-    // and can provide polyfills if needed.
-    if (passive) {
-      if (passiveBrowserEventsSupported) {
-        eventFlags |= IS_PASSIVE;
-      } else {
-        eventFlags |= IS_ACTIVE;
-        eventFlags |= PASSIVE_NOT_SUPPORTED;
-        passive = false;
-      }
+  // If passive option is not supported, then the event will be
+  // active and not passive, but we flag it as using not being
+  // supported too. This way the responder event plugins know,
+  // and can provide polyfills if needed.
+  if (passive) {
+    if (passiveBrowserEventsSupported) {
+      eventFlags |= IS_PASSIVE;
     } else {
       eventFlags |= IS_ACTIVE;
+      eventFlags |= PASSIVE_NOT_SUPPORTED;
+      passive = false;
     }
-    // Check if interactive and wrap in discreteUpdates
-    const listener = dispatchEvent.bind(null, topLevelType, eventFlags);
-    if (passiveBrowserEventsSupported) {
-      addEventCaptureListenerWithPassiveFlag(
-        element,
-        rawEventName,
-        listener,
-        passive,
-      );
-    } else {
-      addEventCaptureListener(element, rawEventName, listener);
-    }
+  } else {
+    eventFlags |= IS_ACTIVE;
+  }
+  // Check if interactive and wrap in discreteUpdates
+  const listener = dispatchEvent.bind(
+    null,
+    ((topLevelType: any): DOMTopLevelEventType),
+    eventFlags,
+  );
+  if (passiveBrowserEventsSupported) {
+    addEventCaptureListenerWithPassiveFlag(
+      document,
+      topLevelType,
+      listener,
+      passive,
+    );
+  } else {
+    addEventCaptureListener(document, topLevelType, listener);
+  }
+  return listener;
+}
+
+export function removeActiveResponderEventSystemEvent(
+  document: Document,
+  topLevelType: string,
+  listener: any => void,
+) {
+  if (passiveBrowserEventsSupported) {
+    document.removeEventListener(topLevelType, listener, {
+      capture: true,
+      passive: false,
+    });
+  } else {
+    document.removeEventListener(topLevelType, listener, true);
   }
 }
 
@@ -256,7 +278,7 @@ function trapEventForPluginEventSystem(
   capture: boolean,
 ): void {
   let listener;
-  switch (getEventPriority(topLevelType)) {
+  switch (getEventPriorityForPluginSystem(topLevelType)) {
     case DiscreteEvent:
       listener = dispatchDiscreteEvent.bind(
         null,
@@ -379,7 +401,7 @@ export function dispatchEvent(
 
   // This is not replayable so we'll invoke it but without a target,
   // in case the event system needs to trace it.
-  if (enableFlareAPI) {
+  if (enableDeprecatedFlareAPI) {
     if (eventSystemFlags & PLUGIN_EVENT_SYSTEM) {
       dispatchEventForPluginEventSystem(
         topLevelType,
@@ -390,7 +412,7 @@ export function dispatchEvent(
     }
     if (eventSystemFlags & RESPONDER_EVENT_SYSTEM) {
       // React Flare event system
-      dispatchEventForResponderEventSystem(
+      DEPRECATED_dispatchEventForResponderEventSystem(
         (topLevelType: any),
         null,
         nativeEvent,
@@ -457,7 +479,7 @@ export function attemptToDispatchEvent(
     }
   }
 
-  if (enableFlareAPI) {
+  if (enableDeprecatedFlareAPI) {
     if (eventSystemFlags & PLUGIN_EVENT_SYSTEM) {
       dispatchEventForPluginEventSystem(
         topLevelType,
@@ -468,7 +490,7 @@ export function attemptToDispatchEvent(
     }
     if (eventSystemFlags & RESPONDER_EVENT_SYSTEM) {
       // React Flare event system
-      dispatchEventForResponderEventSystem(
+      DEPRECATED_dispatchEventForResponderEventSystem(
         (topLevelType: any),
         targetInst,
         nativeEvent,

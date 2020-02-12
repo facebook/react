@@ -19,7 +19,6 @@ import type {
 
 import React from 'react';
 import {DiscreteEvent, UserBlockingEvent} from 'shared/ReactTypes';
-import warning from 'shared/warning';
 
 type PressProps = {|
   disabled: boolean,
@@ -28,6 +27,7 @@ type PressProps = {|
     right: number,
     bottom: number,
     left: number,
+    ...
   },
   preventDefault: boolean,
   onPress: (e: PressEvent) => void,
@@ -66,6 +66,7 @@ type PressState = {
   activePointerId: null | number,
   shouldPreventClick: boolean,
   touchEvent: null | Touch,
+  ...
 };
 
 type PressEventType =
@@ -206,8 +207,7 @@ function createPressEvent(
     stopPropagation() {
       // NO-OP, we should remove this in the future
       if (__DEV__) {
-        warning(
-          false,
+        console.error(
           'stopPropagation is not available on event objects created from event responder modules (React Flare). ' +
             'Try wrapping in a conditional, i.e. `if (event.type !== "press") { event.stopPropagation() }`',
         );
@@ -341,9 +341,9 @@ function isValidKeyboardEvent(nativeEvent: Object): boolean {
   // "Spacebar" is for IE 11
   return (
     (key === 'Enter' || key === ' ' || key === 'Spacebar') &&
-    (tagName !== 'INPUT' &&
-      tagName !== 'TEXTAREA' &&
-      isContentEditable !== true)
+    tagName !== 'INPUT' &&
+    tagName !== 'TEXTAREA' &&
+    isContentEditable !== true
   );
 }
 
@@ -482,13 +482,21 @@ function updateIsPressWithinResponderRegion(
     bottom != null &&
     x !== null &&
     y !== null &&
-    (x >= left && x <= right && y >= top && y <= bottom);
+    x >= left &&
+    x <= right &&
+    y >= top &&
+    y <= bottom;
 }
 
 // After some investigation work, screen reader virtual
 // clicks (NVDA, Jaws, VoiceOver) do not have co-ords associated with the click
 // event and "detail" is always 0 (where normal clicks are > 0)
 function isScreenReaderVirtualClick(nativeEvent): boolean {
+  // JAWS/NVDA with Firefox.
+  if (nativeEvent.mozInputSource === 0 && nativeEvent.isTrusted) {
+    return true;
+  }
+  // Chrome
   return (
     nativeEvent.detail === 0 &&
     nativeEvent.screenX === 0 &&
@@ -570,15 +578,14 @@ const pressResponderImpl = {
                 metaKey,
                 shiftKey,
               } = (nativeEvent: MouseEvent);
-              if (nativeEvent.key === ' ') {
-                nativeEvent.preventDefault();
-              } else if (
+              if (
                 props.preventDefault !== false &&
                 !shiftKey &&
                 !metaKey &&
                 !ctrlKey &&
                 !altKey
               ) {
+                nativeEvent.preventDefault();
                 state.shouldPreventClick = true;
               }
             } else {
@@ -622,6 +629,9 @@ const pressResponderImpl = {
           state.responderRegionOnDeactivation = null;
           state.isPressWithinResponderRegion = true;
           state.buttons = nativeEvent.buttons;
+          if (nativeEvent.button === 1) {
+            state.buttons = 4;
+          }
           dispatchPressStartEvents(event, context, props, state);
           addRootEventTypes(context, state);
         } else {
@@ -881,7 +891,7 @@ const pressResponderImpl = {
   },
 };
 
-export const PressResponder = React.unstable_createResponder(
+export const PressResponder = React.DEPRECATED_createResponder(
   'Press',
   pressResponderImpl,
 );
@@ -889,5 +899,5 @@ export const PressResponder = React.unstable_createResponder(
 export function usePress(
   props: PressProps,
 ): ReactEventResponderListener<any, any> {
-  return React.unstable_useResponder(PressResponder, props);
+  return React.DEPRECATED_useResponder(PressResponder, props);
 }

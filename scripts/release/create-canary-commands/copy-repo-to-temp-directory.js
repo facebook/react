@@ -27,8 +27,6 @@ const run = async ({commit, cwd, tempDirectory}) => {
 module.exports = async params => {
   return logPromise(
     run(params),
-    theme`Copying React repo to temporary directory ({path ${
-      params.tempDirectory
-    }})`
+    theme`Copying React repo to temporary directory ({path ${params.tempDirectory}})`
   );
 };

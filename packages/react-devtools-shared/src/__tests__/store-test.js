@@ -848,4 +848,51 @@ describe('Store', () => {
     act(() => ReactDOM.render([fauxElement], document.createElement('div')));
     expect(store).toMatchSnapshot('1: mount');
   });
+
+  it('should show the right display names for special component types', async done => {
+    async function fakeImport(result) {
+      return {default: result};
+    }
+
+    const MyComponent = (props, ref) => null;
+    const FowardRefComponent = React.forwardRef(MyComponent);
+    const FowardRefComponentWithAnonymousFunction = React.forwardRef(() => (
+      <MyComponent />
+    ));
+    const FowardRefComponentWithCustomDisplayName = React.forwardRef(
+      MyComponent,
+    );
+    FowardRefComponentWithCustomDisplayName.displayName = 'Custom';
+    const MemoComponent = React.memo(MyComponent);
+    const MemoForwardRefComponent = React.memo(FowardRefComponent);
+    const LazyComponent = React.lazy(() => fakeImport(MyComponent));
+
+    const App = () => (
+      <React.Fragment>
+        <MyComponent />
+        <FowardRefComponent />
+        <FowardRefComponentWithAnonymousFunction />
+        <FowardRefComponentWithCustomDisplayName />
+        <MemoComponent />
+        <MemoForwardRefComponent />
+        <React.Suspense fallback="Loading...">
+          <LazyComponent />
+        </React.Suspense>
+      </React.Fragment>
+    );
+
+    const container = document.createElement('div');
+
+    // Render once to start fetching the lazy component
+    act(() => ReactDOM.render(<App />, container));
+
+    await Promise.resolve();
+
+    // Render again after it resolves
+    act(() => ReactDOM.render(<App />, container));
+
+    expect(store).toMatchSnapshot();
+
+    done();
+  });
 });

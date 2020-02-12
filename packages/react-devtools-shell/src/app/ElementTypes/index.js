@@ -35,9 +35,16 @@ function FunctionComponent() {
 
 const MemoFunctionComponent = memo(FunctionComponent);
 
-const ForwardRefComponent = forwardRef((props, ref) => (
+const FowardRefComponentWithAnonymousFunction = forwardRef((props, ref) => (
   <ClassComponent ref={ref} {...props} />
 ));
+const ForwardRefComponent = forwardRef(function NamedInnerFunction(props, ref) {
+  return <ClassComponent ref={ref} {...props} />;
+});
+const FowardRefComponentWithCustomDisplayName = forwardRef((props, ref) => (
+  <ClassComponent ref={ref} {...props} />
+));
+FowardRefComponentWithCustomDisplayName.displayName = 'Custom';
 
 const LazyComponent = lazy(() =>
   Promise.resolve({
@@ -58,6 +65,8 @@ export default function ElementTypes() {
             <FunctionComponent />
             <MemoFunctionComponent />
             <ForwardRefComponent />
+            <FowardRefComponentWithAnonymousFunction />
+            <FowardRefComponentWithCustomDisplayName />
             <LazyComponent />
           </Suspense>
         </StrictMode>

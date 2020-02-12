@@ -81,9 +81,7 @@ describe('ReactDOMRoot', () => {
         <span />
       </div>,
     );
-    expect(() => Scheduler.unstable_flushAll()).toWarnDev('Extra attributes', {
-      withoutStack: true,
-    });
+    expect(() => Scheduler.unstable_flushAll()).toErrorDev('Extra attributes');
   });
 
   it('does not clear existing children', async () => {
@@ -120,7 +118,7 @@ describe('ReactDOMRoot', () => {
     expect(container.textContent).toEqual('Hi');
     expect(() => {
       ReactDOM.render(<div>Bye</div>, container);
-    }).toWarnDev(
+    }).toErrorDev(
       [
         // We care about this warning:
         'You are calling ReactDOM.render() on a container that was previously ' +
@@ -143,7 +141,7 @@ describe('ReactDOMRoot', () => {
     expect(container.textContent).toEqual('Hi');
     expect(() => {
       ReactDOM.hydrate(<div>Hi</div>, container);
-    }).toWarnDev(
+    }).toErrorDev(
       [
         // We care about this warning:
         'You are calling ReactDOM.hydrate() on a container that was previously ' +
@@ -164,7 +162,7 @@ describe('ReactDOMRoot', () => {
     let unmounted = false;
     expect(() => {
       unmounted = ReactDOM.unmountComponentAtNode(container);
-    }).toWarnDev(
+    }).toErrorDev(
       [
         // We care about this warning:
         'You are calling ReactDOM.unmountComponentAtNode() on a container that was previously ' +
@@ -193,7 +191,7 @@ describe('ReactDOMRoot', () => {
     let unmounted = false;
     expect(() => {
       unmounted = ReactDOM.unmountComponentAtNode(container);
-    }).toWarnDev('Did you mean to call root.unmount()?', {withoutStack: true});
+    }).toErrorDev('Did you mean to call root.unmount()?', {withoutStack: true});
     expect(unmounted).toBe(false);
     Scheduler.unstable_flushAll();
     expect(container.textContent).toEqual('Hi');
@@ -206,10 +204,29 @@ describe('ReactDOMRoot', () => {
     ReactDOM.render(<div>Hi</div>, container);
     expect(() => {
       ReactDOM.createRoot(container);
-    }).toWarnDev(
+    }).toErrorDev(
       'You are calling ReactDOM.createRoot() on a container that was previously ' +
         'passed to ReactDOM.render(). This is not supported.',
       {withoutStack: true},
     );
+  });
+
+  it('warns when creating two roots managing the same container', () => {
+    ReactDOM.createRoot(container);
+    expect(() => {
+      ReactDOM.createRoot(container);
+    }).toErrorDev(
+      'You are calling ReactDOM.createRoot() on a container that ' +
+        'has already been passed to createRoot() before. Instead, call ' +
+        'root.render() on the existing root instead if you want to update it.',
+      {withoutStack: true},
+    );
+  });
+
+  it('does not warn when creating second root after first one is unmounted', () => {
+    const root = ReactDOM.createRoot(container);
+    root.unmount();
+    Scheduler.unstable_flushAll();
+    ReactDOM.createRoot(container); // No warning
   });
 });

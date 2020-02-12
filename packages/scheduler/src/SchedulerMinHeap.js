@@ -8,10 +8,10 @@
  */
 
 type Heap = Array<Node>;
-type Node = {
+type Node = {|
   id: number,
   sortIndex: number,
-};
+|};
 
 export function push(heap: Heap, node: Node): void {
   const index = heap.length;
@@ -41,7 +41,7 @@ export function pop(heap: Heap): Node | null {
 function siftUp(heap, node, i) {
   let index = i;
   while (true) {
-    const parentIndex = Math.floor((index - 1) / 2);
+    const parentIndex = (index - 1) >>> 1;
     const parent = heap[parentIndex];
     if (parent !== undefined && compare(parent, node) > 0) {
       // The parent is larger. Swap positions.

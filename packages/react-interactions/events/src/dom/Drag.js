@@ -29,6 +29,7 @@ type DragProps = {
   onDragMove: (e: DragEvent) => void,
   onDragEnd: (e: DragEvent) => void,
   onDragChange: boolean => void,
+  ...
 };
 
 type DragState = {|
@@ -57,6 +58,7 @@ if (typeof window !== 'undefined' && window.PointerEvent === undefined) {
 type EventData = {
   diffX: number,
   diffY: number,
+  ...
 };
 type DragEventType = 'dragstart' | 'dragend' | 'dragchange' | 'dragmove';
 
@@ -239,7 +241,7 @@ const dragResponderImpl = {
   },
 };
 
-export const DragResponder = React.unstable_createResponder(
+export const DragResponder = React.DEPRECATED_createResponder(
   'Drag',
   dragResponderImpl,
 );
@@ -247,5 +249,5 @@ export const DragResponder = React.unstable_createResponder(
 export function useDrag(
   props: DragProps,
 ): ReactEventResponderListener<any, any> {
-  return React.unstable_useResponder(DragResponder, props);
+  return React.DEPRECATED_useResponder(DragResponder, props);
 }

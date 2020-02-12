@@ -50,10 +50,9 @@ describe('create-react-class-integration', () => {
         render: () => null,
       });
 
-      expect(() => ReactNative.render(<View />, 1)).toLowPriorityWarnDev(
-        'componentWillMount has been renamed',
-        {withoutStack: true},
-      );
+      expect(() =>
+        ReactNative.render(<View />, 1),
+      ).toWarnDev('componentWillMount has been renamed', {withoutStack: true});
     });
 
     it('should warn if users specify their own legacy componentWillReceiveProps', () => {
@@ -64,9 +63,11 @@ describe('create-react-class-integration', () => {
         render: () => null,
       });
 
-      expect(() => ReactNative.render(<View />, 1)).toLowPriorityWarnDev(
+      expect(() => ReactNative.render(<View />, 1)).toWarnDev(
         'componentWillReceiveProps has been renamed',
-        {withoutStack: true},
+        {
+          withoutStack: true,
+        },
       );
     });
   });

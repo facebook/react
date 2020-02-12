@@ -22,6 +22,7 @@ import {DiscreteEvent} from 'shared/ReactTypes';
  */
 
 type FocusEvent = {|
+  isTargetAttached: boolean,
   target: Element | Document,
   type: FocusEventType | FocusWithinEventType,
   pointerType: PointerType,
@@ -30,11 +31,12 @@ type FocusEvent = {|
 |};
 
 type FocusState = {
+  detachedTarget: null | Element | Document,
   focusTarget: null | Element | Document,
   isFocused: boolean,
   isFocusVisible: boolean,
   pointerType: PointerType,
-  isEmulatingMouseEvents: boolean,
+  ...
 };
 
 type FocusProps = {
@@ -43,6 +45,7 @@ type FocusProps = {
   onFocus: (e: FocusEvent) => void,
   onFocusChange: boolean => void,
   onFocusVisibleChange: boolean => void,
+  ...
 };
 
 type FocusEventType = 'focus' | 'blur' | 'focuschange' | 'focusvisiblechange';
@@ -50,36 +53,135 @@ type FocusEventType = 'focus' | 'blur' | 'focuschange' | 'focusvisiblechange';
 type FocusWithinProps = {
   disabled?: boolean,
   onFocusWithin?: (e: FocusEvent) => void,
+  onBeforeBlurWithin?: (e: FocusEvent) => void,
   onBlurWithin?: (e: FocusEvent) => void,
   onFocusWithinChange?: boolean => void,
   onFocusWithinVisibleChange?: boolean => void,
+  ...
 };
 
 type FocusWithinEventType =
   | 'focuswithinvisiblechange'
   | 'focuswithinchange'
   | 'blurwithin'
-  | 'focuswithin';
+  | 'focuswithin'
+  | 'beforeblurwithin';
 
 /**
  * Shared between Focus and FocusWithin
  */
 
 let isGlobalFocusVisible = true;
+let hasTrackedGlobalFocusVisible = false;
+let globalFocusVisiblePointerType = '';
+let isEmulatingMouseEvents = false;
 
 const isMac =
   typeof window !== 'undefined' && window.navigator != null
     ? /^Mac/.test(window.navigator.platform)
     : false;
 
-const targetEventTypes = ['focus', 'blur'];
+export let passiveBrowserEventsSupported = false;
+
+const canUseDOM: boolean = !!(
+  typeof window !== 'undefined' &&
+  typeof window.document !== 'undefined' &&
+  typeof window.document.createElement !== 'undefined'
+);
+
+// Check if browser support events with passive listeners
+// https://developer.mozilla.org/en-US/docs/Web/API/EventTarget/addEventListener#Safely_detecting_option_support
+if (canUseDOM) {
+  try {
+    const options = {};
+    // $FlowFixMe: Ignore Flow complaining about needing a value
+    Object.defineProperty(options, 'passive', {
+      get: function() {
+        passiveBrowserEventsSupported = true;
+      },
+    });
+    window.addEventListener('test', options, options);
+    window.removeEventListener('test', options, options);
+  } catch (e) {
+    passiveBrowserEventsSupported = false;
+  }
+}
 
 const hasPointerEvents =
   typeof window !== 'undefined' && window.PointerEvent != null;
 
-const rootEventTypes = hasPointerEvents
+const focusVisibleEvents = hasPointerEvents
   ? ['keydown', 'keyup', 'pointermove', 'pointerdown', 'pointerup']
   : ['keydown', 'keyup', 'mousedown', 'touchmove', 'touchstart', 'touchend'];
+
+const targetEventTypes = ['focus', 'blur', 'beforeblur', ...focusVisibleEvents];
+
+// Used only for the blur "detachedTarget" logic
+const rootEventTypes = ['blur'];
+
+function addWindowEventListener(types, callback, options) {
+  types.forEach(type => {
+    window.addEventListener(type, callback, options);
+  });
+}
+
+function trackGlobalFocusVisible() {
+  if (!hasTrackedGlobalFocusVisible) {
+    hasTrackedGlobalFocusVisible = true;
+    addWindowEventListener(
+      focusVisibleEvents,
+      handleGlobalFocusVisibleEvent,
+      passiveBrowserEventsSupported ? {capture: true, passive: true} : true,
+    );
+  }
+}
+
+function handleGlobalFocusVisibleEvent(
+  nativeEvent: MouseEvent | TouchEvent | KeyboardEvent,
+): void {
+  const {type} = nativeEvent;
+
+  switch (type) {
+    case 'pointermove':
+    case 'pointerdown':
+    case 'pointerup': {
+      isGlobalFocusVisible = false;
+      globalFocusVisiblePointerType = (nativeEvent: any).pointerType;
+      break;
+    }
+
+    case 'keydown':
+    case 'keyup': {
+      const {metaKey, altKey, ctrlKey} = nativeEvent;
+      const validKey = !(metaKey || (!isMac && altKey) || ctrlKey);
+
+      if (validKey) {
+        globalFocusVisiblePointerType = 'keyboard';
+        isGlobalFocusVisible = true;
+      }
+      break;
+    }
+
+    // fallbacks for no PointerEvent support
+    case 'touchmove':
+    case 'touchstart':
+    case 'touchend': {
+      isEmulatingMouseEvents = true;
+      isGlobalFocusVisible = false;
+      globalFocusVisiblePointerType = 'touch';
+      break;
+    }
+    case 'mousedown': {
+      if (!isEmulatingMouseEvents) {
+        isGlobalFocusVisible = false;
+        globalFocusVisiblePointerType = 'mouse';
+      } else {
+        isEmulatingMouseEvents = false;
+      }
+      break;
+    }
+  }
+}
 
 function isFunction(obj): boolean {
   return typeof obj === 'function';
@@ -90,8 +192,10 @@ function createFocusEvent(
   type: FocusEventType | FocusWithinEventType,
   target: Element | Document,
   pointerType: PointerType,
+  isTargetAttached: boolean,
 ): FocusEvent {
   return {
+    isTargetAttached,
     target,
     type,
     pointerType,
@@ -107,7 +211,7 @@ function createFocusEvent(
   };
 }
 
-function handleRootPointerEvent(
+function handleFocusVisibleTargetEvent(
   event: ReactDOMResponderEvent,
   context: ReactDOMResponderContext,
   state: FocusState,
@@ -121,29 +225,26 @@ function handleRootPointerEvent(
   const focusTarget = state.focusTarget;
   if (
     focusTarget !== null &&
-    context.isTargetWithinResponderScope(focusTarget) &&
     (type === 'mousedown' || type === 'touchstart' || type === 'pointerdown')
   ) {
     callback(false);
   }
 }
 
-function handleRootEvent(
+function handleFocusVisibleTargetEvents(
   event: ReactDOMResponderEvent,
   context: ReactDOMResponderContext,
   state: FocusState,
   callback: boolean => void,
 ): void {
   const {type} = event;
+  state.pointerType = globalFocusVisiblePointerType;
 
   switch (type) {
     case 'pointermove':
     case 'pointerdown':
     case 'pointerup': {
-      // $FlowFixMe: Flow doesn't know about PointerEvents
-      const nativeEvent = ((event.nativeEvent: any): PointerEvent);
-      state.pointerType = nativeEvent.pointerType;
-      handleRootPointerEvent(event, context, state, callback);
+      handleFocusVisibleTargetEvent(event, context, state, callback);
       break;
     }
 
@@ -155,12 +256,7 @@ function handleRootEvent(
       const validKey = !(metaKey || (!isMac && altKey) || ctrlKey);
 
       if (validKey) {
-        state.pointerType = 'keyboard';
-        isGlobalFocusVisible = true;
-        if (
-          focusTarget !== null &&
-          context.isTargetWithinResponderScope(focusTarget)
-        ) {
+        if (focusTarget !== null) {
           callback(true);
         }
       }
@@ -171,17 +267,12 @@ function handleRootEvent(
     case 'touchmove':
     case 'touchstart':
     case 'touchend': {
-      state.pointerType = 'touch';
-      state.isEmulatingMouseEvents = true;
-      handleRootPointerEvent(event, context, state, callback);
+      handleFocusVisibleTargetEvent(event, context, state, callback);
       break;
     }
     case 'mousedown': {
-      if (!state.isEmulatingMouseEvents) {
-        state.pointerType = 'mouse';
-        handleRootPointerEvent(event, context, state, callback);
-      } else {
-        state.isEmulatingMouseEvents = false;
+      if (!isEmulatingMouseEvents) {
+        handleFocusVisibleTargetEvent(event, context, state, callback);
       }
       break;
     }
@@ -206,6 +297,7 @@ function dispatchFocusEvents(
       'focus',
       target,
       pointerType,
+      true,
     );
     context.dispatchEvent(syntheticEvent, onFocus, DiscreteEvent);
   }
@@ -229,6 +321,7 @@ function dispatchBlurEvents(
       'blur',
       target,
       pointerType,
+      true,
     );
     context.dispatchEvent(syntheticEvent, onBlur, DiscreteEvent);
   }
@@ -253,6 +346,7 @@ function dispatchFocusWithinEvents(
       'focuswithin',
       target,
       pointerType,
+      true,
     );
     context.dispatchEvent(syntheticEvent, onFocusWithin, DiscreteEvent);
   }
@@ -267,12 +361,14 @@ function dispatchBlurWithinEvents(
   const pointerType = state.pointerType;
   const target = ((state.focusTarget: any): Element | Document) || event.target;
   const onBlurWithin = (props.onBlurWithin: any);
+  const isTargetAttached = state.detachedTarget === null;
   if (isFunction(onBlurWithin)) {
     const syntheticEvent = createFocusEvent(
       context,
       'blurwithin',
       target,
       pointerType,
+      isTargetAttached,
     );
     context.dispatchEvent(syntheticEvent, onBlurWithin, DiscreteEvent);
   }
@@ -313,15 +409,17 @@ function unmountFocusResponder(
 const focusResponderImpl = {
   targetEventTypes,
   targetPortalPropagation: true,
-  rootEventTypes,
   getInitialState(): FocusState {
     return {
+      detachedTarget: null,
       focusTarget: null,
-      isEmulatingMouseEvents: false,
       isFocused: false,
       isFocusVisible: false,
       pointerType: '',
     };
+  },
+  onMount() {
+    trackGlobalFocusVisible();
   },
   onEvent(
     event: ReactDOMResponderEvent,
@@ -350,7 +448,7 @@ const focusResponderImpl = {
           state.isFocusVisible = isGlobalFocusVisible;
           dispatchFocusEvents(context, props, state);
         }
-        state.isEmulatingMouseEvents = false;
+        isEmulatingMouseEvents = false;
         break;
       }
       case 'blur': {
@@ -369,23 +467,22 @@ const focusResponderImpl = {
         if (event.nativeEvent.relatedTarget == null) {
           state.pointerType = '';
         }
-        state.isEmulatingMouseEvents = false;
+        isEmulatingMouseEvents = false;
         break;
       }
+      default:
+        handleFocusVisibleTargetEvents(
+          event,
+          context,
+          state,
+          isFocusVisible => {
+            if (state.isFocused && state.isFocusVisible !== isFocusVisible) {
+              state.isFocusVisible = isFocusVisible;
+              dispatchFocusVisibleChangeEvent(context, props, isFocusVisible);
+            }
+          },
+        );
     }
-  },
-  onRootEvent(
-    event: ReactDOMResponderEvent,
-    context: ReactDOMResponderContext,
-    props: FocusProps,
-    state: FocusState,
-  ): void {
-    handleRootEvent(event, context, state, isFocusVisible => {
-      if (state.isFocused && state.isFocusVisible !== isFocusVisible) {
-        state.isFocusVisible = isFocusVisible;
-        dispatchFocusVisibleChangeEvent(context, props, isFocusVisible);
-      }
-    });
   },
   onUnmount(
     context: ReactDOMResponderContext,
@@ -396,7 +493,7 @@ const focusResponderImpl = {
   },
 };
 
-export const FocusResponder = React.unstable_createResponder(
+export const FocusResponder = React.DEPRECATED_createResponder(
   'Focus',
   focusResponderImpl,
 );
@@ -404,7 +501,7 @@ export const FocusResponder = React.unstable_createResponder(
 export function useFocus(
   props: FocusProps,
 ): ReactEventResponderListener<any, any> {
-  return React.unstable_useResponder(FocusResponder, props);
+  return React.DEPRECATED_useResponder(FocusResponder, props);
 }
 
 /**
@@ -451,15 +548,17 @@ function unmountFocusWithinResponder(
 const focusWithinResponderImpl = {
   targetEventTypes,
   targetPortalPropagation: true,
-  rootEventTypes,
   getInitialState(): FocusState {
     return {
+      detachedTarget: null,
       focusTarget: null,
-      isEmulatingMouseEvents: false,
       isFocused: false,
       isFocusVisible: false,
       pointerType: '',
     };
+  },
+  onMount() {
+    trackGlobalFocusVisible();
   },
   onEvent(
     event: ReactDOMResponderEvent,
@@ -507,6 +606,47 @@ const focusWithinResponderImpl = {
         }
         break;
       }
+      case 'beforeblur': {
+        const onBeforeBlurWithin = (props.onBeforeBlurWithin: any);
+        if (isFunction(onBeforeBlurWithin)) {
+          const syntheticEvent = createFocusEvent(
+            context,
+            'beforeblurwithin',
+            event.target,
+            state.pointerType,
+            true,
+          );
+          state.detachedTarget = event.target;
+          context.dispatchEvent(
+            syntheticEvent,
+            onBeforeBlurWithin,
+            DiscreteEvent,
+          );
+          context.addRootEventTypes(rootEventTypes);
+        } else {
+          // We want to propagate to next focusWithin responder
+          // if this responder doesn't handle beforeblur
+          context.continuePropagation();
+        }
+        break;
+      }
+      default:
+        handleFocusVisibleTargetEvents(
+          event,
+          context,
+          state,
+          isFocusVisible => {
+            if (state.isFocused && state.isFocusVisible !== isFocusVisible) {
+              state.isFocusVisible = isFocusVisible;
+              dispatchFocusWithinVisibleChangeEvent(
+                context,
+                props,
+                state,
+                isFocusVisible,
+              );
+            }
+          },
+        );
     }
   },
   onRootEvent(
@@ -515,17 +655,14 @@ const focusWithinResponderImpl = {
     props: FocusWithinProps,
     state: FocusState,
   ): void {
-    handleRootEvent(event, context, state, isFocusVisible => {
-      if (state.isFocused && state.isFocusVisible !== isFocusVisible) {
-        state.isFocusVisible = isFocusVisible;
-        dispatchFocusWithinVisibleChangeEvent(
-          context,
-          props,
-          state,
-          isFocusVisible,
-        );
+    if (event.type === 'blur') {
+      const detachedTarget = state.detachedTarget;
+      if (detachedTarget !== null && detachedTarget === event.target) {
+        dispatchBlurWithinEvents(context, event, props, state);
+        state.detachedTarget = null;
+        context.removeRootEventTypes(rootEventTypes);
       }
-    });
+    }
   },
   onUnmount(
     context: ReactDOMResponderContext,
@@ -536,7 +673,7 @@ const focusWithinResponderImpl = {
   },
 };
 
-export const FocusWithinResponder = React.unstable_createResponder(
+export const FocusWithinResponder = React.DEPRECATED_createResponder(
   'FocusWithin',
   focusWithinResponderImpl,
 );
@@ -544,5 +681,5 @@ export const FocusWithinResponder = React.unstable_createResponder(
 export function useFocusWithin(
   props: FocusWithinProps,
 ): ReactEventResponderListener<any, any> {
-  return React.unstable_useResponder(FocusWithinResponder, props);
+  return React.DEPRECATED_useResponder(FocusWithinResponder, props);
 }

@@ -9,7 +9,10 @@ const OFF = 0;
 const ERROR = 2;
 
 module.exports = {
-  extends: 'fbjs',
+  extends: [
+    'fbjs',
+    'prettier'
+  ],
 
   // Stop ESLint from looking for a configuration file in parent folders
   root: true,
@@ -30,10 +33,10 @@ module.exports = {
   rules: {
     'accessor-pairs': OFF,
     'brace-style': [ERROR, '1tbs'],
-    'comma-dangle': [ERROR, 'always-multiline'],
     'consistent-return': OFF,
     'dot-location': [ERROR, 'property'],
-    'dot-notation': ERROR,
+    // We use console['error']() as a signal to not transform it:
+    'dot-notation': [ERROR, {allowPattern: '^(error|warn)$'}],
     'eol-last': ERROR,
     eqeqeq: [ERROR, 'allow-null'],
     indent: OFF,
@@ -92,7 +95,9 @@ module.exports = {
     // the second argument of warning/invariant should be a literal string
     'react-internal/no-primitive-constructors': ERROR,
     'react-internal/no-to-warn-dev-within-to-throw': ERROR,
-    'react-internal/warning-and-invariant-args': ERROR,
+    'react-internal/invariant-args': ERROR,
+    'react-internal/warning-args': ERROR,
+    'react-internal/no-production-logging': ERROR,
   },
 
   overrides: [
@@ -131,6 +136,19 @@ module.exports = {
         'jest/no-focused-tests': ERROR,
         'jest/valid-expect': ERROR,
         'jest/valid-expect-in-promise': ERROR,
+      },
+    },
+    {
+      files: [
+        '**/__tests__/**/*.js',
+        'scripts/**/*.js',
+        'packages/*/npm/**/*.js',
+        'packages/dom-event-testing-library/**/*.js',
+        'packages/react-devtools*/**/*.js'
+      ],
+      rules: {
+        'react-internal/no-production-logging': OFF,
+        'react-internal/warning-args': OFF,
       },
     },
     {

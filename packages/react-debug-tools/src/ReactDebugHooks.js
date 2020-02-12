@@ -25,6 +25,7 @@ import {
   SimpleMemoComponent,
   ContextProvider,
   ForwardRef,
+  Chunk,
 } from 'shared/ReactWorkTags';
 
 type CurrentDispatcherRef = typeof ReactSharedInternals.ReactCurrentDispatcher;
@@ -35,6 +36,7 @@ type HookLogEntry = {
   primitive: string,
   stackError: Error,
   value: mixed,
+  ...
 };
 
 let hookLog: Array<HookLogEntry> = [];
@@ -115,8 +117,8 @@ function useState<S>(
     hook !== null
       ? hook.memoizedState
       : typeof initialState === 'function'
-        ? initialState()
-        : initialState;
+      ? initialState()
+      : initialState;
   hookLog.push({primitive: 'State', stackError: new Error(), value: state});
   return [state, (action: BasicStateAction<S>) => {}];
 }
@@ -141,7 +143,7 @@ function useReducer<S, I, A>(
   return [state, (action: A) => {}];
 }
 
-function useRef<T>(initialValue: T): {current: T} {
+function useRef<T>(initialValue: T): {|current: T|} {
   let hook = nextHook();
   let ref = hook !== null ? hook.memoizedState : {current: initialValue};
   hookLog.push({
@@ -173,7 +175,7 @@ function useEffect(
 }
 
 function useImperativeHandle<T>(
-  ref: {current: T | null} | ((inst: T | null) => mixed) | null | void,
+  ref: {|current: T | null|} | ((inst: T | null) => mixed) | null | void,
   create: () => T,
   inputs: Array<mixed> | void | null,
 ): void {
@@ -284,6 +286,7 @@ export type HooksNode = {
   name: string,
   value: mixed,
   subHooks: Array<HooksNode>,
+  ...
 };
 export type HooksTree = Array<HooksNode>;
 
@@ -623,7 +626,8 @@ export function inspectHooksOfFiber(
   if (
     fiber.tag !== FunctionComponent &&
     fiber.tag !== SimpleMemoComponent &&
-    fiber.tag !== ForwardRef
+    fiber.tag !== ForwardRef &&
+    fiber.tag !== Chunk
   ) {
     throw new Error(
       'Unknown Fiber. Needs to be a function component to inspect hooks.',

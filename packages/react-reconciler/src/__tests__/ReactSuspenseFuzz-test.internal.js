@@ -46,32 +46,29 @@ describe('ReactSuspenseFuzz', () => {
     function Container({children, updates}) {
       const [step, setStep] = useState(0);
 
-      useLayoutEffect(
-        () => {
-          if (updates !== undefined) {
-            const cleanUps = new Set();
-            updates.forEach(({remountAfter}, i) => {
-              const task = {
-                label: `Remount children after ${remountAfter}ms`,
-              };
-              const timeoutID = setTimeout(() => {
-                pendingTasks.delete(task);
-                Scheduler.unstable_yieldValue(task.label);
-                setStep(i + 1);
-              }, remountAfter);
-              pendingTasks.add(task);
-              cleanUps.add(() => {
-                pendingTasks.delete(task);
-                clearTimeout(timeoutID);
-              });
-            });
-            return () => {
-              cleanUps.forEach(cleanUp => cleanUp());
+      useLayoutEffect(() => {
+        if (updates !== undefined) {
+          const cleanUps = new Set();
+          updates.forEach(({remountAfter}, i) => {
+            const task = {
+              label: `Remount children after ${remountAfter}ms`,
             };
-          }
-        },
-        [updates],
-      );
+            const timeoutID = setTimeout(() => {
+              pendingTasks.delete(task);
+              Scheduler.unstable_yieldValue(task.label);
+              setStep(i + 1);
+            }, remountAfter);
+            pendingTasks.add(task);
+            cleanUps.add(() => {
+              pendingTasks.delete(task);
+              clearTimeout(timeoutID);
+            });
+          });
+          return () => {
+            cleanUps.forEach(cleanUp => cleanUp());
+          };
+        }
+      }, [updates]);
 
       return <React.Fragment key={step}>{children}</React.Fragment>;
     }
@@ -79,32 +76,29 @@ describe('ReactSuspenseFuzz', () => {
     function Text({text, initialDelay = 0, updates}) {
       const [[step, delay], setStep] = useState([0, initialDelay]);
 
-      useLayoutEffect(
-        () => {
-          if (updates !== undefined) {
-            const cleanUps = new Set();
-            updates.forEach(({beginAfter, suspendFor}, i) => {
-              const task = {
-                label: `Update ${beginAfter}ms after mount and suspend for ${suspendFor}ms [${text}]`,
-              };
-              const timeoutID = setTimeout(() => {
-                pendingTasks.delete(task);
-                Scheduler.unstable_yieldValue(task.label);
-                setStep([i + 1, suspendFor]);
-              }, beginAfter);
-              pendingTasks.add(task);
-              cleanUps.add(() => {
-                pendingTasks.delete(task);
-                clearTimeout(timeoutID);
-              });
-            });
-            return () => {
-              cleanUps.forEach(cleanUp => cleanUp());
+      useLayoutEffect(() => {
+        if (updates !== undefined) {
+          const cleanUps = new Set();
+          updates.forEach(({beginAfter, suspendFor}, i) => {
+            const task = {
+              label: `Update ${beginAfter}ms after mount and suspend for ${suspendFor}ms [${text}]`,
             };
-          }
-        },
-        [updates],
-      );
+            const timeoutID = setTimeout(() => {
+              pendingTasks.delete(task);
+              Scheduler.unstable_yieldValue(task.label);
+              setStep([i + 1, suspendFor]);
+            }, beginAfter);
+            pendingTasks.add(task);
+            cleanUps.add(() => {
+              pendingTasks.delete(task);
+              clearTimeout(timeoutID);
+            });
+          });
+          return () => {
+            cleanUps.forEach(cleanUp => cleanUp());
+          };
+        }
+      }, [updates]);
 
       const fullText = `${text}:${step}`;
 

@@ -25,6 +25,7 @@ import {
 } from 'shared/ReactFeatureFlags';
 import {unstable_getThreadID} from 'scheduler/tracing';
 import {NoPriority} from './SchedulerWithReactIntegration';
+import {initializeUpdateQueue} from './ReactUpdateQueue';
 
 export type PendingInteractionMap = Map<ExpirationTime, Set<Interaction>>;
 
@@ -99,6 +100,7 @@ export type FiberRoot = {
   ...BaseFiberRootProperties,
   ...ProfilingOnlyFiberRootProperties,
   ...SuspenseCallbackOnlyFiberRootProperties,
+  ...
 };
 
 function FiberRootNode(containerInfo, tag, hydrate) {
@@ -149,6 +151,8 @@ export function createFiberRoot(
   root.current = uninitializedFiber;
   uninitializedFiber.stateNode = root;
 
+  initializeUpdateQueue(uninitializedFiber);
+
   return root;
 }
 
@@ -160,8 +164,8 @@ export function isRootSuspendedAtTime(
   const lastSuspendedTime = root.lastSuspendedTime;
   return (
     firstSuspendedTime !== NoWork &&
-    (firstSuspendedTime >= expirationTime &&
-      lastSuspendedTime <= expirationTime)
+    firstSuspendedTime >= expirationTime &&
+    lastSuspendedTime <= expirationTime
   );
 }
 

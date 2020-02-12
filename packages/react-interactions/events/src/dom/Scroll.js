@@ -25,6 +25,7 @@ type ScrollProps = {
   onScroll: ScrollEvent => void,
   onScrollDragStart: ScrollEvent => void,
   onScrollDragEnd: ScrollEvent => void,
+  ...
 };
 
 type ScrollState = {
@@ -35,6 +36,7 @@ type ScrollState = {
   isTouching: boolean,
   scrollLeft: number,
   scrollTop: number,
+  ...
 };
 
 type ScrollEventType =
@@ -305,7 +307,7 @@ const scrollResponderImpl = {
   },
 };
 
-export const ScrollResponder = React.unstable_createResponder(
+export const ScrollResponder = React.DEPRECATED_createResponder(
   'Scroll',
   scrollResponderImpl,
 );
@@ -313,5 +315,5 @@ export const ScrollResponder = React.unstable_createResponder(
 export function useScroll(
   props: ScrollProps,
 ): ReactEventResponderListener<any, any> {
-  return React.unstable_useResponder(ScrollResponder, props);
+  return React.DEPRECATED_useResponder(ScrollResponder, props);
 }

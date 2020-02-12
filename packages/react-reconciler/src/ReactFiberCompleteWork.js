@@ -51,6 +51,7 @@ import {
   IncompleteClassComponent,
   FundamentalComponent,
   ScopeComponent,
+  Chunk,
 } from 'shared/ReactWorkTags';
 import {NoMode, BlockingMode} from './ReactTypeOfMode';
 import {
@@ -115,9 +116,10 @@ import {
   enableSchedulerTracing,
   enableSuspenseCallback,
   enableSuspenseServerRenderer,
-  enableFlareAPI,
+  enableDeprecatedFlareAPI,
   enableFundamentalAPI,
   enableScopeAPI,
+  enableChunksAPI,
 } from 'shared/ReactFeatureFlags';
 import {
   markSpawnedWork,
@@ -128,7 +130,7 @@ import {
 import {createFundamentalStateInstance} from './ReactFiberFundamental';
 import {Never} from './ReactFiberExpirationTime';
 import {resetChildFibers} from './ReactChildFiber';
-import {updateEventListeners} from './ReactFiberEvents';
+import {updateDeprecatedEventListeners} from './ReactFiberDeprecatedEvents';
 import {createScopeMethods} from './ReactFiberScope';
 
 function markUpdate(workInProgress: Fiber) {
@@ -433,8 +435,8 @@ if (supportsMutation) {
     const portalOrRoot: {
       containerInfo: Container,
       pendingChildren: ChildSet,
-    } =
-      workInProgress.stateNode;
+      ...
+    } = workInProgress.stateNode;
     const childrenUnchanged = workInProgress.firstEffect === null;
     if (childrenUnchanged) {
       // No changes, just reuse the existing instance.
@@ -537,6 +539,8 @@ if (supportsMutation) {
       // We'll have to mark it as having an effect, even though we won't use the effect for anything.
       // This lets the parents know that at least one of their children has changed.
       markUpdate(workInProgress);
+    } else {
+      workInProgress.stateNode = current.stateNode;
     }
   };
 } else {
@@ -638,18 +642,22 @@ function completeWork(
 
   switch (workInProgress.tag) {
     case IndeterminateComponent:
-      break;
     case LazyComponent:
-      break;
     case SimpleMemoComponent:
     case FunctionComponent:
-      break;
+    case ForwardRef:
+    case Fragment:
+    case Mode:
+    case Profiler:
+    case ContextConsumer:
+    case MemoComponent:
+      return null;
     case ClassComponent: {
       const Component = workInProgress.type;
       if (isLegacyContextProvider(Component)) {
         popLegacyContext(workInProgress);
       }
-      break;
+      return null;
     }
     case HostRoot: {
       popHostContainer(workInProgress);
@@ -670,7 +678,7 @@ function completeWork(
         }
       }
       updateHostContainer(workInProgress);
-      break;
+      return null;
     }
     case HostComponent: {
       popHostContext(workInProgress);
@@ -685,9 +693,9 @@ function completeWork(
           rootContainerInstance,
         );
 
-        if (enableFlareAPI) {
-          const prevListeners = current.memoizedProps.listeners;
-          const nextListeners = newProps.listeners;
+        if (enableDeprecatedFlareAPI) {
+          const prevListeners = current.memoizedProps.DEPRECATED_flareListeners;
+          const nextListeners = newProps.DEPRECATED_flareListeners;
           if (prevListeners !== nextListeners) {
             markUpdate(workInProgress);
           }
@@ -704,13 +712,13 @@ function completeWork(
               'caused by a bug in React. Please file an issue.',
           );
           // This can happen when we abort work.
-          break;
+          return null;
         }
 
         const currentHostContext = getHostContext();
         // TODO: Move createInstance to beginWork and keep it on a context
         // "stack" as the parent. Then append children as we go in beginWork
-        // or completeWork depending on we want to add then top->down or
+        // or completeWork depending on whether we want to add them top->down or
         // bottom->up. Top->down is faster in IE11.
         let wasHydrated = popHydrationState(workInProgress);
         if (wasHydrated) {
@@ -723,14 +731,14 @@ function completeWork(
               currentHostContext,
             )
           ) {
-            // If changes to the hydrated node needs to be applied at the
+            // If changes to the hydrated node need to be applied at the
             // commit-phase we mark this as such.
             markUpdate(workInProgress);
           }
-          if (enableFlareAPI) {
-            const listeners = newProps.listeners;
+          if (enableDeprecatedFlareAPI) {
+            const listeners = newProps.DEPRECATED_flareListeners;
             if (listeners != null) {
-              updateEventListeners(
+              updateDeprecatedEventListeners(
                 listeners,
                 workInProgress,
                 rootContainerInstance,
@@ -751,10 +759,10 @@ function completeWork(
           // This needs to be set before we mount Flare event listeners
           workInProgress.stateNode = instance;
 
-          if (enableFlareAPI) {
-            const listeners = newProps.listeners;
+          if (enableDeprecatedFlareAPI) {
+            const listeners = newProps.DEPRECATED_flareListeners;
             if (listeners != null) {
-              updateEventListeners(
+              updateDeprecatedEventListeners(
                 listeners,
                 workInProgress,
                 rootContainerInstance,
@@ -783,7 +791,7 @@ function completeWork(
           markRef(workInProgress);
         }
       }
-      break;
+      return null;
     }
     case HostText: {
       let newText = newProps;
@@ -817,10 +825,8 @@ function completeWork(
           );
         }
       }
-      break;
+      return null;
     }
-    case ForwardRef:
-      break;
     case SuspenseComponent: {
       popSuspenseContext(workInProgress);
       const nextState: null | SuspenseState = workInProgress.memoizedState;
@@ -842,15 +848,14 @@ function completeWork(
           } else {
             // We should never have been in a hydration state if we didn't have a current.
             // However, in some of those paths, we might have reentered a hydration state
-            // and then we might be inside a hydration state. In that case, we'll need to
-            // exit out of it.
+            // and then we might be inside a hydration state. In that case, we'll need to exit out of it.
             resetHydrationState();
             if ((workInProgress.effectTag & DidCapture) === NoEffect) {
               // This boundary did not suspend so it's now hydrated and unsuspended.
               workInProgress.memoizedState = null;
             }
             // If nothing suspended, we need to schedule an effect to mark this boundary
-            // as having hydrated so events know that they're free be invoked.
+            // as having hydrated so events know that they're free to be invoked.
             // It's also a signal to replay events and the suspense callback.
             // If something suspended, schedule an effect to attach retry listeners.
             // So we might as well always mark this.
@@ -937,7 +942,7 @@ function completeWork(
         // TODO: Only schedule updates if not prevDidTimeout.
         if (nextDidTimeout) {
           // If this boundary just timed out, schedule an effect to attach a
-          // retry listener to the proimse. This flag is also used to hide the
+          // retry listener to the promise. This flag is also used to hide the
           // primary children.
           workInProgress.effectTag |= Update;
         }
@@ -946,9 +951,9 @@ function completeWork(
         // TODO: Only schedule updates if these values are non equal, i.e. it changed.
         if (nextDidTimeout || prevDidTimeout) {
           // If this boundary just timed out, schedule an effect to attach a
-          // retry listener to the proimse. This flag is also used to hide the
+          // retry listener to the promise. This flag is also used to hide the
           // primary children. In mutation mode, we also need the flag to
-          // *unhide* children that were previously hidden, so check if the
+          // *unhide* children that were previously hidden, so check if this
           // is currently timed out, too.
           workInProgress.effectTag |= Update;
         }
@@ -961,26 +966,16 @@ function completeWork(
         // Always notify the callback
         workInProgress.effectTag |= Update;
       }
-      break;
+      return null;
     }
-    case Fragment:
-      break;
-    case Mode:
-      break;
-    case Profiler:
-      break;
     case HostPortal:
       popHostContainer(workInProgress);
       updateHostContainer(workInProgress);
-      break;
+      return null;
     case ContextProvider:
       // Pop provider fiber
       popProvider(workInProgress);
-      break;
-    case ContextConsumer:
-      break;
-    case MemoComponent:
-      break;
+      return null;
     case IncompleteClassComponent: {
       // Same as class component case. I put it down here so that the tags are
       // sequential to ensure this switch is compiled to a jump table.
@@ -988,7 +983,7 @@ function completeWork(
       if (isLegacyContextProvider(Component)) {
         popLegacyContext(workInProgress);
       }
-      break;
+      return null;
     }
     case SuspenseListComponent: {
       popSuspenseContext(workInProgress);
@@ -997,9 +992,9 @@ function completeWork(
         workInProgress.memoizedState;
 
       if (renderState === null) {
-        // We're running in the default, "independent" mode. We don't do anything
-        // in this mode.
-        break;
+        // We're running in the default, "independent" mode.
+        // We don't do anything in this mode.
+        return null;
       }
 
       let didSuspendAlready =
@@ -1098,10 +1093,11 @@ function completeWork(
             // This might have been modified.
             if (
               renderState.tail === null &&
-              renderState.tailMode === 'hidden'
+              renderState.tailMode === 'hidden' &&
+              !renderedTail.alternate
             ) {
               // We need to delete the row we just rendered.
-              // Reset the effect list to what it w as before we rendered this
+              // Reset the effect list to what it was before we rendered this
               // child. The nested children have already appended themselves.
               let lastEffect = (workInProgress.lastEffect =
                 renderState.lastEffect);
@@ -1113,7 +1109,10 @@ function completeWork(
               return null;
             }
           } else if (
-            now() > renderState.tailExpiration &&
+            // The time it took to render last row is greater than time until
+            // the expiration.
+            now() * 2 - renderState.renderingStartTime >
+              renderState.tailExpiration &&
             renderExpirationTime > Never
           ) {
             // We have now passed our CPU deadline and we'll just give up further
@@ -1163,12 +1162,19 @@ function completeWork(
           // until we just give up and show what we have so far.
           const TAIL_EXPIRATION_TIMEOUT_MS = 500;
           renderState.tailExpiration = now() + TAIL_EXPIRATION_TIMEOUT_MS;
+          // TODO: This is meant to mimic the train model or JND but this
+          // is a per component value. It should really be since the start
+          // of the total render or last commit. Consider using something like
+          // globalMostRecentFallbackTime. That doesn't account for being
+          // suspended for part of the time or when it's a new render.
+          // It should probably use a global start time value instead.
         }
         // Pop a row.
         let next = renderState.tail;
         renderState.rendering = next;
         renderState.tail = next.sibling;
         renderState.lastEffect = workInProgress.lastEffect;
+        renderState.renderingStartTime = now();
         next.sibling = null;
 
         // Restore the context.
@@ -1187,7 +1193,7 @@ function completeWork(
         // Do a pass over the next row.
         return next;
       }
-      break;
+      return null;
     }
     case FundamentalComponent: {
       if (enableFundamentalAPI) {
@@ -1195,8 +1201,7 @@ function completeWork(
         let fundamentalInstance: ReactFundamentalComponentInstance<
           any,
           any,
-        > | null =
-          workInProgress.stateNode;
+        > | null = workInProgress.stateNode;
 
         if (fundamentalInstance === null) {
           const getInitialState = fundamentalImpl.getInitialState;
@@ -1237,6 +1242,7 @@ function completeWork(
             markUpdate(workInProgress);
           }
         }
+        return null;
       }
       break;
     }
@@ -1250,11 +1256,11 @@ function completeWork(
           };
           workInProgress.stateNode = scopeInstance;
           scopeInstance.methods = createScopeMethods(type, scopeInstance);
-          if (enableFlareAPI) {
-            const listeners = newProps.listeners;
+          if (enableDeprecatedFlareAPI) {
+            const listeners = newProps.DEPRECATED_flareListeners;
             if (listeners != null) {
               const rootContainerInstance = getRootHostContainer();
-              updateEventListeners(
+              updateDeprecatedEventListeners(
                 listeners,
                 workInProgress,
                 rootContainerInstance,
@@ -1266,9 +1272,10 @@ function completeWork(
             markUpdate(workInProgress);
           }
         } else {
-          if (enableFlareAPI) {
-            const prevListeners = current.memoizedProps.listeners;
-            const nextListeners = newProps.listeners;
+          if (enableDeprecatedFlareAPI) {
+            const prevListeners =
+              current.memoizedProps.DEPRECATED_flareListeners;
+            const nextListeners = newProps.DEPRECATED_flareListeners;
             if (
               prevListeners !== nextListeners ||
               workInProgress.ref !== null
@@ -1284,19 +1291,22 @@ function completeWork(
             markRef(workInProgress);
           }
         }
+        return null;
       }
       break;
     }
-    default:
-      invariant(
-        false,
-        'Unknown unit of work tag (%s). This error is likely caused by a bug in ' +
-          'React. Please file an issue.',
-        workInProgress.tag,
-      );
+    case Chunk:
+      if (enableChunksAPI) {
+        return null;
+      }
+      break;
   }
-
-  return null;
+  invariant(
+    false,
+    'Unknown unit of work tag (%s). This error is likely caused by a bug in ' +
+      'React. Please file an issue.',
+    workInProgress.tag,
+  );
 }
 
 export {completeWork};

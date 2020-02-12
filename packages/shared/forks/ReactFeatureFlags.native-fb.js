@@ -12,9 +12,9 @@ import invariant from 'shared/invariant';
 import typeof * as FeatureFlagsType from 'shared/ReactFeatureFlags';
 import typeof * as FeatureFlagsShimType from './ReactFeatureFlags.native-fb';
 
-// Re-export dynamic flags from the fbsource version.
+// Uncomment to re-export dynamic flags from the fbsource version.
 export const {
-  debugRenderPhaseSideEffects,
+  enableNativeTargetAsInstance,
 } = require('../shims/ReactFeatureFlags');
 
 // The rest of the flags are static for better dead code elimination.
@@ -23,6 +23,7 @@ export const enableProfilerTimer = __PROFILE__;
 export const enableSchedulerTracing = __PROFILE__;
 export const enableSuspenseServerRenderer = false;
 export const enableSelectiveHydration = false;
+export const enableChunksAPI = false;
 export const exposeConcurrentModeAPIs = __EXPERIMENTAL__;
 export const warnAboutShorthandPropertyCollision = false;
 export const enableSchedulerDebugging = false;
@@ -31,7 +32,7 @@ export const disableJavaScriptURLs = false;
 export const disableInputAttributeSyncing = false;
 export const replayFailedUnitOfWorkWithInvokeGuardedCallback = __DEV__;
 export const warnAboutDeprecatedLifecycles = true;
-export const enableFlareAPI = false;
+export const enableDeprecatedFlareAPI = false;
 export const enableFundamentalAPI = false;
 export const enableScopeAPI = false;
 export const enableJSXTransformAPI = false;
@@ -42,6 +43,7 @@ export const warnAboutDefaultPropsOnFunctionComponents = false;
 export const warnAboutStringRefs = false;
 export const disableLegacyContext = false;
 export const disableSchedulerTimeoutBasedOnReactExpirationTime = false;
+export const enableTrainModelFix = false;
 export const enableTrustedTypesIntegration = false;
 
 // Only used in www builds.

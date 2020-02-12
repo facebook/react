@@ -485,7 +485,14 @@ exports[`InspectedElementContext should support complex data types: 1: Inspected
   "context": null,
   "hooks": null,
   "props": {
+    "anonymous_fn": {},
     "array_buffer": {},
+    "array_of_arrays": [
+      {}
+    ],
+    "big_int": {},
+    "bound_fn": {},
+    "data_view": {},
     "date": {},
     "fn": {},
     "html_element": {},
@@ -502,7 +509,11 @@ exports[`InspectedElementContext should support complex data types: 1: Inspected
       "0": {},
       "1": {}
     },
+    "object_of_objects": {
+      "inner": {}
+    },
     "react_element": {},
+    "regexp": {},
     "set": {
       "0": "abc",
       "1": 123
@@ -532,6 +543,39 @@ exports[`InspectedElementContext should support custom objects with enumerable p
     "data": {
       "_number": 42,
       "number": 42
+    }
+  },
+  "state": null
+}
+`;
+
+exports[`InspectedElementContext should support objects with no prototype: 1: Inspected element 2 1`] = `
+{
+  "id": 2,
+  "owners": null,
+  "context": null,
+  "hooks": null,
+  "props": {
+    "object": {
+      "string": "abc",
+      "number": 123,
+      "boolean": true
+    }
+  },
+  "state": null
+}
+`;
+
+exports[`InspectedElementContext should support objects with overridden hasOwnProperty: 1: Inspected element 2 1`] = `
+{
+  "id": 2,
+  "owners": null,
+  "context": null,
+  "hooks": null,
+  "props": {
+    "object": {
+      "name": "blah",
+      "hasOwnProperty": true
     }
   },
   "state": null

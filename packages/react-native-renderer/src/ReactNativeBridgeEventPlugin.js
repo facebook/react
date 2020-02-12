@@ -35,7 +35,7 @@ const ReactNativeBridgeEventPlugin = {
     topLevelType: TopLevelType,
     targetInst: null | Object,
     nativeEvent: AnyNativeEvent,
-    nativeEventTarget: Object,
+    nativeEventTarget: null | Object,
     eventSystemFlags: EventSystemFlags,
   ): ?Object {
     if (targetInst == null) {

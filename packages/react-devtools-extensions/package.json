@@ -1,5 +1,4 @@
 {
-
   "name": "react-devtools-extensions",
   "version": "0.0.0",
   "private": true,
@@ -26,18 +25,18 @@
     "babel-core": "^7.0.0-bridge",
     "babel-eslint": "^9.0.0",
     "babel-loader": "^8.0.4",
-    "chrome-launch": "^1.1.4",
     "child-process-promise": "^2.2.1",
-    "css-loader": "^1.0.1",
+    "chrome-launch": "^1.1.4",
     "crx": "^5.0.0",
+    "css-loader": "^1.0.1",
     "firefox-profile": "^1.0.2",
     "node-libs-browser": "0.5.3",
     "nullthrows": "^1.0.0",
     "raw-loader": "^3.1.0",
     "style-loader": "^0.23.1",
     "web-ext": "^3.0.0",
-    "webpack": "^4.26.0",
-    "webpack-cli": "^3.1.2",
+    "webpack": "^4.41.2",
+    "webpack-cli": "^3.3.10",
     "webpack-dev-server": "^3.3.1"
   }
 }
