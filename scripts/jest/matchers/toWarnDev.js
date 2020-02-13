@@ -1,6 +1,6 @@
 'use strict';
 
-const jestDiff = require('jest-diff');
+const jestDiff = require('jest-diff').default;
 const util = require('util');
 const shouldIgnoreConsoleError = require('../shouldIgnoreConsoleError');
 

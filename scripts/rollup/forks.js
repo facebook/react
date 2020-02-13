@@ -1,23 +1,23 @@
 'use strict';
 
-const bundleTypes = require('./bundles').bundleTypes;
-const moduleTypes = require('./bundles').moduleTypes;
+const {bundleTypes, moduleTypes} = require('./bundles');
 const inlinedHostConfigs = require('../shared/inlinedHostConfigs');
 
-const UMD_DEV = bundleTypes.UMD_DEV;
-const UMD_PROD = bundleTypes.UMD_PROD;
-const UMD_PROFILING = bundleTypes.UMD_PROFILING;
-const FB_WWW_DEV = bundleTypes.FB_WWW_DEV;
-const FB_WWW_PROD = bundleTypes.FB_WWW_PROD;
-const FB_WWW_PROFILING = bundleTypes.FB_WWW_PROFILING;
-const RN_OSS_DEV = bundleTypes.RN_OSS_DEV;
-const RN_OSS_PROD = bundleTypes.RN_OSS_PROD;
-const RN_OSS_PROFILING = bundleTypes.RN_OSS_PROFILING;
-const RN_FB_DEV = bundleTypes.RN_FB_DEV;
-const RN_FB_PROD = bundleTypes.RN_FB_PROD;
-const RN_FB_PROFILING = bundleTypes.RN_FB_PROFILING;
-const RENDERER = moduleTypes.RENDERER;
-const RECONCILER = moduleTypes.RECONCILER;
+const {
+  UMD_DEV,
+  UMD_PROD,
+  UMD_PROFILING,
+  FB_WWW_DEV,
+  FB_WWW_PROD,
+  FB_WWW_PROFILING,
+  RN_OSS_DEV,
+  RN_OSS_PROD,
+  RN_OSS_PROFILING,
+  RN_FB_DEV,
+  RN_FB_PROD,
+  RN_FB_PROFILING,
+} = bundleTypes;
+const {RENDERER, RECONCILER} = moduleTypes;
 
 // If you need to replace a file with another file for a specific environment,
 // add it to this list with the logic for choosing the right replacement.
@@ -46,7 +46,7 @@ const forks = Object.freeze({
   // Without this fork, importing `shared/ReactSharedInternals` inside
   // the `react` package itself would not work due to a cyclical dependency.
   'shared/ReactSharedInternals': (bundleType, entry, dependencies) => {
-    if (entry === 'react') {
+    if (entry === 'react' || entry === 'react/testing') {
       return 'react/src/ReactSharedInternals';
     }
     if (dependencies.indexOf('react') === -1) {
@@ -106,6 +106,10 @@ const forks = Object.freeze({
             return 'shared/forks/ReactFeatureFlags.test-renderer.www.js';
         }
         return 'shared/forks/ReactFeatureFlags.test-renderer.js';
+      case 'react-dom/testing':
+        return 'shared/forks/ReactFeatureFlags.testing.js';
+      case 'react/testing':
+        return 'shared/forks/ReactFeatureFlags.testing.js';
       default:
         switch (bundleType) {
           case FB_WWW_DEV:

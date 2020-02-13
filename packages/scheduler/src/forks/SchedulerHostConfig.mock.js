@@ -201,13 +201,10 @@ export function unstable_yieldValue(value: mixed): void {
 
 export function unstable_advanceTime(ms: number) {
   currentTime += ms;
-  if (!isFlushing) {
-    if (scheduledTimeout !== null && timeoutTime <= currentTime) {
-      scheduledTimeout(currentTime);
-      timeoutTime = -1;
-      scheduledTimeout = null;
-    }
-    unstable_flushExpired();
+  if (scheduledTimeout !== null && timeoutTime <= currentTime) {
+    scheduledTimeout(currentTime);
+    timeoutTime = -1;
+    scheduledTimeout = null;
   }
 }
 

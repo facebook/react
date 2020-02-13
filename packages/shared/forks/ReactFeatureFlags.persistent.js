@@ -37,9 +37,16 @@ export const warnAboutDefaultPropsOnFunctionComponents = false;
 export const warnAboutStringRefs = false;
 export const disableLegacyContext = false;
 export const disableSchedulerTimeoutBasedOnReactExpirationTime = false;
-export const enableTrainModelFix = false;
+export const enableTrainModelFix = true;
 export const enableTrustedTypesIntegration = false;
 export const enableNativeTargetAsInstance = false;
+export const disableCreateFactory = false;
+export const disableTextareaChildren = false;
+export const disableUnstableRenderSubtreeIntoContainer = false;
+export const warnUnstableRenderSubtreeIntoContainer = false;
+export const disableUnstableCreatePortal = false;
+export const deferPassiveEffectCleanupDuringUnmount = false;
+export const isTestEnvironment = false;
 
 // Only used in www builds.
 export function addUserTimingListener() {

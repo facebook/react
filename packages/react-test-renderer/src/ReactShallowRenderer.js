@@ -173,6 +173,7 @@ function createHook(): Hook {
 }
 
 function basicStateReducer<S>(state: S, action: BasicStateAction<S>): S {
+  // $FlowFixMe: Flow doesn't like mixed types
   return typeof action === 'function' ? action(state) : action;
 }
 

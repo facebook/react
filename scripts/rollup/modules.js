@@ -1,11 +1,7 @@
 'use strict';
 
 const forks = require('./forks');
-const bundleTypes = require('./bundles').bundleTypes;
-
-const UMD_DEV = bundleTypes.UMD_DEV;
-const UMD_PROD = bundleTypes.UMD_PROD;
-const UMD_PROFILING = bundleTypes.UMD_PROFILING;
+const {UMD_DEV, UMD_PROD, UMD_PROFILING} = require('./bundles').bundleTypes;
 
 // For any external that is used in a DEV-only condition, explicitly
 // specify whether it has side effects during import or not. This lets

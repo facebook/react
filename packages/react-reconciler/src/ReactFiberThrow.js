@@ -54,7 +54,6 @@ import {
   markLegacyErrorBoundaryAsFailed,
   isAlreadyFailedLegacyErrorBoundary,
   pingSuspendedRoot,
-  checkForWrongSuspensePriorityInDEV,
 } from './ReactFiberWorkLoop';
 
 import {Sync} from './ReactFiberExpirationTime';
@@ -206,8 +205,6 @@ function throwException(
         sourceFiber.memoizedState = null;
       }
     }
-
-    checkForWrongSuspensePriorityInDEV(sourceFiber);
 
     let hasInvisibleParentBoundary = hasSuspenseContext(
       suspenseStackCursor.current,

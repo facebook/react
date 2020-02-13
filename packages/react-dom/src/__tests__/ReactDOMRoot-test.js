@@ -40,6 +40,35 @@ describe('ReactDOMRoot', () => {
     expect(container.textContent).toEqual('Hi');
   });
 
+  it('warns if a callback parameter is provided to render', () => {
+    const callback = jest.fn();
+    const root = ReactDOM.createRoot(container);
+    expect(() =>
+      root.render(<div>Hi</div>, callback),
+    ).toErrorDev(
+      'render(...): does not support the second callback argument. ' +
+        'To execute a side effect after rendering, declare it in a component body with useEffect().',
+      {withoutStack: true},
+    );
+    Scheduler.unstable_flushAll();
+    expect(callback).not.toHaveBeenCalled();
+  });
+
+  it('warns if a callback parameter is provided to unmount', () => {
+    const callback = jest.fn();
+    const root = ReactDOM.createRoot(container);
+    root.render(<div>Hi</div>);
+    expect(() =>
+      root.unmount(callback),
+    ).toErrorDev(
+      'unmount(...): does not support a callback argument. ' +
+        'To execute a side effect after rendering, declare it in a component body with useEffect().',
+      {withoutStack: true},
+    );
+    Scheduler.unstable_flushAll();
+    expect(callback).not.toHaveBeenCalled();
+  });
+
   it('unmounts children', () => {
     const root = ReactDOM.createRoot(container);
     root.render(<div>Hi</div>);
@@ -228,5 +257,35 @@ describe('ReactDOMRoot', () => {
     root.unmount();
     Scheduler.unstable_flushAll();
     ReactDOM.createRoot(container); // No warning
+  });
+
+  it('warns if creating a root on the document.body', async () => {
+    expect(() => {
+      ReactDOM.createRoot(document.body);
+    }).toErrorDev(
+      'createRoot(): Creating roots directly with document.body is ' +
+        'discouraged, since its children are often manipulated by third-party ' +
+        'scripts and browser extensions. This may lead to subtle ' +
+        'reconciliation issues. Try using a container element created ' +
+        'for your app.',
+      {withoutStack: true},
+    );
+  });
+
+  it('warns if updating a root that has had its contents removed', async () => {
+    const root = ReactDOM.createRoot(container);
+    root.render(<div>Hi</div>);
+    Scheduler.unstable_flushAll();
+    container.innerHTML = '';
+
+    expect(() => {
+      root.render(<div>Hi</div>);
+    }).toErrorDev(
+      'render(...): It looks like the React-rendered content of the ' +
+        'root container was removed without using React. This is not ' +
+        'supported and will cause errors. Instead, call ' +
+        "root.unmount() to empty a root's container.",
+      {withoutStack: true},
+    );
   });
 });

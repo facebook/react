@@ -117,7 +117,8 @@ function useState<S>(
     hook !== null
       ? hook.memoizedState
       : typeof initialState === 'function'
-      ? initialState()
+      ? // $FlowFixMe: Flow doesn't like mixed types
+        initialState()
       : initialState;
   hookLog.push({primitive: 'State', stackError: new Error(), value: state});
   return [state, (action: BasicStateAction<S>) => {}];

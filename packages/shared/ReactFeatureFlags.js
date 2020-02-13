@@ -44,10 +44,6 @@ export function addUserTimingListener() {
 // Disable javascript: URL strings in href for XSS protection.
 export const disableJavaScriptURLs = false;
 
-// React Fire: prevent the value and checked attributes from syncing
-// with their related DOM properties
-export const disableInputAttributeSyncing = false;
-
 // These APIs will no longer be "unstable" in the upcoming 16.7 release,
 // Control this behavior with a flag to support 16.6 minor releases in the meanwhile.
 export const exposeConcurrentModeAPIs = __EXPERIMENTAL__;
@@ -85,15 +81,46 @@ export const enableSuspenseCallback = false;
 // from React.createElement to React.jsx
 // https://github.com/reactjs/rfcs/blob/createlement-rfc/text/0000-create-element-changes.md
 export const warnAboutDefaultPropsOnFunctionComponents = false;
-export const warnAboutStringRefs = false;
-
-export const disableLegacyContext = false;
 
 export const disableSchedulerTimeoutBasedOnReactExpirationTime = false;
 
-export const enableTrainModelFix = __EXPERIMENTAL__;
+export const enableTrainModelFix = true;
 
 export const enableTrustedTypesIntegration = false;
 
 // Flag to turn event.target and event.currentTarget in ReactNative from a reactTag to a component instance
 export const enableNativeTargetAsInstance = false;
+
+// Controls behavior of deferred effect destroy functions during unmount.
+// Previously these functions were run during commit (along with layout effects).
+// Ideally we should delay these until after commit for performance reasons.
+// This flag provides a killswitch if that proves to break existing code somehow.
+export const deferPassiveEffectCleanupDuringUnmount = false;
+
+// --------------------------
+// Future APIs to be deprecated
+// --------------------------
+
+// Prevent the value and checked attributes from syncing
+// with their related DOM properties
+export const disableInputAttributeSyncing = false;
+
+export const warnAboutStringRefs = false;
+
+export const disableLegacyContext = false;
+
+// Disables React.createFactory
+export const disableCreateFactory = false;
+
+// Disables children for <textarea> elements
+export const disableTextareaChildren = false;
+
+// Disables ReactDOM.unstable_renderSubtreeIntoContainer
+export const disableUnstableRenderSubtreeIntoContainer = false;
+// We should remove this flag once the above flag becomes enabled
+export const warnUnstableRenderSubtreeIntoContainer = false;
+
+// Disables ReactDOM.unstable_createPortal
+export const disableUnstableCreatePortal = false;
+
+export const isTestEnvironment = false;

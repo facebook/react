@@ -30,6 +30,7 @@
 untyped-type-import=error
 
 [options]
+server.max_workers=4
 esproposal.class_static_fields=enable
 esproposal.class_instance_fields=enable
 
@@ -49,4 +50,4 @@ suppress_comment=\\(.\\|\n\\)*\\$FlowFixedInNextDeploy
 suppress_comment=\\(.\\|\n\\)*\\$FlowExpectedError
 
 [version]
-^0.84.0
+^0.97.0

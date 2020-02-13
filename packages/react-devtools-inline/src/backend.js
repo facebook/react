@@ -73,17 +73,18 @@ function finishActivation(contentWindow: window) {
   const agent = new Agent(bridge);
 
   const hook = contentWindow.__REACT_DEVTOOLS_GLOBAL_HOOK__;
+  if (hook) {
+    initBackend(hook, agent, contentWindow);
 
-  initBackend(hook, agent, contentWindow);
-
-  // Setup React Native style editor if a renderer like react-native-web has injected it.
-  if (hook.resolveRNStyle) {
-    setupNativeStyleEditor(
-      bridge,
-      agent,
-      hook.resolveRNStyle,
-      hook.nativeStyleEditorValidAttributes,
-    );
+    // Setup React Native style editor if a renderer like react-native-web has injected it.
+    if (hook.resolveRNStyle) {
+      setupNativeStyleEditor(
+        bridge,
+        agent,
+        hook.resolveRNStyle,
+        hook.nativeStyleEditorValidAttributes,
+      );
+    }
   }
 }
 

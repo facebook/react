@@ -13,10 +13,11 @@ import type {ReactNodeList} from 'shared/ReactTypes';
 // TODO: This type is shared between the reconciler and ReactDOM, but will
 // eventually be lifted out to the renderer.
 import type {FiberRoot} from 'react-reconciler/src/ReactFiberRoot';
+import {findHostInstanceWithNoPortals} from 'react-reconciler/inline.dom';
 
 export type RootType = {
-  render(children: ReactNodeList, callback: ?() => mixed): void,
-  unmount(callback: ?() => mixed): void,
+  render(children: ReactNodeList): void,
+  unmount(): void,
   _internalRoot: FiberRoot,
   ...
 };
@@ -62,30 +63,47 @@ function ReactDOMBlockingRoot(
 
 ReactDOMRoot.prototype.render = ReactDOMBlockingRoot.prototype.render = function(
   children: ReactNodeList,
-  callback: ?() => mixed,
 ): void {
   const root = this._internalRoot;
-  const cb = callback === undefined ? null : callback;
   if (__DEV__) {
-    warnOnInvalidCallback(cb, 'render');
+    if (typeof arguments[1] === 'function') {
+      console.error(
+        'render(...): does not support the second callback argument. ' +
+          'To execute a side effect after rendering, declare it in a component body with useEffect().',
+      );
+    }
+    const container = root.containerInfo;
+
+    if (container.nodeType !== COMMENT_NODE) {
+      const hostInstance = findHostInstanceWithNoPortals(root.current);
+      if (hostInstance) {
+        if (hostInstance.parentNode !== container) {
+          console.error(
+            'render(...): It looks like the React-rendered content of the ' +
+              'root container was removed without using React. This is not ' +
+              'supported and will cause errors. Instead, call ' +
+              "root.unmount() to empty a root's container.",
+          );
+        }
+      }
+    }
   }
-  updateContainer(children, root, null, cb);
+  updateContainer(children, root, null, null);
 };
 
-ReactDOMRoot.prototype.unmount = ReactDOMBlockingRoot.prototype.unmount = function(
-  callback: ?() => mixed,
-): void {
-  const root = this._internalRoot;
-  const cb = callback === undefined ? null : callback;
+ReactDOMRoot.prototype.unmount = ReactDOMBlockingRoot.prototype.unmount = function(): void {
   if (__DEV__) {
-    warnOnInvalidCallback(cb, 'render');
+    if (typeof arguments[0] === 'function') {
+      console.error(
+        'unmount(...): does not support a callback argument. ' +
+          'To execute a side effect after rendering, declare it in a component body with useEffect().',
+      );
+    }
   }
+  const root = this._internalRoot;
   const container = root.containerInfo;
   updateContainer(null, root, null, () => {
     unmarkContainerAsRoot(container);
-    if (cb !== null) {
-      cb();
-    }
   });
 };
 
@@ -152,24 +170,21 @@ export function isValidContainer(node: mixed): boolean {
   );
 }
 
-export function warnOnInvalidCallback(
-  callback: mixed,
-  callerName: string,
-): void {
-  if (__DEV__) {
-    if (callback !== null && typeof callback !== 'function') {
-      console.error(
-        '%s(...): Expected the last optional `callback` argument to be a ' +
-          'function. Instead received: %s.',
-        callerName,
-        callback,
-      );
-    }
-  }
-}
-
 function warnIfReactDOMContainerInDEV(container) {
   if (__DEV__) {
+    if (
+      container.nodeType === ELEMENT_NODE &&
+      ((container: any): Element).tagName &&
+      ((container: any): Element).tagName.toUpperCase() === 'BODY'
+    ) {
+      console.error(
+        'createRoot(): Creating roots directly with document.body is ' +
+          'discouraged, since its children are often manipulated by third-party ' +
+          'scripts and browser extensions. This may lead to subtle ' +
+          'reconciliation issues. Try using a container element created ' +
+          'for your app.',
+      );
+    }
     if (isContainerMarkedAsRoot(container)) {
       if (container._reactRootContainer) {
         console.error(

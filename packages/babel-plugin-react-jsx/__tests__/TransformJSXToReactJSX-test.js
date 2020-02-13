@@ -649,15 +649,23 @@ describe('transform react to jsx', () => {
   });
 
   it('should disallow spread children', () => {
+    let _error;
     const code = `<div>{...children}</div>;`;
-    expect(() => transform(code)).toThrow(
-      'Spread children are not supported in React.' +
-        '\n' +
-        codeFrame.codeFrameColumns(
-          code,
-          {start: {line: 1, column: 6}},
-          {highlightCode: true}
-        )
+    try {
+      transform(code);
+    } catch (error) {
+      _error = error;
+    }
+    expect(_error).toEqual(
+      new SyntaxError(
+        'unknown: Spread children are not supported in React.' +
+          '\n' +
+          codeFrame.codeFrameColumns(
+            code,
+            {start: {line: 1, column: 6}, end: {line: 1, column: 19}},
+            {highlightCode: true}
+          )
+      )
     );
   });
 
@@ -795,17 +803,25 @@ describe('transform react to jsx', () => {
   });
 
   it('should throw error namespaces if not flag', () => {
+    let _error;
     const code = `<f:image />`;
-    expect(() => transform(code)).toThrow(
-      "Namespace tags are not supported by default. React's " +
-        "JSX doesn't support namespace tags. You can turn on the " +
-        "'throwIfNamespace' flag to bypass this warning." +
-        '\n' +
-        codeFrame.codeFrameColumns(
-          code,
-          {start: {line: 1, column: 2}},
-          {highlightCode: true}
-        )
+    try {
+      transform(code);
+    } catch (error) {
+      _error = error;
+    }
+    expect(_error).toEqual(
+      new SyntaxError(
+        "unknown: Namespace tags are not supported by default. React's " +
+          "JSX doesn't support namespace tags. You can turn on the " +
+          "'throwIfNamespace' flag to bypass this warning." +
+          '\n' +
+          codeFrame.codeFrameColumns(
+            code,
+            {start: {line: 1, column: 2}, end: {line: 1, column: 9}},
+            {highlightCode: true}
+          )
+      )
     );
   });
 

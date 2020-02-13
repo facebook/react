@@ -424,9 +424,7 @@ describe('Input event responder', () => {
 
       // However, simulating a normal click should fire a React event because the
       // real value (false) would have changed from the last tracked value (true).
-      ref.current.dispatchEvent(
-        new Event('click', {bubbles: true, cancelable: true}),
-      );
+      ref.current.click();
       expect(onChangeCalled).toBe(1);
       expect(onValueChangeCalled).toBe(1);
     });
@@ -534,18 +532,14 @@ describe('Input event responder', () => {
       const option2 = ref.current.childNodes[1];
 
       // Select first option.
-      option1.dispatchEvent(
-        new Event('click', {bubbles: true, cancelable: true}),
-      );
+      option1.click();
       expect(onChangeCalled1).toBe(1);
       expect(onValueChangeCalled1).toBe(1);
       expect(onChangeCalled2).toBe(0);
       expect(onValueChangeCalled2).toBe(0);
 
       // Select second option.
-      option2.dispatchEvent(
-        new Event('click', {bubbles: true, cancelable: true}),
-      );
+      option2.click();
       expect(onChangeCalled1).toBe(1);
       expect(onValueChangeCalled1).toBe(1);
       expect(onChangeCalled2).toBe(1);
@@ -553,9 +547,7 @@ describe('Input event responder', () => {
 
       // Select the first option.
       // It should receive the React change event again.
-      option1.dispatchEvent(
-        new Event('click', {bubbles: true, cancelable: true}),
-      );
+      option1.click();
       expect(onChangeCalled1).toBe(2);
       expect(onValueChangeCalled1).toBe(2);
       expect(onChangeCalled2).toBe(1);
