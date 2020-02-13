@@ -77,10 +77,6 @@ export type ReactNativeBaseComponentViewConfig<
 
 export type ViewConfigGetter = () => ReactNativeBaseComponentViewConfig<>;
 
-/**
- * This type keeps ReactNativeFiberHostComponent and NativeMethodsMixin in sync.
- * It can also provide types for ReactNative applications that use NMM or refs.
- */
 export type NativeMethods = {
   blur(): void,
   focus(): void,
