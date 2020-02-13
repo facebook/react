@@ -99,6 +99,9 @@ export const deferPassiveEffectCleanupDuringUnmount = false;
 
 export const isTestEnvironment = false;
 
+// define React.jsx even in production builds (aliased to .jsx)
+export const jsxDEVIncluded = false;
+
 // --------------------------
 // Future APIs to be deprecated
 // --------------------------
