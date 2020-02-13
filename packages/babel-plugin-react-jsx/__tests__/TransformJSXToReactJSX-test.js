@@ -68,6 +68,23 @@ describe('transform react to jsx', () => {
     ).toMatchSnapshot();
   });
 
+  it('multiple pragmas work', () => {
+    expect(
+      transform(
+        `/** Some comment here
+           * @jsxImportSource baz
+           * @jsxAutoImport defaultExport
+          */
+          var x = <div><span /></div>
+        `,
+        {
+          autoImport: 'namespace',
+          importSource: 'foobar',
+        }
+      )
+    ).toMatchSnapshot();
+  });
+
   it('throws error when sourceType is module and autoImport is require', () => {
     const code = `var x = <div><span /></div>`;
     expect(() => {
@@ -122,54 +139,12 @@ describe('transform react to jsx', () => {
     );
   });
 
-  it('cannot use autoImport with createElement', () => {
-    const code = `var x = <div><span /></div>`;
-    expect(() => {
-      transform(code, {
-        autoImport: 'namespace',
-        useCreateElement: true,
-      });
-    }).toThrow(
-      'autoImport cannot be used with createElement. Consider setting ' +
-        '`useCreateElement` to `false` to use the new `jsx` function instead\n' +
-        codeFrame.codeFrameColumns(
-          code,
-          {start: {line: 1, column: 1}},
-          {highlightCode: true}
-        )
-    );
-  });
-
   it('auto import can specify source', () => {
     expect(
       transform(`var x = <div><span /></div>`, {
         autoImport: 'namespace',
         importSource: 'foobar',
       })
-    ).toMatchSnapshot();
-  });
-
-  it('auto import require with cached variable', () => {
-    expect(
-      transform(
-        `var x = (
-          <>
-            <div>
-              <div key="1" />
-              <div key="2" meow="wolf" />
-              <div key="3" />
-              <div {...props} key="4" />
-            </div>
-          </>
-        );`,
-        {
-          autoImport: 'require',
-          shouldCacheImportFns: true,
-        },
-        {
-          sourceType: 'script',
-        }
-      )
     ).toMatchSnapshot();
   });
 
@@ -216,27 +191,6 @@ describe('transform react to jsx', () => {
     ).toMatchSnapshot();
   });
 
-  it('auto import namespace with cached variable', () => {
-    expect(
-      transform(
-        `var x = (
-          <>
-            <div>
-              <div key="1" />
-              <div key="2" meow="wolf" />
-              <div key="3" />
-              <div {...props} key="4" />
-            </div>
-          </>
-        );`,
-        {
-          autoImport: 'namespace',
-          shouldCacheImportFns: true,
-        }
-      )
-    ).toMatchSnapshot();
-  });
-
   it('auto import default', () => {
     expect(
       transform(
@@ -252,27 +206,6 @@ describe('transform react to jsx', () => {
         );`,
         {
           autoImport: 'defaultExport',
-        }
-      )
-    ).toMatchSnapshot();
-  });
-
-  it('auto import default with cached variable', () => {
-    expect(
-      transform(
-        `var x = (
-          <>
-            <div>
-              <div key="1" />
-              <div key="2" meow="wolf" />
-              <div key="3" />
-              <div {...props} key="4" />
-            </div>
-          </>
-        );`,
-        {
-          autoImport: 'defaultExport',
-          shouldCacheImportFns: true,
         }
       )
     ).toMatchSnapshot();
@@ -312,27 +245,6 @@ describe('transform react to jsx', () => {
     ).toMatchSnapshot();
   });
 
-  it('auto import named exports with cached variable', () => {
-    expect(
-      transform(
-        `var x = (
-          <>
-            <div>
-              <div key="1" />
-              <div key="2" meow="wolf" />
-              <div key="3" />
-              <div {...props} key="4" />
-            </div>
-          </>
-        );`,
-        {
-          autoImport: 'namedExports',
-          shouldCacheImportFns: true,
-        }
-      )
-    ).toMatchSnapshot();
-  });
-
   it('complicated scope require', () => {
     expect(
       transform(
@@ -355,7 +267,6 @@ describe('transform react to jsx', () => {
         `,
         {
           autoImport: 'require',
-          shouldCacheImportFns: true,
         },
         {
           sourceType: 'script',
@@ -385,7 +296,6 @@ describe('transform react to jsx', () => {
         `,
         {
           autoImport: 'namedExports',
-          shouldCacheImportFns: true,
         }
       )
     ).toMatchSnapshot();

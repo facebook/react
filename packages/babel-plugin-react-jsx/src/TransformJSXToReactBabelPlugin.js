@@ -96,7 +96,7 @@ You can turn on the 'throwIfNamespace' flag to bypass this warning.`,
   visitor.JSXElement = {
     exit(path, file) {
       let callExpr;
-      if (file.opts.useCreateElement || shouldUseCreateElement(path, t)) {
+      if (shouldUseCreateElement(path, t)) {
         callExpr = buildCreateElementCall(path, file);
       } else {
         callExpr = buildJSXElementCall(path, file);
@@ -115,12 +115,7 @@ You can turn on the 'throwIfNamespace' flag to bypass this warning.`,
           'Fragment tags are only supported in React 16 and up.',
         );
       }
-      let callExpr;
-      if (file.opts.useCreateElement) {
-        callExpr = buildCreateElementFragmentCall(path, file);
-      } else {
-        callExpr = buildJSXFragmentCall(path, file);
-      }
+      let callExpr = buildJSXFragmentCall(path, file);
 
       if (callExpr) {
         path.replaceWith(t.inherits(callExpr, path.node));
@@ -581,38 +576,6 @@ You can turn on the 'throwIfNamespace' flag to bypass this warning.`,
 
     return attribs;
   }
-
-  function buildCreateElementFragmentCall(path, file) {
-    if (opts.filter && !opts.filter(path.node, file)) {
-      return;
-    }
-
-    const openingPath = path.get('openingElement');
-    openingPath.parent.children = t.react.buildChildren(openingPath.parent);
-
-    const args = [];
-    const tagName = null;
-    const tagExpr = file.get('jsxFragIdentifier')();
-
-    const state = {
-      tagExpr: tagExpr,
-      tagName: tagName,
-      args: args,
-    };
-
-    if (opts.pre) {
-      opts.pre(state, file);
-    }
-
-    // no attributes are allowed with <> syntax
-    args.push(t.nullLiteral(), ...path.node.children);
-
-    if (opts.post) {
-      opts.post(state, file);
-    }
-
-    return state.call || t.callExpression(state.oldCallee, args);
-  }
 }
 
 module.exports = function(babel) {
@@ -643,104 +606,17 @@ module.exports = function(babel) {
     },
   });
 
-  const createIdentifierName = (
-    path,
-    autoImport,
-    shouldCacheImportFns,
-    name,
-    importName,
-  ) => {
+  const createIdentifierName = (path, autoImport, name, importName) => {
     if (autoImport === IMPORT_TYPES.none) {
       return `React.${name}`;
-    } else if (
-      autoImport === IMPORT_TYPES.namedExports ||
-      shouldCacheImportFns
-    ) {
-      const identifierName = `${importName[name]}`;
-      return identifierName;
+    } else if (autoImport === IMPORT_TYPES.namedExports) {
+      if (importName) {
+        const identifierName = `${importName[name]}`;
+        return identifierName;
+      }
     } else {
       return `${importName}.${name}`;
     }
-  };
-
-  const getRequirePath = (path, name, source) => {
-    const targetPath = path.get('body').filter(child => {
-      const {node} = child;
-
-      return (
-        t.isVariableDeclaration(node) &&
-        node.declarations.length === 1 &&
-        t.isVariableDeclarator(node.declarations[0]) &&
-        t.isIdentifier(node.declarations[0].id) &&
-        node.declarations[0].id.name === name &&
-        t.isCallExpression(node.declarations[0].init) &&
-        t.isIdentifier(node.declarations[0].init.callee) &&
-        node.declarations[0].init.callee.name === 'require' &&
-        node.declarations[0].init.arguments.length === 1 &&
-        t.isStringLiteral(node.declarations[0].init.arguments[0]) &&
-        node.declarations[0].init.arguments[0].value === source
-      );
-    });
-
-    if (targetPath.length !== 1) {
-      // wtf throw error
-    }
-
-    return targetPath[0];
-  };
-
-  const getDefaultImportPath = (path, name, source) => {
-    const targetPath = path.get('body').filter(child => {
-      const {node} = child;
-
-      return (
-        t.isImportDeclaration(node) &&
-        node.specifiers.length === 1 &&
-        t.isImportDefaultSpecifier(node.specifiers[0]) &&
-        t.isIdentifier(node.specifiers[0].local) &&
-        node.specifiers[0].local.name === name &&
-        t.isStringLiteral(node.source) &&
-        node.source.value === source
-      );
-    });
-
-    return targetPath[0];
-  };
-
-  const getNamespaceImportPath = (path, name, source) => {
-    const targetPath = path.get('body').filter(child => {
-      const {node} = child;
-      return (
-        t.isImportDeclaration(node) &&
-        node.specifiers.length === 1 &&
-        t.isImportNamespaceSpecifier(node.specifiers[0]) &&
-        t.isIdentifier(node.specifiers[0].local) &&
-        node.specifiers[0].local.name === name &&
-        t.isStringLiteral(node.source) &&
-        node.source.value === source
-      );
-    });
-
-    return targetPath[0];
-  };
-
-  const getNamedExportImportPath = (path, name, importedName, source) => {
-    const targetPath = path.get('body').filter(child => {
-      const {node} = child;
-      return (
-        t.isImportDeclaration(node) &&
-        node.specifiers.length === 1 &&
-        t.isImportSpecifier(node.specifiers[0]) &&
-        t.isIdentifier(node.specifiers[0].local) &&
-        node.specifiers[0].local.name === name &&
-        t.isIdentifier(node.specifiers[0].imported) &&
-        node.specifiers[0].imported.name === importedName &&
-        t.isStringLiteral(node.source) &&
-        node.source.value === source
-      );
-    });
-
-    return targetPath[0];
   };
 
   function getImportNames(parentPath, state) {
@@ -765,25 +641,25 @@ module.exports = function(babel) {
     return imports;
   }
 
-  function shouldAddAutoImports(parentPath) {
-    let shouldAdd = false;
+  function hasJSX(parentPath) {
+    let fileHasJSX = false;
     parentPath.traverse({
       JSXElement(path) {
-        shouldAdd = true;
+        fileHasJSX = true;
         path.stop();
       },
 
       JSXFragment(path) {
-        shouldAdd = true;
+        fileHasJSX = true;
         path.stop();
       },
     });
 
-    return shouldAdd;
+    return fileHasJSX;
   }
 
   function addAutoImports(path, state) {
-    if (state.autoImport === IMPORT_TYPES.none || !shouldAddAutoImports(path)) {
+    if (state.autoImport === IMPORT_TYPES.none) {
       return;
     }
 
@@ -791,12 +667,6 @@ module.exports = function(babel) {
       throw path.buildCodeFrameError(
         'autoImport must be one of the following: ' +
           Object.keys(IMPORT_TYPES).join(', '),
-      );
-    }
-    if (state.useCreateElement) {
-      throw path.buildCodeFrameError(
-        'autoImport cannot be used with createElement. Consider setting ' +
-          '`useCreateElement` to `false` to use the new `jsx` function instead',
       );
     }
     if (state.autoImport === IMPORT_TYPES.require && isModule(path)) {
@@ -823,28 +693,6 @@ module.exports = function(babel) {
         importMap[importName] = addNamed(path, importName, state.source).name;
       });
 
-      if (state.shouldCacheImportFns) {
-        Object.keys(importMap).forEach(importName => {
-          const importPath = getNamedExportImportPath(
-            path,
-            importMap[importName],
-            importName,
-            state.source,
-          );
-
-          const importIdentifier = path.scope.generateUidIdentifier(importName);
-          importPath.insertAfter(
-            t.variableDeclaration('var', [
-              t.variableDeclarator(
-                importIdentifier,
-                t.identifier(importMap[importName]),
-              ),
-            ]),
-          );
-          importMap[importName] = importIdentifier.name;
-        });
-      }
-
       return importMap;
     }
 
@@ -863,122 +711,78 @@ module.exports = function(babel) {
       name = addDefault(path, state.source).name;
     }
 
-    // cache react function names as variables at the top of the file
-    if (state.shouldCacheImportFns) {
-      // var _jsx = _react.jsx;
-      // var _createElement = _react.createElement;
-      const imports = getImportNames(path, state);
-      let importPath;
-      let importMap = {};
-      if (state.autoImport === IMPORT_TYPES.require) {
-        importPath = getRequirePath(path, name, state.source);
-      } else if (state.autoImport === IMPORT_TYPES.namespace) {
-        importPath = getNamespaceImportPath(path, name, state.source);
-      } else if (state.autoImport === IMPORT_TYPES.defaultExport) {
-        importPath = getDefaultImportPath(path, name, state.source);
-      }
-
-      Object.keys(imports).forEach(importName => {
-        const importIdentifier = path.scope.generateUidIdentifier(importName);
-        importPath.insertAfter(
-          t.variableDeclaration('var', [
-            t.variableDeclarator(
-              importIdentifier,
-              t.memberExpression(t.identifier(name), t.identifier(importName)),
-            ),
-          ]),
-        );
-        importMap[importName] = importIdentifier.name;
-      });
-      return importMap;
-    } else {
-      // don't cache react function names
-      return name;
-    }
+    return name;
   }
 
   visitor.Program = {
     enter(path, state) {
-      let autoImport = state.opts.autoImport || 'none';
-      let source = state.opts.importSource || 'react';
-      const CACHE_IMPORT_FNS = state.opts.shouldCacheImportFns || false;
-      const {file} = state;
+      if (hasJSX(path)) {
+        let autoImport = state.opts.autoImport || IMPORT_TYPES.none;
+        let source = state.opts.importSource || 'react';
+        const {file} = state;
 
-      if (file.ast.comments) {
-        for (const comment of (file.ast.comments: Array<Object>)) {
-          const jsxAutoImportMatches = JSX_AUTO_IMPORT_ANNOTATION_REGEX.exec(
-            comment.value,
-          );
-          if (jsxAutoImportMatches) {
-            autoImport = jsxAutoImportMatches[1];
-          }
-          const jsxImportSourceMatches = JSX_IMPORT_SOURCE_ANNOTATION_REGEX.exec(
-            comment.value,
-          );
-          if (jsxImportSourceMatches) {
-            source = jsxImportSourceMatches[1];
+        if (file.ast.comments) {
+          for (let i = 0; i < file.ast.comments.length; i++) {
+            const comment = file.ast.comments[i];
+            const jsxAutoImportMatches = JSX_AUTO_IMPORT_ANNOTATION_REGEX.exec(
+              comment.value,
+            );
+            if (jsxAutoImportMatches) {
+              autoImport = jsxAutoImportMatches[1];
+            }
+            const jsxImportSourceMatches = JSX_IMPORT_SOURCE_ANNOTATION_REGEX.exec(
+              comment.value,
+            );
+            if (jsxImportSourceMatches) {
+              source = jsxImportSourceMatches[1];
+            }
           }
         }
+
+        const importName = addAutoImports(path, {
+          ...state.opts,
+          autoImport,
+          source,
+        });
+
+        state.set(
+          'oldJSXIdentifier',
+          createIdentifierParser(
+            createIdentifierName(path, autoImport, 'createElement', importName),
+          ),
+        );
+
+        state.set(
+          'jsxIdentifier',
+          createIdentifierParser(
+            createIdentifierName(
+              path,
+              autoImport,
+              state.opts.development ? 'jsxDEV' : 'jsx',
+              importName,
+            ),
+          ),
+        );
+
+        state.set(
+          'jsxStaticIdentifier',
+          createIdentifierParser(
+            createIdentifierName(
+              path,
+              autoImport,
+              state.opts.development ? 'jsxDEV' : 'jsxs',
+              importName,
+            ),
+          ),
+        );
+
+        state.set(
+          'jsxFragIdentifier',
+          createIdentifierParser(
+            createIdentifierName(path, autoImport, 'Fragment', importName),
+          ),
+        );
       }
-
-      const importName = addAutoImports(path, {
-        ...state.opts,
-        autoImport,
-        source,
-        shouldCacheImportFns: CACHE_IMPORT_FNS,
-      });
-
-      state.set(
-        'oldJSXIdentifier',
-        createIdentifierParser(
-          createIdentifierName(
-            path,
-            autoImport,
-            CACHE_IMPORT_FNS,
-            'createElement',
-            importName,
-          ),
-        ),
-      );
-
-      state.set(
-        'jsxIdentifier',
-        createIdentifierParser(
-          createIdentifierName(
-            path,
-            autoImport,
-            CACHE_IMPORT_FNS,
-            state.opts.development ? 'jsxDEV' : 'jsx',
-            importName,
-          ),
-        ),
-      );
-
-      state.set(
-        'jsxStaticIdentifier',
-        createIdentifierParser(
-          createIdentifierName(
-            path,
-            autoImport,
-            CACHE_IMPORT_FNS,
-            state.opts.development ? 'jsxDEV' : 'jsxs',
-            importName,
-          ),
-        ),
-      );
-
-      state.set(
-        'jsxFragIdentifier',
-        createIdentifierParser(
-          createIdentifierName(
-            path,
-            autoImport,
-            CACHE_IMPORT_FNS,
-            'Fragment',
-            importName,
-          ),
-        ),
-      );
     },
   };
 

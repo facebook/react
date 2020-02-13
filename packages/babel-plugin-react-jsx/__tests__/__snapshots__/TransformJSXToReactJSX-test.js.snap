@@ -60,24 +60,6 @@ var x = _default.jsx(_default.Fragment, {
 });
 `;
 
-exports[`transform react to jsx auto import default with cached variable 1`] = `
-import _default from "react";
-var _createElement = _default.createElement;
-var _jsx = _default.jsx;
-var _jsxs = _default.jsxs;
-var _Fragment = _default.Fragment;
-
-var x = _jsx(_Fragment, {
-  children: _jsxs("div", {
-    children: [_jsx("div", {}, "1"), _jsx("div", {
-      meow: "wolf"
-    }, "2"), _jsx("div", {}, "3"), _createElement("div", Object.assign({}, props, {
-      key: "4"
-    }))]
-  })
-});
-`;
-
 exports[`transform react to jsx auto import in dev 1`] = `
 import { createElement as _createElement } from "react";
 import { jsxDEV as _jsxDEV } from "react";
@@ -129,27 +111,6 @@ var x = _jsx(_Fragment, {
 });
 `;
 
-exports[`transform react to jsx auto import named exports with cached variable 1`] = `
-import { createElement as _createElement } from "react";
-import { jsx as _jsx } from "react";
-import { jsxs as _jsxs } from "react";
-import { Fragment as _Fragment } from "react";
-var _createElement2 = _createElement;
-var _jsx2 = _jsx;
-var _jsxs2 = _jsxs;
-var _Fragment2 = _Fragment;
-
-var x = _jsx2(_Fragment2, {
-  children: _jsxs2("div", {
-    children: [_jsx2("div", {}, "1"), _jsx2("div", {
-      meow: "wolf"
-    }, "2"), _jsx2("div", {}, "3"), _createElement2("div", Object.assign({}, props, {
-      key: "4"
-    }))]
-  })
-});
-`;
-
 exports[`transform react to jsx auto import namespace 1`] = `
 import * as _react from "react";
 
@@ -158,24 +119,6 @@ var x = _react.jsx(_react.Fragment, {
     children: [_react.jsx("div", {}, "1"), _react.jsx("div", {
       meow: "wolf"
     }, "2"), _react.jsx("div", {}, "3"), _react.createElement("div", Object.assign({}, props, {
-      key: "4"
-    }))]
-  })
-});
-`;
-
-exports[`transform react to jsx auto import namespace with cached variable 1`] = `
-import * as _react from "react";
-var _createElement = _react.createElement;
-var _jsx = _react.jsx;
-var _jsxs = _react.jsxs;
-var _Fragment = _react.Fragment;
-
-var x = _jsx(_Fragment, {
-  children: _jsxs("div", {
-    children: [_jsx("div", {}, "1"), _jsx("div", {
-      meow: "wolf"
-    }, "2"), _jsx("div", {}, "3"), _createElement("div", Object.assign({}, props, {
       key: "4"
     }))]
   })
@@ -211,25 +154,6 @@ var x = _react.jsx(_react.Fragment, {
     children: [_react.jsx("div", {}, "1"), _react.jsx("div", {
       meow: "wolf"
     }, "2"), _react.jsx("div", {}, "3"), _react.createElement("div", Object.assign({}, props, {
-      key: "4"
-    }))]
-  })
-});
-`;
-
-exports[`transform react to jsx auto import require with cached variable 1`] = `
-var _react = require("react");
-
-var _createElement = _react.createElement;
-var _jsx = _react.jsx;
-var _jsxs = _react.jsxs;
-var _Fragment = _react.Fragment;
-
-var x = _jsx(_Fragment, {
-  children: _jsxs("div", {
-    children: [_jsx("div", {}, "1"), _jsx("div", {
-      meow: "wolf"
-    }, "2"), _jsx("div", {}, "3"), _createElement("div", Object.assign({}, props, {
       key: "4"
     }))]
   })
@@ -286,7 +210,6 @@ var x = _react.jsxs("div", {
 
 exports[`transform react to jsx complicated scope named exports 1`] = `
 import { jsx as _jsx2 } from "react";
-var _jsx3 = _jsx2;
 
 const Bar = function () {
   const Foo = function () {
@@ -301,11 +224,11 @@ const Bar = function () {
 
         var jsx = 1;
         var _jsx = 2;
-        return _jsx3("div", {});
+        return _jsx2("div", {});
       }
 
       ;
-      return _jsx3("span", {});
+      return _jsx2("span", {});
     };
   };
 };
@@ -313,8 +236,6 @@ const Bar = function () {
 
 exports[`transform react to jsx complicated scope require 1`] = `
 var _react4 = require("react");
-
-var _jsx2 = _react4.jsx;
 
 const Bar = function () {
   const Foo = function () {
@@ -331,11 +252,11 @@ const Bar = function () {
 
         var jsx = 1;
         var _jsx = 2;
-        return _jsx2("div", {});
+        return _react4.jsx("div", {});
       }
 
       ;
-      return _jsx2("span", {});
+      return _react4.jsx("span", {});
     };
   };
 };
@@ -401,6 +322,18 @@ import * as _baz from "baz";
 /** @jsxImportSource baz */
 var x = _baz.jsx("div", {
   children: _baz.jsx("span", {})
+});
+`;
+
+exports[`transform react to jsx multiple pragmas work 1`] = `
+import _default from "baz";
+
+/** Some comment here
+           * @jsxImportSource baz
+           * @jsxAutoImport defaultExport
+          */
+var x = _default.jsx("div", {
+  children: _default.jsx("span", {})
 });
 `;
 
