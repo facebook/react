@@ -107,8 +107,13 @@ const forks = Object.freeze({
         }
         return 'shared/forks/ReactFeatureFlags.test-renderer.js';
       case 'react-dom/testing':
-        return 'shared/forks/ReactFeatureFlags.testing.js';
       case 'react/testing':
+        switch (bundleType) {
+          case FB_WWW_DEV:
+          case FB_WWW_PROD:
+          case FB_WWW_PROFILING:
+            return 'shared/forks/ReactFeatureFlags.testing.www.js';
+        }
         return 'shared/forks/ReactFeatureFlags.testing.js';
       default:
         switch (bundleType) {

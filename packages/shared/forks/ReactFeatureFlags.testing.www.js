@@ -10,45 +10,45 @@
 import invariant from 'shared/invariant';
 
 import typeof * as FeatureFlagsType from 'shared/ReactFeatureFlags';
-import typeof * as ExportsType from './ReactFeatureFlags.persistent';
+import typeof * as ExportsType from './ReactFeatureFlags.testing.www';
 
 export const debugRenderPhaseSideEffectsForStrictMode = false;
-export const enableUserTimingAPI = __DEV__;
+export const enableUserTimingAPI = false;
 export const warnAboutDeprecatedLifecycles = true;
-export const replayFailedUnitOfWorkWithInvokeGuardedCallback = __DEV__;
-export const enableProfilerTimer = __PROFILE__;
-export const enableSchedulerTracing = __PROFILE__;
-export const enableSuspenseServerRenderer = false;
-export const enableSelectiveHydration = false;
-export const enableChunksAPI = false;
-export const disableJavaScriptURLs = false;
+export const replayFailedUnitOfWorkWithInvokeGuardedCallback = false;
+export const enableProfilerTimer = false;
+export const enableSchedulerTracing = false;
+export const enableSuspenseServerRenderer = true;
+export const enableSelectiveHydration = true;
+export const enableChunksAPI = true;
+export const disableJavaScriptURLs = true;
 export const disableInputAttributeSyncing = false;
-export const exposeConcurrentModeAPIs = __EXPERIMENTAL__;
+export const exposeConcurrentModeAPIs = true;
 export const warnAboutShorthandPropertyCollision = true;
 export const enableSchedulerDebugging = false;
-export const enableDeprecatedFlareAPI = false;
+export const enableDeprecatedFlareAPI = true;
 export const enableFundamentalAPI = false;
-export const enableScopeAPI = false;
-export const enableJSXTransformAPI = false;
+export const enableScopeAPI = true;
+export const enableJSXTransformAPI = true;
 export const warnAboutUnmockedScheduler = true;
 export const flushSuspenseFallbacksInTests = true;
-export const enableSuspenseCallback = false;
+export const enableSuspenseCallback = true;
 export const warnAboutDefaultPropsOnFunctionComponents = false;
 export const warnAboutStringRefs = false;
-export const disableLegacyContext = false;
+export const disableLegacyContext = __EXPERIMENTAL__;
 export const disableSchedulerTimeoutBasedOnReactExpirationTime = false;
 export const enableTrainModelFix = true;
 export const enableTrustedTypesIntegration = false;
 export const enableNativeTargetAsInstance = false;
-export const disableCreateFactory = false;
-export const disableLegacyReactDOMAPIs = false;
-export const disableTextareaChildren = false;
-export const disableMapsAsChildren = false;
-export const disableUnstableRenderSubtreeIntoContainer = false;
+export const disableCreateFactory = __EXPERIMENTAL__;
+export const disableLegacyReactDOMAPIs = __EXPERIMENTAL__;
+export const disableTextareaChildren = __EXPERIMENTAL__;
+export const disableMapsAsChildren = __EXPERIMENTAL__;
+export const disableUnstableRenderSubtreeIntoContainer = __EXPERIMENTAL__;
 export const warnUnstableRenderSubtreeIntoContainer = false;
-export const disableUnstableCreatePortal = false;
+export const disableUnstableCreatePortal = __EXPERIMENTAL__;
 export const deferPassiveEffectCleanupDuringUnmount = false;
-export const isTestEnvironment = false;
+export const isTestEnvironment = true;
 
 // Only used in www builds.
 export function addUserTimingListener() {

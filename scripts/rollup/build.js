@@ -679,17 +679,17 @@ async function buildEverything() {
       [bundle, NODE_DEV],
       [bundle, NODE_PROD],
       [bundle, NODE_PROFILING],
+      [bundle, FB_WWW_DEV],
+      [bundle, FB_WWW_PROD],
+      [bundle, FB_WWW_PROFILING],
       [bundle, RN_OSS_DEV],
       [bundle, RN_OSS_PROD],
       [bundle, RN_OSS_PROFILING]
     );
 
     if (__EXPERIMENTAL__) {
-      // FB specific builds are experimental-only.
+      // FB-specific RN builds are experimental-only.
       bundles.push(
-        [bundle, FB_WWW_DEV],
-        [bundle, FB_WWW_PROD],
-        [bundle, FB_WWW_PROFILING],
         [bundle, RN_FB_DEV],
         [bundle, RN_FB_PROD],
         [bundle, RN_FB_PROFILING]
