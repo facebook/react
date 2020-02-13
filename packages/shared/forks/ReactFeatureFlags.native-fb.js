@@ -10,7 +10,7 @@
 import invariant from 'shared/invariant';
 
 import typeof * as FeatureFlagsType from 'shared/ReactFeatureFlags';
-import typeof * as FeatureFlagsShimType from './ReactFeatureFlags.native-fb';
+import typeof * as ExportsType from './ReactFeatureFlags.native-fb';
 
 // Uncomment to re-export dynamic flags from the fbsource version.
 export const {
@@ -64,4 +64,4 @@ export function addUserTimingListener() {
 // eslint-disable-next-line no-unused-vars
 type Check<_X, Y: _X, X: Y = _X> = null;
 // eslint-disable-next-line no-unused-expressions
-(null: Check<FeatureFlagsShimType, FeatureFlagsType>);
+(null: Check<ExportsType, FeatureFlagsType>);

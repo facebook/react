@@ -8,7 +8,7 @@
  */
 
 import typeof * as FeatureFlagsType from 'shared/ReactFeatureFlags';
-import typeof * as FeatureFlagsShimType from './ReactFeatureFlags.www';
+import typeof * as ExportsType from './ReactFeatureFlags.www';
 
 // Re-export dynamic flags from the www version.
 export const {
@@ -115,4 +115,4 @@ export const isTestEnvironment = false;
 // eslint-disable-next-line no-unused-vars
 type Check<_X, Y: _X, X: Y = _X> = null;
 // eslint-disable-next-line no-unused-expressions
-(null: Check<FeatureFlagsShimType, FeatureFlagsType>);
+(null: Check<ExportsType, FeatureFlagsType>);

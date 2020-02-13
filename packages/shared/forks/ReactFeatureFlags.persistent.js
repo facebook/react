@@ -10,7 +10,7 @@
 import invariant from 'shared/invariant';
 
 import typeof * as FeatureFlagsType from 'shared/ReactFeatureFlags';
-import typeof * as PersistentFeatureFlagsType from './ReactFeatureFlags.persistent';
+import typeof * as ExportsType from './ReactFeatureFlags.persistent';
 
 export const debugRenderPhaseSideEffectsForStrictMode = false;
 export const enableUserTimingAPI = __DEV__;
@@ -59,4 +59,4 @@ export function addUserTimingListener() {
 // eslint-disable-next-line no-unused-vars
 type Check<_X, Y: _X, X: Y = _X> = null;
 // eslint-disable-next-line no-unused-expressions
-(null: Check<PersistentFeatureFlagsType, FeatureFlagsType>);
+(null: Check<ExportsType, FeatureFlagsType>);
