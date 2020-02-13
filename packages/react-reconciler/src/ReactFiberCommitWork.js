@@ -1232,6 +1232,7 @@ function unmountHostComponents(
           currentParent = parentStateNode.instance;
           currentParentIsContainer = false;
         }
+        break findParent;
     }
     parent = parent.return;
   }
@@ -1248,7 +1249,7 @@ function unmountHostComponents(
 
 function recursivelyUnmountHostNode(
   node: Fiber,
-  currentParent: Instance,
+  currentParent: Instance | Container,
   currentParentIsContainer: boolean,
   finishedRoot: FiberRoot,
   renderPriorityLevel: ReactPriorityLevel,
@@ -1259,9 +1260,9 @@ function recursivelyUnmountHostNode(
     // After all the children have unmounted, it is now safe to remove the
     // node from the tree.
     if (currentParentIsContainer) {
-      removeChildFromContainer(currentParent, stateNode);
+      removeChildFromContainer(((currentParent: any): Container), stateNode);
     } else {
-      removeChild(currentParent, stateNode);
+      removeChild(((currentParent: any): Instance), stateNode);
     }
     // Don't visit children because we already visited them.
   } else if (enableFundamentalAPI && tag === FundamentalComponent) {
@@ -1270,9 +1271,12 @@ function recursivelyUnmountHostNode(
     // After all the children have unmounted, it is now safe to remove the
     // node from the tree.
     if (currentParentIsContainer) {
-      removeChildFromContainer(currentParent, fundamentalNode);
+      removeChildFromContainer(
+        ((currentParent: any): Container),
+        fundamentalNode,
+      );
     } else {
-      removeChild(currentParent, fundamentalNode);
+      removeChild(((currentParent: any): Instance), fundamentalNode);
     }
   } else if (enableSuspenseServerRenderer && tag === DehydratedFragment) {
     if (enableSuspenseCallback) {
@@ -1286,9 +1290,12 @@ function recursivelyUnmountHostNode(
     }
     // Delete the dehydrated suspense boundary and all of its content.
     if (currentParentIsContainer) {
-      clearSuspenseBoundaryFromContainer(currentParent, stateNode);
+      clearSuspenseBoundaryFromContainer(
+        ((currentParent: any): Container),
+        stateNode,
+      );
     } else {
-      clearSuspenseBoundary(currentParent, stateNode);
+      clearSuspenseBoundary(((currentParent: any): Instance), stateNode);
     }
   } else if (tag === HostPortal) {
     const child = node.child;
@@ -1322,7 +1329,7 @@ function recursivelyUnmountHostNode(
 
 function recursivelyUnmountHostNodeChildren(
   child: Fiber,
-  currentParent: Instance,
+  currentParent: Instance | Container,
   currentParentIsContainer: boolean,
   finishedRoot: FiberRoot,
   renderPriorityLevel: ReactPriorityLevel,
