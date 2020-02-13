@@ -10,6 +10,9 @@
     "build:chrome:dev": "cross-env NODE_ENV=development node ./chrome/build",
     "build:firefox": "cross-env NODE_ENV=production node ./firefox/build",
     "build:firefox:dev": "cross-env NODE_ENV=development node ./firefox/build",
+    "build:edge": "cross-env NODE_ENV=production node ./edge/build",
+    "build:edge:crx": "cross-env NODE_ENV=production node ./edge/build --crx",
+    "build:edge:dev": "cross-env NODE_ENV=development node ./edge/build",
     "test:chrome": "node ./chrome/test",
     "test:firefox": "node ./firefox/test"
   },
