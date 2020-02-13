@@ -159,7 +159,7 @@ describe('ReactFunctionComponent', () => {
       ReactTestUtils.renderIntoDocument(<Child test="test" />);
     }).toThrowError(
       __DEV__
-        ? 'Function components cannot have refs.'
+        ? 'Function components cannot have string refs. We recommend using useRef() instead.'
         : // It happens because we don't save _owner in production for
           // function components.
           'Element ref was specified as a string (me) but no owner was set. This could happen for one of' +
