@@ -96,7 +96,7 @@ describe('transform react to jsx', () => {
         'to use `require` syntax. See Babel `sourceType` for details.\n' +
         codeFrame.codeFrameColumns(
           code,
-          {start: {line: 1, column: 1}},
+          {start: {line: 1, column: 1}, end: {line: 1, column: 28}},
           {highlightCode: true}
         )
     );
@@ -117,7 +117,7 @@ describe('transform react to jsx', () => {
         'to use `namespace` syntax. See Babel `sourceType` for details.\n' +
         codeFrame.codeFrameColumns(
           code,
-          {start: {line: 1, column: 1}},
+          {start: {line: 1, column: 1}, end: {line: 1, column: 28}},
           {highlightCode: true}
         )
     );
@@ -133,7 +133,7 @@ describe('transform react to jsx', () => {
       'autoImport must be one of the following: none, require, namespace, defaultExport, namedExports\n' +
         codeFrame.codeFrameColumns(
           code,
-          {start: {line: 1, column: 1}},
+          {start: {line: 1, column: 1}, end: {line: 1, column: 28}},
           {highlightCode: true}
         )
     );
