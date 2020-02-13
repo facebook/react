@@ -2,12 +2,21 @@
 
 'use strict';
 
-const chromeLaunch = require('chrome-launch');
+const edge = require('windows-edge');
+ 
 const {resolve} = require('path');
 
 const EXTENSION_PATH = resolve('./edge/build/unpacked');
 const START_URL = 'https://facebook.github.io/react/';
 
-chromeLaunch(START_URL, {
-  args: [`--load-extension=${EXTENSION_PATH}`],
-});
+edge({ uri: START_URL }, (err, ps) => {
+  if (err) throw err;
+  ps.on('error', console.error);
+  ps.on('exit', (code) => {
+    // Browser exited
+  });
+  setTimeout(() => {
+    ps.kill();
+  }, 2000);
+})
+
