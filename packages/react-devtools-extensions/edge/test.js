@@ -3,10 +3,7 @@
 'use strict';
 
 const edge = require('windows-edge');
- 
-const {resolve} = require('path');
 
-const EXTENSION_PATH = resolve('./edge/build/unpacked');
 const START_URL = 'https://facebook.github.io/react/';
 
 edge({ uri: START_URL }, (err, ps) => {
