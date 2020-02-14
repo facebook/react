@@ -8,7 +8,16 @@
  */
 
 import * as React from 'react';
-import {Suspense} from 'react';
+import {
+  Suspense,
+  Fragment,
+  useRef,
+  useState,
+  useMemo,
+  useCallback,
+  useDebugValue,
+  useEffect
+} from 'react';
 import Tree from './Tree';
 import SelectedElement from './SelectedElement';
 import {InspectedElementContextController} from './InspectedElementContext';
@@ -18,33 +27,125 @@ import portaledContent from '../portaledContent';
 import {ModalDialog} from '../ModalDialog';
 import SettingsModal from 'react-devtools-shared/src/devtools/views/Settings/SettingsModal';
 import {SettingsModalContextController} from 'react-devtools-shared/src/devtools/views/Settings/SettingsModalContext';
+import {useLocalStorage} from "../hooks";
 
 import styles from './Components.css';
 
 function Components(_: {||}) {
-  // TODO Flex wrappers below should be user resizable.
-  return (
-    <SettingsModalContextController>
-      <OwnersListContextController>
-        <InspectedElementContextController>
-          <div className={styles.Components}>
-            <div className={styles.TreeWrapper}>
-              <Tree />
-            </div>
-            <div className={styles.SelectedElementWrapper}>
-              <NativeStyleContextController>
-                <Suspense fallback={<Loading />}>
-                  <SelectedElement />
-                </Suspense>
-              </NativeStyleContextController>
-            </div>
-            <ModalDialog />
-            <SettingsModal />
-          </div>
-        </InspectedElementContextController>
-      </OwnersListContextController>
-    </SettingsModalContextController>
+  return <SettingsModalContextController>
+    <OwnersListContextController>
+      <InspectedElementContextController>
+        <ComponentResizer>
+          {({resizeElementRef, onResizeStart, resizeElementStyles}) =>
+            <Fragment>
+              <div
+                ref={resizeElementRef}
+                className={styles.TreeWrapper}
+                style={{
+                  ...resizeElementStyles
+                }}
+              >
+                <Tree/>
+              </div>
+              <div className={styles.ResizeBarWrapper}>
+                <div
+                  onMouseDown={onResizeStart}
+                  className={styles.ResizeBar}
+                />
+              </div>
+              <div className={styles.SelectedElementWrapper}>
+                <NativeStyleContextController>
+                  <Suspense fallback={<Loading/>}>
+                    <SelectedElement/>
+                  </Suspense>
+                </NativeStyleContextController>
+              </div>
+              <ModalDialog/>
+              <SettingsModal/>
+            </Fragment>}
+        </ComponentResizer>
+      </InspectedElementContextController>
+    </OwnersListContextController>
+  </SettingsModalContextController>;
+}
+
+const resizeDirections = {
+  HORIZONTAL: 'HORIZONTAL',
+  VERTICAL: 'VERTICAL',
+};
+
+
+function ComponentResizer({ children }: {| children: React$Node |}) {
+  const [isResizing, setIsResizing] = useState(false);
+  const [horizontalPercentage, setHorizontalPercentage] = useLocalStorage<number>(
+    `React::DevTools::resizedElementPercentage::${resizeDirections.HORIZONTAL}`,
+    65,
   );
+  const [verticalPercentage, setVerticalPercentage] = useLocalStorage<number>(
+    `React::DevTools::resizedElementPercentage::${resizeDirections.VERTICAL}`,
+    50,
+  );
+  const updateLocalStorageTimeoutId = useRef(null);
+  const componentsWrapperRef = useRef(null);
+  const resizeElementRef = useRef(null);
+
+  const resizeElementStyles = useMemo(() => ({
+    flexBasis: `${window.innerWidth > 600 ? horizontalPercentage : verticalPercentage}%`,
+  }), [horizontalPercentage, verticalPercentage]);
+
+  const onResizeStart = useCallback(() => {
+    setIsResizing(true);
+  }, [setIsResizing]);
+
+  const onResizeEnd = useCallback(() => {
+    setIsResizing(false);
+  }, [setIsResizing]);
+
+  const onResize = useCallback((e) => {
+    if (!isResizing || (componentsWrapperRef.current === null || resizeElementRef.current === null)) {
+      return;
+    }
+
+    e.preventDefault();
+
+    const {height, width, left, top} = componentsWrapperRef.current.getBoundingClientRect();
+    const resizeDirection = width > 600 ? resizeDirections.HORIZONTAL : resizeDirections.VERTICAL;
+    const currentMousePosition = resizeDirection === resizeDirections.HORIZONTAL ? (e.clientX - left) : (e.clientY - top);
+    const boundary = {
+      min: 40,
+      max: (resizeDirection === resizeDirections.HORIZONTAL ? width - 40 : height - 40),
+    };
+    const mousePositionInBounds = currentMousePosition > boundary.min && currentMousePosition < boundary.max;
+
+    if (mousePositionInBounds) {
+      const updatedFlexBasisValue = (currentMousePosition / (resizeDirection === resizeDirections.HORIZONTAL ? width : height)) * 100;
+
+      resizeElementRef.current.style.flexBasis = `${updatedFlexBasisValue}%`;
+
+      clearTimeout(updateLocalStorageTimeoutId.current);
+      updateLocalStorageTimeoutId.current = setTimeout(() => {
+        resizeDirection === resizeDirections.HORIZONTAL ? setHorizontalPercentage(updatedFlexBasisValue) : setVerticalPercentage(updatedFlexBasisValue);
+      }, 500);
+    }
+  }, [componentsWrapperRef, resizeElementRef, isResizing]);
+
+  return (
+    <div
+      ref={componentsWrapperRef}
+      className={styles.ComponentsWrapper}
+      {
+        ...(
+          isResizing && {
+            onMouseMove: onResize,
+            onMouseLeave: onResizeEnd,
+            onMouseUp: onResizeEnd,
+          }
+        )
+      }
+    >
+      {children({resizeElementRef, onResizeStart, resizeElementStyles})}
+    </div>
+  )
 }
 
 function Loading() {

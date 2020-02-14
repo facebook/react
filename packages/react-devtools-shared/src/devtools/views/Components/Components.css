@@ -1,4 +1,4 @@
-.Components {
+.ComponentsWrapper {
   position: relative;
   width: 100%;
   height: 100%;
@@ -15,13 +15,26 @@
 }
 
 .SelectedElementWrapper {
-  flex: 0 0 35%;
+  flex: 1 1 35%;
   overflow-x: hidden;
   overflow-y: auto;
 }
 
+.ResizeBarWrapper {
+  flex: 0 0 0px;
+  position: relative;
+}
+
+.ResizeBar {
+  position: absolute;
+  left: -2px;
+  width: 5px;
+  height: 100%;
+  cursor: ew-resize;
+}
+
 @media screen and (max-width: 600px) {
-  .Components {
+  .ComponentsWrapper {
     flex-direction: column;
   }
 
@@ -31,6 +44,14 @@
 
   .SelectedElementWrapper {
     flex: 0 0 50%;
+  }
+
+  .ResizeBar {
+    top: -2px;
+    left: 0;
+    width: 100%;
+    height: 5px;
+    cursor: ns-resize;
   }
 }
 
