@@ -3,8 +3,8 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "build": "cross-env NODE_ENV=production yarn run build:chrome && yarn run build:firefox",
-    "build:dev": "cross-env NODE_ENV=development yarn run build:chrome && yarn run build:firefox",
+    "build": "cross-env NODE_ENV=production yarn run build:chrome && yarn run build:firefox && yarn run build:edge",
+    "build:dev": "cross-env NODE_ENV=development yarn run build:chrome && yarn run build:firefox && yarn run build:edge",
     "build:chrome": "cross-env NODE_ENV=production node ./chrome/build",
     "build:chrome:crx": "cross-env NODE_ENV=production node ./chrome/build --crx",
     "build:chrome:dev": "cross-env NODE_ENV=development node ./chrome/build",
