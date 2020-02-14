@@ -11,7 +11,7 @@ import {
   traverseEnterLeave,
 } from 'shared/ReactTreeTraversal';
 
-import {getListener} from './EventPluginHub';
+import getListener from 'legacy-events/getListener';
 import accumulateInto from './accumulateInto';
 import forEachAccumulated from './forEachAccumulated';
 

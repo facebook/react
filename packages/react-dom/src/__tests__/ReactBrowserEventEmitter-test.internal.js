@@ -9,7 +9,7 @@
 
 'use strict';
 
-let EventPluginHub;
+let EventPluginGetListener;
 let EventPluginRegistry;
 let React;
 let ReactDOM;
@@ -58,7 +58,7 @@ describe('ReactBrowserEventEmitter', () => {
     LISTENER.mockClear();
 
     // TODO: can we express this test with only public API?
-    EventPluginHub = require('legacy-events/EventPluginHub');
+    EventPluginGetListener = require('legacy-events/getListener').default;
     EventPluginRegistry = require('legacy-events/EventPluginRegistry');
     React = require('react');
     ReactDOM = require('react-dom');
@@ -100,7 +100,7 @@ describe('ReactBrowserEventEmitter', () => {
 
     getListener = function(node, eventName) {
       const inst = ReactDOMComponentTree.getInstanceFromNode(node);
-      return EventPluginHub.getListener(inst, eventName);
+      return EventPluginGetListener(inst, eventName);
     };
     putListener = function(node, eventName, listener) {
       switch (node) {

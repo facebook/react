@@ -45,9 +45,11 @@ import {
   enqueueStateRestore,
   restoreStateIfNeeded,
 } from 'legacy-events/ReactControlledComponent';
-import {injection as EventPluginHubInjection} from 'legacy-events/EventPluginHub';
 import {runEventsInBatch} from 'legacy-events/EventBatching';
-import {eventNameDispatchConfigs} from 'legacy-events/EventPluginRegistry';
+import {
+  eventNameDispatchConfigs,
+  injectEventPluginsByName,
+} from 'legacy-events/EventPluginRegistry';
 import {
   accumulateTwoPhaseDispatches,
   accumulateDirectDispatches,
@@ -145,7 +147,7 @@ const ReactDOM: Object = {
       getInstanceFromNode,
       getNodeFromInstance,
       getFiberCurrentPropsFromNode,
-      EventPluginHubInjection.injectEventPluginsByName,
+      injectEventPluginsByName,
       eventNameDispatchConfigs,
       accumulateTwoPhaseDispatches,
       accumulateDirectDispatches,
