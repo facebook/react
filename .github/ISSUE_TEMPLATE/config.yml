@@ -3,5 +3,5 @@ contact_links:
       url: https://github.com/reactjs/reactjs.org/issues/new
       about: This issue tracker is not for documentation issues. Please file documentation issues here.
     - name: 🤔 Questions and Help
-      url: https://stackoverflow.com/questions/tagged/react
-      about: This issue tracker is not for questions. Please ask questions here.
+      url: https://reactjs.org/community/support.html
+      about: This issue tracker is not for support questions. Please refer to the React community's help and discussion forums.
