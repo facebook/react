@@ -90,7 +90,9 @@ function ComponentResizer({children}): {|children: Function|} {
   const componentsWrapperRef = useRef(null);
   const resizeElementRef = useRef(null);
 
-
+  // TODO: We might be saving the localStorage values,
+  // TODO: but window.innerWidth might be bellow 600 so that why it's broken.
+  // TODO: OR we can't access the property when building the extension. :(
   const resizeElementStyles = useMemo(
     () => ({
       flexBasis: `${
