@@ -35,7 +35,7 @@ export default function describeComponentFrame(
             // Note the below string contains a zero width space after the "/" character.
             // This is to prevent browsers like Chrome from formatting the file name as a link.
             // (Since this is a source link, it would not work to open the source file anyway.)
-            fileName = folderName + '/​' + fileName;
+            fileName = folderName + '/\u200B' + fileName;
           }
         }
       }

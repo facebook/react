@@ -8,5 +8,6 @@
  */
 
 import {inspectHooks, inspectHooksOfFiber} from './ReactDebugHooks';
+import {parseErrorInfo} from './ReactErrorInfoParser';
 
-export {inspectHooks, inspectHooksOfFiber};
+export {inspectHooks, inspectHooksOfFiber, parseErrorInfo};

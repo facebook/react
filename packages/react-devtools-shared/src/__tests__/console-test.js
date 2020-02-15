@@ -10,6 +10,7 @@
 describe('console', () => {
   let React;
   let ReactDOM;
+  let parseErrorInfo;
   let act;
   let fakeConsole;
   let mockError;
@@ -55,6 +56,7 @@ describe('console', () => {
 
     React = require('react');
     ReactDOM = require('react-dom');
+    parseErrorInfo = require('react-debug-tools').parseErrorInfo;
 
     const utils = require('./utils');
     act = utils.act;
@@ -340,5 +342,50 @@ describe('console', () => {
     expect(normalizeCodeLocInfo(mockError.mock.calls[1][1])).toBe(
       '\n    in Child (at **)',
     );
+  });
+
+  it('should append component stacks in a format compatible with parseErrorInfo', () => {
+    const Intermediate = ({children}) => children;
+    const Parent = () => (
+      <Intermediate>
+        <Child
+          __source={{fileName: 'path/to/child/index.js', lineNumber: 42}}
+        />
+      </Intermediate>
+    );
+    const Child = () => {
+      fakeConsole.error('error');
+      return null;
+    };
+
+    act(() => ReactDOM.render(<Parent />, document.createElement('div')));
+
+    expect(mockError).toHaveBeenCalledTimes(1);
+    expect(mockError.mock.calls[0]).toHaveLength(2);
+    expect(mockError.mock.calls[0][0]).toBe('error');
+    expect(
+      parseErrorInfo({
+        componentStack: mockError.mock.calls[0][1],
+      }),
+    ).toEqual({
+      componentStack: [
+        {
+          name: 'Child',
+          source: {
+            fileName: 'child/index.js',
+            lineNumber: 42,
+          },
+          owner: null,
+        },
+        {
+          name: 'Parent',
+          source: {
+            fileName: 'console-test.js',
+            lineNumber: expect.any(Number),
+          },
+          owner: null,
+        },
+      ],
+    });
   });
 });
