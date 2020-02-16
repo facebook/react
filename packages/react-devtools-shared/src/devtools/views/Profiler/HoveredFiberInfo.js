@@ -53,6 +53,7 @@ export default function HoveredFiberInfo({fiberData}: Props) {
           {formatTime(timestamp)}s for {formatDuration(duration)}ms
         </div>,
       );
+      break;
     }
   }
 
