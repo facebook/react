@@ -14,6 +14,7 @@ import {getGradientColor} from './utils';
 import ChartNode from './ChartNode';
 import {SettingsContext} from '../Settings/SettingsContext';
 
+import type {ChartData} from './RankedChartBuilder';
 import type {ItemData} from './CommitRanked';
 
 type Props = {
@@ -24,7 +25,14 @@ type Props = {
 };
 
 function CommitRankedListItem({data, index, style}: Props) {
-  const {chartData, scaleX, selectedFiberIndex, selectFiber, width} = data;
+  const {
+    chartData,
+    hoverFiber,
+    scaleX,
+    selectedFiberIndex,
+    selectFiber,
+    width,
+  } = data;
 
   const node = chartData.nodes[index];
 
@@ -36,6 +44,22 @@ function CommitRankedListItem({data, index, style}: Props) {
       selectFiber(node.id, node.name);
     },
     [node, selectFiber],
+  );
+
+  const handleMouseOver = useCallback(
+    (event: SyntheticMouseEvent<*>, nodeData: ChartData) => {
+      event.stopPropagation();
+      hoverFiber(nodeData);
+    },
+    [hoverFiber],
+  );
+
+  const handleMouseOut = useCallback(
+    (event: SyntheticMouseEvent<*>, nodeData: ChartData) => {
+      event.stopPropagation();
+      hoverFiber(null);
+    },
+    [hoverFiber],
   );
 
   // List items are absolutely positioned using the CSS "top" attribute.
@@ -52,6 +76,8 @@ function CommitRankedListItem({data, index, style}: Props) {
       key={node.id}
       label={node.label}
       onClick={handleClick}
+      onMouseOver={event => handleMouseOver(event, node)}
+      onMouseOut={event => handleMouseOut(event, node)}
       width={Math.max(minBarWidth, scaleX(node.value, width))}
       x={0}
       y={top}
