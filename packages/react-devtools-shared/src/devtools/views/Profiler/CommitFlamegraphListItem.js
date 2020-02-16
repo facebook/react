@@ -48,14 +48,15 @@ function CommitFlamegraphListItem({data, index, style}: Props) {
 
   const handleMouseOver = useCallback(
     (event: SyntheticMouseEvent<*>, nodeData: ChartNodeType) => {
+      const {id, name} = nodeData;
       event.stopPropagation();
-      hoverFiber(nodeData);
+      hoverFiber({id, name});
     },
     [hoverFiber],
   );
 
   const handleMouseOut = useCallback(
-    (event: SyntheticMouseEvent<*>, nodeData: ChartNodeType) => {
+    (event: SyntheticMouseEvent<*>) => {
       event.stopPropagation();
       hoverFiber(null);
     },
@@ -124,7 +125,7 @@ function CommitFlamegraphListItem({data, index, style}: Props) {
             label={label}
             onClick={event => handleClick(event, id, name)}
             onMouseOver={event => handleMouseOver(event, chartNode)}
-            onMouseOut={event => handleMouseOut(event, chartNode)}
+            onMouseOut={event => handleMouseOut(event)}
             textStyle={{color: textColor}}
             width={nodeWidth}
             x={nodeOffset - selectedNodeOffset}

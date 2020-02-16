@@ -27,12 +27,13 @@ import Tooltip from '../Components/Tooltip';
 
 import styles from './CommitFlamegraph.css';
 
+import type {TooltipFiberData} from './HoveredFiberInfo';
 import type {ChartData, ChartNode} from './FlamegraphChartBuilder';
 import type {CommitTree} from './types';
 
 export type ItemData = {|
   chartData: ChartData,
-  hoverFiber: (id: number | null, fiberData: ChartNode | null) => void,
+  hoverFiber: (fiberData: TooltipFiberData | null) => void,
   scaleX: (value: number, fallbackValue: number) => number,
   selectedChartNode: ChartNode | null,
   selectedChartNodeIndex: number,

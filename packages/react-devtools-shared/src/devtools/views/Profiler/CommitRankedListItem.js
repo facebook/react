@@ -14,7 +14,7 @@ import {getGradientColor} from './utils';
 import ChartNode from './ChartNode';
 import {SettingsContext} from '../Settings/SettingsContext';
 
-import type {ChartData} from './RankedChartBuilder';
+import type {ChartNode as ChartNodeType} from './RankedChartBuilder';
 import type {ItemData} from './CommitRanked';
 
 type Props = {
@@ -47,15 +47,16 @@ function CommitRankedListItem({data, index, style}: Props) {
   );
 
   const handleMouseOver = useCallback(
-    (event: SyntheticMouseEvent<*>, nodeData: ChartData) => {
+    (event: SyntheticMouseEvent<*>, nodeData: ChartNodeType) => {
+      const {id, name} = nodeData;
       event.stopPropagation();
-      hoverFiber(nodeData);
+      hoverFiber({id, name});
     },
     [hoverFiber],
   );
 
   const handleMouseOut = useCallback(
-    (event: SyntheticMouseEvent<*>, nodeData: ChartData) => {
+    (event: SyntheticMouseEvent<*>) => {
       event.stopPropagation();
       hoverFiber(null);
     },
@@ -77,7 +78,7 @@ function CommitRankedListItem({data, index, style}: Props) {
       label={node.label}
       onClick={handleClick}
       onMouseOver={event => handleMouseOver(event, node)}
-      onMouseOut={event => handleMouseOut(event, node)}
+      onMouseOut={event => handleMouseOut(event)}
       width={Math.max(minBarWidth, scaleX(node.value, width))}
       x={0}
       y={top}
