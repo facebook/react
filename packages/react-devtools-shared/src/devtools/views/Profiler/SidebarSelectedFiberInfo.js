@@ -8,7 +8,7 @@
  */
 
 import React, {Fragment, useContext} from 'react';
-import ProfilerStore from 'react-devtools-shared/src/devtools/ProfilerStore';
+import ProfilerWhatChanged from '../Components/ProfilerWhatChanged';
 import {ProfilerContext} from './ProfilerContext';
 import {formatDuration, formatTime} from './utils';
 import {StoreContext} from '../context';
@@ -75,12 +75,7 @@ export default function SidebarSelectedFiberInfo(_: Props) {
         </Button>
       </div>
       <div className={styles.Content}>
-        <WhatChanged
-          commitIndex={((selectedCommitIndex: any): number)}
-          fiberID={((selectedFiberID: any): number)}
-          profilerStore={profilerStore}
-          rootID={((rootID: any): number)}
-        />
+        <ProfilerWhatChanged fiberID={((selectedFiberID: any): number)} />
         {listItems.length > 0 && (
           <Fragment>
             <label className={styles.Label}>Rendered at</label>: {listItems}
@@ -91,131 +86,5 @@ export default function SidebarSelectedFiberInfo(_: Props) {
         )}
       </div>
     </Fragment>
-  );
-}
-
-type WhatChangedProps = {|
-  commitIndex: number | null,
-  fiberID: number,
-  profilerStore: ProfilerStore,
-  rootID: number,
-|};
-
-function WhatChanged({
-  commitIndex,
-  fiberID,
-  profilerStore,
-  rootID,
-}: WhatChangedProps) {
-  // TRICKY
-  // Handle edge case where no commit is selected because of a min-duration filter update.
-  // If the commit index is null, suspending for data below would throw an error.
-  // TODO (ProfilerContext) This check should not be necessary.
-  if (commitIndex === null) {
-    return null;
-  }
-
-  const {changeDescriptions} = profilerStore.getCommitData(
-    ((rootID: any): number),
-    commitIndex,
-  );
-  if (changeDescriptions === null) {
-    return null;
-  }
-
-  const changeDescription = changeDescriptions.get(fiberID);
-  if (changeDescription == null) {
-    return null;
-  }
-
-  if (changeDescription.isFirstMount) {
-    return (
-      <div className={styles.WhatChanged}>
-        <label className={styles.Label}>Why did this render?</label>
-        <div className={styles.WhatChangedItem}>
-          This is the first time the component rendered.
-        </div>
-      </div>
-    );
-  }
-
-  const changes = [];
-
-  if (changeDescription.context === true) {
-    changes.push(
-      <div key="context" className={styles.WhatChangedItem}>
-        • Context changed
-      </div>,
-    );
-  } else if (
-    typeof changeDescription.context === 'object' &&
-    changeDescription.context !== null &&
-    changeDescription.context.length !== 0
-  ) {
-    changes.push(
-      <div key="context" className={styles.WhatChangedItem}>
-        • Context changed:
-        {changeDescription.context.map(key => (
-          <span key={key} className={styles.WhatChangedKey}>
-            {key}
-          </span>
-        ))}
-      </div>,
-    );
-  }
-
-  if (changeDescription.didHooksChange) {
-    changes.push(
-      <div key="hooks" className={styles.WhatChangedItem}>
-        • Hooks changed
-      </div>,
-    );
-  }
-
-  if (
-    changeDescription.props !== null &&
-    changeDescription.props.length !== 0
-  ) {
-    changes.push(
-      <div key="props" className={styles.WhatChangedItem}>
-        • Props changed:
-        {changeDescription.props.map(key => (
-          <span key={key} className={styles.WhatChangedKey}>
-            {key}
-          </span>
-        ))}
-      </div>,
-    );
-  }
-
-  if (
-    changeDescription.state !== null &&
-    changeDescription.state.length !== 0
-  ) {
-    changes.push(
-      <div key="state" className={styles.WhatChangedItem}>
-        • State changed:
-        {changeDescription.state.map(key => (
-          <span key={key} className={styles.WhatChangedKey}>
-            {key}
-          </span>
-        ))}
-      </div>,
-    );
-  }
-
-  if (changes.length === 0) {
-    changes.push(
-      <div key="nothing" className={styles.WhatChangedItem}>
-        The parent component rendered.
-      </div>,
-    );
-  }
-
-  return (
-    <div className={styles.WhatChanged}>
-      <label className={styles.Label}>Why did this render?</label>
-      {changes}
-    </div>
   );
 }
