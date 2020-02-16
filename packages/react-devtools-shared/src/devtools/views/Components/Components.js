@@ -68,10 +68,17 @@ function Components(_: {||}) {
   );
 }
 
-const RESIZE_DIRECTIONS = {
+type HorizontalResizeDirection = 'HORIZONTAL';
+type VerticalResizeDirection = 'VERTICAL';
+
+const RESIZE_DIRECTIONS: {|
+  HORIZONTAL: HorizontalResizeDirection,
+  VERTICAL: VerticalResizeDirection,
+|} = {
   HORIZONTAL: 'HORIZONTAL',
   VERTICAL: 'VERTICAL',
 };
+
 const LOCAL_STORAGE_RESIZE_ELEMENT_PERCENTAGE_HORIZONTAL_KEY = `React::DevTools::resizedElementPercentage::${RESIZE_DIRECTIONS.HORIZONTAL}`;
 const LOCAL_STORAGE_RESIZE_ELEMENT_PERCENTAGE_VERTICAL_KEY = `React::DevTools::resizedElementPercentage::${RESIZE_DIRECTIONS.VERTICAL}`;
 
@@ -92,6 +99,16 @@ function ComponentResizer({children}): {|children: Function|} {
   const componentsWrapperRef = useRef<HTMLDivElement>(null);
   const resizeElementRef = useRef<HTMLElement>(null);
   const [resizeElementStyles, setResizeElementStyles] = useState<Object>({});
+  const getResizeDirection: Function = useCallback(() => {
+    if (componentsWrapperRef.current === null) {
+      return RESIZE_DIRECTIONS.HORIZONTAL;
+    }
+    const {width} = componentsWrapperRef.current.getBoundingClientRect();
+
+    return width > 600
+      ? RESIZE_DIRECTIONS.HORIZONTAL
+      : RESIZE_DIRECTIONS.VERTICAL;
+  }, [componentsWrapperRef]);
 
   const onResizeStart = useCallback(() => {
     setIsResizing(true);
@@ -119,8 +136,7 @@ function ComponentResizer({children}): {|children: Function|} {
         left,
         top,
       } = componentsWrapperRef.current.getBoundingClientRect();
-      const resizeDirection =
-        width > 600 ? RESIZE_DIRECTIONS.HORIZONTAL : RESIZE_DIRECTIONS.VERTICAL;
+      const resizeDirection = getResizeDirection();
       const currentMousePosition: number =
         resizeDirection === RESIZE_DIRECTIONS.HORIZONTAL
           ? e.clientX - left
@@ -165,7 +181,7 @@ function ComponentResizer({children}): {|children: Function|} {
 
   useLayoutEffect(() => {
     if (componentsWrapperRef.current !== null) {
-      if (componentsWrapperRef.current.getBoundingClientRect().width > 600) {
+      if (getResizeDirection() === RESIZE_DIRECTIONS.HORIZONTAL) {
         setResizeElementStyles({
           flexBasis: `${horizontalPercentage}%`,
         });
