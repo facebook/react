@@ -12,7 +12,7 @@ import React, {
   Fragment,
   useRef,
   useState,
-  useMemo,
+  useLayoutEffect,
   useCallback,
 } from 'react';
 import Tree from './Tree';
@@ -68,39 +68,30 @@ function Components(_: {||}) {
   );
 }
 
-const resizeDirections = {
+const RESIZE_DIRECTIONS = {
   HORIZONTAL: 'HORIZONTAL',
   VERTICAL: 'VERTICAL',
 };
+const LOCAL_STORAGE_RESIZE_ELEMENT_PERCENTAGE_HORIZONTAL_KEY = `React::DevTools::resizedElementPercentage::${RESIZE_DIRECTIONS.HORIZONTAL}`;
+const LOCAL_STORAGE_RESIZE_ELEMENT_PERCENTAGE_VERTICAL_KEY = `React::DevTools::resizedElementPercentage::${RESIZE_DIRECTIONS.VERTICAL}`;
 
 function ComponentResizer({children}): {|children: Function|} {
-  const [isResizing, setIsResizing] = useState(false);
+  const [isResizing, setIsResizing] = useState<boolean>(false);
   const [
     horizontalPercentage,
     setHorizontalPercentage,
   ] = useLocalStorage<number>(
-    `React::DevTools::resizedElementPercentage::${resizeDirections.HORIZONTAL}`,
+    LOCAL_STORAGE_RESIZE_ELEMENT_PERCENTAGE_HORIZONTAL_KEY,
     65,
   );
   const [verticalPercentage, setVerticalPercentage] = useLocalStorage<number>(
-    `React::DevTools::resizedElementPercentage::${resizeDirections.VERTICAL}`,
+    LOCAL_STORAGE_RESIZE_ELEMENT_PERCENTAGE_VERTICAL_KEY,
     50,
   );
-  const updateLocalStorageTimeoutId = useRef(null);
-  const componentsWrapperRef = useRef(null);
-  const resizeElementRef = useRef(null);
-
-  // TODO: We might be saving the localStorage values,
-  // TODO: but window.innerWidth might be bellow 600 so that why it's broken.
-  // TODO: OR we can't access the property when building the extension. :(
-  const resizeElementStyles = useMemo(
-    () => ({
-      flexBasis: `${
-        window.innerWidth > 600 ? horizontalPercentage : verticalPercentage
-      }%`,
-    }),
-    [horizontalPercentage, verticalPercentage],
-  );
+  const updateLocalStorageTimeoutId = useRef<number>(null);
+  const componentsWrapperRef = useRef<HTMLDivElement>(null);
+  const resizeElementRef = useRef<HTMLElement>(null);
+  const [resizeElementStyles, setResizeElementStyles] = useState<Object>({});
 
   const onResizeStart = useCallback(() => {
     setIsResizing(true);
@@ -115,7 +106,7 @@ function ComponentResizer({children}): {|children: Function|} {
       if (
         !isResizing ||
         componentsWrapperRef.current === null ||
-          resizeElementRef.current === null
+        resizeElementRef.current === null
       ) {
         return;
       }
@@ -129,26 +120,29 @@ function ComponentResizer({children}): {|children: Function|} {
         top,
       } = componentsWrapperRef.current.getBoundingClientRect();
       const resizeDirection =
-        width > 600 ? resizeDirections.HORIZONTAL : resizeDirections.VERTICAL;
-      const currentMousePosition =
-        resizeDirection === resizeDirections.HORIZONTAL
+        width > 600 ? RESIZE_DIRECTIONS.HORIZONTAL : RESIZE_DIRECTIONS.VERTICAL;
+      const currentMousePosition: number =
+        resizeDirection === RESIZE_DIRECTIONS.HORIZONTAL
           ? e.clientX - left
           : e.clientY - top;
-      const boundary = {
+      const boundary: {|
+        min: number,
+        max: number,
+      |} = {
         min: 40,
         max:
-          resizeDirection === resizeDirections.HORIZONTAL
+          resizeDirection === RESIZE_DIRECTIONS.HORIZONTAL
             ? width - 40
             : height - 40,
       };
-      const mousePositionInBounds =
+      const mousePositionInBounds: boolean =
         currentMousePosition > boundary.min &&
         currentMousePosition < boundary.max;
 
       if (mousePositionInBounds) {
-        const updatedFlexBasisValue =
+        const updatedFlexBasisValue: number =
           (currentMousePosition /
-            (resizeDirection === resizeDirections.HORIZONTAL
+            (resizeDirection === RESIZE_DIRECTIONS.HORIZONTAL
               ? width
               : height)) *
           100;
@@ -158,7 +152,7 @@ function ComponentResizer({children}): {|children: Function|} {
         clearTimeout(updateLocalStorageTimeoutId.current);
 
         updateLocalStorageTimeoutId.current = setTimeout(() => {
-          if (resizeDirection === resizeDirections.HORIZONTAL) {
+          if (resizeDirection === RESIZE_DIRECTIONS.HORIZONTAL) {
             setHorizontalPercentage(updatedFlexBasisValue);
           } else {
             setVerticalPercentage(updatedFlexBasisValue);
@@ -168,6 +162,20 @@ function ComponentResizer({children}): {|children: Function|} {
     },
     [componentsWrapperRef, resizeElementRef, isResizing],
   );
+
+  useLayoutEffect(() => {
+    if (componentsWrapperRef.current !== null) {
+      if (componentsWrapperRef.current.getBoundingClientRect().width > 600) {
+        setResizeElementStyles({
+          flexBasis: `${horizontalPercentage}%`,
+        });
+      } else {
+        setResizeElementStyles({
+          flexBasis: `${verticalPercentage}%`,
+        });
+      }
+    }
+  }, [componentsWrapperRef, horizontalPercentage, verticalPercentage]);
 
   return (
     <div
