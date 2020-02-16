@@ -18,6 +18,8 @@ type Props = {|
   label: string,
   onClick: (event: SyntheticMouseEvent<*>) => mixed,
   onDoubleClick?: (event: SyntheticMouseEvent<*>) => mixed,
+  onMouseOver: (event: SyntheticMouseEvent<*>) => mixed,
+  onMouseOut: (event: SyntheticMouseEvent<*>) => mixed,
   placeLabelAboveNode?: boolean,
   textStyle?: Object,
   width: number,
@@ -33,6 +35,8 @@ export default function ChartNode({
   isDimmed = false,
   label,
   onClick,
+  onMouseOver,
+  onMouseOut,
   onDoubleClick,
   textStyle,
   width,
@@ -41,12 +45,13 @@ export default function ChartNode({
 }: Props) {
   return (
     <g className={styles.Group} transform={`translate(${x},${y})`}>
-      <title>{label}</title>
       <rect
         width={width}
         height={height}
         fill={color}
         onClick={onClick}
+        onMouseOver={onMouseOver}
+        onMouseOut={onMouseOut}
         onDoubleClick={onDoubleClick}
         className={styles.Rect}
         style={{

@@ -14,6 +14,7 @@ import {getGradientColor} from './utils';
 import ChartNode from './ChartNode';
 import {SettingsContext} from '../Settings/SettingsContext';
 
+import type {ChartNode as ChartNodeType} from './FlamegraphChartBuilder';
 import type {ItemData} from './CommitFlamegraph';
 
 type Props = {
@@ -26,6 +27,7 @@ type Props = {
 function CommitFlamegraphListItem({data, index, style}: Props) {
   const {
     chartData,
+    hoverFiber,
     scaleX,
     selectedChartNode,
     selectedChartNodeIndex,
@@ -35,12 +37,29 @@ function CommitFlamegraphListItem({data, index, style}: Props) {
   const {renderPathNodes, maxSelfDuration, rows} = chartData;
 
   const {lineHeight} = useContext(SettingsContext);
+
   const handleClick = useCallback(
     (event: SyntheticMouseEvent<*>, id: number, name: string) => {
       event.stopPropagation();
       selectFiber(id, name);
     },
     [selectFiber],
+  );
+
+  const handleMouseOver = useCallback(
+    (event: SyntheticMouseEvent<*>, nodeData: ChartNodeType) => {
+      event.stopPropagation();
+      hoverFiber(nodeData);
+    },
+    [hoverFiber],
+  );
+
+  const handleMouseOut = useCallback(
+    (event: SyntheticMouseEvent<*>, nodeData: ChartNodeType) => {
+      event.stopPropagation();
+      hoverFiber(null);
+    },
+    [hoverFiber],
   );
 
   // List items are absolutely positioned using the CSS "top" attribute.
@@ -104,6 +123,8 @@ function CommitFlamegraphListItem({data, index, style}: Props) {
             key={id}
             label={label}
             onClick={event => handleClick(event, id, name)}
+            onMouseOver={event => handleMouseOver(event, chartNode)}
+            onMouseOut={event => handleMouseOut(event, chartNode)}
             textStyle={{color: textColor}}
             width={nodeWidth}
             x={nodeOffset - selectedNodeOffset}
