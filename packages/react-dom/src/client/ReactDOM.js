@@ -232,7 +232,7 @@ const foundDevTools = injectIntoDevTools({
 
 if (__DEV__) {
   if (!foundDevTools && canUseDOM && window.top === window.self) {
-    // If we're in Chrome or Firefox, provide a download link if not installed.
+    // If we're in Chrome(not Edge) or Firefox, provide a download link if not installed.
     if (
       (navigator.userAgent.indexOf('Chrome') > -1 &&
         navigator.userAgent.indexOf('Edge') === -1) ||
