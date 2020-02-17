@@ -13,11 +13,9 @@
 let React;
 let ReactFabric;
 let ReactFeatureFlags;
-let createReactClass;
 let createReactNativeComponentClass;
 let UIManager;
 let StrictMode;
-let NativeMethodsMixin;
 
 const SET_NATIVE_PROPS_NOT_SUPPORTED_MESSAGE =
   'Warning: setNativeProps is not currently supported in Fabric';
@@ -42,16 +40,8 @@ describe('ReactFabric', () => {
     ReactFeatureFlags = require('shared/ReactFeatureFlags');
     UIManager = require('react-native/Libraries/ReactPrivate/ReactNativePrivateInterface')
       .UIManager;
-    createReactClass = require('create-react-class/factory')(
-      React.Component,
-      React.isValidElement,
-      new React.Component().updater,
-    );
     createReactNativeComponentClass = require('react-native/Libraries/ReactPrivate/ReactNativePrivateInterface')
       .ReactNativeViewConfigRegistry.register;
-    NativeMethodsMixin =
-      ReactFabric.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED
-        .NativeMethodsMixin;
   });
 
   it('should be able to create and render a native component', () => {
@@ -213,49 +203,34 @@ describe('ReactFabric', () => {
       uiViewClassName: 'RCTView',
     }));
 
-    class Subclass extends ReactFabric.NativeComponent {
-      render() {
-        return <View />;
-      }
-    }
+    UIManager.updateView.mockReset();
 
-    const CreateClass = createReactClass({
-      mixins: [NativeMethodsMixin],
-      render: () => {
-        return <View />;
-      },
+    let viewRef;
+    ReactFabric.render(
+      <View
+        foo="bar"
+        ref={ref => {
+          viewRef = ref;
+        }}
+      />,
+      11,
+    );
+    expect(UIManager.updateView).not.toBeCalled();
+
+    expect(() => {
+      viewRef.setNativeProps({});
+    }).toErrorDev([SET_NATIVE_PROPS_NOT_SUPPORTED_MESSAGE], {
+      withoutStack: true,
     });
 
-    [View, Subclass, CreateClass].forEach(Component => {
-      UIManager.updateView.mockReset();
+    expect(UIManager.updateView).not.toBeCalled();
 
-      let viewRef;
-      ReactFabric.render(
-        <Component
-          foo="bar"
-          ref={ref => {
-            viewRef = ref;
-          }}
-        />,
-        11,
-      );
-      expect(UIManager.updateView).not.toBeCalled();
-
-      expect(() => {
-        viewRef.setNativeProps({});
-      }).toErrorDev([SET_NATIVE_PROPS_NOT_SUPPORTED_MESSAGE], {
-        withoutStack: true,
-      });
-
-      expect(UIManager.updateView).not.toBeCalled();
-
-      expect(() => {
-        viewRef.setNativeProps({foo: 'baz'});
-      }).toErrorDev([SET_NATIVE_PROPS_NOT_SUPPORTED_MESSAGE], {
-        withoutStack: true,
-      });
-      expect(UIManager.updateView).not.toBeCalled();
+    expect(() => {
+      viewRef.setNativeProps({foo: 'baz'});
+    }).toErrorDev([SET_NATIVE_PROPS_NOT_SUPPORTED_MESSAGE], {
+      withoutStack: true,
     });
+    expect(UIManager.updateView).not.toBeCalled();
   });
 
   it('should call dispatchCommand for native refs', () => {
@@ -264,75 +239,53 @@ describe('ReactFabric', () => {
       uiViewClassName: 'RCTView',
     }));
 
-    [View].forEach(Component => {
-      nativeFabricUIManager.dispatchCommand.mockClear();
+    nativeFabricUIManager.dispatchCommand.mockClear();
 
-      let viewRef;
-      ReactFabric.render(
-        <Component
-          ref={ref => {
-            viewRef = ref;
-          }}
-        />,
-        11,
-      );
+    let viewRef;
+    ReactFabric.render(
+      <View
+        ref={ref => {
+          viewRef = ref;
+        }}
+      />,
+      11,
+    );
 
-      expect(nativeFabricUIManager.dispatchCommand).not.toBeCalled();
-      ReactFabric.dispatchCommand(viewRef, 'updateCommand', [10, 20]);
-      expect(nativeFabricUIManager.dispatchCommand).toHaveBeenCalledTimes(1);
-      expect(
-        nativeFabricUIManager.dispatchCommand,
-      ).toHaveBeenCalledWith(expect.any(Object), 'updateCommand', [10, 20]);
-    });
+    expect(nativeFabricUIManager.dispatchCommand).not.toBeCalled();
+    ReactFabric.dispatchCommand(viewRef, 'updateCommand', [10, 20]);
+    expect(nativeFabricUIManager.dispatchCommand).toHaveBeenCalledTimes(1);
+    expect(
+      nativeFabricUIManager.dispatchCommand,
+    ).toHaveBeenCalledWith(expect.any(Object), 'updateCommand', [10, 20]);
   });
 
   it('should warn and no-op if calling dispatchCommand on non native refs', () => {
-    const View = createReactNativeComponentClass('RCTView', () => ({
-      validAttributes: {foo: true},
-      uiViewClassName: 'RCTView',
-    }));
-
     class BasicClass extends React.Component {
       render() {
         return <React.Fragment />;
       }
     }
 
-    class Subclass extends ReactFabric.NativeComponent {
-      render() {
-        return <View />;
-      }
-    }
+    nativeFabricUIManager.dispatchCommand.mockReset();
 
-    const CreateClass = createReactClass({
-      mixins: [NativeMethodsMixin],
-      render: () => {
-        return <View />;
-      },
+    let viewRef;
+    ReactFabric.render(
+      <BasicClass
+        ref={ref => {
+          viewRef = ref;
+        }}
+      />,
+      11,
+    );
+
+    expect(nativeFabricUIManager.dispatchCommand).not.toBeCalled();
+    expect(() => {
+      ReactFabric.dispatchCommand(viewRef, 'updateCommand', [10, 20]);
+    }).toErrorDev([DISPATCH_COMMAND_REQUIRES_HOST_COMPONENT], {
+      withoutStack: true,
     });
 
-    [BasicClass, Subclass, CreateClass].forEach(Component => {
-      nativeFabricUIManager.dispatchCommand.mockReset();
-
-      let viewRef;
-      ReactFabric.render(
-        <Component
-          ref={ref => {
-            viewRef = ref;
-          }}
-        />,
-        11,
-      );
-
-      expect(nativeFabricUIManager.dispatchCommand).not.toBeCalled();
-      expect(() => {
-        ReactFabric.dispatchCommand(viewRef, 'updateCommand', [10, 20]);
-      }).toErrorDev([DISPATCH_COMMAND_REQUIRES_HOST_COMPONENT], {
-        withoutStack: true,
-      });
-
-      expect(nativeFabricUIManager.dispatchCommand).not.toBeCalled();
-    });
+    expect(nativeFabricUIManager.dispatchCommand).not.toBeCalled();
   });
 
   it('should call FabricUIManager.measure on ref.measure', () => {
@@ -341,39 +294,24 @@ describe('ReactFabric', () => {
       uiViewClassName: 'RCTView',
     }));
 
-    class Subclass extends ReactFabric.NativeComponent {
-      render() {
-        return <View>{this.props.children}</View>;
-      }
-    }
+    nativeFabricUIManager.measure.mockClear();
 
-    const CreateClass = createReactClass({
-      mixins: [NativeMethodsMixin],
-      render() {
-        return <View>{this.props.children}</View>;
-      },
-    });
+    let viewRef;
+    ReactFabric.render(
+      <View
+        ref={ref => {
+          viewRef = ref;
+        }}
+      />,
+      11,
+    );
 
-    [View, Subclass, CreateClass].forEach(Component => {
-      nativeFabricUIManager.measure.mockClear();
-
-      let viewRef;
-      ReactFabric.render(
-        <Component
-          ref={ref => {
-            viewRef = ref;
-          }}
-        />,
-        11,
-      );
-
-      expect(nativeFabricUIManager.measure).not.toBeCalled();
-      const successCallback = jest.fn();
-      viewRef.measure(successCallback);
-      expect(nativeFabricUIManager.measure).toHaveBeenCalledTimes(1);
-      expect(successCallback).toHaveBeenCalledTimes(1);
-      expect(successCallback).toHaveBeenCalledWith(10, 10, 100, 100, 0, 0);
-    });
+    expect(nativeFabricUIManager.measure).not.toBeCalled();
+    const successCallback = jest.fn();
+    viewRef.measure(successCallback);
+    expect(nativeFabricUIManager.measure).toHaveBeenCalledTimes(1);
+    expect(successCallback).toHaveBeenCalledTimes(1);
+    expect(successCallback).toHaveBeenCalledWith(10, 10, 100, 100, 0, 0);
   });
 
   it('should call FabricUIManager.measureInWindow on ref.measureInWindow', () => {
@@ -382,39 +320,24 @@ describe('ReactFabric', () => {
       uiViewClassName: 'RCTView',
     }));
 
-    class Subclass extends ReactFabric.NativeComponent {
-      render() {
-        return <View>{this.props.children}</View>;
-      }
-    }
+    nativeFabricUIManager.measureInWindow.mockClear();
 
-    const CreateClass = createReactClass({
-      mixins: [NativeMethodsMixin],
-      render() {
-        return <View>{this.props.children}</View>;
-      },
-    });
+    let viewRef;
+    ReactFabric.render(
+      <View
+        ref={ref => {
+          viewRef = ref;
+        }}
+      />,
+      11,
+    );
 
-    [View, Subclass, CreateClass].forEach(Component => {
-      nativeFabricUIManager.measureInWindow.mockClear();
-
-      let viewRef;
-      ReactFabric.render(
-        <Component
-          ref={ref => {
-            viewRef = ref;
-          }}
-        />,
-        11,
-      );
-
-      expect(nativeFabricUIManager.measureInWindow).not.toBeCalled();
-      const successCallback = jest.fn();
-      viewRef.measureInWindow(successCallback);
-      expect(nativeFabricUIManager.measureInWindow).toHaveBeenCalledTimes(1);
-      expect(successCallback).toHaveBeenCalledTimes(1);
-      expect(successCallback).toHaveBeenCalledWith(10, 10, 100, 100);
-    });
+    expect(nativeFabricUIManager.measureInWindow).not.toBeCalled();
+    const successCallback = jest.fn();
+    viewRef.measureInWindow(successCallback);
+    expect(nativeFabricUIManager.measureInWindow).toHaveBeenCalledTimes(1);
+    expect(successCallback).toHaveBeenCalledTimes(1);
+    expect(successCallback).toHaveBeenCalledWith(10, 10, 100, 100);
   });
 
   it('should support ref in ref.measureLayout', () => {
@@ -423,98 +346,34 @@ describe('ReactFabric', () => {
       uiViewClassName: 'RCTView',
     }));
 
-    [View].forEach(Component => {
-      nativeFabricUIManager.measureLayout.mockClear();
+    nativeFabricUIManager.measureLayout.mockClear();
 
-      let viewRef;
-      let otherRef;
-      ReactFabric.render(
-        <Component>
-          <Component
-            foo="bar"
-            ref={ref => {
-              viewRef = ref;
-            }}
-          />
-          <View
-            ref={ref => {
-              otherRef = ref;
-            }}
-          />
-        </Component>,
-        11,
-      );
+    let viewRef;
+    let otherRef;
+    ReactFabric.render(
+      <View>
+        <View
+          foo="bar"
+          ref={ref => {
+            viewRef = ref;
+          }}
+        />
+        <View
+          ref={ref => {
+            otherRef = ref;
+          }}
+        />
+      </View>,
+      11,
+    );
 
-      expect(nativeFabricUIManager.measureLayout).not.toBeCalled();
-      const successCallback = jest.fn();
-      const failureCallback = jest.fn();
-      viewRef.measureLayout(otherRef, successCallback, failureCallback);
-      expect(nativeFabricUIManager.measureLayout).toHaveBeenCalledTimes(1);
-      expect(successCallback).toHaveBeenCalledTimes(1);
-      expect(successCallback).toHaveBeenCalledWith(1, 1, 100, 100);
-    });
-  });
-
-  it('should warn when calling measureLayout on Subclass and NativeMethodsMixin', () => {
-    const View = createReactNativeComponentClass('RCTView', () => ({
-      validAttributes: {foo: true},
-      uiViewClassName: 'RCTView',
-    }));
-
-    class Subclass extends ReactFabric.NativeComponent {
-      render() {
-        return <View>{this.props.children}</View>;
-      }
-    }
-
-    const CreateClass = createReactClass({
-      mixins: [NativeMethodsMixin],
-      render() {
-        return <View>{this.props.children}</View>;
-      },
-    });
-
-    [Subclass, CreateClass].forEach(Component => {
-      nativeFabricUIManager.measureLayout.mockReset();
-
-      let viewRef;
-      let otherRef;
-      ReactFabric.render(
-        <Component>
-          <Component
-            foo="bar"
-            ref={ref => {
-              viewRef = ref;
-            }}
-          />
-          <View
-            ref={ref => {
-              otherRef = ref;
-            }}
-          />
-        </Component>,
-        11,
-      );
-
-      const successCallback = jest.fn();
-      const failureCallback = jest.fn();
-
-      expect(() => {
-        viewRef.measureLayout(otherRef, successCallback, failureCallback);
-      }).toErrorDev(
-        [
-          'Warning: measureLayout on components using NativeMethodsMixin ' +
-            'or ReactNative.NativeComponent is not currently supported in Fabric. ' +
-            'measureLayout must be called on a native ref. Consider using forwardRef.',
-        ],
-        {
-          withoutStack: true,
-        },
-      );
-
-      expect(nativeFabricUIManager.measureLayout).not.toBeCalled();
-      expect(UIManager.measureLayout).not.toBeCalled();
-    });
+    expect(nativeFabricUIManager.measureLayout).not.toBeCalled();
+    const successCallback = jest.fn();
+    const failureCallback = jest.fn();
+    viewRef.measureLayout(otherRef, successCallback, failureCallback);
+    expect(nativeFabricUIManager.measureLayout).toHaveBeenCalledTimes(1);
+    expect(successCallback).toHaveBeenCalledTimes(1);
+    expect(successCallback).toHaveBeenCalledWith(1, 1, 100, 100);
   });
 
   it('returns the correct instance and calls it in the callback', () => {

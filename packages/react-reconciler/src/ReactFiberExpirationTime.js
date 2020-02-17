@@ -32,10 +32,9 @@ export const Never = 1;
 // Idle is slightly higher priority than Never. It must completely finish in
 // order to be consistent.
 export const Idle = 2;
-// Continuous Hydration is a moving priority. It is slightly higher than Idle
-// and is used to increase priority of hover targets. It is increasing with
-// each usage so that last always wins.
-let ContinuousHydration = 3;
+// Continuous Hydration is slightly higher than Idle and is used to increase
+// priority of hover targets.
+export const ContinuousHydration = 3;
 export const Sync = MAX_SIGNED_31_BIT_INT;
 export const Batched = Sync - 1;
 
@@ -44,7 +43,7 @@ const MAGIC_NUMBER_OFFSET = Batched - 1;
 
 // 1 unit of expiration time represents 10ms.
 export function msToExpirationTime(ms: number): ExpirationTime {
-  // Always add an offset so that we don't clash with the magic number for NoWork.
+  // Always subtract from the offset so that we don't clash with the magic number for NoWork.
   return MAGIC_NUMBER_OFFSET - ((ms / UNIT_SIZE) | 0);
 }
 
@@ -117,15 +116,6 @@ export function computeInteractiveExpiration(currentTime: ExpirationTime) {
     HIGH_PRIORITY_EXPIRATION,
     HIGH_PRIORITY_BATCH_SIZE,
   );
-}
-
-export function computeContinuousHydrationExpiration(
-  currentTime: ExpirationTime,
-) {
-  // Each time we ask for a new one of these we increase the priority.
-  // This ensures that the last one always wins since we can't deprioritize
-  // once we've scheduled work already.
-  return ContinuousHydration++;
 }
 
 export function inferPriorityFromExpirationTime(

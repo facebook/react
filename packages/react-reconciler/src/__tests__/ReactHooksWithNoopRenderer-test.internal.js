@@ -43,6 +43,7 @@ describe('ReactHooksWithNoopRenderer', () => {
     ReactFeatureFlags.debugRenderPhaseSideEffectsForStrictMode = false;
     ReactFeatureFlags.enableSchedulerTracing = true;
     ReactFeatureFlags.flushSuspenseFallbacksInTests = false;
+    ReactFeatureFlags.deferPassiveEffectCleanupDuringUnmount = true;
     React = require('react');
     ReactNoop = require('react-noop-renderer');
     Scheduler = require('scheduler');
@@ -545,6 +546,132 @@ describe('ReactHooksWithNoopRenderer', () => {
       ]);
       expect(ReactNoop.getChildren()).toEqual([span(22)]);
     });
+
+    it('discards render phase updates if something suspends', () => {
+      const thenable = {then() {}};
+      function Foo({signal}) {
+        return (
+          <Suspense fallback="Loading...">
+            <Bar signal={signal} />
+          </Suspense>
+        );
+      }
+
+      function Bar({signal: newSignal}) {
+        let [counter, setCounter] = useState(0);
+        let [signal, setSignal] = useState(true);
+
+        // Increment a counter every time the signal changes
+        if (signal !== newSignal) {
+          setCounter(c => c + 1);
+          setSignal(newSignal);
+          if (counter === 0) {
+            // We're suspending during a render that includes render phase
+            // updates. Those updates should not persist to the next render.
+            Scheduler.unstable_yieldValue('Suspend!');
+            throw thenable;
+          }
+        }
+
+        return <Text text={counter} />;
+      }
+
+      const root = ReactNoop.createRoot();
+      root.render(<Foo signal={true} />);
+
+      expect(Scheduler).toFlushAndYield([0]);
+      expect(root).toMatchRenderedOutput(<span prop={0} />);
+
+      root.render(<Foo signal={false} />);
+      expect(Scheduler).toFlushAndYield(['Suspend!']);
+      expect(root).toMatchRenderedOutput(<span prop={0} />);
+
+      // Rendering again should suspend again.
+      root.render(<Foo signal={false} />);
+      expect(Scheduler).toFlushAndYield(['Suspend!']);
+    });
+
+    it('discards render phase updates if something suspends, but not other updates in the same component', async () => {
+      const thenable = {then() {}};
+      function Foo({signal}) {
+        return (
+          <Suspense fallback="Loading...">
+            <Bar signal={signal} />
+          </Suspense>
+        );
+      }
+
+      let setLabel;
+      function Bar({signal: newSignal}) {
+        let [counter, setCounter] = useState(0);
+
+        if (counter === 1) {
+          // We're suspending during a render that includes render phase
+          // updates. Those updates should not persist to the next render.
+          Scheduler.unstable_yieldValue('Suspend!');
+          throw thenable;
+        }
+
+        let [signal, setSignal] = useState(true);
+
+        // Increment a counter every time the signal changes
+        if (signal !== newSignal) {
+          setCounter(c => c + 1);
+          setSignal(newSignal);
+        }
+
+        let [label, _setLabel] = useState('A');
+        setLabel = _setLabel;
+
+        return <Text text={`${label}:${counter}`} />;
+      }
+
+      const root = ReactNoop.createRoot();
+      root.render(<Foo signal={true} />);
+
+      expect(Scheduler).toFlushAndYield(['A:0']);
+      expect(root).toMatchRenderedOutput(<span prop="A:0" />);
+
+      await ReactNoop.act(async () => {
+        root.render(<Foo signal={false} />);
+        setLabel('B');
+      });
+      expect(Scheduler).toHaveYielded(['Suspend!']);
+      expect(root).toMatchRenderedOutput(<span prop="A:0" />);
+
+      // Rendering again should suspend again.
+      root.render(<Foo signal={false} />);
+      expect(Scheduler).toFlushAndYield(['Suspend!']);
+
+      // Flip the signal back to "cancel" the update. However, the update to
+      // label should still proceed. It shouldn't have been dropped.
+      root.render(<Foo signal={true} />);
+      expect(Scheduler).toFlushAndYield(['B:0']);
+      expect(root).toMatchRenderedOutput(<span prop="B:0" />);
+    });
+
+    // TODO: This should probably warn
+    it.experimental('calling startTransition inside render phase', async () => {
+      let startTransition;
+      function App() {
+        let [counter, setCounter] = useState(0);
+        let [_startTransition] = useTransition();
+        startTransition = _startTransition;
+
+        if (counter === 0) {
+          startTransition(() => {
+            setCounter(c => c + 1);
+          });
+        }
+
+        return <Text text={counter} />;
+      }
+
+      const root = ReactNoop.createRoot();
+      root.render(<App />);
+      expect(Scheduler).toFlushAndYield([1]);
+      expect(root).toMatchRenderedOutput(<span prop={1} />);
+    });
   });
 
   describe('useReducer', () => {
@@ -845,6 +972,90 @@ describe('ReactHooksWithNoopRenderer', () => {
         ]);
       },
     );
+
+    it('defers passive effect destroy functions during unmount', () => {
+      function Child({bar, foo}) {
+        React.useEffect(() => {
+          Scheduler.unstable_yieldValue('passive bar create');
+          return () => {
+            Scheduler.unstable_yieldValue('passive bar destroy');
+          };
+        }, [bar]);
+        React.useLayoutEffect(() => {
+          Scheduler.unstable_yieldValue('layout bar create');
+          return () => {
+            Scheduler.unstable_yieldValue('layout bar destroy');
+          };
+        }, [bar]);
+        React.useEffect(() => {
+          Scheduler.unstable_yieldValue('passive foo create');
+          return () => {
+            Scheduler.unstable_yieldValue('passive foo destroy');
+          };
+        }, [foo]);
+        React.useLayoutEffect(() => {
+          Scheduler.unstable_yieldValue('layout foo create');
+          return () => {
+            Scheduler.unstable_yieldValue('layout foo destroy');
+          };
+        }, [foo]);
+        Scheduler.unstable_yieldValue('render');
+        return null;
+      }
+
+      act(() => {
+        ReactNoop.render(<Child bar={1} foo={1} />, () =>
+          Scheduler.unstable_yieldValue('Sync effect'),
+        );
+        expect(Scheduler).toFlushAndYieldThrough([
+          'render',
+          'layout bar create',
+          'layout foo create',
+          'Sync effect',
+        ]);
+        // Effects are deferred until after the commit
+        expect(Scheduler).toFlushAndYield([
+          'passive bar create',
+          'passive foo create',
+        ]);
+      });
+
+      // This update is exists to test an internal implementation detail:
+      // Effects without updating dependencies lose their layout/passive tag during an update.
+      act(() => {
+        ReactNoop.render(<Child bar={1} foo={2} />, () =>
+          Scheduler.unstable_yieldValue('Sync effect'),
+        );
+        expect(Scheduler).toFlushAndYieldThrough([
+          'render',
+          'layout foo destroy',
+          'layout foo create',
+          'Sync effect',
+        ]);
+        // Effects are deferred until after the commit
+        expect(Scheduler).toFlushAndYield([
+          'passive foo destroy',
+          'passive foo create',
+        ]);
+      });
+
+      // Unmount the component and verify that passive destroy functions are deferred until post-commit.
+      act(() => {
+        ReactNoop.render(null, () =>
+          Scheduler.unstable_yieldValue('Sync effect'),
+        );
+        expect(Scheduler).toFlushAndYieldThrough([
+          'layout bar destroy',
+          'layout foo destroy',
+          'Sync effect',
+        ]);
+        // Effects are deferred until after the commit
+        expect(Scheduler).toFlushAndYield([
+          'passive bar destroy',
+          'passive foo destroy',
+        ]);
+      });
+    });
 
     it('updates have async priority', () => {
       function Counter(props) {
@@ -1347,6 +1558,67 @@ describe('ReactHooksWithNoopRenderer', () => {
       ]);
     });
 
+    it('unmounts all previous effects between siblings before creating any new ones', () => {
+      function Counter({count, label}) {
+        useEffect(() => {
+          Scheduler.unstable_yieldValue(`Mount ${label} [${count}]`);
+          return () => {
+            Scheduler.unstable_yieldValue(`Unmount ${label} [${count}]`);
+          };
+        });
+        return <Text text={`${label} ${count}`} />;
+      }
+      act(() => {
+        ReactNoop.render(
+          <React.Fragment>
+            <Counter label="A" count={0} />
+            <Counter label="B" count={0} />
+          </React.Fragment>,
+          () => Scheduler.unstable_yieldValue('Sync effect'),
+        );
+        expect(Scheduler).toFlushAndYieldThrough(['A 0', 'B 0', 'Sync effect']);
+        expect(ReactNoop.getChildren()).toEqual([span('A 0'), span('B 0')]);
+      });
+
+      expect(Scheduler).toHaveYielded(['Mount A [0]', 'Mount B [0]']);
+
+      act(() => {
+        ReactNoop.render(
+          <React.Fragment>
+            <Counter label="A" count={1} />
+            <Counter label="B" count={1} />
+          </React.Fragment>,
+          () => Scheduler.unstable_yieldValue('Sync effect'),
+        );
+        expect(Scheduler).toFlushAndYieldThrough(['A 1', 'B 1', 'Sync effect']);
+        expect(ReactNoop.getChildren()).toEqual([span('A 1'), span('B 1')]);
+      });
+      expect(Scheduler).toHaveYielded([
+        'Unmount A [0]',
+        'Unmount B [0]',
+        'Mount A [1]',
+        'Mount B [1]',
+      ]);
+
+      act(() => {
+        ReactNoop.render(
+          <React.Fragment>
+            <Counter label="B" count={2} />
+            <Counter label="C" count={0} />
+          </React.Fragment>,
+          () => Scheduler.unstable_yieldValue('Sync effect'),
+        );
+        expect(Scheduler).toFlushAndYieldThrough(['B 2', 'C 0', 'Sync effect']);
+        expect(ReactNoop.getChildren()).toEqual([span('B 2'), span('C 0')]);
+      });
+      expect(Scheduler).toHaveYielded([
+        'Unmount A [1]',
+        'Unmount B [1]',
+        'Mount B [2]',
+        'Mount C [0]',
+      ]);
+    });
+
     it('handles errors on mount', () => {
       function Counter(props) {
         useEffect(() => {
@@ -1428,12 +1700,14 @@ describe('ReactHooksWithNoopRenderer', () => {
           'Unmount B [0]',
           'Mount A [1]',
           'Oops!',
-          // Clean up effect A. There's no effect B to clean-up, because it
-          // never mounted.
-          'Unmount A [1]',
         ]);
         expect(ReactNoop.getChildren()).toEqual([]);
       });
+      expect(Scheduler).toHaveYielded([
+        // Clean up effect A runs passively on unmount.
+        // There's no effect B to clean-up, because it never mounted.
+        'Unmount A [1]',
+      ]);
     });
 
     it('handles errors on unmount', () => {
@@ -1443,8 +1717,6 @@ describe('ReactHooksWithNoopRenderer', () => {
           return () => {
             Scheduler.unstable_yieldValue('Oops!');
             throw new Error('Oops!');
-            // eslint-disable-next-line no-unreachable
-            Scheduler.unstable_yieldValue(`Unmount A [${props.count}]`);
           };
         });
         useEffect(() => {
@@ -1455,6 +1727,7 @@ describe('ReactHooksWithNoopRenderer', () => {
         });
         return <Text text={'Count: ' + props.count} />;
       }
+
       act(() => {
         ReactNoop.render(<Counter count={0} />, () =>
           Scheduler.unstable_yieldValue('Sync effect'),
@@ -1466,20 +1739,31 @@ describe('ReactHooksWithNoopRenderer', () => {
       });
 
       act(() => {
-        // This update will trigger an error
+        // This update will trigger an error during passive effect unmount
         ReactNoop.render(<Counter count={1} />, () =>
           Scheduler.unstable_yieldValue('Sync effect'),
         );
         expect(Scheduler).toFlushAndYieldThrough(['Count: 1', 'Sync effect']);
         expect(ReactNoop.getChildren()).toEqual([span('Count: 1')]);
         expect(() => ReactNoop.flushPassiveEffects()).toThrow('Oops');
+
+        // This tests enables a feature flag that flushes all passive destroys in a
+        // separate pass before flushing any passive creates.
+        // A result of this two-pass flush is that an error thrown from unmount does
+        // not block the subsequent create functions from being run.
         expect(Scheduler).toHaveYielded([
           'Oops!',
-          // B unmounts even though an error was thrown in the previous effect
           'Unmount B [0]',
+          'Mount A [1]',
+          'Mount B [1]',
         ]);
-        expect(ReactNoop.getChildren()).toEqual([]);
       });
+
+      // <Counter> gets unmounted because an error is thrown above.
+      // The remaining destroy functions are run later on unmount, since they're passive.
+      // In this case, one of them throws again (because of how the test is written).
+      expect(Scheduler).toHaveYielded(['Oops!', 'Unmount B [1]']);
+      expect(ReactNoop.getChildren()).toEqual([]);
     });
 
     it('works with memo', () => {

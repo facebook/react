@@ -89,7 +89,7 @@ function publishEventForPlugin(
 ): boolean {
   invariant(
     !eventNameDispatchConfigs.hasOwnProperty(eventName),
-    'EventPluginHub: More than one plugin attempted to publish the same ' +
+    'EventPluginRegistry: More than one plugin attempted to publish the same ' +
       'event name, `%s`.',
     eventName,
   );
@@ -133,7 +133,7 @@ function publishRegistrationName(
 ): void {
   invariant(
     !registrationNameModules[registrationName],
-    'EventPluginHub: More than one plugin attempted to publish the same ' +
+    'EventPluginRegistry: More than one plugin attempted to publish the same ' +
       'registration name, `%s`.',
     registrationName,
   );
@@ -153,8 +153,6 @@ function publishRegistrationName(
 
 /**
  * Registers plugins so that they can extract and dispatch events.
- *
- * @see {EventPluginHub}
  */
 
 /**
@@ -193,7 +191,6 @@ export const possibleRegistrationNames = __DEV__ ? {} : (null: any);
  *
  * @param {array} InjectedEventPluginOrder
  * @internal
- * @see {EventPluginHub.injection.injectEventPluginOrder}
  */
 export function injectEventPluginOrder(
   injectedEventPluginOrder: EventPluginOrder,
@@ -209,14 +206,13 @@ export function injectEventPluginOrder(
 }
 
 /**
- * Injects plugins to be used by `EventPluginHub`. The plugin names must be
+ * Injects plugins to be used by plugin event system. The plugin names must be
  * in the ordering injected by `injectEventPluginOrder`.
  *
  * Plugins can be injected as part of page initialization or on-the-fly.
  *
  * @param {object} injectedNamesToPlugins Map from names to plugin modules.
  * @internal
- * @see {EventPluginHub.injection.injectEventPluginsByName}
  */
 export function injectEventPluginsByName(
   injectedNamesToPlugins: NamesToPlugins,

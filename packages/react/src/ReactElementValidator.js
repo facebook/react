@@ -473,11 +473,21 @@ export function createElementWithValidation(type, props, children) {
   return element;
 }
 
+let didWarnAboutDeprecatedCreateFactory = false;
+
 export function createFactoryWithValidation(type) {
   const validatedFactory = createElementWithValidation.bind(null, type);
   validatedFactory.type = type;
-  // Legacy hook: remove it
   if (__DEV__) {
+    if (!didWarnAboutDeprecatedCreateFactory) {
+      didWarnAboutDeprecatedCreateFactory = true;
+      console.warn(
+        'React.createFactory() is deprecated and will be removed in ' +
+          'a future major release. Consider using JSX ' +
+          'or use React.createElement() directly instead.',
+      );
+    }
+    // Legacy hook: remove it
     Object.defineProperty(validatedFactory, 'type', {
       enumerable: false,
       get: function() {

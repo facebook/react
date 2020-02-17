@@ -28,13 +28,6 @@ import {
   warnForStyleProps,
 } from './NativeMethodsMixinUtils';
 
-/**
- * This component defines the same methods as NativeMethodsMixin but without the
- * findNodeHandle wrapper. This wrapper is unnecessary for HostComponent views
- * and would also result in a circular require.js dependency (since
- * ReactNativeFiber depends on this component and NativeMethodsMixin depends on
- * ReactNativeFiber).
- */
 class ReactNativeFiberHostComponent {
   _children: Array<Instance | number>;
   _nativeTag: number;

@@ -216,9 +216,7 @@ function createPanelIfReactLoaded() {
               showTabBar: false,
               store,
               warnIfUnsupportedVersionDetected: true,
-              viewAttributeSourceFunction: isChrome
-                ? viewAttributeSourceFunction
-                : null,
+              viewAttributeSourceFunction,
               viewElementSourceFunction,
             }),
           );
@@ -273,7 +271,7 @@ function createPanelIfReactLoaded() {
         // When the user chooses a different node in the browser Elements tab,
         // copy it over to the hook object so that we can sync the selection.
         chrome.devtools.inspectedWindow.eval(
-          '(window.__REACT_DEVTOOLS_GLOBAL_HOOK__.$0 !== $0) ?' +
+          '(window.__REACT_DEVTOOLS_GLOBAL_HOOK__ && window.__REACT_DEVTOOLS_GLOBAL_HOOK__.$0 !== $0) ?' +
             '(window.__REACT_DEVTOOLS_GLOBAL_HOOK__.$0 = $0, true) :' +
             'false',
           (didSelectionChange, evalError) => {
@@ -357,11 +355,9 @@ function createPanelIfReactLoaded() {
 
         // It's easiest to recreate the DevTools panel (to clean up potential stale state).
         // We can revisit this in the future as a small optimization.
-        flushSync(() => {
-          root.unmount(() => {
-            initBridgeAndStore();
-          });
-        });
+        flushSync(() => root.unmount());
+
+        initBridgeAndStore();
       });
     },
   );

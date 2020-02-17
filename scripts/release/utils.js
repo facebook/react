@@ -92,7 +92,7 @@ const getBuildInfo = async () => {
   const buildNumber = process.env.CIRCLE_BUILD_NUM;
 
   // React version is stored explicitly, separately for DevTools support.
-  // See updateVersionsForCanary() below for more info.
+  // See updateVersionsForNext() below for more info.
   const packageJSON = await readJson(
     join(cwd, 'packages', 'react', 'package.json')
   );
@@ -193,12 +193,12 @@ const splitCommaParams = array => {
 // This method is used by both local Node release scripts and Circle CI bash scripts.
 // It updates version numbers in package JSONs (both the version field and dependencies),
 // As well as the embedded renderer version in "packages/shared/ReactVersion".
-// Canaries version numbers use the format of 0.0.0-<sha> to be easily recognized (e.g. 0.0.0-57239eac8).
+// Canaries version numbers use the format of 0.0.0-<sha> to be easily recognized (e.g. 0.0.0-01974a867).
 // A separate "React version" is used for the embedded renderer version to support DevTools,
 // since it needs to distinguish between different version ranges of React.
-// It is based on the version of React in the local package.json (e.g. 16.6.1-canary-57239eac8).
-// Both numbers will be replaced if the canary is promoted to a stable release.
-const updateVersionsForCanary = async (cwd, reactVersion, version) => {
+// It is based on the version of React in the local package.json (e.g. 16.12.0-01974a867).
+// Both numbers will be replaced if the "next" release is promoted to a stable release.
+const updateVersionsForNext = async (cwd, reactVersion, version) => {
   const packages = getPublicPackages(join(cwd, 'packages'));
   const packagesDir = join(cwd, 'packages');
 
@@ -234,7 +234,7 @@ const updateVersionsForCanary = async (cwd, reactVersion, version) => {
     packageJSON.version = version;
 
     // Also update inter-package dependencies.
-    // Canary releases always have exact version matches.
+    // Next releases always have exact version matches.
     // The promote script may later relax these (e.g. "^x.x.x") based on source package JSONs.
     const {dependencies, peerDependencies} = packageJSON;
     for (let j = 0; j < packages.length; j++) {
@@ -263,5 +263,5 @@ module.exports = {
   printDiff,
   splitCommaParams,
   theme,
-  updateVersionsForCanary,
+  updateVersionsForNext,
 };

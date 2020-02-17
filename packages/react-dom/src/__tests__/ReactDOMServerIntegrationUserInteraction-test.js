@@ -208,7 +208,7 @@ describe('ReactDOMServerIntegrationUserInteraction', () => {
         expect(e.checked).toBe(true);
 
         // simulate a user clicking.
-        e.dispatchEvent(new Event('click', {bubbles: true, cancelable: true}));
+        e.click();
 
         expect(changeCount).toBe(1);
         expect(e.checked).toBe(false);

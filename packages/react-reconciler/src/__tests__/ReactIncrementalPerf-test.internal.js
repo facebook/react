@@ -371,7 +371,7 @@ describe('ReactDebugFiberPerf', () => {
         'Using UNSAFE_componentWillUpdate in strict mode is not recommended',
         'Legacy context API has been detected within a strict-mode tree',
       ],
-      {withoutStack: true},
+      {withoutStack: 3},
     );
     ReactNoop.render(<AllLifecycles />);
     addComment('Update');

@@ -35,8 +35,6 @@ import ReactVersion from 'shared/ReactVersion';
 // Module provided by RN:
 import {UIManager} from 'react-native/Libraries/ReactPrivate/ReactNativePrivateInterface';
 
-import NativeMethodsMixin from './NativeMethodsMixin';
-import ReactNativeComponent from './ReactNativeComponent';
 import {getClosestInstanceFromNode} from './ReactNativeComponentTree';
 import {getInspectorDataForViewTag} from './ReactNativeFiberInspector';
 
@@ -164,8 +162,6 @@ function computeComponentStackForErrorReporting(reactTag: number): string {
 const roots = new Map();
 
 const ReactNativeRenderer: ReactNativeType = {
-  NativeComponent: ReactNativeComponent(findNodeHandle, findHostInstance),
-
   // This is needed for implementation details of TouchableNativeFeedback
   // Remove this once TouchableNativeFeedback doesn't use cloneElement
   findHostInstance_DEPRECATED,
@@ -235,8 +231,6 @@ const ReactNativeRenderer: ReactNativeType = {
   unstable_batchedUpdates: batchedUpdates,
 
   __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED: {
-    // Used as a mixin in many createClass-based components
-    NativeMethodsMixin: NativeMethodsMixin(findNodeHandle, findHostInstance),
     computeComponentStackForErrorReporting,
   },
 };

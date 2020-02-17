@@ -24,6 +24,50 @@
 'use strict';
 
 const esutils = require('esutils');
+const {
+  isModule,
+  addNamespace,
+  addNamed,
+  addDefault,
+} = require('@babel/helper-module-imports');
+
+// These are all the valid auto import types (under the config autoImport)
+// that a user can specific
+const IMPORT_TYPES = {
+  none: 'none', // default option. Will not import anything
+  require: 'require', // var _react = require("react");
+  namespace: 'namespace', // import * as _react from "react";
+  defaultExport: 'defaultExport', // import _default from "react";
+  namedExports: 'namedExports', // import { jsx } from "react";
+};
+
+const JSX_AUTO_IMPORT_ANNOTATION_REGEX = /\*?\s*@jsxAutoImport\s+([^\s]+)/;
+const JSX_IMPORT_SOURCE_ANNOTATION_REGEX = /\*?\s*@jsxImportSource\s+([^\s]+)/;
+
+// We want to use React.createElement, even in the case of
+// jsx, for <div {...props} key={key} /> to distinguish it
+// from <div key={key} {...props} />. This is an intermediary
+// step while we deprecate key spread from props. Afterwards,
+// we will remove createElement entirely
+function shouldUseCreateElement(path, types) {
+  const openingPath = path.get('openingElement');
+  const attributes = openingPath.node.attributes;
+
+  let seenPropsSpread = false;
+  for (let i = 0; i < attributes.length; i++) {
+    const attr = attributes[i];
+    if (
+      seenPropsSpread &&
+      types.isJSXAttribute(attr) &&
+      attr.name.name === 'key'
+    ) {
+      return true;
+    } else if (types.isJSXSpreadAttribute(attr)) {
+      seenPropsSpread = true;
+    }
+  }
+  return false;
+}
 
 function helper(babel, opts) {
   const {types: t} = babel;
@@ -52,7 +96,7 @@ You can turn on the 'throwIfNamespace' flag to bypass this warning.`,
   visitor.JSXElement = {
     exit(path, file) {
       let callExpr;
-      if (file.opts.useCreateElement || shouldUseCreateElement(path)) {
+      if (shouldUseCreateElement(path, t)) {
         callExpr = buildCreateElementCall(path, file);
       } else {
         callExpr = buildJSXElementCall(path, file);
@@ -71,12 +115,7 @@ You can turn on the 'throwIfNamespace' flag to bypass this warning.`,
           'Fragment tags are only supported in React 16 and up.',
         );
       }
-      let callExpr;
-      if (file.opts.useCreateElement) {
-        callExpr = buildCreateElementFragmentCall(path, file);
-      } else {
-        callExpr = buildJSXFragmentCall(path, file);
-      }
+      let callExpr = buildJSXFragmentCall(path, file);
 
       if (callExpr) {
         path.replaceWith(t.inherits(callExpr, path.node));
@@ -145,31 +184,6 @@ You can turn on the 'throwIfNamespace' flag to bypass this warning.`,
     }
 
     return t.inherits(t.objectProperty(node.name, value), node);
-  }
-
-  // We want to use React.createElement, even in the case of
-  // jsx, for <div {...props} key={key} /> to distinguish it
-  // from <div key={key} {...props} />. This is an intermediary
-  // step while we deprecate key spread from props. Afterwards,
-  // we will remove createElement entirely
-  function shouldUseCreateElement(path) {
-    const openingPath = path.get('openingElement');
-    const attributes = openingPath.node.attributes;
-
-    let seenPropsSpread = false;
-    for (let i = 0; i < attributes.length; i++) {
-      const attr = attributes[i];
-      if (
-        seenPropsSpread &&
-        t.isJSXAttribute(attr) &&
-        attr.name.name === 'key'
-      ) {
-        return true;
-      } else if (t.isJSXSpreadAttribute(attr)) {
-        seenPropsSpread = true;
-      }
-    }
-    return false;
   }
 
   // Builds JSX into:
@@ -262,6 +276,7 @@ You can turn on the 'throwIfNamespace' flag to bypass this warning.`,
     if (opts.post) {
       opts.post(state, file);
     }
+
     return (
       state.call ||
       t.callExpression(
@@ -561,38 +576,6 @@ You can turn on the 'throwIfNamespace' flag to bypass this warning.`,
 
     return attribs;
   }
-
-  function buildCreateElementFragmentCall(path, file) {
-    if (opts.filter && !opts.filter(path.node, file)) {
-      return;
-    }
-
-    const openingPath = path.get('openingElement');
-    openingPath.parent.children = t.react.buildChildren(openingPath.parent);
-
-    const args = [];
-    const tagName = null;
-    const tagExpr = file.get('jsxFragIdentifier')();
-
-    const state = {
-      tagExpr: tagExpr,
-      tagName: tagName,
-      args: args,
-    };
-
-    if (opts.pre) {
-      opts.pre(state, file);
-    }
-
-    // no attributes are allowed with <> syntax
-    args.push(t.nullLiteral(), ...path.node.children);
-
-    if (opts.post) {
-      opts.post(state, file);
-    }
-
-    return state.call || t.callExpression(state.oldCallee, args);
-  }
 }
 
 module.exports = function(babel) {
@@ -623,25 +606,183 @@ module.exports = function(babel) {
     },
   });
 
+  const createIdentifierName = (path, autoImport, name, importName) => {
+    if (autoImport === IMPORT_TYPES.none) {
+      return `React.${name}`;
+    } else if (autoImport === IMPORT_TYPES.namedExports) {
+      if (importName) {
+        const identifierName = `${importName[name]}`;
+        return identifierName;
+      }
+    } else {
+      return `${importName}.${name}`;
+    }
+  };
+
+  function getImportNames(parentPath, state) {
+    const imports = {};
+    parentPath.traverse({
+      JSXElement(path) {
+        if (shouldUseCreateElement(path, t)) {
+          imports.createElement = true;
+        } else if (path.node.children.length > 1) {
+          const importName = state.development ? 'jsxDEV' : 'jsxs';
+          imports[importName] = true;
+        } else {
+          const importName = state.development ? 'jsxDEV' : 'jsx';
+          imports[importName] = true;
+        }
+      },
+
+      JSXFragment(path) {
+        imports.Fragment = true;
+      },
+    });
+    return imports;
+  }
+
+  function hasJSX(parentPath) {
+    let fileHasJSX = false;
+    parentPath.traverse({
+      JSXElement(path) {
+        fileHasJSX = true;
+        path.stop();
+      },
+
+      JSXFragment(path) {
+        fileHasJSX = true;
+        path.stop();
+      },
+    });
+
+    return fileHasJSX;
+  }
+
+  function addAutoImports(path, state) {
+    if (state.autoImport === IMPORT_TYPES.none) {
+      return;
+    }
+
+    if (IMPORT_TYPES[state.autoImport] === undefined) {
+      throw path.buildCodeFrameError(
+        'autoImport must be one of the following: ' +
+          Object.keys(IMPORT_TYPES).join(', '),
+      );
+    }
+    if (state.autoImport === IMPORT_TYPES.require && isModule(path)) {
+      throw path.buildCodeFrameError(
+        'Babel `sourceType` must be set to `script` for autoImport ' +
+          'to use `require` syntax. See Babel `sourceType` for details.',
+      );
+    }
+    if (state.autoImport !== IMPORT_TYPES.require && !isModule(path)) {
+      throw path.buildCodeFrameError(
+        'Babel `sourceType` must be set to `module` for autoImport to use `' +
+          state.autoImport +
+          '` syntax. See Babel `sourceType` for details.',
+      );
+    }
+
+    // import {jsx} from "react";
+    // import {createElement} from "react";
+    if (state.autoImport === IMPORT_TYPES.namedExports) {
+      const imports = getImportNames(path, state);
+      const importMap = {};
+
+      Object.keys(imports).forEach(importName => {
+        importMap[importName] = addNamed(path, importName, state.source).name;
+      });
+
+      return importMap;
+    }
+
+    // add import to file and get the import name
+    let name;
+    if (state.autoImport === IMPORT_TYPES.require) {
+      // var _react = require("react");
+      name = addNamespace(path, state.source, {
+        importedInterop: 'uncompiled',
+      }).name;
+    } else if (state.autoImport === IMPORT_TYPES.namespace) {
+      // import * as _react from "react";
+      name = addNamespace(path, state.source).name;
+    } else if (state.autoImport === IMPORT_TYPES.defaultExport) {
+      // import _default from "react";
+      name = addDefault(path, state.source).name;
+    }
+
+    return name;
+  }
+
   visitor.Program = {
     enter(path, state) {
-      state.set(
-        'oldJSXIdentifier',
-        createIdentifierParser('React.createElement'),
-      );
-      state.set(
-        'jsxIdentifier',
-        createIdentifierParser(
-          state.opts.development ? 'React.jsxDEV' : 'React.jsx',
-        ),
-      );
-      state.set(
-        'jsxStaticIdentifier',
-        createIdentifierParser(
-          state.opts.development ? 'React.jsxDEV' : 'React.jsxs',
-        ),
-      );
-      state.set('jsxFragIdentifier', createIdentifierParser('React.Fragment'));
+      if (hasJSX(path)) {
+        let autoImport = state.opts.autoImport || IMPORT_TYPES.none;
+        let source = state.opts.importSource || 'react';
+        const {file} = state;
+
+        if (file.ast.comments) {
+          for (let i = 0; i < file.ast.comments.length; i++) {
+            const comment = file.ast.comments[i];
+            const jsxAutoImportMatches = JSX_AUTO_IMPORT_ANNOTATION_REGEX.exec(
+              comment.value,
+            );
+            if (jsxAutoImportMatches) {
+              autoImport = jsxAutoImportMatches[1];
+            }
+            const jsxImportSourceMatches = JSX_IMPORT_SOURCE_ANNOTATION_REGEX.exec(
+              comment.value,
+            );
+            if (jsxImportSourceMatches) {
+              source = jsxImportSourceMatches[1];
+            }
+          }
+        }
+
+        const importName = addAutoImports(path, {
+          ...state.opts,
+          autoImport,
+          source,
+        });
+
+        state.set(
+          'oldJSXIdentifier',
+          createIdentifierParser(
+            createIdentifierName(path, autoImport, 'createElement', importName),
+          ),
+        );
+
+        state.set(
+          'jsxIdentifier',
+          createIdentifierParser(
+            createIdentifierName(
+              path,
+              autoImport,
+              state.opts.development ? 'jsxDEV' : 'jsx',
+              importName,
+            ),
+          ),
+        );
+
+        state.set(
+          'jsxStaticIdentifier',
+          createIdentifierParser(
+            createIdentifierName(
+              path,
+              autoImport,
+              state.opts.development ? 'jsxDEV' : 'jsxs',
+              importName,
+            ),
+          ),
+        );
+
+        state.set(
+          'jsxFragIdentifier',
+          createIdentifierParser(
+            createIdentifierName(path, autoImport, 'Fragment', importName),
+          ),
+        );
+      }
     },
   };
 

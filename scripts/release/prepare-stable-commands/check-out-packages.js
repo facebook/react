@@ -28,7 +28,7 @@ const run = async ({cwd, local, packages, version}) => {
 
   const nodeModulesPath = join(cwd, 'build/node_modules');
 
-  // Checkout canary release from NPM for all local packages
+  // Checkout "next" release from NPM for all local packages
   for (let i = 0; i < packages.length; i++) {
     const packageName = packages[i];
 
@@ -55,6 +55,6 @@ const run = async ({cwd, local, packages, version}) => {
 module.exports = async params => {
   return logPromise(
     run(params),
-    theme`Checking out canary from NPM {version ${params.version}}`
+    theme`Checking out "next" from NPM {version ${params.version}}`
   );
 };

@@ -14,10 +14,11 @@ import type {ReactPriorityLevel} from './SchedulerWithReactIntegration';
 import type {Interaction} from 'scheduler/src/Tracing';
 import type {SuspenseConfig} from './ReactFiberSuspenseConfig';
 import type {SuspenseState} from './ReactFiberSuspenseComponent';
-import type {Hook} from './ReactFiberHooks';
+import type {Effect as HookEffect} from './ReactFiberHooks';
 
 import {
   warnAboutDeprecatedLifecycles,
+  deferPassiveEffectCleanupDuringUnmount,
   enableUserTimingAPI,
   enableSuspenseServerRenderer,
   replayFailedUnitOfWorkWithInvokeGuardedCallback,
@@ -141,7 +142,7 @@ import {
 } from './ReactFiberCommitWork';
 import {enqueueUpdate} from './ReactUpdateQueue';
 import {resetContextDependencies} from './ReactFiberNewContext';
-import {resetHooks, ContextOnlyDispatcher} from './ReactFiberHooks';
+import {resetHooksAfterThrow, ContextOnlyDispatcher} from './ReactFiberHooks';
 import {createCapturedValue} from './ReactCapturedValue';
 
 import {
@@ -257,6 +258,8 @@ let rootDoesHavePassiveEffects: boolean = false;
 let rootWithPendingPassiveEffects: FiberRoot | null = null;
 let pendingPassiveEffectsRenderPriority: ReactPriorityLevel = NoPriority;
 let pendingPassiveEffectsExpirationTime: ExpirationTime = NoWork;
+let pendingPassiveHookEffectsMount: Array<HookEffect | Fiber> = [];
+let pendingPassiveHookEffectsUnmount: Array<HookEffect | Fiber> = [];
 
 let rootsWithPendingDiscreteUpdates: Map<
   FiberRoot,
@@ -777,7 +780,6 @@ function finishConcurrentRender(
       if (expirationTime === lastSuspendedTime) {
         root.nextKnownPendingLevel = getRemainingExpirationTime(finishedWork);
       }
-      flushSuspensePriorityWarningInDEV();
 
       // We have an acceptable loading state. We need to figure out if we
       // should immediately commit it or wait a bit.
@@ -853,7 +855,6 @@ function finishConcurrentRender(
       if (expirationTime === lastSuspendedTime) {
         root.nextKnownPendingLevel = getRemainingExpirationTime(finishedWork);
       }
-      flushSuspensePriorityWarningInDEV();
 
       if (
         // do not delay if we're inside an act() scope
@@ -1049,7 +1050,7 @@ function performSyncWorkOnRoot(root) {
       stopFinishedWorkLoopTimer();
       root.finishedWork = (root.current.alternate: any);
       root.finishedExpirationTime = expirationTime;
-      finishSyncRender(root, workInProgressRootExitStatus, expirationTime);
+      finishSyncRender(root);
     }
 
     // Before exiting, make sure there's a callback scheduled for the next
@@ -1060,15 +1061,9 @@ function performSyncWorkOnRoot(root) {
   return null;
 }
 
-function finishSyncRender(root, exitStatus, expirationTime) {
+function finishSyncRender(root) {
   // Set this to null to indicate there's no in-progress render.
   workInProgressRoot = null;
-
-  if (__DEV__) {
-    if (exitStatus === RootSuspended || exitStatus === RootSuspendedWithDelay) {
-      flushSuspensePriorityWarningInDEV();
-    }
-  }
   commitRoot(root);
 }
 
@@ -1272,7 +1267,6 @@ function prepareFreshStack(root, expirationTime) {
 
   if (__DEV__) {
     ReactStrictModeWarnings.discardPendingWarnings();
-    componentsThatTriggeredHighPriSuspend = null;
   }
 }
 
@@ -1281,7 +1275,7 @@ function handleError(root, thrownValue) {
     try {
       // Reset module-level state that was set during the render phase.
       resetContextDependencies();
-      resetHooks();
+      resetHooksAfterThrow();
       resetCurrentDebugFiberInDEV();
 
       if (workInProgress === null || workInProgress.return === null) {
@@ -2176,6 +2170,43 @@ export function flushPassiveEffects() {
   }
 }
 
+export function enqueuePendingPassiveHookEffectMount(
+  fiber: Fiber,
+  effect: HookEffect,
+): void {
+  if (deferPassiveEffectCleanupDuringUnmount) {
+    pendingPassiveHookEffectsMount.push(effect, fiber);
+    if (!rootDoesHavePassiveEffects) {
+      rootDoesHavePassiveEffects = true;
+      scheduleCallback(NormalPriority, () => {
+        flushPassiveEffects();
+        return null;
+      });
+    }
+  }
+}
+
+export function enqueuePendingPassiveHookEffectUnmount(
+  fiber: Fiber,
+  effect: HookEffect,
+): void {
+  if (deferPassiveEffectCleanupDuringUnmount) {
+    pendingPassiveHookEffectsUnmount.push(effect, fiber);
+    if (!rootDoesHavePassiveEffects) {
+      rootDoesHavePassiveEffects = true;
+      scheduleCallback(NormalPriority, () => {
+        flushPassiveEffects();
+        return null;
+      });
+    }
+  }
+}
+
+function invokePassiveEffectCreate(effect: HookEffect): void {
+  const create = effect.create;
+  effect.destroy = create();
+}
+
 function flushPassiveEffectsImpl() {
   if (rootWithPendingPassiveEffects === null) {
     return false;
@@ -2193,32 +2224,96 @@ function flushPassiveEffectsImpl() {
   executionContext |= CommitContext;
   const prevInteractions = pushInteractions(root);
 
-  // Note: This currently assumes there are no passive effects on the root
-  // fiber, because the root is not part of its own effect list. This could
-  // change in the future.
-  let effect = root.current.firstEffect;
-  while (effect !== null) {
-    if (__DEV__) {
-      setCurrentDebugFiberInDEV(effect);
-      invokeGuardedCallback(null, commitPassiveHookEffects, null, effect);
-      if (hasCaughtError()) {
-        invariant(effect !== null, 'Should be working on an effect.');
-        const error = clearCaughtError();
-        captureCommitPhaseError(effect, error);
-      }
-      resetCurrentDebugFiberInDEV();
-    } else {
-      try {
-        commitPassiveHookEffects(effect);
-      } catch (error) {
-        invariant(effect !== null, 'Should be working on an effect.');
-        captureCommitPhaseError(effect, error);
+  if (deferPassiveEffectCleanupDuringUnmount) {
+    // It's important that ALL pending passive effect destroy functions are called
+    // before ANY passive effect create functions are called.
+    // Otherwise effects in sibling components might interfere with each other.
+    // e.g. a destroy function in one component may unintentionally override a ref
+    // value set by a create function in another component.
+    // Layout effects have the same constraint.
+
+    // First pass: Destroy stale passive effects.
+    let unmountEffects = pendingPassiveHookEffectsUnmount;
+    pendingPassiveHookEffectsUnmount = [];
+    for (let i = 0; i < unmountEffects.length; i += 2) {
+      const effect = ((unmountEffects[i]: any): HookEffect);
+      const fiber = ((unmountEffects[i + 1]: any): Fiber);
+      const destroy = effect.destroy;
+      effect.destroy = undefined;
+      if (typeof destroy === 'function') {
+        if (__DEV__) {
+          setCurrentDebugFiberInDEV(fiber);
+          invokeGuardedCallback(null, destroy, null);
+          if (hasCaughtError()) {
+            invariant(fiber !== null, 'Should be working on an effect.');
+            const error = clearCaughtError();
+            captureCommitPhaseError(fiber, error);
+          }
+          resetCurrentDebugFiberInDEV();
+        } else {
+          try {
+            destroy();
+          } catch (error) {
+            invariant(fiber !== null, 'Should be working on an effect.');
+            captureCommitPhaseError(fiber, error);
+          }
+        }
       }
     }
-    const nextNextEffect = effect.nextEffect;
-    // Remove nextEffect pointer to assist GC
-    effect.nextEffect = null;
-    effect = nextNextEffect;
+
+    // Second pass: Create new passive effects.
+    let mountEffects = pendingPassiveHookEffectsMount;
+    pendingPassiveHookEffectsMount = [];
+    for (let i = 0; i < mountEffects.length; i += 2) {
+      const effect = ((mountEffects[i]: any): HookEffect);
+      const fiber = ((mountEffects[i + 1]: any): Fiber);
+      if (__DEV__) {
+        setCurrentDebugFiberInDEV(fiber);
+        invokeGuardedCallback(null, invokePassiveEffectCreate, null, effect);
+        if (hasCaughtError()) {
+          invariant(fiber !== null, 'Should be working on an effect.');
+          const error = clearCaughtError();
+          captureCommitPhaseError(fiber, error);
+        }
+        resetCurrentDebugFiberInDEV();
+      } else {
+        try {
+          const create = effect.create;
+          effect.destroy = create();
+        } catch (error) {
+          invariant(fiber !== null, 'Should be working on an effect.');
+          captureCommitPhaseError(fiber, error);
+        }
+      }
+    }
+  } else {
+    // Note: This currently assumes there are no passive effects on the root fiber
+    // because the root is not part of its own effect list.
+    // This could change in the future.
+    let effect = root.current.firstEffect;
+    while (effect !== null) {
+      if (__DEV__) {
+        setCurrentDebugFiberInDEV(effect);
+        invokeGuardedCallback(null, commitPassiveHookEffects, null, effect);
+        if (hasCaughtError()) {
+          invariant(effect !== null, 'Should be working on an effect.');
+          const error = clearCaughtError();
+          captureCommitPhaseError(effect, error);
+        }
+        resetCurrentDebugFiberInDEV();
+      } else {
+        try {
+          commitPassiveHookEffects(effect);
+        } catch (error) {
+          invariant(effect !== null, 'Should be working on an effect.');
+          captureCommitPhaseError(effect, error);
+        }
+      }
+      const nextNextEffect = effect.nextEffect;
+      // Remove nextEffect pointer to assist GC
+      effect.nextEffect = null;
+      effect = nextNextEffect;
+    }
   }
 
   if (enableSchedulerTracing) {
@@ -2636,7 +2731,7 @@ if (__DEV__ && replayFailedUnitOfWorkWithInvokeGuardedCallback) {
       // Keep this code in sync with handleError; any changes here must have
       // corresponding changes there.
       resetContextDependencies();
-      resetHooks();
+      resetHooksAfterThrow();
       // Don't reset current debug fiber, since we're about to work on the
       // same fiber again.
 
@@ -2822,121 +2917,6 @@ export function warnIfUnmockedScheduler(fiber: Fiber) {
             'For example, with jest: \n' +
             "jest.mock('scheduler', () => require('scheduler/unstable_mock'));\n\n" +
             'For more info, visit https://fb.me/react-mock-scheduler',
-        );
-      }
-    }
-  }
-}
-
-let componentsThatTriggeredHighPriSuspend = null;
-export function checkForWrongSuspensePriorityInDEV(sourceFiber: Fiber) {
-  if (__DEV__) {
-    const currentPriorityLevel = getCurrentPriorityLevel();
-    if (
-      (sourceFiber.mode & ConcurrentMode) !== NoEffect &&
-      (currentPriorityLevel === UserBlockingPriority ||
-        currentPriorityLevel === ImmediatePriority)
-    ) {
-      let workInProgressNode = sourceFiber;
-      while (workInProgressNode !== null) {
-        // Add the component that triggered the suspense
-        const current = workInProgressNode.alternate;
-        if (current !== null) {
-          // TODO: warn component that triggers the high priority
-          // suspend is the HostRoot
-          switch (workInProgressNode.tag) {
-            case ClassComponent:
-              // Loop through the component's update queue and see whether the component
-              // has triggered any high priority updates
-              const updateQueue = current.updateQueue;
-              if (updateQueue !== null) {
-                let update = updateQueue.baseQueue;
-                while (update !== null) {
-                  const priorityLevel = update.priority;
-                  if (
-                    priorityLevel === UserBlockingPriority ||
-                    priorityLevel === ImmediatePriority
-                  ) {
-                    if (componentsThatTriggeredHighPriSuspend === null) {
-                      componentsThatTriggeredHighPriSuspend = new Set([
-                        getComponentName(workInProgressNode.type),
-                      ]);
-                    } else {
-                      componentsThatTriggeredHighPriSuspend.add(
-                        getComponentName(workInProgressNode.type),
-                      );
-                    }
-                    break;
-                  }
-                  update = update.next;
-                }
-              }
-              break;
-            case FunctionComponent:
-            case ForwardRef:
-            case SimpleMemoComponent:
-            case Chunk: {
-              let firstHook: null | Hook = current.memoizedState;
-              // TODO: This just checks the first Hook. Isn't it suppose to check all Hooks?
-              if (firstHook !== null && firstHook.baseQueue !== null) {
-                let update = firstHook.baseQueue;
-                // Loop through the functional component's memoized state to see whether
-                // the component has triggered any high pri updates
-                while (update !== null) {
-                  const priority = update.priority;
-                  if (
-                    priority === UserBlockingPriority ||
-                    priority === ImmediatePriority
-                  ) {
-                    if (componentsThatTriggeredHighPriSuspend === null) {
-                      componentsThatTriggeredHighPriSuspend = new Set([
-                        getComponentName(workInProgressNode.type),
-                      ]);
-                    } else {
-                      componentsThatTriggeredHighPriSuspend.add(
-                        getComponentName(workInProgressNode.type),
-                      );
-                    }
-                    break;
-                  }
-                  if (update.next === firstHook.baseQueue) {
-                    break;
-                  }
-                  update = update.next;
-                }
-              }
-              break;
-            }
-            default:
-              break;
-          }
-        }
-        workInProgressNode = workInProgressNode.return;
-      }
-    }
-  }
-}
-
-function flushSuspensePriorityWarningInDEV() {
-  if (__DEV__) {
-    if (componentsThatTriggeredHighPriSuspend !== null) {
-      const componentNames = [];
-      componentsThatTriggeredHighPriSuspend.forEach(name =>
-        componentNames.push(name),
-      );
-      componentsThatTriggeredHighPriSuspend = null;
-
-      if (componentNames.length > 0) {
-        console.error(
-          '%s triggered a user-blocking update that suspended.' +
-            '\n\n' +
-            'The fix is to split the update into multiple parts: a user-blocking ' +
-            'update to provide immediate feedback, and another update that ' +
-            'triggers the bulk of the changes.' +
-            '\n\n' +
-            'Refer to the documentation for useTransition to learn how ' +
-            'to implement this pattern.', // TODO: Add link to React docs with more information, once it exists
-          componentNames.sort().join(', '),
         );
       }
     }

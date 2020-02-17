@@ -104,6 +104,31 @@ const bundles = [
     externals: ['react', 'react-dom'],
   },
 
+  /******* React DOM - Testing *******/
+  {
+    moduleType: RENDERER,
+    bundleTypes: [
+      UMD_DEV,
+      UMD_PROD,
+      UMD_PROFILING,
+      NODE_DEV,
+      NODE_PROD,
+      NODE_PROFILING,
+    ],
+    entry: 'react-dom/testing',
+    global: 'ReactDOM',
+    externals: ['react'],
+  },
+
+  /******* React DOM - www - Testing *******/
+  {
+    moduleType: RENDERER,
+    bundleTypes: [FB_WWW_DEV, FB_WWW_PROD, FB_WWW_PROFILING],
+    entry: 'react-dom/testing',
+    global: 'ReactDOMTesting',
+    externals: ['react'],
+  },
+
   /* React DOM internals required for react-native-web (e.g., to shim native events from react-dom) */
   {
     bundleTypes: [
@@ -517,7 +542,7 @@ const bundles = [
     externals: [],
   },
 
-  /******* ESLint Plugin for Hooks (proposal) *******/
+  /******* ESLint Plugin for Hooks *******/
   {
     // TODO: it's awkward to create a bundle for this but if we don't, the package
     // won't get copied. We also can't create just DEV bundle because it contains a
@@ -575,21 +600,6 @@ const bundles = [
     moduleType: NON_FIBER_RENDERER,
     entry: 'react-interactions/events/context-menu',
     global: 'ReactEventsContextMenu',
-    externals: ['react'],
-  },
-
-  {
-    bundleTypes: [
-      UMD_DEV,
-      UMD_PROD,
-      NODE_DEV,
-      NODE_PROD,
-      FB_WWW_DEV,
-      FB_WWW_PROD,
-    ],
-    moduleType: NON_FIBER_RENDERER,
-    entry: 'react-interactions/events/drag',
-    global: 'ReactEventsDrag',
     externals: ['react'],
   },
 
@@ -684,36 +694,6 @@ const bundles = [
     moduleType: NON_FIBER_RENDERER,
     entry: 'react-interactions/events/press-legacy',
     global: 'ReactEventsPressLegacy',
-    externals: ['react'],
-  },
-
-  {
-    bundleTypes: [
-      UMD_DEV,
-      UMD_PROD,
-      NODE_DEV,
-      NODE_PROD,
-      FB_WWW_DEV,
-      FB_WWW_PROD,
-    ],
-    moduleType: NON_FIBER_RENDERER,
-    entry: 'react-interactions/events/scroll',
-    global: 'ReactEventsScroll',
-    externals: ['react'],
-  },
-
-  {
-    bundleTypes: [
-      UMD_DEV,
-      UMD_PROD,
-      NODE_DEV,
-      NODE_PROD,
-      FB_WWW_DEV,
-      FB_WWW_PROD,
-    ],
-    moduleType: NON_FIBER_RENDERER,
-    entry: 'react-interactions/events/swipe',
-    global: 'ReactEventsSwipe',
     externals: ['react'],
   },
 

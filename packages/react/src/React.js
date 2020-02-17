@@ -64,6 +64,7 @@ import {
   enableScopeAPI,
   exposeConcurrentModeAPIs,
   enableChunksAPI,
+  disableCreateFactory,
 } from 'shared/ReactFeatureFlags';
 const React = {
   Children: {
@@ -101,13 +102,16 @@ const React = {
 
   createElement: __DEV__ ? createElementWithValidation : createElement,
   cloneElement: __DEV__ ? cloneElementWithValidation : cloneElement,
-  createFactory: __DEV__ ? createFactoryWithValidation : createFactory,
   isValidElement: isValidElement,
 
   version: ReactVersion,
 
   __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED: ReactSharedInternals,
 };
+
+if (!disableCreateFactory) {
+  React.createFactory = __DEV__ ? createFactoryWithValidation : createFactory;
+}
 
 if (exposeConcurrentModeAPIs) {
   React.useTransition = useTransition;

@@ -171,7 +171,7 @@ function git(args) {
 
     for (let i = 0; i < baseArtifactsInfo.length; i++) {
       const info = baseArtifactsInfo[i];
-      if (info.path === 'home/circleci/project/build/bundle-sizes.json') {
+      if (info.path.endsWith('bundle-sizes.json')) {
         const resultsResponse = await fetch(info.url);
         previousBuildResults = await resultsResponse.json();
         break;

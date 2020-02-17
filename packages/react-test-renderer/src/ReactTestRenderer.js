@@ -19,6 +19,7 @@ import {
   flushSync,
   injectIntoDevTools,
   batchedUpdates,
+  act,
 } from 'react-reconciler/inline.test';
 import {findCurrentFiberUsingSlowPath} from 'react-reconciler/reflection';
 import {
@@ -42,7 +43,6 @@ import {
 } from 'shared/ReactWorkTags';
 import invariant from 'shared/invariant';
 import ReactVersion from 'shared/ReactVersion';
-import act from './ReactTestRendererAct';
 
 import {getPublicInstance} from './ReactTestHostConfig';
 import {ConcurrentRoot, LegacyRoot} from 'shared/ReactRootTags';
