@@ -10,7 +10,7 @@
 import {addUserTimingListener} from 'shared/ReactFeatureFlags';
 
 import ReactDOM from './ReactDOM';
-import {isEnabled} from '../events/ReactBrowserEventEmitter';
+import {isEnabled} from '../events/ReactDOMEventListener';
 import {getClosestInstanceFromNode} from './ReactDOMComponentTree';
 
 if (__EXPERIMENTAL__) {

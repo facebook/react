@@ -57,14 +57,11 @@ import {
   TOP_SUBMIT,
   TOP_TOGGLE,
 } from '../events/DOMTopLevelEventTypes';
-import {
-  listenTo,
-  trapBubbledEvent,
-  getListenerMapForElement,
-} from '../events/ReactBrowserEventEmitter';
+import {getListenerMapForElement} from '../events/DOMEventListenerMap';
 import {
   addResponderEventSystemEvent,
   removeActiveResponderEventSystemEvent,
+  trapBubbledEvent,
 } from '../events/ReactDOMEventListener.js';
 import {mediaEventTypes} from '../events/DOMTopLevelEventTypes';
 import {
@@ -90,6 +87,7 @@ import {
   enableDeprecatedFlareAPI,
   enableTrustedTypesIntegration,
 } from 'shared/ReactFeatureFlags';
+import {listenToEvent} from '../events/DOMEventPluginSystem';
 
 let didWarnInvalidHydration = false;
 let didWarnShadyDOM = false;
@@ -274,7 +272,7 @@ function ensureListeningTo(
   const doc = isDocumentOrFragment
     ? rootContainerElement
     : rootContainerElement.ownerDocument;
-  listenTo(registrationName, doc);
+  listenToEvent(registrationName, doc);
 }
 
 function getOwnerDocumentFromRootContainer(

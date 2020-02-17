@@ -32,10 +32,7 @@ import {
   attemptToDispatchEvent,
   addResponderEventSystemEvent,
 } from './ReactDOMEventListener';
-import {
-  getListenerMapForElement,
-  listenToTopLevel,
-} from './ReactBrowserEventEmitter';
+import {getListenerMapForElement} from './DOMEventListenerMap';
 import {
   getInstanceFromNode,
   getClosestInstanceFromNode,
@@ -120,6 +117,7 @@ import {
   TOP_BLUR,
 } from './DOMTopLevelEventTypes';
 import {IS_REPLAYED} from 'legacy-events/EventSystemFlags';
+import {listenToTopLevelEvent} from './DOMEventPluginSystem';
 
 type QueuedReplayableEvent = {|
   blockedOn: null | Container | SuspenseInstance,
@@ -217,7 +215,7 @@ function trapReplayableEvent(
   document: Document,
   listenerMap: Map<DOMTopLevelEventType | string, null | (any => void)>,
 ) {
-  listenToTopLevel(topLevelType, document, listenerMap);
+  listenToTopLevelEvent(topLevelType, document, listenerMap);
   if (enableDeprecatedFlareAPI) {
     // Trap events for the responder system.
     const topLevelTypeString = unsafeCastDOMTopLevelTypeToString(topLevelType);
