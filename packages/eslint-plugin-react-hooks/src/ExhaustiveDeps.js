@@ -715,9 +715,7 @@ export default {
           if (suggestUseCallback && fn.type === 'Variable') {
             suggest = [
               {
-                desc: `Wrap the '${
-                  fn.name.name
-                }' definition into its own useCallback() Hook.`,
+                desc: `Wrap the '${fn.name.name}' definition into its own useCallback() Hook.`,
                 fix(fixer) {
                   return [
                     // TODO: also add an import?
