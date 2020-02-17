@@ -116,7 +116,7 @@ if (__DEV__) {
     const type = element.type;
     const name = getComponentName(type);
     const ownerName = null;
-    return describeComponentFrame(name, source, ownerName);
+    return describeComponentFrame(name, source, ownerName, type);
   };
 
   pushCurrentDebugStack = function(stack: Array<Frame>) {

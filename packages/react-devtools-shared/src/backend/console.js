@@ -117,6 +117,7 @@ export function patch(): void {
                   name,
                   current._debugSource,
                   ownerName,
+                  current.type,
                 );
 
                 current = owner;

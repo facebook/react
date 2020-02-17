@@ -44,6 +44,7 @@ if (__DEV__) {
         name,
         currentlyValidatingElement._source,
         owner && getComponentName(owner.type),
+        currentlyValidatingElement.type,
       );
     }
 

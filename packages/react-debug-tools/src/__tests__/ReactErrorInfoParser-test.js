@@ -110,6 +110,7 @@ describe('Component stack trace parsing', () => {
             {
               name: 'Component',
               owner: null,
+              location: null,
               source: {fileName: fileNames[fileName], lineNumber: i},
             },
           ],
@@ -149,11 +150,13 @@ describe('Component stack trace parsing', () => {
         {
           name: 'Component',
           owner: __DEV__ ? {name: 'Owner'} : null,
+          location: null,
           source: null,
         },
         {
           name: 'Owner',
           owner: null,
+          location: null,
           source: null,
         },
       ],
@@ -195,6 +198,7 @@ describe('Component stack trace parsing', () => {
         {
           name: 'Unknown',
           owner: null,
+          location: null,
           source: __DEV__
             ? {
                 fileName: 'ReactErrorInfoParser-test.js',
@@ -205,6 +209,7 @@ describe('Component stack trace parsing', () => {
         {
           name: 'ErrorBoundary',
           owner: null,
+          location: null,
           source: __DEV__
             ? {
                 fileName: 'ReactErrorInfoParser-test.js',
@@ -252,6 +257,7 @@ describe('Component stack trace parsing', () => {
         {
           name: 'Component',
           owner: null,
+          location: null,
           source: __DEV__
             ? {
                 fileName: 'ReactErrorInfoParser-test.js',
@@ -262,6 +268,7 @@ describe('Component stack trace parsing', () => {
         {
           name: 'ErrorBoundary',
           owner: null,
+          location: null,
           source: __DEV__
             ? {
                 fileName: 'ReactErrorInfoParser-test.js',
@@ -270,6 +277,84 @@ describe('Component stack trace parsing', () => {
             : null,
         },
       ],
+    });
+  });
+
+  describe('Hermes-specific behavior', () => {
+    let origHermesInternal;
+    const FAKE_FUNCTION_LOCATION = Object.freeze({
+      fileName: 'foo',
+      lineNumber: 42,
+      columnNumber: 1,
+      isNative: false,
+    });
+    beforeEach(() => {
+      origHermesInternal = global.HermesInternal;
+      global.HermesInternal = {
+        getFunctionLocation: () => FAKE_FUNCTION_LOCATION,
+      };
+    });
+    afterEach(() => {
+      global.HermesInternal = origHermesInternal;
+    });
+
+    it('should parse component location alongside element source', () => {
+      let parsedErrorInfo;
+
+      class ErrorBoundary extends React.Component {
+        componentDidCatch(error, errorInfo) {
+          parsedErrorInfo = parseErrorInfo(errorInfo);
+        }
+
+        render() {
+          return <>{this.props.children}</>;
+        }
+      }
+
+      class Component extends React.Component {
+        componentDidMount() {
+          throw new Error();
+        }
+
+        render() {
+          return <div />;
+        }
+      }
+
+      const container = document.createElement('div');
+      ReactDOM.render(
+        <ErrorBoundary>
+          <Component />
+        </ErrorBoundary>,
+        container,
+      );
+
+      expect(parsedErrorInfo).toEqual({
+        componentStack: [
+          {
+            name: 'Component',
+            owner: null,
+            location: {hermes: FAKE_FUNCTION_LOCATION},
+            source: __DEV__
+              ? {
+                  fileName: 'ReactErrorInfoParser-test.js',
+                  lineNumber: expect.any(Number),
+                }
+              : null,
+          },
+          {
+            name: 'ErrorBoundary',
+            owner: null,
+            location: {hermes: FAKE_FUNCTION_LOCATION},
+            source: __DEV__
+              ? {
+                  fileName: 'ReactErrorInfoParser-test.js',
+                  lineNumber: expect.any(Number),
+                }
+              : null,
+          },
+        ],
+      });
     });
   });
 });

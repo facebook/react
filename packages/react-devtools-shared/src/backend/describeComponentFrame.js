@@ -12,12 +12,16 @@
 //
 // It has been modified slightly to add a zero width space as commented below.
 
+// FIXME: This import doesn't work.
+import getComponentLocation from 'shared/getComponentLocation';
+
 const BEFORE_SLASH_RE = /^(.*)[\\/]/;
 
 export default function describeComponentFrame(
   name: null | string,
   source: any,
   ownerName: null | string,
+  type: Function,
 ) {
   let sourceInfo = '';
   if (source) {
@@ -44,5 +48,10 @@ export default function describeComponentFrame(
   } else if (ownerName) {
     sourceInfo = ' (created by ' + ownerName + ')';
   }
-  return '\n    in ' + (name || 'Unknown') + sourceInfo;
+  let extraData = '';
+  const componentLocation = getComponentLocation(type);
+  if (componentLocation) {
+    extraData = ' ' + JSON.stringify({location: componentLocation});
+  }
+  return '\n    in ' + (name || 'Unknown') + extraData + sourceInfo;
 }

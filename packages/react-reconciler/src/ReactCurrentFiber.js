@@ -40,7 +40,7 @@ function describeFiber(fiber: Fiber): string {
       if (owner) {
         ownerName = getComponentName(owner.type);
       }
-      return describeComponentFrame(name, source, ownerName);
+      return describeComponentFrame(name, source, ownerName, fiber.type);
   }
 }
 

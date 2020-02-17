@@ -7,12 +7,13 @@
  * @flow
  */
 
-const FRAME_RE = /\n {4}in (.+?)(?: \(created by (.+?)\)| \(at (.*)\:([0-9]+?)\))?$/gm;
+const FRAME_RE = /\n {4}in (.+?)( \{.*\})?(?: \(created by (.+?)\)| \(at (.*)\:([0-9]+?)\))?$/gm;
 
 type DescribedFiber = {
   +name: string,
   +source: ?{+fileName: string, +lineNumber: number, ...},
   +owner: ?{+name: string, ...},
+  +location: mixed,
   ...
 };
 
@@ -30,7 +31,15 @@ export function parseErrorInfo({
   const result = {componentStack: []};
   let match;
   while ((match = FRAME_RE.exec(componentStack))) {
-    const [, name, ownerName, sourceFileName, sourceLineNumber] = match;
+    const [
+      ,
+      name,
+      extraDataJson,
+      ownerName,
+      sourceFileName,
+      sourceLineNumber,
+    ] = match;
+    const extraData = extraDataJson ? JSON.parse(extraDataJson) : null;
     result.componentStack.push({
       name,
       owner: ownerName != null ? {name: ownerName} : null,
@@ -40,6 +49,10 @@ export function parseErrorInfo({
               fileName: normalizeFileName(sourceFileName),
               lineNumber: Number.parseInt(sourceLineNumber, 10),
             }
+          : null,
+      location:
+        extraData != null && 'location' in extraData
+          ? extraData.location
           : null,
     });
   }

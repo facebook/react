@@ -376,6 +376,7 @@ describe('console', () => {
             lineNumber: 42,
           },
           owner: null,
+          location: null,
         },
         {
           name: 'Parent',
@@ -384,8 +385,75 @@ describe('console', () => {
             lineNumber: expect.any(Number),
           },
           owner: null,
+          location: null,
         },
       ],
+    });
+  });
+
+  describe('Hermes-specific behavior', () => {
+    let origHermesInternal;
+    const FAKE_FUNCTION_LOCATION = Object.freeze({
+      fileName: 'foo',
+      lineNumber: 42,
+      columnNumber: 1,
+      isNative: false,
+    });
+    beforeEach(() => {
+      origHermesInternal = global.HermesInternal;
+      global.HermesInternal = {
+        getFunctionLocation: () => FAKE_FUNCTION_LOCATION,
+      };
+    });
+    afterEach(() => {
+      global.HermesInternal = origHermesInternal;
+    });
+
+    it('should include component location alongside element source', () => {
+      const Intermediate = ({children}) => children;
+      const Parent = () => (
+        <Intermediate>
+          <Child
+            __source={{fileName: 'path/to/child/index.js', lineNumber: 42}}
+          />
+        </Intermediate>
+      );
+      const Child = () => {
+        fakeConsole.error('error');
+        return null;
+      };
+
+      act(() => ReactDOM.render(<Parent />, document.createElement('div')));
+
+      expect(mockError).toHaveBeenCalledTimes(1);
+      expect(mockError.mock.calls[0]).toHaveLength(2);
+      expect(mockError.mock.calls[0][0]).toBe('error');
+      expect(
+        parseErrorInfo({
+          componentStack: mockError.mock.calls[0][1],
+        }),
+      ).toEqual({
+        componentStack: [
+          {
+            name: 'Child',
+            source: {
+              fileName: 'child/index.js',
+              lineNumber: 42,
+            },
+            owner: null,
+            location: {hermes: FAKE_FUNCTION_LOCATION},
+          },
+          {
+            name: 'Parent',
+            source: {
+              fileName: 'console-test.js',
+              lineNumber: expect.any(Number),
+            },
+            owner: null,
+            location: {hermes: FAKE_FUNCTION_LOCATION},
+          },
+        ],
+      });
     });
   });
 });

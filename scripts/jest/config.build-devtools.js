@@ -43,6 +43,9 @@ packages.forEach(name => {
   ] = `<rootDir>/build/node_modules/${name}/$1`;
 });
 
+// Shared isn't a built package; it's a special case.
+moduleNameMapper['^shared/([^/]+)$'] = '<rootDir>/packages/shared/$1';
+
 module.exports = Object.assign({}, baseConfig, {
   // Redirect imports to the compiled bundles
   moduleNameMapper,
