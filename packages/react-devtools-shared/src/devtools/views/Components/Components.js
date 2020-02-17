@@ -103,9 +103,10 @@ function ComponentResizer({children}): {|children: Function|} {
     if (componentsWrapperRef.current === null) {
       return RESIZE_DIRECTIONS.HORIZONTAL;
     }
+    const VERTICAL_MODE_MAX_WIDTH: number = 600;
     const {width} = componentsWrapperRef.current.getBoundingClientRect();
 
-    return width > 600
+    return width > VERTICAL_MODE_MAX_WIDTH
       ? RESIZE_DIRECTIONS.HORIZONTAL
       : RESIZE_DIRECTIONS.VERTICAL;
   }, [componentsWrapperRef]);
@@ -141,27 +142,26 @@ function ComponentResizer({children}): {|children: Function|} {
         resizeDirection === RESIZE_DIRECTIONS.HORIZONTAL
           ? e.clientX - left
           : e.clientY - top;
+      const BOUNDARY_PADDING: number = 40;
       const boundary: {|
         min: number,
         max: number,
       |} = {
-        min: 40,
+        min: BOUNDARY_PADDING,
         max:
           resizeDirection === RESIZE_DIRECTIONS.HORIZONTAL
-            ? width - 40
-            : height - 40,
+            ? width - BOUNDARY_PADDING
+            : height - BOUNDARY_PADDING,
       };
-      const mousePositionInBounds: boolean =
+      const isMousePositionInBounds: boolean =
         currentMousePosition > boundary.min &&
         currentMousePosition < boundary.max;
 
-      if (mousePositionInBounds) {
+      if (isMousePositionInBounds) {
+        const resizedElementDimension: number =
+          resizeDirection === RESIZE_DIRECTIONS.HORIZONTAL ? width : height;
         const updatedFlexBasisValue: number =
-          (currentMousePosition /
-            (resizeDirection === RESIZE_DIRECTIONS.HORIZONTAL
-              ? width
-              : height)) *
-          100;
+          (currentMousePosition / resizedElementDimension) * 100;
 
         resizeElementRef.current.style.flexBasis = `${updatedFlexBasisValue}%`;
 
