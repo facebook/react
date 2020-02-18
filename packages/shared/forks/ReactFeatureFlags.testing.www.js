@@ -48,6 +48,7 @@ export const disableUnstableRenderSubtreeIntoContainer = __EXPERIMENTAL__;
 export const warnUnstableRenderSubtreeIntoContainer = false;
 export const disableUnstableCreatePortal = __EXPERIMENTAL__;
 export const deferPassiveEffectCleanupDuringUnmount = false;
+export const runAllPassiveEffectDestroysBeforeCreates = false;
 export const isTestEnvironment = true;
 
 // Only used in www builds.
