@@ -16,6 +16,7 @@ let ReactFeatureFlags;
 let ReactDOM;
 let FocusWithinResponder;
 let useFocusWithin;
+let Scheduler;
 
 const initializeModules = hasPointerEvents => {
   setPointerEvent(hasPointerEvents);
@@ -27,6 +28,7 @@ const initializeModules = hasPointerEvents => {
   FocusWithinResponder = require('react-interactions/events/focus')
     .FocusWithinResponder;
   useFocusWithin = require('react-interactions/events/focus').useFocusWithin;
+  Scheduler = require('scheduler');
 };
 
 const forcePointerEvents = true;
@@ -336,6 +338,68 @@ describe.each(table)('FocusWithin responder', hasPointerEvents => {
         expect.objectContaining({isTargetAttached: false}),
       );
     });
+
+    it.experimental(
+      'is called after a focused suspended element is hidden',
+      () => {
+        const Suspense = React.Suspense;
+        let suspend = false;
+        let resolve;
+        let promise = new Promise(resolvePromise => (resolve = resolvePromise));
+
+        function Child() {
+          if (suspend) {
+            throw promise;
+          } else {
+            return <input ref={innerRef} />;
+          }
+        }
+
+        const Component = ({show}) => {
+          const listener = useFocusWithin({
+            onBeforeBlurWithin,
+            onBlurWithin,
+          });
+
+          return (
+            <div DEPRECATED_flareListeners={listener}>
+              <Suspense fallback="Loading...">
+                <Child />
+              </Suspense>
+            </div>
+          );
+        };
+
+        const container2 = document.createElement('div');
+        document.body.appendChild(container2);
+
+        let root = ReactDOM.createRoot(container2);
+        root.render(<Component />);
+        Scheduler.unstable_flushAll();
+        jest.runAllTimers();
+        expect(container2.innerHTML).toBe('<div><input></div>');
+
+        const inner = innerRef.current;
+        const target = createEventTarget(inner);
+        target.keydown({key: 'Tab'});
+        target.focus();
+        expect(onBeforeBlurWithin).toHaveBeenCalledTimes(0);
+        expect(onBlurWithin).toHaveBeenCalledTimes(0);
+
+        suspend = true;
+        root.render(<Component />);
+        Scheduler.unstable_flushAll();
+        jest.runAllTimers();
+        expect(container2.innerHTML).toBe(
+          '<div><input style="display: none;">Loading...</div>',
+        );
+        expect(onBeforeBlurWithin).toHaveBeenCalledTimes(1);
+        expect(onBlurWithin).toHaveBeenCalledTimes(1);
+        resolve();
+
+        document.body.removeChild(container2);
+      },
+    );
   });
 
   it('expect displayName to show up for event component', () => {
