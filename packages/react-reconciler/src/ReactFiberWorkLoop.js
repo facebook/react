@@ -18,7 +18,7 @@ import type {Effect as HookEffect} from './ReactFiberHooks';
 
 import {
   warnAboutDeprecatedLifecycles,
-  deferPassiveEffectCleanupDuringUnmount,
+  runAllPassiveEffectDestroysBeforeCreates,
   enableUserTimingAPI,
   enableSuspenseServerRenderer,
   replayFailedUnitOfWorkWithInvokeGuardedCallback,
@@ -2174,7 +2174,7 @@ export function enqueuePendingPassiveHookEffectMount(
   fiber: Fiber,
   effect: HookEffect,
 ): void {
-  if (deferPassiveEffectCleanupDuringUnmount) {
+  if (runAllPassiveEffectDestroysBeforeCreates) {
     pendingPassiveHookEffectsMount.push(effect, fiber);
     if (!rootDoesHavePassiveEffects) {
       rootDoesHavePassiveEffects = true;
@@ -2190,7 +2190,7 @@ export function enqueuePendingPassiveHookEffectUnmount(
   fiber: Fiber,
   effect: HookEffect,
 ): void {
-  if (deferPassiveEffectCleanupDuringUnmount) {
+  if (runAllPassiveEffectDestroysBeforeCreates) {
     pendingPassiveHookEffectsUnmount.push(effect, fiber);
     if (!rootDoesHavePassiveEffects) {
       rootDoesHavePassiveEffects = true;
@@ -2224,7 +2224,7 @@ function flushPassiveEffectsImpl() {
   executionContext |= CommitContext;
   const prevInteractions = pushInteractions(root);
 
-  if (deferPassiveEffectCleanupDuringUnmount) {
+  if (runAllPassiveEffectDestroysBeforeCreates) {
     // It's important that ALL pending passive effect destroy functions are called
     // before ANY passive effect create functions are called.
     // Otherwise effects in sibling components might interfere with each other.
