@@ -3,15 +3,19 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "build": "cross-env NODE_ENV=production yarn run build:chrome && yarn run build:firefox",
-    "build:dev": "cross-env NODE_ENV=development yarn run build:chrome && yarn run build:firefox",
+    "build": "cross-env NODE_ENV=production yarn run build:chrome && yarn run build:firefox && yarn run build:edge",
+    "build:dev": "cross-env NODE_ENV=development yarn run build:chrome && yarn run build:firefox && yarn run build:edge",
     "build:chrome": "cross-env NODE_ENV=production node ./chrome/build",
     "build:chrome:crx": "cross-env NODE_ENV=production node ./chrome/build --crx",
     "build:chrome:dev": "cross-env NODE_ENV=development node ./chrome/build",
     "build:firefox": "cross-env NODE_ENV=production node ./firefox/build",
     "build:firefox:dev": "cross-env NODE_ENV=development node ./firefox/build",
+    "build:edge": "cross-env NODE_ENV=production node ./edge/build",
+    "build:edge:crx": "cross-env NODE_ENV=production node ./edge/build --crx",
+    "build:edge:dev": "cross-env NODE_ENV=development node ./edge/build",
     "test:chrome": "node ./chrome/test",
-    "test:firefox": "node ./firefox/test"
+    "test:firefox": "node ./firefox/test",
+    "test:edge": "node ./edge/test"
   },
   "devDependencies": {
     "@babel/core": "^7.1.6",
@@ -37,6 +41,7 @@
     "web-ext": "^3.0.0",
     "webpack": "^4.41.2",
     "webpack-cli": "^3.3.10",
-    "webpack-dev-server": "^3.3.1"
+    "webpack-dev-server": "^3.3.1",
+    "windows-edge": "^1.0.1"
   }
 }
