@@ -17,6 +17,7 @@ export const {
   enableTrustedTypesIntegration,
   deferPassiveEffectCleanupDuringUnmount,
   warnAboutShorthandPropertyCollision,
+  disableSchedulerTimeoutBasedOnReactExpirationTime,
 } = require('ReactFeatureFlags');
 
 // On WWW, __EXPERIMENTAL__ is used for a new modern build.
@@ -39,7 +40,6 @@ export const warnAboutDeprecatedLifecycles = true;
 export const disableLegacyContext = __EXPERIMENTAL__;
 export const warnAboutStringRefs = false;
 export const warnAboutDefaultPropsOnFunctionComponents = false;
-export const disableSchedulerTimeoutBasedOnReactExpirationTime = false;
 
 export const enableTrainModelFix = true;
 
