@@ -598,7 +598,7 @@ function instanceContainsElem(instance: Instance, element: HTMLElement) {
 
 export function hideInstance(instance: Instance): void {
   // Ensure we trigger `onBeforeBlur` if the active focused elment
-  // is ether the instance of a child of the instance. We need
+  // is ether the instance of a child or the instance. We need
   // to traverse the Fiber tree here rather than use node.contains()
   // as the child node might be inside a Portal.
   if (enableDeprecatedFlareAPI && selectionInformation) {
