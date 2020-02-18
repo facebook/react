@@ -533,6 +533,13 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
           newChildren: Array<Instance | TextInstance>,
         ): void {
           container.pendingChildren = newChildren;
+          if (
+            newChildren.length === 1 &&
+            newChildren[0].text === 'Error when completing root'
+          ) {
+            // Trigger an error for testing purposes
+            throw Error('Error when completing root');
+          }
         },
 
         replaceContainerChildren(
