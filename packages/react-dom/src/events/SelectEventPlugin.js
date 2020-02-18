@@ -22,11 +22,11 @@ import {
   TOP_MOUSE_UP,
   TOP_SELECTION_CHANGE,
 } from './DOMTopLevelEventTypes';
-import {isListeningToAllDependencies} from './ReactBrowserEventEmitter';
 import getActiveElement from '../client/getActiveElement';
 import {getNodeFromInstance} from '../client/ReactDOMComponentTree';
 import {hasSelectionCapabilities} from '../client/ReactInputSelection';
 import {DOCUMENT_NODE} from '../shared/HTMLNodeType';
+import {isListeningToAllDependencies} from './DOMEventPluginSystem';
 
 const skipSelectionChangeEvent =
   canUseDOM && 'documentMode' in document && document.documentMode <= 11;

@@ -14,7 +14,8 @@ let EventPluginRegistry;
 let React;
 let ReactDOM;
 let ReactDOMComponentTree;
-let ReactBrowserEventEmitter;
+let DOMEventPluginSystem;
+let ReactDOMEventListener;
 let ReactTestUtils;
 
 let idCallOrder;
@@ -52,18 +53,21 @@ function registerSimpleTestHandler() {
   return getListener(CHILD, ON_CLICK_KEY);
 }
 
+// We should probably remove this file at some point, it's just full of
+// internal API usage. ReactBrowserEventEmitter was refactored out in
+// #18056 too. The majority of this code lives in DOMEventPluginSystem.
 describe('ReactBrowserEventEmitter', () => {
   beforeEach(() => {
     jest.resetModules();
     LISTENER.mockClear();
 
-    // TODO: can we express this test with only public API?
     EventPluginGetListener = require('legacy-events/getListener').default;
     EventPluginRegistry = require('legacy-events/EventPluginRegistry');
     React = require('react');
     ReactDOM = require('react-dom');
     ReactDOMComponentTree = require('../client/ReactDOMComponentTree');
-    ReactBrowserEventEmitter = require('../events/ReactBrowserEventEmitter');
+    DOMEventPluginSystem = require('../events/DOMEventPluginSystem');
+    ReactDOMEventListener = require('../events/ReactDOMEventListener');
     ReactTestUtils = require('react-dom/test-utils');
 
     container = document.createElement('div');
@@ -177,12 +181,12 @@ describe('ReactBrowserEventEmitter', () => {
     expect(LISTENER).toHaveBeenCalledTimes(1);
   });
 
-  it('should not invoke handlers if ReactBrowserEventEmitter is disabled', () => {
+  it('should not invoke handlers if ReactDOMEventListener is disabled', () => {
     registerSimpleTestHandler();
-    ReactBrowserEventEmitter.setEnabled(false);
+    ReactDOMEventListener.setEnabled(false);
     CHILD.click();
     expect(LISTENER).toHaveBeenCalledTimes(0);
-    ReactBrowserEventEmitter.setEnabled(true);
+    ReactDOMEventListener.setEnabled(true);
     CHILD.click();
     expect(LISTENER).toHaveBeenCalledTimes(1);
   });
@@ -346,15 +350,15 @@ describe('ReactBrowserEventEmitter', () => {
 
   it('should listen to events only once', () => {
     spyOnDevAndProd(EventTarget.prototype, 'addEventListener');
-    ReactBrowserEventEmitter.listenTo(ON_CLICK_KEY, document);
-    ReactBrowserEventEmitter.listenTo(ON_CLICK_KEY, document);
+    DOMEventPluginSystem.listenToEvent(ON_CLICK_KEY, document);
+    DOMEventPluginSystem.listenToEvent(ON_CLICK_KEY, document);
     expect(EventTarget.prototype.addEventListener).toHaveBeenCalledTimes(1);
   });
 
   it('should work with event plugins without dependencies', () => {
     spyOnDevAndProd(EventTarget.prototype, 'addEventListener');
 
-    ReactBrowserEventEmitter.listenTo(ON_CLICK_KEY, document);
+    DOMEventPluginSystem.listenToEvent(ON_CLICK_KEY, document);
 
     expect(EventTarget.prototype.addEventListener.calls.argsFor(0)[0]).toBe(
       'click',
@@ -364,7 +368,7 @@ describe('ReactBrowserEventEmitter', () => {
   it('should work with event plugins with dependencies', () => {
     spyOnDevAndProd(EventTarget.prototype, 'addEventListener');
 
-    ReactBrowserEventEmitter.listenTo(ON_CHANGE_KEY, document);
+    DOMEventPluginSystem.listenToEvent(ON_CHANGE_KEY, document);
 
     const setEventListeners = [];
     const listenCalls = EventTarget.prototype.addEventListener.calls.allArgs();
