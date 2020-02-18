@@ -2885,11 +2885,68 @@ function remountFiber(
   }
 }
 
+function reifyWorkInProgress(current: Fiber) {
+  invariant(
+    current.reify === true,
+    'reifyWorkInProgress was called on a fiber that is not mared for reification',
+  );
+
+  let parent = current.return;
+
+  if (parent.child === null) {
+    return;
+  }
+
+  console.log('reifying child fibers of', fiberName(parent));
+
+  let currentChild = parent.child;
+  // currentChild.return = workInProgress;
+  // currentChild.reify = true;
+  let newChild = createWorkInProgress(
+    currentChild,
+    currentChild.pendingProps,
+    currentChild.expirationTime,
+  );
+  parent.child = newChild;
+
+  newChild.return = parent;
+
+  while (currentChild.sibling !== null) {
+    currentChild = currentChild.sibling;
+    newChild = newChild.sibling = createWorkInProgress(
+      currentChild,
+      currentChild.pendingProps,
+      currentChild.expirationTime,
+    );
+    newChild.return = parent;
+    // currentChild.return = workInProgress;
+    // currentChild.reify = true;
+  }
+  newChild.sibling = null;
+
+  return current.alternate;
+}
+
+function fiberName(fiber) {
+  if (fiber.tag === 3) return 'HostRoot';
+  if (fiber.tag === 6) return 'HostText';
+  if (fiber.tag === 10) return 'ContextProvider';
+  return typeof fiber.type === 'function' ? fiber.type.name : fiber.elementType;
+}
+
 function beginWork(
   current: Fiber | null,
   workInProgress: Fiber,
   renderExpirationTime: ExpirationTime,
 ): Fiber | null {
+  console.log(
+    'beginWork',
+    fiberName(workInProgress),
+    workInProgress.tag,
+    current && current.tag,
+    workInProgress.reify,
+    current && current.reify,
+  );
   const updateExpirationTime = workInProgress.expirationTime;
 
   if (__DEV__) {
@@ -2908,6 +2965,14 @@ function beginWork(
         ),
       );
     }
+  }
+
+  if (workInProgress.reify === true) {
+    console.log(
+      'workInProgress.reify true, if we are going to do work we need to reify first',
+    );
+    current = workInProgress;
+    workInProgress = reifyWorkInProgress(current);
   }
 
   if (current !== null) {

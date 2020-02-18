@@ -633,11 +633,33 @@ function cutOffTailIfNeeded(
   }
 }
 
+function fiberName(fiber) {
+  if (fiber.tag === 3) return 'HostRoot';
+  if (fiber.tag === 6) return 'HostText';
+  if (fiber.tag === 10) return 'ContextProvider';
+  return typeof fiber.type === 'function' ? fiber.type.name : fiber.elementType;
+}
+
 function completeWork(
   current: Fiber | null,
   workInProgress: Fiber,
   renderExpirationTime: ExpirationTime,
 ): Fiber | null {
+  console.log(
+    'completeWork',
+    fiberName(workInProgress),
+    workInProgress.tag,
+    current && current.tag,
+    workInProgress.reify,
+    current && current.reify,
+  );
+
+  // reset reify state. it would have been dealt with already if it needed to by by now
+  workInProgress.reify = false;
+  if (current !== null) {
+    current.reify = false;
+  }
+
   const newProps = workInProgress.pendingProps;
 
   switch (workInProgress.tag) {
