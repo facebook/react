@@ -131,14 +131,7 @@ const bundles = [
 
   /* React DOM internals required for react-native-web (e.g., to shim native events from react-dom) */
   {
-    bundleTypes: [
-      UMD_DEV,
-      UMD_PROD,
-      NODE_DEV,
-      NODE_PROD,
-      FB_WWW_DEV,
-      FB_WWW_PROD,
-    ],
+    bundleTypes: [UMD_DEV, UMD_PROD, NODE_DEV, NODE_PROD],
     moduleType: RENDERER_UTILS,
     entry: 'react-dom/unstable-native-dependencies',
     global: 'ReactDOMUnstableNativeDependencies',
@@ -188,7 +181,7 @@ const bundles = [
     externals: ['react', 'react-dom/server'],
   },
   {
-    bundleTypes: [NODE_DEV, NODE_PROD, FB_WWW_DEV, FB_WWW_PROD],
+    bundleTypes: [NODE_DEV, NODE_PROD],
     moduleType: RENDERER,
     entry: 'react-dom/unstable-fizz.node',
     global: 'ReactDOMFizzServer',
@@ -204,7 +197,7 @@ const bundles = [
     externals: ['react', 'react-dom/server'],
   },
   {
-    bundleTypes: [NODE_DEV, NODE_PROD, FB_WWW_DEV, FB_WWW_PROD],
+    bundleTypes: [NODE_DEV, NODE_PROD],
     moduleType: RENDERER,
     entry: 'react-flight-dom-webpack/server.node',
     global: 'ReactFlightDOMServer',
@@ -213,14 +206,7 @@ const bundles = [
 
   /******* React DOM Flight Client Webpack *******/
   {
-    bundleTypes: [
-      NODE_DEV,
-      NODE_PROD,
-      UMD_DEV,
-      UMD_PROD,
-      FB_WWW_DEV,
-      FB_WWW_PROD,
-    ],
+    bundleTypes: [NODE_DEV, NODE_PROD, UMD_DEV, UMD_PROD],
     moduleType: RENDERER,
     entry: 'react-flight-dom-webpack',
     global: 'ReactFlightDOMClient',
@@ -535,7 +521,7 @@ const bundles = [
 
   /******* Jest React (experimental) *******/
   {
-    bundleTypes: [NODE_DEV, NODE_PROD, FB_WWW_DEV, FB_WWW_PROD],
+    bundleTypes: [NODE_DEV, NODE_PROD],
     moduleType: ISOMORPHIC,
     entry: 'jest-react',
     global: 'JestReact',
