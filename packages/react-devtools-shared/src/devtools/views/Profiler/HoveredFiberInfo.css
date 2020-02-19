@@ -13,13 +13,9 @@
   overflow-y: auto;
 }
 
-.WhatChanged {
-  margin-bottom: 1rem;
-}
-
 .Component {
   flex: 1;
-  color: var(--color-component-name);
+  font-weight: bold;
   font-family: var(--font-family-monospace);
   font-size: var(--font-size-monospace-normal);
   white-space: nowrap;
@@ -32,28 +28,11 @@
   margin-bottom: 0.5rem;
 }
 
-.CurrentCommit,
-.Commit {
+.CurrentCommit {
   display: block;
   width: 100%;
   text-align: left;
   background: none;
   border: none;
   padding: 0.25rem 0.5rem;
-  color: var(--color-text);
-}
-
-.Commit:focus,
-.Commit:hover {
-  outline: none;
-  background-color: var(--color-background-hover);
-}
-
-.CurrentCommit {
-  background-color: var(--color-background-selected);
-  color: var(--color-text-selected);
-}
-
-.CurrentCommit:focus {
-  outline: none;
 }

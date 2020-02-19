@@ -7,23 +7,33 @@
  * @flow
  */
 
-import React, {forwardRef, useCallback, useContext, useMemo} from 'react';
+import React, {
+  forwardRef,
+  useCallback,
+  useContext,
+  useMemo,
+  useState,
+} from 'react';
 import AutoSizer from 'react-virtualized-auto-sizer';
 import {FixedSizeList} from 'react-window';
 import {ProfilerContext} from './ProfilerContext';
 import NoCommitData from './NoCommitData';
 import CommitFlamegraphListItem from './CommitFlamegraphListItem';
+import HoveredFiberInfo from './HoveredFiberInfo';
 import {scale} from './utils';
 import {StoreContext} from '../context';
 import {SettingsContext} from '../Settings/SettingsContext';
+import Tooltip from '../Components/Tooltip';
 
 import styles from './CommitFlamegraph.css';
 
+import type {TooltipFiberData} from './HoveredFiberInfo';
 import type {ChartData, ChartNode} from './FlamegraphChartBuilder';
 import type {CommitTree} from './types';
 
 export type ItemData = {|
   chartData: ChartData,
+  hoverFiber: (fiberData: TooltipFiberData | null) => void,
   scaleX: (value: number, fallbackValue: number) => number,
   selectedChartNode: ChartNode | null,
   selectedChartNodeIndex: number,
@@ -91,6 +101,7 @@ type Props = {|
 |};
 
 function CommitFlamegraph({chartData, commitTree, height, width}: Props) {
+  const [hoveredFiberData, hoverFiber] = useState<number | null>(null);
   const {lineHeight} = useContext(SettingsContext);
   const {selectFiber, selectedFiberID} = useContext(ProfilerContext);
 
@@ -118,6 +129,7 @@ function CommitFlamegraph({chartData, commitTree, height, width}: Props) {
   const itemData = useMemo<ItemData>(
     () => ({
       chartData,
+      hoverFiber,
       scaleX: scale(
         0,
         selectedChartNode !== null
@@ -131,19 +143,37 @@ function CommitFlamegraph({chartData, commitTree, height, width}: Props) {
       selectFiber,
       width,
     }),
-    [chartData, selectedChartNode, selectedChartNodeIndex, selectFiber, width],
+    [
+      chartData,
+      hoverFiber,
+      selectedChartNode,
+      selectedChartNodeIndex,
+      selectFiber,
+      width,
+    ],
+  );
+
+  // Tooltip used to show summary of fiber info on hover
+  const tooltipLabel = useMemo(
+    () =>
+      hoveredFiberData !== null ? (
+        <HoveredFiberInfo fiberData={hoveredFiberData} />
+      ) : null,
+    [hoveredFiberData],
   );
 
   return (
-    <FixedSizeList
-      height={height}
-      innerElementType={InnerElementType}
-      itemCount={chartData.depth}
-      itemData={itemData}
-      itemSize={lineHeight}
-      width={width}>
-      {CommitFlamegraphListItem}
-    </FixedSizeList>
+    <Tooltip label={tooltipLabel}>
+      <FixedSizeList
+        height={height}
+        innerElementType={InnerElementType}
+        itemCount={chartData.depth}
+        itemData={itemData}
+        itemSize={lineHeight}
+        width={width}>
+        {CommitFlamegraphListItem}
+      </FixedSizeList>
+    </Tooltip>
   );
 }
 
