@@ -130,3 +130,6 @@ export const warnUnstableRenderSubtreeIntoContainer = false;
 
 // Disables ReactDOM.unstable_createPortal
 export const disableUnstableCreatePortal = false;
+
+// Modern event system where events get registered at roots
+export const enableModernEventSystem = false;

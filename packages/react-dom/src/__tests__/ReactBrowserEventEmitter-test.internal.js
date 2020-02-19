@@ -14,7 +14,7 @@ let EventPluginRegistry;
 let React;
 let ReactDOM;
 let ReactDOMComponentTree;
-let DOMEventPluginSystem;
+let listenToEvent;
 let ReactDOMEventListener;
 let ReactTestUtils;
 
@@ -54,8 +54,7 @@ function registerSimpleTestHandler() {
 }
 
 // We should probably remove this file at some point, it's just full of
-// internal API usage. ReactBrowserEventEmitter was refactored out in
-// #18056 too. The majority of this code lives in DOMEventPluginSystem.
+// internal API usage.
 describe('ReactBrowserEventEmitter', () => {
   beforeEach(() => {
     jest.resetModules();
@@ -66,7 +65,8 @@ describe('ReactBrowserEventEmitter', () => {
     React = require('react');
     ReactDOM = require('react-dom');
     ReactDOMComponentTree = require('../client/ReactDOMComponentTree');
-    DOMEventPluginSystem = require('../events/DOMEventPluginSystem');
+    listenToEvent = require('../events/DOMLegacyEventPluginSystem')
+      .legacyListenToEvent;
     ReactDOMEventListener = require('../events/ReactDOMEventListener');
     ReactTestUtils = require('react-dom/test-utils');
 
@@ -350,15 +350,15 @@ describe('ReactBrowserEventEmitter', () => {
 
   it('should listen to events only once', () => {
     spyOnDevAndProd(EventTarget.prototype, 'addEventListener');
-    DOMEventPluginSystem.listenToEvent(ON_CLICK_KEY, document);
-    DOMEventPluginSystem.listenToEvent(ON_CLICK_KEY, document);
+    listenToEvent(ON_CLICK_KEY, document);
+    listenToEvent(ON_CLICK_KEY, document);
     expect(EventTarget.prototype.addEventListener).toHaveBeenCalledTimes(1);
   });
 
   it('should work with event plugins without dependencies', () => {
     spyOnDevAndProd(EventTarget.prototype, 'addEventListener');
 
-    DOMEventPluginSystem.listenToEvent(ON_CLICK_KEY, document);
+    listenToEvent(ON_CLICK_KEY, document);
 
     expect(EventTarget.prototype.addEventListener.calls.argsFor(0)[0]).toBe(
       'click',
@@ -368,7 +368,7 @@ describe('ReactBrowserEventEmitter', () => {
   it('should work with event plugins with dependencies', () => {
     spyOnDevAndProd(EventTarget.prototype, 'addEventListener');
 
-    DOMEventPluginSystem.listenToEvent(ON_CHANGE_KEY, document);
+    listenToEvent(ON_CHANGE_KEY, document);
 
     const setEventListeners = [];
     const listenCalls = EventTarget.prototype.addEventListener.calls.allArgs();

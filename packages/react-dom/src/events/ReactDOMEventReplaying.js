@@ -117,7 +117,7 @@ import {
   TOP_BLUR,
 } from './DOMTopLevelEventTypes';
 import {IS_REPLAYED} from 'legacy-events/EventSystemFlags';
-import {listenToTopLevelEvent} from './DOMEventPluginSystem';
+import {listenToTopLevelEvent} from './DOMLegacyEventPluginSystem';
 
 type QueuedReplayableEvent = {|
   blockedOn: null | Container | SuspenseInstance,
