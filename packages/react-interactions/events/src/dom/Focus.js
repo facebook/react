@@ -36,7 +36,7 @@ type FocusState = {
   isFocused: boolean,
   isFocusVisible: boolean,
   pointerType: PointerType,
-  ...
+  addedRootEvents?: boolean,
 };
 
 type FocusProps = {
@@ -416,6 +416,7 @@ const focusResponderImpl = {
       isFocused: false,
       isFocusVisible: false,
       pointerType: '',
+      addedRootEvents: false,
     };
   },
   onMount() {
@@ -622,7 +623,10 @@ const focusWithinResponderImpl = {
             onBeforeBlurWithin,
             DiscreteEvent,
           );
-          context.addRootEventTypes(rootEventTypes);
+          if (!state.addedRootEvents) {
+            state.addedRootEvents = true;
+            context.addRootEventTypes(rootEventTypes);
+          }
         } else {
           // We want to propagate to next focusWithin responder
           // if this responder doesn't handle beforeblur
@@ -660,7 +664,10 @@ const focusWithinResponderImpl = {
       if (detachedTarget !== null && detachedTarget === event.target) {
         dispatchBlurWithinEvents(context, event, props, state);
         state.detachedTarget = null;
-        context.removeRootEventTypes(rootEventTypes);
+        if (state.addedRootEvents) {
+          state.addedRootEvents = false;
+          context.removeRootEventTypes(rootEventTypes);
+        }
       }
     }
   },
