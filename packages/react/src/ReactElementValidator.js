@@ -21,6 +21,7 @@ import {
   REACT_FRAGMENT_TYPE,
   REACT_ELEMENT_TYPE,
 } from 'shared/ReactSymbols';
+import {warnAboutSpreadingKeyToJSX} from 'shared/ReactFeatureFlags';
 import checkPropTypes from 'prop-types/checkPropTypes';
 
 import ReactCurrentOwner from './ReactCurrentOwner';
@@ -365,13 +366,16 @@ export function jsxWithValidation(
     }
   }
 
-  if (hasOwnProperty.call(props, 'key')) {
-    if (__DEV__) {
-      console.error(
-        'React.jsx: Spreading a key to JSX is a deprecated pattern. ' +
-          'Explicitly pass a key after spreading props in your JSX call. ' +
-          'E.g. <ComponentName {...props} key={key} />',
-      );
+  if (__DEV__) {
+    if (warnAboutSpreadingKeyToJSX) {
+      if (hasOwnProperty.call(props, 'key')) {
+        console.error(
+          'React.jsx: Spreading a key to JSX is a deprecated pattern. ' +
+            'Explicitly pass a key after spreading props in your JSX call. ' +
+            'E.g. <%s {...props} key={key} />',
+          getComponentName(type) || 'ComponentName',
+        );
+      }
     }
   }
 

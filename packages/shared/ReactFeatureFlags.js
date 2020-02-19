@@ -48,6 +48,8 @@ export const disableJavaScriptURLs = false;
 // Control this behavior with a flag to support 16.6 minor releases in the meanwhile.
 export const exposeConcurrentModeAPIs = __EXPERIMENTAL__;
 
+// Warns when a combination of updates on a dom can cause a style declaration
+// that clashes with a previous one https://github.com/facebook/react/pull/14181
 export const warnAboutShorthandPropertyCollision = true;
 
 // Experimental React Flare event system and event components support.
@@ -106,7 +108,13 @@ export const runAllPassiveEffectDestroysBeforeCreates = false;
 // WARNING This flag only has an affect if used with runAllPassiveEffectDestroysBeforeCreates.
 export const deferPassiveEffectCleanupDuringUnmount = false;
 
+// Use this flag to generate "testing" builds, that include APIs like act()
+// and extra warnings/errors
 export const isTestEnvironment = false;
+
+// Enables a warning when trying to spread a 'key' to an element;
+// a deprecated pattern we want to get rid of in the future
+export const warnAboutSpreadingKeyToJSX = false;
 
 // --------------------------
 // Future APIs to be deprecated
