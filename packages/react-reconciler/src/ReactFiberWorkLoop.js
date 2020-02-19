@@ -1160,17 +1160,18 @@ export function batchedEventUpdates<A, R>(fn: A => R, a: A): R {
   }
 }
 
-export function discreteUpdates<A, B, C, R>(
+export function discreteUpdates<A, B, C, D, R>(
   fn: (A, B, C) => R,
   a: A,
   b: B,
   c: C,
+  d: D,
 ): R {
   const prevExecutionContext = executionContext;
   executionContext |= DiscreteEventContext;
   try {
     // Should this
-    return runWithPriority(UserBlockingPriority, fn.bind(null, a, b, c));
+    return runWithPriority(UserBlockingPriority, fn.bind(null, a, b, c, d));
   } finally {
     executionContext = prevExecutionContext;
     if (executionContext === NoContext) {
