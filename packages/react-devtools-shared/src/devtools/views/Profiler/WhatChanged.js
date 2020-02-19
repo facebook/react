@@ -11,15 +11,13 @@ import React, {useContext} from 'react';
 import {ProfilerContext} from '../Profiler/ProfilerContext';
 import {StoreContext} from '../context';
 
-import styles from './ProfilerWhatChanged.css';
+import styles from './WhatChanged.css';
 
-type ProfilerWhatChangedProps = {|
+type Props = {|
   fiberID: number,
 |};
 
-export default function ProfilerWhatChanged({
-  fiberID,
-}: ProfilerWhatChangedProps) {
+export default function WhatChanged({fiberID}: Props) {
   const {profilerStore} = useContext(StoreContext);
   const {rootID, selectedCommitIndex} = useContext(ProfilerContext);
 
