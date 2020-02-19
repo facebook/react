@@ -40,15 +40,16 @@ function CommitRankedListItem({data, index, style}: Props) {
   const handleClick = useCallback(
     event => {
       event.stopPropagation();
-      selectFiber(node.id, node.name);
+      const {id, name} = node;
+      selectFiber(id, name);
     },
     [node, selectFiber],
   );
 
-  const handleMouseEnter = useCallback(() => {
+  const handleMouseEnter = () => {
     const {id, name} = node;
     hoverFiber({id, name});
-  }, [node]);
+  };
 
   const handleMouseLeave = () => {
     hoverFiber(null);
