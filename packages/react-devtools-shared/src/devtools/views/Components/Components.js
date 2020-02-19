@@ -111,73 +111,64 @@ function ComponentResizer({children}): {|children: Function|} {
       : RESIZE_DIRECTIONS.VERTICAL;
   }, [componentsWrapperRef]);
 
-  const onResizeStart = useCallback(() => {
-    setIsResizing(true);
-  }, [setIsResizing]);
+  const onResizeStart = () => setIsResizing(true);
+  const onResizeEnd = () => setIsResizing(false);
+  const onResize = e => {
+    if (
+      !isResizing ||
+      componentsWrapperRef.current === null ||
+      resizeElementRef.current === null
+    ) {
+      return;
+    }
 
-  const onResizeEnd = useCallback(() => {
-    setIsResizing(false);
-  }, [setIsResizing]);
+    e.preventDefault();
 
-  const onResize = useCallback(
-    e => {
-      if (
-        !isResizing ||
-        componentsWrapperRef.current === null ||
-        resizeElementRef.current === null
-      ) {
-        return;
-      }
-
-      e.preventDefault();
-
-      const {
-        height,
-        width,
-        left,
-        top,
-      } = componentsWrapperRef.current.getBoundingClientRect();
-      const resizeDirection = getResizeDirection();
-      const currentMousePosition: number =
+    const {
+      height,
+      width,
+      left,
+      top,
+    } = componentsWrapperRef.current.getBoundingClientRect();
+    const resizeDirection = getResizeDirection();
+    const currentMousePosition: number =
+      resizeDirection === RESIZE_DIRECTIONS.HORIZONTAL
+        ? e.clientX - left
+        : e.clientY - top;
+    const BOUNDARY_PADDING: number = 40;
+    const boundary: {|
+      min: number,
+      max: number,
+    |} = {
+      min: BOUNDARY_PADDING,
+      max:
         resizeDirection === RESIZE_DIRECTIONS.HORIZONTAL
-          ? e.clientX - left
-          : e.clientY - top;
-      const BOUNDARY_PADDING: number = 40;
-      const boundary: {|
-        min: number,
-        max: number,
-      |} = {
-        min: BOUNDARY_PADDING,
-        max:
-          resizeDirection === RESIZE_DIRECTIONS.HORIZONTAL
-            ? width - BOUNDARY_PADDING
-            : height - BOUNDARY_PADDING,
-      };
-      const isMousePositionInBounds: boolean =
-        currentMousePosition > boundary.min &&
-        currentMousePosition < boundary.max;
+          ? width - BOUNDARY_PADDING
+          : height - BOUNDARY_PADDING,
+    };
+    const isMousePositionInBounds: boolean =
+      currentMousePosition > boundary.min &&
+      currentMousePosition < boundary.max;
 
-      if (isMousePositionInBounds) {
-        const resizedElementDimension: number =
-          resizeDirection === RESIZE_DIRECTIONS.HORIZONTAL ? width : height;
-        const updatedFlexBasisValue: number =
-          (currentMousePosition / resizedElementDimension) * 100;
+    if (isMousePositionInBounds) {
+      const resizedElementDimension: number =
+        resizeDirection === RESIZE_DIRECTIONS.HORIZONTAL ? width : height;
+      const updatedFlexBasisValue: number =
+        (currentMousePosition / resizedElementDimension) * 100;
 
-        resizeElementRef.current.style.flexBasis = `${updatedFlexBasisValue}%`;
+      resizeElementRef.current.style.flexBasis = `${updatedFlexBasisValue}%`;
 
-        clearTimeout(updateLocalStorageTimeoutId.current);
+      clearTimeout(updateLocalStorageTimeoutId.current);
 
-        updateLocalStorageTimeoutId.current = setTimeout(() => {
-          if (resizeDirection === RESIZE_DIRECTIONS.HORIZONTAL) {
-            setHorizontalPercentage(updatedFlexBasisValue);
-          } else {
-            setVerticalPercentage(updatedFlexBasisValue);
-          }
-        }, 500);
-      }
-    },
-    [componentsWrapperRef, resizeElementRef, isResizing],
-  );
+      updateLocalStorageTimeoutId.current = setTimeout(() => {
+        if (resizeDirection === RESIZE_DIRECTIONS.HORIZONTAL) {
+          setHorizontalPercentage(updatedFlexBasisValue);
+        } else {
+          setVerticalPercentage(updatedFlexBasisValue);
+        }
+      }, 500);
+    }
+  };
 
   useLayoutEffect(() => {
     if (componentsWrapperRef.current !== null) {
