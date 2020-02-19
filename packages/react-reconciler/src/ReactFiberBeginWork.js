@@ -600,6 +600,13 @@ function markRef(current: Fiber | null, workInProgress: Fiber) {
   }
 }
 
+function preemptiveHooksBailout() {
+  console.log(
+    '#### preemptiveHooksBailout checking to see if context selection or states have changed',
+  );
+  return false;
+}
+
 function updateFunctionComponent(
   current,
   workInProgress,
@@ -624,71 +631,110 @@ function updateFunctionComponent(
     }
   }
 
-  let context;
-  if (!disableLegacyContext) {
-    const unmaskedContext = getUnmaskedContext(workInProgress, Component, true);
-    context = getMaskedContext(workInProgress, unmaskedContext);
-  }
-
-  let nextChildren;
-  prepareToReadContext(workInProgress, renderExpirationTime);
-  if (__DEV__) {
-    ReactCurrentOwner.current = workInProgress;
-    setCurrentPhase('render');
-    nextChildren = renderWithHooks(
-      current,
-      workInProgress,
-      Component,
-      nextProps,
-      context,
-      renderExpirationTime,
-    );
-    if (
-      debugRenderPhaseSideEffectsForStrictMode &&
-      workInProgress.mode & StrictMode
-    ) {
-      // Only double-render components with Hooks
-      if (workInProgress.memoizedState !== null) {
-        nextChildren = renderWithHooks(
-          current,
-          workInProgress,
-          Component,
-          nextProps,
-          context,
-          renderExpirationTime,
-        );
+  try {
+    if (workInProgress.reify) {
+      console.log(
+        '???? updateFunctionComponent called with a current fiber for workInProgress',
+        current.memoizedProps,
+      );
+      if (preemptiveHooksBailout()) {
+        console.log('hooks have not changed, we can bail out of update');
       }
+      let parent = workInProgress.return;
+      workInProgress = createWorkInProgress(
+        current,
+        current.memoizedProps,
+        NoWork,
+      );
+      workInProgress.return = parent;
     }
-    setCurrentPhase(null);
-  } else {
-    nextChildren = renderWithHooks(
+
+    console.log(
+      'workInProgress & current',
+      fiberName(workInProgress),
+      fiberName(current),
+    );
+
+    let context;
+    if (!disableLegacyContext) {
+      const unmaskedContext = getUnmaskedContext(
+        workInProgress,
+        Component,
+        true,
+      );
+      context = getMaskedContext(workInProgress, unmaskedContext);
+    }
+
+    let nextChildren;
+    prepareToReadContext(workInProgress, renderExpirationTime);
+    if (__DEV__) {
+      ReactCurrentOwner.current = workInProgress;
+      setCurrentPhase('render');
+      nextChildren = renderWithHooks(
+        current,
+        workInProgress,
+        Component,
+        nextProps,
+        context,
+        renderExpirationTime,
+      );
+      if (
+        debugRenderPhaseSideEffectsForStrictMode &&
+        workInProgress.mode & StrictMode
+      ) {
+        // Only double-render components with Hooks
+        if (workInProgress.memoizedState !== null) {
+          nextChildren = renderWithHooks(
+            current,
+            workInProgress,
+            Component,
+            nextProps,
+            context,
+            renderExpirationTime,
+          );
+        }
+      }
+      setCurrentPhase(null);
+    } else {
+      nextChildren = renderWithHooks(
+        current,
+        workInProgress,
+        Component,
+        nextProps,
+        context,
+        renderExpirationTime,
+      );
+    }
+
+    if (current !== null && !didReceiveUpdate) {
+      bailoutHooks(current, workInProgress, renderExpirationTime);
+      return bailoutOnAlreadyFinishedWork(
+        current,
+        workInProgress,
+        renderExpirationTime,
+      );
+    }
+
+    if (current.reify === true) {
+      console.log(
+        'function component is updating so reifying the work in progress tree',
+      );
+      reifyWorkInProgress(current, workInProgress);
+    }
+
+    // React DevTools reads this flag.
+    workInProgress.effectTag |= PerformedWork;
+    reconcileChildren(
       current,
       workInProgress,
-      Component,
-      nextProps,
-      context,
+      nextChildren,
       renderExpirationTime,
     );
+    return workInProgress.child;
+  } catch (e) {
+    console.log(e);
+    throw e;
   }
-
-  if (current !== null && !didReceiveUpdate) {
-    bailoutHooks(current, workInProgress, renderExpirationTime);
-    return bailoutOnAlreadyFinishedWork(
-      current,
-      workInProgress,
-      renderExpirationTime,
-    );
-  }
-
-  // React DevTools reads this flag.
-  workInProgress.effectTag |= PerformedWork;
-  reconcileChildren(
-    current,
-    workInProgress,
-    nextChildren,
-    renderExpirationTime,
-  );
-  return workInProgress.child;
 }
 
 function updateChunk(
@@ -2885,53 +2931,127 @@ function remountFiber(
   }
 }
 
-function reifyWorkInProgress(current: Fiber) {
+function reifyWorkInProgress(current: Fiber, workInProgress: Fiber | null) {
+  const originalCurrent = current;
+
   invariant(
     current.reify === true,
     'reifyWorkInProgress was called on a fiber that is not mared for reification',
   );
 
-  let parent = current.return;
-
-  if (parent.child === null) {
-    return;
-  }
-
-  console.log('reifying child fibers of', fiberName(parent));
-
-  let currentChild = parent.child;
-  // currentChild.return = workInProgress;
-  // currentChild.reify = true;
-  let newChild = createWorkInProgress(
-    currentChild,
-    currentChild.pendingProps,
-    currentChild.expirationTime,
-  );
-  parent.child = newChild;
-
-  newChild.return = parent;
-
-  while (currentChild.sibling !== null) {
-    currentChild = currentChild.sibling;
-    newChild = newChild.sibling = createWorkInProgress(
-      currentChild,
-      currentChild.pendingProps,
-      currentChild.expirationTime,
+  let parent, parentWorkInProgress;
+  parentWorkInProgress = parent = current.return;
+  if (parent.reify === true) {
+    parentWorkInProgress = createWorkInProgress(
+      parent,
+      parent.memoizedProps,
+      parent.expirationTime,
     );
-    newChild.return = parent;
-    // currentChild.return = workInProgress;
-    // currentChild.reify = true;
+    parentWorkInProgress.return = parent.return;
   }
-  newChild.sibling = null;
 
-  return current.alternate;
+  try {
+    do {
+      // clone parent WIP's child. use the current's workInProgress if the currentChild is
+      // the current fiber
+      let currentChild = parentWorkInProgress.child;
+      console.log(
+        ')))) reifying',
+        fiberName(parentWorkInProgress),
+        'starting with',
+        fiberName(currentChild),
+      );
+      let newChild;
+      if (workInProgress !== null && currentChild === current) {
+        console.log('using workInProgress of', fiberName(workInProgress));
+        newChild = workInProgress;
+      } else {
+        newChild = createWorkInProgress(
+          currentChild,
+          currentChild.pendingProps,
+          currentChild.expirationTime,
+        );
+      }
+      parentWorkInProgress.child = newChild;
+      currentChild.reify = false;
+
+      newChild.return = parentWorkInProgress;
+
+      // for each sibling of the parent's workInProgress create a workInProgress.
+      // use current's workInProgress if the sibiling is the current fiber
+      while (currentChild.sibling !== null) {
+        currentChild = currentChild.sibling;
+        console.log(
+          ')))) reifying',
+          fiberName(parentWorkInProgress),
+          'now with',
+          fiberName(currentChild),
+        );
+        if (workInProgress !== null && currentChild === current) {
+          console.log(
+            'using ephemeralWorkInProgress of',
+            fiberName(workInProgress),
+          );
+          newChild = newChild.sibling = workInProgress;
+        } else {
+          newChild = newChild.sibling = createWorkInProgress(
+            currentChild,
+            currentChild.pendingProps,
+            currentChild.expirationTime,
+          );
+        }
+        newChild.return = parentWorkInProgress;
+        currentChild.reify = false;
+      }
+      newChild.sibling = null;
+
+      console.log(
+        'workInProgress pointing at',
+        fiberName(workInProgress.return),
+      );
+      console.log('current pointing at', fiberName(current.return));
+      console.log('parent pointing at', fiberName(parent.return));
+      console.log(
+        'parentWorkInProgress pointing at',
+        fiberName(parentWorkInProgress.return),
+      );
+
+      workInProgress = parentWorkInProgress;
+      current = parent;
+      parentWorkInProgress = parent = current.return;
+      if (parent !== null && parent.reify === true) {
+        parentWorkInProgress = createWorkInProgress(
+          parent,
+          parent.pendingProps,
+          parent.expirationTime,
+        );
+        parentWorkInProgress.return = parent.return;
+      }
+    } while (parent !== null && current.reify === true);
+  } catch (e) {
+    console.log('error in refiy', e);
+  }
+
+  console.log(
+    'returning originalCurrent.alternate',
+    fiberName(originalCurrent.alternate),
+  );
+  return originalCurrent.alternate;
 }
 
 function fiberName(fiber) {
-  if (fiber.tag === 3) return 'HostRoot';
-  if (fiber.tag === 6) return 'HostText';
-  if (fiber.tag === 10) return 'ContextProvider';
-  return typeof fiber.type === 'function' ? fiber.type.name : fiber.elementType;
+  if (fiber == null) return fiber;
+  let version = fiber.version;
+  let reify = fiber.reify ? 'r' : '';
+  let back = `-${version}${reify}`;
+  let front = '';
+  if (fiber.tag === 3) front = 'HostRoot';
+  else if (fiber.tag === 6) front = 'HostText';
+  else if (fiber.tag === 10) front = 'ContextProvider';
+  else if (typeof fiber.type === 'function') front = fiber.type.name;
+  else front = 'tag' + fiber.tag;
+
+  return front + back;
 }
 
 function beginWork(
@@ -2941,12 +3061,17 @@ function beginWork(
 ): Fiber | null {
   console.log(
     'beginWork',
-    fiberName(workInProgress),
-    workInProgress.tag,
-    current && current.tag,
-    workInProgress.reify,
-    current && current.reify,
+    fiberName(workInProgress) + '->' + fiberName(workInProgress.return),
+    current && fiberName(current) + '->' + fiberName(current.return),
   );
+
+  // we may have been passed a current fiber as workInProgress if the parent fiber
+  // bailed out. in this case set the current to workInProgress. they will be the same
+  // fiber for now until and unless we determine we need to reify it into real workInProgress
+  if (workInProgress.reify === true) {
+    current = workInProgress;
+  }
+
   const updateExpirationTime = workInProgress.expirationTime;
 
   if (__DEV__) {
@@ -2971,13 +3096,23 @@ function beginWork(
     console.log(
       'workInProgress.reify true, if we are going to do work we need to reify first',
     );
-    current = workInProgress;
-    workInProgress = reifyWorkInProgress(current);
+    if (
+      workInProgress.tag !== ContextProvider &&
+      workInProgress.tag !== FunctionComponent
+    ) {
+      console.log(
+        'workInProgress is something other than a ContextProvider or FunctionComponent, reifying immediately',
+      );
+      workInProgress = reifyWorkInProgress(current, null);
+    }
   }
 
   if (current !== null) {
+    // when we are on a current fiber as WIP we use memoizedProps since the pendingProps may be out of date
     const oldProps = current.memoizedProps;
-    const newProps = workInProgress.pendingProps;
+    const newProps = workInProgress.reify
+      ? workInProgress.memoizedProps
+      : workInProgress.pendingProps;
 
     if (
       oldProps !== newProps ||
@@ -2985,10 +3120,16 @@ function beginWork(
       // Force a re-render if the implementation changed due to hot reload:
       (__DEV__ ? workInProgress.type !== current.type : false)
     ) {
+      console.log(
+        '--- props different or legacy context changed. lets do update',
+      );
       // If props or context changed, mark the fiber as having performed work.
       // This may be unset if the props are determined to be equal later (memo).
       didReceiveUpdate = true;
     } else if (updateExpirationTime < renderExpirationTime) {
+      console.log(
+        '--- props same, no legacy context, no work scheduled. lets push onto stack and bailout',
+      );
       didReceiveUpdate = false;
       // This fiber does not have any pending work. Bailout without entering
       // the begin phase. There's still some bookkeeping we that needs to be done
@@ -3162,9 +3303,15 @@ function beginWork(
       // nor legacy context. Set this to false. If an update queue or context
       // consumer produces a changed value, it will set this to true. Otherwise,
       // the component will assume the children have not changed and bail out.
+      console.log(
+        '--- props same, no legacy context, this fiber has work scheduled so we will see if it produces an update',
+      );
       didReceiveUpdate = false;
     }
   } else {
+    console.log(
+      '--- current fiber null, likely this was a newly mounted component',
+    );
     didReceiveUpdate = false;
   }
 

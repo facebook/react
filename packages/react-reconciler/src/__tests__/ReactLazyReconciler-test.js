@@ -69,5 +69,11 @@ describe('ReactLazyReconciler', () => {
     // Everything should render immediately in the next event
     expect(Scheduler).toHaveYielded(['A', 2, 'B', 2, 'C', 2]);
     expect(root).toMatchRenderedOutput('ABC');
+
+    ReactNoop.act(() => trigger(3));
+
+    // Everything should render immediately in the next event
+    expect(Scheduler).toHaveYielded(['A', 3, 'B', 3, 'C', 3]);
+    expect(root).toMatchRenderedOutput('ABC');
   });
 });

@@ -276,6 +276,9 @@ function FiberNode(
   this.type = null;
   this.stateNode = null;
 
+  // @TODO remove this. used for debugging output only
+  this.version = 0;
+
   // Fiber
   this.return = null;
   this.child = null;
@@ -428,6 +431,9 @@ export function createWorkInProgress(
     workInProgress.elementType = current.elementType;
     workInProgress.type = current.type;
     workInProgress.stateNode = current.stateNode;
+
+    // @TODO remove this. used for debugging output only
+    workInProgress.version = current.version + 1;
 
     if (__DEV__) {
       // DEV-only fields

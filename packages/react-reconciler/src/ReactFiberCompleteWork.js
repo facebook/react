@@ -634,10 +634,18 @@ function cutOffTailIfNeeded(
 }
 
 function fiberName(fiber) {
-  if (fiber.tag === 3) return 'HostRoot';
-  if (fiber.tag === 6) return 'HostText';
-  if (fiber.tag === 10) return 'ContextProvider';
-  return typeof fiber.type === 'function' ? fiber.type.name : fiber.elementType;
+  if (fiber == null) return fiber;
+  let version = fiber.version;
+  let reify = fiber.reify ? 'r' : '';
+  let back = `-${version}${reify}`;
+  let front = '';
+  if (fiber.tag === 3) front = 'HostRoot';
+  else if (fiber.tag === 6) front = 'HostText';
+  else if (fiber.tag === 10) front = 'ContextProvider';
+  else if (typeof fiber.type === 'function') front = fiber.type.name;
+  else front = 'tag' + fiber.tag;
+
+  return front + back;
 }
 
 function completeWork(
@@ -647,11 +655,8 @@ function completeWork(
 ): Fiber | null {
   console.log(
     'completeWork',
-    fiberName(workInProgress),
-    workInProgress.tag,
-    current && current.tag,
-    workInProgress.reify,
-    current && current.reify,
+    fiberName(workInProgress) + '->' + fiberName(workInProgress.return),
+    current && fiberName(current) + '->' + fiberName(current.return),
   );
 
   // reset reify state. it would have been dealt with already if it needed to by by now
