@@ -60,7 +60,7 @@ import {
   DiscreteEvent,
 } from 'shared/ReactTypes';
 import {getEventPriorityForPluginSystem} from './DOMEventProperties';
-import {dispatchEventForPluginEventSystem} from './DOMEventPluginSystem';
+import {dispatchEventForPluginEventSystem} from './DOMLegacyEventPluginSystem';
 
 const {
   unstable_UserBlockingPriority: UserBlockingPriority,

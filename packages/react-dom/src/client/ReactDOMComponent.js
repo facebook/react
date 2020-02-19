@@ -87,7 +87,7 @@ import {
   enableDeprecatedFlareAPI,
   enableTrustedTypesIntegration,
 } from 'shared/ReactFeatureFlags';
-import {listenToEvent} from '../events/DOMEventPluginSystem';
+import {legacyListenToEvent} from '../events/DOMLegacyEventPluginSystem';
 
 let didWarnInvalidHydration = false;
 let didWarnShadyDOM = false;
@@ -272,7 +272,7 @@ function ensureListeningTo(
   const doc = isDocumentOrFragment
     ? rootContainerElement
     : rootContainerElement.ownerDocument;
-  listenToEvent(registrationName, doc);
+  legacyListenToEvent(registrationName, doc);
 }
 
 function getOwnerDocumentFromRootContainer(

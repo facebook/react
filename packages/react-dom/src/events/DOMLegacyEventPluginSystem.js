@@ -307,7 +307,7 @@ export function dispatchEventForPluginEventSystem(
  * @param {string} registrationName Name of listener (e.g. `onClick`).
  * @param {object} mountAt Container where to mount the listener
  */
-export function listenToEvent(
+export function legacyListenToEvent(
   registrationName: string,
   mountAt: Document | Element | Node,
 ): void {

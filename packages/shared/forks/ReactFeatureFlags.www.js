@@ -112,6 +112,8 @@ export const disableUnstableCreatePortal = __EXPERIMENTAL__;
 
 export const isTestEnvironment = false;
 
+export const enableModernEventSystem = false;
+
 // Flow magic to verify the exports of this file match the original version.
 // eslint-disable-next-line no-unused-vars
 type Check<_X, Y: _X, X: Y = _X> = null;

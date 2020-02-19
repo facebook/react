@@ -26,7 +26,7 @@ import getActiveElement from '../client/getActiveElement';
 import {getNodeFromInstance} from '../client/ReactDOMComponentTree';
 import {hasSelectionCapabilities} from '../client/ReactInputSelection';
 import {DOCUMENT_NODE} from '../shared/HTMLNodeType';
-import {isListeningToAllDependencies} from './DOMEventPluginSystem';
+import {isListeningToAllDependencies} from './DOMLegacyEventPluginSystem';
 
 const skipSelectionChangeEvent =
   canUseDOM && 'documentMode' in document && document.documentMode <= 11;
