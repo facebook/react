@@ -17,7 +17,7 @@ import HoveredFiberInfo from './HoveredFiberInfo';
 import {scale} from './utils';
 import {StoreContext} from '../context';
 import {SettingsContext} from '../Settings/SettingsContext';
-import Tooltip from '../Components/Tooltip';
+import Tooltip from './Tooltip';
 
 import styles from './CommitRanked.css';
 

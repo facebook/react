@@ -43,46 +43,32 @@ export default function Tooltip({children, label}: any) {
   );
 }
 
+const TOOLTIP_OFFSET = 5;
+
 // Method used to find the position of the tooltip based on current mouse position
 function getTooltipPosition(element, mousePosition) {
   const {height, mouseX, mouseY, width} = mousePosition;
-  const TOOLTIP_OFFSET_X = 5;
-  const TOOLTIP_OFFSET_Y = 15;
   let top = 0;
   let left = 0;
 
-  // Let's check the vertical position.
-  if (mouseY + TOOLTIP_OFFSET_Y + element.offsetHeight >= height) {
-    // The tooltip doesn't fit below the mouse cursor (which is our
-    // default strategy). Therefore we try to position it either above the
-    // mouse cursor or finally aligned with the window's top edge.
-    if (mouseY - TOOLTIP_OFFSET_Y - element.offsetHeight > 0) {
-      // We position the tooltip above the mouse cursor if it fits there.
-      top = `${mouseY - element.offsetHeight - TOOLTIP_OFFSET_Y}px`;
+  if (mouseY + TOOLTIP_OFFSET + element.offsetHeight >= height) {
+    if (mouseY - TOOLTIP_OFFSET - element.offsetHeight > 0) {
+      top = `${mouseY - element.offsetHeight - TOOLTIP_OFFSET}px`;
     } else {
-      // Otherwise we align the tooltip with the window's top edge.
       top = '0px';
     }
   } else {
-    top = `${mouseY + TOOLTIP_OFFSET_Y}px`;
+    top = `${mouseY + TOOLTIP_OFFSET}px`;
   }
 
-  // Now let's check the horizontal position.
-  if (mouseX + TOOLTIP_OFFSET_X + element.offsetWidth >= width) {
-    // The tooltip doesn't fit at the right of the mouse cursor (which is
-    // our default strategy). Therefore we try to position it either at the
-    // left of the mouse cursor or finally aligned with the window's left
-    // edge.
-    if (mouseX - TOOLTIP_OFFSET_X - element.offsetWidth > 0) {
-      // We position the tooltip at the left of the mouse cursor if it fits
-      // there.
-      left = `${mouseX - element.offsetWidth - TOOLTIP_OFFSET_X}px`;
+  if (mouseX + TOOLTIP_OFFSET + element.offsetWidth >= width) {
+    if (mouseX - TOOLTIP_OFFSET - element.offsetWidth > 0) {
+      left = `${mouseX - element.offsetWidth - TOOLTIP_OFFSET}px`;
     } else {
-      // Otherwise, align the tooltip with the window's left edge.
       left = '0px';
     }
   } else {
-    left = `${mouseX + TOOLTIP_OFFSET_X * 2}px`;
+    left = `${mouseX + TOOLTIP_OFFSET * 2}px`;
   }
 
   return {left, top};
@@ -94,9 +80,19 @@ function getMousePosition(
   mouseEvent: SyntheticMouseEvent<*>,
 ) {
   if (relativeContainer !== null) {
-    const {height, top, width} = relativeContainer.getBoundingClientRect();
+    // Positon within the nearest position:relative container.
+    let targetContainer = relativeContainer;
+    while (targetContainer.parentElement != null) {
+      if (targetContainer.style.position === 'relative') {
+        break;
+      } else {
+        targetContainer = targetContainer.parentElement;
+      }
+    }
 
-    const mouseX = mouseEvent.clientX;
+    const {height, left, top, width} = targetContainer.getBoundingClientRect();
+
+    const mouseX = mouseEvent.clientX - left;
     const mouseY = mouseEvent.clientY - top;
 
     return {height, mouseX, mouseY, width};

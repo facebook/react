@@ -10,7 +10,7 @@
 import React, {Fragment, useContext} from 'react';
 import {ProfilerContext} from './ProfilerContext';
 import {formatDuration, formatTime} from './utils';
-import ProfilerWhatChanged from '../Components/ProfilerWhatChanged';
+import WhatChanged from './WhatChanged';
 import {StoreContext} from '../context';
 
 import styles from './HoveredFiberInfo.css';
@@ -67,7 +67,7 @@ export default function HoveredFiberInfo({fiberData}: Props) {
         <div className={styles.Component}>{name}</div>
       </div>
       <div className={styles.Content}>
-        <ProfilerWhatChanged fiberID={((id: any): number)} />
+        <WhatChanged fiberID={((id: any): number)} />
         {renderDurationInfo || (
           <div>Did not render during this profiling session.</div>
         )}

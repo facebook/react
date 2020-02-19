@@ -8,7 +8,7 @@
  */
 
 import React, {Fragment, useContext} from 'react';
-import ProfilerWhatChanged from '../Components/ProfilerWhatChanged';
+import WhatChanged from './WhatChanged';
 import {ProfilerContext} from './ProfilerContext';
 import {formatDuration, formatTime} from './utils';
 import {StoreContext} from '../context';
@@ -75,7 +75,7 @@ export default function SidebarSelectedFiberInfo(_: Props) {
         </Button>
       </div>
       <div className={styles.Content}>
-        <ProfilerWhatChanged fiberID={((selectedFiberID: any): number)} />
+        <WhatChanged fiberID={((selectedFiberID: any): number)} />
         {listItems.length > 0 && (
           <Fragment>
             <label className={styles.Label}>Rendered at</label>: {listItems}

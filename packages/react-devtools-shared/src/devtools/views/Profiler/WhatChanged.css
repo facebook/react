@@ -1,5 +1,5 @@
 .Component {
-  margin-bottom: 1rem;
+  margin-bottom: 0.5rem;
 }
 
 .Item {
@@ -26,5 +26,4 @@
 
 .Label {
   font-weight: bold;
-  margin-bottom: 0.5rem;
 }
