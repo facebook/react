@@ -14,7 +14,6 @@ import {getGradientColor} from './utils';
 import ChartNode from './ChartNode';
 import {SettingsContext} from '../Settings/SettingsContext';
 
-import type {ChartNode as ChartNodeType} from './RankedChartBuilder';
 import type {ItemData} from './CommitRanked';
 
 type Props = {
@@ -46,22 +45,14 @@ function CommitRankedListItem({data, index, style}: Props) {
     [node, selectFiber],
   );
 
-  const handleMouseOver = useCallback(
-    (event: SyntheticMouseEvent<*>, nodeData: ChartNodeType) => {
-      const {id, name} = nodeData;
-      event.stopPropagation();
-      hoverFiber({id, name});
-    },
-    [hoverFiber],
-  );
+  const handleMouseEnter = useCallback(() => {
+    const {id, name} = node;
+    hoverFiber({id, name});
+  }, [node]);
 
-  const handleMouseOut = useCallback(
-    (event: SyntheticMouseEvent<*>) => {
-      event.stopPropagation();
-      hoverFiber(null);
-    },
-    [hoverFiber],
-  );
+  const handleMouseLeave = () => {
+    hoverFiber(null);
+  };
 
   // List items are absolutely positioned using the CSS "top" attribute.
   // The "left" value will always be 0.
@@ -77,8 +68,8 @@ function CommitRankedListItem({data, index, style}: Props) {
       key={node.id}
       label={node.label}
       onClick={handleClick}
-      onMouseOver={event => handleMouseOver(event, node)}
-      onMouseOut={event => handleMouseOut(event)}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
       width={Math.max(minBarWidth, scaleX(node.value, width))}
       x={0}
       y={top}

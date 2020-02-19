@@ -46,22 +46,14 @@ function CommitFlamegraphListItem({data, index, style}: Props) {
     [selectFiber],
   );
 
-  const handleMouseOver = useCallback(
-    (event: SyntheticMouseEvent<*>, nodeData: ChartNodeType) => {
-      const {id, name} = nodeData;
-      event.stopPropagation();
-      hoverFiber({id, name});
-    },
-    [hoverFiber],
-  );
+  const handleMouseEnter = (nodeData: ChartNodeType) => {
+    const {id, name} = nodeData;
+    hoverFiber({id, name});
+  };
 
-  const handleMouseOut = useCallback(
-    (event: SyntheticMouseEvent<*>) => {
-      event.stopPropagation();
-      hoverFiber(null);
-    },
-    [hoverFiber],
-  );
+  const handleMouseLeave = () => {
+    hoverFiber(null);
+  };
 
   // List items are absolutely positioned using the CSS "top" attribute.
   // The "left" value will always be 0.
@@ -124,8 +116,8 @@ function CommitFlamegraphListItem({data, index, style}: Props) {
             key={id}
             label={label}
             onClick={event => handleClick(event, id, name)}
-            onMouseOver={event => handleMouseOver(event, chartNode)}
-            onMouseOut={event => handleMouseOut(event)}
+            onMouseEnter={() => handleMouseEnter(chartNode)}
+            onMouseLeave={handleMouseLeave}
             textStyle={{color: textColor}}
             width={nodeWidth}
             x={nodeOffset - selectedNodeOffset}
