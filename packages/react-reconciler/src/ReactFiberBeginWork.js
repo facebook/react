@@ -600,11 +600,66 @@ function markRef(current: Fiber | null, workInProgress: Fiber) {
   }
 }
 
-function preemptiveHooksBailout() {
+function preemptiveHooksBailout(
+  workInProgress: Fiber,
+  renderExpirationTime: ExpirationTime,
+) {
   console.log(
     '#### preemptiveHooksBailout checking to see if context selection or states have changed',
   );
-  return false;
+  let hook = workInProgress.memoizedState;
+  console.log('hook', hook);
+  console.log('workInProgress.dependencies', workInProgress.dependencies);
+
+  if (workInProgress.dependencies) {
+    console.log(
+      'workInProgress.dependencies exist so not bailing out',
+      workInProgress.dependencies,
+    );
+    return false;
+  }
+
+  while (hook !== null) {
+    const queue = hook.queue;
+
+    if (queue) {
+      // The last rebase update that is NOT part of the base state.
+      let baseQueue = hook.baseQueue;
+      let reducer = queue.lastRenderedReducer;
+
+      // The last pending update that hasn't been processed yet.
+      let pendingQueue = queue.pending;
+      if (pendingQueue !== null) {
+        // We have new updates that haven't been processed yet.
+        // We'll add them to the base queue.
+        baseQueue = pendingQueue;
+      }
+
+      if (baseQueue !== null) {
+        // We have a queue to process.
+        let first = baseQueue.next;
+        let newState = hook.baseState;
+
+        let update = first;
+        do {
+          // Process this update.
+          const action = update.action;
+          newState = reducer(newState, action);
+          update = update.next;
+        } while (update !== null && update !== first);
+
+        // if newState is different from the current state do not bailout
+        if (newState !== hook.memoizedState) {
+          console.log('found a new state. not bailing out of hooks');
+          return false;
+        }
+      }
+    }
+
+    hook = hook.next;
+  }
+  console.log('bailing out of update based on hooks preemptively');
+  return true;
 }
 
 function updateFunctionComponent(
@@ -637,9 +692,15 @@ function updateFunctionComponent(
         '???? updateFunctionComponent called with a current fiber for workInProgress',
         current.memoizedProps,
       );
-      if (preemptiveHooksBailout()) {
+      if (preemptiveHooksBailout(workInProgress, renderExpirationTime)) {
         console.log('hooks have not changed, we can bail out of update');
+        return bailoutOnAlreadyFinishedWork(
+          current,
+          workInProgress,
+          renderExpirationTime,
+        );
       }
+      console.log('???? creating a new workInProgress', current.memoizedProps);
       let parent = workInProgress.return;
       workInProgress = createWorkInProgress(
         current,

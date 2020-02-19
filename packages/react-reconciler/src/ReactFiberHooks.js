@@ -1320,6 +1320,7 @@ function dispatchAction<S, A>(
     currentlyRenderingFiber.expirationTime = renderExpirationTime;
   } else {
     if (
+      false && // turn off eager computation with bailout
       fiber.expirationTime === NoWork &&
       (alternate === null || alternate.expirationTime === NoWork)
     ) {
@@ -1365,6 +1366,7 @@ function dispatchAction<S, A>(
         warnIfNotCurrentlyActingUpdatesInDev(fiber);
       }
     }
+    console.log('++++++++++++ scheduling work for reducer hook');
     scheduleWork(fiber, expirationTime);
   }
 }
