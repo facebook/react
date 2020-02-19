@@ -63,6 +63,7 @@
     "glob-stream": "^6.1.0",
     "google-closure-compiler": "^20200112.0.0",
     "gzip-size": "^5.1.1",
+    "identity-obj-proxy": "^3.0.0",
     "jasmine-check": "^1.0.0-rc.0",
     "jest": "^25.1.0",
     "jest-diff": "^25.1.0",
