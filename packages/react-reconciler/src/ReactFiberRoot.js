@@ -26,6 +26,7 @@ import {
 import {unstable_getThreadID} from 'scheduler/tracing';
 import {NoPriority} from './SchedulerWithReactIntegration';
 import {initializeUpdateQueue} from './ReactUpdateQueue';
+import {clearPendingUpdates as clearPendingMutableSourceUpdates} from './ReactMutableSource';
 
 export type PendingInteractionMap = Map<ExpirationTime, Set<Interaction>>;
 
@@ -74,6 +75,9 @@ type BaseFiberRootProperties = {|
   // render again
   lastPingedTime: ExpirationTime,
   lastExpiredTime: ExpirationTime,
+  // Used by useMutableSource hook to avoid tearing within this root
+  // when external, mutable sources are read from during render.
+  mutableSourcePendingUpdateTime: ExpirationTime,
 |};
 
 // The following attributes are only used by interaction tracing builds.
@@ -123,6 +127,7 @@ function FiberRootNode(containerInfo, tag, hydrate) {
   this.nextKnownPendingLevel = NoWork;
   this.lastPingedTime = NoWork;
   this.lastExpiredTime = NoWork;
+  this.mutableSourcePendingUpdateTime = NoWork;
 
   if (enableSchedulerTracing) {
     this.interactionThreadID = unstable_getThreadID();
@@ -249,6 +254,9 @@ export function markRootFinishedAtTime(
     // Clear the expired time
     root.lastExpiredTime = NoWork;
   }
+
+  // Clear any pending updates that were just processed.
+  clearPendingMutableSourceUpdates(root, finishedExpirationTime);
 }
 
 export function markRootExpiredAtTime(

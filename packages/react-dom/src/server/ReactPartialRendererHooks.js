@@ -13,6 +13,9 @@ import type {
 } from 'react-reconciler/src/ReactFiberHooks';
 import type {ThreadID} from './ReactThreadIDAllocator';
 import type {
+  MutableSource,
+  MutableSourceGetSnapshotFn,
+  MutableSourceSubscribeFn,
   ReactContext,
   ReactEventResponderListener,
 } from 'shared/ReactTypes';
@@ -459,6 +462,18 @@ function useResponder(responder, props): ReactEventResponderListener<any, any> {
   };
 }
 
+// TODO Decide on how to implement this hook for server rendering.
+// If a mutation occurs during render, consider triggering a Suspense boundary
+// and falling back to client rendering.
+function useMutableSource<Source, Snapshot>(
+  source: MutableSource<Source>,
+  getSnapshot: MutableSourceGetSnapshotFn<Source, Snapshot>,
+  subscribe: MutableSourceSubscribeFn<Source>,
+): Snapshot {
+  resolveCurrentlyRenderingComponent();
+  return getSnapshot(source._source);
+}
+
 function useDeferredValue<T>(value: T, config: TimeoutConfig | null | void): T {
   resolveCurrentlyRenderingComponent();
   return value;
@@ -500,4 +515,6 @@ export const Dispatcher: DispatcherType = {
   useResponder,
   useDeferredValue,
   useTransition,
+  // Subscriptions are not setup in a server environment.
+  useMutableSource,
 };

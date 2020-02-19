@@ -28,6 +28,7 @@ import type {
 import type {SuspenseContext} from './ReactFiberSuspenseContext';
 
 import {now} from './SchedulerWithReactIntegration';
+import {resetWorkInProgressVersions as resetMutableSourceWorkInProgressVersions} from './ReactMutableSource';
 
 import {
   IndeterminateComponent,
@@ -660,6 +661,7 @@ function completeWork(
       return null;
     }
     case HostRoot: {
+      resetMutableSourceWorkInProgressVersions();
       popHostContainer(workInProgress);
       popTopLevelLegacyContextObject(workInProgress);
       const fiberRoot = (workInProgress.stateNode: FiberRoot);

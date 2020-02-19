@@ -39,6 +39,7 @@ import {
   useDebugValue,
   useLayoutEffect,
   useMemo,
+  useMutableSource,
   useReducer,
   useRef,
   useState,
@@ -55,6 +56,7 @@ import {
   jsxWithValidationStatic,
   jsxWithValidationDynamic,
 } from './ReactElementValidator';
+import createMutableSource from './createMutableSource';
 import ReactSharedInternals from './ReactSharedInternals';
 import createFundamental from 'shared/createFundamentalComponent';
 import createResponder from 'shared/createEventResponder';
@@ -81,6 +83,7 @@ const Children = {
 
 export {
   Children,
+  createMutableSource,
   createRef,
   Component,
   PureComponent,
@@ -95,6 +98,7 @@ export {
   useDebugValue,
   useLayoutEffect,
   useMemo,
+  useMutableSource,
   useReducer,
   useRef,
   useState,

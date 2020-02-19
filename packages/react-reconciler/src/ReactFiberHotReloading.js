@@ -15,7 +15,7 @@ import type {ReactNodeList} from 'shared/ReactTypes';
 
 import {
   flushSync,
-  scheduleWork,
+  scheduleUpdateOnFiber,
   flushPassiveEffects,
 } from './ReactFiberWorkLoop';
 import {updateContainer, syncUpdates} from './ReactFiberReconciler';
@@ -319,7 +319,7 @@ function scheduleFibersWithFamiliesRecursively(
       fiber._debugNeedsRemount = true;
     }
     if (needsRemount || needsRender) {
-      scheduleWork(fiber, Sync);
+      scheduleUpdateOnFiber(fiber, Sync);
     }
     if (child !== null && !needsRemount) {
       scheduleFibersWithFamiliesRecursively(
