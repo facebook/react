@@ -119,6 +119,7 @@ export function addResponderEventSystemEvent(
     null,
     ((topLevelType: any): DOMTopLevelEventType),
     eventFlags,
+    document,
   );
   if (passiveBrowserEventsSupported) {
     addEventCaptureListenerWithPassiveFlag(
@@ -149,7 +150,7 @@ export function removeActiveResponderEventSystemEvent(
 }
 
 function trapEventForPluginEventSystem(
-  element: Document | Element | Node,
+  container: Document | Element | Node,
   topLevelType: DOMTopLevelEventType,
   capture: boolean,
 ): void {
@@ -160,6 +161,7 @@ function trapEventForPluginEventSystem(
         null,
         topLevelType,
         PLUGIN_EVENT_SYSTEM,
+        container,
       );
       break;
     case UserBlockingEvent:
@@ -167,41 +169,66 @@ function trapEventForPluginEventSystem(
         null,
         topLevelType,
         PLUGIN_EVENT_SYSTEM,
+        container,
       );
       break;
     case ContinuousEvent:
     default:
-      listener = dispatchEvent.bind(null, topLevelType, PLUGIN_EVENT_SYSTEM);
+      listener = dispatchEvent.bind(
+        null,
+        topLevelType,
+        PLUGIN_EVENT_SYSTEM,
+        container,
+      );
       break;
   }
 
   const rawEventName = getRawEventName(topLevelType);
   if (capture) {
-    addEventCaptureListener(element, rawEventName, listener);
+    addEventCaptureListener(container, rawEventName, listener);
   } else {
-    addEventBubbleListener(element, rawEventName, listener);
+    addEventBubbleListener(container, rawEventName, listener);
   }
 }
 
-function dispatchDiscreteEvent(topLevelType, eventSystemFlags, nativeEvent) {
+function dispatchDiscreteEvent(
+  topLevelType,
+  eventSystemFlags,
+  container,
+  nativeEvent,
+) {
   flushDiscreteUpdatesIfNeeded(nativeEvent.timeStamp);
-  discreteUpdates(dispatchEvent, topLevelType, eventSystemFlags, nativeEvent);
+  discreteUpdates(
+    dispatchEvent,
+    topLevelType,
+    eventSystemFlags,
+    container,
+    nativeEvent,
+  );
 }
 
 function dispatchUserBlockingUpdate(
   topLevelType,
   eventSystemFlags,
+  container,
   nativeEvent,
 ) {
   runWithPriority(
     UserBlockingPriority,
-    dispatchEvent.bind(null, topLevelType, eventSystemFlags, nativeEvent),
+    dispatchEvent.bind(
+      null,
+      topLevelType,
+      eventSystemFlags,
+      container,
+      nativeEvent,
+    ),
   );
 }
 
 export function dispatchEvent(
   topLevelType: DOMTopLevelEventType,
   eventSystemFlags: EventSystemFlags,
+  container: Document | Element | Node,
   nativeEvent: AnyNativeEvent,
 ): void {
   if (!_enabled) {
@@ -216,6 +243,7 @@ export function dispatchEvent(
       topLevelType,
       eventSystemFlags,
       nativeEvent,
+      container,
     );
     return;
   }
@@ -224,6 +252,7 @@ export function dispatchEvent(
     topLevelType,
     eventSystemFlags,
     nativeEvent,
+    container,
   );
 
   if (blockedOn === null) {
@@ -234,7 +263,13 @@ export function dispatchEvent(
 
   if (isReplayableDiscreteEvent(topLevelType)) {
     // This this to be replayed later once the target is available.
-    queueDiscreteEvent(blockedOn, topLevelType, eventSystemFlags, nativeEvent);
+    queueDiscreteEvent(
+      blockedOn,
+      topLevelType,
+      eventSystemFlags,
+      nativeEvent,
+      container,
+    );
     return;
   }
 
@@ -244,6 +279,7 @@ export function dispatchEvent(
       topLevelType,
       eventSystemFlags,
       nativeEvent,
+      container,
     )
   ) {
     return;
@@ -289,6 +325,7 @@ export function attemptToDispatchEvent(
   topLevelType: DOMTopLevelEventType,
   eventSystemFlags: EventSystemFlags,
   nativeEvent: AnyNativeEvent,
+  container: Document | Element | Node,
 ): null | Container | SuspenseInstance {
   // TODO: Warn if _enabled is false.
 

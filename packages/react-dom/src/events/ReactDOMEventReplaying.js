@@ -124,6 +124,7 @@ type QueuedReplayableEvent = {|
   topLevelType: DOMTopLevelEventType,
   eventSystemFlags: EventSystemFlags,
   nativeEvent: AnyNativeEvent,
+  container: Document | Element | Node,
 |};
 
 let hasScheduledReplayAttempt = false;
@@ -252,12 +253,14 @@ function createQueuedReplayableEvent(
   topLevelType: DOMTopLevelEventType,
   eventSystemFlags: EventSystemFlags,
   nativeEvent: AnyNativeEvent,
+  container: Document | Element | Node,
 ): QueuedReplayableEvent {
   return {
     blockedOn,
     topLevelType,
     eventSystemFlags: eventSystemFlags | IS_REPLAYED,
     nativeEvent,
+    container,
   };
 }
 
@@ -266,12 +269,14 @@ export function queueDiscreteEvent(
   topLevelType: DOMTopLevelEventType,
   eventSystemFlags: EventSystemFlags,
   nativeEvent: AnyNativeEvent,
+  container: Document | Element | Node,
 ): void {
   const queuedEvent = createQueuedReplayableEvent(
     blockedOn,
     topLevelType,
     eventSystemFlags,
     nativeEvent,
+    container,
   );
   queuedDiscreteEvents.push(queuedEvent);
   if (enableSelectiveHydration) {
@@ -339,6 +344,7 @@ function accumulateOrCreateContinuousQueuedReplayableEvent(
   topLevelType: DOMTopLevelEventType,
   eventSystemFlags: EventSystemFlags,
   nativeEvent: AnyNativeEvent,
+  container: Document | Element | Node,
 ): QueuedReplayableEvent {
   if (
     existingQueuedEvent === null ||
@@ -349,6 +355,7 @@ function accumulateOrCreateContinuousQueuedReplayableEvent(
       topLevelType,
       eventSystemFlags,
       nativeEvent,
+      container,
     );
     if (blockedOn !== null) {
       let fiber = getInstanceFromNode(blockedOn);
@@ -372,6 +379,7 @@ export function queueIfContinuousEvent(
   topLevelType: DOMTopLevelEventType,
   eventSystemFlags: EventSystemFlags,
   nativeEvent: AnyNativeEvent,
+  container: Document | Element | Node,
 ): boolean {
   // These set relatedTarget to null because the replayed event will be treated as if we
   // moved from outside the window (no target) onto the target once it hydrates.
@@ -385,6 +393,7 @@ export function queueIfContinuousEvent(
         topLevelType,
         eventSystemFlags,
         focusEvent,
+        container,
       );
       return true;
     }
@@ -396,6 +405,7 @@ export function queueIfContinuousEvent(
         topLevelType,
         eventSystemFlags,
         dragEvent,
+        container,
       );
       return true;
     }
@@ -407,6 +417,7 @@ export function queueIfContinuousEvent(
         topLevelType,
         eventSystemFlags,
         mouseEvent,
+        container,
       );
       return true;
     }
@@ -421,6 +432,7 @@ export function queueIfContinuousEvent(
           topLevelType,
           eventSystemFlags,
           pointerEvent,
+          container,
         ),
       );
       return true;
@@ -436,6 +448,7 @@ export function queueIfContinuousEvent(
           topLevelType,
           eventSystemFlags,
           pointerEvent,
+          container,
         ),
       );
       return true;
@@ -512,6 +525,7 @@ function attemptReplayContinuousQueuedEvent(
     queuedEvent.topLevelType,
     queuedEvent.eventSystemFlags,
     queuedEvent.nativeEvent,
+    queuedEvent.container,
   );
   if (nextBlockedOn !== null) {
     // We're still blocked. Try again later.
@@ -554,6 +568,7 @@ function replayUnblockedEvents() {
       nextDiscreteEvent.topLevelType,
       nextDiscreteEvent.eventSystemFlags,
       nextDiscreteEvent.nativeEvent,
+      nextDiscreteEvent.container,
     );
     if (nextBlockedOn !== null) {
       // We're still blocked. Try again later.
