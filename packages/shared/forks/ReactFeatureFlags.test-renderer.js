@@ -51,6 +51,7 @@ export const deferPassiveEffectCleanupDuringUnmount = false;
 export const runAllPassiveEffectDestroysBeforeCreates = false;
 export const isTestEnvironment = true; // this should probably *never* change
 export const enableModernEventSystem = false;
+export const warnAboutSpreadingKeyToJSX = false;
 
 // Only used in www builds.
 export function addUserTimingListener() {

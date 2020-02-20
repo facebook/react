@@ -32,6 +32,7 @@ describe('ReactElement.jsx', () => {
 
     ReactFeatureFlags = require('shared/ReactFeatureFlags');
     ReactFeatureFlags.enableJSXTransformAPI = true;
+    ReactFeatureFlags.warnAboutSpreadingKeyToJSX = true;
 
     React = require('react');
     ReactDOM = require('react-dom');
@@ -371,7 +372,7 @@ describe('ReactElement.jsx', () => {
     expect(() => ReactDOM.render(React.jsx(Parent, {}), container)).toErrorDev(
       'Warning: React.jsx: Spreading a key to JSX is a deprecated pattern. ' +
         'Explicitly pass a key after spreading props in your JSX call. ' +
-        'E.g. <ComponentName {...props} key={key} />',
+        'E.g. <Child {...props} key={key} />',
     );
   });
 
