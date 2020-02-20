@@ -60,7 +60,7 @@ import {
   DiscreteEvent,
 } from 'shared/ReactTypes';
 import {getEventPriorityForPluginSystem} from './DOMEventProperties';
-import {dispatchEventForPluginEventSystem} from './DOMEventPluginSystem';
+import {dispatchEventForLegacyPluginEventSystem} from './DOMLegacyEventPluginSystem';
 
 const {
   unstable_UserBlockingPriority: UserBlockingPriority,
@@ -119,6 +119,7 @@ export function addResponderEventSystemEvent(
     null,
     ((topLevelType: any): DOMTopLevelEventType),
     eventFlags,
+    document,
   );
   if (passiveBrowserEventsSupported) {
     addEventCaptureListenerWithPassiveFlag(
@@ -149,7 +150,7 @@ export function removeActiveResponderEventSystemEvent(
 }
 
 function trapEventForPluginEventSystem(
-  element: Document | Element | Node,
+  container: Document | Element | Node,
   topLevelType: DOMTopLevelEventType,
   capture: boolean,
 ): void {
@@ -160,6 +161,7 @@ function trapEventForPluginEventSystem(
         null,
         topLevelType,
         PLUGIN_EVENT_SYSTEM,
+        container,
       );
       break;
     case UserBlockingEvent:
@@ -167,41 +169,66 @@ function trapEventForPluginEventSystem(
         null,
         topLevelType,
         PLUGIN_EVENT_SYSTEM,
+        container,
       );
       break;
     case ContinuousEvent:
     default:
-      listener = dispatchEvent.bind(null, topLevelType, PLUGIN_EVENT_SYSTEM);
+      listener = dispatchEvent.bind(
+        null,
+        topLevelType,
+        PLUGIN_EVENT_SYSTEM,
+        container,
+      );
       break;
   }
 
   const rawEventName = getRawEventName(topLevelType);
   if (capture) {
-    addEventCaptureListener(element, rawEventName, listener);
+    addEventCaptureListener(container, rawEventName, listener);
   } else {
-    addEventBubbleListener(element, rawEventName, listener);
+    addEventBubbleListener(container, rawEventName, listener);
   }
 }
 
-function dispatchDiscreteEvent(topLevelType, eventSystemFlags, nativeEvent) {
+function dispatchDiscreteEvent(
+  topLevelType,
+  eventSystemFlags,
+  container,
+  nativeEvent,
+) {
   flushDiscreteUpdatesIfNeeded(nativeEvent.timeStamp);
-  discreteUpdates(dispatchEvent, topLevelType, eventSystemFlags, nativeEvent);
+  discreteUpdates(
+    dispatchEvent,
+    topLevelType,
+    eventSystemFlags,
+    container,
+    nativeEvent,
+  );
 }
 
 function dispatchUserBlockingUpdate(
   topLevelType,
   eventSystemFlags,
+  container,
   nativeEvent,
 ) {
   runWithPriority(
     UserBlockingPriority,
-    dispatchEvent.bind(null, topLevelType, eventSystemFlags, nativeEvent),
+    dispatchEvent.bind(
+      null,
+      topLevelType,
+      eventSystemFlags,
+      container,
+      nativeEvent,
+    ),
   );
 }
 
 export function dispatchEvent(
   topLevelType: DOMTopLevelEventType,
   eventSystemFlags: EventSystemFlags,
+  container: Document | Element | Node,
   nativeEvent: AnyNativeEvent,
 ): void {
   if (!_enabled) {
@@ -215,6 +242,7 @@ export function dispatchEvent(
       null, // Flags that we're not actually blocked on anything as far as we know.
       topLevelType,
       eventSystemFlags,
+      container,
       nativeEvent,
     );
     return;
@@ -223,6 +251,7 @@ export function dispatchEvent(
   const blockedOn = attemptToDispatchEvent(
     topLevelType,
     eventSystemFlags,
+    container,
     nativeEvent,
   );
 
@@ -234,7 +263,13 @@ export function dispatchEvent(
 
   if (isReplayableDiscreteEvent(topLevelType)) {
     // This this to be replayed later once the target is available.
-    queueDiscreteEvent(blockedOn, topLevelType, eventSystemFlags, nativeEvent);
+    queueDiscreteEvent(
+      blockedOn,
+      topLevelType,
+      eventSystemFlags,
+      container,
+      nativeEvent,
+    );
     return;
   }
 
@@ -243,6 +278,7 @@ export function dispatchEvent(
       blockedOn,
       topLevelType,
       eventSystemFlags,
+      container,
       nativeEvent,
     )
   ) {
@@ -257,7 +293,7 @@ export function dispatchEvent(
   // in case the event system needs to trace it.
   if (enableDeprecatedFlareAPI) {
     if (eventSystemFlags & PLUGIN_EVENT_SYSTEM) {
-      dispatchEventForPluginEventSystem(
+      dispatchEventForLegacyPluginEventSystem(
         topLevelType,
         eventSystemFlags,
         nativeEvent,
@@ -275,7 +311,7 @@ export function dispatchEvent(
       );
     }
   } else {
-    dispatchEventForPluginEventSystem(
+    dispatchEventForLegacyPluginEventSystem(
       topLevelType,
       eventSystemFlags,
       nativeEvent,
@@ -288,6 +324,7 @@ export function dispatchEvent(
 export function attemptToDispatchEvent(
   topLevelType: DOMTopLevelEventType,
   eventSystemFlags: EventSystemFlags,
+  container: Document | Element | Node,
   nativeEvent: AnyNativeEvent,
 ): null | Container | SuspenseInstance {
   // TODO: Warn if _enabled is false.
@@ -335,7 +372,7 @@ export function attemptToDispatchEvent(
 
   if (enableDeprecatedFlareAPI) {
     if (eventSystemFlags & PLUGIN_EVENT_SYSTEM) {
-      dispatchEventForPluginEventSystem(
+      dispatchEventForLegacyPluginEventSystem(
         topLevelType,
         eventSystemFlags,
         nativeEvent,
@@ -353,7 +390,7 @@ export function attemptToDispatchEvent(
       );
     }
   } else {
-    dispatchEventForPluginEventSystem(
+    dispatchEventForLegacyPluginEventSystem(
       topLevelType,
       eventSystemFlags,
       nativeEvent,

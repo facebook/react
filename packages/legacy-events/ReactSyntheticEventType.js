@@ -31,4 +31,4 @@ export type ReactSyntheticEvent = {|
     nativeEventTarget: EventTarget,
   ) => ReactSyntheticEvent,
   isPersistent: () => boolean,
-|} & SyntheticEvent<>;
+|};

@@ -15,6 +15,7 @@ let StrictMode;
 let ReactNative;
 let createReactNativeComponentClass;
 let UIManager;
+let TextInputState;
 
 const DISPATCH_COMMAND_REQUIRES_HOST_COMPONENT =
   "Warning: dispatchCommand was called with a ref that isn't a " +
@@ -31,6 +32,8 @@ describe('ReactNative', () => {
       .UIManager;
     createReactNativeComponentClass = require('react-native/Libraries/ReactPrivate/ReactNativePrivateInterface')
       .ReactNativeViewConfigRegistry.register;
+    TextInputState = require('react-native/Libraries/ReactPrivate/ReactNativePrivateInterface')
+      .TextInputState;
   });
 
   it('should be able to create and render a native component', () => {
@@ -593,5 +596,39 @@ describe('ReactNative', () => {
         '\n    in StrictMode (at **)',
     ]);
     expect(match).toBe(child._nativeTag);
+  });
+
+  it('blur on host component calls TextInputState', () => {
+    const View = createReactNativeComponentClass('RCTView', () => ({
+      validAttributes: {foo: true},
+      uiViewClassName: 'RCTView',
+    }));
+
+    let viewRef = React.createRef();
+    ReactNative.render(<View ref={viewRef} />, 11);
+
+    expect(TextInputState.blurTextInput).not.toBeCalled();
+
+    viewRef.current.blur();
+
+    expect(TextInputState.blurTextInput).toHaveBeenCalledTimes(1);
+    expect(TextInputState.blurTextInput).toHaveBeenCalledWith(viewRef.current);
+  });
+
+  it('focus on host component calls TextInputState', () => {
+    const View = createReactNativeComponentClass('RCTView', () => ({
+      validAttributes: {foo: true},
+      uiViewClassName: 'RCTView',
+    }));
+
+    let viewRef = React.createRef();
+    ReactNative.render(<View ref={viewRef} />, 11);
+
+    expect(TextInputState.focusTextInput).not.toBeCalled();
+
+    viewRef.current.focus();
+
+    expect(TextInputState.focusTextInput).toHaveBeenCalledTimes(1);
+    expect(TextInputState.focusTextInput).toHaveBeenCalledWith(viewRef.current);
   });
 });

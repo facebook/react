@@ -22,11 +22,11 @@ import {
   TOP_MOUSE_UP,
   TOP_SELECTION_CHANGE,
 } from './DOMTopLevelEventTypes';
-import {isListeningToAllDependencies} from './ReactBrowserEventEmitter';
 import getActiveElement from '../client/getActiveElement';
 import {getNodeFromInstance} from '../client/ReactDOMComponentTree';
 import {hasSelectionCapabilities} from '../client/ReactInputSelection';
 import {DOCUMENT_NODE} from '../shared/HTMLNodeType';
+import {isListeningToAllDependencies} from './DOMLegacyEventPluginSystem';
 
 const skipSelectionChangeEvent =
   canUseDOM && 'documentMode' in document && document.documentMode <= 11;
@@ -166,11 +166,16 @@ const SelectEventPlugin = {
     nativeEvent,
     nativeEventTarget,
     eventSystemFlags,
+    container,
   ) {
-    const doc = getEventTargetDocument(nativeEventTarget);
+    const containerOrDoc =
+      container || getEventTargetDocument(nativeEventTarget);
     // Track whether all listeners exists for this plugin. If none exist, we do
     // not extract events. See #3639.
-    if (!doc || !isListeningToAllDependencies('onSelect', doc)) {
+    if (
+      !containerOrDoc ||
+      !isListeningToAllDependencies('onSelect', containerOrDoc)
+    ) {
       return null;
     }
 

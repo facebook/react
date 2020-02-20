@@ -34,6 +34,7 @@ import {
   enableFundamentalAPI,
   enableSuspenseCallback,
   enableScopeAPI,
+  runAllPassiveEffectDestroysBeforeCreates,
 } from 'shared/ReactFeatureFlags';
 import {
   FunctionComponent,
@@ -398,7 +399,7 @@ function commitHookEffectListMount(tag: number, finishedWork: Fiber) {
 }
 
 function schedulePassiveEffects(finishedWork: Fiber) {
-  if (deferPassiveEffectCleanupDuringUnmount) {
+  if (runAllPassiveEffectDestroysBeforeCreates) {
     const updateQueue: FunctionComponentUpdateQueue | null = (finishedWork.updateQueue: any);
     let lastEffect = updateQueue !== null ? updateQueue.lastEffect : null;
     if (lastEffect !== null) {
@@ -456,7 +457,7 @@ function commitLifeCycles(
       // by a create function in another component during the same commit.
       commitHookEffectListMount(HookLayout | HookHasEffect, finishedWork);
 
-      if (deferPassiveEffectCleanupDuringUnmount) {
+      if (runAllPassiveEffectDestroysBeforeCreates) {
         schedulePassiveEffects(finishedWork);
       }
       return;
@@ -795,7 +796,10 @@ function commitUnmount(
         if (lastEffect !== null) {
           const firstEffect = lastEffect.next;
 
-          if (deferPassiveEffectCleanupDuringUnmount) {
+          if (
+            deferPassiveEffectCleanupDuringUnmount &&
+            runAllPassiveEffectDestroysBeforeCreates
+          ) {
             let effect = firstEffect;
             do {
               const {destroy, tag} = effect;

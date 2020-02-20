@@ -18,7 +18,7 @@ import type {Effect as HookEffect} from './ReactFiberHooks';
 
 import {
   warnAboutDeprecatedLifecycles,
-  deferPassiveEffectCleanupDuringUnmount,
+  runAllPassiveEffectDestroysBeforeCreates,
   enableUserTimingAPI,
   enableSuspenseServerRenderer,
   replayFailedUnitOfWorkWithInvokeGuardedCallback,
@@ -380,7 +380,7 @@ export function scheduleUpdateOnFiber(
   expirationTime: ExpirationTime,
 ) {
   checkForNestedUpdates();
-  warnAboutInvalidUpdatesOnClassComponentsInDEV(fiber);
+  warnAboutRenderPhaseUpdatesInDEV(fiber);
 
   const root = markUpdateTimeFromFiberToRoot(fiber, expirationTime);
   if (root === null) {
@@ -1160,17 +1160,18 @@ export function batchedEventUpdates<A, R>(fn: A => R, a: A): R {
   }
 }
 
-export function discreteUpdates<A, B, C, R>(
+export function discreteUpdates<A, B, C, D, R>(
   fn: (A, B, C) => R,
   a: A,
   b: B,
   c: C,
+  d: D,
 ): R {
   const prevExecutionContext = executionContext;
   executionContext |= DiscreteEventContext;
   try {
     // Should this
-    return runWithPriority(UserBlockingPriority, fn.bind(null, a, b, c));
+    return runWithPriority(UserBlockingPriority, fn.bind(null, a, b, c, d));
   } finally {
     executionContext = prevExecutionContext;
     if (executionContext === NoContext) {
@@ -1285,6 +1286,13 @@ function handleError(root, thrownValue) {
         // boundary.
         workInProgressRootExitStatus = RootFatalErrored;
         workInProgressRootFatalError = thrownValue;
+        // Set `workInProgress` to null. This represents advancing to the next
+        // sibling, or the parent if there are no siblings. But since the root
+        // has no siblings nor a parent, we set it to null. Usually this is
+        // handled by `completeUnitOfWork` or `unwindWork`, but since we're
+        // interntionally not calling those, we need set it here.
+        // TODO: Consider calling `unwindWork` to pop the contexts.
+        workInProgress = null;
         return null;
       }
 
@@ -2174,7 +2182,7 @@ export function enqueuePendingPassiveHookEffectMount(
   fiber: Fiber,
   effect: HookEffect,
 ): void {
-  if (deferPassiveEffectCleanupDuringUnmount) {
+  if (runAllPassiveEffectDestroysBeforeCreates) {
     pendingPassiveHookEffectsMount.push(effect, fiber);
     if (!rootDoesHavePassiveEffects) {
       rootDoesHavePassiveEffects = true;
@@ -2190,7 +2198,7 @@ export function enqueuePendingPassiveHookEffectUnmount(
   fiber: Fiber,
   effect: HookEffect,
 ): void {
-  if (deferPassiveEffectCleanupDuringUnmount) {
+  if (runAllPassiveEffectDestroysBeforeCreates) {
     pendingPassiveHookEffectsUnmount.push(effect, fiber);
     if (!rootDoesHavePassiveEffects) {
       rootDoesHavePassiveEffects = true;
@@ -2224,7 +2232,7 @@ function flushPassiveEffectsImpl() {
   executionContext |= CommitContext;
   const prevInteractions = pushInteractions(root);
 
-  if (deferPassiveEffectCleanupDuringUnmount) {
+  if (runAllPassiveEffectDestroysBeforeCreates) {
     // It's important that ALL pending passive effect destroy functions are called
     // before ANY passive effect create functions are called.
     // Otherwise effects in sibling components might interfere with each other.
@@ -2773,30 +2781,44 @@ if (__DEV__ && replayFailedUnitOfWorkWithInvokeGuardedCallback) {
 
 let didWarnAboutUpdateInRender = false;
 let didWarnAboutUpdateInGetChildContext = false;
-function warnAboutInvalidUpdatesOnClassComponentsInDEV(fiber) {
+function warnAboutRenderPhaseUpdatesInDEV(fiber) {
   if (__DEV__) {
-    if (fiber.tag === ClassComponent) {
-      switch (ReactCurrentDebugFiberPhaseInDEV) {
-        case 'getChildContext':
-          if (didWarnAboutUpdateInGetChildContext) {
-            return;
-          }
+    if ((executionContext & RenderContext) !== NoContext) {
+      switch (fiber.tag) {
+        case FunctionComponent:
+        case ForwardRef:
+        case SimpleMemoComponent: {
           console.error(
-            'setState(...): Cannot call setState() inside getChildContext()',
+            'Cannot update a component from inside the function body of a ' +
+              'different component.',
           );
-          didWarnAboutUpdateInGetChildContext = true;
           break;
-        case 'render':
-          if (didWarnAboutUpdateInRender) {
-            return;
+        }
+        case ClassComponent: {
+          switch (ReactCurrentDebugFiberPhaseInDEV) {
+            case 'getChildContext':
+              if (didWarnAboutUpdateInGetChildContext) {
+                return;
+              }
+              console.error(
+                'setState(...): Cannot call setState() inside getChildContext()',
+              );
+              didWarnAboutUpdateInGetChildContext = true;
+              break;
+            case 'render':
+              if (didWarnAboutUpdateInRender) {
+                return;
+              }
+              console.error(
+                'Cannot update during an existing state transition (such as ' +
+                  'within `render`). Render methods should be a pure ' +
+                  'function of props and state.',
+              );
+              didWarnAboutUpdateInRender = true;
+              break;
           }
-          console.error(
-            'Cannot update during an existing state transition (such as ' +
-              'within `render`). Render methods should be a pure function of ' +
-              'props and state.',
-          );
-          didWarnAboutUpdateInRender = true;
           break;
+        }
       }
     }
   }

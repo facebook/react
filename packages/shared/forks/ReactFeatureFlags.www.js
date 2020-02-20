@@ -13,10 +13,13 @@ import typeof * as ExportsType from './ReactFeatureFlags.www';
 // Re-export dynamic flags from the www version.
 export const {
   debugRenderPhaseSideEffectsForStrictMode,
+  deferPassiveEffectCleanupDuringUnmount,
   disableInputAttributeSyncing,
   enableTrustedTypesIntegration,
-  deferPassiveEffectCleanupDuringUnmount,
+  runAllPassiveEffectDestroysBeforeCreates,
   warnAboutShorthandPropertyCollision,
+  disableSchedulerTimeoutBasedOnReactExpirationTime,
+  warnAboutSpreadingKeyToJSX,
 } = require('ReactFeatureFlags');
 
 // On WWW, __EXPERIMENTAL__ is used for a new modern build.
@@ -39,7 +42,6 @@ export const warnAboutDeprecatedLifecycles = true;
 export const disableLegacyContext = __EXPERIMENTAL__;
 export const warnAboutStringRefs = false;
 export const warnAboutDefaultPropsOnFunctionComponents = false;
-export const disableSchedulerTimeoutBasedOnReactExpirationTime = false;
 
 export const enableTrainModelFix = true;
 
@@ -110,6 +112,8 @@ export const warnUnstableRenderSubtreeIntoContainer = false;
 export const disableUnstableCreatePortal = __EXPERIMENTAL__;
 
 export const isTestEnvironment = false;
+
+export const enableModernEventSystem = false;
 
 // Flow magic to verify the exports of this file match the original version.
 // eslint-disable-next-line no-unused-vars

@@ -40,6 +40,7 @@
     "chalk": "^3.0.0",
     "cli-table": "^0.3.1",
     "coffee-script": "^1.12.7",
+    "confusing-browser-globals": "^1.0.9",
     "core-js": "^3.6.4",
     "coveralls": "^3.0.9",
     "create-react-class": "^15.6.3",
