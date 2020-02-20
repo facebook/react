@@ -240,7 +240,7 @@ function useMemo<T>(
 export function useMutableSource<Source, Snapshot>(
   source: MutableSource<Source>,
   getSnapshot: MutableSourceGetSnapshotFn<Source, Snapshot>,
-  subscribe: MutableSourceSubscribeFn<Source>,
+  subscribe: MutableSourceSubscribeFn<Source, Snapshot>,
 ): Snapshot {
   const hook = nextHook();
   const value =

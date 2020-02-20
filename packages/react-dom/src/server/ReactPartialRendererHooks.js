@@ -468,7 +468,7 @@ function useResponder(responder, props): ReactEventResponderListener<any, any> {
 function useMutableSource<Source, Snapshot>(
   source: MutableSource<Source>,
   getSnapshot: MutableSourceGetSnapshotFn<Source, Snapshot>,
-  subscribe: MutableSourceSubscribeFn<Source>,
+  subscribe: MutableSourceSubscribeFn<Source, Snapshot>,
 ): Snapshot {
   resolveCurrentlyRenderingComponent();
   return getSnapshot(source._source);

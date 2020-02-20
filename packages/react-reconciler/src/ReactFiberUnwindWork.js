@@ -32,7 +32,6 @@ import {
   popTopLevelContextObject as popTopLevelLegacyContextObject,
 } from './ReactFiberContext';
 import {popProvider} from './ReactFiberNewContext';
-import {resetWorkInProgressVersions as resetMutableSourceWorkInProgressVersions} from './ReactMutableSource';
 
 import invariant from 'shared/invariant';
 
@@ -54,7 +53,6 @@ function unwindWork(
       return null;
     }
     case HostRoot: {
-      resetMutableSourceWorkInProgressVersions();
       popHostContainer(workInProgress);
       popTopLevelLegacyContextObject(workInProgress);
       const effectTag = workInProgress.effectTag;

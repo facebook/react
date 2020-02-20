@@ -199,10 +199,12 @@ export type MutableSourceGetSnapshotFn<
   Source: $NonMaybeType<mixed>,
   Snapshot,
 > = (source: Source) => Snapshot;
-export type MutableSourceSubscribeFn<Source: $NonMaybeType<mixed>> = (
+
+export type MutableSourceSubscribeFn<Source: $NonMaybeType<mixed>, Snapshot> = (
   source: Source,
-  callback: Function,
+  callback: (snapshot: Snapshot) => void,
 ) => () => void;
+
 export type MutableSourceGetVersionFn = () => MutableSourceVersion;
 
 export type MutableSource<Source: $NonMaybeType<mixed>> = {|

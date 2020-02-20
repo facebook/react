@@ -184,7 +184,7 @@ export function useDeferredValue<T>(value: T, config: ?Object): T {
 export function useMutableSource<Source, Snapshot>(
   source: MutableSource<Source>,
   getSnapshot: MutableSourceGetSnapshotFn<Source, Snapshot>,
-  subscribe: MutableSourceSubscribeFn<Source>,
+  subscribe: MutableSourceSubscribeFn<Source, Snapshot>,
 ): Snapshot {
   const dispatcher = resolveDispatcher();
   return dispatcher.useMutableSource(source, getSnapshot, subscribe);
