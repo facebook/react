@@ -864,14 +864,14 @@ function readFromUnsubcribedMutableSource<Source, Snapshot>(
   source: MutableSource<Source>,
   getSnapshot: MutableSourceGetSnapshotFn<Source, Snapshot>,
 ): Snapshot {
-  const getVersion = source._getVersion;
-  const version = getVersion();
   const root = ((getWorkInProgressRoot(): any): FiberRoot);
-
   invariant(
     root !== null,
     'Expected a work-in-progress root. This is a bug in React. Please file an issue.',
   );
+
+  const getVersion = source._getVersion;
+  const version = getVersion();
 
   // Is it safe for this component to read from this source during the current render?
   let isSafeToReadFromSource = false;
@@ -914,61 +914,151 @@ function readFromUnsubcribedMutableSource<Source, Snapshot>(
   }
 }
 
-function createMutableSourceEffect<Source, Snapshot>(
+type MutableSourceRef<Source, Snapshot> = {|
+  getSnapshot: null | MutableSourceGetSnapshotFn<Source, Snapshot>,
+  source: null | MutableSource<Source>,
+  subscribe: null | MutableSourceSubscribeFn<Source, Snapshot>,
+|};
+
+function useMutableSourceImpl<Source, Snapshot>(
+  useEffectImpl: (
+    create: () => (() => void) | void,
+    deps: Array<mixed> | void | null,
+  ) => void,
+  useRefImpl: (
+    initialValue: MutableSourceRef<Source, Snapshot>,
+  ) => {|current: MutableSourceRef<Source, Snapshot>|},
+  useStateImpl: (
+    initialState: () => MutableSourceState<Source, Snapshot>,
+  ) => [MutableSourceState<Source, Snapshot>, Dispatch<any>],
   source: MutableSource<Source>,
+  getSnapshot: MutableSourceGetSnapshotFn<Source, Snapshot>,
   subscribe: MutableSourceSubscribeFn<Source, Snapshot>,
-  setState: any,
-) {
+): Snapshot {
+  const getVersion = source._getVersion;
+  const version = getVersion();
+
+  const [state, setState] = useStateImpl(
+    () =>
+      ({
+        getSnapshot,
+        snapshot: readFromUnsubcribedMutableSource(source, getSnapshot),
+        source,
+        subscribe,
+      }: MutableSourceState<Source, Snapshot>),
+  );
+
+  const ref = useRefImpl({
+    getSnapshot: null,
+    source: null,
+    subscribe: null,
+  });
+
   let didUnsubscribe = false;
 
-  return () => {
-    const onChange = newSnapshot => {
+  // If we got a new source or subscribe function,
+  // we'll need to subscribe in a passive effect,
+  // and also check for any changes that fire between render and subscribe.
+  useEffectImpl(() => {
+    const shouldResubscribe =
+      subscribe !== ref.current.subscribe || source !== ref.current.source;
+
+    // We need to re-subscribe any time either the source or the subscribe function changes.
+    // We dont' need to re-subscribe when getSnapshot changes,
+    // but we will need the latest getSnapshot inside of our change handler-
+    // so we store a reference to it the ref as well.
+    ref.current = {
+      getSnapshot,
+      source,
+      subscribe,
+    };
+
+    if (shouldResubscribe) {
+      const handleChange = () => {
+        // It's possible that this callback will be invoked even after being unsubscribed,
+        // if it's removed as a result of a subscription event/update.
+        // In this case, React might log a DEV warning about an update from an unmounted component.
+        // We can avoid triggering that warning with this check.
+        if (didUnsubscribe) {
+          return;
+        }
+
+        const latestGetSnapshot = ((ref.current
+          .getSnapshot: any): MutableSourceGetSnapshotFn<Source, Snapshot>);
+        const newSnapshot = latestGetSnapshot(source._source);
+
+        setState(prevState => {
+          // Ignore values from stale sources!
+          // Since we subscribe an unsubscribe in a passive effect,
+          // it's possible that this callback will be invoked for a stale (previous) subscription.
+          // This check avoids scheduling an update for that stale subscription.
+          if (
+            prevState.source !== source ||
+            prevState.subscribe !== subscribe
+          ) {
+            return prevState;
+          }
+
+          // If the value hasn't changed, no update is needed.
+          // Return state as-is so React can bail out and avoid an unnecessary render.
+          if (prevState.snapshot === newSnapshot) {
+            return prevState;
+          }
+
+          setState({
+            ...prevState,
+            snapshot: newSnapshot,
+          });
+        });
+      };
+
+      const unsubscribe = subscribe(source._source, handleChange);
       invariant(
-        arguments.length > 0,
-        'Mutable source subscription callback should be passed a new snapshot value.',
+        typeof unsubscribe === 'function',
+        'Mutable source subscribe function must return an unsubscribe function.',
       );
 
-      // It's possible that this callback will be invoked even after being unsubscribed,
-      // if it's removed as a result of a subscription event/update.
-      // In this case, React might log a DEV warning about an update from an unmounted component.
-      // We can avoid triggering that warning with this check.
-      if (didUnsubscribe) {
-        return;
+      // Check for a possible change between when we last rendered and when we just subscribed.
+      const maybeNewVersion = getVersion();
+      if (version !== maybeNewVersion) {
+        const maybeNewSnapshot = getSnapshot(source._source);
+        if (state.snapshot !== maybeNewSnapshot) {
+          setState(currentState => ({
+            ...currentState,
+            snapshot: maybeNewSnapshot,
+          }));
+        }
       }
 
-      setState(prevState => {
-        // Ignore values from stale sources!
-        // Since we subscribe an unsubscribe in a passive effect,
-        // it's possible that this callback will be invoked for a stale (previous) subscription.
-        // This check avoids scheduling an update for that stale subscription.
-        if (prevState.source !== source || prevState.subscribe !== subscribe) {
-          return prevState;
-        }
+      return () => {
+        didUnsubscribe = true;
+        unsubscribe();
+      };
+    }
+  }, [source, subscribe, getSnapshot]);
 
-        // If the value hasn't changed, no update is needed.
-        // Return state as-is so React can bail out and avoid an unnecessary render.
-        if (prevState.snapshot === newSnapshot) {
-          return prevState;
-        }
-
-        setState({
-          ...prevState,
-          snapshot: newSnapshot,
-        });
-      });
-    };
-
-    const unsubscribe = subscribe(source._source, onChange);
+  if (state.source !== source || state.subscribe !== subscribe) {
+    const snapshot = readFromUnsubcribedMutableSource(source, getSnapshot);
+    setState({
+      getSnapshot,
+      snapshot,
+      source,
+      subscribe,
+    });
+  } else if (state.getSnapshot !== getSnapshot) {
+    setState({
+      getSnapshot,
+      snapshot: getSnapshot(source._source),
+      source,
+      subscribe,
+    });
     invariant(
-      typeof unsubscribe === 'function',
-      'Mutable source subscribe function must return an unsubscribe function.',
+      false,
+      'Cannot read from mutable source during the current render without tearing. This is a bug in React. Please file an issue.',
     );
+  }
 
-    return () => {
-      didUnsubscribe = true;
-      unsubscribe();
-    };
-  };
+  return state.snapshot;
 }
 
 function mountMutableSource<Source, Snapshot>(
@@ -976,34 +1066,14 @@ function mountMutableSource<Source, Snapshot>(
   getSnapshot: MutableSourceGetSnapshotFn<Source, Snapshot>,
   subscribe: MutableSourceSubscribeFn<Source, Snapshot>,
 ): Snapshot {
-  const snapshot = readFromUnsubcribedMutableSource(source, getSnapshot);
-
-  const [state, setState] = mountState(
-    ({
-      getSnapshot,
-      snapshot,
-      source,
-      subscribe,
-    }: MutableSourceState<Source, Snapshot>),
+  return useMutableSourceImpl(
+    mountEffect,
+    mountRef,
+    mountState,
+    source,
+    getSnapshot,
+    subscribe,
   );
-
-  // Re-subscribe when subscribe function changes.
-  mountEffect(createMutableSourceEffect(source, subscribe, setState));
-
-  mountRef(subscribe);
-
-  // Also check for any changes that fire between render and subscribe.
-  mountEffect(() => {
-    const maybeNewSnapshot = getSnapshot(source._source);
-    if (state.snapshot !== maybeNewSnapshot) {
-      setState(currentState => ({
-        ...currentState,
-        snapshot: maybeNewSnapshot,
-      }));
-    }
-  }, [state.snapshot, getSnapshot, subscribe]);
-
-  return snapshot;
 }
 
 function updateMutableSource<Source, Snapshot>(
@@ -1011,52 +1081,14 @@ function updateMutableSource<Source, Snapshot>(
   getSnapshot: MutableSourceGetSnapshotFn<Source, Snapshot>,
   subscribe: MutableSourceSubscribeFn<Source, Snapshot>,
 ): Snapshot {
-  const [state, setState] = updateState(
-    ((null: any): MutableSourceState<Source, Snapshot>),
+  return useMutableSourceImpl(
+    updateEffect,
+    updateRef,
+    updateState,
+    source,
+    getSnapshot,
+    subscribe,
   );
-
-  // Re-subscribe when subscribe function changes.
-  updateEffect(createMutableSourceEffect(source, subscribe, setState));
-
-  const subscribeRef = updateRef(subscribe);
-
-  // If we setting up a new subscription after this update,
-  // also check for any changes that fire between render and subscribe.
-  updateEffect(() => {
-    if (subscribeRef.current !== subscribe) {
-      subscribeRef.current = subscribe;
-      const maybeNewSnapshot = getSnapshot(source._source);
-      if (state.snapshot !== maybeNewSnapshot) {
-        setState(currentState => ({
-          ...currentState,
-          snapshot: maybeNewSnapshot,
-        }));
-      }
-    }
-  }, [state.snapshot, getSnapshot, subscribe]);
-
-  if (state.source !== source) {
-    const snapshot = readFromUnsubcribedMutableSource(source, getSnapshot);
-    setState({
-      getSnapshot,
-      snapshot,
-      source,
-      subscribe,
-    });
-  } else if (state.getSnapshot !== getSnapshot) {
-    setState({
-      getSnapshot,
-      snapshot: getSnapshot(source._source),
-      source,
-      subscribe,
-    });
-    invariant(
-      false,
-      'Cannot read from mutable source during the current render without tearing. This is a bug in React. Please file an issue.',
-    );
-  }
-
-  return state.snapshot;
 }
 
 function rerenderMutableSource<Source, Snapshot>(
@@ -1064,52 +1096,14 @@ function rerenderMutableSource<Source, Snapshot>(
   getSnapshot: MutableSourceGetSnapshotFn<Source, Snapshot>,
   subscribe: MutableSourceSubscribeFn<Source, Snapshot>,
 ): Snapshot {
-  const [state, setState] = rerenderState(
-    ((null: any): MutableSourceState<Source, Snapshot>),
+  return useMutableSourceImpl(
+    updateEffect,
+    updateRef,
+    rerenderState,
+    source,
+    getSnapshot,
+    subscribe,
   );
-
-  // Re-subscribe when subscribe function changes.
-  updateEffect(createMutableSourceEffect(source, subscribe, setState));
-
-  const subscribeRef = updateRef(subscribe);
-
-  // If we setting up a new subscription after this update,
-  // also check for any changes that fire between render and subscribe.
-  updateEffect(() => {
-    if (subscribeRef.current !== subscribe) {
-      subscribeRef.current = subscribe;
-      const maybeNewSnapshot = getSnapshot(source._source);
-      if (state.snapshot !== maybeNewSnapshot) {
-        setState(currentState => ({
-          ...currentState,
-          snapshot: maybeNewSnapshot,
-        }));
-      }
-    }
-  }, [state.snapshot, getSnapshot, subscribe]);
-
-  if (state.source !== source) {
-    const snapshot = readFromUnsubcribedMutableSource(source, getSnapshot);
-    setState({
-      getSnapshot,
-      snapshot,
-      source,
-      subscribe,
-    });
-  } else if (state.getSnapshot !== getSnapshot) {
-    setState({
-      getSnapshot,
-      snapshot: getSnapshot(source._source),
-      source,
-      subscribe,
-    });
-    invariant(
-      false,
-      'Cannot read from mutable source during the current render without tearing. This is a bug in React. Please file an issue.',
-    );
-  }
-
-  return state.snapshot;
 }
 
 function mountState<S>(

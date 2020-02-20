@@ -2408,7 +2408,7 @@ function loadModules({
             set valueA(newValue) {
               revision++;
               valueA = newValue;
-              callbacksA.forEach(callback => callback(newValue));
+              callbacksA.forEach(callback => callback());
             },
             get valueA() {
               return valueA;
@@ -2417,7 +2417,7 @@ function loadModules({
             set valueB(newValue) {
               revision++;
               valueB = newValue;
-              callbacksB.forEach(callback => callback(newValue));
+              callbacksB.forEach(callback => callback());
             },
             get valueB() {
               return valueB;
@@ -2451,7 +2451,7 @@ function loadModules({
             set value(newValue) {
               revision++;
               value = newValue;
-              callbacks.forEach(callback => callback(newValue));
+              callbacks.forEach(callback => callback());
             },
             get value() {
               return value;
@@ -2726,7 +2726,12 @@ function loadModules({
               'root',
               () => Scheduler.unstable_yieldValue('Sync effect'),
             );
-            expect(Scheduler).toFlushAndYield(['only:a-one', 'Sync effect']);
+            expect(Scheduler).toFlushAndYield([
+              'only:a-one',
+              // Reentrant render to update state with new subscribe function.
+              'only:a-one',
+              'Sync effect',
+            ]);
             ReactNoop.flushPassiveEffects();
             expect(source.listenerCount).toBe(1);
             expect(unsubscribeA).toHaveBeenCalledTimes(1);

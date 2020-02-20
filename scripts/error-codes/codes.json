@@ -349,6 +349,5 @@
   "348": "ensureListeningTo(): received a container that was not an element node. This is likely a bug in React.",
   "349": "Expected a work-in-progress root. This is a bug in React. Please file an issue.",
   "350": "Cannot read from mutable source during the current render without tearing. This is a bug in React. Please file an issue.",
-  "351": "Mutable source subscription callback should be passed a new snapshot value.",
-  "352": "Mutable source subscribe function must return an unsubscribe function."
+  "351": "Mutable source subscribe function must return an unsubscribe function."
 }
