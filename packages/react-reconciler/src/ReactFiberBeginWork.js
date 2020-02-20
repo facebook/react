@@ -523,6 +523,20 @@ function updateSimpleMemoComponent(
     ) {
       didReceiveUpdate = false;
       if (updateExpirationTime < renderExpirationTime) {
+        // The pending update priority was cleared at the beginning of
+        // beginWork. We're about to bail out, but there might be additional
+        // updates at a lower priority. Usually, the priority level of the
+        // remaining updates is accumlated during the evaluation of the
+        // component (i.e. when processing the update queue). But since since
+        // we're bailing out early *without* evaluating the component, we need
+        // to account for it here, too. Reset to the value of the current fiber.
+        // NOTE: This only applies to SimpleMemoComponent, not MemoComponent,
+        // because a MemoComponent fiber does not have hooks or an update queue;
+        // rather, it wraps around an inner component, which may or may not
+        // contains hooks.
+        // TODO: Move the reset at in beginWork out of the common path so that
+        // this is no longer necessary.
+        workInProgress.expirationTime = current.expirationTime;
         return bailoutOnAlreadyFinishedWork(
           current,
           workInProgress,
@@ -3103,7 +3117,11 @@ function beginWork(
     didReceiveUpdate = false;
   }
 
-  // Before entering the begin phase, clear the expiration time.
+  // Before entering the begin phase, clear pending update priority.
+  // TODO: This assumes that we're about to evaluate the component and process
+  // the update queue. However, there's an exception: SimpleMemoComponent
+  // sometimes bails out later in the begin phase. This indicates that we should
+  // move this assignment out of the common path and into each branch.
   workInProgress.expirationTime = NoWork;
 
   switch (workInProgress.tag) {
