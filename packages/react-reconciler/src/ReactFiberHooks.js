@@ -985,7 +985,13 @@ function useMutableSourceImpl<Source, Snapshot>(
 
         const latestGetSnapshot = ((ref.current
           .getSnapshot: any): MutableSourceGetSnapshotFn<Source, Snapshot>);
-        const newSnapshot = latestGetSnapshot(source._source);
+        let newSnapshot = null;
+        let snapshotDidThrow = false;
+        try {
+          newSnapshot = latestGetSnapshot(source._source);
+        } catch (error) {
+          snapshotDidThrow = true;
+        }
 
         setState(prevState => {
           // Ignore values from stale sources!
@@ -997,6 +1003,14 @@ function useMutableSourceImpl<Source, Snapshot>(
             prevState.subscribe !== subscribe
           ) {
             return prevState;
+          }
+
+          // A selector might throw after a source mutation.
+          // e.g. it might try to read from a part of the store that no longer exists.
+          // In this case we should still schedule an update with React.
+          // Worst case the selector will throw again and then an error boundary will handle it.
+          if (snapshotDidThrow) {
+            return {...prevState};
           }
 
           // If the value hasn't changed, no update is needed.

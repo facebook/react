@@ -3093,6 +3093,76 @@ function loadModules({
           });
         });
 
+        it('should still schedule an update if an eager selector throws after a mutation', () => {
+          const source = createSource({
+            friends: [
+              {id: 1, name: 'Foo'},
+              {id: 2, name: 'Bar'},
+            ],
+          });
+          const mutableSource = createMutableSource(source);
+
+          function FriendsList() {
+            const getSnapshot = React.useCallback(
+              ({value}) => Array.from(value.friends),
+              [],
+            );
+            const friends = React.useMutableSource(
+              mutableSource,
+              getSnapshot,
+              defaultSubscribe,
+            );
+            return (
+              <ul>
+                {friends.map(friend => (
+                  <Friend key={friend.id} id={friend.id} />
+                ))}
+              </ul>
+            );
+          }
+
+          function Friend({id}) {
+            const getSnapshot = React.useCallback(
+              ({value}) => {
+                // This selector is intentionally written in a way that will throw
+                // if no matching friend exists in the store.
+                return value.friends.find(friend => friend.id === id).name;
+              },
+              [id],
+            );
+            const name = React.useMutableSource(
+              mutableSource,
+              getSnapshot,
+              defaultSubscribe,
+            );
+            Scheduler.unstable_yieldValue(`${id}:${name}`);
+            return <li>{name}</li>;
+          }
+
+          act(() => {
+            ReactNoop.render(<FriendsList />, () =>
+              Scheduler.unstable_yieldValue('Sync effect'),
+            );
+            expect(Scheduler).toFlushAndYield([
+              '1:Foo',
+              '2:Bar',
+              'Sync effect',
+            ]);
+
+            // This mutation will cause the "Bar" component to throw,
+            // since its value will no longer be a part of the store.
+            // Mutable source should still schedule an update though,
+            // which should unmount "Bar" and mount "Baz".
+            source.value = {
+              friends: [
+                {id: 1, name: 'Foo'},
+                {id: 3, name: 'Baz'},
+              ],
+            };
+            expect(Scheduler).toFlushAndYield(['1:Foo', '3:Baz']);
+          });
+        });
+
         // TODO (useMutableSource) Test for multiple updates at different priorities
       });
 
