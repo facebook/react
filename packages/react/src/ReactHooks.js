@@ -40,7 +40,7 @@ export function useContext<T>(
 ) {
   const dispatcher = resolveDispatcher();
   if (__DEV__) {
-    if (unstable_observedBits !== undefined) {
+    if (false && unstable_observedBits !== undefined) {
       console.error(
         'useContext() second argument is reserved for future ' +
           'use in React. Passing it is not supported. ' +

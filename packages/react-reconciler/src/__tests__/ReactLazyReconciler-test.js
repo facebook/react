@@ -24,8 +24,13 @@ describe('ReactLazyReconciler', () => {
 
     const Ctx = React.createContext(1);
 
+    let selectorTest = false;
+
     function Text(props) {
-      let ctx = React.useContext(Ctx);
+      let ctx = React.useContext(Ctx, v => {
+        selectorTest && Scheduler.unstable_yieldValue('selector');
+        return Math.floor(v / 2);
+      });
       Scheduler.unstable_yieldValue(props.text);
       Scheduler.unstable_yieldValue(ctx);
       return props.text;
@@ -44,7 +49,7 @@ describe('ReactLazyReconciler', () => {
     let triggerCtx = null;
 
     function App() {
-      let [val, setVal] = React.useState(1);
+      let [val, setVal] = React.useState(2);
       let texts = React.useMemo(
         () => (
           <Nothing>
@@ -67,30 +72,70 @@ describe('ReactLazyReconciler', () => {
     expect(root).toMatchRenderedOutput(null);
 
     // Everything should render immediately in the next event
+    // double renders for each component with hooks
     expect(Scheduler).toFlushExpired([
       'Nothing',
       'Nothing',
-      'Nothing', // double renders for components with hooks that are indeterminant
+      'Nothing',
       'Nothing',
       'A',
       1,
+      'A',
+      1,
       'B',
+      1,
+      'B',
+      1,
+      'C',
       1,
       'C',
       1,
     ]);
     expect(root).toMatchRenderedOutput('ABC');
 
-    ReactNoop.act(() => triggerCtx(2));
+    ReactNoop.act(() => triggerCtx(4));
 
     // Everything should render immediately in the next event
-    expect(Scheduler).toHaveYielded(['A', 2, 'B', 2, 'C', 2]);
+    expect(Scheduler).toHaveYielded([
+      'A',
+      2,
+      'A',
+      2,
+      'B',
+      2,
+      'B',
+      2,
+      'C',
+      2,
+      'C',
+      2,
+    ]);
     expect(root).toMatchRenderedOutput('ABC');
 
-    ReactNoop.act(() => triggerCtx(3));
+    selectorTest = true;
+    ReactNoop.act(() => triggerCtx(5));
+    selectorTest = false;
+    // nothing should render (below app) because the value will be the same
+    expect(Scheduler).toHaveYielded(['selector', 'selector', 'selector']);
+    expect(root).toMatchRenderedOutput('ABC');
+
+    ReactNoop.act(() => triggerCtx(6));
 
     // Everything should render immediately in the next event
-    expect(Scheduler).toHaveYielded(['A', 3, 'B', 3, 'C', 3]);
+    expect(Scheduler).toHaveYielded([
+      'A',
+      3,
+      'A',
+      3,
+      'B',
+      3,
+      'B',
+      3,
+      'C',
+      3,
+      'C',
+      3,
+    ]);
     expect(root).toMatchRenderedOutput('ABC');
 
     ReactNoop.act(() => triggerState());

@@ -21,7 +21,7 @@ import type {ReactPriorityLevel} from './SchedulerWithReactIntegration';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 
 import {NoWork, Sync} from './ReactFiberExpirationTime';
-import {readContext} from './ReactFiberNewContext';
+import {readContext, peekContext} from './ReactFiberNewContext';
 import {createDeprecatedResponderListener} from './ReactFiberDeprecatedEvents';
 import {
   Update as UpdateEffect,
@@ -343,6 +343,27 @@ function areHookInputsEqual(
   return true;
 }
 
+export function bailoutSpeculativeWorkWithHooks(
+  current: Fiber,
+  nextRenderExpirationTime: renderExpirationTime,
+): boolean {
+  console.log('====== bailoutSpeculativeWorkWithHooks');
+  let hook = current.memoizedState;
+  while (hook !== null) {
+    console.log('hook', hook);
+    if (typeof hook.bailout === 'function') {
+      let didBailout = hook.bailout(hook, nextRenderExpirationTime);
+      if (didBailout === false) {
+        console.log('====== bailoutSpeculativeWorkWithHooks returning false');
+        return false;
+      }
+    }
+    hook = hook.next;
+  }
+  console.log('====== bailoutSpeculativeWorkWithHooks returning true');
+  return true;
+}
+
 export function renderWithHooks(
   current: Fiber | null,
   workInProgress: Fiber,
@@ -480,6 +501,7 @@ export function renderWithHooks(
   return children;
 }
 
+// @TODO may need to reset context hooks now that they have memoizedState
 export function bailoutHooks(
   current: Fiber,
   workInProgress: Fiber,
@@ -492,6 +514,7 @@ export function bailoutHooks(
   }
 }
 
+// @TODO may need to reset context hooks now that they have memoizedState
 export function resetHooksAfterThrow(): void {
   // We can assume the previous dispatcher is always this one, since we set it
   // at the beginning of the render phase and there's no re-entrancy.
@@ -539,6 +562,8 @@ function mountWorkInProgressHook(): Hook {
     baseState: null,
     baseQueue: null,
     queue: null,
+
+    bailout: null,
 
     next: null,
   };
@@ -600,6 +625,8 @@ function updateWorkInProgressHook(): Hook {
       baseQueue: currentHook.baseQueue,
       queue: currentHook.queue,
 
+      bailout: currentHook.bailout,
+
       next: null,
     };
 
@@ -612,6 +639,122 @@ function updateWorkInProgressHook(): Hook {
     }
   }
   return workInProgressHook;
+}
+
+type ObservedBits = void | number | boolean;
+
+function mountContext<C>(
+  context: ReactContext<C>,
+  selector?: ObservedBits | (C => any),
+): any {
+  const hook = mountWorkInProgressHook();
+  if (typeof selector === 'function') {
+    let contextValue = readContext(context);
+    let selection = selector(contextValue);
+    hook.memoizedState = {
+      context,
+      contextValue,
+      selector,
+      selection,
+      stashedContextValue: EMPTY,
+      stashedSelection: EMPTY,
+    };
+    hook.bailout = bailoutContext;
+    return selection;
+  } else {
+    // selector is the legacy observedBits api
+    let contextValue = readContext(context, selector);
+    hook.memoizedState = {
+      context,
+      contextValue,
+      selector: null,
+      selection: EMPTY,
+      stashedContextValue: EMPTY,
+      stashedSelection: EMPTY,
+    };
+    hook.bailout = bailoutContext;
+    return contextValue;
+  }
+}
+
+let EMPTY = Symbol('empty');
+
+function updateContext<C>(
+  context: ReactContext<C>,
+  selector?: ObservedBits | (C => any),
+): any {
+  const hook = updateWorkInProgressHook();
+  const memoizedState = hook.memoizedState;
+  if (memoizedState.stashedSelection !== EMPTY) {
+    // context and selector could not have changed since we attempted a bailout
+    memoizedState.contextValue = memoizedState.stashedContextValue;
+    memoizedState.selection = memoizedState.stashedSelection;
+    memoizedState.stashedContextValue = EMPTY;
+    memoizedState.stashedSelection = EMPTY;
+    return memoizedState.selection;
+  }
+  memoizedState.context = context;
+  if (typeof selector === 'function') {
+    let selection = memoizedState.selection;
+    let contextValue = readContext(context);
+
+    if (
+      contextValue !== memoizedState.contextValue ||
+      selector !== memoizedState.selector
+    ) {
+      selection = selector(contextValue);
+      memoizedState.contextValue = contextValue;
+      memoizedState.selector = selector;
+      memoizedState.selection = selection;
+    }
+    return selection;
+  } else {
+    // selector is actually legacy observedBits
+    let contextValue = readContext(context, selector);
+    memoizedState.contextValue = contextValue;
+    return contextValue;
+  }
+}
+
+function bailoutContext(hook: Hook): boolean {
+  console.log('}}}}} bailoutContext', hook);
+  const memoizedState = hook.memoizedState;
+  let selector = memoizedState.selector;
+  let peekedContextValue = peekContext(memoizedState.context);
+  let previousContextValue = memoizedState.contextValue;
+
+  if (selector !== null) {
+    console.log('}}}}} bailoutContext we have a selector');
+    if (previousContextValue !== peekedContextValue) {
+      console.log(
+        '}}}}} bailoutContext we have different context values',
+        previousContextValue,
+        peekedContextValue,
+      );
+      let stashedSelection = selector(peekedContextValue);
+      if (stashedSelection !== memoizedState.selection) {
+        console.log(
+          '}}}}} bailoutContext we have different context SELECTIONS',
+          memoizedState.selection,
+          stashedSelection,
+        );
+        memoizedState.stashedSelection = stashedSelection;
+        memoizedState.stashedContextValue = peekedContextValue;
+        return false;
+      }
+    }
+  } else {
+    console.log('}}}}} bailoutContext we are not using selectors');
+    if (previousContextValue !== peekedContextValue) {
+      console.log(
+        '}}}}} bailoutContext we have different context values',
+        previousContextValue,
+        peekedContextValue,
+      );
+      return false;
+    }
+  }
+  return true;
 }
 
 function createFunctionComponentUpdateQueue(): FunctionComponentUpdateQueue {
@@ -644,6 +787,8 @@ function mountReducer<S, I, A>(
     lastRenderedReducer: reducer,
     lastRenderedState: (initialState: any),
   });
+  hook.bailout = bailoutReducer;
+  console.log('mountReducer hook', hook);
   const dispatch: Dispatch<A> = (queue.dispatch = (dispatchAction.bind(
     null,
     currentlyRenderingFiber,
@@ -837,6 +982,46 @@ function rerenderReducer<S, I, A>(
   return [newState, dispatch];
 }
 
+function bailoutReducer(hook, renderExpirationTime): boolean {
+  console.log('}}}} bailoutReducer', hook);
+
+  const queue = hook.queue;
+
+  // The last rebase update that is NOT part of the base state.
+  let baseQueue = hook.baseQueue;
+  let reducer = queue.lastRenderedReducer;
+
+  // The last pending update that hasn't been processed yet.
+  let pendingQueue = queue.pending;
+  if (pendingQueue !== null) {
+    // We have new updates that haven't been processed yet.
+    // We'll add them to the base queue.
+    baseQueue = pendingQueue;
+  }
+
+  if (baseQueue !== null) {
+    // We have a queue to process.
+    let first = baseQueue.next;
+    let newState = hook.baseState;
+
+    let update = first;
+    do {
+      // Process this update.
+      const action = update.action;
+      newState = reducer(newState, action);
+      update = update.next;
+    } while (update !== null && update !== first);
+
+    // if newState is different from the current state do not bailout
+    if (newState !== hook.memoizedState) {
+      console.log('found a new state. not bailing out of hooks');
+      return false;
+    }
+  }
+  console.log('state is the same so we can maybe bail out');
+  return true;
+}
+
 function mountState<S>(
   initialState: (() => S) | S,
 ): [S, Dispatch<BasicStateAction<S>>] {
@@ -852,6 +1037,8 @@ function mountState<S>(
     lastRenderedReducer: basicStateReducer,
     lastRenderedState: (initialState: any),
   });
+  hook.bailout = bailoutReducer;
+  console.log('mountState hook', hook);
   const dispatch: Dispatch<
     BasicStateAction<S>,
   > = (queue.dispatch = (dispatchAction.bind(
@@ -1393,7 +1580,7 @@ const HooksDispatcherOnMount: Dispatcher = {
   readContext,
 
   useCallback: mountCallback,
-  useContext: readContext,
+  useContext: mountContext,
   useEffect: mountEffect,
   useImperativeHandle: mountImperativeHandle,
   useLayoutEffect: mountLayoutEffect,
@@ -1411,7 +1598,7 @@ const HooksDispatcherOnUpdate: Dispatcher = {
   readContext,
 
   useCallback: updateCallback,
-  useContext: readContext,
+  useContext: updateContext,
   useEffect: updateEffect,
   useImperativeHandle: updateImperativeHandle,
   useLayoutEffect: updateLayoutEffect,
@@ -1429,7 +1616,7 @@ const HooksDispatcherOnRerender: Dispatcher = {
   readContext,
 
   useCallback: updateCallback,
-  useContext: readContext,
+  useContext: updateContext,
   useEffect: updateEffect,
   useImperativeHandle: updateImperativeHandle,
   useLayoutEffect: updateLayoutEffect,
@@ -1486,11 +1673,11 @@ if (__DEV__) {
     },
     useContext<T>(
       context: ReactContext<T>,
-      observedBits: void | number | boolean,
+      selector: ObservedBits | (T => any),
     ): T {
       currentHookNameInDev = 'useContext';
       mountHookTypesDev();
-      return readContext(context, observedBits);
+      return mountContext(context, selector);
     },
     useEffect(
       create: () => (() => void) | void,
@@ -1607,11 +1794,11 @@ if (__DEV__) {
     },
     useContext<T>(
       context: ReactContext<T>,
-      observedBits: void | number | boolean,
+      selector: ObservedBits | (T => any),
     ): T {
       currentHookNameInDev = 'useContext';
       updateHookTypesDev();
-      return readContext(context, observedBits);
+      return mountContext(context, selector);
     },
     useEffect(
       create: () => (() => void) | void,
@@ -1724,11 +1911,11 @@ if (__DEV__) {
     },
     useContext<T>(
       context: ReactContext<T>,
-      observedBits: void | number | boolean,
+      selector: ObservedBits | (T => any),
     ): T {
       currentHookNameInDev = 'useContext';
       updateHookTypesDev();
-      return readContext(context, observedBits);
+      return updateContext(context, selector);
     },
     useEffect(
       create: () => (() => void) | void,
@@ -1841,11 +2028,11 @@ if (__DEV__) {
     },
     useContext<T>(
       context: ReactContext<T>,
-      observedBits: void | number | boolean,
+      selector: ObservedBits | (T => any),
     ): T {
       currentHookNameInDev = 'useContext';
       updateHookTypesDev();
-      return readContext(context, observedBits);
+      return updateContext(context, selector);
     },
     useEffect(
       create: () => (() => void) | void,
@@ -1960,12 +2147,12 @@ if (__DEV__) {
     },
     useContext<T>(
       context: ReactContext<T>,
-      observedBits: void | number | boolean,
+      selector: ObservedBits | (T => any),
     ): T {
       currentHookNameInDev = 'useContext';
       warnInvalidHookAccess();
       mountHookTypesDev();
-      return readContext(context, observedBits);
+      return mountContext(context, selector);
     },
     useEffect(
       create: () => (() => void) | void,
@@ -2091,12 +2278,12 @@ if (__DEV__) {
     },
     useContext<T>(
       context: ReactContext<T>,
-      observedBits: void | number | boolean,
+      selector: ObservedBits | (T => any),
     ): T {
       currentHookNameInDev = 'useContext';
       warnInvalidHookAccess();
       updateHookTypesDev();
-      return readContext(context, observedBits);
+      return updateContext(context, selector);
     },
     useEffect(
       create: () => (() => void) | void,
@@ -2222,12 +2409,12 @@ if (__DEV__) {
     },
     useContext<T>(
       context: ReactContext<T>,
-      observedBits: void | number | boolean,
+      selector: ObservedBits | (T => any),
     ): T {
       currentHookNameInDev = 'useContext';
       warnInvalidHookAccess();
       updateHookTypesDev();
-      return readContext(context, observedBits);
+      return updateContext(context, selector);
     },
     useEffect(
       create: () => (() => void) | void,

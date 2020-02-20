@@ -335,6 +335,10 @@ export function prepareToReadContext(
   }
 }
 
+export function peekContext<T>(context: ReactContext<T>): T {
+  return isPrimaryRenderer ? context._currentValue : context._currentValue2;
+}
+
 export function readContext<T>(
   context: ReactContext<T>,
   observedBits: void | number | boolean,

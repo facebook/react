@@ -137,7 +137,11 @@ import {
   calculateChangedBits,
   scheduleWorkOnParentPath,
 } from './ReactFiberNewContext';
-import {renderWithHooks, bailoutHooks} from './ReactFiberHooks';
+import {
+  renderWithHooks,
+  bailoutHooks,
+  bailoutSpeculativeWorkWithHooks,
+} from './ReactFiberHooks';
 import {stopProfilerTimerIfRunning} from './ReactProfilerTimer';
 import {
   getMaskedContext,
@@ -692,7 +696,10 @@ function updateFunctionComponent(
         '???? updateFunctionComponent called with a current fiber for workInProgress',
         current.memoizedProps,
       );
-      if (preemptiveHooksBailout(workInProgress, renderExpirationTime)) {
+      // if (preemptiveHooksBailout(workInProgress, renderExpirationTime)) {
+      if (
+        bailoutSpeculativeWorkWithHooks(workInProgress, renderExpirationTime)
+      ) {
         console.log('hooks have not changed, we can bail out of update');
         return bailoutOnAlreadyFinishedWork(
           current,
