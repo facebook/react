@@ -1532,6 +1532,8 @@ function completeUnitOfWork(unitOfWork: Fiber): Fiber | null {
     // need an additional field on the work in progress.
     const current = workInProgress.alternate;
     const returnFiber = workInProgress.return;
+    const workWasSpeculative = workInProgress.reify;
+    workInProgress.reify = false;
 
     // Check if the work completed or if something threw.
     if ((workInProgress.effectTag & Incomplete) === NoEffect) {
@@ -1560,7 +1562,9 @@ function completeUnitOfWork(unitOfWork: Fiber): Fiber | null {
       if (
         returnFiber !== null &&
         // Do not append effects to parents if a sibling failed to complete
-        (returnFiber.effectTag & Incomplete) === NoEffect
+        (returnFiber.effectTag & Incomplete) === NoEffect &&
+        // Do not append effects to parent if workInProgress was speculative
+        workWasSpeculative !== true
       ) {
         // Append all the effects of the subtree and this fiber onto the effect
         // list of the parent. The completion order of the children affects the
@@ -1836,12 +1840,20 @@ function commitRootImpl(root, renderPriorityLevel) {
     }
   } else {
     // There is no effect on the root.
-    console.log('**** no effects on th root');
-
     firstEffect = finishedWork.firstEffect;
   }
 
   if (firstEffect !== null) {
+    console.log('root finishedWork has effects');
+    {
+      let count = 0;
+      let effect = firstEffect;
+      while (effect !== null) {
+        count++;
+        effect = effect.nextEffect;
+      }
+      console.log(`finished work had ${count} effects`);
+    }
     const prevExecutionContext = executionContext;
     executionContext |= CommitContext;
     const prevInteractions = pushInteractions(root);

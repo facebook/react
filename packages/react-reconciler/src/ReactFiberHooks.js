@@ -350,7 +350,7 @@ export function bailoutSpeculativeWorkWithHooks(
   console.log('====== bailoutSpeculativeWorkWithHooks');
   let hook = current.memoizedState;
   while (hook !== null) {
-    console.log('hook', hook);
+    console.log('hook');
     if (typeof hook.bailout === 'function') {
       let didBailout = hook.bailout(hook, nextRenderExpirationTime);
       if (didBailout === false) {
@@ -717,7 +717,7 @@ function updateContext<C>(
 }
 
 function bailoutContext(hook: Hook): boolean {
-  console.log('}}}}} bailoutContext', hook);
+  console.log('}}}}} bailoutContext');
   const memoizedState = hook.memoizedState;
   let selector = memoizedState.selector;
   let peekedContextValue = peekContext(memoizedState.context);
@@ -788,7 +788,7 @@ function mountReducer<S, I, A>(
     lastRenderedState: (initialState: any),
   });
   hook.bailout = bailoutReducer;
-  console.log('mountReducer hook', hook);
+  console.log('mountReducer hook');
   const dispatch: Dispatch<A> = (queue.dispatch = (dispatchAction.bind(
     null,
     currentlyRenderingFiber,
@@ -983,7 +983,7 @@ function rerenderReducer<S, I, A>(
 }
 
 function bailoutReducer(hook, renderExpirationTime): boolean {
-  console.log('}}}} bailoutReducer', hook);
+  console.log('}}}} bailoutReducer');
 
   const queue = hook.queue;
 
@@ -1038,7 +1038,6 @@ function mountState<S>(
     lastRenderedState: (initialState: any),
   });
   hook.bailout = bailoutReducer;
-  console.log('mountState hook', hook);
   const dispatch: Dispatch<
     BasicStateAction<S>,
   > = (queue.dispatch = (dispatchAction.bind(

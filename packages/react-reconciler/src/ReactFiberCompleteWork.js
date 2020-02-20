@@ -653,19 +653,17 @@ function completeWork(
   workInProgress: Fiber,
   renderExpirationTime: ExpirationTime,
 ): Fiber | null {
+  let wasSpeculative = workInProgress.reify;
+
   console.log(
-    'completeWork',
+    wasSpeculative ? 'completeWork -speculative' : 'completeWork',
     fiberName(workInProgress) + '->' + fiberName(workInProgress.return),
     current && fiberName(current) + '->' + fiberName(current.return),
   );
 
-  // reset reify state. it would have been dealt with already if it needed to by by now
-  workInProgress.reify = false;
-  if (current !== null) {
-    current.reify = false;
-  }
-
-  const newProps = workInProgress.pendingProps;
+  const newProps = wasSpeculative
+    ? workInProgress.memoizedProps
+    : workInProgress.pendingProps;
 
   switch (workInProgress.tag) {
     case IndeterminateComponent:

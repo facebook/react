@@ -33,13 +33,15 @@ describe('ReactLazyReconciler', () => {
       });
       Scheduler.unstable_yieldValue(props.text);
       Scheduler.unstable_yieldValue(ctx);
-      return props.text;
+      return props.text + (props.plusValue ? ctx : '');
     }
 
     let triggerState = null;
 
     function Nothing({children}) {
       let [state, setState] = React.useState(0);
+      // trigger state will result in an identical state. it is used to see
+      // where how and if the state bailout is working
       triggerState = () => setState(s => s);
       console.log('^^^^ rendering Nothing Component');
       Scheduler.unstable_yieldValue('Nothing');
@@ -54,8 +56,8 @@ describe('ReactLazyReconciler', () => {
         () => (
           <Nothing>
             <Nothing>
-              <Text text="A" />
-              <Text text="B" />
+              <Text text="A" plusValue />
+              <Text text="B" plusValue />
               <Text text="C" />
             </Nothing>
           </Nothing>
@@ -91,7 +93,7 @@ describe('ReactLazyReconciler', () => {
       'C',
       1,
     ]);
-    expect(root).toMatchRenderedOutput('ABC');
+    expect(root).toMatchRenderedOutput('A1B1C');
 
     ReactNoop.act(() => triggerCtx(4));
 
@@ -110,14 +112,14 @@ describe('ReactLazyReconciler', () => {
       'C',
       2,
     ]);
-    expect(root).toMatchRenderedOutput('ABC');
+    expect(root).toMatchRenderedOutput('A2B2C');
 
     selectorTest = true;
     ReactNoop.act(() => triggerCtx(5));
     selectorTest = false;
     // nothing should render (below app) because the value will be the same
     expect(Scheduler).toHaveYielded(['selector', 'selector', 'selector']);
-    expect(root).toMatchRenderedOutput('ABC');
+    expect(root).toMatchRenderedOutput('A2B2C');
 
     ReactNoop.act(() => triggerCtx(6));
 
@@ -136,12 +138,12 @@ describe('ReactLazyReconciler', () => {
       'C',
       3,
     ]);
-    expect(root).toMatchRenderedOutput('ABC');
+    expect(root).toMatchRenderedOutput('A3B3C');
 
     ReactNoop.act(() => triggerState());
 
     // Everything should render immediately in the next event
     expect(Scheduler).toHaveYielded([]);
-    expect(root).toMatchRenderedOutput('ABC');
+    expect(root).toMatchRenderedOutput('A3B3C');
   });
 });
