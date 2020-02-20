@@ -264,7 +264,7 @@ function handleTopLevel(bookKeeping: BookKeepingInstance) {
   }
 }
 
-export function dispatchEventForPluginEventSystem(
+export function dispatchEventForLegacyPluginEventSystem(
   topLevelType: DOMTopLevelEventType,
   eventSystemFlags: EventSystemFlags,
   nativeEvent: AnyNativeEvent,
@@ -311,16 +311,16 @@ export function legacyListenToEvent(
   registrationName: string,
   mountAt: Document | Element | Node,
 ): void {
-  const listeningSet = getListenerMapForElement(mountAt);
+  const listenerMap = getListenerMapForElement(mountAt);
   const dependencies = registrationNameDependencies[registrationName];
 
   for (let i = 0; i < dependencies.length; i++) {
     const dependency = dependencies[i];
-    listenToTopLevelEvent(dependency, mountAt, listeningSet);
+    legacyListenToTopLevelEvent(dependency, mountAt, listenerMap);
   }
 }
 
-export function listenToTopLevelEvent(
+export function legacyListenToTopLevelEvent(
   topLevelType: DOMTopLevelEventType,
   mountAt: Document | Element | Node,
   listenerMap: Map<DOMTopLevelEventType | string, null | (any => void)>,

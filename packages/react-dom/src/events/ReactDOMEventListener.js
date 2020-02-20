@@ -60,7 +60,7 @@ import {
   DiscreteEvent,
 } from 'shared/ReactTypes';
 import {getEventPriorityForPluginSystem} from './DOMEventProperties';
-import {dispatchEventForPluginEventSystem} from './DOMLegacyEventPluginSystem';
+import {dispatchEventForLegacyPluginEventSystem} from './DOMLegacyEventPluginSystem';
 
 const {
   unstable_UserBlockingPriority: UserBlockingPriority,
@@ -242,8 +242,8 @@ export function dispatchEvent(
       null, // Flags that we're not actually blocked on anything as far as we know.
       topLevelType,
       eventSystemFlags,
-      nativeEvent,
       container,
+      nativeEvent,
     );
     return;
   }
@@ -251,8 +251,8 @@ export function dispatchEvent(
   const blockedOn = attemptToDispatchEvent(
     topLevelType,
     eventSystemFlags,
-    nativeEvent,
     container,
+    nativeEvent,
   );
 
   if (blockedOn === null) {
@@ -267,8 +267,8 @@ export function dispatchEvent(
       blockedOn,
       topLevelType,
       eventSystemFlags,
-      nativeEvent,
       container,
+      nativeEvent,
     );
     return;
   }
@@ -278,8 +278,8 @@ export function dispatchEvent(
       blockedOn,
       topLevelType,
       eventSystemFlags,
-      nativeEvent,
       container,
+      nativeEvent,
     )
   ) {
     return;
@@ -293,7 +293,7 @@ export function dispatchEvent(
   // in case the event system needs to trace it.
   if (enableDeprecatedFlareAPI) {
     if (eventSystemFlags & PLUGIN_EVENT_SYSTEM) {
-      dispatchEventForPluginEventSystem(
+      dispatchEventForLegacyPluginEventSystem(
         topLevelType,
         eventSystemFlags,
         nativeEvent,
@@ -311,7 +311,7 @@ export function dispatchEvent(
       );
     }
   } else {
-    dispatchEventForPluginEventSystem(
+    dispatchEventForLegacyPluginEventSystem(
       topLevelType,
       eventSystemFlags,
       nativeEvent,
@@ -324,8 +324,8 @@ export function dispatchEvent(
 export function attemptToDispatchEvent(
   topLevelType: DOMTopLevelEventType,
   eventSystemFlags: EventSystemFlags,
-  nativeEvent: AnyNativeEvent,
   container: Document | Element | Node,
+  nativeEvent: AnyNativeEvent,
 ): null | Container | SuspenseInstance {
   // TODO: Warn if _enabled is false.
 
@@ -372,7 +372,7 @@ export function attemptToDispatchEvent(
 
   if (enableDeprecatedFlareAPI) {
     if (eventSystemFlags & PLUGIN_EVENT_SYSTEM) {
-      dispatchEventForPluginEventSystem(
+      dispatchEventForLegacyPluginEventSystem(
         topLevelType,
         eventSystemFlags,
         nativeEvent,
@@ -390,7 +390,7 @@ export function attemptToDispatchEvent(
       );
     }
   } else {
-    dispatchEventForPluginEventSystem(
+    dispatchEventForLegacyPluginEventSystem(
       topLevelType,
       eventSystemFlags,
       nativeEvent,

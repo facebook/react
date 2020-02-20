@@ -12,6 +12,7 @@ import type {Container, SuspenseInstance} from '../client/ReactDOMHostConfig';
 import type {DOMTopLevelEventType} from 'legacy-events/TopLevelEventTypes';
 import type {EventSystemFlags} from 'legacy-events/EventSystemFlags';
 import type {FiberRoot} from 'react-reconciler/src/ReactFiberRoot';
+import type {DOMContainer} from '../client/ReactDOM';
 
 import {
   enableDeprecatedFlareAPI,
@@ -117,7 +118,7 @@ import {
   TOP_BLUR,
 } from './DOMTopLevelEventTypes';
 import {IS_REPLAYED} from 'legacy-events/EventSystemFlags';
-import {listenToTopLevelEvent} from './DOMLegacyEventPluginSystem';
+import {legacyListenToTopLevelEvent} from './DOMLegacyEventPluginSystem';
 
 type QueuedReplayableEvent = {|
   blockedOn: null | Container | SuspenseInstance,
@@ -211,12 +212,12 @@ export function isReplayableDiscreteEvent(
   return discreteReplayableEvents.indexOf(eventType) > -1;
 }
 
-function trapReplayableEvent(
+function trapReplayableEventForDocument(
   topLevelType: DOMTopLevelEventType,
   document: Document,
   listenerMap: Map<DOMTopLevelEventType | string, null | (any => void)>,
 ) {
-  listenToTopLevelEvent(topLevelType, document, listenerMap);
+  legacyListenToTopLevelEvent(topLevelType, document, listenerMap);
   if (enableDeprecatedFlareAPI) {
     // Trap events for the responder system.
     const topLevelTypeString = unsafeCastDOMTopLevelTypeToString(topLevelType);
@@ -236,15 +237,18 @@ function trapReplayableEvent(
   }
 }
 
-export function eagerlyTrapReplayableEvents(document: Document) {
-  const listenerMap = getListenerMapForElement(document);
+export function eagerlyTrapReplayableEvents(
+  container: DOMContainer,
+  document: Document,
+) {
+  const listenerMapForDoc = getListenerMapForElement(document);
   // Discrete
   discreteReplayableEvents.forEach(topLevelType => {
-    trapReplayableEvent(topLevelType, document, listenerMap);
+    trapReplayableEventForDocument(topLevelType, document, listenerMapForDoc);
   });
   // Continuous
   continuousReplayableEvents.forEach(topLevelType => {
-    trapReplayableEvent(topLevelType, document, listenerMap);
+    trapReplayableEventForDocument(topLevelType, document, listenerMapForDoc);
   });
 }
 
@@ -252,8 +256,8 @@ function createQueuedReplayableEvent(
   blockedOn: null | Container | SuspenseInstance,
   topLevelType: DOMTopLevelEventType,
   eventSystemFlags: EventSystemFlags,
-  nativeEvent: AnyNativeEvent,
   container: Document | Element | Node,
+  nativeEvent: AnyNativeEvent,
 ): QueuedReplayableEvent {
   return {
     blockedOn,
@@ -268,15 +272,15 @@ export function queueDiscreteEvent(
   blockedOn: null | Container | SuspenseInstance,
   topLevelType: DOMTopLevelEventType,
   eventSystemFlags: EventSystemFlags,
-  nativeEvent: AnyNativeEvent,
   container: Document | Element | Node,
+  nativeEvent: AnyNativeEvent,
 ): void {
   const queuedEvent = createQueuedReplayableEvent(
     blockedOn,
     topLevelType,
     eventSystemFlags,
-    nativeEvent,
     container,
+    nativeEvent,
   );
   queuedDiscreteEvents.push(queuedEvent);
   if (enableSelectiveHydration) {
@@ -343,8 +347,8 @@ function accumulateOrCreateContinuousQueuedReplayableEvent(
   blockedOn: null | Container | SuspenseInstance,
   topLevelType: DOMTopLevelEventType,
   eventSystemFlags: EventSystemFlags,
-  nativeEvent: AnyNativeEvent,
   container: Document | Element | Node,
+  nativeEvent: AnyNativeEvent,
 ): QueuedReplayableEvent {
   if (
     existingQueuedEvent === null ||
@@ -354,8 +358,8 @@ function accumulateOrCreateContinuousQueuedReplayableEvent(
       blockedOn,
       topLevelType,
       eventSystemFlags,
-      nativeEvent,
       container,
+      nativeEvent,
     );
     if (blockedOn !== null) {
       let fiber = getInstanceFromNode(blockedOn);
@@ -378,8 +382,8 @@ export function queueIfContinuousEvent(
   blockedOn: null | Container | SuspenseInstance,
   topLevelType: DOMTopLevelEventType,
   eventSystemFlags: EventSystemFlags,
-  nativeEvent: AnyNativeEvent,
   container: Document | Element | Node,
+  nativeEvent: AnyNativeEvent,
 ): boolean {
   // These set relatedTarget to null because the replayed event will be treated as if we
   // moved from outside the window (no target) onto the target once it hydrates.
@@ -392,8 +396,8 @@ export function queueIfContinuousEvent(
         blockedOn,
         topLevelType,
         eventSystemFlags,
-        focusEvent,
         container,
+        focusEvent,
       );
       return true;
     }
@@ -404,8 +408,8 @@ export function queueIfContinuousEvent(
         blockedOn,
         topLevelType,
         eventSystemFlags,
-        dragEvent,
         container,
+        dragEvent,
       );
       return true;
     }
@@ -416,8 +420,8 @@ export function queueIfContinuousEvent(
         blockedOn,
         topLevelType,
         eventSystemFlags,
-        mouseEvent,
         container,
+        mouseEvent,
       );
       return true;
     }
@@ -431,8 +435,8 @@ export function queueIfContinuousEvent(
           blockedOn,
           topLevelType,
           eventSystemFlags,
-          pointerEvent,
           container,
+          pointerEvent,
         ),
       );
       return true;
@@ -447,8 +451,8 @@ export function queueIfContinuousEvent(
           blockedOn,
           topLevelType,
           eventSystemFlags,
-          pointerEvent,
           container,
+          pointerEvent,
         ),
       );
       return true;
@@ -524,8 +528,8 @@ function attemptReplayContinuousQueuedEvent(
   let nextBlockedOn = attemptToDispatchEvent(
     queuedEvent.topLevelType,
     queuedEvent.eventSystemFlags,
-    queuedEvent.nativeEvent,
     queuedEvent.container,
+    queuedEvent.nativeEvent,
   );
   if (nextBlockedOn !== null) {
     // We're still blocked. Try again later.
@@ -567,8 +571,8 @@ function replayUnblockedEvents() {
     let nextBlockedOn = attemptToDispatchEvent(
       nextDiscreteEvent.topLevelType,
       nextDiscreteEvent.eventSystemFlags,
-      nextDiscreteEvent.nativeEvent,
       nextDiscreteEvent.container,
+      nextDiscreteEvent.nativeEvent,
     );
     if (nextBlockedOn !== null) {
       // We're still blocked. Try again later.
