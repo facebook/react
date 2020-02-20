@@ -410,10 +410,16 @@ function getPlugins(
     // Note that this plugin must be called after closure applies DCE.
     isProduction && stripUnusedImports(pureExternalModules),
     // Add the whitespace back if necessary.
-    shouldStayReadable && prettier({parser: 'babel'}),
+    shouldStayReadable &&
+      prettier({
+        parser: 'babel',
+        singleQuote: false,
+        trailingComma: 'none',
+        bracketSpacing: true,
+      }),
     // License and haste headers, top-level `if` blocks.
     {
-      transformBundle(source) {
+      renderChunk(source) {
         return Wrappers.wrapBundle(
           source,
           bundleType,
@@ -541,6 +547,12 @@ async function createBundle(bundle, bundleType) {
       bundle.moduleType,
       pureExternalModules
     ),
+    output: {
+      externalLiveBindings: false,
+      freeze: false,
+      interop: false,
+      esModule: false,
+    },
   };
   const [mainOutputPath, ...otherOutputPaths] = Packaging.getBundleOutputPaths(
     bundleType,
@@ -616,7 +628,9 @@ function handleRollupWarning(warning) {
     return;
   }
 
-  if (typeof warning.code === 'string') {
+  if (warning.code === 'CIRCULAR_DEPENDENCY') {
+    // Ignored
+  } else if (typeof warning.code === 'string') {
     // This is a warning coming from Rollup itself.
     // These tend to be important (e.g. clashes in namespaced exports)
     // so we'll fail the build on any of them.
