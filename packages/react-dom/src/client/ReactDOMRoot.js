@@ -123,7 +123,7 @@ function createRootImpl(
       container.nodeType === DOCUMENT_NODE
         ? container
         : container.ownerDocument;
-    eagerlyTrapReplayableEvents(doc);
+    eagerlyTrapReplayableEvents(container, doc);
   }
   return root;
 }
