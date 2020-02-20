@@ -28,7 +28,7 @@ import {createContext} from './ReactContext';
 import {lazy} from './ReactLazy';
 import forwardRef from './forwardRef';
 import memo from './memo';
-import chunk from './chunk';
+import block from './block';
 import {
   useCallback,
   useContext,
@@ -63,7 +63,7 @@ import {
   enableFundamentalAPI,
   enableScopeAPI,
   exposeConcurrentModeAPIs,
-  enableChunksAPI,
+  enableBlocksAPI,
   disableCreateFactory,
 } from 'shared/ReactFeatureFlags';
 const React = {
@@ -120,8 +120,8 @@ if (exposeConcurrentModeAPIs) {
   React.unstable_withSuspenseConfig = withSuspenseConfig;
 }
 
-if (enableChunksAPI) {
-  React.chunk = chunk;
+if (enableBlocksAPI) {
+  React.block = block;
 }
 
 if (enableDeprecatedFlareAPI) {

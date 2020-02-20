@@ -51,7 +51,7 @@ import {
   IncompleteClassComponent,
   FundamentalComponent,
   ScopeComponent,
-  Chunk,
+  Block,
 } from 'shared/ReactWorkTags';
 import {NoMode, BlockingMode} from './ReactTypeOfMode';
 import {
@@ -119,7 +119,7 @@ import {
   enableDeprecatedFlareAPI,
   enableFundamentalAPI,
   enableScopeAPI,
-  enableChunksAPI,
+  enableBlocksAPI,
 } from 'shared/ReactFeatureFlags';
 import {
   markSpawnedWork,
@@ -1295,8 +1295,8 @@ function completeWork(
       }
       break;
     }
-    case Chunk:
-      if (enableChunksAPI) {
+    case Block:
+      if (enableBlocksAPI) {
         return null;
       }
       break;

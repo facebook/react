@@ -22,7 +22,7 @@ import {
   REACT_FUNDAMENTAL_TYPE,
   REACT_RESPONDER_TYPE,
   REACT_SCOPE_TYPE,
-  REACT_CHUNK_TYPE,
+  REACT_BLOCK_TYPE,
 } from 'shared/ReactSymbols';
 
 export default function isValidElementType(type: mixed) {
@@ -46,6 +46,6 @@ export default function isValidElementType(type: mixed) {
         type.$$typeof === REACT_FUNDAMENTAL_TYPE ||
         type.$$typeof === REACT_RESPONDER_TYPE ||
         type.$$typeof === REACT_SCOPE_TYPE ||
-        type.$$typeof === REACT_CHUNK_TYPE))
+        type.$$typeof === REACT_BLOCK_TYPE))
   );
 }
