@@ -163,8 +163,10 @@ function coerceRef(
         const ownerFiber = ((owner: any): Fiber);
         invariant(
           ownerFiber.tag === ClassComponent,
-          'Function components cannot have refs. ' +
-            'Did you mean to use React.forwardRef()?',
+          'Function components cannot have string refs. ' +
+            'We recommend using useRef() instead. ' +
+            'Learn more about using refs safely here: ' +
+            'https://fb.me/react-strict-mode-string-ref',
         );
         inst = ownerFiber.stateNode;
       }
