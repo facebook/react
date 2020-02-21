@@ -209,10 +209,7 @@ const updateVersionsForNext = async (cwd, reactVersion, version) => {
   const sourceReactVersion = readFileSync(
     sourceReactVersionPath,
     'utf8'
-  ).replace(
-    /module\.exports = '[^']+';/,
-    `module.exports = '${reactVersion}';`
-  );
+  ).replace(/export default '[^']+';/, `export default '${reactVersion}';`);
   writeFileSync(sourceReactVersionPath, sourceReactVersion);
 
   // Update the root package.json.
