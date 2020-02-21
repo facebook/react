@@ -526,7 +526,6 @@ function constructClassInstance(
   workInProgress: Fiber,
   ctor: any,
   props: any,
-  renderExpirationTime: ExpirationTime,
 ): any {
   let isLegacyContextConsumer = false;
   let unmaskedContext = emptyContextObject;

@@ -466,11 +466,7 @@ function updateMemoComponent(
   }
   // React DevTools reads this flag.
   workInProgress.effectTag |= PerformedWork;
-  let newChild = createWorkInProgress(
-    currentChild,
-    nextProps,
-    renderExpirationTime,
-  );
+  let newChild = createWorkInProgress(currentChild, nextProps);
   newChild.ref = workInProgress.ref;
   newChild.return = workInProgress;
   workInProgress.child = newChild;
@@ -817,12 +813,7 @@ function updateClassComponent(
       workInProgress.effectTag |= Placement;
     }
     // In the initial pass we might need to construct the instance.
-    constructClassInstance(
-      workInProgress,
-      Component,
-      nextProps,
-      renderExpirationTime,
-    );
+    constructClassInstance(workInProgress, Component, nextProps);
     mountClassInstance(
       workInProgress,
       Component,
@@ -1282,12 +1273,7 @@ function mountIncompleteClassComponent(
   }
   prepareToReadContext(workInProgress, renderExpirationTime);
 
-  constructClassInstance(
-    workInProgress,
-    Component,
-    nextProps,
-    renderExpirationTime,
-  );
+  constructClassInstance(workInProgress, Component, nextProps);
   mountClassInstance(
     workInProgress,
     Component,
@@ -1857,7 +1843,6 @@ function updateSuspenseComponent(
         const primaryChildFragment = createWorkInProgress(
           currentPrimaryChildFragment,
           currentPrimaryChildFragment.pendingProps,
-          NoWork,
         );
         primaryChildFragment.return = workInProgress;
 
@@ -1897,7 +1882,6 @@ function updateSuspenseComponent(
         const fallbackChildFragment = createWorkInProgress(
           currentFallbackChildFragment,
           nextFallbackChildren,
-          currentFallbackChildFragment.expirationTime,
         );
         fallbackChildFragment.return = workInProgress;
         primaryChildFragment.sibling = fallbackChildFragment;
