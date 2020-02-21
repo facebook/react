@@ -9,6 +9,28 @@
 
 'use strict';
 
-const ReactART = require('./src/ReactART');
+import {
+  ClippingRectangle,
+  Group,
+  Shape,
+  Path,
+  LinearGradient,
+  Pattern,
+  RadialGradient,
+  Surface,
+  Text,
+  Transform,
+} from './src/ReactART';
 
-module.exports = ReactART;
+export default {
+  ClippingRectangle,
+  Group,
+  Shape,
+  Path,
+  LinearGradient,
+  Pattern,
+  RadialGradient,
+  Surface,
+  Text,
+  Transform,
+};

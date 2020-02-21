@@ -7,4 +7,6 @@
 
 'use strict';
 
-module.exports = require('./src/index');
+import {rules} from './src/index';
+
+export default {rules};
