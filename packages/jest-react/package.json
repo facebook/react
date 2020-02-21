@@ -18,6 +18,9 @@
     "url": "https://github.com/facebook/react/issues"
   },
   "homepage": "https://reactjs.org/",
+  "dependencies": {
+    "object-assign": "^4.1.1"
+  },
   "peerDependencies": {
     "jest": "^23.0.1 || ^24.0.0 || ^25.1.0",
     "react": "^16.0.0",
