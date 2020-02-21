@@ -31,7 +31,7 @@ export const enableSuspenseServerRenderer = __EXPERIMENTAL__;
 export const enableSelectiveHydration = __EXPERIMENTAL__;
 
 // Flight experiments
-export const enableChunksAPI = __EXPERIMENTAL__;
+export const enableBlocksAPI = __EXPERIMENTAL__;
 
 // Only used in www builds.
 export const enableSchedulerDebugging = false;

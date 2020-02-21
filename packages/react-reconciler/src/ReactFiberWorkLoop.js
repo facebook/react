@@ -88,7 +88,7 @@ import {
   ForwardRef,
   MemoComponent,
   SimpleMemoComponent,
-  Chunk,
+  Block,
 } from 'shared/ReactWorkTags';
 import {
   NoEffect,
@@ -2682,7 +2682,7 @@ function warnAboutUpdateOnUnmountedFiberInDEV(fiber) {
       tag !== ForwardRef &&
       tag !== MemoComponent &&
       tag !== SimpleMemoComponent &&
-      tag !== Chunk
+      tag !== Block
     ) {
       // Only warn for user-defined components, not internal ones like Suspense.
       return;

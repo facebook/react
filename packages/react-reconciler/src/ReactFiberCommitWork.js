@@ -53,7 +53,7 @@ import {
   SuspenseListComponent,
   FundamentalComponent,
   ScopeComponent,
-  Chunk,
+  Block,
 } from 'shared/ReactWorkTags';
 import {
   invokeGuardedCallback,
@@ -249,7 +249,7 @@ function commitBeforeMutationLifeCycles(
     case FunctionComponent:
     case ForwardRef:
     case SimpleMemoComponent:
-    case Chunk: {
+    case Block: {
       return;
     }
     case ClassComponent: {
@@ -426,7 +426,7 @@ export function commitPassiveHookEffects(finishedWork: Fiber): void {
       case FunctionComponent:
       case ForwardRef:
       case SimpleMemoComponent:
-      case Chunk: {
+      case Block: {
         // TODO (#17945) We should call all passive destroy functions (for all fibers)
         // before calling any create functions. The current approach only serializes
         // these for a single fiber.
@@ -450,7 +450,7 @@ function commitLifeCycles(
     case FunctionComponent:
     case ForwardRef:
     case SimpleMemoComponent:
-    case Chunk: {
+    case Block: {
       // At this point layout effects have already been destroyed (during mutation phase).
       // This is done to prevent sibling component effects from interfering with each other,
       // e.g. a destroy function in one component should never override a ref set
@@ -779,7 +779,7 @@ function commitUnmount(
     case ForwardRef:
     case MemoComponent:
     case SimpleMemoComponent:
-    case Chunk: {
+    case Block: {
       const updateQueue: FunctionComponentUpdateQueue | null = (current.updateQueue: any);
       if (updateQueue !== null) {
         const lastEffect = updateQueue.lastEffect;
@@ -1360,7 +1360,7 @@ function commitWork(current: Fiber | null, finishedWork: Fiber): void {
       case ForwardRef:
       case MemoComponent:
       case SimpleMemoComponent:
-      case Chunk: {
+      case Block: {
         // Layout effects are destroyed during the mutation phase so that all
         // destroy functions for all fibers are called before any create functions.
         // This prevents sibling component effects from interfering with each other,
@@ -1403,7 +1403,7 @@ function commitWork(current: Fiber | null, finishedWork: Fiber): void {
     case ForwardRef:
     case MemoComponent:
     case SimpleMemoComponent:
-    case Chunk: {
+    case Block: {
       // Layout effects are destroyed during the mutation phase so that all
       // destroy functions for all fibers are called before any create functions.
       // This prevents sibling component effects from interfering with each other,

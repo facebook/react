@@ -19,7 +19,7 @@ import {
   REACT_ELEMENT_TYPE,
   REACT_FRAGMENT_TYPE,
   REACT_PORTAL_TYPE,
-  REACT_CHUNK_TYPE,
+  REACT_BLOCK_TYPE,
 } from 'shared/ReactSymbols';
 import {
   FunctionComponent,
@@ -27,10 +27,10 @@ import {
   HostText,
   HostPortal,
   Fragment,
-  Chunk,
+  Block,
 } from 'shared/ReactWorkTags';
 import invariant from 'shared/invariant';
-import {warnAboutStringRefs, enableChunksAPI} from 'shared/ReactFeatureFlags';
+import {warnAboutStringRefs, enableBlocksAPI} from 'shared/ReactFeatureFlags';
 
 import {
   createWorkInProgress,
@@ -416,9 +416,9 @@ function ChildReconciler(shouldTrackSideEffects) {
         }
         return existing;
       } else if (
-        enableChunksAPI &&
-        current.tag === Chunk &&
-        element.type.$$typeof === REACT_CHUNK_TYPE &&
+        enableBlocksAPI &&
+        current.tag === Block &&
+        element.type.$$typeof === REACT_BLOCK_TYPE &&
         element.type.render === current.type.render
       ) {
         // Same as above but also update the .type field.
@@ -1175,10 +1175,10 @@ function ChildReconciler(shouldTrackSideEffects) {
             }
             break;
           }
-          case Chunk:
-            if (enableChunksAPI) {
+          case Block:
+            if (enableBlocksAPI) {
               if (
-                element.type.$$typeof === REACT_CHUNK_TYPE &&
+                element.type.$$typeof === REACT_BLOCK_TYPE &&
                 element.type.render === child.type.render
               ) {
                 deleteRemainingChildren(returnFiber, child.sibling);
@@ -1192,7 +1192,7 @@ function ChildReconciler(shouldTrackSideEffects) {
                 return existing;
               }
             }
-          // We intentionally fallthrough here if enableChunksAPI is not on.
+          // We intentionally fallthrough here if enableBlocksAPI is not on.
           // eslint-disable-next-lined no-fallthrough
           default: {
             if (

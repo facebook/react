@@ -42,7 +42,7 @@ import {
   IncompleteClassComponent,
   FundamentalComponent,
   ScopeComponent,
-  Chunk,
+  Block,
 } from 'shared/ReactWorkTags';
 import {
   NoEffect,
@@ -65,7 +65,7 @@ import {
   enableFundamentalAPI,
   warnAboutDefaultPropsOnFunctionComponents,
   enableScopeAPI,
-  enableChunksAPI,
+  enableBlocksAPI,
 } from 'shared/ReactFeatureFlags';
 import invariant from 'shared/invariant';
 import shallowEqual from 'shared/shallowEqual';
@@ -701,10 +701,10 @@ function updateFunctionComponent(
   return workInProgress.child;
 }
 
-function updateChunk(
+function updateBlock(
   current: Fiber | null,
   workInProgress: Fiber,
-  chunk: any,
+  block: any,
   nextProps: any,
   renderExpirationTime: ExpirationTime,
 ) {
@@ -712,8 +712,8 @@ function updateChunk(
   // hasn't yet mounted. This happens after the first render suspends.
   // We'll need to figure out if this is fine or can cause issues.
 
-  const render = chunk.render;
-  const data = chunk.query();
+  const render = block.render;
+  const data = block.query();
 
   // The rest is a fork of updateFunctionComponent
   let nextChildren;
@@ -1215,10 +1215,10 @@ function mountLazyComponent(
       );
       return child;
     }
-    case Chunk: {
-      if (enableChunksAPI) {
+    case Block: {
+      if (enableBlocksAPI) {
         // TODO: Resolve for Hot Reloading.
-        child = updateChunk(
+        child = updateBlock(
           null,
           workInProgress,
           Component,
@@ -3289,14 +3289,14 @@ function beginWork(
       }
       break;
     }
-    case Chunk: {
-      if (enableChunksAPI) {
-        const chunk = workInProgress.type;
+    case Block: {
+      if (enableBlocksAPI) {
+        const block = workInProgress.type;
         const props = workInProgress.pendingProps;
-        return updateChunk(
+        return updateBlock(
           current,
           workInProgress,
-          chunk,
+          block,
           props,
           renderExpirationTime,
         );

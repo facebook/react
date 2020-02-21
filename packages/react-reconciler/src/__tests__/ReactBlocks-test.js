@@ -12,17 +12,17 @@ let React;
 let ReactNoop;
 let useState;
 let Suspense;
-let chunk;
+let block;
 let readString;
 
-describe('ReactChunks', () => {
+describe('ReactBlocks', () => {
   beforeEach(() => {
     jest.resetModules();
 
     React = require('react');
     ReactNoop = require('react-noop-renderer');
 
-    chunk = React.chunk;
+    block = React.block;
     useState = React.useState;
     Suspense = React.Suspense;
     let cache = new Map();
@@ -63,7 +63,7 @@ describe('ReactChunks', () => {
       );
     }
 
-    let loadUser = chunk(Query, Render);
+    let loadUser = block(Query, Render);
 
     function App({User}) {
       return (
@@ -102,7 +102,7 @@ describe('ReactChunks', () => {
       );
     }
 
-    let loadUser = chunk(Query, Render);
+    let loadUser = block(Query, Render);
 
     function App({User}) {
       return (
@@ -164,7 +164,7 @@ describe('ReactChunks', () => {
         );
       }
 
-      let loadUser = chunk(Query, Render);
+      let loadUser = block(Query, Render);
 
       function App({User}) {
         return (

@@ -33,7 +33,7 @@ import {
   enableFundamentalAPI,
   enableUserTimingAPI,
   enableScopeAPI,
-  enableChunksAPI,
+  enableBlocksAPI,
 } from 'shared/ReactFeatureFlags';
 import {NoEffect, Placement} from 'shared/ReactSideEffectTags';
 import {ConcurrentRoot, BlockingRoot} from 'shared/ReactRootTags';
@@ -59,7 +59,7 @@ import {
   LazyComponent,
   FundamentalComponent,
   ScopeComponent,
-  Chunk,
+  Block,
 } from 'shared/ReactWorkTags';
 import getComponentName from 'shared/getComponentName';
 
@@ -91,7 +91,7 @@ import {
   REACT_LAZY_TYPE,
   REACT_FUNDAMENTAL_TYPE,
   REACT_SCOPE_TYPE,
-  REACT_CHUNK_TYPE,
+  REACT_BLOCK_TYPE,
 } from 'shared/ReactSymbols';
 
 let hasBadMapPolyfill;
@@ -391,9 +391,9 @@ export function resolveLazyComponentTag(Component: Function): WorkTag {
     if ($$typeof === REACT_MEMO_TYPE) {
       return MemoComponent;
     }
-    if (enableChunksAPI) {
-      if ($$typeof === REACT_CHUNK_TYPE) {
-        return Chunk;
+    if (enableBlocksAPI) {
+      if ($$typeof === REACT_BLOCK_TYPE) {
+        return Block;
       }
     }
   }
@@ -676,8 +676,8 @@ export function createFiberFromTypeAndProps(
               fiberTag = LazyComponent;
               resolvedType = null;
               break getTag;
-            case REACT_CHUNK_TYPE:
-              fiberTag = Chunk;
+            case REACT_BLOCK_TYPE:
+              fiberTag = Block;
               break getTag;
             case REACT_FUNDAMENTAL_TYPE:
               if (enableFundamentalAPI) {

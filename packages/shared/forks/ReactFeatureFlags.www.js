@@ -50,7 +50,7 @@ export const exposeConcurrentModeAPIs = true;
 export const enableSuspenseServerRenderer = true;
 export const enableSelectiveHydration = true;
 
-export const enableChunksAPI = true;
+export const enableBlocksAPI = true;
 
 export const disableJavaScriptURLs = true;
 
