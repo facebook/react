@@ -47,6 +47,20 @@ const forks = Object.freeze({
     return 'shared/forks/object-assign.umd.js';
   },
 
+  // Fork the propTypes check for UMD bundles to use ES modules instead of CommonJS.
+  'prop-types/checkPropTypes': (bundleType, entry, dependencies) => {
+    if (
+      bundleType !== UMD_DEV &&
+      bundleType !== UMD_PROD &&
+      bundleType !== UMD_PROFILING
+    ) {
+      // It's only relevant for UMD bundles since that's where the duplication
+      // happens. Other bundles just require('prop-types/checkPropTypes') anyway.
+      return null;
+    }
+    return 'shared/forks/prop-types-checkPropTypes.inline-umd.js';
+  },
+
   // Without this fork, importing `shared/ReactSharedInternals` inside
   // the `react` package itself would not work due to a cyclical dependency.
   'shared/ReactSharedInternals': (bundleType, entry, dependencies) => {
