@@ -9,8 +9,4 @@
 
 'use strict';
 
-const ReactNoopFlightClient = require('./src/ReactNoopFlightClient');
-
-// TODO: decide on the top-level export form.
-// This is hacky but makes it work with both Rollup and Jest.
-module.exports = ReactNoopFlightClient.default || ReactNoopFlightClient;
+export {default} from './src/ReactNoopFlightClient';

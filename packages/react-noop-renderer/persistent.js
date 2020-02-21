@@ -9,8 +9,4 @@
 
 'use strict';
 
-const ReactNoopPersistent = require('./src/ReactNoopPersistent');
-
-// TODO: decide on the top-level export form.
-// This is hacky but makes it work with both Rollup and Jest.
-module.exports = ReactNoopPersistent.default || ReactNoopPersistent;
+export {default} from './src/ReactNoopPersistent';

@@ -7,7 +7,4 @@
 
 'use strict';
 
-const ReactFreshBabelPlugin = require('./src/ReactFreshBabelPlugin');
-
-// This is hacky but makes it work with both Rollup and Jest.
-module.exports = ReactFreshBabelPlugin.default || ReactFreshBabelPlugin;
+export {default} from './src/ReactFreshBabelPlugin';

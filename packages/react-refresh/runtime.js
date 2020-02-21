@@ -7,7 +7,4 @@
 
 'use strict';
 
-const ReactFreshRuntime = require('./src/ReactFreshRuntime');
-
-// This is hacky but makes it work with both Rollup and Jest.
-module.exports = ReactFreshRuntime.default || ReactFreshRuntime;
+export {default} from './src/ReactFreshRuntime';
