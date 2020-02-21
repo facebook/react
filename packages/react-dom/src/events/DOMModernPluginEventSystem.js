@@ -56,6 +56,11 @@ import {
   TOP_PROGRESS,
   TOP_PLAYING,
 } from './DOMTopLevelEventTypes';
+import {getClosestInstanceFromNode} from '../client/ReactDOMComponentTree';
+import {DOCUMENT_NODE, COMMENT_NODE} from '../shared/HTMLNodeType';
+
+import {enableLegacyFBPrimerSupport} from 'shared/ReactFeatureFlags';
+import {HostRoot, HostPortal} from 'shared/ReactWorkTags';
 
 const capturePhaseEvents = new Set([
   TOP_FOCUS,
@@ -165,6 +170,25 @@ export function listenToEvent(
   }
 }
 
+function willDelegateLaterForFBLegacyPrimer(nativeEvent: any): boolean {
+  let node = nativeEvent.target;
+
+  while (node !== null) {
+    if (node.tagName === 'A' && node.rel) {
+      const legacyFBSupport = true;
+      trapEventForPluginEventSystem(
+        document,
+        nativeEvent.type,
+        false,
+        legacyFBSupport,
+      );
+      return true;
+    }
+    node = node.parentNode;
+  }
+  return false;
+}
+
 export function dispatchEventForPluginEventSystem(
   topLevelType: DOMTopLevelEventType,
   eventSystemFlags: EventSystemFlags,
@@ -173,6 +197,38 @@ export function dispatchEventForPluginEventSystem(
   rootContainer: Document | Element,
 ): void {
   let ancestorInst = targetInst;
+  if (rootContainer.nodeType !== DOCUMENT_NODE) {
+    // FB only
+    if (
+      enableLegacyFBPrimerSupport &&
+      willDelegateLaterForFBLegacyPrimer(nativeEvent)
+    ) {
+      return;
+    }
+    let node = targetInst;
+
+    while (true) {
+      if (node === null) {
+        return;
+      } else if (node.tag === HostRoot || node.tag === HostPortal) {
+        const container = node.stateNode.containerInfo;
+        if (
+          container === rootContainer ||
+          (container.nodeType === COMMENT_NODE &&
+            container.parentNode === rootContainer)
+        ) {
+          break;
+        }
+        const parentSubtreeInst = getClosestInstanceFromNode(container);
+        if (parentSubtreeInst === null) {
+          return;
+        }
+        node = ancestorInst = parentSubtreeInst;
+        continue;
+      }
+      node = node.return;
+    }
+  }
 
   batchedEventUpdates(() =>
     dispatchEventsForPlugins(

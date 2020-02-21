@@ -5,21 +5,54 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import {HostComponent} from './ReactWorkTags';
+import type {Fiber} from 'react-reconciler/src/ReactFiber';
 
-function getParent(inst) {
-  do {
-    inst = inst.return;
-    // TODO: If this is a HostRoot we might want to bail out.
-    // That is depending on if we want nested subtrees (layers) to bubble
-    // events to their parent. We could also go through parentNode on the
-    // host node but that wouldn't work for React Native and doesn't let us
-    // do the portal feature.
-  } while (inst && inst.tag !== HostComponent);
-  if (inst) {
-    return inst;
+import {HostComponent, HostPortal, HostRoot} from './ReactWorkTags';
+import {enableModernEventSystem} from './ReactFeatureFlags';
+
+export function getParent(
+  inst: Fiber,
+  alwaysTraversePortals?: boolean,
+): null | Fiber {
+  if (enableModernEventSystem) {
+    let node = inst.return;
+
+    while (node !== null) {
+      if (node.tag === HostPortal && !alwaysTraversePortals) {
+        let grandNode = node;
+        const portalNode = node.stateNode.containerInfo;
+        while (grandNode !== null) {
+          // If we find a root that is actually a parent in the DOM tree
+          // then we don't continue with getting the parent, as that root
+          // will have its own event listener.
+          if (
+            grandNode.tag === HostRoot &&
+            grandNode.stateNode.containerInfo.contains(portalNode)
+          ) {
+            return null;
+          }
+          grandNode = grandNode.return;
+        }
+      } else if (node.tag === HostComponent) {
+        return node;
+      }
+      node = node.return;
+    }
+    return null;
+  } else {
+    do {
+      inst = inst.return;
+      // TODO: If this is a HostRoot we might want to bail out.
+      // That is depending on if we want nested subtrees (layers) to bubble
+      // events to their parent. We could also go through parentNode on the
+      // host node but that wouldn't work for React Native and doesn't let us
+      // do the portal feature.
+    } while (inst && inst.tag !== HostComponent);
+    if (inst) {
+      return inst;
+    }
+    return null;
   }
-  return null;
 }
 
 /**
@@ -28,23 +61,23 @@ function getParent(inst) {
  */
 export function getLowestCommonAncestor(instA, instB) {
   let depthA = 0;
-  for (let tempA = instA; tempA; tempA = getParent(tempA)) {
+  for (let tempA = instA; tempA; tempA = getParent(tempA, true)) {
     depthA++;
   }
   let depthB = 0;
-  for (let tempB = instB; tempB; tempB = getParent(tempB)) {
+  for (let tempB = instB; tempB; tempB = getParent(tempB, true)) {
     depthB++;
   }
 
   // If A is deeper, crawl up.
   while (depthA - depthB > 0) {
-    instA = getParent(instA);
+    instA = getParent(instA, true);
     depthA--;
   }
 
   // If B is deeper, crawl up.
   while (depthB - depthA > 0) {
-    instB = getParent(instB);
+    instB = getParent(instB, true);
     depthB--;
   }
 
@@ -54,8 +87,8 @@ export function getLowestCommonAncestor(instA, instB) {
     if (instA === instB || instA === instB.alternate) {
       return instA;
     }
-    instA = getParent(instA);
-    instB = getParent(instB);
+    instA = getParent(instA, true);
+    instB = getParent(instB, true);
   }
   return null;
 }
@@ -68,7 +101,7 @@ export function isAncestor(instA, instB) {
     if (instA === instB || instA === instB.alternate) {
       return true;
     }
-    instB = getParent(instB);
+    instB = getParent(instB, true);
   }
   return false;
 }
@@ -120,7 +153,7 @@ export function traverseEnterLeave(from, to, fn, argFrom, argTo) {
       break;
     }
     pathFrom.push(from);
-    from = getParent(from);
+    from = getParent(from, true);
   }
   const pathTo = [];
   while (true) {
@@ -135,7 +168,7 @@ export function traverseEnterLeave(from, to, fn, argFrom, argTo) {
       break;
     }
     pathTo.push(to);
-    to = getParent(to);
+    to = getParent(to, true);
   }
   for (let i = 0; i < pathFrom.length; i++) {
     fn(pathFrom[i], 'bubbled', argFrom);

@@ -65,6 +65,7 @@ import {
 import {getEventPriorityForPluginSystem} from './DOMEventProperties';
 import {dispatchEventForLegacyPluginEventSystem} from './DOMLegacyEventPluginSystem';
 import {dispatchEventForPluginEventSystem} from './DOMModernPluginEventSystem';
+import {enableLegacyFBPrimerSupport} from 'shared/ReactFeatureFlags';
 
 const {
   unstable_UserBlockingPriority: UserBlockingPriority,
@@ -143,6 +144,7 @@ export function trapEventForPluginEventSystem(
   container: Document | Element,
   topLevelType: DOMTopLevelEventType,
   capture: boolean,
+  legacyFBSupport?: boolean,
 ): void {
   let listener;
   let listenerWrapper;
@@ -164,12 +166,29 @@ export function trapEventForPluginEventSystem(
     PLUGIN_EVENT_SYSTEM,
     container,
   );
-
   const rawEventName = getRawEventName(topLevelType);
+  let fbListener;
+  if (enableLegacyFBPrimerSupport && legacyFBSupport) {
+    const originalListener = listener;
+    listener = function(...p) {
+      try {
+        return originalListener.apply(this, p);
+      } finally {
+        if (fbListener) {
+          fbListener.remove();
+        } else {
+          container.removeEventListener(
+            ((rawEventName: any): string),
+            (listener: any),
+          );
+        }
+      }
+    };
+  }
   if (capture) {
-    addEventCaptureListener(container, rawEventName, listener);
+    fbListener = addEventCaptureListener(container, rawEventName, listener);
   } else {
-    addEventBubbleListener(container, rawEventName, listener);
+    fbListener = addEventBubbleListener(container, rawEventName, listener);
   }
 }
 
