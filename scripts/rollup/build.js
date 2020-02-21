@@ -392,8 +392,10 @@ function getPlugins(
       'process.env.NODE_ENV': isProduction ? "'production'" : "'development'",
       __EXPERIMENTAL__,
     }),
-    // We still need CommonJS for external deps like object-assign.
-    commonjs(),
+    // The CommonJS plugin *only* exists to pull "art" into "react-art".
+    // I'm going to port "art" to ES modules to avoid this problem.
+    // Please don't enable this for anything else!
+    isUMDBundle && entry === 'react-art' && commonjs(),
     // Apply dead code elimination and/or minification.
     isProduction &&
       closure(
