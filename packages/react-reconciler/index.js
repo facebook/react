@@ -19,4 +19,4 @@
 
 'use strict';
 
-export {default} from './src/ReactFiberReconciler';
+export * from './src/ReactFiberReconciler';

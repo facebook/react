@@ -9,4 +9,4 @@
 
 import {inspectHooks, inspectHooksOfFiber} from './ReactDebugHooks';
 
-export {inspectHooks, inspectHooksOfFiber};
+export default {inspectHooks, inspectHooksOfFiber};

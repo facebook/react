@@ -7,4 +7,4 @@
 
 'use strict';
 
-export {default} from './src/ReactFreshRuntime';
+export * from './src/ReactFreshRuntime';

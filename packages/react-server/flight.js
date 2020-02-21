@@ -19,4 +19,4 @@
 
 'use strict';
 
-export {default} from './src/ReactFlightServer';
+export * from './src/ReactFlightServer';

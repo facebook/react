@@ -19,4 +19,4 @@
 
 'use strict';
 
-export {default} from './src/ReactFizzStreamer';
+export * from './src/ReactFizzStreamer';

@@ -9,4 +9,4 @@
 
 // This is the same export as in index.js,
 // with persistent reconciler flags turned on.
-export {default} from './src/ReactFiberReconciler';
+export * from './src/ReactFiberReconciler';
