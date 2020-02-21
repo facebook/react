@@ -121,7 +121,11 @@ import {
   Batched,
   Idle,
 } from './ReactFiberExpirationTime';
-import {beginWork as originalBeginWork} from './ReactFiberBeginWork';
+import {
+  beginWork as originalBeginWork,
+  inSpeculativeWorkMode,
+  endSpeculationWorkIfRootFiber,
+} from './ReactFiberBeginWork';
 import {completeWork} from './ReactFiberCompleteWork';
 import {unwindWork, unwindInterruptedWork} from './ReactFiberUnwindWork';
 import {
@@ -1283,6 +1287,7 @@ function prepareFreshStack(root, expirationTime) {
   }
   workInProgressRoot = root;
   workInProgress = createWorkInProgress(root.current, null, expirationTime);
+  console.log('root.current');
   renderExpirationTime = expirationTime;
   workInProgressRootExitStatus = RootIncomplete;
   workInProgressRootFatalError = null;
@@ -1532,8 +1537,8 @@ function completeUnitOfWork(unitOfWork: Fiber): Fiber | null {
     // need an additional field on the work in progress.
     const current = workInProgress.alternate;
     const returnFiber = workInProgress.return;
-    const workWasSpeculative = workInProgress.reify;
-    workInProgress.reify = false;
+    endSpeculationWorkIfRootFiber(workInProgress);
+    const workWasSpeculative = inSpeculativeWorkMode();
 
     // Check if the work completed or if something threw.
     if ((workInProgress.effectTag & Incomplete) === NoEffect) {

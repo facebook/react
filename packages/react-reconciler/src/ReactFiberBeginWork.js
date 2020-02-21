@@ -215,6 +215,22 @@ if (__DEV__) {
   didWarnAboutDefaultPropsOnFunctionComponent = {};
 }
 
+let speculativeWorkRootFiber: Fiber | null = null;
+
+export function inSpeculativeWorkMode() {
+  return speculativeWorkRootFiber !== null;
+}
+
+export function endSpeculationWorkIfRootFiber(fiber: Fiber) {
+  if (fiber === speculativeWorkRootFiber) {
+    speculativeWorkRootFiber = null;
+    console.log(
+      ']]] ending speculation: speculativeWorkRootFiber',
+      fiberName(speculativeWorkRootFiber),
+    );
+  }
+}
+
 export function reconcileChildren(
   current: Fiber | null,
   workInProgress: Fiber,
@@ -604,68 +620,6 @@ function markRef(current: Fiber | null, workInProgress: Fiber) {
   }
 }
 
-function preemptiveHooksBailout(
-  workInProgress: Fiber,
-  renderExpirationTime: ExpirationTime,
-) {
-  console.log(
-    '#### preemptiveHooksBailout checking to see if context selection or states have changed',
-  );
-  let hook = workInProgress.memoizedState;
-  console.log('hook', hook);
-  console.log('workInProgress.dependencies', workInProgress.dependencies);
-
-  if (workInProgress.dependencies) {
-    console.log(
-      'workInProgress.dependencies exist so not bailing out',
-      workInProgress.dependencies,
-    );
-    return false;
-  }
-
-  while (hook !== null) {
-    const queue = hook.queue;
-
-    if (queue) {
-      // The last rebase update that is NOT part of the base state.
-      let baseQueue = hook.baseQueue;
-      let reducer = queue.lastRenderedReducer;
-
-      // The last pending update that hasn't been processed yet.
-      let pendingQueue = queue.pending;
-      if (pendingQueue !== null) {
-        // We have new updates that haven't been processed yet.
-        // We'll add them to the base queue.
-        baseQueue = pendingQueue;
-      }
-
-      if (baseQueue !== null) {
-        // We have a queue to process.
-        let first = baseQueue.next;
-        let newState = hook.baseState;
-
-        let update = first;
-        do {
-          // Process this update.
-          const action = update.action;
-          newState = reducer(newState, action);
-          update = update.next;
-        } while (update !== null && update !== first);
-
-        // if newState is different from the current state do not bailout
-        if (newState !== hook.memoizedState) {
-          console.log('found a new state. not bailing out of hooks');
-          return false;
-        }
-      }
-    }
-
-    hook = hook.next;
-  }
-  console.log('bailing out of update based on hooks preemptively');
-  return true;
-}
-
 function updateFunctionComponent(
   current,
   workInProgress,
@@ -691,7 +645,7 @@ function updateFunctionComponent(
   }
 
   try {
-    if (workInProgress.reify) {
+    if (inSpeculativeWorkMode()) {
       console.log(
         '???? updateFunctionComponent called with a current fiber for workInProgress',
         current.memoizedProps,
@@ -783,7 +737,7 @@ function updateFunctionComponent(
       );
     }
 
-    if (current.reify === true) {
+    if (inSpeculativeWorkMode()) {
       console.log(
         'function component is updating so reifying the work in progress tree',
       );
@@ -2899,6 +2853,22 @@ export function markWorkInProgressReceivedUpdate() {
   didReceiveUpdate = true;
 }
 
+function enterSpeculativeWorkMode(workInProgress: Fiber) {
+  invariant(
+    speculativeWorkRootFiber === null,
+    'enterSpeculativeWorkMode called when we are already in that mode. this is likely a bug with React itself',
+  );
+
+  speculativeWorkRootFiber = workInProgress;
+
+  // set each child to return to this workInProgress;
+  let childFiber = workInProgress.child;
+  while (childFiber !== null) {
+    childFiber.return = workInProgress;
+    childFiber = childFiber.sibling;
+  }
+}
+
 function bailoutOnAlreadyFinishedWork(
   current: Fiber | null,
   workInProgress: Fiber,
@@ -2931,7 +2901,12 @@ function bailoutOnAlreadyFinishedWork(
   } else {
     // This fiber doesn't have work, but its subtree does. Clone the child
     // fibers and continue.
-    cloneChildFibers(current, workInProgress);
+    if (speculativeWorkRootFiber === null) {
+      enterSpeculativeWorkMode(workInProgress);
+    }
+    //  else {
+    //   cloneChildFibers(current, workInProgress);
+    // }
     return workInProgress.child;
   }
 }
@@ -3003,13 +2978,13 @@ function reifyWorkInProgress(current: Fiber, workInProgress: Fiber | null) {
   const originalCurrent = current;
 
   invariant(
-    current.reify === true,
-    'reifyWorkInProgress was called on a fiber that is not mared for reification',
+    speculativeWorkRootFiber !== null,
+    'reifyWorkInProgress was called when we are not in speculative work mode',
   );
 
   let parent, parentWorkInProgress;
   parentWorkInProgress = parent = current.return;
-  if (parent.reify === true) {
+  if (parent !== null && parent !== speculativeWorkRootFiber) {
     parentWorkInProgress = createWorkInProgress(
       parent,
       parent.memoizedProps,
@@ -3020,6 +2995,15 @@ function reifyWorkInProgress(current: Fiber, workInProgress: Fiber | null) {
 
   try {
     do {
+      // if the parent we're cloning child fibers from is the speculativeWorkRootFiber
+      // unset it so we don't go any higher
+      if (parentWorkInProgress === speculativeWorkRootFiber) {
+        console.log(
+          'we have found the speculativeWorkRootFiber during reification. this is the last pass',
+        );
+        speculativeWorkRootFiber = null;
+      }
+
       // clone parent WIP's child. use the current's workInProgress if the currentChild is
       // the current fiber
       let currentChild = parentWorkInProgress.child;
@@ -3041,7 +3025,6 @@ function reifyWorkInProgress(current: Fiber, workInProgress: Fiber | null) {
         );
       }
       parentWorkInProgress.child = newChild;
-      currentChild.reify = false;
 
       newChild.return = parentWorkInProgress;
 
@@ -3069,7 +3052,6 @@ function reifyWorkInProgress(current: Fiber, workInProgress: Fiber | null) {
           );
         }
         newChild.return = parentWorkInProgress;
-        currentChild.reify = false;
       }
       newChild.sibling = null;
 
@@ -3086,16 +3068,18 @@ function reifyWorkInProgress(current: Fiber, workInProgress: Fiber | null) {
 
       workInProgress = parentWorkInProgress;
       current = parent;
-      parentWorkInProgress = parent = current.return;
-      if (parent !== null && parent.reify === true) {
-        parentWorkInProgress = createWorkInProgress(
-          parent,
-          parent.pendingProps,
-          parent.expirationTime,
-        );
-        parentWorkInProgress.return = parent.return;
+      if (speculativeWorkRootFiber !== null) {
+        parentWorkInProgress = parent = current.return;
+        if (parent !== null && parent !== speculativeWorkRootFiber) {
+          parentWorkInProgress = createWorkInProgress(
+            parent,
+            parent.pendingProps,
+            parent.expirationTime,
+          );
+          parentWorkInProgress.return = parent.return;
+        }
       }
-    } while (parent !== null && current.reify === true);
+    } while (speculativeWorkRootFiber !== null && parent !== null);
   } catch (e) {
     console.log('error in refiy', e);
   }
@@ -3104,14 +3088,15 @@ function reifyWorkInProgress(current: Fiber, workInProgress: Fiber | null) {
     'returning originalCurrent.alternate',
     fiberName(originalCurrent.alternate),
   );
+  speculativeWorkRootFiber = null;
   return originalCurrent.alternate;
 }
 
 function fiberName(fiber) {
   if (fiber == null) return fiber;
   let version = fiber.version;
-  let reify = fiber.reify ? 'r' : '';
-  let back = `-${version}${reify}`;
+  let speculative = inSpeculativeWorkMode() ? 's' : '';
+  let back = `-${version}${speculative}`;
   let front = '';
   if (fiber.tag === 3) front = 'HostRoot';
   else if (fiber.tag === 6) front = 'HostText';
@@ -3131,12 +3116,13 @@ function beginWork(
     'beginWork',
     fiberName(workInProgress) + '->' + fiberName(workInProgress.return),
     current && fiberName(current) + '->' + fiberName(current.return),
+    'speculativeWorkRootFiber: ' + fiberName(speculativeWorkRootFiber),
   );
 
-  // we may have been passed a current fiber as workInProgress if the parent fiber
-  // bailed out. in this case set the current to workInProgress. they will be the same
-  // fiber for now until and unless we determine we need to reify it into real workInProgress
-  if (workInProgress.reify === true) {
+  // we may have been passed a current fiber as workInProgress if we are doing
+  // speculative work. if this is the case we need to assign the work to the current
+  // because they are the same
+  if (inSpeculativeWorkMode()) {
     current = workInProgress;
   }
 
@@ -3160,9 +3146,9 @@ function beginWork(
     }
   }
 
-  if (workInProgress.reify === true) {
+  if (inSpeculativeWorkMode()) {
     console.log(
-      'workInProgress.reify true, if we are going to do work we need to reify first',
+      'we are in speculaive work mode, if we are going to do work we need to reify first',
     );
     if (
       workInProgress.tag !== ContextProvider &&
@@ -3176,11 +3162,8 @@ function beginWork(
   }
 
   if (current !== null) {
-    // when we are on a current fiber as WIP we use memoizedProps since the pendingProps may be out of date
     const oldProps = current.memoizedProps;
-    const newProps = workInProgress.reify
-      ? workInProgress.memoizedProps
-      : workInProgress.pendingProps;
+    const newProps = workInProgress.pendingProps;
 
     if (
       oldProps !== newProps ||
@@ -3383,6 +3366,7 @@ function beginWork(
     didReceiveUpdate = false;
   }
 
+  // @TODO pretty sure we need to not do this if we are in speculativeMode. perhaps make it part of reification?
   // Before entering the begin phase, clear the expiration time.
   workInProgress.expirationTime = NoWork;
 

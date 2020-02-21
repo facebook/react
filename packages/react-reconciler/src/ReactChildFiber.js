@@ -1427,9 +1427,6 @@ function ChildReconciler(shouldTrackSideEffects) {
 export const reconcileChildFibers = ChildReconciler(true);
 export const mountChildFibers = ChildReconciler(false);
 
-// @TODO this function currently eagerly clones children before beginning work
-// on them. should figure out how to start work on child fibers without creating
-// workInProgress untill we know we need to
 export function cloneChildFibers(
   current: Fiber | null,
   workInProgress: Fiber,
@@ -1443,32 +1440,25 @@ export function cloneChildFibers(
     return;
   }
 
-  console.log('cloning child fibers', workInProgress.tag);
-
   let currentChild = workInProgress.child;
-  currentChild.return = workInProgress;
-  currentChild.reify = true;
-  // let newChild = createWorkInProgress(
-  //   currentChild,
-  //   currentChild.pendingProps,
-  //   currentChild.expirationTime,
-  // );
-  // workInProgress.child = newChild;
-  //
-  // newChild.return = workInProgress;
+  let newChild = createWorkInProgress(
+    currentChild,
+    currentChild.pendingProps,
+    currentChild.expirationTime,
+  );
+  workInProgress.child = newChild;
 
+  newChild.return = workInProgress;
   while (currentChild.sibling !== null) {
     currentChild = currentChild.sibling;
-    // newChild = newChild.sibling = createWorkInProgress(
-    //   currentChild,
-    //   currentChild.pendingProps,
-    //   currentChild.expirationTime,
-    // );
-    // newChild.return = workInProgress;
-    currentChild.return = workInProgress;
-    currentChild.reify = true;
+    newChild = newChild.sibling = createWorkInProgress(
+      currentChild,
+      currentChild.pendingProps,
+      currentChild.expirationTime,
+    );
+    newChild.return = workInProgress;
   }
-  // newChild.sibling = null;
+  newChild.sibling = null;
 }
 
 // Reset a workInProgress child set to prepare it for a second pass.

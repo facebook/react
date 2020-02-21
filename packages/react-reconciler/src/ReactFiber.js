@@ -221,11 +221,6 @@ export type Fiber = {|
   // memory if we need to.
   alternate: Fiber | null,
 
-  // This boolean tells the workloop whether workInProgress was deferred. if
-  // later workInProgress is required we need to go back an reify any fibers
-  // where this is true
-  reify: boolean,
-
   // Time spent rendering this Fiber and its descendants for the current update.
   // This tells us how well the tree makes use of sCU for memoization.
   // It is reset to 0 each time we render and only updated when we don't bailout.
@@ -306,7 +301,6 @@ function FiberNode(
   this.childExpirationTime = NoWork;
 
   this.alternate = null;
-  this.reify = false;
 
   if (enableProfilerTimer) {
     // Note: The following is done to avoid a v8 performance cliff.

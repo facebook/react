@@ -636,8 +636,7 @@ function cutOffTailIfNeeded(
 function fiberName(fiber) {
   if (fiber == null) return fiber;
   let version = fiber.version;
-  let reify = fiber.reify ? 'r' : '';
-  let back = `-${version}${reify}`;
+  let back = `-${version}`;
   let front = '';
   if (fiber.tag === 3) front = 'HostRoot';
   else if (fiber.tag === 6) front = 'HostText';
@@ -653,17 +652,13 @@ function completeWork(
   workInProgress: Fiber,
   renderExpirationTime: ExpirationTime,
 ): Fiber | null {
-  let wasSpeculative = workInProgress.reify;
-
   console.log(
-    wasSpeculative ? 'completeWork -speculative' : 'completeWork',
+    'completeWork',
     fiberName(workInProgress) + '->' + fiberName(workInProgress.return),
     current && fiberName(current) + '->' + fiberName(current.return),
   );
 
-  const newProps = wasSpeculative
-    ? workInProgress.memoizedProps
-    : workInProgress.pendingProps;
+  const newProps = workInProgress.pendingProps;
 
   switch (workInProgress.tag) {
     case IndeterminateComponent:
