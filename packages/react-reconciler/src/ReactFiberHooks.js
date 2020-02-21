@@ -914,23 +914,7 @@ function readFromUnsubcribedMutableSource<Source, Snapshot>(
   }
 }
 
-type MutableSourceRef<Source, Snapshot> = {|
-  getSnapshot: null | MutableSourceGetSnapshotFn<Source, Snapshot>,
-  source: null | MutableSource<Source>,
-  subscribe: null | MutableSourceSubscribeFn<Source, Snapshot>,
-|};
-
-function useMutableSourceImpl<Source, Snapshot>(
-  useEffectImpl: (
-    create: () => (() => void) | void,
-    deps: Array<mixed> | void | null,
-  ) => void,
-  useRefImpl: (
-    initialValue: MutableSourceRef<Source, Snapshot>,
-  ) => {|current: MutableSourceRef<Source, Snapshot>|},
-  useStateImpl: (
-    initialState: () => MutableSourceState<Source, Snapshot>,
-  ) => [MutableSourceState<Source, Snapshot>, Dispatch<any>],
+function useMutableSource<Source, Snapshot>(
   source: MutableSource<Source>,
   getSnapshot: MutableSourceGetSnapshotFn<Source, Snapshot>,
   subscribe: MutableSourceSubscribeFn<Source, Snapshot>,
@@ -938,7 +922,9 @@ function useMutableSourceImpl<Source, Snapshot>(
   const getVersion = source._getVersion;
   const version = getVersion();
 
-  const [state, setState] = useStateImpl(
+  const dispatcher = ReactCurrentDispatcher.current;
+
+  const [state, setState] = dispatcher.useState(
     () =>
       ({
         getSnapshot,
@@ -948,18 +934,16 @@ function useMutableSourceImpl<Source, Snapshot>(
       }: MutableSourceState<Source, Snapshot>),
   );
 
-  const ref = useRefImpl({
+  const ref = dispatcher.useRef({
     getSnapshot: null,
     source: null,
     subscribe: null,
   });
 
-  let didUnsubscribe = false;
-
   // If we got a new source or subscribe function,
   // we'll need to subscribe in a passive effect,
   // and also check for any changes that fire between render and subscribe.
-  useEffectImpl(() => {
+  dispatcher.useEffect(() => {
     const shouldResubscribe =
       subscribe !== ref.current.subscribe || source !== ref.current.source;
 
@@ -975,22 +959,19 @@ function useMutableSourceImpl<Source, Snapshot>(
 
     if (shouldResubscribe) {
       const handleChange = () => {
-        // It's possible that this callback will be invoked even after being unsubscribed,
-        // if it's removed as a result of a subscription event/update.
-        // In this case, React might log a DEV warning about an update from an unmounted component.
-        // We can avoid triggering that warning with this check.
-        if (didUnsubscribe) {
-          return;
-        }
-
         const latestGetSnapshot = ((ref.current
           .getSnapshot: any): MutableSourceGetSnapshotFn<Source, Snapshot>);
         let newSnapshot = null;
-        let snapshotDidThrow = false;
         try {
           newSnapshot = latestGetSnapshot(source._source);
         } catch (error) {
-          snapshotDidThrow = true;
+          // A selector might throw after a source mutation.
+          // e.g. it might try to read from a part of the store that no longer exists.
+          // In this case we should still schedule an update with React.
+          // Worst case the selector will throw again and then an error boundary will handle it.
+          setState(() => {
+            throw error;
+          });
         }
 
         setState(prevState => {
@@ -1003,14 +984,6 @@ function useMutableSourceImpl<Source, Snapshot>(
             prevState.subscribe !== subscribe
           ) {
             return prevState;
-          }
-
-          // A selector might throw after a source mutation.
-          // e.g. it might try to read from a part of the store that no longer exists.
-          // In this case we should still schedule an update with React.
-          // Worst case the selector will throw again and then an error boundary will handle it.
-          if (snapshotDidThrow) {
-            return {...prevState};
           }
 
           // If the value hasn't changed, no update is needed.
@@ -1044,10 +1017,7 @@ function useMutableSourceImpl<Source, Snapshot>(
         }
       }
 
-      return () => {
-        didUnsubscribe = true;
-        unsubscribe();
-      };
+      return unsubscribe;
     }
   }, [source, subscribe, getSnapshot]);
 
@@ -1082,51 +1052,6 @@ function useMutableSourceImpl<Source, Snapshot>(
   }
 
   return state.snapshot;
-}
-
-function mountMutableSource<Source, Snapshot>(
-  source: MutableSource<Source>,
-  getSnapshot: MutableSourceGetSnapshotFn<Source, Snapshot>,
-  subscribe: MutableSourceSubscribeFn<Source, Snapshot>,
-): Snapshot {
-  return useMutableSourceImpl(
-    mountEffect,
-    mountRef,
-    mountState,
-    source,
-    getSnapshot,
-    subscribe,
-  );
-}
-
-function updateMutableSource<Source, Snapshot>(
-  source: MutableSource<Source>,
-  getSnapshot: MutableSourceGetSnapshotFn<Source, Snapshot>,
-  subscribe: MutableSourceSubscribeFn<Source, Snapshot>,
-): Snapshot {
-  return useMutableSourceImpl(
-    updateEffect,
-    updateRef,
-    updateState,
-    source,
-    getSnapshot,
-    subscribe,
-  );
-}
-
-function rerenderMutableSource<Source, Snapshot>(
-  source: MutableSource<Source>,
-  getSnapshot: MutableSourceGetSnapshotFn<Source, Snapshot>,
-  subscribe: MutableSourceSubscribeFn<Source, Snapshot>,
-): Snapshot {
-  return useMutableSourceImpl(
-    updateEffect,
-    updateRef,
-    rerenderState,
-    source,
-    getSnapshot,
-    subscribe,
-  );
 }
 
 function mountState<S>(
@@ -1696,7 +1621,7 @@ const HooksDispatcherOnMount: Dispatcher = {
   useResponder: createDeprecatedResponderListener,
   useDeferredValue: mountDeferredValue,
   useTransition: mountTransition,
-  useMutableSource: mountMutableSource,
+  useMutableSource: useMutableSource,
 };
 
 const HooksDispatcherOnUpdate: Dispatcher = {
@@ -1715,7 +1640,7 @@ const HooksDispatcherOnUpdate: Dispatcher = {
   useResponder: createDeprecatedResponderListener,
   useDeferredValue: updateDeferredValue,
   useTransition: updateTransition,
-  useMutableSource: updateMutableSource,
+  useMutableSource: useMutableSource,
 };
 
 const HooksDispatcherOnRerender: Dispatcher = {
@@ -1734,7 +1659,7 @@ const HooksDispatcherOnRerender: Dispatcher = {
   useResponder: createDeprecatedResponderListener,
   useDeferredValue: rerenderDeferredValue,
   useTransition: rerenderTransition,
-  useMutableSource: rerenderMutableSource,
+  useMutableSource: useMutableSource,
 };
 
 let HooksDispatcherOnMountInDEV: Dispatcher | null = null;
@@ -1891,7 +1816,7 @@ if (__DEV__) {
     ): Snapshot {
       currentHookNameInDev = 'useMutableSource';
       mountHookTypesDev();
-      return mountMutableSource(source, getSnapshot, subscribe);
+      return useMutableSource(source, getSnapshot, subscribe);
     },
   };
 
@@ -2017,7 +1942,7 @@ if (__DEV__) {
     ): Snapshot {
       currentHookNameInDev = 'useMutableSource';
       updateHookTypesDev();
-      return updateMutableSource(source, getSnapshot, subscribe);
+      return useMutableSource(source, getSnapshot, subscribe);
     },
   };
 
@@ -2143,7 +2068,7 @@ if (__DEV__) {
     ): Snapshot {
       currentHookNameInDev = 'useMutableSource';
       updateHookTypesDev();
-      return updateMutableSource(source, getSnapshot, subscribe);
+      return useMutableSource(source, getSnapshot, subscribe);
     },
   };
 
@@ -2269,7 +2194,7 @@ if (__DEV__) {
     ): Snapshot {
       currentHookNameInDev = 'useMutableSource';
       updateHookTypesDev();
-      return rerenderMutableSource(source, getSnapshot, subscribe);
+      return useMutableSource(source, getSnapshot, subscribe);
     },
   };
 
@@ -2410,7 +2335,7 @@ if (__DEV__) {
       currentHookNameInDev = 'useMutableSource';
       warnInvalidHookAccess();
       mountHookTypesDev();
-      return mountMutableSource(source, getSnapshot, subscribe);
+      return useMutableSource(source, getSnapshot, subscribe);
     },
   };
 
@@ -2551,7 +2476,7 @@ if (__DEV__) {
       currentHookNameInDev = 'useMutableSource';
       warnInvalidHookAccess();
       updateHookTypesDev();
-      return updateMutableSource(source, getSnapshot, subscribe);
+      return useMutableSource(source, getSnapshot, subscribe);
     },
   };
 
@@ -2692,7 +2617,7 @@ if (__DEV__) {
       currentHookNameInDev = 'useMutableSource';
       warnInvalidHookAccess();
       updateHookTypesDev();
-      return rerenderMutableSource(source, getSnapshot, subscribe);
+      return useMutableSource(source, getSnapshot, subscribe);
     },
   };
 }

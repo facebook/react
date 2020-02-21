@@ -3222,6 +3222,42 @@ function loadModules({
           });
         });
 
+        it('should not warn about updates that fire between unmount and passive unsubcribe', () => {
+          const source = createSource('one');
+          const mutableSource = createMutableSource(source);
+
+          function Wrapper() {
+            React.useLayoutEffect(() => () => {
+              Scheduler.unstable_yieldValue('layout unmount');
+            });
+            return (
+              <Component
+                label="only"
+                getSnapshot={defaultGetSnapshot}
+                mutableSource={mutableSource}
+                subscribe={defaultSubscribe}
+              />
+            );
+          }
+
+          act(() => {
+            ReactNoop.renderToRootWithID(<Wrapper />, 'root', () =>
+              Scheduler.unstable_yieldValue('Sync effect'),
+            );
+            expect(Scheduler).toFlushAndYield(['only:one', 'Sync effect']);
+            ReactNoop.flushPassiveEffects();
+
+            // Umounting a root should remove the remaining event listeners in a passive effect
+            ReactNoop.unmountRootWithID('root');
+            expect(Scheduler).toFlushAndYieldThrough(['layout unmount']);
+
+            // Changes to source should not cause a warning,
+            // even though the unsubscribe hasn't run yet (since it's a pending passive effect).
+            source.value = 'two';
+            expect(Scheduler).toFlushAndYield([]);
+          });
+        });
+
         // TODO (useMutableSource) Test for multiple updates at different priorities
       });
 
