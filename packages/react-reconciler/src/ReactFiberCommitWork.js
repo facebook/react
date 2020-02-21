@@ -576,12 +576,7 @@ function commitLifeCycles(
         // We could update instance props and state here,
         // but instead we rely on them being set during last render.
         // TODO: revisit this when we implement resuming.
-        commitUpdateQueue(
-          finishedWork,
-          updateQueue,
-          instance,
-          committedExpirationTime,
-        );
+        commitUpdateQueue(finishedWork, updateQueue, instance);
       }
       return;
     }
@@ -599,12 +594,7 @@ function commitLifeCycles(
               break;
           }
         }
-        commitUpdateQueue(
-          finishedWork,
-          updateQueue,
-          instance,
-          committedExpirationTime,
-        );
+        commitUpdateQueue(finishedWork, updateQueue, instance);
       }
       return;
     }

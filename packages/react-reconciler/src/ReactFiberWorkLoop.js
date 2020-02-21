@@ -1252,7 +1252,7 @@ function prepareFreshStack(root, expirationTime) {
     }
   }
   workInProgressRoot = root;
-  workInProgress = createWorkInProgress(root.current, null, expirationTime);
+  workInProgress = createWorkInProgress(root.current, null);
   renderExpirationTime = expirationTime;
   workInProgressRootExitStatus = RootIncomplete;
   workInProgressRootFatalError = null;
