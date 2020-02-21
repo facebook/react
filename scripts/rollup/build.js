@@ -3,7 +3,6 @@
 const rollup = require('rollup');
 const babel = require('rollup-plugin-babel');
 const closure = require('./plugins/closure-plugin');
-const commonjs = require('rollup-plugin-commonjs');
 const prettier = require('rollup-plugin-prettier');
 const replace = require('rollup-plugin-replace');
 const stripBanner = require('rollup-plugin-strip-banner');
@@ -394,8 +393,6 @@ function getPlugins(
       'process.env.NODE_ENV': isProduction ? "'production'" : "'development'",
       __EXPERIMENTAL__,
     }),
-    // We still need CommonJS for external deps like object-assign.
-    commonjs(),
     // Apply dead code elimination and/or minification.
     isProduction &&
       closure(
