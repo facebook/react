@@ -120,6 +120,7 @@ import {
   enableFundamentalAPI,
   enableScopeAPI,
   enableChunksAPI,
+  enableSpeculativeWorkTracing,
 } from 'shared/ReactFeatureFlags';
 import {
   markSpawnedWork,
@@ -652,11 +653,13 @@ function completeWork(
   workInProgress: Fiber,
   renderExpirationTime: ExpirationTime,
 ): Fiber | null {
-  console.log(
-    'completeWork',
-    fiberName(workInProgress) + '->' + fiberName(workInProgress.return),
-    current && fiberName(current) + '->' + fiberName(current.return),
-  );
+  if (__DEV__ && enableSpeculativeWorkTracing) {
+    console.log(
+      'completeWork',
+      fiberName(workInProgress) + '->' + fiberName(workInProgress.return),
+      current && fiberName(current) + '->' + fiberName(current.return),
+    );
+  }
 
   const newProps = workInProgress.pendingProps;
 

@@ -21,7 +21,19 @@ import type {ReactPriorityLevel} from './SchedulerWithReactIntegration';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 
 import {NoWork, Sync} from './ReactFiberExpirationTime';
-import {readContext, peekContext} from './ReactFiberNewContext';
+import {
+  readContext as originalReadContext,
+  peekContext,
+} from './ReactFiberNewContext';
+
+const readContext = originalReadContext;
+const mountContext = enableSpeculativeWork
+  ? mountContextImpl
+  : originalReadContext;
+const updateContext = enableSpeculativeWork
+  ? updateContextImpl
+  : originalReadContext;
+
 import {createDeprecatedResponderListener} from './ReactFiberDeprecatedEvents';
 import {
   Update as UpdateEffect,
@@ -42,6 +54,10 @@ import {
   markRenderEventTimeAndConfig,
   markUnprocessedUpdateTime,
 } from './ReactFiberWorkLoop';
+import {
+  enableSpeculativeWork,
+  enableSpeculativeWorkTracing,
+} from 'shared/ReactFeatureFlags';
 
 import invariant from 'shared/invariant';
 import getComponentName from 'shared/getComponentName';
@@ -56,6 +72,8 @@ import {
 } from './SchedulerWithReactIntegration';
 
 const {ReactCurrentDispatcher, ReactCurrentBatchConfig} = ReactSharedInternals;
+
+type ObservedBits = void | number | boolean;
 
 export type Dispatcher = {|
   readContext<T>(
@@ -343,24 +361,32 @@ function areHookInputsEqual(
   return true;
 }
 
-export function bailoutSpeculativeWorkWithHooks(
+export function canBailoutSpeculativeWorkWithHooks(
   current: Fiber,
   nextRenderExpirationTime: renderExpirationTime,
 ): boolean {
-  console.log('====== bailoutSpeculativeWorkWithHooks');
+  if (__DEV__ && enableSpeculativeWorkTracing) {
+    console.log('====== bailoutSpeculativeWorkWithHooks');
+  }
   let hook = current.memoizedState;
   while (hook !== null) {
-    console.log('hook');
     if (typeof hook.bailout === 'function') {
       let didBailout = hook.bailout(hook, nextRenderExpirationTime);
       if (didBailout === false) {
-        console.log('====== bailoutSpeculativeWorkWithHooks returning false');
+        if (__DEV__ && enableSpeculativeWorkTracing) {
+          console.log(
+            '====== bailoutSpeculativeWorkWithHooks returning false',
+            hook.bailout.name,
+          );
+        }
         return false;
       }
     }
     hook = hook.next;
   }
-  console.log('====== bailoutSpeculativeWorkWithHooks returning true');
+  if (__DEV__ && enableSpeculativeWorkTracing) {
+    console.log('====== bailoutSpeculativeWorkWithHooks returning true');
+  }
   return true;
 }
 
@@ -641,9 +667,9 @@ function updateWorkInProgressHook(): Hook {
   return workInProgressHook;
 }
 
-type ObservedBits = void | number | boolean;
+const EMPTY = Symbol('empty');
 
-function mountContext<C>(
+function mountContextImpl<C>(
   context: ReactContext<C>,
   selector?: ObservedBits | (C => any),
 ): any {
@@ -677,9 +703,7 @@ function mountContext<C>(
   }
 }
 
-let EMPTY = Symbol('empty');
-
-function updateContext<C>(
+function updateContextImpl<C>(
   context: ReactContext<C>,
   selector?: ObservedBits | (C => any),
 ): any {
@@ -717,40 +741,43 @@ function updateContext<C>(
 }
 
 function bailoutContext(hook: Hook): boolean {
-  console.log('}}}}} bailoutContext');
   const memoizedState = hook.memoizedState;
   let selector = memoizedState.selector;
   let peekedContextValue = peekContext(memoizedState.context);
   let previousContextValue = memoizedState.contextValue;
 
   if (selector !== null) {
-    console.log('}}}}} bailoutContext we have a selector');
     if (previousContextValue !== peekedContextValue) {
-      console.log(
-        '}}}}} bailoutContext we have different context values',
-        previousContextValue,
-        peekedContextValue,
-      );
+      if (__DEV__ && enableSpeculativeWorkTracing) {
+        console.log(
+          '}}}}} [selector mode] bailoutContext we have different context VALUES',
+          previousContextValue,
+          peekedContextValue,
+        );
+      }
       let stashedSelection = selector(peekedContextValue);
       if (stashedSelection !== memoizedState.selection) {
-        console.log(
-          '}}}}} bailoutContext we have different context SELECTIONS',
-          memoizedState.selection,
-          stashedSelection,
-        );
+        if (__DEV__ && enableSpeculativeWorkTracing) {
+          console.log(
+            '}}}}} [selector mode] bailoutContext we have different context SELECTIONS',
+            memoizedState.selection,
+            stashedSelection,
+          );
+        }
         memoizedState.stashedSelection = stashedSelection;
         memoizedState.stashedContextValue = peekedContextValue;
         return false;
       }
     }
   } else {
-    console.log('}}}}} bailoutContext we are not using selectors');
     if (previousContextValue !== peekedContextValue) {
-      console.log(
-        '}}}}} bailoutContext we have different context values',
-        previousContextValue,
-        peekedContextValue,
-      );
+      if (__DEV__ && enableSpeculativeWorkTracing) {
+        console.log(
+          '}}}}} [value mode] bailoutContext we have different context values',
+          previousContextValue,
+          peekedContextValue,
+        );
+      }
       return false;
     }
   }
@@ -788,7 +815,6 @@ function mountReducer<S, I, A>(
     lastRenderedState: (initialState: any),
   });
   hook.bailout = bailoutReducer;
-  console.log('mountReducer hook');
   const dispatch: Dispatch<A> = (queue.dispatch = (dispatchAction.bind(
     null,
     currentlyRenderingFiber,
@@ -983,7 +1009,9 @@ function rerenderReducer<S, I, A>(
 }
 
 function bailoutReducer(hook, renderExpirationTime): boolean {
-  console.log('}}}} bailoutReducer');
+  if (__DEV__ && enableSpeculativeWorkTracing) {
+    console.log('}}}} bailoutReducer');
+  }
 
   const queue = hook.queue;
 
@@ -1014,11 +1042,15 @@ function bailoutReducer(hook, renderExpirationTime): boolean {
 
     // if newState is different from the current state do not bailout
     if (newState !== hook.memoizedState) {
-      console.log('found a new state. not bailing out of hooks');
+      if (__DEV__ && enableSpeculativeWorkTracing) {
+        console.log('found a new state. not bailing out of hooks');
+      }
       return false;
     }
   }
-  console.log('state is the same so we can maybe bail out');
+  if (__DEV__ && enableSpeculativeWorkTracing) {
+    console.log('state is the same so we can maybe bail out');
+  }
   return true;
 }
 
@@ -1506,7 +1538,7 @@ function dispatchAction<S, A>(
     currentlyRenderingFiber.expirationTime = renderExpirationTime;
   } else {
     if (
-      false && // turn off eager computation with bailout
+      !enableSpeculativeWork &&
       fiber.expirationTime === NoWork &&
       (alternate === null || alternate.expirationTime === NoWork)
     ) {
@@ -1530,6 +1562,9 @@ function dispatchAction<S, A>(
           update.eagerReducer = lastRenderedReducer;
           update.eagerState = eagerState;
           if (is(eagerState, currentState)) {
+            if (__DEV__ && enableSpeculativeWorkTracing) {
+              console.log('++++++++++++ eagerly bailing out of reducer update');
+            }
             // Fast path. We can bail out without scheduling React to re-render.
             // It's still possible that we'll need to rebase this update later,
             // if the component re-renders for a different reason and by that
@@ -1552,7 +1587,9 @@ function dispatchAction<S, A>(
         warnIfNotCurrentlyActingUpdatesInDev(fiber);
       }
     }
-    console.log('++++++++++++ scheduling work for reducer hook');
+    if (__DEV__ && enableSpeculativeWorkTracing) {
+      console.log('++++++++++++ scheduling work for reducer hook');
+    }
     scheduleWork(fiber, expirationTime);
   }
 }
