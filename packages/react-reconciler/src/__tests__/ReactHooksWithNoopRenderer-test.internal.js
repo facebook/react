@@ -44,6 +44,7 @@ function loadModules({
   ReactFeatureFlags.flushSuspenseFallbacksInTests = false;
   ReactFeatureFlags.deferPassiveEffectCleanupDuringUnmount = deferPassiveEffectCleanupDuringUnmount;
   ReactFeatureFlags.runAllPassiveEffectDestroysBeforeCreates = runAllPassiveEffectDestroysBeforeCreates;
+  ReactFeatureFlags.enableProfilerTimer = true;
   React = require('react');
   ReactNoop = require('react-noop-renderer');
   Scheduler = require('scheduler');
@@ -3090,6 +3091,64 @@ function loadModules({
             expect(() => {
               expect(Scheduler).toFlushAndYield(['only:new:two']);
             }).toThrow('Cannot read from mutable source');
+          });
+        });
+
+        it('should not throw if the new getSnapshot returns the same snapshot value', () => {
+          const source = createSource('one');
+          const mutableSource = createMutableSource(source);
+
+          const onRenderA = jest.fn();
+          const onRenderB = jest.fn();
+
+          let updateGetSnapshot;
+
+          function WrapperWithState() {
+            const tuple = React.useState(() => defaultGetSnapshot);
+            updateGetSnapshot = tuple[1];
+            return (
+              <Component
+                label="b"
+                getSnapshot={tuple[0]}
+                mutableSource={mutableSource}
+                subscribe={defaultSubscribe}
+              />
+            );
+          }
+
+          act(() => {
+            ReactNoop.render(
+              <>
+                <React.Profiler id="a" onRender={onRenderA}>
+                  <Component
+                    label="a"
+                    getSnapshot={defaultGetSnapshot}
+                    mutableSource={mutableSource}
+                    subscribe={defaultSubscribe}
+                  />
+                </React.Profiler>
+                <React.Profiler id="b" onRender={onRenderB}>
+                  <WrapperWithState />
+                </React.Profiler>
+              </>,
+              () => Scheduler.unstable_yieldValue('Sync effect'),
+            );
+            expect(Scheduler).toFlushAndYield([
+              'a:one',
+              'b:one',
+              'Sync effect',
+            ]);
+            ReactNoop.flushPassiveEffects();
+            expect(onRenderA).toHaveBeenCalledTimes(1);
+            expect(onRenderB).toHaveBeenCalledTimes(1);
+
+            // If B's getSnapshot function updates, but the snapshot it returns is the same,
+            // only B should re-render (to update its state).
+            updateGetSnapshot(() => s => defaultGetSnapshot(s));
+            expect(Scheduler).toFlushAndYield(['b:one', 'b:one']);
+            ReactNoop.flushPassiveEffects();
+            expect(onRenderA).toHaveBeenCalledTimes(1);
+            expect(onRenderB).toHaveBeenCalledTimes(2);
           });
         });
 

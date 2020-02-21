@@ -1060,17 +1060,25 @@ function useMutableSourceImpl<Source, Snapshot>(
       subscribe,
     });
   } else if (state.getSnapshot !== getSnapshot) {
-    // TODO (useMutableSource) We could avoid throwing if the snapshot doesn't change.
+    const snapshot = getSnapshot(source._source);
     setState({
       getSnapshot,
-      snapshot: getSnapshot(source._source),
+      snapshot,
       source,
       subscribe,
     });
-    invariant(
-      false,
-      'Cannot read from mutable source during the current render without tearing. This is a bug in React. Please file an issue.',
-    );
+
+    // Normally a new getSnapshot function implies a new snapshot value.
+    // This function should be memoized so that it only changes when its dependencies change.
+    // Tf the returned snapshot value is the same-
+    // it likely means getSnapshot is not memoized correctly (e.g. inline function).
+    // In this case we can avoid the expensive deopt and just update local component state.
+    if (state.snapshot !== snapshot) {
+      invariant(
+        false,
+        'Cannot read from mutable source during the current render without tearing. This is a bug in React. Please file an issue.',
+      );
+    }
   }
 
   return state.snapshot;
