@@ -18,6 +18,7 @@ import type {Effect as HookEffect} from './ReactFiberHooks';
 
 import {
   warnAboutDeprecatedLifecycles,
+  deferPassiveEffectCleanupDuringUnmount,
   runAllPassiveEffectDestroysBeforeCreates,
   enableUserTimingAPI,
   enableSuspenseServerRenderer,
@@ -2687,6 +2688,18 @@ function warnAboutUpdateOnUnmountedFiberInDEV(fiber) {
       // Only warn for user-defined components, not internal ones like Suspense.
       return;
     }
+
+    if (
+      deferPassiveEffectCleanupDuringUnmount &&
+      runAllPassiveEffectDestroysBeforeCreates
+    ) {
+      // If there are pending passive effects unmounts for this Fiber,
+      // we can assume that they would have prevented this update.
+      if (pendingPassiveHookEffectsUnmount.indexOf(fiber) >= 0) {
+        return;
+      }
+    }
+
     // We show the whole stack but dedupe on the top component's name because
     // the problematic code almost always lies inside that component.
     const componentName = getComponentName(fiber.type) || 'ReactComponent';

@@ -1144,6 +1144,184 @@ function loadModules({
               ]);
             });
           });
+
+          it('does not warn about state updates for unmounted components with pending passive unmounts', () => {
+            let completePendingRequest = null;
+            function Component() {
+              Scheduler.unstable_yieldValue('Component');
+              const [didLoad, setDidLoad] = React.useState(false);
+              React.useLayoutEffect(() => {
+                Scheduler.unstable_yieldValue('layout create');
+                return () => {
+                  Scheduler.unstable_yieldValue('layout destroy');
+                };
+              }, []);
+              React.useEffect(() => {
+                Scheduler.unstable_yieldValue('passive create');
+                // Mimic an XHR request with a complete handler that updates state.
+                completePendingRequest = () => setDidLoad(true);
+                return () => {
+                  Scheduler.unstable_yieldValue('passive destroy');
+                };
+              }, []);
+              return didLoad;
+            }
+
+            act(() => {
+              ReactNoop.renderToRootWithID(<Component />, 'root', () =>
+                Scheduler.unstable_yieldValue('Sync effect'),
+              );
+              expect(Scheduler).toFlushAndYieldThrough([
+                'Component',
+                'layout create',
+                'Sync effect',
+              ]);
+              ReactNoop.flushPassiveEffects();
+              expect(Scheduler).toHaveYielded(['passive create']);
+
+              // Unmount but don't process pending passive destroy function
+              ReactNoop.unmountRootWithID('root');
+              expect(Scheduler).toFlushAndYieldThrough(['layout destroy']);
+
+              // Simulate an XHR completing, which will cause a state update-
+              // but should not log a warning.
+              completePendingRequest();
+
+              ReactNoop.flushPassiveEffects();
+              expect(Scheduler).toHaveYielded(['passive destroy']);
+            });
+          });
+
+          it('still warns about state updates for unmounted components with no pending passive unmounts', () => {
+            let completePendingRequest = null;
+            function Component() {
+              Scheduler.unstable_yieldValue('Component');
+              const [didLoad, setDidLoad] = React.useState(false);
+              React.useLayoutEffect(() => {
+                Scheduler.unstable_yieldValue('layout create');
+                // Mimic an XHR request with a complete handler that updates state.
+                completePendingRequest = () => setDidLoad(true);
+                return () => {
+                  Scheduler.unstable_yieldValue('layout destroy');
+                };
+              }, []);
+              return didLoad;
+            }
+
+            act(() => {
+              ReactNoop.renderToRootWithID(<Component />, 'root', () =>
+                Scheduler.unstable_yieldValue('Sync effect'),
+              );
+              expect(Scheduler).toFlushAndYieldThrough([
+                'Component',
+                'layout create',
+                'Sync effect',
+              ]);
+
+              // Unmount but don't process pending passive destroy function
+              ReactNoop.unmountRootWithID('root');
+              expect(Scheduler).toFlushAndYieldThrough(['layout destroy']);
+
+              // Simulate an XHR completing.
+              expect(completePendingRequest).toErrorDev(
+                "Warning: Can't perform a React state update on an unmounted component.",
+              );
+            });
+          });
+
+          it('still warns if there are pending passive unmount effects but not for the current fiber', () => {
+            let completePendingRequest = null;
+            function ComponentWithXHR() {
+              Scheduler.unstable_yieldValue('Component');
+              const [didLoad, setDidLoad] = React.useState(false);
+              React.useLayoutEffect(() => {
+                Scheduler.unstable_yieldValue('a:layout create');
+                return () => {
+                  Scheduler.unstable_yieldValue('a:layout destroy');
+                };
+              }, []);
+              React.useEffect(() => {
+                Scheduler.unstable_yieldValue('a:passive create');
+                // Mimic an XHR request with a complete handler that updates state.
+                completePendingRequest = () => setDidLoad(true);
+              }, []);
+              return didLoad;
+            }
+
+            function ComponentWithPendingPassiveUnmount() {
+              React.useEffect(() => {
+                Scheduler.unstable_yieldValue('b:passive create');
+                return () => {
+                  Scheduler.unstable_yieldValue('b:passive destroy');
+                };
+              }, []);
+              return null;
+            }
+
+            act(() => {
+              ReactNoop.renderToRootWithID(
+                <>
+                  <ComponentWithXHR />
+                  <ComponentWithPendingPassiveUnmount />
+                </>,
+                'root',
+                () => Scheduler.unstable_yieldValue('Sync effect'),
+              );
+              expect(Scheduler).toFlushAndYieldThrough([
+                'Component',
+                'a:layout create',
+                'Sync effect',
+              ]);
+              ReactNoop.flushPassiveEffects();
+              expect(Scheduler).toHaveYielded([
+                'a:passive create',
+                'b:passive create',
+              ]);
+
+              // Unmount but don't process pending passive destroy function
+              ReactNoop.unmountRootWithID('root');
+              expect(Scheduler).toFlushAndYieldThrough(['a:layout destroy']);
+
+              // Simulate an XHR completing in the component without a pending passive effect..
+              expect(completePendingRequest).toErrorDev(
+                "Warning: Can't perform a React state update on an unmounted component.",
+              );
+            });
+          });
+
+          it('still warns about state updates from within passive unmount function', () => {
+            function Component() {
+              Scheduler.unstable_yieldValue('Component');
+              const [didLoad, setDidLoad] = React.useState(false);
+              React.useEffect(() => {
+                Scheduler.unstable_yieldValue('passive create');
+                return () => {
+                  setDidLoad(true);
+                  Scheduler.unstable_yieldValue('passive destroy');
+                };
+              }, []);
+              return didLoad;
+            }
+
+            act(() => {
+              ReactNoop.renderToRootWithID(<Component />, 'root', () =>
+                Scheduler.unstable_yieldValue('Sync effect'),
+              );
+              expect(Scheduler).toFlushAndYieldThrough([
+                'Component',
+                'Sync effect',
+                'passive create',
+              ]);
+
+              // Unmount but don't process pending passive destroy function
+              ReactNoop.unmountRootWithID('root');
+              expect(() => {
+                expect(Scheduler).toFlushAndYield(['passive destroy']);
+              }).toErrorDev(
+                "Warning: Can't perform a React state update on an unmounted component.",
+              );
+            });
+          });
         }
 
         it('updates have async priority', () => {
