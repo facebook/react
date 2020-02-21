@@ -1019,10 +1019,10 @@ function useMutableSourceImpl<Source, Snapshot>(
             return prevState;
           }
 
-          setState({
+          return {
             ...prevState,
             snapshot: newSnapshot,
-          });
+          };
         });
       };
 
@@ -1060,6 +1060,7 @@ function useMutableSourceImpl<Source, Snapshot>(
       subscribe,
     });
   } else if (state.getSnapshot !== getSnapshot) {
+    // TODO (useMutableSource) We could avoid throwing if the snapshot doesn't change.
     setState({
       getSnapshot,
       snapshot: getSnapshot(source._source),
