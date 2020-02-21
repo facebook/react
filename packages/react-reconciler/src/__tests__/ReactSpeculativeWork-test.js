@@ -24,11 +24,16 @@ describe('ReactSpeculativeWork', () => {
 
     let selectorTest = false;
 
+    let selector = v => {
+      selectorTest && Scheduler.unstable_yieldValue('selector');
+      return Math.floor(v / 2);
+    };
+
     function Text(props) {
-      let ctx = React.useContext(Ctx, v => {
-        selectorTest && Scheduler.unstable_yieldValue('selector');
-        return Math.floor(v / 2);
-      });
+      let ctx = React.useContext(
+        Ctx,
+        ReactFeatureFlags.enableSpeculativeWork ? selector : undefined,
+      );
       Scheduler.unstable_yieldValue(props.text);
       Scheduler.unstable_yieldValue(ctx);
       return props.text + (props.plusValue ? ctx : '');
@@ -97,7 +102,7 @@ describe('ReactSpeculativeWork', () => {
       return <Ctx.Provider value={val}>{texts}</Ctx.Provider>;
     }
 
-    for (let i = 0; i < 1000; i++) {
+    for (let i = 0; i < 100; i++) {
       const root = ReactNoop.createBlockingRoot();
 
       root.render(<App />);

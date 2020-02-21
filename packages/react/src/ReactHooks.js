@@ -12,6 +12,7 @@ import type {
   ReactEventResponder,
   ReactEventResponderListener,
 } from 'shared/ReactTypes';
+import {enableSpeculativeWork} from 'shared/ReactFeatureFlags';
 import invariant from 'shared/invariant';
 import {REACT_RESPONDER_TYPE} from 'shared/ReactSymbols';
 
@@ -40,7 +41,7 @@ export function useContext<T>(
 ) {
   const dispatcher = resolveDispatcher();
   if (__DEV__) {
-    if (false && unstable_observedBits !== undefined) {
+    if (!enableSpeculativeWork && unstable_observedBits !== undefined) {
       console.error(
         'useContext() second argument is reserved for future ' +
           'use in React. Passing it is not supported. ' +
