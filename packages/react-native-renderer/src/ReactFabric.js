@@ -9,6 +9,7 @@
 
 import type {ReactFabricType, HostComponent} from './ReactNativeTypes';
 import type {ReactNodeList} from 'shared/ReactTypes';
+import type {ElementRef} from 'react';
 
 import './ReactFabricInjection';
 
@@ -43,7 +44,7 @@ const ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
 
 function findHostInstance_DEPRECATED(
   componentOrHandle: any,
-): ?React$ElementRef<HostComponent<mixed>> {
+): ?ElementRef<HostComponent<mixed>> {
   if (__DEV__) {
     const owner = ReactCurrentOwner.current;
     if (owner !== null && owner.stateNode !== null) {
