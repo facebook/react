@@ -188,18 +188,16 @@ function getRollupOutputOptions(
 ) {
   const isProduction = isProductionBundleType(bundleType);
 
-  return Object.assign(
-    {},
-    {
-      file: outputPath,
-      format,
-      globals,
-      freeze: !isProduction,
-      interop: false,
-      name: globalName,
-      sourcemap: false,
-    }
-  );
+  return {
+    file: outputPath,
+    format,
+    globals,
+    freeze: !isProduction,
+    interop: false,
+    name: globalName,
+    sourcemap: false,
+    esModule: false,
+  };
 }
 
 function getFormat(bundleType) {
