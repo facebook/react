@@ -17,7 +17,7 @@ import type {
   ReactEventResponderListener,
 } from 'shared/ReactTypes';
 
-import React from 'react';
+import * as React from 'react';
 import {DiscreteEvent, UserBlockingEvent} from 'shared/ReactTypes';
 
 type PressProps = {|

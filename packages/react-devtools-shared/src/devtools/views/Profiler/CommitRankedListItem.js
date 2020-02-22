@@ -7,7 +7,8 @@
  * @flow
  */
 
-import React, {memo, useCallback, useContext} from 'react';
+import * as React from 'react';
+import {memo, useCallback, useContext} from 'react';
 import {areEqual} from 'react-window';
 import {minBarWidth} from './constants';
 import {getGradientColor} from './utils';

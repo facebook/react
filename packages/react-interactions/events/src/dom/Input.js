@@ -12,7 +12,7 @@ import type {
   ReactDOMResponderContext,
 } from 'shared/ReactDOMTypes';
 
-import React from 'react';
+import * as React from 'react';
 import {DiscreteEvent} from 'shared/ReactTypes';
 import type {ReactEventResponderListener} from 'shared/ReactTypes';
 

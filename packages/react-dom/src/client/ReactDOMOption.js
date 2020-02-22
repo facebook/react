@@ -7,7 +7,7 @@
  * @flow
  */
 
-import React from 'react';
+import * as React from 'react';
 import {getToStringValue, toString} from './ToStringValue';
 
 let didWarnSelectedSetOnOption = false;

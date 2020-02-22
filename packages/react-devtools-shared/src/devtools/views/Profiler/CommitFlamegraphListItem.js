@@ -7,7 +7,8 @@
  * @flow
  */
 
-import React, {Fragment, memo, useCallback, useContext} from 'react';
+import * as React from 'react';
+import {Fragment, memo, useCallback, useContext} from 'react';
 import {areEqual} from 'react-window';
 import {barWidthThreshold} from './constants';
 import {getGradientColor} from './utils';

@@ -7,7 +7,8 @@
  * @flow
  */
 
-import React, {Fragment, useContext} from 'react';
+import * as React from 'react';
+import {Fragment, useContext} from 'react';
 import {ModalDialog} from '../ModalDialog';
 import {ProfilerContext} from './ProfilerContext';
 import TabBar from '../TabBar';

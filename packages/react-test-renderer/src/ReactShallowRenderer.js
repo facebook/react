@@ -7,7 +7,7 @@
  * @flow
  */
 
-import React from 'react';
+import * as React from 'react';
 import {isForwardRef, isMemo, ForwardRef} from 'react-is';
 import describeComponentFrame from 'shared/describeComponentFrame';
 import getComponentName from 'shared/getComponentName';

@@ -14,7 +14,7 @@ import type {
 } from 'shared/ReactDOMTypes';
 import type {ReactEventResponderListener} from 'shared/ReactTypes';
 
-import React from 'react';
+import * as React from 'react';
 import {DiscreteEvent} from 'shared/ReactTypes';
 
 /**

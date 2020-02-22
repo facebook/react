@@ -7,7 +7,8 @@
  * @flow
  */
 
-import React, {Fragment, useRef} from 'react';
+import * as React from 'react';
+import {Fragment, useRef} from 'react';
 import styles from './EditableValue.css';
 import {useEditableValue} from '../hooks';
 
