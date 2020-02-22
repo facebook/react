@@ -107,6 +107,8 @@ Or you could develop with a local HTTP server [like `serve`](https://www.npmjs.c
 
 **If your app is inside an iframe, a Chrome extension, React Native, or in another unusual environment**, try [the standalone version instead](https://github.com/facebook/react/tree/master/packages/react-devtools). Chrome apps are currently not inspectable.
 
+**If your web page uses [Content Security Policy](https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP) either via http header or through `<meta>` tag and the policy restricts script sources**, consider adding 'sha256-MJaZqAYHrwcn5ORXadICcIxGe8B8BLsjLE2OWa9jg78=' to the `script-src` directive to whitelist React global hook mount script. 
+
 **If you still have issues** please [report them](https://github.com/facebook/react/issues/new?labels=Component:%20Developer%20Tools). Don't forget to specify your OS, browser version, extension version, and the exact instructions to reproduce the issue with a screenshot.
 
 ## Local development

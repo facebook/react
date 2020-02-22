@@ -86,6 +86,12 @@ if (sessionStorageGetItem(SESSION_STORAGE_RELOAD_AND_PROFILE_KEY) === 'true') {
   injectCode(rendererCode);
 }
 
+const cspViolationError = `react-devtools failed to install a global hook.
+It might be that it happened due to the Content Security Policy settings of a web page.
+If you are using content-security-policy http header or appropriate <meta> tag
+and you want your webpage to be detected by react-devtools extension consider adding
+'sha256-MJaZqAYHrwcn5ORXadICcIxGe8B8BLsjLE2OWa9jg78=' to script-src directive.`;
+
 // Inject a __REACT_DEVTOOLS_GLOBAL_HOOK__ global for React to interact with.
 // Only do this for HTML documents though, to avoid e.g. breaking syntax highlighting for XML docs.
 if ('text/html' === document.contentType) {
@@ -96,6 +102,12 @@ if ('text/html' === document.contentType) {
       saveNativeValues +
       detectReact,
   );
+
+  if (
+    typeof window.wrappedJSObject.__REACT_DEVTOOLS_GLOBAL_HOOK__ === 'undefined'
+  ) {
+    console.error(cspViolationError);
+  }
 }
 
 if (typeof exportFunction === 'function') {
