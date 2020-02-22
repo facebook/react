@@ -6,7 +6,7 @@
  */
 
 import * as React from 'react';
-import ReactDOM from 'react-dom';
+import * as ReactDOM from 'react-dom';
 import {findCurrentFiberUsingSlowPath} from 'react-reconciler/reflection';
 import {get as getInstance} from 'shared/ReactInstanceMap';
 import {
