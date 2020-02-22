@@ -282,7 +282,7 @@ function commitBeforeMutationLifeCycles(
                   'Expected %s state to match memoized state before ' +
                     'getSnapshotBeforeUpdate. ' +
                     'This might either be because of a bug in React, or because ' +
-                    'a component reassigns its own `this.props`. ' +
+                    'a component reassigns its own `this.state`. ' +
                     'Please file an issue.',
                   getComponentName(finishedWork.type) || 'instance',
                 );
@@ -490,7 +490,7 @@ function commitLifeCycles(
                   'Expected %s state to match memoized state before ' +
                     'componentDidMount. ' +
                     'This might either be because of a bug in React, or because ' +
-                    'a component reassigns its own `this.props`. ' +
+                    'a component reassigns its own `this.state`. ' +
                     'Please file an issue.',
                   getComponentName(finishedWork.type) || 'instance',
                 );
@@ -529,7 +529,7 @@ function commitLifeCycles(
                   'Expected %s state to match memoized state before ' +
                     'componentDidUpdate. ' +
                     'This might either be because of a bug in React, or because ' +
-                    'a component reassigns its own `this.props`. ' +
+                    'a component reassigns its own `this.state`. ' +
                     'Please file an issue.',
                   getComponentName(finishedWork.type) || 'instance',
                 );
@@ -566,7 +566,7 @@ function commitLifeCycles(
                 'Expected %s state to match memoized state before ' +
                   'processing the update queue. ' +
                   'This might either be because of a bug in React, or because ' +
-                  'a component reassigns its own `this.props`. ' +
+                  'a component reassigns its own `this.state`. ' +
                   'Please file an issue.',
                 getComponentName(finishedWork.type) || 'instance',
               );
