@@ -127,6 +127,7 @@ import {
   beginWork as originalBeginWork,
   inSpeculativeWorkMode,
   endSpeculationWorkIfRootFiber,
+  didReifySpeculativeWorkDuringThisStep,
 } from './ReactFiberBeginWork';
 import {completeWork} from './ReactFiberCompleteWork';
 import {unwindWork, unwindInterruptedWork} from './ReactFiberUnwindWork';
@@ -1310,8 +1311,12 @@ function prepareFreshStack(root, expirationTime) {
 
 function handleError(root, thrownValue) {
   do {
+    if (__DEV__ && enableSpeculativeWorkTracing) {
+      console.log('!!!! handleError with thrownValue', thrownValue);
+    }
     try {
       // Reset module-level state that was set during the render phase.
+      // @TODO may need to do something about speculativeMode here
       resetContextDependencies();
       resetHooksAfterThrow();
       resetCurrentDebugFiberInDEV();
@@ -1492,6 +1497,66 @@ function workLoopSync() {
   }
 }
 
+function fiberName(fiber) {
+  if (fiber == null) return fiber;
+  let version = fiber.version;
+  let speculative = inSpeculativeWorkMode() ? 's' : '';
+  let back = `-${version}${speculative}`;
+  let front = '';
+  if (fiber.tag === 3) front = 'HostRoot';
+  else if (fiber.tag === 6) front = 'HostText';
+  else if (fiber.tag === 10) front = 'ContextProvider';
+  else if (typeof fiber.type === 'function') front = fiber.type.name;
+  else front = 'tag' + fiber.tag;
+
+  return front + back;
+}
+
+function printEffectChain(label, fiber) {
+  return;
+  let effect = fiber;
+  let firstEffect = fiber.firstEffect;
+  let lastEffect = fiber.lastEffect;
+
+  let cache = new Set();
+  let buffer = '';
+  do {
+    let name = fiberName(effect);
+    if (effect === firstEffect) {
+      name = 'F(' + name + ')';
+    }
+    if (effect === lastEffect) {
+      name = 'L(' + name + ')';
+    }
+    buffer += name + ' -> ';
+    cache.add(effect);
+    effect = effect.nextEffect;
+  } while (effect !== null && !cache.has(effect));
+  if (cache.has(effect)) {
+    buffer = '[Circular] !!! : ' + buffer;
+  }
+  console.log(`printEffectChain(${label}) self`, buffer);
+  buffer = '';
+  effect = fiber.firstEffect;
+  cache = new Set();
+  while (effect !== null && !cache.has(effect)) {
+    let name = fiberName(effect);
+    if (effect === firstEffect) {
+      name = 'F(' + name + ')';
+    }
+    if (effect === lastEffect) {
+      name = 'L(' + name + ')';
+    }
+    buffer += name + ' -> ';
+    cache.add(effect);
+    effect = effect.nextEffect;
+  }
+  if (cache.has(effect)) {
+    buffer = '[Circular] !!! : ' + buffer;
+  }
+  console.log(`printEffectChain(${label}) firstEffect`, buffer);
+}
+
 /** @noinline */
 function workLoopConcurrent() {
   // Perform work until Scheduler asks us to yield
@@ -1506,6 +1571,10 @@ function performUnitOfWork(unitOfWork: Fiber): Fiber | null {
   // need an additional field on the work in progress.
   const current = unitOfWork.alternate;
 
+  if (__DEV__ && enableSpeculativeWorkTracing) {
+    printEffectChain('performUnitOfWork', unitOfWork);
+  }
+
   startWorkTimer(unitOfWork);
   setCurrentDebugFiberInDEV(unitOfWork);
 
@@ -1516,6 +1585,21 @@ function performUnitOfWork(unitOfWork: Fiber): Fiber | null {
     stopProfilerTimerIfRunningAndRecordDelta(unitOfWork, true);
   } else {
     next = beginWork(current, unitOfWork, renderExpirationTime);
+  }
+
+  if (enableSpeculativeWork) {
+    if (didReifySpeculativeWorkDuringThisStep()) {
+      if (__DEV__ && enableSpeculativeWorkTracing) {
+        console.log(
+          'beginWork started speculatively but ended up reifying. we need to swap unitOfWork with the altnerate',
+        );
+      }
+      unitOfWork = unitOfWork.alternate;
+    }
+  }
+
+  if (__DEV__ && enableSpeculativeWorkTracing) {
+    console.log('beginWork returned as next work', fiberName(next));
   }
 
   resetCurrentDebugFiberInDEV();
@@ -1544,6 +1628,12 @@ function completeUnitOfWork(unitOfWork: Fiber): Fiber | null {
 
     // Check if the work completed or if something threw.
     if ((workInProgress.effectTag & Incomplete) === NoEffect) {
+      if (__DEV__ && enableSpeculativeWorkTracing) {
+        console.log(
+          '**** completeUnitOfWork: fiber completed',
+          fiberName(workInProgress),
+        );
+      }
       setCurrentDebugFiberInDEV(workInProgress);
       let next;
       if (
@@ -1573,6 +1663,11 @@ function completeUnitOfWork(unitOfWork: Fiber): Fiber | null {
         // Do not append effects to parent if workInProgress was speculative
         workWasSpeculative !== true
       ) {
+        if (__DEV__ && enableSpeculativeWorkTracing) {
+          console.log('appending effects to return fiber');
+          printEffectChain('initial workInProgress', workInProgress);
+          printEffectChain('initial returnFiber', returnFiber);
+        }
         // Append all the effects of the subtree and this fiber onto the effect
         // list of the parent. The completion order of the children affects the
         // side-effect order.
@@ -1605,8 +1700,17 @@ function completeUnitOfWork(unitOfWork: Fiber): Fiber | null {
           }
           returnFiber.lastEffect = workInProgress;
         }
+        if (__DEV__ && enableSpeculativeWorkTracing) {
+          printEffectChain('final workInProgress', workInProgress);
+          printEffectChain('final returnFiber', returnFiber);
+        }
+      } else if (__DEV__ && enableSpeculativeWorkTracing) {
+        console.log('NOT appending effects to return fiber');
       }
     } else {
+      if (__DEV__ && enableSpeculativeWorkTracing) {
+        console.log('**** fiber did not complete because something threw');
+      }
       // This fiber did not complete because something threw. Pop values off
       // the stack without entering the complete phase. If this is a boundary,
       // capture values if possible.
@@ -1845,10 +1949,15 @@ function commitRootImpl(root, renderPriorityLevel) {
 
   if (firstEffect !== null) {
     if (__DEV__ && enableSpeculativeWorkTracing) {
+      printEffectChain('firstEffect', firstEffect);
       let count = 0;
       let effect = firstEffect;
       while (effect !== null) {
         count++;
+        console.log(`effect ${count}: ${effect.tag}`);
+        if (effect.nextEffect === effect) {
+          console.log(`next effect is the same!!!`);
+        }
         effect = effect.nextEffect;
       }
       console.log(`finished work had ${count} effects`);

@@ -54,6 +54,21 @@ export function useContext<T>(
           : '',
       );
     }
+    if (
+      enableSpeculativeWork &&
+      typeof unstable_observedBits === 'number' &&
+      Array.isArray(arguments[2])
+    ) {
+      console.error(
+        'useContext() second argument is reserved for future ' +
+          'use in React. Passing it is not supported. ' +
+          'You passed: %s.%s',
+        unstable_observedBits,
+        '\n\nDid you call array.map(useContext)? ' +
+          'Calling Hooks inside a loop is not supported. ' +
+          'Learn more at https://fb.me/rules-of-hooks',
+      );
+    }
 
     // TODO: add a more generic warning for invalid values.
     if ((Context: any)._context !== undefined) {

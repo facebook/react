@@ -218,6 +218,7 @@ if (__DEV__) {
 }
 
 let speculativeWorkRootFiber: Fiber | null = null;
+let didReifySpeculativeWork: boolean = false;
 
 export function inSpeculativeWorkMode() {
   return speculativeWorkRootFiber !== null;
@@ -233,6 +234,10 @@ export function endSpeculationWorkIfRootFiber(fiber: Fiber) {
       );
     }
   }
+}
+
+export function didReifySpeculativeWorkDuringThisStep(): boolean {
+  return didReifySpeculativeWork;
 }
 
 export function reconcileChildren(
@@ -847,6 +852,13 @@ function updateClassComponent(
   nextProps,
   renderExpirationTime: ExpirationTime,
 ) {
+  if (__DEV__ && enableSpeculativeWorkTracing) {
+    console.log(
+      'updateClassComponent wip & current',
+      fiberName(workInProgress),
+      fiberName(current),
+    );
+  }
   if (__DEV__) {
     if (workInProgress.type !== workInProgress.elementType) {
       // Lazy component props can't be validated in createElement
@@ -956,6 +968,9 @@ function finishClassComponent(
   markRef(current, workInProgress);
 
   const didCaptureError = (workInProgress.effectTag & DidCapture) !== NoEffect;
+  if (__DEV__ && enableSpeculativeWorkTracing && didCaptureError) {
+    console.log('___ finishClassComponent didCaptureError!!!');
+  }
 
   if (!shouldUpdate && !didCaptureError) {
     // Context providers should defer to sCU for rendering
@@ -979,6 +994,9 @@ function finishClassComponent(
     didCaptureError &&
     typeof Component.getDerivedStateFromError !== 'function'
   ) {
+    if (__DEV__ && enableSpeculativeWorkTracing) {
+      console.log('### captued an error but not derivedStateFromError handler');
+    }
     // If we captured an error, but getDerivedStateFromError is not defined,
     // unmount all the children. componentDidCatch will schedule an update to
     // re-render a fallback. This is temporary until we migrate everyone to
@@ -2997,7 +3015,52 @@ function remountFiber(
   }
 }
 
+function printEffectChain(label, fiber) {
+  let effect = fiber;
+  let firstEffect = fiber.firstEffect;
+  let lastEffect = fiber.lastEffect;
+
+  let cache = new Set();
+  let buffer = '';
+  do {
+    let name = fiberName(effect);
+    if (effect === firstEffect) {
+      name = 'F(' + name + ')';
+    }
+    if (effect === lastEffect) {
+      name = 'L(' + name + ')';
+    }
+    buffer += name + ' -> ';
+    cache.add(effect);
+    effect = effect.nextEffect;
+  } while (effect !== null && !cache.has(effect));
+  if (cache.has(effect)) {
+    buffer = '[Circular] !!! : ' + buffer;
+  }
+  console.log(`printEffectChain(${label}) self`, buffer);
+  buffer = '';
+  effect = fiber.firstEffect;
+  cache = new Set();
+  while (effect !== null && !cache.has(effect)) {
+    let name = fiberName(effect);
+    if (effect === firstEffect) {
+      name = 'F(' + name + ')';
+    }
+    if (effect === lastEffect) {
+      name = 'L(' + name + ')';
+    }
+    buffer += name + ' -> ';
+    cache.add(effect);
+    effect = effect.nextEffect;
+  }
+  if (cache.has(effect)) {
+    buffer = '[Circular] !!! : ' + buffer;
+  }
+  console.log(`printEffectChain(${label}) firstEffect`, buffer);
+}
+
 function reifyWorkInProgress(current: Fiber, workInProgress: Fiber | null) {
+  didReifySpeculativeWork = true;
   const originalCurrent = current;
 
   invariant(
@@ -3112,6 +3175,9 @@ function reifyWorkInProgress(current: Fiber, workInProgress: Fiber | null) {
   }
   // returning alternate of original current because in some cases
   // this function is called with no initialWorkInProgress
+  if (__DEV__ && enableSpeculativeWorkTracing) {
+    printEffectChain('reified leaf fiber', originalCurrent.alternate);
+  }
   return originalCurrent.alternate;
 }
 
@@ -3135,6 +3201,13 @@ function beginWork(
   workInProgress: Fiber,
   renderExpirationTime: ExpirationTime,
 ): Fiber | null {
+  if (enableSpeculativeWork) {
+    // this value is read from work loop to determine if we need to swap
+    // the unitOfWork for it's altnerate when we return null from beginWork
+    // on each step we set it to false. and only set it to true if reification
+    // occurs
+    didReifySpeculativeWork = false;
+  }
   if (__DEV__ && enableSpeculativeWorkTracing) {
     console.log(
       'beginWork',
@@ -3183,6 +3256,9 @@ function beginWork(
       );
     }
     workInProgress = reifyWorkInProgress(current, null);
+    if (__DEV__ && enableSpeculativeWorkTracing) {
+      console.log('reified workInProgress as', fiberName(workInProgress));
+    }
   }
 
   if (current !== null) {
