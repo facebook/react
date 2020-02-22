@@ -7,7 +7,8 @@
  * @flow
  */
 
-import React, {Fragment, useContext} from 'react';
+import * as React from 'react';
+import {Fragment, useContext} from 'react';
 import WhatChanged from './WhatChanged';
 import {ProfilerContext} from './ProfilerContext';
 import {formatDuration, formatTime} from './utils';

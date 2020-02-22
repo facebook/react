@@ -8,7 +8,8 @@
  */
 
 import {copy} from 'clipboard-js';
-import React, {Fragment, useCallback, useContext} from 'react';
+import * as React from 'react';
+import {Fragment, useCallback, useContext} from 'react';
 import {TreeDispatcherContext, TreeStateContext} from './TreeContext';
 import {BridgeContext, ContextMenuContext, StoreContext} from '../context';
 import ContextMenu from '../../ContextMenu/ContextMenu';

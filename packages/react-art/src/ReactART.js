@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import React from 'react';
+import * as React from 'react';
 import ReactVersion from 'shared/ReactVersion';
 import {LegacyRoot} from 'shared/ReactRootTags';
 import {

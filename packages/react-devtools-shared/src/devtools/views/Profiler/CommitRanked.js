@@ -7,7 +7,8 @@
  * @flow
  */
 
-import React, {useCallback, useContext, useMemo, useState} from 'react';
+import * as React from 'react';
+import {useCallback, useContext, useMemo, useState} from 'react';
 import AutoSizer from 'react-virtualized-auto-sizer';
 import {FixedSizeList} from 'react-window';
 import {ProfilerContext} from './ProfilerContext';

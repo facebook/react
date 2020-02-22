@@ -7,7 +7,8 @@
  * @flow
  */
 
-import React, {useContext} from 'react';
+import * as React from 'react';
+import {useContext} from 'react';
 import {ProfilerContext} from '../Profiler/ProfilerContext';
 import {StoreContext} from '../context';
 
