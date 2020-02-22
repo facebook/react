@@ -87,8 +87,6 @@ export const enableFundamentalAPI = false;
 
 export const enableScopeAPI = true;
 
-export const enableJSXTransformAPI = true;
-
 export const warnAboutUnmockedScheduler = true;
 
 export const enableSuspenseCallback = true;
@@ -96,8 +94,6 @@ export const enableSuspenseCallback = true;
 export const flushSuspenseFallbacksInTests = true;
 
 export const enableNativeTargetAsInstance = false;
-
-export const disableCreateFactory = __EXPERIMENTAL__;
 
 export const disableLegacyReactDOMAPIs = __EXPERIMENTAL__;
 

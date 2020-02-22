@@ -62,7 +62,6 @@ export const enableFundamentalAPI = false;
 export const enableScopeAPI = false;
 
 // New API for JSX transforms to target - https://github.com/reactjs/rfcs/pull/107
-export const enableJSXTransformAPI = false;
 
 // We will enforce mocking scheduler with scheduler/unstable_mock at some point. (v17?)
 // Till then, we warn about the missing mock, but still fallback to a legacy mode compatible version
@@ -127,9 +126,6 @@ export const disableInputAttributeSyncing = false;
 export const warnAboutStringRefs = false;
 
 export const disableLegacyContext = false;
-
-// Disables React.createFactory
-export const disableCreateFactory = false;
 
 // Disables hydrate, render, findDOMNode, unmountComponentAtNode
 export const disableLegacyReactDOMAPIs = false;
