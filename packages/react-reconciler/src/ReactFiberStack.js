@@ -8,6 +8,7 @@
  */
 
 import type {Fiber} from './ReactFiber';
+import {enableSpeculativeWork} from 'shared/ReactFeatureFlags';
 
 export type StackCursor<T> = {|current: T|};
 
@@ -40,10 +41,12 @@ function pop<T>(cursor: StackCursor<T>, fiber: Fiber): void {
   }
 
   if (__DEV__) {
+    // when enableSpeculativeWork is activated we need to allow for a fiber's
+    // alternate to be popped off the stack due to reification of speculative work
     if (
       fiber !== fiberStack[index] &&
-      fiber.altnerate !== null &&
-      fiber.alternate !== fiberStack[index]
+      (!enableSpeculativeWork ||
+        (fiber.altnerate !== null && fiber.alternate !== fiberStack[index]))
     ) {
       console.error('Unexpected Fiber popped.');
     }

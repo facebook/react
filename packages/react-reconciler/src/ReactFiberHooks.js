@@ -26,14 +26,6 @@ import {
   peekContext,
 } from './ReactFiberNewContext';
 
-const readContext = originalReadContext;
-const mountContext = enableSpeculativeWork
-  ? mountContextImpl
-  : originalReadContext;
-const updateContext = enableSpeculativeWork
-  ? updateContextImpl
-  : originalReadContext;
-
 import {createDeprecatedResponderListener} from './ReactFiberDeprecatedEvents';
 import {
   Update as UpdateEffect,
@@ -54,10 +46,7 @@ import {
   markRenderEventTimeAndConfig,
   markUnprocessedUpdateTime,
 } from './ReactFiberWorkLoop';
-import {
-  enableSpeculativeWork,
-  enableSpeculativeWorkTracing,
-} from 'shared/ReactFeatureFlags';
+import {enableSpeculativeWork} from 'shared/ReactFeatureFlags';
 
 import invariant from 'shared/invariant';
 import getComponentName from 'shared/getComponentName';
@@ -72,6 +61,14 @@ import {
 } from './SchedulerWithReactIntegration';
 
 const {ReactCurrentDispatcher, ReactCurrentBatchConfig} = ReactSharedInternals;
+
+const readContext = originalReadContext;
+const mountContext = enableSpeculativeWork
+  ? mountContextImpl
+  : originalReadContext;
+const updateContext = enableSpeculativeWork
+  ? updateContextImpl
+  : originalReadContext;
 
 type ObservedBits = void | number | boolean;
 
@@ -365,27 +362,16 @@ export function canBailoutSpeculativeWorkWithHooks(
   current: Fiber,
   nextRenderExpirationTime: renderExpirationTime,
 ): boolean {
-  if (__DEV__ && enableSpeculativeWorkTracing) {
-    console.log('====== bailoutSpeculativeWorkWithHooks');
-  }
   let hook = current.memoizedState;
   while (hook !== null) {
+    // hooks without a bailout are assumed to permit bailing out
+    // any hook which can instigate work needs to implement the bailout API
     if (typeof hook.bailout === 'function') {
-      let didBailout = hook.bailout(hook, nextRenderExpirationTime);
-      if (didBailout === false) {
-        if (__DEV__ && enableSpeculativeWorkTracing) {
-          console.log(
-            '====== bailoutSpeculativeWorkWithHooks returning false',
-            hook.bailout.name,
-          );
-        }
+      if (!hook.bailout(hook, nextRenderExpirationTime)) {
         return false;
       }
     }
     hook = hook.next;
-  }
-  if (__DEV__ && enableSpeculativeWorkTracing) {
-    console.log('====== bailoutSpeculativeWorkWithHooks returning true');
   }
   return true;
 }
@@ -667,6 +653,7 @@ function updateWorkInProgressHook(): Hook {
   return workInProgressHook;
 }
 
+// use a Symbol to allow for any value including null and undefined to be memoized
 const EMPTY = Symbol('empty');
 
 function mountContextImpl<C>(
@@ -689,7 +676,8 @@ function mountContextImpl<C>(
     return selection;
   } else {
     // selector is the legacy observedBits api
-    let contextValue = readContext(context, selector);
+    let observedBits = selector;
+    let contextValue = readContext(context, observedBits);
     hook.memoizedState = {
       context,
       contextValue,
@@ -722,6 +710,8 @@ function updateContextImpl<C>(
     let selection = memoizedState.selection;
     let contextValue = readContext(context);
 
+    // when using a selector only recomput if the context value is different or
+    // the selector is different than the memoized state
     if (
       contextValue !== memoizedState.contextValue ||
       selector !== memoizedState.selector
@@ -733,8 +723,9 @@ function updateContextImpl<C>(
     }
     return selection;
   } else {
-    // selector is actually legacy observedBits
-    let contextValue = readContext(context, selector);
+    // selector is actually observedBits
+    let observedBits = selector;
+    let contextValue = readContext(context, observedBits);
     memoizedState.contextValue = contextValue;
     return contextValue;
   }
@@ -742,44 +733,25 @@ function updateContextImpl<C>(
 
 function bailoutContext(hook: Hook): boolean {
   const memoizedState = hook.memoizedState;
-  let selector = memoizedState.selector;
-  let peekedContextValue = peekContext(memoizedState.context);
-  let previousContextValue = memoizedState.contextValue;
+  const selector = memoizedState.selector;
+  const peekedContextValue = peekContext(memoizedState.context);
+  const previousContextValue = memoizedState.contextValue;
 
+  // if this context hook uses a selector we need to check if the selection
+  // has changed with a new context value
   if (selector !== null) {
     if (previousContextValue !== peekedContextValue) {
-      if (__DEV__ && enableSpeculativeWorkTracing) {
-        console.log(
-          '}}}}} [selector mode] bailoutContext we have different context VALUES',
-          previousContextValue,
-          peekedContextValue,
-        );
-      }
-      let stashedSelection = selector(peekedContextValue);
+      const stashedSelection = selector(peekedContextValue);
       if (stashedSelection !== memoizedState.selection) {
-        if (__DEV__ && enableSpeculativeWorkTracing) {
-          console.log(
-            '}}}}} [selector mode] bailoutContext we have different context SELECTIONS',
-            memoizedState.selection,
-            stashedSelection,
-          );
-        }
+        // stashed selections will get applied to the hook's memoized state as
+        // part of the render phase of the workInProgress fiber
         memoizedState.stashedSelection = stashedSelection;
         memoizedState.stashedContextValue = peekedContextValue;
         return false;
       }
     }
-  } else {
-    if (previousContextValue !== peekedContextValue) {
-      if (__DEV__ && enableSpeculativeWorkTracing) {
-        console.log(
-          '}}}}} [value mode] bailoutContext we have different context values',
-          previousContextValue,
-          peekedContextValue,
-        );
-      }
-      return false;
-    }
+  } else if (previousContextValue !== peekedContextValue) {
+    return false;
   }
   return true;
 }
@@ -1008,11 +980,9 @@ function rerenderReducer<S, I, A>(
   return [newState, dispatch];
 }
 
+// @TODO this is a completely broken bailout implementation. figure out how
+// dispatchAction and updateReducer really work and implement something proper
 function bailoutReducer(hook, renderExpirationTime): boolean {
-  if (__DEV__ && enableSpeculativeWorkTracing) {
-    console.log('}}}} bailoutReducer');
-  }
-
   const queue = hook.queue;
 
   // The last rebase update that is NOT part of the base state.
@@ -1042,14 +1012,8 @@ function bailoutReducer(hook, renderExpirationTime): boolean {
 
     // if newState is different from the current state do not bailout
     if (newState !== hook.memoizedState) {
-      if (__DEV__ && enableSpeculativeWorkTracing) {
-        console.log('found a new state. not bailing out of hooks');
-      }
       return false;
     }
-  }
-  if (__DEV__ && enableSpeculativeWorkTracing) {
-    console.log('state is the same so we can maybe bail out');
   }
   return true;
 }
@@ -1562,9 +1526,6 @@ function dispatchAction<S, A>(
           update.eagerReducer = lastRenderedReducer;
           update.eagerState = eagerState;
           if (is(eagerState, currentState)) {
-            if (__DEV__ && enableSpeculativeWorkTracing) {
-              console.log('++++++++++++ eagerly bailing out of reducer update');
-            }
             // Fast path. We can bail out without scheduling React to re-render.
             // It's still possible that we'll need to rebase this update later,
             // if the component re-renders for a different reason and by that
@@ -1586,9 +1547,6 @@ function dispatchAction<S, A>(
         warnIfNotScopedWithMatchingAct(fiber);
         warnIfNotCurrentlyActingUpdatesInDev(fiber);
       }
-    }
-    if (__DEV__ && enableSpeculativeWorkTracing) {
-      console.log('++++++++++++ scheduling work for reducer hook');
     }
     scheduleWork(fiber, expirationTime);
   }

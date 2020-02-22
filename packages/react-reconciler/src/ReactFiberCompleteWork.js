@@ -120,7 +120,6 @@ import {
   enableFundamentalAPI,
   enableScopeAPI,
   enableChunksAPI,
-  enableSpeculativeWorkTracing,
 } from 'shared/ReactFeatureFlags';
 import {
   markSpawnedWork,
@@ -634,33 +633,11 @@ function cutOffTailIfNeeded(
   }
 }
 
-function fiberName(fiber) {
-  if (fiber == null) return fiber;
-  let version = fiber.version;
-  let back = `-${version}`;
-  let front = '';
-  if (fiber.tag === 3) front = 'HostRoot';
-  else if (fiber.tag === 6) front = 'HostText';
-  else if (fiber.tag === 10) front = 'ContextProvider';
-  else if (typeof fiber.type === 'function') front = fiber.type.name;
-  else front = 'tag' + fiber.tag;
-
-  return front + back;
-}
-
 function completeWork(
   current: Fiber | null,
   workInProgress: Fiber,
   renderExpirationTime: ExpirationTime,
 ): Fiber | null {
-  if (__DEV__ && enableSpeculativeWorkTracing) {
-    console.log(
-      'completeWork',
-      fiberName(workInProgress) + '->' + fiberName(workInProgress.return),
-      current && fiberName(current) + '->' + fiberName(current.return),
-    );
-  }
-
   const newProps = workInProgress.pendingProps;
 
   switch (workInProgress.tag) {

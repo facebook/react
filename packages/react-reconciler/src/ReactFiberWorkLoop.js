@@ -29,7 +29,6 @@ import {
   disableSchedulerTimeoutBasedOnReactExpirationTime,
   enableTrainModelFix,
   enableSpeculativeWork,
-  enableSpeculativeWorkTracing,
 } from 'shared/ReactFeatureFlags';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import invariant from 'shared/invariant';
@@ -571,9 +570,6 @@ function getNextRootExpirationTimeToWorkOn(root: FiberRoot): ExpirationTime {
 // the next level that the root has work on. This function is called on every
 // update, and right before exiting a task.
 function ensureRootIsScheduled(root: FiberRoot) {
-  if (__DEV__ && enableSpeculativeWorkTracing) {
-    console.log('ensureRootIsScheduled');
-  }
   const lastExpiredTime = root.lastExpiredTime;
   if (lastExpiredTime !== NoWork) {
     // Special case: Expired work should flush synchronously.
@@ -656,10 +652,6 @@ function performConcurrentWorkOnRoot(root, didTimeout) {
   // Since we know we're in a React event, we can clear the current
   // event time. The next update will compute a new event time.
   currentEventTime = NoWork;
-
-  if (__DEV__ && enableSpeculativeWorkTracing) {
-    console.log('performConcurrentWorkOnRoot');
-  }
 
   if (didTimeout) {
     // The render task took too long to complete. Mark the current time as
@@ -761,9 +753,6 @@ function finishConcurrentRender(
   exitStatus,
   expirationTime,
 ) {
-  if (__DEV__ && enableSpeculativeWorkTracing) {
-    console.log('finishConcurrentRender');
-  }
   // Set this to null to indicate there's no in-progress render.
   workInProgressRoot = null;
 
@@ -792,9 +781,6 @@ function finishConcurrentRender(
       break;
     }
     case RootSuspended: {
-      if (__DEV__ && enableSpeculativeWorkTracing) {
-        console.log('RootSuspended');
-      }
       markRootSuspendedAtTime(root, expirationTime);
       const lastSuspendedTime = root.lastSuspendedTime;
       if (expirationTime === lastSuspendedTime) {
@@ -870,10 +856,6 @@ function finishConcurrentRender(
       break;
     }
     case RootSuspendedWithDelay: {
-      if (__DEV__ && enableSpeculativeWorkTracing) {
-        console.log('RootSuspendedWithDelay');
-      }
-
       markRootSuspendedAtTime(root, expirationTime);
       const lastSuspendedTime = root.lastSuspendedTime;
       if (expirationTime === lastSuspendedTime) {
@@ -970,10 +952,6 @@ function finishConcurrentRender(
       break;
     }
     case RootCompleted: {
-      if (__DEV__ && enableSpeculativeWorkTracing) {
-        console.log('RootCompleted');
-      }
-
       // The work completed. Ready to commit.
       if (
         // do not delay if we're inside an act() scope
@@ -1023,10 +1001,6 @@ function performSyncWorkOnRoot(root) {
     'Should not already be working.',
   );
 
-  if (__DEV__ && enableSpeculativeWorkTracing) {
-    console.log('performSyncWorkOnRoot', lastExpiredTime, expirationTime);
-  }
-
   flushPassiveEffects();
 
   // If the root or expiration time have changed, throw out the existing stack
@@ -1060,10 +1034,6 @@ function performSyncWorkOnRoot(root) {
       popInteractions(((prevInteractions: any): Set<Interaction>));
     }
 
-    if (__DEV__ && enableSpeculativeWorkTracing) {
-      console.log('workInProgressRootExitStatus', workInProgressRootExitStatus);
-    }
-
     if (workInProgressRootExitStatus === RootFatalErrored) {
       const fatalError = workInProgressRootFatalError;
       stopInterruptedWorkLoopTimer();
@@ -1081,9 +1051,6 @@ function performSyncWorkOnRoot(root) {
           'bug in React. Please file an issue.',
       );
     } else {
-      if (__DEV__ && enableSpeculativeWorkTracing) {
-        console.log('finishing sync render');
-      }
       // We now have a consistent tree. Because this is a sync render, we
       // will commit it even if something suspended.
       stopFinishedWorkLoopTimer();
@@ -1311,9 +1278,6 @@ function prepareFreshStack(root, expirationTime) {
 
 function handleError(root, thrownValue) {
   do {
-    if (__DEV__ && enableSpeculativeWorkTracing) {
-      console.log('!!!! handleError with thrownValue', thrownValue);
-    }
     try {
       // Reset module-level state that was set during the render phase.
       // @TODO may need to do something about speculativeMode here
@@ -1497,66 +1461,6 @@ function workLoopSync() {
   }
 }
 
-function fiberName(fiber) {
-  if (fiber == null) return fiber;
-  let version = fiber.version;
-  let speculative = inSpeculativeWorkMode() ? 's' : '';
-  let back = `-${version}${speculative}`;
-  let front = '';
-  if (fiber.tag === 3) front = 'HostRoot';
-  else if (fiber.tag === 6) front = 'HostText';
-  else if (fiber.tag === 10) front = 'ContextProvider';
-  else if (typeof fiber.type === 'function') front = fiber.type.name;
-  else front = 'tag' + fiber.tag;
-
-  return front + back;
-}
-
-function printEffectChain(label, fiber) {
-  return;
-  let effect = fiber;
-  let firstEffect = fiber.firstEffect;
-  let lastEffect = fiber.lastEffect;
-
-  let cache = new Set();
-  let buffer = '';
-  do {
-    let name = fiberName(effect);
-    if (effect === firstEffect) {
-      name = 'F(' + name + ')';
-    }
-    if (effect === lastEffect) {
-      name = 'L(' + name + ')';
-    }
-    buffer += name + ' -> ';
-    cache.add(effect);
-    effect = effect.nextEffect;
-  } while (effect !== null && !cache.has(effect));
-  if (cache.has(effect)) {
-    buffer = '[Circular] !!! : ' + buffer;
-  }
-  console.log(`printEffectChain(${label}) self`, buffer);
-  buffer = '';
-  effect = fiber.firstEffect;
-  cache = new Set();
-  while (effect !== null && !cache.has(effect)) {
-    let name = fiberName(effect);
-    if (effect === firstEffect) {
-      name = 'F(' + name + ')';
-    }
-    if (effect === lastEffect) {
-      name = 'L(' + name + ')';
-    }
-    buffer += name + ' -> ';
-    cache.add(effect);
-    effect = effect.nextEffect;
-  }
-  if (cache.has(effect)) {
-    buffer = '[Circular] !!! : ' + buffer;
-  }
-  console.log(`printEffectChain(${label}) firstEffect`, buffer);
-}
-
 /** @noinline */
 function workLoopConcurrent() {
   // Perform work until Scheduler asks us to yield
@@ -1571,10 +1475,6 @@ function performUnitOfWork(unitOfWork: Fiber): Fiber | null {
   // need an additional field on the work in progress.
   const current = unitOfWork.alternate;
 
-  if (__DEV__ && enableSpeculativeWorkTracing) {
-    printEffectChain('performUnitOfWork', unitOfWork);
-  }
-
   startWorkTimer(unitOfWork);
   setCurrentDebugFiberInDEV(unitOfWork);
 
@@ -1587,19 +1487,11 @@ function performUnitOfWork(unitOfWork: Fiber): Fiber | null {
     next = beginWork(current, unitOfWork, renderExpirationTime);
   }
 
-  if (enableSpeculativeWork) {
-    if (didReifySpeculativeWorkDuringThisStep()) {
-      if (__DEV__ && enableSpeculativeWorkTracing) {
-        console.log(
-          'beginWork started speculatively but ended up reifying. we need to swap unitOfWork with the altnerate',
-        );
-      }
-      unitOfWork = unitOfWork.alternate;
-    }
-  }
-
-  if (__DEV__ && enableSpeculativeWorkTracing) {
-    console.log('beginWork returned as next work', fiberName(next));
+  if (enableSpeculativeWork && didReifySpeculativeWorkDuringThisStep()) {
+    // we need to switch to the alternate becuase the original unitOfWork
+    // was from the prior commit and the alternate is reified workInProgress
+    // which we need to send to completeUnitOfWork
+    unitOfWork = unitOfWork.alternate;
   }
 
   resetCurrentDebugFiberInDEV();
@@ -1628,12 +1520,6 @@ function completeUnitOfWork(unitOfWork: Fiber): Fiber | null {
 
     // Check if the work completed or if something threw.
     if ((workInProgress.effectTag & Incomplete) === NoEffect) {
-      if (__DEV__ && enableSpeculativeWorkTracing) {
-        console.log(
-          '**** completeUnitOfWork: fiber completed',
-          fiberName(workInProgress),
-        );
-      }
       setCurrentDebugFiberInDEV(workInProgress);
       let next;
       if (
@@ -1663,11 +1549,6 @@ function completeUnitOfWork(unitOfWork: Fiber): Fiber | null {
         // Do not append effects to parent if workInProgress was speculative
         workWasSpeculative !== true
       ) {
-        if (__DEV__ && enableSpeculativeWorkTracing) {
-          console.log('appending effects to return fiber');
-          printEffectChain('initial workInProgress', workInProgress);
-          printEffectChain('initial returnFiber', returnFiber);
-        }
         // Append all the effects of the subtree and this fiber onto the effect
         // list of the parent. The completion order of the children affects the
         // side-effect order.
@@ -1700,17 +1581,8 @@ function completeUnitOfWork(unitOfWork: Fiber): Fiber | null {
           }
           returnFiber.lastEffect = workInProgress;
         }
-        if (__DEV__ && enableSpeculativeWorkTracing) {
-          printEffectChain('final workInProgress', workInProgress);
-          printEffectChain('final returnFiber', returnFiber);
-        }
-      } else if (__DEV__ && enableSpeculativeWorkTracing) {
-        console.log('NOT appending effects to return fiber');
       }
     } else {
-      if (__DEV__ && enableSpeculativeWorkTracing) {
-        console.log('**** fiber did not complete because something threw');
-      }
       // This fiber did not complete because something threw. Pop values off
       // the stack without entering the complete phase. If this is a boundary,
       // capture values if possible.
@@ -1846,9 +1718,6 @@ function resetChildExpirationTime(completedWork: Fiber) {
 }
 
 function commitRoot(root) {
-  if (__DEV__ && enableSpeculativeWorkTracing) {
-    console.log('committing root');
-  }
   const renderPriorityLevel = getCurrentPriorityLevel();
   runWithPriority(
     ImmediatePriority,
@@ -1909,17 +1778,11 @@ function commitRootImpl(root, renderPriorityLevel) {
   );
 
   if (root === workInProgressRoot) {
-    if (__DEV__ && enableSpeculativeWorkTracing) {
-      console.log('root was workInProgressRoot');
-    }
     // We can reset these now that they are finished.
     workInProgressRoot = null;
     workInProgress = null;
     renderExpirationTime = NoWork;
   } else {
-    if (__DEV__ && enableSpeculativeWorkTracing) {
-      console.log('root was different');
-    }
     // This indicates that the last root we worked on is not the same one that
     // we're committing now. This most commonly happens when a suspended root
     // times out.
@@ -1928,10 +1791,6 @@ function commitRootImpl(root, renderPriorityLevel) {
   // Get the list of effects.
   let firstEffect;
   if (finishedWork.effectTag > PerformedWork) {
-    if (__DEV__ && enableSpeculativeWorkTracing) {
-      console.log('**** work was performed');
-    }
-
     // A fiber's effect list consists only of its children, not itself. So if
     // the root has an effect, we need to add it to the end of the list. The
     // resulting list is the set that would belong to the root's parent, if it
@@ -1948,21 +1807,6 @@ function commitRootImpl(root, renderPriorityLevel) {
   }
 
   if (firstEffect !== null) {
-    if (__DEV__ && enableSpeculativeWorkTracing) {
-      printEffectChain('firstEffect', firstEffect);
-      let count = 0;
-      let effect = firstEffect;
-      while (effect !== null) {
-        count++;
-        console.log(`effect ${count}: ${effect.tag}`);
-        if (effect.nextEffect === effect) {
-          console.log(`next effect is the same!!!`);
-        }
-        effect = effect.nextEffect;
-      }
-      console.log(`finished work had ${count} effects`);
-    }
-
     const prevExecutionContext = executionContext;
     executionContext |= CommitContext;
     const prevInteractions = pushInteractions(root);
@@ -2087,10 +1931,6 @@ function commitRootImpl(root, renderPriorityLevel) {
     }
     executionContext = prevExecutionContext;
   } else {
-    if (__DEV__ && enableSpeculativeWorkTracing) {
-      console.log('**** no effects at all');
-    }
-
     // No effects.
     root.current = finishedWork;
     // Measure these anyway so the flamegraph explicitly shows that there were
@@ -2539,9 +2379,6 @@ function captureCommitPhaseErrorOnRoot(
   sourceFiber: Fiber,
   error: mixed,
 ) {
-  if (__DEV__ && enableSpeculativeWorkTracing) {
-    console.log('^^^^^ captureCommitPhaseErrorOnRoot', error);
-  }
   const errorInfo = createCapturedValue(error, sourceFiber);
   const update = createRootErrorUpdate(rootFiber, errorInfo, Sync);
   enqueueUpdate(rootFiber, update);
@@ -2553,9 +2390,6 @@ function captureCommitPhaseErrorOnRoot(
 }
 
 export function captureCommitPhaseError(sourceFiber: Fiber, error: mixed) {
-  if (__DEV__ && enableSpeculativeWorkTracing) {
-    console.log('^^^^^ captureCommitPhaseError', error);
-  }
   if (sourceFiber.tag === HostRoot) {
     // Error was thrown at the root. There is no parent, so the root
     // itself should capture it.
@@ -2667,9 +2501,6 @@ function retryTimedOutBoundary(
   boundaryFiber: Fiber,
   retryTime: ExpirationTime,
 ) {
-  if (__DEV__ && enableSpeculativeWorkTracing) {
-    console.log('^^^^ retryTimedOutBoundary');
-  }
   // The boundary fiber (a Suspense component or SuspenseList component)
   // previously was rendered in its fallback state. One of the promises that
   // suspended it has resolved, which means at least part of the tree was

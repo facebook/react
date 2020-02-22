@@ -16,7 +16,7 @@
 const MAX_SOURCE_ITERATIONS = 1500;
 // Code in tests themselves is permitted to run longer.
 // For example, in the fuzz tester.
-const MAX_TEST_ITERATIONS = 4999;
+const MAX_TEST_ITERATIONS = 5000;
 
 module.exports = ({types: t, template}) => {
   // We set a global so that we can later fail the test

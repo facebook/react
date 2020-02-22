@@ -67,7 +67,6 @@ import {
   enableScopeAPI,
   enableChunksAPI,
   enableSpeculativeWork,
-  enableSpeculativeWorkTracing,
 } from 'shared/ReactFeatureFlags';
 import invariant from 'shared/invariant';
 import shallowEqual from 'shared/shallowEqual';
@@ -227,12 +226,6 @@ export function inSpeculativeWorkMode() {
 export function endSpeculationWorkIfRootFiber(fiber: Fiber) {
   if (fiber === speculativeWorkRootFiber) {
     speculativeWorkRootFiber = null;
-    if (__DEV__ && enableSpeculativeWorkTracing) {
-      console.log(
-        ']]] ending speculation: speculativeWorkRootFiber',
-        fiberName(speculativeWorkRootFiber),
-      );
-    }
   }
 }
 
@@ -654,30 +647,15 @@ function updateFunctionComponent(
   }
 
   if (enableSpeculativeWork && inSpeculativeWorkMode()) {
-    if (__DEV__ && enableSpeculativeWorkTracing) {
-      console.log(
-        '???? updateFunctionComponent called with a current fiber for workInProgress',
-      );
-    }
     if (
       canBailoutSpeculativeWorkWithHooks(workInProgress, renderExpirationTime)
     ) {
-      if (__DEV__ && enableSpeculativeWorkTracing) {
-        console.log('hooks have not changed, we can bail out of update');
-      }
       return bailoutOnAlreadyFinishedWork(
         current,
         workInProgress,
         renderExpirationTime,
       );
     }
-    if (__DEV__ && enableSpeculativeWorkTracing) {
-      console.log(
-        '???? speculative bailout failed: creating a new workInProgress',
-      );
-    }
-    let parent = workInProgress.return;
-
     // this workInProgress is currently detatched from the actual workInProgress
     // tree because the previous workInProgress is from the current tree and we
     // don't yet have a return pointer to any fiber in the workInProgress tree
@@ -687,7 +665,7 @@ function updateFunctionComponent(
       current.pendingProps,
       NoWork,
     );
-    workInProgress.return = parent;
+    workInProgress.return = current.return;
   }
 
   let context;
@@ -747,11 +725,6 @@ function updateFunctionComponent(
   }
 
   if (enableSpeculativeWork && inSpeculativeWorkMode()) {
-    if (__DEV__ && enableSpeculativeWorkTracing) {
-      console.log(
-        'function component is updating so reifying the work in progress tree',
-      );
-    }
     // because there was an update and we were in speculative work mode we need
     // to attach the temporary workInProgress we created earlier in this function
     // to the workInProgress tree
@@ -852,13 +825,6 @@ function updateClassComponent(
   nextProps,
   renderExpirationTime: ExpirationTime,
 ) {
-  if (__DEV__ && enableSpeculativeWorkTracing) {
-    console.log(
-      'updateClassComponent wip & current',
-      fiberName(workInProgress),
-      fiberName(current),
-    );
-  }
   if (__DEV__) {
     if (workInProgress.type !== workInProgress.elementType) {
       // Lazy component props can't be validated in createElement
@@ -968,9 +934,6 @@ function finishClassComponent(
   markRef(current, workInProgress);
 
   const didCaptureError = (workInProgress.effectTag & DidCapture) !== NoEffect;
-  if (__DEV__ && enableSpeculativeWorkTracing && didCaptureError) {
-    console.log('___ finishClassComponent didCaptureError!!!');
-  }
 
   if (!shouldUpdate && !didCaptureError) {
     // Context providers should defer to sCU for rendering
@@ -994,9 +957,6 @@ function finishClassComponent(
     didCaptureError &&
     typeof Component.getDerivedStateFromError !== 'function'
   ) {
-    if (__DEV__ && enableSpeculativeWorkTracing) {
-      console.log('### captued an error but not derivedStateFromError handler');
-    }
     // If we captured an error, but getDerivedStateFromError is not defined,
     // unmount all the children. componentDidCatch will schedule an update to
     // re-render a fallback. This is temporary until we migrate everyone to
@@ -2742,11 +2702,6 @@ function updateContextProvider(
   pushProvider(workInProgress, newValue);
 
   if (enableSpeculativeWork && inSpeculativeWorkMode()) {
-    if (__DEV__ && enableSpeculativeWorkTracing) {
-      console.log(
-        'updateContextProvider: we are in speculative work mode so we can bail out eagerly',
-      );
-    }
     return bailoutOnAlreadyFinishedWork(
       current,
       workInProgress,
@@ -3015,50 +2970,6 @@ function remountFiber(
   }
 }
 
-function printEffectChain(label, fiber) {
-  let effect = fiber;
-  let firstEffect = fiber.firstEffect;
-  let lastEffect = fiber.lastEffect;
-
-  let cache = new Set();
-  let buffer = '';
-  do {
-    let name = fiberName(effect);
-    if (effect === firstEffect) {
-      name = 'F(' + name + ')';
-    }
-    if (effect === lastEffect) {
-      name = 'L(' + name + ')';
-    }
-    buffer += name + ' -> ';
-    cache.add(effect);
-    effect = effect.nextEffect;
-  } while (effect !== null && !cache.has(effect));
-  if (cache.has(effect)) {
-    buffer = '[Circular] !!! : ' + buffer;
-  }
-  console.log(`printEffectChain(${label}) self`, buffer);
-  buffer = '';
-  effect = fiber.firstEffect;
-  cache = new Set();
-  while (effect !== null && !cache.has(effect)) {
-    let name = fiberName(effect);
-    if (effect === firstEffect) {
-      name = 'F(' + name + ')';
-    }
-    if (effect === lastEffect) {
-      name = 'L(' + name + ')';
-    }
-    buffer += name + ' -> ';
-    cache.add(effect);
-    effect = effect.nextEffect;
-  }
-  if (cache.has(effect)) {
-    buffer = '[Circular] !!! : ' + buffer;
-  }
-  console.log(`printEffectChain(${label}) firstEffect`, buffer);
-}
-
 function reifyWorkInProgress(current: Fiber, workInProgress: Fiber | null) {
   didReifySpeculativeWork = true;
   const originalCurrent = current;
@@ -3083,30 +2994,14 @@ function reifyWorkInProgress(current: Fiber, workInProgress: Fiber | null) {
     // if the parent we're cloning child fibers from is the speculativeWorkRootFiber
     // unset it so we don't go any higher
     if (parentWorkInProgress === speculativeWorkRootFiber) {
-      if (__DEV__ && enableSpeculativeWorkTracing) {
-        console.log(
-          'we have found the speculativeWorkRootFiber during reification. this is the last pass',
-        );
-      }
       speculativeWorkRootFiber = null;
     }
 
     // clone parent WIP's child. use the current's workInProgress if the currentChild is
     // the current fiber
     let currentChild = parentWorkInProgress.child;
-    if (__DEV__ && enableSpeculativeWorkTracing) {
-      console.log(
-        ')))) reifying',
-        fiberName(parentWorkInProgress),
-        'starting with',
-        fiberName(currentChild),
-      );
-    }
     let newChild;
     if (workInProgress !== null && currentChild === current) {
-      if (__DEV__ && enableSpeculativeWorkTracing) {
-        console.log('using workInProgress of', fiberName(workInProgress));
-      }
       newChild = workInProgress;
     } else {
       newChild = createWorkInProgress(
@@ -3123,21 +3018,7 @@ function reifyWorkInProgress(current: Fiber, workInProgress: Fiber | null) {
     // use current's workInProgress if the sibiling is the current fiber
     while (currentChild.sibling !== null) {
       currentChild = currentChild.sibling;
-      if (__DEV__ && enableSpeculativeWorkTracing) {
-        console.log(
-          ')))) reifying',
-          fiberName(parentWorkInProgress),
-          'now with',
-          fiberName(currentChild),
-        );
-      }
       if (workInProgress !== null && currentChild === current) {
-        if (__DEV__ && enableSpeculativeWorkTracing) {
-          console.log(
-            'using ephemeralWorkInProgress of',
-            fiberName(workInProgress),
-          );
-        }
         newChild = newChild.sibling = workInProgress;
       } else {
         newChild = newChild.sibling = createWorkInProgress(
@@ -3167,33 +3048,9 @@ function reifyWorkInProgress(current: Fiber, workInProgress: Fiber | null) {
 
   speculativeWorkRootFiber = null;
 
-  if (__DEV__ && enableSpeculativeWorkTracing) {
-    console.log(
-      'returning originalCurrent.alternate',
-      fiberName(originalCurrent.alternate),
-    );
-  }
   // returning alternate of original current because in some cases
   // this function is called with no initialWorkInProgress
-  if (__DEV__ && enableSpeculativeWorkTracing) {
-    printEffectChain('reified leaf fiber', originalCurrent.alternate);
-  }
   return originalCurrent.alternate;
-}
-
-function fiberName(fiber) {
-  if (fiber == null) return fiber;
-  let version = fiber.version;
-  let speculative = inSpeculativeWorkMode() ? 's' : '';
-  let back = `-${version}${speculative}`;
-  let front = '';
-  if (fiber.tag === 3) front = 'HostRoot';
-  else if (fiber.tag === 6) front = 'HostText';
-  else if (fiber.tag === 10) front = 'ContextProvider';
-  else if (typeof fiber.type === 'function') front = fiber.type.name;
-  else front = 'tag' + fiber.tag;
-
-  return front + back;
 }
 
 function beginWork(
@@ -3207,14 +3064,6 @@ function beginWork(
     // on each step we set it to false. and only set it to true if reification
     // occurs
     didReifySpeculativeWork = false;
-  }
-  if (__DEV__ && enableSpeculativeWorkTracing) {
-    console.log(
-      'beginWork',
-      fiberName(workInProgress) + '->' + fiberName(workInProgress.return),
-      current && fiberName(current) + '->' + fiberName(current.return),
-      'speculativeWorkRootFiber: ' + fiberName(speculativeWorkRootFiber),
-    );
   }
   // in speculative work mode we have been passed the current fiber as the workInProgress
   // if this is the case we need to assign the work to the current because they are the same
@@ -3250,15 +3099,7 @@ function beginWork(
     workInProgress.tag !== ContextProvider &&
     workInProgress.tag !== FunctionComponent
   ) {
-    if (__DEV__ && enableSpeculativeWorkTracing) {
-      console.log(
-        'in speculative work mode and workInProgress is something other than a ContextProvider or FunctionComponent, reifying immediately',
-      );
-    }
     workInProgress = reifyWorkInProgress(current, null);
-    if (__DEV__ && enableSpeculativeWorkTracing) {
-      console.log('reified workInProgress as', fiberName(workInProgress));
-    }
   }
 
   if (current !== null) {
@@ -3271,20 +3112,10 @@ function beginWork(
       // Force a re-render if the implementation changed due to hot reload:
       (__DEV__ ? workInProgress.type !== current.type : false)
     ) {
-      if (__DEV__ && enableSpeculativeWorkTracing) {
-        console.log(
-          '--- props different or legacy context changed. lets do update',
-        );
-      }
       // If props or context changed, mark the fiber as having performed work.
       // This may be unset if the props are determined to be equal later (memo).
       didReceiveUpdate = true;
     } else if (updateExpirationTime < renderExpirationTime) {
-      if (__DEV__ && enableSpeculativeWorkTracing) {
-        console.log(
-          '--- props same, no legacy context, no work scheduled. lets push onto stack and bailout',
-        );
-      }
       didReceiveUpdate = false;
       // This fiber does not have any pending work. Bailout without entering
       // the begin phase. There's still some bookkeeping we that needs to be done
@@ -3458,19 +3289,9 @@ function beginWork(
       // nor legacy context. Set this to false. If an update queue or context
       // consumer produces a changed value, it will set this to true. Otherwise,
       // the component will assume the children have not changed and bail out.
-      if (__DEV__ && enableSpeculativeWorkTracing) {
-        console.log(
-          '--- props same, no legacy context, this fiber has work scheduled so we will see if it produces an update',
-        );
-      }
       didReceiveUpdate = false;
     }
   } else {
-    if (__DEV__ && enableSpeculativeWorkTracing) {
-      console.log(
-        '--- current fiber null, likely this was a newly mounted component',
-      );
-    }
     didReceiveUpdate = false;
   }
 
