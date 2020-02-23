@@ -5,20 +5,16 @@
 const open = require('open');
 const os = require('os');
 const osName = require('os-name');
-const { resolve } = require('path');
 const START_URL = 'https://facebook.github.io/react/';
-const EXTENSION_PATH = resolve('./edge/build/unpacked');
 
 const osname = osName(os.platform());
 let appname;
 
-if (osname && osname.toLocaleLowerCase().startsWith("windows")) {
-  appname = "msedge";
-}
-else if (osname && osname.toLocaleLowerCase().startsWith("mac")) {
-  appname = "Microsoft Edge";
-}
-else if (osname && osname.toLocaleLowerCase().startsWith("linux")) {
+if (osname && osname.toLocaleLowerCase().startsWith('windows')) {
+  appname = 'msedge';
+} else if (osname && osname.toLocaleLowerCase().startsWith('mac')) {
+  appname = 'Microsoft Edge';
+} else if (osname && osname.toLocaleLowerCase().startsWith('linux')) {
   //Coming soon
 }
 
