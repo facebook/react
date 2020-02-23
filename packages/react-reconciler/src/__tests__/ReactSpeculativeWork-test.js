@@ -6,11 +6,15 @@ let ReactCache;
 let Suspense;
 let TextResource;
 
+let levels = 8;
+let expansion = 3;
+let leaves = expansion ** levels;
+
 describe('ReactSpeculativeWork', () => {
   beforeEach(() => {
     jest.resetModules();
     ReactFeatureFlags = require('shared/ReactFeatureFlags');
-    ReactFeatureFlags.enableSpeculativeWork = false;
+    ReactFeatureFlags.enableSpeculativeWork = true;
     ReactFeatureFlags.enableSpeculativeWorkTracing = false;
     React = require('react');
     ReactNoop = require('react-noop-renderer');
@@ -224,4 +228,82 @@ describe('ReactSpeculativeWork', () => {
       }
     }
   });
+
+  it.only('WARMUP with selector: stresses the createWorkInProgress less', () => {
+    ReactFeatureFlags.enableSpeculativeWork = false;
+    runTest('warmup');
+    ReactFeatureFlags.enableSpeculativeWork = true;
+    runTest('warmup');
+    runTest('warmup', true);
+  });
+
+  it.only('regular: stresses the createWorkInProgress less', () => {
+    ReactFeatureFlags.enableSpeculativeWork = false;
+    runTest('regular');
+  });
+
+  it.only('speculative: stresses the createWorkInProgress less', () => {
+    ReactFeatureFlags.enableSpeculativeWork = true;
+    runTest('speculative');
+  });
+
+  it.only('speculative with selector: stresses the createWorkInProgress less', () => {
+    ReactFeatureFlags.enableSpeculativeWork = true;
+    runTest('selector', true);
+  });
 });
+
+function runTest(label, withSelector) {
+  let Context = React.createContext(0);
+  let renderCount = 0;
+
+  let selector = withSelector ? c => 1 : undefined;
+  let Consumer = () => {
+    let value = React.useContext(Context, selector);
+    renderCount++;
+    return <span>Consumer</span>;
+  };
+
+  let Expansion = ({level}) => {
+    if (level > 0) {
+      return (
+        <>
+          <Expansion level={level - 1} />
+          <Expansion level={level - 1} />
+          <Expansion level={level - 1} />
+        </>
+      );
+    } else {
+      return <Consumer />;
+    }
+  };
+
+  let externalSetValue;
+
+  let App = () => {
+    let [value, setValue] = React.useState(0);
+    externalSetValue = setValue;
+    let child = React.useMemo(() => <Expansion level={levels} />, [levels]);
+    return <Context.Provider value={value}>{child}</Context.Provider>;
+  };
+
+  let root = ReactNoop.createRoot();
+
+  root.render(<App />);
+
+  expect(root).toMatchRenderedOutput(null);
+  expect(Scheduler).toFlushAndYield([]);
+  expect(root.getChildren().length).toBe(leaves);
+
+  ReactNoop.act(() => externalSetValue(1));
+  expect(Scheduler).toFlushAndYield([]);
+  expect(root.getChildren().length).toBe(leaves);
+
+  for (let i = 2; i < 30; i++) {
+    ReactNoop.act(() => externalSetValue(i));
+    expect(Scheduler).toFlushAndYield([]);
+  }
+  expect(root.getChildren().length).toBe(leaves);
+
+  // console.log(`${label}: renderCount`, renderCount);
+}
