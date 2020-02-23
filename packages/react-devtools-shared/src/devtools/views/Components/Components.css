@@ -43,7 +43,7 @@
   }
 
   .SelectedElementWrapper {
-    flex: 0 0 50%;
+    flex: 1 1 50%;
   }
 
   .ResizeBar {
