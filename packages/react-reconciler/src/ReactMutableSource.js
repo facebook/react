@@ -29,6 +29,17 @@ export function clearPendingUpdates(
   }
 }
 
+export function getPendingExpirationTime(root: FiberRoot): ExpirationTime {
+  return root.mutableSourcePendingUpdateTime;
+}
+
+export function setPendingExpirationTime(
+  root: FiberRoot,
+  expirationTime: ExpirationTime,
+): void {
+  root.mutableSourcePendingUpdateTime = expirationTime;
+}
+
 export function resetWorkInProgressVersions(): void {
   if (isPrimaryRenderer) {
     for (let i = 0; i < workInProgressPrimarySources.length; i++) {
@@ -43,13 +54,6 @@ export function resetWorkInProgressVersions(): void {
     }
     workInProgressSecondarySources.length = 0;
   }
-}
-
-export function getPendingExpirationTime(
-  root: FiberRoot,
-  source: MutableSource<any>,
-): ExpirationTime {
-  return root.mutableSourcePendingUpdateTime;
 }
 
 export function getWorkInProgressVersion(

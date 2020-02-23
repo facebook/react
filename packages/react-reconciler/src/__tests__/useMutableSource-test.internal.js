@@ -338,11 +338,7 @@ function loadModules({
             />,
             () => Scheduler.unstable_yieldValue('Sync effect'),
           );
-          expect(Scheduler).toFlushAndYield([
-            'only:a-two', // (replayed)
-            'only:b-one',
-            'Sync effect',
-          ]);
+          expect(Scheduler).toFlushAndYield(['only:b-one', 'Sync effect']);
           ReactNoop.flushPassiveEffects();
           expect(sourceA.listenerCount).toBe(0);
           expect(sourceB.listenerCount).toBe(1);
@@ -406,12 +402,7 @@ function loadModules({
             'root',
             () => Scheduler.unstable_yieldValue('Sync effect'),
           );
-          expect(Scheduler).toFlushAndYield([
-            'only:a-one',
-            // Reentrant render to update state with new subscribe function.
-            'only:a-one',
-            'Sync effect',
-          ]);
+          expect(Scheduler).toFlushAndYield(['only:a-one', 'Sync effect']);
           ReactNoop.flushPassiveEffects();
           expect(source.listenerCount).toBe(1);
           expect(unsubscribeA).toHaveBeenCalledTimes(1);
@@ -548,18 +539,21 @@ function loadModules({
 
           // Changing values should schedule an update with React.
           // Start working on this update but don't finish it.
-          source.value = 'two';
-          expect(Scheduler).toFlushAndYieldThrough(['a:two']);
+          Scheduler.unstable_runWithPriority(
+            Scheduler.unstable_LowPriority,
+            () => {
+              source.value = 'two';
+              expect(Scheduler).toFlushAndYieldThrough(['a:two']);
+            },
+          );
 
-          const newGetSnapshot = s => defaultGetSnapshot(s);
+          const newGetSnapshot = s => 'new:' + defaultGetSnapshot(s);
 
           // Force a higher priority render with a new config.
           // This should signal that the snapshot is not safe and trigger a full re-render.
-          //
-          // TODO (useMutableSource) Remove toThrow() and reenable toHaveYielded() below.
-          // The current failure is expected and unrelated to this hook.
-          expect(() =>
-            ReactNoop.flushSync(() => {
+          Scheduler.unstable_runWithPriority(
+            Scheduler.unstable_UserBlockingPriority,
+            () => {
               ReactNoop.render(
                 <>
                   <Component
@@ -577,9 +571,13 @@ function loadModules({
                 </>,
                 () => Scheduler.unstable_yieldValue('Sync effect'),
               );
-            }),
-          ).toThrow('Cannot read from mutable source');
-          // expect(Scheduler).toHaveYielded(['a:two', 'b:two', 'Sync effect']);
+            },
+          );
+          expect(Scheduler).toFlushAndYieldThrough([
+            'a:new:two',
+            'b:new:two',
+            'Sync effect',
+          ]);
         });
       });
 
@@ -743,18 +741,23 @@ function loadModules({
           expect(Scheduler).toFlushAndYield(['only:one', 'Sync effect']);
           ReactNoop.flushPassiveEffects();
 
-          // Change the source (and schedule an update)
-          // but also change the snapshot function too.
-          ReactNoop.batchedUpdates(() => {
-            source.value = 'two';
-            updateGetSnapshot(() => newGetSnapshot);
-          });
+          // Change the source (and schedule an update).
+          Scheduler.unstable_runWithPriority(
+            Scheduler.unstable_LowPriority,
+            () => {
+              source.value = 'two';
+            },
+          );
 
-          // TODO (useMutableSource) Remove toThrow() and reenable toHaveYielded() below.
-          // The current failure is expected and unrelated to this hook.
-          expect(() => {
-            expect(Scheduler).toFlushAndYield(['only:new:two']);
-          }).toThrow('Cannot read from mutable source');
+          // Schedule a higher priority update that changes getSnapshot.
+          Scheduler.unstable_runWithPriority(
+            Scheduler.unstable_UserBlockingPriority,
+            () => {
+              updateGetSnapshot(() => newGetSnapshot);
+            },
+          );
+
+          expect(Scheduler).toFlushAndYield(['only:new:two']);
         });
       });
 
@@ -805,10 +808,49 @@ function loadModules({
           // If B's getSnapshot function updates, but the snapshot it returns is the same,
           // only B should re-render (to update its state).
           updateGetSnapshot(() => s => defaultGetSnapshot(s));
-          expect(Scheduler).toFlushAndYield(['b:one', 'b:one']);
+          expect(Scheduler).toFlushAndYield(['b:one']);
           ReactNoop.flushPassiveEffects();
           expect(onRenderA).toHaveBeenCalledTimes(1);
           expect(onRenderB).toHaveBeenCalledTimes(2);
+        });
+      });
+
+      it('should not throw if getSnapshot changes but the source can be safely read from anyway', () => {
+        const source = createSource('one');
+        const mutableSource = createMutableSource(source);
+
+        const newGetSnapshot = s => 'new:' + defaultGetSnapshot(s);
+
+        let updateGetSnapshot;
+
+        function WrapperWithState() {
+          const tuple = React.useState(() => defaultGetSnapshot);
+          updateGetSnapshot = tuple[1];
+          return (
+            <Component
+              label="only"
+              getSnapshot={tuple[0]}
+              mutableSource={mutableSource}
+              subscribe={defaultSubscribe}
+            />
+          );
+        }
+
+        act(() => {
+          ReactNoop.render(<WrapperWithState />, () =>
+            Scheduler.unstable_yieldValue('Sync effect'),
+          );
+          expect(Scheduler).toFlushAndYield(['only:one', 'Sync effect']);
+          ReactNoop.flushPassiveEffects();
+
+          // Change the source (and schedule an update)
+          // but also change the snapshot function too.
+          ReactNoop.batchedUpdates(() => {
+            source.value = 'two';
+            updateGetSnapshot(() => newGetSnapshot);
+          });
+
+          expect(Scheduler).toFlushAndYield(['only:new:two']);
         });
       });
 
