@@ -28,6 +28,11 @@ function initializeModules(hasPointerEvents) {
 describe('Keyboard responder', () => {
   let container;
 
+  if (!__EXPERIMENTAL__) {
+    it("empty test so Jest doesn't complain", () => {});
+    return;
+  }
+
   beforeEach(() => {
     initializeModules();
     container = document.createElement('div');

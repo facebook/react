@@ -45,6 +45,11 @@ const modulesInit = () => {
 describe('Input event responder', () => {
   let container;
 
+  if (!__EXPERIMENTAL__) {
+    it("empty test so Jest doesn't complain", () => {});
+    return;
+  }
+
   beforeEach(() => {
     jest.resetModules();
     modulesInit();

@@ -42,6 +42,11 @@ describe('ReactElement.jsx', () => {
     global.Symbol = originalSymbol;
   });
 
+  if (!__EXPERIMENTAL__) {
+    it("empty test so Jest doesn't complain", () => {});
+    return;
+  }
+
   it('allows static methods to be called using the type property', () => {
     class StaticMethodComponentClass extends React.Component {
       render() {
