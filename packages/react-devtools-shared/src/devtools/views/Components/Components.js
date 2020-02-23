@@ -170,7 +170,9 @@ function createResizeReducer(wrapperRef) {
 function ComponentResizer({children}): {|children: Function|} {
   const componentsWrapperRef = useRef<HTMLDivElement>(null);
   const resizeElementRef = useRef<HTMLElement>(null);
-  const [state, dispatch, ACTION_TYPES] = createResizeReducer(componentsWrapperRef);
+  const [state, dispatch, ACTION_TYPES] = createResizeReducer(
+    componentsWrapperRef,
+  );
 
   const onResizeStart = () =>
     dispatch({type: ACTION_TYPES.SET_IS_RESIZING, payload: true});
