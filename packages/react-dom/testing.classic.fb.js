@@ -7,4 +7,5 @@
  * @flow
  */
 
-export * from './src/client/ReactDOM';
+export * from './index.classic.fb.js';
+export {act} from 'react-reconciler/inline.dom';
