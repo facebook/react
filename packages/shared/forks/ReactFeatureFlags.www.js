@@ -45,8 +45,6 @@ export const warnAboutDefaultPropsOnFunctionComponents = false;
 
 export const enableTrainModelFix = true;
 
-export const exposeConcurrentModeAPIs = true;
-
 export const enableSuspenseServerRenderer = true;
 export const enableSelectiveHydration = true;
 
@@ -95,19 +93,11 @@ export const flushSuspenseFallbacksInTests = true;
 
 export const enableNativeTargetAsInstance = false;
 
-export const disableLegacyReactDOMAPIs = __EXPERIMENTAL__;
-
 export const disableTextareaChildren = __EXPERIMENTAL__;
 
 export const disableMapsAsChildren = __EXPERIMENTAL__;
 
-export const disableUnstableRenderSubtreeIntoContainer = __EXPERIMENTAL__;
-
 export const warnUnstableRenderSubtreeIntoContainer = false;
-
-export const disableUnstableCreatePortal = __EXPERIMENTAL__;
-
-export const isTestEnvironment = false;
 
 export const enableModernEventSystem = false;
 

@@ -19,7 +19,7 @@ const renderSubtreeIntoContainer = require('react-dom')
 const ReactFeatureFlags = require('shared/ReactFeatureFlags');
 
 // Once this flag is always true, we should delete this test file
-if (ReactFeatureFlags.disableUnstableRenderSubtreeIntoContainer) {
+if (__EXPERIMENTAL__) {
   describe('renderSubtreeIntoContainer', () => {
     it('empty test', () => {
       // Empty test to prevent "Your test suite must contain at least one test." error.
