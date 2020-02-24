@@ -1,14 +1,3 @@
-.ComponentsWrapper {
-  position: relative;
-  width: 100%;
-  height: 100%;
-  display: flex;
-  flex-direction: row;
-  background-color: var(--color-background);
-  color: var(--color-text);
-  font-family: var(--font-family-sans);
-}
-
 .TreeWrapper {
   flex: 0 0 65%;
   overflow: auto;
@@ -34,10 +23,6 @@
 }
 
 @media screen and (max-width: 600px) {
-  .ComponentsWrapper {
-    flex-direction: column;
-  }
-
   .TreeWrapper {
     flex: 0 0 50%;
   }
