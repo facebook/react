@@ -95,7 +95,7 @@ export const enableNativeTargetAsInstance = false;
 
 // Controls sequence of passive effect destroy and create functions.
 // If this flag is off, destroy and create functions may be interleaved.
-// When the falg is on, all destroy functions will be run (for all fibers)
+// When the flag is on, all destroy functions will be run (for all fibers)
 // before any create functions are run, similar to how layout effects work.
 // This flag provides a killswitch if that proves to break existing code somehow.
 export const runAllPassiveEffectDestroysBeforeCreates = false;
