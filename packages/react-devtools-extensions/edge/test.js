@@ -6,6 +6,10 @@ const open = require('open');
 const os = require('os');
 const osName = require('os-name');
 const START_URL = 'https://facebook.github.io/react/';
+const {resolve} = require('path');
+
+const EXTENSION_PATH = resolve('./chrome/build/unpacked');
+const extargs = `--load-extension=${EXTENSION_PATH}`;
 
 const osname = osName(os.platform());
 let appname;
@@ -20,6 +24,6 @@ if (osname && osname.toLocaleLowerCase().startsWith('windows')) {
 
 if (appname) {
   (async () => {
-    await open(START_URL, { app: [appname] });
+    await open(START_URL, {app: [appname, extargs]});
   })();
 }
