@@ -12,7 +12,6 @@ import type {Container, SuspenseInstance} from '../client/ReactDOMHostConfig';
 import type {DOMTopLevelEventType} from 'legacy-events/TopLevelEventTypes';
 import type {EventSystemFlags} from 'legacy-events/EventSystemFlags';
 import type {FiberRoot} from 'react-reconciler/src/ReactFiberRoot';
-import type {DOMContainer} from '../client/ReactDOM';
 
 import {
   enableDeprecatedFlareAPI,
@@ -238,7 +237,7 @@ function trapReplayableEventForDocument(
 }
 
 export function eagerlyTrapReplayableEvents(
-  container: DOMContainer,
+  container: Container,
   document: Document,
 ) {
   const listenerMapForDoc = getListenerMapForElement(document);
