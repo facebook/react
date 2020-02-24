@@ -17,6 +17,9 @@ const moduleNameMapper = {};
 moduleNameMapper[
   '^react$'
 ] = `<rootDir>/packages/react/index${preferredExtension}`;
+moduleNameMapper[
+  '^react-dom$'
+] = `<rootDir>/packages/react-dom/index${preferredExtension}`;
 
 module.exports = Object.assign({}, baseConfig, {
   // Prefer the stable forks for tests.
