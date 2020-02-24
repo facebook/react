@@ -7,7 +7,7 @@
  * @flow
  */
 
-import type {DOMContainer} from './ReactDOM';
+import type {Container} from './ReactDOMHostConfig';
 import type {RootType} from './ReactDOMRoot';
 import type {ReactNodeList} from 'shared/ReactTypes';
 
@@ -43,7 +43,7 @@ let topLevelUpdateWarnings;
 let warnedAboutHydrateAPI = false;
 
 if (__DEV__) {
-  topLevelUpdateWarnings = (container: DOMContainer) => {
+  topLevelUpdateWarnings = (container: Container) => {
     if (container._reactRootContainer && container.nodeType !== COMMENT_NODE) {
       const hostInstance = findHostInstanceWithNoPortals(
         container._reactRootContainer._internalRoot.current,
@@ -111,7 +111,7 @@ function shouldHydrateDueToLegacyHeuristic(container) {
 }
 
 function legacyCreateRootFromDOMContainer(
-  container: DOMContainer,
+  container: Container,
   forceHydrate: boolean,
 ): RootType {
   const shouldHydrate =
@@ -175,7 +175,7 @@ function warnOnInvalidCallback(callback: mixed, callerName: string): void {
 function legacyRenderSubtreeIntoContainer(
   parentComponent: ?React$Component<any, any>,
   children: ReactNodeList,
-  container: DOMContainer,
+  container: Container,
   forceHydrate: boolean,
   callback: ?Function,
 ) {
@@ -255,7 +255,7 @@ export function findDOMNode(
 
 export function hydrate(
   element: React$Node,
-  container: DOMContainer,
+  container: Container,
   callback: ?Function,
 ) {
   invariant(
@@ -286,7 +286,7 @@ export function hydrate(
 
 export function render(
   element: React$Element<any>,
-  container: DOMContainer,
+  container: Container,
   callback: ?Function,
 ) {
   invariant(
@@ -317,7 +317,7 @@ export function render(
 export function unstable_renderSubtreeIntoContainer(
   parentComponent: React$Component<any, any>,
   element: React$Element<any>,
-  containerNode: DOMContainer,
+  containerNode: Container,
   callback: ?Function,
 ) {
   invariant(
@@ -337,7 +337,7 @@ export function unstable_renderSubtreeIntoContainer(
   );
 }
 
-export function unmountComponentAtNode(container: DOMContainer) {
+export function unmountComponentAtNode(container: Container) {
   invariant(
     isValidContainer(container),
     'unmountComponentAtNode(...): Target container is not a DOM element.',

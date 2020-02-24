@@ -7,8 +7,8 @@
  * @flow
  */
 
-import type {RootType} from './ReactDOMRoot';
 import type {ReactNodeList} from 'shared/ReactTypes';
+import type {Container} from './ReactDOMHostConfig';
 
 import '../shared/checkReact';
 import './ReactDOMClientInjection';
@@ -116,13 +116,9 @@ setBatchingImplementation(
   batchedEventUpdates,
 );
 
-export type DOMContainer =
-  | (Element & {_reactRootContainer: ?RootType, ...})
-  | (Document & {_reactRootContainer: ?RootType, ...});
-
 function createPortal(
   children: ReactNodeList,
-  container: DOMContainer,
+  container: Container,
   key: ?string = null,
 ) {
   invariant(

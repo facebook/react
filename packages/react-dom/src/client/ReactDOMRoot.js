@@ -7,7 +7,7 @@
  * @flow
  */
 
-import type {DOMContainer} from './ReactDOM';
+import type {Container} from './ReactDOMHostConfig';
 import type {RootTag} from 'shared/ReactRootTags';
 import type {ReactNodeList} from 'shared/ReactTypes';
 // TODO: This type is shared between the reconciler and ReactDOM, but will
@@ -49,12 +49,12 @@ import {createContainer, updateContainer} from 'react-reconciler/inline.dom';
 import invariant from 'shared/invariant';
 import {BlockingRoot, ConcurrentRoot, LegacyRoot} from 'shared/ReactRootTags';
 
-function ReactDOMRoot(container: DOMContainer, options: void | RootOptions) {
+function ReactDOMRoot(container: Container, options: void | RootOptions) {
   this._internalRoot = createRootImpl(container, ConcurrentRoot, options);
 }
 
 function ReactDOMBlockingRoot(
-  container: DOMContainer,
+  container: Container,
   tag: RootTag,
   options: void | RootOptions,
 ) {
@@ -108,7 +108,7 @@ ReactDOMRoot.prototype.unmount = ReactDOMBlockingRoot.prototype.unmount = functi
 };
 
 function createRootImpl(
-  container: DOMContainer,
+  container: Container,
   tag: RootTag,
   options: void | RootOptions,
 ) {
@@ -129,7 +129,7 @@ function createRootImpl(
 }
 
 export function createRoot(
-  container: DOMContainer,
+  container: Container,
   options?: RootOptions,
 ): RootType {
   invariant(
@@ -141,7 +141,7 @@ export function createRoot(
 }
 
 export function createBlockingRoot(
-  container: DOMContainer,
+  container: Container,
   options?: RootOptions,
 ): RootType {
   invariant(
@@ -153,7 +153,7 @@ export function createBlockingRoot(
 }
 
 export function createLegacyRoot(
-  container: DOMContainer,
+  container: Container,
   options?: RootOptions,
 ): RootType {
   return new ReactDOMBlockingRoot(container, LegacyRoot, options);

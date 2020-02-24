@@ -7,6 +7,8 @@
  * @flow
  */
 
+import type {RootType} from './ReactDOMRoot';
+
 import {
   precacheFiberNode,
   updateFiberProps,
@@ -45,7 +47,6 @@ import {
 } from '../shared/HTMLNodeType';
 import dangerousStyleValue from '../shared/dangerousStyleValue';
 
-import type {DOMContainer} from './ReactDOM';
 import type {
   ReactDOMEventResponder,
   ReactDOMEventResponderInstance,
@@ -99,7 +100,9 @@ export type EventTargetChildElement = {
   },
   ...
 };
-export type Container = DOMContainer;
+export type Container =
+  | (Element & {_reactRootContainer: ?RootType, ...})
+  | (Document & {_reactRootContainer: ?RootType, ...});
 export type Instance = Element;
 export type TextInstance = Text;
 export type SuspenseInstance = Comment & {_reactRetry?: () => void, ...};
@@ -419,7 +422,7 @@ export function appendChild(
 }
 
 export function appendChildToContainer(
-  container: DOMContainer,
+  container: Container,
   child: Instance | TextInstance,
 ): void {
   let parentNode;
