@@ -17,6 +17,7 @@ export const enableUserTimingAPI = false;
 export const warnAboutDeprecatedLifecycles = true;
 export const replayFailedUnitOfWorkWithInvokeGuardedCallback = false;
 export const enableProfilerTimer = false;
+export const enableProfilerCommitHooks = false;
 export const enableSchedulerTracing = false;
 export const enableSuspenseServerRenderer = true;
 export const enableSelectiveHydration = true;
