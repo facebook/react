@@ -703,6 +703,8 @@ function updateContextImpl<C>(
     memoizedState.selection = memoizedState.stashedSelection;
     memoizedState.stashedContextValue = EMPTY;
     memoizedState.stashedSelection = EMPTY;
+    // need to readContext to reset dependency
+    readContext(context);
     return memoizedState.selection;
   }
   memoizedState.context = context;
