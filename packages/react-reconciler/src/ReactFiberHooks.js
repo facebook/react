@@ -51,7 +51,10 @@ import {enableSpeculativeWork} from 'shared/ReactFeatureFlags';
 import invariant from 'shared/invariant';
 import getComponentName from 'shared/getComponentName';
 import is from 'shared/objectIs';
-import {markWorkInProgressReceivedUpdate} from './ReactFiberBeginWork';
+import {
+  markWorkInProgressReceivedUpdate,
+  markWorkInProgressPushedEffect,
+} from './ReactFiberBeginWork';
 import {requestCurrentSuspenseConfig} from './ReactFiberSuspenseConfig';
 import {
   UserBlockingPriority,
@@ -1059,6 +1062,9 @@ function rerenderState<S>(
 }
 
 function pushEffect(tag, create, destroy, deps) {
+  if (enableSpeculativeWork && tag & HookHasEffect) {
+    markWorkInProgressPushedEffect();
+  }
   const effect: Effect = {
     tag,
     create,

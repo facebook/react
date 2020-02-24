@@ -191,6 +191,7 @@ import {
 const ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
 
 let didReceiveUpdate: boolean = false;
+let didPushEffect: boolean = false;
 
 let didWarnAboutBadClass;
 let didWarnAboutModulePatternComponent;
@@ -239,6 +240,7 @@ export function reconcileChildren(
   nextChildren: any,
   renderExpirationTime: ExpirationTime,
 ) {
+  workInProgress.residue = (nextChildren && nextChildren.residue) || null;
   if (current === null) {
     // If this is a fresh new component that hasn't been rendered yet, we
     // won't update its child set by applying minimal side-effects. Instead,
@@ -715,6 +717,31 @@ function updateFunctionComponent(
     );
   }
 
+  if (enableSpeculativeWork && inSpeculativeWorkMode()) {
+    if (current !== null && !didPushEffect) {
+      // if nextChildren have the same residue as previous children and there
+      // were not pushed effects which had an effect we can bail out.
+      // bailing out in this way is actually useful now with speculative work
+      // since we can avoid large reifications whereas with the old method a bailout
+      // here is really no better than bailing out in nextChildren's reconciliation
+      if (
+        current &&
+        current.residue ===
+          ((nextChildren && nextChildren.residue) || nextChildren)
+      ) {
+        bailoutHooks(current, workInProgress, renderExpirationTime);
+        return bailoutOnAlreadyFinishedWork(
+          current,
+          workInProgress,
+          renderExpirationTime,
+        );
+      }
+    }
+    // either effects were pushed or nextChildren had a different residue
+    // we need to reify
+    reifyWorkInProgress(current, workInProgress);
+  }
+
   if (current !== null && !didReceiveUpdate) {
     bailoutHooks(current, workInProgress, renderExpirationTime);
     return bailoutOnAlreadyFinishedWork(
@@ -722,13 +749,6 @@ function updateFunctionComponent(
       workInProgress,
       renderExpirationTime,
     );
-  }
-
-  if (enableSpeculativeWork && inSpeculativeWorkMode()) {
-    // because there was an update and we were in speculative work mode we need
-    // to attach the temporary workInProgress we created earlier in this function
-    // to the workInProgress tree
-    reifyWorkInProgress(current, workInProgress);
   }
 
   // React DevTools reads this flag.
@@ -2844,6 +2864,10 @@ export function markWorkInProgressReceivedUpdate() {
   didReceiveUpdate = true;
 }
 
+export function markWorkInProgressPushedEffect() {
+  didPushEffect = true;
+}
+
 function enterSpeculativeWorkMode(workInProgress: Fiber) {
   invariant(
     speculativeWorkRootFiber === null,
@@ -3064,6 +3088,11 @@ function beginWork(
     // on each step we set it to false. and only set it to true if reification
     // occurs
     didReifySpeculativeWork = false;
+
+    // this value is used to determine if we can bailout when nextChildren is identical
+    // to memoized children when we are in speculative mode and would prefer to bailout
+    // rather than reify the workInProgress tree
+    didPushEffect = false;
   }
   // in speculative work mode we have been passed the current fiber as the workInProgress
   // if this is the case we need to assign the work to the current because they are the same

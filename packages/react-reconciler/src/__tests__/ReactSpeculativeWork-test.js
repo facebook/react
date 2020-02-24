@@ -6,7 +6,7 @@ let ReactCache;
 let Suspense;
 let TextResource;
 
-let levels = 8;
+let levels = 6;
 let expansion = 3;
 let leaves = expansion ** levels;
 
@@ -257,20 +257,25 @@ function runTest(label, withSelector) {
   let Context = React.createContext(0);
   let renderCount = 0;
 
+  let span = <span>Consumer</span>;
   let selector = withSelector ? c => 1 : undefined;
   let Consumer = () => {
     let value = React.useContext(Context, selector);
+    let reduced = Math.floor(value / 2);
+    // whenever this effect has a HasEffect tag we won't bail out of updates. currently 50% of the time
+    React.useEffect(() => {}, [reduced]);
     renderCount++;
-    return <span>Consumer</span>;
+    // with residue feature this static element will enable bailouts even if we do a render
+    return span;
   };
 
   let Expansion = ({level}) => {
     if (level > 0) {
       return (
         <>
-          <Expansion level={level - 1} />
-          <Expansion level={level - 1} />
-          <Expansion level={level - 1} />
+          {new Array(expansion).fill(0).map((_, i) => (
+            <Expansion key={i} level={level - 1} />
+          ))}
         </>
       );
     } else {
@@ -289,21 +294,24 @@ function runTest(label, withSelector) {
 
   let root = ReactNoop.createRoot();
 
-  root.render(<App />);
+  ReactNoop.act(() => root.render(<App />));
 
-  expect(root).toMatchRenderedOutput(null);
   expect(Scheduler).toFlushAndYield([]);
   expect(root.getChildren().length).toBe(leaves);
 
-  ReactNoop.act(() => externalSetValue(1));
+  ReactNoop.act(() => {
+    externalSetValue(1);
+  });
   expect(Scheduler).toFlushAndYield([]);
   expect(root.getChildren().length).toBe(leaves);
 
-  for (let i = 2; i < 30; i++) {
-    ReactNoop.act(() => externalSetValue(i));
+  for (let i = 2; i < 10; i++) {
+    ReactNoop.act(() => {
+      externalSetValue(i);
+    });
     expect(Scheduler).toFlushAndYield([]);
   }
   expect(root.getChildren().length).toBe(leaves);
 
-  // console.log(`${label}: renderCount`, renderCount);
+  console.log(`${label}: renderCount`, renderCount);
 }
