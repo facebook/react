@@ -26,6 +26,7 @@ let resourcePromise;
 function loadModules({
   deferPassiveEffectCleanupDuringUnmount = false,
   enableProfilerTimer = true,
+  enableProfilerCommitHooks = true,
   enableSchedulerTracing = true,
   replayFailedUnitOfWorkWithInvokeGuardedCallback = false,
   useNoopRenderer = false,
@@ -33,7 +34,9 @@ function loadModules({
   ReactFeatureFlags = require('shared/ReactFeatureFlags');
   ReactFeatureFlags.debugRenderPhaseSideEffectsForStrictMode = false;
   ReactFeatureFlags.deferPassiveEffectCleanupDuringUnmount = deferPassiveEffectCleanupDuringUnmount;
+  ReactFeatureFlags.runAllPassiveEffectDestroysBeforeCreates = deferPassiveEffectCleanupDuringUnmount;
   ReactFeatureFlags.enableProfilerTimer = enableProfilerTimer;
+  ReactFeatureFlags.enableProfilerCommitHooks = enableProfilerCommitHooks;
   ReactFeatureFlags.enableSchedulerTracing = enableSchedulerTracing;
   ReactFeatureFlags.replayFailedUnitOfWorkWithInvokeGuardedCallback = replayFailedUnitOfWorkWithInvokeGuardedCallback;
 

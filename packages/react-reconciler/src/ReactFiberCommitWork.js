@@ -29,6 +29,7 @@ import {
   deferPassiveEffectCleanupDuringUnmount,
   enableSchedulerTracing,
   enableProfilerTimer,
+  enableProfilerCommitHooks,
   enableSuspenseServerRenderer,
   enableDeprecatedFlareAPI,
   enableFundamentalAPI,
@@ -183,7 +184,11 @@ const callComponentWillUnmountWithTimer = function(current, instance) {
   startPhaseTimer(current, 'componentWillUnmount');
   instance.props = current.memoizedProps;
   instance.state = current.memoizedState;
-  if (enableProfilerTimer && current.mode & ProfileMode) {
+  if (
+    enableProfilerTimer &&
+    enableProfilerCommitHooks &&
+    current.mode & ProfileMode
+  ) {
     try {
       startLayoutEffectTimer();
       instance.componentWillUnmount();
@@ -447,7 +452,11 @@ export function commitPassiveHookEffects(finishedWork: Fiber): void {
         // TODO (#17945) We should call all passive destroy functions (for all fibers)
         // before calling any create functions. The current approach only serializes
         // these for a single fiber.
-        if (enableProfilerTimer && finishedWork.mode & ProfileMode) {
+        if (
+          enableProfilerTimer &&
+          enableProfilerCommitHooks &&
+          finishedWork.mode & ProfileMode
+        ) {
           try {
             startPassiveEffectTimer();
             commitHookEffectListUnmount(
@@ -480,7 +489,7 @@ export function commitPassiveEffectDurations(
   finishedRoot: FiberRoot,
   finishedWork: Fiber,
 ): void {
-  if (enableProfilerTimer) {
+  if (enableProfilerTimer && enableProfilerCommitHooks) {
     // Only Profilers with work in their subtree will have an Update effect scheduled.
     if ((finishedWork.effectTag & Update) !== NoEffect) {
       switch (finishedWork.tag) {
@@ -546,7 +555,11 @@ function commitLifeCycles(
       // This is done to prevent sibling component effects from interfering with each other,
       // e.g. a destroy function in one component should never override a ref set
       // by a create function in another component during the same commit.
-      if (enableProfilerTimer && finishedWork.mode & ProfileMode) {
+      if (
+        enableProfilerTimer &&
+        enableProfilerCommitHooks &&
+        finishedWork.mode & ProfileMode
+      ) {
         try {
           startLayoutEffectTimer();
           commitHookEffectListMount(HookLayout | HookHasEffect, finishedWork);
@@ -597,7 +610,11 @@ function commitLifeCycles(
               }
             }
           }
-          if (enableProfilerTimer && finishedWork.mode & ProfileMode) {
+          if (
+            enableProfilerTimer &&
+            enableProfilerCommitHooks &&
+            finishedWork.mode & ProfileMode
+          ) {
             try {
               startLayoutEffectTimer();
               instance.componentDidMount();
@@ -645,7 +662,11 @@ function commitLifeCycles(
               }
             }
           }
-          if (enableProfilerTimer && finishedWork.mode & ProfileMode) {
+          if (
+            enableProfilerTimer &&
+            enableProfilerCommitHooks &&
+            finishedWork.mode & ProfileMode
+          ) {
             try {
               startLayoutEffectTimer();
               instance.componentDidUpdate(
@@ -773,40 +794,42 @@ function commitLifeCycles(
           }
         }
 
-        if (typeof onCommit === 'function') {
-          if (enableSchedulerTracing) {
-            onCommit(
-              finishedWork.memoizedProps.id,
-              current === null ? 'mount' : 'update',
-              effectDuration,
-              commitTime,
-              finishedRoot.memoizedInteractions,
-            );
-          } else {
-            onCommit(
-              finishedWork.memoizedProps.id,
-              current === null ? 'mount' : 'update',
-              effectDuration,
-              commitTime,
-            );
+        if (enableProfilerCommitHooks) {
+          if (typeof onCommit === 'function') {
+            if (enableSchedulerTracing) {
+              onCommit(
+                finishedWork.memoizedProps.id,
+                current === null ? 'mount' : 'update',
+                effectDuration,
+                commitTime,
+                finishedRoot.memoizedInteractions,
+              );
+            } else {
+              onCommit(
+                finishedWork.memoizedProps.id,
+                current === null ? 'mount' : 'update',
+                effectDuration,
+                commitTime,
+              );
+            }
           }
-        }
 
-        // Schedule a passive effect for this Profiler to call onPostCommit hooks.
-        // This effect should be scheduled even if there is no onPostCommit callback for this Profiler,
-        // because the effect is also where times bubble to parent Profilers.
-        enqueuePendingPassiveProfilerEffect(finishedWork);
+          // Schedule a passive effect for this Profiler to call onPostCommit hooks.
+          // This effect should be scheduled even if there is no onPostCommit callback for this Profiler,
+          // because the effect is also where times bubble to parent Profilers.
+          enqueuePendingPassiveProfilerEffect(finishedWork);
 
-        // Propagate layout effect durations to the next nearest Profiler ancestor.
-        // Do not reset these values until the next render so DevTools has a chance to read them first.
-        let parentFiber = finishedWork.return;
-        while (parentFiber !== null) {
-          if (parentFiber.tag === Profiler) {
-            const parentStateNode = parentFiber.stateNode;
-            parentStateNode.effectDuration += effectDuration;
-            break;
+          // Propagate layout effect durations to the next nearest Profiler ancestor.
+          // Do not reset these values until the next render so DevTools has a chance to read them first.
+          let parentFiber = finishedWork.return;
+          while (parentFiber !== null) {
+            if (parentFiber.tag === Profiler) {
+              const parentStateNode = parentFiber.stateNode;
+              parentStateNode.effectDuration += effectDuration;
+              break;
+            }
+            parentFiber = parentFiber.return;
           }
-          parentFiber = parentFiber.return;
         }
       }
       return;
@@ -958,7 +981,11 @@ function commitUnmount(
                 if ((tag & HookPassive) !== NoHookEffect) {
                   enqueuePendingPassiveHookEffectUnmount(current, effect);
                 } else {
-                  if (enableProfilerTimer && current.mode & ProfileMode) {
+                  if (
+                    enableProfilerTimer &&
+                    enableProfilerCommitHooks &&
+                    current.mode & ProfileMode
+                  ) {
                     startLayoutEffectTimer();
                     safelyCallDestroy(current, destroy);
                     recordLayoutEffectDuration(current);
@@ -991,7 +1018,11 @@ function commitUnmount(
               do {
                 const {destroy, tag} = effect;
                 if (destroy !== undefined) {
-                  if (enableProfilerTimer && current.mode & ProfileMode) {
+                  if (
+                    enableProfilerTimer &&
+                    enableProfilerCommitHooks &&
+                    current.mode & ProfileMode
+                  ) {
                     if ((tag & HookPassive) !== NoHookEffect) {
                       safelyCallDestroy(current, destroy);
                     } else {
@@ -1543,7 +1574,11 @@ function commitWork(current: Fiber | null, finishedWork: Fiber): void {
         // This prevents sibling component effects from interfering with each other,
         // e.g. a destroy function in one component should never override a ref set
         // by a create function in another component during the same commit.
-        if (enableProfilerTimer && finishedWork.mode & ProfileMode) {
+        if (
+          enableProfilerTimer &&
+          enableProfilerCommitHooks &&
+          finishedWork.mode & ProfileMode
+        ) {
           try {
             startLayoutEffectTimer();
             commitHookEffectListUnmount(
@@ -1598,7 +1633,11 @@ function commitWork(current: Fiber | null, finishedWork: Fiber): void {
       // This prevents sibling component effects from interfering with each other,
       // e.g. a destroy function in one component should never override a ref set
       // by a create function in another component during the same commit.
-      if (enableProfilerTimer && finishedWork.mode & ProfileMode) {
+      if (
+        enableProfilerTimer &&
+        enableProfilerCommitHooks &&
+        finishedWork.mode & ProfileMode
+      ) {
         try {
           startLayoutEffectTimer();
           commitHookEffectListUnmount(HookLayout | HookHasEffect, finishedWork);

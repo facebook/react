@@ -24,6 +24,7 @@ import {
   enableSuspenseServerRenderer,
   replayFailedUnitOfWorkWithInvokeGuardedCallback,
   enableProfilerTimer,
+  enableProfilerCommitHooks,
   enableSchedulerTracing,
   warnAboutUnmockedScheduler,
   flushSuspenseFallbacksInTests,
@@ -2184,7 +2185,7 @@ export function flushPassiveEffects() {
 }
 
 export function enqueuePendingPassiveProfilerEffect(fiber: Fiber): void {
-  if (enableProfilerTimer) {
+  if (enableProfilerTimer && enableProfilerCommitHooks) {
     pendingPassiveProfilerEffects.push(fiber);
     if (!rootDoesHavePassiveEffects) {
       rootDoesHavePassiveEffects = true;
@@ -2270,7 +2271,11 @@ function flushPassiveEffectsImpl() {
       if (typeof destroy === 'function') {
         if (__DEV__) {
           setCurrentDebugFiberInDEV(fiber);
-          if (enableProfilerTimer && fiber.mode & ProfileMode) {
+          if (
+            enableProfilerTimer &&
+            enableProfilerCommitHooks &&
+            fiber.mode & ProfileMode
+          ) {
             startPassiveEffectTimer();
             invokeGuardedCallback(null, destroy, null);
             recordPassiveEffectDuration(fiber);
@@ -2285,7 +2290,11 @@ function flushPassiveEffectsImpl() {
           resetCurrentDebugFiberInDEV();
         } else {
           try {
-            if (enableProfilerTimer && fiber.mode & ProfileMode) {
+            if (
+              enableProfilerTimer &&
+              enableProfilerCommitHooks &&
+              fiber.mode & ProfileMode
+            ) {
               try {
                 startPassiveEffectTimer();
                 destroy();
@@ -2310,7 +2319,11 @@ function flushPassiveEffectsImpl() {
       const fiber = ((mountEffects[i + 1]: any): Fiber);
       if (__DEV__) {
         setCurrentDebugFiberInDEV(fiber);
-        if (enableProfilerTimer && fiber.mode & ProfileMode) {
+        if (
+          enableProfilerTimer &&
+          enableProfilerCommitHooks &&
+          fiber.mode & ProfileMode
+        ) {
           startPassiveEffectTimer();
           invokeGuardedCallback(null, invokePassiveEffectCreate, null, effect);
           recordPassiveEffectDuration(fiber);
@@ -2326,7 +2339,11 @@ function flushPassiveEffectsImpl() {
       } else {
         try {
           const create = effect.create;
-          if (enableProfilerTimer && fiber.mode & ProfileMode) {
+          if (
+            enableProfilerTimer &&
+            enableProfilerCommitHooks &&
+            fiber.mode & ProfileMode
+          ) {
             try {
               startPassiveEffectTimer();
               effect.destroy = create();
@@ -2373,7 +2390,7 @@ function flushPassiveEffectsImpl() {
     }
   }
 
-  if (enableProfilerTimer) {
+  if (enableProfilerTimer && enableProfilerCommitHooks) {
     let profilerEffects = pendingPassiveProfilerEffects;
     pendingPassiveProfilerEffects = [];
     for (let i = 0; i < profilerEffects.length; i++) {

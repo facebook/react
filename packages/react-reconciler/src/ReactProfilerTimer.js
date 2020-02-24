@@ -9,7 +9,10 @@
 
 import type {Fiber} from './ReactFiber';
 
-import {enableProfilerTimer} from 'shared/ReactFeatureFlags';
+import {
+  enableProfilerTimer,
+  enableProfilerCommitHooks,
+} from 'shared/ReactFeatureFlags';
 import {Profiler} from 'shared/ReactWorkTags';
 
 // Intentionally not named imports because Rollup would use dynamic dispatch for
@@ -81,7 +84,7 @@ function stopProfilerTimerIfRunningAndRecordDelta(
 }
 
 function recordLayoutEffectDuration(fiber: Fiber): void {
-  if (!enableProfilerTimer) {
+  if (!enableProfilerTimer || !enableProfilerCommitHooks) {
     return;
   }
 
@@ -104,7 +107,7 @@ function recordLayoutEffectDuration(fiber: Fiber): void {
 }
 
 function recordPassiveEffectDuration(fiber: Fiber): void {
-  if (!enableProfilerTimer) {
+  if (!enableProfilerTimer || !enableProfilerCommitHooks) {
     return;
   }
 
@@ -132,14 +135,14 @@ function recordPassiveEffectDuration(fiber: Fiber): void {
 }
 
 function startLayoutEffectTimer(): void {
-  if (!enableProfilerTimer) {
+  if (!enableProfilerTimer || !enableProfilerCommitHooks) {
     return;
   }
   layoutEffectStartTime = now();
 }
 
 function startPassiveEffectTimer(): void {
-  if (!enableProfilerTimer) {
+  if (!enableProfilerTimer || !enableProfilerCommitHooks) {
     return;
   }
   passiveEffectStartTime = now();
