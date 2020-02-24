@@ -370,6 +370,7 @@ export function unmountComponentAtNode(container: Container) {
     // Unmount should not be batched.
     unbatchedUpdates(() => {
       legacyRenderSubtreeIntoContainer(null, null, container, false, () => {
+        // $FlowFixMe This should probably use `delete container._reactRootContainer`
         container._reactRootContainer = null;
         unmarkContainerAsRoot(container);
       });

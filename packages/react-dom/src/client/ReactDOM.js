@@ -112,12 +112,13 @@ function createPortal(
   children: ReactNodeList,
   container: Container,
   key: ?string = null,
-) {
+): React$Portal {
   invariant(
     isValidContainer(container),
     'Target container is not a DOM element.',
   );
   // TODO: pass ReactDOM portal implementation as third argument
+  // $FlowFixMe The Flow type is opaque but there's no way to actually create it.
   return createPortalImpl(children, container, null, key);
 }
 
