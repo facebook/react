@@ -37,6 +37,11 @@ const table = [[forcePointerEvents], [!forcePointerEvents]];
 describe.each(table)('FocusWithin responder', hasPointerEvents => {
   let container;
 
+  if (!__EXPERIMENTAL__) {
+    it("empty test so Jest doesn't complain", () => {});
+    return;
+  }
+
   beforeEach(() => {
     initializeModules();
     container = document.createElement('div');

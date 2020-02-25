@@ -7,8 +7,6 @@
  * @flow
  */
 
-import type {ReactNativeBaseComponentViewConfig} from './ReactNativeTypes';
-
 import invariant from 'shared/invariant';
 
 // Modules provided by RN:
@@ -31,12 +29,7 @@ const {get: getViewConfigForType} = ReactNativeViewConfigRegistry;
 export type Type = string;
 export type Props = Object;
 export type Container = number;
-export type Instance = {
-  _children: Array<Instance | number>,
-  _nativeTag: number,
-  viewConfig: ReactNativeBaseComponentViewConfig<>,
-  ...
-};
+export type Instance = ReactNativeFiberHostComponent;
 export type TextInstance = number;
 export type HydratableInstance = Instance | TextInstance;
 export type PublicInstance = Instance;

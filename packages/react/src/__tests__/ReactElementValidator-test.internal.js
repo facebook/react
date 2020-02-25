@@ -439,7 +439,7 @@ describe('ReactElementValidator', () => {
     );
   });
 
-  if (!ReactFeatureFlags.disableCreateFactory) {
+  if (!__EXPERIMENTAL__) {
     it('should warn when accessing .type on an element factory', () => {
       function TestComponent() {
         return <div />;

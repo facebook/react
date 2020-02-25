@@ -23,6 +23,11 @@ describe('ReactScope', () => {
     React = require('react');
   });
 
+  if (!__EXPERIMENTAL__) {
+    it("empty test so Jest doesn't complain", () => {});
+    return;
+  }
+
   describe('ReactDOM', () => {
     let ReactDOM;
     let container;

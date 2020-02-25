@@ -188,18 +188,16 @@ function getRollupOutputOptions(
 ) {
   const isProduction = isProductionBundleType(bundleType);
 
-  return Object.assign(
-    {},
-    {
-      file: outputPath,
-      format,
-      globals,
-      freeze: !isProduction,
-      interop: false,
-      name: globalName,
-      sourcemap: false,
-    }
-  );
+  return {
+    file: outputPath,
+    format,
+    globals,
+    freeze: !isProduction,
+    interop: false,
+    name: globalName,
+    sourcemap: false,
+    esModule: false,
+  };
 }
 
 function getFormat(bundleType) {
@@ -479,6 +477,40 @@ function shouldSkipBundle(bundle, bundleType) {
   return false;
 }
 
+function resolveEntryFork(resolvedEntry, isFBBundle) {
+  // Pick which entry point fork to use:
+  // .modern.fb.js
+  // .classic.fb.js
+  // .fb.js
+  // .stable.js
+  // .experimental.js
+  // .js
+
+  if (isFBBundle) {
+    const resolvedFBEntry = resolvedEntry.replace(
+      '.js',
+      __EXPERIMENTAL__ ? '.modern.fb.js' : '.classic.fb.js'
+    );
+    if (fs.existsSync(resolvedFBEntry)) {
+      return resolvedFBEntry;
+    }
+    const resolvedGenericFBEntry = resolvedEntry.replace('.js', '.fb.js');
+    if (fs.existsSync(resolvedGenericFBEntry)) {
+      return resolvedGenericFBEntry;
+    }
+    // Even if it's a FB bundle we fallthrough to pick stable or experimental if we don't have an FB fork.
+  }
+  const resolvedForkedEntry = resolvedEntry.replace(
+    '.js',
+    __EXPERIMENTAL__ ? '.experimental.js' : '.stable.js'
+  );
+  if (fs.existsSync(resolvedForkedEntry)) {
+    return resolvedForkedEntry;
+  }
+  // Just use the plain .js one.
+  return resolvedEntry;
+}
+
 async function createBundle(bundle, bundleType) {
   if (shouldSkipBundle(bundle, bundleType)) {
     return;
@@ -490,17 +522,15 @@ async function createBundle(bundle, bundleType) {
   const format = getFormat(bundleType);
   const packageName = Packaging.getPackageName(bundle.entry);
 
-  let resolvedEntry = require.resolve(bundle.entry);
   const isFBBundle =
     bundleType === FB_WWW_DEV ||
     bundleType === FB_WWW_PROD ||
     bundleType === FB_WWW_PROFILING;
-  if (isFBBundle) {
-    const resolvedFBEntry = resolvedEntry.replace('.js', '.fb.js');
-    if (fs.existsSync(resolvedFBEntry)) {
-      resolvedEntry = resolvedFBEntry;
-    }
-  }
+
+  let resolvedEntry = resolveEntryFork(
+    require.resolve(bundle.entry),
+    isFBBundle
+  );
 
   const shouldBundleDependencies =
     bundleType === UMD_DEV ||

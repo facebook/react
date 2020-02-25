@@ -7,7 +7,9 @@
  * @flow
  */
 
+import type {ElementRef} from 'react';
 import type {
+  HostComponent,
   MeasureInWindowOnSuccessCallback,
   MeasureLayoutOnSuccessCallback,
   MeasureOnSuccessCallback,
@@ -62,7 +64,7 @@ class ReactNativeFiberHostComponent {
   }
 
   measureLayout(
-    relativeToNativeNode: number | ReactNativeFiberHostComponent,
+    relativeToNativeNode: number | ElementRef<HostComponent<mixed>>,
     onSuccess: MeasureLayoutOnSuccessCallback,
     onFail?: () => void /* currently unused */,
   ) {
@@ -71,8 +73,11 @@ class ReactNativeFiberHostComponent {
     if (typeof relativeToNativeNode === 'number') {
       // Already a node handle
       relativeNode = relativeToNativeNode;
-    } else if (relativeToNativeNode._nativeTag) {
-      relativeNode = relativeToNativeNode._nativeTag;
+    } else {
+      let nativeNode: ReactNativeFiberHostComponent = (relativeToNativeNode: any);
+      if (nativeNode._nativeTag) {
+        relativeNode = nativeNode._nativeTag;
+      }
     }
 
     if (relativeNode == null) {

@@ -13,8 +13,6 @@ let React;
 let ReactDOM;
 let ReactIs;
 
-const ReactFeatureFlags = require('shared/ReactFeatureFlags');
-
 describe('ReactIs', () => {
   beforeEach(() => {
     jest.resetModules();
@@ -56,7 +54,7 @@ describe('ReactIs', () => {
     expect(ReactIs.isValidElementType(MemoComponent)).toEqual(true);
     expect(ReactIs.isValidElementType(Context.Provider)).toEqual(true);
     expect(ReactIs.isValidElementType(Context.Consumer)).toEqual(true);
-    if (!ReactFeatureFlags.disableCreateFactory) {
+    if (!__EXPERIMENTAL__) {
       let factory;
       expect(() => {
         factory = React.createFactory('div');

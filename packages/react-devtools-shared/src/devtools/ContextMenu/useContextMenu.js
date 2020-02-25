@@ -19,18 +19,22 @@ export default function useContextMenu({
 }: {|
   data: Object,
   id: string,
-  ref: ElementRef<HTMLElement>,
+  ref: {current: ElementRef<'div'> | null},
 |}) {
   const {showMenu} = useContext(RegistryContext);
 
   useEffect(() => {
     if (ref.current !== null) {
-      const handleContextMenu = event => {
+      const handleContextMenu = (event: MouseEvent | TouchEvent) => {
         event.preventDefault();
         event.stopPropagation();
 
-        const pageX = event.pageX || (event.touches && event.touches[0].pageX);
-        const pageY = event.pageY || (event.touches && event.touches[0].pageY);
+        const pageX =
+          event.pageX ||
+          (event.touches && ((event: any): TouchEvent).touches[0].pageX);
+        const pageY =
+          event.pageY ||
+          (event.touches && ((event: any): TouchEvent).touches[0].pageY);
 
         showMenu({data, id, pageX, pageY});
       };

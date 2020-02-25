@@ -7,10 +7,5 @@
  * @flow
  */
 
-'use strict';
-
-const ReactDOM = require('./src/client/ReactDOM');
-
-// TODO: decide on the top-level export form.
-// This is hacky but makes it work with both Rollup and Jest.
-module.exports = ReactDOM.default || ReactDOM;
+export * from './index.js';
+export {act} from 'react-reconciler/inline.dom';

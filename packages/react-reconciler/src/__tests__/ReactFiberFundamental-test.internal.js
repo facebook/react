@@ -50,6 +50,11 @@ function initReactDOMServer() {
 }
 
 describe('ReactFiberFundamental', () => {
+  if (!__EXPERIMENTAL__) {
+    it("empty test so Jest doesn't complain", () => {});
+    return;
+  }
+
   describe('NoopRenderer', () => {
     beforeEach(() => {
       initNoopRenderer();

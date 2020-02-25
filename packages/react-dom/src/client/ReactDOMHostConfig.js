@@ -101,8 +101,8 @@ export type EventTargetChildElement = {
   ...
 };
 export type Container =
-  | (Element & {_reactRootContainer: ?RootType, ...})
-  | (Document & {_reactRootContainer: ?RootType, ...});
+  | (Element & {_reactRootContainer?: RootType, ...})
+  | (Document & {_reactRootContainer?: RootType, ...});
 export type Instance = Element;
 export type TextInstance = Text;
 export type SuspenseInstance = Comment & {_reactRetry?: () => void, ...};

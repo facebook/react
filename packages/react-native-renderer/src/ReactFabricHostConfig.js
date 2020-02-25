@@ -7,7 +7,9 @@
  * @flow
  */
 
+import type {ElementRef} from 'react';
 import type {
+  HostComponent,
   MeasureInWindowOnSuccessCallback,
   MeasureLayoutOnSuccessCallback,
   MeasureOnSuccessCallback,
@@ -126,7 +128,7 @@ class ReactFabricHostComponent {
   }
 
   measureLayout(
-    relativeToNativeNode: number | ReactFabricHostComponent,
+    relativeToNativeNode: number | ElementRef<HostComponent<mixed>>,
     onSuccess: MeasureLayoutOnSuccessCallback,
     onFail?: () => void /* currently unused */,
   ) {

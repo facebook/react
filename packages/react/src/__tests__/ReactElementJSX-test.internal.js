@@ -31,7 +31,6 @@ describe('ReactElement.jsx', () => {
     global.Symbol = undefined;
 
     ReactFeatureFlags = require('shared/ReactFeatureFlags');
-    ReactFeatureFlags.enableJSXTransformAPI = true;
     ReactFeatureFlags.warnAboutSpreadingKeyToJSX = true;
 
     React = require('react');
@@ -42,6 +41,11 @@ describe('ReactElement.jsx', () => {
   afterEach(() => {
     global.Symbol = originalSymbol;
   });
+
+  if (!__EXPERIMENTAL__) {
+    it("empty test so Jest doesn't complain", () => {});
+    return;
+  }
 
   it('allows static methods to be called using the type property', () => {
     class StaticMethodComponentClass extends React.Component {
@@ -69,7 +73,7 @@ describe('ReactElement.jsx', () => {
     expect(React.isValidElement(true)).toEqual(false);
     expect(React.isValidElement({})).toEqual(false);
     expect(React.isValidElement('string')).toEqual(false);
-    if (!ReactFeatureFlags.disableCreateFactory) {
+    if (!__EXPERIMENTAL__) {
       let factory;
       expect(() => {
         factory = React.createFactory('div');
@@ -292,9 +296,6 @@ describe('ReactElement.jsx', () => {
 
     jest.resetModules();
 
-    ReactFeatureFlags = require('shared/ReactFeatureFlags');
-    ReactFeatureFlags.enableJSXTransformAPI = true;
-
     React = require('react');
 
     class Component extends React.Component {
@@ -310,7 +311,7 @@ describe('ReactElement.jsx', () => {
     expect(React.isValidElement(true)).toEqual(false);
     expect(React.isValidElement({})).toEqual(false);
     expect(React.isValidElement('string')).toEqual(false);
-    if (!ReactFeatureFlags.disableCreateFactory) {
+    if (!__EXPERIMENTAL__) {
       let factory;
       expect(() => {
         factory = React.createFactory('div');

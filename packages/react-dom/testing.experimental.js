@@ -7,4 +7,5 @@
  * @flow
  */
 
-export * from './src/client/ReactDOM';
+export * from './index.experimental.js';
+export {act} from 'react-reconciler/inline.dom';
