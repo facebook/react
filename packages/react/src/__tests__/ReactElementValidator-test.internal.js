@@ -399,7 +399,6 @@ describe('ReactElementValidator', () => {
         'returned a function. You may have forgotten to pass an argument to ' +
         'the type checker creator (arrayOf, instanceOf, objectOf, oneOf, ' +
         'oneOfType, and shape all require an argument).',
-      {withoutStack: true},
     );
   });
 
