@@ -78,7 +78,6 @@ import {
   setAttemptUserBlockingHydration,
   setAttemptContinuousHydration,
   setAttemptHydrationAtCurrentPriority,
-  queueExplicitHydrationTarget,
 } from '../events/ReactDOMEventReplaying';
 
 setAttemptSynchronousHydration(attemptSynchronousHydration);
@@ -173,12 +172,6 @@ if (exposeConcurrentModeAPIs) {
   ReactDOM.unstable_discreteUpdates = discreteUpdates;
   ReactDOM.unstable_flushDiscreteUpdates = flushDiscreteUpdates;
   ReactDOM.unstable_flushControlled = flushControlled;
-
-  ReactDOM.unstable_scheduleHydration = target => {
-    if (target) {
-      queueExplicitHydrationTarget(target);
-    }
-  };
 }
 
 if (!disableUnstableRenderSubtreeIntoContainer) {

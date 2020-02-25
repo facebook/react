@@ -37,7 +37,10 @@ import {
   markContainerAsRoot,
   unmarkContainerAsRoot,
 } from './ReactDOMComponentTree';
-import {eagerlyTrapReplayableEvents} from '../events/ReactDOMEventReplaying';
+import {
+  eagerlyTrapReplayableEvents,
+  queueExplicitHydrationTarget,
+} from '../events/ReactDOMEventReplaying';
 import {
   ELEMENT_NODE,
   COMMENT_NODE,
@@ -105,6 +108,14 @@ ReactDOMRoot.prototype.unmount = ReactDOMBlockingRoot.prototype.unmount = functi
   updateContainer(null, root, null, () => {
     unmarkContainerAsRoot(container);
   });
+};
+
+// This only applies to createRoot since Blocking Mode doesn't have a notion
+// of priorities.
+ReactDOMRoot.prototype.unstable_scheduleHydration = target => {
+  if (target) {
+    queueExplicitHydrationTarget(target);
+  }
 };
 
 function createRootImpl(
