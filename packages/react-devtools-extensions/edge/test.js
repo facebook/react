@@ -2,17 +2,28 @@
 
 'use strict';
 
-const edge = require('windows-edge');
-
+const open = require('open');
+const os = require('os');
+const osName = require('os-name');
 const START_URL = 'https://facebook.github.io/react/';
+const {resolve} = require('path');
 
-edge({uri: START_URL}, (err, ps) => {
-  if (err) throw err;
-  ps.on('error', console.error);
-  ps.on('exit', code => {
-    // Browser exited
-  });
-  setTimeout(() => {
-    ps.kill();
-  }, 2000);
-});
+const EXTENSION_PATH = resolve('./edge/build/unpacked');
+const extargs = `--load-extension=${EXTENSION_PATH}`;
+
+const osname = osName(os.platform());
+let appname;
+
+if (osname && osname.toLocaleLowerCase().startsWith('windows')) {
+  appname = 'msedge';
+} else if (osname && osname.toLocaleLowerCase().startsWith('mac')) {
+  appname = 'Microsoft Edge';
+} else if (osname && osname.toLocaleLowerCase().startsWith('linux')) {
+  //Coming soon
+}
+
+if (appname) {
+  (async () => {
+    await open(START_URL, {app: [appname, extargs]});
+  })();
+}
