@@ -126,6 +126,7 @@ const rootEventTypes = hasPointerEvents
       'click',
       'keyup',
       'scroll',
+      'blur',
     ]
   : [
       'click',
@@ -138,6 +139,7 @@ const rootEventTypes = hasPointerEvents
       'dragstart',
       'mouseup_active',
       'touchend',
+      'blur',
     ];
 
 function isFunction(obj): boolean {
@@ -881,6 +883,21 @@ const pressResponderImpl = {
       case 'touchcancel':
       case 'dragstart': {
         dispatchCancel(event, context, props, state);
+        break;
+      }
+      case 'blur': {
+        // If we encounter a blur event that moves focus to
+        // the window, then the relatedTarget will be null.
+        // In this case, we should cancel the active press.
+        // Alternatively, if the blur target matches the
+        // current pressed target, we should also cancel
+        // the active press.
+        if (
+          isPressed &&
+          (nativeEvent.relatedTarget === null || target === state.pressTarget)
+        ) {
+          dispatchCancel(event, context, props, state);
+        }
       }
     }
   },
