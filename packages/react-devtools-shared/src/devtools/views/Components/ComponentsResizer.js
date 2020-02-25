@@ -1,3 +1,12 @@
+/**
+ * Copyright (c) Facebook, Inc. and its affiliates.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ *
+ * @flow
+ */
+
 import type {ElementRef} from 'react';
 
 import * as React from 'react';
@@ -20,8 +29,8 @@ type Props = {|
 |};
 
 export default function ComponentsResizer({children}: Props) {
-  const wrapperElementRef = useRef(null);
-  const resizeElementRef = useRef(null);
+  const wrapperElementRef = useRef<HTMLDivElement>(null);
+  const resizeElementRef = useRef<HTMLElement>(null);
   const [state, dispatch] = createResizeReducer(
     wrapperElementRef,
     resizeElementRef,
@@ -168,7 +177,7 @@ function getOrientation(
 }
 
 function createResizeReducer(wrapperElementRef, resizeElementRef) {
-  const [state, dispatch] = useReducer(resizeReducer, null, initResizeState);
+  const [state, dispatch] = useReducer<ResizeState, ResizeAction>(resizeReducer, null, initResizeState);
   const {horizontalPercentage, verticalPercentage} = state;
   const orientationRef = useRef(null);
 
