@@ -78,10 +78,7 @@ export default function ComponentsResizer({children}: Props) {
           : 'ACTION_SET_VERTICAL_PERCENTAGE';
       const percentage = (currentMousePosition / resizedElementDimension) * 100;
 
-      resizeElement.style.setProperty(
-        `--${orientation}-resize-percentage`,
-        `${percentage}%`,
-      );
+      setResizeCSSVariable(resizeElementRef, orientation, percentage);
 
       dispatch({
         type: actionType,
@@ -176,10 +173,45 @@ function getOrientation(
   return null;
 }
 
+function setResizeCSSVariable(
+  resizeElementRef: ElementRef<HTMLElement>,
+  orientation: null | Orientation,
+  percentage: number,
+): void {
+  const resizeElement = resizeElementRef.current;
+
+  if (resizeElement !== null && orientation !== null) {
+    resizeElement.style.setProperty(
+      `--${orientation}-resize-percentage`,
+      `${percentage}%`,
+    );
+  }
+}
+
 function createResizeReducer(wrapperElementRef, resizeElementRef) {
-  const [state, dispatch] = useReducer<ResizeState, ResizeAction>(resizeReducer, null, initResizeState);
+  const [state, dispatch] = useReducer<ResizeState, ResizeAction>(
+    resizeReducer,
+    null,
+    initResizeState,
+  );
   const {horizontalPercentage, verticalPercentage} = state;
   const orientationRef = useRef(null);
+
+  // Initial set up for the resize percentage CSS variables.
+  useLayoutEffect(() => {
+    const orientationAndPercentage = {
+      horizontal: horizontalPercentage,
+      vertical: verticalPercentage,
+    };
+
+    Object.keys(orientationAndPercentage).forEach(orientation => {
+      setResizeCSSVariable(
+        resizeElementRef,
+        orientation,
+        orientationAndPercentage[orientation] * 100,
+      );
+    });
+  }, []);
 
   useLayoutEffect(() => {
     const orientation = getOrientation(wrapperElementRef);
@@ -191,12 +223,8 @@ function createResizeReducer(wrapperElementRef, resizeElementRef) {
         orientation === 'horizontal'
           ? horizontalPercentage
           : verticalPercentage;
-      const resizeElement = resizeElementRef.current;
 
-      resizeElement.style.setProperty(
-        `--${orientation}-resize-percentage`,
-        `${percentage * 100}%`,
-      );
+      setResizeCSSVariable(resizeElementRef, orientation, percentage * 100);
     }
   });
 
