@@ -237,14 +237,18 @@ function useMemo<T>(
   return value;
 }
 
-export function useMutableSource<Source, Snapshot>(
+function useMutableSource<Source, Snapshot>(
   source: MutableSource<Source>,
   getSnapshot: MutableSourceGetSnapshotFn<Source, Snapshot>,
   subscribe: MutableSourceSubscribeFn<Source, Snapshot>,
 ): Snapshot {
-  const hook = nextHook();
-  const value =
-    hook !== null ? hook.memoizedState.snapshot : getSnapshot(source._source);
+  // useMutableSource() composes multiple hooks internally.
+  // Advance the current hook index the same number of times
+  // so that subsequent hooks have the right memoized state.
+  nextHook(); // MutableSource
+  nextHook(); // State
+  nextHook(); // Effect
+  const value = getSnapshot(source._source);
   hookLog.push({primitive: 'MutableSource', stackError: new Error(), value});
   return value;
 }
