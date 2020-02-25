@@ -23,6 +23,8 @@ export {
   useDebugValue,
   useLayoutEffect,
   useMemo,
+  useMutableSource,
+  createMutableSource,
   useReducer,
   useRef,
   useState,

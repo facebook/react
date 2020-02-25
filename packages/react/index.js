@@ -55,6 +55,8 @@ export {
   useReducer,
   useRef,
   useState,
+  useMutableSource,
+  createMutableSource,
   Fragment,
   Profiler,
   StrictMode,
