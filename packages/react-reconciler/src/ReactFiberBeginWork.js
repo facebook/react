@@ -18,7 +18,7 @@ import type {
 } from './ReactFiberSuspenseComponent';
 import type {SuspenseContext} from './ReactFiberSuspenseContext';
 
-import checkPropTypes from 'prop-types/checkPropTypes';
+import checkPropTypes from 'shared/checkPropTypes';
 
 import {
   IndeterminateComponent,
@@ -75,7 +75,6 @@ import {refineResolvedLazyComponent} from 'shared/ReactLazyComponent';
 import {REACT_LAZY_TYPE, getIteratorFn} from 'shared/ReactSymbols';
 import {
   getCurrentFiberOwnerNameInDevOrNull,
-  getCurrentFiberStackInDev,
   setIsRendering,
 } from './ReactCurrentFiber';
 import {startWorkTimer, cancelWorkTimer} from './ReactDebugFiberPerf';
@@ -296,7 +295,6 @@ function updateForwardRef(
           nextProps, // Resolved props
           'prop',
           getComponentName(Component),
-          getCurrentFiberStackInDev,
         );
       }
     }
@@ -414,7 +412,6 @@ function updateMemoComponent(
           nextProps, // Resolved props
           'prop',
           getComponentName(type),
-          getCurrentFiberStackInDev,
         );
       }
     }
@@ -442,7 +439,6 @@ function updateMemoComponent(
         nextProps, // Resolved props
         'prop',
         getComponentName(type),
-        getCurrentFiberStackInDev,
       );
     }
   }
@@ -501,7 +497,6 @@ function updateSimpleMemoComponent(
           nextProps, // Resolved (SimpleMemoComponent has no defaultProps)
           'prop',
           getComponentName(outerMemoType),
-          getCurrentFiberStackInDev,
         );
       }
       // Inner propTypes will be validated in the function component path.
@@ -626,7 +621,6 @@ function updateFunctionComponent(
           nextProps, // Resolved props
           'prop',
           getComponentName(Component),
-          getCurrentFiberStackInDev,
         );
       }
     }
@@ -793,7 +787,6 @@ function updateClassComponent(
           nextProps, // Resolved props
           'prop',
           getComponentName(Component),
-          getCurrentFiberStackInDev,
         );
       }
     }
@@ -1198,7 +1191,6 @@ function mountLazyComponent(
               resolvedProps, // Resolved for outer only
               'prop',
               getComponentName(Component),
-              getCurrentFiberStackInDev,
             );
           }
         }
@@ -2622,13 +2614,7 @@ function updateContextProvider(
     const providerPropTypes = workInProgress.type.propTypes;
 
     if (providerPropTypes) {
-      checkPropTypes(
-        providerPropTypes,
-        newProps,
-        'prop',
-        'Context.Provider',
-        getCurrentFiberStackInDev,
-      );
+      checkPropTypes(providerPropTypes, newProps, 'prop', 'Context.Provider');
     }
   }
 
@@ -3208,7 +3194,6 @@ function beginWork(
               resolvedProps, // Resolved for outer only
               'prop',
               getComponentName(type),
-              getCurrentFiberStackInDev,
             );
           }
         }
