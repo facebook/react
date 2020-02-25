@@ -8,7 +8,7 @@ const osName = require('os-name');
 const START_URL = 'https://facebook.github.io/react/';
 const {resolve} = require('path');
 
-const EXTENSION_PATH = resolve('./chrome/build/unpacked');
+const EXTENSION_PATH = resolve('./edge/build/unpacked');
 const extargs = `--load-extension=${EXTENSION_PATH}`;
 
 const osname = osName(os.platform());
