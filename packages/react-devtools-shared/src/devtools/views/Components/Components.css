@@ -1,5 +1,5 @@
 .TreeWrapper {
-  flex: 0 0 65%;
+  flex: 0 0 var(--horizontal-resize-percentage);
   overflow: auto;
 }
 
@@ -24,7 +24,7 @@
 
 @media screen and (max-width: 600px) {
   .TreeWrapper {
-    flex: 0 0 50%;
+    flex: 0 0 var(--vertical-resize-percentage);
   }
 
   .SelectedElementWrapper {

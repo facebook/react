@@ -8,7 +8,7 @@
  */
 
 import * as React from 'react';
-import {Suspense, Fragment } from 'react';
+import {Suspense, Fragment} from 'react';
 import Tree from './Tree';
 import SelectedElement from './SelectedElement';
 import {InspectedElementContextController} from './InspectedElementContext';
@@ -30,10 +30,7 @@ function Components(_: {||}) {
           <ComponentsResizer>
             {({resizeElementRef, onResizeStart}) => (
               <Fragment>
-                <div
-                  ref={resizeElementRef}
-                  className={styles.TreeWrapper}
-                >
+                <div ref={resizeElementRef} className={styles.TreeWrapper}>
                   <Tree />
                 </div>
                 <div className={styles.ResizeBarWrapper}>

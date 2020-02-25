@@ -20,8 +20,8 @@ type Props = {|
 |};
 
 export default function ComponentsResizer({children}: Props) {
-  const wrapperElementRef = useRef<HTMLDivElement>(null);
-  const resizeElementRef = useRef<HTMLElement>(null);
+  const wrapperElementRef = useRef(null);
+  const resizeElementRef = useRef(null);
   const [state, dispatch] = createResizeReducer(
     wrapperElementRef,
     resizeElementRef,
@@ -67,10 +67,12 @@ export default function ComponentsResizer({children}: Props) {
         orientation === 'horizontal'
           ? 'ACTION_SET_HORIZONTAL_PERCENTAGE'
           : 'ACTION_SET_VERTICAL_PERCENTAGE';
+      const percentage = (currentMousePosition / resizedElementDimension) * 100;
 
-      resizeElement.style.flexBasis = `${(currentMousePosition /
-        resizedElementDimension) *
-      100}%`;
+      resizeElement.style.setProperty(
+        `--${orientation}-resize-percentage`,
+        `${percentage}%`,
+      );
 
       dispatch({
         type: actionType,
@@ -166,11 +168,7 @@ function getOrientation(
 }
 
 function createResizeReducer(wrapperElementRef, resizeElementRef) {
-  const [state, dispatch] = useReducer<ResizeState, ResizeAction>(
-    resizeReducer,
-    null,
-    initResizeState,
-  );
+  const [state, dispatch] = useReducer(resizeReducer, null, initResizeState);
   const {horizontalPercentage, verticalPercentage} = state;
   const orientationRef = useRef(null);
 
@@ -185,7 +183,11 @@ function createResizeReducer(wrapperElementRef, resizeElementRef) {
           ? horizontalPercentage
           : verticalPercentage;
       const resizeElement = resizeElementRef.current;
-      resizeElement.style.flexBasis = `${percentage * 100}%`;
+
+      resizeElement.style.setProperty(
+        `--${orientation}-resize-percentage`,
+        `${percentage * 100}%`,
+      );
     }
   });
 
