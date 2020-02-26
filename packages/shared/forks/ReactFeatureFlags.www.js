@@ -97,6 +97,8 @@ export const disableTextareaChildren = __EXPERIMENTAL__;
 
 export const disableMapsAsChildren = __EXPERIMENTAL__;
 
+export const disableModulePatternComponents = __EXPERIMENTAL__;
+
 export const warnUnstableRenderSubtreeIntoContainer = false;
 
 export const enableModernEventSystem = false;

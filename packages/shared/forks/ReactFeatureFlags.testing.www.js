@@ -40,6 +40,7 @@ export const enableTrustedTypesIntegration = false;
 export const enableNativeTargetAsInstance = false;
 export const disableTextareaChildren = __EXPERIMENTAL__;
 export const disableMapsAsChildren = __EXPERIMENTAL__;
+export const disableModulePatternComponents = false;
 export const warnUnstableRenderSubtreeIntoContainer = false;
 export const deferPassiveEffectCleanupDuringUnmount = false;
 export const runAllPassiveEffectDestroysBeforeCreates = false;
