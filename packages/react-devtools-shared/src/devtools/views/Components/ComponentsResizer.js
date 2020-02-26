@@ -7,8 +7,6 @@
  * @flow
  */
 
-import type {ElementRef} from 'react';
-
 import * as React from 'react';
 import {useEffect, useLayoutEffect, useReducer, useRef} from 'react';
 import {
@@ -20,86 +18,6 @@ import styles from './ComponentsResizer.css';
 const LOCAL_STORAGE_KEY = 'React::DevTools::createResizeReducer';
 const VERTICAL_MODE_MAX_WIDTH = 600;
 const MINIMUM_SIZE = 50;
-
-type Props = {|
-  children: ({
-    resizeElementRef: ElementRef<HTMLElement>,
-    onResizeStart: () => void,
-  }) => React$Node,
-|};
-
-export default function ComponentsResizer({children}: Props) {
-  const wrapperElementRef = useRef<HTMLDivElement>(null);
-  const resizeElementRef = useRef<HTMLElement>(null);
-  const [state, dispatch] = createResizeReducer(
-    wrapperElementRef,
-    resizeElementRef,
-  );
-
-  const {isResizing} = state;
-
-  const onResizeStart = () =>
-    dispatch({type: 'ACTION_SET_IS_RESIZING', payload: true});
-  const onResizeEnd = () =>
-    dispatch({type: 'ACTION_SET_IS_RESIZING', payload: false});
-
-  const onResize = event => {
-    const resizeElement = resizeElementRef.current;
-    const wrapperElement = wrapperElementRef.current;
-
-    if (!isResizing || wrapperElement === null || resizeElement === null) {
-      return;
-    }
-
-    event.preventDefault();
-
-    const orientation = getOrientation(wrapperElementRef);
-
-    const {height, width, left, top} = wrapperElement.getBoundingClientRect();
-
-    const currentMousePosition =
-      orientation === 'horizontal' ? event.clientX - left : event.clientY - top;
-
-    const boundaryMin = MINIMUM_SIZE;
-    const boundaryMax =
-      orientation === 'horizontal'
-        ? width - MINIMUM_SIZE
-        : height - MINIMUM_SIZE;
-
-    const isMousePositionInBounds =
-      currentMousePosition > boundaryMin && currentMousePosition < boundaryMax;
-
-    if (isMousePositionInBounds) {
-      const resizedElementDimension =
-        orientation === 'horizontal' ? width : height;
-      const actionType =
-        orientation === 'horizontal'
-          ? 'ACTION_SET_HORIZONTAL_PERCENTAGE'
-          : 'ACTION_SET_VERTICAL_PERCENTAGE';
-      const percentage = (currentMousePosition / resizedElementDimension) * 100;
-
-      setResizeCSSVariable(resizeElementRef, orientation, percentage);
-
-      dispatch({
-        type: actionType,
-        payload: currentMousePosition / resizedElementDimension,
-      });
-    }
-  };
-
-  return (
-    <div
-      ref={wrapperElementRef}
-      className={styles.ComponentsWrapper}
-      {...(isResizing && {
-        onMouseMove: onResize,
-        onMouseLeave: onResizeEnd,
-        onMouseUp: onResizeEnd,
-      })}>
-      {children({resizeElementRef, onResizeStart})}
-    </div>
-  );
-}
 
 type Orientation = 'horizontal' | 'vertical';
 
@@ -162,67 +80,34 @@ function resizeReducer(state: ResizeState, action: ResizeAction): ResizeState {
   }
 }
 
-function getOrientation(
-  wrapperElementRef: ElementRef<HTMLElement>,
-): null | Orientation {
-  const wrapperElement = wrapperElementRef.current;
-  if (wrapperElement != null) {
-    const {width} = wrapperElement.getBoundingClientRect();
-    return width > VERTICAL_MODE_MAX_WIDTH ? 'horizontal' : 'vertical';
-  }
-  return null;
-}
+type Props = {|
+  children: ({
+    resizeElementRef: React$Ref<HTMLElement>,
+    onResizeStart: () => void,
+  }) => React$Node,
+|};
 
-function setResizeCSSVariable(
-  resizeElementRef: ElementRef<HTMLElement>,
-  orientation: null | Orientation,
-  percentage: number,
-): void {
-  const resizeElement = resizeElementRef.current;
+export default function ComponentsResizer({children}: Props) {
+  const wrapperElementRef = useRef<HTMLElement>(null);
+  const resizeElementRef = useRef<HTMLElement>(null);
 
-  if (resizeElement !== null && orientation !== null) {
-    resizeElement.style.setProperty(
-      `--${orientation}-resize-percentage`,
-      `${percentage}%`,
-    );
-  }
-}
-
-function createResizeReducer(wrapperElementRef, resizeElementRef) {
   const [state, dispatch] = useReducer<ResizeState, ResizeAction>(
     resizeReducer,
     null,
     initResizeState,
   );
+
   const {horizontalPercentage, verticalPercentage} = state;
 
-  // Initial set up for the resize percentage CSS variables.
   useLayoutEffect(() => {
-    const orientationAndPercentage = {
-      horizontal: horizontalPercentage,
-      vertical: verticalPercentage,
-    };
+    const resizeElement = resizeElementRef.current;
 
-    Object.keys(orientationAndPercentage).forEach(orientation => {
-      setResizeCSSVariable(
-        resizeElementRef,
-        orientation,
-        orientationAndPercentage[orientation] * 100,
-      );
-    });
-  }, []);
-
-  useLayoutEffect(() => {
     setResizeCSSVariable(
-      resizeElementRef,
+      resizeElement,
       'horizontal',
       horizontalPercentage * 100,
     );
-    setResizeCSSVariable(
-      resizeElementRef,
-      'vertical',
-      verticalPercentage * 100,
-    );
+    setResizeCSSVariable(resizeElement, 'vertical', verticalPercentage * 100);
   }, []);
 
   useEffect(() => {
@@ -239,5 +124,90 @@ function createResizeReducer(wrapperElementRef, resizeElementRef) {
     return () => clearTimeout(timeoutID);
   }, [horizontalPercentage, verticalPercentage]);
 
-  return [state, dispatch];
+  const {isResizing} = state;
+
+  const onResizeStart = () =>
+    dispatch({type: 'ACTION_SET_IS_RESIZING', payload: true});
+  const onResizeEnd = () =>
+    dispatch({type: 'ACTION_SET_IS_RESIZING', payload: false});
+
+  const onResize = event => {
+    const resizeElement = resizeElementRef.current;
+    const wrapperElement = wrapperElementRef.current;
+
+    if (!isResizing || wrapperElement === null || resizeElement === null) {
+      return;
+    }
+
+    event.preventDefault();
+
+    const orientation = getOrientation(wrapperElement);
+
+    const {height, width, left, top} = wrapperElement.getBoundingClientRect();
+
+    const currentMousePosition =
+      orientation === 'horizontal' ? event.clientX - left : event.clientY - top;
+
+    const boundaryMin = MINIMUM_SIZE;
+    const boundaryMax =
+      orientation === 'horizontal'
+        ? width - MINIMUM_SIZE
+        : height - MINIMUM_SIZE;
+
+    const isMousePositionInBounds =
+      currentMousePosition > boundaryMin && currentMousePosition < boundaryMax;
+
+    if (isMousePositionInBounds) {
+      const resizedElementDimension =
+        orientation === 'horizontal' ? width : height;
+      const actionType =
+        orientation === 'horizontal'
+          ? 'ACTION_SET_HORIZONTAL_PERCENTAGE'
+          : 'ACTION_SET_VERTICAL_PERCENTAGE';
+      const percentage = (currentMousePosition / resizedElementDimension) * 100;
+
+      setResizeCSSVariable(resizeElement, orientation, percentage);
+
+      dispatch({
+        type: actionType,
+        payload: currentMousePosition / resizedElementDimension,
+      });
+    }
+  };
+
+  return (
+    <div
+      ref={wrapperElementRef}
+      className={styles.ComponentsWrapper}
+      {...(isResizing && {
+        onMouseMove: onResize,
+        onMouseLeave: onResizeEnd,
+        onMouseUp: onResizeEnd,
+      })}>
+      {children({resizeElementRef, onResizeStart})}
+    </div>
+  );
+}
+
+function getOrientation(
+  wrapperElement: null | HTMLElement,
+): null | Orientation {
+  if (wrapperElement != null) {
+    const {width} = wrapperElement.getBoundingClientRect();
+    return width > VERTICAL_MODE_MAX_WIDTH ? 'horizontal' : 'vertical';
+  }
+  return null;
+}
+
+function setResizeCSSVariable(
+  resizeElement: null | HTMLElement,
+  orientation: null | Orientation,
+  percentage: number,
+): void {
+  if (resizeElement !== null && orientation !== null) {
+    resizeElement.style.setProperty(
+      `--${orientation}-resize-percentage`,
+      `${percentage}%`,
+    );
+  }
 }
