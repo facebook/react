@@ -214,19 +214,17 @@ function createResizeReducer(wrapperElementRef, resizeElementRef) {
   }, []);
 
   useLayoutEffect(() => {
-    const orientation = getOrientation(wrapperElementRef);
-
-    if (orientation !== orientationRef.current) {
-      orientationRef.current = orientation;
-
-      const percentage =
-        orientation === 'horizontal'
-          ? horizontalPercentage
-          : verticalPercentage;
-
-      setResizeCSSVariable(resizeElementRef, orientation, percentage * 100);
-    }
-  });
+    setResizeCSSVariable(
+      resizeElementRef,
+      'horizontal',
+      horizontalPercentage * 100,
+    );
+    setResizeCSSVariable(
+      resizeElementRef,
+      'vertical',
+      verticalPercentage * 100,
+    );
+  }, []);
 
   useEffect(() => {
     const timeoutID = setTimeout(() => {
