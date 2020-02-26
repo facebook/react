@@ -366,6 +366,64 @@ describe('ReactHooksInspectionIntegration', () => {
     ]);
   });
 
+  if (__EXPERIMENTAL__) {
+    it('should support composite useTransition hook', () => {
+      function Foo(props) {
+        React.useTransition();
+        const memoizedValue = React.useMemo(() => 'hello', []);
+        return <div>{memoizedValue}</div>;
+      }
+      let renderer = ReactTestRenderer.create(<Foo />);
+      let childFiber = renderer.root.findByType(Foo)._currentFiber();
+      let tree = ReactDebugTools.inspectHooksOfFiber(childFiber);
+      expect(tree).toEqual([
+        {
+          id: 0,
+          isStateEditable: false,
+          name: 'Transition',
+          value: undefined,
+          subHooks: [],
+        },
+        {
+          id: 1,
+          isStateEditable: false,
+          name: 'Memo',
+          value: 'hello',
+          subHooks: [],
+        },
+      ]);
+    });
+
+    it('should support composite useDeferredValue hook', () => {
+      function Foo(props) {
+        React.useDeferredValue('abc', {
+          timeoutMs: 500,
+        });
+        const [state] = React.useState(() => 'hello', []);
+        return <div>{state}</div>;
+      }
+      let renderer = ReactTestRenderer.create(<Foo />);
+      let childFiber = renderer.root.findByType(Foo)._currentFiber();
+      let tree = ReactDebugTools.inspectHooksOfFiber(childFiber);
+      expect(tree).toEqual([
+        {
+          id: 0,
+          isStateEditable: false,
+          name: 'DeferredValue',
+          value: 'abc',
+          subHooks: [],
+        },
+        {
+          id: 1,
+          isStateEditable: true,
+          name: 'State',
+          value: 'hello',
+          subHooks: [],
+        },
+      ]);
+    });
+  }
+
   describe('useDebugValue', () => {
     it('should support inspectable values for multiple custom hooks', () => {
       function useLabeledValue(label) {

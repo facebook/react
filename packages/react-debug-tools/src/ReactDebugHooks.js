@@ -243,7 +243,11 @@ function useResponder(
 function useTransition(
   config: SuspenseConfig | null | void,
 ): [(() => void) => void, boolean] {
-  nextHook();
+  // useTransition() composes multiple hooks internally.
+  // Advance the current hook index the same number of times
+  // so that subsequent hooks have the right memoized state.
+  nextHook(); // State
+  nextHook(); // Callback
   hookLog.push({
     primitive: 'Transition',
     stackError: new Error(),
@@ -253,7 +257,11 @@ function useTransition(
 }
 
 function useDeferredValue<T>(value: T, config: TimeoutConfig | null | void): T {
-  nextHook();
+  // useDeferredValue() composes multiple hooks internally.
+  // Advance the current hook index the same number of times
+  // so that subsequent hooks have the right memoized state.
+  nextHook(); // State
+  nextHook(); // Effect
   hookLog.push({
     primitive: 'DeferredValue',
     stackError: new Error(),
