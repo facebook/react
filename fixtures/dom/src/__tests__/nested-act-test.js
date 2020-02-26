@@ -8,15 +8,11 @@
  */
 
 let React;
-let ReactDOM;
+let DOMAct;
 let TestRenderer;
+let TestAct;
 
 global.__DEV__ = process.env.NODE_ENV !== 'production';
-
-jest.mock('react-dom', () =>
-  require.requireActual('react-dom/cjs/react-dom-testing.development.js')
-);
-// we'll replace the above with react/testing and react-dom/testing right before the next minor
 
 expect.extend(require('../toWarnDev'));
 
@@ -24,8 +20,9 @@ describe('unmocked scheduler', () => {
   beforeEach(() => {
     jest.resetModules();
     React = require('react');
-    ReactDOM = require('react-dom');
+    DOMAct = require('react-dom/test-utils').act;
     TestRenderer = require('react-test-renderer');
+    TestAct = TestRenderer.act;
   });
 
   it('flushes work only outside the outermost act() corresponding to its own renderer', () => {
@@ -37,8 +34,8 @@ describe('unmocked scheduler', () => {
       return null;
     }
     // in legacy mode, this tests whether an act only flushes its own effects
-    TestRenderer.act(() => {
-      ReactDOM.act(() => {
+    TestAct(() => {
+      DOMAct(() => {
         TestRenderer.create(<Effecty />);
       });
       expect(log).toEqual([]);
@@ -47,8 +44,8 @@ describe('unmocked scheduler', () => {
 
     log = [];
     // for doublechecking, we flip it inside out, and assert on the outermost
-    ReactDOM.act(() => {
-      TestRenderer.act(() => {
+    DOMAct(() => {
+      TestAct(() => {
         TestRenderer.create(<Effecty />);
       });
       expect(log).toEqual(['called']);
@@ -64,8 +61,9 @@ describe('mocked scheduler', () => {
       require.requireActual('scheduler/unstable_mock')
     );
     React = require('react');
-    ReactDOM = require('react-dom');
+    DOMAct = require('react-dom/test-utils').act;
     TestRenderer = require('react-test-renderer');
+    TestAct = TestRenderer.act;
   });
 
   afterEach(() => {
@@ -81,8 +79,8 @@ describe('mocked scheduler', () => {
       return null;
     }
     // with a mocked scheduler, this tests whether it flushes all work only on the outermost act
-    TestRenderer.act(() => {
-      ReactDOM.act(() => {
+    TestAct(() => {
+      DOMAct(() => {
         TestRenderer.create(<Effecty />);
       });
       expect(log).toEqual([]);
@@ -91,8 +89,8 @@ describe('mocked scheduler', () => {
 
     log = [];
     // for doublechecking, we flip it inside out, and assert on the outermost
-    ReactDOM.act(() => {
-      TestRenderer.act(() => {
+    DOMAct(() => {
+      TestAct(() => {
         TestRenderer.create(<Effecty />);
       });
       expect(log).toEqual([]);
