@@ -29,12 +29,12 @@ const run = async ({cwd, packages, tags}) => {
     // Each container stores an "error-codes" artifact, unfortunately.
     // We want to use the one that also ran `yarn build` since it may have modifications.
     const {node_index} = artifacts.find(
-      entry => entry.path === 'home/circleci/project/node_modules.tgz'
+      entry => entry.path.endsWith('node_modules.tgz')
     );
     const {url} = artifacts.find(
       entry =>
         entry.node_index === node_index &&
-        entry.path === 'home/circleci/project/scripts/error-codes/codes.json'
+        entry.path.endsWith('codes.json')
     );
 
     // Download and stage changers

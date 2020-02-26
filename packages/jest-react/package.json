@@ -1,6 +1,6 @@
 {
   "name": "jest-react",
-  "version": "0.10.0",
+  "version": "0.11.0",
   "description": "Jest matchers and utilities for testing React components.",
   "main": "index.js",
   "repository": {
