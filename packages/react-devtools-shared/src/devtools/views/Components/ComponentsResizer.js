@@ -195,7 +195,6 @@ function createResizeReducer(wrapperElementRef, resizeElementRef) {
     initResizeState,
   );
   const {horizontalPercentage, verticalPercentage} = state;
-  const orientationRef = useRef(null);
 
   // Initial set up for the resize percentage CSS variables.
   useLayoutEffect(() => {
