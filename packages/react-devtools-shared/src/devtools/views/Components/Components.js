@@ -8,12 +8,13 @@
  */
 
 import * as React from 'react';
-import {Suspense} from 'react';
+import {Suspense, Fragment} from 'react';
 import Tree from './Tree';
 import SelectedElement from './SelectedElement';
 import {InspectedElementContextController} from './InspectedElementContext';
 import {NativeStyleContextController} from './NativeStyleEditor/context';
 import {OwnersListContextController} from './OwnersListContext';
+import ComponentsResizer from './ComponentsResizer';
 import portaledContent from '../portaledContent';
 import {ModalDialog} from '../ModalDialog';
 import SettingsModal from 'react-devtools-shared/src/devtools/views/Settings/SettingsModal';
@@ -22,25 +23,34 @@ import {SettingsModalContextController} from 'react-devtools-shared/src/devtools
 import styles from './Components.css';
 
 function Components(_: {||}) {
-  // TODO Flex wrappers below should be user resizable.
   return (
     <SettingsModalContextController>
       <OwnersListContextController>
         <InspectedElementContextController>
-          <div className={styles.Components}>
-            <div className={styles.TreeWrapper}>
-              <Tree />
-            </div>
-            <div className={styles.SelectedElementWrapper}>
-              <NativeStyleContextController>
-                <Suspense fallback={<Loading />}>
-                  <SelectedElement />
-                </Suspense>
-              </NativeStyleContextController>
-            </div>
-            <ModalDialog />
-            <SettingsModal />
-          </div>
+          <ComponentsResizer>
+            {({resizeElementRef, onResizeStart}) => (
+              <Fragment>
+                <div ref={resizeElementRef} className={styles.TreeWrapper}>
+                  <Tree />
+                </div>
+                <div className={styles.ResizeBarWrapper}>
+                  <div
+                    onMouseDown={onResizeStart}
+                    className={styles.ResizeBar}
+                  />
+                </div>
+                <div className={styles.SelectedElementWrapper}>
+                  <NativeStyleContextController>
+                    <Suspense fallback={<Loading />}>
+                      <SelectedElement />
+                    </Suspense>
+                  </NativeStyleContextController>
+                </div>
+                <ModalDialog />
+                <SettingsModal />
+              </Fragment>
+            )}
+          </ComponentsResizer>
         </InspectedElementContextController>
       </OwnersListContextController>
     </SettingsModalContextController>
