@@ -104,22 +104,6 @@ const bundles = [
     externals: ['react', 'react-dom'],
   },
 
-  /******* React DOM - Testing *******/
-  {
-    moduleType: RENDERER,
-    bundleTypes: [
-      UMD_DEV,
-      UMD_PROD,
-      UMD_PROFILING,
-      NODE_DEV,
-      NODE_PROD,
-      NODE_PROFILING,
-    ],
-    entry: 'react-dom/testing',
-    global: 'ReactDOM',
-    externals: ['react'],
-  },
-
   /******* React DOM - www - Testing *******/
   {
     moduleType: RENDERER,
