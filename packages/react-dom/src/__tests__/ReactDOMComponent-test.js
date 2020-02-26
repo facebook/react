@@ -1242,53 +1242,6 @@ describe('ReactDOMComponent', () => {
       );
     });
 
-    it('should emit a warning once for a named custom component using shady DOM', () => {
-      const defaultCreateElement = document.createElement.bind(document);
-
-      try {
-        document.createElement = element => {
-          const container = defaultCreateElement(element);
-          container.shadyRoot = {};
-          return container;
-        };
-        class ShadyComponent extends React.Component {
-          render() {
-            return <polymer-component />;
-          }
-        }
-        const node = document.createElement('div');
-        expect(() => ReactDOM.render(<ShadyComponent />, node)).toErrorDev(
-          'ShadyComponent is using shady DOM. Using shady DOM with React can ' +
-            'cause things to break subtly.',
-        );
-        mountComponent({is: 'custom-shady-div2'});
-      } finally {
-        document.createElement = defaultCreateElement;
-      }
-    });
-
-    it('should emit a warning once for an unnamed custom component using shady DOM', () => {
-      const defaultCreateElement = document.createElement.bind(document);
-
-      try {
-        document.createElement = element => {
-          const container = defaultCreateElement(element);
-          container.shadyRoot = {};
-          return container;
-        };
-
-        expect(() => mountComponent({is: 'custom-shady-div'})).toErrorDev(
-          'A component is using shady DOM. Using shady DOM with React can ' +
-            'cause things to break subtly.',
-        );
-
-        // No additional warnings are expected
-        mountComponent({is: 'custom-shady-div2'});
-      } finally {
-        document.createElement = defaultCreateElement;
-      }
-    });
-
     it('should treat menuitem as a void element but still create the closing tag', () => {
       // menuitem is not implemented in jsdom, so this triggers the unknown warning error
       const container = document.createElement('div');
