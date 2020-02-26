@@ -43,8 +43,6 @@ export const disableLegacyContext = __EXPERIMENTAL__;
 export const warnAboutStringRefs = false;
 export const warnAboutDefaultPropsOnFunctionComponents = false;
 
-export const enableTrainModelFix = true;
-
 export const enableSuspenseServerRenderer = true;
 export const enableSelectiveHydration = true;
 

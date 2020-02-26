@@ -41,7 +41,6 @@ export const warnAboutDefaultPropsOnFunctionComponents = false;
 export const warnAboutStringRefs = false;
 export const disableLegacyContext = false;
 export const disableSchedulerTimeoutBasedOnReactExpirationTime = false;
-export const enableTrainModelFix = true;
 export const enableTrustedTypesIntegration = false;
 export const disableTextareaChildren = false;
 export const disableMapsAsChildren = false;
