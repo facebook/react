@@ -8,7 +8,7 @@
 ### React DOM
 
 * Warn when changes in `style` may cause an unexpected collision ([@sophiebits](https://github.com/sophiebits) in [#14181](https://github.com/facebook/react/pull/14181), [#18002](https://github.com/facebook/react/pull/18002))
-* Warn when a function component is updated during another component's render phase ([@acdlite]((https://github.com/acdlite)) in [#17099](https://github.com/facebook/react/pull/17099))
+* Warn when a function component is updated during another component's render phase ([@acdlite](https://github.com/acdlite) in [#17099](https://github.com/facebook/react/pull/17099))
 * Deprecate `unstable_createPortal` ([@trueadm](https://github.com/trueadm) in [#17880](https://github.com/facebook/react/pull/17880))
 * Flush all passive effect (`useEffect`) destroy functions before calling subsequent create functions ([@bvaughn](https://github.com/bvaughn) in [#17925](https://github.com/facebook/react/pull/17925), [#17947](https://github.com/facebook/react/pull/17947))
 * Fix `onMouseEnter` being fired on disabled buttons ([@AlfredoGJ](https://github.com/AlfredoGJ) in [#17675](https://github.com/facebook/react/pull/17675))
