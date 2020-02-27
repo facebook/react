@@ -26,11 +26,10 @@ function renderToStaticNodeStream() {
   );
 }
 
-// Note: when changing this, also consider https://github.com/facebook/react/issues/11526
-export default {
+export {
   renderToString,
   renderToStaticMarkup,
   renderToNodeStream,
   renderToStaticNodeStream,
-  version: ReactVersion,
+  ReactVersion as version,
 };

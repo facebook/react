@@ -29,6 +29,4 @@ function renderToReadableStream(children: ReactNodeList): ReadableStream {
   });
 }
 
-export default {
-  renderToReadableStream,
-};
+export {renderToReadableStream};

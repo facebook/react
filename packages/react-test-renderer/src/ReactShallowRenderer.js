@@ -856,4 +856,8 @@ function getMaskedContext(contextTypes, unmaskedContext) {
   return context;
 }
 
+// This should probably be a default export and a named export.
+// However, this not how any of other APIs are designed so doesn't line up
+// with our build configs and makes it hard to properly support ES modules
+// and CommonJS.
 export default ReactShallowRenderer;

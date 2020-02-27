@@ -25,6 +25,4 @@ function pipeToNodeWritable(
   startWork(request);
 }
 
-export default {
-  pipeToNodeWritable,
-};
+export {pipeToNodeWritable};
