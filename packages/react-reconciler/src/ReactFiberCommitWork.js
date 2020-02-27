@@ -296,7 +296,8 @@ function commitBeforeMutationLifeCycles(
                     'This might either be because of a bug in React, or because ' +
                     'a component reassigns its own `this.props`. ' +
                     'Please file an issue.',
-                  getComponentName(finishedWork.type) || 'instance',
+                  // FIXME
+                  null || 'instance',
                 );
               }
               if (instance.state !== finishedWork.memoizedState) {
@@ -306,7 +307,8 @@ function commitBeforeMutationLifeCycles(
                     'This might either be because of a bug in React, or because ' +
                     'a component reassigns its own `this.state`. ' +
                     'Please file an issue.',
-                  getComponentName(finishedWork.type) || 'instance',
+                  // FIXME
+                  null || 'instance',
                 );
               }
             }
@@ -595,7 +597,8 @@ function commitLifeCycles(
                     'This might either be because of a bug in React, or because ' +
                     'a component reassigns its own `this.props`. ' +
                     'Please file an issue.',
-                  getComponentName(finishedWork.type) || 'instance',
+                  // FIXME
+                  null || 'instance',
                 );
               }
               if (instance.state !== finishedWork.memoizedState) {
@@ -605,7 +608,8 @@ function commitLifeCycles(
                     'This might either be because of a bug in React, or because ' +
                     'a component reassigns its own `this.state`. ' +
                     'Please file an issue.',
-                  getComponentName(finishedWork.type) || 'instance',
+                  // FIXME
+                  null || 'instance',
                 );
               }
             }
@@ -647,7 +651,8 @@ function commitLifeCycles(
                     'This might either be because of a bug in React, or because ' +
                     'a component reassigns its own `this.props`. ' +
                     'Please file an issue.',
-                  getComponentName(finishedWork.type) || 'instance',
+                  // FIXME
+                  null || 'instance',
                 );
               }
               if (instance.state !== finishedWork.memoizedState) {
@@ -657,7 +662,8 @@ function commitLifeCycles(
                     'This might either be because of a bug in React, or because ' +
                     'a component reassigns its own `this.state`. ' +
                     'Please file an issue.',
-                  getComponentName(finishedWork.type) || 'instance',
+                  // FIXME
+                  null || 'instance',
                 );
               }
             }
@@ -701,7 +707,8 @@ function commitLifeCycles(
                   'This might either be because of a bug in React, or because ' +
                   'a component reassigns its own `this.props`. ' +
                   'Please file an issue.',
-                getComponentName(finishedWork.type) || 'instance',
+                // FIXME
+                null || 'instance',
               );
             }
             if (instance.state !== finishedWork.memoizedState) {
@@ -711,7 +718,8 @@ function commitLifeCycles(
                   'This might either be because of a bug in React, or because ' +
                   'a component reassigns its own `this.state`. ' +
                   'Please file an issue.',
-                getComponentName(finishedWork.type) || 'instance',
+                // FIXME
+                null || 'instance',
               );
             }
           }
