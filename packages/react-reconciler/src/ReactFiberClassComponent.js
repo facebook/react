@@ -284,7 +284,8 @@ function checkShouldComponentUpdate(
         console.error(
           '%s.shouldComponentUpdate(): Returned undefined instead of a ' +
             'boolean value. Make sure to return true or false.',
-          getComponentName(ctor) || 'Component',
+          // FIXME
+          null || 'Component',
         );
       }
     }
