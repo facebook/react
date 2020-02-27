@@ -581,6 +581,74 @@ function loadModules({
         });
       });
 
+      // TODO (useMutableSource) Re-enable this test once workLoopSync can handle
+      // the thrown error without getting stuck in a cycle.
+      xit('should throw and restart render if source and snapshot are unavailable during a sync update', () => {
+        const source = createSource('one');
+        const mutableSource = createMutableSource(source);
+
+        act(() => {
+          ReactNoop.render(
+            <>
+              <Component
+                label="a"
+                getSnapshot={defaultGetSnapshot}
+                mutableSource={mutableSource}
+                subscribe={defaultSubscribe}
+              />
+              <Component
+                label="b"
+                getSnapshot={defaultGetSnapshot}
+                mutableSource={mutableSource}
+                subscribe={defaultSubscribe}
+              />
+            </>,
+            () => Scheduler.unstable_yieldValue('Sync effect'),
+          );
+          expect(Scheduler).toFlushAndYield(['a:one', 'b:one', 'Sync effect']);
+          ReactNoop.flushPassiveEffects();
+
+          // Changing values should schedule an update with React.
+          // Start working on this update but don't finish it.
+          Scheduler.unstable_runWithPriority(
+            Scheduler.unstable_LowPriority,
+            () => {
+              source.value = 'two';
+              expect(Scheduler).toFlushAndYieldThrough(['a:two']);
+            },
+          );
+
+          const newGetSnapshot = s => 'new:' + defaultGetSnapshot(s);
+
+          // Force a higher priority render with a new config.
+          // This should signal that the snapshot is not safe and trigger a full re-render.
+          ReactNoop.flushSync(() => {
+            ReactNoop.render(
+              <>
+                <Component
+                  label="a"
+                  getSnapshot={newGetSnapshot}
+                  mutableSource={mutableSource}
+                  subscribe={defaultSubscribe}
+                />
+                <Component
+                  label="b"
+                  getSnapshot={newGetSnapshot}
+                  mutableSource={mutableSource}
+                  subscribe={defaultSubscribe}
+                />
+              </>,
+              () => Scheduler.unstable_yieldValue('Sync effect'),
+            );
+          });
+          expect(Scheduler).toFlushAndYieldThrough([
+            'a:new:two',
+            'b:new:two',
+            'Sync effect',
+          ]);
+        });
+      });
+
       it('should only update components whose subscriptions fire', () => {
         const source = createComplexSource('one', 'one');
         const mutableSource = createMutableSource(source);
