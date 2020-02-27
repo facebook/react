@@ -572,7 +572,7 @@ function resolve(
             warnAboutDeprecatedLifecycles &&
             inst.componentWillMount.__suppressDeprecationWarning !== true
           ) {
-            const componentName = getComponentName(Component) || 'Unknown';
+            const componentName = null || 'Unknown';
 
             if (!didWarnAboutDeprecatedWillMount[componentName]) {
               console.warn(
@@ -654,7 +654,7 @@ function resolve(
           console.error(
             '%s uses the legacy childContextTypes API which is no longer supported. ' +
               'Use React.createContext() instead.',
-            getComponentName(Component) || 'Unknown',
+            null || 'Unknown',
           );
         }
       }
@@ -676,7 +676,7 @@ function resolve(
             console.error(
               '%s.getChildContext(): childContextTypes must be defined in order to ' +
                 'use getChildContext().',
-              getComponentName(Component) || 'Unknown',
+              null || 'Unknown',
             );
           }
         }
@@ -1312,7 +1312,7 @@ class ReactDOMServerRenderer {
             "it's defined in, or you might have mixed up default and " +
             'named imports.';
         }
-        const ownerName = owner ? getComponentName(owner) : null;
+        const ownerName = owner ? null : null;
         if (ownerName) {
           info += '\n\nCheck the render method of `' + ownerName + '`.';
         }
