@@ -253,6 +253,7 @@ export function finalizeInitialChildren(
   props: Props,
   rootContainerInstance: Container,
   hostContext: HostContext,
+  internalRootInstanceHandle: Object,
 ): boolean {
   return false;
 }
@@ -298,6 +299,7 @@ export function prepareUpdate(
   newProps: Props,
   rootContainerInstance: Container,
   hostContext: HostContext,
+  internalRootInstanceHandle: Object,
 ): null | Object {
   const viewConfig = instance.canonical.viewConfig;
   const updatePayload = diff(oldProps, newProps, viewConfig.validAttributes);

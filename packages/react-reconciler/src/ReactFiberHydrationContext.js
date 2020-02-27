@@ -16,6 +16,7 @@ import type {
   Container,
   HostContext,
 } from './ReactFiberHostConfig';
+import type {RootOrPortal} from './ReactFiberRoot';
 import type {SuspenseState} from './ReactFiberSuspenseComponent';
 
 import {
@@ -295,6 +296,7 @@ function prepareToHydrateHostInstance(
   fiber: Fiber,
   rootContainerInstance: Container,
   hostContext: HostContext,
+  rootOrPortal: RootOrPortal,
 ): boolean {
   if (!supportsHydration) {
     invariant(
@@ -312,6 +314,7 @@ function prepareToHydrateHostInstance(
     rootContainerInstance,
     hostContext,
     fiber,
+    rootOrPortal,
   );
   // TODO: Type this specific to this type of component.
   fiber.updateQueue = (updatePayload: any);

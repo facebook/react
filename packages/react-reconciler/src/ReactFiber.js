@@ -26,6 +26,7 @@ import type {UpdateQueue} from './ReactUpdateQueue';
 import type {ContextDependency} from './ReactFiberNewContext';
 import type {HookType} from './ReactFiberHooks';
 import type {SuspenseInstance} from './ReactFiberHostConfig';
+import type {FiberPortal} from './ReactFiberRoot';
 
 import invariant from 'shared/invariant';
 import {
@@ -902,11 +903,13 @@ export function createFiberFromPortal(
   const pendingProps = portal.children !== null ? portal.children : [];
   const fiber = createFiber(HostPortal, pendingProps, portal.key, mode);
   fiber.expirationTime = expirationTime;
-  fiber.stateNode = {
+  const portalContainer: FiberPortal = {
     containerInfo: portal.containerInfo,
+    current: fiber,
     pendingChildren: null, // Used by persistent updates
     implementation: portal.implementation,
   };
+  fiber.stateNode = portalContainer;
   return fiber;
 }
 

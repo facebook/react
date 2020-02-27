@@ -13,7 +13,7 @@ import type {
   ReactFundamentalComponentInstance,
   ReactScopeInstance,
 } from 'shared/ReactTypes';
-import type {FiberRoot} from './ReactFiberRoot';
+import type {FiberRoot, RootOrPortal} from './ReactFiberRoot';
 import type {
   Instance,
   Type,
@@ -83,7 +83,7 @@ import {
   shouldUpdateFundamentalComponent,
 } from './ReactFiberHostConfig';
 import {
-  getRootHostContainer,
+  getRootOrPortal,
   popHostContext,
   getHostContext,
   popHostContainer,
@@ -195,6 +195,7 @@ if (supportsMutation) {
     workInProgress: Fiber,
     type: Type,
     newProps: Props,
+    rootOrPortal: RootOrPortal,
     rootContainerInstance: Container,
   ) {
     // If we have an alternate, that means this is an update and we need to
@@ -222,6 +223,7 @@ if (supportsMutation) {
       newProps,
       rootContainerInstance,
       currentHostContext,
+      rootOrPortal,
     );
     // TODO: Type this specific to this type of component.
     workInProgress.updateQueue = (updatePayload: any);
@@ -456,6 +458,7 @@ if (supportsMutation) {
     workInProgress: Fiber,
     type: Type,
     newProps: Props,
+    rootOrPortal: RootOrPortal,
     rootContainerInstance: Container,
   ) {
     const currentInstance = current.stateNode;
@@ -480,6 +483,7 @@ if (supportsMutation) {
         newProps,
         rootContainerInstance,
         currentHostContext,
+        rootOrPortal,
       );
     }
     if (childrenUnchanged && updatePayload === null) {
@@ -505,6 +509,7 @@ if (supportsMutation) {
         newProps,
         rootContainerInstance,
         currentHostContext,
+        rootOrPortal,
       )
     ) {
       markUpdate(workInProgress);
@@ -528,7 +533,8 @@ if (supportsMutation) {
   ) {
     if (oldText !== newText) {
       // If the text content differs, we'll create a new text instance for it.
-      const rootContainerInstance = getRootHostContainer();
+      const rootOrPortal = getRootOrPortal();
+      const rootContainerInstance = rootOrPortal.containerInfo;
       const currentHostContext = getHostContext();
       workInProgress.stateNode = createTextInstance(
         newText,
@@ -553,6 +559,7 @@ if (supportsMutation) {
     workInProgress: Fiber,
     type: Type,
     newProps: Props,
+    rootOrPortal: RootOrPortal,
     rootContainerInstance: Container,
   ) {
     // Noop
@@ -682,7 +689,8 @@ function completeWork(
     }
     case HostComponent: {
       popHostContext(workInProgress);
-      const rootContainerInstance = getRootHostContainer();
+      const rootOrPortal = getRootOrPortal();
+      const rootContainerInstance = rootOrPortal.containerInfo;
       const type = workInProgress.type;
       if (current !== null && workInProgress.stateNode != null) {
         updateHostComponent(
@@ -690,6 +698,7 @@ function completeWork(
           workInProgress,
           type,
           newProps,
+          rootOrPortal,
           rootContainerInstance,
         );
 
@@ -729,6 +738,7 @@ function completeWork(
               workInProgress,
               rootContainerInstance,
               currentHostContext,
+              rootOrPortal,
             )
           ) {
             // If changes to the hydrated node need to be applied at the
@@ -780,6 +790,7 @@ function completeWork(
               newProps,
               rootContainerInstance,
               currentHostContext,
+              rootOrPortal,
             )
           ) {
             markUpdate(workInProgress);
@@ -809,7 +820,8 @@ function completeWork(
           );
           // This can happen when we abort work.
         }
-        const rootContainerInstance = getRootHostContainer();
+        const rootOrPortal = getRootOrPortal();
+        const rootContainerInstance = rootOrPortal.containerInfo;
         const currentHostContext = getHostContext();
         let wasHydrated = popHydrationState(workInProgress);
         if (wasHydrated) {
@@ -1259,7 +1271,8 @@ function completeWork(
           if (enableDeprecatedFlareAPI) {
             const listeners = newProps.DEPRECATED_flareListeners;
             if (listeners != null) {
-              const rootContainerInstance = getRootHostContainer();
+              const rootOrPortal = getRootOrPortal();
+              const rootContainerInstance = rootOrPortal.containerInfo;
               updateDeprecatedEventListeners(
                 listeners,
                 workInProgress,

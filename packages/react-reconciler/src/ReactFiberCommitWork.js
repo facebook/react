@@ -986,13 +986,16 @@ function commitContainer(finishedWork: Fiber) {
     }
     case HostRoot:
     case HostPortal: {
+      const portalContainer = finishedWork.stateNode;
       const portalOrRoot: {
         containerInfo: Container,
         pendingChildren: ChildSet,
         ...
-      } = finishedWork.stateNode;
+      } = portalContainer;
       const {containerInfo, pendingChildren} = portalOrRoot;
       replaceContainerChildren(containerInfo, pendingChildren);
+      // Update the fiber on the portal container
+      portalContainer.current = finishedWork;
       return;
     }
   }

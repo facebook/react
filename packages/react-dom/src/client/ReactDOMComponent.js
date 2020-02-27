@@ -505,6 +505,7 @@ export function setInitialProperties(
   tag: string,
   rawProps: Object,
   rootContainerElement: Element | Document,
+  internalRootInstanceHandle: Object,
 ): void {
   const isCustomComponentTag = isCustomComponent(tag, rawProps);
   if (__DEV__) {
@@ -637,6 +638,7 @@ export function diffProperties(
   lastRawProps: Object,
   nextRawProps: Object,
   rootContainerElement: Element | Document,
+  internalRootInstanceHandle: Object,
 ): null | Array<mixed> {
   if (__DEV__) {
     validatePropertiesInDevelopment(tag, nextRawProps);
@@ -898,6 +900,7 @@ export function diffHydratedProperties(
   rawProps: Object,
   parentNamespace: string,
   rootContainerElement: Element | Document,
+  internalRootInstanceHandle: Object,
 ): null | Array<mixed> {
   let isCustomComponentTag;
   let extraAttributeNames: Set<string>;

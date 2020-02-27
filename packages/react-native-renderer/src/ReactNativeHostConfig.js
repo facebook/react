@@ -149,6 +149,7 @@ export function finalizeInitialChildren(
   props: Props,
   rootContainerInstance: Container,
   hostContext: HostContext,
+  internalRootInstanceHandle: Object,
 ): boolean {
   // Don't send a no-op message over the bridge.
   if (parentInstance._children.length === 0) {
@@ -212,6 +213,7 @@ export function prepareUpdate(
   newProps: Props,
   rootContainerInstance: Container,
   hostContext: HostContext,
+  internalRootInstanceHandle: Object,
 ): null | Object {
   return UPDATE_SIGNAL;
 }

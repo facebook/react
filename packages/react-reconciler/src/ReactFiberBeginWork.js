@@ -117,7 +117,7 @@ import {
 } from './ReactFiberHostConfig';
 import type {SuspenseInstance} from './ReactFiberHostConfig';
 import {shouldSuspend} from './ReactFiberReconciler';
-import {pushHostContext, pushHostContainer} from './ReactFiberHostContext';
+import {pushHostContext, pushRootOrPortal} from './ReactFiberHostContext';
 import {
   suspenseStackCursor,
   pushSuspenseContext,
@@ -983,7 +983,7 @@ function pushHostRootContext(workInProgress) {
     // Should always be set
     pushTopLevelContextObject(workInProgress, root.context, false);
   }
-  pushHostContainer(workInProgress, root.containerInfo);
+  pushRootOrPortal(workInProgress, root);
 }
 
 function updateHostRoot(current, workInProgress, renderExpirationTime) {
@@ -2594,7 +2594,7 @@ function updatePortalComponent(
   workInProgress: Fiber,
   renderExpirationTime: ExpirationTime,
 ) {
-  pushHostContainer(workInProgress, workInProgress.stateNode.containerInfo);
+  pushRootOrPortal(workInProgress, workInProgress.stateNode);
   const nextChildren = workInProgress.pendingProps;
   if (current === null) {
     // Portals are special because we don't append the children during mount
@@ -2954,10 +2954,7 @@ function beginWork(
           break;
         }
         case HostPortal:
-          pushHostContainer(
-            workInProgress,
-            workInProgress.stateNode.containerInfo,
-          );
+          pushRootOrPortal(workInProgress, workInProgress.stateNode);
           break;
         case ContextProvider: {
           const newValue = workInProgress.memoizedProps.value;

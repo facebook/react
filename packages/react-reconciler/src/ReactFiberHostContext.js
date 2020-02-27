@@ -10,6 +10,7 @@
 import type {Fiber} from './ReactFiber';
 import type {StackCursor} from './ReactFiberStack';
 import type {Container, HostContext} from './ReactFiberHostConfig';
+import type {RootOrPortal} from './ReactFiberRoot';
 
 import invariant from 'shared/invariant';
 
@@ -25,9 +26,9 @@ let contextStackCursor: StackCursor<HostContext | NoContextT> = createCursor(
 let contextFiberStackCursor: StackCursor<Fiber | NoContextT> = createCursor(
   NO_CONTEXT,
 );
-let rootInstanceStackCursor: StackCursor<Container | NoContextT> = createCursor(
-  NO_CONTEXT,
-);
+let rootOrPortalStackCursor: StackCursor<
+  RootOrPortal | NoContextT,
+> = createCursor(NO_CONTEXT);
 
 function requiredContext<Value>(c: Value | NoContextT): Value {
   invariant(
@@ -38,15 +39,15 @@ function requiredContext<Value>(c: Value | NoContextT): Value {
   return (c: any);
 }
 
-function getRootHostContainer(): Container {
-  const rootInstance = requiredContext(rootInstanceStackCursor.current);
+function getRootOrPortal(): RootOrPortal {
+  const rootInstance = requiredContext(rootOrPortalStackCursor.current);
   return rootInstance;
 }
 
-function pushHostContainer(fiber: Fiber, nextRootInstance: Container) {
+function pushRootOrPortal(fiber: Fiber, nextRootOrPortalFiber: RootOrPortal) {
   // Push current root instance onto the stack;
   // This allows us to reset root when portals are popped.
-  push(rootInstanceStackCursor, nextRootInstance, fiber);
+  push(rootOrPortalStackCursor, nextRootOrPortalFiber, fiber);
   // Track the context and the Fiber that provided it.
   // This enables us to pop only Fibers that provide unique contexts.
   push(contextFiberStackCursor, fiber, fiber);
@@ -57,7 +58,8 @@ function pushHostContainer(fiber: Fiber, nextRootInstance: Container) {
   // whether getRootHostContext() throws somewhere in renderer code or not.
   // So we push an empty value first. This lets us safely unwind on errors.
   push(contextStackCursor, NO_CONTEXT, fiber);
-  const nextRootContext = getRootHostContext(nextRootInstance);
+  const hostContainer = nextRootOrPortalFiber.containerInfo;
+  const nextRootContext = getRootHostContext(hostContainer);
   // Now that we know this function doesn't throw, replace it.
   pop(contextStackCursor, fiber);
   push(contextStackCursor, nextRootContext, fiber);
@@ -66,7 +68,7 @@ function pushHostContainer(fiber: Fiber, nextRootInstance: Container) {
 function popHostContainer(fiber: Fiber) {
   pop(contextStackCursor, fiber);
   pop(contextFiberStackCursor, fiber);
-  pop(rootInstanceStackCursor, fiber);
+  pop(rootOrPortalStackCursor, fiber);
 }
 
 function getHostContext(): HostContext {
@@ -75,11 +77,12 @@ function getHostContext(): HostContext {
 }
 
 function pushHostContext(fiber: Fiber): void {
-  const rootInstance: Container = requiredContext(
-    rootInstanceStackCursor.current,
+  const rootOrPortal: RootOrPortal = requiredContext(
+    rootOrPortalStackCursor.current,
   );
+  const hostContainer: Container = rootOrPortal.containerInfo;
   const context: HostContext = requiredContext(contextStackCursor.current);
-  const nextContext = getChildHostContext(context, fiber.type, rootInstance);
+  const nextContext = getChildHostContext(context, fiber.type, hostContainer);
 
   // Don't push this Fiber's context unless it's unique.
   if (context === nextContext) {
@@ -105,9 +108,9 @@ function popHostContext(fiber: Fiber): void {
 
 export {
   getHostContext,
-  getRootHostContainer,
+  getRootOrPortal,
   popHostContainer,
   popHostContext,
-  pushHostContainer,
+  pushRootOrPortal,
   pushHostContext,
 };

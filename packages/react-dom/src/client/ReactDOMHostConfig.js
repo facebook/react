@@ -280,8 +280,15 @@ export function finalizeInitialChildren(
   props: Props,
   rootContainerInstance: Container,
   hostContext: HostContext,
+  internalRootInstanceHandle: Object,
 ): boolean {
-  setInitialProperties(domElement, type, props, rootContainerInstance);
+  setInitialProperties(
+    domElement,
+    type,
+    props,
+    rootContainerInstance,
+    internalRootInstanceHandle,
+  );
   return shouldAutoFocusHostComponent(type, props);
 }
 
@@ -292,6 +299,7 @@ export function prepareUpdate(
   newProps: Props,
   rootContainerInstance: Container,
   hostContext: HostContext,
+  internalRootInstanceHandle: Object,
 ): null | Array<mixed> {
   if (__DEV__) {
     const hostContextDev = ((hostContext: any): HostContextDev);
@@ -314,6 +322,7 @@ export function prepareUpdate(
     oldProps,
     newProps,
     rootContainerInstance,
+    internalRootInstanceHandle,
   );
 }
 
@@ -745,6 +754,7 @@ export function hydrateInstance(
   rootContainerInstance: Container,
   hostContext: HostContext,
   internalInstanceHandle: Object,
+  internalRootInstanceHandle: Object,
 ): null | Array<mixed> {
   precacheFiberNode(internalInstanceHandle, instance);
   // TODO: Possibly defer this until the commit phase where all the events
@@ -763,6 +773,7 @@ export function hydrateInstance(
     props,
     parentNamespace,
     rootContainerInstance,
+    internalRootInstanceHandle,
   );
 }
 

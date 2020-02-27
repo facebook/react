@@ -184,6 +184,7 @@ export function finalizeInitialChildren(
   props: Props,
   rootContainerInstance: Container,
   hostContext: Object,
+  internalRootInstanceHandle: Object,
 ): boolean {
   return false;
 }
@@ -195,6 +196,7 @@ export function prepareUpdate(
   newProps: Props,
   rootContainerInstance: Container,
   hostContext: Object,
+  internalRootInstanceHandle: Object,
 ): null | {...} {
   return UPDATE_SIGNAL;
 }

@@ -124,7 +124,7 @@ type QueuedReplayableEvent = {|
   topLevelType: DOMTopLevelEventType,
   eventSystemFlags: EventSystemFlags,
   nativeEvent: AnyNativeEvent,
-  container: Document | Element | Node,
+  rootInst: Object,
 |};
 
 let hasScheduledReplayAttempt = false;
@@ -255,7 +255,7 @@ function createQueuedReplayableEvent(
   blockedOn: null | Container | SuspenseInstance,
   topLevelType: DOMTopLevelEventType,
   eventSystemFlags: EventSystemFlags,
-  container: Document | Element | Node,
+  internalRootInstanceHandle: Object | null,
   nativeEvent: AnyNativeEvent,
 ): QueuedReplayableEvent {
   return {
@@ -263,7 +263,7 @@ function createQueuedReplayableEvent(
     topLevelType,
     eventSystemFlags: eventSystemFlags | IS_REPLAYED,
     nativeEvent,
-    container,
+    rootInst: internalRootInstanceHandle,
   };
 }
 
@@ -271,14 +271,14 @@ export function queueDiscreteEvent(
   blockedOn: null | Container | SuspenseInstance,
   topLevelType: DOMTopLevelEventType,
   eventSystemFlags: EventSystemFlags,
-  container: Document | Element | Node,
+  internalRootInstanceHandle: Object | null,
   nativeEvent: AnyNativeEvent,
 ): void {
   const queuedEvent = createQueuedReplayableEvent(
     blockedOn,
     topLevelType,
     eventSystemFlags,
-    container,
+    internalRootInstanceHandle,
     nativeEvent,
   );
   queuedDiscreteEvents.push(queuedEvent);
@@ -346,7 +346,7 @@ function accumulateOrCreateContinuousQueuedReplayableEvent(
   blockedOn: null | Container | SuspenseInstance,
   topLevelType: DOMTopLevelEventType,
   eventSystemFlags: EventSystemFlags,
-  container: Document | Element | Node,
+  internalRootInstanceHandle: Object | null,
   nativeEvent: AnyNativeEvent,
 ): QueuedReplayableEvent {
   if (
@@ -357,7 +357,7 @@ function accumulateOrCreateContinuousQueuedReplayableEvent(
       blockedOn,
       topLevelType,
       eventSystemFlags,
-      container,
+      internalRootInstanceHandle,
       nativeEvent,
     );
     if (blockedOn !== null) {
@@ -381,7 +381,7 @@ export function queueIfContinuousEvent(
   blockedOn: null | Container | SuspenseInstance,
   topLevelType: DOMTopLevelEventType,
   eventSystemFlags: EventSystemFlags,
-  container: Document | Element | Node,
+  internalRootInstanceHandle: Object | null,
   nativeEvent: AnyNativeEvent,
 ): boolean {
   // These set relatedTarget to null because the replayed event will be treated as if we
@@ -395,7 +395,7 @@ export function queueIfContinuousEvent(
         blockedOn,
         topLevelType,
         eventSystemFlags,
-        container,
+        internalRootInstanceHandle,
         focusEvent,
       );
       return true;
@@ -407,7 +407,7 @@ export function queueIfContinuousEvent(
         blockedOn,
         topLevelType,
         eventSystemFlags,
-        container,
+        internalRootInstanceHandle,
         dragEvent,
       );
       return true;
@@ -419,7 +419,7 @@ export function queueIfContinuousEvent(
         blockedOn,
         topLevelType,
         eventSystemFlags,
-        container,
+        internalRootInstanceHandle,
         mouseEvent,
       );
       return true;
@@ -434,7 +434,7 @@ export function queueIfContinuousEvent(
           blockedOn,
           topLevelType,
           eventSystemFlags,
-          container,
+          internalRootInstanceHandle,
           pointerEvent,
         ),
       );
@@ -450,7 +450,7 @@ export function queueIfContinuousEvent(
           blockedOn,
           topLevelType,
           eventSystemFlags,
-          container,
+          internalRootInstanceHandle,
           pointerEvent,
         ),
       );
@@ -527,7 +527,7 @@ function attemptReplayContinuousQueuedEvent(
   let nextBlockedOn = attemptToDispatchEvent(
     queuedEvent.topLevelType,
     queuedEvent.eventSystemFlags,
-    queuedEvent.container,
+    queuedEvent.rootInst,
     queuedEvent.nativeEvent,
   );
   if (nextBlockedOn !== null) {
@@ -570,7 +570,7 @@ function replayUnblockedEvents() {
     let nextBlockedOn = attemptToDispatchEvent(
       nextDiscreteEvent.topLevelType,
       nextDiscreteEvent.eventSystemFlags,
-      nextDiscreteEvent.container,
+      nextDiscreteEvent.rootInst,
       nextDiscreteEvent.nativeEvent,
     );
     if (nextBlockedOn !== null) {

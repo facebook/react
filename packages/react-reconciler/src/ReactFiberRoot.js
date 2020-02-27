@@ -15,6 +15,7 @@ import type {Thenable} from './ReactFiberWorkLoop';
 import type {Interaction} from 'scheduler/src/Tracing';
 import type {SuspenseHydrationCallbacks} from './ReactFiberSuspenseComponent';
 import type {ReactPriorityLevel} from './SchedulerWithReactIntegration';
+import type {Container, ChildSet} from './ReactFiberHostConfig';
 
 import {noTimeout} from './ReactFiberHostConfig';
 import {createHostRootFiber} from './ReactFiber';
@@ -102,6 +103,15 @@ export type FiberRoot = {
   ...SuspenseCallbackOnlyFiberRootProperties,
   ...
 };
+
+export type FiberPortal = {
+  containerInfo: Container,
+  current: Fiber,
+  implementation: any,
+  pendingChildren: null | ChildSet,
+};
+
+export type RootOrPortal = FiberRoot | FiberPortal;
 
 function FiberRootNode(containerInfo, tag, hydrate) {
   this.tag = tag;

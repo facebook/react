@@ -82,14 +82,14 @@ export function trapBubbledEvent(
   topLevelType: DOMTopLevelEventType,
   element: Document | Element | Node,
 ): void {
-  trapEventForPluginEventSystem(element, topLevelType, false);
+  trapEventForPluginEventSystem(element, topLevelType, false, null);
 }
 
 export function trapCapturedEvent(
   topLevelType: DOMTopLevelEventType,
   element: Document | Element | Node,
 ): void {
-  trapEventForPluginEventSystem(element, topLevelType, true);
+  trapEventForPluginEventSystem(element, topLevelType, true, null);
 }
 
 export function addResponderEventSystemEvent(
@@ -153,35 +153,28 @@ function trapEventForPluginEventSystem(
   container: Document | Element | Node,
   topLevelType: DOMTopLevelEventType,
   capture: boolean,
+  internalRootInstanceHandle: Object | null,
 ): void {
   let listener;
+  let listenerWrapper;
   switch (getEventPriorityForPluginSystem(topLevelType)) {
     case DiscreteEvent:
-      listener = dispatchDiscreteEvent.bind(
-        null,
-        topLevelType,
-        PLUGIN_EVENT_SYSTEM,
-        container,
-      );
+      listenerWrapper = dispatchDiscreteEvent;
       break;
     case UserBlockingEvent:
-      listener = dispatchUserBlockingUpdate.bind(
-        null,
-        topLevelType,
-        PLUGIN_EVENT_SYSTEM,
-        container,
-      );
+      listenerWrapper = dispatchUserBlockingUpdate;
       break;
     case ContinuousEvent:
     default:
-      listener = dispatchEvent.bind(
-        null,
-        topLevelType,
-        PLUGIN_EVENT_SYSTEM,
-        container,
-      );
+      listenerWrapper = dispatchEvent;
       break;
   }
+  listener = listenerWrapper.bind(
+    null,
+    topLevelType,
+    PLUGIN_EVENT_SYSTEM,
+    internalRootInstanceHandle,
+  );
 
   const rawEventName = getRawEventName(topLevelType);
   if (capture) {
@@ -194,7 +187,7 @@ function trapEventForPluginEventSystem(
 function dispatchDiscreteEvent(
   topLevelType,
   eventSystemFlags,
-  container,
+  internalRootInstanceHandle,
   nativeEvent,
 ) {
   flushDiscreteUpdatesIfNeeded(nativeEvent.timeStamp);
@@ -202,7 +195,7 @@ function dispatchDiscreteEvent(
     dispatchEvent,
     topLevelType,
     eventSystemFlags,
-    container,
+    internalRootInstanceHandle,
     nativeEvent,
   );
 }
@@ -210,7 +203,7 @@ function dispatchDiscreteEvent(
 function dispatchUserBlockingUpdate(
   topLevelType,
   eventSystemFlags,
-  container,
+  internalRootInstanceHandle,
   nativeEvent,
 ) {
   runWithPriority(
@@ -219,7 +212,7 @@ function dispatchUserBlockingUpdate(
       null,
       topLevelType,
       eventSystemFlags,
-      container,
+      internalRootInstanceHandle,
       nativeEvent,
     ),
   );
@@ -228,7 +221,7 @@ function dispatchUserBlockingUpdate(
 export function dispatchEvent(
   topLevelType: DOMTopLevelEventType,
   eventSystemFlags: EventSystemFlags,
-  container: Document | Element | Node,
+  internalRootInstanceHandle: Object,
   nativeEvent: AnyNativeEvent,
 ): void {
   if (!_enabled) {
@@ -242,7 +235,7 @@ export function dispatchEvent(
       null, // Flags that we're not actually blocked on anything as far as we know.
       topLevelType,
       eventSystemFlags,
-      container,
+      internalRootInstanceHandle,
       nativeEvent,
     );
     return;
@@ -251,7 +244,7 @@ export function dispatchEvent(
   const blockedOn = attemptToDispatchEvent(
     topLevelType,
     eventSystemFlags,
-    container,
+    internalRootInstanceHandle,
     nativeEvent,
   );
 
@@ -267,7 +260,7 @@ export function dispatchEvent(
       blockedOn,
       topLevelType,
       eventSystemFlags,
-      container,
+      internalRootInstanceHandle,
       nativeEvent,
     );
     return;
@@ -278,7 +271,7 @@ export function dispatchEvent(
       blockedOn,
       topLevelType,
       eventSystemFlags,
-      container,
+      internalRootInstanceHandle,
       nativeEvent,
     )
   ) {
@@ -324,7 +317,7 @@ export function dispatchEvent(
 export function attemptToDispatchEvent(
   topLevelType: DOMTopLevelEventType,
   eventSystemFlags: EventSystemFlags,
-  container: Document | Element | Node,
+  internalRootInstanceHandle: Object | null,
   nativeEvent: AnyNativeEvent,
 ): null | Container | SuspenseInstance {
   // TODO: Warn if _enabled is false.
