@@ -35,7 +35,6 @@ export const warnAboutDefaultPropsOnFunctionComponents = false;
 export const warnAboutStringRefs = false;
 export const disableLegacyContext = __EXPERIMENTAL__;
 export const disableSchedulerTimeoutBasedOnReactExpirationTime = false;
-export const enableTrainModelFix = true;
 export const enableTrustedTypesIntegration = false;
 export const enableNativeTargetAsInstance = false;
 export const disableTextareaChildren = __EXPERIMENTAL__;
