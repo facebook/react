@@ -295,7 +295,7 @@ const bundles = [
       }),
   },
   {
-    bundleTypes: [FB_WWW_DEV, NODE_DEV, NODE_PROD, UMD_DEV, UMD_PROD],
+    bundleTypes: [NODE_DEV, NODE_PROD, UMD_DEV, UMD_PROD],
     moduleType: NON_FIBER_RENDERER,
     entry: 'react-test-renderer/shallow',
     global: 'ReactShallowRenderer',
