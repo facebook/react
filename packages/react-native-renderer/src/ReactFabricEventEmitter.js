@@ -86,8 +86,11 @@ export function dispatchEvent(
 
   let eventTarget = null;
   if (enableNativeTargetAsInstance) {
-    if (targetFiber?.stateNode != null) {
-      eventTarget = targetFiber.stateNode.canonical;
+    if (targetFiber != null) {
+      const stateNode = targetFiber.stateNode;
+      if (stateNode != null) {
+        eventTarget = stateNode.canonical;
+      }
     }
   } else {
     eventTarget = nativeEvent.target;
