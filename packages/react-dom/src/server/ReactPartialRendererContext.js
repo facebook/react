@@ -121,7 +121,8 @@ export function processContext(
           console.error(
             '%s uses the legacy contextTypes API which is no longer supported. ' +
               'Use React.createContext() with static contextType instead.',
-            getComponentName(type) || 'Unknown',
+            // FIXME
+            null || 'Unknown',
           );
         }
       }
@@ -142,7 +143,8 @@ export function processContext(
           console.error(
             '%s uses the legacy contextTypes API which is no longer supported. ' +
               'Use React.createContext() with React.useContext() instead.',
-            getComponentName(type) || 'Unknown',
+            // FIXME
+            null || 'Unknown',
           );
         }
       }

@@ -13,7 +13,8 @@ import type {BlockComponent} from 'react/src/block';
 import type {Fiber} from './ReactFiber';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
 
-import getComponentName from 'shared/getComponentName';
+// FIXME
+//import getComponentName from 'shared/getComponentName';
 import {Placement, Deletion} from 'shared/ReactSideEffectTags';
 import {
   getIteratorFn,
@@ -129,7 +130,8 @@ function coerceRef(
           element._owner.stateNode !== element._self
         )
       ) {
-        const componentName = getComponentName(returnFiber.type) || 'Component';
+        // FIXME
+        const componentName = null || 'Component';
         if (!didWarnAboutStringRefs[componentName]) {
           if (warnAboutStringRefs) {
             console.error(

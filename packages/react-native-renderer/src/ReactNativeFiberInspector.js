@@ -13,7 +13,8 @@ import {
   findCurrentHostFiber,
   findCurrentFiberUsingSlowPath,
 } from 'react-reconciler/src/ReactFiberTreeReflection';
-import getComponentName from 'shared/getComponentName';
+// FIXME
+// import getComponentName from 'shared/getComponentName';
 import {HostComponent} from 'shared/ReactWorkTags';
 import invariant from 'shared/invariant';
 // Module provided by RN:
@@ -79,7 +80,7 @@ if (__DEV__) {
 
   const createHierarchy = function(fiberHierarchy) {
     return fiberHierarchy.map(fiber => ({
-      name: getComponentName(fiber.type),
+      name: null,
       getInspectorData: findNodeHandle => ({
         measure: callback =>
           UIManager.measure(getHostNode(fiber, findNodeHandle), callback),
