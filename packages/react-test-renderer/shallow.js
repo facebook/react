@@ -7,4 +7,4 @@
  * @flow
  */
 
-export {default} from './src/ReactShallowRenderer';
+export {default} from 'react-shallow-renderer';
