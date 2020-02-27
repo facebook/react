@@ -105,6 +105,9 @@ export const deferPassiveEffectCleanupDuringUnmount = false;
 // a deprecated pattern we want to get rid of in the future
 export const warnAboutSpreadingKeyToJSX = false;
 
+// Internal-only attempt to debug a React Native issue. See D20130868.
+export const throwEarlyForMysteriousError = false;
+
 // --------------------------
 // Future APIs to be deprecated
 // --------------------------
