@@ -74,9 +74,9 @@ import ReactStrictModeWarnings from './ReactStrictModeWarnings';
 import {refineResolvedLazyComponent} from 'shared/ReactLazyComponent';
 import {REACT_LAZY_TYPE, getIteratorFn} from 'shared/ReactSymbols';
 import {
-  setCurrentPhase,
   getCurrentFiberOwnerNameInDevOrNull,
   getCurrentFiberStackInDev,
+  setIsRendering,
 } from './ReactCurrentFiber';
 import {startWorkTimer, cancelWorkTimer} from './ReactDebugFiberPerf';
 import {
@@ -193,7 +193,6 @@ let didWarnAboutContextTypeOnFunctionComponent;
 let didWarnAboutGetDerivedStateOnFunctionComponent;
 let didWarnAboutFunctionRefs;
 export let didWarnAboutReassigningProps;
-let didWarnAboutMaxDuration;
 let didWarnAboutRevealOrder;
 let didWarnAboutTailOptions;
 let didWarnAboutDefaultPropsOnFunctionComponent;
@@ -205,7 +204,6 @@ if (__DEV__) {
   didWarnAboutGetDerivedStateOnFunctionComponent = {};
   didWarnAboutFunctionRefs = {};
   didWarnAboutReassigningProps = false;
-  didWarnAboutMaxDuration = false;
   didWarnAboutRevealOrder = {};
   didWarnAboutTailOptions = {};
   didWarnAboutDefaultPropsOnFunctionComponent = {};
@@ -312,7 +310,7 @@ function updateForwardRef(
   prepareToReadContext(workInProgress, renderExpirationTime);
   if (__DEV__) {
     ReactCurrentOwner.current = workInProgress;
-    setCurrentPhase('render');
+    setIsRendering(true);
     nextChildren = renderWithHooks(
       current,
       workInProgress,
@@ -337,7 +335,7 @@ function updateForwardRef(
         );
       }
     }
-    setCurrentPhase(null);
+    setIsRendering(false);
   } else {
     nextChildren = renderWithHooks(
       current,
@@ -644,7 +642,7 @@ function updateFunctionComponent(
   prepareToReadContext(workInProgress, renderExpirationTime);
   if (__DEV__) {
     ReactCurrentOwner.current = workInProgress;
-    setCurrentPhase('render');
+    setIsRendering(true);
     nextChildren = renderWithHooks(
       current,
       workInProgress,
@@ -669,7 +667,7 @@ function updateFunctionComponent(
         );
       }
     }
-    setCurrentPhase(null);
+    setIsRendering(false);
   } else {
     nextChildren = renderWithHooks(
       current,
@@ -720,7 +718,7 @@ function updateBlock(
   prepareToReadContext(workInProgress, renderExpirationTime);
   if (__DEV__) {
     ReactCurrentOwner.current = workInProgress;
-    setCurrentPhase('render');
+    setIsRendering(true);
     nextChildren = renderWithHooks(
       current,
       workInProgress,
@@ -745,7 +743,7 @@ function updateBlock(
         );
       }
     }
-    setCurrentPhase(null);
+    setIsRendering(false);
   } else {
     nextChildren = renderWithHooks(
       current,
@@ -923,7 +921,7 @@ function finishClassComponent(
     }
   } else {
     if (__DEV__) {
-      setCurrentPhase('render');
+      setIsRendering(true);
       nextChildren = instance.render();
       if (
         debugRenderPhaseSideEffectsForStrictMode &&
@@ -931,7 +929,7 @@ function finishClassComponent(
       ) {
         instance.render();
       }
-      setCurrentPhase(null);
+      setIsRendering(false);
     } else {
       nextChildren = instance.render();
     }
@@ -1636,18 +1634,6 @@ function updateSuspenseComponent(
   suspenseContext = setDefaultShallowSuspenseContext(suspenseContext);
 
   pushSuspenseContext(workInProgress, suspenseContext);
-
-  if (__DEV__) {
-    if ('maxDuration' in nextProps) {
-      if (!didWarnAboutMaxDuration) {
-        didWarnAboutMaxDuration = true;
-        console.error(
-          'maxDuration has been removed from React. ' +
-            'Remove the maxDuration prop.',
-        );
-      }
-    }
-  }
 
   // This next part is a bit confusing. If the children timeout, we switch to
   // showing the fallback children in place of the "primary" children.
@@ -2732,9 +2718,9 @@ function updateContextConsumer(
   let newChildren;
   if (__DEV__) {
     ReactCurrentOwner.current = workInProgress;
-    setCurrentPhase('render');
+    setIsRendering(true);
     newChildren = render(newValue);
-    setCurrentPhase(null);
+    setIsRendering(false);
   } else {
     newChildren = render(newValue);
   }

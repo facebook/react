@@ -110,25 +110,6 @@ function loadModules({
         }
       }
 
-      it('warns if the deprecated maxDuration option is used', () => {
-        function Foo() {
-          return (
-            <Suspense maxDuration={100} fallback="Loading...">
-              <div />;
-            </Suspense>
-          );
-        }
-
-        ReactNoop.render(<Foo />);
-
-        expect(() => Scheduler.unstable_flushAll()).toErrorDev([
-          'Warning: maxDuration has been removed from React. ' +
-            'Remove the maxDuration prop.' +
-            '\n    in Suspense (at **)' +
-            '\n    in Foo (at **)',
-        ]);
-      });
-
       it('does not restart rendering for initial render', async () => {
         function Bar(props) {
           Scheduler.unstable_yieldValue('Bar');

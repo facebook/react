@@ -70,7 +70,7 @@ import {
 import {createUpdate, enqueueUpdate} from './ReactUpdateQueue';
 import {
   getStackByFiberInDevAndProd,
-  phase as ReactCurrentFiberPhase,
+  isRendering as ReactCurrentFiberIsRendering,
   current as ReactCurrentFiberCurrent,
 } from './ReactCurrentFiber';
 import {StrictMode} from './ReactTypeOfMode';
@@ -259,7 +259,7 @@ export function updateContainer(
 
   if (__DEV__) {
     if (
-      ReactCurrentFiberPhase === 'render' &&
+      ReactCurrentFiberIsRendering &&
       ReactCurrentFiberCurrent !== null &&
       !didWarnAboutNestedUpdates
     ) {
