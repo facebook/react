@@ -9,7 +9,7 @@
 
 import {convertStringToBuffer} from 'react-server/src/ReactServerHostConfig';
 
-import ReactDOMServer from 'react-dom/server';
+import {renderToStaticMarkup} from 'react-dom/server';
 
 export function formatChunkAsString(type: string, props: Object): string {
   let str = '<' + type + '>';
@@ -31,5 +31,5 @@ export function renderHostChildrenToString(
   // so we can't actually reference the renderer here. Instead, we
   // should replace this method with a reference to Fizz which
   // then uses this file to implement the server renderer.
-  return ReactDOMServer.renderToStaticMarkup(children);
+  return renderToStaticMarkup(children);
 }

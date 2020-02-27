@@ -159,243 +159,233 @@ function validateClassInstance(inst, methodName) {
  * utilities will suffice for testing purposes.
  * @lends ReactTestUtils
  */
-const ReactTestUtils = {
-  renderIntoDocument: function(element) {
-    const div = document.createElement('div');
-    // None of our tests actually require attaching the container to the
-    // DOM, and doing so creates a mess that we rely on test isolation to
-    // clean up, so we're going to stop honoring the name of this method
-    // (and probably rename it eventually) if no problems arise.
-    // document.documentElement.appendChild(div);
-    return ReactDOM.render(element, div);
-  },
+function renderIntoDocument(element) {
+  const div = document.createElement('div');
+  // None of our tests actually require attaching the container to the
+  // DOM, and doing so creates a mess that we rely on test isolation to
+  // clean up, so we're going to stop honoring the name of this method
+  // (and probably rename it eventually) if no problems arise.
+  // document.documentElement.appendChild(div);
+  return ReactDOM.render(element, div);
+}
 
-  isElement: function(element) {
-    return React.isValidElement(element);
-  },
+function isElement(element) {
+  return React.isValidElement(element);
+}
 
-  isElementOfType: function(inst, convenienceConstructor) {
-    return React.isValidElement(inst) && inst.type === convenienceConstructor;
-  },
+function isElementOfType(inst, convenienceConstructor) {
+  return React.isValidElement(inst) && inst.type === convenienceConstructor;
+}
 
-  isDOMComponent: function(inst) {
-    return !!(inst && inst.nodeType === ELEMENT_NODE && inst.tagName);
-  },
+function isDOMComponent(inst) {
+  return !!(inst && inst.nodeType === ELEMENT_NODE && inst.tagName);
+}
 
-  isDOMComponentElement: function(inst) {
-    return !!(inst && React.isValidElement(inst) && !!inst.tagName);
-  },
+function isDOMComponentElement(inst) {
+  return !!(inst && React.isValidElement(inst) && !!inst.tagName);
+}
 
-  isCompositeComponent: function(inst) {
-    if (ReactTestUtils.isDOMComponent(inst)) {
-      // Accessing inst.setState warns; just return false as that'll be what
-      // this returns when we have DOM nodes as refs directly
-      return false;
-    }
-    return (
-      inst != null &&
-      typeof inst.render === 'function' &&
-      typeof inst.setState === 'function'
-    );
-  },
+function isCompositeComponent(inst) {
+  if (isDOMComponent(inst)) {
+    // Accessing inst.setState warns; just return false as that'll be what
+    // this returns when we have DOM nodes as refs directly
+    return false;
+  }
+  return (
+    inst != null &&
+    typeof inst.render === 'function' &&
+    typeof inst.setState === 'function'
+  );
+}
 
-  isCompositeComponentWithType: function(inst, type) {
-    if (!ReactTestUtils.isCompositeComponent(inst)) {
-      return false;
-    }
-    const internalInstance = getInstance(inst);
-    const constructor = internalInstance.type;
-    return constructor === type;
-  },
+function isCompositeComponentWithType(inst, type) {
+  if (!isCompositeComponent(inst)) {
+    return false;
+  }
+  const internalInstance = getInstance(inst);
+  const constructor = internalInstance.type;
+  return constructor === type;
+}
 
-  findAllInRenderedTree: function(inst, test) {
-    validateClassInstance(inst, 'findAllInRenderedTree');
-    if (!inst) {
-      return [];
-    }
-    const internalInstance = getInstance(inst);
-    return findAllInRenderedFiberTreeInternal(internalInstance, test);
-  },
+function findAllInRenderedTree(inst, test) {
+  validateClassInstance(inst, 'findAllInRenderedTree');
+  if (!inst) {
+    return [];
+  }
+  const internalInstance = getInstance(inst);
+  return findAllInRenderedFiberTreeInternal(internalInstance, test);
+}
 
-  /**
-   * Finds all instance of components in the rendered tree that are DOM
-   * components with the class name matching `className`.
-   * @return {array} an array of all the matches.
-   */
-  scryRenderedDOMComponentsWithClass: function(root, classNames) {
-    validateClassInstance(root, 'scryRenderedDOMComponentsWithClass');
-    return ReactTestUtils.findAllInRenderedTree(root, function(inst) {
-      if (ReactTestUtils.isDOMComponent(inst)) {
-        let className = inst.className;
-        if (typeof className !== 'string') {
-          // SVG, probably.
-          className = inst.getAttribute('class') || '';
-        }
-        const classList = className.split(/\s+/);
-
-        if (!Array.isArray(classNames)) {
-          invariant(
-            classNames !== undefined,
-            'TestUtils.scryRenderedDOMComponentsWithClass expects a ' +
-              'className as a second argument.',
-          );
-          classNames = classNames.split(/\s+/);
-        }
-        return classNames.every(function(name) {
-          return classList.indexOf(name) !== -1;
-        });
+/**
+ * Finds all instance of components in the rendered tree that are DOM
+ * components with the class name matching `className`.
+ * @return {array} an array of all the matches.
+ */
+function scryRenderedDOMComponentsWithClass(root, classNames) {
+  validateClassInstance(root, 'scryRenderedDOMComponentsWithClass');
+  return findAllInRenderedTree(root, function(inst) {
+    if (isDOMComponent(inst)) {
+      let className = inst.className;
+      if (typeof className !== 'string') {
+        // SVG, probably.
+        className = inst.getAttribute('class') || '';
       }
-      return false;
-    });
-  },
+      const classList = className.split(/\s+/);
 
-  /**
-   * Like scryRenderedDOMComponentsWithClass but expects there to be one result,
-   * and returns that one result, or throws exception if there is any other
-   * number of matches besides one.
-   * @return {!ReactDOMComponent} The one match.
-   */
-  findRenderedDOMComponentWithClass: function(root, className) {
-    validateClassInstance(root, 'findRenderedDOMComponentWithClass');
-    const all = ReactTestUtils.scryRenderedDOMComponentsWithClass(
-      root,
-      className,
-    );
-    if (all.length !== 1) {
-      throw new Error(
-        'Did not find exactly one match (found: ' +
-          all.length +
-          ') ' +
-          'for class:' +
-          className,
-      );
-    }
-    return all[0];
-  },
-
-  /**
-   * Finds all instance of components in the rendered tree that are DOM
-   * components with the tag name matching `tagName`.
-   * @return {array} an array of all the matches.
-   */
-  scryRenderedDOMComponentsWithTag: function(root, tagName) {
-    validateClassInstance(root, 'scryRenderedDOMComponentsWithTag');
-    return ReactTestUtils.findAllInRenderedTree(root, function(inst) {
-      return (
-        ReactTestUtils.isDOMComponent(inst) &&
-        inst.tagName.toUpperCase() === tagName.toUpperCase()
-      );
-    });
-  },
-
-  /**
-   * Like scryRenderedDOMComponentsWithTag but expects there to be one result,
-   * and returns that one result, or throws exception if there is any other
-   * number of matches besides one.
-   * @return {!ReactDOMComponent} The one match.
-   */
-  findRenderedDOMComponentWithTag: function(root, tagName) {
-    validateClassInstance(root, 'findRenderedDOMComponentWithTag');
-    const all = ReactTestUtils.scryRenderedDOMComponentsWithTag(root, tagName);
-    if (all.length !== 1) {
-      throw new Error(
-        'Did not find exactly one match (found: ' +
-          all.length +
-          ') ' +
-          'for tag:' +
-          tagName,
-      );
-    }
-    return all[0];
-  },
-
-  /**
-   * Finds all instances of components with type equal to `componentType`.
-   * @return {array} an array of all the matches.
-   */
-  scryRenderedComponentsWithType: function(root, componentType) {
-    validateClassInstance(root, 'scryRenderedComponentsWithType');
-    return ReactTestUtils.findAllInRenderedTree(root, function(inst) {
-      return ReactTestUtils.isCompositeComponentWithType(inst, componentType);
-    });
-  },
-
-  /**
-   * Same as `scryRenderedComponentsWithType` but expects there to be one result
-   * and returns that one result, or throws exception if there is any other
-   * number of matches besides one.
-   * @return {!ReactComponent} The one match.
-   */
-  findRenderedComponentWithType: function(root, componentType) {
-    validateClassInstance(root, 'findRenderedComponentWithType');
-    const all = ReactTestUtils.scryRenderedComponentsWithType(
-      root,
-      componentType,
-    );
-    if (all.length !== 1) {
-      throw new Error(
-        'Did not find exactly one match (found: ' +
-          all.length +
-          ') ' +
-          'for componentType:' +
-          componentType,
-      );
-    }
-    return all[0];
-  },
-
-  /**
-   * Pass a mocked component module to this method to augment it with
-   * useful methods that allow it to be used as a dummy React component.
-   * Instead of rendering as usual, the component will become a simple
-   * <div> containing any provided children.
-   *
-   * @param {object} module the mock function object exported from a
-   *                        module that defines the component to be mocked
-   * @param {?string} mockTagName optional dummy root tag name to return
-   *                              from render method (overrides
-   *                              module.mockTagName if provided)
-   * @return {object} the ReactTestUtils object (for chaining)
-   */
-  mockComponent: function(module, mockTagName) {
-    if (__DEV__) {
-      if (!hasWarnedAboutDeprecatedMockComponent) {
-        hasWarnedAboutDeprecatedMockComponent = true;
-        console.warn(
-          'ReactTestUtils.mockComponent() is deprecated. ' +
-            'Use shallow rendering or jest.mock() instead.\n\n' +
-            'See https://fb.me/test-utils-mock-component for more information.',
+      if (!Array.isArray(classNames)) {
+        invariant(
+          classNames !== undefined,
+          'TestUtils.scryRenderedDOMComponentsWithClass expects a ' +
+            'className as a second argument.',
         );
+        classNames = classNames.split(/\s+/);
       }
+      return classNames.every(function(name) {
+        return classList.indexOf(name) !== -1;
+      });
     }
+    return false;
+  });
+}
 
-    mockTagName = mockTagName || module.mockTagName || 'div';
+/**
+ * Like scryRenderedDOMComponentsWithClass but expects there to be one result,
+ * and returns that one result, or throws exception if there is any other
+ * number of matches besides one.
+ * @return {!ReactDOMComponent} The one match.
+ */
+function findRenderedDOMComponentWithClass(root, className) {
+  validateClassInstance(root, 'findRenderedDOMComponentWithClass');
+  const all = scryRenderedDOMComponentsWithClass(root, className);
+  if (all.length !== 1) {
+    throw new Error(
+      'Did not find exactly one match (found: ' +
+        all.length +
+        ') ' +
+        'for class:' +
+        className,
+    );
+  }
+  return all[0];
+}
 
-    module.prototype.render.mockImplementation(function() {
-      return React.createElement(mockTagName, null, this.props.children);
-    });
+/**
+ * Finds all instance of components in the rendered tree that are DOM
+ * components with the tag name matching `tagName`.
+ * @return {array} an array of all the matches.
+ */
+function scryRenderedDOMComponentsWithTag(root, tagName) {
+  validateClassInstance(root, 'scryRenderedDOMComponentsWithTag');
+  return findAllInRenderedTree(root, function(inst) {
+    return (
+      isDOMComponent(inst) &&
+      inst.tagName.toUpperCase() === tagName.toUpperCase()
+    );
+  });
+}
 
-    return this;
-  },
+/**
+ * Like scryRenderedDOMComponentsWithTag but expects there to be one result,
+ * and returns that one result, or throws exception if there is any other
+ * number of matches besides one.
+ * @return {!ReactDOMComponent} The one match.
+ */
+function findRenderedDOMComponentWithTag(root, tagName) {
+  validateClassInstance(root, 'findRenderedDOMComponentWithTag');
+  const all = scryRenderedDOMComponentsWithTag(root, tagName);
+  if (all.length !== 1) {
+    throw new Error(
+      'Did not find exactly one match (found: ' +
+        all.length +
+        ') ' +
+        'for tag:' +
+        tagName,
+    );
+  }
+  return all[0];
+}
 
-  nativeTouchData: function(x, y) {
-    return {
-      touches: [{pageX: x, pageY: y}],
-    };
-  },
+/**
+ * Finds all instances of components with type equal to `componentType`.
+ * @return {array} an array of all the matches.
+ */
+function scryRenderedComponentsWithType(root, componentType) {
+  validateClassInstance(root, 'scryRenderedComponentsWithType');
+  return findAllInRenderedTree(root, function(inst) {
+    return isCompositeComponentWithType(inst, componentType);
+  });
+}
 
-  Simulate: null,
-  SimulateNative: {},
+/**
+ * Same as `scryRenderedComponentsWithType` but expects there to be one result
+ * and returns that one result, or throws exception if there is any other
+ * number of matches besides one.
+ * @return {!ReactComponent} The one match.
+ */
+function findRenderedComponentWithType(root, componentType) {
+  validateClassInstance(root, 'findRenderedComponentWithType');
+  const all = scryRenderedComponentsWithType(root, componentType);
+  if (all.length !== 1) {
+    throw new Error(
+      'Did not find exactly one match (found: ' +
+        all.length +
+        ') ' +
+        'for componentType:' +
+        componentType,
+    );
+  }
+  return all[0];
+}
 
-  act,
-};
+/**
+ * Pass a mocked component module to this method to augment it with
+ * useful methods that allow it to be used as a dummy React component.
+ * Instead of rendering as usual, the component will become a simple
+ * <div> containing any provided children.
+ *
+ * @param {object} module the mock function object exported from a
+ *                        module that defines the component to be mocked
+ * @param {?string} mockTagName optional dummy root tag name to return
+ *                              from render method (overrides
+ *                              module.mockTagName if provided)
+ * @return {object} the ReactTestUtils object (for chaining)
+ */
+function mockComponent(module, mockTagName) {
+  if (__DEV__) {
+    if (!hasWarnedAboutDeprecatedMockComponent) {
+      hasWarnedAboutDeprecatedMockComponent = true;
+      console.warn(
+        'ReactTestUtils.mockComponent() is deprecated. ' +
+          'Use shallow rendering or jest.mock() instead.\n\n' +
+          'See https://fb.me/test-utils-mock-component for more information.',
+      );
+    }
+  }
+
+  mockTagName = mockTagName || module.mockTagName || 'div';
+
+  module.prototype.render.mockImplementation(function() {
+    return React.createElement(mockTagName, null, this.props.children);
+  });
+
+  return this;
+}
+
+function nativeTouchData(x, y) {
+  return {
+    touches: [{pageX: x, pageY: y}],
+  };
+}
+
+const Simulate = {};
+const SimulateNative = {};
 
 /**
  * Exports:
  *
- * - `ReactTestUtils.Simulate.click(Element)`
- * - `ReactTestUtils.Simulate.mouseMove(Element)`
- * - `ReactTestUtils.Simulate.change(Element)`
+ * - `Simulate.click(Element)`
+ * - `Simulate.mouseMove(Element)`
+ * - `Simulate.change(Element)`
  * - ... (All keys from event plugin `eventTypes` objects)
  */
 function makeSimulator(eventType) {
@@ -407,7 +397,7 @@ function makeSimulator(eventType) {
         'Note that TestUtils.Simulate will not work if you are using shallow rendering.',
     );
     invariant(
-      !ReactTestUtils.isCompositeComponent(domNode),
+      !isCompositeComponent(domNode),
       'TestUtils.Simulate expected a DOM node as the first argument but received ' +
         'a component instance. Pass the DOM node you wish to simulate the event on instead.',
     );
@@ -450,15 +440,13 @@ function makeSimulator(eventType) {
 }
 
 function buildSimulators() {
-  ReactTestUtils.Simulate = {};
-
   let eventType;
   for (eventType in eventNameDispatchConfigs) {
     /**
      * @param {!Element|ReactDOMComponent} domComponentOrNode
      * @param {?object} eventData Fake event data to use in SyntheticEvent.
      */
-    ReactTestUtils.Simulate[eventType] = makeSimulator(eventType);
+    Simulate[eventType] = makeSimulator(eventType);
   }
 }
 
@@ -467,16 +455,16 @@ buildSimulators();
 /**
  * Exports:
  *
- * - `ReactTestUtils.SimulateNative.click(Element/ReactDOMComponent)`
- * - `ReactTestUtils.SimulateNative.mouseMove(Element/ReactDOMComponent)`
- * - `ReactTestUtils.SimulateNative.mouseIn/ReactDOMComponent)`
- * - `ReactTestUtils.SimulateNative.mouseOut(Element/ReactDOMComponent)`
+ * - `SimulateNative.click(Element/ReactDOMComponent)`
+ * - `SimulateNative.mouseMove(Element/ReactDOMComponent)`
+ * - `SimulateNative.mouseIn/ReactDOMComponent)`
+ * - `SimulateNative.mouseOut(Element/ReactDOMComponent)`
  * - ... (All keys from `BrowserEventConstants.topLevelTypes`)
  *
  * Note: Top level event types are a subset of the entire set of handler types
  * (which include a broader set of "synthetic" events). For example, onDragDone
  * is a synthetic event. Except when testing an event plugin or React's event
- * handling code specifically, you probably want to use ReactTestUtils.Simulate
+ * handling code specifically, you probably want to use Simulate
  * to dispatch synthetic events.
  */
 
@@ -484,7 +472,7 @@ function makeNativeSimulator(eventType, topLevelType) {
   return function(domComponentOrNode, nativeEventData) {
     const fakeNativeEvent = new Event(eventType);
     Object.assign(fakeNativeEvent, nativeEventData);
-    if (ReactTestUtils.isDOMComponent(domComponentOrNode)) {
+    if (isDOMComponent(domComponentOrNode)) {
       simulateNativeEventOnDOMComponent(
         topLevelType,
         domComponentOrNode,
@@ -576,10 +564,27 @@ function makeNativeSimulator(eventType, topLevelType) {
    * @param {!Element|ReactDOMComponent} domComponentOrNode
    * @param {?Event} nativeEventData Fake native event to use in SyntheticEvent.
    */
-  ReactTestUtils.SimulateNative[eventType] = makeNativeSimulator(
-    eventType,
-    topLevelType,
-  );
+  SimulateNative[eventType] = makeNativeSimulator(eventType, topLevelType);
 });
 
-export default ReactTestUtils;
+export {
+  renderIntoDocument,
+  isElement,
+  isElementOfType,
+  isDOMComponent,
+  isDOMComponentElement,
+  isCompositeComponent,
+  isCompositeComponentWithType,
+  findAllInRenderedTree,
+  scryRenderedDOMComponentsWithClass,
+  findRenderedDOMComponentWithClass,
+  scryRenderedDOMComponentsWithTag,
+  findRenderedDOMComponentWithTag,
+  scryRenderedComponentsWithType,
+  findRenderedComponentWithType,
+  mockComponent,
+  nativeTouchData,
+  Simulate,
+  SimulateNative,
+  act,
+};
