@@ -11,9 +11,9 @@ aliases:
     restore_cache:
       name: Restore node_modules cache
       keys:
-        - v1-node-{{ arch }}-{{ .Branch }}-{{ checksum "yarn.lock" }}
-        - v1-node-{{ arch }}-{{ .Branch }}-
-        - v1-node-{{ arch }}-
+        - v2-node-{{ arch }}-{{ .Branch }}-{{ checksum "yarn.lock" }}
+        - v2-node-{{ arch }}-{{ .Branch }}-
+        - v2-node-{{ arch }}-
   - &run_yarn
     run:
       name: Install Packages
@@ -62,7 +62,7 @@ jobs:
       - *run_yarn
       - save_cache:
           name: Save node_modules cache
-          key: v1-node-{{ arch }}-{{ .Branch }}-{{ checksum "yarn.lock" }}
+          key: v2-node-{{ arch }}-{{ .Branch }}-{{ checksum "yarn.lock" }}
           paths:
             - ~/.cache/yarn
 
