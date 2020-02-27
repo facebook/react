@@ -141,6 +141,18 @@ jobs:
             RELEASE_CHANNEL: stable
           command: yarn test-prod --maxWorkers=2
 
+  test_source_prod_experimental:
+    docker: *docker
+    environment: *environment
+    steps:
+      - checkout
+      - *restore_yarn_cache
+      - *run_yarn
+      - run:
+          environment:
+            RELEASE_CHANNEL: experimental
+          command: yarn test-prod --maxWorkers=2
+
   build:
     docker: *docker
     environment: *environment
@@ -398,6 +410,9 @@ workflows:
     jobs:
       - setup
       - test_source_experimental:
+          requires:
+            - setup
+      - test_source_prod_experimental:
           requires:
             - setup
       - build_experimental:
