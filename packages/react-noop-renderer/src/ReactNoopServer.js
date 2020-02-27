@@ -47,6 +47,4 @@ function render(children: React$Element<any>): Destination {
   return destination;
 }
 
-export default {
-  render,
-};
+export {render};

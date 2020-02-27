@@ -17,10 +17,4 @@
 // `react-server/flight.inline-typed` (which *is*) for the current renderer.
 // On CI, we run Flow checks for each renderer separately.
 
-'use strict';
-
-const ReactFlightServer = require('./src/ReactFlightServer');
-
-// TODO: decide on the top-level export form.
-// This is hacky but makes it work with both Rollup and Jest.
-module.exports = ReactFlightServer.default || ReactFlightServer;
+export * from './src/ReactFlightServer';
