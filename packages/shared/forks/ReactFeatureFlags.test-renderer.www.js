@@ -45,6 +45,9 @@ export const runAllPassiveEffectDestroysBeforeCreates = false;
 export const enableModernEventSystem = false;
 export const warnAboutSpreadingKeyToJSX = false;
 
+// Internal-only attempt to debug a React Native issue. See D20130868.
+export const throwEarlyForMysteriousError = false;
+
 // Only used in www builds.
 export function addUserTimingListener() {
   invariant(false, 'Not implemented.');
