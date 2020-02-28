@@ -345,5 +345,6 @@
   "344": "Expected prepareToHydrateHostSuspenseInstance() to never be called. This error is likely caused by a bug in React. Please file an issue.",
   "345": "Root did not complete. This is a bug in React.",
   "346": "An event responder context was used outside of an event cycle.",
-  "347": "Maps are not valid as a React child (found: %s). Consider converting children to an array of keyed ReactElements instead."
+  "347": "Maps are not valid as a React child (found: %s). Consider converting children to an array of keyed ReactElements instead.",
+  "348": "ensureListeningTo(): received a container that was not an element node. This is likely a bug in React."
 }

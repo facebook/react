@@ -16,16 +16,16 @@ export function addEventBubbleListener(
   element: Element,
   eventType: string,
   listener: Function,
-): void {
-  EventListenerWWW.listen(element, eventType, listener);
+) {
+  return EventListenerWWW.listen(element, eventType, listener);
 }
 
 export function addEventCaptureListener(
   element: Element,
   eventType: string,
   listener: Function,
-): void {
-  EventListenerWWW.capture(element, eventType, listener);
+) {
+  return EventListenerWWW.capture(element, eventType, listener);
 }
 
 export function addEventCaptureListenerWithPassiveFlag(
@@ -33,8 +33,8 @@ export function addEventCaptureListenerWithPassiveFlag(
   eventType: string,
   listener: Function,
   passive: boolean,
-): void {
-  EventListenerWWW.captureWithPassiveFlag(
+) {
+  return EventListenerWWW.captureWithPassiveFlag(
     element,
     eventType,
     listener,

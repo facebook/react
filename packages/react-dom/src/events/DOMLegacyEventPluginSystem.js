@@ -25,7 +25,6 @@ import {registrationNameDependencies} from 'legacy-events/EventPluginRegistry';
 
 import getEventTarget from './getEventTarget';
 import {getClosestInstanceFromNode} from '../client/ReactDOMComponentTree';
-import {trapCapturedEvent, trapBubbledEvent} from './ReactDOMEventListener';
 import {getListenerMapForElement} from './DOMEventListenerMap';
 import isEventSupported from './isEventSupported';
 import {
@@ -40,6 +39,7 @@ import {
   getRawEventName,
   mediaEventTypes,
 } from './DOMTopLevelEventTypes';
+import {trapEventForPluginEventSystem} from './ReactDOMEventListener';
 
 /**
  * Summary of `DOMEventPluginSystem` event handling:
@@ -309,7 +309,7 @@ export function dispatchEventForLegacyPluginEventSystem(
  */
 export function legacyListenToEvent(
   registrationName: string,
-  mountAt: Document | Element | Node,
+  mountAt: Document | Element,
 ): void {
   const listenerMap = getListenerMapForElement(mountAt);
   const dependencies = registrationNameDependencies[registrationName];
@@ -322,18 +322,18 @@ export function legacyListenToEvent(
 
 export function legacyListenToTopLevelEvent(
   topLevelType: DOMTopLevelEventType,
-  mountAt: Document | Element | Node,
+  mountAt: Document | Element,
   listenerMap: Map<DOMTopLevelEventType | string, null | (any => void)>,
 ): void {
   if (!listenerMap.has(topLevelType)) {
     switch (topLevelType) {
       case TOP_SCROLL:
-        trapCapturedEvent(TOP_SCROLL, mountAt);
+        legacyTrapCapturedEvent(TOP_SCROLL, mountAt);
         break;
       case TOP_FOCUS:
       case TOP_BLUR:
-        trapCapturedEvent(TOP_FOCUS, mountAt);
-        trapCapturedEvent(TOP_BLUR, mountAt);
+        legacyTrapCapturedEvent(TOP_FOCUS, mountAt);
+        legacyTrapCapturedEvent(TOP_BLUR, mountAt);
         // We set the flag for a single dependency later in this function,
         // but this ensures we mark both as attached rather than just one.
         listenerMap.set(TOP_BLUR, null);
@@ -342,7 +342,7 @@ export function legacyListenToTopLevelEvent(
       case TOP_CANCEL:
       case TOP_CLOSE:
         if (isEventSupported(getRawEventName(topLevelType))) {
-          trapCapturedEvent(topLevelType, mountAt);
+          legacyTrapCapturedEvent(topLevelType, mountAt);
         }
         break;
       case TOP_INVALID:
@@ -356,7 +356,7 @@ export function legacyListenToTopLevelEvent(
         // Media events don't bubble so adding the listener wouldn't do anything.
         const isMediaEvent = mediaEventTypes.indexOf(topLevelType) !== -1;
         if (!isMediaEvent) {
-          trapBubbledEvent(topLevelType, mountAt);
+          legacyTrapBubbledEvent(topLevelType, mountAt);
         }
         break;
     }
@@ -364,18 +364,16 @@ export function legacyListenToTopLevelEvent(
   }
 }
 
-export function isListeningToAllDependencies(
-  registrationName: string,
-  mountAt: Document | Element,
-): boolean {
-  const listenerMap = getListenerMapForElement(mountAt);
-  const dependencies = registrationNameDependencies[registrationName];
+export function legacyTrapBubbledEvent(
+  topLevelType: DOMTopLevelEventType,
+  element: Document | Element,
+): void {
+  trapEventForPluginEventSystem(element, topLevelType, false);
+}
 
-  for (let i = 0; i < dependencies.length; i++) {
-    const dependency = dependencies[i];
-    if (!listenerMap.has(dependency)) {
-      return false;
-    }
-  }
-  return true;
+export function legacyTrapCapturedEvent(
+  topLevelType: DOMTopLevelEventType,
+  element: Document | Element,
+): void {
+  trapEventForPluginEventSystem(element, topLevelType, true);
 }

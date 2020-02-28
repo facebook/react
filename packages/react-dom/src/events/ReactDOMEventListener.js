@@ -53,7 +53,10 @@ import {getClosestInstanceFromNode} from '../client/ReactDOMComponentTree';
 import {getRawEventName} from './DOMTopLevelEventTypes';
 import {passiveBrowserEventsSupported} from './checkPassiveEvents';
 
-import {enableDeprecatedFlareAPI} from 'shared/ReactFeatureFlags';
+import {
+  enableDeprecatedFlareAPI,
+  enableModernEventSystem,
+} from 'shared/ReactFeatureFlags';
 import {
   UserBlockingEvent,
   ContinuousEvent,
@@ -61,6 +64,7 @@ import {
 } from 'shared/ReactTypes';
 import {getEventPriorityForPluginSystem} from './DOMEventProperties';
 import {dispatchEventForLegacyPluginEventSystem} from './DOMLegacyEventPluginSystem';
+import {dispatchEventForPluginEventSystem} from './DOMModernPluginEventSystem';
 
 const {
   unstable_UserBlockingPriority: UserBlockingPriority,
@@ -76,20 +80,6 @@ export function setEnabled(enabled: ?boolean) {
 
 export function isEnabled() {
   return _enabled;
-}
-
-export function trapBubbledEvent(
-  topLevelType: DOMTopLevelEventType,
-  element: Document | Element | Node,
-): void {
-  trapEventForPluginEventSystem(element, topLevelType, false);
-}
-
-export function trapCapturedEvent(
-  topLevelType: DOMTopLevelEventType,
-  element: Document | Element | Node,
-): void {
-  trapEventForPluginEventSystem(element, topLevelType, true);
 }
 
 export function addResponderEventSystemEvent(
@@ -149,39 +139,31 @@ export function removeActiveResponderEventSystemEvent(
   }
 }
 
-function trapEventForPluginEventSystem(
-  container: Document | Element | Node,
+export function trapEventForPluginEventSystem(
+  container: Document | Element,
   topLevelType: DOMTopLevelEventType,
   capture: boolean,
 ): void {
   let listener;
+  let listenerWrapper;
   switch (getEventPriorityForPluginSystem(topLevelType)) {
     case DiscreteEvent:
-      listener = dispatchDiscreteEvent.bind(
-        null,
-        topLevelType,
-        PLUGIN_EVENT_SYSTEM,
-        container,
-      );
+      listenerWrapper = dispatchDiscreteEvent;
       break;
     case UserBlockingEvent:
-      listener = dispatchUserBlockingUpdate.bind(
-        null,
-        topLevelType,
-        PLUGIN_EVENT_SYSTEM,
-        container,
-      );
+      listenerWrapper = dispatchUserBlockingUpdate;
       break;
     case ContinuousEvent:
     default:
-      listener = dispatchEvent.bind(
-        null,
-        topLevelType,
-        PLUGIN_EVENT_SYSTEM,
-        container,
-      );
+      listenerWrapper = dispatchEvent;
       break;
   }
+  listener = listenerWrapper.bind(
+    null,
+    topLevelType,
+    PLUGIN_EVENT_SYSTEM,
+    container,
+  );
 
   const rawEventName = getRawEventName(topLevelType);
   if (capture) {
@@ -228,7 +210,7 @@ function dispatchUserBlockingUpdate(
 export function dispatchEvent(
   topLevelType: DOMTopLevelEventType,
   eventSystemFlags: EventSystemFlags,
-  container: Document | Element | Node,
+  container: Document | Element,
   nativeEvent: AnyNativeEvent,
 ): void {
   if (!_enabled) {
@@ -293,12 +275,22 @@ export function dispatchEvent(
   // in case the event system needs to trace it.
   if (enableDeprecatedFlareAPI) {
     if (eventSystemFlags & PLUGIN_EVENT_SYSTEM) {
-      dispatchEventForLegacyPluginEventSystem(
-        topLevelType,
-        eventSystemFlags,
-        nativeEvent,
-        null,
-      );
+      if (enableModernEventSystem) {
+        dispatchEventForPluginEventSystem(
+          topLevelType,
+          eventSystemFlags,
+          nativeEvent,
+          null,
+          container,
+        );
+      } else {
+        dispatchEventForLegacyPluginEventSystem(
+          topLevelType,
+          eventSystemFlags,
+          nativeEvent,
+          null,
+        );
+      }
     }
     if (eventSystemFlags & RESPONDER_EVENT_SYSTEM) {
       // React Flare event system
@@ -311,12 +303,22 @@ export function dispatchEvent(
       );
     }
   } else {
-    dispatchEventForLegacyPluginEventSystem(
-      topLevelType,
-      eventSystemFlags,
-      nativeEvent,
-      null,
-    );
+    if (enableModernEventSystem) {
+      dispatchEventForPluginEventSystem(
+        topLevelType,
+        eventSystemFlags,
+        nativeEvent,
+        null,
+        container,
+      );
+    } else {
+      dispatchEventForLegacyPluginEventSystem(
+        topLevelType,
+        eventSystemFlags,
+        nativeEvent,
+        null,
+      );
+    }
   }
 }
 
@@ -324,7 +326,7 @@ export function dispatchEvent(
 export function attemptToDispatchEvent(
   topLevelType: DOMTopLevelEventType,
   eventSystemFlags: EventSystemFlags,
-  container: Document | Element | Node,
+  container: Document | Element,
   nativeEvent: AnyNativeEvent,
 ): null | Container | SuspenseInstance {
   // TODO: Warn if _enabled is false.
@@ -372,12 +374,22 @@ export function attemptToDispatchEvent(
 
   if (enableDeprecatedFlareAPI) {
     if (eventSystemFlags & PLUGIN_EVENT_SYSTEM) {
-      dispatchEventForLegacyPluginEventSystem(
-        topLevelType,
-        eventSystemFlags,
-        nativeEvent,
-        targetInst,
-      );
+      if (enableModernEventSystem) {
+        dispatchEventForPluginEventSystem(
+          topLevelType,
+          eventSystemFlags,
+          nativeEvent,
+          targetInst,
+          container,
+        );
+      } else {
+        dispatchEventForLegacyPluginEventSystem(
+          topLevelType,
+          eventSystemFlags,
+          nativeEvent,
+          targetInst,
+        );
+      }
     }
     if (eventSystemFlags & RESPONDER_EVENT_SYSTEM) {
       // React Flare event system
@@ -390,12 +402,22 @@ export function attemptToDispatchEvent(
       );
     }
   } else {
-    dispatchEventForLegacyPluginEventSystem(
-      topLevelType,
-      eventSystemFlags,
-      nativeEvent,
-      targetInst,
-    );
+    if (enableModernEventSystem) {
+      dispatchEventForPluginEventSystem(
+        topLevelType,
+        eventSystemFlags,
+        nativeEvent,
+        targetInst,
+        container,
+      );
+    } else {
+      dispatchEventForLegacyPluginEventSystem(
+        topLevelType,
+        eventSystemFlags,
+        nativeEvent,
+        targetInst,
+      );
+    }
   }
   // We're not blocked on anything.
   return null;
