@@ -22,8 +22,8 @@ const {RENDERER, RECONCILER} = moduleTypes;
 // If you need to replace a file with another file for a specific environment,
 // add it to this list with the logic for choosing the right replacement.
 const forks = Object.freeze({
-  // Optimization: for UMDs, use object-assign polyfill that is already a part
-  // of the React package instead of bundling it again.
+  // Optimization: for UMDs, use a version that we can inline into the React bundle.
+  // Use that from all other bundles.
   'object-assign': (bundleType, entry, dependencies) => {
     if (
       bundleType !== UMD_DEV &&
@@ -34,12 +34,16 @@ const forks = Object.freeze({
       // happens. Other bundles just require('object-assign') anyway.
       return null;
     }
+    if (entry === 'react') {
+      // Use the forked version that uses ES modules instead of CommonJS.
+      return 'shared/forks/object-assign.inline-umd.js';
+    }
     if (dependencies.indexOf('react') === -1) {
       // We can only apply the optimizations to bundle that depend on React
       // because we read assign() from an object exposed on React internals.
       return null;
     }
-    // We can use the fork!
+    // We can use the fork that reads the secret export!
     return 'shared/forks/object-assign.umd.js';
   },
 
