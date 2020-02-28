@@ -22,7 +22,7 @@ import {
   REACT_ELEMENT_TYPE,
 } from 'shared/ReactSymbols';
 import {warnAboutSpreadingKeyToJSX} from 'shared/ReactFeatureFlags';
-import checkPropTypes from 'prop-types/checkPropTypes';
+import checkPropTypes from 'shared/checkPropTypes';
 
 import ReactCurrentOwner from './ReactCurrentOwner';
 import {
@@ -31,9 +31,7 @@ import {
   cloneElement,
   jsxDEV,
 } from './ReactElement';
-import ReactDebugCurrentFrame, {
-  setCurrentlyValidatingElement,
-} from './ReactDebugCurrentFrame';
+import {setCurrentlyValidatingElement} from './ReactDebugCurrentFrame';
 
 let propTypesMisspellWarningShown;
 
@@ -213,13 +211,7 @@ function validatePropTypes(element) {
     }
     if (propTypes) {
       setCurrentlyValidatingElement(element);
-      checkPropTypes(
-        propTypes,
-        element.props,
-        'prop',
-        name,
-        ReactDebugCurrentFrame.getStackAddendum,
-      );
+      checkPropTypes(propTypes, element.props, 'prop', name);
       setCurrentlyValidatingElement(null);
     } else if (type.PropTypes !== undefined && !propTypesMisspellWarningShown) {
       propTypesMisspellWarningShown = true;
