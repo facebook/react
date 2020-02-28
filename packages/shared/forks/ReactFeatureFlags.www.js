@@ -89,8 +89,6 @@ export const enableSuspenseCallback = true;
 
 export const flushSuspenseFallbacksInTests = true;
 
-export const enableNativeTargetAsInstance = false;
-
 export const disableTextareaChildren = __EXPERIMENTAL__;
 
 export const disableMapsAsChildren = __EXPERIMENTAL__;

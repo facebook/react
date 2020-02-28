@@ -36,7 +36,6 @@ export const warnAboutStringRefs = false;
 export const disableLegacyContext = false;
 export const disableSchedulerTimeoutBasedOnReactExpirationTime = false;
 export const enableTrustedTypesIntegration = false;
-export const enableNativeTargetAsInstance = false;
 export const disableTextareaChildren = false;
 export const disableMapsAsChildren = false;
 export const warnUnstableRenderSubtreeIntoContainer = false;
