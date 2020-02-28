@@ -42,6 +42,7 @@ import {
   ScopeComponent,
 } from 'shared/ReactWorkTags';
 import invariant from 'shared/invariant';
+import getComponentName from 'shared/getComponentName';
 import ReactVersion from 'shared/ReactVersion';
 
 import {getPublicInstance} from './ReactTestHostConfig';
@@ -346,7 +347,7 @@ class ReactTestInstance {
   findByType(type: any): ReactTestInstance {
     return expectOne(
       this.findAllByType(type, {deep: false}),
-      `with node type: "${type.displayName || type.name}"`,
+      `with node type: "${getComponentName(type) || 'Unknown'}"`,
     );
   }
 
