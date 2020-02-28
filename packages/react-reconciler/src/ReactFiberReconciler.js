@@ -39,6 +39,11 @@ import {
   injectIntoDevTools as injectIntoDevTools_old,
   act as act_old,
   createPortal as createPortal_old,
+  getFindAllNodesFailureDescription as getFindAllNodesFailureDescription_old,
+  findAllNodes as findAllNodes_old,
+  findBoundingRects as findBoundingRects_old,
+  focusWithin as focusWithin_old,
+  observeVisibleRects as observeVisibleRects_old,
 } from './ReactFiberReconciler.old';
 
 import {
@@ -66,6 +71,11 @@ import {
   injectIntoDevTools as injectIntoDevTools_new,
   act as act_new,
   createPortal as createPortal_new,
+  getFindAllNodesFailureDescription as getFindAllNodesFailureDescription_new,
+  findAllNodes as findAllNodes_new,
+  findBoundingRects as findBoundingRects_new,
+  focusWithin as focusWithin_new,
+  observeVisibleRects as observeVisibleRects_new,
 } from './ReactFiberReconciler.new';
 
 export const createContainer = enableNewReconciler
@@ -136,3 +146,18 @@ export const act = enableNewReconciler ? act_new : act_old;
 export const createPortal = enableNewReconciler
   ? createPortal_new
   : createPortal_old;
+export const getFindAllNodesFailureDescription = enableNewReconciler
+  ? getFindAllNodesFailureDescription_new
+  : getFindAllNodesFailureDescription_old;
+export const findAllNodes = enableNewReconciler
+  ? findAllNodes_new
+  : findAllNodes_old;
+export const findBoundingRects = enableNewReconciler
+  ? findBoundingRects_new
+  : findBoundingRects_old;
+export const focusWithin = enableNewReconciler
+  ? focusWithin_new
+  : focusWithin_old;
+export const observeVisibleRects = enableNewReconciler
+  ? observeVisibleRects_new
+  : observeVisibleRects_old;

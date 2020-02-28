@@ -8,4 +8,11 @@
  */
 
 export * from './index.js';
-export {act} from 'react-reconciler/src/ReactFiberReconciler';
+export {
+  act,
+  getFindAllNodesFailureDescription,
+  findAllNodes,
+  findBoundingRects,
+  focusWithin,
+  observeVisibleRects,
+} from 'react-reconciler/src/ReactFiberReconciler';

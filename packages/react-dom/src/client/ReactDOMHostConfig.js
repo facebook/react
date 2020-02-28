@@ -8,6 +8,12 @@
  */
 
 import type {TopLevelType} from 'legacy-events/TopLevelEventTypes';
+import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
+import type {
+  BoundingRect,
+  IntersectionObserverOptions,
+  ObserveVisibleRectsCallback,
+} from 'react-reconciler/src/ReactTestSelectors';
 import type {RootType} from './ReactDOMRoot';
 import type {ReactScopeInstance} from 'shared/ReactTypes';
 import type {
@@ -21,6 +27,8 @@ import {
   updateFiberProps,
   getClosestInstanceFromNode,
   getFiberFromScopeInstance,
+  getInstanceFromNode as getInstanceFromNodeDOMTree,
+  isContainerMarkedAsRoot,
 } from './ReactDOMComponentTree';
 import {
   createElement,
@@ -1141,4 +1149,147 @@ export function getInstanceFromScope(
     return getFiberFromScopeInstance(scopeInstance);
   }
   return null;
+}
+
+export const supportsTestSelectors = true;
+
+export function findRootFiber(node: Instance): null | Fiber {
+  const stack = [node];
+  while (stack.length > 0) {
+    const current = stack.shift();
+    if (isContainerMarkedAsRoot(current)) {
+      const root = ((getInstanceFromNodeDOMTree(current): any): Fiber);
+      return root.stateNode.current;
+    }
+    stack.push(...current.children);
+  }
+  return null;
+}
+
+export function getBoundingRect(node: Instance): BoundingRect {
+  const rect = node.getBoundingClientRect();
+  return {
+    x: rect.left,
+    y: rect.top,
+    width: rect.width,
+    height: rect.height,
+  };
+}
+
+export function isHiddenSubtree(workInProgress: Fiber): boolean {
+  return workInProgress.pendingProps.hidden === true;
+}
+
+export function setFocusIfFocusable(node: Instance): boolean {
+  if (node.nodeType !== Node.ELEMENT_NODE) {
+    // Text and comment nodes aren't focusable.
+    // Technically this check should not be necessary,
+    // since React treats elements (Instances) and text (TextInstance) differently.
+    return false;
+  }
+
+  if (((node: any): HTMLInputElement).disabled === true) {
+    // Disabled inputs can't be focused.
+    return false;
+  }
+
+  const element = ((node: any): HTMLElement);
+
+  if (element.tabIndex === null || element.tabIndex < 0) {
+    // The HTML spec says that negative tab index values indicate an element should be,
+    // "click focusable but not sequentially focusable".
+    // https://html.spec.whatwg.org/multipage/interaction.html#the-tabindex-attribute
+    //
+    // The HTML focusable spec also says,
+    // "User agents should consider focusable areas with non-null tabindex values to be click focusable."
+    // https://html.spec.whatwg.org/multipage/interaction.html#focusable
+    //
+    // Despite this, it seems like some browsers (e.g. Chrome, Firefox) return -1 even for elements
+    // that don't accept focus, like HTMLImageElement or the outermost HTMLElement tag.
+    // I think this method should (at least for now) only concern itself with "sequentially focusable" elements.
+    // https://html.spec.whatwg.org/multipage/interaction.html#sequentially-focusable
+    return false;
+  }
+
+  if (element.offsetWidth === 0 || element.offsetHeight === 0) {
+    // Hidden items can't be focused.
+    return false;
+  }
+
+  // At this point we assume the element accepts focus, so let's try and see.
+  // Listen for a "focus" event to verify that focus was set.
+  // We could compare the node to document.activeElement after focus,
+  // but this would not handle the case where application code managed focus to automatically blur.
+  let didFocus = false;
+  const handleFocus = () => {
+    didFocus = true;
+  };
+  try {
+    element.addEventListener('focus', handleFocus);
+    element.focus();
+  } finally {
+    element.removeEventListener('focus', handleFocus);
+  }
+
+  return didFocus;
+}
+
+type RectRatio = {
+  ratio: number,
+  rect: BoundingRect,
+};
+
+export function setupIntersectionObserver(
+  targets: Array<Instance>,
+  callback: ObserveVisibleRectsCallback,
+  options?: IntersectionObserverOptions,
+): {|
+  disconnect: () => void,
+  observe: (instance: Instance) => void,
+  unobserve: (instance: Instance) => void,
+|} {
+  const rectRatioCache: Map<Instance, RectRatio> = new Map();
+  targets.forEach(target => {
+    rectRatioCache.set(target, {
+      rect: getBoundingRect(target),
+      ratio: 0,
+    });
+  });
+
+  const handleIntersection = (entries: Array<IntersectionObserverEntry>) => {
+    entries.forEach(entry => {
+      const {boundingClientRect, intersectionRatio, target} = entry;
+      rectRatioCache.set(target, {
+        rect: {
+          x: boundingClientRect.left,
+          y: boundingClientRect.top,
+          width: boundingClientRect.width,
+          height: boundingClientRect.height,
+        },
+        ratio: intersectionRatio,
+      });
+    });
+
+    callback(Array.from(rectRatioCache.values()));
+  };
+
+  const observer = new IntersectionObserver(handleIntersection, options);
+  targets.forEach(target => {
+    observer.observe((target: any));
+  });
+
+  return {
+    disconnect: () => observer.disconnect(),
+    observe: target => {
+      rectRatioCache.set(target, {
+        rect: getBoundingRect(target),
+        ratio: 0,
+      });
+      observer.observe((target: any));
+    },
+    unobserve: target => {
+      rectRatioCache.delete(target);
+      observer.unobserve((target: any));
+    },
+  };
 }
