@@ -87,7 +87,11 @@ export function dispatchEvent(
   let eventTarget = null;
   if (enableNativeTargetAsInstance) {
     if (targetFiber != null) {
-      eventTarget = targetFiber.stateNode.canonical;
+      const stateNode = targetFiber.stateNode;
+      // Guard against Fiber being unmounted
+      if (stateNode != null) {
+        eventTarget = stateNode.canonical;
+      }
     }
   } else {
     eventTarget = nativeEvent.target;
