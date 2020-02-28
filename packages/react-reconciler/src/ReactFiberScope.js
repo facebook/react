@@ -31,7 +31,9 @@ function isFiberSuspenseAndTimedOut(fiber: Fiber): boolean {
 }
 
 function getSuspenseFallbackChild(fiber: Fiber): Fiber | null {
-  return ((((fiber.child: any): Fiber).sibling: any): Fiber).child;
+  const child = fiber.child;
+  const sibling = child ? child.sibling : null;
+  return sibling ? sibling.child : null;
 }
 
 const emptyObject = {};
