@@ -83,9 +83,6 @@ export const disableSchedulerTimeoutBasedOnReactExpirationTime = false;
 
 export const enableTrustedTypesIntegration = false;
 
-// Flag to turn event.target and event.currentTarget in ReactNative from a reactTag to a component instance
-export const enableNativeTargetAsInstance = false;
-
 // Controls sequence of passive effect destroy and create functions.
 // If this flag is off, destroy and create functions may be interleaved.
 // When the flag is on, all destroy functions will be run (for all fibers)

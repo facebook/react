@@ -19,7 +19,6 @@ import {registrationNameModules} from 'legacy-events/EventPluginRegistry';
 import {batchedUpdates} from 'legacy-events/ReactGenericBatching';
 import accumulateInto from 'legacy-events/accumulateInto';
 
-import {enableNativeTargetAsInstance} from 'shared/ReactFeatureFlags';
 import {plugins} from 'legacy-events/EventPluginRegistry';
 import getListener from 'legacy-events/getListener';
 import {runEventsInBatch} from 'legacy-events/EventBatching';
@@ -85,16 +84,12 @@ export function dispatchEvent(
   const targetFiber = (target: null | Fiber);
 
   let eventTarget = null;
-  if (enableNativeTargetAsInstance) {
-    if (targetFiber != null) {
-      const stateNode = targetFiber.stateNode;
-      // Guard against Fiber being unmounted
-      if (stateNode != null) {
-        eventTarget = stateNode.canonical;
-      }
+  if (targetFiber != null) {
+    const stateNode = targetFiber.stateNode;
+    // Guard against Fiber being unmounted
+    if (stateNode != null) {
+      eventTarget = stateNode.canonical;
     }
-  } else {
-    eventTarget = nativeEvent.target;
   }
 
   batchedUpdates(function() {

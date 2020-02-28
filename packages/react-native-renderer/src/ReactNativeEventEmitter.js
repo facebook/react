@@ -18,7 +18,6 @@ import {PLUGIN_EVENT_SYSTEM} from 'legacy-events/EventSystemFlags';
 import {registrationNameModules} from 'legacy-events/EventPluginRegistry';
 import {batchedUpdates} from 'legacy-events/ReactGenericBatching';
 import {runEventsInBatch} from 'legacy-events/EventBatching';
-import {enableNativeTargetAsInstance} from 'shared/ReactFeatureFlags';
 import {plugins} from 'legacy-events/EventPluginRegistry';
 import getListener from 'legacy-events/getListener';
 import accumulateInto from 'legacy-events/accumulateInto';
@@ -104,12 +103,8 @@ function _receiveRootNodeIDEvent(
   const inst = getInstanceFromNode(rootNodeID);
 
   let target = null;
-  if (enableNativeTargetAsInstance) {
-    if (inst != null) {
-      target = inst.stateNode;
-    }
-  } else {
-    target = nativeEvent.target;
+  if (inst != null) {
+    target = inst.stateNode;
   }
 
   batchedUpdates(function() {
