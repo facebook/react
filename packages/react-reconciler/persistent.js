@@ -9,8 +9,4 @@
 
 // This is the same export as in index.js,
 // with persistent reconciler flags turned on.
-const ReactFiberReconciler = require('./src/ReactFiberReconciler');
-
-// TODO: decide on the top-level export form.
-// This is hacky but makes it work with both Rollup and Jest.
-module.exports = ReactFiberReconciler.default || ReactFiberReconciler;
+export * from './src/ReactFiberReconciler';

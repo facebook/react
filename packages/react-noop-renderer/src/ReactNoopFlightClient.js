@@ -38,6 +38,4 @@ function read<T>(source: Source): ReactModelRoot<T> {
   return getModelRoot(response);
 }
 
-export default {
-  read,
-};
+export {read};

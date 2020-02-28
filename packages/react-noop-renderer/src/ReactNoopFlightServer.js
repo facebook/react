@@ -52,6 +52,4 @@ function render(model: ReactModel): Destination {
   return destination;
 }
 
-export default {
-  render,
-};
+export {render};

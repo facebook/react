@@ -7,6 +7,4 @@
  * @flow
  */
 
-'use strict';
-
-module.exports = require('./src/dom/PressLegacy');
+export * from './src/dom/PressLegacy';
