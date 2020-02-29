@@ -13,6 +13,8 @@ import {createEventTarget} from 'dom-event-testing-library';
 
 let React;
 let ReactFeatureFlags;
+let ReactDOMServer;
+let Scheduler;
 
 describe('ReactScope', () => {
   beforeEach(() => {
@@ -21,6 +23,7 @@ describe('ReactScope', () => {
     ReactFeatureFlags.enableScopeAPI = true;
     ReactFeatureFlags.enableDeprecatedFlareAPI = true;
     React = require('react');
+    Scheduler = require('scheduler');
   });
 
   if (!__EXPERIMENTAL__) {
@@ -34,6 +37,7 @@ describe('ReactScope', () => {
 
     beforeEach(() => {
       ReactDOM = require('react-dom');
+      ReactDOMServer = require('react-dom/server');
       container = document.createElement('div');
       document.body.appendChild(container);
     });
@@ -208,7 +212,6 @@ describe('ReactScope', () => {
 
     it('scopes support server-side rendering and hydration', () => {
       const TestScope = React.unstable_createScope();
-      const ReactDOMServer = require('react-dom/server');
       const scopeRef = React.createRef();
       const divRef = React.createRef();
       const spanRef = React.createRef();
@@ -305,6 +308,72 @@ describe('ReactScope', () => {
       expect(nodes).toEqual([1, 2]);
       ReactDOM.render(null, container);
       expect(scopeRef.current).toBe(null);
+    });
+
+    it('correctly works with suspended boundaries that are hydrated', async () => {
+      let suspend = false;
+      let resolve;
+      const promise = new Promise(resolvePromise => (resolve = resolvePromise));
+      const ref = React.createRef();
+      const TestScope = React.unstable_createScope();
+      const scopeRef = React.createRef();
+      const testScopeQuery = (type, props) => true;
+
+      function Child() {
+        if (suspend) {
+          throw promise;
+        } else {
+          return 'Hello';
+        }
+      }
+
+      function App() {
+        return (
+          <div>
+            <TestScope ref={scopeRef}>
+              <React.Suspense fallback="Loading...">
+                <span ref={ref}>
+                  <Child />
+                </span>
+              </React.Suspense>
+            </TestScope>
+          </div>
+        );
+      }
+
+      // First we render the final HTML. With the streaming renderer
+      // this may have suspense points on the server but here we want
+      // to test the completed HTML. Don't suspend on the server.
+      suspend = false;
+      let finalHTML = ReactDOMServer.renderToString(<App />);
+
+      let container2 = document.createElement('div');
+      container2.innerHTML = finalHTML;
+
+      let span = container2.getElementsByTagName('span')[0];
+
+      // On the client we don't have all data yet but we want to start
+      // hydrating anyway.
+      suspend = true;
+      let root = ReactDOM.createRoot(container2, {hydrate: true});
+      root.render(<App />);
+      Scheduler.unstable_flushAll();
+      jest.runAllTimers();
+
+      // This should not cause a runtime exception, see:
+      // https://github.com/facebook/react/pull/18184
+      scopeRef.current.DO_NOT_USE_queryAllNodes(testScopeQuery);
+      expect(ref.current).toBe(null);
+
+      // Resolving the promise should continue hydration
+      suspend = false;
+      resolve();
+      await promise;
+      Scheduler.unstable_flushAll();
+      jest.runAllTimers();
+
+      // We should now have hydrated with a ref on the existing span.
+      expect(ref.current).toBe(span);
     });
   });
 

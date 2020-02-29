@@ -27,13 +27,16 @@ import {
 import {enableScopeAPI} from 'shared/ReactFeatureFlags';
 
 function isFiberSuspenseAndTimedOut(fiber: Fiber): boolean {
-  return fiber.tag === SuspenseComponent && fiber.memoizedState !== null;
+  const memoizedState = fiber.memoizedState;
+  return (
+    fiber.tag === SuspenseComponent &&
+    memoizedState !== null &&
+    memoizedState.dehydrated === null
+  );
 }
 
 function getSuspenseFallbackChild(fiber: Fiber): Fiber | null {
-  const child = fiber.child;
-  const sibling = child ? child.sibling : null;
-  return sibling ? sibling.child : null;
+  return ((((fiber.child: any): Fiber).sibling: any): Fiber).child;
 }
 
 const emptyObject = {};
