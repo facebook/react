@@ -21,7 +21,7 @@
   "dependencies": {
     "object-assign": "^4.1.1",
     "react-is": "^16.8.6",
-    "react-shallow-renderer": "^16.12.0",
+    "react-shallow-renderer": "^16.13.0",
     "scheduler": "^0.19.0"
   },
   "peerDependencies": {
