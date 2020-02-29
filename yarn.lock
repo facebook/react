@@ -10856,10 +10856,10 @@ react-native-web@^0.11.5:
     prop-types "^15.6.0"
     react-timer-mixin "^0.13.4"
 
-react-shallow-renderer@^16.13.0:
-  version "16.13.0"
-  resolved "https://registry.yarnpkg.com/react-shallow-renderer/-/react-shallow-renderer-16.13.0.tgz#18defe59ac922a9623fcbb8bed8db0da7c728fd4"
-  integrity sha512-qdFKyjjHSp5t4+Fs4479JqYDQnBdHi/IZEnGEmZZKZqoiwxjG4DKJPYd7YTaTmalUAqZlZR+K9ayz1+8tEctSg==
+react-shallow-renderer@^16.13.1:
+  version "16.13.1"
+  resolved "https://registry.yarnpkg.com/react-shallow-renderer/-/react-shallow-renderer-16.13.1.tgz#4cfd6dc0f05a8d4d261ff7a80e9b88f15491a00a"
+  integrity sha512-hLmExm5/ZnjodLgm/4oxYw4i7fL6LLPhbO9mF/4tmaZUurtLrp2aSeDHZmRk0SVCHXPz0VaEbb3Dqi5J7odz7Q==
   dependencies:
     object-assign "^4.1.1"
     react-is "^16.12.0"

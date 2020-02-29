@@ -47,6 +47,11 @@ const forks = Object.freeze({
     return 'shared/forks/object-assign.umd.js';
   },
 
+  'react-shallow-renderer': () => {
+    // Use ESM build of `react-shallow-renderer`.
+    return 'react-shallow-renderer/esm/index.js';
+  },
+
   // Without this fork, importing `shared/ReactSharedInternals` inside
   // the `react` package itself would not work due to a cyclical dependency.
   'shared/ReactSharedInternals': (bundleType, entry, dependencies) => {
