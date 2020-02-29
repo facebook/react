@@ -33,6 +33,7 @@ if (__DEV__) {
       if (
         hasReadOnlyValue[props.type] ||
         props.onChange ||
+        props.onInput ||
         props.readOnly ||
         props.disabled ||
         props[propName] == null ||
