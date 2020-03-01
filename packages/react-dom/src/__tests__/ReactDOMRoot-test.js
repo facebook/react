@@ -258,4 +258,34 @@ describe('ReactDOMRoot', () => {
     Scheduler.unstable_flushAll();
     ReactDOM.createRoot(container); // No warning
   });
+
+  it('warns if creating a root on the document.body', async () => {
+    expect(() => {
+      ReactDOM.createRoot(document.body);
+    }).toErrorDev(
+      'createRoot(): Creating roots directly with document.body is ' +
+        'discouraged, since its children are often manipulated by third-party ' +
+        'scripts and browser extensions. This may lead to subtle ' +
+        'reconciliation issues. Try using a container element created ' +
+        'for your app.',
+      {withoutStack: true},
+    );
+  });
+
+  it('warns if updating a root that has had its contents removed', async () => {
+    const root = ReactDOM.createRoot(container);
+    root.render(<div>Hi</div>);
+    Scheduler.unstable_flushAll();
+    container.innerHTML = '';
+
+    expect(() => {
+      root.render(<div>Hi</div>);
+    }).toErrorDev(
+      'render(...): It looks like the React-rendered content of the ' +
+        'root container was removed without using React. This is not ' +
+        'supported and will cause errors. Instead, call ' +
+        "root.unmount() to empty a root's container.",
+      {withoutStack: true},
+    );
+  });
 });

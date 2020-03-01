@@ -7,13 +7,15 @@
  * @flow
  */
 
-import React, {Fragment, memo, useCallback, useContext, useState} from 'react';
+import * as React from 'react';
+import {Fragment, memo, useCallback, useContext} from 'react';
 import {areEqual} from 'react-window';
 import {barWidthThreshold} from './constants';
 import {getGradientColor} from './utils';
 import ChartNode from './ChartNode';
 import {SettingsContext} from '../Settings/SettingsContext';
 
+import type {ChartNode as ChartNodeType} from './FlamegraphChartBuilder';
 import type {ItemData} from './CommitFlamegraph';
 
 type Props = {
@@ -24,10 +26,9 @@ type Props = {
 };
 
 function CommitFlamegraphListItem({data, index, style}: Props) {
-  const [isHovered, setIsHovered] = useState(false);
-
   const {
     chartData,
+    isHovered,
     onElementMouseEnter,
     onElementMouseLeave,
     scaleX,
@@ -36,9 +37,11 @@ function CommitFlamegraphListItem({data, index, style}: Props) {
     selectFiber,
     width,
   } = data;
+
   const {renderPathNodes, maxSelfDuration, rows} = chartData;
 
   const {lineHeight} = useContext(SettingsContext);
+
   const handleClick = useCallback(
     (event: SyntheticMouseEvent<*>, id: number, name: string) => {
       event.stopPropagation();
@@ -47,16 +50,12 @@ function CommitFlamegraphListItem({data, index, style}: Props) {
     [selectFiber],
   );
 
-  const handleMouseEnter = (id: number) => {
-    setIsHovered(true);
-
-    if (id !== null) {
-      onElementMouseEnter(id);
-    }
+  const handleMouseEnter = (nodeData: ChartNodeType) => {
+    const {id, name} = nodeData;
+    onElementMouseEnter({id, name});
   };
 
   const handleMouseLeave = () => {
-    setIsHovered(false);
     onElementMouseLeave();
   };
 
@@ -122,7 +121,7 @@ function CommitFlamegraphListItem({data, index, style}: Props) {
             key={id}
             label={label}
             onClick={event => handleClick(event, id, name)}
-            onMouseEnter={() => handleMouseEnter(id)}
+            onMouseEnter={() => handleMouseEnter(chartNode)}
             onMouseLeave={handleMouseLeave}
             textStyle={{color: textColor}}
             width={nodeWidth}

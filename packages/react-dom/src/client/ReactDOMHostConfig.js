@@ -7,6 +7,8 @@
  * @flow
  */
 
+import type {RootType} from './ReactDOMRoot';
+
 import {
   precacheFiberNode,
   updateFiberProps,
@@ -34,7 +36,7 @@ import {validateDOMNesting, updatedAncestorInfo} from './validateDOMNesting';
 import {
   isEnabled as ReactBrowserEventEmitterIsEnabled,
   setEnabled as ReactBrowserEventEmitterSetEnabled,
-} from '../events/ReactBrowserEventEmitter';
+} from '../events/ReactDOMEventListener';
 import {getChildNamespace} from '../shared/DOMNamespaces';
 import {
   ELEMENT_NODE,
@@ -45,7 +47,6 @@ import {
 } from '../shared/HTMLNodeType';
 import dangerousStyleValue from '../shared/dangerousStyleValue';
 
-import type {DOMContainer} from './ReactDOM';
 import type {
   ReactDOMEventResponder,
   ReactDOMEventResponderInstance,
@@ -57,6 +58,17 @@ import {
   DEPRECATED_dispatchEventForResponderEventSystem,
 } from '../events/DeprecatedDOMEventResponderSystem';
 import {retryIfBlockedOn} from '../events/ReactDOMEventReplaying';
+
+import {
+  enableSuspenseServerRenderer,
+  enableDeprecatedFlareAPI,
+  enableFundamentalAPI,
+} from 'shared/ReactFeatureFlags';
+import {HostComponent} from 'shared/ReactWorkTags';
+import {
+  RESPONDER_EVENT_SYSTEM,
+  IS_PASSIVE,
+} from 'legacy-events/EventSystemFlags';
 
 export type Type = string;
 export type Props = {
@@ -88,7 +100,9 @@ export type EventTargetChildElement = {
   },
   ...
 };
-export type Container = Element | Document;
+export type Container =
+  | (Element & {_reactRootContainer?: RootType, ...})
+  | (Document & {_reactRootContainer?: RootType, ...});
 export type Instance = Element;
 export type TextInstance = Text;
 export type SuspenseInstance = Comment & {_reactRetry?: () => void, ...};
@@ -111,16 +125,6 @@ type SelectionInformation = {|
   focusedElem: null | HTMLElement,
   selectionRange: mixed,
 |};
-
-import {
-  enableSuspenseServerRenderer,
-  enableDeprecatedFlareAPI,
-  enableFundamentalAPI,
-} from 'shared/ReactFeatureFlags';
-import {
-  RESPONDER_EVENT_SYSTEM,
-  IS_PASSIVE,
-} from 'legacy-events/EventSystemFlags';
 
 let SUPPRESS_HYDRATION_WARNING;
 if (__DEV__) {
@@ -418,7 +422,7 @@ export function appendChild(
 }
 
 export function appendChildToContainer(
-  container: DOMContainer,
+  container: Container,
   child: Instance | TextInstance,
 ): void {
   let parentNode;
@@ -584,7 +588,28 @@ export function clearSuspenseBoundaryFromContainer(
   retryIfBlockedOn(container);
 }
 
+function instanceContainsElem(instance: Instance, element: HTMLElement) {
+  let fiber = getClosestInstanceFromNode(element);
+  while (fiber !== null) {
+    if (fiber.tag === HostComponent && fiber.stateNode === element) {
+      return true;
+    }
+    fiber = fiber.return;
+  }
+  return false;
+}
+
 export function hideInstance(instance: Instance): void {
+  // Ensure we trigger `onBeforeBlur` if the active focused elment
+  // is ether the instance of a child or the instance. We need
+  // to traverse the Fiber tree here rather than use node.contains()
+  // as the child node might be inside a Portal.
+  if (enableDeprecatedFlareAPI && selectionInformation) {
+    const focusedElem = selectionInformation.focusedElem;
+    if (focusedElem !== null && instanceContainsElem(instance, focusedElem)) {
+      dispatchBeforeDetachedBlur(((focusedElem: any): HTMLElement));
+    }
+  }
   // TODO: Does this work for all element types? What about MathML? Should we
   // pass host context to this method?
   instance = ((instance: any): HTMLElement);

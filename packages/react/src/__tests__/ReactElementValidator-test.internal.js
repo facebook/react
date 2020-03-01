@@ -399,7 +399,6 @@ describe('ReactElementValidator', () => {
         'returned a function. You may have forgotten to pass an argument to ' +
         'the type checker creator (arrayOf, instanceOf, objectOf, oneOf, ' +
         'oneOfType, and shape all require an argument).',
-      {withoutStack: true},
     );
   });
 
@@ -439,7 +438,7 @@ describe('ReactElementValidator', () => {
     );
   });
 
-  if (!ReactFeatureFlags.disableCreateFactory) {
+  if (!__EXPERIMENTAL__) {
     it('should warn when accessing .type on an element factory', () => {
       function TestComponent() {
         return <div />;

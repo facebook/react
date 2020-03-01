@@ -29,6 +29,4 @@ function renderToReadableStream(model: ReactModel): ReadableStream {
   });
 }
 
-export default {
-  renderToReadableStream,
-};
+export {renderToReadableStream};

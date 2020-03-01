@@ -18,7 +18,7 @@ import type {
 } from './ReactFiberSuspenseComponent';
 import type {SuspenseContext} from './ReactFiberSuspenseContext';
 
-import checkPropTypes from 'prop-types/checkPropTypes';
+import checkPropTypes from 'shared/checkPropTypes';
 
 import {
   IndeterminateComponent,
@@ -42,7 +42,7 @@ import {
   IncompleteClassComponent,
   FundamentalComponent,
   ScopeComponent,
-  Chunk,
+  Block,
 } from 'shared/ReactWorkTags';
 import {
   NoEffect,
@@ -65,7 +65,7 @@ import {
   enableFundamentalAPI,
   warnAboutDefaultPropsOnFunctionComponents,
   enableScopeAPI,
-  enableChunksAPI,
+  enableBlocksAPI,
 } from 'shared/ReactFeatureFlags';
 import invariant from 'shared/invariant';
 import shallowEqual from 'shared/shallowEqual';
@@ -74,9 +74,8 @@ import ReactStrictModeWarnings from './ReactStrictModeWarnings';
 import {refineResolvedLazyComponent} from 'shared/ReactLazyComponent';
 import {REACT_LAZY_TYPE, getIteratorFn} from 'shared/ReactSymbols';
 import {
-  setCurrentPhase,
   getCurrentFiberOwnerNameInDevOrNull,
-  getCurrentFiberStackInDev,
+  setIsRendering,
 } from './ReactCurrentFiber';
 import {startWorkTimer, cancelWorkTimer} from './ReactDebugFiberPerf';
 import {
@@ -193,7 +192,6 @@ let didWarnAboutContextTypeOnFunctionComponent;
 let didWarnAboutGetDerivedStateOnFunctionComponent;
 let didWarnAboutFunctionRefs;
 export let didWarnAboutReassigningProps;
-let didWarnAboutMaxDuration;
 let didWarnAboutRevealOrder;
 let didWarnAboutTailOptions;
 let didWarnAboutDefaultPropsOnFunctionComponent;
@@ -205,7 +203,6 @@ if (__DEV__) {
   didWarnAboutGetDerivedStateOnFunctionComponent = {};
   didWarnAboutFunctionRefs = {};
   didWarnAboutReassigningProps = false;
-  didWarnAboutMaxDuration = false;
   didWarnAboutRevealOrder = {};
   didWarnAboutTailOptions = {};
   didWarnAboutDefaultPropsOnFunctionComponent = {};
@@ -298,7 +295,6 @@ function updateForwardRef(
           nextProps, // Resolved props
           'prop',
           getComponentName(Component),
-          getCurrentFiberStackInDev,
         );
       }
     }
@@ -312,7 +308,7 @@ function updateForwardRef(
   prepareToReadContext(workInProgress, renderExpirationTime);
   if (__DEV__) {
     ReactCurrentOwner.current = workInProgress;
-    setCurrentPhase('render');
+    setIsRendering(true);
     nextChildren = renderWithHooks(
       current,
       workInProgress,
@@ -337,7 +333,7 @@ function updateForwardRef(
         );
       }
     }
-    setCurrentPhase(null);
+    setIsRendering(false);
   } else {
     nextChildren = renderWithHooks(
       current,
@@ -416,7 +412,6 @@ function updateMemoComponent(
           nextProps, // Resolved props
           'prop',
           getComponentName(type),
-          getCurrentFiberStackInDev,
         );
       }
     }
@@ -444,7 +439,6 @@ function updateMemoComponent(
         nextProps, // Resolved props
         'prop',
         getComponentName(type),
-        getCurrentFiberStackInDev,
       );
     }
   }
@@ -466,11 +460,7 @@ function updateMemoComponent(
   }
   // React DevTools reads this flag.
   workInProgress.effectTag |= PerformedWork;
-  let newChild = createWorkInProgress(
-    currentChild,
-    nextProps,
-    renderExpirationTime,
-  );
+  let newChild = createWorkInProgress(currentChild, nextProps);
   newChild.ref = workInProgress.ref;
   newChild.return = workInProgress;
   workInProgress.child = newChild;
@@ -507,7 +497,6 @@ function updateSimpleMemoComponent(
           nextProps, // Resolved (SimpleMemoComponent has no defaultProps)
           'prop',
           getComponentName(outerMemoType),
-          getCurrentFiberStackInDev,
         );
       }
       // Inner propTypes will be validated in the function component path.
@@ -523,6 +512,20 @@ function updateSimpleMemoComponent(
     ) {
       didReceiveUpdate = false;
       if (updateExpirationTime < renderExpirationTime) {
+        // The pending update priority was cleared at the beginning of
+        // beginWork. We're about to bail out, but there might be additional
+        // updates at a lower priority. Usually, the priority level of the
+        // remaining updates is accumlated during the evaluation of the
+        // component (i.e. when processing the update queue). But since since
+        // we're bailing out early *without* evaluating the component, we need
+        // to account for it here, too. Reset to the value of the current fiber.
+        // NOTE: This only applies to SimpleMemoComponent, not MemoComponent,
+        // because a MemoComponent fiber does not have hooks or an update queue;
+        // rather, it wraps around an inner component, which may or may not
+        // contains hooks.
+        // TODO: Move the reset at in beginWork out of the common path so that
+        // this is no longer necessary.
+        workInProgress.expirationTime = current.expirationTime;
         return bailoutOnAlreadyFinishedWork(
           current,
           workInProgress,
@@ -618,7 +621,6 @@ function updateFunctionComponent(
           nextProps, // Resolved props
           'prop',
           getComponentName(Component),
-          getCurrentFiberStackInDev,
         );
       }
     }
@@ -634,7 +636,7 @@ function updateFunctionComponent(
   prepareToReadContext(workInProgress, renderExpirationTime);
   if (__DEV__) {
     ReactCurrentOwner.current = workInProgress;
-    setCurrentPhase('render');
+    setIsRendering(true);
     nextChildren = renderWithHooks(
       current,
       workInProgress,
@@ -659,7 +661,7 @@ function updateFunctionComponent(
         );
       }
     }
-    setCurrentPhase(null);
+    setIsRendering(false);
   } else {
     nextChildren = renderWithHooks(
       current,
@@ -691,10 +693,10 @@ function updateFunctionComponent(
   return workInProgress.child;
 }
 
-function updateChunk(
+function updateBlock(
   current: Fiber | null,
   workInProgress: Fiber,
-  chunk: any,
+  block: any,
   nextProps: any,
   renderExpirationTime: ExpirationTime,
 ) {
@@ -702,15 +704,15 @@ function updateChunk(
   // hasn't yet mounted. This happens after the first render suspends.
   // We'll need to figure out if this is fine or can cause issues.
 
-  const render = chunk.render;
-  const data = chunk.query();
+  const render = block.render;
+  const data = block.query();
 
   // The rest is a fork of updateFunctionComponent
   let nextChildren;
   prepareToReadContext(workInProgress, renderExpirationTime);
   if (__DEV__) {
     ReactCurrentOwner.current = workInProgress;
-    setCurrentPhase('render');
+    setIsRendering(true);
     nextChildren = renderWithHooks(
       current,
       workInProgress,
@@ -735,7 +737,7 @@ function updateChunk(
         );
       }
     }
-    setCurrentPhase(null);
+    setIsRendering(false);
   } else {
     nextChildren = renderWithHooks(
       current,
@@ -785,7 +787,6 @@ function updateClassComponent(
           nextProps, // Resolved props
           'prop',
           getComponentName(Component),
-          getCurrentFiberStackInDev,
         );
       }
     }
@@ -817,12 +818,7 @@ function updateClassComponent(
       workInProgress.effectTag |= Placement;
     }
     // In the initial pass we might need to construct the instance.
-    constructClassInstance(
-      workInProgress,
-      Component,
-      nextProps,
-      renderExpirationTime,
-    );
+    constructClassInstance(workInProgress, Component, nextProps);
     mountClassInstance(
       workInProgress,
       Component,
@@ -918,7 +914,7 @@ function finishClassComponent(
     }
   } else {
     if (__DEV__) {
-      setCurrentPhase('render');
+      setIsRendering(true);
       nextChildren = instance.render();
       if (
         debugRenderPhaseSideEffectsForStrictMode &&
@@ -926,7 +922,7 @@ function finishClassComponent(
       ) {
         instance.render();
       }
-      setCurrentPhase(null);
+      setIsRendering(false);
     } else {
       nextChildren = instance.render();
     }
@@ -1195,7 +1191,6 @@ function mountLazyComponent(
               resolvedProps, // Resolved for outer only
               'prop',
               getComponentName(Component),
-              getCurrentFiberStackInDev,
             );
           }
         }
@@ -1210,10 +1205,10 @@ function mountLazyComponent(
       );
       return child;
     }
-    case Chunk: {
-      if (enableChunksAPI) {
+    case Block: {
+      if (enableBlocksAPI) {
         // TODO: Resolve for Hot Reloading.
-        child = updateChunk(
+        child = updateBlock(
           null,
           workInProgress,
           Component,
@@ -1282,12 +1277,7 @@ function mountIncompleteClassComponent(
   }
   prepareToReadContext(workInProgress, renderExpirationTime);
 
-  constructClassInstance(
-    workInProgress,
-    Component,
-    nextProps,
-    renderExpirationTime,
-  );
+  constructClassInstance(workInProgress, Component, nextProps);
   mountClassInstance(
     workInProgress,
     Component,
@@ -1637,18 +1627,6 @@ function updateSuspenseComponent(
 
   pushSuspenseContext(workInProgress, suspenseContext);
 
-  if (__DEV__) {
-    if ('maxDuration' in nextProps) {
-      if (!didWarnAboutMaxDuration) {
-        didWarnAboutMaxDuration = true;
-        console.error(
-          'maxDuration has been removed from React. ' +
-            'Remove the maxDuration prop.',
-        );
-      }
-    }
-  }
-
   // This next part is a bit confusing. If the children timeout, we switch to
   // showing the fallback children in place of the "primary" children.
   // However, we don't want to delete the primary children because then their
@@ -1857,7 +1835,6 @@ function updateSuspenseComponent(
         const primaryChildFragment = createWorkInProgress(
           currentPrimaryChildFragment,
           currentPrimaryChildFragment.pendingProps,
-          NoWork,
         );
         primaryChildFragment.return = workInProgress;
 
@@ -1897,7 +1874,6 @@ function updateSuspenseComponent(
         const fallbackChildFragment = createWorkInProgress(
           currentFallbackChildFragment,
           nextFallbackChildren,
-          currentFallbackChildFragment.expirationTime,
         );
         fallbackChildFragment.return = workInProgress;
         primaryChildFragment.sibling = fallbackChildFragment;
@@ -2638,13 +2614,7 @@ function updateContextProvider(
     const providerPropTypes = workInProgress.type.propTypes;
 
     if (providerPropTypes) {
-      checkPropTypes(
-        providerPropTypes,
-        newProps,
-        'prop',
-        'Context.Provider',
-        getCurrentFiberStackInDev,
-      );
+      checkPropTypes(providerPropTypes, newProps, 'prop', 'Context.Provider');
     }
   }
 
@@ -2734,9 +2704,9 @@ function updateContextConsumer(
   let newChildren;
   if (__DEV__) {
     ReactCurrentOwner.current = workInProgress;
-    setCurrentPhase('render');
+    setIsRendering(true);
     newChildren = render(newValue);
-    setCurrentPhase(null);
+    setIsRendering(false);
   } else {
     newChildren = render(newValue);
   }
@@ -3103,7 +3073,11 @@ function beginWork(
     didReceiveUpdate = false;
   }
 
-  // Before entering the begin phase, clear the expiration time.
+  // Before entering the begin phase, clear pending update priority.
+  // TODO: This assumes that we're about to evaluate the component and process
+  // the update queue. However, there's an exception: SimpleMemoComponent
+  // sometimes bails out later in the begin phase. This indicates that we should
+  // move this assignment out of the common path and into each branch.
   workInProgress.expirationTime = NoWork;
 
   switch (workInProgress.tag) {
@@ -3220,7 +3194,6 @@ function beginWork(
               resolvedProps, // Resolved for outer only
               'prop',
               getComponentName(type),
-              getCurrentFiberStackInDev,
             );
           }
         }
@@ -3287,14 +3260,14 @@ function beginWork(
       }
       break;
     }
-    case Chunk: {
-      if (enableChunksAPI) {
-        const chunk = workInProgress.type;
+    case Block: {
+      if (enableBlocksAPI) {
+        const block = workInProgress.type;
         const props = workInProgress.pendingProps;
-        return updateChunk(
+        return updateBlock(
           current,
           workInProgress,
-          chunk,
+          block,
           props,
           renderExpirationTime,
         );

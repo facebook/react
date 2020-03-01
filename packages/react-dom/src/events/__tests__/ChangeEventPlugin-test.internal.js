@@ -779,6 +779,7 @@ describe('ChangeEventPlugin', () => {
 
           // 3s should be enough to expire the updates
           Scheduler.unstable_advanceTime(3000);
+          expect(Scheduler).toFlushExpired([]);
           expect(container.textContent).toEqual('hovered');
         });
       },

@@ -8,7 +8,8 @@
  */
 
 import {copy} from 'clipboard-js';
-import React, {useCallback, useState} from 'react';
+import * as React from 'react';
+import {useCallback, useState} from 'react';
 import Button from '../Button';
 import ButtonIcon from '../ButtonIcon';
 import KeyValue from './KeyValue';

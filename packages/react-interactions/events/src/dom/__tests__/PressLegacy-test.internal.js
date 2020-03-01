@@ -50,6 +50,11 @@ const pointerTypesTable = [['mouse'], ['touch']];
 describe.each(environmentTable)('Press responder', hasPointerEvents => {
   let container;
 
+  if (!__EXPERIMENTAL__) {
+    it("empty test so Jest doesn't complain", () => {});
+    return;
+  }
+
   beforeEach(() => {
     initializeModules(hasPointerEvents);
     container = document.createElement('div');
@@ -1166,5 +1171,28 @@ describe.each(environmentTable)('Press responder', hasPointerEvents => {
     expect(preventDefault).toBeCalled();
     expect(onPressStart).toBeCalled();
     expect(onPressEnd).toBeCalled();
+  });
+
+  it('focus moving to the window should stop the press', () => {
+    const onPress = jest.fn(e => e.preventDefault());
+    const onPressStart = jest.fn(e => e.preventDefault());
+    const onPressEnd = jest.fn(e => e.preventDefault());
+    const buttonRef = React.createRef();
+
+    const Component = () => {
+      const listener = usePress({onPress, onPressStart, onPressEnd});
+      return <button ref={buttonRef} DEPRECATED_flareListeners={listener} />;
+    };
+    ReactDOM.render(<Component />, container);
+
+    const target = createEventTarget(buttonRef.current);
+    target.pointerdown();
+    const secondTarget = createEventTarget(document);
+    // relatedTarget is null when moving focus to window
+    expect(onPressStart).toBeCalled();
+    secondTarget.blur({relatedTarget: null});
+    expect(onPressEnd).toBeCalled();
+    target.pointerup();
+    expect(onPress).not.toBeCalled();
   });
 });

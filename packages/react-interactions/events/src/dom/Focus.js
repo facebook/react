@@ -14,7 +14,7 @@ import type {
 } from 'shared/ReactDOMTypes';
 import type {ReactEventResponderListener} from 'shared/ReactTypes';
 
-import React from 'react';
+import * as React from 'react';
 import {DiscreteEvent} from 'shared/ReactTypes';
 
 /**
@@ -36,7 +36,7 @@ type FocusState = {
   isFocused: boolean,
   isFocusVisible: boolean,
   pointerType: PointerType,
-  ...
+  addedRootEvents?: boolean,
 };
 
 type FocusProps = {
@@ -81,7 +81,7 @@ const isMac =
     ? /^Mac/.test(window.navigator.platform)
     : false;
 
-export let passiveBrowserEventsSupported = false;
+let passiveBrowserEventsSupported = false;
 
 const canUseDOM: boolean = !!(
   typeof window !== 'undefined' &&
@@ -416,6 +416,7 @@ const focusResponderImpl = {
       isFocused: false,
       isFocusVisible: false,
       pointerType: '',
+      addedRootEvents: false,
     };
   },
   onMount() {
@@ -622,7 +623,10 @@ const focusWithinResponderImpl = {
             onBeforeBlurWithin,
             DiscreteEvent,
           );
-          context.addRootEventTypes(rootEventTypes);
+          if (!state.addedRootEvents) {
+            state.addedRootEvents = true;
+            context.addRootEventTypes(rootEventTypes);
+          }
         } else {
           // We want to propagate to next focusWithin responder
           // if this responder doesn't handle beforeblur
@@ -660,7 +664,10 @@ const focusWithinResponderImpl = {
       if (detachedTarget !== null && detachedTarget === event.target) {
         dispatchBlurWithinEvents(context, event, props, state);
         state.detachedTarget = null;
-        context.removeRootEventTypes(rootEventTypes);
+        if (state.addedRootEvents) {
+          state.addedRootEvents = false;
+          context.removeRootEventTypes(rootEventTypes);
+        }
       }
     }
   },

@@ -8,14 +8,22 @@
  */
 
 import typeof * as FeatureFlagsType from 'shared/ReactFeatureFlags';
-import typeof * as FeatureFlagsShimType from './ReactFeatureFlags.www';
+import typeof * as ExportsType from './ReactFeatureFlags.www';
 
 // Re-export dynamic flags from the www version.
 export const {
   debugRenderPhaseSideEffectsForStrictMode,
+  deferPassiveEffectCleanupDuringUnmount,
   disableInputAttributeSyncing,
   enableTrustedTypesIntegration,
+  runAllPassiveEffectDestroysBeforeCreates,
+  warnAboutShorthandPropertyCollision,
+  disableSchedulerTimeoutBasedOnReactExpirationTime,
+  warnAboutSpreadingKeyToJSX,
 } = require('ReactFeatureFlags');
+
+// On WWW, __EXPERIMENTAL__ is used for a new modern build.
+// It's not used anywhere in production yet.
 
 // In www, we have experimental support for gathering data
 // from User Timing API calls in production. By default, we
@@ -23,7 +31,7 @@ export const {
 // somebody calls addUserTimingListener() which is exposed as an
 // experimental FB-only export, we call performance.mark/measure
 // as long as there is more than a single listener.
-export let enableUserTimingAPI = __DEV__;
+export let enableUserTimingAPI = __DEV__ && !__EXPERIMENTAL__;
 
 export const enableProfilerTimer = __PROFILE__;
 export const enableSchedulerTracing = __PROFILE__;
@@ -31,20 +39,14 @@ export const enableSchedulerDebugging = true;
 
 export const replayFailedUnitOfWorkWithInvokeGuardedCallback = false;
 export const warnAboutDeprecatedLifecycles = true;
-export const warnAboutShorthandPropertyCollision = false;
-export const disableLegacyContext = false;
+export const disableLegacyContext = __EXPERIMENTAL__;
 export const warnAboutStringRefs = false;
 export const warnAboutDefaultPropsOnFunctionComponents = false;
-export const disableSchedulerTimeoutBasedOnReactExpirationTime = false;
-
-export const enableTrainModelFix = true;
-
-export const exposeConcurrentModeAPIs = __EXPERIMENTAL__;
 
 export const enableSuspenseServerRenderer = true;
 export const enableSelectiveHydration = true;
 
-export const enableChunksAPI = __EXPERIMENTAL__;
+export const enableBlocksAPI = true;
 
 export const disableJavaScriptURLs = true;
 
@@ -81,26 +83,25 @@ export const enableFundamentalAPI = false;
 
 export const enableScopeAPI = true;
 
-export const enableJSXTransformAPI = true;
-
 export const warnAboutUnmockedScheduler = true;
 
 export const enableSuspenseCallback = true;
 
 export const flushSuspenseFallbacksInTests = true;
 
-export const enableNativeTargetAsInstance = false;
+export const disableTextareaChildren = __EXPERIMENTAL__;
 
-export const disableCreateFactory = false;
+export const disableMapsAsChildren = __EXPERIMENTAL__;
 
-export const disableTextareaChildren = false;
+export const warnUnstableRenderSubtreeIntoContainer = false;
 
-export const disableUnstableRenderSubtreeIntoContainer = false;
+export const enableModernEventSystem = false;
 
-export const disableUnstableCreatePortal = false;
+// Internal-only attempt to debug a React Native issue. See D20130868.
+export const throwEarlyForMysteriousError = false;
 
 // Flow magic to verify the exports of this file match the original version.
 // eslint-disable-next-line no-unused-vars
 type Check<_X, Y: _X, X: Y = _X> = null;
 // eslint-disable-next-line no-unused-expressions
-(null: Check<FeatureFlagsShimType, FeatureFlagsType>);
+(null: Check<ExportsType, FeatureFlagsType>);

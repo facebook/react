@@ -1,29 +1,29 @@
 'use strict';
 
-const bundleTypes = require('./bundles').bundleTypes;
-const moduleTypes = require('./bundles').moduleTypes;
+const {bundleTypes, moduleTypes} = require('./bundles');
 const inlinedHostConfigs = require('../shared/inlinedHostConfigs');
 
-const UMD_DEV = bundleTypes.UMD_DEV;
-const UMD_PROD = bundleTypes.UMD_PROD;
-const UMD_PROFILING = bundleTypes.UMD_PROFILING;
-const FB_WWW_DEV = bundleTypes.FB_WWW_DEV;
-const FB_WWW_PROD = bundleTypes.FB_WWW_PROD;
-const FB_WWW_PROFILING = bundleTypes.FB_WWW_PROFILING;
-const RN_OSS_DEV = bundleTypes.RN_OSS_DEV;
-const RN_OSS_PROD = bundleTypes.RN_OSS_PROD;
-const RN_OSS_PROFILING = bundleTypes.RN_OSS_PROFILING;
-const RN_FB_DEV = bundleTypes.RN_FB_DEV;
-const RN_FB_PROD = bundleTypes.RN_FB_PROD;
-const RN_FB_PROFILING = bundleTypes.RN_FB_PROFILING;
-const RENDERER = moduleTypes.RENDERER;
-const RECONCILER = moduleTypes.RECONCILER;
+const {
+  UMD_DEV,
+  UMD_PROD,
+  UMD_PROFILING,
+  FB_WWW_DEV,
+  FB_WWW_PROD,
+  FB_WWW_PROFILING,
+  RN_OSS_DEV,
+  RN_OSS_PROD,
+  RN_OSS_PROFILING,
+  RN_FB_DEV,
+  RN_FB_PROD,
+  RN_FB_PROFILING,
+} = bundleTypes;
+const {RENDERER, RECONCILER} = moduleTypes;
 
 // If you need to replace a file with another file for a specific environment,
 // add it to this list with the logic for choosing the right replacement.
 const forks = Object.freeze({
-  // Optimization: for UMDs, use object-assign polyfill that is already a part
-  // of the React package instead of bundling it again.
+  // Optimization: for UMDs, use a version that we can inline into the React bundle.
+  // Use that from all other bundles.
   'object-assign': (bundleType, entry, dependencies) => {
     if (
       bundleType !== UMD_DEV &&
@@ -34,12 +34,16 @@ const forks = Object.freeze({
       // happens. Other bundles just require('object-assign') anyway.
       return null;
     }
+    if (entry === 'react') {
+      // Use the forked version that uses ES modules instead of CommonJS.
+      return 'shared/forks/object-assign.inline-umd.js';
+    }
     if (dependencies.indexOf('react') === -1) {
       // We can only apply the optimizations to bundle that depend on React
       // because we read assign() from an object exposed on React internals.
       return null;
     }
-    // We can use the fork!
+    // We can use the fork that reads the secret export!
     return 'shared/forks/object-assign.umd.js';
   },
 
@@ -106,6 +110,14 @@ const forks = Object.freeze({
             return 'shared/forks/ReactFeatureFlags.test-renderer.www.js';
         }
         return 'shared/forks/ReactFeatureFlags.test-renderer.js';
+      case 'react-dom/testing':
+        switch (bundleType) {
+          case FB_WWW_DEV:
+          case FB_WWW_PROD:
+          case FB_WWW_PROFILING:
+            return 'shared/forks/ReactFeatureFlags.testing.www.js';
+        }
+        return 'shared/forks/ReactFeatureFlags.testing.js';
       default:
         switch (bundleType) {
           case FB_WWW_DEV:

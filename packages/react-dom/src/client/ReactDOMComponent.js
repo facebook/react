@@ -7,8 +7,6 @@
  * @flow
  */
 
-// TODO: direct imports like some-package/src/* are bad. Fix me.
-import {getCurrentFiberOwnerNameInDevOrNull} from 'react-reconciler/src/ReactCurrentFiber';
 import {registrationNameModules} from 'legacy-events/EventPluginRegistry';
 import {canUseDOM} from 'shared/ExecutionEnvironment';
 import endsWith from 'shared/endsWith';
@@ -57,14 +55,11 @@ import {
   TOP_SUBMIT,
   TOP_TOGGLE,
 } from '../events/DOMTopLevelEventTypes';
-import {
-  listenTo,
-  trapBubbledEvent,
-  getListenerMapForElement,
-} from '../events/ReactBrowserEventEmitter';
+import {getListenerMapForElement} from '../events/DOMEventListenerMap';
 import {
   addResponderEventSystemEvent,
   removeActiveResponderEventSystemEvent,
+  trapBubbledEvent,
 } from '../events/ReactDOMEventListener.js';
 import {mediaEventTypes} from '../events/DOMTopLevelEventTypes';
 import {
@@ -90,9 +85,9 @@ import {
   enableDeprecatedFlareAPI,
   enableTrustedTypesIntegration,
 } from 'shared/ReactFeatureFlags';
+import {legacyListenToEvent} from '../events/DOMLegacyEventPluginSystem';
 
 let didWarnInvalidHydration = false;
-let didWarnShadyDOM = false;
 let didWarnScriptTags = false;
 
 const DANGEROUSLY_SET_INNER_HTML = 'dangerouslySetInnerHTML';
@@ -274,7 +269,7 @@ function ensureListeningTo(
   const doc = isDocumentOrFragment
     ? rootContainerElement
     : rootContainerElement.ownerDocument;
-  listenTo(registrationName, doc);
+  legacyListenToEvent(registrationName, doc);
 }
 
 function getOwnerDocumentFromRootContainer(
@@ -511,18 +506,6 @@ export function setInitialProperties(
   const isCustomComponentTag = isCustomComponent(tag, rawProps);
   if (__DEV__) {
     validatePropertiesInDevelopment(tag, rawProps);
-    if (
-      isCustomComponentTag &&
-      !didWarnShadyDOM &&
-      (domElement: any).shadyRoot
-    ) {
-      console.error(
-        '%s is using shady DOM. Using shady DOM with React can ' +
-          'cause things to break subtly.',
-        getCurrentFiberOwnerNameInDevOrNull() || 'A component',
-      );
-      didWarnShadyDOM = true;
-    }
   }
 
   // TODO: Make sure that we check isMounted before firing any of these events.
@@ -908,18 +891,6 @@ export function diffHydratedProperties(
     suppressHydrationWarning = rawProps[SUPPRESS_HYDRATION_WARNING] === true;
     isCustomComponentTag = isCustomComponent(tag, rawProps);
     validatePropertiesInDevelopment(tag, rawProps);
-    if (
-      isCustomComponentTag &&
-      !didWarnShadyDOM &&
-      (domElement: any).shadyRoot
-    ) {
-      console.error(
-        '%s is using shady DOM. Using shady DOM with React can ' +
-          'cause things to break subtly.',
-        getCurrentFiberOwnerNameInDevOrNull() || 'A component',
-      );
-      didWarnShadyDOM = true;
-    }
   }
 
   // TODO: Make sure that we check isMounted before firing any of these events.

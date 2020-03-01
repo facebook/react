@@ -493,43 +493,6 @@ describe('ReactCompositeComponent', () => {
     ReactDOM.render(<Component prop={123} />, container);
   });
 
-  it('should warn about `setState` in getChildContext', () => {
-    const container = document.createElement('div');
-
-    let renderPasses = 0;
-
-    class Component extends React.Component {
-      state = {value: 0};
-
-      getChildContext() {
-        if (this.state.value === 0) {
-          this.setState({value: 1});
-        }
-      }
-
-      render() {
-        renderPasses++;
-        return <div />;
-      }
-    }
-    Component.childContextTypes = {};
-
-    let instance;
-
-    expect(() => {
-      instance = ReactDOM.render(<Component />, container);
-    }).toErrorDev(
-      'Warning: setState(...): Cannot call setState() inside getChildContext()',
-    );
-
-    expect(renderPasses).toBe(2);
-    expect(instance.state.value).toBe(1);
-
-    // Test deduplication; (no additional warnings are expected).
-    ReactDOM.unmountComponentAtNode(container);
-    ReactDOM.render(<Component />, container);
-  });
-
   it('should cleanup even if render() fatals', () => {
     class BadComponent extends React.Component {
       render() {

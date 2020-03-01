@@ -117,14 +117,14 @@ describe('Scheduler', () => {
 
     // Advance by just a bit more to expire the user blocking callbacks
     Scheduler.unstable_advanceTime(1);
-    expect(Scheduler).toHaveYielded([
+    expect(Scheduler).toFlushExpired([
       'B (did timeout: true)',
       'C (did timeout: true)',
     ]);
 
     // Expire A
     Scheduler.unstable_advanceTime(4600);
-    expect(Scheduler).toHaveYielded(['A (did timeout: true)']);
+    expect(Scheduler).toFlushExpired(['A (did timeout: true)']);
 
     // Flush the rest without expiring
     expect(Scheduler).toFlushAndYield([
@@ -140,7 +140,7 @@ describe('Scheduler', () => {
     expect(Scheduler).toHaveYielded([]);
 
     Scheduler.unstable_advanceTime(1);
-    expect(Scheduler).toHaveYielded(['A']);
+    expect(Scheduler).toFlushExpired(['A']);
   });
 
   it('continues working on same task after yielding', () => {
@@ -217,7 +217,7 @@ describe('Scheduler', () => {
 
     // Advance time by just a bit more. This should expire all the remaining work.
     Scheduler.unstable_advanceTime(1);
-    expect(Scheduler).toHaveYielded(['C', 'D']);
+    expect(Scheduler).toFlushExpired(['C', 'D']);
   });
 
   it('continuations are interrupted by higher priority work', () => {
@@ -705,7 +705,7 @@ describe('Scheduler', () => {
 
       // Now it expires
       Scheduler.unstable_advanceTime(1);
-      expect(Scheduler).toHaveYielded(['A']);
+      expect(Scheduler).toFlushExpired(['A']);
     });
 
     it('cancels a delayed task', () => {

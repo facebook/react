@@ -19,7 +19,7 @@ const renderSubtreeIntoContainer = require('react-dom')
 const ReactFeatureFlags = require('shared/ReactFeatureFlags');
 
 // Once this flag is always true, we should delete this test file
-if (ReactFeatureFlags.disableUnstableRenderSubtreeIntoContainer) {
+if (__EXPERIMENTAL__) {
   describe('renderSubtreeIntoContainer', () => {
     it('empty test', () => {
       // Empty test to prevent "Your test suite must contain at least one test." error.
@@ -56,14 +56,18 @@ if (ReactFeatureFlags.disableUnstableRenderSubtreeIntoContainer) {
         }
 
         componentDidMount() {
-          expect(
-            function() {
-              renderSubtreeIntoContainer(this, <Component />, portal);
-            }.bind(this),
-          ).toWarnDev(
-            'ReactDOM.unstable_renderSubtreeIntoContainer() is deprecated and ' +
-              'will be removed in a future major release. Consider using React Portals instead.',
-          );
+          if (ReactFeatureFlags.warnUnstableRenderSubtreeIntoContainer) {
+            expect(
+              function() {
+                renderSubtreeIntoContainer(this, <Component />, portal);
+              }.bind(this),
+            ).toWarnDev(
+              'ReactDOM.unstable_renderSubtreeIntoContainer() is deprecated and ' +
+                'will be removed in a future major release. Consider using React Portals instead.',
+            );
+          } else {
+            renderSubtreeIntoContainer(this, <Component />, portal);
+          }
         }
       }
 

@@ -152,31 +152,33 @@ export default {
          * Populates `cyclic` with cyclic segments.
          */
 
-        function countPathsFromStart(segment) {
+        function countPathsFromStart(segment, pathHistory) {
           const {cache} = countPathsFromStart;
           let paths = cache.get(segment.id);
+          const pathList = new Set(pathHistory);
 
-          // If `paths` is null then we've found a cycle! Add it to `cyclic` and
-          // any other segments which are a part of this cycle.
-          if (paths === null) {
-            if (cyclic.has(segment.id)) {
-              return 0;
-            } else {
-              cyclic.add(segment.id);
-              for (const prevSegment of segment.prevSegments) {
-                countPathsFromStart(prevSegment);
-              }
-              return 0;
+          // If `pathList` includes the current segment then we've found a cycle!
+          // We need to fill `cyclic` with all segments inside cycle
+          if (pathList.has(segment.id)) {
+            const pathArray = [...pathList];
+            const cyclicSegments = pathArray.slice(
+              pathArray.indexOf(segment.id) + 1,
+            );
+            for (const cyclicSegment of cyclicSegments) {
+              cyclic.add(cyclicSegment);
             }
+
+            return 0;
           }
+
+          // add the current segment to pathList
+          pathList.add(segment.id);
 
           // We have a cached `paths`. Return it.
           if (paths !== undefined) {
             return paths;
           }
 
-          // Compute `paths` and cache it. Guarding against cycles.
-          cache.set(segment.id, null);
           if (codePath.thrownSegments.includes(segment)) {
             paths = 0;
           } else if (segment.prevSegments.length === 0) {
@@ -184,7 +186,7 @@ export default {
           } else {
             paths = 0;
             for (const prevSegment of segment.prevSegments) {
-              paths += countPathsFromStart(prevSegment);
+              paths += countPathsFromStart(prevSegment, pathList);
             }
           }
 
@@ -221,31 +223,33 @@ export default {
          * Populates `cyclic` with cyclic segments.
          */
 
-        function countPathsToEnd(segment) {
+        function countPathsToEnd(segment, pathHistory) {
           const {cache} = countPathsToEnd;
           let paths = cache.get(segment.id);
+          let pathList = new Set(pathHistory);
 
-          // If `paths` is null then we've found a cycle! Add it to `cyclic` and
-          // any other segments which are a part of this cycle.
-          if (paths === null) {
-            if (cyclic.has(segment.id)) {
-              return 0;
-            } else {
-              cyclic.add(segment.id);
-              for (const nextSegment of segment.nextSegments) {
-                countPathsToEnd(nextSegment);
-              }
-              return 0;
+          // If `pathList` includes the current segment then we've found a cycle!
+          // We need to fill `cyclic` with all segments inside cycle
+          if (pathList.has(segment.id)) {
+            const pathArray = Array.from(pathList);
+            const cyclicSegments = pathArray.slice(
+              pathArray.indexOf(segment.id) + 1,
+            );
+            for (const cyclicSegment of cyclicSegments) {
+              cyclic.add(cyclicSegment);
             }
+
+            return 0;
           }
+
+          // add the current segment to pathList
+          pathList.add(segment.id);
 
           // We have a cached `paths`. Return it.
           if (paths !== undefined) {
             return paths;
           }
 
-          // Compute `paths` and cache it. Guarding against cycles.
-          cache.set(segment.id, null);
           if (codePath.thrownSegments.includes(segment)) {
             paths = 0;
           } else if (segment.nextSegments.length === 0) {
@@ -253,11 +257,11 @@ export default {
           } else {
             paths = 0;
             for (const nextSegment of segment.nextSegments) {
-              paths += countPathsToEnd(nextSegment);
+              paths += countPathsToEnd(nextSegment, pathList);
             }
           }
-          cache.set(segment.id, paths);
 
+          cache.set(segment.id, paths);
           return paths;
         }
 

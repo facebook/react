@@ -409,7 +409,7 @@ const capitalize = token => token[1].toUpperCase();
 // or boolean value assignment. Regular attributes that just accept strings
 // and have the same names are omitted, just like in the HTML whitelist.
 // Some of these attributes can be hard to find. This list was created by
-// scrapping the MDN documentation.
+// scraping the MDN documentation.
 [
   'accent-height',
   'alignment-baseline',

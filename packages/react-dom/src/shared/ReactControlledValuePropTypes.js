@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import checkPropTypes from 'prop-types/checkPropTypes';
+import checkPropTypes from 'shared/checkPropTypes';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import {enableDeprecatedFlareAPI} from 'shared/ReactFeatureFlags';
 

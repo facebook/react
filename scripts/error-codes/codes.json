@@ -98,8 +98,8 @@
   "96": "EventPluginRegistry: Cannot inject event plugins that do not exist in the plugin ordering, `%s`.",
   "97": "EventPluginRegistry: Event plugins must implement an `extractEvents` method, but `%s` does not.",
   "98": "EventPluginRegistry: Failed to publish event `%s` for plugin `%s`.",
-  "99": "EventPluginHub: More than one plugin attempted to publish the same event name, `%s`.",
-  "100": "EventPluginHub: More than one plugin attempted to publish the same registration name, `%s`.",
+  "99": "EventPluginRegistry: More than one plugin attempted to publish the same event name, `%s`.",
+  "100": "EventPluginRegistry: More than one plugin attempted to publish the same registration name, `%s`.",
   "101": "EventPluginRegistry: Cannot inject event plugin ordering more than once. You are likely trying to load more than one copy of React.",
   "102": "EventPluginRegistry: Cannot inject two different event plugins using the same name, `%s`.",
   "103": "executeDirectDispatch(...): Invalid `event`.",
@@ -307,7 +307,7 @@
   "306": "Element type is invalid. Received a promise that resolves to: %s. Lazy element type must resolve to a class or function.%s",
   "307": "Hooks can only be called inside the body of a function component. (https://fb.me/react-invalid-hook-call)",
   "308": "Context can only be read while React is rendering. In classes, you can read it in the render method or getDerivedStateFromProps. In function components, you can read it directly in the function body, but not inside Hooks like useReducer() or useMemo().",
-  "309": "Function components cannot have refs. Did you mean to use React.forwardRef()?",
+  "309": "Function components cannot have string refs. We recommend using useRef() instead. Learn more about using refs safely here: https://fb.me/react-strict-mode-string-ref",
   "310": "Rendered more hooks than during the previous render.",
   "311": "Should have a queue. This is likely a bug in React. Please file an issue.",
   "312": "Rendered more hooks than during the previous render",
@@ -344,5 +344,6 @@
   "343": "ReactDOMServer does not yet support scope components.",
   "344": "Expected prepareToHydrateHostSuspenseInstance() to never be called. This error is likely caused by a bug in React. Please file an issue.",
   "345": "Root did not complete. This is a bug in React.",
-  "346": "An event responder context was used outside of an event cycle."
+  "346": "An event responder context was used outside of an event cycle.",
+  "347": "Maps are not valid as a React child (found: %s). Consider converting children to an array of keyed ReactElements instead."
 }

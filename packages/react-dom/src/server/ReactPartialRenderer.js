@@ -12,7 +12,7 @@ import type {ReactElement} from 'shared/ReactElementType';
 import type {LazyComponent} from 'shared/ReactLazyComponent';
 import type {ReactProvider, ReactContext} from 'shared/ReactTypes';
 
-import React from 'react';
+import * as React from 'react';
 import invariant from 'shared/invariant';
 import getComponentName from 'shared/getComponentName';
 import describeComponentFrame from 'shared/describeComponentFrame';

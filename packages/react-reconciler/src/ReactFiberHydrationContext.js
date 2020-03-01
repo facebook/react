@@ -484,10 +484,6 @@ function resetHydrationState(): void {
   isHydrating = false;
 }
 
-function getIsHydrating(): boolean {
-  return isHydrating;
-}
-
 export {
   warnIfHydrating,
   enterHydrationState,
@@ -498,5 +494,4 @@ export {
   prepareToHydrateHostTextInstance,
   prepareToHydrateHostSuspenseInstance,
   popHydrationState,
-  getIsHydrating,
 };

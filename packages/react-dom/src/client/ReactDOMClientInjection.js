@@ -5,7 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import {injection as EventPluginHubInjection} from 'legacy-events/EventPluginHub';
 import {setComponentTree} from 'legacy-events/EventPluginUtils';
 
 import {
@@ -15,15 +14,35 @@ import {
 } from './ReactDOMComponentTree';
 import BeforeInputEventPlugin from '../events/BeforeInputEventPlugin';
 import ChangeEventPlugin from '../events/ChangeEventPlugin';
-import DOMEventPluginOrder from '../events/DOMEventPluginOrder';
 import EnterLeaveEventPlugin from '../events/EnterLeaveEventPlugin';
 import SelectEventPlugin from '../events/SelectEventPlugin';
 import SimpleEventPlugin from '../events/SimpleEventPlugin';
+import {
+  injectEventPluginOrder,
+  injectEventPluginsByName,
+} from 'legacy-events/EventPluginRegistry';
+
+/**
+ * Specifies a deterministic ordering of `EventPlugin`s. A convenient way to
+ * reason about plugins, without having to package every one of them. This
+ * is better than having plugins be ordered in the same order that they
+ * are injected because that ordering would be influenced by the packaging order.
+ * `ResponderEventPlugin` must occur before `SimpleEventPlugin` so that
+ * preventing default on events is convenient in `SimpleEventPlugin` handlers.
+ */
+const DOMEventPluginOrder = [
+  'ResponderEventPlugin',
+  'SimpleEventPlugin',
+  'EnterLeaveEventPlugin',
+  'ChangeEventPlugin',
+  'SelectEventPlugin',
+  'BeforeInputEventPlugin',
+];
 
 /**
  * Inject modules for resolving DOM hierarchy and plugin ordering.
  */
-EventPluginHubInjection.injectEventPluginOrder(DOMEventPluginOrder);
+injectEventPluginOrder(DOMEventPluginOrder);
 setComponentTree(
   getFiberCurrentPropsFromNode,
   getInstanceFromNode,
@@ -34,7 +53,7 @@ setComponentTree(
  * Some important event plugins included by default (without having to require
  * them).
  */
-EventPluginHubInjection.injectEventPluginsByName({
+injectEventPluginsByName({
   SimpleEventPlugin: SimpleEventPlugin,
   EnterLeaveEventPlugin: EnterLeaveEventPlugin,
   ChangeEventPlugin: ChangeEventPlugin,

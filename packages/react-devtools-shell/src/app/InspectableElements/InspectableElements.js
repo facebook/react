@@ -7,7 +7,8 @@
  * @flow
  */
 
-import React, {Fragment} from 'react';
+import * as React from 'react';
+import {Fragment} from 'react';
 import UnserializableProps from './UnserializableProps';
 import CircularReferences from './CircularReferences';
 import Contexts from './Contexts';

@@ -73,7 +73,7 @@ describe('ReactExpiration', () => {
     ReactNoop.render(<Text text="A" />);
     // Advance the timer.
     Scheduler.unstable_advanceTime(2000);
-    // Partially flush the the first update, then interrupt it.
+    // Partially flush the first update, then interrupt it.
     expect(Scheduler).toFlushAndYieldThrough(['A [render]']);
     interrupt();
 
@@ -138,7 +138,7 @@ describe('ReactExpiration', () => {
       ReactNoop.render(<Text text="A" />);
       // Advance the timer.
       Scheduler.unstable_advanceTime(2000);
-      // Partially flush the the first update, then interrupt it.
+      // Partially flush the first update, then interrupt it.
       expect(Scheduler).toFlushAndYieldThrough(['A [render]']);
       interrupt();
 

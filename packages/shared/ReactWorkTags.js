@@ -54,4 +54,4 @@ export const DehydratedFragment = 18;
 export const SuspenseListComponent = 19;
 export const FundamentalComponent = 20;
 export const ScopeComponent = 21;
-export const Chunk = 22;
+export const Block = 22;

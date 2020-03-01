@@ -17,10 +17,4 @@
 // `react-reconciler/inline-typed` (which *is*) for the current renderer.
 // On CI, we run Flow checks for each renderer separately.
 
-'use strict';
-
-const ReactFiberReconciler = require('./src/ReactFiberReconciler');
-
-// TODO: decide on the top-level export form.
-// This is hacky but makes it work with both Rollup and Jest.
-module.exports = ReactFiberReconciler.default || ReactFiberReconciler;
+export * from './src/ReactFiberReconciler';

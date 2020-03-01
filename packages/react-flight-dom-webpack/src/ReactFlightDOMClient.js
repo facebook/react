@@ -79,8 +79,4 @@ function readFromXHR<T>(request: XMLHttpRequest): ReactModelRoot<T> {
   return getModelRoot(response);
 }
 
-export default {
-  readFromXHR,
-  readFromFetch,
-  readFromReadableStream,
-};
+export {readFromXHR, readFromFetch, readFromReadableStream};

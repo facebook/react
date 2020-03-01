@@ -7,7 +7,9 @@
  * @flow
  */
 
+import type {ElementRef} from 'react';
 import type {
+  HostComponent,
   MeasureInWindowOnSuccessCallback,
   MeasureLayoutOnSuccessCallback,
   MeasureOnSuccessCallback,
@@ -104,11 +106,11 @@ class ReactFabricHostComponent {
   }
 
   blur() {
-    TextInputState.blurTextInput(this._nativeTag);
+    TextInputState.blurTextInput(this);
   }
 
   focus() {
-    TextInputState.focusTextInput(this._nativeTag);
+    TextInputState.focusTextInput(this);
   }
 
   measure(callback: MeasureOnSuccessCallback) {
@@ -126,7 +128,7 @@ class ReactFabricHostComponent {
   }
 
   measureLayout(
-    relativeToNativeNode: number | ReactFabricHostComponent,
+    relativeToNativeNode: number | ElementRef<HostComponent<mixed>>,
     onSuccess: MeasureLayoutOnSuccessCallback,
     onFail?: () => void /* currently unused */,
   ) {

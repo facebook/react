@@ -7,6 +7,4 @@
  * @flow
  */
 
-'use strict';
-
-module.exports = require('./src/dom/Press');
+export * from './src/dom/Press';

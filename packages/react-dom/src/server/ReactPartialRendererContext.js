@@ -12,14 +12,11 @@ import type {ReactContext} from 'shared/ReactTypes';
 
 import {disableLegacyContext} from 'shared/ReactFeatureFlags';
 import {REACT_CONTEXT_TYPE, REACT_PROVIDER_TYPE} from 'shared/ReactSymbols';
-import ReactSharedInternals from 'shared/ReactSharedInternals';
 import getComponentName from 'shared/getComponentName';
-import checkPropTypes from 'prop-types/checkPropTypes';
+import checkPropTypes from 'shared/checkPropTypes';
 
-let ReactDebugCurrentFrame;
 let didWarnAboutInvalidateContextType;
 if (__DEV__) {
-  ReactDebugCurrentFrame = ReactSharedInternals.ReactDebugCurrentFrame;
   didWarnAboutInvalidateContextType = new Set();
 }
 
@@ -42,13 +39,7 @@ function maskContext(type, context) {
 
 function checkContextTypes(typeSpecs, values, location: string) {
   if (__DEV__) {
-    checkPropTypes(
-      typeSpecs,
-      values,
-      location,
-      'Component',
-      ReactDebugCurrentFrame.getCurrentStack,
-    );
+    checkPropTypes(typeSpecs, values, location, 'Component');
   }
 }
 

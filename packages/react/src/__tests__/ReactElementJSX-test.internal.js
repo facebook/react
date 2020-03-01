@@ -31,7 +31,7 @@ describe('ReactElement.jsx', () => {
     global.Symbol = undefined;
 
     ReactFeatureFlags = require('shared/ReactFeatureFlags');
-    ReactFeatureFlags.enableJSXTransformAPI = true;
+    ReactFeatureFlags.warnAboutSpreadingKeyToJSX = true;
 
     React = require('react');
     ReactDOM = require('react-dom');
@@ -41,6 +41,11 @@ describe('ReactElement.jsx', () => {
   afterEach(() => {
     global.Symbol = originalSymbol;
   });
+
+  if (!__EXPERIMENTAL__) {
+    it("empty test so Jest doesn't complain", () => {});
+    return;
+  }
 
   it('allows static methods to be called using the type property', () => {
     class StaticMethodComponentClass extends React.Component {
@@ -68,7 +73,7 @@ describe('ReactElement.jsx', () => {
     expect(React.isValidElement(true)).toEqual(false);
     expect(React.isValidElement({})).toEqual(false);
     expect(React.isValidElement('string')).toEqual(false);
-    if (!ReactFeatureFlags.disableCreateFactory) {
+    if (!__EXPERIMENTAL__) {
       let factory;
       expect(() => {
         factory = React.createFactory('div');
@@ -291,9 +296,6 @@ describe('ReactElement.jsx', () => {
 
     jest.resetModules();
 
-    ReactFeatureFlags = require('shared/ReactFeatureFlags');
-    ReactFeatureFlags.enableJSXTransformAPI = true;
-
     React = require('react');
 
     class Component extends React.Component {
@@ -309,7 +311,7 @@ describe('ReactElement.jsx', () => {
     expect(React.isValidElement(true)).toEqual(false);
     expect(React.isValidElement({})).toEqual(false);
     expect(React.isValidElement('string')).toEqual(false);
-    if (!ReactFeatureFlags.disableCreateFactory) {
+    if (!__EXPERIMENTAL__) {
       let factory;
       expect(() => {
         factory = React.createFactory('div');
@@ -371,7 +373,7 @@ describe('ReactElement.jsx', () => {
     expect(() => ReactDOM.render(React.jsx(Parent, {}), container)).toErrorDev(
       'Warning: React.jsx: Spreading a key to JSX is a deprecated pattern. ' +
         'Explicitly pass a key after spreading props in your JSX call. ' +
-        'E.g. <ComponentName {...props} key={key} />',
+        'E.g. <Child {...props} key={key} />',
     );
   });
 

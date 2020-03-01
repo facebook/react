@@ -7,7 +7,8 @@
  * @flow
  */
 
-import React, {createContext, useCallback, useContext, useEffect} from 'react';
+import * as React from 'react';
+import {createContext, useCallback, useContext, useEffect} from 'react';
 import {createResource} from '../../cache';
 import {BridgeContext, StoreContext} from '../context';
 import {TreeStateContext} from './TreeContext';

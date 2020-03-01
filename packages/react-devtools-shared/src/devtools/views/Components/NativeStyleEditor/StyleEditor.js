@@ -7,7 +7,8 @@
  * @flow
  */
 
-import React, {useContext, useMemo, useRef, useState} from 'react';
+import * as React from 'react';
+import {useContext, useMemo, useRef, useState} from 'react';
 import {unstable_batchedUpdates as batchedUpdates} from 'react-dom';
 import {copy} from 'clipboard-js';
 import {

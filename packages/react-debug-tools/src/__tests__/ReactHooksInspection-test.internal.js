@@ -22,6 +22,11 @@ describe('ReactHooksInspection', () => {
     ReactDebugTools = require('react-debug-tools');
   });
 
+  if (!__EXPERIMENTAL__) {
+    it("empty test so Jest doesn't complain", () => {});
+    return;
+  }
+
   it('should inspect a simple useResponder hook', () => {
     const TestResponder = React.DEPRECATED_createResponder('TestResponder', {});
 

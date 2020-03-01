@@ -26,6 +26,4 @@ function pipeToNodeWritable(model: ReactModel, destination: Writable): void {
   startWork(request);
 }
 
-export default {
-  pipeToNodeWritable,
-};
+export {pipeToNodeWritable};

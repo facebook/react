@@ -7,7 +7,8 @@
  * @flow
  */
 
-import React, {memo, useCallback, useContext, useState} from 'react';
+import * as React from 'react';
+import {memo, useCallback, useContext} from 'react';
 import {areEqual} from 'react-window';
 import {minBarWidth} from './constants';
 import {getGradientColor} from './utils';
@@ -24,9 +25,9 @@ type Props = {
 };
 
 function CommitRankedListItem({data, index, style}: Props) {
-  const [isHovered, setIsHovered] = useState(false);
   const {
     chartData,
+    isHovered,
     onElementMouseEnter,
     onElementMouseLeave,
     scaleX,
@@ -42,21 +43,18 @@ function CommitRankedListItem({data, index, style}: Props) {
   const handleClick = useCallback(
     event => {
       event.stopPropagation();
-      selectFiber(node.id, node.name);
+      const {id, name} = node;
+      selectFiber(id, name);
     },
     [node, selectFiber],
   );
 
-  const handleMouseEnter = (id: number) => {
-    setIsHovered(true);
-
-    if (id !== null) {
-      onElementMouseEnter(id);
-    }
+  const handleMouseEnter = () => {
+    const {id, name} = node;
+    onElementMouseEnter({id, name});
   };
 
   const handleMouseLeave = () => {
-    setIsHovered(false);
     onElementMouseLeave();
   };
 
@@ -75,7 +73,7 @@ function CommitRankedListItem({data, index, style}: Props) {
       key={node.id}
       label={node.label}
       onClick={handleClick}
-      onMouseEnter={() => handleMouseEnter(node.id)}
+      onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
       width={Math.max(minBarWidth, scaleX(node.value, width))}
       x={0}

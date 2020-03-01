@@ -7,7 +7,7 @@
  * @flow
  */
 
-import React from 'react';
+import * as React from 'react';
 import Immutable from 'immutable';
 
 const set = new Set(['abc', 123]);
@@ -31,6 +31,8 @@ const immutable = Immutable.fromJS({
     xyz: 1,
   },
 });
+// $FlowFixMe
+const bigInt = BigInt(123); // eslint-disable-line no-undef
 
 export default function UnserializableProps() {
   return (
@@ -43,6 +45,7 @@ export default function UnserializableProps() {
       setOfSets={setOfSets}
       typedArray={typedArray}
       immutable={immutable}
+      bigInt={bigInt}
     />
   );
 }

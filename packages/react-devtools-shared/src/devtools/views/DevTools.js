@@ -12,7 +12,8 @@
 import '@reach/menu-button/styles.css';
 import '@reach/tooltip/styles.css';
 
-import React, {useEffect, useMemo, useState} from 'react';
+import * as React from 'react';
+import {useEffect, useMemo, useState} from 'react';
 import Store from '../store';
 import {BridgeContext, ContextMenuContext, StoreContext} from './context';
 import Components from './Components/Components';

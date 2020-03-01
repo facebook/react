@@ -13,8 +13,6 @@ const React = require('react');
 const ReactDOM = require('react-dom');
 const PropTypes = require('prop-types');
 
-const ReactFeatureFlags = require('shared/ReactFeatureFlags');
-
 describe('ReactDOMFiber', () => {
   let container;
 
@@ -249,7 +247,7 @@ describe('ReactDOMFiber', () => {
   });
 
   // TODO: remove in React 17
-  if (!ReactFeatureFlags.disableUnstableCreatePortal) {
+  if (!__EXPERIMENTAL__) {
     it('should support unstable_createPortal alias', () => {
       const portalContainer = document.createElement('div');
 
