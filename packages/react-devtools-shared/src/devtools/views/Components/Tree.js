@@ -257,9 +257,7 @@ export default function Tree(props: Props) {
     setIsNavigatingWithKeyboard(false);
   }, []);
 
-  const handleMouseLeave = () => {
-    clearNativeElementHighlight();
-  };
+  const handleMouseLeave = clearNativeElementHighlight;
 
   // Let react-window know to re-render any time the underlying tree data changes.
   // This includes the owner context, since it controls a filtered view of the tree.
