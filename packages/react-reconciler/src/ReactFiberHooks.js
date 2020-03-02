@@ -855,7 +855,10 @@ function rerenderReducer<S, I, A>(
 }
 
 type MutableSourceMemoizedState<Source, Snapshot> = {|
-  getSnapshot: MutableSourceGetSnapshotFn<Source, Snapshot>,
+  refs: {
+    getSnapshot: MutableSourceGetSnapshotFn<Source, Snapshot>,
+    stateHook: null | Hook,
+  },
   source: MutableSource<any>,
   subscribe: MutableSourceSubscribeFn<Source, Snapshot>,
 |};
@@ -944,61 +947,65 @@ function useMutableSource<Source, Snapshot>(
     Source,
     Snapshot,
   >);
-  const prevGetSnapshot = memoizedState.getSnapshot;
+  const refs = memoizedState.refs;
+  const prevGetSnapshot = refs.getSnapshot;
   const prevSource = memoizedState.source;
   const prevSubscribe = memoizedState.subscribe;
 
   hook.memoizedState = ({
-    getSnapshot,
+    refs,
     source,
     subscribe,
   }: MutableSourceMemoizedState<Source, Snapshot>);
+
+  // Sync the values needed by our subscribe function after each commit.
+  dispatcher.useEffect(() => {
+    refs.getSnapshot = getSnapshot;
+    refs.stateHook = stateHook;
+  }, [getSnapshot, stateHook]);
 
   // If we got a new source or subscribe function,
   // we'll need to subscribe in a passive effect,
   // and also check for any changes that fire between render and subscribe.
   dispatcher.useEffect(() => {
-    const shouldResubscribe =
-      isMount || subscribe !== prevSubscribe || source !== prevSource;
+    const handleChange = () => {
+      const latestGetSnapshot = refs.getSnapshot;
+      const latestStateHook = refs.stateHook;
+      try {
+        setSnapshot(latestGetSnapshot(source._source));
 
-    if (shouldResubscribe) {
-      const handleChange = () => {
-        const latestGetSnapshot = memoizedState.getSnapshot;
-        try {
-          setSnapshot(latestGetSnapshot(source._source));
-
-          // Record a pending mutable source update with the same expiration time.
-          const expirationTime = (stateHook.queue: any).pending.expirationTime;
-          setPendingExpirationTime(root, expirationTime);
-        } catch (error) {
-          // A selector might throw after a source mutation.
-          // e.g. it might try to read from a part of the store that no longer exists.
-          // In this case we should still schedule an update with React.
-          // Worst case the selector will throw again and then an error boundary will handle it.
-          setSnapshot(() => {
-            throw error;
-          });
-        }
-      };
-
-      const unsubscribe = subscribe(source._source, handleChange);
-      invariant(
-        typeof unsubscribe === 'function',
-        'Mutable source subscribe function must return an unsubscribe function.',
-      );
-
-      // Check for a possible change between when we last rendered and when we just subscribed.
-      const maybeNewVersion = getVersion();
-      if (version !== maybeNewVersion) {
-        const maybeNewSnapshot = getSnapshot(source._source);
-        if (snapshot !== maybeNewSnapshot) {
-          setSnapshot(maybeNewSnapshot);
-        }
+        // Record a pending mutable source update with the same expiration time.
+        const expirationTime = (latestStateHook: any).queue.pending
+          .expirationTime;
+        setPendingExpirationTime(root, expirationTime);
+      } catch (error) {
+        // A selector might throw after a source mutation.
+        // e.g. it might try to read from a part of the store that no longer exists.
+        // In this case we should still schedule an update with React.
+        // Worst case the selector will throw again and then an error boundary will handle it.
+        setSnapshot(() => {
+          throw error;
+        });
       }
+    };
 
-      return unsubscribe;
+    const unsubscribe = subscribe(source._source, handleChange);
+    invariant(
+      typeof unsubscribe === 'function',
+      'Mutable source subscribe function must return an unsubscribe function.',
+    );
+
+    // Check for a possible change between when we last rendered and when we just subscribed.
+    const maybeNewVersion = getVersion();
+    if (version !== maybeNewVersion) {
+      const maybeNewSnapshot = getSnapshot(source._source);
+      if (snapshot !== maybeNewSnapshot) {
+        setSnapshot(maybeNewSnapshot);
+      }
     }
-  }, [source, subscribe, getSnapshot]);
+
+    return unsubscribe;
+  }, [source, subscribe]);
 
   if (prevSource !== source || prevSubscribe !== subscribe) {
     // If either the source or the subscription have changed,
@@ -1007,17 +1014,9 @@ function useMutableSource<Source, Snapshot>(
     snapshot = readFromUnsubcribedMutableSource(source, getSnapshot);
 
     // Throw away any pending updates since they are no longer relevant.
-    const queue = (stateHook.queue = {
-      ...stateHook.queue,
-      pending: null,
-      lastRenderedState: snapshot,
-    });
-    setSnapshot = queue.dispatch = (dispatchAction.bind(
-      null,
-      currentlyRenderingFiber,
-      queue,
-    ): any);
-    hook.memoizedState = hook.baseState = snapshot;
+    // Be careful though; clearing too much can cause future updates to bail out incorrectly.
+    (stateHook.queue: any).pending = null;
+    stateHook.memoizedState = stateHook.baseState = snapshot;
   } else if (prevGetSnapshot !== getSnapshot) {
     const maybeNewSnapshot = getSnapshot(source._source);
 
@@ -1032,17 +1031,9 @@ function useMutableSource<Source, Snapshot>(
       snapshot = readFromUnsubcribedMutableSource(source, getSnapshot);
 
       // Throw away any pending updates since they are no longer relevant.
-      const queue = (stateHook.queue = {
-        ...stateHook.queue,
-        pending: null,
-        lastRenderedState: snapshot,
-      });
-      setSnapshot = queue.dispatch = (dispatchAction.bind(
-        null,
-        currentlyRenderingFiber,
-        queue,
-      ): any);
-      hook.memoizedState = hook.baseState = snapshot;
+      // Be careful though; clearing too much can cause future updates to bail out incorrectly.
+      (stateHook.queue: any).pending = null;
+      stateHook.memoizedState = stateHook.baseState = snapshot;
     }
   }
 
@@ -1056,7 +1047,10 @@ function mountMutableSource<Source, Snapshot>(
 ): Snapshot {
   const hook = mountWorkInProgressHook();
   hook.memoizedState = ({
-    getSnapshot,
+    refs: {
+      getSnapshot,
+      stateHook: null,
+    },
     source,
     subscribe,
   }: MutableSourceMemoizedState<Source, Snapshot>);

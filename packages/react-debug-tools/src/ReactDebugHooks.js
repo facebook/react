@@ -248,6 +248,7 @@ function useMutableSource<Source, Snapshot>(
   nextHook(); // MutableSource
   nextHook(); // State
   nextHook(); // Effect
+  nextHook(); // Effect
   const value = getSnapshot(source._source);
   hookLog.push({primitive: 'MutableSource', stackError: new Error(), value});
   return value;
