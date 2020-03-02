@@ -1008,32 +1008,38 @@ function useMutableSource<Source, Snapshot>(
   }, [source, subscribe]);
 
   if (prevSource !== source || prevSubscribe !== subscribe) {
+    // Throw away any pending updates since they are no longer relevant.
+    // Be careful though; clearing too much can cause future updates to bail out incorrectly.
+    // Reset the state queue even if the snapshot value did not change,
+    // since there may be pending lower priority updates for the old subscription.
+    (stateHook.queue: any).pending = null;
+    stateHook.baseQueue = null;
+    stateHook.memoizedState = stateHook.baseState = snapshot;
+
     // If either the source or the subscription have changed,
     // we need to treat the read as potentially unsafe,
     // since we can't rely on the current update queue.
     snapshot = readFromUnsubcribedMutableSource(source, getSnapshot);
-
-    // Throw away any pending updates since they are no longer relevant.
-    // Be careful though; clearing too much can cause future updates to bail out incorrectly.
-    (stateHook.queue: any).pending = null;
-    stateHook.memoizedState = stateHook.baseState = snapshot;
   } else if (prevGetSnapshot !== getSnapshot) {
     const maybeNewSnapshot = getSnapshot(source._source);
 
+    // Throw away any pending updates since they are no longer relevant.
+    // Be careful though; clearing too much can cause future updates to bail out incorrectly.
+    // Reset the state queue even if the snapshot value did not change,
+    // since there may be pending lower priority updates based on the old getSnapshot function.
+    (stateHook.queue: any).pending = null;
+    stateHook.baseQueue = null;
+    stateHook.memoizedState = stateHook.baseState = snapshot;
+
     // Normally a new getSnapshot function implies a new snapshot value.
     // This function should be memoized so that it only changes when its dependencies change.
-    // Tf the returned snapshot value is the same-
+    // If the returned snapshot value is the same-
     // it likely means getSnapshot is not memoized correctly (e.g. inline function).
     // In this case we can avoid the expensive deopt and just update local component state.
     if (snapshot !== maybeNewSnapshot) {
       // Even if the snapshot value did change, it might be okay to read the new value.
       // If it's not we'll throw and restart the render (to avoid tearing).
       snapshot = readFromUnsubcribedMutableSource(source, getSnapshot);
-
-      // Throw away any pending updates since they are no longer relevant.
-      // Be careful though; clearing too much can cause future updates to bail out incorrectly.
-      (stateHook.queue: any).pending = null;
-      stateHook.memoizedState = stateHook.baseState = snapshot;
     }
   }
 

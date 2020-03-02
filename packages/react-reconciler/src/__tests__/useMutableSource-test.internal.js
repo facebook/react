@@ -1018,37 +1018,30 @@ function loadModules({
     });
 
     it('should support inline selectors and updates that are processed after selector change', async () => {
-      const store = {
+      const source = createSource({
         a: 'initial',
         b: 'initial',
+      });
+      const mutableSource = createMutableSource(source);
 
-        version: 0,
-      };
+      const getSnapshotA = () => source.value.a;
+      const getSnapshotB = () => source.value.b;
 
-      let callbacks = new Set();
-
-      function subscribe(_, c) {
-        callbacks.add(c);
-        return () => {
-          callbacks.delete(c);
+      function mutateB(newB) {
+        source.value = {
+          ...source.value,
+          b: newB,
         };
       }
 
-      function mutateB(newB) {
-        store.b = newB;
-        store.version++;
-        callbacks.forEach(c => c());
-      }
-
-      const source = React.createMutableSource(store, () => store.version);
-
       function App({toggle}) {
-        const snapshot = useMutableSource(
-          source,
-          toggle ? () => store.b : () => store.a,
-          subscribe,
+        const state = useMutableSource(
+          mutableSource,
+          toggle ? getSnapshotB : getSnapshotA,
+          defaultSubscribe,
         );
-        return `${toggle ? 'on' : 'off'}: ${snapshot}`;
+        const result = (toggle ? 'on: ' : 'off: ') + state;
+        return result;
       }
 
       const root = ReactNoop.createRoot();
@@ -1067,6 +1060,100 @@ function loadModules({
         mutateB('Another update');
       });
       expect(root).toMatchRenderedOutput('on: Another update');
+    });
+
+    it('should clear the update queue when getSnapshot changes with pending lower priority updates', async () => {
+      const source = createSource({
+        a: 'initial',
+        b: 'initial',
+      });
+      const mutableSource = createMutableSource(source);
+
+      const getSnapshotA = () => source.value.a;
+      const getSnapshotB = () => source.value.b;
+
+      function mutateA(newA) {
+        source.value = {
+          ...source.value,
+          a: newA,
+        };
+      }
+
+      function mutateB(newB) {
+        source.value = {
+          ...source.value,
+          b: newB,
+        };
+      }
+
+      function App({toggle}) {
+        const state = useMutableSource(
+          mutableSource,
+          toggle ? getSnapshotB : getSnapshotA,
+          defaultSubscribe,
+        );
+        const result = (toggle ? 'B: ' : 'A: ') + state;
+        return result;
+      }
+
+      const root = ReactNoop.createRoot();
+      await act(async () => {
+        root.render(<App toggle={false} />);
+      });
+      expect(root).toMatchRenderedOutput('A: initial');
+
+      await act(async () => {
+        ReactNoop.discreteUpdates(() => {
+          // Update both A and B to the same value
+          mutateA('Update');
+          mutateB('Update');
+          // Toggle to B in the same batch
+          root.render(<App toggle={true} />);
+        });
+        // Mutate A at lower priority. This should never be rendered, because
+        // by the time we get to the lower priority, we've already switched
+        // to B.
+        mutateA('OOPS! This mutation should be ignored');
+      });
+      expect(root).toMatchRenderedOutput('B: Update');
+    });
+
+    it('should clear the update queue when source changes with pending lower priority updates', async () => {
+      const sourceA = createSource('initial');
+      const sourceB = createSource('initial');
+      const mutableSourceA = createMutableSource(sourceA);
+      const mutableSourceB = createMutableSource(sourceB);
+
+      function App({toggle}) {
+        const state = useMutableSource(
+          toggle ? mutableSourceB : mutableSourceA,
+          defaultGetSnapshot,
+          defaultSubscribe,
+        );
+        const result = (toggle ? 'B: ' : 'A: ') + state;
+        return result;
+      }
+
+      const root = ReactNoop.createRoot();
+      await act(async () => {
+        root.render(<App toggle={false} />);
+      });
+      expect(root).toMatchRenderedOutput('A: initial');
+
+      await act(async () => {
+        ReactNoop.discreteUpdates(() => {
+          // Update both A and B to the same value
+          sourceA.value = 'Update';
+          sourceB.value = 'Update';
+          // Toggle to B in the same batch
+          root.render(<App toggle={true} />);
+        });
+        // Mutate A at lower priority. This should never be rendered, because
+        // by the time we get to the lower priority, we've already switched
+        // to B.
+        sourceA.value = 'OOPS! This mutation should be ignored';
+      });
+      expect(root).toMatchRenderedOutput('B: Update');
     });
 
     // TODO (useMutableSource) Test for multiple updates at different priorities
