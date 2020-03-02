@@ -29,7 +29,7 @@ export type PluginModule<NativeEvent> = {
     nativeTarget: NativeEvent,
     nativeEventTarget: null | EventTarget,
     eventSystemFlags: EventSystemFlags,
-    container?: Document | Element | Node,
+    container?: Document | Element,
   ) => ?ReactSyntheticEvent,
   tapMoveThreshold?: number,
 };

@@ -9,6 +9,8 @@
 
 import type {DOMTopLevelEventType} from 'legacy-events/TopLevelEventTypes';
 
+import {registrationNameDependencies} from 'legacy-events/EventPluginRegistry';
+
 const PossiblyWeakMap = typeof WeakMap === 'function' ? WeakMap : Map;
 // prettier-ignore
 const elementListenerMap:
@@ -28,4 +30,20 @@ export function getListenerMapForElement(
     elementListenerMap.set(element, listenerMap);
   }
   return listenerMap;
+}
+
+export function isListeningToAllDependencies(
+  registrationName: string,
+  mountAt: Document | Element,
+): boolean {
+  const listenerMap = getListenerMapForElement(mountAt);
+  const dependencies = registrationNameDependencies[registrationName];
+
+  for (let i = 0; i < dependencies.length; i++) {
+    const dependency = dependencies[i];
+    if (!listenerMap.has(dependency)) {
+      return false;
+    }
+  }
+  return true;
 }

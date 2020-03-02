@@ -16,6 +16,7 @@ import type {FiberRoot} from 'react-reconciler/src/ReactFiberRoot';
 import {
   enableDeprecatedFlareAPI,
   enableSelectiveHydration,
+  enableModernEventSystem,
 } from 'shared/ReactFeatureFlags';
 import {
   unstable_runWithPriority as runWithPriority,
@@ -118,13 +119,14 @@ import {
 } from './DOMTopLevelEventTypes';
 import {IS_REPLAYED} from 'legacy-events/EventSystemFlags';
 import {legacyListenToTopLevelEvent} from './DOMLegacyEventPluginSystem';
+import {listenToTopLevelEvent} from './DOMModernPluginEventSystem';
 
 type QueuedReplayableEvent = {|
   blockedOn: null | Container | SuspenseInstance,
   topLevelType: DOMTopLevelEventType,
   eventSystemFlags: EventSystemFlags,
   nativeEvent: AnyNativeEvent,
-  container: Document | Element | Node,
+  container: Document | Element,
 |};
 
 let hasScheduledReplayAttempt = false;
@@ -211,12 +213,22 @@ export function isReplayableDiscreteEvent(
   return discreteReplayableEvents.indexOf(eventType) > -1;
 }
 
+function trapReplayableEventForContainer(
+  topLevelType: DOMTopLevelEventType,
+  container: Container,
+  listenerMap: Map<DOMTopLevelEventType | string, null | (any => void)>,
+) {
+  listenToTopLevelEvent(topLevelType, ((container: any): Element), listenerMap);
+}
+
 function trapReplayableEventForDocument(
   topLevelType: DOMTopLevelEventType,
   document: Document,
   listenerMap: Map<DOMTopLevelEventType | string, null | (any => void)>,
 ) {
-  legacyListenToTopLevelEvent(topLevelType, document, listenerMap);
+  if (!enableModernEventSystem) {
+    legacyListenToTopLevelEvent(topLevelType, document, listenerMap);
+  }
   if (enableDeprecatedFlareAPI) {
     // Trap events for the responder system.
     const topLevelTypeString = unsafeCastDOMTopLevelTypeToString(topLevelType);
@@ -241,12 +253,30 @@ export function eagerlyTrapReplayableEvents(
   document: Document,
 ) {
   const listenerMapForDoc = getListenerMapForElement(document);
+  let listenerMapForContainer;
+  if (enableModernEventSystem) {
+    listenerMapForContainer = getListenerMapForElement(container);
+  }
   // Discrete
   discreteReplayableEvents.forEach(topLevelType => {
+    if (enableModernEventSystem) {
+      trapReplayableEventForContainer(
+        topLevelType,
+        container,
+        listenerMapForContainer,
+      );
+    }
     trapReplayableEventForDocument(topLevelType, document, listenerMapForDoc);
   });
   // Continuous
   continuousReplayableEvents.forEach(topLevelType => {
+    if (enableModernEventSystem) {
+      trapReplayableEventForContainer(
+        topLevelType,
+        container,
+        listenerMapForContainer,
+      );
+    }
     trapReplayableEventForDocument(topLevelType, document, listenerMapForDoc);
   });
 }
@@ -255,7 +285,7 @@ function createQueuedReplayableEvent(
   blockedOn: null | Container | SuspenseInstance,
   topLevelType: DOMTopLevelEventType,
   eventSystemFlags: EventSystemFlags,
-  container: Document | Element | Node,
+  container: Document | Element,
   nativeEvent: AnyNativeEvent,
 ): QueuedReplayableEvent {
   return {
@@ -271,7 +301,7 @@ export function queueDiscreteEvent(
   blockedOn: null | Container | SuspenseInstance,
   topLevelType: DOMTopLevelEventType,
   eventSystemFlags: EventSystemFlags,
-  container: Document | Element | Node,
+  container: Document | Element,
   nativeEvent: AnyNativeEvent,
 ): void {
   const queuedEvent = createQueuedReplayableEvent(
@@ -346,7 +376,7 @@ function accumulateOrCreateContinuousQueuedReplayableEvent(
   blockedOn: null | Container | SuspenseInstance,
   topLevelType: DOMTopLevelEventType,
   eventSystemFlags: EventSystemFlags,
-  container: Document | Element | Node,
+  container: Document | Element,
   nativeEvent: AnyNativeEvent,
 ): QueuedReplayableEvent {
   if (
@@ -381,7 +411,7 @@ export function queueIfContinuousEvent(
   blockedOn: null | Container | SuspenseInstance,
   topLevelType: DOMTopLevelEventType,
   eventSystemFlags: EventSystemFlags,
-  container: Document | Element | Node,
+  container: Document | Element,
   nativeEvent: AnyNativeEvent,
 ): boolean {
   // These set relatedTarget to null because the replayed event will be treated as if we
