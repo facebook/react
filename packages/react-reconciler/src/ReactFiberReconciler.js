@@ -87,10 +87,10 @@ import {
   findHostInstancesForRefresh,
 } from './ReactFiberHotReloading';
 
-// used by isTestEnvironment builds
+// used by __TESTING__ builds
 import enqueueTask from 'shared/enqueueTask';
 import * as Scheduler from 'scheduler';
-// end isTestEnvironment imports
+// end __TESTING__ imports
 
 type OpaqueRoot = FiberRoot;
 
@@ -238,7 +238,7 @@ export function updateContainer(
   const currentTime = requestCurrentTimeForUpdate();
   if (__DEV__) {
     // $FlowExpectedError - jest isn't a global, and isn't recognized outside of tests
-    if ('undefined' !== typeof jest) {
+    if (__TESTING__ || 'undefined' !== typeof jest) {
       warnIfUnmockedScheduler(current);
       warnIfNotScopedWithMatchingAct(current);
     }

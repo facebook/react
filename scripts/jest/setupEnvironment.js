@@ -7,6 +7,7 @@ if (NODE_ENV !== 'development' && NODE_ENV !== 'production') {
 global.__DEV__ = NODE_ENV === 'development';
 global.__PROFILE__ = NODE_ENV === 'development';
 global.__UMD__ = false;
+global.__TESTING__ = true;
 
 const RELEASE_CHANNEL = process.env.RELEASE_CHANNEL;
 

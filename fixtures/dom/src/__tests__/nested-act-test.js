@@ -15,12 +15,15 @@ let TestAct;
 global.__DEV__ = process.env.NODE_ENV !== 'production';
 
 expect.extend(require('../toWarnDev'));
+jest.mock('react-dom', () =>
+  require.requireActual('react-dom/unstable-testing')
+);
 
 describe('unmocked scheduler', () => {
   beforeEach(() => {
     jest.resetModules();
     React = require('react');
-    DOMAct = require('react-dom/test-utils').act;
+    DOMAct = require('react-dom').act;
     TestRenderer = require('react-test-renderer');
     TestAct = TestRenderer.act;
   });

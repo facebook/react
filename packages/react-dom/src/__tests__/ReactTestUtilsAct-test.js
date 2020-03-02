@@ -9,7 +9,6 @@
 
 let React;
 let ReactDOM;
-let ReactTestUtils;
 let SchedulerTracing;
 let Scheduler;
 let act;
@@ -25,7 +24,7 @@ function sleep(period) {
   });
 }
 
-describe('ReactTestUtils.act()', () => {
+describe('act()', () => {
   // first we run all the tests with concurrent mode
   if (__EXPERIMENTAL__) {
     let concurrentRoot = null;
@@ -155,10 +154,9 @@ function runActTests(label, render, unmount, rerender) {
       jest.resetModules();
       React = require('react');
       ReactDOM = require('react-dom');
-      ReactTestUtils = require('react-dom/test-utils');
       SchedulerTracing = require('scheduler/tracing');
       Scheduler = require('scheduler');
-      act = ReactTestUtils.act;
+      act = ReactDOM.act;
       container = document.createElement('div');
       document.body.appendChild(container);
     });
@@ -721,7 +719,7 @@ function runActTests(label, render, unmount, rerender) {
     });
 
     describe('suspense', () => {
-      if (__DEV__ && __EXPERIMENTAL__) {
+      if (__EXPERIMENTAL__) {
         // todo - remove __DEV__ check once we start using testing builds
         it('triggers fallbacks if available', async () => {
           let resolved = false;
@@ -792,7 +790,7 @@ function runActTests(label, render, unmount, rerender) {
       }
     });
     describe('warn in prod mode', () => {
-      it('warns if you try to use act() in prod mode', () => {
+      xit('warns if you try to use act() in prod mode', () => {
         const spy = spyOnDevAndProd(console, 'error');
 
         act(() => {});

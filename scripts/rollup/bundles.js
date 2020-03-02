@@ -76,6 +76,24 @@ const bundles = [
     externals: [],
   },
 
+  /******* Isomorphic - Testing *******/
+  {
+    bundleTypes: [UMD_DEV, UMD_PROD, UMD_PROFILING, NODE_DEV, NODE_PROD],
+    moduleType: ISOMORPHIC,
+    entry: 'react/unstable-testing',
+    global: 'React',
+    externals: [],
+  },
+
+  /******* Isomorphic - www - Testing *******/
+  {
+    bundleTypes: [FB_WWW_DEV, FB_WWW_PROD, FB_WWW_PROFILING],
+    moduleType: ISOMORPHIC,
+    entry: 'react/unstable-testing',
+    global: 'ReactTesting',
+    externals: [],
+  },
+
   /******* React DOM *******/
   {
     bundleTypes: [
@@ -95,6 +113,32 @@ const bundles = [
     externals: ['react'],
   },
 
+  /******* React DOM - Testing *******/
+
+  {
+    moduleType: RENDERER,
+    bundleTypes: [
+      UMD_DEV,
+      UMD_PROD,
+      UMD_PROFILING,
+      NODE_DEV,
+      NODE_PROD,
+      NODE_PROFILING,
+    ],
+    entry: 'react-dom/unstable-testing',
+    global: 'ReactDOM',
+    externals: ['react'],
+  },
+
+  /******* React DOM - www - Testing *******/
+  {
+    moduleType: RENDERER,
+    bundleTypes: [FB_WWW_DEV, FB_WWW_PROD, FB_WWW_PROFILING],
+    entry: 'react-dom/unstable-testing',
+    global: 'ReactDOMTesting',
+    externals: ['react'],
+  },
+
   /******* Test Utils *******/
   {
     moduleType: RENDERER_UTILS,
@@ -102,15 +146,6 @@ const bundles = [
     entry: 'react-dom/test-utils',
     global: 'ReactTestUtils',
     externals: ['react', 'react-dom'],
-  },
-
-  /******* React DOM - www - Testing *******/
-  {
-    moduleType: RENDERER,
-    bundleTypes: [FB_WWW_DEV, FB_WWW_PROD, FB_WWW_PROFILING],
-    entry: 'react-dom/testing',
-    global: 'ReactDOMTesting',
-    externals: ['react'],
   },
 
   /* React DOM internals required for react-native-web (e.g., to shim native events from react-dom) */

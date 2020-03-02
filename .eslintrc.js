@@ -171,6 +171,7 @@ module.exports = {
     __PROFILE__: true,
     __UMD__: true,
     __EXPERIMENTAL__: true,
+    __TESTING__: true,
     trustedTypes: true,
   },
 };
