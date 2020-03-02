@@ -103,6 +103,7 @@ const rootEventTypes = hasPointerEvents
       'pointermove',
       'pointercancel',
       'scroll',
+      'blur',
     ]
   : [
       'click_active',
@@ -114,6 +115,7 @@ const rootEventTypes = hasPointerEvents
       'touchmove',
       'touchcancel',
       'scroll',
+      'blur',
     ];
 
 /**
@@ -696,6 +698,13 @@ const responderImpl = {
         }
         removeRootEventTypes(context, state);
         break;
+      }
+      case 'blur': {
+        // If we encounter a blur that happens on the pressed target
+        // then disengage the blur.
+        if (state.isActive && nativeEvent.target === state.responderTarget) {
+          dispatchCancel(context, props, state);
+        }
       }
     }
   },

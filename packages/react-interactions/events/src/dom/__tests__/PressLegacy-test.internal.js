@@ -1173,10 +1173,10 @@ describe.each(environmentTable)('Press responder', hasPointerEvents => {
     expect(onPressEnd).toBeCalled();
   });
 
-  it('focus moving to the window should stop the press', () => {
-    const onPress = jest.fn(e => e.preventDefault());
-    const onPressStart = jest.fn(e => e.preventDefault());
-    const onPressEnd = jest.fn(e => e.preventDefault());
+  it('when blur occurs on a pressed target, we should disengage press', () => {
+    const onPress = jest.fn();
+    const onPressStart = jest.fn();
+    const onPressEnd = jest.fn();
     const buttonRef = React.createRef();
 
     const Component = () => {
@@ -1187,10 +1187,8 @@ describe.each(environmentTable)('Press responder', hasPointerEvents => {
 
     const target = createEventTarget(buttonRef.current);
     target.pointerdown();
-    const secondTarget = createEventTarget(document);
-    // relatedTarget is null when moving focus to window
     expect(onPressStart).toBeCalled();
-    secondTarget.blur({relatedTarget: null});
+    target.blur();
     expect(onPressEnd).toBeCalled();
     target.pointerup();
     expect(onPress).not.toBeCalled();
