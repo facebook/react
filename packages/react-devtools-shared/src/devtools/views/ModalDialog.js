@@ -50,7 +50,7 @@ type ModalDialogContextType = {|
 const ModalDialogContext = createContext<ModalDialogContextType>(
   ((null: any): ModalDialogContextType),
 );
-(ModalDialogContext: any).displayName = 'ModalDialogContext';
+ModalDialogContext.displayName = 'ModalDialogContext';
 
 function dialogReducer(state, action) {
   switch (action.type) {

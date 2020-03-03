@@ -66,6 +66,9 @@ export type ReactContext<T> = {
   // DEV only
   _currentRenderer?: Object | null,
   _currentRenderer2?: Object | null,
+  // This value may be added by application code
+  // to improve DEV tooling display names
+  displayName?: string,
   ...
 };
 

@@ -48,7 +48,7 @@ type Context = {|
 |};
 
 const SettingsContext = createContext<Context>(((null: any): Context));
-(SettingsContext: any).displayName = 'SettingsContext';
+SettingsContext.displayName = 'SettingsContext';
 
 type DocumentElements = Array<HTMLElement>;
 

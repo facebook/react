@@ -130,12 +130,12 @@ export type DispatcherContext = (action: Action) => void;
 const TreeStateContext = createContext<StateContext>(
   ((null: any): StateContext),
 );
-(TreeStateContext: any).displayName = 'TreeStateContext';
+TreeStateContext.displayName = 'TreeStateContext';
 
 const TreeDispatcherContext = createContext<DispatcherContext>(
   ((null: any): DispatcherContext),
 );
-(TreeDispatcherContext: any).displayName = 'TreeDispatcherContext';
+TreeDispatcherContext.displayName = 'TreeDispatcherContext';
 
 type State = {|
   // Tree

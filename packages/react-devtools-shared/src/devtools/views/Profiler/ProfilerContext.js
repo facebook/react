@@ -71,7 +71,7 @@ export type Context = {|
 |};
 
 const ProfilerContext = createContext<Context>(((null: any): Context));
-(ProfilerContext: any).displayName = 'ProfilerContext';
+ProfilerContext.displayName = 'ProfilerContext';
 
 type StoreProfilingState = {|
   didRecordCommits: boolean,

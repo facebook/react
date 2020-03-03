@@ -66,23 +66,23 @@ class LegacyContextConsumer extends Component<any> {
 }
 
 const ModernContext = createContext();
-(ModernContext: any).displayName = 'ModernContext';
+ModernContext.displayName = 'ModernContext';
 const ArrayContext = createContext(contextData.array);
-(ArrayContext: any).displayName = 'ArrayContext';
+ArrayContext.displayName = 'ArrayContext';
 const BoolContext = createContext(contextData.bool);
-(BoolContext: any).displayName = 'BoolContext';
+BoolContext.displayName = 'BoolContext';
 const FuncContext = createContext(contextData.func);
-(FuncContext: any).displayName = 'FuncContext';
+FuncContext.displayName = 'FuncContext';
 const NumberContext = createContext(contextData.number);
-(NumberContext: any).displayName = 'NumberContext';
+NumberContext.displayName = 'NumberContext';
 const StringContext = createContext(contextData.string);
-(StringContext: any).displayName = 'StringContext';
+StringContext.displayName = 'StringContext';
 const SymbolContext = createContext(contextData.symbol);
-(SymbolContext: any).displayName = 'SymbolContext';
+SymbolContext.displayName = 'SymbolContext';
 const NullContext = createContext(null);
-(NullContext: any).displayName = 'NullContext';
+NullContext.displayName = 'NullContext';
 const UndefinedContext = createContext(undefined);
-(UndefinedContext: any).displayName = 'UndefinedContext';
+UndefinedContext.displayName = 'UndefinedContext';
 
 class ModernContextType extends Component<any> {
   static contextType = ModernContext;

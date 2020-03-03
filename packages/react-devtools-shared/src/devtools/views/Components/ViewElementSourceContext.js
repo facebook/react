@@ -20,6 +20,6 @@ export type Context = {|
 |};
 
 const ViewElementSourceContext = createContext<Context>(((null: any): Context));
-(ViewElementSourceContext: any).displayName = 'ViewElementSourceContext';
+ViewElementSourceContext.displayName = 'ViewElementSourceContext';
 
 export default ViewElementSourceContext;

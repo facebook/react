@@ -22,7 +22,7 @@ import {
 } from 'react';
 
 const Context = createContext('abc');
-(Context: any).displayName = 'ExampleContext';
+Context.displayName = 'ExampleContext';
 
 class ClassComponent extends Component<any> {
   render() {

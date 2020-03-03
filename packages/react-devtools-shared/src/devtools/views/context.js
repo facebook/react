@@ -16,10 +16,10 @@ import type {FrontendBridge} from 'react-devtools-shared/src/bridge';
 export const BridgeContext = createContext<FrontendBridge>(
   ((null: any): FrontendBridge),
 );
-(BridgeContext: any).displayName = 'BridgeContext';
+BridgeContext.displayName = 'BridgeContext';
 
 export const StoreContext = createContext<Store>(((null: any): Store));
-(StoreContext: any).displayName = 'StoreContext';
+StoreContext.displayName = 'StoreContext';
 
 export type ContextMenuContextType = {|
   isEnabledForInspectedElement: boolean,
@@ -30,4 +30,4 @@ export const ContextMenuContext = createContext<ContextMenuContextType>({
   isEnabledForInspectedElement: false,
   viewAttributeSourceFunction: null,
 });
-(ContextMenuContext: any).displayName = 'ContextMenuContext';
+ContextMenuContext.displayName = 'ContextMenuContext';

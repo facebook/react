@@ -42,7 +42,7 @@ type Context = {|
 |};
 
 const NativeStyleContext = createContext<Context>(((null: any): Context));
-(NativeStyleContext: any).displayName = 'NativeStyleContext';
+NativeStyleContext.displayName = 'NativeStyleContext';
 
 type ResolveFn = (styleAndLayout: StyleAndLayoutFrontend) => void;
 type InProgressRequest = {|
