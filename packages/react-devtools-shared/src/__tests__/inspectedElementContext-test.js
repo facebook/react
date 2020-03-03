@@ -148,7 +148,7 @@ describe('InspectedElementContext', () => {
 
     // Modern Context API
     const BoolContext = React.createContext(contextData.bool);
-    BoolContext.displayName = 'BoolContext';
+    (BoolContext: any).displayName = 'BoolContext';
 
     class ModernContextType extends React.Component<any> {
       static contextType = BoolContext;
@@ -158,7 +158,7 @@ describe('InspectedElementContext', () => {
     }
 
     const ModernContext = React.createContext();
-    ModernContext.displayName = 'ModernContext';
+    (ModernContext: any).displayName = 'ModernContext';
 
     const container = document.createElement('div');
     await utils.actAsync(() =>

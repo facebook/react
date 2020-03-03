@@ -55,7 +55,18 @@ function registerMenu(id: string, showFn: ShowFn, hideFn: HideFn) {
   };
 }
 
-export const RegistryContext = createContext({
+export type RegistryContextType = {|
+  hideMenu: () => void,
+  showMenu: ({|
+    data: Object,
+    id: string,
+    pageX: number,
+    pageY: number,
+  |}) => void,
+  registerMenu: (string, ShowFn, HideFn) => Function,
+|};
+
+export const RegistryContext = createContext<RegistryContextType>({
   hideMenu,
   showMenu,
   registerMenu,

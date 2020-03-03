@@ -903,13 +903,13 @@ const pressResponderImpl = {
   },
 };
 
-export const PressResponder = React.DEPRECATED_createResponder(
-  'Press',
-  pressResponderImpl,
-);
+export const PressResponder = React.DEPRECATED_createResponder<
+  ReactDOMResponderEvent,
+  ReactDOMResponderContext,
+>('Press', pressResponderImpl);
 
 export function usePress(
   props: PressProps,
-): ReactEventResponderListener<any, any> {
+): ?ReactEventResponderListener<any, any> {
   return React.DEPRECATED_useResponder(PressResponder, props);
 }

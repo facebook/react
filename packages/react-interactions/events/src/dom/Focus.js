@@ -494,14 +494,14 @@ const focusResponderImpl = {
   },
 };
 
-export const FocusResponder = React.DEPRECATED_createResponder(
-  'Focus',
-  focusResponderImpl,
-);
+export const FocusResponder = React.DEPRECATED_createResponder<
+  ReactDOMResponderEvent,
+  ReactDOMResponderContext,
+>('Focus', focusResponderImpl);
 
 export function useFocus(
   props: FocusProps,
-): ReactEventResponderListener<any, any> {
+): ?ReactEventResponderListener<any, any> {
   return React.DEPRECATED_useResponder(FocusResponder, props);
 }
 
@@ -680,13 +680,13 @@ const focusWithinResponderImpl = {
   },
 };
 
-export const FocusWithinResponder = React.DEPRECATED_createResponder(
-  'FocusWithin',
-  focusWithinResponderImpl,
-);
+export const FocusWithinResponder = React.DEPRECATED_createResponder<
+  ReactDOMResponderEvent,
+  ReactDOMResponderContext,
+>('FocusWithin', focusWithinResponderImpl);
 
 export function useFocusWithin(
   props: FocusWithinProps,
-): ReactEventResponderListener<any, any> {
+): ?ReactEventResponderListener<any, any> {
   return React.DEPRECATED_useResponder(FocusWithinResponder, props);
 }

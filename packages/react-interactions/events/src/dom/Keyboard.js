@@ -229,13 +229,13 @@ const keyboardResponderImpl = {
   },
 };
 
-export const KeyboardResponder = React.DEPRECATED_createResponder(
-  'Keyboard',
-  keyboardResponderImpl,
-);
+export const KeyboardResponder = React.DEPRECATED_createResponder<
+  ReactDOMResponderEvent,
+  ReactDOMResponderContext,
+>('Keyboard', keyboardResponderImpl);
 
 export function useKeyboard(
   props: KeyboardProps,
-): ReactEventResponderListener<any, any> {
+): ?ReactEventResponderListener<any, any> {
   return React.DEPRECATED_useResponder(KeyboardResponder, props);
 }

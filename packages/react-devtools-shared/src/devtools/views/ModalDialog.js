@@ -50,7 +50,7 @@ type ModalDialogContextType = {|
 const ModalDialogContext = createContext<ModalDialogContextType>(
   ((null: any): ModalDialogContextType),
 );
-ModalDialogContext.displayName = 'ModalDialogContext';
+(ModalDialogContext: any).displayName = 'ModalDialogContext';
 
 function dialogReducer(state, action) {
   switch (action.type) {
@@ -78,7 +78,7 @@ type Props = {|
 |};
 
 function ModalDialogContextController({children}: Props) {
-  const [state, dispatch] = useReducer<State, Action>(dialogReducer, {
+  const [state, dispatch] = useReducer<State, State, Action>(dialogReducer, {
     canBeDismissed: true,
     content: null,
     isVisible: false,

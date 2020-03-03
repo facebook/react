@@ -212,13 +212,13 @@ const inputResponderImpl = {
   },
 };
 
-export const InputResponder = React.DEPRECATED_createResponder(
-  'Input',
-  inputResponderImpl,
-);
+export const InputResponder = React.DEPRECATED_createResponder<
+  ReactDOMResponderEvent,
+  ReactDOMResponderContext,
+>('Input', inputResponderImpl);
 
 export function useInput(
   props: InputResponderProps,
-): ReactEventResponderListener<any, any> {
+): ?ReactEventResponderListener<any, any> {
   return React.DEPRECATED_useResponder(InputResponder, props);
 }

@@ -79,6 +79,7 @@ export function useEditableValue(
 ): [UseEditableValueState, UseEditableValueDispatch] {
   const [state, dispatch] = useReducer<
     UseEditableValueState,
+    UseEditableValueState,
     UseEditableValueAction,
   >(useEditableValueReducer, {
     editableValue: smartStringify(externalValue),
@@ -158,7 +159,7 @@ export function useLocalStorage<T>(
     }
   }, [initialValue, key]);
 
-  const [storedValue, setStoredValue] = useState(getValueFromLocalStorage);
+  const [storedValue, setStoredValue] = useState<any>(getValueFromLocalStorage);
 
   const setValue = useCallback(
     value => {

@@ -378,13 +378,13 @@ const hoverResponderFallbackImpl = {
   onUnmount: unmountResponder,
 };
 
-export const HoverResponder = React.DEPRECATED_createResponder(
-  'Hover',
-  hasPointerEvents ? hoverResponderImpl : hoverResponderFallbackImpl,
-);
+export const HoverResponder = React.DEPRECATED_createResponder<
+  ReactDOMResponderEvent,
+  ReactDOMResponderContext,
+>('Hover', hasPointerEvents ? hoverResponderImpl : hoverResponderFallbackImpl);
 
 export function useHover(
   props: HoverProps,
-): ReactEventResponderListener<any, any> {
+): ?ReactEventResponderListener<any, any> {
   return React.DEPRECATED_useResponder(HoverResponder, props);
 }

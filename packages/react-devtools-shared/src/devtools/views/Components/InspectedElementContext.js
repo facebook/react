@@ -51,15 +51,17 @@ export type GetInspectedElement = (
   id: number,
 ) => InspectedElementFrontend | null;
 
-type Context = {|
+export type InspectedElementContextType = {|
   copyInspectedElementPath: CopyInspectedElementPath,
   getInspectedElementPath: GetInspectedElementPath,
   getInspectedElement: GetInspectedElement,
   storeAsGlobal: StoreAsGlobal,
 |};
 
-const InspectedElementContext = createContext<Context>(((null: any): Context));
-InspectedElementContext.displayName = 'InspectedElementContext';
+const InspectedElementContext = createContext<InspectedElementContextType>(
+  ((null: any): InspectedElementContextType),
+);
+(InspectedElementContext: any).displayName = 'InspectedElementContext';
 
 type ResolveFn = (inspectedElement: InspectedElementFrontend) => void;
 type InProgressRequest = {|

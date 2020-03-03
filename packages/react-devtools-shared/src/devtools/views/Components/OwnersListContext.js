@@ -24,7 +24,7 @@ import type {Resource, Thenable} from '../../cache';
 type Context = (id: number) => Array<Owner> | null;
 
 const OwnersListContext = createContext<Context>(((null: any): Context));
-OwnersListContext.displayName = 'OwnersListContext';
+(OwnersListContext: any).displayName = 'OwnersListContext';
 
 type ResolveFn = (ownersList: Array<Owner> | null) => void;
 type InProgressRequest = {|

@@ -721,11 +721,13 @@ const responderImpl = {
   },
 };
 
-export const TapResponder = React.DEPRECATED_createResponder(
-  'Tap',
-  responderImpl,
-);
+export const TapResponder = React.DEPRECATED_createResponder<
+  ReactDOMResponderEvent,
+  ReactDOMResponderContext,
+>('Tap', responderImpl);
 
-export function useTap(props: TapProps): ReactEventResponderListener<any, any> {
+export function useTap(
+  props: TapProps,
+): ?ReactEventResponderListener<any, any> {
   return React.DEPRECATED_useResponder(TapResponder, props);
 }

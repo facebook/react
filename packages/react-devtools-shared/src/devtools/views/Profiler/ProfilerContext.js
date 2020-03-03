@@ -71,7 +71,7 @@ export type Context = {|
 |};
 
 const ProfilerContext = createContext<Context>(((null: any): Context));
-ProfilerContext.displayName = 'ProfilerContext';
+(ProfilerContext: any).displayName = 'ProfilerContext';
 
 type StoreProfilingState = {|
   didRecordCommits: boolean,
@@ -124,7 +124,10 @@ function ProfilerContextController({children}: Props) {
     supportsProfiling,
   } = useSubscription<StoreProfilingState>(subscription);
 
-  const [prevProfilingData, setPrevProfilingData] = useState();
+  const [
+    prevProfilingData,
+    setPrevProfilingData,
+  ] = useState<ProfilingDataFrontend | null>(null);
   const [rootID, setRootID] = useState<number | null>(null);
 
   if (prevProfilingData !== profilingData) {

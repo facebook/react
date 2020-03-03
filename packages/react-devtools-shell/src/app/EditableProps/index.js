@@ -66,7 +66,7 @@ function StatefulFunction({name}: StatefulFunctionProps) {
 }
 
 const BoolContext = createContext(true);
-BoolContext.displayName = 'BoolContext';
+(BoolContext: any).displayName = 'BoolContext';
 
 type Props = {|name: string, toggle: boolean|};
 type State = {|cities: Array<string>, state: string|};

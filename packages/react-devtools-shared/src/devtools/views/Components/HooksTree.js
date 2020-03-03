@@ -241,7 +241,7 @@ function HookView({canEditHooks, hook, id, inspectPath, path}: HookViewProps) {
   } else {
     let overrideValueFn = null;
     // TODO Maybe read editable value from debug hook?
-    if (canEditHooks && isStateEditable) {
+    if (canEditHooks && isStateEditable && hookID !== null) {
       overrideValueFn = (
         absolutePath: Array<string | number>,
         newValue: any,

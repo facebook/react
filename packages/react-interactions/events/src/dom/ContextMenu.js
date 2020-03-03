@@ -113,13 +113,13 @@ const contextMenuImpl = {
   },
 };
 
-export const ContextMenuResponder = React.DEPRECATED_createResponder(
-  'ContextMenu',
-  contextMenuImpl,
-);
+export const ContextMenuResponder = React.DEPRECATED_createResponder<
+  ReactDOMResponderEvent,
+  ReactDOMResponderContext,
+>('ContextMenu', contextMenuImpl);
 
 export function useContextMenu(
   props: ContextMenuProps,
-): ReactEventResponderListener<any, any> {
+): ?ReactEventResponderListener<any, any> {
   return React.DEPRECATED_useResponder(ContextMenuResponder, props);
 }

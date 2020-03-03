@@ -16,18 +16,18 @@ import type {FrontendBridge} from 'react-devtools-shared/src/bridge';
 export const BridgeContext = createContext<FrontendBridge>(
   ((null: any): FrontendBridge),
 );
-BridgeContext.displayName = 'BridgeContext';
+(BridgeContext: any).displayName = 'BridgeContext';
 
 export const StoreContext = createContext<Store>(((null: any): Store));
-StoreContext.displayName = 'StoreContext';
+(StoreContext: any).displayName = 'StoreContext';
 
 export type ContextMenuContextType = {|
   isEnabledForInspectedElement: boolean,
-  viewAttributeSourceFunction?: ?ViewAttributeSource,
+  viewAttributeSourceFunction: ViewAttributeSource | null,
 |};
 
 export const ContextMenuContext = createContext<ContextMenuContextType>({
   isEnabledForInspectedElement: false,
   viewAttributeSourceFunction: null,
 });
-ContextMenuContext.displayName = 'ContextMenuContext';
+(ContextMenuContext: any).displayName = 'ContextMenuContext';
