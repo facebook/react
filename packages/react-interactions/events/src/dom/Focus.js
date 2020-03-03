@@ -494,6 +494,7 @@ const focusResponderImpl = {
   },
 };
 
+// $FlowFixMe Can't add generic types without causing a parsing/syntax errors
 export const FocusResponder = React.DEPRECATED_createResponder(
   'Focus',
   focusResponderImpl,
@@ -501,7 +502,7 @@ export const FocusResponder = React.DEPRECATED_createResponder(
 
 export function useFocus(
   props: FocusProps,
-): ReactEventResponderListener<any, any> {
+): ?ReactEventResponderListener<any, any> {
   return React.DEPRECATED_useResponder(FocusResponder, props);
 }
 
@@ -680,6 +681,7 @@ const focusWithinResponderImpl = {
   },
 };
 
+// $FlowFixMe Can't add generic types without causing a parsing/syntax errors
 export const FocusWithinResponder = React.DEPRECATED_createResponder(
   'FocusWithin',
   focusWithinResponderImpl,
@@ -687,6 +689,6 @@ export const FocusWithinResponder = React.DEPRECATED_createResponder(
 
 export function useFocusWithin(
   props: FocusWithinProps,
-): ReactEventResponderListener<any, any> {
+): ?ReactEventResponderListener<any, any> {
   return React.DEPRECATED_useResponder(FocusWithinResponder, props);
 }

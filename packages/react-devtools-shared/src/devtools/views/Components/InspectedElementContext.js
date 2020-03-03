@@ -51,14 +51,16 @@ export type GetInspectedElement = (
   id: number,
 ) => InspectedElementFrontend | null;
 
-type Context = {|
+export type InspectedElementContextType = {|
   copyInspectedElementPath: CopyInspectedElementPath,
   getInspectedElementPath: GetInspectedElementPath,
   getInspectedElement: GetInspectedElement,
   storeAsGlobal: StoreAsGlobal,
 |};
 
-const InspectedElementContext = createContext<Context>(((null: any): Context));
+const InspectedElementContext = createContext<InspectedElementContextType>(
+  ((null: any): InspectedElementContextType),
+);
 InspectedElementContext.displayName = 'InspectedElementContext';
 
 type ResolveFn = (inspectedElement: InspectedElementFrontend) => void;

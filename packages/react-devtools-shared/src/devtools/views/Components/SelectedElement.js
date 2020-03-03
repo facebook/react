@@ -37,9 +37,11 @@ import {
 
 import styles from './SelectedElement.css';
 
+import type {ContextMenuContextType} from '../context';
 import type {
   CopyInspectedElementPath,
   GetInspectedElementPath,
+  InspectedElementContextType,
   StoreAsGlobal,
 } from './InspectedElementContext';
 import type {Element, InspectedElement} from './types';
@@ -62,8 +64,7 @@ export default function SelectedElement(_: Props) {
     getInspectedElementPath,
     getInspectedElement,
     storeAsGlobal,
-    viewInspectedElementPath,
-  } = useContext(InspectedElementContext);
+  } = useContext<InspectedElementContextType>(InspectedElementContext);
 
   const element =
     inspectedElementID !== null
@@ -244,7 +245,6 @@ export default function SelectedElement(_: Props) {
           getInspectedElementPath={getInspectedElementPath}
           inspectedElement={inspectedElement}
           storeAsGlobal={storeAsGlobal}
-          viewInspectedElementPath={viewInspectedElementPath}
         />
       )}
     </div>
@@ -270,7 +270,6 @@ function InspectedElementView({
   getInspectedElementPath,
   inspectedElement,
   storeAsGlobal,
-  viewInspectedElementPath,
 }: InspectedElementViewProps) {
   const {id, type} = element;
   const {
@@ -293,7 +292,7 @@ function InspectedElementView({
   const {
     isEnabledForInspectedElement,
     viewAttributeSourceFunction,
-  } = useContext(ContextMenuContext);
+  } = useContext<ContextMenuContextType>(ContextMenuContext);
 
   const inspectContextPath = useCallback(
     (path: Array<string | number>) => {

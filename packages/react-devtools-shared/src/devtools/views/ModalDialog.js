@@ -78,7 +78,7 @@ type Props = {|
 |};
 
 function ModalDialogContextController({children}: Props) {
-  const [state, dispatch] = useReducer<State, Action>(dialogReducer, {
+  const [state, dispatch] = useReducer<State, State, Action>(dialogReducer, {
     canBeDismissed: true,
     content: null,
     isVisible: false,

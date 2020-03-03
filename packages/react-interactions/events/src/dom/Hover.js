@@ -378,6 +378,7 @@ const hoverResponderFallbackImpl = {
   onUnmount: unmountResponder,
 };
 
+// $FlowFixMe Can't add generic types without causing a parsing/syntax errors
 export const HoverResponder = React.DEPRECATED_createResponder(
   'Hover',
   hasPointerEvents ? hoverResponderImpl : hoverResponderFallbackImpl,
@@ -385,6 +386,6 @@ export const HoverResponder = React.DEPRECATED_createResponder(
 
 export function useHover(
   props: HoverProps,
-): ReactEventResponderListener<any, any> {
+): ?ReactEventResponderListener<any, any> {
   return React.DEPRECATED_useResponder(HoverResponder, props);
 }

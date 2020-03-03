@@ -96,7 +96,9 @@ type Props = {|
 |};
 
 function CommitFlamegraph({chartData, commitTree, height, width}: Props) {
-  const [hoveredFiberData, hoverFiber] = useState<number | null>(null);
+  const [hoveredFiberData, hoverFiber] = useState<TooltipFiberData | null>(
+    null,
+  );
   const {lineHeight} = useContext(SettingsContext);
   const {selectFiber, selectedFiberID} = useContext(ProfilerContext);
 

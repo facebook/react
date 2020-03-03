@@ -14,6 +14,8 @@ import {RegistryContext} from './Contexts';
 
 import styles from './ContextMenu.css';
 
+import type {RegistryContextType} from './Contexts';
+
 function respositionToFit(element: HTMLElement, pageX: number, pageY: number) {
   const ownerWindow = element.ownerDocument.defaultView;
   if (element !== null) {
@@ -52,7 +54,7 @@ type Props = {|
 |};
 
 export default function ContextMenu({children, id}: Props) {
-  const {registerMenu} = useContext(RegistryContext);
+  const {registerMenu} = useContext<RegistryContextType>(RegistryContext);
 
   const [state, setState] = useState(HIDDEN_STATE);
 
@@ -61,12 +63,15 @@ export default function ContextMenu({children, id}: Props) {
   const menuRef = useRef(null);
 
   useEffect(() => {
-    const ownerDocument = bodyAccessorRef.current.ownerDocument;
-    containerRef.current = ownerDocument.createElement('div');
-    ownerDocument.body.appendChild(containerRef.current);
-    return () => {
-      ownerDocument.body.removeChild(containerRef.current);
-    };
+    const element = bodyAccessorRef.current;
+    if (element !== null) {
+      const ownerDocument = element.ownerDocument;
+      containerRef.current = ownerDocument.createElement('div');
+      ownerDocument.body.appendChild(containerRef.current);
+      return () => {
+        ownerDocument.body.removeChild(containerRef.current);
+      };
+    }
   }, []);
 
   useEffect(() => {
@@ -82,45 +87,52 @@ export default function ContextMenu({children, id}: Props) {
       return;
     }
 
-    const menu = menuRef.current;
+    const menu = ((menuRef.current: any): HTMLElement);
+    const container = containerRef.current;
+    if (container !== null) {
+      const hideUnlessContains = event => {
+        if (!menu.contains(event.target)) {
+          setState(HIDDEN_STATE);
+        }
+      };
 
-    const hideUnlessContains = event => {
-      if (!menu.contains(event.target)) {
+      const hide = event => {
         setState(HIDDEN_STATE);
-      }
-    };
+      };
 
-    const hide = event => {
-      setState(HIDDEN_STATE);
-    };
+      const ownerDocument = container.ownerDocument;
+      ownerDocument.addEventListener('mousedown', hideUnlessContains);
+      ownerDocument.addEventListener('touchstart', hideUnlessContains);
+      ownerDocument.addEventListener('keydown', hideUnlessContains);
 
-    const ownerDocument = containerRef.current.ownerDocument;
-    ownerDocument.addEventListener('mousedown', hideUnlessContains);
-    ownerDocument.addEventListener('touchstart', hideUnlessContains);
-    ownerDocument.addEventListener('keydown', hideUnlessContains);
+      const ownerWindow = ownerDocument.defaultView;
+      ownerWindow.addEventListener('resize', hide);
 
-    const ownerWindow = ownerDocument.defaultView;
-    ownerWindow.addEventListener('resize', hide);
+      respositionToFit(menu, state.pageX, state.pageY);
 
-    respositionToFit(menu, state.pageX, state.pageY);
+      return () => {
+        ownerDocument.removeEventListener('mousedown', hideUnlessContains);
+        ownerDocument.removeEventListener('touchstart', hideUnlessContains);
+        ownerDocument.removeEventListener('keydown', hideUnlessContains);
 
-    return () => {
-      ownerDocument.removeEventListener('mousedown', hideUnlessContains);
-      ownerDocument.removeEventListener('touchstart', hideUnlessContains);
-      ownerDocument.removeEventListener('keydown', hideUnlessContains);
-
-      ownerWindow.removeEventListener('resize', hide);
-    };
+        ownerWindow.removeEventListener('resize', hide);
+      };
+    }
   }, [state]);
 
   if (!state.isVisible) {
     return <div ref={bodyAccessorRef} />;
   } else {
-    return createPortal(
-      <div ref={menuRef} className={styles.ContextMenu}>
-        {children(state.data)}
-      </div>,
-      containerRef.current,
-    );
+    const container = containerRef.current;
+    if (container !== null) {
+      return createPortal(
+        <div ref={menuRef} className={styles.ContextMenu}>
+          {children(state.data)}
+        </div>,
+        container,
+      );
+    } else {
+      return null;
+    }
   }
 }

@@ -903,6 +903,7 @@ const pressResponderImpl = {
   },
 };
 
+// $FlowFixMe Can't add generic types without causing a parsing/syntax errors
 export const PressResponder = React.DEPRECATED_createResponder(
   'Press',
   pressResponderImpl,
@@ -910,6 +911,6 @@ export const PressResponder = React.DEPRECATED_createResponder(
 
 export function usePress(
   props: PressProps,
-): ReactEventResponderListener<any, any> {
+): ?ReactEventResponderListener<any, any> {
   return React.DEPRECATED_useResponder(PressResponder, props);
 }

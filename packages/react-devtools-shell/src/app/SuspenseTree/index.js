@@ -128,7 +128,7 @@ function SuspenseListTest() {
 }
 
 function LoadLater() {
-  const [loadChild, setLoadChild] = useState(0);
+  const [loadChild, setLoadChild] = useState(false);
   return (
     <Suspense
       fallback={

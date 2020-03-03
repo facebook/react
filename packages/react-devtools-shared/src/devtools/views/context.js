@@ -23,7 +23,7 @@ StoreContext.displayName = 'StoreContext';
 
 export type ContextMenuContextType = {|
   isEnabledForInspectedElement: boolean,
-  viewAttributeSourceFunction?: ?ViewAttributeSource,
+  viewAttributeSourceFunction: ViewAttributeSource | null,
 |};
 
 export const ContextMenuContext = createContext<ContextMenuContextType>({
