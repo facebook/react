@@ -66,7 +66,7 @@ function accumulateDirectionalDispatches(inst, phase, event) {
  * single traversal for the entire collection of events because each event may
  * have a different target.
  */
-function accumulateTwoPhaseDispatchesSingle(event) {
+export function accumulateTwoPhaseDispatchesSingle(event) {
   if (event && event.dispatchConfig.phasedRegistrationNames) {
     traverseTwoPhase(event._targetInst, accumulateDirectionalDispatches, event);
   }
