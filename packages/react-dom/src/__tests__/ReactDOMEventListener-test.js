@@ -12,6 +12,7 @@
 describe('ReactDOMEventListener', () => {
   let React;
   let ReactDOM;
+  let ReactFeatureFlags = require('shared/ReactFeatureFlags');
 
   beforeEach(() => {
     jest.resetModules();
@@ -19,29 +20,33 @@ describe('ReactDOMEventListener', () => {
     ReactDOM = require('react-dom');
   });
 
-  it('should dispatch events from outside React tree', () => {
-    const mock = jest.fn();
+  // We attached events to roots with the modern system,
+  // so this test is no longer valid.
+  if (!ReactFeatureFlags.enableModernEventSystem) {
+    it('should dispatch events from outside React tree', () => {
+      const mock = jest.fn();
 
-    const container = document.createElement('div');
-    const node = ReactDOM.render(<div onMouseEnter={mock} />, container);
-    const otherNode = document.createElement('h1');
-    document.body.appendChild(container);
-    document.body.appendChild(otherNode);
+      const container = document.createElement('div');
+      const node = ReactDOM.render(<div onMouseEnter={mock} />, container);
+      const otherNode = document.createElement('h1');
+      document.body.appendChild(container);
+      document.body.appendChild(otherNode);
 
-    try {
-      otherNode.dispatchEvent(
-        new MouseEvent('mouseout', {
-          bubbles: true,
-          cancelable: true,
-          relatedTarget: node,
-        }),
-      );
-      expect(mock).toBeCalled();
-    } finally {
-      document.body.removeChild(container);
-      document.body.removeChild(otherNode);
-    }
-  });
+      try {
+        otherNode.dispatchEvent(
+          new MouseEvent('mouseout', {
+            bubbles: true,
+            cancelable: true,
+            relatedTarget: node,
+          }),
+        );
+        expect(mock).toBeCalled();
+      } finally {
+        document.body.removeChild(container);
+        document.body.removeChild(otherNode);
+      }
+    });
+  }
 
   describe('Propagation', () => {
     it('should propagate events one level down', () => {
@@ -189,9 +194,25 @@ describe('ReactDOMEventListener', () => {
         // The first call schedules a render of '1' into the 'Child'.
         // However, we're batching so it isn't flushed yet.
         expect(mock.mock.calls[0][0]).toBe('Child');
-        // The first call schedules a render of '2' into the 'Child'.
-        // We're still batching so it isn't flushed yet either.
-        expect(mock.mock.calls[1][0]).toBe('Child');
+        if (ReactFeatureFlags.enableModernEventSystem) {
+          // As we have two roots, it means we have two event listeners.
+          // This also means we enter the event batching phase twice,
+          // flushing the child to be 1.
+
+          // We don't have any good way of knowing if another event will
+          // occur because another event handler might invoke
+          // stopPropagation() along the way. After discussions internally
+          // with Sebastian, it seems that for now over-flushing should
+          // be fine, especially as the new event system is a breaking
+          // change anyway. We can maybe revisit this later as part of
+          // the work to refine this in the scheduler (maybe by leveraging
+          // isInputPending?).
+          expect(mock.mock.calls[1][0]).toBe('1');
+        } else {
+          // The first call schedules a render of '2' into the 'Child'.
+          // We're still batching so it isn't flushed yet either.
+          expect(mock.mock.calls[1][0]).toBe('Child');
+        }
         // By the time we leave the handler, the second update is flushed.
         expect(childNode.textContent).toBe('2');
       } finally {
@@ -362,13 +383,25 @@ describe('ReactDOMEventListener', () => {
           bubbles: false,
         }),
       );
-      // Historically, we happened to not support onLoadStart
-      // on <img>, and this test documents that lack of support.
-      // If we decide to support it in the future, we should change
-      // this line to expect 1 call. Note that fixing this would
-      // be simple but would require attaching a handler to each
-      // <img>. So far nobody asked us for it.
-      expect(handleImgLoadStart).toHaveBeenCalledTimes(0);
+      if (ReactFeatureFlags.enableModernEventSystem) {
+        // As of the modern event system refactor, we now support
+        // this on <img>. The reason for this, is because we now
+        // attach all media events to the "root" or "portal" in the
+        // capture phase, rather than the bubble phase. This allows
+        // us to assign less event listeners to individual elements,
+        // which also nicely allows us to support more without needing
+        // to add more individual code paths to support various
+        // events that do not bubble.
+        expect(handleImgLoadStart).toHaveBeenCalledTimes(1);
+      } else {
+        // Historically, we happened to not support onLoadStart
+        // on <img>, and this test documents that lack of support.
+        // If we decide to support it in the future, we should change
+        // this line to expect 1 call. Note that fixing this would
+        // be simple but would require attaching a handler to each
+        // <img>. So far nobody asked us for it.
+        expect(handleImgLoadStart).toHaveBeenCalledTimes(0);
+      }
 
       videoRef.current.dispatchEvent(
         new ProgressEvent('loadstart', {
