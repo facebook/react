@@ -44,9 +44,10 @@ function pop<T>(cursor: StackCursor<T>, fiber: Fiber): void {
     // when enableSpeculativeWork is activated we need to allow for a fiber's
     // alternate to be popped off the stack due to reification of speculative work
     if (
-      fiber !== fiberStack[index] &&
+      fiberStack[index] !== fiber &&
       (!enableSpeculativeWork ||
-        (fiber.altnerate !== null && fiber.alternate !== fiberStack[index]))
+        (fiberStack[index].alternate !== null &&
+          fiberStack[index].alternate !== fiber))
     ) {
       console.error('Unexpected Fiber popped.');
     }

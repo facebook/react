@@ -86,6 +86,7 @@ import {
   resolveClassForHotReloading,
 } from './ReactFiberHotReloading';
 
+import {voidFiber} from './ReactFiber';
 import {
   mountChildFibers,
   reconcileChildFibers,
@@ -217,7 +218,15 @@ if (__DEV__) {
   didWarnAboutDefaultPropsOnFunctionComponent = {};
 }
 
+// holds the last workInProgress fiber before entering speculative mode
+// if we work our way back to this fiber without reifying we leave speculative
+// mode. if we reify we also clear this fiber upong reification
 let speculativeWorkRootFiber: Fiber | null = null;
+
+// used to tell whether we reified during a particular beginWork execution. This
+// is useful to reorient the unitOfWork in the work loop since it may have started
+// off as the current (in speculative mode) and needs to become the workInProgress
+// if reification happened
 let didReifySpeculativeWork: boolean = false;
 
 export function inSpeculativeWorkMode() {
@@ -331,6 +340,28 @@ function updateForwardRef(
   const render = Component.render;
   const ref = workInProgress.ref;
 
+  if (enableSpeculativeWork && inSpeculativeWorkMode()) {
+    if (
+      canBailoutSpeculativeWorkWithHooks(workInProgress, renderExpirationTime)
+    ) {
+      return bailoutOnAlreadyFinishedWork(
+        current,
+        workInProgress,
+        renderExpirationTime,
+      );
+    }
+    // this workInProgress is currently detatched from the actual workInProgress
+    // tree because the previous workInProgress is from the current tree and we
+    // don't yet have a return pointer to any fiber in the workInProgress tree
+    // it will get attached if/when we reify it and end our speculative work
+    workInProgress = createWorkInProgress(
+      current,
+      current.pendingProps,
+      NoWork,
+    );
+    workInProgress.return = current.return;
+  }
+
   // The rest is a fork of updateFunctionComponent
   let nextChildren;
   prepareToReadContext(workInProgress, renderExpirationTime);
@@ -371,6 +402,31 @@ function updateForwardRef(
       ref,
       renderExpirationTime,
     );
+  }
+
+  if (enableSpeculativeWork && inSpeculativeWorkMode()) {
+    if (current !== null && !didPushEffect) {
+      // if nextChildren have the same residue as previous children and there
+      // were not pushed effects which had an effect we can bail out.
+      // bailing out in this way is actually useful now with speculative work
+      // since we can avoid large reifications whereas with the old method a bailout
+      // here is really no better than bailing out in nextChildren's reconciliation
+      if (
+        current &&
+        current.residue ===
+          ((nextChildren && nextChildren.residue) || nextChildren)
+      ) {
+        bailoutHooks(current, workInProgress, renderExpirationTime);
+        return bailoutOnAlreadyFinishedWork(
+          current,
+          workInProgress,
+          renderExpirationTime,
+        );
+      }
+    }
+    // either effects were pushed or nextChildren had a different residue
+    // we need to reify
+    reifyWorkInProgress(current, workInProgress);
   }
 
   if (current !== null && !didReceiveUpdate) {
@@ -457,6 +513,16 @@ function updateMemoComponent(
     workInProgress.child = child;
     return child;
   }
+  // If we are in speculative work mode then we've rendered at least once
+  // and the props could not have changed so we don't need to check them
+  if (enableSpeculativeWork && inSpeculativeWorkMode()) {
+    didReceiveUpdate = false;
+    return bailoutOnAlreadyFinishedWork(
+      current,
+      workInProgress,
+      renderExpirationTime,
+    );
+  }
   if (__DEV__) {
     const type = Component.type;
     const innerPropTypes = type.propTypes;
@@ -536,6 +602,21 @@ function updateSimpleMemoComponent(
       }
       // Inner propTypes will be validated in the function component path.
     }
+  }
+  // If we are in speculative work mode then we've rendered at least once
+  // and the props could not have changed so we don't need to check them and
+  // can bail out of work if there is no update
+  if (
+    enableSpeculativeWork &&
+    inSpeculativeWorkMode() &&
+    updateExpirationTime < renderExpirationTime
+  ) {
+    didReceiveUpdate = false;
+    return bailoutOnAlreadyFinishedWork(
+      current,
+      workInProgress,
+      renderExpirationTime,
+    );
   }
   if (current !== null) {
     const prevProps = current.memoizedProps;
@@ -2868,6 +2949,20 @@ export function markWorkInProgressPushedEffect() {
   didPushEffect = true;
 }
 
+function markReturnsForSpeculativeWorkMode(speculativeWorkInProgress: Fiber) {
+  invariant(
+    speculativeWorkRootFiber !== null,
+    'markReturnsForSpeculativeWorkMode called when we are not yet in that mode. this is likely a bug with React itself',
+  );
+
+  // set each child to return to this workInProgress;
+  let childFiber = speculativeWorkInProgress.child;
+  while (childFiber !== null) {
+    childFiber.return = speculativeWorkInProgress;
+    childFiber = childFiber.sibling;
+  }
+}
+
 function enterSpeculativeWorkMode(workInProgress: Fiber) {
   invariant(
     speculativeWorkRootFiber === null,
@@ -2919,6 +3014,8 @@ function bailoutOnAlreadyFinishedWork(
       // work mode if not already in it and continue.
       if (speculativeWorkRootFiber === null) {
         enterSpeculativeWorkMode(workInProgress);
+      } else {
+        markReturnsForSpeculativeWorkMode(workInProgress);
       }
       // this child wasn't cloned so it is from the current tree
       return workInProgress.child;
@@ -2996,85 +3093,104 @@ function remountFiber(
 
 function reifyWorkInProgress(current: Fiber, workInProgress: Fiber | null) {
   didReifySpeculativeWork = true;
-  const originalCurrent = current;
+
+  if (workInProgress === null) {
+    // intentionally not returning anywhere yet
+    workInProgress = createWorkInProgress(
+      current,
+      current.pendingProps,
+      NoWork,
+    );
+    workInProgress.return = null;
+  }
+  let originalWorkInProgress = workInProgress;
 
   invariant(
     speculativeWorkRootFiber !== null,
     'reifyWorkInProgress was called when we are not in speculative work mode',
   );
 
-  let parent, parentWorkInProgress;
-  parentWorkInProgress = parent = current.return;
-  if (parent !== null && parent !== speculativeWorkRootFiber) {
-    parentWorkInProgress = createWorkInProgress(
-      parent,
-      parent.memoizedProps,
-      parent.expirationTime,
-    );
-    parentWorkInProgress.return = parent.return;
+  while (true) {
+    // fibers in the part of the tree already visited by beginWork need to have
+    // their expirationTime set to NoWork. fibers we have yet to visit in the reified
+    // tree need to maintain their expirationTime. This might need to be reworked
+    // where we don't reify to-be-visited fibers but that requires tracking speculative
+    // mode on the fiber.mode property
+    let alreadyCompletedSpeculativeChildFibers = true;
+
+    // when we encounter the reifiedCurrentChild we need to assign the reifiedNewChild rather
+    // than construct a new workInProgress
+    let reifiedNewChild = workInProgress;
+    let reifiedCurrentChild = current;
+
+    // special logic required when we are reifying into the speculativeWorkRootFiber
+    // this is because current.return will actually be pointing at the last workInProgress
+    // created before speculative work began whereas in other cases it will be pointing
+    // to it's parent from the current tree
+    if (current.return === speculativeWorkRootFiber) {
+      workInProgress = current.return;
+      current = current.return = workInProgress.alternate;
+    } else {
+      current = current.return;
+      workInProgress = createWorkInProgress(
+        current,
+        current.pendingProps,
+        NoWork,
+      );
+      workInProgress.return = null;
+    }
+
+    // visit each child of workInProgress and create a newChild
+    let child = workInProgress.child;
+    let parent = workInProgress;
+    let newChild = voidFiber;
+    while (child !== null) {
+      if (child === reifiedCurrentChild) {
+        newChild = newChild.sibling = parent.child = reifiedNewChild;
+        alreadyCompletedSpeculativeChildFibers = false;
+      } else {
+        newChild = newChild.sibling = parent.child = createWorkInProgress(
+          child,
+          child.pendingProps,
+          child.expirationTime,
+        );
+        newChild.return = null;
+        if (alreadyCompletedSpeculativeChildFibers) {
+          resetWorkInProgressFromCompletedSpeculativFiberExpirationTimes(
+            newChild,
+          );
+        }
+      }
+      // parent should only be workInProgress on first pass. use voidFiber
+      // as dummy for subsequent passes
+      parent = voidFiber;
+      newChild.return = workInProgress;
+      child = child.sibling;
+    }
+    voidFiber.child = null;
+    voidFiber.sibling = null;
+
+    if (workInProgress === speculativeWorkRootFiber) {
+      speculativeWorkRootFiber = null;
+      break;
+    }
   }
 
-  do {
-    // if the parent we're cloning child fibers from is the speculativeWorkRootFiber
-    // unset it so we don't go any higher
-    if (parentWorkInProgress === speculativeWorkRootFiber) {
-      speculativeWorkRootFiber = null;
-    }
+  return originalWorkInProgress;
+}
 
-    // clone parent WIP's child. use the current's workInProgress if the currentChild is
-    // the current fiber
-    let currentChild = parentWorkInProgress.child;
-    let newChild;
-    if (workInProgress !== null && currentChild === current) {
-      newChild = workInProgress;
-    } else {
-      newChild = createWorkInProgress(
-        currentChild,
-        currentChild.pendingProps,
-        currentChild.expirationTime,
-      );
-    }
-    parentWorkInProgress.child = newChild;
-
-    newChild.return = parentWorkInProgress;
-
-    // for each sibling of the parent's workInProgress create a workInProgress.
-    // use current's workInProgress if the sibiling is the current fiber
-    while (currentChild.sibling !== null) {
-      currentChild = currentChild.sibling;
-      if (workInProgress !== null && currentChild === current) {
-        newChild = newChild.sibling = workInProgress;
-      } else {
-        newChild = newChild.sibling = createWorkInProgress(
-          currentChild,
-          currentChild.pendingProps,
-          currentChild.expirationTime,
-        );
-      }
-      newChild.return = parentWorkInProgress;
-    }
-    newChild.sibling = null;
-
-    workInProgress = parentWorkInProgress;
-    current = parent;
-    if (speculativeWorkRootFiber !== null) {
-      parentWorkInProgress = parent = current.return;
-      if (parent !== null && parent !== speculativeWorkRootFiber) {
-        parentWorkInProgress = createWorkInProgress(
-          parent,
-          parent.pendingProps,
-          parent.expirationTime,
-        );
-        parentWorkInProgress.return = parent.return;
-      }
-    }
-  } while (speculativeWorkRootFiber !== null && parent !== null);
-
-  speculativeWorkRootFiber = null;
-
-  // returning alternate of original current because in some cases
-  // this function is called with no initialWorkInProgress
-  return originalCurrent.alternate;
+function resetWorkInProgressFromCompletedSpeculativFiberExpirationTimes(
+  reifyingFiber: Fiber,
+) {
+  // when a workInProgress is created from a current fiber after that fiber was completed in
+  // speculative mode we need to reflect that the work completed on this fiber's subtree is
+  // complete. that would not be reflected in the expiration times of the current tree and we
+  // want to avoid mutating them so we can effectively restart work. This is probably not the
+  // the right implementation however because it is possible there are lower priority expiration
+  // times in the speculative tree and marking these as NoWork effective hides those updates
+  // @TODO come back to this
+  reifyingFiber.expirationTime = NoWork;
+  reifyingFiber.childExpirationTime = NoWork;
 }
 
 function beginWork(
@@ -3126,7 +3242,11 @@ function beginWork(
     enableSpeculativeWork &&
     inSpeculativeWorkMode() &&
     workInProgress.tag !== ContextProvider &&
-    workInProgress.tag !== FunctionComponent
+    workInProgress.tag !== FunctionComponent &&
+    workInProgress.tag !== ForwardRef &&
+    workInProgress.tag !== SimpleMemoComponent &&
+    workInProgress.tag !== MemoComponent &&
+    workInProgress.tag > 6
   ) {
     workInProgress = reifyWorkInProgress(current, null);
   }
@@ -3322,6 +3442,19 @@ function beginWork(
     }
   } else {
     didReceiveUpdate = false;
+  }
+
+  // for now only support speculative work with certain fiber types.
+  // support for more can and should be added
+  if (
+    enableSpeculativeWork &&
+    inSpeculativeWorkMode() &&
+    workInProgress.tag !== FunctionComponent &&
+    workInProgress.tag !== ForwardRef &&
+    workInProgress.tag !== SimpleMemoComponent &&
+    workInProgress.tag !== MemoComponent
+  ) {
+    workInProgress = reifyWorkInProgress(current, null);
   }
 
   // @TODO pretty sure we need to not do this if we are in speculativeMode. perhaps make it part of reification?

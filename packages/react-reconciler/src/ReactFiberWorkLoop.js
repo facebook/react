@@ -1495,6 +1495,7 @@ function performUnitOfWork(unitOfWork: Fiber): Fiber | null {
   }
 
   resetCurrentDebugFiberInDEV();
+  // may not want to memoize props here when we did not reifyWork
   unitOfWork.memoizedProps = unitOfWork.pendingProps;
   if (next === null) {
     // If this doesn't spawn new work, complete the current work.
@@ -1515,8 +1516,16 @@ function completeUnitOfWork(unitOfWork: Fiber): Fiber | null {
     // need an additional field on the work in progress.
     const current = workInProgress.alternate;
     const returnFiber = workInProgress.return;
-    endSpeculationWorkIfRootFiber(workInProgress);
-    const workWasSpeculative = inSpeculativeWorkMode();
+    let workWasSpeculative;
+    if (enableSpeculativeWork) {
+      // this whole thing needs to be reworked. I think using mode on the fiber
+      // makes the most sense. we should clean up the speculative mode of children
+      // while completing work. this works b/c roots will never be speculative
+      // this will leave our tree with no speculative mode fibers but will allow
+      // for more natural logic than what you see below
+      endSpeculationWorkIfRootFiber(workInProgress);
+      workWasSpeculative = inSpeculativeWorkMode();
+    }
 
     // Check if the work completed or if something threw.
     if ((workInProgress.effectTag & Incomplete) === NoEffect) {

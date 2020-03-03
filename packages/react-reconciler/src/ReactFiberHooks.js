@@ -747,11 +747,11 @@ function bailoutContext(hook: Hook): boolean {
   if (selector !== null) {
     if (previousContextValue !== peekedContextValue) {
       const stashedSelection = selector(peekedContextValue);
+      // stashed selections will get applied to the hook's memoized state as
+      // part of the render phase of the workInProgress fiber
+      memoizedState.stashedSelection = stashedSelection;
+      memoizedState.stashedContextValue = peekedContextValue;
       if (stashedSelection !== memoizedState.selection) {
-        // stashed selections will get applied to the hook's memoized state as
-        // part of the render phase of the workInProgress fiber
-        memoizedState.stashedSelection = stashedSelection;
-        memoizedState.stashedContextValue = peekedContextValue;
         return false;
       }
     }

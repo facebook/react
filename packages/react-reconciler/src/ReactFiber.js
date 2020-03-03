@@ -372,6 +372,8 @@ const createFiber = function(
   return new FiberNode(tag, pendingProps, key, mode);
 };
 
+export const voidFiber = createFiber(0, null, null, 0);
+
 function shouldConstruct(Component: Function) {
   const prototype = Component.prototype;
   return !!(prototype && prototype.isReactComponent);
