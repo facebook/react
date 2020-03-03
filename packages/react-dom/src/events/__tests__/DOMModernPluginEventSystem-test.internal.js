@@ -13,14 +13,10 @@ let React;
 let ReactFeatureFlags;
 let ReactDOM;
 
-function dispatchEvent(element, type) {
-  const event = document.createEvent('Event');
-  event.initEvent(type, true, true);
-  element.dispatchEvent(event);
-}
-
 function dispatchClickEvent(element) {
-  dispatchEvent(element, 'click');
+  const event = document.createEvent('Event');
+  event.initEvent('click', true, true);
+  element.dispatchEvent(event);
 }
 
 describe('DOMModernPluginEventSystem', () => {

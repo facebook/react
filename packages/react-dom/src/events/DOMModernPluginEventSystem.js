@@ -12,6 +12,7 @@ import type {DOMTopLevelEventType} from 'legacy-events/TopLevelEventTypes';
 import type {EventSystemFlags} from 'legacy-events/EventSystemFlags';
 import type {Fiber} from 'react-reconciler/src/ReactFiber';
 import type {PluginModule} from 'legacy-events/PluginModuleType';
+import type {ReactSyntheticEvent} from 'legacy-events/ReactSyntheticEventType';
 
 import {registrationNameDependencies} from 'legacy-events/EventPluginRegistry';
 import {batchedEventUpdates} from 'legacy-events/ReactGenericBatching';
@@ -102,11 +103,11 @@ function dispatchEventsForPlugins(
   rootContainer: Element | Document,
 ): void {
   const nativeEventTarget = getEventTarget(nativeEvent);
-  const syntheticEvents = [];
+  const syntheticEvents: Array<ReactSyntheticEvent> = [];
 
   for (let i = 0; i < plugins.length; i++) {
     const possiblePlugin: PluginModule<AnyNativeEvent> = plugins[i];
-    if (possiblePlugin) {
+    if (possiblePlugin !== undefined) {
       const extractedEvents = possiblePlugin.extractEvents(
         topLevelType,
         targetInst,
@@ -115,12 +116,13 @@ function dispatchEventsForPlugins(
         eventSystemFlags,
         rootContainer,
       );
-      if (extractedEvents) {
-        if (isArray(extractedEvents)) {
-          syntheticEvents.push(...(extractedEvents: any));
-        } else {
-          syntheticEvents.push(extractedEvents);
-        }
+      if (isArray(extractedEvents)) {
+        // Flow complains about @@iterator being missing in ReactSyntheticEvent,
+        // so we cast to avoid the Flow error.
+        const arrOfExtractedEvents = ((extractedEvents: any): Array<ReactSyntheticEvent>);
+        syntheticEvents.push(...arrOfExtractedEvents);
+      } else if (extractedEvents != null) {
+        syntheticEvents.push(extractedEvents);
       }
     }
   }
