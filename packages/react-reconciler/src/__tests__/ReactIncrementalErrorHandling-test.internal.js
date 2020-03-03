@@ -381,6 +381,56 @@ describe('ReactIncrementalErrorHandling', () => {
     expect(ReactNoop.getChildren()).toEqual([]);
   });
 
+  it('retries one more time if an error occurs during a render that expires midway through the tree', () => {
+    function Oops() {
+      Scheduler.unstable_yieldValue('Oops');
+      throw new Error('Oops');
+    }
+
+    function Text({text}) {
+      Scheduler.unstable_yieldValue(text);
+      return text;
+    }
+
+    function App() {
+      return (
+        <>
+          <Text text="A" />
+          <Text text="B" />
+          <Oops />
+          <Text text="C" />
+          <Text text="D" />
+        </>
+      );
+    }
+
+    ReactNoop.render(<App />);
+
+    // Render part of the tree
+    expect(Scheduler).toFlushAndYieldThrough(['A', 'B']);
+
+    // Expire the render midway through
+    Scheduler.unstable_advanceTime(10000);
+    expect(() => Scheduler.unstable_flushExpired()).toThrow('Oops');
+
+    expect(Scheduler).toHaveYielded([
+      // The render expired, but we shouldn't throw out the partial work.
+      // Finish the current level.
+      'Oops',
+      'C',
+      'D',
+
+      // Since the error occured during a partially concurrent render, we should
+      // retry one more time, synchonrously.
+      'A',
+      'B',
+      'Oops',
+      'C',
+      'D',
+    ]);
+    expect(ReactNoop.getChildren()).toEqual([]);
+  });
+
   it('calls componentDidCatch multiple times for multiple errors', () => {
     let id = 0;
     class BadMount extends React.Component {
@@ -539,7 +589,12 @@ describe('ReactIncrementalErrorHandling', () => {
     expect(ops).toEqual([
       'ErrorBoundary render success',
       'BrokenRender',
-      // React doesn't retry because we're already rendering synchronously.
+
+      // React retries one more time
+      'ErrorBoundary render success',
+      'BrokenRender',
+
+      // Errored again on retry. Now handle it.
       'ErrorBoundary componentDidCatch',
       'ErrorBoundary render error',
     ]);
@@ -583,7 +638,12 @@ describe('ReactIncrementalErrorHandling', () => {
     expect(ops).toEqual([
       'ErrorBoundary render success',
       'BrokenRender',
-      // React doesn't retry because we're already rendering synchronously.
+
+      // React retries one more time
+      'ErrorBoundary render success',
+      'BrokenRender',
+
+      // Errored again on retry. Now handle it.
       'ErrorBoundary componentDidCatch',
       'ErrorBoundary render error',
     ]);
@@ -702,7 +762,12 @@ describe('ReactIncrementalErrorHandling', () => {
     expect(ops).toEqual([
       'RethrowErrorBoundary render',
       'BrokenRender',
-      // React doesn't retry because we're already rendering synchronously.
+
+      // React retries one more time
+      'RethrowErrorBoundary render',
+      'BrokenRender',
+
+      // Errored again on retry. Now handle it.
       'RethrowErrorBoundary componentDidCatch',
     ]);
     expect(ReactNoop.getChildren()).toEqual([]);
@@ -741,7 +806,12 @@ describe('ReactIncrementalErrorHandling', () => {
     expect(ops).toEqual([
       'RethrowErrorBoundary render',
       'BrokenRender',
-      // React doesn't retry because we're already rendering synchronously.
+
+      // React retries one more time
+      'RethrowErrorBoundary render',
+      'BrokenRender',
+
+      // Errored again on retry. Now handle it.
       'RethrowErrorBoundary componentDidCatch',
     ]);
     expect(ReactNoop.getChildren()).toEqual([]);
