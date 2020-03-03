@@ -37,7 +37,7 @@ function resolveDispatcher() {
 export function useContext<T>(
   Context: ReactContext<T>,
   unstable_observedBits: number | boolean | void,
-) {
+): T {
   const dispatcher = resolveDispatcher();
   if (__DEV__) {
     if (unstable_observedBits !== undefined) {
