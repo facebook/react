@@ -2803,8 +2803,7 @@ function warnAboutUpdateOnUnmountedFiberInDEV(fiber) {
 
     // We show the whole stack but dedupe on the top component's name because
     // the problematic code almost always lies inside that component.
-    // FIXME
-    const componentName = null || 'ReactComponent';
+    const componentName = getComponentName(fiber.type) || 'ReactComponent';
     if (didWarnStateUpdateForUnmountedComponent !== null) {
       if (didWarnStateUpdateForUnmountedComponent.has(componentName)) {
         return;
