@@ -654,7 +654,7 @@ function resolve(
           console.error(
             '%s uses the legacy childContextTypes API which is no longer supported. ' +
               'Use React.createContext() instead.',
-            null || 'Unknown',
+            getComponentName(Component) || 'Unknown',
           );
         }
       }
