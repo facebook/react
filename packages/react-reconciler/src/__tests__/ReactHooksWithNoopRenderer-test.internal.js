@@ -364,7 +364,8 @@ describe('ReactHooksWithNoopRenderer', () => {
           'tasks in a useEffect cleanup function.\n' +
           '    in CounterA (at **)',
       );
-      expect(() => act(() => _updateCountA(1))).not.toErrorDev('**');
+      // already cached so this logs no error
+      act(() => _updateCountA(1));
       expect(() => act(() => _updateCountB(1))).toErrorDev(
         "Warning: Can't perform a React state update on an unmounted " +
           'component. This is a no-op, but it indicates a memory leak in your ' +
