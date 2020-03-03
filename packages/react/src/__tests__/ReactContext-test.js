@@ -21,7 +21,7 @@ describe('ReactContext', () => {
     ReactDOMServer = require('react-dom/server');
   });
 
-  it('ignores displayName on the context type', () => {
+  it('should honor a displayName if set on the context type', () => {
     const Context = React.createContext(null);
     Context.displayName = 'MyContextType';
     function Validator() {
@@ -38,8 +38,8 @@ describe('ReactContext', () => {
     }).toErrorDev(
       'Warning: Failed prop type: The prop `dontPassToSeeErrorStack` is marked as required in `Validator`, but its value is `undefined`.\n' +
         '    in Validator (at **)\n' +
-        '    in Context.Consumer (at **)\n' +
-        '    in Context.Provider (at **)',
+        '    in MyContextType.Consumer (at **)\n' +
+        '    in MyContextType.Provider (at **)',
     );
   });
 });
