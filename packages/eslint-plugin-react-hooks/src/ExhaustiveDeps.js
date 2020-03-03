@@ -81,7 +81,7 @@ export default {
       const reactiveHook = node.parent.callee;
       const reactiveHookName = getNodeWithoutReactNamespace(reactiveHook).name;
       const isEffect = /Effect($|[^a-z])/g.test(reactiveHookName);
-      const effectHasBody = isEffect && (node.body.body.length > 0);
+      const effectHasBody = isEffect && node.body.body.length > 0;
 
       // Get the declared dependencies for this reactive hook. If there is no
       // second argument then the reactive callback will re-run on every render.
