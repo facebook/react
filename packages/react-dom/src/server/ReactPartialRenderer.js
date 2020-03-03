@@ -1312,7 +1312,7 @@ class ReactDOMServerRenderer {
             "it's defined in, or you might have mixed up default and " +
             'named imports.';
         }
-        const ownerName = owner ? null : null;
+        const ownerName = owner ? getComponentName(owner) : null;
         if (ownerName) {
           info += '\n\nCheck the render method of `' + ownerName + '`.';
         }
