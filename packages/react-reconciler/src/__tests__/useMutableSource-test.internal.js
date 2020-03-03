@@ -1156,6 +1156,95 @@ function loadModules({
       expect(root).toMatchRenderedOutput('B: Update');
     });
 
+    it('should always treat reading as potentially unsafe when getSnapshot changes between renders', async () => {
+      const source = createSource({
+        a: 'foo',
+        b: 'bar',
+      });
+      const mutableSource = createMutableSource(source);
+
+      const getSnapshotA = () => source.value.a;
+      const getSnapshotB = () => source.value.b;
+
+      function mutateA(newA) {
+        source.value = {
+          ...source.value,
+          a: newA,
+        };
+      }
+
+      function App({getSnapshotFirst, getSnapshotSecond}) {
+        const first = useMutableSource(
+          mutableSource,
+          getSnapshotFirst,
+          defaultSubscribe,
+        );
+        const second = useMutableSource(
+          mutableSource,
+          getSnapshotSecond,
+          defaultSubscribe,
+        );
+
+        let result = `x: ${first}, y: ${second}`;
+
+        if (getSnapshotFirst === getSnapshotSecond) {
+          // When both getSnapshot functions are equal,
+          // the two values must be consistent.
+          if (first !== second) {
+            result = 'Oops, tearing!';
+          }
+        }
+
+        React.useEffect(() => {
+          Scheduler.unstable_yieldValue(result);
+        }, [result]);
+
+        return result;
+      }
+
+      const root = ReactNoop.createRoot();
+      await act(async () => {
+        root.render(
+          <App
+            getSnapshotFirst={getSnapshotA}
+            getSnapshotSecond={getSnapshotB}
+          />,
+        );
+      });
+      // x and y start out reading from different parts of the store.
+      expect(Scheduler).toHaveYielded(['x: foo, y: bar']);
+
+      await act(async () => {
+        ReactNoop.discreteUpdates(() => {
+          // At high priority, toggle y so that it reads from A instead of B.
+          // Simultaneously, mutate A.
+          mutateA('high-pri baz');
+          root.render(
+            <App
+              getSnapshotFirst={getSnapshotA}
+              getSnapshotSecond={getSnapshotA}
+            />,
+          );
+
+          // If this update were processed before the next mutation,
+          // it would be expected to yield "high-pri baz" and "high-pri baz".
+        });
+
+        // At lower priority, mutate A again.
+        // This happens to match the initial value of B.
+        mutateA('bar');
+
+        // When this update is processed,
+        // it is expected to yield "bar" and "bar".
+      });
+
+      // Check that we didn't commit any inconsistent states.
+      // The actual sequence of work will be:
+      // 1. React renders the high-pri update, sees a new getSnapshot, detects the source has been further mutated, and throws
+      // 2. React re-renders with all pending updates, including the second mutation, and renders "bar" and "bar".
+      expect(Scheduler).toHaveYielded(['x: bar, y: bar']);
+    });
+
     // TODO (useMutableSource) Test for multiple updates at different priorities
   });
 });
