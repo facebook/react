@@ -572,7 +572,7 @@ function resolve(
             warnAboutDeprecatedLifecycles &&
             inst.componentWillMount.__suppressDeprecationWarning !== true
           ) {
-            const componentName = null || 'Unknown';
+            const componentName = getComponentName(Component) || 'Unknown';
 
             if (!didWarnAboutDeprecatedWillMount[componentName]) {
               console.warn(

@@ -213,7 +213,7 @@ describe('ReactDOMServerLifecycles', () => {
   it('should invoke both deprecated and new lifecycles if both are present', () => {
     const log = [];
 
-    class Component extends React.Component {
+    class MyComponent extends React.Component {
       componentWillMount() {
         log.push('componentWillMount');
       }
@@ -225,8 +225,10 @@ describe('ReactDOMServerLifecycles', () => {
       }
     }
 
-    expect(() => ReactDOMServer.renderToString(<Component />)).toWarnDev(
-      'componentWillMount has been renamed',
+    expect(() => ReactDOMServer.renderToString(<MyComponent />)).toWarnDev(
+      'componentWillMount has been renamed, and is not recommended for use. See https://fb.me/react-unsafe-component-lifecycles for details.\n\n' +
+        '* Move code from componentWillMount to componentDidMount (preferred in most cases) or the constructor.\n\n' +
+        'Please update the following components: MyComponent',
     );
     expect(log).toEqual(['componentWillMount', 'UNSAFE_componentWillMount']);
   });
