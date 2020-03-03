@@ -622,11 +622,13 @@ const tests = {
       `,
     },
     {
-      // It is valid for effects to over-specify their deps.
+      // It is valid for effects to over-specify their deps to do some extra works.
       code: normalizeIndent`
         function MyComponent(props) {
           const local = props.local;
-          useEffect(() => {}, [local]);
+          useEffect(() => {
+            scrollToTop();
+          }, [local]);
         }
       `,
     },
@@ -1057,6 +1059,37 @@ const tests = {
     },
   ],
   invalid: [
+    {
+      // It isn't valid for effects to over-specify their deps without doing anything.
+      code: normalizeIndent`
+        function MyComponent(props) {
+          const local = props.local;
+          useEffect(() => {
+            // nothing
+          }, [local]);
+        }
+      `,
+      errors: [
+        {
+          message:
+            "React Hook useEffect has an unnecessary dependency: 'local'. " +
+            'Either exclude it or remove the dependency array.',
+          suggestions: [
+            {
+              desc: 'Update the dependencies array to be: []',
+              output: normalizeIndent`
+                function MyComponent(props) {
+                  const local = props.local;
+                  useEffect(() => {
+                    // nothing
+                  }, []);
+                }
+              `,
+            },
+          ],
+        },
+      ],
+    },
     {
       code: normalizeIndent`
         function MyComponent() {
@@ -4086,7 +4119,7 @@ const tests = {
           {
             let y = props.bar;
             useEffect(() => {
-              // nothing
+              doSomething();
             }, [MutableStore.hello.world, props.foo, x, y, z, global.stuff]);
           }
         }
@@ -4113,8 +4146,53 @@ const tests = {
                   {
                     let y = props.bar;
                     useEffect(() => {
-                      // nothing
+                      doSomething();
                     }, [props.foo, x, y]);
+                  }
+                }
+              `,
+            },
+          ],
+        },
+      ],
+    },
+    {
+      code: normalizeIndent`
+        import MutableStore from 'store';
+        let z = {};
+
+        function MyComponent(props) {
+          let x = props.foo;
+          {
+            let y = props.bar;
+            useEffect(() => {
+              // nothing
+            }, [MutableStore.hello.world, props.foo, x, y, z, global.stuff]);
+          }
+        }
+      `,
+      errors: [
+        {
+          message:
+            'React Hook useEffect has unnecessary dependencies: ' +
+            "'MutableStore.hello.world', 'global.stuff', 'props.foo', 'x', 'y', and 'z'. " +
+            'Either exclude them or remove the dependency array. ' +
+            "Outer scope values like 'MutableStore.hello.world' aren't valid dependencies " +
+            "because mutating them doesn't re-render the component.",
+          suggestions: [
+            {
+              desc: 'Update the dependencies array to be: []',
+              output: normalizeIndent`
+                import MutableStore from 'store';
+                let z = {};
+
+                function MyComponent(props) {
+                  let x = props.foo;
+                  {
+                    let y = props.bar;
+                    useEffect(() => {
+                      // nothing
+                    }, []);
                   }
                 }
               `,

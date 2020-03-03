@@ -81,6 +81,7 @@ export default {
       const reactiveHook = node.parent.callee;
       const reactiveHookName = getNodeWithoutReactNamespace(reactiveHook).name;
       const isEffect = /Effect($|[^a-z])/g.test(reactiveHookName);
+      const effectHasBody = isEffect && (node.body.body.length > 0);
 
       // Get the declared dependencies for this reactive hook. If there is no
       // second argument then the reactive callback will re-run on every render.
@@ -548,6 +549,7 @@ export default {
             optionalDependencies,
             externalDependencies: new Set(),
             isEffect: true,
+            effectHasBody: true,
           });
           context.report({
             node: node.parent.callee,
@@ -678,6 +680,7 @@ export default {
         optionalDependencies,
         externalDependencies,
         isEffect,
+        effectHasBody,
       });
 
       const problemCount =
@@ -755,6 +758,7 @@ export default {
           optionalDependencies,
           externalDependencies,
           isEffect,
+          effectHasBody,
         }).suggestedDependencies;
       }
 
@@ -1048,6 +1052,7 @@ function collectRecommendations({
   optionalDependencies,
   externalDependencies,
   isEffect,
+  effectHasBody,
 }) {
   // Our primary data structure.
   // It is a logical representation of property chains:
@@ -1171,6 +1176,7 @@ function collectRecommendations({
     } else {
       if (
         isEffect &&
+        effectHasBody &&
         !key.endsWith('.current') &&
         !externalDependencies.has(key)
       ) {
