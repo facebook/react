@@ -381,8 +381,7 @@ export function stopWorkLoopTimer(
       if (interruptedBy.tag === HostRoot) {
         warning = 'A top-level update interrupted the previous render';
       } else {
-        // FIXME
-        const componentName = null || 'Unknown';
+        const componentName = getComponentName(interruptedBy.type) || 'Unknown';
         warning = `An update to ${componentName} interrupted the previous render`;
       }
     } else if (commitCountInCurrentWorkLoop > 1) {
