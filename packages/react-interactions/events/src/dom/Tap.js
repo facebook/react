@@ -721,10 +721,11 @@ const responderImpl = {
   },
 };
 
-export const TapResponder = React.DEPRECATED_createResponder<
-  ReactDOMResponderEvent,
-  ReactDOMResponderContext,
->('Tap', responderImpl);
+// $FlowFixMe Can't add generic types without causing a parsing/syntax errors
+export const TapResponder = React.DEPRECATED_createResponder(
+  'Tap',
+  responderImpl,
+);
 
 export function useTap(
   props: TapProps,

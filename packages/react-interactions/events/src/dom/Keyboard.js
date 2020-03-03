@@ -229,10 +229,11 @@ const keyboardResponderImpl = {
   },
 };
 
-export const KeyboardResponder = React.DEPRECATED_createResponder<
-  ReactDOMResponderEvent,
-  ReactDOMResponderContext,
->('Keyboard', keyboardResponderImpl);
+// $FlowFixMe Can't add generic types without causing a parsing/syntax errors
+export const KeyboardResponder = React.DEPRECATED_createResponder(
+  'Keyboard',
+  keyboardResponderImpl,
+);
 
 export function useKeyboard(
   props: KeyboardProps,

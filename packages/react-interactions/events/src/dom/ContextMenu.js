@@ -113,10 +113,11 @@ const contextMenuImpl = {
   },
 };
 
-export const ContextMenuResponder = React.DEPRECATED_createResponder<
-  ReactDOMResponderEvent,
-  ReactDOMResponderContext,
->('ContextMenu', contextMenuImpl);
+// $FlowFixMe Can't add generic types without causing a parsing/syntax errors
+export const ContextMenuResponder = React.DEPRECATED_createResponder(
+  'ContextMenu',
+  contextMenuImpl,
+);
 
 export function useContextMenu(
   props: ContextMenuProps,
