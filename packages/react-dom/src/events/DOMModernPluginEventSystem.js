@@ -19,6 +19,8 @@ import {batchedEventUpdates} from 'legacy-events/ReactGenericBatching';
 import {executeDispatchesInOrder} from 'legacy-events/EventPluginUtils';
 import {plugins} from 'legacy-events/EventPluginRegistry';
 
+import {HostRoot, HostPortal} from 'shared/ReactWorkTags';
+
 import {trapEventForPluginEventSystem} from './ReactDOMEventListener';
 import getEventTarget from './getEventTarget';
 import {getListenerMapForElement} from './DOMEventListenerMap';
@@ -56,9 +58,10 @@ import {
   TOP_PROGRESS,
   TOP_PLAYING,
 } from './DOMTopLevelEventTypes';
-import {DOCUMENT_NODE} from '../shared/HTMLNodeType';
 
 import {enableLegacyFBPrimerSupport} from 'shared/ReactFeatureFlags';
+import {getClosestInstanceFromNode} from '../client/ReactDOMComponentTree';
+import {DOCUMENT_NODE, COMMENT_NODE} from '../shared/HTMLNodeType';
 
 const capturePhaseEvents = new Set([
   TOP_FOCUS,
@@ -223,6 +226,40 @@ export function dispatchEventForPluginEventSystem(
       willDeferLaterForFBLegacyPrimer(nativeEvent)
     ) {
       return;
+    }
+    let node = targetInst;
+
+    // The below logic attempts to work out if we need to change
+    // the target fiber to a different ancestor. We had similar logic
+    // in the legacy event system, except the big difference between
+    // systems is that the modern event system now has an event listener
+    // attached to each React Root and React Portal Root. Together,
+    // the DOM nodes representing these roots are the "rootContainer".
+    // To figure out which ancestor instance we should use, we traverse
+    // up the fiber tree from the target instance and attempt to find
+    // root boundaries that match that of our current "rootContainer".
+    // If we find that "rootContainer", we find the parent fiber
+    // sub-tree for that root and make that our ancestor instance.
+    while (true) {
+      if (node === null) {
+        return;
+      } else if (node.tag === HostRoot || node.tag === HostPortal) {
+        const container = node.stateNode.containerInfo;
+        if (
+          container === rootContainer ||
+          (container.nodeType === COMMENT_NODE &&
+            container.parentNode === rootContainer)
+        ) {
+          break;
+        }
+        const parentSubtreeInst = getClosestInstanceFromNode(container);
+        if (parentSubtreeInst === null) {
+          return;
+        }
+        node = ancestorInst = parentSubtreeInst;
+        continue;
+      }
+      node = node.return;
     }
   }
 
