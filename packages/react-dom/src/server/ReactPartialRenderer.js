@@ -676,7 +676,7 @@ function resolve(
             console.error(
               '%s.getChildContext(): childContextTypes must be defined in order to ' +
                 'use getChildContext().',
-              null || 'Unknown',
+              getComponentName(Component) || 'Unknown',
             );
           }
         }
