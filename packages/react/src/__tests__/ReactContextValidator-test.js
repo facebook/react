@@ -18,6 +18,7 @@
 let PropTypes;
 let React;
 let ReactDOM;
+let ReactDOMServer;
 let ReactTestUtils;
 
 describe('ReactContextValidator', () => {
@@ -27,6 +28,7 @@ describe('ReactContextValidator', () => {
     PropTypes = require('prop-types');
     React = require('react');
     ReactDOM = require('react-dom');
+    ReactDOMServer = require('react-dom/server');
     ReactTestUtils = require('react-dom/test-utils');
   });
 
@@ -669,6 +671,28 @@ describe('ReactContextValidator', () => {
 
     expect(() => ReactTestUtils.renderIntoDocument(<ComponentB />)).toErrorDev(
       'Warning: ComponentB: Function components do not support contextType.',
+    );
+  });
+
+  it('should honor a displayName if set on the context type', () => {
+    const Context = React.createContext(null);
+    Context.displayName = 'MyContextType';
+    function Validator() {
+      return null;
+    }
+    Validator.propTypes = {dontPassToSeeErrorStack: PropTypes.bool.isRequired};
+
+    expect(() => {
+      ReactDOMServer.renderToStaticMarkup(
+        <Context.Provider>
+          <Context.Consumer>{() => <Validator />}</Context.Consumer>
+        </Context.Provider>,
+      );
+    }).toErrorDev(
+      'Warning: Failed prop type: The prop `dontPassToSeeErrorStack` is marked as required in `Validator`, but its value is `undefined`.\n' +
+        '    in Validator (at **)\n' +
+        '    in MyContextType.Consumer (at **)\n' +
+        '    in MyContextType.Provider (at **)',
     );
   });
 });
