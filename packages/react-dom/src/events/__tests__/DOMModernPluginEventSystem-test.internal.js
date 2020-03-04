@@ -119,4 +119,54 @@ describe('DOMModernPluginEventSystem', () => {
     expect(log[4]).toEqual(['bubble', divElement]);
     expect(log[5]).toEqual(['bubble', buttonElement]);
   });
+
+  it('handle propagation of click events correctly with FB primer', () => {
+    ReactFeatureFlags.enableLegacyFBPrimerSupport = true;
+    const aRef = React.createRef();
+
+    const log = [];
+    // Stop propagation throught the React system
+    const onClick = jest.fn(e => e.stopPropagation());
+    const onDivClick = jest.fn();
+
+    function Test() {
+      return (
+        <div onClick={onDivClick}>
+          <a ref={aRef} href="#" onClick={onClick} rel="dialog">
+            Click me
+          </a>
+        </div>
+      );
+    }
+    ReactDOM.render(<Test />, container);
+
+    // Fake primer
+    document.addEventListener('click', e => {
+      if (e.target.rel === 'dialog') {
+        log.push('primer');
+      }
+    });
+    let aElement = aRef.current;
+    dispatchClickEvent(aElement);
+    expect(onClick).toHaveBeenCalledTimes(1);
+    expect(log).toEqual(['primer']);
+    expect(onDivClick).toHaveBeenCalledTimes(0);
+
+    log.length = 0;
+    // This isn't something that should be picked up by Primer
+    function Test2() {
+      return (
+        <div onClick={onDivClick}>
+          <a ref={aRef} href="#" onClick={onClick} rel="dialog-foo">
+            Click me
+          </a>
+        </div>
+      );
+    }
+    ReactDOM.render(<Test2 />, container);
+    dispatchClickEvent(aElement);
+    expect(onClick).toHaveBeenCalledTimes(1);
+    expect(log).toEqual([]);
+    expect(onDivClick).toHaveBeenCalledTimes(0);
+  });
 });

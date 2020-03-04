@@ -97,6 +97,8 @@ export const warnUnstableRenderSubtreeIntoContainer = false;
 
 export const enableModernEventSystem = false;
 
+export const enableLegacyFBPrimerSupport = !__EXPERIMENTAL__;
+
 // Internal-only attempt to debug a React Native issue. See D20130868.
 export const throwEarlyForMysteriousError = false;
 

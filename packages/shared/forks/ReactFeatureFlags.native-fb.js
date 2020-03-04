@@ -44,6 +44,7 @@ export const deferPassiveEffectCleanupDuringUnmount = false;
 export const runAllPassiveEffectDestroysBeforeCreates = false;
 export const enableModernEventSystem = false;
 export const warnAboutSpreadingKeyToJSX = false;
+export const enableLegacyFBPrimerSupport = false;
 
 // Internal-only attempt to debug a React Native issue. See D20130868.
 export const throwEarlyForMysteriousError = true;

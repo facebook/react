@@ -56,6 +56,9 @@ import {
   TOP_PROGRESS,
   TOP_PLAYING,
 } from './DOMTopLevelEventTypes';
+import {DOCUMENT_NODE} from '../shared/HTMLNodeType';
+
+import {enableLegacyFBPrimerSupport} from 'shared/ReactFeatureFlags';
 
 const capturePhaseEvents = new Set([
   TOP_FOCUS,
@@ -165,6 +168,44 @@ export function listenToEvent(
   }
 }
 
+const validFBLegacyPrimerRels = new Set([
+  'dialog',
+  'dialog-post',
+  'async',
+  'async-post',
+  'theater',
+  'toggle',
+]);
+
+function willDeferLaterForFBLegacyPrimer(nativeEvent: any): boolean {
+  let node = nativeEvent.target;
+  const type = nativeEvent.type;
+  if (type !== 'click') {
+    return false;
+  }
+  while (node !== null) {
+    // Primer works by intercepting a click event on an <a> element
+    // that has a "rel" attribute that matches one of the valid ones
+    // in the Set above. If we intercept this before Primer does, we
+    // will need to defer the current event till later and discontinue
+    // execution of the current event. To do this we can add a document
+    // event listener and continue again later after propagation.
+    if (node.tagName === 'A' && validFBLegacyPrimerRels.has(node.rel)) {
+      const legacyFBSupport = true;
+      const isCapture = nativeEvent.eventPhase === 1;
+      trapEventForPluginEventSystem(
+        document,
+        ((type: any): DOMTopLevelEventType),
+        isCapture,
+        legacyFBSupport,
+      );
+      return true;
+    }
+    node = node.parentNode;
+  }
+  return false;
+}
+
 export function dispatchEventForPluginEventSystem(
   topLevelType: DOMTopLevelEventType,
   eventSystemFlags: EventSystemFlags,
@@ -173,6 +214,17 @@ export function dispatchEventForPluginEventSystem(
   rootContainer: Document | Element,
 ): void {
   let ancestorInst = targetInst;
+  if (rootContainer.nodeType !== DOCUMENT_NODE) {
+    // If we detect the FB legacy primer system, we
+    // defer the event to the "document" with a one
+    // time event listener so we can defer the event.
+    if (
+      enableLegacyFBPrimerSupport &&
+      willDeferLaterForFBLegacyPrimer(nativeEvent)
+    ) {
+      return;
+    }
+  }
 
   batchedEventUpdates(() =>
     dispatchEventsForPlugins(
