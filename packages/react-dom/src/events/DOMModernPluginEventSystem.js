@@ -204,6 +204,29 @@ export function dispatchEventForPluginEventSystem(
         ) {
           break;
         }
+        if (node.tag === HostPortal) {
+          // The target is a portal, but it's not the rootContainer we're looking for.
+          // Normally portals handle their own events all the way down to the root.
+          // So we should be able to stop now. However, we don't know if this portal
+          // was part of *our* root.
+          let grandNode = node.return;
+          while (grandNode !== null) {
+            if (grandNode.tag === HostRoot || grandNode.tag === HostPortal) {
+              const grandContainer = grandNode.stateNode.containerInfo;
+              if (
+                grandContainer === rootContainer ||
+                (grandContainer.nodeType === COMMENT_NODE &&
+                  grandContainer.parentNode === rootContainer)
+              ) {
+                // This is the rootContainer we're looking for and we found it as
+                // a parent of the Portal. That means we can ignore it because the
+                // Portal will bubble through to us.
+                return;
+              }
+            }
+            grandNode = grandNode.return;
+          }
+        }
         const parentSubtreeInst = getClosestInstanceFromNode(container);
         if (parentSubtreeInst === null) {
           return;
