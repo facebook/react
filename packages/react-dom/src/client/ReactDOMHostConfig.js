@@ -591,7 +591,7 @@ export function clearSuspenseBoundaryFromContainer(
 function instanceContainsElem(instance: Instance, element: HTMLElement) {
   let fiber = getClosestInstanceFromNode(element);
   while (fiber !== null) {
-    if (fiber.tag === HostComponent && fiber.stateNode === element) {
+    if (fiber.tag === HostComponent && fiber.stateNode === instance) {
       return true;
     }
     fiber = fiber.return;
