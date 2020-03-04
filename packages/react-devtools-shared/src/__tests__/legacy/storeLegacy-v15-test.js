@@ -7,6 +7,10 @@
  * @flow
  */
 
+// unmock the testing builds
+jest.unmock('react');
+jest.unmock('react-dom');
+
 describe('Store (legacy)', () => {
   let React;
   let ReactDOM;

@@ -16,10 +16,10 @@ const preferredExtension = __EXPERIMENTAL__ ? '.js' : '.stable.js';
 const moduleNameMapper = {};
 moduleNameMapper[
   '^react$'
-] = `<rootDir>/packages/react/index${preferredExtension}`;
+] = `<rootDir>/packages/react/unstable-testing${preferredExtension}`;
 moduleNameMapper[
   '^react-dom$'
-] = `<rootDir>/packages/react-dom/index${preferredExtension}`;
+] = `<rootDir>/packages/react-dom/unstable-testing${preferredExtension}`;
 
 module.exports = Object.assign({}, baseConfig, {
   // Prefer the stable forks for tests.

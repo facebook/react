@@ -12,6 +12,10 @@ import type {DehydratedData} from 'react-devtools-shared/src/devtools/views/Comp
 import type {FrontendBridge} from 'react-devtools-shared/src/bridge';
 import type Store from 'react-devtools-shared/src/devtools/store';
 
+// unmock the testing builds
+jest.unmock('react');
+jest.unmock('react-dom');
+
 describe('InspectedElementContext', () => {
   let React;
   let ReactDOM;

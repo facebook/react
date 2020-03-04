@@ -345,6 +345,9 @@ function getPlugins(
     bundleType === RN_FB_DEV ||
     bundleType === RN_FB_PROD ||
     bundleType === RN_FB_PROFILING;
+  const isTestBundle =
+    entry === 'react-dom/unstable-testing' ||
+    entry === 'react/unstable-testing';
   const shouldStayReadable = isFBBundle || isRNBundle || forcePrettyOutput;
   return [
     // Extract error codes from invariant() messages into a file.
@@ -389,6 +392,7 @@ function getPlugins(
       __DEV__: isProduction ? 'false' : 'true',
       __PROFILE__: isProfiling || !isProduction ? 'true' : 'false',
       __UMD__: isUMDBundle ? 'true' : 'false',
+      __TESTING__: isTestBundle ? 'true' : 'false',
       'process.env.NODE_ENV': isProduction ? "'production'" : "'development'",
       __EXPERIMENTAL__,
     }),

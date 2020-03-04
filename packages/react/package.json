@@ -13,6 +13,7 @@
     "README.md",
     "build-info.json",
     "index.js",
+    "unstable-testing.js",
     "cjs/",
     "umd/"
   ],

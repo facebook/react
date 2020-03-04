@@ -746,7 +746,7 @@ function finishConcurrentRender(
         hasNotProcessedNewUpdates &&
         // do not delay if we're inside an act() scope
         !(
-          __DEV__ &&
+          (__DEV__ || __TESTING__) &&
           flushSuspenseFallbacksInTests &&
           IsThisRendererActing.current
         )
@@ -812,7 +812,7 @@ function finishConcurrentRender(
       if (
         // do not delay if we're inside an act() scope
         !(
-          __DEV__ &&
+          (__DEV__ || __TESTING__) &&
           flushSuspenseFallbacksInTests &&
           IsThisRendererActing.current
         )
@@ -903,7 +903,7 @@ function finishConcurrentRender(
       if (
         // do not delay if we're inside an act() scope
         !(
-          __DEV__ &&
+          (__DEV__ || __TESTING__) &&
           flushSuspenseFallbacksInTests &&
           IsThisRendererActing.current
         ) &&
@@ -2850,7 +2850,9 @@ function warnAboutRenderPhaseUpdatesInDEV(fiber) {
 }
 
 // a 'shared' variable that changes when act() opens/closes in tests.
-export const IsThisRendererActing = {current: (false: boolean)};
+// $FlowExpectedError avoids a shape check on IsThisRendererActing
+export const IsThisRendererActing: {current: boolean} =
+  __DEV__ || __TESTING__ ? {current: false} : null;
 
 export function warnIfNotScopedWithMatchingAct(fiber: Fiber): void {
   if (__DEV__) {

@@ -16,7 +16,6 @@ const ReactSharedInternals = {
   ReactCurrentDispatcher,
   ReactCurrentBatchConfig,
   ReactCurrentOwner,
-  IsSomeRendererActing,
   // Used by renderers to avoid bundling object-assign twice in UMD bundles:
   assign,
 };
@@ -29,6 +28,10 @@ if (__DEV__) {
     // TODO: remove in React 17.0.
     ReactComponentTreeHook: {},
   });
+}
+
+if (__DEV__ || __TESTING__) {
+  ReactSharedInternals.IsSomeRendererActing = IsSomeRendererActing;
 }
 
 export default ReactSharedInternals;
