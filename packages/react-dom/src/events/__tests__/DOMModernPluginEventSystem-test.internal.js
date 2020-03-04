@@ -919,4 +919,73 @@ describe('DOMModernPluginEventSystem', () => {
     expect(onMouseLeave).toHaveBeenCalledTimes(0);
     expect(log[1]).toEqual(divElement);
   });
+
+  it('should preserve bubble/capture order between roots and nested portals', () => {
+    const targetRef = React.createRef();
+    let log = [];
+    const onClickRoot = jest.fn(e => log.push('bubble root'));
+    const onClickCaptureRoot = jest.fn(e => log.push('capture root'));
+    const onClickPortal = jest.fn(e => log.push('bubble portal'));
+    const onClickCapturePortal = jest.fn(e => log.push('capture portal'));
+
+    function Portal() {
+      return (
+        <div
+          onClick={onClickPortal}
+          onClickCapture={onClickCapturePortal}
+          ref={targetRef}>
+          Click me!
+        </div>
+      );
+    }
+
+    const portalContainer = document.createElement('div');
+
+    let shouldStopPropagation = false;
+    portalContainer.addEventListener(
+      'click',
+      e => {
+        if (shouldStopPropagation) {
+          e.stopPropagation();
+        }
+      },
+      false,
+    );
+
+    function Root() {
+      let portalTargetRef = React.useRef(null);
+      React.useLayoutEffect(() => {
+        portalTargetRef.current.appendChild(portalContainer);
+      });
+      return (
+        <div onClick={onClickRoot} onClickCapture={onClickCaptureRoot}>
+          <div ref={portalTargetRef} />
+          {ReactDOM.createPortal(<Portal />, portalContainer)}
+        </div>
+      );
+    }
+
+    ReactDOM.render(<Root />, container);
+
+    let divElement = targetRef.current;
+    dispatchClickEvent(divElement);
+    expect(log).toEqual([
+      'capture root',
+      'capture portal',
+      'bubble portal',
+      'bubble root',
+    ]);
+
+    log = [];
+
+    shouldStopPropagation = true;
+    dispatchClickEvent(divElement);
+    expect(log).toEqual([
+      // The events on root probably shouldn't fire if a non-React intermediated. but current behavior is that they do.
+      'capture root',
+      'capture portal',
+      'bubble portal',
+      'bubble root',
+    ]);
+  });
 });
