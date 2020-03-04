@@ -56,6 +56,7 @@ import {passiveBrowserEventsSupported} from './checkPassiveEvents';
 import {
   enableDeprecatedFlareAPI,
   enableModernEventSystem,
+  enableLegacyFBPrimerSupport,
 } from 'shared/ReactFeatureFlags';
 import {
   UserBlockingEvent,
@@ -143,6 +144,7 @@ export function trapEventForPluginEventSystem(
   container: Document | Element,
   topLevelType: DOMTopLevelEventType,
   capture: boolean,
+  legacyFBSupport?: boolean,
 ): void {
   let listener;
   let listenerWrapper;
@@ -166,10 +168,40 @@ export function trapEventForPluginEventSystem(
   );
 
   const rawEventName = getRawEventName(topLevelType);
+  let fbListener;
+
+  // When legacyFBSupport is enabled, it's for when we
+  // want to add a one time event listener to a container.
+  // This should only be used with enableLegacyFBPrimerSupport
+  // due to requirement to provide compatibility with
+  // internal FB www event tooling. This works by removing
+  // the event listener as soon as it is invoked. We could
+  // also attempt to use the {once: true} param on
+  // addEventListener, but that requires support and some
+  // browsers do not support this today, and given this is
+  // to support legacy code patterns, it's likely they'll
+  // need support for such browsers.
+  if (enableLegacyFBPrimerSupport && legacyFBSupport) {
+    const originalListener = listener;
+    listener = function(...p) {
+      try {
+        return originalListener.apply(this, p);
+      } finally {
+        if (fbListener) {
+          fbListener.remove();
+        } else {
+          container.removeEventListener(
+            ((rawEventName: any): string),
+            (listener: any),
+          );
+        }
+      }
+    };
+  }
   if (capture) {
-    addEventCaptureListener(container, rawEventName, listener);
+    fbListener = addEventCaptureListener(container, rawEventName, listener);
   } else {
-    addEventBubbleListener(container, rawEventName, listener);
+    fbListener = addEventBubbleListener(container, rawEventName, listener);
   }
 }
 
