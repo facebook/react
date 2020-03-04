@@ -23,11 +23,13 @@
     "start": "node bin.js"
   },
   "dependencies": {
-    "cross-spawn": "^5.0.1",
-    "electron": "^5.0.0",
+    "cross-spawn": "^5.0.1",    
     "ip": "^1.1.4",
     "minimist": "^1.2.0",
     "react-devtools-core": "4.5.0",
     "update-notifier": "^2.1.0"
+  },
+  "optionalDependencies": {
+    "electron": "^5.0.0"
   }
 }
