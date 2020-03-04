@@ -120,6 +120,11 @@ export function createContext<T>(
           return context.Consumer;
         },
       },
+      displayName: {
+        get() {
+          return context.displayName;
+        },
+      },
     });
     // $FlowFixMe: Flow complains about missing properties because it doesn't understand defineProperty
     context.Consumer = Consumer;
