@@ -7,9 +7,46 @@
  * @flow
  */
 
-import type {LazyComponent, Thenable} from 'shared/ReactLazyComponent';
-
 import {REACT_LAZY_TYPE} from 'shared/ReactSymbols';
+
+type Thenable<T, R> = {
+  then(resolve: (T) => mixed, reject: (mixed) => mixed): R,
+};
+
+export type UninitializedLazyComponent<T> = {
+  $$typeof: Symbol | number,
+  _status: -1,
+  _result: () => Thenable<{default: T, ...} | T, mixed>,
+};
+
+export type PendingLazyComponent<T> = {
+  $$typeof: Symbol | number,
+  _status: 0,
+  _result: Thenable<{default: T, ...} | T, mixed>,
+};
+
+export type ResolvedLazyComponent<T> = {
+  $$typeof: Symbol | number,
+  _status: 1,
+  _result: T,
+};
+
+export type RejectedLazyComponent = {
+  $$typeof: Symbol | number,
+  _status: 2,
+  _result: mixed,
+};
+
+export type LazyComponent<T> =
+  | UninitializedLazyComponent<T>
+  | PendingLazyComponent<T>
+  | ResolvedLazyComponent<T>
+  | RejectedLazyComponent;
+
+export const Uninitialized = -1;
+export const Pending = 0;
+export const Resolved = 1;
+export const Rejected = 2;
 
 export function lazy<T>(
   ctor: () => Thenable<{default: T, ...} | T, mixed>,
@@ -17,7 +54,7 @@ export function lazy<T>(
   let lazyType: LazyComponent<T> = {
     $$typeof: REACT_LAZY_TYPE,
     // React uses these fields to store the result.
-    _status: -1,
+    _status: Uninitialized,
     _result: ctor,
   };
 
