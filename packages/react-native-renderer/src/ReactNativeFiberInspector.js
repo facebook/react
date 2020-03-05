@@ -8,7 +8,10 @@
  */
 
 import type {Fiber} from 'react-reconciler/src/ReactFiber';
-import type {ReactFabricType, HostComponent as ReactNativeHostComponent} from './ReactNativeTypes';
+import type {
+  ReactFabricType,
+  HostComponent as ReactNativeHostComponent,
+} from './ReactNativeTypes';
 
 import {
   findCurrentHostFiber,
@@ -117,7 +120,7 @@ if (__DEV__) {
       selection,
       source,
     };
-  }
+  };
 
   getInspectorDataForViewTag = function(viewTag: number): Object {
     const closestInstance = getClosestInstanceFromNode(viewTag);
@@ -161,10 +164,10 @@ if (__DEV__) {
       top: 0,
       width: 0,
       height: 0,
-    }
+    };
 
     if (inspectedView._internalInstanceHandle != null) {
-      // fabric
+      // For Fabric we can look up the instance handle directly and measure it.
       nativeFabricUIManager.findNodeAtPoint(
         inspectedView._internalInstanceHandle.stateNode.node,
         x,
@@ -174,7 +177,8 @@ if (__DEV__) {
             callback(getInspectorDataForInstance(closestInstance, frame));
           }
 
-          closestInstance = shadowNode.stateNode.canonical._internalInstanceHandle;
+          closestInstance =
+            shadowNode.stateNode.canonical._internalInstanceHandle;
           nativeFabricUIManager.measure(
             shadowNode.stateNode.node,
             (x, y, width, height, pageX, pageY) => {
@@ -183,7 +187,7 @@ if (__DEV__) {
                 top: pageY,
                 width,
                 height,
-              }
+              };
 
               callback(getInspectorDataForInstance(closestInstance, frame));
             },
@@ -191,18 +195,21 @@ if (__DEV__) {
         },
       );
     } else if (inspectedView._internalFiberInstanceHandle != null) {
+      // For Paper we fall back to the old strategy using the React tag.
       UIManager.findSubviewIn(
         findNodeHandle(inspectedView),
         [x, y],
         (nativeViewTag, left, top, width, height) => {
           frame = {
-                left,
-                top,
-                width,
-                height,
-              };
-          var closestInstance = getClosestInstanceFromNode(nativeViewTag); // Handle case where user clicks outside of ReactNative
-          const inspectorData = getInspectorDataForInstance(closestInstance, frame);
+            left,
+            top,
+            width,
+            height,
+          };
+          const inspectorData = getInspectorDataForInstance(
+            getClosestInstanceFromNode(nativeViewTag),
+            frame,
+          );
           callback({...inspectorData, nativeViewTag});
         },
       );
