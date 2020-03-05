@@ -343,12 +343,12 @@ function areHookInputsEqual(
   return true;
 }
 
-export function renderWithHooks(
+export function renderWithHooks<Props, SecondArg>(
   current: Fiber | null,
   workInProgress: Fiber,
-  Component: any,
-  props: any,
-  secondArg: any,
+  Component: (p: Props, arg: SecondArg) => any,
+  props: Props,
+  secondArg: SecondArg,
   nextRenderExpirationTime: ExpirationTime,
 ): any {
   renderExpirationTime = nextRenderExpirationTime;
