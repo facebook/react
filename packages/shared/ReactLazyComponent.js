@@ -13,28 +13,24 @@ export type Thenable<T, R> = {
 
 type UninitializedLazyComponent<T> = {
   $$typeof: Symbol | number,
-  _ctor: () => Thenable<{default: T, ...} | T, mixed>,
   _status: -1,
-  _result: null,
+  _result: () => Thenable<{default: T, ...} | T, mixed>,
 };
 
 type PendingLazyComponent<T> = {
   $$typeof: Symbol | number,
-  _ctor: () => Thenable<{default: T, ...} | T, mixed>,
   _status: 0,
   _result: Thenable<{default: T, ...} | T, mixed>,
 };
 
 type ResolvedLazyComponent<T> = {
   $$typeof: Symbol | number,
-  _ctor: () => Thenable<{default: T, ...} | T, mixed>,
   _status: 1,
   _result: T,
 };
 
 type RejectedLazyComponent = {
   $$typeof: Symbol | number,
-  _ctor: () => Thenable<{default: T, ...} | T, mixed>,
   _status: 2,
   _result: mixed,
 };
@@ -60,7 +56,7 @@ export function initializeLazyComponentType(
   lazyComponent: LazyComponent<any>,
 ): void {
   if (lazyComponent._status === Uninitialized) {
-    const ctor = lazyComponent._ctor;
+    const ctor = lazyComponent._result;
     const thenable = ctor();
     // Transition to the next state.
     const pending: PendingLazyComponent<any> = (lazyComponent: any);
