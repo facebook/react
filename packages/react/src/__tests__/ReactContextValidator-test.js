@@ -706,5 +706,8 @@ describe('ReactContextValidator', () => {
         "You should set it directly on the context with Context.displayName = 'NamedContext'.",
       {withoutStack: true},
     );
+
+    // warning is deduped so subsequent setting is fine
+    Context.Consumer.displayName = 'ignored';
   });
 });

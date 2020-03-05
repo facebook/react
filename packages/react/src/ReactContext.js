@@ -57,6 +57,7 @@ export function createContext<T>(
 
   let hasWarnedAboutUsingNestedContextConsumers = false;
   let hasWarnedAboutUsingConsumerProvider = false;
+  let hasWarnedAboutDisplayNameOnConsumer = false;
 
   if (__DEV__) {
     // A separate object, but proxies back to the original context object for
@@ -125,10 +126,13 @@ export function createContext<T>(
           return context.displayName;
         },
         set() {
-          console.warn(
-            'Setting `displayName` on Context.Consumer has no effect. ' +
-              "You should set it directly on the context with Context.displayName = 'NamedContext'.",
-          );
+          if (!hasWarnedAboutDisplayNameOnConsumer) {
+            console.warn(
+              'Setting `displayName` on Context.Consumer has no effect. ' +
+                "You should set it directly on the context with Context.displayName = 'NamedContext'.",
+            );
+            hasWarnedAboutDisplayNameOnConsumer = true;
+          }
         },
       },
     });
