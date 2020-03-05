@@ -18,7 +18,6 @@ import type {
   SuspenseListTailMode,
 } from './ReactFiberSuspenseComponent';
 import type {SuspenseContext} from './ReactFiberSuspenseContext';
-import type {} from 'react/src/block';
 
 import checkPropTypes from 'shared/checkPropTypes';
 
