@@ -695,4 +695,16 @@ describe('ReactContextValidator', () => {
         '    in MyContextType.Provider (at **)',
     );
   });
+
+  it('warns if displayName is set on the consumer type', () => {
+    const Context = React.createContext(null);
+
+    expect(() => {
+      Context.Consumer.displayName = 'ignored';
+    }).toWarnDev(
+      'Warning: Setting `displayName` on Context.Consumer has no effect. ' +
+        "You should set it directly on the context with Context.displayName = 'NamedContext'.",
+      {withoutStack: true},
+    );
+  });
 });

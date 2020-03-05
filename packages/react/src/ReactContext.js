@@ -124,6 +124,12 @@ export function createContext<T>(
         get() {
           return context.displayName;
         },
+        set() {
+          console.warn(
+            'Setting `displayName` on Context.Consumer has no effect. ' +
+              "You should set it directly on the context with Context.displayName = 'NamedContext'.",
+          );
+        },
       },
     });
     // $FlowFixMe: Flow complains about missing properties because it doesn't understand defineProperty
