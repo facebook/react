@@ -48,6 +48,7 @@ import {
 } from './ReactCurrentFiber';
 import {isCompatibleFamilyForHotReloading} from './ReactFiberHotReloading';
 import {StrictMode} from './ReactTypeOfMode';
+import {initializeBlockComponentType} from 'shared/ReactLazyComponent';
 
 let didWarnAboutMaps;
 let didWarnAboutGenerators;
@@ -423,8 +424,9 @@ function ChildReconciler(shouldTrackSideEffects) {
         current.tag === Block &&
         element.type.$$typeof === REACT_BLOCK_TYPE
       ) {
-        // TODO: If this block is not initialized we need to initialize it first,
-        // since it might synchronously resolve to something we can reconcile.
+        // The new Block might not be initialized yet. We need to initialize
+        // it in case initializing it turns out it would match.
+        initializeBlockComponentType(element.type);
         if (
           (element.type: BlockComponent<any, any, any>)._fn ===
           (current.type: BlockComponent<any, any, any>)._fn
@@ -1187,8 +1189,9 @@ function ChildReconciler(shouldTrackSideEffects) {
           case Block:
             if (enableBlocksAPI) {
               if (element.type.$$typeof === REACT_BLOCK_TYPE) {
-                // TODO: If this block is not initialized we need to initialize it first,
-                // since it might synchronously resolve to something we can reconcile.
+                // The new Block might not be initialized yet. We need to initialize
+                // it in case initializing it turns out it would match.
+                initializeBlockComponentType(element.type);
                 if (
                   (element.type: BlockComponent<any, any, any>)._fn ===
                   (child.type: BlockComponent<any, any, any>)._fn
