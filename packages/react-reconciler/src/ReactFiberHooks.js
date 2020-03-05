@@ -919,7 +919,6 @@ function readFromUnsubcribedMutableSource<Source, Snapshot>(
 
 function useMutableSource<Source, Snapshot>(
   hook: Hook,
-  isMount: boolean,
   source: MutableSource<Source>,
   getSnapshot: MutableSourceGetSnapshotFn<Source, Snapshot>,
   subscribe: MutableSourceSubscribeFn<Source, Snapshot>,
@@ -1047,7 +1046,7 @@ function mountMutableSource<Source, Snapshot>(
     source,
     subscribe,
   }: MutableSourceMemoizedState<Source, Snapshot>);
-  return useMutableSource(hook, true, source, getSnapshot, subscribe);
+  return useMutableSource(hook, source, getSnapshot, subscribe);
 }
 
 function updateMutableSource<Source, Snapshot>(
@@ -1056,7 +1055,7 @@ function updateMutableSource<Source, Snapshot>(
   subscribe: MutableSourceSubscribeFn<Source, Snapshot>,
 ): Snapshot {
   const hook = updateWorkInProgressHook();
-  return useMutableSource(hook, false, source, getSnapshot, subscribe);
+  return useMutableSource(hook, source, getSnapshot, subscribe);
 }
 
 function mountState<S>(
