@@ -391,6 +391,7 @@ function getPlugins(
       __UMD__: isUMDBundle ? 'true' : 'false',
       'process.env.NODE_ENV': isProduction ? "'production'" : "'development'",
       __EXPERIMENTAL__,
+      __VARIANT__: false,
     }),
     // The CommonJS plugin *only* exists to pull "art" into "react-art".
     // I'm going to port "art" to ES modules to avoid this problem.
