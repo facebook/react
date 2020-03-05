@@ -18,7 +18,7 @@ import getComponentName from 'shared/getComponentName';
 import describeComponentFrame from 'shared/describeComponentFrame';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import {initializeLazyComponentType} from 'shared/ReactLazyComponent';
-import {Resolved, Rejected, Pending} from 'react/src/ReactLazy';
+import {Resolved, Rejected, Pending} from 'shared/ReactLazyStatusTags';
 import {
   warnAboutDeprecatedLifecycles,
   disableLegacyContext,

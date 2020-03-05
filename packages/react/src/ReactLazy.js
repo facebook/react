@@ -43,18 +43,13 @@ export type LazyComponent<T> =
   | ResolvedLazyComponent<T>
   | RejectedLazyComponent;
 
-export const Uninitialized = -1;
-export const Pending = 0;
-export const Resolved = 1;
-export const Rejected = 2;
-
 export function lazy<T>(
   ctor: () => Thenable<{default: T, ...} | T, mixed>,
 ): LazyComponent<T> {
   let lazyType: LazyComponent<T> = {
     $$typeof: REACT_LAZY_TYPE,
     // React uses these fields to store the result.
-    _status: Uninitialized,
+    _status: -1,
     _result: ctor,
   };
 

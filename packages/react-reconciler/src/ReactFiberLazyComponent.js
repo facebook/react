@@ -9,7 +9,7 @@
 
 import type {LazyComponent} from 'react/src/ReactLazy';
 
-import {Resolved} from 'react/src/ReactLazy';
+import {Resolved} from 'shared/ReactLazyStatusTags';
 import {initializeLazyComponentType} from 'shared/ReactLazyComponent';
 
 export function resolveDefaultProps(Component: any, baseProps: Object): Object {

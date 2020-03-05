@@ -14,7 +14,12 @@ import type {
   LazyComponent,
 } from 'react/src/ReactLazy';
 
-import {Uninitialized, Pending, Resolved, Rejected} from 'react/src/ReactLazy';
+import {
+  Uninitialized,
+  Pending,
+  Resolved,
+  Rejected,
+} from './ReactLazyStatusTags';
 
 export function refineResolvedLazyComponent<T>(
   lazyComponent: LazyComponent<T>,
