@@ -15,6 +15,7 @@ import typeof * as ExportsType from './ReactFeatureFlags.native-fb';
 // The rest of the flags are static for better dead code elimination.
 export const enableUserTimingAPI = __DEV__;
 export const enableProfilerTimer = __PROFILE__;
+export const enableProfilerCommitHooks = false;
 export const enableSchedulerTracing = __PROFILE__;
 export const enableSuspenseServerRenderer = false;
 export const enableSelectiveHydration = false;

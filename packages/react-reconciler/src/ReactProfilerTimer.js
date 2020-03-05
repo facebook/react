@@ -9,7 +9,11 @@
 
 import type {Fiber} from './ReactFiber';
 
-import {enableProfilerTimer} from 'shared/ReactFeatureFlags';
+import {
+  enableProfilerTimer,
+  enableProfilerCommitHooks,
+} from 'shared/ReactFeatureFlags';
+import {Profiler} from 'shared/ReactWorkTags';
 
 // Intentionally not named imports because Rollup would use dynamic dispatch for
 // CommonJS interop named imports.
@@ -27,7 +31,9 @@ export type ProfilerTimer = {
 };
 
 let commitTime: number = 0;
+let layoutEffectStartTime: number = -1;
 let profilerStartTime: number = -1;
+let passiveEffectStartTime: number = -1;
 
 function getCommitTime(): number {
   return commitTime;
@@ -77,9 +83,78 @@ function stopProfilerTimerIfRunningAndRecordDelta(
   }
 }
 
+function recordLayoutEffectDuration(fiber: Fiber): void {
+  if (!enableProfilerTimer || !enableProfilerCommitHooks) {
+    return;
+  }
+
+  if (layoutEffectStartTime >= 0) {
+    const elapsedTime = now() - layoutEffectStartTime;
+
+    layoutEffectStartTime = -1;
+
+    // Store duration on the next nearest Profiler ancestor.
+    let parentFiber = fiber.return;
+    while (parentFiber !== null) {
+      if (parentFiber.tag === Profiler) {
+        const parentStateNode = parentFiber.stateNode;
+        parentStateNode.effectDuration += elapsedTime;
+        break;
+      }
+      parentFiber = parentFiber.return;
+    }
+  }
+}
+
+function recordPassiveEffectDuration(fiber: Fiber): void {
+  if (!enableProfilerTimer || !enableProfilerCommitHooks) {
+    return;
+  }
+
+  if (passiveEffectStartTime >= 0) {
+    const elapsedTime = now() - passiveEffectStartTime;
+
+    passiveEffectStartTime = -1;
+
+    // Store duration on the next nearest Profiler ancestor.
+    let parentFiber = fiber.return;
+    while (parentFiber !== null) {
+      if (parentFiber.tag === Profiler) {
+        const parentStateNode = parentFiber.stateNode;
+        if (parentStateNode !== null) {
+          // Detached fibers have their state node cleared out.
+          // In this case, the return pointer is also cleared out,
+          // so we won't be able to report the time spent in this Profiler's subtree.
+          parentStateNode.passiveEffectDuration += elapsedTime;
+        }
+        break;
+      }
+      parentFiber = parentFiber.return;
+    }
+  }
+}
+
+function startLayoutEffectTimer(): void {
+  if (!enableProfilerTimer || !enableProfilerCommitHooks) {
+    return;
+  }
+  layoutEffectStartTime = now();
+}
+
+function startPassiveEffectTimer(): void {
+  if (!enableProfilerTimer || !enableProfilerCommitHooks) {
+    return;
+  }
+  passiveEffectStartTime = now();
+}
+
 export {
   getCommitTime,
   recordCommitTime,
+  recordLayoutEffectDuration,
+  recordPassiveEffectDuration,
+  startLayoutEffectTimer,
+  startPassiveEffectTimer,
   startProfilerTimer,
   stopProfilerTimerIfRunning,
   stopProfilerTimerIfRunningAndRecordDelta,

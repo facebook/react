@@ -23,6 +23,9 @@ export const warnAboutDeprecatedLifecycles = true;
 // Gather advanced timing metrics for Profiler subtrees.
 export const enableProfilerTimer = __PROFILE__;
 
+// Record durations for commit and passive effects phases.
+export const enableProfilerCommitHooks = false;
+
 // Trace which interactions trigger each commit.
 export const enableSchedulerTracing = __PROFILE__;
 
