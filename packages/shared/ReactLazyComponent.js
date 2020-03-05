@@ -50,7 +50,9 @@ export function initializeLazyComponentType(
               console.error(
                 'lazy: Expected the result of a dynamic import() call. ' +
                   'Instead received: %s\n\nYour code should look like: \n  ' +
-                  "const MyComponent = lazy(() => import('./MyComponent'))",
+                  // Break up imports to avoid accidentally parsing them as dependencies.
+                  'const MyComponent = lazy(() => imp' +
+                  "ort('./MyComponent'))",
                 moduleObject,
               );
             }
