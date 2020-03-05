@@ -20,6 +20,7 @@ export const {
   warnAboutShorthandPropertyCollision,
   disableSchedulerTimeoutBasedOnReactExpirationTime,
   warnAboutSpreadingKeyToJSX,
+  enableModernEventSystem,
 } = require('ReactFeatureFlags');
 
 // On WWW, __EXPERIMENTAL__ is used for a new modern build.
@@ -94,8 +95,6 @@ export const disableTextareaChildren = __EXPERIMENTAL__;
 export const disableMapsAsChildren = __EXPERIMENTAL__;
 
 export const warnUnstableRenderSubtreeIntoContainer = false;
-
-export const enableModernEventSystem = false;
 
 export const enableLegacyFBPrimerSupport = !__EXPERIMENTAL__;
 
