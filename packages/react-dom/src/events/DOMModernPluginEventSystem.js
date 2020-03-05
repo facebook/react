@@ -243,8 +243,13 @@ export function dispatchEventForPluginEventSystem(
     while (true) {
       if (node === null) {
         return;
-      } else if (node.tag === HostRoot || node.tag === HostPortal) {
+      }
+      const tag = node.tag;
+      if (tag === HostRoot || tag === HostPortal) {
         const container = node.stateNode.containerInfo;
+        if (container !== rootContainer && tag === HostPortal) {
+          return;
+        }
         if (
           container === rootContainer ||
           (container.nodeType === COMMENT_NODE &&

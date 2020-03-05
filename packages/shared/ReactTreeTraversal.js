@@ -5,35 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import {HostComponent, HostPortal, HostRoot} from './ReactWorkTags';
-import {enableModernEventSystem} from './ReactFeatureFlags';
-
-function getParentUntilRootOrPortal(inst) {
-  let node = inst.return;
-
-  while (node !== null) {
-    if (node.tag === HostPortal) {
-      let grandNode = node;
-      const portalNode = node.stateNode.containerInfo;
-      while (grandNode !== null) {
-        // If we find a root that is actually a parent in the DOM tree
-        // then we don't continue with getting the parent, as that root
-        // will have its own event listener.
-        if (
-          grandNode.tag === HostRoot &&
-          grandNode.stateNode.containerInfo.contains(portalNode)
-        ) {
-          return null;
-        }
-        grandNode = grandNode.return;
-      }
-    } else if (node.tag === HostComponent) {
-      return node;
-    }
-    node = node.return;
-  }
-  return null;
-}
+import {HostComponent} from './ReactWorkTags';
 
 function getParent(inst) {
   do {
@@ -115,11 +87,7 @@ export function traverseTwoPhase(inst, fn, arg) {
   const path = [];
   while (inst) {
     path.push(inst);
-    if (enableModernEventSystem) {
-      inst = getParentUntilRootOrPortal(inst);
-    } else {
-      inst = getParent(inst);
-    }
+    inst = getParent(inst);
   }
   let i;
   for (i = path.length; i-- > 0; ) {
