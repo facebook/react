@@ -7,6 +7,7 @@
  */
 
 import invariant from 'shared/invariant';
+import {enableModernEventSystem} from 'shared/ReactFeatureFlags';
 import {rethrowCaughtError} from 'shared/ReactErrorUtils';
 
 import type {ReactSyntheticEvent} from './ReactSyntheticEventType';
@@ -30,8 +31,11 @@ const executeDispatchesAndRelease = function(event: ReactSyntheticEvent) {
   if (event) {
     executeDispatchesInOrder(event);
 
-    if (!event.isPersistent()) {
-      event.constructor.release(event);
+    // Modern event system doesn't use pooling.
+    if (!enableModernEventSystem) {
+      if (!event.isPersistent()) {
+        event.constructor.release(event);
+      }
     }
   }
 };

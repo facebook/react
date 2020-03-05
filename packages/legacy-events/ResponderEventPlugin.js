@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import {enableModernEventSystem} from 'shared/ReactFeatureFlags';
 import {getLowestCommonAncestor, isAncestor} from 'shared/ReactTreeTraversal';
 
 import {
@@ -378,8 +379,11 @@ function setResponderAndExtractTransfer(
     accumulateTwoPhaseDispatches(shouldSetEvent);
   }
   const wantsResponderInst = executeDispatchesInOrderStopAtTrue(shouldSetEvent);
-  if (!shouldSetEvent.isPersistent()) {
-    shouldSetEvent.constructor.release(shouldSetEvent);
+  // Modern event system doesn't use pooling.
+  if (!enableModernEventSystem) {
+    if (!shouldSetEvent.isPersistent()) {
+      shouldSetEvent.constructor.release(shouldSetEvent);
+    }
   }
 
   if (!wantsResponderInst || wantsResponderInst === responderInst) {
@@ -409,8 +413,12 @@ function setResponderAndExtractTransfer(
     const shouldSwitch =
       !hasDispatches(terminationRequestEvent) ||
       executeDirectDispatch(terminationRequestEvent);
-    if (!terminationRequestEvent.isPersistent()) {
-      terminationRequestEvent.constructor.release(terminationRequestEvent);
+
+    // Modern event system doesn't use pooling.
+    if (!enableModernEventSystem) {
+      if (!terminationRequestEvent.isPersistent()) {
+        terminationRequestEvent.constructor.release(terminationRequestEvent);
+      }
     }
 
     if (shouldSwitch) {

@@ -132,10 +132,7 @@ function dispatchEventsForPlugins(
   for (let i = 0; i < syntheticEvents.length; i++) {
     const syntheticEvent = syntheticEvents[i];
     executeDispatchesInOrder(syntheticEvent);
-    // Release the event from the pool if needed
-    if (!syntheticEvent.isPersistent()) {
-      syntheticEvent.constructor.release(syntheticEvent);
-    }
+    // This doesn't call release because modern system doesn't use pooling.
   }
 }
 
