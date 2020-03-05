@@ -147,7 +147,7 @@ function loadModules({
     }
 
     function createMutableSource(source) {
-      return React.createMutableSource(source, () => source.version);
+      return React.createMutableSource(source, param => param.version);
     }
 
     function Component({getSnapshot, label, mutableSource, subscribe}) {

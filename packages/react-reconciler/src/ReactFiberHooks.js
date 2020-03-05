@@ -874,7 +874,7 @@ function readFromUnsubcribedMutableSource<Source, Snapshot>(
   );
 
   const getVersion = source._getVersion;
-  const version = getVersion();
+  const version = getVersion(source._source);
 
   // Is it safe for this component to read from this source during the current render?
   let isSafeToReadFromSource = false;
@@ -931,7 +931,7 @@ function useMutableSource<Source, Snapshot>(
   );
 
   const getVersion = source._getVersion;
-  const version = getVersion();
+  const version = getVersion(source._source);
 
   const dispatcher = ReactCurrentDispatcher.current;
 
@@ -996,7 +996,7 @@ function useMutableSource<Source, Snapshot>(
     );
 
     // Check for a possible change between when we last rendered and when we just subscribed.
-    const maybeNewVersion = getVersion();
+    const maybeNewVersion = getVersion(source._source);
     if (version !== maybeNewVersion) {
       const maybeNewSnapshot = getSnapshot(source._source);
       if (snapshot !== maybeNewSnapshot) {
