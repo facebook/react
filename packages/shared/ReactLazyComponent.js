@@ -20,14 +20,6 @@ export type LazyComponent<T> = {
   ...
 };
 
-type ResolvedLazyComponent<T> = {
-  $$typeof: Symbol | number,
-  _ctor: () => Thenable<{default: T, ...}, mixed>,
-  _status: 1,
-  _result: any,
-  ...
-};
-
 export const Uninitialized = -1;
 export const Pending = 0;
 export const Resolved = 1;
@@ -35,7 +27,7 @@ export const Rejected = 2;
 
 export function refineResolvedLazyComponent<T>(
   lazyComponent: LazyComponent<T>,
-): ResolvedLazyComponent<T> | null {
+): T | null {
   return lazyComponent._status === Resolved ? lazyComponent._result : null;
 }
 
