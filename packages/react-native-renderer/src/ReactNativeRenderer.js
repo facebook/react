@@ -36,7 +36,7 @@ import ReactVersion from 'shared/ReactVersion';
 import {UIManager} from 'react-native/Libraries/ReactPrivate/ReactNativePrivateInterface';
 
 import {getClosestInstanceFromNode} from './ReactNativeComponentTree';
-import {getInspectorDataForViewTag} from './ReactNativeFiberInspector';
+import {getInspectorDataForViewTag, getInspectorDataForViewAtPoint} from './ReactNativeFiberInspector';
 
 import {LegacyRoot} from 'shared/ReactRootTags';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
@@ -247,6 +247,7 @@ export {
 injectIntoDevTools({
   findFiberByHostInstance: getClosestInstanceFromNode,
   getInspectorDataForViewTag: getInspectorDataForViewTag,
+  getInspectorDataForViewAtPoint: getInspectorDataForViewAtPoint.bind(null, findNodeHandle),
   bundleType: __DEV__ ? 1 : 0,
   version: ReactVersion,
   rendererPackageName: 'react-native-renderer',

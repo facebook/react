@@ -8,6 +8,7 @@
  */
 
 import type {Fiber} from 'react-reconciler/src/ReactFiber';
+import type {ReactFabricType, HostComponent as ReactNativeHostComponent} from './ReactNativeTypes';
 
 import {
   findCurrentHostFiber,
@@ -27,6 +28,7 @@ if (__DEV__) {
 }
 
 let getInspectorDataForViewTag;
+let getInspectorDataForViewAtPoint;
 
 if (__DEV__) {
   const traverseOwnerTreeUp = function(hierarchy, instance: any) {
@@ -89,6 +91,34 @@ if (__DEV__) {
     }));
   };
 
+  const getInspectorDataForInstance = function(closestInstance, frame): Object {
+    // Handle case where user clicks outside of ReactNative
+    if (!closestInstance) {
+      return {
+        hierarchy: [],
+        props: emptyObject,
+        selection: null,
+        source: null,
+      };
+    }
+
+    const fiber = findCurrentFiberUsingSlowPath(closestInstance);
+    const fiberHierarchy = getOwnerHierarchy(fiber);
+    const instance = lastNonHostInstance(fiberHierarchy);
+    const hierarchy = createHierarchy(fiberHierarchy);
+    const props = getHostProps(instance);
+    const source = instance._debugSource;
+    const selection = fiberHierarchy.indexOf(instance);
+
+    return {
+      hierarchy,
+      frame,
+      props,
+      selection,
+      source,
+    };
+  }
+
   getInspectorDataForViewTag = function(viewTag: number): Object {
     const closestInstance = getClosestInstanceFromNode(viewTag);
 
@@ -117,6 +147,73 @@ if (__DEV__) {
       source,
     };
   };
+
+  getInspectorDataForViewAtPoint = function(
+    findNodeHandle,
+    inspectedView: ?React.ElementRef<ReactNativeHostComponent<mixed>>,
+    x: number,
+    y: number,
+    callback: (obj: Object) => mixed,
+  ): void {
+    let closestInstance = null;
+    let frame = {
+      left: 0,
+      top: 0,
+      width: 0,
+      height: 0,
+    }
+
+    if (inspectedView._internalInstanceHandle != null) {
+      // fabric
+      nativeFabricUIManager.findNodeAtPoint(
+        inspectedView._internalInstanceHandle.stateNode.node,
+        x,
+        y,
+        shadowNode => {
+          if (shadowNode == null) {
+            callback(getInspectorDataForInstance(closestInstance, frame));
+          }
+
+          closestInstance = shadowNode.stateNode.canonical._internalInstanceHandle;
+          nativeFabricUIManager.measure(
+            shadowNode.stateNode.node,
+            (x, y, width, height, pageX, pageY) => {
+              frame = {
+                left: pageX,
+                top: pageY,
+                width,
+                height,
+              }
+
+              callback(getInspectorDataForInstance(closestInstance, frame));
+            },
+          );
+        },
+      );
+    } else if (inspectedView._internalFiberInstanceHandle != null) {
+      UIManager.findSubviewIn(
+        findNodeHandle(inspectedView),
+        [x, y],
+        (nativeViewTag, left, top, width, height) => {
+          frame = {
+                left,
+                top,
+                width,
+                height,
+              };
+          var closestInstance = getClosestInstanceFromNode(nativeViewTag); // Handle case where user clicks outside of ReactNative
+          const inspectorData = getInspectorDataForInstance(closestInstance, frame);
+          callback({...inspectorData, nativeViewTag});
+        },
+      );
+    } else if (__DEV__) {
+      console.error(
+        'getInspectorDataForViewAtPoint expects to receieve a host component',
+      );
+
+      return;
+    }
+  };
 } else {
   getInspectorDataForViewTag = () => {
     invariant(
@@ -124,6 +221,13 @@ if (__DEV__) {
       'getInspectorDataForViewTag() is not available in production',
     );
   };
+
+  getInspectorDataForViewAtPoint = () => {
+    invariant(
+      false,
+      'getInspectorDataForViewAtPoint() is not available in production',
+    );
+  };
 }
 
-export {getInspectorDataForViewTag};
+export {getInspectorDataForViewAtPoint, getInspectorDataForViewTag};
