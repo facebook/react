@@ -24,7 +24,6 @@ import {
   REACT_BLOCK_TYPE,
 } from 'shared/ReactSymbols';
 import {refineResolvedLazyComponent} from 'shared/ReactLazyComponent';
-import type {ReactContext, ReactProviderType} from 'shared/ReactTypes';
 
 function getWrappedName(
   outerType: mixed,
@@ -36,10 +35,6 @@ function getWrappedName(
     (outerType: any).displayName ||
     (functionName !== '' ? `${wrapperName}(${functionName})` : wrapperName)
   );
-}
-
-function getContextName(type: ReactContext<any>) {
-  return type.displayName || 'Context';
 }
 
 function getComponentName(type: mixed): string | null {
@@ -78,11 +73,9 @@ function getComponentName(type: mixed): string | null {
   if (typeof type === 'object') {
     switch (type.$$typeof) {
       case REACT_CONTEXT_TYPE:
-        const context: ReactContext<any> = (type: any);
-        return getContextName(context) + '.Consumer';
+        return 'Context.Consumer';
       case REACT_PROVIDER_TYPE:
-        const provider: ReactProviderType<any> = (type: any);
-        return getContextName(provider._context) + '.Provider';
+        return 'Context.Provider';
       case REACT_FORWARD_REF_TYPE:
         return getWrappedName(type, type.render, 'ForwardRef');
       case REACT_MEMO_TYPE:
