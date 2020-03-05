@@ -7,7 +7,7 @@
 
 import type {TopLevelType} from 'legacy-events/TopLevelEventTypes';
 
-import {accumulateTwoPhaseDispatches} from 'legacy-events/EventPropagators';
+import {accumulateTwoPhaseDispatchesSingle} from 'legacy-events/EventPropagators';
 import {canUseDOM} from 'shared/ExecutionEnvironment';
 
 import {
@@ -276,7 +276,7 @@ function extractCompositionEvent(
     }
   }
 
-  accumulateTwoPhaseDispatches(event);
+  accumulateTwoPhaseDispatchesSingle(event);
   return event;
 }
 
@@ -437,7 +437,7 @@ function extractBeforeInputEvent(
   );
 
   event.data = chars;
-  accumulateTwoPhaseDispatches(event);
+  accumulateTwoPhaseDispatchesSingle(event);
   return event;
 }
 

@@ -6,7 +6,7 @@
  */
 
 import {runEventsInBatch} from 'legacy-events/EventBatching';
-import {accumulateTwoPhaseDispatches} from 'legacy-events/EventPropagators';
+import {accumulateTwoPhaseDispatchesSingle} from 'legacy-events/EventPropagators';
 import {enqueueStateRestore} from 'legacy-events/ReactControlledComponent';
 import {batchedUpdates} from 'legacy-events/ReactGenericBatching';
 import SyntheticEvent from 'legacy-events/SyntheticEvent';
@@ -59,7 +59,7 @@ function createAndAccumulateChangeEvent(inst, nativeEvent, target) {
   event.type = 'change';
   // Flag this event loop as needing state restore.
   enqueueStateRestore(target);
-  accumulateTwoPhaseDispatches(event);
+  accumulateTwoPhaseDispatchesSingle(event);
   return event;
 }
 /**

@@ -16,7 +16,7 @@ import type {Fiber} from 'react-reconciler/src/ReactFiber';
 import type {PluginModule} from 'legacy-events/PluginModuleType';
 import type {EventSystemFlags} from 'legacy-events/EventSystemFlags';
 
-import {accumulateTwoPhaseDispatches} from 'legacy-events/EventPropagators';
+import {accumulateTwoPhaseDispatchesSingle} from 'legacy-events/EventPropagators';
 import SyntheticEvent from 'legacy-events/SyntheticEvent';
 
 import * as DOMTopLevelEventTypes from './DOMTopLevelEventTypes';
@@ -191,7 +191,7 @@ const SimpleEventPlugin: PluginModule<MouseEvent> = {
       nativeEvent,
       nativeEventTarget,
     );
-    accumulateTwoPhaseDispatches(event);
+    accumulateTwoPhaseDispatchesSingle(event);
     return event;
   },
 };

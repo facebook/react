@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import {accumulateTwoPhaseDispatches} from 'legacy-events/EventPropagators';
+import {accumulateTwoPhaseDispatchesSingle} from 'legacy-events/EventPropagators';
 import {canUseDOM} from 'shared/ExecutionEnvironment';
 import SyntheticEvent from 'legacy-events/SyntheticEvent';
 import isTextInputElement from 'shared/isTextInputElement';
@@ -135,7 +135,7 @@ function constructSelectEvent(nativeEvent, nativeEventTarget) {
     syntheticEvent.type = 'select';
     syntheticEvent.target = activeElement;
 
-    accumulateTwoPhaseDispatches(syntheticEvent);
+    accumulateTwoPhaseDispatchesSingle(syntheticEvent);
 
     return syntheticEvent;
   }
