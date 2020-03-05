@@ -9,16 +9,41 @@
 
 export type Thenable<T, R> = {
   then(resolve: (T) => mixed, reject: (mixed) => mixed): R,
-  ...
 };
 
-export type LazyComponent<T> = {
+type UninitializedLazyComponent<T> = {
   $$typeof: Symbol | number,
-  _ctor: () => Thenable<{default: T, ...}, mixed>,
-  _status: 0 | 1 | 2,
-  _result: any,
-  ...
+  _ctor: () => Thenable<{default: T, ...} | T, mixed>,
+  _status: -1,
+  _result: null,
 };
+
+type PendingLazyComponent<T> = {
+  $$typeof: Symbol | number,
+  _ctor: () => Thenable<{default: T, ...} | T, mixed>,
+  _status: 0,
+  _result: Thenable<{default: T, ...} | T, mixed>,
+};
+
+type ResolvedLazyComponent<T> = {
+  $$typeof: Symbol | number,
+  _ctor: () => Thenable<{default: T, ...} | T, mixed>,
+  _status: 1,
+  _result: T,
+};
+
+type RejectedLazyComponent = {
+  $$typeof: Symbol | number,
+  _ctor: () => Thenable<{default: T, ...} | T, mixed>,
+  _status: 2,
+  _result: mixed,
+};
+
+export type LazyComponent<T> =
+  | UninitializedLazyComponent<T>
+  | PendingLazyComponent<T>
+  | ResolvedLazyComponent<T>
+  | RejectedLazyComponent;
 
 export const Uninitialized = -1;
 export const Pending = 0;
@@ -35,10 +60,12 @@ export function initializeLazyComponentType(
   lazyComponent: LazyComponent<any>,
 ): void {
   if (lazyComponent._status === Uninitialized) {
-    lazyComponent._status = Pending;
     const ctor = lazyComponent._ctor;
     const thenable = ctor();
-    lazyComponent._result = thenable;
+    // Transition to the next state.
+    const pending: PendingLazyComponent<any> = (lazyComponent: any);
+    pending._status = Pending;
+    pending._result = thenable;
     thenable.then(
       moduleObject => {
         if (lazyComponent._status === Pending) {
@@ -53,14 +80,18 @@ export function initializeLazyComponentType(
               );
             }
           }
-          lazyComponent._status = Resolved;
-          lazyComponent._result = defaultExport;
+          // Transition to the next state.
+          const resolved: ResolvedLazyComponent<any> = (lazyComponent: any);
+          resolved._status = Resolved;
+          resolved._result = defaultExport;
         }
       },
       error => {
         if (lazyComponent._status === Pending) {
-          lazyComponent._status = Rejected;
-          lazyComponent._result = error;
+          // Transition to the next state.
+          const rejected: RejectedLazyComponent = (lazyComponent: any);
+          rejected._status = Rejected;
+          rejected._result = error;
         }
       },
     );

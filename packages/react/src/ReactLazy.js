@@ -3,14 +3,18 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
+ *
+ * @flow
  */
 
 import type {LazyComponent, Thenable} from 'shared/ReactLazyComponent';
 
 import {REACT_LAZY_TYPE} from 'shared/ReactSymbols';
 
-export function lazy<T, R>(ctor: () => Thenable<T, R>): LazyComponent<T> {
-  let lazyType = {
+export function lazy<T>(
+  ctor: () => Thenable<{default: T, ...} | T, mixed>,
+): LazyComponent<T> {
+  let lazyType: LazyComponent<T> = {
     $$typeof: REACT_LAZY_TYPE,
     _ctor: ctor,
     // React uses these fields to store the result.
@@ -22,6 +26,7 @@ export function lazy<T, R>(ctor: () => Thenable<T, R>): LazyComponent<T> {
     // In production, this would just set it on the object.
     let defaultProps;
     let propTypes;
+    // $FlowFixMe
     Object.defineProperties(lazyType, {
       defaultProps: {
         configurable: true,
@@ -36,6 +41,7 @@ export function lazy<T, R>(ctor: () => Thenable<T, R>): LazyComponent<T> {
           );
           defaultProps = newDefaultProps;
           // Match production behavior more closely:
+          // $FlowFixMe
           Object.defineProperty(lazyType, 'defaultProps', {
             enumerable: true,
           });
@@ -54,6 +60,7 @@ export function lazy<T, R>(ctor: () => Thenable<T, R>): LazyComponent<T> {
           );
           propTypes = newPropTypes;
           // Match production behavior more closely:
+          // $FlowFixMe
           Object.defineProperty(lazyType, 'propTypes', {
             enumerable: true,
           });
