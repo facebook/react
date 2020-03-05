@@ -9,7 +9,7 @@
 
 import type {ThreadID} from './ReactThreadIDAllocator';
 import type {ReactElement} from 'shared/ReactElementType';
-import type {LazyComponent} from 'shared/ReactLazyComponent';
+import type {LazyComponent} from 'react/src/ReactLazy';
 import type {ReactProvider, ReactContext} from 'shared/ReactTypes';
 
 import * as React from 'react';
@@ -17,12 +17,8 @@ import invariant from 'shared/invariant';
 import getComponentName from 'shared/getComponentName';
 import describeComponentFrame from 'shared/describeComponentFrame';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
-import {
-  Resolved,
-  Rejected,
-  Pending,
-  initializeLazyComponentType,
-} from 'shared/ReactLazyComponent';
+import {initializeLazyComponentType} from 'shared/ReactLazyComponent';
+import {Resolved, Rejected, Pending} from 'shared/ReactLazyStatusTags';
 import {
   warnAboutDeprecatedLifecycles,
   disableLegacyContext,

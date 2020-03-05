@@ -7,9 +7,10 @@
  * @flow
  */
 
-import type {LazyComponent} from 'shared/ReactLazyComponent';
+import type {LazyComponent} from 'react/src/ReactLazy';
 
-import {Resolved, initializeLazyComponentType} from 'shared/ReactLazyComponent';
+import {Resolved} from 'shared/ReactLazyStatusTags';
+import {initializeLazyComponentType} from 'shared/ReactLazyComponent';
 
 export function resolveDefaultProps(Component: any, baseProps: Object): Object {
   if (Component && Component.defaultProps) {
