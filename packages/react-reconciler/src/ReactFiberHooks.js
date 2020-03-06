@@ -1394,15 +1394,10 @@ function setState<S>(
         const eagerState = basicStateReducer(currentState, action);
         if (is(eagerState, currentState)) {
           // Fast path. We can bail out without scheduling React to re-render.
-          // It's still possible that we'll need to rebase this update later,
-          // if the component re-renders for a different reason and by that
-          // time the reducer has changed.
           return;
         }
-        // Stash the eagerly computed state, and the reducer used to compute
-        // it, on the update object. If the reducer hasn't changed by the
-        // time we enter the render phase, then the eager state can be used
-        // without calling the reducer again.
+        // Stash the eagerly computed state on the update object.
+        // It will be reused without without calling basicStateReducer again.
         update.eagerlyComputed = true;
         update.eagerState = eagerState;
       } catch (error) {
