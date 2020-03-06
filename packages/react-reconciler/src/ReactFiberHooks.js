@@ -103,7 +103,7 @@ type Update<S, A> = {|
   expirationTime: ExpirationTime,
   suspenseConfig: null | SuspenseConfig,
   action: A,
-  eagerReducer: ((S, A) => S) | null,
+  eagerlyComputed: false,
   eagerState: S | null,
   next: Update<S, A>,
   priority?: ReactPriorityLevel,
@@ -706,7 +706,7 @@ function updateReducer<S, I, A>(
           expirationTime: update.expirationTime,
           suspenseConfig: update.suspenseConfig,
           action: update.action,
-          eagerReducer: update.eagerReducer,
+          eagerlyComputed: update.eagerlyComputed,
           eagerState: update.eagerState,
           next: (null: any),
         };
@@ -729,7 +729,7 @@ function updateReducer<S, I, A>(
             expirationTime: Sync, // This update is going to be committed so we never want uncommit it.
             suspenseConfig: update.suspenseConfig,
             action: update.action,
-            eagerReducer: update.eagerReducer,
+            eagerlyComputed: update.eagerlyComputed,
             eagerState: update.eagerState,
             next: (null: any),
           };
@@ -747,15 +747,8 @@ function updateReducer<S, I, A>(
           update.suspenseConfig,
         );
 
-        // Process this update.
-        if (update.eagerReducer === reducer) {
-          // If this update was processed eagerly, and its reducer matches the
-          // current reducer, we can use the eagerly computed state.
-          newState = ((update.eagerState: any): S);
-        } else {
-          const action = update.action;
-          newState = reducer(newState, action);
-        }
+        const action = update.action;
+        newState = reducer(newState, action);
       }
       update = update.next;
     } while (update !== null && update !== first);
@@ -912,7 +905,7 @@ function updateState<S, I, A>(
           expirationTime: update.expirationTime,
           suspenseConfig: update.suspenseConfig,
           action: update.action,
-          eagerReducer: update.eagerReducer,
+          eagerlyComputed: update.eagerlyComputed,
           eagerState: update.eagerState,
           next: (null: any),
         };
@@ -935,7 +928,7 @@ function updateState<S, I, A>(
             expirationTime: Sync, // This update is going to be committed so we never want uncommit it.
             suspenseConfig: update.suspenseConfig,
             action: update.action,
-            eagerReducer: update.eagerReducer,
+            eagerlyComputed: update.eagerlyComputed,
             eagerState: update.eagerState,
             next: (null: any),
           };
@@ -954,7 +947,7 @@ function updateState<S, I, A>(
         );
 
         // Process this update.
-        if (update.eagerReducer === basicStateReducer) {
+        if (update.eagerlyComputed) {
           // If this update was processed eagerly, and its reducer matches the
           // current reducer, we can use the eagerly computed state.
           newState = ((update.eagerState: any): S);
@@ -1452,7 +1445,7 @@ function dispatchAction<S, A>(
     expirationTime,
     suspenseConfig,
     action,
-    eagerReducer: null,
+    eagerlyComputed: false,
     eagerState: null,
     next: (null: any),
   };
@@ -1522,7 +1515,7 @@ function setState<S>(
     expirationTime,
     suspenseConfig,
     action,
-    eagerReducer: null,
+    eagerlyComputed: false,
     eagerState: null,
     next: (null: any),
   };
@@ -1574,7 +1567,7 @@ function setState<S>(
         // it, on the update object. If the reducer hasn't changed by the
         // time we enter the render phase, then the eager state can be used
         // without calling the reducer again.
-        update.eagerReducer = lastRenderedReducer;
+        update.eagerlyComputed = true;
         update.eagerState = eagerState;
         if (is(eagerState, currentState)) {
           // Fast path. We can bail out without scheduling React to re-render.
