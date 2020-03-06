@@ -3173,6 +3173,59 @@ function loadModules({
         expect(ReactNoop).toMatchRenderedOutput('5');
       });
 
+      it('should not store dispatched items in the queue (TODO: better description)', () => {
+        let setDisabled;
+        let increment;
+
+        function Counter({disabled}) {
+          const [count, dispatch] = useReducer((state, action) => {
+            if (disabled) {
+              return state;
+            }
+            if (action.type === 'increment') {
+              return state + 1;
+            }
+            return state;
+          }, 0);
+
+          increment = () => dispatch({type: 'increment'});
+
+          Scheduler.unstable_yieldValue('Render count: ' + count);
+          return count;
+        }
+
+        function App() {
+          const [disabled, _setDisabled] = useState(true);
+          setDisabled = _setDisabled;
+          Scheduler.unstable_yieldValue('Render disabled: ' + disabled);
+          return <Counter disabled={disabled} />;
+        }
+
+        ReactNoop.render(<App />);
+        expect(Scheduler).toFlushAndYield([
+          'Render disabled: true',
+          'Render count: 0',
+        ]);
+        expect(ReactNoop).toMatchRenderedOutput('0');
+
+        act(() => {
+          increment();
+          increment();
+          increment();
+        });
+        expect(Scheduler).toHaveYielded([]);
+        expect(ReactNoop).toMatchRenderedOutput('0');
+
+        act(() => {
+          setDisabled(false);
+        });
+        expect(Scheduler).toHaveYielded([
+          'Render disabled: false',
+          'Render count: 0',
+        ]);
+        expect(ReactNoop).toMatchRenderedOutput('0');
+      });
+
       it('should process the rest pending updates after a render phase update', () => {
         // Similar to previous test, except using a preceding render phase update
         // instead of new props.
