@@ -1252,10 +1252,7 @@ function rerenderTransition(
   return [start, isPending];
 }
 
-function appendUpdate<S, A>(
-  queue: UpdateQueue<S, A>,
-  update: Update<S, A>,
-) {
+function appendUpdate<S, A>(queue: UpdateQueue<S, A>, update: Update<S, A>) {
   const pending = queue.pending;
   if (pending === null) {
     // This is the first update. Create a circular list.
@@ -1331,9 +1328,9 @@ function dispatchAction<S, A>(
 function setState<S>(
   fiber: Fiber,
   queue: UpdateQueue<S, BasicStateAction<S>>,
-  action: BasicStateAction<S>
+  action: BasicStateAction<S>,
 ) {
- if (__DEV__) {
+  if (__DEV__) {
     if (typeof arguments[3] === 'function') {
       console.error(
         "State updates from the useState() Hook don't support the " +
@@ -1416,7 +1413,7 @@ function setState<S>(
       }
     }
 
-    appendUpdate(queue, update)
+    appendUpdate(queue, update);
     scheduleWork(fiber, expirationTime);
   }
 }
