@@ -3030,56 +3030,6 @@ function loadModules({
         });
       });
 
-      it('eager bailout optimization should always compare to latest rendered reducer', () => {
-        // Edge case based on a bug report
-        let setCounter;
-        function App() {
-          const [counter, _setCounter] = useState(1);
-          setCounter = _setCounter;
-          return <Component count={counter} />;
-        }
-
-        function Component({count}) {
-          const [state, dispatch] = useReducer(() => {
-            // This reducer closes over a value from props. If the reducer is not
-            // properly updated, the eager reducer will compare to an old value
-            // and bail out incorrectly.
-            Scheduler.unstable_yieldValue('Reducer: ' + count);
-            return count;
-          }, -1);
-          useEffect(() => {
-            Scheduler.unstable_yieldValue('Effect: ' + count);
-            dispatch();
-          }, [count]);
-          Scheduler.unstable_yieldValue('Render: ' + state);
-          return count;
-        }
-
-        act(() => {
-          ReactNoop.render(<App />);
-          expect(Scheduler).toFlushAndYield([
-            'Render: -1',
-            'Effect: 1',
-            'Reducer: 1',
-            'Reducer: 1',
-            'Render: 1',
-          ]);
-          expect(ReactNoop).toMatchRenderedOutput('1');
-        });
-
-        act(() => {
-          setCounter(2);
-        });
-        expect(Scheduler).toHaveYielded([
-          'Render: 1',
-          'Effect: 2',
-          'Reducer: 2',
-          'Reducer: 2',
-          'Render: 2',
-        ]);
-        expect(ReactNoop).toMatchRenderedOutput('2');
-      });
-
       // Regression test. Covers a case where an internal state variable
       // (`didReceiveUpdate`) is not reset properly.
       it('state bail out edge case (#16359)', async () => {
@@ -3213,7 +3163,7 @@ function loadModules({
           increment();
           increment();
         });
-        expect(Scheduler).toHaveYielded([]);
+        expect(Scheduler).toHaveYielded(['Render count: 0']);
         expect(ReactNoop).toMatchRenderedOutput('0');
 
         act(() => {

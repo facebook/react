@@ -1488,45 +1488,6 @@ function dispatchAction<S, A>(
     update.expirationTime = renderExpirationTime;
     currentlyRenderingFiber.expirationTime = renderExpirationTime;
   } else {
-    if (
-      fiber.expirationTime === NoWork &&
-      (alternate === null || alternate.expirationTime === NoWork)
-    ) {
-      // The queue is currently empty, which means we can eagerly compute the
-      // next state before entering the render phase. If the new state is the
-      // same as the current state, we may be able to bail out entirely.
-      const lastRenderedReducer = queue.lastRenderedReducer;
-      if (lastRenderedReducer !== null) {
-        let prevDispatcher;
-        if (__DEV__) {
-          prevDispatcher = ReactCurrentDispatcher.current;
-          ReactCurrentDispatcher.current = InvalidNestedHooksDispatcherOnUpdateInDEV;
-        }
-        try {
-          const currentState: S = (queue.lastRenderedState: any);
-          const eagerState = lastRenderedReducer(currentState, action);
-          // Stash the eagerly computed state, and the reducer used to compute
-          // it, on the update object. If the reducer hasn't changed by the
-          // time we enter the render phase, then the eager state can be used
-          // without calling the reducer again.
-          update.eagerReducer = lastRenderedReducer;
-          update.eagerState = eagerState;
-          if (is(eagerState, currentState)) {
-            // Fast path. We can bail out without scheduling React to re-render.
-            // It's still possible that we'll need to rebase this update later,
-            // if the component re-renders for a different reason and by that
-            // time the reducer has changed.
-            return;
-          }
-        } catch (error) {
-          // Suppress the error. It will throw again in the render phase.
-        } finally {
-          if (__DEV__) {
-            ReactCurrentDispatcher.current = prevDispatcher;
-          }
-        }
-      }
-    }
     if (__DEV__) {
       // $FlowExpectedError - jest isn't a global, and isn't recognized outside of tests
       if ('undefined' !== typeof jest) {
