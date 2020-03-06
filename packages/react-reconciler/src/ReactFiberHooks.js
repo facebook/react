@@ -868,12 +868,6 @@ function readFromUnsubcribedMutableSource<Source, Snapshot>(
   source: MutableSource<Source>,
   getSnapshot: MutableSourceGetSnapshotFn<Source, Snapshot>,
 ): Snapshot {
-  const root = ((getWorkInProgressRoot(): any): FiberRoot);
-  invariant(
-    root !== null,
-    'Expected a work-in-progress root. This is a bug in React. Please file an issue.',
-  );
-
   if (__DEV__) {
     warnAboutMultipleRenderersDEV(source);
   }
@@ -891,6 +885,12 @@ function readFromUnsubcribedMutableSource<Source, Snapshot>(
   if (currentRenderVersion !== null) {
     isSafeToReadFromSource = currentRenderVersion === version;
   } else {
+    const root = ((getWorkInProgressRoot(): any): FiberRoot);
+    invariant(
+      root !== null,
+      'Expected a work-in-progress root. This is a bug in React. Please file an issue.',
+    );
+
     // If there's no version, then we should fallback to checking the update time.
     const pendingExpirationTime = getPendingExpirationTime(root);
 
