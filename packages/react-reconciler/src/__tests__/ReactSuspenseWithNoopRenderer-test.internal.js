@@ -1448,6 +1448,55 @@ function loadModules({
             'Caught an error: Error in host config.',
           );
         });
+
+        it('does not drop mounted effects', async () => {
+          let never = {then() {}};
+
+          let setShouldSuspend;
+          function App() {
+            const [shouldSuspend, _setShouldSuspend] = React.useState(0);
+            setShouldSuspend = _setShouldSuspend;
+            return (
+              <Suspense fallback="Loading...">
+                <Child shouldSuspend={shouldSuspend} />
+              </Suspense>
+            );
+          }
+
+          function Child({shouldSuspend}) {
+            if (shouldSuspend) {
+              throw never;
+            }
+
+            React.useEffect(() => {
+              Scheduler.unstable_yieldValue('Mount');
+              return () => {
+                Scheduler.unstable_yieldValue('Unmount');
+              };
+            }, []);
+
+            return 'Child';
+          }
+
+          const root = ReactNoop.createLegacyRoot(null);
+          await ReactNoop.act(async () => {
+            root.render(<App />);
+          });
+          expect(Scheduler).toHaveYielded(['Mount']);
+          expect(root).toMatchRenderedOutput('Child');
+
+          // Suspend the child. This puts it into an inconsistent state.
+          await ReactNoop.act(async () => {
+            setShouldSuspend(true);
+          });
+          expect(root).toMatchRenderedOutput('Loading...');
+
+          // Unmount everying
+          await ReactNoop.act(async () => {
+            root.render(null);
+          });
+          expect(Scheduler).toHaveYielded(['Unmount']);
+        });
       });
 
       it('does not call lifecycles of a suspended component', async () => {
