@@ -1251,7 +1251,7 @@ describe('useMutableSource', () => {
                 />,
               );
             });
-          }).toWarnDev(
+          }).toErrorDev(
             'Mutable source subscribe function must return an unsubscribe function.',
           );
         });

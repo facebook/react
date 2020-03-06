@@ -996,7 +996,7 @@ function useMutableSource<Source, Snapshot>(
     const unsubscribe = subscribe(source._source, handleChange);
     if (__DEV__) {
       if (typeof unsubscribe !== 'function') {
-        console.warn(
+        console.error(
           'Mutable source subscribe function must return an unsubscribe function.',
         );
       }
