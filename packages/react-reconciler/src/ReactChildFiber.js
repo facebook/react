@@ -9,6 +9,7 @@
 
 import type {ReactElement} from 'shared/ReactElementType';
 import type {ReactPortal} from 'shared/ReactTypes';
+import type {BlockComponent} from 'react/src/block';
 import type {Fiber} from './ReactFiber';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
 
@@ -47,6 +48,7 @@ import {
 } from './ReactCurrentFiber';
 import {isCompatibleFamilyForHotReloading} from './ReactFiberHotReloading';
 import {StrictMode} from './ReactTypeOfMode';
+import {initializeBlockComponentType} from 'shared/ReactLazyComponent';
 
 let didWarnAboutMaps;
 let didWarnAboutGenerators;
@@ -420,18 +422,25 @@ function ChildReconciler(shouldTrackSideEffects) {
       } else if (
         enableBlocksAPI &&
         current.tag === Block &&
-        element.type.$$typeof === REACT_BLOCK_TYPE &&
-        element.type.render === current.type.render
+        element.type.$$typeof === REACT_BLOCK_TYPE
       ) {
-        // Same as above but also update the .type field.
-        const existing = useFiber(current, element.props);
-        existing.return = returnFiber;
-        existing.type = element.type;
-        if (__DEV__) {
-          existing._debugSource = element._source;
-          existing._debugOwner = element._owner;
+        // The new Block might not be initialized yet. We need to initialize
+        // it in case initializing it turns out it would match.
+        initializeBlockComponentType(element.type);
+        if (
+          (element.type: BlockComponent<any, any, any>)._fn ===
+          (current.type: BlockComponent<any, any, any>)._fn
+        ) {
+          // Same as above but also update the .type field.
+          const existing = useFiber(current, element.props);
+          existing.return = returnFiber;
+          existing.type = element.type;
+          if (__DEV__) {
+            existing._debugSource = element._source;
+            existing._debugOwner = element._owner;
+          }
+          return existing;
         }
-        return existing;
       }
     }
     // Insert
@@ -1179,19 +1188,24 @@ function ChildReconciler(shouldTrackSideEffects) {
           }
           case Block:
             if (enableBlocksAPI) {
-              if (
-                element.type.$$typeof === REACT_BLOCK_TYPE &&
-                element.type.render === child.type.render
-              ) {
-                deleteRemainingChildren(returnFiber, child.sibling);
-                const existing = useFiber(child, element.props);
-                existing.type = element.type;
-                existing.return = returnFiber;
-                if (__DEV__) {
-                  existing._debugSource = element._source;
-                  existing._debugOwner = element._owner;
+              if (element.type.$$typeof === REACT_BLOCK_TYPE) {
+                // The new Block might not be initialized yet. We need to initialize
+                // it in case initializing it turns out it would match.
+                initializeBlockComponentType(element.type);
+                if (
+                  (element.type: BlockComponent<any, any, any>)._fn ===
+                  (child.type: BlockComponent<any, any, any>)._fn
+                ) {
+                  deleteRemainingChildren(returnFiber, child.sibling);
+                  const existing = useFiber(child, element.props);
+                  existing.type = element.type;
+                  existing.return = returnFiber;
+                  if (__DEV__) {
+                    existing._debugSource = element._source;
+                    existing._debugOwner = element._owner;
+                  }
+                  return existing;
                 }
-                return existing;
               }
             }
           // We intentionally fallthrough here if enableBlocksAPI is not on.
