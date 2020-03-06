@@ -838,7 +838,7 @@ function rerenderReducer<S, I, A>(
 }
 
 function mountState<S>(
-  initialState: (() => S) | S,
+  initialState: BasicStateAction<S>,
 ): [S, Dispatch<BasicStateAction<S>>] {
   const hook = mountWorkInProgressHook();
   if (typeof initialState === 'function') {
@@ -854,7 +854,7 @@ function mountState<S>(
   });
   const dispatch: Dispatch<
     BasicStateAction<S>,
-  > = (queue.dispatch = (dispatchAction.bind(
+  > = (queue.dispatch = (setState.bind(
     null,
     currentlyRenderingFiber,
     queue,
@@ -862,16 +862,185 @@ function mountState<S>(
   return [hook.memoizedState, dispatch];
 }
 
-function updateState<S>(
-  initialState: (() => S) | S,
-): [S, Dispatch<BasicStateAction<S>>] {
-  return updateReducer(basicStateReducer, (initialState: any));
+function updateState<S, I, A>(
+  initialArg: I,
+): [S, Dispatch<A>] {
+  const hook = updateWorkInProgressHook();
+  const queue = hook.queue;
+  invariant(
+    queue !== null,
+    'Should have a queue. This is likely a bug in React. Please file an issue.',
+  );
+
+  queue.lastRenderedReducer = basicStateReducer;
+
+  const current: Hook = (currentHook: any);
+
+  // The last rebase update that is NOT part of the base state.
+  let baseQueue = current.baseQueue;
+
+  // The last pending update that hasn't been processed yet.
+  let pendingQueue = queue.pending;
+  if (pendingQueue !== null) {
+    // We have new updates that haven't been processed yet.
+    // We'll add them to the base queue.
+    if (baseQueue !== null) {
+      // Merge the pending queue and the base queue.
+      let baseFirst = baseQueue.next;
+      let pendingFirst = pendingQueue.next;
+      baseQueue.next = pendingFirst;
+      pendingQueue.next = baseFirst;
+    }
+    current.baseQueue = baseQueue = pendingQueue;
+    queue.pending = null;
+  }
+
+  if (baseQueue !== null) {
+    // We have a queue to process.
+    let first = baseQueue.next;
+    let newState = current.baseState;
+
+    let newBaseState = null;
+    let newBaseQueueFirst = null;
+    let newBaseQueueLast = null;
+    let update = first;
+    do {
+      const updateExpirationTime = update.expirationTime;
+      if (updateExpirationTime < renderExpirationTime) {
+        // Priority is insufficient. Skip this update. If this is the first
+        // skipped update, the previous update/state is the new base
+        // update/state.
+        const clone: Update<S, A> = {
+          expirationTime: update.expirationTime,
+          suspenseConfig: update.suspenseConfig,
+          action: update.action,
+          eagerReducer: update.eagerReducer,
+          eagerState: update.eagerState,
+          next: (null: any),
+        };
+        if (newBaseQueueLast === null) {
+          newBaseQueueFirst = newBaseQueueLast = clone;
+          newBaseState = newState;
+        } else {
+          newBaseQueueLast = newBaseQueueLast.next = clone;
+        }
+        // Update the remaining priority in the queue.
+        if (updateExpirationTime > currentlyRenderingFiber.expirationTime) {
+          currentlyRenderingFiber.expirationTime = updateExpirationTime;
+          markUnprocessedUpdateTime(updateExpirationTime);
+        }
+      } else {
+        // This update does have sufficient priority.
+
+        if (newBaseQueueLast !== null) {
+          const clone: Update<S, A> = {
+            expirationTime: Sync, // This update is going to be committed so we never want uncommit it.
+            suspenseConfig: update.suspenseConfig,
+            action: update.action,
+            eagerReducer: update.eagerReducer,
+            eagerState: update.eagerState,
+            next: (null: any),
+          };
+          newBaseQueueLast = newBaseQueueLast.next = clone;
+        }
+
+        // Mark the event time of this update as relevant to this render pass.
+        // TODO: This should ideally use the true event time of this update rather than
+        // its priority which is a derived and not reverseable value.
+        // TODO: We should skip this update if it was already committed but currently
+        // we have no way of detecting the difference between a committed and suspended
+        // update here.
+        markRenderEventTimeAndConfig(
+          updateExpirationTime,
+          update.suspenseConfig,
+        );
+
+        // Process this update.
+        if (update.eagerReducer === basicStateReducer) {
+          // If this update was processed eagerly, and its reducer matches the
+          // current reducer, we can use the eagerly computed state.
+          newState = ((update.eagerState: any): S);
+        } else {
+          const action = update.action;
+          newState = basicStateReducer(newState, action);
+        }
+      }
+      update = update.next;
+    } while (update !== null && update !== first);
+
+    if (newBaseQueueLast === null) {
+      newBaseState = newState;
+    } else {
+      newBaseQueueLast.next = (newBaseQueueFirst: any);
+    }
+
+    // Mark that the fiber performed work, but only if the new state is
+    // different from the current state.
+    if (!is(newState, hook.memoizedState)) {
+      markWorkInProgressReceivedUpdate();
+    }
+
+    hook.memoizedState = newState;
+    hook.baseState = newBaseState;
+    hook.baseQueue = newBaseQueueLast;
+
+    queue.lastRenderedState = newState;
+  }
+
+  const dispatch: Dispatch<A> = (queue.dispatch: any);
+  return [hook.memoizedState, dispatch];
 }
 
-function rerenderState<S>(
-  initialState: (() => S) | S,
-): [S, Dispatch<BasicStateAction<S>>] {
-  return rerenderReducer(basicStateReducer, (initialState: any));
+function rerenderState<S, I, A>(
+  initialArg: I,
+): [S, Dispatch<A>] {
+  const hook = updateWorkInProgressHook();
+  const queue = hook.queue;
+  invariant(
+    queue !== null,
+    'Should have a queue. This is likely a bug in React. Please file an issue.',
+  );
+
+  queue.lastRenderedReducer = basicStateReducer;
+
+  // This is a re-render. Apply the new render phase updates to the previous
+  // work-in-progress hook.
+  const dispatch: Dispatch<A> = (queue.dispatch: any);
+  const lastRenderPhaseUpdate = queue.pending;
+  let newState = hook.memoizedState;
+  if (lastRenderPhaseUpdate !== null) {
+    // The queue doesn't persist past this render pass.
+    queue.pending = null;
+
+    const firstRenderPhaseUpdate = lastRenderPhaseUpdate.next;
+    let update = firstRenderPhaseUpdate;
+    do {
+      // Process this render phase update. We don't have to check the
+      // priority because it will always be the same as the current
+      // render's.
+      const action = update.action;
+      newState = basicStateReducer(newState, action);
+      update = update.next;
+    } while (update !== firstRenderPhaseUpdate);
+
+    // Mark that the fiber performed work, but only if the new state is
+    // different from the current state.
+    if (!is(newState, hook.memoizedState)) {
+      markWorkInProgressReceivedUpdate();
+    }
+
+    hook.memoizedState = newState;
+    // Don't persist the state accumulated from the render phase updates to
+    // the base state unless the queue is empty.
+    // TODO: Not sure if this is the desired semantics, but it's what we
+    // do for gDSFP. I can't remember why.
+    if (hook.baseQueue === null) {
+      hook.baseState = newState;
+    }
+
+    queue.lastRenderedState = newState;
+  }
+  return [newState, dispatch];
 }
 
 function pushEffect(tag, create, destroy, deps) {
@@ -1268,7 +1437,116 @@ function dispatchAction<S, A>(
   if (__DEV__) {
     if (typeof arguments[3] === 'function') {
       console.error(
-        "State updates from the useState() and useReducer() Hooks don't support the " +
+        "State updates from the useReducer() Hook don't support the " +
+          'second callback argument. To execute a side effect after ' +
+          'rendering, declare it in the component body with useEffect().',
+      );
+    }
+  }
+
+  const currentTime = requestCurrentTimeForUpdate();
+  const suspenseConfig = requestCurrentSuspenseConfig();
+  const expirationTime = computeExpirationForFiber(
+    currentTime,
+    fiber,
+    suspenseConfig,
+  );
+
+  const update: Update<S, A> = {
+    expirationTime,
+    suspenseConfig,
+    action,
+    eagerReducer: null,
+    eagerState: null,
+    next: (null: any),
+  };
+
+  if (__DEV__) {
+    update.priority = getCurrentPriorityLevel();
+  }
+
+  // Append the update to the end of the list.
+  const pending = queue.pending;
+  if (pending === null) {
+    // This is the first update. Create a circular list.
+    update.next = update;
+  } else {
+    update.next = pending.next;
+    pending.next = update;
+  }
+  queue.pending = update;
+
+  const alternate = fiber.alternate;
+  if (
+    fiber === currentlyRenderingFiber ||
+    (alternate !== null && alternate === currentlyRenderingFiber)
+  ) {
+    // This is a render phase update. Stash it in a lazily-created map of
+    // queue -> linked list of updates. After this render pass, we'll restart
+    // and apply the stashed updates on top of the work-in-progress hook.
+    didScheduleRenderPhaseUpdate = true;
+    update.expirationTime = renderExpirationTime;
+    currentlyRenderingFiber.expirationTime = renderExpirationTime;
+  } else {
+    if (
+      fiber.expirationTime === NoWork &&
+      (alternate === null || alternate.expirationTime === NoWork)
+    ) {
+      // The queue is currently empty, which means we can eagerly compute the
+      // next state before entering the render phase. If the new state is the
+      // same as the current state, we may be able to bail out entirely.
+      const lastRenderedReducer = queue.lastRenderedReducer;
+      if (lastRenderedReducer !== null) {
+        let prevDispatcher;
+        if (__DEV__) {
+          prevDispatcher = ReactCurrentDispatcher.current;
+          ReactCurrentDispatcher.current = InvalidNestedHooksDispatcherOnUpdateInDEV;
+        }
+        try {
+          const currentState: S = (queue.lastRenderedState: any);
+          const eagerState = lastRenderedReducer(currentState, action);
+          // Stash the eagerly computed state, and the reducer used to compute
+          // it, on the update object. If the reducer hasn't changed by the
+          // time we enter the render phase, then the eager state can be used
+          // without calling the reducer again.
+          update.eagerReducer = lastRenderedReducer;
+          update.eagerState = eagerState;
+          if (is(eagerState, currentState)) {
+            // Fast path. We can bail out without scheduling React to re-render.
+            // It's still possible that we'll need to rebase this update later,
+            // if the component re-renders for a different reason and by that
+            // time the reducer has changed.
+            return;
+          }
+        } catch (error) {
+          // Suppress the error. It will throw again in the render phase.
+        } finally {
+          if (__DEV__) {
+            ReactCurrentDispatcher.current = prevDispatcher;
+          }
+        }
+      }
+    }
+    if (__DEV__) {
+      // $FlowExpectedError - jest isn't a global, and isn't recognized outside of tests
+      if ('undefined' !== typeof jest) {
+        warnIfNotScopedWithMatchingAct(fiber);
+        warnIfNotCurrentlyActingUpdatesInDev(fiber);
+      }
+    }
+    scheduleWork(fiber, expirationTime);
+  }
+}
+
+function setState<S>(
+  fiber: Fiber,
+  queue: UpdateQueue<S>,
+  action: BasicStateAction<S>
+) {
+ if (__DEV__) {
+    if (typeof arguments[3] === 'function') {
+      console.error(
+        "State updates from the useState() Hook don't support the " +
           'second callback argument. To execute a side effect after ' +
           'rendering, declare it in the component body with useEffect().',
       );

@@ -270,7 +270,7 @@ describe('ReactHooks', () => {
         }),
       );
     }).toErrorDev(
-      'State updates from the useState() and useReducer() Hooks ' +
+      'State updates from the useState() Hook ' +
         "don't support the second callback argument. " +
         'To execute a side effect after rendering, ' +
         'declare it in the component body with useEffect().',
@@ -304,7 +304,7 @@ describe('ReactHooks', () => {
         }),
       );
     }).toErrorDev(
-      'State updates from the useState() and useReducer() Hooks ' +
+      'State updates from the useReducer() Hook ' +
         "don't support the second callback argument. " +
         'To execute a side effect after rendering, ' +
         'declare it in the component body with useEffect().',
