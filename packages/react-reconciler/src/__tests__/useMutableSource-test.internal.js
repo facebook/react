@@ -557,9 +557,7 @@ describe('useMutableSource', () => {
     });
   });
 
-  // TODO (useMutableSource) Re-enable this test once workLoopSync can handle
-  // the thrown error without getting stuck in a cycle.
-  xit('should throw and restart render if source and snapshot are unavailable during a sync update', () => {
+  it('should throw and restart render if source and snapshot are unavailable during a sync update', () => {
     const source = createSource('one');
     const mutableSource = createMutableSource(source);
 
@@ -614,7 +612,7 @@ describe('useMutableSource', () => {
           () => Scheduler.unstable_yieldValue('Sync effect'),
         );
       });
-      expect(Scheduler).toFlushAndYieldThrough([
+      expect(Scheduler).toHaveYielded([
         'a:new:two',
         'b:new:two',
         'Sync effect',
