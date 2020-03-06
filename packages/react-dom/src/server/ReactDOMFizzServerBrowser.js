@@ -13,7 +13,7 @@ import {
   createRequest,
   startWork,
   startFlowing,
-} from 'react-server/src/ReactFizzStreamer';
+} from 'react-server/src/ReactFizzServer';
 
 function renderToReadableStream(children: ReactNodeList): ReadableStream {
   let request;
