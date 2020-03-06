@@ -112,7 +112,6 @@ type Update<S, A> = {|
 type UpdateQueue<S, A> = {|
   pending: Update<S, A> | null,
   dispatch: (A => mixed) | null,
-  lastRenderedReducer: ((S, A) => S) | null,
   lastRenderedState: S | null,
 |};
 
@@ -641,7 +640,6 @@ function mountReducer<S, I, A>(
   const queue = (hook.queue = {
     pending: null,
     dispatch: null,
-    lastRenderedReducer: reducer,
     lastRenderedState: (initialState: any),
   });
   const dispatch: Dispatch<A> = (queue.dispatch = (dispatchAction.bind(
@@ -663,8 +661,6 @@ function updateReducer<S, I, A>(
     queue !== null,
     'Should have a queue. This is likely a bug in React. Please file an issue.',
   );
-
-  queue.lastRenderedReducer = reducer;
 
   const current: Hook = (currentHook: any);
 
@@ -788,8 +784,6 @@ function rerenderReducer<S, I, A>(
     'Should have a queue. This is likely a bug in React. Please file an issue.',
   );
 
-  queue.lastRenderedReducer = reducer;
-
   // This is a re-render. Apply the new render phase updates to the previous
   // work-in-progress hook.
   const dispatch: Dispatch<A> = (queue.dispatch: any);
@@ -842,7 +836,6 @@ function mountState<S>(
   const queue = (hook.queue = {
     pending: null,
     dispatch: null,
-    lastRenderedReducer: basicStateReducer,
     lastRenderedState: (initialState: any),
   });
   const dispatch: Dispatch<
@@ -1554,7 +1547,6 @@ function setState<S>(
       // The queue is currently empty, which means we can eagerly compute the
       // next state before entering the render phase. If the new state is the
       // same as the current state, we may be able to bail out entirely.
-      const lastRenderedReducer = queue.lastRenderedReducer;
       let prevDispatcher;
       if (__DEV__) {
         prevDispatcher = ReactCurrentDispatcher.current;
@@ -1562,7 +1554,7 @@ function setState<S>(
       }
       try {
         const currentState: S = (queue.lastRenderedState: any);
-        const eagerState = lastRenderedReducer(currentState, action);
+        const eagerState = basicStateReducer(currentState, action);
         // Stash the eagerly computed state, and the reducer used to compute
         // it, on the update object. If the reducer hasn't changed by the
         // time we enter the render phase, then the eager state can be used
