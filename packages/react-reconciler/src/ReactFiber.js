@@ -973,10 +973,10 @@ export function assignFiberPropertiesInDEV(
   }
   if (enableUserTimingAPI) {
     target._debugID = source._debugID;
+    target._debugIsCurrentlyTiming = source._debugIsCurrentlyTiming;
   }
   target._debugSource = source._debugSource;
   target._debugOwner = source._debugOwner;
-  target._debugIsCurrentlyTiming = source._debugIsCurrentlyTiming;
   target._debugNeedsRemount = source._debugNeedsRemount;
   target._debugHookTypes = source._debugHookTypes;
   return target;

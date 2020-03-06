@@ -115,6 +115,106 @@ jobs:
             RELEASE_CHANNEL: experimental
           command: yarn test --maxWorkers=2
 
+  test_source_www:
+    docker: *docker
+    environment: *environment
+    steps:
+      - checkout
+      - *restore_yarn_cache
+      - *run_yarn
+      - run:
+          environment:
+            RELEASE_CHANNEL: stable
+          command: yarn test-www --maxWorkers=2
+
+  test_source_www_variant:
+    docker: *docker
+    environment: *environment
+    steps:
+      - checkout
+      - *restore_yarn_cache
+      - *run_yarn
+      - run:
+          environment:
+            RELEASE_CHANNEL: stable
+          command: yarn test-www-variant --maxWorkers=2
+
+  test_source_www_prod:
+    docker: *docker
+    environment: *environment
+    steps:
+      - checkout
+      - *restore_yarn_cache
+      - *run_yarn
+      - run:
+          environment:
+            NODE_ENV: production
+            RELEASE_CHANNEL: stable
+          command: yarn test-www --maxWorkers=2
+
+  test_source_www_variant_prod:
+    docker: *docker
+    environment: *environment
+    steps:
+      - checkout
+      - *restore_yarn_cache
+      - *run_yarn
+      - run:
+          environment:
+            NODE_ENV: production
+            RELEASE_CHANNEL: stable
+          command: yarn test-www-variant --maxWorkers=2
+
+  test_source_www_experimental:
+    docker: *docker
+    environment: *environment
+    steps:
+      - checkout
+      - *restore_yarn_cache
+      - *run_yarn
+      - run:
+          environment:
+            RELEASE_CHANNEL: experimental
+          command: yarn test-www --maxWorkers=2
+
+  test_source_www_variant_experimental:
+    docker: *docker
+    environment: *environment
+    steps:
+      - checkout
+      - *restore_yarn_cache
+      - *run_yarn
+      - run:
+          environment:
+            RELEASE_CHANNEL: experimental
+          command: yarn test-www-variant --maxWorkers=2
+
+  test_source_www_prod_experimental:
+    docker: *docker
+    environment: *environment
+    steps:
+      - checkout
+      - *restore_yarn_cache
+      - *run_yarn
+      - run:
+          environment:
+            NODE_ENV: production
+            RELEASE_CHANNEL: experimental
+          command: yarn test-www --maxWorkers=2
+
+  test_source_www_variant_prod_experimental:
+    docker: *docker
+    environment: *environment
+    steps:
+      - checkout
+      - *restore_yarn_cache
+      - *run_yarn
+      - run:
+          environment:
+            NODE_ENV: production
+            RELEASE_CHANNEL: experimental
+          command: yarn test-www-variant --maxWorkers=2
+
   test_source_persistent:
     docker: *docker
     environment: *environment
@@ -384,6 +484,18 @@ workflows:
       - test_source_persistent:
           requires:
             - setup
+      - test_source_www:
+          requires:
+            - setup
+      - test_source_www_variant:
+          requires:
+            - setup
+      - test_source_www_prod:
+          requires:
+            - setup
+      - test_source_www_variant_prod:
+          requires:
+            - setup
       - build:
           requires:
             - setup
@@ -413,6 +525,18 @@ workflows:
           requires:
             - setup
       - test_source_prod_experimental:
+          requires:
+            - setup
+      - test_source_www_experimental:
+          requires:
+            - setup
+      - test_source_www_variant_experimental:
+          requires:
+            - setup
+      - test_source_www_prod_experimental:
+          requires:
+            - setup
+      - test_source_www_variant_prod_experimental:
           requires:
             - setup
       - build_experimental:

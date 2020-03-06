@@ -9,8 +9,11 @@
 
 import typeof * as FeatureFlagsType from 'shared/ReactFeatureFlags';
 import typeof * as ExportsType from './ReactFeatureFlags.www';
+import typeof * as DynamicFeatureFlags from './ReactFeatureFlags.www-dynamic';
 
 // Re-export dynamic flags from the www version.
+const dynamicFeatureFlags: DynamicFeatureFlags = require('ReactFeatureFlags');
+
 export const {
   debugRenderPhaseSideEffectsForStrictMode,
   deferPassiveEffectCleanupDuringUnmount,
@@ -20,8 +23,9 @@ export const {
   warnAboutShorthandPropertyCollision,
   disableSchedulerTimeoutBasedOnReactExpirationTime,
   warnAboutSpreadingKeyToJSX,
+  replayFailedUnitOfWorkWithInvokeGuardedCallback,
   enableModernEventSystem,
-} = require('ReactFeatureFlags');
+} = dynamicFeatureFlags;
 
 // On WWW, __EXPERIMENTAL__ is used for a new modern build.
 // It's not used anywhere in production yet.
@@ -39,7 +43,6 @@ export const enableProfilerCommitHooks = false;
 export const enableSchedulerTracing = __PROFILE__;
 export const enableSchedulerDebugging = true;
 
-export const replayFailedUnitOfWorkWithInvokeGuardedCallback = false;
 export const warnAboutDeprecatedLifecycles = true;
 export const disableLegacyContext = __EXPERIMENTAL__;
 export const warnAboutStringRefs = false;
