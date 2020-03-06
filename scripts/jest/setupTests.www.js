@@ -18,6 +18,8 @@ jest.mock('shared/ReactFeatureFlags', () => {
   wwwFlags.enableUserTimingAPI = defaultFlags.enableUserTimingAPI;
   wwwFlags.disableJavaScriptURLs = defaultFlags.disableJavaScriptURLs;
   wwwFlags.enableDeprecatedFlareAPI = defaultFlags.enableDeprecatedFlareAPI;
+  wwwFlags.disableModulePatternComponents =
+    defaultFlags.disableModulePatternComponents;
 
   return wwwFlags;
 });
