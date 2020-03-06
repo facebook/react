@@ -59,6 +59,7 @@ import ReactSharedInternals from 'shared/ReactSharedInternals';
 import {
   debugRenderPhaseSideEffectsForStrictMode,
   disableLegacyContext,
+  disableModulePatternComponents,
   enableProfilerTimer,
   enableSchedulerTracing,
   enableSuspenseServerRenderer,
@@ -1377,6 +1378,7 @@ function mountIndeterminateComponent(
   workInProgress.effectTag |= PerformedWork;
 
   if (
+    !disableModulePatternComponents &&
     typeof value === 'object' &&
     value !== null &&
     typeof value.render === 'function' &&

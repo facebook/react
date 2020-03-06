@@ -126,6 +126,8 @@ export const disableTextareaChildren = false;
 // Disables Maps as ReactElement children
 export const disableMapsAsChildren = false;
 
+export const disableModulePatternComponents = false;
+
 // We should remove this flag once the above flag becomes enabled
 export const warnUnstableRenderSubtreeIntoContainer = false;
 
