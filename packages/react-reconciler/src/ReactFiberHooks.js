@@ -1411,6 +1411,21 @@ function rerenderTransition(
   return [start, isPending];
 }
 
+function appendUpdate<S, A>(
+  queue: UpdateQueue<S, A>,
+  update: Update<S, A>,
+) {
+  const pending = queue.pending;
+  if (pending === null) {
+    // This is the first update. Create a circular list.
+    update.next = update;
+  } else {
+    update.next = pending.next;
+    pending.next = update;
+  }
+  queue.pending = update;
+}
+
 function dispatchAction<S, A>(
   fiber: Fiber,
   queue: UpdateQueue<S, A>,
@@ -1447,16 +1462,7 @@ function dispatchAction<S, A>(
     update.priority = getCurrentPriorityLevel();
   }
 
-  // Append the update to the end of the list.
-  const pending = queue.pending;
-  if (pending === null) {
-    // This is the first update. Create a circular list.
-    update.next = update;
-  } else {
-    update.next = pending.next;
-    pending.next = update;
-  }
-  queue.pending = update;
+  appendUpdate(queue, update);
 
   const alternate = fiber.alternate;
   if (
@@ -1517,22 +1523,12 @@ function setState<S>(
     update.priority = getCurrentPriorityLevel();
   }
 
-  // Append the update to the end of the list.
-  const pending = queue.pending;
-  if (pending === null) {
-    // This is the first update. Create a circular list.
-    update.next = update;
-  } else {
-    update.next = pending.next;
-    pending.next = update;
-  }
-  queue.pending = update;
-
   const alternate = fiber.alternate;
   if (
     fiber === currentlyRenderingFiber ||
     (alternate !== null && alternate === currentlyRenderingFiber)
   ) {
+    appendUpdate(queue, update);
     // This is a render phase update. Stash it in a lazily-created map of
     // queue -> linked list of updates. After this render pass, we'll restart
     // and apply the stashed updates on top of the work-in-progress hook.
@@ -1555,12 +1551,6 @@ function setState<S>(
       try {
         const currentState: S = (queue.lastRenderedState: any);
         const eagerState = basicStateReducer(currentState, action);
-        // Stash the eagerly computed state, and the reducer used to compute
-        // it, on the update object. If the reducer hasn't changed by the
-        // time we enter the render phase, then the eager state can be used
-        // without calling the reducer again.
-        update.eagerlyComputed = true;
-        update.eagerState = eagerState;
         if (is(eagerState, currentState)) {
           // Fast path. We can bail out without scheduling React to re-render.
           // It's still possible that we'll need to rebase this update later,
@@ -1568,6 +1558,12 @@ function setState<S>(
           // time the reducer has changed.
           return;
         }
+        // Stash the eagerly computed state, and the reducer used to compute
+        // it, on the update object. If the reducer hasn't changed by the
+        // time we enter the render phase, then the eager state can be used
+        // without calling the reducer again.
+        update.eagerlyComputed = true;
+        update.eagerState = eagerState;
       } catch (error) {
         // Suppress the error. It will throw again in the render phase.
       } finally {
@@ -1583,6 +1579,8 @@ function setState<S>(
         warnIfNotCurrentlyActingUpdatesInDev(fiber);
       }
     }
+
+    appendUpdate(queue, update)
     scheduleWork(fiber, expirationTime);
   }
 }
