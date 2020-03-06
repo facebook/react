@@ -20,6 +20,12 @@ import {NoWork} from './ReactFiberExpirationTime';
 let workInProgressPrimarySources: Array<MutableSource<any>> = [];
 let workInProgressSecondarySources: Array<MutableSource<any>> = [];
 
+let rendererSigil;
+if (__DEV__) {
+  // Used to detect multiple renderers using the same mutable source.
+  rendererSigil = {};
+}
+
 export function clearPendingUpdates(
   root: FiberRoot,
   expirationTime: ExpirationTime,
@@ -76,5 +82,37 @@ export function setWorkInProgressVersion(
   } else {
     mutableSource._workInProgressVersionSecondary = version;
     workInProgressSecondarySources.push(mutableSource);
+  }
+}
+
+export function warnAboutMultipleRenderersDEV(
+  mutableSource: MutableSource<any>,
+): void {
+  if (__DEV__) {
+    if (isPrimaryRenderer) {
+      if (
+        mutableSource._currentPrimaryRenderer !== undefined &&
+        mutableSource._currentPrimaryRenderer !== null &&
+        mutableSource._currentPrimaryRenderer !== rendererSigil
+      ) {
+        console.error(
+          'Detected multiple renderers concurrently rendering the ' +
+            'same mutable source. This is currently unsupported.',
+        );
+      }
+      mutableSource._currentPrimaryRenderer = rendererSigil;
+    } else {
+      if (
+        mutableSource._currentSecondaryRenderer !== undefined &&
+        mutableSource._currentSecondaryRenderer !== null &&
+        mutableSource._currentSecondaryRenderer !== rendererSigil
+      ) {
+        console.error(
+          'Detected multiple renderers concurrently rendering the ' +
+            'same mutable source. This is currently unsupported.',
+        );
+      }
+      mutableSource._currentSecondaryRenderer = rendererSigil;
+    }
   }
 }

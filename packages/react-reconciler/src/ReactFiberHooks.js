@@ -64,6 +64,7 @@ import {
   getWorkInProgressVersion,
   setPendingExpirationTime,
   setWorkInProgressVersion,
+  warnAboutMultipleRenderersDEV,
 } from './ReactMutableSource';
 
 const {ReactCurrentDispatcher, ReactCurrentBatchConfig} = ReactSharedInternals;
@@ -856,8 +857,8 @@ function rerenderReducer<S, I, A>(
 
 type MutableSourceMemoizedState<Source, Snapshot> = {|
   refs: {
+    fiber: Fiber,
     getSnapshot: MutableSourceGetSnapshotFn<Source, Snapshot>,
-    stateHook: null | Hook,
   },
   source: MutableSource<any>,
   subscribe: MutableSourceSubscribeFn<Source, Snapshot>,
@@ -872,6 +873,10 @@ function readFromUnsubcribedMutableSource<Source, Snapshot>(
     root !== null,
     'Expected a work-in-progress root. This is a bug in React. Please file an issue.',
   );
+
+  if (__DEV__) {
+    warnAboutMultipleRenderersDEV(source);
+  }
 
   const getVersion = source._getVersion;
   const version = getVersion(source._source);
@@ -951,6 +956,8 @@ function useMutableSource<Source, Snapshot>(
   const prevSource = memoizedState.source;
   const prevSubscribe = memoizedState.subscribe;
 
+  const fiber = currentlyRenderingFiber;
+
   hook.memoizedState = ({
     refs,
     source,
@@ -959,9 +966,9 @@ function useMutableSource<Source, Snapshot>(
 
   // Sync the values needed by our subscribe function after each commit.
   dispatcher.useEffect(() => {
+    refs.fiber = fiber;
     refs.getSnapshot = getSnapshot;
-    refs.stateHook = stateHook;
-  }, [getSnapshot, stateHook]);
+  }, [fiber, getSnapshot]);
 
   // If we got a new source or subscribe function,
   // we'll need to subscribe in a passive effect,
@@ -969,13 +976,19 @@ function useMutableSource<Source, Snapshot>(
   dispatcher.useEffect(() => {
     const handleChange = () => {
       const latestGetSnapshot = refs.getSnapshot;
-      const latestStateHook = refs.stateHook;
+      const latestFiber = refs.fiber;
       try {
         setSnapshot(latestGetSnapshot(source._source));
 
         // Record a pending mutable source update with the same expiration time.
-        const expirationTime = (latestStateHook: any).queue.pending
-          .expirationTime;
+        const currentTime = requestCurrentTimeForUpdate();
+        const suspenseConfig = requestCurrentSuspenseConfig();
+        const expirationTime = computeExpirationForFiber(
+          currentTime,
+          latestFiber,
+          suspenseConfig,
+        );
+
         setPendingExpirationTime(root, expirationTime);
       } catch (error) {
         // A selector might throw after a source mutation.
@@ -989,16 +1002,19 @@ function useMutableSource<Source, Snapshot>(
     };
 
     const unsubscribe = subscribe(source._source, handleChange);
-    invariant(
-      typeof unsubscribe === 'function',
-      'Mutable source subscribe function must return an unsubscribe function.',
-    );
+    if (__DEV__) {
+      if (typeof unsubscribe !== 'function') {
+        console.warn(
+          'Mutable source subscribe function must return an unsubscribe function.',
+        );
+      }
+    }
 
     // Check for a possible change between when we last rendered and when we just subscribed.
     const maybeNewVersion = getVersion(source._source);
-    if (version !== maybeNewVersion) {
+    if (!Object.is(version, maybeNewVersion)) {
       const maybeNewSnapshot = getSnapshot(source._source);
-      if (snapshot !== maybeNewSnapshot) {
+      if (!Object.is(snapshot, maybeNewSnapshot)) {
         setSnapshot(maybeNewSnapshot);
       }
     }
@@ -1018,15 +1034,13 @@ function useMutableSource<Source, Snapshot>(
   // In both cases, we need to throw away pending udpates (since they are no longer relevant)
   // and treat reading from the source as we do in the mount case.
   if (
-    prevSource !== source ||
-    prevSubscribe !== subscribe ||
-    prevGetSnapshot !== getSnapshot
+    !Object.is(prevSource, source) ||
+    !Object.is(prevSubscribe, subscribe) ||
+    !Object.is(prevGetSnapshot, getSnapshot)
   ) {
-    (stateHook.queue: any).pending = null;
     stateHook.baseQueue = null;
-    stateHook.memoizedState = stateHook.baseState = snapshot;
-
     snapshot = readFromUnsubcribedMutableSource(source, getSnapshot);
+    stateHook.memoizedState = stateHook.baseState = snapshot;
   }
 
   return snapshot;
@@ -1040,8 +1054,8 @@ function mountMutableSource<Source, Snapshot>(
   const hook = mountWorkInProgressHook();
   hook.memoizedState = ({
     refs: {
+      fiber: currentlyRenderingFiber,
       getSnapshot,
-      stateHook: null,
     },
     source,
     subscribe,

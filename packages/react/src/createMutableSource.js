@@ -13,10 +13,17 @@ export default function createMutableSource<Source: $NonMaybeType<mixed>>(
   source: Source,
   getVersion: MutableSourceGetVersionFn,
 ): MutableSource<Source> {
-  return {
+  const mutableSource: MutableSource<Source> = {
     _getVersion: getVersion,
     _source: source,
     _workInProgressVersionPrimary: null,
     _workInProgressVersionSecondary: null,
   };
+
+  if (__DEV__) {
+    mutableSource._currentPrimaryRenderer = null;
+    mutableSource._currentSecondaryRenderer = null;
+  }
+
+  return mutableSource;
 }

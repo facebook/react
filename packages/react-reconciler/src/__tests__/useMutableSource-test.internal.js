@@ -19,16 +19,14 @@ let Scheduler;
 let useMutableSource;
 let act;
 
-function loadModules({
-  deferPassiveEffectCleanupDuringUnmount,
-  runAllPassiveEffectDestroysBeforeCreates,
-}) {
+function loadModules() {
+  jest.resetModules();
+  jest.useFakeTimers();
+
   ReactFeatureFlags = require('shared/ReactFeatureFlags');
   ReactFeatureFlags.debugRenderPhaseSideEffectsForStrictMode = false;
   ReactFeatureFlags.enableSchedulerTracing = true;
   ReactFeatureFlags.flushSuspenseFallbacksInTests = false;
-  ReactFeatureFlags.deferPassiveEffectCleanupDuringUnmount = deferPassiveEffectCleanupDuringUnmount;
-  ReactFeatureFlags.runAllPassiveEffectDestroysBeforeCreates = runAllPassiveEffectDestroysBeforeCreates;
   ReactFeatureFlags.enableProfilerTimer = true;
   React = require('react');
   ReactNoop = require('react-noop-renderer');
@@ -37,20 +35,11 @@ function loadModules({
   act = ReactNoop.act;
 }
 
-//[true, false].forEach(newPassiveEffectsTiming => {
-[false].forEach(newPassiveEffectsTiming => {
-  describe(`ReactHooksWithNoopRenderer ${
-    newPassiveEffectsTiming ? 'new' : 'old'
-  } passive effect timing`, () => {
-    beforeEach(() => {
-      jest.resetModules();
-      jest.useFakeTimers();
-
-      loadModules({
-        deferPassiveEffectCleanupDuringUnmount: newPassiveEffectsTiming,
-        runAllPassiveEffectDestroysBeforeCreates: newPassiveEffectsTiming,
-      });
-    });
+// TODO (useMutableSource) Remove this unnecessay wrapper in separate commit
+// eslint-disable-next-line no-lone-blocks
+{
+  describe('useMutableSource', () => {
+    beforeEach(loadModules);
 
     const defaultGetSnapshot = source => source.value;
     const defaultSubscribe = (source, callback) => source.subscribe(callback);
@@ -1245,6 +1234,86 @@ function loadModules({
       expect(Scheduler).toHaveYielded(['x: bar, y: bar']);
     });
 
-    // TODO (useMutableSource) Test for multiple updates at different priorities
+    if (__DEV__) {
+      describe('dev warnings', () => {
+        it('should warn if the subscribe function does not return an unsubscribe function', () => {
+          const source = createSource('one');
+          const mutableSource = createMutableSource(source);
+
+          const brokenSubscribe = () => {};
+
+          expect(() => {
+            act(() => {
+              ReactNoop.render(
+                <Component
+                  label="only"
+                  getSnapshot={defaultGetSnapshot}
+                  mutableSource={mutableSource}
+                  subscribe={brokenSubscribe}
+                />,
+              );
+            });
+          }).toWarnDev(
+            'Mutable source subscribe function must return an unsubscribe function.',
+          );
+        });
+
+        it('should error if multiple renderers of the same type use a mutable source at the same time', () => {
+          const source = createSource('one');
+          const mutableSource = createMutableSource(source);
+
+          act(() => {
+            // Start a render that uses the mutable source.
+            ReactNoop.render(
+              <>
+                <Component
+                  label="a"
+                  getSnapshot={defaultGetSnapshot}
+                  mutableSource={mutableSource}
+                  subscribe={defaultSubscribe}
+                />
+                <Component
+                  label="b"
+                  getSnapshot={defaultGetSnapshot}
+                  mutableSource={mutableSource}
+                  subscribe={defaultSubscribe}
+                />
+              </>,
+            );
+            expect(Scheduler).toFlushAndYieldThrough(['a:one']);
+
+            const PrevScheduler = Scheduler;
+
+            // Get a new copy of ReactNoop.
+            loadModules();
+
+            spyOnDev(console, 'error');
+
+            // Use the mutablesource again but with a different renderer.
+            ReactNoop.render(
+              <Component
+                label="c"
+                getSnapshot={defaultGetSnapshot}
+                mutableSource={mutableSource}
+                subscribe={defaultSubscribe}
+              />,
+            );
+            expect(Scheduler).toFlushAndYieldThrough(['c:one']);
+
+            expect(console.error.calls.argsFor(0)[0]).toContain(
+              'Detected multiple renderers concurrently rendering the ' +
+                'same mutable source. This is currently unsupported.',
+            );
+
+            // TODO (useMutableSource) Act will automatically flush remaining work from render 1,
+            // but at this point something in the hooks dispatcher has been broken by jest.resetModules()
+            // Figure out what this is and remove this catch.
+            expect(() =>
+              PrevScheduler.unstable_flushAllWithoutAsserting(),
+            ).toThrow('Invalid hook call');
+          });
+        });
+      });
+    }
   });
-});
+}

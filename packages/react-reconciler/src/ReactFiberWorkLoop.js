@@ -65,7 +65,6 @@ import {
   warnsIfNotActing,
 } from './ReactFiberHostConfig';
 
-import {resetWorkInProgressVersions as resetMutableSourceWorkInProgressVersions} from './ReactMutableSource';
 import {createWorkInProgress, assignFiberPropertiesInDEV} from './ReactFiber';
 import {
   isRootSuspendedAtTime,
@@ -1211,8 +1210,6 @@ function prepareFreshStack(root, expirationTime) {
   if (enableSchedulerTracing) {
     spawnedWorkDuringRender = null;
   }
-
-  resetMutableSourceWorkInProgressVersions();
 
   if (__DEV__) {
     ReactStrictModeWarnings.discardPendingWarnings();

@@ -228,4 +228,9 @@ export type MutableSource<Source: $NonMaybeType<mixed>> = {|
   // We use the same approach for Context.
   _workInProgressVersionPrimary: null | MutableSourceVersion,
   _workInProgressVersionSecondary: null | MutableSourceVersion,
+
+  // DEV only
+  // Used to detect multiple renderers using the same mutable source.
+  _currentPrimaryRenderer?: Object | null,
+  _currentSecondaryRenderer?: Object | null,
 |};
