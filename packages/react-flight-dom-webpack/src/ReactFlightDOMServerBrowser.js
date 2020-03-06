@@ -7,13 +7,13 @@
  * @flow
  */
 
-import type {ReactModel} from 'react-server/flight.inline-typed';
+import type {ReactModel} from 'react-server/src/ReactFlightServer';
 
 import {
   createRequest,
   startWork,
   startFlowing,
-} from 'react-server/flight.inline.dom-browser';
+} from 'react-server/src/ReactFlightServer';
 
 function renderToReadableStream(model: ReactModel): ReadableStream {
   let request;

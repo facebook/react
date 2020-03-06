@@ -24,7 +24,7 @@ import {
   updateContainer,
   injectIntoDevTools,
   getPublicRootInstance,
-} from 'react-reconciler/inline.fabric';
+} from 'react-reconciler/src/ReactFiberReconciler';
 
 import {createPortal as createPortalImpl} from 'shared/ReactPortal';
 import {setBatchingImplementation} from 'legacy-events/ReactGenericBatching';

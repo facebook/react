@@ -7,14 +7,14 @@
  * @flow
  */
 
-import type {ReactModel} from 'react-server/flight.inline-typed';
+import type {ReactModel} from 'react-server/src/ReactFlightServer';
 import type {Writable} from 'stream';
 
 import {
   createRequest,
   startWork,
   startFlowing,
-} from 'react-server/flight.inline.dom';
+} from 'react-server/src/ReactFlightServer';
 
 function createDrainHandler(destination, request) {
   return () => startFlowing(request);

@@ -16,7 +16,7 @@ import {
   processStringChunk,
   processBinaryChunk,
   complete,
-} from 'react-flight/inline.dom';
+} from 'react-flight/src/ReactFlightClient';
 
 function startReadingFromStream(response, stream: ReadableStream): void {
   let reader = stream.getReader();

@@ -20,8 +20,8 @@ import {
   injectIntoDevTools,
   batchedUpdates,
   act,
-} from 'react-reconciler/inline.test';
-import {findCurrentFiberUsingSlowPath} from 'react-reconciler/reflection';
+} from 'react-reconciler/src/ReactFiberReconciler';
+import {findCurrentFiberUsingSlowPath} from 'react-reconciler/src/ReactFiberTreeReflection';
 import {
   Fragment,
   FunctionComponent,

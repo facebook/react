@@ -28,7 +28,7 @@ import {
   getNearestMountedFiber,
   getContainerFromFiber,
   getSuspenseInstanceFromFiber,
-} from 'react-reconciler/reflection';
+} from 'react-reconciler/src/ReactFiberTreeReflection';
 import {
   attemptToDispatchEvent,
   addResponderEventSystemEvent,
