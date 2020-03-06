@@ -103,7 +103,7 @@ type Update<S, A> = {|
   expirationTime: ExpirationTime,
   suspenseConfig: null | SuspenseConfig,
   action: A,
-  eagerlyComputed: false,
+  eagerlyComputed: boolean,
   eagerState: S | null,
   next: Update<S, A>,
   priority?: ReactPriorityLevel,
@@ -1330,7 +1330,7 @@ function dispatchAction<S, A>(
 
 function setState<S>(
   fiber: Fiber,
-  queue: UpdateQueue<S>,
+  queue: UpdateQueue<S, BasicStateAction<S>>,
   action: BasicStateAction<S>
 ) {
  if (__DEV__) {
@@ -1351,7 +1351,7 @@ function setState<S>(
     suspenseConfig,
   );
 
-  const update: Update<S, A> = {
+  const update: Update<S, BasicStateAction<S>> = {
     expirationTime,
     suspenseConfig,
     action,
