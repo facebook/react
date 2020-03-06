@@ -857,7 +857,6 @@ function rerenderReducer<S, I, A>(
 
 type MutableSourceMemoizedState<Source, Snapshot> = {|
   refs: {
-    fiber: Fiber,
     getSnapshot: MutableSourceGetSnapshotFn<Source, Snapshot>,
   },
   source: MutableSource<any>,
@@ -865,6 +864,7 @@ type MutableSourceMemoizedState<Source, Snapshot> = {|
 |};
 
 function readFromUnsubcribedMutableSource<Source, Snapshot>(
+  root: FiberRoot,
   source: MutableSource<Source>,
   getSnapshot: MutableSourceGetSnapshotFn<Source, Snapshot>,
 ): Snapshot {
@@ -885,12 +885,6 @@ function readFromUnsubcribedMutableSource<Source, Snapshot>(
   if (currentRenderVersion !== null) {
     isSafeToReadFromSource = currentRenderVersion === version;
   } else {
-    const root = ((getWorkInProgressRoot(): any): FiberRoot);
-    invariant(
-      root !== null,
-      'Expected a work-in-progress root. This is a bug in React. Please file an issue.',
-    );
-
     // If there's no version, then we should fallback to checking the update time.
     const pendingExpirationTime = getPendingExpirationTime(root);
 
@@ -940,7 +934,7 @@ function useMutableSource<Source, Snapshot>(
   const dispatcher = ReactCurrentDispatcher.current;
 
   let [snapshot, setSnapshot] = dispatcher.useState(() =>
-    readFromUnsubcribedMutableSource(source, getSnapshot),
+    readFromUnsubcribedMutableSource(root, source, getSnapshot),
   );
 
   // Grab a handle to the state hook as well.
@@ -966,9 +960,8 @@ function useMutableSource<Source, Snapshot>(
 
   // Sync the values needed by our subscribe function after each commit.
   dispatcher.useEffect(() => {
-    refs.fiber = fiber;
     refs.getSnapshot = getSnapshot;
-  }, [fiber, getSnapshot]);
+  }, [getSnapshot]);
 
   // If we got a new source or subscribe function,
   // we'll need to subscribe in a passive effect,
@@ -976,7 +969,6 @@ function useMutableSource<Source, Snapshot>(
   dispatcher.useEffect(() => {
     const handleChange = () => {
       const latestGetSnapshot = refs.getSnapshot;
-      const latestFiber = refs.fiber;
       try {
         setSnapshot(latestGetSnapshot(source._source));
 
@@ -985,7 +977,7 @@ function useMutableSource<Source, Snapshot>(
         const suspenseConfig = requestCurrentSuspenseConfig();
         const expirationTime = computeExpirationForFiber(
           currentTime,
-          latestFiber,
+          fiber,
           suspenseConfig,
         );
 
@@ -1012,9 +1004,9 @@ function useMutableSource<Source, Snapshot>(
 
     // Check for a possible change between when we last rendered and when we just subscribed.
     const maybeNewVersion = getVersion(source._source);
-    if (!Object.is(version, maybeNewVersion)) {
+    if (!is(version, maybeNewVersion)) {
       const maybeNewSnapshot = getSnapshot(source._source);
-      if (!Object.is(snapshot, maybeNewSnapshot)) {
+      if (!is(snapshot, maybeNewSnapshot)) {
         setSnapshot(maybeNewSnapshot);
       }
     }
@@ -1034,12 +1026,12 @@ function useMutableSource<Source, Snapshot>(
   // In both cases, we need to throw away pending udpates (since they are no longer relevant)
   // and treat reading from the source as we do in the mount case.
   if (
-    !Object.is(prevSource, source) ||
-    !Object.is(prevSubscribe, subscribe) ||
-    !Object.is(prevGetSnapshot, getSnapshot)
+    !is(prevSource, source) ||
+    !is(prevSubscribe, subscribe) ||
+    !is(prevGetSnapshot, getSnapshot)
   ) {
     stateHook.baseQueue = null;
-    snapshot = readFromUnsubcribedMutableSource(source, getSnapshot);
+    snapshot = readFromUnsubcribedMutableSource(root, source, getSnapshot);
     stateHook.memoizedState = stateHook.baseState = snapshot;
   }
 
@@ -1054,7 +1046,6 @@ function mountMutableSource<Source, Snapshot>(
   const hook = mountWorkInProgressHook();
   hook.memoizedState = ({
     refs: {
-      fiber: currentlyRenderingFiber,
       getSnapshot,
     },
     source,
