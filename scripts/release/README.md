@@ -13,7 +13,7 @@ The high level process of creating releases is [documented below](#process). Ind
 * [`prepare-stable`](#prepare-stable)
 * [`publish`](#publish)
 
-<sup>Note that [**creating a patch release**](creating-a-patch-release) has a slightly different process than a major/minor release.</sup>
+<sup>Note that [**creating a patch release**](#creating-a-patch-release) has a slightly different process than a major/minor release.</sup>
 
 # Process
 
