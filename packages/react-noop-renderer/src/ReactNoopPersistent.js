@@ -14,7 +14,7 @@
  * environment.
  */
 
-import ReactFiberPersistentReconciler from 'react-reconciler/persistent';
+import ReactFiberReconciler from 'react-reconciler';
 import createReactNoop from './createReactNoop';
 
 export const {
@@ -47,6 +47,6 @@ export const {
   dumpTree,
   getRoot,
 } = createReactNoop(
-  ReactFiberPersistentReconciler, // reconciler
+  ReactFiberReconciler, // reconciler
   false, // useMutation
 );

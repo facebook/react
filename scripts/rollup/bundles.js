@@ -362,15 +362,6 @@ const bundles = [
     externals: ['react'],
   },
 
-  /******* React Persistent Reconciler *******/
-  {
-    bundleTypes: [NODE_DEV, NODE_PROD],
-    moduleType: RECONCILER,
-    entry: 'react-reconciler/persistent',
-    global: 'ReactPersistentReconciler',
-    externals: ['react'],
-  },
-
   /******* React Server *******/
   {
     bundleTypes: [NODE_DEV, NODE_PROD],

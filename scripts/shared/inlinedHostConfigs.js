@@ -57,7 +57,6 @@ module.exports = [
     shortName: 'custom',
     entryPoints: [
       'react-reconciler',
-      'react-reconciler/persistent',
       'react-flight',
       'react-server',
       'react-server/flight',

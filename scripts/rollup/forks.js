@@ -100,8 +100,6 @@ const forks = Object.freeze({
               `Unexpected entry (${entry}) and bundleType (${bundleType})`
             );
         }
-      case 'react-reconciler/persistent':
-        return 'shared/forks/ReactFeatureFlags.persistent.js';
       case 'react-test-renderer':
         switch (bundleType) {
           case FB_WWW_DEV:

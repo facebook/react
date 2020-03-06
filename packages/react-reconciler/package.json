@@ -13,7 +13,6 @@
     "README.md",
     "build-info.json",
     "index.js",
-    "persistent.js",
     "reflection.js",
     "cjs/"
   ],
