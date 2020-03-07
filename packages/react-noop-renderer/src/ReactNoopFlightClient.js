@@ -14,9 +14,9 @@
  * environment.
  */
 
-import type {ReactModelRoot} from 'react-flight';
+import type {ReactModelRoot} from 'react-client/flight';
 
-import ReactFlightClient from 'react-flight';
+import ReactFlightClient from 'react-client/flight';
 
 type Source = Array<string>;
 

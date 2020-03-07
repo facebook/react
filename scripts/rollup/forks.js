@@ -354,13 +354,13 @@ const forks = Object.freeze({
     );
   },
 
-  'react-flight/src/ReactFlightClientHostConfig': (
+  'react-client/src/ReactFlightClientHostConfig': (
     bundleType,
     entry,
     dependencies,
     moduleType
   ) => {
-    if (dependencies.indexOf('react-flight') !== -1) {
+    if (dependencies.indexOf('react-client') !== -1) {
       return null;
     }
     if (moduleType !== RENDERER && moduleType !== RECONCILER) {
@@ -372,7 +372,7 @@ const forks = Object.freeze({
         if (!rendererInfo.isServerSupported) {
           return null;
         }
-        return `react-flight/src/forks/ReactFlightClientHostConfig.${rendererInfo.shortName}.js`;
+        return `react-client/src/forks/ReactFlightClientHostConfig.${rendererInfo.shortName}.js`;
       }
     }
     throw new Error(

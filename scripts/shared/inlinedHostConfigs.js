@@ -82,7 +82,7 @@ module.exports = [
     shortName: 'custom',
     entryPoints: [
       'react-reconciler',
-      'react-flight',
+      'react-client/flight',
       'react-server',
       'react-server/flight',
     ],

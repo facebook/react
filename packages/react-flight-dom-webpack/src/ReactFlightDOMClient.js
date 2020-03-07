@@ -7,7 +7,7 @@
  * @flow
  */
 
-import type {ReactModelRoot} from 'react-flight/src/ReactFlightClient';
+import type {ReactModelRoot} from 'react-client/src/ReactFlightClient';
 
 import {
   createResponse,
@@ -16,7 +16,7 @@ import {
   processStringChunk,
   processBinaryChunk,
   complete,
-} from 'react-flight/src/ReactFlightClient';
+} from 'react-client/src/ReactFlightClient';
 
 function startReadingFromStream(response, stream: ReadableStream): void {
   let reader = stream.getReader();

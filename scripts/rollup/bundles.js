@@ -384,7 +384,7 @@ const bundles = [
   {
     bundleTypes: [NODE_DEV, NODE_PROD],
     moduleType: RECONCILER,
-    entry: 'react-flight',
+    entry: 'react-client/flight',
     global: 'ReactFlightClient',
     externals: ['react'],
   },

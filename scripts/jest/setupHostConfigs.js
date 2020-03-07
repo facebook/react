@@ -28,17 +28,17 @@ jest.mock('react-server/flight', () => {
   };
 });
 const shimFlightClientHostConfigPath =
-  'react-flight/src/ReactFlightClientHostConfig';
-jest.mock('react-flight', () => {
+  'react-client/src/ReactFlightClientHostConfig';
+jest.mock('react-client/flight', () => {
   return config => {
     jest.mock(shimFlightClientHostConfigPath, () => config);
-    return require.requireActual('react-flight');
+    return require.requireActual('react-client/flight');
   };
 });
 
 const configPaths = [
   'react-reconciler/src/ReactFiberHostConfig',
-  'react-flight/src/ReactFlightClientHostConfig',
+  'react-client/src/ReactFlightClientHostConfig',
   'react-server/src/ReactServerHostConfig',
   'react-server/src/ReactServerFormatConfig',
 ];
