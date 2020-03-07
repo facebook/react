@@ -7,7 +7,7 @@
  * @flow
  */
 
-import type {Destination} from './ReactServerHostConfig';
+import type {Destination} from './ReactServerStreamConfig';
 import type {ReactNodeList} from 'shared/ReactTypes';
 
 import {
@@ -17,7 +17,7 @@ import {
   completeWriting,
   flushBuffered,
   close,
-} from './ReactServerHostConfig';
+} from './ReactServerStreamConfig';
 import {formatChunk} from './ReactServerFormatConfig';
 import {REACT_ELEMENT_TYPE} from 'shared/ReactSymbols';
 

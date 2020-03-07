@@ -7,4 +7,4 @@
  * @flow
  */
 
-export * from '../ReactServerHostConfigBrowser';
+export * from '../ReactServerStreamConfigBrowser';

@@ -7,7 +7,7 @@
  * @flow
  */
 
-import type {Destination} from './ReactServerHostConfig';
+import type {Destination} from './ReactServerStreamConfig';
 
 import {
   scheduleWork,
@@ -17,7 +17,7 @@ import {
   flushBuffered,
   close,
   convertStringToBuffer,
-} from './ReactServerHostConfig';
+} from './ReactServerStreamConfig';
 import {renderHostChildrenToString} from './ReactServerFormatConfig';
 import {REACT_ELEMENT_TYPE} from 'shared/ReactSymbols';
 

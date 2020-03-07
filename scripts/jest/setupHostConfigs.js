@@ -11,18 +11,18 @@ jest.mock('react-reconciler', () => {
     return require.requireActual('react-reconciler');
   };
 });
-const shimServerHostConfigPath = 'react-server/src/ReactServerHostConfig';
+const shimServerStreamConfigPath = 'react-server/src/ReactServerStreamConfig';
 const shimServerFormatConfigPath = 'react-server/src/ReactServerFormatConfig';
 jest.mock('react-server', () => {
   return config => {
-    jest.mock(shimServerHostConfigPath, () => config);
+    jest.mock(shimServerStreamConfigPath, () => config);
     jest.mock(shimServerFormatConfigPath, () => config);
     return require.requireActual('react-server');
   };
 });
 jest.mock('react-server/flight', () => {
   return config => {
-    jest.mock(shimServerHostConfigPath, () => config);
+    jest.mock(shimServerStreamConfigPath, () => config);
     jest.mock(shimServerFormatConfigPath, () => config);
     return require.requireActual('react-server/flight');
   };
@@ -39,7 +39,7 @@ jest.mock('react-client/flight', () => {
 const configPaths = [
   'react-reconciler/src/ReactFiberHostConfig',
   'react-client/src/ReactFlightClientHostConfig',
-  'react-server/src/ReactServerHostConfig',
+  'react-server/src/ReactServerStreamConfig',
   'react-server/src/ReactServerFormatConfig',
 ];
 

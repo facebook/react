@@ -49,7 +49,7 @@ function writeConfig(renderer, rendererInfo, isServerSupported) {
       '%REACT_RENDERER_FLOW_OPTIONS%',
       `
 module.name_mapper='ReactFiberHostConfig$$' -> 'forks/ReactFiberHostConfig.${renderer}'
-module.name_mapper='ReactServerHostConfig$$' -> 'forks/ReactServerHostConfig.${serverRenderer}'
+module.name_mapper='ReactServerStreamConfig$$' -> 'forks/ReactServerStreamConfig.${serverRenderer}'
 module.name_mapper='ReactServerFormatConfig$$' -> 'forks/ReactServerFormatConfig.${serverRenderer}'
 module.name_mapper='ReactFlightClientHostConfig$$' -> 'forks/ReactFlightClientHostConfig.${serverRenderer}'
     `.trim(),
