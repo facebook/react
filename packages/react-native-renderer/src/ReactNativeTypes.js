@@ -100,6 +100,24 @@ type SecretInternalsType = {
   ...
 };
 
+export type TouchedViewDataAtPoint = $ReadOnly<{
+  hierarchy?: ?Array<{|name: string|}>,
+  pointerY: number,
+  touchedViewTag?: ?number,
+  props: $ReadOnly<{[propName: string]: string, ...}>,
+  selection: number,
+  source: $ReadOnly<{|
+    fileName?: string,
+    lineNumber?: number,
+  |}>,
+  frame?: ?$ReadOnly<{|
+    top?: ?number,
+    left?: ?number,
+    width?: ?number,
+    height: ?number,
+  |}>,
+}>;
+
 /**
  * Flat ReactNative renderer bundles are too big for Flow to parse efficiently.
  * Provide minimal Flow typing for the high-level RN API and call it a day.

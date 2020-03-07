@@ -8,10 +8,7 @@
  */
 
 import type {Fiber} from 'react-reconciler/src/ReactFiber';
-import type {
-  ReactFabricType,
-  HostComponent as ReactNativeHostComponent,
-} from './ReactNativeTypes';
+import type {TouchedViewDataAtPoint} from './ReactNativeTypes';
 
 import {
   findCurrentHostFiber,
@@ -152,11 +149,11 @@ if (__DEV__) {
   };
 
   getInspectorDataForViewAtPoint = function(
-    findNodeHandle,
-    inspectedView: ?React.ElementRef<ReactNativeHostComponent<mixed>>,
-    x: number,
-    y: number,
-    callback: (obj: Object) => mixed,
+    findNodeHandle: (componentOrHandle: any) => ?number,
+    inspectedView: Object,
+    locationX: number,
+    locationY: number,
+    callback: (viewData: TouchedViewDataAtPoint) => mixed,
   ): void {
     let closestInstance = null;
     let frame = {
@@ -170,8 +167,8 @@ if (__DEV__) {
       // For Fabric we can look up the instance handle directly and measure it.
       nativeFabricUIManager.findNodeAtPoint(
         inspectedView._internalInstanceHandle.stateNode.node,
-        x,
-        y,
+        locationX,
+        locationY,
         shadowNode => {
           if (shadowNode == null) {
             callback(getInspectorDataForInstance(closestInstance, frame));
@@ -182,14 +179,13 @@ if (__DEV__) {
           nativeFabricUIManager.measure(
             shadowNode.stateNode.node,
             (x, y, width, height, pageX, pageY) => {
-              frame = {
-                left: pageX,
-                top: pageY,
-                width,
-                height,
-              };
-
-              callback(getInspectorDataForInstance(closestInstance, frame));
+              const inspectorData = getInspectorDataForInstance(
+                closestInstance,
+              );
+              callback({
+                ...inspectorData,
+                frame: {left: pageX, top: pageY, width, height},
+              });
             },
           );
         },
@@ -198,19 +194,16 @@ if (__DEV__) {
       // For Paper we fall back to the old strategy using the React tag.
       UIManager.findSubviewIn(
         findNodeHandle(inspectedView),
-        [x, y],
+        [locationX, locationY],
         (nativeViewTag, left, top, width, height) => {
-          frame = {
-            left,
-            top,
-            width,
-            height,
-          };
           const inspectorData = getInspectorDataForInstance(
             getClosestInstanceFromNode(nativeViewTag),
-            frame,
           );
-          callback({...inspectorData, nativeViewTag});
+          callback({
+            ...inspectorData,
+            frame: {left, top, width, height},
+            touchedViewTag: nativeViewTag
+          });
         },
       );
     } else if (__DEV__) {
@@ -229,7 +222,13 @@ if (__DEV__) {
     );
   };
 
-  getInspectorDataForViewAtPoint = () => {
+  getInspectorDataForViewAtPoint = (
+    findNodeHandle: (componentOrHandle: any) => ?number,
+    inspectedView: Object,
+    locationX: number,
+    locationY: number,
+    callback: (viewData: TouchedViewDataAtPoint) => mixed,
+  ): void => {
     invariant(
       false,
       'getInspectorDataForViewAtPoint() is not available in production',
