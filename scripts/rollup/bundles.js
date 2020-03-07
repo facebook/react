@@ -197,6 +197,24 @@ const bundles = [
     externals: ['react'],
   },
 
+  /******* React DOM Flight Server Relay *******/
+  {
+    bundleTypes: [FB_WWW_DEV, FB_WWW_PROD],
+    moduleType: RENDERER,
+    entry: 'react-flight-dom-relay/server',
+    global: 'ReactFlightDOMRelayServer',
+    externals: ['react', 'react-dom/server'],
+  },
+
+  /******* React DOM Flight Client Relay *******/
+  {
+    bundleTypes: [FB_WWW_DEV, FB_WWW_PROD],
+    moduleType: RENDERER,
+    entry: 'react-flight-dom-relay',
+    global: 'ReactFlightDOMRelayClient',
+    externals: ['react'],
+  },
+
   /******* React ART *******/
   {
     bundleTypes: [
@@ -384,7 +402,7 @@ const bundles = [
   {
     bundleTypes: [NODE_DEV, NODE_PROD],
     moduleType: RECONCILER,
-    entry: 'react-flight',
+    entry: 'react-client/flight',
     global: 'ReactFlightClient',
     externals: ['react'],
   },

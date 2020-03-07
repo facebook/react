@@ -7,7 +7,7 @@
  * @flow
  */
 
-import {convertStringToBuffer} from 'react-server/src/ReactServerHostConfig';
+import {convertStringToBuffer} from 'react-server/src/ReactServerStreamConfig';
 
 import {renderToStaticMarkup} from 'react-dom/server';
 

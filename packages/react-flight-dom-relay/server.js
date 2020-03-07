@@ -7,4 +7,4 @@
  * @flow
  */
 
-export * from '../ReactServerHostConfigNode';
+export * from './src/ReactFlightDOMRelayServer';

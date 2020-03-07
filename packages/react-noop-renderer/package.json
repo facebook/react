@@ -14,7 +14,7 @@
     "object-assign": "^4.1.1",
     "regenerator-runtime": "^0.11.0",
     "react-reconciler": "*",
-    "react-flight": "*",
+    "react-client": "*",
     "react-server": "*"
   },
   "peerDependencies": {

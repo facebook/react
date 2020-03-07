@@ -298,7 +298,7 @@ const forks = Object.freeze({
     );
   },
 
-  'react-server/src/ReactServerHostConfig': (
+  'react-server/src/ReactServerStreamConfig': (
     bundleType,
     entry,
     dependencies,
@@ -316,11 +316,11 @@ const forks = Object.freeze({
         if (!rendererInfo.isServerSupported) {
           return null;
         }
-        return `react-server/src/forks/ReactServerHostConfig.${rendererInfo.shortName}.js`;
+        return `react-server/src/forks/ReactServerStreamConfig.${rendererInfo.shortName}.js`;
       }
     }
     throw new Error(
-      'Expected ReactServerHostConfig to always be replaced with a shim, but ' +
+      'Expected ReactServerStreamConfig to always be replaced with a shim, but ' +
         `found no mention of "${entry}" entry point in ./scripts/shared/inlinedHostConfigs.js. ` +
         'Did you mean to add it there to associate it with a specific renderer?'
     );
@@ -354,13 +354,13 @@ const forks = Object.freeze({
     );
   },
 
-  'react-flight/src/ReactFlightClientHostConfig': (
+  'react-client/src/ReactFlightClientHostConfig': (
     bundleType,
     entry,
     dependencies,
     moduleType
   ) => {
-    if (dependencies.indexOf('react-flight') !== -1) {
+    if (dependencies.indexOf('react-client') !== -1) {
       return null;
     }
     if (moduleType !== RENDERER && moduleType !== RECONCILER) {
@@ -372,7 +372,7 @@ const forks = Object.freeze({
         if (!rendererInfo.isServerSupported) {
           return null;
         }
-        return `react-flight/src/forks/ReactFlightClientHostConfig.${rendererInfo.shortName}.js`;
+        return `react-client/src/forks/ReactFlightClientHostConfig.${rendererInfo.shortName}.js`;
       }
     }
     throw new Error(

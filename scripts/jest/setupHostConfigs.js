@@ -11,35 +11,35 @@ jest.mock('react-reconciler', () => {
     return require.requireActual('react-reconciler');
   };
 });
-const shimServerHostConfigPath = 'react-server/src/ReactServerHostConfig';
+const shimServerStreamConfigPath = 'react-server/src/ReactServerStreamConfig';
 const shimServerFormatConfigPath = 'react-server/src/ReactServerFormatConfig';
 jest.mock('react-server', () => {
   return config => {
-    jest.mock(shimServerHostConfigPath, () => config);
+    jest.mock(shimServerStreamConfigPath, () => config);
     jest.mock(shimServerFormatConfigPath, () => config);
     return require.requireActual('react-server');
   };
 });
 jest.mock('react-server/flight', () => {
   return config => {
-    jest.mock(shimServerHostConfigPath, () => config);
+    jest.mock(shimServerStreamConfigPath, () => config);
     jest.mock(shimServerFormatConfigPath, () => config);
     return require.requireActual('react-server/flight');
   };
 });
 const shimFlightClientHostConfigPath =
-  'react-flight/src/ReactFlightClientHostConfig';
-jest.mock('react-flight', () => {
+  'react-client/src/ReactFlightClientHostConfig';
+jest.mock('react-client/flight', () => {
   return config => {
     jest.mock(shimFlightClientHostConfigPath, () => config);
-    return require.requireActual('react-flight');
+    return require.requireActual('react-client/flight');
   };
 });
 
 const configPaths = [
   'react-reconciler/src/ReactFiberHostConfig',
-  'react-flight/src/ReactFlightClientHostConfig',
-  'react-server/src/ReactServerHostConfig',
+  'react-client/src/ReactFlightClientHostConfig',
+  'react-server/src/ReactServerStreamConfig',
   'react-server/src/ReactServerFormatConfig',
 ];
 

@@ -79,10 +79,17 @@ module.exports = [
     isServerSupported: false,
   },
   {
+    shortName: 'dom-relay',
+    entryPoints: ['react-flight-dom-relay', 'react-flight-dom-relay/server'],
+    paths: ['react-dom', 'react-flight-dom-relay'],
+    isFlowTyped: true,
+    isServerSupported: true,
+  },
+  {
     shortName: 'custom',
     entryPoints: [
       'react-reconciler',
-      'react-flight',
+      'react-client/flight',
       'react-server',
       'react-server/flight',
     ],

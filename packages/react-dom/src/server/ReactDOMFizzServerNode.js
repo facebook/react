@@ -14,7 +14,7 @@ import {
   createRequest,
   startWork,
   startFlowing,
-} from 'react-server/src/ReactFizzStreamer';
+} from 'react-server/src/ReactFizzServer';
 
 function createDrainHandler(destination, request) {
   return () => startFlowing(request);

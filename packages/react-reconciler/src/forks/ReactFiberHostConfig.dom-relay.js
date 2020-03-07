@@ -7,4 +7,4 @@
  * @flow
  */
 
-export * from './src/ReactFizzServer';
+export * from 'react-dom/src/client/ReactDOMHostConfig';
