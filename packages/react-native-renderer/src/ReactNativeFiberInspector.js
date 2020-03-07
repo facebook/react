@@ -202,7 +202,7 @@ if (__DEV__) {
           callback({
             ...inspectorData,
             frame: {left, top, width, height},
-            touchedViewTag: nativeViewTag
+            touchedViewTag: nativeViewTag,
           });
         },
       );
