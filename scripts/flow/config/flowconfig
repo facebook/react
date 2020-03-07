@@ -14,6 +14,9 @@
 .*/__mocks__/.*
 .*/__tests__/.*
 
+# TODO: noop should get its own inlinedHostConfig entry
+.*/packages/react-noop-renderer/.*
+
 %REACT_RENDERER_FLOW_IGNORES%
 
 [include]

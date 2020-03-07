@@ -14,7 +14,7 @@
  * environment.
  */
 
-import type {ReactModel} from 'react-server/flight.inline-typed';
+import type {ReactModel} from 'react-server/src/ReactFlightServer';
 
 import ReactFlightServer from 'react-server/flight';
 

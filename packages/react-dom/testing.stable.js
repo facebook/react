@@ -8,4 +8,4 @@
  */
 
 export * from './index.stable.js';
-export {act} from 'react-reconciler/inline.dom';
+export {act} from 'react-reconciler/src/ReactFiberReconciler';

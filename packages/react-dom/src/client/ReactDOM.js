@@ -35,7 +35,7 @@ import {
   attemptUserBlockingHydration,
   attemptContinuousHydration,
   attemptHydrationAtCurrentPriority,
-} from 'react-reconciler/inline.dom';
+} from 'react-reconciler/src/ReactFiberReconciler';
 import {createPortal as createPortalImpl} from 'shared/ReactPortal';
 import {canUseDOM} from 'shared/ExecutionEnvironment';
 import {setBatchingImplementation} from 'legacy-events/ReactGenericBatching';

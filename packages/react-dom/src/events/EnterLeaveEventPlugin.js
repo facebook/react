@@ -21,7 +21,7 @@ import {
   getNodeFromInstance,
 } from '../client/ReactDOMComponentTree';
 import {HostComponent, HostText} from 'shared/ReactWorkTags';
-import {getNearestMountedFiber} from 'react-reconciler/reflection';
+import {getNearestMountedFiber} from 'react-reconciler/src/ReactFiberTreeReflection';
 import {enableModernEventSystem} from 'shared/ReactFeatureFlags';
 
 const eventTypes = {

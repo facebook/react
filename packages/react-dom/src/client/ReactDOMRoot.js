@@ -13,7 +13,7 @@ import type {ReactNodeList} from 'shared/ReactTypes';
 // TODO: This type is shared between the reconciler and ReactDOM, but will
 // eventually be lifted out to the renderer.
 import type {FiberRoot} from 'react-reconciler/src/ReactFiberRoot';
-import {findHostInstanceWithNoPortals} from 'react-reconciler/inline.dom';
+import {findHostInstanceWithNoPortals} from 'react-reconciler/src/ReactFiberReconciler';
 
 export type RootType = {
   render(children: ReactNodeList): void,
@@ -45,7 +45,10 @@ import {
   DOCUMENT_FRAGMENT_NODE,
 } from '../shared/HTMLNodeType';
 
-import {createContainer, updateContainer} from 'react-reconciler/inline.dom';
+import {
+  createContainer,
+  updateContainer,
+} from 'react-reconciler/src/ReactFiberReconciler';
 import invariant from 'shared/invariant';
 import {BlockingRoot, ConcurrentRoot, LegacyRoot} from 'shared/ReactRootTags';
 
