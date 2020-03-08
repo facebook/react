@@ -115,7 +115,8 @@ type DevToolsConfig = {|
     inspectedView: Object,
     locationX: number,
     locationY: number,
-    callback: (viewData: TouchedViewDataAtPoint) => mixed) => void,
+    callback: (viewData: TouchedViewDataAtPoint) => mixed,
+  ) => void,
 |};
 
 let didWarnAboutNestedUpdates;
