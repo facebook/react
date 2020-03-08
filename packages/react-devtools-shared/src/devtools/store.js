@@ -379,7 +379,8 @@ export default class Store extends EventEmitter<{|
       root = ((this._idToElement.get(rootID): any): Element);
       if (root.children.length === 0) {
         continue;
-      } else if (rootWeight + root.weight > index) {
+      }
+      if (rootWeight + root.weight > index) {
         break;
       } else {
         rootWeight += root.weight;

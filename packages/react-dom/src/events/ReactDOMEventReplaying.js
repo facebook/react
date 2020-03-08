@@ -287,7 +287,6 @@ export function queueDiscreteEvent(
           replayUnblockedEvents();
           // If we're reblocked, on an inner boundary, we might need
           // to attempt hydrating that one.
-          continue;
         } else {
           // We're still blocked from hydation, we have to give up
           // and replay later.
