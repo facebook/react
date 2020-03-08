@@ -57,6 +57,35 @@ export default {
       ExpressionStatement: visitExpressionStatement,
     };
 
+    function warnWhenNoDependencyIsPassedAndIsUseless({
+      callbackIndex,
+      node,
+      isEffect,
+      reactiveHookName,
+      argumentsContainingNode,
+    }) {
+      const depsIndex = callbackIndex + 1;
+      const declaredDependenciesNode =
+        argumentsContainingNode.arguments[depsIndex];
+      if (!declaredDependenciesNode && !isEffect) {
+        // These are only used for optimization.
+        if (
+          reactiveHookName === 'useMemo' ||
+          reactiveHookName === 'useCallback'
+        ) {
+          // TODO: Can this have an autofix?
+          context.report({
+            node: argumentsContainingNode.callee,
+            message:
+              `React Hook ${reactiveHookName} does nothing when called with ` +
+              `only one argument. Did you forget to pass an array of ` +
+              `dependencies?`,
+          });
+        }
+        return true;
+      }
+      return false;
+    }
     /**
      * Visitor only for identifier callbacks
      */
@@ -80,23 +109,15 @@ export default {
         // Get the declared dependencies for this reactive hook. If there is no
         // second argument then the reactive callback will re-run on every render.
         // So no need to check for dependency inclusion.
-        const depsIndex = callbackIndex + 1;
-        const declaredDependenciesNode = node.expression.arguments[depsIndex];
-        if (!declaredDependenciesNode && !isEffect) {
-          // These are only used for optimization.
-          if (
-            reactiveHookName === 'useMemo' ||
-            reactiveHookName === 'useCallback'
-          ) {
-            // TODO: Can this have an autofix?
-            context.report({
-              node: node.expression.callee,
-              message:
-                `React Hook ${reactiveHookName} does nothing when called with ` +
-                `only one argument. Did you forget to pass an array of ` +
-                `dependencies?`,
-            });
-          }
+        if (
+          warnWhenNoDependencyIsPassedAndIsUseless({
+            callbackIndex,
+            node,
+            isEffect,
+            reactiveHookName,
+            argumentsContainingNode: node.expression,
+          })
+        ) {
           return;
         }
 
@@ -208,25 +229,20 @@ export default {
       // Get the declared dependencies for this reactive hook. If there is no
       // second argument then the reactive callback will re-run on every render.
       // So no need to check for dependency inclusion.
-      const depsIndex = callbackIndex + 1;
-      const declaredDependenciesNode = node.parent.arguments[depsIndex];
-      if (!declaredDependenciesNode && !isEffect) {
-        // These are only used for optimization.
-        if (
-          reactiveHookName === 'useMemo' ||
-          reactiveHookName === 'useCallback'
-        ) {
-          // TODO: Can this have a suggestion?
-          context.report({
-            node: node.parent.callee,
-            message:
-              `React Hook ${reactiveHookName} does nothing when called with ` +
-              `only one argument. Did you forget to pass an array of ` +
-              `dependencies?`,
-          });
-        }
+      if (
+        warnWhenNoDependencyIsPassedAndIsUseless({
+          callbackIndex,
+          node,
+          isEffect,
+          reactiveHookName,
+          argumentsContainingNode: node.parent,
+        })
+      ) {
         return;
       }
+
+      const depsIndex = callbackIndex + 1;
+      const declaredDependenciesNode = node.parent.arguments[depsIndex];
 
       if (isEffect && node.async) {
         context.report({
