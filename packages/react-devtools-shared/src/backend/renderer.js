@@ -2212,6 +2212,39 @@ export function attach(
     return {instance, style};
   }
 
+  // find the provider fiber that provides the value for this particular consumer
+  function getProviderFiber(consumer: Fiber): Fiber | null {
+    const type = consumer.type;
+    // 16.3-16.5 read from "type" because the Consumer is the actual context object.
+    // 16.6+ should read from "type._context" because Consumer can be different (in DEV).
+    // NOTE Keep in sync with getDisplayNameForFiber()
+    const consumerResolvedContext = type._context || type;
+
+    // Look for overridden value.
+    let current = consumer.return;
+    while (current !== null) {
+      const currentType = current.type;
+      const currentTypeSymbol = getTypeSymbol(currentType);
+      if (
+        currentTypeSymbol === CONTEXT_PROVIDER_NUMBER ||
+        currentTypeSymbol === CONTEXT_PROVIDER_SYMBOL_STRING
+      ) {
+        // 16.3.0 exposed the context object as "context"
+        // PR #12501 changed it to "_context" for 16.3.1+
+        // NOTE Keep in sync with getDisplayNameForFiber()
+        const providerResolvedContext =
+          currentType._context || currentType.context;
+        if (providerResolvedContext === consumerResolvedContext) {
+          return current;
+        }
+      }
+
+      current = current.return;
+    }
+
+    return null;
+  }
+
   function inspectElementRaw(id: number): InspectedElement | null {
     let fiber = findCurrentFiberUsingSlowPathById(id);
     if (fiber == null) {
@@ -2270,30 +2303,12 @@ export function attach(
       // NOTE Keep in sync with getDisplayNameForFiber()
       const consumerResolvedContext = type._context || type;
 
+      const providerFiber = getProviderFiber(fiber);
       // Global context value.
-      context = consumerResolvedContext._currentValue || null;
-
-      // Look for overridden value.
-      let current = ((fiber: any): Fiber).return;
-      while (current !== null) {
-        const currentType = current.type;
-        const currentTypeSymbol = getTypeSymbol(currentType);
-        if (
-          currentTypeSymbol === CONTEXT_PROVIDER_NUMBER ||
-          currentTypeSymbol === CONTEXT_PROVIDER_SYMBOL_STRING
-        ) {
-          // 16.3.0 exposed the context object as "context"
-          // PR #12501 changed it to "_context" for 16.3.1+
-          // NOTE Keep in sync with getDisplayNameForFiber()
-          const providerResolvedContext =
-            currentType._context || currentType.context;
-          if (providerResolvedContext === consumerResolvedContext) {
-            context = current.memoizedProps.value;
-            break;
-          }
-        }
-
-        current = current.return;
+      if (providerFiber === null) {
+        context = consumerResolvedContext._currentValue || null;
+      } else {
+        context = providerFiber.memoizedProps.value;
       }
     }
 
@@ -2729,32 +2744,7 @@ export function attach(
       ) {
         // treat this like an update to the `value` prop of a Context.Provider
 
-        // find the provider fiber that is responsible for this particular
-        let providerFiber = null;
-        const type = fiber.type;
-        const consumerResolvedContext = type._context || type;
-        // Global context provider.
-        let current = ((fiber: any): Fiber).return;
-        while (current !== null) {
-          const currentType = current.type;
-          const currentTypeSymbol = getTypeSymbol(currentType);
-          if (
-            currentTypeSymbol === CONTEXT_PROVIDER_NUMBER ||
-            currentTypeSymbol === CONTEXT_PROVIDER_SYMBOL_STRING
-          ) {
-            // 16.xt object as "context"
-            // PR #12503.0 exposed the conte1 changed it to "_context" for 16.3.1+
-            // NOTE Keep in sync with getDisplayNameForFiber()
-            const providerResolvedContext =
-              currentType._context || currentType.context;
-            if (providerResolvedContext === consumerResolvedContext) {
-              providerFiber = current;
-              break;
-            }
-          }
-
-          current = current.return;
-        }
+        const providerFiber = getProviderFiber(fiber);
 
         // if the edited context value was the default value of the context
         // there is no Context.Provider above the consumer fiber
