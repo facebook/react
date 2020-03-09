@@ -104,7 +104,9 @@ export default function Contexts() {
         <LegacyContextConsumer />
       </LegacyContextProvider>
       <ModernContext.Provider value={contextData}>
-        <ModernContext.Consumer>{value => null}</ModernContext.Consumer>
+        <ModernContext.Consumer>
+          {value => <pre>{JSON.stringify(value, null, 2)}</pre>}
+        </ModernContext.Consumer>
         <ModernContextType />
       </ModernContext.Provider>
       <FunctionalContextConsumer />

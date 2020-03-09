@@ -33,6 +33,7 @@ import {
   ElementTypeFunction,
   ElementTypeMemo,
   ElementTypeSuspense,
+  ElementTypeContext,
 } from 'react-devtools-shared/src/types';
 
 import styles from './SelectedElement.css';
@@ -362,6 +363,13 @@ function InspectedElementView({
         });
       }
     };
+  } else if (type === ElementTypeContext) {
+    overridePropsFn = (path: Array<string | number>, value: any) => {
+      const rendererID = store.getRendererIDForElement(id);
+      if (rendererID !== null) {
+        bridge.send('overrideProps', {id, path, rendererID, value});
+      }
+    };
   }
 
   return (
@@ -375,7 +383,9 @@ function InspectedElementView({
           overrideValueFn={overridePropsFn}
           pathRoot="props"
           showWhenEmpty={true}
-          canAddEntries={typeof overridePropsFn === 'function'}
+          canAddEntries={
+            typeof overridePropsFn === 'function' && type !== ElementTypeContext
+          }
         />
         {type === ElementTypeSuspense ? (
           <InspectedElementTree
