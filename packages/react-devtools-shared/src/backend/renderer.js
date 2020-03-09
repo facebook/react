@@ -2730,11 +2730,6 @@ export function attach(
   }
 
   function setInContext(id: number, path: Array<string | number>, value: any) {
-    // To simplify hydration and display of primative context values (e.g. number, string)
-    // the inspectElement() method wraps context in a {value: ...} object.
-    // We need to remove the first part of the path (the "value") before continuing.
-    path = path.slice(1);
-
     const fiber = findCurrentFiberUsingSlowPathById(id);
     if (fiber !== null) {
       const typeSymbol = getTypeSymbol(fiber.type);
@@ -2749,10 +2744,14 @@ export function attach(
         // if the edited context value was the default value of the context
         // there is no Context.Provider above the consumer fiber
         if (providerFiber !== null && typeof overrideProps === 'function') {
-          const providerPath = ['value', ...path];
-          overrideProps(providerFiber, providerPath, value);
+          overrideProps(providerFiber, path, value);
         }
       } else {
+        // To simplify hydration and display of primative context values (e.g. number, string)
+        // the inspectElement() method wraps context in a {value: ...} object.
+        // We need to remove the first part of the path (the "value") before continuing.
+        path = path.slice(1);
+
         const instance = fiber.stateNode;
         if (path.length === 0) {
           // Simple context value
