@@ -25,7 +25,11 @@ jest.mock('react-server/flight', () => {
   return config => {
     jest.mock(shimServerStreamConfigPath, () => config);
     jest.mock(shimServerFormatConfigPath, () => config);
-    jest.mock(shimFlightServerConfigPath, () => config);
+    jest.mock(shimFlightServerConfigPath, () =>
+      require.requireActual(
+        'react-server/src/forks/ReactFlightServerConfig.custom'
+      )
+    );
     return require.requireActual('react-server/flight');
   };
 });
