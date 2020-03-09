@@ -43,9 +43,6 @@ packages.forEach(name => {
   ] = `<rootDir>/build/node_modules/${name}/$1`;
 });
 
-// https://jestjs.io/docs/en/webpack#mocking-css-modules
-moduleNameMapper['\\.(css|less)$'] = 'identity-obj-proxy';
-
 module.exports = Object.assign({}, baseConfig, {
   // Redirect imports to the compiled bundles
   moduleNameMapper,
