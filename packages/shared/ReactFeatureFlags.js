@@ -111,6 +111,8 @@ export const warnAboutSpreadingKeyToJSX = false;
 // Internal-only attempt to debug a React Native issue. See D20130868.
 export const throwEarlyForMysteriousError = false;
 
+export const enableNewReconciler = false;
+
 // --------------------------
 // Future APIs to be deprecated
 // --------------------------
