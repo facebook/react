@@ -33,6 +33,7 @@ import {
   ElementTypeFunction,
   ElementTypeMemo,
   ElementTypeSuspense,
+  ElementTypeContext,
 } from 'react-devtools-shared/src/types';
 
 import styles from './SelectedElement.css';
@@ -360,6 +361,13 @@ function InspectedElementView({
           rendererID,
           forceFallback: value,
         });
+      }
+    };
+  } else if (type === ElementTypeContext) {
+    overrideContextFn = (path: Array<string | number>, value: any) => {
+      const rendererID = store.getRendererIDForElement(id);
+      if (rendererID !== null) {
+        bridge.send('overrideContext', {id, path, rendererID, value});
       }
     };
   }

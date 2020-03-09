@@ -2722,14 +2722,56 @@ export function attach(
 
     const fiber = findCurrentFiberUsingSlowPathById(id);
     if (fiber !== null) {
-      const instance = fiber.stateNode;
-      if (path.length === 0) {
-        // Simple context value
-        instance.context = value;
+      const typeSymbol = getTypeSymbol(fiber.type);
+      if (
+        typeSymbol === CONTEXT_CONSUMER_NUMBER ||
+        typeSymbol === CONTEXT_CONSUMER_SYMBOL_STRING
+      ) {
+        // treat this like an update to the `value` prop of a Context.Provider
+
+        // find the provider fiber that is responsible for this particular
+        let providerFiber = null;
+        const type = fiber.type;
+        const consumerResolvedContext = type._context || type;
+        // Global context provider.
+        let current = ((fiber: any): Fiber).return;
+        while (current !== null) {
+          const currentType = current.type;
+          const currentTypeSymbol = getTypeSymbol(currentType);
+          if (
+            currentTypeSymbol === CONTEXT_PROVIDER_NUMBER ||
+            currentTypeSymbol === CONTEXT_PROVIDER_SYMBOL_STRING
+          ) {
+            // 16.xt object as "context"
+            // PR #12503.0 exposed the conte1 changed it to "_context" for 16.3.1+
+            // NOTE Keep in sync with getDisplayNameForFiber()
+            const providerResolvedContext =
+              currentType._context || currentType.context;
+            if (providerResolvedContext === consumerResolvedContext) {
+              providerFiber = current;
+              break;
+            }
+          }
+
+          current = current.return;
+        }
+
+        // if the edited context value was the default value of the context
+        // there is no Context.Provider above the consumer fiber
+        if (providerFiber !== null && typeof overrideProps === 'function') {
+          const providerPath = ['value', ...path];
+          overrideProps(providerFiber, providerPath, value);
+        }
       } else {
-        setInObject(instance.context, path, value);
+        const instance = fiber.stateNode;
+        if (path.length === 0) {
+          // Simple context value
+          instance.context = value;
+        } else {
+          setInObject(instance.context, path, value);
+        }
+        instance.forceUpdate();
       }
-      instance.forceUpdate();
     }
   }
 

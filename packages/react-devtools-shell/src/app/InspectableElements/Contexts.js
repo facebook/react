@@ -104,7 +104,23 @@ export default function Contexts() {
         <LegacyContextConsumer />
       </LegacyContextProvider>
       <ModernContext.Provider value={contextData}>
-        <ModernContext.Consumer>{value => null}</ModernContext.Consumer>
+        <ModernContext.Consumer>
+          {value => {
+            return (
+              <React.Fragment>
+                <pre>{JSON.stringify(value, null, 2)}</pre>
+                <ModernContext.Provider
+                  value={{nested: true, array: ['a', 'b', 'c']}}>
+                  <ModernContext.Consumer>
+                    {nestedValue => (
+                      <pre>{JSON.stringify(nestedValue, null, 2)}</pre>
+                    )}
+                  </ModernContext.Consumer>
+                </ModernContext.Provider>
+              </React.Fragment>
+            );
+          }}
+        </ModernContext.Consumer>
         <ModernContextType />
       </ModernContext.Provider>
       <FunctionalContextConsumer />
