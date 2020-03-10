@@ -809,6 +809,39 @@ describe('useMutableSource', () => {
       });
     });
 
+    it('should recover from a mutation during yield when other work is scheduled', () => {
+      const source = createSource('one');
+      const mutableSource = createMutableSource(source);
+
+      act(() => {
+        // Start a render that uses the mutable source.
+        ReactNoop.render(
+          <>
+            <Component
+              label="a"
+              getSnapshot={defaultGetSnapshot}
+              mutableSource={mutableSource}
+              subscribe={defaultSubscribe}
+            />
+            <Component
+              label="b"
+              getSnapshot={defaultGetSnapshot}
+              mutableSource={mutableSource}
+              subscribe={defaultSubscribe}
+            />
+          </>,
+        );
+        expect(Scheduler).toFlushAndYieldThrough(['a:one']);
+
+        // Mutate source
+        source.value = 'two';
+
+        // Now render something different.
+        ReactNoop.render(<div />);
+        expect(Scheduler).toFlushAndYield([]);
+      });
+    });
+
     it('should not throw if the new getSnapshot returns the same snapshot value', () => {
       const source = createSource('one');
       const mutableSource = createMutableSource(source);
