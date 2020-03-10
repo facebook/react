@@ -17,7 +17,7 @@ import type {EventSystemFlags} from 'legacy-events/EventSystemFlags';
 
 export type EventTypes = {[key: string]: DispatchConfig, ...};
 
-export type AnyNativeEvent = Event | KeyboardEvent | MouseEvent | Touch;
+export type AnyNativeEvent = Event | KeyboardEvent | MouseEvent | TouchEvent;
 
 export type PluginName = string;
 
