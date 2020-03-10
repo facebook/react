@@ -115,11 +115,11 @@ type InspectorDataGetter = (
 ) => $ReadOnly<{|
   measure: Function,
   props: InspectorDataProps,
-  source: ?InspectorDataSource,
+  source: InspectorDataSource,
 |}>;
 
 export type InspectorData = $ReadOnly<{
-  hierarchy?: ?Array<{|
+  hierarchy: Array<{|
     name: ?string,
     getInspectorData: InspectorDataGetter,
   |}>,
@@ -129,13 +129,13 @@ export type InspectorData = $ReadOnly<{
 }>;
 
 export type TouchedViewDataAtPoint = $ReadOnly<{
-  pointerY: ?number,
-  touchedViewTag?: ?number,
-  frame?: ?$ReadOnly<{|
-    top?: ?number,
-    left?: ?number,
-    width?: ?number,
-    height: ?number,
+  pointerY: number,
+  touchedViewTag?: number,
+  frame: $ReadOnly<{|
+    top: number,
+    left: number,
+    width: number,
+    height: number,
   |}>,
   ...InspectorData,
 }>;

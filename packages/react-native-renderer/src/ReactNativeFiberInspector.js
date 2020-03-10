@@ -82,12 +82,38 @@ if (__DEV__) {
   const createHierarchy = function(fiberHierarchy) {
     return fiberHierarchy.map(fiber => ({
       name: getComponentName(fiber.type),
-      getInspectorData: findNodeHandle => ({
-        measure: callback =>
-          UIManager.measure(getHostNode(fiber, findNodeHandle), callback),
-        props: getHostProps(fiber),
-        source: fiber._debugSource,
-      }),
+      getInspectorData: findNodeHandle => {
+        return {
+          props: getHostProps(fiber),
+          source: fiber._debugSource,
+          measure: callback => {
+            // If this is Fabric, we'll find a ShadowNode and use that to measure.
+            const hostFiber = findCurrentHostFiber(fiber);
+            const shadowNode =
+              hostFiber != null &&
+              hostFiber.stateNode !== null &&
+              hostFiber.stateNode.node;
+
+            if (shadowNode) {
+              nativeFabricUIManager.measure(shadowNode, function(
+                x,
+                y,
+                width,
+                height,
+                pageX,
+                pageY,
+              ) {
+                callback(x, y, width, height, pageX, pageY);
+              });
+            } else {
+              return UIManager.measure(
+                getHostNode(fiber, findNodeHandle),
+                callback,
+              );
+            }
+          },
+        };
+      },
     }));
   };
 
