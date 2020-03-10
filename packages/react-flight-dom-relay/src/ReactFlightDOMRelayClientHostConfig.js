@@ -7,7 +7,29 @@
  * @flow
  */
 
-export type Source = Array<string>;
+type JSONValue =
+  | string
+  | number
+  | boolean
+  | null
+  | {[key: string]: JSONValue}
+  | Array<JSONValue>;
+
+export type Chunk =
+  | {
+      type: 'json',
+      id: number,
+      json: JSONValue,
+    }
+  | {
+      type: 'error',
+      id: number,
+      json: {
+        message: string,
+        stack: string,
+        ...
+      },
+    };
 
 export type StringDecoder = void;
 

@@ -9,21 +9,59 @@
 
 import type {ReactModelRoot} from 'react-client/src/ReactFlightClient';
 
+import type {Chunk} from './ReactFlightDOMRelayClientHostConfig';
+
 import {
   createResponse,
   getModelRoot,
-  processStringChunk,
-  complete,
+  parseModelFromJSON,
+  resolveModelChunk,
+  resolveErrorChunk,
+  close,
 } from 'react-client/src/ReactFlightClient';
 
-type EncodedData = Array<string>;
+type EncodedData = Array<Chunk>;
+
+function parseModel(response, targetObj, key, value) {
+  if (typeof value === 'object' && value !== null) {
+    if (Array.isArray(value)) {
+      for (let i = 0; i < value.length; i++) {
+        value[i] = parseModel(response, value, '' + i, value[i]);
+      }
+    } else {
+      for (let innerKey in value) {
+        value[innerKey] = parseModel(
+          response,
+          value,
+          innerKey,
+          value[innerKey],
+        );
+      }
+    }
+  }
+  return parseModelFromJSON(response, targetObj, key, value);
+}
 
 function read<T>(data: EncodedData): ReactModelRoot<T> {
-  let response = createResponse(data);
+  let response = createResponse();
   for (let i = 0; i < data.length; i++) {
-    processStringChunk(response, data[i], 0);
+    let chunk = data[i];
+    if (chunk.type === 'json') {
+      resolveModelChunk(
+        response,
+        chunk.id,
+        parseModel(response, {}, '', chunk.json),
+      );
+    } else {
+      resolveErrorChunk(
+        response,
+        chunk.id,
+        chunk.json.message,
+        chunk.json.stack,
+      );
+    }
   }
-  complete(response);
+  close(response);
   return getModelRoot(response);
 }
 

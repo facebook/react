@@ -7,8 +7,6 @@
  * @flow
  */
 
-export type Source = Promise<Response> | ReadableStream | XMLHttpRequest;
-
 export type StringDecoder = TextDecoder;
 
 export const supportsBinaryStreams = true;
