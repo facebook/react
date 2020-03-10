@@ -13,6 +13,7 @@ import type {EventSystemFlags} from 'legacy-events/EventSystemFlags';
 import type {Fiber} from 'react-reconciler/src/ReactFiber';
 import type {PluginModule} from 'legacy-events/PluginModuleType';
 import type {ReactSyntheticEvent} from 'legacy-events/ReactSyntheticEventType';
+import type {ReactDOMListener} from 'shared/ReactDOMTypes';
 
 import {registrationNameDependencies} from 'legacy-events/EventPluginRegistry';
 import {batchedEventUpdates} from 'legacy-events/ReactGenericBatching';
@@ -295,4 +296,12 @@ export function dispatchEventForPluginEventSystem(
       rootContainer,
     ),
   );
+}
+
+export function attachElementListener(listener: ReactDOMListener): void {
+  // TODO
+}
+
+export function detachElementListener(listener: ReactDOMListener): void {
+  // TODO
 }

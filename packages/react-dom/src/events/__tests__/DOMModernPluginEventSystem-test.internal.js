@@ -1039,4 +1039,40 @@ describe('DOMModernPluginEventSystem', () => {
     expect(log).toEqual([]);
     expect(onDivClick).toHaveBeenCalledTimes(0);
   });
+
+  describe('ReactDOM.useEvent', () => {
+    beforeEach(() => {
+      jest.resetModules();
+      ReactFeatureFlags = require('shared/ReactFeatureFlags');
+      ReactFeatureFlags.enableModernEventSystem = true;
+      ReactFeatureFlags.enableUseEventAPI = true;
+
+      React = require('react');
+      ReactDOM = require('react-dom');
+      Scheduler = require('scheduler');
+      ReactDOMServer = require('react-dom/server');
+    });
+
+    if (!__EXPERIMENTAL__) {
+      it("empty test so Jest doesn't complain", () => {});
+      return;
+    }
+
+    it('should create the same event listener map', () => {
+      let listenerMaps = [];
+
+      function Test() {
+        const listenerMap = ReactDOM.unstable_useEvent('click');
+
+        listenerMaps.push(listenerMap);
+
+        return <div />;
+      }
+
+      ReactDOM.render(<Test />, container);
+      ReactDOM.render(<Test />, container);
+      expect(listenerMaps.length).toEqual(2);
+      expect(listenerMaps[0]).toEqual(listenerMaps[1]);
+    });
+  });
 });
