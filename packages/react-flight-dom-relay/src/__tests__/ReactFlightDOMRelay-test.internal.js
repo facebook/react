@@ -7,9 +7,6 @@
 
 'use strict';
 
-// Polyfills for test environment
-global.TextDecoder = require('util').TextDecoder;
-
 let React;
 let ReactDOMFlightRelayServer;
 let ReactDOMFlightRelayClient;
@@ -32,11 +29,30 @@ describe('ReactFlightDOMRelay', () => {
         bar: [<Bar text="a" />, <Bar text="b" />],
       };
     }
-    let data = ReactDOMFlightRelayServer.render({
-      foo: <Foo />,
-    });
-    let root = ReactDOMFlightRelayClient.read(data);
-    let model = root.model;
+    let data = [];
+    ReactDOMFlightRelayServer.render(
+      {
+        foo: <Foo />,
+      },
+      data,
+    );
+
+    let response = ReactDOMFlightRelayClient.createResponse();
+    for (let i = 0; i < data.length; i++) {
+      let chunk = data[i];
+      if (chunk.type === 'json') {
+        ReactDOMFlightRelayClient.resolveModel(response, chunk.id, chunk.json);
+      } else {
+        ReactDOMFlightRelayClient.resolveError(
+          response,
+          chunk.id,
+          chunk.json.message,
+          chunk.json.stack,
+        );
+      }
+    }
+    let model = ReactDOMFlightRelayClient.getModelRoot(response).model;
+    ReactDOMFlightRelayClient.close(response);
     expect(model).toEqual({foo: {bar: ['A', 'B']}});
   });
 });

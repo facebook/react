@@ -203,7 +203,11 @@ const bundles = [
     moduleType: RENDERER,
     entry: 'react-flight-dom-relay/server',
     global: 'ReactFlightDOMRelayServer',
-    externals: ['react', 'react-dom/server'],
+    externals: [
+      'react',
+      'react-dom/server',
+      'ReactFlightDOMRelayServerIntegration',
+    ],
   },
 
   /******* React DOM Flight Client Relay *******/

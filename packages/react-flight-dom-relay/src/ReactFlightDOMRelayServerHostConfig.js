@@ -9,9 +9,13 @@
 
 import type {Request, ReactModel} from 'react-server/src/ReactFlightServer';
 
+import type {Destination} from 'ReactFlightDOMRelayServerIntegration';
+
 import {resolveModelToJSON} from 'react-server/src/ReactFlightServer';
 
-export type Destination = Array<Chunk>;
+import {emitModel, emitError} from 'ReactFlightDOMRelayServerIntegration';
+
+export type {Destination} from 'ReactFlightDOMRelayServerIntegration';
 
 type JSONValue =
   | string
@@ -95,10 +99,14 @@ export function flushBuffered(destination: Destination) {}
 export function beginWriting(destination: Destination) {}
 
 export function writeChunk(destination: Destination, chunk: Chunk): boolean {
-  destination.push(chunk);
+  if (chunk.type === 'json') {
+    emitModel(destination, chunk.id, chunk.json);
+  } else {
+    emitError(destination, chunk.id, chunk.json.message, chunk.json.stack);
+  }
   return true;
 }
 
 export function completeWriting(destination: Destination) {}
 
-export function close(destination: Destination) {}
+export {close} from 'ReactFlightDOMRelayServerIntegration';
