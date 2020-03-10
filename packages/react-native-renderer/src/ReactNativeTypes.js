@@ -100,22 +100,44 @@ type SecretInternalsType = {
   ...
 };
 
-export type TouchedViewDataAtPoint = $ReadOnly<{
-  hierarchy?: ?Array<{|name: string|}>,
-  pointerY: number,
-  touchedViewTag?: ?number,
-  props: $ReadOnly<{[propName: string]: string, ...}>,
-  selection: number,
-  source: $ReadOnly<{|
-    fileName?: string,
-    lineNumber?: number,
+type InspectorDataProps = $ReadOnly<{
+  [propName: string]: string,
+  ...,
+}>;
+
+type InspectorDataSource = $ReadOnly<{|
+  fileName?: string,
+  lineNumber?: number,
+|}>;
+
+type InspectorDataGetter = (
+  (componentOrHandle: any) => ?number,
+) => $ReadOnly<{|
+  measure: Function,
+  props: InspectorDataProps,
+  source: ?InspectorDataSource,
+|}>;
+
+export type InspectorData = $ReadOnly<{
+  hierarchy?: ?Array<{|
+    name: ?string,
+    getInspectorData: InspectorDataGetter,
   |}>,
+  selection: ?number,
+  props: InspectorDataProps,
+  source: ?InspectorDataSource,
+}>;
+
+export type TouchedViewDataAtPoint = $ReadOnly<{
+  pointerY: ?number,
+  touchedViewTag?: ?number,
   frame?: ?$ReadOnly<{|
     top?: ?number,
     left?: ?number,
     width?: ?number,
     height: ?number,
   |}>,
+  ...InspectorData,
 }>;
 
 /**

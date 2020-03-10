@@ -8,7 +8,7 @@
  */
 
 import type {Fiber} from 'react-reconciler/src/ReactFiber';
-import type {TouchedViewDataAtPoint} from './ReactNativeTypes';
+import type {TouchedViewDataAtPoint, InspectorData} from './ReactNativeTypes';
 
 import {
   findCurrentHostFiber,
@@ -91,7 +91,7 @@ if (__DEV__) {
     }));
   };
 
-  const getInspectorDataForInstance = function(closestInstance, frame): Object {
+  const getInspectorDataForInstance = function(closestInstance): InspectorData {
     // Handle case where user clicks outside of ReactNative
     if (!closestInstance) {
       return {
@@ -112,7 +112,6 @@ if (__DEV__) {
 
     return {
       hierarchy,
-      frame,
       props,
       selection,
       source,
@@ -156,12 +155,6 @@ if (__DEV__) {
     callback: (viewData: TouchedViewDataAtPoint) => mixed,
   ): void {
     let closestInstance = null;
-    let frame = {
-      left: 0,
-      top: 0,
-      width: 0,
-      height: 0,
-    };
 
     if (inspectedView._internalInstanceHandle != null) {
       // For Fabric we can look up the instance handle directly and measure it.
@@ -171,7 +164,11 @@ if (__DEV__) {
         locationY,
         shadowNode => {
           if (shadowNode == null) {
-            callback(getInspectorDataForInstance(closestInstance, frame));
+            callback({
+              pointerY: locationY,
+              frame: {left: 0, top: 0, width: 0, height: 0},
+              ...getInspectorDataForInstance(closestInstance),
+            });
           }
 
           closestInstance =
@@ -179,12 +176,10 @@ if (__DEV__) {
           nativeFabricUIManager.measure(
             shadowNode.stateNode.node,
             (x, y, width, height, pageX, pageY) => {
-              const inspectorData = getInspectorDataForInstance(
-                closestInstance,
-              );
               callback({
-                ...inspectorData,
+                pointerY: locationY,
                 frame: {left: pageX, top: pageY, width, height},
+                ...getInspectorDataForInstance(closestInstance),
               });
             },
           );
@@ -201,6 +196,7 @@ if (__DEV__) {
           );
           callback({
             ...inspectorData,
+            pointerY: locationY,
             frame: {left, top, width, height},
             touchedViewTag: nativeViewTag,
           });
