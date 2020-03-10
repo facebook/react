@@ -1729,6 +1729,31 @@ describe('ReactIncrementalErrorHandling', () => {
     ]);
   });
 
+  it('uncaught errors should be discarded if the render is aborted', async () => {
+    const root = ReactNoop.createRoot();
+
+    function Oops() {
+      Scheduler.unstable_yieldValue('Oops');
+      throw Error('Oops');
+    }
+
+    await ReactNoop.act(async () => {
+      ReactNoop.discreteUpdates(() => {
+        root.render(<Oops />);
+      });
+      // Render past the component that throws, then yield.
+      expect(Scheduler).toFlushAndYieldThrough(['Oops']);
+      expect(root).toMatchRenderedOutput(null);
+      // Interleaved update. When the root completes, instead of throwing the
+      // error, it should try rendering again. This update will cause it to
+      // recover gracefully.
+      root.render('Everything is fine.');
+    });
+
+    // Should finish without throwing.
+    expect(root).toMatchRenderedOutput('Everything is fine.');
+  });
+
   if (global.__PERSISTENT__) {
     it('regression test: should fatal if error is thrown at the root', () => {
       const root = ReactNoop.createRoot();
