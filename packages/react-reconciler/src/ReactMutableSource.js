@@ -46,6 +46,14 @@ export function setPendingExpirationTime(
   root.mutableSourcePendingUpdateTime = expirationTime;
 }
 
+export function markSourceAsDirty(mutableSource: MutableSource<any>): void {
+  if (isPrimaryRenderer) {
+    workInProgressPrimarySources.push(mutableSource);
+  } else {
+    workInProgressSecondarySources.push(mutableSource);
+  }
+}
+
 export function resetWorkInProgressVersions(): void {
   if (isPrimaryRenderer) {
     for (let i = 0; i < workInProgressPrimarySources.length; i++) {
@@ -90,29 +98,23 @@ export function warnAboutMultipleRenderersDEV(
 ): void {
   if (__DEV__) {
     if (isPrimaryRenderer) {
-      if (
-        mutableSource._currentPrimaryRenderer !== undefined &&
-        mutableSource._currentPrimaryRenderer !== null &&
-        mutableSource._currentPrimaryRenderer !== rendererSigil
-      ) {
+      if (mutableSource._currentPrimaryRenderer == null) {
+        mutableSource._currentPrimaryRenderer = rendererSigil;
+      } else if (mutableSource._currentPrimaryRenderer !== rendererSigil) {
         console.error(
           'Detected multiple renderers concurrently rendering the ' +
             'same mutable source. This is currently unsupported.',
         );
       }
-      mutableSource._currentPrimaryRenderer = rendererSigil;
     } else {
-      if (
-        mutableSource._currentSecondaryRenderer !== undefined &&
-        mutableSource._currentSecondaryRenderer !== null &&
-        mutableSource._currentSecondaryRenderer !== rendererSigil
-      ) {
+      if (mutableSource._currentSecondaryRenderer == null) {
+        mutableSource._currentSecondaryRenderer = rendererSigil;
+      } else if (mutableSource._currentSecondaryRenderer !== rendererSigil) {
         console.error(
           'Detected multiple renderers concurrently rendering the ' +
             'same mutable source. This is currently unsupported.',
         );
       }
-      mutableSource._currentSecondaryRenderer = rendererSigil;
     }
   }
 }

@@ -62,6 +62,7 @@ import {
 import {
   getPendingExpirationTime,
   getWorkInProgressVersion,
+  markSourceAsDirty,
   setPendingExpirationTime,
   setWorkInProgressVersion,
   warnAboutMultipleRenderersDEV,
@@ -909,6 +910,17 @@ function readFromUnsubcribedMutableSource<Source, Snapshot>(
   if (isSafeToReadFromSource) {
     return getSnapshot(source._source);
   } else {
+    // This handles the special case of a mutable source being shared beween renderers.
+    // In that case, if the source is mutated between the first and second renderer,
+    // The second renderer don't know that it needs to reset the WIP version during unwind,
+    // (because the hook only marks sources as dirty if it's written to their WIP version).
+    // That would cause this tear check to throw again and eventually be visible to the user.
+    // We can avoid this infinite loop by explicitly marking the source as dirty.
+    //
+    // This can lead to tearing in the first renderer when it resumes,
+    // but there's nothing we can do about that (short of throwing here and refusing to continue the render).
+    markSourceAsDirty(source);
+
     invariant(
       false,
       'Cannot read from mutable source during the current render without tearing. This is a bug in React. Please file an issue.',

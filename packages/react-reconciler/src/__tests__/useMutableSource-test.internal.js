@@ -1311,6 +1311,65 @@ describe('useMutableSource', () => {
             ).toThrow('Invalid hook call');
           });
         });
+
+        it('should error if multiple renderers of the same type use a mutable source at the same time with mutation between', () => {
+          const source = createSource('one');
+          const mutableSource = createMutableSource(source);
+
+          act(() => {
+            // Start a render that uses the mutable source.
+            ReactNoop.render(
+              <>
+                <Component
+                  label="a"
+                  getSnapshot={defaultGetSnapshot}
+                  mutableSource={mutableSource}
+                  subscribe={defaultSubscribe}
+                />
+                <Component
+                  label="b"
+                  getSnapshot={defaultGetSnapshot}
+                  mutableSource={mutableSource}
+                  subscribe={defaultSubscribe}
+                />
+              </>,
+            );
+            expect(Scheduler).toFlushAndYieldThrough(['a:one']);
+
+            const PrevScheduler = Scheduler;
+
+            // Get a new copy of ReactNoop.
+            loadModules();
+
+            spyOnDev(console, 'error');
+
+            // Mutate before the new render reads from the source.
+            source.value = 'two';
+
+            // Use the mutablesource again but with a different renderer.
+            ReactNoop.render(
+              <Component
+                label="c"
+                getSnapshot={defaultGetSnapshot}
+                mutableSource={mutableSource}
+                subscribe={defaultSubscribe}
+              />,
+            );
+            expect(Scheduler).toFlushAndYieldThrough(['c:two']);
+
+            expect(console.error.calls.argsFor(0)[0]).toContain(
+              'Detected multiple renderers concurrently rendering the ' +
+                'same mutable source. This is currently unsupported.',
+            );
+
+            // TODO (useMutableSource) Act will automatically flush remaining work from render 1,
+            // but at this point something in the hooks dispatcher has been broken by jest.resetModules()
+            // Figure out what this is and remove this catch.
+            expect(() =>
+              PrevScheduler.unstable_flushAllWithoutAsserting(),
+            ).toThrow('Invalid hook call');
+          });
+        });
       });
     }
   }
