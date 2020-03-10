@@ -39,7 +39,7 @@ export const {
 export let enableUserTimingAPI = __DEV__ && !__EXPERIMENTAL__;
 
 export const enableProfilerTimer = __PROFILE__;
-export const enableProfilerCommitHooks = false;
+export const enableProfilerCommitHooks = __PROFILE__;
 export const enableSchedulerTracing = __PROFILE__;
 export const enableSchedulerDebugging = true;
 
