@@ -223,3 +223,17 @@ export function getEventPriorityForPluginSystem(
   // for the event.
   return priority === undefined ? ContinuousEvent : priority;
 }
+
+export function getEventPriorityForListenerSystem(type: string): EventPriority {
+  const priority = eventPriorities.get(((type: any): TopLevelType));
+  if (priority !== undefined) {
+    return priority;
+  }
+  if (__DEV__) {
+    console.warn(
+      'The event "type" provided to useEvent() does not have a known priority type.' +
+        ' It is recommended to provide a "priority" option to specify a priority.',
+    );
+  }
+  return ContinuousEvent;
+}

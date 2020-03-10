@@ -88,6 +88,8 @@ export const enableFundamentalAPI = false;
 
 export const enableScopeAPI = true;
 
+export const enableUseEventAPI = false;
+
 export const warnAboutUnmockedScheduler = true;
 
 export const enableSuspenseCallback = true;
