@@ -8,10 +8,11 @@
  */
 
 import type {ReactModel} from 'react-server/src/ReactFlightServer';
+import type {Chunk} from './ReactFlightDOMRelayServerHostConfig';
 
 import {createRequest, startWork} from 'react-server/src/ReactFlightServer';
 
-type EncodedData = Array<string>;
+type EncodedData = Array<Chunk>;
 
 function render(model: ReactModel): EncodedData {
   let data: EncodedData = [];

@@ -64,9 +64,45 @@ ByteSize
 
 // TODO: Implement HTMLData, BlobData and URLData.
 
-import type {Destination as DestinationT} from './ReactServerStreamConfig';
+import type {Request, ReactModel} from 'react-server/src/ReactFlightServer';
 
-export type Destination = DestinationT;
+import {convertStringToBuffer} from './ReactServerStreamConfig';
+
+export type {Destination} from './ReactServerStreamConfig';
+
+export type Chunk = Uint8Array;
+
+const stringify = JSON.stringify;
+
+function serializeRowHeader(tag: string, id: number) {
+  return tag + id.toString(16) + ':';
+}
+
+export function processErrorChunk(
+  request: Request,
+  id: number,
+  message: string,
+  stack: string,
+): Chunk {
+  let errorInfo = {message, stack};
+  let row = serializeRowHeader('E', id) + stringify(errorInfo) + '\n';
+  return convertStringToBuffer(row);
+}
+
+export function processModelChunk(
+  request: Request,
+  id: number,
+  model: ReactModel,
+): Chunk {
+  let json = stringify(model, request.toJSON);
+  let row;
+  if (id === 0) {
+    row = json + '\n';
+  } else {
+    row = serializeRowHeader('J', id) + json + '\n';
+  }
+  return convertStringToBuffer(row);
+}
 
 export {
   scheduleWork,
@@ -75,5 +111,4 @@ export {
   writeChunk,
   completeWriting,
   close,
-  convertStringToBuffer,
 } from './ReactServerStreamConfig';
