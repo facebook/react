@@ -39,6 +39,11 @@ type HookLogEntry = {
   ...
 };
 
+type ReactDebugListenerMap = {|
+  clear: () => void,
+  setListener: (instance: EventTarget, callback: ?(Event) => void) => void,
+|};
+
 let hookLog: Array<HookLogEntry> = [];
 
 // Primitives
@@ -256,6 +261,16 @@ function useTransition(
   return [callback => {}, false];
 }
 
+const noOp = () => {};
+
+function useEvent(event: any): ReactDebugListenerMap {
+  hookLog.push({primitive: 'Event', stackError: new Error(), value: event});
+  return {
+    clear: noOp,
+    setListener: noOp,
+  };
+}
+
 function useDeferredValue<T>(value: T, config: TimeoutConfig | null | void): T {
   // useDeferredValue() composes multiple hooks internally.
   // Advance the current hook index the same number of times
@@ -285,6 +300,7 @@ const Dispatcher: DispatcherType = {
   useResponder,
   useTransition,
   useDeferredValue,
+  useEvent,
 };
 
 // Inspect
