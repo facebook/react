@@ -1289,7 +1289,7 @@ function loadModules({
             });
           });
 
-          it('still warns about state updates from within passive unmount function', () => {
+          it('does not warn about state updates from within passive unmount function', () => {
             function Component() {
               Scheduler.unstable_yieldValue('Component');
               const [didLoad, setDidLoad] = React.useState(false);
@@ -1315,11 +1315,7 @@ function loadModules({
 
               // Unmount but don't process pending passive destroy function
               ReactNoop.unmountRootWithID('root');
-              expect(() => {
-                expect(Scheduler).toFlushAndYield(['passive destroy']);
-              }).toErrorDev(
-                "Warning: Can't perform a React state update on an unmounted component.",
-              );
+              expect(Scheduler).toFlushAndYield(['passive destroy']);
             });
           });
         }
