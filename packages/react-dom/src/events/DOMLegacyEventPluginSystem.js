@@ -39,7 +39,7 @@ import {
   getRawEventName,
   mediaEventTypes,
 } from './DOMTopLevelEventTypes';
-import {trapEventForPluginEventSystem} from './ReactDOMEventListener';
+import {addTrappedEventListener} from './ReactDOMEventListener';
 
 /**
  * Summary of `DOMEventPluginSystem` event handling:
@@ -368,12 +368,12 @@ export function legacyTrapBubbledEvent(
   topLevelType: DOMTopLevelEventType,
   element: Document | Element,
 ): void {
-  trapEventForPluginEventSystem(element, topLevelType, false);
+  addTrappedEventListener(element, topLevelType, false);
 }
 
 export function legacyTrapCapturedEvent(
   topLevelType: DOMTopLevelEventType,
   element: Document | Element,
 ): void {
-  trapEventForPluginEventSystem(element, topLevelType, true);
+  addTrappedEventListener(element, topLevelType, true);
 }

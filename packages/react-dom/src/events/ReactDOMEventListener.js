@@ -105,6 +105,7 @@ export function addResponderEventSystemEvent(
   } else {
     eventFlags |= IS_ACTIVE;
   }
+  let fbListener;
   // Check if interactive and wrap in discreteUpdates
   const listener = dispatchEvent.bind(
     null,
@@ -113,39 +114,27 @@ export function addResponderEventSystemEvent(
     document,
   );
   if (passiveBrowserEventsSupported) {
-    addEventCaptureListenerWithPassiveFlag(
+    fbListener = addEventCaptureListenerWithPassiveFlag(
       document,
       topLevelType,
       listener,
       passive,
     );
   } else {
-    addEventCaptureListener(document, topLevelType, listener);
+    fbListener = addEventCaptureListener(document, topLevelType, listener);
   }
-  return listener;
+  // If we have an fbListener, then use that.
+  // We'll only have one if we use the forked
+  // EventListener-www module in FB builds.
+  return fbListener || listener;
 }
 
-export function removeActiveResponderEventSystemEvent(
-  document: Document,
-  topLevelType: string,
-  listener: any => void,
-) {
-  if (passiveBrowserEventsSupported) {
-    document.removeEventListener(topLevelType, listener, {
-      capture: true,
-      passive: false,
-    });
-  } else {
-    document.removeEventListener(topLevelType, listener, true);
-  }
-}
-
-export function trapEventForPluginEventSystem(
+export function addTrappedEventListener(
   container: Document | Element,
   topLevelType: DOMTopLevelEventType,
   capture: boolean,
   legacyFBSupport?: boolean,
-): void {
+): any => void {
   let listener;
   let listenerWrapper;
   switch (getEventPriorityForPluginSystem(topLevelType)) {
@@ -202,6 +191,29 @@ export function trapEventForPluginEventSystem(
     fbListener = addEventCaptureListener(container, rawEventName, listener);
   } else {
     fbListener = addEventBubbleListener(container, rawEventName, listener);
+  }
+  // If we have an fbListener, then use that.
+  // We'll only have one if we use the forked
+  // EventListener-www module in FB builds.
+  return fbListener || listener;
+}
+
+export function removeTrappedPassiveEventListener(
+  document: Document,
+  topLevelType: string,
+  listener: any => void,
+) {
+  if (listener.remove != null) {
+    listener.remove();
+  } else {
+    if (passiveBrowserEventsSupported) {
+      document.removeEventListener(topLevelType, listener, {
+        capture: true,
+        passive: true,
+      });
+    } else {
+      document.removeEventListener(topLevelType, listener, true);
+    }
   }
 }
 

@@ -948,4 +948,39 @@ describe('DOMEventResponderSystem', () => {
     document.body.removeChild(domNode);
     expect(onEvent).toBeCalled();
   });
+
+  it('event upgrading should work correctly', () => {
+    let eventResponderFiredCount = 0;
+    const buttonRef = React.createRef();
+
+    const TestResponder = createEventResponder({
+      targetEventTypes: ['click'],
+      onEvent: (event, context, props, state) => {
+        eventResponderFiredCount++;
+        if (!state.addedRootEventTypes) {
+          context.addRootEventTypes(['click_active']);
+        }
+        state.addedRootEventTypes = true;
+      },
+    });
+
+    function Test() {
+      const listener = React.DEPRECATED_useResponder(TestResponder, {});
+
+      return (
+        <button ref={buttonRef} DEPRECATED_flareListeners={listener}>
+          Click me!
+        </button>
+      );
+    }
+
+    ReactDOM.render(<Test />, container);
+    expect(container.innerHTML).toBe('<button>Click me!</button>');
+
+    let buttonElement = buttonRef.current;
+    dispatchClickEvent(buttonElement);
+    expect(eventResponderFiredCount).toBe(1);
+    dispatchClickEvent(buttonElement);
+    expect(eventResponderFiredCount).toBe(2);
+  });
 });

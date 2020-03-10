@@ -21,7 +21,7 @@ import {plugins} from 'legacy-events/EventPluginRegistry';
 
 import {HostRoot, HostPortal} from 'shared/ReactWorkTags';
 
-import {trapEventForPluginEventSystem} from './ReactDOMEventListener';
+import {addTrappedEventListener} from './ReactDOMEventListener';
 import getEventTarget from './getEventTarget';
 import {getListenerMapForElement} from './DOMEventListenerMap';
 import {
@@ -149,11 +149,7 @@ export function listenToTopLevelEvent(
 ): void {
   if (!listenerMap.has(topLevelType)) {
     const isCapturePhase = capturePhaseEvents.has(topLevelType);
-    trapEventForPluginEventSystem(
-      rootContainerElement,
-      topLevelType,
-      isCapturePhase,
-    );
+    addTrappedEventListener(rootContainerElement, topLevelType, isCapturePhase);
     listenerMap.set(topLevelType, null);
   }
 }
@@ -196,7 +192,7 @@ function willDeferLaterForFBLegacyPrimer(nativeEvent: any): boolean {
     if (node.tagName === 'A' && validFBLegacyPrimerRels.has(node.rel)) {
       const legacyFBSupport = true;
       const isCapture = nativeEvent.eventPhase === 1;
-      trapEventForPluginEventSystem(
+      addTrappedEventListener(
         document,
         ((type: any): DOMTopLevelEventType),
         isCapture,

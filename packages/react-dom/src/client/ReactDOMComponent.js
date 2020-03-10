@@ -59,7 +59,7 @@ import {
 import {getListenerMapForElement} from '../events/DOMEventListenerMap';
 import {
   addResponderEventSystemEvent,
-  removeActiveResponderEventSystemEvent,
+  removeTrappedPassiveEventListener,
 } from '../events/ReactDOMEventListener.js';
 import {mediaEventTypes} from '../events/DOMTopLevelEventTypes';
 import {
@@ -1360,7 +1360,7 @@ export function listenToEventResponderEventTypes(
           const passiveKey = targetEventType + '_passive';
           const passiveListener = listenerMap.get(passiveKey);
           if (passiveListener != null) {
-            removeActiveResponderEventSystemEvent(
+            removeTrappedPassiveEventListener(
               document,
               targetEventType,
               passiveListener,
