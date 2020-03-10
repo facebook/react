@@ -24,7 +24,7 @@ const {
   createResponse,
   getModelRoot,
   processStringChunk,
-  complete,
+  close,
 } = ReactFlightClient({
   supportsBinaryStreams: false,
 });
@@ -34,7 +34,7 @@ function read<T>(source: Source): ReactModelRoot<T> {
   for (let i = 0; i < source.length; i++) {
     processStringChunk(response, source[i], 0);
   }
-  complete(response);
+  close(response);
   return getModelRoot(response);
 }
 

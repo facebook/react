@@ -7,7 +7,7 @@
  * @flow
  */
 
-import type {Destination} from './ReactServerStreamConfig';
+import type {Destination, Chunk} from './ReactFlightServerConfig';
 
 import {
   scheduleWork,
@@ -16,67 +16,19 @@ import {
   completeWriting,
   flushBuffered,
   close,
-  convertStringToBuffer,
-} from './ReactServerStreamConfig';
+  processModelChunk,
+  processErrorChunk,
+} from './ReactFlightServerConfig';
 import {renderHostChildrenToString} from './ReactServerFormatConfig';
 import {REACT_ELEMENT_TYPE} from 'shared/ReactSymbols';
 
-/*
-
-FLIGHT PROTOCOL GRAMMAR
-
-Response
-- JSONData RowSequence
-- JSONData
-
-RowSequence
-- Row RowSequence
-- Row
-
-Row
-- "J" RowID JSONData
-- "H" RowID HTMLData
-- "B" RowID BlobData
-- "U" RowID URLData
-- "E" RowID ErrorData
-
-RowID
-- HexDigits ":"
-
-HexDigits
-- HexDigit HexDigits
-- HexDigit
-
-HexDigit
-- 0-F
-
-URLData
-- (UTF8 encoded URL) "\n"
-
-ErrorData
-- (UTF8 encoded JSON: {message: "...", stack: "..."}) "\n"
-
-JSONData
-- (UTF8 encoded JSON) "\n"
-  - String values that begin with $ are escaped with a "$" prefix.
-  - References to other rows are encoding as JSONReference strings.
-
-JSONReference
-- "$" HexDigits
-
-HTMLData
-- ByteSize (UTF8 encoded HTML)
-
-BlobData
-- ByteSize (Binary Data)
-
-ByteSize
-- (unsigned 32-bit integer)
-*/
-
-// TODO: Implement HTMLData, BlobData and URLData.
-
-const stringify = JSON.stringify;
+type ReactJSONValue =
+  | string
+  | boolean
+  | number
+  | null
+  | Array<ReactModel>
+  | ReactModelObject;
 
 export type ReactModel =
   | React$Element<any>
@@ -87,39 +39,29 @@ export type ReactModel =
   | Iterable<ReactModel>
   | ReactModelObject;
 
-type ReactJSONValue =
-  | string
-  | boolean
-  | number
-  | null
-  | Array<ReactModel>
-  | ReactModelObject;
-
-type ReactModelObject = {+[key: string]: ReactModel, ...};
+type ReactModelObject = {+[key: string]: ReactModel};
 
 type Segment = {
   id: number,
   model: ReactModel,
   ping: () => void,
-  ...
 };
 
-type OpaqueRequest = {
+export type Request = {
   destination: Destination,
   nextChunkId: number,
   pendingChunks: number,
   pingedSegments: Array<Segment>,
-  completedJSONChunks: Array<Uint8Array>,
-  completedErrorChunks: Array<Uint8Array>,
+  completedJSONChunks: Array<Chunk>,
+  completedErrorChunks: Array<Chunk>,
   flowing: boolean,
   toJSON: (key: string, value: ReactModel) => ReactJSONValue,
-  ...
 };
 
 export function createRequest(
   model: ReactModel,
   destination: Destination,
-): OpaqueRequest {
+): Request {
   let pingedSegments = [];
   let request = {
     destination,
@@ -152,7 +94,7 @@ function attemptResolveModelComponent(element: React$Element<any>): ReactModel {
   }
 }
 
-function pingSegment(request: OpaqueRequest, segment: Segment): void {
+function pingSegment(request: Request, segment: Segment): void {
   let pingedSegments = request.pingedSegments;
   pingedSegments.push(segment);
   if (pingedSegments.length === 1) {
@@ -160,7 +102,7 @@ function pingSegment(request: OpaqueRequest, segment: Segment): void {
   }
 }
 
-function createSegment(request: OpaqueRequest, model: ReactModel): Segment {
+function createSegment(request: Request, model: ReactModel): Segment {
   let id = request.nextChunkId++;
   let segment = {
     id,
@@ -174,10 +116,6 @@ function serializeIDRef(id: number): string {
   return '$' + id.toString(16);
 }
 
-function serializeRowHeader(tag: string, id: number) {
-  return tag + id.toString(16) + ':';
-}
-
 function escapeStringValue(value: string): string {
   if (value[0] === '$') {
     // We need to escape $ prefixed strings since we use that to encode
@@ -188,8 +126,8 @@ function escapeStringValue(value: string): string {
   }
 }
 
-function resolveModelToJSON(
-  request: OpaqueRequest,
+export function resolveModelToJSON(
+  request: Request,
   value: ReactModel,
 ): ReactJSONValue {
   if (typeof value === 'string') {
@@ -224,11 +162,7 @@ function resolveModelToJSON(
   return value;
 }
 
-function emitErrorChunk(
-  request: OpaqueRequest,
-  id: number,
-  error: mixed,
-): void {
+function emitErrorChunk(request: Request, id: number, error: mixed): void {
   // TODO: We should not leak error messages to the client in prod.
   // Give this an error code instead and log on the server.
   // We can serialize the error in DEV as a convenience.
@@ -244,12 +178,12 @@ function emitErrorChunk(
   } catch (x) {
     message = 'An error occurred but serializing the error message failed.';
   }
-  let errorInfo = {message, stack};
-  let row = serializeRowHeader('E', id) + stringify(errorInfo) + '\n';
-  request.completedErrorChunks.push(convertStringToBuffer(row));
+
+  let processedChunk = processErrorChunk(request, id, message, stack);
+  request.completedErrorChunks.push(processedChunk);
 }
 
-function retrySegment(request: OpaqueRequest, segment: Segment): void {
+function retrySegment(request: Request, segment: Segment): void {
   let value = segment.model;
   try {
     while (
@@ -263,15 +197,8 @@ function retrySegment(request: OpaqueRequest, segment: Segment): void {
       segment.model = element;
       value = attemptResolveModelComponent(element);
     }
-    let json = stringify(value, request.toJSON);
-    let row;
-    let id = segment.id;
-    if (id === 0) {
-      row = json + '\n';
-    } else {
-      row = serializeRowHeader('J', id) + json + '\n';
-    }
-    request.completedJSONChunks.push(convertStringToBuffer(row));
+    let processedChunk = processModelChunk(request, segment.id, value);
+    request.completedJSONChunks.push(processedChunk);
   } catch (x) {
     if (typeof x === 'object' && x !== null && typeof x.then === 'function') {
       // Something suspended again, let's pick it back up later.
@@ -285,7 +212,7 @@ function retrySegment(request: OpaqueRequest, segment: Segment): void {
   }
 }
 
-function performWork(request: OpaqueRequest): void {
+function performWork(request: Request): void {
   let pingedSegments = request.pingedSegments;
   request.pingedSegments = [];
   for (let i = 0; i < pingedSegments.length; i++) {
@@ -298,7 +225,7 @@ function performWork(request: OpaqueRequest): void {
 }
 
 let reentrant = false;
-function flushCompletedChunks(request: OpaqueRequest): void {
+function flushCompletedChunks(request: Request): void {
   if (reentrant) {
     return;
   }
@@ -341,12 +268,12 @@ function flushCompletedChunks(request: OpaqueRequest): void {
   }
 }
 
-export function startWork(request: OpaqueRequest): void {
+export function startWork(request: Request): void {
   request.flowing = true;
   scheduleWork(() => performWork(request));
 }
 
-export function startFlowing(request: OpaqueRequest): void {
+export function startFlowing(request: Request): void {
   request.flowing = true;
   flushCompletedChunks(request);
 }

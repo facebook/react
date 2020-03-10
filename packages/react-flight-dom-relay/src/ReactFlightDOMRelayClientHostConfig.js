@@ -7,8 +7,6 @@
  * @flow
  */
 
-export type Source = Array<string>;
-
 export type StringDecoder = void;
 
 export const supportsBinaryStreams = false;

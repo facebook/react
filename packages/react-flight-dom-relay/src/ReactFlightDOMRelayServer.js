@@ -8,16 +8,13 @@
  */
 
 import type {ReactModel} from 'react-server/src/ReactFlightServer';
+import type {Destination} from './ReactFlightDOMRelayServerHostConfig';
 
 import {createRequest, startWork} from 'react-server/src/ReactFlightServer';
 
-type EncodedData = Array<string>;
-
-function render(model: ReactModel): EncodedData {
-  let data: EncodedData = [];
-  let request = createRequest(model, data);
+function render(model: ReactModel, destination: Destination): void {
+  let request = createRequest(model, destination);
   startWork(request);
-  return data;
 }
 
 export {render};
