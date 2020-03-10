@@ -199,13 +199,14 @@ const {
 
 type ExecutionContext = number;
 
-const NoContext = /*                    */ 0b000000;
-const BatchedContext = /*               */ 0b000001;
-const EventContext = /*                 */ 0b000010;
-const DiscreteEventContext = /*         */ 0b000100;
-const LegacyUnbatchedContext = /*       */ 0b001000;
-const RenderContext = /*                */ 0b010000;
-const CommitContext = /*                */ 0b100000;
+const NoContext = /*                    */ 0b0000000;
+const BatchedContext = /*               */ 0b0000001;
+const EventContext = /*                 */ 0b0000010;
+const DiscreteEventContext = /*         */ 0b0000100;
+const LegacyUnbatchedContext = /*       */ 0b0001000;
+const RenderContext = /*                */ 0b0010000;
+const CommitContext = /*                */ 0b0100000;
+const PassiveEffectContext = /*         */ 0b1000000;
 
 type RootExitStatus = 0 | 1 | 2 | 3 | 4 | 5;
 const RootIncomplete = 0;
@@ -2283,6 +2284,7 @@ function flushPassiveEffectsImpl() {
   );
   const prevExecutionContext = executionContext;
   executionContext |= CommitContext;
+  executionContext |= PassiveEffectContext;
   const prevInteractions = pushInteractions(root);
 
   if (runAllPassiveEffectDestroysBeforeCreates) {
@@ -2799,6 +2801,11 @@ function warnAboutUpdateOnUnmountedFiberInDEV(fiber) {
       if (pendingPassiveHookEffectsUnmount.indexOf(fiber) >= 0) {
         return;
       }
+    }
+
+    // If we are currently flushing passive effects, skip this warning.
+    if ((executionContext & PassiveEffectContext) !== NoContext) {
+      return;
     }
 
     // We show the whole stack but dedupe on the top component's name because
