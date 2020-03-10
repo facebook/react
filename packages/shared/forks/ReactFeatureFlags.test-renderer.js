@@ -29,6 +29,7 @@ export const enableSchedulerDebugging = false;
 export const enableDeprecatedFlareAPI = false;
 export const enableFundamentalAPI = false;
 export const enableScopeAPI = false;
+export const enableUseEventAPI = false;
 export const warnAboutUnmockedScheduler = false;
 export const flushSuspenseFallbacksInTests = true;
 export const enableSuspenseCallback = false;

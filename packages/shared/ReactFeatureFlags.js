@@ -60,6 +60,9 @@ export const enableFundamentalAPI = false;
 // Experimental Scope support.
 export const enableScopeAPI = false;
 
+// Experimental useEvent support.
+export const enableUseEventAPI = false;
+
 // New API for JSX transforms to target - https://github.com/reactjs/rfcs/pull/107
 
 // We will enforce mocking scheduler with scheduler/unstable_mock at some point. (v17?)
