@@ -92,7 +92,12 @@ describe('ReactFlightDOM', () => {
     let result = ReactFlightDOMClient.readFromReadableStream(readable);
     await waitForSuspense(() => {
       expect(result.model).toEqual({
-        html: '<div><span>hello</span><span>world</span></div>',
+        html: (
+          <div>
+            <span>hello</span>
+            <span>world</span>
+          </div>
+        ),
       });
     });
   });
@@ -120,7 +125,7 @@ describe('ReactFlightDOM', () => {
 
     // View
     function Message({result}) {
-      return <p dangerouslySetInnerHTML={{__html: result.model.html}} />;
+      return <section>{result.model.html}</section>;
     }
     function App({result}) {
       return (
@@ -140,7 +145,7 @@ describe('ReactFlightDOM', () => {
       root.render(<App result={result} />);
     });
     expect(container.innerHTML).toBe(
-      '<p><div><span>hello</span><span>world</span></div></p>',
+      '<section><div><span>hello</span><span>world</span></div></section>',
     );
   });
 
@@ -174,6 +179,38 @@ describe('ReactFlightDOM', () => {
       root.render(<App result={result} />);
     });
     expect(container.innerHTML).toBe('<p>$1</p>');
+  });
+
+  it.experimental('should not get confused by @', async () => {
+    let {Suspense} = React;
+
+    // Model
+    function RootModel() {
+      return {text: '@div'};
+    }
+
+    // View
+    function Message({result}) {
+      return <p>{result.model.text}</p>;
+    }
+    function App({result}) {
+      return (
+        <Suspense fallback={<h1>Loading...</h1>}>
+          <Message result={result} />
+        </Suspense>
+      );
+    }
+
+    let {writable, readable} = getTestStream();
+    ReactFlightDOMServer.pipeToNodeWritable(<RootModel />, writable);
+    let result = ReactFlightDOMClient.readFromReadableStream(readable);
+
+    let container = document.createElement('div');
+    let root = ReactDOM.createRoot(container);
+    await act(async () => {
+      root.render(<App result={result} />);
+    });
+    expect(container.innerHTML).toBe('<p>@div</p>');
   });
 
   it.experimental('should progressively reveal chunks', async () => {

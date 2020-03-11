@@ -65,7 +65,12 @@ describe('ReactFlightDOMBrowser', () => {
     let result = ReactFlightDOMClient.readFromReadableStream(stream);
     await waitForSuspense(() => {
       expect(result.model).toEqual({
-        html: '<div><span>hello</span><span>world</span></div>',
+        html: (
+          <div>
+            <span>hello</span>
+            <span>world</span>
+          </div>
+        ),
       });
     });
   });

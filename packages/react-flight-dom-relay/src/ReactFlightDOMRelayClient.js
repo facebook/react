@@ -22,11 +22,11 @@ function parseModel(response, targetObj, key, value) {
   if (typeof value === 'object' && value !== null) {
     if (Array.isArray(value)) {
       for (let i = 0; i < value.length; i++) {
-        value[i] = parseModel(response, value, '' + i, value[i]);
+        (value: any)[i] = parseModel(response, value, '' + i, value[i]);
       }
     } else {
       for (let innerKey in value) {
-        value[innerKey] = parseModel(
+        (value: any)[innerKey] = parseModel(
           response,
           value,
           innerKey,
