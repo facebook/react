@@ -253,7 +253,7 @@ if (__DEV__) {
   ): void => {
     invariant(
       false,
-      'getInspectorDataForViewAtPoint() is not available in production',
+      'getInspectorDataForViewAtPoint() is not available in production.',
     );
   };
 }
