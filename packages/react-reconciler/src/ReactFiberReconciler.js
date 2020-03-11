@@ -51,7 +51,7 @@ import {injectInternals, onScheduleRoot} from './ReactFiberDevToolsHook';
 import {
   requestCurrentTimeForUpdate,
   computeExpirationForFiber,
-  scheduleWork,
+  scheduleUpdateOnFiber,
   flushRoot,
   batchedEventUpdates,
   batchedUpdates,
@@ -294,7 +294,7 @@ export function updateContainer(
   }
 
   enqueueUpdate(current, update);
-  scheduleWork(current, expirationTime);
+  scheduleUpdateOnFiber(current, expirationTime);
 
   return expirationTime;
 }
@@ -338,7 +338,7 @@ export function attemptSynchronousHydration(fiber: Fiber): void {
       }
       break;
     case SuspenseComponent:
-      flushSync(() => scheduleWork(fiber, Sync));
+      flushSync(() => scheduleUpdateOnFiber(fiber, Sync));
       // If we're still blocked after this, we need to increase
       // the priority of any promises resolving within this
       // boundary so that they next attempt also has higher pri.
@@ -377,7 +377,7 @@ export function attemptUserBlockingHydration(fiber: Fiber): void {
     return;
   }
   let expTime = computeInteractiveExpiration(requestCurrentTimeForUpdate());
-  scheduleWork(fiber, expTime);
+  scheduleUpdateOnFiber(fiber, expTime);
   markRetryTimeIfNotHydrated(fiber, expTime);
 }
 
@@ -389,7 +389,7 @@ export function attemptContinuousHydration(fiber: Fiber): void {
     // Suspense.
     return;
   }
-  scheduleWork(fiber, ContinuousHydration);
+  scheduleUpdateOnFiber(fiber, ContinuousHydration);
   markRetryTimeIfNotHydrated(fiber, ContinuousHydration);
 }
 
@@ -401,7 +401,7 @@ export function attemptHydrationAtCurrentPriority(fiber: Fiber): void {
   }
   const currentTime = requestCurrentTimeForUpdate();
   const expTime = computeExpirationForFiber(currentTime, fiber, null);
-  scheduleWork(fiber, expTime);
+  scheduleUpdateOnFiber(fiber, expTime);
   markRetryTimeIfNotHydrated(fiber, expTime);
 }
 
@@ -484,7 +484,7 @@ if (__DEV__) {
       // Shallow cloning props works as a workaround for now to bypass the bailout check.
       fiber.memoizedProps = {...fiber.memoizedProps};
 
-      scheduleWork(fiber, Sync);
+      scheduleUpdateOnFiber(fiber, Sync);
     }
   };
 
@@ -494,11 +494,11 @@ if (__DEV__) {
     if (fiber.alternate) {
       fiber.alternate.pendingProps = fiber.pendingProps;
     }
-    scheduleWork(fiber, Sync);
+    scheduleUpdateOnFiber(fiber, Sync);
   };
 
   scheduleUpdate = (fiber: Fiber) => {
-    scheduleWork(fiber, Sync);
+    scheduleUpdateOnFiber(fiber, Sync);
   };
 
   setSuspenseHandler = (newShouldSuspendImpl: Fiber => boolean) => {

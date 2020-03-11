@@ -785,4 +785,38 @@ describe('ReactHooksInspectionIntegration', () => {
       },
     ]);
   });
+
+  if (__EXPERIMENTAL__) {
+    it('should support composite useMutableSource hook', () => {
+      const mutableSource = React.createMutableSource({}, () => 1);
+      function Foo(props) {
+        React.useMutableSource(
+          mutableSource,
+          () => 'snapshot',
+          () => {},
+        );
+        React.useMemo(() => 'memo', []);
+        return <div />;
+      }
+      let renderer = ReactTestRenderer.create(<Foo />);
+      let childFiber = renderer.root.findByType(Foo)._currentFiber();
+      let tree = ReactDebugTools.inspectHooksOfFiber(childFiber);
+      expect(tree).toEqual([
+        {
+          id: 0,
+          isStateEditable: false,
+          name: 'MutableSource',
+          value: 'snapshot',
+          subHooks: [],
+        },
+        {
+          id: 1,
+          isStateEditable: false,
+          name: 'Memo',
+          value: 'memo',
+          subHooks: [],
+        },
+      ]);
+    });
+  }
 });

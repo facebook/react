@@ -26,6 +26,7 @@ import type {
   SuspenseListRenderState,
 } from './ReactFiberSuspenseComponent';
 import type {SuspenseContext} from './ReactFiberSuspenseContext';
+import {resetWorkInProgressVersions as resetMutableSourceWorkInProgressVersions} from './ReactMutableSource';
 
 import {now} from './SchedulerWithReactIntegration';
 
@@ -662,6 +663,7 @@ function completeWork(
     case HostRoot: {
       popHostContainer(workInProgress);
       popTopLevelLegacyContextObject(workInProgress);
+      resetMutableSourceWorkInProgressVersions();
       const fiberRoot = (workInProgress.stateNode: FiberRoot);
       if (fiberRoot.pendingContext) {
         fiberRoot.context = fiberRoot.pendingContext;

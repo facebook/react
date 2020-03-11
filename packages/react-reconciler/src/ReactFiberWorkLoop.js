@@ -298,6 +298,10 @@ let spawnedWorkDuringRender: null | Array<ExpirationTime> = null;
 // receive the same expiration time. Otherwise we get tearing.
 let currentEventTime: ExpirationTime = NoWork;
 
+export function getWorkInProgressRoot(): FiberRoot | null {
+  return workInProgressRoot;
+}
+
 export function requestCurrentTimeForUpdate() {
   if ((executionContext & (RenderContext | CommitContext)) !== NoContext) {
     // We're inside React, so it's fine to read the actual time.
@@ -451,7 +455,6 @@ export function scheduleUpdateOnFiber(
     }
   }
 }
-export const scheduleWork = scheduleUpdateOnFiber;
 
 // This is split into a separate function so we can mark a fiber with pending
 // work without treating it as a typical update that originates from an event;

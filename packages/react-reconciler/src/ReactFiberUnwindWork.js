@@ -11,6 +11,7 @@ import type {Fiber} from './ReactFiber';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
 import type {SuspenseState} from './ReactFiberSuspenseComponent';
 
+import {resetWorkInProgressVersions as resetMutableSourceWorkInProgressVersions} from './ReactMutableSource';
 import {
   ClassComponent,
   HostRoot,
@@ -55,6 +56,7 @@ function unwindWork(
     case HostRoot: {
       popHostContainer(workInProgress);
       popTopLevelLegacyContextObject(workInProgress);
+      resetMutableSourceWorkInProgressVersions();
       const effectTag = workInProgress.effectTag;
       invariant(
         (effectTag & DidCapture) === NoEffect,
@@ -120,6 +122,7 @@ function unwindInterruptedWork(interruptedWork: Fiber) {
     case HostRoot: {
       popHostContainer(interruptedWork);
       popTopLevelLegacyContextObject(interruptedWork);
+      resetMutableSourceWorkInProgressVersions();
       break;
     }
     case HostComponent: {

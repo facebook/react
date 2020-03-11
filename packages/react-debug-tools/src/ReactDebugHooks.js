@@ -8,6 +8,9 @@
  */
 
 import type {
+  MutableSource,
+  MutableSourceGetSnapshotFn,
+  MutableSourceSubscribeFn,
   ReactContext,
   ReactProviderType,
   ReactEventResponder,
@@ -72,6 +75,16 @@ function getPrimitiveStackCache(): Map<string, Array<any>> {
       Dispatcher.useDebugValue(null);
       Dispatcher.useCallback(() => {});
       Dispatcher.useMemo(() => null);
+      Dispatcher.useMutableSource(
+        {
+          _source: {},
+          _getVersion: () => 1,
+          _workInProgressVersionPrimary: null,
+          _workInProgressVersionSecondary: null,
+        },
+        () => null,
+        () => () => {},
+      );
     } finally {
       readHookLog = hookLog;
       hookLog = [];
@@ -229,6 +242,23 @@ function useMemo<T>(
   return value;
 }
 
+function useMutableSource<Source, Snapshot>(
+  source: MutableSource<Source>,
+  getSnapshot: MutableSourceGetSnapshotFn<Source, Snapshot>,
+  subscribe: MutableSourceSubscribeFn<Source, Snapshot>,
+): Snapshot {
+  // useMutableSource() composes multiple hooks internally.
+  // Advance the current hook index the same number of times
+  // so that subsequent hooks have the right memoized state.
+  nextHook(); // MutableSource
+  nextHook(); // State
+  nextHook(); // Effect
+  nextHook(); // Effect
+  const value = getSnapshot(source._source);
+  hookLog.push({primitive: 'MutableSource', stackError: new Error(), value});
+  return value;
+}
+
 function useResponder(
   responder: ReactEventResponder<any, any>,
   listenerProps: Object,
@@ -299,6 +329,7 @@ const Dispatcher: DispatcherType = {
   useState,
   useResponder,
   useTransition,
+  useMutableSource,
   useDeferredValue,
   useEvent,
 };

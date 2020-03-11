@@ -180,7 +180,7 @@ import {
   markSpawnedWork,
   requestCurrentTimeForUpdate,
   retryDehydratedSuspenseBoundary,
-  scheduleWork,
+  scheduleUpdateOnFiber,
   renderDidSuspendDelayIfPossible,
   markUnprocessedUpdateTime,
 } from './ReactFiberWorkLoop';
@@ -2121,7 +2121,7 @@ function updateDehydratedSuspenseComponent(
         // at even higher pri.
         let attemptHydrationAtExpirationTime = renderExpirationTime + 1;
         suspenseState.retryTime = attemptHydrationAtExpirationTime;
-        scheduleWork(current, attemptHydrationAtExpirationTime);
+        scheduleUpdateOnFiber(current, attemptHydrationAtExpirationTime);
         // TODO: Early abort this render.
       } else {
         // We have already tried to ping at a higher priority than we're rendering with

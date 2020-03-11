@@ -44,6 +44,7 @@ function loadModules({
   ReactFeatureFlags.flushSuspenseFallbacksInTests = false;
   ReactFeatureFlags.deferPassiveEffectCleanupDuringUnmount = deferPassiveEffectCleanupDuringUnmount;
   ReactFeatureFlags.runAllPassiveEffectDestroysBeforeCreates = runAllPassiveEffectDestroysBeforeCreates;
+  ReactFeatureFlags.enableProfilerTimer = true;
   React = require('react');
   ReactNoop = require('react-noop-renderer');
   Scheduler = require('scheduler');
@@ -1901,10 +1902,10 @@ function loadModules({
             }
             act(() => {
               ReactNoop.render(
-                <React.Fragment>
+                <>
                   <Counter label="A" count={0} />
                   <Counter label="B" count={0} />
-                </React.Fragment>,
+                </>,
                 () => Scheduler.unstable_yieldValue('Sync effect'),
               );
               expect(Scheduler).toFlushAndYieldThrough([
@@ -1922,10 +1923,10 @@ function loadModules({
 
             act(() => {
               ReactNoop.render(
-                <React.Fragment>
+                <>
                   <Counter label="A" count={1} />
                   <Counter label="B" count={1} />
-                </React.Fragment>,
+                </>,
                 () => Scheduler.unstable_yieldValue('Sync effect'),
               );
               expect(Scheduler).toFlushAndYieldThrough([
@@ -1947,10 +1948,10 @@ function loadModules({
 
             act(() => {
               ReactNoop.render(
-                <React.Fragment>
+                <>
                   <Counter label="B" count={2} />
                   <Counter label="C" count={0} />
-                </React.Fragment>,
+                </>,
                 () => Scheduler.unstable_yieldValue('Sync effect'),
               );
               expect(Scheduler).toFlushAndYieldThrough([

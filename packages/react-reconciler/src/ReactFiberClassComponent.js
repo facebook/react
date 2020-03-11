@@ -53,7 +53,7 @@ import {readContext} from './ReactFiberNewContext';
 import {
   requestCurrentTimeForUpdate,
   computeExpirationForFiber,
-  scheduleWork,
+  scheduleUpdateOnFiber,
 } from './ReactFiberWorkLoop';
 import {requestCurrentSuspenseConfig} from './ReactFiberSuspenseConfig';
 
@@ -200,7 +200,7 @@ const classComponentUpdater = {
     }
 
     enqueueUpdate(fiber, update);
-    scheduleWork(fiber, expirationTime);
+    scheduleUpdateOnFiber(fiber, expirationTime);
   },
   enqueueReplaceState(inst, payload, callback) {
     const fiber = getInstance(inst);
@@ -224,7 +224,7 @@ const classComponentUpdater = {
     }
 
     enqueueUpdate(fiber, update);
-    scheduleWork(fiber, expirationTime);
+    scheduleUpdateOnFiber(fiber, expirationTime);
   },
   enqueueForceUpdate(inst, callback) {
     const fiber = getInstance(inst);
@@ -247,7 +247,7 @@ const classComponentUpdater = {
     }
 
     enqueueUpdate(fiber, update);
-    scheduleWork(fiber, expirationTime);
+    scheduleUpdateOnFiber(fiber, expirationTime);
   },
 };
 
