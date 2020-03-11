@@ -19,7 +19,7 @@ import {
   processModelChunk,
   processErrorChunk,
 } from './ReactFlightServerConfig';
-import {renderHostChildrenToString} from './ReactServerFormatConfig';
+
 import {REACT_ELEMENT_TYPE} from 'shared/ReactSymbols';
 
 type ReactJSONValue =
@@ -88,7 +88,7 @@ function attemptResolveModelComponent(element: React$Element<any>): ReactModel {
     return type(props);
   } else if (typeof type === 'string') {
     // This is a host element. E.g. HTML.
-    return renderHostChildrenToString(element);
+    return [REACT_ELEMENT_TYPE, type, element.key, element.props];
   } else {
     throw new Error('Unsupported type.');
   }
@@ -119,7 +119,7 @@ function serializeIDRef(id: number): string {
 function escapeStringValue(value: string): string {
   if (value[0] === '$') {
     // We need to escape $ prefixed strings since we use that to encode
-    // references to IDs.
+    // references to IDs and as a special symbol value.
     return '$' + value;
   } else {
     return value;
@@ -132,6 +132,10 @@ export function resolveModelToJSON(
 ): ReactJSONValue {
   if (typeof value === 'string') {
     return escapeStringValue(value);
+  }
+
+  if (value === REACT_ELEMENT_TYPE) {
+    return '$';
   }
 
   while (

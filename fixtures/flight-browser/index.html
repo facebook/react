@@ -57,9 +57,7 @@
 
       let model = {
         title: <Title />,
-        content: {
-          __html: <HTML />,
-        }
+        content: <HTML />,
       };
 
       let stream = ReactFlightDOMServer.renderToReadableStream(model);
@@ -90,7 +88,7 @@
           <Suspense fallback="...">
             <h1>{model.title}</h1>
           </Suspense>
-          <div dangerouslySetInnerHTML={model.content} />
+          {model.content}
         </div>;
       }
 

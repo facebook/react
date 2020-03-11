@@ -7,6 +7,8 @@
  * @flow
  */
 
+import {REACT_ELEMENT_TYPE} from 'shared/ReactSymbols';
+
 export type ReactModelRoot<T> = {|
   model: T,
 |};
@@ -18,6 +20,8 @@ export type JSONValue =
   | string
   | {[key: string]: JSONValue}
   | Array<JSONValue>;
+
+const isArray = Array.isArray;
 
 const PENDING = 0;
 const RESOLVED = 1;
@@ -141,28 +145,81 @@ function definePendingProperty(
   });
 }
 
+function createElement(type, key, props): React$Element<any> {
+  const element: any = {
+    // This tag allows us to uniquely identify this as a React Element
+    $$typeof: REACT_ELEMENT_TYPE,
+
+    // Built-in properties that belong on the element
+    type: type,
+    key: key,
+    ref: null,
+    props: props,
+
+    // Record the component responsible for creating this element.
+    _owner: null,
+  };
+  if (__DEV__) {
+    // We don't really need to add any of these but keeping them for good measure.
+    // Unfortunately, _store is enumerable in jest matchers so for equality to
+    // work, I need to keep it or make _store non-enumerable in the other file.
+    element._store = {};
+    Object.defineProperty(element._store, 'validated', {
+      configurable: false,
+      enumerable: false,
+      writable: true,
+      value: true, // This element has already been validated on the server.
+    });
+    Object.defineProperty(element, '_self', {
+      configurable: false,
+      enumerable: false,
+      writable: false,
+      value: null,
+    });
+    Object.defineProperty(element, '_source', {
+      configurable: false,
+      enumerable: false,
+      writable: false,
+      value: null,
+    });
+  }
+  return element;
+}
+
 export function parseModelFromJSON(
   response: Response,
   targetObj: Object,
   key: string,
   value: JSONValue,
-): any {
-  if (typeof value === 'string' && value[0] === '$') {
-    if (value[1] === '$') {
-      // This was an escaped string value.
-      return value.substring(1);
-    } else {
-      let id = parseInt(value.substring(1), 16);
-      let chunks = response.chunks;
-      let chunk = chunks.get(id);
-      if (!chunk) {
-        chunk = createPendingChunk();
-        chunks.set(id, chunk);
-      } else if (chunk.status === RESOLVED) {
-        return chunk.value;
+): mixed {
+  if (typeof value === 'string') {
+    if (value[0] === '$') {
+      if (value === '$') {
+        return REACT_ELEMENT_TYPE;
+      } else if (value[1] === '$' || value[1] === '@') {
+        // This was an escaped string value.
+        return value.substring(1);
+      } else {
+        let id = parseInt(value.substring(1), 16);
+        let chunks = response.chunks;
+        let chunk = chunks.get(id);
+        if (!chunk) {
+          chunk = createPendingChunk();
+          chunks.set(id, chunk);
+        } else if (chunk.status === RESOLVED) {
+          return chunk.value;
+        }
+        definePendingProperty(targetObj, key, chunk);
+        return undefined;
       }
-      definePendingProperty(targetObj, key, chunk);
-      return undefined;
+    }
+  }
+  if (isArray(value)) {
+    let tuple: [mixed, mixed, mixed, mixed] = (value: any);
+    if (tuple[0] === REACT_ELEMENT_TYPE) {
+      // TODO: Consider having React just directly accept these arrays as elements.
+      // Or even change the ReactElement type to be an array.
+      return createElement(tuple[1], tuple[2], tuple[3]);
     }
   }
   return value;
