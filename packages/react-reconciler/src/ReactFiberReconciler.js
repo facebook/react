@@ -10,6 +10,7 @@
 import type {Fiber} from './ReactFiber';
 import type {FiberRoot} from './ReactFiberRoot';
 import type {RootTag} from 'shared/ReactRootTags';
+import type {TouchedViewDataAtPoint} from 'react-native-renderer/src/ReactNativeTypes';
 import type {
   Instance,
   TextInstance,
@@ -109,6 +110,13 @@ type DevToolsConfig = {|
   // This API is unfortunately RN-specific.
   // TODO: Change it to accept Fiber instead and type it properly.
   getInspectorDataForViewTag?: (tag: number) => Object,
+  // Used by RN in-app inspector.
+  getInspectorDataForViewAtPoint?: (
+    inspectedView: Object,
+    locationX: number,
+    locationY: number,
+    callback: (viewData: TouchedViewDataAtPoint) => mixed,
+  ) => void,
 |};
 
 let didWarnAboutNestedUpdates;
