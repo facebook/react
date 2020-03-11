@@ -188,8 +188,8 @@ if (__DEV__) {
         inspectedView._internalInstanceHandle.stateNode.node,
         locationX,
         locationY,
-        shadowNode => {
-          if (shadowNode == null) {
+        internalInstanceHandle => {
+          if (internalInstanceHandle == null) {
             callback({
               pointerY: locationY,
               frame: {left: 0, top: 0, width: 0, height: 0},
@@ -198,9 +198,9 @@ if (__DEV__) {
           }
 
           closestInstance =
-            shadowNode.stateNode.canonical._internalInstanceHandle;
+            internalInstanceHandle.stateNode.canonical._internalInstanceHandle;
           nativeFabricUIManager.measure(
-            shadowNode.stateNode.node,
+            internalInstanceHandle.stateNode.node,
             (x, y, width, height, pageX, pageY) => {
               callback({
                 pointerY: locationY,
