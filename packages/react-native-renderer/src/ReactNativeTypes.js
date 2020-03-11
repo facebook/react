@@ -118,7 +118,7 @@ type InspectorDataGetter = (
   source: InspectorDataSource,
 |}>;
 
-export type InspectorData = $ReadOnly<{
+export type InspectorData = $ReadOnly<{|
   hierarchy: Array<{|
     name: ?string,
     getInspectorData: InspectorDataGetter,
@@ -126,9 +126,9 @@ export type InspectorData = $ReadOnly<{
   selection: ?number,
   props: InspectorDataProps,
   source: ?InspectorDataSource,
-}>;
+|}>;
 
-export type TouchedViewDataAtPoint = $ReadOnly<{
+export type TouchedViewDataAtPoint = $ReadOnly<{|
   pointerY: number,
   touchedViewTag?: number,
   frame: $ReadOnly<{|
@@ -138,7 +138,7 @@ export type TouchedViewDataAtPoint = $ReadOnly<{
     height: number,
   |}>,
   ...InspectorData,
-}>;
+|}>;
 
 /**
  * Flat ReactNative renderer bundles are too big for Flow to parse efficiently.
