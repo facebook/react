@@ -76,6 +76,8 @@ function SyntheticEvent(
   this.dispatchConfig = dispatchConfig;
   this._targetInst = targetInst;
   this.nativeEvent = nativeEvent;
+  this._dispatchListeners = null;
+  this._dispatchInstances = null;
 
   const Interface = this.constructor.Interface;
   for (const propName in Interface) {
