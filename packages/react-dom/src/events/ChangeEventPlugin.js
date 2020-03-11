@@ -6,7 +6,6 @@
  */
 
 import {runEventsInBatch} from 'legacy-events/EventBatching';
-import {accumulateTwoPhaseDispatchesSingle} from 'legacy-events/EventPropagators';
 import {enqueueStateRestore} from 'legacy-events/ReactControlledComponent';
 import {batchedUpdates} from 'legacy-events/ReactGenericBatching';
 import SyntheticEvent from 'legacy-events/SyntheticEvent';
@@ -28,6 +27,8 @@ import isEventSupported from './isEventSupported';
 import {getNodeFromInstance} from '../client/ReactDOMComponentTree';
 import {updateValueIfChanged} from '../client/inputValueTracking';
 import {setDefaultValue} from '../client/ReactDOMInput';
+import {accumulateTwoPhaseListeners} from './DOMModernPluginEventSystem';
+
 import {disableInputAttributeSyncing} from 'shared/ReactFeatureFlags';
 
 const eventTypes = {
@@ -59,7 +60,7 @@ function createAndAccumulateChangeEvent(inst, nativeEvent, target) {
   event.type = 'change';
   // Flag this event loop as needing state restore.
   enqueueStateRestore(target);
-  accumulateTwoPhaseDispatchesSingle(event);
+  accumulateTwoPhaseListeners(event);
   return event;
 }
 /**
