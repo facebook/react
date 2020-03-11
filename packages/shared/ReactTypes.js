@@ -124,7 +124,7 @@ export const UserBlockingEvent: EventPriority = 1;
 export const ContinuousEvent: EventPriority = 2;
 
 export type ReactFundamentalComponentInstance<C, H> = {|
-  currentFiber: mixed,
+  currentFiber: Object,
   instance: mixed,
   prevProps: null | Object,
   props: Object,
