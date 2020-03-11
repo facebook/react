@@ -334,7 +334,7 @@ export function accumulateTwoPhaseListeners(event: ReactSyntheticEvent): void {
       const bubbleListener = getListener(node, bubbled);
       if (bubbleListener != null) {
         hasListeners = true;
-        // Bubble listeners/instances should go at the start, so we
+        // Bubble listeners/instances should go at the end, so we
         // push them to the end of the array.
         dispatchListeners.push(bubbleListener);
         dispatchInstances.push(node);
