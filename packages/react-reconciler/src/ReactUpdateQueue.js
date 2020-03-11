@@ -115,7 +115,7 @@ export type Update<State> = {|
   payload: any,
   callback: (() => mixed) | null,
 
-  next: Update<State>,
+  next: Update<State> | null,
 
   // DEV only
   priority?: ReactPriorityLevel,
@@ -125,7 +125,8 @@ type SharedQueue<State> = {|pending: Update<State> | null|};
 
 export type UpdateQueue<State> = {|
   baseState: State,
-  baseQueue: Update<State> | null,
+  firstBaseUpdate: Update<State> | null,
+  lastBaseUpdate: Update<State> | null,
   shared: SharedQueue<State>,
   effects: Array<Update<State>> | null,
 |};
@@ -154,7 +155,8 @@ if (__DEV__) {
 export function initializeUpdateQueue<State>(fiber: Fiber): void {
   const queue: UpdateQueue<State> = {
     baseState: fiber.memoizedState,
-    baseQueue: null,
+    firstBaseUpdate: null,
+    lastBaseUpdate: null,
     shared: {
       pending: null,
     },
@@ -173,7 +175,8 @@ export function cloneUpdateQueue<State>(
   if (queue === currentQueue) {
     const clone: UpdateQueue<State> = {
       baseState: currentQueue.baseState,
-      baseQueue: currentQueue.baseQueue,
+      firstBaseUpdate: currentQueue.firstBaseUpdate,
+      lastBaseUpdate: currentQueue.lastBaseUpdate,
       shared: currentQueue.shared,
       effects: currentQueue.effects,
     };
@@ -193,9 +196,8 @@ export function createUpdate(
     payload: null,
     callback: null,
 
-    next: (null: any),
+    next: null,
   };
-  update.next = update;
   if (__DEV__) {
     update.priority = getCurrentPriorityLevel();
   }
@@ -238,25 +240,81 @@ export function enqueueUpdate<State>(fiber: Fiber, update: Update<State>) {
 
 export function enqueueCapturedUpdate<State>(
   workInProgress: Fiber,
-  update: Update<State>,
+  capturedUpdate: Update<State>,
 ) {
+  // Captured updates are updates that are thrown by a child during the render
+  // phase. They should be discarded if the render is aborted. Therefore,
+  // we should only put them on the work-in-progress queue, not the current one.
+  let queue: UpdateQueue<State> = (workInProgress.updateQueue: any);
+
+  // Check if the work-in-progress queue is a clone.
   const current = workInProgress.alternate;
   if (current !== null) {
-    // Ensure the work-in-progress queue is a clone
-    cloneUpdateQueue(current, workInProgress);
+    const currentQueue: UpdateQueue<State> = (current.updateQueue: any);
+    if (queue === currentQueue) {
+      // The work-in-progress queue is the same as current. This happens when
+      // we bail out on a parent fiber that then captures an error thrown by
+      // a child. Since we want to append the update only to the work-in
+      // -progress queue, we need to clone the updates. We usually clone during
+      // processUpdateQueue, but that didn't happen in this case because we
+      // skipped over the parent when we bailed out.
+      let newFirst = null;
+      let newLast = null;
+      const firstBaseUpdate = queue.firstBaseUpdate;
+      if (firstBaseUpdate !== null) {
+        // Loop through the updates and clone them.
+        let update = firstBaseUpdate;
+        do {
+          const clone: Update<State> = {
+            expirationTime: update.expirationTime,
+            suspenseConfig: update.suspenseConfig,
+
+            tag: update.tag,
+            payload: update.payload,
+            callback: update.callback,
+
+            next: null,
+          };
+          if (newLast === null) {
+            newFirst = newLast = clone;
+          } else {
+            newLast.next = clone;
+            newLast = clone;
+          }
+          update = update.next;
+        } while (update !== null);
+
+        // Append the captured update the end of the cloned list.
+        if (newLast === null) {
+          newFirst = newLast = capturedUpdate;
+        } else {
+          newLast.next = capturedUpdate;
+          newLast = capturedUpdate;
+        }
+      } else {
+        // There are no base updates.
+        newFirst = newLast = capturedUpdate;
+      }
+      queue = {
+        baseState: currentQueue.baseState,
+        firstBaseUpdate: newFirst,
+        lastBaseUpdate: newLast,
+        shared: currentQueue.shared,
+        effects: currentQueue.effects,
+      };
+      workInProgress.updateQueue = queue;
+      return;
+    }
   }
 
-  // Captured updates go only on the work-in-progress queue.
-  const queue: UpdateQueue<State> = (workInProgress.updateQueue: any);
   // Append the update to the end of the list.
-  const last = queue.baseQueue;
-  if (last === null) {
-    queue.baseQueue = update.next = update;
-    update.next = update;
+  const lastBaseUpdate = queue.lastBaseUpdate;
+  if (lastBaseUpdate === null) {
+    queue.firstBaseUpdate = capturedUpdate;
   } else {
-    update.next = last.next;
-    last.next = update;
+    lastBaseUpdate.next = capturedUpdate;
   }
+  queue.lastBaseUpdate = capturedUpdate;
 }
 
 function getStateFromUpdate<State>(
@@ -347,147 +405,160 @@ export function processUpdateQueue<State>(
     currentlyProcessingQueue = queue.shared;
   }
 
-  // The last rebase update that is NOT part of the base state.
-  let baseQueue = queue.baseQueue;
+  let firstBaseUpdate = queue.firstBaseUpdate;
+  let lastBaseUpdate = queue.lastBaseUpdate;
 
-  // The last pending update that hasn't been processed yet.
+  // Check if there are pending updates. If so, transfer them to the base queue.
   let pendingQueue = queue.shared.pending;
   if (pendingQueue !== null) {
-    // We have new updates that haven't been processed yet.
-    // We'll add them to the base queue.
-    if (baseQueue !== null) {
-      // Merge the pending queue and the base queue.
-      let baseFirst = baseQueue.next;
-      let pendingFirst = pendingQueue.next;
-      baseQueue.next = pendingFirst;
-      pendingQueue.next = baseFirst;
-    }
-
-    baseQueue = pendingQueue;
-
     queue.shared.pending = null;
+
+    // The pending queue is circular. Disconnect the pointer between first
+    // and last so that it's non-circular.
+    const lastPendingUpdate = pendingQueue;
+    const firstPendingUpdate = lastPendingUpdate.next;
+    lastPendingUpdate.next = null;
+    // Append pending updates to base queue
+    if (lastBaseUpdate === null) {
+      firstBaseUpdate = firstPendingUpdate;
+    } else {
+      lastBaseUpdate.next = firstPendingUpdate;
+    }
+    lastBaseUpdate = lastPendingUpdate;
+
+    // If there's a current queue, and it's different from the base queue, then
+    // we need to transfer the updates to that queue, too. Because the base
+    // queue is a singly-linked list with no cycles, we can append to both
+    // lists and take advantage of structural sharing.
     // TODO: Pass `current` as argument
     const current = workInProgress.alternate;
     if (current !== null) {
-      const currentQueue = current.updateQueue;
-      if (currentQueue !== null) {
-        currentQueue.baseQueue = pendingQueue;
+      // This is always non-null on a ClassComponent or HostRoot
+      const currentQueue: UpdateQueue<State> = (current.updateQueue: any);
+      const currentLastBaseUpdate = currentQueue.lastBaseUpdate;
+      if (currentLastBaseUpdate !== lastBaseUpdate) {
+        if (currentLastBaseUpdate === null) {
+          currentQueue.firstBaseUpdate = firstPendingUpdate;
+        } else {
+          currentLastBaseUpdate.next = firstPendingUpdate;
+        }
+        currentQueue.lastBaseUpdate = lastPendingUpdate;
       }
     }
   }
 
   // These values may change as we process the queue.
-  if (baseQueue !== null) {
-    let first = baseQueue.next;
+  if (firstBaseUpdate !== null) {
     // Iterate through the list of updates to compute the result.
     let newState = queue.baseState;
     let newExpirationTime = NoWork;
 
     let newBaseState = null;
-    let newBaseQueueFirst = null;
-    let newBaseQueueLast = null;
+    let newFirstBaseUpdate = null;
+    let newLastBaseUpdate = null;
 
-    if (first !== null) {
-      let update = first;
-      do {
-        const updateExpirationTime = update.expirationTime;
-        if (updateExpirationTime < renderExpirationTime) {
-          // Priority is insufficient. Skip this update. If this is the first
-          // skipped update, the previous update/state is the new base
-          // update/state.
+    let update = firstBaseUpdate;
+    do {
+      const updateExpirationTime = update.expirationTime;
+      if (updateExpirationTime < renderExpirationTime) {
+        // Priority is insufficient. Skip this update. If this is the first
+        // skipped update, the previous update/state is the new base
+        // update/state.
+        const clone: Update<State> = {
+          expirationTime: update.expirationTime,
+          suspenseConfig: update.suspenseConfig,
+
+          tag: update.tag,
+          payload: update.payload,
+          callback: update.callback,
+
+          next: null,
+        };
+        if (newLastBaseUpdate === null) {
+          newFirstBaseUpdate = newLastBaseUpdate = clone;
+          newBaseState = newState;
+        } else {
+          newLastBaseUpdate = newLastBaseUpdate.next = clone;
+        }
+        // Update the remaining priority in the queue.
+        if (updateExpirationTime > newExpirationTime) {
+          newExpirationTime = updateExpirationTime;
+        }
+      } else {
+        // This update does have sufficient priority.
+
+        if (newLastBaseUpdate !== null) {
           const clone: Update<State> = {
-            expirationTime: update.expirationTime,
+            expirationTime: Sync, // This update is going to be committed so we never want uncommit it.
             suspenseConfig: update.suspenseConfig,
 
             tag: update.tag,
             payload: update.payload,
             callback: update.callback,
 
-            next: (null: any),
+            next: null,
           };
-          if (newBaseQueueLast === null) {
-            newBaseQueueFirst = newBaseQueueLast = clone;
-            newBaseState = newState;
+          newLastBaseUpdate = newLastBaseUpdate.next = clone;
+        }
+
+        // Mark the event time of this update as relevant to this render pass.
+        // TODO: This should ideally use the true event time of this update rather than
+        // its priority which is a derived and not reverseable value.
+        // TODO: We should skip this update if it was already committed but currently
+        // we have no way of detecting the difference between a committed and suspended
+        // update here.
+        markRenderEventTimeAndConfig(
+          updateExpirationTime,
+          update.suspenseConfig,
+        );
+
+        // Process this update.
+        newState = getStateFromUpdate(
+          workInProgress,
+          queue,
+          update,
+          newState,
+          props,
+          instance,
+        );
+        const callback = update.callback;
+        if (callback !== null) {
+          workInProgress.effectTag |= Callback;
+          let effects = queue.effects;
+          if (effects === null) {
+            queue.effects = [update];
           } else {
-            newBaseQueueLast = newBaseQueueLast.next = clone;
+            effects.push(update);
           }
-          // Update the remaining priority in the queue.
-          if (updateExpirationTime > newExpirationTime) {
-            newExpirationTime = updateExpirationTime;
-          }
+        }
+      }
+      update = update.next;
+      if (update === null) {
+        pendingQueue = queue.shared.pending;
+        if (pendingQueue === null) {
+          break;
         } else {
-          // This update does have sufficient priority.
-
-          if (newBaseQueueLast !== null) {
-            const clone: Update<State> = {
-              expirationTime: Sync, // This update is going to be committed so we never want uncommit it.
-              suspenseConfig: update.suspenseConfig,
-
-              tag: update.tag,
-              payload: update.payload,
-              callback: update.callback,
-
-              next: (null: any),
-            };
-            newBaseQueueLast = newBaseQueueLast.next = clone;
-          }
-
-          // Mark the event time of this update as relevant to this render pass.
-          // TODO: This should ideally use the true event time of this update rather than
-          // its priority which is a derived and not reverseable value.
-          // TODO: We should skip this update if it was already committed but currently
-          // we have no way of detecting the difference between a committed and suspended
-          // update here.
-          markRenderEventTimeAndConfig(
-            updateExpirationTime,
-            update.suspenseConfig,
-          );
-
-          // Process this update.
-          newState = getStateFromUpdate(
-            workInProgress,
-            queue,
-            update,
-            newState,
-            props,
-            instance,
-          );
-          const callback = update.callback;
-          if (callback !== null) {
-            workInProgress.effectTag |= Callback;
-            let effects = queue.effects;
-            if (effects === null) {
-              queue.effects = [update];
-            } else {
-              effects.push(update);
-            }
-          }
+          // An update was scheduled from inside a reducer. Add the new
+          // pending updates to the end of the list and keep processing.
+          const lastPendingUpdate = pendingQueue;
+          // Intentionally unsound. Pending updates form a circular list, but we
+          // unravel them when transferring them to the base queue.
+          const firstPendingUpdate = ((lastPendingUpdate.next: any): Update<State>);
+          lastPendingUpdate.next = null;
+          update = firstPendingUpdate;
+          queue.lastBaseUpdate = lastPendingUpdate;
+          queue.shared.pending = null;
         }
-        update = update.next;
-        if (update === null || update === first) {
-          pendingQueue = queue.shared.pending;
-          if (pendingQueue === null) {
-            break;
-          } else {
-            // An update was scheduled from inside a reducer. Add the new
-            // pending updates to the end of the list and keep processing.
-            update = baseQueue.next = pendingQueue.next;
-            pendingQueue.next = first;
-            queue.baseQueue = baseQueue = pendingQueue;
-            queue.shared.pending = null;
-          }
-        }
-      } while (true);
-    }
+      }
+    } while (true);
 
-    if (newBaseQueueLast === null) {
+    if (newLastBaseUpdate === null) {
       newBaseState = newState;
-    } else {
-      newBaseQueueLast.next = (newBaseQueueFirst: any);
     }
 
     queue.baseState = ((newBaseState: any): State);
-    queue.baseQueue = newBaseQueueLast;
+    queue.firstBaseUpdate = newFirstBaseUpdate;
+    queue.lastBaseUpdate = newLastBaseUpdate;
 
     // Set the remaining expiration time to be whatever is remaining in the queue.
     // This should be fine because the only two other things that contribute to

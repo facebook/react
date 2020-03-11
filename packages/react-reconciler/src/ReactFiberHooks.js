@@ -691,6 +691,16 @@ function updateReducer<S, I, A>(
       baseQueue.next = pendingFirst;
       pendingQueue.next = baseFirst;
     }
+    if (__DEV__) {
+      if (current.baseQueue !== baseQueue) {
+        // Internal invariant that should never happen, but feasibly could in
+        // the future if we implement resuming, or some form of that.
+        console.error(
+          'Internal error: Expected work-in-progress queue to be a clone. ' +
+            'This is a bug in React.',
+        );
+      }
+    }
     current.baseQueue = baseQueue = pendingQueue;
     queue.pending = null;
   }
