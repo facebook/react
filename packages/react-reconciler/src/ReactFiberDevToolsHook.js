@@ -20,10 +20,8 @@ import {DidCapture} from './ReactSideEffectTags';
 
 declare var __REACT_DEVTOOLS_GLOBAL_HOOK__: Object | void;
 
-let onScheduleFiberRoot = null;
 let rendererID = null;
-let onCommitFiberRoot = null;
-let onCommitFiberUnmount = null;
+let injectedHook = null;
 let hasLoggedError = false;
 
 export const isDevToolsPresent =
@@ -55,14 +53,7 @@ export function injectInternals(internals: Object): boolean {
   try {
     rendererID = hook.inject(internals);
     // We have successfully injected, so now it is safe to set up hooks.
-    if (__DEV__) {
-      // Only used by Fast Refresh
-      if (typeof hook.onScheduleFiberRoot === 'function') {
-        onScheduleFiberRoot = hook.onScheduleFiberRoot;
-      }
-    }
-    onCommitFiberRoot = hook.onCommitFiberRoot;
-    onCommitFiberUnmount = hook.onCommitFiberUnmount;
+    injectedHook = hook;
   } catch (err) {
     // Catch all errors because it is unsafe to throw during initialization.
     if (__DEV__) {
@@ -75,9 +66,12 @@ export function injectInternals(internals: Object): boolean {
 
 export function onScheduleRoot(root: FiberRoot, children: ReactNodeList) {
   if (__DEV__) {
-    if (typeof onScheduleFiberRoot === 'function') {
+    if (
+      injectedHook &&
+      typeof injectedHook.onScheduleFiberRoot === 'function'
+    ) {
       try {
-        onScheduleFiberRoot(rendererID, root, children);
+        injectedHook.onScheduleFiberRoot(rendererID, root, children);
       } catch (err) {
         if (__DEV__ && !hasLoggedError) {
           hasLoggedError = true;
@@ -89,7 +83,7 @@ export function onScheduleRoot(root: FiberRoot, children: ReactNodeList) {
 }
 
 export function onCommitRoot(root: FiberRoot, expirationTime: ExpirationTime) {
-  if (typeof onCommitFiberRoot === 'function') {
+  if (injectedHook && typeof injectedHook.onCommitFiberRoot === 'function') {
     try {
       const didError = (root.current.effectTag & DidCapture) === DidCapture;
       if (enableProfilerTimer) {
@@ -98,9 +92,14 @@ export function onCommitRoot(root: FiberRoot, expirationTime: ExpirationTime) {
           currentTime,
           expirationTime,
         );
-        onCommitFiberRoot(rendererID, root, priorityLevel, didError);
+        injectedHook.onCommitFiberRoot(
+          rendererID,
+          root,
+          priorityLevel,
+          didError,
+        );
       } else {
-        onCommitFiberRoot(rendererID, root, undefined, didError);
+        injectedHook.onCommitFiberRoot(rendererID, root, undefined, didError);
       }
     } catch (err) {
       if (__DEV__) {
@@ -114,9 +113,9 @@ export function onCommitRoot(root: FiberRoot, expirationTime: ExpirationTime) {
 }
 
 export function onCommitUnmount(fiber: Fiber) {
-  if (typeof onCommitFiberUnmount === 'function') {
+  if (injectedHook && typeof injectedHook.onCommitFiberUnmount === 'function') {
     try {
-      onCommitFiberUnmount(rendererID, fiber);
+      injectedHook.onCommitFiberUnmount(rendererID, fiber);
     } catch (err) {
       if (__DEV__) {
         if (!hasLoggedError) {
