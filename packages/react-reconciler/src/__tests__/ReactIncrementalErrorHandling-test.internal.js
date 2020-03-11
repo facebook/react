@@ -1754,6 +1754,51 @@ describe('ReactIncrementalErrorHandling', () => {
     expect(root).toMatchRenderedOutput('Everything is fine.');
   });
 
+  it('uncaught errors are discarded if the render is aborted, case 2', async () => {
+    const {useState} = React;
+    const root = ReactNoop.createRoot();
+
+    let setShouldThrow;
+    function Oops() {
+      const [shouldThrow, _setShouldThrow] = useState(false);
+      setShouldThrow = _setShouldThrow;
+      if (shouldThrow) {
+        throw Error('Oops');
+      }
+      return null;
+    }
+
+    function AllGood() {
+      Scheduler.unstable_yieldValue('Everything is fine.');
+      return 'Everything is fine.';
+    }
+
+    await ReactNoop.act(async () => {
+      root.render(<Oops />);
+    });
+
+    await ReactNoop.act(async () => {
+      // Schedule a high pri and a low pri update on the root.
+      ReactNoop.discreteUpdates(() => {
+        root.render(<Oops />);
+      });
+      root.render(<AllGood />);
+      // Render through just the high pri update. The low pri update remains on
+      // the queue.
+      expect(Scheduler).toFlushAndYieldThrough(['Everything is fine.']);
+
+      // Schedule a high pri update on a child that triggers an error.
+      // The root should capture this error. But since there's still a pending
+      // update on the root, the error should be suppressed.
+      ReactNoop.discreteUpdates(() => {
+        setShouldThrow(true);
+      });
+    });
+    // Should render the final state without throwing the error.
+    expect(Scheduler).toHaveYielded(['Everything is fine.']);
+    expect(root).toMatchRenderedOutput('Everything is fine.');
+  });
+
   if (global.__PERSISTENT__) {
     it('regression test: should fatal if error is thrown at the root', () => {
       const root = ReactNoop.createRoot();
