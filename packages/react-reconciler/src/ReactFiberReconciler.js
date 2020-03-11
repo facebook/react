@@ -104,7 +104,7 @@ type DevToolsConfig = {|
   rendererPackageName: string,
   // Note: this actually *does* depend on Fiber internal fields.
   // Used by "inspect clicked DOM element" in React DevTools.
-  findFiberByHostInstance?: (instance: Instance | TextInstance) => Fiber,
+  findFiberByHostInstance?: (instance: Instance | TextInstance) => Fiber | null,
   // Used by RN in-app inspector.
   // This API is unfortunately RN-specific.
   // TODO: Change it to accept Fiber instead and type it properly.
