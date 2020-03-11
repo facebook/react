@@ -511,7 +511,10 @@ export function injectIntoDevTools(devToolsConfig: DevToolsConfig): boolean {
   const {ReactCurrentDispatcher} = ReactSharedInternals;
 
   return injectInternals({
-    ...devToolsConfig,
+    bundleType: devToolsConfig.bundleType,
+    version: devToolsConfig.version,
+    rendererPackageName: devToolsConfig.rendererPackageName,
+    getInspectorDataForViewTag: devToolsConfig.getInspectorDataForViewTag,
     overrideHookState,
     overrideProps,
     setSuspenseHandler,
