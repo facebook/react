@@ -1085,7 +1085,7 @@ export function mountEventListener(listener: ReactDOMListener): void {
   if (enableUseEventAPI) {
     const {target} = listener;
     if (target === window) {
-      // TODO
+      // TODO (useEvent)
     } else {
       attachElementListener(listener);
     }
@@ -1096,14 +1096,14 @@ export function unmountEventListener(listener: ReactDOMListener): void {
   if (enableUseEventAPI) {
     const {target} = listener;
     if (target === window) {
-      // TODO
+      // TODO (useEvent)
     } else {
       detachElementListener(listener);
     }
   }
 }
 
-export function validateEventListenerInstance(
+export function validateEventListenerTarget(
   target: EventTarget,
   listener: ?(Event) => void,
 ): boolean {

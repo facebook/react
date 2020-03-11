@@ -388,6 +388,6 @@ export function unmountEventListener(listener: any) {
   throw new Error('Not yet implemented.');
 }
 
-export function validateEventListenerInstance(target: any, listener: any) {
+export function validateEventListenerTarget(target: any, listener: any) {
   throw new Error('Not yet implemented.');
 }

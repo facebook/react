@@ -53,11 +53,6 @@ import {
   markRenderEventTimeAndConfig,
   markUnprocessedUpdateTime,
 } from './ReactFiberWorkLoop';
-import {
-  mountEventListener as mountHostEventListener,
-  unmountEventListener as unmountHostEventListener,
-  validateEventListenerInstance,
-} from './ReactFiberHostConfig';
 
 import invariant from 'shared/invariant';
 import getComponentName from 'shared/getComponentName';
@@ -1635,14 +1630,6 @@ const noOpMount = () => {};
 function mountEventListener(event: ReactListenerEvent): ReactListenerMap {
   if (enableUseEventAPI) {
     const hook = mountWorkInProgressHook();
-
-    // These are TODOs
-    // eslint-disable-next-line no-unused-expressions
-    mountHostEventListener;
-    // eslint-disable-next-line no-unused-expressions
-    unmountHostEventListener;
-    // eslint-disable-next-line no-unused-expressions
-    validateEventListenerInstance;
 
     const clear = () => {
       // TODO
