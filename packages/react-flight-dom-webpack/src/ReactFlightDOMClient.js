@@ -7,7 +7,7 @@
  * @flow
  */
 
-import type {ReactModelRoot} from 'react-client/src/ReactFlightClient';
+import type {ReactModelRoot} from 'react-client/src/ReactFlightClientStream';
 
 import {
   createResponse,
@@ -15,14 +15,14 @@ import {
   reportGlobalError,
   processStringChunk,
   processBinaryChunk,
-  complete,
-} from 'react-client/src/ReactFlightClient';
+  close,
+} from 'react-client/src/ReactFlightClientStream';
 
 function startReadingFromStream(response, stream: ReadableStream): void {
   let reader = stream.getReader();
   function progress({done, value}) {
     if (done) {
-      complete(response);
+      close(response);
       return;
     }
     let buffer: Uint8Array = (value: any);
@@ -36,7 +36,7 @@ function startReadingFromStream(response, stream: ReadableStream): void {
 }
 
 function readFromReadableStream<T>(stream: ReadableStream): ReactModelRoot<T> {
-  let response = createResponse(stream);
+  let response = createResponse();
   startReadingFromStream(response, stream);
   return getModelRoot(response);
 }
@@ -44,7 +44,7 @@ function readFromReadableStream<T>(stream: ReadableStream): ReactModelRoot<T> {
 function readFromFetch<T>(
   promiseForResponse: Promise<Response>,
 ): ReactModelRoot<T> {
-  let response = createResponse(promiseForResponse);
+  let response = createResponse();
   promiseForResponse.then(
     function(r) {
       startReadingFromStream(response, (r.body: any));
@@ -57,7 +57,7 @@ function readFromFetch<T>(
 }
 
 function readFromXHR<T>(request: XMLHttpRequest): ReactModelRoot<T> {
-  let response = createResponse(request);
+  let response = createResponse();
   let processedLength = 0;
   function progress(e: ProgressEvent): void {
     let chunk = request.responseText;
@@ -66,7 +66,7 @@ function readFromXHR<T>(request: XMLHttpRequest): ReactModelRoot<T> {
   }
   function load(e: ProgressEvent): void {
     progress(e);
-    complete(response);
+    close(response);
   }
   function error(e: ProgressEvent): void {
     reportGlobalError(response, new TypeError('Network error'));

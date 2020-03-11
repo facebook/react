@@ -51,6 +51,9 @@ import type {
   ReactDOMEventResponder,
   ReactDOMEventResponderInstance,
   ReactDOMFundamentalComponentInstance,
+  ReactDOMListener,
+  ReactDOMListenerEvent,
+  ReactDOMListenerMap,
 } from 'shared/ReactDOMTypes';
 import {
   mountEventResponder,
@@ -69,6 +72,10 @@ import {
   RESPONDER_EVENT_SYSTEM,
   IS_PASSIVE,
 } from 'legacy-events/EventSystemFlags';
+
+export type ReactListenerEvent = ReactDOMListenerEvent;
+export type ReactListenerMap = ReactDOMListenerMap;
+export type ReactListener = ReactDOMListener;
 
 export type Type = string;
 export type Props = {

@@ -7,25 +7,21 @@
  * @flow
  */
 
-import type {Source, StringDecoder} from './ReactFlightClientHostConfig';
-
-import {
-  supportsBinaryStreams,
-  createStringDecoder,
-  readPartialStringChunk,
-  readFinalStringChunk,
-} from './ReactFlightClientHostConfig';
+import {REACT_ELEMENT_TYPE} from 'shared/ReactSymbols';
 
 export type ReactModelRoot<T> = {|
   model: T,
 |};
 
-type JSONValue =
+export type JSONValue =
   | number
   | null
   | boolean
   | string
-  | {[key: string]: JSONValue, ...};
+  | {[key: string]: JSONValue}
+  | Array<JSONValue>;
+
+const isArray = Array.isArray;
 
 const PENDING = 0;
 const RESOLVED = 1;
@@ -48,39 +44,23 @@ type ErroredChunk = {|
 |};
 type Chunk = PendingChunk | ResolvedChunk | ErroredChunk;
 
-type OpaqueResponseWithoutDecoder = {
-  source: Source,
+export type Response = {
   partialRow: string,
   modelRoot: ReactModelRoot<any>,
   chunks: Map<number, Chunk>,
-  fromJSON: (key: string, value: JSONValue) => any,
-  ...
 };
 
-type OpaqueResponse = OpaqueResponseWithoutDecoder & {
-  stringDecoder: StringDecoder,
-  ...
-};
-
-export function createResponse(source: Source): OpaqueResponse {
+export function createResponse(): Response {
   let modelRoot: ReactModelRoot<any> = ({}: any);
   let rootChunk: Chunk = createPendingChunk();
   definePendingProperty(modelRoot, 'model', rootChunk);
   let chunks: Map<number, Chunk> = new Map();
   chunks.set(0, rootChunk);
-
-  let response: OpaqueResponse = (({
-    source,
+  let response = {
     partialRow: '',
     modelRoot,
     chunks: chunks,
-    fromJSON: function(key, value) {
-      return parseFromJSON(response, this, key, value);
-    },
-  }: OpaqueResponseWithoutDecoder): any);
-  if (supportsBinaryStreams) {
-    response.stringDecoder = createStringDecoder();
-  }
+  };
   return response;
 }
 
@@ -138,10 +118,7 @@ function resolveChunk(chunk: Chunk, value: mixed): void {
 
 // Report that any missing chunks in the model is now going to throw this
 // error upon read. Also notify any pending promises.
-export function reportGlobalError(
-  response: OpaqueResponse,
-  error: Error,
-): void {
+export function reportGlobalError(response: Response, error: Error): void {
   response.chunks.forEach(chunk => {
     // If this chunk was already resolved or errored, it won't
     // trigger an error but if it wasn't then we need to
@@ -168,39 +145,91 @@ function definePendingProperty(
   });
 }
 
-function parseFromJSON(
-  response: OpaqueResponse,
+function createElement(type, key, props): React$Element<any> {
+  const element: any = {
+    // This tag allows us to uniquely identify this as a React Element
+    $$typeof: REACT_ELEMENT_TYPE,
+
+    // Built-in properties that belong on the element
+    type: type,
+    key: key,
+    ref: null,
+    props: props,
+
+    // Record the component responsible for creating this element.
+    _owner: null,
+  };
+  if (__DEV__) {
+    // We don't really need to add any of these but keeping them for good measure.
+    // Unfortunately, _store is enumerable in jest matchers so for equality to
+    // work, I need to keep it or make _store non-enumerable in the other file.
+    element._store = {};
+    Object.defineProperty(element._store, 'validated', {
+      configurable: false,
+      enumerable: false,
+      writable: true,
+      value: true, // This element has already been validated on the server.
+    });
+    Object.defineProperty(element, '_self', {
+      configurable: false,
+      enumerable: false,
+      writable: false,
+      value: null,
+    });
+    Object.defineProperty(element, '_source', {
+      configurable: false,
+      enumerable: false,
+      writable: false,
+      value: null,
+    });
+  }
+  return element;
+}
+
+export function parseModelFromJSON(
+  response: Response,
   targetObj: Object,
   key: string,
   value: JSONValue,
-): any {
-  if (typeof value === 'string' && value[0] === '$') {
-    if (value[1] === '$') {
-      // This was an escaped string value.
-      return value.substring(1);
-    } else {
-      let id = parseInt(value.substring(1), 16);
-      let chunks = response.chunks;
-      let chunk = chunks.get(id);
-      if (!chunk) {
-        chunk = createPendingChunk();
-        chunks.set(id, chunk);
-      } else if (chunk.status === RESOLVED) {
-        return chunk.value;
+): mixed {
+  if (typeof value === 'string') {
+    if (value[0] === '$') {
+      if (value === '$') {
+        return REACT_ELEMENT_TYPE;
+      } else if (value[1] === '$' || value[1] === '@') {
+        // This was an escaped string value.
+        return value.substring(1);
+      } else {
+        let id = parseInt(value.substring(1), 16);
+        let chunks = response.chunks;
+        let chunk = chunks.get(id);
+        if (!chunk) {
+          chunk = createPendingChunk();
+          chunks.set(id, chunk);
+        } else if (chunk.status === RESOLVED) {
+          return chunk.value;
+        }
+        definePendingProperty(targetObj, key, chunk);
+        return undefined;
       }
-      definePendingProperty(targetObj, key, chunk);
-      return undefined;
+    }
+  }
+  if (isArray(value)) {
+    let tuple: [mixed, mixed, mixed, mixed] = (value: any);
+    if (tuple[0] === REACT_ELEMENT_TYPE) {
+      // TODO: Consider having React just directly accept these arrays as elements.
+      // Or even change the ReactElement type to be an array.
+      return createElement(tuple[1], tuple[2], tuple[3]);
     }
   }
   return value;
 }
 
-function resolveJSONRow(
-  response: OpaqueResponse,
+export function resolveModelChunk<T>(
+  response: Response,
   id: number,
-  json: string,
+  model: T,
 ): void {
-  let model = JSON.parse(json, response.fromJSON);
   let chunks = response.chunks;
   let chunk = chunks.get(id);
   if (!chunk) {
@@ -210,81 +239,24 @@ function resolveJSONRow(
   }
 }
 
-function processFullRow(response: OpaqueResponse, row: string): void {
-  if (row === '') {
-    return;
-  }
-  let tag = row[0];
-  switch (tag) {
-    case 'J': {
-      let colon = row.indexOf(':', 1);
-      let id = parseInt(row.substring(1, colon), 16);
-      let json = row.substring(colon + 1);
-      resolveJSONRow(response, id, json);
-      return;
-    }
-    case 'E': {
-      let colon = row.indexOf(':', 1);
-      let id = parseInt(row.substring(1, colon), 16);
-      let json = row.substring(colon + 1);
-      let errorInfo = JSON.parse(json);
-      let error = new Error(errorInfo.message);
-      error.stack = errorInfo.stack;
-      let chunks = response.chunks;
-      let chunk = chunks.get(id);
-      if (!chunk) {
-        chunks.set(id, createErrorChunk(error));
-      } else {
-        triggerErrorOnChunk(chunk, error);
-      }
-      return;
-    }
-    default: {
-      // Assume this is the root model.
-      resolveJSONRow(response, 0, row);
-      return;
-    }
-  }
-}
-
-export function processStringChunk(
-  response: OpaqueResponse,
-  chunk: string,
-  offset: number,
+export function resolveErrorChunk(
+  response: Response,
+  id: number,
+  message: string,
+  stack: string,
 ): void {
-  let linebreak = chunk.indexOf('\n', offset);
-  while (linebreak > -1) {
-    let fullrow = response.partialRow + chunk.substring(offset, linebreak);
-    processFullRow(response, fullrow);
-    response.partialRow = '';
-    offset = linebreak + 1;
-    linebreak = chunk.indexOf('\n', offset);
+  let error = new Error(message);
+  error.stack = stack;
+  let chunks = response.chunks;
+  let chunk = chunks.get(id);
+  if (!chunk) {
+    chunks.set(id, createErrorChunk(error));
+  } else {
+    triggerErrorOnChunk(chunk, error);
   }
-  response.partialRow += chunk.substring(offset);
 }
 
-export function processBinaryChunk(
-  response: OpaqueResponse,
-  chunk: Uint8Array,
-): void {
-  if (!supportsBinaryStreams) {
-    throw new Error("This environment don't support binary chunks.");
-  }
-  let stringDecoder = response.stringDecoder;
-  let linebreak = chunk.indexOf(10); // newline
-  while (linebreak > -1) {
-    let fullrow =
-      response.partialRow +
-      readFinalStringChunk(stringDecoder, chunk.subarray(0, linebreak));
-    processFullRow(response, fullrow);
-    response.partialRow = '';
-    chunk = chunk.subarray(linebreak + 1);
-    linebreak = chunk.indexOf(10); // newline
-  }
-  response.partialRow += readPartialStringChunk(stringDecoder, chunk);
-}
-
-export function complete(response: OpaqueResponse): void {
+export function close(response: Response): void {
   // In case there are any remaining unresolved chunks, they won't
   // be resolved now. So we need to issue an error to those.
   // Ideally we should be able to early bail out if we kept a
@@ -292,6 +264,6 @@ export function complete(response: OpaqueResponse): void {
   reportGlobalError(response, new Error('Connection closed.'));
 }
 
-export function getModelRoot<T>(response: OpaqueResponse): ReactModelRoot<T> {
+export function getModelRoot<T>(response: Response): ReactModelRoot<T> {
   return response.modelRoot;
 }

@@ -1,7 +1,7 @@
 import React, {Suspense} from 'react';
 
 function Content({data}) {
-  return <p dangerouslySetInnerHTML={data.model.content} />;
+  return data.model.content;
 }
 
 function App({data}) {

@@ -29,6 +29,7 @@
 ../environment.js
 ../react-devtools.js
 ../react-native-host-hooks.js
+../react-relay-hooks.js
 
 [lints]
 untyped-type-import=error

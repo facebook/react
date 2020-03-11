@@ -20,6 +20,8 @@ import type {
   ReactEventResponderListener,
 } from 'shared/ReactTypes';
 import type {SuspenseConfig} from 'react-reconciler/src/ReactFiberSuspenseConfig';
+import type {ReactDOMListenerMap} from 'shared/ReactDOMTypes';
+
 import {validateContextBounds} from './ReactPartialRendererContext';
 
 import invariant from 'shared/invariant';
@@ -489,6 +491,13 @@ function useTransition(
   return [startTransition, false];
 }
 
+function useEvent(event: any): ReactDOMListenerMap {
+  return {
+    clear: noop,
+    setListener: noop,
+  };
+}
+
 function noop(): void {}
 
 export let currentThreadID: ThreadID = 0;
@@ -515,6 +524,7 @@ export const Dispatcher: DispatcherType = {
   useResponder,
   useDeferredValue,
   useTransition,
+  useEvent,
   // Subscriptions are not setup in a server environment.
   useMutableSource,
 };

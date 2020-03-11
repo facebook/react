@@ -16,7 +16,6 @@ import type {Fiber} from 'react-reconciler/src/ReactFiber';
 import type {PluginModule} from 'legacy-events/PluginModuleType';
 import type {EventSystemFlags} from 'legacy-events/EventSystemFlags';
 
-import {accumulateTwoPhaseDispatchesSingle} from 'legacy-events/EventPropagators';
 import SyntheticEvent from 'legacy-events/SyntheticEvent';
 
 import * as DOMTopLevelEventTypes from './DOMTopLevelEventTypes';
@@ -37,6 +36,7 @@ import SyntheticTransitionEvent from './SyntheticTransitionEvent';
 import SyntheticUIEvent from './SyntheticUIEvent';
 import SyntheticWheelEvent from './SyntheticWheelEvent';
 import getEventCharCode from './getEventCharCode';
+import {accumulateTwoPhaseListeners} from './DOMModernPluginEventSystem';
 
 // Only used in DEV for exhaustiveness validation.
 const knownHTMLTopLevelTypes: Array<DOMTopLevelEventType> = [
@@ -191,7 +191,7 @@ const SimpleEventPlugin: PluginModule<MouseEvent> = {
       nativeEvent,
       nativeEventTarget,
     );
-    accumulateTwoPhaseDispatchesSingle(event);
+    accumulateTwoPhaseListeners(event);
     return event;
   },
 };

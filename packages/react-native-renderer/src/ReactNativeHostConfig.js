@@ -26,6 +26,10 @@ import ReactNativeFiberHostComponent from './ReactNativeFiberHostComponent';
 
 const {get: getViewConfigForType} = ReactNativeViewConfigRegistry;
 
+export type ReactListenerEvent = Object;
+export type ReactListenerMap = Object;
+export type ReactListener = Object;
+
 export type Type = string;
 export type Props = Object;
 export type Container = number;

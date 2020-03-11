@@ -21,8 +21,13 @@ import type {HookEffectTag} from './ReactHookEffectTags';
 import type {SuspenseConfig} from './ReactFiberSuspenseConfig';
 import type {ReactPriorityLevel} from './SchedulerWithReactIntegration';
 import type {FiberRoot} from './ReactFiberRoot';
+import type {
+  ReactListenerEvent,
+  ReactListenerMap,
+} from './ReactFiberHostConfig';
 
 import ReactSharedInternals from 'shared/ReactSharedInternals';
+import {enableUseEventAPI} from 'shared/ReactFeatureFlags';
 
 import {NoWork, Sync} from './ReactFiberExpirationTime';
 import {readContext} from './ReactFiberNewContext';
@@ -32,6 +37,7 @@ import {
   Passive as PassiveEffect,
 } from 'shared/ReactSideEffectTags';
 import {
+  NoEffect as NoHookEffect,
   HasEffect as HookHasEffect,
   Layout as HookLayout,
   Passive as HookPassive,
@@ -115,6 +121,7 @@ export type Dispatcher = {|
     getSnapshot: MutableSourceGetSnapshotFn<Source, Snapshot>,
     subscribe: MutableSourceSubscribeFn<Source, Snapshot>,
   ): Snapshot,
+  useEvent(event: ReactListenerEvent): ReactListenerMap,
 |};
 
 type Update<S, A> = {|
@@ -148,7 +155,8 @@ export type HookType =
   | 'useResponder'
   | 'useDeferredValue'
   | 'useTransition'
-  | 'useMutableSource';
+  | 'useMutableSource'
+  | 'useEvent';
 
 let didWarnAboutMismatchedHooksForComponent;
 if (__DEV__) {
@@ -701,6 +709,16 @@ function updateReducer<S, I, A>(
       let pendingFirst = pendingQueue.next;
       baseQueue.next = pendingFirst;
       pendingQueue.next = baseFirst;
+    }
+    if (__DEV__) {
+      if (current.baseQueue !== baseQueue) {
+        // Internal invariant that should never happen, but feasibly could in
+        // the future if we implement resuming, or some form of that.
+        console.error(
+          'Internal error: Expected work-in-progress queue to be a clone. ' +
+            'This is a bug in React.',
+        );
+      }
     }
     current.baseQueue = baseQueue = pendingQueue;
     queue.pending = null;
@@ -1607,6 +1625,77 @@ function dispatchAction<S, A>(
   }
 }
 
+const noOpMount = () => {};
+
+function mountEventListener(event: ReactListenerEvent): ReactListenerMap {
+  if (enableUseEventAPI) {
+    const hook = mountWorkInProgressHook();
+
+    const clear = () => {
+      // TODO
+    };
+
+    const reactListenerMap: ReactListenerMap = {
+      clear,
+      setListener(instance: EventTarget, callback: ?(Event) => void): void {
+        // TODO
+      },
+    };
+    // In order to clear up upon the hook unmounting,
+    // we ensure we set the effecrt tag so that we visit
+    // this effect in the commit phase, so we can handle
+    // clean-up accordingly.
+    currentlyRenderingFiber.effectTag |= UpdateEffect;
+    pushEffect(NoHookEffect, noOpMount, clear, null);
+    hook.memoizedState = [reactListenerMap, event, clear];
+    return reactListenerMap;
+  }
+  // To make Flow not complain
+  return (undefined: any);
+}
+
+function updateEventListener(event: ReactListenerEvent): ReactListenerMap {
+  if (enableUseEventAPI) {
+    const hook = updateWorkInProgressHook();
+    const [reactListenerMap, memoizedEvent, clear] = hook.memoizedState;
+    if (__DEV__) {
+      if (memoizedEvent.type !== event.type) {
+        console.warn(
+          'The event type argument passed to the useEvent() hook was different between renders.' +
+            ' The event type is static and should never change between renders.',
+        );
+      }
+      if (memoizedEvent.capture !== event.capture) {
+        console.warn(
+          'The "capture" option passed to the useEvent() hook was different between renders.' +
+            ' The "capture" option is static and should never change between renders.',
+        );
+      }
+      if (memoizedEvent.priority !== event.priority) {
+        console.warn(
+          'The "priority" option passed to the useEvent() hook was different between renders.' +
+            ' The "priority" option is static and should never change between renders.',
+        );
+      }
+      if (memoizedEvent.passive !== event.passive) {
+        console.warn(
+          'The "passive" option passed to the useEvent() hook was different between renders.' +
+            ' The "passive" option is static and should never change between renders.',
+        );
+      }
+    }
+    // In order to clear up upon the hook unmounting,
+    // we ensure we set the effecrt tag so that we visit
+    // this effect in the commit phase, so we can handle
+    // clean-up accordingly.
+    currentlyRenderingFiber.effectTag |= UpdateEffect;
+    pushEffect(NoHookEffect, noOpMount, clear, null);
+    return reactListenerMap;
+  }
+  // To make Flow not complain
+  return (undefined: any);
+}
+
 export const ContextOnlyDispatcher: Dispatcher = {
   readContext,
 
@@ -1624,6 +1713,7 @@ export const ContextOnlyDispatcher: Dispatcher = {
   useDeferredValue: throwInvalidHookError,
   useTransition: throwInvalidHookError,
   useMutableSource: throwInvalidHookError,
+  useEvent: throwInvalidHookError,
 };
 
 const HooksDispatcherOnMount: Dispatcher = {
@@ -1643,6 +1733,7 @@ const HooksDispatcherOnMount: Dispatcher = {
   useDeferredValue: mountDeferredValue,
   useTransition: mountTransition,
   useMutableSource: mountMutableSource,
+  useEvent: mountEventListener,
 };
 
 const HooksDispatcherOnUpdate: Dispatcher = {
@@ -1662,6 +1753,7 @@ const HooksDispatcherOnUpdate: Dispatcher = {
   useDeferredValue: updateDeferredValue,
   useTransition: updateTransition,
   useMutableSource: updateMutableSource,
+  useEvent: updateEventListener,
 };
 
 const HooksDispatcherOnRerender: Dispatcher = {
@@ -1681,6 +1773,7 @@ const HooksDispatcherOnRerender: Dispatcher = {
   useDeferredValue: rerenderDeferredValue,
   useTransition: rerenderTransition,
   useMutableSource: updateMutableSource,
+  useEvent: updateEventListener,
 };
 
 let HooksDispatcherOnMountInDEV: Dispatcher | null = null;
@@ -1839,6 +1932,11 @@ if (__DEV__) {
       mountHookTypesDev();
       return mountMutableSource(source, getSnapshot, subscribe);
     },
+    useEvent(event: ReactListenerEvent): ReactListenerMap {
+      currentHookNameInDev = 'useEvent';
+      mountHookTypesDev();
+      return mountEventListener(event);
+    },
   };
 
   HooksDispatcherOnMountWithHookTypesInDEV = {
@@ -1964,6 +2062,11 @@ if (__DEV__) {
       currentHookNameInDev = 'useMutableSource';
       updateHookTypesDev();
       return mountMutableSource(source, getSnapshot, subscribe);
+    },
+    useEvent(event: ReactListenerEvent): ReactListenerMap {
+      currentHookNameInDev = 'useEvent';
+      updateHookTypesDev();
+      return mountEventListener(event);
     },
   };
 
@@ -2091,6 +2194,11 @@ if (__DEV__) {
       updateHookTypesDev();
       return updateMutableSource(source, getSnapshot, subscribe);
     },
+    useEvent(event: ReactListenerEvent): ReactListenerMap {
+      currentHookNameInDev = 'useEvent';
+      updateHookTypesDev();
+      return updateEventListener(event);
+    },
   };
 
   HooksDispatcherOnRerenderInDEV = {
@@ -2216,6 +2324,11 @@ if (__DEV__) {
       currentHookNameInDev = 'useMutableSource';
       updateHookTypesDev();
       return updateMutableSource(source, getSnapshot, subscribe);
+    },
+    useEvent(event: ReactListenerEvent): ReactListenerMap {
+      currentHookNameInDev = 'useEvent';
+      updateHookTypesDev();
+      return updateEventListener(event);
     },
   };
 
@@ -2358,6 +2471,12 @@ if (__DEV__) {
       mountHookTypesDev();
       return mountMutableSource(source, getSnapshot, subscribe);
     },
+    useEvent(event: ReactListenerEvent): ReactListenerMap {
+      currentHookNameInDev = 'useEvent';
+      warnInvalidHookAccess();
+      mountHookTypesDev();
+      return mountEventListener(event);
+    },
   };
 
   InvalidNestedHooksDispatcherOnUpdateInDEV = {
@@ -2499,6 +2618,12 @@ if (__DEV__) {
       updateHookTypesDev();
       return updateMutableSource(source, getSnapshot, subscribe);
     },
+    useEvent(event: ReactListenerEvent): ReactListenerMap {
+      currentHookNameInDev = 'useEvent';
+      warnInvalidHookAccess();
+      updateHookTypesDev();
+      return updateEventListener(event);
+    },
   };
 
   InvalidNestedHooksDispatcherOnRerenderInDEV = {
@@ -2639,6 +2764,12 @@ if (__DEV__) {
       warnInvalidHookAccess();
       updateHookTypesDev();
       return updateMutableSource(source, getSnapshot, subscribe);
+    },
+    useEvent(event: ReactListenerEvent): ReactListenerMap {
+      currentHookNameInDev = 'useEvent';
+      warnInvalidHookAccess();
+      updateHookTypesDev();
+      return updateEventListener(event);
     },
   };
 }

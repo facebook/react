@@ -984,11 +984,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
 
       function logUpdateQueue(updateQueue: UpdateQueue<mixed>, depth) {
         log('  '.repeat(depth + 1) + 'QUEUED UPDATES');
-        const last = updateQueue.baseQueue;
-        if (last === null) {
-          return;
-        }
-        const first = last.next;
+        const first = updateQueue.firstBaseUpdate;
         let update = first;
         if (update !== null) {
           do {
@@ -996,7 +992,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
               '  '.repeat(depth + 1) + '~',
               '[' + update.expirationTime + ']',
             );
-          } while (update !== null && update !== first);
+          } while (update !== null);
         }
 
         const lastPending = updateQueue.shared.pending;

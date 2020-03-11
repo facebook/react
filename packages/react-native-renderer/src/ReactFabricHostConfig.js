@@ -76,6 +76,10 @@ export type UpdatePayload = Object;
 export type TimeoutHandle = TimeoutID;
 export type NoTimeout = -1;
 
+export type ReactListenerEvent = Object;
+export type ReactListenerMap = Object;
+export type ReactListener = Object;
+
 // TODO: Remove this conditional once all changes have propagated.
 if (registerEventHandler) {
   /**
