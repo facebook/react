@@ -18,7 +18,6 @@ import type {
 } from 'react-native-renderer/src/ReactNativeTypes';
 import type {RNTopLevelEventType} from 'legacy-events/TopLevelEventTypes';
 import type {CapturedError} from 'react-reconciler/src/ReactCapturedValue';
-import type {Fiber} from 'react-reconciler/src/ReactFiber';
 
 type DeepDifferOptions = {|+unsafelyIgnoreFunctions?: boolean|};
 
@@ -97,17 +96,6 @@ declare module 'react-native/Libraries/ReactPrivate/ReactNativePrivateInterface'
     ) => Promise<any>,
     setJSResponder: (reactTag: number, blockNativeResponder: boolean) => void,
     clearJSResponder: () => void,
-    findSubviewIn: (
-      reactTag: ?number,
-      point: Array<number>,
-      callback: (
-        nativeViewTag: number,
-        left: number,
-        top: number,
-        width: number,
-        height: number,
-      ) => void,
-    ) => void,
     ...
   };
   declare export var BatchedBridge: {
@@ -167,12 +155,6 @@ declare var nativeFabricUIManager: {
     relativeNode: Node,
     onFail: () => void,
     onSuccess: MeasureLayoutOnSuccessCallback,
-  ) => void,
-  findNodeAtPoint: (
-    node: Node,
-    locationX: number,
-    locationY: number,
-    callback: (Fiber) => void,
   ) => void,
   ...
 };

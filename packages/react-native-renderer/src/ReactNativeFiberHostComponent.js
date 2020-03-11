@@ -34,17 +34,11 @@ class ReactNativeFiberHostComponent {
   _children: Array<Instance | number>;
   _nativeTag: number;
   viewConfig: ReactNativeBaseComponentViewConfig<>;
-  _internalFiberInstanceHandle: Object;
 
-  constructor(
-    tag: number,
-    viewConfig: ReactNativeBaseComponentViewConfig<>,
-    internalInstanceHandle: Object,
-  ) {
+  constructor(tag: number, viewConfig: ReactNativeBaseComponentViewConfig<>) {
     this._nativeTag = tag;
     this._children = [];
     this.viewConfig = viewConfig;
-    this._internalFiberInstanceHandle = internalInstanceHandle;
   }
 
   blur() {

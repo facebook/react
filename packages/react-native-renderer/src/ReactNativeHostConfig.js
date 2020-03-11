@@ -112,11 +112,7 @@ export function createInstance(
     updatePayload, // props
   );
 
-  const component = new ReactNativeFiberHostComponent(
-    tag,
-    viewConfig,
-    internalInstanceHandle,
-  );
+  const component = new ReactNativeFiberHostComponent(tag, viewConfig);
 
   precacheFiberNode(internalInstanceHandle, tag);
   updateFiberProps(tag, props);
