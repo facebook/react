@@ -130,7 +130,7 @@ export function addResponderEventSystemEvent(
 }
 
 export function addTrappedEventListener(
-  container: Document | Element,
+  targetContainer: EventTarget,
   topLevelType: DOMTopLevelEventType,
   capture: boolean,
   legacyFBSupport?: boolean,
@@ -153,7 +153,7 @@ export function addTrappedEventListener(
     null,
     topLevelType,
     PLUGIN_EVENT_SYSTEM,
-    container,
+    targetContainer,
   );
 
   const rawEventName = getRawEventName(topLevelType);
@@ -179,7 +179,7 @@ export function addTrappedEventListener(
         if (fbListener) {
           fbListener.remove();
         } else {
-          container.removeEventListener(
+          targetContainer.removeEventListener(
             ((rawEventName: any): string),
             (listener: any),
           );
@@ -188,9 +188,17 @@ export function addTrappedEventListener(
     };
   }
   if (capture) {
-    fbListener = addEventCaptureListener(container, rawEventName, listener);
+    fbListener = addEventCaptureListener(
+      targetContainer,
+      rawEventName,
+      listener,
+    );
   } else {
-    fbListener = addEventBubbleListener(container, rawEventName, listener);
+    fbListener = addEventBubbleListener(
+      targetContainer,
+      rawEventName,
+      listener,
+    );
   }
   // If we have an fbListener, then use that.
   // We'll only have one if we use the forked
@@ -199,7 +207,7 @@ export function addTrappedEventListener(
 }
 
 export function removeTrappedPassiveEventListener(
-  document: Document,
+  targetContainer: EventTarget,
   topLevelType: string,
   listener: any => void,
 ) {
@@ -207,12 +215,12 @@ export function removeTrappedPassiveEventListener(
     listener.remove();
   } else {
     if (passiveBrowserEventsSupported) {
-      document.removeEventListener(topLevelType, listener, {
+      targetContainer.removeEventListener(topLevelType, listener, {
         capture: true,
         passive: true,
       });
     } else {
-      document.removeEventListener(topLevelType, listener, true);
+      targetContainer.removeEventListener(topLevelType, listener, true);
     }
   }
 }
@@ -254,7 +262,7 @@ function dispatchUserBlockingUpdate(
 export function dispatchEvent(
   topLevelType: DOMTopLevelEventType,
   eventSystemFlags: EventSystemFlags,
-  container: Document | Element,
+  container: EventTarget,
   nativeEvent: AnyNativeEvent,
 ): void {
   if (!_enabled) {
@@ -370,7 +378,7 @@ export function dispatchEvent(
 export function attemptToDispatchEvent(
   topLevelType: DOMTopLevelEventType,
   eventSystemFlags: EventSystemFlags,
-  container: Document | Element,
+  container: EventTarget,
   nativeEvent: AnyNativeEvent,
 ): null | Container | SuspenseInstance {
   // TODO: Warn if _enabled is false.

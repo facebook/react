@@ -108,7 +108,7 @@ function dispatchEventsForPlugins(
   eventSystemFlags: EventSystemFlags,
   nativeEvent: AnyNativeEvent,
   targetInst: null | Fiber,
-  rootContainer: Element | Document,
+  rootContainer: EventTarget,
 ): void {
   const nativeEventTarget = getEventTarget(nativeEvent);
   const syntheticEvents: Array<ReactSyntheticEvent> = [];
@@ -209,7 +209,7 @@ function willDeferLaterForFBLegacyPrimer(nativeEvent: any): boolean {
 
 function isMatchingRootContainer(
   grandContainer: Element,
-  rootContainer: Document | Element,
+  rootContainer: EventTarget,
 ): boolean {
   return (
     grandContainer === rootContainer ||
@@ -223,10 +223,19 @@ export function dispatchEventForPluginEventSystem(
   eventSystemFlags: EventSystemFlags,
   nativeEvent: AnyNativeEvent,
   targetInst: null | Fiber,
-  rootContainer: Document | Element,
+  rootContainer: EventTarget,
 ): void {
   let ancestorInst = targetInst;
-  if (rootContainer.nodeType !== DOCUMENT_NODE) {
+  // Given the rootContainer can be any EventTarget, if the
+  // target is that of a DOM node (other than the document)
+  // then we'll attempt to find the correct ancestor root.
+  // Note: the rootContainer can be other things like
+  // "window" or other valid EventTarget objects.
+  const possibleContainerNodeType = ((rootContainer: any): Node).nodeType;
+  if (
+    possibleContainerNodeType !== undefined &&
+    possibleContainerNodeType !== DOCUMENT_NODE
+  ) {
     // If we detect the FB legacy primer system, we
     // defer the event to the "document" with a one
     // time event listener so we can defer the event.

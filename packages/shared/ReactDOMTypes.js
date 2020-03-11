@@ -85,13 +85,12 @@ export type ReactDOMListenerEvent = {|
 
 export type ReactDOMListenerMap = {|
   clear: () => void,
-  setListener: (instance: EventTarget, callback: ?(Event) => void) => void,
+  setListener: (target: EventTarget, callback: ?(Event) => void) => void,
 |};
 
 export type ReactDOMListener = {|
   callback: Event => void,
-  depth: number,
-  destroy: Document | (Element => void),
+  destroy: Node => void,
   event: ReactDOMListenerEvent,
-  instance: EventTarget,
+  target: EventTarget,
 |};

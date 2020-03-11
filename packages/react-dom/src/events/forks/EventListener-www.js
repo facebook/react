@@ -13,29 +13,43 @@ import typeof * as EventListenerType from '../EventListener';
 import typeof * as EventListenerShimType from './EventListener-www';
 
 export function addEventBubbleListener(
-  element: Element,
+  target: EventTarget,
   eventType: string,
   listener: Function,
 ) {
-  return EventListenerWWW.listen(element, eventType, listener);
+  return EventListenerWWW.listen(target, eventType, listener);
 }
 
 export function addEventCaptureListener(
-  element: Element,
+  target: EventTarget,
   eventType: string,
   listener: Function,
 ) {
-  return EventListenerWWW.capture(element, eventType, listener);
+  return EventListenerWWW.capture(target, eventType, listener);
 }
 
 export function addEventCaptureListenerWithPassiveFlag(
-  element: Element,
+  target: EventTarget,
   eventType: string,
   listener: Function,
   passive: boolean,
 ) {
   return EventListenerWWW.captureWithPassiveFlag(
-    element,
+    target,
+    eventType,
+    listener,
+    passive,
+  );
+}
+
+export function addEventBubbleListenerWithPassiveFlag(
+  target: EventTarget,
+  eventType: string,
+  listener: Function,
+  passive: boolean,
+) {
+  return EventListenerWWW.bubbleWithPassiveFlag(
+    target,
     eventType,
     listener,
     passive,

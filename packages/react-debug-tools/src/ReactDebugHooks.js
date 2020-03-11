@@ -44,7 +44,7 @@ type HookLogEntry = {
 
 type ReactDebugListenerMap = {|
   clear: () => void,
-  setListener: (instance: EventTarget, callback: ?(Event) => void) => void,
+  setListener: (target: EventTarget, callback: ?(Event) => void) => void,
 |};
 
 let hookLog: Array<HookLogEntry> = [];
