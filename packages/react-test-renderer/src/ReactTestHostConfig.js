@@ -379,3 +379,15 @@ export function getInstanceFromNode(mockNode: Object) {
 export function beforeRemoveInstance(instance: any) {
   // noop
 }
+
+export function mountEventListener(listener: any) {
+  throw new Error('Not yet implemented.');
+}
+
+export function unmountEventListener(listener: any) {
+  throw new Error('Not yet implemented.');
+}
+
+export function validateEventListenerTarget(target: any, listener: any) {
+  throw new Error('Not yet implemented.');
+}

@@ -16,18 +16,15 @@ const PossiblyWeakMap = typeof WeakMap === 'function' ? WeakMap : Map;
 const elementListenerMap:
   // $FlowFixMe Work around Flow bug
   | WeakMap
-  | Map<
-      Document | Element | Node,
-      Map<DOMTopLevelEventType | string, null | (any => void)>,
-    > = new PossiblyWeakMap();
+  | Map<EventTarget, Map<DOMTopLevelEventType | string, null | (any => void)>> = new PossiblyWeakMap();
 
 export function getListenerMapForElement(
-  element: Document | Element | Node,
+  target: EventTarget,
 ): Map<DOMTopLevelEventType | string, null | (any => void)> {
-  let listenerMap = elementListenerMap.get(element);
+  let listenerMap = elementListenerMap.get(target);
   if (listenerMap === undefined) {
     listenerMap = new Map();
-    elementListenerMap.set(element, listenerMap);
+    elementListenerMap.set(target, listenerMap);
   }
   return listenerMap;
 }

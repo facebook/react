@@ -469,3 +469,15 @@ export function getInstanceFromNode(node) {
 export function beforeRemoveInstance(instance) {
   // noop
 }
+
+export function mountEventListener(listener: any) {
+  throw new Error('Not yet implemented.');
+}
+
+export function unmountEventListener(listener: any) {
+  throw new Error('Not yet implemented.');
+}
+
+export function validateEventListenerTarget(target: any, listener: any) {
+  throw new Error('Not yet implemented.');
+}
