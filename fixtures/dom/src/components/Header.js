@@ -73,6 +73,7 @@ class Header extends React.Component {
                 <option value="/password-inputs">Password Input</option>
                 <option value="/selects">Selects</option>
                 <option value="/textareas">Textareas</option>
+                <option value="/progress">Progress</option>
                 <option value="/input-change-events">
                   Input change events
                 </option>
