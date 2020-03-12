@@ -52,6 +52,8 @@ export const enableLegacyFBPrimerSupport = false;
 // Internal-only attempt to debug a React Native issue. See D20130868.
 export const throwEarlyForMysteriousError = true;
 
+export const enableNewReconciler = false;
+
 // Only used in www builds.
 export function addUserTimingListener() {
   invariant(false, 'Not implemented.');

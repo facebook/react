@@ -109,6 +109,11 @@ export const enableLegacyFBPrimerSupport = !__EXPERIMENTAL__;
 // Internal-only attempt to debug a React Native issue. See D20130868.
 export const throwEarlyForMysteriousError = false;
 
+// Enable forked reconciler. Piggy-backing on the "variant" global so that we
+// don't have to add another test dimension. The build system will compile this
+// to the correct value.
+export const enableNewReconciler = __VARIANT__;
+
 // Flow magic to verify the exports of this file match the original version.
 // eslint-disable-next-line no-unused-vars
 type Check<_X, Y: _X, X: Y = _X> = null;

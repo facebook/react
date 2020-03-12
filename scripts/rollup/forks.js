@@ -246,6 +246,27 @@ const forks = Object.freeze({
     }
   },
 
+  'react-reconciler/src/ReactFiberReconciler': (
+    bundleType,
+    entry,
+    dependencies,
+    moduleType,
+    bundle
+  ) => {
+    if (bundle.enableNewReconciler) {
+      switch (bundleType) {
+        case FB_WWW_DEV:
+        case FB_WWW_PROD:
+        case FB_WWW_PROFILING:
+          // Use the forked version of the reconciler
+          // TODO: Update this to point to the new module, once it exists
+          return 'react-reconciler/src/ReactFiberReconciler.old.js';
+      }
+    }
+    // Otherwise, use the non-forked version.
+    return 'react-reconciler/src/ReactFiberReconciler.old.js';
+  },
+
   // Different dialogs for caught errors.
   'react-reconciler/src/ReactFiberErrorDialog': (bundleType, entry) => {
     switch (bundleType) {
