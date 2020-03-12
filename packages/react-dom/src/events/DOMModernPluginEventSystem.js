@@ -59,8 +59,16 @@ import {
   TOP_PROGRESS,
   TOP_PLAYING,
 } from './DOMTopLevelEventTypes';
-import {getClosestInstanceFromNode} from '../client/ReactDOMComponentTree';
-import {DOCUMENT_NODE, COMMENT_NODE} from '../shared/HTMLNodeType';
+import {
+  getClosestInstanceFromNode,
+  getListenersFromTarget,
+  initListenersSet,
+} from '../client/ReactDOMComponentTree';
+import {
+  DOCUMENT_NODE,
+  COMMENT_NODE,
+  ELEMENT_NODE,
+} from '../shared/HTMLNodeType';
 
 import {enableLegacyFBPrimerSupport} from 'shared/ReactFeatureFlags';
 
@@ -145,13 +153,20 @@ function dispatchEventsForPlugins(
 
 export function listenToTopLevelEvent(
   topLevelType: DOMTopLevelEventType,
-  rootContainerElement: Element,
+  targetContainer: EventTarget,
   listenerMap: Map<DOMTopLevelEventType | string, null | (any => void)>,
+  passive?: boolean,
 ): void {
   if (!listenerMap.has(topLevelType)) {
     const isCapturePhase = capturePhaseEvents.has(topLevelType);
-    addTrappedEventListener(rootContainerElement, topLevelType, isCapturePhase);
-    listenerMap.set(topLevelType, null);
+    const listener = addTrappedEventListener(
+      targetContainer,
+      topLevelType,
+      isCapturePhase,
+      false,
+      passive,
+    );
+    listenerMap.set(topLevelType, listener);
   }
 }
 
@@ -217,6 +232,16 @@ function isMatchingRootContainer(
   );
 }
 
+export function isDOMElement(target: EventTarget): boolean {
+  const nodeType = ((target: any): Node).nodeType;
+  return nodeType != null && nodeType === ELEMENT_NODE;
+}
+
+export function isDOMDocument(target: EventTarget): boolean {
+  const nodeType = ((target: any): Node).nodeType;
+  return nodeType === DOCUMENT_NODE;
+}
+
 export function dispatchEventForPluginEventSystem(
   topLevelType: DOMTopLevelEventType,
   eventSystemFlags: EventSystemFlags,
@@ -226,15 +251,8 @@ export function dispatchEventForPluginEventSystem(
 ): void {
   let ancestorInst = targetInst;
   // Given the rootContainer can be any EventTarget, if the
-  // target is that of a DOM node (other than the document)
-  // then we'll attempt to find the correct ancestor root.
-  // Note: the rootContainer can be other things like
-  // "window" or other valid EventTarget objects.
-  const possibleContainerNodeType = ((rootContainer: any): Node).nodeType;
-  if (
-    possibleContainerNodeType !== undefined &&
-    possibleContainerNodeType !== DOCUMENT_NODE
-  ) {
+  // target is not a valid DOM element then we'll skip this part.
+  if (isDOMElement(rootContainer)) {
     // If we detect the FB legacy primer system, we
     // defer the event to the "document" with a one
     // time event listener so we can defer the event.
@@ -307,10 +325,60 @@ export function dispatchEventForPluginEventSystem(
   );
 }
 
+function getNearestRootOrPortalContainer(instance: Element): Element {
+  let node = getClosestInstanceFromNode(instance);
+  while (node !== null) {
+    const tag = node.tag;
+    // Once we encounter a host container or root container
+    // we can return their DOM instance.
+    if (tag === HostRoot || tag === HostPortal) {
+      return node.stateNode.containerInfo;
+    }
+    node = node.return;
+  }
+  return instance;
+}
+
 export function attachElementListener(listener: ReactDOMListener): void {
-  // TODO
+  const {event, target} = listener;
+  const {passive, type} = event;
+  let containerEventTarget = target;
+  // If we the target is a managed React element, then we need to
+  // find the nearest root/portal contained to attach the event listener
+  // to. If it's not managed, i.e. the window, then we just attach
+  // the listener to the target.
+  const possibleManagedTarget = ((target: any): Element);
+  if (getClosestInstanceFromNode(possibleManagedTarget)) {
+    containerEventTarget = getNearestRootOrPortalContainer(
+      possibleManagedTarget,
+    );
+  }
+  const listenerMap = getListenerMapForElement(containerEventTarget);
+  // Add the event listener to the target container (falling back to
+  // the target if we didn't find one).
+  listenToTopLevelEvent(
+    ((type: any): DOMTopLevelEventType),
+    containerEventTarget,
+    listenerMap,
+    passive,
+  );
+  // Get the internal listeners Set from the target instance.
+  let listeners = getListenersFromTarget(target);
+  // If we don't have any listeners, then we need to init them.
+  if (listeners === null) {
+    listeners = new Set();
+    initListenersSet(target, listeners);
+  }
+  // Finally, add our listener to the listeners Set.
+  listeners.add(listener);
 }
 
 export function detachElementListener(listener: ReactDOMListener): void {
-  // TODO
+  const {target} = listener;
+  // Get the internal listeners Set from the target instance.
+  const listeners = getListenersFromTarget(target);
+  if (listeners !== null) {
+    // Remove out listener from the listeners Set.
+    listeners.delete(listener);
+  }
 }

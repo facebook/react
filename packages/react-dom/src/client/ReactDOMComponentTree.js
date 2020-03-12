@@ -15,6 +15,7 @@ import type {
   SuspenseInstance,
   Props,
 } from './ReactDOMHostConfig';
+import type {ReactDOMListener} from 'shared/ReactDOMTypes';
 
 import {
   HostComponent,
@@ -32,6 +33,7 @@ const randomKey = Math.random()
 const internalInstanceKey = '__reactInternalInstance$' + randomKey;
 const internalEventHandlersKey = '__reactEventHandlers$' + randomKey;
 const internalContainerInstanceKey = '__reactContainere$' + randomKey;
+const internalEventListenersKey = '__reactEventListeners$' + randomKey;
 
 export function precacheFiberNode(
   hostInst: Fiber,
@@ -184,4 +186,19 @@ export function updateFiberProps(
   props: Props,
 ): void {
   (node: any)[internalEventHandlersKey] = props;
+}
+
+// This is used for useEvent listeners
+export function getListenersFromTarget(
+  target: EventTarget,
+): null | Set<ReactDOMListener> {
+  return (target: any)[internalEventListenersKey] || null;
+}
+
+// This is used for useEvent listeners
+export function initListenersSet(
+  target: EventTarget,
+  value: Set<ReactDOMListener>,
+): void {
+  (target: any)[internalEventListenersKey] = value;
 }

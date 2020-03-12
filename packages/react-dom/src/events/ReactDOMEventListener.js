@@ -47,6 +47,7 @@ import {
   addEventBubbleListener,
   addEventCaptureListener,
   addEventCaptureListenerWithPassiveFlag,
+  addEventBubbleListenerWithPassiveFlag,
 } from './EventListener';
 import getEventTarget from './getEventTarget';
 import {getClosestInstanceFromNode} from '../client/ReactDOMComponentTree';
@@ -57,6 +58,7 @@ import {
   enableDeprecatedFlareAPI,
   enableModernEventSystem,
   enableLegacyFBPrimerSupport,
+  enableUseEventAPI,
 } from 'shared/ReactFeatureFlags';
 import {
   UserBlockingEvent,
@@ -134,6 +136,7 @@ export function addTrappedEventListener(
   topLevelType: DOMTopLevelEventType,
   capture: boolean,
   legacyFBSupport?: boolean,
+  passive?: boolean,
 ): any => void {
   let listener;
   let listenerWrapper;
@@ -149,6 +152,12 @@ export function addTrappedEventListener(
       listenerWrapper = dispatchEvent;
       break;
   }
+  // If passive option is not supported, then the event will be
+  // active and not passive.
+  if (passive === true && !passiveBrowserEventsSupported) {
+    passive = false;
+  }
+
   listener = listenerWrapper.bind(
     null,
     topLevelType,
@@ -188,17 +197,37 @@ export function addTrappedEventListener(
     };
   }
   if (capture) {
-    fbListener = addEventCaptureListener(
-      targetContainer,
-      rawEventName,
-      listener,
-    );
+    if (enableUseEventAPI && passive !== undefined) {
+      // This is only used with passive is either true or false.
+      fbListener = addEventCaptureListenerWithPassiveFlag(
+        targetContainer,
+        rawEventName,
+        listener,
+        passive,
+      );
+    } else {
+      fbListener = addEventCaptureListener(
+        targetContainer,
+        rawEventName,
+        listener,
+      );
+    }
   } else {
-    fbListener = addEventBubbleListener(
-      targetContainer,
-      rawEventName,
-      listener,
-    );
+    if (enableUseEventAPI && passive !== undefined) {
+      // This is only used with passive is either true or false.
+      fbListener = addEventBubbleListenerWithPassiveFlag(
+        targetContainer,
+        rawEventName,
+        listener,
+        passive,
+      );
+    } else {
+      fbListener = addEventBubbleListener(
+        targetContainer,
+        rawEventName,
+        listener,
+      );
+    }
   }
   // If we have an fbListener, then use that.
   // We'll only have one if we use the forked

@@ -69,6 +69,7 @@ import {
   enableUseEventAPI,
 } from 'shared/ReactFeatureFlags';
 import {HostComponent} from 'shared/ReactWorkTags';
+import invariant from 'shared/invariant';
 import {
   RESPONDER_EVENT_SYSTEM,
   IS_PASSIVE,
@@ -76,6 +77,8 @@ import {
 import {
   attachElementListener,
   detachElementListener,
+  isDOMDocument,
+  isDOMElement,
 } from '../events/DOMModernPluginEventSystem';
 
 export type ReactListenerEvent = ReactDOMListenerEvent;
@@ -1086,8 +1089,18 @@ export function mountEventListener(listener: ReactDOMListener): void {
     const {target} = listener;
     if (target === window) {
       // TODO (useEvent)
-    } else {
+    } else if (isDOMDocument(target)) {
+      // TODO (useEvent)
+    } else if (isDOMElement(target)) {
       attachElementListener(listener);
+    } else {
+      // The user should never get to here or we missed something in
+      // validateEventListenerTarget below.
+      invariant(
+        false,
+        'A useEvent listener target instance was not handled. This error is ' +
+          'likely caused by a bug in React. Please file an issue.',
+      );
     }
   }
 }
@@ -1095,10 +1108,20 @@ export function mountEventListener(listener: ReactDOMListener): void {
 export function unmountEventListener(listener: ReactDOMListener): void {
   if (enableUseEventAPI) {
     const {target} = listener;
-    if (target === window) {
+    if (isDOMElement(target)) {
       // TODO (useEvent)
-    } else {
+    } else if (isDOMDocument(target)) {
+      // TODO (useEvent)
+    } else if (isDOMElement(target)) {
       detachElementListener(listener);
+    } else {
+      // The user should never get to here or we missed something in
+      // validateEventListenerTarget below.
+      invariant(
+        false,
+        'A useEvent listener target instance was not handled. This error is ' +
+          'likely caused by a bug in React. Please file an issue.',
+      );
     }
   }
 }
@@ -1109,8 +1132,11 @@ export function validateEventListenerTarget(
 ): boolean {
   if (enableUseEventAPI) {
     if (
-      target &&
-      (target === window || getClosestInstanceFromNode(((target: any): Node)))
+      target != null &&
+      (target === window ||
+        isDOMDocument(target) ||
+        (isDOMElement(target) &&
+          getClosestInstanceFromNode(((target: any): Element))))
     ) {
       if (listener == null || typeof listener === 'function') {
         return true;
@@ -1123,19 +1149,11 @@ export function validateEventListenerTarget(
       }
     }
     if (__DEV__) {
-      if (target && (target: any).nodeType === DOCUMENT_NODE) {
-        console.warn(
-          'Event listener method setListener() from useEvent() hook requires the first argument to be a valid' +
-            ' DOM node that was rendered and managed by React or a "window" object. It looks like' +
-            ' you supplied a "document" node, instead use the "window" object.',
-        );
-      } else {
-        console.warn(
-          'Event listener method setListener() from useEvent() hook requires the first argument to be a valid' +
-            ' DOM node that was rendered and managed by React or a "window" object. If this is' +
-            ' from a ref, ensure the ref value has been set before attaching.',
-        );
-      }
+      console.warn(
+        'Event listener method setListener() from useEvent() hook requires the first argument to be either a valid ' +
+          'DOM node that was rendered and managed by React, or either the "window" or "document" objects.' +
+          "If you are setting setListener from ref, ensure the ref's current value has been set and is not null.",
+      );
     }
   }
   return false;
