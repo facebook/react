@@ -16,6 +16,12 @@ import getEventModifierState from './getEventModifierState';
  */
 const SyntheticKeyboardEvent = SyntheticUIEvent.extend({
   key: getEventKey,
+  code: function(event) {
+    if (event.type === 'keydown' || event.type === 'keyup') {
+      return event.code;
+    }
+    return 0;
+  },
   location: null,
   ctrlKey: null,
   shiftKey: null,
