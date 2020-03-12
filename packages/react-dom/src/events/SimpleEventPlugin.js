@@ -36,7 +36,7 @@ import SyntheticTransitionEvent from './SyntheticTransitionEvent';
 import SyntheticUIEvent from './SyntheticUIEvent';
 import SyntheticWheelEvent from './SyntheticWheelEvent';
 import getEventCharCode from './getEventCharCode';
-import {accumulateTwoPhaseListeners} from './DOMModernPluginEventSystem';
+import accumulateTwoPhaseListeners from './accumulateTwoPhaseListeners';
 
 // Only used in DEV for exhaustiveness validation.
 const knownHTMLTopLevelTypes: Array<DOMTopLevelEventType> = [

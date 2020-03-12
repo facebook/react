@@ -27,9 +27,9 @@ import isEventSupported from './isEventSupported';
 import {getNodeFromInstance} from '../client/ReactDOMComponentTree';
 import {updateValueIfChanged} from '../client/inputValueTracking';
 import {setDefaultValue} from '../client/ReactDOMInput';
-import {accumulateTwoPhaseListeners} from './DOMModernPluginEventSystem';
 
 import {disableInputAttributeSyncing} from 'shared/ReactFeatureFlags';
+import accumulateTwoPhaseListeners from './accumulateTwoPhaseListeners';
 
 const eventTypes = {
   change: {
