@@ -5,7 +5,12 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import {getLowestCommonAncestor, isAncestor} from 'shared/ReactTreeTraversal';
+import {
+  getLowestCommonAncestor,
+  isAncestor,
+  getParentInstance,
+  traverseTwoPhase,
+} from 'shared/ReactTreeTraversal';
 
 import {
   executeDirectDispatch,
@@ -13,11 +18,7 @@ import {
   executeDispatchesInOrderStopAtTrue,
   getInstanceFromNode,
 } from './EventPluginUtils';
-import {
-  accumulateDirectDispatches,
-  accumulateTwoPhaseDispatches,
-  accumulateTwoPhaseDispatchesSkipTarget,
-} from './EventPropagators';
+import {accumulateDirectDispatches} from './EventPropagators';
 import ResponderSyntheticEvent from './ResponderSyntheticEvent';
 import ResponderTouchHistoryStore from './ResponderTouchHistoryStore';
 import accumulate from './accumulate';
@@ -32,6 +33,9 @@ import {
   moveDependencies,
   endDependencies,
 } from './ResponderTopLevelEventTypes';
+import getListener from './getListener';
+import accumulateInto from './accumulateInto';
+import forEachAccumulated from './forEachAccumulated';
 
 /**
  * Instance of element that should respond to touch/move types of interactions,
@@ -150,6 +154,54 @@ const eventTypes = {
     dependencies: [],
   },
 };
+
+// Start of inline: the below functions were inlined from
+// EventPropagator.js, as they deviated from ReactDOM's newer
+// implementations.
+function listenerAtPhase(inst, event, propagationPhase: PropagationPhases) {
+  const registrationName =
+    event.dispatchConfig.phasedRegistrationNames[propagationPhase];
+  return getListener(inst, registrationName);
+}
+
+function accumulateDirectionalDispatches(inst, phase, event) {
+  if (__DEV__) {
+    if (!inst) {
+      console.error('Dispatching inst must not be null');
+    }
+  }
+  const listener = listenerAtPhase(inst, event, phase);
+  if (listener) {
+    event._dispatchListeners = accumulateInto(
+      event._dispatchListeners,
+      listener,
+    );
+    event._dispatchInstances = accumulateInto(event._dispatchInstances, inst);
+  }
+}
+
+function accumulateTwoPhaseDispatchesSingleSkipTarget(event) {
+  if (event && event.dispatchConfig.phasedRegistrationNames) {
+    const targetInst = event._targetInst;
+    const parentInst = targetInst ? getParentInstance(targetInst) : null;
+    traverseTwoPhase(parentInst, accumulateDirectionalDispatches, event);
+  }
+}
+
+function accumulateTwoPhaseDispatchesSkipTarget(events) {
+  forEachAccumulated(events, accumulateTwoPhaseDispatchesSingleSkipTarget);
+}
+
+function accumulateTwoPhaseDispatchesSingle(event) {
+  if (event && event.dispatchConfig.phasedRegistrationNames) {
+    traverseTwoPhase(event._targetInst, accumulateDirectionalDispatches, event);
+  }
+}
+
+function accumulateTwoPhaseDispatches(events) {
+  forEachAccumulated(events, accumulateTwoPhaseDispatchesSingle);
+}
+// End of inline
 
 /**
  *

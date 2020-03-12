@@ -23,8 +23,6 @@ const [
   getFiberCurrentPropsFromNode,
   injectEventPluginsByName,
   eventNameDispatchConfigs,
-  accumulateTwoPhaseDispatches,
-  accumulateDirectDispatches,
   enqueueStateRestore,
   restoreStateIfNeeded,
   dispatchEvent,
