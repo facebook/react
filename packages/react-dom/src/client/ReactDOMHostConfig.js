@@ -76,6 +76,8 @@ import {
 import {
   attachElementListener,
   detachElementListener,
+  isDOMDocument,
+  isDOMElement,
 } from '../events/DOMModernPluginEventSystem';
 
 export type ReactListenerEvent = ReactDOMListenerEvent;
@@ -1086,7 +1088,9 @@ export function mountEventListener(listener: ReactDOMListener): void {
     const {target} = listener;
     if (target === window) {
       // TODO (useEvent)
-    } else {
+    } else if (isDOMDocument(target)) {
+      // TODO (useEvent)
+    } else if (isDOMElement(target)) {
       attachElementListener(listener);
     }
   }
@@ -1097,7 +1101,9 @@ export function unmountEventListener(listener: ReactDOMListener): void {
     const {target} = listener;
     if (target === window) {
       // TODO (useEvent)
-    } else {
+    } else if (isDOMDocument(target)) {
+      // TODO (useEvent)
+    } else if (isDOMElement(target)) {
       detachElementListener(listener);
     }
   }
@@ -1109,8 +1115,11 @@ export function validateEventListenerTarget(
 ): boolean {
   if (enableUseEventAPI) {
     if (
-      target &&
-      (target === window || getClosestInstanceFromNode(((target: any): Node)))
+      target != null &&
+      (target === window ||
+        isDOMDocument(target) ||
+        (isDOMElement(target) &&
+          getClosestInstanceFromNode(((target: any): Element))))
     ) {
       if (listener == null || typeof listener === 'function') {
         return true;
@@ -1123,19 +1132,13 @@ export function validateEventListenerTarget(
       }
     }
     if (__DEV__) {
-      if (target && (target: any).nodeType === DOCUMENT_NODE) {
-        console.warn(
-          'Event listener method setListener() from useEvent() hook requires the first argument to be a valid' +
-            ' DOM node that was rendered and managed by React or a "window" object. It looks like' +
-            ' you supplied a "document" node, instead use the "window" object.',
-        );
-      } else {
-        console.warn(
-          'Event listener method setListener() from useEvent() hook requires the first argument to be a valid' +
-            ' DOM node that was rendered and managed by React or a "window" object. If this is' +
-            ' from a ref, ensure the ref value has been set before attaching.',
-        );
-      }
+      console.warn(
+        'Event listener method setListener() from useEvent() hook requires the first argument to be either:' +
+          '\n\n' +
+          '1. A valid DOM node that was rendered and managed by React' +
+          '2. The "window" object' +
+          '3. The "document" object',
+      );
     }
   }
   return false;

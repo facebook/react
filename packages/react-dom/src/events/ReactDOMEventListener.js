@@ -47,6 +47,7 @@ import {
   addEventBubbleListener,
   addEventCaptureListener,
   addEventCaptureListenerWithPassiveFlag,
+  addEventBubbleListenerWithPassiveFlag,
 } from './EventListener';
 import getEventTarget from './getEventTarget';
 import {getClosestInstanceFromNode} from '../client/ReactDOMComponentTree';
@@ -57,6 +58,7 @@ import {
   enableDeprecatedFlareAPI,
   enableModernEventSystem,
   enableLegacyFBPrimerSupport,
+  enableUseEventAPI,
 } from 'shared/ReactFeatureFlags';
 import {
   UserBlockingEvent,
@@ -130,10 +132,11 @@ export function addResponderEventSystemEvent(
 }
 
 export function addTrappedEventListener(
-  targetContainer: EventTarget,
+  targetContainer: null | EventTarget,
   topLevelType: DOMTopLevelEventType,
   capture: boolean,
   legacyFBSupport?: boolean,
+  passive?: boolean,
 ): any => void {
   let listener;
   let listenerWrapper;
@@ -149,12 +152,30 @@ export function addTrappedEventListener(
       listenerWrapper = dispatchEvent;
       break;
   }
+  // If passive option is not supported, then the event will be
+  // active and not passive.
+  if (passive === true && !passiveBrowserEventsSupported) {
+    passive = false;
+  }
+
   listener = listenerWrapper.bind(
     null,
     topLevelType,
     PLUGIN_EVENT_SYSTEM,
     targetContainer,
   );
+
+  // When the targetContainer is null, it means that the container
+  // target is null, but really we need a real DOM node to attach to.
+  // In this case, we fallback to the "document" node, but leave the
+  // targetContainer (which is bound in the above function) to null.
+  // Really, this only happens for TestUtils.Simulate, so when we
+  // remove that support, we can remove this block of code.
+  if (targetContainer === null) {
+    targetContainer = document;
+  }
+
+  const validTargetContainer = ((targetContainer: any): EventTarget);
 
   const rawEventName = getRawEventName(topLevelType);
   let fbListener;
@@ -179,7 +200,7 @@ export function addTrappedEventListener(
         if (fbListener) {
           fbListener.remove();
         } else {
-          targetContainer.removeEventListener(
+          validTargetContainer.removeEventListener(
             ((rawEventName: any): string),
             (listener: any),
           );
@@ -188,17 +209,37 @@ export function addTrappedEventListener(
     };
   }
   if (capture) {
-    fbListener = addEventCaptureListener(
-      targetContainer,
-      rawEventName,
-      listener,
-    );
+    if (enableUseEventAPI && passive !== undefined) {
+      // This is only used with passive is either true or false.
+      fbListener = addEventCaptureListenerWithPassiveFlag(
+        validTargetContainer,
+        rawEventName,
+        listener,
+        passive,
+      );
+    } else {
+      fbListener = addEventCaptureListener(
+        validTargetContainer,
+        rawEventName,
+        listener,
+      );
+    }
   } else {
-    fbListener = addEventBubbleListener(
-      targetContainer,
-      rawEventName,
-      listener,
-    );
+    if (enableUseEventAPI && passive !== undefined) {
+      // This is only used with passive is either true or false.
+      fbListener = addEventBubbleListenerWithPassiveFlag(
+        validTargetContainer,
+        rawEventName,
+        listener,
+        passive,
+      );
+    } else {
+      fbListener = addEventBubbleListener(
+        validTargetContainer,
+        rawEventName,
+        listener,
+      );
+    }
   }
   // If we have an fbListener, then use that.
   // We'll only have one if we use the forked
@@ -262,7 +303,7 @@ function dispatchUserBlockingUpdate(
 export function dispatchEvent(
   topLevelType: DOMTopLevelEventType,
   eventSystemFlags: EventSystemFlags,
-  container: EventTarget,
+  targetContainer: null | EventTarget,
   nativeEvent: AnyNativeEvent,
 ): void {
   if (!_enabled) {
@@ -276,7 +317,7 @@ export function dispatchEvent(
       null, // Flags that we're not actually blocked on anything as far as we know.
       topLevelType,
       eventSystemFlags,
-      container,
+      targetContainer,
       nativeEvent,
     );
     return;
@@ -285,7 +326,7 @@ export function dispatchEvent(
   const blockedOn = attemptToDispatchEvent(
     topLevelType,
     eventSystemFlags,
-    container,
+    targetContainer,
     nativeEvent,
   );
 
@@ -301,7 +342,7 @@ export function dispatchEvent(
       blockedOn,
       topLevelType,
       eventSystemFlags,
-      container,
+      targetContainer,
       nativeEvent,
     );
     return;
@@ -312,7 +353,7 @@ export function dispatchEvent(
       blockedOn,
       topLevelType,
       eventSystemFlags,
-      container,
+      targetContainer,
       nativeEvent,
     )
   ) {
@@ -333,7 +374,7 @@ export function dispatchEvent(
           eventSystemFlags,
           nativeEvent,
           null,
-          container,
+          targetContainer,
         );
       } else {
         dispatchEventForLegacyPluginEventSystem(
@@ -361,7 +402,7 @@ export function dispatchEvent(
         eventSystemFlags,
         nativeEvent,
         null,
-        container,
+        targetContainer,
       );
     } else {
       dispatchEventForLegacyPluginEventSystem(
@@ -378,7 +419,7 @@ export function dispatchEvent(
 export function attemptToDispatchEvent(
   topLevelType: DOMTopLevelEventType,
   eventSystemFlags: EventSystemFlags,
-  container: EventTarget,
+  targetContainer: EventTarget | null,
   nativeEvent: AnyNativeEvent,
 ): null | Container | SuspenseInstance {
   // TODO: Warn if _enabled is false.
@@ -432,7 +473,7 @@ export function attemptToDispatchEvent(
           eventSystemFlags,
           nativeEvent,
           targetInst,
-          container,
+          targetContainer,
         );
       } else {
         dispatchEventForLegacyPluginEventSystem(
@@ -460,7 +501,7 @@ export function attemptToDispatchEvent(
         eventSystemFlags,
         nativeEvent,
         targetInst,
-        container,
+        targetContainer,
       );
     } else {
       dispatchEventForLegacyPluginEventSystem(
