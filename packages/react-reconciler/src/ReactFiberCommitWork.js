@@ -36,6 +36,7 @@ import {
   enableSuspenseCallback,
   enableScopeAPI,
   runAllPassiveEffectDestroysBeforeCreates,
+  enableUseEventAPI,
 } from 'shared/ReactFeatureFlags';
 import {
   FunctionComponent,
@@ -1053,6 +1054,8 @@ function commitUnmount(
     case HostComponent: {
       if (enableDeprecatedFlareAPI) {
         unmountDeprecatedResponderListeners(current);
+      }
+      if (enableDeprecatedFlareAPI || enableUseEventAPI) {
         beforeRemoveInstance(current.stateNode);
       }
       safelyDetachRef(current);

@@ -79,12 +79,20 @@ export function executeDispatchesInOrder(event) {
     validateEventDispatches(event);
   }
   if (Array.isArray(dispatchListeners)) {
+    let previousInstance;
     for (let i = 0; i < dispatchListeners.length; i++) {
-      if (event.isPropagationStopped()) {
+      const instance = dispatchInstances[i];
+      // We check if the instance was the same as the last one,
+      // if it was, then we're still on the same instance thus
+      // propagation should not stop. If we add support for
+      // stopImmediatePropagation at some point, then we'll
+      // need to handle that case here differently.
+      if (instance !== previousInstance && event.isPropagationStopped()) {
         break;
       }
       // Listeners and Instances are two parallel arrays that are always in sync.
       executeDispatch(event, dispatchListeners[i], dispatchInstances[i]);
+      previousInstance = instance;
     }
   } else if (dispatchListeners) {
     executeDispatch(event, dispatchListeners, dispatchInstances);
