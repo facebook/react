@@ -8,6 +8,7 @@
  */
 
 import type {ReactModel} from 'react-server/src/ReactFlightServer';
+import type {BundlerConfig} from './ReactFlightServerWebpackBundlerConfig';
 import type {Writable} from 'stream';
 
 import {
@@ -20,8 +21,12 @@ function createDrainHandler(destination, request) {
   return () => startFlowing(request);
 }
 
-function pipeToNodeWritable(model: ReactModel, destination: Writable): void {
-  let request = createRequest(model, destination);
+function pipeToNodeWritable(
+  model: ReactModel,
+  destination: Writable,
+  webpackMap: BundlerConfig,
+): void {
+  let request = createRequest(model, destination, webpackMap);
   destination.on('drain', createDrainHandler(destination, request));
   startWork(request);
 }

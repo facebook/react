@@ -9,6 +9,13 @@
 
 import {REACT_ELEMENT_TYPE} from 'shared/ReactSymbols';
 
+// import type {ModuleMetaData} from './ReactFlightClientHostConfig';
+
+// import {
+//   preloadModule,
+//   requireModule,
+// } from './ReactFlightClientHostConfig';
+
 export type ReactModelRoot<T> = {|
   model: T,
 |};

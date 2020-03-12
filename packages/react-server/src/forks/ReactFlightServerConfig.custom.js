@@ -8,3 +8,4 @@
  */
 
 export * from '../ReactFlightServerConfigStream';
+export * from '../ReactFlightServerBundlerConfigCustom';

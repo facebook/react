@@ -13,7 +13,7 @@ import type {Destination} from './ReactFlightDOMRelayServerHostConfig';
 import {createRequest, startWork} from 'react-server/src/ReactFlightServer';
 
 function render(model: ReactModel, destination: Destination): void {
-  let request = createRequest(model, destination);
+  let request = createRequest(model, destination, undefined);
   startWork(request);
 }
 

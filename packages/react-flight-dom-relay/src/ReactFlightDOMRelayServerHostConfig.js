@@ -9,13 +9,34 @@
 
 import type {Request, ReactModel} from 'react-server/src/ReactFlightServer';
 
-import type {Destination} from 'ReactFlightDOMRelayServerIntegration';
+import type {
+  Destination,
+  ModuleReference,
+  ModuleMetaData,
+} from 'ReactFlightDOMRelayServerIntegration';
 
 import {resolveModelToJSON} from 'react-server/src/ReactFlightServer';
 
-import {emitModel, emitError} from 'ReactFlightDOMRelayServerIntegration';
+import {
+  emitModel,
+  emitError,
+  resolveResourceMetaData,
+} from 'ReactFlightDOMRelayServerIntegration';
 
-export type {Destination} from 'ReactFlightDOMRelayServerIntegration';
+export type {
+  Destination,
+  ModuleReference,
+  ModuleMetaData,
+} from 'ReactFlightDOMRelayServerIntegration';
+
+export type BundlerConfig = void;
+
+export function resolveModuleMetaData(
+  config: BundlerConfig,
+  resource: ModuleReference,
+): ModuleMetaData {
+  return resolveResourceMetaData(resource);
+}
 
 type JSONValue =
   | string

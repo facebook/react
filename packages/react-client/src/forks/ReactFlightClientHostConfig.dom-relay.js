@@ -8,3 +8,4 @@
  */
 
 export * from 'react-flight-dom-relay/src/ReactFlightDOMRelayClientHostConfig';
+export * from '../ReactFlightClientHostConfigNoStream';

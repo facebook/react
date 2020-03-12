@@ -8,3 +8,4 @@
  */
 
 export * from '../ReactFlightServerConfigStream';
+export * from 'react-flight-dom-webpack/src/ReactFlightServerWebpackBundlerConfig';

@@ -8,3 +8,4 @@
  */
 
 export * from 'react-client/src/ReactFlightClientHostConfigBrowser';
+export * from 'react-flight-dom-webpack/src/ReactFlightClientWebpackBundlerConfig';

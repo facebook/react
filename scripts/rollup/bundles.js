@@ -258,7 +258,7 @@ const bundles = [
     moduleType: RENDERER,
     entry: 'react-flight-dom-relay',
     global: 'ReactFlightDOMRelayClient',
-    externals: ['react'],
+    externals: ['react', 'ReactFlightDOMRelayClientIntegration'],
   },
 
   /******* React ART *******/
