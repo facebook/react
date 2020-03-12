@@ -9,21 +9,59 @@
 
 import type {AnyNativeEvent} from 'legacy-events/PluginModuleType';
 import type {EventSystemFlags} from 'legacy-events/EventSystemFlags';
-import {
-  accumulateTwoPhaseDispatches,
-  accumulateDirectDispatches,
-} from 'legacy-events/EventPropagators';
+import {accumulateDirectDispatches} from 'legacy-events/EventPropagators';
 import type {TopLevelType} from 'legacy-events/TopLevelEventTypes';
 import SyntheticEvent from 'legacy-events/SyntheticEvent';
 import invariant from 'shared/invariant';
 
 // Module provided by RN:
 import {ReactNativeViewConfigRegistry} from 'react-native/Libraries/ReactPrivate/ReactNativePrivateInterface';
+import accumulateInto from 'legacy-events/accumulateInto';
+import getListener from 'legacy-events/getListener';
+import {traverseTwoPhase} from 'shared/ReactTreeTraversal';
+import forEachAccumulated from 'legacy-events/forEachAccumulated';
 
 const {
   customBubblingEventTypes,
   customDirectEventTypes,
 } = ReactNativeViewConfigRegistry;
+
+// Start of inline: the below functions were inlined from
+// EventPropagator.js, as they deviated from ReactDOM's newer
+// implementations.
+function listenerAtPhase(inst, event, propagationPhase: PropagationPhases) {
+  const registrationName =
+    event.dispatchConfig.phasedRegistrationNames[propagationPhase];
+  return getListener(inst, registrationName);
+}
+
+function accumulateDirectionalDispatches(inst, phase, event) {
+  if (__DEV__) {
+    if (!inst) {
+      console.error('Dispatching inst must not be null');
+    }
+  }
+  const listener = listenerAtPhase(inst, event, phase);
+  if (listener) {
+    event._dispatchListeners = accumulateInto(
+      event._dispatchListeners,
+      listener,
+    );
+    event._dispatchInstances = accumulateInto(event._dispatchInstances, inst);
+  }
+}
+
+function accumulateTwoPhaseDispatchesSingle(event) {
+  if (event && event.dispatchConfig.phasedRegistrationNames) {
+    traverseTwoPhase(event._targetInst, accumulateDirectionalDispatches, event);
+  }
+}
+
+function accumulateTwoPhaseDispatches(events) {
+  forEachAccumulated(events, accumulateTwoPhaseDispatchesSingle);
+}
+// End of inline
+type PropagationPhases = 'bubbled' | 'captured';
 
 const ReactNativeBridgeEventPlugin = {
   eventTypes: {},

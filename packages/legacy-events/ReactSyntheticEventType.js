@@ -31,8 +31,8 @@ export type ReactSyntheticEvent = {|
     nativeEventTarget: EventTarget,
   ) => ReactSyntheticEvent,
   isPersistent: () => boolean,
-  _dispatchInstances: null | Array<Fiber>,
-  _dispatchListeners: null | Array<Function>,
-  _targetInst: null | Fiber,
+  _dispatchInstances: null | Array<Fiber> | Fiber,
+  _dispatchListeners: null | Array<Function> | Function,
+  _targetInst: Fiber,
   type: string,
 |};

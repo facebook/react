@@ -21,6 +21,9 @@ import {ELEMENT_NODE} from '../shared/HTMLNodeType';
 import * as DOMTopLevelEventTypes from '../events/DOMTopLevelEventTypes';
 import {PLUGIN_EVENT_SYSTEM} from 'legacy-events/EventSystemFlags';
 import act from './ReactTestUtilsAct';
+import forEachAccumulated from 'legacy-events/forEachAccumulated';
+import accumulateInto from 'legacy-events/accumulateInto';
+import {traverseTwoPhase} from 'shared/ReactTreeTraversal';
 
 const {findDOMNode} = ReactDOM;
 // Keep in sync with ReactDOMUnstableNativeDependencies.js
@@ -33,8 +36,6 @@ const [
   injectEventPluginsByName,
   /* eslint-enable no-unused-vars */
   eventNameDispatchConfigs,
-  accumulateTwoPhaseDispatches,
-  accumulateDirectDispatches,
   enqueueStateRestore,
   restoreStateIfNeeded,
   dispatchEvent,
@@ -376,6 +377,127 @@ function nativeTouchData(x, y) {
     touches: [{pageX: x, pageY: y}],
   };
 }
+
+// Start of inline: the below functions were inlined from
+// EventPropagator.js, as they deviated from ReactDOM's newer
+// implementations.
+function isInteractive(tag) {
+  return (
+    tag === 'button' ||
+    tag === 'input' ||
+    tag === 'select' ||
+    tag === 'textarea'
+  );
+}
+
+function shouldPreventMouseEvent(name, type, props) {
+  switch (name) {
+    case 'onClick':
+    case 'onClickCapture':
+    case 'onDoubleClick':
+    case 'onDoubleClickCapture':
+    case 'onMouseDown':
+    case 'onMouseDownCapture':
+    case 'onMouseMove':
+    case 'onMouseMoveCapture':
+    case 'onMouseUp':
+    case 'onMouseUpCapture':
+    case 'onMouseEnter':
+      return !!(props.disabled && isInteractive(type));
+    default:
+      return false;
+  }
+}
+
+/**
+ * @param {object} inst The instance, which is the source of events.
+ * @param {string} registrationName Name of listener (e.g. `onClick`).
+ * @return {?function} The stored callback.
+ */
+function getListener(inst: Fiber, registrationName: string) {
+  let listener;
+
+  // TODO: shouldPreventMouseEvent is DOM-specific and definitely should not
+  // live here; needs to be moved to a better place soon
+  const stateNode = inst.stateNode;
+  if (!stateNode) {
+    // Work in progress (ex: onload events in incremental mode).
+    return null;
+  }
+  const props = getFiberCurrentPropsFromNode(stateNode);
+  if (!props) {
+    // Work in progress.
+    return null;
+  }
+  listener = props[registrationName];
+  if (shouldPreventMouseEvent(registrationName, inst.type, props)) {
+    return null;
+  }
+  invariant(
+    !listener || typeof listener === 'function',
+    'Expected `%s` listener to be a function, instead got a value of `%s` type.',
+    registrationName,
+    typeof listener,
+  );
+  return listener;
+}
+
+function listenerAtPhase(inst, event, propagationPhase: PropagationPhases) {
+  const registrationName =
+    event.dispatchConfig.phasedRegistrationNames[propagationPhase];
+  return getListener(inst, registrationName);
+}
+
+function accumulateDispatches(inst, ignoredDirection, event) {
+  if (inst && event && event.dispatchConfig.registrationName) {
+    const registrationName = event.dispatchConfig.registrationName;
+    const listener = getListener(inst, registrationName);
+    if (listener) {
+      event._dispatchListeners = accumulateInto(
+        event._dispatchListeners,
+        listener,
+      );
+      event._dispatchInstances = accumulateInto(event._dispatchInstances, inst);
+    }
+  }
+}
+
+function accumulateDirectionalDispatches(inst, phase, event) {
+  if (__DEV__) {
+    if (!inst) {
+      console.error('Dispatching inst must not be null');
+    }
+  }
+  const listener = listenerAtPhase(inst, event, phase);
+  if (listener) {
+    event._dispatchListeners = accumulateInto(
+      event._dispatchListeners,
+      listener,
+    );
+    event._dispatchInstances = accumulateInto(event._dispatchInstances, inst);
+  }
+}
+
+function accumulateDirectDispatchesSingle(event) {
+  if (event && event.dispatchConfig.registrationName) {
+    accumulateDispatches(event._targetInst, null, event);
+  }
+}
+
+function accumulateDirectDispatches(events) {
+  forEachAccumulated(events, accumulateDirectDispatchesSingle);
+}
+
+function accumulateTwoPhaseDispatchesSingle(event) {
+  if (event && event.dispatchConfig.phasedRegistrationNames) {
+    traverseTwoPhase(event._targetInst, accumulateDirectionalDispatches, event);
+  }
+}
+
+function accumulateTwoPhaseDispatches(events) {
+  forEachAccumulated(events, accumulateTwoPhaseDispatchesSingle);
+}
+// End of inline
 
 const Simulate = {};
 const SimulateNative = {};
