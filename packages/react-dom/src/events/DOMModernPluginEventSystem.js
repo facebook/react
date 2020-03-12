@@ -115,7 +115,7 @@ function dispatchEventsForPlugins(
   eventSystemFlags: EventSystemFlags,
   nativeEvent: AnyNativeEvent,
   targetInst: null | Fiber,
-  rootContainer: EventTarget,
+  targetContainer: null | EventTarget,
 ): void {
   const nativeEventTarget = getEventTarget(nativeEvent);
   const syntheticEvents: Array<ReactSyntheticEvent> = [];
@@ -129,7 +129,7 @@ function dispatchEventsForPlugins(
         nativeEvent,
         nativeEventTarget,
         eventSystemFlags,
-        rootContainer,
+        targetContainer,
       );
       if (isArray(extractedEvents)) {
         // Flow complains about @@iterator being missing in ReactSyntheticEvent,
@@ -209,7 +209,7 @@ function willDeferLaterForFBLegacyPrimer(nativeEvent: any): boolean {
       const legacyFBSupport = true;
       const isCapture = nativeEvent.eventPhase === 1;
       addTrappedEventListener(
-        document,
+        null,
         ((type: any): DOMTopLevelEventType),
         isCapture,
         legacyFBSupport,
@@ -223,18 +223,18 @@ function willDeferLaterForFBLegacyPrimer(nativeEvent: any): boolean {
 
 function isMatchingRootContainer(
   grandContainer: Element,
-  rootContainer: EventTarget,
+  targetContainer: EventTarget,
 ): boolean {
   return (
-    grandContainer === rootContainer ||
+    grandContainer === targetContainer ||
     (grandContainer.nodeType === COMMENT_NODE &&
-      grandContainer.parentNode === rootContainer)
+      grandContainer.parentNode === targetContainer)
   );
 }
 
 export function isDOMElement(target: EventTarget): boolean {
   const nodeType = ((target: any): Node).nodeType;
-  return nodeType != null && nodeType === ELEMENT_NODE;
+  return (nodeType: any) && nodeType === ELEMENT_NODE;
 }
 
 export function isDOMDocument(target: EventTarget): boolean {
@@ -247,14 +247,22 @@ export function dispatchEventForPluginEventSystem(
   eventSystemFlags: EventSystemFlags,
   nativeEvent: AnyNativeEvent,
   targetInst: null | Fiber,
-  rootContainer: EventTarget,
+  targetContainer: null | EventTarget,
 ): void {
   let ancestorInst = targetInst;
-  // Given the rootContainer can be any EventTarget, if the
-  // target is not a valid DOM element then we'll skip this part.
-  if (isDOMElement(rootContainer)) {
+  if (targetContainer !== null) {
+    const possibleTargetContainerNode = ((targetContainer: any): Node);
+    // Given the rootContainer can be any EventTarget, if the
+    // target is not a valid DOM element then we'll skip this part.
+    if (
+      possibleTargetContainerNode === window ||
+      !isDOMElement(possibleTargetContainerNode)
+    ) {
+      // TODO: useEvent for document and window
+      return;
+    }
     // If we detect the FB legacy primer system, we
-    // defer the event to the "document" with a one
+    // defer the event to the null with a one
     // time event listener so we can defer the event.
     if (
       enableLegacyFBPrimerSupport &&
@@ -281,7 +289,7 @@ export function dispatchEventForPluginEventSystem(
       }
       if (node.tag === HostRoot || node.tag === HostPortal) {
         const container = node.stateNode.containerInfo;
-        if (isMatchingRootContainer(container, rootContainer)) {
+        if (isMatchingRootContainer(container, possibleTargetContainerNode)) {
           break;
         }
         if (node.tag === HostPortal) {
@@ -293,7 +301,12 @@ export function dispatchEventForPluginEventSystem(
           while (grandNode !== null) {
             if (grandNode.tag === HostRoot || grandNode.tag === HostPortal) {
               const grandContainer = grandNode.stateNode.containerInfo;
-              if (isMatchingRootContainer(grandContainer, rootContainer)) {
+              if (
+                isMatchingRootContainer(
+                  grandContainer,
+                  possibleTargetContainerNode,
+                )
+              ) {
                 // This is the rootContainer we're looking for and we found it as
                 // a parent of the Portal. That means we can ignore it because the
                 // Portal will bubble through to us.
@@ -320,7 +333,7 @@ export function dispatchEventForPluginEventSystem(
       eventSystemFlags,
       nativeEvent,
       ancestorInst,
-      rootContainer,
+      targetContainer,
     ),
   );
 }
@@ -347,11 +360,13 @@ export function attachElementListener(listener: ReactDOMListener): void {
   // find the nearest root/portal contained to attach the event listener
   // to. If it's not managed, i.e. the window, then we just attach
   // the listener to the target.
-  const possibleManagedTarget = ((target: any): Element);
-  if (getClosestInstanceFromNode(possibleManagedTarget)) {
-    containerEventTarget = getNearestRootOrPortalContainer(
-      possibleManagedTarget,
-    );
+  if (isDOMElement(target)) {
+    const possibleManagedTarget = ((target: any): Element);
+    if (getClosestInstanceFromNode(possibleManagedTarget)) {
+      containerEventTarget = getNearestRootOrPortalContainer(
+        possibleManagedTarget,
+      );
+    }
   }
   const listenerMap = getListenerMapForElement(containerEventTarget);
   // Add the event listener to the target container (falling back to

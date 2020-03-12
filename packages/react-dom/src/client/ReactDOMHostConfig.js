@@ -69,7 +69,6 @@ import {
   enableUseEventAPI,
 } from 'shared/ReactFeatureFlags';
 import {HostComponent} from 'shared/ReactWorkTags';
-import invariant from 'shared/invariant';
 import {
   RESPONDER_EVENT_SYSTEM,
   IS_PASSIVE,
@@ -1093,14 +1092,6 @@ export function mountEventListener(listener: ReactDOMListener): void {
       // TODO (useEvent)
     } else if (isDOMElement(target)) {
       attachElementListener(listener);
-    } else {
-      // The user should never get to here or we missed something in
-      // validateEventListenerTarget below.
-      invariant(
-        false,
-        'A useEvent listener target instance was not handled. This error is ' +
-          'likely caused by a bug in React. Please file an issue.',
-      );
     }
   }
 }
@@ -1108,20 +1099,12 @@ export function mountEventListener(listener: ReactDOMListener): void {
 export function unmountEventListener(listener: ReactDOMListener): void {
   if (enableUseEventAPI) {
     const {target} = listener;
-    if (isDOMElement(target)) {
+    if (target === window) {
       // TODO (useEvent)
     } else if (isDOMDocument(target)) {
       // TODO (useEvent)
     } else if (isDOMElement(target)) {
       detachElementListener(listener);
-    } else {
-      // The user should never get to here or we missed something in
-      // validateEventListenerTarget below.
-      invariant(
-        false,
-        'A useEvent listener target instance was not handled. This error is ' +
-          'likely caused by a bug in React. Please file an issue.',
-      );
     }
   }
 }
@@ -1150,9 +1133,11 @@ export function validateEventListenerTarget(
     }
     if (__DEV__) {
       console.warn(
-        'Event listener method setListener() from useEvent() hook requires the first argument to be either a valid ' +
-          'DOM node that was rendered and managed by React, or either the "window" or "document" objects.' +
-          "If you are setting setListener from ref, ensure the ref's current value has been set and is not null.",
+        'Event listener method setListener() from useEvent() hook requires the first argument to be either:' +
+          '\n\n' +
+          '1. A valid DOM node that was rendered and managed by React' +
+          '2. The "window" object' +
+          '3. The "document" object',
       );
     }
   }
