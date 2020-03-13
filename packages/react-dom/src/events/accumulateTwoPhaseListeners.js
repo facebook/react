@@ -14,7 +14,6 @@ import {HostComponent} from 'shared/ReactWorkTags';
 
 export default function accumulateTwoPhaseListeners(
   event: ReactSyntheticEvent,
-  skipTarget?: boolean,
 ): void {
   const phasedRegistrationNames = event.dispatchConfig.phasedRegistrationNames;
   if (phasedRegistrationNames == null) {
@@ -24,12 +23,6 @@ export default function accumulateTwoPhaseListeners(
   const dispatchListeners = [];
   const dispatchInstances = [];
   let node = event._targetInst;
-
-  // If we skip the target, then start the node at the parent
-  // of the target.
-  if (skipTarget) {
-    node = node.return;
-  }
 
   // Accumulate all instances and listeners via the target -> root path.
   while (node !== null) {
