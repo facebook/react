@@ -13,8 +13,6 @@ let React;
 let ReactDOM;
 let ReactTestUtils;
 
-let ReactFeatureFlags = require('shared/ReactFeatureFlags');
-
 // NOTE: We're explicitly not using JSX here. This is intended to test
 // a new React.jsx api which does not have a JSX transformer yet.
 // A lot of these tests are pulled from ReactElement-test because
@@ -29,9 +27,6 @@ describe('ReactElement.jsx', () => {
     // unpolyfilled environment.
     originalSymbol = global.Symbol;
     global.Symbol = undefined;
-
-    ReactFeatureFlags = require('shared/ReactFeatureFlags');
-    ReactFeatureFlags.warnAboutSpreadingKeyToJSX = true;
 
     React = require('react');
     ReactDOM = require('react-dom');
@@ -356,26 +351,30 @@ describe('ReactElement.jsx', () => {
     );
   });
 
-  it('should warn when keys are passed as part of props', () => {
-    const container = document.createElement('div');
-    class Child extends React.Component {
-      render() {
-        return React.jsx('div', {});
+  if (require('shared/ReactFeatureFlags').warnAboutSpreadingKeyToJSX) {
+    it('should warn when keys are passed as part of props', () => {
+      const container = document.createElement('div');
+      class Child extends React.Component {
+        render() {
+          return React.jsx('div', {});
+        }
       }
-    }
-    class Parent extends React.Component {
-      render() {
-        return React.jsx('div', {
-          children: [React.jsx(Child, {key: '0'})],
-        });
+      class Parent extends React.Component {
+        render() {
+          return React.jsx('div', {
+            children: [React.jsx(Child, {key: '0'})],
+          });
+        }
       }
-    }
-    expect(() => ReactDOM.render(React.jsx(Parent, {}), container)).toErrorDev(
-      'Warning: React.jsx: Spreading a key to JSX is a deprecated pattern. ' +
-        'Explicitly pass a key after spreading props in your JSX call. ' +
-        'E.g. <Child {...props} key={key} />',
-    );
-  });
+      expect(() =>
+        ReactDOM.render(React.jsx(Parent, {}), container),
+      ).toErrorDev(
+        'Warning: React.jsx: Spreading a key to JSX is a deprecated pattern. ' +
+          'Explicitly pass a key after spreading props in your JSX call. ' +
+          'E.g. <Child {...props} key={key} />',
+      );
+    });
+  }
 
   it('should not warn when unkeyed children are passed to jsxs', () => {
     const container = document.createElement('div');
