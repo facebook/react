@@ -155,6 +155,27 @@ describe('DOMPropertyOperations', () => {
       // Regression test for https://github.com/facebook/react/issues/6119
       expect(container.firstChild.hasAttribute('value')).toBe(false);
     });
+
+    it('should warn if stringifying an attribute takes too long', () => {
+      const container = document.createElement('div');
+      const perfNow = performance.now.bind(global.performance);
+
+      let nowMock = 0;
+      global.performance.now = () => {
+        nowMock += 3;
+        return nowMock;
+      };
+
+      expect(() =>
+        ReactDOM.render(<div data-perf={{foo: 'bar'}} />, container),
+      ).toWarnDev(
+        'Warning: The attribute <data-perf> took more than 2 ms (3) to stringify. ' +
+          'This usually means you provided a large object as the value ' +
+          'for a DOM attribute, which can lead to performance issues.',
+      );
+
+      global.performance.now = perfNow;
+    });
   });
 
   describe('deleteValueForProperty', () => {

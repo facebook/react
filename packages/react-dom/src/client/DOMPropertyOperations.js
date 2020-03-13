@@ -24,6 +24,47 @@ import {
 import type {PropertyInfo} from '../shared/DOMProperty';
 
 /**
+ * Stringifies a value and warns if it tooks too long.
+ *
+ * @param {value}
+ * @param {attributeName}
+ */
+let stringifyWithPerformanceMeasurement;
+
+if (__DEV__) {
+  stringifyWithPerformanceMeasurement = function(
+    value: mixed,
+    attributeName: string,
+  ) {
+    const hasNativePerformanceNow =
+      typeof performance === 'object' && typeof performance.now === 'function';
+
+    const now = hasNativePerformanceNow
+      ? () => performance.now()
+      : () => Date.now();
+
+    const stringifyStart = now();
+    const attributeValue = enableTrustedTypesIntegration
+      ? (value: any)
+      : '' + (value: any);
+    const stringifyEnd = now();
+    const perf = stringifyEnd - stringifyStart;
+
+    if (perf >= 2) {
+      console.warn(
+        'The attribute <%s> took more than 2 ms (%s) to stringify. ' +
+          'This usually means you provided a large object as the value ' +
+          'for a DOM attribute, which can lead to performance issues.',
+        attributeName,
+        Math.round((perf + Number.EPSILON) * 100) / 100,
+      );
+    }
+
+    return attributeValue;
+  };
+}
+
+/**
  * Get the value for a property on a node. Only used in DEV for SSR validation.
  * The "expected" argument is used as a hint of what the expected value is.
  * Some properties have multiple equivalent values.
@@ -144,6 +185,11 @@ export function setValueForProperty(
       const attributeName = name;
       if (value === null) {
         node.removeAttribute(attributeName);
+      } else if (__DEV__) {
+        node.setAttribute(
+          attributeName,
+          stringifyWithPerformanceMeasurement(value, attributeName),
+        );
       } else {
         node.setAttribute(
           attributeName,
@@ -178,12 +224,19 @@ export function setValueForProperty(
       // and we won't require Trusted Type here.
       attributeValue = '';
     } else {
-      // `setAttribute` with objects becomes only `[object]` in IE8/9,
-      // ('' + value) makes it output the correct toString()-value.
-      if (enableTrustedTypesIntegration) {
-        attributeValue = (value: any);
+      if (__DEV__) {
+        attributeValue = stringifyWithPerformanceMeasurement(
+          value,
+          attributeName,
+        );
       } else {
-        attributeValue = '' + (value: any);
+        // `setAttribute` with objects becomes only `[object]` in IE8/9,
+        // ('' + value) makes it output the correct toString()-value.
+        if (enableTrustedTypesIntegration) {
+          attributeValue = (value: any);
+        } else {
+          attributeValue = '' + (value: any);
+        }
       }
       if (propertyInfo.sanitizeURL) {
         sanitizeURL(attributeValue.toString());
