@@ -1,4 +1,7 @@
-version: 2
+version: 2.1
+
+orbs:
+  win: circleci/windows@2.4.0
 
 aliases:
   - &docker
@@ -47,6 +50,9 @@ aliases:
           root: build
           paths:
             - bundle-sizes.json
+
+  - &ms_windows_environment
+    JAVA_HOME: C:\Program Files\Java\jdk1.8.0
 
 jobs:
   setup:
@@ -464,6 +470,38 @@ jobs:
             RELEASE_CHANNEL: experimental
           command: yarn test-build-prod --maxWorkers=2
 
+  test_ms_windows:
+    executor:
+      name: win/default
+    environment: *ms_windows_environment
+    steps:
+      - run:
+          # Fix line endings in Windows.
+          command: git config --global core.autocrlf input
+      - checkout
+      - restore_cache:
+          keys:
+            - v2-win-node-{{ arch }}-{{ .Branch }}-{{ checksum "yarn.lock" }}
+            - v2-win-node-{{ arch }}-{{ .Branch }}-
+            - v2-win-node-{{ arch }}-
+      - run:
+          command: node --version
+      - run:
+          command: choco install yarn
+      - *run_yarn
+      - save_cache:
+          key: v2-win-node-{{ arch }}-{{ .Branch }}-{{ checksum "yarn.lock" }}
+          paths:
+            - C:\Users\circleci\AppData\Local\Yarn
+      - run:
+          command: yarn lint
+      - run:
+          command: yarn build
+      - run:
+          command: yarn test
+      - run:
+          command: yarn prettier
+
 workflows:
   version: 2
   stable:
@@ -578,3 +616,9 @@ workflows:
       - test_fuzz:
           requires:
             - setup
+
+  ms_windows:
+    jobs:
+      - test_ms_windows
+
+
