@@ -12,6 +12,8 @@
 let React;
 let ReactDOM;
 let ReactTestUtils;
+let JSXRuntime;
+let JSXDEVRuntime;
 
 // NOTE: We're explicitly not using JSX here. This is intended to test
 // a new React.jsx api which does not have a JSX transformer yet.
@@ -29,6 +31,8 @@ describe('ReactElement.jsx', () => {
     global.Symbol = undefined;
 
     React = require('react');
+    JSXRuntime = require('react/jsx-runtime');
+    JSXDEVRuntime = require('react/jsx-dev-runtime');
     ReactDOM = require('react-dom');
     ReactTestUtils = require('react-dom/test-utils');
   });
@@ -37,32 +41,35 @@ describe('ReactElement.jsx', () => {
     global.Symbol = originalSymbol;
   });
 
-  if (!__EXPERIMENTAL__) {
-    it("empty test so Jest doesn't complain", () => {});
-    return;
-  }
-
   it('allows static methods to be called using the type property', () => {
     class StaticMethodComponentClass extends React.Component {
       render() {
-        return React.jsx('div', {});
+        return JSXRuntime.jsx('div', {});
       }
     }
     StaticMethodComponentClass.someStaticMethod = () => 'someReturnValue';
 
-    const element = React.jsx(StaticMethodComponentClass, {});
+    const element = JSXRuntime.jsx(StaticMethodComponentClass, {});
     expect(element.type.someStaticMethod()).toBe('someReturnValue');
   });
 
   it('identifies valid elements', () => {
     class Component extends React.Component {
       render() {
-        return React.jsx('div', {});
+        return JSXRuntime.jsx('div', {});
       }
     }
 
-    expect(React.isValidElement(React.jsx('div', {}))).toEqual(true);
-    expect(React.isValidElement(React.jsx(Component, {}))).toEqual(true);
+    expect(React.isValidElement(JSXRuntime.jsx('div', {}))).toEqual(true);
+    expect(React.isValidElement(JSXRuntime.jsx(Component, {}))).toEqual(true);
+    expect(
+      React.isValidElement(JSXRuntime.jsx(JSXRuntime.Fragment, {})),
+    ).toEqual(true);
+    if (__DEV__) {
+      expect(React.isValidElement(JSXDEVRuntime.jsxDEV('div', {}))).toEqual(
+        true,
+      );
+    }
 
     expect(React.isValidElement(null)).toEqual(false);
     expect(React.isValidElement(true)).toEqual(false);
@@ -83,12 +90,12 @@ describe('ReactElement.jsx', () => {
     expect(React.isValidElement(Component)).toEqual(false);
     expect(React.isValidElement({type: 'div', props: {}})).toEqual(false);
 
-    const jsonElement = JSON.stringify(React.jsx('div', {}));
+    const jsonElement = JSON.stringify(JSXRuntime.jsx('div', {}));
     expect(React.isValidElement(JSON.parse(jsonElement))).toBe(true);
   });
 
   it('is indistinguishable from a plain object', () => {
-    const element = React.jsx('div', {className: 'foo'});
+    const element = JSXRuntime.jsx('div', {className: 'foo'});
     const object = {};
     expect(element.constructor).toBe(object.constructor);
   });
@@ -96,37 +103,37 @@ describe('ReactElement.jsx', () => {
   it('should use default prop value when removing a prop', () => {
     class Component extends React.Component {
       render() {
-        return React.jsx('span', {});
+        return JSXRuntime.jsx('span', {});
       }
     }
     Component.defaultProps = {fruit: 'persimmon'};
 
     const container = document.createElement('div');
     const instance = ReactDOM.render(
-      React.jsx(Component, {fruit: 'mango'}),
+      JSXRuntime.jsx(Component, {fruit: 'mango'}),
       container,
     );
     expect(instance.props.fruit).toBe('mango');
 
-    ReactDOM.render(React.jsx(Component, {}), container);
+    ReactDOM.render(JSXRuntime.jsx(Component, {}), container);
     expect(instance.props.fruit).toBe('persimmon');
   });
 
   it('should normalize props with default values', () => {
     class Component extends React.Component {
       render() {
-        return React.jsx('span', {children: this.props.prop});
+        return JSXRuntime.jsx('span', {children: this.props.prop});
       }
     }
     Component.defaultProps = {prop: 'testKey'};
 
     const instance = ReactTestUtils.renderIntoDocument(
-      React.jsx(Component, {}),
+      JSXRuntime.jsx(Component, {}),
     );
     expect(instance.props.prop).toBe('testKey');
 
     const inst2 = ReactTestUtils.renderIntoDocument(
-      React.jsx(Component, {prop: null}),
+      JSXRuntime.jsx(Component, {prop: null}),
     );
     expect(inst2.props.prop).toBe(null);
   });
@@ -134,7 +141,7 @@ describe('ReactElement.jsx', () => {
   it('throws when changing a prop (in dev) after element creation', () => {
     class Outer extends React.Component {
       render() {
-        const el = React.jsx('div', {className: 'moo'});
+        const el = JSXRuntime.jsx('div', {className: 'moo'});
 
         if (__DEV__) {
           expect(function() {
@@ -150,7 +157,7 @@ describe('ReactElement.jsx', () => {
       }
     }
     const outer = ReactTestUtils.renderIntoDocument(
-      React.jsx(Outer, {color: 'orange'}),
+      JSXRuntime.jsx(Outer, {color: 'orange'}),
     );
     if (__DEV__) {
       expect(ReactDOM.findDOMNode(outer).className).toBe('moo');
@@ -163,7 +170,7 @@ describe('ReactElement.jsx', () => {
     const container = document.createElement('div');
     class Outer extends React.Component {
       render() {
-        const el = React.jsx('div', {children: this.props.sound});
+        const el = JSXRuntime.jsx('div', {children: this.props.sound});
 
         if (__DEV__) {
           expect(function() {
@@ -179,7 +186,7 @@ describe('ReactElement.jsx', () => {
       }
     }
     Outer.defaultProps = {sound: 'meow'};
-    const outer = ReactDOM.render(React.jsx(Outer, {}), container);
+    const outer = ReactDOM.render(JSXRuntime.jsx(Outer, {}), container);
     expect(ReactDOM.findDOMNode(outer).textContent).toBe('meow');
     if (__DEV__) {
       expect(ReactDOM.findDOMNode(outer).className).toBe('');
@@ -191,11 +198,11 @@ describe('ReactElement.jsx', () => {
   it('does not warn for NaN props', () => {
     class Test extends React.Component {
       render() {
-        return React.jsx('div', {});
+        return JSXRuntime.jsx('div', {});
       }
     }
     const test = ReactTestUtils.renderIntoDocument(
-      React.jsx(Test, {value: +undefined}),
+      JSXRuntime.jsx(Test, {value: +undefined}),
     );
     expect(test.props.value).toBeNaN();
   });
@@ -204,21 +211,23 @@ describe('ReactElement.jsx', () => {
     const container = document.createElement('div');
     class Child extends React.Component {
       render() {
-        return React.jsx('div', {children: this.props.key});
+        return JSXRuntime.jsx('div', {children: this.props.key});
       }
     }
     class Parent extends React.Component {
       render() {
-        return React.jsxs('div', {
+        return JSXRuntime.jsxs('div', {
           children: [
-            React.jsx(Child, {}, '0'),
-            React.jsx(Child, {}, '1'),
-            React.jsx(Child, {}, '2'),
+            JSXRuntime.jsx(Child, {}, '0'),
+            JSXRuntime.jsx(Child, {}, '1'),
+            JSXRuntime.jsx(Child, {}, '2'),
           ],
         });
       }
     }
-    expect(() => ReactDOM.render(React.jsx(Parent, {}), container)).toErrorDev(
+    expect(() =>
+      ReactDOM.render(JSXRuntime.jsx(Parent, {}), container),
+    ).toErrorDev(
       'Child: `key` is not a prop. Trying to access it will result ' +
         'in `undefined` being returned. If you need to access the same ' +
         'value within the child component, you should pass it as a different ' +
@@ -229,7 +238,10 @@ describe('ReactElement.jsx', () => {
   it('warns when a jsxs is passed something that is not an array', () => {
     const container = document.createElement('div');
     expect(() =>
-      ReactDOM.render(React.jsxs('div', {children: 'foo'}, null), container),
+      ReactDOM.render(
+        JSXRuntime.jsxs('div', {children: 'foo'}, null),
+        container,
+      ),
     ).toErrorDev(
       'React.jsx: Static children should always be an array. ' +
         'You are likely explicitly calling React.jsxs or React.jsxDEV. ' +
@@ -239,7 +251,7 @@ describe('ReactElement.jsx', () => {
   });
 
   it('should warn when `key` is being accessed on a host element', () => {
-    const element = React.jsxs('div', {}, '3');
+    const element = JSXRuntime.jsxs('div', {}, '3');
     expect(
       () => void element.props.key,
     ).toErrorDev(
@@ -255,17 +267,19 @@ describe('ReactElement.jsx', () => {
     const container = document.createElement('div');
     class Child extends React.Component {
       render() {
-        return React.jsx('div', {children: this.props.ref});
+        return JSXRuntime.jsx('div', {children: this.props.ref});
       }
     }
     class Parent extends React.Component {
       render() {
-        return React.jsx('div', {
-          children: React.jsx(Child, {ref: 'childElement'}),
+        return JSXRuntime.jsx('div', {
+          children: JSXRuntime.jsx(Child, {ref: 'childElement'}),
         });
       }
     }
-    expect(() => ReactDOM.render(React.jsx(Parent, {}), container)).toErrorDev(
+    expect(() =>
+      ReactDOM.render(JSXRuntime.jsx(Parent, {}), container),
+    ).toErrorDev(
       'Child: `ref` is not a prop. Trying to access it will result ' +
         'in `undefined` being returned. If you need to access the same ' +
         'value within the child component, you should pass it as a different ' +
@@ -292,15 +306,16 @@ describe('ReactElement.jsx', () => {
     jest.resetModules();
 
     React = require('react');
+    JSXRuntime = require('react/jsx-runtime');
 
     class Component extends React.Component {
       render() {
-        return React.jsx('div');
+        return JSXRuntime.jsx('div');
       }
     }
 
-    expect(React.isValidElement(React.jsx('div', {}))).toEqual(true);
-    expect(React.isValidElement(React.jsx(Component, {}))).toEqual(true);
+    expect(React.isValidElement(JSXRuntime.jsx('div', {}))).toEqual(true);
+    expect(React.isValidElement(JSXRuntime.jsx(Component, {}))).toEqual(true);
 
     expect(React.isValidElement(null)).toEqual(false);
     expect(React.isValidElement(true)).toEqual(false);
@@ -321,29 +336,32 @@ describe('ReactElement.jsx', () => {
     expect(React.isValidElement(Component)).toEqual(false);
     expect(React.isValidElement({type: 'div', props: {}})).toEqual(false);
 
-    const jsonElement = JSON.stringify(React.jsx('div', {}));
+    const jsonElement = JSON.stringify(JSXRuntime.jsx('div', {}));
     expect(React.isValidElement(JSON.parse(jsonElement))).toBe(false);
   });
 
   it('should warn when unkeyed children are passed to jsx', () => {
     const container = document.createElement('div');
+
     class Child extends React.Component {
       render() {
-        return React.jsx('div', {});
+        return JSXRuntime.jsx('div', {});
       }
     }
     class Parent extends React.Component {
       render() {
-        return React.jsx('div', {
+        return JSXRuntime.jsx('div', {
           children: [
-            React.jsx(Child, {}),
-            React.jsx(Child, {}),
-            React.jsx(Child, {}),
+            JSXRuntime.jsx(Child, {}),
+            JSXRuntime.jsx(Child, {}),
+            JSXRuntime.jsx(Child, {}),
           ],
         });
       }
     }
-    expect(() => ReactDOM.render(React.jsx(Parent, {}), container)).toErrorDev(
+    expect(() =>
+      ReactDOM.render(JSXRuntime.jsx(Parent, {}), container),
+    ).toErrorDev(
       'Warning: Each child in a list should have a unique "key" prop.\n\n' +
         'Check the render method of `Parent`. See https://fb.me/react-warning-keys for more information.\n' +
         '    in Child (created by Parent)\n' +
@@ -356,18 +374,18 @@ describe('ReactElement.jsx', () => {
       const container = document.createElement('div');
       class Child extends React.Component {
         render() {
-          return React.jsx('div', {});
+          return JSXRuntime.jsx('div', {});
         }
       }
       class Parent extends React.Component {
         render() {
-          return React.jsx('div', {
-            children: [React.jsx(Child, {key: '0'})],
+          return JSXRuntime.jsx('div', {
+            children: [JSXRuntime.jsx(Child, {key: '0'})],
           });
         }
       }
       expect(() =>
-        ReactDOM.render(React.jsx(Parent, {}), container),
+        ReactDOM.render(JSXRuntime.jsx(Parent, {}), container),
       ).toErrorDev(
         'Warning: React.jsx: Spreading a key to JSX is a deprecated pattern. ' +
           'Explicitly pass a key after spreading props in your JSX call. ' +
@@ -380,21 +398,21 @@ describe('ReactElement.jsx', () => {
     const container = document.createElement('div');
     class Child extends React.Component {
       render() {
-        return React.jsx('div', {});
+        return JSXRuntime.jsx('div', {});
       }
     }
     class Parent extends React.Component {
       render() {
-        return React.jsxs('div', {
+        return JSXRuntime.jsxs('div', {
           children: [
-            React.jsx(Child, {}),
-            React.jsx(Child, {}),
-            React.jsx(Child, {}),
+            JSXRuntime.jsx(Child, {}),
+            JSXRuntime.jsx(Child, {}),
+            JSXRuntime.jsx(Child, {}),
           ],
         });
       }
     }
     // TODO: an explicit expect for no warning?
-    ReactDOM.render(React.jsx(Parent, {}), container);
+    ReactDOM.render(JSXRuntime.jsx(Parent, {}), container);
   });
 });
