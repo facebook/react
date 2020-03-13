@@ -1025,8 +1025,10 @@ describe('ReactHooksWithNoopRenderer', () => {
     );
 
     if (
-      deferPassiveEffectCleanupDuringUnmount &&
-      runAllPassiveEffectDestroysBeforeCreates
+      require('shared/ReactFeatureFlags')
+        .deferPassiveEffectCleanupDuringUnmount &&
+      require('shared/ReactFeatureFlags')
+        .runAllPassiveEffectDestroysBeforeCreates
     ) {
       it('defers passive effect destroy functions during unmount', () => {
         function Child({bar, foo}) {
