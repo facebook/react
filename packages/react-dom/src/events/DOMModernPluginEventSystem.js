@@ -9,7 +9,9 @@
 
 import type {AnyNativeEvent} from 'legacy-events/PluginModuleType';
 import type {DOMTopLevelEventType} from 'legacy-events/TopLevelEventTypes';
+import type {ElementListenerMap} from '../events/DOMEventListenerMap';
 import type {EventSystemFlags} from 'legacy-events/EventSystemFlags';
+import type {EventPriority} from 'shared/ReactTypes';
 import type {Fiber} from 'react-reconciler/src/ReactFiber';
 import type {PluginModule} from 'legacy-events/PluginModuleType';
 import type {ReactSyntheticEvent} from 'legacy-events/ReactSyntheticEventType';
@@ -154,9 +156,13 @@ function dispatchEventsForPlugins(
 export function listenToTopLevelEvent(
   topLevelType: DOMTopLevelEventType,
   targetContainer: EventTarget,
-  listenerMap: Map<DOMTopLevelEventType | string, null | (any => void)>,
+  listenerMap: ElementListenerMap,
   passive?: boolean,
+  priority?: EventPriority,
 ): void {
+  // TODO: we need to know if the listenerMap previously was passive
+  // and to check if we need to upgrade to active. This will come in
+  // a useEvent follow up PR.
   if (!listenerMap.has(topLevelType)) {
     const isCapturePhase = capturePhaseEvents.has(topLevelType);
     const listener = addTrappedEventListener(
@@ -165,6 +171,7 @@ export function listenToTopLevelEvent(
       isCapturePhase,
       false,
       passive,
+      priority,
     );
     listenerMap.set(topLevelType, listener);
   }
@@ -354,7 +361,7 @@ function getNearestRootOrPortalContainer(instance: Element): Element {
 
 export function attachElementListener(listener: ReactDOMListener): void {
   const {event, target} = listener;
-  const {passive, type} = event;
+  const {passive, priority, type} = event;
   let containerEventTarget = target;
   // If we the target is a managed React element, then we need to
   // find the nearest root/portal contained to attach the event listener
@@ -376,6 +383,7 @@ export function attachElementListener(listener: ReactDOMListener): void {
     containerEventTarget,
     listenerMap,
     passive,
+    priority,
   );
   // Get the internal listeners Set from the target instance.
   let listeners = getListenersFromTarget(target);

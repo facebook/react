@@ -8,6 +8,7 @@
  */
 
 import type {AnyNativeEvent} from 'legacy-events/PluginModuleType';
+import type {EventPriority} from 'shared/ReactTypes';
 import type {FiberRoot} from 'react-reconciler/src/ReactFiberRoot';
 import type {Container, SuspenseInstance} from '../client/ReactDOMHostConfig';
 import type {DOMTopLevelEventType} from 'legacy-events/TopLevelEventTypes';
@@ -137,10 +138,15 @@ export function addTrappedEventListener(
   capture: boolean,
   legacyFBSupport?: boolean,
   passive?: boolean,
+  priority?: EventPriority,
 ): any => void {
+  const eventPriority =
+    priority === undefined
+      ? getEventPriorityForPluginSystem(topLevelType)
+      : priority;
   let listener;
   let listenerWrapper;
-  switch (getEventPriorityForPluginSystem(topLevelType)) {
+  switch (eventPriority) {
     case DiscreteEvent:
       listenerWrapper = dispatchDiscreteEvent;
       break;
@@ -247,10 +253,11 @@ export function addTrappedEventListener(
   return fbListener || listener;
 }
 
-export function removeTrappedPassiveEventListener(
+export function removeTrappedEventListener(
   targetContainer: EventTarget,
   topLevelType: string,
   listener: any => void,
+  passive: boolean,
 ) {
   if (listener.remove != null) {
     listener.remove();
@@ -258,7 +265,7 @@ export function removeTrappedPassiveEventListener(
     if (passiveBrowserEventsSupported) {
       targetContainer.removeEventListener(topLevelType, listener, {
         capture: true,
-        passive: true,
+        passive,
       });
     } else {
       targetContainer.removeEventListener(topLevelType, listener, true);
