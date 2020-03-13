@@ -381,9 +381,23 @@ const tests = {
     {
       code: `
              // Valid because function name is on the whitelist
-             useNotAHook()
+             useNotAHook();
+             useNotAHookEither();
       `,
-      options: [{ignoredNames: ['useNotAHook']}],
+      options: [{ignoredNames: ['useNotAHook', 'useNotAHookEither']}],
+    },
+    {
+      code: `
+             // Valid because function name is on the whitelist
+             const buildSomething = () => {
+               useNotAHook();
+             };
+
+             function buildSomethingElse() {
+               useNotAHookEither();
+            }
+      `,
+      options: [{ignoredNames: ['useNotAHook', 'useNotAHookEither']}],
     },
   ],
   invalid: [
@@ -803,6 +817,17 @@ const tests = {
     },
     {
       code: `
+        // This is invalid because "use"-prefixed functions used in named
+        // functions are assumed to be hooks, and name is not on the whitelist
+        React.unknownFunction(function notAComponent(foo, bar) {
+          useProbablyAHook(bar)
+        });
+      `,
+      options: [{ignoredNames: ['useNotAHook', 'useNotAHookEither']}],
+      errors: [functionError('useProbablyAHook', 'notAComponent')],
+    },
+    {
+      code: `
         // Invalid because it's dangerous.
         // Normally, this would crash, but not if you use inline requires.
         // This *must* be invalid.
@@ -883,6 +908,14 @@ const tests = {
         (class {i() { useState(); }});
       `,
       errors: [classError('useState')],
+    },
+    {
+      code: `
+        // Invalid because top level called function is not on the whitelist
+        useProbablyAHook()
+      `,
+      options: [{ignoredNames: ['useNotAHook', 'useNotAHookEither']}],
+      errors: [topLevelError('useProbablyAHook')],
     },
   ],
 };
