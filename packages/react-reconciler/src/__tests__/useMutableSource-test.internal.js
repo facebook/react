@@ -1323,6 +1323,80 @@ describe('useMutableSource', () => {
       expect(root).toMatchRenderedOutput('baz');
     });
 
+    it('getSnapshot changes and then source is mutated in between paint and passive effect phase, case 2', async () => {
+      const source = createSource({
+        a: 'foo',
+        b: 'bar',
+      });
+      const mutableSource = createMutableSource(source);
+
+      const getSnapshotA = () => source.value.a;
+      const getSnapshotB = () => source.value.b;
+
+      function mutateA(newA) {
+        source.value = {
+          ...source.value,
+          a: newA,
+        };
+      }
+
+      function App({getSnapshotFirst, getSnapshotSecond}) {
+        const first = useMutableSource(
+          mutableSource,
+          getSnapshotFirst,
+          defaultSubscribe,
+        );
+        const second = useMutableSource(
+          mutableSource,
+          getSnapshotSecond,
+          defaultSubscribe,
+        );
+
+        let result = `x: ${first}, y: ${second}`;
+
+        if (getSnapshotFirst === getSnapshotSecond) {
+          // When both getSnapshot functions are equal,
+          // the two values must be consistent.
+          if (first !== second) {
+            result = 'Oops, tearing!';
+          }
+        }
+
+        return result;
+      }
+
+      const root = ReactNoop.createRoot();
+      await act(async () => {
+        root.render(
+          <App
+            getSnapshotFirst={getSnapshotA}
+            getSnapshotSecond={getSnapshotB}
+          />,
+        );
+      });
+
+      await act(async () => {
+        // Switch the second getSnapshot to also read from A
+        root.render(
+          <App
+            getSnapshotFirst={getSnapshotA}
+            getSnapshotSecond={getSnapshotA}
+          />,
+        );
+        // Render and finish the tree, but yield right after paint, before
+        // the passive effects have fired.
+        expect(Scheduler).toFlushUntilNextPaint([]);
+        // Now mutate A. Both hooks should update.
+        // This is at high priority so that it doesn't get batched with default
+        // priority updates that might fire during the passive effect
+        ReactNoop.discreteUpdates(() => {
+          mutateA('baz');
+        });
+        expect(Scheduler).toFlushUntilNextPaint([]);
+        expect(root.getChildrenAsJSX()).not.toEqual('Oops, tearing!');
+      });
+    });
+
     if (__DEV__) {
       describe('dev warnings', () => {
         it('should warn if the subscribe function does not return an unsubscribe function', () => {
