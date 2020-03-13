@@ -1025,8 +1025,10 @@ describe('ReactHooksWithNoopRenderer', () => {
     );
 
     if (
-      deferPassiveEffectCleanupDuringUnmount &&
-      runAllPassiveEffectDestroysBeforeCreates
+      require('shared/ReactFeatureFlags')
+        .deferPassiveEffectCleanupDuringUnmount &&
+      require('shared/ReactFeatureFlags')
+        .runAllPassiveEffectDestroysBeforeCreates
     ) {
       it('defers passive effect destroy functions during unmount', () => {
         function Child({bar, foo}) {
@@ -1256,7 +1258,7 @@ describe('ReactHooksWithNoopRenderer', () => {
         });
       });
 
-      it('still warns about state updates from within passive unmount function', () => {
+      it('shows a unique warning for state updates from within passive unmount function', () => {
         function Component() {
           Scheduler.unstable_yieldValue('Component');
           const [didLoad, setDidLoad] = React.useState(false);
@@ -1285,7 +1287,7 @@ describe('ReactHooksWithNoopRenderer', () => {
           expect(() => {
             expect(Scheduler).toFlushAndYield(['passive destroy']);
           }).toErrorDev(
-            "Warning: Can't perform a React state update on an unmounted component.",
+            "Warning: Can't perform a React state update from within a useEffect cleanup function.",
           );
         });
       });

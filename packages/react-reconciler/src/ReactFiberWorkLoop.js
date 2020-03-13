@@ -199,13 +199,14 @@ const {
 
 type ExecutionContext = number;
 
-const NoContext = /*                    */ 0b000000;
-const BatchedContext = /*               */ 0b000001;
-const EventContext = /*                 */ 0b000010;
-const DiscreteEventContext = /*         */ 0b000100;
-const LegacyUnbatchedContext = /*       */ 0b001000;
-const RenderContext = /*                */ 0b010000;
-const CommitContext = /*                */ 0b100000;
+const NoContext = /*                    */ 0b0000000;
+const BatchedContext = /*               */ 0b0000001;
+const EventContext = /*                 */ 0b0000010;
+const DiscreteEventContext = /*         */ 0b0000100;
+const LegacyUnbatchedContext = /*       */ 0b0001000;
+const RenderContext = /*                */ 0b0010000;
+const CommitContext = /*                */ 0b0100000;
+const PassiveEffectContext = /*         */ 0b1000000;
 
 type RootExitStatus = 0 | 1 | 2 | 3 | 4 | 5;
 const RootIncomplete = 0;
@@ -2283,6 +2284,7 @@ function flushPassiveEffectsImpl() {
   );
   const prevExecutionContext = executionContext;
   executionContext |= CommitContext;
+  executionContext |= PassiveEffectContext;
   const prevInteractions = pushInteractions(root);
 
   if (runAllPassiveEffectDestroysBeforeCreates) {
@@ -2812,15 +2814,28 @@ function warnAboutUpdateOnUnmountedFiberInDEV(fiber) {
     } else {
       didWarnStateUpdateForUnmountedComponent = new Set([componentName]);
     }
-    console.error(
-      "Can't perform a React state update on an unmounted component. This " +
-        'is a no-op, but it indicates a memory leak in your application. To ' +
-        'fix, cancel all subscriptions and asynchronous tasks in %s.%s',
-      tag === ClassComponent
-        ? 'the componentWillUnmount method'
-        : 'a useEffect cleanup function',
-      getStackByFiberInDevAndProd(fiber),
-    );
+
+    // If we are currently flushing passive effects, change the warning text.
+    if ((executionContext & PassiveEffectContext) !== NoContext) {
+      console.error(
+        "Can't perform a React state update from within a useEffect cleanup function. " +
+          'To fix, move state updates to the useEffect() body in %s.%s',
+        tag === ClassComponent
+          ? 'the componentWillUnmount method'
+          : 'a useEffect cleanup function',
+        getStackByFiberInDevAndProd(fiber),
+      );
+    } else {
+      console.error(
+        "Can't perform a React state update on an unmounted component. This " +
+          'is a no-op, but it indicates a memory leak in your application. To ' +
+          'fix, cancel all subscriptions and asynchronous tasks in %s.%s',
+        tag === ClassComponent
+          ? 'the componentWillUnmount method'
+          : 'a useEffect cleanup function',
+        getStackByFiberInDevAndProd(fiber),
+      );
+    }
   }
 }
 
