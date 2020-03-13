@@ -38,7 +38,7 @@ export function pop(heap: Heap): Node | null {
   }
 }
 
-function siftUp(heap, node, i) {
+function siftUp(heap: Heap, node: Node, i: number): void {
   let index = i;
   while (true) {
     const parentIndex = (index - 1) >>> 1;
@@ -55,7 +55,7 @@ function siftUp(heap, node, i) {
   }
 }
 
-function siftDown(heap, node, i) {
+function siftDown(heap: Heap, node: Node, i: number) {
   let index = i;
   const length = heap.length;
   while (index < length) {
@@ -86,7 +86,7 @@ function siftDown(heap, node, i) {
   }
 }
 
-function compare(a, b) {
+function compare(a: Node, b: Node): number {
   // Compare sort index first, then task id.
   const diff = a.sortIndex - b.sortIndex;
   return diff !== 0 ? diff : a.id - b.id;
