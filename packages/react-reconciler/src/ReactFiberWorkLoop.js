@@ -2803,11 +2803,6 @@ function warnAboutUpdateOnUnmountedFiberInDEV(fiber) {
       }
     }
 
-    // If we are currently flushing passive effects, skip this warning.
-    if ((executionContext & PassiveEffectContext) !== NoContext) {
-      return;
-    }
-
     // We show the whole stack but dedupe on the top component's name because
     // the problematic code almost always lies inside that component.
     const componentName = getComponentName(fiber.type) || 'ReactComponent';
@@ -2819,15 +2814,28 @@ function warnAboutUpdateOnUnmountedFiberInDEV(fiber) {
     } else {
       didWarnStateUpdateForUnmountedComponent = new Set([componentName]);
     }
-    console.error(
-      "Can't perform a React state update on an unmounted component. This " +
-        'is a no-op, but it indicates a memory leak in your application. To ' +
-        'fix, cancel all subscriptions and asynchronous tasks in %s.%s',
-      tag === ClassComponent
-        ? 'the componentWillUnmount method'
-        : 'a useEffect cleanup function',
-      getStackByFiberInDevAndProd(fiber),
-    );
+
+    // If we are currently flushing passive effects, change the warning text.
+    if ((executionContext & PassiveEffectContext) !== NoContext) {
+      console.error(
+        "Can't perform a React state update from within a passive effect destroy callback. " +
+          'To fix, move state updates to the useEffect() body in %s.%s',
+        tag === ClassComponent
+          ? 'the componentWillUnmount method'
+          : 'a useEffect cleanup function',
+        getStackByFiberInDevAndProd(fiber),
+      );
+    } else {
+      console.error(
+        "Can't perform a React state update on an unmounted component. This " +
+          'is a no-op, but it indicates a memory leak in your application. To ' +
+          'fix, cancel all subscriptions and asynchronous tasks in %s.%s',
+        tag === ClassComponent
+          ? 'the componentWillUnmount method'
+          : 'a useEffect cleanup function',
+        getStackByFiberInDevAndProd(fiber),
+      );
+    }
   }
 }
 
