@@ -351,6 +351,31 @@ describe('ReactElement.jsx', () => {
     );
   });
 
+  if (require('shared/ReactFeatureFlags').warnAboutSpreadingKeyToJSX) {
+    it('should warn when keys are passed as part of props', () => {
+      const container = document.createElement('div');
+      class Child extends React.Component {
+        render() {
+          return React.jsx('div', {});
+        }
+      }
+      class Parent extends React.Component {
+        render() {
+          return React.jsx('div', {
+            children: [React.jsx(Child, {key: '0'})],
+          });
+        }
+      }
+      expect(() =>
+        ReactDOM.render(React.jsx(Parent, {}), container),
+      ).toErrorDev(
+        'Warning: React.jsx: Spreading a key to JSX is a deprecated pattern. ' +
+          'Explicitly pass a key after spreading props in your JSX call. ' +
+          'E.g. <Child {...props} key={key} />',
+      );
+    });
+  }
+
   it('should not warn when unkeyed children are passed to jsxs', () => {
     const container = document.createElement('div');
     class Child extends React.Component {
