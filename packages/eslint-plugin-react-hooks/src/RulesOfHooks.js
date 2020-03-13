@@ -25,7 +25,10 @@ function isHookName(s) {
 
 function isHook(node, ignoredNames) {
   if (node.type === 'Identifier') {
-    return isHookName(node.name) && !ignoredNames.includes(node.name);
+    return (
+      isHookName(node.name) &&
+      (!ignoredNames || !ignoredNames.includes(node.name))
+    );
   } else if (
     node.type === 'MemberExpression' &&
     !node.computed &&
@@ -93,7 +96,7 @@ function isInsideComponentOrHook(node) {
   while (node) {
     const functionName = getFunctionName(node);
     if (functionName) {
-      if (isComponentName(functionName) || isHook(functionName, [])) {
+      if (isComponentName(functionName) || isHook(functionName)) {
         return true;
       }
     }
@@ -345,7 +348,7 @@ export default {
         );
         const isDirectlyInsideComponentOrHook = codePathFunctionName
           ? isComponentName(codePathFunctionName) ||
-            isHook(codePathFunctionName, [])
+            isHook(codePathFunctionName)
           : isForwardRefCallback(codePathNode) || isMemoCallback(codePathNode);
 
         // Compute the earliest finalizer level using information from the
