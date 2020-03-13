@@ -18,9 +18,14 @@ const elementListenerMap:
   | WeakMap
   | Map<EventTarget, Map<DOMTopLevelEventType | string, null | (any => void)>> = new PossiblyWeakMap();
 
+export type ElementListenerMap = Map<
+  DOMTopLevelEventType | string,
+  null | (any => void),
+>;
+
 export function getListenerMapForElement(
   target: EventTarget,
-): Map<DOMTopLevelEventType | string, null | (any => void)> {
+): ElementListenerMap {
   let listenerMap = elementListenerMap.get(target);
   if (listenerMap === undefined) {
     listenerMap = new Map();

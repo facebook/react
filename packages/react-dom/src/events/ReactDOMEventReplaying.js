@@ -10,6 +10,7 @@
 import type {AnyNativeEvent} from 'legacy-events/PluginModuleType';
 import type {Container, SuspenseInstance} from '../client/ReactDOMHostConfig';
 import type {DOMTopLevelEventType} from 'legacy-events/TopLevelEventTypes';
+import type {ElementListenerMap} from '../events/DOMEventListenerMap';
 import type {EventSystemFlags} from 'legacy-events/EventSystemFlags';
 import type {FiberRoot} from 'react-reconciler/src/ReactFiberRoot';
 
@@ -216,7 +217,7 @@ export function isReplayableDiscreteEvent(
 function trapReplayableEventForContainer(
   topLevelType: DOMTopLevelEventType,
   container: Container,
-  listenerMap: Map<DOMTopLevelEventType | string, null | (any => void)>,
+  listenerMap: ElementListenerMap,
 ) {
   listenToTopLevelEvent(topLevelType, ((container: any): Element), listenerMap);
 }
@@ -224,7 +225,7 @@ function trapReplayableEventForContainer(
 function trapReplayableEventForDocument(
   topLevelType: DOMTopLevelEventType,
   document: Document,
-  listenerMap: Map<DOMTopLevelEventType | string, null | (any => void)>,
+  listenerMap: ElementListenerMap,
 ) {
   if (!enableModernEventSystem) {
     legacyListenToTopLevelEvent(topLevelType, document, listenerMap);
