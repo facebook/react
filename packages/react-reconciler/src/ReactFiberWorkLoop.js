@@ -2818,7 +2818,7 @@ function warnAboutUpdateOnUnmountedFiberInDEV(fiber) {
     // If we are currently flushing passive effects, change the warning text.
     if ((executionContext & PassiveEffectContext) !== NoContext) {
       console.error(
-        "Can't perform a React state update from within a passive effect destroy callback. " +
+        "Can't perform a React state update from within a useEffect cleanup function. " +
           'To fix, move state updates to the useEffect() body in %s.%s',
         tag === ClassComponent
           ? 'the componentWillUnmount method'

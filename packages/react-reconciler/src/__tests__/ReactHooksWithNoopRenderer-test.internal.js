@@ -1287,7 +1287,7 @@ describe('ReactHooksWithNoopRenderer', () => {
           expect(() => {
             expect(Scheduler).toFlushAndYield(['passive destroy']);
           }).toErrorDev(
-            "Warning: Can't perform a React state update from within a passive effect destroy callback.",
+            "Warning: Can't perform a React state update from within a useEffect cleanup function.",
           );
         });
       });
