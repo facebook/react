@@ -244,7 +244,7 @@ function trapReplayableEventForDocument(
         topLevelTypeString,
         false,
       );
-      listenerMap.set(activeEventKey, listener);
+      listenerMap.set(activeEventKey, {passive: false, listener});
     }
   }
 }

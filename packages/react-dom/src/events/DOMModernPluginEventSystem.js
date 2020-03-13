@@ -9,7 +9,10 @@
 
 import type {AnyNativeEvent} from 'legacy-events/PluginModuleType';
 import type {DOMTopLevelEventType} from 'legacy-events/TopLevelEventTypes';
-import type {ElementListenerMap} from '../events/DOMEventListenerMap';
+import type {
+  ElementListenerMap,
+  ElementListenerMapEntry,
+} from '../events/DOMEventListenerMap';
 import type {EventSystemFlags} from 'legacy-events/EventSystemFlags';
 import type {EventPriority} from 'shared/ReactTypes';
 import type {Fiber} from 'react-reconciler/src/ReactFiber';
@@ -24,7 +27,10 @@ import {plugins} from 'legacy-events/EventPluginRegistry';
 
 import {HostRoot, HostPortal} from 'shared/ReactWorkTags';
 
-import {addTrappedEventListener} from './ReactDOMEventListener';
+import {
+  addTrappedEventListener,
+  removeTrappedEventListener,
+} from './ReactDOMEventListener';
 import getEventTarget from './getEventTarget';
 import {getListenerMapForElement} from './DOMEventListenerMap';
 import {
@@ -153,6 +159,25 @@ function dispatchEventsForPlugins(
   }
 }
 
+function shouldUpgradeListener(
+  listenerEntry: void | ElementListenerMapEntry,
+  passive: void | boolean,
+): boolean {
+  if (listenerEntry === undefined) {
+    return false;
+  }
+  // Upgrade from passive to active.
+  if (passive !== true && listenerEntry.passive) {
+    return true;
+  }
+  // Upgrade from default-active (browser default) to active.
+  if (passive === false && listenerEntry.passive === undefined) {
+    return true;
+  }
+  // Otherwise, do not upgrade
+  return false;
+}
+
 export function listenToTopLevelEvent(
   topLevelType: DOMTopLevelEventType,
   targetContainer: EventTarget,
@@ -160,11 +185,21 @@ export function listenToTopLevelEvent(
   passive?: boolean,
   priority?: EventPriority,
 ): void {
-  // TODO: we need to know if the listenerMap previously was passive
-  // and to check if we need to upgrade to active. This will come in
-  // a useEvent follow up PR.
-  if (!listenerMap.has(topLevelType)) {
+  const listenerEntry = listenerMap.get(topLevelType);
+  const shouldUpgrade = shouldUpgradeListener(listenerEntry, passive);
+  if (listenerEntry === undefined || shouldUpgrade) {
     const isCapturePhase = capturePhaseEvents.has(topLevelType);
+    // If we should upgrade, then we need to remove the existing trapped
+    // event listener for the target container.
+    if (shouldUpgrade) {
+      removeTrappedEventListener(
+        targetContainer,
+        topLevelType,
+        isCapturePhase,
+        ((listenerEntry: any): ElementListenerMapEntry).listener,
+        ((listenerEntry: any): ElementListenerMapEntry).passive,
+      );
+    }
     const listener = addTrappedEventListener(
       targetContainer,
       topLevelType,
@@ -173,7 +208,7 @@ export function listenToTopLevelEvent(
       passive,
       priority,
     );
-    listenerMap.set(topLevelType, listener);
+    listenerMap.set(topLevelType, {passive, listener});
   }
 }
 
