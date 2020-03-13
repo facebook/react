@@ -109,6 +109,12 @@ function isInsideComponentOrHook(node) {
 }
 
 export default {
+  schema: [
+    {
+      type: 'object',
+      properties: {ignoredNames: {type: 'array', items: {type: 'string'}}},
+    },
+  ],
   create(context) {
     const ignoredNames =
       (context.options.length === 1 && context.options[0].ignoredNames) || [];
