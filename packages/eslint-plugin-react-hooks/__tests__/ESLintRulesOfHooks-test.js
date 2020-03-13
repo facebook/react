@@ -378,6 +378,13 @@ const tests = {
         const [myState, setMyState] = useState(null);
       }
     `,
+    {
+      code: `
+             // Valid because function name is on the whitelist
+             useNotAHook()
+      `,
+      options: [{ignoredNames: ['useNotAHook']}],
+    },
   ],
   invalid: [
     {

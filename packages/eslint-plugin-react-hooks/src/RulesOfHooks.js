@@ -23,13 +23,13 @@ function isHookName(s) {
  * containing a hook name.
  */
 
-function isHook(node) {
+function isHook(node, ignoredNames) {
   if (node.type === 'Identifier') {
-    return isHookName(node.name);
+    return isHookName(node.name) && !ignoredNames.includes(node.name);
   } else if (
     node.type === 'MemberExpression' &&
     !node.computed &&
-    isHook(node.property)
+    isHook(node.property, ignoredNames)
   ) {
     // Only consider React.useFoo() to be namespace hooks for now to avoid false positives.
     // We can expand this check later.
@@ -93,7 +93,7 @@ function isInsideComponentOrHook(node) {
   while (node) {
     const functionName = getFunctionName(node);
     if (functionName) {
-      if (isComponentName(functionName) || isHook(functionName)) {
+      if (isComponentName(functionName) || isHook(functionName, [])) {
         return true;
       }
     }
@@ -107,6 +107,8 @@ function isInsideComponentOrHook(node) {
 
 export default {
   create(context) {
+    const ignoredNames =
+      (context.options.length === 1 && context.options[0].ignoredNames) || [];
     const codePathReactHooksMapStack = [];
     const codePathSegmentStack = [];
     return {
@@ -343,7 +345,7 @@ export default {
         );
         const isDirectlyInsideComponentOrHook = codePathFunctionName
           ? isComponentName(codePathFunctionName) ||
-            isHook(codePathFunctionName)
+            isHook(codePathFunctionName, [])
           : isForwardRefCallback(codePathNode) || isMemoCallback(codePathNode);
 
         // Compute the earliest finalizer level using information from the
@@ -505,7 +507,7 @@ export default {
       // But that gets complicated and enters type-system territory, so we're
       // only being strict about hook calls for now.
       CallExpression(node) {
-        if (isHook(node.callee)) {
+        if (isHook(node.callee, ignoredNames)) {
           // Add the hook node to a map keyed by the code path segment. We will
           // do full code path analysis at the end of our code path.
           const reactHooksMap = last(codePathReactHooksMapStack);
