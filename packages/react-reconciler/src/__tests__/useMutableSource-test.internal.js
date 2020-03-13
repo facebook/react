@@ -1265,6 +1265,64 @@ describe('useMutableSource', () => {
       expect(Scheduler).toHaveYielded(['x: bar, y: bar']);
     });
 
+    it('getSnapshot changes and then source is mutated in between paint and passive effect phase', async () => {
+      const source = createSource({
+        a: 'foo',
+        b: 'bar',
+      });
+      const mutableSource = createMutableSource(source);
+
+      function mutateB(newB) {
+        source.value = {
+          ...source.value,
+          b: newB,
+        };
+      }
+
+      const getSnapshotA = () => source.value.a;
+      const getSnapshotB = () => source.value.b;
+
+      function App({getSnapshot}) {
+        const value = useMutableSource(
+          mutableSource,
+          getSnapshot,
+          defaultSubscribe,
+        );
+
+        Scheduler.unstable_yieldValue('Render: ' + value);
+        React.useEffect(() => {
+          Scheduler.unstable_yieldValue('Commit: ' + value);
+        }, [value]);
+
+        return value;
+      }
+
+      const root = ReactNoop.createRoot();
+      await act(async () => {
+        root.render(<App getSnapshot={getSnapshotA} />);
+      });
+      expect(Scheduler).toHaveYielded(['Render: foo', 'Commit: foo']);
+
+      await act(async () => {
+        // Switch getSnapshot to read from B instead
+        root.render(<App getSnapshot={getSnapshotB} />);
+        // Render and finish the tree, but yield right after paint, before
+        // the passive effects have fired.
+        expect(Scheduler).toFlushUntilNextPaint(['Render: bar']);
+        // Then mutate B.
+        mutateB('baz');
+      });
+      expect(Scheduler).toHaveYielded([
+        // Fires the effect from the previous render
+        'Commit: bar',
+        // During that effect, it should detect that the snapshot has changed
+        // and re-render.
+        'Render: baz',
+        'Commit: baz',
+      ]);
+      expect(root).toMatchRenderedOutput('baz');
+    });
+
     if (__DEV__) {
       describe('dev warnings', () => {
         it('should warn if the subscribe function does not return an unsubscribe function', () => {
