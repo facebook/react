@@ -133,3 +133,6 @@ export const disableUnstableCreatePortal = false;
 
 // Turns on speculative work mode features and context selector api support
 export const enableSpeculativeWork = true;
+
+// Turns on context reader propagation
+export const enableContextReaderPropagation = true;

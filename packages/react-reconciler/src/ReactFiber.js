@@ -34,6 +34,7 @@ import {
   enableUserTimingAPI,
   enableScopeAPI,
   enableChunksAPI,
+  enableContextReaderPropagation,
 } from 'shared/ReactFeatureFlags';
 import {NoEffect, Placement} from 'shared/ReactSideEffectTags';
 import {ConcurrentRoot, BlockingRoot} from 'shared/ReactRootTags';
@@ -116,6 +117,9 @@ if (__DEV__) {
 export type Dependencies = {
   expirationTime: ExpirationTime,
   firstContext: ContextDependency<mixed> | null,
+  previousFirstContext?: ContextDependency<mixed> | null,
+  contextSet?: Set<ReactContext<mixed>> | null,
+  cleanupSet?: Set<() => mixed> | null,
   responders: Map<
     ReactEventResponder<any, any>,
     ReactEventResponderInstance<any, any>,
@@ -477,14 +481,28 @@ export function createWorkInProgress(
   // Clone the dependencies object. This is mutated during the render phase, so
   // it cannot be shared with the current fiber.
   const currentDependencies = current.dependencies;
-  workInProgress.dependencies =
-    currentDependencies === null
-      ? null
-      : {
-          expirationTime: currentDependencies.expirationTime,
-          firstContext: currentDependencies.firstContext,
-          responders: currentDependencies.responders,
-        };
+  if (enableContextReaderPropagation) {
+    workInProgress.dependencies =
+      currentDependencies === null
+        ? null
+        : {
+            expirationTime: currentDependencies.expirationTime,
+            firstContext: currentDependencies.firstContext,
+            previousFirstContext: currentDependencies.firstContext,
+            contextSet: currentDependencies.contextSet,
+            cleanupSet: currentDependencies.cleanupSet,
+            responders: currentDependencies.responders,
+          };
+  } else {
+    workInProgress.dependencies =
+      currentDependencies === null
+        ? null
+        : {
+            expirationTime: currentDependencies.expirationTime,
+            firstContext: currentDependencies.firstContext,
+            responders: currentDependencies.responders,
+          };
+  }
 
   // These will be overridden during the parent's reconciliation
   workInProgress.sibling = current.sibling;
@@ -572,14 +590,28 @@ export function resetWorkInProgress(
     // Clone the dependencies object. This is mutated during the render phase, so
     // it cannot be shared with the current fiber.
     const currentDependencies = current.dependencies;
-    workInProgress.dependencies =
-      currentDependencies === null
-        ? null
-        : {
-            expirationTime: currentDependencies.expirationTime,
-            firstContext: currentDependencies.firstContext,
-            responders: currentDependencies.responders,
-          };
+    if (enableContextReaderPropagation) {
+      workInProgress.dependencies =
+        currentDependencies === null
+          ? null
+          : {
+              expirationTime: currentDependencies.expirationTime,
+              firstContext: currentDependencies.firstContext,
+              previousFirstContext: currentDependencies.firstContext,
+              contextSet: currentDependencies.contextSet,
+              cleanupSet: currentDependencies.cleanupSet,
+              responders: currentDependencies.responders,
+            };
+    } else {
+      workInProgress.dependencies =
+        currentDependencies === null
+          ? null
+          : {
+              expirationTime: currentDependencies.expirationTime,
+              firstContext: currentDependencies.firstContext,
+              responders: currentDependencies.responders,
+            };
+    }
 
     if (enableProfilerTimer) {
       // Note: We don't reset the actualTime counts. It's useful to accumulate

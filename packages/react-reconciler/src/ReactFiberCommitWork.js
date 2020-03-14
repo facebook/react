@@ -34,6 +34,7 @@ import {
   enableFundamentalAPI,
   enableSuspenseCallback,
   enableScopeAPI,
+  enableContextReaderPropagation,
 } from 'shared/ReactFeatureFlags';
 import {
   FunctionComponent,
@@ -77,6 +78,7 @@ import {logCapturedError} from './ReactFiberErrorLogger';
 import {resolveDefaultProps} from './ReactFiberLazyComponent';
 import {getCommitTime} from './ReactProfilerTimer';
 import {commitUpdateQueue} from './ReactUpdateQueue';
+import {cleanupReadersOnUnmount} from './ReactFiberNewContext';
 import {
   getPublicInstance,
   supportsMutation,
@@ -789,6 +791,9 @@ function commitUnmount(
     case MemoComponent:
     case SimpleMemoComponent:
     case Chunk: {
+      if (enableContextReaderPropagation) {
+        cleanupReadersOnUnmount(current);
+      }
       const updateQueue: FunctionComponentUpdateQueue | null = (current.updateQueue: any);
       if (updateQueue !== null) {
         const lastEffect = updateQueue.lastEffect;
@@ -841,6 +846,9 @@ function commitUnmount(
       return;
     }
     case ClassComponent: {
+      if (enableContextReaderPropagation) {
+        cleanupReadersOnUnmount(current);
+      }
       safelyDetachRef(current);
       const instance = current.stateNode;
       if (typeof instance.componentWillUnmount === 'function') {

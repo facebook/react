@@ -123,6 +123,7 @@ import {
   enableScopeAPI,
   enableChunksAPI,
   enableSpeculativeWork,
+  enableContextReaderPropagation,
 } from 'shared/ReactFeatureFlags';
 import {
   markSpawnedWork,
@@ -986,6 +987,11 @@ function completeWork(
       updateHostContainer(workInProgress);
       return null;
     case ContextProvider:
+      if (enableContextReaderPropagation) {
+        // capture readers and store on memoizedState
+        workInProgress.memoizedState =
+          workInProgress.type._context._currentReaders;
+      }
       // Pop provider fiber
       popProvider(workInProgress);
       return null;
