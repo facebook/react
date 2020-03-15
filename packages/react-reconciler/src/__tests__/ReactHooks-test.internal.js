@@ -1087,7 +1087,7 @@ describe('ReactHooks', () => {
       ),
     ).toErrorDev([
       'Context can only be read while React is rendering',
-      'Cannot update a component from inside the function body of a different component.',
+      'Cannot update a component from inside the function body of a different component.\n"Cls" updated "Fn".',
     ]);
   });
 

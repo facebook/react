@@ -441,7 +441,7 @@ describe('ReactHooksWithNoopRenderer', () => {
           expect(Scheduler).toFlushAndYield(['Foo [0]', 'Bar', 'Foo [1]']),
         ).toErrorDev([
           'Cannot update a component from inside the function body of a ' +
-            'different component.',
+            'different component.\n"Bar" updated "Foo".',
         ]);
       });
     });
