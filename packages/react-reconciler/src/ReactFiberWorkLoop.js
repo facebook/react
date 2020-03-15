@@ -2919,7 +2919,7 @@ function warnAboutRenderPhaseUpdatesInDEV(fiber) {
           console.error(
             'Cannot update a component from inside the function body of a ' +
               'different component.\n' +
-              '%s updated %s',
+              '"%s" updated "%s"',
               getComponentName(ReactCurrentOwner.current.type),
               getComponentName(fiber.type)
           );
