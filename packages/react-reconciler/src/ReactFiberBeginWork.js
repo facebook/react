@@ -2989,7 +2989,8 @@ function fiberName(fiber) {
   if (fiber.tag === 3) front = 'HostRoot';
   else if (fiber.tag === 6) front = 'HostText';
   else if (fiber.tag === 10) front = 'ContextProvider';
-  else if (typeof fiber.type === 'function') front = fiber.type.name;
+  else if (typeof fiber.type === 'function' && fiber.type.name)
+    front = fiber.type.name;
   else front = 'tag' + fiber.tag;
   if (back) {
     back = `-(${back})`;
@@ -3039,11 +3040,20 @@ function reifyNextWork(workInProgress: Fiber, renderExpirationTime) {
           );
           let didBailout;
           switch (fiber.tag) {
+            case ForwardRef:
+            case SimpleMemoComponent:
             case FunctionComponent: {
               didBailout = canBailoutSpeculativeWorkWithHooks(
                 fiber,
                 renderExpirationTime,
               );
+              break;
+            }
+            case ClassComponent: {
+              // class component is not yet supported for bailing out of context and state updates
+              // but it support should be possible
+              // @TODO implement a ClassComponent bailout here
+              didBailout = false;
               break;
             }
             default: {

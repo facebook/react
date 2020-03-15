@@ -57,20 +57,23 @@ describe('ReactSpeculativeWork', () => {
       }
     }
 
-    let Intermediate = ({children}) => children || null;
-    let BeforeUpdatingLeafBranch = ({children}) => children || null;
-    let AfterUpdatingLeafBranch = ({children}) => children || null;
-    let Leaf = () => null;
+    let Intermediate = React.memo(({children}) => children || null);
+    let BeforeUpdatingLeafBranch = React.memo(({children}) => children || null);
+    let AfterUpdatingLeafBranch = React.memo(({children}) => children || null);
+    let Leaf = React.memo(() => null);
 
     let MyContext = React.createContext(0);
 
-    let UpdatingLeaf = () => {
-      let [value, setValue] = React.useState('leaf');
-      let isEven = React.useContext(MyContext, v => v % 2 === 0);
-      Scheduler.unstable_yieldValue(value);
-      externalSetValue = setValue;
-      return `${value}-${isEven ? 'even' : 'odd'}`;
-    };
+    let UpdatingLeaf = React.memo(
+      () => {
+        let [value, setValue] = React.useState('leaf');
+        let isEven = React.useContext(MyContext, v => v % 2 === 0);
+        Scheduler.unstable_yieldValue(value);
+        externalSetValue = setValue;
+        return `${value}-${isEven ? 'even' : 'odd'}`;
+      },
+      (prevProps, nextProps) => prevProps === nextProps,
+    );
 
     let root = ReactNoop.createRoot();
 
