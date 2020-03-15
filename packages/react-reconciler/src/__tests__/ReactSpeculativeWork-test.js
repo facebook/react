@@ -2,9 +2,6 @@ let React;
 let ReactFeatureFlags;
 let ReactNoop;
 let Scheduler;
-let ReactCache;
-let Suspense;
-let TextResource;
 
 let levels = 4;
 let expansion = 3;
@@ -13,13 +10,62 @@ describe('ReactSpeculativeWork', () => {
   beforeEach(() => {
     jest.resetModules();
     ReactFeatureFlags = require('shared/ReactFeatureFlags');
-    ReactFeatureFlags.enableSpeculativeWork = true;
-    ReactFeatureFlags.enableSpeculativeWorkTracing = false;
     React = require('react');
     ReactNoop = require('react-noop-renderer');
     Scheduler = require('scheduler');
-    ReactCache = require('react-cache');
-    Suspense = React.Suspense;
+  });
+
+  it.only('exercises reifyNextWork', () => {
+    let externalSetValue = () => {};
+
+    let App = () => {
+      return (
+        <Intermediate>
+          <BeforeUpdatingLeafBranch>
+            <Leaf />
+          </BeforeUpdatingLeafBranch>
+          <Intermediate>
+            <Intermediate>
+              <Leaf />
+            </Intermediate>
+            <UpdatingLeaf />
+            <Leaf />
+            <Leaf />
+          </Intermediate>
+          <AfterUpdatingLeafBranch />
+        </Intermediate>
+      );
+    };
+
+    let Intermediate = ({children}) => children || null;
+    let BeforeUpdatingLeafBranch = ({children}) => children || null;
+    let AfterUpdatingLeafBranch = ({children}) => children || null;
+    let Leaf = () => null;
+
+    let UpdatingLeaf = () => {
+      let [value, setValue] = React.useState('leaf');
+      Scheduler.unstable_yieldValue(value);
+      externalSetValue = setValue;
+      return value;
+    };
+
+    let root = ReactNoop.createRoot();
+
+    ReactNoop.act(() => root.render(<App />));
+    expect(Scheduler).toHaveYielded(['leaf']);
+    expect(root).toMatchRenderedOutput('leaf');
+
+    ReactNoop.act(() => externalSetValue('leaf'));
+    expect(Scheduler).toHaveYielded([]);
+    expect(root).toMatchRenderedOutput('leaf');
+
+    ReactNoop.act(() => externalSetValue('bar'));
+    expect(Scheduler).toHaveYielded(['bar']);
+    expect(root).toMatchRenderedOutput('bar');
+
+    ReactNoop.act(() => externalSetValue('baz'));
+    expect(Scheduler).toHaveYielded(['baz']);
+    expect(root).toMatchRenderedOutput('baz');
   });
 
   it('enters advanced context tracking mode when you read from different contexts in different orders', () => {

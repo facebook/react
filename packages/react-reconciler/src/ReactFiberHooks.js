@@ -46,7 +46,11 @@ import {
   markRenderEventTimeAndConfig,
   markUnprocessedUpdateTime,
 } from './ReactFiberWorkLoop';
-import {enableSpeculativeWork} from 'shared/ReactFeatureFlags';
+import {
+  enableSpeculativeWork,
+  enableContextSelectors,
+  enableReifyNextWork,
+} from 'shared/ReactFeatureFlags';
 
 import invariant from 'shared/invariant';
 import getComponentName from 'shared/getComponentName';
@@ -66,10 +70,10 @@ import {
 const {ReactCurrentDispatcher, ReactCurrentBatchConfig} = ReactSharedInternals;
 
 const readContext = originalReadContext;
-const mountContext = enableSpeculativeWork
+const mountContext = enableContextSelectors
   ? mountContextImpl
   : originalReadContext;
-const updateContext = enableSpeculativeWork
+const updateContext = enableContextSelectors
   ? updateContextImpl
   : originalReadContext;
 
@@ -1511,6 +1515,7 @@ function dispatchAction<S, A>(
   } else {
     if (
       !enableSpeculativeWork &&
+      !enableReifyNextWork &&
       fiber.expirationTime === NoWork &&
       (alternate === null || alternate.expirationTime === NoWork)
     ) {
