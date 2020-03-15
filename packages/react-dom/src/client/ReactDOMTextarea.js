@@ -10,7 +10,10 @@
 import invariant from 'shared/invariant';
 
 import ReactControlledValuePropTypes from '../shared/ReactControlledValuePropTypes';
-import {getCurrentFiberOwnerNameInDevOrNull} from 'react-reconciler/src/ReactCurrentFiber';
+import {
+  getCurrentFiberStackInDev,
+  getCurrentFiberOwnerNameInDevOrNull,
+} from 'react-reconciler/src/ReactCurrentFiber';
 import {getToStringValue, toString} from './ToStringValue';
 import type {ToStringValue} from './ToStringValue';
 
@@ -42,7 +45,8 @@ export function getHostProps(element: Element, props: Object) {
   const node = ((element: any): TextAreaWithWrapperState);
   invariant(
     props.dangerouslySetInnerHTML == null,
-    '`dangerouslySetInnerHTML` does not make sense on <textarea>.',
+    '`dangerouslySetInnerHTML` does not make sense on <textarea>.%s',
+    getCurrentFiberStackInDev(),
   );
 
   // Always set children to the same thing. In IE9, the selection range will

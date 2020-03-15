@@ -8,7 +8,10 @@
  */
 
 // TODO: direct imports like some-package/src/* are bad. Fix me.
-import {getCurrentFiberOwnerNameInDevOrNull} from 'react-reconciler/src/ReactCurrentFiber';
+import {
+  getCurrentFiberStackInDev,
+  getCurrentFiberOwnerNameInDevOrNull,
+} from 'react-reconciler/src/ReactCurrentFiber';
 import invariant from 'shared/invariant';
 
 import {setValueForProperty} from './DOMPropertyOperations';
@@ -381,7 +384,8 @@ function updateNamedCousins(rootNode, props) {
       invariant(
         otherProps,
         'ReactDOMInput: Mixing React and non-React radio inputs with the ' +
-          'same `name` is not supported.',
+          'same `name` is not supported.%s',
+        getCurrentFiberStackInDev(),
       );
 
       // We need update the tracked value on the named cousin since the value

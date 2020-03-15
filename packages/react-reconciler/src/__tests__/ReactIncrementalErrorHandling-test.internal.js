@@ -41,6 +41,14 @@ describe('ReactIncrementalErrorHandling', () => {
     return str && str.replace(/\(at .+?:\d+\)/g, '(at **)');
   }
 
+  function stripStack(comp) {
+    let compStripped = JSON.parse(JSON.stringify(comp));
+    const prop = compStripped[0].prop;
+    compStripped[0].prop =
+      (prop && prop.replace(/in .+? \(at .+?:\d+\)/g, '').trim()) || '';
+    return compStripped;
+  }
+
   it('recovers from errors asynchronously', () => {
     class ErrorBoundary extends React.Component {
       state = {error: null};
@@ -1257,7 +1265,7 @@ describe('ReactIncrementalErrorHandling', () => {
       // React retries once on error
       'Warning: React.createElement: type is invalid -- expected a string',
     ]);
-    expect(ReactNoop.getChildren()).toEqual([
+    expect(stripStack(ReactNoop.getChildren())).toEqual([
       span(
         'Element type is invalid: expected a string (for built-in components) or ' +
           'a class/function (for composite components) but got: undefined.' +
@@ -1306,7 +1314,7 @@ describe('ReactIncrementalErrorHandling', () => {
       // React retries once on error
       'Warning: React.createElement: type is invalid -- expected a string',
     ]);
-    expect(ReactNoop.getChildren()).toEqual([
+    expect(stripStack(ReactNoop.getChildren())).toEqual([
       span(
         'Element type is invalid: expected a string (for built-in components) or ' +
           'a class/function (for composite components) but got: undefined.' +

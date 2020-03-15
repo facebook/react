@@ -10,6 +10,7 @@
 import type {ThreadID} from './ReactThreadIDAllocator';
 import type {ReactElement} from 'shared/ReactElementType';
 import type {LazyComponent} from 'react/src/ReactLazy';
+import {getCurrentFiberStackInDev} from 'react-reconciler/src/ReactCurrentFiber';
 import type {ReactProvider, ReactContext} from 'shared/ReactTypes';
 
 import * as React from 'react';
@@ -1321,9 +1322,10 @@ class ReactDOMServerRenderer {
         false,
         'Element type is invalid: expected a string (for built-in ' +
           'components) or a class/function (for composite components) ' +
-          'but got: %s.%s',
+          'but got: %s.%s%s',
         elementType == null ? elementType : typeof elementType,
         info,
+        getCurrentFiberStackInDev(),
       );
     }
   }

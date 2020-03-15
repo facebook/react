@@ -175,8 +175,9 @@ function coerceRef(
       invariant(
         inst,
         'Missing owner for string ref %s. This error is likely caused by a ' +
-          'bug in React. Please file an issue.',
+          'bug in React. Please file an issue.%s',
         mixedRef,
+        getCurrentFiberStackInDev(),
       );
       const stringRef = '' + mixedRef;
       // Check if previous string ref matches new string ref
@@ -205,7 +206,8 @@ function coerceRef(
     } else {
       invariant(
         typeof mixedRef === 'string',
-        'Expected ref to be a function, a string, an object returned by React.createRef(), or null.',
+        'Expected ref to be a function, a string, an object returned by React.createRef(), or null.%s',
+        getCurrentFiberStackInDev(),
       );
       invariant(
         element._owner,
@@ -214,8 +216,9 @@ function coerceRef(
           '1. You may be adding a ref to a function component\n' +
           "2. You may be adding a ref to a component that was not created inside a component's render method\n" +
           '3. You have multiple copies of React loaded\n' +
-          'See https://fb.me/react-refs-must-have-owner for more information.',
+          'See https://fb.me/react-refs-must-have-owner for more information.%s',
         mixedRef,
+        getCurrentFiberStackInDev(),
       );
     }
   }
@@ -954,7 +957,8 @@ function ChildReconciler(shouldTrackSideEffects) {
     invariant(
       typeof iteratorFn === 'function',
       'An object is not an iterable. This error is likely caused by a bug in ' +
-        'React. Please file an issue.',
+        'React. Please file an issue.%s',
+      getCurrentFiberStackInDev(),
     );
 
     if (__DEV__) {
