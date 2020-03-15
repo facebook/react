@@ -16,56 +16,96 @@ describe('ReactSpeculativeWork', () => {
   });
 
   it.only('exercises reifyNextWork', () => {
-    let externalSetValue = () => {};
+    let externalSetValue;
+    let externalSetMyContextValue;
 
     let App = () => {
+      let ctxVal = React.useContext(MyContext);
+      let [value, setMyContextValue] = React.useState(ctxVal);
+      externalSetMyContextValue = setMyContextValue;
+
       return (
-        <Intermediate>
-          <BeforeUpdatingLeafBranch>
-            <Leaf />
-          </BeforeUpdatingLeafBranch>
-          <Intermediate>
+        <MyContext.Provider value={value}>
+          <Indirection>
             <Intermediate>
-              <Leaf />
+              <BeforeUpdatingLeafBranch>
+                <Leaf />
+              </BeforeUpdatingLeafBranch>
+              <Intermediate>
+                <Intermediate>
+                  <Leaf />
+                </Intermediate>
+                <UpdatingLeaf />
+                <Leaf />
+                <Leaf />
+              </Intermediate>
+              <AfterUpdatingLeafBranch />
             </Intermediate>
-            <UpdatingLeaf />
-            <Leaf />
-            <Leaf />
-          </Intermediate>
-          <AfterUpdatingLeafBranch />
-        </Intermediate>
+          </Indirection>
+        </MyContext.Provider>
       );
     };
+
+    class Indirection extends React.Component {
+      shouldComponentUpdate() {
+        return false;
+      }
+
+      render() {
+        return this.props.children;
+      }
+    }
 
     let Intermediate = ({children}) => children || null;
     let BeforeUpdatingLeafBranch = ({children}) => children || null;
     let AfterUpdatingLeafBranch = ({children}) => children || null;
     let Leaf = () => null;
 
+    let MyContext = React.createContext(0);
+
     let UpdatingLeaf = () => {
       let [value, setValue] = React.useState('leaf');
+      let isEven = React.useContext(MyContext, v => v % 2 === 0);
       Scheduler.unstable_yieldValue(value);
       externalSetValue = setValue;
-      return value;
+      return `${value}-${isEven ? 'even' : 'odd'}`;
     };
 
     let root = ReactNoop.createRoot();
 
     ReactNoop.act(() => root.render(<App />));
     expect(Scheduler).toHaveYielded(['leaf']);
-    expect(root).toMatchRenderedOutput('leaf');
+    expect(root).toMatchRenderedOutput('leaf-even');
 
     ReactNoop.act(() => externalSetValue('leaf'));
     expect(Scheduler).toHaveYielded([]);
-    expect(root).toMatchRenderedOutput('leaf');
+    expect(root).toMatchRenderedOutput('leaf-even');
 
-    ReactNoop.act(() => externalSetValue('bar'));
+    ReactNoop.act(() => externalSetMyContextValue(2));
+    expect(Scheduler).toHaveYielded([]);
+    expect(root).toMatchRenderedOutput('leaf-even');
+
+    ReactNoop.act(() => {
+      externalSetValue('leaf');
+      externalSetMyContextValue(4);
+    });
+    expect(Scheduler).toHaveYielded([]);
+    expect(root).toMatchRenderedOutput('leaf-even');
+
+    ReactNoop.act(() => externalSetMyContextValue(5));
+    expect(Scheduler).toHaveYielded(['leaf']);
+    expect(root).toMatchRenderedOutput('leaf-odd');
+
+    ReactNoop.act(() => {
+      externalSetValue('bar');
+      externalSetMyContextValue(4);
+    });
     expect(Scheduler).toHaveYielded(['bar']);
-    expect(root).toMatchRenderedOutput('bar');
+    expect(root).toMatchRenderedOutput('bar-even');
 
     ReactNoop.act(() => externalSetValue('baz'));
     expect(Scheduler).toHaveYielded(['baz']);
-    expect(root).toMatchRenderedOutput('baz');
+    expect(root).toMatchRenderedOutput('baz-even');
   });
 
   it('enters advanced context tracking mode when you read from different contexts in different orders', () => {

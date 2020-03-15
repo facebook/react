@@ -11,6 +11,7 @@ import type {ReactContext} from 'shared/ReactTypes';
 import type {Fiber} from './ReactFiber';
 import type {StackCursor} from './ReactFiberStack';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
+import {ReifiedWorkMode} from './ReactTypeOfMode';
 
 export type ContextDependency<T> = {
   context: ReactContext<T>,
@@ -40,6 +41,7 @@ import {markWorkInProgressReceivedUpdate} from './ReactFiberBeginWork';
 import {
   enableSuspenseServerRenderer,
   enableContextReaderPropagation,
+  enableReifyNextWork,
 } from 'shared/ReactFeatureFlags';
 
 const valueCursor: StackCursor<mixed> = createCursor(null);
@@ -85,8 +87,12 @@ export function exitDisallowedContextReadInDEV(): void {
   }
 }
 
+let pushedCount = 0;
+
 export function pushProvider<T>(providerFiber: Fiber, nextValue: T): void {
   const context: ReactContext<T> = providerFiber.type._context;
+
+  console.log(`<====PUSH========= ${++pushedCount} pushed providers`);
 
   if (enableContextReaderPropagation) {
     // push the previousReaders onto the stack
@@ -133,6 +139,7 @@ export function pushProvider<T>(providerFiber: Fiber, nextValue: T): void {
 
 export function popProvider(providerFiber: Fiber): void {
   const currentValue = valueCursor.current;
+  console.log(`======POP========> ${--pushedCount} pushed providers`);
 
   pop(valueCursor, providerFiber);
 
@@ -188,17 +195,26 @@ export function scheduleWorkOnParentPath(
     let alternate = node.alternate;
     if (node.childExpirationTime < renderExpirationTime) {
       node.childExpirationTime = renderExpirationTime;
+      if (enableReifyNextWork) {
+        node.mode &= !ReifiedWorkMode;
+      }
       if (
         alternate !== null &&
         alternate.childExpirationTime < renderExpirationTime
       ) {
         alternate.childExpirationTime = renderExpirationTime;
+        if (enableReifyNextWork) {
+          alternate.mode &= !ReifiedWorkMode;
+        }
       }
     } else if (
       alternate !== null &&
       alternate.childExpirationTime < renderExpirationTime
     ) {
       alternate.childExpirationTime = renderExpirationTime;
+      if (enableReifyNextWork) {
+        alternate.mode &= !ReifiedWorkMode;
+      }
     } else {
       // Neither alternate was updated, which means the rest of the
       // ancestor path already has sufficient priority.
@@ -259,6 +275,9 @@ export function propagateContextChange(
 
           if (fiber.expirationTime < renderExpirationTime) {
             fiber.expirationTime = renderExpirationTime;
+            if (enableReifyNextWork) {
+              fiber.mode &= !ReifiedWorkMode;
+            }
           }
           let alternate = fiber.alternate;
           if (
@@ -266,6 +285,9 @@ export function propagateContextChange(
             alternate.expirationTime < renderExpirationTime
           ) {
             alternate.expirationTime = renderExpirationTime;
+            if (enableReifyNextWork) {
+              alternate.mode &= !ReifiedWorkMode;
+            }
           }
 
           scheduleWorkOnParentPath(fiber.return, renderExpirationTime);
@@ -455,12 +477,18 @@ export function attachReader(contextItem) {
 
             if (readerFiber.expirationTime < renderExpirationTime) {
               readerFiber.expirationTime = renderExpirationTime;
+              if (enableReifyNextWork) {
+                readerFiber.mode &= !ReifiedWorkMode;
+              }
             }
             if (
               alternate !== null &&
               alternate.expirationTime < renderExpirationTime
             ) {
               alternate.expirationTime = renderExpirationTime;
+              if (enableReifyNextWork) {
+                alternate.mode &= !ReifiedWorkMode;
+              }
             }
 
             scheduleWorkOnParentPath(readerFiber.return, renderExpirationTime);

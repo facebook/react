@@ -135,6 +135,7 @@ import {
 import {findFirstSuspended} from './ReactFiberSuspenseComponent';
 import {
   pushProvider,
+  popProvider,
   propagateContextChange,
   readContext,
   prepareToReadContext,
@@ -3085,6 +3086,16 @@ function reifyNextWork(workInProgress: Fiber, renderExpirationTime) {
         }
       }
 
+      if (fiber.tag === ContextProvider) {
+        console.log(
+          `_______ fiber(${fiberName(
+            fiber,
+          )}) is a ContextProvider, pushing its value onto stack`,
+        );
+        const newValue = fiber.memoizedProps.value;
+        pushProvider(fiber, newValue);
+      }
+
       if (nextFiber !== null) {
         nextFiber.return = fiber;
       } else {
@@ -3102,6 +3113,14 @@ function reifyNextWork(workInProgress: Fiber, renderExpirationTime) {
             nextFiber = null;
             break;
           }
+          if (nextFiber.tag === ContextProvider) {
+            console.log(
+              `_______ ______ the return fiber return(${fiberName(
+                nextFiber,
+              )}) is a ContextProvider, pop its value off the stack`,
+            );
+            popProvider(nextFiber);
+          }
           let sibling = nextFiber.sibling;
           if (sibling !== null) {
             // Set the return pointer of the sibling to the work-in-progress fiber.
@@ -3117,12 +3136,12 @@ function reifyNextWork(workInProgress: Fiber, renderExpirationTime) {
             break;
           }
           // No more siblings. Traverse up.
+          nextFiber = nextFiber.return;
           console.log(
             `_______ ______ there are no siblings to return back to return(${fiberName(
-              nextFiber.return,
+              nextFiber,
             )}) and reset expirationTimes`,
           );
-          nextFiber = nextFiber.return;
           resetChildExpirationTime(nextFiber);
         }
       }
