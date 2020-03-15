@@ -2920,7 +2920,7 @@ function warnAboutRenderPhaseUpdatesInDEV(fiber) {
             'Cannot update a component from inside the function body of a ' +
               'different component.\n' +
               '"%s" updated "%s".',
-            getComponentName(workInProgress.type),
+            workInProgress && getComponentName(workInProgress.type),
             getComponentName(fiber.type),
           );
           break;

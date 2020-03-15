@@ -1784,7 +1784,7 @@ describe('ReactHooks', () => {
       expect(console.error).toHaveBeenCalledTimes(2);
       expect(console.error.calls.argsFor(0)[0]).toContain(
         'Warning: Cannot update a component from inside the function body ' +
-          'of a different component.%s',
+          'of a different component.\n"%s" updated "%s".%s',
       );
     }
   });
