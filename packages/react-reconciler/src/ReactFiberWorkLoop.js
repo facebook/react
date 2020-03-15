@@ -2918,7 +2918,10 @@ function warnAboutRenderPhaseUpdatesInDEV(fiber) {
         case SimpleMemoComponent: {
           console.error(
             'Cannot update a component from inside the function body of a ' +
-              'different component.',
+              'different component.\n' +
+              '%s updated %s',
+              getComponentName(ReactCurrentOwner.current.type),
+              getComponentName(fiber.type)
           );
           break;
         }
