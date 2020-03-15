@@ -3001,8 +3001,6 @@ function fiberName(fiber) {
 function reifyNextWork(workInProgress: Fiber, renderExpirationTime) {
   console.log(`reifyNextWork(${fiberName(workInProgress)})`);
 
-  let loops = 0;
-
   let fiber = workInProgress.child;
   if (fiber !== null) {
     // Set the return pointer of the child to the work-in-progress fiber.
@@ -3012,11 +3010,6 @@ function reifyNextWork(workInProgress: Fiber, renderExpirationTime) {
   try {
     while (fiber !== null) {
       let nextFiber;
-
-      if (loops++ > 1000) {
-        console.log('BREAKING LOOP');
-        break;
-      }
 
       console.log(
         `_______ see IF fiber(${fiberName(fiber)}) has work to reify`,
