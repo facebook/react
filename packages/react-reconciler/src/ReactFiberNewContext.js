@@ -196,7 +196,7 @@ export function scheduleWorkOnParentPath(
     if (node.childExpirationTime < renderExpirationTime) {
       node.childExpirationTime = renderExpirationTime;
       if (enableReifyNextWork) {
-        node.mode &= !ReifiedWorkMode;
+        node.mode &= ~ReifiedWorkMode;
       }
       if (
         alternate !== null &&
@@ -204,7 +204,7 @@ export function scheduleWorkOnParentPath(
       ) {
         alternate.childExpirationTime = renderExpirationTime;
         if (enableReifyNextWork) {
-          alternate.mode &= !ReifiedWorkMode;
+          alternate.mode &= ~ReifiedWorkMode;
         }
       }
     } else if (
@@ -213,7 +213,7 @@ export function scheduleWorkOnParentPath(
     ) {
       alternate.childExpirationTime = renderExpirationTime;
       if (enableReifyNextWork) {
-        alternate.mode &= !ReifiedWorkMode;
+        alternate.mode &= ~ReifiedWorkMode;
       }
     } else {
       // Neither alternate was updated, which means the rest of the
@@ -276,7 +276,7 @@ export function propagateContextChange(
           if (fiber.expirationTime < renderExpirationTime) {
             fiber.expirationTime = renderExpirationTime;
             if (enableReifyNextWork) {
-              fiber.mode &= !ReifiedWorkMode;
+              fiber.mode &= ~ReifiedWorkMode;
             }
           }
           let alternate = fiber.alternate;
@@ -286,7 +286,7 @@ export function propagateContextChange(
           ) {
             alternate.expirationTime = renderExpirationTime;
             if (enableReifyNextWork) {
-              alternate.mode &= !ReifiedWorkMode;
+              alternate.mode &= ~ReifiedWorkMode;
             }
           }
 
@@ -478,7 +478,7 @@ export function attachReader(contextItem) {
             if (readerFiber.expirationTime < renderExpirationTime) {
               readerFiber.expirationTime = renderExpirationTime;
               if (enableReifyNextWork) {
-                readerFiber.mode &= !ReifiedWorkMode;
+                readerFiber.mode &= ~ReifiedWorkMode;
               }
             }
             if (
@@ -487,7 +487,7 @@ export function attachReader(contextItem) {
             ) {
               alternate.expirationTime = renderExpirationTime;
               if (enableReifyNextWork) {
-                alternate.mode &= !ReifiedWorkMode;
+                alternate.mode &= ~ReifiedWorkMode;
               }
             }
 

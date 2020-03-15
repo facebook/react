@@ -464,14 +464,14 @@ function markUpdateTimeFromFiberToRoot(fiber, expirationTime) {
   if (fiber.expirationTime < expirationTime) {
     fiber.expirationTime = expirationTime;
     if (enableReifyNextWork) {
-      fiber.mode &= !ReifiedWorkMode;
+      fiber.mode &= ~ReifiedWorkMode;
     }
   }
   let alternate = fiber.alternate;
   if (alternate !== null && alternate.expirationTime < expirationTime) {
     alternate.expirationTime = expirationTime;
     if (enableReifyNextWork) {
-      alternate.mode &= !ReifiedWorkMode;
+      alternate.mode &= ~ReifiedWorkMode;
     }
   }
   // Walk the parent path to the root and update the child expiration time.
@@ -485,7 +485,7 @@ function markUpdateTimeFromFiberToRoot(fiber, expirationTime) {
       if (node.childExpirationTime < expirationTime) {
         node.childExpirationTime = expirationTime;
         if (enableReifyNextWork) {
-          node.mode &= !ReifiedWorkMode;
+          node.mode &= ~ReifiedWorkMode;
         }
         if (
           alternate !== null &&
@@ -493,7 +493,7 @@ function markUpdateTimeFromFiberToRoot(fiber, expirationTime) {
         ) {
           alternate.childExpirationTime = expirationTime;
           if (enableReifyNextWork) {
-            alternate.mode &= !ReifiedWorkMode;
+            alternate.mode &= ~ReifiedWorkMode;
           }
         }
       } else if (
@@ -502,7 +502,7 @@ function markUpdateTimeFromFiberToRoot(fiber, expirationTime) {
       ) {
         alternate.childExpirationTime = expirationTime;
         if (enableReifyNextWork) {
-          alternate.mode &= !ReifiedWorkMode;
+          alternate.mode &= ~ReifiedWorkMode;
         }
       }
       if (node.return === null && node.tag === HostRoot) {

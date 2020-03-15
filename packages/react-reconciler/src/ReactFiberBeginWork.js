@@ -1612,7 +1612,6 @@ function mountIndeterminateComponent(
           getComponentName(Component) || 'Unknown',
         );
       }
-
       if (
         debugRenderPhaseSideEffectsForStrictMode &&
         workInProgress.mode & StrictMode
@@ -3013,7 +3012,7 @@ function reifyNextWork(workInProgress: Fiber, renderExpirationTime) {
     while (fiber !== null) {
       let nextFiber;
 
-      if (loops++ > 100) {
+      if (loops++ > 1000) {
         console.log('BREAKING LOOP');
         break;
       }
