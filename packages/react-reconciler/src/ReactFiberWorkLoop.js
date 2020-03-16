@@ -1254,7 +1254,7 @@ export function flushControlled(fn: () => mixed): void {
 }
 
 function prepareFreshStack(root, expirationTime) {
-  console.log('------------------------------------ prepareFreshStack');
+  // console.log('------------------------------------ prepareFreshStack');
   root.finishedWork = null;
   root.finishedExpirationTime = NoWork;
 

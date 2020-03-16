@@ -660,8 +660,11 @@ function updateWorkInProgressHook(): Hook {
   return workInProgressHook;
 }
 
-// use a Symbol to allow for any value including null and undefined to be memoized
-const EMPTY = Symbol('empty');
+// wanted to use a symbol here to represent no value given undefiend and null should be valid
+// selections. However Symbol was causing errors in tests so using an empty object to get the
+// same effect
+// const EMPTY = Symbol('empty');
+const EMPTY = {};
 
 function mountContextImpl<C>(
   context: ReactContext<C>,
@@ -1020,7 +1023,7 @@ function bailoutReducer(hook, renderExpirationTime): boolean {
     } while (update !== null && update !== first);
 
     // if newState is different from the current state do not bailout
-    if (newState !== hook.memoizedState) {
+    if (!is(newState, hook.memoizedState)) {
       return false;
     }
   }

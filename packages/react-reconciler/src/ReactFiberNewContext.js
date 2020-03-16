@@ -92,7 +92,7 @@ let pushedCount = 0;
 export function pushProvider<T>(providerFiber: Fiber, nextValue: T): void {
   const context: ReactContext<T> = providerFiber.type._context;
 
-  console.log(`<====PUSH========= ${++pushedCount} pushed providers`);
+  // console.log(`<====PUSH========= ${++pushedCount} pushed providers`);
 
   if (enableContextReaderPropagation) {
     // push the previousReaders onto the stack
@@ -139,7 +139,7 @@ export function pushProvider<T>(providerFiber: Fiber, nextValue: T): void {
 
 export function popProvider(providerFiber: Fiber): void {
   const currentValue = valueCursor.current;
-  console.log(`======POP========> ${--pushedCount} pushed providers`);
+  // console.log(`======POP========> ${--pushedCount} pushed providers`);
 
   pop(valueCursor, providerFiber);
 

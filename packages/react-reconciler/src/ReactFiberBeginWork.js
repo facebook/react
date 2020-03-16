@@ -2999,7 +2999,7 @@ function fiberName(fiber) {
 }
 
 function reifyNextWork(workInProgress: Fiber, renderExpirationTime) {
-  console.log(`reifyNextWork(${fiberName(workInProgress)})`);
+  // console.log(`reifyNextWork(${fiberName(workInProgress)})`);
 
   let fiber = workInProgress.child;
   if (fiber !== null) {
@@ -3007,151 +3007,159 @@ function reifyNextWork(workInProgress: Fiber, renderExpirationTime) {
     fiber.return = workInProgress;
   }
 
-  try {
-    while (fiber !== null) {
-      let nextFiber;
+  // try {
+  while (fiber !== null) {
+    let nextFiber;
 
-      console.log(
-        `_______ see IF fiber(${fiberName(fiber)}) has work to reify`,
-      );
+    // console.log(
+    //   `_______ see IF fiber(${fiberName(fiber)}) has work to reify`,
+    // );
 
-      if (fiber.mode & ReifiedWorkMode) {
-        console.log(
-          `_______ fiber(${fiberName(
-            fiber,
-          )}) has already been reified, don't go deeper`,
-        );
-        nextFiber = null;
-      } else {
-        fiber.mode |= ReifiedWorkMode;
+    if (fiber.mode & ReifiedWorkMode) {
+      // console.log(
+      //   `_______ fiber(${fiberName(
+      //     fiber,
+      //   )}) has already been reified, don't go deeper`,
+      // );
+      nextFiber = null;
+    } else {
+      fiber.mode |= ReifiedWorkMode;
 
-        if (fiber.expirationTime >= renderExpirationTime) {
-          console.log(
-            `_______ fiber(${fiberName(
-              fiber,
-            )}) DOES HAVE work to reify, reifying`,
-          );
-          let didBailout;
-          switch (fiber.tag) {
-            case ForwardRef:
-            case SimpleMemoComponent:
-            case FunctionComponent: {
+      if (fiber.expirationTime >= renderExpirationTime) {
+        // console.log(
+        //   `_______ fiber(${fiberName(
+        //     fiber,
+        //   )}) DOES HAVE work to reify, reifying`,
+        // );
+        let didBailout;
+        switch (fiber.tag) {
+          case ForwardRef:
+          case SimpleMemoComponent:
+          case FunctionComponent: {
+            try {
               didBailout = canBailoutSpeculativeWorkWithHooks(
                 fiber,
                 renderExpirationTime,
               );
-              break;
-            }
-            case ClassComponent: {
-              // class component is not yet supported for bailing out of context and state updates
-              // but it support should be possible
-              // @TODO implement a ClassComponent bailout here
-              didBailout = false;
-              break;
-            }
-            default: {
-              // in unsupported cases we cannot bail out of work and we
-              // consider the speculative work reified
+            } catch (e) {
+              // suppress error and do not bailout. it should error again
+              // when the component renders when the context selector is run
+              // or when the reducer state is updated
               didBailout = false;
             }
+
+            break;
           }
-          if (didBailout) {
-            console.log(
-              `_______ fiber(${fiberName(
-                fiber,
-              )}) DOES NOT HAVE REIFIED work, go deeper`,
-            );
-            fiber.expirationTime = NoWork;
-            nextFiber = fiber.child;
-          } else {
-            console.log(
-              `_______ fiber(${fiberName(
-                fiber,
-              )}) HAS REIFIED work, don't go deeper`,
-            );
-            nextFiber = null;
+          case ClassComponent: {
+            // class component is not yet supported for bailing out of context and state updates
+            // but it support should be possible
+            // @TODO implement a ClassComponent bailout here
+            didBailout = false;
+            break;
           }
-        } else if (fiber.childExpirationTime >= renderExpirationTime) {
-          console.log(
-            `_______ fiber(${fiberName(
-              fiber,
-            )}) has children with work to reify, go deeper`,
-          );
+          default: {
+            // in unsupported cases we cannot bail out of work and we
+            // consider the speculative work reified
+            didBailout = false;
+          }
+        }
+        if (didBailout) {
+          // console.log(
+          //   `_______ fiber(${fiberName(
+          //     fiber,
+          //   )}) DOES NOT HAVE REIFIED work, go deeper`,
+          // );
+          fiber.expirationTime = NoWork;
           nextFiber = fiber.child;
         } else {
-          console.log(
-            `_______ there is NO WORK deeper than fiber(${fiberName(
-              fiber,
-            )}), don't go deeper`,
-          );
+          // console.log(
+          //   `_______ fiber(${fiberName(
+          //     fiber,
+          //   )}) HAS REIFIED work, don't go deeper`,
+          // );
           nextFiber = null;
         }
-      }
-
-      if (fiber.tag === ContextProvider) {
-        console.log(
-          `_______ fiber(${fiberName(
-            fiber,
-          )}) is a ContextProvider, pushing its value onto stack`,
-        );
-        const newValue = fiber.memoizedProps.value;
-        pushProvider(fiber, newValue);
-      }
-
-      if (nextFiber !== null) {
-        nextFiber.return = fiber;
+      } else if (fiber.childExpirationTime >= renderExpirationTime) {
+        // console.log(
+        //   `_______ fiber(${fiberName(
+        //     fiber,
+        //   )}) has children with work to reify, go deeper`,
+        // );
+        nextFiber = fiber.child;
       } else {
-        console.log(
-          `_______ looking for siblingsOf(${fiberName(fiber)} and ancestors)`,
-        );
-        // No child. Traverse to next sibling.
-        nextFiber = fiber;
-        while (nextFiber !== null) {
-          if (nextFiber === workInProgress) {
-            // We're back to the root of this subtree. Exit.
-            console.log(
-              `_______ ______ we're back to the beginning, finish up`,
-            );
-            nextFiber = null;
-            break;
-          }
-          if (nextFiber.tag === ContextProvider) {
-            console.log(
-              `_______ ______ the return fiber return(${fiberName(
-                nextFiber,
-              )}) is a ContextProvider, pop its value off the stack`,
-            );
-            popProvider(nextFiber);
-          }
-          let sibling = nextFiber.sibling;
-          if (sibling !== null) {
-            // Set the return pointer of the sibling to the work-in-progress fiber.
-            console.log(
-              `_______ ______ we've found sibling(${fiberName(
-                sibling,
-              )}) of fiber(${fiberName(
-                nextFiber,
-              )}), check it for reifying work`,
-            );
-            sibling.return = nextFiber.return;
-            nextFiber = sibling;
-            break;
-          }
-          // No more siblings. Traverse up.
-          nextFiber = nextFiber.return;
-          console.log(
-            `_______ ______ there are no siblings to return back to return(${fiberName(
-              nextFiber,
-            )}) and reset expirationTimes`,
-          );
-          resetChildExpirationTime(nextFiber);
-        }
+        // console.log(
+        //   `_______ there is NO WORK deeper than fiber(${fiberName(
+        //     fiber,
+        //   )}), don't go deeper`,
+        // );
+        nextFiber = null;
       }
-      fiber = nextFiber;
     }
-  } catch (e) {
-    console.log(e);
+
+    if (fiber.tag === ContextProvider) {
+      // console.log(
+      //   `_______ fiber(${fiberName(
+      //     fiber,
+      //   )}) is a ContextProvider, pushing its value onto stack`,
+      // );
+      const newValue = fiber.memoizedProps.value;
+      pushProvider(fiber, newValue);
+    }
+
+    if (nextFiber !== null) {
+      nextFiber.return = fiber;
+    } else {
+      // console.log(
+      //   `_______ looking for siblingsOf(${fiberName(fiber)} and ancestors)`,
+      // );
+      // No child. Traverse to next sibling.
+      nextFiber = fiber;
+      while (nextFiber !== null) {
+        if (nextFiber === workInProgress) {
+          // We're back to the root of this subtree. Exit.
+          // console.log(
+          //   `_______ ______ we're back to the beginning, finish up`,
+          // );
+          nextFiber = null;
+          break;
+        }
+        if (nextFiber.tag === ContextProvider) {
+          // console.log(
+          //   `_______ ______ the return fiber return(${fiberName(
+          //     nextFiber,
+          //   )}) is a ContextProvider, pop its value off the stack`,
+          // );
+          popProvider(nextFiber);
+        }
+        let sibling = nextFiber.sibling;
+        if (sibling !== null) {
+          // Set the return pointer of the sibling to the work-in-progress fiber.
+          // console.log(
+          //   `_______ ______ we've found sibling(${fiberName(
+          //     sibling,
+          //   )}) of fiber(${fiberName(
+          //     nextFiber,
+          //   )}), check it for reifying work`,
+          // );
+          sibling.return = nextFiber.return;
+          nextFiber = sibling;
+          break;
+        }
+        // No more siblings. Traverse up.
+        nextFiber = nextFiber.return;
+        // console.log(
+        //   `_______ ______ there are no siblings to return back to return(${fiberName(
+        //     nextFiber,
+        //   )}) and reset expirationTimes`,
+        // );
+        resetChildExpirationTime(nextFiber);
+      }
+    }
+    fiber = nextFiber;
   }
+  // } catch (e) {
+  //   console.log(e);
+  // }
 }
 
 function resetChildExpirationTime(fiber: Fiber) {
@@ -3170,11 +3178,11 @@ function resetChildExpirationTime(fiber: Fiber) {
     child = child.sibling;
   }
 
-  console.log(
-    `_______ _____ the new child expriation time for fiber(${fiberName(
-      fiber,
-    )}) is ${newChildExpirationTime}`,
-  );
+  // console.log(
+  //   `_______ _____ the new child expriation time for fiber(${fiberName(
+  //     fiber,
+  //   )}) is ${newChildExpirationTime}`,
+  // );
 
   fiber.childExpirationTime = newChildExpirationTime;
 }
@@ -3204,17 +3212,17 @@ function bailoutOnAlreadyFinishedWork(
   if (enableReifyNextWork) {
     if (workInProgress.childExpirationTime >= renderExpirationTime) {
       if (workInProgress.mode & ReifiedWorkMode) {
-        console.log(
-          `bailoutOnAlreadyFinishedWork(${fiberName(
-            workInProgress,
-          )}) children have unprocessed work but we have already reified it so we do not need to do that again`,
-        );
+        // console.log(
+        //   `bailoutOnAlreadyFinishedWork(${fiberName(
+        //     workInProgress,
+        //   )}) children have unprocessed work but we have already reified it so we do not need to do that again`,
+        // );
       } else {
-        console.log(
-          `bailoutOnAlreadyFinishedWork(${fiberName(
-            workInProgress,
-          )}) children has unprocessed updates and was not yet reified`,
-        );
+        // console.log(
+        //   `bailoutOnAlreadyFinishedWork(${fiberName(
+        //     workInProgress,
+        //   )}) children has unprocessed updates and was not yet reified`,
+        // );
         reifyNextWork(workInProgress, renderExpirationTime);
       }
     }
@@ -3226,11 +3234,11 @@ function bailoutOnAlreadyFinishedWork(
     // The children don't have any work either. We can skip them.
     // TODO: Once we add back resuming, we should check if the children are
     // a work-in-progress set. If so, we need to transfer their effects.
-    console.log(
-      `bailoutOnAlreadyFinishedWork(${fiberName(
-        workInProgress,
-      )}) there is no child work to do so not going any deeper with work`,
-    );
+    // console.log(
+    //   `bailoutOnAlreadyFinishedWork(${fiberName(
+    //     workInProgress,
+    //   )}) there is no child work to do so not going any deeper with work`,
+    // );
     return null;
   } else {
     if (enableSpeculativeWork) {
@@ -3316,7 +3324,7 @@ function remountFiber(
 }
 
 function reifyWorkInProgress(current: Fiber, workInProgress: Fiber | null) {
-  console.log('(((((((((((( reifyWorkInProgress ))))))))))))');
+  // console.log('(((((((((((( reifyWorkInProgress ))))))))))))');
   didReifySpeculativeWork = true;
 
   if (workInProgress === null) {
@@ -3423,7 +3431,7 @@ function beginWork(
   workInProgress: Fiber,
   renderExpirationTime: ExpirationTime,
 ): Fiber | null {
-  console.log(`beginWork(${fiberName(workInProgress)})`);
+  // console.log(`beginWork(${fiberName(workInProgress)})`);
   if (enableSpeculativeWork) {
     // this value is read from work loop to determine if we need to swap
     // the unitOfWork for it's altnerate when we return null from beginWork

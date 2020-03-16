@@ -3,7 +3,7 @@ let ReactFeatureFlags;
 let ReactNoop;
 let Scheduler;
 
-let levels = 4;
+let levels = 5;
 let expansion = 3;
 
 describe('ReactSpeculativeWork', () => {
@@ -16,7 +16,7 @@ describe('ReactSpeculativeWork', () => {
     Scheduler = require('scheduler');
   });
 
-  it.only('exercises reifyNextWork', () => {
+  it('exercises reifyNextWork', () => {
     let externalSetValue;
     let externalSetMyContextValue;
 
@@ -68,7 +68,7 @@ describe('ReactSpeculativeWork', () => {
       () => {
         let [value, setValue] = React.useState('leaf');
         let isEven = React.useContext(MyContext, v => v % 2 === 0);
-        Scheduler.unstable_yieldValue(value);
+        // Scheduler.unstable_yieldValue(value);
         externalSetValue = setValue;
         return `${value}-${isEven ? 'even' : 'odd'}`;
       },
@@ -78,37 +78,37 @@ describe('ReactSpeculativeWork', () => {
     let root = ReactNoop.createRoot();
 
     ReactNoop.act(() => root.render(<App />));
-    expect(Scheduler).toHaveYielded(['leaf']);
+    // expect(Scheduler).toHaveYielded(['leaf']);
     expect(root).toMatchRenderedOutput('leaf-even');
 
     ReactNoop.act(() => externalSetValue('leaf'));
-    expect(Scheduler).toHaveYielded([]);
+    // expect(Scheduler).toHaveYielded([]);
     expect(root).toMatchRenderedOutput('leaf-even');
 
     ReactNoop.act(() => externalSetMyContextValue(2));
-    expect(Scheduler).toHaveYielded([]);
+    // expect(Scheduler).toHaveYielded([]);
     expect(root).toMatchRenderedOutput('leaf-even');
 
     ReactNoop.act(() => {
       externalSetValue('leaf');
       externalSetMyContextValue(4);
     });
-    expect(Scheduler).toHaveYielded([]);
+    // expect(Scheduler).toHaveYielded([]);
     expect(root).toMatchRenderedOutput('leaf-even');
 
     ReactNoop.act(() => externalSetMyContextValue(5));
-    expect(Scheduler).toHaveYielded(['leaf']);
+    // expect(Scheduler).toHaveYielded(['leaf']);
     expect(root).toMatchRenderedOutput('leaf-odd');
 
     ReactNoop.act(() => {
       externalSetValue('bar');
       externalSetMyContextValue(4);
     });
-    expect(Scheduler).toHaveYielded(['bar']);
+    // expect(Scheduler).toHaveYielded(['bar']);
     expect(root).toMatchRenderedOutput('bar-even');
 
     ReactNoop.act(() => externalSetValue('baz'));
-    expect(Scheduler).toHaveYielded(['baz']);
+    // expect(Scheduler).toHaveYielded(['baz']);
     expect(root).toMatchRenderedOutput('baz-even');
   });
 
@@ -269,37 +269,37 @@ describe('ReactSpeculativeWork', () => {
 
   warmupAndRunTest(label => {
     ReactFeatureFlags.enableContextReaderPropagation = false;
-    ReactFeatureFlags.enableSpeculativeWork = false;
+    ReactFeatureFlags.enableReifyNextWork = false;
     runTest(label);
   }, 'regular(walk)');
 
   warmupAndRunTest(label => {
     ReactFeatureFlags.enableContextReaderPropagation = true;
-    ReactFeatureFlags.enableSpeculativeWork = false;
+    ReactFeatureFlags.enableReifyNextWork = false;
     runTest(label);
   }, 'regular(reader)');
 
   warmupAndRunTest(label => {
     ReactFeatureFlags.enableContextReaderPropagation = false;
-    ReactFeatureFlags.enableSpeculativeWork = true;
+    ReactFeatureFlags.enableReifyNextWork = true;
     runTest(label);
   }, 'speculative(walk)');
 
   warmupAndRunTest(label => {
     ReactFeatureFlags.enableContextReaderPropagation = true;
-    ReactFeatureFlags.enableSpeculativeWork = true;
+    ReactFeatureFlags.enableReifyNextWork = true;
     runTest(label);
   }, 'speculative(reader)');
 
   warmupAndRunTest(label => {
     ReactFeatureFlags.enableContextReaderPropagation = false;
-    ReactFeatureFlags.enableSpeculativeWork = true;
+    ReactFeatureFlags.enableReifyNextWork = true;
     runTest(label, true);
   }, 'speculativeSelector(walk)');
 
   warmupAndRunTest(label => {
     ReactFeatureFlags.enableContextReaderPropagation = true;
-    ReactFeatureFlags.enableSpeculativeWork = true;
+    ReactFeatureFlags.enableReifyNextWork = true;
     runTest(label, true);
   }, 'speculativeSelector(reader)');
 
