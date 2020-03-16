@@ -2276,10 +2276,6 @@ function flushPassiveEffectsImpl() {
     return false;
   }
 
-  if (__DEV__) {
-    isFlushingPassiveEffects = true;
-  }
-
   const root = rootWithPendingPassiveEffects;
   const expirationTime = pendingPassiveEffectsExpirationTime;
   rootWithPendingPassiveEffects = null;
@@ -2289,6 +2285,11 @@ function flushPassiveEffectsImpl() {
     (executionContext & (RenderContext | CommitContext)) === NoContext,
     'Cannot flush passive effects while already rendering.',
   );
+
+  if (__DEV__) {
+    isFlushingPassiveEffects = true;
+  }
+
   const prevExecutionContext = executionContext;
   executionContext |= CommitContext;
   const prevInteractions = pushInteractions(root);
@@ -2445,6 +2446,10 @@ function flushPassiveEffectsImpl() {
     finishPendingInteractions(root, expirationTime);
   }
 
+  if (__DEV__) {
+    isFlushingPassiveEffects = false;
+  }
+
   executionContext = prevExecutionContext;
 
   flushSyncCallbackQueue();
@@ -2453,10 +2458,6 @@ function flushPassiveEffectsImpl() {
   // exceeds the limit, we'll fire a warning.
   nestedPassiveUpdateCount =
     rootWithPendingPassiveEffects === null ? 0 : nestedPassiveUpdateCount + 1;
-
-  if (__DEV__) {
-    isFlushingPassiveEffects = false;
-  }
 
   return true;
 }
