@@ -11,8 +11,8 @@ import type {
   Destination,
   Chunk,
   BundlerConfig,
-  // ModuleReference,
-  // ModuleMetaData,
+  ModuleMetaData,
+  ModuleReference,
 } from './ReactFlightServerConfig';
 
 import {
@@ -24,17 +24,25 @@ import {
   close,
   processModelChunk,
   processErrorChunk,
-  // resolveModuleMetaData,
+  resolveModuleMetaData,
 } from './ReactFlightServerConfig';
 
-import {REACT_ELEMENT_TYPE} from 'shared/ReactSymbols';
+import {
+  REACT_BLOCK_TYPE,
+  REACT_SERVER_BLOCK_TYPE,
+  REACT_ELEMENT_TYPE,
+  REACT_FRAGMENT_TYPE,
+  REACT_LAZY_TYPE,
+} from 'shared/ReactSymbols';
+
+import invariant from 'shared/invariant';
 
 type ReactJSONValue =
   | string
   | boolean
   | number
   | null
-  | Array<ReactModel>
+  | $ReadOnlyArray<ReactJSONValue>
   | ReactModelObject;
 
 export type ReactModel =
@@ -50,7 +58,7 @@ type ReactModelObject = {+[key: string]: ReactModel};
 
 type Segment = {
   id: number,
-  model: ReactModel,
+  query: () => ReactModel,
   ping: () => void,
 };
 
@@ -81,26 +89,31 @@ export function createRequest(
     completedJSONChunks: [],
     completedErrorChunks: [],
     flowing: false,
-    toJSON: (key: string, value: ReactModel) =>
-      resolveModelToJSON(request, value),
+    toJSON: function(key: string, value: ReactModel): ReactJSONValue {
+      return resolveModelToJSON(request, this, key, value);
+    },
   };
   request.pendingChunks++;
-  let rootSegment = createSegment(request, model);
+  let rootSegment = createSegment(request, () => model);
   pingedSegments.push(rootSegment);
   return request;
 }
 
-function attemptResolveModelComponent(element: React$Element<any>): ReactModel {
+function attemptResolveElement(element: React$Element<any>): ReactModel {
   let type = element.type;
   let props = element.props;
   if (typeof type === 'function') {
-    // This is a nested view model.
+    // This is a server-side component.
     return type(props);
   } else if (typeof type === 'string') {
     // This is a host element. E.g. HTML.
     return [REACT_ELEMENT_TYPE, type, element.key, element.props];
+  } else if (type[0] === REACT_SERVER_BLOCK_TYPE) {
+    return [REACT_ELEMENT_TYPE, type, element.key, element.props];
+  } else if (type === REACT_FRAGMENT_TYPE) {
+    return element.props.children;
   } else {
-    throw new Error('Unsupported type.');
+    invariant(false, 'Unsupported type.');
   }
 }
 
@@ -112,11 +125,11 @@ function pingSegment(request: Request, segment: Segment): void {
   }
 }
 
-function createSegment(request: Request, model: ReactModel): Segment {
+function createSegment(request: Request, query: () => ReactModel): Segment {
   let id = request.nextChunkId++;
   let segment = {
     id,
-    model,
+    query,
     ping: () => pingSegment(request, segment),
   };
   return segment;
@@ -127,9 +140,9 @@ function serializeIDRef(id: number): string {
 }
 
 function escapeStringValue(value: string): string {
-  if (value[0] === '$') {
-    // We need to escape $ prefixed strings since we use that to encode
-    // references to IDs and as a special symbol value.
+  if (value[0] === '$' || value[0] === '@') {
+    // We need to escape $ or @ prefixed strings since we use those to encode
+    // references to IDs and as special symbol values.
     return '$' + value;
   } else {
     return value;
@@ -138,39 +151,95 @@ function escapeStringValue(value: string): string {
 
 export function resolveModelToJSON(
   request: Request,
+  parent: {+[key: string | number]: ReactModel} | $ReadOnlyArray<ReactModel>,
+  key: string,
   value: ReactModel,
 ): ReactJSONValue {
+  // Special Symbols
+  switch (value) {
+    case REACT_ELEMENT_TYPE:
+      return '$';
+    case REACT_SERVER_BLOCK_TYPE:
+      return '@';
+    case REACT_LAZY_TYPE:
+    case REACT_BLOCK_TYPE:
+      invariant(
+        false,
+        'React Blocks (and Lazy Components) are expected to be replaced by a ' +
+          'compiler on the server. Try configuring your compiler set up and avoid ' +
+          'using React.lazy inside of Blocks.',
+      );
+  }
+
+  if (parent[0] === REACT_SERVER_BLOCK_TYPE) {
+    // We're currently encoding part of a Block. Look up which key.
+    switch (key) {
+      case '1': {
+        // Module reference
+        let moduleReference: ModuleReference = (value: any);
+        try {
+          let moduleMetaData: ModuleMetaData = resolveModuleMetaData(
+            request.bundlerConfig,
+            moduleReference,
+          );
+          return (moduleMetaData: ReactJSONValue);
+        } catch (x) {
+          request.pendingChunks++;
+          let errorId = request.nextChunkId++;
+          emitErrorChunk(request, errorId, x);
+          return serializeIDRef(errorId);
+        }
+      }
+      case '2': {
+        // Query
+        let query: () => ReactModel = (value: any);
+        try {
+          // Attempt to resolve the query.
+          return query();
+        } catch (x) {
+          if (
+            typeof x === 'object' &&
+            x !== null &&
+            typeof x.then === 'function'
+          ) {
+            // Something suspended, we'll need to create a new segment and resolve it later.
+            request.pendingChunks++;
+            let newSegment = createSegment(request, query);
+            let ping = newSegment.ping;
+            x.then(ping, ping);
+            return serializeIDRef(newSegment.id);
+          } else {
+            // This query failed, encode the error as a separate row and reference that.
+            request.pendingChunks++;
+            let errorId = request.nextChunkId++;
+            emitErrorChunk(request, errorId, x);
+            return serializeIDRef(errorId);
+          }
+        }
+      }
+      default: {
+        invariant(
+          false,
+          'A server block should never encode any other slots. This is a bug in React.',
+        );
+      }
+    }
+  }
+
   if (typeof value === 'string') {
     return escapeStringValue(value);
   }
 
-  if (value === REACT_ELEMENT_TYPE) {
-    return '$';
-  }
-
+  // Resolve server components.
   while (
     typeof value === 'object' &&
     value !== null &&
     value.$$typeof === REACT_ELEMENT_TYPE
   ) {
+    // TODO: Concatenate keys of parents onto children.
+    // TODO: Allow elements to suspend independently and serialize as references to future elements.
     let element: React$Element<any> = (value: any);
-    try {
-      value = attemptResolveModelComponent(element);
-    } catch (x) {
-      if (typeof x === 'object' && x !== null && typeof x.then === 'function') {
-        // Something suspended, we'll need to create a new segment and resolve it later.
-        request.pendingChunks++;
-        let newSegment = createSegment(request, element);
-        let ping = newSegment.ping;
-        x.then(ping, ping);
-        return serializeIDRef(newSegment.id);
-      } else {
-        request.pendingChunks++;
-        let errorId = request.nextChunkId++;
-        emitErrorChunk(request, errorId, x);
-        return serializeIDRef(errorId);
-      }
-    }
+    value = attemptResolveElement(element);
   }
 
   return value;
@@ -198,19 +267,9 @@ function emitErrorChunk(request: Request, id: number, error: mixed): void {
 }
 
 function retrySegment(request: Request, segment: Segment): void {
-  let value = segment.model;
+  let query = segment.query;
   try {
-    while (
-      typeof value === 'object' &&
-      value !== null &&
-      value.$$typeof === REACT_ELEMENT_TYPE
-    ) {
-      // If this is a nested model, there's no need to create another chunk,
-      // we can reuse the existing one and try again.
-      let element: React$Element<any> = (value: any);
-      segment.model = element;
-      value = attemptResolveModelComponent(element);
-    }
+    let value = query();
     let processedChunk = processModelChunk(request, segment.id, value);
     request.completedJSONChunks.push(processedChunk);
   } catch (x) {

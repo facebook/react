@@ -348,5 +348,8 @@
   "347": "Maps are not valid as a React child (found: %s). Consider converting children to an array of keyed ReactElements instead.",
   "348": "ensureListeningTo(): received a container that was not an element node. This is likely a bug in React.",
   "349": "Expected a work-in-progress root. This is a bug in React. Please file an issue.",
-  "350": "Cannot read from mutable source during the current render without tearing. This is a bug in React. Please file an issue."
+  "350": "Cannot read from mutable source during the current render without tearing. This is a bug in React. Please file an issue.",
+  "351": "Unsupported type.",
+  "352": "React Blocks (and Lazy Components) are expected to be replaced by a compiler on the server. Try configuring your compiler set up and avoid using React.lazy inside of Blocks.",
+  "353": "A server block should never encode any other slots. This is a bug in React."
 }

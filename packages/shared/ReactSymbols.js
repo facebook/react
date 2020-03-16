@@ -52,6 +52,9 @@ export const REACT_SUSPENSE_LIST_TYPE = hasSymbol
 export const REACT_MEMO_TYPE = hasSymbol ? Symbol.for('react.memo') : 0xead3;
 export const REACT_LAZY_TYPE = hasSymbol ? Symbol.for('react.lazy') : 0xead4;
 export const REACT_BLOCK_TYPE = hasSymbol ? Symbol.for('react.block') : 0xead9;
+export const REACT_SERVER_BLOCK_TYPE = hasSymbol
+  ? Symbol.for('react.server.block')
+  : 0xeada;
 export const REACT_FUNDAMENTAL_TYPE = hasSymbol
   ? Symbol.for('react.fundamental')
   : 0xead5;

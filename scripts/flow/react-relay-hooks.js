@@ -9,11 +9,11 @@
 
 type JSONValue =
   | string
-  | number
   | boolean
+  | number
   | null
-  | {[key: string]: JSONValue}
-  | Array<JSONValue>;
+  | {+[key: string]: JSONValue}
+  | $ReadOnlyArray<JSONValue>;
 
 declare module 'ReactFlightDOMRelayServerIntegration' {
   declare export opaque type Destination;
@@ -31,7 +31,7 @@ declare module 'ReactFlightDOMRelayServerIntegration' {
   declare export function close(destination: Destination): void;
 
   declare export opaque type ModuleReference;
-  declare export opaque type ModuleMetaData;
+  declare export type ModuleMetaData = JSONValue;
   declare export function resolveModuleMetaData(
     resourceReference: ModuleReference,
   ): ModuleMetaData;
