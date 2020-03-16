@@ -48,7 +48,7 @@ export default function accumulateTwoPhaseListeners(
               event: {capture, type},
             } = listener;
             if (type === targetType) {
-              if (capture) {
+              if (capture === true) {
                 dispatchListeners.unshift(callback);
                 dispatchInstances.unshift(node);
               } else {

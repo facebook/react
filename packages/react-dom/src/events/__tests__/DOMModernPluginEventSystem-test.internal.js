@@ -1121,7 +1121,7 @@ describe('DOMModernPluginEventSystem', () => {
     });
 
     it('should correctly work for a basic "click" listener', () => {
-      const log = [];
+      let log = [];
       const clickEvent = jest.fn(event => {
         log.push({
           eventPhase: event.eventPhase,
@@ -1155,12 +1155,15 @@ describe('DOMModernPluginEventSystem', () => {
       // Clicking the button should trigger the event callback
       let divElement = divRef.current;
       dispatchClickEvent(divElement);
-      expect(log[0]).toEqual({
-        eventPhase: 3,
-        type: 'click',
-        currentTarget: buttonRef.current,
-        target: divRef.current,
-      });
+      expect(log).toEqual([
+        {
+          eventPhase: 3,
+          type: 'click',
+          currentTarget: buttonRef.current,
+          target: divRef.current,
+        },
+      ]);
+      expect(clickEvent).toBeCalledTimes(1);
 
       // Unmounting the container and clicking should not work
       ReactDOM.render(null, container);
@@ -1177,15 +1180,19 @@ describe('DOMModernPluginEventSystem', () => {
       dispatchClickEvent(divElement);
       expect(clickEvent).toBeCalledTimes(2);
 
+      log = [];
+
       // Clicking the button should also work
       let buttonElement = buttonRef.current;
       dispatchClickEvent(buttonElement);
-      expect(log[2]).toEqual({
-        eventPhase: 3,
-        type: 'click',
-        currentTarget: buttonRef.current,
-        target: buttonRef.current,
-      });
+      expect(log).toEqual([
+        {
+          eventPhase: 3,
+          type: 'click',
+          currentTarget: buttonRef.current,
+          target: buttonRef.current,
+        },
+      ]);
 
       function Test2({clickEvent2}) {
         const click = ReactDOM.unstable_useEvent('click', clickEvent2);
@@ -1220,15 +1227,7 @@ describe('DOMModernPluginEventSystem', () => {
     });
 
     it('should correctly work for setting and clearing a basic "click" listener', () => {
-      const log = [];
-      const clickEvent = jest.fn(event => {
-        log.push({
-          eventPhase: event.eventPhase,
-          type: event.type,
-          currentTarget: event.currentTarget,
-          target: event.target,
-        });
-      });
+      const clickEvent = jest.fn();
       const divRef = React.createRef();
       const buttonRef = React.createRef();
 
@@ -1263,9 +1262,11 @@ describe('DOMModernPluginEventSystem', () => {
       ReactDOM.render(<Test off={true} />, container);
       Scheduler.unstable_flushAll();
 
+      clickEvent.mockClear();
+
       divElement = divRef.current;
       dispatchClickEvent(divElement);
-      expect(clickEvent).toBeCalledTimes(1);
+      expect(clickEvent).toBeCalledTimes(0);
     });
 
     it('handle propagation of click events', () => {
@@ -1352,12 +1353,14 @@ describe('DOMModernPluginEventSystem', () => {
       // Clicking the button should trigger the event callback
       let divElement = divRef.current;
       dispatchClickEvent(divElement);
-      expect(log[0]).toEqual({
-        eventPhase: 3,
-        type: 'click',
-        currentTarget: divRef.current,
-        target: divRef.current,
-      });
+      expect(log).toEqual([
+        {
+          eventPhase: 3,
+          type: 'click',
+          currentTarget: divRef.current,
+          target: divRef.current,
+        },
+      ]);
 
       // Unmounting the container and clicking should not work
       ReactDOM.render(null, container);
@@ -1380,10 +1383,10 @@ describe('DOMModernPluginEventSystem', () => {
 
     it('should correctly handle many nested target listeners', () => {
       const buttonRef = React.createRef();
-      const targetListerner1 = jest.fn();
-      const targetListerner2 = jest.fn();
-      const targetListerner3 = jest.fn();
-      const targetListerner4 = jest.fn();
+      const targetListener1 = jest.fn();
+      const targetListener2 = jest.fn();
+      const targetListener3 = jest.fn();
+      const targetListener4 = jest.fn();
 
       function Test() {
         const click1 = ReactDOM.unstable_useEvent('click', {capture: true});
@@ -1392,10 +1395,10 @@ describe('DOMModernPluginEventSystem', () => {
         const click4 = ReactDOM.unstable_useEvent('click');
 
         React.useEffect(() => {
-          click1.setListener(buttonRef.current, targetListerner1);
-          click2.setListener(buttonRef.current, targetListerner2);
-          click3.setListener(buttonRef.current, targetListerner3);
-          click4.setListener(buttonRef.current, targetListerner4);
+          click1.setListener(buttonRef.current, targetListener1);
+          click2.setListener(buttonRef.current, targetListener2);
+          click3.setListener(buttonRef.current, targetListener3);
+          click4.setListener(buttonRef.current, targetListener4);
         });
 
         return <button ref={buttonRef}>Click me!</button>;
@@ -1407,10 +1410,10 @@ describe('DOMModernPluginEventSystem', () => {
       let buttonElement = buttonRef.current;
       dispatchClickEvent(buttonElement);
 
-      expect(targetListerner1).toHaveBeenCalledTimes(1);
-      expect(targetListerner2).toHaveBeenCalledTimes(1);
-      expect(targetListerner3).toHaveBeenCalledTimes(1);
-      expect(targetListerner4).toHaveBeenCalledTimes(1);
+      expect(targetListener1).toHaveBeenCalledTimes(1);
+      expect(targetListener2).toHaveBeenCalledTimes(1);
+      expect(targetListener3).toHaveBeenCalledTimes(1);
+      expect(targetListener4).toHaveBeenCalledTimes(1);
 
       function Test2() {
         const click1 = ReactDOM.unstable_useEvent('click');
@@ -1419,10 +1422,10 @@ describe('DOMModernPluginEventSystem', () => {
         const click4 = ReactDOM.unstable_useEvent('click');
 
         React.useEffect(() => {
-          click1.setListener(buttonRef.current, targetListerner1);
-          click2.setListener(buttonRef.current, targetListerner2);
-          click3.setListener(buttonRef.current, targetListerner3);
-          click4.setListener(buttonRef.current, targetListerner4);
+          click1.setListener(buttonRef.current, targetListener1);
+          click2.setListener(buttonRef.current, targetListener2);
+          click3.setListener(buttonRef.current, targetListener3);
+          click4.setListener(buttonRef.current, targetListener4);
         });
 
         return <button ref={buttonRef}>Click me!</button>;
@@ -1433,10 +1436,10 @@ describe('DOMModernPluginEventSystem', () => {
 
       buttonElement = buttonRef.current;
       dispatchClickEvent(buttonElement);
-      expect(targetListerner1).toHaveBeenCalledTimes(2);
-      expect(targetListerner2).toHaveBeenCalledTimes(2);
-      expect(targetListerner3).toHaveBeenCalledTimes(2);
-      expect(targetListerner4).toHaveBeenCalledTimes(2);
+      expect(targetListener1).toHaveBeenCalledTimes(2);
+      expect(targetListener2).toHaveBeenCalledTimes(2);
+      expect(targetListener3).toHaveBeenCalledTimes(2);
+      expect(targetListener4).toHaveBeenCalledTimes(2);
     });
 
     it('should correctly handle stopPropagation corrrectly for target events', () => {

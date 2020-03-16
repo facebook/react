@@ -1639,7 +1639,7 @@ function validateNotInFunctionRender(): boolean {
   }
   if (__DEV__) {
     console.warn(
-      'Event listener methods from useEvent() cannot be used during render.' +
+      'Event listener methods from useEvent() cannot be called during render.' +
         ' These methods should be called in an effect or event callback outside the render.',
     );
   }
