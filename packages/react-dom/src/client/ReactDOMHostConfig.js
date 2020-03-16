@@ -7,6 +7,7 @@
  * @flow
  */
 
+import type {DOMTopLevelEventType} from 'legacy-events/TopLevelEventTypes';
 import type {RootType} from './ReactDOMRoot';
 
 import {
@@ -79,7 +80,9 @@ import {
   detachElementListener,
   isDOMDocument,
   isDOMElement,
+  listenToTopLevelEvent,
 } from '../events/DOMModernPluginEventSystem';
+import {getListenerMapForElement} from '../events/DOMEventListenerMap';
 
 export type ReactListenerEvent = ReactDOMListenerEvent;
 export type ReactListenerMap = ReactDOMListenerMap;
@@ -1098,6 +1101,23 @@ export function unmountFundamentalComponent(
 
 export function getInstanceFromNode(node: HTMLElement): null | Object {
   return getClosestInstanceFromNode(node) || null;
+}
+
+export function registerEvent(
+  event: ReactDOMListenerEvent,
+  rootContainerInstance: Container,
+): void {
+  const {passive, priority, type} = event;
+  const listenerMap = getListenerMapForElement(rootContainerInstance);
+  // Add the event listener to the target container (falling back to
+  // the target if we didn't find one).
+  listenToTopLevelEvent(
+    ((type: any): DOMTopLevelEventType),
+    rootContainerInstance,
+    listenerMap,
+    passive,
+    priority,
+  );
 }
 
 export function mountEventListener(listener: ReactDOMListener): void {

@@ -76,6 +76,7 @@ export const shouldUpdateFundamentalComponent =
   $$$hostConfig.shouldUpdateFundamentalComponent;
 export const getInstanceFromNode = $$$hostConfig.getInstanceFromNode;
 export const beforeRemoveInstance = $$$hostConfig.beforeRemoveInstance;
+export const registerEvent = $$$hostConfig.registerEvent;
 export const mountEventListener = $$$hostConfig.mountEventListener;
 export const unmountEventListener = $$$hostConfig.unmountEventListener;
 export const validateEventListenerTarget =

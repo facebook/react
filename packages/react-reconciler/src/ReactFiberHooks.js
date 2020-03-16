@@ -55,6 +55,7 @@ import {
   markUnprocessedUpdateTime,
 } from './ReactFiberWorkLoop';
 import {
+  registerEvent,
   mountEventListener as mountHostEventListener,
   unmountEventListener as unmountHostEventListener,
   validateEventListenerTarget,
@@ -79,6 +80,7 @@ import {
   setWorkInProgressVersion,
   warnAboutMultipleRenderersDEV,
 } from './ReactMutableSource';
+import {getRootHostContainer} from './ReactFiberHostContext';
 
 const {ReactCurrentDispatcher, ReactCurrentBatchConfig} = ReactSharedInternals;
 
@@ -1664,6 +1666,11 @@ function mountEventListener(event: ReactListenerEvent): ReactListenerMap {
   if (enableUseEventAPI) {
     const hook = mountWorkInProgressHook();
     const listenerMap: Map<EventTarget, ReactListener> = new Map();
+    const rootContainerInstance = getRootHostContainer();
+
+    // Register the event to the current root to ensure event
+    // replaying can pick up the event ahead of time.
+    registerEvent(event, rootContainerInstance);
 
     const clear = () => {
       if (validateNotInFunctionRender()) {
