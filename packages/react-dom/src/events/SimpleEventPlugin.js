@@ -191,7 +191,7 @@ const SimpleEventPlugin: PluginModule<MouseEvent> = {
       nativeEvent,
       nativeEventTarget,
     );
-    accumulateTwoPhaseListeners(event);
+    accumulateTwoPhaseListeners(event, true);
     return event;
   },
 };

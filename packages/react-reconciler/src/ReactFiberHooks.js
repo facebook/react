@@ -24,6 +24,7 @@ import type {FiberRoot} from './ReactFiberRoot';
 import type {
   ReactListenerEvent,
   ReactListenerMap,
+  ReactListener,
 } from './ReactFiberHostConfig';
 
 import ReactSharedInternals from 'shared/ReactSharedInternals';
@@ -53,6 +54,12 @@ import {
   markRenderEventTimeAndConfig,
   markUnprocessedUpdateTime,
 } from './ReactFiberWorkLoop';
+import {
+  registerEvent,
+  mountEventListener as mountHostEventListener,
+  unmountEventListener as unmountHostEventListener,
+  validateEventListenerTarget,
+} from './ReactFiberHostConfig';
 
 import invariant from 'shared/invariant';
 import getComponentName from 'shared/getComponentName';
@@ -73,6 +80,7 @@ import {
   setWorkInProgressVersion,
   warnAboutMultipleRenderersDEV,
 } from './ReactMutableSource';
+import {getRootHostContainer} from './ReactFiberHostContext';
 
 const {ReactCurrentDispatcher, ReactCurrentBatchConfig} = ReactSharedInternals;
 
@@ -1627,18 +1635,93 @@ function dispatchAction<S, A>(
 
 const noOpMount = () => {};
 
+function validateNotInFunctionRender(): boolean {
+  if (currentlyRenderingFiber === null) {
+    return true;
+  }
+  if (__DEV__) {
+    console.warn(
+      'Event listener methods from useEvent() cannot be called during render.' +
+        ' These methods should be called in an effect or event callback outside the render.',
+    );
+  }
+  return false;
+}
+
+function createReactListener(
+  event: ReactListenerEvent,
+  callback: Event => void,
+  target: EventTarget,
+  destroy: Node => void,
+): ReactListener {
+  return {
+    callback,
+    destroy,
+    event,
+    target,
+  };
+}
+
 function mountEventListener(event: ReactListenerEvent): ReactListenerMap {
   if (enableUseEventAPI) {
     const hook = mountWorkInProgressHook();
+    const listenerMap: Map<EventTarget, ReactListener> = new Map();
+    const rootContainerInstance = getRootHostContainer();
+
+    // Register the event to the current root to ensure event
+    // replaying can pick up the event ahead of time.
+    registerEvent(event, rootContainerInstance);
 
     const clear = () => {
-      // TODO
+      if (validateNotInFunctionRender()) {
+        const listeners = Array.from(listenerMap.values());
+        for (let i = 0; i < listeners.length; i++) {
+          unmountHostEventListener(listeners[i]);
+        }
+        listenerMap.clear();
+      }
+    };
+
+    const destroy = (target: Node) => {
+      // We don't need to call detachListenerFromInstance
+      // here as this method should only ever be called
+      // from renderers that need to remove the instance
+      // from the map representing an instance that still
+      // holds a reference to the listenerMap. This means
+      // things like "window" listeners on ReactDOM should
+      // never enter this call path as the the instance in
+      // those cases would be that of "window", which
+      // should be handled via an optimized route in the
+      // renderer, making less overhead here. If we change
+      // this heuristic we should update this path to make
+      // sure we call detachListenerFromInstance.
+      listenerMap.delete(target);
     };
 
     const reactListenerMap: ReactListenerMap = {
       clear,
-      setListener(instance: EventTarget, callback: ?(Event) => void): void {
-        // TODO
+      setListener(target: EventTarget, callback: ?(Event) => void): void {
+        if (
+          validateNotInFunctionRender() &&
+          validateEventListenerTarget(target, callback)
+        ) {
+          let listener = listenerMap.get(target);
+          if (listener === undefined) {
+            if (callback == null) {
+              return;
+            }
+            listener = createReactListener(event, callback, target, destroy);
+            listenerMap.set(target, listener);
+          } else {
+            if (callback == null) {
+              listenerMap.delete(target);
+              unmountHostEventListener(listener);
+              return;
+            }
+            listener.callback = callback;
+          }
+          mountHostEventListener(listener);
+        }
       },
     };
     // In order to clear up upon the hook unmounting,

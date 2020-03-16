@@ -9,11 +9,15 @@
 
 import type {ReactSyntheticEvent} from 'legacy-events/ReactSyntheticEventType';
 
-import getListener from 'legacy-events/getListener';
 import {HostComponent} from 'shared/ReactWorkTags';
+import {enableUseEventAPI} from 'shared/ReactFeatureFlags';
+
+import getListener from 'legacy-events/getListener';
+import {getListenersFromTarget} from '../client/ReactDOMComponentTree';
 
 export default function accumulateTwoPhaseListeners(
   event: ReactSyntheticEvent,
+  accumulateUseEventListeners?: boolean,
 ): void {
   const phasedRegistrationNames = event.dispatchConfig.phasedRegistrationNames;
   if (phasedRegistrationNames == null) {
@@ -28,6 +32,33 @@ export default function accumulateTwoPhaseListeners(
   while (node !== null) {
     // We only care for listeners that are on HostComponents (i.e. <div>)
     if (node.tag === HostComponent) {
+      // For useEvent listenrs
+      if (enableUseEventAPI && accumulateUseEventListeners) {
+        // useEvent event listeners
+        const instance = node.stateNode;
+        const targetType = event.type;
+        const listeners = getListenersFromTarget(instance);
+
+        if (listeners !== null) {
+          const listenersArr = Array.from(listeners);
+          for (let i = 0; i < listenersArr.length; i++) {
+            const listener = listenersArr[i];
+            const {
+              callback,
+              event: {capture, type},
+            } = listener;
+            if (type === targetType) {
+              if (capture === true) {
+                dispatchListeners.unshift(callback);
+                dispatchInstances.unshift(node);
+              } else {
+                dispatchListeners.push(callback);
+                dispatchInstances.push(node);
+              }
+            }
+          }
+        }
+      }
       // Standard React on* listeners, i.e. onClick prop
       const captureListener = getListener(node, captured);
       if (captureListener != null) {

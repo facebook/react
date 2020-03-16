@@ -470,6 +470,10 @@ export function beforeRemoveInstance(instance) {
   // noop
 }
 
+export function registerEvent(event: any, rootContainerInstance: any) {
+  throw new Error('Not yet implemented.');
+}
+
 export function mountEventListener(listener: any) {
   throw new Error('Not yet implemented.');
 }

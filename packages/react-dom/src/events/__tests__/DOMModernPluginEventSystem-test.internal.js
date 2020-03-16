@@ -1074,5 +1074,530 @@ describe('DOMModernPluginEventSystem', () => {
       expect(listenerMaps.length).toEqual(2);
       expect(listenerMaps[0]).toEqual(listenerMaps[1]);
     });
+
+    it('can render correctly with the ReactDOMServer', () => {
+      const clickEvent = jest.fn();
+
+      function Test() {
+        const divRef = React.useRef(null);
+        const click = ReactDOM.unstable_useEvent('click');
+
+        React.useEffect(() => {
+          click.setListener(divRef.current, clickEvent);
+        });
+
+        return <div ref={divRef}>Hello world</div>;
+      }
+      const output = ReactDOMServer.renderToString(<Test />);
+      expect(output).toBe(`<div data-reactroot="">Hello world</div>`);
+    });
+
+    it('can render correctly with the ReactDOMServer hydration', () => {
+      const clickEvent = jest.fn();
+      const spanRef = React.createRef();
+
+      function Test() {
+        const click = ReactDOM.unstable_useEvent('click');
+
+        React.useEffect(() => {
+          click.setListener(spanRef.current, clickEvent);
+        });
+
+        return (
+          <div>
+            <span ref={spanRef}>Hello world</span>
+          </div>
+        );
+      }
+      const output = ReactDOMServer.renderToString(<Test />);
+      expect(output).toBe(
+        `<div data-reactroot=""><span>Hello world</span></div>`,
+      );
+      container.innerHTML = output;
+      ReactDOM.hydrate(<Test />, container);
+      Scheduler.unstable_flushAll();
+      dispatchClickEvent(spanRef.current);
+      expect(clickEvent).toHaveBeenCalledTimes(1);
+    });
+
+    it('should correctly work for a basic "click" listener', () => {
+      let log = [];
+      const clickEvent = jest.fn(event => {
+        log.push({
+          eventPhase: event.eventPhase,
+          type: event.type,
+          currentTarget: event.currentTarget,
+          target: event.target,
+        });
+      });
+      const divRef = React.createRef();
+      const buttonRef = React.createRef();
+
+      function Test() {
+        const click = ReactDOM.unstable_useEvent('click');
+
+        React.useEffect(() => {
+          click.setListener(buttonRef.current, clickEvent);
+        });
+
+        return (
+          <button ref={buttonRef}>
+            <div ref={divRef}>Click me!</div>
+          </button>
+        );
+      }
+
+      ReactDOM.render(<Test />, container);
+      Scheduler.unstable_flushAll();
+
+      expect(container.innerHTML).toBe('<button><div>Click me!</div></button>');
+
+      // Clicking the button should trigger the event callback
+      let divElement = divRef.current;
+      dispatchClickEvent(divElement);
+      expect(log).toEqual([
+        {
+          eventPhase: 3,
+          type: 'click',
+          currentTarget: buttonRef.current,
+          target: divRef.current,
+        },
+      ]);
+      expect(clickEvent).toBeCalledTimes(1);
+
+      // Unmounting the container and clicking should not work
+      ReactDOM.render(null, container);
+      Scheduler.unstable_flushAll();
+
+      dispatchClickEvent(divElement);
+      expect(clickEvent).toBeCalledTimes(1);
+
+      // Re-rendering the container and clicking should work
+      ReactDOM.render(<Test />, container);
+      Scheduler.unstable_flushAll();
+
+      divElement = divRef.current;
+      dispatchClickEvent(divElement);
+      expect(clickEvent).toBeCalledTimes(2);
+
+      log = [];
+
+      // Clicking the button should also work
+      let buttonElement = buttonRef.current;
+      dispatchClickEvent(buttonElement);
+      expect(log).toEqual([
+        {
+          eventPhase: 3,
+          type: 'click',
+          currentTarget: buttonRef.current,
+          target: buttonRef.current,
+        },
+      ]);
+
+      function Test2({clickEvent2}) {
+        const click = ReactDOM.unstable_useEvent('click', clickEvent2);
+
+        React.useEffect(() => {
+          click.setListener(buttonRef.current, clickEvent2);
+        });
+
+        return (
+          <button ref={buttonRef}>
+            <div ref={divRef}>Click me!</div>
+          </button>
+        );
+      }
+
+      let clickEvent2 = jest.fn();
+      ReactDOM.render(<Test2 clickEvent2={clickEvent2} />, container);
+      Scheduler.unstable_flushAll();
+
+      divElement = divRef.current;
+      dispatchClickEvent(divElement);
+      expect(clickEvent2).toBeCalledTimes(1);
+
+      // Reset the function we pass in, so it's different
+      clickEvent2 = jest.fn();
+      ReactDOM.render(<Test2 clickEvent2={clickEvent2} />, container);
+      Scheduler.unstable_flushAll();
+
+      divElement = divRef.current;
+      dispatchClickEvent(divElement);
+      expect(clickEvent2).toBeCalledTimes(1);
+    });
+
+    it('should correctly work for setting and clearing a basic "click" listener', () => {
+      const clickEvent = jest.fn();
+      const divRef = React.createRef();
+      const buttonRef = React.createRef();
+
+      function Test({off}) {
+        const click = ReactDOM.unstable_useEvent('click');
+
+        React.useEffect(() => {
+          click.setListener(buttonRef.current, clickEvent);
+        });
+
+        React.useEffect(() => {
+          if (off) {
+            click.setListener(buttonRef.current, null);
+          }
+        }, [off]);
+
+        return (
+          <button ref={buttonRef}>
+            <div ref={divRef}>Click me!</div>
+          </button>
+        );
+      }
+
+      ReactDOM.render(<Test off={false} />, container);
+      Scheduler.unstable_flushAll();
+
+      let divElement = divRef.current;
+      dispatchClickEvent(divElement);
+      expect(clickEvent).toBeCalledTimes(1);
+
+      // The listener should get unmounted in the second effect
+      ReactDOM.render(<Test off={true} />, container);
+      Scheduler.unstable_flushAll();
+
+      clickEvent.mockClear();
+
+      divElement = divRef.current;
+      dispatchClickEvent(divElement);
+      expect(clickEvent).toBeCalledTimes(0);
+    });
+
+    it('handle propagation of click events', () => {
+      const buttonRef = React.createRef();
+      const divRef = React.createRef();
+      const log = [];
+      const onClick = jest.fn(e => log.push(['bubble', e.currentTarget]));
+      const onClickCapture = jest.fn(e =>
+        log.push(['capture', e.currentTarget]),
+      );
+
+      function Test() {
+        const click = ReactDOM.unstable_useEvent('click');
+        const clickCapture = ReactDOM.unstable_useEvent('click', {
+          capture: true,
+        });
+
+        React.useEffect(() => {
+          click.setListener(buttonRef.current, onClick);
+          clickCapture.setListener(buttonRef.current, onClickCapture);
+          click.setListener(divRef.current, onClick);
+          clickCapture.setListener(divRef.current, onClickCapture);
+        });
+
+        return (
+          <button ref={buttonRef}>
+            <div ref={divRef}>Click me!</div>
+          </button>
+        );
+      }
+
+      ReactDOM.render(<Test />, container);
+      Scheduler.unstable_flushAll();
+
+      let buttonElement = buttonRef.current;
+      dispatchClickEvent(buttonElement);
+      expect(onClick).toHaveBeenCalledTimes(1);
+      expect(onClickCapture).toHaveBeenCalledTimes(1);
+      expect(log[0]).toEqual(['capture', buttonElement]);
+      expect(log[1]).toEqual(['bubble', buttonElement]);
+
+      let divElement = divRef.current;
+      dispatchClickEvent(divElement);
+      expect(onClick).toHaveBeenCalledTimes(3);
+      expect(onClickCapture).toHaveBeenCalledTimes(3);
+      expect(log[2]).toEqual(['capture', buttonElement]);
+      expect(log[3]).toEqual(['capture', divElement]);
+      expect(log[4]).toEqual(['bubble', divElement]);
+      expect(log[5]).toEqual(['bubble', buttonElement]);
+    });
+
+    it('should correctly work for a basic "click" listener on the outer target', () => {
+      const log = [];
+      const clickEvent = jest.fn(event => {
+        log.push({
+          eventPhase: event.eventPhase,
+          type: event.type,
+          currentTarget: event.currentTarget,
+          target: event.target,
+        });
+      });
+      const divRef = React.createRef();
+      const buttonRef = React.createRef();
+
+      function Test() {
+        const click = ReactDOM.unstable_useEvent('click');
+
+        React.useEffect(() => {
+          click.setListener(divRef.current, clickEvent);
+        });
+
+        return (
+          <button ref={buttonRef}>
+            <div ref={divRef}>Click me!</div>
+          </button>
+        );
+      }
+
+      ReactDOM.render(<Test />, container);
+      Scheduler.unstable_flushAll();
+
+      expect(container.innerHTML).toBe('<button><div>Click me!</div></button>');
+
+      // Clicking the button should trigger the event callback
+      let divElement = divRef.current;
+      dispatchClickEvent(divElement);
+      expect(log).toEqual([
+        {
+          eventPhase: 3,
+          type: 'click',
+          currentTarget: divRef.current,
+          target: divRef.current,
+        },
+      ]);
+
+      // Unmounting the container and clicking should not work
+      ReactDOM.render(null, container);
+      dispatchClickEvent(divElement);
+      expect(clickEvent).toBeCalledTimes(1);
+
+      // Re-rendering the container and clicking should work
+      ReactDOM.render(<Test />, container);
+      Scheduler.unstable_flushAll();
+
+      divElement = divRef.current;
+      dispatchClickEvent(divElement);
+      expect(clickEvent).toBeCalledTimes(2);
+
+      // Clicking the button should not work
+      let buttonElement = buttonRef.current;
+      dispatchClickEvent(buttonElement);
+      expect(clickEvent).toBeCalledTimes(2);
+    });
+
+    it('should correctly handle many nested target listeners', () => {
+      const buttonRef = React.createRef();
+      const targetListener1 = jest.fn();
+      const targetListener2 = jest.fn();
+      const targetListener3 = jest.fn();
+      const targetListener4 = jest.fn();
+
+      function Test() {
+        const click1 = ReactDOM.unstable_useEvent('click', {capture: true});
+        const click2 = ReactDOM.unstable_useEvent('click', {capture: true});
+        const click3 = ReactDOM.unstable_useEvent('click');
+        const click4 = ReactDOM.unstable_useEvent('click');
+
+        React.useEffect(() => {
+          click1.setListener(buttonRef.current, targetListener1);
+          click2.setListener(buttonRef.current, targetListener2);
+          click3.setListener(buttonRef.current, targetListener3);
+          click4.setListener(buttonRef.current, targetListener4);
+        });
+
+        return <button ref={buttonRef}>Click me!</button>;
+      }
+
+      ReactDOM.render(<Test />, container);
+      Scheduler.unstable_flushAll();
+
+      let buttonElement = buttonRef.current;
+      dispatchClickEvent(buttonElement);
+
+      expect(targetListener1).toHaveBeenCalledTimes(1);
+      expect(targetListener2).toHaveBeenCalledTimes(1);
+      expect(targetListener3).toHaveBeenCalledTimes(1);
+      expect(targetListener4).toHaveBeenCalledTimes(1);
+
+      function Test2() {
+        const click1 = ReactDOM.unstable_useEvent('click');
+        const click2 = ReactDOM.unstable_useEvent('click');
+        const click3 = ReactDOM.unstable_useEvent('click');
+        const click4 = ReactDOM.unstable_useEvent('click');
+
+        React.useEffect(() => {
+          click1.setListener(buttonRef.current, targetListener1);
+          click2.setListener(buttonRef.current, targetListener2);
+          click3.setListener(buttonRef.current, targetListener3);
+          click4.setListener(buttonRef.current, targetListener4);
+        });
+
+        return <button ref={buttonRef}>Click me!</button>;
+      }
+
+      ReactDOM.render(<Test2 />, container);
+      Scheduler.unstable_flushAll();
+
+      buttonElement = buttonRef.current;
+      dispatchClickEvent(buttonElement);
+      expect(targetListener1).toHaveBeenCalledTimes(2);
+      expect(targetListener2).toHaveBeenCalledTimes(2);
+      expect(targetListener3).toHaveBeenCalledTimes(2);
+      expect(targetListener4).toHaveBeenCalledTimes(2);
+    });
+
+    it('should correctly handle stopPropagation corrrectly for target events', () => {
+      const buttonRef = React.createRef();
+      const divRef = React.createRef();
+      let clickEvent = jest.fn();
+
+      function Test() {
+        const click1 = ReactDOM.unstable_useEvent('click', {
+          bind: buttonRef,
+        });
+        const click2 = ReactDOM.unstable_useEvent('click');
+
+        React.useEffect(() => {
+          click1.setListener(buttonRef.current, clickEvent);
+          click2.setListener(divRef.current, e => {
+            e.stopPropagation();
+          });
+        });
+
+        return (
+          <button ref={buttonRef}>
+            <div ref={divRef}>Click me!</div>
+          </button>
+        );
+      }
+
+      ReactDOM.render(<Test />, container);
+      Scheduler.unstable_flushAll();
+
+      let divElement = divRef.current;
+      dispatchClickEvent(divElement);
+      expect(clickEvent).toHaveBeenCalledTimes(0);
+    });
+
+    it('should correctly handle stopPropagation corrrectly for many target events', () => {
+      const buttonRef = React.createRef();
+      const targetListerner1 = jest.fn(e => e.stopPropagation());
+      const targetListerner2 = jest.fn(e => e.stopPropagation());
+      const targetListerner3 = jest.fn(e => e.stopPropagation());
+      const targetListerner4 = jest.fn(e => e.stopPropagation());
+
+      function Test() {
+        const click1 = ReactDOM.unstable_useEvent('click');
+        const click2 = ReactDOM.unstable_useEvent('click');
+        const click3 = ReactDOM.unstable_useEvent('click');
+        const click4 = ReactDOM.unstable_useEvent('click');
+
+        React.useEffect(() => {
+          click1.setListener(buttonRef.current, targetListerner1);
+          click2.setListener(buttonRef.current, targetListerner2);
+          click3.setListener(buttonRef.current, targetListerner3);
+          click4.setListener(buttonRef.current, targetListerner4);
+        });
+
+        return <button ref={buttonRef}>Click me!</button>;
+      }
+
+      ReactDOM.render(<Test />, container);
+      Scheduler.unstable_flushAll();
+
+      let buttonElement = buttonRef.current;
+      dispatchClickEvent(buttonElement);
+      expect(targetListerner1).toHaveBeenCalledTimes(1);
+      expect(targetListerner2).toHaveBeenCalledTimes(1);
+      expect(targetListerner3).toHaveBeenCalledTimes(1);
+      expect(targetListerner4).toHaveBeenCalledTimes(1);
+    });
+
+    it('should correctly handle stopPropagation for mixed capture/bubbling target listeners', () => {
+      const buttonRef = React.createRef();
+      const targetListerner1 = jest.fn(e => e.stopPropagation());
+      const targetListerner2 = jest.fn(e => e.stopPropagation());
+      const targetListerner3 = jest.fn(e => e.stopPropagation());
+      const targetListerner4 = jest.fn(e => e.stopPropagation());
+
+      function Test() {
+        const click1 = ReactDOM.unstable_useEvent('click', {capture: true});
+        const click2 = ReactDOM.unstable_useEvent('click', {capture: true});
+        const click3 = ReactDOM.unstable_useEvent('click');
+        const click4 = ReactDOM.unstable_useEvent('click');
+
+        React.useEffect(() => {
+          click1.setListener(buttonRef.current, targetListerner1);
+          click2.setListener(buttonRef.current, targetListerner2);
+          click3.setListener(buttonRef.current, targetListerner3);
+          click4.setListener(buttonRef.current, targetListerner4);
+        });
+
+        return <button ref={buttonRef}>Click me!</button>;
+      }
+
+      ReactDOM.render(<Test />, container);
+      Scheduler.unstable_flushAll();
+
+      let buttonElement = buttonRef.current;
+      dispatchClickEvent(buttonElement);
+      expect(targetListerner1).toHaveBeenCalledTimes(1);
+      expect(targetListerner2).toHaveBeenCalledTimes(1);
+      expect(targetListerner3).toHaveBeenCalledTimes(1);
+      expect(targetListerner4).toHaveBeenCalledTimes(1);
+    });
+
+    it.experimental('should work with concurrent mode updates', async () => {
+      const log = [];
+      const ref = React.createRef();
+
+      function Test({counter}) {
+        const click = ReactDOM.unstable_useEvent('click');
+
+        React.useLayoutEffect(() => {
+          click.setListener(ref.current, () => {
+            log.push({counter});
+          });
+        });
+
+        Scheduler.unstable_yieldValue('Test');
+        return <button ref={ref}>Press me</button>;
+      }
+
+      let root = ReactDOM.createRoot(container);
+      root.render(<Test counter={0} />);
+
+      // Dev double-render
+      if (__DEV__) {
+        expect(Scheduler).toFlushAndYield(['Test', 'Test']);
+      } else {
+        expect(Scheduler).toFlushAndYield(['Test']);
+      }
+
+      // Click the button
+      dispatchClickEvent(ref.current);
+      expect(log).toEqual([{counter: 0}]);
+
+      // Clear log
+      log.length = 0;
+
+      // Increase counter
+      root.render(<Test counter={1} />);
+      // Yield before committing
+      // Dev double-render
+      if (__DEV__) {
+        expect(Scheduler).toFlushAndYieldThrough(['Test', 'Test']);
+      } else {
+        expect(Scheduler).toFlushAndYieldThrough(['Test']);
+      }
+
+      // Click the button again
+      dispatchClickEvent(ref.current);
+      expect(log).toEqual([{counter: 0}]);
+
+      // Clear log
+      log.length = 0;
+
+      // Commit
+      expect(Scheduler).toFlushAndYield([]);
+      dispatchClickEvent(ref.current);
+      expect(log).toEqual([{counter: 1}]);
+    });
   });
 });

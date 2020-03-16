@@ -7,12 +7,14 @@
  * @flow
  */
 
+import type {DOMTopLevelEventType} from 'legacy-events/TopLevelEventTypes';
 import type {RootType} from './ReactDOMRoot';
 
 import {
   precacheFiberNode,
   updateFiberProps,
   getClosestInstanceFromNode,
+  getListenersFromTarget,
 } from './ReactDOMComponentTree';
 import {
   createElement,
@@ -78,7 +80,9 @@ import {
   detachElementListener,
   isDOMDocument,
   isDOMElement,
+  listenToTopLevelEvent,
 } from '../events/DOMModernPluginEventSystem';
+import {getListenerMapForElement} from '../events/DOMEventListenerMap';
 
 export type ReactListenerEvent = ReactDOMListenerEvent;
 export type ReactListenerMap = ReactDOMListenerMap;
@@ -528,6 +532,22 @@ export function beforeRemoveInstance(
     instance === selectionInformation.focusedElem
   ) {
     dispatchBeforeDetachedBlur(((instance: any): HTMLElement));
+  }
+  if (enableUseEventAPI) {
+    // It's unfortunate that we have to do this cleanup, but
+    // it's necessary otherwise we will leak the host instances
+    // from the useEvent hook instances Map. We call destroy
+    // on each listener to ensure we properly remove the instance
+    // from the instances Map. Note: we have this Map so that we
+    // can properly unmount instances when the function component
+    // that the hook is attached to gets unmounted.
+    const listenersSet = getListenersFromTarget(instance);
+    if (listenersSet !== null) {
+      const listeners = Array.from(listenersSet);
+      for (let i = 0; i < listeners.length; i++) {
+        listeners[i].destroy(instance);
+      }
+    }
   }
 }
 
@@ -1081,6 +1101,23 @@ export function unmountFundamentalComponent(
 
 export function getInstanceFromNode(node: HTMLElement): null | Object {
   return getClosestInstanceFromNode(node) || null;
+}
+
+export function registerEvent(
+  event: ReactDOMListenerEvent,
+  rootContainerInstance: Container,
+): void {
+  const {passive, priority, type} = event;
+  const listenerMap = getListenerMapForElement(rootContainerInstance);
+  // Add the event listener to the target container (falling back to
+  // the target if we didn't find one).
+  listenToTopLevelEvent(
+    ((type: any): DOMTopLevelEventType),
+    rootContainerInstance,
+    listenerMap,
+    passive,
+    priority,
+  );
 }
 
 export function mountEventListener(listener: ReactDOMListener): void {
