@@ -412,7 +412,7 @@ describe('ReactHooksWithNoopRenderer', () => {
 
       function Bar({triggerUpdate}) {
         if (triggerUpdate) {
-          setStep(1);
+          setStep(x => x + 1);
         }
         return <Text text="Bar" />;
       }
@@ -440,9 +440,20 @@ describe('ReactHooksWithNoopRenderer', () => {
         expect(() =>
           expect(Scheduler).toFlushAndYield(['Foo [0]', 'Bar', 'Foo [1]']),
         ).toErrorDev([
-          'Cannot update a component from inside the function body of a ' +
-            'different component.',
+          'Cannot update a component (`Foo`) from inside the function body of a ' +
+            'different component (`Bar`). To locate the bad setState() call inside `Bar`',
         ]);
+      });
+
+      // It should not warn again (deduplication).
+      await ReactNoop.act(async () => {
+        root.render(
+          <>
+            <Foo />
+            <Bar triggerUpdate={true} />
+          </>,
+        );
+        expect(Scheduler).toFlushAndYield(['Foo [1]', 'Bar', 'Foo [2]']);
       });
     });
 

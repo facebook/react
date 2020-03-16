@@ -2919,6 +2919,11 @@ if (__DEV__ && replayFailedUnitOfWorkWithInvokeGuardedCallback) {
 }
 
 let didWarnAboutUpdateInRender = false;
+let didWarnAboutUpdateInRenderForAnotherComponent;
+if (__DEV__) {
+  didWarnAboutUpdateInRenderForAnotherComponent = new Set();
+}
+
 function warnAboutRenderPhaseUpdatesInDEV(fiber) {
   if (__DEV__) {
     if ((executionContext & RenderContext) !== NoContext) {
@@ -2926,10 +2931,24 @@ function warnAboutRenderPhaseUpdatesInDEV(fiber) {
         case FunctionComponent:
         case ForwardRef:
         case SimpleMemoComponent: {
-          console.error(
-            'Cannot update a component from inside the function body of a ' +
-              'different component.',
-          );
+          const renderingComponentName =
+            (workInProgress && getComponentName(workInProgress.type)) ||
+            'Unknown';
+          const setStateComponentName =
+            getComponentName(fiber.type) || 'Unknown';
+          const dedupeKey =
+            renderingComponentName + ' ' + setStateComponentName;
+          if (!didWarnAboutUpdateInRenderForAnotherComponent.has(dedupeKey)) {
+            didWarnAboutUpdateInRenderForAnotherComponent.add(dedupeKey);
+            console.error(
+              'Cannot update a component (`%s`) from inside the function body of a ' +
+                'different component (`%s`). To locate the bad setState() call inside `%s`, ' +
+                'follow the stack trace as described in https://fb.me/setstate-in-render',
+              setStateComponentName,
+              renderingComponentName,
+              renderingComponentName,
+            );
+          }
           break;
         }
         case ClassComponent: {
