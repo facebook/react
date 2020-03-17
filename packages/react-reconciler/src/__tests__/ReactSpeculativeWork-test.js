@@ -16,6 +16,48 @@ describe('ReactSpeculativeWork', () => {
     Scheduler = require('scheduler');
   });
 
+  it.only('exercises bailoutReducer', () => {
+    let _dispatch;
+
+    let App = () => {
+      return <Parent />;
+    };
+
+    let Parent = () => {
+      return <Child />;
+    };
+
+    let Child = () => {
+      let [value, dispatch] = React.useReducer(function noZs(s, a) {
+        if (a === 'z') return s;
+        return s + a;
+      }, '');
+      _dispatch = dispatch;
+      return value;
+    };
+
+    console.log('------------------------------------ initial');
+    const root = ReactNoop.createRoot();
+    ReactNoop.act(() => root.render(<App />));
+    expect(root).toMatchRenderedOutput('');
+
+    console.log('------------------------------------ dispatch a');
+    ReactNoop.act(() => _dispatch('a'));
+    expect(root).toMatchRenderedOutput('a');
+
+    console.log('------------------------------------ dispatch b');
+    ReactNoop.act(() => _dispatch('b'));
+    expect(root).toMatchRenderedOutput('ab');
+
+    console.log('------------------------------------ dispatch z');
+    ReactNoop.act(() => _dispatch('z'));
+    expect(root).toMatchRenderedOutput('ab');
+
+    console.log('------------------------------------ dispatch c');
+    ReactNoop.act(() => _dispatch('c'));
+    expect(root).toMatchRenderedOutput('abc');
+  });
+
   it('exercises reifyNextWork', () => {
     let externalSetValue;
     let externalSetMyContextValue;

@@ -369,12 +369,15 @@ export function canBailoutSpeculativeWorkWithHooks(
   current: Fiber,
   nextRenderExpirationTime: renderExpirationTime,
 ): boolean {
+  console.log(
+    `canBailoutSpeculativeWorkWithHooks current(${fiberName(current)})`,
+  );
   let hook = current.memoizedState;
   while (hook !== null) {
     // hooks without a bailout are assumed to permit bailing out
     // any hook which can instigate work needs to implement the bailout API
     if (typeof hook.bailout === 'function') {
-      if (!hook.bailout(hook, nextRenderExpirationTime)) {
+      if (!hook.bailout(hook, current, nextRenderExpirationTime)) {
         return false;
       }
     }
@@ -818,6 +821,11 @@ function updateReducer<S, I, A>(
     queue !== null,
     'Should have a queue. This is likely a bug in React. Please file an issue.',
   );
+  console.log(
+    `bailoutReducer --------------------------- current(${fiberName(
+      currentlyRenderingFiber,
+    )})`,
+  );
 
   queue.lastRenderedReducer = reducer;
 
@@ -829,6 +837,11 @@ function updateReducer<S, I, A>(
   // The last pending update that hasn't been processed yet.
   let pendingQueue = queue.pending;
   if (pendingQueue !== null) {
+    console.log(
+      `bailoutReducer current(${fiberName(
+        currentlyRenderingFiber,
+      )}), pending queue has updates`,
+    );
     // We have new updates that haven't been processed yet.
     // We'll add them to the base queue.
     if (baseQueue !== null) {
@@ -843,6 +856,11 @@ function updateReducer<S, I, A>(
   }
 
   if (baseQueue !== null) {
+    console.log(
+      `bailoutReducer current(${fiberName(
+        currentlyRenderingFiber,
+      )}), base queue has updates`,
+    );
     // We have a queue to process.
     let first = baseQueue.next;
     let newState = current.baseState;
@@ -854,6 +872,11 @@ function updateReducer<S, I, A>(
     do {
       const updateExpirationTime = update.expirationTime;
       if (updateExpirationTime < renderExpirationTime) {
+        console.log(
+          `_______ update for current(${fiberName(
+            currentlyRenderingFiber,
+          )}), update has insufficient priority`,
+        );
         // Priority is insufficient. Skip this update. If this is the first
         // skipped update, the previous update/state is the new base
         // update/state.
@@ -877,6 +900,11 @@ function updateReducer<S, I, A>(
           markUnprocessedUpdateTime(updateExpirationTime);
         }
       } else {
+        console.log(
+          `_______ update for current(${fiberName(
+            currentlyRenderingFiber,
+          )}), update has SUFFICIENT priority`,
+        );
         // This update does have sufficient priority.
 
         if (newBaseQueueLast !== null) {
@@ -927,12 +955,24 @@ function updateReducer<S, I, A>(
       markWorkInProgressReceivedUpdate();
     }
 
+    console.log(
+      `updateReducer current(${fiberName(
+        currentlyRenderingFiber,
+      )}), setting memoizedState to ${newState}`,
+    );
+
     hook.memoizedState = newState;
     hook.baseState = newBaseState;
     hook.baseQueue = newBaseQueueLast;
 
     queue.lastRenderedState = newState;
   }
+
+  console.log(
+    `updateReducer current(${fiberName(
+      currentlyRenderingFiber,
+    )}),  about to return ${hook.memoizedState}`,
+  );
 
   const dispatch: Dispatch<A> = (queue.dispatch: any);
   return [hook.memoizedState, dispatch];
@@ -992,9 +1032,216 @@ function rerenderReducer<S, I, A>(
   return [newState, dispatch];
 }
 
+function fiberName(fiber) {
+  if (fiber == null) return fiber;
+  let front = '';
+  let back = '';
+  if (fiber.mode & 16) back = 'r';
+  if (fiber.tag === 3) front = 'HostRoot';
+  else if (fiber.tag === 6) front = 'HostText';
+  else if (fiber.tag === 10) front = 'ContextProvider';
+  else if (typeof fiber.type === 'function' && fiber.type.name)
+    front = fiber.type.name;
+  else front = 'tag' + fiber.tag;
+  if (back) {
+    back = `-(${back})`;
+  }
+  return `${front}${back}`;
+}
+
+function _bailoutReducer(
+  hook: Hook,
+  current: Fiber,
+  renderExpirationTime: ExpirationTime,
+): boolean {
+  // this is mostly a clone of updateReducer
+  // it has been modified to work without a workInProgress hook
+  // and to prepare a toBeApplied state on the next render
+  // @TODO consider what happens if work is yielded between the bailout attempt
+  // and the render attempt
+  const queue = hook.queue;
+  const reducer = queue.lastRenderedReducer;
+
+  console.log(
+    `bailoutReducer --------------------------- current(${fiberName(current)})`,
+  );
+
+  // The last rebase update that is NOT part of the base state.
+  let baseQueue = hook.baseQueue;
+
+  // The last pending update that hasn't been processed yet.
+  let pendingQueue = queue.pending;
+  if (pendingQueue !== null) {
+    console.log(
+      `bailoutReducer current(${fiberName(
+        current,
+      )}) reducer hook has a pending queue so an update needs to be processed`,
+    );
+    // We have new updates that haven't been processed yet.
+    // We'll add them to the base queue.
+    if (baseQueue !== null) {
+      console.log(
+        `bailoutReducer current(${fiberName(
+          current,
+        )}) reducer hook has a baseQueue, merge the two`,
+      );
+      // Merge the pending queue and the base queue.
+      let baseFirst = baseQueue.next;
+      let pendingFirst = pendingQueue.next;
+      baseQueue.next = pendingFirst;
+      pendingQueue.next = baseFirst;
+    }
+    hook.baseQueue = baseQueue = pendingQueue;
+    queue.pending = null;
+  }
+
+  let canBailout;
+
+  if (baseQueue !== null) {
+    console.log(
+      `bailoutReducer current(${fiberName(
+        current,
+      )}) reducer hook has a baseQueue including pending updates if any,  compute new states`,
+    );
+    // We have a queue to process.
+    let first = baseQueue.next;
+    let newState = hook.baseState;
+
+    let newBaseState = null;
+    let newBaseQueueFirst = null;
+    let newBaseQueueLast = null;
+    let update = first;
+    do {
+      console.log(
+        `------ update loop for current(${fiberName(
+          current,
+        )}), looping over each update ${update.expirationTime}`,
+      );
+      const updateExpirationTime = update.expirationTime;
+      if (updateExpirationTime < renderExpirationTime) {
+        console.log(
+          `------ update loop; update insufficient priority ${update.expirationTime} ${renderExpirationTime}`,
+        );
+        // Priority is insufficient. Skip this update. If this is the first
+        // skipped update, the previous update/state is the new base
+        // update/state.
+        const clone: Update<S, A> = {
+          expirationTime: update.expirationTime,
+          suspenseConfig: update.suspenseConfig,
+          action: update.action,
+          eagerReducer: update.eagerReducer,
+          eagerState: update.eagerState,
+          next: (null: any),
+        };
+        if (newBaseQueueLast === null) {
+          console.log(
+            `------ update loop, insufficient priority; newBaseQueueLast is null, setting it to cloned update`,
+          );
+          newBaseQueueFirst = newBaseQueueLast = clone;
+          newBaseState = newState;
+        } else {
+          console.log(
+            `------ update loop, insufficient priority; newBaseQueueLast exists null, appending clone to it`,
+          );
+          newBaseQueueLast = newBaseQueueLast.next = clone;
+        }
+        // Update the remaining priority in the queue.
+        if (updateExpirationTime > current.expirationTime) {
+          console.log(
+            `------ update loop, insufficient priority; reset the expriation time on the fiber`,
+          );
+          current.expirationTime = updateExpirationTime;
+          markUnprocessedUpdateTime(updateExpirationTime);
+        }
+      } else {
+        console.log(
+          `------ update loop; sufficient priority, process this update`,
+        );
+        // This update does have sufficient priority.
+
+        if (newBaseQueueLast !== null) {
+          console.log(
+            `------ update loop sufficient priority; a previous update was skipped so append this update to base queue as well`,
+          );
+          const clone: Update<S, A> = {
+            expirationTime: Sync, // This update is going to be committed so we never want uncommit it.
+            suspenseConfig: update.suspenseConfig,
+            action: update.action,
+            eagerReducer: update.eagerReducer,
+            eagerState: update.eagerState,
+            next: (null: any),
+          };
+          newBaseQueueLast = newBaseQueueLast.next = clone;
+        }
+
+        // Process this update.
+        const action = update.action;
+        newState = reducer(newState, action);
+        console.log(
+          `------ update loop sufficient priority; newState(${newState})`,
+        );
+      }
+      update = update.next;
+    } while (update !== null && update !== first);
+
+    if (is(newState, hook.memoizedState)) {
+      console.log(
+        `bailoutReducer current(${fiberName(
+          current,
+        )}) the final newState is the same as the memoized state, we won't prevent a bailout`,
+      );
+      // the new state is the same as the memoizedState,
+      // the updates in this queue do not require work
+      canBailout = true;
+    } else {
+      console.log(
+        `bailoutReducer current(${fiberName(
+          current,
+        )}) the final newState is different, we can't bailout`,
+      );
+      // the new state is different. we cannot bail out of work
+      canBailout = false;
+    }
+
+    if (newBaseQueueLast === null) {
+      console.log(
+        `bailoutReducer current(${fiberName(
+          current,
+        )}) since the newBaseQueue is empty we need to set the newBaseState to newState`,
+      );
+      newBaseState = newState;
+    } else {
+      console.log(
+        `bailoutReducer current(${fiberName(
+          current,
+        )}) we need to make the newBaseQueue circular`,
+      );
+      newBaseQueueLast.next = (newBaseQueueFirst: any);
+    }
+
+    console.log(
+      `bailoutReducer current(${fiberName(
+        current,
+      )}), set hook memoizedState to newState, and the baseState and baseQueue`,
+    );
+    hook.memoizedState = newState;
+    hook.baseState = newBaseState;
+    hook.baseQueue = newBaseQueueLast;
+  }
+
+  console.log(
+    `bailoutReducer current(${fiberName(
+      current,
+    )}) in the end we said we could bailout ? ${canBailout}`,
+  );
+  return canBailout;
+}
+
+let bailoutReducer = _bailoutReducer;
+
 // @TODO this is a completely broken bailout implementation. figure out how
 // dispatchAction and updateReducer really work and implement something proper
-function bailoutReducer(hook, renderExpirationTime): boolean {
+function __bailoutReducer(hook, renderExpirationTime): boolean {
   const queue = hook.queue;
 
   // The last rebase update that is NOT part of the base state.

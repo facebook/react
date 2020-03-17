@@ -826,7 +826,7 @@ function updateFunctionComponent(
     reifyWorkInProgress(current, workInProgress);
   }
 
-  if (current !== null && !didReceiveUpdate) {
+  if (!enableReifyNextWork && current !== null && !didReceiveUpdate) {
     bailoutHooks(current, workInProgress, renderExpirationTime);
     return bailoutOnAlreadyFinishedWork(
       current,
@@ -2999,7 +2999,7 @@ function fiberName(fiber) {
 }
 
 function reifyNextWork(workInProgress: Fiber, renderExpirationTime) {
-  // console.log(`reifyNextWork(${fiberName(workInProgress)})`);
+  console.log(`reifyNextWork(${fiberName(workInProgress)})`);
 
   let fiber = workInProgress.child;
   if (fiber !== null) {
@@ -3026,11 +3026,11 @@ function reifyNextWork(workInProgress: Fiber, renderExpirationTime) {
       fiber.mode |= ReifiedWorkMode;
 
       if (fiber.expirationTime >= renderExpirationTime) {
-        // console.log(
-        //   `_______ fiber(${fiberName(
-        //     fiber,
-        //   )}) DOES HAVE work to reify, reifying`,
-        // );
+        console.log(
+          `_______ fiber(${fiberName(
+            fiber,
+          )}) DOES HAVE work to reify, reifying`,
+        );
         let didBailout;
         switch (fiber.tag) {
           case ForwardRef:
@@ -3045,6 +3045,7 @@ function reifyNextWork(workInProgress: Fiber, renderExpirationTime) {
               // suppress error and do not bailout. it should error again
               // when the component renders when the context selector is run
               // or when the reducer state is updated
+              console.log(e);
               didBailout = false;
             }
 
