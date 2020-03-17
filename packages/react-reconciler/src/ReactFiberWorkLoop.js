@@ -2942,7 +2942,7 @@ function warnAboutRenderPhaseUpdatesInDEV(fiber) {
           if (!didWarnAboutUpdateInRenderForAnotherComponent.has(dedupeKey)) {
             didWarnAboutUpdateInRenderForAnotherComponent.add(dedupeKey);
             console.error(
-              'Cannot update a component (`%s`) from inside the function body of a ' +
+              'Cannot update a component (`%s`) while rendering a ' +
                 'different component (`%s`). To locate the bad setState() call inside `%s`, ' +
                 'follow the stack trace as described in https://fb.me/setstate-in-render',
               setStateComponentName,
