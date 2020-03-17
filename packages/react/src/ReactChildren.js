@@ -73,31 +73,6 @@ function getComponentKey(component, index) {
 }
 
 function mapIntoArray(children, array, escapedPrefix, nameSoFar, callback) {
-  function handleChild(child, childKey) {
-    let mappedChild = callback(child);
-    if (Array.isArray(mappedChild)) {
-      let escapedChildKey = '';
-      if (childKey != null) {
-        escapedChildKey = escapeUserProvidedKey(childKey) + '/';
-      }
-      mapIntoArray(mappedChild, array, escapedChildKey, c => c);
-    } else if (mappedChild != null) {
-      if (isValidElement(mappedChild)) {
-        mappedChild = cloneAndReplaceKey(
-          mappedChild,
-          // Keep both the (mapped) and old keys if they differ, just as
-          // traverseAllChildren used to do for objects as children
-          escapedPrefix +
-            (mappedChild.key && (!child || child.key !== mappedChild.key)
-              ? escapeUserProvidedKey(mappedChild.key) + '/'
-              : '') +
-            childKey,
-        );
-      }
-      array.push(mappedChild);
-    }
-  }
-
   const type = typeof children;
 
   if (type === 'undefined' || type === 'boolean') {
@@ -125,12 +100,33 @@ function mapIntoArray(children, array, escapedPrefix, nameSoFar, callback) {
   }
 
   if (invokeCallback) {
-    handleChild(
-      children,
-      // If it's the only child, treat the name as if it was wrapped in an array
-      // so that it's consistent if the number of children grows.
-      nameSoFar === '' ? SEPARATOR + getComponentKey(children, 0) : nameSoFar,
-    );
+    const child = children;
+    let mappedChild = callback(child);
+    // If it's the only child, treat the name as if it was wrapped in an array
+    // so that it's consistent if the number of children grows:
+    let childKey =
+      nameSoFar === '' ? SEPARATOR + getComponentKey(child, 0) : nameSoFar;
+    if (Array.isArray(mappedChild)) {
+      let escapedChildKey = '';
+      if (childKey != null) {
+        escapedChildKey = escapeUserProvidedKey(childKey) + '/';
+      }
+      mapIntoArray(mappedChild, array, escapedChildKey, c => c);
+    } else if (mappedChild != null) {
+      if (isValidElement(mappedChild)) {
+        mappedChild = cloneAndReplaceKey(
+          mappedChild,
+          // Keep both the (mapped) and old keys if they differ, just as
+          // traverseAllChildren used to do for objects as children
+          escapedPrefix +
+            (mappedChild.key && (!child || child.key !== mappedChild.key)
+              ? escapeUserProvidedKey(mappedChild.key) + '/'
+              : '') +
+            childKey,
+        );
+      }
+      array.push(mappedChild);
+    }
     return 1;
   }
 
