@@ -1318,6 +1318,55 @@ describe('DOMModernPluginEventSystem', () => {
       expect(log[5]).toEqual(['bubble', buttonElement]);
     });
 
+    it('handle propagation of click events mixed with onClick events', () => {
+      const buttonRef = React.createRef();
+      const divRef = React.createRef();
+      const log = [];
+      const onClick = jest.fn(e => log.push(['bubble', e.currentTarget]));
+      const onClickCapture = jest.fn(e =>
+        log.push(['capture', e.currentTarget]),
+      );
+
+      function Test() {
+        const click = ReactDOM.unstable_useEvent('click');
+        const clickCapture = ReactDOM.unstable_useEvent('click', {
+          capture: true,
+        });
+
+        React.useEffect(() => {
+          click.setListener(buttonRef.current, onClick);
+          clickCapture.setListener(buttonRef.current, onClickCapture);
+        });
+
+        return (
+          <button ref={buttonRef}>
+            <div ref={divRef} onClick={onClick} onClickCapture={onClickCapture}>
+              Click me!
+            </div>
+          </button>
+        );
+      }
+
+      ReactDOM.render(<Test />, container);
+      Scheduler.unstable_flushAll();
+
+      let buttonElement = buttonRef.current;
+      dispatchClickEvent(buttonElement);
+      expect(onClick).toHaveBeenCalledTimes(1);
+      expect(onClickCapture).toHaveBeenCalledTimes(1);
+      expect(log[0]).toEqual(['capture', buttonElement]);
+      expect(log[1]).toEqual(['bubble', buttonElement]);
+
+      let divElement = divRef.current;
+      dispatchClickEvent(divElement);
+      expect(onClick).toHaveBeenCalledTimes(3);
+      expect(onClickCapture).toHaveBeenCalledTimes(3);
+      expect(log[2]).toEqual(['capture', buttonElement]);
+      expect(log[3]).toEqual(['capture', divElement]);
+      expect(log[4]).toEqual(['bubble', divElement]);
+      expect(log[5]).toEqual(['bubble', buttonElement]);
+    });
+
     it('should correctly work for a basic "click" listener on the outer target', () => {
       const log = [];
       const clickEvent = jest.fn(event => {
