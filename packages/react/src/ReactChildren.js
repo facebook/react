@@ -207,11 +207,6 @@ function getComponentKey(component, index) {
   return index.toString(36);
 }
 
-function forEachSingleChild(bookKeeping, child, name) {
-  const {func, context} = bookKeeping;
-  func.call(context, child, bookKeeping.count++);
-}
-
 /**
  * Iterates through children that are typically specified as `props.children`.
  *
@@ -225,16 +220,14 @@ function forEachSingleChild(bookKeeping, child, name) {
  * @param {*} forEachContext Context for forEachContext.
  */
 function forEachChildren(children, forEachFunc, forEachContext) {
-  if (children == null) {
-    return;
-  }
-  const traverseContext = createTraverseContext(
-    null,
-    null,
-    forEachFunc,
+  mapChildren(
+    children,
+    function() {
+      forEachFunc.apply(this, arguments);
+      // Don't return anything.
+    },
     forEachContext,
   );
-  traverseAllChildren(children, '', forEachSingleChild, traverseContext);
 }
 
 function mapSingleChildIntoContext(bookKeeping, child, childKey) {
@@ -271,7 +264,12 @@ function mapIntoWithKeyPrefixInternal(children, array, prefix, func, context) {
     func,
     context,
   );
-  traverseAllChildren(children, '', mapSingleChildIntoContext, traverseContext);
+  return traverseAllChildren(
+    children,
+    '',
+    mapSingleChildIntoContext,
+    traverseContext,
+  );
 }
 
 /**
