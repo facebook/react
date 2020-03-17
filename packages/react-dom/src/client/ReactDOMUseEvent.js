@@ -46,7 +46,7 @@ export function useEvent(
 ): ReactDOMListenerMap {
   const dispatcher = resolveDispatcher();
   let capture = false;
-  let passive = false;
+  let passive = undefined; // Undefined means to use the browser default
   let priority = getEventPriorityForListenerSystem((type: any));
 
   if (options != null) {

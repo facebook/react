@@ -1172,8 +1172,8 @@ export function validateEventListenerTarget(
       console.warn(
         'Event listener method setListener() from useEvent() hook requires the first argument to be either:' +
           '\n\n' +
-          '1. A valid DOM node that was rendered and managed by React' +
-          '2. The "window" object' +
+          '1. A valid DOM node that was rendered and managed by React\n' +
+          '2. The "window" object\n' +
           '3. The "document" object',
       );
     }

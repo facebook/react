@@ -78,7 +78,7 @@ export type ReactDOMResponderContext = {
 
 export type ReactDOMListenerEvent = {|
   capture: boolean,
-  passive: boolean,
+  passive: void | boolean,
   priority: EventPriority,
   type: string,
 |};
