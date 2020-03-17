@@ -68,12 +68,7 @@ function createTraverseContext(mapResult, keyPrefix, mapFunction, mapContext) {
  * process.
  * @return {!number} The number of children in this subtree.
  */
-function traverseAllChildrenImpl(
-  children,
-  nameSoFar,
-  callback,
-  traverseContext,
-) {
+function traverseAllChildren(children, nameSoFar, callback, traverseContext) {
   const type = typeof children;
 
   if (type === 'undefined' || type === 'boolean') {
@@ -121,7 +116,7 @@ function traverseAllChildrenImpl(
     for (let i = 0; i < children.length; i++) {
       child = children[i];
       nextName = nextNamePrefix + getComponentKey(child, i);
-      subtreeCount += traverseAllChildrenImpl(
+      subtreeCount += traverseAllChildren(
         child,
         nextName,
         callback,
@@ -160,7 +155,7 @@ function traverseAllChildrenImpl(
       while (!(step = iterator.next()).done) {
         child = step.value;
         nextName = nextNamePrefix + getComponentKey(child, ii++);
-        subtreeCount += traverseAllChildrenImpl(
+        subtreeCount += traverseAllChildren(
           child,
           nextName,
           callback,
@@ -188,30 +183,6 @@ function traverseAllChildrenImpl(
   }
 
   return subtreeCount;
-}
-
-/**
- * Traverses children that are typically specified as `props.children`, but
- * might also be specified through attributes:
- *
- * - `traverseAllChildren(this.props.children, ...)`
- * - `traverseAllChildren(this.props.leftPanelChildren, ...)`
- *
- * The `traverseContext` is an optional argument that is passed through the
- * entire traversal. It can be used to store accumulations or anything else that
- * the callback might find relevant.
- *
- * @param {?*} children Children tree object.
- * @param {!function} callback To invoke upon traversing each child.
- * @param {?*} traverseContext Context for traversal.
- * @return {!number} The number of children in this subtree.
- */
-function traverseAllChildren(children, callback, traverseContext) {
-  if (children == null) {
-    return 0;
-  }
-
-  return traverseAllChildrenImpl(children, '', callback, traverseContext);
 }
 
 /**
@@ -255,7 +226,7 @@ function forEachSingleChild(bookKeeping, child, name) {
  */
 function forEachChildren(children, forEachFunc, forEachContext) {
   if (children == null) {
-    return children;
+    return;
   }
   const traverseContext = createTraverseContext(
     null,
@@ -263,7 +234,7 @@ function forEachChildren(children, forEachFunc, forEachContext) {
     forEachFunc,
     forEachContext,
   );
-  traverseAllChildren(children, forEachSingleChild, traverseContext);
+  traverseAllChildren(children, '', forEachSingleChild, traverseContext);
 }
 
 function mapSingleChildIntoContext(bookKeeping, child, childKey) {
@@ -300,7 +271,7 @@ function mapIntoWithKeyPrefixInternal(children, array, prefix, func, context) {
     func,
     context,
   );
-  traverseAllChildren(children, mapSingleChildIntoContext, traverseContext);
+  traverseAllChildren(children, '', mapSingleChildIntoContext, traverseContext);
 }
 
 /**
@@ -335,7 +306,10 @@ function mapChildren(children, func, context) {
  * @return {number} The number of children.
  */
 function countChildren(children) {
-  return traverseAllChildren(children, () => null, null);
+  if (children == null) {
+    return 0;
+  }
+  return traverseAllChildren(children, '', () => null, null);
 }
 
 /**
@@ -345,6 +319,9 @@ function countChildren(children) {
  * See https://reactjs.org/docs/react-api.html#reactchildrentoarray
  */
 function toArray(children) {
+  if (children == null) {
+    return [];
+  }
   const result = [];
   mapIntoWithKeyPrefixInternal(children, result, null, child => child);
   return result;
