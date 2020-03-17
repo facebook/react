@@ -185,16 +185,16 @@ function getComponentKey(component, index) {
   return index.toString(36);
 }
 
-function mapIntoArray(children, array, prefix, func, context) {
-  let escapedPrefix = '';
-  if (prefix != null) {
-    escapedPrefix = escapeUserProvidedKey(prefix) + '/';
-  }
+function mapIntoArray(children, array, escapedPrefix, func, context) {
   let count = 0;
   return traverseAllChildren(children, '', (child, childKey) => {
     let mappedChild = func.call(context, child, count++);
     if (Array.isArray(mappedChild)) {
-      mapIntoArray(mappedChild, array, childKey, c => c);
+      let escapedChildKey = '';
+      if (childKey != null) {
+        escapedChildKey = escapeUserProvidedKey(childKey) + '/';
+      }
+      mapIntoArray(mappedChild, array, escapedChildKey, c => c);
     } else if (mappedChild != null) {
       if (isValidElement(mappedChild)) {
         mappedChild = cloneAndReplaceKey(
@@ -231,7 +231,7 @@ function mapChildren(children, func, context) {
     return children;
   }
   const result = [];
-  mapIntoArray(children, result, null, func, context);
+  mapIntoArray(children, result, '', func, context);
   return result;
 }
 
