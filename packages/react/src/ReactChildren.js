@@ -307,7 +307,7 @@ function countChildren(children) {
   if (children == null) {
     return 0;
   }
-  return traverseAllChildren(children, '', () => null, null);
+  return mapIntoWithKeyPrefixInternal(children, null, null, () => null);
 }
 
 /**
