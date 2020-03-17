@@ -542,7 +542,7 @@ describe('ReactCompositeComponent', () => {
   });
 
   it('should warn when shouldComponentUpdate() returns undefined', () => {
-    class Component extends React.Component {
+    class ClassComponent extends React.Component {
       state = {bogus: false};
 
       shouldComponentUpdate() {
@@ -554,10 +554,10 @@ describe('ReactCompositeComponent', () => {
       }
     }
 
-    const instance = ReactTestUtils.renderIntoDocument(<Component />);
+    const instance = ReactTestUtils.renderIntoDocument(<ClassComponent />);
 
     expect(() => instance.setState({bogus: true})).toErrorDev(
-      'Warning: Component.shouldComponentUpdate(): Returned undefined instead of a ' +
+      'Warning: ClassComponent.shouldComponentUpdate(): Returned undefined instead of a ' +
         'boolean value. Make sure to return true or false.',
     );
   });

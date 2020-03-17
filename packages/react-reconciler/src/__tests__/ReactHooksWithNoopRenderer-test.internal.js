@@ -339,6 +339,42 @@ describe('ReactHooksWithNoopRenderer', () => {
       );
     });
 
+    it('dedupes the warning by component name', () => {
+      let _updateCountA;
+      function CounterA(props, ref) {
+        const [, updateCount] = useState(0);
+        _updateCountA = updateCount;
+        return null;
+      }
+      let _updateCountB;
+      function CounterB(props, ref) {
+        const [, updateCount] = useState(0);
+        _updateCountB = updateCount;
+        return null;
+      }
+
+      ReactNoop.render([<CounterA key="A" />, <CounterB key="B" />]);
+      expect(Scheduler).toFlushWithoutYielding();
+      ReactNoop.render(null);
+      expect(Scheduler).toFlushWithoutYielding();
+      expect(() => act(() => _updateCountA(1))).toErrorDev(
+        "Warning: Can't perform a React state update on an unmounted " +
+          'component. This is a no-op, but it indicates a memory leak in your ' +
+          'application. To fix, cancel all subscriptions and asynchronous ' +
+          'tasks in a useEffect cleanup function.\n' +
+          '    in CounterA (at **)',
+      );
+      // already cached so this logs no error
+      act(() => _updateCountA(2));
+      expect(() => act(() => _updateCountB(1))).toErrorDev(
+        "Warning: Can't perform a React state update on an unmounted " +
+          'component. This is a no-op, but it indicates a memory leak in your ' +
+          'application. To fix, cancel all subscriptions and asynchronous ' +
+          'tasks in a useEffect cleanup function.\n' +
+          '    in CounterB (at **)',
+      );
+    });
+
     it('works with memo', () => {
       let _updateCount;
       function Counter(props) {

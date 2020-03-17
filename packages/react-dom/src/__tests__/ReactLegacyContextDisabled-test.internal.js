@@ -11,6 +11,7 @@
 
 let React;
 let ReactDOM;
+let ReactDOMServer;
 let ReactFeatureFlags;
 
 describe('ReactLegacyContextDisabled', () => {
@@ -19,6 +20,7 @@ describe('ReactLegacyContextDisabled', () => {
 
     React = require('react');
     ReactDOM = require('react-dom');
+    ReactDOMServer = require('react-dom/server');
     ReactFeatureFlags = require('shared/ReactFeatureFlags');
     ReactFeatureFlags.disableLegacyContext = true;
   });
@@ -115,6 +117,32 @@ describe('ReactLegacyContextDisabled', () => {
     expect(container.textContent).toBe('{}undefinedundefined');
     expect(lifecycleContextLog).toEqual([{}, {}, {}]);
     ReactDOM.unmountComponentAtNode(container);
+
+    // test server path.
+    let text;
+    expect(() => {
+      text = ReactDOMServer.renderToString(
+        <LegacyProvider>
+          <span>
+            <LegacyClsConsumer />
+            <LegacyFnConsumer />
+            <RegularFn />
+          </span>
+        </LegacyProvider>,
+        container,
+      );
+    }).toErrorDev([
+      'LegacyProvider uses the legacy childContextTypes API which is no longer supported. ' +
+        'Use React.createContext() instead.',
+      'LegacyClsConsumer uses the legacy contextTypes API which is no longer supported. ' +
+        'Use React.createContext() with static contextType instead.',
+      'LegacyFnConsumer uses the legacy contextTypes API which is no longer supported. ' +
+        'Use React.createContext() with React.useContext() instead.',
+    ]);
+    expect(text).toBe(
+      '<span data-reactroot="">{}<!-- -->undefined<!-- -->undefined</span>',
+    );
+    expect(lifecycleContextLog).toEqual([{}, {}, {}]);
   });
 
   it('renders a tree with modern context', () => {
