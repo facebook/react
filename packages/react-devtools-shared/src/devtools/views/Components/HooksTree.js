@@ -203,10 +203,19 @@ function HookView({canEditHooks, hook, id, inspectPath, path}: HookViewProps) {
               {name || 'Anonymous'}
             </span>
             <span className={styles.Value} onClick={toggleIsOpen}>
-              {getMetaValueLabel(value)}
+              {isOpen || getMetaValueLabel(value)}
             </span>
           </div>
           <div className={styles.Children} hidden={!isOpen}>
+            <KeyValue
+              depth={1}
+              alphaSort={false}
+              inspectPath={inspectPath}
+              name="DebugValue"
+              path={path.concat(['value'])}
+              pathRoot="hooks"
+              value={value}
+            />
             {subHooksView}
           </div>
         </div>
