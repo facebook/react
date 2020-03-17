@@ -304,10 +304,9 @@ function mapChildren(children, func, context) {
  * @return {number} The number of children.
  */
 function countChildren(children) {
-  if (children == null) {
-    return 0;
-  }
-  return mapIntoWithKeyPrefixInternal(children, null, null, () => null);
+  let n = 0;
+  mapChildren(children, () => n++);
+  return n;
 }
 
 /**
@@ -317,12 +316,7 @@ function countChildren(children) {
  * See https://reactjs.org/docs/react-api.html#reactchildrentoarray
  */
 function toArray(children) {
-  if (children == null) {
-    return [];
-  }
-  const result = [];
-  mapIntoWithKeyPrefixInternal(children, result, null, child => child);
-  return result;
+  return mapChildren(children, child => child) || [];
 }
 
 /**
