@@ -358,19 +358,26 @@ describe('ReactElement', () => {
     expect(instance.props.fruit).toBe('persimmon');
   });
 
-  it('should not map key property from default props', () => {
+  // NOTE: We're explicitly not using JSX here. This is intended to test
+  // classic JS without JSX.
+  it('should display a warning when mapping key to a default prop', () => {
     class Component extends React.Component {
       render() {
-        return <div>{this.props.key}</div>;
+        return React.createElement('div', null, this.props.key);
       }
     }
 
     Component.defaultProps = {key: 'test key'};
 
     const container = document.createElement('div');
-    const instance = ReactDOM.render(<Component />, container);
-
-    expect(instance.props.key).toBe(undefined);
+    expect(() =>
+      ReactDOM.render(React.createElement(Component), container),
+    ).toWarnDev(
+      'Component: key is not a valid default prop to set. ' +
+        'Please remove this from your default props definition. ' +
+        'Note: the value is still being set, but this behavior will most likely be deprecated in future releases.',
+      {withoutStack: true},
+    );
   });
 
   // NOTE: We're explicitly not using JSX here. This is intended to test

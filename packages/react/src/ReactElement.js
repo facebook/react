@@ -403,13 +403,17 @@ export function createElement(type, config, children) {
   if (type && type.defaultProps) {
     const defaultProps = type.defaultProps;
     for (propName in defaultProps) {
-      if (
-        props[propName] === undefined &&
-        propName !== 'ref' &&
-        propName !== 'key'
-      ) {
+      if (props[propName] === undefined) {
         props[propName] = defaultProps[propName];
       }
+      warningWithoutStack(
+        propName !== 'ref' && propName !== 'key',
+        '%s: %s is not a valid default prop to set. ' +
+          'Please remove this from your default props definition. ' +
+          'Note: the value is still being set, but this behavior will most likely be deprecated in future releases.',
+        type.displayName || type.name || 'Unkown',
+        propName,
+      );
     }
   }
   if (__DEV__) {
