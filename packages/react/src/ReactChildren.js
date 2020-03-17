@@ -50,25 +50,14 @@ function escapeUserProvidedKey(text) {
   return ('' + text).replace(userProvidedKeyEscapeRegex, '$&/');
 }
 
-function createTraverseContext(mapResult, keyPrefix, mapFunction, mapContext) {
-  return {
-    result: mapResult,
-    keyPrefix: keyPrefix,
-    func: mapFunction,
-    context: mapContext,
-    count: 0,
-  };
-}
-
 /**
  * @param {?*} children Children tree container.
  * @param {!string} nameSoFar Name of the key path so far.
  * @param {!function} callback Callback to invoke with each child found.
- * @param {?*} traverseContext Used to pass information throughout the traversal
  * process.
  * @return {!number} The number of children in this subtree.
  */
-function traverseAllChildren(children, nameSoFar, callback, traverseContext) {
+function traverseAllChildren(children, nameSoFar, callback) {
   const type = typeof children;
 
   if (type === 'undefined' || type === 'boolean') {
@@ -97,7 +86,6 @@ function traverseAllChildren(children, nameSoFar, callback, traverseContext) {
 
   if (invokeCallback) {
     callback(
-      traverseContext,
       children,
       // If it's the only child, treat the name as if it was wrapped in an array
       // so that it's consistent if the number of children grows.
@@ -116,12 +104,7 @@ function traverseAllChildren(children, nameSoFar, callback, traverseContext) {
     for (let i = 0; i < children.length; i++) {
       child = children[i];
       nextName = nextNamePrefix + getComponentKey(child, i);
-      subtreeCount += traverseAllChildren(
-        child,
-        nextName,
-        callback,
-        traverseContext,
-      );
+      subtreeCount += traverseAllChildren(child, nextName, callback);
     }
   } else {
     const iteratorFn = getIteratorFn(children);
@@ -155,12 +138,7 @@ function traverseAllChildren(children, nameSoFar, callback, traverseContext) {
       while (!(step = iterator.next()).done) {
         child = step.value;
         nextName = nextNamePrefix + getComponentKey(child, ii++);
-        subtreeCount += traverseAllChildren(
-          child,
-          nextName,
-          callback,
-          traverseContext,
-        );
+        subtreeCount += traverseAllChildren(child, nextName, callback);
       }
     } else if (type === 'object') {
       let addendum = '';
@@ -207,44 +185,32 @@ function getComponentKey(component, index) {
   return index.toString(36);
 }
 
-function mapIntoWithKeyPrefixInternal(children, array, prefix, func, context) {
+function mapIntoArray(children, array, prefix, func, context) {
   let escapedPrefix = '';
   if (prefix != null) {
     escapedPrefix = escapeUserProvidedKey(prefix) + '/';
   }
-  const traverseContext = createTraverseContext(
-    array,
-    escapedPrefix,
-    func,
-    context,
-  );
-  return traverseAllChildren(
-    children,
-    '',
-    (bookKeeping, child, childKey) => {
-      const {result, keyPrefix, func, context} = bookKeeping;
-
-      let mappedChild = func.call(context, child, bookKeeping.count++);
-      if (Array.isArray(mappedChild)) {
-        mapIntoWithKeyPrefixInternal(mappedChild, result, childKey, c => c);
-      } else if (mappedChild != null) {
-        if (isValidElement(mappedChild)) {
-          mappedChild = cloneAndReplaceKey(
-            mappedChild,
-            // Keep both the (mapped) and old keys if they differ, just as
-            // traverseAllChildren used to do for objects as children
-            keyPrefix +
-              (mappedChild.key && (!child || child.key !== mappedChild.key)
-                ? escapeUserProvidedKey(mappedChild.key) + '/'
-                : '') +
-              childKey,
-          );
-        }
-        result.push(mappedChild);
+  let count = 0;
+  return traverseAllChildren(children, '', (child, childKey) => {
+    let mappedChild = func.call(context, child, count++);
+    if (Array.isArray(mappedChild)) {
+      mapIntoArray(mappedChild, array, childKey, c => c);
+    } else if (mappedChild != null) {
+      if (isValidElement(mappedChild)) {
+        mappedChild = cloneAndReplaceKey(
+          mappedChild,
+          // Keep both the (mapped) and old keys if they differ, just as
+          // traverseAllChildren used to do for objects as children
+          escapedPrefix +
+            (mappedChild.key && (!child || child.key !== mappedChild.key)
+              ? escapeUserProvidedKey(mappedChild.key) + '/'
+              : '') +
+            childKey,
+        );
       }
-    },
-    traverseContext,
-  );
+      array.push(mappedChild);
+    }
+  });
 }
 
 /**
@@ -265,7 +231,7 @@ function mapChildren(children, func, context) {
     return children;
   }
   const result = [];
-  mapIntoWithKeyPrefixInternal(children, result, null, func, context);
+  mapIntoArray(children, result, null, func, context);
   return result;
 }
 
