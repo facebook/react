@@ -2935,12 +2935,12 @@ function warnAboutRenderPhaseUpdatesInDEV(fiber) {
           const renderingComponentName =
             (workInProgress && getComponentName(workInProgress.type)) ||
             'Unknown';
-          const setStateComponentName =
-            getComponentName(fiber.type) || 'Unknown';
-          const dedupeKey =
-            renderingComponentName + ' ' + setStateComponentName;
+          // Dedupe by the rendering component because it's the one that needs to be fixed.
+          const dedupeKey = renderingComponentName;
           if (!didWarnAboutUpdateInRenderForAnotherComponent.has(dedupeKey)) {
             didWarnAboutUpdateInRenderForAnotherComponent.add(dedupeKey);
+            const setStateComponentName =
+              getComponentName(fiber.type) || 'Unknown';
             console.error(
               'Cannot update a component (`%s`) while rendering a ' +
                 'different component (`%s`). To locate the bad setState() call inside `%s`, ' +
