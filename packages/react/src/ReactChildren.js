@@ -207,29 +207,6 @@ function getComponentKey(component, index) {
   return index.toString(36);
 }
 
-/**
- * Iterates through children that are typically specified as `props.children`.
- *
- * See https://reactjs.org/docs/react-api.html#reactchildrenforeach
- *
- * The provided forEachFunc(child, index) will be called for each
- * leaf child.
- *
- * @param {?*} children Children tree container.
- * @param {function(*, int)} forEachFunc
- * @param {*} forEachContext Context for forEachContext.
- */
-function forEachChildren(children, forEachFunc, forEachContext) {
-  mapChildren(
-    children,
-    function() {
-      forEachFunc.apply(this, arguments);
-      // Don't return anything.
-    },
-    forEachContext,
-  );
-}
-
 function mapIntoWithKeyPrefixInternal(children, array, prefix, func, context) {
   let escapedPrefix = '';
   if (prefix != null) {
@@ -305,6 +282,29 @@ function countChildren(children) {
   let n = 0;
   mapChildren(children, () => n++);
   return n;
+}
+
+/**
+ * Iterates through children that are typically specified as `props.children`.
+ *
+ * See https://reactjs.org/docs/react-api.html#reactchildrenforeach
+ *
+ * The provided forEachFunc(child, index) will be called for each
+ * leaf child.
+ *
+ * @param {?*} children Children tree container.
+ * @param {function(*, int)} forEachFunc
+ * @param {*} forEachContext Context for forEachContext.
+ */
+function forEachChildren(children, forEachFunc, forEachContext) {
+  mapChildren(
+    children,
+    function() {
+      forEachFunc.apply(this, arguments);
+      // Don't return anything.
+    },
+    forEachContext,
+  );
 }
 
 /**
