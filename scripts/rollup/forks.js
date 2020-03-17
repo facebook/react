@@ -58,7 +58,7 @@ const forks = Object.freeze({
     if (entry === 'react') {
       return 'react/src/ReactSharedInternals';
     }
-    if (dependencies.indexOf('react') === -1) {
+    if (!entry.startsWith('react/') && dependencies.indexOf('react') === -1) {
       // React internals are unavailable if we can't reference the package.
       // We return an error because we only want to throw if this module gets used.
       return new Error(

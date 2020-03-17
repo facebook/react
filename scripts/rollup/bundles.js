@@ -76,6 +76,38 @@ const bundles = [
     externals: [],
   },
 
+  /******* React JSX Runtime *******/
+  {
+    bundleTypes: [
+      NODE_DEV,
+      NODE_PROD,
+      NODE_PROFILING,
+      FB_WWW_DEV,
+      FB_WWW_PROD,
+      FB_WWW_PROFILING,
+    ],
+    moduleType: ISOMORPHIC,
+    entry: 'react/jsx-runtime',
+    global: 'JSXRuntime',
+    externals: ['react'],
+  },
+
+  /******* React JSX DEV Runtime *******/
+  {
+    bundleTypes: [
+      NODE_DEV,
+      NODE_PROD,
+      NODE_PROFILING,
+      FB_WWW_DEV,
+      FB_WWW_PROD,
+      FB_WWW_PROFILING,
+    ],
+    moduleType: ISOMORPHIC,
+    entry: 'react/jsx-dev-runtime',
+    global: 'JSXDEVRuntime',
+    externals: ['react'],
+  },
+
   /******* React DOM *******/
   {
     bundleTypes: [

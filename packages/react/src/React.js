@@ -24,7 +24,6 @@ import {
   createFactory as createFactoryProd,
   cloneElement as cloneElementProd,
   isValidElement,
-  jsx as jsxProd,
 } from './ReactElement';
 import {createContext} from './ReactContext';
 import {lazy} from './ReactLazy';
@@ -52,9 +51,6 @@ import {
   createElementWithValidation,
   createFactoryWithValidation,
   cloneElementWithValidation,
-  jsxWithValidation,
-  jsxWithValidationStatic,
-  jsxWithValidationDynamic,
 } from './ReactElementValidator';
 import createMutableSource from './createMutableSource';
 import ReactSharedInternals from './ReactSharedInternals';
@@ -66,12 +62,6 @@ import createScope from 'shared/createScope';
 const createElement = __DEV__ ? createElementWithValidation : createElementProd;
 const cloneElement = __DEV__ ? cloneElementWithValidation : cloneElementProd;
 const createFactory = __DEV__ ? createFactoryWithValidation : createFactoryProd;
-
-const jsxDEV = __DEV__ ? jsxWithValidation : undefined;
-const jsx = __DEV__ ? jsxWithValidationDynamic : jsxProd;
-// we may want to special case jsxs internally to take advantage of static children.
-// for now we can ship identical prod functions
-const jsxs = __DEV__ ? jsxWithValidationStatic : jsxProd;
 
 const Children = {
   map,
@@ -127,9 +117,4 @@ export {
   createFundamental as unstable_createFundamental,
   // enableScopeAPI
   createScope as unstable_createScope,
-  // enableJSXTransformAPI
-  jsx,
-  jsxs,
-  // TODO: jsxDEV should not be exposed as a name. We might want to move it to a different entry point.
-  jsxDEV,
 };

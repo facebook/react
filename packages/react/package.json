@@ -14,7 +14,9 @@
     "build-info.json",
     "index.js",
     "cjs/",
-    "umd/"
+    "umd/",
+    "jsx-runtime.js",
+    "jsx-dev-runtime.js"
   ],
   "main": "index.js",
   "repository": {

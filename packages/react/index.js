@@ -76,7 +76,4 @@ export {
   DEPRECATED_createResponder,
   unstable_createFundamental,
   unstable_createScope,
-  jsx,
-  jsxs,
-  jsxDEV,
 } from './src/React';
