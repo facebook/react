@@ -38,11 +38,7 @@ export function initializeLazyComponentType(
   lazyComponent: LazyComponent<any>,
 ): void {
   if (lazyComponent._status === Uninitialized) {
-    let ctor = lazyComponent._result;
-    if (!ctor) {
-      // TODO: Remove this later. THis only exists in case you use an older "react" package.
-      ctor = ((lazyComponent: any)._ctor: typeof ctor);
-    }
+    const ctor = lazyComponent._result;
     const thenable = ctor();
     // Transition to the next state.
     const pending: PendingLazyComponent<any> = (lazyComponent: any);
