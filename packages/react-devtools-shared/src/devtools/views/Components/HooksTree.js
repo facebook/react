@@ -17,7 +17,7 @@ import EditableValue from './EditableValue';
 import ExpandCollapseToggle from './ExpandCollapseToggle';
 import {InspectedElementContext} from './InspectedElementContext';
 import KeyValue from './KeyValue';
-import {serializeHooksForCopy} from '../utils';
+import {getMetaValueLabel, serializeHooksForCopy} from '../utils';
 import styles from './HooksTree.css';
 import useContextMenu from '../../ContextMenu/useContextMenu';
 import {meta} from '../../../hydration';
@@ -201,6 +201,9 @@ function HookView({canEditHooks, hook, id, inspectPath, path}: HookViewProps) {
               onClick={toggleIsOpen}
               className={name !== '' ? styles.Name : styles.NameAnonymous}>
               {name || 'Anonymous'}
+            </span>
+            <span className={styles.Value} onClick={toggleIsOpen}>
+              {isOpen || getMetaValueLabel(value)}
             </span>
           </div>
           <div className={styles.Children} hidden={!isOpen}>
