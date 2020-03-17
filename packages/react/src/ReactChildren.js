@@ -51,13 +51,53 @@ function escapeUserProvidedKey(text) {
 }
 
 /**
- * @param {?*} children Children tree container.
- * @param {!string} nameSoFar Name of the key path so far.
- * @param {!function} callback Callback to invoke with each child found.
- * process.
- * @return {!number} The number of children in this subtree.
+ * Generate a key string that identifies a component within a set.
+ *
+ * @param {*} component A component that could contain a manual key.
+ * @param {number} index Index that is used if a manual key is not provided.
+ * @return {string}
  */
-function traverseAllChildren(children, nameSoFar, callback) {
+function getComponentKey(component, index) {
+  // Do some typechecking here since we call this blindly. We want to ensure
+  // that we don't block potential future ES APIs.
+  if (
+    typeof component === 'object' &&
+    component !== null &&
+    component.key != null
+  ) {
+    // Explicit key
+    return escape(component.key);
+  }
+  // Implicit key determined by the index in the set
+  return index.toString(36);
+}
+
+function mapIntoArray(children, array, escapedPrefix, nameSoFar, callback) {
+  function handleChild(child, childKey) {
+    let mappedChild = callback(child);
+    if (Array.isArray(mappedChild)) {
+      let escapedChildKey = '';
+      if (childKey != null) {
+        escapedChildKey = escapeUserProvidedKey(childKey) + '/';
+      }
+      mapIntoArray(mappedChild, array, escapedChildKey, c => c);
+    } else if (mappedChild != null) {
+      if (isValidElement(mappedChild)) {
+        mappedChild = cloneAndReplaceKey(
+          mappedChild,
+          // Keep both the (mapped) and old keys if they differ, just as
+          // traverseAllChildren used to do for objects as children
+          escapedPrefix +
+            (mappedChild.key && (!child || child.key !== mappedChild.key)
+              ? escapeUserProvidedKey(mappedChild.key) + '/'
+              : '') +
+            childKey,
+        );
+      }
+      array.push(mappedChild);
+    }
+  }
+
   const type = typeof children;
 
   if (type === 'undefined' || type === 'boolean') {
@@ -85,7 +125,7 @@ function traverseAllChildren(children, nameSoFar, callback) {
   }
 
   if (invokeCallback) {
-    callback(
+    handleChild(
       children,
       // If it's the only child, treat the name as if it was wrapped in an array
       // so that it's consistent if the number of children grows.
@@ -104,7 +144,13 @@ function traverseAllChildren(children, nameSoFar, callback) {
     for (let i = 0; i < children.length; i++) {
       child = children[i];
       nextName = nextNamePrefix + getComponentKey(child, i);
-      subtreeCount += traverseAllChildren(child, nextName, callback);
+      subtreeCount += mapIntoArray(
+        child,
+        array,
+        escapedPrefix,
+        nextName,
+        callback,
+      );
     }
   } else {
     const iteratorFn = getIteratorFn(children);
@@ -138,7 +184,13 @@ function traverseAllChildren(children, nameSoFar, callback) {
       while (!(step = iterator.next()).done) {
         child = step.value;
         nextName = nextNamePrefix + getComponentKey(child, ii++);
-        subtreeCount += traverseAllChildren(child, nextName, callback);
+        subtreeCount += mapIntoArray(
+          child,
+          array,
+          escapedPrefix,
+          nextName,
+          callback,
+        );
       }
     } else if (type === 'object') {
       let addendum = '';
@@ -164,55 +216,6 @@ function traverseAllChildren(children, nameSoFar, callback) {
 }
 
 /**
- * Generate a key string that identifies a component within a set.
- *
- * @param {*} component A component that could contain a manual key.
- * @param {number} index Index that is used if a manual key is not provided.
- * @return {string}
- */
-function getComponentKey(component, index) {
-  // Do some typechecking here since we call this blindly. We want to ensure
-  // that we don't block potential future ES APIs.
-  if (
-    typeof component === 'object' &&
-    component !== null &&
-    component.key != null
-  ) {
-    // Explicit key
-    return escape(component.key);
-  }
-  // Implicit key determined by the index in the set
-  return index.toString(36);
-}
-
-function mapIntoArray(children, array, escapedPrefix, callback) {
-  return traverseAllChildren(children, '', (child, childKey) => {
-    let mappedChild = callback(child);
-    if (Array.isArray(mappedChild)) {
-      let escapedChildKey = '';
-      if (childKey != null) {
-        escapedChildKey = escapeUserProvidedKey(childKey) + '/';
-      }
-      mapIntoArray(mappedChild, array, escapedChildKey, c => c);
-    } else if (mappedChild != null) {
-      if (isValidElement(mappedChild)) {
-        mappedChild = cloneAndReplaceKey(
-          mappedChild,
-          // Keep both the (mapped) and old keys if they differ, just as
-          // traverseAllChildren used to do for objects as children
-          escapedPrefix +
-            (mappedChild.key && (!child || child.key !== mappedChild.key)
-              ? escapeUserProvidedKey(mappedChild.key) + '/'
-              : '') +
-            childKey,
-        );
-      }
-      array.push(mappedChild);
-    }
-  });
-}
-
-/**
  * Maps children that are typically specified as `props.children`.
  *
  * See https://reactjs.org/docs/react-api.html#reactchildrenmap
@@ -234,6 +237,7 @@ function mapChildren(children, func, context) {
   mapIntoArray(
     children,
     result,
+    '',
     '',
     function(child) {
       return func.call(context, child, count++);
