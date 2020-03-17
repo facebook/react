@@ -50,42 +50,14 @@ function escapeUserProvidedKey(text) {
   return ('' + text).replace(userProvidedKeyEscapeRegex, '$&/');
 }
 
-const POOL_SIZE = 10;
-const traverseContextPool = [];
-function getPooledTraverseContext(
-  mapResult,
-  keyPrefix,
-  mapFunction,
-  mapContext,
-) {
-  if (traverseContextPool.length) {
-    const traverseContext = traverseContextPool.pop();
-    traverseContext.result = mapResult;
-    traverseContext.keyPrefix = keyPrefix;
-    traverseContext.func = mapFunction;
-    traverseContext.context = mapContext;
-    traverseContext.count = 0;
-    return traverseContext;
-  } else {
-    return {
-      result: mapResult,
-      keyPrefix: keyPrefix,
-      func: mapFunction,
-      context: mapContext,
-      count: 0,
-    };
-  }
-}
-
-function releaseTraverseContext(traverseContext) {
-  traverseContext.result = null;
-  traverseContext.keyPrefix = null;
-  traverseContext.func = null;
-  traverseContext.context = null;
-  traverseContext.count = 0;
-  if (traverseContextPool.length < POOL_SIZE) {
-    traverseContextPool.push(traverseContext);
-  }
+function createTraverseContext(mapResult, keyPrefix, mapFunction, mapContext) {
+  return {
+    result: mapResult,
+    keyPrefix: keyPrefix,
+    func: mapFunction,
+    context: mapContext,
+    count: 0,
+  };
 }
 
 /**
@@ -285,14 +257,13 @@ function forEachChildren(children, forEachFunc, forEachContext) {
   if (children == null) {
     return children;
   }
-  const traverseContext = getPooledTraverseContext(
+  const traverseContext = createTraverseContext(
     null,
     null,
     forEachFunc,
     forEachContext,
   );
   traverseAllChildren(children, forEachSingleChild, traverseContext);
-  releaseTraverseContext(traverseContext);
 }
 
 function mapSingleChildIntoContext(bookKeeping, child, childKey) {
@@ -323,14 +294,13 @@ function mapIntoWithKeyPrefixInternal(children, array, prefix, func, context) {
   if (prefix != null) {
     escapedPrefix = escapeUserProvidedKey(prefix) + '/';
   }
-  const traverseContext = getPooledTraverseContext(
+  const traverseContext = createTraverseContext(
     array,
     escapedPrefix,
     func,
     context,
   );
   traverseAllChildren(children, mapSingleChildIntoContext, traverseContext);
-  releaseTraverseContext(traverseContext);
 }
 
 /**
