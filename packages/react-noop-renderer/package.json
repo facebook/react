@@ -18,7 +18,7 @@
     "react-server": "*"
   },
   "peerDependencies": {
-    "react": "^16.0.0"
+    "react": "^16.13.0"
   },
   "files": [
     "LICENSE",
