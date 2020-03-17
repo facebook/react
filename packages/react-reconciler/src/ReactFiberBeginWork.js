@@ -1363,6 +1363,7 @@ function mountIndeterminateComponent(
       ReactStrictModeWarnings.recordLegacyContextWarning(workInProgress, null);
     }
 
+    setIsRendering(true);
     ReactCurrentOwner.current = workInProgress;
     value = renderWithHooks(
       null,
@@ -1372,6 +1373,7 @@ function mountIndeterminateComponent(
       context,
       renderExpirationTime,
     );
+    setIsRendering(false);
   } else {
     value = renderWithHooks(
       null,

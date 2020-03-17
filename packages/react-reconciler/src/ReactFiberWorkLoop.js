@@ -2927,7 +2927,10 @@ if (__DEV__) {
 
 function warnAboutRenderPhaseUpdatesInDEV(fiber) {
   if (__DEV__) {
-    if ((executionContext & RenderContext) !== NoContext) {
+    if (
+      ReactCurrentDebugFiberIsRenderingInDEV &&
+      (executionContext & RenderContext) !== NoContext
+    ) {
       switch (fiber.tag) {
         case FunctionComponent:
         case ForwardRef:
@@ -2953,18 +2956,15 @@ function warnAboutRenderPhaseUpdatesInDEV(fiber) {
           break;
         }
         case ClassComponent: {
-          if (
-            ReactCurrentDebugFiberIsRenderingInDEV &&
-            !didWarnAboutUpdateInRender
-          ) {
+          if (!didWarnAboutUpdateInRender) {
             console.error(
               'Cannot update during an existing state transition (such as ' +
                 'within `render`). Render methods should be a pure ' +
                 'function of props and state.',
             );
             didWarnAboutUpdateInRender = true;
-            break;
           }
+          break;
         }
       }
     }
