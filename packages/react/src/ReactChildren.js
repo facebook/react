@@ -230,29 +230,6 @@ function forEachChildren(children, forEachFunc, forEachContext) {
   );
 }
 
-function mapSingleChildIntoContext(bookKeeping, child, childKey) {
-  const {result, keyPrefix, func, context} = bookKeeping;
-
-  let mappedChild = func.call(context, child, bookKeeping.count++);
-  if (Array.isArray(mappedChild)) {
-    mapIntoWithKeyPrefixInternal(mappedChild, result, childKey, c => c);
-  } else if (mappedChild != null) {
-    if (isValidElement(mappedChild)) {
-      mappedChild = cloneAndReplaceKey(
-        mappedChild,
-        // Keep both the (mapped) and old keys if they differ, just as
-        // traverseAllChildren used to do for objects as children
-        keyPrefix +
-          (mappedChild.key && (!child || child.key !== mappedChild.key)
-            ? escapeUserProvidedKey(mappedChild.key) + '/'
-            : '') +
-          childKey,
-      );
-    }
-    result.push(mappedChild);
-  }
-}
-
 function mapIntoWithKeyPrefixInternal(children, array, prefix, func, context) {
   let escapedPrefix = '';
   if (prefix != null) {
@@ -267,7 +244,28 @@ function mapIntoWithKeyPrefixInternal(children, array, prefix, func, context) {
   return traverseAllChildren(
     children,
     '',
-    mapSingleChildIntoContext,
+    (bookKeeping, child, childKey) => {
+      const {result, keyPrefix, func, context} = bookKeeping;
+
+      let mappedChild = func.call(context, child, bookKeeping.count++);
+      if (Array.isArray(mappedChild)) {
+        mapIntoWithKeyPrefixInternal(mappedChild, result, childKey, c => c);
+      } else if (mappedChild != null) {
+        if (isValidElement(mappedChild)) {
+          mappedChild = cloneAndReplaceKey(
+            mappedChild,
+            // Keep both the (mapped) and old keys if they differ, just as
+            // traverseAllChildren used to do for objects as children
+            keyPrefix +
+              (mappedChild.key && (!child || child.key !== mappedChild.key)
+                ? escapeUserProvidedKey(mappedChild.key) + '/'
+                : '') +
+              childKey,
+          );
+        }
+        result.push(mappedChild);
+      }
+    },
     traverseContext,
   );
 }
