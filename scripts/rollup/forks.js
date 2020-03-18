@@ -19,6 +19,15 @@ const {
 } = bundleTypes;
 const {RENDERER, RECONCILER} = moduleTypes;
 
+const RELEASE_CHANNEL = process.env.RELEASE_CHANNEL;
+
+// Default to building in experimental mode. If the release channel is set via
+// an environment variable, then check if it's "experimental".
+const __EXPERIMENTAL__ =
+  typeof RELEASE_CHANNEL === 'string'
+    ? RELEASE_CHANNEL === 'experimental'
+    : true;
+
 // If you need to replace a file with another file for a specific environment,
 // add it to this list with the logic for choosing the right replacement.
 const forks = Object.freeze({
@@ -442,8 +451,13 @@ const forks = Object.freeze({
       case FB_WWW_DEV:
       case FB_WWW_PROD:
       case FB_WWW_PROFILING:
-        // Use the www fork which is integrated with TimeSlice profiling.
-        return 'react-dom/src/events/forks/EventListener-www.js';
+        if (__EXPERIMENTAL__) {
+          // In modern builds we don't use the indirection. We just use raw DOM.
+          return null;
+        } else {
+          // Use the www fork which is integrated with TimeSlice profiling.
+          return 'react-dom/src/events/forks/EventListener-www.js';
+        }
       default:
         return null;
     }
