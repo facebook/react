@@ -1365,7 +1365,6 @@ export function listenToEventResponderEventTypes(
               (targetEventType: any),
               true,
               passiveItem.listener,
-              true,
             );
             listenerMap.delete(passiveKey);
           }
