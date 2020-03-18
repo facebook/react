@@ -2927,7 +2927,10 @@ if (__DEV__) {
 
 function warnAboutRenderPhaseUpdatesInDEV(fiber) {
   if (__DEV__) {
-    if ((executionContext & RenderContext) !== NoContext) {
+    if (
+      ReactCurrentDebugFiberIsRenderingInDEV &&
+      (executionContext & RenderContext) !== NoContext
+    ) {
       switch (fiber.tag) {
         case FunctionComponent:
         case ForwardRef:
@@ -2935,14 +2938,14 @@ function warnAboutRenderPhaseUpdatesInDEV(fiber) {
           const renderingComponentName =
             (workInProgress && getComponentName(workInProgress.type)) ||
             'Unknown';
-          const setStateComponentName =
-            getComponentName(fiber.type) || 'Unknown';
-          const dedupeKey =
-            renderingComponentName + ' ' + setStateComponentName;
+          // Dedupe by the rendering component because it's the one that needs to be fixed.
+          const dedupeKey = renderingComponentName;
           if (!didWarnAboutUpdateInRenderForAnotherComponent.has(dedupeKey)) {
             didWarnAboutUpdateInRenderForAnotherComponent.add(dedupeKey);
+            const setStateComponentName =
+              getComponentName(fiber.type) || 'Unknown';
             console.error(
-              'Cannot update a component (`%s`) from inside the function body of a ' +
+              'Cannot update a component (`%s`) while rendering a ' +
                 'different component (`%s`). To locate the bad setState() call inside `%s`, ' +
                 'follow the stack trace as described in https://fb.me/setstate-in-render',
               setStateComponentName,
@@ -2953,18 +2956,15 @@ function warnAboutRenderPhaseUpdatesInDEV(fiber) {
           break;
         }
         case ClassComponent: {
-          if (
-            ReactCurrentDebugFiberIsRenderingInDEV &&
-            !didWarnAboutUpdateInRender
-          ) {
+          if (!didWarnAboutUpdateInRender) {
             console.error(
               'Cannot update during an existing state transition (such as ' +
                 'within `render`). Render methods should be a pure ' +
                 'function of props and state.',
             );
             didWarnAboutUpdateInRender = true;
-            break;
           }
+          break;
         }
       }
     }
