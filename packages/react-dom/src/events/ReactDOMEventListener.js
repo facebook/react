@@ -49,6 +49,7 @@ import {
   addEventCaptureListener,
   addEventCaptureListenerWithPassiveFlag,
   addEventBubbleListenerWithPassiveFlag,
+  removeEventListener,
 } from './EventListener';
 import getEventTarget from './getEventTarget';
 import {getClosestInstanceFromNode} from '../client/ReactDOMComponentTree';
@@ -108,7 +109,6 @@ export function addResponderEventSystemEvent(
   } else {
     eventFlags |= IS_ACTIVE;
   }
-  let fbListener;
   // Check if interactive and wrap in discreteUpdates
   const listener = dispatchEvent.bind(
     null,
@@ -117,19 +117,15 @@ export function addResponderEventSystemEvent(
     document,
   );
   if (passiveBrowserEventsSupported) {
-    fbListener = addEventCaptureListenerWithPassiveFlag(
+    return addEventCaptureListenerWithPassiveFlag(
       document,
       topLevelType,
       listener,
       passive,
     );
   } else {
-    fbListener = addEventCaptureListener(document, topLevelType, listener);
+    return addEventCaptureListener(document, topLevelType, listener);
   }
-  // If we have an fbListener, then use that.
-  // We'll only have one if we use the forked
-  // EventListener-www module in FB builds.
-  return fbListener || listener;
 }
 
 export function addTrappedEventListener(
@@ -184,8 +180,8 @@ export function addTrappedEventListener(
   const validTargetContainer = ((targetContainer: any): EventTarget);
 
   const rawEventName = getRawEventName(topLevelType);
-  let fbListener;
 
+  let unsubscribeListener;
   // When legacyFBSupport is enabled, it's for when we
   // want to add a one time event listener to a container.
   // This should only be used with enableLegacyFBPrimerSupport
@@ -203,28 +199,26 @@ export function addTrappedEventListener(
       try {
         return originalListener.apply(this, p);
       } finally {
-        if (fbListener) {
-          fbListener.remove();
-        } else {
-          validTargetContainer.removeEventListener(
-            ((rawEventName: any): string),
-            (listener: any),
-          );
-        }
+        removeEventListener(
+          validTargetContainer,
+          rawEventName,
+          unsubscribeListener,
+          capture,
+        );
       }
     };
   }
   if (capture) {
     if (enableUseEventAPI && passive !== undefined) {
       // This is only used with passive is either true or false.
-      fbListener = addEventCaptureListenerWithPassiveFlag(
+      unsubscribeListener = addEventCaptureListenerWithPassiveFlag(
         validTargetContainer,
         rawEventName,
         listener,
         passive,
       );
     } else {
-      fbListener = addEventCaptureListener(
+      unsubscribeListener = addEventCaptureListener(
         validTargetContainer,
         rawEventName,
         listener,
@@ -233,24 +227,21 @@ export function addTrappedEventListener(
   } else {
     if (enableUseEventAPI && passive !== undefined) {
       // This is only used with passive is either true or false.
-      fbListener = addEventBubbleListenerWithPassiveFlag(
+      unsubscribeListener = addEventBubbleListenerWithPassiveFlag(
         validTargetContainer,
         rawEventName,
         listener,
         passive,
       );
     } else {
-      fbListener = addEventBubbleListener(
+      unsubscribeListener = addEventBubbleListener(
         validTargetContainer,
         rawEventName,
         listener,
       );
     }
   }
-  // If we have an fbListener, then use that.
-  // We'll only have one if we use the forked
-  // EventListener-www module in FB builds.
-  return fbListener || listener;
+  return unsubscribeListener;
 }
 
 export function removeTrappedEventListener(
@@ -259,20 +250,9 @@ export function removeTrappedEventListener(
   capture: boolean,
   listener: any => void,
   passive: void | boolean,
-) {
-  if (listener.remove != null) {
-    listener.remove();
-  } else {
-    const rawEventName = getRawEventName(topLevelType);
-    if (passiveBrowserEventsSupported) {
-      targetContainer.removeEventListener(rawEventName, listener, {
-        capture,
-        passive,
-      });
-    } else {
-      targetContainer.removeEventListener(rawEventName, listener, capture);
-    }
-  }
+): void {
+  const rawEventName = getRawEventName(topLevelType);
+  removeEventListener(targetContainer, rawEventName, listener, capture);
 }
 
 function dispatchDiscreteEvent(
