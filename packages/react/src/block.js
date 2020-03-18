@@ -96,7 +96,7 @@ export default function block<Args: Iterable<any>, Props, Data>(
       );
     } else if (render.length !== 0 && render.length !== 2) {
       // Warn if it's not accepting two args.
-      // Do not warn for 0 arguments because it could be due to usage of the 'arguments' object
+      // Do not warn for 0 arguments because it could be due to usage of the 'arguments' object.
       console.error(
         'Block render functions accept exactly two parameters: props and data. %s',
         render.length === 1
