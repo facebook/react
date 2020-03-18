@@ -7,14 +7,14 @@
  * @flow
  */
 
-export type ModuleMetaData = {
+export opaque type ModuleMetaData = {
   id: string,
   chunks: Array<string>,
   name: string,
 };
 
 // eslint-disable-next-line no-unused-vars
-export type ModuleReference<T> = ModuleMetaData;
+export opaque type ModuleReference<T> = ModuleMetaData;
 
 export function resolveModuleReference<T>(
   moduleData: ModuleMetaData,
@@ -23,7 +23,7 @@ export function resolveModuleReference<T>(
 }
 
 type Thenable = {
-  then(resolve: () => mixed, reject: (Error) => mixed): mixed,
+  then(resolve: (any) => mixed, reject?: (Error) => mixed): Thenable,
   ...
 };
 

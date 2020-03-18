@@ -38,7 +38,7 @@ declare module 'ReactFlightDOMRelayServerIntegration' {
 }
 
 declare module 'ReactFlightDOMRelayClientIntegration' {
-  declare export opaque type ModuleReference;
+  declare export opaque type ModuleReference<T>;
   declare export opaque type ModuleMetaData;
   declare export function resolveModuleReference<T>(
     moduleData: ModuleMetaData,
