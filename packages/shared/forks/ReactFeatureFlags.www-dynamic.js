@@ -27,6 +27,7 @@ export const replayFailedUnitOfWorkWithInvokeGuardedCallback = __DEV__;
 // TODO: These flags are hard-coded to the default values used in open source.
 // Update the tests so that they pass in either mode, then set these
 // to __VARIANT__.
+export const enableDebugTracing = false;
 export const enableTrustedTypesIntegration = false;
 export const disableSchedulerTimeoutBasedOnReactExpirationTime = false;
 export const enableModernEventSystem = false;

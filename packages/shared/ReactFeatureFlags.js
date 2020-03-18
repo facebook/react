@@ -11,6 +11,10 @@
 // This prevents e.g. <img src=""> from making an unnecessar HTTP request for certain browsers.
 export const enableFilterEmptyStringAttributesDOM = false;
 
+// Adds verbose console logging for e.g. state updates, suspense, and work loop stuff.
+// Intended to enable React core members to more easily debug scheduling issues in DEV builds.
+export const enableDebugTracing = false;
+
 // Helps identify side effects in render-phase lifecycle hooks and setState
 // reducers by double invoking them in Strict Mode.
 export const debugRenderPhaseSideEffectsForStrictMode = __DEV__;
