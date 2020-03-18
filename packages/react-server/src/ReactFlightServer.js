@@ -7,7 +7,13 @@
  * @flow
  */
 
-import type {Destination, Chunk} from './ReactFlightServerConfig';
+import type {
+  Destination,
+  Chunk,
+  BundlerConfig,
+  // ModuleReference,
+  // ModuleMetaData,
+} from './ReactFlightServerConfig';
 
 import {
   scheduleWork,
@@ -18,6 +24,7 @@ import {
   close,
   processModelChunk,
   processErrorChunk,
+  // resolveModuleMetaData,
 } from './ReactFlightServerConfig';
 
 import {REACT_ELEMENT_TYPE} from 'shared/ReactSymbols';
@@ -49,6 +56,7 @@ type Segment = {
 
 export type Request = {
   destination: Destination,
+  bundlerConfig: BundlerConfig,
   nextChunkId: number,
   pendingChunks: number,
   pingedSegments: Array<Segment>,
@@ -61,10 +69,12 @@ export type Request = {
 export function createRequest(
   model: ReactModel,
   destination: Destination,
+  bundlerConfig: BundlerConfig,
 ): Request {
   let pingedSegments = [];
   let request = {
     destination,
+    bundlerConfig,
     nextChunkId: 0,
     pendingChunks: 0,
     pingedSegments: pingedSegments,

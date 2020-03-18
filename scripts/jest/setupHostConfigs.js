@@ -34,6 +34,9 @@ jest.mock('react-server/flight', () => {
   return config => {
     jest.mock(shimServerStreamConfigPath, () => config);
     jest.mock(shimServerFormatConfigPath, () => config);
+    jest.mock('react-server/src/ReactFlightServerBundlerConfigCustom', () => ({
+      resolveModuleMetaData: config.resolveModuleMetaData,
+    }));
     jest.mock(shimFlightServerConfigPath, () =>
       require.requireActual(
         'react-server/src/forks/ReactFlightServerConfig.custom'
