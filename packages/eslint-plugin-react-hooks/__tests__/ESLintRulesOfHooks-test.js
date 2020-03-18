@@ -233,45 +233,6 @@ const tests = {
       }
     `,
     `
-      // Currently valid because we found this to be a common pattern
-      // for feature flag checks in existing components.
-      // We *could* make it invalid but that produces quite a few false positives.
-      // Why does it make sense to ignore it? Firstly, because using
-      // hooks in a class would cause a runtime error anyway.
-      // But why don't we care about the same kind of false positive in a functional
-      // component? Because even if it was a false positive, it would be confusing
-      // anyway. So it might make sense to rename a feature flag check in that case.
-      class ClassComponentWithFeatureFlag extends React.Component {
-        render() {
-          if (foo) {
-            useFeatureFlag();
-          }
-        }
-      }
-    `,
-    `
-      // Currently valid because we don't check for hooks in classes.
-      // See ClassComponentWithFeatureFlag for rationale.
-      // We *could* make it invalid if we don't regress that false positive.
-      class ClassComponentWithHook extends React.Component {
-        render() {
-          React.useState();
-        }
-      }
-    `,
-    `
-      // Currently valid.
-      // These are variations capturing the current heuristic--
-      // we only allow hooks in PascalCase, useFoo functions,
-      // or classes (due to common false positives and because they error anyway).
-      // We *could* make some of these invalid.
-      // They probably don't matter much.
-      (class {useHook = () => { useState(); }});
-      (class {useHook() { useState(); }});
-      (class {h = () => { useState(); }});
-      (class {i() { useState(); }});
-    `,
-    `
       // Valid because they're not matching use[A-Z].
       fooState();
       use();
@@ -870,6 +831,52 @@ const tests = {
       `,
       errors: [topLevelError('useBasename')],
     },
+    {
+      code: `
+        class ClassComponentWithFeatureFlag extends React.Component {
+          render() {
+            if (foo) {
+              useFeatureFlag();
+            }
+          }
+        }
+      `,
+      errors: [classError('useFeatureFlag')],
+    },
+    {
+      code: `
+        class ClassComponentWithHook extends React.Component {
+          render() {
+            React.useState();
+          }
+        }
+      `,
+      errors: [classError('React.useState')],
+    },
+    {
+      code: `
+        (class {useHook = () => { useState(); }});
+      `,
+      errors: [classError('useState')],
+    },
+    {
+      code: `
+        (class {useHook() { useState(); }});
+      `,
+      errors: [classError('useState')],
+    },
+    {
+      code: `
+        (class {h = () => { useState(); }});
+      `,
+      errors: [classError('useState')],
+    },
+    {
+      code: `
+        (class {i() { useState(); }});
+      `,
+      errors: [classError('useState')],
+    },
   ],
 };
 
@@ -914,6 +921,15 @@ function topLevelError(hook) {
   return {
     message:
       `React Hook "${hook}" cannot be called at the top level. React Hooks ` +
+      'must be called in a React function component or a custom React ' +
+      'Hook function.',
+  };
+}
+
+function classError(hook) {
+  return {
+    message:
+      `React Hook "${hook}" cannot be called in a class component. React Hooks ` +
       'must be called in a React function component or a custom React ' +
       'Hook function.',
   };
