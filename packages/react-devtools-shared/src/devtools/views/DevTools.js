@@ -13,7 +13,7 @@ import '@reach/menu-button/styles.css';
 import '@reach/tooltip/styles.css';
 
 import * as React from 'react';
-import {useEffect, useMemo, useState, useRef} from 'react';
+import {useEffect, useMemo, useRef} from 'react';
 import Store from '../store';
 import {BridgeContext, ContextMenuContext, StoreContext} from './context';
 import Components from './Components/Components';
@@ -27,6 +27,7 @@ import {ModalDialogContextController} from './ModalDialog';
 import ReactLogo from './ReactLogo';
 import UnsupportedVersionDialog from './UnsupportedVersionDialog';
 import WarnIfLegacyBackendDetected from './WarnIfLegacyBackendDetected';
+import {useLocalStorage} from './hooks';
 
 import styles from './DevTools.css';
 
@@ -106,10 +107,10 @@ export default function DevTools({
   viewAttributeSourceFunction,
   viewElementSourceFunction,
 }: Props) {
-  const [tab, setTab] = useState(defaultTab);
-  if (overrideTab != null && overrideTab !== tab) {
-    setTab(overrideTab);
-  }
+  const [tab, setTab] = useLocalStorage<TabID>(
+    'React::DevTools::defaultTab',
+    overrideTab != null ? overrideTab : defaultTab,
+  );
 
   const viewElementSource = useMemo(
     () => ({
@@ -130,32 +131,36 @@ export default function DevTools({
   const devToolsRef = useRef<HTMLElement | null>(null);
 
   useEffect(() => {
-    if (devToolsRef.current === null) return () => {};
-
-    if (showTabBar) {
-      const ownerWindow = devToolsRef.current.ownerDocument.defaultView;
-      const handleKeyDown = (event: KeyboardEvent) => {
-        if (event.ctrlKey || event.metaKey) {
-          switch (event.key) {
-            case '1':
-              setTab(tabs[0].id);
-              event.preventDefault();
-              event.stopPropagation();
-              break;
-            case '2':
-              setTab(tabs[1].id);
-              event.preventDefault();
-              event.stopPropagation();
-              break;
-          }
-        }
-      };
-
-      ownerWindow.addEventListener('keydown', handleKeyDown);
-      return () => {
-        ownerWindow.removeEventListener('keydown', handleKeyDown);
-      };
+    if (!showTabBar) {
+      return;
     }
+
+    const div = devToolsRef.current;
+    if (div === null) {
+      return;
+    }
+
+    const ownerWindow = div.ownerDocument.defaultView;
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.ctrlKey || event.metaKey) {
+        switch (event.key) {
+          case '1':
+            setTab(tabs[0].id);
+            event.preventDefault();
+            event.stopPropagation();
+            break;
+          case '2':
+            setTab(tabs[1].id);
+            event.preventDefault();
+            event.stopPropagation();
+            break;
+        }
+      }
+    };
+    ownerWindow.addEventListener('keydown', handleKeyDown);
+    return () => {
+      ownerWindow.removeEventListener('keydown', handleKeyDown);
+    };
   }, [showTabBar]);
 
   useEffect(() => {
