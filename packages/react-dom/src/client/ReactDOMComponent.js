@@ -1358,14 +1358,16 @@ export function listenToEventResponderEventTypes(
           // existing passive event listener before we add the
           // active event listener.
           const passiveKey = targetEventType + '_passive';
-          const passiveListener = listenerMap.get(passiveKey);
-          if (passiveListener != null) {
+          const passiveItem = listenerMap.get(passiveKey);
+          if (passiveItem !== undefined) {
             removeTrappedEventListener(
               document,
-              targetEventType,
-              passiveListener,
+              (targetEventType: any),
+              true,
+              passiveItem.listener,
               true,
             );
+            listenerMap.delete(passiveKey);
           }
         }
         const eventListener = addResponderEventSystemEvent(
@@ -1373,7 +1375,10 @@ export function listenToEventResponderEventTypes(
           targetEventType,
           isPassive,
         );
-        listenerMap.set(eventKey, eventListener);
+        listenerMap.set(eventKey, {
+          passive: isPassive,
+          listener: eventListener,
+        });
       }
     }
   }

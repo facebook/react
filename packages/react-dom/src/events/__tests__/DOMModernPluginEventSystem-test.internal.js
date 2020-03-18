@@ -1648,5 +1648,107 @@ describe('DOMModernPluginEventSystem', () => {
       dispatchClickEvent(ref.current);
       expect(log).toEqual([{counter: 1}]);
     });
+
+    it('should correctly work for a basic "click" listener that upgrades', () => {
+      const clickEvent = jest.fn();
+      const buttonRef = React.createRef();
+      const button2Ref = React.createRef();
+
+      function Test2() {
+        const click = ReactDOM.unstable_useEvent('click', {
+          passive: false,
+        });
+
+        React.useEffect(() => {
+          click.setListener(button2Ref.current, clickEvent);
+        });
+
+        return <button ref={button2Ref}>Click me!</button>;
+      }
+
+      function Test({extra}) {
+        const click = ReactDOM.unstable_useEvent('click', {
+          passive: true,
+        });
+
+        React.useEffect(() => {
+          click.setListener(buttonRef.current, clickEvent);
+        });
+
+        return (
+          <>
+            <button ref={buttonRef}>Click me!</button>
+            {extra && <Test2 />}
+          </>
+        );
+      }
+
+      ReactDOM.render(<Test />, container);
+      Scheduler.unstable_flushAll();
+
+      let button = buttonRef.current;
+      dispatchClickEvent(button);
+      expect(clickEvent).toHaveBeenCalledTimes(1);
+
+      ReactDOM.render(<Test extra={true} />, container);
+      Scheduler.unstable_flushAll();
+
+      clickEvent.mockClear();
+
+      button = button2Ref.current;
+      dispatchClickEvent(button);
+      expect(clickEvent).toHaveBeenCalledTimes(1);
+    });
+
+    it('should correctly work for a basic "click" listener that upgrades #2', () => {
+      const clickEvent = jest.fn();
+      const buttonRef = React.createRef();
+      const button2Ref = React.createRef();
+
+      function Test2() {
+        const click = ReactDOM.unstable_useEvent('click', {
+          passive: false,
+        });
+
+        React.useEffect(() => {
+          click.setListener(button2Ref.current, clickEvent);
+        });
+
+        return <button ref={button2Ref}>Click me!</button>;
+      }
+
+      function Test({extra}) {
+        const click = ReactDOM.unstable_useEvent('click', {
+          passive: undefined,
+        });
+
+        React.useEffect(() => {
+          click.setListener(buttonRef.current, clickEvent);
+        });
+
+        return (
+          <>
+            <button ref={buttonRef}>Click me!</button>
+            {extra && <Test2 />}
+          </>
+        );
+      }
+
+      ReactDOM.render(<Test />, container);
+      Scheduler.unstable_flushAll();
+
+      let button = buttonRef.current;
+      dispatchClickEvent(button);
+      expect(clickEvent).toHaveBeenCalledTimes(1);
+
+      ReactDOM.render(<Test extra={true} />, container);
+      Scheduler.unstable_flushAll();
+
+      clickEvent.mockClear();
+
+      button = button2Ref.current;
+      dispatchClickEvent(button);
+      expect(clickEvent).toHaveBeenCalledTimes(1);
+    });
   });
 });

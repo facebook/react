@@ -9,6 +9,7 @@
 
 import type {AnyNativeEvent} from 'legacy-events/PluginModuleType';
 import type {DOMTopLevelEventType} from 'legacy-events/TopLevelEventTypes';
+import type {ElementListenerMap} from '../events/DOMEventListenerMap';
 import type {EventSystemFlags} from 'legacy-events/EventSystemFlags';
 import type {Fiber} from 'react-reconciler/src/ReactFiber';
 import type {PluginModule} from 'legacy-events/PluginModuleType';
@@ -323,57 +324,61 @@ export function legacyListenToEvent(
 export function legacyListenToTopLevelEvent(
   topLevelType: DOMTopLevelEventType,
   mountAt: Document | Element,
-  listenerMap: Map<DOMTopLevelEventType | string, null | (any => void)>,
+  listenerMap: ElementListenerMap,
 ): void {
   if (!listenerMap.has(topLevelType)) {
     switch (topLevelType) {
-      case TOP_SCROLL:
-        legacyTrapCapturedEvent(TOP_SCROLL, mountAt);
+      case TOP_SCROLL: {
+        legacyTrapCapturedEvent(TOP_SCROLL, mountAt, listenerMap);
         break;
+      }
       case TOP_FOCUS:
       case TOP_BLUR:
-        legacyTrapCapturedEvent(TOP_FOCUS, mountAt);
-        legacyTrapCapturedEvent(TOP_BLUR, mountAt);
-        // We set the flag for a single dependency later in this function,
-        // but this ensures we mark both as attached rather than just one.
-        listenerMap.set(TOP_BLUR, null);
-        listenerMap.set(TOP_FOCUS, null);
+        legacyTrapCapturedEvent(TOP_FOCUS, mountAt, listenerMap);
+        legacyTrapCapturedEvent(TOP_BLUR, mountAt, listenerMap);
         break;
       case TOP_CANCEL:
-      case TOP_CLOSE:
+      case TOP_CLOSE: {
         if (isEventSupported(getRawEventName(topLevelType))) {
-          legacyTrapCapturedEvent(topLevelType, mountAt);
+          legacyTrapCapturedEvent(topLevelType, mountAt, listenerMap);
         }
         break;
+      }
       case TOP_INVALID:
       case TOP_SUBMIT:
       case TOP_RESET:
         // We listen to them on the target DOM elements.
         // Some of them bubble so we don't want them to fire twice.
         break;
-      default:
+      default: {
         // By default, listen on the top level to all non-media events.
         // Media events don't bubble so adding the listener wouldn't do anything.
         const isMediaEvent = mediaEventTypes.indexOf(topLevelType) !== -1;
         if (!isMediaEvent) {
-          legacyTrapBubbledEvent(topLevelType, mountAt);
+          legacyTrapBubbledEvent(topLevelType, mountAt, listenerMap);
         }
         break;
+      }
     }
-    listenerMap.set(topLevelType, null);
   }
 }
 
 export function legacyTrapBubbledEvent(
   topLevelType: DOMTopLevelEventType,
   element: Document | Element,
+  listenerMap?: ElementListenerMap,
 ): void {
-  addTrappedEventListener(element, topLevelType, false);
+  const listener = addTrappedEventListener(element, topLevelType, false);
+  if (listenerMap) {
+    listenerMap.set(topLevelType, {passive: undefined, listener});
+  }
 }
 
 export function legacyTrapCapturedEvent(
   topLevelType: DOMTopLevelEventType,
   element: Document | Element,
+  listenerMap: ElementListenerMap,
 ): void {
-  addTrappedEventListener(element, topLevelType, true);
+  const listener = addTrappedEventListener(element, topLevelType, true);
+  listenerMap.set(topLevelType, {passive: undefined, listener});
 }

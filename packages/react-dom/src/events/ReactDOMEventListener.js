@@ -255,20 +255,22 @@ export function addTrappedEventListener(
 
 export function removeTrappedEventListener(
   targetContainer: EventTarget,
-  topLevelType: string,
+  topLevelType: DOMTopLevelEventType,
+  capture: boolean,
   listener: any => void,
-  passive: boolean,
+  passive: void | boolean,
 ) {
   if (listener.remove != null) {
     listener.remove();
   } else {
+    const rawEventName = getRawEventName(topLevelType);
     if (passiveBrowserEventsSupported) {
-      targetContainer.removeEventListener(topLevelType, listener, {
-        capture: true,
+      targetContainer.removeEventListener(rawEventName, listener, {
+        capture,
         passive,
       });
     } else {
-      targetContainer.removeEventListener(topLevelType, listener, true);
+      targetContainer.removeEventListener(rawEventName, listener, capture);
     }
   }
 }
