@@ -107,10 +107,14 @@ export default function DevTools({
   viewAttributeSourceFunction,
   viewElementSourceFunction,
 }: Props) {
-  const [tab, setTab] = useLocalStorage<TabID>(
+  let [tab, setTab] = useLocalStorage<TabID>(
     'React::DevTools::defaultTab',
-    overrideTab != null ? overrideTab : defaultTab,
+    defaultTab,
   );
+
+  if (overrideTab != null) {
+    tab = overrideTab;
+  }
 
   const viewElementSource = useMemo(
     () => ({
