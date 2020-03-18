@@ -56,6 +56,15 @@ export function addEventBubbleListenerWithPassiveFlag(
   );
 }
 
+export function removeEventListener(
+  target: EventTarget,
+  eventType: string,
+  listener: Function,
+  capture: boolean,
+) {
+  listener.remove();
+}
+
 // Flow magic to verify the exports of this file match the original version.
 // eslint-disable-next-line no-unused-vars
 type Check<_X, Y: _X, X: Y = _X> = null;
