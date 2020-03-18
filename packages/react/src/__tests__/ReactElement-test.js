@@ -372,7 +372,7 @@ describe('ReactElement', () => {
     const container = document.createElement('div');
     expect(() =>
       ReactDOM.render(React.createElement(Component), container),
-    ).toWarnDev(
+    ).toErrorDev(
       'Component: key is not a valid default prop to set. ' +
         'Please remove this from your default props definition. ' +
         'Note: the value is still being set, but this behavior will most likely be deprecated in future releases.',
