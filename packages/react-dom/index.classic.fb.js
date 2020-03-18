@@ -9,7 +9,6 @@
 
 import {addUserTimingListener} from 'shared/ReactFeatureFlags';
 import {isEnabled} from './src/events/ReactDOMEventListener';
-import {getClosestInstanceFromNode} from './src/client/ReactDOMComponentTree';
 
 import {__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED} from './src/client/ReactDOM';
 
@@ -17,9 +16,6 @@ import {__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED} from './src/client/R
 Object.assign((__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED: any), {
   ReactBrowserEventEmitter: {
     isEnabled,
-  },
-  ReactDOMComponentTree: {
-    getClosestInstanceFromNode,
   },
   // Perf experiment
   addUserTimingListener,
