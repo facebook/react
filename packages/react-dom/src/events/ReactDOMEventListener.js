@@ -42,6 +42,7 @@ import {
   IS_PASSIVE,
   IS_ACTIVE,
   PASSIVE_NOT_SUPPORTED,
+  LEGACY_FB_SUPPORT,
 } from 'legacy-events/EventSystemFlags';
 
 import {
@@ -59,7 +60,7 @@ import {passiveBrowserEventsSupported} from './checkPassiveEvents';
 import {
   enableDeprecatedFlareAPI,
   enableModernEventSystem,
-  enableLegacyFBPrimerSupport,
+  enableLegacyFBSupport,
   enableUseEventAPI,
 } from 'shared/ReactFeatureFlags';
 import {
@@ -129,10 +130,10 @@ export function addResponderEventSystemEvent(
 }
 
 export function addTrappedEventListener(
-  targetContainer: null | EventTarget,
+  targetContainer: EventTarget,
   topLevelType: DOMTopLevelEventType,
   capture: boolean,
-  legacyFBSupport?: boolean,
+  isDeferredListenerForLegacyFBSupport?: boolean,
   passive?: boolean,
   priority?: EventPriority,
 ): any => void {
@@ -159,11 +160,15 @@ export function addTrappedEventListener(
   if (passive === true && !passiveBrowserEventsSupported) {
     passive = false;
   }
+  const eventSystemFlags =
+    enableLegacyFBSupport && isDeferredListenerForLegacyFBSupport
+      ? PLUGIN_EVENT_SYSTEM | LEGACY_FB_SUPPORT
+      : PLUGIN_EVENT_SYSTEM;
 
   listener = listenerWrapper.bind(
     null,
     topLevelType,
-    PLUGIN_EVENT_SYSTEM,
+    eventSystemFlags,
     targetContainer,
   );
 
@@ -177,14 +182,17 @@ export function addTrappedEventListener(
     targetContainer = document;
   }
 
-  const validTargetContainer = ((targetContainer: any): EventTarget);
+  targetContainer =
+    enableLegacyFBSupport && isDeferredListenerForLegacyFBSupport
+      ? (targetContainer: any).ownerDocument
+      : targetContainer;
 
   const rawEventName = getRawEventName(topLevelType);
 
   let unsubscribeListener;
   // When legacyFBSupport is enabled, it's for when we
   // want to add a one time event listener to a container.
-  // This should only be used with enableLegacyFBPrimerSupport
+  // This should only be used with enableLegacyFBSupport
   // due to requirement to provide compatibility with
   // internal FB www event tooling. This works by removing
   // the event listener as soon as it is invoked. We could
@@ -193,14 +201,14 @@ export function addTrappedEventListener(
   // browsers do not support this today, and given this is
   // to support legacy code patterns, it's likely they'll
   // need support for such browsers.
-  if (enableLegacyFBPrimerSupport && legacyFBSupport) {
+  if (enableLegacyFBSupport && isDeferredListenerForLegacyFBSupport) {
     const originalListener = listener;
     listener = function(...p) {
       try {
         return originalListener.apply(this, p);
       } finally {
         removeEventListener(
-          validTargetContainer,
+          targetContainer,
           rawEventName,
           unsubscribeListener,
           capture,
@@ -212,14 +220,14 @@ export function addTrappedEventListener(
     if (enableUseEventAPI && passive !== undefined) {
       // This is only used with passive is either true or false.
       unsubscribeListener = addEventCaptureListenerWithPassiveFlag(
-        validTargetContainer,
+        targetContainer,
         rawEventName,
         listener,
         passive,
       );
     } else {
       unsubscribeListener = addEventCaptureListener(
-        validTargetContainer,
+        targetContainer,
         rawEventName,
         listener,
       );
@@ -228,14 +236,14 @@ export function addTrappedEventListener(
     if (enableUseEventAPI && passive !== undefined) {
       // This is only used with passive is either true or false.
       unsubscribeListener = addEventBubbleListenerWithPassiveFlag(
-        validTargetContainer,
+        targetContainer,
         rawEventName,
         listener,
         passive,
       );
     } else {
       unsubscribeListener = addEventBubbleListener(
-        validTargetContainer,
+        targetContainer,
         rawEventName,
         listener,
       );
@@ -249,7 +257,6 @@ export function removeTrappedEventListener(
   topLevelType: DOMTopLevelEventType,
   capture: boolean,
   listener: any => void,
-  passive: void | boolean,
 ): void {
   const rawEventName = getRawEventName(topLevelType);
   removeEventListener(targetContainer, rawEventName, listener, capture);

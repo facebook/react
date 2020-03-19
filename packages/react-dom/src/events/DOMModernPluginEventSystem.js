@@ -24,6 +24,7 @@ import {registrationNameDependencies} from 'legacy-events/EventPluginRegistry';
 import {batchedEventUpdates} from 'legacy-events/ReactGenericBatching';
 import {executeDispatchesInOrder} from 'legacy-events/EventPluginUtils';
 import {plugins} from 'legacy-events/EventPluginRegistry';
+import {LEGACY_FB_SUPPORT, IS_REPLAYED} from 'legacy-events/EventSystemFlags';
 
 import {HostRoot, HostPortal} from 'shared/ReactWorkTags';
 
@@ -66,6 +67,7 @@ import {
   TOP_RATE_CHANGE,
   TOP_PROGRESS,
   TOP_PLAYING,
+  TOP_CLICK,
 } from './DOMTopLevelEventTypes';
 import {
   getClosestInstanceFromNode,
@@ -78,7 +80,7 @@ import {
   ELEMENT_NODE,
 } from '../shared/HTMLNodeType';
 
-import {enableLegacyFBPrimerSupport} from 'shared/ReactFeatureFlags';
+import {enableLegacyFBSupport} from 'shared/ReactFeatureFlags';
 
 const capturePhaseEvents = new Set([
   TOP_FOCUS,
@@ -197,7 +199,6 @@ export function listenToTopLevelEvent(
         topLevelType,
         isCapturePhase,
         ((listenerEntry: any): ElementListenerMapEntry).listener,
-        ((listenerEntry: any): ElementListenerMapEntry).passive,
       );
     }
     const listener = addTrappedEventListener(
@@ -225,42 +226,24 @@ export function listenToEvent(
   }
 }
 
-const validFBLegacyPrimerRels = new Set([
-  'dialog',
-  'dialog-post',
-  'async',
-  'async-post',
-  'theater',
-  'toggle',
-]);
-
-function willDeferLaterForFBLegacyPrimer(nativeEvent: any): boolean {
-  let node = nativeEvent.target;
-  const type = nativeEvent.type;
-  if (type !== 'click') {
+function willDeferLaterForLegacyFBSupport(
+  topLevelType: DOMTopLevelEventType,
+  targetContainer: EventTarget,
+): boolean {
+  if (topLevelType !== TOP_CLICK) {
     return false;
   }
-  while (node !== null) {
-    // Primer works by intercepting a click event on an <a> element
-    // that has a "rel" attribute that matches one of the valid ones
-    // in the Set above. If we intercept this before Primer does, we
-    // will need to defer the current event till later and discontinue
-    // execution of the current event. To do this we can add a document
-    // event listener and continue again later after propagation.
-    if (node.tagName === 'A' && validFBLegacyPrimerRels.has(node.rel)) {
-      const legacyFBSupport = true;
-      const isCapture = nativeEvent.eventPhase === 1;
-      addTrappedEventListener(
-        null,
-        ((type: any): DOMTopLevelEventType),
-        isCapture,
-        legacyFBSupport,
-      );
-      return true;
-    }
-    node = node.parentNode;
-  }
-  return false;
+  // We defer all click events with legacy FB support mode on.
+  // This means we add a one time event listener to trigger
+  // after the FB delegated listeners fire.
+  const isDeferredListenerForLegacyFBSupport = true;
+  addTrappedEventListener(
+    targetContainer,
+    topLevelType,
+    false,
+    isDeferredListenerForLegacyFBSupport,
+  );
+  return true;
 }
 
 function isMatchingRootContainer(
@@ -303,12 +286,19 @@ export function dispatchEventForPluginEventSystem(
       // TODO: useEvent for document and window
       return;
     }
-    // If we detect the FB legacy primer system, we
+    // If we are using the legacy FB support flag, we
     // defer the event to the null with a one
     // time event listener so we can defer the event.
     if (
-      enableLegacyFBPrimerSupport &&
-      willDeferLaterForFBLegacyPrimer(nativeEvent)
+      enableLegacyFBSupport &&
+      // We do not want to defer if the event system has already been
+      // set to LEGACY_FB_SUPPORT. LEGACY_FB_SUPPORT only gets set when
+      // we call willDeferLaterForLegacyFBSupport, thus not bailing out
+      // will result in endless cycles like an infinite loop.
+      (eventSystemFlags & LEGACY_FB_SUPPORT) === 0 &&
+      // We also don't want to defer during event replaying.
+      (eventSystemFlags & IS_REPLAYED) === 0 &&
+      willDeferLaterForLegacyFBSupport(topLevelType, targetContainer)
     ) {
       return;
     }

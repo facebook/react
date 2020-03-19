@@ -140,4 +140,4 @@ export const warnUnstableRenderSubtreeIntoContainer = false;
 export const enableModernEventSystem = false;
 
 // Support legacy Primer support on internal FB www
-export const enableLegacyFBPrimerSupport = false;
+export const enableLegacyFBSupport = false;
