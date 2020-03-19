@@ -20,9 +20,6 @@ export default function accumulateTwoPhaseListeners(
   accumulateUseEventListeners?: boolean,
 ): void {
   const phasedRegistrationNames = event.dispatchConfig.phasedRegistrationNames;
-  if (phasedRegistrationNames == null) {
-    return;
-  }
   const {bubbled, captured} = phasedRegistrationNames;
   const dispatchListeners = [];
   const dispatchInstances = [];
@@ -59,20 +56,25 @@ export default function accumulateTwoPhaseListeners(
           }
         }
       }
-      // Standard React on* listeners, i.e. onClick prop
-      const captureListener = getListener(node, captured);
-      if (captureListener != null) {
-        // Capture listeners/instances should go at the start, so we
-        // unshift them to the start of the array.
-        dispatchListeners.unshift(captureListener);
-        dispatchInstances.unshift(node);
+      //
+      if (captured !== null) {
+        // Standard React on* listeners, i.e. onClick prop
+        const captureListener = getListener(node, captured);
+        if (captureListener != null) {
+          // Capture listeners/instances should go at the start, so we
+          // unshift them to the start of the array.
+          dispatchListeners.unshift(captureListener);
+          dispatchInstances.unshift(node);
+        }
       }
-      const bubbleListener = getListener(node, bubbled);
-      if (bubbleListener != null) {
-        // Bubble listeners/instances should go at the end, so we
-        // push them to the end of the array.
-        dispatchListeners.push(bubbleListener);
-        dispatchInstances.push(node);
+      if (bubbled !== null) {
+        const bubbleListener = getListener(node, bubbled);
+        if (bubbleListener != null) {
+          // Bubble listeners/instances should go at the end, so we
+          // push them to the end of the array.
+          dispatchListeners.push(bubbleListener);
+          dispatchInstances.push(node);
+        }
       }
     }
     node = node.return;

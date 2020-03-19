@@ -13,13 +13,14 @@ import type {EventPriority} from 'shared/ReactTypes';
 import type {TopLevelType} from './TopLevelEventTypes';
 
 export type DispatchConfig = {|
-  dependencies: Array<TopLevelType>,
-  phasedRegistrationNames?: {|
-    bubbled: string,
-    captured: string,
+  dependencies?: Array<TopLevelType>,
+  phasedRegistrationNames: {|
+    bubbled: null | string,
+    captured: null | string,
   |},
   registrationName?: string,
-  eventPriority: EventPriority,
+  eventPriority?: EventPriority,
+  customEvent?: boolean,
 |};
 
 export type ReactSyntheticEvent = {|

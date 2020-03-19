@@ -79,6 +79,7 @@ import {
   COMMENT_NODE,
   ELEMENT_NODE,
 } from '../shared/HTMLNodeType';
+import {topLevelEventsToDispatchConfig} from './DOMEventProperties';
 
 import {enableLegacyFBSupport} from 'shared/ReactFeatureFlags';
 
@@ -117,6 +118,13 @@ const capturePhaseEvents = new Set([
   TOP_VOLUME_CHANGE,
   TOP_WAITING,
 ]);
+const emptyDispatchConfigForCustomEvents = {
+  customEvent: true,
+  phasedRegistrationNames: {
+    bubbled: null,
+    captured: null,
+  },
+};
 
 const isArray = Array.isArray;
 
@@ -419,8 +427,21 @@ export function attachElementListener(listener: ReactDOMListener): void {
     listeners = new Set();
     initListenersSet(target, listeners);
   }
-  // Finally, add our listener to the listeners Set.
+  // Add our listener to the listeners Set.
   listeners.add(listener);
+  // Finally, add the event to our known event types list.
+  let dispatchConfig = topLevelEventsToDispatchConfig.get(type);
+  // If we don't have a dispatchConfig, then we're dealing with
+  // an event type that React does not know about (i.e. a custom event).
+  // We need to register an event config for this or the SimpleEventPlugin
+  // will not appropiately provide a SyntheticEvent, so we use out empty
+  // dispatch config for custom events.
+  if (dispatchConfig === undefined) {
+    topLevelEventsToDispatchConfig.set(
+      type,
+      emptyDispatchConfigForCustomEvents,
+    );
+  }
 }
 
 export function detachElementListener(listener: ReactDOMListener): void {
