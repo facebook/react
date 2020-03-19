@@ -67,6 +67,7 @@ import {
   TOP_RATE_CHANGE,
   TOP_PROGRESS,
   TOP_PLAYING,
+  TOP_CLICK,
 } from './DOMTopLevelEventTypes';
 import {
   getClosestInstanceFromNode,
@@ -229,18 +230,18 @@ function willDeferLaterForLegacyFBSupport(
   topLevelType: DOMTopLevelEventType,
   targetContainer: EventTarget,
 ): boolean {
-  if ((topLevelType: any) !== 'click') {
+  if (topLevelType !== TOP_CLICK) {
     return false;
   }
   // We defer all click events with legacy FB support mode on.
   // This means we add a one time event listener to trigger
   // after the FB delegated listeners fire.
-  const legacyFBSupport = true;
+  const isDeferredListenerForLegacyFBSupport = true;
   addTrappedEventListener(
     targetContainer,
     topLevelType,
     false,
-    legacyFBSupport,
+    isDeferredListenerForLegacyFBSupport,
   );
   return true;
 }
@@ -290,7 +291,12 @@ export function dispatchEventForPluginEventSystem(
     // time event listener so we can defer the event.
     if (
       enableLegacyFBSupport &&
+      // We do not want to defer if the event system has already been
+      // set to LEGACY_FB_SUPPORT. LEGACY_FB_SUPPORT only gets set when
+      // we call willDeferLaterForLegacyFBSupport, thus not bailing out
+      // will result in endless cycles like an infinite loop.
       (eventSystemFlags & LEGACY_FB_SUPPORT) === 0 &&
+      // We also don't want to defer during event replaying.
       (eventSystemFlags & IS_REPLAYED) === 0 &&
       willDeferLaterForLegacyFBSupport(topLevelType, targetContainer)
     ) {

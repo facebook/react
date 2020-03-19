@@ -133,7 +133,7 @@ export function addTrappedEventListener(
   targetContainer: EventTarget,
   topLevelType: DOMTopLevelEventType,
   capture: boolean,
-  legacyFBSupport?: boolean,
+  isDeferredListenerForLegacyFBSupport?: boolean,
   passive?: boolean,
   priority?: EventPriority,
 ): any => void {
@@ -161,7 +161,7 @@ export function addTrappedEventListener(
     passive = false;
   }
   const eventSystemFlags =
-    enableLegacyFBSupport && legacyFBSupport
+    enableLegacyFBSupport && isDeferredListenerForLegacyFBSupport
       ? PLUGIN_EVENT_SYSTEM | LEGACY_FB_SUPPORT
       : PLUGIN_EVENT_SYSTEM;
 
@@ -182,8 +182,8 @@ export function addTrappedEventListener(
     targetContainer = document;
   }
 
-  const targetContainerToUse =
-    enableLegacyFBSupport && legacyFBSupport
+  targetContainer =
+    enableLegacyFBSupport && isDeferredListenerForLegacyFBSupport
       ? (targetContainer: any).ownerDocument
       : targetContainer;
 
@@ -201,14 +201,14 @@ export function addTrappedEventListener(
   // browsers do not support this today, and given this is
   // to support legacy code patterns, it's likely they'll
   // need support for such browsers.
-  if (enableLegacyFBSupport && legacyFBSupport) {
+  if (enableLegacyFBSupport && isDeferredListenerForLegacyFBSupport) {
     const originalListener = listener;
     listener = function(...p) {
       try {
         return originalListener.apply(this, p);
       } finally {
         removeEventListener(
-          targetContainerToUse,
+          targetContainer,
           rawEventName,
           unsubscribeListener,
           capture,
@@ -220,14 +220,14 @@ export function addTrappedEventListener(
     if (enableUseEventAPI && passive !== undefined) {
       // This is only used with passive is either true or false.
       unsubscribeListener = addEventCaptureListenerWithPassiveFlag(
-        targetContainerToUse,
+        targetContainer,
         rawEventName,
         listener,
         passive,
       );
     } else {
       unsubscribeListener = addEventCaptureListener(
-        targetContainerToUse,
+        targetContainer,
         rawEventName,
         listener,
       );
@@ -236,14 +236,14 @@ export function addTrappedEventListener(
     if (enableUseEventAPI && passive !== undefined) {
       // This is only used with passive is either true or false.
       unsubscribeListener = addEventBubbleListenerWithPassiveFlag(
-        targetContainerToUse,
+        targetContainer,
         rawEventName,
         listener,
         passive,
       );
     } else {
       unsubscribeListener = addEventBubbleListener(
-        targetContainerToUse,
+        targetContainer,
         rawEventName,
         listener,
       );
