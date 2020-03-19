@@ -23,6 +23,9 @@
     "react": "^16.0.0",
     "react-test-renderer": "^16.0.0"
   },
+  "dependencies": {
+    "object-assign": "^4.1.1"
+  },
   "files": [
     "LICENSE",
     "README.md",
