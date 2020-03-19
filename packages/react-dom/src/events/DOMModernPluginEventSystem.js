@@ -302,60 +302,62 @@ export function dispatchEventForPluginEventSystem(
     ) {
       return;
     }
-    // The below logic attempts to work out if we need to change
-    // the target fiber to a different ancestor. We had similar logic
-    // in the legacy event system, except the big difference between
-    // systems is that the modern event system now has an event listener
-    // attached to each React Root and React Portal Root. Together,
-    // the DOM nodes representing these roots are the "rootContainer".
-    // To figure out which ancestor instance we should use, we traverse
-    // up the fiber tree from the target instance and attempt to find
-    // root boundaries that match that of our current "rootContainer".
-    // If we find that "rootContainer", we find the parent fiber
-    // sub-tree for that root and make that our ancestor instance.
-    let node = targetInst;
+    if (targetInst !== null) {
+      // The below logic attempts to work out if we need to change
+      // the target fiber to a different ancestor. We had similar logic
+      // in the legacy event system, except the big difference between
+      // systems is that the modern event system now has an event listener
+      // attached to each React Root and React Portal Root. Together,
+      // the DOM nodes representing these roots are the "rootContainer".
+      // To figure out which ancestor instance we should use, we traverse
+      // up the fiber tree from the target instance and attempt to find
+      // root boundaries that match that of our current "rootContainer".
+      // If we find that "rootContainer", we find the parent fiber
+      // sub-tree for that root and make that our ancestor instance.
+      let node = targetInst;
 
-    while (true) {
-      if (node === null) {
-        return;
-      }
-      if (node.tag === HostRoot || node.tag === HostPortal) {
-        const container = node.stateNode.containerInfo;
-        if (isMatchingRootContainer(container, possibleTargetContainerNode)) {
-          break;
-        }
-        if (node.tag === HostPortal) {
-          // The target is a portal, but it's not the rootContainer we're looking for.
-          // Normally portals handle their own events all the way down to the root.
-          // So we should be able to stop now. However, we don't know if this portal
-          // was part of *our* root.
-          let grandNode = node.return;
-          while (grandNode !== null) {
-            if (grandNode.tag === HostRoot || grandNode.tag === HostPortal) {
-              const grandContainer = grandNode.stateNode.containerInfo;
-              if (
-                isMatchingRootContainer(
-                  grandContainer,
-                  possibleTargetContainerNode,
-                )
-              ) {
-                // This is the rootContainer we're looking for and we found it as
-                // a parent of the Portal. That means we can ignore it because the
-                // Portal will bubble through to us.
-                return;
-              }
-            }
-            grandNode = grandNode.return;
-          }
-        }
-        const parentSubtreeInst = getClosestInstanceFromNode(container);
-        if (parentSubtreeInst === null) {
+      while (true) {
+        if (node === null) {
           return;
         }
-        node = ancestorInst = parentSubtreeInst;
-        continue;
+        if (node.tag === HostRoot || node.tag === HostPortal) {
+          const container = node.stateNode.containerInfo;
+          if (isMatchingRootContainer(container, possibleTargetContainerNode)) {
+            break;
+          }
+          if (node.tag === HostPortal) {
+            // The target is a portal, but it's not the rootContainer we're looking for.
+            // Normally portals handle their own events all the way down to the root.
+            // So we should be able to stop now. However, we don't know if this portal
+            // was part of *our* root.
+            let grandNode = node.return;
+            while (grandNode !== null) {
+              if (grandNode.tag === HostRoot || grandNode.tag === HostPortal) {
+                const grandContainer = grandNode.stateNode.containerInfo;
+                if (
+                  isMatchingRootContainer(
+                    grandContainer,
+                    possibleTargetContainerNode,
+                  )
+                ) {
+                  // This is the rootContainer we're looking for and we found it as
+                  // a parent of the Portal. That means we can ignore it because the
+                  // Portal will bubble through to us.
+                  return;
+                }
+              }
+              grandNode = grandNode.return;
+            }
+          }
+          const parentSubtreeInst = getClosestInstanceFromNode(container);
+          if (parentSubtreeInst === null) {
+            return;
+          }
+          node = ancestorInst = parentSubtreeInst;
+          continue;
+        }
+        node = node.return;
       }
-      node = node.return;
     }
   }
 
