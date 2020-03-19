@@ -121,6 +121,7 @@ import {
 import {IS_REPLAYED} from 'legacy-events/EventSystemFlags';
 import {legacyListenToTopLevelEvent} from './DOMLegacyEventPluginSystem';
 import {listenToTopLevelEvent} from './DOMModernPluginEventSystem';
+import {DOCUMENT_NODE} from '../shared/HTMLNodeType';
 
 type QueuedReplayableEvent = {|
   blockedOn: null | Container | SuspenseInstance,
@@ -405,6 +406,15 @@ function accumulateOrCreateContinuousQueuedReplayableEvent(
   // We can accumulate the flags and store a single event to be
   // replayed.
   existingQueuedEvent.eventSystemFlags |= eventSystemFlags;
+  // We don't update the targetContainer unless it's a non-document node.
+  // This is because the Flare event system can clash with the Modern
+  // Event System and the fact we need a correct container to be present.
+  if (
+    targetContainer &&
+    ((targetContainer: any): Node).nodeType !== DOCUMENT_NODE
+  ) {
+    existingQueuedEvent.targetContainer = targetContainer;
+  }
   return existingQueuedEvent;
 }
 
