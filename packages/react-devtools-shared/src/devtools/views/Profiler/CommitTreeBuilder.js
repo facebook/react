@@ -79,9 +79,12 @@ export function getCommitTree({
 
     // Construct the initial tree.
     recursivelyInitializeTree(rootID, 0, nodes, dataForRoot);
-
     // Mutate the tree
-    if (operations != null && commitIndex < operations.length) {
+    if (
+      operations != null &&
+      commitIndex < operations.length &&
+      operations[commitIndex]
+    ) {
       const commitTree = updateTree({nodes, rootID}, operations[commitIndex]);
 
       if (__DEBUG__) {
@@ -98,7 +101,11 @@ export function getCommitTree({
       rootID,
     });
 
-    if (operations != null && commitIndex < operations.length) {
+    if (
+      operations != null &&
+      commitIndex < operations.length &&
+      operations[commitIndex]
+    ) {
       const commitTree = updateTree(
         previousCommitTree,
         operations[commitIndex],
