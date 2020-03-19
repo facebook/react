@@ -156,7 +156,7 @@ import {
 import getComponentName from 'shared/getComponentName';
 import ReactStrictModeWarnings from './ReactStrictModeWarnings';
 import {
-  phase as ReactCurrentDebugFiberPhaseInDEV,
+  isRendering as ReactCurrentDebugFiberIsRenderingInDEV,
   resetCurrentFiber as resetCurrentDebugFiberInDEV,
   setCurrentFiber as setCurrentDebugFiberInDEV,
   getStackByFiberInDevAndProd,
@@ -2793,7 +2793,6 @@ if (__DEV__ && replayFailedUnitOfWorkWithInvokeGuardedCallback) {
 }
 
 let didWarnAboutUpdateInRender = false;
-let didWarnAboutUpdateInGetChildContext = false;
 function warnAboutRenderPhaseUpdatesInDEV(fiber) {
   if (__DEV__) {
     if ((executionContext & RenderContext) !== NoContext) {
@@ -2808,29 +2807,18 @@ function warnAboutRenderPhaseUpdatesInDEV(fiber) {
           break;
         }
         case ClassComponent: {
-          switch (ReactCurrentDebugFiberPhaseInDEV) {
-            case 'getChildContext':
-              if (didWarnAboutUpdateInGetChildContext) {
-                return;
-              }
-              console.error(
-                'setState(...): Cannot call setState() inside getChildContext()',
-              );
-              didWarnAboutUpdateInGetChildContext = true;
-              break;
-            case 'render':
-              if (didWarnAboutUpdateInRender) {
-                return;
-              }
-              console.error(
-                'Cannot update during an existing state transition (such as ' +
-                  'within `render`). Render methods should be a pure ' +
-                  'function of props and state.',
-              );
-              didWarnAboutUpdateInRender = true;
-              break;
+          if (
+            ReactCurrentDebugFiberIsRenderingInDEV &&
+            !didWarnAboutUpdateInRender
+          ) {
+            console.error(
+              'Cannot update during an existing state transition (such as ' +
+                'within `render`). Render methods should be a pure ' +
+                'function of props and state.',
+            );
+            didWarnAboutUpdateInRender = true;
+            break;
           }
-          break;
         }
       }
     }

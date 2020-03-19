@@ -17,7 +17,7 @@ import getComponentName from 'shared/getComponentName';
 import invariant from 'shared/invariant';
 import checkPropTypes from 'prop-types/checkPropTypes';
 
-import {setCurrentPhase, getCurrentFiberStackInDev} from './ReactCurrentFiber';
+import {getCurrentFiberStackInDev} from './ReactCurrentFiber';
 import {startPhaseTimer, stopPhaseTimer} from './ReactDebugFiberPerf';
 import {createCursor, push, pop} from './ReactFiberStack';
 
@@ -210,15 +210,9 @@ function processChildContext(
     }
 
     let childContext;
-    if (__DEV__) {
-      setCurrentPhase('getChildContext');
-    }
     startPhaseTimer(fiber, 'getChildContext');
     childContext = instance.getChildContext();
     stopPhaseTimer();
-    if (__DEV__) {
-      setCurrentPhase(null);
-    }
     for (let contextKey in childContext) {
       invariant(
         contextKey in childContextTypes,

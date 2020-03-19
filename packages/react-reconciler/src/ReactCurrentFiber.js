@@ -23,8 +23,6 @@ import getComponentName from 'shared/getComponentName';
 
 const ReactDebugCurrentFrame = ReactSharedInternals.ReactDebugCurrentFrame;
 
-type LifeCyclePhase = 'render' | 'getChildContext';
-
 function describeFiber(fiber: Fiber): string {
   switch (fiber.tag) {
     case HostRoot:
@@ -57,7 +55,7 @@ export function getStackByFiberInDevAndProd(workInProgress: Fiber): string {
 }
 
 export let current: Fiber | null = null;
-export let phase: LifeCyclePhase | null = null;
+export let isRendering: boolean = false;
 
 export function getCurrentFiberOwnerNameInDevOrNull(): string | null {
   if (__DEV__) {
@@ -88,7 +86,7 @@ export function resetCurrentFiber() {
   if (__DEV__) {
     ReactDebugCurrentFrame.getCurrentStack = null;
     current = null;
-    phase = null;
+    isRendering = false;
   }
 }
 
@@ -96,12 +94,12 @@ export function setCurrentFiber(fiber: Fiber) {
   if (__DEV__) {
     ReactDebugCurrentFrame.getCurrentStack = getCurrentFiberStackInDev;
     current = fiber;
-    phase = null;
+    isRendering = false;
   }
 }
 
-export function setCurrentPhase(lifeCyclePhase: LifeCyclePhase | null) {
+export function setIsRendering(rendering: boolean) {
   if (__DEV__) {
-    phase = lifeCyclePhase;
+    isRendering = rendering;
   }
 }
