@@ -404,7 +404,7 @@ export function attachElementListener(listener: ReactDOMListener): void {
   // Add the event listener to the target container (falling back to
   // the target if we didn't find one).
   listenToTopLevelEvent(
-    ((type: any): DOMTopLevelEventType),
+    type,
     containerEventTarget,
     listenerMap,
     passive,

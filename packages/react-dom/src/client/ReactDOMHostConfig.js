@@ -7,7 +7,6 @@
  * @flow
  */
 
-import type {DOMTopLevelEventType} from 'legacy-events/TopLevelEventTypes';
 import type {RootType} from './ReactDOMRoot';
 
 import {
@@ -1112,7 +1111,7 @@ export function registerEvent(
   // Add the event listener to the target container (falling back to
   // the target if we didn't find one).
   listenToTopLevelEvent(
-    ((type: any): DOMTopLevelEventType),
+    type,
     rootContainerInstance,
     listenerMap,
     passive,

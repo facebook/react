@@ -7,6 +7,7 @@
  * @flow
  */
 
+import type {DOMTopLevelEventType} from 'legacy-events/TopLevelEventTypes';
 import type {EventPriority} from 'shared/ReactTypes';
 import type {
   ReactDOMListenerEvent,
@@ -41,13 +42,13 @@ function resolveDispatcher() {
 }
 
 export function useEvent(
-  type: string,
+  type: DOMTopLevelEventType,
   options?: EventOptions,
 ): ReactDOMListenerMap {
   const dispatcher = resolveDispatcher();
   let capture = false;
   let passive = undefined; // Undefined means to use the browser default
-  let priority = getEventPriorityForListenerSystem((type: any));
+  let priority;
 
   if (options != null) {
     const optionsCapture = options.capture;
@@ -63,6 +64,9 @@ export function useEvent(
     if (typeof optionsPriority === 'number') {
       priority = optionsPriority;
     }
+  }
+  if (priority === undefined) {
+    priority = getEventPriorityForListenerSystem(type);
   }
   const event: ReactDOMListenerEvent = {
     capture,

@@ -224,8 +224,10 @@ export function getEventPriorityForPluginSystem(
   return priority === undefined ? ContinuousEvent : priority;
 }
 
-export function getEventPriorityForListenerSystem(type: string): EventPriority {
-  const priority = eventPriorities.get(((type: any): TopLevelType));
+export function getEventPriorityForListenerSystem(
+  type: DOMTopLevelEventType,
+): EventPriority {
+  const priority = eventPriorities.get(type);
   if (priority !== undefined) {
     return priority;
   }

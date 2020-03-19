@@ -13,6 +13,7 @@ import type {
   ReactEventResponderInstance,
   EventPriority,
 } from 'shared/ReactTypes';
+import type {DOMTopLevelEventType} from 'legacy-events/TopLevelEventTypes';
 
 type AnyNativeEvent = Event | KeyboardEvent | MouseEvent | Touch;
 
@@ -80,7 +81,7 @@ export type ReactDOMListenerEvent = {|
   capture: boolean,
   passive: void | boolean,
   priority: EventPriority,
-  type: string,
+  type: DOMTopLevelEventType,
 |};
 
 export type ReactDOMListenerMap = {|
