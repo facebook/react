@@ -121,14 +121,13 @@ import {
 import {IS_REPLAYED} from 'legacy-events/EventSystemFlags';
 import {legacyListenToTopLevelEvent} from './DOMLegacyEventPluginSystem';
 import {listenToTopLevelEvent} from './DOMModernPluginEventSystem';
-import {DOCUMENT_NODE} from '../shared/HTMLNodeType';
 
 type QueuedReplayableEvent = {|
   blockedOn: null | Container | SuspenseInstance,
   topLevelType: DOMTopLevelEventType,
   eventSystemFlags: EventSystemFlags,
   nativeEvent: AnyNativeEvent,
-  targetContainer: EventTarget | null,
+  targetContainers: Array<EventTarget>,
 |};
 
 let hasScheduledReplayAttempt = false;
@@ -295,7 +294,7 @@ function createQueuedReplayableEvent(
     topLevelType,
     eventSystemFlags: eventSystemFlags | IS_REPLAYED,
     nativeEvent,
-    targetContainer,
+    targetContainers: targetContainer !== null ? [targetContainer] : [],
   };
 }
 
@@ -403,17 +402,11 @@ function accumulateOrCreateContinuousQueuedReplayableEvent(
   }
   // If we have already queued this exact event, then it's because
   // the different event systems have different DOM event listeners.
-  // We can accumulate the flags and store a single event to be
-  // replayed.
+  // We can accumulate the flags, and the targetContainers, and
+  // store a single event to be replayed.
   existingQueuedEvent.eventSystemFlags |= eventSystemFlags;
-  // We don't update the targetContainer unless it's a non-document node.
-  // This is because the Flare event system can clash with the Modern
-  // Event System and the fact we need a correct container to be present.
-  if (
-    targetContainer &&
-    ((targetContainer: any): Node).nodeType !== DOCUMENT_NODE
-  ) {
-    existingQueuedEvent.targetContainer = targetContainer;
+  if (targetContainer !== null) {
+    existingQueuedEvent.targetContainers.push(targetContainer);
   }
   return existingQueuedEvent;
 }
@@ -565,20 +558,26 @@ function attemptReplayContinuousQueuedEvent(
   if (queuedEvent.blockedOn !== null) {
     return false;
   }
-  let nextBlockedOn = attemptToDispatchEvent(
-    queuedEvent.topLevelType,
-    queuedEvent.eventSystemFlags,
-    queuedEvent.targetContainer,
-    queuedEvent.nativeEvent,
-  );
-  if (nextBlockedOn !== null) {
-    // We're still blocked. Try again later.
-    let fiber = getInstanceFromNode(nextBlockedOn);
-    if (fiber !== null) {
-      attemptContinuousHydration(fiber);
+  let targetContainers = queuedEvent.targetContainers;
+  while (targetContainers.length > 0) {
+    let targetContainer = targetContainers[0];
+    let nextBlockedOn = attemptToDispatchEvent(
+      queuedEvent.topLevelType,
+      queuedEvent.eventSystemFlags,
+      targetContainer,
+      queuedEvent.nativeEvent,
+    );
+    if (nextBlockedOn !== null) {
+      // We're still blocked. Try again later.
+      let fiber = getInstanceFromNode(nextBlockedOn);
+      if (fiber !== null) {
+        attemptContinuousHydration(fiber);
+      }
+      queuedEvent.blockedOn = nextBlockedOn;
+      return false;
     }
-    queuedEvent.blockedOn = nextBlockedOn;
-    return false;
+    // This target container was successfully dispatched. Try the next.
+    targetContainers.shift();
   }
   return true;
 }
@@ -608,16 +607,24 @@ function replayUnblockedEvents() {
       }
       break;
     }
-    let nextBlockedOn = attemptToDispatchEvent(
-      nextDiscreteEvent.topLevelType,
-      nextDiscreteEvent.eventSystemFlags,
-      nextDiscreteEvent.targetContainer,
-      nextDiscreteEvent.nativeEvent,
-    );
-    if (nextBlockedOn !== null) {
-      // We're still blocked. Try again later.
-      nextDiscreteEvent.blockedOn = nextBlockedOn;
-    } else {
+    let targetContainers = nextDiscreteEvent.targetContainers;
+    while (targetContainers.length > 0) {
+      let targetContainer = targetContainers[0];
+      let nextBlockedOn = attemptToDispatchEvent(
+        nextDiscreteEvent.topLevelType,
+        nextDiscreteEvent.eventSystemFlags,
+        targetContainer,
+        nextDiscreteEvent.nativeEvent,
+      );
+      if (nextBlockedOn !== null) {
+        // We're still blocked. Try again later.
+        nextDiscreteEvent.blockedOn = nextBlockedOn;
+        break;
+      }
+      // This target container was successfully dispatched. Try the next.
+      targetContainers.shift();
+    }
+    if (nextDiscreteEvent.blockedOn === null) {
       // We've successfully replayed the first event. Let's try the next one.
       queuedDiscreteEvents.shift();
     }
