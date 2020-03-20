@@ -14,10 +14,14 @@ function getFakeModule() {
 }
 
 const ReactFlightDOMRelayClientIntegration = {
-  preloadModule(jsResource) {
+  resolveModuleReference(moduleData) {
+    return moduleData;
+  },
+  preloadModule(moduleReference) {},
+  loadModule(moduleReference) {
     return null;
   },
-  requireModule(jsResource) {
+  requireModule(moduleReference) {
     return getFakeModule();
   },
 };

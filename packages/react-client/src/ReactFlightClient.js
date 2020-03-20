@@ -9,10 +9,15 @@
 
 import {REACT_ELEMENT_TYPE} from 'shared/ReactSymbols';
 
-// import type {ModuleMetaData} from './ReactFlightClientHostConfig';
+// import type {
+//   ModuleReference,
+//   ModuleMetaData,
+// } from './ReactFlightClientHostConfig';
 
 // import {
+//   resolveModuleReference,
 //   preloadModule,
+//   loadModule,
 //   requireModule,
 // } from './ReactFlightClientHostConfig';
 
