@@ -213,8 +213,13 @@ export function listenToTopLevelEvent(
 ): void {
   // If we explicitly define capture, then these are for EventTarget objects,
   // rather than React managed DOM elements. So we need to ensure we separate
-  // capture and non-capture events (for React managed DOM nodes we only use
-  // one or the other, never both).
+  // capture and non-capture events. For React managed DOM nodes we only use
+  // one or the other, never both. Which one we use is determined by the the
+  // capturePhaseEvents Set (in this module) that defines if the event listener
+  // should use the capture phase – otherwise we always use the bubble phase.
+  // Finally, when we get to dispatching and accumulating event listeners, we
+  // check if the user wanted capture/bubble and emulate the behavior at that
+  // point (we call this accumulating two phase listeners).
   const typeStr = ((topLevelType: any): string);
   const listenerMapKey =
     capture === undefined

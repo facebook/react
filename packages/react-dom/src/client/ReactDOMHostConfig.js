@@ -1165,7 +1165,7 @@ export function validateEventListenerTarget(
     if (__DEV__) {
       console.warn(
         'Event listener method setListener() from useEvent() hook requires the first argument to be ' +
-          'a valid DOM EventTarget interface object. If using a ref, ensure the current value is not null.',
+          'a valid DOM EventTarget. If using a ref, ensure the current value is not null.',
       );
     }
   }
