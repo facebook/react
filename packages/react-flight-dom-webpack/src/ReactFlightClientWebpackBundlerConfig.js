@@ -33,9 +33,8 @@ type Thenable = {
 // replicate it in user space. null means that it has already loaded.
 const chunkCache: Map<string, null | Thenable | Error> = new Map();
 
-// Returning null means that all dependencies are fulfilled and we
-// can synchronously require the module now. A thenable is returned
-// that when resolved, means we can try again.
+// Start preloading the modules since we might need them soon.
+// This function doesn't suspend.
 export function preloadModule<T>(moduleData: ModuleReference<T>): void {
   let chunks = moduleData.chunks;
   for (let i = 0; i < chunks.length; i++) {
@@ -51,6 +50,8 @@ export function preloadModule<T>(moduleData: ModuleReference<T>): void {
   }
 }
 
+// Actually require the module or suspend if it's not yet ready.
+// Increase priority if necessary.
 export function requireModule<T>(moduleData: ModuleReference<T>): T {
   let chunks = moduleData.chunks;
   for (let i = 0; i < chunks.length; i++) {

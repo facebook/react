@@ -17,7 +17,7 @@ import {
 } from 'shared/ReactSymbols';
 
 type BlockQueryFunction<Args: Iterable<any>, Data> = (...args: Args) => Data;
-type BlockRenderFunction<Props, Data> = (
+export type BlockRenderFunction<Props, Data> = (
   props: Props,
   data: Data,
 ) => React$Node;
