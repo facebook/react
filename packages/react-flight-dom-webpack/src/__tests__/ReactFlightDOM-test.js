@@ -382,8 +382,6 @@ describe('ReactFlightDOM', () => {
           '<p>An error occurred(ERR_RES_MDL_TO_JSON)</p>',
       );
     }
-    
-    
 
     // We can now show the sidebar.
     await act(async () => {
@@ -438,6 +436,5 @@ describe('ReactFlightDOM', () => {
           '<p>An error occurred(ERR_RES_MDL_TO_JSON)</p>',
       );
     }
-    
   });
 });
