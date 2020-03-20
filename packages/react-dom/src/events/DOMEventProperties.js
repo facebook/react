@@ -12,7 +12,10 @@ import type {
   TopLevelType,
   DOMTopLevelEventType,
 } from 'legacy-events/TopLevelEventTypes';
-import type {DispatchConfig} from 'legacy-events/ReactSyntheticEventType';
+import type {
+  DispatchConfig,
+  CustomDispatchConfig,
+} from 'legacy-events/ReactSyntheticEventType';
 
 import * as DOMTopLevelEventTypes from './DOMTopLevelEventTypes';
 import {
@@ -31,7 +34,7 @@ export const simpleEventPluginEventTypes = {};
 
 export const topLevelEventsToDispatchConfig: Map<
   TopLevelType,
-  DispatchConfig,
+  DispatchConfig | CustomDispatchConfig,
 > = new Map();
 
 const eventPriorities = new Map();

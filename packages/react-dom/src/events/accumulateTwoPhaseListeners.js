@@ -20,9 +20,9 @@ export default function accumulateTwoPhaseListeners(
   accumulateUseEventListeners?: boolean,
 ): void {
   const phasedRegistrationNames = event.dispatchConfig.phasedRegistrationNames;
-  const {bubbled, captured} = phasedRegistrationNames;
   const dispatchListeners = [];
   const dispatchInstances = [];
+  const {bubbled, captured} = phasedRegistrationNames;
   let node = event._targetInst;
 
   // Accumulate all instances and listeners via the target -> root path.
@@ -56,9 +56,8 @@ export default function accumulateTwoPhaseListeners(
           }
         }
       }
-      //
+      // Standard React on* listeners, i.e. onClick prop
       if (captured !== null) {
-        // Standard React on* listeners, i.e. onClick prop
         const captureListener = getListener(node, captured);
         if (captureListener != null) {
           // Capture listeners/instances should go at the start, so we

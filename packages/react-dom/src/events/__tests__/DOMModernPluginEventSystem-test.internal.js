@@ -1787,7 +1787,7 @@ describe('DOMModernPluginEventSystem', () => {
             expect(clickEvent).toHaveBeenCalledTimes(1);
           });
 
-          it('handle propagation of custom user events', () => {
+          it('handles propagation of custom user events', () => {
             const buttonRef = React.createRef();
             const divRef = React.createRef();
             const log = [];
@@ -1799,33 +1799,39 @@ describe('DOMModernPluginEventSystem', () => {
             );
 
             function Test() {
-              let custom;
+              let customEventHandle;
 
               // Test that we get a warning when we don't provide an explicit priortiy
               expect(() => {
-                custom = ReactDOM.unstable_useEvent('custom-event');
+                customEventHandle = ReactDOM.unstable_useEvent('custom-event');
               }).toWarnDev(
                 'Warning: The event "type" provided to useEvent() does not have a known priority type. ' +
                   'It is recommended to provide a "priority" option to specify a priority.',
               );
 
-              custom = ReactDOM.unstable_useEvent('custom-event', {
+              customEventHandle = ReactDOM.unstable_useEvent('custom-event', {
                 priority: 0, // Discrete
               });
 
-              const customCapture = ReactDOM.unstable_useEvent('custom-event', {
-                capture: true,
-                priority: 0, // Discrete
-              });
+              const customCaptureHandle = ReactDOM.unstable_useEvent(
+                'custom-event',
+                {
+                  capture: true,
+                  priority: 0, // Discrete
+                },
+              );
 
               React.useEffect(() => {
-                custom.setListener(buttonRef.current, onCustomEvent);
-                customCapture.setListener(
+                customEventHandle.setListener(buttonRef.current, onCustomEvent);
+                customCaptureHandle.setListener(
                   buttonRef.current,
                   onCustomEventCapture,
                 );
-                custom.setListener(divRef.current, onCustomEvent);
-                customCapture.setListener(divRef.current, onCustomEventCapture);
+                customEventHandle.setListener(divRef.current, onCustomEvent);
+                customCaptureHandle.setListener(
+                  divRef.current,
+                  onCustomEventCapture,
+                );
               });
 
               return (
