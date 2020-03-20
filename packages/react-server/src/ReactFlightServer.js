@@ -176,7 +176,12 @@ export function resolveModelToJSON(
   return value;
 }
 
-function emitErrorChunk(request: Request, id: number, error: mixed, errorCode: string): void {
+function emitErrorChunk(
+  request: Request,
+  id: number,
+  error: mixed,
+  errorCode: string,
+): void {
   let message;
   let stack = '';
   if (__DEV__) {
@@ -193,7 +198,7 @@ function emitErrorChunk(request: Request, id: number, error: mixed, errorCode: s
   } else {
     message = 'An error occurred(' + errorCode ? errorCode : 'UNKNOWN' + ')';
   }
-  
+
   let processedChunk = processErrorChunk(request, id, message, stack);
   request.completedErrorChunks.push(processedChunk);
 }
