@@ -60,7 +60,7 @@ import {
   priorityLevelToLabel,
 } from './ReactFiberWorkLoop';
 import {requestCurrentSuspenseConfig} from './ReactFiberSuspenseConfig';
-import {log} from './DebugTrace';
+import {logForceUpdateScheduled, logStateUpdateScheduled} from './DebugTrace';
 
 const fakeInternalInstance = {};
 const isArray = Array.isArray;
@@ -215,7 +215,7 @@ const classComponentUpdater = {
         );
         const label = priorityLevelToLabel(priorityLevel);
         const name = getComponentName(fiber.type) || 'Unknown';
-        log(`${name} updated state (with priority: ${label})`);
+        logStateUpdateScheduled(name, label);
       }
     }
   },
@@ -251,7 +251,7 @@ const classComponentUpdater = {
         );
         const label = priorityLevelToLabel(priorityLevel);
         const name = getComponentName(fiber.type) || 'Unknown';
-        log(`${name} updated state (with priority: ${label}`);
+        logStateUpdateScheduled(name, label);
       }
     }
   },
@@ -286,7 +286,7 @@ const classComponentUpdater = {
         );
         const label = priorityLevelToLabel(priorityLevel);
         const name = getComponentName(fiber.type) || 'Unknown';
-        log(`${name} force updated (with priority: ${label}`);
+        logForceUpdateScheduled(name, label);
       }
     }
   },

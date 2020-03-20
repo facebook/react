@@ -89,7 +89,7 @@ import {
   setRefreshHandler,
   findHostInstancesForRefresh,
 } from './ReactFiberHotReloading';
-import {log} from './DebugTrace';
+import {logRenderScheduled} from './DebugTrace';
 
 // used by isTestEnvironment builds
 import enqueueTask from 'shared/enqueueTask';
@@ -260,7 +260,7 @@ export function updateContainer(
         expirationTime,
       );
       const label = priorityLevelToLabel(priorityLevel);
-      log(`render scheduled (with priority: ${label})`);
+      logRenderScheduled(label);
     }
   }
 

@@ -97,7 +97,7 @@ import {
 } from './ReactMutableSource';
 import {getRootHostContainer} from './ReactFiberHostContext';
 import {getIsRendering} from './ReactCurrentFiber';
-import {log} from './DebugTrace';
+import {logStateUpdateScheduled} from './DebugTrace';
 
 const {ReactCurrentDispatcher, ReactCurrentBatchConfig} = ReactSharedInternals;
 
@@ -1792,7 +1792,7 @@ function dispatchAction<S, A>(
         );
         const label = priorityLevelToLabel(priorityLevel);
         const name = getComponentName(fiber.type) || 'Unknown';
-        log(`${name} updated state (with priority: ${label})`);
+        logStateUpdateScheduled(name, label);
       }
     }
   }

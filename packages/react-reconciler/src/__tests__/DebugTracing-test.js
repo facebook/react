@@ -34,15 +34,15 @@ describe('DebugTracing', () => {
     const groups = [];
 
     spyOnDevAndProd(console, 'log').and.callFake(message => {
-      logs.push(`log: ${message}`);
+      logs.push(`log: ${message.replace(/%c/g, '')}`);
     });
     spyOnDevAndProd(console, 'group').and.callFake(message => {
-      logs.push(`group: ${message}`);
+      logs.push(`group: ${message.replace(/%c/g, '')}`);
       groups.push(message);
     });
     spyOnDevAndProd(console, 'groupEnd').and.callFake(() => {
       const message = groups.pop();
-      logs.push(`groupEnd: ${message}`);
+      logs.push(`groupEnd: ${message.replace(/%c/g, '')}`);
     });
   });
 
@@ -54,17 +54,13 @@ describe('DebugTracing', () => {
     it('should not log anything for sync render without suspends or state updates', () => {
       ReactTestRenderer.create(<div />);
 
-      expect(logs).toEqual([
-        'log: ⚛️ render scheduled (with priority: immediate)',
-      ]);
+      expect(logs).toEqual(['log: ⚛️ render scheduled (priority: immediate)']);
     });
 
     it('should not log anything for concurrent render without suspends or state updates', () => {
       ReactTestRenderer.create(<div />, {unstable_isConcurrent: true});
 
-      expect(logs).toEqual([
-        'log: ⚛️ render scheduled (with priority: normal)',
-      ]);
+      expect(logs).toEqual(['log: ⚛️ render scheduled (priority: normal)']);
 
       logs.splice(0);
 
@@ -86,10 +82,10 @@ describe('DebugTracing', () => {
       );
 
       expect(logs).toEqual([
-        'log: ⚛️ render scheduled (with priority: immediate)',
-        'group: ⚛️ render (current priority: immediate)',
+        'log: ⚛️ render scheduled (priority: immediate)',
+        'group: ⚛️ render (priority: immediate)',
         'log: ⚛️ Example suspended',
-        'groupEnd: ⚛️ render (current priority: immediate)',
+        'groupEnd: ⚛️ render (priority: immediate)',
       ]);
     });
 
@@ -106,18 +102,16 @@ describe('DebugTracing', () => {
         {unstable_isConcurrent: true},
       );
 
-      expect(logs).toEqual([
-        'log: ⚛️ render scheduled (with priority: normal)',
-      ]);
+      expect(logs).toEqual(['log: ⚛️ render scheduled (priority: normal)']);
 
       logs.splice(0);
 
       expect(Scheduler).toFlushUntilNextPaint([]);
 
       expect(logs).toEqual([
-        'group: ⚛️ render (current priority: normal)',
+        'group: ⚛️ render (priority: normal)',
         'log: ⚛️ Example suspended',
-        'groupEnd: ⚛️ render (current priority: normal)',
+        'groupEnd: ⚛️ render (priority: normal)',
       ]);
     });
 
@@ -134,20 +128,18 @@ describe('DebugTracing', () => {
 
       ReactTestRenderer.create(<Example />, {unstable_isConcurrent: true});
 
-      expect(logs).toEqual([
-        'log: ⚛️ render scheduled (with priority: normal)',
-      ]);
+      expect(logs).toEqual(['log: ⚛️ render scheduled (priority: normal)']);
 
       logs.splice(0);
 
       expect(Scheduler).toFlushUntilNextPaint([]);
 
       expect(logs).toEqual([
-        'group: ⚛️ commit (current priority: normal)',
-        'group: ⚛️ layout effects (current priority: immediate)',
-        'log: ⚛️ Example updated state (with priority: immediate)',
-        'groupEnd: ⚛️ layout effects (current priority: immediate)',
-        'groupEnd: ⚛️ commit (current priority: normal)',
+        'group: ⚛️ commit (priority: normal)',
+        'group: ⚛️ layout effects (priority: immediate)',
+        'log: ⚛️ Example updated state (priority: immediate)',
+        'groupEnd: ⚛️ layout effects (priority: immediate)',
+        'groupEnd: ⚛️ commit (priority: normal)',
       ]);
     });
 
@@ -162,20 +154,18 @@ describe('DebugTracing', () => {
 
       ReactTestRenderer.create(<Example />, {unstable_isConcurrent: true});
 
-      expect(logs).toEqual([
-        'log: ⚛️ render scheduled (with priority: normal)',
-      ]);
+      expect(logs).toEqual(['log: ⚛️ render scheduled (priority: normal)']);
 
       logs.splice(0);
 
       expect(Scheduler).toFlushUntilNextPaint([]);
 
       expect(logs).toEqual([
-        'group: ⚛️ commit (current priority: normal)',
-        'group: ⚛️ layout effects (current priority: immediate)',
-        'log: ⚛️ Example updated state (with priority: immediate)',
-        'groupEnd: ⚛️ layout effects (current priority: immediate)',
-        'groupEnd: ⚛️ commit (current priority: normal)',
+        'group: ⚛️ commit (priority: normal)',
+        'group: ⚛️ layout effects (priority: immediate)',
+        'log: ⚛️ Example updated state (priority: immediate)',
+        'groupEnd: ⚛️ layout effects (priority: immediate)',
+        'groupEnd: ⚛️ commit (priority: normal)',
       ]);
     });
 
@@ -192,10 +182,10 @@ describe('DebugTracing', () => {
         ReactTestRenderer.create(<Example />, {unstable_isConcurrent: true});
       });
       expect(logs).toEqual([
-        'log: ⚛️ render scheduled (with priority: normal)',
-        'group: ⚛️ passive effects (current priority: normal)',
-        'log: ⚛️ Example updated state (with priority: normal)',
-        'groupEnd: ⚛️ passive effects (current priority: normal)',
+        'log: ⚛️ render scheduled (priority: normal)',
+        'group: ⚛️ passive effects (priority: normal)',
+        'log: ⚛️ Example updated state (priority: normal)',
+        'groupEnd: ⚛️ passive effects (priority: normal)',
       ]);
     });
   }
