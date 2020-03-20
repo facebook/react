@@ -360,33 +360,54 @@ describe('ReactFlightDOM', () => {
     await act(async () => {
       rejectGamesModel(new Error('Game over'));
     });
+    // should not have message in prod.
+    expect(container.innerHTML).not.toBe(
+      '<div>:name::avatar:</div>' +
+        '<p>(loading sidebar)</p>' +
+        '<p>(loading posts)</p>' +
+        '<p>Game over</p>',
+    );
     expect(container.innerHTML).toBe(
       '<div>:name::avatar:</div>' +
         '<p>(loading sidebar)</p>' +
         '<p>(loading posts)</p>' +
-        '<p>Game over</p>', // TODO: should not have message in prod.
+        '<p>ERR_RES_MDL_TO_JSON</p>',
     );
 
     // We can now show the sidebar.
     await act(async () => {
       resolvePhotosModel();
     });
+    // should not have message in prod.
+    expect(container.innerHTML).not.toBe(
+      '<div>:name::avatar:</div>' +
+        '<div>:photos::friends:</div>' +
+        '<p>(loading posts)</p>' +
+        '<p>Game over</p>',
+    );
     expect(container.innerHTML).toBe(
       '<div>:name::avatar:</div>' +
         '<div>:photos::friends:</div>' +
         '<p>(loading posts)</p>' +
-        '<p>Game over</p>', // TODO: should not have message in prod.
+        '<p>ERR_RES_MDL_TO_JSON</p>',
     );
 
     // Show everything.
     await act(async () => {
       resolvePostsModel();
     });
+    // should not have message in prod.
+    expect(container.innerHTML).not.toBe(
+      '<div>:name::avatar:</div>' +
+        '<div>:photos::friends:</div>' +
+        '<div>:posts:</div>' +
+        '<p>Game over</p>',
+    );
     expect(container.innerHTML).toBe(
       '<div>:name::avatar:</div>' +
         '<div>:photos::friends:</div>' +
         '<div>:posts:</div>' +
-        '<p>Game over</p>', // TODO: should not have message in prod.
+        '<p>ERR_RES_MDL_TO_JSON</p>',
     );
   });
 });
