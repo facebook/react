@@ -16,4 +16,5 @@ export const IS_ACTIVE = 1 << 3;
 export const PASSIVE_NOT_SUPPORTED = 1 << 4;
 export const IS_REPLAYED = 1 << 5;
 export const IS_FIRST_ANCESTOR = 1 << 6;
-export const LEGACY_FB_SUPPORT = 1 << 7;
+export const IS_TARGET_EVENT_ONLY = 1 << 7;
+export const LEGACY_FB_SUPPORT = 1 << 8;
