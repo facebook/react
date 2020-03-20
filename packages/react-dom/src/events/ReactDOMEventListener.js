@@ -418,8 +418,6 @@ export function attemptToDispatchEvent(
   targetContainer: EventTarget | null,
   nativeEvent: AnyNativeEvent,
 ): null | Container | SuspenseInstance {
-  // TODO: Warn if _enabled is false.
-
   const nativeEventTarget = getEventTarget(nativeEvent);
   let targetInst = getClosestInstanceFromNode(nativeEventTarget);
 
@@ -428,6 +426,13 @@ export function attemptToDispatchEvent(
     if (nearestMounted === null) {
       // This tree has been unmounted already. Dispatch without a target.
       targetInst = null;
+      if (__DEV__ && _enabled) {
+        console.warn(
+          'Could not find the nearest mounted node from `getNearestMountedFiber`. ' +
+            'Dispatching the event without a target ' +
+            'to avoid blocking the whole system',
+        );
+      }
     } else {
       const tag = nearestMounted.tag;
       if (tag === SuspenseComponent) {
@@ -441,8 +446,14 @@ export function attemptToDispatchEvent(
         }
         // This shouldn't happen, something went wrong but to avoid blocking
         // the whole system, dispatch the event without a target.
-        // TODO: Warn.
         targetInst = null;
+        if (__DEV__ && _enabled) {
+          console.warn(
+            'Could not find the instance from `getSuspenseInstanceFromFiber`. ' +
+              'Dispatching the event without a target ' +
+              'to avoid blocking the whole system',
+          );
+        }
       } else if (tag === HostRoot) {
         const root: FiberRoot = nearestMounted.stateNode;
         if (root.hydrate) {
@@ -451,12 +462,26 @@ export function attemptToDispatchEvent(
           return getContainerFromFiber(nearestMounted);
         }
         targetInst = null;
+        if (__DEV__ && _enabled) {
+          console.warn(
+            'Could not find the `hydrate` from `nearestMounted.stateNode`. ' +
+              'Dispatching the event without a target ' +
+              'to avoid blocking the whole system',
+          );
+        }
       } else if (nearestMounted !== targetInst) {
         // If we get an event (ex: img onload) before committing that
         // component's mount, ignore it for now (that is, treat it as if it was an
         // event on a non-React tree). We might also consider queueing events and
         // dispatching them after the mount.
         targetInst = null;
+        if (__DEV__ && _enabled) {
+          console.warn(
+            'Target instance(`targetInst`) does not match ' +
+              'with nearest mounted node(`nearestMounted`). Dispatching the event without a target ' +
+              'to avoid blocking the whole system',
+          );
+        }
       }
     }
   }
