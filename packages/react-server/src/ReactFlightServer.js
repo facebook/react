@@ -185,7 +185,6 @@ function emitErrorChunk(
   let message;
   let stack = '';
   if (__DEV__) {
-    console.log('111111111111111')
     try {
       if (error instanceof Error) {
         message = '' + error.message;
@@ -198,7 +197,6 @@ function emitErrorChunk(
     }
   } else {
     message = 'An error occurred(' + (errorCode ? errorCode : 'UNKNOWN') + ')';
-    console.log('22222222222222', message)
   }
 
   let processedChunk = processErrorChunk(request, id, message, stack);
