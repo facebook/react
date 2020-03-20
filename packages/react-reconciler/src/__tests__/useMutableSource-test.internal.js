@@ -43,8 +43,8 @@ describe('useMutableSource', () => {
     const callbacksA = [];
     const callbacksB = [];
     let revision = 0;
-    let valueA = 'a:one';
-    let valueB = 'b:one';
+    let valueA = initialValueA;
+    let valueB = initialValueB;
 
     const subscribeHelper = (callbacks, callback) => {
       if (callbacks.indexOf(callback) < 0) {
@@ -630,7 +630,7 @@ describe('useMutableSource', () => {
     });
 
     it('should only update components whose subscriptions fire', () => {
-      const source = createComplexSource('one', 'one');
+      const source = createComplexSource('a:one', 'b:one');
       const mutableSource = createMutableSource(source);
 
       // Subscribe to part of the store.
@@ -672,7 +672,7 @@ describe('useMutableSource', () => {
     });
 
     it('should detect tearing in part of the store not yet subscribed to', () => {
-      const source = createComplexSource('one', 'one');
+      const source = createComplexSource('a:one', 'b:one');
       const mutableSource = createMutableSource(source);
 
       // Subscribe to part of the store.
@@ -1395,6 +1395,116 @@ describe('useMutableSource', () => {
         expect(Scheduler).toFlushUntilNextPaint([]);
         expect(root.getChildrenAsJSX()).not.toEqual('Oops, tearing!');
       });
+    });
+
+    it('getSnapshot changes and then source is mutated during interleaved event', async () => {
+      const {useEffect} = React;
+
+      const source = createComplexSource('1', '2');
+      const mutableSource = createMutableSource(source);
+
+      // Subscribe to part of the store.
+      const getSnapshotA = s => s.valueA;
+      const subscribeA = (s, callback) => s.subscribeA(callback);
+      const configA = [getSnapshotA, subscribeA];
+
+      const getSnapshotB = s => s.valueB;
+      const subscribeB = (s, callback) => s.subscribeB(callback);
+      const configB = [getSnapshotB, subscribeB];
+
+      function App({parentConfig, childConfig}) {
+        const [getSnapshot, subscribe] = parentConfig;
+        const parentValue = useMutableSource(
+          mutableSource,
+          getSnapshot,
+          subscribe,
+        );
+
+        Scheduler.unstable_yieldValue('Parent: ' + parentValue);
+
+        return (
+          <Child
+            parentConfig={parentConfig}
+            childConfig={childConfig}
+            parentValue={parentValue}
+          />
+        );
+      }
+
+      function Child({parentConfig, childConfig, parentValue}) {
+        const [getSnapshot, subscribe] = childConfig;
+        const childValue = useMutableSource(
+          mutableSource,
+          getSnapshot,
+          subscribe,
+        );
+
+        Scheduler.unstable_yieldValue('Child: ' + childValue);
+
+        let result = `${parentValue}, ${childValue}`;
+
+        if (parentConfig === childConfig) {
+          // When both components read using the same config, the two values
+          // must be consistent.
+          if (parentValue !== childValue) {
+            result = 'Oops, tearing!';
+          }
+        }
+
+        useEffect(() => {
+          Scheduler.unstable_yieldValue('Commit: ' + result);
+        }, [result]);
+
+        return result;
+      }
+
+      const root = ReactNoop.createRoot();
+      await act(async () => {
+        root.render(<App parentConfig={configA} childConfig={configB} />);
+      });
+      expect(Scheduler).toHaveYielded([
+        'Parent: 1',
+        'Child: 2',
+        'Commit: 1, 2',
+      ]);
+
+      await act(async () => {
+        // Switch the parent and the child to read using the same config
+        root.render(<App parentConfig={configB} childConfig={configB} />);
+        // Start rendering the parent, but yield before rendering the child
+        expect(Scheduler).toFlushAndYieldThrough(['Parent: 2']);
+
+        // Mutate the config. This is at lower priority so that 1) to make sure
+        // it doesn't happen to get batched with the in-progress render, and 2)
+        // so it doesn't interrupt the in-progress render.
+        Scheduler.unstable_runWithPriority(
+          Scheduler.unstable_IdlePriority,
+          () => {
+            source.valueB = '3';
+          },
+        );
+      });
+      expect(Scheduler).toHaveYielded([
+        'TODO: This currently tears. Fill in with correct values once bug',
+
+        // Here's the current behavior:
+
+        // The partial render completes
+        'Child: 2',
+        'Commit: 2, 2',
+
+        // Then we start rendering the low priority mutation
+        'Parent: 3',
+        // But the child never received a mutation event, because it hadn't
+        // mounted yet. So the render tears.
+        'Child: 2',
+        'Commit: Oops, tearing!',
+
+        // Eventually the child corrects itself, because of the check that
+        // occurs when re-subscribing.
+        'Child: 3',
+        'Commit: 3, 3',
+      ]);
     });
 
     if (__DEV__) {
