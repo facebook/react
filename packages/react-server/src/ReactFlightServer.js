@@ -167,7 +167,7 @@ export function resolveModelToJSON(
       } else {
         request.pendingChunks++;
         let errorId = request.nextChunkId++;
-        emitErrorChunk(request, errorId, x);
+        emitErrorChunk(request, errorId, x, 'ERR_RETRY_SEG');
         return serializeIDRef(errorId);
       }
     }
@@ -176,23 +176,24 @@ export function resolveModelToJSON(
   return value;
 }
 
-function emitErrorChunk(request: Request, id: number, error: mixed): void {
-  // TODO: We should not leak error messages to the client in prod.
-  // Give this an error code instead and log on the server.
-  // We can serialize the error in DEV as a convenience.
+function emitErrorChunk(request: Request, id: number, error: mixed, errorCode: string): void {
   let message;
   let stack = '';
-  try {
-    if (error instanceof Error) {
-      message = '' + error.message;
-      stack = '' + error.stack;
-    } else {
-      message = 'Error: ' + (error: any);
+  if (__DEV__) {
+    try {
+      if (error instanceof Error) {
+        message = '' + error.message;
+        stack = '' + error.stack;
+      } else {
+        message = 'Error: ' + (error: any);
+      }
+    } catch (x) {
+      message = 'An error occurred but serializing the error message failed.';
     }
-  } catch (x) {
-    message = 'An error occurred but serializing the error message failed.';
+  } else {
+    message = 'An error occurred(' + errorCode ? errorCode : 'UNKNOWN' + ')';
   }
-
+  
   let processedChunk = processErrorChunk(request, id, message, stack);
   request.completedErrorChunks.push(processedChunk);
 }
@@ -221,7 +222,7 @@ function retrySegment(request: Request, segment: Segment): void {
       return;
     } else {
       // This errored, we need to serialize this error to the
-      emitErrorChunk(request, segment.id, x);
+      emitErrorChunk(request, segment.id, x, 'RES_MDL_TO_JSON');
     }
   }
 }
