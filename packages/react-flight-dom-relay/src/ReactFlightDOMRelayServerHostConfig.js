@@ -20,7 +20,7 @@ import {resolveModelToJSON} from 'react-server/src/ReactFlightServer';
 import {
   emitModel,
   emitError,
-  resolveResourceMetaData,
+  resolveModuleMetaData as resolveModuleMetaDataImpl,
 } from 'ReactFlightDOMRelayServerIntegration';
 
 export type {
@@ -35,7 +35,7 @@ export function resolveModuleMetaData(
   config: BundlerConfig,
   resource: ModuleReference,
 ): ModuleMetaData {
-  return resolveResourceMetaData(resource);
+  return resolveModuleMetaDataImpl(resource);
 }
 
 type JSONValue =

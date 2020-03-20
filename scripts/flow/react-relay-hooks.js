@@ -37,15 +37,24 @@ declare module 'ReactFlightDOMRelayServerIntegration' {
 
   declare export opaque type ModuleReference;
   declare export opaque type ModuleMetaData;
-  declare export function resolveResourceMetaData(
-    resource: ModuleReference,
+  declare export function resolveModuleMetaData(
+    resourceReference: ModuleReference,
   ): ModuleMetaData;
 }
 
 declare module 'ReactFlightDOMRelayClientIntegration' {
+  declare export opaque type ModuleReference;
   declare export opaque type ModuleMetaData;
-  declare export function preloadModule(
+  declare export function resolveModuleReference<T>(
     moduleData: ModuleMetaData,
+  ): ModuleReference<T>;
+  declare export function preloadModule<T>(
+    moduleReference: ModuleReference<T>,
+  ): void;
+  declare export function loadModule<T>(
+    moduleReference: ModuleReference<T>,
   ): null | Thenable;
-  declare export function requireModule<T>(moduleData: ModuleMetaData): T;
+  declare export function requireModule<T>(
+    moduleReference: ModuleReference<T>,
+  ): T;
 }

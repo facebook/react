@@ -10,7 +10,17 @@
 export type ModuleMetaData = {
   id: string,
   chunks: Array<string>,
+  name: string,
 };
+
+// eslint-disable-next-line no-unused-vars
+export type ModuleReference<T> = ModuleMetaData;
+
+export function resolveModuleReference<T>(
+  moduleData: ModuleMetaData,
+): ModuleReference<T> {
+  return moduleData;
+}
 
 type Thenable = {
   then(resolve: () => mixed, reject: (mixed) => mixed): mixed,
@@ -26,12 +36,11 @@ const chunkCache: Map<string, null | Thenable> = new Map();
 // Returning null means that all dependencies are fulfilled and we
 // can synchronously require the module now. A thenable is returned
 // that when resolved, means we can try again.
-export function preloadModule(moduleData: ModuleMetaData): null | Thenable {
-  let moduleEntry = require.cache[moduleData.id];
-  if (moduleEntry) {
-    // Fast exit if this module has already been loaded.
-    return null;
-  }
+export function preloadModule<T>(moduleData: ModuleReference<T>): void {
+  loadModule(moduleData);
+}
+
+export function loadModule<T>(moduleData: ModuleReference<T>): null | Thenable {
   let chunks = moduleData.chunks;
   let anyRemainingThenable = null;
   for (let i = 0; i < chunks.length; i++) {
@@ -48,6 +57,6 @@ export function preloadModule(moduleData: ModuleMetaData): null | Thenable {
   return anyRemainingThenable;
 }
 
-export function requireModule<T>(moduleData: ModuleMetaData): T {
-  return __webpack_require__(moduleData.id).default;
+export function requireModule<T>(moduleData: ModuleReference<T>): T {
+  return __webpack_require__(moduleData.id)[moduleData.name];
 }
