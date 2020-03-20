@@ -87,7 +87,7 @@ import {
   setRefreshHandler,
   findHostInstancesForRefresh,
 } from './ReactFiberHotReloading.old';
-import {log} from './DebugTrace';
+import {logRenderScheduled} from './DebugTrace';
 
 export {createPortal} from './ReactPortal';
 
@@ -253,7 +253,7 @@ export function updateContainer(
         expirationTime,
       );
       const label = priorityLevelToLabel(priorityLevel);
-      log(`render scheduled (with priority: ${label})`);
+      logRenderScheduled(label);
     }
   }
 

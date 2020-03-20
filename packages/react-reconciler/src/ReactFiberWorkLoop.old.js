@@ -49,7 +49,16 @@ import {
   flushSyncCallbackQueue,
   scheduleSyncCallback,
 } from './SchedulerWithReactIntegration.old';
-import {group, groupEnd} from './DebugTrace';
+import {
+  logCommitStarted,
+  logCommitStopped,
+  logLayoutEffectsStarted,
+  logLayoutEffectsStopped,
+  logPassiveEffectsStarted,
+  logPassiveEffectsStopped,
+  logRenderStarted,
+  logRenderStopped,
+} from './DebugTrace';
 
 // The scheduler is imported here *only* to detect whether it's been mocked
 import * as Scheduler from 'scheduler';
@@ -1431,7 +1440,7 @@ function renderRootSync(root, expirationTime) {
     if (enableDebugTracing) {
       const priorityLevel = getCurrentPriorityLevel();
       const label = priorityLevelToLabel(priorityLevel);
-      group(`render (current priority: ${label})`);
+      logRenderStarted(label);
     }
   }
 
@@ -1458,6 +1467,12 @@ function renderRootSync(root, expirationTime) {
       'Cannot commit an incomplete root. This error is likely caused by a ' +
         'bug in React. Please file an issue.',
     );
+  }
+
+  if (__DEV__) {
+    if (enableDebugTracing) {
+      logRenderStopped();
+    }
   }
 
   // Set this to null to indicate there's no in-progress render.
@@ -1493,7 +1508,7 @@ function renderRootConcurrent(root, expirationTime) {
     if (enableDebugTracing) {
       const priorityLevel = getCurrentPriorityLevel();
       const label = priorityLevelToLabel(priorityLevel);
-      group(`render (current priority: ${label})`);
+      logRenderStarted(label);
     }
   }
 
@@ -1512,6 +1527,12 @@ function renderRootConcurrent(root, expirationTime) {
 
   popDispatcher(prevDispatcher);
   executionContext = prevExecutionContext;
+
+  if (__DEV__) {
+    if (enableDebugTracing) {
+      logRenderStopped();
+    }
+  }
 
   // Check if the tree has completed.
   if (workInProgress !== null) {
@@ -1783,7 +1804,7 @@ function commitRootImpl(root, renderPriorityLevel) {
   if (__DEV__) {
     if (enableDebugTracing) {
       const label = priorityLevelToLabel(renderPriorityLevel);
-      group(`commit (current priority: ${label})`);
+      logCommitStarted(label);
     }
   }
   do {
@@ -1807,7 +1828,7 @@ function commitRootImpl(root, renderPriorityLevel) {
   if (finishedWork === null) {
     if (__DEV__) {
       if (enableDebugTracing) {
-        groupEnd();
+        logCommitStopped();
       }
     }
     return null;
@@ -2092,7 +2113,7 @@ function commitRootImpl(root, renderPriorityLevel) {
   if ((executionContext & LegacyUnbatchedContext) !== NoContext) {
     if (__DEV__) {
       if (enableDebugTracing) {
-        groupEnd();
+        logCommitStopped();
       }
     }
 
@@ -2108,7 +2129,7 @@ function commitRootImpl(root, renderPriorityLevel) {
 
   if (__DEV__) {
     if (enableDebugTracing) {
-      groupEnd();
+      logCommitStopped();
     }
   }
 
@@ -2223,7 +2244,7 @@ function commitLayoutEffects(
     if (enableDebugTracing) {
       const priorityLevel = getCurrentPriorityLevel();
       const label = priorityLevelToLabel(priorityLevel);
-      group(`layout effects (current priority: ${label})`);
+      logLayoutEffectsStarted(label);
     }
   }
 
@@ -2253,7 +2274,7 @@ function commitLayoutEffects(
 
   if (__DEV__) {
     if (enableDebugTracing) {
-      groupEnd();
+      logLayoutEffectsStopped();
     }
   }
 }
@@ -2338,7 +2359,7 @@ function flushPassiveEffectsImpl() {
     if (enableDebugTracing) {
       const priorityLevel = getCurrentPriorityLevel();
       const label = priorityLevelToLabel(priorityLevel);
-      group(`passive effects (current priority: ${label})`);
+      logPassiveEffectsStarted(label);
     }
   }
 
@@ -2511,7 +2532,7 @@ function flushPassiveEffectsImpl() {
 
   if (__DEV__) {
     if (enableDebugTracing) {
-      groupEnd();
+      logPassiveEffectsStopped();
     }
   }
 

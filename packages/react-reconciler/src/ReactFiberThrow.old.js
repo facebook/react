@@ -56,7 +56,7 @@ import {
   pingSuspendedRoot,
 } from './ReactFiberWorkLoop.old';
 import {logCapturedError} from './ReactFiberErrorLogger';
-import {log} from './DebugTrace';
+import {logComponentSuspended} from './DebugTrace';
 
 import {Sync} from './ReactFiberExpirationTime.old';
 
@@ -199,7 +199,7 @@ function throwException(
     if (__DEV__) {
       if (enableDebugTracing) {
         const name = getComponentName(sourceFiber.type) || 'Unknown';
-        log(`${name} suspended`);
+        logComponentSuspended(name);
       }
     }
 
