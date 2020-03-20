@@ -222,7 +222,7 @@ function retrySegment(request: Request, segment: Segment): void {
       return;
     } else {
       // This errored, we need to serialize this error to the
-      emitErrorChunk(request, segment.id, x, 'RES_MDL_TO_JSON');
+      emitErrorChunk(request, segment.id, x, 'ERR_RES_MDL_TO_JSON');
     }
   }
 }
