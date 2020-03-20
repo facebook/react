@@ -83,6 +83,7 @@ const SimpleEventPlugin: PluginModule<MouseEvent> = {
     nativeEvent: MouseEvent,
     nativeEventTarget: null | EventTarget,
     eventSystemFlags: EventSystemFlags,
+    targetContainer?: null | EventTarget,
   ): null | ReactSyntheticEvent {
     const dispatchConfig = topLevelEventsToDispatchConfig.get(topLevelType);
     if (!dispatchConfig) {
@@ -194,7 +195,7 @@ const SimpleEventPlugin: PluginModule<MouseEvent> = {
       nativeEvent,
       nativeEventTarget,
     );
-    accumulateTwoPhaseListeners(event, true);
+    accumulateTwoPhaseListeners(event, true, eventSystemFlags, targetContainer);
     return event;
   },
 };

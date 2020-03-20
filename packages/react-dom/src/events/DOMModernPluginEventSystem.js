@@ -27,7 +27,11 @@ import {registrationNameDependencies} from 'legacy-events/EventPluginRegistry';
 import {batchedEventUpdates} from 'legacy-events/ReactGenericBatching';
 import {executeDispatchesInOrder} from 'legacy-events/EventPluginUtils';
 import {plugins} from 'legacy-events/EventPluginRegistry';
-import {LEGACY_FB_SUPPORT, IS_REPLAYED} from 'legacy-events/EventSystemFlags';
+import {
+  LEGACY_FB_SUPPORT,
+  IS_REPLAYED,
+  IS_TARGET_EVENT_ONLY,
+} from 'legacy-events/EventSystemFlags';
 
 import {HostRoot, HostPortal} from 'shared/ReactWorkTags';
 
@@ -77,11 +81,7 @@ import {
   getListenersFromTarget,
   initListenersSet,
 } from '../client/ReactDOMComponentTree';
-import {
-  DOCUMENT_NODE,
-  COMMENT_NODE,
-  ELEMENT_NODE,
-} from '../shared/HTMLNodeType';
+import {COMMENT_NODE} from '../shared/HTMLNodeType';
 import {topLevelEventsToDispatchConfig} from './DOMEventProperties';
 
 import {enableLegacyFBSupport} from 'shared/ReactFeatureFlags';
@@ -131,6 +131,17 @@ const emptyDispatchConfigForCustomEvents: CustomDispatchConfig = {
 };
 
 const isArray = Array.isArray;
+
+// $FlowFixMe: Flow struggles with this pattern
+const PossiblyWeakMap = typeof WeakMap === 'function' ? WeakMap : Map;
+// $FlowFixMe: Flow cannot handle polymorphic WeakMaps
+export const eventTargetEventListenerStore: WeakMap<
+  EventTarget,
+  Map<
+    DOMTopLevelEventType,
+    {bubbled: Set<ReactDOMListener>, captured: Set<ReactDOMListener>},
+  >,
+> = new PossiblyWeakMap();
 
 function dispatchEventsForPlugins(
   topLevelType: DOMTopLevelEventType,
@@ -198,11 +209,27 @@ export function listenToTopLevelEvent(
   listenerMap: ElementListenerMap,
   passive?: boolean,
   priority?: EventPriority,
+  capture?: boolean,
 ): void {
-  const listenerEntry = listenerMap.get(topLevelType);
+  // If we explicitly define capture, then these are for EventTarget objects,
+  // rather than React managed DOM elements. So we need to ensure we separate
+  // capture and non-capture events. For React managed DOM nodes we only use
+  // one or the other, never both. Which one we use is determined by the the
+  // capturePhaseEvents Set (in this module) that defines if the event listener
+  // should use the capture phase – otherwise we always use the bubble phase.
+  // Finally, when we get to dispatching and accumulating event listeners, we
+  // check if the user wanted capture/bubble and emulate the behavior at that
+  // point (we call this accumulating two phase listeners).
+  const typeStr = ((topLevelType: any): string);
+  const listenerMapKey =
+    capture === undefined
+      ? topLevelType
+      : `${typeStr}_${capture ? 'capture' : 'bubble'}`;
+  const listenerEntry = listenerMap.get(listenerMapKey);
   const shouldUpgrade = shouldUpgradeListener(listenerEntry, passive);
   if (listenerEntry === undefined || shouldUpgrade) {
-    const isCapturePhase = capturePhaseEvents.has(topLevelType);
+    const isCapturePhase =
+      capture === undefined ? capturePhaseEvents.has(topLevelType) : capture;
     // If we should upgrade, then we need to remove the existing trapped
     // event listener for the target container.
     if (shouldUpgrade) {
@@ -221,7 +248,7 @@ export function listenToTopLevelEvent(
       passive,
       priority,
     );
-    listenerMap.set(topLevelType, {passive, listener});
+    listenerMap.set(listenerMapKey, {passive, listener});
   }
 }
 
@@ -269,14 +296,12 @@ function isMatchingRootContainer(
   );
 }
 
-export function isDOMElement(target: EventTarget): boolean {
-  const nodeType = ((target: any): Node).nodeType;
-  return (nodeType: any) && nodeType === ELEMENT_NODE;
+export function isManagedDOMElement(target: EventTarget): boolean {
+  return getClosestInstanceFromNode(((target: any): Node)) !== null;
 }
 
-export function isDOMDocument(target: EventTarget): boolean {
-  const nodeType = ((target: any): Node).nodeType;
-  return nodeType === DOCUMENT_NODE;
+export function isValidEventTarget(target: EventTarget): boolean {
+  return typeof target.addEventListener === 'function';
 }
 
 export function dispatchEventForPluginEventSystem(
@@ -288,87 +313,85 @@ export function dispatchEventForPluginEventSystem(
 ): void {
   let ancestorInst = targetInst;
   if (targetContainer !== null) {
-    const possibleTargetContainerNode = ((targetContainer: any): Node);
-    // Given the rootContainer can be any EventTarget, if the
-    // target is not a valid DOM element then we'll skip this part.
-    if (
-      possibleTargetContainerNode === window ||
-      !isDOMElement(possibleTargetContainerNode)
-    ) {
-      // TODO: useEvent for document and window
-      return;
-    }
-    // If we are using the legacy FB support flag, we
-    // defer the event to the null with a one
-    // time event listener so we can defer the event.
-    if (
-      enableLegacyFBSupport &&
-      // We do not want to defer if the event system has already been
-      // set to LEGACY_FB_SUPPORT. LEGACY_FB_SUPPORT only gets set when
-      // we call willDeferLaterForLegacyFBSupport, thus not bailing out
-      // will result in endless cycles like an infinite loop.
-      (eventSystemFlags & LEGACY_FB_SUPPORT) === 0 &&
-      // We also don't want to defer during event replaying.
-      (eventSystemFlags & IS_REPLAYED) === 0 &&
-      willDeferLaterForLegacyFBSupport(topLevelType, targetContainer)
-    ) {
-      return;
-    }
-    if (targetInst !== null) {
-      // The below logic attempts to work out if we need to change
-      // the target fiber to a different ancestor. We had similar logic
-      // in the legacy event system, except the big difference between
-      // systems is that the modern event system now has an event listener
-      // attached to each React Root and React Portal Root. Together,
-      // the DOM nodes representing these roots are the "rootContainer".
-      // To figure out which ancestor instance we should use, we traverse
-      // up the fiber tree from the target instance and attempt to find
-      // root boundaries that match that of our current "rootContainer".
-      // If we find that "rootContainer", we find the parent fiber
-      // sub-tree for that root and make that our ancestor instance.
-      let node = targetInst;
+    if (eventTargetEventListenerStore.has(targetContainer)) {
+      // For TargetEvent nodes (i.e. document, window)
+      ancestorInst = null;
+      eventSystemFlags |= IS_TARGET_EVENT_ONLY;
+    } else {
+      const targetContainerNode = ((targetContainer: any): Node);
 
-      while (true) {
-        if (node === null) {
-          return;
-        }
-        if (node.tag === HostRoot || node.tag === HostPortal) {
-          const container = node.stateNode.containerInfo;
-          if (isMatchingRootContainer(container, possibleTargetContainerNode)) {
-            break;
-          }
-          if (node.tag === HostPortal) {
-            // The target is a portal, but it's not the rootContainer we're looking for.
-            // Normally portals handle their own events all the way down to the root.
-            // So we should be able to stop now. However, we don't know if this portal
-            // was part of *our* root.
-            let grandNode = node.return;
-            while (grandNode !== null) {
-              if (grandNode.tag === HostRoot || grandNode.tag === HostPortal) {
-                const grandContainer = grandNode.stateNode.containerInfo;
-                if (
-                  isMatchingRootContainer(
-                    grandContainer,
-                    possibleTargetContainerNode,
-                  )
-                ) {
-                  // This is the rootContainer we're looking for and we found it as
-                  // a parent of the Portal. That means we can ignore it because the
-                  // Portal will bubble through to us.
-                  return;
-                }
-              }
-              grandNode = grandNode.return;
-            }
-          }
-          const parentSubtreeInst = getClosestInstanceFromNode(container);
-          if (parentSubtreeInst === null) {
+      // If we are using the legacy FB support flag, we
+      // defer the event to the null with a one
+      // time event listener so we can defer the event.
+      if (
+        enableLegacyFBSupport &&
+        // We do not want to defer if the event system has already been
+        // set to LEGACY_FB_SUPPORT. LEGACY_FB_SUPPORT only gets set when
+        // we call willDeferLaterForLegacyFBSupport, thus not bailing out
+        // will result in endless cycles like an infinite loop.
+        (eventSystemFlags & LEGACY_FB_SUPPORT) === 0 &&
+        // We also don't want to defer during event replaying.
+        (eventSystemFlags & IS_REPLAYED) === 0 &&
+        willDeferLaterForLegacyFBSupport(topLevelType, targetContainer)
+      ) {
+        return;
+      }
+      if (targetInst !== null) {
+        // The below logic attempts to work out if we need to change
+        // the target fiber to a different ancestor. We had similar logic
+        // in the legacy event system, except the big difference between
+        // systems is that the modern event system now has an event listener
+        // attached to each React Root and React Portal Root. Together,
+        // the DOM nodes representing these roots are the "rootContainer".
+        // To figure out which ancestor instance we should use, we traverse
+        // up the fiber tree from the target instance and attempt to find
+        // root boundaries that match that of our current "rootContainer".
+        // If we find that "rootContainer", we find the parent fiber
+        // sub-tree for that root and make that our ancestor instance.
+        let node = targetInst;
+
+        while (true) {
+          if (node === null) {
             return;
           }
-          node = ancestorInst = parentSubtreeInst;
-          continue;
+          if (node.tag === HostRoot || node.tag === HostPortal) {
+            const container = node.stateNode.containerInfo;
+            if (isMatchingRootContainer(container, targetContainerNode)) {
+              break;
+            }
+            if (node.tag === HostPortal) {
+              // The target is a portal, but it's not the rootContainer we're looking for.
+              // Normally portals handle their own events all the way down to the root.
+              // So we should be able to stop now. However, we don't know if this portal
+              // was part of *our* root.
+              let grandNode = node.return;
+              while (grandNode !== null) {
+                if (
+                  grandNode.tag === HostRoot ||
+                  grandNode.tag === HostPortal
+                ) {
+                  const grandContainer = grandNode.stateNode.containerInfo;
+                  if (
+                    isMatchingRootContainer(grandContainer, targetContainerNode)
+                  ) {
+                    // This is the rootContainer we're looking for and we found it as
+                    // a parent of the Portal. That means we can ignore it because the
+                    // Portal will bubble through to us.
+                    return;
+                  }
+                }
+                grandNode = grandNode.return;
+              }
+            }
+            const parentSubtreeInst = getClosestInstanceFromNode(container);
+            if (parentSubtreeInst === null) {
+              return;
+            }
+            node = ancestorInst = parentSubtreeInst;
+            continue;
+          }
+          node = node.return;
         }
-        node = node.return;
       }
     }
   }
@@ -398,21 +421,32 @@ function getNearestRootOrPortalContainer(instance: Element): Element {
   return instance;
 }
 
-export function attachElementListener(listener: ReactDOMListener): void {
+function addEventTypeToDispatchConfig(type: DOMTopLevelEventType): void {
+  let dispatchConfig = topLevelEventsToDispatchConfig.get(type);
+  // If we don't have a dispatchConfig, then we're dealing with
+  // an event type that React does not know about (i.e. a custom event).
+  // We need to register an event config for this or the SimpleEventPlugin
+  // will not appropriately provide a SyntheticEvent, so we use out empty
+  // dispatch config for custom events.
+  if (dispatchConfig === undefined) {
+    topLevelEventsToDispatchConfig.set(
+      type,
+      emptyDispatchConfigForCustomEvents,
+    );
+  }
+}
+
+export function attachListenerFromManagedDOMElement(
+  listener: ReactDOMListener,
+): void {
   const {event, target} = listener;
   const {passive, priority, type} = event;
+  const possibleManagedTarget = ((target: any): Element);
   let containerEventTarget = target;
-  // If we the target is a managed React element, then we need to
-  // find the nearest root/portal contained to attach the event listener
-  // to. If it's not managed, i.e. the window, then we just attach
-  // the listener to the target.
-  if (isDOMElement(target)) {
-    const possibleManagedTarget = ((target: any): Element);
-    if (getClosestInstanceFromNode(possibleManagedTarget)) {
-      containerEventTarget = getNearestRootOrPortalContainer(
-        possibleManagedTarget,
-      );
-    }
+  if (getClosestInstanceFromNode(possibleManagedTarget)) {
+    containerEventTarget = getNearestRootOrPortalContainer(
+      possibleManagedTarget,
+    );
   }
   const listenerMap = getListenerMapForElement(containerEventTarget);
   // Add the event listener to the target container (falling back to
@@ -434,26 +468,61 @@ export function attachElementListener(listener: ReactDOMListener): void {
   // Add our listener to the listeners Set.
   listeners.add(listener);
   // Finally, add the event to our known event types list.
-  let dispatchConfig = topLevelEventsToDispatchConfig.get(type);
-  // If we don't have a dispatchConfig, then we're dealing with
-  // an event type that React does not know about (i.e. a custom event).
-  // We need to register an event config for this or the SimpleEventPlugin
-  // will not appropriately provide a SyntheticEvent, so we use out empty
-  // dispatch config for custom events.
-  if (dispatchConfig === undefined) {
-    topLevelEventsToDispatchConfig.set(
-      type,
-      emptyDispatchConfigForCustomEvents,
-    );
-  }
+  addEventTypeToDispatchConfig(type);
 }
 
-export function detachElementListener(listener: ReactDOMListener): void {
+export function detachListenerFromManagedDOMElement(
+  listener: ReactDOMListener,
+): void {
   const {target} = listener;
   // Get the internal listeners Set from the target instance.
   const listeners = getListenersFromTarget(target);
   if (listeners !== null) {
     // Remove out listener from the listeners Set.
     listeners.delete(listener);
+  }
+}
+
+export function attachTargetEventListener(listener: ReactDOMListener): void {
+  const {event, target} = listener;
+  const {capture, passive, priority, type} = event;
+  const listenerMap = getListenerMapForElement(target);
+  // Add the event listener to the TargetEvent object.
+  listenToTopLevelEvent(type, target, listenerMap, passive, priority, capture);
+  let eventTypeMap = eventTargetEventListenerStore.get(target);
+  if (eventTypeMap === undefined) {
+    eventTypeMap = new Map();
+    eventTargetEventListenerStore.set(target, eventTypeMap);
+  }
+  // Get the listeners by the event type
+  let listeners = eventTypeMap.get(type);
+  if (listeners === undefined) {
+    listeners = {captured: new Set(), bubbled: new Set()};
+    eventTypeMap.set(type, listeners);
+  }
+  // Add our listener to the listeners Set.
+  if (capture) {
+    listeners.captured.add(listener);
+  } else {
+    listeners.bubbled.add(listener);
+  }
+  // Finally, add the event to our known event types list.
+  addEventTypeToDispatchConfig(type);
+}
+
+export function detachTargetEventListener(listener: ReactDOMListener): void {
+  const {event, target} = listener;
+  const {capture, type} = event;
+  const eventTypeMap = eventTargetEventListenerStore.get(target);
+  if (eventTypeMap !== undefined) {
+    const listeners = eventTypeMap.get(type);
+    if (listeners !== undefined) {
+      // Remove out listener from the listeners Set.
+      if (capture) {
+        listeners.captured.delete(listener);
+      } else {
+        listeners.bubbled.delete(listener);
+      }
+    }
   }
 }

@@ -12,11 +12,11 @@ import type {DOMTopLevelEventType} from 'legacy-events/TopLevelEventTypes';
 import {registrationNameDependencies} from 'legacy-events/EventPluginRegistry';
 
 const PossiblyWeakMap = typeof WeakMap === 'function' ? WeakMap : Map;
-// prettier-ignore
-const elementListenerMap:
-  // $FlowFixMe Work around Flow bug
-  | WeakMap
-  | Map<EventTarget, ElementListenerMap> = new PossiblyWeakMap();
+// $FlowFixMe: Flow cannot handle polymorphic WeakMaps
+const elementListenerMap: WeakMap<
+  EventTarget,
+  ElementListenerMap,
+> = new PossiblyWeakMap();
 
 export type ElementListenerMap = Map<
   DOMTopLevelEventType | string,

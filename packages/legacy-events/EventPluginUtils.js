@@ -64,7 +64,8 @@ if (__DEV__) {
  */
 export function executeDispatch(event, listener, inst) {
   const type = event.type || 'unknown-event';
-  event.currentTarget = getNodeFromInstance(inst);
+  event.currentTarget =
+    inst.tag !== undefined ? getNodeFromInstance(inst) : inst;
   invokeGuardedCallbackAndCatchFirstError(type, listener, undefined, event);
   event.currentTarget = null;
 }
