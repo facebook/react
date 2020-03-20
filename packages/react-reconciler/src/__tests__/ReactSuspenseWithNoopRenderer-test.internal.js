@@ -3,11 +3,12 @@ let ReactFeatureFlags;
 let Fragment;
 let ReactNoop;
 let Scheduler;
-let ReactCache;
 let Suspense;
+let textCache;
 
-let TextResource;
-let textResourceShouldFail;
+let readText;
+let resolveText;
+let rejectText;
 
 describe('ReactSuspenseWithNoopRenderer', () => {
   if (!__EXPERIMENTAL__) {
@@ -26,26 +27,74 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     Fragment = React.Fragment;
     ReactNoop = require('react-noop-renderer');
     Scheduler = require('scheduler');
-    ReactCache = require('react-cache');
     Suspense = React.Suspense;
 
-    TextResource = ReactCache.unstable_createResource(
-      ([text, ms = 0]) => {
-        return new Promise((resolve, reject) =>
-          setTimeout(() => {
-            if (textResourceShouldFail) {
-              Scheduler.unstable_yieldValue(`Promise rejected [${text}]`);
-              reject(new Error('Failed to load: ' + text));
-            } else {
-              Scheduler.unstable_yieldValue(`Promise resolved [${text}]`);
-              resolve(text);
-            }
-          }, ms),
-        );
-      },
-      ([text, ms]) => text,
-    );
-    textResourceShouldFail = false;
+    textCache = new Map();
+
+    readText = text => {
+      const record = textCache.get(text);
+      if (record !== undefined) {
+        switch (record.status) {
+          case 'pending':
+            throw record.promise;
+          case 'rejected':
+            throw Error('Failed to load: ' + text);
+          case 'resolved':
+            return text;
+        }
+      } else {
+        let ping;
+        const promise = new Promise(resolve => (ping = resolve));
+        const newRecord = {
+          status: 'pending',
+          ping: ping,
+          promise,
+        };
+        textCache.set(text, newRecord);
+        throw promise;
+      }
+    };
+
+    resolveText = text => {
+      const record = textCache.get(text);
+      if (record !== undefined) {
+        if (record.status === 'pending') {
+          Scheduler.unstable_yieldValue(`Promise resolved [${text}]`);
+          record.ping();
+          record.ping = null;
+          record.status = 'resolved';
+          clearTimeout(record.promise._timer);
+          record.promise = null;
+        }
+      } else {
+        const newRecord = {
+          ping: null,
+          status: 'resolved',
+          promise: null,
+        };
+        textCache.set(text, newRecord);
+      }
+    };
+
+    rejectText = text => {
+      const record = textCache.get(text);
+      if (record !== undefined) {
+        if (record.status === 'pending') {
+          Scheduler.unstable_yieldValue(`Promise rejected [${text}]`);
+          record.ping();
+          record.status = 'rejected';
+          clearTimeout(record.promise._timer);
+          record.promise = null;
+        }
+      } else {
+        const newRecord = {
+          ping: null,
+          status: 'rejected',
+          promise: null,
+        };
+        textCache.set(text, newRecord);
+      }
+    };
   });
 
   // function div(...children) {
@@ -83,12 +132,17 @@ describe('ReactSuspenseWithNoopRenderer', () => {
   function AsyncText(props) {
     const text = props.text;
     try {
-      TextResource.read([props.text, props.ms]);
+      readText(text);
       Scheduler.unstable_yieldValue(text);
       return <span prop={text} />;
     } catch (promise) {
       if (typeof promise.then === 'function') {
         Scheduler.unstable_yieldValue(`Suspend! [${text}]`);
+        if (typeof props.ms === 'number' && promise._timer === undefined) {
+          promise._timer = setTimeout(() => {
+            resolveText(text);
+          }, props.ms);
+        }
       } else {
         Scheduler.unstable_yieldValue(`Error! [${text}]`);
       }
@@ -279,7 +333,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     expect(ReactNoop.getChildren()).toEqual([]);
 
     // Wait for data to resolve
-    await advanceTimers(100);
+    await resolveText('B');
     // Renders successfully
     expect(Scheduler).toHaveYielded(['Promise resolved [B]']);
     expect(Scheduler).toFlushAndYield(['A', 'B', 'C', 'D']);
@@ -329,10 +383,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     expect(Scheduler).toFlushAndYield(['Suspend! [Result]', 'Loading...']);
     expect(ReactNoop.getChildren()).toEqual([]);
 
-    textResourceShouldFail = true;
-    ReactNoop.expire(1000);
-    await advanceTimers(1000);
-    textResourceShouldFail = false;
+    await rejectText('Result');
 
     expect(Scheduler).toHaveYielded(['Promise rejected [Result]']);
 
@@ -382,10 +433,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     expect(Scheduler).toFlushAndYield(['Suspend! [Result]', 'Loading...']);
     expect(ReactNoop.getChildren()).toEqual([span('Loading...')]);
 
-    textResourceShouldFail = true;
-    ReactNoop.expire(3000);
-    await advanceTimers(3000);
-    textResourceShouldFail = false;
+    await rejectText('Result');
 
     expect(Scheduler).toHaveYielded(['Promise rejected [Result]']);
     expect(Scheduler).toFlushAndYield([
@@ -416,7 +464,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     // Initial mount
     ReactNoop.render(<App highPri="A" lowPri="1" />);
     expect(Scheduler).toFlushAndYield(['A', 'Suspend! [1]', 'Loading...']);
-    await advanceTimers(0);
+    await resolveText('1');
     expect(Scheduler).toHaveYielded(['Promise resolved [1]']);
     expect(Scheduler).toFlushAndYield(['A', '1']);
     expect(ReactNoop.getChildren()).toEqual([span('A'), span('1')]);
@@ -439,7 +487,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     expect(ReactNoop.getChildren()).toEqual([span('B'), span('1')]);
 
     // Unblock the low-pri text and finish
-    await advanceTimers(0);
+    await resolveText('2');
     expect(Scheduler).toHaveYielded(['Promise resolved [2]']);
     expect(ReactNoop.getChildren()).toEqual([span('B'), span('1')]);
   });
@@ -472,7 +520,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     expect(Scheduler).toFlushAndYield(['Suspend! [A]', 'B', 'Loading...']);
     expect(ReactNoop.getChildren()).toEqual([]);
 
-    await advanceTimers(0);
+    await resolveText('A');
     expect(Scheduler).toHaveYielded(['Promise resolved [A]']);
     expect(Scheduler).toFlushAndYield(['A', 'B']);
     expect(ReactNoop.getChildren()).toEqual([span('A'), span('B')]);
@@ -711,7 +759,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     expect(ReactNoop.getChildren()).toEqual([span('Loading...'), span('Sync')]);
 
     // Once the promise resolves, we render the suspended view
-    await advanceTimers(0);
+    await resolveText('Async');
     expect(Scheduler).toHaveYielded(['Promise resolved [Async]']);
     expect(Scheduler).toFlushAndYield(['Async']);
     expect(ReactNoop.getChildren()).toEqual([span('Async'), span('Sync')]);
@@ -1212,7 +1260,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
           const text = props.text;
           Scheduler.unstable_yieldValue('constructor');
           try {
-            TextResource.read([props.text, props.ms]);
+            readText(text);
             this.state = {text};
           } catch (promise) {
             if (typeof promise.then === 'function') {
@@ -1245,7 +1293,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
       ]);
       expect(ReactNoop.getChildren()).toEqual([span('Loading...')]);
 
-      await advanceTimers(1000);
+      await resolveText('Hi');
 
       expect(Scheduler).toHaveYielded(['Promise resolved [Hi]']);
       expect(Scheduler).toFlushExpired([
@@ -1495,9 +1543,8 @@ describe('ReactSuspenseWithNoopRenderer', () => {
       }
       render() {
         const text = this.props.text;
-        const ms = this.props.ms;
         try {
-          TextResource.read([text, ms]);
+          readText(text);
           Scheduler.unstable_yieldValue(text);
           return <span prop={text} />;
         } catch (promise) {
@@ -1581,9 +1628,8 @@ describe('ReactSuspenseWithNoopRenderer', () => {
         };
       }, [props.text]);
       const text = props.text;
-      const ms = props.ms;
       try {
-        TextResource.read([text, ms]);
+        readText(text);
         Scheduler.unstable_yieldValue(text);
         return <span prop={text} />;
       } catch (promise) {
@@ -1640,8 +1686,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
       </>,
     );
 
-    Scheduler.unstable_advanceTime(500);
-    await advanceTimers(500);
+    await resolveText('B');
 
     expect(Scheduler).toHaveYielded(['Promise resolved [B]']);
 
@@ -1690,8 +1735,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
       'Effect [Loading...]',
     ]);
 
-    Scheduler.unstable_advanceTime(500);
-    await advanceTimers(500);
+    await resolveText('B2');
 
     expect(Scheduler).toHaveYielded(['Promise resolved [B2]']);
 
@@ -2068,8 +2112,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     await ReactNoop.act(async () => show(true));
 
     expect(Scheduler).toHaveYielded(['Suspend! [A]']);
-    Scheduler.unstable_advanceTime(100);
-    await advanceTimers(100);
+    await resolveText('A');
 
     expect(Scheduler).toHaveYielded(['Promise resolved [A]']);
   });
@@ -2094,8 +2137,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     await ReactNoop.act(async () => _setShow(true));
 
     expect(Scheduler).toHaveYielded(['Suspend! [A]']);
-    Scheduler.unstable_advanceTime(100);
-    await advanceTimers(100);
+    await resolveText('A');
 
     expect(Scheduler).toHaveYielded(['Promise resolved [A]']);
   });
