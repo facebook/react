@@ -371,7 +371,7 @@ describe('ReactFlightDOM', () => {
       '<div>:name::avatar:</div>' +
         '<p>(loading sidebar)</p>' +
         '<p>(loading posts)</p>' +
-        '<p>ERR_RES_MDL_TO_JSON</p>',
+        '<p>An error occurred(ERR_RES_MDL_TO_JSON)</p>',
     );
 
     // We can now show the sidebar.
@@ -389,7 +389,7 @@ describe('ReactFlightDOM', () => {
       '<div>:name::avatar:</div>' +
         '<div>:photos::friends:</div>' +
         '<p>(loading posts)</p>' +
-        '<p>ERR_RES_MDL_TO_JSON</p>',
+        '<p>An error occurred(ERR_RES_MDL_TO_JSON)</p>',
     );
 
     // Show everything.
@@ -407,7 +407,7 @@ describe('ReactFlightDOM', () => {
       '<div>:name::avatar:</div>' +
         '<div>:photos::friends:</div>' +
         '<div>:posts:</div>' +
-        '<p>ERR_RES_MDL_TO_JSON</p>',
+        '<p>An error occurred(ERR_RES_MDL_TO_JSON)</p>',
     );
   });
 });
