@@ -13,19 +13,27 @@ import type {EventPriority} from 'shared/ReactTypes';
 import type {TopLevelType} from './TopLevelEventTypes';
 
 export type DispatchConfig = {|
-  dependencies: Array<TopLevelType>,
-  phasedRegistrationNames?: {|
-    bubbled: string,
-    captured: string,
+  dependencies?: Array<TopLevelType>,
+  phasedRegistrationNames: {|
+    bubbled: null | string,
+    captured: null | string,
   |},
   registrationName?: string,
   eventPriority: EventPriority,
 |};
 
+export type CustomDispatchConfig = {|
+  phasedRegistrationNames: {|
+    bubbled: null,
+    captured: null,
+  |},
+  customEvent: true,
+|};
+
 export type ReactSyntheticEvent = {|
-  dispatchConfig: DispatchConfig,
+  dispatchConfig: DispatchConfig | CustomDispatchConfig,
   getPooled: (
-    dispatchConfig: DispatchConfig,
+    dispatchConfig: DispatchConfig | CustomDispatchConfig,
     targetInst: Fiber,
     nativeTarget: Event,
     nativeEventTarget: EventTarget,

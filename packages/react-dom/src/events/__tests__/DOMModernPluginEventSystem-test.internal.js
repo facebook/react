@@ -15,10 +15,14 @@ let ReactDOM;
 let ReactDOMServer;
 let Scheduler;
 
-function dispatchClickEvent(element) {
+function dispatchEvent(element, type) {
   const event = document.createEvent('Event');
-  event.initEvent('click', true, true);
+  event.initEvent(type, true, true);
   element.dispatchEvent(event);
+}
+
+function dispatchClickEvent(element) {
+  dispatchEvent(element, 'click');
 }
 
 describe('DOMModernPluginEventSystem', () => {
@@ -1781,6 +1785,80 @@ describe('DOMModernPluginEventSystem', () => {
             button = button2Ref.current;
             dispatchClickEvent(button);
             expect(clickEvent).toHaveBeenCalledTimes(1);
+          });
+
+          it('handles propagation of custom user events', () => {
+            const buttonRef = React.createRef();
+            const divRef = React.createRef();
+            const log = [];
+            const onCustomEvent = jest.fn(e =>
+              log.push(['bubble', e.currentTarget]),
+            );
+            const onCustomEventCapture = jest.fn(e =>
+              log.push(['capture', e.currentTarget]),
+            );
+
+            function Test() {
+              let customEventHandle;
+
+              // Test that we get a warning when we don't provide an explicit priortiy
+              expect(() => {
+                customEventHandle = ReactDOM.unstable_useEvent('custom-event');
+              }).toWarnDev(
+                'Warning: The event "type" provided to useEvent() does not have a known priority type. ' +
+                  'It is recommended to provide a "priority" option to specify a priority.',
+              );
+
+              customEventHandle = ReactDOM.unstable_useEvent('custom-event', {
+                priority: 0, // Discrete
+              });
+
+              const customCaptureHandle = ReactDOM.unstable_useEvent(
+                'custom-event',
+                {
+                  capture: true,
+                  priority: 0, // Discrete
+                },
+              );
+
+              React.useEffect(() => {
+                customEventHandle.setListener(buttonRef.current, onCustomEvent);
+                customCaptureHandle.setListener(
+                  buttonRef.current,
+                  onCustomEventCapture,
+                );
+                customEventHandle.setListener(divRef.current, onCustomEvent);
+                customCaptureHandle.setListener(
+                  divRef.current,
+                  onCustomEventCapture,
+                );
+              });
+
+              return (
+                <button ref={buttonRef}>
+                  <div ref={divRef}>Click me!</div>
+                </button>
+              );
+            }
+
+            ReactDOM.render(<Test />, container);
+            Scheduler.unstable_flushAll();
+
+            let buttonElement = buttonRef.current;
+            dispatchEvent(buttonElement, 'custom-event');
+            expect(onCustomEvent).toHaveBeenCalledTimes(1);
+            expect(onCustomEventCapture).toHaveBeenCalledTimes(1);
+            expect(log[0]).toEqual(['capture', buttonElement]);
+            expect(log[1]).toEqual(['bubble', buttonElement]);
+
+            let divElement = divRef.current;
+            dispatchEvent(divElement, 'custom-event');
+            expect(onCustomEvent).toHaveBeenCalledTimes(3);
+            expect(onCustomEventCapture).toHaveBeenCalledTimes(3);
+            expect(log[2]).toEqual(['capture', buttonElement]);
+            expect(log[3]).toEqual(['capture', divElement]);
+            expect(log[4]).toEqual(['bubble', divElement]);
+            expect(log[5]).toEqual(['bubble', buttonElement]);
           });
         });
       },
