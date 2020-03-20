@@ -30,10 +30,14 @@ import type {
 } from './ReactFiberHostConfig';
 
 import ReactSharedInternals from 'shared/ReactSharedInternals';
-import {enableUseEventAPI} from 'shared/ReactFeatureFlags';
+import {enableDebugTracing, enableUseEventAPI} from 'shared/ReactFeatureFlags';
 
 import {markRootExpiredAtTime} from './ReactFiberRoot.old';
-import {NoWork, Sync} from './ReactFiberExpirationTime.old';
+import {
+  inferPriorityFromExpirationTime,
+  NoWork,
+  Sync,
+} from './ReactFiberExpirationTime.old';
 import {NoMode, BlockingMode} from './ReactTypeOfMode';
 import {readContext} from './ReactFiberNewContext.old';
 import {createDeprecatedResponderListener} from './ReactFiberDeprecatedEvents.old';
@@ -57,6 +61,7 @@ import {
   warnIfNotScopedWithMatchingAct,
   markRenderEventTimeAndConfig,
   markUnprocessedUpdateTime,
+  priorityLevelToLabel,
 } from './ReactFiberWorkLoop.old';
 import {
   registerEvent,
@@ -92,6 +97,7 @@ import {
 } from './ReactMutableSource.old';
 import {getRootHostContainer} from './ReactFiberHostContext.old';
 import {getIsRendering} from './ReactCurrentFiber';
+import {log} from './DebugTrace';
 
 const {ReactCurrentDispatcher, ReactCurrentBatchConfig} = ReactSharedInternals;
 
@@ -1732,6 +1738,18 @@ function dispatchAction<S, A>(
       }
     }
     scheduleUpdateOnFiber(fiber, expirationTime);
+
+    if (__DEV__) {
+      if (enableDebugTracing) {
+        const priorityLevel = inferPriorityFromExpirationTime(
+          currentTime,
+          expirationTime,
+        );
+        const label = priorityLevelToLabel(priorityLevel);
+        const name = getComponentName(fiber.type) || 'Unknown';
+        log(`${name} updated state (with priority: ${label})`);
+      }
+    }
   }
 }
 
