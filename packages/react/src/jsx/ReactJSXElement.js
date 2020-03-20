@@ -53,13 +53,13 @@ function hasValidKey(config) {
   return config.key !== undefined;
 }
 
-function warnIfStringRefCannotBeAutoConverted(config) {
+function warnIfStringRefCannotBeAutoConverted(config, self) {
   if (__DEV__) {
     if (
       typeof config.ref === 'string' &&
       ReactCurrentOwner.current &&
-      config.__self &&
-      ReactCurrentOwner.current.stateNode !== config.__self
+      self &&
+      ReactCurrentOwner.current.stateNode !== self
     ) {
       const componentName = getComponentName(ReactCurrentOwner.current.type);
 
@@ -296,7 +296,7 @@ export function jsxDEV(type, config, maybeKey, source, self) {
 
     if (hasValidRef(config)) {
       ref = config.ref;
-      warnIfStringRefCannotBeAutoConverted(config);
+      warnIfStringRefCannotBeAutoConverted(config, self);
     }
 
     // Remaining properties are added to a new props object
