@@ -91,7 +91,7 @@ import {
   SimpleMemoComponent,
   Block,
 } from 'shared/ReactWorkTags';
-import {LegacyRoot} from 'shared/ReactRootTags';
+import {LegacyRoot} from 'react-reconciler/src/ReactRootTags';
 import {
   NoEffect,
   PerformedWork,
@@ -108,7 +108,7 @@ import {
   HostEffectMask,
   Hydrating,
   HydratingAndUpdate,
-} from 'shared/ReactSideEffectTags';
+} from './ReactSideEffectTags';
 import {
   NoWork,
   Sync,

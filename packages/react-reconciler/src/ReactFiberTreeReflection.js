@@ -25,7 +25,7 @@ import {
   FundamentalComponent,
   SuspenseComponent,
 } from 'shared/ReactWorkTags';
-import {NoEffect, Placement, Hydrating} from 'shared/ReactSideEffectTags';
+import {NoEffect, Placement, Hydrating} from './ReactSideEffectTags';
 import {enableFundamentalAPI} from 'shared/ReactFeatureFlags';
 
 const ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;

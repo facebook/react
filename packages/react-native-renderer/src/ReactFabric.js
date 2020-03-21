@@ -26,7 +26,7 @@ import {
   getPublicRootInstance,
 } from 'react-reconciler/src/ReactFiberReconciler';
 
-import {createPortal as createPortalImpl} from 'shared/ReactPortal';
+import {createPortal as createPortalImpl} from 'react-reconciler/src/ReactPortal';
 import {setBatchingImplementation} from 'legacy-events/ReactGenericBatching';
 import ReactVersion from 'shared/ReactVersion';
 
@@ -36,7 +36,7 @@ import {UIManager} from 'react-native/Libraries/ReactPrivate/ReactNativePrivateI
 import {getClosestInstanceFromNode} from './ReactFabricComponentTree';
 import {getInspectorDataForViewTag} from './ReactNativeFiberInspector';
 
-import {LegacyRoot} from 'shared/ReactRootTags';
+import {LegacyRoot} from 'react-reconciler/src/ReactRootTags';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import getComponentName from 'shared/getComponentName';
 

@@ -55,7 +55,7 @@ import {
   Update,
   Ref,
   Deletion,
-} from 'shared/ReactSideEffectTags';
+} from './ReactSideEffectTags';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import {
   debugRenderPhaseSideEffectsForStrictMode,

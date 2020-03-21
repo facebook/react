@@ -14,7 +14,7 @@ import type {Fiber} from './ReactFiber';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
 
 import getComponentName from 'shared/getComponentName';
-import {Placement, Deletion} from 'shared/ReactSideEffectTags';
+import {Placement, Deletion} from './ReactSideEffectTags';
 import {
   getIteratorFn,
   REACT_ELEMENT_TYPE,

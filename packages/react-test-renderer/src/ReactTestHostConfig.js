@@ -49,8 +49,8 @@ export type ReactListenerEvent = Object;
 export type ReactListenerMap = Object;
 export type ReactListener = Object;
 
-export * from 'shared/HostConfigWithNoPersistence';
-export * from 'shared/HostConfigWithNoHydration';
+export * from 'react-reconciler/src/ReactFiberHostConfigWithNoPersistence';
+export * from 'react-reconciler/src/ReactFiberHostConfigWithNoHydration';
 
 const EVENT_COMPONENT_CONTEXT = {};
 const NO_CONTEXT = {};

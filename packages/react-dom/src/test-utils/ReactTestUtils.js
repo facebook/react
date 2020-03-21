@@ -23,7 +23,7 @@ import {PLUGIN_EVENT_SYSTEM} from 'legacy-events/EventSystemFlags';
 import act from './ReactTestUtilsAct';
 import forEachAccumulated from 'legacy-events/forEachAccumulated';
 import accumulateInto from 'legacy-events/accumulateInto';
-import {traverseTwoPhase} from 'shared/ReactTreeTraversal';
+import {traverseTwoPhase} from 'react-reconciler/src/ReactTreeTraversal';
 
 const {findDOMNode} = ReactDOM;
 // Keep in sync with ReactDOMUnstableNativeDependencies.js

@@ -171,7 +171,7 @@ function shouldAutoFocusHostComponent(type: string, props: Props): boolean {
   return false;
 }
 
-export * from 'shared/HostConfigWithNoPersistence';
+export * from 'react-reconciler/src/ReactFiberHostConfigWithNoPersistence';
 
 export function getRootHostContext(
   rootContainerInstance: Container,

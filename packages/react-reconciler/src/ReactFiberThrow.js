@@ -28,7 +28,7 @@ import {
   NoEffect,
   ShouldCapture,
   LifecycleEffectMask,
-} from 'shared/ReactSideEffectTags';
+} from './ReactSideEffectTags';
 import {NoMode, BlockingMode} from './ReactTypeOfMode';
 import {shouldCaptureSuspense} from './ReactFiberSuspenseComponent';
 

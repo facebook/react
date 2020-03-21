@@ -69,7 +69,7 @@ import {
   Snapshot,
   Update,
   Passive,
-} from 'shared/ReactSideEffectTags';
+} from './ReactSideEffectTags';
 import getComponentName from 'shared/getComponentName';
 import invariant from 'shared/invariant';
 

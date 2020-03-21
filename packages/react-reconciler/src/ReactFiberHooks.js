@@ -36,7 +36,7 @@ import {createDeprecatedResponderListener} from './ReactFiberDeprecatedEvents';
 import {
   Update as UpdateEffect,
   Passive as PassiveEffect,
-} from 'shared/ReactSideEffectTags';
+} from './ReactSideEffectTags';
 import {
   NoEffect as NoHookEffect,
   HasEffect as HookHasEffect,

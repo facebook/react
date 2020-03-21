@@ -9,7 +9,7 @@
 
 import type {Fiber} from './ReactFiber';
 import type {FiberRoot} from './ReactFiberRoot';
-import type {RootTag} from 'shared/ReactRootTags';
+import type {RootTag} from 'react-reconciler/src/ReactRootTags';
 import type {
   Instance,
   TextInstance,

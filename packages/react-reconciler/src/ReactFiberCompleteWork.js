@@ -61,7 +61,7 @@ import {
   NoEffect,
   DidCapture,
   Deletion,
-} from 'shared/ReactSideEffectTags';
+} from './ReactSideEffectTags';
 import invariant from 'shared/invariant';
 
 import {

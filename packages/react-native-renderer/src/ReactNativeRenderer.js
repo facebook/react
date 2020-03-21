@@ -26,7 +26,7 @@ import {
 } from 'react-reconciler/src/ReactFiberReconciler';
 // TODO: direct imports like some-package/src/* are bad. Fix me.
 import {getStackByFiberInDevAndProd} from 'react-reconciler/src/ReactCurrentFiber';
-import {createPortal as createPortalImpl} from 'shared/ReactPortal';
+import {createPortal as createPortalImpl} from 'react-reconciler/src/ReactPortal';
 import {
   setBatchingImplementation,
   batchedUpdates,
@@ -38,7 +38,7 @@ import {UIManager} from 'react-native/Libraries/ReactPrivate/ReactNativePrivateI
 import {getClosestInstanceFromNode} from './ReactNativeComponentTree';
 import {getInspectorDataForViewTag} from './ReactNativeFiberInspector';
 
-import {LegacyRoot} from 'shared/ReactRootTags';
+import {LegacyRoot} from 'react-reconciler/src/ReactRootTags';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import getComponentName from 'shared/getComponentName';
 

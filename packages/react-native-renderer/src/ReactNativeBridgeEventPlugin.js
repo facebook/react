@@ -18,7 +18,7 @@ import invariant from 'shared/invariant';
 import {ReactNativeViewConfigRegistry} from 'react-native/Libraries/ReactPrivate/ReactNativePrivateInterface';
 import accumulateInto from 'legacy-events/accumulateInto';
 import getListener from 'legacy-events/getListener';
-import {traverseTwoPhase} from 'shared/ReactTreeTraversal';
+import {traverseTwoPhase} from 'react-reconciler/src/ReactTreeTraversal';
 import forEachAccumulated from 'legacy-events/forEachAccumulated';
 
 const {
