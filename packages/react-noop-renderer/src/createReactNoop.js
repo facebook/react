@@ -20,7 +20,6 @@ import type {ReactNodeList} from 'shared/ReactTypes';
 import type {RootTag} from 'react-reconciler/src/ReactRootTags';
 
 import * as Scheduler from 'scheduler/unstable_mock';
-import {createPortal} from 'react-reconciler/src/ReactPortal';
 import {REACT_FRAGMENT_TYPE, REACT_ELEMENT_TYPE} from 'shared/ReactSymbols';
 import {
   ConcurrentRoot,
@@ -830,7 +829,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       container: Container,
       key: ?string = null,
     ) {
-      return createPortal(children, container, null, key);
+      return NoopRenderer.createPortal(children, container, null, key);
     },
 
     // Shortcut for testing a single root

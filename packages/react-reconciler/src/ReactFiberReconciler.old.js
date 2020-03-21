@@ -92,6 +92,8 @@ import enqueueTask from 'shared/enqueueTask';
 import * as Scheduler from 'scheduler';
 // end isTestEnvironment imports
 
+export {createPortal} from './ReactPortal';
+
 type OpaqueRoot = FiberRoot;
 
 // 0 is PROD, 1 is DEV.
