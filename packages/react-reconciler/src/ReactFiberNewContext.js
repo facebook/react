@@ -26,7 +26,7 @@ import {
   ContextProvider,
   ClassComponent,
   DehydratedFragment,
-} from 'shared/ReactWorkTags';
+} from './ReactWorkTags';
 
 import invariant from 'shared/invariant';
 import is from 'shared/objectIs';

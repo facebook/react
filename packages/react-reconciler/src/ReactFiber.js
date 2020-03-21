@@ -18,7 +18,7 @@ import type {
   ReactScope,
 } from 'shared/ReactTypes';
 import type {RootTag} from 'react-reconciler/src/ReactRootTags';
-import type {WorkTag} from 'shared/ReactWorkTags';
+import type {WorkTag} from './ReactWorkTags';
 import type {TypeOfMode} from './ReactTypeOfMode';
 import type {SideEffectTag} from './ReactSideEffectTags';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
@@ -61,7 +61,7 @@ import {
   FundamentalComponent,
   ScopeComponent,
   Block,
-} from 'shared/ReactWorkTags';
+} from './ReactWorkTags';
 import getComponentName from 'shared/getComponentName';
 
 import {isDevToolsPresent} from './ReactFiberDevToolsHook';

@@ -21,7 +21,7 @@ import {
   HostRoot,
   SuspenseComponent,
   IncompleteClassComponent,
-} from 'shared/ReactWorkTags';
+} from './ReactWorkTags';
 import {
   DidCapture,
   Incomplete,

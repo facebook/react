@@ -24,7 +24,7 @@ import {
   HostText,
   FundamentalComponent,
   SuspenseComponent,
-} from 'shared/ReactWorkTags';
+} from './ReactWorkTags';
 import {NoEffect, Placement, Hydrating} from './ReactSideEffectTags';
 import {enableFundamentalAPI} from 'shared/ReactFeatureFlags';
 

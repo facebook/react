@@ -23,7 +23,7 @@ import {
   HostText,
   HostRoot,
   SuspenseComponent,
-} from 'shared/ReactWorkTags';
+} from './ReactWorkTags';
 import {Deletion, Placement, Hydrating} from './ReactSideEffectTags';
 import invariant from 'shared/invariant';
 

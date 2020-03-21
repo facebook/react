@@ -20,7 +20,7 @@ import {
   ContextProvider,
   SuspenseComponent,
   SuspenseListComponent,
-} from 'shared/ReactWorkTags';
+} from './ReactWorkTags';
 import {DidCapture, NoEffect, ShouldCapture} from './ReactSideEffectTags';
 import {enableSuspenseServerRenderer} from 'shared/ReactFeatureFlags';
 

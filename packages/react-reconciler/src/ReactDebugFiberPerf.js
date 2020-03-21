@@ -21,7 +21,7 @@ import {
   ContextConsumer,
   Mode,
   SuspenseComponent,
-} from 'shared/ReactWorkTags';
+} from './ReactWorkTags';
 
 type MeasurementPhase =
   | 'componentWillMount'

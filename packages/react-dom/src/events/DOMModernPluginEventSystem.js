@@ -33,7 +33,7 @@ import {
   IS_TARGET_EVENT_ONLY,
 } from 'legacy-events/EventSystemFlags';
 
-import {HostRoot, HostPortal} from 'shared/ReactWorkTags';
+import {HostRoot, HostPortal} from 'react-reconciler/src/ReactWorkTags';
 
 import {
   addTrappedEventListener,

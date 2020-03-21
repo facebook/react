@@ -16,7 +16,7 @@ import type {
   Container,
   PublicInstance,
 } from './ReactFiberHostConfig';
-import {FundamentalComponent} from 'shared/ReactWorkTags';
+import {FundamentalComponent} from './ReactWorkTags';
 import type {ReactNodeList} from 'shared/ReactTypes';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
 import type {
@@ -34,7 +34,7 @@ import {
   ClassComponent,
   HostRoot,
   SuspenseComponent,
-} from 'shared/ReactWorkTags';
+} from './ReactWorkTags';
 import getComponentName from 'shared/getComponentName';
 import invariant from 'shared/invariant';
 import ReactSharedInternals from 'shared/ReactSharedInternals';

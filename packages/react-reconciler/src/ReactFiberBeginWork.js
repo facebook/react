@@ -44,7 +44,7 @@ import {
   FundamentalComponent,
   ScopeComponent,
   Block,
-} from 'shared/ReactWorkTags';
+} from './ReactWorkTags';
 import {
   NoEffect,
   PerformedWork,

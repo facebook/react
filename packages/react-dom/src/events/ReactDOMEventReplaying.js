@@ -40,7 +40,7 @@ import {
   getClosestInstanceFromNode,
 } from '../client/ReactDOMComponentTree';
 import {unsafeCastDOMTopLevelTypeToString} from 'legacy-events/TopLevelEventTypes';
-import {HostRoot, SuspenseComponent} from 'shared/ReactWorkTags';
+import {HostRoot, SuspenseComponent} from 'react-reconciler/src/ReactWorkTags';
 
 let attemptSynchronousHydration: (fiber: Object) => void;
 

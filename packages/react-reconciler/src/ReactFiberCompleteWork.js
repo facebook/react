@@ -53,7 +53,7 @@ import {
   FundamentalComponent,
   ScopeComponent,
   Block,
-} from 'shared/ReactWorkTags';
+} from './ReactWorkTags';
 import {NoMode, BlockingMode} from './ReactTypeOfMode';
 import {
   Ref,

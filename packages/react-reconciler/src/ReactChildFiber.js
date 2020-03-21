@@ -29,7 +29,7 @@ import {
   HostPortal,
   Fragment,
   Block,
-} from 'shared/ReactWorkTags';
+} from './ReactWorkTags';
 import invariant from 'shared/invariant';
 import {warnAboutStringRefs, enableBlocksAPI} from 'shared/ReactFeatureFlags';
 

@@ -11,7 +11,7 @@ import type {DOMTopLevelEventType} from 'legacy-events/TopLevelEventTypes';
 import type {EventSystemFlags} from 'legacy-events/EventSystemFlags';
 import type {ReactSyntheticEvent} from 'legacy-events/ReactSyntheticEventType';
 
-import {HostComponent} from 'shared/ReactWorkTags';
+import {HostComponent} from 'react-reconciler/src/ReactWorkTags';
 import {enableUseEventAPI} from 'shared/ReactFeatureFlags';
 
 import getListener from 'legacy-events/getListener';

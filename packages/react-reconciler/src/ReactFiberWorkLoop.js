@@ -90,7 +90,7 @@ import {
   MemoComponent,
   SimpleMemoComponent,
   Block,
-} from 'shared/ReactWorkTags';
+} from './ReactWorkTags';
 import {LegacyRoot} from 'react-reconciler/src/ReactRootTags';
 import {
   NoEffect,

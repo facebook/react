@@ -16,7 +16,11 @@ import type {PluginModule} from 'legacy-events/PluginModuleType';
 import type {ReactSyntheticEvent} from 'legacy-events/ReactSyntheticEventType';
 import type {TopLevelType} from 'legacy-events/TopLevelEventTypes';
 
-import {HostRoot, HostComponent, HostText} from 'shared/ReactWorkTags';
+import {
+  HostRoot,
+  HostComponent,
+  HostText,
+} from 'react-reconciler/src/ReactWorkTags';
 import {IS_FIRST_ANCESTOR} from 'legacy-events/EventSystemFlags';
 import {batchedEventUpdates} from 'legacy-events/ReactGenericBatching';
 import {runEventsInBatch} from 'legacy-events/EventBatching';
