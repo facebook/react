@@ -7,7 +7,7 @@
 
 import {REACT_FORWARD_REF_TYPE, REACT_MEMO_TYPE} from 'shared/ReactSymbols';
 
-export default function forwardRef<Props, ElementType: React$ElementType>(
+export function forwardRef<Props, ElementType: React$ElementType>(
   render: (props: Props, ref: React$Ref<ElementType>) => React$Node,
 ) {
   if (__DEV__) {

@@ -9,7 +9,7 @@
 
 import type {ReactElement} from 'shared/ReactElementType';
 import type {ReactPortal} from 'shared/ReactTypes';
-import type {BlockComponent} from 'react/src/block';
+import type {BlockComponent} from 'react/src/ReactBlock';
 import type {Fiber} from './ReactFiber';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
 

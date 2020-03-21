@@ -19,7 +19,7 @@ import type {
   ResolvedBlockComponent,
   RejectedBlockComponent,
   BlockComponent,
-} from 'react/src/block';
+} from 'react/src/ReactBlock';
 
 import {
   Uninitialized,

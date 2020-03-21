@@ -11,9 +11,9 @@ import type {
   ReactFundamentalComponent,
 } from 'shared/ReactTypes';
 import {REACT_FUNDAMENTAL_TYPE} from 'shared/ReactSymbols';
-import {hasBadMapPolyfill} from './hasBadMapPolyfill';
+import {hasBadMapPolyfill} from './BadMapPolyfill';
 
-export default function createFundamentalComponent<C, H>(
+export function createFundamental<C, H>(
   impl: ReactFundamentalImpl<C, H>,
 ): ReactFundamentalComponent<C, H> {
   // We use responder as a Map key later on. When we have a bad

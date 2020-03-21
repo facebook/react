@@ -9,7 +9,7 @@
 
 import type {ReactPriorityLevel} from './SchedulerWithReactIntegration';
 
-import MAX_SIGNED_31_BIT_INT from './maxSigned31BitInt';
+import {MAX_SIGNED_31_BIT_INT} from './MaxInts';
 
 import {
   ImmediatePriority,

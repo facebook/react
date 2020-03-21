@@ -21,7 +21,7 @@ export type ContextDependency<T> = {
 
 import {isPrimaryRenderer} from './ReactFiberHostConfig';
 import {createCursor, push, pop} from './ReactFiberStack';
-import MAX_SIGNED_31_BIT_INT from './maxSigned31BitInt';
+import {MAX_SIGNED_31_BIT_INT} from './MaxInts';
 import {
   ContextProvider,
   ClassComponent,

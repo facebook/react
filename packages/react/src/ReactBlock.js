@@ -68,7 +68,7 @@ opaque type Block<Props>: React$AbstractComponent<
   null,
 > = React$AbstractComponent<Props, null>;
 
-export default function block<Args: Iterable<any>, Props, Data>(
+export function block<Args: Iterable<any>, Props, Data>(
   query: BlockQueryFunction<Args, Data>,
   render: BlockRenderFunction<Props, Data>,
 ): (...args: Args) => Block<Props> {
