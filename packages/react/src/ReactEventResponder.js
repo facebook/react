@@ -8,9 +8,9 @@
 
 import type {ReactEventResponder} from 'shared/ReactTypes';
 import {REACT_RESPONDER_TYPE} from 'shared/ReactSymbols';
-import {hasBadMapPolyfill} from './hasBadMapPolyfill';
+import {hasBadMapPolyfill} from './BadMapPolyfill';
 
-export default function createEventResponder<E, C>(
+export function createEventResponder<E, C>(
   displayName: string,
   responderConfig: Object,
 ): ReactEventResponder<E, C> {

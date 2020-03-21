@@ -20,8 +20,8 @@ import {
   ContextProvider,
   SuspenseComponent,
   SuspenseListComponent,
-} from 'shared/ReactWorkTags';
-import {DidCapture, NoEffect, ShouldCapture} from 'shared/ReactSideEffectTags';
+} from './ReactWorkTags';
+import {DidCapture, NoEffect, ShouldCapture} from './ReactSideEffectTags';
 import {enableSuspenseServerRenderer} from 'shared/ReactFeatureFlags';
 
 import {popHostContainer, popHostContext} from './ReactFiberHostContext';

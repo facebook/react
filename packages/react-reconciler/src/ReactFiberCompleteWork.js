@@ -53,7 +53,7 @@ import {
   FundamentalComponent,
   ScopeComponent,
   Block,
-} from 'shared/ReactWorkTags';
+} from './ReactWorkTags';
 import {NoMode, BlockingMode} from './ReactTypeOfMode';
 import {
   Ref,
@@ -61,7 +61,7 @@ import {
   NoEffect,
   DidCapture,
   Deletion,
-} from 'shared/ReactSideEffectTags';
+} from './ReactSideEffectTags';
 import invariant from 'shared/invariant';
 
 import {

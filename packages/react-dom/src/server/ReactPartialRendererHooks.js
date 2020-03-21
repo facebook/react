@@ -20,7 +20,7 @@ import type {
   ReactEventResponderListener,
 } from 'shared/ReactTypes';
 import type {SuspenseConfig} from 'react-reconciler/src/ReactFiberSuspenseConfig';
-import type {ReactDOMListenerMap} from 'shared/ReactDOMTypes';
+import type {ReactDOMListenerMap} from '../shared/ReactDOMTypes';
 
 import {validateContextBounds} from './ReactPartialRendererContext';
 

@@ -12,7 +12,7 @@ import type {ExpirationTime} from './ReactFiberExpirationTime';
 import type {UpdateQueue} from './ReactUpdateQueue';
 
 import * as React from 'react';
-import {Update, Snapshot} from 'shared/ReactSideEffectTags';
+import {Update, Snapshot} from './ReactSideEffectTags';
 import {
   debugRenderPhaseSideEffectsForStrictMode,
   disableLegacyContext,

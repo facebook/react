@@ -20,7 +20,7 @@ import {
   getClosestInstanceFromNode,
   getNodeFromInstance,
 } from '../client/ReactDOMComponentTree';
-import {HostComponent, HostText} from 'shared/ReactWorkTags';
+import {HostComponent, HostText} from 'react-reconciler/src/ReactWorkTags';
 import {getNearestMountedFiber} from 'react-reconciler/src/ReactFiberTreeReflection';
 import {enableModernEventSystem} from 'shared/ReactFeatureFlags';
 

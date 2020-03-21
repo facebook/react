@@ -17,10 +17,10 @@ import type {
   ReactFundamentalComponent,
   ReactScope,
 } from 'shared/ReactTypes';
-import type {RootTag} from 'shared/ReactRootTags';
-import type {WorkTag} from 'shared/ReactWorkTags';
+import type {RootTag} from 'react-reconciler/src/ReactRootTags';
+import type {WorkTag} from './ReactWorkTags';
 import type {TypeOfMode} from './ReactTypeOfMode';
-import type {SideEffectTag} from 'shared/ReactSideEffectTags';
+import type {SideEffectTag} from './ReactSideEffectTags';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
 import type {UpdateQueue} from './ReactUpdateQueue';
 import type {ContextDependency} from './ReactFiberNewContext';
@@ -36,8 +36,8 @@ import {
   enableBlocksAPI,
   throwEarlyForMysteriousError,
 } from 'shared/ReactFeatureFlags';
-import {NoEffect, Placement} from 'shared/ReactSideEffectTags';
-import {ConcurrentRoot, BlockingRoot} from 'shared/ReactRootTags';
+import {NoEffect, Placement} from './ReactSideEffectTags';
+import {ConcurrentRoot, BlockingRoot} from 'react-reconciler/src/ReactRootTags';
 import {
   IndeterminateComponent,
   ClassComponent,
@@ -61,7 +61,7 @@ import {
   FundamentalComponent,
   ScopeComponent,
   Block,
-} from 'shared/ReactWorkTags';
+} from './ReactWorkTags';
 import getComponentName from 'shared/getComponentName';
 
 import {isDevToolsPresent} from './ReactFiberDevToolsHook';

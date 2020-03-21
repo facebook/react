@@ -39,6 +39,7 @@ import {
   shouldSuspend as shouldSuspend_old,
   injectIntoDevTools as injectIntoDevTools_old,
   act as act_old,
+  createPortal as createPortal_old,
 } from './ReactFiberReconciler.old';
 
 // TODO: Update these to point to the fork.
@@ -67,6 +68,7 @@ import {
   shouldSuspend as shouldSuspend_new,
   injectIntoDevTools as injectIntoDevTools_new,
   act as act_new,
+  createPortal as createPortal_new,
 } from './ReactFiberReconciler.old';
 
 export const createContainer = enableNewReconciler
@@ -137,3 +139,6 @@ export const injectIntoDevTools = enableNewReconciler
   ? injectIntoDevTools_new
   : injectIntoDevTools_old;
 export const act = enableNewReconciler ? act_new : act_old;
+export const createPortal = enableNewReconciler
+  ? createPortal_new
+  : createPortal_old;

@@ -12,14 +12,18 @@ import {
   PASSIVE_NOT_SUPPORTED,
 } from 'legacy-events/EventSystemFlags';
 import type {AnyNativeEvent} from 'legacy-events/PluginModuleType';
-import {HostComponent, ScopeComponent, HostPortal} from 'shared/ReactWorkTags';
+import {
+  HostComponent,
+  ScopeComponent,
+  HostPortal,
+} from 'react-reconciler/src/ReactWorkTags';
 import type {EventPriority} from 'shared/ReactTypes';
 import type {
   ReactDOMEventResponder,
   ReactDOMEventResponderInstance,
   ReactDOMResponderContext,
   ReactDOMResponderEvent,
-} from 'shared/ReactDOMTypes';
+} from '../shared/ReactDOMTypes';
 import type {DOMTopLevelEventType} from 'legacy-events/TopLevelEventTypes';
 import {
   batchedEventUpdates,

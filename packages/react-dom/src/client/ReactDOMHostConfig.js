@@ -55,7 +55,7 @@ import type {
   ReactDOMListener,
   ReactDOMListenerEvent,
   ReactDOMListenerMap,
-} from 'shared/ReactDOMTypes';
+} from '../shared/ReactDOMTypes';
 import {
   mountEventResponder,
   unmountEventResponder,
@@ -69,7 +69,7 @@ import {
   enableFundamentalAPI,
   enableUseEventAPI,
 } from 'shared/ReactFeatureFlags';
-import {HostComponent} from 'shared/ReactWorkTags';
+import {HostComponent} from 'react-reconciler/src/ReactWorkTags';
 import {
   RESPONDER_EVENT_SYSTEM,
   IS_PASSIVE,
@@ -171,7 +171,7 @@ function shouldAutoFocusHostComponent(type: string, props: Props): boolean {
   return false;
 }
 
-export * from 'shared/HostConfigWithNoPersistence';
+export * from 'react-reconciler/src/ReactFiberHostConfigWithNoPersistence';
 
 export function getRootHostContext(
   rootContainerInstance: Container,

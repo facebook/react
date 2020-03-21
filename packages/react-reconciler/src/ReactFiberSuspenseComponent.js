@@ -10,8 +10,8 @@
 import type {Fiber} from './ReactFiber';
 import type {SuspenseInstance} from './ReactFiberHostConfig';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
-import {SuspenseComponent, SuspenseListComponent} from 'shared/ReactWorkTags';
-import {NoEffect, DidCapture} from 'shared/ReactSideEffectTags';
+import {SuspenseComponent, SuspenseListComponent} from './ReactWorkTags';
+import {NoEffect, DidCapture} from './ReactSideEffectTags';
 import {
   isSuspenseInstancePending,
   isSuspenseInstanceFallback,

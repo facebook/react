@@ -171,8 +171,8 @@ class ReactFabricHostComponent {
 // eslint-disable-next-line no-unused-expressions
 (ReactFabricHostComponent.prototype: NativeMethods);
 
-export * from 'shared/HostConfigWithNoMutation';
-export * from 'shared/HostConfigWithNoHydration';
+export * from 'react-reconciler/src/ReactFiberHostConfigWithNoMutation';
+export * from 'react-reconciler/src/ReactFiberHostConfigWithNoHydration';
 
 export function appendInitialChild(
   parentInstance: Instance,

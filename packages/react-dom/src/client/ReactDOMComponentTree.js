@@ -15,14 +15,14 @@ import type {
   SuspenseInstance,
   Props,
 } from './ReactDOMHostConfig';
-import type {ReactDOMListener} from 'shared/ReactDOMTypes';
+import type {ReactDOMListener} from '../shared/ReactDOMTypes';
 
 import {
   HostComponent,
   HostText,
   HostRoot,
   SuspenseComponent,
-} from 'shared/ReactWorkTags';
+} from 'react-reconciler/src/ReactWorkTags';
 import invariant from 'shared/invariant';
 
 import {getParentSuspenseInstance} from './ReactDOMHostConfig';

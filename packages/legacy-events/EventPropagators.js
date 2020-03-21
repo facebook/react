@@ -12,7 +12,7 @@ import type {ReactSyntheticEvent} from 'legacy-events/ReactSyntheticEventType';
 
 import getListener from 'legacy-events/getListener';
 
-import {traverseEnterLeave} from 'shared/ReactTreeTraversal';
+import {traverseEnterLeave} from 'react-reconciler/src/ReactTreeTraversal';
 import accumulateInto from './accumulateInto';
 import forEachAccumulated from './forEachAccumulated';
 

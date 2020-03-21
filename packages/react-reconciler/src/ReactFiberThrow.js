@@ -21,14 +21,14 @@ import {
   HostRoot,
   SuspenseComponent,
   IncompleteClassComponent,
-} from 'shared/ReactWorkTags';
+} from './ReactWorkTags';
 import {
   DidCapture,
   Incomplete,
   NoEffect,
   ShouldCapture,
   LifecycleEffectMask,
-} from 'shared/ReactSideEffectTags';
+} from './ReactSideEffectTags';
 import {NoMode, BlockingMode} from './ReactTypeOfMode';
 import {shouldCaptureSuspense} from './ReactFiberSuspenseComponent';
 

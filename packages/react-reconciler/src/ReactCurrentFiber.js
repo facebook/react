@@ -17,7 +17,7 @@ import {
   Fragment,
   ContextProvider,
   ContextConsumer,
-} from 'shared/ReactWorkTags';
+} from './ReactWorkTags';
 import describeComponentFrame from 'shared/describeComponentFrame';
 import getComponentName from 'shared/getComponentName';
 

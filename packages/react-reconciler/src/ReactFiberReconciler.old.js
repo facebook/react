@@ -9,14 +9,14 @@
 
 import type {Fiber} from './ReactFiber';
 import type {FiberRoot} from './ReactFiberRoot';
-import type {RootTag} from 'shared/ReactRootTags';
+import type {RootTag} from 'react-reconciler/src/ReactRootTags';
 import type {
   Instance,
   TextInstance,
   Container,
   PublicInstance,
 } from './ReactFiberHostConfig';
-import {FundamentalComponent} from 'shared/ReactWorkTags';
+import {FundamentalComponent} from './ReactWorkTags';
 import type {ReactNodeList} from 'shared/ReactTypes';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
 import type {
@@ -34,7 +34,7 @@ import {
   ClassComponent,
   HostRoot,
   SuspenseComponent,
-} from 'shared/ReactWorkTags';
+} from './ReactWorkTags';
 import getComponentName from 'shared/getComponentName';
 import invariant from 'shared/invariant';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
@@ -91,6 +91,8 @@ import {
 import enqueueTask from 'shared/enqueueTask';
 import * as Scheduler from 'scheduler';
 // end isTestEnvironment imports
+
+export {createPortal} from './ReactPortal';
 
 type OpaqueRoot = FiberRoot;
 

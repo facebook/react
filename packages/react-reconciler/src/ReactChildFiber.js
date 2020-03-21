@@ -9,12 +9,12 @@
 
 import type {ReactElement} from 'shared/ReactElementType';
 import type {ReactPortal} from 'shared/ReactTypes';
-import type {BlockComponent} from 'react/src/block';
+import type {BlockComponent} from 'react/src/ReactBlock';
 import type {Fiber} from './ReactFiber';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
 
 import getComponentName from 'shared/getComponentName';
-import {Placement, Deletion} from 'shared/ReactSideEffectTags';
+import {Placement, Deletion} from './ReactSideEffectTags';
 import {
   getIteratorFn,
   REACT_ELEMENT_TYPE,
@@ -29,7 +29,7 @@ import {
   HostPortal,
   Fragment,
   Block,
-} from 'shared/ReactWorkTags';
+} from './ReactWorkTags';
 import invariant from 'shared/invariant';
 import {warnAboutStringRefs, enableBlocksAPI} from 'shared/ReactFeatureFlags';
 

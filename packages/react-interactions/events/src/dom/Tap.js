@@ -11,7 +11,7 @@ import type {
   ReactDOMResponderContext,
   ReactDOMResponderEvent,
   PointerType,
-} from 'shared/ReactDOMTypes';
+} from 'react-dom/src/shared/ReactDOMTypes';
 import type {ReactEventResponderListener} from 'shared/ReactTypes';
 
 import * as React from 'react';

@@ -29,7 +29,7 @@ import {
   ContextProvider,
   ForwardRef,
   Block,
-} from 'shared/ReactWorkTags';
+} from 'react-reconciler/src/ReactWorkTags';
 
 type CurrentDispatcherRef = typeof ReactSharedInternals.ReactCurrentDispatcher;
 

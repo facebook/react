@@ -10,7 +10,7 @@ import {
   isAncestor,
   getParentInstance,
   traverseTwoPhase,
-} from 'shared/ReactTreeTraversal';
+} from 'react-reconciler/src/ReactTreeTraversal';
 
 import {
   executeDirectDispatch,

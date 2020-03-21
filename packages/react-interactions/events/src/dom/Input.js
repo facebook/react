@@ -10,7 +10,7 @@
 import type {
   ReactDOMResponderEvent,
   ReactDOMResponderContext,
-} from 'shared/ReactDOMTypes';
+} from 'react-dom/src/shared/ReactDOMTypes';
 
 import * as React from 'react';
 import {DiscreteEvent} from 'shared/ReactTypes';

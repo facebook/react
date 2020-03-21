@@ -40,13 +40,13 @@ import {
   Block,
   IncompleteClassComponent,
   ScopeComponent,
-} from 'shared/ReactWorkTags';
+} from 'react-reconciler/src/ReactWorkTags';
 import invariant from 'shared/invariant';
 import getComponentName from 'shared/getComponentName';
 import ReactVersion from 'shared/ReactVersion';
 
 import {getPublicInstance} from './ReactTestHostConfig';
-import {ConcurrentRoot, LegacyRoot} from 'shared/ReactRootTags';
+import {ConcurrentRoot, LegacyRoot} from 'react-reconciler/src/ReactRootTags';
 
 type TestRendererOptions = {
   createNodeMock: (element: React$Element<any>) => any,

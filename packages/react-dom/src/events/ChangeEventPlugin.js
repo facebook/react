@@ -9,7 +9,7 @@ import {runEventsInBatch} from 'legacy-events/EventBatching';
 import {enqueueStateRestore} from 'legacy-events/ReactControlledComponent';
 import {batchedUpdates} from 'legacy-events/ReactGenericBatching';
 import SyntheticEvent from 'legacy-events/SyntheticEvent';
-import isTextInputElement from 'shared/isTextInputElement';
+import isTextInputElement from './isTextInputElement';
 import {canUseDOM} from 'shared/ExecutionEnvironment';
 
 import {

@@ -25,6 +25,7 @@ module.exports = [
       'react-flight-dom-webpack/server',
       'react-flight-dom-webpack/server.node',
       'react-flight-dom-webpack/src/ReactFlightDOMServerNode.js', // react-flight-dom-webpack/server.browser
+      'react-interactions',
     ],
     isFlowTyped: true,
     isServerSupported: true,
