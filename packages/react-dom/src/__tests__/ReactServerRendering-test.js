@@ -196,6 +196,23 @@ describe('ReactDOMServer', () => {
   });
 
   describe('renderToStaticMarkup', () => {
+    it('should execute hooks in separate namespaces for different renderers', () => {
+      const NestedComponent = () => <div>&nbsp;</div>;
+
+      const memoize = () => {
+        return ReactDOMServer.renderToStaticMarkup(<NestedComponent />);
+      };
+
+      const TestComponent = () => {
+        const htmlProcessed = React.useMemo(() => memoize(), [1]);
+        return <div>{htmlProcessed}</div>;
+      };
+
+      const response = ReactDOMServer.renderToStaticMarkup(<TestComponent />);
+
+      expect(response).toBe('<div>&lt;div&gt; &lt;/div&gt;</div>');
+    });
+
     it('should not put checksum and React ID on components', () => {
       class NestedComponent extends React.Component {
         render() {
