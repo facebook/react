@@ -23,7 +23,6 @@ import {
   REACT_LAZY_TYPE,
   REACT_BLOCK_TYPE,
 } from 'shared/ReactSymbols';
-import {refineResolvedLazyComponent} from 'shared/ReactLazyComponent';
 import type {ReactContext, ReactProviderType} from 'shared/ReactTypes';
 
 function getWrappedName(
@@ -90,12 +89,14 @@ function getComponentName(type: mixed): string | null {
       case REACT_BLOCK_TYPE:
         return getComponentName(type.render);
       case REACT_LAZY_TYPE: {
-        const thenable: LazyComponent<mixed> = (type: any);
-        const resolvedThenable = refineResolvedLazyComponent(thenable);
-        if (resolvedThenable) {
-          return getComponentName(resolvedThenable);
+        const lazyComponent: LazyComponent<any, any> = (type: any);
+        let payload = lazyComponent._payload;
+        let init = lazyComponent._init;
+        try {
+          return getComponentName(init(payload));
+        } catch (x) {
+          return null;
         }
-        break;
       }
     }
   }

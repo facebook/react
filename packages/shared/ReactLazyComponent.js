@@ -8,13 +8,6 @@
  */
 
 import type {
-  PendingLazyComponent,
-  ResolvedLazyComponent,
-  RejectedLazyComponent,
-  LazyComponent,
-} from 'react/src/ReactLazy';
-
-import type {
   PendingBlockComponent,
   ResolvedBlockComponent,
   RejectedBlockComponent,
@@ -27,56 +20,6 @@ import {
   Resolved,
   Rejected,
 } from './ReactLazyStatusTags';
-
-export function refineResolvedLazyComponent<T>(
-  lazyComponent: LazyComponent<T>,
-): T | null {
-  return lazyComponent._status === Resolved ? lazyComponent._result : null;
-}
-
-export function initializeLazyComponentType(
-  lazyComponent: LazyComponent<any>,
-): void {
-  if (lazyComponent._status === Uninitialized) {
-    const ctor = lazyComponent._result;
-    const thenable = ctor();
-    // Transition to the next state.
-    const pending: PendingLazyComponent<any> = (lazyComponent: any);
-    pending._status = Pending;
-    pending._result = thenable;
-    thenable.then(
-      moduleObject => {
-        if (lazyComponent._status === Pending) {
-          const defaultExport = moduleObject.default;
-          if (__DEV__) {
-            if (defaultExport === undefined) {
-              console.error(
-                'lazy: Expected the result of a dynamic import() call. ' +
-                  'Instead received: %s\n\nYour code should look like: \n  ' +
-                  // Break up imports to avoid accidentally parsing them as dependencies.
-                  'const MyComponent = lazy(() => imp' +
-                  "ort('./MyComponent'))",
-                moduleObject,
-              );
-            }
-          }
-          // Transition to the next state.
-          const resolved: ResolvedLazyComponent<any> = (lazyComponent: any);
-          resolved._status = Resolved;
-          resolved._result = defaultExport;
-        }
-      },
-      error => {
-        if (lazyComponent._status === Pending) {
-          // Transition to the next state.
-          const rejected: RejectedLazyComponent = (lazyComponent: any);
-          rejected._status = Rejected;
-          rejected._result = error;
-        }
-      },
-    );
-  }
-}
 
 export function initializeBlockComponentType<Props, Payload, Data>(
   blockComponent: BlockComponent<Props, Payload, Data>,

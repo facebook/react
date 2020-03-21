@@ -7,11 +7,6 @@
  * @flow
  */
 
-import type {LazyComponent} from 'react/src/ReactLazy';
-
-import {Resolved} from 'shared/ReactLazyStatusTags';
-import {initializeLazyComponentType} from 'shared/ReactLazyComponent';
-
 export function resolveDefaultProps(Component: any, baseProps: Object): Object {
   if (Component && Component.defaultProps) {
     // Resolve default props. Taken from ReactElement
@@ -25,12 +20,4 @@ export function resolveDefaultProps(Component: any, baseProps: Object): Object {
     return props;
   }
   return baseProps;
-}
-
-export function readLazyComponentType<T>(lazyComponent: LazyComponent<T>): T {
-  initializeLazyComponentType(lazyComponent);
-  if (lazyComponent._status !== Resolved) {
-    throw lazyComponent._result;
-  }
-  return lazyComponent._result;
 }
