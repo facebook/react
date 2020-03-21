@@ -87,11 +87,9 @@ async function copyWWWShims() {
 }
 
 async function copyRNShims() {
-  const reactTypesBuildTarget = 'build/react-native/shims/ReactTypes.js';
   await Promise.all([
     // React Native
     asyncCopyTo(`${__dirname}/shims/react-native`, 'build/react-native/shims'),
-    asyncCopyTo(require.resolve('shared/ReactTypes.js'), reactTypesBuildTarget),
     asyncCopyTo(
       require.resolve('react-native-renderer/src/ReactNativeTypes.js'),
       'build/react-native/shims/ReactNativeTypes.js'
