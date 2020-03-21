@@ -14,11 +14,13 @@ let useState;
 let Suspense;
 let block;
 let readString;
+let Scheduler;
 
 describe('ReactBlocks', () => {
   beforeEach(() => {
     jest.resetModules();
 
+    Scheduler = require('scheduler');
     React = require('react');
     ReactNoop = require('react-noop-renderer');
 
@@ -86,64 +88,64 @@ describe('ReactBlocks', () => {
     expect(ReactNoop).toMatchRenderedOutput(<span>Name: Sebastian</span>);
   });
 
-  it.experimental('supports a lazy wrapper around a chunk', async () => {
-    function Query(id) {
-      return {
-        id: id,
-        name: readString('Sebastian'),
-      };
-    }
+  it.experimental(
+    'does not support a lazy wrapper around a chunk',
+    async () => {
+      function Query(id) {
+        return {
+          id: id,
+          name: readString('Sebastian'),
+        };
+      }
 
-    function Render(props, data) {
-      return (
-        <span>
-          {props.title}: {data.name}
-        </span>
+      function Render(props, data) {
+        return (
+          <span>
+            {props.title}: {data.name}
+          </span>
+        );
+      }
+
+      let loadUser = block(Query, Render);
+
+      function App({User}) {
+        return (
+          <Suspense fallback={'Loading...'}>
+            <User title="Name" />
+          </Suspense>
+        );
+      }
+
+      let resolveLazy;
+      let LazyUser = React.lazy(
+        () =>
+          new Promise(resolve => {
+            resolveLazy = function() {
+              resolve({
+                default: loadUser(123),
+              });
+            };
+          }),
       );
-    }
 
-    let loadUser = block(Query, Render);
+      await ReactNoop.act(async () => {
+        ReactNoop.render(<App User={LazyUser} />);
+      });
 
-    function App({User}) {
-      return (
-        <Suspense fallback={'Loading...'}>
-          <User title="Name" />
-        </Suspense>
-      );
-    }
+      expect(ReactNoop).toMatchRenderedOutput('Loading...');
 
-    let resolveLazy;
-    let LazyUser = React.lazy(
-      () =>
-        new Promise(resolve => {
-          resolveLazy = function() {
-            resolve({
-              default: loadUser(123),
-            });
-          };
-        }),
-    );
-
-    await ReactNoop.act(async () => {
-      ReactNoop.render(<App User={LazyUser} />);
-    });
-
-    expect(ReactNoop).toMatchRenderedOutput('Loading...');
-
-    // Resolve the component.
-    await ReactNoop.act(async () => {
+      // Resolve the component.
       await resolveLazy();
-    });
 
-    // We're still waiting on the data.
-    expect(ReactNoop).toMatchRenderedOutput('Loading...');
-
-    await ReactNoop.act(async () => {
-      jest.advanceTimersByTime(1000);
-    });
-
-    expect(ReactNoop).toMatchRenderedOutput(<span>Name: Sebastian</span>);
-  });
+      expect(Scheduler).toFlushAndThrow(
+        'Element type is invalid. Received a promise that resolves to: [object Object]. ' +
+          'Lazy element type must resolve to a class or function.' +
+          (__DEV__
+            ? ' Did you wrap a component in React.lazy() more than once?'
+            : ''),
+      );
+    },
+  );
 
   it.experimental(
     'can receive updated data for the same component',

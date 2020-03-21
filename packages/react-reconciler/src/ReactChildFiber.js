@@ -10,6 +10,7 @@
 import type {ReactElement} from 'shared/ReactElementType';
 import type {ReactPortal} from 'shared/ReactTypes';
 import type {BlockComponent} from 'react/src/ReactBlock';
+import type {LazyComponent} from 'react/src/ReactLazy';
 import type {Fiber} from './ReactFiber';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
 
@@ -20,6 +21,7 @@ import {
   REACT_ELEMENT_TYPE,
   REACT_FRAGMENT_TYPE,
   REACT_PORTAL_TYPE,
+  REACT_LAZY_TYPE,
   REACT_BLOCK_TYPE,
 } from 'shared/ReactSymbols';
 import {
@@ -48,7 +50,6 @@ import {
 } from './ReactCurrentFiber';
 import {isCompatibleFamilyForHotReloading} from './ReactFiberHotReloading';
 import {StrictMode} from './ReactTypeOfMode';
-import {initializeBlockComponentType} from 'shared/ReactLazyComponent';
 
 let didWarnAboutMaps;
 let didWarnAboutGenerators;
@@ -263,6 +264,22 @@ function warnOnFunctionType() {
   }
 }
 
+// We avoid inlining this to avoid potential deopts from using try/catch.
+/** @noinline */
+function resolveLazyType<T, P>(
+  lazyComponent: LazyComponent<T, P>,
+): LazyComponent<T, P> | T {
+  try {
+    // If we can, let's peek at the resulting type.
+    let payload = lazyComponent._payload;
+    let init = lazyComponent._init;
+    return init(payload);
+  } catch (x) {
+    // Leave it in place and let it throw again in the begin phase.
+    return lazyComponent;
+  }
+}
+
 // This wrapper function exists because I expect to clone the code in each path
 // to be able to optimize each path individually by branching early. This needs
 // a compiler or we can do it manually. Helpers that don't need this branching
@@ -419,22 +436,22 @@ function ChildReconciler(shouldTrackSideEffects) {
           existing._debugOwner = element._owner;
         }
         return existing;
-      } else if (
-        enableBlocksAPI &&
-        current.tag === Block &&
-        element.type.$$typeof === REACT_BLOCK_TYPE
-      ) {
+      } else if (enableBlocksAPI && current.tag === Block) {
         // The new Block might not be initialized yet. We need to initialize
         // it in case initializing it turns out it would match.
-        initializeBlockComponentType(element.type);
+        let type = element.type;
+        if (type.$$typeof === REACT_LAZY_TYPE) {
+          type = resolveLazyType(type);
+        }
         if (
-          (element.type: BlockComponent<any, any, any>)._fn ===
-          (current.type: BlockComponent<any, any, any>)._fn
+          type.$$typeof === REACT_BLOCK_TYPE &&
+          ((type: any): BlockComponent<any, any>)._render ===
+            (current.type: BlockComponent<any, any>)._render
         ) {
           // Same as above but also update the .type field.
           const existing = useFiber(current, element.props);
           existing.return = returnFiber;
-          existing.type = element.type;
+          existing.type = type;
           if (__DEV__) {
             existing._debugSource = element._source;
             existing._debugOwner = element._owner;
@@ -1188,17 +1205,20 @@ function ChildReconciler(shouldTrackSideEffects) {
           }
           case Block:
             if (enableBlocksAPI) {
-              if (element.type.$$typeof === REACT_BLOCK_TYPE) {
+              let type = element.type;
+              if (type.$$typeof === REACT_LAZY_TYPE) {
+                type = resolveLazyType(type);
+              }
+              if (type.$$typeof === REACT_BLOCK_TYPE) {
                 // The new Block might not be initialized yet. We need to initialize
                 // it in case initializing it turns out it would match.
-                initializeBlockComponentType(element.type);
                 if (
-                  (element.type: BlockComponent<any, any, any>)._fn ===
-                  (child.type: BlockComponent<any, any, any>)._fn
+                  ((type: any): BlockComponent<any, any>)._render ===
+                  (child.type: BlockComponent<any, any>)._render
                 ) {
                   deleteRemainingChildren(returnFiber, child.sibling);
                   const existing = useFiber(child, element.props);
-                  existing.type = element.type;
+                  existing.type = type;
                   existing.return = returnFiber;
                   if (__DEV__) {
                     existing._debugSource = element._source;

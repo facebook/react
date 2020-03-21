@@ -165,7 +165,6 @@ import {
   updateClassInstance,
 } from './ReactFiberClassComponent';
 import {resolveDefaultProps} from './ReactFiberLazyComponent';
-import {initializeBlockComponentType} from 'shared/ReactLazyComponent';
 import {
   resolveLazyComponentTag,
   createFiberFromTypeAndProps,
@@ -181,7 +180,6 @@ import {
   renderDidSuspendDelayIfPossible,
   markUnprocessedUpdateTime,
 } from './ReactFiberWorkLoop';
-import {Resolved} from 'shared/ReactLazyStatusTags';
 
 const ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
 
@@ -707,10 +705,10 @@ function updateFunctionComponent(
   return workInProgress.child;
 }
 
-function updateBlock<Props, Payload, Data>(
+function updateBlock<Props, Data>(
   current: Fiber | null,
   workInProgress: Fiber,
-  block: BlockComponent<Props, Payload, Data>,
+  block: BlockComponent<Props, Data>,
   nextProps: any,
   renderExpirationTime: ExpirationTime,
 ) {
@@ -718,12 +716,7 @@ function updateBlock<Props, Payload, Data>(
   // hasn't yet mounted. This happens after the first render suspends.
   // We'll need to figure out if this is fine or can cause issues.
 
-  initializeBlockComponentType(block);
-  if (block._status !== Resolved) {
-    throw block._data;
-  }
-
-  const render = block._fn;
+  const render = block._render;
   const data = block._data;
 
   // The rest is a fork of updateFunctionComponent
