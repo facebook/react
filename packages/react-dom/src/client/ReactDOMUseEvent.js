@@ -12,7 +12,7 @@ import type {EventPriority} from 'shared/ReactTypes';
 import type {
   ReactDOMListenerEvent,
   ReactDOMListenerMap,
-} from 'shared/ReactDOMTypes';
+} from '../shared/ReactDOMTypes';
 
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import invariant from 'shared/invariant';

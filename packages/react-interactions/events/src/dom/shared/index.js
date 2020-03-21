@@ -13,7 +13,7 @@ import {DiscreteEvent, UserBlockingEvent} from 'shared/ReactTypes';
 import type {
   ReactDOMResponderContext,
   ReactDOMResponderEvent,
-} from 'shared/ReactDOMTypes';
+} from 'react-dom/src/shared/ReactDOMTypes';
 
 export const hasPointerEvents =
   typeof window !== 'undefined' && window.PointerEvent !== undefined;

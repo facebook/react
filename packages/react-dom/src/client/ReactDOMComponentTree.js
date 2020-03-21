@@ -15,7 +15,7 @@ import type {
   SuspenseInstance,
   Props,
 } from './ReactDOMHostConfig';
-import type {ReactDOMListener} from 'shared/ReactDOMTypes';
+import type {ReactDOMListener} from '../shared/ReactDOMTypes';
 
 import {
   HostComponent,

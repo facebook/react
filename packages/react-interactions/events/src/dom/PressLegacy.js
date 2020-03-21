@@ -11,7 +11,7 @@ import type {
   ReactDOMResponderEvent,
   ReactDOMResponderContext,
   PointerType,
-} from 'shared/ReactDOMTypes';
+} from 'react-dom/src/shared/ReactDOMTypes';
 import type {
   EventPriority,
   ReactEventResponderListener,

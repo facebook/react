@@ -55,7 +55,7 @@ import type {
   ReactDOMListener,
   ReactDOMListenerEvent,
   ReactDOMListenerMap,
-} from 'shared/ReactDOMTypes';
+} from '../shared/ReactDOMTypes';
 import {
   mountEventResponder,
   unmountEventResponder,

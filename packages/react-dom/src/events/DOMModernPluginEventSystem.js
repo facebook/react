@@ -21,7 +21,7 @@ import type {
   ReactSyntheticEvent,
   CustomDispatchConfig,
 } from 'legacy-events/ReactSyntheticEventType';
-import type {ReactDOMListener} from 'shared/ReactDOMTypes';
+import type {ReactDOMListener} from '../shared/ReactDOMTypes';
 
 import {registrationNameDependencies} from 'legacy-events/EventPluginRegistry';
 import {batchedEventUpdates} from 'legacy-events/ReactGenericBatching';
