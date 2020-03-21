@@ -446,7 +446,10 @@ describe('ReactDOMFiberAsync', () => {
         let secondEvent = document.createEvent('Event');
         secondEvent.initEvent('click', true, true);
         // This should force the pending update to flush which disables the submit button before the event is invoked.
-        submitButton.dispatchEvent(secondEvent);
+        expect(() => submitButton.dispatchEvent(secondEvent))
+        .toWarnDev('Warning: Could not find the nearest mounted node from `getNearestMountedFiber`. '
+        + 'Dispatching the event without a target to avoid blocking the whole system.',
+        {withoutStack: true});
 
         // Therefore the form should never have been submitted.
         expect(formSubmitted).toBe(false);

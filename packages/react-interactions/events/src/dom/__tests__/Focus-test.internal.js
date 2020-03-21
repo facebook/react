@@ -190,8 +190,12 @@ describe.each(table)('Focus responder', hasPointerEvents => {
       componentInit();
 
       const target = createEventTarget(ref.current);
-      target.keydown({key: 'Tab', altKey: true});
-      target.focus();
+      expect(() => target.keydown({key: 'Tab', altKey: true})).toWarnDev('Warning: Could not find the `hydrate` '
+      + 'from `nearestMounted.stateNode`. Dispatching the event without a target '
+      + 'to avoid blocking the whole system.', {withoutStack: true});
+      expect(() => target.focus()).toWarnDev('Warning: Could not find the `hydrate` '
+      + 'from `nearestMounted.stateNode`. Dispatching the event without a target '
+      + 'to avoid blocking the whole system.', {withoutStack: true});
 
       expect(onFocus).toHaveBeenCalledTimes(1);
       expect(onFocus).toHaveBeenCalledWith(
