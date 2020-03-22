@@ -49,6 +49,43 @@ describe('ReactBlocks', () => {
     };
   });
 
+  it.experimental('prints the name of the render function in warnings', () => {
+    function Query(firstName) {
+      return {
+        name: firstName,
+      };
+    }
+
+    function User(props, data) {
+      let array = [<span>{data.name}</span>];
+      return <div>{array}</div>;
+    }
+
+    function App({Component}) {
+      return (
+        <Suspense fallback={'Loading...'}>
+          <Component name="Name" />
+        </Suspense>
+      );
+    }
+
+    let loadUser = block(Query, User);
+
+    expect(() => {
+      ReactNoop.act(() => {
+        ReactNoop.render(<App Component={loadUser()} />);
+      });
+    }).toErrorDev(
+      'Warning: Each child in a list should have a unique ' +
+        '"key" prop.\n\nCheck the render method of `User`. See ' +
+        'https://fb.me/react-warning-keys for more information.\n' +
+        '    in span (at **)\n' +
+        '    in User (at **)\n' +
+        '    in Suspense (at **)\n' +
+        '    in App (at **)',
+    );
+  });
+
   it.experimental('renders a component with a suspending query', async () => {
     function Query(id) {
       return {

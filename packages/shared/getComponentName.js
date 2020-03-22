@@ -87,7 +87,7 @@ function getComponentName(type: mixed): string | null {
       case REACT_MEMO_TYPE:
         return getComponentName(type.type);
       case REACT_BLOCK_TYPE:
-        return getComponentName(type.render);
+        return getComponentName(type._render);
       case REACT_LAZY_TYPE: {
         const lazyComponent: LazyComponent<any, any> = (type: any);
         let payload = lazyComponent._payload;
