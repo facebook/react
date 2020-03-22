@@ -18,9 +18,6 @@ const ReactFlightDOMRelayClientIntegration = {
     return moduleData;
   },
   preloadModule(moduleReference) {},
-  loadModule(moduleReference) {
-    return null;
-  },
   requireModule(moduleReference) {
     return getFakeModule();
   },

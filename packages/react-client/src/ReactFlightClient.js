@@ -17,7 +17,6 @@ import {REACT_ELEMENT_TYPE} from 'shared/ReactSymbols';
 // import {
 //   resolveModuleReference,
 //   preloadModule,
-//   loadModule,
 //   requireModule,
 // } from './ReactFlightClientHostConfig';
 

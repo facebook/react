@@ -10,7 +10,6 @@
 export {
   resolveModuleReference,
   preloadModule,
-  loadModule,
   requireModule,
 } from 'ReactFlightDOMRelayClientIntegration';
 

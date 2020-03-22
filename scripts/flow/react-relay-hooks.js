@@ -15,11 +15,6 @@ type JSONValue =
   | {[key: string]: JSONValue}
   | Array<JSONValue>;
 
-type Thenable = {
-  then(resolve: () => mixed, reject: (error: Error) => mixed): mixed,
-  ...
-};
-
 declare module 'ReactFlightDOMRelayServerIntegration' {
   declare export opaque type Destination;
   declare export function emitModel(
@@ -43,7 +38,7 @@ declare module 'ReactFlightDOMRelayServerIntegration' {
 }
 
 declare module 'ReactFlightDOMRelayClientIntegration' {
-  declare export opaque type ModuleReference;
+  declare export opaque type ModuleReference<T>;
   declare export opaque type ModuleMetaData;
   declare export function resolveModuleReference<T>(
     moduleData: ModuleMetaData,
@@ -51,9 +46,6 @@ declare module 'ReactFlightDOMRelayClientIntegration' {
   declare export function preloadModule<T>(
     moduleReference: ModuleReference<T>,
   ): void;
-  declare export function loadModule<T>(
-    moduleReference: ModuleReference<T>,
-  ): null | Thenable;
   declare export function requireModule<T>(
     moduleReference: ModuleReference<T>,
   ): T;
