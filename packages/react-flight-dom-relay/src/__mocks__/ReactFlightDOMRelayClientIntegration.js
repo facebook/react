@@ -7,19 +7,13 @@
 
 'use strict';
 
-function getFakeModule() {
-  return function FakeModule(props, data) {
-    return data;
-  };
-}
-
 const ReactFlightDOMRelayClientIntegration = {
   resolveModuleReference(moduleData) {
     return moduleData;
   },
   preloadModule(moduleReference) {},
   requireModule(moduleReference) {
-    return getFakeModule();
+    return moduleReference;
   },
 };
 

@@ -7,7 +7,9 @@
 
 'use strict';
 
+let act;
 let React;
+let ReactDOM;
 let ReactDOMFlightRelayServer;
 let ReactDOMFlightRelayClient;
 
@@ -15,28 +17,14 @@ describe('ReactFlightDOMRelay', () => {
   beforeEach(() => {
     jest.resetModules();
 
+    act = require('react-dom/test-utils').act;
     React = require('react');
+    ReactDOM = require('react-dom');
     ReactDOMFlightRelayServer = require('react-flight-dom-relay/server');
     ReactDOMFlightRelayClient = require('react-flight-dom-relay');
   });
 
-  it('can resolve a model', () => {
-    function Bar({text}) {
-      return text.toUpperCase();
-    }
-    function Foo() {
-      return {
-        bar: [<Bar text="a" />, <Bar text="b" />],
-      };
-    }
-    let data = [];
-    ReactDOMFlightRelayServer.render(
-      {
-        foo: <Foo />,
-      },
-      data,
-    );
-
+  function readThrough(data) {
     let response = ReactDOMFlightRelayClient.createResponse();
     for (let i = 0; i < data.length; i++) {
       let chunk = data[i];
@@ -53,6 +41,81 @@ describe('ReactFlightDOMRelay', () => {
     }
     let model = ReactDOMFlightRelayClient.getModelRoot(response).model;
     ReactDOMFlightRelayClient.close(response);
-    expect(model).toEqual({foo: {bar: ['A', 'B']}});
+    return model;
+  }
+
+  function block(query, render) {
+    return function(...args) {
+      let curriedQuery = () => {
+        return query(...args);
+      };
+      return [Symbol.for('react.server.block'), render, curriedQuery];
+    };
+  }
+
+  it('can render a server component', () => {
+    function Bar({text}) {
+      return text.toUpperCase();
+    }
+    function Foo() {
+      return {
+        bar: (
+          <div>
+            <Bar text="a" />, <Bar text="b" />
+          </div>
+        ),
+      };
+    }
+    let transport = [];
+    ReactDOMFlightRelayServer.render(
+      {
+        foo: <Foo />,
+      },
+      transport,
+    );
+
+    let model = readThrough(transport);
+    expect(model).toEqual({
+      foo: {
+        bar: (
+          <div>
+            {'A'}
+            {', '}
+            {'B'}
+          </div>
+        ),
+      },
+    });
+  });
+
+  it.experimental('can transfer a Block to the client and render there', () => {
+    function Query(firstName, lastName) {
+      return {name: firstName + ' ' + lastName};
+    }
+    function User(props, data) {
+      return (
+        <span>
+          {props.greeting}, {data.name}
+        </span>
+      );
+    }
+    let loadUser = block(Query, User);
+    let model = {
+      User: loadUser('Seb', 'Smith'),
+    };
+
+    let transport = [];
+    ReactDOMFlightRelayServer.render(model, transport);
+
+    let modelClient = readThrough(transport);
+
+    let container = document.createElement('div');
+    let root = ReactDOM.createRoot(container);
+    act(() => {
+      let UserClient = modelClient.User;
+      root.render(<UserClient greeting="Hello" />);
+    });
+
+    expect(container.innerHTML).toEqual('<span>Hello, Seb Smith</span>');
   });
 });
