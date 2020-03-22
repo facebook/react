@@ -27,6 +27,15 @@ const {
   close,
 } = ReactFlightClient({
   supportsBinaryStreams: false,
+  resolveModuleReference(name: string) {
+    return name;
+  },
+  preloadModule(name: string) {},
+  requireModule(name: string) {
+    return function FakeModule() {
+      return name;
+    };
+  },
 });
 
 function read<T>(source: Source): ReactModelRoot<T> {

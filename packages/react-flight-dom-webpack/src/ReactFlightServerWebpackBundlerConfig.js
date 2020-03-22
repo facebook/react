@@ -18,6 +18,7 @@ export type ModuleReference = string;
 export type ModuleMetaData = {
   id: string,
   chunks: Array<string>,
+  name: string,
 };
 
 export function resolveModuleMetaData(

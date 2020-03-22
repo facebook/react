@@ -67,5 +67,7 @@ declare module 'EventListener' {
   };
 }
 
-declare function __webpack_chunk_load__(id: string): {then(() => mixed): mixed};
+declare function __webpack_chunk_load__(
+  id: string,
+): {then(() => mixed, (Error) => mixed): mixed};
 declare function __webpack_require__(id: string): {default: any};
