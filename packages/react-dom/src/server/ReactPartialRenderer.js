@@ -57,7 +57,13 @@ import {
   createMarkupForRoot,
 } from './DOMMarkupOperations';
 import escapeTextForBrowser from './escapeTextForBrowser';
-import {ReactDOMServerRendererHooks as ReactPartialRendererHooks} from './ReactPartialRendererHooks';
+import {
+  prepareToUseHooks,
+  finishHooks,
+  Dispatcher,
+  currentThreadID,
+  setCurrentThreadID,
+} from './ReactPartialRendererHooks';
 import {
   Namespaces,
   getIntrinsicNamespace,
@@ -403,7 +409,6 @@ function validateRenderResult(child, type) {
 }
 
 function resolve(
-  reactPartialRendererHooks: ReactPartialRendererHooks,
   child: mixed,
   context: Object,
   threadID: ThreadID,
@@ -521,14 +526,9 @@ function resolve(
         }
       }
       const componentIdentity = {};
-      reactPartialRendererHooks.prepareToUseHooks(componentIdentity);
+      prepareToUseHooks(componentIdentity);
       inst = Component(element.props, publicContext, updater);
-      inst = reactPartialRendererHooks.finishHooks(
-        Component,
-        element.props,
-        inst,
-        publicContext,
-      );
+      inst = finishHooks(Component, element.props, inst, publicContext);
 
       if (inst == null || inst.render == null) {
         child = inst;
@@ -703,7 +703,6 @@ type Frame = {
 type FrameDev = Frame & {|debugElementStack: Array<ReactElement>|};
 
 class ReactDOMServerRenderer {
-  reactPartialRendererHooks: ReactPartialRendererHooks;
   threadID: ThreadID;
   stack: Array<Frame>;
   exhausted: boolean;
@@ -719,8 +718,6 @@ class ReactDOMServerRenderer {
   contextProviderStack: ?Array<ReactProvider<any>>; // DEV-only
 
   constructor(children: mixed, makeStaticMarkup: boolean) {
-    this.reactPartialRendererHooks = new ReactPartialRendererHooks();
-
     const flatChildren = flattenTopLevelChildren(children);
 
     const topFrame: Frame = {
@@ -831,10 +828,10 @@ class ReactDOMServerRenderer {
       return null;
     }
 
-    const prevThreadID = this.reactPartialRendererHooks.currentThreadID;
-    this.reactPartialRendererHooks.setCurrentThreadID(this.threadID);
+    const prevThreadID = currentThreadID;
+    setCurrentThreadID(this.threadID);
     const prevDispatcher = ReactCurrentDispatcher.current;
-    ReactCurrentDispatcher.current = this.reactPartialRendererHooks.Dispatcher;
+    ReactCurrentDispatcher.current = Dispatcher;
     try {
       // Markup generated within <Suspense> ends up buffered until we know
       // nothing in that boundary suspended
@@ -929,7 +926,7 @@ class ReactDOMServerRenderer {
       return out[0];
     } finally {
       ReactCurrentDispatcher.current = prevDispatcher;
-      this.reactPartialRendererHooks.setCurrentThreadID(prevThreadID);
+      setCurrentThreadID(prevThreadID);
     }
   }
 
@@ -953,12 +950,7 @@ class ReactDOMServerRenderer {
       return escapeTextForBrowser(text);
     } else {
       let nextChild;
-      ({child: nextChild, context} = resolve(
-        this.reactPartialRendererHooks,
-        child,
-        context,
-        this.threadID,
-      ));
+      ({child: nextChild, context} = resolve(child, context, this.threadID));
       if (nextChild === null || nextChild === false) {
         return '';
       } else if (!React.isValidElement(nextChild)) {
@@ -1088,9 +1080,9 @@ class ReactDOMServerRenderer {
             const element: ReactElement = ((nextChild: any): ReactElement);
             let nextChildren;
             const componentIdentity = {};
-            this.reactPartialRendererHooks.prepareToUseHooks(componentIdentity);
+            prepareToUseHooks(componentIdentity);
             nextChildren = elementType.render(element.props, element.ref);
-            nextChildren = this.reactPartialRendererHooks.finishHooks(
+            nextChildren = finishHooks(
               elementType.render,
               element.props,
               nextChildren,
