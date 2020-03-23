@@ -2146,9 +2146,13 @@ describe('DOMModernPluginEventSystem', () => {
           });
 
           it('beforeblur and afterblur are called after a focused element is unmounted', () => {
+            const log = [];
             // We have to persist here because we want to read relatedTarget later.
-            const onAfterBlur = jest.fn(e => e.persist());
-            const onBeforeBlur = jest.fn();
+            const onAfterBlur = jest.fn(e => {
+              e.persist();
+              log.push(e.type);
+            });
+            const onBeforeBlur = jest.fn(e => log.push(e.type));
             const innerRef = React.createRef();
             const innerRef2 = React.createRef();
 
@@ -2187,12 +2191,17 @@ describe('DOMModernPluginEventSystem', () => {
             expect(onAfterBlur).toHaveBeenCalledWith(
               expect.objectContaining({relatedTarget: inner}),
             );
+            expect(log).toEqual(['beforeblur', 'afterblur']);
           });
 
           it('beforeblur and afterblur are called after a nested focused element is unmounted', () => {
+            const log = [];
             // We have to persist here because we want to read relatedTarget later.
-            const onAfterBlur = jest.fn(e => e.persist());
-            const onBeforeBlur = jest.fn();
+            const onAfterBlur = jest.fn(e => {
+              e.persist();
+              log.push(e.type);
+            });
+            const onBeforeBlur = jest.fn(e => log.push(e.type));
             const innerRef = React.createRef();
             const innerRef2 = React.createRef();
 
@@ -2235,14 +2244,19 @@ describe('DOMModernPluginEventSystem', () => {
             expect(onAfterBlur).toHaveBeenCalledWith(
               expect.objectContaining({relatedTarget: inner}),
             );
+            expect(log).toEqual(['beforeblur', 'afterblur']);
           });
 
           it.experimental(
             'beforeblur and afterblur are called after a focused element is suspended',
             () => {
+              const log = [];
               // We have to persist here because we want to read relatedTarget later.
-              const onAfterBlur = jest.fn(e => e.persist());
-              const onBeforeBlur = jest.fn();
+              const onAfterBlur = jest.fn(e => {
+                e.persist();
+                log.push(e.type);
+              });
+              const onBeforeBlur = jest.fn(e => log.push(e.type));
               const innerRef = React.createRef();
               const Suspense = React.Suspense;
               let suspend = false;
@@ -2308,6 +2322,7 @@ describe('DOMModernPluginEventSystem', () => {
                 expect.objectContaining({relatedTarget: inner}),
               );
               resolve();
+              expect(log).toEqual(['beforeblur', 'afterblur']);
 
               document.body.removeChild(container2);
             },

@@ -520,6 +520,9 @@ function dispatchBeforeDetachedBlur(target: HTMLElement): void {
       // to dispatch the "beforeblur" event.
       ReactBrowserEventEmitterSetEnabled(true);
       const event = createEvent(TOP_BEFORE_BLUR);
+      // Dispatch "beforeblur" directly on the target,
+      // so it gets picked up by the event system and
+      // can propagate through the React internal tree.
       target.dispatchEvent(event);
     } finally {
       ReactBrowserEventEmitterSetEnabled(false);
@@ -542,24 +545,11 @@ function dispatchAfterDetachedBlur(target: HTMLElement): void {
     );
   }
   if (enableUseEventAPI) {
-    // This works differently from Flare above, because that piggy-backed
-    // the "blur" event internally. We don't want to do that here,
-    // otherwise we will invoke native event listeners listening to "blur"
-    // which would not normally be expecting that event. So we instead
-    // use a new type of event, like we did with "beforeblur". Also,
-    // technically this period is actually after "blur", as Chrome invokes
-    // "blur" natively just as the node gets removed, thus having a valid
-    // target. If we fire a custom blue at this point, it won't work as
-    // the node has been attached, thus the event system will not pick it
-    // up. We have to use the native system, rather than invoke internally,
-    // like we used to do with Flare because we listen on multiple roots
-    // and we don't know the ordering of propagation unless we invoke a
-    // native event.
     const event = createEvent(TOP_AFTER_BLUR);
     // So we know what was detached, make the relatedTarget the
     // detached target on the "afterblur" event.
     (event: any).relatedTarget = target;
-    // Dispatch the event on the document
+    // Dispatch the event on the document.
     document.dispatchEvent(event);
   }
 }
