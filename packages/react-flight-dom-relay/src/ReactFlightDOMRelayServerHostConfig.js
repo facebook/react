@@ -89,7 +89,7 @@ function convertModelToJSON(
     if (Array.isArray(json)) {
       let jsonArray: Array<JSONValue> = [];
       for (let i = 0; i < json.length; i++) {
-        jsonArray[i] = convertModelToJSON(request, jsonArray, '' + i, json[i]);
+        jsonArray[i] = convertModelToJSON(request, json, '' + i, json[i]);
       }
       return jsonArray;
     } else {
@@ -97,7 +97,7 @@ function convertModelToJSON(
       for (let nextKey in json) {
         jsonObj[nextKey] = convertModelToJSON(
           request,
-          jsonObj,
+          json,
           nextKey,
           json[nextKey],
         );
