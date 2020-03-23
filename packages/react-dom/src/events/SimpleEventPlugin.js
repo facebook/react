@@ -105,6 +105,8 @@ const SimpleEventPlugin: PluginModule<MouseEvent> = {
         break;
       case DOMTopLevelEventTypes.TOP_BLUR:
       case DOMTopLevelEventTypes.TOP_FOCUS:
+      case DOMTopLevelEventTypes.TOP_BEFORE_BLUR:
+      case DOMTopLevelEventTypes.TOP_AFTER_BLUR:
         EventConstructor = SyntheticFocusEvent;
         break;
       case DOMTopLevelEventTypes.TOP_CLICK:
