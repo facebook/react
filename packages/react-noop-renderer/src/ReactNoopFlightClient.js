@@ -16,7 +16,7 @@
 
 import type {ReactModelRoot} from 'react-client/flight';
 
-import {readModule} from './ReactNoopFlightModuleTestHelper';
+import {readModule} from 'react-noop-renderer/flight-modules';
 
 import ReactFlightClient from 'react-client/flight';
 

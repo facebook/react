@@ -16,7 +16,7 @@
 
 import type {ReactModel} from 'react-server/src/ReactFlightServer';
 
-import {saveModule} from './ReactNoopFlightModuleTestHelper';
+import {saveModule} from 'react-noop-renderer/flight-modules';
 
 import ReactFlightServer from 'react-server/flight';
 
