@@ -32,6 +32,10 @@ module.exports = {
     // Flight
     Uint8Array: true,
     Promise: true,
+
+    // Flight Webpack
+    __webpack_chunk_load__: true,
+    __webpack_require__: true,
   },
   parserOptions: {
     ecmaVersion: 5,
