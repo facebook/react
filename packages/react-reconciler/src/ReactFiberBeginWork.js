@@ -9,6 +9,7 @@
 
 import type {ReactProviderType, ReactContext} from 'shared/ReactTypes';
 import type {BlockComponent} from 'react/src/ReactBlock';
+import type {LazyComponent as LazyComponentType} from 'react/src/ReactLazy';
 import type {Fiber} from './ReactFiber';
 import type {FiberRoot} from './ReactFiberRoot';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
@@ -73,7 +74,6 @@ import invariant from 'shared/invariant';
 import shallowEqual from 'shared/shallowEqual';
 import getComponentName from 'shared/getComponentName';
 import ReactStrictModeWarnings from './ReactStrictModeWarnings';
-import {refineResolvedLazyComponent} from 'shared/ReactLazyComponent';
 import {REACT_LAZY_TYPE, getIteratorFn} from 'shared/ReactSymbols';
 import {
   getCurrentFiberOwnerNameInDevOrNull,
@@ -164,11 +164,7 @@ import {
   resumeMountClassInstance,
   updateClassInstance,
 } from './ReactFiberClassComponent';
-import {
-  readLazyComponentType,
-  resolveDefaultProps,
-} from './ReactFiberLazyComponent';
-import {initializeBlockComponentType} from 'shared/ReactLazyComponent';
+import {resolveDefaultProps} from './ReactFiberLazyComponent';
 import {
   resolveLazyComponentTag,
   createFiberFromTypeAndProps,
@@ -184,7 +180,6 @@ import {
   renderDidSuspendDelayIfPossible,
   markUnprocessedUpdateTime,
 } from './ReactFiberWorkLoop';
-import {Resolved} from 'shared/ReactLazyStatusTags';
 
 const ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
 
@@ -492,7 +487,14 @@ function updateSimpleMemoComponent(
         // We warn when you define propTypes on lazy()
         // so let's just skip over it to find memo() outer wrapper.
         // Inner props for memo are validated later.
-        outerMemoType = refineResolvedLazyComponent(outerMemoType);
+        const lazyComponent: LazyComponentType<any, any> = outerMemoType;
+        let payload = lazyComponent._payload;
+        let init = lazyComponent._init;
+        try {
+          outerMemoType = init(payload);
+        } catch (x) {
+          outerMemoType = null;
+        }
       }
       const outerPropTypes = outerMemoType && (outerMemoType: any).propTypes;
       if (outerPropTypes) {
@@ -703,10 +705,10 @@ function updateFunctionComponent(
   return workInProgress.child;
 }
 
-function updateBlock<Props, Payload, Data>(
+function updateBlock<Props, Data>(
   current: Fiber | null,
   workInProgress: Fiber,
-  block: BlockComponent<Props, Payload, Data>,
+  block: BlockComponent<Props, Data>,
   nextProps: any,
   renderExpirationTime: ExpirationTime,
 ) {
@@ -714,12 +716,7 @@ function updateBlock<Props, Payload, Data>(
   // hasn't yet mounted. This happens after the first render suspends.
   // We'll need to figure out if this is fine or can cause issues.
 
-  initializeBlockComponentType(block);
-  if (block._status !== Resolved) {
-    throw block._data;
-  }
-
-  const render = block._fn;
+  const render = block._render;
   const data = block._data;
 
   // The rest is a fork of updateFunctionComponent
@@ -1142,7 +1139,10 @@ function mountLazyComponent(
   // We can't start a User Timing measurement with correct label yet.
   // Cancel and resume right after we know the tag.
   cancelWorkTimer(workInProgress);
-  let Component = readLazyComponentType(elementType);
+  let lazyComponent: LazyComponentType<any, any> = elementType;
+  let payload = lazyComponent._payload;
+  let init = lazyComponent._init;
+  let Component = init(payload);
   // Store the unwrapped component in the type.
   workInProgress.type = Component;
   const resolvedTag = (workInProgress.tag = resolveLazyComponentTag(Component));
