@@ -19,9 +19,7 @@ function EmailInputs() {
           <li>Type character, space, character, delete last character</li>
         </TestCase.Steps>
 
-        <TestCase.ExpectedResult>
-          Cursor not moving.
-        </TestCase.ExpectedResult>
+        <TestCase.ExpectedResult>Cursor not moving.</TestCase.ExpectedResult>
 
         <JumpingCursorTestCase />
       </TestCase>
