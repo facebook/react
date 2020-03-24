@@ -111,7 +111,7 @@ function mapIntoArray(children, array, escapedPrefix, nameSoFar, callback) {
       if (childKey != null) {
         escapedChildKey = escapeUserProvidedKey(childKey) + '/';
       }
-      mapIntoArray(mappedChild, array, escapedChildKey, c => c);
+      mapIntoArray(mappedChild, array, escapedChildKey, '', c => c);
     } else if (mappedChild != null) {
       if (isValidElement(mappedChild)) {
         mappedChild = cloneAndReplaceKey(
