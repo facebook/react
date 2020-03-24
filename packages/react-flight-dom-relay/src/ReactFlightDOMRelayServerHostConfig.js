@@ -43,7 +43,7 @@ type JSONValue =
   | number
   | boolean
   | null
-  | {[key: string]: JSONValue}
+  | {+[key: string]: JSONValue}
   | Array<JSONValue>;
 
 export type Chunk =
@@ -78,19 +78,29 @@ export function processErrorChunk(
   };
 }
 
-function convertModelToJSON(request: Request, model: ReactModel): JSONValue {
-  let json = resolveModelToJSON(request, model);
+function convertModelToJSON(
+  request: Request,
+  parent: {+[key: string]: ReactModel} | $ReadOnlyArray<ReactModel>,
+  key: string,
+  model: ReactModel,
+): JSONValue {
+  let json = resolveModelToJSON(request, parent, key, model);
   if (typeof json === 'object' && json !== null) {
     if (Array.isArray(json)) {
       let jsonArray: Array<JSONValue> = [];
       for (let i = 0; i < json.length; i++) {
-        jsonArray[i] = convertModelToJSON(request, json[i]);
+        jsonArray[i] = convertModelToJSON(request, json, '' + i, json[i]);
       }
       return jsonArray;
     } else {
       let jsonObj: {[key: string]: JSONValue} = {};
-      for (let key in json) {
-        jsonObj[key] = convertModelToJSON(request, json[key]);
+      for (let nextKey in json) {
+        jsonObj[nextKey] = convertModelToJSON(
+          request,
+          json,
+          nextKey,
+          json[nextKey],
+        );
       }
       return jsonObj;
     }
@@ -103,7 +113,7 @@ export function processModelChunk(
   id: number,
   model: ReactModel,
 ): Chunk {
-  let json = convertModelToJSON(request, model);
+  let json = convertModelToJSON(request, {}, '', model);
   return {
     type: 'json',
     id: id,

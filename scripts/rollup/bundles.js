@@ -405,7 +405,12 @@ const bundles = [
     moduleType: RENDERER,
     entry: 'react-noop-renderer/flight-server',
     global: 'ReactNoopFlightServer',
-    externals: ['react', 'scheduler', 'expect'],
+    externals: [
+      'react',
+      'scheduler',
+      'expect',
+      'react-noop-renderer/flight-modules',
+    ],
   },
 
   /******* React Noop Flight Client (used for tests) *******/
@@ -414,7 +419,12 @@ const bundles = [
     moduleType: RENDERER,
     entry: 'react-noop-renderer/flight-client',
     global: 'ReactNoopFlightClient',
-    externals: ['react', 'scheduler', 'expect'],
+    externals: [
+      'react',
+      'scheduler',
+      'expect',
+      'react-noop-renderer/flight-modules',
+    ],
   },
 
   /******* React Reconciler *******/

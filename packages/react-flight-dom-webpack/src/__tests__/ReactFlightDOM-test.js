@@ -17,6 +17,13 @@ global.TextDecoder = require('util').TextDecoder;
 // TODO: we can replace this with FlightServer.act().
 global.setImmediate = cb => cb();
 
+let webpackModuleIdx = 0;
+let webpackModules = {};
+let webpackMap = {};
+global.__webpack_require__ = function(id) {
+  return webpackModules[id];
+};
+
 let act;
 let Stream;
 let React;
@@ -27,6 +34,8 @@ let ReactFlightDOMClient;
 describe('ReactFlightDOM', () => {
   beforeEach(() => {
     jest.resetModules();
+    webpackModules = {};
+    webpackMap = {};
     act = require('react-dom/test-utils').act;
     Stream = require('stream');
     React = require('react');
@@ -50,6 +59,24 @@ describe('ReactFlightDOM', () => {
     return {
       writable,
       readable,
+    };
+  }
+
+  function block(query, render) {
+    let idx = webpackModuleIdx++;
+    webpackModules[idx] = {
+      d: render,
+    };
+    webpackMap['path/' + idx] = {
+      id: '' + idx,
+      chunks: [],
+      name: 'd',
+    };
+    return function(...args) {
+      let curriedQuery = () => {
+        return query(...args);
+      };
+      return [Symbol.for('react.server.block'), 'path/' + idx, curriedQuery];
     };
   }
 
@@ -88,7 +115,7 @@ describe('ReactFlightDOM', () => {
     }
 
     let {writable, readable} = getTestStream();
-    ReactFlightDOMServer.pipeToNodeWritable(<App />, writable);
+    ReactFlightDOMServer.pipeToNodeWritable(<App />, writable, webpackMap);
     let result = ReactFlightDOMClient.readFromReadableStream(readable);
     await waitForSuspense(() => {
       expect(result.model).toEqual({
@@ -136,7 +163,11 @@ describe('ReactFlightDOM', () => {
     }
 
     let {writable, readable} = getTestStream();
-    ReactFlightDOMServer.pipeToNodeWritable(<RootModel />, writable);
+    ReactFlightDOMServer.pipeToNodeWritable(
+      <RootModel />,
+      writable,
+      webpackMap,
+    );
     let result = ReactFlightDOMClient.readFromReadableStream(readable);
 
     let container = document.createElement('div');
@@ -170,7 +201,11 @@ describe('ReactFlightDOM', () => {
     }
 
     let {writable, readable} = getTestStream();
-    ReactFlightDOMServer.pipeToNodeWritable(<RootModel />, writable);
+    ReactFlightDOMServer.pipeToNodeWritable(
+      <RootModel />,
+      writable,
+      webpackMap,
+    );
     let result = ReactFlightDOMClient.readFromReadableStream(readable);
 
     let container = document.createElement('div');
@@ -202,7 +237,11 @@ describe('ReactFlightDOM', () => {
     }
 
     let {writable, readable} = getTestStream();
-    ReactFlightDOMServer.pipeToNodeWritable(<RootModel />, writable);
+    ReactFlightDOMServer.pipeToNodeWritable(
+      <RootModel />,
+      writable,
+      webpackMap,
+    );
     let result = ReactFlightDOMClient.readFromReadableStream(readable);
 
     let container = document.createElement('div');
@@ -213,7 +252,7 @@ describe('ReactFlightDOM', () => {
     expect(container.innerHTML).toBe('<p>@div</p>');
   });
 
-  it.experimental('should progressively reveal chunks', async () => {
+  it.experimental('should progressively reveal Blocks', async () => {
     let {Suspense} = React;
 
     class ErrorBoundary extends React.Component {
@@ -249,16 +288,20 @@ describe('ReactFlightDOM', () => {
           reject(e);
         };
       });
-      function DelayedText({children}) {
+      function Query() {
         if (promise) {
           throw promise;
         }
         if (error) {
           throw error;
         }
+        return 'data';
+      }
+      function DelayedText({children}, data) {
         return <Text>{children}</Text>;
       }
-      return [DelayedText, _resolve, _reject];
+      let _block = block(Query, DelayedText);
+      return [_block(), _resolve, _reject];
     }
 
     const [FriendsModel, resolveFriendsModel] = makeDelayedText();
@@ -274,13 +317,11 @@ describe('ReactFlightDOM', () => {
         games: <GamesModel>:games:</GamesModel>,
       };
     }
-    function ProfileModel() {
-      return {
-        photos: <PhotosModel>:photos:</PhotosModel>,
-        name: <NameModel>:name:</NameModel>,
-        more: <ProfileMore />,
-      };
-    }
+    let profileModel = {
+      photos: <PhotosModel>:photos:</PhotosModel>,
+      name: <NameModel>:name:</NameModel>,
+      more: <ProfileMore />,
+    };
 
     // View
     function ProfileDetails({result}) {
@@ -327,7 +368,7 @@ describe('ReactFlightDOM', () => {
     }
 
     let {writable, readable} = getTestStream();
-    ReactFlightDOMServer.pipeToNodeWritable(<ProfileModel />, writable);
+    ReactFlightDOMServer.pipeToNodeWritable(profileModel, writable, webpackMap);
     let result = ReactFlightDOMClient.readFromReadableStream(readable);
 
     let container = document.createElement('div');

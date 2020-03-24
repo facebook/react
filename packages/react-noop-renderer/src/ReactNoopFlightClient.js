@@ -16,6 +16,8 @@
 
 import type {ReactModelRoot} from 'react-client/flight';
 
+import {readModule} from 'react-noop-renderer/flight-modules';
+
 import ReactFlightClient from 'react-client/flight';
 
 type Source = Array<string>;
@@ -27,14 +29,12 @@ const {
   close,
 } = ReactFlightClient({
   supportsBinaryStreams: false,
-  resolveModuleReference(name: string) {
-    return name;
+  resolveModuleReference(idx: string) {
+    return idx;
   },
-  preloadModule(name: string) {},
-  requireModule(name: string) {
-    return function FakeModule() {
-      return name;
-    };
+  preloadModule(idx: string) {},
+  requireModule(idx: string) {
+    return readModule(idx);
   },
 });
 

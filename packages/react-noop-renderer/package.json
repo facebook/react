@@ -28,6 +28,7 @@
     "persistent.js",
     "server.js",
     "flight-client.js",
+    "flight-modules.js",
     "flight-server.js",
     "cjs/"
   ]
