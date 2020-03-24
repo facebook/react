@@ -230,16 +230,9 @@ function mapChildren(children, func, context) {
   }
   const result = [];
   let count = 0;
-  mapIntoArray(
-    children,
-    result,
-    '',
-    '',
-    function(child) {
-      return func.call(context, child, count++);
-    },
-    context,
-  );
+  mapIntoArray(children, result, '', '', function(child) {
+    return func.call(context, child, count++);
+  });
   return result;
 }
 
@@ -254,7 +247,10 @@ function mapChildren(children, func, context) {
  */
 function countChildren(children) {
   let n = 0;
-  mapChildren(children, () => n++);
+  mapChildren(children, () => {
+    n++;
+    // Don't return anything
+  });
   return n;
 }
 
