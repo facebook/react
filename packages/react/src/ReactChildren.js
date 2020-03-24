@@ -3,7 +3,11 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
+ *
+ * @flow
  */
+
+import type {ReactNodeList} from 'shared/ReactTypes';
 
 import invariant from 'shared/invariant';
 import {
@@ -25,7 +29,7 @@ const SUBSEPARATOR = ':';
  * @param {string} key to be escaped.
  * @return {string} the escaped key.
  */
-function escape(key) {
+function escape(key: any): string {
   const escapeRegex = /[=:]/g;
   const escaperLookup = {
     '=': '=0',
@@ -46,7 +50,7 @@ function escape(key) {
 let didWarnAboutMaps = false;
 
 const userProvidedKeyEscapeRegex = /\/+/g;
-function escapeUserProvidedKey(text) {
+function escapeUserProvidedKey(text: string): string {
   return ('' + text).replace(userProvidedKeyEscapeRegex, '$&/');
 }
 
@@ -57,7 +61,7 @@ function escapeUserProvidedKey(text) {
  * @param {number} index Index that is used if a manual key is not provided.
  * @return {string}
  */
-function getComponentKey(component, index) {
+function getComponentKey(component: mixed, index: number): string {
   // Do some typechecking here since we call this blindly. We want to ensure
   // that we don't block potential future ES APIs.
   if (
@@ -72,7 +76,13 @@ function getComponentKey(component, index) {
   return index.toString(36);
 }
 
-function mapIntoArray(children, array, escapedPrefix, nameSoFar, callback) {
+function mapIntoArray(
+  children: ?ReactNodeList,
+  array: Array<React$Node>,
+  escapedPrefix: string,
+  nameSoFar: string,
+  callback: (?React$Node) => ?ReactNodeList,
+): number {
   const type = typeof children;
 
   if (type === 'undefined' || type === 'boolean') {
@@ -91,7 +101,7 @@ function mapIntoArray(children, array, escapedPrefix, nameSoFar, callback) {
         invokeCallback = true;
         break;
       case 'object':
-        switch (children.$$typeof) {
+        switch ((children: any).$$typeof) {
           case REACT_ELEMENT_TYPE:
           case REACT_PORTAL_TYPE:
             invokeCallback = true;
@@ -119,8 +129,10 @@ function mapIntoArray(children, array, escapedPrefix, nameSoFar, callback) {
           // Keep both the (mapped) and old keys if they differ, just as
           // traverseAllChildren used to do for objects as children
           escapedPrefix +
+            // $FlowFixMe Flow incorrectly thinks React.Portal doesn't have a key
             (mappedChild.key && (!child || child.key !== mappedChild.key)
-              ? escapeUserProvidedKey(mappedChild.key) + '/'
+              ? // $FlowFixMe Flow incorrectly thinks existing element's key can be a number
+                escapeUserProvidedKey(mappedChild.key) + '/'
               : '') +
             childKey,
         );
@@ -151,18 +163,21 @@ function mapIntoArray(children, array, escapedPrefix, nameSoFar, callback) {
   } else {
     const iteratorFn = getIteratorFn(children);
     if (typeof iteratorFn === 'function') {
+      const iterableChildren: Iterable<React$Node> & {
+        entries: any,
+      } = (children: any);
       if (disableMapsAsChildren) {
         invariant(
-          iteratorFn !== children.entries,
+          iteratorFn !== iterableChildren.entries,
           'Maps are not valid as a React child (found: %s). Consider converting ' +
             'children to an array of keyed ReactElements instead.',
-          children,
+          iterableChildren,
         );
       }
 
       if (__DEV__) {
         // Warn about using Maps as children
-        if (iteratorFn === children.entries) {
+        if (iteratorFn === iterableChildren.entries) {
           if (!didWarnAboutMaps) {
             console.warn(
               'Using Maps as children is deprecated and will be removed in ' +
@@ -174,7 +189,7 @@ function mapIntoArray(children, array, escapedPrefix, nameSoFar, callback) {
         }
       }
 
-      const iterator = iteratorFn.call(children);
+      const iterator = iteratorFn.call(iterableChildren);
       let step;
       let ii = 0;
       while (!(step = iterator.next()).done) {
@@ -196,12 +211,12 @@ function mapIntoArray(children, array, escapedPrefix, nameSoFar, callback) {
           'instead.' +
           ReactDebugCurrentFrame.getStackAddendum();
       }
-      const childrenString = '' + children;
+      const childrenString = '' + (children: any);
       invariant(
         false,
         'Objects are not valid as a React child (found: %s).%s',
         childrenString === '[object Object]'
-          ? 'object with keys {' + Object.keys(children).join(', ') + '}'
+          ? 'object with keys {' + Object.keys((children: any)).join(', ') + '}'
           : childrenString,
         addendum,
       );
@@ -210,6 +225,8 @@ function mapIntoArray(children, array, escapedPrefix, nameSoFar, callback) {
 
   return subtreeCount;
 }
+
+type MapFunc = (child: ?React$Node) => ?ReactNodeList;
 
 /**
  * Maps children that are typically specified as `props.children`.
@@ -224,7 +241,11 @@ function mapIntoArray(children, array, escapedPrefix, nameSoFar, callback) {
  * @param {*} context Context for mapFunction.
  * @return {object} Object containing the ordered map of results.
  */
-function mapChildren(children, func, context) {
+function mapChildren(
+  children: ?ReactNodeList,
+  func: MapFunc,
+  context: mixed,
+): ?Array<React$Node> {
   if (children == null) {
     return children;
   }
@@ -245,7 +266,7 @@ function mapChildren(children, func, context) {
  * @param {?*} children Children tree container.
  * @return {number} The number of children.
  */
-function countChildren(children) {
+function countChildren(children: ?ReactNodeList): number {
   let n = 0;
   mapChildren(children, () => {
     n++;
@@ -253,6 +274,8 @@ function countChildren(children) {
   });
   return n;
 }
+
+type ForEachFunc = (child: ?React$Node) => void;
 
 /**
  * Iterates through children that are typically specified as `props.children`.
@@ -266,7 +289,11 @@ function countChildren(children) {
  * @param {function(*, int)} forEachFunc
  * @param {*} forEachContext Context for forEachContext.
  */
-function forEachChildren(children, forEachFunc, forEachContext) {
+function forEachChildren(
+  children: ?ReactNodeList,
+  forEachFunc: ForEachFunc,
+  forEachContext: mixed,
+): void {
   mapChildren(
     children,
     function() {
@@ -283,7 +310,7 @@ function forEachChildren(children, forEachFunc, forEachContext) {
  *
  * See https://reactjs.org/docs/react-api.html#reactchildrentoarray
  */
-function toArray(children) {
+function toArray(children: ?ReactNodeList): Array<React$Node> {
   return mapChildren(children, child => child) || [];
 }
 
@@ -301,7 +328,7 @@ function toArray(children) {
  * @return {ReactElement} The first and only `ReactElement` contained in the
  * structure.
  */
-function onlyChild(children) {
+function onlyChild<T>(children: T): T {
   invariant(
     isValidElement(children),
     'React.Children.only expected to receive a single React element child.',

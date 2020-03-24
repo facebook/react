@@ -25,7 +25,7 @@ function flattenChildren(children) {
     if (child == null) {
       return;
     }
-    content += child;
+    content += (child: any);
     // Note: we don't warn about invalid children here.
     // Instead, this is done separately below so that
     // it happens during the hydration codepath too.
@@ -52,7 +52,7 @@ export function validateProps(element: Element, props: Object) {
         if (typeof child === 'string' || typeof child === 'number') {
           return;
         }
-        if (typeof child.type !== 'string') {
+        if (typeof (child: any).type !== 'string') {
           return;
         }
         if (!didWarnInvalidChild) {
