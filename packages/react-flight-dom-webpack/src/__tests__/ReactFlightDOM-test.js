@@ -62,7 +62,7 @@ describe('ReactFlightDOM', () => {
     };
   }
 
-  function block(render, query) {
+  function block(render, load) {
     let idx = webpackModuleIdx++;
     webpackModules[idx] = {
       d: render,
@@ -73,13 +73,13 @@ describe('ReactFlightDOM', () => {
       name: 'd',
     };
     return function(...args) {
-      if (query === undefined) {
+      if (load === undefined) {
         return [Symbol.for('react.server.block'), render];
       }
-      let curriedQuery = () => {
-        return query(...args);
+      let curriedLoad = () => {
+        return load(...args);
       };
-      return [Symbol.for('react.server.block'), 'path/' + idx, curriedQuery];
+      return [Symbol.for('react.server.block'), 'path/' + idx, curriedLoad];
     };
   }
 
@@ -291,7 +291,7 @@ describe('ReactFlightDOM', () => {
           reject(e);
         };
       });
-      function query() {
+      function load() {
         if (promise) {
           throw promise;
         }
@@ -303,8 +303,8 @@ describe('ReactFlightDOM', () => {
       function DelayedText({children}, data) {
         return <Text>{children}</Text>;
       }
-      let _block = block(DelayedText, query);
-      return [_block(), _resolve, _reject];
+      let loadBlock = block(DelayedText, load);
+      return [loadBlock(), _resolve, _reject];
     }
 
     const [FriendsModel, resolveFriendsModel] = makeDelayedText();

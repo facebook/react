@@ -72,7 +72,7 @@ describe('ReactBlocks', () => {
   });
 
   it.experimental('prints the name of the render function in warnings', () => {
-    function query(firstName) {
+    function load(firstName) {
       return {
         name: firstName,
       };
@@ -91,7 +91,7 @@ describe('ReactBlocks', () => {
       );
     }
 
-    let loadUser = block(User, query);
+    let loadUser = block(User, load);
 
     expect(() => {
       ReactNoop.act(() => {
@@ -108,8 +108,8 @@ describe('ReactBlocks', () => {
     );
   });
 
-  it.experimental('renders a component with a suspending query', async () => {
-    function query(id) {
+  it.experimental('renders a component with a suspending load', async () => {
+    function load(id) {
       return {
         id: id,
         name: readString('Sebastian'),
@@ -124,7 +124,7 @@ describe('ReactBlocks', () => {
       );
     }
 
-    let loadUser = block(Render, query);
+    let loadUser = block(Render, load);
 
     function App({User}) {
       return (
@@ -150,7 +150,7 @@ describe('ReactBlocks', () => {
   it.experimental(
     'does not support a lazy wrapper around a chunk',
     async () => {
-      function query(id) {
+      function load(id) {
         return {
           id: id,
           name: readString('Sebastian'),
@@ -165,7 +165,7 @@ describe('ReactBlocks', () => {
         );
       }
 
-      let loadUser = block(Render, query);
+      let loadUser = block(Render, load);
 
       function App({User}) {
         return (
@@ -209,7 +209,7 @@ describe('ReactBlocks', () => {
   it.experimental(
     'can receive updated data for the same component',
     async () => {
-      function query(firstName) {
+      function load(firstName) {
         return {
           name: firstName,
         };
@@ -225,7 +225,7 @@ describe('ReactBlocks', () => {
         );
       }
 
-      let loadUser = block(Render, query);
+      let loadUser = block(Render, load);
 
       function App({User}) {
         return (

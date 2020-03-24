@@ -16,14 +16,14 @@ import {
   REACT_FORWARD_REF_TYPE,
 } from 'shared/ReactSymbols';
 
-type BlockQueryFunction<Args: Iterable<any>, Data> = (...args: Args) => Data;
+type BlockLoadFunction<Args: Iterable<any>, Data> = (...args: Args) => Data;
 export type BlockRenderFunction<Props, Data> = (
   props: Props,
   data: Data,
 ) => React$Node;
 
 type Payload<Props, Args: Iterable<any>, Data> = {
-  query: BlockQueryFunction<Args, Data>,
+  load: BlockLoadFunction<Args, Data>,
   args: Args,
   render: BlockRenderFunction<Props, Data>,
 };
@@ -44,20 +44,20 @@ function lazyInitializer<Props, Args: Iterable<any>, Data>(
 ): BlockComponent<Props, Data> {
   return {
     $$typeof: REACT_BLOCK_TYPE,
-    _data: payload.query.apply(null, payload.args),
+    _data: payload.load.apply(null, payload.args),
     _render: payload.render,
   };
 }
 
 export function block<Args: Iterable<any>, Props, Data>(
   render: BlockRenderFunction<Props, Data>,
-  query?: BlockQueryFunction<Args, Data>,
+  load?: BlockLoadFunction<Args, Data>,
 ): (...args: Args) => Block<Props> {
   if (__DEV__) {
-    if (query !== undefined && typeof query !== 'function') {
+    if (load !== undefined && typeof load !== 'function') {
       console.error(
-        'Blocks require a query function, if provided, but was given %s.',
-        query === null ? 'null' : typeof query,
+        'Blocks require a load function, if provided, but was given %s.',
+        load === null ? 'null' : typeof load,
       );
     }
     if (render != null && render.$$typeof === REACT_MEMO_TYPE) {
@@ -97,7 +97,7 @@ export function block<Args: Iterable<any>, Props, Data>(
     }
   }
 
-  if (query === undefined) {
+  if (load === undefined) {
     return function(): Block<Props> {
       let blockComponent: BlockComponent<Props, void> = {
         $$typeof: REACT_BLOCK_TYPE,
@@ -112,13 +112,13 @@ export function block<Args: Iterable<any>, Props, Data>(
   }
 
   // Trick to let Flow refine this.
-  let queryFn = query;
+  let loadFn = load;
 
   return function(): Block<Props> {
     let args: Args = arguments;
 
     let payload: Payload<Props, Args, Data> = {
-      query: queryFn,
+      load: loadFn,
       args: args,
       render: render,
     };
