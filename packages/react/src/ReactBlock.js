@@ -50,13 +50,13 @@ function lazyInitializer<Props, Args: Iterable<any>, Data>(
 }
 
 export function block<Args: Iterable<any>, Props, Data>(
-  query: BlockQueryFunction<Args, Data>,
   render: BlockRenderFunction<Props, Data>,
+  query?: BlockQueryFunction<Args, Data>,
 ): (...args: Args) => Block<Props> {
   if (__DEV__) {
-    if (typeof query !== 'function') {
+    if (query !== undefined && typeof query !== 'function') {
       console.error(
-        'Blocks require a query function but was given %s.',
+        'Blocks require a query function, if provided, but was given %s.',
         query === null ? 'null' : typeof query,
       );
     }
@@ -97,11 +97,28 @@ export function block<Args: Iterable<any>, Props, Data>(
     }
   }
 
+  if (query === undefined) {
+    return function(): Block<Props> {
+      let blockComponent: BlockComponent<Props, void> = {
+        $$typeof: REACT_BLOCK_TYPE,
+        _data: undefined,
+        // $FlowFixMe: Data must be void in this scenario.
+        _render: render,
+      };
+
+      // $FlowFixMe
+      return blockComponent;
+    };
+  }
+
+  // Trick to let Flow refine this.
+  let queryFn = query;
+
   return function(): Block<Props> {
     let args: Args = arguments;
 
     let payload: Payload<Props, Args, Data> = {
-      query: query,
+      query: queryFn,
       args: args,
       render: render,
     };

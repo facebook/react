@@ -152,7 +152,7 @@ export function reportGlobalError(response: Response, error: Error): void {
 }
 
 function readMaybeChunk<T>(maybeChunk: Chunk<T> | T): T {
-  if ((maybeChunk: any).$$typeof !== CHUNK_TYPE) {
+  if (maybeChunk == null || (maybeChunk: any).$$typeof !== CHUNK_TYPE) {
     // $FlowFixMe
     return maybeChunk;
   }

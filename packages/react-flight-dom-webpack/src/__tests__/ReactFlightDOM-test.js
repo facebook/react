@@ -62,7 +62,7 @@ describe('ReactFlightDOM', () => {
     };
   }
 
-  function block(query, render) {
+  function block(render, query) {
     let idx = webpackModuleIdx++;
     webpackModules[idx] = {
       d: render,
@@ -73,6 +73,9 @@ describe('ReactFlightDOM', () => {
       name: 'd',
     };
     return function(...args) {
+      if (query === undefined) {
+        return [Symbol.for('react.server.block'), render];
+      }
       let curriedQuery = () => {
         return query(...args);
       };
@@ -288,7 +291,7 @@ describe('ReactFlightDOM', () => {
           reject(e);
         };
       });
-      function Query() {
+      function query() {
         if (promise) {
           throw promise;
         }
@@ -300,7 +303,7 @@ describe('ReactFlightDOM', () => {
       function DelayedText({children}, data) {
         return <Text>{children}</Text>;
       }
-      let _block = block(Query, DelayedText);
+      let _block = block(DelayedText, query);
       return [_block(), _resolve, _reject];
     }
 
