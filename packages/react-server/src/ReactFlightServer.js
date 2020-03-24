@@ -191,11 +191,11 @@ export function resolveModelToJSON(
         }
       }
       case '2': {
-        // Query
-        let query: () => ReactModel = (value: any);
+        // Load function
+        let load: () => ReactModel = (value: any);
         try {
-          // Attempt to resolve the query.
-          return query();
+          // Attempt to resolve the data.
+          return load();
         } catch (x) {
           if (
             typeof x === 'object' &&
@@ -204,12 +204,12 @@ export function resolveModelToJSON(
           ) {
             // Something suspended, we'll need to create a new segment and resolve it later.
             request.pendingChunks++;
-            let newSegment = createSegment(request, query);
+            let newSegment = createSegment(request, load);
             let ping = newSegment.ping;
             x.then(ping, ping);
             return serializeIDRef(newSegment.id);
           } else {
-            // This query failed, encode the error as a separate row and reference that.
+            // This load failed, encode the error as a separate row and reference that.
             request.pendingChunks++;
             let errorId = request.nextChunkId++;
             emitErrorChunk(request, errorId, x);

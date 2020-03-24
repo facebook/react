@@ -44,12 +44,15 @@ describe('ReactFlightDOMRelay', () => {
     return model;
   }
 
-  function block(query, render) {
+  function block(render, load) {
     return function(...args) {
-      let curriedQuery = () => {
-        return query(...args);
+      if (load === undefined) {
+        return [Symbol.for('react.server.block'), render];
+      }
+      let curriedLoad = () => {
+        return load(...args);
       };
-      return [Symbol.for('react.server.block'), render, curriedQuery];
+      return [Symbol.for('react.server.block'), render, curriedLoad];
     };
   }
 
@@ -89,7 +92,7 @@ describe('ReactFlightDOMRelay', () => {
   });
 
   it.experimental('can transfer a Block to the client and render there', () => {
-    function Query(firstName, lastName) {
+    function load(firstName, lastName) {
       return {name: firstName + ' ' + lastName};
     }
     function User(props, data) {
@@ -99,7 +102,7 @@ describe('ReactFlightDOMRelay', () => {
         </span>
       );
     }
-    let loadUser = block(Query, User);
+    let loadUser = block(User, load);
     let model = {
       User: loadUser('Seb', 'Smith'),
     };

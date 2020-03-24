@@ -49,8 +49,30 @@ describe('ReactBlocks', () => {
     };
   });
 
+  it.experimental('renders a simple component', () => {
+    function User(props, data) {
+      return <div>{typeof data}</div>;
+    }
+
+    function App({Component}) {
+      return (
+        <Suspense fallback={'Loading...'}>
+          <Component name="Name" />
+        </Suspense>
+      );
+    }
+
+    let loadUser = block(User);
+
+    ReactNoop.act(() => {
+      ReactNoop.render(<App Component={loadUser()} />);
+    });
+
+    expect(ReactNoop).toMatchRenderedOutput(<div>undefined</div>);
+  });
+
   it.experimental('prints the name of the render function in warnings', () => {
-    function Query(firstName) {
+    function load(firstName) {
       return {
         name: firstName,
       };
@@ -69,7 +91,7 @@ describe('ReactBlocks', () => {
       );
     }
 
-    let loadUser = block(Query, User);
+    let loadUser = block(User, load);
 
     expect(() => {
       ReactNoop.act(() => {
@@ -86,8 +108,8 @@ describe('ReactBlocks', () => {
     );
   });
 
-  it.experimental('renders a component with a suspending query', async () => {
-    function Query(id) {
+  it.experimental('renders a component with a suspending load', async () => {
+    function load(id) {
       return {
         id: id,
         name: readString('Sebastian'),
@@ -102,7 +124,7 @@ describe('ReactBlocks', () => {
       );
     }
 
-    let loadUser = block(Query, Render);
+    let loadUser = block(Render, load);
 
     function App({User}) {
       return (
@@ -128,7 +150,7 @@ describe('ReactBlocks', () => {
   it.experimental(
     'does not support a lazy wrapper around a chunk',
     async () => {
-      function Query(id) {
+      function load(id) {
         return {
           id: id,
           name: readString('Sebastian'),
@@ -143,7 +165,7 @@ describe('ReactBlocks', () => {
         );
       }
 
-      let loadUser = block(Query, Render);
+      let loadUser = block(Render, load);
 
       function App({User}) {
         return (
@@ -187,7 +209,7 @@ describe('ReactBlocks', () => {
   it.experimental(
     'can receive updated data for the same component',
     async () => {
-      function Query(firstName) {
+      function load(firstName) {
         return {
           name: firstName,
         };
@@ -203,7 +225,7 @@ describe('ReactBlocks', () => {
         );
       }
 
-      let loadUser = block(Query, Render);
+      let loadUser = block(Render, load);
 
       function App({User}) {
         return (

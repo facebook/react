@@ -29,12 +29,15 @@ describe('ReactFlight', () => {
     act = ReactNoop.act;
   });
 
-  function block(query, render) {
+  function block(render, load) {
     return function(...args) {
-      let curriedQuery = () => {
-        return query(...args);
+      if (load === undefined) {
+        return [Symbol.for('react.server.block'), render];
+      }
+      let curriedLoad = () => {
+        return load(...args);
       };
-      return [Symbol.for('react.server.block'), render, curriedQuery];
+      return [Symbol.for('react.server.block'), render, curriedLoad];
     };
   }
 
@@ -70,8 +73,32 @@ describe('ReactFlight', () => {
   });
 
   if (ReactFeatureFlags.enableBlocksAPI) {
-    it('can transfer a Block to the client and render there', () => {
-      function Query(firstName, lastName) {
+    it('can transfer a Block to the client and render there, without data', () => {
+      function User(props, data) {
+        return (
+          <span>
+            {props.greeting} {typeof data}
+          </span>
+        );
+      }
+      let loadUser = block(User);
+      let model = {
+        User: loadUser('Seb', 'Smith'),
+      };
+
+      let transport = ReactNoopFlightServer.render(model);
+      let root = ReactNoopFlightClient.read(transport);
+
+      act(() => {
+        let UserClient = root.model.User;
+        ReactNoop.render(<UserClient greeting="Hello" />);
+      });
+
+      expect(ReactNoop).toMatchRenderedOutput(<span>Hello undefined</span>);
+    });
+
+    it('can transfer a Block to the client and render there, with data', () => {
+      function load(firstName, lastName) {
         return {name: firstName + ' ' + lastName};
       }
       function User(props, data) {
@@ -81,7 +108,7 @@ describe('ReactFlight', () => {
           </span>
         );
       }
-      let loadUser = block(Query, User);
+      let loadUser = block(User, load);
       let model = {
         User: loadUser('Seb', 'Smith'),
       };
