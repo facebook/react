@@ -75,6 +75,8 @@ import {
   TOP_PROGRESS,
   TOP_PLAYING,
   TOP_CLICK,
+  TOP_BEFORE_BLUR,
+  TOP_AFTER_BLUR,
 } from './DOMTopLevelEventTypes';
 import {
   getClosestInstanceFromNode,
@@ -84,7 +86,10 @@ import {
 import {COMMENT_NODE} from '../shared/HTMLNodeType';
 import {topLevelEventsToDispatchConfig} from './DOMEventProperties';
 
-import {enableLegacyFBSupport} from 'shared/ReactFeatureFlags';
+import {
+  enableLegacyFBSupport,
+  enableUseEventAPI,
+} from 'shared/ReactFeatureFlags';
 
 const capturePhaseEvents = new Set([
   TOP_FOCUS,
@@ -121,6 +126,11 @@ const capturePhaseEvents = new Set([
   TOP_VOLUME_CHANGE,
   TOP_WAITING,
 ]);
+
+if (enableUseEventAPI) {
+  capturePhaseEvents.add(TOP_BEFORE_BLUR);
+  capturePhaseEvents.add(TOP_AFTER_BLUR);
+}
 
 const emptyDispatchConfigForCustomEvents: CustomDispatchConfig = {
   customEvent: true,

@@ -149,6 +149,9 @@ export const TOP_VOLUME_CHANGE = unsafeCastStringToDOMTopLevelType(
 export const TOP_WAITING = unsafeCastStringToDOMTopLevelType('waiting');
 export const TOP_WHEEL = unsafeCastStringToDOMTopLevelType('wheel');
 
+export const TOP_AFTER_BLUR = unsafeCastStringToDOMTopLevelType('afterblur');
+export const TOP_BEFORE_BLUR = unsafeCastStringToDOMTopLevelType('beforeblur');
+
 // List of events that need to be individually attached to media elements.
 // Note that events in this list will *not* be listened to at the top level
 // unless they're explicitly whitelisted in `ReactBrowserEventEmitter.listenTo`.

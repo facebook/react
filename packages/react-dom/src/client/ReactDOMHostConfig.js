@@ -7,6 +7,7 @@
  * @flow
  */
 
+import type {TopLevelType} from 'legacy-events/TopLevelEventTypes';
 import type {RootType} from './ReactDOMRoot';
 
 import {
@@ -84,6 +85,7 @@ import {
   attachTargetEventListener,
 } from '../events/DOMModernPluginEventSystem';
 import {getListenerMapForElement} from '../events/DOMEventListenerMap';
+import {TOP_BEFORE_BLUR, TOP_AFTER_BLUR} from '../events/DOMTopLevelEventTypes';
 
 export type ReactListenerEvent = ReactDOMListenerEvent;
 export type ReactListenerMap = ReactDOMListenerMap;
@@ -238,11 +240,11 @@ export function resetAfterCommit(containerInfo: Container): void {
   restoreSelection(selectionInformation);
   ReactBrowserEventEmitterSetEnabled(eventsEnabled);
   eventsEnabled = null;
-  if (enableDeprecatedFlareAPI) {
+  if (enableDeprecatedFlareAPI || enableUseEventAPI) {
     const activeElementDetached = (selectionInformation: any)
       .activeElementDetached;
     if (activeElementDetached !== null) {
-      dispatchDetachedBlur(activeElementDetached);
+      dispatchAfterDetachedBlur(activeElementDetached);
     }
   }
   selectionInformation = null;
@@ -490,34 +492,66 @@ export function insertInContainerBefore(
   }
 }
 
+function createEvent(type: TopLevelType): Event {
+  const event = document.createEvent('Event');
+  event.initEvent(((type: any): string), false, false);
+  return event;
+}
+
 function dispatchBeforeDetachedBlur(target: HTMLElement): void {
   const targetInstance = getClosestInstanceFromNode(target);
   ((selectionInformation: any): SelectionInformation).activeElementDetached = target;
 
-  DEPRECATED_dispatchEventForResponderEventSystem(
-    'beforeblur',
-    targetInstance,
-    ({
+  if (enableDeprecatedFlareAPI) {
+    DEPRECATED_dispatchEventForResponderEventSystem(
+      'beforeblur',
+      targetInstance,
+      ({
+        target,
+        timeStamp: Date.now(),
+      }: any),
       target,
-      timeStamp: Date.now(),
-    }: any),
-    target,
-    RESPONDER_EVENT_SYSTEM | IS_PASSIVE,
-  );
+      RESPONDER_EVENT_SYSTEM | IS_PASSIVE,
+    );
+  }
+  if (enableUseEventAPI) {
+    try {
+      // We need to temporarily enable the event system
+      // to dispatch the "beforeblur" event.
+      ReactBrowserEventEmitterSetEnabled(true);
+      const event = createEvent(TOP_BEFORE_BLUR);
+      // Dispatch "beforeblur" directly on the target,
+      // so it gets picked up by the event system and
+      // can propagate through the React internal tree.
+      target.dispatchEvent(event);
+    } finally {
+      ReactBrowserEventEmitterSetEnabled(false);
+    }
+  }
 }
 
-function dispatchDetachedBlur(target: HTMLElement): void {
-  DEPRECATED_dispatchEventForResponderEventSystem(
-    'blur',
-    null,
-    ({
-      isTargetAttached: false,
+function dispatchAfterDetachedBlur(target: HTMLElement): void {
+  if (enableDeprecatedFlareAPI) {
+    DEPRECATED_dispatchEventForResponderEventSystem(
+      'blur',
+      null,
+      ({
+        isTargetAttached: false,
+        target,
+        timeStamp: Date.now(),
+      }: any),
       target,
-      timeStamp: Date.now(),
-    }: any),
-    target,
-    RESPONDER_EVENT_SYSTEM | IS_PASSIVE,
-  );
+      RESPONDER_EVENT_SYSTEM | IS_PASSIVE,
+    );
+  }
+  if (enableUseEventAPI) {
+    const event = createEvent(TOP_AFTER_BLUR);
+    // So we know what was detached, make the relatedTarget the
+    // detached target on the "afterblur" event.
+    (event: any).relatedTarget = target;
+    // Dispatch the event on the document.
+    document.dispatchEvent(event);
+  }
 }
 
 // This is a specific event for the React Flare
@@ -528,7 +562,7 @@ export function beforeRemoveInstance(
   instance: Instance | TextInstance | SuspenseInstance,
 ): void {
   if (
-    enableDeprecatedFlareAPI &&
+    (enableDeprecatedFlareAPI || enableUseEventAPI) &&
     selectionInformation &&
     instance === selectionInformation.focusedElem
   ) {
@@ -639,7 +673,7 @@ export function hideInstance(instance: Instance): void {
   // is ether the instance of a child or the instance. We need
   // to traverse the Fiber tree here rather than use node.contains()
   // as the child node might be inside a Portal.
-  if (enableDeprecatedFlareAPI && selectionInformation) {
+  if ((enableDeprecatedFlareAPI || enableUseEventAPI) && selectionInformation) {
     const focusedElem = selectionInformation.focusedElem;
     if (focusedElem !== null && instanceContainsElem(instance, focusedElem)) {
       dispatchBeforeDetachedBlur(((focusedElem: any): HTMLElement));

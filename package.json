@@ -113,6 +113,7 @@
     "test-persistent": "cross-env NODE_ENV=development jest --config ./scripts/jest/config.source-persistent.js",
     "debug-test-persistent": "cross-env NODE_ENV=development node --inspect-brk node_modules/jest/bin/jest.js --config ./scripts/jest/config.source-persistent.js --runInBand",
     "test-prod": "cross-env NODE_ENV=production jest --config ./scripts/jest/config.source.js",
+    "debug-test-prod": "cross-env NODE_ENV=production node --inspect-brk node_modules/jest/bin/jest.js --config ./scripts/jest/config.source.js --runInBand",
     "test-prod-build": "yarn test-build-prod",
     "test-build": "cross-env NODE_ENV=development jest --config ./scripts/jest/config.build.js",
     "test-build-prod": "cross-env NODE_ENV=production jest --config ./scripts/jest/config.build.js",

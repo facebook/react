@@ -23,6 +23,7 @@ import {
   UserBlockingEvent,
   ContinuousEvent,
 } from 'shared/ReactTypes';
+import {enableUseEventAPI} from 'shared/ReactFeatureFlags';
 
 // Needed for SimpleEventPlugin, rather than
 // do it in two places, which duplicates logic
@@ -94,6 +95,13 @@ const otherDiscreteEvents = [
   DOMTopLevelEventTypes.TOP_COMPOSITION_END,
   DOMTopLevelEventTypes.TOP_COMPOSITION_UPDATE,
 ];
+
+if (enableUseEventAPI) {
+  otherDiscreteEvents.push(
+    DOMTopLevelEventTypes.TOP_BEFORE_BLUR,
+    DOMTopLevelEventTypes.TOP_AFTER_BLUR,
+  );
+}
 
 // prettier-ignore
 const userBlockingPairsForSimpleEventPlugin = [

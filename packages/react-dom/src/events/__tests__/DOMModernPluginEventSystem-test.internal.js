@@ -9,10 +9,13 @@
 
 'use strict';
 
+import {createEventTarget} from 'dom-event-testing-library';
+
 let React;
 let ReactFeatureFlags;
 let ReactDOM;
 let ReactDOMServer;
+let ReactTestUtils;
 let Scheduler;
 
 function dispatchEvent(element, type) {
@@ -64,6 +67,7 @@ describe('DOMModernPluginEventSystem', () => {
           ReactDOM = require('react-dom');
           Scheduler = require('scheduler');
           ReactDOMServer = require('react-dom/server');
+          ReactTestUtils = require('react-dom/test-utils');
           container = document.createElement('div');
           document.body.appendChild(container);
           startNativeEventListenerClearDown();
@@ -1092,6 +1096,7 @@ describe('DOMModernPluginEventSystem', () => {
             ReactDOM = require('react-dom');
             Scheduler = require('scheduler');
             ReactDOMServer = require('react-dom/server');
+            ReactTestUtils = require('react-dom/test-utils');
           });
 
           if (!__EXPERIMENTAL__) {
@@ -2139,6 +2144,189 @@ describe('DOMModernPluginEventSystem', () => {
             expect(log[4]).toEqual(['bubble', divElement]);
             expect(log[5]).toEqual(['bubble', buttonElement]);
           });
+
+          it('beforeblur and afterblur are called after a focused element is unmounted', () => {
+            const log = [];
+            // We have to persist here because we want to read relatedTarget later.
+            const onAfterBlur = jest.fn(e => {
+              e.persist();
+              log.push(e.type);
+            });
+            const onBeforeBlur = jest.fn(e => log.push(e.type));
+            const innerRef = React.createRef();
+            const innerRef2 = React.createRef();
+
+            const Component = ({show}) => {
+              const ref = React.useRef(null);
+              const afterBlurHandle = ReactDOM.unstable_useEvent('afterblur');
+              const beforeBlurHandle = ReactDOM.unstable_useEvent('beforeblur');
+
+              React.useEffect(() => {
+                afterBlurHandle.setListener(document, onAfterBlur);
+                beforeBlurHandle.setListener(ref.current, onBeforeBlur);
+              });
+
+              return (
+                <div ref={ref}>
+                  {show && <input ref={innerRef} />}
+                  <div ref={innerRef2} />
+                </div>
+              );
+            };
+
+            ReactDOM.render(<Component show={true} />, container);
+            Scheduler.unstable_flushAll();
+
+            const inner = innerRef.current;
+            const target = createEventTarget(inner);
+            target.focus();
+            expect(onBeforeBlur).toHaveBeenCalledTimes(0);
+            expect(onAfterBlur).toHaveBeenCalledTimes(0);
+
+            ReactDOM.render(<Component show={false} />, container);
+            Scheduler.unstable_flushAll();
+
+            expect(onBeforeBlur).toHaveBeenCalledTimes(1);
+            expect(onAfterBlur).toHaveBeenCalledTimes(1);
+            expect(onAfterBlur).toHaveBeenCalledWith(
+              expect.objectContaining({relatedTarget: inner}),
+            );
+            expect(log).toEqual(['beforeblur', 'afterblur']);
+          });
+
+          it('beforeblur and afterblur are called after a nested focused element is unmounted', () => {
+            const log = [];
+            // We have to persist here because we want to read relatedTarget later.
+            const onAfterBlur = jest.fn(e => {
+              e.persist();
+              log.push(e.type);
+            });
+            const onBeforeBlur = jest.fn(e => log.push(e.type));
+            const innerRef = React.createRef();
+            const innerRef2 = React.createRef();
+
+            const Component = ({show}) => {
+              const ref = React.useRef(null);
+              const afterBlurHandle = ReactDOM.unstable_useEvent('afterblur');
+              const beforeBlurHandle = ReactDOM.unstable_useEvent('beforeblur');
+
+              React.useEffect(() => {
+                afterBlurHandle.setListener(document, onAfterBlur);
+                beforeBlurHandle.setListener(ref.current, onBeforeBlur);
+              });
+
+              return (
+                <div ref={ref}>
+                  {show && (
+                    <div>
+                      <input ref={innerRef} />
+                    </div>
+                  )}
+                  <div ref={innerRef2} />
+                </div>
+              );
+            };
+
+            ReactDOM.render(<Component show={true} />, container);
+            Scheduler.unstable_flushAll();
+
+            const inner = innerRef.current;
+            const target = createEventTarget(inner);
+            target.focus();
+            expect(onBeforeBlur).toHaveBeenCalledTimes(0);
+            expect(onAfterBlur).toHaveBeenCalledTimes(0);
+
+            ReactDOM.render(<Component show={false} />, container);
+            Scheduler.unstable_flushAll();
+
+            expect(onBeforeBlur).toHaveBeenCalledTimes(1);
+            expect(onAfterBlur).toHaveBeenCalledTimes(1);
+            expect(onAfterBlur).toHaveBeenCalledWith(
+              expect.objectContaining({relatedTarget: inner}),
+            );
+            expect(log).toEqual(['beforeblur', 'afterblur']);
+          });
+
+          it.experimental(
+            'beforeblur and afterblur are called after a focused element is suspended',
+            () => {
+              const log = [];
+              // We have to persist here because we want to read relatedTarget later.
+              const onAfterBlur = jest.fn(e => {
+                e.persist();
+                log.push(e.type);
+              });
+              const onBeforeBlur = jest.fn(e => log.push(e.type));
+              const innerRef = React.createRef();
+              const Suspense = React.Suspense;
+              let suspend = false;
+              let resolve;
+              let promise = new Promise(
+                resolvePromise => (resolve = resolvePromise),
+              );
+
+              function Child() {
+                if (suspend) {
+                  throw promise;
+                } else {
+                  return <input ref={innerRef} />;
+                }
+              }
+
+              const Component = () => {
+                const ref = React.useRef(null);
+                const afterBlurHandle = ReactDOM.unstable_useEvent('afterblur');
+                const beforeBlurHandle = ReactDOM.unstable_useEvent(
+                  'beforeblur',
+                );
+
+                React.useEffect(() => {
+                  afterBlurHandle.setListener(document, onAfterBlur);
+                  beforeBlurHandle.setListener(ref.current, onBeforeBlur);
+                });
+
+                return (
+                  <div ref={ref}>
+                    <Suspense fallback="Loading...">
+                      <Child />
+                    </Suspense>
+                  </div>
+                );
+              };
+
+              const container2 = document.createElement('div');
+              document.body.appendChild(container2);
+
+              let root = ReactDOM.createRoot(container2);
+
+              ReactTestUtils.act(() => {
+                root.render(<Component />);
+              });
+              jest.runAllTimers();
+
+              const inner = innerRef.current;
+              const target = createEventTarget(inner);
+              target.focus();
+              expect(onBeforeBlur).toHaveBeenCalledTimes(0);
+              expect(onAfterBlur).toHaveBeenCalledTimes(0);
+
+              suspend = true;
+              ReactTestUtils.act(() => {
+                root.render(<Component />);
+              });
+              jest.runAllTimers();
+
+              expect(onBeforeBlur).toHaveBeenCalledTimes(1);
+              expect(onAfterBlur).toHaveBeenCalledTimes(1);
+              expect(onAfterBlur).toHaveBeenCalledWith(
+                expect.objectContaining({relatedTarget: inner}),
+              );
+              resolve();
+              expect(log).toEqual(['beforeblur', 'afterblur']);
+
+              document.body.removeChild(container2);
+            },
+          );
         });
       },
     );
