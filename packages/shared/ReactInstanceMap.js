@@ -21,17 +21,17 @@
  * supported we can rename it.
  */
 export function remove(key) {
-  key._reactInternals = undefined;
+  key._reactInternalFiber = undefined;
 }
 
 export function get(key) {
-  return key._reactInternals;
+  return key._reactInternalFiber;
 }
 
 export function has(key) {
-  return key._reactInternals !== undefined;
+  return key._reactInternalFiber !== undefined;
 }
 
 export function set(key, value) {
-  key._reactInternals = value;
+  key._reactInternalFiber = value;
 }
