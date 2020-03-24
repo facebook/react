@@ -12,6 +12,7 @@ import type {
   ReactEventResponder,
   ReactEventResponderInstance,
   EventPriority,
+  ReactScopeMethods,
 } from 'shared/ReactTypes';
 import type {DOMTopLevelEventType} from 'legacy-events/TopLevelEventTypes';
 
@@ -86,12 +87,15 @@ export type ReactDOMListenerEvent = {|
 
 export type ReactDOMListenerMap = {|
   clear: () => void,
-  setListener: (target: EventTarget, callback: ?(Event) => void) => void,
+  setListener: (
+    target: EventTarget | ReactScopeMethods,
+    callback: ?(Event) => void,
+  ) => void,
 |};
 
 export type ReactDOMListener = {|
   callback: Event => void,
   destroy: Node => void,
   event: ReactDOMListenerEvent,
-  target: EventTarget,
+  target: EventTarget | ReactScopeMethods,
 |};
