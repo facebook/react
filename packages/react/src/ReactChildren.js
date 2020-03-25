@@ -29,13 +29,13 @@ const SUBSEPARATOR = ':';
  * @param {string} key to be escaped.
  * @return {string} the escaped key.
  */
-function escape(key: any): string {
+function escape(key: string): string {
   const escapeRegex = /[=:]/g;
   const escaperLookup = {
     '=': '=0',
     ':': '=2',
   };
-  const escapedString = ('' + key).replace(escapeRegex, function(match) {
+  const escapedString = key.replace(escapeRegex, function(match) {
     return escaperLookup[match];
   });
 
@@ -51,7 +51,7 @@ let didWarnAboutMaps = false;
 
 const userProvidedKeyEscapeRegex = /\/+/g;
 function escapeUserProvidedKey(text: string): string {
-  return ('' + text).replace(userProvidedKeyEscapeRegex, '$&/');
+  return text.replace(userProvidedKeyEscapeRegex, '$&/');
 }
 
 /**
@@ -61,7 +61,7 @@ function escapeUserProvidedKey(text: string): string {
  * @param {number} index Index that is used if a manual key is not provided.
  * @return {string}
  */
-function getComponentKey(component: mixed, index: number): string {
+function getComponentKey(component: any, index: number): string {
   // Do some typechecking here since we call this blindly. We want to ensure
   // that we don't block potential future ES APIs.
   if (
@@ -70,7 +70,7 @@ function getComponentKey(component: mixed, index: number): string {
     component.key != null
   ) {
     // Explicit key
-    return escape(component.key);
+    return escape('' + component.key);
   }
   // Implicit key determined by the index in the set
   return index.toString(36);
@@ -132,7 +132,7 @@ function mapIntoArray(
             // $FlowFixMe Flow incorrectly thinks React.Portal doesn't have a key
             (mappedChild.key && (!child || child.key !== mappedChild.key)
               ? // $FlowFixMe Flow incorrectly thinks existing element's key can be a number
-                escapeUserProvidedKey(mappedChild.key) + '/'
+                escapeUserProvidedKey('' + mappedChild.key) + '/'
               : '') +
             childKey,
         );
