@@ -7,6 +7,7 @@
  * @flow
  */
 
+import type {Wakeable} from 'shared/ReactTypes';
 import type {BlockComponent, BlockRenderFunction} from 'react/src/ReactBlock';
 import type {LazyComponent} from 'react/src/ReactLazy';
 
@@ -44,7 +45,7 @@ const CHUNK_TYPE = Symbol('flight.chunk');
 type PendingChunk = {|
   $$typeof: Symbol,
   status: 0,
-  value: Promise<void>,
+  value: Wakeable,
   resolve: () => void,
 |};
 type ResolvedChunk<T> = {|
@@ -219,10 +220,6 @@ type UninitializedBlockPayload<Data> = [
   ModuleMetaData | Chunk<ModuleMetaData>,
   Data | Chunk<Data>,
 ];
-
-type Thenable<T> = {
-  then(resolve: (T) => mixed, reject?: (mixed) => mixed): Thenable<any>,
-};
 
 function initializeBlock<Props, Data>(
   tuple: UninitializedBlockPayload<Data>,

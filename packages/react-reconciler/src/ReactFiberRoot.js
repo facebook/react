@@ -11,7 +11,7 @@ import type {Fiber} from './ReactFiber';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
 import type {RootTag} from 'react-reconciler/src/ReactRootTags';
 import type {TimeoutHandle, NoTimeout} from './ReactFiberHostConfig';
-import type {Thenable} from './ReactFiberWorkLoop';
+import type {Wakeable} from 'shared/ReactTypes';
 import type {Interaction} from 'scheduler/src/Tracing';
 import type {SuspenseHydrationCallbacks} from './ReactFiberSuspenseComponent';
 import type {ReactPriorityLevel} from './SchedulerWithReactIntegration';
@@ -42,8 +42,8 @@ type BaseFiberRootProperties = {|
   current: Fiber,
 
   pingCache:
-    | WeakMap<Thenable, Set<ExpirationTime>>
-    | Map<Thenable, Set<ExpirationTime>>
+    | WeakMap<Wakeable, Set<ExpirationTime>>
+    | Map<Wakeable, Set<ExpirationTime>>
     | null,
 
   finishedExpirationTime: ExpirationTime,
