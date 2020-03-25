@@ -8,7 +8,7 @@
  */
 
 export default class EventEmitter<Events: Object> {
-  listenersMap: Map<string, Set<Function>> = new Map();
+  listenersMap: Map<string, Array<Function>> = new Map();
 
   addListener<Event: $Keys<Events>>(
     event: Event,
@@ -16,12 +16,13 @@ export default class EventEmitter<Events: Object> {
   ): void {
     let listeners = this.listenersMap.get(event);
     if (listeners === undefined) {
-      listeners = new Set();
-
-      this.listenersMap.set(event, listeners);
+      this.listenersMap.set(event, [listener]);
+    } else {
+      const index = listeners.indexOf(listener);
+      if (index < 0) {
+        listeners.push(listener);
+      }
     }
-
-    listeners.add(listener);
   }
 
   emit<Event: $Keys<Events>>(
@@ -30,38 +31,45 @@ export default class EventEmitter<Events: Object> {
   ): void {
     const listeners = this.listenersMap.get(event);
     if (listeners !== undefined) {
-      let didThrow = false;
-      let caughtError = null;
+      if (listeners.length === 1) {
+        // No need to clone or try/catch
+        const listener = listeners[0];
+        listener.apply(null, args);
+      } else {
+        let didThrow = false;
+        let caughtError = null;
 
-      listeners.forEach(listener => {
-        try {
-          listener.apply(null, args);
-        } catch (error) {
-          if (caughtError === null) {
-            didThrow = true;
-            caughtError = error;
+        const clonedListeners = Array.from(listeners);
+        for (let i = 0; i < clonedListeners.length; i++) {
+          const listener = clonedListeners[i];
+          try {
+            listener.apply(null, args);
+          } catch (error) {
+            if (caughtError === null) {
+              didThrow = true;
+              caughtError = error;
+            }
           }
         }
-      });
 
-      if (didThrow) {
-        throw caughtError;
+        if (didThrow) {
+          throw caughtError;
+        }
       }
     }
   }
 
-  removeAllListeners(event?: $Keys<Events>): void {
-    if (event != null) {
-      this.listenersMap.delete(event);
-    } else {
-      this.listenersMap.clear();
-    }
+  removeAllListeners(): void {
+    this.listenersMap.clear();
   }
 
   removeListener(event: $Keys<Events>, listener: Function): void {
     const listeners = this.listenersMap.get(event);
     if (listeners !== undefined) {
-      listeners.delete(listener);
+      const index = listeners.indexOf(listener);
+      if (index >= 0) {
+        listeners.splice(index, 1);
+      }
     }
   }
 }

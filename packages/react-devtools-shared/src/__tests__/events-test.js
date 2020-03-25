@@ -25,6 +25,10 @@ describe('events', () => {
 
     dispatcher.addListener('event', callback);
     dispatcher.addListener('event', callback);
+
+    dispatcher.emit('event', 123);
+    expect(callback).toHaveBeenCalledTimes(1);
+    expect(callback).toHaveBeenCalledWith(123);
   });
 
   it('notifies all attached listeners of events', () => {
@@ -92,5 +96,31 @@ describe('events', () => {
     expect(callback1).not.toHaveBeenCalled();
     expect(callback2).not.toHaveBeenCalled();
     expect(callback3).not.toHaveBeenCalled();
+  });
+
+  it('should call the initial listeners even if others are added or removed during a dispatch', () => {
+    const callback1 = jest.fn(() => {
+      dispatcher.removeListener('event', callback2);
+      dispatcher.addListener('event', callback3);
+    });
+    const callback2 = jest.fn();
+    const callback3 = jest.fn();
+
+    dispatcher.addListener('event', callback1);
+    dispatcher.addListener('event', callback2);
+
+    dispatcher.emit('event', 123);
+    expect(callback1).toHaveBeenCalledTimes(1);
+    expect(callback1).toHaveBeenCalledWith(123);
+    expect(callback2).toHaveBeenCalledTimes(1);
+    expect(callback2).toHaveBeenCalledWith(123);
+    expect(callback3).not.toHaveBeenCalled();
+
+    dispatcher.emit('event', 456);
+    expect(callback1).toHaveBeenCalledTimes(2);
+    expect(callback1).toHaveBeenCalledWith(456);
+    expect(callback2).toHaveBeenCalledTimes(1);
+    expect(callback3).toHaveBeenCalledTimes(1);
+    expect(callback3).toHaveBeenCalledWith(456);
   });
 });
