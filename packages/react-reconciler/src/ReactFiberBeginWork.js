@@ -3064,6 +3064,42 @@ function beginWork(
                 renderExpirationTime,
               );
             } else {
+              // The primary child fragment does not have pending work marked
+              // on it...
+
+              // ...usually. There's an unfortunate edge case where the fragment
+              // fiber is not part of the return path of the children, so when
+              // an update happens, the fragment doesn't get marked during
+              // setState. This is something we should consider addressing when
+              // we refactor the Fiber data structure. (There's a test with more
+              // details; to find it, comment out the following block and see
+              // which one fails.)
+              //
+              // As a workaround, we need to recompute the `childExpirationTime`
+              // by bubbling it up from the next level of children. This is
+              // based on similar logic in `resetChildExpirationTime`.
+              let primaryChild = primaryChildFragment.child;
+              while (primaryChild !== null) {
+                const childUpdateExpirationTime = primaryChild.expirationTime;
+                const childChildExpirationTime =
+                  primaryChild.childExpirationTime;
+                if (
+                  (childUpdateExpirationTime !== NoWork &&
+                    childUpdateExpirationTime >= renderExpirationTime) ||
+                  (childChildExpirationTime !== NoWork &&
+                    childChildExpirationTime >= renderExpirationTime)
+                ) {
+                  // Found a child with an update with sufficient priority.
+                  // Use the normal path to render the primary children again.
+                  return updateSuspenseComponent(
+                    current,
+                    workInProgress,
+                    renderExpirationTime,
+                  );
+                }
+                primaryChild = primaryChild.sibling;
+              }
+
               pushSuspenseContext(
                 workInProgress,
                 setDefaultShallowSuspenseContext(suspenseStackCursor.current),

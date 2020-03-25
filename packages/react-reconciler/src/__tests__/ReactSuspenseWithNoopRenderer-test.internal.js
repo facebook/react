@@ -1335,6 +1335,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
         'Suspend! [Hi]',
         'Loading...',
         // Re-render due to lifecycle update
+        'Suspend! [Hi]',
         'Loading...',
       ]);
       expect(ReactNoop.getChildren()).toEqual([span('Loading...')]);
@@ -3113,6 +3114,91 @@ describe('ReactSuspenseWithNoopRenderer', () => {
       // Now flush the remaining work. The Idle update successfully finishes.
       expect(Scheduler).toFlushAndYield(['C']);
       expect(root).toMatchRenderedOutput(<span prop="C" />);
+    },
+  );
+
+  it(
+    'regression: primary fragment fiber is not always part of setState ' +
+      'return path',
+    async () => {
+      // Reproduces a bug where updates inside a suspended tree are dropped
+      // because the fragment fiber we insert to wrap the hidden children is not
+      // part of the return path, so it doesn't get marked during setState.
+      const {useState} = React;
+      const root = ReactNoop.createRoot();
+
+      function Parent() {
+        return (
+          <>
+            <Suspense fallback={<Text text="Loading..." />}>
+              <Child />
+            </Suspense>
+          </>
+        );
+      }
+
+      let setText;
+      function Child() {
+        const [text, _setText] = useState('A');
+        setText = _setText;
+        return <AsyncText text={text} />;
+      }
+
+      // Mount an initial tree. Resolve A so that it doesn't suspend.
+      await resolveText('A');
+      await ReactNoop.act(async () => {
+        root.render(<Parent />);
+      });
+      expect(Scheduler).toHaveYielded(['A']);
+      // At this point, the setState return path follows current fiber.
+      expect(root).toMatchRenderedOutput(<span prop="A" />);
+
+      // Schedule another update. This will "flip" the alternate pairs.
+      await resolveText('B');
+      await ReactNoop.act(async () => {
+        setText('B');
+      });
+      expect(Scheduler).toHaveYielded(['B']);
+      // Now the setState return path follows the *alternate* fiber.
+      expect(root).toMatchRenderedOutput(<span prop="B" />);
+
+      // Schedule another update. This time, we'll suspend.
+      await ReactNoop.act(async () => {
+        setText('C');
+      });
+      expect(Scheduler).toHaveYielded([
+        'Suspend! [C]',
+        'Loading...',
+
+        'Suspend! [C]',
+        'Loading...',
+      ]);
+
+      // Commit. This will insert a fragment fiber to wrap around the component
+      // that triggered the update.
+      await ReactNoop.act(async () => {
+        await advanceTimers(250);
+      });
+      expect(Scheduler).toHaveYielded(['Suspend! [C]']);
+      // The fragment fiber is part of the current tree, but the setState return
+      // path still follows the alternate path. That means the fragment fiber is
+      // not part of the return path.
+      expect(root).toMatchRenderedOutput(
+        <>
+          <span hidden={true} prop="B" />
+          <span prop="Loading..." />
+        </>,
+      );
+
+      // Update again. This should unsuspend the tree.
+      await resolveText('D');
+      await ReactNoop.act(async () => {
+        setText('D');
+      });
+      // Even though the fragment fiber is not part of the return path, we should
+      // be able to finish rendering.
+      expect(Scheduler).toHaveYielded(['D']);
+      expect(root).toMatchRenderedOutput(<span prop="D" />);
     },
   );
 });
