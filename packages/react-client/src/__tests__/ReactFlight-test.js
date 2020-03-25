@@ -57,8 +57,7 @@ describe('ReactFlight', () => {
     let transport = ReactNoopFlightServer.render({
       foo: <Foo />,
     });
-    let root = ReactNoopFlightClient.read(transport);
-    let model = root.model;
+    let model = ReactNoopFlightClient.read(transport);
     expect(model).toEqual({
       foo: {
         bar: (
@@ -87,10 +86,10 @@ describe('ReactFlight', () => {
       };
 
       let transport = ReactNoopFlightServer.render(model);
-      let root = ReactNoopFlightClient.read(transport);
 
       act(() => {
-        let UserClient = root.model.User;
+        let rootModel = ReactNoopFlightClient.read(transport);
+        let UserClient = rootModel.User;
         ReactNoop.render(<UserClient greeting="Hello" />);
       });
 
@@ -114,10 +113,10 @@ describe('ReactFlight', () => {
       };
 
       let transport = ReactNoopFlightServer.render(model);
-      let root = ReactNoopFlightClient.read(transport);
 
       act(() => {
-        let UserClient = root.model.User;
+        let rootModel = ReactNoopFlightClient.read(transport);
+        let UserClient = rootModel.User;
         ReactNoop.render(<UserClient greeting="Hello" />);
       });
 

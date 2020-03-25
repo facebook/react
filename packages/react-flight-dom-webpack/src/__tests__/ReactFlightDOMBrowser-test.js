@@ -62,9 +62,10 @@ describe('ReactFlightDOMBrowser', () => {
     }
 
     let stream = ReactFlightDOMServer.renderToReadableStream(<App />);
-    let result = ReactFlightDOMClient.readFromReadableStream(stream);
+    let response = ReactFlightDOMClient.createFromReadableStream(stream);
     await waitForSuspense(() => {
-      expect(result.model).toEqual({
+      let model = response.readRoot();
+      expect(model).toEqual({
         html: (
           <div>
             <span>hello</span>

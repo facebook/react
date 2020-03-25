@@ -27,10 +27,6 @@ import {
   REACT_ELEMENT_TYPE,
 } from 'shared/ReactSymbols';
 
-export type ReactModelRoot<T> = {|
-  model: T,
-|};
-
 export type JSONValue =
   | number
   | null
@@ -65,22 +61,32 @@ type ErroredChunk = {|
 |};
 type Chunk<T> = PendingChunk | ResolvedChunk<T> | ErroredChunk;
 
-export type Response = {
+export type Response<T> = {
   partialRow: string,
-  modelRoot: ReactModelRoot<any>,
+  rootChunk: Chunk<T>,
   chunks: Map<number, Chunk<any>>,
+  readRoot(): T,
 };
 
-export function createResponse(): Response {
-  let modelRoot: ReactModelRoot<any> = ({}: any);
+function readRoot<T>(): T {
+  let response: Response<T> = this;
+  let rootChunk = response.rootChunk;
+  if (rootChunk.status === RESOLVED) {
+    return rootChunk.value;
+  } else {
+    throw rootChunk.value;
+  }
+}
+
+export function createResponse<T>(): Response<T> {
   let rootChunk: Chunk<any> = createPendingChunk();
-  definePendingProperty(modelRoot, 'model', rootChunk);
   let chunks: Map<number, Chunk<any>> = new Map();
   chunks.set(0, rootChunk);
   let response = {
     partialRow: '',
-    modelRoot,
+    rootChunk,
     chunks: chunks,
+    readRoot: readRoot,
   };
   return response;
 }
@@ -142,7 +148,10 @@ function resolveChunk<T>(chunk: Chunk<T>, value: T): void {
 
 // Report that any missing chunks in the model is now going to throw this
 // error upon read. Also notify any pending promises.
-export function reportGlobalError(response: Response, error: Error): void {
+export function reportGlobalError<T>(
+  response: Response<T>,
+  error: Error,
+): void {
   response.chunks.forEach(chunk => {
     // If this chunk was already resolved or errored, it won't
     // trigger an error but if it wasn't then we need to
@@ -162,24 +171,6 @@ function readMaybeChunk<T>(maybeChunk: Chunk<T> | T): T {
   } else {
     throw chunk.value;
   }
-}
-
-function definePendingProperty<T>(
-  object: Object,
-  key: string,
-  chunk: Chunk<T>,
-): void {
-  Object.defineProperty(object, key, {
-    configurable: false,
-    enumerable: true,
-    get() {
-      if (chunk.status === RESOLVED) {
-        return chunk.value;
-      } else {
-        throw chunk.value;
-      }
-    },
-  });
 }
 
 function createElement(type, key, props): React$Element<any> {
@@ -272,8 +263,8 @@ function createLazyBlock<Props, Data>(
   return lazyType;
 }
 
-export function parseModelFromJSON(
-  response: Response,
+export function parseModelFromJSON<T>(
+  response: Response<T>,
   targetObj: Object,
   key: string,
   value: JSONValue,
@@ -317,10 +308,10 @@ export function parseModelFromJSON(
   return value;
 }
 
-export function resolveModelChunk<T>(
-  response: Response,
+export function resolveModelChunk<T, M>(
+  response: Response<T>,
   id: number,
-  model: T,
+  model: M,
 ): void {
   let chunks = response.chunks;
   let chunk = chunks.get(id);
@@ -331,8 +322,8 @@ export function resolveModelChunk<T>(
   }
 }
 
-export function resolveErrorChunk(
-  response: Response,
+export function resolveErrorChunk<T>(
+  response: Response<T>,
   id: number,
   message: string,
   stack: string,
@@ -348,14 +339,10 @@ export function resolveErrorChunk(
   }
 }
 
-export function close(response: Response): void {
+export function close<T>(response: Response<T>): void {
   // In case there are any remaining unresolved chunks, they won't
   // be resolved now. So we need to issue an error to those.
   // Ideally we should be able to early bail out if we kept a
   // ref count of pending chunks.
   reportGlobalError(response, new Error('Connection closed.'));
-}
-
-export function getModelRoot<T>(response: Response): ReactModelRoot<T> {
-  return response.modelRoot;
 }

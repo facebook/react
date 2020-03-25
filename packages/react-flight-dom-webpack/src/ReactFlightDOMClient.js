@@ -7,18 +7,20 @@
  * @flow
  */
 
-import type {ReactModelRoot} from 'react-client/src/ReactFlightClientStream';
+import type {Response as FlightResponse} from 'react-client/src/ReactFlightClientStream';
 
 import {
   createResponse,
-  getModelRoot,
   reportGlobalError,
   processStringChunk,
   processBinaryChunk,
   close,
 } from 'react-client/src/ReactFlightClientStream';
 
-function startReadingFromStream(response, stream: ReadableStream): void {
+function startReadingFromStream<T>(
+  response: FlightResponse<T>,
+  stream: ReadableStream,
+): void {
   let reader = stream.getReader();
   function progress({done, value}) {
     if (done) {
@@ -35,16 +37,18 @@ function startReadingFromStream(response, stream: ReadableStream): void {
   reader.read().then(progress, error);
 }
 
-function readFromReadableStream<T>(stream: ReadableStream): ReactModelRoot<T> {
-  let response = createResponse();
+function createFromReadableStream<T>(
+  stream: ReadableStream,
+): FlightResponse<T> {
+  let response: FlightResponse<T> = createResponse();
   startReadingFromStream(response, stream);
-  return getModelRoot(response);
+  return response;
 }
 
-function readFromFetch<T>(
+function createFromFetch<T>(
   promiseForResponse: Promise<Response>,
-): ReactModelRoot<T> {
-  let response = createResponse();
+): FlightResponse<T> {
+  let response: FlightResponse<T> = createResponse();
   promiseForResponse.then(
     function(r) {
       startReadingFromStream(response, (r.body: any));
@@ -53,11 +57,11 @@ function readFromFetch<T>(
       reportGlobalError(response, e);
     },
   );
-  return getModelRoot(response);
+  return response;
 }
 
-function readFromXHR<T>(request: XMLHttpRequest): ReactModelRoot<T> {
-  let response = createResponse();
+function createFromXHR<T>(request: XMLHttpRequest): FlightResponse<T> {
+  let response: FlightResponse<T> = createResponse();
   let processedLength = 0;
   function progress(e: ProgressEvent): void {
     let chunk = request.responseText;
@@ -76,7 +80,7 @@ function readFromXHR<T>(request: XMLHttpRequest): ReactModelRoot<T> {
   request.addEventListener('error', error);
   request.addEventListener('abort', error);
   request.addEventListener('timeout', error);
-  return getModelRoot(response);
+  return response;
 }
 
-export {readFromXHR, readFromFetch, readFromReadableStream};
+export {createFromXHR, createFromFetch, createFromReadableStream};

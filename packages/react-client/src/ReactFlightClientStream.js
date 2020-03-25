@@ -25,17 +25,13 @@ import {
   readFinalStringChunk,
 } from './ReactFlightClientHostConfig';
 
-export type ReactModelRoot<T> = {|
-  model: T,
-|};
-
-type Response = ResponseBase & {
+export type Response<T> = ResponseBase<T> & {
   fromJSON: (key: string, value: JSONValue) => any,
   stringDecoder: StringDecoder,
 };
 
-export function createResponse(): Response {
-  let response: Response = (createResponseImpl(): any);
+export function createResponse<T>(): Response<T> {
+  let response: Response<T> = (createResponseImpl(): any);
   response.fromJSON = function(key: string, value: JSONValue) {
     return parseModelFromJSON(response, this, key, value);
   };
@@ -45,7 +41,7 @@ export function createResponse(): Response {
   return response;
 }
 
-function processFullRow(response: Response, row: string): void {
+function processFullRow<T>(response: Response<T>, row: string): void {
   if (row === '') {
     return;
   }
@@ -76,8 +72,8 @@ function processFullRow(response: Response, row: string): void {
   }
 }
 
-export function processStringChunk(
-  response: Response,
+export function processStringChunk<T>(
+  response: Response<T>,
   chunk: string,
   offset: number,
 ): void {
@@ -92,8 +88,8 @@ export function processStringChunk(
   response.partialRow += chunk.substring(offset);
 }
 
-export function processBinaryChunk(
-  response: Response,
+export function processBinaryChunk<T>(
+  response: Response<T>,
   chunk: Uint8Array,
 ): void {
   if (!supportsBinaryStreams) {
@@ -113,4 +109,4 @@ export function processBinaryChunk(
   response.partialRow += readPartialStringChunk(stringDecoder, chunk);
 }
 
-export {reportGlobalError, close, getModelRoot} from './ReactFlightClient';
+export {reportGlobalError, close} from './ReactFlightClient';

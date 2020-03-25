@@ -70,20 +70,20 @@
         let blob = await responseToDisplay.blob();
         let url = URL.createObjectURL(blob);
 
-        let data = ReactFlightDOMClient.readFromFetch(
+        let data = ReactFlightDOMClient.createFromFetch(
           fetch(url)
         );
         // The client also supports XHR streaming.
         // var xhr = new XMLHttpRequest();
         // xhr.open('GET', url);
-        // let data = ReactFlightDOMClient.readFromXHR(xhr);
+        // let data = ReactFlightDOMClient.createFromXHR(xhr);
         // xhr.send();
 
         renderResult(data);
       }
 
       function Shell({ data }) {
-        let model = data.model;
+        let model = data.readRoot();
         return <div>
           <Suspense fallback="...">
             <h1>{model.title}</h1>
