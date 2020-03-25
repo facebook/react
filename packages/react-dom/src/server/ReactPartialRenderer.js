@@ -315,11 +315,11 @@ function flattenOptionChildren(children: mixed): ?string {
   let content = '';
   // Flatten children and warn if they aren't strings or numbers;
   // invalid types are ignored.
-  React.Children.forEach(children, function(child) {
+  React.Children.forEach((children: any), function(child) {
     if (child == null) {
       return;
     }
-    content += child;
+    content += (child: any);
     if (__DEV__) {
       if (
         !didWarnInvalidOptionChildren &&
