@@ -7,6 +7,7 @@
  * @flow
  */
 
+import type {Wakeable} from 'shared/ReactTypes';
 import type {Fiber} from './ReactFiber';
 import type {FiberRoot} from './ReactFiberRoot';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
@@ -214,13 +215,6 @@ const RootErrored = 2;
 const RootSuspended = 3;
 const RootSuspendedWithDelay = 4;
 const RootCompleted = 5;
-
-export type Thenable = {
-  then(resolve: () => mixed, reject?: () => mixed): Thenable | void,
-  // Special flag to opt out of tracing interactions across a Suspense boundary.
-  __reactDoNotTraceInteractions?: boolean,
-  ...
-};
 
 // Describes where we are in the React execution stack
 let executionContext: ExecutionContext = NoContext;
@@ -2543,14 +2537,14 @@ export function captureCommitPhaseError(sourceFiber: Fiber, error: mixed) {
 
 export function pingSuspendedRoot(
   root: FiberRoot,
-  thenable: Thenable,
+  wakeable: Wakeable,
   suspendedTime: ExpirationTime,
 ) {
   const pingCache = root.pingCache;
   if (pingCache !== null) {
-    // The thenable resolved, so we no longer need to memoize, because it will
+    // The wakeable resolved, so we no longer need to memoize, because it will
     // never be thrown again.
-    pingCache.delete(thenable);
+    pingCache.delete(wakeable);
   }
 
   if (workInProgressRoot === root && renderExpirationTime === suspendedTime) {
@@ -2636,9 +2630,9 @@ export function retryDehydratedSuspenseBoundary(boundaryFiber: Fiber) {
   retryTimedOutBoundary(boundaryFiber, retryTime);
 }
 
-export function resolveRetryThenable(boundaryFiber: Fiber, thenable: Thenable) {
+export function resolveRetryWakeable(boundaryFiber: Fiber, wakeable: Wakeable) {
   let retryTime = NoWork; // Default
-  let retryCache: WeakSet<Thenable> | Set<Thenable> | null;
+  let retryCache: WeakSet<Wakeable> | Set<Wakeable> | null;
   if (enableSuspenseServerRenderer) {
     switch (boundaryFiber.tag) {
       case SuspenseComponent:
@@ -2663,9 +2657,9 @@ export function resolveRetryThenable(boundaryFiber: Fiber, thenable: Thenable) {
   }
 
   if (retryCache !== null) {
-    // The thenable resolved, so we no longer need to memoize, because it will
+    // The wakeable resolved, so we no longer need to memoize, because it will
     // never be thrown again.
-    retryCache.delete(thenable);
+    retryCache.delete(wakeable);
   }
 
   retryTimedOutBoundary(boundaryFiber, retryTime);

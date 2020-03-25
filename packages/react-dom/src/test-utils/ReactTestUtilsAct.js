@@ -7,7 +7,7 @@
  * @flow
  */
 
-import type {Thenable} from 'react-reconciler/src/ReactFiberWorkLoop';
+import type {Thenable} from 'shared/ReactTypes';
 
 import * as ReactDOM from 'react-dom';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
@@ -73,7 +73,7 @@ function flushWorkAndMicroTasks(onDone: (err: ?Error) => void) {
 let actingUpdatesScopeDepth = 0;
 let didWarnAboutUsingActInProd = false;
 
-function act(callback: () => Thenable) {
+function act(callback: () => Thenable<mixed>): Thenable<void> {
   if (!__DEV__) {
     if (didWarnAboutUsingActInProd === false) {
       didWarnAboutUsingActInProd = true;
@@ -146,7 +146,7 @@ function act(callback: () => Thenable) {
     // effects and  microtasks in a loop until flushPassiveEffects() === false,
     // and cleans up
     return {
-      then(resolve: () => void, reject: (?Error) => void) {
+      then(resolve, reject) {
         called = true;
         result.then(
           () => {
@@ -206,7 +206,7 @@ function act(callback: () => Thenable) {
 
     // in the sync case, the returned thenable only warns *if* await-ed
     return {
-      then(resolve: () => void) {
+      then(resolve) {
         if (__DEV__) {
           console.error(
             'Do not await the result of calling act(...) with sync logic, it is not a Promise.',

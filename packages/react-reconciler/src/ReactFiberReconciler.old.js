@@ -17,7 +17,7 @@ import type {
   PublicInstance,
 } from './ReactFiberHostConfig';
 import {FundamentalComponent} from './ReactWorkTags';
-import type {ReactNodeList} from 'shared/ReactTypes';
+import type {ReactNodeList, Thenable} from 'shared/ReactTypes';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
 import type {
   SuspenseHydrationCallbacks,
@@ -582,7 +582,7 @@ let actingUpdatesScopeDepth = 0;
 let didWarnAboutUsingActInProd = false;
 
 // eslint-disable-next-line no-inner-declarations
-export function act(callback: () => Thenable) {
+export function act(callback: () => Thenable<mixed>): Thenable<void> {
   if (!__DEV__) {
     if (didWarnAboutUsingActInProd === false) {
       didWarnAboutUsingActInProd = true;
@@ -656,7 +656,7 @@ export function act(callback: () => Thenable) {
     // effects and  microtasks in a loop until flushPassiveEffects() === false,
     // and cleans up
     return {
-      then(resolve: () => void, reject: (?Error) => void) {
+      then(resolve, reject) {
         called = true;
         result.then(
           () => {
@@ -716,7 +716,7 @@ export function act(callback: () => Thenable) {
 
     // in the sync case, the returned thenable only warns *if* await-ed
     return {
-      then(resolve: () => void) {
+      then(resolve) {
         if (__DEV__) {
           console.error(
             'Do not await the result of calling act(...) with sync logic, it is not a Promise.',

@@ -7,11 +7,9 @@
  * @flow
  */
 
-import {REACT_LAZY_TYPE} from 'shared/ReactSymbols';
+import type {Wakeable, Thenable} from 'shared/ReactTypes';
 
-type Thenable<T, R> = {
-  then(resolve: (T) => mixed, reject: (mixed) => mixed): R,
-};
+import {REACT_LAZY_TYPE} from 'shared/ReactSymbols';
 
 const Uninitialized = -1;
 const Pending = 0;
@@ -20,12 +18,12 @@ const Rejected = 2;
 
 type UninitializedPayload<T> = {
   _status: -1,
-  _result: () => Thenable<{default: T, ...}, mixed>,
+  _result: () => Thenable<{default: T, ...}>,
 };
 
-type PendingPayload<T> = {
+type PendingPayload = {
   _status: 0,
-  _result: Thenable<{default: T, ...}, mixed>,
+  _result: Wakeable,
 };
 
 type ResolvedPayload<T> = {
@@ -40,7 +38,7 @@ type RejectedPayload = {
 
 type Payload<T> =
   | UninitializedPayload<T>
-  | PendingPayload<T>
+  | PendingPayload
   | ResolvedPayload<T>
   | RejectedPayload;
 
@@ -55,7 +53,7 @@ function lazyInitializer<T>(payload: Payload<T>): T {
     const ctor = payload._result;
     const thenable = ctor();
     // Transition to the next state.
-    const pending: PendingPayload<any> = (payload: any);
+    const pending: PendingPayload = (payload: any);
     pending._status = Pending;
     pending._result = thenable;
     thenable.then(
@@ -75,7 +73,7 @@ function lazyInitializer<T>(payload: Payload<T>): T {
             }
           }
           // Transition to the next state.
-          const resolved: ResolvedPayload<any> = (payload: any);
+          const resolved: ResolvedPayload<T> = (payload: any);
           resolved._status = Resolved;
           resolved._result = defaultExport;
         }
@@ -98,7 +96,7 @@ function lazyInitializer<T>(payload: Payload<T>): T {
 }
 
 export function lazy<T>(
-  ctor: () => Thenable<{default: T, ...}, mixed>,
+  ctor: () => Thenable<{default: T, ...}>,
 ): LazyComponent<T, Payload<T>> {
   let payload: Payload<T> = {
     // We use these fields to store the result.

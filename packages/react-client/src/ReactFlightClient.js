@@ -7,6 +7,7 @@
  * @flow
  */
 
+import type {Wakeable} from 'shared/ReactTypes';
 import type {BlockComponent, BlockRenderFunction} from 'react/src/ReactBlock';
 import type {LazyComponent} from 'react/src/ReactLazy';
 
@@ -39,48 +40,62 @@ const PENDING = 0;
 const RESOLVED = 1;
 const ERRORED = 2;
 
-const CHUNK_TYPE = Symbol('flight.chunk');
+type PendingChunk = {
+  _status: 0,
+  _value: null | Array<() => mixed>,
+  then(resolve: () => mixed): void,
+};
+type ResolvedChunk<T> = {
+  _status: 1,
+  _value: T,
+  then(resolve: () => mixed): void,
+};
+type ErroredChunk = {
+  _status: 2,
+  _value: Error,
+  then(resolve: () => mixed): void,
+};
+type SomeChunk<T> = PendingChunk | ResolvedChunk<T> | ErroredChunk;
 
-type PendingChunk = {|
-  $$typeof: Symbol,
-  status: 0,
-  value: Promise<void>,
-  resolve: () => void,
-|};
-type ResolvedChunk<T> = {|
-  $$typeof: Symbol,
-  status: 1,
-  value: T,
-  resolve: null,
-|};
-type ErroredChunk = {|
-  $$typeof: Symbol,
-  status: 2,
-  value: Error,
-  resolve: null,
-|};
-type Chunk<T> = PendingChunk | ResolvedChunk<T> | ErroredChunk;
+function Chunk(status: any, value: any) {
+  this._status = status;
+  this._value = value;
+}
+Chunk.prototype.then = function<T>(resolve: () => mixed) {
+  let chunk: SomeChunk<T> = this;
+  if (chunk._status === PENDING) {
+    if (chunk._value === null) {
+      chunk._value = [];
+    }
+    chunk._value.push(resolve);
+  } else {
+    resolve();
+  }
+};
 
 export type Response<T> = {
   partialRow: string,
-  rootChunk: Chunk<T>,
-  chunks: Map<number, Chunk<any>>,
+  rootChunk: SomeChunk<T>,
+  chunks: Map<number, SomeChunk<any>>,
   readRoot(): T,
 };
 
 function readRoot<T>(): T {
   let response: Response<T> = this;
   let rootChunk = response.rootChunk;
-  if (rootChunk.status === RESOLVED) {
-    return rootChunk.value;
+  if (rootChunk._status === RESOLVED) {
+    return rootChunk._value;
+  } else if (rootChunk._status === PENDING) {
+    // eslint-disable-next-line no-throw-literal
+    throw (rootChunk: Wakeable);
   } else {
-    throw rootChunk.value;
+    throw rootChunk._value;
   }
 }
 
 export function createResponse<T>(): Response<T> {
-  let rootChunk: Chunk<any> = createPendingChunk();
-  let chunks: Map<number, Chunk<any>> = new Map();
+  let rootChunk: SomeChunk<any> = createPendingChunk();
+  let chunks: Map<number, SomeChunk<any>> = new Map();
   chunks.set(0, rootChunk);
   let response = {
     partialRow: '',
@@ -92,58 +107,48 @@ export function createResponse<T>(): Response<T> {
 }
 
 function createPendingChunk(): PendingChunk {
-  let resolve: () => void = (null: any);
-  let promise = new Promise(r => (resolve = r));
-  return {
-    $$typeof: CHUNK_TYPE,
-    status: PENDING,
-    value: promise,
-    resolve: resolve,
-  };
+  return new Chunk(PENDING, null);
 }
 
 function createErrorChunk(error: Error): ErroredChunk {
-  return {
-    $$typeof: CHUNK_TYPE,
-    status: ERRORED,
-    value: error,
-    resolve: null,
-  };
+  return new Chunk(ERRORED, error);
 }
 
-function triggerErrorOnChunk<T>(chunk: Chunk<T>, error: Error): void {
-  if (chunk.status !== PENDING) {
+function wakeChunk(listeners: null | Array<() => mixed>) {
+  if (listeners !== null) {
+    for (let i = 0; i < listeners.length; i++) {
+      let listener = listeners[i];
+      listener();
+    }
+  }
+}
+
+function triggerErrorOnChunk<T>(chunk: SomeChunk<T>, error: Error): void {
+  if (chunk._status !== PENDING) {
     // We already resolved. We didn't expect to see this.
     return;
   }
-  let resolve = chunk.resolve;
+  let listeners = chunk._value;
   let erroredChunk: ErroredChunk = (chunk: any);
-  erroredChunk.status = ERRORED;
-  erroredChunk.value = error;
-  erroredChunk.resolve = null;
-  resolve();
+  erroredChunk._status = ERRORED;
+  erroredChunk._value = error;
+  wakeChunk(listeners);
 }
 
 function createResolvedChunk<T>(value: T): ResolvedChunk<T> {
-  return {
-    $$typeof: CHUNK_TYPE,
-    status: RESOLVED,
-    value: value,
-    resolve: null,
-  };
+  return new Chunk(RESOLVED, value);
 }
 
-function resolveChunk<T>(chunk: Chunk<T>, value: T): void {
-  if (chunk.status !== PENDING) {
+function resolveChunk<T>(chunk: SomeChunk<T>, value: T): void {
+  if (chunk._status !== PENDING) {
     // We already resolved. We didn't expect to see this.
     return;
   }
-  let resolve = chunk.resolve;
+  let listeners = chunk._value;
   let resolvedChunk: ResolvedChunk<T> = (chunk: any);
-  resolvedChunk.status = RESOLVED;
-  resolvedChunk.value = value;
-  resolvedChunk.resolve = null;
-  resolve();
+  resolvedChunk._status = RESOLVED;
+  resolvedChunk._value = value;
+  wakeChunk(listeners);
 }
 
 // Report that any missing chunks in the model is now going to throw this
@@ -160,16 +165,19 @@ export function reportGlobalError<T>(
   });
 }
 
-function readMaybeChunk<T>(maybeChunk: Chunk<T> | T): T {
-  if (maybeChunk == null || (maybeChunk: any).$$typeof !== CHUNK_TYPE) {
+function readMaybeChunk<T>(maybeChunk: SomeChunk<T> | T): T {
+  if (maybeChunk == null || !(maybeChunk instanceof Chunk)) {
     // $FlowFixMe
     return maybeChunk;
   }
-  let chunk: Chunk<T> = (maybeChunk: any);
-  if (chunk.status === RESOLVED) {
-    return chunk.value;
+  let chunk: SomeChunk<T> = (maybeChunk: any);
+  if (chunk._status === RESOLVED) {
+    return chunk._value;
+  } else if (chunk._status === PENDING) {
+    // eslint-disable-next-line no-throw-literal
+    throw (chunk: Wakeable);
   } else {
-    throw chunk.value;
+    throw chunk._value;
   }
 }
 
@@ -216,13 +224,9 @@ function createElement(type, key, props): React$Element<any> {
 
 type UninitializedBlockPayload<Data> = [
   mixed,
-  ModuleMetaData | Chunk<ModuleMetaData>,
-  Data | Chunk<Data>,
+  ModuleMetaData | SomeChunk<ModuleMetaData>,
+  Data | SomeChunk<Data>,
 ];
-
-type Thenable<T> = {
-  then(resolve: (T) => mixed, reject?: (mixed) => mixed): Thenable<any>,
-};
 
 function initializeBlock<Props, Data>(
   tuple: UninitializedBlockPayload<Data>,

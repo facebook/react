@@ -21,7 +21,7 @@ import type {ExpirationTime} from './ReactFiberExpirationTime';
 import type {CapturedValue, CapturedError} from './ReactCapturedValue';
 import type {SuspenseState} from './ReactFiberSuspenseComponent';
 import type {FunctionComponentUpdateQueue} from './ReactFiberHooks';
-import type {Thenable} from './ReactFiberWorkLoop';
+import type {Wakeable} from 'shared/ReactTypes';
 import type {ReactPriorityLevel} from './SchedulerWithReactIntegration';
 
 import {unstable_wrap as Schedule_tracing_wrap} from 'scheduler/tracing';
@@ -118,7 +118,7 @@ import {
 } from './ReactFiberHostConfig';
 import {
   captureCommitPhaseError,
-  resolveRetryThenable,
+  resolveRetryWakeable,
   markCommitTimeOfFallback,
   enqueuePendingPassiveHookEffectMount,
   enqueuePendingPassiveHookEffectUnmount,
@@ -1783,9 +1783,9 @@ function commitSuspenseComponent(finishedWork: Fiber) {
   if (enableSuspenseCallback && newState !== null) {
     const suspenseCallback = finishedWork.memoizedProps.suspenseCallback;
     if (typeof suspenseCallback === 'function') {
-      const thenables: Set<Thenable> | null = (finishedWork.updateQueue: any);
-      if (thenables !== null) {
-        suspenseCallback(new Set(thenables));
+      const wakeables: Set<Wakeable> | null = (finishedWork.updateQueue: any);
+      if (wakeables !== null) {
+        suspenseCallback(new Set(wakeables));
       }
     } else if (__DEV__) {
       if (suspenseCallback !== undefined) {
@@ -1827,27 +1827,27 @@ function commitSuspenseHydrationCallbacks(
 }
 
 function attachSuspenseRetryListeners(finishedWork: Fiber) {
-  // If this boundary just timed out, then it will have a set of thenables.
-  // For each thenable, attach a listener so that when it resolves, React
+  // If this boundary just timed out, then it will have a set of wakeables.
+  // For each wakeable, attach a listener so that when it resolves, React
   // attempts to re-render the boundary in the primary (pre-timeout) state.
-  const thenables: Set<Thenable> | null = (finishedWork.updateQueue: any);
-  if (thenables !== null) {
+  const wakeables: Set<Wakeable> | null = (finishedWork.updateQueue: any);
+  if (wakeables !== null) {
     finishedWork.updateQueue = null;
     let retryCache = finishedWork.stateNode;
     if (retryCache === null) {
       retryCache = finishedWork.stateNode = new PossiblyWeakSet();
     }
-    thenables.forEach(thenable => {
+    wakeables.forEach(wakeable => {
       // Memoize using the boundary fiber to prevent redundant listeners.
-      let retry = resolveRetryThenable.bind(null, finishedWork, thenable);
-      if (!retryCache.has(thenable)) {
+      let retry = resolveRetryWakeable.bind(null, finishedWork, wakeable);
+      if (!retryCache.has(wakeable)) {
         if (enableSchedulerTracing) {
-          if (thenable.__reactDoNotTraceInteractions !== true) {
+          if (wakeable.__reactDoNotTraceInteractions !== true) {
             retry = Schedule_tracing_wrap(retry);
           }
         }
-        retryCache.add(thenable);
-        thenable.then(retry, retry);
+        retryCache.add(wakeable);
+        wakeable.then(retry, retry);
       }
     });
   }

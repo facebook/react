@@ -67,9 +67,5 @@ declare module 'EventListener' {
   };
 }
 
-type Thenable = {
-  then(resolve: (mixed) => mixed, reject?: (Error) => mixed): Thenable,
-};
-
-declare function __webpack_chunk_load__(id: string): Thenable;
+declare function __webpack_chunk_load__(id: string): Promise<mixed>;
 declare function __webpack_require__(id: string): {default: any};

@@ -7,14 +7,11 @@
  * @flow
  */
 
+import type {Thenable} from 'shared/ReactTypes';
+
 import * as React from 'react';
 
 import {createLRU} from './LRU';
-
-type Thenable<T> = {
-  then(resolve: (T) => mixed, reject: (mixed) => mixed): mixed,
-  ...
-};
 
 type Suspender = {then(resolve: () => mixed, reject: () => mixed): mixed, ...};
 
