@@ -39,8 +39,8 @@ describe('ReactFlightDOMRelay', () => {
         );
       }
     }
-    let model = ReactDOMFlightRelayClient.getModelRoot(response).model;
     ReactDOMFlightRelayClient.close(response);
+    let model = response.readRoot();
     return model;
   }
 

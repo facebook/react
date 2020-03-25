@@ -11,14 +11,13 @@ import type {Response, JSONValue} from 'react-client/src/ReactFlightClient';
 
 import {
   createResponse,
-  getModelRoot,
   parseModelFromJSON,
   resolveModelChunk,
   resolveErrorChunk,
   close,
 } from 'react-client/src/ReactFlightClient';
 
-function parseModel(response, targetObj, key, value) {
+function parseModel<T>(response: Response<T>, targetObj, key, value) {
   if (typeof value === 'object' && value !== null) {
     if (Array.isArray(value)) {
       for (let i = 0; i < value.length; i++) {
@@ -38,14 +37,18 @@ function parseModel(response, targetObj, key, value) {
   return parseModelFromJSON(response, targetObj, key, value);
 }
 
-export {createResponse, getModelRoot, close};
+export {createResponse, close};
 
-export function resolveModel(response: Response, id: number, json: JSONValue) {
+export function resolveModel<T>(
+  response: Response<T>,
+  id: number,
+  json: JSONValue,
+) {
   resolveModelChunk(response, id, parseModel(response, {}, '', json));
 }
 
-export function resolveError(
-  response: Response,
+export function resolveError<T>(
+  response: Response<T>,
   id: number,
   message: string,
   stack: string,
