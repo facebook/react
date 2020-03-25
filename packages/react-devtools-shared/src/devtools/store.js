@@ -7,7 +7,7 @@
  * @flow
  */
 
-import EventEmitter from 'events';
+import EventEmitter from '../events';
 import {inspect} from 'util';
 import {
   TREE_OPERATION_ADD,
