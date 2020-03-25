@@ -2537,14 +2537,14 @@ export function captureCommitPhaseError(sourceFiber: Fiber, error: mixed) {
 
 export function pingSuspendedRoot(
   root: FiberRoot,
-  thenable: Wakeable,
+  wakeable: Wakeable,
   suspendedTime: ExpirationTime,
 ) {
   const pingCache = root.pingCache;
   if (pingCache !== null) {
-    // The thenable resolved, so we no longer need to memoize, because it will
+    // The wakeable resolved, so we no longer need to memoize, because it will
     // never be thrown again.
-    pingCache.delete(thenable);
+    pingCache.delete(wakeable);
   }
 
   if (workInProgressRoot === root && renderExpirationTime === suspendedTime) {
@@ -2630,7 +2630,7 @@ export function retryDehydratedSuspenseBoundary(boundaryFiber: Fiber) {
   retryTimedOutBoundary(boundaryFiber, retryTime);
 }
 
-export function resolveRetryThenable(boundaryFiber: Fiber, thenable: Wakeable) {
+export function resolveRetryWakeable(boundaryFiber: Fiber, wakeable: Wakeable) {
   let retryTime = NoWork; // Default
   let retryCache: WeakSet<Wakeable> | Set<Wakeable> | null;
   if (enableSuspenseServerRenderer) {
@@ -2657,9 +2657,9 @@ export function resolveRetryThenable(boundaryFiber: Fiber, thenable: Wakeable) {
   }
 
   if (retryCache !== null) {
-    // The thenable resolved, so we no longer need to memoize, because it will
+    // The wakeable resolved, so we no longer need to memoize, because it will
     // never be thrown again.
-    retryCache.delete(thenable);
+    retryCache.delete(wakeable);
   }
 
   retryTimedOutBoundary(boundaryFiber, retryTime);
