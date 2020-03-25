@@ -956,7 +956,14 @@ describe('ReactSuspense', () => {
 
       // Update that suspends
       instance.setState({step: 2});
-      expect(Scheduler).toFlushAndYield(['Suspend! [Step: 2]', 'Loading...']);
+      expect(Scheduler).toFlushAndYield([
+        'Suspend! [Step: 2]',
+        'Loading...',
+        // TODO: This second attempt is because React isn't sure if there's
+        // another update at a lower priority. Ideally we wouldn't need it.
+        'Suspend! [Step: 2]',
+        'Loading...',
+      ]);
       jest.advanceTimersByTime(500);
       expect(root).toMatchRenderedOutput('Loading...');
 

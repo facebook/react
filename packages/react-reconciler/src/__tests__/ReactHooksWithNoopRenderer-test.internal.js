@@ -734,12 +734,22 @@ describe('ReactHooksWithNoopRenderer', () => {
         root.render(<Foo signal={false} />);
         setLabel('B');
       });
-      expect(Scheduler).toHaveYielded(['Suspend!']);
+      expect(Scheduler).toHaveYielded([
+        'Suspend!',
+        // TODO: This second attempt is because React isn't sure if there's
+        // another update at a lower priority. Ideally we wouldn't need it.
+        'Suspend!',
+      ]);
       expect(root).toMatchRenderedOutput(<span prop="A:0" />);
 
       // Rendering again should suspend again.
       root.render(<Foo signal={false} />);
-      expect(Scheduler).toFlushAndYield(['Suspend!']);
+      expect(Scheduler).toFlushAndYield([
+        'Suspend!',
+        // TODO: This second attempt is because React isn't sure if there's
+        // another update at a lower priority. Ideally we wouldn't need it.
+        'Suspend!',
+      ]);
 
       // Flip the signal back to "cancel" the update. However, the update to
       // label should still proceed. It shouldn't have been dropped.

@@ -98,6 +98,8 @@ import {
 } from './ReactUpdateQueue';
 import {
   NoWork,
+  Idle,
+  ContinuousHydration,
   Never,
   Sync,
   computeAsyncExpiration,
@@ -1590,6 +1592,42 @@ function shouldRemainOnFallback(
   );
 }
 
+function getRemainingWorkInPrimaryTree(
+  workInProgress,
+  currentChildExpirationTime,
+  renderExpirationTime,
+) {
+  if (currentChildExpirationTime < renderExpirationTime) {
+    // The highest priority remaining work is not part of this render. So the
+    // remaining work has not changed.
+    return currentChildExpirationTime;
+  }
+  if ((workInProgress.mode & BlockingMode) !== NoMode) {
+    // The highest priority remaining work is part of this render. Since we only
+    // keep track of the highest level, we don't know if there's a lower
+    // priority level scheduled. As a compromise, we'll render at a really low
+    // priority that includes all the updates.
+    // TODO: If expirationTime were a bitmask where each bit represents a
+    // separate task thread, this would be: currentChildBits & ~renderBits
+    // TODO: We used to track the lowest pending level for the whole root, but
+    // we removed it to simplify the implementation. It might be worth adding
+    // it back for this use case, to avoid redundant passes.
+    if (renderExpirationTime > ContinuousHydration) {
+      // First we try ContinuousHydration, so that we don't get grouped
+      // with Idle.
+      return ContinuousHydration;
+    } else if (renderExpirationTime > Idle) {
+      // Then we'll try Idle.
+      return Idle;
+    } else {
+      // Already at lowest possible update level.
+      return NoWork;
+    }
+  }
+  // In legacy mode, there's no work left.
+  return NoWork;
+}
+
 function updateSuspenseComponent(
   current,
   workInProgress,
@@ -1831,8 +1869,15 @@ function updateSuspenseComponent(
             fallbackChildFragment.return = workInProgress;
             primaryChildFragment.sibling = fallbackChildFragment;
             fallbackChildFragment.effectTag |= Placement;
-            primaryChildFragment.childExpirationTime = NoWork;
-
+            primaryChildFragment.childExpirationTime = getRemainingWorkInPrimaryTree(
+              workInProgress,
+              // This argument represents the remaining work in the current
+              // primary tree. Since the current tree did not already time out
+              // the direct parent of the primary children is the Suspense
+              // fiber, not a fragment.
+              current.childExpirationTime,
+              renderExpirationTime,
+            );
             workInProgress.memoizedState = SUSPENDED_MARKER;
             workInProgress.child = primaryChildFragment;
 
@@ -1895,6 +1940,11 @@ function updateSuspenseComponent(
         );
         fallbackChildFragment.return = workInProgress;
         primaryChildFragment.sibling = fallbackChildFragment;
+        primaryChildFragment.childExpirationTime = getRemainingWorkInPrimaryTree(
+          workInProgress,
+          currentPrimaryChildFragment.childExpirationTime,
+          renderExpirationTime,
+        );
         primaryChildFragment.childExpirationTime = NoWork;
         // Skip the primary children, and continue working on the
         // fallback children.
@@ -1989,7 +2039,15 @@ function updateSuspenseComponent(
         fallbackChildFragment.return = workInProgress;
         primaryChildFragment.sibling = fallbackChildFragment;
         fallbackChildFragment.effectTag |= Placement;
-        primaryChildFragment.childExpirationTime = NoWork;
+        primaryChildFragment.childExpirationTime = getRemainingWorkInPrimaryTree(
+          workInProgress,
+          // This argument represents the remaining work in the current
+          // primary tree. Since the current tree did not already time out
+          // the direct parent of the primary children is the Suspense
+          // fiber, not a fragment.
+          current.childExpirationTime,
+          renderExpirationTime,
+        );
         // Skip the primary children, and continue working on the
         // fallback children.
         workInProgress.memoizedState = SUSPENDED_MARKER;

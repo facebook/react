@@ -2871,6 +2871,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
       foo.setState({suspend: false});
     });
 
+    expect(Scheduler).toHaveYielded(['Foo']);
     expect(root).toMatchRenderedOutput(<span prop="Foo" />);
   });
 
@@ -2986,4 +2987,132 @@ describe('ReactSuspenseWithNoopRenderer', () => {
       </>,
     );
   });
+
+  it(
+    'multiple updates originating inside a Suspense boundary at different ' +
+      'priority levels are not dropped',
+    async () => {
+      const {useState} = React;
+      const root = ReactNoop.createRoot();
+
+      function Parent() {
+        return (
+          <>
+            <Suspense fallback={<Text text="Loading..." />}>
+              <Child />
+            </Suspense>
+          </>
+        );
+      }
+
+      let setText;
+      function Child() {
+        const [text, _setText] = useState('A');
+        setText = _setText;
+        return <AsyncText text={text} />;
+      }
+
+      await resolveText('A');
+      await ReactNoop.act(async () => {
+        root.render(<Parent />);
+      });
+      expect(Scheduler).toHaveYielded(['A']);
+      expect(root).toMatchRenderedOutput(<span prop="A" />);
+
+      await ReactNoop.act(async () => {
+        // Schedule two updates that originate inside the Suspense boundary.
+        // The first one causes the boundary to suspend. The second one is at
+        // lower priority and unsuspends the tree.
+        ReactNoop.discreteUpdates(() => {
+          setText('B');
+        });
+        // Update to a value that has already resolved
+        await resolveText('C');
+        setText('C');
+      });
+      expect(Scheduler).toHaveYielded([
+        // First we attempt the high pri update. It suspends.
+        'Suspend! [B]',
+        'Loading...',
+        // Then we attempt the low pri update, which finishes successfully.
+        'C',
+      ]);
+      expect(root).toMatchRenderedOutput(<span prop="C" />);
+    },
+  );
+
+  it(
+    'multiple updates originating inside a Suspense boundary at different ' +
+      'priority levels are not dropped, including Idle updates',
+    async () => {
+      const {useState} = React;
+      const root = ReactNoop.createRoot();
+
+      function Parent() {
+        return (
+          <>
+            <Suspense fallback={<Text text="Loading..." />}>
+              <Child />
+            </Suspense>
+          </>
+        );
+      }
+
+      let setText;
+      function Child() {
+        const [text, _setText] = useState('A');
+        setText = _setText;
+        return <AsyncText text={text} />;
+      }
+
+      await resolveText('A');
+      await ReactNoop.act(async () => {
+        root.render(<Parent />);
+      });
+      expect(Scheduler).toHaveYielded(['A']);
+      expect(root).toMatchRenderedOutput(<span prop="A" />);
+
+      await ReactNoop.act(async () => {
+        // Schedule two updates that originate inside the Suspense boundary.
+        // The first one causes the boundary to suspend. The second one is at
+        // lower priority and unsuspends it by hiding the async component.
+        setText('B');
+
+        await resolveText('C');
+        Scheduler.unstable_runWithPriority(
+          Scheduler.unstable_IdlePriority,
+          () => {
+            setText('C');
+          },
+        );
+      });
+      expect(Scheduler).toHaveYielded([
+        // First we attempt the high pri update. It suspends.
+        'Suspend! [B]',
+        'Loading...',
+
+        // Then retry at a lower priority level.
+        // NOTE: The current implementation doesn't know which level to attempt,
+        // so it picks ContinuousHydration, which is one level higher than Idle.
+        // Since it doesn't include the Idle update, it will suspend again and
+        // reschedule to try at Idle. If we refactor expiration time to be a
+        // bitmask, we shouldn't need this heuristic.
+        'Suspend! [B]',
+        'Loading...',
+      ]);
+
+      // Commit the placeholder to unblock the Idle update.
+      await advanceTimers(250);
+      expect(root).toMatchRenderedOutput(
+        <>
+          <span hidden={true} prop="A" />
+          <span prop="Loading..." />
+        </>,
+      );
+
+      // Now flush the remaining work. The Idle update successfully finishes.
+      expect(Scheduler).toFlushAndYield(['C']);
+      expect(root).toMatchRenderedOutput(<span prop="C" />);
+    },
+  );
 });
