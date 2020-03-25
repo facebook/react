@@ -55,22 +55,18 @@ function escapeUserProvidedKey(text: string): string {
 }
 
 /**
- * Generate a key string that identifies a component within a set.
+ * Generate a key string that identifies a element within a set.
  *
- * @param {*} component A component that could contain a manual key.
+ * @param {*} element A element that could contain a manual key.
  * @param {number} index Index that is used if a manual key is not provided.
  * @return {string}
  */
-function getComponentKey(component: any, index: number): string {
+function getElementKey(element: any, index: number): string {
   // Do some typechecking here since we call this blindly. We want to ensure
   // that we don't block potential future ES APIs.
-  if (
-    typeof component === 'object' &&
-    component !== null &&
-    component.key != null
-  ) {
+  if (typeof element === 'object' && element !== null && element.key != null) {
     // Explicit key
-    return escape('' + component.key);
+    return escape('' + element.key);
   }
   // Implicit key determined by the index in the set
   return index.toString(36);
@@ -115,7 +111,7 @@ function mapIntoArray(
     // If it's the only child, treat the name as if it was wrapped in an array
     // so that it's consistent if the number of children grows:
     let childKey =
-      nameSoFar === '' ? SEPARATOR + getComponentKey(child, 0) : nameSoFar;
+      nameSoFar === '' ? SEPARATOR + getElementKey(child, 0) : nameSoFar;
     if (Array.isArray(mappedChild)) {
       let escapedChildKey = '';
       if (childKey != null) {
@@ -151,7 +147,7 @@ function mapIntoArray(
   if (Array.isArray(children)) {
     for (let i = 0; i < children.length; i++) {
       child = children[i];
-      nextName = nextNamePrefix + getComponentKey(child, i);
+      nextName = nextNamePrefix + getElementKey(child, i);
       subtreeCount += mapIntoArray(
         child,
         array,
@@ -194,7 +190,7 @@ function mapIntoArray(
       let ii = 0;
       while (!(step = iterator.next()).done) {
         child = step.value;
-        nextName = nextNamePrefix + getComponentKey(child, ii++);
+        nextName = nextNamePrefix + getElementKey(child, ii++);
         subtreeCount += mapIntoArray(
           child,
           array,
