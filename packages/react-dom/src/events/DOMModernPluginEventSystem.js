@@ -318,16 +318,20 @@ function isMatchingRootContainer(
   );
 }
 
-export function isManagedDOMElement(target: Object): boolean {
+export function isManagedDOMElement(
+  target: EventTarget | ReactScopeMethods,
+): boolean {
   return getClosestInstanceFromNode(((target: any): Node)) !== null;
 }
 
-export function isValidEventTarget(target: Object): boolean {
-  return typeof target.addEventListener === 'function';
+export function isValidEventTarget(
+  target: EventTarget | ReactScopeMethods,
+): boolean {
+  return typeof (target: any).addEventListener === 'function';
 }
 
-export function isReactScope(target: Object): boolean {
-  return typeof target.getChildContextValues === 'function';
+export function isReactScope(target: EventTarget | ReactScopeMethods): boolean {
+  return typeof (target: any).getChildContextValues === 'function';
 }
 
 export function dispatchEventForPluginEventSystem(
