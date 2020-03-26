@@ -14,6 +14,7 @@ import type {LazyComponent} from 'react/src/ReactLazy';
 import type {
   ModuleReference,
   ModuleMetaData,
+  UninitializedModel,
 } from './ReactFlightClientHostConfig';
 
 import {
@@ -37,25 +38,35 @@ export type JSONValue =
   | Array<JSONValue>;
 
 const PENDING = 0;
-const RESOLVED = 1;
-const ERRORED = 2;
+const RESOLVED_MODEL = 1;
+const INITIALIZED = 2;
+const ERRORED = 3;
 
 type PendingChunk = {
   _status: 0,
   _value: null | Array<() => mixed>,
   then(resolve: () => mixed): void,
 };
-type ResolvedChunk<T> = {
+type ResolvedModelChunk = {
   _status: 1,
+  _value: UninitializedModel,
+  then(resolve: () => mixed): void,
+};
+type InitializedChunk<T> = {
+  _status: 2,
   _value: T,
   then(resolve: () => mixed): void,
 };
 type ErroredChunk = {
-  _status: 2,
+  _status: 3,
   _value: Error,
   then(resolve: () => mixed): void,
 };
-type SomeChunk<T> = PendingChunk | ResolvedChunk<T> | ErroredChunk;
+type SomeChunk<T> =
+  | PendingChunk
+  | ResolvedModelChunk
+  | InitializedChunk<T>
+  | ErroredChunk;
 
 function Chunk(status: any, value: any) {
   this._status = status;
@@ -69,6 +80,7 @@ Chunk.prototype.then = function<T>(resolve: () => mixed) {
     }
     chunk._value.push(resolve);
   } else {
+    // Uninitialized Chunks should never have been
     resolve();
   }
 };
@@ -81,15 +93,18 @@ export type Response<T> = {
 };
 
 function readRoot<T>(): T {
-  const response: Response<T> = this;
-  const rootChunk = response.rootChunk;
-  if (rootChunk._status === RESOLVED) {
-    return rootChunk._value;
-  } else if (rootChunk._status === PENDING) {
-    // eslint-disable-next-line no-throw-literal
-    throw (rootChunk: Wakeable);
-  } else {
-    throw rootChunk._value;
+  let response: Response<T> = this;
+  let chunk = response.rootChunk;
+  switch (chunk._status) {
+    case INITIALIZED:
+      return chunk._value;
+    case RESOLVED_MODEL:
+      return initializeModelChunk<T>(chunk);
+    case PENDING:
+      // eslint-disable-next-line no-throw-literal
+      throw (chunk: Wakeable);
+    default:
+      throw chunk._value;
   }
 }
 
@@ -135,20 +150,33 @@ function triggerErrorOnChunk<T>(chunk: SomeChunk<T>, error: Error): void {
   wakeChunk(listeners);
 }
 
-function createResolvedChunk<T>(value: T): ResolvedChunk<T> {
-  return new Chunk(RESOLVED, value);
+function createResolvedModelChunk(
+  value: UninitializedModel,
+): ResolvedModelChunk {
+  return new Chunk(RESOLVED_MODEL, value);
 }
 
-function resolveChunk<T>(chunk: SomeChunk<T>, value: T): void {
+function resolveModelChunkImpl<T>(
+  chunk: SomeChunk<T>,
+  value: UninitializedModel,
+): void {
   if (chunk._status !== PENDING) {
     // We already resolved. We didn't expect to see this.
     return;
   }
-  const listeners = chunk._value;
-  const resolvedChunk: ResolvedChunk<T> = (chunk: any);
-  resolvedChunk._status = RESOLVED;
+  let listeners = chunk._value;
+  let resolvedChunk: ResolvedModelChunk = (chunk: any);
+  resolvedChunk._status = RESOLVED_MODEL;
   resolvedChunk._value = value;
   wakeChunk(listeners);
+}
+
+function initializeModelChunk<T>(chunk: ResolvedModelChunk): T {
+  let value: T = (chunk._value: any); // TODO
+  let initializedChunk: InitializedChunk<T> = (chunk: any);
+  initializedChunk._status = INITIALIZED;
+  initializedChunk._value = value;
+  return value;
 }
 
 // Report that any missing chunks in the model is now going to throw this
@@ -170,14 +198,17 @@ function readMaybeChunk<T>(maybeChunk: SomeChunk<T> | T): T {
     // $FlowFixMe
     return maybeChunk;
   }
-  const chunk: SomeChunk<T> = (maybeChunk: any);
-  if (chunk._status === RESOLVED) {
-    return chunk._value;
-  } else if (chunk._status === PENDING) {
-    // eslint-disable-next-line no-throw-literal
-    throw (chunk: Wakeable);
-  } else {
-    throw chunk._value;
+  let chunk: SomeChunk<T> = (maybeChunk: any);
+  switch (chunk._status) {
+    case INITIALIZED:
+      return chunk._value;
+    case RESOLVED_MODEL:
+      return initializeModelChunk<T>(chunk);
+    case PENDING:
+      // eslint-disable-next-line no-throw-literal
+      throw (chunk: Wakeable);
+    default:
+      throw chunk._value;
   }
 }
 
@@ -312,17 +343,17 @@ export function parseModelFromJSON<T>(
   return value;
 }
 
-export function resolveModelChunk<T, M>(
+export function resolveModelChunk<T>(
   response: Response<T>,
   id: number,
-  model: M,
+  model: UninitializedModel,
 ): void {
   const chunks = response.chunks;
   const chunk = chunks.get(id);
   if (!chunk) {
-    chunks.set(id, createResolvedChunk(model));
+    chunks.set(id, createResolvedModelChunk(model));
   } else {
-    resolveChunk(chunk, model);
+    resolveModelChunkImpl(chunk, model);
   }
 }
 

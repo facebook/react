@@ -7,6 +7,8 @@
  * @flow
  */
 
+import type {JSONValue} from 'react-client/src/ReactFlightClient';
+
 export {
   resolveModuleReference,
   preloadModule,
@@ -17,3 +19,5 @@ export type {
   ModuleReference,
   ModuleMetaData,
 } from 'ReactFlightDOMRelayClientIntegration';
+
+export type UninitializedModel = JSONValue;

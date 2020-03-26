@@ -32,6 +32,9 @@ export const preloadModule = $$$hostConfig.preloadModule;
 export const requireModule = $$$hostConfig.requireModule;
 
 export opaque type Source = mixed; // eslint-disable-line no-undef
+
+export type UninitializedModel = string;
+
 export opaque type StringDecoder = mixed; // eslint-disable-line no-undef
 
 export const supportsBinaryStreams = $$$hostConfig.supportsBinaryStreams;
