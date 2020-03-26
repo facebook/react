@@ -3109,6 +3109,81 @@ describe('ReactSuspenseWithNoopRenderer', () => {
   );
 
   it(
+    'fallback component can update itself even after a high pri update to ' +
+      'the primary tree suspends',
+    async () => {
+      const {useState} = React;
+      const root = ReactNoop.createRoot();
+
+      let setAppText;
+      function App() {
+        const [text, _setText] = useState('A');
+        setAppText = _setText;
+        return (
+          <>
+            <Suspense fallback={<Fallback />}>
+              <AsyncText text={text} />
+            </Suspense>
+          </>
+        );
+      }
+
+      let setFallbackText;
+      function Fallback() {
+        const [text, _setText] = useState('Loading...');
+        setFallbackText = _setText;
+        return <Text text={text} />;
+      }
+
+      // Resolve the initial tree
+      await resolveText('A');
+      await ReactNoop.act(async () => {
+        root.render(<App />);
+      });
+      expect(Scheduler).toHaveYielded(['A']);
+      expect(root).toMatchRenderedOutput(<span prop="A" />);
+
+      // Schedule an update inside the Suspense boundary that suspends.
+      await ReactNoop.act(async () => {
+        setAppText('B');
+      });
+      expect(Scheduler).toHaveYielded(['Suspend! [B]', 'Loading...']);
+      // Commit the placeholder
+      await advanceTimers(250);
+      expect(root).toMatchRenderedOutput(
+        <>
+          <span hidden={true} prop="A" />
+          <span prop="Loading..." />
+        </>,
+      );
+
+      // Schedule a high pri update on the boundary, and a lower pri update
+      // on the fallback. We're testing to make sure the fallback can still
+      // update even though the primary tree is suspended.
+      await ReactNoop.act(async () => {
+        ReactNoop.discreteUpdates(() => {
+          setAppText('C');
+        });
+        setFallbackText('Still loading...');
+      });
+
+      expect(Scheduler).toHaveYielded([
+        // First try to update the suspended tree. It's still suspended.
+        'Suspend! [C]',
+        'Loading...',
+        // Then complete the update to the fallback.
+        'Still loading...',
+      ]);
+      expect(root).toMatchRenderedOutput(
+        <>
+          <span hidden={true} prop="A" />
+          <span prop="Still loading..." />
+        </>,
+      );
+    },
+  );
+
+  it(
     'regression: primary fragment fiber is not always part of setState ' +
       'return path',
     async () => {
