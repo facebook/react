@@ -11,6 +11,7 @@ import type {Request, ReactModel} from 'react-server/src/ReactFlightServer';
 
 import type {
   Destination,
+  BundlerConfig,
   ModuleReference,
   ModuleMetaData,
 } from 'ReactFlightDOMRelayServerIntegration';
@@ -25,17 +26,16 @@ import {
 
 export type {
   Destination,
+  BundlerConfig,
   ModuleReference,
   ModuleMetaData,
 } from 'ReactFlightDOMRelayServerIntegration';
-
-export type BundlerConfig = void;
 
 export function resolveModuleMetaData<T>(
   config: BundlerConfig,
   resource: ModuleReference<T>,
 ): ModuleMetaData {
-  return resolveModuleMetaDataImpl(resource);
+  return resolveModuleMetaDataImpl(config, resource);
 }
 
 type JSONValue =
