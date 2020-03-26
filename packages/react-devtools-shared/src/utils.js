@@ -7,7 +7,6 @@
  * @flow
  */
 
-import Symbol from 'es6-symbol';
 import LRU from 'lru-cache';
 import {
   isElement,
