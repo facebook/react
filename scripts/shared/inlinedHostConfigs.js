@@ -14,6 +14,7 @@ module.exports = [
       'react-dom/testing',
       'react-dom/unstable-fizz.node',
       'react-flight-dom-webpack/server.node',
+      'react-flight-dom-webpack/server-runtime',
       'react-flight-dom-webpack',
     ],
     paths: [
@@ -24,6 +25,7 @@ module.exports = [
       'react-flight-dom-webpack',
       'react-flight-dom-webpack/server',
       'react-flight-dom-webpack/server.node',
+      'react-flight-dom-webpack/server-runtime',
       'react-flight-dom-webpack/src/ReactFlightDOMServerNode.js', // react-flight-dom-webpack/server.browser
       'react-interactions',
     ],
@@ -37,6 +39,7 @@ module.exports = [
       'react-dom/testing',
       'react-dom/unstable-fizz.browser',
       'react-flight-dom-webpack/server.browser',
+      'react-flight-dom-webpack/server-runtime',
       'react-flight-dom-webpack',
     ],
     paths: [
@@ -46,6 +49,7 @@ module.exports = [
       'react-dom/src/server/ReactDOMFizzServerBrowser.js', // react-dom/unstable-fizz.browser
       'react-flight-dom-webpack',
       'react-flight-dom-webpack/server.browser',
+      'react-flight-dom-webpack/server-runtime',
       'react-flight-dom-webpack/src/ReactFlightDOMServerBrowser.js', // react-flight-dom-webpack/server.browser
     ],
     isFlowTyped: true,
@@ -81,7 +85,11 @@ module.exports = [
   },
   {
     shortName: 'dom-relay',
-    entryPoints: ['react-flight-dom-relay', 'react-flight-dom-relay/server'],
+    entryPoints: [
+      'react-flight-dom-relay',
+      'react-flight-dom-relay/server',
+      'react-flight-dom-relay/server-runtime',
+    ],
     paths: ['react-dom', 'react-flight-dom-relay'],
     isFlowTyped: true,
     isServerSupported: true,
@@ -93,6 +101,7 @@ module.exports = [
       'react-client/flight',
       'react-server',
       'react-server/flight',
+      'react-server/flight-server-runtime',
     ],
     paths: [],
     isFlowTyped: true,

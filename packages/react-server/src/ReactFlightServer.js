@@ -176,7 +176,7 @@ export function resolveModelToJSON(
     switch (key) {
       case '1': {
         // Module reference
-        let moduleReference: ModuleReference = (value: any);
+        let moduleReference: ModuleReference<any> = (value: any);
         try {
           let moduleMetaData: ModuleMetaData = resolveModuleMetaData(
             request.bundlerConfig,

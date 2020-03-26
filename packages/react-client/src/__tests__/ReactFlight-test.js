@@ -16,6 +16,7 @@ let act;
 let React;
 let ReactNoop;
 let ReactNoopFlightServer;
+let ReactNoopFlightServerRuntime;
 let ReactNoopFlightClient;
 
 describe('ReactFlight', () => {
@@ -25,19 +26,22 @@ describe('ReactFlight', () => {
     React = require('react');
     ReactNoop = require('react-noop-renderer');
     ReactNoopFlightServer = require('react-noop-renderer/flight-server');
+    ReactNoopFlightServerRuntime = require('react-noop-renderer/flight-server-runtime');
     ReactNoopFlightClient = require('react-noop-renderer/flight-client');
     act = ReactNoop.act;
   });
 
   function block(render, load) {
+    if (load === undefined) {
+      return () => {
+        return ReactNoopFlightServerRuntime.serverBlockNoData(render);
+      };
+    }
     return function(...args) {
-      if (load === undefined) {
-        return [Symbol.for('react.server.block'), render];
-      }
       let curriedLoad = () => {
         return load(...args);
       };
-      return [Symbol.for('react.server.block'), render, curriedLoad];
+      return ReactNoopFlightServerRuntime.serverBlock(render, curriedLoad);
     };
   }
 

@@ -31,9 +31,9 @@ export type {
 
 export type BundlerConfig = void;
 
-export function resolveModuleMetaData(
+export function resolveModuleMetaData<T>(
   config: BundlerConfig,
-  resource: ModuleReference,
+  resource: ModuleReference<T>,
 ): ModuleMetaData {
   return resolveModuleMetaDataImpl(resource);
 }

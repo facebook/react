@@ -30,10 +30,10 @@ declare module 'ReactFlightDOMRelayServerIntegration' {
   ): void;
   declare export function close(destination: Destination): void;
 
-  declare export opaque type ModuleReference;
+  declare export opaque type ModuleReference<T>;
   declare export type ModuleMetaData = JSONValue;
-  declare export function resolveModuleMetaData(
-    resourceReference: ModuleReference,
+  declare export function resolveModuleMetaData<T>(
+    resourceReference: ModuleReference<T>,
   ): ModuleMetaData;
 }
 

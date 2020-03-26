@@ -10,6 +10,6 @@
 declare var $$$hostConfig: any;
 
 export opaque type BundlerConfig = mixed; // eslint-disable-line no-undef
-export opaque type ModuleReference = mixed; // eslint-disable-line no-undef
+export opaque type ModuleReference<T> = mixed; // eslint-disable-line no-undef
 export opaque type ModuleMetaData: any = mixed; // eslint-disable-line no-undef
 export const resolveModuleMetaData = $$$hostConfig.resolveModuleMetaData;
