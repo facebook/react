@@ -11,6 +11,7 @@ let act;
 let React;
 let ReactDOM;
 let ReactDOMFlightRelayServer;
+let ReactDOMFlightRelayServerRuntime;
 let ReactDOMFlightRelayClient;
 
 describe('ReactFlightDOMRelay', () => {
@@ -21,6 +22,7 @@ describe('ReactFlightDOMRelay', () => {
     React = require('react');
     ReactDOM = require('react-dom');
     ReactDOMFlightRelayServer = require('react-flight-dom-relay/server');
+    ReactDOMFlightRelayServerRuntime = require('react-flight-dom-relay/server-runtime');
     ReactDOMFlightRelayClient = require('react-flight-dom-relay');
   });
 
@@ -45,14 +47,14 @@ describe('ReactFlightDOMRelay', () => {
   }
 
   function block(render, load) {
+    if (load === undefined) {
+      return ReactDOMFlightRelayServerRuntime.serverBlock(render);
+    }
     return function(...args) {
-      if (load === undefined) {
-        return [Symbol.for('react.server.block'), render];
-      }
       let curriedLoad = () => {
         return load(...args);
       };
-      return [Symbol.for('react.server.block'), render, curriedLoad];
+      return ReactDOMFlightRelayServerRuntime.serverBlock(render, curriedLoad);
     };
   }
 

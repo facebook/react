@@ -106,7 +106,7 @@ export function block<Args: Iterable<any>, Props, Data>(
         _render: render,
       };
 
-      // $FlowFixMe
+      // $FlowFixMe: Upstream BlockComponent to Flow as a valid Node.
       return blockComponent;
     };
   }
@@ -132,7 +132,7 @@ export function block<Args: Iterable<any>, Props, Data>(
       _init: lazyInitializer,
     };
 
-    // $FlowFixMe
+    // $FlowFixMe: Upstream BlockComponent to Flow as a valid Node.
     return lazyType;
   };
 }

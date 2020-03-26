@@ -29,6 +29,7 @@ let Stream;
 let React;
 let ReactDOM;
 let ReactFlightDOMServer;
+let ReactFlightDOMServerRuntime;
 let ReactFlightDOMClient;
 
 describe('ReactFlightDOM', () => {
@@ -41,6 +42,7 @@ describe('ReactFlightDOM', () => {
     React = require('react');
     ReactDOM = require('react-dom');
     ReactFlightDOMServer = require('react-flight-dom-webpack/server');
+    ReactFlightDOMServerRuntime = require('react-flight-dom-webpack/server-runtime');
     ReactFlightDOMClient = require('react-flight-dom-webpack');
   });
 
@@ -72,14 +74,19 @@ describe('ReactFlightDOM', () => {
       chunks: [],
       name: 'd',
     };
+    if (load === undefined) {
+      return () => {
+        return ReactFlightDOMServerRuntime.serverBlockNoData('path/' + idx);
+      };
+    }
     return function(...args) {
-      if (load === undefined) {
-        return [Symbol.for('react.server.block'), render];
-      }
       let curriedLoad = () => {
         return load(...args);
       };
-      return [Symbol.for('react.server.block'), 'path/' + idx, curriedLoad];
+      return ReactFlightDOMServerRuntime.serverBlock(
+        'path/' + idx,
+        curriedLoad,
+      );
     };
   }
 

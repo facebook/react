@@ -13,7 +13,8 @@ type WebpackMap = {
 
 export type BundlerConfig = WebpackMap;
 
-export type ModuleReference = string;
+// eslint-disable-next-line no-unused-vars
+export type ModuleReference<T> = string;
 
 export type ModuleMetaData = {
   id: string,
@@ -21,9 +22,9 @@ export type ModuleMetaData = {
   name: string,
 };
 
-export function resolveModuleMetaData(
+export function resolveModuleMetaData<T>(
   config: BundlerConfig,
-  modulePath: ModuleReference,
+  modulePath: ModuleReference<T>,
 ): ModuleMetaData {
   return config[modulePath];
 }
