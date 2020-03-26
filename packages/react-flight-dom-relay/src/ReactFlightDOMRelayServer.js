@@ -8,12 +8,19 @@
  */
 
 import type {ReactModel} from 'react-server/src/ReactFlightServer';
-import type {Destination} from './ReactFlightDOMRelayServerHostConfig';
+import type {
+  BundlerConfig,
+  Destination,
+} from './ReactFlightDOMRelayServerHostConfig';
 
 import {createRequest, startWork} from 'react-server/src/ReactFlightServer';
 
-function render(model: ReactModel, destination: Destination): void {
-  let request = createRequest(model, destination, undefined);
+function render(
+  model: ReactModel,
+  destination: Destination,
+  config: BundlerConfig,
+): void {
+  let request = createRequest(model, destination, config);
   startWork(request);
 }
 
