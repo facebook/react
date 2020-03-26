@@ -98,8 +98,6 @@ import {
 } from './ReactUpdateQueue';
 import {
   NoWork,
-  Idle,
-  ContinuousHydration,
   Never,
   Sync,
   computeAsyncExpiration,
@@ -181,6 +179,7 @@ import {
   scheduleUpdateOnFiber,
   renderDidSuspendDelayIfPossible,
   markUnprocessedUpdateTime,
+  getWorkInProgressRoot,
 } from './ReactFiberWorkLoop';
 
 const ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
@@ -1605,23 +1604,16 @@ function getRemainingWorkInPrimaryTree(
   if ((workInProgress.mode & BlockingMode) !== NoMode) {
     // The highest priority remaining work is part of this render. Since we only
     // keep track of the highest level, we don't know if there's a lower
-    // priority level scheduled. As a compromise, we'll render at a really low
-    // priority that includes all the updates.
+    // priority level scheduled. As a compromise, we'll render at the lowest
+    // known level in the entire tree, since that will include everything.
     // TODO: If expirationTime were a bitmask where each bit represents a
     // separate task thread, this would be: currentChildBits & ~renderBits
-    // TODO: We used to track the lowest pending level for the whole root, but
-    // we removed it to simplify the implementation. It might be worth adding
-    // it back for this use case, to avoid redundant passes.
-    if (renderExpirationTime > ContinuousHydration) {
-      // First we try ContinuousHydration, so that we don't get grouped
-      // with Idle.
-      return ContinuousHydration;
-    } else if (renderExpirationTime > Idle) {
-      // Then we'll try Idle.
-      return Idle;
-    } else {
-      // Already at lowest possible update level.
-      return NoWork;
+    const root = getWorkInProgressRoot();
+    if (root !== null) {
+      const lastPendingTime = root.lastPendingTime;
+      if (lastPendingTime < renderExpirationTime) {
+        return lastPendingTime;
+      }
     }
   }
   // In legacy mode, there's no work left.

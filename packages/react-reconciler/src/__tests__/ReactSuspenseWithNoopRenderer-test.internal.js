@@ -3091,15 +3091,6 @@ describe('ReactSuspenseWithNoopRenderer', () => {
         // First we attempt the high pri update. It suspends.
         'Suspend! [B]',
         'Loading...',
-
-        // Then retry at a lower priority level.
-        // NOTE: The current implementation doesn't know which level to attempt,
-        // so it picks ContinuousHydration, which is one level higher than Idle.
-        // Since it doesn't include the Idle update, it will suspend again and
-        // reschedule to try at Idle. If we refactor expiration time to be a
-        // bitmask, we shouldn't need this heuristic.
-        'Suspend! [B]',
-        'Loading...',
       ]);
 
       // Commit the placeholder to unblock the Idle update.
@@ -3166,20 +3157,13 @@ describe('ReactSuspenseWithNoopRenderer', () => {
       await ReactNoop.act(async () => {
         setText('C');
       });
-      expect(Scheduler).toHaveYielded([
-        'Suspend! [C]',
-        'Loading...',
-
-        'Suspend! [C]',
-        'Loading...',
-      ]);
+      expect(Scheduler).toHaveYielded(['Suspend! [C]', 'Loading...']);
 
       // Commit. This will insert a fragment fiber to wrap around the component
       // that triggered the update.
       await ReactNoop.act(async () => {
         await advanceTimers(250);
       });
-      expect(Scheduler).toHaveYielded(['Suspend! [C]']);
       // The fragment fiber is part of the current tree, but the setState return
       // path still follows the alternate path. That means the fragment fiber is
       // not part of the return path.
