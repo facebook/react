@@ -327,11 +327,11 @@ export function isManagedDOMElement(
 export function isValidEventTarget(
   target: EventTarget | ReactScopeMethods,
 ): boolean {
-  return typeof (target: any).addEventListener === 'function';
+  return typeof (target: Object).addEventListener === 'function';
 }
 
 export function isReactScope(target: EventTarget | ReactScopeMethods): boolean {
-  return typeof (target: any).getChildContextValues === 'function';
+  return typeof (target: Object).getChildContextValues === 'function';
 }
 
 export function dispatchEventForPluginEventSystem(

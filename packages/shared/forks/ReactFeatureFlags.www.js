@@ -88,7 +88,7 @@ export const enableFundamentalAPI = false;
 
 export const enableScopeAPI = true;
 
-export const enableUseEventAPI = false;
+export const enableUseEventAPI = true;
 
 export const warnAboutUnmockedScheduler = true;
 
