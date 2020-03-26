@@ -10,6 +10,19 @@
 
 </details>
 
+## 4.6.0 (March 26, 2020)
+
+#### Features
+* Add shortcut keys for tab switching ([kerolloz](https://github.com/kerolloz) in [#18248](https://github.com/facebook/react/pull/18248))
+
+#### Bugfix
+* Improve display of complex values for `useDebugValue` ([eps1lon](https://github.com/eps1lon) in [#18070](https://github.com/facebook/react/pull/18070))
+* Fix minor CSS layout issue that broke Profiler commit selector UI ([bvaughn](https://github.com/bvaughn) in [#18286](https://github.com/facebook/react/pull/18286))
+* Inlined DevTools event emitter implementation to fix a source of Profiler bugs ([bvaughn](https://github.com/bvaughn) in [#18378](https://github.com/facebook/react/pull/18378))
+
+#### Cleanup
+* Remove "es6-symbol" dependency from "react-devtools-inline" package ([bvaughn](https://github.com/bvaughn) in [#18397](https://github.com/facebook/react/pull/18397))
+
 ## 4.5.0 (March 3, 2020)
 
 #### Features
