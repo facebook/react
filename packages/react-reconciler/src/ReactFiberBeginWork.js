@@ -179,6 +179,7 @@ import {
   scheduleUpdateOnFiber,
   renderDidSuspendDelayIfPossible,
   markUnprocessedUpdateTime,
+  getWorkInProgressRoot,
 } from './ReactFiberWorkLoop';
 
 const ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
@@ -1590,6 +1591,35 @@ function shouldRemainOnFallback(
   );
 }
 
+function getRemainingWorkInPrimaryTree(
+  workInProgress,
+  currentChildExpirationTime,
+  renderExpirationTime,
+) {
+  if (currentChildExpirationTime < renderExpirationTime) {
+    // The highest priority remaining work is not part of this render. So the
+    // remaining work has not changed.
+    return currentChildExpirationTime;
+  }
+  if ((workInProgress.mode & BlockingMode) !== NoMode) {
+    // The highest priority remaining work is part of this render. Since we only
+    // keep track of the highest level, we don't know if there's a lower
+    // priority level scheduled. As a compromise, we'll render at the lowest
+    // known level in the entire tree, since that will include everything.
+    // TODO: If expirationTime were a bitmask where each bit represents a
+    // separate task thread, this would be: currentChildBits & ~renderBits
+    const root = getWorkInProgressRoot();
+    if (root !== null) {
+      const lastPendingTime = root.lastPendingTime;
+      if (lastPendingTime < renderExpirationTime) {
+        return lastPendingTime;
+      }
+    }
+  }
+  // In legacy mode, there's no work left.
+  return NoWork;
+}
+
 function updateSuspenseComponent(
   current,
   workInProgress,
@@ -1831,8 +1861,15 @@ function updateSuspenseComponent(
             fallbackChildFragment.return = workInProgress;
             primaryChildFragment.sibling = fallbackChildFragment;
             fallbackChildFragment.effectTag |= Placement;
-            primaryChildFragment.childExpirationTime = NoWork;
-
+            primaryChildFragment.childExpirationTime = getRemainingWorkInPrimaryTree(
+              workInProgress,
+              // This argument represents the remaining work in the current
+              // primary tree. Since the current tree did not already time out
+              // the direct parent of the primary children is the Suspense
+              // fiber, not a fragment.
+              current.childExpirationTime,
+              renderExpirationTime,
+            );
             workInProgress.memoizedState = SUSPENDED_MARKER;
             workInProgress.child = primaryChildFragment;
 
@@ -1895,6 +1932,11 @@ function updateSuspenseComponent(
         );
         fallbackChildFragment.return = workInProgress;
         primaryChildFragment.sibling = fallbackChildFragment;
+        primaryChildFragment.childExpirationTime = getRemainingWorkInPrimaryTree(
+          workInProgress,
+          currentPrimaryChildFragment.childExpirationTime,
+          renderExpirationTime,
+        );
         primaryChildFragment.childExpirationTime = NoWork;
         // Skip the primary children, and continue working on the
         // fallback children.
@@ -1989,7 +2031,15 @@ function updateSuspenseComponent(
         fallbackChildFragment.return = workInProgress;
         primaryChildFragment.sibling = fallbackChildFragment;
         fallbackChildFragment.effectTag |= Placement;
-        primaryChildFragment.childExpirationTime = NoWork;
+        primaryChildFragment.childExpirationTime = getRemainingWorkInPrimaryTree(
+          workInProgress,
+          // This argument represents the remaining work in the current
+          // primary tree. Since the current tree did not already time out
+          // the direct parent of the primary children is the Suspense
+          // fiber, not a fragment.
+          current.childExpirationTime,
+          renderExpirationTime,
+        );
         // Skip the primary children, and continue working on the
         // fallback children.
         workInProgress.memoizedState = SUSPENDED_MARKER;
@@ -3006,6 +3056,42 @@ function beginWork(
                 renderExpirationTime,
               );
             } else {
+              // The primary child fragment does not have pending work marked
+              // on it...
+
+              // ...usually. There's an unfortunate edge case where the fragment
+              // fiber is not part of the return path of the children, so when
+              // an update happens, the fragment doesn't get marked during
+              // setState. This is something we should consider addressing when
+              // we refactor the Fiber data structure. (There's a test with more
+              // details; to find it, comment out the following block and see
+              // which one fails.)
+              //
+              // As a workaround, we need to recompute the `childExpirationTime`
+              // by bubbling it up from the next level of children. This is
+              // based on similar logic in `resetChildExpirationTime`.
+              let primaryChild = primaryChildFragment.child;
+              while (primaryChild !== null) {
+                const childUpdateExpirationTime = primaryChild.expirationTime;
+                const childChildExpirationTime =
+                  primaryChild.childExpirationTime;
+                if (
+                  (childUpdateExpirationTime !== NoWork &&
+                    childUpdateExpirationTime >= renderExpirationTime) ||
+                  (childChildExpirationTime !== NoWork &&
+                    childChildExpirationTime >= renderExpirationTime)
+                ) {
+                  // Found a child with an update with sufficient priority.
+                  // Use the normal path to render the primary children again.
+                  return updateSuspenseComponent(
+                    current,
+                    workInProgress,
+                    renderExpirationTime,
+                  );
+                }
+                primaryChild = primaryChild.sibling;
+              }
+
               pushSuspenseContext(
                 workInProgress,
                 setDefaultShallowSuspenseContext(suspenseStackCursor.current),

@@ -293,7 +293,13 @@ describe('ReactSuspenseList', () => {
 
     await C.resolve();
 
-    expect(Scheduler).toFlushAndYield(['C']);
+    expect(Scheduler).toFlushAndYield([
+      // TODO: Ideally we wouldn't have to retry B. This is an implementation
+      // trade off.
+      'Suspend! [B]',
+
+      'C',
+    ]);
 
     expect(ReactNoop).toMatchRenderedOutput(
       <>
