@@ -27,6 +27,7 @@ export type CustomDispatchConfig = {|
     bubbled: null,
     captured: null,
   |},
+  registrationName?: string,
   customEvent: true,
 |};
 
