@@ -1937,7 +1937,6 @@ function updateSuspenseComponent(
           currentPrimaryChildFragment.childExpirationTime,
           renderExpirationTime,
         );
-        primaryChildFragment.childExpirationTime = NoWork;
         // Skip the primary children, and continue working on the
         // fallback children.
         workInProgress.memoizedState = SUSPENDED_MARKER;
