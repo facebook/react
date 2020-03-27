@@ -7,39 +7,24 @@
  * @flow
  */
 
-import type {Response as ResponseBase, JSONValue} from './ReactFlightClient';
-
-import type {StringDecoder} from './ReactFlightClientHostConfig';
+import type {Response} from './ReactFlightClientHostConfigStream';
 
 import {
-  createResponse as createResponseImpl,
-  resolveModelChunk,
-  resolveErrorChunk,
-  parseModelFromJSON,
+  resolveModel,
+  resolveError,
+  createResponse as createResponseBase,
+  parseModelString,
+  parseModelTuple,
 } from './ReactFlightClient';
 
 import {
-  supportsBinaryStreams,
-  createStringDecoder,
   readPartialStringChunk,
   readFinalStringChunk,
+  supportsBinaryStreams,
+  createStringDecoder,
 } from './ReactFlightClientHostConfig';
 
-export type Response<T> = ResponseBase<T> & {
-  fromJSON: (key: string, value: JSONValue) => any,
-  stringDecoder: StringDecoder,
-};
-
-export function createResponse<T>(): Response<T> {
-  const response: Response<T> = (createResponseImpl(): any);
-  response.fromJSON = function(key: string, value: JSONValue) {
-    return parseModelFromJSON(response, this, key, value);
-  };
-  if (supportsBinaryStreams) {
-    response.stringDecoder = createStringDecoder();
-  }
-  return response;
-}
+export type {Response};
 
 function processFullRow<T>(response: Response<T>, row: string): void {
   if (row === '') {
@@ -51,8 +36,7 @@ function processFullRow<T>(response: Response<T>, row: string): void {
       const colon = row.indexOf(':', 1);
       const id = parseInt(row.substring(1, colon), 16);
       const json = row.substring(colon + 1);
-      const model = JSON.parse(json, response.fromJSON);
-      resolveModelChunk(response, id, model);
+      resolveModel(response, id, json);
       return;
     }
     case 'E': {
@@ -60,13 +44,12 @@ function processFullRow<T>(response: Response<T>, row: string): void {
       const id = parseInt(row.substring(1, colon), 16);
       const json = row.substring(colon + 1);
       const errorInfo = JSON.parse(json);
-      resolveErrorChunk(response, id, errorInfo.message, errorInfo.stack);
+      resolveError(response, id, errorInfo.message, errorInfo.stack);
       return;
     }
     default: {
       // Assume this is the root model.
-      const model = JSON.parse(row, response.fromJSON);
-      resolveModelChunk(response, 0, model);
+      resolveModel(response, 0, row);
       return;
     }
   }
@@ -107,6 +90,33 @@ export function processBinaryChunk<T>(
     linebreak = chunk.indexOf(10); // newline
   }
   response.partialRow += readPartialStringChunk(stringDecoder, chunk);
+}
+
+function createFromJSONCallback<T>(response: Response<T>) {
+  return function(key: string, value: JSONValue) {
+    if (typeof value === 'string') {
+      // We can't use .bind here because we need the "this" value.
+      return parseModelString(response, this, value);
+    }
+    if (typeof value === 'object' && value !== null) {
+      return parseModelTuple(response, value);
+    }
+    return value;
+  };
+}
+
+export function createResponse<T>(): Response<T> {
+  // NOTE: CHECK THE COMPILER OUTPUT EACH TIME YOU CHANGE THIS.
+  // It should be inlined to one object literal but minor changes can break it.
+  const stringDecoder = supportsBinaryStreams ? createStringDecoder() : null;
+  const response: any = createResponseBase();
+  response.partialRow = '';
+  if (supportsBinaryStreams) {
+    response.stringDecoder = stringDecoder;
+  }
+  // Don't inline this call because it causes closure to outline the call above.
+  response.fromJSON = createFromJSONCallback(response);
+  return response;
 }
 
 export {reportGlobalError, close} from './ReactFlightClient';

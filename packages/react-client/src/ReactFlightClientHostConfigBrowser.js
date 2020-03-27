@@ -7,8 +7,6 @@
  * @flow
  */
 
-export type UninitializedModel = string;
-
 export type StringDecoder = TextDecoder;
 
 export const supportsBinaryStreams = true;

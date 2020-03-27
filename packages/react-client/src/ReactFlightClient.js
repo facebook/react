@@ -15,12 +15,14 @@ import type {
   ModuleReference,
   ModuleMetaData,
   UninitializedModel,
+  Response,
 } from './ReactFlightClientHostConfig';
 
 import {
   resolveModuleReference,
   preloadModule,
   requireModule,
+  parseModel,
 } from './ReactFlightClientHostConfig';
 
 import {
@@ -34,8 +36,8 @@ export type JSONValue =
   | null
   | boolean
   | string
-  | {[key: string]: JSONValue}
-  | Array<JSONValue>;
+  | {+[key: string]: JSONValue}
+  | $ReadOnlyArray<JSONValue>;
 
 const PENDING = 0;
 const RESOLVED_MODEL = 1;
@@ -80,45 +82,33 @@ Chunk.prototype.then = function<T>(resolve: () => mixed) {
     }
     chunk._value.push(resolve);
   } else {
-    // Uninitialized Chunks should never have been
     resolve();
   }
 };
 
-export type Response<T> = {
-  partialRow: string,
+export type ResponseBase<T> = {
   rootChunk: SomeChunk<T>,
   chunks: Map<number, SomeChunk<any>>,
   readRoot(): T,
+  ...
 };
 
+export type {Response};
+
 function readRoot<T>(): T {
-  let response: Response<T> = this;
-  let chunk = response.rootChunk;
+  const response: Response<T> = this;
+  const chunk = response.rootChunk;
   switch (chunk._status) {
     case INITIALIZED:
       return chunk._value;
     case RESOLVED_MODEL:
-      return initializeModelChunk<T>(chunk);
+      return initializeModelChunk(response, chunk);
     case PENDING:
       // eslint-disable-next-line no-throw-literal
       throw (chunk: Wakeable);
     default:
       throw chunk._value;
   }
-}
-
-export function createResponse<T>(): Response<T> {
-  const rootChunk: SomeChunk<any> = createPendingChunk();
-  const chunks: Map<number, SomeChunk<any>> = new Map();
-  chunks.set(0, rootChunk);
-  const response = {
-    partialRow: '',
-    rootChunk,
-    chunks: chunks,
-    readRoot: readRoot,
-  };
-  return response;
 }
 
 function createPendingChunk(): PendingChunk {
@@ -156,7 +146,7 @@ function createResolvedModelChunk(
   return new Chunk(RESOLVED_MODEL, value);
 }
 
-function resolveModelChunkImpl<T>(
+function resolveModelChunk<T>(
   chunk: SomeChunk<T>,
   value: UninitializedModel,
 ): void {
@@ -164,16 +154,19 @@ function resolveModelChunkImpl<T>(
     // We already resolved. We didn't expect to see this.
     return;
   }
-  let listeners = chunk._value;
-  let resolvedChunk: ResolvedModelChunk = (chunk: any);
+  const listeners = chunk._value;
+  const resolvedChunk: ResolvedModelChunk = (chunk: any);
   resolvedChunk._status = RESOLVED_MODEL;
   resolvedChunk._value = value;
   wakeChunk(listeners);
 }
 
-function initializeModelChunk<T>(chunk: ResolvedModelChunk): T {
-  let value: T = (chunk._value: any); // TODO
-  let initializedChunk: InitializedChunk<T> = (chunk: any);
+function initializeModelChunk<R, T>(
+  response: Response<R>,
+  chunk: ResolvedModelChunk,
+): T {
+  const value: T = parseModel(response, chunk._value);
+  const initializedChunk: InitializedChunk<T> = (chunk: any);
   initializedChunk._status = INITIALIZED;
   initializedChunk._value = value;
   return value;
@@ -193,17 +186,20 @@ export function reportGlobalError<T>(
   });
 }
 
-function readMaybeChunk<T>(maybeChunk: SomeChunk<T> | T): T {
+function readMaybeChunk<R, T>(
+  response: Response<R>,
+  maybeChunk: SomeChunk<T> | T,
+): T {
   if (maybeChunk == null || !(maybeChunk instanceof Chunk)) {
     // $FlowFixMe
     return maybeChunk;
   }
-  let chunk: SomeChunk<T> = (maybeChunk: any);
+  const chunk: SomeChunk<T> = (maybeChunk: any);
   switch (chunk._status) {
     case INITIALIZED:
       return chunk._value;
     case RESOLVED_MODEL:
-      return initializeModelChunk<T>(chunk);
+      return initializeModelChunk(response, chunk);
     case PENDING:
       // eslint-disable-next-line no-throw-literal
       throw (chunk: Wakeable);
@@ -257,13 +253,15 @@ type UninitializedBlockPayload<Data> = [
   mixed,
   ModuleMetaData | SomeChunk<ModuleMetaData>,
   Data | SomeChunk<Data>,
+  Response<any>,
 ];
 
-function initializeBlock<Props, Data>(
+function initializeBlock<T, Props, Data>(
   tuple: UninitializedBlockPayload<Data>,
 ): BlockComponent<Props, Data> {
+  const response: Response<T> = tuple[3];
   // Require module first and then data. The ordering matters.
-  const moduleMetaData: ModuleMetaData = readMaybeChunk(tuple[1]);
+  const moduleMetaData: ModuleMetaData = readMaybeChunk(response, tuple[1]);
   const moduleReference: ModuleReference<
     BlockRenderFunction<Props, Data>,
   > = resolveModuleReference(moduleMetaData);
@@ -274,7 +272,7 @@ function initializeBlock<Props, Data>(
 
   // The ordering here is important because this call might suspend.
   // We don't want that to prevent the module graph for being initialized.
-  const data: Data = readMaybeChunk(tuple[2]);
+  const data: Data = readMaybeChunk(response, tuple[2]);
 
   return {
     $$typeof: REACT_BLOCK_TYPE,
@@ -298,52 +296,79 @@ function createLazyBlock<Props, Data>(
   return lazyType;
 }
 
-export function parseModelFromJSON<T>(
+function getChunk<T>(response: Response<T>, id: number): SomeChunk<any> {
+  const chunks = response.chunks;
+  let chunk = chunks.get(id);
+  if (!chunk) {
+    chunk = createPendingChunk();
+    chunks.set(id, chunk);
+  }
+  return chunk;
+}
+
+export function parseModelString<T>(
   response: Response<T>,
-  targetObj: Object,
-  key: string,
-  value: JSONValue,
-): mixed {
-  if (typeof value === 'string') {
-    if (value[0] === '$') {
-      if (value === '$') {
-        return REACT_ELEMENT_TYPE;
-      } else if (value[1] === '$' || value[1] === '@') {
-        // This was an escaped string value.
-        return value.substring(1);
-      } else {
-        const id = parseInt(value.substring(1), 16);
-        const chunks = response.chunks;
-        let chunk = chunks.get(id);
-        if (!chunk) {
-          chunk = createPendingChunk();
-          chunks.set(id, chunk);
-        }
+  parentObject: Object,
+  value: string,
+): any {
+  if (value[0] === '$') {
+    if (value === '$') {
+      return REACT_ELEMENT_TYPE;
+    } else if (value[1] === '$' || value[1] === '@') {
+      // This was an escaped string value.
+      return value.substring(1);
+    } else {
+      const id = parseInt(value.substring(1), 16);
+      const chunk = getChunk(response, id);
+      if (parentObject[0] === REACT_BLOCK_TYPE) {
+        // Block types know how to deal with lazy values.
         return chunk;
       }
-    }
-    if (value === '@') {
-      return REACT_BLOCK_TYPE;
+      // For anything else we must Suspend this block if
+      // we don't yet have the value.
+      return readMaybeChunk(response, chunk);
     }
   }
-  if (typeof value === 'object' && value !== null) {
-    const tuple: [mixed, mixed, mixed, mixed] = (value: any);
-    switch (tuple[0]) {
-      case REACT_ELEMENT_TYPE: {
-        // TODO: Consider having React just directly accept these arrays as elements.
-        // Or even change the ReactElement type to be an array.
-        return createElement(tuple[1], tuple[2], tuple[3]);
-      }
-      case REACT_BLOCK_TYPE: {
-        // TODO: Consider having React just directly accept these arrays as blocks.
-        return createLazyBlock((tuple: any));
-      }
-    }
+  if (value === '@') {
+    return REACT_BLOCK_TYPE;
   }
   return value;
 }
 
-export function resolveModelChunk<T>(
+export function parseModelTuple<T>(
+  response: Response<T>,
+  value: {+[key: string]: JSONValue} | $ReadOnlyArray<JSONValue>,
+): any {
+  const tuple: [mixed, mixed, mixed, mixed] = (value: any);
+  if (tuple[0] === REACT_ELEMENT_TYPE) {
+    // TODO: Consider having React just directly accept these arrays as elements.
+    // Or even change the ReactElement type to be an array.
+    return createElement(tuple[1], tuple[2], tuple[3]);
+  } else if (tuple[0] === REACT_BLOCK_TYPE) {
+    // TODO: Consider having React just directly accept these arrays as blocks.
+    // ensure that missing slots gets set to non-holey undefined.
+    tuple[2] = tuple[2];
+    // We need a backpointer to the response somewhere. We could also store initializeBlock
+    // in a closure per response which I also tried but ultimately decided on this approach.
+    tuple[3] = response;
+    return createLazyBlock((tuple: any));
+  }
+  return value;
+}
+
+export function createResponse<T>(): Response<T> {
+  const rootChunk: SomeChunk<any> = createPendingChunk();
+  const chunks: Map<number, SomeChunk<any>> = new Map();
+  chunks.set(0, rootChunk);
+  const response: any = {
+    rootChunk: rootChunk,
+    chunks: chunks,
+    readRoot: readRoot,
+  };
+  return response;
+}
+
+export function resolveModel<T>(
   response: Response<T>,
   id: number,
   model: UninitializedModel,
@@ -353,11 +378,11 @@ export function resolveModelChunk<T>(
   if (!chunk) {
     chunks.set(id, createResolvedModelChunk(model));
   } else {
-    resolveModelChunkImpl(chunk, model);
+    resolveModelChunk(chunk, model);
   }
 }
 
-export function resolveErrorChunk<T>(
+export function resolveError<T>(
   response: Response<T>,
   id: number,
   message: string,

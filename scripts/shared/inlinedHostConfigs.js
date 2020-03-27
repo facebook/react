@@ -27,6 +27,7 @@ module.exports = [
       'react-flight-dom-webpack/server.node',
       'react-flight-dom-webpack/server-runtime',
       'react-flight-dom-webpack/src/ReactFlightDOMServerNode.js', // react-flight-dom-webpack/server.browser
+      'react-client/src/ReactFlightClientStream.js', // We can only type check this in streaming configurations.
       'react-interactions',
     ],
     isFlowTyped: true,
@@ -51,6 +52,7 @@ module.exports = [
       'react-flight-dom-webpack/server.browser',
       'react-flight-dom-webpack/server-runtime',
       'react-flight-dom-webpack/src/ReactFlightDOMServerBrowser.js', // react-flight-dom-webpack/server.browser
+      'react-client/src/ReactFlightClientStream.js', // We can only type check this in streaming configurations.
     ],
     isFlowTyped: true,
     isServerSupported: true,
@@ -103,7 +105,12 @@ module.exports = [
       'react-server/flight',
       'react-server/flight-server-runtime',
     ],
-    paths: [],
+    paths: [
+      'react-client/flight',
+      'react-server/flight',
+      'react-server/flight-server-runtime',
+      'react-client/src/ReactFlightClientStream.js', // We can only type check this in streaming configurations.
+    ],
     isFlowTyped: true,
     isServerSupported: true,
   },
