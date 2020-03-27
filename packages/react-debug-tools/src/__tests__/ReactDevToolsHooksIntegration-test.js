@@ -265,6 +265,7 @@ describe('React hooks DevTools integration', () => {
       // Release the lock
       setSuspenseHandler(() => false);
       scheduleUpdate(fiber); // Re-render
+      Scheduler.unstable_flushAll();
       expect(renderer.toJSON().children).toEqual(['Done']);
       scheduleUpdate(fiber); // Re-render
       expect(renderer.toJSON().children).toEqual(['Done']);
