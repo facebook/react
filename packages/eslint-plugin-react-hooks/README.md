@@ -51,6 +51,24 @@ Please refer to the [Rules of Hooks](https://reactjs.org/docs/hooks-rules.html) 
 
 For feedback about the `exhaustive-deps` rule, please post in [this thread](https://github.com/facebook/react/issues/14920).
 
+## Options
+
+If your codebase contains functions with `use` prefix which are not React Hooks, and you are not able to rename them, you can configure `react-hooks/rules-of-hooks` to ignore them with the `ignoredNames` option:
+
+```js
+{
+  "plugins": [
+    // ...
+    "react-hooks"
+  ],
+  "rules": {
+    // ...
+    "react-hooks/rules-of-hooks": ["error", {ignoredNames: ["useThisIsNotAHook"]}],
+    "react-hooks/exhaustive-deps": "warn"
+  }
+}
+```
+
 ## License
 
 MIT
