@@ -7,8 +7,6 @@
  * @flow strict
  */
 
-export const enableUserTimingAPI = __DEV__;
-
 // Helps identify side effects in render-phase lifecycle hooks and setState
 // reducers by double invoking them in Strict Mode.
 export const debugRenderPhaseSideEffectsForStrictMode = __DEV__;
@@ -38,11 +36,6 @@ export const enableBlocksAPI = __EXPERIMENTAL__;
 
 // Only used in www builds.
 export const enableSchedulerDebugging = false;
-
-// Only used in www builds.
-export function addUserTimingListener() {
-  throw new Error('Not implemented.');
-}
 
 // Disable javascript: URL strings in href for XSS protection.
 export const disableJavaScriptURLs = false;

@@ -7,7 +7,6 @@
  * @flow
  */
 
-import {addUserTimingListener} from 'shared/ReactFeatureFlags';
 import {isEnabled} from './src/events/ReactDOMEventListener';
 
 import {__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED} from './src/client/ReactDOM';
@@ -17,8 +16,6 @@ Object.assign((__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED: any), {
   ReactBrowserEventEmitter: {
     isEnabled,
   },
-  // Perf experiment
-  addUserTimingListener,
 });
 
 export {
