@@ -219,13 +219,6 @@ export function isAncestor(instA, instB) {
 }
 
 /**
- * Return the parent instance of the passed-in instance.
- */
-export function getParentInstance(inst) {
-  return getParent(inst);
-}
-
-/**
  * Simulates the traversal of a two-phase, capture/bubble event dispatch.
  */
 export function traverseTwoPhase(inst, fn, arg) {
@@ -306,7 +299,7 @@ function accumulateDirectDispatches(events: ?(Array<Object> | Object)) {
 function accumulateTwoPhaseDispatchesSingleSkipTarget(event) {
   if (event && event.dispatchConfig.phasedRegistrationNames) {
     const targetInst = event._targetInst;
-    const parentInst = targetInst ? getParentInstance(targetInst) : null;
+    const parentInst = targetInst ? getParent(targetInst) : null;
     traverseTwoPhase(parentInst, accumulateDirectionalDispatches, event);
   }
 }
