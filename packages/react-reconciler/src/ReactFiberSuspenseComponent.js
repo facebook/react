@@ -35,6 +35,7 @@ export type SuspenseState = {|
   // here to indicate that it is dehydrated (flag) and for quick access
   // to check things like isSuspenseInstancePending.
   dehydrated: null | SuspenseInstance,
+  skippedTime: ExpirationTime,
   // Represents the earliest expiration time we should attempt to hydrate
   // a dehydrated boundary at.
   // Never is the default for dehydrated boundaries.
