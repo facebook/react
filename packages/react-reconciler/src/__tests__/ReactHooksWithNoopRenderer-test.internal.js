@@ -1305,7 +1305,7 @@ describe('ReactHooksWithNoopRenderer', () => {
         });
       });
 
-      it('shows a unique warning for state updates from within passive unmount function', () => {
+      it('shows a warning when a component updates its own state from within passive unmount function', () => {
         function Component() {
           Scheduler.unstable_yieldValue('Component');
           const [didLoad, setDidLoad] = React.useState(false);
@@ -1334,8 +1334,88 @@ describe('ReactHooksWithNoopRenderer', () => {
           expect(() => {
             expect(Scheduler).toFlushAndYield(['passive destroy']);
           }).toErrorDev(
-            "Warning: Can't perform a React state update from within a useEffect cleanup function.",
+            "Warning: Can't perform a React state update from within a useEffect cleanup function. " +
+              'To fix, move state updates to the useEffect() body.\n' +
+              '    in Component (at **)',
           );
+        });
+      });
+
+      it('shows a warning when a component updates a childs state from within passive unmount function', () => {
+        function Parent() {
+          Scheduler.unstable_yieldValue('Parent');
+          const updaterRef = React.useRef(null);
+          React.useEffect(() => {
+            Scheduler.unstable_yieldValue('Parent passive create');
+            return () => {
+              updaterRef.current(true);
+              Scheduler.unstable_yieldValue('Parent passive destroy');
+            };
+          }, []);
+          return <Child updaterRef={updaterRef} />;
+        }
+
+        function Child({updaterRef}) {
+          Scheduler.unstable_yieldValue('Child');
+          const [state, setState] = React.useState(false);
+          React.useEffect(() => {
+            Scheduler.unstable_yieldValue('Child passive create');
+            updaterRef.current = setState;
+          }, []);
+          return state;
+        }
+
+        act(() => {
+          ReactNoop.renderToRootWithID(<Parent />, 'root');
+          expect(Scheduler).toFlushAndYieldThrough([
+            'Parent',
+            'Child',
+            'Child passive create',
+            'Parent passive create',
+          ]);
+
+          // Unmount but don't process pending passive destroy function
+          ReactNoop.unmountRootWithID('root');
+          expect(() => {
+            expect(Scheduler).toFlushAndYield(['Parent passive destroy']);
+          }).toErrorDev(
+            "Warning: Can't perform a React state update from within a useEffect cleanup function. " +
+              'To fix, move state updates to the useEffect() body.\n' +
+              '    in Parent (at **)',
+          );
+        });
+      });
+
+      it('does not show a warning when a component updates a parents state from within passive unmount function', () => {
+        function Parent() {
+          const [state, setState] = React.useState(false);
+          Scheduler.unstable_yieldValue('Parent');
+          return <Child setState={setState} state={state} />;
+        }
+
+        function Child({setState, state}) {
+          Scheduler.unstable_yieldValue('Child');
+          React.useEffect(() => {
+            Scheduler.unstable_yieldValue('Child passive create');
+            return () => {
+              Scheduler.unstable_yieldValue('Child passive destroy');
+              setState(true);
+            };
+          }, []);
+          return state;
+        }
+
+        act(() => {
+          ReactNoop.renderToRootWithID(<Parent />, 'root');
+          expect(Scheduler).toFlushAndYieldThrough([
+            'Parent',
+            'Child',
+            'Child passive create',
+          ]);
+
+          // Unmount but don't process pending passive destroy function
+          ReactNoop.unmountRootWithID('root');
+          expect(Scheduler).toFlushAndYield(['Child passive destroy']);
         });
       });
     }
