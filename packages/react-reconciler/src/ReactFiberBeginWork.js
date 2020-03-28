@@ -3153,6 +3153,7 @@ function beginWork(
             // update in the past but didn't complete it.
             renderState.rendering = null;
             renderState.tail = null;
+            renderState.lastEffect = null;
           }
           pushSuspenseContext(workInProgress, suspenseStackCursor.current);
 
