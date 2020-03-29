@@ -2486,20 +2486,12 @@ describe('ReactSuspenseList', () => {
     );
   });
 
-  it('crashes if an error boundary wraps a suspense boundary when revealed together', async () => {
+  it('crashes when it contains class components when revealed together', async () => {
     let A = createAsyncText('A');
     let B = createAsyncText('B');
 
-    class ErrorBoundary extends React.Component {
-      state = {didThrow: false};
-      static getDerivedStateFromError() {
-        return {didThrow: true};
-      }
-
+    class ClassComponent extends React.Component {
       render() {
-        if (this.state.didThrow) {
-          return this.props.fallback;
-        }
         return this.props.children;
       }
     }
@@ -2508,16 +2500,16 @@ describe('ReactSuspenseList', () => {
       return (
         <Suspense fallback={<Text text="Loading" />}>
           <SuspenseList revealOrder="together">
-            <ErrorBoundary fallback="A crashed">
+            <ClassComponent>
               <Suspense fallback={<Text text="Loading A" />}>
                 <A />
               </Suspense>
-            </ErrorBoundary>
-            <ErrorBoundary fallback={<Text text="B crashed" />}>
+            </ClassComponent>
+            <ClassComponent>
               <Suspense fallback={<Text text="Loading B" />}>
                 <B />
               </Suspense>
-            </ErrorBoundary>
+            </ClassComponent>
           </SuspenseList>
         </Suspense>
       );
