@@ -2300,4 +2300,189 @@ describe('ReactSuspenseList', () => {
     // remount.
     expect(previousInst).toBe(setAsyncB);
   });
+
+  it('is able to re-suspend the last rows during an update with hidden', async () => {
+    let AsyncB = createAsyncText('B');
+
+    let setAsyncB;
+
+    function B() {
+      let [shouldBeAsync, setAsync] = React.useState(false);
+      setAsyncB = setAsync;
+
+      return shouldBeAsync ? (
+        <Suspense fallback={<Text text="Loading B" />}>
+          <AsyncB />
+        </Suspense>
+      ) : (
+        <Text text="Sync B" />
+      );
+    }
+
+    function Foo({updateList}) {
+      return (
+        <SuspenseList revealOrder="forwards" tail="hidden">
+          <Suspense key="A" fallback={<Text text="Loading A" />}>
+            <Text text="A" />
+          </Suspense>
+          <B key="B" updateList={updateList} />
+        </SuspenseList>
+      );
+    }
+
+    ReactNoop.render(<Foo />);
+
+    expect(Scheduler).toFlushAndYield(['A', 'Sync B']);
+
+    expect(ReactNoop).toMatchRenderedOutput(
+      <>
+        <span>A</span>
+        <span>Sync B</span>
+      </>,
+    );
+
+    let previousInst = setAsyncB;
+
+    // During an update we suspend on B.
+    ReactNoop.act(() => setAsyncB(true));
+
+    expect(Scheduler).toHaveYielded([
+      'Suspend! [B]',
+      'Loading B',
+      // The second pass is the "force hide" pass
+      'Loading B',
+    ]);
+
+    expect(ReactNoop).toMatchRenderedOutput(
+      <>
+        <span>A</span>
+        <span>Loading B</span>
+      </>,
+    );
+
+    // Before we resolve we'll rerender the whole list.
+    // This should leave the tree intact.
+    ReactNoop.act(() => ReactNoop.render(<Foo updateList={true} />));
+
+    expect(Scheduler).toHaveYielded(['A', 'Suspend! [B]', 'Loading B']);
+
+    expect(ReactNoop).toMatchRenderedOutput(
+      <>
+        <span>A</span>
+        <span>Loading B</span>
+      </>,
+    );
+
+    await AsyncB.resolve();
+
+    expect(Scheduler).toFlushAndYield(['B']);
+
+    expect(ReactNoop).toMatchRenderedOutput(
+      <>
+        <span>A</span>
+        <span>B</span>
+      </>,
+    );
+
+    // This should be the same instance. I.e. it didn't
+    // remount.
+    expect(previousInst).toBe(setAsyncB);
+  });
+
+  it('is able to interrupt a partially rendered tree and continue later', async () => {
+    let AsyncA = createAsyncText('A');
+
+    let updateLowPri;
+    let updateHighPri;
+
+    function Bar() {
+      let [highPriState, setHighPriState] = React.useState(false);
+      updateHighPri = setHighPriState;
+      return highPriState ? <AsyncA /> : null;
+    }
+
+    function Foo() {
+      let [lowPriState, setLowPriState] = React.useState(false);
+      updateLowPri = setLowPriState;
+      return (
+        <SuspenseList revealOrder="forwards" tail="hidden">
+          <Suspense key="A" fallback={<Text text="Loading A" />}>
+            <Bar />
+          </Suspense>
+          {lowPriState ? <Text text="B" /> : null}
+          {lowPriState ? <Text text="C" /> : null}
+          {lowPriState ? <Text text="D" /> : null}
+        </SuspenseList>
+      );
+    }
+
+    ReactNoop.render(<Foo />);
+
+    expect(Scheduler).toFlushAndYield([]);
+
+    expect(ReactNoop).toMatchRenderedOutput(null);
+
+    ReactNoop.act(() => {
+      // Add a few items at the end.
+      updateLowPri(true);
+
+      // Flush partially through.
+      expect(Scheduler).toFlushAndYieldThrough(['B', 'C']);
+
+      // Schedule another update at higher priority.
+      Scheduler.unstable_runWithPriority(
+        Scheduler.unstable_UserBlockingPriority,
+        () => updateHighPri(true),
+      );
+
+      // That will intercept the previous render.
+    });
+
+    jest.runAllTimers();
+
+    expect(Scheduler).toHaveYielded(
+      __DEV__
+        ? [
+            // First attempt at high pri.
+            'Suspend! [A]',
+            'Loading A',
+            // Re-render at forced.
+            'Suspend! [A]',
+            'Loading A',
+            // We auto-commit this on DEV.
+            // Try again on low-pri.
+            'Suspend! [A]',
+            'Loading A',
+          ]
+        : [
+            // First attempt at high pri.
+            'Suspend! [A]',
+            'Loading A',
+            // Re-render at forced.
+            'Suspend! [A]',
+            'Loading A',
+            // We didn't commit so retry at low-pri.
+            'Suspend! [A]',
+            'Loading A',
+            // Re-render at forced.
+            'Suspend! [A]',
+            'Loading A',
+          ],
+    );
+
+    expect(ReactNoop).toMatchRenderedOutput(<span>Loading A</span>);
+
+    await AsyncA.resolve();
+
+    expect(Scheduler).toFlushAndYield(['A', 'B', 'C', 'D']);
+
+    expect(ReactNoop).toMatchRenderedOutput(
+      <>
+        <span>A</span>
+        <span>B</span>
+        <span>C</span>
+        <span>D</span>
+      </>,
+    );
+  });
 });
