@@ -64,11 +64,19 @@ describe('ReactTestRendererAsync', () => {
       unstable_isConcurrent: true,
     });
 
-    expect(Scheduler).toFlushAndYield(['A:1', 'B:1', 'C:1']);
+    expect(Scheduler).toFlushAndYield(
+      __DEV__
+        ? ['A:1', 'A:1', 'B:1', 'B:1', 'C:1', 'C:1']
+        : ['A:1', 'B:1', 'C:1'],
+    );
     expect(renderer.toJSON()).toEqual(['A:1', 'B:1', 'C:1']);
 
     renderer.update(<Parent step={2} />);
-    expect(Scheduler).toFlushAndYield(['A:2', 'B:2', 'C:2']);
+    expect(Scheduler).toFlushAndYield(
+      __DEV__
+        ? ['A:2', 'A:2', 'B:2', 'B:2', 'C:2', 'C:2']
+        : ['A:2', 'B:2', 'C:2'],
+    );
     expect(renderer.toJSON()).toEqual(['A:2', 'B:2', 'C:2']);
   });
 
@@ -91,12 +99,14 @@ describe('ReactTestRendererAsync', () => {
     });
 
     // Flush the first two siblings
-    expect(Scheduler).toFlushAndYieldThrough(['A:1', 'B:1']);
+    expect(Scheduler).toFlushAndYieldThrough(
+      __DEV__ ? ['A:1', 'A:1', 'B:1', 'B:1'] : ['A:1', 'B:1'],
+    );
     // Did not commit yet.
     expect(renderer.toJSON()).toEqual(null);
 
     // Flush the remaining work
-    expect(Scheduler).toFlushAndYield(['C:1']);
+    expect(Scheduler).toFlushAndYield(__DEV__ ? ['C:1', 'C:1'] : ['C:1']);
     expect(renderer.toJSON()).toEqual(['A:1', 'B:1', 'C:1']);
   });
 
@@ -128,7 +138,9 @@ describe('ReactTestRendererAsync', () => {
     });
 
     // Flush the some of the changes, but don't commit
-    expect(Scheduler).toFlushAndYieldThrough(['A:1']);
+    expect(Scheduler).toFlushAndYieldThrough(
+      __DEV__ ? ['A:1', 'A:1'] : ['A:1'],
+    );
     expect(renderer.toJSON()).toEqual(null);
 
     // Interrupt with higher priority properties
@@ -224,12 +236,54 @@ describe('ReactTestRendererAsync', () => {
       });
 
       expect(Scheduler).toFlushAndThrow('Oh no!');
-      expect(Scheduler).toHaveYielded(['A', 'B', 'C', 'D', 'A', 'B', 'C', 'D']);
+      expect(Scheduler).toHaveYielded(
+        __DEV__
+          ? [
+              'A',
+              'A',
+              'B',
+              'B',
+              'C',
+              'C',
+              'D',
+              'D',
+              'A',
+              'A',
+              'B',
+              'B',
+              'C',
+              'C',
+              'D',
+              'D',
+            ]
+          : ['A', 'B', 'C', 'D', 'A', 'B', 'C', 'D'],
+      );
 
       renderer.update(<App />);
 
       expect(Scheduler).toFlushAndThrow('Oh no!');
-      expect(Scheduler).toHaveYielded(['A', 'B', 'C', 'D', 'A', 'B', 'C', 'D']);
+      expect(Scheduler).toHaveYielded(
+        __DEV__
+          ? [
+              'A',
+              'A',
+              'B',
+              'B',
+              'C',
+              'C',
+              'D',
+              'D',
+              'A',
+              'A',
+              'B',
+              'B',
+              'C',
+              'C',
+              'D',
+              'D',
+            ]
+          : ['A', 'B', 'C', 'D', 'A', 'B', 'C', 'D'],
+      );
 
       renderer.update(<App />);
       expect(Scheduler).toFlushAndThrow('Oh no!');

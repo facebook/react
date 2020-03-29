@@ -607,7 +607,9 @@ function runActTests(label, render, unmount, rerender) {
             },
           );
 
-          expect(Component).toHaveBeenCalledTimes(4);
+          expect(Component).toHaveBeenCalledTimes(
+            label === 'legacy mode' ? 4 : 8,
+          );
           unmount(secondContainer);
         });
       }

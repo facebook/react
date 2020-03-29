@@ -321,17 +321,14 @@ function updateForwardRef(
       debugRenderPhaseSideEffectsForStrictMode &&
       workInProgress.mode & StrictMode
     ) {
-      // Only double-render components with Hooks
-      if (workInProgress.memoizedState !== null) {
-        nextChildren = renderWithHooks(
-          current,
-          workInProgress,
-          render,
-          nextProps,
-          ref,
-          renderExpirationTime,
-        );
-      }
+      nextChildren = renderWithHooks(
+        current,
+        workInProgress,
+        render,
+        nextProps,
+        ref,
+        renderExpirationTime,
+      );
     }
     setIsRendering(false);
   } else {
@@ -662,17 +659,14 @@ function updateFunctionComponent(
       debugRenderPhaseSideEffectsForStrictMode &&
       workInProgress.mode & StrictMode
     ) {
-      // Only double-render components with Hooks
-      if (workInProgress.memoizedState !== null) {
-        nextChildren = renderWithHooks(
-          current,
-          workInProgress,
-          Component,
-          nextProps,
-          context,
-          renderExpirationTime,
-        );
-      }
+      nextChildren = renderWithHooks(
+        current,
+        workInProgress,
+        Component,
+        nextProps,
+        context,
+        renderExpirationTime,
+      );
     }
     setIsRendering(false);
   } else {
@@ -738,17 +732,14 @@ function updateBlock<Props, Data>(
       debugRenderPhaseSideEffectsForStrictMode &&
       workInProgress.mode & StrictMode
     ) {
-      // Only double-render components with Hooks
-      if (workInProgress.memoizedState !== null) {
-        nextChildren = renderWithHooks(
-          current,
-          workInProgress,
-          render,
-          nextProps,
-          data,
-          renderExpirationTime,
-        );
-      }
+      nextChildren = renderWithHooks(
+        current,
+        workInProgress,
+        render,
+        nextProps,
+        data,
+        renderExpirationTime,
+      );
     }
     setIsRendering(false);
   } else {
@@ -1471,17 +1462,14 @@ function mountIndeterminateComponent(
         debugRenderPhaseSideEffectsForStrictMode &&
         workInProgress.mode & StrictMode
       ) {
-        // Only double-render components with Hooks
-        if (workInProgress.memoizedState !== null) {
-          value = renderWithHooks(
-            null,
-            workInProgress,
-            Component,
-            props,
-            context,
-            renderExpirationTime,
-          );
-        }
+        value = renderWithHooks(
+          null,
+          workInProgress,
+          Component,
+          props,
+          context,
+          renderExpirationTime,
+        );
       }
     }
     reconcileChildren(null, workInProgress, value, renderExpirationTime);
