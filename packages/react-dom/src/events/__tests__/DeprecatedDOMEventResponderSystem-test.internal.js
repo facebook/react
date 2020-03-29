@@ -813,7 +813,7 @@ describe('DOMEventResponderSystem', () => {
 
     let root = ReactDOM.createRoot(container);
     root.render(<Test counter={0} />);
-    expect(Scheduler).toFlushAndYield(['Test']);
+    expect(Scheduler).toFlushAndYield(__DEV__ ? ['Test', 'Test'] : ['Test']);
 
     // Click the button
     dispatchClickEvent(ref.current);
@@ -825,7 +825,9 @@ describe('DOMEventResponderSystem', () => {
     // Increase counter
     root.render(<Test counter={1} />);
     // Yield before committing
-    expect(Scheduler).toFlushAndYieldThrough(['Test']);
+    expect(Scheduler).toFlushAndYieldThrough(
+      __DEV__ ? ['Test', 'Test'] : ['Test'],
+    );
 
     // Click the button again
     dispatchClickEvent(ref.current);

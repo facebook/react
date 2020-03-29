@@ -1300,14 +1300,14 @@ describe('ReactHooks', () => {
         <NoHooks />
       </StrictMode>,
     );
-    expect(renderCount).toBe(1);
+    expect(renderCount).toBe(__DEV__ ? 2 : 1);
     renderCount = 0;
     renderer.update(
       <StrictMode>
         <NoHooks />
       </StrictMode>,
     );
-    expect(renderCount).toBe(1);
+    expect(renderCount).toBe(__DEV__ ? 2 : 1);
 
     renderCount = 0;
     renderer.update(<FwdRef />);
@@ -1321,14 +1321,14 @@ describe('ReactHooks', () => {
         <FwdRef />
       </StrictMode>,
     );
-    expect(renderCount).toBe(1);
+    expect(renderCount).toBe(__DEV__ ? 2 : 1);
     renderCount = 0;
     renderer.update(
       <StrictMode>
         <FwdRef />
       </StrictMode>,
     );
-    expect(renderCount).toBe(1);
+    expect(renderCount).toBe(__DEV__ ? 2 : 1);
 
     renderCount = 0;
     renderer.update(<Memo arg={1} />);
@@ -1342,14 +1342,14 @@ describe('ReactHooks', () => {
         <Memo arg={1} />
       </StrictMode>,
     );
-    expect(renderCount).toBe(1);
+    expect(renderCount).toBe(__DEV__ ? 2 : 1);
     renderCount = 0;
     renderer.update(
       <StrictMode>
         <Memo arg={2} />
       </StrictMode>,
     );
-    expect(renderCount).toBe(1);
+    expect(renderCount).toBe(__DEV__ ? 2 : 1);
 
     renderCount = 0;
     expect(() => renderer.update(<Factory />)).toErrorDev(

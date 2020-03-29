@@ -1333,6 +1333,7 @@ describe('ReactUpdates', () => {
             'Foo',
             'Foo',
             'Baz',
+            'Baz',
             'Foo#effect',
           ]);
         } else {
