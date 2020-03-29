@@ -2485,4 +2485,74 @@ describe('ReactSuspenseList', () => {
       </>,
     );
   });
+
+  it('crashes if an error boundary wraps a suspense boundary when revealed together', async () => {
+    let A = createAsyncText('A');
+    let B = createAsyncText('B');
+
+    class ErrorBoundary extends React.Component {
+      state = {didThrow: false};
+      static getDerivedStateFromError() {
+        return {didThrow: true};
+      }
+
+      render() {
+        if (this.state.didThrow) {
+          return this.props.fallback;
+        }
+        return this.props.children;
+      }
+    }
+
+    function Foo() {
+      return (
+        <Suspense fallback={<Text text="Loading" />}>
+          <SuspenseList revealOrder="together">
+            <ErrorBoundary fallback="A crashed">
+              <Suspense fallback={<Text text="Loading A" />}>
+                <A />
+              </Suspense>
+            </ErrorBoundary>
+            <ErrorBoundary fallback={<Text text="B crashed" />}>
+              <Suspense fallback={<Text text="Loading B" />}>
+                <B />
+              </Suspense>
+            </ErrorBoundary>
+          </SuspenseList>
+        </Suspense>
+      );
+    }
+
+    await A.resolve();
+
+    ReactNoop.render(<Foo />);
+
+    expect(Scheduler).toFlushAndYield([
+      'A',
+      'Suspend! [B]',
+      'Loading B',
+      'Loading A',
+      'Loading B',
+    ]);
+
+    expect(ReactNoop).toMatchRenderedOutput(
+      <>
+        <span>Loading A</span>
+        <span>Loading B</span>
+      </>,
+    );
+
+    await B.resolve();
+
+    ReactNoop.render(<Foo />);
+
+    expect(Scheduler).toFlushAndYield(['A', 'B']);
+
+    expect(ReactNoop).toMatchRenderedOutput(
+      <>
+        <span>A</span>
+        <span>B</span>
+      </>,
+    );
+  });
 });
