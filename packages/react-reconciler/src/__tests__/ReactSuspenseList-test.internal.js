@@ -2485,4 +2485,66 @@ describe('ReactSuspenseList', () => {
       </>,
     );
   });
+
+  it('can resume class components when revealed together', async () => {
+    let A = createAsyncText('A');
+    let B = createAsyncText('B');
+
+    class ClassComponent extends React.Component {
+      render() {
+        return this.props.children;
+      }
+    }
+
+    function Foo() {
+      return (
+        <Suspense fallback={<Text text="Loading" />}>
+          <SuspenseList revealOrder="together">
+            <ClassComponent>
+              <Suspense fallback={<Text text="Loading A" />}>
+                <A />
+              </Suspense>
+            </ClassComponent>
+            <ClassComponent>
+              <Suspense fallback={<Text text="Loading B" />}>
+                <B />
+              </Suspense>
+            </ClassComponent>
+          </SuspenseList>
+        </Suspense>
+      );
+    }
+
+    await A.resolve();
+
+    ReactNoop.render(<Foo />);
+
+    expect(Scheduler).toFlushAndYield([
+      'A',
+      'Suspend! [B]',
+      'Loading B',
+      'Loading A',
+      'Loading B',
+    ]);
+
+    expect(ReactNoop).toMatchRenderedOutput(
+      <>
+        <span>Loading A</span>
+        <span>Loading B</span>
+      </>,
+    );
+
+    await B.resolve();
+
+    ReactNoop.render(<Foo />);
+
+    expect(Scheduler).toFlushAndYield(['A', 'B']);
+
+    expect(ReactNoop).toMatchRenderedOutput(
+      <>
+        <span>A</span>
+        <span>B</span>
+      </>,
+    );
+  });
 });
