@@ -885,6 +885,10 @@ function resumeMountClassInstance(
     nextContext = getMaskedContext(workInProgress, nextLegacyUnmaskedContext);
   }
 
+  if (workInProgress.updateQueue === null) {
+    initializeUpdateQueue(workInProgress);
+  }
+
   const getDerivedStateFromProps = ctor.getDerivedStateFromProps;
   const hasNewLifecycles =
     typeof getDerivedStateFromProps === 'function' ||
