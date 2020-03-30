@@ -79,7 +79,6 @@ import {
   getCurrentFiberOwnerNameInDevOrNull,
   setIsRendering,
 } from './ReactCurrentFiber';
-import {startWorkTimer, cancelWorkTimer} from './ReactDebugFiberPerf';
 import {
   resolveFunctionForHotReloading,
   resolveForwardRefForHotReloading,
@@ -1128,9 +1127,6 @@ function mountLazyComponent(
   }
 
   const props = workInProgress.pendingProps;
-  // We can't start a User Timing measurement with correct label yet.
-  // Cancel and resume right after we know the tag.
-  cancelWorkTimer(workInProgress);
   let lazyComponent: LazyComponentType<any, any> = elementType;
   let payload = lazyComponent._payload;
   let init = lazyComponent._init;
@@ -1138,7 +1134,6 @@ function mountLazyComponent(
   // Store the unwrapped component in the type.
   workInProgress.type = Component;
   const resolvedTag = (workInProgress.tag = resolveLazyComponentTag(Component));
-  startWorkTimer(workInProgress);
   const resolvedProps = resolveDefaultProps(Component, props);
   let child;
   switch (resolvedTag) {
@@ -2886,8 +2881,6 @@ function bailoutOnAlreadyFinishedWork(
   workInProgress: Fiber,
   renderExpirationTime: ExpirationTime,
 ): Fiber | null {
-  cancelWorkTimer(workInProgress);
-
   if (current !== null) {
     // Reuse previous dependencies
     workInProgress.dependencies = current.dependencies;

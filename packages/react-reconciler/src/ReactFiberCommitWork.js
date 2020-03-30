@@ -74,7 +74,6 @@ import getComponentName from 'shared/getComponentName';
 import invariant from 'shared/invariant';
 
 import {onCommitUnmount} from './ReactFiberDevToolsHook';
-import {startPhaseTimer, stopPhaseTimer} from './ReactDebugFiberPerf';
 import {getStackByFiberInDevAndProd} from './ReactCurrentFiber';
 import {logCapturedError} from './ReactFiberErrorLogger';
 import {resolveDefaultProps} from './ReactFiberLazyComponent';
@@ -182,7 +181,6 @@ export function logError(boundary: Fiber, errorInfo: CapturedValue<mixed>) {
 }
 
 const callComponentWillUnmountWithTimer = function(current, instance) {
-  startPhaseTimer(current, 'componentWillUnmount');
   instance.props = current.memoizedProps;
   instance.state = current.memoizedState;
   if (
@@ -199,7 +197,6 @@ const callComponentWillUnmountWithTimer = function(current, instance) {
   } else {
     instance.componentWillUnmount();
   }
-  stopPhaseTimer();
 };
 
 // Capture errors so they don't interrupt unmounting.
@@ -280,7 +277,6 @@ function commitBeforeMutationLifeCycles(
         if (current !== null) {
           const prevProps = current.memoizedProps;
           const prevState = current.memoizedState;
-          startPhaseTimer(finishedWork, 'getSnapshotBeforeUpdate');
           const instance = finishedWork.stateNode;
           // We could update instance props and state here,
           // but instead we rely on them being set during last render.
@@ -330,7 +326,6 @@ function commitBeforeMutationLifeCycles(
             }
           }
           instance.__reactInternalSnapshotBeforeUpdate = snapshot;
-          stopPhaseTimer();
         }
       }
       return;
@@ -580,7 +575,6 @@ function commitLifeCycles(
       const instance = finishedWork.stateNode;
       if (finishedWork.effectTag & Update) {
         if (current === null) {
-          startPhaseTimer(finishedWork, 'componentDidMount');
           // We could update instance props and state here,
           // but instead we rely on them being set during last render.
           // TODO: revisit this when we implement resuming.
@@ -625,14 +619,12 @@ function commitLifeCycles(
           } else {
             instance.componentDidMount();
           }
-          stopPhaseTimer();
         } else {
           const prevProps =
             finishedWork.elementType === finishedWork.type
               ? current.memoizedProps
               : resolveDefaultProps(finishedWork.type, current.memoizedProps);
           const prevState = current.memoizedState;
-          startPhaseTimer(finishedWork, 'componentDidUpdate');
           // We could update instance props and state here,
           // but instead we rely on them being set during last render.
           // TODO: revisit this when we implement resuming.
@@ -685,7 +677,6 @@ function commitLifeCycles(
               instance.__reactInternalSnapshotBeforeUpdate,
             );
           }
-          stopPhaseTimer();
         }
       }
       const updateQueue = finishedWork.updateQueue;

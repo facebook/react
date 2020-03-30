@@ -26,7 +26,6 @@ import getComponentName from 'shared/getComponentName';
 import invariant from 'shared/invariant';
 import {REACT_CONTEXT_TYPE, REACT_PROVIDER_TYPE} from 'shared/ReactSymbols';
 
-import {startPhaseTimer, stopPhaseTimer} from './ReactDebugFiberPerf';
 import {resolveDefaultProps} from './ReactFiberLazyComponent';
 import {StrictMode} from './ReactTypeOfMode';
 
@@ -271,13 +270,11 @@ function checkShouldComponentUpdate(
         instance.shouldComponentUpdate(newProps, newState, nextContext);
       }
     }
-    startPhaseTimer(workInProgress, 'shouldComponentUpdate');
     const shouldUpdate = instance.shouldComponentUpdate(
       newProps,
       newState,
       nextContext,
     );
-    stopPhaseTimer();
 
     if (__DEV__) {
       if (shouldUpdate === undefined) {
@@ -705,7 +702,6 @@ function constructClassInstance(
 }
 
 function callComponentWillMount(workInProgress, instance) {
-  startPhaseTimer(workInProgress, 'componentWillMount');
   const oldState = instance.state;
 
   if (typeof instance.componentWillMount === 'function') {
@@ -714,8 +710,6 @@ function callComponentWillMount(workInProgress, instance) {
   if (typeof instance.UNSAFE_componentWillMount === 'function') {
     instance.UNSAFE_componentWillMount();
   }
-
-  stopPhaseTimer();
 
   if (oldState !== instance.state) {
     if (__DEV__) {
@@ -737,14 +731,12 @@ function callComponentWillReceiveProps(
   nextContext,
 ) {
   const oldState = instance.state;
-  startPhaseTimer(workInProgress, 'componentWillReceiveProps');
   if (typeof instance.componentWillReceiveProps === 'function') {
     instance.componentWillReceiveProps(newProps, nextContext);
   }
   if (typeof instance.UNSAFE_componentWillReceiveProps === 'function') {
     instance.UNSAFE_componentWillReceiveProps(newProps, nextContext);
   }
-  stopPhaseTimer();
 
   if (instance.state !== oldState) {
     if (__DEV__) {
@@ -961,14 +953,12 @@ function resumeMountClassInstance(
       (typeof instance.UNSAFE_componentWillMount === 'function' ||
         typeof instance.componentWillMount === 'function')
     ) {
-      startPhaseTimer(workInProgress, 'componentWillMount');
       if (typeof instance.componentWillMount === 'function') {
         instance.componentWillMount();
       }
       if (typeof instance.UNSAFE_componentWillMount === 'function') {
         instance.UNSAFE_componentWillMount();
       }
-      stopPhaseTimer();
     }
     if (typeof instance.componentDidMount === 'function') {
       workInProgress.effectTag |= Update;
@@ -1113,14 +1103,12 @@ function updateClassInstance(
       (typeof instance.UNSAFE_componentWillUpdate === 'function' ||
         typeof instance.componentWillUpdate === 'function')
     ) {
-      startPhaseTimer(workInProgress, 'componentWillUpdate');
       if (typeof instance.componentWillUpdate === 'function') {
         instance.componentWillUpdate(newProps, newState, nextContext);
       }
       if (typeof instance.UNSAFE_componentWillUpdate === 'function') {
         instance.UNSAFE_componentWillUpdate(newProps, newState, nextContext);
       }
-      stopPhaseTimer();
     }
     if (typeof instance.componentDidUpdate === 'function') {
       workInProgress.effectTag |= Update;

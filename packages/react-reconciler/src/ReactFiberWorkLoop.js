@@ -21,7 +21,6 @@ import {
   warnAboutDeprecatedLifecycles,
   deferPassiveEffectCleanupDuringUnmount,
   runAllPassiveEffectDestroysBeforeCreates,
-  enableUserTimingAPI,
   enableSuspenseServerRenderer,
   replayFailedUnitOfWorkWithInvokeGuardedCallback,
   enableProfilerTimer,
@@ -168,23 +167,6 @@ import {
   getStackByFiberInDevAndProd,
 } from './ReactCurrentFiber';
 import {
-  recordEffect,
-  recordScheduleUpdate,
-  startWorkTimer,
-  stopWorkTimer,
-  stopFailedWorkTimer,
-  startWorkLoopTimer,
-  stopWorkLoopTimer,
-  startCommitTimer,
-  stopCommitTimer,
-  startCommitSnapshotEffectsTimer,
-  stopCommitSnapshotEffectsTimer,
-  startCommitHostEffectsTimer,
-  stopCommitHostEffectsTimer,
-  startCommitLifeCyclesTimer,
-  stopCommitLifeCyclesTimer,
-} from './ReactDebugFiberPerf';
-import {
   invokeGuardedCallback,
   hasCaughtError,
   clearCaughtError,
@@ -274,8 +256,6 @@ let rootWithNestedUpdates: FiberRoot | null = null;
 
 const NESTED_PASSIVE_UPDATE_LIMIT = 50;
 let nestedPassiveUpdateCount: number = 0;
-
-let interruptedBy: Fiber | null = null;
 
 // Marks the need to reschedule pending interactions at these expiration times
 // during the commit phase. This enables them to be traced across components
@@ -396,9 +376,6 @@ export function scheduleUpdateOnFiber(
     warnAboutUpdateOnUnmountedFiberInDEV(fiber);
     return;
   }
-
-  checkForInterruption(fiber, expirationTime);
-  recordScheduleUpdate();
 
   // TODO: computeExpirationForFiber also reads the priority. Pass the
   // priority as an argument to that function and this one.
@@ -1410,7 +1387,6 @@ function renderRootSync(root, expirationTime) {
   }
 
   const prevInteractions = pushInteractions(root);
-  startWorkLoopTimer(workInProgress);
   do {
     try {
       workLoopSync();
@@ -1435,8 +1411,6 @@ function renderRootSync(root, expirationTime) {
         'bug in React. Please file an issue.',
     );
   }
-
-  stopFinishedWorkLoopTimer();
 
   // Set this to null to indicate there's no in-progress render.
   workInProgressRoot = null;
@@ -1466,7 +1440,6 @@ function renderRootConcurrent(root, expirationTime) {
   }
 
   const prevInteractions = pushInteractions(root);
-  startWorkLoopTimer(workInProgress);
   do {
     try {
       workLoopConcurrent();
@@ -1486,12 +1459,9 @@ function renderRootConcurrent(root, expirationTime) {
   // Check if the tree has completed.
   if (workInProgress !== null) {
     // Still work remaining.
-    stopInterruptedWorkLoopTimer();
     return RootIncomplete;
   } else {
     // Completed the tree.
-    stopFinishedWorkLoopTimer();
-
     // Set this to null to indicate there's no in-progress render.
     workInProgressRoot = null;
 
@@ -1513,8 +1483,6 @@ function performUnitOfWork(unitOfWork: Fiber): Fiber | null {
   // nothing should rely on this, but relying on it here means that we don't
   // need an additional field on the work in progress.
   const current = unitOfWork.alternate;
-
-  startWorkTimer(unitOfWork);
   setCurrentDebugFiberInDEV(unitOfWork);
 
   let next;
@@ -1563,7 +1531,6 @@ function completeUnitOfWork(unitOfWork: Fiber): Fiber | null {
         // Update render duration assuming we didn't error.
         stopProfilerTimerIfRunningAndRecordDelta(workInProgress, false);
       }
-      stopWorkTimer(workInProgress);
       resetCurrentDebugFiberInDEV();
       resetChildExpirationTime(workInProgress);
 
@@ -1640,13 +1607,9 @@ function completeUnitOfWork(unitOfWork: Fiber): Fiber | null {
         // back here again.
         // Since we're restarting, remove anything that is not a host effect
         // from the effect tag.
-        // TODO: The name stopFailedWorkTimer is misleading because Suspense
-        // also captures and restarts.
-        stopFailedWorkTimer(workInProgress);
         next.effectTag &= HostEffectMask;
         return next;
       }
-      stopWorkTimer(workInProgress);
 
       if (returnFiber !== null) {
         // Mark the parent fiber as incomplete and clear its effect list.
@@ -1792,8 +1755,6 @@ function commitRootImpl(root, renderPriorityLevel) {
   root.callbackPriority = NoPriority;
   root.nextKnownPendingLevel = NoWork;
 
-  startCommitTimer();
-
   // Update the first and last pending times on this root. The new first
   // pending time is whatever is left on the root fiber.
   const remainingExpirationTimeBeforeCommit = getRemainingExpirationTime(
@@ -1849,7 +1810,6 @@ function commitRootImpl(root, renderPriorityLevel) {
     // The first phase a "before mutation" phase. We use this phase to read the
     // state of the host tree right before we mutate it. This is where
     // getSnapshotBeforeUpdate is called.
-    startCommitSnapshotEffectsTimer();
     prepareForCommit(root.containerInfo);
     nextEffect = firstEffect;
     do {
@@ -1871,7 +1831,6 @@ function commitRootImpl(root, renderPriorityLevel) {
         }
       }
     } while (nextEffect !== null);
-    stopCommitSnapshotEffectsTimer();
 
     if (enableProfilerTimer) {
       // Mark the current commit time to be shared by all Profilers in this
@@ -1880,7 +1839,6 @@ function commitRootImpl(root, renderPriorityLevel) {
     }
 
     // The next phase is the mutation phase, where we mutate the host tree.
-    startCommitHostEffectsTimer();
     nextEffect = firstEffect;
     do {
       if (__DEV__) {
@@ -1907,7 +1865,6 @@ function commitRootImpl(root, renderPriorityLevel) {
         }
       }
     } while (nextEffect !== null);
-    stopCommitHostEffectsTimer();
     resetAfterCommit(root.containerInfo);
 
     // The work-in-progress tree is now the current tree. This must come after
@@ -1919,7 +1876,6 @@ function commitRootImpl(root, renderPriorityLevel) {
     // The next phase is the layout phase, where we call effects that read
     // the host tree after it's been mutated. The idiomatic use case for this is
     // layout, but class component lifecycles also fire here for legacy reasons.
-    startCommitLifeCyclesTimer();
     nextEffect = firstEffect;
     do {
       if (__DEV__) {
@@ -1946,7 +1902,6 @@ function commitRootImpl(root, renderPriorityLevel) {
         }
       }
     } while (nextEffect !== null);
-    stopCommitLifeCyclesTimer();
 
     nextEffect = null;
 
@@ -1964,18 +1919,10 @@ function commitRootImpl(root, renderPriorityLevel) {
     // Measure these anyway so the flamegraph explicitly shows that there were
     // no effects.
     // TODO: Maybe there's a better way to report this.
-    startCommitSnapshotEffectsTimer();
-    stopCommitSnapshotEffectsTimer();
     if (enableProfilerTimer) {
       recordCommitTime();
     }
-    startCommitHostEffectsTimer();
-    stopCommitHostEffectsTimer();
-    startCommitLifeCyclesTimer();
-    stopCommitLifeCyclesTimer();
   }
-
-  stopCommitTimer();
 
   const rootDidHavePassiveEffects = rootDoesHavePassiveEffects;
 
@@ -2075,7 +2022,6 @@ function commitBeforeMutationEffects() {
     const effectTag = nextEffect.effectTag;
     if ((effectTag & Snapshot) !== NoEffect) {
       setCurrentDebugFiberInDEV(nextEffect);
-      recordEffect();
 
       const current = nextEffect.alternate;
       commitBeforeMutationEffectOnFiber(current, nextEffect);
@@ -2166,9 +2112,6 @@ function commitMutationEffects(root: FiberRoot, renderPriorityLevel) {
       }
     }
 
-    // TODO: Only record a mutation effect if primaryEffectTag is non-zero.
-    recordEffect();
-
     resetCurrentDebugFiberInDEV();
     nextEffect = nextEffect.nextEffect;
   }
@@ -2185,7 +2128,6 @@ function commitLayoutEffects(
     const effectTag = nextEffect.effectTag;
 
     if (effectTag & (Update | Callback)) {
-      recordEffect();
       const current = nextEffect.alternate;
       commitLayoutEffectOnFiber(
         root,
@@ -2196,7 +2138,6 @@ function commitLayoutEffects(
     }
 
     if (effectTag & Ref) {
-      recordEffect();
       commitAttachRef(nextEffect);
     }
 
@@ -2752,32 +2693,6 @@ function flushRenderPhaseStrictModeWarningsInDEV() {
     if (warnAboutDeprecatedLifecycles) {
       ReactStrictModeWarnings.flushPendingUnsafeLifecycleWarnings();
     }
-  }
-}
-
-function stopFinishedWorkLoopTimer() {
-  const didCompleteRoot = true;
-  stopWorkLoopTimer(interruptedBy, didCompleteRoot);
-  interruptedBy = null;
-}
-
-function stopInterruptedWorkLoopTimer() {
-  // TODO: Track which fiber caused the interruption.
-  const didCompleteRoot = false;
-  stopWorkLoopTimer(interruptedBy, didCompleteRoot);
-  interruptedBy = null;
-}
-
-function checkForInterruption(
-  fiberThatReceivedUpdate: Fiber,
-  updateExpirationTime: ExpirationTime,
-) {
-  if (
-    enableUserTimingAPI &&
-    workInProgressRoot !== null &&
-    updateExpirationTime > renderExpirationTime
-  ) {
-    interruptedBy = fiberThatReceivedUpdate;
   }
 }
 
