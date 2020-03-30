@@ -66,6 +66,7 @@ export default {
       const callback = node.arguments[callbackIndex];
       const reactiveHook = node.callee;
       const declaredDependenciesNode = node.arguments[callbackIndex + 1];
+
       switch (callback.type) {
         case 'FunctionExpression':
         case 'ArrowFunctionExpression':
@@ -74,8 +75,88 @@ export default {
             declaredDependenciesNode,
             reactiveHook,
           );
-          break;
+          return; // Handled
+        case 'Identifier':
+          // The function passed as a callback is not written inline.
+          // But perhaps it's in the dependencies array?
+          if (
+            declaredDependenciesNode &&
+            declaredDependenciesNode.elements &&
+            declaredDependenciesNode.elements.some(
+              el => el.type === 'Identifier' && el.name === callback.name,
+            )
+          ) {
+            // If it's already in the list of deps, we don't care because
+            // this is valid regardless.
+            return; // Handled
+          }
+          // We'll do our best effort to find it, complain otherwise.
+          const variable = context.getScope().set.get(callback.name);
+          if (variable == null || variable.defs == null) {
+            // If it's not in scope, we don't care.
+            return; // Handled
+          }
+          // The function passed as a callback is not written inline.
+          // But it's defined somewhere in the render scope.
+          // We'll do our best effort to find and check it, complain otherwise.
+          const def = variable.defs[0];
+          if (!def || !def.node) {
+            break; // Unhandled
+          }
+          if (def.type !== 'Variable' && def.type !== 'FunctionName') {
+            // Parameter or an unusual pattern. Bail out.
+            break; // Unhandled
+          }
+          switch (def.node.type) {
+            case 'FunctionDeclaration':
+              // useEffect(() => { ... }, []);
+              visitFunctionWithDependencies(
+                def.node,
+                declaredDependenciesNode,
+                reactiveHook,
+              );
+              return; // Handled
+            case 'VariableDeclarator':
+              const init = def.node.init;
+              if (!init) {
+                break; // Unhandled
+              }
+              switch (init.type) {
+                // const effectBody = () => {...};
+                // useEffect(effectBody, []);
+                case 'ArrowFunctionExpression':
+                case 'FunctionExpression':
+                  // We can inspect this function as if it were inline.
+                  visitFunctionWithDependencies(
+                    init,
+                    declaredDependenciesNode,
+                    reactiveHook,
+                  );
+                  return; // Handled
+              }
+              break; // Unhandled
+          }
+          break; // Unhandled
       }
+      // Something unusual. Fall back to suggesting to add the body itself as a dep.
+      const reactiveHookName = getNodeWithoutReactNamespace(reactiveHook).name;
+      context.report({
+        node: reactiveHook,
+        message:
+          `React Hook ${reactiveHookName} has a missing dependency: '${callback.name}'. ` +
+          `Either include it or remove the dependency array.`,
+        suggest: [
+          {
+            desc: `Update the dependencies array to be: [${callback.name}]`,
+            fix(fixer) {
+              return fixer.replaceText(
+                declaredDependenciesNode,
+                `[${callback.name}]`,
+              );
+            },
+          },
+        ],
+      });
     }
 
     /**
@@ -86,11 +167,10 @@ export default {
       declaredDependenciesNode,
       reactiveHook,
     ) {
-      // Get the reactive hook node.
       const reactiveHookName = getNodeWithoutReactNamespace(reactiveHook).name;
       const isEffect = /Effect($|[^a-z])/g.test(reactiveHookName);
 
-      // Get the declared dependencies for this reactive hook. If there is no
+      // Check the declared dependencies for this reactive hook. If there is no
       // second argument then the reactive callback will re-run on every render.
       // So no need to check for dependency inclusion.
       if (!declaredDependenciesNode && !isEffect) {
