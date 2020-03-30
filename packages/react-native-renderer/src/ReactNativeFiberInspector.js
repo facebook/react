@@ -202,7 +202,7 @@ if (__DEV__) {
           );
         },
       );
-    } else if (inspectedView._internalFiberInstanceHandle != null) {
+    } else if (inspectedView._internalFiberInstanceHandleDEV != null) {
       // For Paper we fall back to the old strategy using the React tag.
       UIManager.findSubviewIn(
         findNodeHandle(inspectedView),
