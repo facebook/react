@@ -145,6 +145,7 @@ export type UpdatePayload = Array<mixed>;
 export type ChildSet = void; // Unused
 export type TimeoutHandle = TimeoutID;
 export type NoTimeout = -1;
+export type RendererInspectionConfig = $ReadOnly<{||}>;
 
 type SelectionInformation = {|
   activeElementDetached: null | HTMLElement,

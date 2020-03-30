@@ -33,12 +33,20 @@ import {
 class ReactNativeFiberHostComponent {
   _children: Array<Instance | number>;
   _nativeTag: number;
+  _internalFiberInstanceHandleDEV: Object;
   viewConfig: ReactNativeBaseComponentViewConfig<>;
 
-  constructor(tag: number, viewConfig: ReactNativeBaseComponentViewConfig<>) {
+  constructor(
+    tag: number,
+    viewConfig: ReactNativeBaseComponentViewConfig<>,
+    internalInstanceHandleDEV: Object,
+  ) {
     this._nativeTag = tag;
     this._children = [];
     this.viewConfig = viewConfig;
+    if (__DEV__) {
+      this._internalFiberInstanceHandleDEV = internalInstanceHandleDEV;
+    }
   }
 
   blur() {

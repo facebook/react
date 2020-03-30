@@ -15,6 +15,7 @@ import type {
   MeasureOnSuccessCallback,
   NativeMethods,
   ReactNativeBaseComponentViewConfig,
+  TouchedViewDataAtPoint,
 } from './ReactNativeTypes';
 
 import {mountSafeCallback_NOT_REALLY_SAFE} from './NativeMethodsMixinUtils';
@@ -79,6 +80,17 @@ export type NoTimeout = -1;
 export type ReactListenerEvent = Object;
 export type ReactListenerMap = Object;
 export type ReactListener = Object;
+
+export type RendererInspectionConfig = $ReadOnly<{|
+  // Deprecated. Replaced with getInspectorDataForViewAtPoint.
+  getInspectorDataForViewTag?: (tag: number) => Object,
+  getInspectorDataForViewAtPoint?: (
+    inspectedView: Object,
+    locationX: number,
+    locationY: number,
+    callback: (viewData: TouchedViewDataAtPoint) => mixed,
+  ) => void,
+|}>;
 
 // TODO: Remove this conditional once all changes have propagated.
 if (registerEventHandler) {

@@ -48,6 +48,7 @@ export type EventResponder = any;
 export type ReactListenerEvent = Object;
 export type ReactListenerMap = Object;
 export type ReactListener = Object;
+export type RendererInspectionConfig = $ReadOnly<{||}>;
 
 export * from 'react-reconciler/src/ReactFiberHostConfigWithNoPersistence';
 export * from 'react-reconciler/src/ReactFiberHostConfigWithNoHydration';
