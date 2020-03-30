@@ -3409,4 +3409,108 @@ describe('ReactSuspenseWithNoopRenderer', () => {
       );
     },
   );
+
+  it('a high pri update can unhide a boundary that suspended at a different level', async () => {
+    const {useState, useEffect} = React;
+    const root = ReactNoop.createRoot();
+
+    let setOuterText;
+    function Parent({step}) {
+      const [text, _setText] = useState('A');
+      setOuterText = _setText;
+      return (
+        <>
+          <Text text={'Outer: ' + text + step} />
+          <Suspense fallback={<Text text="Loading..." />}>
+            <Child step={step} outerText={text} />
+          </Suspense>
+        </>
+      );
+    }
+
+    let setInnerText;
+    function Child({step, outerText}) {
+      const [text, _setText] = useState('A');
+      setInnerText = _setText;
+
+      // This will log if the component commits in an inconsistent state
+      useEffect(() => {
+        if (text === outerText) {
+          Scheduler.unstable_yieldValue('Commit Child');
+        } else {
+          Scheduler.unstable_yieldValue(
+            'FIXME: Texts are inconsistent (tearing)',
+          );
+        }
+      }, [text, outerText]);
+
+      return (
+        <>
+          <AsyncText text={'Inner: ' + text + step} />
+        </>
+      );
+    }
+
+    // These always update simultaneously. They must be consistent.
+    function setText(text) {
+      setOuterText(text);
+      setInnerText(text);
+    }
+
+    // Mount an initial tree. Resolve A so that it doesn't suspend.
+    await resolveText('Inner: A0');
+    await ReactNoop.act(async () => {
+      root.render(<Parent step={0} />);
+    });
+    expect(Scheduler).toHaveYielded(['Outer: A0', 'Inner: A0', 'Commit Child']);
+    expect(root).toMatchRenderedOutput(
+      <>
+        <span prop="Outer: A0" />
+        <span prop="Inner: A0" />
+      </>,
+    );
+
+    // Update. This causes the inner component to suspend.
+    await ReactNoop.act(async () => {
+      setText('B');
+    });
+    expect(Scheduler).toHaveYielded([
+      'Outer: B0',
+      'Suspend! [Inner: B0]',
+      'Loading...',
+    ]);
+    // Commit the placeholder
+    await advanceTimers(250);
+    expect(root).toMatchRenderedOutput(
+      <>
+        <span prop="Outer: B0" />
+        <span hidden={true} prop="Inner: A0" />
+        <span prop="Loading..." />
+      </>,
+    );
+
+    // Schedule a high pri update on the parent. This will unblock the content.
+    await resolveText('Inner: B1');
+    await ReactNoop.act(async () => {
+      ReactNoop.discreteUpdates(() => {
+        root.render(<Parent step={1} />);
+      });
+    });
+
+    expect(Scheduler).toHaveYielded([
+      // First the outer part of the tree updates, at high pri.
+      'Outer: B1',
+      'Loading...',
+
+      // Then we retry the boundary.
+      'Inner: B1',
+      'Commit Child',
+    ]);
+    expect(root).toMatchRenderedOutput(
+      <>
+        <span prop="Outer: B1" />
+        <span prop="Inner: B1" />
+      </>,
+    );
+  });
 });
