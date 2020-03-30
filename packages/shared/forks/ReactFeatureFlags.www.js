@@ -40,7 +40,11 @@ export let enableUserTimingAPI = __DEV__ && !__EXPERIMENTAL__;
 
 export const enableProfilerTimer = __PROFILE__;
 export const enableProfilerCommitHooks = __PROFILE__;
-export const enableSchedulerTracing = __PROFILE__;
+
+// Note: we'll want to remove this when we to userland implementation.
+// For now, we'll turn it on for everyone because it's *already* on for everyone in practice.
+// At least this will let us stop shipping <Profiler> implementation to all users.
+export const enableSchedulerTracing = true;
 export const enableSchedulerDebugging = true;
 
 export const warnAboutDeprecatedLifecycles = true;
