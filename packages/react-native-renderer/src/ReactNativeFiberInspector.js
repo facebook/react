@@ -95,16 +95,7 @@ if (__DEV__) {
               hostFiber.stateNode.node;
 
             if (shadowNode) {
-              nativeFabricUIManager.measure(shadowNode, function(
-                x,
-                y,
-                width,
-                height,
-                pageX,
-                pageY,
-              ) {
-                callback(x, y, width, height, pageX, pageY);
-              });
+              nativeFabricUIManager.measure(shadowNode, callback);
             } else {
               return UIManager.measure(
                 getHostNode(fiber, findNodeHandle),
@@ -123,7 +114,7 @@ if (__DEV__) {
       return {
         hierarchy: [],
         props: emptyObject,
-        selection: null,
+        selectedIndex: null,
         source: null,
       };
     }
@@ -134,12 +125,12 @@ if (__DEV__) {
     const hierarchy = createHierarchy(fiberHierarchy);
     const props = getHostProps(instance);
     const source = instance._debugSource;
-    const selection = fiberHierarchy.indexOf(instance);
+    const selectedIndex = fiberHierarchy.indexOf(instance);
 
     return {
       hierarchy,
       props,
-      selection,
+      selectedIndex,
       source,
     };
   };
@@ -152,7 +143,7 @@ if (__DEV__) {
       return {
         hierarchy: [],
         props: emptyObject,
-        selection: null,
+        selectedIndex: null,
         source: null,
       };
     }
@@ -163,12 +154,12 @@ if (__DEV__) {
     const hierarchy = createHierarchy(fiberHierarchy);
     const props = getHostProps(instance);
     const source = instance._debugSource;
-    const selection = fiberHierarchy.indexOf(instance);
+    const selectedIndex = fiberHierarchy.indexOf(instance);
 
     return {
       hierarchy,
       props,
-      selection,
+      selectedIndex,
       source,
     };
   };
@@ -228,7 +219,7 @@ if (__DEV__) {
           });
         },
       );
-    } else if (__DEV__) {
+    } else {
       console.error(
         'getInspectorDataForViewAtPoint expects to receieve a host component',
       );

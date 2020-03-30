@@ -123,7 +123,7 @@ export type InspectorData = $ReadOnly<{|
     name: ?string,
     getInspectorData: InspectorDataGetter,
   |}>,
-  selection: ?number,
+  selectedIndex: ?number,
   props: InspectorDataProps,
   source: ?InspectorDataSource,
 |}>;

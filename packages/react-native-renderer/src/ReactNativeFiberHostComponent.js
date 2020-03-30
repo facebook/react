@@ -44,7 +44,9 @@ class ReactNativeFiberHostComponent {
     this._nativeTag = tag;
     this._children = [];
     this.viewConfig = viewConfig;
-    this._internalFiberInstanceHandle = internalInstanceHandle;
+    if (__DEV__) {
+      this._internalFiberInstanceHandle = internalInstanceHandle;
+    }
   }
 
   blur() {
