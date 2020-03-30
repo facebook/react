@@ -33,6 +33,8 @@ export default {
         : undefined;
     const options = {additionalHooks};
 
+    const scopeManager = context.getSourceCode().scopeManager;
+
     // Should be shared between visitors.
     let setStateCallSites = new WeakMap();
     let stateVariables = new WeakSet();
@@ -52,41 +54,45 @@ export default {
     }
 
     return {
-      FunctionExpression: visitFunctionExpression,
-      ArrowFunctionExpression: visitFunctionExpression,
+      CallExpression: visitCallExpression,
     };
+
+    function visitCallExpression(node) {
+      const callbackIndex = getReactiveHookCallbackIndex(node.callee, options);
+      if (callbackIndex === -1) {
+        // Not a React Hook call that needs deps.
+        return;
+      }
+      const callback = node.arguments[callbackIndex];
+      const reactiveHook = node.callee;
+      const declaredDependenciesNode = node.arguments[callbackIndex + 1];
+      switch (callback.type) {
+        case 'FunctionExpression':
+        case 'ArrowFunctionExpression':
+          visitFunctionWithDependencies(
+            callback,
+            declaredDependenciesNode,
+            reactiveHook,
+          );
+          break;
+      }
+    }
 
     /**
      * Visitor for both function expressions and arrow function expressions.
      */
-    function visitFunctionExpression(node) {
-      // We only want to lint nodes which are reactive hook callbacks.
-      if (
-        (node.type !== 'FunctionExpression' &&
-          node.type !== 'ArrowFunctionExpression') ||
-        node.parent.type !== 'CallExpression'
-      ) {
-        return;
-      }
-
-      const callbackIndex = getReactiveHookCallbackIndex(
-        node.parent.callee,
-        options,
-      );
-      if (node.parent.arguments[callbackIndex] !== node) {
-        return;
-      }
-
+    function visitFunctionWithDependencies(
+      node,
+      declaredDependenciesNode,
+      reactiveHook,
+    ) {
       // Get the reactive hook node.
-      const reactiveHook = node.parent.callee;
       const reactiveHookName = getNodeWithoutReactNamespace(reactiveHook).name;
       const isEffect = /Effect($|[^a-z])/g.test(reactiveHookName);
 
       // Get the declared dependencies for this reactive hook. If there is no
       // second argument then the reactive callback will re-run on every render.
       // So no need to check for dependency inclusion.
-      const depsIndex = callbackIndex + 1;
-      const declaredDependenciesNode = node.parent.arguments[depsIndex];
       if (!declaredDependenciesNode && !isEffect) {
         // These are only used for optimization.
         if (
@@ -95,7 +101,7 @@ export default {
         ) {
           // TODO: Can this have a suggestion?
           context.report({
-            node: node.parent.callee,
+            node: reactiveHook,
             message:
               `React Hook ${reactiveHookName} does nothing when called with ` +
               `only one argument. Did you forget to pass an array of ` +
@@ -124,7 +130,7 @@ export default {
       }
 
       // Get the current scope.
-      const scope = context.getScope();
+      const scope = scopeManager.acquire(node);
 
       // Find all our "pure scopes". On every re-render of a component these
       // pure scopes may have changes to the variables declared within. So all
@@ -550,7 +556,7 @@ export default {
             isEffect: true,
           });
           context.report({
-            node: node.parent.callee,
+            node: reactiveHook,
             message:
               `React Hook ${reactiveHookName} contains a call to '${setStateInsideEffectWithoutDeps}'. ` +
               `Without a list of dependencies, this can lead to an infinite chain of updates. ` +
@@ -1341,7 +1347,7 @@ function getNodeWithoutReactNamespace(node, options) {
 function getReactiveHookCallbackIndex(calleeNode, options) {
   let node = getNodeWithoutReactNamespace(calleeNode);
   if (node.type !== 'Identifier') {
-    return null;
+    return -1;
   }
   switch (node.name) {
     case 'useEffect':
