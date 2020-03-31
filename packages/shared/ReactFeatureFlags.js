@@ -121,9 +121,6 @@ export const disableLegacyContext = false;
 // Disables children for <textarea> elements
 export const disableTextareaChildren = false;
 
-// Disables Maps as ReactElement children
-export const disableMapsAsChildren = false;
-
 export const disableModulePatternComponents = false;
 
 // We should remove this flag once the above flag becomes enabled

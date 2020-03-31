@@ -36,7 +36,6 @@ export const disableLegacyContext = false;
 export const disableSchedulerTimeoutBasedOnReactExpirationTime = false;
 export const enableTrustedTypesIntegration = false;
 export const disableTextareaChildren = false;
-export const disableMapsAsChildren = false;
 export const disableModulePatternComponents = false;
 export const warnUnstableRenderSubtreeIntoContainer = false;
 export const deferPassiveEffectCleanupDuringUnmount = true;
