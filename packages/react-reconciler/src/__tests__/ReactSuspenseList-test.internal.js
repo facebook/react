@@ -2486,7 +2486,7 @@ describe('ReactSuspenseList', () => {
     );
   });
 
-  it('crashes when it contains class components when revealed together', async () => {
+  it('can resume class components when revealed together', async () => {
     let A = createAsyncText('A');
     let B = createAsyncText('B');
 
