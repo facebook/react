@@ -16,10 +16,8 @@ const dynamicFeatureFlags: DynamicFeatureFlags = require('ReactFeatureFlags');
 
 export const {
   debugRenderPhaseSideEffectsForStrictMode,
-  deferPassiveEffectCleanupDuringUnmount,
   disableInputAttributeSyncing,
   enableTrustedTypesIntegration,
-  runAllPassiveEffectDestroysBeforeCreates,
   warnAboutShorthandPropertyCollision,
   disableSchedulerTimeoutBasedOnReactExpirationTime,
   warnAboutSpreadingKeyToJSX,
@@ -82,6 +80,9 @@ export const throwEarlyForMysteriousError = false;
 // don't have to add another test dimension. The build system will compile this
 // to the correct value.
 export const enableNewReconciler = __VARIANT__;
+
+export const deferPassiveEffectCleanupDuringUnmount = true;
+export const runAllPassiveEffectDestroysBeforeCreates = true;
 
 // Flow magic to verify the exports of this file match the original version.
 // eslint-disable-next-line no-unused-vars
