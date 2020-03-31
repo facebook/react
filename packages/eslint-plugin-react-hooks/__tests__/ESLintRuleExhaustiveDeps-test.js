@@ -6336,6 +6336,34 @@ const tests = {
         },
       ],
     },
+    {
+      code: normalizeIndent`
+        function MyComponent() {
+          const local = {};
+          useEffect(() => {
+            console.log(local);
+          }, []);
+        }
+      `,
+      // Dangerous autofix is enabled due to the option:
+      output: normalizeIndent`
+        function MyComponent() {
+          const local = {};
+          useEffect(() => {
+            console.log(local);
+          }, [local]);
+        }
+      `,
+      errors: [
+        {
+          message:
+            "React Hook useEffect has a missing dependency: 'local'. " +
+            'Either include it or remove the dependency array.',
+        },
+      ],
+      // Keep this until major IDEs and VS Code FB ESLint plugin support Suggestions API.
+      options: [{enableDangerousAutofixThisMayCauseInfiniteLoops: true}],
+    },
   ],
 };
 
