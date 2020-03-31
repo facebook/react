@@ -13,8 +13,6 @@
 // Use __VARIANT__ to simulate a GK. The tests will be run twice: once
 // with the __VARIANT__ set to `true`, and once set to `false`.
 
-export const deferPassiveEffectCleanupDuringUnmount = __VARIANT__;
-export const runAllPassiveEffectDestroysBeforeCreates = __VARIANT__;
 export const warnAboutSpreadingKeyToJSX = __VARIANT__;
 
 // These are already tested in both modes using the build type dimension,
