@@ -25,6 +25,7 @@ export const replayFailedUnitOfWorkWithInvokeGuardedCallback = __DEV__;
 // to __VARIANT__.
 export const enableTrustedTypesIntegration = false;
 export const warnAboutShorthandPropertyCollision = true;
+export const disableModulePatternComponents = false;
 export const disableInputAttributeSyncing = false;
 export const disableSchedulerTimeoutBasedOnReactExpirationTime = false;
 export const enableModernEventSystem = false;
