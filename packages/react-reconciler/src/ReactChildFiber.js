@@ -998,9 +998,8 @@ function ChildReconciler(shouldTrackSideEffects) {
       if ((newChildrenIterable: any).entries === iteratorFn) {
         if (!didWarnAboutMaps) {
           console.error(
-            'Using Maps as children is unsupported and will likely yield ' +
-              'unexpected results. Convert it to a sequence/iterable of keyed ' +
-              'ReactElements instead.',
+            'Using Maps as children is not supported. ' +
+              'Use an array of keyed ReactElements instead.',
           );
         }
         didWarnAboutMaps = true;
