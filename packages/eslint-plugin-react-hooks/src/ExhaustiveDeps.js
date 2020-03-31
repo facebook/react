@@ -11,13 +11,18 @@
 
 export default {
   meta: {
+    fixable: 'code',
     schema: [
       {
         type: 'object',
         additionalProperties: false,
+        enableDangerousAutofixThisMayCauseInfiniteLoops: false,
         properties: {
           additionalHooks: {
             type: 'string',
+          },
+          enableDangerousAutofixThisMayCauseInfiniteLoops: {
+            type: 'boolean',
           },
         },
       },
@@ -31,7 +36,28 @@ export default {
       context.options[0].additionalHooks
         ? new RegExp(context.options[0].additionalHooks)
         : undefined;
-    const options = {additionalHooks};
+
+    const enableDangerousAutofixThisMayCauseInfiniteLoops =
+      (context.options &&
+        context.options[0] &&
+        context.options[0].enableDangerousAutofixThisMayCauseInfiniteLoops) ||
+      false;
+
+    const options = {
+      additionalHooks,
+      enableDangerousAutofixThisMayCauseInfiniteLoops,
+    };
+
+    function reportProblem(problem) {
+      if (enableDangerousAutofixThisMayCauseInfiniteLoops) {
+        // Used to enable legacy behavior. Dangerous.
+        // Keep this as an option until major IDEs upgrade (including VSCode FB ESLint extension).
+        if (Array.isArray(problem.suggest) && problem.suggest.length > 0) {
+          problem.fix = problem.suggest[0].fix;
+        }
+      }
+      context.report(problem);
+    }
 
     const scopeManager = context.getSourceCode().scopeManager;
 
@@ -140,7 +166,7 @@ export default {
           break; // Unhandled
         default:
           // useEffect(generateEffectBody(), []);
-          context.report({
+          reportProblem({
             node: reactiveHook,
             message:
               `React Hook ${reactiveHookName} received a function whose dependencies ` +
@@ -150,7 +176,7 @@ export default {
       }
 
       // Something unusual. Fall back to suggesting to add the body itself as a dep.
-      context.report({
+      reportProblem({
         node: reactiveHook,
         message:
           `React Hook ${reactiveHookName} has a missing dependency: '${callback.name}'. ` +
@@ -190,7 +216,7 @@ export default {
           reactiveHookName === 'useCallback'
         ) {
           // TODO: Can this have a suggestion?
-          context.report({
+          reportProblem({
             node: reactiveHook,
             message:
               `React Hook ${reactiveHookName} does nothing when called with ` +
@@ -202,7 +228,7 @@ export default {
       }
 
       if (isEffect && node.async) {
-        context.report({
+        reportProblem({
           node: node,
           message:
             `Effect callbacks are synchronous to prevent race conditions. ` +
@@ -557,7 +583,7 @@ export default {
           if (foundCurrentAssignment) {
             return;
           }
-          context.report({
+          reportProblem({
             node: dependencyNode.parent.property,
             message:
               `The ref value '${dependency}.current' will likely have ` +
@@ -577,7 +603,7 @@ export default {
           return;
         }
         staleAssignments.add(key);
-        context.report({
+        reportProblem({
           node: writeExpr,
           message:
             `Assignments to the '${key}' variable from inside React Hook ` +
@@ -645,7 +671,7 @@ export default {
             externalDependencies: new Set(),
             isEffect: true,
           });
-          context.report({
+          reportProblem({
             node: reactiveHook,
             message:
               `React Hook ${reactiveHookName} contains a call to '${setStateInsideEffectWithoutDeps}'. ` +
@@ -677,7 +703,7 @@ export default {
         // If the declared dependencies are not an array expression then we
         // can't verify that the user provided the correct dependencies. Tell
         // the user this in an error.
-        context.report({
+        reportProblem({
           node: declaredDependenciesNode,
           message:
             `React Hook ${context.getSource(reactiveHook)} was passed a ` +
@@ -693,7 +719,7 @@ export default {
           }
           // If we see a spread element then add a special warning.
           if (declaredDependencyNode.type === 'SpreadElement') {
-            context.report({
+            reportProblem({
               node: declaredDependencyNode,
               message:
                 `React Hook ${context.getSource(reactiveHook)} has a spread ` +
@@ -712,7 +738,7 @@ export default {
             if (/Unsupported node type/.test(error.message)) {
               if (declaredDependencyNode.type === 'Literal') {
                 if (dependencies.has(declaredDependencyNode.value)) {
-                  context.report({
+                  reportProblem({
                     node: declaredDependencyNode,
                     message:
                       `The ${declaredDependencyNode.raw} literal is not a valid dependency ` +
@@ -720,7 +746,7 @@ export default {
                       `Did you mean to include ${declaredDependencyNode.value} in the array instead?`,
                   });
                 } else {
-                  context.report({
+                  reportProblem({
                     node: declaredDependencyNode,
                     message:
                       `The ${declaredDependencyNode.raw} literal is not a valid dependency ` +
@@ -728,7 +754,7 @@ export default {
                   });
                 }
               } else {
-                context.report({
+                reportProblem({
                   node: declaredDependencyNode,
                   message:
                     `React Hook ${context.getSource(reactiveHook)} has a ` +
@@ -828,7 +854,7 @@ export default {
           }
           // TODO: What if the function needs to change on every render anyway?
           // Should we suggest removing effect deps as an appropriate fix too?
-          context.report({
+          reportProblem({
             // TODO: Why not report this at the dependency site?
             node: fn.node,
             message,
@@ -1099,7 +1125,7 @@ export default {
         }
       }
 
-      context.report({
+      reportProblem({
         node: declaredDependenciesNode,
         message:
           `React Hook ${context.getSource(reactiveHook)} has ` +
