@@ -6318,6 +6318,24 @@ const tests = {
         },
       ],
     },
+    {
+      code: normalizeIndent`
+        function MyComponent() {
+          const local = {};
+          useEffect(debounce(() => {
+            console.log(local);
+          }, delay), []);
+        }
+      `,
+      errors: [
+        {
+          message:
+            'React Hook useEffect received a function whose dependencies ' +
+            'are unknown. Pass an inline function instead.',
+          suggestions: [],
+        },
+      ],
+    },
   ],
 };
 

@@ -65,6 +65,7 @@ export default {
       }
       const callback = node.arguments[callbackIndex];
       const reactiveHook = node.callee;
+      const reactiveHookName = getNodeWithoutReactNamespace(reactiveHook).name;
       const declaredDependenciesNode = node.arguments[callbackIndex + 1];
 
       switch (callback.type) {
@@ -137,9 +138,18 @@ export default {
               break; // Unhandled
           }
           break; // Unhandled
+        default:
+          // useEffect(generateEffectBody(), []);
+          context.report({
+            node: reactiveHook,
+            message:
+              `React Hook ${reactiveHookName} received a function whose dependencies ` +
+              `are unknown. Pass an inline function instead.`,
+          });
+          return; // Handled
       }
+
       // Something unusual. Fall back to suggesting to add the body itself as a dep.
-      const reactiveHookName = getNodeWithoutReactNamespace(reactiveHook).name;
       context.report({
         node: reactiveHook,
         message:
