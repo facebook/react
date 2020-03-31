@@ -31,6 +31,7 @@ import type {
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import {enableUseEventAPI} from 'shared/ReactFeatureFlags';
 
+import {markRootExpiredAtTime} from './ReactFiberRoot';
 import {NoWork, Sync} from './ReactFiberExpirationTime';
 import {readContext} from './ReactFiberNewContext';
 import {createDeprecatedResponderListener} from './ReactFiberDeprecatedEvents';
@@ -886,6 +887,7 @@ function rerenderReducer<S, I, A>(
 type MutableSourceMemoizedState<Source, Snapshot> = {|
   refs: {
     getSnapshot: MutableSourceGetSnapshotFn<Source, Snapshot>,
+    setSnapshot: Snapshot => void,
   },
   source: MutableSource<any>,
   subscribe: MutableSourceSubscribeFn<Source, Snapshot>,
@@ -1000,7 +1002,40 @@ function useMutableSource<Source, Snapshot>(
 
   // Sync the values needed by our subscribe function after each commit.
   dispatcher.useEffect(() => {
+    const didGetSnapshotChange = !is(refs.getSnapshot, getSnapshot);
     refs.getSnapshot = getSnapshot;
+
+    // Normally the dispatch function for a state hook never changes,
+    // but in the case of this hook, it will change if getSnapshot changes.
+    // In that case, the subscription below will have cloesd over the previous function,
+    // so we use a ref to ensure that handleChange() always has the latest version.
+    refs.setSnapshot = setSnapshot;
+
+    // This effect runs on mount, even though getSnapshot hasn't changed.
+    // In that case we can avoid the additional checks for a changed snapshot,
+    // because the subscription effect below will cover this.
+    if (didGetSnapshotChange) {
+      // Because getSnapshot is shared with subscriptions via a ref,
+      // we don't resubscribe when getSnapshot changes.
+      // This means that we also don't check for any missed mutations
+      // between the render and the passive commit though.
+      // So we need to check here, just like when we newly subscribe.
+      const maybeNewVersion = getVersion(source._source);
+      if (!is(version, maybeNewVersion)) {
+        const maybeNewSnapshot = getSnapshot(source._source);
+        if (!is(snapshot, maybeNewSnapshot)) {
+          setSnapshot(maybeNewSnapshot);
+
+          // If the source mutated between render and now,
+          // there may be state updates already scheduled from the old getSnapshot.
+          // Those updates should not commit without this value.
+          // There is no mechanism currently to associate these updates though,
+          // so for now we fall back to synchronously flushing all pending updates.
+          // TODO: Improve this later.
+          markRootExpiredAtTime(root, getPendingExpirationTime(root));
+        }
+      }
+    }
   }, [getSnapshot]);
 
   // If we got a new source or subscribe function,
@@ -1009,8 +1044,10 @@ function useMutableSource<Source, Snapshot>(
   dispatcher.useEffect(() => {
     const handleChange = () => {
       const latestGetSnapshot = refs.getSnapshot;
+      const latestSetSnapshot = refs.setSnapshot;
+
       try {
-        setSnapshot(latestGetSnapshot(source._source));
+        latestSetSnapshot(latestGetSnapshot(source._source));
 
         // Record a pending mutable source update with the same expiration time.
         const currentTime = requestCurrentTimeForUpdate();
@@ -1027,9 +1064,11 @@ function useMutableSource<Source, Snapshot>(
         // e.g. it might try to read from a part of the store that no longer exists.
         // In this case we should still schedule an update with React.
         // Worst case the selector will throw again and then an error boundary will handle it.
-        setSnapshot(() => {
-          throw error;
-        });
+        latestSetSnapshot(
+          (() => {
+            throw error;
+          }: any),
+        );
       }
     };
 
@@ -1048,6 +1087,11 @@ function useMutableSource<Source, Snapshot>(
       const maybeNewSnapshot = getSnapshot(source._source);
       if (!is(snapshot, maybeNewSnapshot)) {
         setSnapshot(maybeNewSnapshot);
+
+        // We missed a mutation before committing.
+        // It's possible that other components using this source also have pending updates scheduled.
+        // In that case, we should ensure they all commit together.
+        markRootExpiredAtTime(root, getPendingExpirationTime(root));
       }
     }
 
@@ -1065,11 +1109,31 @@ function useMutableSource<Source, Snapshot>(
   //
   // In both cases, we need to throw away pending udpates (since they are no longer relevant)
   // and treat reading from the source as we do in the mount case.
+  const didGetSnapshotChange = !is(prevGetSnapshot, getSnapshot);
   if (
     !is(prevSource, source) ||
     !is(prevSubscribe, subscribe) ||
-    !is(prevGetSnapshot, getSnapshot)
+    didGetSnapshotChange
   ) {
+    if (didGetSnapshotChange) {
+      // Create a new queue and setState method,
+      // So if there are interleaved updates, they get pushed to the older queue.
+      // When this becomes current, the previous queue and dispatch method will be discarded,
+      // including any interleaving updates that occur.
+      const newQueue = {
+        pending: null,
+        dispatch: null,
+        lastRenderedReducer: basicStateReducer,
+        lastRenderedState: snapshot,
+      };
+      newQueue.dispatch = setSnapshot = (dispatchAction.bind(
+        null,
+        currentlyRenderingFiber,
+        newQueue,
+      ): any);
+      stateHook.queue = newQueue;
+    }
+
     stateHook.baseQueue = null;
     snapshot = readFromUnsubcribedMutableSource(root, source, getSnapshot);
     stateHook.memoizedState = stateHook.baseState = snapshot;
@@ -1087,6 +1151,7 @@ function mountMutableSource<Source, Snapshot>(
   hook.memoizedState = ({
     refs: {
       getSnapshot,
+      setSnapshot: (null: any),
     },
     source,
     subscribe,

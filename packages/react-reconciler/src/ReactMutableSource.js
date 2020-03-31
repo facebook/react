@@ -43,7 +43,16 @@ export function setPendingExpirationTime(
   root: FiberRoot,
   expirationTime: ExpirationTime,
 ): void {
-  root.mutableSourcePendingUpdateTime = expirationTime;
+  // Because we only track one pending update time per root,
+  // track the lowest priority update.
+  // It's inclusive of all other pending updates.
+  //
+  // TODO This currently gives us a false positive in some cases
+  // when it comes to determining if it's safe to read during an update.
+  root.mutableSourcePendingUpdateTime = Math.max(
+    root.mutableSourcePendingUpdateTime,
+    expirationTime,
+  );
 }
 
 export function markSourceAsDirty(mutableSource: MutableSource<any>): void {
