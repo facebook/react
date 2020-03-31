@@ -885,8 +885,13 @@ function resumeMountClassInstance(
     nextContext = getMaskedContext(workInProgress, nextLegacyUnmaskedContext);
   }
 
-  if (workInProgress.updateQueue === null) {
-    initializeUpdateQueue(workInProgress);
+  if (__DEV__) {
+    if (workInProgress.updateQueue === null) {
+      console.error(
+        'Class fiber is missing an updateQueue. ' +
+          'This error is likely caused by a bug in React. Please file an issue.',
+      );
+    }
   }
 
   const getDerivedStateFromProps = ctor.getDerivedStateFromProps;

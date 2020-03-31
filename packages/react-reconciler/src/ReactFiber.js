@@ -546,7 +546,6 @@ export function resetWorkInProgress(
     workInProgress.child = null;
     workInProgress.memoizedProps = null;
     workInProgress.memoizedState = null;
-    workInProgress.updateQueue = null;
 
     workInProgress.dependencies = null;
 
