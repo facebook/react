@@ -9,15 +9,6 @@
 
 import type {TopLevelType} from 'legacy-events/TopLevelEventTypes';
 import type {RootType} from './ReactDOMRoot';
-import type {
-  ReactDOMEventResponder,
-  ReactDOMEventResponderInstance,
-  ReactDOMFundamentalComponentInstance,
-  ReactDOMListener,
-  ReactDOMListenerEvent,
-  ReactDOMListenerMap,
-} from '../shared/ReactDOMTypes';
-import type {ReactScopeMethods} from 'shared/ReactTypes';
 
 import {
   precacheFiberNode,
@@ -58,6 +49,14 @@ import {
 } from '../shared/HTMLNodeType';
 import dangerousStyleValue from '../shared/dangerousStyleValue';
 
+import type {
+  ReactDOMEventResponder,
+  ReactDOMEventResponderInstance,
+  ReactDOMFundamentalComponentInstance,
+  ReactDOMListener,
+  ReactDOMListenerEvent,
+  ReactDOMListenerMap,
+} from '../shared/ReactDOMTypes';
 import {
   mountEventResponder,
   unmountEventResponder,
@@ -70,7 +69,6 @@ import {
   enableDeprecatedFlareAPI,
   enableFundamentalAPI,
   enableUseEventAPI,
-  enableScopeAPI,
 } from 'shared/ReactFeatureFlags';
 import {HostComponent} from 'react-reconciler/src/ReactWorkTags';
 import {
@@ -81,13 +79,10 @@ import {
   isManagedDOMElement,
   isValidEventTarget,
   listenToTopLevelEvent,
-  attachListenerToManagedDOMElement,
   detachListenerFromManagedDOMElement,
-  attachTargetEventListener,
+  attachListenerFromManagedDOMElement,
   detachTargetEventListener,
-  isReactScope,
-  attachListenerToReactScope,
-  detachListenerFromReactScope,
+  attachTargetEventListener,
 } from '../events/DOMModernPluginEventSystem';
 import {getListenerMapForElement} from '../events/DOMEventListenerMap';
 import {TOP_BEFORE_BLUR, TOP_AFTER_BLUR} from '../events/DOMTopLevelEventTypes';
@@ -1165,9 +1160,7 @@ export function mountEventListener(listener: ReactDOMListener): void {
   if (enableUseEventAPI) {
     const {target} = listener;
     if (isManagedDOMElement(target)) {
-      attachListenerToManagedDOMElement(listener);
-    } else if (enableScopeAPI && isReactScope(target)) {
-      attachListenerToReactScope(listener);
+      attachListenerFromManagedDOMElement(listener);
     } else {
       attachTargetEventListener(listener);
     }
@@ -1179,8 +1172,6 @@ export function unmountEventListener(listener: ReactDOMListener): void {
     const {target} = listener;
     if (isManagedDOMElement(target)) {
       detachListenerFromManagedDOMElement(listener);
-    } else if (enableScopeAPI && isReactScope(target)) {
-      detachListenerFromReactScope(listener);
     } else {
       detachTargetEventListener(listener);
     }
@@ -1188,15 +1179,13 @@ export function unmountEventListener(listener: ReactDOMListener): void {
 }
 
 export function validateEventListenerTarget(
-  target: EventTarget | ReactScopeMethods,
+  target: EventTarget,
   listener: ?(Event) => void,
 ): boolean {
   if (enableUseEventAPI) {
     if (
       target != null &&
-      (isManagedDOMElement(target) ||
-        isValidEventTarget(target) ||
-        isReactScope(target))
+      (isManagedDOMElement(target) || isValidEventTarget(target))
     ) {
       if (listener == null || typeof listener === 'function') {
         return true;

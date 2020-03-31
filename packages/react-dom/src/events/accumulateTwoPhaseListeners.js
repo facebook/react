@@ -11,19 +11,13 @@ import type {DOMTopLevelEventType} from 'legacy-events/TopLevelEventTypes';
 import type {EventSystemFlags} from 'legacy-events/EventSystemFlags';
 import type {ReactSyntheticEvent} from 'legacy-events/ReactSyntheticEventType';
 
-import {
-  HostComponent,
-  ScopeComponent,
-} from 'react-reconciler/src/ReactWorkTags';
-import {enableUseEventAPI, enableScopeAPI} from 'shared/ReactFeatureFlags';
+import {HostComponent} from 'react-reconciler/src/ReactWorkTags';
+import {enableUseEventAPI} from 'shared/ReactFeatureFlags';
 
 import getListener from 'legacy-events/getListener';
 import {getListenersFromTarget} from '../client/ReactDOMComponentTree';
 import {IS_TARGET_EVENT_ONLY} from 'legacy-events/EventSystemFlags';
-import {
-  eventTargetEventListenerStore,
-  reactScopeListenerStore,
-} from './DOMModernPluginEventSystem';
+import {eventTargetEventListenerStore} from './DOMModernPluginEventSystem';
 
 export default function accumulateTwoPhaseListeners(
   event: ReactSyntheticEvent,
@@ -82,13 +76,11 @@ export default function accumulateTwoPhaseListeners(
     // usual two phase accumulation using the React fiber tree to pick up
     // all relevant useEvent and on* prop events.
     let node = event._targetInst;
-    let lastHostComponent;
 
     // Accumulate all instances and listeners via the target -> root path.
     while (node !== null) {
-      // Handle listeners that are on HostComponents (i.e. <div>)
+      // We only care for listeners that are on HostComponents (i.e. <div>)
       if (node.tag === HostComponent) {
-        lastHostComponent = node.stateNode;
         // For useEvent listenrs
         if (enableUseEventAPI && accumulateUseEventListeners) {
           // useEvent event listeners
@@ -133,30 +125,6 @@ export default function accumulateTwoPhaseListeners(
             // push them to the end of the array.
             dispatchListeners.push(bubbleListener);
             dispatchInstances.push(node);
-          }
-        }
-      } else if (enableScopeAPI && node.tag === ScopeComponent) {
-        const reactScope = node.stateNode.methods;
-        const eventTypeMap = reactScopeListenerStore.get(reactScope);
-        if (eventTypeMap !== undefined) {
-          const type = ((event.type: any): DOMTopLevelEventType);
-          const listeners = eventTypeMap.get(type);
-          if (listeners !== undefined) {
-            const captureListeners = Array.from(listeners.captured);
-            const bubbleListeners = Array.from(listeners.bubbled);
-
-            for (let i = 0; i < captureListeners.length; i++) {
-              const listener = captureListeners[i];
-              const {callback} = listener;
-              dispatchListeners.unshift(callback);
-              dispatchInstances.unshift(((lastHostComponent: any): Element));
-            }
-            for (let i = 0; i < bubbleListeners.length; i++) {
-              const listener = bubbleListeners[i];
-              const {callback} = listener;
-              dispatchListeners.push(callback);
-              dispatchInstances.push(((lastHostComponent: any): Element));
-            }
           }
         }
       }
