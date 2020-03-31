@@ -1317,6 +1317,28 @@ describe('DOMModernPluginEventSystem', () => {
             expect(clickEvent).toBeCalledTimes(0);
           });
 
+          it('should handle the target being a text node', () => {
+            const clickEvent = jest.fn();
+            const buttonRef = React.createRef();
+
+            function Test() {
+              const click = ReactDOM.unstable_useEvent('click');
+
+              React.useEffect(() => {
+                click.setListener(buttonRef.current, clickEvent);
+              });
+
+              return <button ref={buttonRef}>Click me!</button>;
+            }
+
+            ReactDOM.render(<Test />, container);
+            Scheduler.unstable_flushAll();
+
+            let textNode = buttonRef.current.firstChild;
+            dispatchClickEvent(textNode);
+            expect(clickEvent).toBeCalledTimes(1);
+          });
+
           it('handle propagation of click events', () => {
             const buttonRef = React.createRef();
             const divRef = React.createRef();
@@ -2458,6 +2480,37 @@ describe('DOMModernPluginEventSystem', () => {
                 ['bubble', buttonElement],
                 ['bubble', buttonElement],
               ]);
+            });
+
+            it('should not handle the target being a dangling text node within a scope', () => {
+              const clickEvent = jest.fn();
+              const buttonRef = React.createRef();
+
+              const TestScope = React.unstable_createScope();
+
+              function Test() {
+                const click = ReactDOM.unstable_useEvent('click');
+                const scopeRef = React.useRef(null);
+
+                React.useEffect(() => {
+                  click.setListener(scopeRef.current, clickEvent);
+                });
+
+                return (
+                  <button ref={buttonRef}>
+                    <TestScope ref={scopeRef}>Click me!</TestScope>
+                  </button>
+                );
+              }
+
+              ReactDOM.render(<Test />, container);
+              Scheduler.unstable_flushAll();
+
+              let textNode = buttonRef.current.firstChild;
+              dispatchClickEvent(textNode);
+              // This should not work, as the target instance will be the
+              // <button>, which is actually outside the scope.
+              expect(clickEvent).toBeCalledTimes(0);
             });
           });
         });

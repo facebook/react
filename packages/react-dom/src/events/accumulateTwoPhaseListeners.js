@@ -15,7 +15,11 @@ import {
   HostComponent,
   ScopeComponent,
 } from 'react-reconciler/src/ReactWorkTags';
-import {enableUseEventAPI, enableScopeAPI} from 'shared/ReactFeatureFlags';
+import {
+  enableUseEventAPI,
+  enableScopeAPI,
+  enableModernEventSystem,
+} from 'shared/ReactFeatureFlags';
 
 import getListener from 'legacy-events/getListener';
 import {getListenersFromTarget} from '../client/ReactDOMComponentTree';
@@ -82,17 +86,21 @@ export default function accumulateTwoPhaseListeners(
     // usual two phase accumulation using the React fiber tree to pick up
     // all relevant useEvent and on* prop events.
     let node = event._targetInst;
-    let lastHostComponent;
+    let lastHostComponent = null;
 
     // Accumulate all instances and listeners via the target -> root path.
     while (node !== null) {
+      const {stateNode: instance, tag} = node;
       // Handle listeners that are on HostComponents (i.e. <div>)
-      if (node.tag === HostComponent) {
-        lastHostComponent = node.stateNode;
+      if (instance !== null && tag === HostComponent) {
+        lastHostComponent = instance;
         // For useEvent listenrs
-        if (enableUseEventAPI && accumulateUseEventListeners) {
+        if (
+          enableModernEventSystem &&
+          enableUseEventAPI &&
+          accumulateUseEventListeners
+        ) {
           // useEvent event listeners
-          const instance = node.stateNode;
           const targetType = event.type;
           const listeners = getListenersFromTarget(instance);
 
@@ -135,8 +143,16 @@ export default function accumulateTwoPhaseListeners(
             dispatchInstances.push(node);
           }
         }
-      } else if (enableScopeAPI && node.tag === ScopeComponent) {
-        const reactScope = node.stateNode.methods;
+      }
+      if (
+        enableModernEventSystem &&
+        enableUseEventAPI &&
+        enableScopeAPI &&
+        accumulateUseEventListeners &&
+        tag === ScopeComponent &&
+        lastHostComponent !== null
+      ) {
+        const reactScope = instance.methods;
         const eventTypeMap = reactScopeListenerStore.get(reactScope);
         if (eventTypeMap !== undefined) {
           const type = ((event.type: any): DOMTopLevelEventType);
