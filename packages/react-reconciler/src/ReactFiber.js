@@ -95,6 +95,8 @@ import {
   REACT_BLOCK_TYPE,
 } from 'shared/ReactSymbols';
 
+import {initializeUpdateQueue} from './ReactUpdateQueue';
+
 let hasBadMapPolyfill;
 
 if (__DEV__) {
@@ -546,6 +548,15 @@ export function resetWorkInProgress(
     workInProgress.child = null;
     workInProgress.memoizedProps = null;
     workInProgress.memoizedState = null;
+    // updateQueue must never be null on ClassComponent or HostRoot
+    if (
+      workInProgress.tag === ClassComponent ||
+      workInProgress.tag === HostRoot
+    ) {
+      initializeUpdateQueue(workInProgress);
+    } else {
+      workInProgress.updateQueue = null;
+    }
 
     workInProgress.dependencies = null;
 
