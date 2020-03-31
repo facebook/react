@@ -221,7 +221,7 @@ if (__DEV__) {
       );
     } else {
       console.error(
-        'getInspectorDataForViewAtPoint expects to receieve a host component',
+        'getInspectorDataForViewAtPoint expects to receive a host component',
       );
 
       return;
