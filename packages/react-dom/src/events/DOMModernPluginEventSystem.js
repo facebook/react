@@ -14,7 +14,7 @@ import type {
   ElementListenerMapEntry,
 } from '../events/DOMEventListenerMap';
 import type {EventSystemFlags} from 'legacy-events/EventSystemFlags';
-import type {EventPriority, ReactScopeMethods} from 'shared/ReactTypes';
+import type {EventPriority} from 'shared/ReactTypes';
 import type {Fiber} from 'react-reconciler/src/ReactFiber';
 import type {PluginModule} from 'legacy-events/PluginModuleType';
 import type {
@@ -142,23 +142,11 @@ const emptyDispatchConfigForCustomEvents: CustomDispatchConfig = {
 
 const isArray = Array.isArray;
 
-// TODO: we should remove the FlowFixMes and the casting to figure out how to make
-// these patterns work properly.
-// $FlowFixMe: Flow struggles with this pattern, so we also have to cast it.
-const PossiblyWeakMap = ((typeof WeakMap === 'function' ? WeakMap : Map): any);
-
+// $FlowFixMe: Flow struggles with this pattern
+const PossiblyWeakMap = typeof WeakMap === 'function' ? WeakMap : Map;
 // $FlowFixMe: Flow cannot handle polymorphic WeakMaps
 export const eventTargetEventListenerStore: WeakMap<
   EventTarget,
-  Map<
-    DOMTopLevelEventType,
-    {bubbled: Set<ReactDOMListener>, captured: Set<ReactDOMListener>},
-  >,
-> = new PossiblyWeakMap();
-
-// $FlowFixMe: Flow cannot handle polymorphic WeakMaps
-export const reactScopeListenerStore: WeakMap<
-  ReactScopeMethods,
   Map<
     DOMTopLevelEventType,
     {bubbled: Set<ReactDOMListener>, captured: Set<ReactDOMListener>},
@@ -318,20 +306,12 @@ function isMatchingRootContainer(
   );
 }
 
-export function isManagedDOMElement(
-  target: EventTarget | ReactScopeMethods,
-): boolean {
+export function isManagedDOMElement(target: EventTarget): boolean {
   return getClosestInstanceFromNode(((target: any): Node)) !== null;
 }
 
-export function isValidEventTarget(
-  target: EventTarget | ReactScopeMethods,
-): boolean {
-  return typeof (target: Object).addEventListener === 'function';
-}
-
-export function isReactScope(target: EventTarget | ReactScopeMethods): boolean {
-  return typeof (target: Object).getChildContextValues === 'function';
+export function isValidEventTarget(target: EventTarget): boolean {
+  return typeof target.addEventListener === 'function';
 }
 
 export function dispatchEventForPluginEventSystem(
@@ -466,16 +446,18 @@ function addEventTypeToDispatchConfig(type: DOMTopLevelEventType): void {
   }
 }
 
-export function attachListenerToManagedDOMElement(
+export function attachListenerFromManagedDOMElement(
   listener: ReactDOMListener,
 ): void {
   const {event, target} = listener;
   const {passive, priority, type} = event;
-
-  const managedTargetElement = ((target: any): Element);
-  const containerEventTarget = getNearestRootOrPortalContainer(
-    managedTargetElement,
-  );
+  const possibleManagedTarget = ((target: any): Element);
+  let containerEventTarget = target;
+  if (getClosestInstanceFromNode(possibleManagedTarget)) {
+    containerEventTarget = getNearestRootOrPortalContainer(
+      possibleManagedTarget,
+    );
+  }
   const listenerMap = getListenerMapForElement(containerEventTarget);
   // Add the event listener to the target container (falling back to
   // the target if we didn't find one).
@@ -487,11 +469,11 @@ export function attachListenerToManagedDOMElement(
     priority,
   );
   // Get the internal listeners Set from the target instance.
-  let listeners = getListenersFromTarget(managedTargetElement);
+  let listeners = getListenersFromTarget(target);
   // If we don't have any listeners, then we need to init them.
   if (listeners === null) {
     listeners = new Set();
-    initListenersSet(managedTargetElement, listeners);
+    initListenersSet(target, listeners);
   }
   // Add our listener to the listeners Set.
   listeners.add(listener);
@@ -503,9 +485,8 @@ export function detachListenerFromManagedDOMElement(
   listener: ReactDOMListener,
 ): void {
   const {target} = listener;
-  const managedTargetElement = ((target: any): Element);
   // Get the internal listeners Set from the target instance.
-  const listeners = getListenersFromTarget(managedTargetElement);
+  const listeners = getListenersFromTarget(target);
   if (listeners !== null) {
     // Remove out listener from the listeners Set.
     listeners.delete(listener);
@@ -515,21 +496,13 @@ export function detachListenerFromManagedDOMElement(
 export function attachTargetEventListener(listener: ReactDOMListener): void {
   const {event, target} = listener;
   const {capture, passive, priority, type} = event;
-  const eventTarget = ((target: any): EventTarget);
-  const listenerMap = getListenerMapForElement(eventTarget);
+  const listenerMap = getListenerMapForElement(target);
   // Add the event listener to the TargetEvent object.
-  listenToTopLevelEvent(
-    type,
-    eventTarget,
-    listenerMap,
-    passive,
-    priority,
-    capture,
-  );
-  let eventTypeMap = eventTargetEventListenerStore.get(eventTarget);
+  listenToTopLevelEvent(type, target, listenerMap, passive, priority, capture);
+  let eventTypeMap = eventTargetEventListenerStore.get(target);
   if (eventTypeMap === undefined) {
     eventTypeMap = new Map();
-    eventTargetEventListenerStore.set(eventTarget, eventTypeMap);
+    eventTargetEventListenerStore.set(target, eventTypeMap);
   }
   // Get the listeners by the event type
   let listeners = eventTypeMap.get(type);
@@ -550,51 +523,7 @@ export function attachTargetEventListener(listener: ReactDOMListener): void {
 export function detachTargetEventListener(listener: ReactDOMListener): void {
   const {event, target} = listener;
   const {capture, type} = event;
-  const validEventTarget = ((target: any): EventTarget);
-  const eventTypeMap = eventTargetEventListenerStore.get(validEventTarget);
-  if (eventTypeMap !== undefined) {
-    const listeners = eventTypeMap.get(type);
-    if (listeners !== undefined) {
-      // Remove out listener from the listeners Set.
-      if (capture) {
-        listeners.captured.delete(listener);
-      } else {
-        listeners.bubbled.delete(listener);
-      }
-    }
-  }
-}
-
-export function attachListenerToReactScope(listener: ReactDOMListener): void {
-  const {event, target} = listener;
-  const {capture, type} = event;
-  const reactScope = ((target: any): ReactScopeMethods);
-  let eventTypeMap = reactScopeListenerStore.get(reactScope);
-  if (eventTypeMap === undefined) {
-    eventTypeMap = new Map();
-    reactScopeListenerStore.set(reactScope, eventTypeMap);
-  }
-  // Get the listeners by the event type
-  let listeners = eventTypeMap.get(type);
-  if (listeners === undefined) {
-    listeners = {captured: new Set(), bubbled: new Set()};
-    eventTypeMap.set(type, listeners);
-  }
-  // Add our listener to the listeners Set.
-  if (capture) {
-    listeners.captured.add(listener);
-  } else {
-    listeners.bubbled.add(listener);
-  }
-  // Finally, add the event to our known event types list.
-  addEventTypeToDispatchConfig(type);
-}
-
-export function detachListenerFromReactScope(listener: ReactDOMListener): void {
-  const {event, target} = listener;
-  const {capture, type} = event;
-  const reactScope = ((target: any): ReactScopeMethods);
-  const eventTypeMap = reactScopeListenerStore.get(reactScope);
+  const eventTypeMap = eventTargetEventListenerStore.get(target);
   if (eventTypeMap !== undefined) {
     const listeners = eventTypeMap.get(type);
     if (listeners !== undefined) {

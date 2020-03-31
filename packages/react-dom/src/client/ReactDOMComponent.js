@@ -1348,10 +1348,6 @@ export function listenToEventResponderEventTypes(
       const targetEventType = isPassive
         ? eventType
         : eventType.substring(0, eventType.length - 7);
-      // We don't listen to this as we actually emulate it in the host config
-      if (targetEventType === 'beforeblur') {
-        continue;
-      }
       if (!listenerMap.has(eventKey)) {
         if (isPassive) {
           const activeKey = targetEventType + '_active';

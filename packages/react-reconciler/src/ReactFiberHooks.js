@@ -14,7 +14,6 @@ import type {
   ReactEventResponder,
   ReactContext,
   ReactEventResponderListener,
-  ReactScopeMethods,
 } from 'shared/ReactTypes';
 import type {Fiber} from './ReactFiber';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
@@ -1652,7 +1651,7 @@ function validateNotInFunctionRender(): boolean {
 function createReactListener(
   event: ReactListenerEvent,
   callback: Event => void,
-  target: EventTarget | ReactScopeMethods,
+  target: EventTarget,
   destroy: Node => void,
 ): ReactListener {
   return {
@@ -1666,10 +1665,7 @@ function createReactListener(
 function mountEventListener(event: ReactListenerEvent): ReactListenerMap {
   if (enableUseEventAPI) {
     const hook = mountWorkInProgressHook();
-    const listenerMap: Map<
-      EventTarget | ReactScopeMethods,
-      ReactListener,
-    > = new Map();
+    const listenerMap: Map<EventTarget, ReactListener> = new Map();
     const rootContainerInstance = getRootHostContainer();
 
     // Register the event to the current root to ensure event
@@ -1704,10 +1700,7 @@ function mountEventListener(event: ReactListenerEvent): ReactListenerMap {
 
     const reactListenerMap: ReactListenerMap = {
       clear,
-      setListener(
-        target: EventTarget | ReactScopeMethods,
-        callback: ?(Event) => void,
-      ): void {
+      setListener(target: EventTarget, callback: ?(Event) => void): void {
         if (
           validateNotInFunctionRender() &&
           validateEventListenerTarget(target, callback)
