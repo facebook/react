@@ -15,7 +15,6 @@ import type {
   ReactProviderType,
   ReactEventResponder,
   ReactEventResponderListener,
-  ReactScopeMethods,
 } from 'shared/ReactTypes';
 import type {Fiber} from 'react-reconciler/src/ReactFiber';
 import type {Hook, TimeoutConfig} from 'react-reconciler/src/ReactFiberHooks';
@@ -45,10 +44,7 @@ type HookLogEntry = {
 
 type ReactDebugListenerMap = {|
   clear: () => void,
-  setListener: (
-    target: EventTarget | ReactScopeMethods,
-    callback: ?(Event) => void,
-  ) => void,
+  setListener: (target: EventTarget, callback: ?(Event) => void) => void,
 |};
 
 let hookLog: Array<HookLogEntry> = [];
