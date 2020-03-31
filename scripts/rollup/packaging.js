@@ -80,6 +80,7 @@ function getBundleOutputPaths(bundleType, filename, packageName) {
 }
 
 async function copyWWWShims() {
+  await asyncRimRaf('build/facebook-www/shims');
   await asyncCopyTo(
     `${__dirname}/shims/facebook-www`,
     'build/facebook-www/shims'
@@ -87,6 +88,7 @@ async function copyWWWShims() {
 }
 
 async function copyRNShims() {
+  await asyncRimRaf('build/react-native/shims');
   await Promise.all([
     // React Native
     asyncCopyTo(`${__dirname}/shims/react-native`, 'build/react-native/shims'),
