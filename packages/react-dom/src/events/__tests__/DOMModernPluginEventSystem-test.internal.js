@@ -1317,6 +1317,28 @@ describe('DOMModernPluginEventSystem', () => {
             expect(clickEvent).toBeCalledTimes(0);
           });
 
+          it('should handle the target being a text node', () => {
+            const clickEvent = jest.fn();
+            const buttonRef = React.createRef();
+
+            function Test() {
+              const click = ReactDOM.unstable_useEvent('click');
+
+              React.useEffect(() => {
+                click.setListener(buttonRef.current, clickEvent);
+              });
+
+              return <button ref={buttonRef}>Click me!</button>;
+            }
+
+            ReactDOM.render(<Test />, container);
+            Scheduler.unstable_flushAll();
+
+            let textNode = buttonRef.current.firstChild;
+            dispatchClickEvent(textNode);
+            expect(clickEvent).toBeCalledTimes(1);
+          });
+
           it('handle propagation of click events', () => {
             const buttonRef = React.createRef();
             const divRef = React.createRef();
@@ -2327,6 +2349,170 @@ describe('DOMModernPluginEventSystem', () => {
               document.body.removeChild(container2);
             },
           );
+
+          describe('Compatibility with Scopes API', () => {
+            beforeEach(() => {
+              jest.resetModules();
+              ReactFeatureFlags = require('shared/ReactFeatureFlags');
+              ReactFeatureFlags.enableModernEventSystem = true;
+              ReactFeatureFlags.enableUseEventAPI = true;
+              ReactFeatureFlags.enableScopeAPI = true;
+
+              React = require('react');
+              ReactDOM = require('react-dom');
+              Scheduler = require('scheduler');
+              ReactDOMServer = require('react-dom/server');
+            });
+
+            it('handle propagation of click events on a scope', () => {
+              const buttonRef = React.createRef();
+              const log = [];
+              const onClick = jest.fn(e =>
+                log.push(['bubble', e.currentTarget]),
+              );
+              const onClickCapture = jest.fn(e =>
+                log.push(['capture', e.currentTarget]),
+              );
+              const TestScope = React.unstable_createScope();
+
+              function Test() {
+                const click = ReactDOM.unstable_useEvent('click');
+                const clickCapture = ReactDOM.unstable_useEvent('click', {
+                  capture: true,
+                });
+                const scopeRef = React.useRef(null);
+
+                React.useEffect(() => {
+                  click.setListener(scopeRef.current, onClick);
+                  clickCapture.setListener(scopeRef.current, onClickCapture);
+                });
+
+                return (
+                  <TestScope ref={scopeRef}>
+                    <button ref={buttonRef} />
+                  </TestScope>
+                );
+              }
+
+              ReactDOM.render(<Test />, container);
+              Scheduler.unstable_flushAll();
+
+              const buttonElement = buttonRef.current;
+              dispatchClickEvent(buttonElement);
+
+              expect(onClick).toHaveBeenCalledTimes(1);
+              expect(onClickCapture).toHaveBeenCalledTimes(1);
+              expect(log).toEqual([
+                ['capture', buttonElement],
+                ['bubble', buttonElement],
+              ]);
+            });
+
+            it('handle mixed propagation of click events on a scope', () => {
+              const buttonRef = React.createRef();
+              const divRef = React.createRef();
+              const log = [];
+              const onClick = jest.fn(e =>
+                log.push(['bubble', e.currentTarget]),
+              );
+              const onClickCapture = jest.fn(e =>
+                log.push(['capture', e.currentTarget]),
+              );
+              const TestScope = React.unstable_createScope();
+
+              function Test() {
+                const click = ReactDOM.unstable_useEvent('click');
+                const clickCapture = ReactDOM.unstable_useEvent('click', {
+                  capture: true,
+                });
+                const scopeRef = React.useRef(null);
+
+                React.useEffect(() => {
+                  click.setListener(scopeRef.current, onClick);
+                  clickCapture.setListener(scopeRef.current, onClickCapture);
+                  click.setListener(buttonRef.current, onClick);
+                  clickCapture.setListener(buttonRef.current, onClickCapture);
+                });
+
+                return (
+                  <TestScope ref={scopeRef}>
+                    <button ref={buttonRef}>
+                      <div
+                        ref={divRef}
+                        onClick={onClick}
+                        onClickCapture={onClickCapture}>
+                        Click me!
+                      </div>
+                    </button>
+                  </TestScope>
+                );
+              }
+
+              ReactDOM.render(<Test />, container);
+              Scheduler.unstable_flushAll();
+
+              const buttonElement = buttonRef.current;
+              dispatchClickEvent(buttonElement);
+
+              expect(onClick).toHaveBeenCalledTimes(2);
+              expect(onClickCapture).toHaveBeenCalledTimes(2);
+              expect(log).toEqual([
+                ['capture', buttonElement],
+                ['capture', buttonElement],
+                ['bubble', buttonElement],
+                ['bubble', buttonElement],
+              ]);
+
+              log.length = 0;
+              onClick.mockClear();
+              onClickCapture.mockClear();
+
+              const divElement = divRef.current;
+              dispatchClickEvent(divElement);
+
+              expect(onClick).toHaveBeenCalledTimes(3);
+              expect(onClickCapture).toHaveBeenCalledTimes(3);
+              expect(log).toEqual([
+                ['capture', buttonElement],
+                ['capture', buttonElement],
+                ['capture', divElement],
+                ['bubble', divElement],
+                ['bubble', buttonElement],
+                ['bubble', buttonElement],
+              ]);
+            });
+
+            it('should not handle the target being a dangling text node within a scope', () => {
+              const clickEvent = jest.fn();
+              const buttonRef = React.createRef();
+
+              const TestScope = React.unstable_createScope();
+
+              function Test() {
+                const click = ReactDOM.unstable_useEvent('click');
+                const scopeRef = React.useRef(null);
+
+                React.useEffect(() => {
+                  click.setListener(scopeRef.current, clickEvent);
+                });
+
+                return (
+                  <button ref={buttonRef}>
+                    <TestScope ref={scopeRef}>Click me!</TestScope>
+                  </button>
+                );
+              }
+
+              ReactDOM.render(<Test />, container);
+              Scheduler.unstable_flushAll();
+
+              let textNode = buttonRef.current.firstChild;
+              dispatchClickEvent(textNode);
+              // This should not work, as the target instance will be the
+              // <button>, which is actually outside the scope.
+              expect(clickEvent).toBeCalledTimes(0);
+            });
+          });
         });
       },
     );
