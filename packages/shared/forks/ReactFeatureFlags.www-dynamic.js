@@ -14,6 +14,7 @@
 // with the __VARIANT__ set to `true`, and once set to `false`.
 
 export const warnAboutSpreadingKeyToJSX = __VARIANT__;
+export const disableModulePatternComponents = __VARIANT__;
 
 // These are already tested in both modes using the build type dimension,
 // so we don't need to use __VARIANT__ to get extra coverage.
@@ -25,7 +26,6 @@ export const replayFailedUnitOfWorkWithInvokeGuardedCallback = __DEV__;
 // to __VARIANT__.
 export const enableTrustedTypesIntegration = false;
 export const warnAboutShorthandPropertyCollision = true;
-export const disableModulePatternComponents = false;
 export const disableInputAttributeSyncing = false;
 export const disableSchedulerTimeoutBasedOnReactExpirationTime = false;
 export const enableModernEventSystem = false;
