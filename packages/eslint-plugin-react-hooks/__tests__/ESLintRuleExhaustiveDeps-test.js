@@ -358,6 +358,14 @@ const tests = {
       `,
     },
     {
+      // Valid because has no deps.
+      code: normalizeIndent`
+        function MyComponent({myEffect}) {
+          useEffect(myEffect);
+        }
+      `,
+    },
+    {
       code: normalizeIndent`
         function MyComponent(props) {
           useCustomEffect(() => {
@@ -1258,6 +1266,29 @@ const tests = {
         }
       `,
       // We don't know what you meant.
+      errors: [
+        {
+          message:
+            'React Hook useMemo does nothing when called with only one argument. ' +
+            'Did you forget to pass an array of dependencies?',
+          suggestions: undefined,
+        },
+        {
+          message:
+            'React Hook useCallback does nothing when called with only one argument. ' +
+            'Did you forget to pass an array of dependencies?',
+          suggestions: undefined,
+        },
+      ],
+    },
+    {
+      // Invalid because they don't have a meaning without deps.
+      code: normalizeIndent`
+        function MyComponent({ fn1, fn2 }) {
+          const value = useMemo(fn1);
+          const fn = useCallback(fn2);
+        }
+      `,
       errors: [
         {
           message:
