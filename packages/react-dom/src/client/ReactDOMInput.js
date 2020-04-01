@@ -410,8 +410,8 @@ export function setDefaultValue(
   value: *,
 ) {
   if (
-    // Focused number inputs synchronize on blur. See ChangeEventPlugin.js
-    type !== 'number' ||
+    // Focused number and email inputs synchronize on blur. See ChangeEventPlugin.js
+    (type !== 'number' && type !== 'email') ||
     node.ownerDocument.activeElement !== node
   ) {
     if (value == null) {
