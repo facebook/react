@@ -160,7 +160,6 @@ import {
 import getComponentName from 'shared/getComponentName';
 import ReactStrictModeWarnings from './ReactStrictModeWarnings';
 import {
-  current as currentDebugFiberInDEV,
   isRendering as ReactCurrentDebugFiberIsRenderingInDEV,
   resetCurrentFiber as resetCurrentDebugFiberInDEV,
   setCurrentFiber as setCurrentDebugFiberInDEV,
@@ -2736,38 +2735,20 @@ function warnAboutUpdateOnUnmountedFiberInDEV(fiber) {
       didWarnStateUpdateForUnmountedComponent = new Set([componentName]);
     }
 
-    // If we are currently flushing passive effects, change the warning text.
     if (isFlushingPassiveEffects) {
+      // Do not warn if we are currently flushing passive effects!
+      //
       // React can't directly detect a memory leak, but there are some clues that warn about one.
       // One of these clues is when an unmounted React component tries to update its state.
       // For example, if a component forgets to remove an event listener when unmounting,
-      // that listener may be called later and try to update state, at which point React would warn about the potential leak.
+      // that listener may be called later and try to update state,
+      // at which point React would warn about the potential leak.
       //
-      // Warning signals like this are more useful if they're strong.
-      // For this reason, it's good to always avoid updating state from inside of an effect's cleanup function.
-      // Even when you know there is no potential leak, React has no way to know and so it will warn anyway.
-      // In most cases we suggest moving state updates to the useEffect() body instead.
-      // This works so long as the component is updating its own state (or the state of a descendant).
-      //
-      // However this will not work when a component updates its parent state in a cleanup function.
-      // If such a component is unmounted but its parent remains mounted, the state will be out of sync.
-      // For this reason, we avoid showing the warning if a component is updating an ancestor.
-      let currentTargetFiber = fiber;
-      while (currentTargetFiber !== null) {
-        // currentDebugFiberInDEV owns the effect destroy function currently being invoked.
-        if (
-          currentDebugFiberInDEV === currentTargetFiber ||
-          currentDebugFiberInDEV === currentTargetFiber.alternate
-        ) {
-          console.error(
-            "Can't perform a React state update from within a useEffect cleanup function. " +
-              'To fix, move state updates to the useEffect() body.%s',
-            getStackByFiberInDevAndProd(((currentDebugFiberInDEV: any): Fiber)),
-          );
-          break;
-        }
-        currentTargetFiber = currentTargetFiber.return;
-      }
+      // Warning signals are the most useful when they're strong.
+      // (So we should avoid false positive warnings.)
+      // Updating state from within an effect cleanup function is sometimes a necessary pattern, e.g.:
+      // 1. Updating an ancestor that a component had registered itself with on mount.
+      // 2. Resetting state when a component is hidden after going offscreen.
     } else {
       console.error(
         "Can't perform a React state update on an unmounted component. This " +
