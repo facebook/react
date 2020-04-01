@@ -542,6 +542,8 @@ export function resetWorkInProgress(
 
     workInProgress.dependencies = null;
 
+    workInProgress.stateNode = null;
+
     if (enableProfilerTimer) {
       // Note: We don't reset the actualTime counts. It's useful to accumulate
       // actual time across multiple render passes.
