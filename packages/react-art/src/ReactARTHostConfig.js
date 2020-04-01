@@ -68,7 +68,7 @@ function createEventHandler(instance) {
 
 function destroyEventListeners(instance) {
   if (instance._subscriptions) {
-    for (let type in instance._subscriptions) {
+    for (const type in instance._subscriptions) {
       instance._subscriptions[type]();
     }
   }
@@ -170,7 +170,7 @@ function applyNodeProps(instance, props, prevProps = {}) {
     }
   }
 
-  for (let type in EVENT_TYPES) {
+  for (const type in EVENT_TYPES) {
     addEventListeners(instance, EVENT_TYPES[type], props[type]);
   }
 }

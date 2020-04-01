@@ -167,7 +167,7 @@ describe('ReactIncrementalTriangle', () => {
   }
 
   function randomActions(n) {
-    let actions = [];
+    const actions = [];
     for (let i = 0; i < n; i++) {
       actions.push(randomAction());
     }
@@ -180,7 +180,7 @@ describe('ReactIncrementalTriangle', () => {
 
     let triangles = [];
     let leafTriangles = [];
-    let yieldAfterEachRender = false;
+    const yieldAfterEachRender = false;
     class Triangle extends React.Component {
       constructor(props) {
         super();
@@ -325,7 +325,7 @@ describe('ReactIncrementalTriangle', () => {
       let expectedCounter = counter;
 
       for (let i = 0; i < children.length; i++) {
-        let child = children[i];
+        const child = children[i];
 
         const output = JSON.parse(child.prop);
         const prop = output.prop;
@@ -376,8 +376,8 @@ describe('ReactIncrementalTriangle', () => {
       const app = reset();
       let expectedCounterAtEnd = app.state.counter;
 
-      let activeIndices = new Set();
-      let activeLeafIndices = new Set();
+      const activeIndices = new Set();
+      const activeLeafIndices = new Set();
       let action;
       while (true) {
         action = yield;
@@ -441,7 +441,7 @@ describe('ReactIncrementalTriangle', () => {
       // Call this once to prepare the generator
       gen.next();
       // eslint-disable-next-line no-for-of-loops/no-for-of-loops
-      for (let action of actions) {
+      for (const action of actions) {
         gen.next(action);
       }
       gen.next(STOP);
@@ -528,7 +528,7 @@ ${formatActions(actions)}
     function simulateMultipleRoots(...actions) {
       const roots = new Map();
       // eslint-disable-next-line no-for-of-loops/no-for-of-loops
-      for (let rootID of rootIDs) {
+      for (const rootID of rootIDs) {
         const simulator = TriangleSimulator(rootID);
         const generator = simulator.simulateAndYield();
         // Call this once to prepare the generator

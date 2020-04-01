@@ -83,7 +83,7 @@ function act(callback: () => Thenable<mixed>): Thenable<void> {
       );
     }
   }
-  let previousActingUpdatesScopeDepth = actingUpdatesScopeDepth;
+  const previousActingUpdatesScopeDepth = actingUpdatesScopeDepth;
   let previousIsSomeRendererActing;
   let previousIsThisRendererActing;
   actingUpdatesScopeDepth++;

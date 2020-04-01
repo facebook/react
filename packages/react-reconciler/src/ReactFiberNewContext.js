@@ -164,7 +164,7 @@ export function scheduleWorkOnParentPath(
   // the alternates.
   let node = parent;
   while (node !== null) {
-    let alternate = node.alternate;
+    const alternate = node.alternate;
     if (node.childExpirationTime < renderExpirationTime) {
       node.childExpirationTime = renderExpirationTime;
       if (
@@ -229,7 +229,7 @@ export function propagateContextChange(
           if (fiber.expirationTime < renderExpirationTime) {
             fiber.expirationTime = renderExpirationTime;
           }
-          let alternate = fiber.alternate;
+          const alternate = fiber.alternate;
           if (
             alternate !== null &&
             alternate.expirationTime < renderExpirationTime
@@ -260,7 +260,7 @@ export function propagateContextChange(
       // If a dehydrated suspense bounudary is in this subtree, we don't know
       // if it will have any context consumers in it. The best we can do is
       // mark it as having updates.
-      let parentSuspense = fiber.return;
+      const parentSuspense = fiber.return;
       invariant(
         parentSuspense !== null,
         'We just came from a parent so we must have had a parent. This is a bug in React.',
@@ -268,7 +268,7 @@ export function propagateContextChange(
       if (parentSuspense.expirationTime < renderExpirationTime) {
         parentSuspense.expirationTime = renderExpirationTime;
       }
-      let alternate = parentSuspense.alternate;
+      const alternate = parentSuspense.alternate;
       if (
         alternate !== null &&
         alternate.expirationTime < renderExpirationTime
@@ -298,7 +298,7 @@ export function propagateContextChange(
           nextFiber = null;
           break;
         }
-        let sibling = nextFiber.sibling;
+        const sibling = nextFiber.sibling;
         if (sibling !== null) {
           // Set the return pointer of the sibling to the work-in-progress fiber.
           sibling.return = nextFiber.return;
@@ -369,7 +369,7 @@ export function readContext<T>(
       resolvedObservedBits = observedBits;
     }
 
-    let contextItem = {
+    const contextItem = {
       context: ((context: any): ReactContext<mixed>),
       observedBits: resolvedObservedBits,
       next: null,

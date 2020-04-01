@@ -188,7 +188,7 @@ export function createUpdate(
   expirationTime: ExpirationTime,
   suspenseConfig: null | SuspenseConfig,
 ): Update<*> {
-  let update: Update<*> = {
+  const update: Update<*> = {
     expirationTime,
     suspenseConfig,
 
@@ -524,7 +524,7 @@ export function processUpdateQueue<State>(
         const callback = update.callback;
         if (callback !== null) {
           workInProgress.effectTag |= Callback;
-          let effects = queue.effects;
+          const effects = queue.effects;
           if (effects === null) {
             queue.effects = [update];
           } else {

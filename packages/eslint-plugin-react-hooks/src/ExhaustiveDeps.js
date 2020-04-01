@@ -62,10 +62,10 @@ export default {
     const scopeManager = context.getSourceCode().scopeManager;
 
     // Should be shared between visitors.
-    let setStateCallSites = new WeakMap();
-    let stateVariables = new WeakSet();
-    let staticKnownValueCache = new WeakMap();
-    let functionWithoutCapturedValueCache = new WeakMap();
+    const setStateCallSites = new WeakMap();
+    const stateVariables = new WeakSet();
+    const staticKnownValueCache = new WeakMap();
+    const functionWithoutCapturedValueCache = new WeakMap();
     function memoizeWithWeakMap(fn, map) {
       return function(arg) {
         if (map.has(arg)) {
@@ -400,12 +400,12 @@ export default {
         // Search the direct component subscopes for
         // top-level function definitions matching this reference.
         const fnNode = def.node;
-        let childScopes = componentScope.childScopes;
+        const childScopes = componentScope.childScopes;
         let fnScope = null;
         let i;
         for (i = 0; i < childScopes.length; i++) {
-          let childScope = childScopes[i];
-          let childScopeBlock = childScope.block;
+          const childScope = childScopes[i];
+          const childScopeBlock = childScope.block;
           if (
             // function handleChange() {}
             (fnNode.type === 'FunctionDeclaration' &&
@@ -597,7 +597,7 @@ export default {
 
       // Warn about assigning to variables in the outer scope.
       // Those are usually bugs.
-      let staleAssignments = new Set();
+      const staleAssignments = new Set();
       function reportStaleAssignment(writeExpr, key) {
         if (staleAssignments.has(key)) {
           return;
@@ -664,7 +664,7 @@ export default {
           });
         });
         if (setStateInsideEffectWithoutDeps) {
-          let {suggestedDependencies} = collectRecommendations({
+          const {suggestedDependencies} = collectRecommendations({
             dependencies,
             declaredDependencies: [],
             optionalDependencies,
@@ -945,7 +945,7 @@ export default {
       // a `this` value. This warning can be confusing.
       // So if we're going to show it, append a clarification.
       if (!extraWarning && missingDependencies.has('props')) {
-        let propDep = dependencies.get('props');
+        const propDep = dependencies.get('props');
         if (propDep == null) {
           return;
         }
@@ -1213,9 +1213,9 @@ function collectRecommendations({
 
   // Tree manipulation helpers.
   function getOrCreateNodeByPath(rootNode, path) {
-    let keys = path.split('.');
+    const keys = path.split('.');
     let node = rootNode;
-    for (let key of keys) {
+    for (const key of keys) {
       let child = node.children.get(key);
       if (!child) {
         child = createDepTree();
@@ -1226,10 +1226,10 @@ function collectRecommendations({
     return node;
   }
   function markAllParentsByPath(rootNode, path, fn) {
-    let keys = path.split('.');
+    const keys = path.split('.');
     let node = rootNode;
-    for (let key of keys) {
-      let child = node.children.get(key);
+    for (const key of keys) {
+      const child = node.children.get(key);
       if (!child) {
         return;
       }
@@ -1239,8 +1239,8 @@ function collectRecommendations({
   }
 
   // Now we can learn which dependencies are missing or necessary.
-  let missingDependencies = new Set();
-  let satisfyingDependencies = new Set();
+  const missingDependencies = new Set();
+  const satisfyingDependencies = new Set();
   scanTreeRecursively(
     depTree,
     missingDependencies,
@@ -1277,9 +1277,9 @@ function collectRecommendations({
   }
 
   // Collect suggestions in the order they were originally specified.
-  let suggestedDependencies = [];
-  let unnecessaryDependencies = new Set();
-  let duplicateDependencies = new Set();
+  const suggestedDependencies = [];
+  const unnecessaryDependencies = new Set();
+  const duplicateDependencies = new Set();
   declaredDependencies.forEach(({key}) => {
     // Does this declared dep satisfy a real need?
     if (satisfyingDependencies.has(key)) {
@@ -1337,7 +1337,7 @@ function scanForDeclaredBareFunctions({
       if (fnRef == null) {
         return null;
       }
-      let fnNode = fnRef.defs[0];
+      const fnNode = fnRef.defs[0];
       if (fnNode == null) {
         return null;
       }
@@ -1461,7 +1461,7 @@ function getNodeWithoutReactNamespace(node, options) {
 // 1 for useImperativeHandle(ref, fn).
 // For additionally configured Hooks, assume that they're like useEffect (0).
 function getReactiveHookCallbackIndex(calleeNode, options) {
-  let node = getNodeWithoutReactNamespace(calleeNode);
+  const node = getNodeWithoutReactNamespace(calleeNode);
   if (node.type !== 'Identifier') {
     return -1;
   }
@@ -1507,7 +1507,7 @@ function getReactiveHookCallbackIndex(calleeNode, options) {
  * - agnostic to AST node types, it looks for `{ type: string, ... }`
  */
 function fastFindReferenceWithParent(start, target) {
-  let queue = [start];
+  const queue = [start];
   let item = null;
 
   while (queue.length) {
@@ -1521,7 +1521,7 @@ function fastFindReferenceWithParent(start, target) {
       continue;
     }
 
-    for (let [key, value] of Object.entries(item)) {
+    for (const [key, value] of Object.entries(item)) {
       if (key === 'parent') {
         continue;
       }

@@ -16,8 +16,8 @@ let ReactDOM;
 let ReactFreshRuntime;
 let act;
 
-let babel = require('@babel/core');
-let freshPlugin = require('react-refresh/babel');
+const babel = require('@babel/core');
+const freshPlugin = require('react-refresh/babel');
 
 describe('ReactFreshIntegration', () => {
   let container;
@@ -100,7 +100,7 @@ describe('ReactFreshIntegration', () => {
       // (In a real module system we'd do this for *all* exports.)
       // For example, this can happen if you convert a class to a function.
       // Or if you wrap something in a HOC.
-      let didExportsChange =
+      const didExportsChange =
         ReactFreshRuntime.getFamilyByType(prevExports.default) !==
         ReactFreshRuntime.getFamilyByType(nextExports.default);
       if (didExportsChange) {

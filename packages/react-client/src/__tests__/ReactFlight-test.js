@@ -38,7 +38,7 @@ describe('ReactFlight', () => {
       };
     }
     return function(...args) {
-      let curriedLoad = () => {
+      const curriedLoad = () => {
         return load(...args);
       };
       return ReactNoopFlightServerRuntime.serverBlock(render, curriedLoad);
@@ -58,10 +58,10 @@ describe('ReactFlight', () => {
         ),
       };
     }
-    let transport = ReactNoopFlightServer.render({
+    const transport = ReactNoopFlightServer.render({
       foo: <Foo />,
     });
-    let model = ReactNoopFlightClient.read(transport);
+    const model = ReactNoopFlightClient.read(transport);
     expect(model).toEqual({
       foo: {
         bar: (
@@ -84,16 +84,16 @@ describe('ReactFlight', () => {
           </span>
         );
       }
-      let loadUser = block(User);
-      let model = {
+      const loadUser = block(User);
+      const model = {
         User: loadUser('Seb', 'Smith'),
       };
 
-      let transport = ReactNoopFlightServer.render(model);
+      const transport = ReactNoopFlightServer.render(model);
 
       act(() => {
-        let rootModel = ReactNoopFlightClient.read(transport);
-        let UserClient = rootModel.User;
+        const rootModel = ReactNoopFlightClient.read(transport);
+        const UserClient = rootModel.User;
         ReactNoop.render(<UserClient greeting="Hello" />);
       });
 
@@ -111,16 +111,16 @@ describe('ReactFlight', () => {
           </span>
         );
       }
-      let loadUser = block(User, load);
-      let model = {
+      const loadUser = block(User, load);
+      const model = {
         User: loadUser('Seb', 'Smith'),
       };
 
-      let transport = ReactNoopFlightServer.render(model);
+      const transport = ReactNoopFlightServer.render(model);
 
       act(() => {
-        let rootModel = ReactNoopFlightClient.read(transport);
-        let UserClient = rootModel.User;
+        const rootModel = ReactNoopFlightClient.read(transport);
+        const UserClient = rootModel.User;
         ReactNoop.render(<UserClient greeting="Hello" />);
       });
 

@@ -613,18 +613,18 @@ describe('ReactFabric', () => {
       1,
     );
 
-    let [
+    const [
       ,
       ,
       ,
       ,
       instanceHandle,
     ] = nativeFabricUIManager.createNode.mock.calls[0];
-    let [
+    const [
       dispatchEvent,
     ] = nativeFabricUIManager.registerEventHandler.mock.calls[0];
 
-    let touchEvent = {
+    const touchEvent = {
       touches: [],
       changedTouches: [],
     };
@@ -708,7 +708,7 @@ describe('ReactFabric', () => {
       1,
     );
 
-    let [
+    const [
       dispatchEvent,
     ] = nativeFabricUIManager.registerEventHandler.mock.calls[0];
 
@@ -894,7 +894,7 @@ describe('ReactFabric', () => {
       uiViewClassName: 'RCTView',
     }));
 
-    let viewRef = React.createRef();
+    const viewRef = React.createRef();
     ReactFabric.render(<View ref={viewRef} />, 11);
 
     expect(TextInputState.blurTextInput).not.toBeCalled();
@@ -911,7 +911,7 @@ describe('ReactFabric', () => {
       uiViewClassName: 'RCTView',
     }));
 
-    let viewRef = React.createRef();
+    const viewRef = React.createRef();
     ReactFabric.render(<View ref={viewRef} />, 11);
 
     expect(TextInputState.focusTextInput).not.toBeCalled();

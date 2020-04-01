@@ -90,7 +90,7 @@ function findAllInRenderedFiberTreeInternal(fiber, test) {
     return [];
   }
   let node = currentParent;
-  let ret = [];
+  const ret = [];
   while (true) {
     if (
       node.tag === HostComponent ||

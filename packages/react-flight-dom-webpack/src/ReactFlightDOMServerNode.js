@@ -26,7 +26,7 @@ function pipeToNodeWritable(
   destination: Writable,
   webpackMap: BundlerConfig,
 ): void {
-  let request = createRequest(model, destination, webpackMap);
+  const request = createRequest(model, destination, webpackMap);
   destination.on('drain', createDrainHandler(destination, request));
   startWork(request);
 }

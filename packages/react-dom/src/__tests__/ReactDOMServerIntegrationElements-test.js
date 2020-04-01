@@ -397,7 +397,7 @@ describe('ReactDOMServerIntegration', () => {
       });
 
       itRenders('svg child element with an attribute', async render => {
-        let e = await render(<svg viewBox="0 0 0 0" />);
+        const e = await render(<svg viewBox="0 0 0 0" />);
         expect(e.childNodes.length).toBe(0);
         expect(e.tagName).toBe('svg');
         expect(e.namespaceURI).toBe('http://www.w3.org/2000/svg');
@@ -439,14 +439,14 @@ describe('ReactDOMServerIntegration', () => {
       });
 
       itRenders('svg element with a tabIndex attribute', async render => {
-        let e = await render(<svg tabIndex="1" />);
+        const e = await render(<svg tabIndex="1" />);
         expect(e.tabIndex).toBe(1);
       });
 
       itRenders(
         'svg element with a badly cased tabIndex attribute',
         async render => {
-          let e = await render(<svg tabindex="1" />, 1);
+          const e = await render(<svg tabindex="1" />, 1);
           expect(e.tabIndex).toBe(1);
         },
       );
@@ -795,7 +795,7 @@ describe('ReactDOMServerIntegration', () => {
           <Component>{['a', 'b', [undefined], [[false, 'c']]]}</Component>,
         );
 
-        let parent = e.parentNode;
+        const parent = e.parentNode;
         if (
           render === serverRender ||
           render === clientRenderOnServerString ||

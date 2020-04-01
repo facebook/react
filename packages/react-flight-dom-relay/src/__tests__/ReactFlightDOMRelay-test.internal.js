@@ -27,9 +27,9 @@ describe('ReactFlightDOMRelay', () => {
   });
 
   function readThrough(data) {
-    let response = ReactDOMFlightRelayClient.createResponse();
+    const response = ReactDOMFlightRelayClient.createResponse();
     for (let i = 0; i < data.length; i++) {
-      let chunk = data[i];
+      const chunk = data[i];
       if (chunk.type === 'json') {
         ReactDOMFlightRelayClient.resolveModel(response, chunk.id, chunk.json);
       } else {
@@ -42,7 +42,7 @@ describe('ReactFlightDOMRelay', () => {
       }
     }
     ReactDOMFlightRelayClient.close(response);
-    let model = response.readRoot();
+    const model = response.readRoot();
     return model;
   }
 
@@ -51,7 +51,7 @@ describe('ReactFlightDOMRelay', () => {
       return ReactDOMFlightRelayServerRuntime.serverBlock(render);
     }
     return function(...args) {
-      let curriedLoad = () => {
+      const curriedLoad = () => {
         return load(...args);
       };
       return ReactDOMFlightRelayServerRuntime.serverBlock(render, curriedLoad);
@@ -71,7 +71,7 @@ describe('ReactFlightDOMRelay', () => {
         ),
       };
     }
-    let transport = [];
+    const transport = [];
     ReactDOMFlightRelayServer.render(
       {
         foo: <Foo />,
@@ -79,7 +79,7 @@ describe('ReactFlightDOMRelay', () => {
       transport,
     );
 
-    let model = readThrough(transport);
+    const model = readThrough(transport);
     expect(model).toEqual({
       foo: {
         bar: (
@@ -104,20 +104,20 @@ describe('ReactFlightDOMRelay', () => {
         </span>
       );
     }
-    let loadUser = block(User, load);
-    let model = {
+    const loadUser = block(User, load);
+    const model = {
       User: loadUser('Seb', 'Smith'),
     };
 
-    let transport = [];
+    const transport = [];
     ReactDOMFlightRelayServer.render(model, transport);
 
-    let modelClient = readThrough(transport);
+    const modelClient = readThrough(transport);
 
-    let container = document.createElement('div');
-    let root = ReactDOM.createRoot(container);
+    const container = document.createElement('div');
+    const root = ReactDOM.createRoot(container);
     act(() => {
-      let UserClient = modelClient.User;
+      const UserClient = modelClient.User;
       root.render(<UserClient greeting="Hello" />);
     });
 

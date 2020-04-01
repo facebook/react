@@ -76,7 +76,7 @@ const resource: Resource<
   InspectedElementFrontend,
 > = createResource(
   (element: Element) => {
-    let request = inProgressRequests.get(element);
+    const request = inProgressRequests.get(element);
     if (request != null) {
       return request.promise;
     }

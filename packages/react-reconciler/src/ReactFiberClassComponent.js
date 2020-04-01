@@ -540,7 +540,7 @@ function constructClassInstance(
 
   if (__DEV__) {
     if ('contextType' in ctor) {
-      let isValid =
+      const isValid =
         // Allow null for conditional declaration
         contextType === null ||
         (contextType !== undefined &&

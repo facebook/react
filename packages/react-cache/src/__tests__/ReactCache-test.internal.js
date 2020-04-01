@@ -303,7 +303,7 @@ describe('ReactCache', () => {
     const BadTextResource = createResource(
       ([text, ms = 0]) => {
         let listeners = null;
-        let value = null;
+        const value = null;
         return {
           then(resolve, reject) {
             if (value !== null) {

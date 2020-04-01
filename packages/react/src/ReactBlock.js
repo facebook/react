@@ -99,7 +99,7 @@ export function block<Args: Iterable<any>, Props, Data>(
 
   if (load === undefined) {
     return function(): Block<Props> {
-      let blockComponent: BlockComponent<Props, void> = {
+      const blockComponent: BlockComponent<Props, void> = {
         $$typeof: REACT_BLOCK_TYPE,
         _data: undefined,
         // $FlowFixMe: Data must be void in this scenario.
@@ -112,18 +112,18 @@ export function block<Args: Iterable<any>, Props, Data>(
   }
 
   // Trick to let Flow refine this.
-  let loadFn = load;
+  const loadFn = load;
 
   return function(): Block<Props> {
-    let args: Args = arguments;
+    const args: Args = arguments;
 
-    let payload: Payload<Props, Args, Data> = {
+    const payload: Payload<Props, Args, Data> = {
       load: loadFn,
       args: args,
       render: render,
     };
 
-    let lazyType: LazyComponent<
+    const lazyType: LazyComponent<
       BlockComponent<Props, Data>,
       Payload<Props, Args, Data>,
     > = {

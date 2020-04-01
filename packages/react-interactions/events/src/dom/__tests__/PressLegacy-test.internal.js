@@ -615,7 +615,7 @@ describe.each(environmentTable)('Press responder', hasPointerEvents => {
       });
 
       it('press retention offset can be configured', () => {
-        let localEvents = [];
+        const localEvents = [];
         const localRef = React.createRef();
         const createEventHandler = msg => () => {
           localEvents.push(msg);

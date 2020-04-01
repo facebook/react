@@ -443,7 +443,7 @@ if (supportsMutation) {
       // No changes, just reuse the existing instance.
     } else {
       const container = portalOrRoot.containerInfo;
-      let newChildSet = createContainerChildSet(container);
+      const newChildSet = createContainerChildSet(container);
       // If children might have changed, we have to add them all to the set.
       appendAllChildrenToContainer(newChildSet, workInProgress, false, false);
       portalOrRoot.pendingChildren = newChildSet;
@@ -489,7 +489,7 @@ if (supportsMutation) {
       workInProgress.stateNode = currentInstance;
       return;
     }
-    let newInstance = cloneInstance(
+    const newInstance = cloneInstance(
       currentInstance,
       updatePayload,
       type,
@@ -672,7 +672,7 @@ function completeWork(
       if (current === null || current.child === null) {
         // If we hydrated, pop so that we can delete any remaining children
         // that weren't hydrated.
-        let wasHydrated = popHydrationState(workInProgress);
+        const wasHydrated = popHydrationState(workInProgress);
         if (wasHydrated) {
           // If we hydrated, then we'll need to schedule an update for
           // the commit side-effects on the root.
@@ -722,7 +722,7 @@ function completeWork(
         // "stack" as the parent. Then append children as we go in beginWork
         // or completeWork depending on whether we want to add them top->down or
         // bottom->up. Top->down is faster in IE11.
-        let wasHydrated = popHydrationState(workInProgress);
+        const wasHydrated = popHydrationState(workInProgress);
         if (wasHydrated) {
           // TODO: Move this and createInstance step into the beginPhase
           // to consolidate.
@@ -748,7 +748,7 @@ function completeWork(
             }
           }
         } else {
-          let instance = createInstance(
+          const instance = createInstance(
             type,
             newProps,
             rootContainerInstance,
@@ -796,7 +796,7 @@ function completeWork(
       return null;
     }
     case HostText: {
-      let newText = newProps;
+      const newText = newProps;
       if (current && workInProgress.stateNode != null) {
         const oldText = current.memoizedProps;
         // If we have an alternate, that means this is an update and we need
@@ -813,7 +813,7 @@ function completeWork(
         }
         const rootContainerInstance = getRootHostContainer();
         const currentHostContext = getHostContext();
-        let wasHydrated = popHydrationState(workInProgress);
+        const wasHydrated = popHydrationState(workInProgress);
         if (wasHydrated) {
           if (prepareToHydrateHostTextInstance(workInProgress)) {
             markUpdate(workInProgress);
@@ -836,7 +836,7 @@ function completeWork(
       if (enableSuspenseServerRenderer) {
         if (nextState !== null && nextState.dehydrated !== null) {
           if (current === null) {
-            let wasHydrated = popHydrationState(workInProgress);
+            const wasHydrated = popHydrationState(workInProgress);
             invariant(
               wasHydrated,
               'A dehydrated suspense component was completed without a hydrated node. ' +
@@ -1002,7 +1002,7 @@ function completeWork(
       let didSuspendAlready =
         (workInProgress.effectTag & DidCapture) !== NoEffect;
 
-      let renderedTail = renderState.rendering;
+      const renderedTail = renderState.rendering;
       if (renderedTail === null) {
         // We just rendered the head.
         if (!didSuspendAlready) {
@@ -1017,13 +1017,13 @@ function completeWork(
           // something in the previous committed pass suspended. Otherwise,
           // there's no chance so we can skip the expensive call to
           // findFirstSuspended.
-          let cannotBeSuspended =
+          const cannotBeSuspended =
             renderHasNotSuspendedYet() &&
             (current === null || (current.effectTag & DidCapture) === NoEffect);
           if (!cannotBeSuspended) {
             let row = workInProgress.child;
             while (row !== null) {
-              let suspended = findFirstSuspended(row);
+              const suspended = findFirstSuspended(row);
               if (suspended !== null) {
                 didSuspendAlready = true;
                 workInProgress.effectTag |= DidCapture;
@@ -1041,7 +1041,7 @@ function completeWork(
                 // We might bail out of the loop before finding any but that
                 // doesn't matter since that means that the other boundaries that
                 // we did find already has their listeners attached.
-                let newThennables = suspended.updateQueue;
+                const newThennables = suspended.updateQueue;
                 if (newThennables !== null) {
                   workInProgress.updateQueue = newThennables;
                   workInProgress.effectTag |= Update;
@@ -1078,14 +1078,14 @@ function completeWork(
       } else {
         // Append the rendered row to the child list.
         if (!didSuspendAlready) {
-          let suspended = findFirstSuspended(renderedTail);
+          const suspended = findFirstSuspended(renderedTail);
           if (suspended !== null) {
             workInProgress.effectTag |= DidCapture;
             didSuspendAlready = true;
 
             // Ensure we transfer the update queue to the parent so that it doesn't
             // get lost if this row ends up dropped during a second pass.
-            let newThennables = suspended.updateQueue;
+            const newThennables = suspended.updateQueue;
             if (newThennables !== null) {
               workInProgress.updateQueue = newThennables;
               workInProgress.effectTag |= Update;
@@ -1101,7 +1101,7 @@ function completeWork(
               // We need to delete the row we just rendered.
               // Reset the effect list to what it was before we rendered this
               // child. The nested children have already appended themselves.
-              let lastEffect = (workInProgress.lastEffect =
+              const lastEffect = (workInProgress.lastEffect =
                 renderState.lastEffect);
               // Remove any effects that were appended after this point.
               if (lastEffect !== null) {
@@ -1147,7 +1147,7 @@ function completeWork(
           renderedTail.sibling = workInProgress.child;
           workInProgress.child = renderedTail;
         } else {
-          let previousSibling = renderState.last;
+          const previousSibling = renderState.last;
           if (previousSibling !== null) {
             previousSibling.sibling = renderedTail;
           } else {
@@ -1172,7 +1172,7 @@ function completeWork(
           // It should probably use a global start time value instead.
         }
         // Pop a row.
-        let next = renderState.tail;
+        const next = renderState.tail;
         renderState.rendering = next;
         renderState.tail = next.sibling;
         renderState.lastEffect = workInProgress.lastEffect;

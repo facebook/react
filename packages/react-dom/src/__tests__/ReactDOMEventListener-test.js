@@ -12,7 +12,7 @@
 describe('ReactDOMEventListener', () => {
   let React;
   let ReactDOM;
-  let ReactFeatureFlags = require('shared/ReactFeatureFlags');
+  const ReactFeatureFlags = require('shared/ReactFeatureFlags');
 
   beforeEach(() => {
     jest.resetModules();

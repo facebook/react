@@ -31,7 +31,7 @@ export type Response<T> = ResponseBase<T> & {
 };
 
 export function createResponse<T>(): Response<T> {
-  let response: Response<T> = (createResponseImpl(): any);
+  const response: Response<T> = (createResponseImpl(): any);
   response.fromJSON = function(key: string, value: JSONValue) {
     return parseModelFromJSON(response, this, key, value);
   };
@@ -45,27 +45,27 @@ function processFullRow<T>(response: Response<T>, row: string): void {
   if (row === '') {
     return;
   }
-  let tag = row[0];
+  const tag = row[0];
   switch (tag) {
     case 'J': {
-      let colon = row.indexOf(':', 1);
-      let id = parseInt(row.substring(1, colon), 16);
-      let json = row.substring(colon + 1);
-      let model = JSON.parse(json, response.fromJSON);
+      const colon = row.indexOf(':', 1);
+      const id = parseInt(row.substring(1, colon), 16);
+      const json = row.substring(colon + 1);
+      const model = JSON.parse(json, response.fromJSON);
       resolveModelChunk(response, id, model);
       return;
     }
     case 'E': {
-      let colon = row.indexOf(':', 1);
-      let id = parseInt(row.substring(1, colon), 16);
-      let json = row.substring(colon + 1);
-      let errorInfo = JSON.parse(json);
+      const colon = row.indexOf(':', 1);
+      const id = parseInt(row.substring(1, colon), 16);
+      const json = row.substring(colon + 1);
+      const errorInfo = JSON.parse(json);
       resolveErrorChunk(response, id, errorInfo.message, errorInfo.stack);
       return;
     }
     default: {
       // Assume this is the root model.
-      let model = JSON.parse(row, response.fromJSON);
+      const model = JSON.parse(row, response.fromJSON);
       resolveModelChunk(response, 0, model);
       return;
     }
@@ -79,7 +79,7 @@ export function processStringChunk<T>(
 ): void {
   let linebreak = chunk.indexOf('\n', offset);
   while (linebreak > -1) {
-    let fullrow = response.partialRow + chunk.substring(offset, linebreak);
+    const fullrow = response.partialRow + chunk.substring(offset, linebreak);
     processFullRow(response, fullrow);
     response.partialRow = '';
     offset = linebreak + 1;
@@ -95,10 +95,10 @@ export function processBinaryChunk<T>(
   if (!supportsBinaryStreams) {
     throw new Error("This environment don't support binary chunks.");
   }
-  let stringDecoder = response.stringDecoder;
+  const stringDecoder = response.stringDecoder;
   let linebreak = chunk.indexOf(10); // newline
   while (linebreak > -1) {
-    let fullrow =
+    const fullrow =
       response.partialRow +
       readFinalStringChunk(stringDecoder, chunk.subarray(0, linebreak));
     processFullRow(response, fullrow);

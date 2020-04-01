@@ -79,8 +79,8 @@ export function createRequest(
   destination: Destination,
   bundlerConfig: BundlerConfig,
 ): Request {
-  let pingedSegments = [];
-  let request = {
+  const pingedSegments = [];
+  const request = {
     destination,
     bundlerConfig,
     nextChunkId: 0,
@@ -94,14 +94,14 @@ export function createRequest(
     },
   };
   request.pendingChunks++;
-  let rootSegment = createSegment(request, () => model);
+  const rootSegment = createSegment(request, () => model);
   pingedSegments.push(rootSegment);
   return request;
 }
 
 function attemptResolveElement(element: React$Element<any>): ReactModel {
-  let type = element.type;
-  let props = element.props;
+  const type = element.type;
+  const props = element.props;
   if (typeof type === 'function') {
     // This is a server-side component.
     return type(props);
@@ -118,7 +118,7 @@ function attemptResolveElement(element: React$Element<any>): ReactModel {
 }
 
 function pingSegment(request: Request, segment: Segment): void {
-  let pingedSegments = request.pingedSegments;
+  const pingedSegments = request.pingedSegments;
   pingedSegments.push(segment);
   if (pingedSegments.length === 1) {
     scheduleWork(() => performWork(request));
@@ -126,8 +126,8 @@ function pingSegment(request: Request, segment: Segment): void {
 }
 
 function createSegment(request: Request, query: () => ReactModel): Segment {
-  let id = request.nextChunkId++;
-  let segment = {
+  const id = request.nextChunkId++;
+  const segment = {
     id,
     query,
     ping: () => pingSegment(request, segment),
@@ -176,23 +176,23 @@ export function resolveModelToJSON(
     switch (key) {
       case '1': {
         // Module reference
-        let moduleReference: ModuleReference<any> = (value: any);
+        const moduleReference: ModuleReference<any> = (value: any);
         try {
-          let moduleMetaData: ModuleMetaData = resolveModuleMetaData(
+          const moduleMetaData: ModuleMetaData = resolveModuleMetaData(
             request.bundlerConfig,
             moduleReference,
           );
           return (moduleMetaData: ReactJSONValue);
         } catch (x) {
           request.pendingChunks++;
-          let errorId = request.nextChunkId++;
+          const errorId = request.nextChunkId++;
           emitErrorChunk(request, errorId, x);
           return serializeIDRef(errorId);
         }
       }
       case '2': {
         // Load function
-        let load: () => ReactModel = (value: any);
+        const load: () => ReactModel = (value: any);
         try {
           // Attempt to resolve the data.
           return load();
@@ -204,14 +204,14 @@ export function resolveModelToJSON(
           ) {
             // Something suspended, we'll need to create a new segment and resolve it later.
             request.pendingChunks++;
-            let newSegment = createSegment(request, load);
-            let ping = newSegment.ping;
+            const newSegment = createSegment(request, load);
+            const ping = newSegment.ping;
             x.then(ping, ping);
             return serializeIDRef(newSegment.id);
           } else {
             // This load failed, encode the error as a separate row and reference that.
             request.pendingChunks++;
-            let errorId = request.nextChunkId++;
+            const errorId = request.nextChunkId++;
             emitErrorChunk(request, errorId, x);
             return serializeIDRef(errorId);
           }
@@ -238,7 +238,7 @@ export function resolveModelToJSON(
   ) {
     // TODO: Concatenate keys of parents onto children.
     // TODO: Allow elements to suspend independently and serialize as references to future elements.
-    let element: React$Element<any> = (value: any);
+    const element: React$Element<any> = (value: any);
     value = attemptResolveElement(element);
   }
 
@@ -262,20 +262,20 @@ function emitErrorChunk(request: Request, id: number, error: mixed): void {
     message = 'An error occurred but serializing the error message failed.';
   }
 
-  let processedChunk = processErrorChunk(request, id, message, stack);
+  const processedChunk = processErrorChunk(request, id, message, stack);
   request.completedErrorChunks.push(processedChunk);
 }
 
 function retrySegment(request: Request, segment: Segment): void {
-  let query = segment.query;
+  const query = segment.query;
   try {
-    let value = query();
-    let processedChunk = processModelChunk(request, segment.id, value);
+    const value = query();
+    const processedChunk = processModelChunk(request, segment.id, value);
     request.completedJSONChunks.push(processedChunk);
   } catch (x) {
     if (typeof x === 'object' && x !== null && typeof x.then === 'function') {
       // Something suspended again, let's pick it back up later.
-      let ping = segment.ping;
+      const ping = segment.ping;
       x.then(ping, ping);
       return;
     } else {
@@ -286,10 +286,10 @@ function retrySegment(request: Request, segment: Segment): void {
 }
 
 function performWork(request: Request): void {
-  let pingedSegments = request.pingedSegments;
+  const pingedSegments = request.pingedSegments;
   request.pingedSegments = [];
   for (let i = 0; i < pingedSegments.length; i++) {
-    let segment = pingedSegments[i];
+    const segment = pingedSegments[i];
     retrySegment(request, segment);
   }
   if (request.flowing) {
@@ -303,14 +303,14 @@ function flushCompletedChunks(request: Request): void {
     return;
   }
   reentrant = true;
-  let destination = request.destination;
+  const destination = request.destination;
   beginWriting(destination);
   try {
-    let jsonChunks = request.completedJSONChunks;
+    const jsonChunks = request.completedJSONChunks;
     let i = 0;
     for (; i < jsonChunks.length; i++) {
       request.pendingChunks--;
-      let chunk = jsonChunks[i];
+      const chunk = jsonChunks[i];
       if (!writeChunk(destination, chunk)) {
         request.flowing = false;
         i++;
@@ -318,11 +318,11 @@ function flushCompletedChunks(request: Request): void {
       }
     }
     jsonChunks.splice(0, i);
-    let errorChunks = request.completedErrorChunks;
+    const errorChunks = request.completedErrorChunks;
     i = 0;
     for (; i < errorChunks.length; i++) {
       request.pendingChunks--;
-      let chunk = errorChunks[i];
+      const chunk = errorChunks[i];
       if (!writeChunk(destination, chunk)) {
         request.flowing = false;
         i++;

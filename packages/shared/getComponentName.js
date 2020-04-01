@@ -90,8 +90,8 @@ function getComponentName(type: mixed): string | null {
         return getComponentName(type._render);
       case REACT_LAZY_TYPE: {
         const lazyComponent: LazyComponent<any, any> = (type: any);
-        let payload = lazyComponent._payload;
-        let init = lazyComponent._init;
+        const payload = lazyComponent._payload;
+        const init = lazyComponent._init;
         try {
           return getComponentName(init(payload));
         } catch (x) {

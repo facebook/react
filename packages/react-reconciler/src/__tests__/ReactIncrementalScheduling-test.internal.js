@@ -324,7 +324,7 @@ describe('ReactIncrementalScheduling', () => {
 
   it('nested updates are always deferred, even inside unbatchedUpdates', () => {
     let instance;
-    let ops = [];
+    const ops = [];
     class Foo extends React.Component {
       state = {step: 0};
       componentDidUpdate() {

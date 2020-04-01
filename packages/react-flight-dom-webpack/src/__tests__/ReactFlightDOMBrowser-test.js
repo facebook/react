@@ -55,16 +55,16 @@ describe('ReactFlightDOMBrowser', () => {
     }
 
     function App() {
-      let model = {
+      const model = {
         html: <HTML />,
       };
       return model;
     }
 
-    let stream = ReactFlightDOMServer.renderToReadableStream(<App />);
-    let response = ReactFlightDOMClient.createFromReadableStream(stream);
+    const stream = ReactFlightDOMServer.renderToReadableStream(<App />);
+    const response = ReactFlightDOMClient.createFromReadableStream(stream);
     await waitForSuspense(() => {
-      let model = response.readRoot();
+      const model = response.readRoot();
       expect(model).toEqual({
         html: (
           <div>

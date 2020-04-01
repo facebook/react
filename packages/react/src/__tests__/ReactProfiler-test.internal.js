@@ -818,7 +818,7 @@ describe('Profiler', () => {
             // The initial work was thrown away in this case,
             // So the actual and base times should only include the final rendered tree times.
             expect(callback).toHaveBeenCalledTimes(1);
-            let call = callback.mock.calls[0];
+            const call = callback.mock.calls[0];
             expect(call[2]).toBe(5); // actual time
             expect(call[3]).toBe(5); // base time
             expect(call[4]).toBe(115); // start time
@@ -1075,7 +1075,7 @@ describe('Profiler', () => {
                   expect(callback).toHaveBeenCalledTimes(2);
 
                   // Callbacks bubble (reverse order).
-                  let [mountCall, updateCall] = callback.mock.calls;
+                  const [mountCall, updateCall] = callback.mock.calls;
 
                   // The initial mount only includes the ErrorBoundary (which takes 2)
                   // But it spends time rendering all of the failed subtree also.
@@ -1154,7 +1154,7 @@ describe('Profiler', () => {
                   expect(callback).toHaveBeenCalledTimes(1);
 
                   // Callbacks bubble (reverse order).
-                  let [mountCall] = callback.mock.calls;
+                  const [mountCall] = callback.mock.calls;
 
                   // The initial mount includes the ErrorBoundary's error state,
                   // But it also spends actual time rendering UI that fails and isn't included.
@@ -3500,7 +3500,7 @@ describe('Profiler', () => {
       expect(onPostCommit).not.toHaveBeenCalled();
       expect(Scheduler).toFlushAndYield(['Child:1', 'onPostCommit']);
       expect(onPostCommit).toHaveBeenCalledTimes(1);
-      let call = onPostCommit.mock.calls[0];
+      const call = onPostCommit.mock.calls[0];
       expect(call[0]).toEqual('test-profiler');
       expect(call[4]).toMatchInteractions(
         ReactFeatureFlags.enableSchedulerTracing ? [interaction] : [],
@@ -3934,7 +3934,7 @@ describe('Profiler', () => {
       it('handles high-pri renderers between suspended and resolved (async) trees', async () => {
         // Set up an initial shell. We need to set this up before the test sceanrio
         // because we want initial render to suspend on navigation to the initial state.
-        let renderer = ReactTestRenderer.create(
+        const renderer = ReactTestRenderer.create(
           <React.Profiler id="app" onRender={() => {}}>
             <React.Suspense fallback={<Text text="loading" />} />
           </React.Profiler>,

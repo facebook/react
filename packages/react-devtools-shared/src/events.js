@@ -14,7 +14,7 @@ export default class EventEmitter<Events: Object> {
     event: Event,
     listener: (...$ElementType<Events, Event>) => any,
   ): void {
-    let listeners = this.listenersMap.get(event);
+    const listeners = this.listenersMap.get(event);
     if (listeners === undefined) {
       this.listenersMap.set(event, [listener]);
     } else {

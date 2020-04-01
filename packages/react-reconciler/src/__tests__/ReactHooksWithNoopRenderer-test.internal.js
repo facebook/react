@@ -299,7 +299,7 @@ describe('ReactHooksWithNoopRenderer', () => {
     });
 
     it('returns the same updater function every time', () => {
-      let updaters = [];
+      const updaters = [];
       function Counter() {
         const [count, updateCount] = useState(0);
         updaters.push(updateCount);
@@ -403,8 +403,8 @@ describe('ReactHooksWithNoopRenderer', () => {
   describe('updates during the render phase', () => {
     it('restarts the render function and applies the new updates on top', () => {
       function ScrollView({row: newRow}) {
-        let [isScrollingDown, setIsScrollingDown] = useState(false);
-        let [row, setRow] = useState(null);
+        const [isScrollingDown, setIsScrollingDown] = useState(false);
+        const [row, setRow] = useState(null);
 
         if (row !== newRow) {
           // Row changed since last render. Update isScrollingDown.
@@ -497,7 +497,7 @@ describe('ReactHooksWithNoopRenderer', () => {
 
     it('keeps restarting until there are no more new updates', () => {
       function Counter({row: newRow}) {
-        let [count, setCount] = useState(0);
+        const [count, setCount] = useState(0);
         if (count < 3) {
           setCount(count + 1);
         }
@@ -518,7 +518,7 @@ describe('ReactHooksWithNoopRenderer', () => {
 
     it('updates multiple times within same render function', () => {
       function Counter({row: newRow}) {
-        let [count, setCount] = useState(0);
+        const [count, setCount] = useState(0);
         if (count < 12) {
           setCount(c => c + 1);
           setCount(c => c + 1);
@@ -543,7 +543,7 @@ describe('ReactHooksWithNoopRenderer', () => {
 
     it('throws after too many iterations', () => {
       function Counter({row: newRow}) {
-        let [count, setCount] = useState(0);
+        const [count, setCount] = useState(0);
         setCount(count + 1);
         Scheduler.unstable_yieldValue('Render: ' + count);
         return <Text text={count} />;
@@ -560,7 +560,7 @@ describe('ReactHooksWithNoopRenderer', () => {
         return action === 'increment' ? state + 1 : state;
       }
       function Counter({row: newRow}) {
-        let [count, dispatch] = useReducer(reducer, 0);
+        const [count, dispatch] = useReducer(reducer, 0);
         if (count < 3) {
           dispatch('increment');
         }
@@ -601,8 +601,8 @@ describe('ReactHooksWithNoopRenderer', () => {
       }
 
       function Counter({row: newRow}, ref) {
-        let [reducer, setReducer] = useState(() => reducerA);
-        let [count, dispatch] = useReducer(reducer, 0);
+        const [reducer, setReducer] = useState(() => reducerA);
+        const [count, dispatch] = useReducer(reducer, 0);
         useImperativeHandle(ref, () => ({dispatch}));
         if (count < 20) {
           dispatch('increment');
@@ -658,8 +658,8 @@ describe('ReactHooksWithNoopRenderer', () => {
       }
 
       function Bar({signal: newSignal}) {
-        let [counter, setCounter] = useState(0);
-        let [signal, setSignal] = useState(true);
+        const [counter, setCounter] = useState(0);
+        const [signal, setSignal] = useState(true);
 
         // Increment a counter every time the signal changes
         if (signal !== newSignal) {
@@ -703,7 +703,7 @@ describe('ReactHooksWithNoopRenderer', () => {
 
       let setLabel;
       function Bar({signal: newSignal}) {
-        let [counter, setCounter] = useState(0);
+        const [counter, setCounter] = useState(0);
 
         if (counter === 1) {
           // We're suspending during a render that includes render phase
@@ -712,7 +712,7 @@ describe('ReactHooksWithNoopRenderer', () => {
           throw thenable;
         }
 
-        let [signal, setSignal] = useState(true);
+        const [signal, setSignal] = useState(true);
 
         // Increment a counter every time the signal changes
         if (signal !== newSignal) {
@@ -720,7 +720,7 @@ describe('ReactHooksWithNoopRenderer', () => {
           setSignal(newSignal);
         }
 
-        let [label, _setLabel] = useState('A');
+        const [label, _setLabel] = useState('A');
         setLabel = _setLabel;
 
         return <Text text={`${label}:${counter}`} />;
@@ -754,8 +754,8 @@ describe('ReactHooksWithNoopRenderer', () => {
     it.experimental('calling startTransition inside render phase', async () => {
       let startTransition;
       function App() {
-        let [counter, setCounter] = useState(0);
-        let [_startTransition] = useTransition();
+        const [counter, setCounter] = useState(0);
+        const [_startTransition] = useTransition();
         startTransition = _startTransition;
 
         if (counter === 0) {
@@ -937,7 +937,7 @@ describe('ReactHooksWithNoopRenderer', () => {
         }, []);
         return <Text text="Passive" />;
       }
-      let passive = <PassiveEffect key="p" />;
+      const passive = <PassiveEffect key="p" />;
       act(() => {
         ReactNoop.render([<LayoutEffect key="l" />, passive]);
         expect(Scheduler).toFlushAndYieldThrough([
@@ -967,7 +967,7 @@ describe('ReactHooksWithNoopRenderer', () => {
         return <Text text="Passive" />;
       }
       function LayoutEffect(props) {
-        let [count, setCount] = useState(0);
+        const [count, setCount] = useState(0);
         useLayoutEffect(() => {
           // Scheduling work shouldn't interfere with the queued passive effect
           if (count === 0) {

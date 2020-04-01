@@ -175,10 +175,10 @@ const eventResponderContext: ReactDOMResponderContext = {
     validateResponderContext();
     for (let i = 0; i < rootEventTypes.length; i++) {
       const rootEventType = rootEventTypes[i];
-      let rootEventResponders = rootEventTypesToEventResponderInstances.get(
+      const rootEventResponders = rootEventTypesToEventResponderInstances.get(
         rootEventType,
       );
-      let rootEventTypesSet = ((currentInstance: any): ReactDOMEventResponderInstance)
+      const rootEventTypesSet = ((currentInstance: any): ReactDOMEventResponderInstance)
         .rootEventTypes;
       if (rootEventTypesSet !== null) {
         rootEventTypesSet.delete(rootEventType);
@@ -462,7 +462,7 @@ export function unmountEventResponder(
   const responder = ((responderInstance.responder: any): ReactDOMEventResponder);
   const onUnmount = responder.onUnmount;
   if (onUnmount !== null) {
-    let {props, state} = responderInstance;
+    const {props, state} = responderInstance;
     const previousInstance = currentInstance;
     currentInstance = responderInstance;
     try {
@@ -477,7 +477,7 @@ export function unmountEventResponder(
 
     for (let i = 0; i < rootEventTypes.length; i++) {
       const topLevelEventType = rootEventTypes[i];
-      let rootEventResponderInstances = rootEventTypesToEventResponderInstances.get(
+      const rootEventResponderInstances = rootEventTypesToEventResponderInstances.get(
         topLevelEventType,
       );
       if (rootEventResponderInstances !== undefined) {

@@ -297,7 +297,7 @@ export default class ProfilerStore extends EventEmitter<{|
 
       // Record all renderer IDs initially too (in case of unmount)
       // eslint-disable-next-line no-for-of-loops/no-for-of-loops
-      for (let rendererID of this._store.rootIDToRendererID.values()) {
+      for (const rendererID of this._store.rootIDToRendererID.values()) {
         if (!this._initialRendererIDs.has(rendererID)) {
           this._initialRendererIDs.add(rendererID);
         }

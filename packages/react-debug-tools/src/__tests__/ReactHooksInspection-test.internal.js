@@ -39,7 +39,7 @@ describe('ReactHooksInspection', () => {
       });
       return <div DEPRECATED_flareListeners={listener}>Hello world</div>;
     }
-    let tree = ReactDebugTools.inspectHooks(Foo, {});
+    const tree = ReactDebugTools.inspectHooks(Foo, {});
     expect(tree).toEqual([
       {
         isStateEditable: false,
@@ -65,7 +65,7 @@ describe('ReactHooksInspection', () => {
       React.useEffect(effect);
       return <div ref={ref}>Hello world</div>;
     }
-    let tree = ReactDebugTools.inspectHooks(Foo, {});
+    const tree = ReactDebugTools.inspectHooks(Foo, {});
     expect(tree).toEqual([
       {
         isStateEditable: false,

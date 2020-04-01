@@ -219,7 +219,7 @@ setBatchingImplementation(
 );
 
 function computeComponentStackForErrorReporting(reactTag: number): string {
-  let fiber = getClosestInstanceFromNode(reactTag);
+  const fiber = getClosestInstanceFromNode(reactTag);
   if (!fiber) {
     return '';
   }

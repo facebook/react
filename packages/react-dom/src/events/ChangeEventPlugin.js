@@ -234,7 +234,7 @@ function getTargetInstForInputOrChangeEvent(topLevelType, targetInst) {
 }
 
 function handleControlledInputBlur(node) {
-  let state = node._wrapperState;
+  const state = node._wrapperState;
 
   if (
     !state ||

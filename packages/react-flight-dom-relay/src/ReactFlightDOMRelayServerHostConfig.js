@@ -84,17 +84,17 @@ function convertModelToJSON(
   key: string,
   model: ReactModel,
 ): JSONValue {
-  let json = resolveModelToJSON(request, parent, key, model);
+  const json = resolveModelToJSON(request, parent, key, model);
   if (typeof json === 'object' && json !== null) {
     if (Array.isArray(json)) {
-      let jsonArray: Array<JSONValue> = [];
+      const jsonArray: Array<JSONValue> = [];
       for (let i = 0; i < json.length; i++) {
         jsonArray[i] = convertModelToJSON(request, json, '' + i, json[i]);
       }
       return jsonArray;
     } else {
-      let jsonObj: {[key: string]: JSONValue} = {};
-      for (let nextKey in json) {
+      const jsonObj: {[key: string]: JSONValue} = {};
+      for (const nextKey in json) {
         jsonObj[nextKey] = convertModelToJSON(
           request,
           json,
@@ -113,7 +113,7 @@ export function processModelChunk(
   id: number,
   model: ReactModel,
 ): Chunk {
-  let json = convertModelToJSON(request, {}, '', model);
+  const json = convertModelToJSON(request, {}, '', model);
   return {
     type: 'json',
     id: id,

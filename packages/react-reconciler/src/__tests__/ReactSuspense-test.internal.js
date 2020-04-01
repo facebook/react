@@ -199,7 +199,7 @@ describe('ReactSuspense', () => {
 
   it('interrupts current render if promise resolves before current render phase', () => {
     let didResolve = false;
-    let listeners = [];
+    const listeners = [];
 
     const thenable = {
       then(resolve) {

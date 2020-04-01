@@ -133,7 +133,7 @@ describe('ReactErrorUtils', () => {
     const ReactErrorUtils2 = require('shared/ReactErrorUtils');
     expect(ReactErrorUtils1).not.toEqual(ReactErrorUtils2);
 
-    let ops = [];
+    const ops = [];
 
     ReactErrorUtils1.invokeGuardedCallback(
       null,

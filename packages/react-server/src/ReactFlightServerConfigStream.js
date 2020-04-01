@@ -84,8 +84,8 @@ export function processErrorChunk(
   message: string,
   stack: string,
 ): Chunk {
-  let errorInfo = {message, stack};
-  let row = serializeRowHeader('E', id) + stringify(errorInfo) + '\n';
+  const errorInfo = {message, stack};
+  const row = serializeRowHeader('E', id) + stringify(errorInfo) + '\n';
   return convertStringToBuffer(row);
 }
 
@@ -94,7 +94,7 @@ export function processModelChunk(
   id: number,
   model: ReactModel,
 ): Chunk {
-  let json = stringify(model, request.toJSON);
+  const json = stringify(model, request.toJSON);
   let row;
   if (id === 0) {
     row = json + '\n';

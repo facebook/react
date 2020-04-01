@@ -734,7 +734,7 @@ function TreeContextController({
       prevSelectedElementID.current = state.selectedElementID;
 
       if (state.selectedElementID !== null) {
-        let element = store.getElementByID(state.selectedElementID);
+        const element = store.getElementByID(state.selectedElementID);
         if (element !== null && element.parentID > 0) {
           store.toggleIsCollapsed(element.parentID, false);
         }

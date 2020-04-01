@@ -740,7 +740,7 @@ function finishConcurrentRender(
         // and after that's fixed it can only be a retry. We're going to
         // throttle committing retries so that we don't show too many
         // loading states too quickly.
-        let msUntilTimeout =
+        const msUntilTimeout =
           globalMostRecentFallbackTime + FALLBACK_THROTTLE_MS - now();
         // Don't bother with a very short suspense time.
         if (msUntilTimeout > 10) {
@@ -2064,7 +2064,7 @@ function commitMutationEffects(root: FiberRoot, renderPriorityLevel) {
     // updates, and deletions. To avoid needing to add a case for every possible
     // bitmap value, we remove the secondary effects from the effect tag and
     // switch on that value.
-    let primaryEffectTag =
+    const primaryEffectTag =
       effectTag & (Placement | Update | Deletion | Hydrating);
     switch (primaryEffectTag) {
       case Placement: {
@@ -2238,7 +2238,7 @@ function flushPassiveEffectsImpl() {
     // Layout effects have the same constraint.
 
     // First pass: Destroy stale passive effects.
-    let unmountEffects = pendingPassiveHookEffectsUnmount;
+    const unmountEffects = pendingPassiveHookEffectsUnmount;
     pendingPassiveHookEffectsUnmount = [];
     for (let i = 0; i < unmountEffects.length; i += 2) {
       const effect = ((unmountEffects[i]: any): HookEffect);
@@ -2289,7 +2289,7 @@ function flushPassiveEffectsImpl() {
       }
     }
     // Second pass: Create new passive effects.
-    let mountEffects = pendingPassiveHookEffectsMount;
+    const mountEffects = pendingPassiveHookEffectsMount;
     pendingPassiveHookEffectsMount = [];
     for (let i = 0; i < mountEffects.length; i += 2) {
       const effect = ((mountEffects[i]: any): HookEffect);
@@ -2368,7 +2368,7 @@ function flushPassiveEffectsImpl() {
   }
 
   if (enableProfilerTimer && enableProfilerCommitHooks) {
-    let profilerEffects = pendingPassiveProfilerEffects;
+    const profilerEffects = pendingPassiveProfilerEffects;
     pendingPassiveProfilerEffects = [];
     for (let i = 0; i < profilerEffects.length; i++) {
       const fiber = ((profilerEffects[i]: any): Fiber);
@@ -2765,7 +2765,7 @@ function warnAboutUpdateOnUnmountedFiberInDEV(fiber) {
 
 let beginWork;
 if (__DEV__ && replayFailedUnitOfWorkWithInvokeGuardedCallback) {
-  let dummyFiber = null;
+  const dummyFiber = null;
   beginWork = (current, unitOfWork, expirationTime) => {
     // If a component throws an error, we replay it again in a synchronously
     // dispatched event, so that the debugger will treat it as an uncaught

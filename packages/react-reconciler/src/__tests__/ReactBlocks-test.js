@@ -27,7 +27,7 @@ describe('ReactBlocks', () => {
     block = React.block;
     useState = React.useState;
     Suspense = React.Suspense;
-    let cache = new Map();
+    const cache = new Map();
     readString = function(text) {
       let entry = cache.get(text);
       if (!entry) {
@@ -62,7 +62,7 @@ describe('ReactBlocks', () => {
       );
     }
 
-    let loadUser = block(User);
+    const loadUser = block(User);
 
     ReactNoop.act(() => {
       ReactNoop.render(<App Component={loadUser()} />);
@@ -79,7 +79,7 @@ describe('ReactBlocks', () => {
     }
 
     function User(props, data) {
-      let array = [<span>{data.name}</span>];
+      const array = [<span>{data.name}</span>];
       return <div>{array}</div>;
     }
 
@@ -91,7 +91,7 @@ describe('ReactBlocks', () => {
       );
     }
 
-    let loadUser = block(User, load);
+    const loadUser = block(User, load);
 
     expect(() => {
       ReactNoop.act(() => {
@@ -124,7 +124,7 @@ describe('ReactBlocks', () => {
       );
     }
 
-    let loadUser = block(Render, load);
+    const loadUser = block(Render, load);
 
     function App({User}) {
       return (
@@ -165,7 +165,7 @@ describe('ReactBlocks', () => {
         );
       }
 
-      let loadUser = block(Render, load);
+      const loadUser = block(Render, load);
 
       function App({User}) {
         return (
@@ -176,7 +176,7 @@ describe('ReactBlocks', () => {
       }
 
       let resolveLazy;
-      let LazyUser = React.lazy(
+      const LazyUser = React.lazy(
         () =>
           new Promise(resolve => {
             resolveLazy = function() {
@@ -216,7 +216,7 @@ describe('ReactBlocks', () => {
       }
 
       function Render(props, data) {
-        let [initialName] = useState(data.name);
+        const [initialName] = useState(data.name);
         return (
           <>
             <span>Initial name: {initialName}</span>
@@ -225,7 +225,7 @@ describe('ReactBlocks', () => {
         );
       }
 
-      let loadUser = block(Render, load);
+      const loadUser = block(Render, load);
 
       function App({User}) {
         return (

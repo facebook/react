@@ -26,7 +26,7 @@ describe('ReactDOMSelect', () => {
   });
 
   it('should allow setting `defaultValue`', () => {
-    let stub = (
+    const stub = (
       <select defaultValue="giraffe">
         <option value="monkey">A monkey!</option>
         <option value="giraffe">A giraffe!</option>
@@ -75,7 +75,7 @@ describe('ReactDOMSelect', () => {
   });
 
   it('should allow setting `defaultValue` with multiple', () => {
-    let stub = (
+    const stub = (
       <select multiple={true} defaultValue={['giraffe', 'gorilla']}>
         <option value="monkey">A monkey!</option>
         <option value="giraffe">A giraffe!</option>
@@ -104,7 +104,7 @@ describe('ReactDOMSelect', () => {
   });
 
   it('should allow setting `value`', () => {
-    let stub = (
+    const stub = (
       <select value="giraffe" onChange={noop}>
         <option value="monkey">A monkey!</option>
         <option value="giraffe">A giraffe!</option>
@@ -128,7 +128,7 @@ describe('ReactDOMSelect', () => {
   });
 
   it('should default to the first non-disabled option', () => {
-    let stub = (
+    const stub = (
       <select defaultValue="">
         <option disabled={true}>Disabled</option>
         <option disabled={true}>Still Disabled</option>
@@ -143,7 +143,7 @@ describe('ReactDOMSelect', () => {
   });
 
   it('should allow setting `value` to __proto__', () => {
-    let stub = (
+    const stub = (
       <select value="__proto__" onChange={noop}>
         <option value="monkey">A monkey!</option>
         <option value="__proto__">A giraffe!</option>
@@ -175,7 +175,7 @@ describe('ReactDOMSelect', () => {
   });
 
   it('should allow setting `value` with multiple', () => {
-    let stub = (
+    const stub = (
       <select multiple={true} value={['giraffe', 'gorilla']} onChange={noop}>
         <option value="monkey">A monkey!</option>
         <option value="giraffe">A giraffe!</option>
@@ -204,7 +204,7 @@ describe('ReactDOMSelect', () => {
   });
 
   it('should allow setting `value` to __proto__ with multiple', () => {
-    let stub = (
+    const stub = (
       <select multiple={true} value={['__proto__', 'gorilla']} onChange={noop}>
         <option value="monkey">A monkey!</option>
         <option value="__proto__">A __proto__!</option>
@@ -233,7 +233,7 @@ describe('ReactDOMSelect', () => {
   });
 
   it('should not select other options automatically', () => {
-    let stub = (
+    const stub = (
       <select multiple={true} value={['12']} onChange={noop}>
         <option value="1">one</option>
         <option value="2">two</option>
@@ -248,7 +248,7 @@ describe('ReactDOMSelect', () => {
   });
 
   it('should reset child options selected when they are changed and `value` is set', () => {
-    let stub = <select multiple={true} value={['a', 'b']} onChange={noop} />;
+    const stub = <select multiple={true} value={['a', 'b']} onChange={noop} />;
     const container = document.createElement('div');
     const node = ReactDOM.render(stub, container);
 
@@ -306,7 +306,7 @@ describe('ReactDOMSelect', () => {
   });
 
   it('should allow switching to multiple', () => {
-    let stub = (
+    const stub = (
       <select defaultValue="giraffe">
         <option value="monkey">A monkey!</option>
         <option value="giraffe">A giraffe!</option>
@@ -335,7 +335,7 @@ describe('ReactDOMSelect', () => {
   });
 
   it('should allow switching from multiple', () => {
-    let stub = (
+    const stub = (
       <select multiple={true} defaultValue={['giraffe', 'gorilla']}>
         <option value="monkey">A monkey!</option>
         <option value="giraffe">A giraffe!</option>
@@ -389,7 +389,7 @@ describe('ReactDOMSelect', () => {
   });
 
   it('should remember value when switching to uncontrolled', () => {
-    let stub = (
+    const stub = (
       <select value={'giraffe'} onChange={noop}>
         <option value="monkey">A monkey!</option>
         <option value="giraffe">A giraffe!</option>
@@ -412,7 +412,7 @@ describe('ReactDOMSelect', () => {
   });
 
   it('should remember updated value when switching to uncontrolled', () => {
-    let stub = (
+    const stub = (
       <select value={'giraffe'} onChange={noop}>
         <option value="monkey">A monkey!</option>
         <option value="giraffe">A giraffe!</option>
@@ -663,7 +663,7 @@ describe('ReactDOMSelect', () => {
   });
 
   it('should refresh state on change', () => {
-    let stub = (
+    const stub = (
       <select value="giraffe" onChange={noop}>
         <option value="monkey">A monkey!</option>
         <option value="giraffe">A giraffe!</option>
@@ -725,7 +725,7 @@ describe('ReactDOMSelect', () => {
     }
 
     const container = document.createElement('div');
-    let stub = (
+    const stub = (
       <select value="giraffe" onChange={changeView}>
         <option value="monkey">A monkey!</option>
         <option value="giraffe">A giraffe!</option>

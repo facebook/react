@@ -98,13 +98,13 @@ function lazyInitializer<T>(payload: Payload<T>): T {
 export function lazy<T>(
   ctor: () => Thenable<{default: T, ...}>,
 ): LazyComponent<T, Payload<T>> {
-  let payload: Payload<T> = {
+  const payload: Payload<T> = {
     // We use these fields to store the result.
     _status: -1,
     _result: ctor,
   };
 
-  let lazyType: LazyComponent<T, Payload<T>> = {
+  const lazyType: LazyComponent<T, Payload<T>> = {
     $$typeof: REACT_LAZY_TYPE,
     _payload: payload,
     _init: lazyInitializer,

@@ -120,7 +120,7 @@ export function findFirstSuspended(row: Fiber): null | Fiber {
       // keep track of whether it suspended or not.
       node.memoizedProps.revealOrder !== undefined
     ) {
-      let didSuspend = (node.effectTag & DidCapture) !== NoEffect;
+      const didSuspend = (node.effectTag & DidCapture) !== NoEffect;
       if (didSuspend) {
         return node;
       }

@@ -97,7 +97,7 @@ function accessResult<I, K, V>(
     entriesForResource = new Map();
     entries.set(resource, entriesForResource);
   }
-  let entry = entriesForResource.get(key);
+  const entry = entriesForResource.get(key);
   if (entry === undefined) {
     const thenable = fetch(input);
     thenable.then(

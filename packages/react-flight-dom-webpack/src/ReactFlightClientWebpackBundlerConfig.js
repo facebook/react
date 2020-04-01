@@ -31,14 +31,14 @@ const chunkCache: Map<string, null | Promise<any> | Error> = new Map();
 // Start preloading the modules since we might need them soon.
 // This function doesn't suspend.
 export function preloadModule<T>(moduleData: ModuleReference<T>): void {
-  let chunks = moduleData.chunks;
+  const chunks = moduleData.chunks;
   for (let i = 0; i < chunks.length; i++) {
-    let chunkId = chunks[i];
-    let entry = chunkCache.get(chunkId);
+    const chunkId = chunks[i];
+    const entry = chunkCache.get(chunkId);
     if (entry === undefined) {
-      let thenable = __webpack_chunk_load__(chunkId);
-      let resolve = chunkCache.set.bind(chunkCache, chunkId, null);
-      let reject = chunkCache.set.bind(chunkCache, chunkId);
+      const thenable = __webpack_chunk_load__(chunkId);
+      const resolve = chunkCache.set.bind(chunkCache, chunkId, null);
+      const reject = chunkCache.set.bind(chunkCache, chunkId);
       thenable.then(resolve, reject);
       chunkCache.set(chunkId, thenable);
     }
@@ -48,10 +48,10 @@ export function preloadModule<T>(moduleData: ModuleReference<T>): void {
 // Actually require the module or suspend if it's not yet ready.
 // Increase priority if necessary.
 export function requireModule<T>(moduleData: ModuleReference<T>): T {
-  let chunks = moduleData.chunks;
+  const chunks = moduleData.chunks;
   for (let i = 0; i < chunks.length; i++) {
-    let chunkId = chunks[i];
-    let entry = chunkCache.get(chunkId);
+    const chunkId = chunks[i];
+    const entry = chunkCache.get(chunkId);
     if (entry !== null) {
       // We assume that preloadModule has been called before.
       // So we don't expect to see entry being undefined here, that's an error.

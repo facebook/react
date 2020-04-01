@@ -528,7 +528,7 @@ export function resetWorkInProgress(
   workInProgress.firstEffect = null;
   workInProgress.lastEffect = null;
 
-  let current = workInProgress.alternate;
+  const current = workInProgress.alternate;
   if (current === null) {
     // Reset to createFiber's initial values.
     workInProgress.childExpirationTime = NoWork;

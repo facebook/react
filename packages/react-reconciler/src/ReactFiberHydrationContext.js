@@ -381,8 +381,8 @@ function prepareToHydrateHostSuspenseInstance(fiber: Fiber): void {
     );
   }
 
-  let suspenseState: null | SuspenseState = fiber.memoizedState;
-  let suspenseInstance: null | SuspenseInstance =
+  const suspenseState: null | SuspenseState = fiber.memoizedState;
+  const suspenseInstance: null | SuspenseInstance =
     suspenseState !== null ? suspenseState.dehydrated : null;
   invariant(
     suspenseInstance,
@@ -402,8 +402,8 @@ function skipPastDehydratedSuspenseInstance(
         'This error is likely caused by a bug in React. Please file an issue.',
     );
   }
-  let suspenseState: null | SuspenseState = fiber.memoizedState;
-  let suspenseInstance: null | SuspenseInstance =
+  const suspenseState: null | SuspenseState = fiber.memoizedState;
+  const suspenseInstance: null | SuspenseInstance =
     suspenseState !== null ? suspenseState.dehydrated : null;
   invariant(
     suspenseInstance,

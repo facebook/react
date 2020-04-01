@@ -35,7 +35,7 @@ type InProgressRequest = {|
 const inProgressRequests: WeakMap<Element, InProgressRequest> = new WeakMap();
 const resource: Resource<Element, Element, Array<Owner>> = createResource(
   (element: Element) => {
-    let request = inProgressRequests.get(element);
+    const request = inProgressRequests.get(element);
     if (request != null) {
       return request.promise;
     }

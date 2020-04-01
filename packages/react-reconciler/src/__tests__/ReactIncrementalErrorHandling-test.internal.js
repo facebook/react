@@ -1451,7 +1451,7 @@ describe('ReactIncrementalErrorHandling', () => {
   it('error boundaries capture non-errors', () => {
     spyOnProd(console, 'error');
     spyOnDev(console, 'error');
-    let ops = [];
+    const ops = [];
 
     class ErrorBoundary extends React.Component {
       state = {error: null};

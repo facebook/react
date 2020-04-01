@@ -482,7 +482,7 @@ describe('TreeListContext', () => {
       utils.act(() => (renderer = TestRenderer.create(<Contexts />)));
       expect(state).toMatchSnapshot('1: initial state');
 
-      let parentID = ((store.getElementIDAtIndex(1): any): number);
+      const parentID = ((store.getElementIDAtIndex(1): any): number);
       utils.act(() => dispatch({type: 'SELECT_OWNER', payload: parentID}));
       utils.act(() => renderer.update(<Contexts />));
       expect(state).toMatchSnapshot('2: parent owners tree');
@@ -507,7 +507,7 @@ describe('TreeListContext', () => {
       utils.act(() => (renderer = TestRenderer.create(<Contexts />)));
       expect(state).toMatchSnapshot('1: initial state');
 
-      let parentID = ((store.getElementIDAtIndex(1): any): number);
+      const parentID = ((store.getElementIDAtIndex(1): any): number);
       utils.act(() => dispatch({type: 'SELECT_OWNER', payload: parentID}));
       utils.act(() => renderer.update(<Contexts />));
       expect(state).toMatchSnapshot('2: parent owners tree');
@@ -545,7 +545,7 @@ describe('TreeListContext', () => {
       utils.act(() => (renderer = TestRenderer.create(<Contexts />)));
       expect(state).toMatchSnapshot('1: initial state');
 
-      let childID = ((store.getElementIDAtIndex(1): any): number);
+      const childID = ((store.getElementIDAtIndex(1): any): number);
       utils.act(() => dispatch({type: 'SELECT_OWNER', payload: childID}));
       utils.act(() => renderer.update(<Contexts />));
       expect(state).toMatchSnapshot('2: child owners tree');
@@ -553,7 +553,7 @@ describe('TreeListContext', () => {
       await utils.actAsync(() => ReactDOM.render(<Parent />, container));
       expect(state).toMatchSnapshot('3: remove child');
 
-      let parentID = ((store.getElementIDAtIndex(0): any): number);
+      const parentID = ((store.getElementIDAtIndex(0): any): number);
       utils.act(() => dispatch({type: 'SELECT_OWNER', payload: parentID}));
       utils.act(() => renderer.update(<Contexts />));
       expect(state).toMatchSnapshot('4: parent owners tree');

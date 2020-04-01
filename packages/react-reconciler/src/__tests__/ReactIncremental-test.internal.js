@@ -2476,10 +2476,10 @@ describe('ReactIncremental', () => {
   });
 
   xit('should reuse memoized work if pointers are updated before calling lifecycles', () => {
-    let cduNextProps = [];
-    let cduPrevProps = [];
-    let scuNextProps = [];
-    let scuPrevProps = [];
+    const cduNextProps = [];
+    const cduPrevProps = [];
+    const scuNextProps = [];
+    const scuPrevProps = [];
     let renderCounter = 0;
 
     function SecondChild(props) {
@@ -2559,7 +2559,7 @@ describe('ReactIncremental', () => {
   });
 
   it('updates descendants with new context values', () => {
-    let rendered = [];
+    const rendered = [];
     let instance;
 
     class TopContextProvider extends React.Component {
@@ -2616,7 +2616,7 @@ describe('ReactIncremental', () => {
   });
 
   it('updates descendants with multiple context-providing ancestors with new context values', () => {
-    let rendered = [];
+    const rendered = [];
     let instance;
 
     class TopContextProvider extends React.Component {
@@ -2679,7 +2679,7 @@ describe('ReactIncremental', () => {
   });
 
   it('should not update descendants with new context values if shouldComponentUpdate returns false', () => {
-    let rendered = [];
+    const rendered = [];
     let instance;
 
     class TopContextProvider extends React.Component {
@@ -2751,7 +2751,7 @@ describe('ReactIncremental', () => {
   });
 
   it('should update descendants with new context values if setState() is called in the middle of the tree', () => {
-    let rendered = [];
+    const rendered = [];
     let middleInstance;
     let topInstance;
 

@@ -95,7 +95,7 @@ describe('ReactDOMServerSelectiveHydration', () => {
   beforeEach(() => {
     jest.resetModuleRegistry();
 
-    let ReactFeatureFlags = require('shared/ReactFeatureFlags');
+    const ReactFeatureFlags = require('shared/ReactFeatureFlags');
     ReactFeatureFlags.enableDeprecatedFlareAPI = true;
     ReactFeatureFlags.debugRenderPhaseSideEffectsForStrictMode = false;
 
@@ -140,19 +140,19 @@ describe('ReactDOMServerSelectiveHydration', () => {
       );
     }
 
-    let finalHTML = ReactDOMServer.renderToString(<App />);
+    const finalHTML = ReactDOMServer.renderToString(<App />);
 
     expect(Scheduler).toHaveYielded(['App', 'A', 'B']);
 
-    let container = document.createElement('div');
+    const container = document.createElement('div');
     // We need this to be in the document since we'll dispatch events on it.
     document.body.appendChild(container);
 
     container.innerHTML = finalHTML;
 
-    let span = container.getElementsByTagName('span')[1];
+    const span = container.getElementsByTagName('span')[1];
 
-    let root = ReactDOM.createRoot(container, {hydrate: true});
+    const root = ReactDOM.createRoot(container, {hydrate: true});
     root.render(<App />);
 
     // Nothing has been hydrated so far.
@@ -160,7 +160,7 @@ describe('ReactDOMServerSelectiveHydration', () => {
 
     // This should synchronously hydrate the root App and the second suspense
     // boundary.
-    let result = dispatchClickEvent(span);
+    const result = dispatchClickEvent(span);
 
     // The event should have been canceled because we called preventDefault.
     expect(result).toBe(false);
@@ -177,7 +177,7 @@ describe('ReactDOMServerSelectiveHydration', () => {
   it('hydrates at higher pri if sync did not work first time', async () => {
     let suspend = false;
     let resolve;
-    let promise = new Promise(resolvePromise => (resolve = resolvePromise));
+    const promise = new Promise(resolvePromise => (resolve = resolvePromise));
 
     function Child({text}) {
       if ((text === 'A' || text === 'D') && suspend) {
@@ -215,30 +215,30 @@ describe('ReactDOMServerSelectiveHydration', () => {
       );
     }
 
-    let finalHTML = ReactDOMServer.renderToString(<App />);
+    const finalHTML = ReactDOMServer.renderToString(<App />);
 
     expect(Scheduler).toHaveYielded(['App', 'A', 'B', 'C', 'D']);
 
-    let container = document.createElement('div');
+    const container = document.createElement('div');
     // We need this to be in the document since we'll dispatch events on it.
     document.body.appendChild(container);
 
     container.innerHTML = finalHTML;
 
-    let spanD = container.getElementsByTagName('span')[3];
+    const spanD = container.getElementsByTagName('span')[3];
 
     suspend = true;
 
     // A and D will be suspended. We'll click on D which should take
     // priority, after we unsuspend.
-    let root = ReactDOM.createRoot(container, {hydrate: true});
+    const root = ReactDOM.createRoot(container, {hydrate: true});
     root.render(<App />);
 
     // Nothing has been hydrated so far.
     expect(Scheduler).toHaveYielded([]);
 
     // This click target cannot be hydrated yet because it's suspended.
-    let result = dispatchClickEvent(spanD);
+    const result = dispatchClickEvent(spanD);
 
     expect(Scheduler).toHaveYielded(['App']);
 
@@ -261,7 +261,7 @@ describe('ReactDOMServerSelectiveHydration', () => {
   it('hydrates at higher pri for secondary discrete events', async () => {
     let suspend = false;
     let resolve;
-    let promise = new Promise(resolvePromise => (resolve = resolvePromise));
+    const promise = new Promise(resolvePromise => (resolve = resolvePromise));
 
     function Child({text}) {
       if ((text === 'A' || text === 'D') && suspend) {
@@ -299,25 +299,25 @@ describe('ReactDOMServerSelectiveHydration', () => {
       );
     }
 
-    let finalHTML = ReactDOMServer.renderToString(<App />);
+    const finalHTML = ReactDOMServer.renderToString(<App />);
 
     expect(Scheduler).toHaveYielded(['App', 'A', 'B', 'C', 'D']);
 
-    let container = document.createElement('div');
+    const container = document.createElement('div');
     // We need this to be in the document since we'll dispatch events on it.
     document.body.appendChild(container);
 
     container.innerHTML = finalHTML;
 
-    let spanA = container.getElementsByTagName('span')[0];
-    let spanC = container.getElementsByTagName('span')[2];
-    let spanD = container.getElementsByTagName('span')[3];
+    const spanA = container.getElementsByTagName('span')[0];
+    const spanC = container.getElementsByTagName('span')[2];
+    const spanD = container.getElementsByTagName('span')[3];
 
     suspend = true;
 
     // A and D will be suspended. We'll click on D which should take
     // priority, after we unsuspend.
-    let root = ReactDOM.createRoot(container, {hydrate: true});
+    const root = ReactDOM.createRoot(container, {hydrate: true});
     root.render(<App />);
 
     // Nothing has been hydrated so far.
@@ -352,7 +352,7 @@ describe('ReactDOMServerSelectiveHydration', () => {
 
   if (__EXPERIMENTAL__) {
     it('hydrates the target boundary synchronously during a click (flare)', async () => {
-      let usePress = require('react-interactions/events/press').usePress;
+      const usePress = require('react-interactions/events/press').usePress;
 
       function Child({text}) {
         Scheduler.unstable_yieldValue(text);
@@ -379,29 +379,29 @@ describe('ReactDOMServerSelectiveHydration', () => {
         );
       }
 
-      let finalHTML = ReactDOMServer.renderToString(<App />);
+      const finalHTML = ReactDOMServer.renderToString(<App />);
 
       expect(Scheduler).toHaveYielded(['App', 'A', 'B']);
 
-      let container = document.createElement('div');
+      const container = document.createElement('div');
       // We need this to be in the document since we'll dispatch events on it.
       document.body.appendChild(container);
 
       container.innerHTML = finalHTML;
 
-      let root = ReactDOM.createRoot(container, {hydrate: true});
+      const root = ReactDOM.createRoot(container, {hydrate: true});
       root.render(<App />);
 
       // Nothing has been hydrated so far.
       expect(Scheduler).toHaveYielded([]);
 
-      let span = container.getElementsByTagName('span')[1];
+      const span = container.getElementsByTagName('span')[1];
 
-      let target = createEventTarget(span);
+      const target = createEventTarget(span);
 
       // This should synchronously hydrate the root App and the second suspense
       // boundary.
-      let preventDefault = jest.fn();
+      const preventDefault = jest.fn();
       target.virtualclick({preventDefault});
 
       // The event should have been canceled because we called preventDefault.
@@ -417,10 +417,10 @@ describe('ReactDOMServerSelectiveHydration', () => {
     });
 
     it('hydrates at higher pri if sync did not work first time (flare)', async () => {
-      let usePress = require('react-interactions/events/press').usePress;
+      const usePress = require('react-interactions/events/press').usePress;
       let suspend = false;
       let resolve;
-      let promise = new Promise(resolvePromise => (resolve = resolvePromise));
+      const promise = new Promise(resolvePromise => (resolve = resolvePromise));
 
       function Child({text}) {
         if ((text === 'A' || text === 'D') && suspend) {
@@ -456,30 +456,30 @@ describe('ReactDOMServerSelectiveHydration', () => {
         );
       }
 
-      let finalHTML = ReactDOMServer.renderToString(<App />);
+      const finalHTML = ReactDOMServer.renderToString(<App />);
 
       expect(Scheduler).toHaveYielded(['App', 'A', 'B', 'C', 'D']);
 
-      let container = document.createElement('div');
+      const container = document.createElement('div');
       // We need this to be in the document since we'll dispatch events on it.
       document.body.appendChild(container);
 
       container.innerHTML = finalHTML;
 
-      let spanD = container.getElementsByTagName('span')[3];
+      const spanD = container.getElementsByTagName('span')[3];
 
       suspend = true;
 
       // A and D will be suspended. We'll click on D which should take
       // priority, after we unsuspend.
-      let root = ReactDOM.createRoot(container, {hydrate: true});
+      const root = ReactDOM.createRoot(container, {hydrate: true});
       root.render(<App />);
 
       // Nothing has been hydrated so far.
       expect(Scheduler).toHaveYielded([]);
 
       // This click target cannot be hydrated yet because it's suspended.
-      let result = dispatchClickEvent(spanD);
+      const result = dispatchClickEvent(spanD);
 
       expect(Scheduler).toHaveYielded(['App']);
 
@@ -500,10 +500,10 @@ describe('ReactDOMServerSelectiveHydration', () => {
     });
 
     it('hydrates at higher pri for secondary discrete events (flare)', async () => {
-      let usePress = require('react-interactions/events/press').usePress;
+      const usePress = require('react-interactions/events/press').usePress;
       let suspend = false;
       let resolve;
-      let promise = new Promise(resolvePromise => (resolve = resolvePromise));
+      const promise = new Promise(resolvePromise => (resolve = resolvePromise));
 
       function Child({text}) {
         if ((text === 'A' || text === 'D') && suspend) {
@@ -539,25 +539,25 @@ describe('ReactDOMServerSelectiveHydration', () => {
         );
       }
 
-      let finalHTML = ReactDOMServer.renderToString(<App />);
+      const finalHTML = ReactDOMServer.renderToString(<App />);
 
       expect(Scheduler).toHaveYielded(['App', 'A', 'B', 'C', 'D']);
 
-      let container = document.createElement('div');
+      const container = document.createElement('div');
       // We need this to be in the document since we'll dispatch events on it.
       document.body.appendChild(container);
 
       container.innerHTML = finalHTML;
 
-      let spanA = container.getElementsByTagName('span')[0];
-      let spanC = container.getElementsByTagName('span')[2];
-      let spanD = container.getElementsByTagName('span')[3];
+      const spanA = container.getElementsByTagName('span')[0];
+      const spanC = container.getElementsByTagName('span')[2];
+      const spanD = container.getElementsByTagName('span')[3];
 
       suspend = true;
 
       // A and D will be suspended. We'll click on D which should take
       // priority, after we unsuspend.
-      let root = ReactDOM.createRoot(container, {hydrate: true});
+      const root = ReactDOM.createRoot(container, {hydrate: true});
       root.render(<App />);
 
       // Nothing has been hydrated so far.
@@ -594,7 +594,7 @@ describe('ReactDOMServerSelectiveHydration', () => {
   it('hydrates the hovered targets as higher priority for continuous events', async () => {
     let suspend = false;
     let resolve;
-    let promise = new Promise(resolvePromise => (resolve = resolvePromise));
+    const promise = new Promise(resolvePromise => (resolve = resolvePromise));
 
     function Child({text}) {
       if ((text === 'A' || text === 'D') && suspend) {
@@ -636,25 +636,25 @@ describe('ReactDOMServerSelectiveHydration', () => {
       );
     }
 
-    let finalHTML = ReactDOMServer.renderToString(<App />);
+    const finalHTML = ReactDOMServer.renderToString(<App />);
 
     expect(Scheduler).toHaveYielded(['App', 'A', 'B', 'C', 'D']);
 
-    let container = document.createElement('div');
+    const container = document.createElement('div');
     // We need this to be in the document since we'll dispatch events on it.
     document.body.appendChild(container);
 
     container.innerHTML = finalHTML;
 
-    let spanB = container.getElementsByTagName('span')[1];
-    let spanC = container.getElementsByTagName('span')[2];
-    let spanD = container.getElementsByTagName('span')[3];
+    const spanB = container.getElementsByTagName('span')[1];
+    const spanC = container.getElementsByTagName('span')[2];
+    const spanD = container.getElementsByTagName('span')[3];
 
     suspend = true;
 
     // A and D will be suspended. We'll click on D which should take
     // priority, after we unsuspend.
-    let root = ReactDOM.createRoot(container, {hydrate: true});
+    const root = ReactDOM.createRoot(container, {hydrate: true});
     root.render(<App />);
 
     // Nothing has been hydrated so far.
@@ -694,7 +694,7 @@ describe('ReactDOMServerSelectiveHydration', () => {
   it('hydrates the last target path first for continuous events', async () => {
     let suspend = false;
     let resolve;
-    let promise = new Promise(resolvePromise => (resolve = resolvePromise));
+    const promise = new Promise(resolvePromise => (resolve = resolvePromise));
 
     function Child({text}) {
       if ((text === 'A' || text === 'D') && suspend) {
@@ -734,25 +734,25 @@ describe('ReactDOMServerSelectiveHydration', () => {
       );
     }
 
-    let finalHTML = ReactDOMServer.renderToString(<App />);
+    const finalHTML = ReactDOMServer.renderToString(<App />);
 
     expect(Scheduler).toHaveYielded(['App', 'A', 'B', 'C', 'D']);
 
-    let container = document.createElement('div');
+    const container = document.createElement('div');
     // We need this to be in the document since we'll dispatch events on it.
     document.body.appendChild(container);
 
     container.innerHTML = finalHTML;
 
-    let spanB = container.getElementsByTagName('span')[1];
-    let spanC = container.getElementsByTagName('span')[2];
-    let spanD = container.getElementsByTagName('span')[3];
+    const spanB = container.getElementsByTagName('span')[1];
+    const spanC = container.getElementsByTagName('span')[2];
+    const spanD = container.getElementsByTagName('span')[3];
 
     suspend = true;
 
     // A and D will be suspended. We'll click on D which should take
     // priority, after we unsuspend.
-    let root = ReactDOM.createRoot(container, {hydrate: true});
+    const root = ReactDOM.createRoot(container, {hydrate: true});
     root.render(<App />);
 
     // Nothing has been hydrated so far.
@@ -799,17 +799,17 @@ describe('ReactDOMServerSelectiveHydration', () => {
       );
     }
 
-    let finalHTML = ReactDOMServer.renderToString(<App />);
+    const finalHTML = ReactDOMServer.renderToString(<App />);
 
     expect(Scheduler).toHaveYielded(['App', 'A', 'B', 'C']);
 
-    let container = document.createElement('div');
+    const container = document.createElement('div');
     container.innerHTML = finalHTML;
 
-    let spanB = container.getElementsByTagName('span')[1];
-    let spanC = container.getElementsByTagName('span')[2];
+    const spanB = container.getElementsByTagName('span')[1];
+    const spanC = container.getElementsByTagName('span')[2];
 
-    let root = ReactDOM.createRoot(container, {hydrate: true});
+    const root = ReactDOM.createRoot(container, {hydrate: true});
     root.render(<App />);
 
     // Nothing has been hydrated so far.
@@ -829,7 +829,7 @@ describe('ReactDOMServerSelectiveHydration', () => {
       Scheduler.unstable_yieldValue(text);
       return <span>{text}</span>;
     }
-    let ChildWithBoundary = React.memo(function({text}) {
+    const ChildWithBoundary = React.memo(function({text}) {
       return (
         <Suspense fallback="Loading...">
           <Child text={text} />
@@ -852,21 +852,21 @@ describe('ReactDOMServerSelectiveHydration', () => {
       );
     }
 
-    let finalHTML = ReactDOMServer.renderToString(<App a="A" />);
+    const finalHTML = ReactDOMServer.renderToString(<App a="A" />);
 
     expect(Scheduler).toHaveYielded(['App', 'A', 'a', 'B', 'b', 'C', 'c']);
 
-    let container = document.createElement('div');
+    const container = document.createElement('div');
     container.innerHTML = finalHTML;
 
     // We need this to be in the document since we'll dispatch events on it.
     document.body.appendChild(container);
 
-    let spanA = container.getElementsByTagName('span')[0];
-    let spanB = container.getElementsByTagName('span')[2];
-    let spanC = container.getElementsByTagName('span')[4];
+    const spanA = container.getElementsByTagName('span')[0];
+    const spanB = container.getElementsByTagName('span')[2];
+    const spanC = container.getElementsByTagName('span')[4];
 
-    let root = ReactDOM.createRoot(container, {hydrate: true});
+    const root = ReactDOM.createRoot(container, {hydrate: true});
     ReactTestUtils.act(() => {
       root.render(<App a="A" />);
 
@@ -923,7 +923,7 @@ describe('ReactDOMServerSelectiveHydration', () => {
       ]);
     });
 
-    let spanA2 = container.getElementsByTagName('span')[0];
+    const spanA2 = container.getElementsByTagName('span')[0];
     // This is supposed to have been hydrated, not replaced.
     expect(spanA).toBe(spanA2);
 
