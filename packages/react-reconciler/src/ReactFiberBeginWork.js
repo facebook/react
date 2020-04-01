@@ -1646,16 +1646,9 @@ function shouldRemainOnFallback(
 function getRemainingWorkInPrimaryTree(
   current: Fiber,
   workInProgress: Fiber,
-  currentPrimaryChildFragment: Fiber | null,
   renderExpirationTime,
 ) {
-  const currentParentOfPrimaryChildren =
-    currentPrimaryChildFragment !== null
-      ? currentPrimaryChildFragment
-      : current;
-  const currentChildExpirationTime =
-    currentParentOfPrimaryChildren.childExpirationTime;
-
+  const currentChildExpirationTime = current.childExpirationTime;
   const currentSuspenseState: SuspenseState = current.memoizedState;
   if (currentSuspenseState !== null) {
     // This boundary already timed out. Check if this render includes the level
@@ -1945,7 +1938,6 @@ function updateSuspenseComponent(
             primaryChildFragment.childExpirationTime = getRemainingWorkInPrimaryTree(
               current,
               workInProgress,
-              null,
               renderExpirationTime,
             );
             workInProgress.memoizedState = updateSuspenseState(
@@ -2016,7 +2008,6 @@ function updateSuspenseComponent(
         primaryChildFragment.childExpirationTime = getRemainingWorkInPrimaryTree(
           current,
           workInProgress,
-          currentPrimaryChildFragment,
           renderExpirationTime,
         );
         // Skip the primary children, and continue working on the
@@ -2118,7 +2109,6 @@ function updateSuspenseComponent(
         primaryChildFragment.childExpirationTime = getRemainingWorkInPrimaryTree(
           current,
           workInProgress,
-          null,
           renderExpirationTime,
         );
         // Skip the primary children, and continue working on the
