@@ -958,7 +958,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
         return;
       }
 
-      let bufferedLog = [];
+      const bufferedLog = [];
       function log(...args) {
         bufferedLog.push(...args, '\n');
       }
@@ -988,7 +988,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       function logUpdateQueue(updateQueue: UpdateQueue<mixed>, depth) {
         log('  '.repeat(depth + 1) + 'QUEUED UPDATES');
         const first = updateQueue.firstBaseUpdate;
-        let update = first;
+        const update = first;
         if (update !== null) {
           do {
             log(
@@ -1001,7 +1001,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
         const lastPending = updateQueue.shared.pending;
         if (lastPending !== null) {
           const firstPending = lastPending.next;
-          let pendingUpdate = firstPending;
+          const pendingUpdate = firstPending;
           if (pendingUpdate !== null) {
             do {
               log(

@@ -564,8 +564,8 @@ describe('ReactDOMComponent', () => {
             {'></div><script>alert("hi")</script>': 'selected'},
             null,
           );
-          let result1 = ReactDOMServer.renderToString(element1);
-          let result2 = ReactDOMServer.renderToString(element2);
+          const result1 = ReactDOMServer.renderToString(element1);
+          const result2 = ReactDOMServer.renderToString(element2);
           expect(result1.toLowerCase()).not.toContain('onclick');
           expect(result2.toLowerCase()).not.toContain('script');
         }
@@ -588,8 +588,8 @@ describe('ReactDOMComponent', () => {
             {'></x-foo-component><script>alert("hi")</script>': 'selected'},
             null,
           );
-          let result1 = ReactDOMServer.renderToString(element1);
-          let result2 = ReactDOMServer.renderToString(element2);
+          const result1 = ReactDOMServer.renderToString(element1);
+          const result2 = ReactDOMServer.renderToString(element2);
           expect(result1.toLowerCase()).not.toContain('onclick');
           expect(result2.toLowerCase()).not.toContain('script');
         }
@@ -1166,7 +1166,7 @@ describe('ReactDOMComponent', () => {
       let realToString;
       try {
         realToString = Object.prototype.toString;
-        let wrappedToString = function() {
+        const wrappedToString = function() {
           // Emulate browser behavior which is missing in jsdom
           if (this instanceof window.HTMLUnknownElement) {
             return '[object HTMLUnknownElement]';
@@ -2553,10 +2553,10 @@ describe('ReactDOMComponent', () => {
   });
 
   it('receives events in specific order', () => {
-    let eventOrder = [];
-    let track = tag => () => eventOrder.push(tag);
-    let outerRef = React.createRef();
-    let innerRef = React.createRef();
+    const eventOrder = [];
+    const track = tag => () => eventOrder.push(tag);
+    const outerRef = React.createRef();
+    const innerRef = React.createRef();
 
     function OuterReactApp() {
       return (

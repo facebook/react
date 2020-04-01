@@ -24,7 +24,7 @@ function parseModel<T>(response: Response<T>, targetObj, key, value) {
         (value: any)[i] = parseModel(response, value, '' + i, value[i]);
       }
     } else {
-      for (let innerKey in value) {
+      for (const innerKey in value) {
         (value: any)[innerKey] = parseModel(
           response,
           value,

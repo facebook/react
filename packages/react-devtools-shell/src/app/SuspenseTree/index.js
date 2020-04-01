@@ -47,13 +47,13 @@ function PrimaryFallbackTest({initialSuspend}) {
 }
 
 function useTestSequence(label, T1, T2) {
-  let [step, setStep] = useState(0);
-  let next = (
+  const [step, setStep] = useState(0);
+  const next = (
     <button onClick={() => setStep(s => (s + 1) % allSteps.length)}>
       next {label} content
     </button>
   );
-  let allSteps = [
+  const allSteps = [
     <Fragment>{next}</Fragment>,
     <Fragment>
       {next} <T1 prop={step}>mount</T1>

@@ -184,7 +184,7 @@ describe('SimpleEventPlugin', function() {
     container = document.createElement('div');
     document.body.appendChild(container);
 
-    let ops = [];
+    const ops = [];
     let button;
     class Button extends React.Component {
       state = {count: 0};

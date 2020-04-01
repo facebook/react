@@ -526,7 +526,6 @@ describe('ReactUpdates', () => {
 
     const bContainer = document.createElement('div');
 
-    let a;
     let b;
 
     let aUpdated = false;
@@ -560,7 +559,7 @@ describe('ReactUpdates', () => {
       }
     }
 
-    a = ReactTestUtils.renderIntoDocument(<A />);
+    const a = ReactTestUtils.renderIntoDocument(<A />);
     ReactDOM.unstable_batchedUpdates(function() {
       a.setState({x: 1});
       b.setState({x: 1});
@@ -733,11 +732,8 @@ describe('ReactUpdates', () => {
       }
     }
 
-    let x;
-    let y;
-
-    x = ReactTestUtils.renderIntoDocument(<X />);
-    y = ReactTestUtils.renderIntoDocument(<Y />);
+    const x = ReactTestUtils.renderIntoDocument(<X />);
+    const y = ReactTestUtils.renderIntoDocument(<Y />);
     expect(ReactDOM.findDOMNode(x).textContent).toBe('0');
 
     y.forceUpdate();
@@ -1102,7 +1098,7 @@ describe('ReactUpdates', () => {
     'in legacy mode, updates in componentWillUpdate and componentDidUpdate ' +
       'should both flush in the immediately subsequent commit',
     () => {
-      let ops = [];
+      const ops = [];
       class Foo extends React.Component {
         state = {a: false, b: false};
         UNSAFE_componentWillUpdate(_, nextState) {
@@ -1145,7 +1141,7 @@ describe('ReactUpdates', () => {
     'in legacy mode, updates in componentWillUpdate and componentDidUpdate ' +
       '(on a sibling) should both flush in the immediately subsequent commit',
     () => {
-      let ops = [];
+      const ops = [];
       class Foo extends React.Component {
         state = {a: false};
         UNSAFE_componentWillUpdate(_, nextState) {
@@ -1213,7 +1209,7 @@ describe('ReactUpdates', () => {
   );
 
   it('uses correct base state for setState inside render phase', () => {
-    let ops = [];
+    const ops = [];
 
     class Foo extends React.Component {
       state = {step: 0};
@@ -1236,7 +1232,7 @@ describe('ReactUpdates', () => {
   });
 
   it('does not re-render if state update is null', () => {
-    let container = document.createElement('div');
+    const container = document.createElement('div');
 
     let instance;
     let ops = [];
@@ -1626,7 +1622,7 @@ describe('ReactUpdates', () => {
 
       let error = null;
       let stack = null;
-      let originalConsoleError = console.error;
+      const originalConsoleError = console.error;
       console.error = (e, s) => {
         error = e;
         stack = s;

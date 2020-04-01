@@ -30,7 +30,7 @@ export function serverBlock<Props, Data>(
   moduleReference: ModuleReference<BlockRenderFunction<Props, Data>>,
   loadData: () => Data,
 ): ServerBlock<Props> {
-  let blockComponent: ServerBlockComponent<Props, Data> = [
+  const blockComponent: ServerBlockComponent<Props, Data> = [
     REACT_SERVER_BLOCK_TYPE,
     moduleReference,
     loadData,
@@ -43,7 +43,7 @@ export function serverBlock<Props, Data>(
 export function serverBlockNoData<Props>(
   moduleReference: ModuleReference<BlockRenderFunction<Props, void>>,
 ): ServerBlock<Props> {
-  let blockComponent: ServerBlockComponent<Props, void> = [
+  const blockComponent: ServerBlockComponent<Props, void> = [
     REACT_SERVER_BLOCK_TYPE,
     moduleReference,
   ];

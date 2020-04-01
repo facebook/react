@@ -424,14 +424,14 @@ export function attemptToDispatchEvent(
   let targetInst = getClosestInstanceFromNode(nativeEventTarget);
 
   if (targetInst !== null) {
-    let nearestMounted = getNearestMountedFiber(targetInst);
+    const nearestMounted = getNearestMountedFiber(targetInst);
     if (nearestMounted === null) {
       // This tree has been unmounted already. Dispatch without a target.
       targetInst = null;
     } else {
       const tag = nearestMounted.tag;
       if (tag === SuspenseComponent) {
-        let instance = getSuspenseInstanceFromFiber(nearestMounted);
+        const instance = getSuspenseInstanceFromFiber(nearestMounted);
         if (instance !== null) {
           // Queue the event to be replayed later. Abort dispatching since we
           // don't want this event dispatched twice through the event system.

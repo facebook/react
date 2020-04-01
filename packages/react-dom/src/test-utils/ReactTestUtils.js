@@ -90,7 +90,7 @@ function findAllInRenderedFiberTreeInternal(fiber, test) {
     return [];
   }
   let node = currentParent;
-  let ret = [];
+  const ret = [];
   while (true) {
     if (
       node.tag === HostComponent ||
@@ -415,8 +415,6 @@ function shouldPreventMouseEvent(name, type, props) {
  * @return {?function} The stored callback.
  */
 function getListener(inst: Fiber, registrationName: string) {
-  let listener;
-
   // TODO: shouldPreventMouseEvent is DOM-specific and definitely should not
   // live here; needs to be moved to a better place soon
   const stateNode = inst.stateNode;
@@ -429,7 +427,7 @@ function getListener(inst: Fiber, registrationName: string) {
     // Work in progress.
     return null;
   }
-  listener = props[registrationName];
+  const listener = props[registrationName];
   if (shouldPreventMouseEvent(registrationName, inst.type, props)) {
     return null;
   }

@@ -28,7 +28,7 @@ function dispatchClickEvent(element) {
   dispatchEvent(element, 'click');
 }
 
-let eventListenersToClear = [];
+const eventListenersToClear = [];
 
 function startNativeEventListenerClearDown() {
   const nativeWindowEventListener = window.addEventListener;
@@ -106,7 +106,7 @@ describe('DOMModernPluginEventSystem', () => {
 
           ReactDOM.render(<Test />, container);
 
-          let buttonElement = buttonRef.current;
+          const buttonElement = buttonRef.current;
           dispatchClickEvent(buttonElement);
 
           expect(onClick).toHaveBeenCalledTimes(1);
@@ -114,7 +114,7 @@ describe('DOMModernPluginEventSystem', () => {
           expect(log[0]).toEqual(['capture', buttonElement]);
           expect(log[1]).toEqual(['bubble', buttonElement]);
 
-          let divElement = divRef.current;
+          const divElement = divRef.current;
           dispatchClickEvent(divElement);
           expect(onClick).toHaveBeenCalledTimes(3);
           expect(onClickCapture).toHaveBeenCalledTimes(3);
@@ -159,14 +159,14 @@ describe('DOMModernPluginEventSystem', () => {
           ReactDOM.render(<Parent />, container);
           ReactDOM.render(<Child />, childRef.current);
 
-          let buttonElement = buttonRef.current;
+          const buttonElement = buttonRef.current;
           dispatchClickEvent(buttonElement);
           expect(onClick).toHaveBeenCalledTimes(1);
           expect(onClickCapture).toHaveBeenCalledTimes(1);
           expect(log[0]).toEqual(['capture', buttonElement]);
           expect(log[1]).toEqual(['bubble', buttonElement]);
 
-          let divElement = divRef.current;
+          const divElement = divRef.current;
           dispatchClickEvent(divElement);
           expect(onClick).toHaveBeenCalledTimes(3);
           expect(onClickCapture).toHaveBeenCalledTimes(3);
@@ -211,14 +211,14 @@ describe('DOMModernPluginEventSystem', () => {
           buttonRef.current.appendChild(disjointedNode);
           ReactDOM.render(<Child />, disjointedNode);
 
-          let buttonElement = buttonRef.current;
+          const buttonElement = buttonRef.current;
           dispatchClickEvent(buttonElement);
           expect(onClick).toHaveBeenCalledTimes(1);
           expect(onClickCapture).toHaveBeenCalledTimes(1);
           expect(log[0]).toEqual(['capture', buttonElement]);
           expect(log[1]).toEqual(['bubble', buttonElement]);
 
-          let divElement = divRef.current;
+          const divElement = divRef.current;
           dispatchClickEvent(divElement);
           expect(onClick).toHaveBeenCalledTimes(3);
           expect(onClickCapture).toHaveBeenCalledTimes(3);
@@ -266,14 +266,14 @@ describe('DOMModernPluginEventSystem', () => {
           buttonRef.current.appendChild(disjointedNode);
           ReactDOM.render(<Child />, disjointedNode);
 
-          let buttonElement = buttonRef.current;
+          const buttonElement = buttonRef.current;
           dispatchClickEvent(buttonElement);
           expect(onClick).toHaveBeenCalledTimes(1);
           expect(onClickCapture).toHaveBeenCalledTimes(1);
           expect(log[0]).toEqual(['capture', buttonElement]);
           expect(log[1]).toEqual(['bubble', buttonElement]);
 
-          let divElement = divRef.current;
+          const divElement = divRef.current;
           dispatchClickEvent(divElement);
           expect(onClick).toHaveBeenCalledTimes(3);
           expect(onClickCapture).toHaveBeenCalledTimes(3);
@@ -323,14 +323,14 @@ describe('DOMModernPluginEventSystem', () => {
           spanRef.current.appendChild(disjointedNode);
           ReactDOM.render(<Child />, disjointedNode);
 
-          let buttonElement = buttonRef.current;
+          const buttonElement = buttonRef.current;
           dispatchClickEvent(buttonElement);
           expect(onClick).toHaveBeenCalledTimes(1);
           expect(onClickCapture).toHaveBeenCalledTimes(1);
           expect(log[0]).toEqual(['capture', buttonElement]);
           expect(log[1]).toEqual(['bubble', buttonElement]);
 
-          let divElement = divRef.current;
+          const divElement = divRef.current;
           dispatchClickEvent(divElement);
           expect(onClick).toHaveBeenCalledTimes(3);
           expect(onClickCapture).toHaveBeenCalledTimes(3);
@@ -376,14 +376,14 @@ describe('DOMModernPluginEventSystem', () => {
 
           ReactDOM.render(<Parent />, container);
 
-          let buttonElement = buttonRef.current;
+          const buttonElement = buttonRef.current;
           dispatchClickEvent(buttonElement);
           expect(onClick).toHaveBeenCalledTimes(1);
           expect(onClickCapture).toHaveBeenCalledTimes(1);
           expect(log[0]).toEqual(['capture', buttonElement]);
           expect(log[1]).toEqual(['bubble', buttonElement]);
 
-          let divElement = divRef.current;
+          const divElement = divRef.current;
           dispatchClickEvent(divElement);
           expect(onClick).toHaveBeenCalledTimes(3);
           expect(onClickCapture).toHaveBeenCalledTimes(3);
@@ -437,12 +437,12 @@ describe('DOMModernPluginEventSystem', () => {
           async () => {
             let suspend = false;
             let resolve;
-            let promise = new Promise(
+            const promise = new Promise(
               resolvePromise => (resolve = resolvePromise),
             );
 
             let clicks = 0;
-            let childSlotRef = React.createRef();
+            const childSlotRef = React.createRef();
 
             function Parent() {
               return <div onClick={() => clicks++} ref={childSlotRef} />;
@@ -466,17 +466,17 @@ describe('DOMModernPluginEventSystem', () => {
             }
 
             suspend = false;
-            let finalHTML = ReactDOMServer.renderToString(<App />);
+            const finalHTML = ReactDOMServer.renderToString(<App />);
 
-            let parentContainer = document.createElement('div');
-            let childContainer = document.createElement('div');
+            const parentContainer = document.createElement('div');
+            const childContainer = document.createElement('div');
 
             // We need this to be in the document since we'll dispatch events on it.
             document.body.appendChild(parentContainer);
 
             // We're going to use a different root as a parent.
             // This lets us detect whether an event goes through React's event system.
-            let parentRoot = ReactDOM.createRoot(parentContainer);
+            const parentRoot = ReactDOM.createRoot(parentContainer);
             parentRoot.render(<Parent />);
             Scheduler.unstable_flushAll();
 
@@ -484,12 +484,12 @@ describe('DOMModernPluginEventSystem', () => {
 
             childContainer.innerHTML = finalHTML;
 
-            let a = childContainer.getElementsByTagName('a')[0];
+            const a = childContainer.getElementsByTagName('a')[0];
 
             suspend = true;
 
             // Hydrate asynchronously.
-            let root = ReactDOM.createRoot(childContainer, {hydrate: true});
+            const root = ReactDOM.createRoot(childContainer, {hydrate: true});
             root.render(<App />);
             jest.runAllTimers();
             Scheduler.unstable_flushAll();
@@ -641,14 +641,14 @@ describe('DOMModernPluginEventSystem', () => {
 
           ReactDOM.render(<Parent />, container);
 
-          let buttonElement = buttonRef.current;
+          const buttonElement = buttonRef.current;
           dispatchClickEvent(buttonElement);
           expect(onClick).toHaveBeenCalledTimes(1);
           expect(onClickCapture).toHaveBeenCalledTimes(1);
           expect(log[0]).toEqual(['capture', buttonElement]);
           expect(log[1]).toEqual(['bubble', buttonElement]);
 
-          let divElement = divRef.current;
+          const divElement = divRef.current;
           dispatchClickEvent(divElement);
           expect(onClick).toHaveBeenCalledTimes(1);
           expect(onClickCapture).toHaveBeenCalledTimes(1);
@@ -684,14 +684,14 @@ describe('DOMModernPluginEventSystem', () => {
 
           ReactDOM.render(<Test />, container);
 
-          let buttonElement = buttonRef.current;
+          const buttonElement = buttonRef.current;
           buttonElement.focus();
           expect(onFocus).toHaveBeenCalledTimes(1);
           expect(onFocusCapture).toHaveBeenCalledTimes(1);
           expect(log[0]).toEqual(['capture', buttonElement]);
           expect(log[1]).toEqual(['bubble', buttonElement]);
 
-          let divElement = divRef.current;
+          const divElement = divRef.current;
           divElement.focus();
           expect(onFocus).toHaveBeenCalledTimes(3);
           expect(onFocusCapture).toHaveBeenCalledTimes(3);
@@ -737,14 +737,14 @@ describe('DOMModernPluginEventSystem', () => {
           ReactDOM.render(<Parent />, container);
           ReactDOM.render(<Child />, childRef.current);
 
-          let buttonElement = buttonRef.current;
+          const buttonElement = buttonRef.current;
           buttonElement.focus();
           expect(onFocus).toHaveBeenCalledTimes(1);
           expect(onFocusCapture).toHaveBeenCalledTimes(1);
           expect(log[0]).toEqual(['capture', buttonElement]);
           expect(log[1]).toEqual(['bubble', buttonElement]);
 
-          let divElement = divRef.current;
+          const divElement = divRef.current;
           divElement.focus();
           expect(onFocus).toHaveBeenCalledTimes(3);
           expect(onFocusCapture).toHaveBeenCalledTimes(3);
@@ -791,14 +791,14 @@ describe('DOMModernPluginEventSystem', () => {
 
           ReactDOM.render(<Parent />, container);
 
-          let buttonElement = buttonRef.current;
+          const buttonElement = buttonRef.current;
           buttonElement.focus();
           expect(onFocus).toHaveBeenCalledTimes(1);
           expect(onFocusCapture).toHaveBeenCalledTimes(1);
           expect(log[0]).toEqual(['capture', buttonElement]);
           expect(log[1]).toEqual(['bubble', buttonElement]);
 
-          let divElement = divRef.current;
+          const divElement = divRef.current;
           divElement.focus();
           expect(onFocus).toHaveBeenCalledTimes(3);
           expect(onFocusCapture).toHaveBeenCalledTimes(3);
@@ -858,14 +858,14 @@ describe('DOMModernPluginEventSystem', () => {
 
           ReactDOM.render(<Parent />, container);
 
-          let buttonElement = buttonRef.current;
+          const buttonElement = buttonRef.current;
           buttonElement.focus();
           expect(onFocus).toHaveBeenCalledTimes(1);
           expect(onFocusCapture).toHaveBeenCalledTimes(1);
           expect(log[0]).toEqual(['capture', buttonElement]);
           expect(log[1]).toEqual(['bubble', buttonElement]);
 
-          let divElement = divRef.current;
+          const divElement = divRef.current;
           divElement.focus();
           expect(onFocus).toHaveBeenCalledTimes(1);
           expect(onFocusCapture).toHaveBeenCalledTimes(1);
@@ -906,7 +906,7 @@ describe('DOMModernPluginEventSystem', () => {
 
           ReactDOM.render(<Parent />, container);
 
-          let buttonElement = buttonRef.current;
+          const buttonElement = buttonRef.current;
           buttonElement.dispatchEvent(
             new MouseEvent('mouseover', {
               bubbles: true,
@@ -918,7 +918,7 @@ describe('DOMModernPluginEventSystem', () => {
           expect(onMouseLeave).toHaveBeenCalledTimes(0);
           expect(log[0]).toEqual(buttonElement);
 
-          let divElement = divRef.current;
+          const divElement = divRef.current;
           buttonElement.dispatchEvent(
             new MouseEvent('mouseout', {
               bubbles: true,
@@ -977,7 +977,7 @@ describe('DOMModernPluginEventSystem', () => {
 
           ReactDOM.render(<Parent />, container);
 
-          let buttonElement = buttonRef.current;
+          const buttonElement = buttonRef.current;
           buttonElement.dispatchEvent(
             new MouseEvent('mouseover', {
               bubbles: true,
@@ -989,7 +989,7 @@ describe('DOMModernPluginEventSystem', () => {
           expect(onMouseLeave).toHaveBeenCalledTimes(0);
           expect(log[0]).toEqual(buttonElement);
 
-          let divElement = divRef.current;
+          const divElement = divRef.current;
           buttonElement.dispatchEvent(
             new MouseEvent('mouseout', {
               bubbles: true,
@@ -1042,7 +1042,7 @@ describe('DOMModernPluginEventSystem', () => {
           );
 
           function Root() {
-            let portalTargetRef = React.useRef(null);
+            const portalTargetRef = React.useRef(null);
             React.useLayoutEffect(() => {
               portalTargetRef.current.appendChild(portalContainer);
             });
@@ -1056,7 +1056,7 @@ describe('DOMModernPluginEventSystem', () => {
 
           ReactDOM.render(<Root />, container);
 
-          let divElement = targetRef.current;
+          const divElement = targetRef.current;
           dispatchClickEvent(divElement);
           expect(log).toEqual([
             'capture root',
@@ -1105,7 +1105,7 @@ describe('DOMModernPluginEventSystem', () => {
           }
 
           it('should create the same event listener map', () => {
-            let listenerMaps = [];
+            const listenerMaps = [];
 
             function Test() {
               const listenerMap = ReactDOM.unstable_useEvent('click');
@@ -1231,7 +1231,7 @@ describe('DOMModernPluginEventSystem', () => {
             log = [];
 
             // Clicking the button should also work
-            let buttonElement = buttonRef.current;
+            const buttonElement = buttonRef.current;
             dispatchClickEvent(buttonElement);
             expect(log).toEqual([
               {
@@ -1334,7 +1334,7 @@ describe('DOMModernPluginEventSystem', () => {
             ReactDOM.render(<Test />, container);
             Scheduler.unstable_flushAll();
 
-            let textNode = buttonRef.current.firstChild;
+            const textNode = buttonRef.current.firstChild;
             dispatchClickEvent(textNode);
             expect(clickEvent).toBeCalledTimes(1);
           });
@@ -1371,7 +1371,7 @@ describe('DOMModernPluginEventSystem', () => {
             ReactDOM.render(<Test />, container);
             Scheduler.unstable_flushAll();
 
-            let buttonElement = buttonRef.current;
+            const buttonElement = buttonRef.current;
             dispatchClickEvent(buttonElement);
             expect(onClick).toHaveBeenCalledTimes(1);
             expect(onClickCapture).toHaveBeenCalledTimes(1);
@@ -1382,7 +1382,7 @@ describe('DOMModernPluginEventSystem', () => {
             onClick.mockClear();
             onClickCapture.mockClear();
 
-            let divElement = divRef.current;
+            const divElement = divRef.current;
             dispatchClickEvent(divElement);
             expect(onClick).toHaveBeenCalledTimes(2);
             expect(onClickCapture).toHaveBeenCalledTimes(2);
@@ -1427,14 +1427,14 @@ describe('DOMModernPluginEventSystem', () => {
             ReactDOM.render(<Test />, container);
             Scheduler.unstable_flushAll();
 
-            let buttonElement = buttonRef.current;
+            const buttonElement = buttonRef.current;
             dispatchClickEvent(buttonElement);
             expect(onClick).toHaveBeenCalledTimes(1);
             expect(onClickCapture).toHaveBeenCalledTimes(1);
             expect(log[0]).toEqual(['capture', buttonElement]);
             expect(log[1]).toEqual(['bubble', buttonElement]);
 
-            let divElement = divRef.current;
+            const divElement = divRef.current;
             dispatchClickEvent(divElement);
             expect(onClick).toHaveBeenCalledTimes(3);
             expect(onClickCapture).toHaveBeenCalledTimes(3);
@@ -1504,7 +1504,7 @@ describe('DOMModernPluginEventSystem', () => {
             expect(clickEvent).toBeCalledTimes(2);
 
             // Clicking the button should not work
-            let buttonElement = buttonRef.current;
+            const buttonElement = buttonRef.current;
             dispatchClickEvent(buttonElement);
             expect(clickEvent).toBeCalledTimes(2);
           });
@@ -1577,7 +1577,7 @@ describe('DOMModernPluginEventSystem', () => {
           it('should correctly handle stopPropagation corrrectly for target events', () => {
             const buttonRef = React.createRef();
             const divRef = React.createRef();
-            let clickEvent = jest.fn();
+            const clickEvent = jest.fn();
 
             function Test() {
               const click1 = ReactDOM.unstable_useEvent('click', {
@@ -1602,7 +1602,7 @@ describe('DOMModernPluginEventSystem', () => {
             ReactDOM.render(<Test />, container);
             Scheduler.unstable_flushAll();
 
-            let divElement = divRef.current;
+            const divElement = divRef.current;
             dispatchClickEvent(divElement);
             expect(clickEvent).toHaveBeenCalledTimes(0);
           });
@@ -1633,7 +1633,7 @@ describe('DOMModernPluginEventSystem', () => {
             ReactDOM.render(<Test />, container);
             Scheduler.unstable_flushAll();
 
-            let buttonElement = buttonRef.current;
+            const buttonElement = buttonRef.current;
             dispatchClickEvent(buttonElement);
             expect(targetListerner1).toHaveBeenCalledTimes(1);
             expect(targetListerner2).toHaveBeenCalledTimes(1);
@@ -1671,7 +1671,7 @@ describe('DOMModernPluginEventSystem', () => {
             ReactDOM.render(<Test />, container);
             Scheduler.unstable_flushAll();
 
-            let buttonElement = buttonRef.current;
+            const buttonElement = buttonRef.current;
             dispatchClickEvent(buttonElement);
             expect(targetListerner1).toHaveBeenCalledTimes(1);
             expect(targetListerner2).toHaveBeenCalledTimes(1);
@@ -1698,7 +1698,7 @@ describe('DOMModernPluginEventSystem', () => {
                 return <button ref={ref}>Press me</button>;
               }
 
-              let root = ReactDOM.createRoot(container);
+              const root = ReactDOM.createRoot(container);
               root.render(<Test counter={0} />);
 
               // Dev double-render
@@ -1926,7 +1926,7 @@ describe('DOMModernPluginEventSystem', () => {
             ReactDOM.render(<Test />, container);
             Scheduler.unstable_flushAll();
 
-            let buttonElement = buttonRef.current;
+            const buttonElement = buttonRef.current;
             dispatchClickEvent(buttonElement);
             expect(onClick).toHaveBeenCalledTimes(2);
             expect(onClickCapture).toHaveBeenCalledTimes(2);
@@ -1939,7 +1939,7 @@ describe('DOMModernPluginEventSystem', () => {
             onClick.mockClear();
             onClickCapture.mockClear();
 
-            let divElement = divRef.current;
+            const divElement = divRef.current;
             dispatchClickEvent(divElement);
             expect(onClick).toHaveBeenCalledTimes(3);
             expect(onClickCapture).toHaveBeenCalledTimes(3);
@@ -1981,7 +1981,7 @@ describe('DOMModernPluginEventSystem', () => {
             ReactDOM.render(<Test />, container);
             Scheduler.unstable_flushAll();
 
-            let buttonElement = buttonRef.current;
+            const buttonElement = buttonRef.current;
             dispatchClickEvent(buttonElement);
             expect(rootListerner1).toHaveBeenCalledTimes(1);
             expect(targetListerner1).toHaveBeenCalledTimes(0);
@@ -2020,7 +2020,7 @@ describe('DOMModernPluginEventSystem', () => {
 
             Scheduler.unstable_flushAll();
 
-            let buttonElement = buttonRef.current;
+            const buttonElement = buttonRef.current;
             dispatchClickEvent(buttonElement);
             expect(rootListerner1).toHaveBeenCalledTimes(1);
             expect(rootListerner2).toHaveBeenCalledTimes(1);
@@ -2064,7 +2064,7 @@ describe('DOMModernPluginEventSystem', () => {
             ReactDOM.render(<Test />, container);
             Scheduler.unstable_flushAll();
 
-            let buttonElement = buttonRef.current;
+            const buttonElement = buttonRef.current;
             dispatchClickEvent(buttonElement);
             expect(onClick).toHaveBeenCalledTimes(3);
             expect(onClickCapture).toHaveBeenCalledTimes(3);
@@ -2079,7 +2079,7 @@ describe('DOMModernPluginEventSystem', () => {
             onClick.mockClear();
             onClickCapture.mockClear();
 
-            let divElement = divRef.current;
+            const divElement = divRef.current;
             dispatchClickEvent(divElement);
             expect(onClick).toHaveBeenCalledTimes(4);
             expect(onClickCapture).toHaveBeenCalledTimes(4);
@@ -2150,14 +2150,14 @@ describe('DOMModernPluginEventSystem', () => {
             ReactDOM.render(<Test />, container);
             Scheduler.unstable_flushAll();
 
-            let buttonElement = buttonRef.current;
+            const buttonElement = buttonRef.current;
             dispatchEvent(buttonElement, 'custom-event');
             expect(onCustomEvent).toHaveBeenCalledTimes(1);
             expect(onCustomEventCapture).toHaveBeenCalledTimes(1);
             expect(log[0]).toEqual(['capture', buttonElement]);
             expect(log[1]).toEqual(['bubble', buttonElement]);
 
-            let divElement = divRef.current;
+            const divElement = divRef.current;
             dispatchEvent(divElement, 'custom-event');
             expect(onCustomEvent).toHaveBeenCalledTimes(3);
             expect(onCustomEventCapture).toHaveBeenCalledTimes(3);
@@ -2283,7 +2283,7 @@ describe('DOMModernPluginEventSystem', () => {
               const Suspense = React.Suspense;
               let suspend = false;
               let resolve;
-              let promise = new Promise(
+              const promise = new Promise(
                 resolvePromise => (resolve = resolvePromise),
               );
 
@@ -2319,7 +2319,7 @@ describe('DOMModernPluginEventSystem', () => {
               const container2 = document.createElement('div');
               document.body.appendChild(container2);
 
-              let root = ReactDOM.createRoot(container2);
+              const root = ReactDOM.createRoot(container2);
 
               ReactTestUtils.act(() => {
                 root.render(<Component />);
@@ -2506,7 +2506,7 @@ describe('DOMModernPluginEventSystem', () => {
               ReactDOM.render(<Test />, container);
               Scheduler.unstable_flushAll();
 
-              let textNode = buttonRef.current.firstChild;
+              const textNode = buttonRef.current.firstChild;
               dispatchClickEvent(textNode);
               // This should not work, as the target instance will be the
               // <button>, which is actually outside the scope.

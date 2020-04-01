@@ -191,7 +191,7 @@ export function getRootHostContext(
     case DOCUMENT_NODE:
     case DOCUMENT_FRAGMENT_NODE: {
       type = nodeType === DOCUMENT_NODE ? '#document' : '#fragment';
-      let root = (rootContainerInstance: any).documentElement;
+      const root = (rootContainerInstance: any).documentElement;
       namespace = root ? root.namespaceURI : getChildNamespace(null, '');
       break;
     }
@@ -620,10 +620,10 @@ export function clearSuspenseBoundary(
   // deep we are and only break out when we're back on top.
   let depth = 0;
   do {
-    let nextNode = node.nextSibling;
+    const nextNode = node.nextSibling;
     parentInstance.removeChild(node);
     if (nextNode && nextNode.nodeType === COMMENT_NODE) {
-      let data = ((nextNode: any).data: string);
+      const data = ((nextNode: any).data: string);
       if (data === SUSPENSE_END_DATA) {
         if (depth === 0) {
           parentInstance.removeChild(nextNode);
@@ -867,7 +867,7 @@ export function getNextHydratableInstanceAfterSuspenseInstance(
   let depth = 0;
   while (node) {
     if (node.nodeType === COMMENT_NODE) {
-      let data = ((node: any).data: string);
+      const data = ((node: any).data: string);
       if (data === SUSPENSE_END_DATA) {
         if (depth === 0) {
           return getNextHydratableSibling((node: any));
@@ -901,7 +901,7 @@ export function getParentSuspenseInstance(
   let depth = 0;
   while (node) {
     if (node.nodeType === COMMENT_NODE) {
-      let data = ((node: any).data: string);
+      const data = ((node: any).data: string);
       if (
         data === SUSPENSE_START_DATA ||
         data === SUSPENSE_FALLBACK_START_DATA ||

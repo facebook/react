@@ -174,8 +174,7 @@ function createPressEvent(
     ({altKey, ctrlKey, metaKey, shiftKey} = nativeEvent);
     // Only check for one property, checking for all of them is costly. We can assume
     // if clientX exists, so do the rest.
-    let eventObject;
-    eventObject = (touchEvent: any) || (nativeEvent: any);
+    const eventObject = (touchEvent: any) || (nativeEvent: any);
     if (eventObject) {
       ({clientX, clientY, pageX, pageY, screenX, screenY} = eventObject);
     }
@@ -671,7 +670,8 @@ const pressResponderImpl = {
     props: PressProps,
     state: PressState,
   ): void {
-    let {pointerType, target, type} = event;
+    const {pointerType, type} = event;
+    let target = event.target;
 
     const nativeEvent: any = event.nativeEvent;
     const isPressed = state.isPressed;

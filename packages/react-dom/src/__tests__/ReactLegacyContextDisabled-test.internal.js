@@ -51,7 +51,7 @@ describe('ReactLegacyContextDisabled', () => {
       }
     }
 
-    let lifecycleContextLog = [];
+    const lifecycleContextLog = [];
     class LegacyClsConsumer extends React.Component {
       static contextTypes = {
         foo() {},
@@ -146,7 +146,7 @@ describe('ReactLegacyContextDisabled', () => {
   });
 
   it('renders a tree with modern context', () => {
-    let Ctx = React.createContext();
+    const Ctx = React.createContext();
 
     class Provider extends React.Component {
       render() {
@@ -164,7 +164,7 @@ describe('ReactLegacyContextDisabled', () => {
       }
     }
 
-    let lifecycleContextLog = [];
+    const lifecycleContextLog = [];
     class ContextTypeConsumer extends React.Component {
       static contextType = Ctx;
       shouldComponentUpdate(nextProps, nextState, nextContext) {

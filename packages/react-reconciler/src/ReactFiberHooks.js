@@ -597,7 +597,7 @@ function updateWorkInProgressHook(): Hook {
   // the dispatcher used for mounts.
   let nextCurrentHook: null | Hook;
   if (currentHook === null) {
-    let current = currentlyRenderingFiber.alternate;
+    const current = currentlyRenderingFiber.alternate;
     if (current !== null) {
       nextCurrentHook = current.memoizedState;
     } else {
@@ -708,14 +708,14 @@ function updateReducer<S, I, A>(
   let baseQueue = current.baseQueue;
 
   // The last pending update that hasn't been processed yet.
-  let pendingQueue = queue.pending;
+  const pendingQueue = queue.pending;
   if (pendingQueue !== null) {
     // We have new updates that haven't been processed yet.
     // We'll add them to the base queue.
     if (baseQueue !== null) {
       // Merge the pending queue and the base queue.
-      let baseFirst = baseQueue.next;
-      let pendingFirst = pendingQueue.next;
+      const baseFirst = baseQueue.next;
+      const pendingFirst = pendingQueue.next;
       baseQueue.next = pendingFirst;
       pendingQueue.next = baseFirst;
     }
@@ -735,7 +735,7 @@ function updateReducer<S, I, A>(
 
   if (baseQueue !== null) {
     // We have a queue to process.
-    let first = baseQueue.next;
+    const first = baseQueue.next;
     let newState = current.baseState;
 
     let newBaseState = null;
@@ -972,9 +972,10 @@ function useMutableSource<Source, Snapshot>(
 
   const dispatcher = ReactCurrentDispatcher.current;
 
-  let [snapshot, setSnapshot] = dispatcher.useState(() =>
+  const [currentSnapshot, setSnapshot] = dispatcher.useState(() =>
     readFromUnsubcribedMutableSource(root, source, getSnapshot),
   );
+  let snapshot = currentSnapshot;
 
   // Grab a handle to the state hook as well.
   // We use it to clear the pending update queue if we have a new source.

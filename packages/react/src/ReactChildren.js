@@ -109,7 +109,7 @@ function mapIntoArray(
     let mappedChild = callback(child);
     // If it's the only child, treat the name as if it was wrapped in an array
     // so that it's consistent if the number of children grows:
-    let childKey =
+    const childKey =
       nameSoFar === '' ? SEPARATOR + getElementKey(child, 0) : nameSoFar;
     if (Array.isArray(mappedChild)) {
       let escapedChildKey = '';

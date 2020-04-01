@@ -47,8 +47,8 @@ describe('ReactFlightDOM', () => {
   });
 
   function getTestStream() {
-    let writable = new Stream.PassThrough();
-    let readable = new ReadableStream({
+    const writable = new Stream.PassThrough();
+    const readable = new ReadableStream({
       start(controller) {
         writable.on('data', chunk => {
           controller.enqueue(chunk);
@@ -65,7 +65,7 @@ describe('ReactFlightDOM', () => {
   }
 
   function block(render, load) {
-    let idx = webpackModuleIdx++;
+    const idx = webpackModuleIdx++;
     webpackModules[idx] = {
       d: render,
     };
@@ -80,7 +80,7 @@ describe('ReactFlightDOM', () => {
       };
     }
     return function(...args) {
-      let curriedLoad = () => {
+      const curriedLoad = () => {
         return load(...args);
       };
       return ReactFlightDOMServerRuntime.serverBlock(
@@ -118,17 +118,17 @@ describe('ReactFlightDOM', () => {
     }
 
     function App() {
-      let model = {
+      const model = {
         html: <HTML />,
       };
       return model;
     }
 
-    let {writable, readable} = getTestStream();
+    const {writable, readable} = getTestStream();
     ReactFlightDOMServer.pipeToNodeWritable(<App />, writable, webpackMap);
-    let response = ReactFlightDOMClient.createFromReadableStream(readable);
+    const response = ReactFlightDOMClient.createFromReadableStream(readable);
     await waitForSuspense(() => {
-      let model = response.readRoot();
+      const model = response.readRoot();
       expect(model).toEqual({
         html: (
           <div>
@@ -141,7 +141,7 @@ describe('ReactFlightDOM', () => {
   });
 
   it.experimental('should resolve the root', async () => {
-    let {Suspense} = React;
+    const {Suspense} = React;
 
     // Model
     function Text({children}) {
@@ -173,16 +173,16 @@ describe('ReactFlightDOM', () => {
       );
     }
 
-    let {writable, readable} = getTestStream();
+    const {writable, readable} = getTestStream();
     ReactFlightDOMServer.pipeToNodeWritable(
       <RootModel />,
       writable,
       webpackMap,
     );
-    let response = ReactFlightDOMClient.createFromReadableStream(readable);
+    const response = ReactFlightDOMClient.createFromReadableStream(readable);
 
-    let container = document.createElement('div');
-    let root = ReactDOM.createRoot(container);
+    const container = document.createElement('div');
+    const root = ReactDOM.createRoot(container);
     await act(async () => {
       root.render(<App response={response} />);
     });
@@ -192,7 +192,7 @@ describe('ReactFlightDOM', () => {
   });
 
   it.experimental('should not get confused by $', async () => {
-    let {Suspense} = React;
+    const {Suspense} = React;
 
     // Model
     function RootModel() {
@@ -211,16 +211,16 @@ describe('ReactFlightDOM', () => {
       );
     }
 
-    let {writable, readable} = getTestStream();
+    const {writable, readable} = getTestStream();
     ReactFlightDOMServer.pipeToNodeWritable(
       <RootModel />,
       writable,
       webpackMap,
     );
-    let response = ReactFlightDOMClient.createFromReadableStream(readable);
+    const response = ReactFlightDOMClient.createFromReadableStream(readable);
 
-    let container = document.createElement('div');
-    let root = ReactDOM.createRoot(container);
+    const container = document.createElement('div');
+    const root = ReactDOM.createRoot(container);
     await act(async () => {
       root.render(<App response={response} />);
     });
@@ -228,7 +228,7 @@ describe('ReactFlightDOM', () => {
   });
 
   it.experimental('should not get confused by @', async () => {
-    let {Suspense} = React;
+    const {Suspense} = React;
 
     // Model
     function RootModel() {
@@ -247,16 +247,16 @@ describe('ReactFlightDOM', () => {
       );
     }
 
-    let {writable, readable} = getTestStream();
+    const {writable, readable} = getTestStream();
     ReactFlightDOMServer.pipeToNodeWritable(
       <RootModel />,
       writable,
       webpackMap,
     );
-    let response = ReactFlightDOMClient.createFromReadableStream(readable);
+    const response = ReactFlightDOMClient.createFromReadableStream(readable);
 
-    let container = document.createElement('div');
-    let root = ReactDOM.createRoot(container);
+    const container = document.createElement('div');
+    const root = ReactDOM.createRoot(container);
     await act(async () => {
       root.render(<App response={response} />);
     });
@@ -264,7 +264,7 @@ describe('ReactFlightDOM', () => {
   });
 
   it.experimental('should progressively reveal Blocks', async () => {
-    let {Suspense} = React;
+    const {Suspense} = React;
 
     class ErrorBoundary extends React.Component {
       state = {hasError: false, error: null};
@@ -311,7 +311,7 @@ describe('ReactFlightDOM', () => {
       function DelayedText({children}, data) {
         return <Text>{children}</Text>;
       }
-      let loadBlock = block(DelayedText, load);
+      const loadBlock = block(DelayedText, load);
       return [loadBlock(), _resolve, _reject];
     }
 
@@ -328,7 +328,7 @@ describe('ReactFlightDOM', () => {
         games: <GamesModel>:games:</GamesModel>,
       };
     }
-    let profileModel = {
+    const profileModel = {
       photos: <PhotosModel>:photos:</PhotosModel>,
       name: <NameModel>:name:</NameModel>,
       more: <ProfileMore />,
@@ -336,7 +336,7 @@ describe('ReactFlightDOM', () => {
 
     // View
     function ProfileDetails({response}) {
-      let model = response.readRoot();
+      const model = response.readRoot();
       return (
         <div>
           {model.name}
@@ -345,7 +345,7 @@ describe('ReactFlightDOM', () => {
       );
     }
     function ProfileSidebar({response}) {
-      let model = response.readRoot();
+      const model = response.readRoot();
       return (
         <div>
           {model.photos}
@@ -380,12 +380,12 @@ describe('ReactFlightDOM', () => {
       );
     }
 
-    let {writable, readable} = getTestStream();
+    const {writable, readable} = getTestStream();
     ReactFlightDOMServer.pipeToNodeWritable(profileModel, writable, webpackMap);
-    let response = ReactFlightDOMClient.createFromReadableStream(readable);
+    const response = ReactFlightDOMClient.createFromReadableStream(readable);
 
-    let container = document.createElement('div');
-    let root = ReactDOM.createRoot(container);
+    const container = document.createElement('div');
+    const root = ReactDOM.createRoot(container);
     await act(async () => {
       root.render(<ProfilePage response={response} />);
     });

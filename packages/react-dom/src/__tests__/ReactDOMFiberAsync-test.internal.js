@@ -49,7 +49,7 @@ describe('ReactDOMFiberAsync', () => {
   });
 
   it('flushSync batches sync updates and flushes them at the end of the batch', () => {
-    let ops = [];
+    const ops = [];
     let instance;
 
     class Component extends React.Component {
@@ -87,7 +87,7 @@ describe('ReactDOMFiberAsync', () => {
   });
 
   it('flushSync flushes updates even if nested inside another flushSync', () => {
-    let ops = [];
+    const ops = [];
     let instance;
 
     class Component extends React.Component {
@@ -156,9 +156,9 @@ describe('ReactDOMFiberAsync', () => {
     });
 
     it.experimental('does not perform deferred updates synchronously', () => {
-      let inputRef = React.createRef();
-      let asyncValueRef = React.createRef();
-      let syncValueRef = React.createRef();
+      const inputRef = React.createRef();
+      const asyncValueRef = React.createRef();
+      const syncValueRef = React.createRef();
 
       class Counter extends React.Component {
         state = {asyncValue: '', syncValue: ''};
@@ -246,7 +246,7 @@ describe('ReactDOMFiberAsync', () => {
     });
 
     it.experimental('flushSync flushes updates before end of the tick', () => {
-      let ops = [];
+      const ops = [];
       let instance;
 
       class Component extends React.Component {
@@ -317,7 +317,7 @@ describe('ReactDOMFiberAsync', () => {
         Scheduler.unstable_flushAll();
         expect(container.textContent).toEqual('1');
 
-        let ops = [];
+        const ops = [];
         ReactDOM.unstable_flushControlled(() => {
           inst.increment();
           ReactDOM.unstable_flushControlled(() => {
@@ -350,7 +350,7 @@ describe('ReactDOMFiberAsync', () => {
         }
         ReactDOM.render(<Counter />, container);
 
-        let ops = [];
+        const ops = [];
         ReactDOM.unstable_batchedUpdates(() => {
           inst.increment();
           ReactDOM.unstable_flushControlled(() => {
@@ -428,22 +428,22 @@ describe('ReactDOMFiberAsync', () => {
         // Flush
         Scheduler.unstable_flushAll();
 
-        let disableButton = disableButtonRef.current;
+        const disableButton = disableButtonRef.current;
         expect(disableButton.tagName).toBe('BUTTON');
 
         // Dispatch a click event on the Disable-button.
-        let firstEvent = document.createEvent('Event');
+        const firstEvent = document.createEvent('Event');
         firstEvent.initEvent('click', true, true);
         disableButton.dispatchEvent(firstEvent);
 
         // There should now be a pending update to disable the form.
 
         // This should not have flushed yet since it's in concurrent mode.
-        let submitButton = submitButtonRef.current;
+        const submitButton = submitButtonRef.current;
         expect(submitButton.tagName).toBe('BUTTON');
 
         // In the meantime, we can dispatch a new client event on the submit button.
-        let secondEvent = document.createEvent('Event');
+        const secondEvent = document.createEvent('Event');
         secondEvent.initEvent('click', true, true);
         // This should force the pending update to flush which disables the submit button before the event is invoked.
         submitButton.dispatchEvent(secondEvent);
@@ -499,22 +499,22 @@ describe('ReactDOMFiberAsync', () => {
         // Flush
         Scheduler.unstable_flushAll();
 
-        let disableButton = disableButtonRef.current;
+        const disableButton = disableButtonRef.current;
         expect(disableButton.tagName).toBe('BUTTON');
 
         // Dispatch a click event on the Disable-button.
-        let firstEvent = document.createEvent('Event');
+        const firstEvent = document.createEvent('Event');
         firstEvent.initEvent('click', true, true);
         disableButton.dispatchEvent(firstEvent);
 
         // There should now be a pending update to disable the form.
 
         // This should not have flushed yet since it's in concurrent mode.
-        let submitButton = submitButtonRef.current;
+        const submitButton = submitButtonRef.current;
         expect(submitButton.tagName).toBe('BUTTON');
 
         // In the meantime, we can dispatch a new client event on the submit button.
-        let secondEvent = document.createEvent('Event');
+        const secondEvent = document.createEvent('Event');
         secondEvent.initEvent('click', true, true);
         // This should force the pending update to flush which disables the submit button before the event is invoked.
         submitButton.dispatchEvent(secondEvent);
@@ -562,22 +562,22 @@ describe('ReactDOMFiberAsync', () => {
         // Flush
         Scheduler.unstable_flushAll();
 
-        let enableButton = enableButtonRef.current;
+        const enableButton = enableButtonRef.current;
         expect(enableButton.tagName).toBe('BUTTON');
 
         // Dispatch a click event on the Enable-button.
-        let firstEvent = document.createEvent('Event');
+        const firstEvent = document.createEvent('Event');
         firstEvent.initEvent('click', true, true);
         enableButton.dispatchEvent(firstEvent);
 
         // There should now be a pending update to enable the form.
 
         // This should not have flushed yet since it's in concurrent mode.
-        let submitButton = submitButtonRef.current;
+        const submitButton = submitButtonRef.current;
         expect(submitButton.tagName).toBe('BUTTON');
 
         // In the meantime, we can dispatch a new client event on the submit button.
-        let secondEvent = document.createEvent('Event');
+        const secondEvent = document.createEvent('Event');
         secondEvent.initEvent('click', true, true);
         // This should force the pending update to flush which enables the submit button before the event is invoked.
         submitButton.dispatchEvent(secondEvent);

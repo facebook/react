@@ -62,7 +62,7 @@ let resolveFamily: RefreshHandler | null = null;
 // $FlowFixMe Flow gets confused by a WeakSet feature check below.
 let failedBoundaries: WeakSet<Fiber> | null = null;
 
-export let setRefreshHandler = (handler: RefreshHandler | null): void => {
+export const setRefreshHandler = (handler: RefreshHandler | null): void => {
   if (__DEV__) {
     resolveFamily = handler;
   }
@@ -74,7 +74,7 @@ export function resolveFunctionForHotReloading(type: any): any {
       // Hot reloading is disabled.
       return type;
     }
-    let family = resolveFamily(type);
+    const family = resolveFamily(type);
     if (family === undefined) {
       return type;
     }
@@ -96,7 +96,7 @@ export function resolveForwardRefForHotReloading(type: any): any {
       // Hot reloading is disabled.
       return type;
     }
-    let family = resolveFamily(type);
+    const family = resolveFamily(type);
     if (family === undefined) {
       // Check if we're dealing with a real forwardRef. Don't want to crash early.
       if (
@@ -225,7 +225,7 @@ export function markFailedErrorBoundaryForHotReloading(fiber: Fiber) {
   }
 }
 
-export let scheduleRefresh: ScheduleRefresh = (
+export const scheduleRefresh: ScheduleRefresh = (
   root: FiberRoot,
   update: RefreshUpdate,
 ): void => {
@@ -246,7 +246,7 @@ export let scheduleRefresh: ScheduleRefresh = (
   }
 };
 
-export let scheduleRoot: ScheduleRoot = (
+export const scheduleRoot: ScheduleRoot = (
   root: FiberRoot,
   element: ReactNodeList,
 ): void => {
@@ -338,7 +338,7 @@ function scheduleFibersWithFamiliesRecursively(
   }
 }
 
-export let findHostInstancesForRefresh: FindHostInstancesForRefresh = (
+export const findHostInstancesForRefresh: FindHostInstancesForRefresh = (
   root: FiberRoot,
   families: Array<Family>,
 ): Set<Instance> => {

@@ -211,7 +211,7 @@ export default class Agent extends EventEmitter<{|
   }
 
   getIDForNode(node: Object): number | null {
-    for (let rendererID in this._rendererInterfaces) {
+    for (const rendererID in this._rendererInterfaces) {
       const renderer = ((this._rendererInterfaces[
         (rendererID: any)
       ]: any): RendererInterface);
@@ -389,7 +389,7 @@ export default class Agent extends EventEmitter<{|
 
     setTraceUpdatesEnabled(traceUpdatesEnabled);
 
-    for (let rendererID in this._rendererInterfaces) {
+    for (const rendererID in this._rendererInterfaces) {
       const renderer = ((this._rendererInterfaces[
         (rendererID: any)
       ]: any): RendererInterface);
@@ -413,7 +413,7 @@ export default class Agent extends EventEmitter<{|
   startProfiling = (recordChangeDescriptions: boolean) => {
     this._recordChangeDescriptions = recordChangeDescriptions;
     this._isProfiling = true;
-    for (let rendererID in this._rendererInterfaces) {
+    for (const rendererID in this._rendererInterfaces) {
       const renderer = ((this._rendererInterfaces[
         (rendererID: any)
       ]: any): RendererInterface);
@@ -425,7 +425,7 @@ export default class Agent extends EventEmitter<{|
   stopProfiling = () => {
     this._isProfiling = false;
     this._recordChangeDescriptions = false;
-    for (let rendererID in this._rendererInterfaces) {
+    for (const rendererID in this._rendererInterfaces) {
       const renderer = ((this._rendererInterfaces[
         (rendererID: any)
       ]: any): RendererInterface);
@@ -456,7 +456,7 @@ export default class Agent extends EventEmitter<{|
   };
 
   updateComponentFilters = (componentFilters: Array<ComponentFilter>) => {
-    for (let rendererID in this._rendererInterfaces) {
+    for (const rendererID in this._rendererInterfaces) {
       const renderer = ((this._rendererInterfaces[
         (rendererID: any)
       ]: any): RendererInterface);

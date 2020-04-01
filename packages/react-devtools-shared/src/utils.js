@@ -49,7 +49,7 @@ const cachedDisplayNames: WeakMap<Function, string> = new WeakMap();
 
 // On large trees, encoding takes significant time.
 // Try to reuse the already encoded strings.
-let encodedStringCache = new LRU({max: 1000});
+const encodedStringCache = new LRU({max: 1000});
 
 export function alphaSortKeys(a: string, b: string): number {
   if (a > b) {
@@ -96,7 +96,7 @@ export function utfDecodeString(array: Array<number>): string {
 }
 
 export function utfEncodeString(string: string): Array<number> {
-  let cached = encodedStringCache.get(string);
+  const cached = encodedStringCache.get(string);
   if (cached !== undefined) {
     return cached;
   }
@@ -281,12 +281,12 @@ export function separateDisplayNameAndHOCs(
 // Pulled from react-compat
 // https://github.com/developit/preact-compat/blob/7c5de00e7c85e2ffd011bf3af02899b63f699d3a/src/index.js#L349
 export function shallowDiffers(prev: Object, next: Object): boolean {
-  for (let attribute in prev) {
+  for (const attribute in prev) {
     if (!(attribute in next)) {
       return true;
     }
   }
-  for (let attribute in next) {
+  for (const attribute in next) {
     if (prev[attribute] !== next[attribute]) {
       return true;
     }

@@ -370,7 +370,7 @@ function updateMemoComponent(
   renderExpirationTime: ExpirationTime,
 ): null | Fiber {
   if (current === null) {
-    let type = Component.type;
+    const type = Component.type;
     if (
       isSimpleFunctionComponent(type) &&
       Component.compare === null &&
@@ -411,7 +411,7 @@ function updateMemoComponent(
         );
       }
     }
-    let child = createFiberFromTypeAndProps(
+    const child = createFiberFromTypeAndProps(
       Component.type,
       null,
       nextProps,
@@ -438,7 +438,7 @@ function updateMemoComponent(
       );
     }
   }
-  let currentChild = ((current.child: any): Fiber); // This is always exactly one child
+  const currentChild = ((current.child: any): Fiber); // This is always exactly one child
   if (updateExpirationTime < renderExpirationTime) {
     // This will be the props with resolved defaultProps,
     // unlike current.memoizedProps which will be the unresolved ones.
@@ -456,7 +456,7 @@ function updateMemoComponent(
   }
   // React DevTools reads this flag.
   workInProgress.effectTag |= PerformedWork;
-  let newChild = createWorkInProgress(currentChild, nextProps);
+  const newChild = createWorkInProgress(currentChild, nextProps);
   newChild.ref = workInProgress.ref;
   newChild.return = workInProgress;
   workInProgress.child = newChild;
@@ -485,8 +485,8 @@ function updateSimpleMemoComponent(
         // so let's just skip over it to find memo() outer wrapper.
         // Inner props for memo are validated later.
         const lazyComponent: LazyComponentType<any, any> = outerMemoType;
-        let payload = lazyComponent._payload;
-        let init = lazyComponent._init;
+        const payload = lazyComponent._payload;
+        const init = lazyComponent._init;
         try {
           outerMemoType = init(payload);
         } catch (x) {
@@ -855,7 +855,7 @@ function updateClassComponent(
     renderExpirationTime,
   );
   if (__DEV__) {
-    let inst = workInProgress.stateNode;
+    const inst = workInProgress.stateNode;
     if (inst.props !== nextProps) {
       if (!didWarnAboutReassigningProps) {
         console.error(
@@ -1015,7 +1015,7 @@ function updateHostRoot(current, workInProgress, renderExpirationTime) {
     // be any children to hydrate which is effectively the same thing as
     // not hydrating.
 
-    let child = mountChildFibers(
+    const child = mountChildFibers(
       workInProgress,
       null,
       nextChildren,
@@ -1127,9 +1127,9 @@ function mountLazyComponent(
   }
 
   const props = workInProgress.pendingProps;
-  let lazyComponent: LazyComponentType<any, any> = elementType;
-  let payload = lazyComponent._payload;
-  let init = lazyComponent._init;
+  const lazyComponent: LazyComponentType<any, any> = elementType;
+  const payload = lazyComponent._payload;
+  const init = lazyComponent._init;
   let Component = init(payload);
   // Store the unwrapped component in the type.
   workInProgress.type = Component;
@@ -2194,9 +2194,9 @@ function mountDehydratedSuspenseComponent(
     // a protocol to transfer that time, we'll just estimate it by using the current
     // time. This will mean that Suspense timeouts are slightly shifted to later than
     // they should be.
-    let serverDisplayTime = requestCurrentTimeForUpdate();
+    const serverDisplayTime = requestCurrentTimeForUpdate();
     // Schedule a normal pri update to render this content.
-    let newExpirationTime = computeAsyncExpiration(serverDisplayTime);
+    const newExpirationTime = computeAsyncExpiration(serverDisplayTime);
     if (enableSchedulerTracing) {
       markSpawnedWork(newExpirationTime);
     }
@@ -2252,7 +2252,7 @@ function updateDehydratedSuspenseComponent(
       if (suspenseState.retryTime <= renderExpirationTime) {
         // This render is even higher pri than we've seen before, let's try again
         // at even higher pri.
-        let attemptHydrationAtExpirationTime = renderExpirationTime + 1;
+        const attemptHydrationAtExpirationTime = renderExpirationTime + 1;
         suspenseState.retryTime = attemptHydrationAtExpirationTime;
         scheduleUpdateOnFiber(current, attemptHydrationAtExpirationTime);
         // TODO: Early abort this render.
@@ -2332,7 +2332,7 @@ function scheduleWorkOnFiber(
   if (fiber.expirationTime < renderExpirationTime) {
     fiber.expirationTime = renderExpirationTime;
   }
-  let alternate = fiber.alternate;
+  const alternate = fiber.alternate;
   if (alternate !== null && alternate.expirationTime < renderExpirationTime) {
     alternate.expirationTime = renderExpirationTime;
   }
@@ -2391,7 +2391,7 @@ function findLastContentRow(firstChild: null | Fiber): null | Fiber {
   let row = firstChild;
   let lastContentRow: null | Fiber = null;
   while (row !== null) {
-    let currentRow = row.alternate;
+    const currentRow = row.alternate;
     // New rows can't be content rows.
     if (currentRow !== null && findFirstSuspended(currentRow) === null) {
       lastContentRow = row;
@@ -2483,10 +2483,11 @@ function validateTailOptions(
 
 function validateSuspenseListNestedChild(childSlot: mixed, index: number) {
   if (__DEV__) {
-    let isArray = Array.isArray(childSlot);
-    let isIterable = !isArray && typeof getIteratorFn(childSlot) === 'function';
+    const isArray = Array.isArray(childSlot);
+    const isIterable =
+      !isArray && typeof getIteratorFn(childSlot) === 'function';
     if (isArray || isIterable) {
-      let type = isArray ? 'array' : 'iterable';
+      const type = isArray ? 'array' : 'iterable';
       console.error(
         'A nested %s was passed to row #%s in <SuspenseList />. Wrap it in ' +
           'an additional SuspenseList to configure its revealOrder: ' +
@@ -2521,7 +2522,7 @@ function validateSuspenseListChildren(
           }
         }
       } else {
-        let iteratorFn = getIteratorFn(children);
+        const iteratorFn = getIteratorFn(children);
         if (typeof iteratorFn === 'function') {
           const childrenIterator = iteratorFn.call(children);
           if (childrenIterator) {
@@ -2555,7 +2556,7 @@ function initSuspenseListRenderState(
   tailMode: SuspenseListTailMode,
   lastEffectBeforeRendering: null | Fiber,
 ): void {
-  let renderState: null | SuspenseListRenderState =
+  const renderState: null | SuspenseListRenderState =
     workInProgress.memoizedState;
   if (renderState === null) {
     workInProgress.memoizedState = ({
@@ -2606,7 +2607,7 @@ function updateSuspenseListComponent(
 
   let suspenseContext: SuspenseContext = suspenseStackCursor.current;
 
-  let shouldForceFallback = hasSuspenseContext(
+  const shouldForceFallback = hasSuspenseContext(
     suspenseContext,
     (ForceSuspenseFallback: SuspenseContext),
   );
@@ -2640,7 +2641,7 @@ function updateSuspenseListComponent(
   } else {
     switch (revealOrder) {
       case 'forwards': {
-        let lastContentRow = findLastContentRow(workInProgress.child);
+        const lastContentRow = findLastContentRow(workInProgress.child);
         let tail;
         if (lastContentRow === null) {
           // The whole list is part of the tail.
@@ -2672,14 +2673,14 @@ function updateSuspenseListComponent(
         let row = workInProgress.child;
         workInProgress.child = null;
         while (row !== null) {
-          let currentRow = row.alternate;
+          const currentRow = row.alternate;
           // New rows can't be content rows.
           if (currentRow !== null && findFirstSuspended(currentRow) === null) {
             // This is the beginning of the main content.
             workInProgress.child = row;
             break;
           }
-          let nextRow = row.sibling;
+          const nextRow = row.sibling;
           row.sibling = tail;
           tail = row;
           row = nextRow;
@@ -3227,7 +3228,7 @@ function beginWork(
           // If nothing suspended before and we're rendering the same children,
           // then the tail doesn't matter. Anything new that suspends will work
           // in the "together" mode, so we can continue from the state we had.
-          let renderState = workInProgress.memoizedState;
+          const renderState = workInProgress.memoizedState;
           if (renderState !== null) {
             // Reset to the "together" mode in case we've started a different
             // update in the past but didn't complete it.

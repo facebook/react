@@ -69,7 +69,7 @@ export const requestPaint =
 let syncQueue: Array<SchedulerCallback> | null = null;
 let immediateQueueCallbackNode: mixed | null = null;
 let isFlushingSyncQueue: boolean = false;
-let initialTimeMs: number = Scheduler_now();
+const initialTimeMs: number = Scheduler_now();
 
 // If the initial timestamp is reasonably small, use Scheduler's `now` directly.
 // This will be the case for modern browsers that support `performance.now`. In

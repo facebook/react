@@ -452,7 +452,7 @@ function getNearestRootOrPortalContainer(instance: Element): Element {
 }
 
 function addEventTypeToDispatchConfig(type: DOMTopLevelEventType): void {
-  let dispatchConfig = topLevelEventsToDispatchConfig.get(type);
+  const dispatchConfig = topLevelEventsToDispatchConfig.get(type);
   // If we don't have a dispatchConfig, then we're dealing with
   // an event type that React does not know about (i.e. a custom event).
   // We need to register an event config for this or the SimpleEventPlugin

@@ -32,7 +32,7 @@ const {createResponse, processStringChunk, close} = ReactFlightClient({
 });
 
 function read<T>(source: Source): T {
-  let response = createResponse(source);
+  const response = createResponse(source);
   for (let i = 0; i < source.length; i++) {
     processStringChunk(response, source[i], 0);
   }

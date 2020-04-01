@@ -9,11 +9,11 @@
 
 // This file is used as temporary storage for modules generated in Flight tests.
 let moduleIdx = 0;
-let modules: Map<string, Function> = new Map();
+const modules: Map<string, Function> = new Map();
 
 // This simulates what the compiler will do when it replaces render functions with server blocks.
 export function saveModule(render: Function): string {
-  let idx = '' + moduleIdx++;
+  const idx = '' + moduleIdx++;
   modules.set(idx, render);
   return idx;
 }

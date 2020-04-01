@@ -88,9 +88,9 @@ const toArray = ((React.Children.toArray: any): toArrayType);
 // Each entry is `this.stack` from a currently executing renderer instance.
 // (There may be more than one because ReactDOMServer is reentrant).
 // Each stack is an array of frames which may contain nested stacks of elements.
-let currentDebugStacks = [];
+const currentDebugStacks = [];
 
-let ReactCurrentDispatcher = ReactSharedInternals.ReactCurrentDispatcher;
+const ReactCurrentDispatcher = ReactSharedInternals.ReactCurrentDispatcher;
 let ReactDebugCurrentFrame;
 let prevGetCurrentStackImpl = null;
 let getCurrentServerStackImpl = () => '';
@@ -160,7 +160,7 @@ if (__DEV__) {
     }
     // ReactDOMServer is reentrant so there may be multiple calls at the same time.
     // Take the frames from the innermost call which is the last in the array.
-    let frames = currentDebugStacks[currentDebugStacks.length - 1];
+    const frames = currentDebugStacks[currentDebugStacks.length - 1];
     let stack = '';
     // Go through every frame in the stack from the innermost one.
     for (let i = frames.length - 1; i >= 0; i--) {
@@ -168,7 +168,7 @@ if (__DEV__) {
       // Every frame might have more than one debug element stack entry associated with it.
       // This is because single-child nesting doesn't create materialized frames.
       // Instead it would push them through `pushElementToDebugStack()`.
-      let debugElementStack = ((frame: any): FrameDev).debugElementStack;
+      const debugElementStack = ((frame: any): FrameDev).debugElementStack;
       for (let ii = debugElementStack.length - 1; ii >= 0; ii--) {
         stack += describeStackFrame(debugElementStack[ii]);
       }
@@ -416,8 +416,8 @@ function resolve(
 |} {
   while (React.isValidElement(child)) {
     // Safe because we just checked it's an element.
-    let element: ReactElement = (child: any);
-    let Component = element.type;
+    const element: ReactElement = (child: any);
+    const Component = element.type;
     if (__DEV__) {
       pushElementToDebugStack(element);
     }
@@ -434,7 +434,7 @@ function resolve(
 
     let queue = [];
     let replace = false;
-    let updater = {
+    const updater = {
       isMounted: function(publicInstance) {
         return false;
       },
@@ -480,7 +480,7 @@ function resolve(
           }
         }
 
-        let partialState = Component.getDerivedStateFromProps.call(
+        const partialState = Component.getDerivedStateFromProps.call(
           null,
           element.props,
           inst.state,
@@ -612,8 +612,8 @@ function resolve(
         inst.UNSAFE_componentWillMount();
       }
       if (queue.length) {
-        let oldQueue = queue;
-        let oldReplace = replace;
+        const oldQueue = queue;
+        const oldReplace = replace;
         queue = null;
         replace = false;
 
@@ -623,8 +623,8 @@ function resolve(
           let nextState = oldReplace ? oldQueue[0] : inst.state;
           let dontMutate = true;
           for (let i = oldReplace ? 1 : 0; i < oldQueue.length; i++) {
-            let partial = oldQueue[i];
-            let partialState =
+            const partial = oldQueue[i];
+            const partialState =
               typeof partial === 'function'
                 ? partial.call(inst, nextState, element.props, publicContext)
                 : partial;
@@ -657,7 +657,7 @@ function resolve(
     let childContext;
     if (disableLegacyContext) {
       if (__DEV__) {
-        let childContextTypes = Component.childContextTypes;
+        const childContextTypes = Component.childContextTypes;
         if (childContextTypes !== undefined) {
           console.error(
             '%s uses the legacy childContextTypes API which is no longer supported. ' +
@@ -668,10 +668,10 @@ function resolve(
       }
     } else {
       if (typeof inst.getChildContext === 'function') {
-        let childContextTypes = Component.childContextTypes;
+        const childContextTypes = Component.childContextTypes;
         if (typeof childContextTypes === 'object') {
           childContext = inst.getChildContext();
-          for (let contextKey in childContext) {
+          for (const contextKey in childContext) {
             invariant(
               contextKey in childContextTypes,
               '%s.getChildContext(): key "%s" is not defined in childContextTypes.',
@@ -843,7 +843,7 @@ class ReactDOMServerRenderer {
     try {
       // Markup generated within <Suspense> ends up buffered until we know
       // nothing in that boundary suspended
-      let out = [''];
+      const out = [''];
       let suspended = false;
       while (out[0].length < bytes) {
         if (this.stack.length === 0) {
@@ -1112,7 +1112,7 @@ class ReactDOMServerRenderer {
           }
           case REACT_MEMO_TYPE: {
             const element: ReactElement = ((nextChild: any): ReactElement);
-            let nextChildren = [
+            const nextChildren = [
               React.createElement(
                 elementType.type,
                 Object.assign({ref: element.ref}, element.props),
@@ -1245,9 +1245,9 @@ class ReactDOMServerRenderer {
             // Attempt to initialize lazy component regardless of whether the
             // suspense server-side renderer is enabled so synchronously
             // resolved constructors are supported.
-            let payload = lazyComponent._payload;
-            let init = lazyComponent._init;
-            let result = init(payload);
+            const payload = lazyComponent._payload;
+            const init = lazyComponent._init;
+            const result = init(payload);
             const nextChildren = [
               React.createElement(
                 result,

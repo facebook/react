@@ -24,7 +24,7 @@ function writeConfig(renderer, rendererInfo, isServerSupported) {
 
   const serverRenderer = isServerSupported ? renderer : 'custom';
 
-  let ignoredPaths = [];
+  const ignoredPaths = [];
 
   inlinedHostConfigs.forEach(otherRenderer => {
     if (otherRenderer === rendererInfo) {

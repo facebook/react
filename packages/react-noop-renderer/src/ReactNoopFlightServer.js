@@ -48,9 +48,9 @@ const ReactNoopFlightServer = ReactFlightServer({
 });
 
 function render(model: ReactModel): Destination {
-  let destination: Destination = [];
-  let bundlerConfig = undefined;
-  let request = ReactNoopFlightServer.createRequest(
+  const destination: Destination = [];
+  const bundlerConfig = undefined;
+  const request = ReactNoopFlightServer.createRequest(
     model,
     destination,
     bundlerConfig,

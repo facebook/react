@@ -466,7 +466,7 @@ describe('SyntheticKeyboardEvent', () => {
         expect(event.isPropagationStopped()).toBe(true);
         expectedCount++;
       };
-      let div = ReactDOM.render(
+      const div = ReactDOM.render(
         <div
           onKeyDown={eventHandler}
           onKeyUp={eventHandler}
@@ -508,7 +508,7 @@ describe('SyntheticKeyboardEvent', () => {
         expect(event.isPersistent()).toBe(true);
         persistentEvents.push(event);
       };
-      let div = ReactDOM.render(
+      const div = ReactDOM.render(
         <div
           onKeyDown={eventHandler}
           onKeyUp={eventHandler}

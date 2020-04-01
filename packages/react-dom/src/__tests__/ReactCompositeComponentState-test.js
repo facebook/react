@@ -143,7 +143,7 @@ describe('ReactCompositeComponent-state', () => {
 
     ReactDOM.unmountComponentAtNode(container);
 
-    let expected = [
+    const expected = [
       // there is no state when getInitialState() is called
       ['getInitialState', null],
       ['componentWillMount-start', 'red'],
@@ -283,8 +283,6 @@ describe('ReactCompositeComponent-state', () => {
   });
 
   it('should batch unmounts', () => {
-    let outer;
-
     class Inner extends React.Component {
       render() {
         return <div />;
@@ -306,7 +304,7 @@ describe('ReactCompositeComponent-state', () => {
     }
 
     const container = document.createElement('div');
-    outer = ReactDOM.render(<Outer />, container);
+    const outer = ReactDOM.render(<Outer />, container);
     expect(() => {
       ReactDOM.unmountComponentAtNode(container);
     }).not.toThrow();
@@ -380,7 +378,7 @@ describe('ReactCompositeComponent-state', () => {
   });
 
   it('should treat assigning to this.state inside cWRP as a replaceState, with a warning', () => {
-    let ops = [];
+    const ops = [];
     class Test extends React.Component {
       state = {step: 1, extra: true};
       UNSAFE_componentWillReceiveProps() {
@@ -423,7 +421,7 @@ describe('ReactCompositeComponent-state', () => {
   });
 
   it('should treat assigning to this.state inside cWM as a replaceState, with a warning', () => {
-    let ops = [];
+    const ops = [];
     class Test extends React.Component {
       state = {step: 1, extra: true};
       UNSAFE_componentWillMount() {

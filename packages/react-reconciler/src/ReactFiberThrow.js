@@ -164,7 +164,7 @@ function attachPingListener(
   if (!threadIDs.has(renderExpirationTime)) {
     // Memoize using the thread ID to prevent redundant listeners.
     threadIDs.add(renderExpirationTime);
-    let ping = pingSuspendedRoot.bind(
+    const ping = pingSuspendedRoot.bind(
       null,
       root,
       wakeable,
@@ -197,7 +197,7 @@ function throwException(
     if ((sourceFiber.mode & BlockingMode) === NoMode) {
       // Reset the memoizedState to what it was before we attempted
       // to render it.
-      let currentSource = sourceFiber.alternate;
+      const currentSource = sourceFiber.alternate;
       if (currentSource) {
         sourceFiber.updateQueue = currentSource.updateQueue;
         sourceFiber.memoizedState = currentSource.memoizedState;
@@ -208,7 +208,7 @@ function throwException(
       }
     }
 
-    let hasInvisibleParentBoundary = hasSuspenseContext(
+    const hasInvisibleParentBoundary = hasSuspenseContext(
       suspenseStackCursor.current,
       (InvisibleParentSuspenseContext: SuspenseContext),
     );

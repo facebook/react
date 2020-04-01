@@ -76,7 +76,7 @@ const resource: Resource<
   InspectedElementFrontend,
 > = createResource(
   (element: Element) => {
-    let request = inProgressRequests.get(element);
+    const request = inProgressRequests.get(element);
     if (request != null) {
       return request.promise;
     }
@@ -351,16 +351,19 @@ function hydrateHelper(
   path?: Array<string | number>,
 ): Object | null {
   if (dehydratedData !== null) {
-    let {cleaned, data, unserializable} = dehydratedData;
+    const {cleaned, data, unserializable} = dehydratedData;
 
     if (path) {
       const {length} = path;
       if (length > 0) {
         // Hydration helper requires full paths, but inspection dehydrates with relative paths.
         // In that event it's important that we adjust the "cleaned" paths to match.
-        cleaned = cleaned.map(cleanedPath => cleanedPath.slice(length));
-        unserializable = unserializable.map(unserializablePath =>
-          unserializablePath.slice(length),
+        return hydrate(
+          data,
+          cleaned.map(cleanedPath => cleanedPath.slice(length)),
+          unserializable.map(unserializablePath =>
+            unserializablePath.slice(length),
+          ),
         );
       }
     }

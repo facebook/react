@@ -72,7 +72,7 @@ describe('ReactFiberHostContext', () => {
   });
 
   it('should send the context to prepareForCommit and resetAfterCommit', () => {
-    let rootContext = {};
+    const rootContext = {};
     const Renderer = ReactFiberReconciler({
       prepareForCommit: function(hostContext) {
         expect(hostContext).toBe(rootContext);

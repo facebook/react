@@ -331,7 +331,7 @@ export function getPublicRootInstance(
 export function attemptSynchronousHydration(fiber: Fiber): void {
   switch (fiber.tag) {
     case HostRoot:
-      let root: FiberRoot = fiber.stateNode;
+      const root: FiberRoot = fiber.stateNode;
       if (root.hydrate) {
         // Flush the first scheduled "update".
         flushRoot(root, root.firstPendingTime);
@@ -342,7 +342,7 @@ export function attemptSynchronousHydration(fiber: Fiber): void {
       // If we're still blocked after this, we need to increase
       // the priority of any promises resolving within this
       // boundary so that they next attempt also has higher pri.
-      let retryExpTime = computeInteractiveExpiration(
+      const retryExpTime = computeInteractiveExpiration(
         requestCurrentTimeForUpdate(),
       );
       markRetryTimeIfNotHydrated(fiber, retryExpTime);
@@ -351,7 +351,7 @@ export function attemptSynchronousHydration(fiber: Fiber): void {
 }
 
 function markRetryTimeImpl(fiber: Fiber, retryTime: ExpirationTime) {
-  let suspenseState: null | SuspenseState = fiber.memoizedState;
+  const suspenseState: null | SuspenseState = fiber.memoizedState;
   if (suspenseState !== null && suspenseState.dehydrated !== null) {
     if (suspenseState.retryTime < retryTime) {
       suspenseState.retryTime = retryTime;
@@ -362,7 +362,7 @@ function markRetryTimeImpl(fiber: Fiber, retryTime: ExpirationTime) {
 // Increases the priority of thennables when they resolve within this boundary.
 function markRetryTimeIfNotHydrated(fiber: Fiber, retryTime: ExpirationTime) {
   markRetryTimeImpl(fiber, retryTime);
-  let alternate = fiber.alternate;
+  const alternate = fiber.alternate;
   if (alternate) {
     markRetryTimeImpl(alternate, retryTime);
   }
@@ -376,7 +376,7 @@ export function attemptUserBlockingHydration(fiber: Fiber): void {
     // Suspense.
     return;
   }
-  let expTime = computeInteractiveExpiration(requestCurrentTimeForUpdate());
+  const expTime = computeInteractiveExpiration(requestCurrentTimeForUpdate());
   scheduleUpdateOnFiber(fiber, expTime);
   markRetryTimeIfNotHydrated(fiber, expTime);
 }
@@ -591,13 +591,11 @@ export function act(callback: () => Thenable<mixed>): Thenable<void> {
     }
   }
 
-  let previousActingUpdatesScopeDepth = actingUpdatesScopeDepth;
-  let previousIsSomeRendererActing;
-  let previousIsThisRendererActing;
+  const previousActingUpdatesScopeDepth = actingUpdatesScopeDepth;
   actingUpdatesScopeDepth++;
 
-  previousIsSomeRendererActing = IsSomeRendererActing.current;
-  previousIsThisRendererActing = IsThisRendererActing.current;
+  const previousIsSomeRendererActing = IsSomeRendererActing.current;
+  const previousIsThisRendererActing = IsThisRendererActing.current;
   IsSomeRendererActing.current = true;
   IsThisRendererActing.current = true;
 

@@ -31,9 +31,11 @@ if (__DEV__) {
 }
 
 // A cursor to the current merged context object on the stack.
-let contextStackCursor: StackCursor<Object> = createCursor(emptyContextObject);
+const contextStackCursor: StackCursor<Object> = createCursor(
+  emptyContextObject,
+);
 // A cursor to a boolean indicating whether the context has changed.
-let didPerformWorkStackCursor: StackCursor<boolean> = createCursor(false);
+const didPerformWorkStackCursor: StackCursor<boolean> = createCursor(false);
 // Keep track of the previous context object that was on the stack.
 // We use this to get access to the parent context after we have already
 // pushed the next context provider, and now need to merge their contexts.
@@ -97,7 +99,7 @@ function getMaskedContext(
     }
 
     const context = {};
-    for (let key in contextTypes) {
+    for (const key in contextTypes) {
       context[key] = unmaskedContext[key];
     }
 
@@ -201,9 +203,8 @@ function processChildContext(
       return parentContext;
     }
 
-    let childContext;
-    childContext = instance.getChildContext();
-    for (let contextKey in childContext) {
+    const childContext = instance.getChildContext();
+    for (const contextKey in childContext) {
       invariant(
         contextKey in childContextTypes,
         '%s.getChildContext(): key "%s" is not defined in childContextTypes.',

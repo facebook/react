@@ -1287,7 +1287,7 @@ describe('ReactHooks', () => {
       };
     }
 
-    let renderer = ReactTestRenderer.create(null);
+    const renderer = ReactTestRenderer.create(null);
 
     renderCount = 0;
     renderer.update(<NoHooks />);
@@ -1485,7 +1485,7 @@ describe('ReactHooks', () => {
     // We don't include useImperativeHandleHelper in this set,
     // because it generates an additional warning about the inputs length changing.
     // We test it below with its own test.
-    let orderedHooks = [
+    const orderedHooks = [
       useCallbackHelper,
       useContextHelper,
       useDebugValueHelper,
@@ -1499,7 +1499,7 @@ describe('ReactHooks', () => {
 
     // We don't include useContext or useDebugValue in this set,
     // because they aren't added to the hooks list and so won't throw.
-    let hooksInList = [
+    const hooksInList = [
       useCallbackHelper,
       useEffectHelper,
       useImperativeHandleHelper,
@@ -1692,7 +1692,7 @@ describe('ReactHooks', () => {
           return null;
           /* eslint-enable no-unused-vars */
         }
-        let root = ReactTestRenderer.create(<App update={false} />);
+        const root = ReactTestRenderer.create(<App update={false} />);
         expect(() => {
           try {
             root.update(<App update={true} />);
@@ -1738,7 +1738,7 @@ describe('ReactHooks', () => {
         return null;
         /* eslint-enable no-unused-vars */
       }
-      let root = ReactTestRenderer.create(<App update={false} />);
+      const root = ReactTestRenderer.create(<App update={false} />);
       expect(() => {
         expect(() => root.update(<App update={true} />)).toThrow(
           'custom error',
@@ -1757,7 +1757,7 @@ describe('ReactHooks', () => {
 
   // Regression test for #14674
   it('does not swallow original error when updating another component in render phase', async () => {
-    let {useState} = React;
+    const {useState} = React;
     spyOnDev(console, 'error');
 
     let _setState;
@@ -1795,7 +1795,7 @@ describe('ReactHooks', () => {
 
   // Regression test for https://github.com/facebook/react/issues/15057
   it('does not fire a false positive warning when previous effect unmounts the component', () => {
-    let {useState, useEffect} = React;
+    const {useState, useEffect} = React;
     let globalListener;
 
     function A() {

@@ -1673,7 +1673,7 @@ describe('ReactNewContext', () => {
     }
 
     function randomActions(n) {
-      let actions = [];
+      const actions = [];
       for (let i = 0; i < n; i++) {
         actions.push(randomAction());
       }

@@ -110,7 +110,7 @@ function coerceRef(
   current: Fiber | null,
   element: ReactElement,
 ) {
-  let mixedRef = element.ref;
+  const mixedRef = element.ref;
   if (
     mixedRef !== null &&
     typeof mixedRef !== 'function' &&
@@ -271,8 +271,8 @@ function resolveLazyType<T, P>(
 ): LazyComponent<T, P> | T {
   try {
     // If we can, let's peek at the resulting type.
-    let payload = lazyComponent._payload;
-    let init = lazyComponent._init;
+    const payload = lazyComponent._payload;
+    const init = lazyComponent._init;
     return init(payload);
   } catch (x) {
     // Leave it in place and let it throw again in the begin phase.

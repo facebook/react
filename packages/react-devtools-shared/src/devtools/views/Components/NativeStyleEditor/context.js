@@ -57,7 +57,7 @@ const resource: Resource<
   StyleAndLayoutFrontend,
 > = createResource(
   (element: Element) => {
-    let request = inProgressRequests.get(element);
+    const request = inProgressRequests.get(element);
     if (request != null) {
       return request.promise;
     }
@@ -108,7 +108,7 @@ function NativeStyleContextController({children}: Props) {
   // This effect handler invalidates the suspense cache and schedules rendering updates with React.
   useEffect(() => {
     const onStyleAndLayout = ({id, layout, style}: StyleAndLayoutBackend) => {
-      let element = store.getElementByID(id);
+      const element = store.getElementByID(id);
       if (element !== null) {
         const styleAndLayout: StyleAndLayoutFrontend = {
           layout,

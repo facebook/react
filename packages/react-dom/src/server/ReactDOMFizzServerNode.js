@@ -24,7 +24,7 @@ function pipeToNodeWritable(
   children: ReactNodeList,
   destination: Writable,
 ): void {
-  let request = createRequest(children, destination);
+  const request = createRequest(children, destination);
   destination.on('drain', createDrainHandler(destination, request));
   startWork(request);
 }

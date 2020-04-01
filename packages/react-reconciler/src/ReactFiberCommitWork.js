@@ -347,7 +347,7 @@ function commitBeforeMutationLifeCycles(
 
 function commitHookEffectListUnmount(tag: number, finishedWork: Fiber) {
   const updateQueue: FunctionComponentUpdateQueue | null = (finishedWork.updateQueue: any);
-  let lastEffect = updateQueue !== null ? updateQueue.lastEffect : null;
+  const lastEffect = updateQueue !== null ? updateQueue.lastEffect : null;
   if (lastEffect !== null) {
     const firstEffect = lastEffect.next;
     let effect = firstEffect;
@@ -367,7 +367,7 @@ function commitHookEffectListUnmount(tag: number, finishedWork: Fiber) {
 
 function commitHookEffectListMount(tag: number, finishedWork: Fiber) {
   const updateQueue: FunctionComponentUpdateQueue | null = (finishedWork.updateQueue: any);
-  let lastEffect = updateQueue !== null ? updateQueue.lastEffect : null;
+  const lastEffect = updateQueue !== null ? updateQueue.lastEffect : null;
   if (lastEffect !== null) {
     const firstEffect = lastEffect.next;
     let effect = firstEffect;
@@ -419,7 +419,7 @@ function commitHookEffectListMount(tag: number, finishedWork: Fiber) {
 function schedulePassiveEffects(finishedWork: Fiber) {
   if (runAllPassiveEffectDestroysBeforeCreates) {
     const updateQueue: FunctionComponentUpdateQueue | null = (finishedWork.updateQueue: any);
-    let lastEffect = updateQueue !== null ? updateQueue.lastEffect : null;
+    const lastEffect = updateQueue !== null ? updateQueue.lastEffect : null;
     if (lastEffect !== null) {
       const firstEffect = lastEffect.next;
       let effect = firstEffect;
@@ -1755,7 +1755,7 @@ function commitWork(current: Fiber | null, finishedWork: Fiber): void {
 }
 
 function commitSuspenseComponent(finishedWork: Fiber) {
-  let newState: SuspenseState | null = finishedWork.memoizedState;
+  const newState: SuspenseState | null = finishedWork.memoizedState;
 
   let newDidTimeout;
   let primaryChildParent = finishedWork;

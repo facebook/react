@@ -298,7 +298,7 @@ describe('ReactIncrementalUpdates', () => {
   });
 
   it('does not call callbacks that are scheduled by another callback until a later commit', () => {
-    let ops = [];
+    const ops = [];
     class Foo extends React.Component {
       state = {};
       componentDidMount() {
@@ -366,7 +366,7 @@ describe('ReactIncrementalUpdates', () => {
 
   it('enqueues setState inside an updater function as if the in-progress update is progressed (and warns)', () => {
     let instance;
-    let ops = [];
+    const ops = [];
     class Foo extends React.Component {
       state = {};
       render() {

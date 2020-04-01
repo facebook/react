@@ -15,8 +15,8 @@ export default function enqueueTask(task: () => void) {
     try {
       // read require off the module object to get around the bundlers.
       // we don't want them to detect a require and bundle a Node polyfill.
-      let requireString = ('require' + Math.random()).slice(0, 7);
-      let nodeRequire = module && module[requireString];
+      const requireString = ('require' + Math.random()).slice(0, 7);
+      const nodeRequire = module && module[requireString];
       // assuming we're in node, let's try to get node's
       // version of setImmediate, bypassing fake timers if any.
       enqueueTaskImpl = nodeRequire('timers').setImmediate;

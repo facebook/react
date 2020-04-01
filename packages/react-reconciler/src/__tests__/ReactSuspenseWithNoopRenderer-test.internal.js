@@ -1467,7 +1467,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     });
 
     it('does not drop mounted effects', async () => {
-      let never = {then() {}};
+      const never = {then() {}};
 
       let setShouldSuspend;
       function App() {
@@ -1974,7 +1974,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
   it('does not warn when a low priority update suspends inside a high priority update for functional components', async () => {
     let _setShow;
     function App() {
-      let [show, setShow] = React.useState(false);
+      const [show, setShow] = React.useState(false);
       _setShow = setShow;
       return (
         <Suspense fallback="Loading...">
@@ -2121,7 +2121,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
   it('normal priority updates suspending do not warn for functional components', async () => {
     let _setShow;
     function App() {
-      let [show, setShow] = React.useState(false);
+      const [show, setShow] = React.useState(false);
       _setShow = setShow;
       return (
         <Suspense fallback="Loading...">
@@ -2388,7 +2388,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     it('hooks', async () => {
       let transitionToPage;
       function App() {
-        let [page, setPage] = React.useState('none');
+        const [page, setPage] = React.useState('none');
         transitionToPage = setPage;
         if (page === 'none') {
           return null;
@@ -2458,7 +2458,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
         state = {page: 'none'};
         render() {
           transitionToPage = page => this.setState({page});
-          let page = this.state.page;
+          const page = this.state.page;
           if (page === 'none') {
             return null;
           }
@@ -2699,8 +2699,8 @@ describe('ReactSuspenseWithNoopRenderer', () => {
 
   it('supports delaying a busy spinner from disappearing', async () => {
     function useLoadingIndicator(config) {
-      let [isLoading, setLoading] = React.useState(false);
-      let start = React.useCallback(
+      const [isLoading, setLoading] = React.useState(false);
+      const start = React.useCallback(
         cb => {
           setLoading(true);
           Scheduler.unstable_next(() =>
@@ -2724,8 +2724,8 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     let transitionToPage;
 
     function App() {
-      let [page, setPage] = React.useState('A');
-      let [isLoading, startLoading] = useLoadingIndicator(SUSPENSE_CONFIG);
+      const [page, setPage] = React.useState('A');
+      const [isLoading, startLoading] = useLoadingIndicator(SUSPENSE_CONFIG);
       transitionToPage = nextPage => startLoading(() => setPage(nextPage));
       return (
         <Fragment>

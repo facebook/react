@@ -20,7 +20,7 @@ function render(
   destination: Destination,
   config: BundlerConfig,
 ): void {
-  let request = createRequest(model, destination, config);
+  const request = createRequest(model, destination, config);
   startWork(request);
 }
 

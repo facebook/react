@@ -62,7 +62,7 @@ function Chunk(status: any, value: any) {
   this._value = value;
 }
 Chunk.prototype.then = function<T>(resolve: () => mixed) {
-  let chunk: SomeChunk<T> = this;
+  const chunk: SomeChunk<T> = this;
   if (chunk._status === PENDING) {
     if (chunk._value === null) {
       chunk._value = [];
@@ -81,8 +81,8 @@ export type Response<T> = {
 };
 
 function readRoot<T>(): T {
-  let response: Response<T> = this;
-  let rootChunk = response.rootChunk;
+  const response: Response<T> = this;
+  const rootChunk = response.rootChunk;
   if (rootChunk._status === RESOLVED) {
     return rootChunk._value;
   } else if (rootChunk._status === PENDING) {
@@ -94,10 +94,10 @@ function readRoot<T>(): T {
 }
 
 export function createResponse<T>(): Response<T> {
-  let rootChunk: SomeChunk<any> = createPendingChunk();
-  let chunks: Map<number, SomeChunk<any>> = new Map();
+  const rootChunk: SomeChunk<any> = createPendingChunk();
+  const chunks: Map<number, SomeChunk<any>> = new Map();
   chunks.set(0, rootChunk);
-  let response = {
+  const response = {
     partialRow: '',
     rootChunk,
     chunks: chunks,
@@ -117,7 +117,7 @@ function createErrorChunk(error: Error): ErroredChunk {
 function wakeChunk(listeners: null | Array<() => mixed>) {
   if (listeners !== null) {
     for (let i = 0; i < listeners.length; i++) {
-      let listener = listeners[i];
+      const listener = listeners[i];
       listener();
     }
   }
@@ -128,8 +128,8 @@ function triggerErrorOnChunk<T>(chunk: SomeChunk<T>, error: Error): void {
     // We already resolved. We didn't expect to see this.
     return;
   }
-  let listeners = chunk._value;
-  let erroredChunk: ErroredChunk = (chunk: any);
+  const listeners = chunk._value;
+  const erroredChunk: ErroredChunk = (chunk: any);
   erroredChunk._status = ERRORED;
   erroredChunk._value = error;
   wakeChunk(listeners);
@@ -144,8 +144,8 @@ function resolveChunk<T>(chunk: SomeChunk<T>, value: T): void {
     // We already resolved. We didn't expect to see this.
     return;
   }
-  let listeners = chunk._value;
-  let resolvedChunk: ResolvedChunk<T> = (chunk: any);
+  const listeners = chunk._value;
+  const resolvedChunk: ResolvedChunk<T> = (chunk: any);
   resolvedChunk._status = RESOLVED;
   resolvedChunk._value = value;
   wakeChunk(listeners);
@@ -170,7 +170,7 @@ function readMaybeChunk<T>(maybeChunk: SomeChunk<T> | T): T {
     // $FlowFixMe
     return maybeChunk;
   }
-  let chunk: SomeChunk<T> = (maybeChunk: any);
+  const chunk: SomeChunk<T> = (maybeChunk: any);
   if (chunk._status === RESOLVED) {
     return chunk._value;
   } else if (chunk._status === PENDING) {
@@ -232,18 +232,18 @@ function initializeBlock<Props, Data>(
   tuple: UninitializedBlockPayload<Data>,
 ): BlockComponent<Props, Data> {
   // Require module first and then data. The ordering matters.
-  let moduleMetaData: ModuleMetaData = readMaybeChunk(tuple[1]);
-  let moduleReference: ModuleReference<
+  const moduleMetaData: ModuleMetaData = readMaybeChunk(tuple[1]);
+  const moduleReference: ModuleReference<
     BlockRenderFunction<Props, Data>,
   > = resolveModuleReference(moduleMetaData);
   // TODO: Do this earlier, as the chunk is resolved.
   preloadModule(moduleReference);
 
-  let moduleExport = requireModule(moduleReference);
+  const moduleExport = requireModule(moduleReference);
 
   // The ordering here is important because this call might suspend.
   // We don't want that to prevent the module graph for being initialized.
-  let data: Data = readMaybeChunk(tuple[2]);
+  const data: Data = readMaybeChunk(tuple[2]);
 
   return {
     $$typeof: REACT_BLOCK_TYPE,
@@ -256,7 +256,7 @@ function initializeBlock<Props, Data>(
 function createLazyBlock<Props, Data>(
   tuple: UninitializedBlockPayload<Data>,
 ): LazyComponent<BlockComponent<Props, Data>, UninitializedBlockPayload<Data>> {
-  let lazyType: LazyComponent<
+  const lazyType: LazyComponent<
     BlockComponent<Props, Data>,
     UninitializedBlockPayload<Data>,
   > = {
@@ -281,8 +281,8 @@ export function parseModelFromJSON<T>(
         // This was an escaped string value.
         return value.substring(1);
       } else {
-        let id = parseInt(value.substring(1), 16);
-        let chunks = response.chunks;
+        const id = parseInt(value.substring(1), 16);
+        const chunks = response.chunks;
         let chunk = chunks.get(id);
         if (!chunk) {
           chunk = createPendingChunk();
@@ -296,7 +296,7 @@ export function parseModelFromJSON<T>(
     }
   }
   if (typeof value === 'object' && value !== null) {
-    let tuple: [mixed, mixed, mixed, mixed] = (value: any);
+    const tuple: [mixed, mixed, mixed, mixed] = (value: any);
     switch (tuple[0]) {
       case REACT_ELEMENT_TYPE: {
         // TODO: Consider having React just directly accept these arrays as elements.
@@ -317,8 +317,8 @@ export function resolveModelChunk<T, M>(
   id: number,
   model: M,
 ): void {
-  let chunks = response.chunks;
-  let chunk = chunks.get(id);
+  const chunks = response.chunks;
+  const chunk = chunks.get(id);
   if (!chunk) {
     chunks.set(id, createResolvedChunk(model));
   } else {
@@ -332,10 +332,10 @@ export function resolveErrorChunk<T>(
   message: string,
   stack: string,
 ): void {
-  let error = new Error(message);
+  const error = new Error(message);
   error.stack = stack;
-  let chunks = response.chunks;
-  let chunk = chunks.get(id);
+  const chunks = response.chunks;
+  const chunk = chunks.get(id);
   if (!chunk) {
     chunks.set(id, createErrorChunk(error));
   } else {

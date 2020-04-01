@@ -1093,8 +1093,8 @@ describe('ReactLegacyErrorBoundaries', () => {
   });
 
   it('resets object refs if mounting aborts', () => {
-    let childRef = React.createRef();
-    let errorMessageRef = React.createRef();
+    const childRef = React.createRef();
+    const errorMessageRef = React.createRef();
 
     const container = document.createElement('div');
     ReactDOM.render(
@@ -2080,7 +2080,7 @@ describe('ReactLegacyErrorBoundaries', () => {
     let err2;
 
     try {
-      let container = document.createElement('div');
+      const container = document.createElement('div');
       expect(() => ReactDOM.render(<X />, container)).toErrorDev(
         'React.createElement: type is invalid -- expected a string ' +
           '(for built-in components) or a class/function ' +
@@ -2090,7 +2090,7 @@ describe('ReactLegacyErrorBoundaries', () => {
       err1 = err;
     }
     try {
-      let container = document.createElement('div');
+      const container = document.createElement('div');
       expect(() => ReactDOM.render(<Y />, container)).toErrorDev(
         'React.createElement: type is invalid -- expected a string ' +
           '(for built-in components) or a class/function ' +
