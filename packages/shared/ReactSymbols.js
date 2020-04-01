@@ -9,51 +9,44 @@
 
 // The Symbol used to tag the ReactElement-like types. If there is no native Symbol
 // nor polyfill, then a plain number is used for performance.
-const hasSymbol = typeof Symbol === 'function' && Symbol.for;
+export let REACT_ELEMENT_TYPE = 0xeac7;
+export let REACT_PORTAL_TYPE = 0xeaca;
+export let REACT_FRAGMENT_TYPE = 0xeacb;
+export let REACT_STRICT_MODE_TYPE = 0xeacc;
+export let REACT_PROFILER_TYPE = 0xead2;
+export let REACT_PROVIDER_TYPE = 0xeacd;
+export let REACT_CONTEXT_TYPE = 0xeace;
+export let REACT_FORWARD_REF_TYPE = 0xead0;
+export let REACT_SUSPENSE_TYPE = 0xead1;
+export let REACT_SUSPENSE_LIST_TYPE = 0xead8;
+export let REACT_MEMO_TYPE = 0xead3;
+export let REACT_LAZY_TYPE = 0xead4;
+export let REACT_BLOCK_TYPE = 0xead9;
+export let REACT_SERVER_BLOCK_TYPE = 0xeada;
+export let REACT_FUNDAMENTAL_TYPE = 0xead5;
+export let REACT_RESPONDER_TYPE = 0xead6;
+export let REACT_SCOPE_TYPE = 0xead7;
 
-export const REACT_ELEMENT_TYPE = hasSymbol
-  ? Symbol.for('react.element')
-  : 0xeac7;
-export const REACT_PORTAL_TYPE = hasSymbol
-  ? Symbol.for('react.portal')
-  : 0xeaca;
-export const REACT_FRAGMENT_TYPE = hasSymbol
-  ? Symbol.for('react.fragment')
-  : 0xeacb;
-export const REACT_STRICT_MODE_TYPE = hasSymbol
-  ? Symbol.for('react.strict_mode')
-  : 0xeacc;
-export const REACT_PROFILER_TYPE = hasSymbol
-  ? Symbol.for('react.profiler')
-  : 0xead2;
-export const REACT_PROVIDER_TYPE = hasSymbol
-  ? Symbol.for('react.provider')
-  : 0xeacd;
-export const REACT_CONTEXT_TYPE = hasSymbol
-  ? Symbol.for('react.context')
-  : 0xeace;
-export const REACT_FORWARD_REF_TYPE = hasSymbol
-  ? Symbol.for('react.forward_ref')
-  : 0xead0;
-export const REACT_SUSPENSE_TYPE = hasSymbol
-  ? Symbol.for('react.suspense')
-  : 0xead1;
-export const REACT_SUSPENSE_LIST_TYPE = hasSymbol
-  ? Symbol.for('react.suspense_list')
-  : 0xead8;
-export const REACT_MEMO_TYPE = hasSymbol ? Symbol.for('react.memo') : 0xead3;
-export const REACT_LAZY_TYPE = hasSymbol ? Symbol.for('react.lazy') : 0xead4;
-export const REACT_BLOCK_TYPE = hasSymbol ? Symbol.for('react.block') : 0xead9;
-export const REACT_SERVER_BLOCK_TYPE = hasSymbol
-  ? Symbol.for('react.server.block')
-  : 0xeada;
-export const REACT_FUNDAMENTAL_TYPE = hasSymbol
-  ? Symbol.for('react.fundamental')
-  : 0xead5;
-export const REACT_RESPONDER_TYPE = hasSymbol
-  ? Symbol.for('react.responder')
-  : 0xead6;
-export const REACT_SCOPE_TYPE = hasSymbol ? Symbol.for('react.scope') : 0xead7;
+if (typeof Symbol === 'function' && Symbol.for) {
+  const symbolFor = Symbol.for;
+  REACT_ELEMENT_TYPE = symbolFor('react.element');
+  REACT_PORTAL_TYPE = symbolFor('react.portal');
+  REACT_FRAGMENT_TYPE = symbolFor('react.fragment');
+  REACT_STRICT_MODE_TYPE = symbolFor('react.strict_mode');
+  REACT_PROFILER_TYPE = symbolFor('react.profiler');
+  REACT_PROVIDER_TYPE = symbolFor('react.provider');
+  REACT_CONTEXT_TYPE = symbolFor('react.context');
+  REACT_FORWARD_REF_TYPE = symbolFor('react.forward_ref');
+  REACT_SUSPENSE_TYPE = symbolFor('react.suspense');
+  REACT_SUSPENSE_LIST_TYPE = symbolFor('react.suspense_list');
+  REACT_MEMO_TYPE = symbolFor('react.memo');
+  REACT_LAZY_TYPE = symbolFor('react.lazy');
+  REACT_BLOCK_TYPE = symbolFor('react.block');
+  REACT_SERVER_BLOCK_TYPE = symbolFor('react.server.block');
+  REACT_FUNDAMENTAL_TYPE = symbolFor('react.fundamental');
+  REACT_RESPONDER_TYPE = symbolFor('react.responder');
+  REACT_SCOPE_TYPE = symbolFor('react.scope');
+}
 
 const MAYBE_ITERATOR_SYMBOL = typeof Symbol === 'function' && Symbol.iterator;
 const FAUX_ITERATOR_SYMBOL = '@@iterator';
