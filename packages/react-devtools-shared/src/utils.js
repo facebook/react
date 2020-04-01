@@ -11,8 +11,6 @@ import LRU from 'lru-cache';
 import {
   isElement,
   typeOf,
-  AsyncMode,
-  ConcurrentMode,
   ContextConsumer,
   ContextProvider,
   ForwardRef,
@@ -424,9 +422,6 @@ export function getDisplayNameForReactElement(
 ): string | null {
   const elementType = typeOf(element);
   switch (elementType) {
-    case AsyncMode:
-    case ConcurrentMode:
-      return 'ConcurrentMode';
     case ContextConsumer:
       return 'ContextConsumer';
     case ContextProvider:
