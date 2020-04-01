@@ -1307,7 +1307,49 @@ describe('ReactHooksWithNoopRenderer', () => {
         });
       });
 
-      it('shows a warning when a component updates its own state from within passive unmount function', () => {
+      it('still warns if there are updates after pending passive unmount effects have been flushed', () => {
+        let updaterFunction;
+
+        function Component() {
+          Scheduler.unstable_yieldValue('Component');
+          const [state, setState] = React.useState(false);
+          updaterFunction = setState;
+          React.useEffect(() => {
+            Scheduler.unstable_yieldValue('passive create');
+            return () => {
+              Scheduler.unstable_yieldValue('passive destroy');
+            };
+          }, []);
+          return state;
+        }
+
+        act(() => {
+          ReactNoop.renderToRootWithID(<Component />, 'root', () =>
+            Scheduler.unstable_yieldValue('Sync effect'),
+          );
+        });
+        expect(Scheduler).toHaveYielded([
+          'Component',
+          'Sync effect',
+          'passive create',
+        ]);
+
+        ReactNoop.unmountRootWithID('root');
+        expect(Scheduler).toFlushAndYield(['passive destroy']);
+
+        act(() => {
+          expect(() => {
+            updaterFunction(true);
+          }).toErrorDev(
+            "Warning: Can't perform a React state update on an unmounted component. " +
+              'This is a no-op, but it indicates a memory leak in your application. ' +
+              'To fix, cancel all subscriptions and asynchronous tasks in a useEffect cleanup function.\n' +
+              '    in Component (at **)',
+          );
+        });
+      });
+
+      it('does not show a warning when a component updates its own state from within passive unmount function', () => {
         function Component() {
           Scheduler.unstable_yieldValue('Component');
           const [didLoad, setDidLoad] = React.useState(false);
@@ -1333,17 +1375,11 @@ describe('ReactHooksWithNoopRenderer', () => {
 
           // Unmount but don't process pending passive destroy function
           ReactNoop.unmountRootWithID('root');
-          expect(() => {
-            expect(Scheduler).toFlushAndYield(['passive destroy']);
-          }).toErrorDev(
-            "Warning: Can't perform a React state update from within a useEffect cleanup function. " +
-              'To fix, move state updates to the useEffect() body.\n' +
-              '    in Component (at **)',
-          );
+          expect(Scheduler).toFlushAndYield(['passive destroy']);
         });
       });
 
-      it('shows a warning when a component updates a childs state from within passive unmount function', () => {
+      it('does not show a warning when a component updates a childs state from within passive unmount function', () => {
         function Parent() {
           Scheduler.unstable_yieldValue('Parent');
           const updaterRef = React.useRef(null);
@@ -1378,13 +1414,7 @@ describe('ReactHooksWithNoopRenderer', () => {
 
           // Unmount but don't process pending passive destroy function
           ReactNoop.unmountRootWithID('root');
-          expect(() => {
-            expect(Scheduler).toFlushAndYield(['Parent passive destroy']);
-          }).toErrorDev(
-            "Warning: Can't perform a React state update from within a useEffect cleanup function. " +
-              'To fix, move state updates to the useEffect() body.\n' +
-              '    in Parent (at **)',
-          );
+          expect(Scheduler).toFlushAndYield(['Parent passive destroy']);
         });
       });
 
