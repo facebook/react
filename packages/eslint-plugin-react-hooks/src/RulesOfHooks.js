@@ -106,6 +106,15 @@ function isInsideComponentOrHook(node) {
 }
 
 export default {
+  meta: {
+    type: 'problem',
+    docs: {
+      description: 'enforces the Rules of Hooks',
+      category: 'Possible Errors',
+      recommended: true,
+      url: 'https://reactjs.org/docs/hooks-rules.html',
+    },
+  },
   create(context) {
     const codePathReactHooksMapStack = [];
     const codePathSegmentStack = [];

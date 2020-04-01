@@ -11,6 +11,14 @@
 
 export default {
   meta: {
+    type: 'suggestion',
+    docs: {
+      description:
+        'verifies the list of dependencies for Hooks like useEffect and similar',
+      category: 'Best Practices',
+      recommended: true,
+      url: 'https://github.com/facebook/react/issues/14920',
+    },
     fixable: 'code',
     schema: [
       {
