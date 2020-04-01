@@ -128,9 +128,8 @@ describe('ReactDOMServerIntegration', () => {
             Text<span>More Text</span>
           </div>,
         );
-        let spanNode;
         expect(e.childNodes.length).toBe(2);
-        spanNode = e.childNodes[1];
+        const spanNode = e.childNodes[1];
         expectTextNode(e.childNodes[0], 'Text');
         expect(spanNode.tagName).toBe('SPAN');
         expect(spanNode.childNodes.length).toBe(1);
@@ -758,11 +757,10 @@ describe('ReactDOMServerIntegration', () => {
             </div>,
           );
           expect(e.id).toBe('parent');
-          let child1, child2, textNode;
           expect(e.childNodes.length).toBe(3);
-          child1 = e.childNodes[0];
-          textNode = e.childNodes[1];
-          child2 = e.childNodes[2];
+          const child1 = e.childNodes[0];
+          const textNode = e.childNodes[1];
+          const child2 = e.childNodes[2];
           expect(child1.id).toBe('child1');
           expect(child1.childNodes.length).toBe(0);
           expectTextNode(textNode, ' ');
@@ -776,11 +774,10 @@ describe('ReactDOMServerIntegration', () => {
         async render => {
           // prettier-ignore
           const e = await render(<div id="parent">  <div id="child" />   </div>); // eslint-disable-line no-multi-spaces
-          let textNode1, child, textNode2;
           expect(e.childNodes.length).toBe(3);
-          textNode1 = e.childNodes[0];
-          child = e.childNodes[1];
-          textNode2 = e.childNodes[2];
+          const textNode1 = e.childNodes[0];
+          const child = e.childNodes[1];
+          const textNode2 = e.childNodes[2];
           expect(e.id).toBe('parent');
           expectTextNode(textNode1, '  ');
           expect(child.id).toBe('child');

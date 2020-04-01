@@ -526,7 +526,6 @@ describe('ReactUpdates', () => {
 
     const bContainer = document.createElement('div');
 
-    let a;
     let b;
 
     let aUpdated = false;
@@ -560,7 +559,7 @@ describe('ReactUpdates', () => {
       }
     }
 
-    a = ReactTestUtils.renderIntoDocument(<A />);
+    const a = ReactTestUtils.renderIntoDocument(<A />);
     ReactDOM.unstable_batchedUpdates(function() {
       a.setState({x: 1});
       b.setState({x: 1});
@@ -733,11 +732,8 @@ describe('ReactUpdates', () => {
       }
     }
 
-    let x;
-    let y;
-
-    x = ReactTestUtils.renderIntoDocument(<X />);
-    y = ReactTestUtils.renderIntoDocument(<Y />);
+    const x = ReactTestUtils.renderIntoDocument(<X />);
+    const y = ReactTestUtils.renderIntoDocument(<Y />);
     expect(ReactDOM.findDOMNode(x).textContent).toBe('0');
 
     y.forceUpdate();

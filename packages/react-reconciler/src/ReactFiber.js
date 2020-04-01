@@ -610,8 +610,6 @@ export function createFiberFromTypeAndProps(
   mode: TypeOfMode,
   expirationTime: ExpirationTime,
 ): Fiber {
-  let fiber;
-
   let fiberTag = IndeterminateComponent;
   // The resolved type is set if we know what the final type will be. I.e. it's not lazy.
   let resolvedType = type;
@@ -731,7 +729,7 @@ export function createFiberFromTypeAndProps(
     }
   }
 
-  fiber = createFiber(fiberTag, pendingProps, key, mode);
+  const fiber = createFiber(fiberTag, pendingProps, key, mode);
   fiber.elementType = type;
   fiber.type = resolvedType;
   fiber.expirationTime = expirationTime;

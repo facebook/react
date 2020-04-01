@@ -46,8 +46,6 @@ function shouldPreventMouseEvent(name, type, props) {
  * @return {?function} The stored callback.
  */
 export default function getListener(inst: Fiber, registrationName: string) {
-  let listener;
-
   // TODO: shouldPreventMouseEvent is DOM-specific and definitely should not
   // live here; needs to be moved to a better place soon
   const stateNode = inst.stateNode;
@@ -60,7 +58,7 @@ export default function getListener(inst: Fiber, registrationName: string) {
     // Work in progress.
     return null;
   }
-  listener = props[registrationName];
+  const listener = props[registrationName];
   if (shouldPreventMouseEvent(registrationName, inst.type, props)) {
     return null;
   }

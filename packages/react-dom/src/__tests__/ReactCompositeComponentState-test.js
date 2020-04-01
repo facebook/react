@@ -283,8 +283,6 @@ describe('ReactCompositeComponent-state', () => {
   });
 
   it('should batch unmounts', () => {
-    let outer;
-
     class Inner extends React.Component {
       render() {
         return <div />;
@@ -306,7 +304,7 @@ describe('ReactCompositeComponent-state', () => {
     }
 
     const container = document.createElement('div');
-    outer = ReactDOM.render(<Outer />, container);
+    const outer = ReactDOM.render(<Outer />, container);
     expect(() => {
       ReactDOM.unmountComponentAtNode(container);
     }).not.toThrow();

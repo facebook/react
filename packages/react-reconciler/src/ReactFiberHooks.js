@@ -972,9 +972,10 @@ function useMutableSource<Source, Snapshot>(
 
   const dispatcher = ReactCurrentDispatcher.current;
 
-  let [snapshot, setSnapshot] = dispatcher.useState(() =>
+  const [currentSnapshot, setSnapshot] = dispatcher.useState(() =>
     readFromUnsubcribedMutableSource(root, source, getSnapshot),
   );
+  let snapshot = currentSnapshot;
 
   // Grab a handle to the state hook as well.
   // We use it to clear the pending update queue if we have a new source.

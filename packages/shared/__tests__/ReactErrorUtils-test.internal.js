@@ -82,7 +82,6 @@ describe('ReactErrorUtils', () => {
     const err1 = new Error();
     let err2;
     const err3 = new Error();
-    let err4;
     ReactErrorUtils.invokeGuardedCallback(
       'foo',
       function() {
@@ -98,7 +97,7 @@ describe('ReactErrorUtils', () => {
       },
       null,
     );
-    err4 = ReactErrorUtils.clearCaughtError();
+    const err4 = ReactErrorUtils.clearCaughtError();
 
     expect(err2).toBe(err1);
     expect(err4).toBe(err3);

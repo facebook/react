@@ -203,8 +203,7 @@ function processChildContext(
       return parentContext;
     }
 
-    let childContext;
-    childContext = instance.getChildContext();
+    const childContext = instance.getChildContext();
     for (const contextKey in childContext) {
       invariant(
         contextKey in childContextTypes,

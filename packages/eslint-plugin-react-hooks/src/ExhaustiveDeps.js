@@ -789,7 +789,7 @@ export default {
         });
       }
 
-      let {
+      const {
         suggestedDependencies,
         unnecessaryDependencies,
         missingDependencies,
@@ -801,6 +801,8 @@ export default {
         externalDependencies,
         isEffect,
       });
+
+      let suggestedDeps = suggestedDependencies;
 
       const problemCount =
         duplicateDependencies.size +
@@ -871,7 +873,7 @@ export default {
       // for effects though because those have legit
       // use cases for over-specifying deps.
       if (!isEffect && missingDependencies.size > 0) {
-        suggestedDependencies = collectRecommendations({
+        suggestedDeps = collectRecommendations({
           dependencies,
           declaredDependencies: [], // Pretend we don't know
           optionalDependencies,
@@ -890,7 +892,7 @@ export default {
         return declaredDepKeys.join(',') === sortedDeclaredDepKeys.join(',');
       }
       if (areDeclaredDepsAlphabetized()) {
-        suggestedDependencies.sort();
+        suggestedDeps.sort();
       }
 
       function getWarningMessage(deps, singlePrefix, label, fixVerb) {
@@ -1146,14 +1148,14 @@ export default {
           extraWarning,
         suggest: [
           {
-            desc: `Update the dependencies array to be: [${suggestedDependencies.join(
+            desc: `Update the dependencies array to be: [${suggestedDeps.join(
               ', ',
             )}]`,
             fix(fixer) {
               // TODO: consider preserving the comments or formatting?
               return fixer.replaceText(
                 declaredDependenciesNode,
-                `[${suggestedDependencies.join(', ')}]`,
+                `[${suggestedDeps.join(', ')}]`,
               );
             },
           },
