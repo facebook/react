@@ -115,6 +115,10 @@ describe('ReactDOMInput', () => {
     ReactDOM.render(<input type="checkbox" checked={undefined} />, container);
   });
 
+  it('should not warn with value and onInput handler', () => {
+    ReactDOM.render(<input value="..." onInput={() => {}} />, container);
+  });
+
   it('should properly control a value even if no event listener exists', () => {
     let node;
 
