@@ -1379,51 +1379,53 @@ describe('ReactFreshIntegration', () => {
       }
     });
 
-    it('remounts deprecated factory components', () => {
-      if (__DEV__) {
-        expect(() => {
-          render(`
+    if (!require('shared/ReactFeatureFlags').disableModulePatternComponents) {
+      it('remounts deprecated factory components', () => {
+        if (__DEV__) {
+          expect(() => {
+            render(`
+              function Parent() {
+                return {
+                  render() {
+                    return <Child prop="A" />;
+                  }
+                };
+              };
+
+              function Child({prop}) {
+                return <h1>{prop}1</h1>;
+              };
+
+              export default Parent;
+            `);
+          }).toErrorDev(
+            'The <Parent /> component appears to be a function component ' +
+              'that returns a class instance.',
+          );
+          const el = container.firstChild;
+          expect(el.textContent).toBe('A1');
+          patch(`
             function Parent() {
               return {
                 render() {
-                  return <Child prop="A" />;
+                  return <Child prop="B" />;
                 }
               };
             };
 
             function Child({prop}) {
-              return <h1>{prop}1</h1>;
+              return <h1>{prop}2</h1>;
             };
 
             export default Parent;
           `);
-        }).toErrorDev(
-          'The <Parent /> component appears to be a function component ' +
-            'that returns a class instance.',
-        );
-        const el = container.firstChild;
-        expect(el.textContent).toBe('A1');
-        patch(`
-          function Parent() {
-            return {
-              render() {
-                return <Child prop="B" />;
-              }
-            };
-          };
-
-          function Child({prop}) {
-            return <h1>{prop}2</h1>;
-          };
-
-          export default Parent;
-        `);
-        // Like classes, factory components always remount.
-        expect(container.firstChild).not.toBe(el);
-        const newEl = container.firstChild;
-        expect(newEl.textContent).toBe('B2');
-      }
-    });
+          // Like classes, factory components always remount.
+          expect(container.firstChild).not.toBe(el);
+          const newEl = container.firstChild;
+          expect(newEl.textContent).toBe('B2');
+        }
+      });
+    }
 
     describe('with inline requires', () => {
       beforeEach(() => {

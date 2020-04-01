@@ -1237,6 +1237,7 @@ describe('ReactHooks', () => {
       'Context can only be read while React is rendering',
     );
   });
+
   it('double-invokes components with Hooks in Strict Mode', () => {
     ReactFeatureFlags.debugRenderPhaseSideEffectsForStrictMode = true;
 
@@ -1351,32 +1352,35 @@ describe('ReactHooks', () => {
     );
     expect(renderCount).toBe(__DEV__ ? 2 : 1);
 
-    renderCount = 0;
-    expect(() => renderer.update(<Factory />)).toErrorDev(
-      'Warning: The <Factory /> component appears to be a function component that returns a class instance. ' +
-        'Change Factory to a class that extends React.Component instead. ' +
-        "If you can't use a class try assigning the prototype on the function as a workaround. " +
-        '`Factory.prototype = React.Component.prototype`. ' +
-        "Don't use an arrow function since it cannot be called with `new` by React.",
-    );
-    expect(renderCount).toBe(1);
-    renderCount = 0;
-    renderer.update(<Factory />);
-    expect(renderCount).toBe(1);
-    renderCount = 0;
-    renderer.update(
-      <StrictMode>
-        <Factory />
-      </StrictMode>,
-    );
-    expect(renderCount).toBe(__DEV__ ? 2 : 1); // Treated like a class
-    renderCount = 0;
-    renderer.update(
-      <StrictMode>
-        <Factory />
-      </StrictMode>,
-    );
-    expect(renderCount).toBe(__DEV__ ? 2 : 1); // Treated like a class
+    if (!require('shared/ReactFeatureFlags').disableModulePatternComponents) {
+      renderCount = 0;
+      expect(() => renderer.update(<Factory />)).toErrorDev(
+        'Warning: The <Factory /> component appears to be a function component that returns a class instance. ' +
+          'Change Factory to a class that extends React.Component instead. ' +
+          "If you can't use a class try assigning the prototype on the function as a workaround. " +
+          '`Factory.prototype = React.Component.prototype`. ' +
+          "Don't use an arrow function since it cannot be called with `new` by React.",
+      );
+      expect(renderCount).toBe(1);
+      renderCount = 0;
+      renderer.update(<Factory />);
+      expect(renderCount).toBe(1);
+
+      renderCount = 0;
+      renderer.update(
+        <StrictMode>
+          <Factory />
+        </StrictMode>,
+      );
+      expect(renderCount).toBe(__DEV__ ? 2 : 1); // Treated like a class
+      renderCount = 0;
+      renderer.update(
+        <StrictMode>
+          <Factory />
+        </StrictMode>,
+      );
+      expect(renderCount).toBe(__DEV__ ? 2 : 1); // Treated like a class
+    }
 
     renderCount = 0;
     renderer.update(<HasHooks />);

@@ -20,6 +20,7 @@ import ReactSharedInternals from 'shared/ReactSharedInternals';
 import {
   warnAboutDeprecatedLifecycles,
   disableLegacyContext,
+  disableModulePatternComponents,
   enableSuspenseServerRenderer,
   enableFundamentalAPI,
   enableDeprecatedFlareAPI,
@@ -527,27 +528,37 @@ function resolve(
       inst = Component(element.props, publicContext, updater);
       inst = finishHooks(Component, element.props, inst, publicContext);
 
-      if (inst == null || inst.render == null) {
+      if (__DEV__) {
+        // Support for module components is deprecated and is removed behind a flag.
+        // Whether or not it would crash later, we want to show a good message in DEV first.
+        if (inst != null && inst.render != null) {
+          const componentName = getComponentName(Component) || 'Unknown';
+          if (!didWarnAboutModulePatternComponent[componentName]) {
+            console.error(
+              'The <%s /> component appears to be a function component that returns a class instance. ' +
+                'Change %s to a class that extends React.Component instead. ' +
+                "If you can't use a class try assigning the prototype on the function as a workaround. " +
+                "`%s.prototype = React.Component.prototype`. Don't use an arrow function since it " +
+                'cannot be called with `new` by React.',
+              componentName,
+              componentName,
+              componentName,
+            );
+            didWarnAboutModulePatternComponent[componentName] = true;
+          }
+        }
+      }
+
+      // If the flag is on, everything is assumed to be a function component.
+      // Otherwise, we also do the unfortunate dynamic checks.
+      if (
+        disableModulePatternComponents ||
+        inst == null ||
+        inst.render == null
+      ) {
         child = inst;
         validateRenderResult(child, Component);
         return;
-      }
-
-      if (__DEV__) {
-        const componentName = getComponentName(Component) || 'Unknown';
-        if (!didWarnAboutModulePatternComponent[componentName]) {
-          console.error(
-            'The <%s /> component appears to be a function component that returns a class instance. ' +
-              'Change %s to a class that extends React.Component instead. ' +
-              "If you can't use a class try assigning the prototype on the function as a workaround. " +
-              "`%s.prototype = React.Component.prototype`. Don't use an arrow function since it " +
-              'cannot be called with `new` by React.',
-            componentName,
-            componentName,
-            componentName,
-          );
-          didWarnAboutModulePatternComponent[componentName] = true;
-        }
       }
     }
 

@@ -187,41 +187,43 @@ describe('ReactHooksWithNoopRenderer', () => {
     expect(Scheduler).toFlushAndYield([10]);
   });
 
-  it('throws inside module-style components', () => {
-    function Counter() {
-      return {
-        render() {
-          const [count] = useState(0);
-          return <Text text={this.props.label + ': ' + count} />;
-        },
-      };
-    }
-    ReactNoop.render(<Counter />);
-    expect(() =>
-      expect(Scheduler).toFlushAndThrow(
-        'Invalid hook call. Hooks can only be called inside of the body of a function component. This could happen ' +
-          'for one of the following reasons:\n' +
-          '1. You might have mismatching versions of React and the renderer (such as React DOM)\n' +
-          '2. You might be breaking the Rules of Hooks\n' +
-          '3. You might have more than one copy of React in the same app\n' +
-          'See https://fb.me/react-invalid-hook-call for tips about how to debug and fix this problem.',
-      ),
-    ).toErrorDev(
-      'Warning: The <Counter /> component appears to be a function component that returns a class instance. ' +
-        'Change Counter to a class that extends React.Component instead. ' +
-        "If you can't use a class try assigning the prototype on the function as a workaround. " +
-        '`Counter.prototype = React.Component.prototype`. ' +
-        "Don't use an arrow function since it cannot be called with `new` by React.",
-    );
+  if (!require('shared/ReactFeatureFlags').disableModulePatternComponents) {
+    it('throws inside module-style components', () => {
+      function Counter() {
+        return {
+          render() {
+            const [count] = useState(0);
+            return <Text text={this.props.label + ': ' + count} />;
+          },
+        };
+      }
+      ReactNoop.render(<Counter />);
+      expect(() =>
+        expect(Scheduler).toFlushAndThrow(
+          'Invalid hook call. Hooks can only be called inside of the body of a function component. This could happen ' +
+            'for one of the following reasons:\n' +
+            '1. You might have mismatching versions of React and the renderer (such as React DOM)\n' +
+            '2. You might be breaking the Rules of Hooks\n' +
+            '3. You might have more than one copy of React in the same app\n' +
+            'See https://fb.me/react-invalid-hook-call for tips about how to debug and fix this problem.',
+        ),
+      ).toErrorDev(
+        'Warning: The <Counter /> component appears to be a function component that returns a class instance. ' +
+          'Change Counter to a class that extends React.Component instead. ' +
+          "If you can't use a class try assigning the prototype on the function as a workaround. " +
+          '`Counter.prototype = React.Component.prototype`. ' +
+          "Don't use an arrow function since it cannot be called with `new` by React.",
+      );
 
-    // Confirm that a subsequent hook works properly.
-    function GoodCounter(props) {
-      const [count] = useState(props.initialCount);
-      return <Text text={count} />;
-    }
-    ReactNoop.render(<GoodCounter initialCount={10} />);
-    expect(Scheduler).toFlushAndYield([10]);
-  });
+      // Confirm that a subsequent hook works properly.
+      function GoodCounter(props) {
+        const [count] = useState(props.initialCount);
+        return <Text text={count} />;
+      }
+      ReactNoop.render(<GoodCounter initialCount={10} />);
+      expect(Scheduler).toFlushAndYield([10]);
+    });
+  }
 
   it('throws when called outside the render phase', () => {
     expect(() => useState(0)).toThrow(

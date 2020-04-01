@@ -644,16 +644,33 @@ describe('ReactDOMServerIntegration', () => {
         checkFooDiv(await render(<ClassComponent />));
       });
 
-      itRenders('factory components', async render => {
-        const FactoryComponent = () => {
-          return {
-            render: function() {
-              return <div>foo</div>;
-            },
+      if (require('shared/ReactFeatureFlags').disableModulePatternComponents) {
+        itThrowsWhenRendering(
+          'factory components',
+          async render => {
+            const FactoryComponent = () => {
+              return {
+                render: function() {
+                  return <div>foo</div>;
+                },
+              };
+            };
+            await render(<FactoryComponent />, 1);
+          },
+          'Objects are not valid as a React child (found: object with keys {render})',
+        );
+      } else {
+        itRenders('factory components', async render => {
+          const FactoryComponent = () => {
+            return {
+              render: function() {
+                return <div>foo</div>;
+              },
+            };
           };
-        };
-        checkFooDiv(await render(<FactoryComponent />, 1));
-      });
+          checkFooDiv(await render(<FactoryComponent />, 1));
+        });
+      }
     });
 
     describe('component hierarchies', function() {
