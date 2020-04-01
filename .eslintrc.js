@@ -126,6 +126,7 @@ module.exports = {
       },
       rules: {
         'no-var': ERROR,
+        'prefer-const': ERROR,
         strict: OFF,
       },
     },
