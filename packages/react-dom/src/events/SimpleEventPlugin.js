@@ -37,6 +37,9 @@ import SyntheticUIEvent from './SyntheticUIEvent';
 import SyntheticWheelEvent from './SyntheticWheelEvent';
 import getEventCharCode from './getEventCharCode';
 import accumulateTwoPhaseListeners from './accumulateTwoPhaseListeners';
+import accumulateEventTargetListeners from './accumulateEventTargetListeners';
+import {IS_TARGET_EVENT_ONLY} from 'legacy-events/EventSystemFlags';
+import {enableUseEventAPI} from 'shared/ReactFeatureFlags';
 
 // Only used in DEV for exhaustiveness validation.
 const knownHTMLTopLevelTypes: Array<DOMTopLevelEventType> = [
@@ -197,7 +200,23 @@ const SimpleEventPlugin: PluginModule<MouseEvent> = {
       nativeEvent,
       nativeEventTarget,
     );
-    accumulateTwoPhaseListeners(event, true, eventSystemFlags, targetContainer);
+
+    // For TargetEvent only accumulation, we do not traverse through
+    // the React tree looking for managed React DOM elements that have
+    // events. Instead we only check the EventTarget Store Map to see
+    // if the container has listeners for the particular phase we're
+    // interested in. This is because we attach the native event listener
+    // only in the given phase.
+    if (
+      enableUseEventAPI &&
+      eventSystemFlags !== undefined &&
+      eventSystemFlags & IS_TARGET_EVENT_ONLY &&
+      targetContainer != null
+    ) {
+      accumulateEventTargetListeners(event, targetContainer);
+    } else {
+      accumulateTwoPhaseListeners(event, true);
+    }
     return event;
   },
 };
