@@ -7,8 +7,4 @@
  * @flow
  */
 
-'use strict';
-
-const ReactART = require('./src/ReactART');
-
-module.exports = ReactART;
+export * from './src/ReactART';

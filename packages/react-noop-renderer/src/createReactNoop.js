@@ -17,12 +17,15 @@
 import type {Fiber} from 'react-reconciler/src/ReactFiber';
 import type {UpdateQueue} from 'react-reconciler/src/ReactUpdateQueue';
 import type {ReactNodeList} from 'shared/ReactTypes';
-import type {RootTag} from 'shared/ReactRootTags';
+import type {RootTag} from 'react-reconciler/src/ReactRootTags';
 
 import * as Scheduler from 'scheduler/unstable_mock';
-import {createPortal} from 'shared/ReactPortal';
 import {REACT_FRAGMENT_TYPE, REACT_ELEMENT_TYPE} from 'shared/ReactSymbols';
-import {ConcurrentRoot, BlockingRoot, LegacyRoot} from 'shared/ReactRootTags';
+import {
+  ConcurrentRoot,
+  BlockingRoot,
+  LegacyRoot,
+} from 'react-reconciler/src/ReactRootTags';
 
 type Container = {
   rootID: string,
@@ -785,6 +788,32 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       };
     },
 
+    createLegacyRoot() {
+      const container = {
+        rootID: '' + idCounter++,
+        pendingChildren: [],
+        children: [],
+      };
+      const fiberRoot = NoopRenderer.createContainer(
+        container,
+        LegacyRoot,
+        false,
+        null,
+      );
+      return {
+        _Scheduler: Scheduler,
+        render(children: ReactNodeList) {
+          NoopRenderer.updateContainer(children, fiberRoot, null, null);
+        },
+        getChildren() {
+          return getChildren(container);
+        },
+        getChildrenAsJSX() {
+          return getChildrenAsJSX(container);
+        },
+      };
+    },
+
     getChildrenAsJSX(rootID: string = DEFAULT_ROOT_ID) {
       const container = rootContainers.get(rootID);
       return getChildrenAsJSX(container);
@@ -800,7 +829,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       container: Container,
       key: ?string = null,
     ) {
-      return createPortal(children, container, null, key);
+      return NoopRenderer.createPortal(children, container, null, key);
     },
 
     // Shortcut for testing a single root
@@ -929,7 +958,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
         return;
       }
 
-      let bufferedLog = [];
+      const bufferedLog = [];
       function log(...args) {
         bufferedLog.push(...args, '\n');
       }
@@ -958,25 +987,21 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
 
       function logUpdateQueue(updateQueue: UpdateQueue<mixed>, depth) {
         log('  '.repeat(depth + 1) + 'QUEUED UPDATES');
-        const last = updateQueue.baseQueue;
-        if (last === null) {
-          return;
-        }
-        const first = last.next;
-        let update = first;
+        const first = updateQueue.firstBaseUpdate;
+        const update = first;
         if (update !== null) {
           do {
             log(
               '  '.repeat(depth + 1) + '~',
               '[' + update.expirationTime + ']',
             );
-          } while (update !== null && update !== first);
+          } while (update !== null);
         }
 
         const lastPending = updateQueue.shared.pending;
         if (lastPending !== null) {
           const firstPending = lastPending.next;
-          let pendingUpdate = firstPending;
+          const pendingUpdate = firstPending;
           if (pendingUpdate !== null) {
             do {
               log(

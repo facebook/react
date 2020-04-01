@@ -13,10 +13,15 @@ import type {
 } from 'react-reconciler/src/ReactFiberHooks';
 import type {ThreadID} from './ReactThreadIDAllocator';
 import type {
+  MutableSource,
+  MutableSourceGetSnapshotFn,
+  MutableSourceSubscribeFn,
   ReactContext,
   ReactEventResponderListener,
 } from 'shared/ReactTypes';
 import type {SuspenseConfig} from 'react-reconciler/src/ReactFiberSuspenseConfig';
+import type {ReactDOMListenerMap} from '../shared/ReactDOMTypes';
+
 import {validateContextBounds} from './ReactPartialRendererContext';
 
 import invariant from 'shared/invariant';
@@ -218,7 +223,7 @@ function readContext<T>(
   context: ReactContext<T>,
   observedBits: void | number | boolean,
 ): T {
-  let threadID = currentThreadID;
+  const threadID = currentThreadID;
   validateContextBounds(context, threadID);
   if (__DEV__) {
     if (isInHookUserCodeInDev) {
@@ -241,7 +246,7 @@ function useContext<T>(
     currentHookNameInDev = 'useContext';
   }
   resolveCurrentlyRenderingComponent();
-  let threadID = currentThreadID;
+  const threadID = currentThreadID;
   validateContextBounds(context, threadID);
   return context[threadID];
 }
@@ -459,6 +464,18 @@ function useResponder(responder, props): ReactEventResponderListener<any, any> {
   };
 }
 
+// TODO Decide on how to implement this hook for server rendering.
+// If a mutation occurs during render, consider triggering a Suspense boundary
+// and falling back to client rendering.
+function useMutableSource<Source, Snapshot>(
+  source: MutableSource<Source>,
+  getSnapshot: MutableSourceGetSnapshotFn<Source, Snapshot>,
+  subscribe: MutableSourceSubscribeFn<Source, Snapshot>,
+): Snapshot {
+  resolveCurrentlyRenderingComponent();
+  return getSnapshot(source._source);
+}
+
 function useDeferredValue<T>(value: T, config: TimeoutConfig | null | void): T {
   resolveCurrentlyRenderingComponent();
   return value;
@@ -472,6 +489,13 @@ function useTransition(
     callback();
   };
   return [startTransition, false];
+}
+
+function useEvent(event: any): ReactDOMListenerMap {
+  return {
+    clear: noop,
+    setListener: noop,
+  };
 }
 
 function noop(): void {}
@@ -500,4 +524,7 @@ export const Dispatcher: DispatcherType = {
   useResponder,
   useDeferredValue,
   useTransition,
+  useEvent,
+  // Subscriptions are not setup in a server environment.
+  useMutableSource,
 };

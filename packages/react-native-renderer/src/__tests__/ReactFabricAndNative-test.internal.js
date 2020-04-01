@@ -40,7 +40,7 @@ describe('created with ReactFabric called with ReactNative', () => {
       uiViewClassName: 'RCTView',
     }));
 
-    let ref = React.createRef();
+    const ref = React.createRef();
 
     class Component extends React.Component {
       render() {
@@ -50,7 +50,7 @@ describe('created with ReactFabric called with ReactNative', () => {
 
     ReactFabric.render(<Component ref={ref} />, 11);
 
-    let instance = ReactNative.findHostInstance_DEPRECATED(ref.current);
+    const instance = ReactNative.findHostInstance_DEPRECATED(ref.current);
     expect(instance._nativeTag).toBe(2);
   });
 
@@ -60,7 +60,7 @@ describe('created with ReactFabric called with ReactNative', () => {
       uiViewClassName: 'RCTView',
     }));
 
-    let ref = React.createRef();
+    const ref = React.createRef();
 
     class Component extends React.Component {
       render() {
@@ -70,7 +70,7 @@ describe('created with ReactFabric called with ReactNative', () => {
 
     ReactFabric.render(<Component ref={ref} />, 11);
 
-    let handle = ReactNative.findNodeHandle(ref.current);
+    const handle = ReactNative.findNodeHandle(ref.current);
     expect(handle).toBe(2);
   });
 
@@ -81,7 +81,7 @@ describe('created with ReactFabric called with ReactNative', () => {
       uiViewClassName: 'RCTView',
     }));
 
-    let ref = React.createRef();
+    const ref = React.createRef();
 
     ReactFabric.render(<View title="bar" ref={ref} />, 11);
     expect(nativeFabricUIManager.dispatchCommand).not.toBeCalled();
@@ -118,7 +118,7 @@ describe('created with ReactNative called with ReactFabric', () => {
       uiViewClassName: 'RCTView',
     }));
 
-    let ref = React.createRef();
+    const ref = React.createRef();
 
     class Component extends React.Component {
       render() {
@@ -128,7 +128,7 @@ describe('created with ReactNative called with ReactFabric', () => {
 
     ReactNative.render(<Component ref={ref} />, 11);
 
-    let instance = ReactFabric.findHostInstance_DEPRECATED(ref.current);
+    const instance = ReactFabric.findHostInstance_DEPRECATED(ref.current);
     expect(instance._nativeTag).toBe(3);
   });
 
@@ -138,7 +138,7 @@ describe('created with ReactNative called with ReactFabric', () => {
       uiViewClassName: 'RCTView',
     }));
 
-    let ref = React.createRef();
+    const ref = React.createRef();
 
     class Component extends React.Component {
       render() {
@@ -148,7 +148,7 @@ describe('created with ReactNative called with ReactFabric', () => {
 
     ReactNative.render(<Component ref={ref} />, 11);
 
-    let handle = ReactFabric.findNodeHandle(ref.current);
+    const handle = ReactFabric.findNodeHandle(ref.current);
     expect(handle).toBe(3);
   });
 
@@ -159,7 +159,7 @@ describe('created with ReactNative called with ReactFabric', () => {
       uiViewClassName: 'RCTView',
     }));
 
-    let ref = React.createRef();
+    const ref = React.createRef();
 
     ReactNative.render(<View title="bar" ref={ref} />, 11);
     expect(UIManager.dispatchViewManagerCommand).not.toBeCalled();

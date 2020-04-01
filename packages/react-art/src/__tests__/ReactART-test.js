@@ -11,22 +11,25 @@
 
 'use strict';
 
-const React = require('react');
+import * as React from 'react';
+
+import * as ReactART from 'react-art';
+import ARTSVGMode from 'art/modes/svg';
+import ARTCurrentMode from 'art/modes/current';
+// Since these are default exports, we need to import them using ESM.
+// Since they must be on top, we need to import this before ReactDOM.
+import Circle from 'react-art/Circle';
+import Rectangle from 'react-art/Rectangle';
+import Wedge from 'react-art/Wedge';
+
+// Isolate DOM renderer.
+jest.resetModules();
 const ReactDOM = require('react-dom');
 const ReactTestUtils = require('react-dom/test-utils');
 
 // Isolate test renderer.
 jest.resetModules();
 const ReactTestRenderer = require('react-test-renderer');
-
-// Isolate ART renderer.
-jest.resetModules();
-const ReactART = require('react-art');
-const ARTSVGMode = require('art/modes/svg');
-const ARTCurrentMode = require('art/modes/current');
-const Circle = require('react-art/Circle');
-const Rectangle = require('react-art/Rectangle');
-const Wedge = require('react-art/Wedge');
 
 // Isolate the noop renderer
 jest.resetModules();
@@ -388,7 +391,7 @@ describe('ReactART', () => {
       </CurrentRendererContext.Provider>,
     );
 
-    expect(Scheduler).toFlushAndYieldThrough(['A']);
+    expect(Scheduler).toFlushAndYieldThrough(__DEV__ ? ['A', 'A'] : ['A']);
 
     ReactDOM.render(
       <Surface>
@@ -403,7 +406,9 @@ describe('ReactART', () => {
     expect(ops).toEqual([null, 'ART']);
 
     ops = [];
-    expect(Scheduler).toFlushAndYield(['B', 'C']);
+    expect(Scheduler).toFlushAndYield(
+      __DEV__ ? ['B', 'B', 'C', 'C'] : ['B', 'C'],
+    );
 
     expect(ops).toEqual(['Test']);
   });

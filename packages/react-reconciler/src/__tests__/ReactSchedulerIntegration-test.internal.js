@@ -408,3 +408,123 @@ describe('ReactSchedulerIntegration', () => {
     );
   });
 });
+
+describe(
+  'regression test: does not infinite loop if `shouldYield` returns ' +
+    'true after a partial tree expires',
+  () => {
+    let logDuringShouldYield = false;
+
+    beforeEach(() => {
+      jest.resetModules();
+      ReactFeatureFlags = require('shared/ReactFeatureFlags');
+      ReactFeatureFlags.debugRenderPhaseSideEffectsForStrictMode = false;
+
+      jest.mock('scheduler', () => {
+        const actual = require.requireActual('scheduler/unstable_mock');
+        return {
+          ...actual,
+          unstable_shouldYield() {
+            if (logDuringShouldYield) {
+              actual.unstable_yieldValue('shouldYield');
+            }
+            return actual.unstable_shouldYield();
+          },
+        };
+      });
+
+      React = require('react');
+      ReactNoop = require('react-noop-renderer');
+      Scheduler = require('scheduler');
+
+      React = require('react');
+    });
+
+    afterEach(() => {
+      jest.mock('scheduler', () =>
+        require.requireActual('scheduler/unstable_mock'),
+      );
+    });
+
+    it('using public APIs to trigger real world scenario', async () => {
+      // This test reproduces a case where React's Scheduler task timed out but
+      // the `shouldYield` method returned true. The bug was that React fell
+      // into an infinite loop, because it would enter the work loop then
+      // immediately yield back to Scheduler.
+      //
+      // (The next test in this suite covers the same case. The difference is
+      // that this test only uses public APIs, whereas the next test mocks
+      // `shouldYield` to check when it is called.)
+      function Text({text}) {
+        return text;
+      }
+
+      function App({step}) {
+        return (
+          <>
+            <Text text="A" />
+            <TriggerErstwhileSchedulerBug />
+            <Text text="B" />
+            <TriggerErstwhileSchedulerBug />
+            <Text text="C" />
+          </>
+        );
+      }
+
+      function TriggerErstwhileSchedulerBug() {
+        // This triggers a once-upon-a-time bug in Scheduler that caused
+        // `shouldYield` to return true even though the current task expired.
+        Scheduler.unstable_advanceTime(10000);
+        Scheduler.unstable_requestPaint();
+        return null;
+      }
+
+      await ReactNoop.act(async () => {
+        ReactNoop.render(<App />);
+        expect(Scheduler).toFlushUntilNextPaint([]);
+        expect(Scheduler).toFlushUntilNextPaint([]);
+      });
+    });
+
+    it('mock Scheduler module to check if `shouldYield` is called', async () => {
+      // This test reproduces a bug where React's Scheduler task timed out but
+      // the `shouldYield` method returned true. Usually we try not to mock
+      // internal methods, but I've made an exception here since the point is
+      // specifically to test that React is reslient to the behavior of a
+      // Scheduler API. That being said, feel free to rewrite or delete this
+      // test if/when the API changes.
+      function Text({text}) {
+        Scheduler.unstable_yieldValue(text);
+        return text;
+      }
+
+      function App({step}) {
+        return (
+          <>
+            <Text text="A" />
+            <Text text="B" />
+            <Text text="C" />
+          </>
+        );
+      }
+
+      await ReactNoop.act(async () => {
+        // Partially render the tree, then yield
+        ReactNoop.render(<App />);
+        expect(Scheduler).toFlushAndYieldThrough(['A']);
+
+        // Start logging whenever shouldYield is called
+        logDuringShouldYield = true;
+        // Let's call it once to confirm the mock actually works
+        Scheduler.unstable_shouldYield();
+        expect(Scheduler).toHaveYielded(['shouldYield']);
+
+        // Expire the task
+        Scheduler.unstable_advanceTime(10000);
+        // Because the render expired, React should finish the tree without
+        // consulting `shouldYield` again
+        expect(Scheduler).toFlushExpired(['B', 'C']);
+      });
+    });
+  },
+);

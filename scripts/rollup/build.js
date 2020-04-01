@@ -97,7 +97,7 @@ const errorCodeOpts = {
 
 const closureOptions = {
   compilation_level: 'SIMPLE',
-  language_in: 'ECMASCRIPT5_STRICT',
+  language_in: 'ECMASCRIPT_2015',
   language_out: 'ECMASCRIPT5_STRICT',
   env: 'CUSTOM',
   warning_level: 'QUIET',
@@ -105,7 +105,40 @@ const closureOptions = {
   use_types_for_optimization: false,
   process_common_js_modules: false,
   rewrite_polyfills: false,
+  inject_libraries: false,
 };
+
+// Non-ES2015 stuff applied before closure compiler.
+const babelPlugins = [
+  // These plugins filter out non-ES2015.
+  '@babel/plugin-transform-flow-strip-types',
+  ['@babel/plugin-proposal-class-properties', {loose: true}],
+  'syntax-trailing-function-commas',
+  // These use loose mode which avoids embedding a runtime.
+  // TODO: Remove object spread from the source. Prefer Object.assign instead.
+  [
+    '@babel/plugin-proposal-object-rest-spread',
+    {loose: true, useBuiltIns: true},
+  ],
+  ['@babel/plugin-transform-template-literals', {loose: true}],
+  // TODO: Remove for...of from the source. It requires a runtime to be embedded.
+  '@babel/plugin-transform-for-of',
+  // TODO: Remove array spread from the source. Prefer .apply instead.
+  ['@babel/plugin-transform-spread', {loose: true, useBuiltIns: true}],
+  '@babel/plugin-transform-parameters',
+  // TODO: Remove array destructuring from the source. Requires runtime.
+  ['@babel/plugin-transform-destructuring', {loose: true, useBuiltIns: true}],
+];
+
+const babelToES5Plugins = [
+  // These plugins transform DEV mode. Closure compiler deals with these in PROD.
+  '@babel/plugin-transform-literals',
+  '@babel/plugin-transform-arrow-functions',
+  '@babel/plugin-transform-block-scoped-functions',
+  '@babel/plugin-transform-shorthand-properties',
+  '@babel/plugin-transform-computed-properties',
+  ['@babel/plugin-transform-block-scoping', {throwIfClosureRequired: true}],
+];
 
 function getBabelConfig(
   updateBabelOptions,
@@ -118,11 +151,14 @@ function getBabelConfig(
     packageName === 'react' || externals.indexOf('react') !== -1;
   let options = {
     exclude: '/**/node_modules/**',
+    babelrc: false,
+    configFile: false,
     presets: [],
-    plugins: [],
+    plugins: [...babelPlugins],
   };
   if (isDevelopment) {
     options.plugins.push(
+      ...babelToES5Plugins,
       // Turn console.error/warn() into a custom wrapper
       [
         require('../babel/transform-replace-console-calls'),
@@ -188,18 +224,16 @@ function getRollupOutputOptions(
 ) {
   const isProduction = isProductionBundleType(bundleType);
 
-  return Object.assign(
-    {},
-    {
-      file: outputPath,
-      format,
-      globals,
-      freeze: !isProduction,
-      interop: false,
-      name: globalName,
-      sourcemap: false,
-    }
-  );
+  return {
+    file: outputPath,
+    format,
+    globals,
+    freeze: !isProduction,
+    interop: false,
+    name: globalName,
+    sourcemap: false,
+    esModule: false,
+  };
 }
 
 function getFormat(bundleType) {
@@ -326,10 +360,11 @@ function getPlugins(
   bundleType,
   globalName,
   moduleType,
-  pureExternalModules
+  pureExternalModules,
+  bundle
 ) {
   const findAndRecordErrorCodes = extractErrorCodes(errorCodeOpts);
-  const forks = Modules.getForks(bundleType, entry, moduleType);
+  const forks = Modules.getForks(bundleType, entry, moduleType, bundle);
   const isProduction = isProductionBundleType(bundleType);
   const isProfiling = isProfilingBundleType(bundleType);
   const isUMDBundle =
@@ -370,7 +405,7 @@ function getPlugins(
     stripBanner({
       exclude: 'node_modules/**/*',
     }),
-    // Compile to ES5.
+    // Compile to ES2015.
     babel(
       getBabelConfig(
         updateBabelOptions,
@@ -393,9 +428,14 @@ function getPlugins(
       __UMD__: isUMDBundle ? 'true' : 'false',
       'process.env.NODE_ENV': isProduction ? "'production'" : "'development'",
       __EXPERIMENTAL__,
+      // Enable forked reconciler.
+      // NOTE: I did not put much thought into how to configure this.
+      __VARIANT__: bundle.enableNewReconciler === true,
     }),
-    // We still need CommonJS for external deps like object-assign.
-    commonjs(),
+    // The CommonJS plugin *only* exists to pull "art" into "react-art".
+    // I'm going to port "art" to ES modules to avoid this problem.
+    // Please don't enable this for anything else!
+    isUMDBundle && entry === 'react-art' && commonjs(),
     // Apply dead code elimination and/or minification.
     isProduction &&
       closure(
@@ -479,6 +519,40 @@ function shouldSkipBundle(bundle, bundleType) {
   return false;
 }
 
+function resolveEntryFork(resolvedEntry, isFBBundle) {
+  // Pick which entry point fork to use:
+  // .modern.fb.js
+  // .classic.fb.js
+  // .fb.js
+  // .stable.js
+  // .experimental.js
+  // .js
+
+  if (isFBBundle) {
+    const resolvedFBEntry = resolvedEntry.replace(
+      '.js',
+      __EXPERIMENTAL__ ? '.modern.fb.js' : '.classic.fb.js'
+    );
+    if (fs.existsSync(resolvedFBEntry)) {
+      return resolvedFBEntry;
+    }
+    const resolvedGenericFBEntry = resolvedEntry.replace('.js', '.fb.js');
+    if (fs.existsSync(resolvedGenericFBEntry)) {
+      return resolvedGenericFBEntry;
+    }
+    // Even if it's a FB bundle we fallthrough to pick stable or experimental if we don't have an FB fork.
+  }
+  const resolvedForkedEntry = resolvedEntry.replace(
+    '.js',
+    __EXPERIMENTAL__ ? '.experimental.js' : '.stable.js'
+  );
+  if (fs.existsSync(resolvedForkedEntry)) {
+    return resolvedForkedEntry;
+  }
+  // Just use the plain .js one.
+  return resolvedEntry;
+}
+
 async function createBundle(bundle, bundleType) {
   if (shouldSkipBundle(bundle, bundleType)) {
     return;
@@ -490,17 +564,15 @@ async function createBundle(bundle, bundleType) {
   const format = getFormat(bundleType);
   const packageName = Packaging.getPackageName(bundle.entry);
 
-  let resolvedEntry = require.resolve(bundle.entry);
   const isFBBundle =
     bundleType === FB_WWW_DEV ||
     bundleType === FB_WWW_PROD ||
     bundleType === FB_WWW_PROFILING;
-  if (isFBBundle) {
-    const resolvedFBEntry = resolvedEntry.replace('.js', '.fb.js');
-    if (fs.existsSync(resolvedFBEntry)) {
-      resolvedEntry = resolvedFBEntry;
-    }
-  }
+
+  let resolvedEntry = resolveEntryFork(
+    require.resolve(bundle.entry),
+    isFBBundle
+  );
 
   const shouldBundleDependencies =
     bundleType === UMD_DEV ||
@@ -545,7 +617,8 @@ async function createBundle(bundle, bundleType) {
       bundleType,
       bundle.global,
       bundle.moduleType,
-      pureExternalModules
+      pureExternalModules,
+      bundle
     ),
     output: {
       externalLiveBindings: false,

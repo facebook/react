@@ -250,7 +250,9 @@ describe('ChangeEventPlugin', () => {
     input.checked = true;
     // Under the hood, uncheck the box so that the click will "check" it again.
     setUntrackedChecked.call(input, false);
-    input.click();
+    input.dispatchEvent(
+      new MouseEvent('click', {bubbles: true, cancelable: true}),
+    );
     expect(input.checked).toBe(true);
     // We don't expect a React event because at the time of the click, the real
     // checked value (true) was the same as the last recorded "current" value
@@ -259,7 +261,7 @@ describe('ChangeEventPlugin', () => {
 
     // However, simulating a normal click should fire a React event because the
     // real value (false) would have changed from the last tracked value (true).
-    input.click();
+    input.dispatchEvent(new Event('click', {bubbles: true, cancelable: true}));
     expect(called).toBe(1);
   });
 
@@ -313,18 +315,24 @@ describe('ChangeEventPlugin', () => {
     const option2 = div.childNodes[1];
 
     // Select first option.
-    option1.click();
+    option1.dispatchEvent(
+      new Event('click', {bubbles: true, cancelable: true}),
+    );
     expect(called1).toBe(1);
     expect(called2).toBe(0);
 
     // Select second option.
-    option2.click();
+    option2.dispatchEvent(
+      new Event('click', {bubbles: true, cancelable: true}),
+    );
     expect(called1).toBe(1);
     expect(called2).toBe(1);
 
     // Select the first option.
     // It should receive the React change event again.
-    option1.click();
+    option1.dispatchEvent(
+      new Event('click', {bubbles: true, cancelable: true}),
+    );
     expect(called1).toBe(2);
     expect(called2).toBe(1);
   });

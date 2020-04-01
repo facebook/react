@@ -1103,7 +1103,9 @@ describe('ReactNewContext', () => {
 
       // Render the provider again using a different renderer
       ReactNoop.render(<App value={1} />);
-      expect(Scheduler).toFlushAndYield(['Foo', 'Foo']);
+      expect(Scheduler).toFlushAndYield(
+        __DEV__ ? ['Foo', 'Foo', 'Foo', 'Foo'] : ['Foo', 'Foo'],
+      );
 
       if (__DEV__) {
         expect(console.error.calls.argsFor(0)[0]).toContain(
@@ -1671,7 +1673,7 @@ describe('ReactNewContext', () => {
     }
 
     function randomActions(n) {
-      let actions = [];
+      const actions = [];
       for (let i = 0; i < n; i++) {
         actions.push(randomAction());
       }

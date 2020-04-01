@@ -19,15 +19,15 @@ import {createCursor, push, pop} from './ReactFiberStack';
 declare class NoContextT {}
 const NO_CONTEXT: NoContextT = ({}: any);
 
-let contextStackCursor: StackCursor<HostContext | NoContextT> = createCursor(
+const contextStackCursor: StackCursor<HostContext | NoContextT> = createCursor(
   NO_CONTEXT,
 );
-let contextFiberStackCursor: StackCursor<Fiber | NoContextT> = createCursor(
+const contextFiberStackCursor: StackCursor<Fiber | NoContextT> = createCursor(
   NO_CONTEXT,
 );
-let rootInstanceStackCursor: StackCursor<Container | NoContextT> = createCursor(
-  NO_CONTEXT,
-);
+const rootInstanceStackCursor: StackCursor<
+  Container | NoContextT,
+> = createCursor(NO_CONTEXT);
 
 function requiredContext<Value>(c: Value | NoContextT): Value {
   invariant(

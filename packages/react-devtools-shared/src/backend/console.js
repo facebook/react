@@ -27,7 +27,7 @@ const injectedRenderers: Map<
 
 let targetConsole: Object = console;
 let targetConsoleMethods = {};
-for (let method in console) {
+for (const method in console) {
   targetConsoleMethods[method] = console[method];
 }
 
@@ -40,7 +40,7 @@ export function dangerous_setTargetConsoleForTesting(
   targetConsole = targetConsoleForTesting;
 
   targetConsoleMethods = {};
-  for (let method in targetConsole) {
+  for (const method in targetConsole) {
     targetConsoleMethods[method] = console[method];
   }
 }
@@ -77,7 +77,7 @@ export function patch(): void {
   const originalConsoleMethods = {};
 
   unpatchFn = () => {
-    for (let method in originalConsoleMethods) {
+    for (const method in originalConsoleMethods) {
       try {
         // $FlowFixMe property error|warn is not writable.
         targetConsole[method] = originalConsoleMethods[method];
@@ -101,7 +101,7 @@ export function patch(): void {
             // If there's a component stack for at least one of the injected renderers, append it.
             // We don't handle the edge case of stacks for more than one (e.g. interleaved renderers?)
             // eslint-disable-next-line no-for-of-loops/no-for-of-loops
-            for (let {
+            for (const {
               getCurrentFiber,
               getDisplayNameForFiber,
             } of injectedRenderers.values()) {

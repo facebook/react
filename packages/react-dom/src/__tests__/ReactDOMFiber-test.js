@@ -13,8 +13,6 @@ const React = require('react');
 const ReactDOM = require('react-dom');
 const PropTypes = require('prop-types');
 
-const ReactFeatureFlags = require('shared/ReactFeatureFlags');
-
 describe('ReactDOMFiber', () => {
   let container;
 
@@ -213,7 +211,7 @@ describe('ReactDOMFiber', () => {
   };
 
   const assertNamespacesMatch = function(tree) {
-    let testContainer = document.createElement('div');
+    const testContainer = document.createElement('div');
     svgEls = [];
     htmlEls = [];
     mathEls = [];
@@ -249,7 +247,7 @@ describe('ReactDOMFiber', () => {
   });
 
   // TODO: remove in React 17
-  if (!ReactFeatureFlags.disableUnstableCreatePortal) {
+  if (!__EXPERIMENTAL__) {
     it('should support unstable_createPortal alias', () => {
       const portalContainer = document.createElement('div');
 
@@ -1226,7 +1224,7 @@ describe('ReactDOMFiber', () => {
 
   // Regression test for https://github.com/facebook/react/issues/12643#issuecomment-413727104
   it('should not diff memoized host components', () => {
-    let inputRef = React.createRef();
+    const inputRef = React.createRef();
     let didCallOnChange = false;
 
     class Child extends React.Component {

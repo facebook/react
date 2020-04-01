@@ -14,6 +14,8 @@ let React;
 let ReactDOMServer;
 let PropTypes;
 let ReactCurrentDispatcher;
+const enableSuspenseServerRenderer = require('shared/ReactFeatureFlags')
+  .enableSuspenseServerRenderer;
 
 function normalizeCodeLocInfo(str) {
   return str && str.replace(/\(at .+?:\d+\)/g, '(at **)');
@@ -686,7 +688,7 @@ describe('ReactDOMServer', () => {
     expect(markup).toBe('<div></div>');
   });
 
-  if (!__EXPERIMENTAL__) {
+  if (!enableSuspenseServerRenderer) {
     it('throws for unsupported types on the server', () => {
       expect(() => {
         ReactDOMServer.renderToString(<React.Suspense />);
@@ -707,7 +709,7 @@ describe('ReactDOMServer', () => {
           ),
         );
         ReactDOMServer.renderToString(<LazyFoo />);
-      }).toThrow('ReactDOMServer does not yet support lazy-loaded components.');
+      }).toThrow('ReactDOMServer does not yet support Suspense.');
     });
 
     it('throws when suspending on the server', () => {

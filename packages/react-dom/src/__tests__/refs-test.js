@@ -156,29 +156,31 @@ describe('reactiverefs', () => {
   });
 });
 
-describe('factory components', () => {
-  it('Should correctly get the ref', () => {
-    function Comp() {
-      return {
-        render() {
-          return <div ref="elemRef" />;
-        },
-      };
-    }
+if (!require('shared/ReactFeatureFlags').disableModulePatternComponents) {
+  describe('factory components', () => {
+    it('Should correctly get the ref', () => {
+      function Comp() {
+        return {
+          render() {
+            return <div ref="elemRef" />;
+          },
+        };
+      }
 
-    let inst;
-    expect(
-      () => (inst = ReactTestUtils.renderIntoDocument(<Comp />)),
-    ).toErrorDev(
-      'Warning: The <Comp /> component appears to be a function component that returns a class instance. ' +
-        'Change Comp to a class that extends React.Component instead. ' +
-        "If you can't use a class try assigning the prototype on the function as a workaround. " +
-        '`Comp.prototype = React.Component.prototype`. ' +
-        "Don't use an arrow function since it cannot be called with `new` by React.",
-    );
-    expect(inst.refs.elemRef.tagName).toBe('DIV');
+      let inst;
+      expect(
+        () => (inst = ReactTestUtils.renderIntoDocument(<Comp />)),
+      ).toErrorDev(
+        'Warning: The <Comp /> component appears to be a function component that returns a class instance. ' +
+          'Change Comp to a class that extends React.Component instead. ' +
+          "If you can't use a class try assigning the prototype on the function as a workaround. " +
+          '`Comp.prototype = React.Component.prototype`. ' +
+          "Don't use an arrow function since it cannot be called with `new` by React.",
+      );
+      expect(inst.refs.elemRef.tagName).toBe('DIV');
+    });
   });
-});
+}
 
 /**
  * Tests that when a ref hops around children, we can track that correctly.

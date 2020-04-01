@@ -381,6 +381,56 @@ describe('ReactIncrementalErrorHandling', () => {
     expect(ReactNoop.getChildren()).toEqual([]);
   });
 
+  it('retries one more time if an error occurs during a render that expires midway through the tree', () => {
+    function Oops() {
+      Scheduler.unstable_yieldValue('Oops');
+      throw new Error('Oops');
+    }
+
+    function Text({text}) {
+      Scheduler.unstable_yieldValue(text);
+      return text;
+    }
+
+    function App() {
+      return (
+        <>
+          <Text text="A" />
+          <Text text="B" />
+          <Oops />
+          <Text text="C" />
+          <Text text="D" />
+        </>
+      );
+    }
+
+    ReactNoop.render(<App />);
+
+    // Render part of the tree
+    expect(Scheduler).toFlushAndYieldThrough(['A', 'B']);
+
+    // Expire the render midway through
+    Scheduler.unstable_advanceTime(10000);
+    expect(() => Scheduler.unstable_flushExpired()).toThrow('Oops');
+
+    expect(Scheduler).toHaveYielded([
+      // The render expired, but we shouldn't throw out the partial work.
+      // Finish the current level.
+      'Oops',
+      'C',
+      'D',
+
+      // Since the error occured during a partially concurrent render, we should
+      // retry one more time, synchonrously.
+      'A',
+      'B',
+      'Oops',
+      'C',
+      'D',
+    ]);
+    expect(ReactNoop.getChildren()).toEqual([]);
+  });
+
   it('calls componentDidCatch multiple times for multiple errors', () => {
     let id = 0;
     class BadMount extends React.Component {
@@ -539,7 +589,12 @@ describe('ReactIncrementalErrorHandling', () => {
     expect(ops).toEqual([
       'ErrorBoundary render success',
       'BrokenRender',
-      // React doesn't retry because we're already rendering synchronously.
+
+      // React retries one more time
+      'ErrorBoundary render success',
+      'BrokenRender',
+
+      // Errored again on retry. Now handle it.
       'ErrorBoundary componentDidCatch',
       'ErrorBoundary render error',
     ]);
@@ -583,7 +638,12 @@ describe('ReactIncrementalErrorHandling', () => {
     expect(ops).toEqual([
       'ErrorBoundary render success',
       'BrokenRender',
-      // React doesn't retry because we're already rendering synchronously.
+
+      // React retries one more time
+      'ErrorBoundary render success',
+      'BrokenRender',
+
+      // Errored again on retry. Now handle it.
       'ErrorBoundary componentDidCatch',
       'ErrorBoundary render error',
     ]);
@@ -702,7 +762,12 @@ describe('ReactIncrementalErrorHandling', () => {
     expect(ops).toEqual([
       'RethrowErrorBoundary render',
       'BrokenRender',
-      // React doesn't retry because we're already rendering synchronously.
+
+      // React retries one more time
+      'RethrowErrorBoundary render',
+      'BrokenRender',
+
+      // Errored again on retry. Now handle it.
       'RethrowErrorBoundary componentDidCatch',
     ]);
     expect(ReactNoop.getChildren()).toEqual([]);
@@ -741,7 +806,12 @@ describe('ReactIncrementalErrorHandling', () => {
     expect(ops).toEqual([
       'RethrowErrorBoundary render',
       'BrokenRender',
-      // React doesn't retry because we're already rendering synchronously.
+
+      // React retries one more time
+      'RethrowErrorBoundary render',
+      'BrokenRender',
+
+      // Errored again on retry. Now handle it.
       'RethrowErrorBoundary componentDidCatch',
     ]);
     expect(ReactNoop.getChildren()).toEqual([]);
@@ -1381,7 +1451,7 @@ describe('ReactIncrementalErrorHandling', () => {
   it('error boundaries capture non-errors', () => {
     spyOnProd(console, 'error');
     spyOnDev(console, 'error');
-    let ops = [];
+    const ops = [];
 
     class ErrorBoundary extends React.Component {
       state = {error: null};
@@ -1625,38 +1695,110 @@ describe('ReactIncrementalErrorHandling', () => {
     expect(ReactNoop.getChildren()).toEqual([span('Caught an error: Hello')]);
   });
 
-  it('handles error thrown inside getDerivedStateFromProps of a module-style context provider', () => {
-    function Provider() {
-      return {
-        getChildContext() {
-          return {foo: 'bar'};
-        },
-        render() {
-          return 'Hi';
-        },
+  if (!require('shared/ReactFeatureFlags').disableModulePatternComponents) {
+    it('handles error thrown inside getDerivedStateFromProps of a module-style context provider', () => {
+      function Provider() {
+        return {
+          getChildContext() {
+            return {foo: 'bar'};
+          },
+          render() {
+            return 'Hi';
+          },
+        };
+      }
+      Provider.childContextTypes = {
+        x: () => {},
       };
-    }
-    Provider.childContextTypes = {
-      x: () => {},
-    };
-    Provider.getDerivedStateFromProps = () => {
-      throw new Error('Oops!');
-    };
+      Provider.getDerivedStateFromProps = () => {
+        throw new Error('Oops!');
+      };
 
-    ReactNoop.render(<Provider />);
-    expect(() => {
-      expect(Scheduler).toFlushAndThrow('Oops!');
-    }).toErrorDev([
-      'Warning: The <Provider /> component appears to be a function component that returns a class instance. ' +
-        'Change Provider to a class that extends React.Component instead. ' +
-        "If you can't use a class try assigning the prototype on the function as a workaround. " +
-        '`Provider.prototype = React.Component.prototype`. ' +
-        "Don't use an arrow function since it cannot be called with `new` by React.",
-      'Legacy context API has been detected within a strict-mode tree.\n\n' +
-        'The old API will be supported in all 16.x releases, but ' +
-        'applications using it should migrate to the new version.\n\n' +
-        'Please update the following components: Provider',
-    ]);
+      ReactNoop.render(<Provider />);
+      expect(() => {
+        expect(Scheduler).toFlushAndThrow('Oops!');
+      }).toErrorDev([
+        'Warning: The <Provider /> component appears to be a function component that returns a class instance. ' +
+          'Change Provider to a class that extends React.Component instead. ' +
+          "If you can't use a class try assigning the prototype on the function as a workaround. " +
+          '`Provider.prototype = React.Component.prototype`. ' +
+          "Don't use an arrow function since it cannot be called with `new` by React.",
+        'Legacy context API has been detected within a strict-mode tree.\n\n' +
+          'The old API will be supported in all 16.x releases, but ' +
+          'applications using it should migrate to the new version.\n\n' +
+          'Please update the following components: Provider',
+      ]);
+    });
+  }
+
+  it('uncaught errors should be discarded if the render is aborted', async () => {
+    const root = ReactNoop.createRoot();
+
+    function Oops() {
+      Scheduler.unstable_yieldValue('Oops');
+      throw Error('Oops');
+    }
+
+    await ReactNoop.act(async () => {
+      ReactNoop.discreteUpdates(() => {
+        root.render(<Oops />);
+      });
+      // Render past the component that throws, then yield.
+      expect(Scheduler).toFlushAndYieldThrough(['Oops']);
+      expect(root).toMatchRenderedOutput(null);
+      // Interleaved update. When the root completes, instead of throwing the
+      // error, it should try rendering again. This update will cause it to
+      // recover gracefully.
+      root.render('Everything is fine.');
+    });
+
+    // Should finish without throwing.
+    expect(root).toMatchRenderedOutput('Everything is fine.');
+  });
+
+  it('uncaught errors are discarded if the render is aborted, case 2', async () => {
+    const {useState} = React;
+    const root = ReactNoop.createRoot();
+
+    let setShouldThrow;
+    function Oops() {
+      const [shouldThrow, _setShouldThrow] = useState(false);
+      setShouldThrow = _setShouldThrow;
+      if (shouldThrow) {
+        throw Error('Oops');
+      }
+      return null;
+    }
+
+    function AllGood() {
+      Scheduler.unstable_yieldValue('Everything is fine.');
+      return 'Everything is fine.';
+    }
+
+    await ReactNoop.act(async () => {
+      root.render(<Oops />);
+    });
+
+    await ReactNoop.act(async () => {
+      // Schedule a high pri and a low pri update on the root.
+      ReactNoop.discreteUpdates(() => {
+        root.render(<Oops />);
+      });
+      root.render(<AllGood />);
+      // Render through just the high pri update. The low pri update remains on
+      // the queue.
+      expect(Scheduler).toFlushAndYieldThrough(['Everything is fine.']);
+
+      // Schedule a high pri update on a child that triggers an error.
+      // The root should capture this error. But since there's still a pending
+      // update on the root, the error should be suppressed.
+      ReactNoop.discreteUpdates(() => {
+        setShouldThrow(true);
+      });
+    });
+    // Should render the final state without throwing the error.
+    expect(Scheduler).toHaveYielded(['Everything is fine.']);
+    expect(root).toMatchRenderedOutput('Everything is fine.');
   });
 
   if (global.__PERSISTENT__) {

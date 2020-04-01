@@ -564,8 +564,8 @@ describe('ReactDOMComponent', () => {
             {'></div><script>alert("hi")</script>': 'selected'},
             null,
           );
-          let result1 = ReactDOMServer.renderToString(element1);
-          let result2 = ReactDOMServer.renderToString(element2);
+          const result1 = ReactDOMServer.renderToString(element1);
+          const result2 = ReactDOMServer.renderToString(element2);
           expect(result1.toLowerCase()).not.toContain('onclick');
           expect(result2.toLowerCase()).not.toContain('script');
         }
@@ -588,8 +588,8 @@ describe('ReactDOMComponent', () => {
             {'></x-foo-component><script>alert("hi")</script>': 'selected'},
             null,
           );
-          let result1 = ReactDOMServer.renderToString(element1);
-          let result2 = ReactDOMServer.renderToString(element2);
+          const result1 = ReactDOMServer.renderToString(element1);
+          const result2 = ReactDOMServer.renderToString(element2);
           expect(result1.toLowerCase()).not.toContain('onclick');
           expect(result2.toLowerCase()).not.toContain('script');
         }
@@ -1166,7 +1166,7 @@ describe('ReactDOMComponent', () => {
       let realToString;
       try {
         realToString = Object.prototype.toString;
-        let wrappedToString = function() {
+        const wrappedToString = function() {
           // Emulate browser behavior which is missing in jsdom
           if (this instanceof window.HTMLUnknownElement) {
             return '[object HTMLUnknownElement]';
@@ -1240,53 +1240,6 @@ describe('ReactDOMComponent', () => {
           'use `dangerouslySetInnerHTML`.' +
           (__DEV__ ? '\n    in input (at **)' : ''),
       );
-    });
-
-    it('should emit a warning once for a named custom component using shady DOM', () => {
-      const defaultCreateElement = document.createElement.bind(document);
-
-      try {
-        document.createElement = element => {
-          const container = defaultCreateElement(element);
-          container.shadyRoot = {};
-          return container;
-        };
-        class ShadyComponent extends React.Component {
-          render() {
-            return <polymer-component />;
-          }
-        }
-        const node = document.createElement('div');
-        expect(() => ReactDOM.render(<ShadyComponent />, node)).toErrorDev(
-          'ShadyComponent is using shady DOM. Using shady DOM with React can ' +
-            'cause things to break subtly.',
-        );
-        mountComponent({is: 'custom-shady-div2'});
-      } finally {
-        document.createElement = defaultCreateElement;
-      }
-    });
-
-    it('should emit a warning once for an unnamed custom component using shady DOM', () => {
-      const defaultCreateElement = document.createElement.bind(document);
-
-      try {
-        document.createElement = element => {
-          const container = defaultCreateElement(element);
-          container.shadyRoot = {};
-          return container;
-        };
-
-        expect(() => mountComponent({is: 'custom-shady-div'})).toErrorDev(
-          'A component is using shady DOM. Using shady DOM with React can ' +
-            'cause things to break subtly.',
-        );
-
-        // No additional warnings are expected
-        mountComponent({is: 'custom-shady-div2'});
-      } finally {
-        document.createElement = defaultCreateElement;
-      }
     });
 
     it('should treat menuitem as a void element but still create the closing tag', () => {
@@ -2422,7 +2375,7 @@ describe('ReactDOMComponent', () => {
       const container = document.createElement('div');
 
       ReactDOM.render(<img src={obj} />, container);
-      expect(container.firstChild.src).toBe('http://localhost/hello');
+      expect(container.firstChild.src).toBe('hello');
 
       ReactDOM.render(<svg arabicForm={obj} />, container);
       expect(container.firstChild.getAttribute('arabic-form')).toBe('hello');
@@ -2456,7 +2409,7 @@ describe('ReactDOMComponent', () => {
       const child = Object.create(parent);
       const el = ReactTestUtils.renderIntoDocument(<img src={child} />);
 
-      expect(el.src).toBe('http://localhost/hello.jpg');
+      expect(el.src).toBe('hello.jpg');
     });
 
     it('assigns ajaxify (an important internal FB attribute)', function() {
@@ -2600,10 +2553,10 @@ describe('ReactDOMComponent', () => {
   });
 
   it('receives events in specific order', () => {
-    let eventOrder = [];
-    let track = tag => () => eventOrder.push(tag);
-    let outerRef = React.createRef();
-    let innerRef = React.createRef();
+    const eventOrder = [];
+    const track = tag => () => eventOrder.push(tag);
+    const outerRef = React.createRef();
+    const innerRef = React.createRef();
 
     function OuterReactApp() {
       return (

@@ -600,7 +600,7 @@ describe('ReactDOMTracing', () => {
 
     describe('hydration', () => {
       it('traces interaction across hydration', async done => {
-        let ref = React.createRef();
+        const ref = React.createRef();
 
         function Child() {
           return 'Hello';
@@ -651,8 +651,10 @@ describe('ReactDOMTracing', () => {
       it('traces interaction across suspended hydration', async done => {
         let suspend = false;
         let resolve;
-        let promise = new Promise(resolvePromise => (resolve = resolvePromise));
-        let ref = React.createRef();
+        const promise = new Promise(
+          resolvePromise => (resolve = resolvePromise),
+        );
+        const ref = React.createRef();
 
         function Child() {
           if (suspend) {
@@ -720,8 +722,8 @@ describe('ReactDOMTracing', () => {
 
       it('traces interaction across client-rendered hydration', async done => {
         let suspend = false;
-        let promise = new Promise(() => {});
-        let ref = React.createRef();
+        const promise = new Promise(() => {});
+        const ref = React.createRef();
 
         function Child() {
           if (suspend) {

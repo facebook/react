@@ -11,7 +11,7 @@ import type {
   ReactDOMResponderEvent,
   ReactDOMResponderContext,
   PointerType,
-} from 'shared/ReactDOMTypes';
+} from 'react-dom/src/shared/ReactDOMTypes';
 import type {
   EventPriority,
   ReactEventResponderListener,
@@ -126,6 +126,7 @@ const rootEventTypes = hasPointerEvents
       'click',
       'keyup',
       'scroll',
+      'blur',
     ]
   : [
       'click',
@@ -138,6 +139,7 @@ const rootEventTypes = hasPointerEvents
       'dragstart',
       'mouseup_active',
       'touchend',
+      'blur',
     ];
 
 function isFunction(obj): boolean {
@@ -172,8 +174,7 @@ function createPressEvent(
     ({altKey, ctrlKey, metaKey, shiftKey} = nativeEvent);
     // Only check for one property, checking for all of them is costly. We can assume
     // if clientX exists, so do the rest.
-    let eventObject;
-    eventObject = (touchEvent: any) || (nativeEvent: any);
+    const eventObject = (touchEvent: any) || (nativeEvent: any);
     if (eventObject) {
       ({clientX, clientY, pageX, pageY, screenX, screenY} = eventObject);
     }
@@ -669,7 +670,8 @@ const pressResponderImpl = {
     props: PressProps,
     state: PressState,
   ): void {
-    let {pointerType, target, type} = event;
+    const {pointerType, type} = event;
+    let target = event.target;
 
     const nativeEvent: any = event.nativeEvent;
     const isPressed = state.isPressed;
@@ -881,6 +883,14 @@ const pressResponderImpl = {
       case 'touchcancel':
       case 'dragstart': {
         dispatchCancel(event, context, props, state);
+        break;
+      }
+      case 'blur': {
+        // If we encounter a blur that happens on the pressed target
+        // then disengage the blur.
+        if (isPressed && target === state.pressTarget) {
+          dispatchCancel(event, context, props, state);
+        }
       }
     }
   },
@@ -893,6 +903,7 @@ const pressResponderImpl = {
   },
 };
 
+// $FlowFixMe Can't add generic types without causing a parsing/syntax errors
 export const PressResponder = React.DEPRECATED_createResponder(
   'Press',
   pressResponderImpl,
@@ -900,6 +911,6 @@ export const PressResponder = React.DEPRECATED_createResponder(
 
 export function usePress(
   props: PressProps,
-): ReactEventResponderListener<any, any> {
+): ?ReactEventResponderListener<any, any> {
   return React.DEPRECATED_useResponder(PressResponder, props);
 }

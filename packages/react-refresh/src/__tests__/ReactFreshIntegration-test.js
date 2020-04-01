@@ -16,8 +16,8 @@ let ReactDOM;
 let ReactFreshRuntime;
 let act;
 
-let babel = require('@babel/core');
-let freshPlugin = require('react-refresh/babel');
+const babel = require('@babel/core');
+const freshPlugin = require('react-refresh/babel');
 
 describe('ReactFreshIntegration', () => {
   let container;
@@ -100,7 +100,7 @@ describe('ReactFreshIntegration', () => {
       // (In a real module system we'd do this for *all* exports.)
       // For example, this can happen if you convert a class to a function.
       // Or if you wrap something in a HOC.
-      let didExportsChange =
+      const didExportsChange =
         ReactFreshRuntime.getFamilyByType(prevExports.default) !==
         ReactFreshRuntime.getFamilyByType(nextExports.default);
       if (didExportsChange) {
@@ -1379,51 +1379,53 @@ describe('ReactFreshIntegration', () => {
       }
     });
 
-    it('remounts deprecated factory components', () => {
-      if (__DEV__) {
-        expect(() => {
-          render(`
+    if (!require('shared/ReactFeatureFlags').disableModulePatternComponents) {
+      it('remounts deprecated factory components', () => {
+        if (__DEV__) {
+          expect(() => {
+            render(`
+              function Parent() {
+                return {
+                  render() {
+                    return <Child prop="A" />;
+                  }
+                };
+              };
+
+              function Child({prop}) {
+                return <h1>{prop}1</h1>;
+              };
+
+              export default Parent;
+            `);
+          }).toErrorDev(
+            'The <Parent /> component appears to be a function component ' +
+              'that returns a class instance.',
+          );
+          const el = container.firstChild;
+          expect(el.textContent).toBe('A1');
+          patch(`
             function Parent() {
               return {
                 render() {
-                  return <Child prop="A" />;
+                  return <Child prop="B" />;
                 }
               };
             };
 
             function Child({prop}) {
-              return <h1>{prop}1</h1>;
+              return <h1>{prop}2</h1>;
             };
 
             export default Parent;
           `);
-        }).toErrorDev(
-          'The <Parent /> component appears to be a function component ' +
-            'that returns a class instance.',
-        );
-        const el = container.firstChild;
-        expect(el.textContent).toBe('A1');
-        patch(`
-          function Parent() {
-            return {
-              render() {
-                return <Child prop="B" />;
-              }
-            };
-          };
-
-          function Child({prop}) {
-            return <h1>{prop}2</h1>;
-          };
-
-          export default Parent;
-        `);
-        // Like classes, factory components always remount.
-        expect(container.firstChild).not.toBe(el);
-        const newEl = container.firstChild;
-        expect(newEl.textContent).toBe('B2');
-      }
-    });
+          // Like classes, factory components always remount.
+          expect(container.firstChild).not.toBe(el);
+          const newEl = container.firstChild;
+          expect(newEl.textContent).toBe('B2');
+        }
+      });
+    }
 
     describe('with inline requires', () => {
       beforeEach(() => {

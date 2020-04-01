@@ -7,25 +7,27 @@
  * @flow
  */
 
-import type {ReactModelRoot} from 'react-flight/src/ReactFlightClient';
+import type {Response as FlightResponse} from 'react-client/src/ReactFlightClientStream';
 
 import {
   createResponse,
-  getModelRoot,
   reportGlobalError,
   processStringChunk,
   processBinaryChunk,
-  complete,
-} from 'react-flight/inline.dom';
+  close,
+} from 'react-client/src/ReactFlightClientStream';
 
-function startReadingFromStream(response, stream: ReadableStream): void {
-  let reader = stream.getReader();
+function startReadingFromStream<T>(
+  response: FlightResponse<T>,
+  stream: ReadableStream,
+): void {
+  const reader = stream.getReader();
   function progress({done, value}) {
     if (done) {
-      complete(response);
+      close(response);
       return;
     }
-    let buffer: Uint8Array = (value: any);
+    const buffer: Uint8Array = (value: any);
     processBinaryChunk(response, buffer);
     return reader.read().then(progress, error);
   }
@@ -35,16 +37,18 @@ function startReadingFromStream(response, stream: ReadableStream): void {
   reader.read().then(progress, error);
 }
 
-function readFromReadableStream<T>(stream: ReadableStream): ReactModelRoot<T> {
-  let response = createResponse(stream);
+function createFromReadableStream<T>(
+  stream: ReadableStream,
+): FlightResponse<T> {
+  const response: FlightResponse<T> = createResponse();
   startReadingFromStream(response, stream);
-  return getModelRoot(response);
+  return response;
 }
 
-function readFromFetch<T>(
+function createFromFetch<T>(
   promiseForResponse: Promise<Response>,
-): ReactModelRoot<T> {
-  let response = createResponse(promiseForResponse);
+): FlightResponse<T> {
+  const response: FlightResponse<T> = createResponse();
   promiseForResponse.then(
     function(r) {
       startReadingFromStream(response, (r.body: any));
@@ -53,20 +57,20 @@ function readFromFetch<T>(
       reportGlobalError(response, e);
     },
   );
-  return getModelRoot(response);
+  return response;
 }
 
-function readFromXHR<T>(request: XMLHttpRequest): ReactModelRoot<T> {
-  let response = createResponse(request);
+function createFromXHR<T>(request: XMLHttpRequest): FlightResponse<T> {
+  const response: FlightResponse<T> = createResponse();
   let processedLength = 0;
   function progress(e: ProgressEvent): void {
-    let chunk = request.responseText;
+    const chunk = request.responseText;
     processStringChunk(response, chunk, processedLength);
     processedLength = chunk.length;
   }
   function load(e: ProgressEvent): void {
     progress(e);
-    complete(response);
+    close(response);
   }
   function error(e: ProgressEvent): void {
     reportGlobalError(response, new TypeError('Network error'));
@@ -76,11 +80,7 @@ function readFromXHR<T>(request: XMLHttpRequest): ReactModelRoot<T> {
   request.addEventListener('error', error);
   request.addEventListener('abort', error);
   request.addEventListener('timeout', error);
-  return getModelRoot(response);
+  return response;
 }
 
-export default {
-  readFromXHR,
-  readFromFetch,
-  readFromReadableStream,
-};
+export {createFromXHR, createFromFetch, createFromReadableStream};

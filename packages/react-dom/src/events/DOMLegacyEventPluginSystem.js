@@ -9,13 +9,18 @@
 
 import type {AnyNativeEvent} from 'legacy-events/PluginModuleType';
 import type {DOMTopLevelEventType} from 'legacy-events/TopLevelEventTypes';
+import type {ElementListenerMap} from '../events/DOMEventListenerMap';
 import type {EventSystemFlags} from 'legacy-events/EventSystemFlags';
 import type {Fiber} from 'react-reconciler/src/ReactFiber';
 import type {PluginModule} from 'legacy-events/PluginModuleType';
 import type {ReactSyntheticEvent} from 'legacy-events/ReactSyntheticEventType';
 import type {TopLevelType} from 'legacy-events/TopLevelEventTypes';
 
-import {HostRoot, HostComponent, HostText} from 'shared/ReactWorkTags';
+import {
+  HostRoot,
+  HostComponent,
+  HostText,
+} from 'react-reconciler/src/ReactWorkTags';
 import {IS_FIRST_ANCESTOR} from 'legacy-events/EventSystemFlags';
 import {batchedEventUpdates} from 'legacy-events/ReactGenericBatching';
 import {runEventsInBatch} from 'legacy-events/EventBatching';
@@ -25,7 +30,6 @@ import {registrationNameDependencies} from 'legacy-events/EventPluginRegistry';
 
 import getEventTarget from './getEventTarget';
 import {getClosestInstanceFromNode} from '../client/ReactDOMComponentTree';
-import {trapCapturedEvent, trapBubbledEvent} from './ReactDOMEventListener';
 import {getListenerMapForElement} from './DOMEventListenerMap';
 import isEventSupported from './isEventSupported';
 import {
@@ -40,6 +44,7 @@ import {
   getRawEventName,
   mediaEventTypes,
 } from './DOMTopLevelEventTypes';
+import {addTrappedEventListener} from './ReactDOMEventListener';
 
 /**
  * Summary of `DOMEventPluginSystem` event handling:
@@ -309,7 +314,7 @@ export function dispatchEventForLegacyPluginEventSystem(
  */
 export function legacyListenToEvent(
   registrationName: string,
-  mountAt: Document | Element | Node,
+  mountAt: Document | Element,
 ): void {
   const listenerMap = getListenerMapForElement(mountAt);
   const dependencies = registrationNameDependencies[registrationName];
@@ -322,60 +327,62 @@ export function legacyListenToEvent(
 
 export function legacyListenToTopLevelEvent(
   topLevelType: DOMTopLevelEventType,
-  mountAt: Document | Element | Node,
-  listenerMap: Map<DOMTopLevelEventType | string, null | (any => void)>,
+  mountAt: Document | Element,
+  listenerMap: ElementListenerMap,
 ): void {
   if (!listenerMap.has(topLevelType)) {
     switch (topLevelType) {
-      case TOP_SCROLL:
-        trapCapturedEvent(TOP_SCROLL, mountAt);
+      case TOP_SCROLL: {
+        legacyTrapCapturedEvent(TOP_SCROLL, mountAt, listenerMap);
         break;
+      }
       case TOP_FOCUS:
       case TOP_BLUR:
-        trapCapturedEvent(TOP_FOCUS, mountAt);
-        trapCapturedEvent(TOP_BLUR, mountAt);
-        // We set the flag for a single dependency later in this function,
-        // but this ensures we mark both as attached rather than just one.
-        listenerMap.set(TOP_BLUR, null);
-        listenerMap.set(TOP_FOCUS, null);
+        legacyTrapCapturedEvent(TOP_FOCUS, mountAt, listenerMap);
+        legacyTrapCapturedEvent(TOP_BLUR, mountAt, listenerMap);
         break;
       case TOP_CANCEL:
-      case TOP_CLOSE:
+      case TOP_CLOSE: {
         if (isEventSupported(getRawEventName(topLevelType))) {
-          trapCapturedEvent(topLevelType, mountAt);
+          legacyTrapCapturedEvent(topLevelType, mountAt, listenerMap);
         }
         break;
+      }
       case TOP_INVALID:
       case TOP_SUBMIT:
       case TOP_RESET:
         // We listen to them on the target DOM elements.
         // Some of them bubble so we don't want them to fire twice.
         break;
-      default:
+      default: {
         // By default, listen on the top level to all non-media events.
         // Media events don't bubble so adding the listener wouldn't do anything.
         const isMediaEvent = mediaEventTypes.indexOf(topLevelType) !== -1;
         if (!isMediaEvent) {
-          trapBubbledEvent(topLevelType, mountAt);
+          legacyTrapBubbledEvent(topLevelType, mountAt, listenerMap);
         }
         break;
+      }
     }
-    listenerMap.set(topLevelType, null);
   }
 }
 
-export function isListeningToAllDependencies(
-  registrationName: string,
-  mountAt: Document | Element,
-): boolean {
-  const listenerMap = getListenerMapForElement(mountAt);
-  const dependencies = registrationNameDependencies[registrationName];
-
-  for (let i = 0; i < dependencies.length; i++) {
-    const dependency = dependencies[i];
-    if (!listenerMap.has(dependency)) {
-      return false;
-    }
+export function legacyTrapBubbledEvent(
+  topLevelType: DOMTopLevelEventType,
+  element: Document | Element,
+  listenerMap?: ElementListenerMap,
+): void {
+  const listener = addTrappedEventListener(element, topLevelType, false);
+  if (listenerMap) {
+    listenerMap.set(topLevelType, {passive: undefined, listener});
   }
-  return true;
+}
+
+export function legacyTrapCapturedEvent(
+  topLevelType: DOMTopLevelEventType,
+  element: Document | Element,
+  listenerMap: ElementListenerMap,
+): void {
+  const listener = addTrappedEventListener(element, topLevelType, true);
+  listenerMap.set(topLevelType, {passive: undefined, listener});
 }

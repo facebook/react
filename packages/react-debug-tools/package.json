@@ -29,6 +29,7 @@
     "react": "^16.0.0"
   },
   "dependencies": {
-    "error-stack-parser": "^2.0.2"
+    "error-stack-parser": "^2.0.2",
+    "object-assign": "^4.1.1"
   }
 }

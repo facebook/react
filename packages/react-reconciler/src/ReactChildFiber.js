@@ -9,16 +9,19 @@
 
 import type {ReactElement} from 'shared/ReactElementType';
 import type {ReactPortal} from 'shared/ReactTypes';
+import type {BlockComponent} from 'react/src/ReactBlock';
+import type {LazyComponent} from 'react/src/ReactLazy';
 import type {Fiber} from './ReactFiber';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
 
 import getComponentName from 'shared/getComponentName';
-import {Placement, Deletion} from 'shared/ReactSideEffectTags';
+import {Placement, Deletion} from './ReactSideEffectTags';
 import {
   getIteratorFn,
   REACT_ELEMENT_TYPE,
   REACT_FRAGMENT_TYPE,
   REACT_PORTAL_TYPE,
+  REACT_LAZY_TYPE,
   REACT_BLOCK_TYPE,
 } from 'shared/ReactSymbols';
 import {
@@ -28,7 +31,7 @@ import {
   HostPortal,
   Fragment,
   Block,
-} from 'shared/ReactWorkTags';
+} from './ReactWorkTags';
 import invariant from 'shared/invariant';
 import {warnAboutStringRefs, enableBlocksAPI} from 'shared/ReactFeatureFlags';
 
@@ -107,7 +110,7 @@ function coerceRef(
   current: Fiber | null,
   element: ReactElement,
 ) {
-  let mixedRef = element.ref;
+  const mixedRef = element.ref;
   if (
     mixedRef !== null &&
     typeof mixedRef !== 'function' &&
@@ -258,6 +261,22 @@ function warnOnFunctionType() {
         'you return a Component instead of <Component /> from render. ' +
         'Or maybe you meant to call this function rather than return it.',
     );
+  }
+}
+
+// We avoid inlining this to avoid potential deopts from using try/catch.
+/** @noinline */
+function resolveLazyType<T, P>(
+  lazyComponent: LazyComponent<T, P>,
+): LazyComponent<T, P> | T {
+  try {
+    // If we can, let's peek at the resulting type.
+    const payload = lazyComponent._payload;
+    const init = lazyComponent._init;
+    return init(payload);
+  } catch (x) {
+    // Leave it in place and let it throw again in the begin phase.
+    return lazyComponent;
   }
 }
 
@@ -417,21 +436,28 @@ function ChildReconciler(shouldTrackSideEffects) {
           existing._debugOwner = element._owner;
         }
         return existing;
-      } else if (
-        enableBlocksAPI &&
-        current.tag === Block &&
-        element.type.$$typeof === REACT_BLOCK_TYPE &&
-        element.type.render === current.type.render
-      ) {
-        // Same as above but also update the .type field.
-        const existing = useFiber(current, element.props);
-        existing.return = returnFiber;
-        existing.type = element.type;
-        if (__DEV__) {
-          existing._debugSource = element._source;
-          existing._debugOwner = element._owner;
+      } else if (enableBlocksAPI && current.tag === Block) {
+        // The new Block might not be initialized yet. We need to initialize
+        // it in case initializing it turns out it would match.
+        let type = element.type;
+        if (type.$$typeof === REACT_LAZY_TYPE) {
+          type = resolveLazyType(type);
         }
-        return existing;
+        if (
+          type.$$typeof === REACT_BLOCK_TYPE &&
+          ((type: any): BlockComponent<any, any>)._render ===
+            (current.type: BlockComponent<any, any>)._render
+        ) {
+          // Same as above but also update the .type field.
+          const existing = useFiber(current, element.props);
+          existing.return = returnFiber;
+          existing.type = type;
+          if (__DEV__) {
+            existing._debugSource = element._source;
+            existing._debugOwner = element._owner;
+          }
+          return existing;
+        }
       }
     }
     // Insert
@@ -972,9 +998,8 @@ function ChildReconciler(shouldTrackSideEffects) {
       if ((newChildrenIterable: any).entries === iteratorFn) {
         if (!didWarnAboutMaps) {
           console.error(
-            'Using Maps as children is unsupported and will likely yield ' +
-              'unexpected results. Convert it to a sequence/iterable of keyed ' +
-              'ReactElements instead.',
+            'Using Maps as children is not supported. ' +
+              'Use an array of keyed ReactElements instead.',
           );
         }
         didWarnAboutMaps = true;
@@ -1179,19 +1204,27 @@ function ChildReconciler(shouldTrackSideEffects) {
           }
           case Block:
             if (enableBlocksAPI) {
-              if (
-                element.type.$$typeof === REACT_BLOCK_TYPE &&
-                element.type.render === child.type.render
-              ) {
-                deleteRemainingChildren(returnFiber, child.sibling);
-                const existing = useFiber(child, element.props);
-                existing.type = element.type;
-                existing.return = returnFiber;
-                if (__DEV__) {
-                  existing._debugSource = element._source;
-                  existing._debugOwner = element._owner;
+              let type = element.type;
+              if (type.$$typeof === REACT_LAZY_TYPE) {
+                type = resolveLazyType(type);
+              }
+              if (type.$$typeof === REACT_BLOCK_TYPE) {
+                // The new Block might not be initialized yet. We need to initialize
+                // it in case initializing it turns out it would match.
+                if (
+                  ((type: any): BlockComponent<any, any>)._render ===
+                  (child.type: BlockComponent<any, any>)._render
+                ) {
+                  deleteRemainingChildren(returnFiber, child.sibling);
+                  const existing = useFiber(child, element.props);
+                  existing.type = type;
+                  existing.return = returnFiber;
+                  if (__DEV__) {
+                    existing._debugSource = element._source;
+                    existing._debugOwner = element._owner;
+                  }
+                  return existing;
                 }
-                return existing;
               }
             }
           // We intentionally fallthrough here if enableBlocksAPI is not on.

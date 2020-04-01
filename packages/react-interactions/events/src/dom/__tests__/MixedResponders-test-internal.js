@@ -19,6 +19,11 @@ let Scheduler;
 describe('mixing responders with the heritage event system', () => {
   let container;
 
+  if (!__EXPERIMENTAL__) {
+    it("empty test so Jest doesn't complain", () => {});
+    return;
+  }
+
   beforeEach(() => {
     ReactFeatureFlags = require('shared/ReactFeatureFlags');
     ReactFeatureFlags.enableDeprecatedFlareAPI = true;

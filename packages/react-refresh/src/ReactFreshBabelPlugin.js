@@ -251,7 +251,7 @@ export default function(babel, opts = {}) {
     };
   }
 
-  let hasForceResetCommentByFile = new WeakMap();
+  const hasForceResetCommentByFile = new WeakMap();
 
   // We let user do /* @refresh reset */ to reset state in the whole file.
   function hasForceResetComment(path) {
@@ -279,7 +279,7 @@ export default function(babel, opts = {}) {
     const {key, customHooks} = signature;
 
     let forceReset = hasForceResetComment(scope.path);
-    let customHooksInScope = [];
+    const customHooksInScope = [];
     customHooks.forEach(callee => {
       // Check if a corresponding binding exists where we emit the signature.
       let bindingName;
@@ -335,11 +335,11 @@ export default function(babel, opts = {}) {
     return args;
   }
 
-  let seenForRegistration = new WeakSet();
-  let seenForSignature = new WeakSet();
-  let seenForOutro = new WeakSet();
+  const seenForRegistration = new WeakSet();
+  const seenForSignature = new WeakSet();
+  const seenForOutro = new WeakSet();
 
-  let hookCalls = new WeakMap();
+  const hookCalls = new WeakMap();
   const HookCallsVisitor = {
     CallExpression(path) {
       const node = path.node;
@@ -370,7 +370,7 @@ export default function(babel, opts = {}) {
       if (!hookCalls.has(fnNode)) {
         hookCalls.set(fnNode, []);
       }
-      let hookCallsForFn = hookCalls.get(fnNode);
+      const hookCallsForFn = hookCalls.get(fnNode);
       let key = '';
       if (path.parent.type === 'VariableDeclarator') {
         // TODO: if there is no LHS, consider some other heuristic.

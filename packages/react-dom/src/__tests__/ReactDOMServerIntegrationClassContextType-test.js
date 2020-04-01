@@ -257,7 +257,7 @@ describe('ReactDOMServerIntegration', () => {
           </LanguageConsumer>
         </div>
       );
-      let e = await render(<App />);
+      const e = await render(<App />);
       expect(e.querySelector('#theme1').textContent).toBe('dark');
       expect(e.querySelector('#theme2').textContent).toBe('light');
       expect(e.querySelector('#theme3').textContent).toBe('blue');

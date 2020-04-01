@@ -23,6 +23,13 @@ export function setCurrentlyValidatingElement(element: null | ReactElement) {
 }
 
 if (__DEV__) {
+  ReactDebugCurrentFrame.setCurrentlyValidatingElement = function(
+    element: null | ReactElement,
+  ) {
+    if (__DEV__) {
+      currentlyValidatingElement = element;
+    }
+  };
   // Stack implementation injected by the current renderer.
   ReactDebugCurrentFrame.getCurrentStack = (null: null | (() => string));
 

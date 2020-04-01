@@ -37,6 +37,11 @@ const table = [[forcePointerEvents], [!forcePointerEvents]];
 describe.each(table)('FocusWithin responder', hasPointerEvents => {
   let container;
 
+  if (!__EXPERIMENTAL__) {
+    it("empty test so Jest doesn't complain", () => {});
+    return;
+  }
+
   beforeEach(() => {
     initializeModules();
     container = document.createElement('div');
@@ -345,7 +350,9 @@ describe.each(table)('FocusWithin responder', hasPointerEvents => {
         const Suspense = React.Suspense;
         let suspend = false;
         let resolve;
-        let promise = new Promise(resolvePromise => (resolve = resolvePromise));
+        const promise = new Promise(
+          resolvePromise => (resolve = resolvePromise),
+        );
 
         function Child() {
           if (suspend) {
@@ -373,7 +380,7 @@ describe.each(table)('FocusWithin responder', hasPointerEvents => {
         const container2 = document.createElement('div');
         document.body.appendChild(container2);
 
-        let root = ReactDOM.createRoot(container2);
+        const root = ReactDOM.createRoot(container2);
         root.render(<Component />);
         Scheduler.unstable_flushAll();
         jest.runAllTimers();

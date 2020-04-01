@@ -7,6 +7,4 @@
  * @flow
  */
 
-'use strict';
-
-module.exports = require('./src/dom/Hover');
+export * from './src/dom/Hover';

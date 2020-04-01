@@ -78,8 +78,8 @@ function updateOptions(
   const options: IndexableHTMLOptionsCollection = node.options;
 
   if (multiple) {
-    let selectedValues = (propValue: Array<string>);
-    let selectedValue = {};
+    const selectedValues = (propValue: Array<string>);
+    const selectedValue = {};
     for (let i = 0; i < selectedValues.length; i++) {
       // Prefix to avoid chaos with special keys.
       selectedValue['$' + selectedValues[i]] = true;
@@ -96,7 +96,7 @@ function updateOptions(
   } else {
     // Do not set `select.value` as exact behavior isn't consistent across all
     // browsers for all cases.
-    let selectedValue = toString(getToStringValue((propValue: any)));
+    const selectedValue = toString(getToStringValue((propValue: any)));
     let defaultSelected = null;
     for (let i = 0; i < options.length; i++) {
       if (options[i].value === selectedValue) {

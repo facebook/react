@@ -51,14 +51,16 @@ export type GetInspectedElement = (
   id: number,
 ) => InspectedElementFrontend | null;
 
-type Context = {|
+export type InspectedElementContextType = {|
   copyInspectedElementPath: CopyInspectedElementPath,
   getInspectedElementPath: GetInspectedElementPath,
   getInspectedElement: GetInspectedElement,
   storeAsGlobal: StoreAsGlobal,
 |};
 
-const InspectedElementContext = createContext<Context>(((null: any): Context));
+const InspectedElementContext = createContext<InspectedElementContextType>(
+  ((null: any): InspectedElementContextType),
+);
 InspectedElementContext.displayName = 'InspectedElementContext';
 
 type ResolveFn = (inspectedElement: InspectedElementFrontend) => void;
@@ -74,7 +76,7 @@ const resource: Resource<
   InspectedElementFrontend,
 > = createResource(
   (element: Element) => {
-    let request = inProgressRequests.get(element);
+    const request = inProgressRequests.get(element);
     if (request != null) {
       return request.promise;
     }
@@ -349,16 +351,19 @@ function hydrateHelper(
   path?: Array<string | number>,
 ): Object | null {
   if (dehydratedData !== null) {
-    let {cleaned, data, unserializable} = dehydratedData;
+    const {cleaned, data, unserializable} = dehydratedData;
 
     if (path) {
       const {length} = path;
       if (length > 0) {
         // Hydration helper requires full paths, but inspection dehydrates with relative paths.
         // In that event it's important that we adjust the "cleaned" paths to match.
-        cleaned = cleaned.map(cleanedPath => cleanedPath.slice(length));
-        unserializable = unserializable.map(unserializablePath =>
-          unserializablePath.slice(length),
+        return hydrate(
+          data,
+          cleaned.map(cleanedPath => cleanedPath.slice(length)),
+          unserializable.map(unserializablePath =>
+            unserializablePath.slice(length),
+          ),
         );
       }
     }

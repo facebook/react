@@ -23,11 +23,16 @@ import {
   SuspenseComponent,
   ScopeComponent,
   ContextProvider,
-} from 'shared/ReactWorkTags';
+} from './ReactWorkTags';
 import {enableScopeAPI} from 'shared/ReactFeatureFlags';
 
 function isFiberSuspenseAndTimedOut(fiber: Fiber): boolean {
-  return fiber.tag === SuspenseComponent && fiber.memoizedState !== null;
+  const memoizedState = fiber.memoizedState;
+  return (
+    fiber.tag === SuspenseComponent &&
+    memoizedState !== null &&
+    memoizedState.dehydrated === null
+  );
 }
 
 function getSuspenseFallbackChild(fiber: Fiber): Fiber | null {

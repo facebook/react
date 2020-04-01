@@ -6,11 +6,10 @@
  */
 
 import {runEventsInBatch} from 'legacy-events/EventBatching';
-import {accumulateTwoPhaseDispatches} from 'legacy-events/EventPropagators';
 import {enqueueStateRestore} from 'legacy-events/ReactControlledComponent';
 import {batchedUpdates} from 'legacy-events/ReactGenericBatching';
 import SyntheticEvent from 'legacy-events/SyntheticEvent';
-import isTextInputElement from 'shared/isTextInputElement';
+import isTextInputElement from './isTextInputElement';
 import {canUseDOM} from 'shared/ExecutionEnvironment';
 
 import {
@@ -28,7 +27,9 @@ import isEventSupported from './isEventSupported';
 import {getNodeFromInstance} from '../client/ReactDOMComponentTree';
 import {updateValueIfChanged} from '../client/inputValueTracking';
 import {setDefaultValue} from '../client/ReactDOMInput';
+
 import {disableInputAttributeSyncing} from 'shared/ReactFeatureFlags';
+import accumulateTwoPhaseListeners from './accumulateTwoPhaseListeners';
 
 const eventTypes = {
   change: {
@@ -59,7 +60,7 @@ function createAndAccumulateChangeEvent(inst, nativeEvent, target) {
   event.type = 'change';
   // Flag this event loop as needing state restore.
   enqueueStateRestore(target);
-  accumulateTwoPhaseDispatches(event);
+  accumulateTwoPhaseListeners(event);
   return event;
 }
 /**
@@ -233,15 +234,19 @@ function getTargetInstForInputOrChangeEvent(topLevelType, targetInst) {
 }
 
 function handleControlledInputBlur(node) {
-  let state = node._wrapperState;
+  const state = node._wrapperState;
 
-  if (!state || !state.controlled || node.type !== 'number') {
+  if (
+    !state ||
+    !state.controlled ||
+    (node.type !== 'number' && node.type !== 'email')
+  ) {
     return;
   }
 
   if (!disableInputAttributeSyncing) {
     // If controlled, assign the value attribute to the current value on blur
-    setDefaultValue(node, 'number', node.value);
+    setDefaultValue(node, node.type, node.value);
   }
 }
 

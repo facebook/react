@@ -11,7 +11,7 @@ import type {
   ReactDOMResponderEvent,
   ReactDOMResponderContext,
   PointerType,
-} from 'shared/ReactDOMTypes';
+} from 'react-dom/src/shared/ReactDOMTypes';
 import type {ReactEventResponderListener} from 'shared/ReactTypes';
 
 import * as React from 'react';
@@ -113,6 +113,7 @@ const contextMenuImpl = {
   },
 };
 
+// $FlowFixMe Can't add generic types without causing a parsing/syntax errors
 export const ContextMenuResponder = React.DEPRECATED_createResponder(
   'ContextMenu',
   contextMenuImpl,
@@ -120,6 +121,6 @@ export const ContextMenuResponder = React.DEPRECATED_createResponder(
 
 export function useContextMenu(
   props: ContextMenuProps,
-): ReactEventResponderListener<any, any> {
+): ?ReactEventResponderListener<any, any> {
   return React.DEPRECATED_useResponder(ContextMenuResponder, props);
 }

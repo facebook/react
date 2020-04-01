@@ -494,10 +494,10 @@ describe('ReactDOMServerHydration', () => {
   it.experimental(
     'does not re-enter hydration after committing the first one',
     () => {
-      let finalHTML = ReactDOMServer.renderToString(<div />);
-      let container = document.createElement('div');
+      const finalHTML = ReactDOMServer.renderToString(<div />);
+      const container = document.createElement('div');
       container.innerHTML = finalHTML;
-      let root = ReactDOM.createRoot(container, {hydrate: true});
+      const root = ReactDOM.createRoot(container, {hydrate: true});
       root.render(<div />);
       Scheduler.unstable_flushAll();
       root.render(null);
@@ -512,8 +512,8 @@ describe('ReactDOMServerHydration', () => {
   it('Suspense + hydration in legacy mode', () => {
     const element = document.createElement('div');
     element.innerHTML = '<div>Hello World</div>';
-    let div = element.firstChild;
-    let ref = React.createRef();
+    const div = element.firstChild;
+    const ref = React.createRef();
     expect(() =>
       ReactDOM.hydrate(
         <React.Suspense fallback={null}>
@@ -536,8 +536,8 @@ describe('ReactDOMServerHydration', () => {
   it('Suspense + hydration in legacy mode with no fallback', () => {
     const element = document.createElement('div');
     element.innerHTML = '<div>Hello World</div>';
-    let div = element.firstChild;
-    let ref = React.createRef();
+    const div = element.firstChild;
+    const ref = React.createRef();
     ReactDOM.hydrate(
       <React.Suspense>
         <div ref={ref}>Hello World</div>

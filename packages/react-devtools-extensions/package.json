@@ -36,12 +36,13 @@
     "firefox-profile": "^1.0.2",
     "node-libs-browser": "0.5.3",
     "nullthrows": "^1.0.0",
+    "open": "^7.0.2",
+    "os-name": "^3.1.0",
     "raw-loader": "^3.1.0",
     "style-loader": "^0.23.1",
     "web-ext": "^3.0.0",
     "webpack": "^4.41.2",
     "webpack-cli": "^3.3.10",
-    "webpack-dev-server": "^3.3.1",
-    "windows-edge": "^1.0.1"
+    "webpack-dev-server": "^3.3.1"
   }
 }

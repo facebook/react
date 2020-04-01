@@ -96,7 +96,7 @@ if (__DEV__) {
       // Keeps track of the value of window.event so that we can reset it
       // during the callback to let user code access window.event in the
       // browsers that support it.
-      let windowEvent = window.event;
+      const windowEvent = window.event;
 
       // Keeps track of the descriptor of window.event to restore it after event
       // dispatching: https://github.com/facebook/react/issues/13688

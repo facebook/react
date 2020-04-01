@@ -152,7 +152,7 @@ describe('useSubscription', () => {
       return null;
     }
 
-    let subscriptions = [];
+    const subscriptions = [];
 
     function Subscription({source}) {
       const value = useSubscription(
@@ -213,7 +213,7 @@ describe('useSubscription', () => {
       return null;
     }
 
-    let subscriptions = [];
+    const subscriptions = [];
 
     function Subscription({source}) {
       const value = useSubscription({
