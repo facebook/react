@@ -1237,7 +1237,7 @@ describe('useMutableSource', () => {
         ReactNoop.discreteUpdates(() => {
           // At high priority, toggle y so that it reads from A instead of B.
           // Simultaneously, mutate A.
-          mutateA('high-pri baz');
+          mutateA('baz');
           root.render(
             <App
               getSnapshotFirst={getSnapshotA}
@@ -1246,7 +1246,7 @@ describe('useMutableSource', () => {
           );
 
           // If this update were processed before the next mutation,
-          // it would be expected to yield "high-pri baz" and "high-pri baz".
+          // it would be expected to yield "baz" and "baz".
         });
 
         // At lower priority, mutate A again.

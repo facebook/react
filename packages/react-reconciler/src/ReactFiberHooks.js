@@ -75,7 +75,8 @@ import {
   getCurrentPriorityLevel,
 } from './SchedulerWithReactIntegration';
 import {
-  getPendingExpirationTime,
+  getFirstPendingExpirationTime,
+  getLastPendingExpirationTime,
   getWorkInProgressVersion,
   markSourceAsDirty,
   setPendingExpirationTime,
@@ -916,16 +917,14 @@ function readFromUnsubcribedMutableSource<Source, Snapshot>(
     isSafeToReadFromSource = currentRenderVersion === version;
   } else {
     // If there's no version, then we should fallback to checking the update time.
-    const pendingExpirationTime = getPendingExpirationTime(root);
+    const pendingExpirationTime = getFirstPendingExpirationTime(root);
 
     if (pendingExpirationTime === NoWork) {
       isSafeToReadFromSource = true;
     } else {
       // If the source has pending updates, we can use the current render's expiration
       // time to determine if it's safe to read again from the source.
-      isSafeToReadFromSource =
-        pendingExpirationTime === NoWork ||
-        pendingExpirationTime >= renderExpirationTime;
+      isSafeToReadFromSource = pendingExpirationTime >= renderExpirationTime;
     }
 
     if (isSafeToReadFromSource) {
@@ -974,7 +973,8 @@ function useMutableSource<Source, Snapshot>(
 
   const dispatcher = ReactCurrentDispatcher.current;
 
-  const [currentSnapshot, setSnapshot] = dispatcher.useState(() =>
+  // eslint-disable-next-line prefer-const
+  let [currentSnapshot, setSnapshot] = dispatcher.useState(() =>
     readFromUnsubcribedMutableSource(root, source, getSnapshot),
   );
   let snapshot = currentSnapshot;
@@ -1032,7 +1032,7 @@ function useMutableSource<Source, Snapshot>(
           // There is no mechanism currently to associate these updates though,
           // so for now we fall back to synchronously flushing all pending updates.
           // TODO: Improve this later.
-          markRootExpiredAtTime(root, getPendingExpirationTime(root));
+          markRootExpiredAtTime(root, getLastPendingExpirationTime(root));
         }
       }
     }
@@ -1091,7 +1091,7 @@ function useMutableSource<Source, Snapshot>(
         // We missed a mutation before committing.
         // It's possible that other components using this source also have pending updates scheduled.
         // In that case, we should ensure they all commit together.
-        markRootExpiredAtTime(root, getPendingExpirationTime(root));
+        markRootExpiredAtTime(root, getLastPendingExpirationTime(root));
       }
     }
 

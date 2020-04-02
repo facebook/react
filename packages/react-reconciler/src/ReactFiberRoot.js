@@ -79,7 +79,8 @@ type BaseFiberRootProperties = {|
   lastExpiredTime: ExpirationTime,
   // Used by useMutableSource hook to avoid tearing within this root
   // when external, mutable sources are read from during render.
-  mutableSourcePendingUpdateTime: ExpirationTime,
+  mutableSourceFirstPendingUpdateTime: ExpirationTime,
+  mutableSourceLastPendingUpdateTime: ExpirationTime,
 |};
 
 // The following attributes are only used by interaction tracing builds.
@@ -130,7 +131,8 @@ function FiberRootNode(containerInfo, tag, hydrate) {
   this.nextKnownPendingLevel = NoWork;
   this.lastPingedTime = NoWork;
   this.lastExpiredTime = NoWork;
-  this.mutableSourcePendingUpdateTime = NoWork;
+  this.mutableSourceFirstPendingUpdateTime = NoWork;
+  this.mutableSourceLastPendingUpdateTime = NoWork;
 
   if (enableSchedulerTracing) {
     this.interactionThreadID = unstable_getThreadID();
