@@ -43,7 +43,7 @@ export type ReactSyntheticEvent = {|
   isPropagationStopped: () => boolean,
   _dispatchInstances: null | Array<Fiber | null>,
   _dispatchListeners: null | Array<Function>,
-  _dispatchContainers: null | Array<EventTarget>,
+  _dispatchCurrentTargets: null | Array<EventTarget>,
   _targetInst: Fiber,
   type: string,
   currentTarget: null | EventTarget,

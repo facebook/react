@@ -180,18 +180,18 @@ function executeDispatchesInOrder(event: ReactSyntheticEvent): void {
   // TODO we should remove _dispatchListeners and _dispatchInstances at some point.
   const dispatchListeners = event._dispatchListeners;
   const dispatchInstances = event._dispatchInstances;
-  const dispatchContainers = event._dispatchContainers;
+  const dispatchCurrentTargets = event._dispatchCurrentTargets;
   let previousInstance;
 
   if (
     dispatchListeners !== null &&
     dispatchInstances !== null &&
-    dispatchContainers !== null
+    dispatchCurrentTargets !== null
   ) {
     for (let i = 0; i < dispatchListeners.length; i++) {
       const instance = dispatchInstances[i];
       const listener = dispatchListeners[i];
-      const currentTarget = dispatchContainers[i];
+      const currentTarget = dispatchCurrentTargets[i];
 
       // We check if the instance was the same as the last one,
       // if it was, then we're still on the same instance thus
@@ -208,6 +208,7 @@ function executeDispatchesInOrder(event: ReactSyntheticEvent): void {
   }
   event._dispatchListeners = null;
   event._dispatchInstances = null;
+  event._dispatchCurrentTargets = null;
 }
 
 function dispatchEventsForPlugins(
