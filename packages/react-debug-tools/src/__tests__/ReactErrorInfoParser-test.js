@@ -98,7 +98,7 @@ describe('Component stack trace parsing', () => {
     if (__DEV__) {
       let i = 0;
       expect(console.error.calls.count()).toBe(Object.keys(fileNames).length);
-      for (let fileName in fileNames) {
+      for (const fileName in fileNames) {
         if (!fileNames.hasOwnProperty(fileName)) {
           continue;
         }
