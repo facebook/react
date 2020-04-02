@@ -31,6 +31,7 @@ export default function accumulateTwoPhaseListeners(
   const phasedRegistrationNames = event.dispatchConfig.phasedRegistrationNames;
   const dispatchListeners = [];
   const dispatchInstances = [];
+  const dispatchContainers = [];
 
   const {bubbled, captured} = phasedRegistrationNames;
   // If we are not handling EventTarget only phase, then we're doing the
@@ -67,9 +68,11 @@ export default function accumulateTwoPhaseListeners(
               if (capture === true) {
                 dispatchListeners.unshift(callback);
                 dispatchInstances.unshift(node);
+                dispatchContainers.unshift(instance);
               } else {
                 dispatchListeners.push(callback);
                 dispatchInstances.push(node);
+                dispatchContainers.push(instance);
               }
             }
           }
@@ -83,6 +86,7 @@ export default function accumulateTwoPhaseListeners(
           // unshift them to the start of the array.
           dispatchListeners.unshift(captureListener);
           dispatchInstances.unshift(node);
+          dispatchContainers.unshift(instance);
         }
       }
       if (bubbled !== null) {
@@ -92,6 +96,7 @@ export default function accumulateTwoPhaseListeners(
           // push them to the end of the array.
           dispatchListeners.push(bubbleListener);
           dispatchInstances.push(node);
+          dispatchContainers.push(instance);
         }
       }
     }
@@ -117,13 +122,15 @@ export default function accumulateTwoPhaseListeners(
             const listener = captureListeners[i];
             const {callback} = listener;
             dispatchListeners.unshift(callback);
-            dispatchInstances.unshift({instance: node, container});
+            dispatchInstances.unshift(node);
+            dispatchContainers.unshift(container);
           }
           for (let i = 0; i < bubbleListeners.length; i++) {
             const listener = bubbleListeners[i];
             const {callback} = listener;
             dispatchListeners.push(callback);
-            dispatchInstances.push({instance: node, container});
+            dispatchInstances.push(node);
+            dispatchContainers.push(container);
           }
         }
       }
@@ -136,5 +143,6 @@ export default function accumulateTwoPhaseListeners(
   if (dispatchListeners.length > 0) {
     event._dispatchListeners = dispatchListeners;
     event._dispatchInstances = dispatchInstances;
+    event._dispatchContainers = dispatchContainers;
   }
 }

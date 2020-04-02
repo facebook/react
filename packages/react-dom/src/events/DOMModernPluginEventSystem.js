@@ -20,7 +20,6 @@ import type {PluginModule} from 'legacy-events/PluginModuleType';
 import type {
   ReactSyntheticEvent,
   CustomDispatchConfig,
-  DispatchInstance,
 } from 'legacy-events/ReactSyntheticEventType';
 import type {ReactDOMListener} from '../shared/ReactDOMTypes';
 
@@ -82,7 +81,6 @@ import {
   getClosestInstanceFromNode,
   getListenersFromTarget,
   initListenersSet,
-  getNodeFromInstance,
 } from '../client/ReactDOMComponentTree';
 import {COMMENT_NODE} from '../shared/HTMLNodeType';
 import {topLevelEventsToDispatchConfig} from './DOMEventProperties';
@@ -182,25 +180,19 @@ function executeDispatchesInOrder(event: ReactSyntheticEvent): void {
   // TODO we should remove _dispatchListeners and _dispatchInstances at some point.
   const dispatchListeners = event._dispatchListeners;
   const dispatchInstances = event._dispatchInstances;
+  const dispatchContainers = event._dispatchContainers;
   let previousInstance;
 
-  if (dispatchListeners !== null && dispatchInstances !== null) {
+  if (
+    dispatchListeners !== null &&
+    dispatchInstances !== null &&
+    dispatchContainers !== null
+  ) {
     for (let i = 0; i < dispatchListeners.length; i++) {
-      const dispatchInstance = dispatchInstances[i];
-      const dispatchListener = dispatchListeners[i];
-      let instance = dispatchInstance;
-      let currentTarget;
+      const instance = dispatchInstances[i];
+      const listener = dispatchListeners[i];
+      const currentTarget = dispatchContainers[i];
 
-      // dispatchInstance can come in two forms:
-      // - as a Fiber instance
-      // - as an object { instance: Fiber | null, container: EventTarget }
-      // The second form is used for useEvent types
-      if (dispatchInstance.container !== undefined) {
-        instance = ((dispatchInstance: any): DispatchInstance).instance;
-        currentTarget = ((dispatchInstance: any): DispatchInstance).container;
-      } else {
-        currentTarget = getNodeFromInstance(((dispatchInstance: any): Fiber));
-      }
       // We check if the instance was the same as the last one,
       // if it was, then we're still on the same instance thus
       // propagation should not stop. If we add support for
@@ -210,7 +202,7 @@ function executeDispatchesInOrder(event: ReactSyntheticEvent): void {
         break;
       }
       // Listeners and Instances are two parallel arrays that are always in sync.
-      executeDispatch(event, dispatchListener, currentTarget);
+      executeDispatch(event, listener, currentTarget);
       previousInstance = instance;
     }
   }

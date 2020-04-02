@@ -83,17 +83,18 @@ function accumulateEnterLeaveListenersForEvent(
   }
   const dispatchListeners = [];
   const dispatchInstances = [];
+  const dispatchContainers = [];
 
   let node = target;
   while (node !== null) {
     if (node === common) {
       break;
     }
-    const alternate = node.alternate;
+    const {alternate, stateNode, tag} = node;
     if (alternate !== null && alternate === common) {
       break;
     }
-    if (node.tag === HostComponent) {
+    if (stateNode !== null && tag === HostComponent) {
       if (capture) {
         const captureListener = getListener(node, registrationName);
         if (captureListener != null) {
@@ -101,6 +102,7 @@ function accumulateEnterLeaveListenersForEvent(
           // unshift them to the start of the array.
           dispatchListeners.unshift(captureListener);
           dispatchInstances.unshift(node);
+          dispatchContainers.unshift(stateNode);
         }
       } else {
         const bubbleListener = getListener(node, registrationName);
@@ -109,6 +111,7 @@ function accumulateEnterLeaveListenersForEvent(
           // push them to the end of the array.
           dispatchListeners.push(bubbleListener);
           dispatchInstances.push(node);
+          dispatchContainers.push(stateNode);
         }
       }
     }
@@ -119,6 +122,7 @@ function accumulateEnterLeaveListenersForEvent(
   if (dispatchListeners.length > 0) {
     event._dispatchListeners = dispatchListeners;
     event._dispatchInstances = dispatchInstances;
+    event._dispatchContainers = dispatchContainers;
   }
 }
 

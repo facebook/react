@@ -18,6 +18,8 @@ export default function accumulateEventTargetListeners(
 ): void {
   const dispatchListeners = [];
   const dispatchInstances = [];
+  const dispatchContainers = [];
+
   const eventTypeMap = eventTargetEventListenerStore.get(container);
   if (eventTypeMap !== undefined) {
     const type = ((event.type: any): DOMTopLevelEventType);
@@ -32,7 +34,8 @@ export default function accumulateEventTargetListeners(
           const listener = captureListeners[i];
           const {callback} = listener;
           dispatchListeners.push(callback);
-          dispatchInstances.push({instance: null, container});
+          dispatchInstances.push(null);
+          dispatchContainers.push(container);
         }
       } else {
         const bubbleListeners = Array.from(listeners.bubbled);
@@ -41,7 +44,8 @@ export default function accumulateEventTargetListeners(
           const listener = bubbleListeners[i];
           const {callback} = listener;
           dispatchListeners.push(callback);
-          dispatchInstances.push({instance: null, container});
+          dispatchInstances.push(null);
+          dispatchContainers.push(container);
         }
       }
     }
@@ -51,5 +55,6 @@ export default function accumulateEventTargetListeners(
   if (dispatchListeners.length > 0) {
     event._dispatchListeners = dispatchListeners;
     event._dispatchInstances = dispatchInstances;
+    event._dispatchContainers = dispatchContainers;
   }
 }
