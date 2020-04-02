@@ -453,7 +453,7 @@ describe('SyntheticKeyboardEvent', () => {
     });
 
     describe('code', () => {
-      it('returns code on `keydown`, `keyup` and 0 on `keypress`', () => {
+      it('returns code on `keydown`, `keyup` and null on `keypress`', () => {
         let codeDown = null;
         let codeUp = null;
         let codePress = null;
@@ -487,14 +487,14 @@ describe('SyntheticKeyboardEvent', () => {
         );
         node.dispatchEvent(
           new KeyboardEvent('keypress', {
-            charCode: 81,
+            code: 'KeyQ',
             bubbles: true,
             cancelable: true,
           }),
         );
         expect(codeDown).toBe('KeyQ');
         expect(codeUp).toBe('KeyQ');
-        expect(codePress).toBe(0);
+        expect(codePress).toBe(null);
       });
     });
   });
