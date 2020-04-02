@@ -19,7 +19,6 @@ import SyntheticEvent from 'legacy-events/SyntheticEvent';
 import invariant from 'shared/invariant';
 import {ELEMENT_NODE} from '../shared/HTMLNodeType';
 import * as DOMTopLevelEventTypes from '../events/DOMTopLevelEventTypes';
-import {PLUGIN_EVENT_SYSTEM} from 'legacy-events/EventSystemFlags';
 import act from './ReactTestUtilsAct';
 import forEachAccumulated from 'legacy-events/forEachAccumulated';
 import accumulateInto from 'legacy-events/accumulateInto';
@@ -62,6 +61,7 @@ let hasWarnedAboutDeprecatedMockComponent = false;
  */
 function simulateNativeEventOnNode(topLevelType, node, fakeNativeEvent) {
   fakeNativeEvent.target = node;
+  const PLUGIN_EVENT_SYSTEM = 1;
   dispatchEvent(topLevelType, PLUGIN_EVENT_SYSTEM, null, fakeNativeEvent);
 }
 

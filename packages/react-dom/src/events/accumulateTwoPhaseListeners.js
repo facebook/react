@@ -20,7 +20,7 @@ import {
   enableModernEventSystem,
 } from 'shared/ReactFeatureFlags';
 
-import getListener from 'legacy-events/getListener';
+import getListener from './getListener';
 import {getListenersFromTarget} from '../client/ReactDOMComponentTree';
 import {reactScopeListenerStore} from './DOMModernPluginEventSystem';
 

@@ -13,7 +13,7 @@ import type {
   ElementListenerMap,
   ElementListenerMapEntry,
 } from '../events/DOMEventListenerMap';
-import type {EventSystemFlags} from 'legacy-events/EventSystemFlags';
+import type {EventSystemFlags} from './EventSystemFlags';
 import type {EventPriority, ReactScopeMethods} from 'shared/ReactTypes';
 import type {Fiber} from 'react-reconciler/src/ReactFiber';
 import type {PluginModule} from 'legacy-events/PluginModuleType';
@@ -32,7 +32,7 @@ import {
   IS_REPLAYED,
   IS_TARGET_PHASE_ONLY,
   USE_EVENT_SYSTEM,
-} from 'legacy-events/EventSystemFlags';
+} from './EventSystemFlags';
 
 import {HostRoot, HostPortal} from 'react-reconciler/src/ReactWorkTags';
 

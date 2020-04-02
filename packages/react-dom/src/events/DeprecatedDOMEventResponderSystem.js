@@ -10,7 +10,7 @@ import {
   type EventSystemFlags,
   IS_PASSIVE,
   PASSIVE_NOT_SUPPORTED,
-} from 'legacy-events/EventSystemFlags';
+} from './EventSystemFlags';
 import type {AnyNativeEvent} from 'legacy-events/PluginModuleType';
 import {
   HostComponent,

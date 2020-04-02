@@ -11,7 +11,7 @@ import type {AnyNativeEvent} from 'legacy-events/PluginModuleType';
 import type {Container, SuspenseInstance} from '../client/ReactDOMHostConfig';
 import type {DOMTopLevelEventType} from 'legacy-events/TopLevelEventTypes';
 import type {ElementListenerMap} from '../events/DOMEventListenerMap';
-import type {EventSystemFlags} from 'legacy-events/EventSystemFlags';
+import type {EventSystemFlags} from './EventSystemFlags';
 import type {FiberRoot} from 'react-reconciler/src/ReactFiberRoot';
 
 import {
@@ -118,7 +118,7 @@ import {
   TOP_FOCUS,
   TOP_BLUR,
 } from './DOMTopLevelEventTypes';
-import {IS_REPLAYED, PLUGIN_EVENT_SYSTEM} from 'legacy-events/EventSystemFlags';
+import {IS_REPLAYED, PLUGIN_EVENT_SYSTEM} from './EventSystemFlags';
 import {legacyListenToTopLevelEvent} from './DOMLegacyEventPluginSystem';
 import {listenToTopLevelEvent} from './DOMModernPluginEventSystem';
 

@@ -42,7 +42,7 @@ import {
   RESPONDER_EVENT_SYSTEM,
   IS_PASSIVE,
   PASSIVE_NOT_SUPPORTED,
-} from 'legacy-events/EventSystemFlags';
+} from './EventSystemFlags';
 
 import {
   addEventBubbleListener,

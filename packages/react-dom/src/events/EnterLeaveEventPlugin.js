@@ -11,7 +11,10 @@ import {
   TOP_POINTER_OUT,
   TOP_POINTER_OVER,
 } from './DOMTopLevelEventTypes';
-import {IS_REPLAYED, IS_FIRST_ANCESTOR} from 'legacy-events/EventSystemFlags';
+import {
+  IS_REPLAYED,
+  IS_FIRST_ANCESTOR,
+} from 'react-dom/src/events/EventSystemFlags';
 import SyntheticMouseEvent from './SyntheticMouseEvent';
 import SyntheticPointerEvent from './SyntheticPointerEvent';
 import {

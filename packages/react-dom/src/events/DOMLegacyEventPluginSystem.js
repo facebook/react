@@ -10,7 +10,7 @@
 import type {AnyNativeEvent} from 'legacy-events/PluginModuleType';
 import type {DOMTopLevelEventType} from 'legacy-events/TopLevelEventTypes';
 import type {ElementListenerMap} from '../events/DOMEventListenerMap';
-import type {EventSystemFlags} from 'legacy-events/EventSystemFlags';
+import type {EventSystemFlags} from './EventSystemFlags';
 import type {Fiber} from 'react-reconciler/src/ReactFiber';
 import type {PluginModule} from 'legacy-events/PluginModuleType';
 import type {ReactSyntheticEvent} from 'legacy-events/ReactSyntheticEventType';
@@ -21,10 +21,7 @@ import {
   HostComponent,
   HostText,
 } from 'react-reconciler/src/ReactWorkTags';
-import {
-  IS_FIRST_ANCESTOR,
-  PLUGIN_EVENT_SYSTEM,
-} from 'legacy-events/EventSystemFlags';
+import {IS_FIRST_ANCESTOR, PLUGIN_EVENT_SYSTEM} from './EventSystemFlags';
 import {batchedEventUpdates} from 'legacy-events/ReactGenericBatching';
 import {runEventsInBatch} from 'legacy-events/EventBatching';
 import {plugins} from 'legacy-events/EventPluginRegistry';

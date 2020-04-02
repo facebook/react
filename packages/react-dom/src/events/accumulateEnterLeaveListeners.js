@@ -10,8 +10,8 @@
 import type {Fiber} from 'react-reconciler/src/ReactFiber';
 import type {ReactSyntheticEvent} from 'legacy-events/ReactSyntheticEventType';
 
-import getListener from 'legacy-events/getListener';
 import {HostComponent} from 'react-reconciler/src/ReactWorkTags';
+import getListener from './getListener';
 
 function getParent(inst: Fiber | null): Fiber | null {
   if (inst === null) {

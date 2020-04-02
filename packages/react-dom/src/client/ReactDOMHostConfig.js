@@ -78,7 +78,7 @@ import {
   IS_PASSIVE,
   PLUGIN_EVENT_SYSTEM,
   USE_EVENT_SYSTEM,
-} from 'legacy-events/EventSystemFlags';
+} from '../events/EventSystemFlags';
 import {
   isManagedDOMElement,
   isValidEventTarget,
@@ -102,6 +102,7 @@ export type Type = string;
 export type Props = {
   autoFocus?: boolean,
   children?: mixed,
+  disabled?: boolean,
   hidden?: boolean,
   suppressHydrationWarning?: boolean,
   dangerouslySetInnerHTML?: mixed,
