@@ -94,7 +94,7 @@ function accumulateEnterLeaveListenersForEvent(
     if (alternate !== null && alternate === common) {
       break;
     }
-    if (stateNode !== null && tag === HostComponent) {
+    if (tag === HostComponent && stateNode !== null) {
       const currentTarget = stateNode;
       if (capture) {
         const captureListener = getListener(instance, registrationName);

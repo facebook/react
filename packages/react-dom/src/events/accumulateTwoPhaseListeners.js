@@ -44,7 +44,7 @@ export default function accumulateTwoPhaseListeners(
   while (instance !== null) {
     const {stateNode, tag} = instance;
     // Handle listeners that are on HostComponents (i.e. <div>)
-    if (stateNode !== null && tag === HostComponent) {
+    if (tag === HostComponent && stateNode !== null) {
       const currentTarget = stateNode;
       lastHostComponent = currentTarget;
       // For useEvent listenrs
