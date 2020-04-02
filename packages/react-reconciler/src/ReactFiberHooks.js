@@ -76,7 +76,6 @@ import {
 } from './SchedulerWithReactIntegration';
 import {
   getFirstPendingExpirationTime,
-  getLastPendingExpirationTime,
   getWorkInProgressVersion,
   markSourceAsDirty,
   setPendingExpirationTime,
@@ -1026,13 +1025,22 @@ function useMutableSource<Source, Snapshot>(
         if (!is(snapshot, maybeNewSnapshot)) {
           setSnapshot(maybeNewSnapshot);
 
+          const currentTime = requestCurrentTimeForUpdate();
+          const suspenseConfig = requestCurrentSuspenseConfig();
+          const expirationTime = computeExpirationForFiber(
+            currentTime,
+            fiber,
+            suspenseConfig,
+          );
+          setPendingExpirationTime(root, expirationTime);
+
           // If the source mutated between render and now,
           // there may be state updates already scheduled from the old getSnapshot.
           // Those updates should not commit without this value.
           // There is no mechanism currently to associate these updates though,
           // so for now we fall back to synchronously flushing all pending updates.
           // TODO: Improve this later.
-          markRootExpiredAtTime(root, getLastPendingExpirationTime(root));
+          markRootExpiredAtTime(root, getFirstPendingExpirationTime(root));
         }
       }
     }
@@ -1088,10 +1096,19 @@ function useMutableSource<Source, Snapshot>(
       if (!is(snapshot, maybeNewSnapshot)) {
         setSnapshot(maybeNewSnapshot);
 
+        const currentTime = requestCurrentTimeForUpdate();
+        const suspenseConfig = requestCurrentSuspenseConfig();
+        const expirationTime = computeExpirationForFiber(
+          currentTime,
+          fiber,
+          suspenseConfig,
+        );
+        setPendingExpirationTime(root, expirationTime);
+
         // We missed a mutation before committing.
         // It's possible that other components using this source also have pending updates scheduled.
         // In that case, we should ensure they all commit together.
-        markRootExpiredAtTime(root, getLastPendingExpirationTime(root));
+        markRootExpiredAtTime(root, getFirstPendingExpirationTime(root));
       }
     }
 

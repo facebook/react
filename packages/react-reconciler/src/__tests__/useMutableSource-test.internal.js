@@ -1385,9 +1385,7 @@ describe('useMutableSource', () => {
         });
         expect(Scheduler).toFlushUntilNextPaint([]);
 
-        // TODO: This test currently tears.
-        // Fill in with correct values once the entanglement issue has been fixed.
-        expect(root.getChildrenAsJSX()).toEqual('first: a1, second: a0');
+        expect(root.getChildrenAsJSX()).toEqual('first: a1, second: a1');
       });
 
       expect(root.getChildrenAsJSX()).toEqual('first: a1, second: a1');
@@ -1481,9 +1479,6 @@ describe('useMutableSource', () => {
         );
       });
 
-      // TODO: This test currently tears.
-      // Fill in with correct values once the entanglement issue has been fixed.
-      // Here's the current behavior:
       expect(Scheduler).toHaveYielded([
         // The partial render completes
         'Child: 2',
@@ -1491,10 +1486,6 @@ describe('useMutableSource', () => {
 
         // Then we start rendering the low priority mutation
         'Parent: 3',
-        // But the child never received a mutation event, because it hadn't
-        // mounted yet. So the render tears.
-        'Child: 2',
-        'Commit: Oops, tearing!',
 
         // Eventually the child corrects itself, because of the check that
         // occurs when re-subscribing.
