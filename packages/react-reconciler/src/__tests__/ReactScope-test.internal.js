@@ -345,17 +345,17 @@ describe('ReactScope', () => {
       // this may have suspense points on the server but here we want
       // to test the completed HTML. Don't suspend on the server.
       suspend = false;
-      let finalHTML = ReactDOMServer.renderToString(<App />);
+      const finalHTML = ReactDOMServer.renderToString(<App />);
 
-      let container2 = document.createElement('div');
+      const container2 = document.createElement('div');
       container2.innerHTML = finalHTML;
 
-      let span = container2.getElementsByTagName('span')[0];
+      const span = container2.getElementsByTagName('span')[0];
 
       // On the client we don't have all data yet but we want to start
       // hydrating anyway.
       suspend = true;
-      let root = ReactDOM.createRoot(container2, {hydrate: true});
+      const root = ReactDOM.createRoot(container2, {hydrate: true});
       root.render(<App />);
       Scheduler.unstable_flushAll();
       jest.runAllTimers();

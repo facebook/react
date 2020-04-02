@@ -24,7 +24,7 @@ import {NoWork} from './ReactFiberExpirationTime';
 import {REACT_RESPONDER_TYPE} from 'shared/ReactSymbols';
 
 import invariant from 'shared/invariant';
-import {HostComponent, HostRoot} from 'shared/ReactWorkTags';
+import {HostComponent, HostRoot} from './ReactWorkTags';
 
 const emptyObject = {};
 const isArray = Array.isArray;

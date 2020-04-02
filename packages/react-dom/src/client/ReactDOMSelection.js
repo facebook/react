@@ -169,7 +169,7 @@ export function setOffsets(node, offsets) {
   // IE 11 uses modern selection, but doesn't support the extend method.
   // Flip backward selections, so we can set with a single range.
   if (!selection.extend && start > end) {
-    let temp = end;
+    const temp = end;
     end = start;
     start = temp;
   }

@@ -17,27 +17,38 @@ global.TextDecoder = require('util').TextDecoder;
 // TODO: we can replace this with FlightServer.act().
 global.setImmediate = cb => cb();
 
+let webpackModuleIdx = 0;
+let webpackModules = {};
+let webpackMap = {};
+global.__webpack_require__ = function(id) {
+  return webpackModules[id];
+};
+
 let act;
 let Stream;
 let React;
 let ReactDOM;
 let ReactFlightDOMServer;
+let ReactFlightDOMServerRuntime;
 let ReactFlightDOMClient;
 
 describe('ReactFlightDOM', () => {
   beforeEach(() => {
     jest.resetModules();
+    webpackModules = {};
+    webpackMap = {};
     act = require('react-dom/test-utils').act;
     Stream = require('stream');
     React = require('react');
     ReactDOM = require('react-dom');
     ReactFlightDOMServer = require('react-flight-dom-webpack/server');
+    ReactFlightDOMServerRuntime = require('react-flight-dom-webpack/server-runtime');
     ReactFlightDOMClient = require('react-flight-dom-webpack');
   });
 
   function getTestStream() {
-    let writable = new Stream.PassThrough();
-    let readable = new ReadableStream({
+    const writable = new Stream.PassThrough();
+    const readable = new ReadableStream({
       start(controller) {
         writable.on('data', chunk => {
           controller.enqueue(chunk);
@@ -50,6 +61,32 @@ describe('ReactFlightDOM', () => {
     return {
       writable,
       readable,
+    };
+  }
+
+  function block(render, load) {
+    const idx = webpackModuleIdx++;
+    webpackModules[idx] = {
+      d: render,
+    };
+    webpackMap['path/' + idx] = {
+      id: '' + idx,
+      chunks: [],
+      name: 'd',
+    };
+    if (load === undefined) {
+      return () => {
+        return ReactFlightDOMServerRuntime.serverBlockNoData('path/' + idx);
+      };
+    }
+    return function(...args) {
+      const curriedLoad = () => {
+        return load(...args);
+      };
+      return ReactFlightDOMServerRuntime.serverBlock(
+        'path/' + idx,
+        curriedLoad,
+      );
     };
   }
 
@@ -81,17 +118,18 @@ describe('ReactFlightDOM', () => {
     }
 
     function App() {
-      let model = {
+      const model = {
         html: <HTML />,
       };
       return model;
     }
 
-    let {writable, readable} = getTestStream();
-    ReactFlightDOMServer.pipeToNodeWritable(<App />, writable);
-    let result = ReactFlightDOMClient.readFromReadableStream(readable);
+    const {writable, readable} = getTestStream();
+    ReactFlightDOMServer.pipeToNodeWritable(<App />, writable, webpackMap);
+    const response = ReactFlightDOMClient.createFromReadableStream(readable);
     await waitForSuspense(() => {
-      expect(result.model).toEqual({
+      const model = response.readRoot();
+      expect(model).toEqual({
         html: (
           <div>
             <span>hello</span>
@@ -103,7 +141,7 @@ describe('ReactFlightDOM', () => {
   });
 
   it.experimental('should resolve the root', async () => {
-    let {Suspense} = React;
+    const {Suspense} = React;
 
     // Model
     function Text({children}) {
@@ -124,25 +162,29 @@ describe('ReactFlightDOM', () => {
     }
 
     // View
-    function Message({result}) {
-      return <section>{result.model.html}</section>;
+    function Message({response}) {
+      return <section>{response.readRoot().html}</section>;
     }
-    function App({result}) {
+    function App({response}) {
       return (
         <Suspense fallback={<h1>Loading...</h1>}>
-          <Message result={result} />
+          <Message response={response} />
         </Suspense>
       );
     }
 
-    let {writable, readable} = getTestStream();
-    ReactFlightDOMServer.pipeToNodeWritable(<RootModel />, writable);
-    let result = ReactFlightDOMClient.readFromReadableStream(readable);
+    const {writable, readable} = getTestStream();
+    ReactFlightDOMServer.pipeToNodeWritable(
+      <RootModel />,
+      writable,
+      webpackMap,
+    );
+    const response = ReactFlightDOMClient.createFromReadableStream(readable);
 
-    let container = document.createElement('div');
-    let root = ReactDOM.createRoot(container);
+    const container = document.createElement('div');
+    const root = ReactDOM.createRoot(container);
     await act(async () => {
-      root.render(<App result={result} />);
+      root.render(<App response={response} />);
     });
     expect(container.innerHTML).toBe(
       '<section><div><span>hello</span><span>world</span></div></section>',
@@ -150,7 +192,7 @@ describe('ReactFlightDOM', () => {
   });
 
   it.experimental('should not get confused by $', async () => {
-    let {Suspense} = React;
+    const {Suspense} = React;
 
     // Model
     function RootModel() {
@@ -158,31 +200,35 @@ describe('ReactFlightDOM', () => {
     }
 
     // View
-    function Message({result}) {
-      return <p>{result.model.text}</p>;
+    function Message({response}) {
+      return <p>{response.readRoot().text}</p>;
     }
-    function App({result}) {
+    function App({response}) {
       return (
         <Suspense fallback={<h1>Loading...</h1>}>
-          <Message result={result} />
+          <Message response={response} />
         </Suspense>
       );
     }
 
-    let {writable, readable} = getTestStream();
-    ReactFlightDOMServer.pipeToNodeWritable(<RootModel />, writable);
-    let result = ReactFlightDOMClient.readFromReadableStream(readable);
+    const {writable, readable} = getTestStream();
+    ReactFlightDOMServer.pipeToNodeWritable(
+      <RootModel />,
+      writable,
+      webpackMap,
+    );
+    const response = ReactFlightDOMClient.createFromReadableStream(readable);
 
-    let container = document.createElement('div');
-    let root = ReactDOM.createRoot(container);
+    const container = document.createElement('div');
+    const root = ReactDOM.createRoot(container);
     await act(async () => {
-      root.render(<App result={result} />);
+      root.render(<App response={response} />);
     });
     expect(container.innerHTML).toBe('<p>$1</p>');
   });
 
   it.experimental('should not get confused by @', async () => {
-    let {Suspense} = React;
+    const {Suspense} = React;
 
     // Model
     function RootModel() {
@@ -190,31 +236,35 @@ describe('ReactFlightDOM', () => {
     }
 
     // View
-    function Message({result}) {
-      return <p>{result.model.text}</p>;
+    function Message({response}) {
+      return <p>{response.readRoot().text}</p>;
     }
-    function App({result}) {
+    function App({response}) {
       return (
         <Suspense fallback={<h1>Loading...</h1>}>
-          <Message result={result} />
+          <Message response={response} />
         </Suspense>
       );
     }
 
-    let {writable, readable} = getTestStream();
-    ReactFlightDOMServer.pipeToNodeWritable(<RootModel />, writable);
-    let result = ReactFlightDOMClient.readFromReadableStream(readable);
+    const {writable, readable} = getTestStream();
+    ReactFlightDOMServer.pipeToNodeWritable(
+      <RootModel />,
+      writable,
+      webpackMap,
+    );
+    const response = ReactFlightDOMClient.createFromReadableStream(readable);
 
-    let container = document.createElement('div');
-    let root = ReactDOM.createRoot(container);
+    const container = document.createElement('div');
+    const root = ReactDOM.createRoot(container);
     await act(async () => {
-      root.render(<App result={result} />);
+      root.render(<App response={response} />);
     });
     expect(container.innerHTML).toBe('<p>@div</p>');
   });
 
-  it.experimental('should progressively reveal chunks', async () => {
-    let {Suspense} = React;
+  it.experimental('should progressively reveal Blocks', async () => {
+    const {Suspense} = React;
 
     class ErrorBoundary extends React.Component {
       state = {hasError: false, error: null};
@@ -249,16 +299,20 @@ describe('ReactFlightDOM', () => {
           reject(e);
         };
       });
-      function DelayedText({children}) {
+      function load() {
         if (promise) {
           throw promise;
         }
         if (error) {
           throw error;
         }
+        return 'data';
+      }
+      function DelayedText({children}, data) {
         return <Text>{children}</Text>;
       }
-      return [DelayedText, _resolve, _reject];
+      const loadBlock = block(DelayedText, load);
+      return [loadBlock(), _resolve, _reject];
     }
 
     const [FriendsModel, resolveFriendsModel] = makeDelayedText();
@@ -274,51 +328,51 @@ describe('ReactFlightDOM', () => {
         games: <GamesModel>:games:</GamesModel>,
       };
     }
-    function ProfileModel() {
-      return {
-        photos: <PhotosModel>:photos:</PhotosModel>,
-        name: <NameModel>:name:</NameModel>,
-        more: <ProfileMore />,
-      };
-    }
+    const profileModel = {
+      photos: <PhotosModel>:photos:</PhotosModel>,
+      name: <NameModel>:name:</NameModel>,
+      more: <ProfileMore />,
+    };
 
     // View
-    function ProfileDetails({result}) {
+    function ProfileDetails({response}) {
+      const model = response.readRoot();
       return (
         <div>
-          {result.model.name}
-          {result.model.more.avatar}
+          {model.name}
+          {model.more.avatar}
         </div>
       );
     }
-    function ProfileSidebar({result}) {
+    function ProfileSidebar({response}) {
+      const model = response.readRoot();
       return (
         <div>
-          {result.model.photos}
-          {result.model.more.friends}
+          {model.photos}
+          {model.more.friends}
         </div>
       );
     }
-    function ProfilePosts({result}) {
-      return <div>{result.model.more.posts}</div>;
+    function ProfilePosts({response}) {
+      return <div>{response.readRoot().more.posts}</div>;
     }
-    function ProfileGames({result}) {
-      return <div>{result.model.more.games}</div>;
+    function ProfileGames({response}) {
+      return <div>{response.readRoot().more.games}</div>;
     }
-    function ProfilePage({result}) {
+    function ProfilePage({response}) {
       return (
         <>
           <Suspense fallback={<p>(loading)</p>}>
-            <ProfileDetails result={result} />
+            <ProfileDetails response={response} />
             <Suspense fallback={<p>(loading sidebar)</p>}>
-              <ProfileSidebar result={result} />
+              <ProfileSidebar response={response} />
             </Suspense>
             <Suspense fallback={<p>(loading posts)</p>}>
-              <ProfilePosts result={result} />
+              <ProfilePosts response={response} />
             </Suspense>
             <ErrorBoundary fallback={e => <p>{e.message}</p>}>
               <Suspense fallback={<p>(loading games)</p>}>
-                <ProfileGames result={result} />
+                <ProfileGames response={response} />
               </Suspense>
             </ErrorBoundary>
           </Suspense>
@@ -326,14 +380,14 @@ describe('ReactFlightDOM', () => {
       );
     }
 
-    let {writable, readable} = getTestStream();
-    ReactFlightDOMServer.pipeToNodeWritable(<ProfileModel />, writable);
-    let result = ReactFlightDOMClient.readFromReadableStream(readable);
+    const {writable, readable} = getTestStream();
+    ReactFlightDOMServer.pipeToNodeWritable(profileModel, writable, webpackMap);
+    const response = ReactFlightDOMClient.createFromReadableStream(readable);
 
-    let container = document.createElement('div');
-    let root = ReactDOM.createRoot(container);
+    const container = document.createElement('div');
+    const root = ReactDOM.createRoot(container);
     await act(async () => {
-      root.render(<ProfilePage result={result} />);
+      root.render(<ProfilePage response={response} />);
     });
     expect(container.innerHTML).toBe('<p>(loading)</p>');
 

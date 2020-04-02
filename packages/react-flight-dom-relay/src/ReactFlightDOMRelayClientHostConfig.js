@@ -7,24 +7,13 @@
  * @flow
  */
 
-export type StringDecoder = void;
+export {
+  resolveModuleReference,
+  preloadModule,
+  requireModule,
+} from 'ReactFlightDOMRelayClientIntegration';
 
-export const supportsBinaryStreams = false;
-
-export function createStringDecoder(): void {
-  throw new Error('Should never be called');
-}
-
-export function readPartialStringChunk(
-  decoder: StringDecoder,
-  buffer: Uint8Array,
-): string {
-  throw new Error('Should never be called');
-}
-
-export function readFinalStringChunk(
-  decoder: StringDecoder,
-  buffer: Uint8Array,
-): string {
-  throw new Error('Should never be called');
-}
+export type {
+  ModuleReference,
+  ModuleMetaData,
+} from 'ReactFlightDOMRelayClientIntegration';

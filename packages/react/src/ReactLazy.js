@@ -7,50 +7,107 @@
  * @flow
  */
 
+import type {Wakeable, Thenable} from 'shared/ReactTypes';
+
 import {REACT_LAZY_TYPE} from 'shared/ReactSymbols';
 
-type Thenable<T, R> = {
-  then(resolve: (T) => mixed, reject: (mixed) => mixed): R,
-};
+const Uninitialized = -1;
+const Pending = 0;
+const Resolved = 1;
+const Rejected = 2;
 
-export type UninitializedLazyComponent<T> = {
-  $$typeof: Symbol | number,
+type UninitializedPayload<T> = {
   _status: -1,
-  _result: () => Thenable<{default: T, ...} | T, mixed>,
+  _result: () => Thenable<{default: T, ...}>,
 };
 
-export type PendingLazyComponent<T> = {
-  $$typeof: Symbol | number,
+type PendingPayload = {
   _status: 0,
-  _result: Thenable<{default: T, ...} | T, mixed>,
+  _result: Wakeable,
 };
 
-export type ResolvedLazyComponent<T> = {
-  $$typeof: Symbol | number,
+type ResolvedPayload<T> = {
   _status: 1,
   _result: T,
 };
 
-export type RejectedLazyComponent = {
-  $$typeof: Symbol | number,
+type RejectedPayload = {
   _status: 2,
   _result: mixed,
 };
 
-export type LazyComponent<T> =
-  | UninitializedLazyComponent<T>
-  | PendingLazyComponent<T>
-  | ResolvedLazyComponent<T>
-  | RejectedLazyComponent;
+type Payload<T> =
+  | UninitializedPayload<T>
+  | PendingPayload
+  | ResolvedPayload<T>
+  | RejectedPayload;
+
+export type LazyComponent<T, P> = {
+  $$typeof: Symbol | number,
+  _payload: P,
+  _init: (payload: P) => T,
+};
+
+function lazyInitializer<T>(payload: Payload<T>): T {
+  if (payload._status === Uninitialized) {
+    const ctor = payload._result;
+    const thenable = ctor();
+    // Transition to the next state.
+    const pending: PendingPayload = (payload: any);
+    pending._status = Pending;
+    pending._result = thenable;
+    thenable.then(
+      moduleObject => {
+        if (payload._status === Pending) {
+          const defaultExport = moduleObject.default;
+          if (__DEV__) {
+            if (defaultExport === undefined) {
+              console.error(
+                'lazy: Expected the result of a dynamic import() call. ' +
+                  'Instead received: %s\n\nYour code should look like: \n  ' +
+                  // Break up imports to avoid accidentally parsing them as dependencies.
+                  'const MyComponent = lazy(() => imp' +
+                  "ort('./MyComponent'))",
+                moduleObject,
+              );
+            }
+          }
+          // Transition to the next state.
+          const resolved: ResolvedPayload<T> = (payload: any);
+          resolved._status = Resolved;
+          resolved._result = defaultExport;
+        }
+      },
+      error => {
+        if (payload._status === Pending) {
+          // Transition to the next state.
+          const rejected: RejectedPayload = (payload: any);
+          rejected._status = Rejected;
+          rejected._result = error;
+        }
+      },
+    );
+  }
+  if (payload._status === Resolved) {
+    return payload._result;
+  } else {
+    throw payload._result;
+  }
+}
 
 export function lazy<T>(
-  ctor: () => Thenable<{default: T, ...} | T, mixed>,
-): LazyComponent<T> {
-  let lazyType: LazyComponent<T> = {
-    $$typeof: REACT_LAZY_TYPE,
-    // React uses these fields to store the result.
+  ctor: () => Thenable<{default: T, ...}>,
+): LazyComponent<T, Payload<T>> {
+  const payload: Payload<T> = {
+    // We use these fields to store the result.
     _status: -1,
     _result: ctor,
+  };
+
+  const lazyType: LazyComponent<T, Payload<T>> = {
+    $$typeof: REACT_LAZY_TYPE,
+    _payload: payload,
+    _init: lazyInitializer,
   };
 
   if (__DEV__) {

@@ -7,8 +7,6 @@
  * @flow strict
  */
 
-export const enableUserTimingAPI = __DEV__;
-
 // Helps identify side effects in render-phase lifecycle hooks and setState
 // reducers by double invoking them in Strict Mode.
 export const debugRenderPhaseSideEffectsForStrictMode = __DEV__;
@@ -39,17 +37,8 @@ export const enableBlocksAPI = __EXPERIMENTAL__;
 // Only used in www builds.
 export const enableSchedulerDebugging = false;
 
-// Only used in www builds.
-export function addUserTimingListener() {
-  throw new Error('Not implemented.');
-}
-
 // Disable javascript: URL strings in href for XSS protection.
 export const disableJavaScriptURLs = false;
-
-// Warns when a combination of updates on a dom can cause a style declaration
-// that clashes with a previous one https://github.com/facebook/react/pull/14181
-export const warnAboutShorthandPropertyCollision = true;
 
 // Experimental React Flare event system and event components support.
 export const enableDeprecatedFlareAPI = false;
@@ -111,6 +100,8 @@ export const warnAboutSpreadingKeyToJSX = false;
 // Internal-only attempt to debug a React Native issue. See D20130868.
 export const throwEarlyForMysteriousError = false;
 
+export const enableNewReconciler = false;
+
 // --------------------------
 // Future APIs to be deprecated
 // --------------------------
@@ -126,9 +117,6 @@ export const disableLegacyContext = false;
 // Disables children for <textarea> elements
 export const disableTextareaChildren = false;
 
-// Disables Maps as ReactElement children
-export const disableMapsAsChildren = false;
-
 export const disableModulePatternComponents = false;
 
 // We should remove this flag once the above flag becomes enabled
@@ -138,4 +126,4 @@ export const warnUnstableRenderSubtreeIntoContainer = false;
 export const enableModernEventSystem = false;
 
 // Support legacy Primer support on internal FB www
-export const enableLegacyFBPrimerSupport = false;
+export const enableLegacyFBSupport = false;

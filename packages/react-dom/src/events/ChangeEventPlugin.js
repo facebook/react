@@ -9,7 +9,7 @@ import {runEventsInBatch} from 'legacy-events/EventBatching';
 import {enqueueStateRestore} from 'legacy-events/ReactControlledComponent';
 import {batchedUpdates} from 'legacy-events/ReactGenericBatching';
 import SyntheticEvent from 'legacy-events/SyntheticEvent';
-import isTextInputElement from 'shared/isTextInputElement';
+import isTextInputElement from './isTextInputElement';
 import {canUseDOM} from 'shared/ExecutionEnvironment';
 
 import {
@@ -27,9 +27,9 @@ import isEventSupported from './isEventSupported';
 import {getNodeFromInstance} from '../client/ReactDOMComponentTree';
 import {updateValueIfChanged} from '../client/inputValueTracking';
 import {setDefaultValue} from '../client/ReactDOMInput';
-import {accumulateTwoPhaseListeners} from './DOMModernPluginEventSystem';
 
 import {disableInputAttributeSyncing} from 'shared/ReactFeatureFlags';
+import accumulateTwoPhaseListeners from './accumulateTwoPhaseListeners';
 
 const eventTypes = {
   change: {
@@ -234,7 +234,7 @@ function getTargetInstForInputOrChangeEvent(topLevelType, targetInst) {
 }
 
 function handleControlledInputBlur(node) {
-  let state = node._wrapperState;
+  const state = node._wrapperState;
 
   if (!state || !state.controlled || node.type !== 'number') {
     return;

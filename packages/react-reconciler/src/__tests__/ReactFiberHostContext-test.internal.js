@@ -19,7 +19,7 @@ describe('ReactFiberHostContext', () => {
     jest.resetModules();
     React = require('react');
     ReactFiberReconciler = require('react-reconciler');
-    ConcurrentRoot = require('shared/ReactRootTags');
+    ConcurrentRoot = require('react-reconciler/src/ReactRootTags');
   });
 
   it('works with null host context', () => {
@@ -72,7 +72,7 @@ describe('ReactFiberHostContext', () => {
   });
 
   it('should send the context to prepareForCommit and resetAfterCommit', () => {
-    let rootContext = {};
+    const rootContext = {};
     const Renderer = ReactFiberReconciler({
       prepareForCommit: function(hostContext) {
         expect(hostContext).toBe(rootContext);

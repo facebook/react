@@ -125,11 +125,12 @@ export function createContext<T>(
         get() {
           return context.displayName;
         },
-        set() {
+        set(displayName) {
           if (!hasWarnedAboutDisplayNameOnConsumer) {
             console.warn(
               'Setting `displayName` on Context.Consumer has no effect. ' +
-                "You should set it directly on the context with Context.displayName = 'NamedContext'.",
+                "You should set it directly on the context with Context.displayName = '%s'.",
+              displayName,
             );
             hasWarnedAboutDisplayNameOnConsumer = true;
           }

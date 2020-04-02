@@ -106,6 +106,15 @@ function isInsideComponentOrHook(node) {
 }
 
 export default {
+  meta: {
+    type: 'problem',
+    docs: {
+      description: 'enforces the Rules of Hooks',
+      category: 'Possible Errors',
+      recommended: true,
+      url: 'https://reactjs.org/docs/hooks-rules.html',
+    },
+  },
   create(context) {
     const codePathReactHooksMapStack = [];
     const codePathSegmentStack = [];
@@ -226,7 +235,7 @@ export default {
         function countPathsToEnd(segment, pathHistory) {
           const {cache} = countPathsToEnd;
           let paths = cache.get(segment.id);
-          let pathList = new Set(pathHistory);
+          const pathList = new Set(pathHistory);
 
           // If `pathList` includes the current segment then we've found a cycle!
           // We need to fill `cyclic` with all segments inside cycle
@@ -461,11 +470,12 @@ export default {
                 codePathNode.parent.type === 'ClassProperty') &&
               codePathNode.parent.value === codePathNode
             ) {
-              // Ignore class methods for now because they produce too many
-              // false positives due to feature flag checks. We're less
-              // sensitive to them in classes because hooks would produce
-              // runtime errors in classes anyway, and because a use*()
-              // call in a class, if it works, is unambiguously *not* a hook.
+              // Custom message for hooks inside a class
+              const message =
+                `React Hook "${context.getSource(hook)}" cannot be called ` +
+                'in a class component. React Hooks must be called in a ' +
+                'React function component or a custom React Hook function.';
+              context.report({node: hook, message});
             } else if (codePathFunctionName) {
               // Custom message if we found an invalid function name.
               const message =

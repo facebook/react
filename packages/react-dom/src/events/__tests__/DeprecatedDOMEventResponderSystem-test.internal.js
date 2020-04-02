@@ -149,7 +149,7 @@ describe('DOMEventResponderSystem', () => {
 
   it('the event responders should fire on click event', () => {
     let eventResponderFiredCount = 0;
-    let eventLog = [];
+    const eventLog = [];
     const buttonRef = React.createRef();
 
     const TestResponder = createEventResponder({
@@ -182,10 +182,11 @@ describe('DOMEventResponderSystem', () => {
     dispatchClickEvent(buttonElement);
     expect(eventResponderFiredCount).toBe(1);
     expect(eventLog.length).toBe(1);
+    // JSDOM does not support passive events, so this will be false
     expect(eventLog).toEqual([
       {
         name: 'click',
-        passive: true,
+        passive: false,
         phase: 'bubble',
       },
     ]);
@@ -207,7 +208,7 @@ describe('DOMEventResponderSystem', () => {
     const checkPassiveEvents = require('react-dom/src/events/checkPassiveEvents');
     checkPassiveEvents.passiveBrowserEventsSupported = true;
 
-    let eventLog = [];
+    const eventLog = [];
     const buttonRef = React.createRef();
 
     const TestResponder = createEventResponder({
@@ -234,7 +235,7 @@ describe('DOMEventResponderSystem', () => {
     ReactDOM.render(<Test />, container);
 
     // Clicking the button should trigger the event responder onEvent()
-    let buttonElement = buttonRef.current;
+    const buttonElement = buttonRef.current;
     dispatchClickEvent(buttonElement);
     expect(eventLog.length).toBe(1);
     expect(eventLog).toEqual([
@@ -288,10 +289,11 @@ describe('DOMEventResponderSystem', () => {
     dispatchClickEvent(buttonElement);
     expect(eventResponderFiredCount).toBe(1);
     expect(eventLog.length).toBe(1);
+    // JSDOM does not support passive events, so this will be false
     expect(eventLog).toEqual([
       {
         name: 'click',
-        passive: true,
+        passive: false,
         phase: 'bubble',
       },
     ]);
@@ -321,7 +323,7 @@ describe('DOMEventResponderSystem', () => {
     expect(eventLog).toEqual([
       {
         name: 'click',
-        passive: true,
+        passive: false,
         phase: 'bubble',
       },
     ]);
@@ -391,7 +393,7 @@ describe('DOMEventResponderSystem', () => {
   });
 
   it('nested event responders should fire in the correct order #2', () => {
-    let eventLog = [];
+    const eventLog = [];
     const buttonRef = React.createRef();
 
     const TestResponder = createEventResponder({
@@ -420,14 +422,14 @@ describe('DOMEventResponderSystem', () => {
     ReactDOM.render(<Test />, container);
 
     // Clicking the button should trigger the event responder onEvent()
-    let buttonElement = buttonRef.current;
+    const buttonElement = buttonRef.current;
     dispatchClickEvent(buttonElement);
 
     expect(eventLog).toEqual(['B [bubble]']);
   });
 
   it('custom event dispatching for click -> magicClick works', () => {
-    let eventLog = [];
+    const eventLog = [];
     const buttonRef = React.createRef();
 
     const TestResponder = createEventResponder({
@@ -466,7 +468,7 @@ describe('DOMEventResponderSystem', () => {
     ReactDOM.render(<Test />, container);
 
     // Clicking the button should trigger the event responder onEvent()
-    let buttonElement = buttonRef.current;
+    const buttonElement = buttonRef.current;
     dispatchClickEvent(buttonElement);
 
     expect(eventLog).toEqual(['magic event fired', 'magicclick', 'bubble']);
@@ -624,7 +626,7 @@ describe('DOMEventResponderSystem', () => {
   it('the event responder target listeners should correctly fire for only their events', () => {
     let clickEventComponent1Fired = 0;
     let clickEventComponent2Fired = 0;
-    let eventLog = [];
+    const eventLog = [];
     const buttonRef = React.createRef();
 
     const TestResponderA = createEventResponder({
@@ -664,7 +666,7 @@ describe('DOMEventResponderSystem', () => {
 
     ReactDOM.render(<Test />, container);
 
-    let buttonElement = buttonRef.current;
+    const buttonElement = buttonRef.current;
     dispatchClickEvent(buttonElement);
 
     expect(clickEventComponent1Fired).toBe(1);
@@ -696,7 +698,7 @@ describe('DOMEventResponderSystem', () => {
     });
 
     let handler;
-    let buttonRef = React.createRef();
+    const buttonRef = React.createRef();
     const Test = () => {
       const listener = React.DEPRECATED_useResponder(TestResponder, {
         onClick: handler,
@@ -809,9 +811,9 @@ describe('DOMEventResponderSystem', () => {
       );
     }
 
-    let root = ReactDOM.createRoot(container);
+    const root = ReactDOM.createRoot(container);
     root.render(<Test counter={0} />);
-    expect(Scheduler).toFlushAndYield(['Test']);
+    expect(Scheduler).toFlushAndYield(__DEV__ ? ['Test', 'Test'] : ['Test']);
 
     // Click the button
     dispatchClickEvent(ref.current);
@@ -823,7 +825,9 @@ describe('DOMEventResponderSystem', () => {
     // Increase counter
     root.render(<Test counter={1} />);
     // Yield before committing
-    expect(Scheduler).toFlushAndYieldThrough(['Test']);
+    expect(Scheduler).toFlushAndYieldThrough(
+      __DEV__ ? ['Test', 'Test'] : ['Test'],
+    );
 
     // Click the button again
     dispatchClickEvent(ref.current);
@@ -977,7 +981,7 @@ describe('DOMEventResponderSystem', () => {
     ReactDOM.render(<Test />, container);
     expect(container.innerHTML).toBe('<button>Click me!</button>');
 
-    let buttonElement = buttonRef.current;
+    const buttonElement = buttonRef.current;
     dispatchClickEvent(buttonElement);
     expect(eventResponderFiredCount).toBe(1);
     dispatchClickEvent(buttonElement);

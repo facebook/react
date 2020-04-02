@@ -37,13 +37,13 @@ export function createRequest(
 }
 
 function performWork(request: OpaqueRequest): void {
-  let element = (request.children: any);
+  const element = (request.children: any);
   request.children = null;
   if (element && element.$$typeof !== REACT_ELEMENT_TYPE) {
     return;
   }
-  let type = element.type;
-  let props = element.props;
+  const type = element.type;
+  const props = element.props;
   if (typeof type !== 'string') {
     return;
   }
@@ -56,14 +56,14 @@ function performWork(request: OpaqueRequest): void {
 }
 
 function flushCompletedChunks(request: OpaqueRequest) {
-  let destination = request.destination;
-  let chunks = request.completedChunks;
+  const destination = request.destination;
+  const chunks = request.completedChunks;
   request.completedChunks = [];
 
   beginWriting(destination);
   try {
     for (let i = 0; i < chunks.length; i++) {
-      let chunk = chunks[i];
+      const chunk = chunks[i];
       writeChunk(destination, chunk);
     }
   } finally {

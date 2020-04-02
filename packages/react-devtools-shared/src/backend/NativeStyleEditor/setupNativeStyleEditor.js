@@ -171,7 +171,7 @@ function measureStyle(
 
 function shallowClone(object: Object): Object {
   const cloned = {};
-  for (let n in object) {
+  for (const n in object) {
     cloned[n] = object[n];
   }
   return cloned;

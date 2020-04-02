@@ -19,6 +19,15 @@ const {
 } = bundleTypes;
 const {RENDERER, RECONCILER} = moduleTypes;
 
+const RELEASE_CHANNEL = process.env.RELEASE_CHANNEL;
+
+// Default to building in experimental mode. If the release channel is set via
+// an environment variable, then check if it's "experimental".
+const __EXPERIMENTAL__ =
+  typeof RELEASE_CHANNEL === 'string'
+    ? RELEASE_CHANNEL === 'experimental'
+    : true;
+
 // If you need to replace a file with another file for a specific environment,
 // add it to this list with the logic for choosing the right replacement.
 const forks = Object.freeze({
@@ -47,13 +56,18 @@ const forks = Object.freeze({
     return 'shared/forks/object-assign.umd.js';
   },
 
+  'react-shallow-renderer': () => {
+    // Use ESM build of `react-shallow-renderer`.
+    return 'react-shallow-renderer/esm/index.js';
+  },
+
   // Without this fork, importing `shared/ReactSharedInternals` inside
   // the `react` package itself would not work due to a cyclical dependency.
   'shared/ReactSharedInternals': (bundleType, entry, dependencies) => {
     if (entry === 'react') {
       return 'react/src/ReactSharedInternals';
     }
-    if (dependencies.indexOf('react') === -1) {
+    if (!entry.startsWith('react/') && dependencies.indexOf('react') === -1) {
       // React internals are unavailable if we can't reference the package.
       // We return an error because we only want to throw if this module gets used.
       return new Error(
@@ -246,6 +260,27 @@ const forks = Object.freeze({
     }
   },
 
+  'react-reconciler/src/ReactFiberReconciler': (
+    bundleType,
+    entry,
+    dependencies,
+    moduleType,
+    bundle
+  ) => {
+    if (bundle.enableNewReconciler) {
+      switch (bundleType) {
+        case FB_WWW_DEV:
+        case FB_WWW_PROD:
+        case FB_WWW_PROFILING:
+          // Use the forked version of the reconciler
+          // TODO: Update this to point to the new module, once it exists
+          return 'react-reconciler/src/ReactFiberReconciler.old.js';
+      }
+    }
+    // Otherwise, use the non-forked version.
+    return 'react-reconciler/src/ReactFiberReconciler.old.js';
+  },
+
   // Different dialogs for caught errors.
   'react-reconciler/src/ReactFiberErrorDialog': (bundleType, entry) => {
     switch (bundleType) {
@@ -416,8 +451,13 @@ const forks = Object.freeze({
       case FB_WWW_DEV:
       case FB_WWW_PROD:
       case FB_WWW_PROFILING:
-        // Use the www fork which is integrated with TimeSlice profiling.
-        return 'react-dom/src/events/forks/EventListener-www.js';
+        if (__EXPERIMENTAL__) {
+          // In modern builds we don't use the indirection. We just use raw DOM.
+          return null;
+        } else {
+          // Use the www fork which is integrated with TimeSlice profiling.
+          return 'react-dom/src/events/forks/EventListener-www.js';
+        }
       default:
         return null;
     }

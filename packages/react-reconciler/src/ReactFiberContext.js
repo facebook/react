@@ -12,12 +12,11 @@ import type {StackCursor} from './ReactFiberStack';
 
 import {isFiberMounted} from 'react-reconciler/src/ReactFiberTreeReflection';
 import {disableLegacyContext} from 'shared/ReactFeatureFlags';
-import {ClassComponent, HostRoot} from 'shared/ReactWorkTags';
+import {ClassComponent, HostRoot} from './ReactWorkTags';
 import getComponentName from 'shared/getComponentName';
 import invariant from 'shared/invariant';
 import checkPropTypes from 'shared/checkPropTypes';
 
-import {startPhaseTimer, stopPhaseTimer} from './ReactDebugFiberPerf';
 import {createCursor, push, pop} from './ReactFiberStack';
 
 let warnedAboutMissingGetChildContext;
@@ -32,9 +31,11 @@ if (__DEV__) {
 }
 
 // A cursor to the current merged context object on the stack.
-let contextStackCursor: StackCursor<Object> = createCursor(emptyContextObject);
+const contextStackCursor: StackCursor<Object> = createCursor(
+  emptyContextObject,
+);
 // A cursor to a boolean indicating whether the context has changed.
-let didPerformWorkStackCursor: StackCursor<boolean> = createCursor(false);
+const didPerformWorkStackCursor: StackCursor<boolean> = createCursor(false);
 // Keep track of the previous context object that was on the stack.
 // We use this to get access to the parent context after we have already
 // pushed the next context provider, and now need to merge their contexts.
@@ -98,7 +99,7 @@ function getMaskedContext(
     }
 
     const context = {};
-    for (let key in contextTypes) {
+    for (const key in contextTypes) {
       context[key] = unmaskedContext[key];
     }
 
@@ -202,11 +203,8 @@ function processChildContext(
       return parentContext;
     }
 
-    let childContext;
-    startPhaseTimer(fiber, 'getChildContext');
-    childContext = instance.getChildContext();
-    stopPhaseTimer();
-    for (let contextKey in childContext) {
+    const childContext = instance.getChildContext();
+    for (const contextKey in childContext) {
       invariant(
         contextKey in childContextTypes,
         '%s.getChildContext(): key "%s" is not defined in childContextTypes.',

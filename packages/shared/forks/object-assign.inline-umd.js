@@ -5,7 +5,7 @@
 const hasOwnProperty = Object.prototype.hasOwnProperty;
 
 const _assign = function(to, from) {
-  for (let key in from) {
+  for (const key in from) {
     if (hasOwnProperty.call(from, key)) {
       to[key] = from[key];
     }

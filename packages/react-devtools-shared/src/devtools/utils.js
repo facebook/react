@@ -44,7 +44,8 @@ export function printElement(element: Element, includeWeight: boolean = false) {
     }
   }
 
-  let hocs = hocDisplayNames === null ? '' : ` [${hocDisplayNames.join('][')}]`;
+  const hocs =
+    hocDisplayNames === null ? '' : ` [${hocDisplayNames.join('][')}]`;
 
   let suffix = '';
   if (includeWeight) {

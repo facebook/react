@@ -15,11 +15,8 @@ jest.mock('shared/ReactFeatureFlags', () => {
   // configuration, too. Then remove these overrides.
   wwwFlags.disableLegacyContext = defaultFlags.disableLegacyContext;
   wwwFlags.warnAboutUnmockedScheduler = defaultFlags.warnAboutUnmockedScheduler;
-  wwwFlags.enableUserTimingAPI = defaultFlags.enableUserTimingAPI;
   wwwFlags.disableJavaScriptURLs = defaultFlags.disableJavaScriptURLs;
   wwwFlags.enableDeprecatedFlareAPI = defaultFlags.enableDeprecatedFlareAPI;
-  wwwFlags.disableModulePatternComponents =
-    defaultFlags.disableModulePatternComponents;
 
   return wwwFlags;
 });

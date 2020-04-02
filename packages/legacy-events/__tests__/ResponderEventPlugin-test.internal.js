@@ -9,7 +9,7 @@
 
 'use strict';
 
-const {HostComponent} = require('shared/ReactWorkTags');
+const {HostComponent} = require('react-reconciler/src/ReactWorkTags');
 const {PLUGIN_EVENT_SYSTEM} = require('legacy-events/EventSystemFlags');
 
 let EventBatching;
@@ -1378,7 +1378,8 @@ describe('ResponderEventPlugin', () => {
     // ResponderEventPlugin uses `getLowestCommonAncestor`
     const React = require('react');
     const ReactTestUtils = require('react-dom/test-utils');
-    const ReactTreeTraversal = require('shared/ReactTreeTraversal');
+    const getLowestCommonAncestor = require('legacy-events/ResponderEventPlugin')
+      .getLowestCommonAncestor;
     const ReactDOMComponentTree = require('../../react-dom/src/client/ReactDOMComponentTree');
 
     class ChildComponent extends React.Component {
@@ -1451,7 +1452,7 @@ describe('ResponderEventPlugin', () => {
     let i;
     for (i = 0; i < ancestors.length; i++) {
       const plan = ancestors[i];
-      const firstCommon = ReactTreeTraversal.getLowestCommonAncestor(
+      const firstCommon = getLowestCommonAncestor(
         ReactDOMComponentTree.getInstanceFromNode(plan.one),
         ReactDOMComponentTree.getInstanceFromNode(plan.two),
       );

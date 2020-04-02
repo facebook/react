@@ -23,7 +23,7 @@ import {
   SuspenseComponent,
   ScopeComponent,
   ContextProvider,
-} from 'shared/ReactWorkTags';
+} from './ReactWorkTags';
 import {enableScopeAPI} from 'shared/ReactFeatureFlags';
 
 function isFiberSuspenseAndTimedOut(fiber: Fiber): boolean {

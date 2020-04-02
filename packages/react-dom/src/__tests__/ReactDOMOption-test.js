@@ -22,7 +22,7 @@ describe('ReactDOMOption', () => {
   });
 
   it('should flatten children to a string', () => {
-    let stub = (
+    const stub = (
       <option>
         {1} {'foo'}
       </option>
@@ -50,7 +50,7 @@ describe('ReactDOMOption', () => {
   });
 
   it('should ignore null/undefined/false children without warning', () => {
-    let stub = (
+    const stub = (
       <option>
         {1} {false}
         {true}
@@ -92,7 +92,7 @@ describe('ReactDOMOption', () => {
   it('should support element-ish child', () => {
     // This is similar to <fbt>.
     // It's important that we toString it.
-    let obj = {
+    const obj = {
       $$typeof: Symbol.for('react.element'),
       type: props => props.content,
       ref: null,
@@ -134,7 +134,7 @@ describe('ReactDOMOption', () => {
   });
 
   it('should be able to use dangerouslySetInnerHTML on option', () => {
-    let stub = <option dangerouslySetInnerHTML={{__html: 'foobar'}} />;
+    const stub = <option dangerouslySetInnerHTML={{__html: 'foobar'}} />;
     const node = ReactTestUtils.renderIntoDocument(stub);
 
     expect(node.innerHTML).toBe('foobar');
@@ -153,7 +153,7 @@ describe('ReactDOMOption', () => {
 
   it('should allow ignoring `value` on option', () => {
     const a = 'a';
-    let stub = (
+    const stub = (
       <select value="giraffe" onChange={() => {}}>
         <option>monkey</option>
         <option>gir{a}ffe</option>

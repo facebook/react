@@ -15,13 +15,14 @@ import type {
   SuspenseInstance,
   Props,
 } from './ReactDOMHostConfig';
+import type {ReactDOMListener} from '../shared/ReactDOMTypes';
 
 import {
   HostComponent,
   HostText,
   HostRoot,
   SuspenseComponent,
-} from 'shared/ReactWorkTags';
+} from 'react-reconciler/src/ReactWorkTags';
 import invariant from 'shared/invariant';
 
 import {getParentSuspenseInstance} from './ReactDOMHostConfig';
@@ -29,9 +30,10 @@ import {getParentSuspenseInstance} from './ReactDOMHostConfig';
 const randomKey = Math.random()
   .toString(36)
   .slice(2);
-const internalInstanceKey = '__reactInternalInstance$' + randomKey;
-const internalEventHandlersKey = '__reactEventHandlers$' + randomKey;
-const internalContainerInstanceKey = '__reactContainere$' + randomKey;
+const internalInstanceKey = '__reactFiber$' + randomKey;
+const internalEventHandlersKey = '__reactEvents$' + randomKey;
+const internalContainerInstanceKey = '__reactContainer$' + randomKey;
+const internalEventListenersKey = '__reactListeners$' + randomKey;
 
 export function precacheFiberNode(
   hostInst: Fiber,
@@ -112,7 +114,7 @@ export function getClosestInstanceFromNode(targetNode: Node): null | Fiber {
           // have had an internalInstanceKey on it.
           // Let's get the fiber associated with the SuspenseComponent
           // as the deepest instance.
-          let targetSuspenseInst = suspenseInstance[internalInstanceKey];
+          const targetSuspenseInst = suspenseInstance[internalInstanceKey];
           if (targetSuspenseInst) {
             return targetSuspenseInst;
           }
@@ -184,4 +186,19 @@ export function updateFiberProps(
   props: Props,
 ): void {
   (node: any)[internalEventHandlersKey] = props;
+}
+
+// This is used for useEvent listeners
+export function getListenersFromTarget(
+  target: EventTarget,
+): null | Set<ReactDOMListener> {
+  return (target: any)[internalEventListenersKey] || null;
+}
+
+// This is used for useEvent listeners
+export function initListenersSet(
+  target: EventTarget,
+  value: Set<ReactDOMListener>,
+): void {
+  (target: any)[internalEventListenersKey] = value;
 }

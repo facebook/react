@@ -14,18 +14,20 @@ let useState;
 let Suspense;
 let block;
 let readString;
+let Scheduler;
 
 describe('ReactBlocks', () => {
   beforeEach(() => {
     jest.resetModules();
 
+    Scheduler = require('scheduler');
     React = require('react');
     ReactNoop = require('react-noop-renderer');
 
     block = React.block;
     useState = React.useState;
     Suspense = React.Suspense;
-    let cache = new Map();
+    const cache = new Map();
     readString = function(text) {
       let entry = cache.get(text);
       if (!entry) {
@@ -47,8 +49,67 @@ describe('ReactBlocks', () => {
     };
   });
 
-  it.experimental('renders a component with a suspending query', async () => {
-    function Query(id) {
+  it.experimental('renders a simple component', () => {
+    function User(props, data) {
+      return <div>{typeof data}</div>;
+    }
+
+    function App({Component}) {
+      return (
+        <Suspense fallback={'Loading...'}>
+          <Component name="Name" />
+        </Suspense>
+      );
+    }
+
+    const loadUser = block(User);
+
+    ReactNoop.act(() => {
+      ReactNoop.render(<App Component={loadUser()} />);
+    });
+
+    expect(ReactNoop).toMatchRenderedOutput(<div>undefined</div>);
+  });
+
+  it.experimental('prints the name of the render function in warnings', () => {
+    function load(firstName) {
+      return {
+        name: firstName,
+      };
+    }
+
+    function User(props, data) {
+      const array = [<span>{data.name}</span>];
+      return <div>{array}</div>;
+    }
+
+    function App({Component}) {
+      return (
+        <Suspense fallback={'Loading...'}>
+          <Component name="Name" />
+        </Suspense>
+      );
+    }
+
+    const loadUser = block(User, load);
+
+    expect(() => {
+      ReactNoop.act(() => {
+        ReactNoop.render(<App Component={loadUser()} />);
+      });
+    }).toErrorDev(
+      'Warning: Each child in a list should have a unique ' +
+        '"key" prop.\n\nCheck the render method of `User`. See ' +
+        'https://fb.me/react-warning-keys for more information.\n' +
+        '    in span (at **)\n' +
+        '    in User (at **)\n' +
+        '    in Suspense (at **)\n' +
+        '    in App (at **)',
+    );
+  });
+
+  it.experimental('renders a component with a suspending load', async () => {
+    function load(id) {
       return {
         id: id,
         name: readString('Sebastian'),
@@ -63,7 +124,7 @@ describe('ReactBlocks', () => {
       );
     }
 
-    let loadUser = block(Query, Render);
+    const loadUser = block(Render, load);
 
     function App({User}) {
       return (
@@ -86,76 +147,76 @@ describe('ReactBlocks', () => {
     expect(ReactNoop).toMatchRenderedOutput(<span>Name: Sebastian</span>);
   });
 
-  it.experimental('supports a lazy wrapper around a chunk', async () => {
-    function Query(id) {
-      return {
-        id: id,
-        name: readString('Sebastian'),
-      };
-    }
+  it.experimental(
+    'does not support a lazy wrapper around a chunk',
+    async () => {
+      function load(id) {
+        return {
+          id: id,
+          name: readString('Sebastian'),
+        };
+      }
 
-    function Render(props, data) {
-      return (
-        <span>
-          {props.title}: {data.name}
-        </span>
+      function Render(props, data) {
+        return (
+          <span>
+            {props.title}: {data.name}
+          </span>
+        );
+      }
+
+      const loadUser = block(Render, load);
+
+      function App({User}) {
+        return (
+          <Suspense fallback={'Loading...'}>
+            <User title="Name" />
+          </Suspense>
+        );
+      }
+
+      let resolveLazy;
+      const LazyUser = React.lazy(
+        () =>
+          new Promise(resolve => {
+            resolveLazy = function() {
+              resolve({
+                default: loadUser(123),
+              });
+            };
+          }),
       );
-    }
 
-    let loadUser = block(Query, Render);
+      await ReactNoop.act(async () => {
+        ReactNoop.render(<App User={LazyUser} />);
+      });
 
-    function App({User}) {
-      return (
-        <Suspense fallback={'Loading...'}>
-          <User title="Name" />
-        </Suspense>
-      );
-    }
+      expect(ReactNoop).toMatchRenderedOutput('Loading...');
 
-    let resolveLazy;
-    let LazyUser = React.lazy(
-      () =>
-        new Promise(resolve => {
-          resolveLazy = function() {
-            resolve({
-              default: loadUser(123),
-            });
-          };
-        }),
-    );
-
-    await ReactNoop.act(async () => {
-      ReactNoop.render(<App User={LazyUser} />);
-    });
-
-    expect(ReactNoop).toMatchRenderedOutput('Loading...');
-
-    // Resolve the component.
-    await ReactNoop.act(async () => {
+      // Resolve the component.
       await resolveLazy();
-    });
 
-    // We're still waiting on the data.
-    expect(ReactNoop).toMatchRenderedOutput('Loading...');
-
-    await ReactNoop.act(async () => {
-      jest.advanceTimersByTime(1000);
-    });
-
-    expect(ReactNoop).toMatchRenderedOutput(<span>Name: Sebastian</span>);
-  });
+      expect(Scheduler).toFlushAndThrow(
+        'Element type is invalid. Received a promise that resolves to: [object Object]. ' +
+          'Lazy element type must resolve to a class or function.' +
+          (__DEV__
+            ? ' Did you wrap a component in React.lazy() more than once?'
+            : ''),
+      );
+    },
+  );
 
   it.experimental(
     'can receive updated data for the same component',
     async () => {
-      function Query(firstName) {
+      function load(firstName) {
         return {
           name: firstName,
         };
       }
 
       function Render(props, data) {
-        let [initialName] = useState(data.name);
+        const [initialName] = useState(data.name);
         return (
           <>
             <span>Initial name: {initialName}</span>
@@ -164,7 +225,7 @@ describe('ReactBlocks', () => {
         );
       }
 
-      let loadUser = block(Query, Render);
+      const loadUser = block(Render, load);
 
       function App({User}) {
         return (

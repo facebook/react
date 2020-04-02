@@ -37,7 +37,7 @@ import {
   attemptContinuousHydration,
   attemptHydrationAtCurrentPriority,
 } from 'react-reconciler/src/ReactFiberReconciler';
-import {createPortal as createPortalImpl} from 'shared/ReactPortal';
+import {createPortal as createPortalImpl} from 'react-reconciler/src/ReactPortal';
 import {canUseDOM} from 'shared/ExecutionEnvironment';
 import {setBatchingImplementation} from 'legacy-events/ReactGenericBatching';
 import {
@@ -50,10 +50,6 @@ import {
   eventNameDispatchConfigs,
   injectEventPluginsByName,
 } from 'legacy-events/EventPluginRegistry';
-import {
-  accumulateTwoPhaseDispatches,
-  accumulateDirectDispatches,
-} from 'legacy-events/EventPropagators';
 import ReactVersion from 'shared/ReactVersion';
 import invariant from 'shared/invariant';
 import {warnUnstableRenderSubtreeIntoContainer} from 'shared/ReactFeatureFlags';
@@ -184,8 +180,6 @@ const Internals = {
     getFiberCurrentPropsFromNode,
     injectEventPluginsByName,
     eventNameDispatchConfigs,
-    accumulateTwoPhaseDispatches,
-    accumulateDirectDispatches,
     enqueueStateRestore,
     restoreStateIfNeeded,
     dispatchEvent,

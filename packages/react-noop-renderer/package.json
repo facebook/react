@@ -18,7 +18,7 @@
     "react-server": "*"
   },
   "peerDependencies": {
-    "react": "^16.0.0"
+    "react": "^16.13.0"
   },
   "files": [
     "LICENSE",
@@ -28,7 +28,9 @@
     "persistent.js",
     "server.js",
     "flight-client.js",
+    "flight-modules.js",
     "flight-server.js",
+    "flight-server-runtime.js",
     "cjs/"
   ]
 }

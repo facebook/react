@@ -1571,4 +1571,54 @@ describe('InspectedElementContext', () => {
 
     done();
   });
+
+  it('display complex values of useDebugValue', async done => {
+    let getInspectedElementPath: GetInspectedElementPath = ((null: any): GetInspectedElementPath);
+    let inspectedElement = null;
+    function Suspender({target}) {
+      const context = React.useContext(InspectedElementContext);
+      getInspectedElementPath = context.getInspectedElementPath;
+      inspectedElement = context.getInspectedElement(target);
+      return null;
+    }
+
+    const container = document.createElement('div');
+
+    function useDebuggableHook() {
+      React.useDebugValue({foo: 2});
+      React.useState(1);
+      return 1;
+    }
+    function DisplayedComplexValue() {
+      useDebuggableHook();
+      return null;
+    }
+
+    await utils.actAsync(() =>
+      ReactDOM.render(<DisplayedComplexValue />, container),
+    );
+
+    const ignoredComplexValueIndex = 0;
+    const ignoredComplexValueId = ((store.getElementIDAtIndex(
+      ignoredComplexValueIndex,
+    ): any): number);
+    await utils.actAsync(
+      () =>
+        TestRenderer.create(
+          <Contexts
+            defaultSelectedElementID={ignoredComplexValueId}
+            defaultSelectedElementIndex={ignoredComplexValueIndex}>
+            <React.Suspense fallback={null}>
+              <Suspender target={ignoredComplexValueId} />
+            </React.Suspense>
+          </Contexts>,
+        ),
+      false,
+    );
+    expect(getInspectedElementPath).not.toBeNull();
+    expect(inspectedElement).not.toBeNull();
+    expect(inspectedElement).toMatchSnapshot('DisplayedComplexValue');
+
+    done();
+  });
 });

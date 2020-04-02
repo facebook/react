@@ -11,7 +11,7 @@
 
 let React;
 let ReactDOM;
-let ReactFeatureFlags = require('shared/ReactFeatureFlags');
+const ReactFeatureFlags = require('shared/ReactFeatureFlags');
 
 const ChildComponent = ({id, eventHandler}) => (
   <div

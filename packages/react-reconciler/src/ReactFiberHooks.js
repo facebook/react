@@ -14,6 +14,7 @@ import type {
   ReactEventResponder,
   ReactContext,
   ReactEventResponderListener,
+  ReactScopeMethods,
 } from 'shared/ReactTypes';
 import type {Fiber} from './ReactFiber';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
@@ -24,6 +25,7 @@ import type {FiberRoot} from './ReactFiberRoot';
 import type {
   ReactListenerEvent,
   ReactListenerMap,
+  ReactListener,
 } from './ReactFiberHostConfig';
 
 import ReactSharedInternals from 'shared/ReactSharedInternals';
@@ -35,7 +37,7 @@ import {createDeprecatedResponderListener} from './ReactFiberDeprecatedEvents';
 import {
   Update as UpdateEffect,
   Passive as PassiveEffect,
-} from 'shared/ReactSideEffectTags';
+} from './ReactSideEffectTags';
 import {
   NoEffect as NoHookEffect,
   HasEffect as HookHasEffect,
@@ -53,6 +55,12 @@ import {
   markRenderEventTimeAndConfig,
   markUnprocessedUpdateTime,
 } from './ReactFiberWorkLoop';
+import {
+  registerEvent,
+  mountEventListener as mountHostEventListener,
+  unmountEventListener as unmountHostEventListener,
+  validateEventListenerTarget,
+} from './ReactFiberHostConfig';
 
 import invariant from 'shared/invariant';
 import getComponentName from 'shared/getComponentName';
@@ -73,6 +81,7 @@ import {
   setWorkInProgressVersion,
   warnAboutMultipleRenderersDEV,
 } from './ReactMutableSource';
+import {getRootHostContainer} from './ReactFiberHostContext';
 
 const {ReactCurrentDispatcher, ReactCurrentBatchConfig} = ReactSharedInternals;
 
@@ -588,7 +597,7 @@ function updateWorkInProgressHook(): Hook {
   // the dispatcher used for mounts.
   let nextCurrentHook: null | Hook;
   if (currentHook === null) {
-    let current = currentlyRenderingFiber.alternate;
+    const current = currentlyRenderingFiber.alternate;
     if (current !== null) {
       nextCurrentHook = current.memoizedState;
     } else {
@@ -699,14 +708,14 @@ function updateReducer<S, I, A>(
   let baseQueue = current.baseQueue;
 
   // The last pending update that hasn't been processed yet.
-  let pendingQueue = queue.pending;
+  const pendingQueue = queue.pending;
   if (pendingQueue !== null) {
     // We have new updates that haven't been processed yet.
     // We'll add them to the base queue.
     if (baseQueue !== null) {
       // Merge the pending queue and the base queue.
-      let baseFirst = baseQueue.next;
-      let pendingFirst = pendingQueue.next;
+      const baseFirst = baseQueue.next;
+      const pendingFirst = pendingQueue.next;
       baseQueue.next = pendingFirst;
       pendingQueue.next = baseFirst;
     }
@@ -726,7 +735,7 @@ function updateReducer<S, I, A>(
 
   if (baseQueue !== null) {
     // We have a queue to process.
-    let first = baseQueue.next;
+    const first = baseQueue.next;
     let newState = current.baseState;
 
     let newBaseState = null;
@@ -963,9 +972,10 @@ function useMutableSource<Source, Snapshot>(
 
   const dispatcher = ReactCurrentDispatcher.current;
 
-  let [snapshot, setSnapshot] = dispatcher.useState(() =>
+  const [currentSnapshot, setSnapshot] = dispatcher.useState(() =>
     readFromUnsubcribedMutableSource(root, source, getSnapshot),
   );
+  let snapshot = currentSnapshot;
 
   // Grab a handle to the state hook as well.
   // We use it to clear the pending update queue if we have a new source.
@@ -1627,18 +1637,99 @@ function dispatchAction<S, A>(
 
 const noOpMount = () => {};
 
+function validateNotInFunctionRender(): boolean {
+  if (currentlyRenderingFiber === null) {
+    return true;
+  }
+  if (__DEV__) {
+    console.warn(
+      'Event listener methods from useEvent() cannot be called during render.' +
+        ' These methods should be called in an effect or event callback outside the render.',
+    );
+  }
+  return false;
+}
+
+function createReactListener(
+  event: ReactListenerEvent,
+  callback: Event => void,
+  target: EventTarget | ReactScopeMethods,
+  destroy: Node => void,
+): ReactListener {
+  return {
+    callback,
+    destroy,
+    event,
+    target,
+  };
+}
+
 function mountEventListener(event: ReactListenerEvent): ReactListenerMap {
   if (enableUseEventAPI) {
     const hook = mountWorkInProgressHook();
+    const listenerMap: Map<
+      EventTarget | ReactScopeMethods,
+      ReactListener,
+    > = new Map();
+    const rootContainerInstance = getRootHostContainer();
+
+    // Register the event to the current root to ensure event
+    // replaying can pick up the event ahead of time.
+    registerEvent(event, rootContainerInstance);
 
     const clear = () => {
-      // TODO
+      if (validateNotInFunctionRender()) {
+        const listeners = Array.from(listenerMap.values());
+        for (let i = 0; i < listeners.length; i++) {
+          unmountHostEventListener(listeners[i]);
+        }
+        listenerMap.clear();
+      }
+    };
+
+    const destroy = (target: Node) => {
+      // We don't need to call detachListenerFromInstance
+      // here as this method should only ever be called
+      // from renderers that need to remove the instance
+      // from the map representing an instance that still
+      // holds a reference to the listenerMap. This means
+      // things like "window" listeners on ReactDOM should
+      // never enter this call path as the the instance in
+      // those cases would be that of "window", which
+      // should be handled via an optimized route in the
+      // renderer, making less overhead here. If we change
+      // this heuristic we should update this path to make
+      // sure we call detachListenerFromInstance.
+      listenerMap.delete(target);
     };
 
     const reactListenerMap: ReactListenerMap = {
       clear,
-      setListener(instance: EventTarget, callback: ?(Event) => void): void {
-        // TODO
+      setListener(
+        target: EventTarget | ReactScopeMethods,
+        callback: ?(Event) => void,
+      ): void {
+        if (
+          validateNotInFunctionRender() &&
+          validateEventListenerTarget(target, callback)
+        ) {
+          let listener = listenerMap.get(target);
+          if (listener === undefined) {
+            if (callback == null) {
+              return;
+            }
+            listener = createReactListener(event, callback, target, destroy);
+            listenerMap.set(target, listener);
+          } else {
+            if (callback == null) {
+              listenerMap.delete(target);
+              unmountHostEventListener(listener);
+              return;
+            }
+            listener.callback = callback;
+          }
+          mountHostEventListener(listener);
+        }
       },
     };
     // In order to clear up upon the hook unmounting,

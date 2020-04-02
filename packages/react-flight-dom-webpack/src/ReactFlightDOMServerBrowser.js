@@ -8,6 +8,7 @@
  */
 
 import type {ReactModel} from 'react-server/src/ReactFlightServer';
+import type {BundlerConfig} from './ReactFlightServerWebpackBundlerConfig';
 
 import {
   createRequest,
@@ -15,11 +16,14 @@ import {
   startFlowing,
 } from 'react-server/src/ReactFlightServer';
 
-function renderToReadableStream(model: ReactModel): ReadableStream {
+function renderToReadableStream(
+  model: ReactModel,
+  webpackMap: BundlerConfig,
+): ReadableStream {
   let request;
   return new ReadableStream({
     start(controller) {
-      request = createRequest(model, controller);
+      request = createRequest(model, controller, webpackMap);
       startWork(request);
     },
     pull(controller) {

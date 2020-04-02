@@ -32,7 +32,7 @@ describe('ReactIncrementalErrorReplay-test', () => {
     expect(realFiber).toEqual(stash);
 
     // Mutate the original.
-    for (let key in realFiber) {
+    for (const key in realFiber) {
       realFiber[key] = key + '_' + Math.random();
     }
     expect(realFiber).not.toEqual(stash);

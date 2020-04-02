@@ -7,7 +7,7 @@
  * @flow
  */
 
-let loggedTypeFailures = {};
+const loggedTypeFailures = {};
 
 export default function checkPropTypes(
   typeSpecs: Object,
@@ -17,8 +17,8 @@ export default function checkPropTypes(
 ): void {
   if (__DEV__) {
     // $FlowFixMe This is okay but Flow doesn't know it.
-    let has = Function.call.bind(Object.prototype.hasOwnProperty);
-    for (let typeSpecName in typeSpecs) {
+    const has = Function.call.bind(Object.prototype.hasOwnProperty);
+    for (const typeSpecName in typeSpecs) {
       if (has(typeSpecs, typeSpecName)) {
         let error;
         // Prop type validation may throw. In case they do, we don't want to
@@ -28,7 +28,7 @@ export default function checkPropTypes(
           // This is intentionally an invariant that gets caught. It's the same
           // behavior as without this statement except with a better message.
           if (typeof typeSpecs[typeSpecName] !== 'function') {
-            let err = Error(
+            const err = Error(
               (componentName || 'React class') +
                 ': ' +
                 location +

@@ -604,7 +604,7 @@ describe('ReactNative', () => {
       uiViewClassName: 'RCTView',
     }));
 
-    let viewRef = React.createRef();
+    const viewRef = React.createRef();
     ReactNative.render(<View ref={viewRef} />, 11);
 
     expect(TextInputState.blurTextInput).not.toBeCalled();
@@ -621,7 +621,7 @@ describe('ReactNative', () => {
       uiViewClassName: 'RCTView',
     }));
 
-    let viewRef = React.createRef();
+    const viewRef = React.createRef();
     ReactNative.render(<View ref={viewRef} />, 11);
 
     expect(TextInputState.focusTextInput).not.toBeCalled();

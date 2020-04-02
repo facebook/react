@@ -25,17 +25,13 @@ import {
   readFinalStringChunk,
 } from './ReactFlightClientHostConfig';
 
-export type ReactModelRoot<T> = {|
-  model: T,
-|};
-
-type Response = ResponseBase & {
+export type Response<T> = ResponseBase<T> & {
   fromJSON: (key: string, value: JSONValue) => any,
   stringDecoder: StringDecoder,
 };
 
-export function createResponse(): Response {
-  let response: Response = (createResponseImpl(): any);
+export function createResponse<T>(): Response<T> {
+  const response: Response<T> = (createResponseImpl(): any);
   response.fromJSON = function(key: string, value: JSONValue) {
     return parseModelFromJSON(response, this, key, value);
   };
@@ -45,45 +41,45 @@ export function createResponse(): Response {
   return response;
 }
 
-function processFullRow(response: Response, row: string): void {
+function processFullRow<T>(response: Response<T>, row: string): void {
   if (row === '') {
     return;
   }
-  let tag = row[0];
+  const tag = row[0];
   switch (tag) {
     case 'J': {
-      let colon = row.indexOf(':', 1);
-      let id = parseInt(row.substring(1, colon), 16);
-      let json = row.substring(colon + 1);
-      let model = JSON.parse(json, response.fromJSON);
+      const colon = row.indexOf(':', 1);
+      const id = parseInt(row.substring(1, colon), 16);
+      const json = row.substring(colon + 1);
+      const model = JSON.parse(json, response.fromJSON);
       resolveModelChunk(response, id, model);
       return;
     }
     case 'E': {
-      let colon = row.indexOf(':', 1);
-      let id = parseInt(row.substring(1, colon), 16);
-      let json = row.substring(colon + 1);
-      let errorInfo = JSON.parse(json);
+      const colon = row.indexOf(':', 1);
+      const id = parseInt(row.substring(1, colon), 16);
+      const json = row.substring(colon + 1);
+      const errorInfo = JSON.parse(json);
       resolveErrorChunk(response, id, errorInfo.message, errorInfo.stack);
       return;
     }
     default: {
       // Assume this is the root model.
-      let model = JSON.parse(row, response.fromJSON);
+      const model = JSON.parse(row, response.fromJSON);
       resolveModelChunk(response, 0, model);
       return;
     }
   }
 }
 
-export function processStringChunk(
-  response: Response,
+export function processStringChunk<T>(
+  response: Response<T>,
   chunk: string,
   offset: number,
 ): void {
   let linebreak = chunk.indexOf('\n', offset);
   while (linebreak > -1) {
-    let fullrow = response.partialRow + chunk.substring(offset, linebreak);
+    const fullrow = response.partialRow + chunk.substring(offset, linebreak);
     processFullRow(response, fullrow);
     response.partialRow = '';
     offset = linebreak + 1;
@@ -92,17 +88,17 @@ export function processStringChunk(
   response.partialRow += chunk.substring(offset);
 }
 
-export function processBinaryChunk(
-  response: Response,
+export function processBinaryChunk<T>(
+  response: Response<T>,
   chunk: Uint8Array,
 ): void {
   if (!supportsBinaryStreams) {
     throw new Error("This environment don't support binary chunks.");
   }
-  let stringDecoder = response.stringDecoder;
+  const stringDecoder = response.stringDecoder;
   let linebreak = chunk.indexOf(10); // newline
   while (linebreak > -1) {
-    let fullrow =
+    const fullrow =
       response.partialRow +
       readFinalStringChunk(stringDecoder, chunk.subarray(0, linebreak));
     processFullRow(response, fullrow);
@@ -113,4 +109,4 @@ export function processBinaryChunk(
   response.partialRow += readPartialStringChunk(stringDecoder, chunk);
 }
 
-export {reportGlobalError, close, getModelRoot} from './ReactFlightClient';
+export {reportGlobalError, close} from './ReactFlightClient';

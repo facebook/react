@@ -39,7 +39,7 @@ describe('SchedulerNoDOM', () => {
   });
 
   it('runAllTimers flushes all scheduled callbacks', () => {
-    let log = [];
+    const log = [];
     scheduleCallback(NormalPriority, () => {
       log.push('A');
     });
@@ -55,7 +55,7 @@ describe('SchedulerNoDOM', () => {
   });
 
   it('executes callbacks in order of priority', () => {
-    let log = [];
+    const log = [];
 
     scheduleCallback(NormalPriority, () => {
       log.push('A');

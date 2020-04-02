@@ -68,9 +68,9 @@ describe('ReactNativeError', () => {
 
     ReactNative.render(<ClassComponent />, 1);
 
-    let reactTag = ReactNative.findNodeHandle(ref.current);
+    const reactTag = ReactNative.findNodeHandle(ref.current);
 
-    let componentStack = normalizeCodeLocInfo(
+    const componentStack = normalizeCodeLocInfo(
       computeComponentStackForErrorReporting(reactTag),
     );
 

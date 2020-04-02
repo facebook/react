@@ -9,7 +9,6 @@
 
 import {registrationNameModules} from 'legacy-events/EventPluginRegistry';
 import {canUseDOM} from 'shared/ExecutionEnvironment';
-import endsWith from 'shared/endsWith';
 import invariant from 'shared/invariant';
 import {setListenToResponderEventTypes} from '../events/DeprecatedDOMEventResponderSystem';
 
@@ -59,7 +58,7 @@ import {
 import {getListenerMapForElement} from '../events/DOMEventListenerMap';
 import {
   addResponderEventSystemEvent,
-  removeTrappedPassiveEventListener,
+  removeTrappedEventListener,
 } from '../events/ReactDOMEventListener.js';
 import {mediaEventTypes} from '../events/DOMTopLevelEventTypes';
 import {
@@ -1327,6 +1326,11 @@ export function restoreControlledState(
   }
 }
 
+function endsWith(subject: string, search: string): boolean {
+  const length = subject.length;
+  return subject.substring(length - search.length, length) === search;
+}
+
 export function listenToEventResponderEventTypes(
   eventTypes: Array<string>,
   document: Document,
@@ -1344,6 +1348,10 @@ export function listenToEventResponderEventTypes(
       const targetEventType = isPassive
         ? eventType
         : eventType.substring(0, eventType.length - 7);
+      // We don't listen to this as we actually emulate it in the host config
+      if (targetEventType === 'beforeblur') {
+        continue;
+      }
       if (!listenerMap.has(eventKey)) {
         if (isPassive) {
           const activeKey = targetEventType + '_active';
@@ -1358,13 +1366,15 @@ export function listenToEventResponderEventTypes(
           // existing passive event listener before we add the
           // active event listener.
           const passiveKey = targetEventType + '_passive';
-          const passiveListener = listenerMap.get(passiveKey);
-          if (passiveListener != null) {
-            removeTrappedPassiveEventListener(
+          const passiveItem = listenerMap.get(passiveKey);
+          if (passiveItem !== undefined) {
+            removeTrappedEventListener(
               document,
-              targetEventType,
-              passiveListener,
+              (targetEventType: any),
+              true,
+              passiveItem.listener,
             );
+            listenerMap.delete(passiveKey);
           }
         }
         const eventListener = addResponderEventSystemEvent(
@@ -1372,7 +1382,10 @@ export function listenToEventResponderEventTypes(
           targetEventType,
           isPassive,
         );
-        listenerMap.set(eventKey, eventListener);
+        listenerMap.set(eventKey, {
+          passive: isPassive,
+          listener: eventListener,
+        });
       }
     }
   }

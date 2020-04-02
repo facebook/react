@@ -216,7 +216,7 @@ describe('ReactShallowRenderer with hooks', () => {
     }
 
     const shallowRenderer = createRenderer();
-    let result = shallowRenderer.render(<SomeComponent initialCount={0} />);
+    const result = shallowRenderer.render(<SomeComponent initialCount={0} />);
 
     expect(result).toEqual(
       <div>
@@ -228,7 +228,7 @@ describe('ReactShallowRenderer with hooks', () => {
   });
 
   it('should not trigger effects', () => {
-    let effectsCalled = [];
+    const effectsCalled = [];
 
     function SomeComponent({defaultName}) {
       React.useEffect(() => {
@@ -260,8 +260,8 @@ describe('ReactShallowRenderer with hooks', () => {
     }
 
     const shallowRenderer = createRenderer();
-    let firstResult = shallowRenderer.render(<SomeComponent />);
-    let secondResult = shallowRenderer.render(<SomeComponent />);
+    const firstResult = shallowRenderer.render(<SomeComponent />);
+    const secondResult = shallowRenderer.render(<SomeComponent />);
 
     expect(firstResult).toEqual(secondResult);
   });
@@ -280,8 +280,8 @@ describe('ReactShallowRenderer with hooks', () => {
     }
 
     const shallowRenderer = createRenderer();
-    let firstResult = shallowRenderer.render(<SomeComponent />);
-    let secondResult = shallowRenderer.render(<SomeComponent />);
+    const firstResult = shallowRenderer.render(<SomeComponent />);
+    const secondResult = shallowRenderer.render(<SomeComponent />);
 
     expect(firstResult).toEqual(secondResult);
   });
@@ -300,7 +300,7 @@ describe('ReactShallowRenderer with hooks', () => {
     }
 
     const shallowRenderer = createRenderer();
-    let result = shallowRenderer.render(<SomeComponent />);
+    const result = shallowRenderer.render(<SomeComponent />);
 
     expect(result).toEqual(
       <div>
@@ -368,8 +368,8 @@ describe('ReactShallowRenderer with hooks', () => {
     });
 
     const shallowRenderer = createRenderer();
-    let firstResult = shallowRenderer.render(<SomeComponent />);
-    let secondResult = shallowRenderer.render(<SomeComponent />);
+    const firstResult = shallowRenderer.render(<SomeComponent />);
+    const secondResult = shallowRenderer.render(<SomeComponent />);
 
     expect(firstResult).toEqual(secondResult);
   });

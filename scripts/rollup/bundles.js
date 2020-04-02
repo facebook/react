@@ -76,6 +76,38 @@ const bundles = [
     externals: [],
   },
 
+  /******* React JSX Runtime *******/
+  {
+    bundleTypes: [
+      NODE_DEV,
+      NODE_PROD,
+      NODE_PROFILING,
+      FB_WWW_DEV,
+      FB_WWW_PROD,
+      FB_WWW_PROFILING,
+    ],
+    moduleType: ISOMORPHIC,
+    entry: 'react/jsx-runtime',
+    global: 'JSXRuntime',
+    externals: ['react'],
+  },
+
+  /******* React JSX DEV Runtime *******/
+  {
+    bundleTypes: [
+      NODE_DEV,
+      NODE_PROD,
+      NODE_PROFILING,
+      FB_WWW_DEV,
+      FB_WWW_PROD,
+      FB_WWW_PROFILING,
+    ],
+    moduleType: ISOMORPHIC,
+    entry: 'react/jsx-dev-runtime',
+    global: 'JSXDEVRuntime',
+    externals: ['react'],
+  },
+
   /******* React DOM *******/
   {
     bundleTypes: [
@@ -92,6 +124,16 @@ const bundles = [
     moduleType: RENDERER,
     entry: 'react-dom',
     global: 'ReactDOM',
+    externals: ['react'],
+  },
+
+  /******* React DOM - www - Uses forked reconciler *******/
+  {
+    moduleType: RENDERER,
+    bundleTypes: [FB_WWW_DEV, FB_WWW_PROD, FB_WWW_PROFILING],
+    entry: 'react-dom',
+    global: 'ReactDOMForked',
+    enableNewReconciler: true,
     externals: ['react'],
   },
 
@@ -187,6 +229,13 @@ const bundles = [
     global: 'ReactFlightDOMServer',
     externals: ['react', 'react-dom/server'],
   },
+  {
+    bundleTypes: [NODE_DEV, NODE_PROD],
+    moduleType: RENDERER,
+    entry: 'react-flight-dom-webpack/server-runtime',
+    global: 'ReactFlightDOMServerRuntime',
+    externals: ['react'],
+  },
 
   /******* React DOM Flight Client Webpack *******/
   {
@@ -209,6 +258,13 @@ const bundles = [
       'ReactFlightDOMRelayServerIntegration',
     ],
   },
+  {
+    bundleTypes: [FB_WWW_DEV, FB_WWW_PROD],
+    moduleType: RENDERER,
+    entry: 'react-flight-dom-relay/server-runtime',
+    global: 'ReactFlightDOMRelayServerRuntime',
+    externals: ['react', 'ReactFlightDOMRelayServerIntegration'],
+  },
 
   /******* React DOM Flight Client Relay *******/
   {
@@ -216,7 +272,7 @@ const bundles = [
     moduleType: RENDERER,
     entry: 'react-flight-dom-relay',
     global: 'ReactFlightDOMRelayClient',
-    externals: ['react'],
+    externals: ['react', 'ReactFlightDOMRelayClientIntegration'],
   },
 
   /******* React ART *******/
@@ -363,7 +419,12 @@ const bundles = [
     moduleType: RENDERER,
     entry: 'react-noop-renderer/flight-server',
     global: 'ReactNoopFlightServer',
-    externals: ['react', 'scheduler', 'expect'],
+    externals: [
+      'react',
+      'scheduler',
+      'expect',
+      'react-noop-renderer/flight-modules',
+    ],
   },
 
   /******* React Noop Flight Client (used for tests) *******/
@@ -372,7 +433,12 @@ const bundles = [
     moduleType: RENDERER,
     entry: 'react-noop-renderer/flight-client',
     global: 'ReactNoopFlightClient',
-    externals: ['react', 'scheduler', 'expect'],
+    externals: [
+      'react',
+      'scheduler',
+      'expect',
+      'react-noop-renderer/flight-modules',
+    ],
   },
 
   /******* React Reconciler *******/
@@ -399,6 +465,13 @@ const bundles = [
     moduleType: RECONCILER,
     entry: 'react-server/flight',
     global: 'ReactFlightServer',
+    externals: ['react'],
+  },
+  {
+    bundleTypes: [NODE_DEV, NODE_PROD],
+    moduleType: RENDERER,
+    entry: 'react-server/flight-server-runtime',
+    global: 'ReactFlightServerRuntime',
     externals: ['react'],
   },
 

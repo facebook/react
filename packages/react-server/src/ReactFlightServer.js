@@ -7,7 +7,13 @@
  * @flow
  */
 
-import type {Destination, Chunk} from './ReactFlightServerConfig';
+import type {
+  Destination,
+  Chunk,
+  BundlerConfig,
+  ModuleMetaData,
+  ModuleReference,
+} from './ReactFlightServerConfig';
 
 import {
   scheduleWork,
@@ -18,16 +24,25 @@ import {
   close,
   processModelChunk,
   processErrorChunk,
+  resolveModuleMetaData,
 } from './ReactFlightServerConfig';
 
-import {REACT_ELEMENT_TYPE} from 'shared/ReactSymbols';
+import {
+  REACT_BLOCK_TYPE,
+  REACT_SERVER_BLOCK_TYPE,
+  REACT_ELEMENT_TYPE,
+  REACT_FRAGMENT_TYPE,
+  REACT_LAZY_TYPE,
+} from 'shared/ReactSymbols';
+
+import invariant from 'shared/invariant';
 
 type ReactJSONValue =
   | string
   | boolean
   | number
   | null
-  | Array<ReactModel>
+  | $ReadOnlyArray<ReactJSONValue>
   | ReactModelObject;
 
 export type ReactModel =
@@ -43,12 +58,13 @@ type ReactModelObject = {+[key: string]: ReactModel};
 
 type Segment = {
   id: number,
-  model: ReactModel,
+  query: () => ReactModel,
   ping: () => void,
 };
 
 export type Request = {
   destination: Destination,
+  bundlerConfig: BundlerConfig,
   nextChunkId: number,
   pendingChunks: number,
   pingedSegments: Array<Segment>,
@@ -61,52 +77,59 @@ export type Request = {
 export function createRequest(
   model: ReactModel,
   destination: Destination,
+  bundlerConfig: BundlerConfig,
 ): Request {
-  let pingedSegments = [];
-  let request = {
+  const pingedSegments = [];
+  const request = {
     destination,
+    bundlerConfig,
     nextChunkId: 0,
     pendingChunks: 0,
     pingedSegments: pingedSegments,
     completedJSONChunks: [],
     completedErrorChunks: [],
     flowing: false,
-    toJSON: (key: string, value: ReactModel) =>
-      resolveModelToJSON(request, value),
+    toJSON: function(key: string, value: ReactModel): ReactJSONValue {
+      return resolveModelToJSON(request, this, key, value);
+    },
   };
   request.pendingChunks++;
-  let rootSegment = createSegment(request, model);
+  const rootSegment = createSegment(request, () => model);
   pingedSegments.push(rootSegment);
   return request;
 }
 
-function attemptResolveModelComponent(element: React$Element<any>): ReactModel {
-  let type = element.type;
-  let props = element.props;
+function attemptResolveElement(element: React$Element<any>): ReactModel {
+  const type = element.type;
+  const props = element.props;
   if (typeof type === 'function') {
-    // This is a nested view model.
+    // This is a server-side component.
     return type(props);
   } else if (typeof type === 'string') {
     // This is a host element. E.g. HTML.
     return [REACT_ELEMENT_TYPE, type, element.key, element.props];
+  } else if (type[0] === REACT_SERVER_BLOCK_TYPE) {
+    return [REACT_ELEMENT_TYPE, type, element.key, element.props];
+  } else if (type === REACT_FRAGMENT_TYPE) {
+    return element.props.children;
   } else {
-    throw new Error('Unsupported type.');
+    invariant(false, 'Unsupported type.');
   }
 }
 
 function pingSegment(request: Request, segment: Segment): void {
-  let pingedSegments = request.pingedSegments;
+  const pingedSegments = request.pingedSegments;
   pingedSegments.push(segment);
   if (pingedSegments.length === 1) {
     scheduleWork(() => performWork(request));
   }
 }
 
-function createSegment(request: Request, model: ReactModel): Segment {
-  let id = request.nextChunkId++;
-  let segment = {
+function createSegment(request: Request, query: () => ReactModel): Segment {
+  const id = request.nextChunkId++;
+  const segment = {
     id,
-    model,
+    query,
     ping: () => pingSegment(request, segment),
   };
   return segment;
@@ -117,9 +140,9 @@ function serializeIDRef(id: number): string {
 }
 
 function escapeStringValue(value: string): string {
-  if (value[0] === '$') {
-    // We need to escape $ prefixed strings since we use that to encode
-    // references to IDs and as a special symbol value.
+  if (value[0] === '$' || value[0] === '@') {
+    // We need to escape $ or @ prefixed strings since we use those to encode
+    // references to IDs and as special symbol values.
     return '$' + value;
   } else {
     return value;
@@ -128,39 +151,95 @@ function escapeStringValue(value: string): string {
 
 export function resolveModelToJSON(
   request: Request,
+  parent: {+[key: string | number]: ReactModel} | $ReadOnlyArray<ReactModel>,
+  key: string,
   value: ReactModel,
 ): ReactJSONValue {
+  // Special Symbols
+  switch (value) {
+    case REACT_ELEMENT_TYPE:
+      return '$';
+    case REACT_SERVER_BLOCK_TYPE:
+      return '@';
+    case REACT_LAZY_TYPE:
+    case REACT_BLOCK_TYPE:
+      invariant(
+        false,
+        'React Blocks (and Lazy Components) are expected to be replaced by a ' +
+          'compiler on the server. Try configuring your compiler set up and avoid ' +
+          'using React.lazy inside of Blocks.',
+      );
+  }
+
+  if (parent[0] === REACT_SERVER_BLOCK_TYPE) {
+    // We're currently encoding part of a Block. Look up which key.
+    switch (key) {
+      case '1': {
+        // Module reference
+        const moduleReference: ModuleReference<any> = (value: any);
+        try {
+          const moduleMetaData: ModuleMetaData = resolveModuleMetaData(
+            request.bundlerConfig,
+            moduleReference,
+          );
+          return (moduleMetaData: ReactJSONValue);
+        } catch (x) {
+          request.pendingChunks++;
+          const errorId = request.nextChunkId++;
+          emitErrorChunk(request, errorId, x);
+          return serializeIDRef(errorId);
+        }
+      }
+      case '2': {
+        // Load function
+        const load: () => ReactModel = (value: any);
+        try {
+          // Attempt to resolve the data.
+          return load();
+        } catch (x) {
+          if (
+            typeof x === 'object' &&
+            x !== null &&
+            typeof x.then === 'function'
+          ) {
+            // Something suspended, we'll need to create a new segment and resolve it later.
+            request.pendingChunks++;
+            const newSegment = createSegment(request, load);
+            const ping = newSegment.ping;
+            x.then(ping, ping);
+            return serializeIDRef(newSegment.id);
+          } else {
+            // This load failed, encode the error as a separate row and reference that.
+            request.pendingChunks++;
+            const errorId = request.nextChunkId++;
+            emitErrorChunk(request, errorId, x);
+            return serializeIDRef(errorId);
+          }
+        }
+      }
+      default: {
+        invariant(
+          false,
+          'A server block should never encode any other slots. This is a bug in React.',
+        );
+      }
+    }
+  }
+
   if (typeof value === 'string') {
     return escapeStringValue(value);
   }
 
-  if (value === REACT_ELEMENT_TYPE) {
-    return '$';
-  }
-
+  // Resolve server components.
   while (
     typeof value === 'object' &&
     value !== null &&
     value.$$typeof === REACT_ELEMENT_TYPE
   ) {
-    let element: React$Element<any> = (value: any);
-    try {
-      value = attemptResolveModelComponent(element);
-    } catch (x) {
-      if (typeof x === 'object' && x !== null && typeof x.then === 'function') {
-        // Something suspended, we'll need to create a new segment and resolve it later.
-        request.pendingChunks++;
-        let newSegment = createSegment(request, element);
-        let ping = newSegment.ping;
-        x.then(ping, ping);
-        return serializeIDRef(newSegment.id);
-      } else {
-        request.pendingChunks++;
-        let errorId = request.nextChunkId++;
-        emitErrorChunk(request, errorId, x);
-        return serializeIDRef(errorId);
-      }
-    }
+    // TODO: Concatenate keys of parents onto children.
+    // TODO: Allow elements to suspend independently and serialize as references to future elements.
+    const element: React$Element<any> = (value: any);
+    value = attemptResolveElement(element);
   }
 
   return value;
@@ -183,30 +262,20 @@ function emitErrorChunk(request: Request, id: number, error: mixed): void {
     message = 'An error occurred but serializing the error message failed.';
   }
 
-  let processedChunk = processErrorChunk(request, id, message, stack);
+  const processedChunk = processErrorChunk(request, id, message, stack);
   request.completedErrorChunks.push(processedChunk);
 }
 
 function retrySegment(request: Request, segment: Segment): void {
-  let value = segment.model;
+  const query = segment.query;
   try {
-    while (
-      typeof value === 'object' &&
-      value !== null &&
-      value.$$typeof === REACT_ELEMENT_TYPE
-    ) {
-      // If this is a nested model, there's no need to create another chunk,
-      // we can reuse the existing one and try again.
-      let element: React$Element<any> = (value: any);
-      segment.model = element;
-      value = attemptResolveModelComponent(element);
-    }
-    let processedChunk = processModelChunk(request, segment.id, value);
+    const value = query();
+    const processedChunk = processModelChunk(request, segment.id, value);
     request.completedJSONChunks.push(processedChunk);
   } catch (x) {
     if (typeof x === 'object' && x !== null && typeof x.then === 'function') {
       // Something suspended again, let's pick it back up later.
-      let ping = segment.ping;
+      const ping = segment.ping;
       x.then(ping, ping);
       return;
     } else {
@@ -217,10 +286,10 @@ function retrySegment(request: Request, segment: Segment): void {
 }
 
 function performWork(request: Request): void {
-  let pingedSegments = request.pingedSegments;
+  const pingedSegments = request.pingedSegments;
   request.pingedSegments = [];
   for (let i = 0; i < pingedSegments.length; i++) {
-    let segment = pingedSegments[i];
+    const segment = pingedSegments[i];
     retrySegment(request, segment);
   }
   if (request.flowing) {
@@ -234,14 +303,14 @@ function flushCompletedChunks(request: Request): void {
     return;
   }
   reentrant = true;
-  let destination = request.destination;
+  const destination = request.destination;
   beginWriting(destination);
   try {
-    let jsonChunks = request.completedJSONChunks;
+    const jsonChunks = request.completedJSONChunks;
     let i = 0;
     for (; i < jsonChunks.length; i++) {
       request.pendingChunks--;
-      let chunk = jsonChunks[i];
+      const chunk = jsonChunks[i];
       if (!writeChunk(destination, chunk)) {
         request.flowing = false;
         i++;
@@ -249,11 +318,11 @@ function flushCompletedChunks(request: Request): void {
       }
     }
     jsonChunks.splice(0, i);
-    let errorChunks = request.completedErrorChunks;
+    const errorChunks = request.completedErrorChunks;
     i = 0;
     for (; i < errorChunks.length; i++) {
       request.pendingChunks--;
-      let chunk = errorChunks[i];
+      const chunk = errorChunks[i];
       if (!writeChunk(destination, chunk)) {
         request.flowing = false;
         i++;

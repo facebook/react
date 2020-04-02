@@ -20,7 +20,7 @@ import type {
   ReactEventResponderListener,
 } from 'shared/ReactTypes';
 import type {SuspenseConfig} from 'react-reconciler/src/ReactFiberSuspenseConfig';
-import type {ReactDOMListenerMap} from 'shared/ReactDOMTypes';
+import type {ReactDOMListenerMap} from '../shared/ReactDOMTypes';
 
 import {validateContextBounds} from './ReactPartialRendererContext';
 
@@ -223,7 +223,7 @@ function readContext<T>(
   context: ReactContext<T>,
   observedBits: void | number | boolean,
 ): T {
-  let threadID = currentThreadID;
+  const threadID = currentThreadID;
   validateContextBounds(context, threadID);
   if (__DEV__) {
     if (isInHookUserCodeInDev) {
@@ -246,7 +246,7 @@ function useContext<T>(
     currentHookNameInDev = 'useContext';
   }
   resolveCurrentlyRenderingComponent();
-  let threadID = currentThreadID;
+  const threadID = currentThreadID;
   validateContextBounds(context, threadID);
   return context[threadID];
 }

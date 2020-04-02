@@ -46,7 +46,7 @@ export function writeChunk(
   destination: Destination,
   buffer: Uint8Array,
 ): boolean {
-  let nodeBuffer = ((buffer: any): Buffer); // close enough
+  const nodeBuffer = ((buffer: any): Buffer); // close enough
   return destination.write(nodeBuffer);
 }
 

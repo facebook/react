@@ -126,6 +126,7 @@ module.exports = {
       },
       rules: {
         'no-var': ERROR,
+        'prefer-const': ERROR,
         strict: OFF,
       },
     },
@@ -155,6 +156,13 @@ module.exports = {
       files: ['packages/react-native-renderer/**/*.js'],
       globals: {
         nativeFabricUIManager: true,
+      },
+    },
+    {
+      files: ['packages/react-flight-dom-webpack/**/*.js'],
+      globals: {
+        '__webpack_chunk_load__': true,
+        '__webpack_require__': true,
       },
     },
   ],

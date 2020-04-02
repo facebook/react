@@ -14,6 +14,7 @@ describe('ReactDOMComponent', () => {
   let ReactTestUtils;
   let ReactDOM;
   let ReactDOMServer;
+  const ReactFeatureFlags = require('shared/ReactFeatureFlags');
 
   function normalizeCodeLocInfo(str) {
     return str && str.replace(/\(at .+?:\d+\)/g, '(at **)');
@@ -564,8 +565,8 @@ describe('ReactDOMComponent', () => {
             {'></div><script>alert("hi")</script>': 'selected'},
             null,
           );
-          let result1 = ReactDOMServer.renderToString(element1);
-          let result2 = ReactDOMServer.renderToString(element2);
+          const result1 = ReactDOMServer.renderToString(element1);
+          const result2 = ReactDOMServer.renderToString(element2);
           expect(result1.toLowerCase()).not.toContain('onclick');
           expect(result2.toLowerCase()).not.toContain('script');
         }
@@ -588,8 +589,8 @@ describe('ReactDOMComponent', () => {
             {'></x-foo-component><script>alert("hi")</script>': 'selected'},
             null,
           );
-          let result1 = ReactDOMServer.renderToString(element1);
-          let result2 = ReactDOMServer.renderToString(element2);
+          const result1 = ReactDOMServer.renderToString(element1);
+          const result2 = ReactDOMServer.renderToString(element2);
           expect(result1.toLowerCase()).not.toContain('onclick');
           expect(result2.toLowerCase()).not.toContain('script');
         }
@@ -1166,7 +1167,7 @@ describe('ReactDOMComponent', () => {
       let realToString;
       try {
         realToString = Object.prototype.toString;
-        let wrappedToString = function() {
+        const wrappedToString = function() {
           // Emulate browser behavior which is missing in jsdom
           if (this instanceof window.HTMLUnknownElement) {
             return '[object HTMLUnknownElement]';
@@ -2375,7 +2376,7 @@ describe('ReactDOMComponent', () => {
       const container = document.createElement('div');
 
       ReactDOM.render(<img src={obj} />, container);
-      expect(container.firstChild.src).toBe('http://localhost/hello');
+      expect(container.firstChild.src).toBe('hello');
 
       ReactDOM.render(<svg arabicForm={obj} />, container);
       expect(container.firstChild.getAttribute('arabic-form')).toBe('hello');
@@ -2409,7 +2410,7 @@ describe('ReactDOMComponent', () => {
       const child = Object.create(parent);
       const el = ReactTestUtils.renderIntoDocument(<img src={child} />);
 
-      expect(el.src).toBe('http://localhost/hello.jpg');
+      expect(el.src).toBe('hello.jpg');
     });
 
     it('assigns ajaxify (an important internal FB attribute)', function() {
@@ -2553,10 +2554,10 @@ describe('ReactDOMComponent', () => {
   });
 
   it('receives events in specific order', () => {
-    let eventOrder = [];
-    let track = tag => () => eventOrder.push(tag);
-    let outerRef = React.createRef();
-    let innerRef = React.createRef();
+    const eventOrder = [];
+    const track = tag => () => eventOrder.push(tag);
+    const outerRef = React.createRef();
+    const innerRef = React.createRef();
 
     function OuterReactApp() {
       return (
@@ -2595,14 +2596,30 @@ describe('ReactDOMComponent', () => {
       // might depend on this.
       //
       // @see https://github.com/facebook/react/pull/12919#issuecomment-395224674
-      expect(eventOrder).toEqual([
-        'document capture',
-        'inner capture',
-        'inner bubble',
-        'outer capture',
-        'outer bubble',
-        'document bubble',
-      ]);
+      if (
+        ReactFeatureFlags.enableModernEventSystem &
+        ReactFeatureFlags.enableLegacyFBSupport
+      ) {
+        // The order will change here, as the legacy FB support adds
+        // the event listener onto the document after the one above has.
+        expect(eventOrder).toEqual([
+          'document capture',
+          'document bubble',
+          'inner capture',
+          'inner bubble',
+          'outer capture',
+          'outer bubble',
+        ]);
+      } else {
+        expect(eventOrder).toEqual([
+          'document capture',
+          'inner capture',
+          'inner bubble',
+          'outer capture',
+          'outer bubble',
+          'document bubble',
+        ]);
+      }
     } finally {
       document.body.removeChild(container);
     }

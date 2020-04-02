@@ -9,7 +9,7 @@
 
 import type {MutableSource, MutableSourceGetVersionFn} from 'shared/ReactTypes';
 
-export default function createMutableSource<Source: $NonMaybeType<mixed>>(
+export function createMutableSource<Source: $NonMaybeType<mixed>>(
   source: Source,
   getVersion: MutableSourceGetVersionFn,
 ): MutableSource<Source> {

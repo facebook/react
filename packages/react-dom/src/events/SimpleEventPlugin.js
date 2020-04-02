@@ -17,6 +17,7 @@ import type {PluginModule} from 'legacy-events/PluginModuleType';
 import type {EventSystemFlags} from 'legacy-events/EventSystemFlags';
 
 import SyntheticEvent from 'legacy-events/SyntheticEvent';
+import {IS_TARGET_PHASE_ONLY} from 'legacy-events/EventSystemFlags';
 
 import * as DOMTopLevelEventTypes from './DOMTopLevelEventTypes';
 import {
@@ -36,7 +37,10 @@ import SyntheticTransitionEvent from './SyntheticTransitionEvent';
 import SyntheticUIEvent from './SyntheticUIEvent';
 import SyntheticWheelEvent from './SyntheticWheelEvent';
 import getEventCharCode from './getEventCharCode';
-import {accumulateTwoPhaseListeners} from './DOMModernPluginEventSystem';
+import accumulateTwoPhaseListeners from './accumulateTwoPhaseListeners';
+import accumulateEventTargetListeners from './accumulateEventTargetListeners';
+
+import {enableUseEventAPI} from 'shared/ReactFeatureFlags';
 
 // Only used in DEV for exhaustiveness validation.
 const knownHTMLTopLevelTypes: Array<DOMTopLevelEventType> = [
@@ -83,6 +87,7 @@ const SimpleEventPlugin: PluginModule<MouseEvent> = {
     nativeEvent: MouseEvent,
     nativeEventTarget: null | EventTarget,
     eventSystemFlags: EventSystemFlags,
+    targetContainer?: null | EventTarget,
   ): null | ReactSyntheticEvent {
     const dispatchConfig = topLevelEventsToDispatchConfig.get(topLevelType);
     if (!dispatchConfig) {
@@ -104,6 +109,8 @@ const SimpleEventPlugin: PluginModule<MouseEvent> = {
         break;
       case DOMTopLevelEventTypes.TOP_BLUR:
       case DOMTopLevelEventTypes.TOP_FOCUS:
+      case DOMTopLevelEventTypes.TOP_BEFORE_BLUR:
+      case DOMTopLevelEventTypes.TOP_AFTER_BLUR:
         EventConstructor = SyntheticFocusEvent;
         break;
       case DOMTopLevelEventTypes.TOP_CLICK:
@@ -172,7 +179,10 @@ const SimpleEventPlugin: PluginModule<MouseEvent> = {
         break;
       default:
         if (__DEV__) {
-          if (knownHTMLTopLevelTypes.indexOf(topLevelType) === -1) {
+          if (
+            knownHTMLTopLevelTypes.indexOf(topLevelType) === -1 &&
+            dispatchConfig.customEvent !== true
+          ) {
             console.error(
               'SimpleEventPlugin: Unhandled event type, `%s`. This warning ' +
                 'is likely caused by a bug in React. Please file an issue.',
@@ -191,7 +201,23 @@ const SimpleEventPlugin: PluginModule<MouseEvent> = {
       nativeEvent,
       nativeEventTarget,
     );
-    accumulateTwoPhaseListeners(event);
+
+    // For TargetEvent only accumulation, we do not traverse through
+    // the React tree looking for managed React DOM elements that have
+    // events. Instead we only check the EventTarget Store Map to see
+    // if the container has listeners for the particular phase we're
+    // interested in. This is because we attach the native event listener
+    // only in the given phase.
+    if (
+      enableUseEventAPI &&
+      eventSystemFlags !== undefined &&
+      eventSystemFlags & IS_TARGET_PHASE_ONLY &&
+      targetContainer != null
+    ) {
+      accumulateEventTargetListeners(event, targetContainer);
+    } else {
+      accumulateTwoPhaseListeners(event, true);
+    }
     return event;
   },
 };

@@ -12,7 +12,9 @@ import type {
   ReactEventResponder,
   ReactEventResponderInstance,
   EventPriority,
+  ReactScopeMethods,
 } from 'shared/ReactTypes';
+import type {DOMTopLevelEventType} from 'legacy-events/TopLevelEventTypes';
 
 type AnyNativeEvent = Event | KeyboardEvent | MouseEvent | Touch;
 
@@ -78,20 +80,22 @@ export type ReactDOMResponderContext = {
 
 export type ReactDOMListenerEvent = {|
   capture: boolean,
-  passive: boolean,
+  passive: void | boolean,
   priority: EventPriority,
-  type: string,
+  type: DOMTopLevelEventType,
 |};
 
 export type ReactDOMListenerMap = {|
   clear: () => void,
-  setListener: (instance: EventTarget, callback: ?(Event) => void) => void,
+  setListener: (
+    target: EventTarget | ReactScopeMethods,
+    callback: ?(Event) => void,
+  ) => void,
 |};
 
 export type ReactDOMListener = {|
   callback: Event => void,
-  depth: number,
-  destroy: Document | (Element => void),
+  destroy: Node => void,
   event: ReactDOMListenerEvent,
-  instance: EventTarget,
+  target: EventTarget | ReactScopeMethods,
 |};

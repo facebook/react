@@ -391,7 +391,7 @@ describe('ReactART', () => {
       </CurrentRendererContext.Provider>,
     );
 
-    expect(Scheduler).toFlushAndYieldThrough(['A']);
+    expect(Scheduler).toFlushAndYieldThrough(__DEV__ ? ['A', 'A'] : ['A']);
 
     ReactDOM.render(
       <Surface>
@@ -406,7 +406,9 @@ describe('ReactART', () => {
     expect(ops).toEqual([null, 'ART']);
 
     ops = [];
-    expect(Scheduler).toFlushAndYield(['B', 'C']);
+    expect(Scheduler).toFlushAndYield(
+      __DEV__ ? ['B', 'B', 'C', 'C'] : ['B', 'C'],
+    );
 
     expect(ops).toEqual(['Test']);
   });

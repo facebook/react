@@ -17,10 +17,10 @@ import type {
   ReactFundamentalComponent,
   ReactScope,
 } from 'shared/ReactTypes';
-import type {RootTag} from 'shared/ReactRootTags';
-import type {WorkTag} from 'shared/ReactWorkTags';
+import type {RootTag} from 'react-reconciler/src/ReactRootTags';
+import type {WorkTag} from './ReactWorkTags';
 import type {TypeOfMode} from './ReactTypeOfMode';
-import type {SideEffectTag} from 'shared/ReactSideEffectTags';
+import type {SideEffectTag} from './ReactSideEffectTags';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
 import type {UpdateQueue} from './ReactUpdateQueue';
 import type {ContextDependency} from './ReactFiberNewContext';
@@ -31,13 +31,12 @@ import invariant from 'shared/invariant';
 import {
   enableProfilerTimer,
   enableFundamentalAPI,
-  enableUserTimingAPI,
   enableScopeAPI,
   enableBlocksAPI,
   throwEarlyForMysteriousError,
 } from 'shared/ReactFeatureFlags';
-import {NoEffect, Placement} from 'shared/ReactSideEffectTags';
-import {ConcurrentRoot, BlockingRoot} from 'shared/ReactRootTags';
+import {NoEffect, Placement} from './ReactSideEffectTags';
+import {ConcurrentRoot, BlockingRoot} from 'react-reconciler/src/ReactRootTags';
 import {
   IndeterminateComponent,
   ClassComponent,
@@ -61,7 +60,7 @@ import {
   FundamentalComponent,
   ScopeComponent,
   Block,
-} from 'shared/ReactWorkTags';
+} from './ReactWorkTags';
 import getComponentName from 'shared/getComponentName';
 
 import {isDevToolsPresent} from './ReactFiberDevToolsHook';
@@ -85,7 +84,6 @@ import {
   REACT_PROFILER_TYPE,
   REACT_PROVIDER_TYPE,
   REACT_CONTEXT_TYPE,
-  REACT_CONCURRENT_MODE_TYPE,
   REACT_SUSPENSE_TYPE,
   REACT_SUSPENSE_LIST_TYPE,
   REACT_MEMO_TYPE,
@@ -101,13 +99,10 @@ if (__DEV__) {
   hasBadMapPolyfill = false;
   try {
     const nonExtensibleObject = Object.preventExtensions({});
-    const testMap = new Map([[nonExtensibleObject, null]]);
-    const testSet = new Set([nonExtensibleObject]);
-    // This is necessary for Rollup to not consider these unused.
-    // https://github.com/rollup/rollup/issues/1771
-    // TODO: we can remove these if Rollup fixes the bug.
-    testMap.set(0, 0);
-    testSet.add(0);
+    /* eslint-disable no-new */
+    new Map([[nonExtensibleObject, null]]);
+    new Set([nonExtensibleObject]);
+    /* eslint-enable no-new */
   } catch (e) {
     // TODO: Consider warning about bad polyfills
     hasBadMapPolyfill = true;
@@ -327,14 +322,9 @@ function FiberNode(
     this.treeBaseDuration = 0;
   }
 
-  // This is normally DEV-only except www when it adds listeners.
-  // TODO: remove the User Timing integration in favor of Root Events.
-  if (enableUserTimingAPI) {
-    this._debugID = debugCounter++;
-    this._debugIsCurrentlyTiming = false;
-  }
-
   if (__DEV__) {
+    // This isn't directly used but is handy for debugging internals:
+    this._debugID = debugCounter++;
     this._debugSource = null;
     this._debugOwner = null;
     this._debugNeedsRemount = false;
@@ -422,9 +412,7 @@ export function createWorkInProgress(current: Fiber, pendingProps: any): Fiber {
 
     if (__DEV__) {
       // DEV-only fields
-      if (enableUserTimingAPI) {
-        workInProgress._debugID = current._debugID;
-      }
+      workInProgress._debugID = current._debugID;
       workInProgress._debugSource = current._debugSource;
       workInProgress._debugOwner = current._debugOwner;
       workInProgress._debugHookTypes = current._debugHookTypes;
@@ -540,7 +528,7 @@ export function resetWorkInProgress(
   workInProgress.firstEffect = null;
   workInProgress.lastEffect = null;
 
-  let current = workInProgress.alternate;
+  const current = workInProgress.alternate;
   if (current === null) {
     // Reset to createFiber's initial values.
     workInProgress.childExpirationTime = NoWork;
@@ -552,6 +540,8 @@ export function resetWorkInProgress(
     workInProgress.updateQueue = null;
 
     workInProgress.dependencies = null;
+
+    workInProgress.stateNode = null;
 
     if (enableProfilerTimer) {
       // Note: We don't reset the actualTime counts. It's useful to accumulate
@@ -620,8 +610,6 @@ export function createFiberFromTypeAndProps(
   mode: TypeOfMode,
   expirationTime: ExpirationTime,
 ): Fiber {
-  let fiber;
-
   let fiberTag = IndeterminateComponent;
   // The resolved type is set if we know what the final type will be. I.e. it's not lazy.
   let resolvedType = type;
@@ -647,10 +635,6 @@ export function createFiberFromTypeAndProps(
           expirationTime,
           key,
         );
-      case REACT_CONCURRENT_MODE_TYPE:
-        fiberTag = Mode;
-        mode |= ConcurrentMode | BlockingMode | StrictMode;
-        break;
       case REACT_STRICT_MODE_TYPE:
         fiberTag = Mode;
         mode |= StrictMode;
@@ -745,7 +729,7 @@ export function createFiberFromTypeAndProps(
     }
   }
 
-  fiber = createFiber(fiberTag, pendingProps, key, mode);
+  const fiber = createFiber(fiberTag, pendingProps, key, mode);
   fiber.elementType = type;
   fiber.type = resolvedType;
   fiber.expirationTime = expirationTime;
@@ -971,10 +955,7 @@ export function assignFiberPropertiesInDEV(
     target.selfBaseDuration = source.selfBaseDuration;
     target.treeBaseDuration = source.treeBaseDuration;
   }
-  if (enableUserTimingAPI) {
-    target._debugID = source._debugID;
-    target._debugIsCurrentlyTiming = source._debugIsCurrentlyTiming;
-  }
+  target._debugID = source._debugID;
   target._debugSource = source._debugSource;
   target._debugOwner = source._debugOwner;
   target._debugNeedsRemount = source._debugNeedsRemount;

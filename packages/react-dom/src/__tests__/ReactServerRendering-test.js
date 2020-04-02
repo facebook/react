@@ -14,7 +14,7 @@ let React;
 let ReactDOMServer;
 let PropTypes;
 let ReactCurrentDispatcher;
-let enableSuspenseServerRenderer = require('shared/ReactFeatureFlags')
+const enableSuspenseServerRenderer = require('shared/ReactFeatureFlags')
   .enableSuspenseServerRenderer;
 
 function normalizeCodeLocInfo(str) {
@@ -709,7 +709,7 @@ describe('ReactDOMServer', () => {
           ),
         );
         ReactDOMServer.renderToString(<LazyFoo />);
-      }).toThrow('ReactDOMServer does not yet support lazy-loaded components.');
+      }).toThrow('ReactDOMServer does not yet support Suspense.');
     });
 
     it('throws when suspending on the server', () => {

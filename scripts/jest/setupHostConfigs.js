@@ -2,6 +2,15 @@
 
 const inlinedHostConfigs = require('../shared/inlinedHostConfigs');
 
+jest.mock('react-reconciler/src/ReactFiberReconciler', () => {
+  return require.requireActual(
+    __VARIANT__
+      ? // TODO: Update this to point to the new module, once it exists
+        'react-reconciler/src/ReactFiberReconciler.old'
+      : 'react-reconciler/src/ReactFiberReconciler.old'
+  );
+});
+
 // When testing the custom renderer code path through `react-reconciler`,
 // turn the export into a function, and use the argument as host config.
 const shimHostConfigPath = 'react-reconciler/src/ReactFiberHostConfig';
@@ -25,6 +34,9 @@ jest.mock('react-server/flight', () => {
   return config => {
     jest.mock(shimServerStreamConfigPath, () => config);
     jest.mock(shimServerFormatConfigPath, () => config);
+    jest.mock('react-server/src/ReactFlightServerBundlerConfigCustom', () => ({
+      resolveModuleMetaData: config.resolveModuleMetaData,
+    }));
     jest.mock(shimFlightServerConfigPath, () =>
       require.requireActual(
         'react-server/src/forks/ReactFlightServerConfig.custom'

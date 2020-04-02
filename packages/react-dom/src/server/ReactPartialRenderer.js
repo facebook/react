@@ -17,11 +17,10 @@ import invariant from 'shared/invariant';
 import getComponentName from 'shared/getComponentName';
 import describeComponentFrame from 'shared/describeComponentFrame';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
-import {initializeLazyComponentType} from 'shared/ReactLazyComponent';
-import {Resolved, Rejected, Pending} from 'shared/ReactLazyStatusTags';
 import {
   warnAboutDeprecatedLifecycles,
   disableLegacyContext,
+  disableModulePatternComponents,
   enableSuspenseServerRenderer,
   enableFundamentalAPI,
   enableDeprecatedFlareAPI,
@@ -32,7 +31,6 @@ import {
   REACT_FORWARD_REF_TYPE,
   REACT_FRAGMENT_TYPE,
   REACT_STRICT_MODE_TYPE,
-  REACT_CONCURRENT_MODE_TYPE,
   REACT_SUSPENSE_TYPE,
   REACT_SUSPENSE_LIST_TYPE,
   REACT_PORTAL_TYPE,
@@ -90,9 +88,9 @@ const toArray = ((React.Children.toArray: any): toArrayType);
 // Each entry is `this.stack` from a currently executing renderer instance.
 // (There may be more than one because ReactDOMServer is reentrant).
 // Each stack is an array of frames which may contain nested stacks of elements.
-let currentDebugStacks = [];
+const currentDebugStacks = [];
 
-let ReactCurrentDispatcher = ReactSharedInternals.ReactCurrentDispatcher;
+const ReactCurrentDispatcher = ReactSharedInternals.ReactCurrentDispatcher;
 let ReactDebugCurrentFrame;
 let prevGetCurrentStackImpl = null;
 let getCurrentServerStackImpl = () => '';
@@ -162,7 +160,7 @@ if (__DEV__) {
     }
     // ReactDOMServer is reentrant so there may be multiple calls at the same time.
     // Take the frames from the innermost call which is the last in the array.
-    let frames = currentDebugStacks[currentDebugStacks.length - 1];
+    const frames = currentDebugStacks[currentDebugStacks.length - 1];
     let stack = '';
     // Go through every frame in the stack from the innermost one.
     for (let i = frames.length - 1; i >= 0; i--) {
@@ -170,7 +168,7 @@ if (__DEV__) {
       // Every frame might have more than one debug element stack entry associated with it.
       // This is because single-child nesting doesn't create materialized frames.
       // Instead it would push them through `pushElementToDebugStack()`.
-      let debugElementStack = ((frame: any): FrameDev).debugElementStack;
+      const debugElementStack = ((frame: any): FrameDev).debugElementStack;
       for (let ii = debugElementStack.length - 1; ii >= 0; ii--) {
         stack += describeStackFrame(debugElementStack[ii]);
       }
@@ -317,11 +315,11 @@ function flattenOptionChildren(children: mixed): ?string {
   let content = '';
   // Flatten children and warn if they aren't strings or numbers;
   // invalid types are ignored.
-  React.Children.forEach(children, function(child) {
+  React.Children.forEach((children: any), function(child) {
     if (child == null) {
       return;
     }
-    content += child;
+    content += (child: any);
     if (__DEV__) {
       if (
         !didWarnInvalidOptionChildren &&
@@ -418,8 +416,8 @@ function resolve(
 |} {
   while (React.isValidElement(child)) {
     // Safe because we just checked it's an element.
-    let element: ReactElement = (child: any);
-    let Component = element.type;
+    const element: ReactElement = (child: any);
+    const Component = element.type;
     if (__DEV__) {
       pushElementToDebugStack(element);
     }
@@ -436,7 +434,7 @@ function resolve(
 
     let queue = [];
     let replace = false;
-    let updater = {
+    const updater = {
       isMounted: function(publicInstance) {
         return false;
       },
@@ -482,7 +480,7 @@ function resolve(
           }
         }
 
-        let partialState = Component.getDerivedStateFromProps.call(
+        const partialState = Component.getDerivedStateFromProps.call(
           null,
           element.props,
           inst.state,
@@ -530,27 +528,37 @@ function resolve(
       inst = Component(element.props, publicContext, updater);
       inst = finishHooks(Component, element.props, inst, publicContext);
 
-      if (inst == null || inst.render == null) {
+      if (__DEV__) {
+        // Support for module components is deprecated and is removed behind a flag.
+        // Whether or not it would crash later, we want to show a good message in DEV first.
+        if (inst != null && inst.render != null) {
+          const componentName = getComponentName(Component) || 'Unknown';
+          if (!didWarnAboutModulePatternComponent[componentName]) {
+            console.error(
+              'The <%s /> component appears to be a function component that returns a class instance. ' +
+                'Change %s to a class that extends React.Component instead. ' +
+                "If you can't use a class try assigning the prototype on the function as a workaround. " +
+                "`%s.prototype = React.Component.prototype`. Don't use an arrow function since it " +
+                'cannot be called with `new` by React.',
+              componentName,
+              componentName,
+              componentName,
+            );
+            didWarnAboutModulePatternComponent[componentName] = true;
+          }
+        }
+      }
+
+      // If the flag is on, everything is assumed to be a function component.
+      // Otherwise, we also do the unfortunate dynamic checks.
+      if (
+        disableModulePatternComponents ||
+        inst == null ||
+        inst.render == null
+      ) {
         child = inst;
         validateRenderResult(child, Component);
         return;
-      }
-
-      if (__DEV__) {
-        const componentName = getComponentName(Component) || 'Unknown';
-        if (!didWarnAboutModulePatternComponent[componentName]) {
-          console.error(
-            'The <%s /> component appears to be a function component that returns a class instance. ' +
-              'Change %s to a class that extends React.Component instead. ' +
-              "If you can't use a class try assigning the prototype on the function as a workaround. " +
-              "`%s.prototype = React.Component.prototype`. Don't use an arrow function since it " +
-              'cannot be called with `new` by React.',
-            componentName,
-            componentName,
-            componentName,
-          );
-          didWarnAboutModulePatternComponent[componentName] = true;
-        }
       }
     }
 
@@ -604,8 +612,8 @@ function resolve(
         inst.UNSAFE_componentWillMount();
       }
       if (queue.length) {
-        let oldQueue = queue;
-        let oldReplace = replace;
+        const oldQueue = queue;
+        const oldReplace = replace;
         queue = null;
         replace = false;
 
@@ -615,8 +623,8 @@ function resolve(
           let nextState = oldReplace ? oldQueue[0] : inst.state;
           let dontMutate = true;
           for (let i = oldReplace ? 1 : 0; i < oldQueue.length; i++) {
-            let partial = oldQueue[i];
-            let partialState =
+            const partial = oldQueue[i];
+            const partialState =
               typeof partial === 'function'
                 ? partial.call(inst, nextState, element.props, publicContext)
                 : partial;
@@ -649,7 +657,7 @@ function resolve(
     let childContext;
     if (disableLegacyContext) {
       if (__DEV__) {
-        let childContextTypes = Component.childContextTypes;
+        const childContextTypes = Component.childContextTypes;
         if (childContextTypes !== undefined) {
           console.error(
             '%s uses the legacy childContextTypes API which is no longer supported. ' +
@@ -660,10 +668,10 @@ function resolve(
       }
     } else {
       if (typeof inst.getChildContext === 'function') {
-        let childContextTypes = Component.childContextTypes;
+        const childContextTypes = Component.childContextTypes;
         if (typeof childContextTypes === 'object') {
           childContext = inst.getChildContext();
-          for (let contextKey in childContext) {
+          for (const contextKey in childContext) {
             invariant(
               contextKey in childContextTypes,
               '%s.getChildContext(): key "%s" is not defined in childContextTypes.',
@@ -835,7 +843,7 @@ class ReactDOMServerRenderer {
     try {
       // Markup generated within <Suspense> ends up buffered until we know
       // nothing in that boundary suspended
-      let out = [''];
+      const out = [''];
       let suspended = false;
       while (out[0].length < bytes) {
         if (this.stack.length === 0) {
@@ -995,7 +1003,6 @@ class ReactDOMServerRenderer {
 
       switch (elementType) {
         case REACT_STRICT_MODE_TYPE:
-        case REACT_CONCURRENT_MODE_TYPE:
         case REACT_PROFILER_TYPE:
         case REACT_SUSPENSE_LIST_TYPE:
         case REACT_FRAGMENT_TYPE: {
@@ -1105,7 +1112,7 @@ class ReactDOMServerRenderer {
           }
           case REACT_MEMO_TYPE: {
             const element: ReactElement = ((nextChild: any): ReactElement);
-            let nextChildren = [
+            const nextChildren = [
               React.createElement(
                 elementType.type,
                 Object.assign({ref: element.ref}, element.props),
@@ -1233,42 +1240,33 @@ class ReactDOMServerRenderer {
           // eslint-disable-next-line-no-fallthrough
           case REACT_LAZY_TYPE: {
             const element: ReactElement = (nextChild: any);
-            const lazyComponent: LazyComponent<any> = (nextChild: any).type;
+            const lazyComponent: LazyComponent<any, any> = (nextChild: any)
+              .type;
             // Attempt to initialize lazy component regardless of whether the
             // suspense server-side renderer is enabled so synchronously
             // resolved constructors are supported.
-            initializeLazyComponentType(lazyComponent);
-            switch (lazyComponent._status) {
-              case Resolved: {
-                const nextChildren = [
-                  React.createElement(
-                    lazyComponent._result,
-                    Object.assign({ref: element.ref}, element.props),
-                  ),
-                ];
-                const frame: Frame = {
-                  type: null,
-                  domNamespace: parentNamespace,
-                  children: nextChildren,
-                  childIndex: 0,
-                  context: context,
-                  footer: '',
-                };
-                if (__DEV__) {
-                  ((frame: any): FrameDev).debugElementStack = [];
-                }
-                this.stack.push(frame);
-                return '';
-              }
-              case Rejected:
-                throw lazyComponent._result;
-              case Pending:
-              default:
-                invariant(
-                  false,
-                  'ReactDOMServer does not yet support lazy-loaded components.',
-                );
+            const payload = lazyComponent._payload;
+            const init = lazyComponent._init;
+            const result = init(payload);
+            const nextChildren = [
+              React.createElement(
+                result,
+                Object.assign({ref: element.ref}, element.props),
+              ),
+            ];
+            const frame: Frame = {
+              type: null,
+              domNamespace: parentNamespace,
+              children: nextChildren,
+              childIndex: 0,
+              context: context,
+              footer: '',
+            };
+            if (__DEV__) {
+              ((frame: any): FrameDev).debugElementStack = [];
             }
+            this.stack.push(frame);
+            return '';
           }
           // eslint-disable-next-line-no-fallthrough
           case REACT_SCOPE_TYPE: {

@@ -7,8 +7,4 @@
  * @flow
  */
 
-// TODO: Move this to "react" once we can import from externals.
-export const Uninitialized = -1;
-export const Pending = 0;
-export const Resolved = 1;
-export const Rejected = 2;
+export * from 'react-server/flight-server-runtime';

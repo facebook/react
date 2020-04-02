@@ -21,7 +21,7 @@ export default function describeComponentFrame(
 ) {
   let sourceInfo = '';
   if (source) {
-    let path = source.fileName;
+    const path = source.fileName;
     let fileName = path.replace(BEFORE_SLASH_RE, '');
     if (__DEV__) {
       // In DEV, include code for a common special case:

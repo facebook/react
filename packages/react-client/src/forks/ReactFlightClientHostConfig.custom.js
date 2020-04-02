@@ -24,6 +24,13 @@
 // really an argument to a top-level wrapping function.
 
 declare var $$$hostConfig: any;
+
+export opaque type ModuleMetaData = mixed; // eslint-disable-line no-undef
+export opaque type ModuleReference<T> = mixed; // eslint-disable-line no-undef
+export const resolveModuleReference = $$$hostConfig.resolveModuleReference;
+export const preloadModule = $$$hostConfig.preloadModule;
+export const requireModule = $$$hostConfig.requireModule;
+
 export opaque type Source = mixed; // eslint-disable-line no-undef
 export opaque type StringDecoder = mixed; // eslint-disable-line no-undef
 

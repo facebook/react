@@ -8,7 +8,7 @@
  */
 
 import type {Container} from './ReactDOMHostConfig';
-import type {RootTag} from 'shared/ReactRootTags';
+import type {RootTag} from 'react-reconciler/src/ReactRootTags';
 import type {ReactNodeList} from 'shared/ReactTypes';
 // TODO: This type is shared between the reconciler and ReactDOM, but will
 // eventually be lifted out to the renderer.
@@ -50,7 +50,11 @@ import {
   updateContainer,
 } from 'react-reconciler/src/ReactFiberReconciler';
 import invariant from 'shared/invariant';
-import {BlockingRoot, ConcurrentRoot, LegacyRoot} from 'shared/ReactRootTags';
+import {
+  BlockingRoot,
+  ConcurrentRoot,
+  LegacyRoot,
+} from 'react-reconciler/src/ReactRootTags';
 
 function ReactDOMRoot(container: Container, options: void | RootOptions) {
   this._internalRoot = createRootImpl(container, ConcurrentRoot, options);

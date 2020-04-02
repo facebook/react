@@ -155,11 +155,11 @@ export default class Overlay {
 
   constructor() {
     // Find the root window, because overlays are positioned relative to it.
-    let currentWindow = window.__REACT_DEVTOOLS_TARGET_WINDOW__ || window;
+    const currentWindow = window.__REACT_DEVTOOLS_TARGET_WINDOW__ || window;
     this.window = currentWindow;
 
     // When opened in shells/dev, the tooltip should be bound by the app iframe, not by the topmost window.
-    let tipBoundsWindow = window.__REACT_DEVTOOLS_TARGET_WINDOW__ || window;
+    const tipBoundsWindow = window.__REACT_DEVTOOLS_TARGET_WINDOW__ || window;
     this.tipBoundsWindow = tipBoundsWindow;
 
     const doc = currentWindow.document;
