@@ -47,6 +47,7 @@ const [
 function Event(suffix) {}
 
 let hasWarnedAboutDeprecatedMockComponent = false;
+let didWarnSimulateNativeDeprecated = false;
 
 /**
  * @class ReactTestUtils
@@ -622,6 +623,20 @@ buildSimulators();
 
 function makeNativeSimulator(eventType, topLevelType) {
   return function(domComponentOrNode, nativeEventData) {
+    if (__DEV__) {
+      if (!didWarnSimulateNativeDeprecated) {
+        didWarnSimulateNativeDeprecated = true;
+        console.warn(
+          'ReactTestUtils.SimulateNative is an undocumented API that does not match ' +
+            'how the browser dispatches events, and will be removed in a future major ' +
+            'version of React. If you rely on it for testing, consider attaching the root ' +
+            'DOM container to the document during the test, and then dispatching native browser ' +
+            'events by calling `node.dispatchEvent()` on the DOM nodes. Make sure to set ' +
+            'the `bubbles` flag to `true` when creating the native browser event.',
+        );
+      }
+    }
+
     const fakeNativeEvent = new Event(eventType);
     Object.assign(fakeNativeEvent, nativeEventData);
     if (isDOMComponent(domComponentOrNode)) {
