@@ -76,6 +76,8 @@ import {HostComponent} from 'react-reconciler/src/ReactWorkTags';
 import {
   RESPONDER_EVENT_SYSTEM,
   IS_PASSIVE,
+  PLUGIN_EVENT_SYSTEM,
+  USE_EVENT_SYSTEM,
 } from 'legacy-events/EventSystemFlags';
 import {
   isManagedDOMElement,
@@ -1156,6 +1158,7 @@ export function registerEvent(
     type,
     rootContainerInstance,
     listenerMap,
+    PLUGIN_EVENT_SYSTEM | USE_EVENT_SYSTEM,
     passive,
     priority,
   );

@@ -13,6 +13,7 @@ let React;
 let ReactDOM;
 let ReactDOMServer;
 let ReactTestUtils;
+const ReactFeatureFlags = require('shared/ReactFeatureFlags');
 
 describe('ReactDOM', () => {
   beforeEach(() => {
@@ -354,11 +355,31 @@ describe('ReactDOM', () => {
     document.body.appendChild(container);
     try {
       ReactDOM.render(<Wrapper />, container);
+      let expected;
 
-      const expected = [
-        '1st node clicked',
-        "2nd node clicked imperatively from 1st's handler",
-      ];
+      if (
+        ReactFeatureFlags.enableModernEventSystem &
+        ReactFeatureFlags.enableLegacyFBSupport
+      ) {
+        // We expect to duplicate the 2nd handler because this test is
+        // not really designed around how the legacy FB support system works.
+        // This is because the above test sync fires a click() event
+        // during that of another click event, which causes the FB support system
+        // to duplicate adding an event listener. In practice this would never
+        // happen, as we only apply the legacy FB logic for "click" events,
+        // which would never stack this way in product code.
+        expected = [
+          '1st node clicked',
+          "2nd node clicked imperatively from 1st's handler",
+          "2nd node clicked imperatively from 1st's handler",
+        ];
+      } else {
+        expected = [
+          '1st node clicked',
+          "2nd node clicked imperatively from 1st's handler",
+        ];
+      }
+
       expect(actual).toEqual(expected);
     } finally {
       document.body.removeChild(container);

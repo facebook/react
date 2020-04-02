@@ -28,9 +28,11 @@ import {batchedEventUpdates} from 'legacy-events/ReactGenericBatching';
 import {executeDispatchesInOrder} from 'legacy-events/EventPluginUtils';
 import {plugins} from 'legacy-events/EventPluginRegistry';
 import {
+  PLUGIN_EVENT_SYSTEM,
   LEGACY_FB_SUPPORT,
   IS_REPLAYED,
-  IS_TARGET_EVENT_ONLY,
+  IS_TARGET_PHASE_ONLY,
+  USE_EVENT_SYSTEM,
 } from 'legacy-events/EventSystemFlags';
 
 import {HostRoot, HostPortal} from 'react-reconciler/src/ReactWorkTags';
@@ -229,6 +231,7 @@ export function listenToTopLevelEvent(
   topLevelType: DOMTopLevelEventType,
   targetContainer: EventTarget,
   listenerMap: ElementListenerMap,
+  eventSystemFlags: EventSystemFlags,
   passive?: boolean,
   priority?: EventPriority,
   capture?: boolean,
@@ -265,6 +268,7 @@ export function listenToTopLevelEvent(
     const listener = addTrappedEventListener(
       targetContainer,
       topLevelType,
+      eventSystemFlags,
       isCapturePhase,
       false,
       passive,
@@ -283,7 +287,12 @@ export function listenToEvent(
 
   for (let i = 0; i < dependencies.length; i++) {
     const dependency = dependencies[i];
-    listenToTopLevelEvent(dependency, rootContainerElement, listenerMap);
+    listenToTopLevelEvent(
+      dependency,
+      rootContainerElement,
+      listenerMap,
+      PLUGIN_EVENT_SYSTEM,
+    );
   }
 }
 
@@ -301,6 +310,7 @@ function willDeferLaterForLegacyFBSupport(
   addTrappedEventListener(
     targetContainer,
     topLevelType,
+    PLUGIN_EVENT_SYSTEM | LEGACY_FB_SUPPORT,
     false,
     isDeferredListenerForLegacyFBSupport,
   );
@@ -343,10 +353,9 @@ export function dispatchEventForPluginEventSystem(
 ): void {
   let ancestorInst = targetInst;
   if (targetContainer !== null) {
-    if (eventTargetEventListenerStore.has(targetContainer)) {
+    if (eventSystemFlags & IS_TARGET_PHASE_ONLY) {
       // For TargetEvent nodes (i.e. document, window)
       ancestorInst = null;
-      eventSystemFlags |= IS_TARGET_EVENT_ONLY;
     } else {
       const targetContainerNode = ((targetContainer: any): Node);
 
@@ -362,6 +371,8 @@ export function dispatchEventForPluginEventSystem(
         (eventSystemFlags & LEGACY_FB_SUPPORT) === 0 &&
         // We also don't want to defer during event replaying.
         (eventSystemFlags & IS_REPLAYED) === 0 &&
+        // We don't want to apply the legacy FB support for the useEvent API.
+        (eventSystemFlags & USE_EVENT_SYSTEM) === 0 &&
         willDeferLaterForLegacyFBSupport(topLevelType, targetContainer)
       ) {
         return;
@@ -483,6 +494,7 @@ export function attachListenerToManagedDOMElement(
     type,
     containerEventTarget,
     listenerMap,
+    PLUGIN_EVENT_SYSTEM | USE_EVENT_SYSTEM,
     passive,
     priority,
   );
@@ -522,6 +534,7 @@ export function attachTargetEventListener(listener: ReactDOMListener): void {
     type,
     eventTarget,
     listenerMap,
+    PLUGIN_EVENT_SYSTEM | USE_EVENT_SYSTEM | IS_TARGET_PHASE_ONLY,
     passive,
     priority,
     capture,

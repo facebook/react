@@ -118,7 +118,7 @@ import {
   TOP_FOCUS,
   TOP_BLUR,
 } from './DOMTopLevelEventTypes';
-import {IS_REPLAYED} from 'legacy-events/EventSystemFlags';
+import {IS_REPLAYED, PLUGIN_EVENT_SYSTEM} from 'legacy-events/EventSystemFlags';
 import {legacyListenToTopLevelEvent} from './DOMLegacyEventPluginSystem';
 import {listenToTopLevelEvent} from './DOMModernPluginEventSystem';
 
@@ -219,7 +219,12 @@ function trapReplayableEventForContainer(
   container: Container,
   listenerMap: ElementListenerMap,
 ) {
-  listenToTopLevelEvent(topLevelType, ((container: any): Element), listenerMap);
+  listenToTopLevelEvent(
+    topLevelType,
+    ((container: any): Element),
+    listenerMap,
+    PLUGIN_EVENT_SYSTEM,
+  );
 }
 
 function trapReplayableEventForDocument(
