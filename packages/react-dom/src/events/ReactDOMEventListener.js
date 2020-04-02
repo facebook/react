@@ -165,16 +165,6 @@ export function addTrappedEventListener(
     targetContainer,
   );
 
-  // When the targetContainer is null, it means that the container
-  // target is null, but really we need a real DOM node to attach to.
-  // In this case, we fallback to the "document" node, but leave the
-  // targetContainer (which is bound in the above function) to null.
-  // Really, this only happens for TestUtils.Simulate, so when we
-  // remove that support, we can remove this block of code.
-  if (targetContainer === null) {
-    targetContainer = document;
-  }
-
   targetContainer =
     enableLegacyFBSupport && isDeferredListenerForLegacyFBSupport
       ? (targetContainer: any).ownerDocument
@@ -299,7 +289,7 @@ function dispatchUserBlockingUpdate(
 export function dispatchEvent(
   topLevelType: DOMTopLevelEventType,
   eventSystemFlags: EventSystemFlags,
-  targetContainer: null | EventTarget,
+  targetContainer: EventTarget,
   nativeEvent: AnyNativeEvent,
 ): void {
   if (!_enabled) {
@@ -415,7 +405,7 @@ export function dispatchEvent(
 export function attemptToDispatchEvent(
   topLevelType: DOMTopLevelEventType,
   eventSystemFlags: EventSystemFlags,
-  targetContainer: EventTarget | null,
+  targetContainer: EventTarget,
   nativeEvent: AnyNativeEvent,
 ): null | Container | SuspenseInstance {
   // TODO: Warn if _enabled is false.
