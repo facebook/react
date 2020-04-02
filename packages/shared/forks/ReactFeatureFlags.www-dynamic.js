@@ -25,7 +25,6 @@ export const replayFailedUnitOfWorkWithInvokeGuardedCallback = __DEV__;
 // Update the tests so that they pass in either mode, then set these
 // to __VARIANT__.
 export const enableTrustedTypesIntegration = false;
-export const warnAboutShorthandPropertyCollision = true;
 export const disableInputAttributeSyncing = false;
 export const disableSchedulerTimeoutBasedOnReactExpirationTime = false;
 export const enableModernEventSystem = false;
