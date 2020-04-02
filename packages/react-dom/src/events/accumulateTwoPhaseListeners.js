@@ -31,20 +31,22 @@ export default function accumulateTwoPhaseListeners(
   const phasedRegistrationNames = event.dispatchConfig.phasedRegistrationNames;
   const dispatchListeners = [];
   const dispatchInstances = [];
+  const dispatchCurrentTargets = [];
 
   const {bubbled, captured} = phasedRegistrationNames;
   // If we are not handling EventTarget only phase, then we're doing the
   // usual two phase accumulation using the React fiber tree to pick up
   // all relevant useEvent and on* prop events.
-  let node = event._targetInst;
+  let instance = event._targetInst;
   let lastHostComponent = null;
 
   // Accumulate all instances and listeners via the target -> root path.
-  while (node !== null) {
-    const {stateNode: instance, tag} = node;
+  while (instance !== null) {
+    const {stateNode, tag} = instance;
     // Handle listeners that are on HostComponents (i.e. <div>)
-    if (instance !== null && tag === HostComponent) {
-      lastHostComponent = instance;
+    if (tag === HostComponent && stateNode !== null) {
+      const currentTarget = stateNode;
+      lastHostComponent = currentTarget;
       // For useEvent listenrs
       if (
         enableModernEventSystem &&
@@ -53,7 +55,7 @@ export default function accumulateTwoPhaseListeners(
       ) {
         // useEvent event listeners
         const targetType = event.type;
-        const listeners = getListenersFromTarget(instance);
+        const listeners = getListenersFromTarget(currentTarget);
 
         if (listeners !== null) {
           const listenersArr = Array.from(listeners);
@@ -66,10 +68,12 @@ export default function accumulateTwoPhaseListeners(
             if (type === targetType) {
               if (capture === true) {
                 dispatchListeners.unshift(callback);
-                dispatchInstances.unshift(node);
+                dispatchInstances.unshift(instance);
+                dispatchCurrentTargets.unshift(currentTarget);
               } else {
                 dispatchListeners.push(callback);
-                dispatchInstances.push(node);
+                dispatchInstances.push(instance);
+                dispatchCurrentTargets.push(currentTarget);
               }
             }
           }
@@ -77,21 +81,23 @@ export default function accumulateTwoPhaseListeners(
       }
       // Standard React on* listeners, i.e. onClick prop
       if (captured !== null) {
-        const captureListener = getListener(node, captured);
+        const captureListener = getListener(instance, captured);
         if (captureListener != null) {
           // Capture listeners/instances should go at the start, so we
           // unshift them to the start of the array.
           dispatchListeners.unshift(captureListener);
-          dispatchInstances.unshift(node);
+          dispatchInstances.unshift(instance);
+          dispatchCurrentTargets.unshift(currentTarget);
         }
       }
       if (bubbled !== null) {
-        const bubbleListener = getListener(node, bubbled);
+        const bubbleListener = getListener(instance, bubbled);
         if (bubbleListener != null) {
           // Bubble listeners/instances should go at the end, so we
           // push them to the end of the array.
           dispatchListeners.push(bubbleListener);
-          dispatchInstances.push(node);
+          dispatchInstances.push(instance);
+          dispatchCurrentTargets.push(currentTarget);
         }
       }
     }
@@ -103,7 +109,7 @@ export default function accumulateTwoPhaseListeners(
       tag === ScopeComponent &&
       lastHostComponent !== null
     ) {
-      const reactScope = instance.methods;
+      const reactScope = stateNode.methods;
       const eventTypeMap = reactScopeListenerStore.get(reactScope);
       if (eventTypeMap !== undefined) {
         const type = ((event.type: any): DOMTopLevelEventType);
@@ -111,23 +117,26 @@ export default function accumulateTwoPhaseListeners(
         if (listeners !== undefined) {
           const captureListeners = Array.from(listeners.captured);
           const bubbleListeners = Array.from(listeners.bubbled);
+          const lastCurrentTarget = ((lastHostComponent: any): Element);
 
           for (let i = 0; i < captureListeners.length; i++) {
             const listener = captureListeners[i];
             const {callback} = listener;
             dispatchListeners.unshift(callback);
-            dispatchInstances.unshift(((lastHostComponent: any): Element));
+            dispatchInstances.unshift(instance);
+            dispatchCurrentTargets.unshift(lastCurrentTarget);
           }
           for (let i = 0; i < bubbleListeners.length; i++) {
             const listener = bubbleListeners[i];
             const {callback} = listener;
             dispatchListeners.push(callback);
-            dispatchInstances.push(((lastHostComponent: any): Element));
+            dispatchInstances.push(instance);
+            dispatchCurrentTargets.push(lastCurrentTarget);
           }
         }
       }
     }
-    node = node.return;
+    instance = instance.return;
   }
 
   // To prevent allocation to the event unless we actually
@@ -135,5 +144,6 @@ export default function accumulateTwoPhaseListeners(
   if (dispatchListeners.length > 0) {
     event._dispatchListeners = dispatchListeners;
     event._dispatchInstances = dispatchInstances;
+    event._dispatchCurrentTargets = dispatchCurrentTargets;
   }
 }

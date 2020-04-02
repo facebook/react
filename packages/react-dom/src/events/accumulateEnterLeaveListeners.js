@@ -83,42 +83,47 @@ function accumulateEnterLeaveListenersForEvent(
   }
   const dispatchListeners = [];
   const dispatchInstances = [];
+  const dispatchCurrentTargets = [];
 
-  let node = target;
-  while (node !== null) {
-    if (node === common) {
+  let instance = target;
+  while (instance !== null) {
+    if (instance === common) {
       break;
     }
-    const alternate = node.alternate;
+    const {alternate, stateNode, tag} = instance;
     if (alternate !== null && alternate === common) {
       break;
     }
-    if (node.tag === HostComponent) {
+    if (tag === HostComponent && stateNode !== null) {
+      const currentTarget = stateNode;
       if (capture) {
-        const captureListener = getListener(node, registrationName);
+        const captureListener = getListener(instance, registrationName);
         if (captureListener != null) {
           // Capture listeners/instances should go at the start, so we
           // unshift them to the start of the array.
           dispatchListeners.unshift(captureListener);
-          dispatchInstances.unshift(node);
+          dispatchInstances.unshift(instance);
+          dispatchCurrentTargets.unshift(currentTarget);
         }
       } else {
-        const bubbleListener = getListener(node, registrationName);
+        const bubbleListener = getListener(instance, registrationName);
         if (bubbleListener != null) {
           // Bubble listeners/instances should go at the end, so we
           // push them to the end of the array.
           dispatchListeners.push(bubbleListener);
-          dispatchInstances.push(node);
+          dispatchInstances.push(instance);
+          dispatchCurrentTargets.push(currentTarget);
         }
       }
     }
-    node = node.return;
+    instance = instance.return;
   }
   // To prevent allocation to the event unless we actually
   // have listeners we check the length of one of the arrays.
   if (dispatchListeners.length > 0) {
     event._dispatchListeners = dispatchListeners;
     event._dispatchInstances = dispatchInstances;
+    event._dispatchCurrentTargets = dispatchCurrentTargets;
   }
 }
 

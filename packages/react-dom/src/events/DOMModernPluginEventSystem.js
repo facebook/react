@@ -25,7 +25,6 @@ import type {ReactDOMListener} from '../shared/ReactDOMTypes';
 
 import {registrationNameDependencies} from 'legacy-events/EventPluginRegistry';
 import {batchedEventUpdates} from 'legacy-events/ReactGenericBatching';
-import {executeDispatchesInOrder} from 'legacy-events/EventPluginUtils';
 import {plugins} from 'legacy-events/EventPluginRegistry';
 import {
   PLUGIN_EVENT_SYSTEM,
@@ -92,6 +91,7 @@ import {
   enableLegacyFBSupport,
   enableUseEventAPI,
 } from 'shared/ReactFeatureFlags';
+import {invokeGuardedCallbackAndCatchFirstError} from 'shared/ReactErrorUtils';
 
 const capturePhaseEvents = new Set([
   TOP_FOCUS,
@@ -166,6 +166,52 @@ export const reactScopeListenerStore: WeakMap<
     {bubbled: Set<ReactDOMListener>, captured: Set<ReactDOMListener>},
   >,
 > = new PossiblyWeakMap();
+
+function executeDispatch(
+  event: ReactSyntheticEvent,
+  listener: Function,
+  currentTarget: EventTarget,
+): void {
+  const type = event.type || 'unknown-event';
+  event.currentTarget = currentTarget;
+  invokeGuardedCallbackAndCatchFirstError(type, listener, undefined, event);
+  event.currentTarget = null;
+}
+
+function executeDispatchesInOrder(event: ReactSyntheticEvent): void {
+  // TODO we should remove _dispatchListeners and _dispatchInstances at some point.
+  const dispatchListeners = event._dispatchListeners;
+  const dispatchInstances = event._dispatchInstances;
+  const dispatchCurrentTargets = event._dispatchCurrentTargets;
+  let previousInstance;
+
+  if (
+    dispatchListeners !== null &&
+    dispatchInstances !== null &&
+    dispatchCurrentTargets !== null
+  ) {
+    for (let i = 0; i < dispatchListeners.length; i++) {
+      const instance = dispatchInstances[i];
+      const listener = dispatchListeners[i];
+      const currentTarget = dispatchCurrentTargets[i];
+
+      // We check if the instance was the same as the last one,
+      // if it was, then we're still on the same instance thus
+      // propagation should not stop. If we add support for
+      // stopImmediatePropagation at some point, then we'll
+      // need to handle that case here differently.
+      if (instance !== previousInstance && event.isPropagationStopped()) {
+        break;
+      }
+      // Listeners and Instances are two parallel arrays that are always in sync.
+      executeDispatch(event, listener, currentTarget);
+      previousInstance = instance;
+    }
+  }
+  event._dispatchListeners = null;
+  event._dispatchInstances = null;
+  event._dispatchCurrentTargets = null;
+}
 
 function dispatchEventsForPlugins(
   topLevelType: DOMTopLevelEventType,

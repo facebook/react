@@ -2512,6 +2512,112 @@ describe('DOMModernPluginEventSystem', () => {
               // <button>, which is actually outside the scope.
               expect(clickEvent).toBeCalledTimes(0);
             });
+
+            it('handle stopPropagation (inner) correctly between scopes', () => {
+              const buttonRef = React.createRef();
+              const outerOnClick = jest.fn();
+              const innerOnClick = jest.fn(e => e.stopPropagation());
+              const TestScope = React.unstable_createScope();
+              const TestScope2 = React.unstable_createScope();
+
+              function Test() {
+                const click = ReactDOM.unstable_useEvent('click');
+                const scopeRef = React.useRef(null);
+                const scope2Ref = React.useRef(null);
+
+                React.useEffect(() => {
+                  click.setListener(scopeRef.current, outerOnClick);
+                  click.setListener(scope2Ref.current, innerOnClick);
+                });
+
+                return (
+                  <TestScope ref={scopeRef}>
+                    <TestScope2 ref={scope2Ref}>
+                      <button ref={buttonRef} />
+                    </TestScope2>
+                  </TestScope>
+                );
+              }
+
+              ReactDOM.render(<Test />, container);
+              Scheduler.unstable_flushAll();
+
+              const buttonElement = buttonRef.current;
+              dispatchClickEvent(buttonElement);
+
+              expect(innerOnClick).toHaveBeenCalledTimes(1);
+              expect(outerOnClick).toHaveBeenCalledTimes(0);
+            });
+
+            it('handle stopPropagation (outer) correctly between scopes', () => {
+              const buttonRef = React.createRef();
+              const outerOnClick = jest.fn(e => e.stopPropagation());
+              const innerOnClick = jest.fn();
+              const TestScope = React.unstable_createScope();
+              const TestScope2 = React.unstable_createScope();
+
+              function Test() {
+                const click = ReactDOM.unstable_useEvent('click');
+                const scopeRef = React.useRef(null);
+                const scope2Ref = React.useRef(null);
+
+                React.useEffect(() => {
+                  click.setListener(scopeRef.current, outerOnClick);
+                  click.setListener(scope2Ref.current, innerOnClick);
+                });
+
+                return (
+                  <TestScope ref={scopeRef}>
+                    <TestScope2 ref={scope2Ref}>
+                      <button ref={buttonRef} />
+                    </TestScope2>
+                  </TestScope>
+                );
+              }
+
+              ReactDOM.render(<Test />, container);
+              Scheduler.unstable_flushAll();
+
+              const buttonElement = buttonRef.current;
+              dispatchClickEvent(buttonElement);
+
+              expect(innerOnClick).toHaveBeenCalledTimes(1);
+              expect(outerOnClick).toHaveBeenCalledTimes(1);
+            });
+
+            it('handle stopPropagation (inner and outer) correctly between scopes', () => {
+              const buttonRef = React.createRef();
+              const onClick = jest.fn(e => e.stopPropagation());
+              const TestScope = React.unstable_createScope();
+              const TestScope2 = React.unstable_createScope();
+
+              function Test() {
+                const click = ReactDOM.unstable_useEvent('click');
+                const scopeRef = React.useRef(null);
+                const scope2Ref = React.useRef(null);
+
+                React.useEffect(() => {
+                  click.setListener(scopeRef.current, onClick);
+                  click.setListener(scope2Ref.current, onClick);
+                });
+
+                return (
+                  <TestScope ref={scopeRef}>
+                    <TestScope2 ref={scope2Ref}>
+                      <button ref={buttonRef} />
+                    </TestScope2>
+                  </TestScope>
+                );
+              }
+
+              ReactDOM.render(<Test />, container);
+              Scheduler.unstable_flushAll();
+
+              const buttonElement = buttonRef.current;
+              dispatchClickEvent(buttonElement);
+
+              expect(onClick).toHaveBeenCalledTimes(1);
+            });
           });
         });
       },

@@ -14,11 +14,13 @@ import {eventTargetEventListenerStore} from './DOMModernPluginEventSystem';
 
 export default function accumulateEventTargetListeners(
   event: ReactSyntheticEvent,
-  targetContainer: EventTarget,
+  currentTarget: EventTarget,
 ): void {
   const dispatchListeners = [];
   const dispatchInstances = [];
-  const eventTypeMap = eventTargetEventListenerStore.get(targetContainer);
+  const dispatchCurrentTargets = [];
+
+  const eventTypeMap = eventTargetEventListenerStore.get(currentTarget);
   if (eventTypeMap !== undefined) {
     const type = ((event.type: any): DOMTopLevelEventType);
     const listeners = eventTypeMap.get(type);
@@ -32,7 +34,10 @@ export default function accumulateEventTargetListeners(
           const listener = captureListeners[i];
           const {callback} = listener;
           dispatchListeners.push(callback);
-          dispatchInstances.push(targetContainer);
+          // EventTarget listeners do not have instances, as there
+          // is no backing Fiber instance for them (window, document etc).
+          dispatchInstances.push(null);
+          dispatchCurrentTargets.push(currentTarget);
         }
       } else {
         const bubbleListeners = Array.from(listeners.bubbled);
@@ -41,7 +46,10 @@ export default function accumulateEventTargetListeners(
           const listener = bubbleListeners[i];
           const {callback} = listener;
           dispatchListeners.push(callback);
-          dispatchInstances.push(targetContainer);
+          // EventTarget listeners do not have instances, as there
+          // is no backing Fiber instance for them (window, document etc).
+          dispatchInstances.push(null);
+          dispatchCurrentTargets.push(currentTarget);
         }
       }
     }
@@ -51,5 +59,6 @@ export default function accumulateEventTargetListeners(
   if (dispatchListeners.length > 0) {
     event._dispatchListeners = dispatchListeners;
     event._dispatchInstances = dispatchInstances;
+    event._dispatchCurrentTargets = dispatchCurrentTargets;
   }
 }
