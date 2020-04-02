@@ -40,10 +40,6 @@ export const enableSchedulerDebugging = false;
 // Disable javascript: URL strings in href for XSS protection.
 export const disableJavaScriptURLs = false;
 
-// Warns when a combination of updates on a dom can cause a style declaration
-// that clashes with a previous one https://github.com/facebook/react/pull/14181
-export const warnAboutShorthandPropertyCollision = true;
-
 // Experimental React Flare event system and event components support.
 export const enableDeprecatedFlareAPI = false;
 
