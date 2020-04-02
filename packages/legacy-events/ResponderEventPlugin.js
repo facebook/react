@@ -10,6 +10,7 @@ import {
   hasDispatches,
   executeDispatchesInOrderStopAtTrue,
   getInstanceFromNode,
+  getFiberCurrentPropsFromNode,
 } from './EventPluginUtils';
 import ResponderSyntheticEvent from './ResponderSyntheticEvent';
 import ResponderTouchHistoryStore from './ResponderTouchHistoryStore';
@@ -25,10 +26,10 @@ import {
   moveDependencies,
   endDependencies,
 } from './ResponderTopLevelEventTypes';
-import getListener from './getListener';
 import accumulateInto from './accumulateInto';
 import forEachAccumulated from './forEachAccumulated';
 import {HostComponent} from 'react-reconciler/src/ReactWorkTags';
+import invariant from 'shared/invariant';
 
 /**
  * Instance of element that should respond to touch/move types of interactions,
@@ -208,7 +209,7 @@ export function getLowestCommonAncestor(instA, instB) {
 /**
  * Return if A is an ancestor of B.
  */
-export function isAncestor(instA, instB) {
+function isAncestor(instA, instB) {
   while (instB) {
     if (instA === instB || instA === instB.alternate) {
       return true;
@@ -221,7 +222,7 @@ export function isAncestor(instA, instB) {
 /**
  * Simulates the traversal of a two-phase, capture/bubble event dispatch.
  */
-export function traverseTwoPhase(inst, fn, arg) {
+function traverseTwoPhase(inst, fn, arg) {
   const path = [];
   while (inst) {
     path.push(inst);
@@ -234,6 +235,27 @@ export function traverseTwoPhase(inst, fn, arg) {
   for (i = 0; i < path.length; i++) {
     fn(path[i], 'bubbled', arg);
   }
+}
+
+function getListener(inst, registrationName) {
+  const stateNode = inst.stateNode;
+  if (stateNode === null) {
+    // Work in progress (ex: onload events in incremental mode).
+    return null;
+  }
+  const props = getFiberCurrentPropsFromNode(stateNode);
+  if (props === null) {
+    // Work in progress.
+    return null;
+  }
+  const listener = props[registrationName];
+  invariant(
+    !listener || typeof listener === 'function',
+    'Expected `%s` listener to be a function, instead got a value of `%s` type.',
+    registrationName,
+    typeof listener,
+  );
+  return listener;
 }
 
 function listenerAtPhase(inst, event, propagationPhase: PropagationPhases) {

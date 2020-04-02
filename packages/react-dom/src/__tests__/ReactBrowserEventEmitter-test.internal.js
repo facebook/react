@@ -62,7 +62,8 @@ describe('ReactBrowserEventEmitter', () => {
     LISTENER.mockClear();
 
     ReactFeatureFlags = require('shared/ReactFeatureFlags');
-    EventPluginGetListener = require('legacy-events/getListener').default;
+    EventPluginGetListener = require('react-dom/src/events/getListener')
+      .default;
     EventPluginRegistry = require('legacy-events/EventPluginRegistry');
     React = require('react');
     ReactDOM = require('react-dom');

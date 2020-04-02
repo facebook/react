@@ -8,7 +8,6 @@
  */
 
 import type {AnyNativeEvent} from 'legacy-events/PluginModuleType';
-import type {EventSystemFlags} from 'legacy-events/EventSystemFlags';
 import type {TopLevelType} from 'legacy-events/TopLevelEventTypes';
 import SyntheticEvent from 'legacy-events/SyntheticEvent';
 import invariant from 'shared/invariant';
@@ -16,7 +15,7 @@ import invariant from 'shared/invariant';
 // Module provided by RN:
 import {ReactNativeViewConfigRegistry} from 'react-native/Libraries/ReactPrivate/ReactNativePrivateInterface';
 import accumulateInto from 'legacy-events/accumulateInto';
-import getListener from 'legacy-events/getListener';
+import getListener from './ReactNativeGetListener';
 import forEachAccumulated from 'legacy-events/forEachAccumulated';
 import {HostComponent} from 'react-reconciler/src/ReactWorkTags';
 
@@ -142,7 +141,6 @@ const ReactNativeBridgeEventPlugin = {
     targetInst: null | Object,
     nativeEvent: AnyNativeEvent,
     nativeEventTarget: null | Object,
-    eventSystemFlags: EventSystemFlags,
   ): ?Object {
     if (targetInst == null) {
       // Probably a node belonging to another renderer's tree.

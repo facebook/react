@@ -7,12 +7,12 @@
  */
 
 import type {Fiber} from 'react-reconciler/src/ReactFiber';
+import type {Props} from '../client/ReactDOMHostConfig';
 
 import invariant from 'shared/invariant';
+import {getFiberCurrentPropsFromNode} from '../client/ReactDOMComponentTree';
 
-import {getFiberCurrentPropsFromNode} from './EventPluginUtils';
-
-function isInteractive(tag) {
+function isInteractive(tag: string): boolean {
   return (
     tag === 'button' ||
     tag === 'input' ||
@@ -21,7 +21,11 @@ function isInteractive(tag) {
   );
 }
 
-function shouldPreventMouseEvent(name, type, props) {
+function shouldPreventMouseEvent(
+  name: string,
+  type: string,
+  props: Props,
+): boolean {
   switch (name) {
     case 'onClick':
     case 'onClickCapture':
@@ -45,16 +49,17 @@ function shouldPreventMouseEvent(name, type, props) {
  * @param {string} registrationName Name of listener (e.g. `onClick`).
  * @return {?function} The stored callback.
  */
-export default function getListener(inst: Fiber, registrationName: string) {
-  // TODO: shouldPreventMouseEvent is DOM-specific and definitely should not
-  // live here; needs to be moved to a better place soon
+export default function getListener(
+  inst: Fiber,
+  registrationName: string,
+): Function | null {
   const stateNode = inst.stateNode;
-  if (!stateNode) {
+  if (stateNode === null) {
     // Work in progress (ex: onload events in incremental mode).
     return null;
   }
   const props = getFiberCurrentPropsFromNode(stateNode);
-  if (!props) {
+  if (props === null) {
     // Work in progress.
     return null;
   }

@@ -8,18 +8,16 @@
  */
 
 import type {AnyNativeEvent} from 'legacy-events/PluginModuleType';
-import type {EventSystemFlags} from 'legacy-events/EventSystemFlags';
 import type {Fiber} from 'react-reconciler/src/ReactFiber';
 import type {PluginModule} from 'legacy-events/PluginModuleType';
 import type {ReactSyntheticEvent} from 'legacy-events/ReactSyntheticEventType';
 import type {TopLevelType} from 'legacy-events/TopLevelEventTypes';
 
-import {PLUGIN_EVENT_SYSTEM} from 'legacy-events/EventSystemFlags';
 import {registrationNameModules} from 'legacy-events/EventPluginRegistry';
 import {batchedUpdates} from 'legacy-events/ReactGenericBatching';
 import {runEventsInBatch} from 'legacy-events/EventBatching';
 import {plugins} from 'legacy-events/EventPluginRegistry';
-import getListener from 'legacy-events/getListener';
+import getListener from './ReactNativeGetListener';
 import accumulateInto from 'legacy-events/accumulateInto';
 
 import {getInstanceFromNode} from './ReactNativeComponentTree';
@@ -108,13 +106,7 @@ function _receiveRootNodeIDEvent(
   }
 
   batchedUpdates(function() {
-    runExtractedPluginEventsInBatch(
-      topLevelType,
-      inst,
-      nativeEvent,
-      target,
-      PLUGIN_EVENT_SYSTEM,
-    );
+    runExtractedPluginEventsInBatch(topLevelType, inst, nativeEvent, target);
   });
   // React Native doesn't use ReactControlledComponent but if it did, here's
   // where it would do it.
@@ -132,7 +124,6 @@ function extractPluginEvents(
   targetInst: null | Fiber,
   nativeEvent: AnyNativeEvent,
   nativeEventTarget: null | EventTarget,
-  eventSystemFlags: EventSystemFlags,
 ): Array<ReactSyntheticEvent> | ReactSyntheticEvent | null {
   let events = null;
   for (let i = 0; i < plugins.length; i++) {
@@ -144,7 +135,6 @@ function extractPluginEvents(
         targetInst,
         nativeEvent,
         nativeEventTarget,
-        eventSystemFlags,
       );
       if (extractedEvents) {
         events = accumulateInto(events, extractedEvents);
@@ -159,14 +149,12 @@ function runExtractedPluginEventsInBatch(
   targetInst: null | Fiber,
   nativeEvent: AnyNativeEvent,
   nativeEventTarget: null | EventTarget,
-  eventSystemFlags: EventSystemFlags,
 ) {
   const events = extractPluginEvents(
     topLevelType,
     targetInst,
     nativeEvent,
     nativeEventTarget,
-    eventSystemFlags,
   );
   runEventsInBatch(events);
 }

@@ -10,7 +10,7 @@
 'use strict';
 
 const {HostComponent} = require('react-reconciler/src/ReactWorkTags');
-const {PLUGIN_EVENT_SYSTEM} = require('legacy-events/EventSystemFlags');
+const {PLUGIN_EVENT_SYSTEM} = require('react-dom/src/events/EventSystemFlags');
 
 let EventBatching;
 let EventPluginUtils;
