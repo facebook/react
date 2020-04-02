@@ -5,8 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import {accumulateEnterLeaveDispatches} from 'legacy-events/EventPropagators';
-
 import {
   TOP_MOUSE_OUT,
   TOP_MOUSE_OVER,
@@ -23,6 +21,7 @@ import {
 import {HostComponent, HostText} from 'react-reconciler/src/ReactWorkTags';
 import {getNearestMountedFiber} from 'react-reconciler/src/ReactFiberTreeReflection';
 import {enableModernEventSystem} from 'shared/ReactFeatureFlags';
+import accumulateEnterLeaveListeners from './accumulateEnterLeaveListeners';
 
 const eventTypes = {
   mouseEnter: {
@@ -172,7 +171,7 @@ const EnterLeaveEventPlugin = {
     enter.target = toNode;
     enter.relatedTarget = fromNode;
 
-    accumulateEnterLeaveDispatches(leave, enter, from, to);
+    accumulateEnterLeaveListeners(leave, enter, from, to);
 
     if (!enableModernEventSystem) {
       // If we are not processing the first ancestor, then we

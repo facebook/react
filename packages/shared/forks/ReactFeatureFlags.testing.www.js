@@ -21,7 +21,6 @@ export const enableSelectiveHydration = true;
 export const enableBlocksAPI = true;
 export const disableJavaScriptURLs = true;
 export const disableInputAttributeSyncing = false;
-export const warnAboutShorthandPropertyCollision = true;
 export const enableSchedulerDebugging = false;
 export const enableDeprecatedFlareAPI = true;
 export const enableFundamentalAPI = false;

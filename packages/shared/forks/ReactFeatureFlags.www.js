@@ -19,7 +19,6 @@ export const {
   disableModulePatternComponents,
   disableInputAttributeSyncing,
   enableTrustedTypesIntegration,
-  warnAboutShorthandPropertyCollision,
   disableSchedulerTimeoutBasedOnReactExpirationTime,
   warnAboutSpreadingKeyToJSX,
   replayFailedUnitOfWorkWithInvokeGuardedCallback,

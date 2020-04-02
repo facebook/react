@@ -9,7 +9,6 @@
 
 import type {AnyNativeEvent} from 'legacy-events/PluginModuleType';
 import type {EventSystemFlags} from 'legacy-events/EventSystemFlags';
-import {accumulateDirectDispatches} from 'legacy-events/EventPropagators';
 import type {TopLevelType} from 'legacy-events/TopLevelEventTypes';
 import SyntheticEvent from 'legacy-events/SyntheticEvent';
 import invariant from 'shared/invariant';
@@ -18,8 +17,8 @@ import invariant from 'shared/invariant';
 import {ReactNativeViewConfigRegistry} from 'react-native/Libraries/ReactPrivate/ReactNativePrivateInterface';
 import accumulateInto from 'legacy-events/accumulateInto';
 import getListener from 'legacy-events/getListener';
-import {traverseTwoPhase} from 'react-reconciler/src/ReactTreeTraversal';
 import forEachAccumulated from 'legacy-events/forEachAccumulated';
+import {HostComponent} from 'react-reconciler/src/ReactWorkTags';
 
 const {
   customBubblingEventTypes,
@@ -51,6 +50,39 @@ function accumulateDirectionalDispatches(inst, phase, event) {
   }
 }
 
+function getParent(inst) {
+  do {
+    inst = inst.return;
+    // TODO: If this is a HostRoot we might want to bail out.
+    // That is depending on if we want nested subtrees (layers) to bubble
+    // events to their parent. We could also go through parentNode on the
+    // host node but that wouldn't work for React Native and doesn't let us
+    // do the portal feature.
+  } while (inst && inst.tag !== HostComponent);
+  if (inst) {
+    return inst;
+  }
+  return null;
+}
+
+/**
+ * Simulates the traversal of a two-phase, capture/bubble event dispatch.
+ */
+export function traverseTwoPhase(inst: Object, fn: Function, arg: Function) {
+  const path = [];
+  while (inst) {
+    path.push(inst);
+    inst = getParent(inst);
+  }
+  let i;
+  for (i = path.length; i-- > 0; ) {
+    fn(path[i], 'captured', arg);
+  }
+  for (i = 0; i < path.length; i++) {
+    fn(path[i], 'bubbled', arg);
+  }
+}
+
 function accumulateTwoPhaseDispatchesSingle(event) {
   if (event && event.dispatchConfig.phasedRegistrationNames) {
     traverseTwoPhase(event._targetInst, accumulateDirectionalDispatches, event);
@@ -60,6 +92,45 @@ function accumulateTwoPhaseDispatchesSingle(event) {
 function accumulateTwoPhaseDispatches(events) {
   forEachAccumulated(events, accumulateTwoPhaseDispatchesSingle);
 }
+
+/**
+ * Accumulates without regard to direction, does not look for phased
+ * registration names. Same as `accumulateDirectDispatchesSingle` but without
+ * requiring that the `dispatchMarker` be the same as the dispatched ID.
+ */
+function accumulateDispatches(
+  inst: Object,
+  ignoredDirection: ?boolean,
+  event: Object,
+): void {
+  if (inst && event && event.dispatchConfig.registrationName) {
+    const registrationName = event.dispatchConfig.registrationName;
+    const listener = getListener(inst, registrationName);
+    if (listener) {
+      event._dispatchListeners = accumulateInto(
+        event._dispatchListeners,
+        listener,
+      );
+      event._dispatchInstances = accumulateInto(event._dispatchInstances, inst);
+    }
+  }
+}
+
+/**
+ * Accumulates dispatches on an `SyntheticEvent`, but only for the
+ * `dispatchMarker`.
+ * @param {SyntheticEvent} event
+ */
+function accumulateDirectDispatchesSingle(event: Object) {
+  if (event && event.dispatchConfig.registrationName) {
+    accumulateDispatches(event._targetInst, null, event);
+  }
+}
+
+function accumulateDirectDispatches(events: ?(Array<Object> | Object)) {
+  forEachAccumulated(events, accumulateDirectDispatchesSingle);
+}
+
 // End of inline
 type PropagationPhases = 'bubbled' | 'captured';
 
