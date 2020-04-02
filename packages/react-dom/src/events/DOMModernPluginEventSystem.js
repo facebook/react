@@ -218,7 +218,7 @@ function dispatchEventsForPlugins(
   eventSystemFlags: EventSystemFlags,
   nativeEvent: AnyNativeEvent,
   targetInst: null | Fiber,
-  targetContainer: null | EventTarget,
+  targetContainer: EventTarget,
 ): void {
   const nativeEventTarget = getEventTarget(nativeEvent);
   const syntheticEvents: Array<ReactSyntheticEvent> = [];
@@ -395,90 +395,85 @@ export function dispatchEventForPluginEventSystem(
   eventSystemFlags: EventSystemFlags,
   nativeEvent: AnyNativeEvent,
   targetInst: null | Fiber,
-  targetContainer: null | EventTarget,
+  targetContainer: EventTarget,
 ): void {
   let ancestorInst = targetInst;
-  if (targetContainer !== null) {
-    if (eventSystemFlags & IS_TARGET_PHASE_ONLY) {
-      // For TargetEvent nodes (i.e. document, window)
-      ancestorInst = null;
-    } else {
-      const targetContainerNode = ((targetContainer: any): Node);
+  if (eventSystemFlags & IS_TARGET_PHASE_ONLY) {
+    // For TargetEvent nodes (i.e. document, window)
+    ancestorInst = null;
+  } else {
+    const targetContainerNode = ((targetContainer: any): Node);
 
-      // If we are using the legacy FB support flag, we
-      // defer the event to the null with a one
-      // time event listener so we can defer the event.
-      if (
-        enableLegacyFBSupport &&
-        // We do not want to defer if the event system has already been
-        // set to LEGACY_FB_SUPPORT. LEGACY_FB_SUPPORT only gets set when
-        // we call willDeferLaterForLegacyFBSupport, thus not bailing out
-        // will result in endless cycles like an infinite loop.
-        (eventSystemFlags & LEGACY_FB_SUPPORT) === 0 &&
-        // We also don't want to defer during event replaying.
-        (eventSystemFlags & IS_REPLAYED) === 0 &&
-        // We don't want to apply the legacy FB support for the useEvent API.
-        (eventSystemFlags & USE_EVENT_SYSTEM) === 0 &&
-        willDeferLaterForLegacyFBSupport(topLevelType, targetContainer)
-      ) {
-        return;
-      }
-      if (targetInst !== null) {
-        // The below logic attempts to work out if we need to change
-        // the target fiber to a different ancestor. We had similar logic
-        // in the legacy event system, except the big difference between
-        // systems is that the modern event system now has an event listener
-        // attached to each React Root and React Portal Root. Together,
-        // the DOM nodes representing these roots are the "rootContainer".
-        // To figure out which ancestor instance we should use, we traverse
-        // up the fiber tree from the target instance and attempt to find
-        // root boundaries that match that of our current "rootContainer".
-        // If we find that "rootContainer", we find the parent fiber
-        // sub-tree for that root and make that our ancestor instance.
-        let node = targetInst;
+    // If we are using the legacy FB support flag, we
+    // defer the event to the null with a one
+    // time event listener so we can defer the event.
+    if (
+      enableLegacyFBSupport &&
+      // We do not want to defer if the event system has already been
+      // set to LEGACY_FB_SUPPORT. LEGACY_FB_SUPPORT only gets set when
+      // we call willDeferLaterForLegacyFBSupport, thus not bailing out
+      // will result in endless cycles like an infinite loop.
+      (eventSystemFlags & LEGACY_FB_SUPPORT) === 0 &&
+      // We also don't want to defer during event replaying.
+      (eventSystemFlags & IS_REPLAYED) === 0 &&
+      // We don't want to apply the legacy FB support for the useEvent API.
+      (eventSystemFlags & USE_EVENT_SYSTEM) === 0 &&
+      willDeferLaterForLegacyFBSupport(topLevelType, targetContainer)
+    ) {
+      return;
+    }
+    if (targetInst !== null) {
+      // The below logic attempts to work out if we need to change
+      // the target fiber to a different ancestor. We had similar logic
+      // in the legacy event system, except the big difference between
+      // systems is that the modern event system now has an event listener
+      // attached to each React Root and React Portal Root. Together,
+      // the DOM nodes representing these roots are the "rootContainer".
+      // To figure out which ancestor instance we should use, we traverse
+      // up the fiber tree from the target instance and attempt to find
+      // root boundaries that match that of our current "rootContainer".
+      // If we find that "rootContainer", we find the parent fiber
+      // sub-tree for that root and make that our ancestor instance.
+      let node = targetInst;
 
-        while (true) {
-          if (node === null) {
+      while (true) {
+        if (node === null) {
+          return;
+        }
+        if (node.tag === HostRoot || node.tag === HostPortal) {
+          const container = node.stateNode.containerInfo;
+          if (isMatchingRootContainer(container, targetContainerNode)) {
+            break;
+          }
+          if (node.tag === HostPortal) {
+            // The target is a portal, but it's not the rootContainer we're looking for.
+            // Normally portals handle their own events all the way down to the root.
+            // So we should be able to stop now. However, we don't know if this portal
+            // was part of *our* root.
+            let grandNode = node.return;
+            while (grandNode !== null) {
+              if (grandNode.tag === HostRoot || grandNode.tag === HostPortal) {
+                const grandContainer = grandNode.stateNode.containerInfo;
+                if (
+                  isMatchingRootContainer(grandContainer, targetContainerNode)
+                ) {
+                  // This is the rootContainer we're looking for and we found it as
+                  // a parent of the Portal. That means we can ignore it because the
+                  // Portal will bubble through to us.
+                  return;
+                }
+              }
+              grandNode = grandNode.return;
+            }
+          }
+          const parentSubtreeInst = getClosestInstanceFromNode(container);
+          if (parentSubtreeInst === null) {
             return;
           }
-          if (node.tag === HostRoot || node.tag === HostPortal) {
-            const container = node.stateNode.containerInfo;
-            if (isMatchingRootContainer(container, targetContainerNode)) {
-              break;
-            }
-            if (node.tag === HostPortal) {
-              // The target is a portal, but it's not the rootContainer we're looking for.
-              // Normally portals handle their own events all the way down to the root.
-              // So we should be able to stop now. However, we don't know if this portal
-              // was part of *our* root.
-              let grandNode = node.return;
-              while (grandNode !== null) {
-                if (
-                  grandNode.tag === HostRoot ||
-                  grandNode.tag === HostPortal
-                ) {
-                  const grandContainer = grandNode.stateNode.containerInfo;
-                  if (
-                    isMatchingRootContainer(grandContainer, targetContainerNode)
-                  ) {
-                    // This is the rootContainer we're looking for and we found it as
-                    // a parent of the Portal. That means we can ignore it because the
-                    // Portal will bubble through to us.
-                    return;
-                  }
-                }
-                grandNode = grandNode.return;
-              }
-            }
-            const parentSubtreeInst = getClosestInstanceFromNode(container);
-            if (parentSubtreeInst === null) {
-              return;
-            }
-            node = ancestorInst = parentSubtreeInst;
-            continue;
-          }
-          node = node.return;
+          node = ancestorInst = parentSubtreeInst;
+          continue;
         }
+        node = node.return;
       }
     }
   }

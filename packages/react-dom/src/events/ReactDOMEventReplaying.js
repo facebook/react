@@ -291,7 +291,7 @@ function createQueuedReplayableEvent(
   blockedOn: null | Container | SuspenseInstance,
   topLevelType: DOMTopLevelEventType,
   eventSystemFlags: EventSystemFlags,
-  targetContainer: EventTarget | null,
+  targetContainer: EventTarget,
   nativeEvent: AnyNativeEvent,
 ): QueuedReplayableEvent {
   return {
@@ -299,7 +299,7 @@ function createQueuedReplayableEvent(
     topLevelType,
     eventSystemFlags: eventSystemFlags | IS_REPLAYED,
     nativeEvent,
-    targetContainers: targetContainer !== null ? [targetContainer] : [],
+    targetContainers: [targetContainer],
   };
 }
 
@@ -307,7 +307,7 @@ export function queueDiscreteEvent(
   blockedOn: null | Container | SuspenseInstance,
   topLevelType: DOMTopLevelEventType,
   eventSystemFlags: EventSystemFlags,
-  targetContainer: EventTarget | null,
+  targetContainer: EventTarget,
   nativeEvent: AnyNativeEvent,
 ): void {
   const queuedEvent = createQueuedReplayableEvent(
@@ -382,7 +382,7 @@ function accumulateOrCreateContinuousQueuedReplayableEvent(
   blockedOn: null | Container | SuspenseInstance,
   topLevelType: DOMTopLevelEventType,
   eventSystemFlags: EventSystemFlags,
-  targetContainer: EventTarget | null,
+  targetContainer: EventTarget,
   nativeEvent: AnyNativeEvent,
 ): QueuedReplayableEvent {
   if (
@@ -424,7 +424,7 @@ export function queueIfContinuousEvent(
   blockedOn: null | Container | SuspenseInstance,
   topLevelType: DOMTopLevelEventType,
   eventSystemFlags: EventSystemFlags,
-  targetContainer: EventTarget | null,
+  targetContainer: EventTarget,
   nativeEvent: AnyNativeEvent,
 ): boolean {
   // These set relatedTarget to null because the replayed event will be treated as if we
