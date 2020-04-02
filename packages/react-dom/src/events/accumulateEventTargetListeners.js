@@ -14,11 +14,11 @@ import {eventTargetEventListenerStore} from './DOMModernPluginEventSystem';
 
 export default function accumulateEventTargetListeners(
   event: ReactSyntheticEvent,
-  targetContainer: EventTarget,
+  container: EventTarget,
 ): void {
   const dispatchListeners = [];
   const dispatchInstances = [];
-  const eventTypeMap = eventTargetEventListenerStore.get(targetContainer);
+  const eventTypeMap = eventTargetEventListenerStore.get(container);
   if (eventTypeMap !== undefined) {
     const type = ((event.type: any): DOMTopLevelEventType);
     const listeners = eventTypeMap.get(type);
@@ -32,7 +32,7 @@ export default function accumulateEventTargetListeners(
           const listener = captureListeners[i];
           const {callback} = listener;
           dispatchListeners.push(callback);
-          dispatchInstances.push(targetContainer);
+          dispatchInstances.push({instance: null, container});
         }
       } else {
         const bubbleListeners = Array.from(listeners.bubbled);
@@ -41,7 +41,7 @@ export default function accumulateEventTargetListeners(
           const listener = bubbleListeners[i];
           const {callback} = listener;
           dispatchListeners.push(callback);
-          dispatchInstances.push(targetContainer);
+          dispatchInstances.push({instance: null, container});
         }
       }
     }

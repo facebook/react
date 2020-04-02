@@ -111,18 +111,19 @@ export default function accumulateTwoPhaseListeners(
         if (listeners !== undefined) {
           const captureListeners = Array.from(listeners.captured);
           const bubbleListeners = Array.from(listeners.bubbled);
+          const container = ((lastHostComponent: any): Element);
 
           for (let i = 0; i < captureListeners.length; i++) {
             const listener = captureListeners[i];
             const {callback} = listener;
             dispatchListeners.unshift(callback);
-            dispatchInstances.unshift(((lastHostComponent: any): Element));
+            dispatchInstances.unshift({instance: node, container});
           }
           for (let i = 0; i < bubbleListeners.length; i++) {
             const listener = bubbleListeners[i];
             const {callback} = listener;
             dispatchListeners.push(callback);
-            dispatchInstances.push(((lastHostComponent: any): Element));
+            dispatchInstances.push({instance: node, container});
           }
         }
       }

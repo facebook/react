@@ -20,12 +20,12 @@ import type {PluginModule} from 'legacy-events/PluginModuleType';
 import type {
   ReactSyntheticEvent,
   CustomDispatchConfig,
+  DispatchInstance,
 } from 'legacy-events/ReactSyntheticEventType';
 import type {ReactDOMListener} from '../shared/ReactDOMTypes';
 
 import {registrationNameDependencies} from 'legacy-events/EventPluginRegistry';
 import {batchedEventUpdates} from 'legacy-events/ReactGenericBatching';
-import {executeDispatchesInOrder} from 'legacy-events/EventPluginUtils';
 import {plugins} from 'legacy-events/EventPluginRegistry';
 import {
   LEGACY_FB_SUPPORT,
@@ -82,6 +82,7 @@ import {
   getClosestInstanceFromNode,
   getListenersFromTarget,
   initListenersSet,
+  getNodeFromInstance,
 } from '../client/ReactDOMComponentTree';
 import {COMMENT_NODE} from '../shared/HTMLNodeType';
 import {topLevelEventsToDispatchConfig} from './DOMEventProperties';
@@ -90,6 +91,7 @@ import {
   enableLegacyFBSupport,
   enableUseEventAPI,
 } from 'shared/ReactFeatureFlags';
+import {invokeGuardedCallbackAndCatchFirstError} from 'shared/ReactErrorUtils';
 
 const capturePhaseEvents = new Set([
   TOP_FOCUS,
@@ -164,6 +166,57 @@ export const reactScopeListenerStore: WeakMap<
     {bubbled: Set<ReactDOMListener>, captured: Set<ReactDOMListener>},
   >,
 > = new PossiblyWeakMap();
+
+function executeDispatch(
+  event: ReactSyntheticEvent,
+  listener: Function,
+  currentTarget: EventTarget,
+): void {
+  const type = event.type || 'unknown-event';
+  event.currentTarget = currentTarget;
+  invokeGuardedCallbackAndCatchFirstError(type, listener, undefined, event);
+  event.currentTarget = null;
+}
+
+function executeDispatchesInOrder(event: ReactSyntheticEvent): void {
+  // TODO we should remove _dispatchListeners and _dispatchInstances at some point.
+  const dispatchListeners = event._dispatchListeners;
+  const dispatchInstances = event._dispatchInstances;
+  let previousInstance;
+
+  if (dispatchListeners !== null && dispatchInstances !== null) {
+    for (let i = 0; i < dispatchListeners.length; i++) {
+      const dispatchInstance = dispatchInstances[i];
+      const dispatchListener = dispatchListeners[i];
+      let instance = dispatchInstance;
+      let currentTarget;
+
+      // dispatchInstance can come in two forms:
+      // - as a Fiber instance
+      // - as an object { instance: Fiber | null, container: EventTarget }
+      // The second form is used for useEvent types
+      if (dispatchInstance.container !== undefined) {
+        instance = ((dispatchInstance: any): DispatchInstance).instance;
+        currentTarget = ((dispatchInstance: any): DispatchInstance).container;
+      } else {
+        currentTarget = getNodeFromInstance(((dispatchInstance: any): Fiber));
+      }
+      // We check if the instance was the same as the last one,
+      // if it was, then we're still on the same instance thus
+      // propagation should not stop. If we add support for
+      // stopImmediatePropagation at some point, then we'll
+      // need to handle that case here differently.
+      if (instance !== previousInstance && event.isPropagationStopped()) {
+        break;
+      }
+      // Listeners and Instances are two parallel arrays that are always in sync.
+      executeDispatch(event, dispatchListener, currentTarget);
+      previousInstance = instance;
+    }
+  }
+  event._dispatchListeners = null;
+  event._dispatchInstances = null;
+}
 
 function dispatchEventsForPlugins(
   topLevelType: DOMTopLevelEventType,
