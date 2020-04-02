@@ -1438,6 +1438,25 @@ function getDependency(node) {
   ) {
     return getDependency(node.parent);
   } else {
+    return stripTailingPropInAssignment(node);
+  }
+}
+
+/**
+ * Assuming () means the passed/returned node:
+ * (props) => (props)
+ * (props.foo) => (props.foo)
+ * (props.foo.bar) = X => (props.foo).bar = X
+ * (props.foo.bar.baz) = X => (props.foo.bar).baz
+ */
+function stripTailingPropInAssignment(node) {
+  if (
+    node.type === 'MemberExpression' &&
+    node.parent &&
+    node.parent.type === 'AssignmentExpression'
+  ) {
+    return node.object;
+  } else {
     return node;
   }
 }
