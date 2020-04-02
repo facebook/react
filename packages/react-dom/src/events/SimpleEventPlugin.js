@@ -17,6 +17,7 @@ import type {PluginModule} from 'legacy-events/PluginModuleType';
 import type {EventSystemFlags} from 'legacy-events/EventSystemFlags';
 
 import SyntheticEvent from 'legacy-events/SyntheticEvent';
+import {IS_TARGET_PHASE_ONLY} from 'legacy-events/EventSystemFlags';
 
 import * as DOMTopLevelEventTypes from './DOMTopLevelEventTypes';
 import {
@@ -38,7 +39,7 @@ import SyntheticWheelEvent from './SyntheticWheelEvent';
 import getEventCharCode from './getEventCharCode';
 import accumulateTwoPhaseListeners from './accumulateTwoPhaseListeners';
 import accumulateEventTargetListeners from './accumulateEventTargetListeners';
-import {IS_TARGET_EVENT_ONLY} from 'legacy-events/EventSystemFlags';
+
 import {enableUseEventAPI} from 'shared/ReactFeatureFlags';
 
 // Only used in DEV for exhaustiveness validation.
@@ -210,7 +211,7 @@ const SimpleEventPlugin: PluginModule<MouseEvent> = {
     if (
       enableUseEventAPI &&
       eventSystemFlags !== undefined &&
-      eventSystemFlags & IS_TARGET_EVENT_ONLY &&
+      eventSystemFlags & IS_TARGET_PHASE_ONLY &&
       targetContainer != null
     ) {
       accumulateEventTargetListeners(event, targetContainer);

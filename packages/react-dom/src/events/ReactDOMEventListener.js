@@ -37,12 +37,11 @@ import {
 import {HostRoot, SuspenseComponent} from 'react-reconciler/src/ReactWorkTags';
 import {
   type EventSystemFlags,
+  LEGACY_FB_SUPPORT,
   PLUGIN_EVENT_SYSTEM,
   RESPONDER_EVENT_SYSTEM,
   IS_PASSIVE,
-  IS_ACTIVE,
   PASSIVE_NOT_SUPPORTED,
-  LEGACY_FB_SUPPORT,
 } from 'legacy-events/EventSystemFlags';
 
 import {
@@ -103,12 +102,9 @@ export function addResponderEventSystemEvent(
     if (passiveBrowserEventsSupported) {
       eventFlags |= IS_PASSIVE;
     } else {
-      eventFlags |= IS_ACTIVE;
       eventFlags |= PASSIVE_NOT_SUPPORTED;
       passive = false;
     }
-  } else {
-    eventFlags |= IS_ACTIVE;
   }
   // Check if interactive and wrap in discreteUpdates
   const listener = dispatchEvent.bind(
@@ -132,6 +128,7 @@ export function addResponderEventSystemEvent(
 export function addTrappedEventListener(
   targetContainer: EventTarget,
   topLevelType: DOMTopLevelEventType,
+  eventSystemFlags: EventSystemFlags,
   capture: boolean,
   isDeferredListenerForLegacyFBSupport?: boolean,
   passive?: boolean,
@@ -160,10 +157,6 @@ export function addTrappedEventListener(
   if (passive === true && !passiveBrowserEventsSupported) {
     passive = false;
   }
-  const eventSystemFlags =
-    enableLegacyFBSupport && isDeferredListenerForLegacyFBSupport
-      ? PLUGIN_EVENT_SYSTEM | LEGACY_FB_SUPPORT
-      : PLUGIN_EVENT_SYSTEM;
 
   listener = listenerWrapper.bind(
     null,
@@ -268,7 +261,14 @@ function dispatchDiscreteEvent(
   container,
   nativeEvent,
 ) {
-  flushDiscreteUpdatesIfNeeded(nativeEvent.timeStamp);
+  if (
+    !enableLegacyFBSupport ||
+    // If we have Legacy FB support, it means we've already
+    // flushed for this event and we don't need to do it again.
+    (eventSystemFlags & LEGACY_FB_SUPPORT) === 0
+  ) {
+    flushDiscreteUpdatesIfNeeded(nativeEvent.timeStamp);
+  }
   discreteUpdates(
     dispatchEvent,
     topLevelType,

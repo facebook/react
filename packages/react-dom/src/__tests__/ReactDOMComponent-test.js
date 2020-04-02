@@ -14,6 +14,7 @@ describe('ReactDOMComponent', () => {
   let ReactTestUtils;
   let ReactDOM;
   let ReactDOMServer;
+  const ReactFeatureFlags = require('shared/ReactFeatureFlags');
 
   function normalizeCodeLocInfo(str) {
     return str && str.replace(/\(at .+?:\d+\)/g, '(at **)');
@@ -2595,14 +2596,30 @@ describe('ReactDOMComponent', () => {
       // might depend on this.
       //
       // @see https://github.com/facebook/react/pull/12919#issuecomment-395224674
-      expect(eventOrder).toEqual([
-        'document capture',
-        'inner capture',
-        'inner bubble',
-        'outer capture',
-        'outer bubble',
-        'document bubble',
-      ]);
+      if (
+        ReactFeatureFlags.enableModernEventSystem &
+        ReactFeatureFlags.enableLegacyFBSupport
+      ) {
+        // The order will change here, as the legacy FB support adds
+        // the event listener onto the document after the one above has.
+        expect(eventOrder).toEqual([
+          'document capture',
+          'document bubble',
+          'inner capture',
+          'inner bubble',
+          'outer capture',
+          'outer bubble',
+        ]);
+      } else {
+        expect(eventOrder).toEqual([
+          'document capture',
+          'inner capture',
+          'inner bubble',
+          'outer capture',
+          'outer bubble',
+          'document bubble',
+        ]);
+      }
     } finally {
       document.body.removeChild(container);
     }
