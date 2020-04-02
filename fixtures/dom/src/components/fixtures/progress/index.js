@@ -76,14 +76,6 @@ class ProgressFixture extends React.Component {
                   )}
                 </span>
               </fieldset>
-
-              <fieldset>
-                <legend>Uncontrolled</legend>
-                <progress
-                  value="0"
-                  max="1"
-                  style={{margin: '17px 0 40px'}}></progress>
-              </fieldset>
             </div>
           </Fixture>
         </TestCase>
