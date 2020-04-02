@@ -13,8 +13,6 @@
 // Use __VARIANT__ to simulate a GK. The tests will be run twice: once
 // with the __VARIANT__ set to `true`, and once set to `false`.
 
-export const deferPassiveEffectCleanupDuringUnmount = __VARIANT__;
-export const runAllPassiveEffectDestroysBeforeCreates = __VARIANT__;
 export const warnAboutSpreadingKeyToJSX = __VARIANT__;
 export const disableModulePatternComponents = __VARIANT__;
 export const disableInputAttributeSyncing = __VARIANT__;
