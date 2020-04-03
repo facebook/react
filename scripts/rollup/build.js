@@ -21,7 +21,7 @@ const useForks = require('./plugins/use-forks-plugin');
 const stripUnusedImports = require('./plugins/strip-unused-imports');
 const extractErrorCodes = require('../error-codes/extract-errors');
 const Packaging = require('./packaging');
-const {asyncCopyTo, asyncRimRaf} = require('./utils');
+const {asyncRimRaf} = require('./utils');
 const codeFrame = require('babel-code-frame');
 const Wrappers = require('./wrappers');
 
@@ -627,7 +627,7 @@ async function createBundle(bundle, bundleType) {
       esModule: false,
     },
   };
-  const [mainOutputPath, ...otherOutputPaths] = Packaging.getBundleOutputPaths(
+  const mainOutputPath = Packaging.getBundleOutputPath(
     bundleType,
     filename,
     packageName
@@ -649,9 +649,6 @@ async function createBundle(bundle, bundleType) {
           console.log(`${chalk.bgYellow.black(' BUILDING ')} ${logKey}`);
           break;
         case 'BUNDLE_END':
-          for (let i = 0; i < otherOutputPaths.length; i++) {
-            await asyncCopyTo(mainOutputPath, otherOutputPaths[i]);
-          }
           console.log(`${chalk.bgGreen.black(' COMPLETE ')} ${logKey}\n`);
           break;
         case 'ERROR':
@@ -670,9 +667,6 @@ async function createBundle(bundle, bundleType) {
       console.log(`${chalk.bgRed.black(' OH NOES! ')} ${logKey}\n`);
       handleRollupError(error);
       throw error;
-    }
-    for (let i = 0; i < otherOutputPaths.length; i++) {
-      await asyncCopyTo(mainOutputPath, otherOutputPaths[i]);
     }
     console.log(`${chalk.bgGreen.black(' COMPLETE ')} ${logKey}\n`);
   }

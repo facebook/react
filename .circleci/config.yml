@@ -31,7 +31,6 @@ aliases:
       - *restore_yarn_cache
       - *run_yarn
       - run: node ./scripts/rollup/consolidateBundleSizes.js
-      - run: ./scripts/circleci/upload_build.sh
       - run: ./scripts/circleci/pack_and_store_artifact.sh
       - store_artifacts:
           path: ./node_modules.tgz
