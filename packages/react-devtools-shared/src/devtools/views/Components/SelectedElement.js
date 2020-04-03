@@ -539,7 +539,7 @@ function OwnerView({
 
   const onMouseEnter = () => highlightNativeElement(id);
 
-  const onMouseLeave = () => clearHighlightNativeElement();
+  const onMouseLeave = clearHighlightNativeElement;
 
   return (
     <Button
