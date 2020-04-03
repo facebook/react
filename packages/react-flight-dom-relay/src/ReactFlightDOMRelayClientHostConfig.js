@@ -27,9 +27,9 @@ export type {
 
 export opaque type UninitializedModel = JSONValue;
 
-export type Response<T> = ResponseBase<T>;
+export type Response = ResponseBase;
 
-function parseModelRecursively<T>(response: Response<T>, parentObj, value) {
+function parseModelRecursively(response: Response, parentObj, value) {
   if (typeof value === 'string') {
     return parseModelString(response, parentObj, value);
   }
@@ -54,9 +54,6 @@ function parseModelRecursively<T>(response: Response<T>, parentObj, value) {
 
 const dummy = {};
 
-export function parseModel<T, R>(
-  response: Response<R>,
-  json: UninitializedModel,
-): T {
+export function parseModel<T>(response: Response, json: UninitializedModel): T {
   return (parseModelRecursively(response, dummy, json): any);
 }

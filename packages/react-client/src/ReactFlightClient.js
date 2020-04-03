@@ -86,17 +86,17 @@ Chunk.prototype.then = function<T>(resolve: () => mixed) {
   }
 };
 
-export type ResponseBase<T> = {
-  rootChunk: SomeChunk<T>,
+export type ResponseBase = {
+  rootChunk: SomeChunk<any>,
   chunks: Map<number, SomeChunk<any>>,
-  readRoot(): T,
+  readRoot<T>(): T,
   ...
 };
 
 export type {Response};
 
 function readRoot<T>(): T {
-  const response: Response<T> = this;
+  const response: Response = this;
   const chunk = response.rootChunk;
   switch (chunk._status) {
     case INITIALIZED:
@@ -161,8 +161,8 @@ function resolveModelChunk<T>(
   wakeChunk(listeners);
 }
 
-function initializeModelChunk<R, T>(
-  response: Response<R>,
+function initializeModelChunk<T>(
+  response: Response,
   chunk: ResolvedModelChunk,
 ): T {
   const value: T = parseModel(response, chunk._value);
@@ -174,10 +174,7 @@ function initializeModelChunk<R, T>(
 
 // Report that any missing chunks in the model is now going to throw this
 // error upon read. Also notify any pending promises.
-export function reportGlobalError<T>(
-  response: Response<T>,
-  error: Error,
-): void {
+export function reportGlobalError(response: Response, error: Error): void {
   response.chunks.forEach(chunk => {
     // If this chunk was already resolved or errored, it won't
     // trigger an error but if it wasn't then we need to
@@ -186,8 +183,8 @@ export function reportGlobalError<T>(
   });
 }
 
-function readMaybeChunk<R, T>(
-  response: Response<R>,
+function readMaybeChunk<T>(
+  response: Response,
   maybeChunk: SomeChunk<T> | T,
 ): T {
   if (maybeChunk == null || !(maybeChunk instanceof Chunk)) {
@@ -253,13 +250,13 @@ type UninitializedBlockPayload<Data> = [
   mixed,
   ModuleMetaData | SomeChunk<ModuleMetaData>,
   Data | SomeChunk<Data>,
-  Response<any>,
+  Response,
 ];
 
-function initializeBlock<T, Props, Data>(
+function initializeBlock<Props, Data>(
   tuple: UninitializedBlockPayload<Data>,
 ): BlockComponent<Props, Data> {
-  const response: Response<T> = tuple[3];
+  const response: Response = tuple[3];
   // Require module first and then data. The ordering matters.
   const moduleMetaData: ModuleMetaData = readMaybeChunk(response, tuple[1]);
   const moduleReference: ModuleReference<
@@ -296,7 +293,7 @@ function createLazyBlock<Props, Data>(
   return lazyType;
 }
 
-function getChunk<T>(response: Response<T>, id: number): SomeChunk<any> {
+function getChunk(response: Response, id: number): SomeChunk<any> {
   const chunks = response.chunks;
   let chunk = chunks.get(id);
   if (!chunk) {
@@ -306,8 +303,8 @@ function getChunk<T>(response: Response<T>, id: number): SomeChunk<any> {
   return chunk;
 }
 
-export function parseModelString<T>(
-  response: Response<T>,
+export function parseModelString(
+  response: Response,
   parentObject: Object,
   value: string,
 ): any {
@@ -335,8 +332,8 @@ export function parseModelString<T>(
   return value;
 }
 
-export function parseModelTuple<T>(
-  response: Response<T>,
+export function parseModelTuple(
+  response: Response,
   value: {+[key: string]: JSONValue} | $ReadOnlyArray<JSONValue>,
 ): any {
   const tuple: [mixed, mixed, mixed, mixed] = (value: any);
@@ -356,7 +353,7 @@ export function parseModelTuple<T>(
   return value;
 }
 
-export function createResponse<T>(): Response<T> {
+export function createResponse(): Response {
   const rootChunk: SomeChunk<any> = createPendingChunk();
   const chunks: Map<number, SomeChunk<any>> = new Map();
   chunks.set(0, rootChunk);
@@ -368,8 +365,8 @@ export function createResponse<T>(): Response<T> {
   return response;
 }
 
-export function resolveModel<T>(
-  response: Response<T>,
+export function resolveModel(
+  response: Response,
   id: number,
   model: UninitializedModel,
 ): void {
@@ -382,8 +379,8 @@ export function resolveModel<T>(
   }
 }
 
-export function resolveError<T>(
-  response: Response<T>,
+export function resolveError(
+  response: Response,
   id: number,
   message: string,
   stack: string,
@@ -399,7 +396,7 @@ export function resolveError<T>(
   }
 }
 
-export function close<T>(response: Response<T>): void {
+export function close(response: Response): void {
   // In case there are any remaining unresolved chunks, they won't
   // be resolved now. So we need to issue an error to those.
   // Ideally we should be able to early bail out if we kept a

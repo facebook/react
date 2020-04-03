@@ -10,7 +10,7 @@
 import type {ResponseBase} from './ReactFlightClient';
 import type {StringDecoder} from './ReactFlightClientHostConfig';
 
-export type Response<T> = ResponseBase<T> & {
+export type Response = ResponseBase & {
   partialRow: string,
   fromJSON: (key: string, value: JSONValue) => any,
   stringDecoder: StringDecoder,
@@ -18,9 +18,6 @@ export type Response<T> = ResponseBase<T> & {
 
 export type UninitializedModel = string;
 
-export function parseModel<T, R>(
-  response: Response<R>,
-  json: UninitializedModel,
-): T {
+export function parseModel<T>(response: Response, json: UninitializedModel): T {
   return JSON.parse(json, response.fromJSON);
 }

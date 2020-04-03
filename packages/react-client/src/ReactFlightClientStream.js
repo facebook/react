@@ -26,7 +26,7 @@ import {
 
 export type {Response};
 
-function processFullRow<T>(response: Response<T>, row: string): void {
+function processFullRow(response: Response, row: string): void {
   if (row === '') {
     return;
   }
@@ -55,8 +55,8 @@ function processFullRow<T>(response: Response<T>, row: string): void {
   }
 }
 
-export function processStringChunk<T>(
-  response: Response<T>,
+export function processStringChunk(
+  response: Response,
   chunk: string,
   offset: number,
 ): void {
@@ -71,8 +71,8 @@ export function processStringChunk<T>(
   response.partialRow += chunk.substring(offset);
 }
 
-export function processBinaryChunk<T>(
-  response: Response<T>,
+export function processBinaryChunk(
+  response: Response,
   chunk: Uint8Array,
 ): void {
   if (!supportsBinaryStreams) {
@@ -92,7 +92,7 @@ export function processBinaryChunk<T>(
   response.partialRow += readPartialStringChunk(stringDecoder, chunk);
 }
 
-function createFromJSONCallback<T>(response: Response<T>) {
+function createFromJSONCallback(response: Response) {
   return function(key: string, value: JSONValue) {
     if (typeof value === 'string') {
       // We can't use .bind here because we need the "this" value.
@@ -105,7 +105,7 @@ function createFromJSONCallback<T>(response: Response<T>) {
   };
 }
 
-export function createResponse<T>(): Response<T> {
+export function createResponse(): Response {
   // NOTE: CHECK THE COMPILER OUTPUT EACH TIME YOU CHANGE THIS.
   // It should be inlined to one object literal but minor changes can break it.
   const stringDecoder = supportsBinaryStreams ? createStringDecoder() : null;
