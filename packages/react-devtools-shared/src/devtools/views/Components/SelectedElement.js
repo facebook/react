@@ -538,13 +538,13 @@ function OwnerView({
       className={styles.OwnerButton}
       disabled={!isInStore}
       onClick={handleClick}>
-        <span className={styles.OwnerContent} >
-          <span
-            className={`${styles.Owner} ${isInStore ? '' : styles.NotInStore}`}
-            title={displayName}>
-            {displayName}
-          </span>
-          <Badge hocDisplayNames={hocDisplayNames} type={type} />
+      <span className={styles.OwnerContent}>
+        <span
+          className={`${styles.Owner} ${isInStore ? '' : styles.NotInStore}`}
+          title={displayName}>
+          {displayName}
+        </span>
+        <Badge hocDisplayNames={hocDisplayNames} type={type} />
       </span>
     </Button>
   );
