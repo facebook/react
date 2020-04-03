@@ -302,7 +302,7 @@ describe('useMutableSource', () => {
           />,
           () => Scheduler.unstable_yieldValue('Sync effect'),
         );
-        expect(Scheduler).toFlushAndYieldThrough(['only:a-one', 'Sync effect']);
+        expect(Scheduler).toFlushAndYield(['only:a-one', 'Sync effect']);
         ReactNoop.flushPassiveEffects();
         expect(sourceA.listenerCount).toBe(1);
 

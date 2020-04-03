@@ -999,56 +999,44 @@ function useMutableSource<Source, Snapshot>(
     subscribe,
   }: MutableSourceMemoizedState<Source, Snapshot>);
 
-  // Sync the values needed by our subscribe function after each commit.
+  // Sync the values needed by our subscription handler after each commit.
   dispatcher.useEffect(() => {
-    const didGetSnapshotChange = !is(refs.getSnapshot, getSnapshot);
     refs.getSnapshot = getSnapshot;
 
     // Normally the dispatch function for a state hook never changes,
-    // but in the case of this hook, it will change if getSnapshot changes.
-    // In that case, the subscription below will have cloesd over the previous function,
-    // so we use a ref to ensure that handleChange() always has the latest version.
+    // but this hook recreates the queue in certain cases  to avoid updates from stale sources.
+    // handleChange() below needs to reference the dispatch function without re-subscribing,
+    // so we use a ref to ensure that it always has the latest version.
     refs.setSnapshot = setSnapshot;
 
-    // This effect runs on mount, even though getSnapshot hasn't changed.
-    // In that case we can avoid the additional checks for a changed snapshot,
-    // because the subscription effect below will cover this.
-    if (didGetSnapshotChange) {
-      // Because getSnapshot is shared with subscriptions via a ref,
-      // we don't resubscribe when getSnapshot changes.
-      // This means that we also don't check for any missed mutations
-      // between the render and the passive commit though.
-      // So we need to check here, just like when we newly subscribe.
-      const maybeNewVersion = getVersion(source._source);
-      if (!is(version, maybeNewVersion)) {
-        const maybeNewSnapshot = getSnapshot(source._source);
-        if (!is(snapshot, maybeNewSnapshot)) {
-          setSnapshot(maybeNewSnapshot);
+    // Check for a possible change between when we last rendered now.
+    const maybeNewVersion = getVersion(source._source);
+    if (!is(version, maybeNewVersion)) {
+      const maybeNewSnapshot = getSnapshot(source._source);
+      if (!is(snapshot, maybeNewSnapshot)) {
+        setSnapshot(maybeNewSnapshot);
 
-          const currentTime = requestCurrentTimeForUpdate();
-          const suspenseConfig = requestCurrentSuspenseConfig();
-          const expirationTime = computeExpirationForFiber(
-            currentTime,
-            fiber,
-            suspenseConfig,
-          );
-          setPendingExpirationTime(root, expirationTime);
+        const currentTime = requestCurrentTimeForUpdate();
+        const suspenseConfig = requestCurrentSuspenseConfig();
+        const expirationTime = computeExpirationForFiber(
+          currentTime,
+          fiber,
+          suspenseConfig,
+        );
+        setPendingExpirationTime(root, expirationTime);
 
-          // If the source mutated between render and now,
-          // there may be state updates already scheduled from the old getSnapshot.
-          // Those updates should not commit without this value.
-          // There is no mechanism currently to associate these updates though,
-          // so for now we fall back to synchronously flushing all pending updates.
-          // TODO: Improve this later.
-          markRootExpiredAtTime(root, getLastPendingExpirationTime(root));
-        }
+        // If the source mutated between render and now,
+        // there may be state updates already scheduled from the old getSnapshot.
+        // Those updates should not commit without this value.
+        // There is no mechanism currently to associate these updates though,
+        // so for now we fall back to synchronously flushing all pending updates.
+        // TODO: Improve this later.
+        markRootExpiredAtTime(root, getLastPendingExpirationTime(root));
       }
     }
-  }, [getSnapshot]);
+  }, [getSnapshot, source, subscribe]);
 
-  // If we got a new source or subscribe function,
-  // we'll need to subscribe in a passive effect,
-  // and also check for any changes that fire between render and subscribe.
+  // If we got a new source or subscribe function, re-subscribe in a passive effect.
   dispatcher.useEffect(() => {
     const handleChange = () => {
       const latestGetSnapshot = refs.getSnapshot;
@@ -1089,29 +1077,6 @@ function useMutableSource<Source, Snapshot>(
       }
     }
 
-    // Check for a possible change between when we last rendered and when we just subscribed.
-    const maybeNewVersion = getVersion(source._source);
-    if (!is(version, maybeNewVersion)) {
-      const maybeNewSnapshot = getSnapshot(source._source);
-      if (!is(snapshot, maybeNewSnapshot)) {
-        setSnapshot(maybeNewSnapshot);
-
-        const currentTime = requestCurrentTimeForUpdate();
-        const suspenseConfig = requestCurrentSuspenseConfig();
-        const expirationTime = computeExpirationForFiber(
-          currentTime,
-          fiber,
-          suspenseConfig,
-        );
-        setPendingExpirationTime(root, expirationTime);
-
-        // We missed a mutation before committing.
-        // It's possible that other components using this source also have pending updates scheduled.
-        // In that case, we should ensure they all commit together.
-        markRootExpiredAtTime(root, getLastPendingExpirationTime(root));
-      }
-    }
-
     return unsubscribe;
   }, [source, subscribe]);
 
@@ -1126,31 +1091,27 @@ function useMutableSource<Source, Snapshot>(
   //
   // In both cases, we need to throw away pending udpates (since they are no longer relevant)
   // and treat reading from the source as we do in the mount case.
-  const didGetSnapshotChange = !is(prevGetSnapshot, getSnapshot);
   if (
+    !is(prevGetSnapshot, getSnapshot) ||
     !is(prevSource, source) ||
-    !is(prevSubscribe, subscribe) ||
-    didGetSnapshotChange
+    !is(prevSubscribe, subscribe)
   ) {
-    if (didGetSnapshotChange) {
-      // Create a new queue and setState method,
-      // So if there are interleaved updates, they get pushed to the older queue.
-      // When this becomes current, the previous queue and dispatch method will be discarded,
-      // including any interleaving updates that occur.
-      const newQueue = {
-        pending: null,
-        dispatch: null,
-        lastRenderedReducer: basicStateReducer,
-        lastRenderedState: snapshot,
-      };
-      newQueue.dispatch = setSnapshot = (dispatchAction.bind(
-        null,
-        currentlyRenderingFiber,
-        newQueue,
-      ): any);
-      stateHook.queue = newQueue;
-    }
-
+    // Create a new queue and setState method,
+    // So if there are interleaved updates, they get pushed to the older queue.
+    // When this becomes current, the previous queue and dispatch method will be discarded,
+    // including any interleaving updates that occur.
+    const newQueue = {
+      pending: null,
+      dispatch: null,
+      lastRenderedReducer: basicStateReducer,
+      lastRenderedState: snapshot,
+    };
+    newQueue.dispatch = setSnapshot = (dispatchAction.bind(
+      null,
+      currentlyRenderingFiber,
+      newQueue,
+    ): any);
+    stateHook.queue = newQueue;
     stateHook.baseQueue = null;
     snapshot = readFromUnsubcribedMutableSource(root, source, getSnapshot);
     stateHook.memoizedState = stateHook.baseState = snapshot;
