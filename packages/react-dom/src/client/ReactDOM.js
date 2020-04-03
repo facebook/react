@@ -172,8 +172,8 @@ function unstable_createPortal(
 }
 
 const Internals = {
-  // Keep in sync with ReactDOMUnstableNativeDependencies.js
-  // ReactTestUtils.js, and ReactTestUtilsAct.js. This is an array for better minification.
+  // Keep in sync with ReactTestUtils.js, and ReactTestUtilsAct.js.
+  // This is an array for better minification.
   Events: [
     getInstanceFromNode,
     getNodeFromInstance,

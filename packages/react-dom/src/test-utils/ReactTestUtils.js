@@ -25,8 +25,7 @@ import accumulateInto from 'legacy-events/accumulateInto';
 import {enableModernEventSystem} from 'shared/ReactFeatureFlags';
 
 const {findDOMNode} = ReactDOM;
-// Keep in sync with ReactDOMUnstableNativeDependencies.js
-// ReactDOM.js, and ReactTestUtilsAct.js:
+// Keep in sync with ReactDOM.js, and ReactTestUtilsAct.js:
 const [
   getInstanceFromNode,
   /* eslint-disable no-unused-vars */
