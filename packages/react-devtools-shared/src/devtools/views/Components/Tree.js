@@ -30,6 +30,7 @@ import SearchInput from './SearchInput';
 import SettingsModalContextToggle from 'react-devtools-shared/src/devtools/views/Settings/SettingsModalContextToggle';
 import SelectedTreeHighlight from './SelectedTreeHighlight';
 import TreeFocusedContext from './TreeFocusedContext';
+import {useHighlightNativeElement} from '../hooks';
 
 import styles from './Tree.css';
 
@@ -61,6 +62,10 @@ export default function Tree(props: Props) {
   const [isNavigatingWithKeyboard, setIsNavigatingWithKeyboard] = useState(
     false,
   );
+  const {
+    highlightNativeElement,
+    clearHighlightNativeElement,
+  } = useHighlightNativeElement();
   const treeRef = useRef<HTMLDivElement | null>(null);
   const focusTargetRef = useRef<HTMLDivElement | null>(null);
 
@@ -205,24 +210,6 @@ export default function Tree(props: Props) {
     [dispatch, selectedElementID],
   );
 
-  const highlightNativeElement = useCallback(
-    (id: number) => {
-      const element = store.getElementByID(id);
-      const rendererID = store.getRendererIDForElement(id);
-      if (element !== null && rendererID !== null) {
-        bridge.send('highlightNativeElement', {
-          displayName: element.displayName,
-          hideAfterTimeout: false,
-          id,
-          openNativeElementsPanel: false,
-          rendererID,
-          scrollIntoView: false,
-        });
-      }
-    },
-    [store, bridge],
-  );
-
   // If we switch the selected element while using the keyboard,
   // start highlighting it in the DOM instead of the last hovered node.
   const searchRef = useRef({searchIndex, searchResults});
@@ -240,7 +227,7 @@ export default function Tree(props: Props) {
       if (selectedElementID !== null) {
         highlightNativeElement(selectedElementID);
       } else {
-        bridge.send('clearNativeElementHighlight');
+        clearHighlightNativeElement();
       }
     }
   }, [
@@ -270,9 +257,7 @@ export default function Tree(props: Props) {
     setIsNavigatingWithKeyboard(false);
   }, []);
 
-  const handleMouseLeave = useCallback(() => {
-    bridge.send('clearNativeElementHighlight');
-  }, [bridge]);
+  const handleMouseLeave = clearHighlightNativeElement;
 
   // Let react-window know to re-render any time the underlying tree data changes.
   // This includes the owner context, since it controls a filtered view of the tree.

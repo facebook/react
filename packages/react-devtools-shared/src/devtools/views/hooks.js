@@ -14,11 +14,13 @@ import {
   useLayoutEffect,
   useReducer,
   useState,
+  useContext,
 } from 'react';
 import {
   localStorageGetItem,
   localStorageSetItem,
 } from 'react-devtools-shared/src/storage';
+import {StoreContext, BridgeContext} from './context';
 import {sanitizeForParse, smartParse, smartStringify} from '../utils';
 
 type ACTION_RESET = {|
@@ -300,4 +302,36 @@ export function useSubscription<Value>({
   }, [getCurrentValue, subscribe]);
 
   return state.value;
+}
+
+export function useHighlightNativeElement() {
+  const bridge = useContext(BridgeContext);
+  const store = useContext(StoreContext);
+
+  const highlightNativeElement = useCallback(
+    (id: number) => {
+      const element = store.getElementByID(id);
+      const rendererID = store.getRendererIDForElement(id);
+      if (element !== null && rendererID !== null) {
+        bridge.send('highlightNativeElement', {
+          displayName: element.displayName,
+          hideAfterTimeout: false,
+          id,
+          openNativeElementsPanel: false,
+          rendererID,
+          scrollIntoView: false,
+        });
+      }
+    },
+    [store, bridge],
+  );
+
+  const clearHighlightNativeElement = useCallback(() => {
+    bridge.send('clearNativeElementHighlight');
+  }, [bridge]);
+
+  return {
+    highlightNativeElement,
+    clearHighlightNativeElement,
+  };
 }

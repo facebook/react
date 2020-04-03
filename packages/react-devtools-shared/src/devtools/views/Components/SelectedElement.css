@@ -82,7 +82,6 @@
 .Owner {
   border-radius: 0.25rem;
   padding: 0.125rem 0.25rem;
-  cursor: pointer;
   background: none;
   border: none;
   display: block;
@@ -107,10 +106,21 @@
 }
 
 .OwnerButton {
+  cursor: pointer;
+  width: 100%;
+  padding: 0;
+}
+
+.OwnerContent {
   display: flex;
   align-items: center;
-  margin-left: 0.5rem;
-  padding: 0;
+  padding-left: 1rem;
+  width: 100%;
+  border-radius: 0.25rem;
+}
+
+.OwnerContent:hover {
+  background-color: var(--color-background-hover);
 }
 
 .ContextMenuIcon {
