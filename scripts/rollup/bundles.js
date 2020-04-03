@@ -246,6 +246,15 @@ const bundles = [
     externals: ['react'],
   },
 
+  /******* React DOM Flight Webpack Plugin *******/
+  {
+    bundleTypes: [NODE_DEV, NODE_PROD, UMD_DEV, UMD_PROD],
+    moduleType: RENDERER_UTILS,
+    entry: 'react-flight-dom-webpack/webpack-plugin',
+    global: 'ReactFlightWebpackPlugin',
+    externals: [],
+  },
+
   /******* React DOM Flight Server Relay *******/
   {
     bundleTypes: [FB_WWW_DEV, FB_WWW_PROD],
