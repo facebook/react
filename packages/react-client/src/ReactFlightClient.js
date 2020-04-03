@@ -47,21 +47,25 @@ const ERRORED = 3;
 type PendingChunk = {
   _status: 0,
   _value: null | Array<() => mixed>,
+  _response: Response,
   then(resolve: () => mixed): void,
 };
 type ResolvedModelChunk = {
   _status: 1,
   _value: UninitializedModel,
+  _response: Response,
   then(resolve: () => mixed): void,
 };
 type InitializedChunk<T> = {
   _status: 2,
   _value: T,
+  _response: Response,
   then(resolve: () => mixed): void,
 };
 type ErroredChunk = {
   _status: 3,
   _value: Error,
+  _response: Response,
   then(resolve: () => mixed): void,
 };
 type SomeChunk<T> =
@@ -70,9 +74,10 @@ type SomeChunk<T> =
   | InitializedChunk<T>
   | ErroredChunk;
 
-function Chunk(status: any, value: any) {
+function Chunk(status: any, value: any, response: Response) {
   this._status = status;
   this._value = value;
+  this._response = response;
 }
 Chunk.prototype.then = function<T>(resolve: () => mixed) {
   const chunk: SomeChunk<T> = this;
@@ -94,12 +99,12 @@ export type ResponseBase = {
 
 export type {Response};
 
-function readChunk<T>(response: Response, chunk: SomeChunk<T>): T {
+function readChunk<T>(chunk: SomeChunk<T>): T {
   switch (chunk._status) {
     case INITIALIZED:
       return chunk._value;
     case RESOLVED_MODEL:
-      return initializeModelChunk(response, chunk);
+      return initializeModelChunk(chunk);
     case PENDING:
       // eslint-disable-next-line no-throw-literal
       throw (chunk: Wakeable);
@@ -111,15 +116,15 @@ function readChunk<T>(response: Response, chunk: SomeChunk<T>): T {
 function readRoot<T>(): T {
   const response: Response = this;
   const chunk = getChunk(response, 0);
-  return readChunk(response, chunk);
+  return readChunk(chunk);
 }
 
-function createPendingChunk(): PendingChunk {
-  return new Chunk(PENDING, null);
+function createPendingChunk(response: Response): PendingChunk {
+  return new Chunk(PENDING, null, response);
 }
 
-function createErrorChunk(error: Error): ErroredChunk {
-  return new Chunk(ERRORED, error);
+function createErrorChunk(response: Response, error: Error): ErroredChunk {
+  return new Chunk(ERRORED, error, response);
 }
 
 function wakeChunk(listeners: null | Array<() => mixed>) {
@@ -144,9 +149,10 @@ function triggerErrorOnChunk<T>(chunk: SomeChunk<T>, error: Error): void {
 }
 
 function createResolvedModelChunk(
+  response: Response,
   value: UninitializedModel,
 ): ResolvedModelChunk {
-  return new Chunk(RESOLVED_MODEL, value);
+  return new Chunk(RESOLVED_MODEL, value, response);
 }
 
 function resolveModelChunk<T>(
@@ -164,11 +170,8 @@ function resolveModelChunk<T>(
   wakeChunk(listeners);
 }
 
-function initializeModelChunk<T>(
-  response: Response,
-  chunk: ResolvedModelChunk,
-): T {
-  const value: T = parseModel(response, chunk._value);
+function initializeModelChunk<T>(chunk: ResolvedModelChunk): T {
+  const value: T = parseModel(chunk._response, chunk._value);
   const initializedChunk: InitializedChunk<T> = (chunk: any);
   initializedChunk._status = INITIALIZED;
   initializedChunk._value = value;
@@ -186,16 +189,13 @@ export function reportGlobalError(response: Response, error: Error): void {
   });
 }
 
-function readMaybeChunk<T>(
-  response: Response,
-  maybeChunk: SomeChunk<T> | T,
-): T {
+function readMaybeChunk<T>(maybeChunk: SomeChunk<T> | T): T {
   if (maybeChunk == null || !(maybeChunk instanceof Chunk)) {
     // $FlowFixMe
     return maybeChunk;
   }
   const chunk: SomeChunk<T> = (maybeChunk: any);
-  return readChunk(response, chunk);
+  return readChunk(chunk);
 }
 
 function createElement(type, key, props): React$Element<any> {
@@ -249,9 +249,8 @@ type UninitializedBlockPayload<Data> = [
 function initializeBlock<Props, Data>(
   tuple: UninitializedBlockPayload<Data>,
 ): BlockComponent<Props, Data> {
-  const response: Response = tuple[3];
   // Require module first and then data. The ordering matters.
-  const moduleMetaData: ModuleMetaData = readMaybeChunk(response, tuple[1]);
+  const moduleMetaData: ModuleMetaData = readMaybeChunk(tuple[1]);
   const moduleReference: ModuleReference<
     BlockRenderFunction<Props, Data>,
   > = resolveModuleReference(moduleMetaData);
@@ -262,7 +261,7 @@ function initializeBlock<Props, Data>(
 
   // The ordering here is important because this call might suspend.
   // We don't want that to prevent the module graph for being initialized.
-  const data: Data = readMaybeChunk(response, tuple[2]);
+  const data: Data = readMaybeChunk(tuple[2]);
 
   return {
     $$typeof: REACT_BLOCK_TYPE,
@@ -290,7 +289,7 @@ function getChunk(response: Response, id: number): SomeChunk<any> {
   const chunks = response.chunks;
   let chunk = chunks.get(id);
   if (!chunk) {
-    chunk = createPendingChunk();
+    chunk = createPendingChunk(response);
     chunks.set(id, chunk);
   }
   return chunk;
@@ -316,7 +315,7 @@ export function parseModelString(
       }
       // For anything else we must Suspend this block if
       // we don't yet have the value.
-      return readChunk(response, chunk);
+      return readChunk(chunk);
     }
   }
   if (value === '@') {
@@ -336,11 +335,6 @@ export function parseModelTuple(
     return createElement(tuple[1], tuple[2], tuple[3]);
   } else if (tuple[0] === REACT_BLOCK_TYPE) {
     // TODO: Consider having React just directly accept these arrays as blocks.
-    // ensure that missing slots gets set to non-holey undefined.
-    tuple[2] = tuple[2];
-    // We need a backpointer to the response somewhere. We could also store initializeBlock
-    // in a closure per response which I also tried but ultimately decided on this approach.
-    tuple[3] = response;
     return createLazyBlock((tuple: any));
   }
   return value;
@@ -363,7 +357,7 @@ export function resolveModel(
   const chunks = response.chunks;
   const chunk = chunks.get(id);
   if (!chunk) {
-    chunks.set(id, createResolvedModelChunk(model));
+    chunks.set(id, createResolvedModelChunk(response, model));
   } else {
     resolveModelChunk(chunk, model);
   }
@@ -380,7 +374,7 @@ export function resolveError(
   const chunks = response.chunks;
   const chunk = chunks.get(id);
   if (!chunk) {
-    chunks.set(id, createErrorChunk(error));
+    chunks.set(id, createErrorChunk(response, error));
   } else {
     triggerErrorOnChunk(chunk, error);
   }
