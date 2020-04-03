@@ -32,17 +32,8 @@ export function clearPendingUpdates(
 ): void {
   if (expirationTime <= root.mutableSourceLastPendingUpdateTime) {
     // All updates for this source have been processed.
-    root.mutableSourceFirstPendingUpdateTime = NoWork;
     root.mutableSourceLastPendingUpdateTime = NoWork;
-  } else if (expirationTime <= root.mutableSourceFirstPendingUpdateTime) {
-    // The highest priority pending updates have been processed,
-    // but we don't how many updates remain between the current and lowest priority.
-    root.mutableSourceFirstPendingUpdateTime = expirationTime - 1;
   }
-}
-
-export function getFirstPendingExpirationTime(root: FiberRoot): ExpirationTime {
-  return root.mutableSourceFirstPendingUpdateTime;
 }
 
 export function getLastPendingExpirationTime(root: FiberRoot): ExpirationTime {
@@ -53,17 +44,13 @@ export function setPendingExpirationTime(
   root: FiberRoot,
   expirationTime: ExpirationTime,
 ): void {
-  // Because we only track one pending update time per root,
-  // track the lowest priority update.
-  // It's inclusive of all other pending updates.
-  if (expirationTime > root.mutableSourceLastPendingUpdateTime) {
+  const mutableSourceLastPendingUpdateTime =
+    root.mutableSourceLastPendingUpdateTime;
+  if (
+    mutableSourceLastPendingUpdateTime === NoWork ||
+    expirationTime < mutableSourceLastPendingUpdateTime
+  ) {
     root.mutableSourceLastPendingUpdateTime = expirationTime;
-  }
-
-  if (root.mutableSourceFirstPendingUpdateTime === NoWork) {
-    root.mutableSourceFirstPendingUpdateTime = expirationTime;
-  } else if (expirationTime < root.mutableSourceFirstPendingUpdateTime) {
-    root.mutableSourceFirstPendingUpdateTime = expirationTime;
   }
 }
 

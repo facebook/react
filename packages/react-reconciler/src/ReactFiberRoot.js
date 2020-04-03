@@ -79,7 +79,6 @@ type BaseFiberRootProperties = {|
   lastExpiredTime: ExpirationTime,
   // Used by useMutableSource hook to avoid tearing within this root
   // when external, mutable sources are read from during render.
-  mutableSourceFirstPendingUpdateTime: ExpirationTime,
   mutableSourceLastPendingUpdateTime: ExpirationTime,
 |};
 

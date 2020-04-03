@@ -75,7 +75,7 @@ import {
   getCurrentPriorityLevel,
 } from './SchedulerWithReactIntegration';
 import {
-  getFirstPendingExpirationTime,
+  getLastPendingExpirationTime,
   getWorkInProgressVersion,
   markSourceAsDirty,
   setPendingExpirationTime,
@@ -916,7 +916,7 @@ function readFromUnsubcribedMutableSource<Source, Snapshot>(
     isSafeToReadFromSource = currentRenderVersion === version;
   } else {
     // If there's no version, then we should fallback to checking the update time.
-    const pendingExpirationTime = getFirstPendingExpirationTime(root);
+    const pendingExpirationTime = getLastPendingExpirationTime(root);
 
     if (pendingExpirationTime === NoWork) {
       isSafeToReadFromSource = true;
@@ -1040,7 +1040,7 @@ function useMutableSource<Source, Snapshot>(
           // There is no mechanism currently to associate these updates though,
           // so for now we fall back to synchronously flushing all pending updates.
           // TODO: Improve this later.
-          markRootExpiredAtTime(root, getFirstPendingExpirationTime(root));
+          markRootExpiredAtTime(root, getLastPendingExpirationTime(root));
         }
       }
     }
@@ -1108,7 +1108,7 @@ function useMutableSource<Source, Snapshot>(
         // We missed a mutation before committing.
         // It's possible that other components using this source also have pending updates scheduled.
         // In that case, we should ensure they all commit together.
-        markRootExpiredAtTime(root, getFirstPendingExpirationTime(root));
+        markRootExpiredAtTime(root, getLastPendingExpirationTime(root));
       }
     }
 
