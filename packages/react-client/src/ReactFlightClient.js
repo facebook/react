@@ -87,7 +87,6 @@ Chunk.prototype.then = function<T>(resolve: () => mixed) {
 };
 
 export type ResponseBase = {
-  rootChunk: SomeChunk<any>,
   chunks: Map<number, SomeChunk<any>>,
   readRoot<T>(): T,
   ...
@@ -95,9 +94,7 @@ export type ResponseBase = {
 
 export type {Response};
 
-function readRoot<T>(): T {
-  const response: Response = this;
-  const chunk = response.rootChunk;
+function readChunk<T>(response: Response, chunk: SomeChunk<T>): T {
   switch (chunk._status) {
     case INITIALIZED:
       return chunk._value;
@@ -109,6 +106,12 @@ function readRoot<T>(): T {
     default:
       throw chunk._value;
   }
+}
+
+function readRoot<T>(): T {
+  const response: Response = this;
+  const chunk = getChunk(response, 0);
+  return readChunk(response, chunk);
 }
 
 function createPendingChunk(): PendingChunk {
@@ -192,17 +195,7 @@ function readMaybeChunk<T>(
     return maybeChunk;
   }
   const chunk: SomeChunk<T> = (maybeChunk: any);
-  switch (chunk._status) {
-    case INITIALIZED:
-      return chunk._value;
-    case RESOLVED_MODEL:
-      return initializeModelChunk(response, chunk);
-    case PENDING:
-      // eslint-disable-next-line no-throw-literal
-      throw (chunk: Wakeable);
-    default:
-      throw chunk._value;
-  }
+  return readChunk(response, chunk);
 }
 
 function createElement(type, key, props): React$Element<any> {
@@ -323,7 +316,7 @@ export function parseModelString(
       }
       // For anything else we must Suspend this block if
       // we don't yet have the value.
-      return readMaybeChunk(response, chunk);
+      return readChunk(response, chunk);
     }
   }
   if (value === '@') {
@@ -354,11 +347,8 @@ export function parseModelTuple(
 }
 
 export function createResponse(): Response {
-  const rootChunk: SomeChunk<any> = createPendingChunk();
   const chunks: Map<number, SomeChunk<any>> = new Map();
-  chunks.set(0, rootChunk);
   const response: any = {
-    rootChunk: rootChunk,
     chunks: chunks,
     readRoot: readRoot,
   };
