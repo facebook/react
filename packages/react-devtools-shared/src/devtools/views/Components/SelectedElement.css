@@ -114,9 +114,6 @@
 .OwnerContent {
   display: flex;
   align-items: center;
-  padding-top: 0;
-  padding-right: 0;
-  padding-bottom: 0;
   padding-left: 1rem;
   width: 100%;
   border-radius: 0.25rem;
