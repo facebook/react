@@ -1581,42 +1581,46 @@ function rerenderTransition(
 }
 
 function mountOpaqueIdentifier(): OpaqueIDType | void {
-  let hasSetId = false;
+  if (getIsHydrating()) {
+    let didUpgrade = false;
+    const id = makeOpaqueHydratingObject(() => {
+      if (!didUpgrade) {
+        // Only upgrade once. This works even inside the render phase because
+        // the update is added to a shared queue, which outlasts the
+        // in-progress render.
+        didUpgrade = true;
+        setId(makeClientId());
+      }
+    }, currentlyRenderingFiber.type);
 
-  const [id, setId] = mountState(() => {
-    if (getIsHydrating()) {
-      return makeOpaqueHydratingObject(() => {
-        if (!hasSetId) {
-          setId(() => makeClientId());
-          hasSetId = true;
-        }
-      }, currentlyRenderingFiber.type);
-    } else {
-      return makeClientId();
+    const setId = mountState(id)[1];
+
+    if ((currentlyRenderingFiber.mode & BlockingMode) === NoMode) {
+      currentlyRenderingFiber.effectTag |= UpdateEffect | PassiveEffect;
+      pushEffect(
+        HookHasEffect | HookPassive,
+        () => {
+          setId(makeClientId());
+        },
+        undefined,
+        null,
+      );
     }
-  });
-
-  if ((currentlyRenderingFiber.mode & BlockingMode) === NoMode) {
-    mountEffect(() => {
-      setId(() => makeClientId());
-    });
+    return id;
+  } else {
+    const id = makeClientId();
+    mountState(id);
+    return id;
   }
-  return id;
 }
 
 function updateOpaqueIdentifier(): OpaqueIDType | void {
   const id = updateState(undefined)[0];
-  if ((currentlyRenderingFiber.mode & BlockingMode) === NoMode) {
-    updateEffect(() => {});
-  }
   return id;
 }
 
 function rerenderOpaqueIdentifier(): OpaqueIDType | void {
   const id = rerenderState(undefined)[0];
-  if ((currentlyRenderingFiber.mode & BlockingMode) === NoMode) {
-    updateEffect(() => {});
-  }
   return id;
 }
 
