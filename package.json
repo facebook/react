@@ -32,7 +32,7 @@
     "@babel/plugin-transform-template-literals": "^7.8.0",
     "@babel/preset-flow": "^7.8.0",
     "@babel/preset-react": "^7.8.0",
-    "@babel/traverse": "^7.8.0",
+    "@babel/traverse": "^7.9.0",
     "@mattiasbuelens/web-streams-polyfill": "^0.3.2",
     "art": "0.10.1",
     "babel-eslint": "^10.0.3",
