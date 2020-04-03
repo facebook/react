@@ -8,6 +8,6 @@
  */
 
 export default class ReactFlightWebpackPlugin {
-  constructor(options: any) {}
+  constructor(options: {isServer: boolean}) {}
   apply(compiler: any) {}
 }

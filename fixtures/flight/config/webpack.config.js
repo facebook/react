@@ -1,7 +1,7 @@
 'use strict';
 
 // Fork Start
-const ReactFlightWebpackPlugin = require('react-flight-dom-webpack/webpack-plugin');
+const ReactFlightWebpackPlugin = require('react-flight-dom-webpack/plugin');
 // Fork End
 
 const fs = require('fs');
@@ -664,7 +664,7 @@ module.exports = function(webpackEnv) {
           formatter: isEnvProduction ? typescriptFormatter : undefined,
         }),
       // Fork Start
-      new ReactFlightWebpackPlugin({}),
+      new ReactFlightWebpackPlugin({isServer: false}),
       // Fork End
     ].filter(Boolean),
     // Some libraries import Node modules but don't use them in the browser.

@@ -250,10 +250,10 @@ const bundles = [
   {
     bundleTypes: [NODE_DEV, NODE_PROD],
     moduleType: RENDERER_UTILS,
-    entry: 'react-flight-dom-webpack/webpack-plugin',
+    entry: 'react-flight-dom-webpack/plugin',
     global: 'ReactFlightWebpackPlugin',
     externals: [],
-        babel: opts =>
+    babel: opts =>
       Object.assign({}, opts, {
         // Include JSX
         presets: opts.presets.concat([
@@ -264,7 +264,6 @@ const bundles = [
           [require.resolve('@babel/plugin-transform-classes'), {loose: true}],
         ]),
       }),
-
   },
 
   /******* React DOM Flight Server Relay *******/
