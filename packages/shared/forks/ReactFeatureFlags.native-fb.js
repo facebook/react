@@ -42,6 +42,7 @@ export const deferPassiveEffectCleanupDuringUnmount = false;
 export const runAllPassiveEffectDestroysBeforeCreates = false;
 export const enableModernEventSystem = false;
 export const warnAboutSpreadingKeyToJSX = false;
+export const enableComponentStackLocations = false;
 export const enableLegacyFBSupport = false;
 
 // Internal-only attempt to debug a React Native issue. See D20130868.
