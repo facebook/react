@@ -9,7 +9,5 @@
 
 export default class ReactFlightWebpackPlugin {
   constructor(options: any) {}
-  apply(compiler: any) {
-    console.log(compiler);
-  }
+  apply(compiler: any) {}
 }
