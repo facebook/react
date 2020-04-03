@@ -286,7 +286,7 @@ describe('ReactFlightDOM', () => {
     function Text({children}) {
       return children;
     }
-    function makeDelayedText() {
+    function makeDelayedTextBlock() {
       let error, _resolve, _reject;
       let promise = new Promise((resolve, reject) => {
         _resolve = () => {
@@ -315,11 +315,36 @@ describe('ReactFlightDOM', () => {
       return [loadBlock(), _resolve, _reject];
     }
 
+    function makeDelayedText() {
+      let error, _resolve, _reject;
+      let promise = new Promise((resolve, reject) => {
+        _resolve = () => {
+          promise = null;
+          resolve();
+        };
+        _reject = e => {
+          error = e;
+          promise = null;
+          reject(e);
+        };
+      });
+      function DelayedText({children}, data) {
+        if (promise) {
+          throw promise;
+        }
+        if (error) {
+          throw error;
+        }
+        return <Text>{children}</Text>;
+      }
+      return [DelayedText, _resolve, _reject];
+    }
+
     const [FriendsModel, resolveFriendsModel] = makeDelayedText();
     const [NameModel, resolveNameModel] = makeDelayedText();
-    const [PostsModel, resolvePostsModel] = makeDelayedText();
-    const [PhotosModel, resolvePhotosModel] = makeDelayedText();
-    const [GamesModel, , rejectGamesModel] = makeDelayedText();
+    const [PostsModel, resolvePostsModel] = makeDelayedTextBlock();
+    const [PhotosModel, resolvePhotosModel] = makeDelayedTextBlock();
+    const [GamesModel, , rejectGamesModel] = makeDelayedTextBlock();
     function ProfileMore() {
       return {
         avatar: <Text>:avatar:</Text>,
