@@ -43,8 +43,8 @@ describe('useMutableSource', () => {
     const callbacksA = [];
     const callbacksB = [];
     let revision = 0;
-    let valueA = 'a:one';
-    let valueB = 'b:one';
+    let valueA = initialValueA;
+    let valueB = initialValueB;
 
     const subscribeHelper = (callbacks, callback) => {
       if (callbacks.indexOf(callback) < 0) {
@@ -302,7 +302,7 @@ describe('useMutableSource', () => {
           />,
           () => Scheduler.unstable_yieldValue('Sync effect'),
         );
-        expect(Scheduler).toFlushAndYieldThrough(['only:a-one', 'Sync effect']);
+        expect(Scheduler).toFlushAndYield(['only:a-one', 'Sync effect']);
         ReactNoop.flushPassiveEffects();
         expect(sourceA.listenerCount).toBe(1);
 
@@ -630,7 +630,7 @@ describe('useMutableSource', () => {
     });
 
     it('should only update components whose subscriptions fire', () => {
-      const source = createComplexSource('one', 'one');
+      const source = createComplexSource('a:one', 'b:one');
       const mutableSource = createMutableSource(source);
 
       // Subscribe to part of the store.
@@ -672,7 +672,7 @@ describe('useMutableSource', () => {
     });
 
     it('should detect tearing in part of the store not yet subscribed to', () => {
-      const source = createComplexSource('one', 'one');
+      const source = createComplexSource('a:one', 'b:one');
       const mutableSource = createMutableSource(source);
 
       // Subscribe to part of the store.
@@ -1054,32 +1054,31 @@ describe('useMutableSource', () => {
         };
       }
 
-      function App({toggle}) {
+      function App({getSnapshot}) {
         const state = useMutableSource(
           mutableSource,
-          toggle ? getSnapshotB : getSnapshotA,
+          getSnapshot,
           defaultSubscribe,
         );
-        const result = (toggle ? 'on: ' : 'off: ') + state;
-        return result;
+        return state;
       }
 
       const root = ReactNoop.createRoot();
       await act(async () => {
-        root.render(<App toggle={false} />);
+        root.render(<App getSnapshot={getSnapshotA} />);
       });
-      expect(root).toMatchRenderedOutput('off: initial');
+      expect(root).toMatchRenderedOutput('initial');
 
       await act(async () => {
         mutateB('Updated B');
-        root.render(<App toggle={true} />);
+        root.render(<App getSnapshot={getSnapshotB} />);
       });
-      expect(root).toMatchRenderedOutput('on: Updated B');
+      expect(root).toMatchRenderedOutput('Updated B');
 
       await act(async () => {
         mutateB('Another update');
       });
-      expect(root).toMatchRenderedOutput('on: Another update');
+      expect(root).toMatchRenderedOutput('Another update');
     });
 
     it('should clear the update queue when getSnapshot changes with pending lower priority updates', async () => {
@@ -1238,7 +1237,7 @@ describe('useMutableSource', () => {
         ReactNoop.discreteUpdates(() => {
           // At high priority, toggle y so that it reads from A instead of B.
           // Simultaneously, mutate A.
-          mutateA('high-pri baz');
+          mutateA('baz');
           root.render(
             <App
               getSnapshotFirst={getSnapshotA}
@@ -1247,7 +1246,7 @@ describe('useMutableSource', () => {
           );
 
           // If this update were processed before the next mutation,
-          // it would be expected to yield "high-pri baz" and "high-pri baz".
+          // it would be expected to yield "baz" and "baz".
         });
 
         // At lower priority, mutate A again.
@@ -1263,6 +1262,316 @@ describe('useMutableSource', () => {
       // 1. React renders the high-pri update, sees a new getSnapshot, detects the source has been further mutated, and throws
       // 2. React re-renders with all pending updates, including the second mutation, and renders "bar" and "bar".
       expect(Scheduler).toHaveYielded(['x: bar, y: bar']);
+    });
+
+    it('getSnapshot changes and then source is mutated in between paint and passive effect phase', async () => {
+      const source = createSource({
+        a: 'foo',
+        b: 'bar',
+      });
+      const mutableSource = createMutableSource(source);
+
+      function mutateB(newB) {
+        source.value = {
+          ...source.value,
+          b: newB,
+        };
+      }
+
+      const getSnapshotA = () => source.value.a;
+      const getSnapshotB = () => source.value.b;
+
+      function App({getSnapshot}) {
+        const value = useMutableSource(
+          mutableSource,
+          getSnapshot,
+          defaultSubscribe,
+        );
+
+        Scheduler.unstable_yieldValue('Render: ' + value);
+        React.useEffect(() => {
+          Scheduler.unstable_yieldValue('Commit: ' + value);
+        }, [value]);
+
+        return value;
+      }
+
+      const root = ReactNoop.createRoot();
+      await act(async () => {
+        root.render(<App getSnapshot={getSnapshotA} />);
+      });
+      expect(Scheduler).toHaveYielded(['Render: foo', 'Commit: foo']);
+
+      await act(async () => {
+        // Switch getSnapshot to read from B instead
+        root.render(<App getSnapshot={getSnapshotB} />);
+        // Render and finish the tree, but yield right after paint, before
+        // the passive effects have fired.
+        expect(Scheduler).toFlushUntilNextPaint(['Render: bar']);
+        // Then mutate B.
+        mutateB('baz');
+      });
+      expect(Scheduler).toHaveYielded([
+        // Fires the effect from the previous render
+        'Commit: bar',
+        // During that effect, it should detect that the snapshot has changed
+        // and re-render.
+        'Render: baz',
+        'Commit: baz',
+      ]);
+      expect(root).toMatchRenderedOutput('baz');
+    });
+
+    it('getSnapshot changes and then source is mutated in between paint and passive effect phase, case 2', async () => {
+      const source = createSource({
+        a: 'a0',
+        b: 'b0',
+      });
+      const mutableSource = createMutableSource(source);
+
+      const getSnapshotA = () => source.value.a;
+      const getSnapshotB = () => source.value.b;
+
+      function mutateA(newA) {
+        source.value = {
+          ...source.value,
+          a: newA,
+        };
+      }
+
+      function App({getSnapshotFirst, getSnapshotSecond}) {
+        const first = useMutableSource(
+          mutableSource,
+          getSnapshotFirst,
+          defaultSubscribe,
+        );
+        const second = useMutableSource(
+          mutableSource,
+          getSnapshotSecond,
+          defaultSubscribe,
+        );
+
+        return `first: ${first}, second: ${second}`;
+      }
+
+      const root = ReactNoop.createRoot();
+      await act(async () => {
+        root.render(
+          <App
+            getSnapshotFirst={getSnapshotA}
+            getSnapshotSecond={getSnapshotB}
+          />,
+        );
+      });
+      expect(root.getChildrenAsJSX()).toEqual('first: a0, second: b0');
+
+      await act(async () => {
+        // Switch the second getSnapshot to also read from A
+        root.render(
+          <App
+            getSnapshotFirst={getSnapshotA}
+            getSnapshotSecond={getSnapshotA}
+          />,
+        );
+        // Render and finish the tree, but yield right after paint, before
+        // the passive effects have fired.
+        expect(Scheduler).toFlushUntilNextPaint([]);
+
+        // Now mutate A. Both hooks should update.
+        // This is at high priority so that it doesn't get batched with default
+        // priority updates that might fire during the passive effect
+        ReactNoop.discreteUpdates(() => {
+          mutateA('a1');
+        });
+        expect(Scheduler).toFlushUntilNextPaint([]);
+
+        expect(root.getChildrenAsJSX()).toEqual('first: a1, second: a1');
+      });
+
+      expect(root.getChildrenAsJSX()).toEqual('first: a1, second: a1');
+    });
+
+    it('getSnapshot changes and then source is mutated during interleaved event', async () => {
+      const {useEffect} = React;
+
+      const source = createComplexSource('1', '2');
+      const mutableSource = createMutableSource(source);
+
+      // Subscribe to part of the store.
+      const getSnapshotA = s => s.valueA;
+      const subscribeA = (s, callback) => s.subscribeA(callback);
+      const configA = [getSnapshotA, subscribeA];
+
+      const getSnapshotB = s => s.valueB;
+      const subscribeB = (s, callback) => s.subscribeB(callback);
+      const configB = [getSnapshotB, subscribeB];
+
+      function App({parentConfig, childConfig}) {
+        const [getSnapshot, subscribe] = parentConfig;
+        const parentValue = useMutableSource(
+          mutableSource,
+          getSnapshot,
+          subscribe,
+        );
+
+        Scheduler.unstable_yieldValue('Parent: ' + parentValue);
+
+        return (
+          <Child
+            parentConfig={parentConfig}
+            childConfig={childConfig}
+            parentValue={parentValue}
+          />
+        );
+      }
+
+      function Child({parentConfig, childConfig, parentValue}) {
+        const [getSnapshot, subscribe] = childConfig;
+        const childValue = useMutableSource(
+          mutableSource,
+          getSnapshot,
+          subscribe,
+        );
+
+        Scheduler.unstable_yieldValue('Child: ' + childValue);
+
+        let result = `${parentValue}, ${childValue}`;
+
+        if (parentConfig === childConfig) {
+          // When both components read using the same config, the two values
+          // must be consistent.
+          if (parentValue !== childValue) {
+            result = 'Oops, tearing!';
+          }
+        }
+
+        useEffect(() => {
+          Scheduler.unstable_yieldValue('Commit: ' + result);
+        }, [result]);
+
+        return result;
+      }
+
+      const root = ReactNoop.createRoot();
+      await act(async () => {
+        root.render(<App parentConfig={configA} childConfig={configB} />);
+      });
+      expect(Scheduler).toHaveYielded([
+        'Parent: 1',
+        'Child: 2',
+        'Commit: 1, 2',
+      ]);
+
+      await act(async () => {
+        // Switch the parent and the child to read using the same config
+        root.render(<App parentConfig={configB} childConfig={configB} />);
+        // Start rendering the parent, but yield before rendering the child
+        expect(Scheduler).toFlushAndYieldThrough(['Parent: 2']);
+
+        // Mutate the config. This is at lower priority so that 1) to make sure
+        // it doesn't happen to get batched with the in-progress render, and 2)
+        // so it doesn't interrupt the in-progress render.
+        Scheduler.unstable_runWithPriority(
+          Scheduler.unstable_IdlePriority,
+          () => {
+            source.valueB = '3';
+          },
+        );
+      });
+
+      expect(Scheduler).toHaveYielded([
+        // The partial render completes
+        'Child: 2',
+        'Commit: 2, 2',
+
+        // Then we start rendering the low priority mutation
+        'Parent: 3',
+
+        // Eventually the child corrects itself, because of the check that
+        // occurs when re-subscribing.
+        'Child: 3',
+        'Commit: 3, 3',
+      ]);
+    });
+
+    it('should not tear with newly mounted component when updates were scheduled at a lower priority', async () => {
+      const source = createSource('one');
+      const mutableSource = createMutableSource(source);
+
+      let committedA = null;
+      let committedB = null;
+
+      const onRender = () => {
+        if (committedB !== null) {
+          expect(committedA).toBe(committedB);
+        }
+      };
+
+      function ComponentA() {
+        const snapshot = useMutableSource(
+          mutableSource,
+          defaultGetSnapshot,
+          defaultSubscribe,
+        );
+        Scheduler.unstable_yieldValue(`a:${snapshot}`);
+        React.useEffect(() => {
+          committedA = snapshot;
+        }, [snapshot]);
+        return <div>{`a:${snapshot}`}</div>;
+      }
+      function ComponentB() {
+        const snapshot = useMutableSource(
+          mutableSource,
+          defaultGetSnapshot,
+          defaultSubscribe,
+        );
+        Scheduler.unstable_yieldValue(`b:${snapshot}`);
+        React.useEffect(() => {
+          committedB = snapshot;
+        }, [snapshot]);
+        return <div>{`b:${snapshot}`}</div>;
+      }
+
+      // Mount ComponentA with data version 1
+      act(() => {
+        ReactNoop.render(
+          <React.Profiler id="root" onRender={onRender}>
+            <ComponentA />
+          </React.Profiler>,
+          () => Scheduler.unstable_yieldValue('Sync effect'),
+        );
+      });
+      expect(Scheduler).toHaveYielded(['a:one', 'Sync effect']);
+      expect(source.listenerCount).toBe(1);
+
+      // Mount ComponentB with version 1 (but don't commit it)
+      act(() => {
+        ReactNoop.render(
+          <React.Profiler id="root" onRender={onRender}>
+            <ComponentA />
+            <ComponentB />
+          </React.Profiler>,
+          () => Scheduler.unstable_yieldValue('Sync effect'),
+        );
+        expect(Scheduler).toFlushAndYieldThrough([
+          'a:one',
+          'b:one',
+          'Sync effect',
+        ]);
+        expect(source.listenerCount).toBe(1);
+
+        // Mutate -> schedule update for ComponentA
+        Scheduler.unstable_runWithPriority(
+          Scheduler.unstable_IdlePriority,
+          () => {
+            source.value = 'two';
+          },
+        );
+
+        // Commit ComponentB -> notice the change and schedule an update for ComponentB
+        expect(Scheduler).toFlushAndYield(['a:two', 'b:two']);
+        expect(source.listenerCount).toBe(2);
+      });
     });
 
     if (__DEV__) {
