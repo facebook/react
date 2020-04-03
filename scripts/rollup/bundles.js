@@ -246,6 +246,26 @@ const bundles = [
     externals: ['react'],
   },
 
+  /******* React DOM Flight Webpack Plugin *******/
+  {
+    bundleTypes: [NODE_DEV, NODE_PROD],
+    moduleType: RENDERER_UTILS,
+    entry: 'react-flight-dom-webpack/plugin',
+    global: 'ReactFlightWebpackPlugin',
+    externals: [],
+    babel: opts =>
+      Object.assign({}, opts, {
+        // Include JSX
+        presets: opts.presets.concat([
+          require.resolve('@babel/preset-react'),
+          require.resolve('@babel/preset-flow'),
+        ]),
+        plugins: opts.plugins.concat([
+          [require.resolve('@babel/plugin-transform-classes'), {loose: true}],
+        ]),
+      }),
+  },
+
   /******* React DOM Flight Server Relay *******/
   {
     bundleTypes: [FB_WWW_DEV, FB_WWW_PROD],
