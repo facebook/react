@@ -17,8 +17,8 @@ import {
   close,
 } from 'react-client/src/ReactFlightClientStream';
 
-function startReadingFromStream<T>(
-  response: FlightResponse<T>,
+function startReadingFromStream(
+  response: FlightResponse,
   stream: ReadableStream,
 ): void {
   const reader = stream.getReader();
@@ -37,18 +37,16 @@ function startReadingFromStream<T>(
   reader.read().then(progress, error);
 }
 
-function createFromReadableStream<T>(
-  stream: ReadableStream,
-): FlightResponse<T> {
-  const response: FlightResponse<T> = createResponse();
+function createFromReadableStream(stream: ReadableStream): FlightResponse {
+  const response: FlightResponse = createResponse();
   startReadingFromStream(response, stream);
   return response;
 }
 
-function createFromFetch<T>(
+function createFromFetch(
   promiseForResponse: Promise<Response>,
-): FlightResponse<T> {
-  const response: FlightResponse<T> = createResponse();
+): FlightResponse {
+  const response: FlightResponse = createResponse();
   promiseForResponse.then(
     function(r) {
       startReadingFromStream(response, (r.body: any));
@@ -60,8 +58,8 @@ function createFromFetch<T>(
   return response;
 }
 
-function createFromXHR<T>(request: XMLHttpRequest): FlightResponse<T> {
-  const response: FlightResponse<T> = createResponse();
+function createFromXHR(request: XMLHttpRequest): FlightResponse {
+  const response: FlightResponse = createResponse();
   let processedLength = 0;
   function progress(e: ProgressEvent): void {
     const chunk = request.responseText;

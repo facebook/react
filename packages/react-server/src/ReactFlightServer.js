@@ -237,9 +237,23 @@ export function resolveModelToJSON(
     value.$$typeof === REACT_ELEMENT_TYPE
   ) {
     // TODO: Concatenate keys of parents onto children.
-    // TODO: Allow elements to suspend independently and serialize as references to future elements.
     const element: React$Element<any> = (value: any);
-    value = attemptResolveElement(element);
+    try {
+      // Attempt to render the server component.
+      value = attemptResolveElement(element);
+    } catch (x) {
+      if (typeof x === 'object' && x !== null && typeof x.then === 'function') {
+        // Something suspended, we'll need to create a new segment and resolve it later.
+        request.pendingChunks++;
+        const newSegment = createSegment(request, () => value);
+        const ping = newSegment.ping;
+        x.then(ping, ping);
+        return serializeIDRef(newSegment.id);
+      } else {
+        // Something errored. Don't bother encoding anything up to here.
+        throw x;
+      }
+    }
   }
 
   return value;
@@ -268,8 +282,22 @@ function emitErrorChunk(request: Request, id: number, error: mixed): void {
 
 function retrySegment(request: Request, segment: Segment): void {
   const query = segment.query;
+  let value;
   try {
-    const value = query();
+    value = query();
+    while (
+      typeof value === 'object' &&
+      value !== null &&
+      value.$$typeof === REACT_ELEMENT_TYPE
+    ) {
+      // TODO: Concatenate keys of parents onto children.
+      const element: React$Element<any> = (value: any);
+      // Attempt to render the server component.
+      // Doing this here lets us reuse this same segment if the next component
+      // also suspends.
+      segment.query = () => value;
+      value = attemptResolveElement(element);
+    }
     const processedChunk = processModelChunk(request, segment.id, value);
     request.completedJSONChunks.push(processedChunk);
   } catch (x) {

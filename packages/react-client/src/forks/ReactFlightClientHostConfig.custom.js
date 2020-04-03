@@ -25,6 +25,7 @@
 
 declare var $$$hostConfig: any;
 
+export type Response = any;
 export opaque type ModuleMetaData = mixed; // eslint-disable-line no-undef
 export opaque type ModuleReference<T> = mixed; // eslint-disable-line no-undef
 export const resolveModuleReference = $$$hostConfig.resolveModuleReference;
@@ -32,6 +33,10 @@ export const preloadModule = $$$hostConfig.preloadModule;
 export const requireModule = $$$hostConfig.requireModule;
 
 export opaque type Source = mixed; // eslint-disable-line no-undef
+
+export type UninitializedModel = string;
+export const parseModel = $$$hostConfig.parseModel;
+
 export opaque type StringDecoder = mixed; // eslint-disable-line no-undef
 
 export const supportsBinaryStreams = $$$hostConfig.supportsBinaryStreams;
