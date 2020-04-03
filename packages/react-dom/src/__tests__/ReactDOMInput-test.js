@@ -1547,8 +1547,7 @@ describe('ReactDOMInput', () => {
     );
   });
 
-  // FIXME: Re-enable this test when upgrading to Jest 25
-  it.skip('sets type, step, min, max before value always', () => {
+  it('sets type, step, min, max before value always', () => {
     const log = [];
     const originalCreateElement = document.createElement;
     spyOnDevAndProd(document, 'createElement').and.callFake(function(type) {
@@ -1584,26 +1583,13 @@ describe('ReactDOMInput', () => {
       container,
     );
 
-    if (disableInputAttributeSyncing) {
-      expect(log).toEqual([
-        'set attribute type',
-        'set attribute min',
-        'set attribute max',
-        'set attribute step',
-        'set property value',
-      ]);
-    } else {
-      expect(log).toEqual([
-        'set attribute type',
-        'set attribute min',
-        'set attribute max',
-        'set attribute step',
-        'set property value',
-        'set attribute value',
-        // FIXME: This doesn't get logged in prod build??
-        'set attribute checked',
-      ]);
-    }
+    expect(log).toEqual([
+      'set attribute type',
+      'set attribute min',
+      'set attribute max',
+      'set attribute step',
+      'set property value',
+    ]);
   });
 
   it('sets value properly with type coming later in props', () => {
@@ -1630,8 +1616,7 @@ describe('ReactDOMInput', () => {
     expect(node.value).toEqual('Test');
   });
 
-  // FIXME: Re-enable this test when upgrading to Jest 25
-  it.skip('resets value of date/time input to fix bugs in iOS Safari', () => {
+  it('resets value of date/time input to fix bugs in iOS Safari', () => {
     function strify(x) {
       return JSON.stringify(x, null, 2);
     }
@@ -1669,9 +1654,6 @@ describe('ReactDOMInput', () => {
       expect(log).toEqual([
         'node.setAttribute("type", "date")',
         'node.value = "1980-01-01"',
-        'node.setAttribute("value", "1980-01-01")',
-        // FIXME: This doesn't get logged in prod build??
-        'node.setAttribute("checked", "")',
       ]);
     }
   });
