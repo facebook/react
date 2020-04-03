@@ -59,10 +59,7 @@ import {
 import dangerousStyleValue from '../shared/dangerousStyleValue';
 import getComponentName from 'shared/getComponentName';
 
-import {
-  REACT_OPAQUE_OBJECT_TYPE,
-  REACT_OPAQUE_VALUE_TYPE,
-} from 'shared/ReactSymbols';
+import {REACT_OPAQUE_OBJECT_TYPE} from 'shared/ReactSymbols';
 import {
   mountEventResponder,
   unmountEventResponder,
@@ -159,7 +156,6 @@ export type RendererInspectionConfig = $ReadOnly<{||}>;
 export opaque type OpaqueIDType =
   | string
   | {
-      $$typeof: number | Symbol,
       toString: () => string | void,
       valueOf: () => string | void,
     };
@@ -1169,7 +1165,6 @@ let clientId: number = 0;
 export function makeClientId(): OpaqueIDType {
   const id = 'r:' + (clientId++).toString(36);
   return {
-    $$typeof: REACT_OPAQUE_VALUE_TYPE,
     toString() {
       if (__DEV__) {
         if (getIsRendering()) {
