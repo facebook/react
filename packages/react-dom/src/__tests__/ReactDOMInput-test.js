@@ -1547,8 +1547,7 @@ describe('ReactDOMInput', () => {
     );
   });
 
-  // FIXME: Re-enable this test when upgrading to Jest 25
-  it.skip('sets type, step, min, max before value always', () => {
+  it('sets type, step, min, max before value always', () => {
     const log = [];
     const originalCreateElement = document.createElement;
     spyOnDevAndProd(document, 'createElement').and.callFake(function(type) {
@@ -1584,26 +1583,13 @@ describe('ReactDOMInput', () => {
       container,
     );
 
-    if (disableInputAttributeSyncing) {
-      expect(log).toEqual([
-        'set attribute type',
-        'set attribute min',
-        'set attribute max',
-        'set attribute step',
-        'set property value',
-      ]);
-    } else {
-      expect(log).toEqual([
-        'set attribute type',
-        'set attribute min',
-        'set attribute max',
-        'set attribute step',
-        'set property value',
-        'set attribute value',
-        // FIXME: This doesn't get logged in prod build??
-        'set attribute checked',
-      ]);
-    }
+    expect(log).toEqual([
+      'set attribute type',
+      'set attribute min',
+      'set attribute max',
+      'set attribute step',
+      'set property value',
+    ]);
   });
 
   it('sets value properly with type coming later in props', () => {
@@ -1630,8 +1616,7 @@ describe('ReactDOMInput', () => {
     expect(node.value).toEqual('Test');
   });
 
-  // FIXME: Re-enable this test when upgrading to Jest 25
-  it.skip('resets value of date/time input to fix bugs in iOS Safari', () => {
+  it('resets value of date/time input to fix bugs in iOS Safari', () => {
     function strify(x) {
       return JSON.stringify(x, null, 2);
     }
@@ -1640,15 +1625,39 @@ describe('ReactDOMInput', () => {
     const originalCreateElement = document.createElement;
     spyOnDevAndProd(document, 'createElement').and.callFake(function(type) {
       const el = originalCreateElement.apply(this, arguments);
-      let value = '';
+      const getDefaultValue = Object.getOwnPropertyDescriptor(
+        HTMLInputElement.prototype,
+        'defaultValue',
+      ).get;
+      const setDefaultValue = Object.getOwnPropertyDescriptor(
+        HTMLInputElement.prototype,
+        'defaultValue',
+      ).set;
+      const getValue = Object.getOwnPropertyDescriptor(
+        HTMLInputElement.prototype,
+        'value',
+      ).get;
+      const setValue = Object.getOwnPropertyDescriptor(
+        HTMLInputElement.prototype,
+        'value',
+      ).set;
       if (type === 'input') {
-        Object.defineProperty(el, 'value', {
+        Object.defineProperty(el, 'defaultValue', {
           get: function() {
-            return value;
+            return getDefaultValue.call(this);
           },
           set: function(val) {
-            value = '' + val;
+            log.push(`node.defaultValue = ${strify(val)}`);
+            setDefaultValue.call(this, val);
+          },
+        });
+        Object.defineProperty(el, 'value', {
+          get: function() {
+            return getValue.call(this);
+          },
+          set: function(val) {
             log.push(`node.value = ${strify(val)}`);
+            setValue.call(this, val);
           },
         });
         spyOnDevAndProd(el, 'setAttribute').and.callFake(function(name, val) {
@@ -1663,15 +1672,18 @@ describe('ReactDOMInput', () => {
     if (disableInputAttributeSyncing) {
       expect(log).toEqual([
         'node.setAttribute("type", "date")',
-        'node.setAttribute("value", "1980-01-01")',
+        'node.defaultValue = "1980-01-01"',
+        // TODO: it's possible this reintroduces the bug because we don't assign `value` at all.
+        // Need to check this on mobile Safari and Chrome.
       ]);
     } else {
       expect(log).toEqual([
         'node.setAttribute("type", "date")',
+        // value must be assigned before defaultValue. This fixes an issue where the
+        // visually displayed value of date inputs disappears on mobile Safari and Chrome:
+        // https://github.com/facebook/react/issues/7233
         'node.value = "1980-01-01"',
-        'node.setAttribute("value", "1980-01-01")',
-        // FIXME: This doesn't get logged in prod build??
-        'node.setAttribute("checked", "")',
+        'node.defaultValue = "1980-01-01"',
       ]);
     }
   });
