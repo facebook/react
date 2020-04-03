@@ -62,13 +62,13 @@ export function processStringChunk(
 ): void {
   let linebreak = chunk.indexOf('\n', offset);
   while (linebreak > -1) {
-    const fullrow = response.partialRow + chunk.substring(offset, linebreak);
+    const fullrow = response._partialRow + chunk.substring(offset, linebreak);
     processFullRow(response, fullrow);
-    response.partialRow = '';
+    response._partialRow = '';
     offset = linebreak + 1;
     linebreak = chunk.indexOf('\n', offset);
   }
-  response.partialRow += chunk.substring(offset);
+  response._partialRow += chunk.substring(offset);
 }
 
 export function processBinaryChunk(
@@ -78,18 +78,18 @@ export function processBinaryChunk(
   if (!supportsBinaryStreams) {
     throw new Error("This environment don't support binary chunks.");
   }
-  const stringDecoder = response.stringDecoder;
+  const stringDecoder = response._stringDecoder;
   let linebreak = chunk.indexOf(10); // newline
   while (linebreak > -1) {
     const fullrow =
-      response.partialRow +
+      response._partialRow +
       readFinalStringChunk(stringDecoder, chunk.subarray(0, linebreak));
     processFullRow(response, fullrow);
-    response.partialRow = '';
+    response._partialRow = '';
     chunk = chunk.subarray(linebreak + 1);
     linebreak = chunk.indexOf(10); // newline
   }
-  response.partialRow += readPartialStringChunk(stringDecoder, chunk);
+  response._partialRow += readPartialStringChunk(stringDecoder, chunk);
 }
 
 function createFromJSONCallback(response: Response) {
@@ -110,12 +110,12 @@ export function createResponse(): Response {
   // It should be inlined to one object literal but minor changes can break it.
   const stringDecoder = supportsBinaryStreams ? createStringDecoder() : null;
   const response: any = createResponseBase();
-  response.partialRow = '';
+  response._partialRow = '';
   if (supportsBinaryStreams) {
-    response.stringDecoder = stringDecoder;
+    response._stringDecoder = stringDecoder;
   }
   // Don't inline this call because it causes closure to outline the call above.
-  response.fromJSON = createFromJSONCallback(response);
+  response._fromJSON = createFromJSONCallback(response);
   return response;
 }
 

@@ -92,7 +92,7 @@ Chunk.prototype.then = function<T>(resolve: () => mixed) {
 };
 
 export type ResponseBase = {
-  chunks: Map<number, SomeChunk<any>>,
+  _chunks: Map<number, SomeChunk<any>>,
   readRoot<T>(): T,
   ...
 };
@@ -181,7 +181,7 @@ function initializeModelChunk<T>(chunk: ResolvedModelChunk): T {
 // Report that any missing chunks in the model is now going to throw this
 // error upon read. Also notify any pending promises.
 export function reportGlobalError(response: Response, error: Error): void {
-  response.chunks.forEach(chunk => {
+  response._chunks.forEach(chunk => {
     // If this chunk was already resolved or errored, it won't
     // trigger an error but if it wasn't then we need to
     // because we won't be getting any new data to resolve it.
@@ -286,7 +286,7 @@ function createLazyBlock<Props, Data>(
 }
 
 function getChunk(response: Response, id: number): SomeChunk<any> {
-  const chunks = response.chunks;
+  const chunks = response._chunks;
   let chunk = chunks.get(id);
   if (!chunk) {
     chunk = createPendingChunk(response);
@@ -340,10 +340,10 @@ export function parseModelTuple(
   return value;
 }
 
-export function createResponse(): Response {
+export function createResponse(): ResponseBase {
   const chunks: Map<number, SomeChunk<any>> = new Map();
-  const response: any = {
-    chunks: chunks,
+  const response = {
+    _chunks: chunks,
     readRoot: readRoot,
   };
   return response;
@@ -354,7 +354,7 @@ export function resolveModel(
   id: number,
   model: UninitializedModel,
 ): void {
-  const chunks = response.chunks;
+  const chunks = response._chunks;
   const chunk = chunks.get(id);
   if (!chunk) {
     chunks.set(id, createResolvedModelChunk(response, model));
@@ -371,7 +371,7 @@ export function resolveError(
 ): void {
   const error = new Error(message);
   error.stack = stack;
-  const chunks = response.chunks;
+  const chunks = response._chunks;
   const chunk = chunks.get(id);
   if (!chunk) {
     chunks.set(id, createErrorChunk(response, error));
