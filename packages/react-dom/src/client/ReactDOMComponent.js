@@ -84,7 +84,7 @@ import possibleStandardNames from '../shared/possibleStandardNames';
 import {validateProperties as validateARIAProperties} from '../shared/ReactDOMInvalidARIAHook';
 import {validateProperties as validateInputProperties} from '../shared/ReactDOMNullInputValuePropHook';
 import {validateProperties as validateUnknownProperties} from '../shared/ReactDOMUnknownPropertyHook';
-import {REACT_OPAQUE_OBJECT_TYPE} from 'shared/ReactSymbols';
+import {REACT_OPAQUE_ID_TYPE} from 'shared/ReactSymbols';
 
 import {
   enableDeprecatedFlareAPI,
@@ -853,7 +853,7 @@ export function diffProperties(
     } else if (
       typeof nextProp === 'object' &&
       nextProp !== null &&
-      nextProp.$$typeof === REACT_OPAQUE_OBJECT_TYPE
+      nextProp.$$typeof === REACT_OPAQUE_ID_TYPE
     ) {
       // If we encounter useOpaqueReference's opaque object, this means we are hydrating.
       // In this case, call the opaque object's toString function which generates a new client

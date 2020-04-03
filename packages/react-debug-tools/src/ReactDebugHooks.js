@@ -27,7 +27,7 @@ import {NoMode} from 'react-reconciler/src/ReactTypeOfMode';
 
 import ErrorStackParser from 'error-stack-parser';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
-import {REACT_OPAQUE_OBJECT_TYPE} from 'shared/ReactSymbols';
+import {REACT_OPAQUE_ID_TYPE} from 'shared/ReactSymbols';
 import {
   FunctionComponent,
   SimpleMemoComponent,
@@ -331,7 +331,7 @@ function useOpaqueIdentifier(): OpaqueIDType | void {
     nextHook(); // Effect
   }
   let value = hook === null ? undefined : hook.memoizedState;
-  if (value && value.$$typeof === REACT_OPAQUE_OBJECT_TYPE) {
+  if (value && value.$$typeof === REACT_OPAQUE_ID_TYPE) {
     value = undefined;
   }
   hookLog.push({

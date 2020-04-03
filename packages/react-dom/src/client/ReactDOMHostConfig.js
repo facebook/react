@@ -59,7 +59,7 @@ import {
 import dangerousStyleValue from '../shared/dangerousStyleValue';
 import getComponentName from 'shared/getComponentName';
 
-import {REACT_OPAQUE_OBJECT_TYPE} from 'shared/ReactSymbols';
+import {REACT_OPAQUE_ID_TYPE} from 'shared/ReactSymbols';
 import {
   mountEventResponder,
   unmountEventResponder,
@@ -1204,7 +1204,7 @@ export function isOpaqueHydratingObject(value: mixed): boolean {
   return (
     value !== null &&
     typeof value === 'object' &&
-    value.$$typeof === REACT_OPAQUE_OBJECT_TYPE
+    value.$$typeof === REACT_OPAQUE_ID_TYPE
   );
 }
 
@@ -1213,7 +1213,7 @@ export function makeOpaqueHydratingObject(
   fiberType: mixed,
 ): OpaqueIDType {
   return {
-    $$typeof: REACT_OPAQUE_OBJECT_TYPE,
+    $$typeof: REACT_OPAQUE_ID_TYPE,
     toString() {
       if (__DEV__) {
         const name = getComponentName(fiberType) || 'Unknown';

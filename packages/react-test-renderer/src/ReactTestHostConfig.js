@@ -14,7 +14,7 @@ import type {
 } from 'shared/ReactTypes';
 
 import {enableDeprecatedFlareAPI} from 'shared/ReactFeatureFlags';
-import {REACT_OPAQUE_OBJECT_TYPE} from 'shared/ReactSymbols';
+import {REACT_OPAQUE_ID_TYPE} from 'shared/ReactSymbols';
 
 export type Type = string;
 export type Props = Object;
@@ -402,7 +402,7 @@ export function isOpaqueHydratingObject(value: mixed): boolean {
   return (
     value !== null &&
     typeof value === 'object' &&
-    value.$$typeof === REACT_OPAQUE_OBJECT_TYPE
+    value.$$typeof === REACT_OPAQUE_ID_TYPE
   );
 }
 
@@ -411,7 +411,7 @@ export function makeOpaqueHydratingObject(
   fiberType: mixed,
 ): OpaqueIDType {
   return {
-    $$typeof: REACT_OPAQUE_OBJECT_TYPE,
+    $$typeof: REACT_OPAQUE_ID_TYPE,
     _setId: setId,
     toString() {
       setIsUpdatingOpaqueValueInRenderPhase(true);
