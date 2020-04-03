@@ -1164,30 +1164,25 @@ export function getInstanceFromNode(node: HTMLElement): null | Object {
 let clientId: number = 0;
 export function makeClientId(): OpaqueIDType {
   const id = 'r:' + (clientId++).toString(36);
-  return {
-    toString() {
-      if (__DEV__) {
-        if (getIsRendering()) {
-          console.error(
-            'The object passed back from useOpaqueIdentifier is meant to be passed through ' +
-              'to attributes only. Do not read the value directly.',
-          );
-        }
+  if (__DEV__) {
+    const warnOnAccess = () => {
+      // TODO: Should warn in effects and callbacks, too
+      if (getIsRendering()) {
+        console.error(
+          'The object passed back from useOpaqueIdentifier is meant to be ' +
+            'passed through to attributes only. Do not read the ' +
+            'value directly.',
+        );
       }
       return id;
-    },
-    valueOf() {
-      if (__DEV__) {
-        if (getIsRendering()) {
-          console.error(
-            'The object passed back from useOpaqueIdentifier is meant to be passed through ' +
-              'to attributes only. Do not read the value directly.',
-          );
-        }
-      }
-      return id;
-    },
-  };
+    };
+    return {
+      toString: warnOnAccess,
+      valueOf: warnOnAccess,
+    };
+  } else {
+    return id;
+  }
 }
 
 let serverId: number = 0;
