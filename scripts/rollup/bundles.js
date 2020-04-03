@@ -248,7 +248,7 @@ const bundles = [
 
   /******* React DOM Flight Webpack Plugin *******/
   {
-    bundleTypes: [NODE_DEV, NODE_PROD, UMD_DEV, UMD_PROD],
+    bundleTypes: [NODE_DEV, NODE_PROD],
     moduleType: RENDERER_UTILS,
     entry: 'react-flight-dom-webpack/webpack-plugin',
     global: 'ReactFlightWebpackPlugin',
