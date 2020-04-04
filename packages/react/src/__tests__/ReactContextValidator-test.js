@@ -690,9 +690,7 @@ describe('ReactContextValidator', () => {
       );
     }).toErrorDev(
       'Warning: Failed prop type: The prop `dontPassToSeeErrorStack` is marked as required in `Validator`, but its value is `undefined`.\n' +
-        '    in Validator (at **)\n' +
-        '    in MyContextType.Consumer (at **)\n' +
-        '    in MyContextType.Provider (at **)',
+        '    in Validator (at **)',
     );
   });
 
