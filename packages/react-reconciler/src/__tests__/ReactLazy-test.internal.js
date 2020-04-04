@@ -343,6 +343,97 @@ describe('ReactLazy', () => {
     expect(root).toMatchRenderedOutput('SiblingB');
   });
 
+  it('resolves defaultProps without breaking bailout due to unchanged props and state, #17151', async () => {
+    class LazyImpl extends React.Component {
+      static defaultProps = {value: 0};
+
+      render() {
+        const text = `${this.props.label}: ${this.props.value}`;
+        return <Text text={text} />;
+      }
+    }
+
+    const Lazy = lazy(() => fakeImport(LazyImpl));
+
+    const instance1 = React.createRef(null);
+    const instance2 = React.createRef(null);
+
+    const root = ReactTestRenderer.create(
+      <>
+        <LazyImpl ref={instance1} label="Not lazy" />
+        <Suspense fallback={<Text text="Loading..." />}>
+          <Lazy ref={instance2} label="Lazy" />
+        </Suspense>
+      </>,
+      {
+        unstable_isConcurrent: true,
+      },
+    );
+    expect(Scheduler).toFlushAndYield(['Not lazy: 0', 'Loading...']);
+    expect(root).not.toMatchRenderedOutput('Not lazy: 0Lazy: 0');
+
+    await Promise.resolve();
+
+    expect(Scheduler).toFlushAndYield(['Lazy: 0']);
+    expect(root).toMatchRenderedOutput('Not lazy: 0Lazy: 0');
+
+    // Should bailout due to unchanged props and state
+    instance1.current.setState(null);
+    expect(Scheduler).toFlushAndYield([]);
+    expect(root).toMatchRenderedOutput('Not lazy: 0Lazy: 0');
+
+    // Should bailout due to unchanged props and state
+    instance2.current.setState(null);
+    expect(Scheduler).toFlushAndYield([]);
+    expect(root).toMatchRenderedOutput('Not lazy: 0Lazy: 0');
+  });
+
+  it('resolves defaultProps without breaking bailout in PureComponent, #17151', async () => {
+    class LazyImpl extends React.PureComponent {
+      static defaultProps = {value: 0};
+      state = {};
+
+      render() {
+        const text = `${this.props.label}: ${this.props.value}`;
+        return <Text text={text} />;
+      }
+    }
+
+    const Lazy = lazy(() => fakeImport(LazyImpl));
+
+    const instance1 = React.createRef(null);
+    const instance2 = React.createRef(null);
+
+    const root = ReactTestRenderer.create(
+      <>
+        <LazyImpl ref={instance1} label="Not lazy" />
+        <Suspense fallback={<Text text="Loading..." />}>
+          <Lazy ref={instance2} label="Lazy" />
+        </Suspense>
+      </>,
+      {
+        unstable_isConcurrent: true,
+      },
+    );
+    expect(Scheduler).toFlushAndYield(['Not lazy: 0', 'Loading...']);
+    expect(root).not.toMatchRenderedOutput('Not lazy: 0Lazy: 0');
+
+    await Promise.resolve();
+
+    expect(Scheduler).toFlushAndYield(['Lazy: 0']);
+    expect(root).toMatchRenderedOutput('Not lazy: 0Lazy: 0');
+
+    // Should bailout due to shallow equal props and state
+    instance1.current.setState({});
+    expect(Scheduler).toFlushAndYield([]);
+    expect(root).toMatchRenderedOutput('Not lazy: 0Lazy: 0');
+
+    // Should bailout due to shallow equal props and state
+    instance2.current.setState({});
+    expect(Scheduler).toFlushAndYield([]);
+    expect(root).toMatchRenderedOutput('Not lazy: 0Lazy: 0');
+  });
+
   it('sets defaultProps for modern lifecycles', async () => {
     class C extends React.Component {
       static defaultProps = {text: 'A'};
