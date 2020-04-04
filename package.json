@@ -76,7 +76,7 @@
     "prop-types": "^15.6.2",
     "random-seed": "^0.3.0",
     "react-lifecycles-compat": "^3.0.4",
-    "rimraf": "^3.0.0",
+    "rimraf": "^3.0.2",
     "rollup": "^0.52.1",
     "rollup-plugin-babel": "^4.0.1",
     "rollup-plugin-commonjs": "^8.2.6",
