@@ -42,7 +42,7 @@
     "coffee-script": "^1.12.7",
     "confusing-browser-globals": "^1.0.9",
     "core-js": "^3.6.4",
-    "coveralls": "^3.0.9",
+    "coveralls": "^3.0.11",
     "create-react-class": "^15.6.3",
     "cross-env": "^6.0.3",
     "danger": "^9.2.10",
