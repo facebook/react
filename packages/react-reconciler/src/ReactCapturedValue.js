@@ -18,13 +18,9 @@ export type CapturedValue<T> = {|
 |};
 
 export type CapturedError = {|
-  componentName: ?string,
   componentStack: string,
   error: mixed,
   errorBoundary: ?Object,
-  errorBoundaryFound: boolean,
-  errorBoundaryName: string | null,
-  willRetry: boolean,
 |};
 
 export function createCapturedValue<T>(

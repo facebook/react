@@ -10,6 +10,7 @@
 import type {CapturedError} from './ReactCapturedValue';
 
 import {showErrorDialog} from './ReactFiberErrorDialog';
+import getComponentName from 'shared/getComponentName';
 
 export function logCapturedError(capturedError: CapturedError): void {
   const logError = showErrorDialog(capturedError);
@@ -22,19 +23,13 @@ export function logCapturedError(capturedError: CapturedError): void {
 
   const error = (capturedError.error: any);
   if (__DEV__) {
-    const {
-      componentName,
-      componentStack,
-      errorBoundaryName,
-      errorBoundaryFound,
-      willRetry,
-    } = capturedError;
+    const {componentStack, errorBoundary} = capturedError;
 
     // Browsers support silencing uncaught errors by calling
     // `preventDefault()` in window `error` handler.
     // We record this information as an expando on the error.
     if (error != null && error._suppressLogging) {
-      if (errorBoundaryFound && willRetry) {
+      if (errorBoundary) {
         // The error is recoverable and was silenced.
         // Ignore it and don't print the stack addendum.
         // This is handy for testing error boundaries without noise.
@@ -49,29 +44,24 @@ export function logCapturedError(capturedError: CapturedError): void {
       // https://github.com/facebook/react/pull/13384
     }
 
+    const componentName = ''; // TODO
     const componentNameMessage = componentName
       ? `The above error occurred in the <${componentName}> component:`
       : 'The above error occurred in one of your React components:';
 
     let errorBoundaryMessage;
-    // errorBoundaryFound check is sufficient; errorBoundaryName check is to satisfy Flow.
-    if (errorBoundaryFound && errorBoundaryName) {
-      if (willRetry) {
-        errorBoundaryMessage =
-          `React will try to recreate this component tree from scratch ` +
-          `using the error boundary you provided, ${errorBoundaryName}.`;
-      } else {
-        errorBoundaryMessage =
-          `This error was initially handled by the error boundary ${errorBoundaryName}.\n` +
-          `Recreating the tree from scratch failed so React will unmount the tree.`;
-      }
+    const errorBoundaryName = getComponentName(errorBoundary);
+    if (errorBoundaryName) {
+      errorBoundaryMessage =
+        `React will try to recreate this component tree from scratch ` +
+        `using the error boundary you provided, ${errorBoundaryName}.`;
     } else {
       errorBoundaryMessage =
         'Consider adding an error boundary to your tree to customize error handling behavior.\n' +
         'Visit https://fb.me/react-error-boundaries to learn more about error boundaries.';
     }
     const combinedMessage =
-      `${componentNameMessage}${componentStack}\n\n` +
+      `${componentNameMessage}\n${componentStack}\n\n` +
       `${errorBoundaryMessage}`;
 
     // In development, we provide our own message with just the component stack.
