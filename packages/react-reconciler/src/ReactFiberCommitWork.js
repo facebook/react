@@ -885,7 +885,9 @@ function commitAttachRef(finishedWork: Fiber) {
         }
       }
 
-      ref.current = instanceToUse;
+      try {
+        ref.current = instanceToUse;
+      } catch (e) {}
     }
   }
 }
