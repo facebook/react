@@ -1437,6 +1437,12 @@ function getDependency(node) {
     )
   ) {
     return getDependency(node.parent);
+  } else if (
+    node.type === 'MemberExpression' &&
+    node.parent &&
+    node.parent.type === 'AssignmentExpression'
+  ) {
+    return node.object;
   } else {
     return node;
   }

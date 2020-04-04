@@ -585,6 +585,16 @@ const tests = {
       `,
     },
     {
+      code: normalizeIndent`
+        function MyComponent(props) {
+          let foo = {}
+          useEffect(() => {
+            foo.bar.baz = 43;
+          }, [foo.bar]);
+        }
+      `,
+    },
+    {
       // Valid because we assign ref.current
       // ourselves. Therefore it's likely not
       // a ref managed by React.
@@ -6394,6 +6404,39 @@ const tests = {
       ],
       // Keep this until major IDEs and VS Code FB ESLint plugin support Suggestions API.
       options: [{enableDangerousAutofixThisMayCauseInfiniteLoops: true}],
+    },
+    {
+      code: normalizeIndent`
+        function MyComponent(props) {
+          let foo = {}
+          useEffect(() => {
+            foo.bar.baz = 43;
+            props.foo.bar.baz = 1;
+          }, []);
+        }
+      `,
+      errors: [
+        {
+          message:
+            "React Hook useEffect has missing dependencies: 'foo.bar' and 'props.foo.bar'. " +
+            'Either include them or remove the dependency array.',
+          suggestions: [
+            {
+              desc:
+                'Update the dependencies array to be: [foo.bar, props.foo.bar]',
+              output: normalizeIndent`
+                function MyComponent(props) {
+                  let foo = {}
+                  useEffect(() => {
+                    foo.bar.baz = 43;
+                    props.foo.bar.baz = 1;
+                  }, [foo.bar, props.foo.bar]);
+                }
+              `,
+            },
+          ],
+        },
+      ],
     },
   ],
 };
