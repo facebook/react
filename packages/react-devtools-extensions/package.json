@@ -32,7 +32,7 @@
     "firefox-profile": "^1.0.2",
     "node-libs-browser": "0.5.3",
     "nullthrows": "^1.0.0",
-    "raw-loader": "^3.1.0",
+    "raw-loader": "^4.0.0",
     "style-loader": "^0.23.1",
     "web-ext": "^3.0.0",
     "webpack": "^4.41.2",

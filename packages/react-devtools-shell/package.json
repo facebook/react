@@ -24,7 +24,7 @@
     "babel-loader": "^8.0.4",
     "cross-env": "^3.1.4",
     "css-loader": "^1.0.1",
-    "raw-loader": "^3.1.0",
+    "raw-loader": "^4.0.0",
     "style-loader": "^0.23.1",
     "webpack": "^4.41.2",
     "webpack-cli": "^3.3.10",
