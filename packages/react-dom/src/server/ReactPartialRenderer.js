@@ -15,7 +15,7 @@ import type {ReactProvider, ReactContext} from 'shared/ReactTypes';
 import * as React from 'react';
 import invariant from 'shared/invariant';
 import getComponentName from 'shared/getComponentName';
-import describeComponentFrame from 'shared/describeComponentFrame';
+import {describeUnknownElementTypeFrameInDEV} from 'shared/ReactComponentStackFrame';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import {
   warnAboutDeprecatedLifecycles,
@@ -112,11 +112,11 @@ if (__DEV__) {
   };
 
   describeStackFrame = function(element): string {
-    const source = element._source;
-    const type = element.type;
-    const name = getComponentName(type);
-    const ownerName = null;
-    return describeComponentFrame(name, source, ownerName);
+    return describeUnknownElementTypeFrameInDEV(
+      element.type,
+      element._source,
+      null,
+    );
   };
 
   pushCurrentDebugStack = function(stack: Array<Frame>) {

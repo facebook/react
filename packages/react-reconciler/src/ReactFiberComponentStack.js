@@ -10,34 +10,54 @@
 import type {Fiber} from './ReactFiber';
 
 import {
-  HostRoot,
-  HostPortal,
-  HostText,
-  Fragment,
-  ContextProvider,
-  ContextConsumer,
+  HostComponent,
+  LazyComponent,
+  SuspenseComponent,
+  SuspenseListComponent,
+  FunctionComponent,
+  IndeterminateComponent,
+  ForwardRef,
+  MemoComponent,
+  SimpleMemoComponent,
+  Block,
+  ClassComponent,
 } from './ReactWorkTags';
-import describeComponentFrame from 'shared/describeComponentFrame';
-import getComponentName from 'shared/getComponentName';
+import {
+  describeBuiltInComponentFrame,
+  describeFunctionComponentFrame,
+  describeClassComponentFrame,
+} from 'shared/ReactComponentStackFrame';
 
 function describeFiber(fiber: Fiber): string {
+  const owner: null | Function = __DEV__
+    ? fiber._debugOwner
+      ? fiber._debugOwner.type
+      : null
+    : null;
+  const source = __DEV__ ? fiber._debugSource : null;
   switch (fiber.tag) {
-    case HostRoot:
-    case HostPortal:
-    case HostText:
-    case Fragment:
-    case ContextProvider:
-    case ContextConsumer:
-      return '';
+    case HostComponent:
+      return describeBuiltInComponentFrame(fiber.type, source, owner);
+    case LazyComponent:
+      return describeBuiltInComponentFrame('Lazy', source, owner);
+    case SuspenseComponent:
+      return describeBuiltInComponentFrame('Suspense', source, owner);
+    case SuspenseListComponent:
+      return describeBuiltInComponentFrame('SuspenseList', source, owner);
+    case FunctionComponent:
+    case IndeterminateComponent:
+    case SimpleMemoComponent:
+      return describeFunctionComponentFrame(fiber.type, source, owner);
+    case ForwardRef:
+      return describeFunctionComponentFrame(fiber.type.render, source, owner);
+    case MemoComponent:
+      return describeFunctionComponentFrame(fiber.type.type, source, owner);
+    case Block:
+      return describeFunctionComponentFrame(fiber.type._render, source, owner);
+    case ClassComponent:
+      return describeClassComponentFrame(fiber.type, source, owner);
     default:
-      const owner = fiber._debugOwner;
-      const source = fiber._debugSource;
-      const name = getComponentName(fiber.type);
-      let ownerName = null;
-      if (owner) {
-        ownerName = getComponentName(owner.type);
-      }
-      return describeComponentFrame(name, source, ownerName);
+      return '';
   }
 }
 
