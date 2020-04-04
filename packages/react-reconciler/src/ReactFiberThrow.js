@@ -40,7 +40,6 @@ import {
   ForceUpdate,
   enqueueUpdate,
 } from './ReactUpdateQueue';
-import {logError} from './ReactFiberCommitWork';
 import {getStackByFiberInDevAndProd} from './ReactCurrentFiber';
 import {markFailedErrorBoundaryForHotReloading} from './ReactFiberHotReloading';
 import {
@@ -55,6 +54,7 @@ import {
   isAlreadyFailedLegacyErrorBoundary,
   pingSuspendedRoot,
 } from './ReactFiberWorkLoop';
+import {logCapturedError} from './ReactFiberErrorLogger';
 
 import {Sync} from './ReactFiberExpirationTime';
 
@@ -74,7 +74,7 @@ function createRootErrorUpdate(
   const error = errorInfo.value;
   update.callback = () => {
     onUncaughtError(error);
-    logError(fiber, errorInfo);
+    logCapturedError(fiber, errorInfo);
   };
   return update;
 }
@@ -90,7 +90,7 @@ function createClassErrorUpdate(
   if (typeof getDerivedStateFromError === 'function') {
     const error = errorInfo.value;
     update.payload = () => {
-      logError(fiber, errorInfo);
+      logCapturedError(fiber, errorInfo);
       return getDerivedStateFromError(error);
     };
   }
@@ -110,7 +110,7 @@ function createClassErrorUpdate(
         markLegacyErrorBoundaryAsFailed(this);
 
         // Only log here if componentDidCatch is the only error boundary method defined
-        logError(fiber, errorInfo);
+        logCapturedError(fiber, errorInfo);
       }
       const error = errorInfo.value;
       const stack = errorInfo.stack;

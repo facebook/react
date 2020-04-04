@@ -17,16 +17,6 @@ export type CapturedValue<T> = {|
   stack: string | null,
 |};
 
-export type CapturedError = {|
-  componentName: ?string,
-  componentStack: string,
-  error: mixed,
-  errorBoundary: ?Object,
-  errorBoundaryFound: boolean,
-  errorBoundaryName: string | null,
-  willRetry: boolean,
-|};
-
 export function createCapturedValue<T>(
   value: T,
   source: Fiber,
