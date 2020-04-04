@@ -54,7 +54,7 @@ describe('ReactDOMInput', () => {
     expect(() => {
       ReactDOM.render(<input type="text" value={0} />, container);
     }).toErrorDev(
-      'Failed prop type: You provided a `value` prop to a form field without an `onChange` handler.',
+      'Warning: You provided a `value` prop to a form field without an `onChange` handler.',
     );
   });
 
@@ -62,7 +62,7 @@ describe('ReactDOMInput', () => {
     expect(() => {
       ReactDOM.render(<input type="text" value="" />, container);
     }).toErrorDev(
-      'Failed prop type: You provided a `value` prop to a form field without an `onChange` handler.',
+      'Warning: You provided a `value` prop to a form field without an `onChange` handler.',
     );
   });
 
@@ -70,7 +70,7 @@ describe('ReactDOMInput', () => {
     expect(() => {
       ReactDOM.render(<input type="text" value="0" />, container);
     }).toErrorDev(
-      'Failed prop type: You provided a `value` prop to a form field without an `onChange` handler.',
+      'Warning: You provided a `value` prop to a form field without an `onChange` handler.',
     );
   });
 
@@ -78,7 +78,7 @@ describe('ReactDOMInput', () => {
     expect(() =>
       ReactDOM.render(<input type="checkbox" checked={false} />, container),
     ).toErrorDev(
-      'Failed prop type: You provided a `checked` prop to a form field without an `onChange` handler.',
+      'Warning: You provided a `checked` prop to a form field without an `onChange` handler.',
     );
   });
 
@@ -95,7 +95,7 @@ describe('ReactDOMInput', () => {
         container,
       ),
     ).toErrorDev(
-      'Failed prop type: You provided a `checked` prop to a form field without an `onChange` handler. ' +
+      'Warning: You provided a `checked` prop to a form field without an `onChange` handler. ' +
         'This will render a read-only field. If the field should be mutable use `defaultChecked`. ' +
         'Otherwise, set either `onChange` or `readOnly`.',
     );
@@ -125,7 +125,7 @@ describe('ReactDOMInput', () => {
     expect(() => {
       node = ReactDOM.render(<input type="text" value="lion" />, container);
     }).toErrorDev(
-      'Failed prop type: You provided a `value` prop to a form field without an `onChange` handler.',
+      'Warning: You provided a `value` prop to a form field without an `onChange` handler.',
     );
 
     setUntrackedValue.call(node, 'giraffe');
@@ -1172,7 +1172,7 @@ describe('ReactDOMInput', () => {
         container,
       ),
     ).toErrorDev(
-      'Warning: Failed prop type: You provided a `value` prop to a form ' +
+      'Warning: You provided a `value` prop to a form ' +
         'field without an `onChange` handler. This will render a read-only ' +
         'field. If the field should be mutable use `defaultValue`. ' +
         'Otherwise, set either `onChange` or `readOnly`.\n' +

@@ -67,7 +67,7 @@ import {
   getIntrinsicNamespace,
   getChildNamespace,
 } from '../shared/DOMNamespaces';
-import ReactControlledValuePropTypes from '../shared/ReactControlledValuePropTypes';
+import {checkControlledValueProps} from '../shared/ReactControlledValuePropTypes';
 import assertValidProps from '../shared/assertValidProps';
 import dangerousStyleValue from '../shared/dangerousStyleValue';
 import hyphenateStyleName from '../shared/hyphenateStyleName';
@@ -1358,7 +1358,7 @@ class ReactDOMServerRenderer {
     let props = element.props;
     if (tag === 'input') {
       if (__DEV__) {
-        ReactControlledValuePropTypes.checkPropTypes('input', props);
+        checkControlledValueProps('input', props);
 
         if (
           props.checked !== undefined &&
@@ -1410,7 +1410,7 @@ class ReactDOMServerRenderer {
       );
     } else if (tag === 'textarea') {
       if (__DEV__) {
-        ReactControlledValuePropTypes.checkPropTypes('textarea', props);
+        checkControlledValueProps('textarea', props);
         if (
           props.value !== undefined &&
           props.defaultValue !== undefined &&
@@ -1465,7 +1465,7 @@ class ReactDOMServerRenderer {
       });
     } else if (tag === 'select') {
       if (__DEV__) {
-        ReactControlledValuePropTypes.checkPropTypes('select', props);
+        checkControlledValueProps('select', props);
 
         for (let i = 0; i < valuePropNames.length; i++) {
           const propName = valuePropNames[i];
