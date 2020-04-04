@@ -14,7 +14,7 @@ import invariant from 'shared/invariant';
 import {setValueForProperty} from './DOMPropertyOperations';
 import {getFiberCurrentPropsFromNode} from './ReactDOMComponentTree';
 import {getToStringValue, toString} from './ToStringValue';
-import ReactControlledValuePropTypes from '../shared/ReactControlledValuePropTypes';
+import {checkControlledValueProps} from '../shared/ReactControlledValuePropTypes';
 import {updateValueIfChanged} from './inputValueTracking';
 import {disableInputAttributeSyncing} from 'shared/ReactFeatureFlags';
 
@@ -73,7 +73,7 @@ export function getHostProps(element: Element, props: Object) {
 
 export function initWrapperState(element: Element, props: Object) {
   if (__DEV__) {
-    ReactControlledValuePropTypes.checkPropTypes('input', props);
+    checkControlledValueProps('input', props);
 
     if (
       props.checked !== undefined &&
