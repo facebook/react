@@ -145,10 +145,7 @@ const PossiblyWeakSet = typeof WeakSet === 'function' ? WeakSet : Set;
 
 export function logError(boundary: Fiber, errorInfo: CapturedValue<mixed>) {
   const source = errorInfo.source;
-  let stack = errorInfo.stack;
-  if (stack === null && source !== null) {
-    stack = getStackByFiberInDevAndProd(source);
-  }
+  const stack = errorInfo.stack;
 
   const capturedError: CapturedError = {
     componentStack: stack !== null ? stack : '',
