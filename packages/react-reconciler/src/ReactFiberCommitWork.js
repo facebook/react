@@ -73,7 +73,7 @@ import getComponentName from 'shared/getComponentName';
 import invariant from 'shared/invariant';
 
 import {onCommitUnmount} from './ReactFiberDevToolsHook';
-import {getStackByFiberInDevAndProd} from './ReactCurrentFiber';
+import {getStackByFiberInDevAndProd} from './ReactFiberComponentStack';
 import {resolveDefaultProps} from './ReactFiberLazyComponent';
 import {
   getCommitTime,

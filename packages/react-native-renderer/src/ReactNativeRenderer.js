@@ -25,7 +25,7 @@ import {
   getPublicRootInstance,
 } from 'react-reconciler/src/ReactFiberReconciler';
 // TODO: direct imports like some-package/src/* are bad. Fix me.
-import {getStackByFiberInDevAndProd} from 'react-reconciler/src/ReactCurrentFiber';
+import {getStackByFiberInDevAndProd} from 'react-reconciler/src/ReactFiberComponentStack';
 import {createPortal as createPortalImpl} from 'react-reconciler/src/ReactPortal';
 import {
   setBatchingImplementation,

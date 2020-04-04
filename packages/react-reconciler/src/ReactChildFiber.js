@@ -44,10 +44,8 @@ import {
   createFiberFromPortal,
 } from './ReactFiber';
 import {emptyRefsObject} from './ReactFiberClassComponent';
-import {
-  getCurrentFiberStackInDev,
-  getStackByFiberInDevAndProd,
-} from './ReactCurrentFiber';
+import {getStackByFiberInDevAndProd} from './ReactFiberComponentStack';
+import {getCurrentFiberStackInDev} from './ReactCurrentFiber';
 import {isCompatibleFamilyForHotReloading} from './ReactFiberHotReloading';
 import {StrictMode} from './ReactTypeOfMode';
 

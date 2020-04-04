@@ -40,7 +40,7 @@ import {
   ForceUpdate,
   enqueueUpdate,
 } from './ReactUpdateQueue';
-import {getStackByFiberInDevAndProd} from './ReactCurrentFiber';
+import {getStackByFiberInDevAndProd} from './ReactFiberComponentStack';
 import {markFailedErrorBoundaryForHotReloading} from './ReactFiberHotReloading';
 import {
   suspenseStackCursor,

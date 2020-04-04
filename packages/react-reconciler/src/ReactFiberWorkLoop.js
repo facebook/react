@@ -159,11 +159,11 @@ import {
 // DEV stuff
 import getComponentName from 'shared/getComponentName';
 import ReactStrictModeWarnings from './ReactStrictModeWarnings';
+import {getStackByFiberInDevAndProd} from './ReactFiberComponentStack';
 import {
   isRendering as ReactCurrentDebugFiberIsRenderingInDEV,
   resetCurrentFiber as resetCurrentDebugFiberInDEV,
   setCurrentFiber as setCurrentDebugFiberInDEV,
-  getStackByFiberInDevAndProd,
 } from './ReactCurrentFiber';
 import {
   invokeGuardedCallback,
