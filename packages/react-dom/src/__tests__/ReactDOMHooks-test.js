@@ -32,8 +32,8 @@ describe('ReactDOMHooks', () => {
   });
 
   it('can ReactDOM.render() from useEffect', () => {
-    let container2 = document.createElement('div');
-    let container3 = document.createElement('div');
+    const container2 = document.createElement('div');
+    const container3 = document.createElement('div');
 
     function Example1({n}) {
       React.useEffect(() => {

@@ -76,6 +76,9 @@ function SyntheticEvent(
   this.dispatchConfig = dispatchConfig;
   this._targetInst = targetInst;
   this.nativeEvent = nativeEvent;
+  this._dispatchListeners = null;
+  this._dispatchInstances = null;
+  this._dispatchCurrentTargets = null;
 
   const Interface = this.constructor.Interface;
   for (const propName in Interface) {
@@ -185,6 +188,7 @@ Object.assign(SyntheticEvent.prototype, {
     this.isPropagationStopped = functionThatReturnsFalse;
     this._dispatchListeners = null;
     this._dispatchInstances = null;
+    this._dispatchCurrentTargets = null;
     if (__DEV__) {
       Object.defineProperty(
         this,

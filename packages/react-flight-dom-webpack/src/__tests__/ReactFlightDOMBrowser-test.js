@@ -55,17 +55,23 @@ describe('ReactFlightDOMBrowser', () => {
     }
 
     function App() {
-      let model = {
+      const model = {
         html: <HTML />,
       };
       return model;
     }
 
-    let stream = ReactFlightDOMServer.renderToReadableStream(<App />);
-    let result = ReactFlightDOMClient.readFromReadableStream(stream);
+    const stream = ReactFlightDOMServer.renderToReadableStream(<App />);
+    const response = ReactFlightDOMClient.createFromReadableStream(stream);
     await waitForSuspense(() => {
-      expect(result.model).toEqual({
-        html: '<div><span>hello</span><span>world</span></div>',
+      const model = response.readRoot();
+      expect(model).toEqual({
+        html: (
+          <div>
+            <span>hello</span>
+            <span>world</span>
+          </div>
+        ),
       });
     });
   });

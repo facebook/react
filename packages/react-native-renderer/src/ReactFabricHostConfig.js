@@ -7,12 +7,15 @@
  * @flow
  */
 
+import type {ElementRef} from 'react';
 import type {
+  HostComponent,
   MeasureInWindowOnSuccessCallback,
   MeasureLayoutOnSuccessCallback,
   MeasureOnSuccessCallback,
   NativeMethods,
   ReactNativeBaseComponentViewConfig,
+  TouchedViewDataAtPoint,
 } from './ReactNativeTypes';
 
 import {mountSafeCallback_NOT_REALLY_SAFE} from './NativeMethodsMixinUtils';
@@ -74,6 +77,21 @@ export type UpdatePayload = Object;
 export type TimeoutHandle = TimeoutID;
 export type NoTimeout = -1;
 
+export type ReactListenerEvent = Object;
+export type ReactListenerMap = Object;
+export type ReactListener = Object;
+
+export type RendererInspectionConfig = $ReadOnly<{|
+  // Deprecated. Replaced with getInspectorDataForViewAtPoint.
+  getInspectorDataForViewTag?: (tag: number) => Object,
+  getInspectorDataForViewAtPoint?: (
+    inspectedView: Object,
+    locationX: number,
+    locationY: number,
+    callback: (viewData: TouchedViewDataAtPoint) => mixed,
+  ) => void,
+|}>;
+
 // TODO: Remove this conditional once all changes have propagated.
 if (registerEventHandler) {
   /**
@@ -104,11 +122,11 @@ class ReactFabricHostComponent {
   }
 
   blur() {
-    TextInputState.blurTextInput(this._nativeTag);
+    TextInputState.blurTextInput(this);
   }
 
   focus() {
-    TextInputState.focusTextInput(this._nativeTag);
+    TextInputState.focusTextInput(this);
   }
 
   measure(callback: MeasureOnSuccessCallback) {
@@ -126,7 +144,7 @@ class ReactFabricHostComponent {
   }
 
   measureLayout(
-    relativeToNativeNode: number | ReactFabricHostComponent,
+    relativeToNativeNode: number | ElementRef<HostComponent<mixed>>,
     onSuccess: MeasureLayoutOnSuccessCallback,
     onFail?: () => void /* currently unused */,
   ) {
@@ -165,8 +183,8 @@ class ReactFabricHostComponent {
 // eslint-disable-next-line no-unused-expressions
 (ReactFabricHostComponent.prototype: NativeMethods);
 
-export * from 'shared/HostConfigWithNoMutation';
-export * from 'shared/HostConfigWithNoHydration';
+export * from 'react-reconciler/src/ReactFiberHostConfigWithNoMutation';
+export * from 'react-reconciler/src/ReactFiberHostConfigWithNoHydration';
 
 export function appendInitialChild(
   parentInstance: Instance,
@@ -466,4 +484,20 @@ export function getInstanceFromNode(node: any) {
 
 export function beforeRemoveInstance(instance: any) {
   // noop
+}
+
+export function registerEvent(event: any, rootContainerInstance: Container) {
+  throw new Error('Not yet implemented.');
+}
+
+export function mountEventListener(listener: any) {
+  throw new Error('Not yet implemented.');
+}
+
+export function unmountEventListener(listener: any) {
+  throw new Error('Not yet implemented.');
+}
+
+export function validateEventListenerTarget(target: any, listener: any) {
+  throw new Error('Not yet implemented.');
 }

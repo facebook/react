@@ -14,6 +14,7 @@ const importSideEffects = Object.freeze({
   scheduler: HAS_NO_SIDE_EFFECTS_ON_IMPORT,
   'scheduler/tracing': HAS_NO_SIDE_EFFECTS_ON_IMPORT,
   'react-dom/server': HAS_NO_SIDE_EFFECTS_ON_IMPORT,
+  'react/jsx-dev-runtime': HAS_NO_SIDE_EFFECTS_ON_IMPORT,
 });
 
 // Bundles exporting globals that other modules rely on.
@@ -60,7 +61,7 @@ function getDependencies(bundleType, entry) {
 }
 
 // Hijacks some modules for optimization and integration reasons.
-function getForks(bundleType, entry, moduleType) {
+function getForks(bundleType, entry, moduleType, bundle) {
   const forksForBundle = {};
   Object.keys(forks).forEach(srcModule => {
     const dependencies = getDependencies(bundleType, entry);
@@ -68,7 +69,8 @@ function getForks(bundleType, entry, moduleType) {
       bundleType,
       entry,
       dependencies,
-      moduleType
+      moduleType,
+      bundle
     );
     if (targetModule === null) {
       return;

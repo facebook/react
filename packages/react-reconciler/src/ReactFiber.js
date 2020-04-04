@@ -17,10 +17,10 @@ import type {
   ReactFundamentalComponent,
   ReactScope,
 } from 'shared/ReactTypes';
-import type {RootTag} from 'shared/ReactRootTags';
-import type {WorkTag} from 'shared/ReactWorkTags';
+import type {RootTag} from 'react-reconciler/src/ReactRootTags';
+import type {WorkTag} from './ReactWorkTags';
 import type {TypeOfMode} from './ReactTypeOfMode';
-import type {SideEffectTag} from 'shared/ReactSideEffectTags';
+import type {SideEffectTag} from './ReactSideEffectTags';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
 import type {UpdateQueue} from './ReactUpdateQueue';
 import type {ContextDependency} from './ReactFiberNewContext';
@@ -31,12 +31,12 @@ import invariant from 'shared/invariant';
 import {
   enableProfilerTimer,
   enableFundamentalAPI,
-  enableUserTimingAPI,
   enableScopeAPI,
-  enableChunksAPI,
+  enableBlocksAPI,
+  throwEarlyForMysteriousError,
 } from 'shared/ReactFeatureFlags';
-import {NoEffect, Placement} from 'shared/ReactSideEffectTags';
-import {ConcurrentRoot, BlockingRoot} from 'shared/ReactRootTags';
+import {NoEffect, Placement} from './ReactSideEffectTags';
+import {ConcurrentRoot, BlockingRoot} from 'react-reconciler/src/ReactRootTags';
 import {
   IndeterminateComponent,
   ClassComponent,
@@ -59,8 +59,8 @@ import {
   LazyComponent,
   FundamentalComponent,
   ScopeComponent,
-  Chunk,
-} from 'shared/ReactWorkTags';
+  Block,
+} from './ReactWorkTags';
 import getComponentName from 'shared/getComponentName';
 
 import {isDevToolsPresent} from './ReactFiberDevToolsHook';
@@ -84,14 +84,13 @@ import {
   REACT_PROFILER_TYPE,
   REACT_PROVIDER_TYPE,
   REACT_CONTEXT_TYPE,
-  REACT_CONCURRENT_MODE_TYPE,
   REACT_SUSPENSE_TYPE,
   REACT_SUSPENSE_LIST_TYPE,
   REACT_MEMO_TYPE,
   REACT_LAZY_TYPE,
   REACT_FUNDAMENTAL_TYPE,
   REACT_SCOPE_TYPE,
-  REACT_CHUNK_TYPE,
+  REACT_BLOCK_TYPE,
 } from 'shared/ReactSymbols';
 
 let hasBadMapPolyfill;
@@ -100,13 +99,10 @@ if (__DEV__) {
   hasBadMapPolyfill = false;
   try {
     const nonExtensibleObject = Object.preventExtensions({});
-    const testMap = new Map([[nonExtensibleObject, null]]);
-    const testSet = new Set([nonExtensibleObject]);
-    // This is necessary for Rollup to not consider these unused.
-    // https://github.com/rollup/rollup/issues/1771
-    // TODO: we can remove these if Rollup fixes the bug.
-    testMap.set(0, 0);
-    testSet.add(0);
+    /* eslint-disable no-new */
+    new Map([[nonExtensibleObject, null]]);
+    new Set([nonExtensibleObject]);
+    /* eslint-enable no-new */
   } catch (e) {
     // TODO: Consider warning about bad polyfills
     hasBadMapPolyfill = true;
@@ -326,14 +322,9 @@ function FiberNode(
     this.treeBaseDuration = 0;
   }
 
-  // This is normally DEV-only except www when it adds listeners.
-  // TODO: remove the User Timing integration in favor of Root Events.
-  if (enableUserTimingAPI) {
-    this._debugID = debugCounter++;
-    this._debugIsCurrentlyTiming = false;
-  }
-
   if (__DEV__) {
+    // This isn't directly used but is handy for debugging internals:
+    this._debugID = debugCounter++;
     this._debugSource = null;
     this._debugOwner = null;
     this._debugNeedsRemount = false;
@@ -391,9 +382,9 @@ export function resolveLazyComponentTag(Component: Function): WorkTag {
     if ($$typeof === REACT_MEMO_TYPE) {
       return MemoComponent;
     }
-    if (enableChunksAPI) {
-      if ($$typeof === REACT_CHUNK_TYPE) {
-        return Chunk;
+    if (enableBlocksAPI) {
+      if ($$typeof === REACT_BLOCK_TYPE) {
+        return Block;
       }
     }
   }
@@ -401,11 +392,7 @@ export function resolveLazyComponentTag(Component: Function): WorkTag {
 }
 
 // This is used to create an alternate fiber to do work on.
-export function createWorkInProgress(
-  current: Fiber,
-  pendingProps: any,
-  expirationTime: ExpirationTime,
-): Fiber {
+export function createWorkInProgress(current: Fiber, pendingProps: any): Fiber {
   let workInProgress = current.alternate;
   if (workInProgress === null) {
     // We use a double buffering pooling technique because we know that we'll
@@ -425,9 +412,7 @@ export function createWorkInProgress(
 
     if (__DEV__) {
       // DEV-only fields
-      if (enableUserTimingAPI) {
-        workInProgress._debugID = current._debugID;
-      }
+      workInProgress._debugID = current._debugID;
       workInProgress._debugSource = current._debugSource;
       workInProgress._debugOwner = current._debugOwner;
       workInProgress._debugHookTypes = current._debugHookTypes;
@@ -454,6 +439,18 @@ export function createWorkInProgress(
       // But works for yielding (the common case) and should support resuming.
       workInProgress.actualDuration = 0;
       workInProgress.actualStartTime = -1;
+    }
+  }
+
+  if (throwEarlyForMysteriousError) {
+    // Trying to debug a mysterious internal-only production failure.
+    // See D20130868 and t62461245.
+    // This is only on for RN FB builds.
+    if (current == null) {
+      throw Error('current is ' + current + " but it can't be");
+    }
+    if (workInProgress == null) {
+      throw Error('workInProgress is ' + workInProgress + " but it can't be");
     }
   }
 
@@ -531,7 +528,7 @@ export function resetWorkInProgress(
   workInProgress.firstEffect = null;
   workInProgress.lastEffect = null;
 
-  let current = workInProgress.alternate;
+  const current = workInProgress.alternate;
   if (current === null) {
     // Reset to createFiber's initial values.
     workInProgress.childExpirationTime = NoWork;
@@ -543,6 +540,8 @@ export function resetWorkInProgress(
     workInProgress.updateQueue = null;
 
     workInProgress.dependencies = null;
+
+    workInProgress.stateNode = null;
 
     if (enableProfilerTimer) {
       // Note: We don't reset the actualTime counts. It's useful to accumulate
@@ -611,8 +610,6 @@ export function createFiberFromTypeAndProps(
   mode: TypeOfMode,
   expirationTime: ExpirationTime,
 ): Fiber {
-  let fiber;
-
   let fiberTag = IndeterminateComponent;
   // The resolved type is set if we know what the final type will be. I.e. it's not lazy.
   let resolvedType = type;
@@ -638,10 +635,6 @@ export function createFiberFromTypeAndProps(
           expirationTime,
           key,
         );
-      case REACT_CONCURRENT_MODE_TYPE:
-        fiberTag = Mode;
-        mode |= ConcurrentMode | BlockingMode | StrictMode;
-        break;
       case REACT_STRICT_MODE_TYPE:
         fiberTag = Mode;
         mode |= StrictMode;
@@ -680,8 +673,8 @@ export function createFiberFromTypeAndProps(
               fiberTag = LazyComponent;
               resolvedType = null;
               break getTag;
-            case REACT_CHUNK_TYPE:
-              fiberTag = Chunk;
+            case REACT_BLOCK_TYPE:
+              fiberTag = Block;
               break getTag;
             case REACT_FUNDAMENTAL_TYPE:
               if (enableFundamentalAPI) {
@@ -736,7 +729,7 @@ export function createFiberFromTypeAndProps(
     }
   }
 
-  fiber = createFiber(fiberTag, pendingProps, key, mode);
+  const fiber = createFiber(fiberTag, pendingProps, key, mode);
   fiber.elementType = type;
   fiber.type = resolvedType;
   fiber.expirationTime = expirationTime;
@@ -817,13 +810,8 @@ function createFiberFromProfiler(
   key: null | string,
 ): Fiber {
   if (__DEV__) {
-    if (
-      typeof pendingProps.id !== 'string' ||
-      typeof pendingProps.onRender !== 'function'
-    ) {
-      console.error(
-        'Profiler must specify an "id" string and "onRender" function as props',
-      );
+    if (typeof pendingProps.id !== 'string') {
+      console.error('Profiler must specify an "id" as a prop');
     }
   }
 
@@ -832,6 +820,13 @@ function createFiberFromProfiler(
   fiber.elementType = REACT_PROFILER_TYPE;
   fiber.type = REACT_PROFILER_TYPE;
   fiber.expirationTime = expirationTime;
+
+  if (enableProfilerTimer) {
+    fiber.stateNode = {
+      effectDuration: 0,
+      passiveEffectDuration: 0,
+    };
+  }
 
   return fiber;
 }
@@ -960,12 +955,9 @@ export function assignFiberPropertiesInDEV(
     target.selfBaseDuration = source.selfBaseDuration;
     target.treeBaseDuration = source.treeBaseDuration;
   }
-  if (enableUserTimingAPI) {
-    target._debugID = source._debugID;
-  }
+  target._debugID = source._debugID;
   target._debugSource = source._debugSource;
   target._debugOwner = source._debugOwner;
-  target._debugIsCurrentlyTiming = source._debugIsCurrentlyTiming;
   target._debugNeedsRemount = source._debugNeedsRemount;
   target._debugHookTypes = source._debugHookTypes;
   return target;

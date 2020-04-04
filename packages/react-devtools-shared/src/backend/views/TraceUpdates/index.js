@@ -135,7 +135,7 @@ function measureNode(node: Object): Rect | null {
     return null;
   }
 
-  let currentWindow = window.__REACT_DEVTOOLS_TARGET_WINDOW__ || window;
+  const currentWindow = window.__REACT_DEVTOOLS_TARGET_WINDOW__ || window;
 
   return getNestedBoundingClientRect(node, currentWindow);
 }

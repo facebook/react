@@ -9,17 +9,20 @@
 
 import type {ReactElement} from 'shared/ReactElementType';
 import type {ReactPortal} from 'shared/ReactTypes';
+import type {BlockComponent} from 'react/src/ReactBlock';
+import type {LazyComponent} from 'react/src/ReactLazy';
 import type {Fiber} from './ReactFiber';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
 
 import getComponentName from 'shared/getComponentName';
-import {Placement, Deletion} from 'shared/ReactSideEffectTags';
+import {Placement, Deletion} from './ReactSideEffectTags';
 import {
   getIteratorFn,
   REACT_ELEMENT_TYPE,
   REACT_FRAGMENT_TYPE,
   REACT_PORTAL_TYPE,
-  REACT_CHUNK_TYPE,
+  REACT_LAZY_TYPE,
+  REACT_BLOCK_TYPE,
 } from 'shared/ReactSymbols';
 import {
   FunctionComponent,
@@ -27,10 +30,10 @@ import {
   HostText,
   HostPortal,
   Fragment,
-  Chunk,
-} from 'shared/ReactWorkTags';
+  Block,
+} from './ReactWorkTags';
 import invariant from 'shared/invariant';
-import {warnAboutStringRefs, enableChunksAPI} from 'shared/ReactFeatureFlags';
+import {warnAboutStringRefs, enableBlocksAPI} from 'shared/ReactFeatureFlags';
 
 import {
   createWorkInProgress,
@@ -107,7 +110,7 @@ function coerceRef(
   current: Fiber | null,
   element: ReactElement,
 ) {
-  let mixedRef = element.ref;
+  const mixedRef = element.ref;
   if (
     mixedRef !== null &&
     typeof mixedRef !== 'function' &&
@@ -163,8 +166,10 @@ function coerceRef(
         const ownerFiber = ((owner: any): Fiber);
         invariant(
           ownerFiber.tag === ClassComponent,
-          'Function components cannot have refs. ' +
-            'Did you mean to use React.forwardRef()?',
+          'Function components cannot have string refs. ' +
+            'We recommend using useRef() instead. ' +
+            'Learn more about using refs safely here: ' +
+            'https://fb.me/react-strict-mode-string-ref',
         );
         inst = ownerFiber.stateNode;
       }
@@ -259,6 +264,22 @@ function warnOnFunctionType() {
   }
 }
 
+// We avoid inlining this to avoid potential deopts from using try/catch.
+/** @noinline */
+function resolveLazyType<T, P>(
+  lazyComponent: LazyComponent<T, P>,
+): LazyComponent<T, P> | T {
+  try {
+    // If we can, let's peek at the resulting type.
+    const payload = lazyComponent._payload;
+    const init = lazyComponent._init;
+    return init(payload);
+  } catch (x) {
+    // Leave it in place and let it throw again in the begin phase.
+    return lazyComponent;
+  }
+}
+
 // This wrapper function exists because I expect to clone the code in each path
 // to be able to optimize each path individually by branching early. This needs
 // a compiler or we can do it manually. Helpers that don't need this branching
@@ -325,14 +346,10 @@ function ChildReconciler(shouldTrackSideEffects) {
     return existingChildren;
   }
 
-  function useFiber(
-    fiber: Fiber,
-    pendingProps: mixed,
-    expirationTime: ExpirationTime,
-  ): Fiber {
+  function useFiber(fiber: Fiber, pendingProps: mixed): Fiber {
     // We currently set sibling to null and index to 0 here because it is easy
     // to forget to do before returning it. E.g. for the single child case.
-    const clone = createWorkInProgress(fiber, pendingProps, expirationTime);
+    const clone = createWorkInProgress(fiber, pendingProps);
     clone.index = 0;
     clone.sibling = null;
     return clone;
@@ -392,7 +409,7 @@ function ChildReconciler(shouldTrackSideEffects) {
       return created;
     } else {
       // Update
-      const existing = useFiber(current, textContent, expirationTime);
+      const existing = useFiber(current, textContent);
       existing.return = returnFiber;
       return existing;
     }
@@ -411,7 +428,7 @@ function ChildReconciler(shouldTrackSideEffects) {
         (__DEV__ ? isCompatibleFamilyForHotReloading(current, element) : false)
       ) {
         // Move based on index
-        const existing = useFiber(current, element.props, expirationTime);
+        const existing = useFiber(current, element.props);
         existing.ref = coerceRef(returnFiber, current, element);
         existing.return = returnFiber;
         if (__DEV__) {
@@ -419,21 +436,28 @@ function ChildReconciler(shouldTrackSideEffects) {
           existing._debugOwner = element._owner;
         }
         return existing;
-      } else if (
-        enableChunksAPI &&
-        current.tag === Chunk &&
-        element.type.$$typeof === REACT_CHUNK_TYPE &&
-        element.type.render === current.type.render
-      ) {
-        // Same as above but also update the .type field.
-        const existing = useFiber(current, element.props, expirationTime);
-        existing.return = returnFiber;
-        existing.type = element.type;
-        if (__DEV__) {
-          existing._debugSource = element._source;
-          existing._debugOwner = element._owner;
+      } else if (enableBlocksAPI && current.tag === Block) {
+        // The new Block might not be initialized yet. We need to initialize
+        // it in case initializing it turns out it would match.
+        let type = element.type;
+        if (type.$$typeof === REACT_LAZY_TYPE) {
+          type = resolveLazyType(type);
         }
-        return existing;
+        if (
+          type.$$typeof === REACT_BLOCK_TYPE &&
+          ((type: any): BlockComponent<any, any>)._render ===
+            (current.type: BlockComponent<any, any>)._render
+        ) {
+          // Same as above but also update the .type field.
+          const existing = useFiber(current, element.props);
+          existing.return = returnFiber;
+          existing.type = type;
+          if (__DEV__) {
+            existing._debugSource = element._source;
+            existing._debugOwner = element._owner;
+          }
+          return existing;
+        }
       }
     }
     // Insert
@@ -469,7 +493,7 @@ function ChildReconciler(shouldTrackSideEffects) {
       return created;
     } else {
       // Update
-      const existing = useFiber(current, portal.children || [], expirationTime);
+      const existing = useFiber(current, portal.children || []);
       existing.return = returnFiber;
       return existing;
     }
@@ -494,7 +518,7 @@ function ChildReconciler(shouldTrackSideEffects) {
       return created;
     } else {
       // Update
-      const existing = useFiber(current, fragment, expirationTime);
+      const existing = useFiber(current, fragment);
       existing.return = returnFiber;
       return existing;
     }
@@ -974,9 +998,8 @@ function ChildReconciler(shouldTrackSideEffects) {
       if ((newChildrenIterable: any).entries === iteratorFn) {
         if (!didWarnAboutMaps) {
           console.error(
-            'Using Maps as children is unsupported and will likely yield ' +
-              'unexpected results. Convert it to a sequence/iterable of keyed ' +
-              'ReactElements instead.',
+            'Using Maps as children is not supported. ' +
+              'Use an array of keyed ReactElements instead.',
           );
         }
         didWarnAboutMaps = true;
@@ -1137,7 +1160,7 @@ function ChildReconciler(shouldTrackSideEffects) {
       // We already have an existing node so let's just update it and delete
       // the rest.
       deleteRemainingChildren(returnFiber, currentFirstChild.sibling);
-      const existing = useFiber(currentFirstChild, textContent, expirationTime);
+      const existing = useFiber(currentFirstChild, textContent);
       existing.return = returnFiber;
       return existing;
     }
@@ -1169,11 +1192,7 @@ function ChildReconciler(shouldTrackSideEffects) {
           case Fragment: {
             if (element.type === REACT_FRAGMENT_TYPE) {
               deleteRemainingChildren(returnFiber, child.sibling);
-              const existing = useFiber(
-                child,
-                element.props.children,
-                expirationTime,
-              );
+              const existing = useFiber(child, element.props.children);
               existing.return = returnFiber;
               if (__DEV__) {
                 existing._debugSource = element._source;
@@ -1183,24 +1202,32 @@ function ChildReconciler(shouldTrackSideEffects) {
             }
             break;
           }
-          case Chunk:
-            if (enableChunksAPI) {
-              if (
-                element.type.$$typeof === REACT_CHUNK_TYPE &&
-                element.type.render === child.type.render
-              ) {
-                deleteRemainingChildren(returnFiber, child.sibling);
-                const existing = useFiber(child, element.props, expirationTime);
-                existing.type = element.type;
-                existing.return = returnFiber;
-                if (__DEV__) {
-                  existing._debugSource = element._source;
-                  existing._debugOwner = element._owner;
+          case Block:
+            if (enableBlocksAPI) {
+              let type = element.type;
+              if (type.$$typeof === REACT_LAZY_TYPE) {
+                type = resolveLazyType(type);
+              }
+              if (type.$$typeof === REACT_BLOCK_TYPE) {
+                // The new Block might not be initialized yet. We need to initialize
+                // it in case initializing it turns out it would match.
+                if (
+                  ((type: any): BlockComponent<any, any>)._render ===
+                  (child.type: BlockComponent<any, any>)._render
+                ) {
+                  deleteRemainingChildren(returnFiber, child.sibling);
+                  const existing = useFiber(child, element.props);
+                  existing.type = type;
+                  existing.return = returnFiber;
+                  if (__DEV__) {
+                    existing._debugSource = element._source;
+                    existing._debugOwner = element._owner;
+                  }
+                  return existing;
                 }
-                return existing;
               }
             }
-          // We intentionally fallthrough here if enableChunksAPI is not on.
+          // We intentionally fallthrough here if enableBlocksAPI is not on.
           // eslint-disable-next-lined no-fallthrough
           default: {
             if (
@@ -1211,7 +1238,7 @@ function ChildReconciler(shouldTrackSideEffects) {
                 : false)
             ) {
               deleteRemainingChildren(returnFiber, child.sibling);
-              const existing = useFiber(child, element.props, expirationTime);
+              const existing = useFiber(child, element.props);
               existing.ref = coerceRef(returnFiber, child, element);
               existing.return = returnFiber;
               if (__DEV__) {
@@ -1271,11 +1298,7 @@ function ChildReconciler(shouldTrackSideEffects) {
           child.stateNode.implementation === portal.implementation
         ) {
           deleteRemainingChildren(returnFiber, child.sibling);
-          const existing = useFiber(
-            child,
-            portal.children || [],
-            expirationTime,
-          );
+          const existing = useFiber(child, portal.children || []);
           existing.return = returnFiber;
           return existing;
         } else {
@@ -1441,11 +1464,7 @@ export function cloneChildFibers(
   }
 
   let currentChild = workInProgress.child;
-  let newChild = createWorkInProgress(
-    currentChild,
-    currentChild.pendingProps,
-    currentChild.expirationTime,
-  );
+  let newChild = createWorkInProgress(currentChild, currentChild.pendingProps);
   workInProgress.child = newChild;
 
   newChild.return = workInProgress;
@@ -1454,7 +1473,6 @@ export function cloneChildFibers(
     newChild = newChild.sibling = createWorkInProgress(
       currentChild,
       currentChild.pendingProps,
-      currentChild.expirationTime,
     );
     newChild.return = workInProgress;
   }

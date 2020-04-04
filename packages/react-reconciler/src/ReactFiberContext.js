@@ -10,15 +10,13 @@
 import type {Fiber} from './ReactFiber';
 import type {StackCursor} from './ReactFiberStack';
 
-import {isFiberMounted} from 'react-reconciler/reflection';
+import {isFiberMounted} from 'react-reconciler/src/ReactFiberTreeReflection';
 import {disableLegacyContext} from 'shared/ReactFeatureFlags';
-import {ClassComponent, HostRoot} from 'shared/ReactWorkTags';
+import {ClassComponent, HostRoot} from './ReactWorkTags';
 import getComponentName from 'shared/getComponentName';
 import invariant from 'shared/invariant';
-import checkPropTypes from 'prop-types/checkPropTypes';
+import checkPropTypes from 'shared/checkPropTypes';
 
-import {setCurrentPhase, getCurrentFiberStackInDev} from './ReactCurrentFiber';
-import {startPhaseTimer, stopPhaseTimer} from './ReactDebugFiberPerf';
 import {createCursor, push, pop} from './ReactFiberStack';
 
 let warnedAboutMissingGetChildContext;
@@ -33,9 +31,11 @@ if (__DEV__) {
 }
 
 // A cursor to the current merged context object on the stack.
-let contextStackCursor: StackCursor<Object> = createCursor(emptyContextObject);
+const contextStackCursor: StackCursor<Object> = createCursor(
+  emptyContextObject,
+);
 // A cursor to a boolean indicating whether the context has changed.
-let didPerformWorkStackCursor: StackCursor<boolean> = createCursor(false);
+const didPerformWorkStackCursor: StackCursor<boolean> = createCursor(false);
 // Keep track of the previous context object that was on the stack.
 // We use this to get access to the parent context after we have already
 // pushed the next context provider, and now need to merge their contexts.
@@ -99,19 +99,13 @@ function getMaskedContext(
     }
 
     const context = {};
-    for (let key in contextTypes) {
+    for (const key in contextTypes) {
       context[key] = unmaskedContext[key];
     }
 
     if (__DEV__) {
       const name = getComponentName(type) || 'Unknown';
-      checkPropTypes(
-        contextTypes,
-        context,
-        'context',
-        name,
-        getCurrentFiberStackInDev,
-      );
+      checkPropTypes(contextTypes, context, 'context', name);
     }
 
     // Cache unmasked context so we can avoid recreating masked context unless necessary.
@@ -209,17 +203,8 @@ function processChildContext(
       return parentContext;
     }
 
-    let childContext;
-    if (__DEV__) {
-      setCurrentPhase('getChildContext');
-    }
-    startPhaseTimer(fiber, 'getChildContext');
-    childContext = instance.getChildContext();
-    stopPhaseTimer();
-    if (__DEV__) {
-      setCurrentPhase(null);
-    }
-    for (let contextKey in childContext) {
+    const childContext = instance.getChildContext();
+    for (const contextKey in childContext) {
       invariant(
         contextKey in childContextTypes,
         '%s.getChildContext(): key "%s" is not defined in childContextTypes.',
@@ -229,18 +214,7 @@ function processChildContext(
     }
     if (__DEV__) {
       const name = getComponentName(type) || 'Unknown';
-      checkPropTypes(
-        childContextTypes,
-        childContext,
-        'child context',
-        name,
-        // In practice, there is one case in which we won't get a stack. It's when
-        // somebody calls unstable_renderSubtreeIntoContainer() and we process
-        // context from the parent component instance. The stack will be missing
-        // because it's outside of the reconciliation, and so the pointer has not
-        // been set. This is rare and doesn't matter. We'll also remove that API.
-        getCurrentFiberStackInDev,
-      );
+      checkPropTypes(childContextTypes, childContext, 'child context', name);
     }
 
     return {...parentContext, ...childContext};

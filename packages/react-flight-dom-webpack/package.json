@@ -13,9 +13,11 @@
     "LICENSE",
     "README.md",
     "index.js",
+    "plugin.js",
     "server.js",
     "server.browser.js",
     "server.node.js",
+    "server-runtime.js",
     "cjs/",
     "umd/"
   ],

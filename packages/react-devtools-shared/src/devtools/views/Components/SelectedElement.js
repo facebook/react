@@ -8,7 +8,8 @@
  */
 
 import {copy} from 'clipboard-js';
-import React, {Fragment, useCallback, useContext} from 'react';
+import * as React from 'react';
+import {Fragment, useCallback, useContext} from 'react';
 import {TreeDispatcherContext, TreeStateContext} from './TreeContext';
 import {BridgeContext, ContextMenuContext, StoreContext} from '../context';
 import ContextMenu from '../../ContextMenu/ContextMenu';
@@ -25,6 +26,7 @@ import ViewElementSourceContext from './ViewElementSourceContext';
 import NativeStyleEditor from './NativeStyleEditor';
 import Toggle from '../Toggle';
 import Badge from './Badge';
+import {useHighlightNativeElement} from '../hooks';
 import {
   ComponentFilterElementType,
   ElementTypeClass,
@@ -36,9 +38,11 @@ import {
 
 import styles from './SelectedElement.css';
 
+import type {ContextMenuContextType} from '../context';
 import type {
   CopyInspectedElementPath,
   GetInspectedElementPath,
+  InspectedElementContextType,
   StoreAsGlobal,
 } from './InspectedElementContext';
 import type {Element, InspectedElement} from './types';
@@ -61,8 +65,7 @@ export default function SelectedElement(_: Props) {
     getInspectedElementPath,
     getInspectedElement,
     storeAsGlobal,
-    viewInspectedElementPath,
-  } = useContext(InspectedElementContext);
+  } = useContext<InspectedElementContextType>(InspectedElementContext);
 
   const element =
     inspectedElementID !== null
@@ -243,7 +246,6 @@ export default function SelectedElement(_: Props) {
           getInspectedElementPath={getInspectedElementPath}
           inspectedElement={inspectedElement}
           storeAsGlobal={storeAsGlobal}
-          viewInspectedElementPath={viewInspectedElementPath}
         />
       )}
     </div>
@@ -269,7 +271,6 @@ function InspectedElementView({
   getInspectedElementPath,
   inspectedElement,
   storeAsGlobal,
-  viewInspectedElementPath,
 }: InspectedElementViewProps) {
   const {id, type} = element;
   const {
@@ -292,7 +293,7 @@ function InspectedElementView({
   const {
     isEnabledForInspectedElement,
     viewAttributeSourceFunction,
-  } = useContext(ContextMenuContext);
+  } = useContext<ContextMenuContextType>(ContextMenuContext);
 
   const inspectContextPath = useCallback(
     (path: Array<string | number>) => {
@@ -522,6 +523,10 @@ function OwnerView({
   type,
 }: OwnerViewProps) {
   const dispatch = useContext(TreeDispatcherContext);
+  const {
+    highlightNativeElement,
+    clearHighlightNativeElement,
+  } = useHighlightNativeElement();
 
   const handleClick = useCallback(
     () =>
@@ -532,18 +537,26 @@ function OwnerView({
     [dispatch, id],
   );
 
+  const onMouseEnter = () => highlightNativeElement(id);
+
+  const onMouseLeave = clearHighlightNativeElement;
+
   return (
     <Button
       key={id}
       className={styles.OwnerButton}
       disabled={!isInStore}
-      onClick={handleClick}>
-      <span
-        className={`${styles.Owner} ${isInStore ? '' : styles.NotInStore}`}
-        title={displayName}>
-        {displayName}
+      onClick={handleClick}
+      onMouseEnter={onMouseEnter}
+      onMouseLeave={onMouseLeave}>
+      <span className={styles.OwnerContent}>
+        <span
+          className={`${styles.Owner} ${isInStore ? '' : styles.NotInStore}`}
+          title={displayName}>
+          {displayName}
+        </span>
+        <Badge hocDisplayNames={hocDisplayNames} type={type} />
       </span>
-      <Badge hocDisplayNames={hocDisplayNames} type={type} />
     </Button>
   );
 }

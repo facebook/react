@@ -159,8 +159,8 @@ if (__DEV__) {
   };
 
   updatedAncestorInfo = function(oldInfo, tag) {
-    let ancestorInfo = {...(oldInfo || emptyAncestorInfo)};
-    let info = {tag};
+    const ancestorInfo = {...(oldInfo || emptyAncestorInfo)};
+    const info = {tag};
 
     if (inScopeTags.indexOf(tag) !== -1) {
       ancestorInfo.aTagInScope = null;

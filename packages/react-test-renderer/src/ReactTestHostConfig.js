@@ -45,8 +45,13 @@ export type TimeoutHandle = TimeoutID;
 export type NoTimeout = -1;
 export type EventResponder = any;
 
-export * from 'shared/HostConfigWithNoPersistence';
-export * from 'shared/HostConfigWithNoHydration';
+export type ReactListenerEvent = Object;
+export type ReactListenerMap = Object;
+export type ReactListener = Object;
+export type RendererInspectionConfig = $ReadOnly<{||}>;
+
+export * from 'react-reconciler/src/ReactFiberHostConfigWithNoPersistence';
+export * from 'react-reconciler/src/ReactFiberHostConfigWithNoHydration';
 
 const EVENT_COMPONENT_CONTEXT = {};
 const NO_CONTEXT = {};
@@ -374,4 +379,20 @@ export function getInstanceFromNode(mockNode: Object) {
 
 export function beforeRemoveInstance(instance: any) {
   // noop
+}
+
+export function registerEvent(event: any, rootContainerInstance: Container) {
+  throw new Error('Not yet implemented.');
+}
+
+export function mountEventListener(listener: any) {
+  throw new Error('Not yet implemented.');
+}
+
+export function unmountEventListener(listener: any) {
+  throw new Error('Not yet implemented.');
+}
+
+export function validateEventListenerTarget(target: any, listener: any) {
+  throw new Error('Not yet implemented.');
 }

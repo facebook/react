@@ -16,7 +16,7 @@ import type {FiberRoot} from './ReactFiberRoot';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
 import type {ReactNodeList} from 'shared/ReactTypes';
 
-import {DidCapture} from 'shared/ReactSideEffectTags';
+import {DidCapture} from './ReactSideEffectTags';
 
 declare var __REACT_DEVTOOLS_GLOBAL_HOOK__: Object | void;
 

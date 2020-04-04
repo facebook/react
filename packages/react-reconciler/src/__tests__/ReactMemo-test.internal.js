@@ -419,6 +419,75 @@ describe('memo', () => {
           'Invalid prop `inner` of type `boolean` supplied to `Inner`, expected `number`.',
         ]);
       });
+
+      it('does not drop lower priority state updates when bailing out at higher pri (simple)', async () => {
+        const {useState} = React;
+
+        let setCounter;
+        const Counter = memo(() => {
+          const [counter, _setCounter] = useState(0);
+          setCounter = _setCounter;
+          return counter;
+        });
+
+        function App() {
+          return (
+            <Suspense fallback="Loading...">
+              <Counter />
+            </Suspense>
+          );
+        }
+
+        const root = ReactNoop.createRoot();
+        await ReactNoop.act(async () => {
+          root.render(<App />);
+        });
+        expect(root).toMatchRenderedOutput('0');
+
+        await ReactNoop.act(async () => {
+          setCounter(1);
+          ReactNoop.discreteUpdates(() => {
+            root.render(<App />);
+          });
+        });
+        expect(root).toMatchRenderedOutput('1');
+      });
+
+      it('does not drop lower priority state updates when bailing out at higher pri (complex)', async () => {
+        const {useState} = React;
+
+        let setCounter;
+        const Counter = memo(
+          () => {
+            const [counter, _setCounter] = useState(0);
+            setCounter = _setCounter;
+            return counter;
+          },
+          (a, b) => a.complexProp.val === b.complexProp.val,
+        );
+
+        function App() {
+          return (
+            <Suspense fallback="Loading...">
+              <Counter complexProp={{val: 1}} />
+            </Suspense>
+          );
+        }
+
+        const root = ReactNoop.createRoot();
+        await ReactNoop.act(async () => {
+          root.render(<App />);
+        });
+        expect(root).toMatchRenderedOutput('0');
+
+        await ReactNoop.act(async () => {
+          setCounter(1);
+          ReactNoop.discreteUpdates(() => {
+            root.render(<App />);
+          });
+        });
+        expect(root).toMatchRenderedOutput('1');
+      });
     });
   }
 });

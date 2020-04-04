@@ -3,6 +3,8 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
+ *
+ * @flow
  */
 
 import ReactVersion from 'shared/ReactVersion';
@@ -18,17 +20,16 @@ import {Component, PureComponent} from './ReactBaseClasses';
 import {createRef} from './ReactCreateRef';
 import {forEach, map, count, toArray, only} from './ReactChildren';
 import {
-  createElement,
-  createFactory,
-  cloneElement,
+  createElement as createElementProd,
+  createFactory as createFactoryProd,
+  cloneElement as cloneElementProd,
   isValidElement,
-  jsx,
 } from './ReactElement';
 import {createContext} from './ReactContext';
 import {lazy} from './ReactLazy';
-import forwardRef from './forwardRef';
-import memo from './memo';
-import chunk from './chunk';
+import {forwardRef} from './ReactForwardRef';
+import {memo} from './ReactMemo';
+import {block} from './ReactBlock';
 import {
   useCallback,
   useContext,
@@ -37,6 +38,7 @@ import {
   useDebugValue,
   useLayoutEffect,
   useMemo,
+  useMutableSource,
   useReducer,
   useRef,
   useState,
@@ -49,41 +51,36 @@ import {
   createElementWithValidation,
   createFactoryWithValidation,
   cloneElementWithValidation,
-  jsxWithValidation,
-  jsxWithValidationStatic,
-  jsxWithValidationDynamic,
 } from './ReactElementValidator';
+import {createMutableSource} from './ReactMutableSource';
 import ReactSharedInternals from './ReactSharedInternals';
-import createFundamental from 'shared/createFundamentalComponent';
-import createResponder from 'shared/createEventResponder';
-import createScope from 'shared/createScope';
-import {
-  enableJSXTransformAPI,
-  enableDeprecatedFlareAPI,
-  enableFundamentalAPI,
-  enableScopeAPI,
-  exposeConcurrentModeAPIs,
-  enableChunksAPI,
-  disableCreateFactory,
-} from 'shared/ReactFeatureFlags';
-const React = {
-  Children: {
-    map,
-    forEach,
-    count,
-    toArray,
-    only,
-  },
+import {createFundamental} from './ReactFundamental';
+import {createEventResponder} from './ReactEventResponder';
+import {createScope} from './ReactScope';
 
+// TODO: Move this branching into the other module instead and just re-export.
+const createElement = __DEV__ ? createElementWithValidation : createElementProd;
+const cloneElement = __DEV__ ? cloneElementWithValidation : cloneElementProd;
+const createFactory = __DEV__ ? createFactoryWithValidation : createFactoryProd;
+
+const Children = {
+  map,
+  forEach,
+  count,
+  toArray,
+  only,
+};
+
+export {
+  Children,
+  createMutableSource,
   createRef,
   Component,
   PureComponent,
-
   createContext,
   forwardRef,
   lazy,
   memo,
-
   useCallback,
   useContext,
   useEffect,
@@ -91,68 +88,33 @@ const React = {
   useDebugValue,
   useLayoutEffect,
   useMemo,
+  useMutableSource,
   useReducer,
   useRef,
   useState,
-
-  Fragment: REACT_FRAGMENT_TYPE,
-  Profiler: REACT_PROFILER_TYPE,
-  StrictMode: REACT_STRICT_MODE_TYPE,
-  Suspense: REACT_SUSPENSE_TYPE,
-
-  createElement: __DEV__ ? createElementWithValidation : createElement,
-  cloneElement: __DEV__ ? cloneElementWithValidation : cloneElement,
-  isValidElement: isValidElement,
-
-  version: ReactVersion,
-
-  __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED: ReactSharedInternals,
+  REACT_FRAGMENT_TYPE as Fragment,
+  REACT_PROFILER_TYPE as Profiler,
+  REACT_STRICT_MODE_TYPE as StrictMode,
+  REACT_SUSPENSE_TYPE as Suspense,
+  createElement,
+  cloneElement,
+  isValidElement,
+  ReactVersion as version,
+  ReactSharedInternals as __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED,
+  // Deprecated behind disableCreateFactory
+  createFactory,
+  // Concurrent Mode
+  useTransition,
+  useDeferredValue,
+  REACT_SUSPENSE_LIST_TYPE as SuspenseList,
+  withSuspenseConfig as unstable_withSuspenseConfig,
+  // enableBlocksAPI
+  block,
+  // enableDeprecatedFlareAPI
+  useResponder as DEPRECATED_useResponder,
+  createEventResponder as DEPRECATED_createResponder,
+  // enableFundamentalAPI
+  createFundamental as unstable_createFundamental,
+  // enableScopeAPI
+  createScope as unstable_createScope,
 };
-
-if (!disableCreateFactory) {
-  React.createFactory = __DEV__ ? createFactoryWithValidation : createFactory;
-}
-
-if (exposeConcurrentModeAPIs) {
-  React.useTransition = useTransition;
-  React.useDeferredValue = useDeferredValue;
-  React.SuspenseList = REACT_SUSPENSE_LIST_TYPE;
-  React.unstable_withSuspenseConfig = withSuspenseConfig;
-}
-
-if (enableChunksAPI) {
-  React.chunk = chunk;
-}
-
-if (enableDeprecatedFlareAPI) {
-  React.DEPRECATED_useResponder = useResponder;
-  React.DEPRECATED_createResponder = createResponder;
-}
-
-if (enableFundamentalAPI) {
-  React.unstable_createFundamental = createFundamental;
-}
-
-if (enableScopeAPI) {
-  React.unstable_createScope = createScope;
-}
-
-// Note: some APIs are added with feature flags.
-// Make sure that stable builds for open source
-// don't modify the React object to avoid deopts.
-// Also let's not expose their names in stable builds.
-
-if (enableJSXTransformAPI) {
-  if (__DEV__) {
-    React.jsxDEV = jsxWithValidation;
-    React.jsx = jsxWithValidationDynamic;
-    React.jsxs = jsxWithValidationStatic;
-  } else {
-    React.jsx = jsx;
-    // we may want to special case jsxs internally to take advantage of static children.
-    // for now we can ship identical prod functions
-    React.jsxs = jsx;
-  }
-}
-
-export default React;

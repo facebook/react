@@ -7,7 +7,9 @@
  * @flow
  */
 
+import type {ElementRef} from 'react';
 import type {
+  HostComponent,
   MeasureInWindowOnSuccessCallback,
   MeasureLayoutOnSuccessCallback,
   MeasureOnSuccessCallback,
@@ -31,20 +33,28 @@ import {
 class ReactNativeFiberHostComponent {
   _children: Array<Instance | number>;
   _nativeTag: number;
+  _internalFiberInstanceHandleDEV: Object;
   viewConfig: ReactNativeBaseComponentViewConfig<>;
 
-  constructor(tag: number, viewConfig: ReactNativeBaseComponentViewConfig<>) {
+  constructor(
+    tag: number,
+    viewConfig: ReactNativeBaseComponentViewConfig<>,
+    internalInstanceHandleDEV: Object,
+  ) {
     this._nativeTag = tag;
     this._children = [];
     this.viewConfig = viewConfig;
+    if (__DEV__) {
+      this._internalFiberInstanceHandleDEV = internalInstanceHandleDEV;
+    }
   }
 
   blur() {
-    TextInputState.blurTextInput(this._nativeTag);
+    TextInputState.blurTextInput(this);
   }
 
   focus() {
-    TextInputState.focusTextInput(this._nativeTag);
+    TextInputState.focusTextInput(this);
   }
 
   measure(callback: MeasureOnSuccessCallback) {
@@ -62,7 +72,7 @@ class ReactNativeFiberHostComponent {
   }
 
   measureLayout(
-    relativeToNativeNode: number | ReactNativeFiberHostComponent,
+    relativeToNativeNode: number | ElementRef<HostComponent<mixed>>,
     onSuccess: MeasureLayoutOnSuccessCallback,
     onFail?: () => void /* currently unused */,
   ) {
@@ -71,8 +81,11 @@ class ReactNativeFiberHostComponent {
     if (typeof relativeToNativeNode === 'number') {
       // Already a node handle
       relativeNode = relativeToNativeNode;
-    } else if (relativeToNativeNode._nativeTag) {
-      relativeNode = relativeToNativeNode._nativeTag;
+    } else {
+      const nativeNode: ReactNativeFiberHostComponent = (relativeToNativeNode: any);
+      if (nativeNode._nativeTag) {
+        relativeNode = nativeNode._nativeTag;
+      }
     }
 
     if (relativeNode == null) {

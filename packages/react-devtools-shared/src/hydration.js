@@ -7,7 +7,6 @@
  * @flow
  */
 
-import Symbol from 'es6-symbol';
 import {
   getDataType,
   getDisplayNameForReactElement,
@@ -288,7 +287,7 @@ export function dehydrate(
         return createDehydrated(type, true, data, cleaned, path);
       } else {
         const object = {};
-        for (let name in data) {
+        for (const name in data) {
           object[name] = dehydrate(
             data[name],
             cleaned,

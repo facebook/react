@@ -12,11 +12,13 @@ import ReactCurrentDispatcher from '../ReactCurrentDispatcher';
 import ReactCurrentOwner from '../ReactCurrentOwner';
 import ReactDebugCurrentFrame from '../ReactDebugCurrentFrame';
 import IsSomeRendererActing from '../IsSomeRendererActing';
+import ReactCurrentBatchConfig from '../ReactCurrentBatchConfig';
 
 const ReactSharedInternals = {
   ReactCurrentDispatcher,
   ReactCurrentOwner,
   IsSomeRendererActing,
+  ReactCurrentBatchConfig,
   // Used by renderers to avoid bundling object-assign twice in UMD bundles:
   assign,
 };

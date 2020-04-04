@@ -28,5 +28,3 @@ export opaque type Destination = mixed; // eslint-disable-line no-undef
 
 export const formatChunkAsString = $$$hostConfig.formatChunkAsString;
 export const formatChunk = $$$hostConfig.formatChunk;
-export const renderHostChildrenToString =
-  $$$hostConfig.renderHostChildrenToString;

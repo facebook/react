@@ -40,7 +40,7 @@ describe('EnterLeaveEventPlugin', () => {
     );
     iframeDocument.close();
 
-    let leaveEvents = [];
+    const leaveEvents = [];
     const node = ReactDOM.render(
       <div
         onMouseLeave={e => {
@@ -73,7 +73,7 @@ describe('EnterLeaveEventPlugin', () => {
     );
     iframeDocument.close();
 
-    let enterEvents = [];
+    const enterEvents = [];
     const node = ReactDOM.render(
       <div
         onMouseEnter={e => {

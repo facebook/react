@@ -145,7 +145,7 @@ module.exports = function(initModules) {
     return await expectErrors(
       () =>
         new Promise(resolve => {
-          let writable = new DrainWritable();
+          const writable = new DrainWritable();
           ReactDOMServer.renderToNodeStream(reactElement).pipe(writable);
           writable.on('finish', () => resolve(writable.buffer));
         }),
@@ -174,7 +174,7 @@ module.exports = function(initModules) {
     const markup = await renderIntoString(element, errorCount);
     resetModules();
 
-    let container = getContainerFromMarkup(element, markup);
+    const container = getContainerFromMarkup(element, markup);
     let serverNode = container.firstChild;
 
     const firstClientNode = await renderIntoDom(
@@ -205,7 +205,7 @@ module.exports = function(initModules) {
   const clientRenderOnBadMarkup = async (element, errorCount = 0) => {
     // First we render the top of bad mark up.
 
-    let container = getContainerFromMarkup(
+    const container = getContainerFromMarkup(
       element,
       shouldUseDocument(element)
         ? '<html><body><div id="badIdWhichWillCauseMismatch" /></body></html>'

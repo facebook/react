@@ -295,9 +295,8 @@ describe('ReactMultiChild', () => {
     }
     const container = document.createElement('div');
     expect(() => ReactDOM.render(<Parent />, container)).toErrorDev(
-      'Warning: Using Maps as children is unsupported and will likely yield ' +
-        'unexpected results. Convert it to a sequence/iterable of keyed ' +
-        'ReactElements instead.\n' +
+      'Using Maps as children is not supported. ' +
+        'Use an array of keyed ReactElements instead.\n' +
         '    in div (at **)\n' +
         '    in Parent (at **)',
     );

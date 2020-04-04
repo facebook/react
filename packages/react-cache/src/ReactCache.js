@@ -7,14 +7,11 @@
  * @flow
  */
 
-import React from 'react';
+import type {Thenable} from 'shared/ReactTypes';
+
+import * as React from 'react';
 
 import {createLRU} from './LRU';
-
-type Thenable<T> = {
-  then(resolve: (T) => mixed, reject: (mixed) => mixed): mixed,
-  ...
-};
 
 type Suspender = {then(resolve: () => mixed, reject: () => mixed): mixed, ...};
 
@@ -100,7 +97,7 @@ function accessResult<I, K, V>(
     entriesForResource = new Map();
     entries.set(resource, entriesForResource);
   }
-  let entry = entriesForResource.get(key);
+  const entry = entriesForResource.get(key);
   if (entry === undefined) {
     const thenable = fetch(input);
     thenable.then(

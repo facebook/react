@@ -7,13 +7,8 @@
  * @flow
  */
 
-import React, {
-  createContext,
-  useCallback,
-  useContext,
-  useMemo,
-  useState,
-} from 'react';
+import * as React from 'react';
+import {createContext, useCallback, useContext, useMemo, useState} from 'react';
 import {unstable_batchedUpdates as batchedUpdates} from 'react-dom';
 import {useLocalStorage, useSubscription} from '../hooks';
 import {
@@ -129,7 +124,10 @@ function ProfilerContextController({children}: Props) {
     supportsProfiling,
   } = useSubscription<StoreProfilingState>(subscription);
 
-  const [prevProfilingData, setPrevProfilingData] = useState();
+  const [
+    prevProfilingData,
+    setPrevProfilingData,
+  ] = useState<ProfilingDataFrontend | null>(null);
   const [rootID, setRootID] = useState<number | null>(null);
 
   if (prevProfilingData !== profilingData) {

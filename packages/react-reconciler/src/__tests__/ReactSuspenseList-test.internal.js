@@ -31,14 +31,14 @@ describe('ReactSuspenseList', () => {
 
   function createAsyncText(text) {
     let resolved = false;
-    let Component = function() {
+    const Component = function() {
       if (!resolved) {
         Scheduler.unstable_yieldValue('Suspend! [' + text + ']');
         throw promise;
       }
       return <Text text={text} />;
     };
-    let promise = new Promise(resolve => {
+    const promise = new Promise(resolve => {
       Component.resolve = function() {
         resolved = true;
         return resolve();
@@ -185,9 +185,9 @@ describe('ReactSuspenseList', () => {
   });
 
   it('shows content independently by default', async () => {
-    let A = createAsyncText('A');
-    let B = createAsyncText('B');
-    let C = createAsyncText('C');
+    const A = createAsyncText('A');
+    const B = createAsyncText('B');
+    const C = createAsyncText('C');
 
     function Foo() {
       return (
@@ -251,9 +251,9 @@ describe('ReactSuspenseList', () => {
   });
 
   it('shows content independently in legacy mode regardless of option', async () => {
-    let A = createAsyncText('A');
-    let B = createAsyncText('B');
-    let C = createAsyncText('C');
+    const A = createAsyncText('A');
+    const B = createAsyncText('B');
+    const C = createAsyncText('C');
 
     function Foo() {
       return (
@@ -293,7 +293,13 @@ describe('ReactSuspenseList', () => {
 
     await C.resolve();
 
-    expect(Scheduler).toFlushAndYield(['C']);
+    expect(Scheduler).toFlushAndYield([
+      // TODO: Ideally we wouldn't have to retry B. This is an implementation
+      // trade off.
+      'Suspend! [B]',
+
+      'C',
+    ]);
 
     expect(ReactNoop).toMatchRenderedOutput(
       <>
@@ -317,9 +323,9 @@ describe('ReactSuspenseList', () => {
   });
 
   it('displays all "together"', async () => {
-    let A = createAsyncText('A');
-    let B = createAsyncText('B');
-    let C = createAsyncText('C');
+    const A = createAsyncText('A');
+    const B = createAsyncText('B');
+    const C = createAsyncText('C');
 
     function Foo() {
       return (
@@ -386,9 +392,9 @@ describe('ReactSuspenseList', () => {
   });
 
   it('displays all "together" even when nested as siblings', async () => {
-    let A = createAsyncText('A');
-    let B = createAsyncText('B');
-    let C = createAsyncText('C');
+    const A = createAsyncText('A');
+    const B = createAsyncText('B');
+    const C = createAsyncText('C');
 
     function Foo() {
       return (
@@ -471,9 +477,9 @@ describe('ReactSuspenseList', () => {
   });
 
   it('displays all "together" in nested SuspenseLists', async () => {
-    let A = createAsyncText('A');
-    let B = createAsyncText('B');
-    let C = createAsyncText('C');
+    const A = createAsyncText('A');
+    const B = createAsyncText('B');
+    const C = createAsyncText('C');
 
     function Foo() {
       return (
@@ -532,9 +538,9 @@ describe('ReactSuspenseList', () => {
   });
 
   it('displays all "together" in nested SuspenseLists where the inner is default', async () => {
-    let A = createAsyncText('A');
-    let B = createAsyncText('B');
-    let C = createAsyncText('C');
+    const A = createAsyncText('A');
+    const B = createAsyncText('B');
+    const C = createAsyncText('C');
 
     function Foo() {
       return (
@@ -591,10 +597,10 @@ describe('ReactSuspenseList', () => {
   });
 
   it('displays all "together" during an update', async () => {
-    let A = createAsyncText('A');
-    let B = createAsyncText('B');
-    let C = createAsyncText('C');
-    let D = createAsyncText('D');
+    const A = createAsyncText('A');
+    const B = createAsyncText('B');
+    const C = createAsyncText('C');
+    const D = createAsyncText('D');
 
     function Foo({step}) {
       return (
@@ -675,9 +681,9 @@ describe('ReactSuspenseList', () => {
   });
 
   it('avoided boundaries can be coordinate with SuspenseList', async () => {
-    let A = createAsyncText('A');
-    let B = createAsyncText('B');
-    let C = createAsyncText('C');
+    const A = createAsyncText('A');
+    const B = createAsyncText('B');
+    const C = createAsyncText('C');
 
     function Foo({showMore}) {
       return (
@@ -773,9 +779,9 @@ describe('ReactSuspenseList', () => {
   });
 
   it('displays each items in "forwards" order', async () => {
-    let A = createAsyncText('A');
-    let B = createAsyncText('B');
-    let C = createAsyncText('C');
+    const A = createAsyncText('A');
+    const B = createAsyncText('B');
+    const C = createAsyncText('C');
 
     function Foo() {
       return (
@@ -838,9 +844,9 @@ describe('ReactSuspenseList', () => {
   });
 
   it('displays each items in "backwards" order', async () => {
-    let A = createAsyncText('A');
-    let B = createAsyncText('B');
-    let C = createAsyncText('C');
+    const A = createAsyncText('A');
+    const B = createAsyncText('B');
+    const C = createAsyncText('C');
 
     function Foo() {
       return (
@@ -903,12 +909,12 @@ describe('ReactSuspenseList', () => {
   });
 
   it('displays added row at the top "together" and the bottom in "forwards" order', async () => {
-    let A = createAsyncText('A');
-    let B = createAsyncText('B');
-    let C = createAsyncText('C');
-    let D = createAsyncText('D');
-    let E = createAsyncText('E');
-    let F = createAsyncText('F');
+    const A = createAsyncText('A');
+    const B = createAsyncText('B');
+    const C = createAsyncText('C');
+    const D = createAsyncText('D');
+    const E = createAsyncText('E');
+    const F = createAsyncText('F');
 
     function Foo({items}) {
       return (
@@ -1057,10 +1063,10 @@ describe('ReactSuspenseList', () => {
   });
 
   it('displays added row at the top "together" and the bottom in "backwards" order', async () => {
-    let A = createAsyncText('A');
-    let B = createAsyncText('B');
-    let D = createAsyncText('D');
-    let F = createAsyncText('F');
+    const A = createAsyncText('A');
+    const B = createAsyncText('B');
+    const D = createAsyncText('D');
+    const F = createAsyncText('F');
 
     function createSyncText(text) {
       return function() {
@@ -1068,12 +1074,12 @@ describe('ReactSuspenseList', () => {
       };
     }
 
-    let As = createSyncText('A');
-    let Bs = createSyncText('B');
-    let Cs = createSyncText('C');
-    let Ds = createSyncText('D');
-    let Es = createSyncText('E');
-    let Fs = createSyncText('F');
+    const As = createSyncText('A');
+    const Bs = createSyncText('B');
+    const Cs = createSyncText('C');
+    const Ds = createSyncText('D');
+    const Es = createSyncText('E');
+    const Fs = createSyncText('F');
 
     function Foo({items}) {
       return (
@@ -1303,9 +1309,9 @@ describe('ReactSuspenseList', () => {
   });
 
   it('only shows one loading state at a time for "collapsed" tail insertions', async () => {
-    let A = createAsyncText('A');
-    let B = createAsyncText('B');
-    let C = createAsyncText('C');
+    const A = createAsyncText('A');
+    const B = createAsyncText('B');
+    const C = createAsyncText('C');
 
     function Foo() {
       return (
@@ -1478,12 +1484,12 @@ describe('ReactSuspenseList', () => {
   });
 
   it('adding to the middle does not collapse insertions (forwards)', async () => {
-    let A = createAsyncText('A');
-    let B = createAsyncText('B');
-    let C = createAsyncText('C');
-    let D = createAsyncText('D');
-    let E = createAsyncText('E');
-    let F = createAsyncText('F');
+    const A = createAsyncText('A');
+    const B = createAsyncText('B');
+    const C = createAsyncText('C');
+    const D = createAsyncText('D');
+    const E = createAsyncText('E');
+    const F = createAsyncText('F');
 
     function Foo({items}) {
       return (
@@ -1620,12 +1626,12 @@ describe('ReactSuspenseList', () => {
   });
 
   it('adding to the middle does not collapse insertions (backwards)', async () => {
-    let A = createAsyncText('A');
-    let B = createAsyncText('B');
-    let C = createAsyncText('C');
-    let D = createAsyncText('D');
-    let E = createAsyncText('E');
-    let F = createAsyncText('F');
+    const A = createAsyncText('A');
+    const B = createAsyncText('B');
+    const C = createAsyncText('C');
+    const D = createAsyncText('D');
+    const E = createAsyncText('E');
+    const F = createAsyncText('F');
 
     function Foo({items}) {
       return (
@@ -1767,12 +1773,12 @@ describe('ReactSuspenseList', () => {
   });
 
   it('adding to the middle of committed tail does not collapse insertions', async () => {
-    let A = createAsyncText('A');
-    let B = createAsyncText('B');
-    let C = createAsyncText('C');
-    let D = createAsyncText('D');
-    let E = createAsyncText('E');
-    let F = createAsyncText('F');
+    const A = createAsyncText('A');
+    const B = createAsyncText('B');
+    const C = createAsyncText('C');
+    const D = createAsyncText('D');
+    const E = createAsyncText('E');
+    const F = createAsyncText('F');
 
     function SyncD() {
       return <Text text="D" />;
@@ -1924,9 +1930,9 @@ describe('ReactSuspenseList', () => {
   });
 
   it('only shows no initial loading state "hidden" tail insertions', async () => {
-    let A = createAsyncText('A');
-    let B = createAsyncText('B');
-    let C = createAsyncText('C');
+    const A = createAsyncText('A');
+    const B = createAsyncText('B');
+    const C = createAsyncText('C');
 
     function Foo() {
       return (
@@ -1987,7 +1993,7 @@ describe('ReactSuspenseList', () => {
   });
 
   it('eventually resolves a nested forwards suspense list', async () => {
-    let B = createAsyncText('B');
+    const B = createAsyncText('B');
 
     function Foo() {
       return (
@@ -2049,7 +2055,7 @@ describe('ReactSuspenseList', () => {
   });
 
   it('eventually resolves a nested forwards suspense list with a hidden tail', async () => {
-    let B = createAsyncText('B');
+    const B = createAsyncText('B');
 
     function Foo() {
       return (
@@ -2095,7 +2101,7 @@ describe('ReactSuspenseList', () => {
   });
 
   it('eventually resolves two nested forwards suspense lists with a hidden tail', async () => {
-    let B = createAsyncText('B');
+    const B = createAsyncText('B');
 
     function Foo({showB}) {
       return (
@@ -2164,7 +2170,7 @@ describe('ReactSuspenseList', () => {
   it('can do unrelated adjacent updates', async () => {
     let updateAdjacent;
     function Adjacent() {
-      let [text, setText] = React.useState('-');
+      const [text, setText] = React.useState('-');
       updateAdjacent = setText;
       return <Text text={text} />;
     }
@@ -2208,12 +2214,12 @@ describe('ReactSuspenseList', () => {
   });
 
   it('is able to re-suspend the last rows during an update with hidden', async () => {
-    let AsyncB = createAsyncText('B');
+    const AsyncB = createAsyncText('B');
 
     let setAsyncB;
 
     function B() {
-      let [shouldBeAsync, setAsync] = React.useState(false);
+      const [shouldBeAsync, setAsync] = React.useState(false);
       setAsyncB = setAsync;
 
       return shouldBeAsync ? (
@@ -2247,7 +2253,7 @@ describe('ReactSuspenseList', () => {
       </>,
     );
 
-    let previousInst = setAsyncB;
+    const previousInst = setAsyncB;
 
     // During an update we suspend on B.
     ReactNoop.act(() => setAsyncB(true));
@@ -2293,5 +2299,252 @@ describe('ReactSuspenseList', () => {
     // This should be the same instance. I.e. it didn't
     // remount.
     expect(previousInst).toBe(setAsyncB);
+  });
+
+  it('is able to re-suspend the last rows during an update with hidden', async () => {
+    const AsyncB = createAsyncText('B');
+
+    let setAsyncB;
+
+    function B() {
+      const [shouldBeAsync, setAsync] = React.useState(false);
+      setAsyncB = setAsync;
+
+      return shouldBeAsync ? (
+        <Suspense fallback={<Text text="Loading B" />}>
+          <AsyncB />
+        </Suspense>
+      ) : (
+        <Text text="Sync B" />
+      );
+    }
+
+    function Foo({updateList}) {
+      return (
+        <SuspenseList revealOrder="forwards" tail="hidden">
+          <Suspense key="A" fallback={<Text text="Loading A" />}>
+            <Text text="A" />
+          </Suspense>
+          <B key="B" updateList={updateList} />
+        </SuspenseList>
+      );
+    }
+
+    ReactNoop.render(<Foo />);
+
+    expect(Scheduler).toFlushAndYield(['A', 'Sync B']);
+
+    expect(ReactNoop).toMatchRenderedOutput(
+      <>
+        <span>A</span>
+        <span>Sync B</span>
+      </>,
+    );
+
+    const previousInst = setAsyncB;
+
+    // During an update we suspend on B.
+    ReactNoop.act(() => setAsyncB(true));
+
+    expect(Scheduler).toHaveYielded([
+      'Suspend! [B]',
+      'Loading B',
+      // The second pass is the "force hide" pass
+      'Loading B',
+    ]);
+
+    expect(ReactNoop).toMatchRenderedOutput(
+      <>
+        <span>A</span>
+        <span>Loading B</span>
+      </>,
+    );
+
+    // Before we resolve we'll rerender the whole list.
+    // This should leave the tree intact.
+    ReactNoop.act(() => ReactNoop.render(<Foo updateList={true} />));
+
+    expect(Scheduler).toHaveYielded(['A', 'Suspend! [B]', 'Loading B']);
+
+    expect(ReactNoop).toMatchRenderedOutput(
+      <>
+        <span>A</span>
+        <span>Loading B</span>
+      </>,
+    );
+
+    await AsyncB.resolve();
+
+    expect(Scheduler).toFlushAndYield(['B']);
+
+    expect(ReactNoop).toMatchRenderedOutput(
+      <>
+        <span>A</span>
+        <span>B</span>
+      </>,
+    );
+
+    // This should be the same instance. I.e. it didn't
+    // remount.
+    expect(previousInst).toBe(setAsyncB);
+  });
+
+  it('is able to interrupt a partially rendered tree and continue later', async () => {
+    const AsyncA = createAsyncText('A');
+
+    let updateLowPri;
+    let updateHighPri;
+
+    function Bar() {
+      const [highPriState, setHighPriState] = React.useState(false);
+      updateHighPri = setHighPriState;
+      return highPriState ? <AsyncA /> : null;
+    }
+
+    function Foo() {
+      const [lowPriState, setLowPriState] = React.useState(false);
+      updateLowPri = setLowPriState;
+      return (
+        <SuspenseList revealOrder="forwards" tail="hidden">
+          <Suspense key="A" fallback={<Text text="Loading A" />}>
+            <Bar />
+          </Suspense>
+          {lowPriState ? <Text text="B" /> : null}
+          {lowPriState ? <Text text="C" /> : null}
+          {lowPriState ? <Text text="D" /> : null}
+        </SuspenseList>
+      );
+    }
+
+    ReactNoop.render(<Foo />);
+
+    expect(Scheduler).toFlushAndYield([]);
+
+    expect(ReactNoop).toMatchRenderedOutput(null);
+
+    ReactNoop.act(() => {
+      // Add a few items at the end.
+      updateLowPri(true);
+
+      // Flush partially through.
+      expect(Scheduler).toFlushAndYieldThrough(['B', 'C']);
+
+      // Schedule another update at higher priority.
+      Scheduler.unstable_runWithPriority(
+        Scheduler.unstable_UserBlockingPriority,
+        () => updateHighPri(true),
+      );
+
+      // That will intercept the previous render.
+    });
+
+    jest.runAllTimers();
+
+    expect(Scheduler).toHaveYielded(
+      __DEV__
+        ? [
+            // First attempt at high pri.
+            'Suspend! [A]',
+            'Loading A',
+            // Re-render at forced.
+            'Suspend! [A]',
+            'Loading A',
+            // We auto-commit this on DEV.
+            // Try again on low-pri.
+            'Suspend! [A]',
+            'Loading A',
+          ]
+        : [
+            // First attempt at high pri.
+            'Suspend! [A]',
+            'Loading A',
+            // Re-render at forced.
+            'Suspend! [A]',
+            'Loading A',
+            // We didn't commit so retry at low-pri.
+            'Suspend! [A]',
+            'Loading A',
+            // Re-render at forced.
+            'Suspend! [A]',
+            'Loading A',
+          ],
+    );
+
+    expect(ReactNoop).toMatchRenderedOutput(<span>Loading A</span>);
+
+    await AsyncA.resolve();
+
+    expect(Scheduler).toFlushAndYield(['A', 'B', 'C', 'D']);
+
+    expect(ReactNoop).toMatchRenderedOutput(
+      <>
+        <span>A</span>
+        <span>B</span>
+        <span>C</span>
+        <span>D</span>
+      </>,
+    );
+  });
+
+  it('can resume class components when revealed together', async () => {
+    const A = createAsyncText('A');
+    const B = createAsyncText('B');
+
+    class ClassComponent extends React.Component {
+      render() {
+        return this.props.children;
+      }
+    }
+
+    function Foo() {
+      return (
+        <Suspense fallback={<Text text="Loading" />}>
+          <SuspenseList revealOrder="together">
+            <ClassComponent>
+              <Suspense fallback={<Text text="Loading A" />}>
+                <A />
+              </Suspense>
+            </ClassComponent>
+            <ClassComponent>
+              <Suspense fallback={<Text text="Loading B" />}>
+                <B />
+              </Suspense>
+            </ClassComponent>
+          </SuspenseList>
+        </Suspense>
+      );
+    }
+
+    await A.resolve();
+
+    ReactNoop.render(<Foo />);
+
+    expect(Scheduler).toFlushAndYield([
+      'A',
+      'Suspend! [B]',
+      'Loading B',
+      'Loading A',
+      'Loading B',
+    ]);
+
+    expect(ReactNoop).toMatchRenderedOutput(
+      <>
+        <span>Loading A</span>
+        <span>Loading B</span>
+      </>,
+    );
+
+    await B.resolve();
+
+    ReactNoop.render(<Foo />);
+
+    expect(Scheduler).toFlushAndYield(['A', 'B']);
+
+    expect(ReactNoop).toMatchRenderedOutput(
+      <>
+        <span>A</span>
+        <span>B</span>
+      </>,
+    );
   });
 });

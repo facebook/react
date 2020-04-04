@@ -307,7 +307,7 @@
   "306": "Element type is invalid. Received a promise that resolves to: %s. Lazy element type must resolve to a class or function.%s",
   "307": "Hooks can only be called inside the body of a function component. (https://fb.me/react-invalid-hook-call)",
   "308": "Context can only be read while React is rendering. In classes, you can read it in the render method or getDerivedStateFromProps. In function components, you can read it directly in the function body, but not inside Hooks like useReducer() or useMemo().",
-  "309": "Function components cannot have refs. Did you mean to use React.forwardRef()?",
+  "309": "Function components cannot have string refs. We recommend using useRef() instead. Learn more about using refs safely here: https://fb.me/react-strict-mode-string-ref",
   "310": "Rendered more hooks than during the previous render.",
   "311": "Should have a queue. This is likely a bug in React. Please file an issue.",
   "312": "Rendered more hooks than during the previous render",
@@ -345,5 +345,11 @@
   "344": "Expected prepareToHydrateHostSuspenseInstance() to never be called. This error is likely caused by a bug in React. Please file an issue.",
   "345": "Root did not complete. This is a bug in React.",
   "346": "An event responder context was used outside of an event cycle.",
-  "347": "Maps are not valid as a React child (found: %s). Consider converting children to an array of keyed ReactElements instead."
+  "348": "ensureListeningTo(): received a container that was not an element node. This is likely a bug in React.",
+  "349": "Expected a work-in-progress root. This is a bug in React. Please file an issue.",
+  "350": "Cannot read from mutable source during the current render without tearing. This is a bug in React. Please file an issue.",
+  "351": "Unsupported type.",
+  "352": "React Blocks (and Lazy Components) are expected to be replaced by a compiler on the server. Try configuring your compiler set up and avoid using React.lazy inside of Blocks.",
+  "353": "A server block should never encode any other slots. This is a bug in React.",
+  "354": "getInspectorDataForViewAtPoint() is not available in production."
 }

@@ -5,23 +5,26 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import {accumulateEnterLeaveDispatches} from 'legacy-events/EventPropagators';
-
 import {
   TOP_MOUSE_OUT,
   TOP_MOUSE_OVER,
   TOP_POINTER_OUT,
   TOP_POINTER_OVER,
 } from './DOMTopLevelEventTypes';
-import {IS_REPLAYED, IS_FIRST_ANCESTOR} from 'legacy-events/EventSystemFlags';
+import {
+  IS_REPLAYED,
+  IS_FIRST_ANCESTOR,
+} from 'react-dom/src/events/EventSystemFlags';
 import SyntheticMouseEvent from './SyntheticMouseEvent';
 import SyntheticPointerEvent from './SyntheticPointerEvent';
 import {
   getClosestInstanceFromNode,
   getNodeFromInstance,
 } from '../client/ReactDOMComponentTree';
-import {HostComponent, HostText} from 'shared/ReactWorkTags';
-import {getNearestMountedFiber} from 'react-reconciler/reflection';
+import {HostComponent, HostText} from 'react-reconciler/src/ReactWorkTags';
+import {getNearestMountedFiber} from 'react-reconciler/src/ReactFiberTreeReflection';
+import {enableModernEventSystem} from 'shared/ReactFeatureFlags';
+import accumulateEnterLeaveListeners from './accumulateEnterLeaveListeners';
 
 const eventTypes = {
   mouseEnter: {
@@ -64,16 +67,26 @@ const EnterLeaveEventPlugin = {
     const isOutEvent =
       topLevelType === TOP_MOUSE_OUT || topLevelType === TOP_POINTER_OUT;
 
-    if (
-      isOverEvent &&
-      (eventSystemFlags & IS_REPLAYED) === 0 &&
-      (nativeEvent.relatedTarget || nativeEvent.fromElement)
-    ) {
-      // If this is an over event with a target, then we've already dispatched
-      // the event in the out event of the other target. If this is replayed,
-      // then it's because we couldn't dispatch against this target previously
-      // so we have to do it now instead.
-      return null;
+    if (isOverEvent && (eventSystemFlags & IS_REPLAYED) === 0) {
+      const related = nativeEvent.relatedTarget || nativeEvent.fromElement;
+      if (related) {
+        if (enableModernEventSystem) {
+          // Due to the fact we don't add listeners to the document with the
+          // modern event system and instead attach listeners to roots, we
+          // need to handle the over event case. To ensure this, we just need to
+          // make sure the node that we're coming from is managed by React.
+          const inst = getClosestInstanceFromNode(related);
+          if (inst !== null) {
+            return null;
+          }
+        } else {
+          // If this is an over event with a target, then we've already dispatched
+          // the event in the out event of the other target. If this is replayed,
+          // then it's because we couldn't dispatch against this target previously
+          // so we have to do it now instead.
+          return null;
+        }
+      }
     }
 
     if (!isOutEvent && !isOverEvent) {
@@ -161,13 +174,15 @@ const EnterLeaveEventPlugin = {
     enter.target = toNode;
     enter.relatedTarget = fromNode;
 
-    accumulateEnterLeaveDispatches(leave, enter, from, to);
+    accumulateEnterLeaveListeners(leave, enter, from, to);
 
-    // If we are not processing the first ancestor, then we
-    // should not process the same nativeEvent again, as we
-    // will have already processed it in the first ancestor.
-    if ((eventSystemFlags & IS_FIRST_ANCESTOR) === 0) {
-      return [leave];
+    if (!enableModernEventSystem) {
+      // If we are not processing the first ancestor, then we
+      // should not process the same nativeEvent again, as we
+      // will have already processed it in the first ancestor.
+      if ((eventSystemFlags & IS_FIRST_ANCESTOR) === 0) {
+        return [leave];
+      }
     }
 
     return [leave, enter];

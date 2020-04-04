@@ -38,6 +38,11 @@ const table = [[forcePointerEvents], [!forcePointerEvents]];
 describe.each(table)('ContextMenu responder', hasPointerEvents => {
   let container;
 
+  if (!__EXPERIMENTAL__) {
+    it("empty test so Jest doesn't complain", () => {});
+    return;
+  }
+
   beforeEach(() => {
     initializeModules(hasPointerEvents);
     container = document.createElement('div');

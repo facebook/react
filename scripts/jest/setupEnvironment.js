@@ -17,6 +17,8 @@ global.__EXPERIMENTAL__ =
     ? RELEASE_CHANNEL === 'experimental'
     : true;
 
+global.__VARIANT__ = !!process.env.VARIANT;
+
 if (typeof window !== 'undefined') {
   global.requestIdleCallback = function(callback) {
     return setTimeout(() => {

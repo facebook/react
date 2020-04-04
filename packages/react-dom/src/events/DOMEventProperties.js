@@ -12,7 +12,10 @@ import type {
   TopLevelType,
   DOMTopLevelEventType,
 } from 'legacy-events/TopLevelEventTypes';
-import type {DispatchConfig} from 'legacy-events/ReactSyntheticEventType';
+import type {
+  DispatchConfig,
+  CustomDispatchConfig,
+} from 'legacy-events/ReactSyntheticEventType';
 
 import * as DOMTopLevelEventTypes from './DOMTopLevelEventTypes';
 import {
@@ -20,6 +23,7 @@ import {
   UserBlockingEvent,
   ContinuousEvent,
 } from 'shared/ReactTypes';
+import {enableUseEventAPI} from 'shared/ReactFeatureFlags';
 
 // Needed for SimpleEventPlugin, rather than
 // do it in two places, which duplicates logic
@@ -31,7 +35,7 @@ export const simpleEventPluginEventTypes = {};
 
 export const topLevelEventsToDispatchConfig: Map<
   TopLevelType,
-  DispatchConfig,
+  DispatchConfig | CustomDispatchConfig,
 > = new Map();
 
 const eventPriorities = new Map();
@@ -91,6 +95,13 @@ const otherDiscreteEvents = [
   DOMTopLevelEventTypes.TOP_COMPOSITION_END,
   DOMTopLevelEventTypes.TOP_COMPOSITION_UPDATE,
 ];
+
+if (enableUseEventAPI) {
+  otherDiscreteEvents.push(
+    DOMTopLevelEventTypes.TOP_BEFORE_BLUR,
+    DOMTopLevelEventTypes.TOP_AFTER_BLUR,
+  );
+}
 
 // prettier-ignore
 const userBlockingPairsForSimpleEventPlugin = [
@@ -222,4 +233,20 @@ export function getEventPriorityForPluginSystem(
   // want to warn if we can't detect the priority
   // for the event.
   return priority === undefined ? ContinuousEvent : priority;
+}
+
+export function getEventPriorityForListenerSystem(
+  type: DOMTopLevelEventType,
+): EventPriority {
+  const priority = eventPriorities.get(type);
+  if (priority !== undefined) {
+    return priority;
+  }
+  if (__DEV__) {
+    console.warn(
+      'The event "type" provided to useEvent() does not have a known priority type.' +
+        ' It is recommended to provide a "priority" option to specify a priority.',
+    );
+  }
+  return ContinuousEvent;
 }

@@ -543,7 +543,7 @@ export function attach(
 
   // Highlight updates
   let traceUpdatesEnabled: boolean = false;
-  let traceUpdatesForNodes: Set<NativeType> = new Set();
+  const traceUpdatesForNodes: Set<NativeType> = new Set();
 
   function applyComponentFilters(componentFilters: Array<ComponentFilter>) {
     hideElementsWithTypes.clear();
@@ -675,7 +675,7 @@ export function attach(
       const displayName = getDisplayNameForFiber(fiber);
       if (displayName != null) {
         // eslint-disable-next-line no-for-of-loops/no-for-of-loops
-        for (let displayNameRegExp of hideElementsWithDisplayNames) {
+        for (const displayNameRegExp of hideElementsWithDisplayNames) {
           if (displayNameRegExp.test(displayName)) {
             return true;
           }
@@ -686,7 +686,7 @@ export function attach(
     if (_debugSource != null && hideElementsWithPaths.size > 0) {
       const {fileName} = _debugSource;
       // eslint-disable-next-line no-for-of-loops/no-for-of-loops
-      for (let pathRegExp of hideElementsWithPaths) {
+      for (const pathRegExp of hideElementsWithPaths) {
         if (pathRegExp.test(fileName)) {
           return true;
         }
@@ -960,7 +960,7 @@ export function attach(
     const keys = new Set([...Object.keys(prev), ...Object.keys(next)]);
     const changedKeys = [];
     // eslint-disable-next-line no-for-of-loops/no-for-of-loops
-    for (let key of keys) {
+    for (const key of keys) {
       if (prev[key] !== next[key]) {
         changedKeys.push(key);
       }
@@ -994,11 +994,11 @@ export function attach(
     }
   }
 
-  let pendingOperations: Array<number> = [];
-  let pendingRealUnmountedIDs: Array<number> = [];
-  let pendingSimulatedUnmountedIDs: Array<number> = [];
+  const pendingOperations: Array<number> = [];
+  const pendingRealUnmountedIDs: Array<number> = [];
+  const pendingSimulatedUnmountedIDs: Array<number> = [];
   let pendingOperationsQueue: Array<Array<number>> | null = [];
-  let pendingStringTable: Map<string, number> = new Map();
+  const pendingStringTable: Map<string, number> = new Map();
   let pendingStringTableLength: number = 0;
   let pendingUnmountedRootID: number | null = null;
 
@@ -1173,12 +1173,12 @@ export function attach(
         ? getFiberID(getPrimaryFiber(parentFiber))
         : 0;
 
-      let displayNameStringID = getStringID(displayName);
+      const displayNameStringID = getStringID(displayName);
 
       // This check is a guard to handle a React element that has been modified
       // in such a way as to bypass the default stringification of the "key" property.
-      let keyString = key === null ? null : '' + key;
-      let keyStringID = getStringID(keyString);
+      const keyString = key === null ? null : '' + key;
+      const keyStringID = getStringID(keyString);
 
       pushOperation(TREE_OPERATION_ADD);
       pushOperation(id);
@@ -1974,7 +1974,7 @@ export function attach(
       return null;
     }
 
-    let alternate = fiber.alternate;
+    const alternate = fiber.alternate;
     if (!alternate) {
       // If there is no alternate, then we only need to check if it is mounted.
       const state = isFiberMountedImpl(fiber);
@@ -1992,12 +1992,12 @@ export function attach(
     let a: Fiber = fiber;
     let b: Fiber = alternate;
     while (true) {
-      let parentA = a.return;
+      const parentA = a.return;
       if (parentA === null) {
         // We're at the root.
         break;
       }
-      let parentB = parentA.alternate;
+      const parentB = parentA.alternate;
       if (parentB === null) {
         // There is no alternate. This is an unusual case. Currently, it only
         // happens when a Suspense component is hidden. An extra fragment fiber
@@ -2131,7 +2131,7 @@ export function attach(
   }
 
   function prepareViewElementSource(id: number): void {
-    let fiber = idToFiberMap.get(id);
+    const fiber = idToFiberMap.get(id);
     if (fiber == null) {
       console.warn(`Could not find Fiber with id "${id}"`);
       return;
@@ -2163,7 +2163,7 @@ export function attach(
   }
 
   function getOwnersList(id: number): Array<Owner> | null {
-    let fiber = findCurrentFiberUsingSlowPathById(id);
+    const fiber = findCurrentFiberUsingSlowPathById(id);
     if (fiber == null) {
       return null;
     }
@@ -2200,7 +2200,7 @@ export function attach(
     let instance = null;
     let style = null;
 
-    let fiber = findCurrentFiberUsingSlowPathById(id);
+    const fiber = findCurrentFiberUsingSlowPathById(id);
     if (fiber !== null) {
       instance = fiber.stateNode;
 
@@ -2213,7 +2213,7 @@ export function attach(
   }
 
   function inspectElementRaw(id: number): InspectedElement | null {
-    let fiber = findCurrentFiberUsingSlowPathById(id);
+    const fiber = findCurrentFiberUsingSlowPathById(id);
     if (fiber == null) {
       return null;
     }
@@ -2328,7 +2328,7 @@ export function attach(
       const originalConsoleMethods = {};
 
       // Temporarily disable all console logging before re-running the hook.
-      for (let method in console) {
+      for (const method in console) {
         try {
           originalConsoleMethods[method] = console[method];
           // $FlowFixMe property error|warn is not writable.
@@ -2343,7 +2343,7 @@ export function attach(
         );
       } finally {
         // Restore original console functionality.
-        for (let method in originalConsoleMethods) {
+        for (const method in originalConsoleMethods) {
           try {
             // $FlowFixMe property error|warn is not writable.
             console[method] = originalConsoleMethods[method];
@@ -2462,7 +2462,7 @@ export function attach(
   function updateSelectedElement(inspectedElement: InspectedElement): void {
     const {hooks, id, props} = inspectedElement;
 
-    let fiber = idToFiberMap.get(id);
+    const fiber = idToFiberMap.get(id);
     if (fiber == null) {
       console.warn(`Could not find Fiber with id "${id}"`);
       return;
@@ -2912,7 +2912,7 @@ export function attach(
     return false;
   }
 
-  let forceFallbackForSuspenseIDs = new Set();
+  const forceFallbackForSuspenseIDs = new Set();
   function shouldSuspendFiberAccordingToSet(fiber) {
     const id = getFiberID(getPrimaryFiber(((fiber: any): Fiber)));
     return forceFallbackForSuspenseIDs.has(id);

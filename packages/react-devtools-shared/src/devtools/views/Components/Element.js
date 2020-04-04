@@ -7,7 +7,8 @@
  * @flow
  */
 
-import React, {Fragment, useContext, useMemo, useState} from 'react';
+import * as React from 'react';
+import {Fragment, useContext, useMemo, useState} from 'react';
 import Store from 'react-devtools-shared/src/devtools/store';
 import Badge from './Badge';
 import ButtonIcon from '../ButtonIcon';

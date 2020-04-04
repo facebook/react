@@ -53,6 +53,7 @@
   overflow: hidden;
   text-overflow: ellipsis;
   cursor: default;
+  white-space: nowrap;
 }
 
 .None {

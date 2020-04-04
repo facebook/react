@@ -72,7 +72,7 @@ describe('ProfilingCache', () => {
     utils.act(() => ReactDOM.render(<Parent count={0} />, containerA));
     utils.act(() => store.profilerStore.stopProfiling());
 
-    let allProfilingDataForRoots = [];
+    const allProfilingDataForRoots = [];
 
     function Validator({previousProfilingDataForRoot, rootID}) {
       const profilingDataForRoot = store.profilerStore.getDataForRoot(rootID);

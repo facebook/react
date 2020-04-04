@@ -121,7 +121,7 @@ describe('ReactDOMServerHooks', () => {
         return <span>{children}</span>;
       }
       function Counter() {
-        let [count, setCount] = useState(0);
+        const [count, setCount] = useState(0);
         return (
           <div>
             <UpdateCount setCount={setCount} count={count}>
@@ -140,7 +140,7 @@ describe('ReactDOMServerHooks', () => {
       async render => {
         class Counter extends React.Component {
           render() {
-            let [count] = useState(0);
+            const [count] = useState(0);
             return <Text text={count} />;
           }
         }
@@ -157,7 +157,7 @@ describe('ReactDOMServerHooks', () => {
 
     itRenders('multiple times when an updater is called', async render => {
       function Counter() {
-        let [count, setCount] = useState(0);
+        const [count, setCount] = useState(0);
         if (count < 12) {
           setCount(c => c + 1);
           setCount(c => c + 1);
@@ -172,7 +172,7 @@ describe('ReactDOMServerHooks', () => {
 
     itRenders('until there are no more new updates', async render => {
       function Counter() {
-        let [count, setCount] = useState(0);
+        const [count, setCount] = useState(0);
         if (count < 3) {
           setCount(count + 1);
         }
@@ -187,7 +187,7 @@ describe('ReactDOMServerHooks', () => {
       'after too many iterations',
       async render => {
         function Counter() {
-          let [count, setCount] = useState(0);
+          const [count, setCount] = useState(0);
           setCount(count + 1);
           return <span>{count}</span>;
         }
@@ -204,7 +204,7 @@ describe('ReactDOMServerHooks', () => {
         return action === 'increment' ? state + 1 : state;
       }
       function Counter() {
-        let [count] = useReducer(reducer, 0);
+        const [count] = useReducer(reducer, 0);
         yieldValue('Render: ' + count);
         return <Text text={count} />;
       }
@@ -221,7 +221,7 @@ describe('ReactDOMServerHooks', () => {
         return action === 'increment' ? state + 1 : state;
       }
       function Counter() {
-        let [count] = useReducer(reducer, 0, c => c + 1);
+        const [count] = useReducer(reducer, 0, c => c + 1);
         yieldValue('Render: ' + count);
         return <Text text={count} />;
       }
@@ -240,7 +240,7 @@ describe('ReactDOMServerHooks', () => {
           return action === 'increment' ? state + 1 : state;
         }
         function Counter() {
-          let [count, dispatch] = useReducer(reducer, 0);
+          const [count, dispatch] = useReducer(reducer, 0);
           if (count < 3) {
             dispatch('increment');
           }
@@ -286,8 +286,8 @@ describe('ReactDOMServerHooks', () => {
         }
 
         function Counter() {
-          let [reducer, setReducer] = useState(() => reducerA);
-          let [count, dispatch] = useReducer(reducer, 0);
+          const [reducer, setReducer] = useState(() => reducerA);
+          const [count, dispatch] = useReducer(reducer, 0);
           if (count < 20) {
             dispatch('increment');
             // Swap reducers each time we increment
@@ -630,7 +630,7 @@ describe('ReactDOMServerHooks', () => {
         const Context = React.createContext({}, () => {});
         class Counter extends React.Component {
           render() {
-            let [count] = useContext(Context);
+            const [count] = useContext(Context);
             return <Text text={count} />;
           }
         }
@@ -705,7 +705,7 @@ describe('ReactDOMServerHooks', () => {
   );
 
   itRenders('warns when bitmask is passed to useContext', async render => {
-    let Context = React.createContext('Hi');
+    const Context = React.createContext('Hi');
 
     function Foo() {
       return <span>{useContext(Context, 1)}</span>;
@@ -815,12 +815,12 @@ describe('ReactDOMServerHooks', () => {
       const Context = React.createContext(42);
 
       function ReadInMemo(props) {
-        let count = React.useMemo(() => readContext(Context), []);
+        const count = React.useMemo(() => readContext(Context), []);
         return <Text text={count} />;
       }
 
       function ReadInReducer(props) {
-        let [count, dispatch] = React.useReducer(() => readContext(Context));
+        const [count, dispatch] = React.useReducer(() => readContext(Context));
         if (count !== 42) {
           dispatch();
         }

@@ -143,7 +143,7 @@ describe('ReactIncrementalReflection', () => {
       // We ignore warnings fired by findInstance because we are testing
       // that the actual behavior still works as expected even though it
       // is deprecated.
-      let oldConsoleError = console.error;
+      const oldConsoleError = console.error;
       console.error = jest.fn();
       try {
         return ReactNoop.findInstance(inst);

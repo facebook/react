@@ -37,7 +37,11 @@ export opaque type UpdatePayload = mixed; // eslint-disable-line no-undef
 export opaque type ChildSet = mixed; // eslint-disable-line no-undef
 export opaque type TimeoutHandle = mixed; // eslint-disable-line no-undef
 export opaque type NoTimeout = mixed; // eslint-disable-line no-undef
+export opaque type RendererInspectionConfig = mixed; // eslint-disable-line no-undef
 export type EventResponder = any;
+export type ReactListenerEvent = Object;
+export type ReactListenerMap = Object;
+export type ReactListener = Object;
 
 export const getPublicInstance = $$$hostConfig.getPublicInstance;
 export const getRootHostContext = $$$hostConfig.getRootHostContext;
@@ -73,6 +77,11 @@ export const shouldUpdateFundamentalComponent =
   $$$hostConfig.shouldUpdateFundamentalComponent;
 export const getInstanceFromNode = $$$hostConfig.getInstanceFromNode;
 export const beforeRemoveInstance = $$$hostConfig.beforeRemoveInstance;
+export const registerEvent = $$$hostConfig.registerEvent;
+export const mountEventListener = $$$hostConfig.mountEventListener;
+export const unmountEventListener = $$$hostConfig.unmountEventListener;
+export const validateEventListenerTarget =
+  $$$hostConfig.validateEventListenerTarget;
 
 // -------------------
 //      Mutation

@@ -23,8 +23,8 @@ import {
   HostText,
   HostRoot,
   SuspenseComponent,
-} from 'shared/ReactWorkTags';
-import {Deletion, Placement, Hydrating} from 'shared/ReactSideEffectTags';
+} from './ReactWorkTags';
+import {Deletion, Placement, Hydrating} from './ReactSideEffectTags';
 import invariant from 'shared/invariant';
 
 import {
@@ -55,7 +55,7 @@ import {
   didNotFindHydratableSuspenseInstance,
 } from './ReactFiberHostConfig';
 import {enableSuspenseServerRenderer} from 'shared/ReactFeatureFlags';
-import {Never} from './ReactFiberExpirationTime';
+import {Never, NoWork} from './ReactFiberExpirationTime';
 
 // The deepest Fiber on the stack involved in a hydration context.
 // This may have been an insertion or a hydration.
@@ -231,6 +231,7 @@ function tryHydrate(fiber, nextInstance) {
         if (suspenseInstance !== null) {
           const suspenseState: SuspenseState = {
             dehydrated: suspenseInstance,
+            baseTime: NoWork,
             retryTime: Never,
           };
           fiber.memoizedState = suspenseState;
@@ -380,8 +381,8 @@ function prepareToHydrateHostSuspenseInstance(fiber: Fiber): void {
     );
   }
 
-  let suspenseState: null | SuspenseState = fiber.memoizedState;
-  let suspenseInstance: null | SuspenseInstance =
+  const suspenseState: null | SuspenseState = fiber.memoizedState;
+  const suspenseInstance: null | SuspenseInstance =
     suspenseState !== null ? suspenseState.dehydrated : null;
   invariant(
     suspenseInstance,
@@ -401,8 +402,8 @@ function skipPastDehydratedSuspenseInstance(
         'This error is likely caused by a bug in React. Please file an issue.',
     );
   }
-  let suspenseState: null | SuspenseState = fiber.memoizedState;
-  let suspenseInstance: null | SuspenseInstance =
+  const suspenseState: null | SuspenseState = fiber.memoizedState;
+  const suspenseInstance: null | SuspenseInstance =
     suspenseState !== null ? suspenseState.dehydrated : null;
   invariant(
     suspenseInstance,

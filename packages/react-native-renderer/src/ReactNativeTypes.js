@@ -100,7 +100,45 @@ type SecretInternalsType = {
   ...
 };
 
-type SecretInternalsFabricType = {...};
+type InspectorDataProps = $ReadOnly<{
+  [propName: string]: string,
+  ...,
+}>;
+
+type InspectorDataSource = $ReadOnly<{|
+  fileName?: string,
+  lineNumber?: number,
+|}>;
+
+type InspectorDataGetter = (
+  (componentOrHandle: any) => ?number,
+) => $ReadOnly<{|
+  measure: Function,
+  props: InspectorDataProps,
+  source: InspectorDataSource,
+|}>;
+
+export type InspectorData = $ReadOnly<{|
+  hierarchy: Array<{|
+    name: ?string,
+    getInspectorData: InspectorDataGetter,
+  |}>,
+  selectedIndex: ?number,
+  props: InspectorDataProps,
+  source: ?InspectorDataSource,
+|}>;
+
+export type TouchedViewDataAtPoint = $ReadOnly<{|
+  pointerY: number,
+  touchedViewTag?: number,
+  frame: $ReadOnly<{|
+    top: number,
+    left: number,
+    width: number,
+    height: number,
+  |}>,
+  ...InspectorData,
+|}>;
 
 /**
  * Flat ReactNative renderer bundles are too big for Flow to parse efficiently.
@@ -126,7 +164,9 @@ export type ReactNativeType = {
 };
 
 export type ReactFabricType = {
-  findHostInstance_DEPRECATED(componentOrHandle: any): ?HostComponent<mixed>,
+  findHostInstance_DEPRECATED(
+    componentOrHandle: any,
+  ): ?ElementRef<HostComponent<mixed>>,
   findNodeHandle(componentOrHandle: any): ?number,
   dispatchCommand(handle: any, command: string, args: Array<any>): void,
   render(
@@ -135,7 +175,6 @@ export type ReactFabricType = {
     callback: ?Function,
   ): any,
   unmountComponentAtNode(containerTag: number): any,
-  __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED: SecretInternalsFabricType,
   ...
 };
 

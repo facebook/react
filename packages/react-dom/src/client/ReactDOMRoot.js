@@ -7,13 +7,13 @@
  * @flow
  */
 
-import type {DOMContainer} from './ReactDOM';
-import type {RootTag} from 'shared/ReactRootTags';
+import type {Container} from './ReactDOMHostConfig';
+import type {RootTag} from 'react-reconciler/src/ReactRootTags';
 import type {ReactNodeList} from 'shared/ReactTypes';
 // TODO: This type is shared between the reconciler and ReactDOM, but will
 // eventually be lifted out to the renderer.
 import type {FiberRoot} from 'react-reconciler/src/ReactFiberRoot';
-import {findHostInstanceWithNoPortals} from 'react-reconciler/inline.dom';
+import {findHostInstanceWithNoPortals} from 'react-reconciler/src/ReactFiberReconciler';
 
 export type RootType = {
   render(children: ReactNodeList): void,
@@ -45,16 +45,23 @@ import {
   DOCUMENT_FRAGMENT_NODE,
 } from '../shared/HTMLNodeType';
 
-import {createContainer, updateContainer} from 'react-reconciler/inline.dom';
+import {
+  createContainer,
+  updateContainer,
+} from 'react-reconciler/src/ReactFiberReconciler';
 import invariant from 'shared/invariant';
-import {BlockingRoot, ConcurrentRoot, LegacyRoot} from 'shared/ReactRootTags';
+import {
+  BlockingRoot,
+  ConcurrentRoot,
+  LegacyRoot,
+} from 'react-reconciler/src/ReactRootTags';
 
-function ReactDOMRoot(container: DOMContainer, options: void | RootOptions) {
+function ReactDOMRoot(container: Container, options: void | RootOptions) {
   this._internalRoot = createRootImpl(container, ConcurrentRoot, options);
 }
 
 function ReactDOMBlockingRoot(
-  container: DOMContainer,
+  container: Container,
   tag: RootTag,
   options: void | RootOptions,
 ) {
@@ -108,7 +115,7 @@ ReactDOMRoot.prototype.unmount = ReactDOMBlockingRoot.prototype.unmount = functi
 };
 
 function createRootImpl(
-  container: DOMContainer,
+  container: Container,
   tag: RootTag,
   options: void | RootOptions,
 ) {
@@ -123,13 +130,13 @@ function createRootImpl(
       container.nodeType === DOCUMENT_NODE
         ? container
         : container.ownerDocument;
-    eagerlyTrapReplayableEvents(doc);
+    eagerlyTrapReplayableEvents(container, doc);
   }
   return root;
 }
 
 export function createRoot(
-  container: DOMContainer,
+  container: Container,
   options?: RootOptions,
 ): RootType {
   invariant(
@@ -141,7 +148,7 @@ export function createRoot(
 }
 
 export function createBlockingRoot(
-  container: DOMContainer,
+  container: Container,
   options?: RootOptions,
 ): RootType {
   invariant(
@@ -153,7 +160,7 @@ export function createBlockingRoot(
 }
 
 export function createLegacyRoot(
-  container: DOMContainer,
+  container: Container,
   options?: RootOptions,
 ): RootType {
   return new ReactDOMBlockingRoot(container, LegacyRoot, options);

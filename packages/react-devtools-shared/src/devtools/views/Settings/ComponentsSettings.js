@@ -7,7 +7,8 @@
  * @flow
  */
 
-import React, {
+import * as React from 'react';
+import {
   useCallback,
   useContext,
   useEffect,

@@ -38,6 +38,11 @@ const pointerTypesTable = [['mouse'], ['touch']];
 describeWithPointerEvent('Press responder', hasPointerEvents => {
   let container;
 
+  if (!__EXPERIMENTAL__) {
+    it("empty test so Jest doesn't complain", () => {});
+    return;
+  }
+
   beforeEach(() => {
     initializeModules(hasPointerEvents);
     container = document.createElement('div');
@@ -694,5 +699,26 @@ describeWithPointerEvent('Press responder', hasPointerEvents => {
     target.pointermove();
     target.pointerup();
     target.pointerdown();
+  });
+
+  it('when blur occurs on a pressed target, we should disengage press', () => {
+    const onPress = jest.fn();
+    const onPressStart = jest.fn();
+    const onPressEnd = jest.fn();
+    const buttonRef = React.createRef();
+
+    const Component = () => {
+      const listener = usePress({onPress, onPressStart, onPressEnd});
+      return <button ref={buttonRef} DEPRECATED_flareListeners={listener} />;
+    };
+    ReactDOM.render(<Component />, container);
+
+    const target = createEventTarget(buttonRef.current);
+    target.pointerdown();
+    expect(onPressStart).toBeCalled();
+    target.blur();
+    expect(onPressEnd).toBeCalled();
+    target.pointerup();
+    expect(onPress).not.toBeCalled();
   });
 });

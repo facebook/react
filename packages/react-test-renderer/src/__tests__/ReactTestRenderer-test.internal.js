@@ -1022,4 +1022,14 @@ describe('ReactTestRenderer', () => {
     expect(Scheduler).toFlushWithoutYielding();
     ReactTestRenderer.create(<App />);
   });
+
+  it('calling findByType() with an invalid component will fall back to "Unknown" for component name', () => {
+    const App = () => null;
+    const renderer = ReactTestRenderer.create(<App />);
+    const NonComponent = {};
+
+    expect(() => {
+      renderer.root.findByType(NonComponent);
+    }).toThrowError(`No instances found with node type: "Unknown"`);
+  });
 });

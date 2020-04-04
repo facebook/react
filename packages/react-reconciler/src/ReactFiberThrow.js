@@ -12,7 +12,7 @@ import type {FiberRoot} from './ReactFiberRoot';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
 import type {CapturedValue} from './ReactCapturedValue';
 import type {Update} from './ReactUpdateQueue';
-import type {Thenable} from './ReactFiberWorkLoop';
+import type {Wakeable} from 'shared/ReactTypes';
 import type {SuspenseContext} from './ReactFiberSuspenseContext';
 
 import getComponentName from 'shared/getComponentName';
@@ -21,14 +21,14 @@ import {
   HostRoot,
   SuspenseComponent,
   IncompleteClassComponent,
-} from 'shared/ReactWorkTags';
+} from './ReactWorkTags';
 import {
   DidCapture,
   Incomplete,
   NoEffect,
   ShouldCapture,
   LifecycleEffectMask,
-} from 'shared/ReactSideEffectTags';
+} from './ReactSideEffectTags';
 import {NoMode, BlockingMode} from './ReactTypeOfMode';
 import {shouldCaptureSuspense} from './ReactFiberSuspenseComponent';
 
@@ -40,7 +40,6 @@ import {
   ForceUpdate,
   enqueueUpdate,
 } from './ReactUpdateQueue';
-import {logError} from './ReactFiberCommitWork';
 import {getStackByFiberInDevAndProd} from './ReactCurrentFiber';
 import {markFailedErrorBoundaryForHotReloading} from './ReactFiberHotReloading';
 import {
@@ -55,6 +54,7 @@ import {
   isAlreadyFailedLegacyErrorBoundary,
   pingSuspendedRoot,
 } from './ReactFiberWorkLoop';
+import {logCapturedError} from './ReactFiberErrorLogger';
 
 import {Sync} from './ReactFiberExpirationTime';
 
@@ -74,7 +74,7 @@ function createRootErrorUpdate(
   const error = errorInfo.value;
   update.callback = () => {
     onUncaughtError(error);
-    logError(fiber, errorInfo);
+    logCapturedError(fiber, errorInfo);
   };
   return update;
 }
@@ -90,7 +90,7 @@ function createClassErrorUpdate(
   if (typeof getDerivedStateFromError === 'function') {
     const error = errorInfo.value;
     update.payload = () => {
-      logError(fiber, errorInfo);
+      logCapturedError(fiber, errorInfo);
       return getDerivedStateFromError(error);
     };
   }
@@ -110,7 +110,7 @@ function createClassErrorUpdate(
         markLegacyErrorBoundaryAsFailed(this);
 
         // Only log here if componentDidCatch is the only error boundary method defined
-        logError(fiber, errorInfo);
+        logCapturedError(fiber, errorInfo);
       }
       const error = errorInfo.value;
       const stack = errorInfo.stack;
@@ -143,7 +143,7 @@ function createClassErrorUpdate(
 function attachPingListener(
   root: FiberRoot,
   renderExpirationTime: ExpirationTime,
-  thenable: Thenable,
+  wakeable: Wakeable,
 ) {
   // Attach a listener to the promise to "ping" the root and retry. But
   // only if one does not already exist for the current render expiration
@@ -153,24 +153,24 @@ function attachPingListener(
   if (pingCache === null) {
     pingCache = root.pingCache = new PossiblyWeakMap();
     threadIDs = new Set();
-    pingCache.set(thenable, threadIDs);
+    pingCache.set(wakeable, threadIDs);
   } else {
-    threadIDs = pingCache.get(thenable);
+    threadIDs = pingCache.get(wakeable);
     if (threadIDs === undefined) {
       threadIDs = new Set();
-      pingCache.set(thenable, threadIDs);
+      pingCache.set(wakeable, threadIDs);
     }
   }
   if (!threadIDs.has(renderExpirationTime)) {
     // Memoize using the thread ID to prevent redundant listeners.
     threadIDs.add(renderExpirationTime);
-    let ping = pingSuspendedRoot.bind(
+    const ping = pingSuspendedRoot.bind(
       null,
       root,
-      thenable,
+      wakeable,
       renderExpirationTime,
     );
-    thenable.then(ping, ping);
+    wakeable.then(ping, ping);
   }
 }
 
@@ -191,22 +191,24 @@ function throwException(
     typeof value === 'object' &&
     typeof value.then === 'function'
   ) {
-    // This is a thenable.
-    const thenable: Thenable = (value: any);
+    // This is a wakeable.
+    const wakeable: Wakeable = (value: any);
 
     if ((sourceFiber.mode & BlockingMode) === NoMode) {
       // Reset the memoizedState to what it was before we attempted
       // to render it.
-      let currentSource = sourceFiber.alternate;
+      const currentSource = sourceFiber.alternate;
       if (currentSource) {
+        sourceFiber.updateQueue = currentSource.updateQueue;
         sourceFiber.memoizedState = currentSource.memoizedState;
         sourceFiber.expirationTime = currentSource.expirationTime;
       } else {
+        sourceFiber.updateQueue = null;
         sourceFiber.memoizedState = null;
       }
     }
 
-    let hasInvisibleParentBoundary = hasSuspenseContext(
+    const hasInvisibleParentBoundary = hasSuspenseContext(
       suspenseStackCursor.current,
       (InvisibleParentSuspenseContext: SuspenseContext),
     );
@@ -222,13 +224,13 @@ function throwException(
 
         // Stash the promise on the boundary fiber. If the boundary times out, we'll
         // attach another listener to flip the boundary back to its normal state.
-        const thenables: Set<Thenable> = (workInProgress.updateQueue: any);
-        if (thenables === null) {
+        const wakeables: Set<Wakeable> = (workInProgress.updateQueue: any);
+        if (wakeables === null) {
           const updateQueue = (new Set(): any);
-          updateQueue.add(thenable);
+          updateQueue.add(wakeable);
           workInProgress.updateQueue = updateQueue;
         } else {
-          thenables.add(thenable);
+          wakeables.add(wakeable);
         }
 
         // If the boundary is outside of blocking mode, we should *not*
@@ -314,7 +316,7 @@ function throwException(
         // We want to ensure that a "busy" state doesn't get force committed. We want to
         // ensure that new initial loading states can commit as soon as possible.
 
-        attachPingListener(root, renderExpirationTime, thenable);
+        attachPingListener(root, renderExpirationTime, wakeable);
 
         workInProgress.effectTag |= ShouldCapture;
         workInProgress.expirationTime = renderExpirationTime;

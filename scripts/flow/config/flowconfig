@@ -14,6 +14,9 @@
 .*/__mocks__/.*
 .*/__tests__/.*
 
+# TODO: noop should get its own inlinedHostConfig entry
+.*/packages/react-noop-renderer/.*
+
 %REACT_RENDERER_FLOW_IGNORES%
 
 [include]
@@ -26,6 +29,7 @@
 ../environment.js
 ../react-devtools.js
 ../react-native-host-hooks.js
+../react-relay-hooks.js
 
 [lints]
 untyped-type-import=error

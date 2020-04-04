@@ -7,7 +7,8 @@
  * @flow
  */
 
-import React, {useEffect, useRef, useState} from 'react';
+import * as React from 'react';
+import {useEffect, useRef, useState} from 'react';
 import EditableValue from './EditableValue';
 import ExpandCollapseToggle from './ExpandCollapseToggle';
 import {alphaSortEntries, getMetaValueLabel} from '../utils';
@@ -216,7 +217,7 @@ export default function KeyValue({
       const hasChildren = entries.length > 0;
       const displayName = getMetaValueLabel(value);
 
-      let areChildrenReadOnly = isReadOnly || !!value[meta.readonly];
+      const areChildrenReadOnly = isReadOnly || !!value[meta.readonly];
       children = entries.map<Element<any>>(([key, keyValue]) => (
         <KeyValue
           key={key}

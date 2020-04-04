@@ -11,22 +11,21 @@ import type {Fiber} from './ReactFiber';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
 import type {UpdateQueue} from './ReactUpdateQueue';
 
-import React from 'react';
-import {Update, Snapshot} from 'shared/ReactSideEffectTags';
+import * as React from 'react';
+import {Update, Snapshot} from './ReactSideEffectTags';
 import {
   debugRenderPhaseSideEffectsForStrictMode,
   disableLegacyContext,
   warnAboutDeprecatedLifecycles,
 } from 'shared/ReactFeatureFlags';
 import ReactStrictModeWarnings from './ReactStrictModeWarnings';
-import {isMounted} from 'react-reconciler/reflection';
+import {isMounted} from 'react-reconciler/src/ReactFiberTreeReflection';
 import {get as getInstance, set as setInstance} from 'shared/ReactInstanceMap';
 import shallowEqual from 'shared/shallowEqual';
 import getComponentName from 'shared/getComponentName';
 import invariant from 'shared/invariant';
 import {REACT_CONTEXT_TYPE, REACT_PROVIDER_TYPE} from 'shared/ReactSymbols';
 
-import {startPhaseTimer, stopPhaseTimer} from './ReactDebugFiberPerf';
 import {resolveDefaultProps} from './ReactFiberLazyComponent';
 import {StrictMode} from './ReactTypeOfMode';
 
@@ -53,7 +52,7 @@ import {readContext} from './ReactFiberNewContext';
 import {
   requestCurrentTimeForUpdate,
   computeExpirationForFiber,
-  scheduleWork,
+  scheduleUpdateOnFiber,
 } from './ReactFiberWorkLoop';
 import {requestCurrentSuspenseConfig} from './ReactFiberSuspenseConfig';
 
@@ -200,7 +199,7 @@ const classComponentUpdater = {
     }
 
     enqueueUpdate(fiber, update);
-    scheduleWork(fiber, expirationTime);
+    scheduleUpdateOnFiber(fiber, expirationTime);
   },
   enqueueReplaceState(inst, payload, callback) {
     const fiber = getInstance(inst);
@@ -224,7 +223,7 @@ const classComponentUpdater = {
     }
 
     enqueueUpdate(fiber, update);
-    scheduleWork(fiber, expirationTime);
+    scheduleUpdateOnFiber(fiber, expirationTime);
   },
   enqueueForceUpdate(inst, callback) {
     const fiber = getInstance(inst);
@@ -247,7 +246,7 @@ const classComponentUpdater = {
     }
 
     enqueueUpdate(fiber, update);
-    scheduleWork(fiber, expirationTime);
+    scheduleUpdateOnFiber(fiber, expirationTime);
   },
 };
 
@@ -271,13 +270,11 @@ function checkShouldComponentUpdate(
         instance.shouldComponentUpdate(newProps, newState, nextContext);
       }
     }
-    startPhaseTimer(workInProgress, 'shouldComponentUpdate');
     const shouldUpdate = instance.shouldComponentUpdate(
       newProps,
       newState,
       nextContext,
     );
-    stopPhaseTimer();
 
     if (__DEV__) {
       if (shouldUpdate === undefined) {
@@ -535,7 +532,6 @@ function constructClassInstance(
   workInProgress: Fiber,
   ctor: any,
   props: any,
-  renderExpirationTime: ExpirationTime,
 ): any {
   let isLegacyContextConsumer = false;
   let unmaskedContext = emptyContextObject;
@@ -544,7 +540,7 @@ function constructClassInstance(
 
   if (__DEV__) {
     if ('contextType' in ctor) {
-      let isValid =
+      const isValid =
         // Allow null for conditional declaration
         contextType === null ||
         (contextType !== undefined &&
@@ -706,7 +702,6 @@ function constructClassInstance(
 }
 
 function callComponentWillMount(workInProgress, instance) {
-  startPhaseTimer(workInProgress, 'componentWillMount');
   const oldState = instance.state;
 
   if (typeof instance.componentWillMount === 'function') {
@@ -715,8 +710,6 @@ function callComponentWillMount(workInProgress, instance) {
   if (typeof instance.UNSAFE_componentWillMount === 'function') {
     instance.UNSAFE_componentWillMount();
   }
-
-  stopPhaseTimer();
 
   if (oldState !== instance.state) {
     if (__DEV__) {
@@ -738,14 +731,12 @@ function callComponentWillReceiveProps(
   nextContext,
 ) {
   const oldState = instance.state;
-  startPhaseTimer(workInProgress, 'componentWillReceiveProps');
   if (typeof instance.componentWillReceiveProps === 'function') {
     instance.componentWillReceiveProps(newProps, nextContext);
   }
   if (typeof instance.UNSAFE_componentWillReceiveProps === 'function') {
     instance.UNSAFE_componentWillReceiveProps(newProps, nextContext);
   }
-  stopPhaseTimer();
 
   if (instance.state !== oldState) {
     if (__DEV__) {
@@ -962,14 +953,12 @@ function resumeMountClassInstance(
       (typeof instance.UNSAFE_componentWillMount === 'function' ||
         typeof instance.componentWillMount === 'function')
     ) {
-      startPhaseTimer(workInProgress, 'componentWillMount');
       if (typeof instance.componentWillMount === 'function') {
         instance.componentWillMount();
       }
       if (typeof instance.UNSAFE_componentWillMount === 'function') {
         instance.UNSAFE_componentWillMount();
       }
-      stopPhaseTimer();
     }
     if (typeof instance.componentDidMount === 'function') {
       workInProgress.effectTag |= Update;
@@ -1114,14 +1103,12 @@ function updateClassInstance(
       (typeof instance.UNSAFE_componentWillUpdate === 'function' ||
         typeof instance.componentWillUpdate === 'function')
     ) {
-      startPhaseTimer(workInProgress, 'componentWillUpdate');
       if (typeof instance.componentWillUpdate === 'function') {
         instance.componentWillUpdate(newProps, newState, nextContext);
       }
       if (typeof instance.UNSAFE_componentWillUpdate === 'function') {
         instance.UNSAFE_componentWillUpdate(newProps, newState, nextContext);
       }
-      stopPhaseTimer();
     }
     if (typeof instance.componentDidUpdate === 'function') {
       workInProgress.effectTag |= Update;

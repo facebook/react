@@ -8,6 +8,7 @@
  */
 
 import type {AnyNativeEvent} from 'legacy-events/PluginModuleType';
+import type {EventPriority} from 'shared/ReactTypes';
 import type {FiberRoot} from 'react-reconciler/src/ReactFiberRoot';
 import type {Container, SuspenseInstance} from '../client/ReactDOMHostConfig';
 import type {DOMTopLevelEventType} from 'legacy-events/TopLevelEventTypes';
@@ -32,35 +33,43 @@ import {
   getNearestMountedFiber,
   getContainerFromFiber,
   getSuspenseInstanceFromFiber,
-} from 'react-reconciler/reflection';
-import {HostRoot, SuspenseComponent} from 'shared/ReactWorkTags';
+} from 'react-reconciler/src/ReactFiberTreeReflection';
+import {HostRoot, SuspenseComponent} from 'react-reconciler/src/ReactWorkTags';
 import {
   type EventSystemFlags,
+  LEGACY_FB_SUPPORT,
   PLUGIN_EVENT_SYSTEM,
   RESPONDER_EVENT_SYSTEM,
   IS_PASSIVE,
-  IS_ACTIVE,
   PASSIVE_NOT_SUPPORTED,
-} from 'legacy-events/EventSystemFlags';
+} from './EventSystemFlags';
 
 import {
   addEventBubbleListener,
   addEventCaptureListener,
   addEventCaptureListenerWithPassiveFlag,
+  addEventBubbleListenerWithPassiveFlag,
+  removeEventListener,
 } from './EventListener';
 import getEventTarget from './getEventTarget';
 import {getClosestInstanceFromNode} from '../client/ReactDOMComponentTree';
 import {getRawEventName} from './DOMTopLevelEventTypes';
 import {passiveBrowserEventsSupported} from './checkPassiveEvents';
 
-import {enableDeprecatedFlareAPI} from 'shared/ReactFeatureFlags';
+import {
+  enableDeprecatedFlareAPI,
+  enableModernEventSystem,
+  enableLegacyFBSupport,
+  enableUseEventAPI,
+} from 'shared/ReactFeatureFlags';
 import {
   UserBlockingEvent,
   ContinuousEvent,
   DiscreteEvent,
 } from 'shared/ReactTypes';
 import {getEventPriorityForPluginSystem} from './DOMEventProperties';
-import {dispatchEventForPluginEventSystem} from './DOMEventPluginSystem';
+import {dispatchEventForLegacyPluginEventSystem} from './DOMLegacyEventPluginSystem';
+import {dispatchEventForPluginEventSystem} from './DOMModernPluginEventSystem';
 
 const {
   unstable_UserBlockingPriority: UserBlockingPriority,
@@ -78,20 +87,6 @@ export function isEnabled() {
   return _enabled;
 }
 
-export function trapBubbledEvent(
-  topLevelType: DOMTopLevelEventType,
-  element: Document | Element | Node,
-): void {
-  trapEventForPluginEventSystem(element, topLevelType, false);
-}
-
-export function trapCapturedEvent(
-  topLevelType: DOMTopLevelEventType,
-  element: Document | Element | Node,
-): void {
-  trapEventForPluginEventSystem(element, topLevelType, true);
-}
-
 export function addResponderEventSystemEvent(
   document: Document,
   topLevelType: string,
@@ -107,101 +102,194 @@ export function addResponderEventSystemEvent(
     if (passiveBrowserEventsSupported) {
       eventFlags |= IS_PASSIVE;
     } else {
-      eventFlags |= IS_ACTIVE;
       eventFlags |= PASSIVE_NOT_SUPPORTED;
       passive = false;
     }
-  } else {
-    eventFlags |= IS_ACTIVE;
   }
   // Check if interactive and wrap in discreteUpdates
   const listener = dispatchEvent.bind(
     null,
     ((topLevelType: any): DOMTopLevelEventType),
     eventFlags,
+    document,
   );
   if (passiveBrowserEventsSupported) {
-    addEventCaptureListenerWithPassiveFlag(
+    return addEventCaptureListenerWithPassiveFlag(
       document,
       topLevelType,
       listener,
       passive,
     );
   } else {
-    addEventCaptureListener(document, topLevelType, listener);
-  }
-  return listener;
-}
-
-export function removeActiveResponderEventSystemEvent(
-  document: Document,
-  topLevelType: string,
-  listener: any => void,
-) {
-  if (passiveBrowserEventsSupported) {
-    document.removeEventListener(topLevelType, listener, {
-      capture: true,
-      passive: false,
-    });
-  } else {
-    document.removeEventListener(topLevelType, listener, true);
+    return addEventCaptureListener(document, topLevelType, listener);
   }
 }
 
-function trapEventForPluginEventSystem(
-  element: Document | Element | Node,
+export function addTrappedEventListener(
+  targetContainer: EventTarget,
   topLevelType: DOMTopLevelEventType,
+  eventSystemFlags: EventSystemFlags,
   capture: boolean,
-): void {
+  isDeferredListenerForLegacyFBSupport?: boolean,
+  passive?: boolean,
+  priority?: EventPriority,
+): any => void {
+  const eventPriority =
+    priority === undefined
+      ? getEventPriorityForPluginSystem(topLevelType)
+      : priority;
   let listener;
-  switch (getEventPriorityForPluginSystem(topLevelType)) {
+  let listenerWrapper;
+  switch (eventPriority) {
     case DiscreteEvent:
-      listener = dispatchDiscreteEvent.bind(
-        null,
-        topLevelType,
-        PLUGIN_EVENT_SYSTEM,
-      );
+      listenerWrapper = dispatchDiscreteEvent;
       break;
     case UserBlockingEvent:
-      listener = dispatchUserBlockingUpdate.bind(
-        null,
-        topLevelType,
-        PLUGIN_EVENT_SYSTEM,
-      );
+      listenerWrapper = dispatchUserBlockingUpdate;
       break;
     case ContinuousEvent:
     default:
-      listener = dispatchEvent.bind(null, topLevelType, PLUGIN_EVENT_SYSTEM);
+      listenerWrapper = dispatchEvent;
       break;
   }
+  // If passive option is not supported, then the event will be
+  // active and not passive.
+  if (passive === true && !passiveBrowserEventsSupported) {
+    passive = false;
+  }
+
+  listener = listenerWrapper.bind(
+    null,
+    topLevelType,
+    eventSystemFlags,
+    targetContainer,
+  );
+
+  targetContainer =
+    enableLegacyFBSupport && isDeferredListenerForLegacyFBSupport
+      ? (targetContainer: any).ownerDocument
+      : targetContainer;
 
   const rawEventName = getRawEventName(topLevelType);
-  if (capture) {
-    addEventCaptureListener(element, rawEventName, listener);
-  } else {
-    addEventBubbleListener(element, rawEventName, listener);
+
+  let unsubscribeListener;
+  // When legacyFBSupport is enabled, it's for when we
+  // want to add a one time event listener to a container.
+  // This should only be used with enableLegacyFBSupport
+  // due to requirement to provide compatibility with
+  // internal FB www event tooling. This works by removing
+  // the event listener as soon as it is invoked. We could
+  // also attempt to use the {once: true} param on
+  // addEventListener, but that requires support and some
+  // browsers do not support this today, and given this is
+  // to support legacy code patterns, it's likely they'll
+  // need support for such browsers.
+  if (enableLegacyFBSupport && isDeferredListenerForLegacyFBSupport) {
+    const originalListener = listener;
+    listener = function(...p) {
+      try {
+        return originalListener.apply(this, p);
+      } finally {
+        removeEventListener(
+          targetContainer,
+          rawEventName,
+          unsubscribeListener,
+          capture,
+        );
+      }
+    };
   }
+  if (capture) {
+    if (enableUseEventAPI && passive !== undefined) {
+      // This is only used with passive is either true or false.
+      unsubscribeListener = addEventCaptureListenerWithPassiveFlag(
+        targetContainer,
+        rawEventName,
+        listener,
+        passive,
+      );
+    } else {
+      unsubscribeListener = addEventCaptureListener(
+        targetContainer,
+        rawEventName,
+        listener,
+      );
+    }
+  } else {
+    if (enableUseEventAPI && passive !== undefined) {
+      // This is only used with passive is either true or false.
+      unsubscribeListener = addEventBubbleListenerWithPassiveFlag(
+        targetContainer,
+        rawEventName,
+        listener,
+        passive,
+      );
+    } else {
+      unsubscribeListener = addEventBubbleListener(
+        targetContainer,
+        rawEventName,
+        listener,
+      );
+    }
+  }
+  return unsubscribeListener;
 }
 
-function dispatchDiscreteEvent(topLevelType, eventSystemFlags, nativeEvent) {
-  flushDiscreteUpdatesIfNeeded(nativeEvent.timeStamp);
-  discreteUpdates(dispatchEvent, topLevelType, eventSystemFlags, nativeEvent);
+export function removeTrappedEventListener(
+  targetContainer: EventTarget,
+  topLevelType: DOMTopLevelEventType,
+  capture: boolean,
+  listener: any => void,
+): void {
+  const rawEventName = getRawEventName(topLevelType);
+  removeEventListener(targetContainer, rawEventName, listener, capture);
+}
+
+function dispatchDiscreteEvent(
+  topLevelType,
+  eventSystemFlags,
+  container,
+  nativeEvent,
+) {
+  if (
+    !enableLegacyFBSupport ||
+    // If we have Legacy FB support, it means we've already
+    // flushed for this event and we don't need to do it again.
+    (eventSystemFlags & LEGACY_FB_SUPPORT) === 0
+  ) {
+    flushDiscreteUpdatesIfNeeded(nativeEvent.timeStamp);
+  }
+  discreteUpdates(
+    dispatchEvent,
+    topLevelType,
+    eventSystemFlags,
+    container,
+    nativeEvent,
+  );
 }
 
 function dispatchUserBlockingUpdate(
   topLevelType,
   eventSystemFlags,
+  container,
   nativeEvent,
 ) {
   runWithPriority(
     UserBlockingPriority,
-    dispatchEvent.bind(null, topLevelType, eventSystemFlags, nativeEvent),
+    dispatchEvent.bind(
+      null,
+      topLevelType,
+      eventSystemFlags,
+      container,
+      nativeEvent,
+    ),
   );
 }
 
 export function dispatchEvent(
   topLevelType: DOMTopLevelEventType,
   eventSystemFlags: EventSystemFlags,
+  targetContainer: EventTarget,
   nativeEvent: AnyNativeEvent,
 ): void {
   if (!_enabled) {
@@ -215,6 +303,7 @@ export function dispatchEvent(
       null, // Flags that we're not actually blocked on anything as far as we know.
       topLevelType,
       eventSystemFlags,
+      targetContainer,
       nativeEvent,
     );
     return;
@@ -223,6 +312,7 @@ export function dispatchEvent(
   const blockedOn = attemptToDispatchEvent(
     topLevelType,
     eventSystemFlags,
+    targetContainer,
     nativeEvent,
   );
 
@@ -234,7 +324,13 @@ export function dispatchEvent(
 
   if (isReplayableDiscreteEvent(topLevelType)) {
     // This this to be replayed later once the target is available.
-    queueDiscreteEvent(blockedOn, topLevelType, eventSystemFlags, nativeEvent);
+    queueDiscreteEvent(
+      blockedOn,
+      topLevelType,
+      eventSystemFlags,
+      targetContainer,
+      nativeEvent,
+    );
     return;
   }
 
@@ -243,6 +339,7 @@ export function dispatchEvent(
       blockedOn,
       topLevelType,
       eventSystemFlags,
+      targetContainer,
       nativeEvent,
     )
   ) {
@@ -257,12 +354,22 @@ export function dispatchEvent(
   // in case the event system needs to trace it.
   if (enableDeprecatedFlareAPI) {
     if (eventSystemFlags & PLUGIN_EVENT_SYSTEM) {
-      dispatchEventForPluginEventSystem(
-        topLevelType,
-        eventSystemFlags,
-        nativeEvent,
-        null,
-      );
+      if (enableModernEventSystem) {
+        dispatchEventForPluginEventSystem(
+          topLevelType,
+          eventSystemFlags,
+          nativeEvent,
+          null,
+          targetContainer,
+        );
+      } else {
+        dispatchEventForLegacyPluginEventSystem(
+          topLevelType,
+          eventSystemFlags,
+          nativeEvent,
+          null,
+        );
+      }
     }
     if (eventSystemFlags & RESPONDER_EVENT_SYSTEM) {
       // React Flare event system
@@ -275,12 +382,22 @@ export function dispatchEvent(
       );
     }
   } else {
-    dispatchEventForPluginEventSystem(
-      topLevelType,
-      eventSystemFlags,
-      nativeEvent,
-      null,
-    );
+    if (enableModernEventSystem) {
+      dispatchEventForPluginEventSystem(
+        topLevelType,
+        eventSystemFlags,
+        nativeEvent,
+        null,
+        targetContainer,
+      );
+    } else {
+      dispatchEventForLegacyPluginEventSystem(
+        topLevelType,
+        eventSystemFlags,
+        nativeEvent,
+        null,
+      );
+    }
   }
 }
 
@@ -288,6 +405,7 @@ export function dispatchEvent(
 export function attemptToDispatchEvent(
   topLevelType: DOMTopLevelEventType,
   eventSystemFlags: EventSystemFlags,
+  targetContainer: EventTarget,
   nativeEvent: AnyNativeEvent,
 ): null | Container | SuspenseInstance {
   // TODO: Warn if _enabled is false.
@@ -296,14 +414,14 @@ export function attemptToDispatchEvent(
   let targetInst = getClosestInstanceFromNode(nativeEventTarget);
 
   if (targetInst !== null) {
-    let nearestMounted = getNearestMountedFiber(targetInst);
+    const nearestMounted = getNearestMountedFiber(targetInst);
     if (nearestMounted === null) {
       // This tree has been unmounted already. Dispatch without a target.
       targetInst = null;
     } else {
       const tag = nearestMounted.tag;
       if (tag === SuspenseComponent) {
-        let instance = getSuspenseInstanceFromFiber(nearestMounted);
+        const instance = getSuspenseInstanceFromFiber(nearestMounted);
         if (instance !== null) {
           // Queue the event to be replayed later. Abort dispatching since we
           // don't want this event dispatched twice through the event system.
@@ -335,12 +453,22 @@ export function attemptToDispatchEvent(
 
   if (enableDeprecatedFlareAPI) {
     if (eventSystemFlags & PLUGIN_EVENT_SYSTEM) {
-      dispatchEventForPluginEventSystem(
-        topLevelType,
-        eventSystemFlags,
-        nativeEvent,
-        targetInst,
-      );
+      if (enableModernEventSystem) {
+        dispatchEventForPluginEventSystem(
+          topLevelType,
+          eventSystemFlags,
+          nativeEvent,
+          targetInst,
+          targetContainer,
+        );
+      } else {
+        dispatchEventForLegacyPluginEventSystem(
+          topLevelType,
+          eventSystemFlags,
+          nativeEvent,
+          targetInst,
+        );
+      }
     }
     if (eventSystemFlags & RESPONDER_EVENT_SYSTEM) {
       // React Flare event system
@@ -353,12 +481,22 @@ export function attemptToDispatchEvent(
       );
     }
   } else {
-    dispatchEventForPluginEventSystem(
-      topLevelType,
-      eventSystemFlags,
-      nativeEvent,
-      targetInst,
-    );
+    if (enableModernEventSystem) {
+      dispatchEventForPluginEventSystem(
+        topLevelType,
+        eventSystemFlags,
+        nativeEvent,
+        targetInst,
+        targetContainer,
+      );
+    } else {
+      dispatchEventForLegacyPluginEventSystem(
+        topLevelType,
+        eventSystemFlags,
+        nativeEvent,
+        targetInst,
+      );
+    }
   }
   // We're not blocked on anything.
   return null;

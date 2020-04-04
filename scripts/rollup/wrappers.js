@@ -133,6 +133,7 @@ ${source}`;
 ${license}
  *
  * @noflow
+ * @nolint
  * @preventMunge
  * @preserve-invariant-messages
  */
@@ -152,6 +153,7 @@ ${source}
 ${license}
  *
  * @noflow
+ * @nolint
  * @preventMunge
  * @preserve-invariant-messages
  */
@@ -165,6 +167,7 @@ ${source}`;
 ${license}
  *
  * @noflow
+ * @nolint
  * @preventMunge
  * @preserve-invariant-messages
  */
@@ -178,6 +181,7 @@ ${source}`;
 ${license}
  *
  * @noflow
+ * @nolint
  * @providesModule ${globalName}-dev
  * @preventMunge
  * ${'@gen' + 'erated'}
@@ -198,6 +202,7 @@ ${source}
 ${license}
  *
  * @noflow
+ * @nolint
  * @providesModule ${globalName}-prod
  * @preventMunge
  * ${'@gen' + 'erated'}
@@ -212,6 +217,7 @@ ${source}`;
 ${license}
  *
  * @noflow
+ * @nolint
  * @providesModule ${globalName}-profiling
  * @preventMunge
  * ${'@gen' + 'erated'}
@@ -226,6 +232,7 @@ ${source}`;
 ${license}
  *
  * @noflow
+ * @nolint
  * @preventMunge
  * ${'@gen' + 'erated'}
  */
@@ -245,6 +252,7 @@ ${source}
 ${license}
  *
  * @noflow
+ * @nolint
  * @preventMunge
  * ${'@gen' + 'erated'}
  */
@@ -258,6 +266,7 @@ ${source}`;
 ${license}
  *
  * @noflow
+ * @nolint
  * @preventMunge
  * ${'@gen' + 'erated'}
  */
@@ -279,10 +288,9 @@ ${license}
 
 if (process.env.NODE_ENV !== "production") {
   module.exports = function $$$reconciler($$$hostConfig) {
+    var exports = {};
 ${source}
-    var $$$renderer = module.exports;
-    module.exports = $$$reconciler;
-    return $$$renderer;
+    return exports;
   };
 }`;
   },
@@ -295,10 +303,9 @@ ${source}
 ${license}
  */
 module.exports = function $$$reconciler($$$hostConfig) {
+    var exports = {};
 ${source}
-    var $$$renderer = module.exports;
-    module.exports = $$$reconciler;
-    return $$$renderer;
+    return exports;
 };`;
   },
 };

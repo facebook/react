@@ -13,8 +13,6 @@ let React;
 let ReactDOM;
 let ReactTestUtils;
 
-const ReactFeatureFlags = require('shared/ReactFeatureFlags');
-
 describe('ReactElement', () => {
   let ComponentClass;
   let originalSymbol;
@@ -312,7 +310,7 @@ describe('ReactElement', () => {
     expect(React.isValidElement(true)).toEqual(false);
     expect(React.isValidElement({})).toEqual(false);
     expect(React.isValidElement('string')).toEqual(false);
-    if (!ReactFeatureFlags.disableCreateFactory) {
+    if (!__EXPERIMENTAL__) {
       let factory;
       expect(() => {
         factory = React.createFactory('div');
@@ -481,7 +479,7 @@ describe('ReactElement', () => {
     expect(React.isValidElement(true)).toEqual(false);
     expect(React.isValidElement({})).toEqual(false);
     expect(React.isValidElement('string')).toEqual(false);
-    if (!ReactFeatureFlags.disableCreateFactory) {
+    if (!__EXPERIMENTAL__) {
       let factory;
       expect(() => {
         factory = React.createFactory('div');
