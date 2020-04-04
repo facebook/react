@@ -451,6 +451,53 @@ describe('SyntheticKeyboardEvent', () => {
         });
       });
     });
+
+    describe('code', () => {
+      it('returns code on `keydown`, `keyup` and `keypress`', () => {
+        let codeDown = null;
+        let codeUp = null;
+        let codePress = null;
+        const node = ReactDOM.render(
+          <input
+            onKeyDown={e => {
+              codeDown = e.code;
+            }}
+            onKeyUp={e => {
+              codeUp = e.code;
+            }}
+            onKeyPress={e => {
+              codePress = e.code;
+            }}
+          />,
+          container,
+        );
+        node.dispatchEvent(
+          new KeyboardEvent('keydown', {
+            code: 'KeyQ',
+            bubbles: true,
+            cancelable: true,
+          }),
+        );
+        node.dispatchEvent(
+          new KeyboardEvent('keyup', {
+            code: 'KeyQ',
+            bubbles: true,
+            cancelable: true,
+          }),
+        );
+        node.dispatchEvent(
+          new KeyboardEvent('keypress', {
+            code: 'KeyQ',
+            charCode: 113,
+            bubbles: true,
+            cancelable: true,
+          }),
+        );
+        expect(codeDown).toBe('KeyQ');
+        expect(codeUp).toBe('KeyQ');
+        expect(codePress).toBe('KeyQ');
+      });
+    });
   });
 
   describe('EventInterface', () => {
