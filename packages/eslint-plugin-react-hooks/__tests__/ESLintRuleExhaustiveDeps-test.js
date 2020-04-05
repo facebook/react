@@ -11,14 +11,6 @@ const ESLintTester = require('eslint').RuleTester;
 const ReactHooksESLintPlugin = require('eslint-plugin-react-hooks');
 const ReactHooksESLintRule = ReactHooksESLintPlugin.rules['exhaustive-deps'];
 
-ESLintTester.setDefaultConfig({
-  parser: require.resolve('babel-eslint'),
-  parserOptions: {
-    ecmaVersion: 6,
-    sourceType: 'module',
-  },
-});
-
 /**
  * A string template tag that removes padding from the left side of multi-line strings
  * @param {Array} strings array of code strings (only one expected)
@@ -6441,11 +6433,65 @@ const tests = {
   ],
 };
 
+const testsTypescript = {
+  valid: [
+    {
+      // `ref` is still constant, despite the cast.
+      code: normalizeIndent`
+        function MyComponent() {
+          const ref = useRef() as React.MutableRefObject<HTMLDivElement>;
+          useEffect(() => {
+            console.log(ref.current);
+          }, []);
+        }
+      `,
+    },
+  ],
+  invalid: [
+    {
+      // `local` is still non-constant, despite the cast.
+      code: normalizeIndent`
+        function MyComponent() {
+          const local = {} as string;
+          useEffect(() => {
+            console.log(local);
+          }, []);
+        }
+      `,
+      errors: [
+        {
+          message:
+            "React Hook useEffect has a missing dependency: 'local'. " +
+            'Either include it or remove the dependency array.',
+          suggestions: [
+            {
+              desc: 'Update the dependencies array to be: [local]',
+              output: normalizeIndent`
+                function MyComponent() {
+                  const local = {} as string;
+                  useEffect(() => {
+                    console.log(local);
+                  }, [local]);
+                }
+              `,
+            },
+          ],
+        },
+      ],
+    },
+  ],
+};
+
 // For easier local testing
 if (!process.env.CI) {
   let only = [];
   let skipped = [];
-  [...tests.valid, ...tests.invalid].forEach(t => {
+  [
+    ...tests.valid,
+    ...tests.invalid,
+    ...testsTypescript.valid,
+    ...testsTypescript.invalid,
+  ].forEach(t => {
     if (t.skip) {
       delete t.skip;
       skipped.push(t);
@@ -6466,7 +6512,21 @@ if (!process.env.CI) {
   };
   tests.valid = tests.valid.filter(predicate);
   tests.invalid = tests.invalid.filter(predicate);
+  testsTypescript.valid = testsTypescript.valid.filter(predicate);
+  testsTypescript.invalid = testsTypescript.invalid.filter(predicate);
 }
 
-const eslintTester = new ESLintTester();
-eslintTester.run('react-hooks', ReactHooksESLintRule, tests);
+const parserOptions = {
+  ecmaVersion: 6,
+  sourceType: 'module',
+};
+
+new ESLintTester({
+  parser: require.resolve('babel-eslint'),
+  parserOptions,
+}).run('react-hooks', ReactHooksESLintRule, tests);
+
+new ESLintTester({
+  parser: require.resolve('@typescript-eslint/parser'),
+  parserOptions,
+}).run('react-hooks', ReactHooksESLintRule, testsTypescript);
