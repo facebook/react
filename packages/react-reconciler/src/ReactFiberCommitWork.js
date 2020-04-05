@@ -872,17 +872,7 @@ function commitAttachRef(finishedWork: Fiber) {
       instanceToUse = instance.methods;
     }
     if (typeof ref === 'function') {
-      try {
-        ref(instanceToUse);
-      } catch (error) {
-        if (__DEV__) {
-          console.error(
-            'Callback ref failed with error: %s%s',
-            error.message,
-            getStackByFiberInDevAndProd(finishedWork),
-          );
-        }
-      }
+      ref(instanceToUse);
     } else {
       if (__DEV__) {
         if (!ref.hasOwnProperty('current')) {
