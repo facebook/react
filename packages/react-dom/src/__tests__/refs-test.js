@@ -518,4 +518,22 @@ describe('ref error boundary', () => {
         '    in span (at **)',
     );
   });
+
+  it('handles error in callback ref', () => {
+    const container = document.createElement('div');
+
+    expect(() =>
+      ReactDOM.render(
+        <span
+          ref={() => {
+            throw new Error('Test Error');
+          }}
+        />,
+        container,
+      ),
+    ).toErrorDev(
+      'Warning: Callback ref failed with error: Test Error\n' +
+        '    in span (at **)',
+    );
+  });
 });
