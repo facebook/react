@@ -316,9 +316,12 @@ export default {
         if (def.node.type !== 'VariableDeclarator') {
           return false;
         }
-        const init = def.node.init;
+        let init = def.node.init;
         if (init == null) {
           return false;
+        }
+        while (init.type === 'TSAsExpression') {
+          init = init.expression;
         }
         // Detect primitive constants
         // const foo = 42
