@@ -114,21 +114,21 @@ function prepareToDraw(): void {
   redrawTimeoutID = null;
 
   const now = getCurrentTime();
-  let expirationTimeout = Number.NEGATIVE_INFINITY;
+  let earliestExpiration = Number.MAX_VALUE;
 
   // Remove any items that have already expired.
   nodeToData.forEach((data, node) => {
     if (data.expirationTime < now) {
       nodeToData.delete(node);
     } else {
-      expirationTimeout = Math.max(expirationTimeout, data.expirationTime);
+      earliestExpiration = Math.min(earliestExpiration, data.expirationTime);
     }
   });
 
   draw(nodeToData);
 
-  if (expirationTimeout > 0) {
-    redrawTimeoutID = setTimeout(prepareToDraw, expirationTimeout - now);
+  if (earliestExpiration !== Number.MAX_VALUE) {
+    redrawTimeoutID = setTimeout(prepareToDraw, earliestExpiration - now);
   }
 }
 
