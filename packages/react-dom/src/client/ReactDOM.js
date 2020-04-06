@@ -69,6 +69,7 @@ import {
   setAttemptHydrationAtCurrentPriority,
   queueExplicitHydrationTarget,
 } from '../events/ReactDOMEventReplaying';
+import createDangerousStringForStyles from './createDangerousStringForStyles';
 
 setAttemptSynchronousHydration(attemptSynchronousHydration);
 setAttemptUserBlockingHydration(attemptUserBlockingHydration);
@@ -215,6 +216,7 @@ export {
   unstable_createPortal,
   // enableUseEventAPI
   useEvent as unstable_useEvent,
+  createDangerousStringForStyles
 };
 
 const foundDevTools = injectIntoDevTools({
