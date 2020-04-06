@@ -72,9 +72,9 @@ export {
   SuspenseList,
   unstable_withSuspenseConfig,
   block,
-  useOpaqueIdentifier,
   DEPRECATED_useResponder,
   DEPRECATED_createResponder,
   unstable_createFundamental,
   unstable_createScope,
+  unstable_useOpaqueIdentifier,
 } from './src/React';

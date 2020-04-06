@@ -57,7 +57,7 @@ function initModules() {
   useDebugValue = React.useDebugValue;
   useImperativeHandle = React.useImperativeHandle;
   useLayoutEffect = React.useLayoutEffect;
-  useOpaqueIdentifier = React.useOpaqueIdentifier;
+  useOpaqueIdentifier = React.unstable_useOpaqueIdentifier;
   forwardRef = React.forwardRef;
 
   yieldedValues = [];
@@ -1645,99 +1645,99 @@ describe('ReactDOMServerHooks', () => {
             'Do not read the value directly.',
         ]);
       });
-    });
 
-    it('useOpaqueIdentifier throws if you try to add the result as a number in a child component wrapped in a Suspense', async () => {
-      function Child({appId}) {
-        return <div aria-labelledby={+appId} />;
-      }
-      function App() {
-        const [show] = useState(false);
-        const id = useOpaqueIdentifier();
-        return (
-          <React.Suspense fallback={null}>
-            {show && <div id={id} />}
-            <Child appId={id} />
-          </React.Suspense>
-        );
-      }
+      it('useOpaqueIdentifier throws if you try to add the result as a number in a child component wrapped in a Suspense', async () => {
+        function Child({appId}) {
+          return <div aria-labelledby={+appId} />;
+        }
+        function App() {
+          const [show] = useState(false);
+          const id = useOpaqueIdentifier();
+          return (
+            <React.Suspense fallback={null}>
+              {show && <div id={id} />}
+              <Child appId={id} />
+            </React.Suspense>
+          );
+        }
 
-      const container = document.createElement('div');
-      document.body.appendChild(container);
+        const container = document.createElement('div');
+        document.body.appendChild(container);
 
-      container.innerHTML = ReactDOMServer.renderToString(<App />);
+        container.innerHTML = ReactDOMServer.renderToString(<App />);
 
-      ReactDOM.createRoot(container, {hydrate: true}).render(<App />);
+        ReactDOM.createRoot(container, {hydrate: true}).render(<App />);
 
-      expect(() =>
-        expect(() => Scheduler.unstable_flushAll()).toThrow(
+        expect(() =>
+          expect(() => Scheduler.unstable_flushAll()).toThrow(
+            'The object passed back from useOpaqueIdentifier is meant to be passed through to attributes only. ' +
+              'Do not read the value directly.',
+          ),
+        ).toErrorDev([
           'The object passed back from useOpaqueIdentifier is meant to be passed through to attributes only. ' +
             'Do not read the value directly.',
-        ),
-      ).toErrorDev([
-        'The object passed back from useOpaqueIdentifier is meant to be passed through to attributes only. ' +
-          'Do not read the value directly.',
-      ]);
-    });
-
-    it('useOpaqueIdentifier with two opaque identifiers on the same page', () => {
-      let _setShow;
-
-      function App() {
-        const id1 = useOpaqueIdentifier();
-        const id2 = useOpaqueIdentifier();
-        const [show, setShow] = useState(true);
-        _setShow = setShow;
-
-        return (
-          <div>
-            <React.Suspense fallback={null}>
-              {show ? (
-                <span id={id1}>{'Child'}</span>
-              ) : (
-                <span id={id2}>{'Child'}</span>
-              )}
-            </React.Suspense>
-            <span aria-labelledby={id1}>{'test'}</span>
-          </div>
-        );
-      }
-
-      const container = document.createElement('div');
-      document.body.appendChild(container);
-
-      container.innerHTML = ReactDOMServer.renderToString(<App />);
-
-      const serverID = container
-        .getElementsByTagName('span')[0]
-        .getAttribute('id');
-      expect(serverID).not.toBeNull();
-      expect(
-        container
-          .getElementsByTagName('span')[1]
-          .getAttribute('aria-labelledby'),
-      ).toEqual(serverID);
-
-      ReactDOM.createRoot(container, {hydrate: true}).render(<App />);
-      jest.runAllTimers();
-      expect(Scheduler).toHaveYielded([]);
-      expect(Scheduler).toFlushAndYield([]);
-
-      ReactTestUtils.act(() => {
-        _setShow(false);
+        ]);
       });
 
-      expect(
-        container
-          .getElementsByTagName('span')[1]
-          .getAttribute('aria-labelledby'),
-      ).toEqual(serverID);
-      expect(
-        container.getElementsByTagName('span')[0].getAttribute('id'),
-      ).not.toEqual(serverID);
-      expect(
-        container.getElementsByTagName('span')[0].getAttribute('id'),
-      ).not.toBeNull();
+      it('useOpaqueIdentifier with two opaque identifiers on the same page', () => {
+        let _setShow;
+
+        function App() {
+          const id1 = useOpaqueIdentifier();
+          const id2 = useOpaqueIdentifier();
+          const [show, setShow] = useState(true);
+          _setShow = setShow;
+
+          return (
+            <div>
+              <React.Suspense fallback={null}>
+                {show ? (
+                  <span id={id1}>{'Child'}</span>
+                ) : (
+                  <span id={id2}>{'Child'}</span>
+                )}
+              </React.Suspense>
+              <span aria-labelledby={id1}>{'test'}</span>
+            </div>
+          );
+        }
+
+        const container = document.createElement('div');
+        document.body.appendChild(container);
+
+        container.innerHTML = ReactDOMServer.renderToString(<App />);
+
+        const serverID = container
+          .getElementsByTagName('span')[0]
+          .getAttribute('id');
+        expect(serverID).not.toBeNull();
+        expect(
+          container
+            .getElementsByTagName('span')[1]
+            .getAttribute('aria-labelledby'),
+        ).toEqual(serverID);
+
+        ReactDOM.createRoot(container, {hydrate: true}).render(<App />);
+        jest.runAllTimers();
+        expect(Scheduler).toHaveYielded([]);
+        expect(Scheduler).toFlushAndYield([]);
+
+        ReactTestUtils.act(() => {
+          _setShow(false);
+        });
+
+        expect(
+          container
+            .getElementsByTagName('span')[1]
+            .getAttribute('aria-labelledby'),
+        ).toEqual(serverID);
+        expect(
+          container.getElementsByTagName('span')[0].getAttribute('id'),
+        ).not.toEqual(serverID);
+        expect(
+          container.getElementsByTagName('span')[0].getAttribute('id'),
+        ).not.toBeNull();
+      });
     });
   }
 });

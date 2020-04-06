@@ -425,7 +425,7 @@ describe('ReactHooksInspectionIntegration', () => {
 
     it('should support composite useOpaqueIdentifier hook', () => {
       function Foo(props) {
-        const id = React.useOpaqueIdentifier();
+        const id = React.unstable_useOpaqueIdentifier();
         const [state] = React.useState(() => 'hello', []);
         return <div id={id}>{state}</div>;
       }
@@ -452,7 +452,7 @@ describe('ReactHooksInspectionIntegration', () => {
 
     it('should support composite useOpaqueIdentifier hook in concurrent mode', () => {
       function Foo(props) {
-        const id = React.useOpaqueIdentifier();
+        const id = React.unstable_useOpaqueIdentifier();
         const [state] = React.useState(() => 'hello', []);
         return <div id={id}>{state}</div>;
       }

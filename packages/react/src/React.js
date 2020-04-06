@@ -118,5 +118,5 @@ export {
   createFundamental as unstable_createFundamental,
   // enableScopeAPI
   createScope as unstable_createScope,
-  useOpaqueIdentifier,
+  useOpaqueIdentifier as unstable_useOpaqueIdentifier,
 };
