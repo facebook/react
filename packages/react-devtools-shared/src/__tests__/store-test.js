@@ -856,16 +856,20 @@ describe('Store', () => {
 
     const MyComponent = (props, ref) => null;
     const FowardRefComponent = React.forwardRef(MyComponent);
+    const MyComponent2 = (props, ref) => null;
     const FowardRefComponentWithAnonymousFunction = React.forwardRef(() => (
-      <MyComponent />
+      <MyComponent2 />
     ));
+    const MyComponent3 = (props, ref) => null;
     const FowardRefComponentWithCustomDisplayName = React.forwardRef(
-      MyComponent,
+      MyComponent3,
     );
     FowardRefComponentWithCustomDisplayName.displayName = 'Custom';
-    const MemoComponent = React.memo(MyComponent);
+    const MyComponent4 = (props, ref) => null;
+    const MemoComponent = React.memo(MyComponent4);
     const MemoForwardRefComponent = React.memo(FowardRefComponent);
-    const LazyComponent = React.lazy(() => fakeImport(MyComponent));
+    const MyComponent5 = (props, ref) => null;
+    const LazyComponent = React.lazy(() => fakeImport(MyComponent5));
 
     const App = () => (
       <React.Fragment>
