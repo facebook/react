@@ -69,8 +69,8 @@ import {
   IsThisRendererActing,
 } from './ReactFiberWorkLoop';
 import {createUpdate, enqueueUpdate} from './ReactUpdateQueue';
+import {getStackByFiberInDevAndProd} from './ReactFiberComponentStack';
 import {
-  getStackByFiberInDevAndProd,
   isRendering as ReactCurrentFiberIsRendering,
   current as ReactCurrentFiberCurrent,
 } from './ReactCurrentFiber';

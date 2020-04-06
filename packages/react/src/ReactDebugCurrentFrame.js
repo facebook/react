@@ -9,8 +9,7 @@
 
 import type {ReactElement} from 'shared/ReactElementType';
 
-import describeComponentFrame from 'shared/describeComponentFrame';
-import getComponentName from 'shared/getComponentName';
+import {describeUnknownElementTypeFrameInDEV} from 'shared/ReactComponentStackFrame';
 
 const ReactDebugCurrentFrame = {};
 
@@ -38,12 +37,11 @@ if (__DEV__) {
 
     // Add an extra top frame while an element is being validated
     if (currentlyValidatingElement) {
-      const name = getComponentName(currentlyValidatingElement.type);
       const owner = currentlyValidatingElement._owner;
-      stack += describeComponentFrame(
-        name,
+      stack += describeUnknownElementTypeFrameInDEV(
+        currentlyValidatingElement.type,
         currentlyValidatingElement._source,
-        owner && getComponentName(owner.type),
+        owner ? owner.type : null,
       );
     }
 

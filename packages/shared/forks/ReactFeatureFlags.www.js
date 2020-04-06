@@ -21,6 +21,7 @@ export const {
   enableTrustedTypesIntegration,
   disableSchedulerTimeoutBasedOnReactExpirationTime,
   warnAboutSpreadingKeyToJSX,
+  enableComponentStackLocations,
   replayFailedUnitOfWorkWithInvokeGuardedCallback,
   enableModernEventSystem,
 } = dynamicFeatureFlags;
