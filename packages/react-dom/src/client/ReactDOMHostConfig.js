@@ -57,7 +57,6 @@ import {
   DOCUMENT_FRAGMENT_NODE,
 } from '../shared/HTMLNodeType';
 import dangerousStyleValue from '../shared/dangerousStyleValue';
-import getComponentName from 'shared/getComponentName';
 
 import {REACT_OPAQUE_ID_TYPE} from 'shared/ReactSymbols';
 import {
@@ -75,7 +74,6 @@ import {
   enableScopeAPI,
 } from 'shared/ReactFeatureFlags';
 import {HostComponent} from 'react-reconciler/src/ReactWorkTags';
-import {getIsRendering} from 'react-reconciler/src/ReactCurrentFiber';
 import {
   RESPONDER_EVENT_SYSTEM,
   IS_PASSIVE,
@@ -167,12 +165,8 @@ type SelectionInformation = {|
 |};
 
 let SUPPRESS_HYDRATION_WARNING;
-let didWarnAboutUseOpaqueIdentifier;
-let isUpdatingOpaqueValueInRenderPhase;
 if (__DEV__) {
   SUPPRESS_HYDRATION_WARNING = 'suppressHydrationWarning';
-  didWarnAboutUseOpaqueIdentifier = {};
-  isUpdatingOpaqueValueInRenderPhase = false;
 }
 
 const SUSPENSE_START_DATA = '$';
@@ -1163,41 +1157,26 @@ export function getInstanceFromNode(node: HTMLElement): null | Object {
 
 let clientId: number = 0;
 export function makeClientId(): OpaqueIDType {
+  return 'r:' + (clientId++).toString(36);
+}
+
+export function makeClientIdInDEV(warnOnAccessInDEV: () => void): OpaqueIDType {
   const id = 'r:' + (clientId++).toString(36);
-  if (__DEV__) {
-    const warnOnAccess = () => {
-      // TODO: Should warn in effects and callbacks, too
-      if (getIsRendering()) {
-        console.error(
-          'The object passed back from useOpaqueIdentifier is meant to be ' +
-            'passed through to attributes only. Do not read the ' +
-            'value directly.',
-        );
-      }
+  return {
+    toString() {
+      warnOnAccessInDEV();
       return id;
-    };
-    return {
-      toString: warnOnAccess,
-      valueOf: warnOnAccess,
-    };
-  } else {
-    return id;
-  }
+    },
+    valueOf() {
+      warnOnAccessInDEV();
+      return id;
+    },
+  };
 }
 
 let serverId: number = 0;
 export function makeServerId(): OpaqueIDType {
   return 'R:' + (serverId++).toString(36);
-}
-
-export function getIsUpdatingOpaqueValueInRenderPhase() {
-  if (__DEV__) {
-    return isUpdatingOpaqueValueInRenderPhase;
-  }
-}
-
-function setIsUpdatingOpaqueValueInRenderPhase(isUpdating: boolean) {
-  isUpdatingOpaqueValueInRenderPhase = isUpdating;
 }
 
 export function isOpaqueHydratingObject(value: mixed): boolean {
@@ -1209,51 +1188,12 @@ export function isOpaqueHydratingObject(value: mixed): boolean {
 }
 
 export function makeOpaqueHydratingObject(
-  setId: () => void,
-  fiberType: mixed,
+  attemptToReadValue: () => void,
 ): OpaqueIDType {
   return {
     $$typeof: REACT_OPAQUE_ID_TYPE,
-    toString() {
-      if (__DEV__) {
-        const name = getComponentName(fiberType) || 'Unknown';
-        if (getIsRendering() && !didWarnAboutUseOpaqueIdentifier[name]) {
-          console.error(
-            'The object passed back from useOpaqueIdentifier is meant to be passed through ' +
-              'to attributes only. Do not read the value directly.',
-          );
-          didWarnAboutUseOpaqueIdentifier[name] = true;
-        }
-      }
-
-      setIsUpdatingOpaqueValueInRenderPhase(true);
-      setId();
-      setIsUpdatingOpaqueValueInRenderPhase(false);
-      throw new Error(
-        'The object passed back from useOpaqueIdentifier is meant to be passed through ' +
-          'to attributes only. Do not read the value directly.',
-      );
-    },
-    valueOf() {
-      if (__DEV__) {
-        const name = getComponentName(fiberType) || 'Unknown';
-        if (getIsRendering() && !didWarnAboutUseOpaqueIdentifier[name]) {
-          console.error(
-            'The object passed back from useOpaqueIdentifier is meant to be passed through ' +
-              'to attributes only. Do not read the value directly.',
-          );
-          didWarnAboutUseOpaqueIdentifier[name] = true;
-        }
-      }
-
-      setIsUpdatingOpaqueValueInRenderPhase(true);
-      setId();
-      setIsUpdatingOpaqueValueInRenderPhase(false);
-      throw new Error(
-        'The object passed back from useOpaqueIdentifier is meant to be passed through ' +
-          'to attributes only. Do not read the value directly.',
-      );
-    },
+    toString: attemptToReadValue,
+    valueOf: attemptToReadValue,
   };
 }
 

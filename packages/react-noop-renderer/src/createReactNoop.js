@@ -439,10 +439,6 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
     beforeRemoveInstance(instance: any): void {
       // NO-OP
     },
-
-    getIsUpdatingOpaqueValueInRenderPhase() {
-      return false;
-    },
   };
 
   const hostConfig = useMutation

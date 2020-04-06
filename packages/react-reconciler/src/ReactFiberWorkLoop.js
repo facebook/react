@@ -63,7 +63,6 @@ import {
   cancelTimeout,
   noTimeout,
   warnsIfNotActing,
-  getIsUpdatingOpaqueValueInRenderPhase,
 } from './ReactFiberHostConfig';
 
 import {createWorkInProgress, assignFiberPropertiesInDEV} from './ReactFiber';
@@ -146,7 +145,11 @@ import {
 } from './ReactFiberCommitWork';
 import {enqueueUpdate} from './ReactUpdateQueue';
 import {resetContextDependencies} from './ReactFiberNewContext';
-import {resetHooksAfterThrow, ContextOnlyDispatcher} from './ReactFiberHooks';
+import {
+  resetHooksAfterThrow,
+  ContextOnlyDispatcher,
+  getIsUpdatingOpaqueValueInRenderPhaseInDEV,
+} from './ReactFiberHooks';
 import {createCapturedValue} from './ReactCapturedValue';
 
 import {
@@ -2844,7 +2847,7 @@ function warnAboutRenderPhaseUpdatesInDEV(fiber) {
     if (
       ReactCurrentDebugFiberIsRenderingInDEV &&
       (executionContext & RenderContext) !== NoContext &&
-      !getIsUpdatingOpaqueValueInRenderPhase()
+      !getIsUpdatingOpaqueValueInRenderPhaseInDEV()
     ) {
       switch (fiber.tag) {
         case FunctionComponent:

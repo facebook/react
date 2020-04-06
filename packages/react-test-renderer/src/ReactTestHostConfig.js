@@ -48,8 +48,8 @@ export type EventResponder = any;
 export opaque type OpaqueIDType =
   | string
   | {
-      $$typeof: Symbol | number,
-      _setId(): void,
+      toString: () => string | void,
+      valueOf: () => string | void,
     };
 
 export type ReactListenerEvent = Object;
@@ -393,6 +393,20 @@ export function makeClientId(): OpaqueIDType {
   return 'c_' + (clientId++).toString(36);
 }
 
+export function makeClientIdInDEV(warnOnAccessInDEV: () => void): OpaqueIDType {
+  const id = 'c_' + (clientId++).toString(36);
+  return {
+    toString() {
+      warnOnAccessInDEV();
+      return id;
+    },
+    valueOf() {
+      warnOnAccessInDEV();
+      return id;
+    },
+  };
+}
+
 let serverId: number = 0;
 export function makeServerId(): OpaqueIDType {
   return 's_' + (serverId++).toString(36);
@@ -407,46 +421,13 @@ export function isOpaqueHydratingObject(value: mixed): boolean {
 }
 
 export function makeOpaqueHydratingObject(
-  setId: () => void,
-  fiberType: mixed,
+  attemptToReadValue: () => void,
 ): OpaqueIDType {
   return {
     $$typeof: REACT_OPAQUE_ID_TYPE,
-    _setId: setId,
-    toString() {
-      setIsUpdatingOpaqueValueInRenderPhase(true);
-      setId();
-      setIsUpdatingOpaqueValueInRenderPhase(false);
-      throw new Error(
-        'The object passed back from useOpaqueIdentifier is meant to be passed through ' +
-          'to attributes only. Do not read the value directly.',
-      );
-    },
-    valueOf() {
-      setIsUpdatingOpaqueValueInRenderPhase(true);
-      setId();
-      setIsUpdatingOpaqueValueInRenderPhase(false);
-      throw new Error(
-        'The object passed back from useOpaqueIdentifier is meant to be passed through ' +
-          'to attributes only. Do not read the value directly.',
-      );
-    },
+    toString: attemptToReadValue,
+    valueOf: attemptToReadValue,
   };
-}
-
-let isUpdatingOpaqueValueInRenderPhase;
-if (__DEV__) {
-  isUpdatingOpaqueValueInRenderPhase = false;
-}
-
-export function getIsUpdatingOpaqueValueInRenderPhase() {
-  if (__DEV__) {
-    return isUpdatingOpaqueValueInRenderPhase;
-  }
-}
-
-function setIsUpdatingOpaqueValueInRenderPhase(isUpdating) {
-  isUpdatingOpaqueValueInRenderPhase = isUpdating;
 }
 
 export function registerEvent(event: any, rootContainerInstance: Container) {

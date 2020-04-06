@@ -492,17 +492,16 @@ export function isOpaqueHydratingObject(value: mixed): boolean {
 }
 
 export function makeOpaqueHydratingObject(
-  setId: () => void,
-  fiberType: mixed,
+  attemptToReadValue: () => void,
 ): OpaqueIDType {
   throw new Error('Not yet implemented.');
 }
 
-export function getIsUpdatingOpaqueValueInRenderPhase() {
-  // noop
+export function makeClientId(): OpaqueIDType {
+  throw new Error('Not yet implemented');
 }
 
-export function makeClientId(): OpaqueIDType {
+export function makeClientIdInDEV(warnOnAccessInDEV: () => void): OpaqueIDType {
   throw new Error('Not yet implemented');
 }
 

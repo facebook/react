@@ -77,7 +77,11 @@ import {
   getCurrentPriorityLevel,
 } from './SchedulerWithReactIntegration';
 import {getIsHydrating} from './ReactFiberHydrationContext';
-import {makeClientId, makeOpaqueHydratingObject} from './ReactFiberHostConfig';
+import {
+  makeClientId,
+  makeClientIdInDEV,
+  makeOpaqueHydratingObject,
+} from './ReactFiberHostConfig';
 import {
   getLastPendingExpirationTime,
   getWorkInProgressVersion,
@@ -87,6 +91,7 @@ import {
   warnAboutMultipleRenderersDEV,
 } from './ReactMutableSource';
 import {getRootHostContainer} from './ReactFiberHostContext';
+import {getIsRendering} from './ReactCurrentFiber';
 
 const {ReactCurrentDispatcher, ReactCurrentBatchConfig} = ReactSharedInternals;
 
@@ -139,11 +144,6 @@ export type Dispatcher = {|
   useOpaqueIdentifier(): OpaqueIDType | void,
 |};
 
-export type IdObject = {
-  $$typeof: Symbol | number,
-  _setId: () => void,
-};
-
 type Update<S, A> = {|
   expirationTime: ExpirationTime,
   suspenseConfig: null | SuspenseConfig,
@@ -180,7 +180,9 @@ export type HookType =
   | 'useOpaqueIdentifier';
 
 let didWarnAboutMismatchedHooksForComponent;
+let didWarnAboutUseOpaqueIdentifier;
 if (__DEV__) {
+  didWarnAboutUseOpaqueIdentifier = {};
   didWarnAboutMismatchedHooksForComponent = new Set();
 }
 
@@ -575,6 +577,8 @@ export function resetHooksAfterThrow(): void {
     hookTypesUpdateIndexDev = -1;
 
     currentHookNameInDev = null;
+
+    isUpdatingOpaqueValueInRenderPhase = false;
   }
 
   didScheduleRenderPhaseUpdate = false;
@@ -1580,18 +1584,61 @@ function rerenderTransition(
   return [start, isPending];
 }
 
+let isUpdatingOpaqueValueInRenderPhase = false;
+export function getIsUpdatingOpaqueValueInRenderPhaseInDEV(): boolean | void {
+  if (__DEV__) {
+    return isUpdatingOpaqueValueInRenderPhase;
+  }
+}
+
+function warnOnOpaqueIdentifierAccessInDEV(fiber) {
+  if (__DEV__) {
+    // TODO: Should warn in effects and callbacks, too
+    const name = getComponentName(fiber.type) || 'Unknown';
+    if (getIsRendering() && !didWarnAboutUseOpaqueIdentifier[name]) {
+      console.error(
+        'The object passed back from useOpaqueIdentifier is meant to be ' +
+          'passed through to attributes only. Do not read the ' +
+          'value directly.',
+      );
+      didWarnAboutUseOpaqueIdentifier[name] = true;
+    }
+  }
+}
+
 function mountOpaqueIdentifier(): OpaqueIDType | void {
+  const makeId = __DEV__
+    ? makeClientIdInDEV.bind(
+        null,
+        warnOnOpaqueIdentifierAccessInDEV.bind(null, currentlyRenderingFiber),
+      )
+    : makeClientId;
+
   if (getIsHydrating()) {
     let didUpgrade = false;
-    const id = makeOpaqueHydratingObject(() => {
+    const fiber = currentlyRenderingFiber;
+    const readValue = () => {
       if (!didUpgrade) {
         // Only upgrade once. This works even inside the render phase because
         // the update is added to a shared queue, which outlasts the
         // in-progress render.
         didUpgrade = true;
-        setId(makeClientId());
+        if (__DEV__) {
+          isUpdatingOpaqueValueInRenderPhase = true;
+          setId(makeId());
+          isUpdatingOpaqueValueInRenderPhase = false;
+          warnOnOpaqueIdentifierAccessInDEV(fiber);
+        } else {
+          setId(makeId());
+        }
       }
-    }, currentlyRenderingFiber.type);
+      invariant(
+        false,
+        'The object passed back from useOpaqueIdentifier is meant to be ' +
+          'passed through to attributes only. Do not read the value directly.',
+      );
+    };
+    const id = makeOpaqueHydratingObject(readValue);
 
     const setId = mountState(id)[1];
 
@@ -1600,7 +1647,7 @@ function mountOpaqueIdentifier(): OpaqueIDType | void {
       pushEffect(
         HookHasEffect | HookPassive,
         () => {
-          setId(makeClientId());
+          setId(makeId());
         },
         undefined,
         null,
@@ -1608,7 +1655,7 @@ function mountOpaqueIdentifier(): OpaqueIDType | void {
     }
     return id;
   } else {
-    const id = makeClientId();
+    const id = makeId();
     mountState(id);
     return id;
   }

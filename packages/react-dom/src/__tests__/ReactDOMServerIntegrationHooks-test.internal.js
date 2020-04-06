@@ -1643,8 +1643,6 @@ describe('ReactDOMServerHooks', () => {
         ).toErrorDev([
           'The object passed back from useOpaqueIdentifier is meant to be passed through to attributes only. ' +
             'Do not read the value directly.',
-          'The object passed back from useOpaqueIdentifier is meant to be passed through to attributes only. ' +
-            'Do not read the value directly.',
         ]);
       });
     });
@@ -1677,8 +1675,6 @@ describe('ReactDOMServerHooks', () => {
             'Do not read the value directly.',
         ),
       ).toErrorDev([
-        'The object passed back from useOpaqueIdentifier is meant to be passed through to attributes only. ' +
-          'Do not read the value directly.',
         'The object passed back from useOpaqueIdentifier is meant to be passed through to attributes only. ' +
           'Do not read the value directly.',
       ]);

@@ -86,9 +86,8 @@ export const validateEventListenerTarget =
 export const isOpaqueHydratingObject = $$$hostConfig.isOpaqueHydratingObject;
 export const makeOpaqueHydratingObject =
   $$$hostConfig.makeOpaqueHydratingObject;
-export const getIsUpdatingOpaqueValueInRenderPhase =
-  $$$hostConfig.getIsUpdatingOpaqueValueInRenderPhase;
 export const makeClientId = $$$hostConfig.makeClientId;
+export const makeClientIdInDEV = $$$hostConfig.makeClientIdInDEV;
 export const makeServerId = $$$hostConfig.makeServerId;
 
 // -------------------
