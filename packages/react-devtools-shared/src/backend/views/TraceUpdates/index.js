@@ -7,7 +7,6 @@
  * @flow
  */
 
-import Agent from 'react-devtools-shared/src/backend/agent';
 import {destroy as destroyCanvas, draw} from './canvas';
 import {getNestedBoundingClientRect} from '../utils';
 

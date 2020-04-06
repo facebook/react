@@ -8,7 +8,6 @@
  */
 
 import {createContext} from 'react';
-import Store from '../store';
 
 import type {ViewAttributeSource} from 'react-devtools-shared/src/devtools/views/DevTools';
 import type {FrontendBridge} from 'react-devtools-shared/src/bridge';

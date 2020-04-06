@@ -42,7 +42,6 @@ import {
 } from 'scheduler';
 import {createRegExp} from '../utils';
 import {BridgeContext, StoreContext} from '../context';
-import Store from '../../store';
 
 import type {Element} from './types';
 

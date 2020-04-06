@@ -7,7 +7,6 @@
  * @flow
  */
 
-import ProfilerStore from './ProfilerStore';
 import {
   getCommitTree,
   invalidateCommitTrees,

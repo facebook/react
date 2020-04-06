@@ -7,7 +7,6 @@
  * @flow
  */
 
-import Agent from 'react-devtools-shared/src/backend/agent';
 import resolveBoxStyle from './resolveBoxStyle';
 
 import type {BackendBridge} from 'react-devtools-shared/src/bridge';

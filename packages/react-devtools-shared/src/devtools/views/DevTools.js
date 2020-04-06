@@ -14,7 +14,6 @@ import '@reach/tooltip/styles.css';
 
 import * as React from 'react';
 import {useEffect, useMemo, useRef} from 'react';
-import Store from '../store';
 import {BridgeContext, ContextMenuContext, StoreContext} from './context';
 import Components from './Components/Components';
 import Profiler from './Profiler/Profiler';

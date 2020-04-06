@@ -16,7 +16,6 @@ import {
 } from 'react-devtools-shared/src/constants';
 import {utfDecodeString} from 'react-devtools-shared/src/utils';
 import {ElementTypeRoot} from 'react-devtools-shared/src/types';
-import ProfilerStore from 'react-devtools-shared/src/devtools/ProfilerStore';
 
 import type {ElementType} from 'react-devtools-shared/src/types';
 import type {

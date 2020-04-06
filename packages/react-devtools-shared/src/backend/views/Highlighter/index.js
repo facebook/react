@@ -9,7 +9,6 @@
 
 import memoize from 'memoize-one';
 import throttle from 'lodash.throttle';
-import Agent from 'react-devtools-shared/src/backend/agent';
 import {hideOverlay, showOverlay} from './Highlighter';
 
 import type {BackendBridge} from 'react-devtools-shared/src/bridge';
