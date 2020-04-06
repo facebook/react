@@ -242,7 +242,7 @@ describe('forwardRef', () => {
     ).toErrorDev(
       'Warning: Failed prop type: The prop `required` is marked as required in ' +
         '`Foo`, but its value is `undefined`.\n' +
-        '    in Unknown (at **)',
+        '    in Foo (at **)',
     );
   });
 
