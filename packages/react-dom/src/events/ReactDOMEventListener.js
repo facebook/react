@@ -17,10 +17,6 @@ import type {DOMTopLevelEventType} from 'legacy-events/TopLevelEventTypes';
 // CommonJS interop named imports.
 import * as Scheduler from 'scheduler';
 
-import {
-  discreteUpdates,
-  flushDiscreteUpdatesIfNeeded,
-} from 'legacy-events/ReactGenericBatching';
 import {DEPRECATED_dispatchEventForResponderEventSystem} from './DeprecatedDOMEventResponderSystem';
 import {
   isReplayableDiscreteEvent,
@@ -70,6 +66,10 @@ import {
 import {getEventPriorityForPluginSystem} from './DOMEventProperties';
 import {dispatchEventForLegacyPluginEventSystem} from './DOMLegacyEventPluginSystem';
 import {dispatchEventForPluginEventSystem} from './DOMModernPluginEventSystem';
+import {
+  flushDiscreteUpdatesIfNeeded,
+  discreteUpdates,
+} from './ReactDOMUpdateBatching';
 
 const {
   unstable_UserBlockingPriority: UserBlockingPriority,
