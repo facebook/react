@@ -46,6 +46,12 @@ type Hook = {|
   next: Hook | null,
 |};
 
+type HookInternals = {|
+  currentlyRenderingComponent: Object | null,
+  firstWorkInProgressHook: Hook | null,
+  workInProgressHook: Hook | null,
+|};
+
 let currentlyRenderingComponent: Object | null = null;
 let firstWorkInProgressHook: Hook | null = null;
 let workInProgressHook: Hook | null = null;
@@ -63,6 +69,20 @@ let isInHookUserCodeInDev = false;
 
 // In DEV, this is the name of the currently executing primitive hook
 let currentHookNameInDev: ?string;
+
+export function getHookInternals() {
+  return {
+    currentlyRenderingComponent,
+    firstWorkInProgressHook,
+    workInProgressHook,
+  };
+}
+
+export function setHookInternals(internals: HookInternals) {
+  currentlyRenderingComponent = internals.currentlyRenderingComponent;
+  firstWorkInProgressHook = internals.firstWorkInProgressHook;
+  workInProgressHook = internals.workInProgressHook;
+}
 
 function resolveCurrentlyRenderingComponent(): Object {
   invariant(

@@ -196,7 +196,7 @@ describe('ReactDOMServer', () => {
   });
 
   describe('renderToStaticMarkup', () => {
-    it('should execute hooks in separate namespaces for different renderers', () => {
+    it('should restore hooks internals upon exiting for nested renderers', () => {
       const NestedComponent = () => <div>&nbsp;</div>;
 
       const memoize = () => {

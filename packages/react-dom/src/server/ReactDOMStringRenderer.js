@@ -6,6 +6,9 @@
  */
 
 import ReactPartialRenderer from './ReactPartialRenderer';
+import {getHookInternals, setHookInternals} from './ReactPartialRendererHooks';
+
+let hookInternals;
 
 /**
  * Render a ReactElement to its initial HTML. This should only be used on the
@@ -13,12 +16,14 @@ import ReactPartialRenderer from './ReactPartialRenderer';
  * See https://reactjs.org/docs/react-dom-server.html#rendertostring
  */
 export function renderToString(element) {
+  hookInternals = getHookInternals();
   const renderer = new ReactPartialRenderer(element, false);
   try {
     const markup = renderer.read(Infinity);
     return markup;
   } finally {
     renderer.destroy();
+    setHookInternals(hookInternals);
   }
 }
 
@@ -28,11 +33,13 @@ export function renderToString(element) {
  * See https://reactjs.org/docs/react-dom-server.html#rendertostaticmarkup
  */
 export function renderToStaticMarkup(element) {
+  hookInternals = getHookInternals();
   const renderer = new ReactPartialRenderer(element, true);
   try {
     const markup = renderer.read(Infinity);
     return markup;
   } finally {
     renderer.destroy();
+    setHookInternals(hookInternals);
   }
 }
