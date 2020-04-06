@@ -8,11 +8,10 @@
  */
 
 import invariant from 'shared/invariant';
-
 import {
   getInstanceFromNode,
   getFiberCurrentPropsFromNode,
-} from './EventPluginUtils';
+} from '../client/ReactDOMComponentTree';
 
 // Use to restore controlled state after a change event has fired.
 
@@ -20,7 +19,7 @@ let restoreImpl = null;
 let restoreTarget = null;
 let restoreQueue = null;
 
-function restoreStateOfTarget(target) {
+function restoreStateOfTarget(target: Node) {
   // We perform this translation at the end of the event loop so that we
   // always receive the correct fiber here
   const internalInstance = getInstanceFromNode(target);
@@ -47,7 +46,7 @@ export function setRestoreImplementation(
   restoreImpl = impl;
 }
 
-export function enqueueStateRestore(target: EventTarget): void {
+export function enqueueStateRestore(target: Node): void {
   if (restoreTarget) {
     if (restoreQueue) {
       restoreQueue.push(target);

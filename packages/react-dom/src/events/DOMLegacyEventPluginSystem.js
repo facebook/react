@@ -22,7 +22,6 @@ import {
   HostText,
 } from 'react-reconciler/src/ReactWorkTags';
 import {IS_FIRST_ANCESTOR, PLUGIN_EVENT_SYSTEM} from './EventSystemFlags';
-import {batchedEventUpdates} from 'legacy-events/ReactGenericBatching';
 import {runEventsInBatch} from 'legacy-events/EventBatching';
 import {plugins} from 'legacy-events/EventPluginRegistry';
 import accumulateInto from 'legacy-events/accumulateInto';
@@ -45,6 +44,7 @@ import {
   mediaEventTypes,
 } from './DOMTopLevelEventTypes';
 import {addTrappedEventListener} from './ReactDOMEventListener';
+import {batchedEventUpdates} from './ReactDOMUpdateBatching';
 
 /**
  * Summary of `DOMEventPluginSystem` event handling:

@@ -24,7 +24,6 @@ import type {
 import type {ReactDOMListener} from '../shared/ReactDOMTypes';
 
 import {registrationNameDependencies} from 'legacy-events/EventPluginRegistry';
-import {batchedEventUpdates} from 'legacy-events/ReactGenericBatching';
 import {plugins} from 'legacy-events/EventPluginRegistry';
 import {
   PLUGIN_EVENT_SYSTEM,
@@ -86,12 +85,16 @@ import {
 } from '../client/ReactDOMComponentTree';
 import {COMMENT_NODE} from '../shared/HTMLNodeType';
 import {topLevelEventsToDispatchConfig} from './DOMEventProperties';
+import {batchedEventUpdates} from './ReactDOMUpdateBatching';
 
 import {
   enableLegacyFBSupport,
   enableUseEventAPI,
 } from 'shared/ReactFeatureFlags';
-import {invokeGuardedCallbackAndCatchFirstError} from 'shared/ReactErrorUtils';
+import {
+  invokeGuardedCallbackAndCatchFirstError,
+  rethrowCaughtError,
+} from 'shared/ReactErrorUtils';
 
 const capturePhaseEvents = new Set([
   TOP_FOCUS,
@@ -213,6 +216,21 @@ function executeDispatchesInOrder(event: ReactSyntheticEvent): void {
   event._dispatchCurrentTargets = null;
 }
 
+export function dispatchEventsInBatch(
+  events: Array<ReactSyntheticEvent>,
+): void {
+  for (let i = 0; i < events.length; i++) {
+    const syntheticEvent = events[i];
+    executeDispatchesInOrder(syntheticEvent);
+    // Release the event from the pool if needed
+    if (!syntheticEvent.isPersistent()) {
+      syntheticEvent.constructor.release(syntheticEvent);
+    }
+  }
+  // This would be a good time to rethrow if any of the event handlers threw.
+  rethrowCaughtError();
+}
+
 function dispatchEventsForPlugins(
   topLevelType: DOMTopLevelEventType,
   eventSystemFlags: EventSystemFlags,
@@ -244,14 +262,7 @@ function dispatchEventsForPlugins(
       }
     }
   }
-  for (let i = 0; i < syntheticEvents.length; i++) {
-    const syntheticEvent = syntheticEvents[i];
-    executeDispatchesInOrder(syntheticEvent);
-    // Release the event from the pool if needed
-    if (!syntheticEvent.isPersistent()) {
-      syntheticEvent.constructor.release(syntheticEvent);
-    }
-  }
+  dispatchEventsInBatch(syntheticEvents);
 }
 
 function shouldUpgradeListener(

@@ -30,13 +30,13 @@ import {
   discreteUpdates,
   flushDiscreteUpdatesIfNeeded,
   executeUserEventHandler,
-} from 'legacy-events/ReactGenericBatching';
-import {enqueueStateRestore} from 'legacy-events/ReactControlledComponent';
+} from './ReactDOMUpdateBatching';
 import type {Fiber} from 'react-reconciler/src/ReactFiber';
 import {enableDeprecatedFlareAPI} from 'shared/ReactFeatureFlags';
 import invariant from 'shared/invariant';
 
 import {getClosestInstanceFromNode} from '../client/ReactDOMComponentTree';
+import {enqueueStateRestore} from './ReactDOMControlledComponent';
 import {
   ContinuousEvent,
   UserBlockingEvent,
