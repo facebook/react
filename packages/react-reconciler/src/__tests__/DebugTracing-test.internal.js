@@ -50,7 +50,11 @@ describe('DebugTracing', () => {
     });
   } else {
     it('should not log anything for sync render without suspends or state updates', () => {
-      ReactTestRenderer.create(<div />);
+      ReactTestRenderer.create(
+        <React.DebugTraceMode>
+          <div />
+        </React.DebugTraceMode>,
+      );
 
       expect(logs).toEqual(['log: ⚛️ render scheduled (priority: immediate)']);
     });
@@ -74,9 +78,11 @@ describe('DebugTracing', () => {
       }
 
       ReactTestRenderer.create(
-        <React.Suspense fallback={null}>
-          <Example />
-        </React.Suspense>,
+        <React.DebugTraceMode>
+          <React.Suspense fallback={null}>
+            <Example />
+          </React.Suspense>
+        </React.DebugTraceMode>,
       );
 
       expect(logs).toEqual([
@@ -94,9 +100,11 @@ describe('DebugTracing', () => {
       }
 
       ReactTestRenderer.create(
-        <React.Suspense fallback={null}>
-          <Example />
-        </React.Suspense>,
+        <React.DebugTraceMode>
+          <React.Suspense fallback={null}>
+            <Example />
+          </React.Suspense>
+        </React.DebugTraceMode>,
         {unstable_isConcurrent: true},
       );
 
@@ -124,7 +132,12 @@ describe('DebugTracing', () => {
         }
       }
 
-      ReactTestRenderer.create(<Example />, {unstable_isConcurrent: true});
+      ReactTestRenderer.create(
+        <React.DebugTraceMode>
+          <Example />
+        </React.DebugTraceMode>,
+        {unstable_isConcurrent: true},
+      );
 
       expect(logs).toEqual(['log: ⚛️ render scheduled (priority: normal)']);
 
@@ -152,7 +165,12 @@ describe('DebugTracing', () => {
         }
       }
 
-      ReactTestRenderer.create(<Example />, {unstable_isConcurrent: true});
+      ReactTestRenderer.create(
+        <React.DebugTraceMode>
+          <Example />
+        </React.DebugTraceMode>,
+        {unstable_isConcurrent: true},
+      );
 
       expect(logs).toEqual(['log: ⚛️ render scheduled (priority: normal)']);
 
@@ -179,7 +197,12 @@ describe('DebugTracing', () => {
         return didMount;
       }
 
-      ReactTestRenderer.create(<Example />, {unstable_isConcurrent: true});
+      ReactTestRenderer.create(
+        <React.DebugTraceMode>
+          <Example />
+        </React.DebugTraceMode>,
+        {unstable_isConcurrent: true},
+      );
 
       expect(logs).toEqual(['log: ⚛️ render scheduled (priority: normal)']);
 
@@ -206,7 +229,12 @@ describe('DebugTracing', () => {
       }
 
       ReactTestRenderer.act(() => {
-        ReactTestRenderer.create(<Example />, {unstable_isConcurrent: true});
+        ReactTestRenderer.create(
+          <React.DebugTraceMode>
+            <Example />
+          </React.DebugTraceMode>,
+          {unstable_isConcurrent: true},
+        );
       });
       expect(logs).toEqual([
         'log: ⚛️ render scheduled (priority: normal)',
@@ -226,7 +254,12 @@ describe('DebugTracing', () => {
       }
 
       ReactTestRenderer.act(() => {
-        ReactTestRenderer.create(<Example />, {unstable_isConcurrent: true});
+        ReactTestRenderer.create(
+          <React.DebugTraceMode>
+            <Example />
+          </React.DebugTraceMode>,
+          {unstable_isConcurrent: true},
+        );
       });
       expect(logs).toEqual([
         'log: ⚛️ render scheduled (priority: normal)',
@@ -243,7 +276,12 @@ describe('DebugTracing', () => {
         return null;
       }
 
-      ReactTestRenderer.create(<Example />, {unstable_isConcurrent: true});
+      ReactTestRenderer.create(
+        <React.DebugTraceMode>
+          <Example />
+        </React.DebugTraceMode>,
+        {unstable_isConcurrent: true},
+      );
 
       expect(logs).toEqual(['log: ⚛️ render scheduled (priority: normal)']);
 
@@ -256,6 +294,39 @@ describe('DebugTracing', () => {
         'log: Hello from user code',
         'groupEnd: ⚛️ render (priority: normal)',
       ]);
+    });
+
+    it('should not log anything outside of a DebugTraceMode subtree', () => {
+      function ExampleThatCascades() {
+        const [didMount, setDidMount] = React.useState(false);
+        React.useLayoutEffect(() => {
+          setDidMount(true);
+        }, []);
+        return didMount;
+      }
+
+      const fakeSuspensPromise = new Promise(() => {});
+      function ExampleThatSuspends() {
+        throw fakeSuspensPromise;
+      }
+
+      function Example() {
+        return null;
+      }
+
+      ReactTestRenderer.create(
+        <React.Fragment>
+          <ExampleThatCascades />
+          <React.Suspense fallback={null}>
+            <ExampleThatSuspends />
+          </React.Suspense>
+          <React.DebugTraceMode>
+            <Example />
+          </React.DebugTraceMode>
+        </React.Fragment>,
+      );
+
+      expect(logs).toEqual(['log: ⚛️ render scheduled (priority: immediate)']);
     });
   }
 });

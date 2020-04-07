@@ -29,7 +29,7 @@ import invariant from 'shared/invariant';
 import {REACT_CONTEXT_TYPE, REACT_PROVIDER_TYPE} from 'shared/ReactSymbols';
 
 import {resolveDefaultProps} from './ReactFiberLazyComponent.old';
-import {StrictMode} from './ReactTypeOfMode';
+import {DebugTraceMode, StrictMode} from './ReactTypeOfMode';
 
 import {
   enqueueUpdate,
@@ -214,11 +214,13 @@ const classComponentUpdater = {
 
     if (__DEV__) {
       if (enableDebugTracing) {
-        const label = priorityLevelToLabel(
-          ((update.priority: any): ReactPriorityLevel),
-        );
-        const name = getComponentName(fiber.type) || 'Unknown';
-        logStateUpdateScheduled(name, label, payload);
+        if (fiber.mode & DebugTraceMode) {
+          const label = priorityLevelToLabel(
+            ((update.priority: any): ReactPriorityLevel),
+          );
+          const name = getComponentName(fiber.type) || 'Unknown';
+          logStateUpdateScheduled(name, label, payload);
+        }
       }
     }
   },
@@ -248,11 +250,13 @@ const classComponentUpdater = {
 
     if (__DEV__) {
       if (enableDebugTracing) {
-        const label = priorityLevelToLabel(
-          ((update.priority: any): ReactPriorityLevel),
-        );
-        const name = getComponentName(fiber.type) || 'Unknown';
-        logStateUpdateScheduled(name, label, payload);
+        if (fiber.mode & DebugTraceMode) {
+          const label = priorityLevelToLabel(
+            ((update.priority: any): ReactPriorityLevel),
+          );
+          const name = getComponentName(fiber.type) || 'Unknown';
+          logStateUpdateScheduled(name, label, payload);
+        }
       }
     }
   },
@@ -281,11 +285,13 @@ const classComponentUpdater = {
 
     if (__DEV__) {
       if (enableDebugTracing) {
-        const label = priorityLevelToLabel(
-          ((update.priority: any): ReactPriorityLevel),
-        );
-        const name = getComponentName(fiber.type) || 'Unknown';
-        logForceUpdateScheduled(name, label);
+        if (fiber.mode & DebugTraceMode) {
+          const label = priorityLevelToLabel(
+            ((update.priority: any): ReactPriorityLevel),
+          );
+          const name = getComponentName(fiber.type) || 'Unknown';
+          logForceUpdateScheduled(name, label);
+        }
       }
     }
   },

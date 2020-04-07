@@ -33,12 +33,12 @@ import ReactSharedInternals from 'shared/ReactSharedInternals';
 import {enableDebugTracing, enableUseEventAPI} from 'shared/ReactFeatureFlags';
 
 import {markRootExpiredAtTime} from './ReactFiberRoot.old';
+import {NoMode, BlockingMode, DebugTraceMode} from './ReactTypeOfMode';
 import {
   inferPriorityFromExpirationTime,
   NoWork,
   Sync,
 } from './ReactFiberExpirationTime.old';
-import {NoMode, BlockingMode} from './ReactTypeOfMode';
 import {readContext} from './ReactFiberNewContext.old';
 import {createDeprecatedResponderListener} from './ReactFiberDeprecatedEvents.old';
 import {
@@ -1742,13 +1742,15 @@ function dispatchAction<S, A>(
 
   if (__DEV__) {
     if (enableDebugTracing) {
-      const priorityLevel = inferPriorityFromExpirationTime(
-        currentTime,
-        expirationTime,
-      );
-      const label = priorityLevelToLabel(priorityLevel);
-      const name = getComponentName(fiber.type) || 'Unknown';
-      logStateUpdateScheduled(name, label, action);
+      if (fiber.mode & DebugTraceMode) {
+        const priorityLevel = inferPriorityFromExpirationTime(
+          currentTime,
+          expirationTime,
+        );
+        const label = priorityLevelToLabel(priorityLevel);
+        const name = getComponentName(fiber.type) || 'Unknown';
+        logStateUpdateScheduled(name, label, action);
+      }
     }
   }
 }

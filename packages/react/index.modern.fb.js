@@ -50,5 +50,7 @@ export {
   // enableScopeAPI
   unstable_createScope,
   unstable_useOpaqueIdentifier,
+  // enableDebugTracing
+  DebugTraceMode,
 } from './src/React';
 export {jsx, jsxs, jsxDEV} from './src/jsx/ReactJSX';

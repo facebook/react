@@ -29,9 +29,8 @@ import {
   ShouldCapture,
   LifecycleEffectMask,
 } from './ReactSideEffectTags';
-import {NoMode, BlockingMode} from './ReactTypeOfMode';
 import {shouldCaptureSuspense} from './ReactFiberSuspenseComponent.old';
-
+import {NoMode, BlockingMode, DebugTraceMode} from './ReactTypeOfMode';
 import {enableDebugTracing} from 'shared/ReactFeatureFlags';
 import {createCapturedValue} from './ReactCapturedValue';
 import {
@@ -198,8 +197,10 @@ function throwException(
 
     if (__DEV__) {
       if (enableDebugTracing) {
-        const name = getComponentName(sourceFiber.type) || 'Unknown';
-        logComponentSuspended(name, wakeable);
+        if (sourceFiber.mode & DebugTraceMode) {
+          const name = getComponentName(sourceFiber.type) || 'Unknown';
+          logComponentSuspended(name, wakeable);
+        }
       }
     }
 

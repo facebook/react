@@ -15,6 +15,7 @@ import {
   REACT_FORWARD_REF_TYPE,
   REACT_FRAGMENT_TYPE,
   REACT_LAZY_TYPE,
+  REACT_DEBUG_TRACE_MODE_TYPE,
   REACT_MEMO_TYPE,
   REACT_PORTAL_TYPE,
   REACT_PROFILER_TYPE,
@@ -65,6 +66,7 @@ export const Element = REACT_ELEMENT_TYPE;
 export const ForwardRef = REACT_FORWARD_REF_TYPE;
 export const Fragment = REACT_FRAGMENT_TYPE;
 export const Lazy = REACT_LAZY_TYPE;
+export const DebugTraceMode = REACT_DEBUG_TRACE_MODE_TYPE;
 export const Memo = REACT_MEMO_TYPE;
 export const Portal = REACT_PORTAL_TYPE;
 export const Profiler = REACT_PROFILER_TYPE;
@@ -124,6 +126,9 @@ export function isFragment(object: any) {
 }
 export function isLazy(object: any) {
   return typeOf(object) === REACT_LAZY_TYPE;
+}
+export function isDebugTraceMode(object: any) {
+  return typeOf(object) === REACT_DEBUG_TRACE_MODE_TYPE;
 }
 export function isMemo(object: any) {
   return typeOf(object) === REACT_MEMO_TYPE;

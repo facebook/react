@@ -59,6 +59,7 @@ export {
   createMutableSource,
   Fragment,
   Profiler,
+  DebugTraceMode,
   StrictMode,
   Suspense,
   createElement,
