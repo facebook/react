@@ -3645,4 +3645,117 @@ describe('ReactSuspenseWithNoopRenderer', () => {
       </>,
     );
   });
+
+  it('regression: ping at high priority causes update to be dropped', async () => {
+    const {useState, useTransition} = React;
+
+    let setTextA;
+    function A() {
+      const [textA, _setTextA] = useState('A');
+      setTextA = _setTextA;
+      return (
+        <Suspense fallback={<Text text="Loading..." />}>
+          <AsyncText text={textA} />
+        </Suspense>
+      );
+    }
+
+    let setTextB;
+    let startTransition;
+    function B() {
+      const [textB, _setTextB] = useState('B');
+      const [_startTransition] = useTransition({timeoutMs: 10000});
+      startTransition = _startTransition;
+      setTextB = _setTextB;
+      return (
+        <Suspense fallback={<Text text="Loading..." />}>
+          <AsyncText text={textB} />
+        </Suspense>
+      );
+    }
+
+    function App() {
+      return (
+        <>
+          <A />
+          <B />
+        </>
+      );
+    }
+
+    const root = ReactNoop.createRoot();
+    await ReactNoop.act(async () => {
+      await resolveText('A');
+      await resolveText('B');
+      root.render(<App />);
+    });
+    expect(Scheduler).toHaveYielded(['A', 'B']);
+    expect(root).toMatchRenderedOutput(
+      <>
+        <span prop="A" />
+        <span prop="B" />
+      </>,
+    );
+
+    await ReactNoop.act(async () => {
+      // Triggers suspense at normal pri
+      setTextA('A1');
+      // Triggers in an unrelated tree at a different pri
+      startTransition(() => {
+        // Update A again so that it doesn't suspend on A1. That way we can ping
+        // the A1 update without also pinging this one. This is a workaround
+        // because there's currently no way to render at a lower priority (B2)
+        // without including all updates at higher priority (A1).
+        setTextA('A2');
+        setTextB('B2');
+      });
+    });
+    expect(Scheduler).toHaveYielded([
+      'B',
+      'Suspend! [A1]',
+      'Loading...',
+
+      'Suspend! [A2]',
+      'Loading...',
+      'Suspend! [B2]',
+      'Loading...',
+    ]);
+    expect(root).toMatchRenderedOutput(
+      <>
+        <span prop="A" />
+        <span prop="B" />
+      </>,
+    );
+
+    await ReactNoop.act(async () => {
+      resolveText('A1');
+    });
+    expect(Scheduler).toHaveYielded([
+      'Promise resolved [A1]',
+      'A1',
+      'Suspend! [A2]',
+      'Loading...',
+      'Suspend! [B2]',
+      'Loading...',
+    ]);
+    expect(root).toMatchRenderedOutput(
+      <>
+        <span prop="A1" />
+        <span prop="B" />
+      </>,
+    );
+
+    // Commit the placeholder
+    Scheduler.unstable_advanceTime(20000);
+    await advanceTimers(20000);
+
+    expect(root).toMatchRenderedOutput(
+      <>
+        <span hidden={true} prop="A1" />
+        <span prop="Loading..." />
+        <span hidden={true} prop="B" />
+        <span prop="Loading..." />
+      </>,
+    );
+  });
 });
