@@ -172,7 +172,8 @@ export function shouldRemoveAttribute(
         if (__DEV__) {
           console.error(
             'Invalid value "" (empty string) for attribute `%s`. ' +
-              'Use `null` instead to indicate an empty value.',
+              'This will be a no-op. Either do not render the element at all ' +
+              'or use `null` instead to indicate an empty value.',
             name,
           );
         }
