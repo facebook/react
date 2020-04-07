@@ -3634,7 +3634,6 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     // Triggers erstwhile bug where flushDiscreteUpdates caused an empty render
     // at a previously committed level
     ReactNoop.flushDiscreteUpdates();
-    expect(Scheduler).toFlushAndYield(['A', 'Suspend! [B]', 'Loading...']);
 
     // Commit the placeholder
     Scheduler.unstable_advanceTime(2000);

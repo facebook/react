@@ -1782,6 +1782,19 @@ function commitRootImpl(root, renderPriorityLevel) {
     remainingExpirationTimeBeforeCommit,
   );
 
+  // Clear already finished discrete updates in case that a later call of
+  // `flushDiscreteUpdates` starts a useless render pass which may cancels
+  // a scheduled timeout.
+  if (rootsWithPendingDiscreteUpdates !== null) {
+    const lastDiscreteTime = rootsWithPendingDiscreteUpdates.get(root);
+    if (
+      lastDiscreteTime !== undefined &&
+      remainingExpirationTimeBeforeCommit < lastDiscreteTime
+    ) {
+      rootsWithPendingDiscreteUpdates.delete(root);
+    }
+  }
+
   if (root === workInProgressRoot) {
     // We can reset these now that they are finished.
     workInProgressRoot = null;
