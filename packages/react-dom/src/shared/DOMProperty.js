@@ -171,9 +171,10 @@ export function shouldRemoveAttribute(
       if (propertyInfo.removeEmptyString && value === '') {
         if (__DEV__) {
           console.error(
-            'Invalid value "" (empty string) for attribute `%s`. ' +
-              'This will be a no-op. Either do not render the element at all ' +
-              'or use `null` instead to indicate an empty value.',
+            'An empty string ("") was passed to the %s attribute. ' +
+              'To fix this, either do not render the element at all ' +
+              'or pass null to %s instead of an empty string.',
+            name,
             name,
           );
         }
