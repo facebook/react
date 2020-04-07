@@ -222,7 +222,7 @@ const classComponentUpdater = {
         );
         const label = priorityLevelToLabel(priorityLevel);
         const name = getComponentName(fiber.type) || 'Unknown';
-        logStateUpdateScheduled(name, label);
+        logStateUpdateScheduled(name, label, payload);
       }
     }
   },
@@ -258,7 +258,7 @@ const classComponentUpdater = {
         );
         const label = priorityLevelToLabel(priorityLevel);
         const name = getComponentName(fiber.type) || 'Unknown';
-        logStateUpdateScheduled(name, label);
+        logStateUpdateScheduled(name, label, payload);
       }
     }
   },

@@ -199,7 +199,7 @@ function throwException(
     if (__DEV__) {
       if (enableDebugTracing) {
         const name = getComponentName(sourceFiber.type) || 'Unknown';
-        logComponentSuspended(name);
+        logComponentSuspended(name, wakeable);
       }
     }
 

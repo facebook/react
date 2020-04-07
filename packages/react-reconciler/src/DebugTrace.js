@@ -7,6 +7,8 @@
  * @flow
  */
 
+import type {Wakeable} from 'shared/ReactTypes';
+
 const nativeConsole: Object = console;
 let nativeConsoleLog: null | Function = null;
 
@@ -66,11 +68,15 @@ export function logCommitStopped(): void {
   groupEnd();
 }
 
-export function logComponentSuspended(componentName: string): void {
+export function logComponentSuspended(
+  componentName: string,
+  wakeable: Wakeable,
+): void {
   log(
     `%c⚛️%c ${componentName} suspended`,
     REACT_LOGO_STYLE,
     'color: #80366d; font-weight: bold;',
+    wakeable,
   );
 }
 
@@ -137,11 +143,13 @@ export function logRenderScheduled(priorityLabel: string): void {
 export function logStateUpdateScheduled(
   componentName: string,
   priorityLabel: string,
+  payloadOrAction: any,
 ): void {
   log(
     `%c⚛️%c ${componentName} updated state %c(priority: ${priorityLabel})`,
     REACT_LOGO_STYLE,
     'color: #01a252; font-weight: bold;',
     '',
+    payloadOrAction,
   );
 }
