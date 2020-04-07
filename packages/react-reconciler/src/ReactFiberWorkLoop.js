@@ -1944,16 +1944,12 @@ function commitRootImpl(root, renderPriorityLevel) {
     // nextEffect pointers to assist with GC. If we have passive effects, we'll
     // clear this in flushPassiveEffects.
     nextEffect = firstEffect;
+    clearNextEffectList();
     while (nextEffect !== null) {
       const nextNextEffect = nextEffect.nextEffect;
       nextEffect.nextEffect = null;
       nextEffect = nextNextEffect;
     }
-    // Clear the nextEffect pointers of an alternates
-    for (let i = 0; i < nextEffectsToClear.length; i++) {
-      nextEffectsToClear[i].nextEffect = null;
-    }
-    nextEffectsToClear = [];
   }
 
   // Check if there's remaining work on this root
@@ -2122,10 +2118,10 @@ function commitMutationEffects(root: FiberRoot, renderPriorityLevel) {
         // If the effect has a nextEffect, add it to our list
         if (nextEffect.nextEffect !== null) {
           nextEffectsToClear.push(nextEffect);
-          const alternate = nextEffect.alternate;
-          if (alternate !== null && alternate.nextEffect !== null) {
-            nextEffectsToClear.push(alternate);
-          }
+        }
+        const alternate = nextEffect.alternate;
+        if (alternate !== null && alternate.nextEffect !== null) {
+          nextEffectsToClear.push(alternate);
         }
         break;
       }
@@ -2386,6 +2382,7 @@ function flushPassiveEffectsImpl() {
       effect = nextNextEffect;
     }
   }
+  clearNextEffectList();
 
   if (enableProfilerTimer && enableProfilerCommitHooks) {
     const profilerEffects = pendingPassiveProfilerEffects;
@@ -3189,4 +3186,12 @@ function finishPendingInteractions(root, committedExpirationTime) {
       },
     );
   }
+}
+
+function clearNextEffectList() {
+  // Clear the nextEffect pointers of an alternates
+  for (let i = 0; i < nextEffectsToClear.length; i++) {
+    nextEffectsToClear[i].nextEffect = null;
+  }
+  nextEffectsToClear = [];
 }
