@@ -10,7 +10,6 @@
 'use strict';
 
 describe('DebugTracing', () => {
-  //let DebugTrace;
   let React;
   let ReactFeatureFlags;
   let ReactTestRenderer;
@@ -24,7 +23,6 @@ describe('DebugTracing', () => {
     ReactFeatureFlags = require('shared/ReactFeatureFlags');
     ReactFeatureFlags.enableDebugTracing = true;
 
-    //DebugTrace = require('react-reconciler/src/DebugTrace');
     React = require('react');
     ReactTestRenderer = require('react-test-renderer');
     Scheduler = require('scheduler');
@@ -143,6 +141,35 @@ describe('DebugTracing', () => {
       ]);
     });
 
+    it('should log render phase state updates for class component', () => {
+      class Example extends React.Component {
+        state = {didRender: false};
+        render() {
+          if (this.state.didRender === false) {
+            this.setState({didRender: true});
+          }
+          return null;
+        }
+      }
+
+      ReactTestRenderer.create(<Example />, {unstable_isConcurrent: true});
+
+      expect(logs).toEqual(['log: ⚛️ render scheduled (priority: normal)']);
+
+      logs.splice(0);
+
+      expect(() => {
+        expect(Scheduler).toFlushUntilNextPaint([]);
+      }).toErrorDev('Cannot update during an existing state transition');
+
+      expect(logs).toEqual([
+        'group: ⚛️ render (priority: normal)',
+        'log: ⚛️ Example updated state (priority: normal)',
+        'log: ⚛️ Example updated state (priority: normal)',
+        'groupEnd: ⚛️ render (priority: normal)',
+      ]);
+    });
+
     it('should log cascading layout updates', () => {
       function Example() {
         const [didMount, setDidMount] = React.useState(false);
@@ -186,6 +213,49 @@ describe('DebugTracing', () => {
         'group: ⚛️ passive effects (priority: normal)',
         'log: ⚛️ Example updated state (priority: normal)',
         'groupEnd: ⚛️ passive effects (priority: normal)',
+      ]);
+    });
+
+    it('should log render phase updates', () => {
+      function Example() {
+        const [didRender, setDidRender] = React.useState(false);
+        if (!didRender) {
+          setDidRender(true);
+        }
+        return didRender;
+      }
+
+      ReactTestRenderer.act(() => {
+        ReactTestRenderer.create(<Example />, {unstable_isConcurrent: true});
+      });
+      expect(logs).toEqual([
+        'log: ⚛️ render scheduled (priority: normal)',
+        'group: ⚛️ render (priority: normal)',
+        'log: ⚛️ Example updated state (priority: normal)',
+        'log: ⚛️ Example updated state (priority: normal)', // debugRenderPhaseSideEffectsForStrictMode
+        'groupEnd: ⚛️ render (priority: normal)',
+      ]);
+    });
+
+    it('should log when user code logs', () => {
+      function Example() {
+        console.log('Hello from user code');
+        return null;
+      }
+
+      ReactTestRenderer.create(<Example />, {unstable_isConcurrent: true});
+
+      expect(logs).toEqual(['log: ⚛️ render scheduled (priority: normal)']);
+
+      logs.splice(0);
+
+      expect(Scheduler).toFlushUntilNextPaint([]);
+
+      expect(logs).toEqual([
+        'group: ⚛️ render (priority: normal)',
+        'log: Hello from user code',
+        'log: Hello from user code', // debugRenderPhaseSideEffectsForStrictMode
+        'groupEnd: ⚛️ render (priority: normal)',
       ]);
     });
   }

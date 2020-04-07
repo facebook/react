@@ -7,19 +7,31 @@
  * @flow
  */
 
+const nativeConsole: Object = console;
+let nativeConsoleLog: null | Function = null;
+
 const pendingGroupArgs: Array<any> = [];
 let printedGroupIndex: number = -1;
 
 function group(...groupArgs): void {
   pendingGroupArgs.push(groupArgs);
+
+  if (nativeConsoleLog === null) {
+    nativeConsoleLog = nativeConsole.log;
+    nativeConsole.log = log;
+  }
 }
 
 function groupEnd(): void {
   pendingGroupArgs.pop();
   while (printedGroupIndex >= pendingGroupArgs.length) {
-    // eslint-disable-next-line react-internal/no-production-logging
-    console.groupEnd();
+    nativeConsole.groupEnd();
     printedGroupIndex--;
+  }
+
+  if (pendingGroupArgs.length === 0) {
+    nativeConsole.log = nativeConsoleLog;
+    nativeConsoleLog = null;
   }
 }
 
@@ -27,13 +39,15 @@ function log(...logArgs): void {
   if (printedGroupIndex < pendingGroupArgs.length - 1) {
     for (let i = printedGroupIndex + 1; i < pendingGroupArgs.length; i++) {
       const groupArgs = pendingGroupArgs[i];
-      // eslint-disable-next-line react-internal/no-production-logging
-      console.group(...groupArgs);
+      nativeConsole.group(...groupArgs);
     }
     printedGroupIndex = pendingGroupArgs.length - 1;
   }
-  // eslint-disable-next-line react-internal/no-production-logging
-  console.log(...logArgs);
+  if (typeof nativeConsoleLog === 'function') {
+    nativeConsoleLog(...logArgs);
+  } else {
+    nativeConsole.log(...logArgs);
+  }
 }
 
 const REACT_LOGO_STYLE =

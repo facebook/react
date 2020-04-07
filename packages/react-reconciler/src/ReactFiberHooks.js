@@ -1735,6 +1735,18 @@ function dispatchAction<S, A>(
     didScheduleRenderPhaseUpdate = true;
     update.expirationTime = renderExpirationTime;
     currentlyRenderingFiber.expirationTime = renderExpirationTime;
+
+    if (__DEV__) {
+      if (enableDebugTracing) {
+        const priorityLevel = inferPriorityFromExpirationTime(
+          currentTime,
+          renderExpirationTime,
+        );
+        const label = priorityLevelToLabel(priorityLevel);
+        const name = getComponentName(fiber.type) || 'Unknown';
+        logStateUpdateScheduled(name, label);
+      }
+    }
   } else {
     if (
       fiber.expirationTime === NoWork &&
