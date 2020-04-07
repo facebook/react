@@ -1615,7 +1615,7 @@ describe('ReactUpdates', () => {
               Scheduler.unstable_clearYields();
             }
             expect(error).toContain('Warning: Maximum update depth exceeded.');
-            expect(stack).toContain('in NonTerminating');
+            expect(stack).toContain(' NonTerminating');
             // rethrow error to prevent going into an infinite loop when act() exits
             throw error;
           });

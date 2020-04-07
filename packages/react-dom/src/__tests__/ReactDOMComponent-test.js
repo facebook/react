@@ -17,7 +17,12 @@ describe('ReactDOMComponent', () => {
   const ReactFeatureFlags = require('shared/ReactFeatureFlags');
 
   function normalizeCodeLocInfo(str) {
-    return str && str.replace(/\(at .+?:\d+\)/g, '(at **)');
+    return (
+      str &&
+      str.replace(/\n +(?:at|in) ([\S]+)[^\n]*/g, function(m, name) {
+        return '\n    in ' + name + ' (at **)';
+      })
+    );
   }
 
   beforeEach(() => {

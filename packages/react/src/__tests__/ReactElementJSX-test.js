@@ -364,8 +364,8 @@ describe('ReactElement.jsx', () => {
     ).toErrorDev(
       'Warning: Each child in a list should have a unique "key" prop.\n\n' +
         'Check the render method of `Parent`. See https://fb.me/react-warning-keys for more information.\n' +
-        '    in Child (created by Parent)\n' +
-        '    in Parent',
+        '    in Child (at **)\n' +
+        '    in Parent (at **)',
     );
   });
 

@@ -59,9 +59,9 @@ describe('ReactIncrementalErrorLogging', () => {
         ? expect.stringMatching(
             new RegExp(
               'The above error occurred in the <ErrorThrowingComponent> component:\n' +
-                '\\s+in ErrorThrowingComponent (.*)\n' +
-                '\\s+in span (.*)\n' +
-                '\\s+in div (.*)\n\n' +
+                '\\s+(in|at) ErrorThrowingComponent (.*)\n' +
+                '\\s+(in|at) span(.*)\n' +
+                '\\s+(in|at) div(.*)\n\n' +
                 'Consider adding an error boundary to your tree ' +
                 'to customize error handling behavior\\.',
             ),
@@ -95,9 +95,9 @@ describe('ReactIncrementalErrorLogging', () => {
         ? expect.stringMatching(
             new RegExp(
               'The above error occurred in the <ErrorThrowingComponent> component:\n' +
-                '\\s+in ErrorThrowingComponent (.*)\n' +
-                '\\s+in span (.*)\n' +
-                '\\s+in div (.*)\n\n' +
+                '\\s+(in|at) ErrorThrowingComponent (.*)\n' +
+                '\\s+(in|at) span(.*)\n' +
+                '\\s+(in|at) div(.*)\n\n' +
                 'Consider adding an error boundary to your tree ' +
                 'to customize error handling behavior\\.',
             ),
@@ -134,9 +134,9 @@ describe('ReactIncrementalErrorLogging', () => {
         ? expect.stringMatching(
             new RegExp(
               'The above error occurred in the <ErrorThrowingComponent> component:\n' +
-                '\\s+in ErrorThrowingComponent (.*)\n' +
-                '\\s+in span (.*)\n' +
-                '\\s+in div (.*)\n\n' +
+                '\\s+(in|at) ErrorThrowingComponent (.*)\n' +
+                '\\s+(in|at) span(.*)\n' +
+                '\\s+(in|at) div(.*)\n\n' +
                 'Consider adding an error boundary to your tree ' +
                 'to customize error handling behavior\\.',
             ),
@@ -206,8 +206,8 @@ describe('ReactIncrementalErrorLogging', () => {
         ? expect.stringMatching(
             new RegExp(
               'The above error occurred in the <Foo> component:\n' +
-                '\\s+in Foo (.*)\n' +
-                '\\s+in ErrorBoundary (.*)\n\n' +
+                '\\s+(in|at) Foo (.*)\n' +
+                '\\s+(in|at) ErrorBoundary (.*)\n\n' +
                 'React will try to recreate this component tree from scratch ' +
                 'using the error boundary you provided, ErrorBoundary.',
             ),

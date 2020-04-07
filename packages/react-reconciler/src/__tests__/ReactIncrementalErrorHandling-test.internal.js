@@ -10,8 +10,8 @@
 
 'use strict';
 
+let ReactFeatureFlags = require('shared/ReactFeatureFlags');
 let PropTypes;
-let ReactFeatureFlags;
 let React;
 let ReactNoop;
 let Scheduler;
@@ -37,7 +37,12 @@ describe('ReactIncrementalErrorHandling', () => {
   }
 
   function normalizeCodeLocInfo(str) {
-    return str && str.replace(/\(at .+?:\d+\)/g, '(at **)');
+    return (
+      str &&
+      str.replace(/\n +(?:at|in) ([\S]+)[^\n]*/g, function(m, name) {
+        return '\n    in ' + name + ' (at **)';
+      })
+    );
   }
 
   it('recovers from errors asynchronously', () => {
@@ -1633,10 +1638,8 @@ describe('ReactIncrementalErrorHandling', () => {
     expect(ReactNoop.getChildren()).toEqual([
       span(
         'Caught an error:\n' +
-          (__DEV__
-            ? '    in BrokenRender (at **)\n'
-            : '    in BrokenRender\n') +
-          (__DEV__ ? '    in ErrorBoundary (at **).' : '    in ErrorBoundary.'),
+          '    in BrokenRender (at **)\n' +
+          '    in ErrorBoundary (at **).',
       ),
     ]);
   });
@@ -1669,7 +1672,7 @@ describe('ReactIncrementalErrorHandling', () => {
     expect(ReactNoop.getChildren()).toEqual([span('Caught an error: Hello')]);
   });
 
-  if (!require('shared/ReactFeatureFlags').disableModulePatternComponents) {
+  if (!ReactFeatureFlags.disableModulePatternComponents) {
     it('handles error thrown inside getDerivedStateFromProps of a module-style context provider', () => {
       function Provider() {
         return {
