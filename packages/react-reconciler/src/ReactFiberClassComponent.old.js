@@ -10,6 +10,7 @@
 import type {Fiber} from './ReactInternalTypes';
 import type {ExpirationTime} from './ReactFiberExpirationTime.old';
 import type {UpdateQueue} from './ReactUpdateQueue.old';
+import type {ReactPriorityLevel} from './ReactInternalTypes';
 
 import * as React from 'react';
 import {Update, Snapshot} from './ReactSideEffectTags';
@@ -41,10 +42,7 @@ import {
   initializeUpdateQueue,
   cloneUpdateQueue,
 } from './ReactUpdateQueue.old';
-import {
-  inferPriorityFromExpirationTime,
-  NoWork,
-} from './ReactFiberExpirationTime.old';
+import {NoWork} from './ReactFiberExpirationTime.old';
 import {
   cacheContext,
   getMaskedContext,
@@ -216,11 +214,9 @@ const classComponentUpdater = {
 
     if (__DEV__) {
       if (enableDebugTracing) {
-        const priorityLevel = inferPriorityFromExpirationTime(
-          currentTime,
-          expirationTime,
+        const label = priorityLevelToLabel(
+          ((update.priority: any): ReactPriorityLevel),
         );
-        const label = priorityLevelToLabel(priorityLevel);
         const name = getComponentName(fiber.type) || 'Unknown';
         logStateUpdateScheduled(name, label, payload);
       }
@@ -252,11 +248,9 @@ const classComponentUpdater = {
 
     if (__DEV__) {
       if (enableDebugTracing) {
-        const priorityLevel = inferPriorityFromExpirationTime(
-          currentTime,
-          expirationTime,
+        const label = priorityLevelToLabel(
+          ((update.priority: any): ReactPriorityLevel),
         );
-        const label = priorityLevelToLabel(priorityLevel);
         const name = getComponentName(fiber.type) || 'Unknown';
         logStateUpdateScheduled(name, label, payload);
       }
@@ -287,11 +281,9 @@ const classComponentUpdater = {
 
     if (__DEV__) {
       if (enableDebugTracing) {
-        const priorityLevel = inferPriorityFromExpirationTime(
-          currentTime,
-          expirationTime,
+        const label = priorityLevelToLabel(
+          ((update.priority: any): ReactPriorityLevel),
         );
-        const label = priorityLevelToLabel(priorityLevel);
         const name = getComponentName(fiber.type) || 'Unknown';
         logForceUpdateScheduled(name, label);
       }
