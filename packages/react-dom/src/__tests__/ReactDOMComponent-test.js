@@ -449,7 +449,10 @@ describe('ReactDOMComponent', () => {
       it('should not add an empty src attribute', () => {
         const container = document.createElement('div');
         expect(() => ReactDOM.render(<img src="" />, container)).toErrorDev(
-          'An empty string ("") was passed to the src attribute.',
+          'An empty string ("") was passed to the src attribute. ' +
+            'This may cause the browser to download the whole page again over the network. ' +
+            'To fix this, either do not render the element at all ' +
+            'or pass null to src instead of an empty string.',
         );
         const node = container.firstChild;
         expect(node.hasAttribute('src')).toBe(false);
@@ -458,7 +461,10 @@ describe('ReactDOMComponent', () => {
         expect(node.hasAttribute('src')).toBe(true);
 
         expect(() => ReactDOM.render(<img src="" />, container)).toErrorDev(
-          'An empty string ("") was passed to the src attribute.',
+          'An empty string ("") was passed to the src attribute. ' +
+            'This may cause the browser to download the whole page again over the network. ' +
+            'To fix this, either do not render the element at all ' +
+            'or pass null to src instead of an empty string.',
         );
         expect(node.hasAttribute('src')).toBe(false);
       });
@@ -466,7 +472,9 @@ describe('ReactDOMComponent', () => {
       it('should not add an empty href attribute', () => {
         const container = document.createElement('div');
         expect(() => ReactDOM.render(<link href="" />, container)).toErrorDev(
-          'An empty string ("") was passed to the href attribute.',
+          'An empty string ("") was passed to the href attribute. ' +
+            'To fix this, either do not render the element at all ' +
+            'or pass null to href instead of an empty string.',
         );
         const node = container.firstChild;
         expect(node.hasAttribute('href')).toBe(false);
@@ -475,7 +483,9 @@ describe('ReactDOMComponent', () => {
         expect(node.hasAttribute('href')).toBe(true);
 
         expect(() => ReactDOM.render(<link href="" />, container)).toErrorDev(
-          'An empty string ("") was passed to the href attribute.',
+          'An empty string ("") was passed to the href attribute. ' +
+            'To fix this, either do not render the element at all ' +
+            'or pass null to href instead of an empty string.',
         );
         expect(node.hasAttribute('href')).toBe(false);
       });
@@ -483,7 +493,9 @@ describe('ReactDOMComponent', () => {
       it('should not add an empty action attribute', () => {
         const container = document.createElement('div');
         expect(() => ReactDOM.render(<form action="" />, container)).toErrorDev(
-          'An empty string ("") was passed to the action attribute.',
+          'An empty string ("") was passed to the action attribute. ' +
+            'To fix this, either do not render the element at all ' +
+            'or pass null to action instead of an empty string.',
         );
         const node = container.firstChild;
         expect(node.hasAttribute('action')).toBe(false);
@@ -492,7 +504,9 @@ describe('ReactDOMComponent', () => {
         expect(node.hasAttribute('action')).toBe(true);
 
         expect(() => ReactDOM.render(<form action="" />, container)).toErrorDev(
-          'An empty string ("") was passed to the action attribute.',
+          'An empty string ("") was passed to the action attribute. ' +
+            'To fix this, either do not render the element at all ' +
+            'or pass null to action instead of an empty string.',
         );
         expect(node.hasAttribute('action')).toBe(false);
       });
@@ -502,7 +516,9 @@ describe('ReactDOMComponent', () => {
         expect(() =>
           ReactDOM.render(<button formAction="" />, container),
         ).toErrorDev(
-          'An empty string ("") was passed to the formAction attribute.',
+          'An empty string ("") was passed to the formAction attribute. ' +
+            'To fix this, either do not render the element at all ' +
+            'or pass null to formAction instead of an empty string.',
         );
         const node = container.firstChild;
         expect(node.hasAttribute('formAction')).toBe(false);
@@ -513,7 +529,9 @@ describe('ReactDOMComponent', () => {
         expect(() =>
           ReactDOM.render(<button formAction="" />, container),
         ).toErrorDev(
-          'An empty string ("") was passed to the formAction attribute.',
+          'An empty string ("") was passed to the formAction attribute. ' +
+            'To fix this, either do not render the element at all ' +
+            'or pass null to formAction instead of an empty string.',
         );
         expect(node.hasAttribute('formAction')).toBe(false);
       });
