@@ -3645,4 +3645,137 @@ describe('ReactSuspenseWithNoopRenderer', () => {
       </>,
     );
   });
+
+  // Regression: https://github.com/facebook/react/issues/18486
+  it.experimental(
+    'does not get stuck in pending state with render phase updates',
+    async () => {
+      let setTextWithTransition;
+
+      function App() {
+        const [startTransition, isPending] = React.useTransition({
+          timeoutMs: 30000,
+        });
+        const [text, setText] = React.useState('');
+        const [mirror, setMirror] = React.useState('');
+
+        if (text !== mirror) {
+          // Render phase update was needed to repro the bug.
+          setMirror(text);
+        }
+
+        if (text !== '') {
+          // Inlined so that it's in the same component.
+          try {
+            Scheduler.unstable_yieldValue(text);
+            readText(text);
+          } catch (e) {
+            if (e && typeof e.then === 'function') {
+              Scheduler.unstable_yieldValue('Suspend! [' + text + ']');
+            }
+            throw e;
+          }
+        }
+
+        setTextWithTransition = value => {
+          startTransition(() => {
+            setText(value);
+          });
+        };
+
+        return (
+          <>
+            {isPending ? <Text text="Pending..." /> : null}
+            <Text text={text} />
+          </>
+        );
+      }
+
+      function Root() {
+        return (
+          <Suspense fallback={<Text text="Loading..." />}>
+            <App />
+          </Suspense>
+        );
+      }
+
+      const root = ReactNoop.createRoot();
+      await ReactNoop.act(async () => {
+        root.render(<Root />);
+      });
+      expect(Scheduler).toHaveYielded(['']);
+      expect(root).toMatchRenderedOutput(<span prop="" />);
+
+      // Update to "a". That will suspend.
+      await ReactNoop.act(async () => {
+        setTextWithTransition('a');
+        // Let it expire. This is important for the repro.
+        Scheduler.unstable_advanceTime(1000);
+        expect(Scheduler).toFlushAndYield([
+          'Pending...',
+          '',
+          'a',
+          'Suspend! [a]',
+          'Loading...',
+        ]);
+      });
+      expect(Scheduler).toHaveYielded([]);
+      expect(root).toMatchRenderedOutput(
+        <>
+          <span prop="Pending..." />
+          <span prop="" />
+        </>,
+      );
+
+      // Update to "b". That will suspend, too.
+      await ReactNoop.act(async () => {
+        setTextWithTransition('b');
+        expect(Scheduler).toFlushAndYield([
+          // Neither is resolved yet.
+          'a',
+          'Suspend! [a]',
+          'Loading...',
+          'b',
+          'Suspend! [b]',
+          'Loading...',
+        ]);
+      });
+      expect(Scheduler).toHaveYielded([]);
+      expect(root).toMatchRenderedOutput(
+        <>
+          <span prop="Pending..." />
+          <span prop="" />
+        </>,
+      );
+
+      // Resolve "a". But "b" is still pending.
+      await ReactNoop.act(async () => {
+        await resolveText('a');
+      });
+      expect(Scheduler).toHaveYielded([
+        'Promise resolved [a]',
+        'a',
+        'a',
+        'Pending...',
+        'a',
+      ]);
+      expect(root).toMatchRenderedOutput(
+        <>
+          <span prop="Pending..." />
+          <span prop="a" />
+        </>,
+      );
+
+      // Resolve "b". This should remove the pending state.
+      await ReactNoop.act(async () => {
+        await resolveText('b');
+      });
+      expect(Scheduler).toHaveYielded([
+        'Promise resolved [b]',
+        // TODO: "b"
+      ]);
+      // The bug was that the pending state got stuck forever.
+      expect(root).toMatchRenderedOutput(<span prop="b" />);
+    },
+  );
 });
