@@ -7,7 +7,10 @@
  * @flow
  */
 
-import {enableDeprecatedFlareAPI} from 'shared/ReactFeatureFlags';
+import {
+  enableDeprecatedFlareAPI,
+  enableFilterEmptyStringAttributesDOM,
+} from 'shared/ReactFeatureFlags';
 
 type PropertyType = 0 | 1 | 2 | 3 | 4 | 5 | 6;
 
@@ -52,6 +55,7 @@ export type PropertyInfo = {|
   +propertyName: string,
   +type: PropertyType,
   +sanitizeURL: boolean,
+  +removeEmptyString: boolean,
 |};
 
 /* eslint-disable max-len */
@@ -163,6 +167,19 @@ export function shouldRemoveAttribute(
     return false;
   }
   if (propertyInfo !== null) {
+    if (enableFilterEmptyStringAttributesDOM) {
+      if (propertyInfo.removeEmptyString && value === '') {
+        if (__DEV__) {
+          console.error(
+            'Invalid value "" (empty string) for attribute `%s`. ' +
+              'Use `null` instead to indicate an empty value.',
+            name,
+          );
+        }
+        return true;
+      }
+    }
+
     switch (propertyInfo.type) {
       case BOOLEAN:
         return !value;
@@ -188,6 +205,7 @@ function PropertyInfoRecord(
   attributeName: string,
   attributeNamespace: string | null,
   sanitizeURL: boolean,
+  removeEmptyString: boolean,
 ) {
   this.acceptsBooleans =
     type === BOOLEANISH_STRING ||
@@ -199,6 +217,7 @@ function PropertyInfoRecord(
   this.propertyName = name;
   this.type = type;
   this.sanitizeURL = sanitizeURL;
+  this.removeEmptyString = removeEmptyString;
 }
 
 // When adding attributes to this list, be sure to also add them to
@@ -232,6 +251,7 @@ reservedProps.forEach(name => {
     name, // attributeName
     null, // attributeNamespace
     false, // sanitizeURL
+    false, // removeEmptyString
   );
 });
 
@@ -250,6 +270,7 @@ reservedProps.forEach(name => {
     attributeName, // attributeName
     null, // attributeNamespace
     false, // sanitizeURL
+    false, // removeEmptyString
   );
 });
 
@@ -264,6 +285,7 @@ reservedProps.forEach(name => {
     name.toLowerCase(), // attributeName
     null, // attributeNamespace
     false, // sanitizeURL
+    false, // removeEmptyString
   );
 });
 
@@ -284,6 +306,7 @@ reservedProps.forEach(name => {
     name, // attributeName
     null, // attributeNamespace
     false, // sanitizeURL
+    false, // removeEmptyString
   );
 });
 
@@ -322,6 +345,7 @@ reservedProps.forEach(name => {
     name.toLowerCase(), // attributeName
     null, // attributeNamespace
     false, // sanitizeURL
+    false, // removeEmptyString
   );
 });
 
@@ -346,6 +370,7 @@ reservedProps.forEach(name => {
     name, // attributeName
     null, // attributeNamespace
     false, // sanitizeURL
+    false, // removeEmptyString
   );
 });
 
@@ -366,6 +391,7 @@ reservedProps.forEach(name => {
     name, // attributeName
     null, // attributeNamespace
     false, // sanitizeURL
+    false, // removeEmptyString
   );
 });
 
@@ -387,6 +413,7 @@ reservedProps.forEach(name => {
     name, // attributeName
     null, // attributeNamespace
     false, // sanitizeURL
+    false, // removeEmptyString
   );
 });
 
@@ -399,6 +426,7 @@ reservedProps.forEach(name => {
     name.toLowerCase(), // attributeName
     null, // attributeNamespace
     false, // sanitizeURL
+    false, // removeEmptyString
   );
 });
 
@@ -497,6 +525,7 @@ const capitalize = token => token[1].toUpperCase();
     attributeName,
     null, // attributeNamespace
     false, // sanitizeURL
+    false, // removeEmptyString
   );
 });
 
@@ -521,6 +550,7 @@ const capitalize = token => token[1].toUpperCase();
     attributeName,
     'http://www.w3.org/1999/xlink',
     false, // sanitizeURL
+    false, // removeEmptyString
   );
 });
 
@@ -542,6 +572,7 @@ const capitalize = token => token[1].toUpperCase();
     attributeName,
     'http://www.w3.org/XML/1998/namespace',
     false, // sanitizeURL
+    false, // removeEmptyString
   );
 });
 
@@ -556,6 +587,7 @@ const capitalize = token => token[1].toUpperCase();
     attributeName.toLowerCase(), // attributeName
     null, // attributeNamespace
     false, // sanitizeURL
+    false, // removeEmptyString
   );
 });
 
@@ -569,6 +601,7 @@ properties[xlinkHref] = new PropertyInfoRecord(
   'xlink:href',
   'http://www.w3.org/1999/xlink',
   true, // sanitizeURL
+  false, // removeEmptyString
 );
 
 ['src', 'href', 'action', 'formAction'].forEach(attributeName => {
@@ -579,5 +612,6 @@ properties[xlinkHref] = new PropertyInfoRecord(
     attributeName.toLowerCase(), // attributeName
     null, // attributeNamespace
     true, // sanitizeURL
+    true, // removeEmptyString
   );
 });

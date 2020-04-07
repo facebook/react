@@ -445,6 +445,93 @@ describe('ReactDOMComponent', () => {
       expect(node.hasAttribute('data-foo')).toBe(false);
     });
 
+    if (ReactFeatureFlags.enableFilterEmptyStringAttributesDOM) {
+      it('should not add an empty src attribute', () => {
+        const container = document.createElement('div');
+        expect(() => ReactDOM.render(<img src="" />, container)).toErrorDev(
+          'Invalid value "" (empty string) for attribute `src`.',
+        );
+        const node = container.firstChild;
+        expect(node.hasAttribute('src')).toBe(false);
+
+        ReactDOM.render(<img src="abc" />, container);
+        expect(node.hasAttribute('src')).toBe(true);
+
+        expect(() => ReactDOM.render(<img src="" />, container)).toErrorDev(
+          'Invalid value "" (empty string) for attribute `src`.',
+        );
+        expect(node.hasAttribute('src')).toBe(false);
+      });
+
+      it('should not add an empty href attribute', () => {
+        const container = document.createElement('div');
+        expect(() => ReactDOM.render(<link href="" />, container)).toErrorDev(
+          'Invalid value "" (empty string) for attribute `href`.',
+        );
+        const node = container.firstChild;
+        expect(node.hasAttribute('href')).toBe(false);
+
+        ReactDOM.render(<link href="abc" />, container);
+        expect(node.hasAttribute('href')).toBe(true);
+
+        expect(() => ReactDOM.render(<link href="" />, container)).toErrorDev(
+          'Invalid value "" (empty string) for attribute `href`.',
+        );
+        expect(node.hasAttribute('href')).toBe(false);
+      });
+
+      it('should not add an empty action attribute', () => {
+        const container = document.createElement('div');
+        expect(() => ReactDOM.render(<form action="" />, container)).toErrorDev(
+          'Invalid value "" (empty string) for attribute `action`.',
+        );
+        const node = container.firstChild;
+        expect(node.hasAttribute('action')).toBe(false);
+
+        ReactDOM.render(<form action="abc" />, container);
+        expect(node.hasAttribute('action')).toBe(true);
+
+        expect(() => ReactDOM.render(<form action="" />, container)).toErrorDev(
+          'Invalid value "" (empty string) for attribute `action`.',
+        );
+        expect(node.hasAttribute('action')).toBe(false);
+      });
+
+      it('should not add an empty formAction attribute', () => {
+        const container = document.createElement('div');
+        expect(() =>
+          ReactDOM.render(<button formAction="" />, container),
+        ).toErrorDev(
+          'Invalid value "" (empty string) for attribute `formAction`.',
+        );
+        const node = container.firstChild;
+        expect(node.hasAttribute('formAction')).toBe(false);
+
+        ReactDOM.render(<button formAction="abc" />, container);
+        expect(node.hasAttribute('formAction')).toBe(true);
+
+        expect(() =>
+          ReactDOM.render(<button formAction="" />, container),
+        ).toErrorDev(
+          'Invalid value "" (empty string) for attribute `formAction`.',
+        );
+        expect(node.hasAttribute('formAction')).toBe(false);
+      });
+
+      it('should not filter attributes for custom elements', () => {
+        const container = document.createElement('div');
+        ReactDOM.render(
+          <some-custom-element action="" formAction="" href="" src="" />,
+          container,
+        );
+        const node = container.firstChild;
+        expect(node.hasAttribute('action')).toBe(true);
+        expect(node.hasAttribute('formAction')).toBe(true);
+        expect(node.hasAttribute('href')).toBe(true);
+        expect(node.hasAttribute('src')).toBe(true);
+      });
+    }
+
     it('should apply React-specific aliases to HTML elements', () => {
       const container = document.createElement('div');
       ReactDOM.render(<form acceptCharset="foo" />, container);
