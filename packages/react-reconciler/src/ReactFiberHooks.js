@@ -23,6 +23,7 @@ import type {SuspenseConfig} from './ReactFiberSuspenseConfig';
 import type {ReactPriorityLevel} from './SchedulerWithReactIntegration';
 import type {FiberRoot} from './ReactFiberRoot';
 import type {
+  OpaqueIDType,
   ReactListenerEvent,
   ReactListenerMap,
   ReactListener,
@@ -33,6 +34,7 @@ import {enableUseEventAPI} from 'shared/ReactFeatureFlags';
 
 import {markRootExpiredAtTime} from './ReactFiberRoot';
 import {NoWork, Sync} from './ReactFiberExpirationTime';
+import {NoMode, BlockingMode} from './ReactTypeOfMode';
 import {readContext} from './ReactFiberNewContext';
 import {createDeprecatedResponderListener} from './ReactFiberDeprecatedEvents';
 import {
@@ -74,6 +76,12 @@ import {
   runWithPriority,
   getCurrentPriorityLevel,
 } from './SchedulerWithReactIntegration';
+import {getIsHydrating} from './ReactFiberHydrationContext';
+import {
+  makeClientId,
+  makeClientIdInDEV,
+  makeOpaqueHydratingObject,
+} from './ReactFiberHostConfig';
 import {
   getLastPendingExpirationTime,
   getWorkInProgressVersion,
@@ -83,6 +91,7 @@ import {
   warnAboutMultipleRenderersDEV,
 } from './ReactMutableSource';
 import {getRootHostContainer} from './ReactFiberHostContext';
+import {getIsRendering} from './ReactCurrentFiber';
 
 const {ReactCurrentDispatcher, ReactCurrentBatchConfig} = ReactSharedInternals;
 
@@ -132,6 +141,7 @@ export type Dispatcher = {|
     subscribe: MutableSourceSubscribeFn<Source, Snapshot>,
   ): Snapshot,
   useEvent(event: ReactListenerEvent): ReactListenerMap,
+  useOpaqueIdentifier(): OpaqueIDType | void,
 |};
 
 type Update<S, A> = {|
@@ -166,10 +176,13 @@ export type HookType =
   | 'useDeferredValue'
   | 'useTransition'
   | 'useMutableSource'
-  | 'useEvent';
+  | 'useEvent'
+  | 'useOpaqueIdentifier';
 
 let didWarnAboutMismatchedHooksForComponent;
+let didWarnAboutUseOpaqueIdentifier;
 if (__DEV__) {
+  didWarnAboutUseOpaqueIdentifier = {};
   didWarnAboutMismatchedHooksForComponent = new Set();
 }
 
@@ -564,6 +577,8 @@ export function resetHooksAfterThrow(): void {
     hookTypesUpdateIndexDev = -1;
 
     currentHookNameInDev = null;
+
+    isUpdatingOpaqueValueInRenderPhase = false;
   }
 
   didScheduleRenderPhaseUpdate = false;
@@ -1569,6 +1584,93 @@ function rerenderTransition(
   return [start, isPending];
 }
 
+let isUpdatingOpaqueValueInRenderPhase = false;
+export function getIsUpdatingOpaqueValueInRenderPhaseInDEV(): boolean | void {
+  if (__DEV__) {
+    return isUpdatingOpaqueValueInRenderPhase;
+  }
+}
+
+function warnOnOpaqueIdentifierAccessInDEV(fiber) {
+  if (__DEV__) {
+    // TODO: Should warn in effects and callbacks, too
+    const name = getComponentName(fiber.type) || 'Unknown';
+    if (getIsRendering() && !didWarnAboutUseOpaqueIdentifier[name]) {
+      console.error(
+        'The object passed back from useOpaqueIdentifier is meant to be ' +
+          'passed through to attributes only. Do not read the ' +
+          'value directly.',
+      );
+      didWarnAboutUseOpaqueIdentifier[name] = true;
+    }
+  }
+}
+
+function mountOpaqueIdentifier(): OpaqueIDType | void {
+  const makeId = __DEV__
+    ? makeClientIdInDEV.bind(
+        null,
+        warnOnOpaqueIdentifierAccessInDEV.bind(null, currentlyRenderingFiber),
+      )
+    : makeClientId;
+
+  if (getIsHydrating()) {
+    let didUpgrade = false;
+    const fiber = currentlyRenderingFiber;
+    const readValue = () => {
+      if (!didUpgrade) {
+        // Only upgrade once. This works even inside the render phase because
+        // the update is added to a shared queue, which outlasts the
+        // in-progress render.
+        didUpgrade = true;
+        if (__DEV__) {
+          isUpdatingOpaqueValueInRenderPhase = true;
+          setId(makeId());
+          isUpdatingOpaqueValueInRenderPhase = false;
+          warnOnOpaqueIdentifierAccessInDEV(fiber);
+        } else {
+          setId(makeId());
+        }
+      }
+      invariant(
+        false,
+        'The object passed back from useOpaqueIdentifier is meant to be ' +
+          'passed through to attributes only. Do not read the value directly.',
+      );
+    };
+    const id = makeOpaqueHydratingObject(readValue);
+
+    const setId = mountState(id)[1];
+
+    if ((currentlyRenderingFiber.mode & BlockingMode) === NoMode) {
+      currentlyRenderingFiber.effectTag |= UpdateEffect | PassiveEffect;
+      pushEffect(
+        HookHasEffect | HookPassive,
+        () => {
+          setId(makeId());
+        },
+        undefined,
+        null,
+      );
+    }
+    return id;
+  } else {
+    const id = makeId();
+    mountState(id);
+    return id;
+  }
+}
+
+function updateOpaqueIdentifier(): OpaqueIDType | void {
+  const id = updateState(undefined)[0];
+  return id;
+}
+
+function rerenderOpaqueIdentifier(): OpaqueIDType | void {
+  const id = rerenderState(undefined)[0];
+  return id;
+}
+
 function dispatchAction<S, A>(
   fiber: Fiber,
   queue: UpdateQueue<S, A>,
@@ -1848,6 +1950,7 @@ export const ContextOnlyDispatcher: Dispatcher = {
   useTransition: throwInvalidHookError,
   useMutableSource: throwInvalidHookError,
   useEvent: throwInvalidHookError,
+  useOpaqueIdentifier: throwInvalidHookError,
 };
 
 const HooksDispatcherOnMount: Dispatcher = {
@@ -1868,6 +1971,7 @@ const HooksDispatcherOnMount: Dispatcher = {
   useTransition: mountTransition,
   useMutableSource: mountMutableSource,
   useEvent: mountEventListener,
+  useOpaqueIdentifier: mountOpaqueIdentifier,
 };
 
 const HooksDispatcherOnUpdate: Dispatcher = {
@@ -1888,6 +1992,7 @@ const HooksDispatcherOnUpdate: Dispatcher = {
   useTransition: updateTransition,
   useMutableSource: updateMutableSource,
   useEvent: updateEventListener,
+  useOpaqueIdentifier: updateOpaqueIdentifier,
 };
 
 const HooksDispatcherOnRerender: Dispatcher = {
@@ -1908,6 +2013,7 @@ const HooksDispatcherOnRerender: Dispatcher = {
   useTransition: rerenderTransition,
   useMutableSource: updateMutableSource,
   useEvent: updateEventListener,
+  useOpaqueIdentifier: rerenderOpaqueIdentifier,
 };
 
 let HooksDispatcherOnMountInDEV: Dispatcher | null = null;
@@ -1944,7 +2050,6 @@ if (__DEV__) {
     ): T {
       return readContext(context, observedBits);
     },
-
     useCallback<T>(callback: T, deps: Array<mixed> | void | null): T {
       currentHookNameInDev = 'useCallback';
       mountHookTypesDev();
@@ -2070,6 +2175,11 @@ if (__DEV__) {
       currentHookNameInDev = 'useEvent';
       mountHookTypesDev();
       return mountEventListener(event);
+    },
+    useOpaqueIdentifier(): OpaqueIDType | void {
+      currentHookNameInDev = 'useOpaqueIdentifier';
+      mountHookTypesDev();
+      return mountOpaqueIdentifier();
     },
   };
 
@@ -2080,7 +2190,6 @@ if (__DEV__) {
     ): T {
       return readContext(context, observedBits);
     },
-
     useCallback<T>(callback: T, deps: Array<mixed> | void | null): T {
       currentHookNameInDev = 'useCallback';
       updateHookTypesDev();
@@ -2202,6 +2311,11 @@ if (__DEV__) {
       updateHookTypesDev();
       return mountEventListener(event);
     },
+    useOpaqueIdentifier(): OpaqueIDType | void {
+      currentHookNameInDev = 'useOpaqueIdentifier';
+      updateHookTypesDev();
+      return mountOpaqueIdentifier();
+    },
   };
 
   HooksDispatcherOnUpdateInDEV = {
@@ -2211,7 +2325,6 @@ if (__DEV__) {
     ): T {
       return readContext(context, observedBits);
     },
-
     useCallback<T>(callback: T, deps: Array<mixed> | void | null): T {
       currentHookNameInDev = 'useCallback';
       updateHookTypesDev();
@@ -2332,6 +2445,11 @@ if (__DEV__) {
       currentHookNameInDev = 'useEvent';
       updateHookTypesDev();
       return updateEventListener(event);
+    },
+    useOpaqueIdentifier(): OpaqueIDType | void {
+      currentHookNameInDev = 'useOpaqueIdentifier';
+      updateHookTypesDev();
+      return updateOpaqueIdentifier();
     },
   };
 
@@ -2464,6 +2582,11 @@ if (__DEV__) {
       updateHookTypesDev();
       return updateEventListener(event);
     },
+    useOpaqueIdentifier(): OpaqueIDType | void {
+      currentHookNameInDev = 'useOpaqueIdentifier';
+      updateHookTypesDev();
+      return rerenderOpaqueIdentifier();
+    },
   };
 
   InvalidNestedHooksDispatcherOnMountInDEV = {
@@ -2474,7 +2597,6 @@ if (__DEV__) {
       warnInvalidContextAccess();
       return readContext(context, observedBits);
     },
-
     useCallback<T>(callback: T, deps: Array<mixed> | void | null): T {
       currentHookNameInDev = 'useCallback';
       warnInvalidHookAccess();
@@ -2611,6 +2733,12 @@ if (__DEV__) {
       mountHookTypesDev();
       return mountEventListener(event);
     },
+    useOpaqueIdentifier(): OpaqueIDType | void {
+      currentHookNameInDev = 'useOpaqueIdentifier';
+      warnInvalidHookAccess();
+      mountHookTypesDev();
+      return mountOpaqueIdentifier();
+    },
   };
 
   InvalidNestedHooksDispatcherOnUpdateInDEV = {
@@ -2621,7 +2749,6 @@ if (__DEV__) {
       warnInvalidContextAccess();
       return readContext(context, observedBits);
     },
-
     useCallback<T>(callback: T, deps: Array<mixed> | void | null): T {
       currentHookNameInDev = 'useCallback';
       warnInvalidHookAccess();
@@ -2757,6 +2884,12 @@ if (__DEV__) {
       warnInvalidHookAccess();
       updateHookTypesDev();
       return updateEventListener(event);
+    },
+    useOpaqueIdentifier(): OpaqueIDType | void {
+      currentHookNameInDev = 'useOpaqueIdentifier';
+      warnInvalidHookAccess();
+      updateHookTypesDev();
+      return updateOpaqueIdentifier();
     },
   };
 
@@ -2904,6 +3037,12 @@ if (__DEV__) {
       warnInvalidHookAccess();
       updateHookTypesDev();
       return updateEventListener(event);
+    },
+    useOpaqueIdentifier(): OpaqueIDType | void {
+      currentHookNameInDev = 'useOpaqueIdentifier';
+      warnInvalidHookAccess();
+      updateHookTypesDev();
+      return rerenderOpaqueIdentifier();
     },
   };
 }

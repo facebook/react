@@ -45,6 +45,7 @@ import {
   useResponder,
   useTransition,
   useDeferredValue,
+  useOpaqueIdentifier,
 } from './ReactHooks';
 import {withSuspenseConfig} from './ReactBatchConfig';
 import {
@@ -117,4 +118,5 @@ export {
   createFundamental as unstable_createFundamental,
   // enableScopeAPI
   createScope as unstable_createScope,
+  useOpaqueIdentifier as unstable_useOpaqueIdentifier,
 };

@@ -58,6 +58,7 @@ import {
 } from '../shared/HTMLNodeType';
 import dangerousStyleValue from '../shared/dangerousStyleValue';
 
+import {REACT_OPAQUE_ID_TYPE} from 'shared/ReactSymbols';
 import {
   mountEventResponder,
   unmountEventResponder,
@@ -149,6 +150,13 @@ export type ChildSet = void; // Unused
 export type TimeoutHandle = TimeoutID;
 export type NoTimeout = -1;
 export type RendererInspectionConfig = $ReadOnly<{||}>;
+
+export opaque type OpaqueIDType =
+  | string
+  | {
+      toString: () => string | void,
+      valueOf: () => string | void,
+    };
 
 type SelectionInformation = {|
   activeElementDetached: null | HTMLElement,
@@ -1145,6 +1153,48 @@ export function unmountFundamentalComponent(
 
 export function getInstanceFromNode(node: HTMLElement): null | Object {
   return getClosestInstanceFromNode(node) || null;
+}
+
+let clientId: number = 0;
+export function makeClientId(): OpaqueIDType {
+  return 'r:' + (clientId++).toString(36);
+}
+
+export function makeClientIdInDEV(warnOnAccessInDEV: () => void): OpaqueIDType {
+  const id = 'r:' + (clientId++).toString(36);
+  return {
+    toString() {
+      warnOnAccessInDEV();
+      return id;
+    },
+    valueOf() {
+      warnOnAccessInDEV();
+      return id;
+    },
+  };
+}
+
+let serverId: number = 0;
+export function makeServerId(): OpaqueIDType {
+  return 'R:' + (serverId++).toString(36);
+}
+
+export function isOpaqueHydratingObject(value: mixed): boolean {
+  return (
+    value !== null &&
+    typeof value === 'object' &&
+    value.$$typeof === REACT_OPAQUE_ID_TYPE
+  );
+}
+
+export function makeOpaqueHydratingObject(
+  attemptToReadValue: () => void,
+): OpaqueIDType {
+  return {
+    $$typeof: REACT_OPAQUE_ID_TYPE,
+    toString: attemptToReadValue,
+    valueOf: attemptToReadValue,
+  };
 }
 
 export function registerEvent(

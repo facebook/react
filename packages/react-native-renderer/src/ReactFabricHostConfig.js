@@ -80,6 +80,7 @@ export type NoTimeout = -1;
 export type ReactListenerEvent = Object;
 export type ReactListenerMap = Object;
 export type ReactListener = Object;
+export type OpaqueIDType = void;
 
 export type RendererInspectionConfig = $ReadOnly<{|
   // Deprecated. Replaced with getInspectorDataForViewAtPoint.
@@ -484,6 +485,28 @@ export function getInstanceFromNode(node: any) {
 
 export function beforeRemoveInstance(instance: any) {
   // noop
+}
+
+export function isOpaqueHydratingObject(value: mixed): boolean {
+  throw new Error('Not yet implemented');
+}
+
+export function makeOpaqueHydratingObject(
+  attemptToReadValue: () => void,
+): OpaqueIDType {
+  throw new Error('Not yet implemented.');
+}
+
+export function makeClientId(): OpaqueIDType {
+  throw new Error('Not yet implemented');
+}
+
+export function makeClientIdInDEV(warnOnAccessInDEV: () => void): OpaqueIDType {
+  throw new Error('Not yet implemented');
+}
+
+export function makeServerId(): OpaqueIDType {
+  throw new Error('Not yet implemented');
 }
 
 export function registerEvent(event: any, rootContainerInstance: Container) {

@@ -18,6 +18,7 @@ let ReactFeatureFlags;
 let ReactDOM;
 let ReactDOMServer;
 let ReactTestUtils;
+let Scheduler;
 let useState;
 let useReducer;
 let useEffect;
@@ -28,6 +29,7 @@ let useRef;
 let useImperativeHandle;
 let useLayoutEffect;
 let useDebugValue;
+let useOpaqueIdentifier;
 let forwardRef;
 let yieldedValues;
 let yieldValue;
@@ -39,10 +41,12 @@ function initModules() {
 
   ReactFeatureFlags = require('shared/ReactFeatureFlags');
   ReactFeatureFlags.debugRenderPhaseSideEffectsForStrictMode = false;
+  ReactFeatureFlags.flushSuspenseFallbacksInTests = false;
   React = require('react');
   ReactDOM = require('react-dom');
   ReactDOMServer = require('react-dom/server');
   ReactTestUtils = require('react-dom/test-utils');
+  Scheduler = require('scheduler');
   useState = React.useState;
   useReducer = React.useReducer;
   useEffect = React.useEffect;
@@ -53,6 +57,7 @@ function initModules() {
   useDebugValue = React.useDebugValue;
   useImperativeHandle = React.useImperativeHandle;
   useLayoutEffect = React.useLayoutEffect;
+  useOpaqueIdentifier = React.unstable_useOpaqueIdentifier;
   forwardRef = React.forwardRef;
 
   yieldedValues = [];
@@ -78,6 +83,9 @@ const {
   itRenders,
   itThrowsWhenRendering,
   serverRender,
+  streamRender,
+  clientCleanRender,
+  clientRenderOnServerString,
 } = ReactDOMServerIntegrationUtils(initModules);
 
 describe('ReactDOMServerHooks', () => {
@@ -834,4 +842,902 @@ describe('ReactDOMServerHooks', () => {
       expect(domNode2.textContent).toEqual('42');
     });
   });
+
+  if (__EXPERIMENTAL__) {
+    describe('useOpaqueIdentifier', () => {
+      it('generates unique ids for server string render', async () => {
+        function App(props) {
+          const idOne = useOpaqueIdentifier();
+          const idTwo = useOpaqueIdentifier();
+          return (
+            <div>
+              <div aria-labelledby={idOne} />
+              <div id={idOne} />
+              <span aria-labelledby={idTwo} />
+              <span id={idTwo} />
+            </div>
+          );
+        }
+
+        const domNode = await serverRender(<App />);
+        expect(domNode.children.length).toEqual(4);
+        expect(domNode.children[0].getAttribute('aria-labelledby')).toEqual(
+          domNode.children[1].getAttribute('id'),
+        );
+        expect(domNode.children[2].getAttribute('aria-labelledby')).toEqual(
+          domNode.children[3].getAttribute('id'),
+        );
+        expect(domNode.children[0].getAttribute('aria-labelledby')).not.toEqual(
+          domNode.children[2].getAttribute('aria-labelledby'),
+        );
+        expect(
+          domNode.children[0].getAttribute('aria-labelledby'),
+        ).not.toBeNull();
+        expect(
+          domNode.children[2].getAttribute('aria-labelledby'),
+        ).not.toBeNull();
+      });
+
+      it('generates unique ids for server stream render', async () => {
+        function App(props) {
+          const idOne = useOpaqueIdentifier();
+          const idTwo = useOpaqueIdentifier();
+          return (
+            <div>
+              <div aria-labelledby={idOne} />
+              <div id={idOne} />
+              <span aria-labelledby={idTwo} />
+              <span id={idTwo} />
+            </div>
+          );
+        }
+
+        const domNode = await streamRender(<App />);
+        expect(domNode.children.length).toEqual(4);
+        expect(domNode.children[0].getAttribute('aria-labelledby')).toEqual(
+          domNode.children[1].getAttribute('id'),
+        );
+        expect(domNode.children[2].getAttribute('aria-labelledby')).toEqual(
+          domNode.children[3].getAttribute('id'),
+        );
+        expect(domNode.children[0].getAttribute('aria-labelledby')).not.toEqual(
+          domNode.children[2].getAttribute('aria-labelledby'),
+        );
+        expect(
+          domNode.children[0].getAttribute('aria-labelledby'),
+        ).not.toBeNull();
+        expect(
+          domNode.children[2].getAttribute('aria-labelledby'),
+        ).not.toBeNull();
+      });
+
+      it('generates unique ids for client render', async () => {
+        function App(props) {
+          const idOne = useOpaqueIdentifier();
+          const idTwo = useOpaqueIdentifier();
+          return (
+            <div>
+              <div aria-labelledby={idOne} />
+              <div id={idOne} />
+              <span aria-labelledby={idTwo} />
+              <span id={idTwo} />
+            </div>
+          );
+        }
+
+        const domNode = await clientCleanRender(<App />);
+        expect(domNode.children.length).toEqual(4);
+        expect(domNode.children[0].getAttribute('aria-labelledby')).toEqual(
+          domNode.children[1].getAttribute('id'),
+        );
+        expect(domNode.children[2].getAttribute('aria-labelledby')).toEqual(
+          domNode.children[3].getAttribute('id'),
+        );
+        expect(domNode.children[0].getAttribute('aria-labelledby')).not.toEqual(
+          domNode.children[2].getAttribute('aria-labelledby'),
+        );
+        expect(
+          domNode.children[0].getAttribute('aria-labelledby'),
+        ).not.toBeNull();
+        expect(
+          domNode.children[2].getAttribute('aria-labelledby'),
+        ).not.toBeNull();
+      });
+
+      it('generates unique ids for client render on good server markup', async () => {
+        function App(props) {
+          const idOne = useOpaqueIdentifier();
+          const idTwo = useOpaqueIdentifier();
+          return (
+            <div>
+              <div aria-labelledby={idOne} />
+              <div id={idOne} />
+              <span aria-labelledby={idTwo} />
+              <span id={idTwo} />
+            </div>
+          );
+        }
+
+        const domNode = await clientRenderOnServerString(<App />);
+        expect(domNode.children.length).toEqual(4);
+        expect(domNode.children[0].getAttribute('aria-labelledby')).toEqual(
+          domNode.children[1].getAttribute('id'),
+        );
+        expect(domNode.children[2].getAttribute('aria-labelledby')).toEqual(
+          domNode.children[3].getAttribute('id'),
+        );
+        expect(domNode.children[0].getAttribute('aria-labelledby')).not.toEqual(
+          domNode.children[2].getAttribute('aria-labelledby'),
+        );
+        expect(
+          domNode.children[0].getAttribute('aria-labelledby'),
+        ).not.toBeNull();
+        expect(
+          domNode.children[2].getAttribute('aria-labelledby'),
+        ).not.toBeNull();
+      });
+
+      it('useOpaqueIdentifier does not change id even if the component updates during client render', async () => {
+        let _setShowId;
+        function App() {
+          const id = useOpaqueIdentifier();
+          const [showId, setShowId] = useState(false);
+          _setShowId = setShowId;
+          return (
+            <div>
+              <div aria-labelledby={id} />
+              {showId && <div id={id} />}
+            </div>
+          );
+        }
+
+        const domNode = await clientCleanRender(<App />);
+        const oldClientId = domNode.children[0].getAttribute('aria-labelledby');
+
+        expect(domNode.children.length).toEqual(1);
+        expect(oldClientId).not.toBeNull();
+
+        await ReactTestUtils.act(async () => _setShowId(true));
+
+        expect(domNode.children.length).toEqual(2);
+        expect(domNode.children[0].getAttribute('aria-labelledby')).toEqual(
+          domNode.children[1].getAttribute('id'),
+        );
+        expect(domNode.children[0].getAttribute('aria-labelledby')).toEqual(
+          oldClientId,
+        );
+      });
+
+      it('useOpaqueIdentifier: IDs match when, after hydration, a new component that uses the ID is rendered', async () => {
+        let _setShowDiv;
+        function App() {
+          const id = useOpaqueIdentifier();
+          const [showDiv, setShowDiv] = useState(false);
+          _setShowDiv = setShowDiv;
+
+          return (
+            <div>
+              <div id={id}>Child One</div>
+              {showDiv && <div id={id}>Child Two</div>}
+            </div>
+          );
+        }
+
+        const container = document.createElement('div');
+        document.body.append(container);
+
+        container.innerHTML = ReactDOMServer.renderToString(<App />);
+        const root = ReactDOM.createRoot(container, {hydrate: true});
+        root.render(<App />);
+        Scheduler.unstable_flushAll();
+        jest.runAllTimers();
+
+        expect(container.children[0].children.length).toEqual(1);
+        const oldServerId = container.children[0].children[0].getAttribute(
+          'id',
+        );
+        expect(oldServerId).not.toBeNull();
+
+        await ReactTestUtils.act(async () => {
+          _setShowDiv(true);
+        });
+        expect(container.children[0].children.length).toEqual(2);
+        expect(container.children[0].children[0].getAttribute('id')).toEqual(
+          container.children[0].children[1].getAttribute('id'),
+        );
+        expect(
+          container.children[0].children[0].getAttribute('id'),
+        ).not.toEqual(oldServerId);
+        expect(
+          container.children[0].children[0].getAttribute('id'),
+        ).not.toBeNull();
+      });
+
+      it('useOpaqueIdentifier: IDs match when, after hydration, a new component that uses the ID is rendered for legacy', async () => {
+        let _setShowDiv;
+        function App() {
+          const id = useOpaqueIdentifier();
+          const [showDiv, setShowDiv] = useState(false);
+          _setShowDiv = setShowDiv;
+
+          return (
+            <div>
+              <div id={id}>Child One</div>
+              {showDiv && <div id={id}>Child Two</div>}
+            </div>
+          );
+        }
+
+        const container = document.createElement('div');
+        document.body.append(container);
+
+        container.innerHTML = ReactDOMServer.renderToString(<App />);
+        ReactDOM.hydrate(<App />, container);
+
+        expect(container.children[0].children.length).toEqual(1);
+        const oldServerId = container.children[0].children[0].getAttribute(
+          'id',
+        );
+        expect(oldServerId).not.toBeNull();
+
+        await ReactTestUtils.act(async () => {
+          _setShowDiv(true);
+        });
+        expect(container.children[0].children.length).toEqual(2);
+        expect(container.children[0].children[0].getAttribute('id')).toEqual(
+          container.children[0].children[1].getAttribute('id'),
+        );
+        expect(
+          container.children[0].children[0].getAttribute('id'),
+        ).not.toEqual(oldServerId);
+        expect(
+          container.children[0].children[0].getAttribute('id'),
+        ).not.toBeNull();
+      });
+
+      it('useOpaqueIdentifier: ID is not used during hydration but is used in an update', async () => {
+        let _setShow;
+        function App() {
+          Scheduler.unstable_yieldValue('App');
+          const id = useOpaqueIdentifier();
+          const [show, setShow] = useState(false);
+          _setShow = setShow;
+          return (
+            <div>
+              <span id={show ? id : null}>{'Child One'}</span>
+            </div>
+          );
+        }
+
+        const container = document.createElement('div');
+        document.body.append(container);
+        container.innerHTML = ReactDOMServer.renderToString(<App />);
+        const root = ReactDOM.createRoot(container, {hydrate: true});
+        ReactTestUtils.act(() => {
+          root.render(<App />);
+        });
+        expect(Scheduler).toHaveYielded(['App', 'App']);
+        // The ID goes from not being used to being added to the page
+        ReactTestUtils.act(() => {
+          _setShow(true);
+        });
+        expect(Scheduler).toHaveYielded(['App', 'App']);
+        expect(
+          container.getElementsByTagName('span')[0].getAttribute('id'),
+        ).not.toBeNull();
+      });
+
+      it('useOpaqueIdentifier: ID is not used during hydration but is used in an update in legacy', async () => {
+        let _setShow;
+        function App() {
+          Scheduler.unstable_yieldValue('App');
+          const id = useOpaqueIdentifier();
+          const [show, setShow] = useState(false);
+          _setShow = setShow;
+          return (
+            <div>
+              <span id={show ? id : null}>{'Child One'}</span>
+            </div>
+          );
+        }
+
+        const container = document.createElement('div');
+        document.body.append(container);
+        container.innerHTML = ReactDOMServer.renderToString(<App />);
+        ReactDOM.hydrate(<App />, container);
+        expect(Scheduler).toHaveYielded(['App', 'App']);
+        // The ID goes from not being used to being added to the page
+        ReactTestUtils.act(() => {
+          _setShow(true);
+        });
+        expect(Scheduler).toHaveYielded(['App']);
+        expect(
+          container.getElementsByTagName('span')[0].getAttribute('id'),
+        ).not.toBeNull();
+      });
+
+      it('useOpaqueIdentifierr: flushSync', async () => {
+        let _setShow;
+        function App() {
+          const id = useOpaqueIdentifier();
+          const [show, setShow] = useState(false);
+          _setShow = setShow;
+          return (
+            <div>
+              <span id={show ? id : null}>{'Child One'}</span>
+            </div>
+          );
+        }
+
+        const container = document.createElement('div');
+        document.body.append(container);
+        container.innerHTML = ReactDOMServer.renderToString(<App />);
+        const root = ReactDOM.createRoot(container, {hydrate: true});
+        ReactTestUtils.act(() => {
+          root.render(<App />);
+        });
+
+        // The ID goes from not being used to being added to the page
+        ReactTestUtils.act(() => {
+          ReactDOM.flushSync(() => {
+            _setShow(true);
+          });
+        });
+        expect(
+          container.getElementsByTagName('span')[0].getAttribute('id'),
+        ).not.toBeNull();
+      });
+
+      it('useOpaqueIdentifier: children with id hydrates before other children if ID updates', async () => {
+        let _setShow;
+
+        const child1Ref = React.createRef();
+        const childWithIDRef = React.createRef();
+        const setShowRef = React.createRef();
+
+        // RENAME THESE
+        function Child1() {
+          Scheduler.unstable_yieldValue('Child One');
+          return <span ref={child1Ref}>{'Child One'}</span>;
+        }
+
+        function Child2() {
+          Scheduler.unstable_yieldValue('Child Two');
+          return <span>{'Child Two'}</span>;
+        }
+
+        const Children = React.memo(function Children() {
+          return (
+            <React.Suspense fallback="Loading 1...">
+              <Child1 />
+              <Child2 />
+            </React.Suspense>
+          );
+        });
+
+        function ChildWithID({parentID}) {
+          Scheduler.unstable_yieldValue('Child with ID');
+          return (
+            <span id={parentID} ref={childWithIDRef}>
+              {'Child with ID'}
+            </span>
+          );
+        }
+
+        const ChildrenWithID = React.memo(function ChildrenWithID({parentID}) {
+          return (
+            <React.Suspense fallback="Loading 2...">
+              <ChildWithID parentID={parentID} />
+            </React.Suspense>
+          );
+        });
+
+        function App() {
+          const id = useOpaqueIdentifier();
+          const [show, setShow] = useState(false);
+          _setShow = setShow;
+          return (
+            <div>
+              <Children />
+              <ChildrenWithID parentID={id} />
+              {show && (
+                <span aria-labelledby={id} ref={setShowRef}>
+                  {'Child Three'}
+                </span>
+              )}
+            </div>
+          );
+        }
+
+        const container = document.createElement('div');
+        container.innerHTML = ReactDOMServer.renderToString(<App />);
+        expect(Scheduler).toHaveYielded([
+          'Child One',
+          'Child Two',
+          'Child with ID',
+        ]);
+        expect(container.textContent).toEqual(
+          'Child OneChild TwoChild with ID',
+        );
+
+        const serverId = container
+          .getElementsByTagName('span')[2]
+          .getAttribute('id');
+        expect(serverId).not.toBeNull();
+
+        const childOneSpan = container.getElementsByTagName('span')[0];
+
+        const root = ReactDOM.createRoot(container, {hydrate: true});
+        root.render(<App show={false} />);
+        expect(Scheduler).toHaveYielded([]);
+
+        //Hydrate just child one before updating state
+        expect(Scheduler).toFlushAndYieldThrough(['Child One']);
+        expect(child1Ref.current).toBe(null);
+        expect(Scheduler).toHaveYielded([]);
+
+        ReactTestUtils.act(() => {
+          _setShow(true);
+
+          // State update should trigger the ID to update, which changes the props
+          // of ChildWithID. This should cause ChildWithID to hydrate before Children
+          expect(Scheduler).toFlushAndYieldThrough([
+            'Child with ID',
+            'Child with ID',
+            'Child with ID',
+            'Child One',
+            'Child Two',
+          ]);
+
+          expect(child1Ref.current).toBe(null);
+          expect(childWithIDRef.current).toEqual(
+            container.getElementsByTagName('span')[2],
+          );
+
+          expect(setShowRef.current).toEqual(
+            container.getElementsByTagName('span')[3],
+          );
+
+          expect(childWithIDRef.current.getAttribute('id')).toEqual(
+            setShowRef.current.getAttribute('aria-labelledby'),
+          );
+          expect(childWithIDRef.current.getAttribute('id')).not.toEqual(
+            serverId,
+          );
+        });
+
+        // Children hydrates after ChildWithID
+        expect(child1Ref.current).toBe(childOneSpan);
+
+        Scheduler.unstable_flushAll();
+
+        expect(Scheduler).toHaveYielded([]);
+      });
+
+      it('useOpaqueIdentifier: IDs match when part of the DOM tree is server rendered and part is client rendered', async () => {
+        let suspend = true;
+        let resolve;
+        const promise = new Promise(
+          resolvePromise => (resolve = resolvePromise),
+        );
+
+        function Child({text}) {
+          if (suspend) {
+            throw promise;
+          } else {
+            return text;
+          }
+        }
+
+        function RenderedChild() {
+          useEffect(() => {
+            Scheduler.unstable_yieldValue('Child did commit');
+          });
+          return null;
+        }
+
+        function App() {
+          const id = useOpaqueIdentifier();
+          useEffect(() => {
+            Scheduler.unstable_yieldValue('Did commit');
+          });
+          return (
+            <div>
+              <div id={id}>Child One</div>
+              <RenderedChild />
+              <React.Suspense fallback={'Fallback'}>
+                <div id={id}>
+                  <Child text="Child Two" />
+                </div>
+              </React.Suspense>
+            </div>
+          );
+        }
+
+        const container = document.createElement('div');
+        document.body.appendChild(container);
+
+        container.innerHTML = ReactDOMServer.renderToString(<App />);
+
+        suspend = true;
+        const root = ReactDOM.createRoot(container, {hydrate: true});
+        await ReactTestUtils.act(async () => {
+          root.render(<App />);
+        });
+        jest.runAllTimers();
+        expect(Scheduler).toHaveYielded(['Child did commit', 'Did commit']);
+        expect(Scheduler).toFlushAndYield([]);
+
+        const serverId = container.children[0].children[0].getAttribute('id');
+        expect(container.children[0].children.length).toEqual(1);
+        expect(
+          container.children[0].children[0].getAttribute('id'),
+        ).not.toBeNull();
+
+        await ReactTestUtils.act(async () => {
+          suspend = false;
+          resolve();
+          await promise;
+        });
+
+        expect(Scheduler).toHaveYielded(['Child did commit', 'Did commit']);
+        expect(Scheduler).toFlushAndYield([]);
+        jest.runAllTimers();
+
+        expect(container.children[0].children.length).toEqual(2);
+        expect(container.children[0].children[0].getAttribute('id')).toEqual(
+          container.children[0].children[1].getAttribute('id'),
+        );
+        expect(
+          container.children[0].children[0].getAttribute('id'),
+        ).not.toEqual(serverId);
+        expect(
+          container.children[0].children[0].getAttribute('id'),
+        ).not.toBeNull();
+      });
+
+      it('useOpaqueIdentifier warn when there is a hydration error', async () => {
+        function Child({appId}) {
+          return <div aria-labelledby={appId} />;
+        }
+        function App() {
+          const id = useOpaqueIdentifier();
+          return <Child appId={id} />;
+        }
+
+        const container = document.createElement('div');
+        document.body.appendChild(container);
+
+        // This is the wrong HTML string
+        container.innerHTML = '<span></span>';
+        ReactDOM.createRoot(container, {hydrate: true}).render(<App />);
+        expect(() =>
+          expect(() => Scheduler.unstable_flushAll()).toThrow(),
+        ).toErrorDev([
+          'Warning: Expected server HTML to contain a matching <div> in <div>.',
+        ]);
+      });
+
+      it('useOpaqueIdentifier: IDs match when part of the DOM tree is server rendered and part is client rendered', async () => {
+        let suspend = true;
+
+        function Child({text}) {
+          if (suspend) {
+            throw new Promise(() => {});
+          } else {
+            return text;
+          }
+        }
+
+        function RenderedChild() {
+          useEffect(() => {
+            Scheduler.unstable_yieldValue('Child did commit');
+          });
+          return null;
+        }
+
+        function App() {
+          const id = useOpaqueIdentifier();
+          useEffect(() => {
+            Scheduler.unstable_yieldValue('Did commit');
+          });
+          return (
+            <div>
+              <div id={id}>Child One</div>
+              <RenderedChild />
+              <React.Suspense fallback={'Fallback'}>
+                <div id={id}>
+                  <Child text="Child Two" />
+                </div>
+              </React.Suspense>
+            </div>
+          );
+        }
+
+        const container = document.createElement('div');
+        document.body.appendChild(container);
+
+        container.innerHTML = ReactDOMServer.renderToString(<App />);
+
+        suspend = false;
+        const root = ReactDOM.createRoot(container, {hydrate: true});
+        await ReactTestUtils.act(async () => {
+          root.render(<App />);
+        });
+        jest.runAllTimers();
+        expect(Scheduler).toHaveYielded([
+          'Child did commit',
+          'Did commit',
+          'Child did commit',
+          'Did commit',
+        ]);
+        expect(Scheduler).toFlushAndYield([]);
+
+        expect(container.children[0].children.length).toEqual(2);
+        expect(container.children[0].children[0].getAttribute('id')).toEqual(
+          container.children[0].children[1].getAttribute('id'),
+        );
+        expect(
+          container.children[0].children[0].getAttribute('id'),
+        ).not.toBeNull();
+      });
+
+      it('useOpaqueIdentifier warn when there is a hydration error', async () => {
+        function Child({appId}) {
+          return <div aria-labelledby={appId} />;
+        }
+        function App() {
+          const id = useOpaqueIdentifier();
+          return <Child appId={id} />;
+        }
+
+        const container = document.createElement('div');
+        document.body.appendChild(container);
+
+        // This is the wrong HTML string
+        container.innerHTML = '<span></span>';
+        ReactDOM.createRoot(container, {hydrate: true}).render(<App />);
+        expect(() =>
+          expect(() => Scheduler.unstable_flushAll()).toThrow(),
+        ).toErrorDev([
+          'Warning: Expected server HTML to contain a matching <div> in <div>.',
+        ]);
+      });
+
+      it('useOpaqueIdentifier throws when there is a hydration error and we are using ID as a string', async () => {
+        function Child({appId}) {
+          return <div aria-labelledby={appId + ''} />;
+        }
+        function App() {
+          const id = useOpaqueIdentifier();
+          return <Child appId={id} />;
+        }
+
+        const container = document.createElement('div');
+        document.body.appendChild(container);
+
+        // This is the wrong HTML string
+        container.innerHTML = '<span></span>';
+        ReactDOM.createRoot(container, {hydrate: true}).render(<App />);
+        expect(() =>
+          expect(() => Scheduler.unstable_flushAll()).toThrow(
+            'The object passed back from useOpaqueIdentifier is meant to be passed through to attributes only. ' +
+              'Do not read the value directly.',
+          ),
+        ).toErrorDev(
+          [
+            'Warning: The object passed back from useOpaqueIdentifier is meant to be passed through to attributes only. Do not read the value directly.',
+            'Warning: Did not expect server HTML to contain a <span> in <div>.',
+          ],
+          {withoutStack: 1},
+        );
+      });
+
+      it('useOpaqueIdentifier throws when there is a hydration error and we are using ID as a string', async () => {
+        function Child({appId}) {
+          return <div aria-labelledby={appId + ''} />;
+        }
+        function App() {
+          const id = useOpaqueIdentifier();
+          return <Child appId={id} />;
+        }
+
+        const container = document.createElement('div');
+        document.body.appendChild(container);
+
+        // This is the wrong HTML string
+        container.innerHTML = '<span></span>';
+        ReactDOM.createRoot(container, {hydrate: true}).render(<App />);
+        expect(() =>
+          expect(() => Scheduler.unstable_flushAll()).toThrow(
+            'The object passed back from useOpaqueIdentifier is meant to be passed through to attributes only. ' +
+              'Do not read the value directly.',
+          ),
+        ).toErrorDev(
+          [
+            'Warning: The object passed back from useOpaqueIdentifier is meant to be passed through to attributes only. Do not read the value directly.',
+            'Warning: Did not expect server HTML to contain a <span> in <div>.',
+          ],
+          {withoutStack: 1},
+        );
+      });
+
+      it('useOpaqueIdentifier throws if you try to use the result as a string in a child component', async () => {
+        function Child({appId}) {
+          return <div aria-labelledby={appId + ''} />;
+        }
+        function App() {
+          const id = useOpaqueIdentifier();
+          return <Child appId={id} />;
+        }
+
+        const container = document.createElement('div');
+        document.body.appendChild(container);
+
+        container.innerHTML = ReactDOMServer.renderToString(<App />);
+        ReactDOM.createRoot(container, {hydrate: true}).render(<App />);
+        expect(() =>
+          expect(() => Scheduler.unstable_flushAll()).toThrow(
+            'The object passed back from useOpaqueIdentifier is meant to be passed through to attributes only. ' +
+              'Do not read the value directly.',
+          ),
+        ).toErrorDev(
+          [
+            'Warning: The object passed back from useOpaqueIdentifier is meant to be passed through to attributes only. Do not read the value directly.',
+            'Warning: Did not expect server HTML to contain a <div> in <div>.',
+          ],
+          {withoutStack: 1},
+        );
+      });
+
+      it('useOpaqueIdentifier throws if you try to use the result as a string', async () => {
+        function App() {
+          const id = useOpaqueIdentifier();
+          return <div aria-labelledby={id + ''} />;
+        }
+
+        const container = document.createElement('div');
+        document.body.appendChild(container);
+
+        container.innerHTML = ReactDOMServer.renderToString(<App />);
+        ReactDOM.createRoot(container, {hydrate: true}).render(<App />);
+        expect(() =>
+          expect(() => Scheduler.unstable_flushAll()).toThrow(
+            'The object passed back from useOpaqueIdentifier is meant to be passed through to attributes only. ' +
+              'Do not read the value directly.',
+          ),
+        ).toErrorDev(
+          [
+            'Warning: The object passed back from useOpaqueIdentifier is meant to be passed through to attributes only. Do not read the value directly.',
+            'Warning: Did not expect server HTML to contain a <div> in <div>.',
+          ],
+          {withoutStack: 1},
+        );
+      });
+
+      it('useOpaqueIdentifier throws if you try to use the result as a string in a child component wrapped in a Suspense', async () => {
+        function Child({appId}) {
+          return <div aria-labelledby={appId + ''} />;
+        }
+        function App() {
+          const id = useOpaqueIdentifier();
+          return (
+            <React.Suspense fallback={null}>
+              <Child appId={id} />
+            </React.Suspense>
+          );
+        }
+
+        const container = document.createElement('div');
+        document.body.appendChild(container);
+
+        container.innerHTML = ReactDOMServer.renderToString(<App />);
+
+        ReactDOM.createRoot(container, {hydrate: true}).render(<App />);
+
+        expect(() =>
+          expect(() => Scheduler.unstable_flushAll()).toThrow(
+            'The object passed back from useOpaqueIdentifier is meant to be passed through to attributes only. ' +
+              'Do not read the value directly.',
+          ),
+        ).toErrorDev([
+          'The object passed back from useOpaqueIdentifier is meant to be passed through to attributes only. ' +
+            'Do not read the value directly.',
+        ]);
+      });
+
+      it('useOpaqueIdentifier throws if you try to add the result as a number in a child component wrapped in a Suspense', async () => {
+        function Child({appId}) {
+          return <div aria-labelledby={+appId} />;
+        }
+        function App() {
+          const [show] = useState(false);
+          const id = useOpaqueIdentifier();
+          return (
+            <React.Suspense fallback={null}>
+              {show && <div id={id} />}
+              <Child appId={id} />
+            </React.Suspense>
+          );
+        }
+
+        const container = document.createElement('div');
+        document.body.appendChild(container);
+
+        container.innerHTML = ReactDOMServer.renderToString(<App />);
+
+        ReactDOM.createRoot(container, {hydrate: true}).render(<App />);
+
+        expect(() =>
+          expect(() => Scheduler.unstable_flushAll()).toThrow(
+            'The object passed back from useOpaqueIdentifier is meant to be passed through to attributes only. ' +
+              'Do not read the value directly.',
+          ),
+        ).toErrorDev([
+          'The object passed back from useOpaqueIdentifier is meant to be passed through to attributes only. ' +
+            'Do not read the value directly.',
+        ]);
+      });
+
+      it('useOpaqueIdentifier with two opaque identifiers on the same page', () => {
+        let _setShow;
+
+        function App() {
+          const id1 = useOpaqueIdentifier();
+          const id2 = useOpaqueIdentifier();
+          const [show, setShow] = useState(true);
+          _setShow = setShow;
+
+          return (
+            <div>
+              <React.Suspense fallback={null}>
+                {show ? (
+                  <span id={id1}>{'Child'}</span>
+                ) : (
+                  <span id={id2}>{'Child'}</span>
+                )}
+              </React.Suspense>
+              <span aria-labelledby={id1}>{'test'}</span>
+            </div>
+          );
+        }
+
+        const container = document.createElement('div');
+        document.body.appendChild(container);
+
+        container.innerHTML = ReactDOMServer.renderToString(<App />);
+
+        const serverID = container
+          .getElementsByTagName('span')[0]
+          .getAttribute('id');
+        expect(serverID).not.toBeNull();
+        expect(
+          container
+            .getElementsByTagName('span')[1]
+            .getAttribute('aria-labelledby'),
+        ).toEqual(serverID);
+
+        ReactDOM.createRoot(container, {hydrate: true}).render(<App />);
+        jest.runAllTimers();
+        expect(Scheduler).toHaveYielded([]);
+        expect(Scheduler).toFlushAndYield([]);
+
+        ReactTestUtils.act(() => {
+          _setShow(false);
+        });
+
+        expect(
+          container
+            .getElementsByTagName('span')[1]
+            .getAttribute('aria-labelledby'),
+        ).toEqual(serverID);
+        expect(
+          container.getElementsByTagName('span')[0].getAttribute('id'),
+        ).not.toEqual(serverID);
+        expect(
+          container.getElementsByTagName('span')[0].getAttribute('id'),
+        ).not.toBeNull();
+      });
+    });
+  }
 });

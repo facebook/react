@@ -47,6 +47,7 @@ export type ChildSet = void; // Unused
 
 export type TimeoutHandle = TimeoutID;
 export type NoTimeout = -1;
+export type OpaqueIDType = void;
 
 export type RendererInspectionConfig = $ReadOnly<{|
   // Deprecated. Replaced with getInspectorDataForViewAtPoint.
@@ -533,6 +534,28 @@ export function getInstanceFromNode(node: any) {
 
 export function beforeRemoveInstance(instance: any) {
   // noop
+}
+
+export function isOpaqueHydratingObject(value: mixed): boolean {
+  throw new Error('Not yet implemented');
+}
+
+export function makeOpaqueHydratingObject(
+  attemptToReadValue: () => void,
+): OpaqueIDType {
+  throw new Error('Not yet implemented.');
+}
+
+export function makeClientId(): OpaqueIDType {
+  throw new Error('Not yet implemented');
+}
+
+export function makeClientIdInDEV(warnOnAccessInDEV: () => void): OpaqueIDType {
+  throw new Error('Not yet implemented');
+}
+
+export function makeServerId(): OpaqueIDType {
+  throw new Error('Not yet implemented');
 }
 
 export function registerEvent(event: any, rootContainerInstance: Container) {

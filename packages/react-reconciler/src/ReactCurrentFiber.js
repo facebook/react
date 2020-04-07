@@ -64,3 +64,9 @@ export function setIsRendering(rendering: boolean) {
     isRendering = rendering;
   }
 }
+
+export function getIsRendering() {
+  if (__DEV__) {
+    return isRendering;
+  }
+}
