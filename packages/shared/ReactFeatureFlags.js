@@ -7,6 +7,10 @@
  * @flow strict
  */
 
+// Filter certain DOM attributes (e.g. src, href) if their values are empty strings.
+// This prevents e.g. <img src=""> from making an unnecessar HTTP request for certain browsers.
+export const enableFilterEmptyStringAttributesDOM = false;
+
 // Helps identify side effects in render-phase lifecycle hooks and setState
 // reducers by double invoking them in Strict Mode.
 export const debugRenderPhaseSideEffectsForStrictMode = __DEV__;

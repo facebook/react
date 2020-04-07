@@ -24,6 +24,7 @@ export const {
   enableComponentStackLocations,
   replayFailedUnitOfWorkWithInvokeGuardedCallback,
   enableModernEventSystem,
+  enableFilterEmptyStringAttributesDOM,
 } = dynamicFeatureFlags;
 
 // On WWW, __EXPERIMENTAL__ is used for a new modern build.
