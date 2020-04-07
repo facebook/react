@@ -918,7 +918,7 @@ export function attach(
   }
 
   function didHooksChange(prev: any, next: any): boolean {
-    if (next == null) {
+    if (prev == null || next == null) {
       return false;
     }
 
