@@ -1097,7 +1097,7 @@ function commitNestedUnmounts(
   }
 }
 
-function detachFiber(current: Fiber) {
+function detachFiber(current: Fiber, detatchAlternate: boolean) {
   const alternate = current.alternate;
   // Cut off the return pointers to disconnect it from the tree. Ideally, we
   // should clear the child pointer of the parent alternate to let this
@@ -1115,8 +1115,8 @@ function detachFiber(current: Fiber) {
   current.pendingProps = null;
   current.memoizedProps = null;
   current.stateNode = null;
-  if (alternate !== null) {
-    detachFiber(alternate);
+  if (detatchAlternate && alternate !== null) {
+    detachFiber(alternate, false);
   }
 }
 
@@ -1513,7 +1513,7 @@ function commitDeletion(
     // Detach refs and call componentWillUnmount() on the whole subtree.
     commitNestedUnmounts(finishedRoot, current, renderPriorityLevel);
   }
-  detachFiber(current);
+  detachFiber(current, true);
 }
 
 function commitWork(current: Fiber | null, finishedWork: Fiber): void {

@@ -280,6 +280,9 @@ let currentEventTime: ExpirationTime = NoWork;
 // We warn about state updates for unmounted components differently in this case.
 let isFlushingPassiveEffects = false;
 
+// Store all fibers that have nextEffects that we need to clear.
+let nextEffectsToClear = [];
+
 export function getWorkInProgressRoot(): FiberRoot | null {
   return workInProgressRoot;
 }
@@ -1946,6 +1949,11 @@ function commitRootImpl(root, renderPriorityLevel) {
       nextEffect.nextEffect = null;
       nextEffect = nextNextEffect;
     }
+    // Clear the nextEffect pointers of an alternates
+    for (let i = 0; i < nextEffectsToClear.length; i++) {
+      nextEffectsToClear[i].nextEffect = null;
+    }
+    nextEffectsToClear = [];
   }
 
   // Check if there's remaining work on this root
@@ -2111,6 +2119,14 @@ function commitMutationEffects(root: FiberRoot, renderPriorityLevel) {
       }
       case Deletion: {
         commitDeletion(root, nextEffect, renderPriorityLevel);
+        // If the effect has a nextEffect, add it to our list
+        if (nextEffect.nextEffect !== null) {
+          nextEffectsToClear.push(nextEffect);
+          const alternate = nextEffect.alternate;
+          if (alternate !== null && alternate.nextEffect !== null) {
+            nextEffectsToClear.push(alternate);
+          }
+        }
         break;
       }
     }
