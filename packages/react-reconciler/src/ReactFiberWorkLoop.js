@@ -1168,6 +1168,19 @@ function prepareFreshStack(root, expirationTime) {
     cancelTimeout(timeoutHandle);
   }
 
+  // Check if there's a suspended level at lower priority.
+  const lastSuspendedTime = root.lastSuspendedTime;
+  if (lastSuspendedTime !== NoWork && lastSuspendedTime < expirationTime) {
+    const lastPingedTime = root.lastPingedTime;
+    // Make sure the suspended level is marked as pinged so that we return back
+    // to it later, in case the render we're about to start gets aborted.
+    // Generally we only reach this path via a ping, but we shouldn't assume
+    // that will always be the case.
+    if (lastPingedTime === NoWork || lastPingedTime > lastSuspendedTime) {
+      root.lastPingedTime = lastSuspendedTime;
+    }
+  }
+
   if (workInProgress !== null) {
     let interruptedWork = workInProgress.return;
     while (interruptedWork !== null) {
@@ -1202,6 +1215,9 @@ function handleError(root, thrownValue) {
       resetContextDependencies();
       resetHooksAfterThrow();
       resetCurrentDebugFiberInDEV();
+      // TODO: I found and added this missing line while investigating a
+      // separate issue. Write a regression test using string refs.
+      ReactCurrentOwner.current = null;
 
       if (workInProgress === null || workInProgress.return === null) {
         // Expected to be working on a non-root fiber. This is a fatal error
@@ -1768,6 +1784,19 @@ function commitRootImpl(root, renderPriorityLevel) {
     expirationTime,
     remainingExpirationTimeBeforeCommit,
   );
+
+  // Clear already finished discrete updates in case that a later call of
+  // `flushDiscreteUpdates` starts a useless render pass which may cancels
+  // a scheduled timeout.
+  if (rootsWithPendingDiscreteUpdates !== null) {
+    const lastDiscreteTime = rootsWithPendingDiscreteUpdates.get(root);
+    if (
+      lastDiscreteTime !== undefined &&
+      remainingExpirationTimeBeforeCommit < lastDiscreteTime
+    ) {
+      rootsWithPendingDiscreteUpdates.delete(root);
+    }
+  }
 
   if (root === workInProgressRoot) {
     // We can reset these now that they are finished.
