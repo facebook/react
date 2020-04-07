@@ -39,7 +39,7 @@ export default function HoveredFiberInfo({fiberData}: Props) {
     rootID: ((rootID: any): number),
   });
 
-  let renderDurationInfo;
+  let renderDurationInfo = null;
   let i = 0;
   for (i = 0; i < commitIndices.length; i++) {
     const commitIndex = commitIndices[i];
@@ -67,9 +67,7 @@ export default function HoveredFiberInfo({fiberData}: Props) {
         <div className={styles.Component}>{name}</div>
       </div>
       <div className={styles.Content}>
-        {renderDurationInfo || (
-          <div>Did not render during this profiling session.</div>
-        )}
+        {renderDurationInfo || <div>Did not render.</div>}
         <WhatChanged fiberID={((id: any): number)} />
       </div>
     </Fragment>
