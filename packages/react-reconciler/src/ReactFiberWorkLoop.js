@@ -1215,6 +1215,9 @@ function handleError(root, thrownValue) {
       resetContextDependencies();
       resetHooksAfterThrow();
       resetCurrentDebugFiberInDEV();
+      // TODO: I found and added this missing line while investigating a
+      // separate issue. Write a regression test using string refs.
+      ReactCurrentOwner.current = null;
 
       if (workInProgress === null || workInProgress.return === null) {
         // Expected to be working on a non-root fiber. This is a fatal error
