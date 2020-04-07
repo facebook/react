@@ -1168,6 +1168,19 @@ function prepareFreshStack(root, expirationTime) {
     cancelTimeout(timeoutHandle);
   }
 
+  // Check if there's a suspended level at lower priority.
+  const lastSuspendedTime = root.lastSuspendedTime;
+  if (lastSuspendedTime !== NoWork && lastSuspendedTime < expirationTime) {
+    const lastPingedTime = root.lastPingedTime;
+    // Make sure the suspended level is marked as pinged so that we return back
+    // to it later, in case the render we're about to start gets aborted.
+    // Generally we only reach this path via a ping, but we shouldn't assume
+    // that will always be the case.
+    if (lastPingedTime === NoWork || lastPingedTime > lastSuspendedTime) {
+      root.lastPingedTime = lastSuspendedTime;
+    }
+  }
+
   if (workInProgress !== null) {
     let interruptedWork = workInProgress.return;
     while (interruptedWork !== null) {
