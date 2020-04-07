@@ -1117,6 +1117,8 @@ function detachFiber(current: Fiber) {
   current.stateNode = null;
   current.alternate = null;
   if (alternate !== null) {
+    // Stop the alternate from going back to the current fiber.
+    alternate.alternate = null;
     detachFiber(alternate);
   }
 }
