@@ -1690,6 +1690,18 @@ function dispatchAction<S, A>(
     // and apply the stashed updates on top of the work-in-progress hook.
     didScheduleRenderPhaseUpdateDuringThisPass = didScheduleRenderPhaseUpdate = true;
     update.expirationTime = renderExpirationTime;
+
+    if (__DEV__) {
+      if (enableDebugTracing) {
+        const priorityLevel = inferPriorityFromExpirationTime(
+          currentTime,
+          renderExpirationTime,
+        );
+        const label = priorityLevelToLabel(priorityLevel);
+        const name = getComponentName(fiber.type) || 'Unknown';
+        logStateUpdateScheduled(name, label);
+      }
+    }
   } else {
     if (
       fiber.expirationTime === NoWork &&
