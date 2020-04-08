@@ -1724,16 +1724,26 @@ describe('ReactDOMComponent', () => {
             <tr />
           </div>,
         );
-      }).toErrorDev([
-        'Warning: validateDOMNesting(...): <tr> cannot appear as a child of ' +
-          '<div>.' +
-          '\n    in tr (at **)' +
-          '\n    in div (at **)',
-        'Warning: validateDOMNesting(...): <tr> cannot appear as a child of ' +
-          '<div>.' +
-          '\n    in tr (at **)' +
-          '\n    in div (at **)',
-      ]);
+      }).toErrorDev(
+        ReactFeatureFlags.enableComponentStackLocations
+          ? [
+              // This warning dedupes since they're in the same component.
+              'Warning: validateDOMNesting(...): <tr> cannot appear as a child of ' +
+                '<div>.' +
+                '\n    in tr (at **)' +
+                '\n    in div (at **)',
+            ]
+          : [
+              'Warning: validateDOMNesting(...): <tr> cannot appear as a child of ' +
+                '<div>.' +
+                '\n    in tr (at **)' +
+                '\n    in div (at **)',
+              'Warning: validateDOMNesting(...): <tr> cannot appear as a child of ' +
+                '<div>.' +
+                '\n    in tr (at **)' +
+                '\n    in div (at **)',
+            ],
+      );
     });
 
     it('warns on invalid nesting at root', () => {
