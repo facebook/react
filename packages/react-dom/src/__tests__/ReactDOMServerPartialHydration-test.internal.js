@@ -77,7 +77,6 @@ describe('ReactDOMServerPartialHydration', () => {
     ReactFeatureFlags = require('shared/ReactFeatureFlags');
     ReactFeatureFlags.enableSuspenseCallback = true;
     ReactFeatureFlags.enableDeprecatedFlareAPI = true;
-    ReactFeatureFlags.debugRenderPhaseSideEffectsForStrictMode = false;
 
     React = require('react');
     ReactDOM = require('react-dom');

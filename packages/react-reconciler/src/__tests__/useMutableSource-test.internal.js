@@ -24,7 +24,7 @@ function loadModules() {
   jest.useFakeTimers();
 
   ReactFeatureFlags = require('shared/ReactFeatureFlags');
-  ReactFeatureFlags.debugRenderPhaseSideEffectsForStrictMode = false;
+
   ReactFeatureFlags.enableSchedulerTracing = true;
   ReactFeatureFlags.flushSuspenseFallbacksInTests = false;
   ReactFeatureFlags.enableProfilerTimer = true;

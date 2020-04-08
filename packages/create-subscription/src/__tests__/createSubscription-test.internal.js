@@ -11,7 +11,6 @@
 
 let createSubscription;
 let BehaviorSubject;
-let ReactFeatureFlags;
 let React;
 let ReactNoop;
 let Scheduler;
@@ -21,8 +20,7 @@ describe('createSubscription', () => {
   beforeEach(() => {
     jest.resetModules();
     createSubscription = require('create-subscription').createSubscription;
-    ReactFeatureFlags = require('shared/ReactFeatureFlags');
-    ReactFeatureFlags.debugRenderPhaseSideEffectsForStrictMode = false;
+
     React = require('react');
     ReactNoop = require('react-noop-renderer');
     Scheduler = require('scheduler');

@@ -40,7 +40,7 @@ function initModules() {
   jest.resetModuleRegistry();
 
   ReactFeatureFlags = require('shared/ReactFeatureFlags');
-  ReactFeatureFlags.debugRenderPhaseSideEffectsForStrictMode = false;
+
   ReactFeatureFlags.flushSuspenseFallbacksInTests = false;
   React = require('react');
   ReactDOM = require('react-dom');

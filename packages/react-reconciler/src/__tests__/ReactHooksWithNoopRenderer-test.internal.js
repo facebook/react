@@ -42,7 +42,7 @@ describe('ReactHooksWithNoopRenderer', () => {
     jest.useFakeTimers();
 
     ReactFeatureFlags = require('shared/ReactFeatureFlags');
-    ReactFeatureFlags.debugRenderPhaseSideEffectsForStrictMode = false;
+
     ReactFeatureFlags.enableSchedulerTracing = true;
     ReactFeatureFlags.flushSuspenseFallbacksInTests = false;
     ReactFeatureFlags.enableProfilerTimer = true;
@@ -299,25 +299,29 @@ describe('ReactHooksWithNoopRenderer', () => {
     });
 
     it('returns the same updater function every time', () => {
-      const updaters = [];
+      let updater = null;
       function Counter() {
         const [count, updateCount] = useState(0);
-        updaters.push(updateCount);
+        updater = updateCount;
         return <Text text={'Count: ' + count} />;
       }
       ReactNoop.render(<Counter />);
       expect(Scheduler).toFlushAndYield(['Count: 0']);
       expect(ReactNoop.getChildren()).toEqual([span('Count: 0')]);
 
-      act(() => updaters[0](1));
+      const firstUpdater = updater;
+
+      act(() => firstUpdater(1));
       expect(Scheduler).toHaveYielded(['Count: 1']);
       expect(ReactNoop.getChildren()).toEqual([span('Count: 1')]);
 
-      act(() => updaters[0](count => count + 10));
+      const secondUpdater = updater;
+
+      act(() => firstUpdater(count => count + 10));
       expect(Scheduler).toHaveYielded(['Count: 11']);
       expect(ReactNoop.getChildren()).toEqual([span('Count: 11')]);
 
-      expect(updaters).toEqual([updaters[0], updaters[0], updaters[0]]);
+      expect(firstUpdater).toBe(secondUpdater);
     });
 
     it('warns on set after unmount', () => {
@@ -476,7 +480,11 @@ describe('ReactHooksWithNoopRenderer', () => {
           </>,
         );
         expect(() =>
-          expect(Scheduler).toFlushAndYield(['Foo [0]', 'Bar', 'Foo [1]']),
+          expect(Scheduler).toFlushAndYield(
+            __DEV__
+              ? ['Foo [0]', 'Bar', 'Foo [2]']
+              : ['Foo [0]', 'Bar', 'Foo [1]'],
+          ),
         ).toErrorDev([
           'Cannot update a component (`Foo`) while rendering a ' +
             'different component (`Bar`). To locate the bad setState() call inside `Bar`',
@@ -491,7 +499,11 @@ describe('ReactHooksWithNoopRenderer', () => {
             <Bar triggerUpdate={true} />
           </>,
         );
-        expect(Scheduler).toFlushAndYield(['Foo [1]', 'Bar', 'Foo [2]']);
+        expect(Scheduler).toFlushAndYield(
+          __DEV__
+            ? ['Foo [2]', 'Bar', 'Foo [4]']
+            : ['Foo [1]', 'Bar', 'Foo [2]'],
+        );
       });
     });
 

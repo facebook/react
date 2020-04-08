@@ -11,7 +11,6 @@
 'use strict';
 
 let React;
-let ReactFeatureFlags;
 let ReactNoop;
 let Scheduler;
 let ImmediatePriority;
@@ -24,8 +23,7 @@ let runWithPriority;
 describe('ReactSchedulerIntegration', () => {
   beforeEach(() => {
     jest.resetModules();
-    ReactFeatureFlags = require('shared/ReactFeatureFlags');
-    ReactFeatureFlags.debugRenderPhaseSideEffectsForStrictMode = false;
+
     React = require('react');
     ReactNoop = require('react-noop-renderer');
     Scheduler = require('scheduler');
@@ -417,8 +415,6 @@ describe(
 
     beforeEach(() => {
       jest.resetModules();
-      ReactFeatureFlags = require('shared/ReactFeatureFlags');
-      ReactFeatureFlags.debugRenderPhaseSideEffectsForStrictMode = false;
 
       jest.mock('scheduler', () => {
         const actual = require.requireActual('scheduler/unstable_mock');

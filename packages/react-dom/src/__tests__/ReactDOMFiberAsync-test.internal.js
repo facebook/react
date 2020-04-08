@@ -10,7 +10,6 @@
 'use strict';
 
 let React;
-let ReactFeatureFlags = require('shared/ReactFeatureFlags');
 
 let ReactDOM;
 let Scheduler;
@@ -149,8 +148,7 @@ describe('ReactDOMFiberAsync', () => {
   describe('concurrent mode', () => {
     beforeEach(() => {
       jest.resetModules();
-      ReactFeatureFlags = require('shared/ReactFeatureFlags');
-      ReactFeatureFlags.debugRenderPhaseSideEffectsForStrictMode = false;
+
       ReactDOM = require('react-dom');
       Scheduler = require('scheduler');
     });

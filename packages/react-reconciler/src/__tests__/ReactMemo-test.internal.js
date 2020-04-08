@@ -14,7 +14,6 @@
 
 let PropTypes;
 let React;
-let ReactFeatureFlags;
 let ReactNoop;
 let Suspense;
 let Scheduler;
@@ -22,8 +21,7 @@ let Scheduler;
 describe('memo', () => {
   beforeEach(() => {
     jest.resetModules();
-    ReactFeatureFlags = require('shared/ReactFeatureFlags');
-    ReactFeatureFlags.debugRenderPhaseSideEffectsForStrictMode = false;
+
     PropTypes = require('prop-types');
     React = require('react');
     ReactNoop = require('react-noop-renderer');

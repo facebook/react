@@ -22,9 +22,6 @@ describe('useSubscription', () => {
     jest.resetModules();
     jest.mock('scheduler', () => require('scheduler/unstable_mock'));
 
-    const ReactFeatureFlags = require('shared/ReactFeatureFlags');
-    ReactFeatureFlags.debugRenderPhaseSideEffectsForStrictMode = false;
-
     useSubscription = require('use-subscription').useSubscription;
     React = require('react');
     ReactTestRenderer = require('react-test-renderer');
