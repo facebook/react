@@ -679,9 +679,10 @@ function performConcurrentWorkOnRoot(root, didTimeout) {
 
     // We now have a consistent tree. The next step is either to commit it,
     // or, if something suspended, wait to commit it after a timeout.
-    const finishedWork: Fiber = ((root.finishedWork =
-      root.current.alternate): any);
+    const finishedWork: Fiber = (root.current.alternate: any);
+    root.finishedWork = finishedWork;
     root.finishedExpirationTime = expirationTime;
+    root.nextKnownPendingLevel = getRemainingExpirationTime(finishedWork);
     finishConcurrentRender(root, finishedWork, exitStatus, expirationTime);
   }
 
@@ -717,9 +718,6 @@ function finishConcurrentRender(
     case RootSuspended: {
       markRootSuspendedAtTime(root, expirationTime);
       const lastSuspendedTime = root.lastSuspendedTime;
-      if (expirationTime === lastSuspendedTime) {
-        root.nextKnownPendingLevel = getRemainingExpirationTime(finishedWork);
-      }
 
       // We have an acceptable loading state. We need to figure out if we
       // should immediately commit it or wait a bit.
@@ -792,9 +790,6 @@ function finishConcurrentRender(
     case RootSuspendedWithDelay: {
       markRootSuspendedAtTime(root, expirationTime);
       const lastSuspendedTime = root.lastSuspendedTime;
-      if (expirationTime === lastSuspendedTime) {
-        root.nextKnownPendingLevel = getRemainingExpirationTime(finishedWork);
-      }
 
       if (
         // do not delay if we're inside an act() scope
@@ -979,9 +974,10 @@ function performSyncWorkOnRoot(root) {
 
   // We now have a consistent tree. Because this is a sync render, we
   // will commit it even if something suspended.
-  root.finishedWork = (root.current.alternate: any);
+  const finishedWork: Fiber = (root.current.alternate: any);
+  root.finishedWork = finishedWork;
   root.finishedExpirationTime = expirationTime;
-
+  root.nextKnownPendingLevel = getRemainingExpirationTime(finishedWork);
   commitRoot(root);
 
   // Before exiting, make sure there's a callback scheduled for the next
@@ -1176,6 +1172,8 @@ function prepareFreshStack(root, expirationTime) {
     // to it later, in case the render we're about to start gets aborted.
     // Generally we only reach this path via a ping, but we shouldn't assume
     // that will always be the case.
+    // Note: This is defensive coding to prevent a pending commit from
+    // being dropped without being rescheduled. It shouldn't be necessary.
     if (lastPingedTime === NoWork || lastPingedTime > lastSuspendedTime) {
       root.lastPingedTime = lastSuspendedTime;
     }
@@ -1772,7 +1770,6 @@ function commitRootImpl(root, renderPriorityLevel) {
   root.callbackNode = null;
   root.callbackExpirationTime = NoWork;
   root.callbackPriority = NoPriority;
-  root.nextKnownPendingLevel = NoWork;
 
   // Update the first and last pending times on this root. The new first
   // pending time is whatever is left on the root fiber.
