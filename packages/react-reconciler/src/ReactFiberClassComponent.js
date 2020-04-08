@@ -997,11 +997,13 @@ function updateClassInstance(
 
   cloneUpdateQueue(current, workInProgress);
 
-  const oldProps = workInProgress.memoizedProps;
-  instance.props =
+  const unresolvedOldProps = workInProgress.memoizedProps;
+  const oldProps =
     workInProgress.type === workInProgress.elementType
-      ? oldProps
-      : resolveDefaultProps(workInProgress.type, oldProps);
+      ? unresolvedOldProps
+      : resolveDefaultProps(workInProgress.type, unresolvedOldProps);
+  instance.props = oldProps;
+  const unresolvedNewProps = workInProgress.pendingProps;
 
   const oldContext = instance.context;
   const contextType = ctor.contextType;
@@ -1029,7 +1031,10 @@ function updateClassInstance(
     (typeof instance.UNSAFE_componentWillReceiveProps === 'function' ||
       typeof instance.componentWillReceiveProps === 'function')
   ) {
-    if (oldProps !== newProps || oldContext !== nextContext) {
+    if (
+      unresolvedOldProps !== unresolvedNewProps ||
+      oldContext !== nextContext
+    ) {
       callComponentWillReceiveProps(
         workInProgress,
         instance,
@@ -1047,7 +1052,7 @@ function updateClassInstance(
   newState = workInProgress.memoizedState;
 
   if (
-    oldProps === newProps &&
+    unresolvedOldProps === unresolvedNewProps &&
     oldState === newState &&
     !hasContextChanged() &&
     !checkHasForceUpdateAfterProcessing()
@@ -1056,7 +1061,7 @@ function updateClassInstance(
     // effect even though we're bailing out, so that cWU/cDU are called.
     if (typeof instance.componentDidUpdate === 'function') {
       if (
-        oldProps !== current.memoizedProps ||
+        unresolvedOldProps !== current.memoizedProps ||
         oldState !== current.memoizedState
       ) {
         workInProgress.effectTag |= Update;
@@ -1064,7 +1069,7 @@ function updateClassInstance(
     }
     if (typeof instance.getSnapshotBeforeUpdate === 'function') {
       if (
-        oldProps !== current.memoizedProps ||
+        unresolvedOldProps !== current.memoizedProps ||
         oldState !== current.memoizedState
       ) {
         workInProgress.effectTag |= Snapshot;
@@ -1121,7 +1126,7 @@ function updateClassInstance(
     // effect even though we're bailing out, so that cWU/cDU are called.
     if (typeof instance.componentDidUpdate === 'function') {
       if (
-        oldProps !== current.memoizedProps ||
+        unresolvedOldProps !== current.memoizedProps ||
         oldState !== current.memoizedState
       ) {
         workInProgress.effectTag |= Update;
@@ -1129,7 +1134,7 @@ function updateClassInstance(
     }
     if (typeof instance.getSnapshotBeforeUpdate === 'function') {
       if (
-        oldProps !== current.memoizedProps ||
+        unresolvedOldProps !== current.memoizedProps ||
         oldState !== current.memoizedState
       ) {
         workInProgress.effectTag |= Snapshot;
