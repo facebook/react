@@ -3664,19 +3664,6 @@ describe('ReactSuspenseWithNoopRenderer', () => {
           setMirror(text);
         }
 
-        if (text !== '') {
-          // Inlined so that it's in the same component.
-          try {
-            Scheduler.unstable_yieldValue(text);
-            readText(text);
-          } catch (e) {
-            if (e && typeof e.then === 'function') {
-              Scheduler.unstable_yieldValue('Suspend! [' + text + ']');
-            }
-            throw e;
-          }
-        }
-
         setTextWithTransition = value => {
           startTransition(() => {
             setText(value);
@@ -3686,7 +3673,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
         return (
           <>
             {isPending ? <Text text="Pending..." /> : null}
-            <Text text={text} />
+            {text !== '' ? <AsyncText text={text} /> : <Text text={text} />}
           </>
         );
       }
@@ -3714,7 +3701,6 @@ describe('ReactSuspenseWithNoopRenderer', () => {
         expect(Scheduler).toFlushAndYield([
           'Pending...',
           '',
-          'a',
           'Suspend! [a]',
           'Loading...',
         ]);
@@ -3732,10 +3718,9 @@ describe('ReactSuspenseWithNoopRenderer', () => {
         setTextWithTransition('b');
         expect(Scheduler).toFlushAndYield([
           // Neither is resolved yet.
-          'a',
+          'Pending...',
           'Suspend! [a]',
           'Loading...',
-          'b',
           'Suspend! [b]',
           'Loading...',
         ]);
@@ -3754,8 +3739,6 @@ describe('ReactSuspenseWithNoopRenderer', () => {
       });
       expect(Scheduler).toHaveYielded([
         'Promise resolved [a]',
-        'a',
-        'a',
         'Pending...',
         'a',
       ]);
