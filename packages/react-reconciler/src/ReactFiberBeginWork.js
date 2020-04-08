@@ -181,6 +181,8 @@ import {
   getWorkInProgressRoot,
 } from './ReactFiberWorkLoop';
 
+import {disableLogs, reenableLogs} from 'shared/ConsolePatchingDev';
+
 const ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
 
 let didReceiveUpdate: boolean = false;
@@ -320,14 +322,19 @@ function updateForwardRef(
       debugRenderPhaseSideEffectsForStrictMode &&
       workInProgress.mode & StrictMode
     ) {
-      nextChildren = renderWithHooks(
-        current,
-        workInProgress,
-        render,
-        nextProps,
-        ref,
-        renderExpirationTime,
-      );
+      disableLogs();
+      try {
+        nextChildren = renderWithHooks(
+          current,
+          workInProgress,
+          render,
+          nextProps,
+          ref,
+          renderExpirationTime,
+        );
+      } finally {
+        reenableLogs();
+      }
     }
     setIsRendering(false);
   } else {
@@ -658,14 +665,19 @@ function updateFunctionComponent(
       debugRenderPhaseSideEffectsForStrictMode &&
       workInProgress.mode & StrictMode
     ) {
-      nextChildren = renderWithHooks(
-        current,
-        workInProgress,
-        Component,
-        nextProps,
-        context,
-        renderExpirationTime,
-      );
+      disableLogs();
+      try {
+        nextChildren = renderWithHooks(
+          current,
+          workInProgress,
+          Component,
+          nextProps,
+          context,
+          renderExpirationTime,
+        );
+      } finally {
+        reenableLogs();
+      }
     }
     setIsRendering(false);
   } else {
@@ -731,14 +743,19 @@ function updateBlock<Props, Data>(
       debugRenderPhaseSideEffectsForStrictMode &&
       workInProgress.mode & StrictMode
     ) {
-      nextChildren = renderWithHooks(
-        current,
-        workInProgress,
-        render,
-        nextProps,
-        data,
-        renderExpirationTime,
-      );
+      disableLogs();
+      try {
+        nextChildren = renderWithHooks(
+          current,
+          workInProgress,
+          render,
+          nextProps,
+          data,
+          renderExpirationTime,
+        );
+      } finally {
+        reenableLogs();
+      }
     }
     setIsRendering(false);
   } else {
@@ -923,7 +940,12 @@ function finishClassComponent(
         debugRenderPhaseSideEffectsForStrictMode &&
         workInProgress.mode & StrictMode
       ) {
-        instance.render();
+        disableLogs();
+        try {
+          instance.render();
+        } finally {
+          reenableLogs();
+        }
       }
       setIsRendering(false);
     } else {
@@ -1485,14 +1507,19 @@ function mountIndeterminateComponent(
         debugRenderPhaseSideEffectsForStrictMode &&
         workInProgress.mode & StrictMode
       ) {
-        value = renderWithHooks(
-          null,
-          workInProgress,
-          Component,
-          props,
-          context,
-          renderExpirationTime,
-        );
+        disableLogs();
+        try {
+          value = renderWithHooks(
+            null,
+            workInProgress,
+            Component,
+            props,
+            context,
+            renderExpirationTime,
+          );
+        } finally {
+          reenableLogs();
+        }
       }
     }
     reconcileChildren(null, workInProgress, value, renderExpirationTime);
