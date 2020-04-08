@@ -1701,12 +1701,7 @@ describe('DOMModernPluginEventSystem', () => {
               const root = ReactDOM.createRoot(container);
               root.render(<Test counter={0} />);
 
-              // Dev double-render
-              if (__DEV__) {
-                expect(Scheduler).toFlushAndYield(['Test', 'Test']);
-              } else {
-                expect(Scheduler).toFlushAndYield(['Test']);
-              }
+              expect(Scheduler).toFlushAndYield(['Test']);
 
               // Click the button
               dispatchClickEvent(ref.current);
@@ -1718,12 +1713,7 @@ describe('DOMModernPluginEventSystem', () => {
               // Increase counter
               root.render(<Test counter={1} />);
               // Yield before committing
-              // Dev double-render
-              if (__DEV__) {
-                expect(Scheduler).toFlushAndYieldThrough(['Test', 'Test']);
-              } else {
-                expect(Scheduler).toFlushAndYieldThrough(['Test']);
-              }
+              expect(Scheduler).toFlushAndYieldThrough(['Test']);
 
               // Click the button again
               dispatchClickEvent(ref.current);

@@ -10,7 +10,7 @@ describe('ReactSuspenseList', () => {
   beforeEach(() => {
     jest.resetModules();
     ReactFeatureFlags = require('shared/ReactFeatureFlags');
-    ReactFeatureFlags.debugRenderPhaseSideEffectsForStrictMode = false;
+
     ReactFeatureFlags.replayFailedUnitOfWorkWithInvokeGuardedCallback = false;
     ReactFeatureFlags.disableSchedulerTimeoutBasedOnReactExpirationTime = true;
     React = require('react');

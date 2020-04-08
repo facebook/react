@@ -107,6 +107,8 @@ import {
 import invariant from 'shared/invariant';
 import {getCurrentPriorityLevel} from './SchedulerWithReactIntegration';
 
+import {disableLogs, reenableLogs} from 'shared/ConsolePatchingDev';
+
 export type Update<State> = {|
   expirationTime: ExpirationTime,
   suspenseConfig: null | SuspenseConfig,
@@ -336,7 +338,12 @@ function getStateFromUpdate<State>(
             debugRenderPhaseSideEffectsForStrictMode &&
             workInProgress.mode & StrictMode
           ) {
-            payload.call(instance, prevState, nextProps);
+            disableLogs();
+            try {
+              payload.call(instance, prevState, nextProps);
+            } finally {
+              reenableLogs();
+            }
           }
         }
         const nextState = payload.call(instance, prevState, nextProps);
@@ -364,7 +371,12 @@ function getStateFromUpdate<State>(
             debugRenderPhaseSideEffectsForStrictMode &&
             workInProgress.mode & StrictMode
           ) {
-            payload.call(instance, prevState, nextProps);
+            disableLogs();
+            try {
+              payload.call(instance, prevState, nextProps);
+            } finally {
+              reenableLogs();
+            }
           }
         }
         partialState = payload.call(instance, prevState, nextProps);

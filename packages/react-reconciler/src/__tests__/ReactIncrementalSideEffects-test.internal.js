@@ -11,15 +11,13 @@
 'use strict';
 
 let React;
-let ReactFeatureFlags;
 let ReactNoop;
 let Scheduler;
 
 describe('ReactIncrementalSideEffects', () => {
   beforeEach(() => {
     jest.resetModules();
-    ReactFeatureFlags = require('shared/ReactFeatureFlags');
-    ReactFeatureFlags.debugRenderPhaseSideEffectsForStrictMode = false;
+
     React = require('react');
     ReactNoop = require('react-noop-renderer');
     Scheduler = require('scheduler');
@@ -897,12 +895,12 @@ describe('ReactIncrementalSideEffects', () => {
       constructor() {
         super();
         this.state = {active: false};
-        barInstances.push(this);
       }
       activate() {
         this.setState({active: true});
       }
       render() {
+        barInstances.push(this);
         Scheduler.unstable_yieldValue('Bar');
         return <span prop={this.state.active ? 'X' : this.props.idx} />;
       }

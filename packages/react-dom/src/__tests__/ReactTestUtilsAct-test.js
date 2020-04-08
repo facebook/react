@@ -121,7 +121,6 @@ describe('ReactTestUtils.act()', () => {
         );
       }).toErrorDev([
         'An update to App ran an effect, but was not wrapped in act(...)',
-        'An update to App ran an effect, but was not wrapped in act(...)',
       ]);
     });
 
@@ -132,7 +131,6 @@ describe('ReactTestUtils.act()', () => {
         Scheduler.unstable_flushAll();
       }).toErrorDev([
         'An update to App ran an effect, but was not wrapped in act(...)',
-        'An update to App ran an effect, but was not wrapped in act(...)',
       ]);
     });
 
@@ -142,7 +140,6 @@ describe('ReactTestUtils.act()', () => {
         root.render(<App />);
         Scheduler.unstable_flushAll();
       }).toErrorDev([
-        'An update to App ran an effect, but was not wrapped in act(...)',
         'An update to App ran an effect, but was not wrapped in act(...)',
       ]);
     });

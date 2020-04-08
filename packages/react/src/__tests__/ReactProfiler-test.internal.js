@@ -32,7 +32,7 @@ function loadModules({
   useNoopRenderer = false,
 } = {}) {
   ReactFeatureFlags = require('shared/ReactFeatureFlags');
-  ReactFeatureFlags.debugRenderPhaseSideEffectsForStrictMode = false;
+
   ReactFeatureFlags.deferPassiveEffectCleanupDuringUnmount = deferPassiveEffectCleanupDuringUnmount;
   ReactFeatureFlags.runAllPassiveEffectDestroysBeforeCreates = deferPassiveEffectCleanupDuringUnmount;
   ReactFeatureFlags.enableProfilerTimer = enableProfilerTimer;

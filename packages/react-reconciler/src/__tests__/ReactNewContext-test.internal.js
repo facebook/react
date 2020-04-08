@@ -9,8 +9,6 @@
 
 'use strict';
 
-let ReactFeatureFlags = require('shared/ReactFeatureFlags');
-
 let React = require('react');
 let useContext;
 let ReactNoop;
@@ -20,8 +18,7 @@ let gen;
 describe('ReactNewContext', () => {
   beforeEach(() => {
     jest.resetModules();
-    ReactFeatureFlags = require('shared/ReactFeatureFlags');
-    ReactFeatureFlags.debugRenderPhaseSideEffectsForStrictMode = false;
+
     React = require('react');
     useContext = React.useContext;
     ReactNoop = require('react-noop-renderer');
@@ -1096,16 +1093,13 @@ describe('ReactNewContext', () => {
 
       // Get a new copy of ReactNoop
       jest.resetModules();
-      ReactFeatureFlags = require('shared/ReactFeatureFlags');
       React = require('react');
       ReactNoop = require('react-noop-renderer');
       Scheduler = require('scheduler');
 
       // Render the provider again using a different renderer
       ReactNoop.render(<App value={1} />);
-      expect(Scheduler).toFlushAndYield(
-        __DEV__ ? ['Foo', 'Foo', 'Foo', 'Foo'] : ['Foo', 'Foo'],
-      );
+      expect(Scheduler).toFlushAndYield(['Foo', 'Foo']);
 
       if (__DEV__) {
         expect(console.error.calls.argsFor(0)[0]).toContain(
@@ -1481,6 +1475,8 @@ describe('ReactNewContext', () => {
 
       ReactNoop.render(<Cls />);
       expect(() => expect(Scheduler).toFlushWithoutYielding()).toErrorDev([
+        'Context can only be read while React is rendering',
+        // A second warning comes from to setStates being added to the queue.
         'Context can only be read while React is rendering',
         'Cannot update during an existing state transition',
       ]);
