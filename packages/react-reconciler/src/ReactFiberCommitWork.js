@@ -1097,27 +1097,23 @@ function commitNestedUnmounts(
   }
 }
 
-function detachFiber(current: Fiber) {
-  const alternate = current.alternate;
+function detachFiber(fiber: Fiber) {
   // Cut off the return pointers to disconnect it from the tree. Ideally, we
   // should clear the child pointer of the parent alternate to let this
   // get GC:ed but we don't know which for sure which parent is the current
   // one so we'll settle for GC:ing the subtree of this child. This child
   // itself will be GC:ed when the parent updates the next time.
-  current.return = null;
-  current.child = null;
-  current.memoizedState = null;
-  current.updateQueue = null;
-  current.dependencies = null;
-  current.alternate = null;
-  current.firstEffect = null;
-  current.lastEffect = null;
-  current.pendingProps = null;
-  current.memoizedProps = null;
-  current.stateNode = null;
-  if (alternate !== null) {
-    detachFiber(alternate);
-  }
+  fiber.return = null;
+  fiber.child = null;
+  fiber.memoizedState = null;
+  fiber.updateQueue = null;
+  fiber.dependencies = null;
+  fiber.alternate = null;
+  fiber.firstEffect = null;
+  fiber.lastEffect = null;
+  fiber.pendingProps = null;
+  fiber.memoizedProps = null;
+  fiber.stateNode = null;
 }
 
 function emptyPortalContainer(current: Fiber) {
@@ -1485,7 +1481,11 @@ function commitDeletion(
     // Detach refs and call componentWillUnmount() on the whole subtree.
     commitNestedUnmounts(finishedRoot, current, renderPriorityLevel);
   }
+  const alternate = current.alternate;
   detachFiber(current);
+  if (alternate !== null) {
+    detachFiber(alternate);
+  }
 }
 
 function commitWork(current: Fiber | null, finishedWork: Fiber): void {
