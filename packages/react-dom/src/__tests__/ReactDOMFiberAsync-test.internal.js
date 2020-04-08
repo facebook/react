@@ -639,9 +639,7 @@ describe('ReactDOMFiberAsync', () => {
       expect(container.textContent).toEqual('');
 
       // Everything should render immediately in the next event
-      expect(Scheduler).toFlushExpired(
-        __DEV__ ? ['A', 'A', 'B', 'B', 'C', 'C'] : ['A', 'B', 'C'],
-      );
+      expect(Scheduler).toFlushExpired(['A', 'B', 'C']);
       expect(container.textContent).toEqual('ABC');
     });
   });

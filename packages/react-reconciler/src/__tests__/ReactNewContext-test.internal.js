@@ -1103,9 +1103,7 @@ describe('ReactNewContext', () => {
 
       // Render the provider again using a different renderer
       ReactNoop.render(<App value={1} />);
-      expect(Scheduler).toFlushAndYield(
-        __DEV__ ? ['Foo', 'Foo', 'Foo', 'Foo'] : ['Foo', 'Foo'],
-      );
+      expect(Scheduler).toFlushAndYield(['Foo', 'Foo']);
 
       if (__DEV__) {
         expect(console.error.calls.argsFor(0)[0]).toContain(

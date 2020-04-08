@@ -1324,30 +1324,12 @@ describe('ReactUpdates', () => {
       let hiddenDiv;
       act(() => {
         root.render(<Foo />);
-        if (__DEV__) {
-          expect(Scheduler).toFlushAndYieldThrough([
-            'Foo',
-            'Foo',
-            'Baz',
-            'Baz',
-            'Foo#effect',
-          ]);
-        } else {
-          expect(Scheduler).toFlushAndYieldThrough([
-            'Foo',
-            'Baz',
-            'Foo#effect',
-          ]);
-        }
+        expect(Scheduler).toFlushAndYieldThrough(['Foo', 'Baz', 'Foo#effect']);
         hiddenDiv = container.firstChild.firstChild;
         expect(hiddenDiv.hidden).toBe(true);
         expect(hiddenDiv.innerHTML).toBe('');
         // Run offscreen update
-        if (__DEV__) {
-          expect(Scheduler).toFlushAndYield(['Bar', 'Bar']);
-        } else {
-          expect(Scheduler).toFlushAndYield(['Bar']);
-        }
+        expect(Scheduler).toFlushAndYield(['Bar']);
         expect(hiddenDiv.hidden).toBe(true);
         expect(hiddenDiv.innerHTML).toBe('<p>bar 0</p>');
       });
@@ -1359,11 +1341,7 @@ describe('ReactUpdates', () => {
       expect(hiddenDiv.innerHTML).toBe('<p>bar 0</p>');
 
       // Run offscreen update
-      if (__DEV__) {
-        expect(Scheduler).toFlushAndYield(['Bar', 'Bar']);
-      } else {
-        expect(Scheduler).toFlushAndYield(['Bar']);
-      }
+      expect(Scheduler).toFlushAndYield(['Bar']);
       expect(hiddenDiv.innerHTML).toBe('<p>bar 1</p>');
     },
   );
