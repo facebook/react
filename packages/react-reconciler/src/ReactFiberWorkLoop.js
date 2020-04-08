@@ -247,6 +247,8 @@ let pendingPassiveHookEffectsMount: Array<HookEffect | Fiber> = [];
 let pendingPassiveHookEffectsUnmount: Array<HookEffect | Fiber> = [];
 let pendingPassiveProfilerEffects: Array<Fiber> = [];
 
+let testFibers = [];
+
 let rootsWithPendingDiscreteUpdates: Map<
   FiberRoot,
   ExpirationTime,
@@ -1972,6 +1974,13 @@ function commitRootImpl(root, renderPriorityLevel) {
       nextEffect.nextEffect = null;
       nextEffect = nextNextEffect;
     }
+    for (let i = 0; i < testFibers.length; i++) {
+      if (testFibers[i].nextEffect !== null) {
+        // Leave this in to test it
+        debugger;
+      }
+    }
+    testFibers = [];
   }
 
   // Check if there's remaining work on this root
@@ -2137,6 +2146,7 @@ function commitMutationEffects(root: FiberRoot, renderPriorityLevel) {
       }
       case Deletion: {
         commitDeletion(root, nextEffect, renderPriorityLevel);
+        testFibers.push(nextEffect);
         break;
       }
     }
