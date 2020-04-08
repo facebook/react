@@ -271,7 +271,7 @@ export function updateContainer(
     }
   }
 
-  const update = createUpdate(expirationTime, suspenseConfig);
+  const update = createUpdate(currentTime, expirationTime, suspenseConfig);
   // Caution: React DevTools currently depends on this property
   // being called "element".
   update.payload = {element};

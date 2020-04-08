@@ -2843,6 +2843,9 @@ describe('ReactHooksWithNoopRenderer', () => {
           span('Before... Pending: true'),
         ]);
 
+        // Resolve the promise. The whole tree has now completed. However,
+        // because we exceeded the busy threshold, we won't commit the
+        // result yet.
         Scheduler.unstable_advanceTime(1000);
         await advanceTimers(1000);
         expect(Scheduler).toHaveYielded([
@@ -2853,13 +2856,16 @@ describe('ReactHooksWithNoopRenderer', () => {
           span('Before... Pending: true'),
         ]);
 
-        Scheduler.unstable_advanceTime(1000);
-        await advanceTimers(1000);
+        // Advance time until just before the `busyMinDuration` threshold.
+        Scheduler.unstable_advanceTime(999);
+        await advanceTimers(999);
         expect(ReactNoop.getChildren()).toEqual([
           span('Before... Pending: true'),
         ]);
-        Scheduler.unstable_advanceTime(250);
-        await advanceTimers(250);
+
+        // Advance time just a bit more. Now we complete the transition.
+        Scheduler.unstable_advanceTime(300);
+        await advanceTimers(300);
         expect(ReactNoop.getChildren()).toEqual([
           span('After... Pending: false'),
         ]);

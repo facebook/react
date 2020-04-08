@@ -35,6 +35,8 @@ export const Idle = 2;
 // Continuous Hydration is slightly higher than Idle and is used to increase
 // priority of hover targets.
 export const ContinuousHydration = 3;
+export const LongTransition = 49999;
+export const ShortTransition = 99999;
 export const Sync = MAX_SIGNED_31_BIT_INT;
 export const Batched = Sync - 1;
 
@@ -84,16 +86,13 @@ export function computeAsyncExpiration(
   );
 }
 
-export function computeSuspenseExpiration(
+export function computeSuspenseTimeout(
   currentTime: ExpirationTime,
   timeoutMs: number,
 ): ExpirationTime {
-  // TODO: Should we warn if timeoutMs is lower than the normal pri expiration time?
-  return computeExpirationBucket(
-    currentTime,
-    timeoutMs,
-    LOW_PRIORITY_BATCH_SIZE,
-  );
+  const currentTimeMs = expirationTimeToMs(currentTime);
+  const deadlineMs = currentTimeMs + timeoutMs;
+  return msToExpirationTime(deadlineMs);
 }
 
 // We intentionally set a higher expiration time for interactive updates in

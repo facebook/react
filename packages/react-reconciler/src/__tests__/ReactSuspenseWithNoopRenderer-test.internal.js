@@ -2580,22 +2580,17 @@ describe('ReactSuspenseWithNoopRenderer', () => {
         // but at this scope we should suspend for longer.
         Scheduler.unstable_next(() => ReactNoop.render(<App page="C" />));
       },
-      {timeoutMs: 2000},
+      {timeoutMs: 60000},
     );
-    expect(Scheduler).toFlushAndYield([
-      'Suspend! [C]',
-      'Loading...',
-      'Suspend! [C]',
-      'Loading...',
-    ]);
+    expect(Scheduler).toFlushAndYield(['B', 'Suspend! [C]', 'Loading...']);
     expect(ReactNoop.getChildren()).toEqual([span('B')]);
     Scheduler.unstable_advanceTime(1200);
     await advanceTimers(1200);
     // Even after a second, we have still not yet flushed the loading state.
     expect(ReactNoop.getChildren()).toEqual([span('B')]);
-    Scheduler.unstable_advanceTime(1200);
-    await advanceTimers(1200);
-    // After the two second timeout we show the loading state.
+    Scheduler.unstable_advanceTime(60000);
+    await advanceTimers(60000);
+    // After the timeout we show the loading state.
     expect(ReactNoop.getChildren()).toEqual([
       hiddenSpan('B'),
       span('Loading...'),
@@ -2698,23 +2693,6 @@ describe('ReactSuspenseWithNoopRenderer', () => {
   });
 
   it('supports delaying a busy spinner from disappearing', async () => {
-    function useLoadingIndicator(config) {
-      const [isLoading, setLoading] = React.useState(false);
-      const start = React.useCallback(
-        cb => {
-          setLoading(true);
-          Scheduler.unstable_next(() =>
-            React.unstable_withSuspenseConfig(() => {
-              setLoading(false);
-              cb();
-            }, config),
-          );
-        },
-        [setLoading, config],
-      );
-      return [isLoading, start];
-    }
-
     const SUSPENSE_CONFIG = {
       timeoutMs: 10000,
       busyDelayMs: 500,
@@ -2725,7 +2703,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
 
     function App() {
       const [page, setPage] = React.useState('A');
-      const [isLoading, startLoading] = useLoadingIndicator(SUSPENSE_CONFIG);
+      const [startLoading, isLoading] = React.useTransition(SUSPENSE_CONFIG);
       transitionToPage = nextPage => startLoading(() => setPage(nextPage));
       return (
         <Fragment>
@@ -2907,7 +2885,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
       () => {
         ReactNoop.render(<App showContent={true} />);
       },
-      {timeoutMs: 2000},
+      {timeoutMs: 2500},
     );
 
     expect(Scheduler).toFlushAndYield(['Suspend! [A]', 'Loading...']);
@@ -3763,12 +3741,17 @@ describe('ReactSuspenseWithNoopRenderer', () => {
   it.experimental(
     'does not get stuck in pending state with render phase updates',
     async () => {
-      let setTextWithTransition;
+      let setTextWithShortTransition;
+      let setTextWithLongTransition;
 
       function App() {
-        const [startTransition, isPending] = React.useTransition({
+        const [startShortTransition, isPending1] = React.useTransition({
+          timeoutMs: 5000,
+        });
+        const [startLongTransition, isPending2] = React.useTransition({
           timeoutMs: 30000,
         });
+        const isPending = isPending1 || isPending2;
         const [text, setText] = React.useState('');
         const [mirror, setMirror] = React.useState('');
 
@@ -3777,8 +3760,13 @@ describe('ReactSuspenseWithNoopRenderer', () => {
           setMirror(text);
         }
 
-        setTextWithTransition = value => {
-          startTransition(() => {
+        setTextWithShortTransition = value => {
+          startShortTransition(() => {
+            setText(value);
+          });
+        };
+        setTextWithLongTransition = value => {
+          startLongTransition(() => {
             setText(value);
           });
         };
@@ -3808,9 +3796,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
 
       // Update to "a". That will suspend.
       await ReactNoop.act(async () => {
-        setTextWithTransition('a');
-        // Let it expire. This is important for the repro.
-        Scheduler.unstable_advanceTime(1000);
+        setTextWithShortTransition('a');
         expect(Scheduler).toFlushAndYield([
           'Pending...',
           '',
@@ -3828,9 +3814,11 @@ describe('ReactSuspenseWithNoopRenderer', () => {
 
       // Update to "b". That will suspend, too.
       await ReactNoop.act(async () => {
-        setTextWithTransition('b');
+        setTextWithLongTransition('b');
         expect(Scheduler).toFlushAndYield([
           // Neither is resolved yet.
+          'Pending...',
+          '',
           'Pending...',
           'Suspend! [a]',
           'Loading...',
