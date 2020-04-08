@@ -392,12 +392,20 @@ describe('memo', () => {
         Outer.defaultProps = {outer: 0};
 
         // No warning expected because defaultProps satisfy both.
-        ReactNoop.render(<Outer />);
+        ReactNoop.render(
+          <div>
+            <Outer />
+          </div>,
+        );
         expect(Scheduler).toFlushWithoutYielding();
 
         // Mount
         expect(() => {
-          ReactNoop.render(<Outer inner="2" middle="3" outer="4" />);
+          ReactNoop.render(
+            <div>
+              <Outer inner="2" middle="3" outer="4" />
+            </div>,
+          );
           expect(Scheduler).toFlushWithoutYielding();
         }).toErrorDev([
           'Invalid prop `outer` of type `string` supplied to `Inner`, expected `number`.',
@@ -408,7 +416,9 @@ describe('memo', () => {
         // Update
         expect(() => {
           ReactNoop.render(
-            <Outer inner={false} middle={false} outer={false} />,
+            <div>
+              <Outer inner={false} middle={false} outer={false} />
+            </div>,
           );
           expect(Scheduler).toFlushWithoutYielding();
         }).toErrorDev([

@@ -17,7 +17,6 @@ import {
   FunctionComponent,
   IndeterminateComponent,
   ForwardRef,
-  MemoComponent,
   SimpleMemoComponent,
   Block,
   ClassComponent,
@@ -50,8 +49,6 @@ function describeFiber(fiber: Fiber): string {
       return describeFunctionComponentFrame(fiber.type, source, owner);
     case ForwardRef:
       return describeFunctionComponentFrame(fiber.type.render, source, owner);
-    case MemoComponent:
-      return describeFunctionComponentFrame(fiber.type.type, source, owner);
     case Block:
       return describeFunctionComponentFrame(fiber.type._render, source, owner);
     case ClassComponent:
