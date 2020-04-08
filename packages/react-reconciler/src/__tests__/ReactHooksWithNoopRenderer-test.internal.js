@@ -750,6 +750,41 @@ describe('ReactHooksWithNoopRenderer', () => {
       expect(root).toMatchRenderedOutput(<span prop="B:0" />);
     });
 
+    it('regression: render phase updates cause lower pri work to be dropped', async () => {
+      let setRow;
+      function ScrollView() {
+        const [row, _setRow] = useState(10);
+        setRow = _setRow;
+
+        const [scrollDirection, setScrollDirection] = useState('Up');
+        const [prevRow, setPrevRow] = useState(null);
+
+        if (prevRow !== row) {
+          setScrollDirection(prevRow !== null && row > prevRow ? 'Down' : 'Up');
+          setPrevRow(row);
+        }
+
+        return <Text text={scrollDirection} />;
+      }
+
+      const root = ReactNoop.createRoot();
+
+      await act(async () => {
+        root.render(<ScrollView row={10} />);
+      });
+      expect(Scheduler).toHaveYielded(['Up']);
+      expect(root).toMatchRenderedOutput(<span prop="Up" />);
+
+      await act(async () => {
+        ReactNoop.discreteUpdates(() => {
+          setRow(5);
+        });
+        setRow(20);
+      });
+      expect(Scheduler).toHaveYielded(['Up', 'Down']);
+      expect(root).toMatchRenderedOutput(<span prop="Down" />);
+    });
+
     // TODO: This should probably warn
     it.experimental('calling startTransition inside render phase', async () => {
       let startTransition;

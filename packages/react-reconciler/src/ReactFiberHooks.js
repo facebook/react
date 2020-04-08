@@ -230,6 +230,11 @@ let workInProgressHook: Hook | null = null;
 // finished evaluating this component. This is an optimization so we know
 // whether we need to clear render phase updates after a throw.
 let didScheduleRenderPhaseUpdate: boolean = false;
+// Where an update was scheduled only during the current render pass. This
+// gets reset after each attempt.
+// TODO: Maybe there's some way to consolidate this with
+// `didScheduleRenderPhaseUpdate`. Or with `numberOfReRenders`.
+let didScheduleRenderPhaseUpdateDuringThisPass: boolean = false;
 
 const RE_RENDER_LIMIT = 25;
 
@@ -455,13 +460,12 @@ export function renderWithHooks<Props, SecondArg>(
   let children = Component(props, secondArg);
 
   // Check if there was a render phase update
-  if (workInProgress.expirationTime === renderExpirationTime) {
+  if (didScheduleRenderPhaseUpdateDuringThisPass) {
     // Keep rendering in a loop for as long as render phase updates continue to
     // be scheduled. Use a counter to prevent infinite loops.
     let numberOfReRenders: number = 0;
     do {
-      workInProgress.expirationTime = NoWork;
-
+      didScheduleRenderPhaseUpdateDuringThisPass = false;
       invariant(
         numberOfReRenders < RE_RENDER_LIMIT,
         'Too many re-renders. React limits the number of renders to prevent ' +
@@ -491,7 +495,7 @@ export function renderWithHooks<Props, SecondArg>(
         : HooksDispatcherOnRerender;
 
       children = Component(props, secondArg);
-    } while (workInProgress.expirationTime === renderExpirationTime);
+    } while (didScheduleRenderPhaseUpdateDuringThisPass);
   }
 
   // We can assume the previous dispatcher is always this one, since we set it
@@ -564,6 +568,7 @@ export function resetHooksAfterThrow(): void {
       }
       hook = hook.next;
     }
+    didScheduleRenderPhaseUpdate = false;
   }
 
   renderExpirationTime = NoWork;
@@ -581,7 +586,7 @@ export function resetHooksAfterThrow(): void {
     isUpdatingOpaqueValueInRenderPhase = false;
   }
 
-  didScheduleRenderPhaseUpdate = false;
+  didScheduleRenderPhaseUpdateDuringThisPass = false;
 }
 
 function mountWorkInProgressHook(): Hook {
@@ -1726,9 +1731,8 @@ function dispatchAction<S, A>(
     // This is a render phase update. Stash it in a lazily-created map of
     // queue -> linked list of updates. After this render pass, we'll restart
     // and apply the stashed updates on top of the work-in-progress hook.
-    didScheduleRenderPhaseUpdate = true;
+    didScheduleRenderPhaseUpdateDuringThisPass = didScheduleRenderPhaseUpdate = true;
     update.expirationTime = renderExpirationTime;
-    currentlyRenderingFiber.expirationTime = renderExpirationTime;
   } else {
     if (
       fiber.expirationTime === NoWork &&
