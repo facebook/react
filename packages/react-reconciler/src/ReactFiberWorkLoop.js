@@ -2273,6 +2273,8 @@ function flushPassiveEffectsImpl() {
     for (let i = 0; i < unmountEffects.length; i += 2) {
       const effect = ((unmountEffects[i]: any): HookEffect);
       const fiber = ((unmountEffects[i + 1]: any): Fiber);
+      // Remove nextEffect pointer to assist GC
+      fiber.nextEffect = null;
       const destroy = effect.destroy;
       effect.destroy = undefined;
       if (typeof destroy === 'function') {
@@ -2324,6 +2326,8 @@ function flushPassiveEffectsImpl() {
     for (let i = 0; i < mountEffects.length; i += 2) {
       const effect = ((mountEffects[i]: any): HookEffect);
       const fiber = ((mountEffects[i + 1]: any): Fiber);
+      // Remove nextEffect pointer to assist GC
+      fiber.nextEffect = null;
       if (__DEV__) {
         setCurrentDebugFiberInDEV(fiber);
         if (
