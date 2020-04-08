@@ -856,7 +856,7 @@ function updateClassComponent(
   );
   if (__DEV__) {
     const inst = workInProgress.stateNode;
-    if (inst.props !== nextProps) {
+    if (shouldUpdate && inst.props !== nextProps) {
       if (!didWarnAboutReassigningProps) {
         console.error(
           'It looks like %s is reassigning its own `this.props` while rendering. ' +

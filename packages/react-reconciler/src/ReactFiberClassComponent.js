@@ -1075,7 +1075,6 @@ function updateClassInstance(
         workInProgress.effectTag |= Snapshot;
       }
     }
-    instance.props = workInProgress.memoizedProps = newProps;
     return false;
   }
 
