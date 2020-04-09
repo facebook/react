@@ -198,4 +198,4 @@
       window.parent.postMessage(JSON.stringify({type: 'ready'}), '*');
     })
     .catch(handleError);
-})();
+}());
