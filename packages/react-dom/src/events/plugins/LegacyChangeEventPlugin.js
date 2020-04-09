@@ -7,7 +7,7 @@
 
 import {runEventsInBatch} from 'legacy-events/EventBatching';
 import SyntheticEvent from 'legacy-events/SyntheticEvent';
-import isTextInputElement from './isTextInputElement';
+import isTextInputElement from '../isTextInputElement';
 import {canUseDOM} from 'shared/ExecutionEnvironment';
 
 import {
@@ -19,21 +19,21 @@ import {
   TOP_KEY_DOWN,
   TOP_KEY_UP,
   TOP_SELECTION_CHANGE,
-} from './DOMTopLevelEventTypes';
-import getEventTarget from './getEventTarget';
-import isEventSupported from './isEventSupported';
-import {getNodeFromInstance} from '../client/ReactDOMComponentTree';
-import {updateValueIfChanged} from '../client/inputValueTracking';
-import {setDefaultValue} from '../client/ReactDOMInput';
-import {enqueueStateRestore} from './ReactDOMControlledComponent';
+} from '../DOMTopLevelEventTypes';
+import getEventTarget from '../getEventTarget';
+import isEventSupported from '../isEventSupported';
+import {getNodeFromInstance} from '../../client/ReactDOMComponentTree';
+import {updateValueIfChanged} from '../../client/inputValueTracking';
+import {setDefaultValue} from '../../client/ReactDOMInput';
+import {enqueueStateRestore} from '../ReactDOMControlledComponent';
 
 import {
   disableInputAttributeSyncing,
   enableModernEventSystem,
 } from 'shared/ReactFeatureFlags';
-import accumulateTwoPhaseListeners from './accumulateTwoPhaseListeners';
-import {batchedUpdates} from './ReactDOMUpdateBatching';
-import {dispatchEventsInBatch} from './DOMModernPluginEventSystem';
+import accumulateTwoPhaseListeners from '../accumulateTwoPhaseListeners';
+import {batchedUpdates} from '../ReactDOMUpdateBatching';
+import {dispatchEventsInBatch} from '../DOMModernPluginEventSystem';
 
 const eventTypes = {
   change: {

@@ -10,21 +10,21 @@ import {
   TOP_MOUSE_OVER,
   TOP_POINTER_OUT,
   TOP_POINTER_OVER,
-} from './DOMTopLevelEventTypes';
+} from '../DOMTopLevelEventTypes';
 import {
   IS_REPLAYED,
   IS_FIRST_ANCESTOR,
 } from 'react-dom/src/events/EventSystemFlags';
-import SyntheticMouseEvent from './SyntheticMouseEvent';
-import SyntheticPointerEvent from './SyntheticPointerEvent';
+import SyntheticMouseEvent from '../SyntheticMouseEvent';
+import SyntheticPointerEvent from '../SyntheticPointerEvent';
 import {
   getClosestInstanceFromNode,
   getNodeFromInstance,
-} from '../client/ReactDOMComponentTree';
+} from '../../client/ReactDOMComponentTree';
 import {HostComponent, HostText} from 'react-reconciler/src/ReactWorkTags';
 import {getNearestMountedFiber} from 'react-reconciler/src/ReactFiberTreeReflection';
 import {enableModernEventSystem} from 'shared/ReactFeatureFlags';
-import accumulateEnterLeaveListeners from './accumulateEnterLeaveListeners';
+import accumulateEnterLeaveListeners from '../accumulateEnterLeaveListeners';
 
 const eventTypes = {
   mouseEnter: {

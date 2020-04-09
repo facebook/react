@@ -14,31 +14,31 @@ import type {
 import type {ReactSyntheticEvent} from 'legacy-events/ReactSyntheticEventType';
 import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
 import type {PluginModule} from 'legacy-events/PluginModuleType';
-import type {EventSystemFlags} from './EventSystemFlags';
+import type {EventSystemFlags} from '../EventSystemFlags';
 
 import SyntheticEvent from 'legacy-events/SyntheticEvent';
-import {IS_TARGET_PHASE_ONLY} from './EventSystemFlags';
+import {IS_TARGET_PHASE_ONLY} from '../EventSystemFlags';
 
-import * as DOMTopLevelEventTypes from './DOMTopLevelEventTypes';
+import * as DOMTopLevelEventTypes from '../DOMTopLevelEventTypes';
 import {
   topLevelEventsToDispatchConfig,
   simpleEventPluginEventTypes,
-} from './DOMEventProperties';
+} from '../DOMEventProperties';
 
-import SyntheticAnimationEvent from './SyntheticAnimationEvent';
-import SyntheticClipboardEvent from './SyntheticClipboardEvent';
-import SyntheticFocusEvent from './SyntheticFocusEvent';
-import SyntheticKeyboardEvent from './SyntheticKeyboardEvent';
-import SyntheticMouseEvent from './SyntheticMouseEvent';
-import SyntheticPointerEvent from './SyntheticPointerEvent';
-import SyntheticDragEvent from './SyntheticDragEvent';
-import SyntheticTouchEvent from './SyntheticTouchEvent';
-import SyntheticTransitionEvent from './SyntheticTransitionEvent';
-import SyntheticUIEvent from './SyntheticUIEvent';
-import SyntheticWheelEvent from './SyntheticWheelEvent';
-import getEventCharCode from './getEventCharCode';
-import accumulateTwoPhaseListeners from './accumulateTwoPhaseListeners';
-import accumulateEventTargetListeners from './accumulateEventTargetListeners';
+import SyntheticAnimationEvent from '../SyntheticAnimationEvent';
+import SyntheticClipboardEvent from '../SyntheticClipboardEvent';
+import SyntheticFocusEvent from '../SyntheticFocusEvent';
+import SyntheticKeyboardEvent from '../SyntheticKeyboardEvent';
+import SyntheticMouseEvent from '../SyntheticMouseEvent';
+import SyntheticPointerEvent from '../SyntheticPointerEvent';
+import SyntheticDragEvent from '../SyntheticDragEvent';
+import SyntheticTouchEvent from '../SyntheticTouchEvent';
+import SyntheticTransitionEvent from '../SyntheticTransitionEvent';
+import SyntheticUIEvent from '../SyntheticUIEvent';
+import SyntheticWheelEvent from '../SyntheticWheelEvent';
+import getEventCharCode from '../getEventCharCode';
+import accumulateTwoPhaseListeners from '../accumulateTwoPhaseListeners';
+import accumulateEventTargetListeners from '../accumulateEventTargetListeners';
 
 import {enableUseEventAPI} from 'shared/ReactFeatureFlags';
 
