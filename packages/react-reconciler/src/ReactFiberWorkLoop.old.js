@@ -1527,7 +1527,6 @@ function performUnitOfWork(unitOfWork: Fiber): Fiber | null {
 function completeUnitOfWork(unitOfWork: Fiber): Fiber | null {
   // Attempt to complete the current unit of work, then move to the next
   // sibling. If there are no more siblings, return to the parent fiber.
-  workInProgress = unitOfWork;
   do {
     // The current, flushed, state of this fiber is the alternate. Ideally
     // nothing should rely on this, but relying on it here means that we don't
