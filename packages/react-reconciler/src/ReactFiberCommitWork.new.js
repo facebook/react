@@ -1118,6 +1118,7 @@ function detachFiber(fiber: Fiber) {
   // itself will be GC:ed when the parent updates the next time.
   fiber.return = null;
   fiber.child = null;
+  fiber.sibling = null;
   fiber.memoizedState = null;
   fiber.updateQueue = null;
   fiber.dependencies = null;
@@ -1127,6 +1128,9 @@ function detachFiber(fiber: Fiber) {
   fiber.pendingProps = null;
   fiber.memoizedProps = null;
   fiber.stateNode = null;
+  if (__DEV__) {
+    fiber._debugOwner = null;
+  }
 }
 
 function emptyPortalContainer(current: Fiber) {
