@@ -25,6 +25,7 @@ export const {
   replayFailedUnitOfWorkWithInvokeGuardedCallback,
   enableModernEventSystem,
   enableFilterEmptyStringAttributesDOM,
+  enableLegacyFBSupport,
 } = dynamicFeatureFlags;
 
 // On WWW, __EXPERIMENTAL__ is used for a new modern build.
@@ -68,8 +69,6 @@ export const flushSuspenseFallbacksInTests = true;
 export const disableTextareaChildren = __EXPERIMENTAL__;
 
 export const warnUnstableRenderSubtreeIntoContainer = false;
-
-export const enableLegacyFBSupport = !__EXPERIMENTAL__;
 
 // Internal-only attempt to debug a React Native issue. See D20130868.
 export const throwEarlyForMysteriousError = false;
