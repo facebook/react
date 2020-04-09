@@ -9,7 +9,7 @@
 
 import type {Fiber} from './ReactInternalTypes';
 import type {SuspenseInstance} from './ReactFiberHostConfig';
-import type {ExpirationTime} from './ReactFiberExpirationTime';
+import type {ExpirationTime} from './ReactFiberExpirationTime.new';
 import {SuspenseComponent, SuspenseListComponent} from './ReactWorkTags';
 import {NoEffect, DidCapture} from './ReactSideEffectTags';
 import {

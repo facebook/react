@@ -9,7 +9,7 @@
 
 import type {Wakeable} from 'shared/ReactTypes';
 import type {Fiber, FiberRoot} from './ReactInternalTypes';
-import type {ExpirationTime} from './ReactFiberExpirationTime';
+import type {ExpirationTime} from './ReactFiberExpirationTime.old';
 import type {ReactPriorityLevel} from './ReactInternalTypes';
 import type {Interaction} from 'scheduler/src/Tracing';
 import type {SuspenseConfig} from './ReactFiberSuspenseConfig';
@@ -124,7 +124,7 @@ import {
   LOW_PRIORITY_EXPIRATION,
   Batched,
   Idle,
-} from './ReactFiberExpirationTime';
+} from './ReactFiberExpirationTime.old';
 import {beginWork as originalBeginWork} from './ReactFiberBeginWork.old';
 import {completeWork} from './ReactFiberCompleteWork.old';
 import {unwindWork, unwindInterruptedWork} from './ReactFiberUnwindWork.old';

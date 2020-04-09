@@ -9,7 +9,7 @@
 
 import type {Fiber} from './ReactInternalTypes';
 import type {FiberRoot} from './ReactInternalTypes';
-import type {ExpirationTime} from './ReactFiberExpirationTime';
+import type {ExpirationTime} from './ReactFiberExpirationTime.new';
 import type {CapturedValue} from './ReactCapturedValue';
 import type {Update} from './ReactUpdateQueue.new';
 import type {Wakeable} from 'shared/ReactTypes';
@@ -56,7 +56,7 @@ import {
 } from './ReactFiberWorkLoop.new';
 import {logCapturedError} from './ReactFiberErrorLogger';
 
-import {Sync} from './ReactFiberExpirationTime';
+import {Sync} from './ReactFiberExpirationTime.new';
 
 const PossiblyWeakMap = typeof WeakMap === 'function' ? WeakMap : Map;
 

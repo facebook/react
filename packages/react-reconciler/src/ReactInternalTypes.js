@@ -25,7 +25,7 @@ import type {
 import type {WorkTag} from './ReactWorkTags';
 import type {TypeOfMode} from './ReactTypeOfMode';
 import type {SideEffectTag} from './ReactSideEffectTags';
-import type {ExpirationTime} from './ReactFiberExpirationTime';
+import type {ExpirationTime} from './ReactFiberExpirationTime.old';
 // import type {UpdateQueue} from './ReactUpdateQueue.old';
 import type {HookType} from './ReactFiberHooks.old';
 import type {RootTag} from './ReactRootTags';

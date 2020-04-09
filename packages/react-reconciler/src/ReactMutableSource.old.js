@@ -7,12 +7,12 @@
  * @flow
  */
 
-import type {ExpirationTime} from './ReactFiberExpirationTime';
+import type {ExpirationTime} from './ReactFiberExpirationTime.old';
 import type {FiberRoot} from './ReactInternalTypes';
 import type {MutableSource, MutableSourceVersion} from 'shared/ReactTypes';
 
 import {isPrimaryRenderer} from './ReactFiberHostConfig';
-import {NoWork} from './ReactFiberExpirationTime';
+import {NoWork} from './ReactFiberExpirationTime.old';
 
 // Work in progress version numbers only apply to a single render,
 // and should be reset before starting a new render.

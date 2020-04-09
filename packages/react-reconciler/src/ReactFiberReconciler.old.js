@@ -19,7 +19,7 @@ import type {
 import type {RendererInspectionConfig} from './ReactFiberHostConfig';
 import {FundamentalComponent} from './ReactWorkTags';
 import type {ReactNodeList, Thenable} from 'shared/ReactTypes';
-import type {ExpirationTime} from './ReactFiberExpirationTime';
+import type {ExpirationTime} from './ReactFiberExpirationTime.old';
 import type {SuspenseState} from './ReactFiberSuspenseComponent.old';
 
 import {
@@ -76,7 +76,7 @@ import {
   Sync,
   ContinuousHydration,
   computeInteractiveExpiration,
-} from './ReactFiberExpirationTime';
+} from './ReactFiberExpirationTime.old';
 import {requestCurrentSuspenseConfig} from './ReactFiberSuspenseConfig';
 import {
   scheduleRefresh,

@@ -8,12 +8,12 @@
  */
 
 import type {FiberRoot, SuspenseHydrationCallbacks} from './ReactInternalTypes';
-import type {ExpirationTime} from './ReactFiberExpirationTime';
+import type {ExpirationTime} from './ReactFiberExpirationTime.new';
 import type {RootTag} from './ReactRootTags';
 
 import {noTimeout} from './ReactFiberHostConfig';
 import {createHostRootFiber} from './ReactFiber.new';
-import {NoWork} from './ReactFiberExpirationTime';
+import {NoWork} from './ReactFiberExpirationTime.new';
 import {
   enableSchedulerTracing,
   enableSuspenseCallback,

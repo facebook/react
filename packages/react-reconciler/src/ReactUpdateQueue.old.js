@@ -85,11 +85,11 @@
 // resources, but the final state is always the same.
 
 import type {Fiber} from './ReactInternalTypes';
-import type {ExpirationTime} from './ReactFiberExpirationTime';
+import type {ExpirationTime} from './ReactFiberExpirationTime.old';
 import type {SuspenseConfig} from './ReactFiberSuspenseConfig';
 import type {ReactPriorityLevel} from './ReactInternalTypes';
 
-import {NoWork, Sync} from './ReactFiberExpirationTime';
+import {NoWork, Sync} from './ReactFiberExpirationTime.old';
 import {
   enterDisallowedContextReadInDEV,
   exitDisallowedContextReadInDEV,

@@ -18,7 +18,7 @@ import type {Fiber} from './ReactInternalTypes';
 import type {RootTag} from './ReactRootTags';
 import type {WorkTag} from './ReactWorkTags';
 import type {TypeOfMode} from './ReactTypeOfMode';
-import type {ExpirationTime} from './ReactFiberExpirationTime';
+import type {ExpirationTime} from './ReactFiberExpirationTime.old';
 import type {SuspenseInstance} from './ReactFiberHostConfig';
 
 import invariant from 'shared/invariant';
@@ -63,7 +63,7 @@ import {
   resolveFunctionForHotReloading,
   resolveForwardRefForHotReloading,
 } from './ReactFiberHotReloading.old';
-import {NoWork} from './ReactFiberExpirationTime';
+import {NoWork} from './ReactFiberExpirationTime.old';
 import {
   NoMode,
   ConcurrentMode,

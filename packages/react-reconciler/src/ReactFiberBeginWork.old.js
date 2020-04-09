@@ -12,7 +12,7 @@ import type {BlockComponent} from 'react/src/ReactBlock';
 import type {LazyComponent as LazyComponentType} from 'react/src/ReactLazy';
 import type {Fiber} from './ReactInternalTypes';
 import type {FiberRoot} from './ReactInternalTypes';
-import type {ExpirationTime} from './ReactFiberExpirationTime';
+import type {ExpirationTime} from './ReactFiberExpirationTime.old';
 import type {
   SuspenseState,
   SuspenseListRenderState,
@@ -100,7 +100,7 @@ import {
   Never,
   Sync,
   computeAsyncExpiration,
-} from './ReactFiberExpirationTime';
+} from './ReactFiberExpirationTime.old';
 import {
   ConcurrentMode,
   NoMode,

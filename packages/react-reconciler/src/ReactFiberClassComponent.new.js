@@ -8,7 +8,7 @@
  */
 
 import type {Fiber} from './ReactInternalTypes';
-import type {ExpirationTime} from './ReactFiberExpirationTime';
+import type {ExpirationTime} from './ReactFiberExpirationTime.new';
 import type {UpdateQueue} from './ReactUpdateQueue.new';
 
 import * as React from 'react';
@@ -40,7 +40,7 @@ import {
   initializeUpdateQueue,
   cloneUpdateQueue,
 } from './ReactUpdateQueue.new';
-import {NoWork} from './ReactFiberExpirationTime';
+import {NoWork} from './ReactFiberExpirationTime.new';
 import {
   cacheContext,
   getMaskedContext,

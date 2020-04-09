@@ -12,7 +12,7 @@ import type {ReactPortal} from 'shared/ReactTypes';
 import type {BlockComponent} from 'react/src/ReactBlock';
 import type {LazyComponent} from 'react/src/ReactLazy';
 import type {Fiber} from './ReactInternalTypes';
-import type {ExpirationTime} from './ReactFiberExpirationTime';
+import type {ExpirationTime} from './ReactFiberExpirationTime.new';
 
 import getComponentName from 'shared/getComponentName';
 import {Placement, Deletion} from './ReactSideEffectTags';

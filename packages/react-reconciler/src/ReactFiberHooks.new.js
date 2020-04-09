@@ -17,7 +17,7 @@ import type {
   ReactScopeMethods,
 } from 'shared/ReactTypes';
 import type {Fiber, Dispatcher} from './ReactInternalTypes';
-import type {ExpirationTime} from './ReactFiberExpirationTime';
+import type {ExpirationTime} from './ReactFiberExpirationTime.new';
 import type {HookEffectTag} from './ReactHookEffectTags';
 import type {SuspenseConfig} from './ReactFiberSuspenseConfig';
 import type {ReactPriorityLevel} from './ReactInternalTypes';
@@ -33,7 +33,7 @@ import ReactSharedInternals from 'shared/ReactSharedInternals';
 import {enableUseEventAPI} from 'shared/ReactFeatureFlags';
 
 import {markRootExpiredAtTime} from './ReactFiberRoot.new';
-import {NoWork, Sync} from './ReactFiberExpirationTime';
+import {NoWork, Sync} from './ReactFiberExpirationTime.new';
 import {NoMode, BlockingMode} from './ReactTypeOfMode';
 import {readContext} from './ReactFiberNewContext.new';
 import {createDeprecatedResponderListener} from './ReactFiberDeprecatedEvents.new';
