@@ -182,12 +182,6 @@ describe('ReactIncrementalTriangle', () => {
     class Triangle extends React.Component {
       constructor(props) {
         super();
-        this.index = triangles.length;
-        triangles.push(this);
-        if (props.remainingDepth === 0) {
-          this.leafIndex = leafTriangles.length;
-          leafTriangles.push(this);
-        }
         this.state = {isActive: false};
         this.child = React.createRef(null);
       }
@@ -203,6 +197,14 @@ describe('ReactIncrementalTriangle', () => {
           this.props.activeDepth !== nextProps.activeDepth ||
           this.state.isActive !== nextState.isActive
         );
+      }
+      componentDidMount() {
+        this.index = triangles.length;
+        triangles.push(this);
+        if (this.props.remainingDepth === 0) {
+          this.leafIndex = leafTriangles.length;
+          leafTriangles.push(this);
+        }
       }
       componentDidUpdate() {
         if (this.child.current !== null) {
