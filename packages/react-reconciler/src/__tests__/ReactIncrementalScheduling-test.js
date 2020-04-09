@@ -11,15 +11,13 @@
 'use strict';
 
 let React;
-let ReactFeatureFlags;
 let ReactNoop;
 let Scheduler;
 
 describe('ReactIncrementalScheduling', () => {
   beforeEach(() => {
     jest.resetModules();
-    ReactFeatureFlags = require('shared/ReactFeatureFlags');
-    ReactFeatureFlags.debugRenderPhaseSideEffectsForStrictMode = false;
+
     React = require('react');
     ReactNoop = require('react-noop-renderer');
     Scheduler = require('scheduler');
@@ -324,11 +322,10 @@ describe('ReactIncrementalScheduling', () => {
 
   it('nested updates are always deferred, even inside unbatchedUpdates', () => {
     let instance;
-    const ops = [];
     class Foo extends React.Component {
       state = {step: 0};
       componentDidUpdate() {
-        ops.push('componentDidUpdate: ' + this.state.step);
+        Scheduler.unstable_yieldValue('componentDidUpdate: ' + this.state.step);
         if (this.state.step === 1) {
           ReactNoop.unbatchedUpdates(() => {
             // This is a nested state update, so it should not be
@@ -336,30 +333,27 @@ describe('ReactIncrementalScheduling', () => {
             // in unbatchedUpdates.
             this.setState({step: 2});
           });
+          expect(Scheduler).toHaveYielded([
+            'render: 1',
+            'componentDidUpdate: 1',
+          ]);
           expect(ReactNoop).toMatchRenderedOutput(<span prop={1} />);
         }
       }
       render() {
-        ops.push('render: ' + this.state.step);
+        Scheduler.unstable_yieldValue('render: ' + this.state.step);
         instance = this;
         return <span prop={this.state.step} />;
       }
     }
     ReactNoop.render(<Foo />);
-    expect(Scheduler).toFlushWithoutYielding();
+    expect(Scheduler).toFlushAndYield(['render: 0']);
     expect(ReactNoop).toMatchRenderedOutput(<span prop={0} />);
 
     ReactNoop.flushSync(() => {
       instance.setState({step: 1});
     });
+    expect(Scheduler).toHaveYielded(['render: 2', 'componentDidUpdate: 2']);
     expect(ReactNoop).toMatchRenderedOutput(<span prop={2} />);
-
-    expect(ops).toEqual([
-      'render: 0',
-      'render: 1',
-      'componentDidUpdate: 1',
-      'render: 2',
-      'componentDidUpdate: 2',
-    ]);
   });
 });

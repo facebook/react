@@ -34,7 +34,7 @@ const setUntrackedTextareaValue = Object.getOwnPropertyDescriptor(
 const modulesInit = () => {
   ReactFeatureFlags = require('shared/ReactFeatureFlags');
   ReactFeatureFlags.enableDeprecatedFlareAPI = true;
-  ReactFeatureFlags.debugRenderPhaseSideEffectsForStrictMode = false;
+
   React = require('react');
   ReactDOM = require('react-dom');
   Scheduler = require('scheduler');
@@ -797,8 +797,6 @@ describe('Input event responder', () => {
         const root = ReactDOM.createRoot(container);
         let input;
 
-        let ops = [];
-
         function Component({innerRef, onChange, controlledValue}) {
           const listener = useInput({
             onChange,
@@ -817,7 +815,7 @@ describe('Input event responder', () => {
           state = {value: 'initial'};
           onChange = event => this.setState({value: event.target.value});
           render() {
-            ops.push(`render: ${this.state.value}`);
+            Scheduler.unstable_yieldValue(`render: ${this.state.value}`);
             const controlledValue =
               this.state.value === 'changed' ? 'changed [!]' : this.state.value;
             return (
@@ -833,14 +831,11 @@ describe('Input event responder', () => {
         // Initial mount. Test that this is async.
         root.render(<ControlledInput />);
         // Should not have flushed yet.
-        expect(ops).toEqual([]);
+        expect(Scheduler).toHaveYielded([]);
         expect(input).toBe(undefined);
         // Flush callbacks.
-        Scheduler.unstable_flushAll();
-        expect(ops).toEqual(['render: initial']);
+        expect(Scheduler).toFlushAndYield(['render: initial']);
         expect(input.value).toBe('initial');
-
-        ops = [];
 
         // Trigger a change event.
         setUntrackedValue.call(input, 'changed');
@@ -848,7 +843,7 @@ describe('Input event responder', () => {
           new Event('input', {bubbles: true, cancelable: true}),
         );
         // Change should synchronously flush
-        expect(ops).toEqual(['render: changed']);
+        expect(Scheduler).toHaveYielded(['render: changed']);
         // Value should be the controlled value, not the original one
         expect(input.value).toBe('changed [!]');
       });
@@ -856,8 +851,6 @@ describe('Input event responder', () => {
       it.experimental('checkbox input', () => {
         const root = ReactDOM.createRoot(container);
         let input;
-
-        let ops = [];
 
         function Component({innerRef, onChange, controlledValue}) {
           const listener = useInput({
@@ -879,7 +872,7 @@ describe('Input event responder', () => {
             this.setState({checked: event.target.checked});
           };
           render() {
-            ops.push(`render: ${this.state.checked}`);
+            Scheduler.unstable_yieldValue(`render: ${this.state.checked}`);
             const controlledValue = this.props.reverse
               ? !this.state.checked
               : this.state.checked;
@@ -896,43 +889,36 @@ describe('Input event responder', () => {
         // Initial mount. Test that this is async.
         root.render(<ControlledInput reverse={false} />);
         // Should not have flushed yet.
-        expect(ops).toEqual([]);
+        expect(Scheduler).toHaveYielded([]);
         expect(input).toBe(undefined);
         // Flush callbacks.
-        Scheduler.unstable_flushAll();
-        expect(ops).toEqual(['render: false']);
+        expect(Scheduler).toFlushAndYield(['render: false']);
         expect(input.checked).toBe(false);
-
-        ops = [];
 
         // Trigger a change event.
         input.dispatchEvent(
           new MouseEvent('click', {bubbles: true, cancelable: true}),
         );
         // Change should synchronously flush
-        expect(ops).toEqual(['render: true']);
+        expect(Scheduler).toHaveYielded(['render: true']);
         expect(input.checked).toBe(true);
 
         // Now let's make sure we're using the controlled value.
         root.render(<ControlledInput reverse={true} />);
-        Scheduler.unstable_flushAll();
-
-        ops = [];
+        expect(Scheduler).toFlushAndYield(['render: true']);
 
         // Trigger another change event.
         input.dispatchEvent(
           new MouseEvent('click', {bubbles: true, cancelable: true}),
         );
         // Change should synchronously flush
-        expect(ops).toEqual(['render: true']);
+        expect(Scheduler).toHaveYielded(['render: true']);
         expect(input.checked).toBe(false);
       });
 
       it.experimental('textarea', () => {
         const root = ReactDOM.createRoot(container);
         let textarea;
-
-        let ops = [];
 
         function Component({innerRef, onChange, controlledValue}) {
           const listener = useInput({
@@ -952,7 +938,7 @@ describe('Input event responder', () => {
           state = {value: 'initial'};
           onChange = event => this.setState({value: event.target.value});
           render() {
-            ops.push(`render: ${this.state.value}`);
+            Scheduler.unstable_yieldValue(`render: ${this.state.value}`);
             const controlledValue =
               this.state.value === 'changed' ? 'changed [!]' : this.state.value;
             return (
@@ -968,14 +954,11 @@ describe('Input event responder', () => {
         // Initial mount. Test that this is async.
         root.render(<ControlledTextarea />);
         // Should not have flushed yet.
-        expect(ops).toEqual([]);
+        expect(Scheduler).toHaveYielded([]);
         expect(textarea).toBe(undefined);
         // Flush callbacks.
-        Scheduler.unstable_flushAll();
-        expect(ops).toEqual(['render: initial']);
+        expect(Scheduler).toFlushAndYield(['render: initial']);
         expect(textarea.value).toBe('initial');
-
-        ops = [];
 
         // Trigger a change event.
         setUntrackedTextareaValue.call(textarea, 'changed');
@@ -983,7 +966,7 @@ describe('Input event responder', () => {
           new Event('input', {bubbles: true, cancelable: true}),
         );
         // Change should synchronously flush
-        expect(ops).toEqual(['render: changed']);
+        expect(Scheduler).toHaveYielded(['render: changed']);
         // Value should be the controlled value, not the original one
         expect(textarea.value).toBe('changed [!]');
       });

@@ -1219,7 +1219,7 @@ describe('ReactNewContext', () => {
       spyOnDev(console, 'error');
       const Context = React.createContext(0);
       ReactNoop.render(<Context.Consumer />);
-      expect(Scheduler).toFlushAndThrow('render is not a function');
+      expect(Scheduler).toFlushAndThrow('is not a function');
       if (__DEV__) {
         expect(console.error.calls.argsFor(0)[0]).toContain(
           'A context consumer was rendered with multiple children, or a child ' +

@@ -499,17 +499,17 @@ function updateSimpleMemoComponent(
         } catch (x) {
           outerMemoType = null;
         }
+        // Inner propTypes will be validated in the function component path.
+        const outerPropTypes = outerMemoType && (outerMemoType: any).propTypes;
+        if (outerPropTypes) {
+          checkPropTypes(
+            outerPropTypes,
+            nextProps, // Resolved (SimpleMemoComponent has no defaultProps)
+            'prop',
+            getComponentName(outerMemoType),
+          );
+        }
       }
-      const outerPropTypes = outerMemoType && (outerMemoType: any).propTypes;
-      if (outerPropTypes) {
-        checkPropTypes(
-          outerPropTypes,
-          nextProps, // Resolved (SimpleMemoComponent has no defaultProps)
-          'prop',
-          getComponentName(outerMemoType),
-        );
-      }
-      // Inner propTypes will be validated in the function component path.
     }
   }
   if (current !== null) {

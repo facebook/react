@@ -11,15 +11,13 @@
 'use strict';
 
 let React;
-let ReactFeatureFlags;
 let ReactNoop;
 let Scheduler;
 
 describe('ReactIncrementalUpdates', () => {
   beforeEach(() => {
     jest.resetModuleRegistry();
-    ReactFeatureFlags = require('shared/ReactFeatureFlags');
-    ReactFeatureFlags.debugRenderPhaseSideEffectsForStrictMode = false;
+
     React = require('react');
     ReactNoop = require('react-noop-renderer');
     Scheduler = require('scheduler');
@@ -79,24 +77,23 @@ describe('ReactIncrementalUpdates', () => {
 
   it('only drops updates with equal or lesser priority when replaceState is called', () => {
     let instance;
-    let ops = [];
     class Foo extends React.Component {
       state = {};
       componentDidMount() {
-        ops.push('componentDidMount');
+        Scheduler.unstable_yieldValue('componentDidMount');
       }
       componentDidUpdate() {
-        ops.push('componentDidUpdate');
+        Scheduler.unstable_yieldValue('componentDidUpdate');
       }
       render() {
-        ops.push('render');
+        Scheduler.unstable_yieldValue('render');
         instance = this;
         return <div />;
       }
     }
 
     ReactNoop.render(<Foo />);
-    expect(Scheduler).toFlushWithoutYielding();
+    expect(Scheduler).toFlushAndYield(['render', 'componentDidMount']);
 
     ReactNoop.flushSync(() => {
       ReactNoop.deferredUpdates(() => {
@@ -114,19 +111,11 @@ describe('ReactIncrementalUpdates', () => {
     // Even though a replaceState has been already scheduled, it hasn't been
     // flushed yet because it has async priority.
     expect(instance.state).toEqual({a: 'a', b: 'b'});
-    expect(ops).toEqual([
-      'render',
-      'componentDidMount',
-      'render',
-      'componentDidUpdate',
-    ]);
+    expect(Scheduler).toHaveYielded(['render', 'componentDidUpdate']);
 
-    ops = [];
-
-    expect(Scheduler).toFlushWithoutYielding();
+    expect(Scheduler).toFlushAndYield(['render', 'componentDidUpdate']);
     // Now the rest of the updates are flushed, including the replaceState.
     expect(instance.state).toEqual({c: 'c', d: 'd'});
-    expect(ops).toEqual(['render', 'componentDidUpdate']);
   });
 
   it('can abort an update, schedule additional updates, and resume', () => {
@@ -298,27 +287,25 @@ describe('ReactIncrementalUpdates', () => {
   });
 
   it('does not call callbacks that are scheduled by another callback until a later commit', () => {
-    const ops = [];
     class Foo extends React.Component {
       state = {};
       componentDidMount() {
-        ops.push('did mount');
+        Scheduler.unstable_yieldValue('did mount');
         this.setState({a: 'a'}, () => {
-          ops.push('callback a');
+          Scheduler.unstable_yieldValue('callback a');
           this.setState({b: 'b'}, () => {
-            ops.push('callback b');
+            Scheduler.unstable_yieldValue('callback b');
           });
         });
       }
       render() {
-        ops.push('render');
+        Scheduler.unstable_yieldValue('render');
         return <div />;
       }
     }
 
     ReactNoop.render(<Foo />);
-    expect(Scheduler).toFlushWithoutYielding();
-    expect(ops).toEqual([
+    expect(Scheduler).toFlushAndYield([
       'render',
       'did mount',
       'render',
@@ -330,29 +317,26 @@ describe('ReactIncrementalUpdates', () => {
 
   it('gives setState during reconciliation the same priority as whatever level is currently reconciling', () => {
     let instance;
-    let ops = [];
 
     class Foo extends React.Component {
       state = {};
       UNSAFE_componentWillReceiveProps() {
-        ops.push('componentWillReceiveProps');
+        Scheduler.unstable_yieldValue('componentWillReceiveProps');
         this.setState({b: 'b'});
       }
       render() {
-        ops.push('render');
+        Scheduler.unstable_yieldValue('render');
         instance = this;
         return <div />;
       }
     }
     ReactNoop.render(<Foo />);
     expect(() =>
-      expect(Scheduler).toFlushWithoutYielding(),
+      expect(Scheduler).toFlushAndYield(['render']),
     ).toErrorDev(
       'Using UNSAFE_componentWillReceiveProps in strict mode is not recommended',
       {withoutStack: true},
     );
-
-    ops = [];
 
     ReactNoop.flushSync(() => {
       instance.setState({a: 'a'});
@@ -361,44 +345,45 @@ describe('ReactIncrementalUpdates', () => {
     });
 
     expect(instance.state).toEqual({a: 'a', b: 'b'});
-    expect(ops).toEqual(['componentWillReceiveProps', 'render']);
+    expect(Scheduler).toHaveYielded(['componentWillReceiveProps', 'render']);
   });
 
   it('enqueues setState inside an updater function as if the in-progress update is progressed (and warns)', () => {
     let instance;
-    const ops = [];
     class Foo extends React.Component {
       state = {};
       render() {
-        ops.push('render');
+        Scheduler.unstable_yieldValue('render');
         instance = this;
         return <div />;
       }
     }
 
     ReactNoop.render(<Foo />);
-    expect(Scheduler).toFlushWithoutYielding();
+    expect(Scheduler).toFlushAndYield([
+      // Initial render
+      'render',
+    ]);
 
     instance.setState(function a() {
-      ops.push('setState updater');
+      Scheduler.unstable_yieldValue('setState updater');
       this.setState({b: 'b'});
       return {a: 'a'};
     });
 
-    expect(() => expect(Scheduler).toFlushWithoutYielding()).toErrorDev(
+    expect(() =>
+      expect(Scheduler).toFlushAndYield([
+        'setState updater',
+        // Update b is enqueued with the same priority as update a, so it should
+        // be flushed in the same commit.
+        'render',
+      ]),
+    ).toErrorDev(
       'An update (setState, replaceState, or forceUpdate) was scheduled ' +
         'from inside an update function. Update functions should be pure, ' +
         'with zero side-effects. Consider using componentDidUpdate or a ' +
         'callback.',
     );
-    expect(ops).toEqual([
-      // Initial render
-      'render',
-      'setState updater',
-      // Update b is enqueued with the same priority as update a, so it should
-      // be flushed in the same commit.
-      'render',
-    ]);
     expect(instance.state).toEqual({a: 'a', b: 'b'});
 
     // Test deduplication (no additional warnings expected)
@@ -406,7 +391,7 @@ describe('ReactIncrementalUpdates', () => {
       this.setState({a: 'a'});
       return {b: 'b'};
     });
-    expect(Scheduler).toFlushWithoutYielding();
+    expect(Scheduler).toFlushAndYield(['render']);
   });
 
   it('getDerivedStateFromProps should update base state of updateQueue (based on product bug)', () => {
