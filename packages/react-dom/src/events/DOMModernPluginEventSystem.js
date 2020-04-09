@@ -15,7 +15,7 @@ import type {
 } from '../events/DOMEventListenerMap';
 import type {EventSystemFlags} from './EventSystemFlags';
 import type {EventPriority, ReactScopeMethods} from 'shared/ReactTypes';
-import type {Fiber} from 'react-reconciler/src/ReactFiber.old';
+import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
 import type {PluginModule} from 'legacy-events/PluginModuleType';
 import type {
   ReactSyntheticEvent,

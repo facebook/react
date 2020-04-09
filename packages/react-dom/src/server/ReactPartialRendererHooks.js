@@ -7,10 +7,7 @@
  * @flow
  */
 
-import type {
-  Dispatcher as DispatcherType,
-  TimeoutConfig,
-} from 'react-reconciler/src/ReactFiberHooks.old';
+import type {Dispatcher as DispatcherType} from 'react-reconciler/src/ReactInternalTypes';
 import type {ThreadID} from './ReactThreadIDAllocator';
 import type {OpaqueIDType} from 'react-reconciler/src/ReactFiberHostConfig';
 
@@ -21,7 +18,7 @@ import type {
   ReactContext,
   ReactEventResponderListener,
 } from 'shared/ReactTypes';
-import type {SuspenseConfig} from 'react-reconciler/src/ReactFiberSuspenseConfig.old';
+import type {SuspenseConfig} from 'react-reconciler/src/ReactFiberSuspenseConfig';
 import type {ReactDOMListenerMap} from '../shared/ReactDOMTypes';
 
 import {validateContextBounds} from './ReactPartialRendererContext';
@@ -47,6 +44,10 @@ type Hook = {|
   memoizedState: any,
   queue: UpdateQueue<any> | null,
   next: Hook | null,
+|};
+
+type TimeoutConfig = {|
+  timeoutMs: number,
 |};
 
 let currentlyRenderingComponent: Object | null = null;

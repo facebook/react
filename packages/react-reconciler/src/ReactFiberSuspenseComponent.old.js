@@ -7,21 +7,15 @@
  * @flow
  */
 
-import type {Fiber} from './ReactFiber.old';
+import type {Fiber} from './ReactInternalTypes';
 import type {SuspenseInstance} from './ReactFiberHostConfig';
-import type {ExpirationTime} from './ReactFiberExpirationTime.old';
+import type {ExpirationTime} from './ReactFiberExpirationTime';
 import {SuspenseComponent, SuspenseListComponent} from './ReactWorkTags';
 import {NoEffect, DidCapture} from './ReactSideEffectTags';
 import {
   isSuspenseInstancePending,
   isSuspenseInstanceFallback,
 } from './ReactFiberHostConfig';
-
-export type SuspenseHydrationCallbacks = {
-  onHydrated?: (suspenseInstance: SuspenseInstance) => void,
-  onDeleted?: (suspenseInstance: SuspenseInstance) => void,
-  ...
-};
 
 // A null SuspenseState represents an unsuspended normal Suspense boundary.
 // A non-null SuspenseState means that it is blocked for one reason or another.

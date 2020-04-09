@@ -12,7 +12,7 @@ import type {Container, SuspenseInstance} from '../client/ReactDOMHostConfig';
 import type {DOMTopLevelEventType} from 'legacy-events/TopLevelEventTypes';
 import type {ElementListenerMap} from '../events/DOMEventListenerMap';
 import type {EventSystemFlags} from './EventSystemFlags';
-import type {FiberRoot} from 'react-reconciler/src/ReactFiberRoot.old';
+import type {FiberRoot} from 'react-reconciler/src/ReactInternalTypes';
 
 import {
   enableDeprecatedFlareAPI,

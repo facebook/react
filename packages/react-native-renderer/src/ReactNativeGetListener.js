@@ -6,7 +6,7 @@
  * @flow
  */
 
-import type {Fiber} from 'react-reconciler/src/ReactFiber.old';
+import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
 
 import invariant from 'shared/invariant';
 import {getFiberCurrentPropsFromNode} from 'legacy-events/EventPluginUtils';

@@ -8,8 +8,8 @@
  */
 
 import type {ReactElement} from 'shared/ReactElementType';
-import type {Fiber} from './ReactFiber.old';
-import type {FiberRoot} from './ReactFiberRoot.old';
+import type {Fiber} from './ReactInternalTypes';
+import type {FiberRoot} from './ReactInternalTypes';
 import type {Instance} from './ReactFiberHostConfig';
 import type {ReactNodeList} from 'shared/ReactTypes';
 
@@ -20,7 +20,7 @@ import {
 } from './ReactFiberWorkLoop.old';
 import {updateContainer, syncUpdates} from './ReactFiberReconciler.old';
 import {emptyContextObject} from './ReactFiberContext.old';
-import {Sync} from './ReactFiberExpirationTime.old';
+import {Sync} from './ReactFiberExpirationTime';
 import {
   ClassComponent,
   FunctionComponent,

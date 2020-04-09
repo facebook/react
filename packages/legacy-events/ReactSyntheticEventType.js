@@ -8,7 +8,7 @@
  * @flow
  */
 
-import type {Fiber} from 'react-reconciler/src/ReactFiber.old';
+import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
 import type {EventPriority} from 'shared/ReactTypes';
 import type {TopLevelType} from './TopLevelEventTypes';
 

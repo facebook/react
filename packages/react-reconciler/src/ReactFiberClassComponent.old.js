@@ -7,8 +7,8 @@
  * @flow
  */
 
-import type {Fiber} from './ReactFiber.old';
-import type {ExpirationTime} from './ReactFiberExpirationTime.old';
+import type {Fiber} from './ReactInternalTypes';
+import type {ExpirationTime} from './ReactFiberExpirationTime';
 import type {UpdateQueue} from './ReactUpdateQueue.old';
 
 import * as React from 'react';
@@ -40,7 +40,7 @@ import {
   initializeUpdateQueue,
   cloneUpdateQueue,
 } from './ReactUpdateQueue.old';
-import {NoWork} from './ReactFiberExpirationTime.old';
+import {NoWork} from './ReactFiberExpirationTime';
 import {
   cacheContext,
   getMaskedContext,
@@ -54,7 +54,7 @@ import {
   computeExpirationForFiber,
   scheduleUpdateOnFiber,
 } from './ReactFiberWorkLoop.old';
-import {requestCurrentSuspenseConfig} from './ReactFiberSuspenseConfig.old';
+import {requestCurrentSuspenseConfig} from './ReactFiberSuspenseConfig';
 
 import {disableLogs, reenableLogs} from 'shared/ConsolePatchingDev';
 

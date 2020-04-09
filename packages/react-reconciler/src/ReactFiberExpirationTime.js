@@ -7,7 +7,7 @@
  * @flow
  */
 
-import type {ReactPriorityLevel} from './SchedulerWithReactIntegration.old';
+import type {ReactPriorityLevel} from './ReactInternalTypes';
 
 import {MAX_SIGNED_31_BIT_INT} from './MaxInts';
 

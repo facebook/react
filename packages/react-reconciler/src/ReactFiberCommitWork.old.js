@@ -15,13 +15,14 @@ import type {
   ChildSet,
   UpdatePayload,
 } from './ReactFiberHostConfig';
-import type {Fiber} from './ReactFiber.old';
-import type {FiberRoot} from './ReactFiberRoot.old';
-import type {ExpirationTime} from './ReactFiberExpirationTime.old';
+import type {Fiber} from './ReactInternalTypes';
+import type {FiberRoot} from './ReactInternalTypes';
+import type {ExpirationTime} from './ReactFiberExpirationTime';
 import type {SuspenseState} from './ReactFiberSuspenseComponent.old';
+import type {UpdateQueue} from './ReactUpdateQueue.old';
 import type {FunctionComponentUpdateQueue} from './ReactFiberHooks.old';
 import type {Wakeable} from 'shared/ReactTypes';
-import type {ReactPriorityLevel} from './SchedulerWithReactIntegration.old';
+import type {ReactPriorityLevel} from './ReactInternalTypes';
 
 import {unstable_wrap as Schedule_tracing_wrap} from 'scheduler/tracing';
 import {
@@ -643,7 +644,12 @@ function commitLifeCycles(
           }
         }
       }
-      const updateQueue = finishedWork.updateQueue;
+
+      // TODO: I think this is now always non-null by the time it reaches the
+      // commit phase. Consider removing the type check.
+      const updateQueue: UpdateQueue<
+        *,
+      > | null = (finishedWork.updateQueue: any);
       if (updateQueue !== null) {
         if (__DEV__) {
           if (
@@ -680,7 +686,11 @@ function commitLifeCycles(
       return;
     }
     case HostRoot: {
-      const updateQueue = finishedWork.updateQueue;
+      // TODO: I think this is now always non-null by the time it reaches the
+      // commit phase. Consider removing the type check.
+      const updateQueue: UpdateQueue<
+        *,
+      > | null = (finishedWork.updateQueue: any);
       if (updateQueue !== null) {
         let instance = null;
         if (finishedWork.child !== null) {

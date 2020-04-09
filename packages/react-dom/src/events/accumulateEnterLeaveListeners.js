@@ -7,7 +7,7 @@
  * @flow
  */
 
-import type {Fiber} from 'react-reconciler/src/ReactFiber.old';
+import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
 import type {ReactSyntheticEvent} from 'legacy-events/ReactSyntheticEventType';
 
 import {HostComponent} from 'react-reconciler/src/ReactWorkTags';

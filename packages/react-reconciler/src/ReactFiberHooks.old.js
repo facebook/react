@@ -16,12 +16,12 @@ import type {
   ReactEventResponderListener,
   ReactScopeMethods,
 } from 'shared/ReactTypes';
-import type {Fiber} from './ReactFiber.old';
-import type {ExpirationTime} from './ReactFiberExpirationTime.old';
+import type {Fiber, Dispatcher} from './ReactInternalTypes';
+import type {ExpirationTime} from './ReactFiberExpirationTime';
 import type {HookEffectTag} from './ReactHookEffectTags';
-import type {SuspenseConfig} from './ReactFiberSuspenseConfig.old';
-import type {ReactPriorityLevel} from './SchedulerWithReactIntegration.old';
-import type {FiberRoot} from './ReactFiberRoot.old';
+import type {SuspenseConfig} from './ReactFiberSuspenseConfig';
+import type {ReactPriorityLevel} from './ReactInternalTypes';
+import type {FiberRoot} from './ReactInternalTypes';
 import type {
   OpaqueIDType,
   ReactListenerEvent,
@@ -33,7 +33,7 @@ import ReactSharedInternals from 'shared/ReactSharedInternals';
 import {enableUseEventAPI} from 'shared/ReactFeatureFlags';
 
 import {markRootExpiredAtTime} from './ReactFiberRoot.old';
-import {NoWork, Sync} from './ReactFiberExpirationTime.old';
+import {NoWork, Sync} from './ReactFiberExpirationTime';
 import {NoMode, BlockingMode} from './ReactTypeOfMode';
 import {readContext} from './ReactFiberNewContext.old';
 import {createDeprecatedResponderListener} from './ReactFiberDeprecatedEvents.old';
@@ -69,7 +69,7 @@ import invariant from 'shared/invariant';
 import getComponentName from 'shared/getComponentName';
 import is from 'shared/objectIs';
 import {markWorkInProgressReceivedUpdate} from './ReactFiberBeginWork.old';
-import {requestCurrentSuspenseConfig} from './ReactFiberSuspenseConfig.old';
+import {requestCurrentSuspenseConfig} from './ReactFiberSuspenseConfig';
 import {
   UserBlockingPriority,
   NormalPriority,
@@ -94,55 +94,6 @@ import {getRootHostContainer} from './ReactFiberHostContext.old';
 import {getIsRendering} from './ReactCurrentFiber';
 
 const {ReactCurrentDispatcher, ReactCurrentBatchConfig} = ReactSharedInternals;
-
-export type Dispatcher = {|
-  readContext<T>(
-    context: ReactContext<T>,
-    observedBits: void | number | boolean,
-  ): T,
-  useState<S>(initialState: (() => S) | S): [S, Dispatch<BasicStateAction<S>>],
-  useReducer<S, I, A>(
-    reducer: (S, A) => S,
-    initialArg: I,
-    init?: (I) => S,
-  ): [S, Dispatch<A>],
-  useContext<T>(
-    context: ReactContext<T>,
-    observedBits: void | number | boolean,
-  ): T,
-  useRef<T>(initialValue: T): {|current: T|},
-  useEffect(
-    create: () => (() => void) | void,
-    deps: Array<mixed> | void | null,
-  ): void,
-  useLayoutEffect(
-    create: () => (() => void) | void,
-    deps: Array<mixed> | void | null,
-  ): void,
-  useCallback<T>(callback: T, deps: Array<mixed> | void | null): T,
-  useMemo<T>(nextCreate: () => T, deps: Array<mixed> | void | null): T,
-  useImperativeHandle<T>(
-    ref: {|current: T | null|} | ((inst: T | null) => mixed) | null | void,
-    create: () => T,
-    deps: Array<mixed> | void | null,
-  ): void,
-  useDebugValue<T>(value: T, formatterFn: ?(value: T) => mixed): void,
-  useResponder<E, C>(
-    responder: ReactEventResponder<E, C>,
-    props: Object,
-  ): ReactEventResponderListener<E, C>,
-  useDeferredValue<T>(value: T, config: TimeoutConfig | void | null): T,
-  useTransition(
-    config: SuspenseConfig | void | null,
-  ): [(() => void) => void, boolean],
-  useMutableSource<Source, Snapshot>(
-    source: MutableSource<Source>,
-    getSnapshot: MutableSourceGetSnapshotFn<Source, Snapshot>,
-    subscribe: MutableSourceSubscribeFn<Source, Snapshot>,
-  ): Snapshot,
-  useEvent(event: ReactListenerEvent): ReactListenerMap,
-  useOpaqueIdentifier(): OpaqueIDType | void,
-|};
 
 type Update<S, A> = {|
   expirationTime: ExpirationTime,
@@ -204,7 +155,7 @@ export type Effect = {|
 
 export type FunctionComponentUpdateQueue = {|lastEffect: Effect | null|};
 
-export type TimeoutConfig = {|
+type TimeoutConfig = {|
   timeoutMs: number,
 |};
 

@@ -17,15 +17,13 @@ import type {
   ReactEventResponderListener,
   ReactScopeMethods,
 } from 'shared/ReactTypes';
-import type {Fiber} from 'react-reconciler/src/ReactFiber.old';
+import type {
+  Fiber,
+  Dispatcher as DispatcherType,
+} from 'react-reconciler/src/ReactInternalTypes';
 import type {OpaqueIDType} from 'react-reconciler/src/ReactFiberHostConfig';
 
-import type {
-  Hook,
-  TimeoutConfig,
-  Dispatcher as DispatcherType,
-} from 'react-reconciler/src/ReactFiberHooks.old';
-import type {SuspenseConfig} from 'react-reconciler/src/ReactFiberSuspenseConfig.old';
+import type {SuspenseConfig} from 'react-reconciler/src/ReactFiberSuspenseConfig';
 import {NoMode} from 'react-reconciler/src/ReactTypeOfMode';
 
 import ErrorStackParser from 'error-stack-parser';
@@ -69,6 +67,15 @@ type Dispatch<A> = A => void;
 let primitiveStackCache: null | Map<string, Array<any>> = null;
 
 let currentFiber: Fiber | null = null;
+
+type Hook = {
+  memoizedState: any,
+  next: Hook | null,
+};
+
+type TimeoutConfig = {|
+  timeoutMs: number,
+|};
 
 function getPrimitiveStackCache(): Map<string, Array<any>> {
   // This initializes a cache of all primitive hooks so that the top

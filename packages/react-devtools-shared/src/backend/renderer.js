@@ -50,7 +50,7 @@ import {
   registerRenderer as registerRendererWithConsole,
 } from './console';
 
-import type {Fiber} from 'react-reconciler/src/ReactFiber.old';
+import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
 import type {
   ChangeDescription,
   CommitDataBackend,

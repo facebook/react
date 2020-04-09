@@ -7,6 +7,8 @@
  * @flow
  */
 
+import type {ReactPriorityLevel} from './ReactInternalTypes';
+
 // Intentionally not named imports because Rollup would use dynamic dispatch for
 // CommonJS interop named imports.
 import * as Scheduler from 'scheduler';
@@ -43,7 +45,6 @@ if (enableSchedulerTracing) {
   );
 }
 
-export type ReactPriorityLevel = 99 | 98 | 97 | 96 | 95 | 90;
 export type SchedulerCallback = (isSync: boolean) => SchedulerCallback | null;
 
 type SchedulerCallbackOptions = {timeout?: number, ...};

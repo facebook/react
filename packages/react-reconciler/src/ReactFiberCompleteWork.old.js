@@ -7,13 +7,13 @@
  * @flow
  */
 
-import type {Fiber} from './ReactFiber.old';
-import type {ExpirationTime} from './ReactFiberExpirationTime.old';
+import type {Fiber} from './ReactInternalTypes';
+import type {ExpirationTime} from './ReactFiberExpirationTime';
 import type {
   ReactFundamentalComponentInstance,
   ReactScopeInstance,
 } from 'shared/ReactTypes';
-import type {FiberRoot} from './ReactFiberRoot.old';
+import type {FiberRoot} from './ReactInternalTypes';
 import type {
   Instance,
   Type,
@@ -129,7 +129,7 @@ import {
   renderHasNotSuspendedYet,
 } from './ReactFiberWorkLoop.old';
 import {createFundamentalStateInstance} from './ReactFiberFundamental.old';
-import {Never} from './ReactFiberExpirationTime.old';
+import {Never} from './ReactFiberExpirationTime';
 import {resetChildFibers} from './ReactChildFiber.old';
 import {updateDeprecatedEventListeners} from './ReactFiberDeprecatedEvents.old';
 import {createScopeMethods} from './ReactFiberScope.old';

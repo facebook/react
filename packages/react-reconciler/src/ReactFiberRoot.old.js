@@ -7,18 +7,13 @@
  * @flow
  */
 
-import type {Fiber} from './ReactFiber.old';
-import type {ExpirationTime} from './ReactFiberExpirationTime.old';
+import type {FiberRoot, SuspenseHydrationCallbacks} from './ReactInternalTypes';
+import type {ExpirationTime} from './ReactFiberExpirationTime';
 import type {RootTag} from './ReactRootTags';
-import type {TimeoutHandle, NoTimeout} from './ReactFiberHostConfig';
-import type {Wakeable} from 'shared/ReactTypes';
-import type {Interaction} from 'scheduler/src/Tracing';
-import type {SuspenseHydrationCallbacks} from './ReactFiberSuspenseComponent.old';
-import type {ReactPriorityLevel} from './SchedulerWithReactIntegration.old';
 
 import {noTimeout} from './ReactFiberHostConfig';
 import {createHostRootFiber} from './ReactFiber.old';
-import {NoWork} from './ReactFiberExpirationTime.old';
+import {NoWork} from './ReactFiberExpirationTime';
 import {
   enableSchedulerTracing,
   enableSuspenseCallback,
@@ -27,87 +22,6 @@ import {unstable_getThreadID} from 'scheduler/tracing';
 import {NoPriority} from './SchedulerWithReactIntegration.old';
 import {initializeUpdateQueue} from './ReactUpdateQueue.old';
 import {clearPendingUpdates as clearPendingMutableSourceUpdates} from './ReactMutableSource.old';
-
-export type PendingInteractionMap = Map<ExpirationTime, Set<Interaction>>;
-
-type BaseFiberRootProperties = {|
-  // The type of root (legacy, batched, concurrent, etc.)
-  tag: RootTag,
-
-  // Any additional information from the host associated with this root.
-  containerInfo: any,
-  // Used only by persistent updates.
-  pendingChildren: any,
-  // The currently active root fiber. This is the mutable root of the tree.
-  current: Fiber,
-
-  pingCache:
-    | WeakMap<Wakeable, Set<ExpirationTime>>
-    | Map<Wakeable, Set<ExpirationTime>>
-    | null,
-
-  finishedExpirationTime: ExpirationTime,
-  // A finished work-in-progress HostRoot that's ready to be committed.
-  finishedWork: Fiber | null,
-  // Timeout handle returned by setTimeout. Used to cancel a pending timeout, if
-  // it's superseded by a new one.
-  timeoutHandle: TimeoutHandle | NoTimeout,
-  // Top context object, used by renderSubtreeIntoContainer
-  context: Object | null,
-  pendingContext: Object | null,
-  // Determines if we should attempt to hydrate on the initial mount
-  +hydrate: boolean,
-  // Node returned by Scheduler.scheduleCallback
-  callbackNode: *,
-  // Expiration of the callback associated with this root
-  callbackExpirationTime: ExpirationTime,
-  // Priority of the callback associated with this root
-  callbackPriority: ReactPriorityLevel,
-  // The earliest pending expiration time that exists in the tree
-  firstPendingTime: ExpirationTime,
-  // The latest pending expiration time that exists in the tree
-  lastPendingTime: ExpirationTime,
-  // The earliest suspended expiration time that exists in the tree
-  firstSuspendedTime: ExpirationTime,
-  // The latest suspended expiration time that exists in the tree
-  lastSuspendedTime: ExpirationTime,
-  // The next known expiration time after the suspended range
-  nextKnownPendingLevel: ExpirationTime,
-  // The latest time at which a suspended component pinged the root to
-  // render again
-  lastPingedTime: ExpirationTime,
-  lastExpiredTime: ExpirationTime,
-  // Used by useMutableSource hook to avoid tearing within this root
-  // when external, mutable sources are read from during render.
-  mutableSourceLastPendingUpdateTime: ExpirationTime,
-|};
-
-// The following attributes are only used by interaction tracing builds.
-// They enable interactions to be associated with their async work,
-// And expose interaction metadata to the React DevTools Profiler plugin.
-// Note that these attributes are only defined when the enableSchedulerTracing flag is enabled.
-type ProfilingOnlyFiberRootProperties = {|
-  interactionThreadID: number,
-  memoizedInteractions: Set<Interaction>,
-  pendingInteractionMap: PendingInteractionMap,
-|};
-
-// The follow fields are only used by enableSuspenseCallback for hydration.
-type SuspenseCallbackOnlyFiberRootProperties = {|
-  hydrationCallbacks: null | SuspenseHydrationCallbacks,
-|};
-
-// Exported FiberRoot type includes all properties,
-// To avoid requiring potentially error-prone :any casts throughout the project.
-// Profiling properties are only safe to access in profiling builds (when enableSchedulerTracing is true).
-// The types are defined separately within this file to ensure they stay in sync.
-// (We don't have to use an inline :any cast when enableSchedulerTracing is disabled.)
-export type FiberRoot = {
-  ...BaseFiberRootProperties,
-  ...ProfilingOnlyFiberRootProperties,
-  ...SuspenseCallbackOnlyFiberRootProperties,
-  ...
-};
 
 function FiberRootNode(containerInfo, tag, hydrate) {
   this.tag = tag;

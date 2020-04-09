@@ -7,8 +7,8 @@
  * @flow
  */
 
-import type {Fiber} from './ReactFiber.old';
-import type {FiberRoot} from './ReactFiberRoot.old';
+import type {Fiber, SuspenseHydrationCallbacks} from './ReactInternalTypes';
+import type {FiberRoot} from './ReactInternalTypes';
 import type {RootTag} from './ReactRootTags';
 import type {
   Instance,
@@ -19,11 +19,8 @@ import type {
 import type {RendererInspectionConfig} from './ReactFiberHostConfig';
 import {FundamentalComponent} from './ReactWorkTags';
 import type {ReactNodeList, Thenable} from 'shared/ReactTypes';
-import type {ExpirationTime} from './ReactFiberExpirationTime.old';
-import type {
-  SuspenseHydrationCallbacks,
-  SuspenseState,
-} from './ReactFiberSuspenseComponent.old';
+import type {ExpirationTime} from './ReactFiberExpirationTime';
+import type {SuspenseState} from './ReactFiberSuspenseComponent.old';
 
 import {
   findCurrentHostFiber,
@@ -79,8 +76,8 @@ import {
   Sync,
   ContinuousHydration,
   computeInteractiveExpiration,
-} from './ReactFiberExpirationTime.old';
-import {requestCurrentSuspenseConfig} from './ReactFiberSuspenseConfig.old';
+} from './ReactFiberExpirationTime';
+import {requestCurrentSuspenseConfig} from './ReactFiberSuspenseConfig';
 import {
   scheduleRefresh,
   scheduleRoot,

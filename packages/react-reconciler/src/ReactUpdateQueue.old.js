@@ -84,12 +84,12 @@
 // regardless of priority. Intermediate state may vary according to system
 // resources, but the final state is always the same.
 
-import type {Fiber} from './ReactFiber.old';
-import type {ExpirationTime} from './ReactFiberExpirationTime.old';
-import type {SuspenseConfig} from './ReactFiberSuspenseConfig.old';
-import type {ReactPriorityLevel} from './SchedulerWithReactIntegration.old';
+import type {Fiber} from './ReactInternalTypes';
+import type {ExpirationTime} from './ReactFiberExpirationTime';
+import type {SuspenseConfig} from './ReactFiberSuspenseConfig';
+import type {ReactPriorityLevel} from './ReactInternalTypes';
 
-import {NoWork, Sync} from './ReactFiberExpirationTime.old';
+import {NoWork, Sync} from './ReactFiberExpirationTime';
 import {
   enterDisallowedContextReadInDEV,
   exitDisallowedContextReadInDEV,
@@ -213,7 +213,7 @@ export function enqueueUpdate<State>(fiber: Fiber, update: Update<State>) {
     return;
   }
 
-  const sharedQueue = updateQueue.shared;
+  const sharedQueue: SharedQueue<State> = (updateQueue: any).shared;
   const pending = sharedQueue.pending;
   if (pending === null) {
     // This is the first update. Create a circular list.
