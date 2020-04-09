@@ -12,7 +12,6 @@
 describe('SimpleEventPlugin', function() {
   let React;
   let ReactDOM;
-  let ReactFeatureFlags;
   let Scheduler;
 
   let onClick;
@@ -184,7 +183,6 @@ describe('SimpleEventPlugin', function() {
     container = document.createElement('div');
     document.body.appendChild(container);
 
-    const ops = [];
     let button;
     class Button extends React.Component {
       state = {count: 0};
@@ -193,7 +191,7 @@ describe('SimpleEventPlugin', function() {
           count: state.count + 1,
         }));
       componentDidUpdate() {
-        ops.push(`didUpdate - Count: ${this.state.count}`);
+        Scheduler.unstable_yieldValue(`didUpdate - Count: ${this.state.count}`);
       }
       render() {
         return (
@@ -221,20 +219,19 @@ describe('SimpleEventPlugin', function() {
 
     ReactDOM.render(<Button />, container);
     expect(button.textContent).toEqual('Count: 0');
-    expect(ops).toEqual([]);
+    expect(Scheduler).toHaveYielded([]);
 
     click();
 
     // There should be exactly one update.
-    expect(ops).toEqual(['didUpdate - Count: 3']);
+    expect(Scheduler).toHaveYielded(['didUpdate - Count: 3']);
     expect(button.textContent).toEqual('Count: 3');
   });
 
   describe('interactive events, in concurrent mode', () => {
     beforeEach(() => {
       jest.resetModules();
-      ReactFeatureFlags = require('shared/ReactFeatureFlags');
-      ReactFeatureFlags.debugRenderPhaseSideEffectsForStrictMode = false;
+
       ReactDOM = require('react-dom');
       Scheduler = require('scheduler');
     });
@@ -246,19 +243,17 @@ describe('SimpleEventPlugin', function() {
         const root = ReactDOM.createRoot(container);
         document.body.appendChild(container);
 
-        let ops = [];
-
         let button;
         class Button extends React.Component {
           state = {disabled: false};
           onClick = () => {
             // Perform some side-effect
-            ops.push('Side-effect');
+            Scheduler.unstable_yieldValue('Side-effect');
             // Disable the button
             this.setState({disabled: true});
           };
           render() {
-            ops.push(
+            Scheduler.unstable_yieldValue(
               `render button: ${this.state.disabled ? 'disabled' : 'enabled'}`,
             );
             return (
@@ -274,13 +269,10 @@ describe('SimpleEventPlugin', function() {
         // Initial mount
         root.render(<Button />);
         // Should not have flushed yet because it's async
-        expect(ops).toEqual([]);
+        expect(Scheduler).toHaveYielded([]);
         expect(button).toBe(undefined);
         // Flush async work
-        Scheduler.unstable_flushAll();
-        expect(ops).toEqual(['render button: enabled']);
-
-        ops = [];
+        expect(Scheduler).toFlushAndYield(['render button: enabled']);
 
         function click() {
           button.dispatchEvent(
@@ -290,25 +282,21 @@ describe('SimpleEventPlugin', function() {
 
         // Click the button to trigger the side-effect
         click();
-        expect(ops).toEqual([
+        expect(Scheduler).toHaveYielded([
           // The handler fired
           'Side-effect',
           // but the component did not re-render yet, because it's async
         ]);
 
-        ops = [];
-
         // Click the button again
         click();
-        expect(ops).toEqual([
+        expect(Scheduler).toHaveYielded([
           // Before handling this second click event, the previous interactive
           // update is flushed
           'render button: disabled',
           // The event handler was removed from the button, so there's no second
           // side-effect
         ]);
-
-        ops = [];
 
         // The handler should not fire again no matter how many times we
         // click the handler.
@@ -317,8 +305,7 @@ describe('SimpleEventPlugin', function() {
         click();
         click();
         click();
-        Scheduler.unstable_flushAll();
-        expect(ops).toEqual([]);
+        expect(Scheduler).toFlushAndYield([]);
       },
     );
 
