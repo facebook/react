@@ -2368,12 +2368,15 @@ function flushPassiveEffectsImpl() {
         }
       }
     }
-  } else {
-    // Note: This currently assumes there are no passive effects on the root fiber
-    // because the root is not part of its own effect list.
-    // This could change in the future.
-    let effect = root.current.firstEffect;
-    while (effect !== null) {
+  }
+  // Note: This currently assumes there are no passive effects on the root fiber
+  // because the root is not part of its own effect list.
+  // This could change in the future.
+  let effect = root.current.firstEffect;
+  while (effect !== null) {
+    // We do this work above if this flag is enabled, so we shouldn't be
+    // doing it here.
+    if (!runAllPassiveEffectDestroysBeforeCreates) {
       if (__DEV__) {
         setCurrentDebugFiberInDEV(effect);
         invokeGuardedCallback(null, commitPassiveHookEffects, null, effect);
@@ -2391,12 +2394,12 @@ function flushPassiveEffectsImpl() {
           captureCommitPhaseError(effect, error);
         }
       }
-
-      const nextNextEffect = effect.nextEffect;
-      // Remove nextEffect pointer to assist GC
-      effect.nextEffect = null;
-      effect = nextNextEffect;
     }
+
+    const nextNextEffect = effect.nextEffect;
+    // Remove nextEffect pointer to assist GC
+    effect.nextEffect = null;
+    effect = nextNextEffect;
   }
 
   if (enableProfilerTimer && enableProfilerCommitHooks) {
