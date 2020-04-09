@@ -177,6 +177,56 @@ describe('memo', () => {
         expect(ReactNoop.getChildren()).toEqual([span('Count: 1')]);
       });
 
+      it('bails out on props equality during context change', async () => {
+        const CountContext = React.createContext(0);
+
+        function readContext(Context) {
+          const dispatcher =
+            React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED
+              .ReactCurrentDispatcher.current;
+          return dispatcher.readContext(Context);
+        }
+
+        function Inner(props) {
+          const renderCountRef = React.useRef(0);
+          readContext(CountContext);
+          return React.useMemo(() => {
+            const text = `Inner render count: ${++renderCountRef.current}`;
+            return <Text text={text} />;
+          }, [
+            props,
+          ]);
+        }
+
+        Inner = memo(Inner);
+
+        function Outer(props) {
+          readContext(CountContext);
+          return <Inner />;
+        }
+
+        function Parent({ value }) {
+          return (
+            <Suspense fallback={<Text text="Loading..." />}>
+              <CountContext.Provider value={value}>
+                <Outer />
+              </CountContext.Provider>
+            </Suspense>
+          );
+        }
+
+        let ctxValue = 0;
+        ReactNoop.render(<Parent value={ctxValue++} />);
+        expect(ReactNoop.flush()).toEqual(['Loading...']);
+        await Promise.resolve();
+        expect(ReactNoop.flush()).toEqual(['Inner render count: 1']);
+        expect(ReactNoop.getChildren()).toEqual([span('Inner render count: 1')]);
+
+        ReactNoop.render(<Parent value={ctxValue++} />);
+        expect(ReactNoop.flush()).toEqual([]);
+        expect(ReactNoop.getChildren()).toEqual([span('Inner render count: 1')]);
+      });
+
       it('accepts custom comparison function', async () => {
         function Counter({count}) {
           return <Text text={count} />;
