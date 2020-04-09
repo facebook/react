@@ -396,18 +396,58 @@ function unstable_getCurrentPriorityLevel() {
 }
 
 function unstable_shouldYield() {
+  // Note: In general, we should bias toward returning `false` instead of
+  // `true`, since in the extreme cases, the consequences of yielding too much
+  // (indefinite starvation) are worse than the consequences of blocking the
+  // main thread (temporary unresponsiveness).
+
+  if (currentTask === null) {
+    // There's no currently running task.
+    // TODO: Is this desirable behavior? Maybe we should pretend unscheduled
+    // work has default priority.
+    return false;
+  }
+
+  // Check if the current task expired.
   const currentTime = getCurrentTime();
+  const currentExpiration = currentTask.expirationTime;
+  if (currentExpiration <= currentTime) {
+    // Never yield from an expired task, even if there is a pending main thread
+    // task or a higher priority task in the queue.
+    return false;
+  }
+
+  // Check if there's a pending main thread task.
+  if (shouldYieldToHost()) {
+    return true;
+  }
+
+  // Check a higher priority task was scheduled. But first, check if any timers
+  // have elapsed since we started working on this task. If so, this transfers
+  // them to the task queue.
   advanceTimers(currentTime);
-  const firstTask = peek(taskQueue);
-  return (
-    (firstTask !== currentTask &&
-      currentTask !== null &&
-      firstTask !== null &&
-      firstTask.callback !== null &&
-      firstTask.startTime <= currentTime &&
-      firstTask.expirationTime < currentTask.expirationTime) ||
-    shouldYieldToHost()
-  );
+
+  // Now compare the priority of the current task to the highest priority task.
+  // This equivalent to checking if the current task is the head of the queue.
+  let firstTask = peek(taskQueue);
+  while (firstTask !== currentTask && firstTask !== null) {
+    if (firstTask.callback !== null) {
+      // There's a higher priority task. Yield.
+      return true;
+    } else {
+      // There's a higher priority task, but it was canceled. This happens
+      // because tasks are not always removed from the queue immediately when
+      // they are canceled, since removal of an arbitrary node from a binary
+      // heap is O(log n). Instead, we null out the `callback` field and remove
+      // it the next time we traverse the queue.
+      //
+      // Pop the canceled task from the queue and proceed to the next task.
+      pop(taskQueue);
+      firstTask = peek(taskQueue);
+    }
+  }
+  // There's no higher priority task.
+  return false;
 }
 
 const unstable_requestPaint = requestPaint;
