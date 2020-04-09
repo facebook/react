@@ -20,15 +20,15 @@ import {
   TOP_MOUSE_DOWN,
   TOP_TEXT_INPUT,
   TOP_PASTE,
-} from './DOMTopLevelEventTypes';
+} from '../DOMTopLevelEventTypes';
 import {
   getData as FallbackCompositionStateGetData,
   initialize as FallbackCompositionStateInitialize,
   reset as FallbackCompositionStateReset,
-} from './FallbackCompositionState';
-import SyntheticCompositionEvent from './SyntheticCompositionEvent';
-import SyntheticInputEvent from './SyntheticInputEvent';
-import accumulateTwoPhaseListeners from './accumulateTwoPhaseListeners';
+} from '../FallbackCompositionState';
+import SyntheticCompositionEvent from '../SyntheticCompositionEvent';
+import SyntheticInputEvent from '../SyntheticInputEvent';
+import accumulateTwoPhaseListeners from '../accumulateTwoPhaseListeners';
 
 const END_KEYCODES = [9, 13, 27, 32]; // Tab, Return, Esc, Space
 const START_KEYCODE = 229;

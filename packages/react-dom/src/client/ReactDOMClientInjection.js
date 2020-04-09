@@ -12,11 +12,11 @@ import {
   getInstanceFromNode,
   getNodeFromInstance,
 } from './ReactDOMComponentTree';
-import BeforeInputEventPlugin from '../events/BeforeInputEventPlugin';
-import ChangeEventPlugin from '../events/ChangeEventPlugin';
-import EnterLeaveEventPlugin from '../events/EnterLeaveEventPlugin';
-import SelectEventPlugin from '../events/SelectEventPlugin';
-import SimpleEventPlugin from '../events/SimpleEventPlugin';
+import BeforeInputEventPlugin from '../events/plugins/LegacyBeforeInputEventPlugin';
+import ChangeEventPlugin from '../events/plugins/LegacyChangeEventPlugin';
+import EnterLeaveEventPlugin from '../events/plugins/LegacyEnterLeaveEventPlugin';
+import SelectEventPlugin from '../events/plugins/LegacySelectEventPlugin';
+import SimpleEventPlugin from '../events/plugins/LegacySimpleEventPlugin';
 import {
   injectEventPluginOrder,
   injectEventPluginsByName,
