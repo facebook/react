@@ -506,6 +506,24 @@ if (__DEV__) {
   };
 }
 
+function findHostInstanceByFiber(fiber: Fiber): Instance | TextInstance | null {
+  const hostFiber = findCurrentHostFiber(fiber);
+  if (hostFiber === null) {
+    return null;
+  }
+  return hostFiber.stateNode;
+}
+
+function emptyFindFiberByHostInstance(
+  instance: Instance | TextInstance,
+): Fiber | null {
+  return null;
+}
+
+function getCurrentFiberForDevTools() {
+  return ReactCurrentFiberCurrent;
+}
+
 export function injectIntoDevTools(devToolsConfig: DevToolsConfig): boolean {
   const {findFiberByHostInstance} = devToolsConfig;
   const {ReactCurrentDispatcher} = ReactSharedInternals;
@@ -520,27 +538,16 @@ export function injectIntoDevTools(devToolsConfig: DevToolsConfig): boolean {
     setSuspenseHandler,
     scheduleUpdate,
     currentDispatcherRef: ReactCurrentDispatcher,
-    findHostInstanceByFiber(fiber: Fiber): Instance | TextInstance | null {
-      const hostFiber = findCurrentHostFiber(fiber);
-      if (hostFiber === null) {
-        return null;
-      }
-      return hostFiber.stateNode;
-    },
-    findFiberByHostInstance(instance: Instance | TextInstance): Fiber | null {
-      if (!findFiberByHostInstance) {
-        // Might not be implemented by the renderer.
-        return null;
-      }
-      return findFiberByHostInstance(instance);
-    },
+    findHostInstanceByFiber,
+    findFiberByHostInstance:
+      findFiberByHostInstance || emptyFindFiberByHostInstance,
     // React Refresh
     findHostInstancesForRefresh: __DEV__ ? findHostInstancesForRefresh : null,
     scheduleRefresh: __DEV__ ? scheduleRefresh : null,
     scheduleRoot: __DEV__ ? scheduleRoot : null,
     setRefreshHandler: __DEV__ ? setRefreshHandler : null,
     // Enables DevTools to append owner stacks to error messages in DEV mode.
-    getCurrentFiber: __DEV__ ? () => ReactCurrentFiberCurrent : null,
+    getCurrentFiber: __DEV__ ? getCurrentFiberForDevTools : null,
   });
 }
 
