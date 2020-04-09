@@ -1938,6 +1938,15 @@ function commitRootImpl(root, renderPriorityLevel) {
       }
     } while (nextEffect !== null);
 
+    nextEffect = firstEffect;
+    while (nextEffect !== null) {
+      const nextNextEffect = nextEffect.nextEffect;
+      if (nextEffect.effectTag & Deletion) {
+        detachFiberPair(nextEffect);
+      }
+      nextEffect = nextNextEffect;
+    }
+
     nextEffect = null;
 
     // Tell Scheduler to yield at the end of the frame, so the browser has an
@@ -3431,5 +3440,36 @@ export function act(callback: () => Thenable<mixed>): Thenable<void> {
         resolve();
       },
     };
+  }
+}
+
+function detachFiberPair(fiber: Fiber) {
+  const alternate = fiber.alternate;
+  detachFiber(fiber);
+  if (alternate !== null) {
+    detachFiber(alternate);
+  }
+}
+
+function detachFiber(fiber: Fiber) {
+  // Cut off the return pointers to disconnect it from the tree. Ideally, we
+  // should clear the child pointer of the parent alternate to let this
+  // get GC:ed but we don't know which for sure which parent is the current
+  // one so we'll settle for GC:ing the subtree of this child. This child
+  // itself will be GC:ed when the parent updates the next time.
+  fiber.alternate = null;
+  fiber.child = null;
+  fiber.dependencies = null;
+  fiber.firstEffect = null;
+  fiber.lastEffect = null;
+  fiber.memoizedProps = null;
+  fiber.memoizedState = null;
+  fiber.pendingProps = null;
+  fiber.return = null;
+  fiber.sibling = null;
+  fiber.stateNode = null;
+  fiber.updateQueue = null;
+  if (__DEV__) {
+    fiber._debugOwner = null;
   }
 }
