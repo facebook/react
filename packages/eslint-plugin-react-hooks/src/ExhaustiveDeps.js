@@ -23,7 +23,7 @@ export default {
     schema: [
       {
         type: 'object',
-        additionalProperties: false,
+        additionalProperties: true,
         enableDangerousAutofixThisMayCauseInfiniteLoops: false,
         properties: {
           additionalHooks: {
