@@ -619,11 +619,11 @@ exports[`Store should show the right display names for special component types 1
       <MyComponent>
       <MyComponent> [ForwardRef]
     ▾ <Anonymous> [ForwardRef]
-        <MyComponent>
+        <MyComponent2>
       <Custom> [ForwardRef]
-      <MyComponent> [Memo]
+      <MyComponent4> [Memo]
     ▾ <MyComponent> [Memo]
         <MyComponent> [ForwardRef]
     ▾ <Suspense>
-        <MyComponent>
+        <MyComponent5>
 `;

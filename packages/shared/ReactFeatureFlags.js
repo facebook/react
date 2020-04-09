@@ -7,6 +7,10 @@
  * @flow strict
  */
 
+// Filter certain DOM attributes (e.g. src, href) if their values are empty strings.
+// This prevents e.g. <img src=""> from making an unnecessar HTTP request for certain browsers.
+export const enableFilterEmptyStringAttributesDOM = false;
+
 // Helps identify side effects in render-phase lifecycle hooks and setState
 // reducers by double invoking them in Strict Mode.
 export const debugRenderPhaseSideEffectsForStrictMode = __DEV__;
@@ -96,6 +100,8 @@ export const deferPassiveEffectCleanupDuringUnmount = false;
 // Enables a warning when trying to spread a 'key' to an element;
 // a deprecated pattern we want to get rid of in the future
 export const warnAboutSpreadingKeyToJSX = false;
+
+export const enableComponentStackLocations = false;
 
 // Internal-only attempt to debug a React Native issue. See D20130868.
 export const throwEarlyForMysteriousError = false;

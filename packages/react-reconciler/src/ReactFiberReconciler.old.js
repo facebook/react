@@ -7,9 +7,9 @@
  * @flow
  */
 
-import type {Fiber} from './ReactFiber';
-import type {FiberRoot} from './ReactFiberRoot';
-import type {RootTag} from 'react-reconciler/src/ReactRootTags';
+import type {Fiber, SuspenseHydrationCallbacks} from './ReactInternalTypes';
+import type {FiberRoot} from './ReactInternalTypes';
+import type {RootTag} from './ReactRootTags';
 import type {
   Instance,
   TextInstance,
@@ -20,15 +20,12 @@ import type {RendererInspectionConfig} from './ReactFiberHostConfig';
 import {FundamentalComponent} from './ReactWorkTags';
 import type {ReactNodeList, Thenable} from 'shared/ReactTypes';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
-import type {
-  SuspenseHydrationCallbacks,
-  SuspenseState,
-} from './ReactFiberSuspenseComponent';
+import type {SuspenseState} from './ReactFiberSuspenseComponent.old';
 
 import {
   findCurrentHostFiber,
   findCurrentHostFiberWithNoPortals,
-} from 'react-reconciler/src/ReactFiberTreeReflection';
+} from './ReactFiberTreeReflection';
 import {get as getInstance} from 'shared/ReactInstanceMap';
 import {
   HostComponent,
@@ -46,9 +43,9 @@ import {
   processChildContext,
   emptyContextObject,
   isContextProvider as isLegacyContextProvider,
-} from './ReactFiberContext';
-import {createFiberRoot} from './ReactFiberRoot';
-import {injectInternals, onScheduleRoot} from './ReactFiberDevToolsHook';
+} from './ReactFiberContext.old';
+import {createFiberRoot} from './ReactFiberRoot.old';
+import {injectInternals, onScheduleRoot} from './ReactFiberDevToolsHook.old';
 import {
   requestCurrentTimeForUpdate,
   computeExpirationForFiber,
@@ -67,10 +64,10 @@ import {
   warnIfNotScopedWithMatchingAct,
   warnIfUnmockedScheduler,
   IsThisRendererActing,
-} from './ReactFiberWorkLoop';
-import {createUpdate, enqueueUpdate} from './ReactUpdateQueue';
+} from './ReactFiberWorkLoop.old';
+import {createUpdate, enqueueUpdate} from './ReactUpdateQueue.old';
+import {getStackByFiberInDevAndProd} from './ReactFiberComponentStack';
 import {
-  getStackByFiberInDevAndProd,
   isRendering as ReactCurrentFiberIsRendering,
   current as ReactCurrentFiberCurrent,
 } from './ReactCurrentFiber';
@@ -86,7 +83,7 @@ import {
   scheduleRoot,
   setRefreshHandler,
   findHostInstancesForRefresh,
-} from './ReactFiberHotReloading';
+} from './ReactFiberHotReloading.old';
 
 // used by isTestEnvironment builds
 import enqueueTask from 'shared/enqueueTask';
@@ -506,6 +503,24 @@ if (__DEV__) {
   };
 }
 
+function findHostInstanceByFiber(fiber: Fiber): Instance | TextInstance | null {
+  const hostFiber = findCurrentHostFiber(fiber);
+  if (hostFiber === null) {
+    return null;
+  }
+  return hostFiber.stateNode;
+}
+
+function emptyFindFiberByHostInstance(
+  instance: Instance | TextInstance,
+): Fiber | null {
+  return null;
+}
+
+function getCurrentFiberForDevTools() {
+  return ReactCurrentFiberCurrent;
+}
+
 export function injectIntoDevTools(devToolsConfig: DevToolsConfig): boolean {
   const {findFiberByHostInstance} = devToolsConfig;
   const {ReactCurrentDispatcher} = ReactSharedInternals;
@@ -520,27 +535,16 @@ export function injectIntoDevTools(devToolsConfig: DevToolsConfig): boolean {
     setSuspenseHandler,
     scheduleUpdate,
     currentDispatcherRef: ReactCurrentDispatcher,
-    findHostInstanceByFiber(fiber: Fiber): Instance | TextInstance | null {
-      const hostFiber = findCurrentHostFiber(fiber);
-      if (hostFiber === null) {
-        return null;
-      }
-      return hostFiber.stateNode;
-    },
-    findFiberByHostInstance(instance: Instance | TextInstance): Fiber | null {
-      if (!findFiberByHostInstance) {
-        // Might not be implemented by the renderer.
-        return null;
-      }
-      return findFiberByHostInstance(instance);
-    },
+    findHostInstanceByFiber,
+    findFiberByHostInstance:
+      findFiberByHostInstance || emptyFindFiberByHostInstance,
     // React Refresh
     findHostInstancesForRefresh: __DEV__ ? findHostInstancesForRefresh : null,
     scheduleRefresh: __DEV__ ? scheduleRefresh : null,
     scheduleRoot: __DEV__ ? scheduleRoot : null,
     setRefreshHandler: __DEV__ ? setRefreshHandler : null,
     // Enables DevTools to append owner stacks to error messages in DEV mode.
-    getCurrentFiber: __DEV__ ? () => ReactCurrentFiberCurrent : null,
+    getCurrentFiber: __DEV__ ? getCurrentFiberForDevTools : null,
   });
 }
 

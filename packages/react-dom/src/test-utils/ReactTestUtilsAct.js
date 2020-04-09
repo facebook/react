@@ -26,7 +26,6 @@ const [
   enqueueStateRestore,
   restoreStateIfNeeded,
   dispatchEvent,
-  runEventsInBatch,
   /* eslint-enable no-unused-vars */
   flushPassiveEffects,
   IsThisRendererActing,

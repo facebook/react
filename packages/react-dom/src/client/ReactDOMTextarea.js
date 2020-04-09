@@ -9,7 +9,7 @@
 
 import invariant from 'shared/invariant';
 
-import ReactControlledValuePropTypes from '../shared/ReactControlledValuePropTypes';
+import {checkControlledValueProps} from '../shared/ReactControlledValuePropTypes';
 import {getCurrentFiberOwnerNameInDevOrNull} from 'react-reconciler/src/ReactCurrentFiber';
 import {getToStringValue, toString} from './ToStringValue';
 import type {ToStringValue} from './ToStringValue';
@@ -64,7 +64,7 @@ export function getHostProps(element: Element, props: Object) {
 export function initWrapperState(element: Element, props: Object) {
   const node = ((element: any): TextAreaWithWrapperState);
   if (__DEV__) {
-    ReactControlledValuePropTypes.checkPropTypes('textarea', props);
+    checkControlledValueProps('textarea', props);
     if (
       props.value !== undefined &&
       props.defaultValue !== undefined &&

@@ -127,7 +127,9 @@ function prepareToDraw(): void {
 
   draw(nodeToData);
 
-  redrawTimeoutID = setTimeout(prepareToDraw, earliestExpiration - now);
+  if (earliestExpiration !== Number.MAX_VALUE) {
+    redrawTimeoutID = setTimeout(prepareToDraw, earliestExpiration - now);
+  }
 }
 
 function measureNode(node: Object): Rect | null {

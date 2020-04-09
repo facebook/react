@@ -6,8 +6,6 @@
  */
 
 import {runEventsInBatch} from 'legacy-events/EventBatching';
-import {enqueueStateRestore} from 'legacy-events/ReactControlledComponent';
-import {batchedUpdates} from 'legacy-events/ReactGenericBatching';
 import SyntheticEvent from 'legacy-events/SyntheticEvent';
 import isTextInputElement from './isTextInputElement';
 import {canUseDOM} from 'shared/ExecutionEnvironment';
@@ -27,9 +25,15 @@ import isEventSupported from './isEventSupported';
 import {getNodeFromInstance} from '../client/ReactDOMComponentTree';
 import {updateValueIfChanged} from '../client/inputValueTracking';
 import {setDefaultValue} from '../client/ReactDOMInput';
+import {enqueueStateRestore} from './ReactDOMControlledComponent';
 
-import {disableInputAttributeSyncing} from 'shared/ReactFeatureFlags';
+import {
+  disableInputAttributeSyncing,
+  enableModernEventSystem,
+} from 'shared/ReactFeatureFlags';
 import accumulateTwoPhaseListeners from './accumulateTwoPhaseListeners';
+import {batchedUpdates} from './ReactDOMUpdateBatching';
+import {dispatchEventsInBatch} from './DOMModernPluginEventSystem';
 
 const eventTypes = {
   change: {
@@ -101,7 +105,11 @@ function manualDispatchChangeEvent(nativeEvent) {
 }
 
 function runEventInBatch(event) {
-  runEventsInBatch(event);
+  if (enableModernEventSystem) {
+    dispatchEventsInBatch([event]);
+  } else {
+    runEventsInBatch(event);
+  }
 }
 
 function getInstIfValueChanged(targetInst) {

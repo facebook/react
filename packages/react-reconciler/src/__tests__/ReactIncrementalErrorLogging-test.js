@@ -188,14 +188,13 @@ describe('ReactIncrementalErrorLogging', () => {
     expect(Scheduler).toFlushAndYield(
       [
         'render: 0',
-        __DEV__ && 'render: 0', // replay
 
         'render: 1',
-        __DEV__ && 'render: 1', // replay
+        __DEV__ && 'render: 1', // replay due to invokeGuardedCallback
 
         // Retry one more time before handling error
         'render: 1',
-        __DEV__ && 'render: 1', // replay
+        __DEV__ && 'render: 1', // replay due to invokeGuardedCallback
 
         'componentWillUnmount: 0',
       ].filter(Boolean),

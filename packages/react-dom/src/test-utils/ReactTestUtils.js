@@ -23,6 +23,10 @@ import act from './ReactTestUtilsAct';
 import forEachAccumulated from 'legacy-events/forEachAccumulated';
 import accumulateInto from 'legacy-events/accumulateInto';
 import {enableModernEventSystem} from 'shared/ReactFeatureFlags';
+import {
+  rethrowCaughtError,
+  invokeGuardedCallbackAndCatchFirstError,
+} from 'shared/ReactErrorUtils';
 
 const {findDOMNode} = ReactDOM;
 // Keep in sync with ReactDOMUnstableNativeDependencies.js
@@ -38,7 +42,6 @@ const [
   enqueueStateRestore,
   restoreStateIfNeeded,
   dispatchEvent,
-  runEventsInBatch,
   /* eslint-disable no-unused-vars */
   flushPassiveEffects,
   IsThisRendererActing,
@@ -354,6 +357,93 @@ function nativeTouchData(x, y) {
 // Start of inline: the below functions were inlined from
 // EventPropagator.js, as they deviated from ReactDOM's newer
 // implementations.
+
+/**
+ * Dispatch the event to the listener.
+ * @param {SyntheticEvent} event SyntheticEvent to handle
+ * @param {function} listener Application-level callback
+ * @param {*} inst Internal component instance
+ */
+function executeDispatch(event, listener, inst) {
+  const type = event.type || 'unknown-event';
+  event.currentTarget = getNodeFromInstance(inst);
+  invokeGuardedCallbackAndCatchFirstError(type, listener, undefined, event);
+  event.currentTarget = null;
+}
+
+/**
+ * Standard/simple iteration through an event's collected dispatches.
+ */
+function executeDispatchesInOrder(event) {
+  const dispatchListeners = event._dispatchListeners;
+  const dispatchInstances = event._dispatchInstances;
+  if (Array.isArray(dispatchListeners)) {
+    for (let i = 0; i < dispatchListeners.length; i++) {
+      if (event.isPropagationStopped()) {
+        break;
+      }
+      // Listeners and Instances are two parallel arrays that are always in sync.
+      executeDispatch(event, dispatchListeners[i], dispatchInstances[i]);
+    }
+  } else if (dispatchListeners) {
+    executeDispatch(event, dispatchListeners, dispatchInstances);
+  }
+  event._dispatchListeners = null;
+  event._dispatchInstances = null;
+}
+
+/**
+ * Internal queue of events that have accumulated their dispatches and are
+ * waiting to have their dispatches executed.
+ */
+let eventQueue: ?(Array<ReactSyntheticEvent> | ReactSyntheticEvent) = null;
+
+/**
+ * Dispatches an event and releases it back into the pool, unless persistent.
+ *
+ * @param {?object} event Synthetic event to be dispatched.
+ * @private
+ */
+const executeDispatchesAndRelease = function(event: ReactSyntheticEvent) {
+  if (event) {
+    executeDispatchesInOrder(event);
+
+    if (!event.isPersistent()) {
+      event.constructor.release(event);
+    }
+  }
+};
+
+const executeDispatchesAndReleaseTopLevel = function(e) {
+  return executeDispatchesAndRelease(e);
+};
+
+function runEventsInBatch(
+  events: Array<ReactSyntheticEvent> | ReactSyntheticEvent | null,
+) {
+  if (events !== null) {
+    eventQueue = accumulateInto(eventQueue, events);
+  }
+
+  // Set `eventQueue` to null before processing it so that we can tell if more
+  // events get enqueued while processing.
+  const processingEventQueue = eventQueue;
+  eventQueue = null;
+
+  if (!processingEventQueue) {
+    return;
+  }
+
+  forEachAccumulated(processingEventQueue, executeDispatchesAndReleaseTopLevel);
+  invariant(
+    !eventQueue,
+    'processEventQueue(): Additional events were enqueued while processing ' +
+      'an event queue. Support for this has not yet been implemented.',
+  );
+  // This would be a good time to rethrow if any of the event handlers threw.
+  rethrowCaughtError();
+}
+
 function isInteractive(tag) {
   return (
     tag === 'button' ||

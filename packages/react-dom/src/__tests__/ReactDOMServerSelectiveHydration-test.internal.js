@@ -97,7 +97,6 @@ describe('ReactDOMServerSelectiveHydration', () => {
 
     const ReactFeatureFlags = require('shared/ReactFeatureFlags');
     ReactFeatureFlags.enableDeprecatedFlareAPI = true;
-    ReactFeatureFlags.debugRenderPhaseSideEffectsForStrictMode = false;
 
     React = require('react');
     ReactDOM = require('react-dom');

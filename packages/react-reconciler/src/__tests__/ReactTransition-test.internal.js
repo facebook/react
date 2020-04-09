@@ -24,7 +24,7 @@ describe('ReactTransition', () => {
     jest.resetModules();
 
     ReactFeatureFlags = require('shared/ReactFeatureFlags');
-    ReactFeatureFlags.debugRenderPhaseSideEffectsForStrictMode = false;
+
     ReactFeatureFlags.enableSchedulerTracing = true;
     ReactFeatureFlags.flushSuspenseFallbacksInTests = false;
     React = require('react');

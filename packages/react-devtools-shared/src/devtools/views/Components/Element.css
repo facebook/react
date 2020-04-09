@@ -13,7 +13,7 @@
 
 .Wrapper {
   padding: 0 0.25rem;
-  white-space: nowrap;
+  white-space: pre;
   height: var(--line-height-data);
   line-height: var(--line-height-data);
   display: inline-flex;

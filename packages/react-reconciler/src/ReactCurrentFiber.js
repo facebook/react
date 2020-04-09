@@ -7,52 +7,13 @@
  * @flow
  */
 
-import type {Fiber} from './ReactFiber';
+import type {Fiber} from './ReactInternalTypes';
 
 import ReactSharedInternals from 'shared/ReactSharedInternals';
-import {
-  HostRoot,
-  HostPortal,
-  HostText,
-  Fragment,
-  ContextProvider,
-  ContextConsumer,
-} from './ReactWorkTags';
-import describeComponentFrame from 'shared/describeComponentFrame';
+import {getStackByFiberInDevAndProd} from './ReactFiberComponentStack';
 import getComponentName from 'shared/getComponentName';
 
 const ReactDebugCurrentFrame = ReactSharedInternals.ReactDebugCurrentFrame;
-
-function describeFiber(fiber: Fiber): string {
-  switch (fiber.tag) {
-    case HostRoot:
-    case HostPortal:
-    case HostText:
-    case Fragment:
-    case ContextProvider:
-    case ContextConsumer:
-      return '';
-    default:
-      const owner = fiber._debugOwner;
-      const source = fiber._debugSource;
-      const name = getComponentName(fiber.type);
-      let ownerName = null;
-      if (owner) {
-        ownerName = getComponentName(owner.type);
-      }
-      return describeComponentFrame(name, source, ownerName);
-  }
-}
-
-export function getStackByFiberInDevAndProd(workInProgress: Fiber): string {
-  let info = '';
-  let node = workInProgress;
-  do {
-    info += describeFiber(node);
-    node = node.return;
-  } while (node);
-  return info;
-}
 
 export let current: Fiber | null = null;
 export let isRendering: boolean = false;
@@ -101,5 +62,11 @@ export function setCurrentFiber(fiber: Fiber) {
 export function setIsRendering(rendering: boolean) {
   if (__DEV__) {
     isRendering = rendering;
+  }
+}
+
+export function getIsRendering() {
+  if (__DEV__) {
+    return isRendering;
   }
 }

@@ -42,7 +42,7 @@ describe('ReactHooksWithNoopRenderer', () => {
     jest.useFakeTimers();
 
     ReactFeatureFlags = require('shared/ReactFeatureFlags');
-    ReactFeatureFlags.debugRenderPhaseSideEffectsForStrictMode = false;
+
     ReactFeatureFlags.enableSchedulerTracing = true;
     ReactFeatureFlags.flushSuspenseFallbacksInTests = false;
     ReactFeatureFlags.enableProfilerTimer = true;
@@ -299,25 +299,29 @@ describe('ReactHooksWithNoopRenderer', () => {
     });
 
     it('returns the same updater function every time', () => {
-      const updaters = [];
+      let updater = null;
       function Counter() {
         const [count, updateCount] = useState(0);
-        updaters.push(updateCount);
+        updater = updateCount;
         return <Text text={'Count: ' + count} />;
       }
       ReactNoop.render(<Counter />);
       expect(Scheduler).toFlushAndYield(['Count: 0']);
       expect(ReactNoop.getChildren()).toEqual([span('Count: 0')]);
 
-      act(() => updaters[0](1));
+      const firstUpdater = updater;
+
+      act(() => firstUpdater(1));
       expect(Scheduler).toHaveYielded(['Count: 1']);
       expect(ReactNoop.getChildren()).toEqual([span('Count: 1')]);
 
-      act(() => updaters[0](count => count + 10));
+      const secondUpdater = updater;
+
+      act(() => firstUpdater(count => count + 10));
       expect(Scheduler).toHaveYielded(['Count: 11']);
       expect(ReactNoop.getChildren()).toEqual([span('Count: 11')]);
 
-      expect(updaters).toEqual([updaters[0], updaters[0], updaters[0]]);
+      expect(firstUpdater).toBe(secondUpdater);
     });
 
     it('warns on set after unmount', () => {
@@ -476,7 +480,11 @@ describe('ReactHooksWithNoopRenderer', () => {
           </>,
         );
         expect(() =>
-          expect(Scheduler).toFlushAndYield(['Foo [0]', 'Bar', 'Foo [1]']),
+          expect(Scheduler).toFlushAndYield(
+            __DEV__
+              ? ['Foo [0]', 'Bar', 'Foo [2]']
+              : ['Foo [0]', 'Bar', 'Foo [1]'],
+          ),
         ).toErrorDev([
           'Cannot update a component (`Foo`) while rendering a ' +
             'different component (`Bar`). To locate the bad setState() call inside `Bar`',
@@ -491,7 +499,11 @@ describe('ReactHooksWithNoopRenderer', () => {
             <Bar triggerUpdate={true} />
           </>,
         );
-        expect(Scheduler).toFlushAndYield(['Foo [1]', 'Bar', 'Foo [2]']);
+        expect(Scheduler).toFlushAndYield(
+          __DEV__
+            ? ['Foo [2]', 'Bar', 'Foo [4]']
+            : ['Foo [1]', 'Bar', 'Foo [2]'],
+        );
       });
     });
 
@@ -748,6 +760,41 @@ describe('ReactHooksWithNoopRenderer', () => {
       root.render(<Foo signal={true} />);
       expect(Scheduler).toFlushAndYield(['B:0']);
       expect(root).toMatchRenderedOutput(<span prop="B:0" />);
+    });
+
+    it('regression: render phase updates cause lower pri work to be dropped', async () => {
+      let setRow;
+      function ScrollView() {
+        const [row, _setRow] = useState(10);
+        setRow = _setRow;
+
+        const [scrollDirection, setScrollDirection] = useState('Up');
+        const [prevRow, setPrevRow] = useState(null);
+
+        if (prevRow !== row) {
+          setScrollDirection(prevRow !== null && row > prevRow ? 'Down' : 'Up');
+          setPrevRow(row);
+        }
+
+        return <Text text={scrollDirection} />;
+      }
+
+      const root = ReactNoop.createRoot();
+
+      await act(async () => {
+        root.render(<ScrollView row={10} />);
+      });
+      expect(Scheduler).toHaveYielded(['Up']);
+      expect(root).toMatchRenderedOutput(<span prop="Up" />);
+
+      await act(async () => {
+        ReactNoop.discreteUpdates(() => {
+          setRow(5);
+        });
+        setRow(20);
+      });
+      expect(Scheduler).toHaveYielded(['Up', 'Down']);
+      expect(root).toMatchRenderedOutput(<span prop="Down" />);
     });
 
     // TODO: This should probably warn

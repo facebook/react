@@ -18,11 +18,14 @@ describe('ReactIncrementalErrorReplay-test', () => {
     // We almost always try to avoid such tests, but here the cost of
     // the list getting out of sync (and causing subtle bugs in rare cases)
     // is higher than the cost of maintaining the test.
-    const {
-      // This is the method we're going to test.
-      // If this is no longer used, you can delete this test file.
-      assignFiberPropertiesInDEV,
-    } = require('../ReactFiber');
+
+    // This is the method we're going to test.
+    // If this is no longer used, you can delete this test file.;
+
+    const assignFiberPropertiesInDEV = require('shared/ReactFeatureFlags')
+      ? // TODO: Update this to point to the new module, once it exists
+        require('../ReactFiber.old').assignFiberPropertiesInDEV
+      : require('../ReactFiber.old').assignFiberPropertiesInDEV;
 
     // Get a real fiber.
     const realFiber = ReactTestRenderer.create(<div />).root._currentFiber();

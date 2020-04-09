@@ -50,7 +50,7 @@ import {
   registerRenderer as registerRendererWithConsole,
 } from './console';
 
-import type {Fiber} from 'react-reconciler/src/ReactFiber';
+import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
 import type {
   ChangeDescription,
   CommitDataBackend,
@@ -918,7 +918,7 @@ export function attach(
   }
 
   function didHooksChange(prev: any, next: any): boolean {
-    if (next == null) {
+    if (prev == null || next == null) {
       return false;
     }
 

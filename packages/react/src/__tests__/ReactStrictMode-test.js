@@ -40,8 +40,7 @@ describe('ReactStrictMode', () => {
       'Invalid ARIA attribute `ariaTypo`. ' +
         'ARIA attributes follow the pattern aria-* and must be lowercase.\n' +
         '    in div (at **)\n' +
-        '    in Foo (at **)\n' +
-        '    in StrictMode (at **)',
+        '    in Foo (at **)',
     );
   });
 
@@ -60,8 +59,7 @@ describe('ReactStrictMode', () => {
       'Invalid ARIA attribute `ariaTypo`. ' +
         'ARIA attributes follow the pattern aria-* and must be lowercase.\n' +
         '    in div (at **)\n' +
-        '    in Foo (at **)\n' +
-        '    in StrictMode (at **)',
+        '    in Foo (at **)',
     );
   });
 
@@ -759,7 +757,6 @@ describe('string refs', () => {
         'We recommend using useRef() or createRef() instead. ' +
         'Learn more about using refs safely here: ' +
         'https://fb.me/react-strict-mode-string-ref\n' +
-        '    in StrictMode (at **)\n' +
         '    in OuterComponent (at **)',
     );
 
@@ -802,7 +799,6 @@ describe('string refs', () => {
         'Learn more about using refs safely here: ' +
         'https://fb.me/react-strict-mode-string-ref\n' +
         '    in InnerComponent (at **)\n' +
-        '    in StrictMode (at **)\n' +
         '    in OuterComponent (at **)',
     );
 
@@ -883,7 +879,6 @@ describe('context legacy', () => {
         '\n\nLearn more about this warning here: ' +
         'https://fb.me/react-legacy-context' +
         '\n    in LegacyContextProvider (at **)' +
-        '\n    in StrictMode (at **)' +
         '\n    in div (at **)' +
         '\n    in Root (at **)',
     );
