@@ -7,7 +7,7 @@
  * @flow
  */
 
-import type {Fiber} from './ReactFiber';
+import type {Fiber} from './ReactFiber.old';
 
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import {getStackByFiberInDevAndProd} from './ReactFiberComponentStack';

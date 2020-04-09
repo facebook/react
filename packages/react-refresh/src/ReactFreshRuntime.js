@@ -8,7 +8,7 @@
  */
 
 import type {Instance} from 'react-reconciler/src/ReactFiberHostConfig';
-import type {FiberRoot} from 'react-reconciler/src/ReactFiberRoot';
+import type {FiberRoot} from 'react-reconciler/src/ReactFiberRoot.old';
 import type {
   Family,
   RefreshUpdate,

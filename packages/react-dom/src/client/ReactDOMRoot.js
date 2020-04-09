@@ -12,7 +12,7 @@ import type {RootTag} from 'react-reconciler/src/ReactRootTags';
 import type {ReactNodeList} from 'shared/ReactTypes';
 // TODO: This type is shared between the reconciler and ReactDOM, but will
 // eventually be lifted out to the renderer.
-import type {FiberRoot} from 'react-reconciler/src/ReactFiberRoot';
+import type {FiberRoot} from 'react-reconciler/src/ReactFiberRoot.old';
 import {findHostInstanceWithNoPortals} from 'react-reconciler/src/ReactFiberReconciler';
 
 export type RootType = {

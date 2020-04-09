@@ -7,9 +7,9 @@
  * @flow
  */
 
-import type {Fiber} from './ReactFiber';
-import type {ExpirationTime} from './ReactFiberExpirationTime';
-import type {UpdateQueue} from './ReactUpdateQueue';
+import type {Fiber} from './ReactFiber.old';
+import type {ExpirationTime} from './ReactFiberExpirationTime.old';
+import type {UpdateQueue} from './ReactUpdateQueue.old';
 
 import * as React from 'react';
 import {Update, Snapshot} from './ReactSideEffectTags';
@@ -18,15 +18,15 @@ import {
   disableLegacyContext,
   warnAboutDeprecatedLifecycles,
 } from 'shared/ReactFeatureFlags';
-import ReactStrictModeWarnings from './ReactStrictModeWarnings';
-import {isMounted} from 'react-reconciler/src/ReactFiberTreeReflection';
+import ReactStrictModeWarnings from './ReactStrictModeWarnings.old';
+import {isMounted} from './ReactFiberTreeReflection';
 import {get as getInstance, set as setInstance} from 'shared/ReactInstanceMap';
 import shallowEqual from 'shared/shallowEqual';
 import getComponentName from 'shared/getComponentName';
 import invariant from 'shared/invariant';
 import {REACT_CONTEXT_TYPE, REACT_PROVIDER_TYPE} from 'shared/ReactSymbols';
 
-import {resolveDefaultProps} from './ReactFiberLazyComponent';
+import {resolveDefaultProps} from './ReactFiberLazyComponent.old';
 import {StrictMode} from './ReactTypeOfMode';
 
 import {
@@ -39,22 +39,22 @@ import {
   ForceUpdate,
   initializeUpdateQueue,
   cloneUpdateQueue,
-} from './ReactUpdateQueue';
-import {NoWork} from './ReactFiberExpirationTime';
+} from './ReactUpdateQueue.old';
+import {NoWork} from './ReactFiberExpirationTime.old';
 import {
   cacheContext,
   getMaskedContext,
   getUnmaskedContext,
   hasContextChanged,
   emptyContextObject,
-} from './ReactFiberContext';
-import {readContext} from './ReactFiberNewContext';
+} from './ReactFiberContext.old';
+import {readContext} from './ReactFiberNewContext.old';
 import {
   requestCurrentTimeForUpdate,
   computeExpirationForFiber,
   scheduleUpdateOnFiber,
-} from './ReactFiberWorkLoop';
-import {requestCurrentSuspenseConfig} from './ReactFiberSuspenseConfig';
+} from './ReactFiberWorkLoop.old';
+import {requestCurrentSuspenseConfig} from './ReactFiberSuspenseConfig.old';
 
 import {disableLogs, reenableLogs} from 'shared/ConsolePatchingDev';
 

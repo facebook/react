@@ -7,7 +7,7 @@
  * @flow
  */
 
-import type {SuspenseConfig} from 'react-reconciler/src/ReactFiberSuspenseConfig';
+import type {SuspenseConfig} from 'react-reconciler/src/ReactFiberSuspenseConfig.old';
 
 /**
  * Keeps track of the current batch's configuration such as how long an update

@@ -8,9 +8,9 @@
  */
 
 import type {ReactContext} from 'shared/ReactTypes';
-import type {Fiber} from './ReactFiber';
-import type {StackCursor} from './ReactFiberStack';
-import type {ExpirationTime} from './ReactFiberExpirationTime';
+import type {Fiber} from './ReactFiber.old';
+import type {StackCursor} from './ReactFiberStack.old';
+import type {ExpirationTime} from './ReactFiberExpirationTime.old';
 
 export type ContextDependency<T> = {
   context: ReactContext<T>,
@@ -20,7 +20,7 @@ export type ContextDependency<T> = {
 };
 
 import {isPrimaryRenderer} from './ReactFiberHostConfig';
-import {createCursor, push, pop} from './ReactFiberStack';
+import {createCursor, push, pop} from './ReactFiberStack.old';
 import {MAX_SIGNED_31_BIT_INT} from './MaxInts';
 import {
   ContextProvider,
@@ -30,13 +30,9 @@ import {
 
 import invariant from 'shared/invariant';
 import is from 'shared/objectIs';
-import {
-  createUpdate,
-  enqueueUpdate,
-  ForceUpdate,
-} from 'react-reconciler/src/ReactUpdateQueue';
-import {NoWork} from './ReactFiberExpirationTime';
-import {markWorkInProgressReceivedUpdate} from './ReactFiberBeginWork';
+import {createUpdate, enqueueUpdate, ForceUpdate} from './ReactUpdateQueue.old';
+import {NoWork} from './ReactFiberExpirationTime.old';
+import {markWorkInProgressReceivedUpdate} from './ReactFiberBeginWork.old';
 import {enableSuspenseServerRenderer} from 'shared/ReactFeatureFlags';
 
 const valueCursor: StackCursor<mixed> = createCursor(null);

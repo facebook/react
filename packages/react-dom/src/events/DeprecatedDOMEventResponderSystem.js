@@ -31,7 +31,7 @@ import {
   flushDiscreteUpdatesIfNeeded,
   executeUserEventHandler,
 } from './ReactDOMUpdateBatching';
-import type {Fiber} from 'react-reconciler/src/ReactFiber';
+import type {Fiber} from 'react-reconciler/src/ReactFiber.old';
 import {enableDeprecatedFlareAPI} from 'shared/ReactFeatureFlags';
 import invariant from 'shared/invariant';
 

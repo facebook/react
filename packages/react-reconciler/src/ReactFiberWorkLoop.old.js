@@ -8,14 +8,14 @@
  */
 
 import type {Wakeable} from 'shared/ReactTypes';
-import type {Fiber} from './ReactFiber';
-import type {FiberRoot} from './ReactFiberRoot';
-import type {ExpirationTime} from './ReactFiberExpirationTime';
-import type {ReactPriorityLevel} from './SchedulerWithReactIntegration';
+import type {Fiber} from './ReactFiber.old';
+import type {FiberRoot} from './ReactFiberRoot.old';
+import type {ExpirationTime} from './ReactFiberExpirationTime.old';
+import type {ReactPriorityLevel} from './SchedulerWithReactIntegration.old';
 import type {Interaction} from 'scheduler/src/Tracing';
-import type {SuspenseConfig} from './ReactFiberSuspenseConfig';
-import type {SuspenseState} from './ReactFiberSuspenseComponent';
-import type {Effect as HookEffect} from './ReactFiberHooks';
+import type {SuspenseConfig} from './ReactFiberSuspenseConfig.old';
+import type {SuspenseState} from './ReactFiberSuspenseComponent.old';
+import type {Effect as HookEffect} from './ReactFiberHooks.old';
 
 import {
   warnAboutDeprecatedLifecycles,
@@ -49,7 +49,7 @@ import {
   IdlePriority,
   flushSyncCallbackQueue,
   scheduleSyncCallback,
-} from './SchedulerWithReactIntegration';
+} from './SchedulerWithReactIntegration.old';
 
 // The scheduler is imported here *only* to detect whether it's been mocked
 import * as Scheduler from 'scheduler';
@@ -65,14 +65,17 @@ import {
   warnsIfNotActing,
 } from './ReactFiberHostConfig';
 
-import {createWorkInProgress, assignFiberPropertiesInDEV} from './ReactFiber';
+import {
+  createWorkInProgress,
+  assignFiberPropertiesInDEV,
+} from './ReactFiber.old';
 import {
   isRootSuspendedAtTime,
   markRootSuspendedAtTime,
   markRootFinishedAtTime,
   markRootUpdatedAtTime,
   markRootExpiredAtTime,
-} from './ReactFiberRoot';
+} from './ReactFiberRoot.old';
 import {
   NoMode,
   StrictMode,
@@ -91,7 +94,7 @@ import {
   SimpleMemoComponent,
   Block,
 } from './ReactWorkTags';
-import {LegacyRoot} from 'react-reconciler/src/ReactRootTags';
+import {LegacyRoot} from './ReactRootTags';
 import {
   NoEffect,
   PerformedWork,
@@ -122,15 +125,15 @@ import {
   LOW_PRIORITY_EXPIRATION,
   Batched,
   Idle,
-} from './ReactFiberExpirationTime';
-import {beginWork as originalBeginWork} from './ReactFiberBeginWork';
-import {completeWork} from './ReactFiberCompleteWork';
-import {unwindWork, unwindInterruptedWork} from './ReactFiberUnwindWork';
+} from './ReactFiberExpirationTime.old';
+import {beginWork as originalBeginWork} from './ReactFiberBeginWork.old';
+import {completeWork} from './ReactFiberCompleteWork.old';
+import {unwindWork, unwindInterruptedWork} from './ReactFiberUnwindWork.old';
 import {
   throwException,
   createRootErrorUpdate,
   createClassErrorUpdate,
-} from './ReactFiberThrow';
+} from './ReactFiberThrow.old';
 import {
   commitBeforeMutationLifeCycles as commitBeforeMutationEffectOnFiber,
   commitLifeCycles as commitLayoutEffectOnFiber,
@@ -142,14 +145,14 @@ import {
   commitAttachRef,
   commitPassiveEffectDurations,
   commitResetTextContent,
-} from './ReactFiberCommitWork';
-import {enqueueUpdate} from './ReactUpdateQueue';
-import {resetContextDependencies} from './ReactFiberNewContext';
+} from './ReactFiberCommitWork.old';
+import {enqueueUpdate} from './ReactUpdateQueue.old';
+import {resetContextDependencies} from './ReactFiberNewContext.old';
 import {
   resetHooksAfterThrow,
   ContextOnlyDispatcher,
   getIsUpdatingOpaqueValueInRenderPhaseInDEV,
-} from './ReactFiberHooks';
+} from './ReactFiberHooks.old';
 import {createCapturedValue} from './ReactCapturedValue';
 
 import {
@@ -158,11 +161,11 @@ import {
   startPassiveEffectTimer,
   startProfilerTimer,
   stopProfilerTimerIfRunningAndRecordDelta,
-} from './ReactProfilerTimer';
+} from './ReactProfilerTimer.old';
 
 // DEV stuff
 import getComponentName from 'shared/getComponentName';
-import ReactStrictModeWarnings from './ReactStrictModeWarnings';
+import ReactStrictModeWarnings from './ReactStrictModeWarnings.old';
 import {getStackByFiberInDevAndProd} from './ReactFiberComponentStack';
 import {
   isRendering as ReactCurrentDebugFiberIsRenderingInDEV,
@@ -174,7 +177,7 @@ import {
   hasCaughtError,
   clearCaughtError,
 } from 'shared/ReactErrorUtils';
-import {onCommitRoot} from './ReactFiberDevToolsHook';
+import {onCommitRoot} from './ReactFiberDevToolsHook.old';
 
 const ceil = Math.ceil;
 

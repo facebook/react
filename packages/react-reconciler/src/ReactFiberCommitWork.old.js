@@ -15,13 +15,13 @@ import type {
   ChildSet,
   UpdatePayload,
 } from './ReactFiberHostConfig';
-import type {Fiber} from './ReactFiber';
-import type {FiberRoot} from './ReactFiberRoot';
-import type {ExpirationTime} from './ReactFiberExpirationTime';
-import type {SuspenseState} from './ReactFiberSuspenseComponent';
-import type {FunctionComponentUpdateQueue} from './ReactFiberHooks';
+import type {Fiber} from './ReactFiber.old';
+import type {FiberRoot} from './ReactFiberRoot.old';
+import type {ExpirationTime} from './ReactFiberExpirationTime.old';
+import type {SuspenseState} from './ReactFiberSuspenseComponent.old';
+import type {FunctionComponentUpdateQueue} from './ReactFiberHooks.old';
 import type {Wakeable} from 'shared/ReactTypes';
-import type {ReactPriorityLevel} from './SchedulerWithReactIntegration';
+import type {ReactPriorityLevel} from './SchedulerWithReactIntegration.old';
 
 import {unstable_wrap as Schedule_tracing_wrap} from 'scheduler/tracing';
 import {
@@ -72,18 +72,18 @@ import {
 import getComponentName from 'shared/getComponentName';
 import invariant from 'shared/invariant';
 
-import {onCommitUnmount} from './ReactFiberDevToolsHook';
+import {onCommitUnmount} from './ReactFiberDevToolsHook.old';
 import {getStackByFiberInDevAndProd} from './ReactFiberComponentStack';
-import {resolveDefaultProps} from './ReactFiberLazyComponent';
+import {resolveDefaultProps} from './ReactFiberLazyComponent.old';
 import {
   getCommitTime,
   recordLayoutEffectDuration,
   recordPassiveEffectDuration,
   startLayoutEffectTimer,
   startPassiveEffectTimer,
-} from './ReactProfilerTimer';
+} from './ReactProfilerTimer.old';
 import {ProfileMode} from './ReactTypeOfMode';
-import {commitUpdateQueue} from './ReactUpdateQueue';
+import {commitUpdateQueue} from './ReactUpdateQueue.old';
 import {
   getPublicInstance,
   supportsMutation,
@@ -120,19 +120,22 @@ import {
   enqueuePendingPassiveHookEffectMount,
   enqueuePendingPassiveHookEffectUnmount,
   enqueuePendingPassiveProfilerEffect,
-} from './ReactFiberWorkLoop';
+} from './ReactFiberWorkLoop.old';
 import {
   NoEffect as NoHookEffect,
   HasEffect as HookHasEffect,
   Layout as HookLayout,
   Passive as HookPassive,
 } from './ReactHookEffectTags';
-import {didWarnAboutReassigningProps} from './ReactFiberBeginWork';
-import {runWithPriority, NormalPriority} from './SchedulerWithReactIntegration';
+import {didWarnAboutReassigningProps} from './ReactFiberBeginWork.old';
+import {
+  runWithPriority,
+  NormalPriority,
+} from './SchedulerWithReactIntegration.old';
 import {
   updateDeprecatedEventListeners,
   unmountDeprecatedResponderListeners,
-} from './ReactFiberDeprecatedEvents';
+} from './ReactFiberDeprecatedEvents.old';
 
 let didWarnAboutUndefinedSnapshotBeforeUpdate: Set<mixed> | null = null;
 if (__DEV__) {

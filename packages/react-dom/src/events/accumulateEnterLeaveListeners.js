@@ -7,7 +7,7 @@
  * @flow
  */
 
-import type {Fiber} from 'react-reconciler/src/ReactFiber';
+import type {Fiber} from 'react-reconciler/src/ReactFiber.old';
 import type {ReactSyntheticEvent} from 'legacy-events/ReactSyntheticEventType';
 
 import {HostComponent} from 'react-reconciler/src/ReactWorkTags';
@@ -82,7 +82,7 @@ function accumulateEnterLeaveListenersForEvent(
     return;
   }
   const dispatchListeners = [];
-  const dispatchInstances = [];
+  const dispatchInstances: Array<Fiber | null> = [];
   const dispatchCurrentTargets = [];
 
   let instance = target;

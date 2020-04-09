@@ -7,7 +7,7 @@
  * @flow
  */
 
-import type {Fiber} from './ReactFiber';
+import type {Fiber} from './ReactFiber.old';
 
 export type StackCursor<T> = {|current: T|};
 

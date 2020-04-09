@@ -7,7 +7,7 @@
  * @flow
  */
 
-import type {ReactPriorityLevel} from './SchedulerWithReactIntegration';
+import type {ReactPriorityLevel} from './SchedulerWithReactIntegration.old';
 
 import {MAX_SIGNED_31_BIT_INT} from './MaxInts';
 
@@ -16,7 +16,7 @@ import {
   UserBlockingPriority,
   NormalPriority,
   IdlePriority,
-} from './SchedulerWithReactIntegration';
+} from './SchedulerWithReactIntegration.old';
 
 export type ExpirationTime = number;
 

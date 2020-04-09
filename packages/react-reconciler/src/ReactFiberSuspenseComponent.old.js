@@ -7,9 +7,9 @@
  * @flow
  */
 
-import type {Fiber} from './ReactFiber';
+import type {Fiber} from './ReactFiber.old';
 import type {SuspenseInstance} from './ReactFiberHostConfig';
-import type {ExpirationTime} from './ReactFiberExpirationTime';
+import type {ExpirationTime} from './ReactFiberExpirationTime.old';
 import {SuspenseComponent, SuspenseListComponent} from './ReactWorkTags';
 import {NoEffect, DidCapture} from './ReactSideEffectTags';
 import {

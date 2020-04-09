@@ -7,26 +7,26 @@
  * @flow
  */
 
-import type {Fiber} from './ReactFiber';
-import type {ExpirationTime} from './ReactFiberExpirationTime';
-import type {RootTag} from 'react-reconciler/src/ReactRootTags';
+import type {Fiber} from './ReactFiber.old';
+import type {ExpirationTime} from './ReactFiberExpirationTime.old';
+import type {RootTag} from './ReactRootTags';
 import type {TimeoutHandle, NoTimeout} from './ReactFiberHostConfig';
 import type {Wakeable} from 'shared/ReactTypes';
 import type {Interaction} from 'scheduler/src/Tracing';
-import type {SuspenseHydrationCallbacks} from './ReactFiberSuspenseComponent';
-import type {ReactPriorityLevel} from './SchedulerWithReactIntegration';
+import type {SuspenseHydrationCallbacks} from './ReactFiberSuspenseComponent.old';
+import type {ReactPriorityLevel} from './SchedulerWithReactIntegration.old';
 
 import {noTimeout} from './ReactFiberHostConfig';
-import {createHostRootFiber} from './ReactFiber';
-import {NoWork} from './ReactFiberExpirationTime';
+import {createHostRootFiber} from './ReactFiber.old';
+import {NoWork} from './ReactFiberExpirationTime.old';
 import {
   enableSchedulerTracing,
   enableSuspenseCallback,
 } from 'shared/ReactFeatureFlags';
 import {unstable_getThreadID} from 'scheduler/tracing';
-import {NoPriority} from './SchedulerWithReactIntegration';
-import {initializeUpdateQueue} from './ReactUpdateQueue';
-import {clearPendingUpdates as clearPendingMutableSourceUpdates} from './ReactMutableSource';
+import {NoPriority} from './SchedulerWithReactIntegration.old';
+import {initializeUpdateQueue} from './ReactUpdateQueue.old';
+import {clearPendingUpdates as clearPendingMutableSourceUpdates} from './ReactMutableSource.old';
 
 export type PendingInteractionMap = Map<ExpirationTime, Set<Interaction>>;
 

@@ -11,8 +11,8 @@ import type {ReactElement} from 'shared/ReactElementType';
 import type {ReactPortal} from 'shared/ReactTypes';
 import type {BlockComponent} from 'react/src/ReactBlock';
 import type {LazyComponent} from 'react/src/ReactLazy';
-import type {Fiber} from './ReactFiber';
-import type {ExpirationTime} from './ReactFiberExpirationTime';
+import type {Fiber} from './ReactFiber.old';
+import type {ExpirationTime} from './ReactFiberExpirationTime.old';
 
 import getComponentName from 'shared/getComponentName';
 import {Placement, Deletion} from './ReactSideEffectTags';
@@ -42,11 +42,11 @@ import {
   createFiberFromFragment,
   createFiberFromText,
   createFiberFromPortal,
-} from './ReactFiber';
-import {emptyRefsObject} from './ReactFiberClassComponent';
+} from './ReactFiber.old';
+import {emptyRefsObject} from './ReactFiberClassComponent.old';
 import {getStackByFiberInDevAndProd} from './ReactFiberComponentStack';
 import {getCurrentFiberStackInDev} from './ReactCurrentFiber';
-import {isCompatibleFamilyForHotReloading} from './ReactFiberHotReloading';
+import {isCompatibleFamilyForHotReloading} from './ReactFiberHotReloading.old';
 import {StrictMode} from './ReactTypeOfMode';
 
 let didWarnAboutMaps;

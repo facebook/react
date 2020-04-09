@@ -16,12 +16,12 @@ import type {
   ReactEventResponderListener,
   ReactScopeMethods,
 } from 'shared/ReactTypes';
-import type {Fiber} from './ReactFiber';
-import type {ExpirationTime} from './ReactFiberExpirationTime';
+import type {Fiber} from './ReactFiber.old';
+import type {ExpirationTime} from './ReactFiberExpirationTime.old';
 import type {HookEffectTag} from './ReactHookEffectTags';
-import type {SuspenseConfig} from './ReactFiberSuspenseConfig';
-import type {ReactPriorityLevel} from './SchedulerWithReactIntegration';
-import type {FiberRoot} from './ReactFiberRoot';
+import type {SuspenseConfig} from './ReactFiberSuspenseConfig.old';
+import type {ReactPriorityLevel} from './SchedulerWithReactIntegration.old';
+import type {FiberRoot} from './ReactFiberRoot.old';
 import type {
   OpaqueIDType,
   ReactListenerEvent,
@@ -32,11 +32,11 @@ import type {
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import {enableUseEventAPI} from 'shared/ReactFeatureFlags';
 
-import {markRootExpiredAtTime} from './ReactFiberRoot';
-import {NoWork, Sync} from './ReactFiberExpirationTime';
+import {markRootExpiredAtTime} from './ReactFiberRoot.old';
+import {NoWork, Sync} from './ReactFiberExpirationTime.old';
 import {NoMode, BlockingMode} from './ReactTypeOfMode';
-import {readContext} from './ReactFiberNewContext';
-import {createDeprecatedResponderListener} from './ReactFiberDeprecatedEvents';
+import {readContext} from './ReactFiberNewContext.old';
+import {createDeprecatedResponderListener} from './ReactFiberDeprecatedEvents.old';
 import {
   Update as UpdateEffect,
   Passive as PassiveEffect,
@@ -57,7 +57,7 @@ import {
   warnIfNotScopedWithMatchingAct,
   markRenderEventTimeAndConfig,
   markUnprocessedUpdateTime,
-} from './ReactFiberWorkLoop';
+} from './ReactFiberWorkLoop.old';
 import {
   registerEvent,
   mountEventListener as mountHostEventListener,
@@ -68,15 +68,15 @@ import {
 import invariant from 'shared/invariant';
 import getComponentName from 'shared/getComponentName';
 import is from 'shared/objectIs';
-import {markWorkInProgressReceivedUpdate} from './ReactFiberBeginWork';
-import {requestCurrentSuspenseConfig} from './ReactFiberSuspenseConfig';
+import {markWorkInProgressReceivedUpdate} from './ReactFiberBeginWork.old';
+import {requestCurrentSuspenseConfig} from './ReactFiberSuspenseConfig.old';
 import {
   UserBlockingPriority,
   NormalPriority,
   runWithPriority,
   getCurrentPriorityLevel,
-} from './SchedulerWithReactIntegration';
-import {getIsHydrating} from './ReactFiberHydrationContext';
+} from './SchedulerWithReactIntegration.old';
+import {getIsHydrating} from './ReactFiberHydrationContext.old';
 import {
   makeClientId,
   makeClientIdInDEV,
@@ -89,8 +89,8 @@ import {
   setPendingExpirationTime,
   setWorkInProgressVersion,
   warnAboutMultipleRenderersDEV,
-} from './ReactMutableSource';
-import {getRootHostContainer} from './ReactFiberHostContext';
+} from './ReactMutableSource.old';
+import {getRootHostContainer} from './ReactFiberHostContext.old';
 import {getIsRendering} from './ReactCurrentFiber';
 
 const {ReactCurrentDispatcher, ReactCurrentBatchConfig} = ReactSharedInternals;

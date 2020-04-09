@@ -7,6 +7,7 @@
  * @flow
  */
 
+import type {Fiber} from 'react-reconciler/src/ReactFiber.old';
 import type {DOMTopLevelEventType} from 'legacy-events/TopLevelEventTypes';
 import type {ReactSyntheticEvent} from 'legacy-events/ReactSyntheticEventType';
 
@@ -17,7 +18,7 @@ export default function accumulateEventTargetListeners(
   currentTarget: EventTarget,
 ): void {
   const dispatchListeners = [];
-  const dispatchInstances = [];
+  const dispatchInstances: Array<Fiber | null> = [];
   const dispatchCurrentTargets = [];
 
   const eventTypeMap = eventTargetEventListenerStore.get(currentTarget);

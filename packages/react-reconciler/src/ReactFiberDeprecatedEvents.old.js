@@ -7,7 +7,7 @@
  * @flow
  */
 
-import type {Fiber} from './ReactFiber';
+import type {Fiber} from './ReactFiber.old';
 import type {Container, Instance} from './ReactFiberHostConfig';
 import type {
   ReactEventResponder,
@@ -19,7 +19,7 @@ import {
   DEPRECATED_mountResponderInstance,
   DEPRECATED_unmountResponderInstance,
 } from './ReactFiberHostConfig';
-import {NoWork} from './ReactFiberExpirationTime';
+import {NoWork} from './ReactFiberExpirationTime.old';
 
 import {REACT_RESPONDER_TYPE} from 'shared/ReactSymbols';
 

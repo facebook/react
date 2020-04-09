@@ -17,12 +17,15 @@ import type {
   ReactEventResponderListener,
   ReactScopeMethods,
 } from 'shared/ReactTypes';
-import type {Fiber} from 'react-reconciler/src/ReactFiber';
+import type {Fiber} from 'react-reconciler/src/ReactFiber.old';
 import type {OpaqueIDType} from 'react-reconciler/src/ReactFiberHostConfig';
 
-import type {Hook, TimeoutConfig} from 'react-reconciler/src/ReactFiberHooks';
-import type {Dispatcher as DispatcherType} from 'react-reconciler/src/ReactFiberHooks';
-import type {SuspenseConfig} from 'react-reconciler/src/ReactFiberSuspenseConfig';
+import type {
+  Hook,
+  TimeoutConfig,
+  Dispatcher as DispatcherType,
+} from 'react-reconciler/src/ReactFiberHooks.old';
+import type {SuspenseConfig} from 'react-reconciler/src/ReactFiberSuspenseConfig.old';
 import {NoMode} from 'react-reconciler/src/ReactTypeOfMode';
 
 import ErrorStackParser from 'error-stack-parser';

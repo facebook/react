@@ -7,9 +7,9 @@
  * @flow
  */
 
-import type {Fiber} from './ReactFiber';
-import type {FiberRoot} from './ReactFiberRoot';
-import type {RootTag} from 'react-reconciler/src/ReactRootTags';
+import type {Fiber} from './ReactFiber.old';
+import type {FiberRoot} from './ReactFiberRoot.old';
+import type {RootTag} from './ReactRootTags';
 import type {
   Instance,
   TextInstance,
@@ -19,16 +19,16 @@ import type {
 import type {RendererInspectionConfig} from './ReactFiberHostConfig';
 import {FundamentalComponent} from './ReactWorkTags';
 import type {ReactNodeList, Thenable} from 'shared/ReactTypes';
-import type {ExpirationTime} from './ReactFiberExpirationTime';
+import type {ExpirationTime} from './ReactFiberExpirationTime.old';
 import type {
   SuspenseHydrationCallbacks,
   SuspenseState,
-} from './ReactFiberSuspenseComponent';
+} from './ReactFiberSuspenseComponent.old';
 
 import {
   findCurrentHostFiber,
   findCurrentHostFiberWithNoPortals,
-} from 'react-reconciler/src/ReactFiberTreeReflection';
+} from './ReactFiberTreeReflection';
 import {get as getInstance} from 'shared/ReactInstanceMap';
 import {
   HostComponent,
@@ -46,9 +46,9 @@ import {
   processChildContext,
   emptyContextObject,
   isContextProvider as isLegacyContextProvider,
-} from './ReactFiberContext';
-import {createFiberRoot} from './ReactFiberRoot';
-import {injectInternals, onScheduleRoot} from './ReactFiberDevToolsHook';
+} from './ReactFiberContext.old';
+import {createFiberRoot} from './ReactFiberRoot.old';
+import {injectInternals, onScheduleRoot} from './ReactFiberDevToolsHook.old';
 import {
   requestCurrentTimeForUpdate,
   computeExpirationForFiber,
@@ -67,8 +67,8 @@ import {
   warnIfNotScopedWithMatchingAct,
   warnIfUnmockedScheduler,
   IsThisRendererActing,
-} from './ReactFiberWorkLoop';
-import {createUpdate, enqueueUpdate} from './ReactUpdateQueue';
+} from './ReactFiberWorkLoop.old';
+import {createUpdate, enqueueUpdate} from './ReactUpdateQueue.old';
 import {getStackByFiberInDevAndProd} from './ReactFiberComponentStack';
 import {
   isRendering as ReactCurrentFiberIsRendering,
@@ -79,14 +79,14 @@ import {
   Sync,
   ContinuousHydration,
   computeInteractiveExpiration,
-} from './ReactFiberExpirationTime';
-import {requestCurrentSuspenseConfig} from './ReactFiberSuspenseConfig';
+} from './ReactFiberExpirationTime.old';
+import {requestCurrentSuspenseConfig} from './ReactFiberSuspenseConfig.old';
 import {
   scheduleRefresh,
   scheduleRoot,
   setRefreshHandler,
   findHostInstancesForRefresh,
-} from './ReactFiberHotReloading';
+} from './ReactFiberHotReloading.old';
 
 // used by isTestEnvironment builds
 import enqueueTask from 'shared/enqueueTask';

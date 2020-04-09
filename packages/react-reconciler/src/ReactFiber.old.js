@@ -17,14 +17,14 @@ import type {
   ReactFundamentalComponent,
   ReactScope,
 } from 'shared/ReactTypes';
-import type {RootTag} from 'react-reconciler/src/ReactRootTags';
+import type {RootTag} from './ReactRootTags';
 import type {WorkTag} from './ReactWorkTags';
 import type {TypeOfMode} from './ReactTypeOfMode';
 import type {SideEffectTag} from './ReactSideEffectTags';
-import type {ExpirationTime} from './ReactFiberExpirationTime';
-import type {UpdateQueue} from './ReactUpdateQueue';
-import type {ContextDependency} from './ReactFiberNewContext';
-import type {HookType} from './ReactFiberHooks';
+import type {ExpirationTime} from './ReactFiberExpirationTime.old';
+import type {UpdateQueue} from './ReactUpdateQueue.old';
+import type {ContextDependency} from './ReactFiberNewContext.old';
+import type {HookType} from './ReactFiberHooks.old';
 import type {SuspenseInstance} from './ReactFiberHostConfig';
 
 import invariant from 'shared/invariant';
@@ -36,7 +36,7 @@ import {
   throwEarlyForMysteriousError,
 } from 'shared/ReactFeatureFlags';
 import {NoEffect, Placement} from './ReactSideEffectTags';
-import {ConcurrentRoot, BlockingRoot} from 'react-reconciler/src/ReactRootTags';
+import {ConcurrentRoot, BlockingRoot} from './ReactRootTags';
 import {
   IndeterminateComponent,
   ClassComponent,
@@ -63,13 +63,13 @@ import {
 } from './ReactWorkTags';
 import getComponentName from 'shared/getComponentName';
 
-import {isDevToolsPresent} from './ReactFiberDevToolsHook';
+import {isDevToolsPresent} from './ReactFiberDevToolsHook.old';
 import {
   resolveClassForHotReloading,
   resolveFunctionForHotReloading,
   resolveForwardRefForHotReloading,
-} from './ReactFiberHotReloading';
-import {NoWork} from './ReactFiberExpirationTime';
+} from './ReactFiberHotReloading.old';
+import {NoWork} from './ReactFiberExpirationTime.old';
 import {
   NoMode,
   ConcurrentMode,

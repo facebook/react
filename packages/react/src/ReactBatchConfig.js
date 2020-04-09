@@ -7,7 +7,7 @@
  * @flow
  */
 
-import type {SuspenseConfig} from 'react-reconciler/src/ReactFiberSuspenseConfig';
+import type {SuspenseConfig} from 'react-reconciler/src/ReactFiberSuspenseConfig.old';
 
 import ReactCurrentBatchConfig from './ReactCurrentBatchConfig';
 

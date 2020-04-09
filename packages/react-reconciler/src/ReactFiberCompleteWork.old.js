@@ -7,13 +7,13 @@
  * @flow
  */
 
-import type {Fiber} from './ReactFiber';
-import type {ExpirationTime} from './ReactFiberExpirationTime';
+import type {Fiber} from './ReactFiber.old';
+import type {ExpirationTime} from './ReactFiberExpirationTime.old';
 import type {
   ReactFundamentalComponentInstance,
   ReactScopeInstance,
 } from 'shared/ReactTypes';
-import type {FiberRoot} from './ReactFiberRoot';
+import type {FiberRoot} from './ReactFiberRoot.old';
 import type {
   Instance,
   Type,
@@ -24,11 +24,11 @@ import type {
 import type {
   SuspenseState,
   SuspenseListRenderState,
-} from './ReactFiberSuspenseComponent';
-import type {SuspenseContext} from './ReactFiberSuspenseContext';
-import {resetWorkInProgressVersions as resetMutableSourceWorkInProgressVersions} from './ReactMutableSource';
+} from './ReactFiberSuspenseComponent.old';
+import type {SuspenseContext} from './ReactFiberSuspenseContext.old';
+import {resetWorkInProgressVersions as resetMutableSourceWorkInProgressVersions} from './ReactMutableSource.old';
 
-import {now} from './SchedulerWithReactIntegration';
+import {now} from './SchedulerWithReactIntegration.old';
 
 import {
   IndeterminateComponent,
@@ -88,7 +88,7 @@ import {
   popHostContext,
   getHostContext,
   popHostContainer,
-} from './ReactFiberHostContext';
+} from './ReactFiberHostContext.old';
 import {
   suspenseStackCursor,
   InvisibleParentSuspenseContext,
@@ -98,21 +98,21 @@ import {
   setShallowSuspenseContext,
   ForceSuspenseFallback,
   setDefaultShallowSuspenseContext,
-} from './ReactFiberSuspenseContext';
-import {findFirstSuspended} from './ReactFiberSuspenseComponent';
+} from './ReactFiberSuspenseContext.old';
+import {findFirstSuspended} from './ReactFiberSuspenseComponent.old';
 import {
   isContextProvider as isLegacyContextProvider,
   popContext as popLegacyContext,
   popTopLevelContextObject as popTopLevelLegacyContextObject,
-} from './ReactFiberContext';
-import {popProvider} from './ReactFiberNewContext';
+} from './ReactFiberContext.old';
+import {popProvider} from './ReactFiberNewContext.old';
 import {
   prepareToHydrateHostInstance,
   prepareToHydrateHostTextInstance,
   prepareToHydrateHostSuspenseInstance,
   popHydrationState,
   resetHydrationState,
-} from './ReactFiberHydrationContext';
+} from './ReactFiberHydrationContext.old';
 import {
   enableSchedulerTracing,
   enableSuspenseCallback,
@@ -127,12 +127,12 @@ import {
   renderDidSuspend,
   renderDidSuspendDelayIfPossible,
   renderHasNotSuspendedYet,
-} from './ReactFiberWorkLoop';
-import {createFundamentalStateInstance} from './ReactFiberFundamental';
-import {Never} from './ReactFiberExpirationTime';
-import {resetChildFibers} from './ReactChildFiber';
-import {updateDeprecatedEventListeners} from './ReactFiberDeprecatedEvents';
-import {createScopeMethods} from './ReactFiberScope';
+} from './ReactFiberWorkLoop.old';
+import {createFundamentalStateInstance} from './ReactFiberFundamental.old';
+import {Never} from './ReactFiberExpirationTime.old';
+import {resetChildFibers} from './ReactChildFiber.old';
+import {updateDeprecatedEventListeners} from './ReactFiberDeprecatedEvents.old';
+import {createScopeMethods} from './ReactFiberScope.old';
 
 function markUpdate(workInProgress: Fiber) {
   // Tag the fiber with an update effect. This turns a Placement into

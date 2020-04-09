@@ -10,15 +10,15 @@
 import type {ReactProviderType, ReactContext} from 'shared/ReactTypes';
 import type {BlockComponent} from 'react/src/ReactBlock';
 import type {LazyComponent as LazyComponentType} from 'react/src/ReactLazy';
-import type {Fiber} from './ReactFiber';
-import type {FiberRoot} from './ReactFiberRoot';
-import type {ExpirationTime} from './ReactFiberExpirationTime';
+import type {Fiber} from './ReactFiber.old';
+import type {FiberRoot} from './ReactFiberRoot.old';
+import type {ExpirationTime} from './ReactFiberExpirationTime.old';
 import type {
   SuspenseState,
   SuspenseListRenderState,
   SuspenseListTailMode,
-} from './ReactFiberSuspenseComponent';
-import type {SuspenseContext} from './ReactFiberSuspenseContext';
+} from './ReactFiberSuspenseComponent.old';
+import type {SuspenseContext} from './ReactFiberSuspenseContext.old';
 
 import checkPropTypes from 'shared/checkPropTypes';
 
@@ -73,7 +73,7 @@ import {
 import invariant from 'shared/invariant';
 import shallowEqual from 'shared/shallowEqual';
 import getComponentName from 'shared/getComponentName';
-import ReactStrictModeWarnings from './ReactStrictModeWarnings';
+import ReactStrictModeWarnings from './ReactStrictModeWarnings.old';
 import {REACT_LAZY_TYPE, getIteratorFn} from 'shared/ReactSymbols';
 import {
   getCurrentFiberOwnerNameInDevOrNull,
@@ -83,24 +83,24 @@ import {
   resolveFunctionForHotReloading,
   resolveForwardRefForHotReloading,
   resolveClassForHotReloading,
-} from './ReactFiberHotReloading';
+} from './ReactFiberHotReloading.old';
 
 import {
   mountChildFibers,
   reconcileChildFibers,
   cloneChildFibers,
-} from './ReactChildFiber';
+} from './ReactChildFiber.old';
 import {
   processUpdateQueue,
   cloneUpdateQueue,
   initializeUpdateQueue,
-} from './ReactUpdateQueue';
+} from './ReactUpdateQueue.old';
 import {
   NoWork,
   Never,
   Sync,
   computeAsyncExpiration,
-} from './ReactFiberExpirationTime';
+} from './ReactFiberExpirationTime.old';
 import {
   ConcurrentMode,
   NoMode,
@@ -117,7 +117,7 @@ import {
 } from './ReactFiberHostConfig';
 import type {SuspenseInstance} from './ReactFiberHostConfig';
 import {shouldSuspend} from './ReactFiberReconciler';
-import {pushHostContext, pushHostContainer} from './ReactFiberHostContext';
+import {pushHostContext, pushHostContainer} from './ReactFiberHostContext.old';
 import {
   suspenseStackCursor,
   pushSuspenseContext,
@@ -127,8 +127,8 @@ import {
   setDefaultShallowSuspenseContext,
   addSubtreeSuspenseContext,
   setShallowSuspenseContext,
-} from './ReactFiberSuspenseContext';
-import {findFirstSuspended} from './ReactFiberSuspenseComponent';
+} from './ReactFiberSuspenseContext.old';
+import {findFirstSuspended} from './ReactFiberSuspenseComponent.old';
 import {
   pushProvider,
   propagateContextChange,
@@ -136,9 +136,9 @@ import {
   prepareToReadContext,
   calculateChangedBits,
   scheduleWorkOnParentPath,
-} from './ReactFiberNewContext';
-import {renderWithHooks, bailoutHooks} from './ReactFiberHooks';
-import {stopProfilerTimerIfRunning} from './ReactProfilerTimer';
+} from './ReactFiberNewContext.old';
+import {renderWithHooks, bailoutHooks} from './ReactFiberHooks.old';
+import {stopProfilerTimerIfRunning} from './ReactProfilerTimer.old';
 import {
   getMaskedContext,
   getUnmaskedContext,
@@ -147,14 +147,14 @@ import {
   isContextProvider as isLegacyContextProvider,
   pushTopLevelContextObject,
   invalidateContextProvider,
-} from './ReactFiberContext';
+} from './ReactFiberContext.old';
 import {
   enterHydrationState,
   reenterHydrationStateFromDehydratedSuspenseInstance,
   resetHydrationState,
   tryToClaimNextHydratableInstance,
   warnIfHydrating,
-} from './ReactFiberHydrationContext';
+} from './ReactFiberHydrationContext.old';
 import {
   adoptClassInstance,
   applyDerivedStateFromProps,
@@ -162,15 +162,15 @@ import {
   mountClassInstance,
   resumeMountClassInstance,
   updateClassInstance,
-} from './ReactFiberClassComponent';
-import {resolveDefaultProps} from './ReactFiberLazyComponent';
+} from './ReactFiberClassComponent.old';
+import {resolveDefaultProps} from './ReactFiberLazyComponent.old';
 import {
   resolveLazyComponentTag,
   createFiberFromTypeAndProps,
   createFiberFromFragment,
   createWorkInProgress,
   isSimpleFunctionComponent,
-} from './ReactFiber';
+} from './ReactFiber.old';
 import {
   markSpawnedWork,
   requestCurrentTimeForUpdate,
@@ -179,7 +179,7 @@ import {
   renderDidSuspendDelayIfPossible,
   markUnprocessedUpdateTime,
   getWorkInProgressRoot,
-} from './ReactFiberWorkLoop';
+} from './ReactFiberWorkLoop.old';
 
 import {disableLogs, reenableLogs} from 'shared/ConsolePatchingDev';
 

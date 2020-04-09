@@ -7,11 +7,11 @@
  * @flow
  */
 
-import type {Fiber} from './ReactFiber';
-import type {ExpirationTime} from './ReactFiberExpirationTime';
-import type {SuspenseState} from './ReactFiberSuspenseComponent';
+import type {Fiber} from './ReactFiber.old';
+import type {ExpirationTime} from './ReactFiberExpirationTime.old';
+import type {SuspenseState} from './ReactFiberSuspenseComponent.old';
 
-import {resetWorkInProgressVersions as resetMutableSourceWorkInProgressVersions} from './ReactMutableSource';
+import {resetWorkInProgressVersions as resetMutableSourceWorkInProgressVersions} from './ReactMutableSource.old';
 import {
   ClassComponent,
   HostRoot,
@@ -24,15 +24,15 @@ import {
 import {DidCapture, NoEffect, ShouldCapture} from './ReactSideEffectTags';
 import {enableSuspenseServerRenderer} from 'shared/ReactFeatureFlags';
 
-import {popHostContainer, popHostContext} from './ReactFiberHostContext';
-import {popSuspenseContext} from './ReactFiberSuspenseContext';
-import {resetHydrationState} from './ReactFiberHydrationContext';
+import {popHostContainer, popHostContext} from './ReactFiberHostContext.old';
+import {popSuspenseContext} from './ReactFiberSuspenseContext.old';
+import {resetHydrationState} from './ReactFiberHydrationContext.old';
 import {
   isContextProvider as isLegacyContextProvider,
   popContext as popLegacyContext,
   popTopLevelContextObject as popTopLevelLegacyContextObject,
-} from './ReactFiberContext';
-import {popProvider} from './ReactFiberNewContext';
+} from './ReactFiberContext.old';
+import {popProvider} from './ReactFiberNewContext.old';
 
 import invariant from 'shared/invariant';
 

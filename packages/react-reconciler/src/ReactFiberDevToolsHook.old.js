@@ -8,12 +8,12 @@
  */
 
 import {enableProfilerTimer} from 'shared/ReactFeatureFlags';
-import {getCurrentTime} from './ReactFiberWorkLoop';
-import {inferPriorityFromExpirationTime} from './ReactFiberExpirationTime';
+import {getCurrentTime} from './ReactFiberWorkLoop.old';
+import {inferPriorityFromExpirationTime} from './ReactFiberExpirationTime.old';
 
-import type {Fiber} from './ReactFiber';
-import type {FiberRoot} from './ReactFiberRoot';
-import type {ExpirationTime} from './ReactFiberExpirationTime';
+import type {Fiber} from './ReactFiber.old';
+import type {FiberRoot} from './ReactFiberRoot.old';
+import type {ExpirationTime} from './ReactFiberExpirationTime.old';
 import type {ReactNodeList} from 'shared/ReactTypes';
 
 import {DidCapture} from './ReactSideEffectTags';

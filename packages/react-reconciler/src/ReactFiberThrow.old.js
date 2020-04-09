@@ -7,13 +7,13 @@
  * @flow
  */
 
-import type {Fiber} from './ReactFiber';
-import type {FiberRoot} from './ReactFiberRoot';
-import type {ExpirationTime} from './ReactFiberExpirationTime';
+import type {Fiber} from './ReactFiber.old';
+import type {FiberRoot} from './ReactFiberRoot.old';
+import type {ExpirationTime} from './ReactFiberExpirationTime.old';
 import type {CapturedValue} from './ReactCapturedValue';
-import type {Update} from './ReactUpdateQueue';
+import type {Update} from './ReactUpdateQueue.old';
 import type {Wakeable} from 'shared/ReactTypes';
-import type {SuspenseContext} from './ReactFiberSuspenseContext';
+import type {SuspenseContext} from './ReactFiberSuspenseContext.old';
 
 import getComponentName from 'shared/getComponentName';
 import {
@@ -30,7 +30,7 @@ import {
   LifecycleEffectMask,
 } from './ReactSideEffectTags';
 import {NoMode, BlockingMode} from './ReactTypeOfMode';
-import {shouldCaptureSuspense} from './ReactFiberSuspenseComponent';
+import {shouldCaptureSuspense} from './ReactFiberSuspenseComponent.old';
 
 import {createCapturedValue} from './ReactCapturedValue';
 import {
@@ -39,24 +39,24 @@ import {
   CaptureUpdate,
   ForceUpdate,
   enqueueUpdate,
-} from './ReactUpdateQueue';
+} from './ReactUpdateQueue.old';
 import {getStackByFiberInDevAndProd} from './ReactFiberComponentStack';
-import {markFailedErrorBoundaryForHotReloading} from './ReactFiberHotReloading';
+import {markFailedErrorBoundaryForHotReloading} from './ReactFiberHotReloading.old';
 import {
   suspenseStackCursor,
   InvisibleParentSuspenseContext,
   hasSuspenseContext,
-} from './ReactFiberSuspenseContext';
+} from './ReactFiberSuspenseContext.old';
 import {
   renderDidError,
   onUncaughtError,
   markLegacyErrorBoundaryAsFailed,
   isAlreadyFailedLegacyErrorBoundary,
   pingSuspendedRoot,
-} from './ReactFiberWorkLoop';
+} from './ReactFiberWorkLoop.old';
 import {logCapturedError} from './ReactFiberErrorLogger';
 
-import {Sync} from './ReactFiberExpirationTime';
+import {Sync} from './ReactFiberExpirationTime.old';
 
 const PossiblyWeakMap = typeof WeakMap === 'function' ? WeakMap : Map;
 

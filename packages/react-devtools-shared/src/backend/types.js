@@ -9,7 +9,7 @@
 
 import type {ReactContext} from 'shared/ReactTypes';
 import type {Source} from 'shared/ReactElementType';
-import type {Fiber} from 'react-reconciler/src/ReactFiber';
+import type {Fiber} from 'react-reconciler/src/ReactFiber.old';
 import type {
   ComponentFilter,
   ElementType,

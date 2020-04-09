@@ -84,16 +84,16 @@
 // regardless of priority. Intermediate state may vary according to system
 // resources, but the final state is always the same.
 
-import type {Fiber} from './ReactFiber';
-import type {ExpirationTime} from './ReactFiberExpirationTime';
-import type {SuspenseConfig} from './ReactFiberSuspenseConfig';
-import type {ReactPriorityLevel} from './SchedulerWithReactIntegration';
+import type {Fiber} from './ReactFiber.old';
+import type {ExpirationTime} from './ReactFiberExpirationTime.old';
+import type {SuspenseConfig} from './ReactFiberSuspenseConfig.old';
+import type {ReactPriorityLevel} from './SchedulerWithReactIntegration.old';
 
-import {NoWork, Sync} from './ReactFiberExpirationTime';
+import {NoWork, Sync} from './ReactFiberExpirationTime.old';
 import {
   enterDisallowedContextReadInDEV,
   exitDisallowedContextReadInDEV,
-} from './ReactFiberNewContext';
+} from './ReactFiberNewContext.old';
 import {Callback, ShouldCapture, DidCapture} from './ReactSideEffectTags';
 
 import {debugRenderPhaseSideEffectsForStrictMode} from 'shared/ReactFeatureFlags';
@@ -102,10 +102,10 @@ import {StrictMode} from './ReactTypeOfMode';
 import {
   markRenderEventTimeAndConfig,
   markUnprocessedUpdateTime,
-} from './ReactFiberWorkLoop';
+} from './ReactFiberWorkLoop.old';
 
 import invariant from 'shared/invariant';
-import {getCurrentPriorityLevel} from './SchedulerWithReactIntegration';
+import {getCurrentPriorityLevel} from './SchedulerWithReactIntegration.old';
 
 import {disableLogs, reenableLogs} from 'shared/ConsolePatchingDev';
 
