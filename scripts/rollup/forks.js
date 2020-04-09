@@ -273,8 +273,7 @@ const forks = Object.freeze({
         case FB_WWW_PROD:
         case FB_WWW_PROFILING:
           // Use the forked version of the reconciler
-          // TODO: Update this to point to the new module, once it exists
-          return 'react-reconciler/src/ReactFiberReconciler.old.js';
+          return 'react-reconciler/src/ReactFiberReconciler.new.js';
       }
     }
     // Otherwise, use the non-forked version.
@@ -294,8 +293,7 @@ const forks = Object.freeze({
         case FB_WWW_PROD:
         case FB_WWW_PROFILING:
           // Use the forked version of the reconciler
-          // TODO: Update this to point to the new module, once it exists
-          return 'react-reconciler/src/ReactFiberHotReloading.old.js';
+          return 'react-reconciler/src/ReactFiberHotReloading.new.js';
       }
     }
     // Otherwise, use the non-forked version.

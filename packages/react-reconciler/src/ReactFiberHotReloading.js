@@ -30,7 +30,6 @@ import {
   findHostInstancesForRefresh as findHostInstancesForRefresh_old,
 } from './ReactFiberHotReloading.old';
 
-// TODO: Update these to point to the fork.
 import {
   setRefreshHandler as setRefreshHandler_new,
   resolveFunctionForHotReloading as resolveFunctionForHotReloading_new,
@@ -41,7 +40,7 @@ import {
   scheduleRefresh as scheduleRefresh_new,
   scheduleRoot as scheduleRoot_new,
   findHostInstancesForRefresh as findHostInstancesForRefresh_new,
-} from './ReactFiberHotReloading.old';
+} from './ReactFiberHotReloading.new';
 
 export const setRefreshHandler = enableNewReconciler
   ? setRefreshHandler_new
