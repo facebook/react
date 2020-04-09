@@ -334,6 +334,9 @@ function getStateFromUpdate<State>(
         // Updater function
         if (__DEV__) {
           enterDisallowedContextReadInDEV();
+        }
+        const nextState = payload.call(instance, prevState, nextProps);
+        if (__DEV__) {
           if (
             debugRenderPhaseSideEffectsForStrictMode &&
             workInProgress.mode & StrictMode
@@ -345,9 +348,6 @@ function getStateFromUpdate<State>(
               reenableLogs();
             }
           }
-        }
-        const nextState = payload.call(instance, prevState, nextProps);
-        if (__DEV__) {
           exitDisallowedContextReadInDEV();
         }
         return nextState;
@@ -367,6 +367,9 @@ function getStateFromUpdate<State>(
         // Updater function
         if (__DEV__) {
           enterDisallowedContextReadInDEV();
+        }
+        partialState = payload.call(instance, prevState, nextProps);
+        if (__DEV__) {
           if (
             debugRenderPhaseSideEffectsForStrictMode &&
             workInProgress.mode & StrictMode
@@ -378,9 +381,6 @@ function getStateFromUpdate<State>(
               reenableLogs();
             }
           }
-        }
-        partialState = payload.call(instance, prevState, nextProps);
-        if (__DEV__) {
           exitDisallowedContextReadInDEV();
         }
       } else {
