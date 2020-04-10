@@ -497,7 +497,7 @@ describe('ReactErrorBoundaries', () => {
       }
     };
 
-    BrokenUseEffect = props => {
+    BrokenUseEffect = ({children}) => {
       Scheduler.unstable_yieldValue('BrokenUseEffect render');
 
       React.useEffect(() => {
@@ -505,10 +505,10 @@ describe('ReactErrorBoundaries', () => {
         throw new Error('Hello');
       });
 
-      return props.children;
+      return children;
     };
 
-    BrokenUseLayoutEffect = props => {
+    BrokenUseLayoutEffect = ({children}) => {
       Scheduler.unstable_yieldValue('BrokenUseLayoutEffect render');
 
       React.useLayoutEffect(() => {
@@ -518,7 +518,7 @@ describe('ReactErrorBoundaries', () => {
         throw new Error('Hello');
       });
 
-      return props.children;
+      return children;
     };
 
     NoopErrorBoundary = class extends React.Component {

@@ -1041,7 +1041,7 @@ describe('Profiler', () => {
                 it('should accumulate actual time after an error handled by componentDidCatch()', () => {
                   const callback = jest.fn();
 
-                  const ThrowsError = () => {
+                  const ThrowsError = ({unused}) => {
                     Scheduler.unstable_advanceTime(3);
                     throw Error('expected error');
                   };
@@ -1120,7 +1120,7 @@ describe('Profiler', () => {
                 it('should accumulate actual time after an error handled by getDerivedStateFromError()', () => {
                   const callback = jest.fn();
 
-                  const ThrowsError = () => {
+                  const ThrowsError = ({unused}) => {
                     Scheduler.unstable_advanceTime(10);
                     throw Error('expected error');
                   };

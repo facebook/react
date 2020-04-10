@@ -101,7 +101,7 @@ export const deferPassiveEffectCleanupDuringUnmount = false;
 // a deprecated pattern we want to get rid of in the future
 export const warnAboutSpreadingKeyToJSX = false;
 
-export const enableComponentStackLocations = false;
+export const enableComponentStackLocations = __EXPERIMENTAL__;
 
 // Internal-only attempt to debug a React Native issue. See D20130868.
 export const throwEarlyForMysteriousError = false;

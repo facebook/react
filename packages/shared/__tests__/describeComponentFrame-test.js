@@ -11,12 +11,18 @@
 
 let React;
 let ReactDOM;
+const ReactFeatureFlags = require('shared/ReactFeatureFlags');
 
 describe('Component stack trace displaying', () => {
   beforeEach(() => {
     React = require('react');
     ReactDOM = require('react-dom');
   });
+
+  if (ReactFeatureFlags.enableComponentStackLocations) {
+    it("empty test so Jest doesn't complain", () => {});
+    return;
+  }
 
   it('should provide filenames in stack traces', () => {
     class Component extends React.Component {

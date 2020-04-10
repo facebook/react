@@ -17,7 +17,12 @@ describe('ReactDOMComponent', () => {
   const ReactFeatureFlags = require('shared/ReactFeatureFlags');
 
   function normalizeCodeLocInfo(str) {
-    return str && str.replace(/\(at .+?:\d+\)/g, '(at **)');
+    return (
+      str &&
+      str.replace(/\n +(?:at|in) ([\S]+)[^\n]*/g, function(m, name) {
+        return '\n    in ' + name + ' (at **)';
+      })
+    );
   }
 
   beforeEach(() => {
@@ -1719,16 +1724,26 @@ describe('ReactDOMComponent', () => {
             <tr />
           </div>,
         );
-      }).toErrorDev([
-        'Warning: validateDOMNesting(...): <tr> cannot appear as a child of ' +
-          '<div>.' +
-          '\n    in tr (at **)' +
-          '\n    in div (at **)',
-        'Warning: validateDOMNesting(...): <tr> cannot appear as a child of ' +
-          '<div>.' +
-          '\n    in tr (at **)' +
-          '\n    in div (at **)',
-      ]);
+      }).toErrorDev(
+        ReactFeatureFlags.enableComponentStackLocations
+          ? [
+              // This warning dedupes since they're in the same component.
+              'Warning: validateDOMNesting(...): <tr> cannot appear as a child of ' +
+                '<div>.' +
+                '\n    in tr (at **)' +
+                '\n    in div (at **)',
+            ]
+          : [
+              'Warning: validateDOMNesting(...): <tr> cannot appear as a child of ' +
+                '<div>.' +
+                '\n    in tr (at **)' +
+                '\n    in div (at **)',
+              'Warning: validateDOMNesting(...): <tr> cannot appear as a child of ' +
+                '<div>.' +
+                '\n    in tr (at **)' +
+                '\n    in div (at **)',
+            ],
+      );
     });
 
     it('warns on invalid nesting at root', () => {

@@ -10,8 +10,8 @@
 
 'use strict';
 
+let ReactFeatureFlags = require('shared/ReactFeatureFlags');
 let PropTypes;
-let ReactFeatureFlags;
 let React;
 let ReactNoop;
 let Scheduler;
@@ -37,7 +37,12 @@ describe('ReactIncrementalErrorHandling', () => {
   }
 
   function normalizeCodeLocInfo(str) {
-    return str && str.replace(/\(at .+?:\d+\)/g, '(at **)');
+    return (
+      str &&
+      str.replace(/\n +(?:at|in) ([\S]+)[^\n]*/g, function(m, name) {
+        return '\n    in ' + name + ' (at **)';
+      })
+    );
   }
 
   it('recovers from errors asynchronously', () => {
@@ -57,17 +62,17 @@ describe('ReactIncrementalErrorHandling', () => {
       }
     }
 
-    function ErrorMessage(props) {
+    function ErrorMessage({error}) {
       Scheduler.unstable_yieldValue('ErrorMessage');
-      return <span prop={`Caught an error: ${props.error.message}`} />;
+      return <span prop={`Caught an error: ${error.message}`} />;
     }
 
-    function Indirection(props) {
+    function Indirection({children}) {
       Scheduler.unstable_yieldValue('Indirection');
-      return props.children || null;
+      return children || null;
     }
 
-    function BadRender() {
+    function BadRender({unused}) {
       Scheduler.unstable_yieldValue('throw');
       throw new Error('oops!');
     }
@@ -151,17 +156,17 @@ describe('ReactIncrementalErrorHandling', () => {
       }
     }
 
-    function ErrorMessage(props) {
+    function ErrorMessage({error}) {
       Scheduler.unstable_yieldValue('ErrorMessage');
-      return <span prop={`Caught an error: ${props.error.message}`} />;
+      return <span prop={`Caught an error: ${error.message}`} />;
     }
 
-    function Indirection(props) {
+    function Indirection({children}) {
       Scheduler.unstable_yieldValue('Indirection');
-      return props.children || null;
+      return children || null;
     }
 
-    function BadRender() {
+    function BadRender({unused}) {
       Scheduler.unstable_yieldValue('throw');
       throw new Error('oops!');
     }
@@ -341,17 +346,17 @@ describe('ReactIncrementalErrorHandling', () => {
   });
 
   it('retries one more time before handling error', () => {
-    function BadRender() {
+    function BadRender({unused}) {
       Scheduler.unstable_yieldValue('BadRender');
       throw new Error('oops');
     }
 
-    function Sibling() {
+    function Sibling({unused}) {
       Scheduler.unstable_yieldValue('Sibling');
       return <span prop="Sibling" />;
     }
 
-    function Parent() {
+    function Parent({unused}) {
       Scheduler.unstable_yieldValue('Parent');
       return (
         <>
@@ -381,7 +386,7 @@ describe('ReactIncrementalErrorHandling', () => {
   });
 
   it('retries one more time if an error occurs during a render that expires midway through the tree', () => {
-    function Oops() {
+    function Oops({unused}) {
       Scheduler.unstable_yieldValue('Oops');
       throw new Error('Oops');
     }
@@ -391,7 +396,7 @@ describe('ReactIncrementalErrorHandling', () => {
       return text;
     }
 
-    function App() {
+    function App({unused}) {
       return (
         <>
           <Text text="A" />
@@ -525,7 +530,7 @@ describe('ReactIncrementalErrorHandling', () => {
       }
     }
 
-    function BrokenRender(props) {
+    function BrokenRender({unused}) {
       Scheduler.unstable_yieldValue('BrokenRender');
       throw new Error('Hello');
     }
@@ -571,7 +576,7 @@ describe('ReactIncrementalErrorHandling', () => {
       }
     }
 
-    function BrokenRender(props) {
+    function BrokenRender({unused}) {
       Scheduler.unstable_yieldValue('BrokenRender');
       throw new Error('Hello');
     }
@@ -618,7 +623,7 @@ describe('ReactIncrementalErrorHandling', () => {
       }
     }
 
-    function BrokenRender(props) {
+    function BrokenRender({unused}) {
       Scheduler.unstable_yieldValue('BrokenRender');
       throw new Error('Hello');
     }
@@ -659,7 +664,7 @@ describe('ReactIncrementalErrorHandling', () => {
       }
     }
 
-    function BrokenRender() {
+    function BrokenRender({unused}) {
       Scheduler.unstable_yieldValue('BrokenRender');
       throw new Error('Hello');
     }
@@ -698,7 +703,7 @@ describe('ReactIncrementalErrorHandling', () => {
       }
     }
 
-    function BrokenRender() {
+    function BrokenRender({unused}) {
       Scheduler.unstable_yieldValue('BrokenRender');
       throw new Error('Hello');
     }
@@ -739,7 +744,7 @@ describe('ReactIncrementalErrorHandling', () => {
       }
     }
 
-    function BrokenRender() {
+    function BrokenRender({unused}) {
       Scheduler.unstable_yieldValue('BrokenRender');
       throw new Error('Hello');
     }
@@ -779,7 +784,7 @@ describe('ReactIncrementalErrorHandling', () => {
       }
     }
 
-    function BrokenRender() {
+    function BrokenRender({unused}) {
       Scheduler.unstable_yieldValue('BrokenRender');
       throw new Error('Hello');
     }
@@ -857,12 +862,12 @@ describe('ReactIncrementalErrorHandling', () => {
   });
 
   it('can schedule updates after uncaught error in render on mount', () => {
-    function BrokenRender() {
+    function BrokenRender({unused}) {
       Scheduler.unstable_yieldValue('BrokenRender');
       throw new Error('Hello');
     }
 
-    function Foo() {
+    function Foo({unused}) {
       Scheduler.unstable_yieldValue('Foo');
       return null;
     }
@@ -882,24 +887,24 @@ describe('ReactIncrementalErrorHandling', () => {
   });
 
   it('can schedule updates after uncaught error in render on update', () => {
-    function BrokenRender(props) {
+    function BrokenRender({shouldThrow}) {
       Scheduler.unstable_yieldValue('BrokenRender');
-      if (props.throw) {
+      if (shouldThrow) {
         throw new Error('Hello');
       }
       return null;
     }
 
-    function Foo() {
+    function Foo({unused}) {
       Scheduler.unstable_yieldValue('Foo');
       return null;
     }
 
-    ReactNoop.render(<BrokenRender throw={false} />);
+    ReactNoop.render(<BrokenRender shouldThrow={false} />);
     expect(Scheduler).toFlushAndYield(['BrokenRender']);
 
     expect(() => {
-      ReactNoop.render(<BrokenRender throw={true} />);
+      ReactNoop.render(<BrokenRender shouldThrow={true} />);
       expect(Scheduler).toFlushWithoutYielding();
     }).toThrow('Hello');
     expect(Scheduler).toHaveYielded([
@@ -1449,13 +1454,13 @@ describe('ReactIncrementalErrorHandling', () => {
       }
     }
 
-    function Indirection(props) {
+    function Indirection({children}) {
       Scheduler.unstable_yieldValue('Indirection');
-      return props.children;
+      return children;
     }
 
     const notAnError = {nonStandardMessage: 'oops'};
-    function BadRender() {
+    function BadRender({unused}) {
       Scheduler.unstable_yieldValue('BadRender');
       throw notAnError;
     }
@@ -1514,17 +1519,17 @@ describe('ReactIncrementalErrorHandling', () => {
       }
     }
 
-    function ErrorMessage(props) {
+    function ErrorMessage({error}) {
       Scheduler.unstable_yieldValue('ErrorMessage');
-      return <span prop={`Caught an error: ${props.error.message}`} />;
+      return <span prop={`Caught an error: ${error.message}`} />;
     }
 
-    function BadRenderSibling(props) {
+    function BadRenderSibling({unused}) {
       Scheduler.unstable_yieldValue('BadRenderSibling');
       return null;
     }
 
-    function BadRender() {
+    function BadRender({unused}) {
       Scheduler.unstable_yieldValue('throw');
       throw new Error('oops!');
     }
@@ -1562,7 +1567,7 @@ describe('ReactIncrementalErrorHandling', () => {
     // This test seems a bit contrived, but it's based on an actual regression
     // where we checked for the existence of didUpdate instead of didMount, and
     // didMount was not defined.
-    function BadRender() {
+    function BadRender({unused}) {
       Scheduler.unstable_yieldValue('throw');
       throw new Error('oops!');
     }
@@ -1633,10 +1638,8 @@ describe('ReactIncrementalErrorHandling', () => {
     expect(ReactNoop.getChildren()).toEqual([
       span(
         'Caught an error:\n' +
-          (__DEV__
-            ? '    in BrokenRender (at **)\n'
-            : '    in BrokenRender\n') +
-          (__DEV__ ? '    in ErrorBoundary (at **).' : '    in ErrorBoundary.'),
+          '    in BrokenRender (at **)\n' +
+          '    in ErrorBoundary (at **).',
       ),
     ]);
   });
@@ -1669,7 +1672,7 @@ describe('ReactIncrementalErrorHandling', () => {
     expect(ReactNoop.getChildren()).toEqual([span('Caught an error: Hello')]);
   });
 
-  if (!require('shared/ReactFeatureFlags').disableModulePatternComponents) {
+  if (!ReactFeatureFlags.disableModulePatternComponents) {
     it('handles error thrown inside getDerivedStateFromProps of a module-style context provider', () => {
       function Provider() {
         return {
@@ -1708,7 +1711,7 @@ describe('ReactIncrementalErrorHandling', () => {
   it('uncaught errors should be discarded if the render is aborted', async () => {
     const root = ReactNoop.createRoot();
 
-    function Oops() {
+    function Oops({unused}) {
       Scheduler.unstable_yieldValue('Oops');
       throw Error('Oops');
     }
