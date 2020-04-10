@@ -369,8 +369,10 @@ describe('ReactElement.jsx', () => {
     );
   });
 
-  if (require('shared/ReactFeatureFlags').warnAboutSpreadingKeyToJSX) {
-    it('should warn when keys are passed as part of props', () => {
+  it.gate(
+    flags => flags.warnAboutSpreadingKeyToJSX || !__DEV__,
+    'should warn when keys are passed as part of props',
+    () => {
       const container = document.createElement('div');
       class Child extends React.Component {
         render() {
@@ -391,8 +393,8 @@ describe('ReactElement.jsx', () => {
           'Explicitly pass a key after spreading props in your JSX call. ' +
           'E.g. <Child {...props} key={key} />',
       );
-    });
-  }
+    },
+  );
 
   it('should not warn when unkeyed children are passed to jsxs', () => {
     const container = document.createElement('div');

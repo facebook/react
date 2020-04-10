@@ -108,8 +108,10 @@ describe('ReactCompositeComponent', () => {
     };
   });
 
-  if (require('shared/ReactFeatureFlags').disableModulePatternComponents) {
-    it('should not support module pattern components', () => {
+  it.gate(
+    'disableModulePatternComponents',
+    'should not support module pattern components',
+    () => {
       function Child({test}) {
         return {
           render() {
@@ -132,9 +134,12 @@ describe('ReactCompositeComponent', () => {
       );
 
       expect(el.textContent).toBe('');
-    });
-  } else {
-    it('should support module pattern components', () => {
+    },
+  );
+  it.gate(
+    '!disableModulePatternComponents',
+    'should support module pattern components',
+    () => {
       function Child({test}) {
         return {
           render() {
@@ -153,8 +158,8 @@ describe('ReactCompositeComponent', () => {
       );
 
       expect(el.textContent).toBe('test');
-    });
-  }
+    },
+  );
 
   it('should support rendering to different child types over time', () => {
     const instance = ReactTestUtils.renderIntoDocument(<MorphingComponent />);
