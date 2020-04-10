@@ -5,15 +5,15 @@
 const {join} = require('path');
 const {getPublicPackages, handleError} = require('./utils');
 
-const checkOutPackages = require('./prepare-stable-commands/check-out-packages');
-const confirmStableVersionNumbers = require('./prepare-stable-commands/confirm-stable-version-numbers');
-const getLatestNextVersion = require('./prepare-stable-commands/get-latest-next-version');
-const guessStableVersionNumbers = require('./prepare-stable-commands/guess-stable-version-numbers');
-const parseParams = require('./prepare-stable-commands/parse-params');
+const checkOutPackages = require('./promote-to-stable-commands/check-out-packages');
+const confirmStableVersionNumbers = require('./promote-to-stable-commands/confirm-stable-version-numbers');
+const getLatestNextVersion = require('./promote-to-stable-commands/get-latest-next-version');
+const guessStableVersionNumbers = require('./promote-to-stable-commands/guess-stable-version-numbers');
+const parseParams = require('./promote-to-stable-commands/parse-params');
 const printPrereleaseSummary = require('./shared-commands/print-prerelease-summary');
 const testPackagingFixture = require('./shared-commands/test-packaging-fixture');
 const testTracingFixture = require('./shared-commands/test-tracing-fixture');
-const updateStableVersionNumbers = require('./prepare-stable-commands/update-stable-version-numbers');
+const updateStableVersionNumbers = require('./promote-to-stable-commands/update-stable-version-numbers');
 const theme = require('./theme');
 
 const run = async () => {
