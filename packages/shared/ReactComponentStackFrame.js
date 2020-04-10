@@ -53,6 +53,11 @@ export function describeBuiltInComponentFrame(
 }
 
 let reentry = false;
+let componentFrameCache;
+if (__DEV__) {
+  const PossiblyWeakMap = typeof WeakMap === 'function' ? WeakMap : Map;
+  componentFrameCache = new PossiblyWeakMap();
+}
 
 export function describeNativeComponentFrame(
   fn: Function,
@@ -61,6 +66,13 @@ export function describeNativeComponentFrame(
   // If something asked for a stack inside a fake render, it should get ignored.
   if (!fn || reentry) {
     return '';
+  }
+
+  if (__DEV__) {
+    const frame = componentFrameCache.get(fn);
+    if (frame !== undefined) {
+      return frame;
+    }
   }
 
   const control = Error();
@@ -119,7 +131,13 @@ export function describeNativeComponentFrame(
         if (sampleLines[s] !== controlLines[c]) {
           // Return the line we found.
           // V8 adds a "new" prefix for native classes. Let's remove it to make it prettier.
-          return '\n' + sampleLines[s - 1].replace(' at new ', ' at ');
+          const frame = '\n' + sampleLines[s - 1].replace(' at new ', ' at ');
+          if (__DEV__) {
+            if (typeof fn === 'function') {
+              componentFrameCache.set(fn, frame);
+            }
+          }
+          return frame;
         }
       }
     }
@@ -132,7 +150,13 @@ export function describeNativeComponentFrame(
   }
   // Fallback to just using the name if we couldn't make it throw.
   const name = fn ? fn.displayName || fn.name : '';
-  return name ? describeBuiltInComponentFrame(name) : '';
+  const syntheticFrame = name ? describeBuiltInComponentFrame(name) : '';
+  if (__DEV__) {
+    if (typeof fn === 'function') {
+      componentFrameCache.set(fn, syntheticFrame);
+    }
+  }
+  return syntheticFrame;
 }
 
 const BEFORE_SLASH_RE = /^(.*)[\\\/]/;
