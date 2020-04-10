@@ -1,0 +1,5 @@
+{
+  "plugins": [
+    ["@babel/plugin-transform-classes", {"loose": true}]
+  ]
+}
