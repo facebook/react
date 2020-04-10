@@ -1097,7 +1097,7 @@ describe('ReactDOMServerHooks', () => {
 
       it('useOpaqueIdentifier: ID is not used during hydration but is used in an update', async () => {
         let _setShow;
-        function App() {
+        function App({unused}) {
           Scheduler.unstable_yieldValue('App');
           const id = useOpaqueIdentifier();
           const [show, setShow] = useState(false);
@@ -1129,7 +1129,7 @@ describe('ReactDOMServerHooks', () => {
 
       it('useOpaqueIdentifier: ID is not used during hydration but is used in an update in legacy', async () => {
         let _setShow;
-        function App() {
+        function App({unused}) {
           Scheduler.unstable_yieldValue('App');
           const id = useOpaqueIdentifier();
           const [show, setShow] = useState(false);
