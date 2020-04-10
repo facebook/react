@@ -51,5 +51,11 @@ export function reenableLogs(): void {
       console.error = prevError;
       /* eslint-enable react-internal/no-production-logging */
     }
+    if (disabledDepth < 0) {
+      console.error(
+        'disabledDepth fell below zero. ' +
+          'This is a bug in React. Please file an issue.',
+      );
+    }
   }
 }
