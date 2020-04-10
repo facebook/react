@@ -25,6 +25,7 @@ export const {
   replayFailedUnitOfWorkWithInvokeGuardedCallback,
   enableModernEventSystem,
   enableFilterEmptyStringAttributesDOM,
+  enableDebugTracing,
   enableLegacyFBSupport,
 } = dynamicFeatureFlags;
 

@@ -29,9 +29,9 @@ import {
   ShouldCapture,
   LifecycleEffectMask,
 } from './ReactSideEffectTags';
-import {NoMode, BlockingMode} from './ReactTypeOfMode';
+import {NoMode, BlockingMode, DebugTraceMode} from './ReactTypeOfMode';
 import {shouldCaptureSuspense} from './ReactFiberSuspenseComponent.old';
-
+import {enableDebugTracing} from 'shared/ReactFeatureFlags';
 import {createCapturedValue} from './ReactCapturedValue';
 import {
   enqueueCapturedUpdate,
@@ -55,6 +55,7 @@ import {
   pingSuspendedRoot,
 } from './ReactFiberWorkLoop.old';
 import {logCapturedError} from './ReactFiberErrorLogger';
+import {logComponentSuspended} from './DebugTrace';
 
 import {Sync} from './ReactFiberExpirationTime.old';
 
@@ -193,6 +194,15 @@ function throwException(
   ) {
     // This is a wakeable.
     const wakeable: Wakeable = (value: any);
+
+    if (__DEV__) {
+      if (enableDebugTracing) {
+        if (sourceFiber.mode & DebugTraceMode) {
+          const name = getComponentName(sourceFiber.type) || 'Unknown';
+          logComponentSuspended(name, wakeable);
+        }
+      }
+    }
 
     if ((sourceFiber.mode & BlockingMode) === NoMode) {
       // Reset the memoizedState to what it was before we attempted

@@ -36,7 +36,7 @@ import {
 import getComponentName from 'shared/getComponentName';
 import invariant from 'shared/invariant';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
-
+import {enableDebugTracing} from 'shared/ReactFeatureFlags';
 import {getPublicInstance} from './ReactFiberHostConfig';
 import {
   findCurrentUnmaskedContext,
@@ -64,6 +64,7 @@ import {
   warnIfNotScopedWithMatchingAct,
   warnIfUnmockedScheduler,
   IsThisRendererActing,
+  priorityLevelToLabel,
 } from './ReactFiberWorkLoop.new';
 import {createUpdate, enqueueUpdate} from './ReactUpdateQueue.new';
 import {getStackByFiberInDevAndProd} from './ReactFiberComponentStack';
@@ -76,6 +77,7 @@ import {
   Sync,
   ContinuousHydration,
   computeInteractiveExpiration,
+  inferPriorityFromExpirationTime,
 } from './ReactFiberExpirationTime.new';
 import {requestCurrentSuspenseConfig} from './ReactFiberSuspenseConfig';
 import {
@@ -84,6 +86,7 @@ import {
   setRefreshHandler,
   findHostInstancesForRefresh,
 } from './ReactFiberHotReloading.new';
+import {logRenderScheduled} from './DebugTrace';
 
 // used by isTestEnvironment builds
 import enqueueTask from 'shared/enqueueTask';
@@ -246,6 +249,17 @@ export function updateContainer(
     current,
     suspenseConfig,
   );
+
+  if (__DEV__) {
+    if (enableDebugTracing) {
+      const priorityLevel = inferPriorityFromExpirationTime(
+        currentTime,
+        expirationTime,
+      );
+      const label = priorityLevelToLabel(priorityLevel);
+      logRenderScheduled(label);
+    }
+  }
 
   const context = getContextForSubtree(parentComponent);
   if (container.context === null) {

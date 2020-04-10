@@ -46,4 +46,6 @@ export {
   // enableBlocksAPI
   block,
   unstable_useOpaqueIdentifier,
+  // enableDebugTracing
+  DebugTraceMode,
 } from './src/React';

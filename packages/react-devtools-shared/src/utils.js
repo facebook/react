@@ -16,6 +16,7 @@ import {
   ForwardRef,
   Fragment,
   Lazy,
+  DebugTraceMode,
   Memo,
   Portal,
   Profiler,
@@ -432,6 +433,8 @@ export function getDisplayNameForReactElement(
       return 'Fragment';
     case Lazy:
       return 'Lazy';
+    case DebugTraceMode:
+      return 'DebugTraceMode';
     case Memo:
       return 'Memo';
     case Portal:

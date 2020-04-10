@@ -30,13 +30,18 @@ import type {
 } from './ReactFiberHostConfig';
 
 import ReactSharedInternals from 'shared/ReactSharedInternals';
-import {enableUseEventAPI} from 'shared/ReactFeatureFlags';
+import {enableDebugTracing, enableUseEventAPI} from 'shared/ReactFeatureFlags';
 
 import {markRootExpiredAtTime} from './ReactFiberRoot.old';
-import {NoWork, Sync} from './ReactFiberExpirationTime.old';
-import {NoMode, BlockingMode} from './ReactTypeOfMode';
+import {
+  inferPriorityFromExpirationTime,
+  NoWork,
+  Sync,
+} from './ReactFiberExpirationTime.old';
+import {NoMode, BlockingMode, DebugTraceMode} from './ReactTypeOfMode';
 import {readContext} from './ReactFiberNewContext.old';
 import {createDeprecatedResponderListener} from './ReactFiberDeprecatedEvents.old';
+
 import {
   Update as UpdateEffect,
   Passive as PassiveEffect,
@@ -57,6 +62,7 @@ import {
   warnIfNotScopedWithMatchingAct,
   markRenderEventTimeAndConfig,
   markUnprocessedUpdateTime,
+  priorityLevelToLabel,
 } from './ReactFiberWorkLoop.old';
 import {
   registerEvent,
@@ -92,6 +98,7 @@ import {
 } from './ReactMutableSource.old';
 import {getRootHostContainer} from './ReactFiberHostContext.old';
 import {getIsRendering} from './ReactCurrentFiber';
+import {logStateUpdateScheduled} from './DebugTrace';
 
 const {ReactCurrentDispatcher, ReactCurrentBatchConfig} = ReactSharedInternals;
 
@@ -1684,6 +1691,18 @@ function dispatchAction<S, A>(
     // and apply the stashed updates on top of the work-in-progress hook.
     didScheduleRenderPhaseUpdateDuringThisPass = didScheduleRenderPhaseUpdate = true;
     update.expirationTime = renderExpirationTime;
+
+    if (__DEV__) {
+      if (enableDebugTracing) {
+        const priorityLevel = inferPriorityFromExpirationTime(
+          currentTime,
+          renderExpirationTime,
+        );
+        const label = priorityLevelToLabel(priorityLevel);
+        const name = getComponentName(fiber.type) || 'Unknown';
+        logStateUpdateScheduled(name, label);
+      }
+    }
   } else {
     if (
       fiber.expirationTime === NoWork &&
@@ -1732,6 +1751,20 @@ function dispatchAction<S, A>(
       }
     }
     scheduleUpdateOnFiber(fiber, expirationTime);
+  }
+
+  if (__DEV__) {
+    if (enableDebugTracing) {
+      if (fiber.mode & DebugTraceMode) {
+        const priorityLevel = inferPriorityFromExpirationTime(
+          currentTime,
+          expirationTime,
+        );
+        const label = priorityLevelToLabel(priorityLevel);
+        const name = getComponentName(fiber.type) || 'Unknown';
+        logStateUpdateScheduled(name, label, action);
+      }
+    }
   }
 }
 
