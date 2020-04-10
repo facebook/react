@@ -25,7 +25,10 @@ const run = async () => {
     // https://circleci.com/gh/facebook/react/12707
     let promise = spawn(
       'node',
-      ['./scripts/release/prepare-release-from-ci.js', `--build=${CIRCLE_CI_BUILD}`],
+      [
+        './scripts/release/prepare-release-from-ci.js',
+        `--build=${CIRCLE_CI_BUILD}`,
+      ],
       defaultOptions
     );
     logPromise(
