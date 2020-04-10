@@ -1208,7 +1208,7 @@ function prepareFreshStack(root, expirationTime) {
   }
 }
 
-function handleError(root, thrownValue) {
+function handleError(root, thrownValue): void {
   do {
     try {
       // Reset module-level state that was set during the render phase.
@@ -1233,7 +1233,7 @@ function handleError(root, thrownValue) {
         // interntionally not calling those, we need set it here.
         // TODO: Consider calling `unwindWork` to pop the contexts.
         workInProgress = null;
-        return null;
+        return;
       }
 
       if (enableProfilerTimer && workInProgress.mode & ProfileMode) {
