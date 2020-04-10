@@ -1200,7 +1200,7 @@ function prepareFreshStack(root, expirationTime) {
   }
 }
 
-function handleError(root, thrownValue) {
+function handleError(root, thrownValue): void {
   do {
     try {
       // Reset module-level state that was set during the render phase.
@@ -1225,7 +1225,7 @@ function handleError(root, thrownValue) {
         // interntionally not calling those, we need set it here.
         // TODO: Consider calling `unwindWork` to pop the contexts.
         workInProgress = null;
-        return null;
+        return;
       }
 
       if (enableProfilerTimer && workInProgress.mode & ProfileMode) {
@@ -1242,7 +1242,7 @@ function handleError(root, thrownValue) {
         thrownValue,
         renderExpirationTime,
       );
-      workInProgress = completeUnitOfWork(workInProgress);
+      completeUnitOfWork(workInProgress);
     } catch (yetAnotherThrownValue) {
       // Something in the return path also threw.
       thrownValue = yetAnotherThrownValue;
@@ -1423,7 +1423,7 @@ function renderRootSync(root, expirationTime) {
 function workLoopSync() {
   // Already timed out, so perform work without checking if we need to yield.
   while (workInProgress !== null) {
-    workInProgress = performUnitOfWork(workInProgress);
+    performUnitOfWork(workInProgress);
   }
 }
 
@@ -1474,11 +1474,11 @@ function renderRootConcurrent(root, expirationTime) {
 function workLoopConcurrent() {
   // Perform work until Scheduler asks us to yield
   while (workInProgress !== null && !shouldYield()) {
-    workInProgress = performUnitOfWork(workInProgress);
+    performUnitOfWork(workInProgress);
   }
 }
 
-function performUnitOfWork(unitOfWork: Fiber): Fiber | null {
+function performUnitOfWork(unitOfWork: Fiber): void {
   // The current, flushed, state of this fiber is the alternate. Ideally
   // nothing should rely on this, but relying on it here means that we don't
   // need an additional field on the work in progress.
@@ -1498,45 +1498,47 @@ function performUnitOfWork(unitOfWork: Fiber): Fiber | null {
   unitOfWork.memoizedProps = unitOfWork.pendingProps;
   if (next === null) {
     // If this doesn't spawn new work, complete the current work.
-    next = completeUnitOfWork(unitOfWork);
+    completeUnitOfWork(unitOfWork);
+  } else {
+    workInProgress = next;
   }
 
   ReactCurrentOwner.current = null;
-  return next;
 }
 
-function completeUnitOfWork(unitOfWork: Fiber): Fiber | null {
+function completeUnitOfWork(unitOfWork: Fiber): void {
   // Attempt to complete the current unit of work, then move to the next
   // sibling. If there are no more siblings, return to the parent fiber.
-  workInProgress = unitOfWork;
+  let completedWork = unitOfWork;
   do {
     // The current, flushed, state of this fiber is the alternate. Ideally
     // nothing should rely on this, but relying on it here means that we don't
     // need an additional field on the work in progress.
-    const current = workInProgress.alternate;
-    const returnFiber = workInProgress.return;
+    const current = completedWork.alternate;
+    const returnFiber = completedWork.return;
 
     // Check if the work completed or if something threw.
-    if ((workInProgress.effectTag & Incomplete) === NoEffect) {
-      setCurrentDebugFiberInDEV(workInProgress);
+    if ((completedWork.effectTag & Incomplete) === NoEffect) {
+      setCurrentDebugFiberInDEV(completedWork);
       let next;
       if (
         !enableProfilerTimer ||
-        (workInProgress.mode & ProfileMode) === NoMode
+        (completedWork.mode & ProfileMode) === NoMode
       ) {
-        next = completeWork(current, workInProgress, renderExpirationTime);
+        next = completeWork(current, completedWork, renderExpirationTime);
       } else {
-        startProfilerTimer(workInProgress);
-        next = completeWork(current, workInProgress, renderExpirationTime);
+        startProfilerTimer(completedWork);
+        next = completeWork(current, completedWork, renderExpirationTime);
         // Update render duration assuming we didn't error.
-        stopProfilerTimerIfRunningAndRecordDelta(workInProgress, false);
+        stopProfilerTimerIfRunningAndRecordDelta(completedWork, false);
       }
       resetCurrentDebugFiberInDEV();
-      resetChildExpirationTime(workInProgress);
+      resetChildExpirationTime(completedWork);
 
       if (next !== null) {
         // Completing this fiber spawned new work. Work on that next.
-        return next;
+        workInProgress = next;
+        return;
       }
 
       if (
@@ -1548,13 +1550,13 @@ function completeUnitOfWork(unitOfWork: Fiber): Fiber | null {
         // list of the parent. The completion order of the children affects the
         // side-effect order.
         if (returnFiber.firstEffect === null) {
-          returnFiber.firstEffect = workInProgress.firstEffect;
+          returnFiber.firstEffect = completedWork.firstEffect;
         }
-        if (workInProgress.lastEffect !== null) {
+        if (completedWork.lastEffect !== null) {
           if (returnFiber.lastEffect !== null) {
-            returnFiber.lastEffect.nextEffect = workInProgress.firstEffect;
+            returnFiber.lastEffect.nextEffect = completedWork.firstEffect;
           }
-          returnFiber.lastEffect = workInProgress.lastEffect;
+          returnFiber.lastEffect = completedWork.lastEffect;
         }
 
         // If this fiber had side-effects, we append it AFTER the children's
@@ -1563,43 +1565,43 @@ function completeUnitOfWork(unitOfWork: Fiber): Fiber | null {
         // schedule our own side-effect on our own list because if end up
         // reusing children we'll schedule this effect onto itself since we're
         // at the end.
-        const effectTag = workInProgress.effectTag;
+        const effectTag = completedWork.effectTag;
 
         // Skip both NoWork and PerformedWork tags when creating the effect
         // list. PerformedWork effect is read by React DevTools but shouldn't be
         // committed.
         if (effectTag > PerformedWork) {
           if (returnFiber.lastEffect !== null) {
-            returnFiber.lastEffect.nextEffect = workInProgress;
+            returnFiber.lastEffect.nextEffect = completedWork;
           } else {
-            returnFiber.firstEffect = workInProgress;
+            returnFiber.firstEffect = completedWork;
           }
-          returnFiber.lastEffect = workInProgress;
+          returnFiber.lastEffect = completedWork;
         }
       }
     } else {
       // This fiber did not complete because something threw. Pop values off
       // the stack without entering the complete phase. If this is a boundary,
       // capture values if possible.
-      const next = unwindWork(workInProgress, renderExpirationTime);
+      const next = unwindWork(completedWork, renderExpirationTime);
 
       // Because this fiber did not complete, don't reset its expiration time.
 
       if (
         enableProfilerTimer &&
-        (workInProgress.mode & ProfileMode) !== NoMode
+        (completedWork.mode & ProfileMode) !== NoMode
       ) {
         // Record the render duration for the fiber that errored.
-        stopProfilerTimerIfRunningAndRecordDelta(workInProgress, false);
+        stopProfilerTimerIfRunningAndRecordDelta(completedWork, false);
 
         // Include the time spent working on failed children before continuing.
-        let actualDuration = workInProgress.actualDuration;
-        let child = workInProgress.child;
+        let actualDuration = completedWork.actualDuration;
+        let child = completedWork.child;
         while (child !== null) {
           actualDuration += child.actualDuration;
           child = child.sibling;
         }
-        workInProgress.actualDuration = actualDuration;
+        completedWork.actualDuration = actualDuration;
       }
 
       if (next !== null) {
@@ -1608,7 +1610,8 @@ function completeUnitOfWork(unitOfWork: Fiber): Fiber | null {
         // Since we're restarting, remove anything that is not a host effect
         // from the effect tag.
         next.effectTag &= HostEffectMask;
-        return next;
+        workInProgress = next;
+        return;
       }
 
       if (returnFiber !== null) {
@@ -1618,20 +1621,22 @@ function completeUnitOfWork(unitOfWork: Fiber): Fiber | null {
       }
     }
 
-    const siblingFiber = workInProgress.sibling;
+    const siblingFiber = completedWork.sibling;
     if (siblingFiber !== null) {
       // If there is more work to do in this returnFiber, do that next.
-      return siblingFiber;
+      workInProgress = siblingFiber;
+      return;
     }
     // Otherwise, return to the parent
-    workInProgress = returnFiber;
-  } while (workInProgress !== null);
+    completedWork = returnFiber;
+    // Update the next thing we're working on in case something throws.
+    workInProgress = completedWork;
+  } while (completedWork !== null);
 
   // We've reached the root.
   if (workInProgressRootExitStatus === RootIncomplete) {
     workInProgressRootExitStatus = RootCompleted;
   }
-  return null;
 }
 
 function getRemainingExpirationTime(fiber: Fiber) {
