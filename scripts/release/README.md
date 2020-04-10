@@ -9,7 +9,7 @@ A typical release goes like this:
 3. Finally, a "next" release can be [**promoted to stable**](#publishing-a-stable-release)<sup>1</sup> using the [`promote-to-stable`](#promote-to-stable) and [`publish`](#publish) scripts. (This process is always manual.)
 
 The high level process of creating releases is [documented below](#process). Individual scripts are documented as well:
-* [`build-release`](#build-release): Build a release locally from the checked out source code.
+* [`build-release-locally`](#build-release-locally): Build a release locally from the checked out source code.
 * [`download-release`](#download-release): Download a pre-built release from CI.
 * [`promote-to-stable`](#promote-to-stable): Prepare an NPM "next" release to be published as a "stable" release.
 * [`publish`](#publish): Publish the downloaded (or prepared) release to NPM.
@@ -119,7 +119,7 @@ Once CI is complete, follow the regular [**next**](#publishing-release) and [**p
 
 # Scripts
 
-## `build-release`
+## `build-release-locally`
 Creates a "next" build from the current (local) Git revision.
 
 **This script is an escape hatch.** It allows a release to be created without pushing a commit to be verified by Circle CI. **It does not run any automated unit tests.** Testing is solely the responsibility of the release engineer.
@@ -129,7 +129,7 @@ Note that this script git-archives the React repo (at the current revision) to a
 #### Example usage
 To create a build from the current branch and revision:
 ```sh
-scripts/release/build-release.js
+scripts/release/build-release-locally.js
 ```
 
 ## `download-release`
