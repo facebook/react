@@ -98,6 +98,7 @@ module.exports = {
     'react-internal/invariant-args': ERROR,
     'react-internal/warning-args': ERROR,
     'react-internal/no-production-logging': ERROR,
+    'react-internal/no-cross-fork-imports': ERROR,
   },
 
   overrides: [
@@ -161,8 +162,8 @@ module.exports = {
     {
       files: ['packages/react-flight-dom-webpack/**/*.js'],
       globals: {
-        '__webpack_chunk_load__': true,
-        '__webpack_require__': true,
+        __webpack_chunk_load__: true,
+        __webpack_require__: true,
       },
     },
   ],
