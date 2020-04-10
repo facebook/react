@@ -129,15 +129,22 @@ export function describeNativeComponentFrame(
         // Next we find the first one that isn't the same which should be the
         // frame that called our sample function.
         if (sampleLines[s] !== controlLines[c]) {
-          // Return the line we found.
-          // V8 adds a "new" prefix for native classes. Let's remove it to make it prettier.
-          const frame = '\n' + sampleLines[s - 1].replace(' at new ', ' at ');
-          if (__DEV__) {
-            if (typeof fn === 'function') {
-              componentFrameCache.set(fn, frame);
+          // In V8, the first line is describing the message but other VMs don't.
+          // If we're about to return the first line, and the control is also on the same
+          // line, that's a pretty good indicator that our sample threw at same line as
+          // the control. I.e. before we entered the sample frame. So we ignore this result.
+          // This can happen if you passed a class to function component, or non-function.
+          if (s !== 1 || c !== 1) {
+            // V8 adds a "new" prefix for native classes. Let's remove it to make it prettier.
+            const frame = '\n' + sampleLines[s - 1].replace(' at new ', ' at ');
+            if (__DEV__) {
+              if (typeof fn === 'function') {
+                componentFrameCache.set(fn, frame);
+              }
             }
+            // Return the line we found.
+            return frame;
           }
-          return frame;
         }
       }
     }
