@@ -13,13 +13,13 @@ const {getBuildInfo, handleError} = require('./utils');
 // It doesn't run all of the tests that the CI environment runs.
 // You're expected to run those manually before publishing a release.
 
-const addBuildInfoJSON = require('./create-next-commands/add-build-info-json');
-const buildArtifacts = require('./create-next-commands/build-artifacts');
-const confirmAutomatedTesting = require('./create-next-commands/confirm-automated-testing');
-const copyRepoToTempDirectory = require('./create-next-commands/copy-repo-to-temp-directory');
-const npmPackAndUnpack = require('./create-next-commands/npm-pack-and-unpack');
+const addBuildInfoJSON = require('./build-release-locally-commands/add-build-info-json');
+const buildArtifacts = require('./build-release-locally-commands/build-artifacts');
+const confirmAutomatedTesting = require('./build-release-locally-commands/confirm-automated-testing');
+const copyRepoToTempDirectory = require('./build-release-locally-commands/copy-repo-to-temp-directory');
+const npmPackAndUnpack = require('./build-release-locally-commands/npm-pack-and-unpack');
 const printPrereleaseSummary = require('./shared-commands/print-prerelease-summary');
-const updateVersionNumbers = require('./create-next-commands/update-version-numbers');
+const updateVersionNumbers = require('./build-release-locally-commands/update-version-numbers');
 
 const run = async () => {
   try {
