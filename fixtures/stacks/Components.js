@@ -18,3 +18,13 @@ class NativeClass extends React.Component {
     return this.props.children;
   }
 }
+
+class FrozenClass extends React.Component {
+  constructor() {
+    super();
+  }
+  render() {
+    return this.props.children;
+  }
+}
+Object.freeze(FrozenClass.prototype);

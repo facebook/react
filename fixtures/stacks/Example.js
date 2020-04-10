@@ -44,12 +44,20 @@ function Example() {
           NativeClass,
           null,
           x(
-            BabelClass,
+            FrozenClass,
             null,
             x(
-              React.Suspense,
+              BabelClass,
               null,
-              x('div', null, x(Component, null, x(Throw)))
+              x(
+                BabelClassWithFields,
+                null,
+                x(
+                  React.Suspense,
+                  null,
+                  x('div', null, x(Component, null, x(Throw)))
+                )
+              )
             )
           )
         )
