@@ -3,6 +3,7 @@
 const chalk = require('chalk');
 const util = require('util');
 const shouldIgnoreConsoleError = require('./shouldIgnoreConsoleError');
+const installGatedTestHelpers = require('./installGatedTestHelpers');
 
 if (process.env.REACT_CLASS_EQUIVALENCE_TEST) {
   // Inside the class equivalence tester, we have a custom environment, let's
@@ -215,58 +216,11 @@ if (process.env.REACT_CLASS_EQUIVALENCE_TEST) {
     global.Error = ErrorProxy;
   }
 
-  const expectExperimentalToFail = async callback => {
-    if (callback.length > 0) {
-      throw Error(
-        'Experimental test helpers do not support `done` callback. Return a ' +
-          'promise instead.'
-      );
-    }
-    try {
-      const maybePromise = callback();
-      if (
-        maybePromise !== undefined &&
-        maybePromise !== null &&
-        typeof maybePromise.then === 'function'
-      ) {
-        await maybePromise;
-      }
-    } catch (error) {
-      // Failed as expected
-      return;
-    }
-    throw Error(
-      'Tests marked experimental are expected to fail, but this one passed.'
-    );
-  };
-
-  const it = global.it;
-  const fit = global.fit;
-  const xit = global.xit;
-  if (__EXPERIMENTAL__) {
-    it.experimental = it;
-    fit.experimental = it.only.experimental = it.experimental.only = fit;
-    xit.experimental = it.skip.experimental = it.experimental.skip = xit;
-  } else {
-    it.experimental = (message, callback) => {
-      it(`[EXPERIMENTAL, SHOULD FAIL] ${message}`, () =>
-        expectExperimentalToFail(callback));
-    };
-    fit.experimental = it.only.experimental = it.experimental.only = (
-      message,
-      callback
-    ) => {
-      fit(`[EXPERIMENTAL, SHOULD FAIL] ${message}`, () =>
-        expectExperimentalToFail(callback));
-    };
-    xit.experimental = it.skip.experimental = it.experimental.skip = (
-      message,
-      callback
-    ) => {
-      xit(`[EXPERIMENTAL, SHOULD FAIL] ${message}`, () =>
-        expectExperimentalToFail(callback));
-    };
-  }
-
   require('jasmine-check').install();
 }
+
+// TODO: Our tests only distinguishes between stable and experimental release
+// channels. We should treat www's "classic" and "modern" as release
+// channels, too.
+const currentReleaseChannel = __EXPERIMENTAL__ ? 'experimental' : 'stable';
+installGatedTestHelpers(currentReleaseChannel);
