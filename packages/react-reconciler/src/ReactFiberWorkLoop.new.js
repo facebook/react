@@ -1202,6 +1202,7 @@ function prepareFreshStack(root, expirationTime) {
 
 function handleError(root, thrownValue): void {
   do {
+    let erroredWork = workInProgress;
     try {
       // Reset module-level state that was set during the render phase.
       resetContextDependencies();
@@ -1211,7 +1212,7 @@ function handleError(root, thrownValue): void {
       // separate issue. Write a regression test using string refs.
       ReactCurrentOwner.current = null;
 
-      if (workInProgress === null || workInProgress.return === null) {
+      if (erroredWork === null || erroredWork.return === null) {
         // Expected to be working on a non-root fiber. This is a fatal error
         // because there's no ancestor that can handle it; the root is
         // supposed to capture all errors that weren't caught by an error
@@ -1228,24 +1229,32 @@ function handleError(root, thrownValue): void {
         return;
       }
 
-      if (enableProfilerTimer && workInProgress.mode & ProfileMode) {
+      if (enableProfilerTimer && erroredWork.mode & ProfileMode) {
         // Record the time spent rendering before an error was thrown. This
         // avoids inaccurate Profiler durations in the case of a
         // suspended render.
-        stopProfilerTimerIfRunningAndRecordDelta(workInProgress, true);
+        stopProfilerTimerIfRunningAndRecordDelta(erroredWork, true);
       }
 
       throwException(
         root,
-        workInProgress.return,
-        workInProgress,
+        erroredWork.return,
+        erroredWork,
         thrownValue,
         renderExpirationTime,
       );
-      completeUnitOfWork(workInProgress);
+      completeUnitOfWork(erroredWork);
     } catch (yetAnotherThrownValue) {
       // Something in the return path also threw.
       thrownValue = yetAnotherThrownValue;
+      if (workInProgress === erroredWork && erroredWork !== null) {
+        // If this boundary has already errored, then we had trouble processing
+        // the error. Bubble it to the next boundary.
+        erroredWork = erroredWork.return;
+        workInProgress = erroredWork;
+      } else {
+        erroredWork = workInProgress;
+      }
       continue;
     }
     // Return to the normal work loop.

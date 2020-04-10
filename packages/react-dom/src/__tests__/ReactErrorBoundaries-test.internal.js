@@ -2408,4 +2408,71 @@ describe('ReactErrorBoundaries', () => {
       'Caught an error: input is a void element tag',
     );
   });
+
+  it('should catch errors from errors in the throw phase from boundaries', () => {
+    const container = document.createElement('div');
+
+    const thrownError = new Error('original error');
+    const Throws = () => {
+      throw thrownError;
+    };
+
+    class EvilErrorBoundary extends React.Component {
+      get componentDidCatch() {
+        throw new Error('gotta catch em all');
+      }
+      render() {
+        return this.props.children;
+      }
+    }
+
+    ReactDOM.render(
+      <ErrorBoundary>
+        <EvilErrorBoundary>
+          <Throws />
+        </EvilErrorBoundary>
+      </ErrorBoundary>,
+      container,
+    );
+
+    expect(container.textContent).toContain(
+      'Caught an error: gotta catch em all',
+    );
+  });
+
+  it('should catch errors from errors in the throw phase from errors', () => {
+    const container = document.createElement('div');
+
+    const evilError = {
+      get message() {
+        throw new Error('gotta catch em all');
+      },
+      get stack() {
+        throw new Error('gotta catch em all');
+      },
+    };
+    const Throws = () => {
+      throw evilError;
+    };
+    Object.defineProperty(Throws, 'displayName', {
+      get: function() {
+        throw new Error('gotta catch em all');
+      },
+    });
+
+    function Wrapper() {
+      return <Throws />;
+    }
+
+    ReactDOM.render(
+      <ErrorBoundary>
+        <Wrapper />
+      </ErrorBoundary>,
+      container,
+    );
+
+    expect(container.textContent).toContain(
+      'Caught an error: gotta catch em all.',
+    );
+  });
 });
