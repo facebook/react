@@ -36,10 +36,12 @@ export function describeBuiltInComponentFrame(
   if (enableComponentStackLocations) {
     if (prefix === undefined) {
       // Extract the VM specific prefix used by each line.
-      const match = Error()
-        .stack.trim()
-        .match(/\n( *(at )?)/);
-      prefix = (match && match[1]) || '';
+      try {
+        throw Error();
+      } catch (x) {
+        const match = x.stack.trim().match(/\n( *(at )?)/);
+        prefix = (match && match[1]) || '';
+      }
     }
     // We use the prefix to ensure our stacks line up with native stack frames.
     return '\n' + prefix + name;
@@ -75,7 +77,7 @@ export function describeNativeComponentFrame(
     }
   }
 
-  const control = Error();
+  let control;
 
   reentry = true;
   let previousDispatcher;
@@ -90,7 +92,9 @@ export function describeNativeComponentFrame(
     // This should throw.
     if (construct) {
       // Something should be setting the props in the constructor.
-      const Fake = function() {};
+      const Fake = function() {
+        throw Error();
+      };
       // $FlowFixMe
       Object.defineProperty(Fake.prototype, 'props', {
         set: function() {
@@ -100,16 +104,33 @@ export function describeNativeComponentFrame(
         },
       });
       if (typeof Reflect === 'object' && Reflect.construct) {
+        // We construct a different control for this case to include any extra
+        // frames added by the construct call.
+        try {
+          Reflect.construct(Fake, []);
+        } catch (x) {
+          control = x;
+        }
         Reflect.construct(fn, [], Fake);
       } else {
-        fn.call(new Fake());
+        try {
+          Fake.call();
+        } catch (x) {
+          control = x;
+        }
+        fn.call(Fake.prototype);
       }
     } else {
+      try {
+        throw Error();
+      } catch (x) {
+        control = x;
+      }
       fn();
     }
   } catch (sample) {
     // This is inlined manually because closure doesn't do it for us.
-    if (sample && typeof sample.stack === 'string') {
+    if (sample && control && typeof sample.stack === 'string') {
       // This extracts the first frame from the sample that isn't also in the control.
       // Skipping one frame that we assume is the frame that calls the two.
       const sampleLines = sample.stack.split('\n');
@@ -127,7 +148,7 @@ export function describeNativeComponentFrame(
       }
       for (; s >= 1 && c >= 0; s--, c--) {
         // Next we find the first one that isn't the same which should be the
-        // frame that called our sample function.
+        // frame that called our sample function and the control.
         if (sampleLines[s] !== controlLines[c]) {
           // In V8, the first line is describing the message but other VMs don't.
           // If we're about to return the first line, and the control is also on the same
@@ -135,16 +156,25 @@ export function describeNativeComponentFrame(
           // the control. I.e. before we entered the sample frame. So we ignore this result.
           // This can happen if you passed a class to function component, or non-function.
           if (s !== 1 || c !== 1) {
-            // V8 adds a "new" prefix for native classes. Let's remove it to make it prettier.
-            const frame = '\n' + sampleLines[s - 1].replace(' at new ', ' at ');
-            if (__DEV__) {
-              if (typeof fn === 'function') {
-                componentFrameCache.set(fn, frame);
+            do {
+              s--;
+              c--;
+              // We may still have similar intermediate frames from the construct call.
+              // The next one that isn't the same should be our match though.
+              if (c < 0 || sampleLines[s] !== controlLines[c]) {
+                // V8 adds a "new" prefix for native classes. Let's remove it to make it prettier.
+                const frame = '\n' + sampleLines[s].replace(' at new ', ' at ');
+                if (__DEV__) {
+                  if (typeof fn === 'function') {
+                    componentFrameCache.set(fn, frame);
+                  }
+                }
+                // Return the line we found.
+                return frame;
               }
-            }
-            // Return the line we found.
-            return frame;
+            } while (s >= 1 && c >= 0);
           }
+          break;
         }
       }
     }

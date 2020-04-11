@@ -27,8 +27,8 @@
     </div>
     <script src="../../build/node_modules/react/umd/react.production.min.js"></script>
     <script src="../../build/node_modules/react-dom/umd/react-dom.production.min.js"></script>
-    <script src="./Component.js"></script>
-    <script src="./BabelClass-compiled.js"></script>
+    <script src="./Components.js"></script>
+    <script src="./BabelClasses-compiled.js"></script>
     <script src="./Example.js"></script>
     <script>
       const container = document.getElementById("container");
@@ -36,16 +36,17 @@
     </script>
     <h3>The above stack should look something like this:</h3>
     <pre>
-
     at Lazy
-    at Component (/stacks/Component.js:7:50)
+    at Component (/stacks/Component.js:7:1)
     at div
     at Suspense
+    at BabelClassWithFields (/stacks/BabelClasses-compiled.js:31:31)
     at BabelClass (/stacks/BabelClass-compiled.js:13:29)
+    at FrozenClass (/stacks/Components.js:22:1)
     at NativeClass (/stacks/Component.js:16:1)
     at SuspenseList
-    at Custom Name (/stacks/Component.js:11:23)
+    at Custom Name (/stacks/Component.js:11:1)
     at ErrorBoundary (/stacks/Example.js:5:1)
-    at Example (/stacks/Example.js:33:21)</pre>
+    at Example (/stacks/Example.js:32:1)</pre>
   </body>
 </html>

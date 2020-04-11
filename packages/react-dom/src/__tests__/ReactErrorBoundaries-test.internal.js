@@ -2440,13 +2440,11 @@ describe('ReactErrorBoundaries', () => {
     );
   });
 
-  it('should catch errors from errors in the throw phase from errors', () => {
+  it('should protect errors from errors in the stack generation', () => {
     const container = document.createElement('div');
 
     const evilError = {
-      get message() {
-        throw new Error('gotta catch em all');
-      },
+      message: 'gotta catch em all',
       get stack() {
         throw new Error('gotta catch em all');
       },
