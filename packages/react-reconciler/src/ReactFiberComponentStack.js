@@ -59,11 +59,15 @@ function describeFiber(fiber: Fiber): string {
 }
 
 export function getStackByFiberInDevAndProd(workInProgress: Fiber): string {
-  let info = '';
-  let node = workInProgress;
-  do {
-    info += describeFiber(node);
-    node = node.return;
-  } while (node);
-  return info;
+  try {
+    let info = '';
+    let node = workInProgress;
+    do {
+      info += describeFiber(node);
+      node = node.return;
+    } while (node);
+    return info;
+  } catch (x) {
+    return '\nError generating stack: ' + x.message + '\n' + x.stack;
+  }
 }
