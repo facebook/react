@@ -215,10 +215,10 @@ if (process.env.REACT_CLASS_EQUIVALENCE_TEST) {
     global.Error = ErrorProxy;
   }
 
-  const expectExperimentalToFail = async callback => {
+  const expectTestToFail = async (callback, errorMsg) => {
     if (callback.length > 0) {
       throw Error(
-        'Experimental test helpers do not support `done` callback. Return a ' +
+        'Gated test helpers do not support the `done` callback. Return a ' +
           'promise instead.'
       );
     }
@@ -235,11 +235,10 @@ if (process.env.REACT_CLASS_EQUIVALENCE_TEST) {
       // Failed as expected
       return;
     }
-    throw Error(
-      'Tests marked experimental are expected to fail, but this one passed.'
-    );
+    throw Error(errorMsg);
   };
 
+  // TODO: Deprecate these helpers in favor of @gate pragma
   const it = global.it;
   const fit = global.fit;
   const xit = global.xit;
@@ -248,25 +247,92 @@ if (process.env.REACT_CLASS_EQUIVALENCE_TEST) {
     fit.experimental = it.only.experimental = it.experimental.only = fit;
     xit.experimental = it.skip.experimental = it.experimental.skip = xit;
   } else {
+    const errorMessage =
+      'Tests marked experimental are expected to fail, but this one passed.';
     it.experimental = (message, callback) => {
       it(`[EXPERIMENTAL, SHOULD FAIL] ${message}`, () =>
-        expectExperimentalToFail(callback));
+        expectTestToFail(callback, errorMessage));
     };
     fit.experimental = it.only.experimental = it.experimental.only = (
       message,
       callback
     ) => {
       fit(`[EXPERIMENTAL, SHOULD FAIL] ${message}`, () =>
-        expectExperimentalToFail(callback));
+        expectTestToFail(callback, errorMessage));
     };
     xit.experimental = it.skip.experimental = it.experimental.skip = (
       message,
       callback
     ) => {
       xit(`[EXPERIMENTAL, SHOULD FAIL] ${message}`, () =>
-        expectExperimentalToFail(callback));
+        expectTestToFail(callback, errorMessage));
     };
   }
+
+  const context = new Proxy(
+    {
+      build: __DEV__ ? 'development' : 'production',
+      experimental: __EXPERIMENTAL__,
+      stable: !__EXPERIMENTAL__,
+    },
+    {
+      get(environment, flagName) {
+        const environmentFlag = environment[flagName];
+        if (environmentFlag !== undefined) {
+          return environmentFlag;
+        }
+
+        const flags = require('shared/ReactFeatureFlags');
+        switch (flagName) {
+          case 'new':
+            return flags.enableNewReconciler === true;
+          case 'old':
+            return flags.enableNewReconciler === false;
+        }
+        const flagValue = flags[flagName];
+        if (typeof flagValue !== 'boolean') {
+          throw Error(`Feature flag "${flagName}" does not exist`);
+        }
+        return flagValue;
+      },
+    }
+  );
+
+  const gatedErrorMessage = 'Gated test was expected to fail, but it passed.';
+  global._test_gate = (gateFn, testName, callback) => {
+    let shouldPass;
+    try {
+      shouldPass = gateFn(context);
+    } catch (e) {
+      test(testName, () => {
+        throw e;
+      });
+      return;
+    }
+    if (shouldPass) {
+      test(testName, callback);
+    } else {
+      test(`[GATED, SHOULD FAIL] ${testName}`, () =>
+        expectTestToFail(callback, gatedErrorMessage));
+    }
+  };
+  global._test_gate_focus = (gateFn, testName, callback) => {
+    let shouldPass;
+    try {
+      shouldPass = gateFn(context);
+    } catch (e) {
+      test.only(testName, () => {
+        throw e;
+      });
+      return;
+    }
+    if (shouldPass) {
+      test.only(testName, callback);
+    } else {
+      test.only(`[GATED, SHOULD FAIL] ${testName}`, () =>
+        expectTestToFail(callback, gatedErrorMessage));
+    }
+  };
 
   require('jasmine-check').install();
 }
