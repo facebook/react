@@ -360,12 +360,41 @@ const tests = {
     {
       code: normalizeIndent`
         function MyComponent(props) {
+          useCustomHook(() => {
+            console.log(props.foo);
+          });
+        }
+      `,
+      options: [{additionalHooks: 'useCustomHook'}],
+    },
+    {
+      code: normalizeIndent`
+        function MyComponent(props) {
+          useCustomHook(() => {
+            console.log(props.foo);
+          }, [props.foo]);
+        }
+      `,
+      options: [{additionalHooks: 'useCustomHook'}],
+    },
+    {
+      code: normalizeIndent`
+        function MyComponent(props) {
+          useCustomHook(() => {
+            console.log(props.foo);
+          }, []);
+        }
+      `,
+      options: [{additionalHooks: 'useAnotherHook'}],
+    },
+    {
+      code: normalizeIndent`
+        function MyComponent(props) {
           useCustomEffect(() => {
             console.log(props.foo);
           });
         }
       `,
-      options: [{additionalHooks: 'useCustomEffect'}],
     },
     {
       code: normalizeIndent`
@@ -375,17 +404,6 @@ const tests = {
           }, [props.foo]);
         }
       `,
-      options: [{additionalHooks: 'useCustomEffect'}],
-    },
-    {
-      code: normalizeIndent`
-        function MyComponent(props) {
-          useCustomEffect(() => {
-            console.log(props.foo);
-          }, []);
-        }
-      `,
-      options: [{additionalHooks: 'useAnotherEffect'}],
     },
     {
       // Valid because we don't care about hooks outside of components.
@@ -3005,6 +3023,105 @@ const tests = {
     {
       code: normalizeIndent`
         function MyComponent(props) {
+          useCustomHook(() => {
+            console.log(props.foo);
+          }, []);
+          useEffect(() => {
+            console.log(props.foo);
+          }, []);
+          React.useEffect(() => {
+            console.log(props.foo);
+          }, []);
+          React.useCustomHook(() => {
+            console.log(props.foo);
+          }, []);
+        }
+      `,
+      options: [{additionalHooks: 'useCustomHook'}],
+      errors: [
+        {
+          message:
+            "React Hook useCustomHook has a missing dependency: 'props.foo'. " +
+            'Either include it or remove the dependency array.',
+          suggestions: [
+            {
+              desc: 'Update the dependencies array to be: [props.foo]',
+              output: normalizeIndent`
+                function MyComponent(props) {
+                  useCustomHook(() => {
+                    console.log(props.foo);
+                  }, [props.foo]);
+                  useEffect(() => {
+                    console.log(props.foo);
+                  }, []);
+                  React.useEffect(() => {
+                    console.log(props.foo);
+                  }, []);
+                  React.useCustomHook(() => {
+                    console.log(props.foo);
+                  }, []);
+                }
+              `,
+            },
+          ],
+        },
+        {
+          message:
+            "React Hook useEffect has a missing dependency: 'props.foo'. " +
+            'Either include it or remove the dependency array.',
+          suggestions: [
+            {
+              desc: 'Update the dependencies array to be: [props.foo]',
+              output: normalizeIndent`
+                function MyComponent(props) {
+                  useCustomHook(() => {
+                    console.log(props.foo);
+                  }, []);
+                  useEffect(() => {
+                    console.log(props.foo);
+                  }, [props.foo]);
+                  React.useEffect(() => {
+                    console.log(props.foo);
+                  }, []);
+                  React.useCustomHook(() => {
+                    console.log(props.foo);
+                  }, []);
+                }
+              `,
+            },
+          ],
+        },
+        {
+          message:
+            "React Hook React.useEffect has a missing dependency: 'props.foo'. " +
+            'Either include it or remove the dependency array.',
+          suggestions: [
+            {
+              desc: 'Update the dependencies array to be: [props.foo]',
+              output: normalizeIndent`
+                function MyComponent(props) {
+                  useCustomHook(() => {
+                    console.log(props.foo);
+                  }, []);
+                  useEffect(() => {
+                    console.log(props.foo);
+                  }, []);
+                  React.useEffect(() => {
+                    console.log(props.foo);
+                  }, [props.foo]);
+                  React.useCustomHook(() => {
+                    console.log(props.foo);
+                  }, []);
+                }
+              `,
+            },
+          ],
+        },
+      ],
+    },
+    {
+      code: normalizeIndent`
+        function MyComponent(props) {
           useCustomEffect(() => {
             console.log(props.foo);
           }, []);
@@ -3019,7 +3136,6 @@ const tests = {
           }, []);
         }
       `,
-      options: [{additionalHooks: 'useCustomEffect'}],
       errors: [
         {
           message:
