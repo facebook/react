@@ -36,10 +36,12 @@ export function describeBuiltInComponentFrame(
   if (enableComponentStackLocations) {
     if (prefix === undefined) {
       // Extract the VM specific prefix used by each line.
-      const match = Error()
-        .stack.trim()
-        .match(/\n( *(at )?)/);
-      prefix = (match && match[1]) || '';
+      try {
+        throw Error();
+      } catch (x) {
+        const match = x.stack.trim().match(/\n( *(at )?)/);
+        prefix = (match && match[1]) || '';
+      }
     }
     // We use the prefix to ensure our stacks line up with native stack frames.
     return '\n' + prefix + name;
@@ -91,7 +93,7 @@ export function describeNativeComponentFrame(
     if (construct) {
       // Something should be setting the props in the constructor.
       const Fake = function() {
-        return Error();
+        throw Error();
       };
       // $FlowFixMe
       Object.defineProperty(Fake.prototype, 'props', {
@@ -104,14 +106,26 @@ export function describeNativeComponentFrame(
       if (typeof Reflect === 'object' && Reflect.construct) {
         // We construct a different control for this case to include any extra
         // frames added by the construct call.
-        control = Reflect.construct(Fake, []);
+        try {
+          Reflect.construct(Fake, []);
+        } catch (x) {
+          control = x;
+        }
         Reflect.construct(fn, [], Fake);
       } else {
-        control = Error();
+        try {
+          Fake.call();
+        } catch (x) {
+          control = x;
+        }
         fn.call(new Fake());
       }
     } else {
-      control = Error();
+      try {
+        throw Error();
+      } catch (x) {
+        control = x;
+      }
       fn();
     }
   } catch (sample) {
