@@ -118,7 +118,7 @@ export function describeNativeComponentFrame(
         } catch (x) {
           control = x;
         }
-        fn.call(new Fake());
+        fn.call(Fake.prototype);
       }
     } else {
       try {
