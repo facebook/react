@@ -652,11 +652,10 @@ describe('ReactSuspense', () => {
       );
     }
 
-    const root = ReactTestRenderer.create(<App />, {unstable_isConcurrent: true});
-    expect(Scheduler).toFlushAndYield([
-      'Suspend! [default]',
-      'Loading...',
-    ]);
+    const root = ReactTestRenderer.create(<App />, {
+      unstable_isConcurrent: true,
+    });
+    expect(Scheduler).toFlushAndYield(['Suspend! [default]', 'Loading...']);
     expect(root).toMatchRenderedOutput('Loading...');
     jest.advanceTimersByTime(1000);
 
@@ -665,10 +664,7 @@ describe('ReactSuspense', () => {
     expect(root).toMatchRenderedOutput('default');
 
     act(() => setValue('new value'));
-    expect(Scheduler).toHaveYielded([
-      'Suspend! [new value]',
-      'Loading...'
-    ]);
+    expect(Scheduler).toHaveYielded(['Suspend! [new value]', 'Loading...']);
     expect(root).toMatchRenderedOutput('Loading...');
     jest.advanceTimersByTime(1000);
 
