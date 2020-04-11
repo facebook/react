@@ -503,10 +503,6 @@ export function makeClientIdInDEV(warnOnAccessInDEV: () => void): OpaqueIDType {
   throw new Error('Not yet implemented');
 }
 
-export function makeServerId(): OpaqueIDType {
-  throw new Error('Not yet implemented');
-}
-
 export function beforeActiveInstanceBlur() {
   // noop
 }
