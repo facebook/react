@@ -27,7 +27,8 @@ it('does not warn when rendering in legacy mode', () => {
   }).toErrorDev([]);
 });
 
-it.experimental('should warn when rendering in concurrent mode', () => {
+// @gate experimental
+it('should warn when rendering in concurrent mode', () => {
   expect(() => {
     ReactDOM.createRoot(document.createElement('div')).render(<App />);
   }).toErrorDev(
@@ -41,7 +42,8 @@ it.experimental('should warn when rendering in concurrent mode', () => {
   }).toErrorDev([]);
 });
 
-it.experimental('should warn when rendering in blocking mode', () => {
+// @gate experimental
+it('should warn when rendering in blocking mode', () => {
   expect(() => {
     ReactDOM.createBlockingRoot(document.createElement('div')).render(<App />);
   }).toErrorDev(

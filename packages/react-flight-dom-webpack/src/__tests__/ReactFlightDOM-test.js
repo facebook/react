@@ -140,7 +140,8 @@ describe('ReactFlightDOM', () => {
     });
   });
 
-  it.experimental('should resolve the root', async () => {
+  // @gate experimental
+  it('should resolve the root', async () => {
     const {Suspense} = React;
 
     // Model
@@ -191,7 +192,8 @@ describe('ReactFlightDOM', () => {
     );
   });
 
-  it.experimental('should not get confused by $', async () => {
+  // @gate experimental
+  it('should not get confused by $', async () => {
     const {Suspense} = React;
 
     // Model
@@ -227,7 +229,8 @@ describe('ReactFlightDOM', () => {
     expect(container.innerHTML).toBe('<p>$1</p>');
   });
 
-  it.experimental('should not get confused by @', async () => {
+  // @gate experimental
+  it('should not get confused by @', async () => {
     const {Suspense} = React;
 
     // Model
@@ -263,7 +266,8 @@ describe('ReactFlightDOM', () => {
     expect(container.innerHTML).toBe('<p>@div</p>');
   });
 
-  it.experimental('should progressively reveal Blocks', async () => {
+  // @gate experimental
+  it('should progressively reveal Blocks', async () => {
     const {Suspense} = React;
 
     class ErrorBoundary extends React.Component {

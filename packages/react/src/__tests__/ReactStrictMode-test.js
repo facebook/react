@@ -362,76 +362,75 @@ describe('Concurrent Mode', () => {
     Scheduler = require('scheduler');
   });
 
-  it.experimental(
-    'should warn about unsafe legacy lifecycle methods anywhere in the tree',
-    () => {
-      class AsyncRoot extends React.Component {
-        UNSAFE_componentWillMount() {}
-        UNSAFE_componentWillUpdate() {}
-        render() {
-          return (
+  // @gate experimental
+  it('should warn about unsafe legacy lifecycle methods anywhere in the tree', () => {
+    class AsyncRoot extends React.Component {
+      UNSAFE_componentWillMount() {}
+      UNSAFE_componentWillUpdate() {}
+      render() {
+        return (
+          <div>
+            <Wrapper>
+              <Foo />
+            </Wrapper>
             <div>
-              <Wrapper>
-                <Foo />
-              </Wrapper>
-              <div>
-                <Bar />
-                <Foo />
-              </div>
+              <Bar />
+              <Foo />
             </div>
-          );
-        }
+          </div>
+        );
       }
-      function Wrapper({children}) {
-        return <div>{children}</div>;
+    }
+    function Wrapper({children}) {
+      return <div>{children}</div>;
+    }
+    class Foo extends React.Component {
+      UNSAFE_componentWillReceiveProps() {}
+      render() {
+        return null;
       }
-      class Foo extends React.Component {
-        UNSAFE_componentWillReceiveProps() {}
-        render() {
-          return null;
-        }
+    }
+    class Bar extends React.Component {
+      UNSAFE_componentWillReceiveProps() {}
+      render() {
+        return null;
       }
-      class Bar extends React.Component {
-        UNSAFE_componentWillReceiveProps() {}
-        render() {
-          return null;
-        }
-      }
+    }
 
-      const container = document.createElement('div');
-      const root = ReactDOM.createRoot(container);
-      root.render(<AsyncRoot />);
-      expect(() => Scheduler.unstable_flushAll()).toErrorDev(
-        [
-          /* eslint-disable max-len */
-          `Warning: Using UNSAFE_componentWillMount in strict mode is not recommended and may indicate bugs in your code. See https://fb.me/react-unsafe-component-lifecycles for details.
+    const container = document.createElement('div');
+    const root = ReactDOM.createRoot(container);
+    root.render(<AsyncRoot />);
+    expect(() => Scheduler.unstable_flushAll()).toErrorDev(
+      [
+        /* eslint-disable max-len */
+        `Warning: Using UNSAFE_componentWillMount in strict mode is not recommended and may indicate bugs in your code. See https://fb.me/react-unsafe-component-lifecycles for details.
 
 * Move code with side effects to componentDidMount, and set initial state in the constructor.
 
 Please update the following components: AsyncRoot`,
-          `Warning: Using UNSAFE_componentWillReceiveProps in strict mode is not recommended and may indicate bugs in your code. See https://fb.me/react-unsafe-component-lifecycles for details.
+        `Warning: Using UNSAFE_componentWillReceiveProps in strict mode is not recommended and may indicate bugs in your code. See https://fb.me/react-unsafe-component-lifecycles for details.
 
 * Move data fetching code or side effects to componentDidUpdate.
 * If you're updating state whenever props change, refactor your code to use memoization techniques or move it to static getDerivedStateFromProps. Learn more at: https://fb.me/react-derived-state
 
 Please update the following components: Bar, Foo`,
-          `Warning: Using UNSAFE_componentWillUpdate in strict mode is not recommended and may indicate bugs in your code. See https://fb.me/react-unsafe-component-lifecycles for details.
+        `Warning: Using UNSAFE_componentWillUpdate in strict mode is not recommended and may indicate bugs in your code. See https://fb.me/react-unsafe-component-lifecycles for details.
 
 * Move data fetching code or side effects to componentDidUpdate.
 
 Please update the following components: AsyncRoot`,
-          /* eslint-enable max-len */
-        ],
-        {withoutStack: true},
-      );
+        /* eslint-enable max-len */
+      ],
+      {withoutStack: true},
+    );
 
-      // Dedupe
-      root.render(<AsyncRoot />);
-      Scheduler.unstable_flushAll();
-    },
-  );
+    // Dedupe
+    root.render(<AsyncRoot />);
+    Scheduler.unstable_flushAll();
+  });
 
-  it.experimental('should coalesce warnings by lifecycle name', () => {
+  // @gate experimental
+  it('should coalesce warnings by lifecycle name', () => {
     class AsyncRoot extends React.Component {
       UNSAFE_componentWillMount() {}
       UNSAFE_componentWillUpdate() {}
@@ -513,52 +512,50 @@ Please update the following components: Parent`,
     Scheduler.unstable_flushAll();
   });
 
-  it.experimental(
-    'should warn about components not present during the initial render',
-    () => {
-      class AsyncRoot extends React.Component {
-        render() {
-          return this.props.foo ? <Foo /> : <Bar />;
-        }
+  // @gate experimental
+  it('should warn about components not present during the initial render', () => {
+    class AsyncRoot extends React.Component {
+      render() {
+        return this.props.foo ? <Foo /> : <Bar />;
       }
-      class Foo extends React.Component {
-        UNSAFE_componentWillMount() {}
-        render() {
-          return null;
-        }
+    }
+    class Foo extends React.Component {
+      UNSAFE_componentWillMount() {}
+      render() {
+        return null;
       }
-      class Bar extends React.Component {
-        UNSAFE_componentWillMount() {}
-        render() {
-          return null;
-        }
+    }
+    class Bar extends React.Component {
+      UNSAFE_componentWillMount() {}
+      render() {
+        return null;
       }
+    }
 
-      const container = document.createElement('div');
-      const root = ReactDOM.createRoot(container);
-      root.render(<AsyncRoot foo={true} />);
-      expect(() =>
-        Scheduler.unstable_flushAll(),
-      ).toErrorDev(
-        'Using UNSAFE_componentWillMount in strict mode is not recommended',
-        {withoutStack: true},
-      );
+    const container = document.createElement('div');
+    const root = ReactDOM.createRoot(container);
+    root.render(<AsyncRoot foo={true} />);
+    expect(() =>
+      Scheduler.unstable_flushAll(),
+    ).toErrorDev(
+      'Using UNSAFE_componentWillMount in strict mode is not recommended',
+      {withoutStack: true},
+    );
 
-      root.render(<AsyncRoot foo={false} />);
-      expect(() =>
-        Scheduler.unstable_flushAll(),
-      ).toErrorDev(
-        'Using UNSAFE_componentWillMount in strict mode is not recommended',
-        {withoutStack: true},
-      );
+    root.render(<AsyncRoot foo={false} />);
+    expect(() =>
+      Scheduler.unstable_flushAll(),
+    ).toErrorDev(
+      'Using UNSAFE_componentWillMount in strict mode is not recommended',
+      {withoutStack: true},
+    );
 
-      // Dedupe
-      root.render(<AsyncRoot foo={true} />);
-      Scheduler.unstable_flushAll();
-      root.render(<AsyncRoot foo={false} />);
-      Scheduler.unstable_flushAll();
-    },
-  );
+    // Dedupe
+    root.render(<AsyncRoot foo={true} />);
+    Scheduler.unstable_flushAll();
+    root.render(<AsyncRoot foo={false} />);
+    Scheduler.unstable_flushAll();
+  });
 
   it('should also warn inside of "strict" mode trees', () => {
     const {StrictMode} = React;

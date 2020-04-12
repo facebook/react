@@ -798,7 +798,8 @@ describe('ReactHooksWithNoopRenderer', () => {
     });
 
     // TODO: This should probably warn
-    it.experimental('calling startTransition inside render phase', async () => {
+    // @gate experimental
+    it('calling startTransition inside render phase', async () => {
       let startTransition;
       function App() {
         const [counter, setCounter] = useState(0);
@@ -2728,152 +2729,149 @@ describe('ReactHooksWithNoopRenderer', () => {
     });
   });
   describe('useTransition', () => {
-    it.experimental(
-      'delays showing loading state until after timeout',
-      async () => {
-        let transition;
-        function App() {
-          const [show, setShow] = useState(false);
-          const [startTransition, isPending] = useTransition({
-            timeoutMs: 1000,
-          });
-          transition = () => {
-            startTransition(() => {
-              setShow(true);
-            });
-          };
-          return (
-            <Suspense
-              fallback={<Text text={`Loading... Pending: ${isPending}`} />}>
-              {show ? (
-                <AsyncText ms={2000} text={`After... Pending: ${isPending}`} />
-              ) : (
-                <Text text={`Before... Pending: ${isPending}`} />
-              )}
-            </Suspense>
-          );
-        }
-        ReactNoop.render(<App />);
-        expect(Scheduler).toFlushAndYield(['Before... Pending: false']);
-        expect(ReactNoop.getChildren()).toEqual([
-          span('Before... Pending: false'),
-        ]);
-
-        act(() => {
-          Scheduler.unstable_runWithPriority(
-            Scheduler.unstable_UserBlockingPriority,
-            transition,
-          );
+    // @gate experimental
+    it('delays showing loading state until after timeout', async () => {
+      let transition;
+      function App() {
+        const [show, setShow] = useState(false);
+        const [startTransition, isPending] = useTransition({
+          timeoutMs: 1000,
         });
-        Scheduler.unstable_advanceTime(500);
-        await advanceTimers(500);
-        expect(Scheduler).toHaveYielded([
-          'Before... Pending: true',
-          'Suspend! [After... Pending: false]',
-          'Loading... Pending: false',
-        ]);
-        expect(ReactNoop.getChildren()).toEqual([
-          span('Before... Pending: true'),
-        ]);
-
-        Scheduler.unstable_advanceTime(1000);
-        await advanceTimers(1000);
-        expect(ReactNoop.getChildren()).toEqual([
-          hiddenSpan('Before... Pending: true'),
-          span('Loading... Pending: false'),
-        ]);
-
-        Scheduler.unstable_advanceTime(500);
-        await advanceTimers(500);
-        expect(Scheduler).toHaveYielded([
-          'Promise resolved [After... Pending: false]',
-        ]);
-        expect(Scheduler).toFlushAndYield(['After... Pending: false']);
-        expect(ReactNoop.getChildren()).toEqual([
-          span('After... Pending: false'),
-        ]);
-      },
-    );
-    it.experimental(
-      'delays showing loading state until after busyDelayMs + busyMinDurationMs',
-      async () => {
-        let transition;
-        function App() {
-          const [show, setShow] = useState(false);
-          const [startTransition, isPending] = useTransition({
-            busyDelayMs: 1000,
-            busyMinDurationMs: 2000,
+        transition = () => {
+          startTransition(() => {
+            setShow(true);
           });
-          transition = () => {
-            startTransition(() => {
-              setShow(true);
-            });
-          };
-          return (
-            <Suspense
-              fallback={<Text text={`Loading... Pending: ${isPending}`} />}>
-              {show ? (
-                <AsyncText ms={2000} text={`After... Pending: ${isPending}`} />
-              ) : (
-                <Text text={`Before... Pending: ${isPending}`} />
-              )}
-            </Suspense>
-          );
-        }
-        ReactNoop.render(<App />);
-        expect(Scheduler).toFlushAndYield(['Before... Pending: false']);
-        expect(ReactNoop.getChildren()).toEqual([
-          span('Before... Pending: false'),
-        ]);
+        };
+        return (
+          <Suspense
+            fallback={<Text text={`Loading... Pending: ${isPending}`} />}>
+            {show ? (
+              <AsyncText ms={2000} text={`After... Pending: ${isPending}`} />
+            ) : (
+              <Text text={`Before... Pending: ${isPending}`} />
+            )}
+          </Suspense>
+        );
+      }
+      ReactNoop.render(<App />);
+      expect(Scheduler).toFlushAndYield(['Before... Pending: false']);
+      expect(ReactNoop.getChildren()).toEqual([
+        span('Before... Pending: false'),
+      ]);
 
-        act(() => {
-          Scheduler.unstable_runWithPriority(
-            Scheduler.unstable_UserBlockingPriority,
-            transition,
-          );
+      act(() => {
+        Scheduler.unstable_runWithPriority(
+          Scheduler.unstable_UserBlockingPriority,
+          transition,
+        );
+      });
+      Scheduler.unstable_advanceTime(500);
+      await advanceTimers(500);
+      expect(Scheduler).toHaveYielded([
+        'Before... Pending: true',
+        'Suspend! [After... Pending: false]',
+        'Loading... Pending: false',
+      ]);
+      expect(ReactNoop.getChildren()).toEqual([
+        span('Before... Pending: true'),
+      ]);
+
+      Scheduler.unstable_advanceTime(1000);
+      await advanceTimers(1000);
+      expect(ReactNoop.getChildren()).toEqual([
+        hiddenSpan('Before... Pending: true'),
+        span('Loading... Pending: false'),
+      ]);
+
+      Scheduler.unstable_advanceTime(500);
+      await advanceTimers(500);
+      expect(Scheduler).toHaveYielded([
+        'Promise resolved [After... Pending: false]',
+      ]);
+      expect(Scheduler).toFlushAndYield(['After... Pending: false']);
+      expect(ReactNoop.getChildren()).toEqual([
+        span('After... Pending: false'),
+      ]);
+    });
+    // @gate experimental
+    it('delays showing loading state until after busyDelayMs + busyMinDurationMs', async () => {
+      let transition;
+      function App() {
+        const [show, setShow] = useState(false);
+        const [startTransition, isPending] = useTransition({
+          busyDelayMs: 1000,
+          busyMinDurationMs: 2000,
         });
-        Scheduler.unstable_advanceTime(1000);
-        await advanceTimers(1000);
-        expect(Scheduler).toHaveYielded([
-          'Before... Pending: true',
-          'Suspend! [After... Pending: false]',
-          'Loading... Pending: false',
-        ]);
-        expect(ReactNoop.getChildren()).toEqual([
-          span('Before... Pending: true'),
-        ]);
+        transition = () => {
+          startTransition(() => {
+            setShow(true);
+          });
+        };
+        return (
+          <Suspense
+            fallback={<Text text={`Loading... Pending: ${isPending}`} />}>
+            {show ? (
+              <AsyncText ms={2000} text={`After... Pending: ${isPending}`} />
+            ) : (
+              <Text text={`Before... Pending: ${isPending}`} />
+            )}
+          </Suspense>
+        );
+      }
+      ReactNoop.render(<App />);
+      expect(Scheduler).toFlushAndYield(['Before... Pending: false']);
+      expect(ReactNoop.getChildren()).toEqual([
+        span('Before... Pending: false'),
+      ]);
 
-        // Resolve the promise. The whole tree has now completed. However,
-        // because we exceeded the busy threshold, we won't commit the
-        // result yet.
-        Scheduler.unstable_advanceTime(1000);
-        await advanceTimers(1000);
-        expect(Scheduler).toHaveYielded([
-          'Promise resolved [After... Pending: false]',
-        ]);
-        expect(Scheduler).toFlushAndYield(['After... Pending: false']);
-        expect(ReactNoop.getChildren()).toEqual([
-          span('Before... Pending: true'),
-        ]);
+      act(() => {
+        Scheduler.unstable_runWithPriority(
+          Scheduler.unstable_UserBlockingPriority,
+          transition,
+        );
+      });
+      Scheduler.unstable_advanceTime(1000);
+      await advanceTimers(1000);
+      expect(Scheduler).toHaveYielded([
+        'Before... Pending: true',
+        'Suspend! [After... Pending: false]',
+        'Loading... Pending: false',
+      ]);
+      expect(ReactNoop.getChildren()).toEqual([
+        span('Before... Pending: true'),
+      ]);
 
-        // Advance time until just before the `busyMinDuration` threshold.
-        Scheduler.unstable_advanceTime(999);
-        await advanceTimers(999);
-        expect(ReactNoop.getChildren()).toEqual([
-          span('Before... Pending: true'),
-        ]);
+      // Resolve the promise. The whole tree has now completed. However,
+      // because we exceeded the busy threshold, we won't commit the
+      // result yet.
+      Scheduler.unstable_advanceTime(1000);
+      await advanceTimers(1000);
+      expect(Scheduler).toHaveYielded([
+        'Promise resolved [After... Pending: false]',
+      ]);
+      expect(Scheduler).toFlushAndYield(['After... Pending: false']);
+      expect(ReactNoop.getChildren()).toEqual([
+        span('Before... Pending: true'),
+      ]);
 
-        // Advance time just a bit more. Now we complete the transition.
-        Scheduler.unstable_advanceTime(300);
-        await advanceTimers(300);
-        expect(ReactNoop.getChildren()).toEqual([
-          span('After... Pending: false'),
-        ]);
-      },
-    );
+      // Advance time until just before the `busyMinDuration` threshold.
+      Scheduler.unstable_advanceTime(999);
+      await advanceTimers(999);
+      expect(ReactNoop.getChildren()).toEqual([
+        span('Before... Pending: true'),
+      ]);
+
+      // Advance time just a bit more. Now we complete the transition.
+      Scheduler.unstable_advanceTime(300);
+      await advanceTimers(300);
+      expect(ReactNoop.getChildren()).toEqual([
+        span('After... Pending: false'),
+      ]);
+    });
   });
   describe('useDeferredValue', () => {
-    it.experimental('defers text value until specified timeout', async () => {
+    // @gate experimental
+    it('defers text value until specified timeout', async () => {
       function TextBox({text}) {
         return <AsyncText ms={1000} text={text} />;
       }
