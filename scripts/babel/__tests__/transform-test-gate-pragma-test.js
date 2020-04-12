@@ -161,3 +161,27 @@ describe('transform-test-gate-pragma', () => {
     expect(shouldPass).toBe(true);
   });
 });
+
+describe('transform test-gate-pragma: actual runtime', () => {
+  // These tests use the actual gating runtime used by the rest of our
+  // test suite.
+
+  // Always should fail because of the unguarded console.error
+  // @gate false
+  test('works with console.error tracking', () => {
+    console.error('Should cause test to fail');
+  });
+
+  // Always should fail because of the unguarded console.warn
+  // @gate false
+  test('works with console.warn tracking', () => {
+    console.warn('Should cause test to fail');
+  });
+
+  // @gate false
+  test('works with console tracking if error is thrown before end of test', () => {
+    console.warn('Please stop that!');
+    console.error('Stop that!');
+    throw Error('I told you to stop!');
+  });
+});

@@ -66,8 +66,9 @@ if (process.env.REACT_CLASS_EQUIVALENCE_TEST) {
     }
   });
 
-  ['error', 'warn'].forEach(methodName => {
-    const unexpectedConsoleCallStacks = [];
+  // TODO: Consider consolidating this with `yieldValue`. In both cases, tests
+  // should not be allowed to exit without asserting on the entire log.
+  const patchConsoleMethod = (methodName, unexpectedConsoleCallStacks) => {
     const newMethod = function(format, ...args) {
       // Ignore uncaught errors reported by jsdom
       // and React addendums because they're too noisy.
@@ -87,55 +88,77 @@ if (process.env.REACT_CLASS_EQUIVALENCE_TEST) {
 
     console[methodName] = newMethod;
 
-    env.beforeEach(() => {
-      unexpectedConsoleCallStacks.length = 0;
-    });
+    return newMethod;
+  };
 
-    env.afterEach(() => {
-      if (console[methodName] !== newMethod && !isSpy(console[methodName])) {
-        throw new Error(
-          `Test did not tear down console.${methodName} mock properly.`
-        );
-      }
+  const flushUnexpectedConsoleCalls = (
+    mockMethod,
+    methodName,
+    expectedMatcher,
+    unexpectedConsoleCallStacks
+  ) => {
+    if (console[methodName] !== mockMethod && !isSpy(console[methodName])) {
+      throw new Error(
+        `Test did not tear down console.${methodName} mock properly.`
+      );
+    }
+    if (unexpectedConsoleCallStacks.length > 0) {
+      const messages = unexpectedConsoleCallStacks.map(
+        ([stack, message]) =>
+          `${chalk.red(message)}\n` +
+          `${stack
+            .split('\n')
+            .map(line => chalk.gray(line))
+            .join('\n')}`
+      );
 
-      if (unexpectedConsoleCallStacks.length > 0) {
-        const messages = unexpectedConsoleCallStacks.map(
-          ([stack, message]) =>
-            `${chalk.red(message)}\n` +
-            `${stack
-              .split('\n')
-              .map(line => chalk.gray(line))
-              .join('\n')}`
-        );
+      const message =
+        `Expected test not to call ${chalk.bold(
+          `console.${methodName}()`
+        )}.\n\n` +
+        'If the warning is expected, test for it explicitly by:\n' +
+        `1. Using the ${chalk.bold('.' + expectedMatcher + '()')} ` +
+        `matcher, or...\n` +
+        `2. Mock it out using ${chalk.bold(
+          'spyOnDev'
+        )}(console, '${methodName}') or ${chalk.bold(
+          'spyOnProd'
+        )}(console, '${methodName}'), and test that the warning occurs.`;
 
-        let expectedMatcher;
-        switch (methodName) {
-          case 'warn':
-            expectedMatcher = 'toWarnDev';
-            break;
-          case 'error':
-            expectedMatcher = 'toErrorDev';
-            break;
-          default:
-            throw new Error('No matcher for ' + methodName);
-        }
-        const message =
-          `Expected test not to call ${chalk.bold(
-            `console.${methodName}()`
-          )}.\n\n` +
-          'If the warning is expected, test for it explicitly by:\n' +
-          `1. Using the ${chalk.bold('.' + expectedMatcher + '()')} ` +
-          `matcher, or...\n` +
-          `2. Mock it out using ${chalk.bold(
-            'spyOnDev'
-          )}(console, '${methodName}') or ${chalk.bold(
-            'spyOnProd'
-          )}(console, '${methodName}'), and test that the warning occurs.`;
+      throw new Error(`${message}\n\n${messages.join('\n\n')}`);
+    }
+  };
 
-        throw new Error(`${message}\n\n${messages.join('\n\n')}`);
-      }
-    });
-  });
+  const unexpectedErrorCallStacks = [];
+  const unexpectedWarnCallStacks = [];
+
+  const errorMethod = patchConsoleMethod('error', unexpectedErrorCallStacks);
+  const warnMethod = patchConsoleMethod('warn', unexpectedWarnCallStacks);
+
+  const flushAllUnexpectedConsoleCalls = () => {
+    flushUnexpectedConsoleCalls(
+      errorMethod,
+      'error',
+      'toErrorDev',
+      unexpectedErrorCallStacks
+    );
+    flushUnexpectedConsoleCalls(
+      warnMethod,
+      'warn',
+      'toWarnDev',
+      unexpectedWarnCallStacks
+    );
+    unexpectedErrorCallStacks.length = 0;
+    unexpectedWarnCallStacks.length = 0;
+  };
+
+  const resetAllUnexpectedConsoleCalls = () => {
+    unexpectedErrorCallStacks.length = 0;
+    unexpectedWarnCallStacks.length = 0;
+  };
+
+  env.beforeEach(resetAllUnexpectedConsoleCalls);
+  env.afterEach(flushAllUnexpectedConsoleCalls);
 
   if (process.env.NODE_ENV === 'production') {
     // In production, we strip error messages and turn them into codes.
@@ -231,8 +254,13 @@ if (process.env.REACT_CLASS_EQUIVALENCE_TEST) {
       ) {
         await maybePromise;
       }
+      // Flush unexpected console calls inside the test itself, instead of in
+      // `afterEach` like we normally do. `afterEach` is too late because if it
+      // throws, we won't have captured it.
+      flushAllUnexpectedConsoleCalls();
     } catch (error) {
       // Failed as expected
+      resetAllUnexpectedConsoleCalls();
       return;
     }
     throw Error(errorMsg);
