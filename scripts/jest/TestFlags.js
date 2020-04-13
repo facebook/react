@@ -58,7 +58,7 @@ function getTestFlags() {
     {
       get(flags, flagName) {
         const flagValue = flags[flagName];
-        if (typeof flagValue !== 'boolean' && typeof flagName === 'string') {
+        if (flagValue === undefined && typeof flagName === 'string') {
           throw Error(
             `Feature flag "${flagName}" does not exist. See TestFlags.js ` +
               'for more details.'
