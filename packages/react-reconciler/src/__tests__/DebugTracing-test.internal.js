@@ -44,7 +44,7 @@ describe('DebugTracing', () => {
     });
   });
 
-  if (!__DEV__) {
+  if (!__EXPERIMENTAL__) {
     it('empty test', () => {
       // Empty test to prevent "Your test suite must contain at least one test." error.
     });
