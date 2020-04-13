@@ -8,7 +8,7 @@
  */
 
 import * as React from 'react';
-import {Fragment, useContext, useCallback, useEffect, useRef} from 'react';
+import {Fragment, useContext, useEffect, useRef} from 'react';
 import WhatChanged from './WhatChanged';
 import {ProfilerContext} from './ProfilerContext';
 import {formatDuration, formatTime} from './utils';
@@ -39,35 +39,30 @@ export default function SidebarSelectedFiberInfo(_: Props) {
     rootID: ((rootID: any): number),
   });
 
-  const handleKeyDown = useCallback(
-    event => {
-      switch (event.key) {
-        case 'ArrowUp':
-          if (selectedCommitIndex !== null) {
-            selectCommitIndex(
-              selectedCommitIndex > 0
-                ? selectedCommitIndex - 1
-                : commitIndices.length - 1,
-            );
-          }
-          event.preventDefault();
-          break;
-        case 'ArrowDown':
-          if (selectedCommitIndex !== null) {
-            selectCommitIndex(
-              selectedCommitIndex < commitIndices.length - 1
-                ? selectedCommitIndex + 1
-                : 0,
-            );
-          }
-          event.preventDefault();
-          break;
-        default:
-          break;
-      }
-    },
-    [selectCommitIndex, selectedCommitIndex, commitIndices],
-  );
+  const handleKeyDown = event => {
+    switch (event.key) {
+      case 'ArrowUp':
+        if (selectedCommitIndex !== null) {
+          const prevIndex = commitIndices.indexOf(selectedCommitIndex);
+          const nextIndex =
+            prevIndex > 0 ? prevIndex - 1 : commitIndices.length - 1;
+          selectCommitIndex(commitIndices[nextIndex]);
+        }
+        event.preventDefault();
+        break;
+      case 'ArrowDown':
+        if (selectedCommitIndex !== null) {
+          const prevIndex = commitIndices.indexOf(selectedCommitIndex);
+          const nextIndex =
+            prevIndex < commitIndices.length - 1 ? prevIndex + 1 : 0;
+          selectCommitIndex(commitIndices[nextIndex]);
+        }
+        event.preventDefault();
+        break;
+      default:
+        break;
+    }
+  };
 
   useEffect(() => {
     if (listContainer.current === null || selectedCommitIndex === null) {
