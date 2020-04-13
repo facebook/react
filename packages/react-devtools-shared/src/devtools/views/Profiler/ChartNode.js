@@ -8,6 +8,7 @@
  */
 
 import * as React from 'react';
+import {useEffect} from 'react';
 
 import styles from './ChartNode.css';
 
@@ -15,6 +16,7 @@ type Props = {|
   color: string,
   height: number,
   isDimmed?: boolean,
+  isSelected?: boolean,
   label: string,
   onClick: (event: SyntheticMouseEvent<*>) => mixed,
   onDoubleClick?: (event: SyntheticMouseEvent<*>) => mixed,
@@ -33,6 +35,7 @@ export default function ChartNode({
   color,
   height,
   isDimmed = false,
+  isSelected = false,
   label,
   onClick,
   onMouseEnter,
@@ -43,12 +46,22 @@ export default function ChartNode({
   x,
   y,
 }: Props) {
+  useEffect(() => {
+    if (isSelected) {
+      const selectedPatternPath = document.getElementById(
+        'selectedPatternPath',
+      );
+      selectedPatternPath.style.stroke = color;
+    }
+  }, [isSelected, color]);
+
+  const fill = isSelected ? 'url(#selectedPattern)' : color;
   return (
     <g className={styles.Group} transform={`translate(${x},${y})`}>
       <rect
         width={width}
         height={height}
-        fill={color}
+        fill={fill}
         onClick={onClick}
         onMouseEnter={onMouseEnter}
         onMouseLeave={onMouseLeave}

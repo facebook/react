@@ -187,6 +187,19 @@ const InnerElementType = forwardRef(({children, ...rest}, ref) => (
           className={styles.PatternPath}
         />
       </pattern>
+      <pattern
+        id="selectedPattern"
+        patternUnits="userSpaceOnUse"
+        width="4"
+        height="4">
+        <path
+          id="selectedPatternPath"
+          d="M-1,1 l2,-2
+           M0,4 l4,-4
+           M3,5 l2,-2"
+          style={{strokeWidth: 2.4}}
+        />
+      </pattern>
     </defs>
     {children}
   </svg>
