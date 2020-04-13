@@ -20,8 +20,6 @@ import styles from './SidebarSelectedFiberInfo.css';
 
 export type Props = {||};
 
-const renderedAtButtonId = 'renderedAtButton';
-
 export default function SidebarSelectedFiberInfo(_: Props) {
   const {profilerStore} = useContext(StoreContext);
   const {
@@ -34,6 +32,7 @@ export default function SidebarSelectedFiberInfo(_: Props) {
   } = useContext(ProfilerContext);
   const {profilingCache} = profilerStore;
   const listContainer = useRef<HTMLElement | null>(null);
+  const listItemRef = useRef<HTMLElement | null>(null);
 
   const commitIndices = profilingCache.getFiberCommits({
     fiberID: ((selectedFiberID: any): number),
@@ -44,17 +43,22 @@ export default function SidebarSelectedFiberInfo(_: Props) {
     event => {
       switch (event.key) {
         case 'ArrowUp':
-          if (selectedCommitIndex !== null && selectedCommitIndex > 0) {
-            selectCommitIndex(selectedCommitIndex - 1);
+          if (selectedCommitIndex !== null) {
+            selectCommitIndex(
+              selectedCommitIndex > 0
+                ? selectedCommitIndex - 1
+                : commitIndices.length - 1,
+            );
           }
           event.preventDefault();
           break;
         case 'ArrowDown':
-          if (
-            selectedCommitIndex !== null &&
-            selectedCommitIndex < commitIndices.length - 1
-          ) {
-            selectCommitIndex(selectedCommitIndex + 1);
+          if (selectedCommitIndex !== null) {
+            selectCommitIndex(
+              selectedCommitIndex < commitIndices.length - 1
+                ? selectedCommitIndex + 1
+                : 0,
+            );
           }
           event.preventDefault();
           break;
@@ -65,40 +69,13 @@ export default function SidebarSelectedFiberInfo(_: Props) {
     [selectCommitIndex, selectedCommitIndex, commitIndices],
   );
 
-  const listItems = [];
-  let i = 0;
-  for (i = 0; i < commitIndices.length; i++) {
-    const commitIndex = commitIndices[i];
-
-    const {duration, timestamp} = profilerStore.getCommitData(
-      ((rootID: any): number),
-      commitIndex,
-    );
-
-    listItems.push(
-      <button
-        key={commitIndex}
-        id={`${renderedAtButtonId}${commitIndex}`}
-        className={
-          selectedCommitIndex === commitIndex
-            ? styles.CurrentCommit
-            : styles.Commit
-        }
-        onClick={() => selectCommitIndex(commitIndex)}>
-        {formatTime(timestamp)}s for {formatDuration(duration)}ms
-      </button>,
-    );
-  }
-
   useEffect(() => {
     if (listContainer.current === null || selectedCommitIndex === null) {
       return;
     }
 
     const list: any = listContainer.current;
-    const selectedElement = document.getElementById(
-      `${renderedAtButtonId}${selectedCommitIndex}`,
-    );
+    const selectedElement = listItemRef.current;
 
     if (selectedElement === null) {
       return;
@@ -115,6 +92,31 @@ export default function SidebarSelectedFiberInfo(_: Props) {
       list.scrollBy({top: buttonBottom - listBottom});
     }
   }, [selectedCommitIndex]);
+
+  const listItems = [];
+  let i = 0;
+  for (i = 0; i < commitIndices.length; i++) {
+    const commitIndex = commitIndices[i];
+
+    const {duration, timestamp} = profilerStore.getCommitData(
+      ((rootID: any): number),
+      commitIndex,
+    );
+
+    listItems.push(
+      <button
+        key={commitIndex}
+        ref={selectedCommitIndex === commitIndex ? listItemRef : null}
+        className={
+          selectedCommitIndex === commitIndex
+            ? styles.CurrentCommit
+            : styles.Commit
+        }
+        onClick={() => selectCommitIndex(commitIndex)}>
+        {formatTime(timestamp)}s for {formatDuration(duration)}ms
+      </button>,
+    );
+  }
 
   return (
     <Fragment>
