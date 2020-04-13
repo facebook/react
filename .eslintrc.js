@@ -178,6 +178,7 @@ module.exports = {
     __UMD__: true,
     __EXPERIMENTAL__: true,
     __VARIANT__: true,
+    gate: true,
     trustedTypes: true,
   },
 };
