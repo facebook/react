@@ -267,37 +267,6 @@ if (process.env.REACT_CLASS_EQUIVALENCE_TEST) {
     throw Error(errorMsg);
   };
 
-  // TODO: Deprecate these helpers in favor of @gate pragma
-  const it = global.it;
-  const fit = global.fit;
-  const xit = global.xit;
-  if (__EXPERIMENTAL__) {
-    it.experimental = it;
-    fit.experimental = it.only.experimental = it.experimental.only = fit;
-    xit.experimental = it.skip.experimental = it.experimental.skip = xit;
-  } else {
-    const errorMessage =
-      'Tests marked experimental are expected to fail, but this one passed.';
-    it.experimental = (message, callback) => {
-      it(`[EXPERIMENTAL, SHOULD FAIL] ${message}`, () =>
-        expectTestToFail(callback, errorMessage));
-    };
-    fit.experimental = it.only.experimental = it.experimental.only = (
-      message,
-      callback
-    ) => {
-      fit(`[EXPERIMENTAL, SHOULD FAIL] ${message}`, () =>
-        expectTestToFail(callback, errorMessage));
-    };
-    xit.experimental = it.skip.experimental = it.experimental.skip = (
-      message,
-      callback
-    ) => {
-      xit(`[EXPERIMENTAL, SHOULD FAIL] ${message}`, () =>
-        expectTestToFail(callback, errorMessage));
-    };
-  }
-
   const gatedErrorMessage = 'Gated test was expected to fail, but it passed.';
   global._test_gate = (gateFn, testName, callback) => {
     let shouldPass;

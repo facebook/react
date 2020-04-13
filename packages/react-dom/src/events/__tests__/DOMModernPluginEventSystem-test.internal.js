@@ -432,87 +432,85 @@ describe('DOMModernPluginEventSystem', () => {
           expect(log).toEqual(['second', 'first']);
         });
 
-        it.experimental(
-          'does not invoke an event on a parent tree when a subtree is dehydrated',
-          async () => {
-            let suspend = false;
-            let resolve;
-            const promise = new Promise(
-              resolvePromise => (resolve = resolvePromise),
+        // @gate experimental
+        it('does not invoke an event on a parent tree when a subtree is dehydrated', async () => {
+          let suspend = false;
+          let resolve;
+          const promise = new Promise(
+            resolvePromise => (resolve = resolvePromise),
+          );
+
+          let clicks = 0;
+          const childSlotRef = React.createRef();
+
+          function Parent() {
+            return <div onClick={() => clicks++} ref={childSlotRef} />;
+          }
+
+          function Child({text}) {
+            if (suspend) {
+              throw promise;
+            } else {
+              return <a>Click me</a>;
+            }
+          }
+
+          function App() {
+            // The root is a Suspense boundary.
+            return (
+              <React.Suspense fallback="Loading...">
+                <Child />
+              </React.Suspense>
             );
+          }
 
-            let clicks = 0;
-            const childSlotRef = React.createRef();
+          suspend = false;
+          const finalHTML = ReactDOMServer.renderToString(<App />);
 
-            function Parent() {
-              return <div onClick={() => clicks++} ref={childSlotRef} />;
-            }
+          const parentContainer = document.createElement('div');
+          const childContainer = document.createElement('div');
 
-            function Child({text}) {
-              if (suspend) {
-                throw promise;
-              } else {
-                return <a>Click me</a>;
-              }
-            }
+          // We need this to be in the document since we'll dispatch events on it.
+          document.body.appendChild(parentContainer);
 
-            function App() {
-              // The root is a Suspense boundary.
-              return (
-                <React.Suspense fallback="Loading...">
-                  <Child />
-                </React.Suspense>
-              );
-            }
+          // We're going to use a different root as a parent.
+          // This lets us detect whether an event goes through React's event system.
+          const parentRoot = ReactDOM.createRoot(parentContainer);
+          parentRoot.render(<Parent />);
+          Scheduler.unstable_flushAll();
 
-            suspend = false;
-            const finalHTML = ReactDOMServer.renderToString(<App />);
+          childSlotRef.current.appendChild(childContainer);
 
-            const parentContainer = document.createElement('div');
-            const childContainer = document.createElement('div');
+          childContainer.innerHTML = finalHTML;
 
-            // We need this to be in the document since we'll dispatch events on it.
-            document.body.appendChild(parentContainer);
+          const a = childContainer.getElementsByTagName('a')[0];
 
-            // We're going to use a different root as a parent.
-            // This lets us detect whether an event goes through React's event system.
-            const parentRoot = ReactDOM.createRoot(parentContainer);
-            parentRoot.render(<Parent />);
-            Scheduler.unstable_flushAll();
+          suspend = true;
 
-            childSlotRef.current.appendChild(childContainer);
+          // Hydrate asynchronously.
+          const root = ReactDOM.createRoot(childContainer, {hydrate: true});
+          root.render(<App />);
+          jest.runAllTimers();
+          Scheduler.unstable_flushAll();
 
-            childContainer.innerHTML = finalHTML;
+          // The Suspense boundary is not yet hydrated.
+          a.click();
+          expect(clicks).toBe(0);
 
-            const a = childContainer.getElementsByTagName('a')[0];
+          // Resolving the promise so that rendering can complete.
+          suspend = false;
+          resolve();
+          await promise;
 
-            suspend = true;
+          Scheduler.unstable_flushAll();
+          jest.runAllTimers();
 
-            // Hydrate asynchronously.
-            const root = ReactDOM.createRoot(childContainer, {hydrate: true});
-            root.render(<App />);
-            jest.runAllTimers();
-            Scheduler.unstable_flushAll();
+          // We're now full hydrated.
 
-            // The Suspense boundary is not yet hydrated.
-            a.click();
-            expect(clicks).toBe(0);
+          expect(clicks).toBe(1);
 
-            // Resolving the promise so that rendering can complete.
-            suspend = false;
-            resolve();
-            await promise;
-
-            Scheduler.unstable_flushAll();
-            jest.runAllTimers();
-
-            // We're now full hydrated.
-
-            expect(clicks).toBe(1);
-
-            document.body.removeChild(parentContainer);
-          },
-        );
+          document.body.removeChild(parentContainer);
+        });
 
         it('handle click events on dynamic portals', () => {
           const log = [];
@@ -1679,55 +1677,53 @@ describe('DOMModernPluginEventSystem', () => {
             expect(targetListerner4).toHaveBeenCalledTimes(1);
           });
 
-          it.experimental(
-            'should work with concurrent mode updates',
-            async () => {
-              const log = [];
-              const ref = React.createRef();
+          // @gate experimental
+          it('should work with concurrent mode updates', async () => {
+            const log = [];
+            const ref = React.createRef();
 
-              function Test({counter}) {
-                const click = ReactDOM.unstable_useEvent('click');
+            function Test({counter}) {
+              const click = ReactDOM.unstable_useEvent('click');
 
-                React.useLayoutEffect(() => {
-                  click.setListener(ref.current, () => {
-                    log.push({counter});
-                  });
+              React.useLayoutEffect(() => {
+                click.setListener(ref.current, () => {
+                  log.push({counter});
                 });
+              });
 
-                Scheduler.unstable_yieldValue('Test');
-                return <button ref={ref}>Press me</button>;
-              }
+              Scheduler.unstable_yieldValue('Test');
+              return <button ref={ref}>Press me</button>;
+            }
 
-              const root = ReactDOM.createRoot(container);
-              root.render(<Test counter={0} />);
+            const root = ReactDOM.createRoot(container);
+            root.render(<Test counter={0} />);
 
-              expect(Scheduler).toFlushAndYield(['Test']);
+            expect(Scheduler).toFlushAndYield(['Test']);
 
-              // Click the button
-              dispatchClickEvent(ref.current);
-              expect(log).toEqual([{counter: 0}]);
+            // Click the button
+            dispatchClickEvent(ref.current);
+            expect(log).toEqual([{counter: 0}]);
 
-              // Clear log
-              log.length = 0;
+            // Clear log
+            log.length = 0;
 
-              // Increase counter
-              root.render(<Test counter={1} />);
-              // Yield before committing
-              expect(Scheduler).toFlushAndYieldThrough(['Test']);
+            // Increase counter
+            root.render(<Test counter={1} />);
+            // Yield before committing
+            expect(Scheduler).toFlushAndYieldThrough(['Test']);
 
-              // Click the button again
-              dispatchClickEvent(ref.current);
-              expect(log).toEqual([{counter: 0}]);
+            // Click the button again
+            dispatchClickEvent(ref.current);
+            expect(log).toEqual([{counter: 0}]);
 
-              // Clear log
-              log.length = 0;
+            // Clear log
+            log.length = 0;
 
-              // Commit
-              expect(Scheduler).toFlushAndYield([]);
-              dispatchClickEvent(ref.current);
-              expect(log).toEqual([{counter: 1}]);
-            },
-          );
+            // Commit
+            expect(Scheduler).toFlushAndYield([]);
+            dispatchClickEvent(ref.current);
+            expect(log).toEqual([{counter: 1}]);
+          });
 
           it('should correctly work for a basic "click" listener that upgrades', () => {
             const clickEvent = jest.fn();
@@ -2259,86 +2255,82 @@ describe('DOMModernPluginEventSystem', () => {
             expect(log).toEqual(['beforeblur', 'afterblur']);
           });
 
-          it.experimental(
-            'beforeblur and afterblur are called after a focused element is suspended',
-            () => {
-              const log = [];
-              // We have to persist here because we want to read relatedTarget later.
-              const onAfterBlur = jest.fn(e => {
-                e.persist();
-                log.push(e.type);
-              });
-              const onBeforeBlur = jest.fn(e => log.push(e.type));
-              const innerRef = React.createRef();
-              const Suspense = React.Suspense;
-              let suspend = false;
-              let resolve;
-              const promise = new Promise(
-                resolvePromise => (resolve = resolvePromise),
-              );
+          // @gate experimental
+          it('beforeblur and afterblur are called after a focused element is suspended', () => {
+            const log = [];
+            // We have to persist here because we want to read relatedTarget later.
+            const onAfterBlur = jest.fn(e => {
+              e.persist();
+              log.push(e.type);
+            });
+            const onBeforeBlur = jest.fn(e => log.push(e.type));
+            const innerRef = React.createRef();
+            const Suspense = React.Suspense;
+            let suspend = false;
+            let resolve;
+            const promise = new Promise(
+              resolvePromise => (resolve = resolvePromise),
+            );
 
-              function Child() {
-                if (suspend) {
-                  throw promise;
-                } else {
-                  return <input ref={innerRef} />;
-                }
+            function Child() {
+              if (suspend) {
+                throw promise;
+              } else {
+                return <input ref={innerRef} />;
               }
+            }
 
-              const Component = () => {
-                const ref = React.useRef(null);
-                const afterBlurHandle = ReactDOM.unstable_useEvent('afterblur');
-                const beforeBlurHandle = ReactDOM.unstable_useEvent(
-                  'beforeblur',
-                );
+            const Component = () => {
+              const ref = React.useRef(null);
+              const afterBlurHandle = ReactDOM.unstable_useEvent('afterblur');
+              const beforeBlurHandle = ReactDOM.unstable_useEvent('beforeblur');
 
-                React.useEffect(() => {
-                  afterBlurHandle.setListener(document, onAfterBlur);
-                  beforeBlurHandle.setListener(ref.current, onBeforeBlur);
-                });
-
-                return (
-                  <div ref={ref}>
-                    <Suspense fallback="Loading...">
-                      <Child />
-                    </Suspense>
-                  </div>
-                );
-              };
-
-              const container2 = document.createElement('div');
-              document.body.appendChild(container2);
-
-              const root = ReactDOM.createRoot(container2);
-
-              ReactTestUtils.act(() => {
-                root.render(<Component />);
+              React.useEffect(() => {
+                afterBlurHandle.setListener(document, onAfterBlur);
+                beforeBlurHandle.setListener(ref.current, onBeforeBlur);
               });
-              jest.runAllTimers();
 
-              const inner = innerRef.current;
-              const target = createEventTarget(inner);
-              target.focus();
-              expect(onBeforeBlur).toHaveBeenCalledTimes(0);
-              expect(onAfterBlur).toHaveBeenCalledTimes(0);
-
-              suspend = true;
-              ReactTestUtils.act(() => {
-                root.render(<Component />);
-              });
-              jest.runAllTimers();
-
-              expect(onBeforeBlur).toHaveBeenCalledTimes(1);
-              expect(onAfterBlur).toHaveBeenCalledTimes(1);
-              expect(onAfterBlur).toHaveBeenCalledWith(
-                expect.objectContaining({relatedTarget: inner}),
+              return (
+                <div ref={ref}>
+                  <Suspense fallback="Loading...">
+                    <Child />
+                  </Suspense>
+                </div>
               );
-              resolve();
-              expect(log).toEqual(['beforeblur', 'afterblur']);
+            };
 
-              document.body.removeChild(container2);
-            },
-          );
+            const container2 = document.createElement('div');
+            document.body.appendChild(container2);
+
+            const root = ReactDOM.createRoot(container2);
+
+            ReactTestUtils.act(() => {
+              root.render(<Component />);
+            });
+            jest.runAllTimers();
+
+            const inner = innerRef.current;
+            const target = createEventTarget(inner);
+            target.focus();
+            expect(onBeforeBlur).toHaveBeenCalledTimes(0);
+            expect(onAfterBlur).toHaveBeenCalledTimes(0);
+
+            suspend = true;
+            ReactTestUtils.act(() => {
+              root.render(<Component />);
+            });
+            jest.runAllTimers();
+
+            expect(onBeforeBlur).toHaveBeenCalledTimes(1);
+            expect(onAfterBlur).toHaveBeenCalledTimes(1);
+            expect(onAfterBlur).toHaveBeenCalledWith(
+              expect.objectContaining({relatedTarget: inner}),
+            );
+            resolve();
+            expect(log).toEqual(['beforeblur', 'afterblur']);
+
+            document.body.removeChild(container2);
+          });
 
           describe('Compatibility with Scopes API', () => {
             beforeEach(() => {

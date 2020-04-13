@@ -789,7 +789,8 @@ describe('DOMEventResponderSystem', () => {
     buttonRef.current.dispatchEvent(createEvent('foobar'));
   });
 
-  it.experimental('should work with concurrent mode updates', async () => {
+  // @gate experimental
+  it('should work with concurrent mode updates', async () => {
     const log = [];
     const TestResponder = createEventResponder({
       targetEventTypes: ['click'],
