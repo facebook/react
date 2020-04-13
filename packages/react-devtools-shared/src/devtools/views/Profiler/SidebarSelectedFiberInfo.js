@@ -65,26 +65,23 @@ export default function SidebarSelectedFiberInfo(_: Props) {
   };
 
   useEffect(() => {
-    if (listContainer.current === null || selectedCommitIndex === null) {
-      return;
-    }
-
-    const list: any = listContainer.current;
+    const listElement = listContainer.current;
     const selectedElement = listItemRef.current;
-
-    if (selectedElement === null) {
-      return;
-    }
-
-    const {
-      top: buttonTop,
-      bottom: buttonBottom,
-    } = selectedElement.getBoundingClientRect();
-    const {top: listTop, bottom: listBottom} = list.getBoundingClientRect();
-    if (buttonTop < listTop) {
-      selectedElement.scrollIntoView();
-    } else if (buttonBottom > listBottom) {
-      list.scrollBy({top: buttonBottom - listBottom});
+    if (listElement !== null && selectedElement !== null) {
+      const {
+        top: buttonTop,
+        bottom: buttonBottom,
+      } = selectedElement.getBoundingClientRect();
+      const {
+        top: listTop,
+        bottom: listBottom,
+      } = listElement.getBoundingClientRect();
+      if (buttonTop < listTop) {
+        selectedElement.scrollIntoView();
+      } else if (buttonBottom > listBottom) {
+        // $FlowFixMe property scrollBy is missing in HTMLElement
+        listElement.scrollBy({top: buttonBottom - listBottom});
+      }
     }
   }, [selectedCommitIndex]);
 
