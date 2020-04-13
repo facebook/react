@@ -7,7 +7,7 @@
  * @flow
  */
 
-import type {Wakeable} from 'shared/ReactTypes';
+import type {Thenable, Wakeable} from 'shared/ReactTypes';
 import type {Fiber, FiberRoot} from './ReactInternalTypes';
 import type {ExpirationTime} from './ReactFiberExpirationTime.new';
 import type {ReactPriorityLevel} from './ReactInternalTypes';
@@ -179,6 +179,9 @@ import {
   clearCaughtError,
 } from 'shared/ReactErrorUtils';
 import {onCommitRoot} from './ReactFiberDevToolsHook.new';
+
+// Used by `act`
+import enqueueTask from 'shared/enqueueTask';
 
 const ceil = Math.ceil;
 
@@ -3195,5 +3198,188 @@ function finishPendingInteractions(root, committedExpirationTime) {
         }
       },
     );
+  }
+}
+
+// `act` testing API
+//
+// TODO: This is mostly a copy-paste from the legacy `act`, which does not have
+// access to the same internals that we do here. Some trade offs in the
+// implementation no longer make sense.
+const isSchedulerMocked =
+  typeof Scheduler.unstable_flushAllWithoutAsserting === 'function';
+const flushSchedulerWork =
+  Scheduler.unstable_flushAllWithoutAsserting ||
+  function() {
+    let didFlushWork = false;
+    while (flushPassiveEffects()) {
+      didFlushWork = true;
+    }
+
+    return didFlushWork;
+  };
+
+function flushWorkAndMicroTasks(onDone: (err: ?Error) => void) {
+  try {
+    flushSchedulerWork();
+    enqueueTask(() => {
+      if (flushSchedulerWork()) {
+        flushWorkAndMicroTasks(onDone);
+      } else {
+        onDone();
+      }
+    });
+  } catch (err) {
+    onDone(err);
+  }
+}
+
+// we track the 'depth' of the act() calls with this counter,
+// so we can tell if any async act() calls try to run in parallel.
+
+let actingUpdatesScopeDepth = 0;
+let didWarnAboutUsingActInProd = false;
+
+export function act(callback: () => Thenable<mixed>): Thenable<void> {
+  if (!__DEV__) {
+    if (didWarnAboutUsingActInProd === false) {
+      didWarnAboutUsingActInProd = true;
+      // eslint-disable-next-line react-internal/no-production-logging
+      console.error(
+        'act(...) is not supported in production builds of React, and might not behave as expected.',
+      );
+    }
+  }
+
+  const previousActingUpdatesScopeDepth = actingUpdatesScopeDepth;
+  actingUpdatesScopeDepth++;
+
+  const previousIsSomeRendererActing = IsSomeRendererActing.current;
+  const previousIsThisRendererActing = IsThisRendererActing.current;
+  IsSomeRendererActing.current = true;
+  IsThisRendererActing.current = true;
+
+  function onDone() {
+    actingUpdatesScopeDepth--;
+    IsSomeRendererActing.current = previousIsSomeRendererActing;
+    IsThisRendererActing.current = previousIsThisRendererActing;
+    if (__DEV__) {
+      if (actingUpdatesScopeDepth > previousActingUpdatesScopeDepth) {
+        // if it's _less than_ previousActingUpdatesScopeDepth, then we can assume the 'other' one has warned
+        console.error(
+          'You seem to have overlapping act() calls, this is not supported. ' +
+            'Be sure to await previous act() calls before making a new one. ',
+        );
+      }
+    }
+  }
+
+  let result;
+  try {
+    result = batchedUpdates(callback);
+  } catch (error) {
+    // on sync errors, we still want to 'cleanup' and decrement actingUpdatesScopeDepth
+    onDone();
+    throw error;
+  }
+
+  if (
+    result !== null &&
+    typeof result === 'object' &&
+    typeof result.then === 'function'
+  ) {
+    // setup a boolean that gets set to true only
+    // once this act() call is await-ed
+    let called = false;
+    if (__DEV__) {
+      if (typeof Promise !== 'undefined') {
+        //eslint-disable-next-line no-undef
+        Promise.resolve()
+          .then(() => {})
+          .then(() => {
+            if (called === false) {
+              console.error(
+                'You called act(async () => ...) without await. ' +
+                  'This could lead to unexpected testing behaviour, interleaving multiple act ' +
+                  'calls and mixing their scopes. You should - await act(async () => ...);',
+              );
+            }
+          });
+      }
+    }
+
+    // in the async case, the returned thenable runs the callback, flushes
+    // effects and  microtasks in a loop until flushPassiveEffects() === false,
+    // and cleans up
+    return {
+      then(resolve, reject) {
+        called = true;
+        result.then(
+          () => {
+            if (
+              actingUpdatesScopeDepth > 1 ||
+              (isSchedulerMocked === true &&
+                previousIsSomeRendererActing === true)
+            ) {
+              onDone();
+              resolve();
+              return;
+            }
+            // we're about to exit the act() scope,
+            // now's the time to flush tasks/effects
+            flushWorkAndMicroTasks((err: ?Error) => {
+              onDone();
+              if (err) {
+                reject(err);
+              } else {
+                resolve();
+              }
+            });
+          },
+          err => {
+            onDone();
+            reject(err);
+          },
+        );
+      },
+    };
+  } else {
+    if (__DEV__) {
+      if (result !== undefined) {
+        console.error(
+          'The callback passed to act(...) function ' +
+            'must return undefined, or a Promise. You returned %s',
+          result,
+        );
+      }
+    }
+
+    // flush effects until none remain, and cleanup
+    try {
+      if (
+        actingUpdatesScopeDepth === 1 &&
+        (isSchedulerMocked === false || previousIsSomeRendererActing === false)
+      ) {
+        // we're about to exit the act() scope,
+        // now's the time to flush effects
+        flushSchedulerWork();
+      }
+      onDone();
+    } catch (err) {
+      onDone();
+      throw err;
+    }
+
+    // in the sync case, the returned thenable only warns *if* await-ed
+    return {
+      then(resolve) {
+        if (__DEV__) {
+          console.error(
+            'Do not await the result of calling act(...) with sync logic, it is not a Promise.',
+          );
+        }
+        resolve();
+      },
+    };
   }
 }
