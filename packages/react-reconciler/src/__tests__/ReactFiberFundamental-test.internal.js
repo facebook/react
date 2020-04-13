@@ -50,16 +50,12 @@ function initReactDOMServer() {
 }
 
 describe('ReactFiberFundamental', () => {
-  if (!__EXPERIMENTAL__) {
-    it("empty test so Jest doesn't complain", () => {});
-    return;
-  }
-
   describe('NoopRenderer', () => {
     beforeEach(() => {
       initNoopRenderer();
     });
 
+    // @gate experimental
     it('should render a simple fundamental component with a single child', () => {
       const FundamentalComponent = createReactFundamentalComponent({
         reconcileChildren: true,
@@ -94,6 +90,7 @@ describe('ReactFiberFundamental', () => {
       initTestRenderer();
     });
 
+    // @gate experimental
     it('should render a simple fundamental component with a single child', () => {
       const FundamentalComponent = createReactFundamentalComponent({
         reconcileChildren: true,
@@ -130,6 +127,7 @@ describe('ReactFiberFundamental', () => {
       initReactDOM();
     });
 
+    // @gate experimental
     it('should render a simple fundamental component with a single child', () => {
       const FundamentalComponent = createReactFundamentalComponent({
         reconcileChildren: true,
@@ -155,6 +153,7 @@ describe('ReactFiberFundamental', () => {
       expect(container.innerHTML).toBe('');
     });
 
+    // @gate experimental
     it('should render a simple fundamental component without reconcileChildren', () => {
       const FundamentalComponent = createReactFundamentalComponent({
         reconcileChildren: false,
@@ -186,6 +185,7 @@ describe('ReactFiberFundamental', () => {
       initReactDOMServer();
     });
 
+    // @gate experimental
     it('should render a simple fundamental component with a single child', () => {
       const getInstance = jest.fn();
       const FundamentalComponent = createReactFundamentalComponent({
@@ -210,6 +210,7 @@ describe('ReactFiberFundamental', () => {
       expect(output).toBe('<div>Hello world again</div>');
     });
 
+    // @gate experimental
     it('should render a simple fundamental component without reconcileChildren', () => {
       const FundamentalComponent = createReactFundamentalComponent({
         reconcileChildren: false,

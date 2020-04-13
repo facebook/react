@@ -38,17 +38,17 @@ const modulesInit = () => {
   React = require('react');
   ReactDOM = require('react-dom');
   Scheduler = require('scheduler');
-  InputResponder = require('react-interactions/events/input').InputResponder;
-  useInput = require('react-interactions/events/input').useInput;
+
+  // TODO: This import throws outside of experimental mode. Figure out better
+  // strategy for gated imports.
+  if (__EXPERIMENTAL__) {
+    InputResponder = require('react-interactions/events/input').InputResponder;
+    useInput = require('react-interactions/events/input').useInput;
+  }
 };
 
 describe('Input event responder', () => {
   let container;
-
-  if (!__EXPERIMENTAL__) {
-    it("empty test so Jest doesn't complain", () => {});
-    return;
-  }
 
   beforeEach(() => {
     jest.resetModules();
@@ -66,7 +66,7 @@ describe('Input event responder', () => {
   describe('disabled', () => {
     let onChange, onValueChange, ref;
 
-    beforeEach(() => {
+    const componentInit = () => {
       onChange = jest.fn();
       onValueChange = jest.fn();
       ref = React.createRef();
@@ -80,9 +80,11 @@ describe('Input event responder', () => {
         return <input ref={ref} DEPRECATED_flareListeners={listener} />;
       }
       ReactDOM.render(<Component />, container);
-    });
+    };
 
+    // @gate experimental
     it('prevents custom events being dispatched', () => {
+      componentInit();
       ref.current.dispatchEvent(
         new Event('change', {bubbles: true, cancelable: true}),
       );
@@ -104,6 +106,7 @@ describe('Input event responder', () => {
     // keep track of the "current" value and only fire events when it changes.
     // See https://github.com/facebook/react/pull/5746.
 
+    // @gate experimental
     it('should consider initial text value to be current', () => {
       let onChangeCalled = 0;
       let onValueChangeCalled = 0;
@@ -151,6 +154,7 @@ describe('Input event responder', () => {
       }
     });
 
+    // @gate experimental
     it('should consider initial checkbox checked=true to be current', () => {
       let onChangeCalled = 0;
       let onValueChangeCalled = 0;
@@ -194,6 +198,7 @@ describe('Input event responder', () => {
       expect(onValueChangeCalled).toBe(0);
     });
 
+    // @gate experimental
     it('should consider initial checkbox checked=false to be current', () => {
       let onChangeCalled = 0;
       let onValueChangeCalled = 0;
@@ -236,6 +241,7 @@ describe('Input event responder', () => {
       expect(onValueChangeCalled).toBe(0);
     });
 
+    // @gate experimental
     it('should fire change for checkbox input', () => {
       let onChangeCalled = 0;
       let onValueChangeCalled = 0;
@@ -283,6 +289,7 @@ describe('Input event responder', () => {
       expect(onValueChangeCalled).toBe(2);
     });
 
+    // @gate experimental
     it('should not fire change setting the value programmatically', () => {
       let onChangeCalled = 0;
       let onValueChangeCalled = 0;
@@ -345,6 +352,7 @@ describe('Input event responder', () => {
       expect(onValueChangeCalled).toBe(1);
     });
 
+    // @gate experimental
     it('should not distinguish equal string and number values', () => {
       let onChangeCalled = 0;
       let onValueChangeCalled = 0;
@@ -390,6 +398,7 @@ describe('Input event responder', () => {
     });
 
     // See a similar input test above for a detailed description of why.
+    // @gate experimental
     it('should not fire change when setting checked programmatically', () => {
       let onChangeCalled = 0;
       let onValueChangeCalled = 0;
@@ -441,6 +450,7 @@ describe('Input event responder', () => {
       expect(onValueChangeCalled).toBe(1);
     });
 
+    // @gate experimental
     it('should only fire change for checked radio button once', () => {
       let onChangeCalled = 0;
       let onValueChangeCalled = 0;
@@ -477,6 +487,7 @@ describe('Input event responder', () => {
       expect(onValueChangeCalled).toBe(1);
     });
 
+    // @gate experimental
     it('should track radio button cousins in a group', () => {
       let onChangeCalled1 = 0;
       let onValueChangeCalled1 = 0;
@@ -566,6 +577,7 @@ describe('Input event responder', () => {
       expect(onValueChangeCalled2).toBe(1);
     });
 
+    // @gate experimental
     it('should deduplicate input value change events', () => {
       let onChangeCalled = 0;
       let onValueChangeCalled = 0;
@@ -672,6 +684,7 @@ describe('Input event responder', () => {
       });
     });
 
+    // @gate experimental
     it('should listen for both change and input events when supported', () => {
       let onChangeCalled = 0;
       let onValueChangeCalled = 0;
@@ -711,6 +724,7 @@ describe('Input event responder', () => {
       expect(onValueChangeCalled).toBe(2);
     });
 
+    // @gate experimental
     it('should only fire events when the value changes for range inputs', () => {
       let onChangeCalled = 0;
       let onValueChangeCalled = 0;
@@ -756,6 +770,7 @@ describe('Input event responder', () => {
       expect(onValueChangeCalled).toBe(2);
     });
 
+    // @gate experimental || build === "production"
     it('does not crash for nodes with custom value property', () => {
       let originalCreateElement;
       // https://github.com/facebook/react/issues/10196
@@ -793,6 +808,7 @@ describe('Input event responder', () => {
     });
 
     describe('concurrent mode', () => {
+      // @gate experimental
       // @gate experimental
       it('text input', () => {
         const root = ReactDOM.createRoot(container);
@@ -849,6 +865,7 @@ describe('Input event responder', () => {
         expect(input.value).toBe('changed [!]');
       });
 
+      // @gate experimental
       // @gate experimental
       it('checkbox input', () => {
         const root = ReactDOM.createRoot(container);
@@ -919,6 +936,7 @@ describe('Input event responder', () => {
       });
 
       // @gate experimental
+      // @gate experimental
       it('textarea', () => {
         const root = ReactDOM.createRoot(container);
         let textarea;
@@ -976,6 +994,7 @@ describe('Input event responder', () => {
     });
   });
 
+  // @gate experimental
   it('expect displayName to show up for event component', () => {
     expect(InputResponder.displayName).toBe('Input');
   });

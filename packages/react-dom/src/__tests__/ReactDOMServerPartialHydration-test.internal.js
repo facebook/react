@@ -87,11 +87,7 @@ describe('ReactDOMServerPartialHydration', () => {
     SuspenseList = React.SuspenseList;
   });
 
-  if (!__EXPERIMENTAL__) {
-    it("empty test so Jest doesn't complain", () => {});
-    return;
-  }
-
+  // @gate experimental
   it('hydrates a parent even if a child Suspense boundary is blocked', async () => {
     let suspend = false;
     let resolve;
@@ -150,6 +146,7 @@ describe('ReactDOMServerPartialHydration', () => {
     expect(ref.current).toBe(span);
   });
 
+  // @gate experimental
   it('calls the hydration callbacks after hydration or deletion', async () => {
     let suspend = false;
     let resolve;
@@ -240,6 +237,7 @@ describe('ReactDOMServerPartialHydration', () => {
     expect(deleted.length).toBe(1);
   });
 
+  // @gate experimental
   it('calls the onDeleted hydration callback if the parent gets deleted', async () => {
     let suspend = false;
     const promise = new Promise(() => {});
@@ -297,6 +295,7 @@ describe('ReactDOMServerPartialHydration', () => {
     expect(deleted.length).toBe(1);
   });
 
+  // @gate experimental || www
   it('warns and replaces the boundary content in legacy mode', async () => {
     let suspend = false;
     let resolve;
@@ -368,6 +367,7 @@ describe('ReactDOMServerPartialHydration', () => {
     expect(container.textContent).toBe('Hello');
   });
 
+  // @gate experimental
   it('can insert siblings before the dehydrated boundary', () => {
     let suspend = false;
     const promise = new Promise(() => {});
@@ -426,6 +426,7 @@ describe('ReactDOMServerPartialHydration', () => {
     expect(container.firstChild.firstChild.textContent).toBe('First');
   });
 
+  // @gate experimental
   it('can delete the dehydrated boundary before it is hydrated', () => {
     let suspend = false;
     const promise = new Promise(() => {});
@@ -482,6 +483,7 @@ describe('ReactDOMServerPartialHydration', () => {
     expect(container.firstChild.children[1].textContent).toBe('After');
   });
 
+  // @gate experimental
   it('blocks updates to hydrate the content first if props have changed', async () => {
     let suspend = false;
     let resolve;
@@ -553,6 +555,7 @@ describe('ReactDOMServerPartialHydration', () => {
     expect(span.className).toBe('hi');
   });
 
+  // @gate experimental
   it('shows the fallback if props have changed before hydration completes and is still suspended', async () => {
     let suspend = false;
     let resolve;
@@ -622,6 +625,7 @@ describe('ReactDOMServerPartialHydration', () => {
     expect(container.textContent).toBe('Hi');
   });
 
+  // @gate experimental
   it('shows the fallback of the outer if fallback is missing', async () => {
     // This is the same exact test as above but with a nested Suspense without a fallback.
     // This should be a noop.
@@ -695,6 +699,7 @@ describe('ReactDOMServerPartialHydration', () => {
     expect(container.textContent).toBe('Hi');
   });
 
+  // @gate experimental
   it('clears nested suspense boundaries if they did not hydrate yet', async () => {
     let suspend = false;
     let resolve;
@@ -767,6 +772,7 @@ describe('ReactDOMServerPartialHydration', () => {
     expect(container.textContent).toBe('Hi Hi');
   });
 
+  // @gate experimental
   it('hydrates first if props changed but we are able to resolve within a timeout', async () => {
     let suspend = false;
     let resolve;
@@ -847,6 +853,7 @@ describe('ReactDOMServerPartialHydration', () => {
     expect(span.className).toBe('hi');
   });
 
+  // @gate experimental
   it('blocks the update to hydrate first if context has changed', async () => {
     let suspend = false;
     let resolve;
@@ -931,6 +938,7 @@ describe('ReactDOMServerPartialHydration', () => {
     expect(span.className).toBe('hi');
   });
 
+  // @gate experimental
   it('shows the fallback if context has changed before hydration completes and is still suspended', async () => {
     let suspend = false;
     let resolve;
@@ -1014,6 +1022,7 @@ describe('ReactDOMServerPartialHydration', () => {
     expect(container.textContent).toBe('Hi');
   });
 
+  // @gate experimental
   it('replaces the fallback with client content if it is not rendered by the server', async () => {
     let suspend = false;
     const promise = new Promise(resolvePromise => {});
@@ -1062,6 +1071,7 @@ describe('ReactDOMServerPartialHydration', () => {
     expect(ref.current).toBe(span);
   });
 
+  // @gate experimental
   it('replaces the fallback within the suspended time if there is a nested suspense', async () => {
     let suspend = false;
     const promise = new Promise(resolvePromise => {});
@@ -1121,6 +1131,7 @@ describe('ReactDOMServerPartialHydration', () => {
     expect(ref.current).toBe(span);
   });
 
+  // @gate experimental
   it('replaces the fallback within the suspended time if there is a nested suspense in a nested suspense', async () => {
     let suspend = false;
     const promise = new Promise(resolvePromise => {});
@@ -1182,6 +1193,7 @@ describe('ReactDOMServerPartialHydration', () => {
     expect(ref.current).toBe(span);
   });
 
+  // @gate experimental
   it('waits for pending content to come in from the server and then hydrates it', async () => {
     let suspend = false;
     const promise = new Promise(resolvePromise => {});
@@ -1269,6 +1281,7 @@ describe('ReactDOMServerPartialHydration', () => {
     expect(ref.current).toBe(span);
   });
 
+  // @gate experimental
   it('handles an error on the client if the server ends up erroring', async () => {
     let suspend = false;
     const promise = new Promise(resolvePromise => {});
@@ -1363,6 +1376,7 @@ describe('ReactDOMServerPartialHydration', () => {
     expect(ref.current).toBe(div);
   });
 
+  // @gate experimental
   it('shows inserted items in a SuspenseList before content is hydrated', async () => {
     let suspend = false;
     let resolve;
@@ -1448,6 +1462,7 @@ describe('ReactDOMServerPartialHydration', () => {
     expect(ref.current).toBe(spanB);
   });
 
+  // @gate experimental
   it('shows is able to hydrate boundaries even if others in a list are pending', async () => {
     let suspend = false;
     let resolve;
@@ -1522,6 +1537,7 @@ describe('ReactDOMServerPartialHydration', () => {
     expect(container.textContent).toBe('ALoading B');
   });
 
+  // @gate experimental
   it('shows inserted items before pending in a SuspenseList as fallbacks', async () => {
     let suspend = false;
     let resolve;
@@ -1613,6 +1629,7 @@ describe('ReactDOMServerPartialHydration', () => {
     expect(container.textContent).toBe('ABC');
   });
 
+  // @gate experimental
   it('can client render nested boundaries', async () => {
     let suspend = false;
     const promise = new Promise(() => {});
@@ -1667,6 +1684,7 @@ describe('ReactDOMServerPartialHydration', () => {
     expect(container.lastChild.data).toBe('unrelated comment');
   });
 
+  // @gate experimental
   it('can hydrate TWO suspense boundaries', async () => {
     const ref1 = React.createRef();
     const ref2 = React.createRef();
@@ -1706,6 +1724,7 @@ describe('ReactDOMServerPartialHydration', () => {
     expect(ref2.current).toBe(span2);
   });
 
+  // @gate experimental
   it('regenerates if it cannot hydrate before changes to props/context expire', async () => {
     let suspend = false;
     const promise = new Promise(resolvePromise => {});
@@ -1787,6 +1806,7 @@ describe('ReactDOMServerPartialHydration', () => {
     expect(newSpan.className).toBe('hi');
   });
 
+  // @gate experimental
   it('does not invoke an event on a hydrated node until it commits', async () => {
     let suspend = false;
     let resolve;
@@ -1868,6 +1888,7 @@ describe('ReactDOMServerPartialHydration', () => {
     document.body.removeChild(container);
   });
 
+  // @gate experimental
   it('does not invoke an event on a hydrated EventResponder until it commits', async () => {
     let suspend = false;
     let resolve;
@@ -1949,6 +1970,7 @@ describe('ReactDOMServerPartialHydration', () => {
     document.body.removeChild(container);
   });
 
+  // @gate experimental
   it('invokes discrete events on nested suspense boundaries in a root (legacy system)', async () => {
     let suspend = false;
     let resolve;
@@ -2028,6 +2050,7 @@ describe('ReactDOMServerPartialHydration', () => {
     document.body.removeChild(container);
   });
 
+  // @gate experimental
   it('invokes discrete events on nested suspense boundaries in a root (responder system)', async () => {
     let suspend = false;
     let resolve;
@@ -2110,6 +2133,7 @@ describe('ReactDOMServerPartialHydration', () => {
     document.body.removeChild(container);
   });
 
+  // @gate experimental
   it('does not invoke the parent of dehydrated boundary event', async () => {
     let suspend = false;
     let resolve;
@@ -2184,6 +2208,7 @@ describe('ReactDOMServerPartialHydration', () => {
     document.body.removeChild(container);
   });
 
+  // @gate experimental
   it('does not invoke an event on a parent tree when a subtree is dehydrated', async () => {
     let suspend = false;
     let resolve;
@@ -2261,6 +2286,7 @@ describe('ReactDOMServerPartialHydration', () => {
     document.body.removeChild(parentContainer);
   });
 
+  // @gate experimental
   it('blocks only on the last continuous event (legacy system)', async () => {
     let suspend1 = false;
     let resolve1;
@@ -2365,129 +2391,125 @@ describe('ReactDOMServerPartialHydration', () => {
     document.body.removeChild(container);
   });
 
-  if (__EXPERIMENTAL__) {
-    it('blocks only on the last continuous event (Responder system)', async () => {
-      useHover = require('react-interactions/events/hover').useHover;
+  // @gate experimental
+  it('blocks only on the last continuous event (Responder system)', async () => {
+    useHover = require('react-interactions/events/hover').useHover;
 
-      let suspend1 = false;
-      let resolve1;
-      const promise1 = new Promise(
-        resolvePromise => (resolve1 = resolvePromise),
-      );
-      let suspend2 = false;
-      let resolve2;
-      const promise2 = new Promise(
-        resolvePromise => (resolve2 = resolvePromise),
-      );
+    let suspend1 = false;
+    let resolve1;
+    const promise1 = new Promise(resolvePromise => (resolve1 = resolvePromise));
+    let suspend2 = false;
+    let resolve2;
+    const promise2 = new Promise(resolvePromise => (resolve2 = resolvePromise));
 
-      function First({text}) {
-        if (suspend1) {
-          throw promise1;
-        } else {
-          return 'Hello';
-        }
+    function First({text}) {
+      if (suspend1) {
+        throw promise1;
+      } else {
+        return 'Hello';
       }
+    }
 
-      function Second({text}) {
-        if (suspend2) {
-          throw promise2;
-        } else {
-          return 'World';
-        }
+    function Second({text}) {
+      if (suspend2) {
+        throw promise2;
+      } else {
+        return 'World';
       }
+    }
 
-      const ops = [];
+    const ops = [];
 
-      function App() {
-        const listener1 = useHover({
-          onHoverStart() {
-            ops.push('Hover Start First');
-          },
-          onHoverEnd() {
-            ops.push('Hover End First');
-          },
-        });
-        const listener2 = useHover({
-          onHoverStart() {
-            ops.push('Hover Start Second');
-          },
-          onHoverEnd() {
-            ops.push('Hover End Second');
-          },
-        });
-        return (
-          <div>
-            <Suspense fallback="Loading First...">
-              <span DEPRECATED_flareListeners={listener1} />
-              {/* We suspend after to test what happens when we eager
+    function App() {
+      const listener1 = useHover({
+        onHoverStart() {
+          ops.push('Hover Start First');
+        },
+        onHoverEnd() {
+          ops.push('Hover End First');
+        },
+      });
+      const listener2 = useHover({
+        onHoverStart() {
+          ops.push('Hover Start Second');
+        },
+        onHoverEnd() {
+          ops.push('Hover End Second');
+        },
+      });
+      return (
+        <div>
+          <Suspense fallback="Loading First...">
+            <span DEPRECATED_flareListeners={listener1} />
+            {/* We suspend after to test what happens when we eager
                 attach the listener. */}
-              <First />
-            </Suspense>
-            <Suspense fallback="Loading Second...">
-              <span DEPRECATED_flareListeners={listener2}>
-                <Second />
-              </span>
-            </Suspense>
-          </div>
-        );
-      }
+            <First />
+          </Suspense>
+          <Suspense fallback="Loading Second...">
+            <span DEPRECATED_flareListeners={listener2}>
+              <Second />
+            </span>
+          </Suspense>
+        </div>
+      );
+    }
 
-      const finalHTML = ReactDOMServer.renderToString(<App />);
-      const container = document.createElement('div');
-      container.innerHTML = finalHTML;
+    const finalHTML = ReactDOMServer.renderToString(<App />);
+    const container = document.createElement('div');
+    container.innerHTML = finalHTML;
 
-      // We need this to be in the document since we'll dispatch events on it.
-      document.body.appendChild(container);
+    // We need this to be in the document since we'll dispatch events on it.
+    document.body.appendChild(container);
 
-      const appDiv = container.getElementsByTagName('div')[0];
-      const firstSpan = appDiv.getElementsByTagName('span')[0];
-      const secondSpan = appDiv.getElementsByTagName('span')[1];
-      expect(firstSpan.textContent).toBe('');
-      expect(secondSpan.textContent).toBe('World');
+    const appDiv = container.getElementsByTagName('div')[0];
+    const firstSpan = appDiv.getElementsByTagName('span')[0];
+    const secondSpan = appDiv.getElementsByTagName('span')[1];
+    expect(firstSpan.textContent).toBe('');
+    expect(secondSpan.textContent).toBe('World');
 
-      // On the client we don't have all data yet but we want to start
-      // hydrating anyway.
-      suspend1 = true;
-      suspend2 = true;
-      const root = ReactDOM.createRoot(container, {hydrate: true});
-      root.render(<App />);
+    // On the client we don't have all data yet but we want to start
+    // hydrating anyway.
+    suspend1 = true;
+    suspend2 = true;
+    const root = ReactDOM.createRoot(container, {hydrate: true});
+    root.render(<App />);
 
-      Scheduler.unstable_flushAll();
-      jest.runAllTimers();
+    Scheduler.unstable_flushAll();
+    jest.runAllTimers();
 
-      dispatchMouseEvent(appDiv, null);
-      dispatchMouseEvent(firstSpan, appDiv);
-      dispatchMouseEvent(secondSpan, firstSpan);
+    dispatchMouseEvent(appDiv, null);
+    dispatchMouseEvent(firstSpan, appDiv);
+    dispatchMouseEvent(secondSpan, firstSpan);
 
-      // Neither target is yet hydrated.
-      expect(ops).toEqual([]);
+    // Neither target is yet hydrated.
+    expect(ops).toEqual([]);
 
-      // Resolving the second promise so that rendering can complete.
-      suspend2 = false;
-      resolve2();
-      await promise2;
+    // Resolving the second promise so that rendering can complete.
+    suspend2 = false;
+    resolve2();
+    await promise2;
 
-      Scheduler.unstable_flushAll();
-      jest.runAllTimers();
+    Scheduler.unstable_flushAll();
+    jest.runAllTimers();
 
-      // We've unblocked the current hover target so we should be
-      // able to replay it now.
-      expect(ops).toEqual(['Hover Start Second']);
+    // We've unblocked the current hover target so we should be
+    // able to replay it now.
+    expect(ops).toEqual(['Hover Start Second']);
 
-      // Resolving the first promise has no effect now.
-      suspend1 = false;
-      resolve1();
-      await promise1;
+    // Resolving the first promise has no effect now.
+    suspend1 = false;
+    resolve1();
+    await promise1;
 
-      Scheduler.unstable_flushAll();
-      jest.runAllTimers();
+    Scheduler.unstable_flushAll();
+    jest.runAllTimers();
 
-      expect(ops).toEqual(['Hover Start Second']);
+    expect(ops).toEqual(['Hover Start Second']);
 
-      document.body.removeChild(container);
-    });
-  }
+    document.body.removeChild(container);
+  });
 
+  // @gate experimental
   it('finishes normal pri work before continuing to hydrate a retry', async () => {
     let suspend = false;
     let resolve;
