@@ -336,5 +336,11 @@ if (process.env.REACT_CLASS_EQUIVALENCE_TEST) {
     }
   };
 
+  // Dynamic version of @gate pragma
+  global.gate = fn => {
+    const flags = getTestFlags();
+    return fn(flags);
+  };
+
   require('jasmine-check').install();
 }

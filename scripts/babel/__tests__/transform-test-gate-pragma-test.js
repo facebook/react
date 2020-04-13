@@ -192,3 +192,10 @@ describe('transform test-gate-pragma: actual runtime', () => {
     throw Error('I told you to stop!');
   });
 });
+
+describe('dynamic gate method', () => {
+  // @gate experimental && __DEV__
+  test('returns same conditions as pragma', () => {
+    expect(gate(ctx => ctx.experimental && ctx.__DEV__)).toBe(true);
+  });
+});
