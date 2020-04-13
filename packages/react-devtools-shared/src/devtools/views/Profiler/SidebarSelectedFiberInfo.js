@@ -31,8 +31,7 @@ export default function SidebarSelectedFiberInfo(_: Props) {
     selectFiber,
   } = useContext(ProfilerContext);
   const {profilingCache} = profilerStore;
-  const listContainer = useRef<HTMLElement | null>(null);
-  const listItemRef = useRef<HTMLElement | null>(null);
+  const selectedListItemRef = useRef<HTMLElement | null>(null);
 
   const commitIndices = profilingCache.getFiberCommits({
     fiberID: ((selectedFiberID: any): number),
@@ -65,23 +64,12 @@ export default function SidebarSelectedFiberInfo(_: Props) {
   };
 
   useEffect(() => {
-    const listElement = listContainer.current;
-    const selectedElement = listItemRef.current;
-    if (listElement !== null && selectedElement !== null) {
-      const {
-        top: buttonTop,
-        bottom: buttonBottom,
-      } = selectedElement.getBoundingClientRect();
-      const {
-        top: listTop,
-        bottom: listBottom,
-      } = listElement.getBoundingClientRect();
-      if (buttonTop < listTop) {
-        selectedElement.scrollIntoView();
-      } else if (buttonBottom > listBottom) {
-        // $FlowFixMe property scrollBy is missing in HTMLElement
-        listElement.scrollBy({top: buttonBottom - listBottom});
-      }
+    const selectedElement = selectedListItemRef.current;
+    if (
+      selectedElement !== null &&
+      typeof selectedElement.scrollIntoView === 'function'
+    ) {
+      selectedElement.scrollIntoView({block: 'nearest', inline: 'nearest'});
     }
   }, [selectedCommitIndex]);
 
@@ -98,7 +86,7 @@ export default function SidebarSelectedFiberInfo(_: Props) {
     listItems.push(
       <button
         key={commitIndex}
-        ref={selectedCommitIndex === commitIndex ? listItemRef : null}
+        ref={selectedCommitIndex === commitIndex ? selectedListItemRef : null}
         className={
           selectedCommitIndex === commitIndex
             ? styles.CurrentCommit
@@ -124,10 +112,7 @@ export default function SidebarSelectedFiberInfo(_: Props) {
           <ButtonIcon type="close" />
         </Button>
       </div>
-      <div
-        ref={listContainer}
-        className={styles.Content}
-        onKeyDown={handleKeyDown}>
+      <div className={styles.Content} onKeyDown={handleKeyDown}>
         <WhatChanged fiberID={((selectedFiberID: any): number)} />
         {listItems.length > 0 && (
           <Fragment>
