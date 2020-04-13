@@ -35,7 +35,11 @@
 const environmentFlags = {
   __DEV__,
   build: __DEV__ ? 'development' : 'production',
+
+  // TODO: Should "experimental" also imply "modern"? Maybe we should
+  // always compare to the channel?
   experimental: __EXPERIMENTAL__,
+  // Similarly, should stable imply "classic"?
   stable: !__EXPERIMENTAL__,
 };
 
@@ -44,6 +48,18 @@ function getTestFlags() {
   // not to but there are exceptions.
   const featureFlags = require('shared/ReactFeatureFlags');
 
+  // TODO: This is a heuristic to detect the release channel by checking a flag
+  // that is known to only be enabled in www. What we should do instead is set
+  // the release channel explicitly in the each test config file.
+  const www = featureFlags.enableSuspenseCallback === true;
+  const releaseChannel = www
+    ? __EXPERIMENTAL__
+      ? 'modern'
+      : 'classic'
+    : __EXPERIMENTAL__
+    ? 'experimental'
+    : 'stable';
+
   // Return a proxy so we can throw if you attempt to access a flag that
   // doesn't exist.
   return new Proxy(
@@ -51,6 +67,11 @@ function getTestFlags() {
       // Feature flag aliases
       old: featureFlags.enableNewReconciler === true,
       new: featureFlags.enableNewReconciler === true,
+
+      channel: releaseChannel,
+      modern: releaseChannel === 'modern',
+      classic: releaseChannel === 'classic',
+      www,
 
       ...featureFlags,
       ...environmentFlags,
