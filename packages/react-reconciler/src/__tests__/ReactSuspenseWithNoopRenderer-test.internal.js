@@ -11,11 +11,6 @@ let resolveText;
 let rejectText;
 
 describe('ReactSuspenseWithNoopRenderer', () => {
-  if (!__EXPERIMENTAL__) {
-    it("empty test so Jest doesn't complain", () => {});
-    return;
-  }
-
   beforeEach(() => {
     jest.resetModules();
 
@@ -922,6 +917,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     expect(ReactNoop.getChildren()).toEqual([span('Async')]);
   });
 
+  // @gate experimental
   it('starts working on an update even if its priority falls between two suspended levels', async () => {
     function App(props) {
       return (
@@ -2331,6 +2327,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
       timeoutMs: 2000,
     };
 
+    // @gate experimental
     it('top level render', async () => {
       function App({page}) {
         return (
@@ -2385,6 +2382,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
       expect(ReactNoop.getChildren()).toEqual([span('B')]);
     });
 
+    // @gate experimental
     it('hooks', async () => {
       let transitionToPage;
       function App() {
@@ -2452,6 +2450,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
       expect(ReactNoop.getChildren()).toEqual([span('B')]);
     });
 
+    // @gate experimental
     it('classes', async () => {
       let transitionToPage;
       class App extends React.Component {
@@ -2523,6 +2522,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     });
   });
 
+  // @gate experimental
   it('disables suspense config when nothing is passed to withSuspenseConfig', async () => {
     function App({page}) {
       return (
@@ -2597,6 +2597,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     ]);
   });
 
+  // @gate experimental
   it('withSuspenseConfig timeout applies when we use an updated avoided boundary', async () => {
     function App({page}) {
       return (
@@ -2645,6 +2646,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     ]);
   });
 
+  // @gate experimental
   it('withSuspenseConfig timeout applies when we use a newly created avoided boundary', async () => {
     function App({page}) {
       return (
@@ -2692,6 +2694,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     ]);
   });
 
+  // @gate experimental
   it('supports delaying a busy spinner from disappearing', async () => {
     const SUSPENSE_CONFIG = {
       timeoutMs: 10000,
@@ -2854,6 +2857,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     expect(root).toMatchRenderedOutput(<span prop="Foo" />);
   });
 
+  // @gate experimental
   it('should not render hidden content while suspended on higher pri', async () => {
     function Offscreen() {
       Scheduler.unstable_yieldValue('Offscreen');
@@ -2908,6 +2912,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     );
   });
 
+  // @gate experimental
   it('should be able to unblock higher pri content before suspended hidden', async () => {
     function Offscreen() {
       Scheduler.unstable_yieldValue('Offscreen');
@@ -3624,6 +3629,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     );
   });
 
+  // @gate experimental
   it('regression: ping at high priority causes update to be dropped', async () => {
     const {useState, useTransition} = React;
 

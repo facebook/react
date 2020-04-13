@@ -25,11 +25,7 @@ describe('ReactHooksInspection', () => {
     ReactDebugTools = require('react-debug-tools');
   });
 
-  if (!__EXPERIMENTAL__) {
-    it("empty test so Jest doesn't complain", () => {});
-    return;
-  }
-
+  // @gate experimental
   it('should inspect a simple useResponder hook', () => {
     const TestResponder = React.DEPRECATED_createResponder('TestResponder', {});
 
@@ -51,6 +47,7 @@ describe('ReactHooksInspection', () => {
     ]);
   });
 
+  // @gate experimental
   it('should inspect a simple ReactDOM.useEvent hook', () => {
     let clickHandle;
     let ref;

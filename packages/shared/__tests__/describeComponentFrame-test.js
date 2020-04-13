@@ -11,7 +11,6 @@
 
 let React;
 let ReactDOM;
-const ReactFeatureFlags = require('shared/ReactFeatureFlags');
 
 describe('Component stack trace displaying', () => {
   beforeEach(() => {
@@ -19,11 +18,7 @@ describe('Component stack trace displaying', () => {
     ReactDOM = require('react-dom');
   });
 
-  if (ReactFeatureFlags.enableComponentStackLocations) {
-    it("empty test so Jest doesn't complain", () => {});
-    return;
-  }
-
+  // @gate !enableComponentStackLocations || !__DEV__
   it('should provide filenames in stack traces', () => {
     class Component extends React.Component {
       render() {
