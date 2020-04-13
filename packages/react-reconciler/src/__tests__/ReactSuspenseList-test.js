@@ -1,5 +1,4 @@
 let React;
-let ReactFeatureFlags;
 let ReactNoop;
 let Scheduler;
 let Suspense;
@@ -8,10 +7,7 @@ let SuspenseList;
 describe('ReactSuspenseList', () => {
   beforeEach(() => {
     jest.resetModules();
-    ReactFeatureFlags = require('shared/ReactFeatureFlags');
 
-    ReactFeatureFlags.replayFailedUnitOfWorkWithInvokeGuardedCallback = false;
-    ReactFeatureFlags.enableSuspenseServerRenderer = true;
     React = require('react');
     ReactNoop = require('react-noop-renderer');
     Scheduler = require('scheduler');

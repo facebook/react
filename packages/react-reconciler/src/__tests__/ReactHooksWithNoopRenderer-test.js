@@ -43,8 +43,6 @@ describe('ReactHooksWithNoopRenderer', () => {
 
     ReactFeatureFlags = require('shared/ReactFeatureFlags');
 
-    ReactFeatureFlags.enableSchedulerTracing = true;
-    ReactFeatureFlags.enableProfilerTimer = true;
     deferPassiveEffectCleanupDuringUnmount =
       ReactFeatureFlags.deferPassiveEffectCleanupDuringUnmount;
     runAllPassiveEffectDestroysBeforeCreates =
@@ -1611,6 +1609,7 @@ describe('ReactHooksWithNoopRenderer', () => {
       expect(ReactNoop.getChildren()).toEqual([span('Count: 2')]);
     });
 
+    // @gate enableSchedulerTracing
     it('flushes passive effects when flushing discrete updates (with tracing)', () => {
       const onInteractionScheduledWorkCompleted = jest.fn();
       const onWorkCanceled = jest.fn();
