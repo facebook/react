@@ -173,6 +173,13 @@ describe('transform test-gate-pragma: actual runtime', () => {
     }
   });
 
+  // @gate build === "development"
+  test('strings', () => {
+    if (!__DEV__) {
+      throw Error("Doesn't work in production!");
+    }
+  });
+
   // Always should fail because of the unguarded console.error
   // @gate false
   test('works with console.error tracking', () => {
