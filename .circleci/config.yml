@@ -138,7 +138,7 @@ jobs:
             RELEASE_CHANNEL: stable
           command: yarn test-www-variant --maxWorkers=2
 
-  RELEASE_CHANNEL_stable_NODE_ENV_production_yarn_test_www:
+  RELEASE_CHANNEL_stable_yarn_test_prod_www:
     docker: *docker
     environment: *environment
     steps:
@@ -147,11 +147,10 @@ jobs:
       - *run_yarn
       - run:
           environment:
-            NODE_ENV: production
             RELEASE_CHANNEL: stable
-          command: yarn test-www --maxWorkers=2
+          command: yarn test-prod-www --maxWorkers=2
 
-  RELEASE_CHANNEL_stable_NODE_ENV_production_yarn_test_www_variant:
+  RELEASE_CHANNEL_stable_yarn_test_prod_www_variant:
     docker: *docker
     environment: *environment
     steps:
@@ -160,9 +159,8 @@ jobs:
       - *run_yarn
       - run:
           environment:
-            NODE_ENV: production
             RELEASE_CHANNEL: stable
-          command: yarn test-www-variant --maxWorkers=2
+          command: yarn test-prod-www-variant --maxWorkers=2
 
   yarn_test_www:
     docker: *docker
@@ -188,7 +186,7 @@ jobs:
             RELEASE_CHANNEL: experimental
           command: yarn test-www-variant --maxWorkers=2
 
-  NODE_ENV_production_yarn_test_www:
+  yarn_test_prod_www:
     docker: *docker
     environment: *environment
     steps:
@@ -197,11 +195,10 @@ jobs:
       - *run_yarn
       - run:
           environment:
-            NODE_ENV: production
             RELEASE_CHANNEL: experimental
-          command: yarn test-www --maxWorkers=2
+          command: yarn test-prod-www --maxWorkers=2
 
-  NODE_ENV_production_yarn_test_www_variant:
+  yarn_test_prod_www_variant:
     docker: *docker
     environment: *environment
     steps:
@@ -210,7 +207,6 @@ jobs:
       - *run_yarn
       - run:
           environment:
-            NODE_ENV: production
             RELEASE_CHANNEL: experimental
           command: yarn test-www-variant --maxWorkers=2
 
@@ -489,10 +485,10 @@ workflows:
       - RELEASE_CHANNEL_stable_yarn_test_www_variant:
           requires:
             - setup
-      - RELEASE_CHANNEL_stable_NODE_ENV_production_yarn_test_www:
+      - RELEASE_CHANNEL_stable_yarn_test_prod_www:
           requires:
             - setup
-      - RELEASE_CHANNEL_stable_NODE_ENV_production_yarn_test_www_variant:
+      - RELEASE_CHANNEL_stable_yarn_test_prod_www_variant:
           requires:
             - setup
       - RELEASE_CHANNEL_stable_yarn_build:
@@ -532,10 +528,10 @@ workflows:
       - yarn_test_www_variant:
           requires:
             - setup
-      - NODE_ENV_production_yarn_test_www:
+      - yarn_test_prod_www:
           requires:
             - setup
-      - NODE_ENV_production_yarn_test_www_variant:
+      - yarn_test_prod_www_variant:
           requires:
             - setup
       - yarn_build:
