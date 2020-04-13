@@ -112,7 +112,7 @@ export default function SidebarSelectedFiberInfo(_: Props) {
           <ButtonIcon type="close" />
         </Button>
       </div>
-      <div className={styles.Content} onKeyDown={handleKeyDown}>
+      <div className={styles.Content} onKeyDown={handleKeyDown} tabIndex={0}>
         <WhatChanged fiberID={((selectedFiberID: any): number)} />
         {listItems.length > 0 && (
           <Fragment>
