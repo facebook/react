@@ -166,6 +166,13 @@ describe('transform test-gate-pragma: actual runtime', () => {
   // These tests use the actual gating runtime used by the rest of our
   // test suite.
 
+  // @gate __DEV__
+  test('__DEV__', () => {
+    if (!__DEV__) {
+      throw Error("Doesn't work in production!");
+    }
+  });
+
   // Always should fail because of the unguarded console.error
   // @gate false
   test('works with console.error tracking', () => {

@@ -3,6 +3,7 @@
 const chalk = require('chalk');
 const util = require('util');
 const shouldIgnoreConsoleError = require('./shouldIgnoreConsoleError');
+const {getTestFlags} = require('./TestFlags');
 
 if (process.env.REACT_CLASS_EQUIVALENCE_TEST) {
   // Inside the class equivalence tester, we have a custom environment, let's
@@ -297,40 +298,12 @@ if (process.env.REACT_CLASS_EQUIVALENCE_TEST) {
     };
   }
 
-  const context = new Proxy(
-    {
-      build: __DEV__ ? 'development' : 'production',
-      experimental: __EXPERIMENTAL__,
-      stable: !__EXPERIMENTAL__,
-    },
-    {
-      get(environment, flagName) {
-        const environmentFlag = environment[flagName];
-        if (environmentFlag !== undefined) {
-          return environmentFlag;
-        }
-
-        const flags = require('shared/ReactFeatureFlags');
-        switch (flagName) {
-          case 'new':
-            return flags.enableNewReconciler === true;
-          case 'old':
-            return flags.enableNewReconciler === false;
-        }
-        const flagValue = flags[flagName];
-        if (typeof flagValue !== 'boolean') {
-          throw Error(`Feature flag "${flagName}" does not exist`);
-        }
-        return flagValue;
-      },
-    }
-  );
-
   const gatedErrorMessage = 'Gated test was expected to fail, but it passed.';
   global._test_gate = (gateFn, testName, callback) => {
     let shouldPass;
     try {
-      shouldPass = gateFn(context);
+      const flags = getTestFlags();
+      shouldPass = gateFn(flags);
     } catch (e) {
       test(testName, () => {
         throw e;
@@ -347,7 +320,8 @@ if (process.env.REACT_CLASS_EQUIVALENCE_TEST) {
   global._test_gate_focus = (gateFn, testName, callback) => {
     let shouldPass;
     try {
-      shouldPass = gateFn(context);
+      const flags = getTestFlags();
+      shouldPass = gateFn(flags);
     } catch (e) {
       test.only(testName, () => {
         throw e;
