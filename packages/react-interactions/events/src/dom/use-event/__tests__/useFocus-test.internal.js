@@ -9,39 +9,33 @@
 
 'use strict';
 
-import {
-  createEventTarget,
-  setPointerEvent,
-  platform,
-} from 'dom-event-testing-library';
+import {createEventTarget, setPointerEvent} from 'dom-event-testing-library';
 
 let React;
 let ReactFeatureFlags;
 let ReactDOM;
-let FocusResponder;
 let useFocus;
 
 function initializeModules(hasPointerEvents) {
   setPointerEvent(hasPointerEvents);
   jest.resetModules();
   ReactFeatureFlags = require('shared/ReactFeatureFlags');
-  ReactFeatureFlags.enableDeprecatedFlareAPI = true;
+  ReactFeatureFlags.enableModernEventSystem = true;
+  ReactFeatureFlags.enableUseEventAPI = true;
   React = require('react');
   ReactDOM = require('react-dom');
 
   // TODO: This import throws outside of experimental mode. Figure out better
   // strategy for gated imports.
   if (__EXPERIMENTAL__) {
-    FocusResponder = require('react-interactions/events/deprecated-focus')
-      .FocusResponder;
-    useFocus = require('react-interactions/events/deprecated-focus').useFocus;
+    useFocus = require('react-interactions/events/focus').useFocus;
   }
 }
 
 const forcePointerEvents = true;
 const table = [[forcePointerEvents], [!forcePointerEvents]];
 
-describe.each(table)('Focus responder', hasPointerEvents => {
+describe.each(table)(`useFocus`, hasPointerEvents => {
   let container;
 
   beforeEach(() => {
@@ -64,12 +58,12 @@ describe.each(table)('Focus responder', hasPointerEvents => {
       onFocus = jest.fn();
       ref = React.createRef();
       const Component = () => {
-        const listener = useFocus({
+        useFocus(ref, {
           disabled: true,
           onBlur,
           onFocus,
         });
-        return <div ref={ref} DEPRECATED_flareListeners={listener} />;
+        return <div ref={ref} />;
       };
       ReactDOM.render(<Component />, container);
     };
@@ -92,10 +86,10 @@ describe.each(table)('Focus responder', hasPointerEvents => {
       onBlur = jest.fn();
       ref = React.createRef();
       const Component = () => {
-        const listener = useFocus({
+        useFocus(ref, {
           onBlur,
         });
-        return <div ref={ref} DEPRECATED_flareListeners={listener} />;
+        return <div ref={ref} />;
       };
       ReactDOM.render(<Component />, container);
     };
@@ -118,11 +112,11 @@ describe.each(table)('Focus responder', hasPointerEvents => {
       ref = React.createRef();
       innerRef = React.createRef();
       const Component = () => {
-        const listener = useFocus({
+        useFocus(ref, {
           onFocus,
         });
         return (
-          <div ref={ref} DEPRECATED_flareListeners={listener}>
+          <div ref={ref}>
             <a ref={innerRef} />
           </div>
         );
@@ -145,79 +139,6 @@ describe.each(table)('Focus responder', hasPointerEvents => {
       target.focus();
       expect(onFocus).not.toBeCalled();
     });
-
-    // @gate experimental
-    it('is called with the correct pointerType: mouse', () => {
-      componentInit();
-      const target = createEventTarget(ref.current);
-      target.pointerdown();
-      target.pointerup();
-      expect(onFocus).toHaveBeenCalledTimes(1);
-      expect(onFocus).toHaveBeenCalledWith(
-        expect.objectContaining({pointerType: 'mouse'}),
-      );
-    });
-
-    // @gate experimental
-    it('is called with the correct pointerType: touch', () => {
-      componentInit();
-      const target = createEventTarget(ref.current);
-      const pointerType = 'touch';
-      target.pointerdown({pointerType});
-      target.pointerup({pointerType});
-      expect(onFocus).toHaveBeenCalledTimes(1);
-      expect(onFocus).toHaveBeenCalledWith(
-        expect.objectContaining({pointerType: 'touch'}),
-      );
-    });
-
-    if (hasPointerEvents) {
-      // @gate experimental
-      it('is called with the correct pointerType: pen', () => {
-        componentInit();
-        const target = createEventTarget(ref.current);
-        const pointerType = 'pen';
-        target.pointerdown({pointerType});
-        target.pointerup({pointerType});
-        expect(onFocus).toHaveBeenCalledTimes(1);
-        expect(onFocus).toHaveBeenCalledWith(
-          expect.objectContaining({pointerType: 'pen'}),
-        );
-      });
-    }
-
-    // @gate experimental
-    it('is called with the correct pointerType using a keyboard', () => {
-      componentInit();
-      const target = createEventTarget(ref.current);
-      target.keydown({key: 'LeftArrow'});
-      target.focus();
-      expect(onFocus).toHaveBeenCalledTimes(1);
-      expect(onFocus).toHaveBeenCalledWith(
-        expect.objectContaining({pointerType: 'keyboard'}),
-      );
-    });
-
-    // @gate experimental
-    it('is called with the correct pointerType using Tab+altKey on Mac', () => {
-      platform.set('mac');
-      jest.resetModules();
-      initializeModules();
-      componentInit();
-
-      const target = createEventTarget(ref.current);
-      target.keydown({key: 'Tab', altKey: true});
-      target.focus();
-
-      expect(onFocus).toHaveBeenCalledTimes(1);
-      expect(onFocus).toHaveBeenCalledWith(
-        expect.objectContaining({
-          pointerType: 'keyboard',
-        }),
-      );
-
-      platform.clear();
-    });
   });
 
   describe('onFocusChange', () => {
@@ -228,11 +149,11 @@ describe.each(table)('Focus responder', hasPointerEvents => {
       ref = React.createRef();
       innerRef = React.createRef();
       const Component = () => {
-        const listener = useFocus({
+        useFocus(ref, {
           onFocusChange,
         });
         return (
-          <div ref={ref} DEPRECATED_flareListeners={listener}>
+          <div ref={ref}>
             <div ref={innerRef} />
           </div>
         );
@@ -271,11 +192,11 @@ describe.each(table)('Focus responder', hasPointerEvents => {
       ref = React.createRef();
       innerRef = React.createRef();
       const Component = () => {
-        const listener = useFocus({
+        useFocus(ref, {
           onFocusVisibleChange,
         });
         return (
-          <div ref={ref} DEPRECATED_flareListeners={listener}>
+          <div ref={ref}>
             <div ref={innerRef} />
           </div>
         );
@@ -353,22 +274,22 @@ describe.each(table)('Focus responder', hasPointerEvents => {
       };
 
       const Inner = () => {
-        const listener = useFocus({
+        useFocus(innerRef, {
           onBlur: createEventHandler('inner: onBlur'),
           onFocus: createEventHandler('inner: onFocus'),
           onFocusChange: createEventHandler('inner: onFocusChange'),
         });
-        return <div ref={innerRef} DEPRECATED_flareListeners={listener} />;
+        return <div ref={innerRef} />;
       };
 
       const Outer = () => {
-        const listener = useFocus({
+        useFocus(outerRef, {
           onBlur: createEventHandler('outer: onBlur'),
           onFocus: createEventHandler('outer: onFocus'),
           onFocusChange: createEventHandler('outer: onFocusChange'),
         });
         return (
-          <div ref={outerRef} DEPRECATED_flareListeners={listener}>
+          <div ref={outerRef}>
             <Inner />
           </div>
         );
@@ -394,10 +315,5 @@ describe.each(table)('Focus responder', hasPointerEvents => {
         'inner: onFocusChange',
       ]);
     });
-  });
-
-  // @gate experimental
-  it('expect displayName to show up for event component', () => {
-    expect(FocusResponder.displayName).toBe('Focus');
   });
 });

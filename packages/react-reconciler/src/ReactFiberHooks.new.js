@@ -1757,7 +1757,7 @@ function validateNotInFunctionRender(): boolean {
 
 function createReactListener(
   event: ReactListenerEvent,
-  callback: Event => void,
+  callback: (SyntheticEvent<EventTarget>) => void,
   target: EventTarget | ReactScopeMethods,
   destroy: Node => void,
 ): ReactListener {
@@ -1812,7 +1812,7 @@ function mountEventListener(event: ReactListenerEvent): ReactListenerMap {
       clear,
       setListener(
         target: EventTarget | ReactScopeMethods,
-        callback: ?(Event) => void,
+        callback: ?(SyntheticEvent<EventTarget>) => void,
       ): void {
         if (
           validateNotInFunctionRender() &&

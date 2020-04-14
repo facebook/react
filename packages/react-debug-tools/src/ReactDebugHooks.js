@@ -52,7 +52,7 @@ type ReactDebugListenerMap = {|
   clear: () => void,
   setListener: (
     target: EventTarget | ReactScopeMethods,
-    callback: ?(Event) => void,
+    callback: ?(SyntheticEvent<EventTarget>) => void,
   ) => void,
 |};
 

@@ -42,9 +42,10 @@ function resolveDispatcher() {
 }
 
 export function useEvent(
-  type: DOMTopLevelEventType,
+  type: string,
   options?: EventOptions,
 ): ReactDOMListenerMap {
+  const topLevelType = ((type: any): DOMTopLevelEventType);
   const dispatcher = resolveDispatcher();
   let capture = false;
   let passive = undefined; // Undefined means to use the browser default
@@ -66,13 +67,13 @@ export function useEvent(
     }
   }
   if (priority === undefined) {
-    priority = getEventPriorityForListenerSystem(type);
+    priority = getEventPriorityForListenerSystem(topLevelType);
   }
   const event: ReactDOMListenerEvent = {
     capture,
     passive,
     priority,
-    type,
+    type: topLevelType,
   };
   return dispatcher.useEvent(event);
 }
