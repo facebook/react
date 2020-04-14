@@ -73,7 +73,6 @@ import {
   enableUseEventAPI,
   enableScopeAPI,
 } from 'shared/ReactFeatureFlags';
-import {HostComponent} from 'react-reconciler/src/ReactWorkTags';
 import {
   RESPONDER_EVENT_SYSTEM,
   IS_PASSIVE,
@@ -94,6 +93,10 @@ import {
 } from '../events/DOMModernPluginEventSystem';
 import {getListenerMapForElement} from '../events/DOMEventListenerMap';
 import {TOP_BEFORE_BLUR, TOP_AFTER_BLUR} from '../events/DOMTopLevelEventTypes';
+
+// TODO: This is an exposed internal, we should move this around
+// so this isn't the case.
+import {isFiberInsideHiddenOrRemovedTree} from 'react-reconciler/src/ReactFiberTreeReflection';
 
 export type ReactListenerEvent = ReactDOMListenerEvent;
 export type ReactListenerMap = ReactDOMListenerMap;
@@ -250,6 +253,15 @@ export function getPublicInstance(instance: Instance): * {
 export function prepareForCommit(containerInfo: Container): void {
   eventsEnabled = ReactBrowserEventEmitterIsEnabled();
   selectionInformation = getSelectionInformation();
+  if (enableDeprecatedFlareAPI || enableUseEventAPI) {
+    const focusedElem = selectionInformation.focusedElem;
+    if (focusedElem !== null) {
+      const instance = getClosestInstanceFromNode(focusedElem);
+      if (instance !== null && isFiberInsideHiddenOrRemovedTree(instance)) {
+        dispatchBeforeDetachedBlur(focusedElem);
+      }
+    }
+  }
   ReactBrowserEventEmitterSetEnabled(false);
 }
 
@@ -532,18 +544,11 @@ function dispatchBeforeDetachedBlur(target: HTMLElement): void {
     );
   }
   if (enableUseEventAPI) {
-    try {
-      // We need to temporarily enable the event system
-      // to dispatch the "beforeblur" event.
-      ReactBrowserEventEmitterSetEnabled(true);
-      const event = createEvent(TOP_BEFORE_BLUR);
-      // Dispatch "beforeblur" directly on the target,
-      // so it gets picked up by the event system and
-      // can propagate through the React internal tree.
-      target.dispatchEvent(event);
-    } finally {
-      ReactBrowserEventEmitterSetEnabled(false);
-    }
+    const event = createEvent(TOP_BEFORE_BLUR);
+    // Dispatch "beforeblur" directly on the target,
+    // so it gets picked up by the event system and
+    // can propagate through the React internal tree.
+    target.dispatchEvent(event);
   }
 }
 
@@ -571,20 +576,9 @@ function dispatchAfterDetachedBlur(target: HTMLElement): void {
   }
 }
 
-// This is a specific event for the React Flare
-// event system, so event responders can act
-// accordingly to a DOM node being unmounted that
-// previously had active document focus.
 export function beforeRemoveInstance(
   instance: Instance | TextInstance | SuspenseInstance,
 ): void {
-  if (
-    (enableDeprecatedFlareAPI || enableUseEventAPI) &&
-    selectionInformation &&
-    instance === selectionInformation.focusedElem
-  ) {
-    dispatchBeforeDetachedBlur(((instance: any): HTMLElement));
-  }
   if (enableUseEventAPI) {
     // It's unfortunate that we have to do this cleanup, but
     // it's necessary otherwise we will leak the host instances
@@ -674,28 +668,7 @@ export function clearSuspenseBoundaryFromContainer(
   retryIfBlockedOn(container);
 }
 
-function instanceContainsElem(instance: Instance, element: HTMLElement) {
-  let fiber = getClosestInstanceFromNode(element);
-  while (fiber !== null) {
-    if (fiber.tag === HostComponent && fiber.stateNode === instance) {
-      return true;
-    }
-    fiber = fiber.return;
-  }
-  return false;
-}
-
 export function hideInstance(instance: Instance): void {
-  // Ensure we trigger `onBeforeBlur` if the active focused elment
-  // is ether the instance of a child or the instance. We need
-  // to traverse the Fiber tree here rather than use node.contains()
-  // as the child node might be inside a Portal.
-  if ((enableDeprecatedFlareAPI || enableUseEventAPI) && selectionInformation) {
-    const focusedElem = selectionInformation.focusedElem;
-    if (focusedElem !== null && instanceContainsElem(instance, focusedElem)) {
-      dispatchBeforeDetachedBlur(((focusedElem: any): HTMLElement));
-    }
-  }
   // TODO: Does this work for all element types? What about MathML? Should we
   // pass host context to this method?
   instance = ((instance: any): HTMLElement);

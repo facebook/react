@@ -17,23 +17,10 @@ import type {
 } from 'shared/ReactTypes';
 
 import {getPublicInstance, getInstanceFromNode} from './ReactFiberHostConfig';
+import {isFiberSuspenseAndTimedOut} from './ReactFiberTreeReflection';
 
-import {
-  HostComponent,
-  SuspenseComponent,
-  ScopeComponent,
-  ContextProvider,
-} from './ReactWorkTags';
+import {HostComponent, ScopeComponent, ContextProvider} from './ReactWorkTags';
 import {enableScopeAPI} from 'shared/ReactFeatureFlags';
-
-function isFiberSuspenseAndTimedOut(fiber: Fiber): boolean {
-  const memoizedState = fiber.memoizedState;
-  return (
-    fiber.tag === SuspenseComponent &&
-    memoizedState !== null &&
-    memoizedState.dehydrated === null
-  );
-}
 
 function getSuspenseFallbackChild(fiber: Fiber): Fiber | null {
   return ((((fiber.child: any): Fiber).sibling: any): Fiber).child;

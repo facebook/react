@@ -1116,17 +1116,21 @@ function detachFiber(fiber: Fiber) {
   // get GC:ed but we don't know which for sure which parent is the current
   // one so we'll settle for GC:ing the subtree of this child. This child
   // itself will be GC:ed when the parent updates the next time.
-  fiber.return = null;
-  fiber.child = null;
-  fiber.memoizedState = null;
-  fiber.updateQueue = null;
-  fiber.dependencies = null;
   fiber.alternate = null;
+  fiber.child = null;
+  fiber.dependencies = null;
   fiber.firstEffect = null;
   fiber.lastEffect = null;
-  fiber.pendingProps = null;
   fiber.memoizedProps = null;
+  fiber.memoizedState = null;
+  fiber.pendingProps = null;
+  fiber.return = null;
+  fiber.sibling = null;
   fiber.stateNode = null;
+  fiber.updateQueue = null;
+  if (__DEV__) {
+    fiber._debugOwner = null;
+  }
 }
 
 function emptyPortalContainer(current: Fiber) {
