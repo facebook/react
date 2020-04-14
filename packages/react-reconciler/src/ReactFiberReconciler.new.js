@@ -47,7 +47,7 @@ import {createFiberRoot} from './ReactFiberRoot.new';
 import {injectInternals, onScheduleRoot} from './ReactFiberDevToolsHook.new';
 import {
   requestCurrentTimeForUpdate,
-  computeExpirationForFiber,
+  requestUpdateExpirationTime,
   scheduleUpdateOnFiber,
   flushRoot,
   batchedEventUpdates,
@@ -248,10 +248,10 @@ export function updateContainer(
     }
   }
   const suspenseConfig = requestCurrentSuspenseConfig();
-  const expirationTime = computeExpirationForFiber(
-    currentTime,
+  const expirationTime = requestUpdateExpirationTime(
     current,
     suspenseConfig,
+    currentTime,
   );
 
   const context = getContextForSubtree(parentComponent);
@@ -405,7 +405,7 @@ export function attemptHydrationAtCurrentPriority(fiber: Fiber): void {
     return;
   }
   const currentTime = requestCurrentTimeForUpdate();
-  const expTime = computeExpirationForFiber(currentTime, fiber, null);
+  const expTime = requestUpdateExpirationTime(fiber, null, currentTime);
   scheduleUpdateOnFiber(fiber, expTime);
   markRetryTimeIfNotHydrated(fiber, expTime);
 }

@@ -39,12 +39,12 @@ import {
   shouldYield,
   requestPaint,
   now,
-  NoPriority,
-  ImmediatePriority,
-  UserBlockingPriority,
-  NormalPriority,
-  LowPriority,
-  IdlePriority,
+  NoPriority as NoSchedulerPriority,
+  ImmediatePriority as ImmediateSchedulerPriority,
+  UserBlockingPriority as UserBlockingSchedulerPriority,
+  NormalPriority as NormalSchedulerPriority,
+  LowPriority as LowSchedulerPriority,
+  IdlePriority as IdleSchedulerPriority,
   flushSyncCallbackQueue,
   scheduleSyncCallback,
 } from './SchedulerWithReactIntegration.new';
@@ -126,9 +126,22 @@ import {
   inferPriorityFromExpirationTime,
   Batched,
   Idle,
+  ContinuousHydration,
   ShortTransition,
   LongTransition,
 } from './ReactFiberExpirationTime.new';
+import {
+  SyncLanePriority,
+  SyncBatchedLanePriority,
+  InputDiscreteLanePriority,
+  InputContinuousLanePriority,
+  DefaultLanePriority,
+  TransitionShortLanePriority,
+  TransitionLongLanePriority,
+  HydrationContinuousLanePriority,
+  IdleLanePriority,
+  OffscreenLanePriority,
+} from './ReactFiberLane';
 import {beginWork as originalBeginWork} from './ReactFiberBeginWork.new';
 import {completeWork} from './ReactFiberCompleteWork.new';
 import {unwindWork, unwindInterruptedWork} from './ReactFiberUnwindWork.new';
@@ -251,7 +264,7 @@ let legacyErrorBoundariesThatAlreadyFailed: Set<mixed> | null = null;
 
 let rootDoesHavePassiveEffects: boolean = false;
 let rootWithPendingPassiveEffects: FiberRoot | null = null;
-let pendingPassiveEffectsRenderPriority: ReactPriorityLevel = NoPriority;
+let pendingPassiveEffectsRenderPriority: ReactPriorityLevel = NoSchedulerPriority;
 let pendingPassiveEffectsExpirationTime: ExpirationTime = NoWork;
 let pendingPassiveHookEffectsMount: Array<HookEffect | Fiber> = [];
 let pendingPassiveHookEffectsUnmount: Array<HookEffect | Fiber> = [];
@@ -316,67 +329,102 @@ export function getCurrentTime() {
   return msToExpirationTime(now());
 }
 
-export function computeExpirationForFiber(
-  currentTime: ExpirationTime,
+export function requestUpdateExpirationTime(
   fiber: Fiber,
-  suspenseConfig: null | SuspenseConfig,
+  suspenseConfig: SuspenseConfig | null,
+  currentTime: ExpirationTime,
 ): ExpirationTime {
+  // Special cases
   const mode = fiber.mode;
   if ((mode & BlockingMode) === NoMode) {
     return Sync;
-  }
-
-  const priorityLevel = getCurrentPriorityLevel();
-  if ((mode & ConcurrentMode) === NoMode) {
-    return priorityLevel === ImmediatePriority ? Sync : Batched;
-  }
-
-  if ((executionContext & RenderContext) !== NoContext) {
+  } else if ((mode & ConcurrentMode) === NoMode) {
+    return getCurrentPriorityLevel() === ImmediateSchedulerPriority
+      ? Sync
+      : Batched;
+  } else if ((executionContext & RenderContext) !== NoContext) {
     // Use whatever time we're already rendering
-    // TODO: Should there be a way to opt out, like with `runWithPriority`?
+    // TODO: Treat render phase updates as if they came from an
+    // interleaved event.
     return renderExpirationTime;
   }
 
-  let expirationTime;
+  let updateLanePriority;
   if (suspenseConfig !== null) {
     // If there's a SuspenseConfig, choose an expiration time that's lower
     // priority than a normal concurrent update (regardless of the current
-    // Scheduler priority.) Timeouts larger than 10 seconds move one level lower
-    // than that.
+    // Scheduler priority.) Timeouts larger than 10 seconds move one level
+    // lower than that.
+    // TODO: This will coerce numbers larger than 31 bits to 0.
     const timeoutMs = suspenseConfig.timeoutMs;
-    expirationTime =
-      // TODO: This will coerce numbers larger than 31 bits to 0.
+    updateLanePriority =
       timeoutMs === undefined || (timeoutMs | 0) < 10000
-        ? ShortTransition
-        : LongTransition;
+        ? TransitionShortLanePriority
+        : TransitionLongLanePriority;
   } else {
-    // Compute an expiration time based on the Scheduler priority.
+    // TODO: If we're not inside `runWithPriority`, this returns the priority
+    // of the currently running task. That's probably not what we want.
+    const priorityLevel = getCurrentPriorityLevel();
     switch (priorityLevel) {
-      case ImmediatePriority:
-        expirationTime = Sync;
+      case ImmediateSchedulerPriority:
+        updateLanePriority = SyncLanePriority;
         break;
-      case UserBlockingPriority:
-        // TODO: Rename this to computeUserBlockingExpiration
-        expirationTime = computeInteractiveExpiration(currentTime);
+      case UserBlockingSchedulerPriority:
+        updateLanePriority = InputContinuousLanePriority;
         break;
-      case NormalPriority:
-      case LowPriority: // TODO: Handle LowPriority
-        // TODO: Rename this to... something better.
-        expirationTime = computeAsyncExpiration(currentTime);
+      case NormalSchedulerPriority:
+      case LowSchedulerPriority:
+        // TODO: Handle LowSchedulerPriority, somehow. Maybe the same lane as hydration.
+        updateLanePriority = DefaultLanePriority;
         break;
-      case IdlePriority:
-        expirationTime = Idle;
+      case IdleSchedulerPriority:
+        updateLanePriority = IdleLanePriority;
         break;
       default:
         invariant(false, 'Expected a valid priority level');
     }
   }
 
+  // TODO: In the new system, what we'll do here is claim one of the bits of
+  // the root's `pendingLanes` field, based on its priority. We'll combine this
+  // function with `scheduleUpdateOnFiber` and `markRootUpdatedAtTime`.
+  let expirationTime;
+  switch (updateLanePriority) {
+    case SyncLanePriority:
+      return Sync;
+    case SyncBatchedLanePriority:
+      return Batched;
+    case InputDiscreteLanePriority:
+    case InputContinuousLanePriority:
+      expirationTime = computeInteractiveExpiration(currentTime);
+      break;
+    case DefaultLanePriority:
+      expirationTime = computeAsyncExpiration(currentTime);
+      break;
+    case TransitionShortLanePriority:
+      expirationTime = ShortTransition;
+      break;
+    case TransitionLongLanePriority:
+      expirationTime = LongTransition;
+      break;
+    case HydrationContinuousLanePriority:
+      expirationTime = ContinuousHydration;
+      break;
+    case IdleLanePriority:
+      expirationTime = Idle;
+      break;
+    case OffscreenLanePriority:
+      expirationTime = Never;
+      break;
+    default:
+      invariant(false, 'Expected a valid priority level');
+  }
+
   // If we're in the middle of rendering a tree, do not update at the same
   // expiration time that is already rendering.
   // TODO: We shouldn't have to do this if the update is on a different root.
-  // Refactor computeExpirationForFiber + scheduleUpdate so we have access to
-  // the root when we check for this condition.
+  // TODO: In the new system, we'll find a different bit that's not the one
+  // we're currently rendering.
   if (workInProgressRoot !== null && expirationTime === renderExpirationTime) {
     // This is a trick to move this update into a separate batch
     expirationTime -= 1;
@@ -398,7 +446,7 @@ export function scheduleUpdateOnFiber(
     return null;
   }
 
-  // TODO: computeExpirationForFiber also reads the priority. Pass the
+  // TODO: requestUpdateLanePriority also reads the priority. Pass the
   // priority as an argument to that function and this one.
   const priorityLevel = getCurrentPriorityLevel();
 
@@ -437,8 +485,8 @@ export function scheduleUpdateOnFiber(
     (executionContext & DiscreteEventContext) !== NoContext &&
     // Only updates at user-blocking priority or greater are considered
     // discrete, even inside a discrete event.
-    (priorityLevel === UserBlockingPriority ||
-      priorityLevel === ImmediatePriority)
+    (priorityLevel === UserBlockingSchedulerPriority ||
+      priorityLevel === ImmediateSchedulerPriority)
   ) {
     // This is the result of a discrete event. Track the lowest priority
     // discrete update per root so we can flush them early, if needed.
@@ -508,7 +556,7 @@ function markUpdateTimeFromFiberToRoot(fiber, expirationTime) {
         // suspended now, right before marking the incoming update. This has the
         // effect of interrupting the current render and switching to the update.
         // TODO: This happens to work when receiving an update during the render
-        // phase, because of the trick inside computeExpirationForFiber to
+        // phase, because of the trick inside requestUpdateExpirationTime to
         // subtract 1 from `renderExpirationTime` to move it into a
         // separate bucket. But we should probably model it with an exception,
         // using the same mechanism we use to force hydration of a subtree.
@@ -570,7 +618,7 @@ function ensureRootIsScheduled(root: FiberRoot) {
   if (lastExpiredTime !== NoWork) {
     // Special case: Expired work should flush synchronously.
     root.callbackExpirationTime = Sync;
-    root.callbackPriority = ImmediatePriority;
+    root.callbackPriority = ImmediateSchedulerPriority;
     root.callbackNode = scheduleSyncCallback(
       performSyncWorkOnRoot.bind(null, root),
     );
@@ -584,7 +632,7 @@ function ensureRootIsScheduled(root: FiberRoot) {
     if (existingCallbackNode !== null) {
       root.callbackNode = null;
       root.callbackExpirationTime = NoWork;
-      root.callbackPriority = NoPriority;
+      root.callbackPriority = NoSchedulerPriority;
     }
     return;
   }
@@ -1016,7 +1064,7 @@ export function flushDiscreteUpdates() {
 
 export function deferredUpdates<A>(fn: () => A): A {
   // TODO: Remove in favor of Scheduler.next
-  return runWithPriority(NormalPriority, fn);
+  return runWithPriority(NormalSchedulerPriority, fn);
 }
 
 export function syncUpdates<A, B, C, R>(
@@ -1025,7 +1073,7 @@ export function syncUpdates<A, B, C, R>(
   b: B,
   c: C,
 ): R {
-  return runWithPriority(ImmediatePriority, fn.bind(null, a, b, c));
+  return runWithPriority(ImmediateSchedulerPriority, fn.bind(null, a, b, c));
 }
 
 function flushPendingDiscreteUpdates() {
@@ -1082,7 +1130,10 @@ export function discreteUpdates<A, B, C, D, R>(
   executionContext |= DiscreteEventContext;
   try {
     // Should this
-    return runWithPriority(UserBlockingPriority, fn.bind(null, a, b, c, d));
+    return runWithPriority(
+      UserBlockingSchedulerPriority,
+      fn.bind(null, a, b, c, d),
+    );
   } finally {
     executionContext = prevExecutionContext;
     if (executionContext === NoContext) {
@@ -1118,7 +1169,7 @@ export function flushSync<A, R>(fn: A => R, a: A): R {
   const prevExecutionContext = executionContext;
   executionContext |= BatchedContext;
   try {
-    return runWithPriority(ImmediatePriority, fn.bind(null, a));
+    return runWithPriority(ImmediateSchedulerPriority, fn.bind(null, a));
   } finally {
     executionContext = prevExecutionContext;
     // Flush the immediate callbacks that were scheduled during this batch.
@@ -1132,7 +1183,7 @@ export function flushControlled(fn: () => mixed): void {
   const prevExecutionContext = executionContext;
   executionContext |= BatchedContext;
   try {
-    runWithPriority(ImmediatePriority, fn);
+    runWithPriority(ImmediateSchedulerPriority, fn);
   } finally {
     executionContext = prevExecutionContext;
     if (executionContext === NoContext) {
@@ -1724,7 +1775,7 @@ function resetChildExpirationTime(completedWork: Fiber) {
 function commitRoot(root) {
   const renderPriorityLevel = getCurrentPriorityLevel();
   runWithPriority(
-    ImmediatePriority,
+    ImmediateSchedulerPriority,
     commitRootImpl.bind(null, root, renderPriorityLevel),
   );
   return null;
@@ -1765,7 +1816,7 @@ function commitRootImpl(root, renderPriorityLevel) {
   // So we can clear these now to allow a new callback to be scheduled.
   root.callbackNode = null;
   root.callbackExpirationTime = NoWork;
-  root.callbackPriority = NoPriority;
+  root.callbackPriority = NoSchedulerPriority;
 
   // Update the first and last pending times on this root. The new first
   // pending time is whatever is left on the root fiber.
@@ -2076,7 +2127,7 @@ function commitBeforeMutationEffects() {
       // the earliest opportunity.
       if (!rootDoesHavePassiveEffects) {
         rootDoesHavePassiveEffects = true;
-        scheduleCallback(NormalPriority, () => {
+        scheduleCallback(NormalSchedulerPriority, () => {
           flushPassiveEffects();
           return null;
         });
@@ -2190,12 +2241,12 @@ function commitLayoutEffects(
 }
 
 export function flushPassiveEffects() {
-  if (pendingPassiveEffectsRenderPriority !== NoPriority) {
+  if (pendingPassiveEffectsRenderPriority !== NoSchedulerPriority) {
     const priorityLevel =
-      pendingPassiveEffectsRenderPriority > NormalPriority
-        ? NormalPriority
+      pendingPassiveEffectsRenderPriority > NormalSchedulerPriority
+        ? NormalSchedulerPriority
         : pendingPassiveEffectsRenderPriority;
-    pendingPassiveEffectsRenderPriority = NoPriority;
+    pendingPassiveEffectsRenderPriority = NoSchedulerPriority;
     return runWithPriority(priorityLevel, flushPassiveEffectsImpl);
   }
 }
@@ -2205,7 +2256,7 @@ export function enqueuePendingPassiveProfilerEffect(fiber: Fiber): void {
     pendingPassiveProfilerEffects.push(fiber);
     if (!rootDoesHavePassiveEffects) {
       rootDoesHavePassiveEffects = true;
-      scheduleCallback(NormalPriority, () => {
+      scheduleCallback(NormalSchedulerPriority, () => {
         flushPassiveEffects();
         return null;
       });
@@ -2221,7 +2272,7 @@ export function enqueuePendingPassiveHookEffectMount(
     pendingPassiveHookEffectsMount.push(effect, fiber);
     if (!rootDoesHavePassiveEffects) {
       rootDoesHavePassiveEffects = true;
-      scheduleCallback(NormalPriority, () => {
+      scheduleCallback(NormalSchedulerPriority, () => {
         flushPassiveEffects();
         return null;
       });
@@ -2246,7 +2297,7 @@ export function enqueuePendingPassiveHookEffectUnmount(
     }
     if (!rootDoesHavePassiveEffects) {
       rootDoesHavePassiveEffects = true;
-      scheduleCallback(NormalPriority, () => {
+      scheduleCallback(NormalSchedulerPriority, () => {
         flushPassiveEffects();
         return null;
       });
@@ -2615,10 +2666,10 @@ function retryTimedOutBoundary(
   if (retryTime === NoWork) {
     const suspenseConfig = null; // Retries don't carry over the already committed update.
     const currentTime = requestCurrentTimeForUpdate();
-    retryTime = computeExpirationForFiber(
-      currentTime,
+    retryTime = requestUpdateExpirationTime(
       boundaryFiber,
       suspenseConfig,
+      currentTime,
     );
   }
   // TODO: Special case idle priority?
@@ -3197,7 +3248,7 @@ function startWorkOnPendingInteractions(root, expirationTime) {
         subscriber.onWorkStarted(interactions, threadID);
       } catch (error) {
         // If the subscriber throws, rethrow it in a separate task
-        scheduleCallback(ImmediatePriority, () => {
+        scheduleCallback(ImmediateSchedulerPriority, () => {
           throw error;
         });
       }
@@ -3222,7 +3273,7 @@ function finishPendingInteractions(root, committedExpirationTime) {
     }
   } catch (error) {
     // If the subscriber throws, rethrow it in a separate task
-    scheduleCallback(ImmediatePriority, () => {
+    scheduleCallback(ImmediateSchedulerPriority, () => {
       throw error;
     });
   } finally {
@@ -3246,7 +3297,7 @@ function finishPendingInteractions(root, committedExpirationTime) {
                 subscriber.onInteractionScheduledWorkCompleted(interaction);
               } catch (error) {
                 // If the subscriber throws, rethrow it in a separate task
-                scheduleCallback(ImmediatePriority, () => {
+                scheduleCallback(ImmediateSchedulerPriority, () => {
                   throw error;
                 });
               }
