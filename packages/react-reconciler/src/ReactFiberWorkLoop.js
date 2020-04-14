@@ -28,7 +28,6 @@ import {
   flushSuspenseFallbacksInTests,
   disableSchedulerTimeoutBasedOnReactExpirationTime,
   enableTrainModelFix,
-  enableSpeculativeWork,
   enableReifyNextWork,
 } from 'shared/ReactFeatureFlags';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
@@ -124,12 +123,7 @@ import {
   Batched,
   Idle,
 } from './ReactFiberExpirationTime';
-import {
-  beginWork as originalBeginWork,
-  inSpeculativeWorkMode,
-  endSpeculationWorkIfRootFiber,
-  didReifySpeculativeWorkDuringThisStep,
-} from './ReactFiberBeginWork';
+import {beginWork as originalBeginWork} from './ReactFiberBeginWork';
 import {completeWork} from './ReactFiberCompleteWork';
 import {unwindWork, unwindInterruptedWork} from './ReactFiberUnwindWork';
 import {
@@ -1505,13 +1499,6 @@ function performUnitOfWork(unitOfWork: Fiber): Fiber | null {
     next = beginWork(current, unitOfWork, renderExpirationTime);
   }
 
-  if (enableSpeculativeWork && didReifySpeculativeWorkDuringThisStep()) {
-    // we need to switch to the alternate becuase the original unitOfWork
-    // was from the prior commit and the alternate is reified workInProgress
-    // which we need to send to completeUnitOfWork
-    unitOfWork = unitOfWork.alternate;
-  }
-
   resetCurrentDebugFiberInDEV();
   // may not want to memoize props here when we did not reifyWork
   unitOfWork.memoizedProps = unitOfWork.pendingProps;
@@ -1534,16 +1521,6 @@ function completeUnitOfWork(unitOfWork: Fiber): Fiber | null {
     // need an additional field on the work in progress.
     const current = workInProgress.alternate;
     const returnFiber = workInProgress.return;
-    let workWasSpeculative;
-    if (enableSpeculativeWork) {
-      // this whole thing needs to be reworked. I think using mode on the fiber
-      // makes the most sense. we should clean up the speculative mode of children
-      // while completing work. this works b/c roots will never be speculative
-      // this will leave our tree with no speculative mode fibers but will allow
-      // for more natural logic than what you see below
-      endSpeculationWorkIfRootFiber(workInProgress);
-      workWasSpeculative = inSpeculativeWorkMode();
-    }
 
     // Check if the work completed or if something threw.
     if ((workInProgress.effectTag & Incomplete) === NoEffect) {
@@ -1572,9 +1549,7 @@ function completeUnitOfWork(unitOfWork: Fiber): Fiber | null {
       if (
         returnFiber !== null &&
         // Do not append effects to parents if a sibling failed to complete
-        (returnFiber.effectTag & Incomplete) === NoEffect &&
-        // Do not append effects to parent if workInProgress was speculative
-        workWasSpeculative !== true
+        (returnFiber.effectTag & Incomplete) === NoEffect
       ) {
         // Append all the effects of the subtree and this fiber onto the effect
         // list of the parent. The completion order of the children affects the

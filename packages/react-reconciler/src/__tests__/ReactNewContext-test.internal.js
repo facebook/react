@@ -54,7 +54,7 @@ describe('ReactNewContext', () => {
       function Consumer(props) {
         const observedBits = props.unstable_observedBits;
         let contextValue;
-        if (ReactFeatureFlags.enableSpeculativeWork) {
+        if (ReactFeatureFlags.enableContextSelectors) {
           contextValue = useContext(Context, observedBits);
         } else {
           expect(() => {
@@ -74,7 +74,7 @@ describe('ReactNewContext', () => {
     React.forwardRef(function Consumer(props, ref) {
       const observedBits = props.unstable_observedBits;
       let contextValue;
-      if (ReactFeatureFlags.enableSpeculativeWork) {
+      if (ReactFeatureFlags.enableContextSelectors) {
         contextValue = useContext(Context, observedBits);
       } else {
         expect(() => {
@@ -94,7 +94,7 @@ describe('ReactNewContext', () => {
     React.memo(function Consumer(props) {
       const observedBits = props.unstable_observedBits;
       let contextValue;
-      if (ReactFeatureFlags.enableSpeculativeWork) {
+      if (ReactFeatureFlags.enableContextSelectors) {
         contextValue = useContext(Context, observedBits);
       } else {
         expect(() => {
@@ -1338,11 +1338,7 @@ describe('ReactNewContext', () => {
   });
 
   describe('readContext', () => {
-    // @TODO this API is not currently supported when enableSpeculativeWork is true
-    // this is because with speculative work the fiber itself must hold necessary
-    // state to determine all the sources that could disallow a bailout
-    // readContext is not a hook per se and does not leave a path for using the
-    // same kind of hook bailout logic required by actual hooks
+    // @TODO revisit this test with enableReifyNextWork and enableContextSelectors
     it('can read the same context multiple times in the same function', () => {
       const Context = React.createContext({foo: 0, bar: 0, baz: 0}, (a, b) => {
         let result = 0;

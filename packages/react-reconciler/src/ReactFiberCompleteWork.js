@@ -122,7 +122,6 @@ import {
   enableFundamentalAPI,
   enableScopeAPI,
   enableChunksAPI,
-  enableSpeculativeWork,
   enableContextReaderPropagation,
 } from 'shared/ReactFeatureFlags';
 import {
@@ -642,16 +641,6 @@ function completeWork(
   workInProgress: Fiber,
   renderExpirationTime: ExpirationTime,
 ): Fiber | null {
-  if (enableSpeculativeWork && inSpeculativeWorkMode()) {
-    // the workInProgress is the current fiber.
-    current = workInProgress;
-    // if we completed and we're still in speculative mode that means there
-    // was either no update on this fiber or we had updates but they bailed
-    // out and therefore we can safely reset work
-    // @TODO this should be moved elsewhere and account for render phase work
-    // as well as lower priority work
-    workInProgress.expirationTime = NoWork;
-  }
   const newProps = workInProgress.pendingProps;
 
   switch (workInProgress.tag) {

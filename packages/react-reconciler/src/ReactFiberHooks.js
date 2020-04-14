@@ -47,7 +47,6 @@ import {
   markUnprocessedUpdateTime,
 } from './ReactFiberWorkLoop';
 import {
-  enableSpeculativeWork,
   enableContextSelectors,
   enableReifyNextWork,
 } from 'shared/ReactFeatureFlags';
@@ -55,10 +54,7 @@ import {
 import invariant from 'shared/invariant';
 import getComponentName from 'shared/getComponentName';
 import is from 'shared/objectIs';
-import {
-  markWorkInProgressReceivedUpdate,
-  markWorkInProgressPushedEffect,
-} from './ReactFiberBeginWork';
+import {markWorkInProgressReceivedUpdate} from './ReactFiberBeginWork';
 import {requestCurrentSuspenseConfig} from './ReactFiberSuspenseConfig';
 import {
   UserBlockingPriority,
@@ -1145,9 +1141,6 @@ function rerenderState<S>(
 }
 
 function pushEffect(tag, create, destroy, deps) {
-  if (enableSpeculativeWork && tag & HookHasEffect) {
-    markWorkInProgressPushedEffect();
-  }
   const effect: Effect = {
     tag,
     create,
@@ -1593,7 +1586,6 @@ function dispatchAction<S, A>(
     currentlyRenderingFiber.expirationTime = renderExpirationTime;
   } else {
     if (
-      !enableSpeculativeWork &&
       !enableReifyNextWork &&
       fiber.expirationTime === NoWork &&
       (alternate === null || alternate.expirationTime === NoWork)

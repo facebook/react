@@ -173,9 +173,6 @@ export type Fiber = {|
   sibling: Fiber | null,
   index: number,
 
-  // identifier of last rendered children
-  residue: any,
-
   // The ref last used to attach this node.
   // I'll avoid adding an owner field for prod and model that as functions.
   ref:
@@ -284,8 +281,6 @@ function FiberNode(
   this.sibling = null;
   this.index = 0;
 
-  this.residue = null;
-
   this.ref = null;
 
   this.pendingProps = pendingProps;
@@ -375,8 +370,6 @@ const createFiber = function(
   // $FlowFixMe: the shapes are exact here but Flow doesn't like constructors
   return new FiberNode(tag, pendingProps, key, mode);
 };
-
-export const voidFiber = createFiber(0, null, null, 0);
 
 function shouldConstruct(Component: Function) {
   const prototype = Component.prototype;
@@ -475,8 +468,6 @@ export function createWorkInProgress(
   workInProgress.memoizedProps = current.memoizedProps;
   workInProgress.memoizedState = current.memoizedState;
   workInProgress.updateQueue = current.updateQueue;
-
-  workInProgress.residue = current.residue;
 
   // Clone the dependencies object. This is mutated during the render phase, so
   // it cannot be shared with the current fiber.

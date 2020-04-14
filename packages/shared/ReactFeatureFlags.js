@@ -132,9 +132,6 @@ export const warnUnstableRenderSubtreeIntoContainer = false;
 export const disableUnstableCreatePortal = false;
 
 // Turns on speculative work mode features and context selector api support
-export const enableSpeculativeWork = false;
-
-// Turns on speculative work mode features and context selector api support
 export const enableContextSelectors = true;
 
 // Turns on context reader propagation

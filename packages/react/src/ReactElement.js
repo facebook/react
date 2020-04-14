@@ -6,7 +6,6 @@
  */
 
 import getComponentName from 'shared/getComponentName';
-import {enableSpeculativeWork} from 'shared/ReactFeatureFlags';
 import invariant from 'shared/invariant';
 import {REACT_ELEMENT_TYPE} from 'shared/ReactSymbols';
 
@@ -158,12 +157,6 @@ const ReactElement = function(type, key, ref, self, source, owner, props) {
     // Record the component responsible for creating this element.
     _owner: owner,
   };
-
-  if (enableSpeculativeWork) {
-    // allows referential equality checking without having to hang onto old
-    // elements
-    element.residue = {};
-  }
 
   if (__DEV__) {
     // The validation flag is currently mutative. We put it on

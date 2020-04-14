@@ -6,7 +6,7 @@ let Scheduler;
 let levels = 5;
 let expansion = 3;
 
-describe('ReactSpeculativeWork', () => {
+xdescribe('ReactSpeculativeWork', () => {
   beforeEach(() => {
     jest.resetModules();
     ReactFeatureFlags = require('shared/ReactFeatureFlags');

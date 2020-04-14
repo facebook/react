@@ -12,7 +12,6 @@ import type {StackCursor} from './ReactFiberStack';
 import type {Container, HostContext} from './ReactFiberHostConfig';
 
 import invariant from 'shared/invariant';
-import {enableSpeculativeWork} from 'shared/ReactFeatureFlags';
 
 import {getChildHostContext, getRootHostContext} from './ReactFiberHostConfig';
 import {createCursor, push, pop} from './ReactFiberStack';
@@ -96,12 +95,7 @@ function pushHostContext(fiber: Fiber): void {
 function popHostContext(fiber: Fiber): void {
   // Do not pop unless this Fiber provided the current context.
   // pushHostContext() only pushes Fibers that provide unique contexts.
-  if (
-    contextFiberStackCursor.current !== fiber &&
-    (!enableSpeculativeWork ||
-      (contextFiberStackCursor.current.alternate !== null &&
-        contextFiberStackCursor.current.alternate !== fiber))
-  ) {
+  if (contextFiberStackCursor.current !== fiber) {
     return;
   }
 
