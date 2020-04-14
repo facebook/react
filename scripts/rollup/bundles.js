@@ -689,7 +689,7 @@ const bundles = [
       FB_WWW_PROD,
     ],
     moduleType: NON_FIBER_RENDERER,
-    entry: 'react-interactions/events/focus',
+    entry: 'react-interactions/events/deprecated-focus',
     global: 'ReactEventsFocus',
     externals: ['react'],
   },

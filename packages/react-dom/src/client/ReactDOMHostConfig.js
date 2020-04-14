@@ -1216,7 +1216,7 @@ export function unmountEventListener(listener: ReactDOMListener): void {
 
 export function validateEventListenerTarget(
   target: EventTarget | ReactScopeMethods,
-  listener: ?(Event) => void,
+  listener: ?(SyntheticEvent<EventTarget>) => void,
 ): boolean {
   if (enableUseEventAPI) {
     if (

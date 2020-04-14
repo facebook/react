@@ -14,38 +14,37 @@ import {createEventTarget, setPointerEvent} from 'dom-event-testing-library';
 let React;
 let ReactFeatureFlags;
 let ReactDOM;
-let FocusWithinResponder;
 let useFocusWithin;
-let Scheduler;
+let ReactTestRenderer;
+let act;
 
-const initializeModules = hasPointerEvents => {
+function initializeModules(hasPointerEvents) {
   setPointerEvent(hasPointerEvents);
   jest.resetModules();
   ReactFeatureFlags = require('shared/ReactFeatureFlags');
-  ReactFeatureFlags.enableDeprecatedFlareAPI = true;
   ReactFeatureFlags.enableScopeAPI = true;
+  ReactFeatureFlags.enableModernEventSystem = true;
+  ReactFeatureFlags.enableUseEventAPI = true;
   React = require('react');
   ReactDOM = require('react-dom');
-  Scheduler = require('scheduler');
+  ReactTestRenderer = require('react-test-renderer');
+  act = ReactTestRenderer.act;
 
   // TODO: This import throws outside of experimental mode. Figure out better
   // strategy for gated imports.
   if (__EXPERIMENTAL__) {
-    FocusWithinResponder = require('react-interactions/events/deprecated-focus')
-      .FocusWithinResponder;
-    useFocusWithin = require('react-interactions/events/deprecated-focus')
-      .useFocusWithin;
+    useFocusWithin = require('react-interactions/events/focus').useFocusWithin;
   }
-};
+}
 
 const forcePointerEvents = true;
 const table = [[forcePointerEvents], [!forcePointerEvents]];
 
-describe.each(table)('FocusWithin responder', hasPointerEvents => {
+describe.each(table)(`useFocus`, hasPointerEvents => {
   let container;
 
   beforeEach(() => {
-    initializeModules();
+    initializeModules(hasPointerEvents);
     container = document.createElement('div');
     document.body.appendChild(container);
   });
@@ -64,12 +63,12 @@ describe.each(table)('FocusWithin responder', hasPointerEvents => {
       onFocusWithinVisibleChange = jest.fn();
       ref = React.createRef();
       const Component = () => {
-        const listener = useFocusWithin({
+        useFocusWithin(ref, {
           disabled: true,
           onFocusWithinChange,
           onFocusWithinVisibleChange,
         });
-        return <div ref={ref} DEPRECATED_flareListeners={listener} />;
+        return <div ref={ref} />;
       };
       ReactDOM.render(<Component />, container);
     };
@@ -89,11 +88,11 @@ describe.each(table)('FocusWithin responder', hasPointerEvents => {
     let onFocusWithinChange, ref, innerRef, innerRef2;
 
     const Component = ({show}) => {
-      const listener = useFocusWithin({
+      useFocusWithin(ref, {
         onFocusWithinChange,
       });
       return (
-        <div ref={ref} DEPRECATED_flareListeners={listener}>
+        <div ref={ref}>
           {show && <input ref={innerRef} />}
           <div ref={innerRef2} />
         </div>
@@ -164,11 +163,11 @@ describe.each(table)('FocusWithin responder', hasPointerEvents => {
     let onFocusWithinVisibleChange, ref, innerRef, innerRef2;
 
     const Component = ({show}) => {
-      const listener = useFocusWithin({
+      useFocusWithin(ref, {
         onFocusWithinVisibleChange,
       });
       return (
-        <div ref={ref} DEPRECATED_flareListeners={listener}>
+        <div ref={ref}>
           {show && <input ref={innerRef} />}
           <div ref={innerRef2} />
         </div>
@@ -290,11 +289,13 @@ describe.each(table)('FocusWithin responder', hasPointerEvents => {
   });
 
   describe('onBeforeBlurWithin', () => {
-    let onBeforeBlurWithin, onBlurWithin, ref, innerRef, innerRef2;
+    let onBeforeBlurWithin, onAfterBlurWithin, ref, innerRef, innerRef2;
 
     beforeEach(() => {
       onBeforeBlurWithin = jest.fn();
-      onBlurWithin = jest.fn();
+      onAfterBlurWithin = jest.fn(e => {
+        e.persist();
+      });
       ref = React.createRef();
       innerRef = React.createRef();
       innerRef2 = React.createRef();
@@ -303,12 +304,12 @@ describe.each(table)('FocusWithin responder', hasPointerEvents => {
     // @gate experimental
     it('is called after a focused element is unmounted', () => {
       const Component = ({show}) => {
-        const listener = useFocusWithin({
+        useFocusWithin(ref, {
           onBeforeBlurWithin,
-          onBlurWithin,
+          onAfterBlurWithin,
         });
         return (
-          <div ref={ref} DEPRECATED_flareListeners={listener}>
+          <div ref={ref}>
             {show && <input ref={innerRef} />}
             <div ref={innerRef2} />
           </div>
@@ -322,24 +323,24 @@ describe.each(table)('FocusWithin responder', hasPointerEvents => {
       target.keydown({key: 'Tab'});
       target.focus();
       expect(onBeforeBlurWithin).toHaveBeenCalledTimes(0);
-      expect(onBlurWithin).toHaveBeenCalledTimes(0);
+      expect(onAfterBlurWithin).toHaveBeenCalledTimes(0);
       ReactDOM.render(<Component show={false} />, container);
       expect(onBeforeBlurWithin).toHaveBeenCalledTimes(1);
-      expect(onBlurWithin).toHaveBeenCalledTimes(1);
-      expect(onBlurWithin).toHaveBeenCalledWith(
-        expect.objectContaining({isTargetAttached: false}),
+      expect(onAfterBlurWithin).toHaveBeenCalledTimes(1);
+      expect(onAfterBlurWithin).toHaveBeenCalledWith(
+        expect.objectContaining({relatedTarget: inner}),
       );
     });
 
     // @gate experimental
     it('is called after a nested focused element is unmounted', () => {
       const Component = ({show}) => {
-        const listener = useFocusWithin({
+        useFocusWithin(ref, {
           onBeforeBlurWithin,
-          onBlurWithin,
+          onAfterBlurWithin,
         });
         return (
-          <div ref={ref} DEPRECATED_flareListeners={listener}>
+          <div ref={ref}>
             {show && (
               <div>
                 <input ref={innerRef} />
@@ -357,12 +358,12 @@ describe.each(table)('FocusWithin responder', hasPointerEvents => {
       target.keydown({key: 'Tab'});
       target.focus();
       expect(onBeforeBlurWithin).toHaveBeenCalledTimes(0);
-      expect(onBlurWithin).toHaveBeenCalledTimes(0);
+      expect(onAfterBlurWithin).toHaveBeenCalledTimes(0);
       ReactDOM.render(<Component show={false} />, container);
       expect(onBeforeBlurWithin).toHaveBeenCalledTimes(1);
-      expect(onBlurWithin).toHaveBeenCalledTimes(1);
-      expect(onBlurWithin).toHaveBeenCalledWith(
-        expect.objectContaining({isTargetAttached: false}),
+      expect(onAfterBlurWithin).toHaveBeenCalledTimes(1);
+      expect(onAfterBlurWithin).toHaveBeenCalledWith(
+        expect.objectContaining({relatedTarget: inner}),
       );
     });
 
@@ -375,7 +376,7 @@ describe.each(table)('FocusWithin responder', hasPointerEvents => {
 
       const Component = ({show}) => {
         const scopeRef = React.useRef(null);
-        const listener = useFocusWithin({
+        useFocusWithin(scopeRef, {
           onBeforeBlurWithin(event) {
             const scope = scopeRef.current;
             targetNode = innerRef.current;
@@ -384,7 +385,7 @@ describe.each(table)('FocusWithin responder', hasPointerEvents => {
         });
 
         return (
-          <TestScope ref={scopeRef} DEPRECATED_flareListeners={[listener]}>
+          <TestScope ref={scopeRef}>
             {show && <input ref={innerRef} />}
           </TestScope>
         );
@@ -416,13 +417,13 @@ describe.each(table)('FocusWithin responder', hasPointerEvents => {
       }
 
       const Component = ({show}) => {
-        const listener = useFocusWithin({
+        useFocusWithin(ref, {
           onBeforeBlurWithin,
-          onBlurWithin,
+          onAfterBlurWithin,
         });
 
         return (
-          <div DEPRECATED_flareListeners={listener}>
+          <div ref={ref}>
             <Suspense fallback="Loading...">
               <Child />
             </Suspense>
@@ -434,8 +435,10 @@ describe.each(table)('FocusWithin responder', hasPointerEvents => {
       document.body.appendChild(container2);
 
       const root = ReactDOM.createRoot(container2);
-      root.render(<Component />);
-      Scheduler.unstable_flushAll();
+
+      act(() => {
+        root.render(<Component />);
+      });
       jest.runAllTimers();
       expect(container2.innerHTML).toBe('<div><input></div>');
 
@@ -444,25 +447,21 @@ describe.each(table)('FocusWithin responder', hasPointerEvents => {
       target.keydown({key: 'Tab'});
       target.focus();
       expect(onBeforeBlurWithin).toHaveBeenCalledTimes(0);
-      expect(onBlurWithin).toHaveBeenCalledTimes(0);
+      expect(onAfterBlurWithin).toHaveBeenCalledTimes(0);
 
       suspend = true;
-      root.render(<Component />);
-      Scheduler.unstable_flushAll();
+      act(() => {
+        root.render(<Component />);
+      });
       jest.runAllTimers();
       expect(container2.innerHTML).toBe(
         '<div><input style="display: none;">Loading...</div>',
       );
       expect(onBeforeBlurWithin).toHaveBeenCalledTimes(1);
-      expect(onBlurWithin).toHaveBeenCalledTimes(1);
+      expect(onAfterBlurWithin).toHaveBeenCalledTimes(1);
       resolve();
 
       document.body.removeChild(container2);
     });
-  });
-
-  // @gate experimental
-  it('expect displayName to show up for event component', () => {
-    expect(FocusWithinResponder.displayName).toBe('FocusWithin');
   });
 });
