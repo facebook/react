@@ -32,6 +32,7 @@ describe('ReactSpeculativeWork', () => {
         if (a === 'z') return s;
         return s + a;
       }, '');
+      Scheduler.unstable_yieldValue(value);
       _dispatch = dispatch;
       return value;
     };
@@ -39,23 +40,51 @@ describe('ReactSpeculativeWork', () => {
     console.log('------------------------------------ initial');
     const root = ReactNoop.createRoot();
     ReactNoop.act(() => root.render(<App />));
+    expect(Scheduler).toHaveYielded(['']);
     expect(root).toMatchRenderedOutput('');
 
     console.log('------------------------------------ dispatch a');
     ReactNoop.act(() => _dispatch('a'));
+    expect(Scheduler).toHaveYielded(['a']);
     expect(root).toMatchRenderedOutput('a');
 
     console.log('------------------------------------ dispatch b');
     ReactNoop.act(() => _dispatch('b'));
+    expect(Scheduler).toHaveYielded(['ab']);
     expect(root).toMatchRenderedOutput('ab');
 
     console.log('------------------------------------ dispatch z');
     ReactNoop.act(() => _dispatch('z'));
+    expect(Scheduler).toHaveYielded([]);
     expect(root).toMatchRenderedOutput('ab');
 
     console.log('------------------------------------ dispatch c');
     ReactNoop.act(() => _dispatch('c'));
+    expect(Scheduler).toHaveYielded(['abc']);
     expect(root).toMatchRenderedOutput('abc');
+
+    console.log('------------------------------------ dispatch zd');
+    ReactNoop.act(() => {
+      _dispatch('z');
+      _dispatch('d');
+    });
+    expect(Scheduler).toHaveYielded(['abcd']);
+    expect(root).toMatchRenderedOutput('abcd');
+
+    console.log('------------------------------------ dispatch zd');
+    ReactNoop.act(() => {
+      _dispatch('e');
+      _dispatch('z');
+      _dispatch('z');
+      _dispatch('z');
+      _dispatch('z');
+      _dispatch('f');
+      _dispatch('z');
+      _dispatch('z');
+      _dispatch('z');
+    });
+    expect(Scheduler).toHaveYielded(['abcdef']);
+    expect(root).toMatchRenderedOutput('abcdef');
   });
 
   it('exercises reifyNextWork', () => {
