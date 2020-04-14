@@ -304,10 +304,7 @@ export function getPublicInstance(instance: Instance): * {
   return instance.canonical;
 }
 
-export function prepareForCommit(
-  containerInfo: Container,
-  isInstanceInsideHiddenOrRemovedTree: Function,
-): void {
+export function prepareForCommit(containerInfo: Container): void {
   // Noop
 }
 

@@ -94,6 +94,10 @@ import {
 import {getListenerMapForElement} from '../events/DOMEventListenerMap';
 import {TOP_BEFORE_BLUR, TOP_AFTER_BLUR} from '../events/DOMTopLevelEventTypes';
 
+// TODO: This is an exposed internal, we should move this around
+// so this isn't the case.
+import {isFiberInsideHiddenOrRemovedTree} from 'react-reconciler/src/ReactFiberTreeReflection';
+
 export type ReactListenerEvent = ReactDOMListenerEvent;
 export type ReactListenerMap = ReactDOMListenerMap;
 export type ReactListener = ReactDOMListener;
@@ -246,17 +250,14 @@ export function getPublicInstance(instance: Instance): * {
   return instance;
 }
 
-export function prepareForCommit(
-  containerInfo: Container,
-  isInstanceInsideHiddenOrRemovedTree: (instance: Object) => boolean,
-): void {
+export function prepareForCommit(containerInfo: Container): void {
   eventsEnabled = ReactBrowserEventEmitterIsEnabled();
   selectionInformation = getSelectionInformation();
   if (enableDeprecatedFlareAPI || enableUseEventAPI) {
     const focusedElem = selectionInformation.focusedElem;
     if (focusedElem !== null) {
       const instance = getClosestInstanceFromNode(focusedElem);
-      if (instance !== null && isInstanceInsideHiddenOrRemovedTree(instance)) {
+      if (instance !== null && isFiberInsideHiddenOrRemovedTree(instance)) {
         dispatchBeforeDetachedBlur(focusedElem);
       }
     }

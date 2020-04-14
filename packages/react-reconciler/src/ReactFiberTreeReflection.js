@@ -342,6 +342,8 @@ export function isFiberSuspenseAndTimedOut(fiber: Fiber): boolean {
   );
 }
 
+// This is only safe to call in the commit phase when the return tree is consistent.
+// It should not be used anywhere else. See PR #18609 for details.
 export function isFiberInsideHiddenOrRemovedTree(fiber: Fiber): boolean {
   let node = fiber;
   while (node !== null) {

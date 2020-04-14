@@ -152,7 +152,6 @@ import {
   getIsUpdatingOpaqueValueInRenderPhaseInDEV,
 } from './ReactFiberHooks.old';
 import {createCapturedValue} from './ReactCapturedValue';
-import {isFiberInsideHiddenOrRemovedTree} from './ReactFiberTreeReflection';
 
 import {
   recordCommitTime,
@@ -1846,7 +1845,7 @@ function commitRootImpl(root, renderPriorityLevel) {
     // The first phase a "before mutation" phase. We use this phase to read the
     // state of the host tree right before we mutate it. This is where
     // getSnapshotBeforeUpdate is called.
-    prepareForCommit(root.containerInfo, isFiberInsideHiddenOrRemovedTree);
+    prepareForCommit(root.containerInfo);
     nextEffect = firstEffect;
     do {
       if (__DEV__) {

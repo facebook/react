@@ -223,10 +223,7 @@ export function getPublicInstance(instance: Instance): * {
   return instance;
 }
 
-export function prepareForCommit(
-  containerInfo: Container,
-  isInstanceInsideHiddenOrRemovedTree: Function,
-): void {
+export function prepareForCommit(containerInfo: Container): void {
   // Noop
 }
 
