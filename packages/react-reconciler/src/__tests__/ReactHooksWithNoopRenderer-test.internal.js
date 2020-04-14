@@ -44,7 +44,6 @@ describe('ReactHooksWithNoopRenderer', () => {
     ReactFeatureFlags = require('shared/ReactFeatureFlags');
 
     ReactFeatureFlags.enableSchedulerTracing = true;
-    ReactFeatureFlags.flushSuspenseFallbacksInTests = false;
     ReactFeatureFlags.enableProfilerTimer = true;
     deferPassiveEffectCleanupDuringUnmount =
       ReactFeatureFlags.deferPassiveEffectCleanupDuringUnmount;
@@ -659,7 +658,7 @@ describe('ReactHooksWithNoopRenderer', () => {
       expect(ReactNoop.getChildren()).toEqual([span(22)]);
     });
 
-    it('discards render phase updates if something suspends', () => {
+    it('discards render phase updates if something suspends', async () => {
       const thenable = {then() {}};
       function Foo({signal}) {
         return (
@@ -747,19 +746,20 @@ describe('ReactHooksWithNoopRenderer', () => {
       await ReactNoop.act(async () => {
         root.render(<Foo signal={false} />);
         setLabel('B');
+
+        expect(Scheduler).toFlushAndYield(['Suspend!']);
+        expect(root).toMatchRenderedOutput(<span prop="A:0" />);
+
+        // Rendering again should suspend again.
+        root.render(<Foo signal={false} />);
+        expect(Scheduler).toFlushAndYield(['Suspend!']);
+
+        // Flip the signal back to "cancel" the update. However, the update to
+        // label should still proceed. It shouldn't have been dropped.
+        root.render(<Foo signal={true} />);
+        expect(Scheduler).toFlushAndYield(['B:0']);
+        expect(root).toMatchRenderedOutput(<span prop="B:0" />);
       });
-      expect(Scheduler).toHaveYielded(['Suspend!']);
-      expect(root).toMatchRenderedOutput(<span prop="A:0" />);
-
-      // Rendering again should suspend again.
-      root.render(<Foo signal={false} />);
-      expect(Scheduler).toFlushAndYield(['Suspend!']);
-
-      // Flip the signal back to "cancel" the update. However, the update to
-      // label should still proceed. It shouldn't have been dropped.
-      root.render(<Foo signal={true} />);
-      expect(Scheduler).toFlushAndYield(['B:0']);
-      expect(root).toMatchRenderedOutput(<span prop="B:0" />);
     });
 
     it('regression: render phase updates cause lower pri work to be dropped', async () => {
@@ -2755,39 +2755,40 @@ describe('ReactHooksWithNoopRenderer', () => {
         span('Before... Pending: false'),
       ]);
 
-      act(() => {
+      await act(async () => {
         Scheduler.unstable_runWithPriority(
           Scheduler.unstable_UserBlockingPriority,
           transition,
         );
+
+        expect(Scheduler).toFlushAndYield([
+          'Before... Pending: true',
+          'Suspend! [After... Pending: false]',
+          'Loading... Pending: false',
+        ]);
+        expect(ReactNoop.getChildren()).toEqual([
+          span('Before... Pending: true'),
+        ]);
+        Scheduler.unstable_advanceTime(500);
+        await advanceTimers(500);
+
+        Scheduler.unstable_advanceTime(1000);
+        await advanceTimers(1000);
+        expect(ReactNoop.getChildren()).toEqual([
+          hiddenSpan('Before... Pending: true'),
+          span('Loading... Pending: false'),
+        ]);
+
+        Scheduler.unstable_advanceTime(500);
+        await advanceTimers(500);
+        expect(Scheduler).toHaveYielded([
+          'Promise resolved [After... Pending: false]',
+        ]);
+        expect(Scheduler).toFlushAndYield(['After... Pending: false']);
+        expect(ReactNoop.getChildren()).toEqual([
+          span('After... Pending: false'),
+        ]);
       });
-      Scheduler.unstable_advanceTime(500);
-      await advanceTimers(500);
-      expect(Scheduler).toHaveYielded([
-        'Before... Pending: true',
-        'Suspend! [After... Pending: false]',
-        'Loading... Pending: false',
-      ]);
-      expect(ReactNoop.getChildren()).toEqual([
-        span('Before... Pending: true'),
-      ]);
-
-      Scheduler.unstable_advanceTime(1000);
-      await advanceTimers(1000);
-      expect(ReactNoop.getChildren()).toEqual([
-        hiddenSpan('Before... Pending: true'),
-        span('Loading... Pending: false'),
-      ]);
-
-      Scheduler.unstable_advanceTime(500);
-      await advanceTimers(500);
-      expect(Scheduler).toHaveYielded([
-        'Promise resolved [After... Pending: false]',
-      ]);
-      expect(Scheduler).toFlushAndYield(['After... Pending: false']);
-      expect(ReactNoop.getChildren()).toEqual([
-        span('After... Pending: false'),
-      ]);
     });
     // @gate experimental
     it('delays showing loading state until after busyDelayMs + busyMinDurationMs', async () => {
@@ -2820,51 +2821,54 @@ describe('ReactHooksWithNoopRenderer', () => {
         span('Before... Pending: false'),
       ]);
 
-      act(() => {
+      await act(async () => {
         Scheduler.unstable_runWithPriority(
           Scheduler.unstable_UserBlockingPriority,
           transition,
         );
+
+        expect(Scheduler).toFlushAndYield([
+          'Before... Pending: true',
+          'Suspend! [After... Pending: false]',
+          'Loading... Pending: false',
+        ]);
+        expect(ReactNoop.getChildren()).toEqual([
+          span('Before... Pending: true'),
+        ]);
+
+        Scheduler.unstable_advanceTime(1000);
+        await advanceTimers(1000);
+
+        // Resolve the promise. The whole tree has now completed. However,
+        // because we exceeded the busy threshold, we won't commit the
+        // result yet.
+        Scheduler.unstable_advanceTime(1000);
+        await advanceTimers(1000);
+        expect(Scheduler).toHaveYielded([
+          'Promise resolved [After... Pending: false]',
+        ]);
+        expect(Scheduler).toFlushAndYield(['After... Pending: false']);
+        expect(ReactNoop.getChildren()).toEqual([
+          span('Before... Pending: true'),
+        ]);
+
+        // Advance time until just before the `busyMinDuration` threshold.
+        Scheduler.unstable_advanceTime(999);
+        await advanceTimers(999);
+        expect(ReactNoop.getChildren()).toEqual([
+          span('Before... Pending: true'),
+        ]);
+
+        // Advance time just a bit more. Now we complete the transition.
+        Scheduler.unstable_advanceTime(300);
+        await advanceTimers(300);
+        expect(ReactNoop.getChildren()).toEqual([
+          span('After... Pending: false'),
+        ]);
       });
-      Scheduler.unstable_advanceTime(1000);
-      await advanceTimers(1000);
-      expect(Scheduler).toHaveYielded([
-        'Before... Pending: true',
-        'Suspend! [After... Pending: false]',
-        'Loading... Pending: false',
-      ]);
-      expect(ReactNoop.getChildren()).toEqual([
-        span('Before... Pending: true'),
-      ]);
-
-      // Resolve the promise. The whole tree has now completed. However,
-      // because we exceeded the busy threshold, we won't commit the
-      // result yet.
-      Scheduler.unstable_advanceTime(1000);
-      await advanceTimers(1000);
-      expect(Scheduler).toHaveYielded([
-        'Promise resolved [After... Pending: false]',
-      ]);
-      expect(Scheduler).toFlushAndYield(['After... Pending: false']);
-      expect(ReactNoop.getChildren()).toEqual([
-        span('Before... Pending: true'),
-      ]);
-
-      // Advance time until just before the `busyMinDuration` threshold.
-      Scheduler.unstable_advanceTime(999);
-      await advanceTimers(999);
-      expect(ReactNoop.getChildren()).toEqual([
-        span('Before... Pending: true'),
-      ]);
-
-      // Advance time just a bit more. Now we complete the transition.
-      Scheduler.unstable_advanceTime(300);
-      await advanceTimers(300);
-      expect(ReactNoop.getChildren()).toEqual([
-        span('After... Pending: false'),
-      ]);
     });
   });
+
   describe('useDeferredValue', () => {
     // @gate experimental
     it('defers text value until specified timeout', async () => {
@@ -2902,39 +2906,42 @@ describe('ReactHooksWithNoopRenderer', () => {
       expect(Scheduler).toFlushAndYield(['A']);
       expect(ReactNoop.getChildren()).toEqual([span('A'), span('A')]);
 
-      act(() => {
+      await act(async () => {
         _setText('B');
+        expect(Scheduler).toFlushAndYield([
+          'B',
+          'A',
+          'B',
+          'Suspend! [B]',
+          'Loading',
+        ]);
+        expect(Scheduler).toFlushAndYield([]);
+        expect(ReactNoop.getChildren()).toEqual([span('B'), span('A')]);
       });
-      expect(Scheduler).toHaveYielded([
-        'B',
-        'A',
-        'B',
-        'Suspend! [B]',
-        'Loading',
-      ]);
-      expect(Scheduler).toFlushAndYield([]);
+
+      await act(async () => {
+        Scheduler.unstable_advanceTime(250);
+        await advanceTimers(250);
+      });
+      expect(Scheduler).toHaveYielded([]);
       expect(ReactNoop.getChildren()).toEqual([span('B'), span('A')]);
 
-      Scheduler.unstable_advanceTime(250);
-      await advanceTimers(250);
-      expect(Scheduler).toFlushAndYield([]);
-      expect(ReactNoop.getChildren()).toEqual([span('B'), span('A')]);
-
-      Scheduler.unstable_advanceTime(500);
-      await advanceTimers(500);
+      await act(async () => {
+        Scheduler.unstable_advanceTime(500);
+        await advanceTimers(500);
+      });
+      expect(Scheduler).toHaveYielded([]);
       expect(ReactNoop.getChildren()).toEqual([
         span('B'),
         hiddenSpan('A'),
         span('Loading'),
       ]);
 
-      Scheduler.unstable_advanceTime(250);
-      await advanceTimers(250);
-      expect(Scheduler).toHaveYielded(['Promise resolved [B]']);
-
-      act(() => {
-        expect(Scheduler).toFlushAndYield(['B']);
+      await act(async () => {
+        Scheduler.unstable_advanceTime(250);
+        await advanceTimers(250);
       });
+      expect(Scheduler).toHaveYielded(['Promise resolved [B]', 'B']);
       expect(ReactNoop.getChildren()).toEqual([span('B'), span('B')]);
     });
   });

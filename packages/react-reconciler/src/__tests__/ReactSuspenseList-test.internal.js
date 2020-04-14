@@ -2469,35 +2469,21 @@ describe('ReactSuspenseList', () => {
 
     jest.runAllTimers();
 
-    expect(Scheduler).toHaveYielded(
-      __DEV__
-        ? [
-            // First attempt at high pri.
-            'Suspend! [A]',
-            'Loading A',
-            // Re-render at forced.
-            'Suspend! [A]',
-            'Loading A',
-            // We auto-commit this on DEV.
-            // Try again on low-pri.
-            'Suspend! [A]',
-            'Loading A',
-          ]
-        : [
-            // First attempt at high pri.
-            'Suspend! [A]',
-            'Loading A',
-            // Re-render at forced.
-            'Suspend! [A]',
-            'Loading A',
-            // We didn't commit so retry at low-pri.
-            'Suspend! [A]',
-            'Loading A',
-            // Re-render at forced.
-            'Suspend! [A]',
-            'Loading A',
-          ],
-    );
+    expect(Scheduler).toHaveYielded([
+      // First attempt at high pri.
+      'Suspend! [A]',
+      'Loading A',
+      // Re-render at forced.
+      'Suspend! [A]',
+      'Loading A',
+      // We auto-commit this on DEV.
+      // Try again on low-pri.
+      'Suspend! [A]',
+      'Loading A',
+      // Re-render at forced.
+      'Suspend! [A]',
+      'Loading A',
+    ]);
 
     expect(ReactNoop).toMatchRenderedOutput(<span>Loading A</span>);
 

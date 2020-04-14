@@ -26,7 +26,6 @@ import {
   enableProfilerCommitHooks,
   enableSchedulerTracing,
   warnAboutUnmockedScheduler,
-  flushSuspenseFallbacksInTests,
   disableSchedulerTimeoutBasedOnReactExpirationTime,
 } from 'shared/ReactFeatureFlags';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
@@ -735,11 +734,7 @@ function finishConcurrentRender(
       if (
         hasNotProcessedNewUpdates &&
         // do not delay if we're inside an act() scope
-        !(
-          __DEV__ &&
-          flushSuspenseFallbacksInTests &&
-          IsThisRendererActing.current
-        )
+        !shouldForceFlushFallbacksInDEV()
       ) {
         // If we have not processed any new updates during this pass, then
         // this is either a retry of an existing fallback state or a
@@ -798,11 +793,7 @@ function finishConcurrentRender(
 
       if (
         // do not delay if we're inside an act() scope
-        !(
-          __DEV__ &&
-          flushSuspenseFallbacksInTests &&
-          IsThisRendererActing.current
-        )
+        !shouldForceFlushFallbacksInDEV()
       ) {
         // We're suspended in a state that should be avoided. We'll try to
         // avoid committing it for as long as the timeouts let us.
@@ -889,11 +880,7 @@ function finishConcurrentRender(
       // The work completed. Ready to commit.
       if (
         // do not delay if we're inside an act() scope
-        !(
-          __DEV__ &&
-          flushSuspenseFallbacksInTests &&
-          IsThisRendererActing.current
-        ) &&
+        !shouldForceFlushFallbacksInDEV() &&
         workInProgressRootLatestProcessedExpirationTime !== Sync &&
         workInProgressRootCanSuspendUsingConfig !== null
       ) {
@@ -3228,24 +3215,62 @@ function finishPendingInteractions(root, committedExpirationTime) {
 // TODO: This is mostly a copy-paste from the legacy `act`, which does not have
 // access to the same internals that we do here. Some trade offs in the
 // implementation no longer make sense.
-const isSchedulerMocked =
-  typeof Scheduler.unstable_flushAllWithoutAsserting === 'function';
-const flushSchedulerWork =
-  Scheduler.unstable_flushAllWithoutAsserting ||
-  function() {
-    let didFlushWork = false;
-    while (flushPassiveEffects()) {
-      didFlushWork = true;
-    }
 
-    return didFlushWork;
-  };
+let isFlushingAct = false;
+let isInsideThisAct = false;
+
+// TODO: Yes, this is confusing. See above comment. We'll refactor it.
+function shouldForceFlushFallbacksInDEV() {
+  if (!__DEV__) {
+    // Never force flush in production. This function should get stripped out.
+    return false;
+  }
+  // `IsThisRendererActing.current` is used by ReactTestUtils version of `act`.
+  if (IsThisRendererActing.current) {
+    // `isInsideAct` is only used by the reconciler implementation of `act`.
+    // We don't want to flush suspense fallbacks until the end.
+    return !isInsideThisAct;
+  }
+  // Flush callbacks at the end.
+  return isFlushingAct;
+}
+
+const flushMockScheduler = Scheduler.unstable_flushAllWithoutAsserting;
+const isSchedulerMocked = typeof flushMockScheduler === 'function';
+
+// Returns whether additional work was scheduled. Caller should keep flushing
+// until there's no work left.
+function flushActWork(): boolean {
+  if (flushMockScheduler !== undefined) {
+    const prevIsFlushing = isFlushingAct;
+    isFlushingAct = true;
+    try {
+      return flushMockScheduler();
+    } finally {
+      isFlushingAct = prevIsFlushing;
+    }
+  } else {
+    // No mock scheduler available. However, the only type of pending work is
+    // passive effects, which we control. So we can flush that.
+    const prevIsFlushing = isFlushingAct;
+    isFlushingAct = true;
+    try {
+      let didFlushWork = false;
+      while (flushPassiveEffects()) {
+        didFlushWork = true;
+      }
+      return didFlushWork;
+    } finally {
+      isFlushingAct = prevIsFlushing;
+    }
+  }
+}
 
 function flushWorkAndMicroTasks(onDone: (err: ?Error) => void) {
   try {
-    flushSchedulerWork();
+    flushActWork();
     enqueueTask(() => {
-      if (flushSchedulerWork()) {
+      if (flushActWork()) {
         flushWorkAndMicroTasks(onDone);
       } else {
         onDone();
@@ -3278,13 +3303,16 @@ export function act(callback: () => Thenable<mixed>): Thenable<void> {
 
   const previousIsSomeRendererActing = IsSomeRendererActing.current;
   const previousIsThisRendererActing = IsThisRendererActing.current;
+  const previousIsInsideThisAct = isInsideThisAct;
   IsSomeRendererActing.current = true;
   IsThisRendererActing.current = true;
+  isInsideThisAct = true;
 
   function onDone() {
     actingUpdatesScopeDepth--;
     IsSomeRendererActing.current = previousIsSomeRendererActing;
     IsThisRendererActing.current = previousIsThisRendererActing;
+    isInsideThisAct = previousIsInsideThisAct;
     if (__DEV__) {
       if (actingUpdatesScopeDepth > previousActingUpdatesScopeDepth) {
         // if it's _less than_ previousActingUpdatesScopeDepth, then we can assume the 'other' one has warned
@@ -3384,7 +3412,7 @@ export function act(callback: () => Thenable<mixed>): Thenable<void> {
       ) {
         // we're about to exit the act() scope,
         // now's the time to flush effects
-        flushSchedulerWork();
+        flushActWork();
       }
       onDone();
     } catch (err) {

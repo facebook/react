@@ -14,7 +14,6 @@
 const ReactDOMServerIntegrationUtils = require('./utils/ReactDOMServerIntegrationTestUtils');
 
 let React;
-let ReactFeatureFlags;
 let ReactDOM;
 let ReactDOMServer;
 let ReactTestUtils;
@@ -39,9 +38,6 @@ function initModules() {
   // Reset warning cache.
   jest.resetModuleRegistry();
 
-  ReactFeatureFlags = require('shared/ReactFeatureFlags');
-
-  ReactFeatureFlags.flushSuspenseFallbacksInTests = false;
   React = require('react');
   ReactDOM = require('react-dom');
   ReactDOMServer = require('react-dom/server');
@@ -1281,13 +1277,26 @@ describe('ReactDOMServerHooks', () => {
 
           // State update should trigger the ID to update, which changes the props
           // of ChildWithID. This should cause ChildWithID to hydrate before Children
-          expect(Scheduler).toFlushAndYieldThrough([
-            'Child with ID',
-            'Child with ID',
-            'Child with ID',
-            'Child One',
-            'Child Two',
-          ]);
+
+          expect(Scheduler).toFlushAndYieldThrough(
+            __DEV__
+              ? [
+                  'Child with ID',
+                  // Fallbacks are immdiately committed in TestUtils version
+                  // of act
+                  // 'Child with ID',
+                  // 'Child with ID',
+                  'Child One',
+                  'Child Two',
+                ]
+              : [
+                  'Child with ID',
+                  'Child with ID',
+                  'Child with ID',
+                  'Child One',
+                  'Child Two',
+                ],
+          );
 
           expect(child1Ref.current).toBe(null);
           expect(childWithIDRef.current).toEqual(
