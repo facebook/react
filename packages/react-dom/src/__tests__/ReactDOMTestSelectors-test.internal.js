@@ -1111,7 +1111,7 @@ No matching component was found for:
         {rect: rect2, ratio: 0},
       ]);
 
-      handleVisibilityChange.mockReset();
+      handleVisibilityChange.mockClear();
 
       rect2 = {
         x: 210,
@@ -1167,6 +1167,8 @@ No matching component was found for:
       expect(callback).toBeNull();
     });
 
+    // This test reuires gating because it relies on the __DEV__ only commit hook to work.
+    // @gate __DEV__
     it('should update which targets its listening to after a commit', () => {
       const ref1 = React.createRef(null);
       const ref2 = React.createRef(null);
@@ -1220,7 +1222,7 @@ No matching component was found for:
       };
       setBoundingClientRect(ref2.current, rect2);
 
-      handleVisibilityChange.mockReset();
+      handleVisibilityChange.mockClear();
 
       simulateIntersection(
         [ref1.current, rect1, 0.5],
@@ -1235,7 +1237,7 @@ No matching component was found for:
 
       act(() => increment());
 
-      handleVisibilityChange.mockReset();
+      handleVisibilityChange.mockClear();
 
       simulateIntersection([ref2.current, rect2, 0.75]);
 

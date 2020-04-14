@@ -8,7 +8,7 @@
  */
 
 import type {TopLevelType} from 'legacy-events/TopLevelEventTypes';
-import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
+import type {Fiber, FiberRoot} from 'react-reconciler/src/ReactInternalTypes';
 import type {
   BoundingRect,
   IntersectionObserverOptions,
@@ -1155,14 +1155,13 @@ export function getInstanceFromScope(
 
 export const supportsTestSelectors = true;
 
-export function findRootFiber(node: Instance): null | Fiber {
+export function findRootFiber(node: Instance): null | FiberRoot {
   const stack = [node];
   let index = 0;
   while (index < stack.length) {
     const current = stack[index++];
     if (isContainerMarkedAsRoot(current)) {
-      const root = ((getInstanceFromNodeDOMTree(current): any): Fiber);
-      return root.stateNode.current;
+      return ((getInstanceFromNodeDOMTree(current): any): FiberRoot);
     }
     stack.push(...current.children);
   }
@@ -1179,17 +1178,10 @@ export function getBoundingRect(node: Instance): BoundingRect {
   };
 }
 
-export function matchAccessibilityRole(
-  fiber: Fiber,
-  targetRole: string,
-): boolean {
+export function matchAccessibilityRole(fiber: Fiber, role: string): boolean {
   if (fiber.tag === HostComponent) {
     const node = fiber.stateNode;
-    const inferredRole = getRole(node);
-    if (targetRole === inferredRole) {
-      return true;
-    }
-    if (node.getAttribute('role') === targetRole) {
+    if (role === getRole(node)) {
       return true;
     }
   }

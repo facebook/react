@@ -25,4 +25,8 @@ function shim(...args: any) {
 export const supportsTestSelectors = false;
 export const findRootFiber = shim;
 export const getBoundingRect = shim;
-export const canBeFocused = shim;
+export const getTextContent = shim;
+export const isHiddenSubtree = shim;
+export const matchAccessibilityRole = shim;
+export const setFocusIfFocusable = shim;
+export const setupIntersectionObserver = shim;

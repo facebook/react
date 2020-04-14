@@ -122,12 +122,14 @@ function findRootFiberForHostRoot(hostRoot: Instance): Fiber {
     );
     return ((maybeFiber: any): Fiber);
   } else {
-    const root = findRootFiber(hostRoot);
+    const fiberRoot = findRootFiber(hostRoot);
     invariant(
-      root !== null,
+      fiberRoot !== null,
       'Could not find React container within specified host subtree.',
     );
-    return root;
+    // The Flow type for FiberRoot is a little funky.
+    // createFiberRoot() cheats this by treating the root as :any and adding stateNode lazily.
+    return ((fiberRoot: any).stateNode.current: Fiber);
   }
 }
 
