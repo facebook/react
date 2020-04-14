@@ -15,8 +15,6 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     jest.resetModules();
 
     ReactFeatureFlags = require('shared/ReactFeatureFlags');
-
-    ReactFeatureFlags.replayFailedUnitOfWorkWithInvokeGuardedCallback = false;
     React = require('react');
     Fragment = React.Fragment;
     ReactNoop = require('react-noop-renderer');
@@ -339,6 +337,9 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     ]);
   });
 
+  // Second condition is redundant but guarantees that the test runs in prod.
+  // TODO: Delete this feature flag.
+  // @gate !replayFailedUnitOfWorkWithInvokeGuardedCallback || !__DEV__
   it('retries on error', async () => {
     class ErrorBoundary extends React.Component {
       state = {error: null};
@@ -395,6 +396,9 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     ]);
   });
 
+  // Second condition is redundant but guarantees that the test runs in prod.
+  // TODO: Delete this feature flag.
+  // @gate !replayFailedUnitOfWorkWithInvokeGuardedCallback || !__DEV__
   it('retries on error after falling back to a placeholder', async () => {
     class ErrorBoundary extends React.Component {
       state = {error: null};
