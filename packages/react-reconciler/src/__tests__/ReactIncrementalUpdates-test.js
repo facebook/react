@@ -438,6 +438,39 @@ describe('ReactIncrementalUpdates', () => {
     expect(ReactNoop.getChildren()).toEqual([span('derived state')]);
   });
 
+  it('regression: does not expire soon due to layout effects in the last batch', () => {
+    const {useState, useLayoutEffect} = React;
+
+    let setCount;
+    function App() {
+      const [count, _setCount] = useState(0);
+      setCount = _setCount;
+      Scheduler.unstable_yieldValue('Render: ' + count);
+      useLayoutEffect(() => {
+        setCount(prevCount => prevCount + 1);
+        Scheduler.unstable_yieldValue('Commit: ' + count);
+      }, []);
+      return null;
+    }
+
+    ReactNoop.act(() => {
+      ReactNoop.render(<App />);
+      expect(Scheduler).toFlushExpired([]);
+      expect(Scheduler).toFlushAndYield([
+        'Render: 0',
+        'Commit: 0',
+        'Render: 1',
+      ]);
+
+      Scheduler.unstable_advanceTime(10000);
+
+      setCount(2);
+
+      expect(Scheduler).toFlushExpired([]);
+      expect(Scheduler).toFlushAndYield(['Render: 2']);
+    });
+  });
+
   it('when rebasing, does not exclude updates that were already committed, regardless of priority', async () => {
     const {useState, useLayoutEffect} = React;
 
