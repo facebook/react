@@ -8,6 +8,7 @@ const __EXPERIMENTAL__ =
     : true;
 
 const bundleTypes = {
+  NODE_ES2015: 'NODE_ES2015',
   UMD_DEV: 'UMD_DEV',
   UMD_PROD: 'UMD_PROD',
   UMD_PROFILING: 'UMD_PROFILING',
@@ -26,6 +27,7 @@ const bundleTypes = {
 };
 
 const {
+  NODE_ES2015,
   UMD_DEV,
   UMD_PROD,
   UMD_PROFILING,
@@ -280,22 +282,11 @@ const bundles = [
 
   /******* React Transport DOM Webpack Plugin *******/
   {
-    bundleTypes: [NODE_DEV, NODE_PROD],
+    bundleTypes: [NODE_ES2015],
     moduleType: RENDERER_UTILS,
     entry: 'react-transport-dom-webpack/plugin',
     global: 'ReactFlightWebpackPlugin',
     externals: [],
-    babel: opts =>
-      Object.assign({}, opts, {
-        // Include JSX
-        presets: opts.presets.concat([
-          require.resolve('@babel/preset-react'),
-          require.resolve('@babel/preset-flow'),
-        ]),
-        plugins: opts.plugins.concat([
-          [require.resolve('@babel/plugin-transform-classes'), {loose: true}],
-        ]),
-      }),
   },
 
   /******* React Transport DOM Server Relay *******/
@@ -803,6 +794,8 @@ function getFilename(bundle, bundleType) {
   // we do this to replace / to -, for react-dom/server
   name = name.replace('/index.', '.').replace('/', '-');
   switch (bundleType) {
+    case NODE_ES2015:
+      return `${name}.js`;
     case UMD_DEV:
       return `${name}.development.js`;
     case UMD_PROD:

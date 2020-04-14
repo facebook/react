@@ -45,6 +45,7 @@ process.on('unhandledRejection', err => {
 });
 
 const {
+  NODE_ES2015,
   UMD_DEV,
   UMD_PROD,
   UMD_PROFILING,
@@ -244,6 +245,7 @@ function getFormat(bundleType) {
     case UMD_PROD:
     case UMD_PROFILING:
       return `umd`;
+    case NODE_ES2015:
     case NODE_DEV:
     case NODE_PROD:
     case NODE_PROFILING:
@@ -262,6 +264,7 @@ function getFormat(bundleType) {
 
 function isProductionBundleType(bundleType) {
   switch (bundleType) {
+    case NODE_ES2015:
     case UMD_DEV:
     case NODE_DEV:
     case FB_WWW_DEV:
@@ -286,6 +289,7 @@ function isProductionBundleType(bundleType) {
 
 function isProfilingBundleType(bundleType) {
   switch (bundleType) {
+    case NODE_ES2015:
     case FB_WWW_DEV:
     case FB_WWW_PROD:
     case NODE_DEV:
@@ -725,6 +729,7 @@ async function buildEverything() {
   // eslint-disable-next-line no-for-of-loops/no-for-of-loops
   for (const bundle of Bundles.bundles) {
     bundles.push(
+      [bundle, NODE_ES2015],
       [bundle, UMD_DEV],
       [bundle, UMD_PROD],
       [bundle, UMD_PROFILING],
