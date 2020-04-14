@@ -14,7 +14,7 @@ describe('ReactDOMTestSelectors', () => {
 
   let act;
   let createComponentSelector;
-  //let createHasPsuedoClassSelector;
+  let createHasPsuedoClassSelector;
   let createRoleSelector;
   let createTextSelector;
   let createTestNameSelector;
@@ -35,7 +35,7 @@ describe('ReactDOMTestSelectors', () => {
     const ReactDOM = require('react-dom/testing');
     act = ReactDOM.act;
     createComponentSelector = ReactDOM.createComponentSelector;
-    //createHasPsuedoClassSelector = ReactDOM.createHasPsuedoClassSelector;
+    createHasPsuedoClassSelector = ReactDOM.createHasPsuedoClassSelector;
     createRoleSelector = ReactDOM.createRoleSelector;
     createTextSelector = ReactDOM.createTextSelector;
     createTestNameSelector = ReactDOM.createTestNameSelector;
@@ -400,6 +400,41 @@ describe('ReactDOMTestSelectors', () => {
       const matches = findAllNodes(document.body, [
         createComponentSelector(Example),
         createRoleSelector('checkbox'),
+      ]);
+      expect(matches).toHaveLength(1);
+      expect(matches[0].id).toBe('match');
+    });
+
+    it('should support searching ahead with the has() selector', () => {
+      function Example() {
+        return (
+          <div>
+            <article>
+              <h1>Should match</h1>
+              <p>
+                <button id="match">Like</button>
+              </p>
+            </article>
+            <article>
+              <h1>Should not match</h1>
+              <p>
+                <button>Like</button>
+              </p>
+            </article>
+          </div>
+        );
+      }
+
+      render(<Example />, container);
+
+      const matches = findAllNodes(document.body, [
+        createComponentSelector(Example),
+        createRoleSelector('article'),
+        createHasPsuedoClassSelector([
+          createRoleSelector('heading'),
+          createTextSelector('Should match'),
+        ]),
+        createRoleSelector('button'),
       ]);
       expect(matches).toHaveLength(1);
       expect(matches[0].id).toBe('match');

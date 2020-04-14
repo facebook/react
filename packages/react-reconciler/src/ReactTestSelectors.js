@@ -141,8 +141,10 @@ function matchSelector(fiber: Fiber, selector: Selector): boolean {
       }
       break;
     case HAS_PSEUDO_CLASS_TYPE:
-      // TODO (test-selectors) Implement this selector type.
-      break;
+      return hasMatchingPaths(
+        fiber,
+        ((selector: any): HasPsuedoClassSelector).value,
+      );
     case ROLE_TYPE:
       if (fiber.tag === HostComponent) {
         if (
@@ -189,8 +191,7 @@ function selectorToString(selector: Selector): string | null {
       const displayName = getComponentName(selector.value) || 'Unknown';
       return `<${displayName}>`;
     case HAS_PSEUDO_CLASS_TYPE:
-      // TODO (test-selectors) Implement this selector type.
-      break;
+      return `:has(${selectorToString(selector) || ''})`;
     case ROLE_TYPE:
       return `[role="${((selector: any): RoleSelector).value}"]`;
     case TEXT_TYPE:
@@ -213,12 +214,15 @@ function findPaths(root: Fiber, selectors: Array<Selector>): Array<Fiber> {
   while (index < stack.length) {
     const fiber = ((stack[index++]: any): Fiber);
     let selectorIndex = ((stack[index++]: any): number);
-    const selector = selectors[selectorIndex];
+    let selector = selectors[selectorIndex];
 
     if (fiber.tag === HostComponent && isHiddenSubtree(fiber)) {
       continue;
-    } else if (matchSelector(fiber, selector)) {
-      selectorIndex++;
+    } else {
+      while (selector != null && matchSelector(fiber, selector)) {
+        selectorIndex++;
+        selector = selectors[selectorIndex];
+      }
     }
 
     if (selectorIndex === selectors.length) {
@@ -233,6 +237,38 @@ function findPaths(root: Fiber, selectors: Array<Selector>): Array<Fiber> {
   }
 
   return matchingFibers;
+}
+
+// Same as findPaths but with eager bailout on first match
+function hasMatchingPaths(root: Fiber, selectors: Array<Selector>): boolean {
+  const stack = [root, 0];
+  let index = 0;
+  while (index < stack.length) {
+    const fiber = ((stack[index++]: any): Fiber);
+    let selectorIndex = ((stack[index++]: any): number);
+    let selector = selectors[selectorIndex];
+
+    if (fiber.tag === HostComponent && isHiddenSubtree(fiber)) {
+      continue;
+    } else {
+      while (selector != null && matchSelector(fiber, selector)) {
+        selectorIndex++;
+        selector = selectors[selectorIndex];
+      }
+    }
+
+    if (selectorIndex === selectors.length) {
+      return true;
+    } else {
+      let child = fiber.child;
+      while (child !== null) {
+        stack.push(child, selectorIndex);
+        child = child.sibling;
+      }
+    }
+  }
+
+  return false;
 }
 
 export function findAllNodes(
