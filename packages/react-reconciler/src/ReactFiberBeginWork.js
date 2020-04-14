@@ -218,31 +218,6 @@ if (__DEV__) {
   didWarnAboutDefaultPropsOnFunctionComponent = {};
 }
 
-// holds the last workInProgress fiber before entering speculative mode
-// if we work our way back to this fiber without reifying we leave speculative
-// mode. if we reify we also clear this fiber upong reification
-let speculativeWorkRootFiber: Fiber | null = null;
-
-// used to tell whether we reified during a particular beginWork execution. This
-// is useful to reorient the unitOfWork in the work loop since it may have started
-// off as the current (in speculative mode) and needs to become the workInProgress
-// if reification happened
-let didReifySpeculativeWork: boolean = false;
-
-export function inSpeculativeWorkMode() {
-  return speculativeWorkRootFiber !== null;
-}
-
-export function endSpeculationWorkIfRootFiber(fiber: Fiber) {
-  if (fiber === speculativeWorkRootFiber) {
-    speculativeWorkRootFiber = null;
-  }
-}
-
-export function didReifySpeculativeWorkDuringThisStep(): boolean {
-  return didReifySpeculativeWork;
-}
-
 export function reconcileChildren(
   current: Fiber | null,
   workInProgress: Fiber,

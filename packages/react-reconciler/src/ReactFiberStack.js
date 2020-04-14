@@ -40,7 +40,7 @@ function pop<T>(cursor: StackCursor<T>, fiber: Fiber): void {
   }
 
   if (__DEV__) {
-    if (fiberStack[index] !== fiber) {
+    if (fiber !== fiberStack[index]) {
       console.error('Unexpected Fiber popped.');
     }
   }

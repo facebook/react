@@ -661,7 +661,7 @@ export function readContext<T>(
       // contexts you read from and their order in the dependency list won't be stable across renders
       //
       // the main goal is to attach readers during render so that we are included in the set of
-      // "fibers that need to know about new context values provided but they current provider"
+      // "fibers that need to know about new context values provided by the current provider"
       // it is ok if we don't end up depending on that context in the future, it is safe to still
       // be notified about future changes which is why this can be done during render phase
       //

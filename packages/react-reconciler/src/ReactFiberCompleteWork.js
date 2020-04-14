@@ -54,7 +54,6 @@ import {
   Chunk,
 } from 'shared/ReactWorkTags';
 import {NoMode, BlockingMode} from './ReactTypeOfMode';
-import {NoWork} from './ReactFiberExpirationTime';
 import {
   Ref,
   Update,
@@ -83,7 +82,6 @@ import {
   cloneFundamentalInstance,
   shouldUpdateFundamentalComponent,
 } from './ReactFiberHostConfig';
-import {inSpeculativeWorkMode} from './ReactFiberBeginWork';
 import {
   getRootHostContainer,
   popHostContext,

@@ -1248,7 +1248,6 @@ export function flushControlled(fn: () => mixed): void {
 }
 
 function prepareFreshStack(root, expirationTime) {
-  // console.log('------------------------------------ prepareFreshStack');
   root.finishedWork = null;
   root.finishedExpirationTime = NoWork;
 
@@ -1292,7 +1291,6 @@ function handleError(root, thrownValue) {
   do {
     try {
       // Reset module-level state that was set during the render phase.
-      // @TODO may need to do something about speculativeMode here
       resetContextDependencies();
       resetHooksAfterThrow();
       resetCurrentDebugFiberInDEV();
@@ -1500,7 +1498,6 @@ function performUnitOfWork(unitOfWork: Fiber): Fiber | null {
   }
 
   resetCurrentDebugFiberInDEV();
-  // may not want to memoize props here when we did not reifyWork
   unitOfWork.memoizedProps = unitOfWork.pendingProps;
   if (next === null) {
     // If this doesn't spawn new work, complete the current work.
