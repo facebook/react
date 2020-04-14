@@ -17,7 +17,6 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     ReactFeatureFlags = require('shared/ReactFeatureFlags');
 
     ReactFeatureFlags.replayFailedUnitOfWorkWithInvokeGuardedCallback = false;
-    ReactFeatureFlags.flushSuspenseFallbacksInTests = false;
     React = require('react');
     Fragment = React.Fragment;
     ReactNoop = require('react-noop-renderer');
@@ -3069,25 +3068,26 @@ describe('ReactSuspenseWithNoopRenderer', () => {
             setText('C');
           },
         );
+
+        expect(Scheduler).toFlushAndYield([
+          // First we attempt the high pri update. It suspends.
+          'Suspend! [B]',
+          'Loading...',
+        ]);
+
+        // Commit the placeholder to unblock the Idle update.
+        await advanceTimers(250);
+        expect(root).toMatchRenderedOutput(
+          <>
+            <span hidden={true} prop="A" />
+            <span prop="Loading..." />
+          </>,
+        );
+
+        // Now flush the remaining work. The Idle update successfully finishes.
+        expect(Scheduler).toFlushAndYield(['C']);
+        expect(root).toMatchRenderedOutput(<span prop="C" />);
       });
-      expect(Scheduler).toHaveYielded([
-        // First we attempt the high pri update. It suspends.
-        'Suspend! [B]',
-        'Loading...',
-      ]);
-
-      // Commit the placeholder to unblock the Idle update.
-      await advanceTimers(250);
-      expect(root).toMatchRenderedOutput(
-        <>
-          <span hidden={true} prop="A" />
-          <span prop="Loading..." />
-        </>,
-      );
-
-      // Now flush the remaining work. The Idle update successfully finishes.
-      expect(Scheduler).toFlushAndYield(['C']);
-      expect(root).toMatchRenderedOutput(<span prop="C" />);
     },
   );
 
@@ -3126,48 +3126,47 @@ describe('ReactSuspenseWithNoopRenderer', () => {
       expect(Scheduler).toHaveYielded(['A']);
       expect(root).toMatchRenderedOutput(<span prop="A" />);
 
-      // Schedule an update inside the Suspense boundary that suspends.
       await ReactNoop.act(async () => {
+        // Schedule an update inside the Suspense boundary that suspends.
         setAppText('B');
-      });
-      expect(Scheduler).toHaveYielded(['Suspend! [B]', 'Loading...']);
-      // Commit the placeholder
-      await advanceTimers(250);
-      expect(root).toMatchRenderedOutput(
-        <>
-          <span hidden={true} prop="A" />
-          <span prop="Loading..." />
-        </>,
-      );
+        expect(Scheduler).toFlushAndYield(['Suspend! [B]', 'Loading...']);
 
-      // Schedule a high pri update on the boundary, and a lower pri update
-      // on the fallback. We're testing to make sure the fallback can still
-      // update even though the primary tree is suspended.
-      await ReactNoop.act(async () => {
+        // Commit the placeholder
+        await advanceTimers(250);
+        expect(root).toMatchRenderedOutput(
+          <>
+            <span hidden={true} prop="A" />
+            <span prop="Loading..." />
+          </>,
+        );
+
+        // Schedule a high pri update on the boundary, and a lower pri update
+        // on the fallback. We're testing to make sure the fallback can still
+        // update even though the primary tree is suspended.{
         ReactNoop.discreteUpdates(() => {
           setAppText('C');
         });
         setFallbackText('Still loading...');
+
+        expect(Scheduler).toFlushAndYield([
+          // First try to render the high pri update. We won't try to re-render
+          // the suspended tree during this pass, because it still has unfinished
+          // updates at a lower priority.
+          'Loading...',
+
+          // Now try the suspended update again. It's still suspended.
+          'Suspend! [C]',
+
+          // Then complete the update to the fallback.
+          'Still loading...',
+        ]);
+        expect(root).toMatchRenderedOutput(
+          <>
+            <span hidden={true} prop="A" />
+            <span prop="Still loading..." />
+          </>,
+        );
       });
-
-      expect(Scheduler).toHaveYielded([
-        // First try to render the high pri update. We won't try to re-render
-        // the suspended tree during this pass, because it still has unfinished
-        // updates at a lower priority.
-        'Loading...',
-
-        // Now try the suspended update again. It's still suspended.
-        'Suspend! [C]',
-
-        // Then complete the update to the fallback.
-        'Still loading...',
-      ]);
-      expect(root).toMatchRenderedOutput(
-        <>
-          <span hidden={true} prop="A" />
-          <span prop="Still loading..." />
-        </>,
-      );
     },
   );
 
@@ -3693,54 +3692,53 @@ describe('ReactSuspenseWithNoopRenderer', () => {
         setTextA('A2');
         setTextB('B2');
       });
+
+      expect(Scheduler).toFlushAndYield([
+        'B',
+        'Suspend! [A1]',
+        'Loading...',
+
+        'Suspend! [A2]',
+        'Loading...',
+        'Suspend! [B2]',
+        'Loading...',
+      ]);
+      expect(root).toMatchRenderedOutput(
+        <>
+          <span prop="A" />
+          <span prop="B" />
+        </>,
+      );
+
+      await resolveText('A1');
+      expect(Scheduler).toHaveYielded(['Promise resolved [A1]']);
+      expect(Scheduler).toFlushAndYield([
+        'A1',
+        'Suspend! [A2]',
+        'Loading...',
+        'Suspend! [B2]',
+        'Loading...',
+      ]);
+      expect(root).toMatchRenderedOutput(
+        <>
+          <span prop="A1" />
+          <span prop="B" />
+        </>,
+      );
+
+      // Commit the placeholder
+      Scheduler.unstable_advanceTime(20000);
+      await advanceTimers(20000);
+
+      expect(root).toMatchRenderedOutput(
+        <>
+          <span hidden={true} prop="A1" />
+          <span prop="Loading..." />
+          <span hidden={true} prop="B" />
+          <span prop="Loading..." />
+        </>,
+      );
     });
-    expect(Scheduler).toHaveYielded([
-      'B',
-      'Suspend! [A1]',
-      'Loading...',
-
-      'Suspend! [A2]',
-      'Loading...',
-      'Suspend! [B2]',
-      'Loading...',
-    ]);
-    expect(root).toMatchRenderedOutput(
-      <>
-        <span prop="A" />
-        <span prop="B" />
-      </>,
-    );
-
-    await ReactNoop.act(async () => {
-      resolveText('A1');
-    });
-    expect(Scheduler).toHaveYielded([
-      'Promise resolved [A1]',
-      'A1',
-      'Suspend! [A2]',
-      'Loading...',
-      'Suspend! [B2]',
-      'Loading...',
-    ]);
-    expect(root).toMatchRenderedOutput(
-      <>
-        <span prop="A1" />
-        <span prop="B" />
-      </>,
-    );
-
-    // Commit the placeholder
-    Scheduler.unstable_advanceTime(20000);
-    await advanceTimers(20000);
-
-    expect(root).toMatchRenderedOutput(
-      <>
-        <span hidden={true} prop="A1" />
-        <span prop="Loading..." />
-        <span hidden={true} prop="B" />
-        <span prop="Loading..." />
-      </>,
-    );
   });
 
   // Regression: https://github.com/facebook/react/issues/18486
@@ -3842,27 +3840,29 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     // Resolve "a". But "b" is still pending.
     await ReactNoop.act(async () => {
       await resolveText('a');
-    });
-    expect(Scheduler).toHaveYielded([
-      'Promise resolved [a]',
-      'Pending...',
-      'a',
-      'Suspend! [b]',
-      'Loading...',
-    ]);
-    expect(root).toMatchRenderedOutput(
-      <>
-        <span prop="Pending..." />
-        <span prop="a" />
-      </>,
-    );
 
-    // Resolve "b". This should remove the pending state.
-    await ReactNoop.act(async () => {
-      await resolveText('b');
+      expect(Scheduler).toHaveYielded(['Promise resolved [a]']);
+      expect(Scheduler).toFlushAndYield([
+        'Pending...',
+        'a',
+        'Suspend! [b]',
+        'Loading...',
+      ]);
+      expect(root).toMatchRenderedOutput(
+        <>
+          <span prop="Pending..." />
+          <span prop="a" />
+        </>,
+      );
+
+      // Resolve "b". This should remove the pending state.
+      await ReactNoop.act(async () => {
+        await resolveText('b');
+      });
+      expect(Scheduler).toHaveYielded(['Promise resolved [b]']);
+      expect(Scheduler).toFlushAndYield(['b']);
+      // The bug was that the pending state got stuck forever.
+      expect(root).toMatchRenderedOutput(<span prop="b" />);
     });
-    expect(Scheduler).toHaveYielded(['Promise resolved [b]', 'b']);
-    // The bug was that the pending state got stuck forever.
-    expect(root).toMatchRenderedOutput(<span prop="b" />);
   });
 });

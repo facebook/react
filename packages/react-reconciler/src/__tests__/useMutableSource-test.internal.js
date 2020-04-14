@@ -26,7 +26,6 @@ function loadModules() {
   ReactFeatureFlags = require('shared/ReactFeatureFlags');
 
   ReactFeatureFlags.enableSchedulerTracing = true;
-  ReactFeatureFlags.flushSuspenseFallbacksInTests = false;
   ReactFeatureFlags.enableProfilerTimer = true;
   React = require('react');
   ReactNoop = require('react-noop-renderer');

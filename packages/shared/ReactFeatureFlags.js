@@ -62,10 +62,6 @@ export const enableUseEventAPI = false;
 // Till then, we warn about the missing mock, but still fallback to a legacy mode compatible version
 export const warnAboutUnmockedScheduler = false;
 
-// For tests, we flush suspense fallbacks in an act scope;
-// *except* in some of our own tests, where we test incremental loading states.
-export const flushSuspenseFallbacksInTests = true;
-
 // Add a callback property to suspense to notify which promises are currently
 // in the update queue. This allows reporting and tracing of what is causing
 // the user to see a loading state.

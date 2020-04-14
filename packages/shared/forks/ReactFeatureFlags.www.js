@@ -64,8 +64,6 @@ export const warnAboutUnmockedScheduler = true;
 
 export const enableSuspenseCallback = true;
 
-export const flushSuspenseFallbacksInTests = true;
-
 export const disableTextareaChildren = __EXPERIMENTAL__;
 
 export const warnUnstableRenderSubtreeIntoContainer = false;

@@ -27,7 +27,6 @@ export const enableFundamentalAPI = false;
 export const enableScopeAPI = true;
 export const enableUseEventAPI = true;
 export const warnAboutUnmockedScheduler = true;
-export const flushSuspenseFallbacksInTests = true;
 export const enableSuspenseCallback = true;
 export const warnAboutDefaultPropsOnFunctionComponents = false;
 export const warnAboutStringRefs = false;

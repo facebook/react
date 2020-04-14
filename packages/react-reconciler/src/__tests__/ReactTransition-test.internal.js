@@ -10,7 +10,6 @@
 
 'use strict';
 
-let ReactFeatureFlags;
 let React;
 let ReactNoop;
 let Scheduler;
@@ -22,11 +21,6 @@ let act;
 describe('ReactTransition', () => {
   beforeEach(() => {
     jest.resetModules();
-
-    ReactFeatureFlags = require('shared/ReactFeatureFlags');
-
-    ReactFeatureFlags.enableSchedulerTracing = true;
-    ReactFeatureFlags.flushSuspenseFallbacksInTests = false;
     React = require('react');
     ReactNoop = require('react-noop-renderer');
     Scheduler = require('scheduler');
