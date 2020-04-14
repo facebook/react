@@ -25,7 +25,7 @@ import {
   FundamentalComponent,
   SuspenseComponent,
 } from './ReactWorkTags';
-import {NoEffect, Placement, Hydrating} from './ReactSideEffectTags';
+import {NoEffect, Placement, Hydrating, Deletion} from './ReactSideEffectTags';
 import {enableFundamentalAPI} from 'shared/ReactFeatureFlags';
 
 const ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
@@ -331,4 +331,24 @@ export function findCurrentHostFiberWithNoPortals(parent: Fiber): Fiber | null {
   // Flow needs the return null here, but ESLint complains about it.
   // eslint-disable-next-line no-unreachable
   return null;
+}
+
+export function isFiberSuspenseAndTimedOut(fiber: Fiber): boolean {
+  const memoizedState = fiber.memoizedState;
+  return (
+    fiber.tag === SuspenseComponent &&
+    memoizedState !== null &&
+    memoizedState.dehydrated === null
+  );
+}
+
+export function isFiberInsideHiddenOrRemovedTree(fiber: Fiber): boolean {
+  let node = fiber;
+  while (node !== null) {
+    if (node.effectTag & Deletion || isFiberSuspenseAndTimedOut(node)) {
+      return true;
+    }
+    node = node.return;
+  }
+  return false;
 }

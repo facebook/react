@@ -23,6 +23,7 @@ const initializeModules = hasPointerEvents => {
   jest.resetModules();
   ReactFeatureFlags = require('shared/ReactFeatureFlags');
   ReactFeatureFlags.enableDeprecatedFlareAPI = true;
+  ReactFeatureFlags.enableScopeAPI = true;
   React = require('react');
   ReactDOM = require('react-dom');
   Scheduler = require('scheduler');
@@ -362,6 +363,40 @@ describe.each(table)('FocusWithin responder', hasPointerEvents => {
       expect(onBlurWithin).toHaveBeenCalledWith(
         expect.objectContaining({isTargetAttached: false}),
       );
+    });
+
+    // @gate experimental
+    it('is called after a nested focused element is unmounted (with scope query)', () => {
+      const TestScope = React.unstable_createScope();
+      const testScopeQuery = (type, props) => true;
+      let targetNodes;
+      let targetNode;
+
+      const Component = ({show}) => {
+        const scopeRef = React.useRef(null);
+        const listener = useFocusWithin({
+          onBeforeBlurWithin(event) {
+            const scope = scopeRef.current;
+            targetNode = innerRef.current;
+            targetNodes = scope.DO_NOT_USE_queryAllNodes(testScopeQuery);
+          },
+        });
+
+        return (
+          <TestScope ref={scopeRef} DEPRECATED_flareListeners={[listener]}>
+            {show && <input ref={innerRef} />}
+          </TestScope>
+        );
+      };
+
+      ReactDOM.render(<Component show={true} />, container);
+
+      const inner = innerRef.current;
+      const target = createEventTarget(inner);
+      target.keydown({key: 'Tab'});
+      target.focus();
+      ReactDOM.render(<Component show={false} />, container);
+      expect(targetNodes).toEqual([targetNode]);
     });
 
     // @gate experimental

@@ -143,7 +143,10 @@ export function getChildHostContext(
   return NO_CONTEXT;
 }
 
-export function prepareForCommit(containerInfo: Container): void {
+export function prepareForCommit(
+  containerInfo: Container,
+  isInstanceInsideHiddenOrRemovedTree: Function,
+): void {
   // noop
 }
 
