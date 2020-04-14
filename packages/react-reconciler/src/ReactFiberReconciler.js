@@ -39,6 +39,11 @@ import {
   injectIntoDevTools as injectIntoDevTools_old,
   act as act_old,
   createPortal as createPortal_old,
+  createComponentSelector as createComponentSelector_old,
+  createHasPsuedoClassSelector as createHasPsuedoClassSelector_old,
+  createRoleSelector as createRoleSelector_old,
+  createTestNameSelector as createTestNameSelector_old,
+  createTextSelector as createTextSelector_old,
   getFindAllNodesFailureDescription as getFindAllNodesFailureDescription_old,
   findAllNodes as findAllNodes_old,
   findBoundingRects as findBoundingRects_old,
@@ -71,6 +76,11 @@ import {
   injectIntoDevTools as injectIntoDevTools_new,
   act as act_new,
   createPortal as createPortal_new,
+  createComponentSelector as createComponentSelector_new,
+  createHasPsuedoClassSelector as createHasPsuedoClassSelector_new,
+  createRoleSelector as createRoleSelector_new,
+  createTestNameSelector as createTestNameSelector_new,
+  createTextSelector as createTextSelector_new,
   getFindAllNodesFailureDescription as getFindAllNodesFailureDescription_new,
   findAllNodes as findAllNodes_new,
   findBoundingRects as findBoundingRects_new,
@@ -146,6 +156,21 @@ export const act = enableNewReconciler ? act_new : act_old;
 export const createPortal = enableNewReconciler
   ? createPortal_new
   : createPortal_old;
+export const createComponentSelector = enableNewReconciler
+  ? createComponentSelector_new
+  : createComponentSelector_old;
+export const createHasPsuedoClassSelector = enableNewReconciler
+  ? createHasPsuedoClassSelector_new
+  : createHasPsuedoClassSelector_old;
+export const createRoleSelector = enableNewReconciler
+  ? createRoleSelector_new
+  : createRoleSelector_old;
+export const createTextSelector = enableNewReconciler
+  ? createTextSelector_new
+  : createTextSelector_old;
+export const createTestNameSelector = enableNewReconciler
+  ? createTestNameSelector_new
+  : createTestNameSelector_old;
 export const getFindAllNodesFailureDescription = enableNewReconciler
   ? getFindAllNodesFailureDescription_new
   : getFindAllNodesFailureDescription_old;

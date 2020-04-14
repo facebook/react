@@ -10,6 +10,11 @@
 export * from './index.js';
 export {
   act,
+  createComponentSelector,
+  createHasPsuedoClassSelector,
+  createRoleSelector,
+  createTestNameSelector,
+  createTextSelector,
   getFindAllNodesFailureDescription,
   findAllNodes,
   findBoundingRects,

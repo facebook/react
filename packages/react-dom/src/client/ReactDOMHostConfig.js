@@ -30,6 +30,7 @@ import {
   getInstanceFromNode as getInstanceFromNodeDOMTree,
   isContainerMarkedAsRoot,
 } from './ReactDOMComponentTree';
+import {getRole} from './DOMAccessibilityRoles';
 import {
   createElement,
   createTextNode,
@@ -77,6 +78,7 @@ import {
   enableModernEventSystem,
   enableScopeAPI,
 } from 'shared/ReactFeatureFlags';
+import {HostComponent, HostText} from 'react-reconciler/src/ReactWorkTags';
 import {TOP_BEFORE_BLUR, TOP_AFTER_BLUR} from '../events/DOMTopLevelEventTypes';
 import {listenToEvent} from '../events/DOMModernPluginEventSystem';
 
@@ -1155,8 +1157,9 @@ export const supportsTestSelectors = true;
 
 export function findRootFiber(node: Instance): null | Fiber {
   const stack = [node];
-  while (stack.length > 0) {
-    const current = stack.shift();
+  let index = 0;
+  while (index < stack.length) {
+    const current = stack[index++];
     if (isContainerMarkedAsRoot(current)) {
       const root = ((getInstanceFromNodeDOMTree(current): any): Fiber);
       return root.stateNode.current;
@@ -1174,6 +1177,43 @@ export function getBoundingRect(node: Instance): BoundingRect {
     width: rect.width,
     height: rect.height,
   };
+}
+
+export function matchAccessibilityRole(
+  fiber: Fiber,
+  targetRole: string,
+): boolean {
+  if (fiber.tag === HostComponent) {
+    const node = fiber.stateNode;
+    const inferredRole = getRole(node);
+    if (targetRole === inferredRole) {
+      return true;
+    }
+    if (node.getAttribute('role') === targetRole) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+export function getTextContent(fiber: Fiber): string | null {
+  switch (fiber.tag) {
+    case HostComponent:
+      let textContent = '';
+      const childNodes = fiber.stateNode.childNodes;
+      for (let i = 0; i < childNodes.length; i++) {
+        const childNode = childNodes[i];
+        if (childNode.nodeType === Node.TEXT_NODE) {
+          textContent += childNode.textContent;
+        }
+      }
+      return textContent;
+    case HostText:
+      return fiber.stateNode.textContent;
+  }
+
+  return null;
 }
 
 export function isHiddenSubtree(workInProgress: Fiber): boolean {

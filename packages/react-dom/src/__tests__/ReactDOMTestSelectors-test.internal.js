@@ -9,17 +9,43 @@
 
 'use strict';
 
-let React;
-let ReactDOM;
-
 describe('ReactDOMTestSelectors', () => {
+  let React;
+
+  let act;
+  let createComponentSelector;
+  //let createHasPsuedoClassSelector;
+  let createRoleSelector;
+  let createTextSelector;
+  let createTestNameSelector;
+  let findAllNodes;
+  let findBoundingRects;
+  let focusWithin;
+  let getFindAllNodesFailureDescription;
+  let observeVisibleRects;
+  let render;
+
   let container;
 
   beforeEach(() => {
     jest.resetModules();
 
     React = require('react');
-    ReactDOM = require('react-dom/testing');
+
+    const ReactDOM = require('react-dom/testing');
+    act = ReactDOM.act;
+    createComponentSelector = ReactDOM.createComponentSelector;
+    //createHasPsuedoClassSelector = ReactDOM.createHasPsuedoClassSelector;
+    createRoleSelector = ReactDOM.createRoleSelector;
+    createTextSelector = ReactDOM.createTextSelector;
+    createTestNameSelector = ReactDOM.createTestNameSelector;
+    findAllNodes = ReactDOM.findAllNodes;
+    findBoundingRects = ReactDOM.findBoundingRects;
+    focusWithin = ReactDOM.focusWithin;
+    getFindAllNodesFailureDescription =
+      ReactDOM.getFindAllNodesFailureDescription;
+    observeVisibleRects = ReactDOM.observeVisibleRects;
+    render = ReactDOM.render;
 
     container = document.createElement('div');
     document.body.appendChild(container);
@@ -39,9 +65,12 @@ describe('ReactDOMTestSelectors', () => {
         );
       }
 
-      ReactDOM.render(<Example />, container);
+      render(<Example />, container);
 
-      const matches = ReactDOM.findAllNodes(document.body, [Example], 'match');
+      const matches = findAllNodes(document.body, [
+        createComponentSelector(Example),
+        createTestNameSelector('match'),
+      ]);
       expect(matches).toHaveLength(1);
       expect(matches[0].id).toBe('match');
     });
@@ -55,14 +84,17 @@ describe('ReactDOMTestSelectors', () => {
         );
       }
 
-      ReactDOM.render(<Example />, container);
+      render(<Example />, container);
 
-      const matches = ReactDOM.findAllNodes(container, [Example], 'match');
+      const matches = findAllNodes(container, [
+        createComponentSelector(Example),
+        createTestNameSelector('match'),
+      ]);
       expect(matches).toHaveLength(1);
       expect(matches[0].id).toBe('match');
     });
 
-    it('should support searching from a previous match', () => {
+    it('should support searching from a previous match if the match had a data-testname', () => {
       function Outer() {
         return (
           <div data-testname="outer" id="outer">
@@ -75,15 +107,50 @@ describe('ReactDOMTestSelectors', () => {
         return <div data-testname="inner" id="inner" />;
       }
 
-      ReactDOM.render(<Outer />, container);
+      render(<Outer />, container);
 
-      let matches = ReactDOM.findAllNodes(container, [Outer], 'outer');
+      let matches = findAllNodes(container, [
+        createComponentSelector(Outer),
+        createTestNameSelector('outer'),
+      ]);
       expect(matches).toHaveLength(1);
       expect(matches[0].id).toBe('outer');
 
-      matches = ReactDOM.findAllNodes(matches[0], [Inner], 'inner');
+      matches = findAllNodes(matches[0], [
+        createComponentSelector(Inner),
+        createTestNameSelector('inner'),
+      ]);
       expect(matches).toHaveLength(1);
       expect(matches[0].id).toBe('inner');
+    });
+
+    it('should not support searching from a previous match if the match did not have a data-testname', () => {
+      function Outer() {
+        return (
+          <div id="outer">
+            <Inner />
+          </div>
+        );
+      }
+
+      function Inner() {
+        return <div id="inner" />;
+      }
+
+      render(<Outer />, container);
+
+      const matches = findAllNodes(container, [createComponentSelector(Outer)]);
+      expect(matches).toHaveLength(1);
+      expect(matches[0].id).toBe('outer');
+
+      expect(() => {
+        findAllNodes(matches[0], [
+          createComponentSelector(Inner),
+          createTestNameSelector('inner'),
+        ]);
+      }).toThrow(
+        'Invalid host root specified. Should be either a React container or a node with a testname attribute.',
+      );
     });
 
     it('should support an multiple component types in the selector array', () => {
@@ -111,43 +178,32 @@ describe('ReactDOMTestSelectors', () => {
         );
       }
 
-      ReactDOM.render(<Outer />, container);
+      render(<Outer />, container);
 
-      let matches = ReactDOM.findAllNodes(
-        document.body,
-        [Outer, Middle],
-        'match',
-      );
+      let matches = findAllNodes(document.body, [
+        createComponentSelector(Outer),
+        createComponentSelector(Middle),
+        createTestNameSelector('match'),
+      ]);
       expect(matches).toHaveLength(2);
       expect(matches.map(m => m.id).sort()).toEqual(['match2', 'match3']);
 
-      matches = ReactDOM.findAllNodes(
-        document.body,
-        [Outer, Middle, Inner],
-        'match',
-      );
+      matches = findAllNodes(document.body, [
+        createComponentSelector(Outer),
+        createComponentSelector(Middle),
+        createComponentSelector(Inner),
+        createTestNameSelector('match'),
+      ]);
       expect(matches).toHaveLength(1);
       expect(matches[0].id).toBe('match3');
 
-      matches = ReactDOM.findAllNodes(document.body, [Outer, Inner], 'match');
+      matches = findAllNodes(document.body, [
+        createComponentSelector(Outer),
+        createComponentSelector(Inner),
+        createTestNameSelector('match'),
+      ]);
       expect(matches).toHaveLength(1);
       expect(matches[0].id).toBe('match3');
-    });
-
-    it('should support an empty component type selector array', () => {
-      function Example() {
-        return (
-          <div>
-            <div data-testname="match" id="match" />
-          </div>
-        );
-      }
-
-      ReactDOM.render(<Example />, container);
-
-      const matches = ReactDOM.findAllNodes(document.body, [], 'match');
-      expect(matches).toHaveLength(1);
-      expect(matches[0].id).toBe('match');
     });
 
     it('should find multiple matches', () => {
@@ -168,7 +224,7 @@ describe('ReactDOMTestSelectors', () => {
         );
       }
 
-      ReactDOM.render(
+      render(
         <>
           <Example1 />
           <Example2 />
@@ -176,7 +232,9 @@ describe('ReactDOMTestSelectors', () => {
         container,
       );
 
-      const matches = ReactDOM.findAllNodes(document.body, [], 'match');
+      const matches = findAllNodes(document.body, [
+        createTestNameSelector('match'),
+      ]);
       expect(matches).toHaveLength(3);
       expect(matches.map(m => m.id).sort()).toEqual([
         'match1',
@@ -185,7 +243,7 @@ describe('ReactDOMTestSelectors', () => {
       ]);
     });
 
-    it('should find nested matches', () => {
+    it('should ignore nested matches', () => {
       function Example() {
         return (
           <div data-testname="match" id="match1">
@@ -194,14 +252,17 @@ describe('ReactDOMTestSelectors', () => {
         );
       }
 
-      ReactDOM.render(<Example />, container);
+      render(<Example />, container);
 
-      const matches = ReactDOM.findAllNodes(document.body, [Example], 'match');
-      expect(matches).toHaveLength(2);
-      expect(matches.map(m => m.id).sort()).toEqual(['match1', 'match2']);
+      const matches = findAllNodes(document.body, [
+        createComponentSelector(Example),
+        createTestNameSelector('match'),
+      ]);
+      expect(matches).toHaveLength(1);
+      expect(matches[0].id).toEqual('match1');
     });
 
-    it('should enforce the specific order of components types', () => {
+    it('should enforce the specific order of selectors', () => {
       function Outer() {
         return (
           <>
@@ -214,34 +275,14 @@ describe('ReactDOMTestSelectors', () => {
         return <div data-testname="match" id="match1" />;
       }
 
-      ReactDOM.render(<Outer />, container);
+      render(<Outer />, container);
 
       expect(
-        ReactDOM.findAllNodes(document.body, [Inner, Outer], 'match'),
-      ).toHaveLength(0);
-    });
-
-    it('should only search the subtree within the component types selector', () => {
-      function Outer() {
-        return (
-          <>
-            <div data-testname="match" id="match1" />
-            <Inner />
-          </>
-        );
-      }
-      function Inner() {
-        return <div />;
-      }
-
-      ReactDOM.render(<Outer />, container);
-
-      expect(
-        ReactDOM.findAllNodes(document.body, [Outer, Inner], 'match'),
-      ).toHaveLength(0);
-
-      expect(
-        ReactDOM.findAllNodes(document.body, [Inner], 'match'),
+        findAllNodes(document.body, [
+          createComponentSelector(Inner),
+          createComponentSelector(Outer),
+          createTestNameSelector('match'),
+        ]),
       ).toHaveLength(0);
     });
 
@@ -252,10 +293,10 @@ describe('ReactDOMTestSelectors', () => {
       function Outer() {
         return (
           <>
-            <Inner />
             <div hidden={true}>
               <div ref={ref1} data-testname="match" />
             </div>
+            <Inner />
           </>
         );
       }
@@ -263,16 +304,109 @@ describe('ReactDOMTestSelectors', () => {
         return <div ref={ref2} data-testname="match" />;
       }
 
-      ReactDOM.render(<Outer />, container);
+      render(<Outer />, container);
 
-      const matches = ReactDOM.findAllNodes(document.body, [Outer], 'match');
+      const matches = findAllNodes(document.body, [
+        createComponentSelector(Outer),
+        createTestNameSelector('match'),
+      ]);
 
       expect(matches).toHaveLength(1);
       expect(matches[0]).toBe(ref2.current);
     });
 
+    it('should support filtering by display text', () => {
+      function Example() {
+        return (
+          <div>
+            <div>foo</div>
+            <div>
+              <div id="match">bar</div>
+            </div>
+          </div>
+        );
+      }
+
+      render(<Example />, container);
+
+      const matches = findAllNodes(document.body, [
+        createComponentSelector(Example),
+        createTextSelector('bar'),
+      ]);
+      expect(matches).toHaveLength(1);
+      expect(matches[0].id).toBe('match');
+    });
+
+    it('should support filtering by explicit accessibiliy role', () => {
+      function Example() {
+        return (
+          <div>
+            <div>foo</div>
+            <div>
+              <div role="button" id="match">
+                bar
+              </div>
+            </div>
+          </div>
+        );
+      }
+
+      render(<Example />, container);
+
+      const matches = findAllNodes(document.body, [
+        createComponentSelector(Example),
+        createRoleSelector('button'),
+      ]);
+      expect(matches).toHaveLength(1);
+      expect(matches[0].id).toBe('match');
+    });
+
+    it('should support filtering by implicit accessibiliy role', () => {
+      function Example() {
+        return (
+          <div>
+            <div>foo</div>
+            <div>
+              <button id="match">bar</button>
+            </div>
+          </div>
+        );
+      }
+
+      render(<Example />, container);
+
+      const matches = findAllNodes(document.body, [
+        createComponentSelector(Example),
+        createRoleSelector('button'),
+      ]);
+      expect(matches).toHaveLength(1);
+      expect(matches[0].id).toBe('match');
+    });
+
+    it('should support filtering by implicit accessibiliy role with attributes qualifications', () => {
+      function Example() {
+        return (
+          <div>
+            <div>foo</div>
+            <div>
+              <input type="checkbox" id="match" value="bar" />
+            </div>
+          </div>
+        );
+      }
+
+      render(<Example />, container);
+
+      const matches = findAllNodes(document.body, [
+        createComponentSelector(Example),
+        createRoleSelector('checkbox'),
+      ]);
+      expect(matches).toHaveLength(1);
+      expect(matches[0].id).toBe('match');
+    });
+
     it('should throw if no container can be found', () => {
-      expect(() => ReactDOM.findAllNodes(document.body, [], 'match')).toThrow(
+      expect(() => findAllNodes(document.body, [])).toThrow(
         'Could not find React container within specified host subtree.',
       );
     });
@@ -283,10 +417,10 @@ describe('ReactDOMTestSelectors', () => {
         return <div ref={ref} />;
       }
 
-      ReactDOM.render(<Example />, container);
+      render(<Example />, container);
 
-      expect(() => ReactDOM.findAllNodes(ref.current, [], 'match')).toThrow(
-        'Invalid host root specified. Should be either a React container or a node previously returned by findAllNodes().',
+      expect(() => findAllNodes(ref.current, [])).toThrow(
+        'Invalid host root specified. Should be either a React container or a node with a testname attribute.',
       );
     });
   });
@@ -303,74 +437,21 @@ describe('ReactDOMTestSelectors', () => {
         return <div data-testname="match" />;
       }
 
-      ReactDOM.render(<Outer />, container);
+      render(<Outer />, container);
 
-      const description = ReactDOM.getFindAllNodesFailureDescription(
-        document.body,
-        [Outer, Middle, NotRendered],
-        'match',
-      );
+      const description = getFindAllNodesFailureDescription(document.body, [
+        createComponentSelector(Outer),
+        createComponentSelector(Middle),
+        createComponentSelector(NotRendered),
+        createTestNameSelector('match'),
+      ]);
 
       expect(description).toEqual(
         `findAllNodes was able to match part of the selector:
-  Outer > Middle
+  <Outer> > <Middle>
 
 No matching component was found for:
-  NotRendered`,
-      );
-    });
-
-    it('should describe findAllNodes failures caused by a failed test-name match', () => {
-      function Example() {
-        return (
-          <>
-            <Example1 />
-            <Example2 />
-          </>
-        );
-      }
-
-      function Example1() {
-        return (
-          <div>
-            <div data-testname="match1" />
-          </div>
-        );
-      }
-
-      function Example2() {
-        return (
-          <div>
-            <div data-testname="match2" />
-            <Example3 />
-          </div>
-        );
-      }
-
-      function Example3() {
-        return (
-          <>
-            <div data-testname="match2" />
-            <div data-testname="match3" />
-          </>
-        );
-      }
-
-      ReactDOM.render(<Example />, container);
-
-      const description = ReactDOM.getFindAllNodesFailureDescription(
-        document.body,
-        [Example],
-        'match',
-      );
-
-      expect(description).toEqual(
-        `No host element was found with the test name "match".
-
-The following test names were found in the matched subtree:
-  match1
-  match2
-  match3`,
+  <NotRendered> > [data-testname="match"]`,
       );
     });
 
@@ -383,13 +464,11 @@ The following test names were found in the matched subtree:
         );
       }
 
-      ReactDOM.render(<Example />, container);
+      render(<Example />, container);
 
-      const description = ReactDOM.getFindAllNodesFailureDescription(
-        document.body,
-        [Example],
-        'match',
-      );
+      const description = getFindAllNodesFailureDescription(document.body, [
+        createComponentSelector(Example),
+      ]);
 
       expect(description).toBe(null);
     });
@@ -423,7 +502,7 @@ The following test names were found in the matched subtree:
         );
       }
 
-      ReactDOM.render(<Example />, container);
+      render(<Example />, container);
 
       setBoundingClientRect(ref.current, {
         x: 10,
@@ -432,7 +511,9 @@ The following test names were found in the matched subtree:
         height: 100,
       });
 
-      const rects = ReactDOM.findBoundingRects(document.body, [Example]);
+      const rects = findBoundingRects(document.body, [
+        createComponentSelector(Example),
+      ]);
       expect(rects).toHaveLength(1);
       expect(rects).toContainEqual({
         x: 10,
@@ -458,7 +539,7 @@ The following test names were found in the matched subtree:
         return <div ref={innerRef} />;
       }
 
-      ReactDOM.render(<Outer />, container);
+      render(<Outer />, container);
 
       setBoundingClientRect(outerRef.current, {
         x: 10,
@@ -473,7 +554,9 @@ The following test names were found in the matched subtree:
         height: 150,
       });
 
-      const rects = ReactDOM.findBoundingRects(document.body, [Outer]);
+      const rects = findBoundingRects(document.body, [
+        createComponentSelector(Outer),
+      ]);
       expect(rects).toHaveLength(2);
       expect(rects).toContainEqual({
         x: 10,
@@ -505,7 +588,7 @@ The following test names were found in the matched subtree:
         );
       }
 
-      ReactDOM.render(<Example />, container);
+      render(<Example />, container);
 
       setBoundingClientRect(refA.current, {
         x: 10,
@@ -520,7 +603,9 @@ The following test names were found in the matched subtree:
         height: 150,
       });
 
-      const rects = ReactDOM.findBoundingRects(document.body, [Example]);
+      const rects = findBoundingRects(document.body, [
+        createComponentSelector(Example),
+      ]);
       expect(rects).toHaveLength(2);
       expect(rects).toContainEqual({
         x: 10,
@@ -551,7 +636,7 @@ The following test names were found in the matched subtree:
         );
       }
 
-      ReactDOM.render(<Example />, container);
+      render(<Example />, container);
 
       setBoundingClientRect(refA.current, {
         x: 10,
@@ -572,7 +657,9 @@ The following test names were found in the matched subtree:
         height: 25,
       });
 
-      const rects = ReactDOM.findBoundingRects(document.body, [Example]);
+      const rects = findBoundingRects(document.body, [
+        createComponentSelector(Example),
+      ]);
       expect(rects).toHaveLength(2);
       expect(rects).toContainEqual({
         x: 10,
@@ -603,7 +690,7 @@ The following test names were found in the matched subtree:
         );
       }
 
-      ReactDOM.render(<Example />, container);
+      render(<Example />, container);
 
       setBoundingClientRect(refA.current, {
         x: 10,
@@ -624,7 +711,9 @@ The following test names were found in the matched subtree:
         height: 25,
       });
 
-      const rects = ReactDOM.findBoundingRects(document.body, [Example]);
+      const rects = findBoundingRects(document.body, [
+        createComponentSelector(Example),
+      ]);
       expect(rects).toHaveLength(2);
       expect(rects).toContainEqual({
         x: 10,
@@ -671,9 +760,12 @@ The following test names were found in the matched subtree:
         return null;
       }
 
-      ReactDOM.render(<Example />, container);
+      render(<Example />, container);
 
-      const didFocus = ReactDOM.focusWithin(document.body, [Example, NotUsed]);
+      const didFocus = focusWithin(document.body, [
+        createComponentSelector(Example),
+        createComponentSelector(NotUsed),
+      ]);
       expect(didFocus).toBe(false);
     });
 
@@ -685,9 +777,12 @@ The following test names were found in the matched subtree:
         return 'not focusable';
       }
 
-      ReactDOM.render(<Example />, container);
+      render(<Example />, container);
 
-      const didFocus = ReactDOM.focusWithin(document.body, [Example, Child]);
+      const didFocus = focusWithin(document.body, [
+        createComponentSelector(Example),
+        createComponentSelector(Child),
+      ]);
       expect(didFocus).toBe(false);
     });
 
@@ -700,9 +795,11 @@ The following test names were found in the matched subtree:
         );
       }
 
-      ReactDOM.render(<Example />, container);
+      render(<Example />, container);
 
-      const didFocus = ReactDOM.focusWithin(document.body, [Example]);
+      const didFocus = focusWithin(document.body, [
+        createComponentSelector(Example),
+      ]);
       expect(didFocus).toBe(false);
     });
 
@@ -711,9 +808,11 @@ The following test names were found in the matched subtree:
         return <button style={{display: 'none'}}>not clickable</button>;
       }
 
-      ReactDOM.render(<Example />, container);
+      render(<Example />, container);
 
-      const didFocus = ReactDOM.focusWithin(document.body, [Example]);
+      const didFocus = focusWithin(document.body, [
+        createComponentSelector(Example),
+      ]);
       expect(didFocus).toBe(false);
     });
 
@@ -758,9 +857,11 @@ The following test names were found in the matched subtree:
         );
       }
 
-      ReactDOM.render(<Example />, container);
+      render(<Example />, container);
 
-      const didFocus = ReactDOM.focusWithin(document.body, [Example]);
+      const didFocus = focusWithin(document.body, [
+        createComponentSelector(Example),
+      ]);
       expect(didFocus).toBe(true);
       expect(document.activeElement).not.toBeNull();
       expect(document.activeElement).toBe(secondRef.current);
@@ -787,9 +888,11 @@ The following test names were found in the matched subtree:
         );
       }
 
-      ReactDOM.render(<Example />, container);
+      render(<Example />, container);
 
-      const didFocus = ReactDOM.focusWithin(document.body, [Example]);
+      const didFocus = focusWithin(document.body, [
+        createComponentSelector(Example),
+      ]);
       expect(didFocus).toBe(true);
       expect(ref.current).not.toBeNull();
       expect(ref.current).not.toBe(document.activeElement);
@@ -839,9 +942,11 @@ The following test names were found in the matched subtree:
         );
       }
 
-      ReactDOM.render(<Example />, container);
+      render(<Example />, container);
 
-      const didFocus = ReactDOM.focusWithin(document.body, [Example]);
+      const didFocus = focusWithin(document.body, [
+        createComponentSelector(Example),
+      ]);
       expect(didFocus).toBe(true);
       expect(document.activeElement).not.toBeNull();
       expect(document.activeElement).toBe(secondRef.current);
@@ -924,7 +1029,7 @@ The following test names were found in the matched subtree:
         return <div ref={ref} />;
       }
 
-      ReactDOM.render(<Example />, container);
+      render(<Example />, container);
 
       // Stub out the size of the element this test will be observing.
       const rect = {
@@ -936,9 +1041,9 @@ The following test names were found in the matched subtree:
       setBoundingClientRect(ref.current, rect);
 
       const handleVisibilityChange = jest.fn();
-      ReactDOM.observeVisibleRects(
+      observeVisibleRects(
         document.body,
-        [Example],
+        [createComponentSelector(Example)],
         handleVisibilityChange,
       );
 
@@ -966,7 +1071,7 @@ The following test names were found in the matched subtree:
         );
       }
 
-      ReactDOM.render(<Example />, container);
+      render(<Example />, container);
 
       // Stub out the size of the element this test will be observing.
       const rect1 = {
@@ -985,9 +1090,9 @@ The following test names were found in the matched subtree:
       setBoundingClientRect(ref2.current, rect2);
 
       const handleVisibilityChange = jest.fn();
-      ReactDOM.observeVisibleRects(
+      observeVisibleRects(
         document.body,
-        [Example],
+        [createComponentSelector(Example)],
         handleVisibilityChange,
       );
 
@@ -1036,7 +1141,7 @@ The following test names were found in the matched subtree:
         return <div ref={ref} />;
       }
 
-      ReactDOM.render(<Example />, container);
+      render(<Example />, container);
 
       // Stub out the size of the element this test will be observing.
       const rect = {
@@ -1048,9 +1153,9 @@ The following test names were found in the matched subtree:
       setBoundingClientRect(ref.current, rect);
 
       const handleVisibilityChange = jest.fn();
-      const {disconnect} = ReactDOM.observeVisibleRects(
+      const {disconnect} = observeVisibleRects(
         document.body,
-        [Example],
+        [createComponentSelector(Example)],
         handleVisibilityChange,
       );
 
@@ -1079,7 +1184,7 @@ The following test names were found in the matched subtree:
         );
       }
 
-      ReactDOM.render(<Example />, container);
+      render(<Example />, container);
 
       // Stub out the size of the element this test will be observing.
       const rect1 = {
@@ -1091,9 +1196,9 @@ The following test names were found in the matched subtree:
       setBoundingClientRect(ref1.current, rect1);
 
       const handleVisibilityChange = jest.fn();
-      ReactDOM.observeVisibleRects(
+      observeVisibleRects(
         document.body,
-        [Example],
+        [createComponentSelector(Example)],
         handleVisibilityChange,
       );
 
@@ -1105,7 +1210,7 @@ The following test names were found in the matched subtree:
         {rect: rect1, ratio: 1},
       ]);
 
-      ReactDOM.act(() => increment());
+      act(() => increment());
 
       const rect2 = {
         x: 110,
@@ -1128,7 +1233,7 @@ The following test names were found in the matched subtree:
         {rect: rect2, ratio: 0.25},
       ]);
 
-      ReactDOM.act(() => increment());
+      act(() => increment());
 
       handleVisibilityChange.mockReset();
 
@@ -1153,7 +1258,7 @@ The following test names were found in the matched subtree:
         );
       }
 
-      ReactDOM.render(<Example />, container);
+      render(<Example />, container);
 
       // Stub out the size of the element this test will be observing.
       const rect1 = {
@@ -1172,9 +1277,9 @@ The following test names were found in the matched subtree:
       setBoundingClientRect(ref2.current, rect2);
 
       const handleVisibilityChange = jest.fn();
-      ReactDOM.observeVisibleRects(
+      observeVisibleRects(
         document.body,
-        [Example],
+        [createComponentSelector(Example)],
         handleVisibilityChange,
       );
 
