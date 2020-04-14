@@ -16,7 +16,7 @@ describe('ReactSpeculativeWork', () => {
     Scheduler = require('scheduler');
   });
 
-  it.only('exercises bailoutReducer', () => {
+  it('exercises bailoutReducer', () => {
     let _dispatch;
 
     let App = () => {
@@ -71,7 +71,7 @@ describe('ReactSpeculativeWork', () => {
     expect(Scheduler).toHaveYielded(['abcd']);
     expect(root).toMatchRenderedOutput('abcd');
 
-    console.log('------------------------------------ dispatch zd');
+    console.log('------------------------------------ dispatch ezzzzfzzz');
     ReactNoop.act(() => {
       _dispatch('e');
       _dispatch('z');
@@ -128,18 +128,30 @@ describe('ReactSpeculativeWork', () => {
       }
     }
 
-    let Intermediate = React.memo(({children}) => children || null);
-    let BeforeUpdatingLeafBranch = React.memo(({children}) => children || null);
-    let AfterUpdatingLeafBranch = React.memo(({children}) => children || null);
-    let Leaf = React.memo(() => null);
+    let Intermediate = React.memo(function Intermediate({children}) {
+      return children || null;
+    });
+    let BeforeUpdatingLeafBranch = React.memo(
+      function BeforeUpdatingLeafBranch({children}) {
+        return children || null;
+      },
+    );
+    let AfterUpdatingLeafBranch = React.memo(function AfterUpdatingLeafBranch({
+      children,
+    }) {
+      return children || null;
+    });
+    let Leaf = React.memo(function Leaf() {
+      return null;
+    });
 
     let MyContext = React.createContext(0);
 
     let UpdatingLeaf = React.memo(
-      () => {
+      function UpdatingLeaf() {
         let [value, setValue] = React.useState('leaf');
         let isEven = React.useContext(MyContext, v => v % 2 === 0);
-        // Scheduler.unstable_yieldValue(value);
+        Scheduler.unstable_yieldValue(value);
         externalSetValue = setValue;
         return `${value}-${isEven ? 'even' : 'odd'}`;
       },
@@ -149,37 +161,37 @@ describe('ReactSpeculativeWork', () => {
     let root = ReactNoop.createRoot();
 
     ReactNoop.act(() => root.render(<App />));
-    // expect(Scheduler).toHaveYielded(['leaf']);
+    expect(Scheduler).toHaveYielded(['leaf']);
     expect(root).toMatchRenderedOutput('leaf-even');
 
     ReactNoop.act(() => externalSetValue('leaf'));
-    // expect(Scheduler).toHaveYielded([]);
+    expect(Scheduler).toHaveYielded([]);
     expect(root).toMatchRenderedOutput('leaf-even');
 
     ReactNoop.act(() => externalSetMyContextValue(2));
-    // expect(Scheduler).toHaveYielded([]);
+    expect(Scheduler).toHaveYielded([]);
     expect(root).toMatchRenderedOutput('leaf-even');
 
     ReactNoop.act(() => {
       externalSetValue('leaf');
       externalSetMyContextValue(4);
     });
-    // expect(Scheduler).toHaveYielded([]);
+    expect(Scheduler).toHaveYielded([]);
     expect(root).toMatchRenderedOutput('leaf-even');
 
     ReactNoop.act(() => externalSetMyContextValue(5));
-    // expect(Scheduler).toHaveYielded(['leaf']);
+    expect(Scheduler).toHaveYielded(['leaf']);
     expect(root).toMatchRenderedOutput('leaf-odd');
 
     ReactNoop.act(() => {
       externalSetValue('bar');
       externalSetMyContextValue(4);
     });
-    // expect(Scheduler).toHaveYielded(['bar']);
+    expect(Scheduler).toHaveYielded(['bar']);
     expect(root).toMatchRenderedOutput('bar-even');
 
     ReactNoop.act(() => externalSetValue('baz'));
-    // expect(Scheduler).toHaveYielded(['baz']);
+    expect(Scheduler).toHaveYielded(['baz']);
     expect(root).toMatchRenderedOutput('baz-even');
   });
 
