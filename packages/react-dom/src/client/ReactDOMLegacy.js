@@ -235,7 +235,7 @@ export function findDOMNode(
             'never access something that requires stale data from the previous ' +
             'render, such as refs. Move this logic to componentDidMount and ' +
             'componentDidUpdate instead.',
-          getComponentName(owner.type) || 'A component',
+          getComponentName(owner.elementType) || 'A component',
         );
       }
       owner.stateNode._warnedAboutRefsInRender = true;

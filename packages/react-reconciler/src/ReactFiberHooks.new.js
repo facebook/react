@@ -243,7 +243,7 @@ function checkDepsAreArrayDev(deps: mixed) {
 
 function warnOnHookMismatchInDev(currentHookName: HookType) {
   if (__DEV__) {
-    const componentName = getComponentName(currentlyRenderingFiber.type);
+    const componentName = getComponentName(currentlyRenderingFiber.elementType);
     if (!didWarnAboutMismatchedHooksForComponent.has(componentName)) {
       didWarnAboutMismatchedHooksForComponent.add(componentName);
 
@@ -1576,7 +1576,7 @@ export function getIsUpdatingOpaqueValueInRenderPhaseInDEV(): boolean | void {
 function warnOnOpaqueIdentifierAccessInDEV(fiber) {
   if (__DEV__) {
     // TODO: Should warn in effects and callbacks, too
-    const name = getComponentName(fiber.type) || 'Unknown';
+    const name = getComponentName(fiber.elementType) || 'Unknown';
     if (getIsRendering() && !didWarnAboutUseOpaqueIdentifier[name]) {
       console.error(
         'The object passed back from useOpaqueIdentifier is meant to be ' +

@@ -137,7 +137,7 @@ function createClassErrorUpdate(
             console.error(
               '%s: Error boundaries should implement getDerivedStateFromError(). ' +
                 'In that method, return a state update to display an error message or fallback UI.',
-              getComponentName(fiber.type) || 'Unknown',
+              getComponentName(fiber.elementType) || 'Unknown',
             );
           }
         }
@@ -346,7 +346,7 @@ function throwException(
     // No boundary was found. Fallthrough to error mode.
     // TODO: Use invariant so the message is stripped in prod?
     value = new Error(
-      (getComponentName(sourceFiber.type) || 'A React component') +
+      (getComponentName(sourceFiber.elementType) || 'A React component') +
         ' suspended while rendering, but no fallback UI was specified.\n' +
         '\n' +
         'Add a <Suspense fallback=...> component higher in the tree to ' +

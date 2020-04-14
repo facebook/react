@@ -60,7 +60,7 @@ const hasOwnProperty = Object.prototype.hasOwnProperty;
 
 function getDeclarationErrorAddendum() {
   if (ReactCurrentOwner.current) {
-    const name = getComponentName(ReactCurrentOwner.current.type);
+    const name = getComponentName(ReactCurrentOwner.current.elementType);
     if (name) {
       return '\n\nCheck the render method of `' + name + '`.';
     }
@@ -140,7 +140,7 @@ function validateExplicitKey(element, parentType) {
   ) {
     // Give the component that originally created this child.
     childOwner = ` It was passed a child from ${getComponentName(
-      element._owner.type,
+      element._owner.elementType,
     )}.`;
   }
 

@@ -249,7 +249,7 @@ function checkDepsAreArrayDev(deps: mixed) {
 
 function warnOnHookMismatchInDev(currentHookName: HookType) {
   if (__DEV__) {
-    const componentName = getComponentName(currentlyRenderingFiber.type);
+    const componentName = getComponentName(currentlyRenderingFiber.elementType);
     if (!didWarnAboutMismatchedHooksForComponent.has(componentName)) {
       didWarnAboutMismatchedHooksForComponent.add(componentName);
 

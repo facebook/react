@@ -937,7 +937,7 @@ function updateClassComponent(
         console.error(
           'It looks like %s is reassigning its own `this.props` while rendering. ' +
             'This is not supported and can lead to confusing bugs.',
-          getComponentName(workInProgress.type) || 'a component',
+          getComponentName(workInProgress.elementType) || 'a component',
         );
       }
       didWarnAboutReassigningProps = true;
@@ -3391,7 +3391,7 @@ function beginWork(
               outerPropTypes,
               resolvedProps, // Resolved for outer only
               'prop',
-              getComponentName(type),
+              getComponentName(workInProgress.elementType),
             );
           }
         }

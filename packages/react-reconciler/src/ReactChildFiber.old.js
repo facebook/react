@@ -85,7 +85,8 @@ if (__DEV__) {
     );
     child._store.validated = true;
 
-    const componentName = getComponentName(returnFiber.type) || 'Component';
+    const componentName =
+      getComponentName(returnFiber.elementType) || 'Component';
 
     if (ownerHasKeyUseWarning[componentName]) {
       return;
@@ -127,7 +128,8 @@ function coerceRef(
           element._owner.stateNode !== element._self
         )
       ) {
-        const componentName = getComponentName(returnFiber.type) || 'Component';
+        const componentName =
+          getComponentName(returnFiber.elementType) || 'Component';
         if (!didWarnAboutStringRefs[componentName]) {
           if (warnAboutStringRefs) {
             console.error(
@@ -234,7 +236,8 @@ function throwOnInvalidObjectType(returnFiber: Fiber, newChild: Object) {
 
 function warnOnFunctionType(returnFiber: Fiber) {
   if (__DEV__) {
-    const componentName = getComponentName(returnFiber.type) || 'Component';
+    const componentName =
+      getComponentName(returnFiber.elementType) || 'Component';
 
     if (ownerHasFunctionTypeWarning[componentName]) {
       return;

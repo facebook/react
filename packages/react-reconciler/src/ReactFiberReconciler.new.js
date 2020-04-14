@@ -197,7 +197,7 @@ function findHostInstanceWithWarning(
       return null;
     }
     if (hostFiber.mode & StrictMode) {
-      const componentName = getComponentName(fiber.type) || 'Component';
+      const componentName = getComponentName(fiber.elementType) || 'Component';
       if (!didWarnAboutFindNodeInStrictMode[componentName]) {
         didWarnAboutFindNodeInStrictMode[componentName] = true;
 
@@ -292,7 +292,7 @@ export function updateContainer(
           'triggering nested component updates from render is not allowed. ' +
           'If necessary, trigger nested updates in componentDidUpdate.\n\n' +
           'Check the render method of %s.',
-        getComponentName(ReactCurrentFiberCurrent.type) || 'Unknown',
+        getComponentName(ReactCurrentFiberCurrent.elementType) || 'Unknown',
       );
     }
   }

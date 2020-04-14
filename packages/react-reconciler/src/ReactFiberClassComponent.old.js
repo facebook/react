@@ -768,7 +768,7 @@ function callComponentWillMount(workInProgress, instance) {
         '%s.componentWillMount(): Assigning directly to this.state is ' +
           "deprecated (except inside a component's " +
           'constructor). Use setState instead.',
-        getComponentName(workInProgress.type) || 'Component',
+        getComponentName(workInProgress.elementType) || 'Component',
       );
     }
     classComponentUpdater.enqueueReplaceState(instance, instance.state, null);
@@ -792,7 +792,7 @@ function callComponentWillReceiveProps(
   if (instance.state !== oldState) {
     if (__DEV__) {
       const componentName =
-        getComponentName(workInProgress.type) || 'Component';
+        getComponentName(workInProgress.elementType) || 'Component';
       if (!didWarnAboutStateAssignmentForComponent.has(componentName)) {
         didWarnAboutStateAssignmentForComponent.add(componentName);
         console.error(

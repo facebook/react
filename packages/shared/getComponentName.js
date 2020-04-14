@@ -41,26 +41,27 @@ function getContextName(type: ReactContext<any>) {
   return type.displayName || 'Context';
 }
 
-function getComponentName(type: mixed): string | null {
-  if (type == null) {
+function getComponentName(elementType: mixed): string | null {
+  if (elementType == null) {
     // Host root, text node or just invalid type.
     return null;
   }
   if (__DEV__) {
-    if (typeof (type: any).tag === 'number') {
+    // TODO: protect against potential false positives from user-defined statics
+    if (typeof (elementType: any).tag === 'number') {
       console.error(
         'Received an unexpected object in getComponentName(). ' +
           'This is likely a bug in React. Please file an issue.',
       );
     }
   }
-  if (typeof type === 'function') {
-    return (type: any).displayName || type.name || null;
+  if (typeof elementType === 'function') {
+    return (elementType: any).displayName || elementType.name || null;
   }
-  if (typeof type === 'string') {
-    return type;
+  if (typeof elementType === 'string') {
+    return elementType;
   }
-  switch (type) {
+  switch (elementType) {
     case REACT_FRAGMENT_TYPE:
       return 'Fragment';
     case REACT_PORTAL_TYPE:
@@ -74,22 +75,22 @@ function getComponentName(type: mixed): string | null {
     case REACT_SUSPENSE_LIST_TYPE:
       return 'SuspenseList';
   }
-  if (typeof type === 'object') {
-    switch (type.$$typeof) {
+  if (typeof elementType === 'object') {
+    switch (elementType.$$typeof) {
       case REACT_CONTEXT_TYPE:
-        const context: ReactContext<any> = (type: any);
+        const context: ReactContext<any> = (elementType: any);
         return getContextName(context) + '.Consumer';
       case REACT_PROVIDER_TYPE:
-        const provider: ReactProviderType<any> = (type: any);
+        const provider: ReactProviderType<any> = (elementType: any);
         return getContextName(provider._context) + '.Provider';
       case REACT_FORWARD_REF_TYPE:
-        return getWrappedName(type, type.render, 'ForwardRef');
+        return getWrappedName(elementType, elementType.render, 'ForwardRef');
       case REACT_MEMO_TYPE:
-        return getComponentName(type.type);
+        return getComponentName(elementType.type);
       case REACT_BLOCK_TYPE:
-        return getComponentName(type._render);
+        return getComponentName(elementType._render);
       case REACT_LAZY_TYPE: {
-        const lazyComponent: LazyComponent<any, any> = (type: any);
+        const lazyComponent: LazyComponent<any, any> = (elementType: any);
         const payload = lazyComponent._payload;
         const init = lazyComponent._init;
         try {

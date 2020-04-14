@@ -3089,7 +3089,8 @@ function warnAboutUpdateOnUnmountedFiberInDEV(fiber) {
 
     // We show the whole stack but dedupe on the top component's name because
     // the problematic code almost always lies inside that component.
-    const componentName = getComponentName(fiber.type) || 'ReactComponent';
+    const componentName =
+      getComponentName(fiber.elementType) || 'ReactComponent';
     if (didWarnStateUpdateForUnmountedComponent !== null) {
       if (didWarnStateUpdateForUnmountedComponent.has(componentName)) {
         return;
@@ -3318,7 +3319,7 @@ export function warnIfNotCurrentlyActingEffectsInDEV(fiber: Fiber): void {
           "This ensures that you're testing the behavior the user would see " +
           'in the browser.' +
           ' Learn more at https://fb.me/react-wrap-tests-with-act',
-        getComponentName(fiber.type),
+        getComponentName(fiber.elementType),
       );
     }
   }
@@ -3346,7 +3347,7 @@ function warnIfNotCurrentlyActingUpdatesInDEV(fiber: Fiber): void {
             "This ensures that you're testing the behavior the user would see " +
             'in the browser.' +
             ' Learn more at https://fb.me/react-wrap-tests-with-act',
-          getComponentName(fiber.type),
+          getComponentName(fiber.elementType),
         );
       } finally {
         if (previousFiber) {

@@ -559,7 +559,7 @@ export function createFiberFromTypeAndProps(
               "it's defined in, or you might have mixed up default and " +
               'named imports.';
           }
-          const ownerName = owner ? getComponentName(owner.type) : null;
+          const ownerName = owner ? getComponentName(owner.elementType) : null;
           if (ownerName) {
             info += '\n\nCheck the render method of `' + ownerName + '`.';
           }

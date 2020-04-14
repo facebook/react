@@ -251,7 +251,7 @@ function commitBeforeMutationLifeCycles(
                     'This might either be because of a bug in React, or because ' +
                     'a component reassigns its own `this.props`. ' +
                     'Please file an issue.',
-                  getComponentName(finishedWork.type) || 'instance',
+                  getComponentName(finishedWork.elementType) || 'instance',
                 );
               }
               if (instance.state !== finishedWork.memoizedState) {
@@ -261,7 +261,7 @@ function commitBeforeMutationLifeCycles(
                     'This might either be because of a bug in React, or because ' +
                     'a component reassigns its own `this.state`. ' +
                     'Please file an issue.',
-                  getComponentName(finishedWork.type) || 'instance',
+                  getComponentName(finishedWork.elementType) || 'instance',
                 );
               }
             }
@@ -279,7 +279,7 @@ function commitBeforeMutationLifeCycles(
               console.error(
                 '%s.getSnapshotBeforeUpdate(): A snapshot value (or null) ' +
                   'must be returned. You have returned undefined.',
-                getComponentName(finishedWork.type),
+                getComponentName(finishedWork.elementType),
               );
             }
           }
@@ -508,7 +508,7 @@ function commitLifeCycles(
                     'This might either be because of a bug in React, or because ' +
                     'a component reassigns its own `this.props`. ' +
                     'Please file an issue.',
-                  getComponentName(finishedWork.type) || 'instance',
+                  getComponentName(finishedWork.elementType) || 'instance',
                 );
               }
               if (instance.state !== finishedWork.memoizedState) {
@@ -518,7 +518,7 @@ function commitLifeCycles(
                     'This might either be because of a bug in React, or because ' +
                     'a component reassigns its own `this.state`. ' +
                     'Please file an issue.',
-                  getComponentName(finishedWork.type) || 'instance',
+                  getComponentName(finishedWork.elementType) || 'instance',
                 );
               }
             }
@@ -558,7 +558,7 @@ function commitLifeCycles(
                     'This might either be because of a bug in React, or because ' +
                     'a component reassigns its own `this.props`. ' +
                     'Please file an issue.',
-                  getComponentName(finishedWork.type) || 'instance',
+                  getComponentName(finishedWork.elementType) || 'instance',
                 );
               }
               if (instance.state !== finishedWork.memoizedState) {
@@ -568,7 +568,7 @@ function commitLifeCycles(
                     'This might either be because of a bug in React, or because ' +
                     'a component reassigns its own `this.state`. ' +
                     'Please file an issue.',
-                  getComponentName(finishedWork.type) || 'instance',
+                  getComponentName(finishedWork.elementType) || 'instance',
                 );
               }
             }
@@ -616,7 +616,7 @@ function commitLifeCycles(
                   'This might either be because of a bug in React, or because ' +
                   'a component reassigns its own `this.props`. ' +
                   'Please file an issue.',
-                getComponentName(finishedWork.type) || 'instance',
+                getComponentName(finishedWork.elementType) || 'instance',
               );
             }
             if (instance.state !== finishedWork.memoizedState) {
@@ -626,7 +626,7 @@ function commitLifeCycles(
                   'This might either be because of a bug in React, or because ' +
                   'a component reassigns its own `this.state`. ' +
                   'Please file an issue.',
-                getComponentName(finishedWork.type) || 'instance',
+                getComponentName(finishedWork.elementType) || 'instance',
               );
             }
           }
@@ -844,7 +844,7 @@ function commitAttachRef(finishedWork: Fiber) {
           console.error(
             'Unexpected ref object provided for %s. ' +
               'Use either a ref-setter function or React.createRef().',
-            getComponentName(finishedWork.type),
+            getComponentName(finishedWork.elementType),
           );
         }
       }

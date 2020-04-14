@@ -104,7 +104,7 @@ function getMaskedContext(
     }
 
     if (__DEV__) {
-      const name = getComponentName(type) || 'Unknown';
+      const name = getComponentName(workInProgress.elementType) || 'Unknown';
       checkPropTypes(contextTypes, context, 'context', name);
     }
 

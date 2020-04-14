@@ -2888,7 +2888,8 @@ function warnAboutUpdateOnNotYetMountedFiberInDEV(fiber) {
 
     // We show the whole stack but dedupe on the top component's name because
     // the problematic code almost always lies inside that component.
-    const componentName = getComponentName(fiber.type) || 'ReactComponent';
+    const componentName =
+      getComponentName(fiber.elementType) || 'ReactComponent';
     if (didWarnStateUpdateForNotYetMountedComponent !== null) {
       if (didWarnStateUpdateForNotYetMountedComponent.has(componentName)) {
         return;
@@ -2942,7 +2943,8 @@ function warnAboutUpdateOnUnmountedFiberInDEV(fiber) {
 
     // We show the whole stack but dedupe on the top component's name because
     // the problematic code almost always lies inside that component.
-    const componentName = getComponentName(fiber.type) || 'ReactComponent';
+    const componentName =
+      getComponentName(fiber.elementType) || 'ReactComponent';
     if (didWarnStateUpdateForUnmountedComponent !== null) {
       if (didWarnStateUpdateForUnmountedComponent.has(componentName)) {
         return;
@@ -3076,14 +3078,14 @@ function warnAboutRenderPhaseUpdatesInDEV(fiber) {
         case ForwardRef:
         case SimpleMemoComponent: {
           const renderingComponentName =
-            (workInProgress && getComponentName(workInProgress.type)) ||
+            (workInProgress && getComponentName(workInProgress.elementType)) ||
             'Unknown';
           // Dedupe by the rendering component because it's the one that needs to be fixed.
           const dedupeKey = renderingComponentName;
           if (!didWarnAboutUpdateInRenderForAnotherComponent.has(dedupeKey)) {
             didWarnAboutUpdateInRenderForAnotherComponent.add(dedupeKey);
             const setStateComponentName =
-              getComponentName(fiber.type) || 'Unknown';
+              getComponentName(fiber.elementType) || 'Unknown';
             console.error(
               'Cannot update a component (`%s`) while rendering a ' +
                 'different component (`%s`). To locate the bad setState() call inside `%s`, ' +
@@ -3171,7 +3173,7 @@ export function warnIfNotCurrentlyActingEffectsInDEV(fiber: Fiber): void {
           "This ensures that you're testing the behavior the user would see " +
           'in the browser.' +
           ' Learn more at https://fb.me/react-wrap-tests-with-act',
-        getComponentName(fiber.type),
+        getComponentName(fiber.elementType),
       );
     }
   }
@@ -3199,7 +3201,7 @@ function warnIfNotCurrentlyActingUpdatesInDEV(fiber: Fiber): void {
             "This ensures that you're testing the behavior the user would see " +
             'in the browser.' +
             ' Learn more at https://fb.me/react-wrap-tests-with-act',
-          getComponentName(fiber.type),
+          getComponentName(fiber.elementType),
         );
       } finally {
         if (previousFiber) {
