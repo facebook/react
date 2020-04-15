@@ -12,7 +12,7 @@
 let React;
 let ReactDOM;
 
-describe('EnterLeaveEventPlugin', () => {
+describe('Legacy EnterLeaveEventPlugin', () => {
   let container;
 
   beforeEach(() => {

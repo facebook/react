@@ -12,7 +12,7 @@
 let React;
 let ReactDOM;
 
-describe('BeforeInputEventPlugin', () => {
+describe('Legacy BeforeInputEventPlugin', () => {
   let container;
 
   function loadReactDOM(envSimulator) {

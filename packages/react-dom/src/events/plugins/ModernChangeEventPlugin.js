@@ -32,8 +32,10 @@ import {
   enableModernEventSystem,
 } from 'shared/ReactFeatureFlags';
 import {batchedUpdates} from '../ReactDOMUpdateBatching';
-import {dispatchEventsInBatch} from '../DOMModernPluginEventSystem';
-import {legacyAccumulateTwoPhaseDispatchesSingle} from '../DOMLegacyEventPluginSystem';
+import {
+  dispatchEventsInBatch,
+  accumulateTwoPhaseListeners,
+} from '../DOMModernPluginEventSystem';
 
 const eventTypes = {
   change: {
@@ -64,7 +66,7 @@ function createAndAccumulateChangeEvent(inst, nativeEvent, target) {
   event.type = 'change';
   // Flag this event loop as needing state restore.
   enqueueStateRestore(target);
-  legacyAccumulateTwoPhaseDispatchesSingle(event);
+  accumulateTwoPhaseListeners(event);
   return event;
 }
 /**

@@ -17,12 +17,17 @@ import type {PluginModule} from 'legacy-events/PluginModuleType';
 import type {EventSystemFlags} from '../EventSystemFlags';
 
 import SyntheticEvent from 'legacy-events/SyntheticEvent';
+import {IS_TARGET_PHASE_ONLY} from '../EventSystemFlags';
 
 import * as DOMTopLevelEventTypes from '../DOMTopLevelEventTypes';
 import {
   topLevelEventsToDispatchConfig,
   simpleEventPluginEventTypes,
 } from '../DOMEventProperties';
+import {
+  accumulateEventTargetListeners,
+  accumulateTwoPhaseListeners,
+} from '../DOMModernPluginEventSystem';
 
 import SyntheticAnimationEvent from '../SyntheticAnimationEvent';
 import SyntheticClipboardEvent from '../SyntheticClipboardEvent';
@@ -36,7 +41,8 @@ import SyntheticTransitionEvent from '../SyntheticTransitionEvent';
 import SyntheticUIEvent from '../SyntheticUIEvent';
 import SyntheticWheelEvent from '../SyntheticWheelEvent';
 import getEventCharCode from '../getEventCharCode';
-import {legacyAccumulateTwoPhaseDispatchesSingle} from '../DOMLegacyEventPluginSystem';
+
+import {enableUseEventAPI} from 'shared/ReactFeatureFlags';
 
 // Only used in DEV for exhaustiveness validation.
 const knownHTMLTopLevelTypes: Array<DOMTopLevelEventType> = [
@@ -198,7 +204,22 @@ const SimpleEventPlugin: PluginModule<MouseEvent> = {
       nativeEventTarget,
     );
 
-    legacyAccumulateTwoPhaseDispatchesSingle(event);
+    // For TargetEvent only accumulation, we do not traverse through
+    // the React tree looking for managed React DOM elements that have
+    // events. Instead we only check the EventTarget Store Map to see
+    // if the container has listeners for the particular phase we're
+    // interested in. This is because we attach the native event listener
+    // only in the given phase.
+    if (
+      enableUseEventAPI &&
+      eventSystemFlags !== undefined &&
+      eventSystemFlags & IS_TARGET_PHASE_ONLY &&
+      targetContainer != null
+    ) {
+      accumulateEventTargetListeners(event, targetContainer);
+    } else {
+      accumulateTwoPhaseListeners(event, true);
+    }
     return event;
   },
 };

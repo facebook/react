@@ -11,17 +11,14 @@ import {
   TOP_POINTER_OUT,
   TOP_POINTER_OVER,
 } from '../DOMTopLevelEventTypes';
-import {
-  IS_REPLAYED,
-  IS_FIRST_ANCESTOR,
-} from 'react-dom/src/events/EventSystemFlags';
+import {IS_REPLAYED} from 'react-dom/src/events/EventSystemFlags';
 import SyntheticMouseEvent from '../SyntheticMouseEvent';
 import SyntheticPointerEvent from '../SyntheticPointerEvent';
 import {
   getClosestInstanceFromNode,
   getNodeFromInstance,
 } from '../../client/ReactDOMComponentTree';
-import {legacyAccumulateEnterLeaveDispatches} from '../DOMLegacyEventPluginSystem';
+import {accumulateEnterLeaveListeners} from '../DOMModernPluginEventSystem';
 
 import {HostComponent, HostText} from 'react-reconciler/src/ReactWorkTags';
 import {getNearestMountedFiber} from 'react-reconciler/src/ReactFiberTreeReflection';
@@ -70,11 +67,14 @@ const EnterLeaveEventPlugin = {
     if (isOverEvent && (eventSystemFlags & IS_REPLAYED) === 0) {
       const related = nativeEvent.relatedTarget || nativeEvent.fromElement;
       if (related) {
-        // If this is an over event with a target, then we've already dispatched
-        // the event in the out event of the other target. If this is replayed,
-        // then it's because we couldn't dispatch against this target previously
-        // so we have to do it now instead.
-        return null;
+        // Due to the fact we don't add listeners to the document with the
+        // modern event system and instead attach listeners to roots, we
+        // need to handle the over event case. To ensure this, we just need to
+        // make sure the node that we're coming from is managed by React.
+        const inst = getClosestInstanceFromNode(related);
+        if (inst !== null) {
+          return null;
+        }
       }
     }
 
@@ -163,11 +163,7 @@ const EnterLeaveEventPlugin = {
     enter.target = toNode;
     enter.relatedTarget = fromNode;
 
-    legacyAccumulateEnterLeaveDispatches(leave, enter, from, to);
-
-    if ((eventSystemFlags & IS_FIRST_ANCESTOR) === 0) {
-      return [leave];
-    }
+    accumulateEnterLeaveListeners(leave, enter, from, to);
 
     return [leave, enter];
   },
