@@ -32,6 +32,16 @@ export function logCapturedError(
       const source = errorInfo.source;
       const stack = errorInfo.stack;
       const componentStack = stack !== null ? stack : '';
+
+      if (error != null && boundary.type != null && !error._loggedByBrowser) {
+        // If an error boundary caught this error then we need to log it.
+        // However, we can't just always log it because the browser's
+        // implementation of invokeGuardedCallback will log the error and we
+        // don't want to log it twice. So, when the browser logs the error,
+        // we set the _loggedByBrowser expando and skip logging it here.
+        console['error'](error);
+      }
+
       // Browsers support silencing uncaught errors by calling
       // `preventDefault()` in window `error` handler.
       // We record this information as an expando on the error.
