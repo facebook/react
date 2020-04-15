@@ -44,7 +44,6 @@ function FiberRootNode(containerInfo, tag, hydrate) {
   this.nextKnownPendingLevel = NoWork;
   this.lastPingedTime = NoWork;
   this.lastExpiredTime = NoWork;
-  this.mutableSourceFirstPendingUpdateTime = NoWork;
   this.mutableSourceLastPendingUpdateTime = NoWork;
 
   if (enableSchedulerTracing) {
