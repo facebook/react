@@ -99,7 +99,7 @@ import {
   NoWork,
   Never,
   Sync,
-  computeAsyncExpiration,
+  DefaultUpdateTime,
 } from './ReactFiberExpirationTime.new';
 import {
   ConcurrentMode,
@@ -2207,7 +2207,7 @@ function mountDehydratedSuspenseComponent(
     // time. This will mean that Suspense timeouts are slightly shifted to later than
     // they should be.
     // Schedule a normal pri update to render this content.
-    const newExpirationTime = computeAsyncExpiration();
+    const newExpirationTime = DefaultUpdateTime;
     if (enableSchedulerTracing) {
       markSpawnedWork(newExpirationTime);
     }

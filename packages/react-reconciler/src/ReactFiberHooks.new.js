@@ -83,7 +83,7 @@ const {ReactCurrentDispatcher, ReactCurrentBatchConfig} = ReactSharedInternals;
 type Update<S, A> = {|
   // TODO: Temporary field. Will remove this by storing a map of
   // transition -> start time on the root.
-  eventTime: ExpirationTime,
+  eventTime: number,
   expirationTime: ExpirationTime,
   suspenseConfig: null | SuspenseConfig,
   action: A,

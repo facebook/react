@@ -115,14 +115,9 @@ import {
 import {
   NoWork,
   Sync,
+  UserBlockingUpdateTime,
+  DefaultUpdateTime,
   Never,
-  msToExpirationTime,
-  expirationTimeToMs,
-  computeInteractiveExpiration,
-  computeAsyncExpiration,
-  computeSuspenseTimeout,
-  HIGH_PRIORITY_EXPIRATION,
-  LOW_PRIORITY_EXPIRATION,
   inferPriorityFromExpirationTime,
   Batched,
   Idle,
@@ -241,8 +236,8 @@ let workInProgressRootFatalError: mixed = null;
 // This is conceptually a time stamp but expressed in terms of an ExpirationTime
 // because we deal mostly with expiration times in the hot path, so this avoids
 // the conversion happening in the hot path.
-let workInProgressRootLatestProcessedEventTime: ExpirationTime = Sync;
-let workInProgressRootLatestSuspenseTimeout: ExpirationTime = Sync;
+let workInProgressRootLatestProcessedEventTime: number = -1;
+let workInProgressRootLatestSuspenseTimeout: number = -1;
 let workInProgressRootCanSuspendUsingConfig: null | SuspenseConfig = null;
 // The work left over by components that were visited during this render. Only
 // includes unprocessed updates, not work in bailed out children.
@@ -256,6 +251,7 @@ let workInProgressRootHasPendingPing: boolean = false;
 // model where we don't commit new loading states in too quick succession.
 let globalMostRecentFallbackTime: number = 0;
 const FALLBACK_THROTTLE_MS: number = 500;
+const DEFAULT_TIMEOUT_MS: number = 5000;
 
 let nextEffect: Fiber | null = null;
 let hasUncaughtError = false;
@@ -289,15 +285,10 @@ let nestedPassiveUpdateCount: number = 0;
 // hydration or SuspenseList.
 let spawnedWorkDuringRender: null | Array<ExpirationTime> = null;
 
-// Expiration times are computed by adding to the current time (the start
-// time). However, if two updates are scheduled within the same event, we
-// should treat their start times as simultaneous, even if the actual clock
-// time has advanced between the first and second call.
-
-// In other words, because expiration times determine how updates are batched,
-// we want all updates of like priority that occur within the same event to
-// receive the same expiration time. Otherwise we get tearing.
-let currentEventTime: ExpirationTime = NoWork;
+// If two updates are scheduled within the same event, we should treat their
+// event times as simultaneous, even if the actual clock time has advanced
+// between the first and second call.
+let currentEventTime: number = -1;
 
 // Dev only flag that tracks if passive effects are currently being flushed.
 // We warn about state updates for unmounted components differently in this case.
@@ -313,20 +304,20 @@ export function getWorkInProgressRoot(): FiberRoot | null {
 export function requestEventTime() {
   if ((executionContext & (RenderContext | CommitContext)) !== NoContext) {
     // We're inside React, so it's fine to read the actual time.
-    return msToExpirationTime(now());
+    return now();
   }
   // We're not inside React, so we may be in the middle of a browser event.
-  if (currentEventTime !== NoWork) {
+  if (currentEventTime !== -1) {
     // Use the same start time for all updates until we enter React again.
     return currentEventTime;
   }
   // This is the first update since React yielded. Compute a new start time.
-  currentEventTime = msToExpirationTime(now());
+  currentEventTime = now();
   return currentEventTime;
 }
 
 export function getCurrentTime() {
-  return msToExpirationTime(now());
+  return now();
 }
 
 export function requestUpdateExpirationTime(
@@ -395,10 +386,10 @@ export function requestUpdateExpirationTime(
       return Batched;
     case InputDiscreteLanePriority:
     case InputContinuousLanePriority:
-      expirationTime = computeInteractiveExpiration();
+      expirationTime = UserBlockingUpdateTime;
       break;
     case DefaultLanePriority:
-      expirationTime = computeAsyncExpiration();
+      expirationTime = DefaultUpdateTime;
       break;
     case TransitionShortLanePriority:
       expirationTime = ShortTransition;
@@ -669,23 +660,21 @@ function ensureRootIsScheduled(root: FiberRoot) {
       const currentTimeMs = now();
 
       // Compute an expiration time based on the priority level.
-      const maxMsUntilExpiration =
-        priorityLevel === UserBlockingSchedulerPriority
-          ? HIGH_PRIORITY_EXPIRATION
-          : LOW_PRIORITY_EXPIRATION;
+      const expiration =
+        priorityLevel === UserBlockingSchedulerPriority ? 250 : 5000;
 
       let msUntilExpiration;
       if (existingExpirationTime === -1) {
         // This is the first concurrent update on the root. Use the expiration
         // time we just computed.
-        msUntilExpiration = maxMsUntilExpiration;
+        msUntilExpiration = expiration;
         root.expiresAt = msUntilExpiration + currentTimeMs;
       } else {
         // There's already an expiration time. Use the smaller of the current
         // expiration and the one we just computed.
         msUntilExpiration = existingExpirationTime - currentTimeMs;
-        if (maxMsUntilExpiration < msUntilExpiration) {
-          root.expiresAt = maxMsUntilExpiration;
+        if (expiration < msUntilExpiration) {
+          root.expiresAt = expiration;
         }
       }
       newCallbackNode = scheduleCallback(
@@ -710,7 +699,7 @@ function ensureRootIsScheduled(root: FiberRoot) {
 function performConcurrentWorkOnRoot(root, didTimeout) {
   // Since we know we're in a React event, we can clear the current
   // event time. The next update will compute a new event time.
-  currentEventTime = NoWork;
+  currentEventTime = -1;
 
   // Determine the next expiration time to work on, using the fields stored
   // on the root.
@@ -806,7 +795,7 @@ function finishConcurrentRender(
       // have a new loading state ready. We want to ensure that we commit
       // that as soon as possible.
       const hasNotProcessedNewUpdates =
-        workInProgressRootLatestProcessedEventTime === Sync;
+        workInProgressRootLatestProcessedEventTime === -1;
       if (
         hasNotProcessedNewUpdates &&
         // do not delay if we're inside an act() scope
@@ -901,12 +890,11 @@ function finishConcurrentRender(
         }
 
         let msUntilTimeout;
-        if (workInProgressRootLatestSuspenseTimeout !== Sync) {
+        if (workInProgressRootLatestSuspenseTimeout !== -1) {
           // We have processed a suspense config whose expiration time we
           // can use as the timeout.
-          msUntilTimeout =
-            expirationTimeToMs(workInProgressRootLatestSuspenseTimeout) - now();
-        } else if (workInProgressRootLatestProcessedEventTime === Sync) {
+          msUntilTimeout = workInProgressRootLatestSuspenseTimeout - now();
+        } else if (workInProgressRootLatestProcessedEventTime === -1) {
           // This should never normally happen because only new updates
           // cause delayed states, so we should have processed something.
           // However, this could also happen in an offscreen tree.
@@ -914,9 +902,7 @@ function finishConcurrentRender(
         } else {
           // If we didn't process a suspense config, compute a JND based on
           // the amount of time elapsed since the most recent event time.
-          const eventTimeMs = expirationTimeToMs(
-            workInProgressRootLatestProcessedEventTime,
-          );
+          const eventTimeMs = workInProgressRootLatestProcessedEventTime;
           const timeElapsedMs = now() - eventTimeMs;
           msUntilTimeout = jnd(timeElapsedMs) - timeElapsedMs;
         }
@@ -942,7 +928,7 @@ function finishConcurrentRender(
       if (
         // do not delay if we're inside an act() scope
         !shouldForceFlushFallbacksInDEV() &&
-        workInProgressRootLatestProcessedEventTime !== Sync &&
+        workInProgressRootLatestProcessedEventTime !== -1 &&
         workInProgressRootCanSuspendUsingConfig !== null
       ) {
         // If we have exceeded the minimum loading delay, which probably
@@ -951,7 +937,6 @@ function finishConcurrentRender(
         // enough time.
         const msUntilTimeout = computeMsUntilSuspenseLoadingDelay(
           workInProgressRootLatestProcessedEventTime,
-          expirationTime,
           workInProgressRootCanSuspendUsingConfig,
         );
         if (msUntilTimeout > 10) {
@@ -1247,8 +1232,8 @@ function prepareFreshStack(root, expirationTime) {
   renderExpirationTime = expirationTime;
   workInProgressRootExitStatus = RootIncomplete;
   workInProgressRootFatalError = null;
-  workInProgressRootLatestProcessedEventTime = Sync;
-  workInProgressRootLatestSuspenseTimeout = Sync;
+  workInProgressRootLatestProcessedEventTime = -1;
+  workInProgressRootLatestSuspenseTimeout = -1;
   workInProgressRootCanSuspendUsingConfig = null;
   workInProgressRootNextUnprocessedUpdateTime = NoWork;
   workInProgressRootHasPendingPing = false;
@@ -1361,33 +1346,30 @@ export function markCommitTimeOfFallback() {
 }
 
 export function markRenderEventTimeAndConfig(
-  eventTime: ExpirationTime,
+  eventTime: number,
   suspenseConfig: null | SuspenseConfig,
 ): void {
-  // Anything lower pri than Idle is not an update, so we should skip it.
-  if (eventTime > Idle) {
-    // Track the most recent event time of all updates processed in this batch.
-    if (workInProgressRootLatestProcessedEventTime > eventTime) {
-      workInProgressRootLatestProcessedEventTime = eventTime;
-    }
+  // Track the most recent event time of all updates processed in this batch.
+  if (workInProgressRootLatestProcessedEventTime < eventTime) {
+    workInProgressRootLatestProcessedEventTime = eventTime;
+  }
 
-    // Track the largest/latest timeout deadline in this batch.
-    // TODO: If there are two transitions in the same batch, shouldn't we
-    // choose the smaller one? Maybe this is because when an intermediate
-    // transition is superseded, we should ignore its suspense config, but
-    // we don't currently.
-    if (suspenseConfig !== null) {
-      // If `timeoutMs` is not specified, we default to 5 seconds. We have to
-      // resolve this default here because `suspenseConfig` is owned
-      // by userspace.
-      // TODO: Store this on the root instead (transition -> timeoutMs)
-      // TODO: Should this default to a JND instead?
-      const timeoutMs = suspenseConfig.timeoutMs | 0 || LOW_PRIORITY_EXPIRATION;
-      const timeoutTime = computeSuspenseTimeout(eventTime, timeoutMs);
-      if (timeoutTime < workInProgressRootLatestSuspenseTimeout) {
-        workInProgressRootLatestSuspenseTimeout = timeoutTime;
-        workInProgressRootCanSuspendUsingConfig = suspenseConfig;
-      }
+  // Track the largest/latest timeout deadline in this batch.
+  // TODO: If there are two transitions in the same batch, shouldn't we
+  // choose the smaller one? Maybe this is because when an intermediate
+  // transition is superseded, we should ignore its suspense config, but
+  // we don't currently.
+  if (suspenseConfig !== null) {
+    // If `timeoutMs` is not specified, we default to 5 seconds. We have to
+    // resolve this default here because `suspenseConfig` is owned
+    // by userspace.
+    // TODO: Store this on the root instead (transition -> timeoutMs)
+    // TODO: Should this default to a JND instead?
+    const timeoutMs = suspenseConfig.timeoutMs | 0 || DEFAULT_TIMEOUT_MS;
+    const timeoutTime = eventTime + timeoutMs;
+    if (timeoutTime > workInProgressRootLatestSuspenseTimeout) {
+      workInProgressRootLatestSuspenseTimeout = timeoutTime;
+      workInProgressRootCanSuspendUsingConfig = suspenseConfig;
     }
   }
 }
@@ -2641,7 +2623,7 @@ export function pingSuspendedRoot(
     if (
       workInProgressRootExitStatus === RootSuspendedWithDelay ||
       (workInProgressRootExitStatus === RootSuspended &&
-        workInProgressRootLatestProcessedEventTime === Sync &&
+        workInProgressRootLatestProcessedEventTime === -1 &&
         now() - globalMostRecentFallbackTime < FALLBACK_THROTTLE_MS)
     ) {
       // Restart from the root. Don't need to schedule a ping because
@@ -2763,8 +2745,7 @@ function jnd(timeElapsed: number) {
 }
 
 function computeMsUntilSuspenseLoadingDelay(
-  mostRecentEventTime: ExpirationTime,
-  committedExpirationTime: ExpirationTime,
+  mostRecentEventTime: number,
   suspenseConfig: SuspenseConfig,
 ) {
   const busyMinDurationMs = (suspenseConfig.busyMinDurationMs: any) | 0;
@@ -2775,7 +2756,7 @@ function computeMsUntilSuspenseLoadingDelay(
 
   // Compute the time until this render pass would expire.
   const currentTimeMs: number = now();
-  const eventTimeMs: number = expirationTimeToMs(mostRecentEventTime);
+  const eventTimeMs: number = mostRecentEventTime;
   const timeElapsed = currentTimeMs - eventTimeMs;
   if (timeElapsed <= busyDelayMs) {
     // If we haven't yet waited longer than the initial delay, we don't

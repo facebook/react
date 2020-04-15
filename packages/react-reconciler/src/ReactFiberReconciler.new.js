@@ -76,7 +76,7 @@ import {StrictMode} from './ReactTypeOfMode';
 import {
   Sync,
   ContinuousHydration,
-  computeInteractiveExpiration,
+  UserBlockingUpdateTime,
 } from './ReactFiberExpirationTime.new';
 import {requestCurrentSuspenseConfig} from './ReactFiberSuspenseConfig';
 import {
@@ -343,7 +343,7 @@ export function attemptSynchronousHydration(fiber: Fiber): void {
       // If we're still blocked after this, we need to increase
       // the priority of any promises resolving within this
       // boundary so that they next attempt also has higher pri.
-      const retryExpTime = computeInteractiveExpiration();
+      const retryExpTime = UserBlockingUpdateTime;
       markRetryTimeIfNotHydrated(fiber, retryExpTime);
       break;
   }
@@ -375,7 +375,7 @@ export function attemptUserBlockingHydration(fiber: Fiber): void {
     // Suspense.
     return;
   }
-  const expTime = computeInteractiveExpiration();
+  const expTime = UserBlockingUpdateTime;
   scheduleUpdateOnFiber(fiber, expTime);
   markRetryTimeIfNotHydrated(fiber, expTime);
 }
