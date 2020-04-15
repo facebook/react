@@ -3141,10 +3141,7 @@ function beginWork(
             const primaryChildFragment: Fiber = (workInProgress.child: any);
             const primaryChildExpirationTime =
               primaryChildFragment.childExpirationTime;
-            if (
-              primaryChildExpirationTime !== NoWork &&
-              primaryChildExpirationTime >= renderExpirationTime
-            ) {
+            if (primaryChildExpirationTime >= renderExpirationTime) {
               // The primary children have pending work. Use the normal path
               // to attempt to render the primary children again.
               return updateSuspenseComponent(
@@ -3173,10 +3170,8 @@ function beginWork(
                 const childChildExpirationTime =
                   primaryChild.childExpirationTime;
                 if (
-                  (childUpdateExpirationTime !== NoWork &&
-                    childUpdateExpirationTime >= renderExpirationTime) ||
-                  (childChildExpirationTime !== NoWork &&
-                    childChildExpirationTime >= renderExpirationTime)
+                  childUpdateExpirationTime >= renderExpirationTime ||
+                  childChildExpirationTime >= renderExpirationTime
                 ) {
                   // Found a child with an update with sufficient priority.
                   // Use the normal path to render the primary children again.
