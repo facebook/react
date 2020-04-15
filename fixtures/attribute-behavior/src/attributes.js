@@ -449,14 +449,14 @@ const attributes = [
   },
   {name: 'disabled', tagName: 'input'},
   {
-    name: 'disableRemotePlayback',
-    tagName: 'video',
-    read: getProperty('disableremoteplayback'),
-  },
-  {
     name: 'disablePictureInPicture',
     tagName: 'video',
     read: getProperty('disablepictureinpicture'),
+  },
+  {
+    name: 'disableRemotePlayback',
+    tagName: 'video',
+    read: getProperty('disableremoteplayback'),
   },
   {
     name: 'display',
