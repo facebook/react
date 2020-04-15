@@ -26,7 +26,6 @@ import {
   enableProfilerCommitHooks,
   enableSchedulerTracing,
   warnAboutUnmockedScheduler,
-  disableSchedulerTimeoutBasedOnReactExpirationTime,
 } from 'shared/ReactFeatureFlags';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import invariant from 'shared/invariant';
@@ -122,6 +121,7 @@ import {
   computeInteractiveExpiration,
   computeAsyncExpiration,
   computeSuspenseTimeout,
+  HIGH_PRIORITY_EXPIRATION,
   LOW_PRIORITY_EXPIRATION,
   inferPriorityFromExpirationTime,
   Batched,
@@ -310,7 +310,7 @@ export function getWorkInProgressRoot(): FiberRoot | null {
   return workInProgressRoot;
 }
 
-export function requestCurrentTimeForUpdate() {
+export function requestEventTime() {
   if ((executionContext & (RenderContext | CommitContext)) !== NoContext) {
     // We're inside React, so it's fine to read the actual time.
     return msToExpirationTime(now());
@@ -332,7 +332,6 @@ export function getCurrentTime() {
 export function requestUpdateExpirationTime(
   fiber: Fiber,
   suspenseConfig: SuspenseConfig | null,
-  currentTime: ExpirationTime,
 ): ExpirationTime {
   // Special cases
   const mode = fiber.mode;
@@ -396,10 +395,10 @@ export function requestUpdateExpirationTime(
       return Batched;
     case InputDiscreteLanePriority:
     case InputContinuousLanePriority:
-      expirationTime = computeInteractiveExpiration(currentTime);
+      expirationTime = computeInteractiveExpiration();
       break;
     case DefaultLanePriority:
-      expirationTime = computeAsyncExpiration(currentTime);
+      expirationTime = computeAsyncExpiration();
       break;
     case TransitionShortLanePriority:
       expirationTime = ShortTransition;
@@ -427,6 +426,7 @@ export function requestUpdateExpirationTime(
   // we're currently rendering.
   if (workInProgressRoot !== null && expirationTime === renderExpirationTime) {
     // This is a trick to move this update into a separate batch
+    // TODO: This probably causes problems with ContinuousHydration and Idle
     expirationTime -= 1;
   }
 
@@ -614,80 +614,95 @@ function getNextRootExpirationTimeToWorkOn(root: FiberRoot): ExpirationTime {
 // the next level that the root has work on. This function is called on every
 // update, and right before exiting a task.
 function ensureRootIsScheduled(root: FiberRoot) {
-  const lastExpiredTime = root.lastExpiredTime;
-  if (lastExpiredTime !== NoWork) {
-    // Special case: Expired work should flush synchronously.
-    root.callbackExpirationTime = Sync;
-    root.callbackPriority = ImmediateSchedulerPriority;
-    root.callbackNode = scheduleSyncCallback(
-      performSyncWorkOnRoot.bind(null, root),
-    );
-    return;
-  }
-
-  const expirationTime = getNextRootExpirationTimeToWorkOn(root);
   const existingCallbackNode = root.callbackNode;
-  if (expirationTime === NoWork) {
-    // There's nothing to work on.
+
+  const newCallbackId = getNextRootExpirationTimeToWorkOn(root);
+  if (newCallbackId === NoWork) {
+    // Special case: There's nothing to work on.
     if (existingCallbackNode !== null) {
+      cancelCallback(existingCallbackNode);
+      root.expiresAt = -1;
       root.callbackNode = null;
-      root.callbackExpirationTime = NoWork;
-      root.callbackPriority = NoSchedulerPriority;
+      root.callbackIsSync = false;
+      root.callbackId = NoWork;
     }
     return;
   }
 
-  // TODO: If this is an update, we already read the current time. Pass the
-  // time as an argument.
-  const currentTime = requestCurrentTimeForUpdate();
-  const priorityLevel = inferPriorityFromExpirationTime(
-    currentTime,
-    expirationTime,
-  );
+  const newTaskIsSync =
+    newCallbackId === Sync || root.lastExpiredTime !== NoWork;
 
-  // If there's an existing render task, confirm it has the correct priority and
-  // expiration time. Otherwise, we'll cancel it and schedule a new one.
-  if (existingCallbackNode !== null) {
-    const existingCallbackPriority = root.callbackPriority;
-    const existingCallbackExpirationTime = root.callbackExpirationTime;
-    if (
-      // Callback must have the exact same expiration time.
-      existingCallbackExpirationTime === expirationTime &&
-      // Callback must have greater or equal priority.
-      existingCallbackPriority >= priorityLevel
-    ) {
-      // Existing callback is sufficient.
-      return;
+  // Check if there's an existing task. We may be able to reuse it.
+  const existingTaskId = root.callbackId;
+  const existingCallbackIsSync = root.callbackIsSync;
+  if (existingTaskId !== NoWork) {
+    if (newCallbackId === existingTaskId) {
+      // This task is already scheduled. Let's check its priority.
+      if (
+        (newTaskIsSync && existingCallbackIsSync) ||
+        (!newTaskIsSync && !existingCallbackIsSync)
+      ) {
+        // The priority hasn't changed. Exit.
+        return;
+      }
+      // The task ID is the same but the priority changed. Cancel the existing
+      // callback. We'll schedule a new one below.
     }
-    // Need to schedule a new task.
-    // TODO: Instead of scheduling a new task, we should be able to change the
-    // priority of the existing one.
     cancelCallback(existingCallbackNode);
   }
 
-  root.callbackExpirationTime = expirationTime;
-  root.callbackPriority = priorityLevel;
-
-  let callbackNode;
-  if (expirationTime === Sync) {
-    // Sync React callbacks are scheduled on a special internal queue
-    callbackNode = scheduleSyncCallback(performSyncWorkOnRoot.bind(null, root));
-  } else if (disableSchedulerTimeoutBasedOnReactExpirationTime) {
-    callbackNode = scheduleCallback(
-      priorityLevel,
-      performConcurrentWorkOnRoot.bind(null, root),
+  // Schedule a new callback.
+  let newCallbackNode;
+  if (newTaskIsSync) {
+    // Special case: Sync React callbacks are scheduled on a special internal queue
+    newCallbackNode = scheduleSyncCallback(
+      performSyncWorkOnRoot.bind(null, root),
     );
   } else {
-    callbackNode = scheduleCallback(
-      priorityLevel,
-      performConcurrentWorkOnRoot.bind(null, root),
-      // Compute a task timeout based on the expiration time. This also affects
-      // ordering because tasks are processed in timeout order.
-      {timeout: expirationTimeToMs(expirationTime) - now()},
-    );
+    // TODO: Use LanePriority instead of SchedulerPriority
+    const priorityLevel = inferPriorityFromExpirationTime(newCallbackId);
+    if (
+      priorityLevel === NormalSchedulerPriority ||
+      priorityLevel === UserBlockingSchedulerPriority
+    ) {
+      const existingExpirationTime = root.expiresAt;
+      const currentTimeMs = now();
+
+      // Compute an expiration time based on the priority level.
+      const maxMsUntilExpiration =
+        priorityLevel === UserBlockingSchedulerPriority
+          ? HIGH_PRIORITY_EXPIRATION
+          : LOW_PRIORITY_EXPIRATION;
+
+      let msUntilExpiration;
+      if (existingExpirationTime === -1) {
+        // This is the first concurrent update on the root. Use the expiration
+        // time we just computed.
+        msUntilExpiration = maxMsUntilExpiration;
+        root.expiresAt = msUntilExpiration + currentTimeMs;
+      } else {
+        // There's already an expiration time. Use the smaller of the current
+        // expiration and the one we just computed.
+        msUntilExpiration = existingExpirationTime - currentTimeMs;
+        if (maxMsUntilExpiration < msUntilExpiration) {
+          root.expiresAt = maxMsUntilExpiration;
+        }
+      }
+      newCallbackNode = scheduleCallback(
+        priorityLevel,
+        performConcurrentWorkOnRoot.bind(null, root),
+      );
+    } else {
+      newCallbackNode = scheduleCallback(
+        priorityLevel,
+        performConcurrentWorkOnRoot.bind(null, root),
+      );
+    }
   }
 
-  root.callbackNode = callbackNode;
+  root.callbackId = newCallbackId;
+  root.callbackNode = newCallbackNode;
+  root.callbackIsSync = newTaskIsSync;
 }
 
 // This is the entry point for every concurrent task, i.e. anything that
@@ -697,23 +712,22 @@ function performConcurrentWorkOnRoot(root, didTimeout) {
   // event time. The next update will compute a new event time.
   currentEventTime = NoWork;
 
-  // Check if the render expired.
-  if (didTimeout) {
-    // The render task took too long to complete. Mark the current time as
-    // expired to synchronously render all expired work in a single batch.
-    const currentTime = requestCurrentTimeForUpdate();
-    markRootExpiredAtTime(root, currentTime);
-    // This will schedule a synchronous callback.
-    ensureRootIsScheduled(root);
-    return null;
-  }
-
   // Determine the next expiration time to work on, using the fields stored
   // on the root.
   let expirationTime = getNextRootExpirationTimeToWorkOn(root);
   if (expirationTime === NoWork) {
     return null;
   }
+
+  if (didTimeout) {
+    // The render task took too long to complete. Mark the root as expired to
+    // prevent yielding to other tasks until this one finishes.
+    markRootExpiredAtTime(root, expirationTime);
+    // This will schedule a synchronous callback.
+    ensureRootIsScheduled(root);
+    return null;
+  }
+
   const originalCallbackNode = root.callbackNode;
   invariant(
     (executionContext & (RenderContext | CommitContext)) === NoContext,
@@ -1815,8 +1829,12 @@ function commitRootImpl(root, renderPriorityLevel) {
   // commitRoot never returns a continuation; it always finishes synchronously.
   // So we can clear these now to allow a new callback to be scheduled.
   root.callbackNode = null;
-  root.callbackExpirationTime = NoWork;
-  root.callbackPriority = NoSchedulerPriority;
+  root.callbackId = NoWork;
+  // TODO: Use LanePriority instead of SchedulerPriority
+  if (renderPriorityLevel < ImmediateSchedulerPriority) {
+    // If this was a concurrent render, we can reset the expiration time.
+    root.expiresAt = -1;
+  }
 
   // Update the first and last pending times on this root. The new first
   // pending time is whatever is left on the root fiber.
@@ -2076,7 +2094,7 @@ function commitRootImpl(root, renderPriorityLevel) {
     nestedUpdateCount = 0;
   }
 
-  onCommitRoot(finishedWork.stateNode, expirationTime);
+  onCommitRoot(finishedWork.stateNode, renderPriorityLevel);
 
   // Always call this before exiting `commitRoot`, to ensure that any
   // additional work on this root is scheduled.
@@ -2665,12 +2683,7 @@ function retryTimedOutBoundary(
   // likely unblocked. Try rendering again, at a new expiration time.
   if (retryTime === NoWork) {
     const suspenseConfig = null; // Retries don't carry over the already committed update.
-    const currentTime = requestCurrentTimeForUpdate();
-    retryTime = requestUpdateExpirationTime(
-      boundaryFiber,
-      suspenseConfig,
-      currentTime,
-    );
+    retryTime = requestUpdateExpirationTime(boundaryFiber, suspenseConfig);
   }
   // TODO: Special case idle priority?
   const root = markUpdateTimeFromFiberToRoot(boundaryFiber, retryTime);

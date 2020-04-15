@@ -19,15 +19,14 @@ import {
   enableSuspenseCallback,
 } from 'shared/ReactFeatureFlags';
 import {unstable_getThreadID} from 'scheduler/tracing';
-import {NoPriority} from './SchedulerWithReactIntegration.new';
 import {initializeUpdateQueue} from './ReactUpdateQueue.new';
 import {clearPendingUpdates as clearPendingMutableSourceUpdates} from './ReactMutableSource.new';
 
 function FiberRootNode(containerInfo, tag, hydrate) {
   this.tag = tag;
-  this.current = null;
   this.containerInfo = containerInfo;
   this.pendingChildren = null;
+  this.current = null;
   this.pingCache = null;
   this.finishedExpirationTime = NoWork;
   this.finishedWork = null;
@@ -36,7 +35,9 @@ function FiberRootNode(containerInfo, tag, hydrate) {
   this.pendingContext = null;
   this.hydrate = hydrate;
   this.callbackNode = null;
-  this.callbackPriority = NoPriority;
+  this.callbackId = NoWork;
+  this.callbackIsSync = false;
+  this.expiresAt = -1;
   this.firstPendingTime = NoWork;
   this.lastPendingTime = NoWork;
   this.firstSuspendedTime = NoWork;

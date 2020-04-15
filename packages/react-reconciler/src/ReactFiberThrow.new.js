@@ -54,7 +54,7 @@ import {
 } from './ReactFiberWorkLoop.new';
 import {logCapturedError} from './ReactFiberErrorLogger';
 
-import {Sync, NoWork} from './ReactFiberExpirationTime.new';
+import {Sync} from './ReactFiberExpirationTime.new';
 
 const PossiblyWeakMap = typeof WeakMap === 'function' ? WeakMap : Map;
 
@@ -63,7 +63,7 @@ function createRootErrorUpdate(
   errorInfo: CapturedValue<mixed>,
   expirationTime: ExpirationTime,
 ): Update<mixed> {
-  const update = createUpdate(NoWork, expirationTime, null);
+  const update = createUpdate(-1, expirationTime, null);
   // Unmount the root by rendering null.
   update.tag = CaptureUpdate;
   // Caution: React DevTools currently depends on this property
@@ -82,7 +82,7 @@ function createClassErrorUpdate(
   errorInfo: CapturedValue<mixed>,
   expirationTime: ExpirationTime,
 ): Update<mixed> {
-  const update = createUpdate(NoWork, expirationTime, null);
+  const update = createUpdate(-1, expirationTime, null);
   update.tag = CaptureUpdate;
   const getDerivedStateFromError = fiber.type.getDerivedStateFromError;
   if (typeof getDerivedStateFromError === 'function') {
@@ -258,7 +258,7 @@ function throwException(
               // When we try rendering again, we should not reuse the current fiber,
               // since it's known to be in an inconsistent state. Use a force update to
               // prevent a bail out.
-              const update = createUpdate(NoWork, Sync, null);
+              const update = createUpdate(-1, Sync, null);
               update.tag = ForceUpdate;
               enqueueUpdate(sourceFiber, update);
             }

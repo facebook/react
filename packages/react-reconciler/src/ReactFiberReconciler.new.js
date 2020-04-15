@@ -46,7 +46,7 @@ import {
 import {createFiberRoot} from './ReactFiberRoot.new';
 import {injectInternals, onScheduleRoot} from './ReactFiberDevToolsHook.new';
 import {
-  requestCurrentTimeForUpdate,
+  requestEventTime,
   requestUpdateExpirationTime,
   scheduleUpdateOnFiber,
   flushRoot,
@@ -239,7 +239,7 @@ export function updateContainer(
     onScheduleRoot(container, element);
   }
   const current = container.current;
-  const currentTime = requestCurrentTimeForUpdate();
+  const eventTime = requestEventTime();
   if (__DEV__) {
     // $FlowExpectedError - jest isn't a global, and isn't recognized outside of tests
     if ('undefined' !== typeof jest) {
@@ -248,11 +248,7 @@ export function updateContainer(
     }
   }
   const suspenseConfig = requestCurrentSuspenseConfig();
-  const expirationTime = requestUpdateExpirationTime(
-    current,
-    suspenseConfig,
-    currentTime,
-  );
+  const expirationTime = requestUpdateExpirationTime(current, suspenseConfig);
 
   const context = getContextForSubtree(parentComponent);
   if (container.context === null) {
@@ -278,7 +274,7 @@ export function updateContainer(
     }
   }
 
-  const update = createUpdate(currentTime, expirationTime, suspenseConfig);
+  const update = createUpdate(eventTime, expirationTime, suspenseConfig);
   // Caution: React DevTools currently depends on this property
   // being called "element".
   update.payload = {element};
@@ -347,9 +343,7 @@ export function attemptSynchronousHydration(fiber: Fiber): void {
       // If we're still blocked after this, we need to increase
       // the priority of any promises resolving within this
       // boundary so that they next attempt also has higher pri.
-      const retryExpTime = computeInteractiveExpiration(
-        requestCurrentTimeForUpdate(),
-      );
+      const retryExpTime = computeInteractiveExpiration();
       markRetryTimeIfNotHydrated(fiber, retryExpTime);
       break;
   }
@@ -381,7 +375,7 @@ export function attemptUserBlockingHydration(fiber: Fiber): void {
     // Suspense.
     return;
   }
-  const expTime = computeInteractiveExpiration(requestCurrentTimeForUpdate());
+  const expTime = computeInteractiveExpiration();
   scheduleUpdateOnFiber(fiber, expTime);
   markRetryTimeIfNotHydrated(fiber, expTime);
 }
@@ -404,8 +398,7 @@ export function attemptHydrationAtCurrentPriority(fiber: Fiber): void {
     // their priority other than synchronously flush it.
     return;
   }
-  const currentTime = requestCurrentTimeForUpdate();
-  const expTime = requestUpdateExpirationTime(fiber, null, currentTime);
+  const expTime = requestUpdateExpirationTime(fiber, null);
   scheduleUpdateOnFiber(fiber, expTime);
   markRetryTimeIfNotHydrated(fiber, expTime);
 }

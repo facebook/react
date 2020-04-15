@@ -53,37 +53,13 @@ export function expirationTimeToMs(expirationTime: ExpirationTime): number {
   return (MAGIC_NUMBER_OFFSET - expirationTime) * UNIT_SIZE;
 }
 
-function ceiling(num: number, precision: number): number {
-  return (((num / precision) | 0) + 1) * precision;
-}
-
-function computeExpirationBucket(
-  currentTime,
-  expirationInMs,
-  bucketSizeMs,
-): ExpirationTime {
-  return (
-    MAGIC_NUMBER_OFFSET -
-    ceiling(
-      MAGIC_NUMBER_OFFSET - currentTime + expirationInMs / UNIT_SIZE,
-      bucketSizeMs / UNIT_SIZE,
-    )
-  );
-}
-
 // TODO: This corresponds to Scheduler's NormalPriority, not LowPriority. Update
 // the names to reflect.
 export const LOW_PRIORITY_EXPIRATION = 5000;
 export const LOW_PRIORITY_BATCH_SIZE = 250;
 
-export function computeAsyncExpiration(
-  currentTime: ExpirationTime,
-): ExpirationTime {
-  return computeExpirationBucket(
-    currentTime,
-    LOW_PRIORITY_EXPIRATION,
-    LOW_PRIORITY_BATCH_SIZE,
-  );
+export function computeAsyncExpiration(): ExpirationTime {
+  return msToExpirationTime(LOW_PRIORITY_EXPIRATION + LOW_PRIORITY_BATCH_SIZE);
 }
 
 export function computeSuspenseTimeout(
@@ -109,16 +85,13 @@ export function computeSuspenseTimeout(
 export const HIGH_PRIORITY_EXPIRATION = __DEV__ ? 500 : 150;
 export const HIGH_PRIORITY_BATCH_SIZE = 100;
 
-export function computeInteractiveExpiration(currentTime: ExpirationTime) {
-  return computeExpirationBucket(
-    currentTime,
-    HIGH_PRIORITY_EXPIRATION,
-    HIGH_PRIORITY_BATCH_SIZE,
+export function computeInteractiveExpiration() {
+  return msToExpirationTime(
+    HIGH_PRIORITY_EXPIRATION + HIGH_PRIORITY_BATCH_SIZE,
   );
 }
 
 export function inferPriorityFromExpirationTime(
-  currentTime: ExpirationTime,
   expirationTime: ExpirationTime,
 ): ReactPriorityLevel {
   if (expirationTime === Sync) {
@@ -127,8 +100,7 @@ export function inferPriorityFromExpirationTime(
   if (expirationTime === Never || expirationTime === Idle) {
     return IdlePriority;
   }
-  const msUntil =
-    expirationTimeToMs(expirationTime) - expirationTimeToMs(currentTime);
+  const msUntil = expirationTimeToMs(expirationTime);
   if (msUntil <= 0) {
     return ImmediatePriority;
   }

@@ -215,10 +215,6 @@ type BaseFiberRootProperties = {|
   +hydrate: boolean,
   // Node returned by Scheduler.scheduleCallback
   callbackNode: *,
-  // Expiration of the callback associated with this root
-  callbackExpirationTime: ExpirationTime,
-  // Priority of the callback associated with this root
-  callbackPriority: ReactPriorityLevel,
   // The earliest pending expiration time that exists in the tree
   firstPendingTime: ExpirationTime,
   // The latest pending expiration time that exists in the tree
@@ -236,6 +232,31 @@ type BaseFiberRootProperties = {|
   // Used by useMutableSource hook to avoid tearing within this root
   // when external, mutable sources are read from during render.
   mutableSourceLastPendingUpdateTime: ExpirationTime,
+
+  // Only used by new reconciler
+
+  // Represents the next task that the root should work on, or the current one
+  // if it's already working.
+  // TODO: In the new system, this will be a Lanes bitmask.
+  callbackId: ExpirationTime,
+  // Whether the currently scheduled task for this root is synchronous or
+  // batched/concurrent. We have to track this because Scheduler does not
+  // support synchronous tasks, so we put those on a separate queue. So you
+  // could also think of this as "which queue is the callback scheduled with?"
+  callbackIsSync: boolean,
+  // Timestamp at which we will synchronously finish the current task to
+  // prevent starvation.
+  // TODO: There should be a separate expiration per lane.
+  // NOTE: This is not an "ExpirationTime" as used by the old reconciler. It's a
+  // timestamp, in milliseconds.
+  expiresAt: number,
+
+  // Only used by old reconciler
+
+  // Expiration of the callback associated with this root
+  callbackExpirationTime: ExpirationTime,
+  // Priority of the callback associated with this root
+  callbackPriority: ReactPriorityLevel,
 |};
 
 // The following attributes are only used by interaction tracing builds.
