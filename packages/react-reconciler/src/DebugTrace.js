@@ -68,15 +68,49 @@ export function logCommitStopped(): void {
   groupEnd();
 }
 
+const PossiblyWeakMap = typeof WeakMap === 'function' ? WeakMap : Map;
+// $FlowFixMe: Flow cannot handle polymorphic WeakMaps
+const wakeableIDs: WeakMap<Wakeable, number> = new PossiblyWeakMap();
+let wakeableID: number = 0;
+function getWakeableID(wakeable: Wakeable): number {
+  if (!wakeableIDs.has(wakeable)) {
+    wakeableIDs.set(wakeable, wakeableID++);
+  }
+  return ((wakeableIDs.get(wakeable): any): number);
+}
+
 export function logComponentSuspended(
   componentName: string,
   wakeable: Wakeable,
 ): void {
+  const id = getWakeableID(wakeable);
+  const display = (wakeable: any).displayName || wakeable;
   log(
     `%c⚛️%c ${componentName} suspended`,
     REACT_LOGO_STYLE,
     'color: #80366d; font-weight: bold;',
-    wakeable,
+    id,
+    display,
+  );
+  wakeable.then(
+    () => {
+      log(
+        `%c⚛️%c ${componentName} resolved`,
+        REACT_LOGO_STYLE,
+        'color: #80366d; font-weight: bold;',
+        id,
+        display,
+      );
+    },
+    () => {
+      log(
+        `%c⚛️%c ${componentName} rejected`,
+        REACT_LOGO_STYLE,
+        'color: #80366d; font-weight: bold;',
+        id,
+        display,
+      );
+    },
   );
 }
 
@@ -127,15 +161,6 @@ export function logForceUpdateScheduled(
     `%c⚛️%c ${componentName} forced update %c(priority: ${priorityLabel})`,
     REACT_LOGO_STYLE,
     'color: #db2e1f; font-weight: bold;',
-    '',
-  );
-}
-
-export function logRenderScheduled(priorityLabel: string): void {
-  log(
-    `%c⚛️%c render scheduled%c (priority: ${priorityLabel})`,
-    REACT_LOGO_STYLE,
-    'color: #0265e3; font-weight: bold;',
     '',
   );
 }
