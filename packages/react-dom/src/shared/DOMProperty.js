@@ -336,6 +336,7 @@ reservedProps.forEach(name => {
   'defer',
   'disabled',
   'disablePictureInPicture',
+  'disableRemotePlayback',
   'formNoValidate',
   'hidden',
   'loop',
