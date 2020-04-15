@@ -20,6 +20,7 @@ export const disableInputAttributeSyncing = __VARIANT__;
 export const enableFilterEmptyStringAttributesDOM = __VARIANT__;
 export const enableModernEventSystem = __VARIANT__;
 export const enableLegacyFBSupport = __VARIANT__;
+export const enableDebugTracing = __VARIANT__;
 
 // These are already tested in both modes using the build type dimension,
 // so we don't need to use __VARIANT__ to get extra coverage.
@@ -29,6 +30,5 @@ export const replayFailedUnitOfWorkWithInvokeGuardedCallback = __DEV__;
 // TODO: These flags are hard-coded to the default values used in open source.
 // Update the tests so that they pass in either mode, then set these
 // to __VARIANT__.
-export const enableDebugTracing = false;
 export const enableTrustedTypesIntegration = false;
 export const disableSchedulerTimeoutBasedOnReactExpirationTime = false;

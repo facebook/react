@@ -40,7 +40,6 @@ describe('DebugTracing', () => {
     });
   });
 
-  // @gate enableDebugTracing
   it('should not log anything for sync render without suspends or state updates', () => {
     ReactTestRenderer.create(
       <React.DebugTraceMode>
@@ -51,7 +50,6 @@ describe('DebugTracing', () => {
     expect(logs).toEqual([]);
   });
 
-  // @gate enableDebugTracing
   it('should not log anything for concurrent render without suspends or state updates', () => {
     ReactTestRenderer.create(<div />, {unstable_isConcurrent: true});
 
@@ -304,7 +302,6 @@ describe('DebugTracing', () => {
     ]);
   });
 
-  // @gate enableDebugTracing
   it('should not log anything outside of a DebugTraceMode subtree', () => {
     function ExampleThatCascades() {
       const [didMount, setDidMount] = React.useState(false);
