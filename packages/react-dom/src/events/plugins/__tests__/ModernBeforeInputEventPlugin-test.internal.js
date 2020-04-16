@@ -11,6 +11,7 @@
 
 let React;
 let ReactDOM;
+let ReactFeatureFlags;
 
 describe('BeforeInputEventPlugin', () => {
   let container;
@@ -77,6 +78,8 @@ describe('BeforeInputEventPlugin', () => {
   }
 
   beforeEach(() => {
+    ReactFeatureFlags = require('shared/ReactFeatureFlags');
+    ReactFeatureFlags.enableModernEventSystem = true;
     React = require('react');
     container = document.createElement('div');
     document.body.appendChild(container);

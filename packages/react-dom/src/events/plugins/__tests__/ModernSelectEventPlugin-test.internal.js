@@ -11,11 +11,14 @@
 
 let React;
 let ReactDOM;
+let ReactFeatureFlags;
 
 describe('SelectEventPlugin', () => {
   let container;
 
   beforeEach(() => {
+    ReactFeatureFlags = require('shared/ReactFeatureFlags');
+    ReactFeatureFlags.enableModernEventSystem = true;
     React = require('react');
     ReactDOM = require('react-dom');
 

@@ -470,6 +470,7 @@ describe('ChangeEventPlugin', () => {
     beforeEach(() => {
       jest.resetModules();
       ReactFeatureFlags = require('shared/ReactFeatureFlags');
+      ReactFeatureFlags.enableModernEventSystem = true;
 
       React = require('react');
       ReactDOM = require('react-dom');
@@ -720,6 +721,7 @@ describe('ChangeEventPlugin', () => {
     it('mouse enter/leave should be user-blocking but not discrete', async () => {
       // This is currently behind a feature flag
       jest.resetModules();
+      ReactFeatureFlags.enableModernEventSystem = true;
       React = require('react');
       ReactDOM = require('react-dom');
       TestUtils = require('react-dom/test-utils');

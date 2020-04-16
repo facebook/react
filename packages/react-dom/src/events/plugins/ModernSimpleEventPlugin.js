@@ -24,6 +24,10 @@ import {
   topLevelEventsToDispatchConfig,
   simpleEventPluginEventTypes,
 } from '../DOMEventProperties';
+import {
+  accumulateEventTargetListeners,
+  accumulateTwoPhaseListeners,
+} from '../DOMModernPluginEventSystem';
 
 import SyntheticAnimationEvent from '../SyntheticAnimationEvent';
 import SyntheticClipboardEvent from '../SyntheticClipboardEvent';
@@ -37,8 +41,6 @@ import SyntheticTransitionEvent from '../SyntheticTransitionEvent';
 import SyntheticUIEvent from '../SyntheticUIEvent';
 import SyntheticWheelEvent from '../SyntheticWheelEvent';
 import getEventCharCode from '../getEventCharCode';
-import accumulateTwoPhaseListeners from '../accumulateTwoPhaseListeners';
-import accumulateEventTargetListeners from '../accumulateEventTargetListeners';
 
 import {enableUseEventAPI} from 'shared/ReactFeatureFlags';
 
