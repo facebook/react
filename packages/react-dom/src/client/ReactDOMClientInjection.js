@@ -12,11 +12,19 @@ import {
   getInstanceFromNode,
   getNodeFromInstance,
 } from './ReactDOMComponentTree';
-import BeforeInputEventPlugin from '../events/plugins/LegacyBeforeInputEventPlugin';
-import ChangeEventPlugin from '../events/plugins/LegacyChangeEventPlugin';
-import EnterLeaveEventPlugin from '../events/plugins/LegacyEnterLeaveEventPlugin';
-import SelectEventPlugin from '../events/plugins/LegacySelectEventPlugin';
-import SimpleEventPlugin from '../events/plugins/LegacySimpleEventPlugin';
+
+import LegacyBeforeInputEventPlugin from '../events/plugins/LegacyBeforeInputEventPlugin';
+import LegacyChangeEventPlugin from '../events/plugins/LegacyChangeEventPlugin';
+import LegacyEnterLeaveEventPlugin from '../events/plugins/LegacyEnterLeaveEventPlugin';
+import LegacySelectEventPlugin from '../events/plugins/LegacySelectEventPlugin';
+import LegacySimpleEventPlugin from '../events/plugins/LegacySimpleEventPlugin';
+
+import ModernBeforeInputEventPlugin from '../events/plugins/ModernBeforeInputEventPlugin';
+import ModernChangeEventPlugin from '../events/plugins/ModernChangeEventPlugin';
+import ModernEnterLeaveEventPlugin from '../events/plugins/ModernEnterLeaveEventPlugin';
+import ModernSelectEventPlugin from '../events/plugins/ModernSelectEventPlugin';
+import ModernSimpleEventPlugin from '../events/plugins/ModernSimpleEventPlugin';
+
 import {
   injectEventPluginOrder,
   injectEventPluginsByName,
@@ -26,11 +34,11 @@ import {enableModernEventSystem} from 'shared/ReactFeatureFlags';
 
 if (enableModernEventSystem) {
   injectEventPlugins([
-    SimpleEventPlugin,
-    EnterLeaveEventPlugin,
-    ChangeEventPlugin,
-    SelectEventPlugin,
-    BeforeInputEventPlugin,
+    ModernSimpleEventPlugin,
+    ModernEnterLeaveEventPlugin,
+    ModernChangeEventPlugin,
+    ModernSelectEventPlugin,
+    ModernBeforeInputEventPlugin,
   ]);
 } else {
   /**
@@ -65,10 +73,10 @@ if (enableModernEventSystem) {
    * them).
    */
   injectEventPluginsByName({
-    SimpleEventPlugin: SimpleEventPlugin,
-    EnterLeaveEventPlugin: EnterLeaveEventPlugin,
-    ChangeEventPlugin: ChangeEventPlugin,
-    SelectEventPlugin: SelectEventPlugin,
-    BeforeInputEventPlugin: BeforeInputEventPlugin,
+    SimpleEventPlugin: LegacySimpleEventPlugin,
+    EnterLeaveEventPlugin: LegacyEnterLeaveEventPlugin,
+    ChangeEventPlugin: LegacyChangeEventPlugin,
+    SelectEventPlugin: LegacySelectEventPlugin,
+    BeforeInputEventPlugin: LegacyBeforeInputEventPlugin,
   });
 }
