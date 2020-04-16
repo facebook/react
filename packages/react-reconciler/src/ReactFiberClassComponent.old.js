@@ -10,12 +10,14 @@
 import type {Fiber} from './ReactInternalTypes';
 import type {ExpirationTime} from './ReactFiberExpirationTime.old';
 import type {UpdateQueue} from './ReactUpdateQueue.old';
+import type {ReactPriorityLevel} from './ReactInternalTypes';
 
 import * as React from 'react';
 import {Update, Snapshot} from './ReactSideEffectTags';
 import {
   debugRenderPhaseSideEffectsForStrictMode,
   disableLegacyContext,
+  enableDebugTracing,
   warnAboutDeprecatedLifecycles,
 } from 'shared/ReactFeatureFlags';
 import ReactStrictModeWarnings from './ReactStrictModeWarnings.old';
@@ -27,7 +29,7 @@ import invariant from 'shared/invariant';
 import {REACT_CONTEXT_TYPE, REACT_PROVIDER_TYPE} from 'shared/ReactSymbols';
 
 import {resolveDefaultProps} from './ReactFiberLazyComponent.old';
-import {StrictMode} from './ReactTypeOfMode';
+import {DebugTracingMode, StrictMode} from './ReactTypeOfMode';
 
 import {
   enqueueUpdate,
@@ -53,8 +55,10 @@ import {
   requestCurrentTimeForUpdate,
   computeExpirationForFiber,
   scheduleUpdateOnFiber,
+  priorityLevelToLabel,
 } from './ReactFiberWorkLoop.old';
 import {requestCurrentSuspenseConfig} from './ReactFiberSuspenseConfig';
+import {logForceUpdateScheduled, logStateUpdateScheduled} from './DebugTracing';
 
 import {disableLogs, reenableLogs} from 'shared/ConsolePatchingDev';
 
@@ -207,6 +211,18 @@ const classComponentUpdater = {
 
     enqueueUpdate(fiber, update);
     scheduleUpdateOnFiber(fiber, expirationTime);
+
+    if (__DEV__) {
+      if (enableDebugTracing) {
+        if (fiber.mode & DebugTracingMode) {
+          const label = priorityLevelToLabel(
+            ((update.priority: any): ReactPriorityLevel),
+          );
+          const name = getComponentName(fiber.type) || 'Unknown';
+          logStateUpdateScheduled(name, label, payload);
+        }
+      }
+    }
   },
   enqueueReplaceState(inst, payload, callback) {
     const fiber = getInstance(inst);
@@ -231,6 +247,18 @@ const classComponentUpdater = {
 
     enqueueUpdate(fiber, update);
     scheduleUpdateOnFiber(fiber, expirationTime);
+
+    if (__DEV__) {
+      if (enableDebugTracing) {
+        if (fiber.mode & DebugTracingMode) {
+          const label = priorityLevelToLabel(
+            ((update.priority: any): ReactPriorityLevel),
+          );
+          const name = getComponentName(fiber.type) || 'Unknown';
+          logStateUpdateScheduled(name, label, payload);
+        }
+      }
+    }
   },
   enqueueForceUpdate(inst, callback) {
     const fiber = getInstance(inst);
@@ -254,6 +282,18 @@ const classComponentUpdater = {
 
     enqueueUpdate(fiber, update);
     scheduleUpdateOnFiber(fiber, expirationTime);
+
+    if (__DEV__) {
+      if (enableDebugTracing) {
+        if (fiber.mode & DebugTracingMode) {
+          const label = priorityLevelToLabel(
+            ((update.priority: any): ReactPriorityLevel),
+          );
+          const name = getComponentName(fiber.type) || 'Unknown';
+          logForceUpdateScheduled(name, label);
+        }
+      }
+    }
   },
 };
 

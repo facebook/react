@@ -30,11 +30,15 @@ import type {
 } from './ReactFiberHostConfig';
 
 import ReactSharedInternals from 'shared/ReactSharedInternals';
-import {enableUseEventAPI} from 'shared/ReactFeatureFlags';
+import {enableDebugTracing, enableUseEventAPI} from 'shared/ReactFeatureFlags';
 
 import {markRootExpiredAtTime} from './ReactFiberRoot.new';
-import {NoWork, Sync} from './ReactFiberExpirationTime.new';
-import {NoMode, BlockingMode} from './ReactTypeOfMode';
+import {
+  inferPriorityFromExpirationTime,
+  NoWork,
+  Sync,
+} from './ReactFiberExpirationTime.new';
+import {NoMode, BlockingMode, DebugTracingMode} from './ReactTypeOfMode';
 import {readContext} from './ReactFiberNewContext.new';
 import {createDeprecatedResponderListener} from './ReactFiberDeprecatedEvents.new';
 import {
@@ -57,6 +61,7 @@ import {
   warnIfNotScopedWithMatchingAct,
   markRenderEventTimeAndConfig,
   markUnprocessedUpdateTime,
+  priorityLevelToLabel,
 } from './ReactFiberWorkLoop.new';
 import {
   registerEvent,
@@ -92,6 +97,7 @@ import {
 } from './ReactMutableSource.new';
 import {getRootHostContainer} from './ReactFiberHostContext.new';
 import {getIsRendering} from './ReactCurrentFiber';
+import {logStateUpdateScheduled} from './DebugTracing';
 
 const {ReactCurrentDispatcher, ReactCurrentBatchConfig} = ReactSharedInternals;
 
@@ -1737,6 +1743,20 @@ function dispatchAction<S, A>(
       }
     }
     scheduleUpdateOnFiber(fiber, expirationTime);
+  }
+
+  if (__DEV__) {
+    if (enableDebugTracing) {
+      if (fiber.mode & DebugTracingMode) {
+        const priorityLevel = inferPriorityFromExpirationTime(
+          currentTime,
+          expirationTime,
+        );
+        const label = priorityLevelToLabel(priorityLevel);
+        const name = getComponentName(fiber.type) || 'Unknown';
+        logStateUpdateScheduled(name, label, action);
+      }
+    }
   }
 }
 

@@ -27,6 +27,7 @@ import {
   enableSchedulerTracing,
   warnAboutUnmockedScheduler,
   disableSchedulerTimeoutBasedOnReactExpirationTime,
+  enableDebugTracing,
 } from 'shared/ReactFeatureFlags';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import invariant from 'shared/invariant';
@@ -48,6 +49,16 @@ import {
   flushSyncCallbackQueue,
   scheduleSyncCallback,
 } from './SchedulerWithReactIntegration.old';
+import {
+  logCommitStarted,
+  logCommitStopped,
+  logLayoutEffectsStarted,
+  logLayoutEffectsStopped,
+  logPassiveEffectsStarted,
+  logPassiveEffectsStopped,
+  logRenderStarted,
+  logRenderStopped,
+} from './DebugTracing';
 
 // The scheduler is imported here *only* to detect whether it's been mocked
 import * as Scheduler from 'scheduler';
@@ -369,6 +380,29 @@ export function computeExpirationForFiber(
   }
 
   return expirationTime;
+}
+
+export function priorityLevelToLabel(
+  priorityLevel: ReactPriorityLevel,
+): string {
+  if (__DEV__ && enableDebugTracing) {
+    switch (priorityLevel) {
+      case ImmediatePriority:
+        return 'immediate';
+      case UserBlockingPriority:
+        return 'user-blocking';
+      case NormalPriority:
+        return 'normal';
+      case LowPriority:
+        return 'low';
+      case IdlePriority:
+        return 'idle';
+      default:
+        return 'other';
+    }
+  } else {
+    return '';
+  }
 }
 
 export function scheduleUpdateOnFiber(
@@ -1405,6 +1439,15 @@ function renderRootSync(root, expirationTime) {
   }
 
   const prevInteractions = pushInteractions(root);
+
+  if (__DEV__) {
+    if (enableDebugTracing) {
+      const priorityLevel = getCurrentPriorityLevel();
+      const label = priorityLevelToLabel(priorityLevel);
+      logRenderStarted(label);
+    }
+  }
+
   do {
     try {
       workLoopSync();
@@ -1428,6 +1471,12 @@ function renderRootSync(root, expirationTime) {
       'Cannot commit an incomplete root. This error is likely caused by a ' +
         'bug in React. Please file an issue.',
     );
+  }
+
+  if (__DEV__) {
+    if (enableDebugTracing) {
+      logRenderStopped();
+    }
   }
 
   // Set this to null to indicate there's no in-progress render.
@@ -1458,6 +1507,15 @@ function renderRootConcurrent(root, expirationTime) {
   }
 
   const prevInteractions = pushInteractions(root);
+
+  if (__DEV__) {
+    if (enableDebugTracing) {
+      const priorityLevel = getCurrentPriorityLevel();
+      const label = priorityLevelToLabel(priorityLevel);
+      logRenderStarted(label);
+    }
+  }
+
   do {
     try {
       workLoopConcurrent();
@@ -1473,6 +1531,12 @@ function renderRootConcurrent(root, expirationTime) {
 
   popDispatcher(prevDispatcher);
   executionContext = prevExecutionContext;
+
+  if (__DEV__) {
+    if (enableDebugTracing) {
+      logRenderStopped();
+    }
+  }
 
   // Check if the tree has completed.
   if (workInProgress !== null) {
@@ -1741,6 +1805,12 @@ function commitRoot(root) {
 }
 
 function commitRootImpl(root, renderPriorityLevel) {
+  if (__DEV__) {
+    if (enableDebugTracing) {
+      const label = priorityLevelToLabel(renderPriorityLevel);
+      logCommitStarted(label);
+    }
+  }
   do {
     // `flushPassiveEffects` will call `flushSyncUpdateQueue` at the end, which
     // means `flushPassiveEffects` will sometimes result in additional
@@ -1760,6 +1830,11 @@ function commitRootImpl(root, renderPriorityLevel) {
   const finishedWork = root.finishedWork;
   const expirationTime = root.finishedExpirationTime;
   if (finishedWork === null) {
+    if (__DEV__) {
+      if (enableDebugTracing) {
+        logCommitStopped();
+      }
+    }
     return null;
   }
   root.finishedWork = null;
@@ -2040,6 +2115,12 @@ function commitRootImpl(root, renderPriorityLevel) {
   }
 
   if ((executionContext & LegacyUnbatchedContext) !== NoContext) {
+    if (__DEV__) {
+      if (enableDebugTracing) {
+        logCommitStopped();
+      }
+    }
+
     // This is a legacy edge case. We just committed the initial mount of
     // a ReactDOM.render-ed root inside of batchedUpdates. The commit fired
     // synchronously, but layout updates should be deferred until the end
@@ -2049,6 +2130,13 @@ function commitRootImpl(root, renderPriorityLevel) {
 
   // If layout work was scheduled, flush it now.
   flushSyncCallbackQueue();
+
+  if (__DEV__) {
+    if (enableDebugTracing) {
+      logCommitStopped();
+    }
+  }
+
   return null;
 }
 
@@ -2156,6 +2244,14 @@ function commitLayoutEffects(
   root: FiberRoot,
   committedExpirationTime: ExpirationTime,
 ) {
+  if (__DEV__) {
+    if (enableDebugTracing) {
+      const priorityLevel = getCurrentPriorityLevel();
+      const label = priorityLevelToLabel(priorityLevel);
+      logLayoutEffectsStarted(label);
+    }
+  }
+
   // TODO: Should probably move the bulk of this function to commitWork.
   while (nextEffect !== null) {
     setCurrentDebugFiberInDEV(nextEffect);
@@ -2178,6 +2274,12 @@ function commitLayoutEffects(
 
     resetCurrentDebugFiberInDEV();
     nextEffect = nextEffect.nextEffect;
+  }
+
+  if (__DEV__) {
+    if (enableDebugTracing) {
+      logLayoutEffectsStopped();
+    }
   }
 }
 
@@ -2256,6 +2358,14 @@ function flushPassiveEffectsImpl() {
     (executionContext & (RenderContext | CommitContext)) === NoContext,
     'Cannot flush passive effects while already rendering.',
   );
+
+  if (__DEV__) {
+    if (enableDebugTracing) {
+      const priorityLevel = getCurrentPriorityLevel();
+      const label = priorityLevelToLabel(priorityLevel);
+      logPassiveEffectsStarted(label);
+    }
+  }
 
   if (__DEV__) {
     isFlushingPassiveEffects = true;
@@ -2422,6 +2532,12 @@ function flushPassiveEffectsImpl() {
 
   if (__DEV__) {
     isFlushingPassiveEffects = false;
+  }
+
+  if (__DEV__) {
+    if (enableDebugTracing) {
+      logPassiveEffectsStopped();
+    }
   }
 
   executionContext = prevExecutionContext;
