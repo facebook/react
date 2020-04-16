@@ -106,6 +106,15 @@ function isInsideComponentOrHook(node) {
 }
 
 export default {
+  meta: {
+    type: 'problem',
+    docs: {
+      description: 'enforces the Rules of Hooks',
+      category: 'Possible Errors',
+      recommended: true,
+      url: 'https://reactjs.org/docs/hooks-rules.html',
+    },
+  },
   create(context) {
     const codePathReactHooksMapStack = [];
     const codePathSegmentStack = [];
@@ -226,7 +235,7 @@ export default {
         function countPathsToEnd(segment, pathHistory) {
           const {cache} = countPathsToEnd;
           let paths = cache.get(segment.id);
-          let pathList = new Set(pathHistory);
+          const pathList = new Set(pathHistory);
 
           // If `pathList` includes the current segment then we've found a cycle!
           // We need to fill `cyclic` with all segments inside cycle

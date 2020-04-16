@@ -7,7 +7,10 @@
  * @flow
  */
 
-import type {CapturedError} from '../ReactCapturedValue';
+import type {Fiber} from '../ReactFiber.old';
+import type {CapturedValue} from '../ReactCapturedValue';
+
+import {ClassComponent} from '../ReactWorkTags';
 
 import invariant from 'shared/invariant';
 
@@ -18,6 +21,17 @@ invariant(
   'Expected ReactFiberErrorDialog.showErrorDialog to be a function.',
 );
 
-export function showErrorDialog(capturedError: CapturedError): boolean {
+export function showErrorDialog(
+  boundary: Fiber,
+  errorInfo: CapturedValue<mixed>,
+): boolean {
+  const capturedError = {
+    componentStack: errorInfo.stack !== null ? errorInfo.stack : '',
+    error: errorInfo.value,
+    errorBoundary:
+      boundary !== null && boundary.tag === ClassComponent
+        ? boundary.stateNode
+        : null,
+  };
   return ReactFiberErrorDialogWWW.showErrorDialog(capturedError);
 }

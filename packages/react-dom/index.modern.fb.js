@@ -19,4 +19,5 @@ export {
   unstable_flushDiscreteUpdates,
   unstable_flushControlled,
   unstable_scheduleHydration,
+  unstable_useEvent,
 } from './src/client/ReactDOM';

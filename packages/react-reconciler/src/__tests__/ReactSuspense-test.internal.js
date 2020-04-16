@@ -16,7 +16,7 @@ describe('ReactSuspense', () => {
   beforeEach(() => {
     jest.resetModules();
     ReactFeatureFlags = require('shared/ReactFeatureFlags');
-    ReactFeatureFlags.debugRenderPhaseSideEffectsForStrictMode = false;
+
     ReactFeatureFlags.replayFailedUnitOfWorkWithInvokeGuardedCallback = false;
     ReactFeatureFlags.enableSchedulerTracing = true;
     React = require('react');
@@ -199,7 +199,7 @@ describe('ReactSuspense', () => {
 
   it('interrupts current render if promise resolves before current render phase', () => {
     let didResolve = false;
-    let listeners = [];
+    const listeners = [];
 
     const thenable = {
       then(resolve) {

@@ -690,9 +690,7 @@ describe('ReactContextValidator', () => {
       );
     }).toErrorDev(
       'Warning: Failed prop type: The prop `dontPassToSeeErrorStack` is marked as required in `Validator`, but its value is `undefined`.\n' +
-        '    in Validator (at **)\n' +
-        '    in MyContextType.Consumer (at **)\n' +
-        '    in MyContextType.Provider (at **)',
+        '    in Validator (at **)',
     );
   });
 
@@ -700,14 +698,14 @@ describe('ReactContextValidator', () => {
     const Context = React.createContext(null);
 
     expect(() => {
-      Context.Consumer.displayName = 'ignored';
+      Context.Consumer.displayName = 'IgnoredName';
     }).toWarnDev(
       'Warning: Setting `displayName` on Context.Consumer has no effect. ' +
-        "You should set it directly on the context with Context.displayName = 'NamedContext'.",
+        "You should set it directly on the context with Context.displayName = 'IgnoredName'.",
       {withoutStack: true},
     );
 
-    // warning is deduped so subsequent setting is fine
-    Context.Consumer.displayName = 'ignored';
+    // warning is deduped by Context so subsequent setting is fine
+    Context.Consumer.displayName = 'ADifferentName';
   });
 });

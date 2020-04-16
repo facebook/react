@@ -613,18 +613,18 @@ describe('ReactFabric', () => {
       1,
     );
 
-    let [
+    const [
       ,
       ,
       ,
       ,
       instanceHandle,
     ] = nativeFabricUIManager.createNode.mock.calls[0];
-    let [
+    const [
       dispatchEvent,
     ] = nativeFabricUIManager.registerEventHandler.mock.calls[0];
 
-    let touchEvent = {
+    const touchEvent = {
       touches: [],
       changedTouches: [],
     };
@@ -708,7 +708,7 @@ describe('ReactFabric', () => {
       1,
     );
 
-    let [
+    const [
       dispatchEvent,
     ] = nativeFabricUIManager.registerEventHandler.mock.calls[0];
 
@@ -773,7 +773,6 @@ describe('ReactFabric', () => {
         'Learn more about using refs safely here: ' +
         'https://fb.me/react-strict-mode-find-node' +
         '\n    in RCTView (at **)' +
-        '\n    in StrictMode (at **)' +
         '\n    in ContainsStrictModeChild (at **)',
     ]);
     expect(match).toBe(child);
@@ -811,8 +810,7 @@ describe('ReactFabric', () => {
         'Learn more about using refs safely here: ' +
         'https://fb.me/react-strict-mode-find-node' +
         '\n    in RCTView (at **)' +
-        '\n    in IsInStrictMode (at **)' +
-        '\n    in StrictMode (at **)',
+        '\n    in IsInStrictMode (at **)',
     ]);
     expect(match).toBe(child);
   });
@@ -846,7 +844,6 @@ describe('ReactFabric', () => {
         'Learn more about using refs safely here: ' +
         'https://fb.me/react-strict-mode-find-node' +
         '\n    in RCTView (at **)' +
-        '\n    in StrictMode (at **)' +
         '\n    in ContainsStrictModeChild (at **)',
     ]);
     expect(match).toBe(child._nativeTag);
@@ -882,8 +879,7 @@ describe('ReactFabric', () => {
         'Learn more about using refs safely here: ' +
         'https://fb.me/react-strict-mode-find-node' +
         '\n    in RCTView (at **)' +
-        '\n    in IsInStrictMode (at **)' +
-        '\n    in StrictMode (at **)',
+        '\n    in IsInStrictMode (at **)',
     ]);
     expect(match).toBe(child._nativeTag);
   });
@@ -894,7 +890,7 @@ describe('ReactFabric', () => {
       uiViewClassName: 'RCTView',
     }));
 
-    let viewRef = React.createRef();
+    const viewRef = React.createRef();
     ReactFabric.render(<View ref={viewRef} />, 11);
 
     expect(TextInputState.blurTextInput).not.toBeCalled();
@@ -911,7 +907,7 @@ describe('ReactFabric', () => {
       uiViewClassName: 'RCTView',
     }));
 
-    let viewRef = React.createRef();
+    const viewRef = React.createRef();
     ReactFabric.render(<View ref={viewRef} />, 11);
 
     expect(TextInputState.focusTextInput).not.toBeCalled();

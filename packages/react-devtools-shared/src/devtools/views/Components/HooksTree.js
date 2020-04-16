@@ -124,7 +124,7 @@ function HookView({canEditHooks, hook, id, inspectPath, path}: HookViewProps) {
         hook !== null &&
         typeof hook === 'object' &&
         hook.hasOwnProperty(meta.type)
-          ? hook[meta.type]
+          ? hook[(meta.type: any)]
           : typeof value,
     },
     id: 'SelectedElement',

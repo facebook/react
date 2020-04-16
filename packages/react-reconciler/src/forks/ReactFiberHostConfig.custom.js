@@ -37,6 +37,8 @@ export opaque type UpdatePayload = mixed; // eslint-disable-line no-undef
 export opaque type ChildSet = mixed; // eslint-disable-line no-undef
 export opaque type TimeoutHandle = mixed; // eslint-disable-line no-undef
 export opaque type NoTimeout = mixed; // eslint-disable-line no-undef
+export opaque type RendererInspectionConfig = mixed; // eslint-disable-line no-undef
+export opaque type OpaqueIDType = mixed;
 export type EventResponder = any;
 export type ReactListenerEvent = Object;
 export type ReactListenerMap = Object;
@@ -55,8 +57,8 @@ export const shouldSetTextContent = $$$hostConfig.shouldSetTextContent;
 export const shouldDeprioritizeSubtree =
   $$$hostConfig.shouldDeprioritizeSubtree;
 export const createTextInstance = $$$hostConfig.createTextInstance;
-export const scheduleTimeout = $$$hostConfig.setTimeout;
-export const cancelTimeout = $$$hostConfig.clearTimeout;
+export const scheduleTimeout = $$$hostConfig.scheduleTimeout;
+export const cancelTimeout = $$$hostConfig.cancelTimeout;
 export const noTimeout = $$$hostConfig.noTimeout;
 export const now = $$$hostConfig.now;
 export const isPrimaryRenderer = $$$hostConfig.isPrimaryRenderer;
@@ -81,6 +83,12 @@ export const mountEventListener = $$$hostConfig.mountEventListener;
 export const unmountEventListener = $$$hostConfig.unmountEventListener;
 export const validateEventListenerTarget =
   $$$hostConfig.validateEventListenerTarget;
+export const isOpaqueHydratingObject = $$$hostConfig.isOpaqueHydratingObject;
+export const makeOpaqueHydratingObject =
+  $$$hostConfig.makeOpaqueHydratingObject;
+export const makeClientId = $$$hostConfig.makeClientId;
+export const makeClientIdInDEV = $$$hostConfig.makeClientIdInDEV;
+export const makeServerId = $$$hostConfig.makeServerId;
 
 // -------------------
 //      Mutation

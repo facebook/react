@@ -124,7 +124,6 @@ describe('findDOMNode', () => {
         'Learn more about using refs safely here: ' +
         'https://fb.me/react-strict-mode-find-node' +
         '\n    in div (at **)' +
-        '\n    in StrictMode (at **)' +
         '\n    in ContainsStrictModeChild (at **)',
     ]);
     expect(match).toBe(child);
@@ -154,8 +153,7 @@ describe('findDOMNode', () => {
         'Learn more about using refs safely here: ' +
         'https://fb.me/react-strict-mode-find-node' +
         '\n    in div (at **)' +
-        '\n    in IsInStrictMode (at **)' +
-        '\n    in StrictMode (at **)',
+        '\n    in IsInStrictMode (at **)',
     ]);
     expect(match).toBe(child);
   });

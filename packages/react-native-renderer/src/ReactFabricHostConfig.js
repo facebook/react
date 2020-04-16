@@ -15,6 +15,7 @@ import type {
   MeasureOnSuccessCallback,
   NativeMethods,
   ReactNativeBaseComponentViewConfig,
+  TouchedViewDataAtPoint,
 } from './ReactNativeTypes';
 
 import {mountSafeCallback_NOT_REALLY_SAFE} from './NativeMethodsMixinUtils';
@@ -79,6 +80,18 @@ export type NoTimeout = -1;
 export type ReactListenerEvent = Object;
 export type ReactListenerMap = Object;
 export type ReactListener = Object;
+export type OpaqueIDType = void;
+
+export type RendererInspectionConfig = $ReadOnly<{|
+  // Deprecated. Replaced with getInspectorDataForViewAtPoint.
+  getInspectorDataForViewTag?: (tag: number) => Object,
+  getInspectorDataForViewAtPoint?: (
+    inspectedView: Object,
+    locationX: number,
+    locationY: number,
+    callback: (viewData: TouchedViewDataAtPoint) => mixed,
+  ) => void,
+|}>;
 
 // TODO: Remove this conditional once all changes have propagated.
 if (registerEventHandler) {
@@ -171,8 +184,8 @@ class ReactFabricHostComponent {
 // eslint-disable-next-line no-unused-expressions
 (ReactFabricHostComponent.prototype: NativeMethods);
 
-export * from 'shared/HostConfigWithNoMutation';
-export * from 'shared/HostConfigWithNoHydration';
+export * from 'react-reconciler/src/ReactFiberHostConfigWithNoMutation';
+export * from 'react-reconciler/src/ReactFiberHostConfigWithNoHydration';
 
 export function appendInitialChild(
   parentInstance: Instance,
@@ -472,6 +485,28 @@ export function getInstanceFromNode(node: any) {
 
 export function beforeRemoveInstance(instance: any) {
   // noop
+}
+
+export function isOpaqueHydratingObject(value: mixed): boolean {
+  throw new Error('Not yet implemented');
+}
+
+export function makeOpaqueHydratingObject(
+  attemptToReadValue: () => void,
+): OpaqueIDType {
+  throw new Error('Not yet implemented.');
+}
+
+export function makeClientId(): OpaqueIDType {
+  throw new Error('Not yet implemented');
+}
+
+export function makeClientIdInDEV(warnOnAccessInDEV: () => void): OpaqueIDType {
+  throw new Error('Not yet implemented');
+}
+
+export function makeServerId(): OpaqueIDType {
+  throw new Error('Not yet implemented');
 }
 
 export function registerEvent(event: any, rootContainerInstance: Container) {

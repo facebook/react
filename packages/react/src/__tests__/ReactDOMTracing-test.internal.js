@@ -25,7 +25,7 @@ let onWorkStopped;
 
 function loadModules() {
   ReactFeatureFlags = require('shared/ReactFeatureFlags');
-  ReactFeatureFlags.debugRenderPhaseSideEffectsForStrictMode = false;
+
   ReactFeatureFlags.enableProfilerTimer = true;
   ReactFeatureFlags.enableSchedulerTracing = true;
   ReactFeatureFlags.replayFailedUnitOfWorkWithInvokeGuardedCallback = false;
@@ -62,13 +62,9 @@ describe('ReactDOMTracing', () => {
     loadModules();
   });
 
-  if (!__EXPERIMENTAL__) {
-    it("empty test so Jest doesn't complain", () => {});
-    return;
-  }
-
   describe('interaction tracing', () => {
     describe('hidden', () => {
+      // @gate experimental
       it('traces interaction through hidden subtree', () => {
         const Child = () => {
           const [didMount, setDidMount] = React.useState(false);
@@ -145,6 +141,7 @@ describe('ReactDOMTracing', () => {
         );
       });
 
+      // @gate experimental
       it('traces interaction through hidden subtree when there is other pending traced work', () => {
         const Child = () => {
           Scheduler.unstable_yieldValue('Child');
@@ -212,6 +209,7 @@ describe('ReactDOMTracing', () => {
         ).toHaveBeenLastNotifiedOfInteraction(interaction);
       });
 
+      // @gate experimental
       it('traces interaction through hidden subtree that schedules more idle/never work', () => {
         const Child = () => {
           const [didMount, setDidMount] = React.useState(false);
@@ -294,6 +292,7 @@ describe('ReactDOMTracing', () => {
         );
       });
 
+      // @gate experimental
       it('does not continue interactions across pre-existing idle work', () => {
         const Child = () => {
           Scheduler.unstable_yieldValue('Child');
@@ -394,6 +393,7 @@ describe('ReactDOMTracing', () => {
         });
       });
 
+      // @gate experimental
       it('should properly trace interactions when there is work of interleaved priorities', () => {
         const Child = () => {
           Scheduler.unstable_yieldValue('Child');
@@ -515,6 +515,7 @@ describe('ReactDOMTracing', () => {
         });
       });
 
+      // @gate experimental
       it('should properly trace interactions through a multi-pass SuspenseList render', () => {
         const SuspenseList = React.SuspenseList;
         const Suspense = React.Suspense;
@@ -599,8 +600,9 @@ describe('ReactDOMTracing', () => {
     });
 
     describe('hydration', () => {
-      it('traces interaction across hydration', async done => {
-        let ref = React.createRef();
+      // @gate experimental
+      it('traces interaction across hydration', () => {
+        const ref = React.createRef();
 
         function Child() {
           return 'Hello';
@@ -644,15 +646,16 @@ describe('ReactDOMTracing', () => {
         expect(
           onInteractionScheduledWorkCompleted,
         ).toHaveBeenLastNotifiedOfInteraction(interaction);
-
-        done();
       });
 
-      it('traces interaction across suspended hydration', async done => {
+      // @gate experimental
+      it('traces interaction across suspended hydration', async () => {
         let suspend = false;
         let resolve;
-        let promise = new Promise(resolvePromise => (resolve = resolvePromise));
-        let ref = React.createRef();
+        const promise = new Promise(
+          resolvePromise => (resolve = resolvePromise),
+        );
+        const ref = React.createRef();
 
         function Child() {
           if (suspend) {
@@ -714,14 +717,13 @@ describe('ReactDOMTracing', () => {
         expect(
           onInteractionScheduledWorkCompleted,
         ).toHaveBeenLastNotifiedOfInteraction(interaction);
-
-        done();
       });
 
-      it('traces interaction across client-rendered hydration', async done => {
+      // @gate experimental
+      it('traces interaction across client-rendered hydration', () => {
         let suspend = false;
-        let promise = new Promise(() => {});
-        let ref = React.createRef();
+        const promise = new Promise(() => {});
+        const ref = React.createRef();
 
         function Child() {
           if (suspend) {
@@ -786,8 +788,6 @@ describe('ReactDOMTracing', () => {
         expect(
           onInteractionScheduledWorkCompleted,
         ).toHaveBeenLastNotifiedOfInteraction(interaction);
-
-        done();
       });
     });
   });

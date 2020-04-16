@@ -227,8 +227,8 @@ describe('ReactElementValidator', () => {
       'Warning: Failed prop type: ' +
         'Invalid prop `color` of type `number` supplied to `MyComp`, ' +
         'expected `string`.\n' +
-        '    in MyComp (created by ParentComp)\n' +
-        '    in ParentComp',
+        '    in MyComp (at **)\n' +
+        '    in ParentComp (at **)',
     );
   });
 

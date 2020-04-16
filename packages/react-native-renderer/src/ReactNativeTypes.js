@@ -100,6 +100,46 @@ type SecretInternalsType = {
   ...
 };
 
+type InspectorDataProps = $ReadOnly<{
+  [propName: string]: string,
+  ...,
+}>;
+
+type InspectorDataSource = $ReadOnly<{|
+  fileName?: string,
+  lineNumber?: number,
+|}>;
+
+type InspectorDataGetter = (
+  (componentOrHandle: any) => ?number,
+) => $ReadOnly<{|
+  measure: Function,
+  props: InspectorDataProps,
+  source: InspectorDataSource,
+|}>;
+
+export type InspectorData = $ReadOnly<{|
+  hierarchy: Array<{|
+    name: ?string,
+    getInspectorData: InspectorDataGetter,
+  |}>,
+  selectedIndex: ?number,
+  props: InspectorDataProps,
+  source: ?InspectorDataSource,
+|}>;
+
+export type TouchedViewDataAtPoint = $ReadOnly<{|
+  pointerY: number,
+  touchedViewTag?: number,
+  frame: $ReadOnly<{|
+    top: number,
+    left: number,
+    width: number,
+    height: number,
+  |}>,
+  ...InspectorData,
+|}>;
+
 /**
  * Flat ReactNative renderer bundles are too big for Flow to parse efficiently.
  * Provide minimal Flow typing for the high-level RN API and call it a day.

@@ -32,7 +32,7 @@ describe('ReactSuspense', () => {
   function createThenable() {
     let completed = false;
     const resolveRef = {current: null};
-    let promise = {
+    const promise = {
       then(resolve, reject) {
         resolveRef.current = () => {
           completed = true;
@@ -149,11 +149,11 @@ describe('ReactSuspense', () => {
   it('nested suspense promises are reported only for their tier', () => {
     const {promise, PromiseComp} = createThenable();
 
-    let ops1 = [];
+    const ops1 = [];
     const suspenseCallback1 = thenables => {
       ops1.push(thenables);
     };
-    let ops2 = [];
+    const ops2 = [];
     const suspenseCallback2 = thenables => {
       ops2.push(thenables);
     };
@@ -250,7 +250,7 @@ describe('ReactSuspense', () => {
       // you can probably just delete it. It's not worth the hassle.
       jest.resetModules();
 
-      let errors = [];
+      const errors = [];
       let hasCaughtError = false;
       jest.mock('shared/ReactErrorUtils', () => ({
         invokeGuardedCallback(name, fn, context, ...args) {

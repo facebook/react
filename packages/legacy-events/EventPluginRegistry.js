@@ -241,3 +241,20 @@ export function injectEventPluginsByName(
     recomputePluginOrdering();
   }
 }
+
+export function injectEventPlugins(
+  eventPlugins: [PluginModule<AnyNativeEvent>],
+): void {
+  for (let i = 0; i < eventPlugins.length; i++) {
+    const pluginModule = eventPlugins[i];
+    plugins.push(pluginModule);
+    const publishedEvents = pluginModule.eventTypes;
+    for (const eventName in publishedEvents) {
+      publishEventForPlugin(
+        publishedEvents[eventName],
+        pluginModule,
+        eventName,
+      );
+    }
+  }
+}

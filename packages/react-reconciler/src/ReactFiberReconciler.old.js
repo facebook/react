@@ -7,47 +7,44 @@
  * @flow
  */
 
-import type {Fiber} from './ReactFiber';
-import type {FiberRoot} from './ReactFiberRoot';
-import type {RootTag} from 'shared/ReactRootTags';
+import type {Fiber, SuspenseHydrationCallbacks} from './ReactInternalTypes';
+import type {FiberRoot} from './ReactInternalTypes';
+import type {RootTag} from './ReactRootTags';
 import type {
   Instance,
   TextInstance,
   Container,
   PublicInstance,
 } from './ReactFiberHostConfig';
-import {FundamentalComponent} from 'shared/ReactWorkTags';
+import type {RendererInspectionConfig} from './ReactFiberHostConfig';
+import {FundamentalComponent} from './ReactWorkTags';
 import type {ReactNodeList} from 'shared/ReactTypes';
-import type {ExpirationTime} from './ReactFiberExpirationTime';
-import type {
-  SuspenseHydrationCallbacks,
-  SuspenseState,
-} from './ReactFiberSuspenseComponent';
+import type {ExpirationTime} from './ReactFiberExpirationTime.old';
+import type {SuspenseState} from './ReactFiberSuspenseComponent.old';
 
 import {
   findCurrentHostFiber,
   findCurrentHostFiberWithNoPortals,
-} from 'react-reconciler/src/ReactFiberTreeReflection';
+} from './ReactFiberTreeReflection';
 import {get as getInstance} from 'shared/ReactInstanceMap';
 import {
   HostComponent,
   ClassComponent,
   HostRoot,
   SuspenseComponent,
-} from 'shared/ReactWorkTags';
+} from './ReactWorkTags';
 import getComponentName from 'shared/getComponentName';
 import invariant from 'shared/invariant';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
-
 import {getPublicInstance} from './ReactFiberHostConfig';
 import {
   findCurrentUnmaskedContext,
   processChildContext,
   emptyContextObject,
   isContextProvider as isLegacyContextProvider,
-} from './ReactFiberContext';
-import {createFiberRoot} from './ReactFiberRoot';
-import {injectInternals, onScheduleRoot} from './ReactFiberDevToolsHook';
+} from './ReactFiberContext.old';
+import {createFiberRoot} from './ReactFiberRoot.old';
+import {injectInternals, onScheduleRoot} from './ReactFiberDevToolsHook.old';
 import {
   requestCurrentTimeForUpdate,
   computeExpirationForFiber,
@@ -66,10 +63,11 @@ import {
   warnIfNotScopedWithMatchingAct,
   warnIfUnmockedScheduler,
   IsThisRendererActing,
-} from './ReactFiberWorkLoop';
-import {createUpdate, enqueueUpdate} from './ReactUpdateQueue';
+  act,
+} from './ReactFiberWorkLoop.old';
+import {createUpdate, enqueueUpdate} from './ReactUpdateQueue.old';
+import {getStackByFiberInDevAndProd} from './ReactFiberComponentStack';
 import {
-  getStackByFiberInDevAndProd,
   isRendering as ReactCurrentFiberIsRendering,
   current as ReactCurrentFiberCurrent,
 } from './ReactCurrentFiber';
@@ -78,19 +76,16 @@ import {
   Sync,
   ContinuousHydration,
   computeInteractiveExpiration,
-} from './ReactFiberExpirationTime';
+} from './ReactFiberExpirationTime.old';
 import {requestCurrentSuspenseConfig} from './ReactFiberSuspenseConfig';
 import {
   scheduleRefresh,
   scheduleRoot,
   setRefreshHandler,
   findHostInstancesForRefresh,
-} from './ReactFiberHotReloading';
+} from './ReactFiberHotReloading.old';
 
-// used by isTestEnvironment builds
-import enqueueTask from 'shared/enqueueTask';
-import * as Scheduler from 'scheduler';
-// end isTestEnvironment imports
+export {createPortal} from './ReactPortal';
 
 type OpaqueRoot = FiberRoot;
 
@@ -105,10 +100,7 @@ type DevToolsConfig = {|
   // Note: this actually *does* depend on Fiber internal fields.
   // Used by "inspect clicked DOM element" in React DevTools.
   findFiberByHostInstance?: (instance: Instance | TextInstance) => Fiber | null,
-  // Used by RN in-app inspector.
-  // This API is unfortunately RN-specific.
-  // TODO: Change it to accept Fiber instead and type it properly.
-  getInspectorDataForViewTag?: (tag: number) => Object,
+  rendererConfig?: RendererInspectionConfig,
 |};
 
 let didWarnAboutNestedUpdates;
@@ -311,6 +303,7 @@ export {
   flushSync,
   flushPassiveEffects,
   IsThisRendererActing,
+  act,
 };
 
 export function getPublicRootInstance(
@@ -331,7 +324,7 @@ export function getPublicRootInstance(
 export function attemptSynchronousHydration(fiber: Fiber): void {
   switch (fiber.tag) {
     case HostRoot:
-      let root: FiberRoot = fiber.stateNode;
+      const root: FiberRoot = fiber.stateNode;
       if (root.hydrate) {
         // Flush the first scheduled "update".
         flushRoot(root, root.firstPendingTime);
@@ -342,7 +335,7 @@ export function attemptSynchronousHydration(fiber: Fiber): void {
       // If we're still blocked after this, we need to increase
       // the priority of any promises resolving within this
       // boundary so that they next attempt also has higher pri.
-      let retryExpTime = computeInteractiveExpiration(
+      const retryExpTime = computeInteractiveExpiration(
         requestCurrentTimeForUpdate(),
       );
       markRetryTimeIfNotHydrated(fiber, retryExpTime);
@@ -351,7 +344,7 @@ export function attemptSynchronousHydration(fiber: Fiber): void {
 }
 
 function markRetryTimeImpl(fiber: Fiber, retryTime: ExpirationTime) {
-  let suspenseState: null | SuspenseState = fiber.memoizedState;
+  const suspenseState: null | SuspenseState = fiber.memoizedState;
   if (suspenseState !== null && suspenseState.dehydrated !== null) {
     if (suspenseState.retryTime < retryTime) {
       suspenseState.retryTime = retryTime;
@@ -362,7 +355,7 @@ function markRetryTimeImpl(fiber: Fiber, retryTime: ExpirationTime) {
 // Increases the priority of thennables when they resolve within this boundary.
 function markRetryTimeIfNotHydrated(fiber: Fiber, retryTime: ExpirationTime) {
   markRetryTimeImpl(fiber, retryTime);
-  let alternate = fiber.alternate;
+  const alternate = fiber.alternate;
   if (alternate) {
     markRetryTimeImpl(alternate, retryTime);
   }
@@ -376,7 +369,7 @@ export function attemptUserBlockingHydration(fiber: Fiber): void {
     // Suspense.
     return;
   }
-  let expTime = computeInteractiveExpiration(requestCurrentTimeForUpdate());
+  const expTime = computeInteractiveExpiration(requestCurrentTimeForUpdate());
   scheduleUpdateOnFiber(fiber, expTime);
   markRetryTimeIfNotHydrated(fiber, expTime);
 }
@@ -506,6 +499,24 @@ if (__DEV__) {
   };
 }
 
+function findHostInstanceByFiber(fiber: Fiber): Instance | TextInstance | null {
+  const hostFiber = findCurrentHostFiber(fiber);
+  if (hostFiber === null) {
+    return null;
+  }
+  return hostFiber.stateNode;
+}
+
+function emptyFindFiberByHostInstance(
+  instance: Instance | TextInstance,
+): Fiber | null {
+  return null;
+}
+
+function getCurrentFiberForDevTools() {
+  return ReactCurrentFiberCurrent;
+}
+
 export function injectIntoDevTools(devToolsConfig: DevToolsConfig): boolean {
   const {findFiberByHostInstance} = devToolsConfig;
   const {ReactCurrentDispatcher} = ReactSharedInternals;
@@ -514,214 +525,21 @@ export function injectIntoDevTools(devToolsConfig: DevToolsConfig): boolean {
     bundleType: devToolsConfig.bundleType,
     version: devToolsConfig.version,
     rendererPackageName: devToolsConfig.rendererPackageName,
-    getInspectorDataForViewTag: devToolsConfig.getInspectorDataForViewTag,
+    rendererConfig: devToolsConfig.rendererConfig,
     overrideHookState,
     overrideProps,
     setSuspenseHandler,
     scheduleUpdate,
     currentDispatcherRef: ReactCurrentDispatcher,
-    findHostInstanceByFiber(fiber: Fiber): Instance | TextInstance | null {
-      const hostFiber = findCurrentHostFiber(fiber);
-      if (hostFiber === null) {
-        return null;
-      }
-      return hostFiber.stateNode;
-    },
-    findFiberByHostInstance(instance: Instance | TextInstance): Fiber | null {
-      if (!findFiberByHostInstance) {
-        // Might not be implemented by the renderer.
-        return null;
-      }
-      return findFiberByHostInstance(instance);
-    },
+    findHostInstanceByFiber,
+    findFiberByHostInstance:
+      findFiberByHostInstance || emptyFindFiberByHostInstance,
     // React Refresh
     findHostInstancesForRefresh: __DEV__ ? findHostInstancesForRefresh : null,
     scheduleRefresh: __DEV__ ? scheduleRefresh : null,
     scheduleRoot: __DEV__ ? scheduleRoot : null,
     setRefreshHandler: __DEV__ ? setRefreshHandler : null,
     // Enables DevTools to append owner stacks to error messages in DEV mode.
-    getCurrentFiber: __DEV__ ? () => ReactCurrentFiberCurrent : null,
+    getCurrentFiber: __DEV__ ? getCurrentFiberForDevTools : null,
   });
-}
-
-const {IsSomeRendererActing} = ReactSharedInternals;
-const isSchedulerMocked =
-  typeof Scheduler.unstable_flushAllWithoutAsserting === 'function';
-const flushWork =
-  Scheduler.unstable_flushAllWithoutAsserting ||
-  function() {
-    let didFlushWork = false;
-    while (flushPassiveEffects()) {
-      didFlushWork = true;
-    }
-
-    return didFlushWork;
-  };
-
-function flushWorkAndMicroTasks(onDone: (err: ?Error) => void) {
-  try {
-    flushWork();
-    enqueueTask(() => {
-      if (flushWork()) {
-        flushWorkAndMicroTasks(onDone);
-      } else {
-        onDone();
-      }
-    });
-  } catch (err) {
-    onDone(err);
-  }
-}
-
-// we track the 'depth' of the act() calls with this counter,
-// so we can tell if any async act() calls try to run in parallel.
-
-let actingUpdatesScopeDepth = 0;
-let didWarnAboutUsingActInProd = false;
-
-// eslint-disable-next-line no-inner-declarations
-export function act(callback: () => Thenable) {
-  if (!__DEV__) {
-    if (didWarnAboutUsingActInProd === false) {
-      didWarnAboutUsingActInProd = true;
-      // eslint-disable-next-line react-internal/no-production-logging
-      console.error(
-        'act(...) is not supported in production builds of React, and might not behave as expected.',
-      );
-    }
-  }
-
-  let previousActingUpdatesScopeDepth = actingUpdatesScopeDepth;
-  let previousIsSomeRendererActing;
-  let previousIsThisRendererActing;
-  actingUpdatesScopeDepth++;
-
-  previousIsSomeRendererActing = IsSomeRendererActing.current;
-  previousIsThisRendererActing = IsThisRendererActing.current;
-  IsSomeRendererActing.current = true;
-  IsThisRendererActing.current = true;
-
-  function onDone() {
-    actingUpdatesScopeDepth--;
-    IsSomeRendererActing.current = previousIsSomeRendererActing;
-    IsThisRendererActing.current = previousIsThisRendererActing;
-    if (__DEV__) {
-      if (actingUpdatesScopeDepth > previousActingUpdatesScopeDepth) {
-        // if it's _less than_ previousActingUpdatesScopeDepth, then we can assume the 'other' one has warned
-        console.error(
-          'You seem to have overlapping act() calls, this is not supported. ' +
-            'Be sure to await previous act() calls before making a new one. ',
-        );
-      }
-    }
-  }
-
-  let result;
-  try {
-    result = batchedUpdates(callback);
-  } catch (error) {
-    // on sync errors, we still want to 'cleanup' and decrement actingUpdatesScopeDepth
-    onDone();
-    throw error;
-  }
-
-  if (
-    result !== null &&
-    typeof result === 'object' &&
-    typeof result.then === 'function'
-  ) {
-    // setup a boolean that gets set to true only
-    // once this act() call is await-ed
-    let called = false;
-    if (__DEV__) {
-      if (typeof Promise !== 'undefined') {
-        //eslint-disable-next-line no-undef
-        Promise.resolve()
-          .then(() => {})
-          .then(() => {
-            if (called === false) {
-              console.error(
-                'You called act(async () => ...) without await. ' +
-                  'This could lead to unexpected testing behaviour, interleaving multiple act ' +
-                  'calls and mixing their scopes. You should - await act(async () => ...);',
-              );
-            }
-          });
-      }
-    }
-
-    // in the async case, the returned thenable runs the callback, flushes
-    // effects and  microtasks in a loop until flushPassiveEffects() === false,
-    // and cleans up
-    return {
-      then(resolve: () => void, reject: (?Error) => void) {
-        called = true;
-        result.then(
-          () => {
-            if (
-              actingUpdatesScopeDepth > 1 ||
-              (isSchedulerMocked === true &&
-                previousIsSomeRendererActing === true)
-            ) {
-              onDone();
-              resolve();
-              return;
-            }
-            // we're about to exit the act() scope,
-            // now's the time to flush tasks/effects
-            flushWorkAndMicroTasks((err: ?Error) => {
-              onDone();
-              if (err) {
-                reject(err);
-              } else {
-                resolve();
-              }
-            });
-          },
-          err => {
-            onDone();
-            reject(err);
-          },
-        );
-      },
-    };
-  } else {
-    if (__DEV__) {
-      if (result !== undefined) {
-        console.error(
-          'The callback passed to act(...) function ' +
-            'must return undefined, or a Promise. You returned %s',
-          result,
-        );
-      }
-    }
-
-    // flush effects until none remain, and cleanup
-    try {
-      if (
-        actingUpdatesScopeDepth === 1 &&
-        (isSchedulerMocked === false || previousIsSomeRendererActing === false)
-      ) {
-        // we're about to exit the act() scope,
-        // now's the time to flush effects
-        flushWork();
-      }
-      onDone();
-    } catch (err) {
-      onDone();
-      throw err;
-    }
-
-    // in the sync case, the returned thenable only warns *if* await-ed
-    return {
-      then(resolve: () => void) {
-        if (__DEV__) {
-          console.error(
-            'Do not await the result of calling act(...) with sync logic, it is not a Promise.',
-          );
-        }
-        resolve();
-      },
-    };
-  }
 }

@@ -7,7 +7,13 @@
  * @flow strict
  */
 
-export const enableUserTimingAPI = __DEV__;
+// Filter certain DOM attributes (e.g. src, href) if their values are empty strings.
+// This prevents e.g. <img src=""> from making an unnecessar HTTP request for certain browsers.
+export const enableFilterEmptyStringAttributesDOM = false;
+
+// Adds verbose console logging for e.g. state updates, suspense, and work loop stuff.
+// Intended to enable React core members to more easily debug scheduling issues in DEV builds.
+export const enableDebugTracing = false;
 
 // Helps identify side effects in render-phase lifecycle hooks and setState
 // reducers by double invoking them in Strict Mode.
@@ -39,17 +45,8 @@ export const enableBlocksAPI = __EXPERIMENTAL__;
 // Only used in www builds.
 export const enableSchedulerDebugging = false;
 
-// Only used in www builds.
-export function addUserTimingListener() {
-  throw new Error('Not implemented.');
-}
-
 // Disable javascript: URL strings in href for XSS protection.
 export const disableJavaScriptURLs = false;
-
-// Warns when a combination of updates on a dom can cause a style declaration
-// that clashes with a previous one https://github.com/facebook/react/pull/14181
-export const warnAboutShorthandPropertyCollision = true;
 
 // Experimental React Flare event system and event components support.
 export const enableDeprecatedFlareAPI = false;
@@ -68,10 +65,6 @@ export const enableUseEventAPI = false;
 // We will enforce mocking scheduler with scheduler/unstable_mock at some point. (v17?)
 // Till then, we warn about the missing mock, but still fallback to a legacy mode compatible version
 export const warnAboutUnmockedScheduler = false;
-
-// For tests, we flush suspense fallbacks in an act scope;
-// *except* in some of our own tests, where we test incremental loading states.
-export const flushSuspenseFallbacksInTests = true;
 
 // Add a callback property to suspense to notify which promises are currently
 // in the update queue. This allows reporting and tracing of what is causing
@@ -108,6 +101,8 @@ export const deferPassiveEffectCleanupDuringUnmount = false;
 // a deprecated pattern we want to get rid of in the future
 export const warnAboutSpreadingKeyToJSX = false;
 
+export const enableComponentStackLocations = __EXPERIMENTAL__;
+
 // Internal-only attempt to debug a React Native issue. See D20130868.
 export const throwEarlyForMysteriousError = false;
 
@@ -127,9 +122,6 @@ export const disableLegacyContext = false;
 
 // Disables children for <textarea> elements
 export const disableTextareaChildren = false;
-
-// Disables Maps as ReactElement children
-export const disableMapsAsChildren = false;
 
 export const disableModulePatternComponents = false;
 

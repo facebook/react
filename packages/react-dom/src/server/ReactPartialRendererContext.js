@@ -70,7 +70,7 @@ export function processContext(
     const contextType = type.contextType;
     if (__DEV__) {
       if ('contextType' in (type: any)) {
-        let isValid =
+        const isValid =
           // Allow null for conditional declaration
           contextType === null ||
           (contextType !== undefined &&

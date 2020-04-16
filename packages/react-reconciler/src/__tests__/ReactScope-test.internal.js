@@ -26,11 +26,6 @@ describe('ReactScope', () => {
     Scheduler = require('scheduler');
   });
 
-  if (!__EXPERIMENTAL__) {
-    it("empty test so Jest doesn't complain", () => {});
-    return;
-  }
-
   describe('ReactDOM', () => {
     let ReactDOM;
     let container;
@@ -47,6 +42,7 @@ describe('ReactScope', () => {
       container = null;
     });
 
+    // @gate experimental
     it('DO_NOT_USE_queryAllNodes() works as intended', () => {
       const testScopeQuery = (type, props) => true;
       const TestScope = React.unstable_createScope();
@@ -81,6 +77,7 @@ describe('ReactScope', () => {
       expect(scopeRef.current).toBe(null);
     });
 
+    // @gate experimental
     it('DO_NOT_USE_queryAllNodes() provides the correct host instance', () => {
       const testScopeQuery = (type, props) => type === 'div';
       const TestScope = React.unstable_createScope();
@@ -127,6 +124,7 @@ describe('ReactScope', () => {
       expect(scopeRef.current).toBe(null);
     });
 
+    // @gate experimental
     it('DO_NOT_USE_queryFirstNode() works as intended', () => {
       const testScopeQuery = (type, props) => true;
       const TestScope = React.unstable_createScope();
@@ -161,6 +159,7 @@ describe('ReactScope', () => {
       expect(scopeRef.current).toBe(null);
     });
 
+    // @gate experimental
     it('containsNode() works as intended', () => {
       const TestScope = React.unstable_createScope();
       const scopeRef = React.createRef();
@@ -210,6 +209,7 @@ describe('ReactScope', () => {
       expect(scopeRef.current.containsNode(emRef.current)).toBe(false);
     });
 
+    // @gate experimental
     it('scopes support server-side rendering and hydration', () => {
       const TestScope = React.unstable_createScope();
       const scopeRef = React.createRef();
@@ -240,6 +240,7 @@ describe('ReactScope', () => {
       expect(nodes).toEqual([divRef.current, spanRef.current, aRef.current]);
     });
 
+    // @gate experimental
     it('event responders can be attached to scopes', () => {
       let onKeyDown = jest.fn();
       const TestScope = React.unstable_createScope();
@@ -282,6 +283,7 @@ describe('ReactScope', () => {
       expect(onKeyDown).toHaveBeenCalledTimes(1);
     });
 
+    // @gate experimental
     it('getChildContextValues() works as intended', () => {
       const TestContext = React.createContext();
       const TestScope = React.unstable_createScope();
@@ -310,6 +312,7 @@ describe('ReactScope', () => {
       expect(scopeRef.current).toBe(null);
     });
 
+    // @gate experimental
     it('correctly works with suspended boundaries that are hydrated', async () => {
       let suspend = false;
       let resolve;
@@ -345,17 +348,17 @@ describe('ReactScope', () => {
       // this may have suspense points on the server but here we want
       // to test the completed HTML. Don't suspend on the server.
       suspend = false;
-      let finalHTML = ReactDOMServer.renderToString(<App />);
+      const finalHTML = ReactDOMServer.renderToString(<App />);
 
-      let container2 = document.createElement('div');
+      const container2 = document.createElement('div');
       container2.innerHTML = finalHTML;
 
-      let span = container2.getElementsByTagName('span')[0];
+      const span = container2.getElementsByTagName('span')[0];
 
       // On the client we don't have all data yet but we want to start
       // hydrating anyway.
       suspend = true;
-      let root = ReactDOM.createRoot(container2, {hydrate: true});
+      const root = ReactDOM.createRoot(container2, {hydrate: true});
       root.render(<App />);
       Scheduler.unstable_flushAll();
       jest.runAllTimers();
@@ -384,6 +387,7 @@ describe('ReactScope', () => {
       ReactTestRenderer = require('react-test-renderer');
     });
 
+    // @gate experimental
     it('DO_NOT_USE_queryAllNodes() works as intended', () => {
       const testScopeQuery = (type, props) => true;
       const TestScope = React.unstable_createScope();
@@ -420,6 +424,7 @@ describe('ReactScope', () => {
       expect(nodes).toEqual([aRef.current, divRef.current, spanRef.current]);
     });
 
+    // @gate experimental
     it('DO_NOT_USE_queryFirstNode() works as intended', () => {
       const testScopeQuery = (type, props) => true;
       const TestScope = React.unstable_createScope();
@@ -456,6 +461,7 @@ describe('ReactScope', () => {
       expect(node).toEqual(aRef.current);
     });
 
+    // @gate experimental
     it('containsNode() works as intended', () => {
       const TestScope = React.unstable_createScope();
       const scopeRef = React.createRef();

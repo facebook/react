@@ -10,29 +10,33 @@ import {
   type EventSystemFlags,
   IS_PASSIVE,
   PASSIVE_NOT_SUPPORTED,
-} from 'legacy-events/EventSystemFlags';
+} from './EventSystemFlags';
 import type {AnyNativeEvent} from 'legacy-events/PluginModuleType';
-import {HostComponent, ScopeComponent, HostPortal} from 'shared/ReactWorkTags';
+import {
+  HostComponent,
+  ScopeComponent,
+  HostPortal,
+} from 'react-reconciler/src/ReactWorkTags';
 import type {EventPriority} from 'shared/ReactTypes';
 import type {
   ReactDOMEventResponder,
   ReactDOMEventResponderInstance,
   ReactDOMResponderContext,
   ReactDOMResponderEvent,
-} from 'shared/ReactDOMTypes';
+} from '../shared/ReactDOMTypes';
 import type {DOMTopLevelEventType} from 'legacy-events/TopLevelEventTypes';
 import {
   batchedEventUpdates,
   discreteUpdates,
   flushDiscreteUpdatesIfNeeded,
   executeUserEventHandler,
-} from 'legacy-events/ReactGenericBatching';
-import {enqueueStateRestore} from 'legacy-events/ReactControlledComponent';
-import type {Fiber} from 'react-reconciler/src/ReactFiber';
+} from './ReactDOMUpdateBatching';
+import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
 import {enableDeprecatedFlareAPI} from 'shared/ReactFeatureFlags';
 import invariant from 'shared/invariant';
 
 import {getClosestInstanceFromNode} from '../client/ReactDOMComponentTree';
+import {enqueueStateRestore} from './ReactDOMControlledComponent';
 import {
   ContinuousEvent,
   UserBlockingEvent,
@@ -171,10 +175,10 @@ const eventResponderContext: ReactDOMResponderContext = {
     validateResponderContext();
     for (let i = 0; i < rootEventTypes.length; i++) {
       const rootEventType = rootEventTypes[i];
-      let rootEventResponders = rootEventTypesToEventResponderInstances.get(
+      const rootEventResponders = rootEventTypesToEventResponderInstances.get(
         rootEventType,
       );
-      let rootEventTypesSet = ((currentInstance: any): ReactDOMEventResponderInstance)
+      const rootEventTypesSet = ((currentInstance: any): ReactDOMEventResponderInstance)
         .rootEventTypes;
       if (rootEventTypesSet !== null) {
         rootEventTypesSet.delete(rootEventType);
@@ -458,7 +462,7 @@ export function unmountEventResponder(
   const responder = ((responderInstance.responder: any): ReactDOMEventResponder);
   const onUnmount = responder.onUnmount;
   if (onUnmount !== null) {
-    let {props, state} = responderInstance;
+    const {props, state} = responderInstance;
     const previousInstance = currentInstance;
     currentInstance = responderInstance;
     try {
@@ -473,7 +477,7 @@ export function unmountEventResponder(
 
     for (let i = 0; i < rootEventTypes.length; i++) {
       const topLevelEventType = rootEventTypes[i];
-      let rootEventResponderInstances = rootEventTypesToEventResponderInstances.get(
+      const rootEventResponderInstances = rootEventTypesToEventResponderInstances.get(
         topLevelEventType,
       );
       if (rootEventResponderInstances !== undefined) {

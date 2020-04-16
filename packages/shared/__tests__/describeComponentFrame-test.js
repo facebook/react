@@ -18,6 +18,7 @@ describe('Component stack trace displaying', () => {
     ReactDOM = require('react-dom');
   });
 
+  // @gate !enableComponentStackLocations || !__DEV__
   it('should provide filenames in stack traces', () => {
     class Component extends React.Component {
       render() {
@@ -96,7 +97,7 @@ describe('Component stack trace displaying', () => {
     if (__DEV__) {
       let i = 0;
       expect(console.error.calls.count()).toBe(Object.keys(fileNames).length);
-      for (let fileName in fileNames) {
+      for (const fileName in fileNames) {
         if (!fileNames.hasOwnProperty(fileName)) {
           continue;
         }

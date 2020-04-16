@@ -491,29 +491,27 @@ describe('ReactDOMServerHydration', () => {
     expect(element.textContent).toBe('Hello world');
   });
 
-  it.experimental(
-    'does not re-enter hydration after committing the first one',
-    () => {
-      let finalHTML = ReactDOMServer.renderToString(<div />);
-      let container = document.createElement('div');
-      container.innerHTML = finalHTML;
-      let root = ReactDOM.createRoot(container, {hydrate: true});
-      root.render(<div />);
-      Scheduler.unstable_flushAll();
-      root.render(null);
-      Scheduler.unstable_flushAll();
-      // This should not reenter hydration state and therefore not trigger hydration
-      // warnings.
-      root.render(<div />);
-      Scheduler.unstable_flushAll();
-    },
-  );
+  // @gate experimental
+  it('does not re-enter hydration after committing the first one', () => {
+    const finalHTML = ReactDOMServer.renderToString(<div />);
+    const container = document.createElement('div');
+    container.innerHTML = finalHTML;
+    const root = ReactDOM.createRoot(container, {hydrate: true});
+    root.render(<div />);
+    Scheduler.unstable_flushAll();
+    root.render(null);
+    Scheduler.unstable_flushAll();
+    // This should not reenter hydration state and therefore not trigger hydration
+    // warnings.
+    root.render(<div />);
+    Scheduler.unstable_flushAll();
+  });
 
   it('Suspense + hydration in legacy mode', () => {
     const element = document.createElement('div');
     element.innerHTML = '<div>Hello World</div>';
-    let div = element.firstChild;
-    let ref = React.createRef();
+    const div = element.firstChild;
+    const ref = React.createRef();
     expect(() =>
       ReactDOM.hydrate(
         <React.Suspense fallback={null}>
@@ -536,8 +534,8 @@ describe('ReactDOMServerHydration', () => {
   it('Suspense + hydration in legacy mode with no fallback', () => {
     const element = document.createElement('div');
     element.innerHTML = '<div>Hello World</div>';
-    let div = element.firstChild;
-    let ref = React.createRef();
+    const div = element.firstChild;
+    const ref = React.createRef();
     ReactDOM.hydrate(
       <React.Suspense>
         <div ref={ref}>Hello World</div>

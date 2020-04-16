@@ -5,8 +5,7 @@ const inlinedHostConfigs = require('../shared/inlinedHostConfigs');
 jest.mock('react-reconciler/src/ReactFiberReconciler', () => {
   return require.requireActual(
     __VARIANT__
-      ? // TODO: Update this to point to the new module, once it exists
-        'react-reconciler/src/ReactFiberReconciler.old'
+      ? 'react-reconciler/src/ReactFiberReconciler.new'
       : 'react-reconciler/src/ReactFiberReconciler.old'
   );
 });

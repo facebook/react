@@ -7,5 +7,6 @@ module.exports = {
     'warning-args': require('./warning-args'),
     'invariant-args': require('./invariant-args'),
     'no-production-logging': require('./no-production-logging'),
+    'no-cross-fork-imports': require('./no-cross-fork-imports'),
   },
 };

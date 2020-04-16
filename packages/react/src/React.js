@@ -10,6 +10,7 @@
 import ReactVersion from 'shared/ReactVersion';
 import {
   REACT_FRAGMENT_TYPE,
+  REACT_DEBUG_TRACING_MODE_TYPE,
   REACT_PROFILER_TYPE,
   REACT_STRICT_MODE_TYPE,
   REACT_SUSPENSE_TYPE,
@@ -27,9 +28,9 @@ import {
 } from './ReactElement';
 import {createContext} from './ReactContext';
 import {lazy} from './ReactLazy';
-import forwardRef from './forwardRef';
-import memo from './memo';
-import block from './block';
+import {forwardRef} from './ReactForwardRef';
+import {memo} from './ReactMemo';
+import {block} from './ReactBlock';
 import {
   useCallback,
   useContext,
@@ -45,6 +46,7 @@ import {
   useResponder,
   useTransition,
   useDeferredValue,
+  useOpaqueIdentifier,
 } from './ReactHooks';
 import {withSuspenseConfig} from './ReactBatchConfig';
 import {
@@ -52,11 +54,11 @@ import {
   createFactoryWithValidation,
   cloneElementWithValidation,
 } from './ReactElementValidator';
-import createMutableSource from './createMutableSource';
+import {createMutableSource} from './ReactMutableSource';
 import ReactSharedInternals from './ReactSharedInternals';
-import createFundamental from 'shared/createFundamentalComponent';
-import createResponder from 'shared/createEventResponder';
-import createScope from 'shared/createScope';
+import {createFundamental} from './ReactFundamental';
+import {createEventResponder} from './ReactEventResponder';
+import {createScope} from './ReactScope';
 
 // TODO: Move this branching into the other module instead and just re-export.
 const createElement = __DEV__ ? createElementWithValidation : createElementProd;
@@ -95,6 +97,7 @@ export {
   REACT_FRAGMENT_TYPE as Fragment,
   REACT_PROFILER_TYPE as Profiler,
   REACT_STRICT_MODE_TYPE as StrictMode,
+  REACT_DEBUG_TRACING_MODE_TYPE as unstable_DebugTracingMode,
   REACT_SUSPENSE_TYPE as Suspense,
   createElement,
   cloneElement,
@@ -112,9 +115,10 @@ export {
   block,
   // enableDeprecatedFlareAPI
   useResponder as DEPRECATED_useResponder,
-  createResponder as DEPRECATED_createResponder,
+  createEventResponder as DEPRECATED_createResponder,
   // enableFundamentalAPI
   createFundamental as unstable_createFundamental,
   // enableScopeAPI
   createScope as unstable_createScope,
+  useOpaqueIdentifier as unstable_useOpaqueIdentifier,
 };

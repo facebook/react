@@ -20,6 +20,7 @@ import {
   disableJavaScriptURLs,
   enableTrustedTypesIntegration,
 } from 'shared/ReactFeatureFlags';
+import {isOpaqueHydratingObject} from './ReactDOMHostConfig';
 
 import type {PropertyInfo} from '../shared/DOMProperty';
 
@@ -106,6 +107,13 @@ export function getValueForAttribute(
   if (__DEV__) {
     if (!isAttributeNameSafe(name)) {
       return;
+    }
+
+    // If the object is an opaque reference ID, it's expected that
+    // the next prop is different than the server value, so just return
+    // expected
+    if (isOpaqueHydratingObject(expected)) {
+      return expected;
     }
     if (!node.hasAttribute(name)) {
       return expected === undefined ? undefined : null;

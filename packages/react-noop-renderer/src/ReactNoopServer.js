@@ -41,8 +41,8 @@ const ReactNoopServer = ReactFizzServer({
 });
 
 function render(children: React$Element<any>): Destination {
-  let destination: Destination = [];
-  let request = ReactNoopServer.createRequest(children, destination);
+  const destination: Destination = [];
+  const request = ReactNoopServer.createRequest(children, destination);
   ReactNoopServer.startWork(request);
   return destination;
 }

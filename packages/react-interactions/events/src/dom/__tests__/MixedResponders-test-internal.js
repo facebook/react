@@ -19,11 +19,6 @@ let Scheduler;
 describe('mixing responders with the heritage event system', () => {
   let container;
 
-  if (!__EXPERIMENTAL__) {
-    it("empty test so Jest doesn't complain", () => {});
-    return;
-  }
-
   beforeEach(() => {
     ReactFeatureFlags = require('shared/ReactFeatureFlags');
     ReactFeatureFlags.enableDeprecatedFlareAPI = true;
@@ -39,11 +34,7 @@ describe('mixing responders with the heritage event system', () => {
     container = null;
   });
 
-  if (!__EXPERIMENTAL__) {
-    it("empty test so Jest doesn't complain", () => {});
-    return;
-  }
-
+  // @gate experimental
   it('should properly only flush sync once when the event systems are mixed', () => {
     const useTap = require('react-interactions/events/tap').useTap;
     const ref = React.createRef();
@@ -113,6 +104,7 @@ describe('mixing responders with the heritage event system', () => {
     document.body.removeChild(newContainer);
   });
 
+  // @gate experimental
   it('should properly flush sync when the event systems are mixed with unstable_flushDiscreteUpdates', () => {
     const useTap = require('react-interactions/events/tap').useTap;
     const ref = React.createRef();
@@ -182,6 +174,7 @@ describe('mixing responders with the heritage event system', () => {
     document.body.removeChild(newContainer);
   });
 
+  // @gate experimental
   it(
     'should only flush before outermost discrete event handler when mixing ' +
       'event systems',
@@ -190,8 +183,6 @@ describe('mixing responders with the heritage event system', () => {
       const useTap = require('react-interactions/events/tap').useTap;
 
       const button = React.createRef();
-
-      const ops = [];
 
       function MyComponent() {
         const [pressesCount, updatePressesCount] = useState(0);
@@ -204,7 +195,7 @@ describe('mixing responders with the heritage event system', () => {
           const target = createEventTarget(button.current);
           target.click();
           // Text context should not have changed
-          ops.push(newContainer.textContent);
+          Scheduler.unstable_yieldValue(newContainer.textContent);
           updatePressesCount(pressesCount + 1);
         }
 
@@ -229,29 +220,26 @@ describe('mixing responders with the heritage event system', () => {
       const root = ReactDOM.createRoot(newContainer);
 
       root.render(<MyComponent />);
-      Scheduler.unstable_flushAll();
+      expect(Scheduler).toFlushWithoutYielding();
       expect(newContainer.textContent).toEqual('Presses: 0, Clicks: 0');
 
       const target = createEventTarget(button.current);
       target.pointerdown({timeStamp: 100});
       target.pointerup({timeStamp: 100});
 
-      Scheduler.unstable_flushAll();
+      expect(Scheduler).toHaveYielded(['Presses: 0, Clicks: 0']);
+      expect(Scheduler).toFlushWithoutYielding();
       expect(newContainer.textContent).toEqual('Presses: 1, Clicks: 1');
-
-      expect(ops).toEqual(['Presses: 0, Clicks: 0']);
     },
   );
 
   describe('mixing the Input and Press repsonders', () => {
+    // @gate experimental
     it('is async for non-input events', () => {
-      ReactFeatureFlags.debugRenderPhaseSideEffectsForStrictMode = false;
       const useTap = require('react-interactions/events/tap').useTap;
       const useInput = require('react-interactions/events/input').useInput;
       const root = ReactDOM.createRoot(container);
       let input;
-
-      let ops = [];
 
       function Component({innerRef, onChange, controlledValue, listeners}) {
         const inputListener = useInput({onChange});
@@ -286,7 +274,7 @@ describe('mixing responders with the heritage event system', () => {
           this.setState({value: ''});
         };
         render() {
-          ops.push(`render: ${this.state.value}`);
+          Scheduler.unstable_yieldValue(`render: ${this.state.value}`);
           const controlledValue =
             this.state.value === 'changed' ? 'changed [!]' : this.state.value;
           return (
@@ -303,14 +291,11 @@ describe('mixing responders with the heritage event system', () => {
       // Initial mount. Test that this is async.
       root.render(<ControlledInput />);
       // Should not have flushed yet.
-      expect(ops).toEqual([]);
+      expect(Scheduler).toHaveYielded([]);
       expect(input).toBe(undefined);
       // Flush callbacks.
-      Scheduler.unstable_flushAll();
-      expect(ops).toEqual(['render: initial']);
+      expect(Scheduler).toFlushAndYield(['render: initial']);
       expect(input.value).toBe('initial');
-
-      ops = [];
 
       // Trigger a click event
       input.dispatchEvent(
@@ -328,13 +313,12 @@ describe('mixing responders with the heritage event system', () => {
         }),
       );
       // Nothing should have changed
-      expect(ops).toEqual([]);
+      expect(Scheduler).toHaveYielded([]);
       expect(input.value).toBe('initial');
 
       // Flush callbacks.
-      Scheduler.unstable_flushAll();
       // Now the click update has flushed.
-      expect(ops).toEqual(['render: ']);
+      expect(Scheduler).toFlushAndYield(['render: ']);
       expect(input.value).toBe('');
     });
   });

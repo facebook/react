@@ -11,14 +11,6 @@ const ESLintTester = require('eslint').RuleTester;
 const ReactHooksESLintPlugin = require('eslint-plugin-react-hooks');
 const ReactHooksESLintRule = ReactHooksESLintPlugin.rules['exhaustive-deps'];
 
-ESLintTester.setDefaultConfig({
-  parser: require.resolve('babel-eslint'),
-  parserOptions: {
-    ecmaVersion: 6,
-    sourceType: 'module',
-  },
-});
-
 /**
  * A string template tag that removes padding from the left side of multi-line strings
  * @param {Array} strings array of code strings (only one expected)
@@ -261,6 +253,112 @@ const tests = {
     },
     {
       code: normalizeIndent`
+        function MyComponent() {
+          const myEffect = () => {
+            // Doesn't use anything
+          };
+          useEffect(myEffect, []);
+        }
+      `,
+    },
+    {
+      code: normalizeIndent`
+        const local = {};
+        function MyComponent() {
+          const myEffect = () => {
+            console.log(local);
+          };
+          useEffect(myEffect, []);
+        }
+      `,
+    },
+    {
+      code: normalizeIndent`
+        const local = {};
+        function MyComponent() {
+          function myEffect() {
+            console.log(local);
+          }
+          useEffect(myEffect, []);
+        }
+      `,
+    },
+    {
+      code: normalizeIndent`
+        function MyComponent() {
+          const local = {};
+          function myEffect() {
+            console.log(local);
+          }
+          useEffect(myEffect, [local]);
+        }
+      `,
+    },
+    {
+      code: normalizeIndent`
+        function MyComponent() {
+          function myEffect() {
+            console.log(global);
+          }
+          useEffect(myEffect, []);
+        }
+      `,
+    },
+    {
+      code: normalizeIndent`
+        const local = {};
+        function MyComponent() {
+          const myEffect = () => {
+            otherThing()
+          }
+          const otherThing = () => {
+            console.log(local);
+          }
+          useEffect(myEffect, []);
+        }
+      `,
+    },
+    {
+      // Valid because even though we don't inspect the function itself,
+      // at least it's passed as a dependency.
+      code: normalizeIndent`
+        function MyComponent({delay}) {
+          const local = {};
+          const myEffect = debounce(() => {
+            console.log(local);
+          }, delay);
+          useEffect(myEffect, [myEffect]);
+        }
+      `,
+    },
+    {
+      code: normalizeIndent`
+        let local = {};
+        function myEffect() {
+          console.log(local);
+        }
+        function MyComponent() {
+          useEffect(myEffect, []);
+        }
+      `,
+    },
+    {
+      code: normalizeIndent`
+        function MyComponent({myEffect}) {
+          useEffect(myEffect, [myEffect]);
+        }
+      `,
+    },
+    {
+      // Valid because has no deps.
+      code: normalizeIndent`
+        function MyComponent({myEffect}) {
+          useEffect(myEffect);
+        }
+      `,
+    },
+    {
+      code: normalizeIndent`
         function MyComponent(props) {
           useCustomEffect(() => {
             console.log(props.foo);
@@ -475,6 +573,16 @@ const tests = {
           useEffect(() => {
             obj.foo = true;
           }, [obj]);
+        }
+      `,
+    },
+    {
+      code: normalizeIndent`
+        function MyComponent(props) {
+          let foo = {}
+          useEffect(() => {
+            foo.bar.baz = 43;
+          }, [foo.bar]);
         }
       `,
     },
@@ -1160,6 +1268,29 @@ const tests = {
         }
       `,
       // We don't know what you meant.
+      errors: [
+        {
+          message:
+            'React Hook useMemo does nothing when called with only one argument. ' +
+            'Did you forget to pass an array of dependencies?',
+          suggestions: undefined,
+        },
+        {
+          message:
+            'React Hook useCallback does nothing when called with only one argument. ' +
+            'Did you forget to pass an array of dependencies?',
+          suggestions: undefined,
+        },
+      ],
+    },
+    {
+      // Invalid because they don't have a meaning without deps.
+      code: normalizeIndent`
+        function MyComponent({ fn1, fn2 }) {
+          const value = useMemo(fn1);
+          const fn = useCallback(fn2);
+        }
+      `,
       errors: [
         {
           message:
@@ -5998,6 +6129,356 @@ const tests = {
         },
       ],
     },
+    {
+      code: normalizeIndent`
+        function MyComponent() {
+          const local = {};
+          function myEffect() {
+            console.log(local);
+          }
+          useEffect(myEffect, []);
+        }
+      `,
+      errors: [
+        {
+          message:
+            "React Hook useEffect has a missing dependency: 'local'. " +
+            'Either include it or remove the dependency array.',
+          suggestions: [
+            {
+              desc: 'Update the dependencies array to be: [local]',
+              output: normalizeIndent`
+                function MyComponent() {
+                  const local = {};
+                  function myEffect() {
+                    console.log(local);
+                  }
+                  useEffect(myEffect, [local]);
+                }
+              `,
+            },
+          ],
+        },
+      ],
+    },
+    {
+      code: normalizeIndent`
+        function MyComponent() {
+          const local = {};
+          const myEffect = () => {
+            console.log(local);
+          };
+          useEffect(myEffect, []);
+        }
+      `,
+      errors: [
+        {
+          message:
+            "React Hook useEffect has a missing dependency: 'local'. " +
+            'Either include it or remove the dependency array.',
+          suggestions: [
+            {
+              desc: 'Update the dependencies array to be: [local]',
+              output: normalizeIndent`
+                function MyComponent() {
+                  const local = {};
+                  const myEffect = () => {
+                    console.log(local);
+                  };
+                  useEffect(myEffect, [local]);
+                }
+              `,
+            },
+          ],
+        },
+      ],
+    },
+    {
+      code: normalizeIndent`
+        function MyComponent() {
+          const local = {};
+          const myEffect = function() {
+            console.log(local);
+          };
+          useEffect(myEffect, []);
+        }
+      `,
+      errors: [
+        {
+          message:
+            "React Hook useEffect has a missing dependency: 'local'. " +
+            'Either include it or remove the dependency array.',
+          suggestions: [
+            {
+              desc: 'Update the dependencies array to be: [local]',
+              output: normalizeIndent`
+                function MyComponent() {
+                  const local = {};
+                  const myEffect = function() {
+                    console.log(local);
+                  };
+                  useEffect(myEffect, [local]);
+                }
+              `,
+            },
+          ],
+        },
+      ],
+    },
+    {
+      code: normalizeIndent`
+        function MyComponent() {
+          const local = {};
+          const myEffect = () => {
+            otherThing();
+          };
+          const otherThing = () => {
+            console.log(local);
+          };
+          useEffect(myEffect, []);
+        }
+      `,
+      errors: [
+        {
+          message:
+            "React Hook useEffect has a missing dependency: 'otherThing'. " +
+            'Either include it or remove the dependency array.',
+          suggestions: [
+            {
+              desc: 'Update the dependencies array to be: [otherThing]',
+              output: normalizeIndent`
+                function MyComponent() {
+                  const local = {};
+                  const myEffect = () => {
+                    otherThing();
+                  };
+                  const otherThing = () => {
+                    console.log(local);
+                  };
+                  useEffect(myEffect, [otherThing]);
+                }
+              `,
+            },
+          ],
+        },
+      ],
+    },
+    {
+      code: normalizeIndent`
+        function MyComponent() {
+          const local = {};
+          const myEffect = debounce(() => {
+            console.log(local);
+          }, delay);
+          useEffect(myEffect, []);
+        }
+      `,
+      errors: [
+        {
+          message:
+            "React Hook useEffect has a missing dependency: 'myEffect'. " +
+            'Either include it or remove the dependency array.',
+          suggestions: [
+            {
+              desc: 'Update the dependencies array to be: [myEffect]',
+              output: normalizeIndent`
+                function MyComponent() {
+                  const local = {};
+                  const myEffect = debounce(() => {
+                    console.log(local);
+                  }, delay);
+                  useEffect(myEffect, [myEffect]);
+                }
+              `,
+            },
+          ],
+        },
+      ],
+    },
+    {
+      code: normalizeIndent`
+        function MyComponent() {
+          const local = {};
+          const myEffect = debounce(() => {
+            console.log(local);
+          }, delay);
+          useEffect(myEffect, [local]);
+        }
+      `,
+      errors: [
+        {
+          message:
+            "React Hook useEffect has a missing dependency: 'myEffect'. " +
+            'Either include it or remove the dependency array.',
+          suggestions: [
+            {
+              desc: 'Update the dependencies array to be: [myEffect]',
+              output: normalizeIndent`
+                function MyComponent() {
+                  const local = {};
+                  const myEffect = debounce(() => {
+                    console.log(local);
+                  }, delay);
+                  useEffect(myEffect, [myEffect]);
+                }
+              `,
+            },
+          ],
+        },
+      ],
+    },
+    {
+      code: normalizeIndent`
+        function MyComponent({myEffect}) {
+          useEffect(myEffect, []);
+        }
+      `,
+      errors: [
+        {
+          message:
+            "React Hook useEffect has a missing dependency: 'myEffect'. " +
+            'Either include it or remove the dependency array.',
+          suggestions: [
+            {
+              desc: 'Update the dependencies array to be: [myEffect]',
+              output: normalizeIndent`
+                function MyComponent({myEffect}) {
+                  useEffect(myEffect, [myEffect]);
+                }
+              `,
+            },
+          ],
+        },
+      ],
+    },
+    {
+      code: normalizeIndent`
+        function MyComponent() {
+          const local = {};
+          useEffect(debounce(() => {
+            console.log(local);
+          }, delay), []);
+        }
+      `,
+      errors: [
+        {
+          message:
+            'React Hook useEffect received a function whose dependencies ' +
+            'are unknown. Pass an inline function instead.',
+          suggestions: [],
+        },
+      ],
+    },
+    {
+      code: normalizeIndent`
+        function MyComponent() {
+          const local = {};
+          useEffect(() => {
+            console.log(local);
+          }, []);
+        }
+      `,
+      // Dangerous autofix is enabled due to the option:
+      output: normalizeIndent`
+        function MyComponent() {
+          const local = {};
+          useEffect(() => {
+            console.log(local);
+          }, [local]);
+        }
+      `,
+      errors: [
+        {
+          message:
+            "React Hook useEffect has a missing dependency: 'local'. " +
+            'Either include it or remove the dependency array.',
+        },
+      ],
+      // Keep this until major IDEs and VS Code FB ESLint plugin support Suggestions API.
+      options: [{enableDangerousAutofixThisMayCauseInfiniteLoops: true}],
+    },
+    {
+      code: normalizeIndent`
+        function MyComponent(props) {
+          let foo = {}
+          useEffect(() => {
+            foo.bar.baz = 43;
+            props.foo.bar.baz = 1;
+          }, []);
+        }
+      `,
+      errors: [
+        {
+          message:
+            "React Hook useEffect has missing dependencies: 'foo.bar' and 'props.foo.bar'. " +
+            'Either include them or remove the dependency array.',
+          suggestions: [
+            {
+              desc:
+                'Update the dependencies array to be: [foo.bar, props.foo.bar]',
+              output: normalizeIndent`
+                function MyComponent(props) {
+                  let foo = {}
+                  useEffect(() => {
+                    foo.bar.baz = 43;
+                    props.foo.bar.baz = 1;
+                  }, [foo.bar, props.foo.bar]);
+                }
+              `,
+            },
+          ],
+        },
+      ],
+    },
+  ],
+};
+
+const testsTypescript = {
+  valid: [
+    {
+      // `ref` is still constant, despite the cast.
+      code: normalizeIndent`
+        function MyComponent() {
+          const ref = useRef() as React.MutableRefObject<HTMLDivElement>;
+          useEffect(() => {
+            console.log(ref.current);
+          }, []);
+        }
+      `,
+    },
+  ],
+  invalid: [
+    {
+      // `local` is still non-constant, despite the cast.
+      code: normalizeIndent`
+        function MyComponent() {
+          const local = {} as string;
+          useEffect(() => {
+            console.log(local);
+          }, []);
+        }
+      `,
+      errors: [
+        {
+          message:
+            "React Hook useEffect has a missing dependency: 'local'. " +
+            'Either include it or remove the dependency array.',
+          suggestions: [
+            {
+              desc: 'Update the dependencies array to be: [local]',
+              output: normalizeIndent`
+                function MyComponent() {
+                  const local = {} as string;
+                  useEffect(() => {
+                    console.log(local);
+                  }, [local]);
+                }
+              `,
+            },
+          ],
+        },
+      ],
+    },
   ],
 };
 
@@ -6005,7 +6486,12 @@ const tests = {
 if (!process.env.CI) {
   let only = [];
   let skipped = [];
-  [...tests.valid, ...tests.invalid].forEach(t => {
+  [
+    ...tests.valid,
+    ...tests.invalid,
+    ...testsTypescript.valid,
+    ...testsTypescript.invalid,
+  ].forEach(t => {
     if (t.skip) {
       delete t.skip;
       skipped.push(t);
@@ -6026,7 +6512,21 @@ if (!process.env.CI) {
   };
   tests.valid = tests.valid.filter(predicate);
   tests.invalid = tests.invalid.filter(predicate);
+  testsTypescript.valid = testsTypescript.valid.filter(predicate);
+  testsTypescript.invalid = testsTypescript.invalid.filter(predicate);
 }
 
-const eslintTester = new ESLintTester();
-eslintTester.run('react-hooks', ReactHooksESLintRule, tests);
+const parserOptions = {
+  ecmaVersion: 6,
+  sourceType: 'module',
+};
+
+new ESLintTester({
+  parser: require.resolve('babel-eslint'),
+  parserOptions,
+}).run('react-hooks', ReactHooksESLintRule, tests);
+
+new ESLintTester({
+  parser: require.resolve('@typescript-eslint/parser'),
+  parserOptions,
+}).run('react-hooks', ReactHooksESLintRule, testsTypescript);

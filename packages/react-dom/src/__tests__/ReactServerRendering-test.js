@@ -14,11 +14,16 @@ let React;
 let ReactDOMServer;
 let PropTypes;
 let ReactCurrentDispatcher;
-let enableSuspenseServerRenderer = require('shared/ReactFeatureFlags')
+const enableSuspenseServerRenderer = require('shared/ReactFeatureFlags')
   .enableSuspenseServerRenderer;
 
 function normalizeCodeLocInfo(str) {
-  return str && str.replace(/\(at .+?:\d+\)/g, '(at **)');
+  return (
+    str &&
+    str.replace(/\n +(?:at|in) ([\S]+)[^\n]*/g, function(m, name) {
+      return '\n    in ' + name + ' (at **)';
+    })
+  );
 }
 
 describe('ReactDOMServer', () => {
@@ -726,7 +731,7 @@ describe('ReactDOMServer', () => {
           ),
         );
         ReactDOMServer.renderToString(<LazyFoo />);
-      }).toThrow('ReactDOMServer does not yet support lazy-loaded components.');
+      }).toThrow('ReactDOMServer does not yet support Suspense.');
     });
 
     it('throws when suspending on the server', () => {
