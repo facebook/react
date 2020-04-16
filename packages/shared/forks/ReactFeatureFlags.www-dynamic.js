@@ -15,7 +15,6 @@
 
 export const warnAboutSpreadingKeyToJSX = __VARIANT__;
 export const enableComponentStackLocations = __VARIANT__;
-export const disableModulePatternComponents = __VARIANT__;
 export const disableInputAttributeSyncing = __VARIANT__;
 export const enableFilterEmptyStringAttributesDOM = __VARIANT__;
 export const enableModernEventSystem = __VARIANT__;
