@@ -19,7 +19,7 @@ export default function enqueueTask(task: () => void) {
       const nodeRequire = module && module[requireString];
       // assuming we're in node, let's try to get node's
       // version of setImmediate, bypassing fake timers if any.
-      enqueueTaskImpl = nodeRequire('timers').setImmediate;
+      enqueueTaskImpl = nodeRequire.call(module, 'timers').setImmediate;
     } catch (_err) {
       // we're in a browser
       // we can't use regular timers because they may still be faked
