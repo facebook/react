@@ -43,9 +43,9 @@ describe('DebugTracing', () => {
   // @gate experimental
   it('should not log anything for sync render without suspends or state updates', () => {
     ReactTestRenderer.create(
-      <React.DebugTracingMode>
+      <React.unstable_DebugTracingMode>
         <div />
-      </React.DebugTracingMode>,
+      </React.unstable_DebugTracingMode>,
     );
 
     expect(logs).toEqual([]);
@@ -54,9 +54,9 @@ describe('DebugTracing', () => {
   // @gate experimental
   it('should not log anything for concurrent render without suspends or state updates', () => {
     ReactTestRenderer.create(
-      <React.DebugTracingMode>
+      <React.unstable_DebugTracingMode>
         <div />
-      </React.DebugTracingMode>,
+      </React.unstable_DebugTracingMode>,
       {unstable_isConcurrent: true},
     );
 
@@ -77,11 +77,11 @@ describe('DebugTracing', () => {
     }
 
     ReactTestRenderer.create(
-      <React.DebugTracingMode>
+      <React.unstable_DebugTracingMode>
         <React.Suspense fallback={null}>
           <Example />
         </React.Suspense>
-      </React.DebugTracingMode>,
+      </React.unstable_DebugTracingMode>,
     );
 
     expect(logs).toEqual([
@@ -104,11 +104,11 @@ describe('DebugTracing', () => {
     }
 
     ReactTestRenderer.create(
-      <React.DebugTracingMode>
+      <React.unstable_DebugTracingMode>
         <React.Suspense fallback={null}>
           <Example />
         </React.Suspense>
-      </React.DebugTracingMode>,
+      </React.unstable_DebugTracingMode>,
       {unstable_isConcurrent: true},
     );
 
@@ -143,9 +143,9 @@ describe('DebugTracing', () => {
     }
 
     ReactTestRenderer.create(
-      <React.DebugTracingMode>
+      <React.unstable_DebugTracingMode>
         <Example />
-      </React.DebugTracingMode>,
+      </React.unstable_DebugTracingMode>,
       {unstable_isConcurrent: true},
     );
 
@@ -177,9 +177,9 @@ describe('DebugTracing', () => {
     }
 
     ReactTestRenderer.create(
-      <React.DebugTracingMode>
+      <React.unstable_DebugTracingMode>
         <Example />
-      </React.DebugTracingMode>,
+      </React.unstable_DebugTracingMode>,
       {unstable_isConcurrent: true},
     );
 
@@ -210,9 +210,9 @@ describe('DebugTracing', () => {
     }
 
     ReactTestRenderer.create(
-      <React.DebugTracingMode>
+      <React.unstable_DebugTracingMode>
         <Example />
-      </React.DebugTracingMode>,
+      </React.unstable_DebugTracingMode>,
       {unstable_isConcurrent: true},
     );
 
@@ -243,9 +243,9 @@ describe('DebugTracing', () => {
 
     ReactTestRenderer.act(() => {
       ReactTestRenderer.create(
-        <React.DebugTracingMode>
+        <React.unstable_DebugTracingMode>
           <Example />
-        </React.DebugTracingMode>,
+        </React.unstable_DebugTracingMode>,
         {unstable_isConcurrent: true},
       );
     });
@@ -268,9 +268,9 @@ describe('DebugTracing', () => {
 
     ReactTestRenderer.act(() => {
       ReactTestRenderer.create(
-        <React.DebugTracingMode>
+        <React.unstable_DebugTracingMode>
           <Example />
-        </React.DebugTracingMode>,
+        </React.unstable_DebugTracingMode>,
         {unstable_isConcurrent: true},
       );
     });
@@ -290,9 +290,9 @@ describe('DebugTracing', () => {
     }
 
     ReactTestRenderer.create(
-      <React.DebugTracingMode>
+      <React.unstable_DebugTracingMode>
         <Example />
-      </React.DebugTracingMode>,
+      </React.unstable_DebugTracingMode>,
       {unstable_isConcurrent: true},
     );
 
@@ -310,7 +310,7 @@ describe('DebugTracing', () => {
   });
 
   // @gate experimental
-  it('should not log anything outside of a DebugTracingMode subtree', () => {
+  it('should not log anything outside of a unstable_DebugTracingMode subtree', () => {
     function ExampleThatCascades() {
       const [didMount, setDidMount] = React.useState(false);
       React.useLayoutEffect(() => {
@@ -334,9 +334,9 @@ describe('DebugTracing', () => {
         <React.Suspense fallback={null}>
           <ExampleThatSuspends />
         </React.Suspense>
-        <React.DebugTracingMode>
+        <React.unstable_DebugTracingMode>
           <Example />
-        </React.DebugTracingMode>
+        </React.unstable_DebugTracingMode>
       </React.Fragment>,
     );
 

@@ -44,16 +44,16 @@ describe('ReactDOMServerIntegration', () => {
     __EXPERIMENTAL__ &&
     require('shared/ReactFeatureFlags').enableDebugTracing
   ) {
-    describe('React.DebugTracingMode', () => {
+    describe('React.unstable_DebugTracingMode', () => {
       beforeEach(() => {
         spyOnDevAndProd(console, 'log');
       });
 
       itRenders('with one child', async render => {
         const e = await render(
-          <React.DebugTracingMode>
+          <React.unstable_DebugTracingMode>
             <div>text1</div>
-          </React.DebugTracingMode>,
+          </React.unstable_DebugTracingMode>,
         );
         const parent = e.parentNode;
         expect(parent.childNodes[0].tagName).toBe('DIV');
@@ -65,19 +65,19 @@ describe('ReactDOMServerIntegration', () => {
         };
         const Footer = props => {
           return (
-            <React.DebugTracingMode>
+            <React.unstable_DebugTracingMode>
               <h2>footer</h2>
               <h3>about</h3>
-            </React.DebugTracingMode>
+            </React.unstable_DebugTracingMode>
           );
         };
         const e = await render(
-          <React.DebugTracingMode>
+          <React.unstable_DebugTracingMode>
             <div>text1</div>
             <span>text2</span>
             <Header />
             <Footer />
-          </React.DebugTracingMode>,
+          </React.unstable_DebugTracingMode>,
         );
         const parent = e.parentNode;
         expect(parent.childNodes[0].tagName).toBe('DIV');

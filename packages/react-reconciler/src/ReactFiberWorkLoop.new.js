@@ -392,19 +392,23 @@ export function computeExpirationForFiber(
 export function priorityLevelToLabel(
   priorityLevel: ReactPriorityLevel,
 ): string {
-  switch (priorityLevel) {
-    case ImmediatePriority:
-      return 'immediate';
-    case UserBlockingPriority:
-      return 'user-blocking';
-    case NormalPriority:
-      return 'normal';
-    case LowPriority:
-      return 'low';
-    case IdlePriority:
-      return 'idle';
-    default:
-      return 'other';
+  if (__DEV__ && enableDebugTracing) {
+    switch (priorityLevel) {
+      case ImmediatePriority:
+        return 'immediate';
+      case UserBlockingPriority:
+        return 'user-blocking';
+      case NormalPriority:
+        return 'normal';
+      case LowPriority:
+        return 'low';
+      case IdlePriority:
+        return 'idle';
+      default:
+        return 'other';
+    }
+  } else {
+    return '';
   }
 }
 
