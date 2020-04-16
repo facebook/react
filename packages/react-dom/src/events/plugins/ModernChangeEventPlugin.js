@@ -5,7 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import {runEventsInBatch} from 'legacy-events/EventBatching';
 import SyntheticEvent from 'legacy-events/SyntheticEvent';
 import isTextInputElement from '../isTextInputElement';
 import {canUseDOM} from 'shared/ExecutionEnvironment';
@@ -27,13 +26,12 @@ import {updateValueIfChanged} from '../../client/inputValueTracking';
 import {setDefaultValue} from '../../client/ReactDOMInput';
 import {enqueueStateRestore} from '../ReactDOMControlledComponent';
 
-import {
-  disableInputAttributeSyncing,
-  enableModernEventSystem,
-} from 'shared/ReactFeatureFlags';
-import accumulateTwoPhaseListeners from '../accumulateTwoPhaseListeners';
+import {disableInputAttributeSyncing} from 'shared/ReactFeatureFlags';
 import {batchedUpdates} from '../ReactDOMUpdateBatching';
-import {dispatchEventsInBatch} from '../DOMModernPluginEventSystem';
+import {
+  dispatchEventsInBatch,
+  accumulateTwoPhaseListeners,
+} from '../DOMModernPluginEventSystem';
 
 const eventTypes = {
   change: {
@@ -105,11 +103,7 @@ function manualDispatchChangeEvent(nativeEvent) {
 }
 
 function runEventInBatch(event) {
-  if (enableModernEventSystem) {
-    dispatchEventsInBatch([event]);
-  } else {
-    runEventsInBatch(event);
-  }
+  dispatchEventsInBatch([event]);
 }
 
 function getInstIfValueChanged(targetInst) {
