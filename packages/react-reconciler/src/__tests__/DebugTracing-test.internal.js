@@ -69,7 +69,7 @@ describe('DebugTracing', () => {
     expect(logs).toEqual([]);
   });
 
-  // @gate experimental && enableDebugTracing
+  // @gate experimental && build === 'development' && enableDebugTracing
   it('should log sync render with suspense', async () => {
     const fakeSuspensPromise = Promise.resolve(true);
     function Example() {
@@ -96,7 +96,7 @@ describe('DebugTracing', () => {
     expect(logs).toEqual(['log: ⚛️ Example resolved']);
   });
 
-  // @gate experimental && enableDebugTracing
+  // @gate experimental && build === 'development' && enableDebugTracing
   it('should log concurrent render with suspense', async () => {
     const fakeSuspensPromise = Promise.resolve(true);
     function Example() {
@@ -130,7 +130,7 @@ describe('DebugTracing', () => {
     expect(logs).toEqual(['log: ⚛️ Example resolved']);
   });
 
-  // @gate experimental && enableDebugTracing
+  // @gate experimental && build === 'development' && enableDebugTracing
   it('should log cascading class component updates', () => {
     class Example extends React.Component {
       state = {didMount: false};
@@ -164,7 +164,7 @@ describe('DebugTracing', () => {
     ]);
   });
 
-  // @gate experimental && enableDebugTracing
+  // @gate experimental && build === 'development' && enableDebugTracing
   it('should log render phase state updates for class component', () => {
     class Example extends React.Component {
       state = {didRender: false};
@@ -199,7 +199,7 @@ describe('DebugTracing', () => {
     ]);
   });
 
-  // @gate experimental && enableDebugTracing
+  // @gate experimental && build === 'development' && enableDebugTracing
   it('should log cascading layout updates', () => {
     function Example() {
       const [didMount, setDidMount] = React.useState(false);
@@ -231,7 +231,7 @@ describe('DebugTracing', () => {
     ]);
   });
 
-  // @gate experimental && enableDebugTracing
+  // @gate experimental && build === 'development' && enableDebugTracing
   it('should log cascading passive updates', () => {
     function Example() {
       const [didMount, setDidMount] = React.useState(false);
@@ -256,7 +256,7 @@ describe('DebugTracing', () => {
     ]);
   });
 
-  // @gate experimental && enableDebugTracing
+  // @gate experimental && build === 'development' && enableDebugTracing
   it('should log render phase updates', () => {
     function Example() {
       const [didRender, setDidRender] = React.useState(false);
@@ -282,7 +282,7 @@ describe('DebugTracing', () => {
     ]);
   });
 
-  // @gate experimental && enableDebugTracing
+  // @gate experimental && build === 'development' && enableDebugTracing
   it('should log when user code logs', () => {
     function Example() {
       console.log('Hello from user code');
