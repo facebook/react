@@ -42,9 +42,9 @@ describe('DebugTracing', () => {
 
   it('should not log anything for sync render without suspends or state updates', () => {
     ReactTestRenderer.create(
-      <React.DebugTraceMode>
+      <React.DebugTracingMode>
         <div />
-      </React.DebugTraceMode>,
+      </React.DebugTracingMode>,
     );
 
     expect(logs).toEqual([]);
@@ -70,11 +70,11 @@ describe('DebugTracing', () => {
     }
 
     ReactTestRenderer.create(
-      <React.DebugTraceMode>
+      <React.DebugTracingMode>
         <React.Suspense fallback={null}>
           <Example />
         </React.Suspense>
-      </React.DebugTraceMode>,
+      </React.DebugTracingMode>,
     );
 
     expect(logs).toEqual([
@@ -97,11 +97,11 @@ describe('DebugTracing', () => {
     }
 
     ReactTestRenderer.create(
-      <React.DebugTraceMode>
+      <React.DebugTracingMode>
         <React.Suspense fallback={null}>
           <Example />
         </React.Suspense>
-      </React.DebugTraceMode>,
+      </React.DebugTracingMode>,
       {unstable_isConcurrent: true},
     );
 
@@ -136,9 +136,9 @@ describe('DebugTracing', () => {
     }
 
     ReactTestRenderer.create(
-      <React.DebugTraceMode>
+      <React.DebugTracingMode>
         <Example />
-      </React.DebugTraceMode>,
+      </React.DebugTracingMode>,
       {unstable_isConcurrent: true},
     );
 
@@ -170,9 +170,9 @@ describe('DebugTracing', () => {
     }
 
     ReactTestRenderer.create(
-      <React.DebugTraceMode>
+      <React.DebugTracingMode>
         <Example />
-      </React.DebugTraceMode>,
+      </React.DebugTracingMode>,
       {unstable_isConcurrent: true},
     );
 
@@ -203,9 +203,9 @@ describe('DebugTracing', () => {
     }
 
     ReactTestRenderer.create(
-      <React.DebugTraceMode>
+      <React.DebugTracingMode>
         <Example />
-      </React.DebugTraceMode>,
+      </React.DebugTracingMode>,
       {unstable_isConcurrent: true},
     );
 
@@ -236,9 +236,9 @@ describe('DebugTracing', () => {
 
     ReactTestRenderer.act(() => {
       ReactTestRenderer.create(
-        <React.DebugTraceMode>
+        <React.DebugTracingMode>
           <Example />
-        </React.DebugTraceMode>,
+        </React.DebugTracingMode>,
         {unstable_isConcurrent: true},
       );
     });
@@ -261,9 +261,9 @@ describe('DebugTracing', () => {
 
     ReactTestRenderer.act(() => {
       ReactTestRenderer.create(
-        <React.DebugTraceMode>
+        <React.DebugTracingMode>
           <Example />
-        </React.DebugTraceMode>,
+        </React.DebugTracingMode>,
         {unstable_isConcurrent: true},
       );
     });
@@ -283,9 +283,9 @@ describe('DebugTracing', () => {
     }
 
     ReactTestRenderer.create(
-      <React.DebugTraceMode>
+      <React.DebugTracingMode>
         <Example />
-      </React.DebugTraceMode>,
+      </React.DebugTracingMode>,
       {unstable_isConcurrent: true},
     );
 
@@ -302,7 +302,7 @@ describe('DebugTracing', () => {
     ]);
   });
 
-  it('should not log anything outside of a DebugTraceMode subtree', () => {
+  it('should not log anything outside of a DebugTracingMode subtree', () => {
     function ExampleThatCascades() {
       const [didMount, setDidMount] = React.useState(false);
       React.useLayoutEffect(() => {
@@ -326,9 +326,9 @@ describe('DebugTracing', () => {
         <React.Suspense fallback={null}>
           <ExampleThatSuspends />
         </React.Suspense>
-        <React.DebugTraceMode>
+        <React.DebugTracingMode>
           <Example />
-        </React.DebugTraceMode>
+        </React.DebugTracingMode>
       </React.Fragment>,
     );
 

@@ -58,7 +58,7 @@ import {
   logPassiveEffectsStopped,
   logRenderStarted,
   logRenderStopped,
-} from './DebugTrace';
+} from './DebugTracing';
 
 // The scheduler is imported here *only* to detect whether it's been mocked
 import * as Scheduler from 'scheduler';

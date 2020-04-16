@@ -33,7 +33,7 @@ import ReactSharedInternals from 'shared/ReactSharedInternals';
 import {enableDebugTracing, enableUseEventAPI} from 'shared/ReactFeatureFlags';
 
 import {markRootExpiredAtTime} from './ReactFiberRoot.old';
-import {NoMode, BlockingMode, DebugTraceMode} from './ReactTypeOfMode';
+import {NoMode, BlockingMode, DebugTracingMode} from './ReactTypeOfMode';
 import {
   inferPriorityFromExpirationTime,
   NoWork,
@@ -97,7 +97,7 @@ import {
 } from './ReactMutableSource.old';
 import {getRootHostContainer} from './ReactFiberHostContext.old';
 import {getIsRendering} from './ReactCurrentFiber';
-import {logStateUpdateScheduled} from './DebugTrace';
+import {logStateUpdateScheduled} from './DebugTracing';
 
 const {ReactCurrentDispatcher, ReactCurrentBatchConfig} = ReactSharedInternals;
 
@@ -1742,7 +1742,7 @@ function dispatchAction<S, A>(
 
   if (__DEV__) {
     if (enableDebugTracing) {
-      if (fiber.mode & DebugTraceMode) {
+      if (fiber.mode & DebugTracingMode) {
         const priorityLevel = inferPriorityFromExpirationTime(
           currentTime,
           expirationTime,

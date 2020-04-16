@@ -30,7 +30,7 @@ import {
   LifecycleEffectMask,
 } from './ReactSideEffectTags';
 import {shouldCaptureSuspense} from './ReactFiberSuspenseComponent.old';
-import {NoMode, BlockingMode, DebugTraceMode} from './ReactTypeOfMode';
+import {NoMode, BlockingMode, DebugTracingMode} from './ReactTypeOfMode';
 import {enableDebugTracing} from 'shared/ReactFeatureFlags';
 import {createCapturedValue} from './ReactCapturedValue';
 import {
@@ -55,7 +55,7 @@ import {
   pingSuspendedRoot,
 } from './ReactFiberWorkLoop.old';
 import {logCapturedError} from './ReactFiberErrorLogger';
-import {logComponentSuspended} from './DebugTrace';
+import {logComponentSuspended} from './DebugTracing';
 
 import {Sync} from './ReactFiberExpirationTime.old';
 
@@ -197,7 +197,7 @@ function throwException(
 
     if (__DEV__) {
       if (enableDebugTracing) {
-        if (sourceFiber.mode & DebugTraceMode) {
+        if (sourceFiber.mode & DebugTracingMode) {
           const name = getComponentName(sourceFiber.type) || 'Unknown';
           logComponentSuspended(name, wakeable);
         }

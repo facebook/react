@@ -67,7 +67,7 @@ import {NoWork} from './ReactFiberExpirationTime.old';
 import {
   NoMode,
   ConcurrentMode,
-  DebugTraceMode,
+  DebugTracingMode,
   ProfileMode,
   StrictMode,
   BlockingMode,
@@ -75,7 +75,7 @@ import {
 import {
   REACT_FORWARD_REF_TYPE,
   REACT_FRAGMENT_TYPE,
-  REACT_DEBUG_TRACE_MODE_TYPE,
+  REACT_DEBUG_TRACING_MODE_TYPE,
   REACT_STRICT_MODE_TYPE,
   REACT_PROFILER_TYPE,
   REACT_PROVIDER_TYPE,
@@ -490,9 +490,9 @@ export function createFiberFromTypeAndProps(
           expirationTime,
           key,
         );
-      case REACT_DEBUG_TRACE_MODE_TYPE:
+      case REACT_DEBUG_TRACING_MODE_TYPE:
         fiberTag = Mode;
-        mode |= DebugTraceMode;
+        mode |= DebugTracingMode;
         break;
       case REACT_STRICT_MODE_TYPE:
         fiberTag = Mode;

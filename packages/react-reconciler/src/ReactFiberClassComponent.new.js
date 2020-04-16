@@ -29,7 +29,7 @@ import invariant from 'shared/invariant';
 import {REACT_CONTEXT_TYPE, REACT_PROVIDER_TYPE} from 'shared/ReactSymbols';
 
 import {resolveDefaultProps} from './ReactFiberLazyComponent.new';
-import {DebugTraceMode, StrictMode} from './ReactTypeOfMode';
+import {DebugTracingMode, StrictMode} from './ReactTypeOfMode';
 
 import {
   enqueueUpdate,
@@ -58,7 +58,7 @@ import {
   priorityLevelToLabel,
 } from './ReactFiberWorkLoop.new';
 import {requestCurrentSuspenseConfig} from './ReactFiberSuspenseConfig';
-import {logForceUpdateScheduled, logStateUpdateScheduled} from './DebugTrace';
+import {logForceUpdateScheduled, logStateUpdateScheduled} from './DebugTracing';
 
 import {disableLogs, reenableLogs} from 'shared/ConsolePatchingDev';
 
@@ -214,7 +214,7 @@ const classComponentUpdater = {
 
     if (__DEV__) {
       if (enableDebugTracing) {
-        if (fiber.mode & DebugTraceMode) {
+        if (fiber.mode & DebugTracingMode) {
           const label = priorityLevelToLabel(
             ((update.priority: any): ReactPriorityLevel),
           );
@@ -250,7 +250,7 @@ const classComponentUpdater = {
 
     if (__DEV__) {
       if (enableDebugTracing) {
-        if (fiber.mode & DebugTraceMode) {
+        if (fiber.mode & DebugTracingMode) {
           const label = priorityLevelToLabel(
             ((update.priority: any): ReactPriorityLevel),
           );
@@ -285,7 +285,7 @@ const classComponentUpdater = {
 
     if (__DEV__) {
       if (enableDebugTracing) {
-        if (fiber.mode & DebugTraceMode) {
+        if (fiber.mode & DebugTracingMode) {
           const label = priorityLevelToLabel(
             ((update.priority: any): ReactPriorityLevel),
           );

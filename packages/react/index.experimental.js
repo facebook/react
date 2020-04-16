@@ -47,5 +47,5 @@ export {
   block,
   unstable_useOpaqueIdentifier,
   // enableDebugTracing
-  DebugTraceMode,
+  DebugTracingMode,
 } from './src/React';

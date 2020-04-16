@@ -38,7 +38,7 @@ import {
   NoWork,
   Sync,
 } from './ReactFiberExpirationTime.new';
-import {NoMode, BlockingMode, DebugTraceMode} from './ReactTypeOfMode';
+import {NoMode, BlockingMode, DebugTracingMode} from './ReactTypeOfMode';
 import {readContext} from './ReactFiberNewContext.new';
 import {createDeprecatedResponderListener} from './ReactFiberDeprecatedEvents.new';
 import {
@@ -97,7 +97,7 @@ import {
 } from './ReactMutableSource.new';
 import {getRootHostContainer} from './ReactFiberHostContext.new';
 import {getIsRendering} from './ReactCurrentFiber';
-import {logStateUpdateScheduled} from './DebugTrace';
+import {logStateUpdateScheduled} from './DebugTracing';
 
 const {ReactCurrentDispatcher, ReactCurrentBatchConfig} = ReactSharedInternals;
 
@@ -1747,7 +1747,7 @@ function dispatchAction<S, A>(
 
   if (__DEV__) {
     if (enableDebugTracing) {
-      if (fiber.mode & DebugTraceMode) {
+      if (fiber.mode & DebugTracingMode) {
         const priorityLevel = inferPriorityFromExpirationTime(
           currentTime,
           expirationTime,

@@ -41,16 +41,16 @@ describe('ReactDOMServerIntegration', () => {
 
   // Test pragmas don't support itRenders abstraction
   if (require('shared/ReactFeatureFlags').enableDebugTracing) {
-    describe('React.DebugTraceMode', () => {
+    describe('React.DebugTracingMode', () => {
       beforeEach(() => {
         spyOnDevAndProd(console, 'log');
       });
 
       itRenders('with one child', async render => {
         const e = await render(
-          <React.DebugTraceMode>
+          <React.DebugTracingMode>
             <div>text1</div>
-          </React.DebugTraceMode>,
+          </React.DebugTracingMode>,
         );
         const parent = e.parentNode;
         expect(parent.childNodes[0].tagName).toBe('DIV');
@@ -62,19 +62,19 @@ describe('ReactDOMServerIntegration', () => {
         };
         const Footer = props => {
           return (
-            <React.DebugTraceMode>
+            <React.DebugTracingMode>
               <h2>footer</h2>
               <h3>about</h3>
-            </React.DebugTraceMode>
+            </React.DebugTracingMode>
           );
         };
         const e = await render(
-          <React.DebugTraceMode>
+          <React.DebugTracingMode>
             <div>text1</div>
             <span>text2</span>
             <Header />
             <Footer />
-          </React.DebugTraceMode>,
+          </React.DebugTracingMode>,
         );
         const parent = e.parentNode;
         expect(parent.childNodes[0].tagName).toBe('DIV');
