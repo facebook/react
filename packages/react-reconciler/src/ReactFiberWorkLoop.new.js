@@ -3168,7 +3168,7 @@ function scheduleInteractions(root, expirationTime, interactions) {
   }
 
   if (interactions.size > 0) {
-    const pendingInteractionMap = root.pendingInteractionMap;
+    const pendingInteractionMap = root.pendingInteractionMap_new;
     const pendingInteractions = pendingInteractionMap.get(expirationTime);
     if (pendingInteractions != null) {
       interactions.forEach(interaction => {
@@ -3217,7 +3217,7 @@ function startWorkOnPendingInteractions(root, expirationTime) {
   // we can accurately attribute time spent working on it, And so that cascading
   // work triggered during the render phase will be associated with it.
   const interactions: Set<Interaction> = new Set();
-  root.pendingInteractionMap.forEach(
+  root.pendingInteractionMap_new.forEach(
     (scheduledInteractions, scheduledExpirationTime) => {
       if (scheduledExpirationTime >= expirationTime) {
         scheduledInteractions.forEach(interaction =>
@@ -3274,7 +3274,7 @@ function finishPendingInteractions(root, committedExpirationTime) {
     // Clear completed interactions from the pending Map.
     // Unless the render was suspended or cascading work was scheduled,
     // In which case– leave pending interactions until the subsequent render.
-    const pendingInteractionMap = root.pendingInteractionMap;
+    const pendingInteractionMap = root.pendingInteractionMap_new;
     pendingInteractionMap.forEach(
       (scheduledInteractions, scheduledExpirationTime) => {
         // Only decrement the pending interaction count if we're done.

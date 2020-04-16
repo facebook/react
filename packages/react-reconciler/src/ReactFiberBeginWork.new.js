@@ -2923,7 +2923,7 @@ function bailoutOnAlreadyFinishedWork(
 ): Fiber | null {
   if (current !== null) {
     // Reuse previous dependencies
-    workInProgress.dependencies = current.dependencies;
+    workInProgress.dependencies_new = current.dependencies_new;
   }
 
   if (enableProfilerTimer) {

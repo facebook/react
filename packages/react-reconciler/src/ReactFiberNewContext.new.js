@@ -191,7 +191,7 @@ export function propagateContextChange(
     let nextFiber;
 
     // Visit this fiber.
-    const list = fiber.dependencies;
+    const list = fiber.dependencies_new;
     if (list !== null) {
       nextFiber = fiber.child;
 
@@ -310,7 +310,7 @@ export function prepareToReadContext(
   lastContextDependency = null;
   lastContextWithAllBitsObserved = null;
 
-  const dependencies = workInProgress.dependencies;
+  const dependencies = workInProgress.dependencies_new;
   if (dependencies !== null) {
     const firstContext = dependencies.firstContext;
     if (firstContext !== null) {
@@ -375,7 +375,7 @@ export function readContext<T>(
 
       // This is the first dependency for this component. Create a new list.
       lastContextDependency = contextItem;
-      currentlyRenderingFiber.dependencies = {
+      currentlyRenderingFiber.dependencies_new = {
         expirationTime: NoWork,
         firstContext: contextItem,
         responders: null,

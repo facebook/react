@@ -41,7 +41,17 @@ export type ContextDependency<T> = {
   ...
 };
 
-export type Dependencies = {
+export type Dependencies_old = {
+  expirationTime: ExpirationTime,
+  firstContext: ContextDependency<mixed> | null,
+  responders: Map<
+    ReactEventResponder<any, any>,
+    ReactEventResponderInstance<any, any>,
+  > | null,
+  ...
+};
+
+export type Dependencies_new = {
   expirationTime: ExpirationTime,
   firstContext: ContextDependency<mixed> | null,
   responders: Map<
@@ -115,7 +125,8 @@ export type Fiber = {|
   memoizedState: any,
 
   // Dependencies (contexts, events) for this fiber, if it has any
-  dependencies: Dependencies | null,
+  dependencies_new: Dependencies_new | null,
+  dependencies_old: Dependencies_old | null,
 
   // Bitfield that describes properties about the fiber and its subtree. E.g.
   // the ConcurrentMode flag indicates whether the subtree should be async-by-
@@ -183,8 +194,6 @@ export type Fiber = {|
   // Used to verify that the order of hooks does not change between renders.
   _debugHookTypes?: Array<HookType> | null,
 |};
-
-export type PendingInteractionMap = Map<ExpirationTime, Set<Interaction>>;
 
 type BaseFiberRootProperties = {|
   // The type of root (legacy, batched, concurrent, etc.)
@@ -266,7 +275,8 @@ type BaseFiberRootProperties = {|
 type ProfilingOnlyFiberRootProperties = {|
   interactionThreadID: number,
   memoizedInteractions: Set<Interaction>,
-  pendingInteractionMap: PendingInteractionMap,
+  pendingInteractionMap_new: Map<ExpirationTime, Set<Interaction>>,
+  pendingInteractionMap_old: Map<ExpirationTime, Set<Interaction>>,
 |};
 
 export type SuspenseHydrationCallbacks = {

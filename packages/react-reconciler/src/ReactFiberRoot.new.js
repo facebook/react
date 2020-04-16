@@ -50,7 +50,7 @@ function FiberRootNode(containerInfo, tag, hydrate) {
   if (enableSchedulerTracing) {
     this.interactionThreadID = unstable_getThreadID();
     this.memoizedInteractions = new Set();
-    this.pendingInteractionMap = new Map();
+    this.pendingInteractionMap_new = new Map();
   }
   if (enableSuspenseCallback) {
     this.hydrationCallbacks = null;
