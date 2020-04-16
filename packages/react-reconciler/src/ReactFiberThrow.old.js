@@ -21,6 +21,7 @@ import {
   HostRoot,
   SuspenseComponent,
   IncompleteClassComponent,
+  SimpleMemoComponent,
 } from './ReactWorkTags';
 import {
   DidCapture,
@@ -264,6 +265,10 @@ function throwException(
               update.tag = ForceUpdate;
               enqueueUpdate(sourceFiber, update);
             }
+          } else if (sourceFiber.tag === SimpleMemoComponent) {
+            const update = createUpdate(Sync, null);
+            update.tag = ForceUpdate;
+            enqueueUpdate(sourceFiber, update);
           }
 
           // The source fiber did not complete. Mark it with Sync priority to
