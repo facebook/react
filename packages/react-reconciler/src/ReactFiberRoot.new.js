@@ -94,6 +94,7 @@ export function isRootSuspendedAtTime(
 export function markRootSuspendedAtTime(
   root: FiberRoot,
   expirationTime: ExpirationTime,
+  isRendering: boolean,
 ): void {
   const firstSuspendedTime = root.firstSuspendedTime;
   const lastSuspendedTime = root.lastSuspendedTime;
@@ -104,7 +105,11 @@ export function markRootSuspendedAtTime(
     root.lastSuspendedTime = expirationTime;
   }
 
-  if (expirationTime <= root.lastPingedTime) {
+  if (!isRendering && expirationTime <= root.lastPingedTime) {
+    // This function is sometimes called during rendering, but we can
+    // only set this field outside of the render work loop. Otherwise,
+    // we may drop updates because we wouldn't know there's more work to do.
+    // https://github.com/facebook/react/issues/18644
     root.lastPingedTime = NoWork;
   }
 

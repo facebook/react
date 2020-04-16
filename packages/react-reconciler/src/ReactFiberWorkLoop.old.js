@@ -536,7 +536,7 @@ function markUpdateTimeFromFiberToRoot(fiber, expirationTime) {
         // scheduled before the root started rendering. Need to track the next
         // pending expiration time (perhaps by backtracking the return path) and
         // then trigger a restart in the `renderDidSuspendDelayIfPossible` path.
-        markRootSuspendedAtTime(root, renderExpirationTime);
+        markRootSuspendedAtTime(root, renderExpirationTime, false);
       }
     }
     // Mark that the root has a pending update.
@@ -710,7 +710,7 @@ function performConcurrentWorkOnRoot(root, didTimeout) {
     if (exitStatus === RootFatalErrored) {
       const fatalError = workInProgressRootFatalError;
       prepareFreshStack(root, expirationTime);
-      markRootSuspendedAtTime(root, expirationTime);
+      markRootSuspendedAtTime(root, expirationTime, false);
       ensureRootIsScheduled(root);
       throw fatalError;
     }
@@ -754,7 +754,7 @@ function finishConcurrentRender(
       break;
     }
     case RootSuspended: {
-      markRootSuspendedAtTime(root, expirationTime);
+      markRootSuspendedAtTime(root, expirationTime, false);
       const lastSuspendedTime = root.lastSuspendedTime;
 
       // We have an acceptable loading state. We need to figure out if we
@@ -822,7 +822,7 @@ function finishConcurrentRender(
       break;
     }
     case RootSuspendedWithDelay: {
-      markRootSuspendedAtTime(root, expirationTime);
+      markRootSuspendedAtTime(root, expirationTime, false);
       const lastSuspendedTime = root.lastSuspendedTime;
 
       if (
@@ -928,7 +928,7 @@ function finishConcurrentRender(
           workInProgressRootCanSuspendUsingConfig,
         );
         if (msUntilTimeout > 10) {
-          markRootSuspendedAtTime(root, expirationTime);
+          markRootSuspendedAtTime(root, expirationTime, false);
           root.timeoutHandle = scheduleTimeout(
             commitRoot.bind(null, root),
             msUntilTimeout,
@@ -993,7 +993,7 @@ function performSyncWorkOnRoot(root) {
   if (exitStatus === RootFatalErrored) {
     const fatalError = workInProgressRootFatalError;
     prepareFreshStack(root, expirationTime);
-    markRootSuspendedAtTime(root, expirationTime);
+    markRootSuspendedAtTime(root, expirationTime, false);
     ensureRootIsScheduled(root);
     throw fatalError;
   }
@@ -1383,7 +1383,7 @@ export function renderDidSuspendDelayIfPossible(): void {
     // pending update.
     // TODO: This should immediately interrupt the current render, instead
     // of waiting until the next time we yield.
-    markRootSuspendedAtTime(workInProgressRoot, renderExpirationTime);
+    markRootSuspendedAtTime(workInProgressRoot, renderExpirationTime, true);
     markRootUpdatedAtTime(
       workInProgressRoot,
       workInProgressRootNextUnprocessedUpdateTime,
