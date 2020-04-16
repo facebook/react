@@ -751,7 +751,6 @@ const pressResponderImpl = {
       case 'touchend': {
         if (isPressed) {
           const buttons = state.buttons;
-          let isKeyboardEvent = false;
           let touchEvent;
           if (
             type === 'pointerup' &&
@@ -770,7 +769,6 @@ const pressResponderImpl = {
             if (!isValidKeyboardEvent(nativeEvent)) {
               return;
             }
-            isKeyboardEvent = true;
             removeRootEventTypes(context, state);
           } else if (buttons === 4) {
             // Remove the root events here as no 'click' event is dispatched when this 'button' is pressed.
@@ -820,14 +818,7 @@ const pressResponderImpl = {
         const pressTarget = state.pressTarget;
         const onPress = props.onPress;
         if (pressTarget !== null && isFunction(onPress)) {
-          dispatchEvent(
-            event,
-            onPress,
-            context,
-            state,
-            "press",
-            DiscreteEvent
-          );
+          dispatchEvent(event, onPress, context, state, 'press', DiscreteEvent);
         }
         break;
       }
