@@ -803,46 +803,7 @@ const pressResponderImpl = {
             }
           }
 
-          const pressTarget = state.pressTarget;
           dispatchPressEndEvents(event, context, props, state);
-          const onPress = props.onPress;
-
-          if (pressTarget !== null && isFunction(onPress)) {
-            if (
-              !isKeyboardEvent &&
-              pressTarget !== null &&
-              target !== null &&
-              !targetIsDocument(pressTarget)
-            ) {
-              if (
-                pointerType === 'mouse' &&
-                context.isTargetWithinNode(target, pressTarget)
-              ) {
-                state.isPressWithinResponderRegion = true;
-              } else {
-                // If the event target isn't within the press target, check if we're still
-                // within the responder region. The region may have changed if the
-                // element's layout was modified after activation.
-                updateIsPressWithinResponderRegion(
-                  touchEvent || nativeEvent,
-                  context,
-                  props,
-                  state,
-                );
-              }
-            }
-
-            if (state.isPressWithinResponderRegion && buttons !== 4) {
-              dispatchEvent(
-                event,
-                onPress,
-                context,
-                state,
-                'press',
-                DiscreteEvent,
-              );
-            }
-          }
           state.touchEvent = null;
         } else if (type === 'mouseup') {
           state.ignoreEmulatedMouseEvents = false;
@@ -854,6 +815,19 @@ const pressResponderImpl = {
         // "keyup" occurs after "click"
         if (previousPointerType !== 'keyboard') {
           removeRootEventTypes(context, state);
+        }
+
+        const pressTarget = state.pressTarget;
+        const onPress = props.onPress;
+        if (pressTarget !== null && isFunction(onPress)) {
+          dispatchEvent(
+            event,
+            onPress,
+            context,
+            state,
+            "press",
+            DiscreteEvent
+          );
         }
         break;
       }
