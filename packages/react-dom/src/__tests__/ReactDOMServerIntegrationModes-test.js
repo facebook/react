@@ -40,7 +40,10 @@ describe('ReactDOMServerIntegration', () => {
   });
 
   // Test pragmas don't support itRenders abstraction
-  if (require('shared/ReactFeatureFlags').enableDebugTracing) {
+  if (
+    __EXPERIMENTAL__ &&
+    require('shared/ReactFeatureFlags').enableDebugTracing
+  ) {
     describe('React.DebugTracingMode', () => {
       beforeEach(() => {
         spyOnDevAndProd(console, 'log');
