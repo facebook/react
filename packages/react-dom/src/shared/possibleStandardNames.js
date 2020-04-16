@@ -59,6 +59,7 @@ const possibleStandardNames = {
   download: 'download',
   draggable: 'draggable',
   enctype: 'encType',
+  enterkeyhint: 'enterKeyHint',
   for: 'htmlFor',
   form: 'form',
   formmethod: 'formMethod',
