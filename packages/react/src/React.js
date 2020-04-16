@@ -7,14 +7,14 @@
  * @flow
  */
 
-import ReactVersion from 'shared/ReactVersion';
+import version from 'shared/ReactVersion';
 import {
-  REACT_FRAGMENT_TYPE,
-  REACT_DEBUG_TRACING_MODE_TYPE,
-  REACT_PROFILER_TYPE,
-  REACT_STRICT_MODE_TYPE,
-  REACT_SUSPENSE_TYPE,
-  REACT_SUSPENSE_LIST_TYPE,
+  REACT_FRAGMENT_TYPE as Fragment,
+  REACT_DEBUG_TRACING_MODE_TYPE as unstable_DebugTracingMode,
+  REACT_PROFILER_TYPE as Profiler,
+  REACT_STRICT_MODE_TYPE as StrictMode,
+  REACT_SUSPENSE_TYPE as Suspense,
+  REACT_SUSPENSE_LIST_TYPE as SuspenseList,
 } from 'shared/ReactSymbols';
 
 import {Component, PureComponent} from './ReactBaseClasses';
@@ -43,22 +43,22 @@ import {
   useReducer,
   useRef,
   useState,
-  useResponder,
+  useResponder as DEPRECATED_useResponder,
   useTransition,
   useDeferredValue,
-  useOpaqueIdentifier,
+  useOpaqueIdentifier as unstable_useOpaqueIdentifier,
 } from './ReactHooks';
-import {withSuspenseConfig} from './ReactBatchConfig';
+import {withSuspenseConfig as unstable_withSuspenseConfig} from './ReactBatchConfig';
 import {
   createElementWithValidation,
   createFactoryWithValidation,
   cloneElementWithValidation,
 } from './ReactElementValidator';
 import {createMutableSource} from './ReactMutableSource';
-import ReactSharedInternals from './ReactSharedInternals';
-import {createFundamental} from './ReactFundamental';
-import {createEventResponder} from './ReactEventResponder';
-import {createScope} from './ReactScope';
+import __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED from './ReactSharedInternals';
+import {createFundamental as unstable_createFundamental} from './ReactFundamental';
+import {createEventResponder as DEPRECATED_createResponder} from './ReactEventResponder';
+import {createScope as unstable_createScope} from './ReactScope';
 
 // TODO: Move this branching into the other module instead and just re-export.
 const createElement = __DEV__ ? createElementWithValidation : createElementProd;
@@ -94,31 +94,31 @@ export {
   useReducer,
   useRef,
   useState,
-  REACT_FRAGMENT_TYPE as Fragment,
-  REACT_PROFILER_TYPE as Profiler,
-  REACT_STRICT_MODE_TYPE as StrictMode,
-  REACT_DEBUG_TRACING_MODE_TYPE as unstable_DebugTracingMode,
-  REACT_SUSPENSE_TYPE as Suspense,
+  Fragment,
+  Profiler,
+  StrictMode,
+  unstable_DebugTracingMode,
+  Suspense,
   createElement,
   cloneElement,
   isValidElement,
-  ReactVersion as version,
-  ReactSharedInternals as __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED,
+  version,
+  __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED,
   // Deprecated behind disableCreateFactory
   createFactory,
   // Concurrent Mode
   useTransition,
   useDeferredValue,
-  REACT_SUSPENSE_LIST_TYPE as SuspenseList,
-  withSuspenseConfig as unstable_withSuspenseConfig,
+  SuspenseList,
+  unstable_withSuspenseConfig,
   // enableBlocksAPI
   block,
   // enableDeprecatedFlareAPI
-  useResponder as DEPRECATED_useResponder,
-  createEventResponder as DEPRECATED_createResponder,
+  DEPRECATED_useResponder,
+  DEPRECATED_createResponder,
   // enableFundamentalAPI
-  createFundamental as unstable_createFundamental,
+  unstable_createFundamental,
   // enableScopeAPI
-  createScope as unstable_createScope,
-  useOpaqueIdentifier as unstable_useOpaqueIdentifier,
+  unstable_createScope,
+  unstable_useOpaqueIdentifier,
 };
