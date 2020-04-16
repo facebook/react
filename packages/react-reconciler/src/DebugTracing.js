@@ -9,6 +9,8 @@
 
 import type {Wakeable} from 'shared/ReactTypes';
 
+import {enableDebugTracing} from 'shared/ReactFeatureFlags';
+
 const nativeConsole: Object = console;
 let nativeConsoleLog: null | Function = null;
 
@@ -56,16 +58,24 @@ const REACT_LOGO_STYLE =
   'background-color: #20232a; color: #61dafb; padding: 0 2px;';
 
 export function logCommitStarted(priorityLabel: string): void {
-  group(
-    `%c⚛️%c commit%c (priority: ${priorityLabel})`,
-    REACT_LOGO_STYLE,
-    '',
-    'font-weight: normal;',
-  );
+  if (__DEV__) {
+    if (enableDebugTracing) {
+      group(
+        `%c⚛️%c commit%c (priority: ${priorityLabel})`,
+        REACT_LOGO_STYLE,
+        '',
+        'font-weight: normal;',
+      );
+    }
+  }
 }
 
 export function logCommitStopped(): void {
-  groupEnd();
+  if (__DEV__) {
+    if (enableDebugTracing) {
+      groupEnd();
+    }
+  }
 }
 
 const PossiblyWeakMap = typeof WeakMap === 'function' ? WeakMap : Map;
@@ -83,86 +93,118 @@ export function logComponentSuspended(
   componentName: string,
   wakeable: Wakeable,
 ): void {
-  const id = getWakeableID(wakeable);
-  const display = (wakeable: any).displayName || wakeable;
-  log(
-    `%c⚛️%c ${componentName} suspended`,
-    REACT_LOGO_STYLE,
-    'color: #80366d; font-weight: bold;',
-    id,
-    display,
-  );
-  wakeable.then(
-    () => {
+  if (__DEV__) {
+    if (enableDebugTracing) {
+      const id = getWakeableID(wakeable);
+      const display = (wakeable: any).displayName || wakeable;
       log(
-        `%c⚛️%c ${componentName} resolved`,
+        `%c⚛️%c ${componentName} suspended`,
         REACT_LOGO_STYLE,
         'color: #80366d; font-weight: bold;',
         id,
         display,
       );
-    },
-    () => {
-      log(
-        `%c⚛️%c ${componentName} rejected`,
-        REACT_LOGO_STYLE,
-        'color: #80366d; font-weight: bold;',
-        id,
-        display,
+      wakeable.then(
+        () => {
+          log(
+            `%c⚛️%c ${componentName} resolved`,
+            REACT_LOGO_STYLE,
+            'color: #80366d; font-weight: bold;',
+            id,
+            display,
+          );
+        },
+        () => {
+          log(
+            `%c⚛️%c ${componentName} rejected`,
+            REACT_LOGO_STYLE,
+            'color: #80366d; font-weight: bold;',
+            id,
+            display,
+          );
+        },
       );
-    },
-  );
+    }
+  }
 }
 
 export function logLayoutEffectsStarted(priorityLabel: string): void {
-  group(
-    `%c⚛️%c layout effects%c (priority: ${priorityLabel})`,
-    REACT_LOGO_STYLE,
-    '',
-    'font-weight: normal;',
-  );
+  if (__DEV__) {
+    if (enableDebugTracing) {
+      group(
+        `%c⚛️%c layout effects%c (priority: ${priorityLabel})`,
+        REACT_LOGO_STYLE,
+        '',
+        'font-weight: normal;',
+      );
+    }
+  }
 }
 
 export function logLayoutEffectsStopped(): void {
-  groupEnd();
+  if (__DEV__) {
+    if (enableDebugTracing) {
+      groupEnd();
+    }
+  }
 }
 
 export function logPassiveEffectsStarted(priorityLabel: string): void {
-  group(
-    `%c⚛️%c passive effects%c (priority: ${priorityLabel})`,
-    REACT_LOGO_STYLE,
-    '',
-    'font-weight: normal;',
-  );
+  if (__DEV__) {
+    if (enableDebugTracing) {
+      group(
+        `%c⚛️%c passive effects%c (priority: ${priorityLabel})`,
+        REACT_LOGO_STYLE,
+        '',
+        'font-weight: normal;',
+      );
+    }
+  }
 }
 
 export function logPassiveEffectsStopped(): void {
-  groupEnd();
+  if (__DEV__) {
+    if (enableDebugTracing) {
+      groupEnd();
+    }
+  }
 }
 
 export function logRenderStarted(priorityLabel: string): void {
-  group(
-    `%c⚛️%c render%c (priority: ${priorityLabel})`,
-    REACT_LOGO_STYLE,
-    '',
-    'font-weight: normal;',
-  );
+  if (__DEV__) {
+    if (enableDebugTracing) {
+      group(
+        `%c⚛️%c render%c (priority: ${priorityLabel})`,
+        REACT_LOGO_STYLE,
+        '',
+        'font-weight: normal;',
+      );
+    }
+  }
 }
 
 export function logRenderStopped(): void {
-  groupEnd();
+  if (__DEV__) {
+    if (enableDebugTracing) {
+      groupEnd();
+    }
+  }
 }
 
 export function logForceUpdateScheduled(
   componentName: string,
   priorityLabel: string,
 ): void {
-  log(
-    `%c⚛️%c ${componentName} forced update %c(priority: ${priorityLabel})`,
-    REACT_LOGO_STYLE,
-    'color: #db2e1f; font-weight: bold;',
-    '',
-  );
+  if (__DEV__) {
+    if (enableDebugTracing) {
+      log(
+        `%c⚛️%c ${componentName} forced update %c(priority: ${priorityLabel})`,
+        REACT_LOGO_STYLE,
+        'color: #db2e1f; font-weight: bold;',
+        '',
+      );
+    }
+  }
 }
 
 export function logStateUpdateScheduled(
@@ -170,11 +212,15 @@ export function logStateUpdateScheduled(
   priorityLabel: string,
   payloadOrAction: any,
 ): void {
-  log(
-    `%c⚛️%c ${componentName} updated state %c(priority: ${priorityLabel})`,
-    REACT_LOGO_STYLE,
-    'color: #01a252; font-weight: bold;',
-    '',
-    payloadOrAction,
-  );
+  if (__DEV__) {
+    if (enableDebugTracing) {
+      log(
+        `%c⚛️%c ${componentName} updated state %c(priority: ${priorityLabel})`,
+        REACT_LOGO_STYLE,
+        'color: #01a252; font-weight: bold;',
+        '',
+        payloadOrAction,
+      );
+    }
+  }
 }
