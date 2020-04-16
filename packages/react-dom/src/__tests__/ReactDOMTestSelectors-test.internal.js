@@ -710,6 +710,105 @@ No matching component was found for:
       });
     });
 
+    it('should merge some types of adjacent rects (if they are the same in one dimension)', () => {
+      const refA = React.createRef();
+      const refB = React.createRef();
+      const refC = React.createRef();
+      const refD = React.createRef();
+      const refE = React.createRef();
+      const refF = React.createRef();
+      const refG = React.createRef();
+
+      function Example() {
+        return (
+          <>
+            <div ref={refA} data-debug="A" />
+            <div ref={refB} data-debug="B" />
+            <div ref={refC} data-debug="C" />
+            <div ref={refD} data-debug="D" />
+            <div ref={refE} data-debug="E" />
+            <div ref={refF} data-debug="F" />
+            <div ref={refG} data-debug="G" />
+          </>
+        );
+      }
+
+      render(<Example />, container);
+
+      // A, B, and C are all adjacent and/or overlapping, with the same height.
+      setBoundingClientRect(refA.current, {
+        x: 30,
+        y: 0,
+        width: 40,
+        height: 25,
+      });
+      setBoundingClientRect(refB.current, {
+        x: 0,
+        y: 0,
+        width: 50,
+        height: 25,
+      });
+      setBoundingClientRect(refC.current, {
+        x: 70,
+        y: 0,
+        width: 20,
+        height: 25,
+      });
+
+      // D is partially overlapping with A and B, but is too tall to be merged.
+      setBoundingClientRect(refD.current, {
+        x: 20,
+        y: 0,
+        width: 20,
+        height: 30,
+      });
+
+      // Same thing but for a vertical group.
+      // Some of them could intersect with the horizontal group,
+      // except they're too far to the right.
+      setBoundingClientRect(refE.current, {
+        x: 100,
+        y: 25,
+        width: 25,
+        height: 50,
+      });
+      setBoundingClientRect(refF.current, {
+        x: 100,
+        y: 0,
+        width: 25,
+        height: 25,
+      });
+      setBoundingClientRect(refG.current, {
+        x: 100,
+        y: 75,
+        width: 25,
+        height: 10,
+      });
+
+      const rects = findBoundingRects(document.body, [
+        createComponentSelector(Example),
+      ]);
+      expect(rects).toHaveLength(3);
+      expect(rects).toContainEqual({
+        x: 0,
+        y: 0,
+        width: 90,
+        height: 25,
+      });
+      expect(rects).toContainEqual({
+        x: 20,
+        y: 0,
+        width: 20,
+        height: 30,
+      });
+      expect(rects).toContainEqual({
+        x: 100,
+        y: 0,
+        width: 25,
+        height: 85,
+      });
+    });
+
     it('should not search within hidden subtrees', () => {
       const refA = React.createRef();
       const refB = React.createRef();

@@ -23,7 +23,7 @@ function shim(...args: any) {
 
 // Test selectors (when unsupported)
 export const supportsTestSelectors = false;
-export const findRootFiber = shim;
+export const findFiberRoot = shim;
 export const getBoundingRect = shim;
 export const getTextContent = shim;
 export const isHiddenSubtree = shim;

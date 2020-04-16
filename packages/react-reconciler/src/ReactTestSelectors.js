@@ -14,7 +14,7 @@ import invariant from 'shared/invariant';
 import {HostComponent, HostText} from 'react-reconciler/src/ReactWorkTags';
 import getComponentName from 'shared/getComponentName';
 import {
-  findRootFiber,
+  findFiberRoot,
   getBoundingRect,
   getInstanceFromNode,
   getTextContent,
@@ -113,7 +113,7 @@ export function createTestNameSelector(id: string): TestNameSelector {
   };
 }
 
-function findRootFiberForHostRoot(hostRoot: Instance): Fiber {
+function findFiberRootForHostRoot(hostRoot: Instance): Fiber {
   const maybeFiber = getInstanceFromNode((hostRoot: any));
   if (maybeFiber != null) {
     invariant(
@@ -122,7 +122,7 @@ function findRootFiberForHostRoot(hostRoot: Instance): Fiber {
     );
     return ((maybeFiber: any): Fiber);
   } else {
-    const fiberRoot = findRootFiber(hostRoot);
+    const fiberRoot = findFiberRoot(hostRoot);
     invariant(
       fiberRoot !== null,
       'Could not find React container within specified host subtree.',
@@ -147,8 +147,9 @@ function matchSelector(fiber: Fiber, selector: Selector): boolean {
       );
     case ROLE_TYPE:
       if (fiber.tag === HostComponent) {
+        const node = fiber.stateNode;
         if (
-          matchAccessibilityRole(fiber, ((selector: any): RoleSelector).value)
+          matchAccessibilityRole(node, ((selector: any): RoleSelector).value)
         ) {
           return true;
         }
@@ -178,7 +179,7 @@ function matchSelector(fiber: Fiber, selector: Selector): boolean {
       }
       break;
     default:
-      invariant(null, 'Invalid selector type %s specified', selector);
+      invariant(null, 'Invalid selector type %s specified.', selector);
       break;
   }
 
@@ -199,7 +200,7 @@ function selectorToString(selector: Selector): string | null {
     case TEST_NAME_TYPE:
       return `[data-testname="${((selector: any): TestNameSelector).value}"]`;
     default:
-      invariant(null, 'Invalid selector type %s specified', selector);
+      invariant(null, 'Invalid selector type %s specified.', selector);
       break;
   }
 
@@ -279,7 +280,7 @@ export function findAllNodes(
     invariant(false, 'Test selector API is not supported by this renderer.');
   }
 
-  const root = findRootFiberForHostRoot(hostRoot);
+  const root = findFiberRootForHostRoot(hostRoot);
   const matchingFibers = findPaths(root, selectors);
 
   const instanceRoots: Array<Instance> = [];
@@ -313,7 +314,7 @@ export function getFindAllNodesFailureDescription(
     invariant(false, 'Test selector API is not supported by this renderer.');
   }
 
-  const root = findRootFiberForHostRoot(hostRoot);
+  const root = findFiberRootForHostRoot(hostRoot);
 
   let maxSelectorIndex: number = 0;
   const matchedNames = [];
@@ -385,26 +386,77 @@ export function findBoundingRects(
     boundingRects.push(getBoundingRect(instanceRoots[i]));
   }
 
-  for (let i = boundingRects.length - 1; i >= 0; i--) {
+  for (let i = boundingRects.length - 1; i > 0; i--) {
     const targetRect = boundingRects[i];
-    for (let j = boundingRects.length - 1; j >= 0; j--) {
+    const targetLeft = targetRect.x;
+    const targetRight = targetLeft + targetRect.width;
+    const targetTop = targetRect.y;
+    const targetBottom = targetTop + targetRect.height;
+
+    for (let j = i - 1; j >= 0; j--) {
       if (i !== j) {
         const otherRect = boundingRects[j];
+        const otherLeft = otherRect.x;
+        const otherRight = otherLeft + otherRect.width;
+        const otherTop = otherRect.y;
+        const otherBottom = otherTop + otherRect.height;
+
+        // Merging all rects to the minimums set would be complicated,
+        // but we can handle the most common cases:
+        // 1. completely overlapping rects
+        // 2. adjacent rects that are the same width or height (e.g. items in a list)
+        //
+        // Even given the above constraints,
+        // we still won't end up with the fewest possible rects without doing multiple passes,
+        // but it's good enough for this purpose.
+
         if (
-          targetRect.x >= otherRect.x &&
-          targetRect.y >= otherRect.y &&
-          targetRect.x + targetRect.width <= otherRect.x + otherRect.width &&
-          targetRect.y + targetRect.height <= otherRect.y + otherRect.height
+          targetLeft >= otherLeft &&
+          targetTop >= otherTop &&
+          targetRight <= otherRight &&
+          targetBottom <= otherBottom
         ) {
+          // Complete overlapping rects; remove the inner one.
+          boundingRects.splice(i, 1);
+          break;
+        } else if (
+          targetLeft === otherLeft &&
+          targetRect.width === otherRect.width &&
+          !(otherBottom < targetTop) &&
+          !(otherTop > targetBottom)
+        ) {
+          // Adjacent vertical rects; merge them.
+          if (otherTop > targetTop) {
+            otherRect.height += otherTop - targetTop;
+            otherRect.y = targetTop;
+          }
+          if (otherBottom < targetBottom) {
+            otherRect.height = targetBottom - otherTop;
+          }
+
+          boundingRects.splice(i, 1);
+          break;
+        } else if (
+          targetTop === otherTop &&
+          targetRect.height === otherRect.height &&
+          !(otherRight < targetLeft) &&
+          !(otherLeft > targetRight)
+        ) {
+          // Adjacent horizontal rects; merge them.
+          if (otherLeft > targetLeft) {
+            otherRect.width += otherLeft - targetLeft;
+            otherRect.x = targetLeft;
+          }
+          if (otherRight < targetRight) {
+            otherRect.width = targetRight - otherLeft;
+          }
+
           boundingRects.splice(i, 1);
           break;
         }
       }
     }
   }
-
-  // TODO We may also want to combine rects that intersect or are adjacent.
-  // We could at least handle the most common cases (e.g. same in one dimension).
 
   return boundingRects;
 }
@@ -417,23 +469,23 @@ export function focusWithin(
     invariant(false, 'Test selector API is not supported by this renderer.');
   }
 
-  const root = findRootFiberForHostRoot(hostRoot);
+  const root = findFiberRootForHostRoot(hostRoot);
   const matchingFibers = findPaths(root, selectors);
 
   const stack = Array.from(matchingFibers);
   let index = 0;
   while (index < stack.length) {
-    const node = ((stack[index++]: any): Fiber);
-    if (node.tag === HostComponent) {
-      if (isHiddenSubtree(node)) {
-        continue;
-      }
-      if (setFocusIfFocusable(node.stateNode)) {
+    const fiber = ((stack[index++]: any): Fiber);
+    if (isHiddenSubtree(fiber)) {
+      continue;
+    }
+    if (fiber.tag === HostComponent) {
+      const node = fiber.stateNode;
+      if (setFocusIfFocusable(node)) {
         return true;
       }
     }
-
-    let child = node.child;
+    let child = fiber.child;
     while (child !== null) {
       stack.push(child);
       child = child.sibling;

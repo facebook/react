@@ -371,5 +371,10 @@
   "371": "The current renderer does not support test selectors. This error is likely caused by a bug in React. Please file an issue.",
   "372": "Test selector API is not supported by this renderer.",
   "373": "Invalid host root specified. Should be either a React container or a node with a testname attribute.",
-  "374": "Invalid selector type %s specified"
+  "374": "Invalid selector type %s specified",
+  "375": "The current renderer does not support test selectors. This error is likely caused by a bug in React. Please file an issue.",
+  "376": "Could not find React container within specified host subtree.",
+  "377": "Test selector API is not supported by this renderer.",
+  "378": "Invalid host root specified. Should be either a React container or a node with a testname attribute.",
+  "379": "Invalid selector type %s specified."
 }
