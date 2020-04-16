@@ -26,7 +26,7 @@ import {getNodeFromInstance} from '../../client/ReactDOMComponentTree';
 import {hasSelectionCapabilities} from '../../client/ReactInputSelection';
 import {DOCUMENT_NODE} from '../../shared/HTMLNodeType';
 import {isListeningToAllDependencies} from '../DOMEventListenerMap';
-import accumulateTwoPhaseListeners from '../accumulateTwoPhaseListeners';
+import {accumulateTwoPhaseDispatches} from '../DOMLegacyEventPluginSystem';
 
 const skipSelectionChangeEvent =
   canUseDOM && 'documentMode' in document && document.documentMode <= 11;
@@ -135,7 +135,7 @@ function constructSelectEvent(nativeEvent, nativeEventTarget) {
     syntheticEvent.type = 'select';
     syntheticEvent.target = activeElement;
 
-    accumulateTwoPhaseListeners(syntheticEvent);
+    accumulateTwoPhaseDispatches(syntheticEvent);
 
     return syntheticEvent;
   }
@@ -166,16 +166,11 @@ const SelectEventPlugin = {
     nativeEvent,
     nativeEventTarget,
     eventSystemFlags,
-    container,
   ) {
-    const containerOrDoc =
-      container || getEventTargetDocument(nativeEventTarget);
+    const doc = getEventTargetDocument(nativeEventTarget);
     // Track whether all listeners exists for this plugin. If none exist, we do
     // not extract events. See #3639.
-    if (
-      !containerOrDoc ||
-      !isListeningToAllDependencies('onSelect', containerOrDoc)
-    ) {
+    if (!doc || !isListeningToAllDependencies('onSelect', doc)) {
       return null;
     }
 
