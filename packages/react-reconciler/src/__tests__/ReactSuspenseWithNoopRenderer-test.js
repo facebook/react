@@ -3869,4 +3869,110 @@ describe('ReactSuspenseWithNoopRenderer', () => {
       expect(root).toMatchRenderedOutput(<span prop="b" />);
     });
   });
+
+  fit('repro', async () => {
+    const {useState, Suspense} = React;
+
+    let _setHiPri, _setNormalPri, _setIdlePri;
+    function App({}) {
+      const [hiPri, setHiPri] = useState("a");
+      _setHiPri = setHiPri;
+      const [normalPri, setNormalPri] = useState("a");
+      _setNormalPri = setNormalPri;
+      const [idlePri, setIdlePri] = useState("a");
+      _setIdlePri = setIdlePri;
+      return (
+        <>
+          <Text text={hiPri + ':' + normalPri + ':' + idlePri} />
+          <Reader text={normalPri} />
+        </>
+      );
+    }
+
+    function Reader({ text }) {
+      readText(text);
+      return (
+        <>
+          <Text text={text} />
+          <Suspense fallback={null}>
+            <AsyncText text={text + '_inner'} />
+          </Suspense>
+          <Text text={text} />
+        </>
+      );
+    }
+
+    await resolveText('a');
+
+    const root = ReactNoop.createRoot();
+    await ReactNoop.act(async () => {
+      root.render(
+        <Suspense fallback={<h1>Loading</h1>}>
+          <App />
+        </Suspense>
+      );
+    });
+    expect(Scheduler).toHaveYielded(['a:a:a', 'a', 'Suspend! [a_inner]', 'a']);
+    expect(root).toMatchRenderedOutput(
+      <>
+        <span prop="a:a:a" />
+        <span prop="a" />
+        <span prop="a" />
+      </>
+    );
+
+    await ReactNoop.act(async () => {
+      Scheduler.unstable_runWithPriority(
+        Scheduler.unstable_UserBlockingPriority,
+        () => _setHiPri('b'),
+      );
+      Scheduler.unstable_runWithPriority(
+        Scheduler.unstable_IdlePriority,
+        () => _setIdlePri('b'),
+      );
+
+      // Only the user blocking update (a -> b) is done. Don't do idle yet.
+      expect(Scheduler).toFlushAndYieldThrough(['b:a:a', 'a', 'a', 'Suspend! [a_inner]']);
+      expect(root).toMatchRenderedOutput(
+        <>
+          <span prop="b:a:a" />
+          <span prop="a" />
+          <span prop="a" />
+        </>
+      );
+
+      // Schedule an update at normal priority. It's blocked.
+      Scheduler.unstable_runWithPriority(
+        Scheduler.unstable_NormalPriority,
+        () => _setNormalPri('b'),
+      );
+      expect(Scheduler).toFlushAndYield(['b:b:a']);
+
+      // TODO: trigger the same situation where we leave this commit
+      // hanging and then its timeout gets canceled by a ping,
+      // and later this ping causes more yielding, and before one of
+      // those yields markRootSuspendedAtTime sets lastPingedTime to 0,
+      // as a result triggering the Idle bailout and not completing to "b:b:a".
+      // Note it's very easy to make the test just flush Idle work,
+      // but that wouldn't show anything.
+
+      // Ping
+      await resolveText('b');
+      expect(Scheduler).toHaveYielded(['Promise resolved [b]']);
+
+      // ...
+
+      // A failing case wouuld end with something like
+      expect(root).toMatchRenderedOutput(
+        <>
+          <span prop="b:a:a" />
+          <span prop="a" />
+          <span prop="a" />
+        </>
+      );
+      console.log('-- exiting act --')
+      // that also proves no further timeout flushes would commit anything
+      // until we fix the bug.
+    });
+  });
 });

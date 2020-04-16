@@ -575,6 +575,7 @@ function getNextRootExpirationTimeToWorkOn(root: FiberRoot): ExpirationTime {
       : nextKnownPendingLevel;
   if (nextLevel <= Idle && firstPendingTime !== nextLevel) {
     // Don't work on Idle/Never priority unless everything else is committed.
+    console.log('bailout')
     return NoWork;
   }
   return nextLevel;
@@ -899,6 +900,7 @@ function finishConcurrentRender(
           // The render is suspended, it hasn't timed out, and there's no
           // lower priority work to do. Instead of committing the fallback
           // immediately, wait for more data to arrive.
+          console.log('set timeout')
           root.timeoutHandle = scheduleTimeout(
             commitRoot.bind(null, root),
             msUntilTimeout,
@@ -1183,6 +1185,7 @@ function prepareFreshStack(root, expirationTime) {
 
   const timeoutHandle = root.timeoutHandle;
   if (timeoutHandle !== noTimeout) {
+    console.log('clear timeout')
     // The root previous suspended and scheduled a timeout to commit a fallback
     // state. Now that we have additional work, cancel the timeout.
     root.timeoutHandle = noTimeout;
