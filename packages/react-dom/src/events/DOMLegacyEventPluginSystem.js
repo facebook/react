@@ -15,6 +15,7 @@ import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
 import type {PluginModule} from 'legacy-events/PluginModuleType';
 import type {ReactSyntheticEvent} from 'legacy-events/ReactSyntheticEventType';
 import type {TopLevelType} from 'legacy-events/TopLevelEventTypes';
+import forEachAccumulated from 'legacy-events/forEachAccumulated';
 
 import {
   HostRoot,
@@ -45,6 +46,7 @@ import {
 } from './DOMTopLevelEventTypes';
 import {addTrappedEventListener} from './ReactDOMEventListener';
 import {batchedEventUpdates} from './ReactDOMUpdateBatching';
+import getListener from './getListener';
 
 /**
  * Summary of `DOMEventPluginSystem` event handling:
@@ -395,4 +397,204 @@ export function legacyTrapCapturedEvent(
     true,
   );
   listenerMap.set(topLevelType, {passive: undefined, listener});
+}
+
+function getParent(inst: Object | null): Object | null {
+  if (!inst) {
+    return null;
+  }
+  do {
+    inst = inst.return;
+    // TODO: If this is a HostRoot we might want to bail out.
+    // That is depending on if we want nested subtrees (layers) to bubble
+    // events to their parent. We could also go through parentNode on the
+    // host node but that wouldn't work for React Native and doesn't let us
+    // do the portal feature.
+  } while (inst && inst.tag !== HostComponent);
+  if (inst) {
+    return inst;
+  }
+  return null;
+}
+
+/**
+ * Simulates the traversal of a two-phase, capture/bubble event dispatch.
+ */
+function traverseTwoPhase(
+  inst: Object,
+  fn: Function,
+  arg: ReactSyntheticEvent,
+) {
+  const path = [];
+  while (inst) {
+    path.push(inst);
+    inst = getParent(inst);
+  }
+  let i;
+  for (i = path.length; i-- > 0; ) {
+    fn(path[i], 'captured', arg);
+  }
+  for (i = 0; i < path.length; i++) {
+    fn(path[i], 'bubbled', arg);
+  }
+}
+
+function listenerAtPhase(inst, event, propagationPhase) {
+  const registrationName =
+    event.dispatchConfig.phasedRegistrationNames[propagationPhase];
+  return getListener(inst, registrationName);
+}
+
+/**
+ * Return the lowest common ancestor of A and B, or null if they are in
+ * different trees.
+ */
+export function getLowestCommonAncestor(
+  instA: Object,
+  instB: Object,
+): Object | null {
+  let depthA = 0;
+  for (let tempA = instA; tempA; tempA = getParent(tempA)) {
+    depthA++;
+  }
+  let depthB = 0;
+  for (let tempB = instB; tempB; tempB = getParent(tempB)) {
+    depthB++;
+  }
+
+  // If A is deeper, crawl up.
+  while (depthA - depthB > 0) {
+    instA = getParent(instA);
+    depthA--;
+  }
+
+  // If B is deeper, crawl up.
+  while (depthB - depthA > 0) {
+    instB = getParent(instB);
+    depthB--;
+  }
+
+  // Walk in lockstep until we find a match.
+  let depth = depthA;
+  while (depth--) {
+    if (instA === instB || instA === instB.alternate) {
+      return instA;
+    }
+    instA = getParent(instA);
+    instB = getParent(instB);
+  }
+  return null;
+}
+
+/**
+ * Traverses the ID hierarchy and invokes the supplied `cb` on any IDs that
+ * should would receive a `mouseEnter` or `mouseLeave` event.
+ *
+ * Does not invoke the callback on the nearest common ancestor because nothing
+ * "entered" or "left" that element.
+ */
+export function traverseEnterLeave(
+  from: Object,
+  to: Object,
+  fn: Function,
+  argFrom: ReactSyntheticEvent,
+  argTo: ReactSyntheticEvent,
+) {
+  const common = from && to ? getLowestCommonAncestor(from, to) : null;
+  const pathFrom = [];
+  while (true) {
+    if (!from) {
+      break;
+    }
+    if (from === common) {
+      break;
+    }
+    const alternate = from.alternate;
+    if (alternate !== null && alternate === common) {
+      break;
+    }
+    pathFrom.push(from);
+    from = getParent(from);
+  }
+  const pathTo = [];
+  while (true) {
+    if (!to) {
+      break;
+    }
+    if (to === common) {
+      break;
+    }
+    const alternate = to.alternate;
+    if (alternate !== null && alternate === common) {
+      break;
+    }
+    pathTo.push(to);
+    to = getParent(to);
+  }
+  for (let i = 0; i < pathFrom.length; i++) {
+    fn(pathFrom[i], 'bubbled', argFrom);
+  }
+  for (let i = pathTo.length; i-- > 0; ) {
+    fn(pathTo[i], 'captured', argTo);
+  }
+}
+
+function accumulateDirectionalDispatches(inst, phase, event) {
+  if (__DEV__) {
+    if (!inst) {
+      console.error('Dispatching inst must not be null');
+    }
+  }
+  const listener = listenerAtPhase(inst, event, phase);
+  if (listener) {
+    event._dispatchListeners = accumulateInto(
+      event._dispatchListeners,
+      listener,
+    );
+    event._dispatchInstances = accumulateInto(event._dispatchInstances, inst);
+  }
+}
+
+function accumulateTwoPhaseDispatchesSingle(event) {
+  if (event && event.dispatchConfig.phasedRegistrationNames) {
+    traverseTwoPhase(event._targetInst, accumulateDirectionalDispatches, event);
+  }
+}
+
+/**
+ * Accumulates without regard to direction, does not look for phased
+ * registration names. Same as `accumulateDirectDispatchesSingle` but without
+ * requiring that the `dispatchMarker` be the same as the dispatched ID.
+ */
+function accumulateDispatches(
+  inst: Object,
+  ignoredDirection: ?boolean,
+  event: Object,
+): void {
+  if (inst && event && event.dispatchConfig.registrationName) {
+    const registrationName = event.dispatchConfig.registrationName;
+    const listener = getListener(inst, registrationName);
+    if (listener) {
+      event._dispatchListeners = accumulateInto(
+        event._dispatchListeners,
+        listener,
+      );
+      event._dispatchInstances = accumulateInto(event._dispatchInstances, inst);
+    }
+  }
+}
+
+export function accumulateTwoPhaseDispatches(
+  events: ReactSyntheticEvent | Array<ReactSyntheticEvent>,
+): void {
+  forEachAccumulated(events, accumulateTwoPhaseDispatchesSingle);
+}
+
+export function accumulateEnterLeaveDispatches(
+  leave: ReactSyntheticEvent,
+  enter: ReactSyntheticEvent,
+  from: Fiber,
+  to: Fiber,
+) {
+  traverseEnterLeave(from, to, accumulateDispatches, leave, enter);
 }
