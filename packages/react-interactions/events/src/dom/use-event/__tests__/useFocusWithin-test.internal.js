@@ -402,6 +402,131 @@ describe.each(table)(`useFocus`, hasPointerEvents => {
     });
 
     // @gate experimental
+    it('is called after a nested FocusRegion is unmounted', () => {
+      const TestScope = React.unstable_createScope();
+      const testScopeQuery = (type, props) => true;
+      const buttonRef = React.createRef();
+      const button2Ref = React.createRef();
+      const nestedButtonRef = React.createRef();
+
+      const FocusRegion = ({autoFocus, children}) => {
+        const scopeRef = React.useRef(null);
+        const prevElementsRef = React.useRef(null);
+        useFocusWithin(scopeRef, {
+          onBeforeBlurWithin(event) {
+            const scope = scopeRef.current;
+            if (scope !== null) {
+              const detachedNode = event.target;
+              const scopedNodes = scope.DO_NOT_USE_queryAllNodes(
+                (type, props, instance) =>
+                  detachedNode === instance ||
+                  testScopeQuery(type, props, instance),
+              );
+              if (scopedNodes === null) {
+                return;
+              }
+              // Build up arrays of nodes that are before to the detached node
+              const prevRecoveryElements = [];
+              for (let i = 0; i < scopedNodes.length; i++) {
+                const node = scopedNodes[i];
+                if (node === detachedNode) {
+                  break;
+                }
+                prevRecoveryElements.push(node);
+              }
+              // Store this in the ref to use later
+              prevElementsRef.current = {
+                recovery: prevRecoveryElements,
+                all: scopedNodes,
+              };
+            }
+          },
+          onAfterBlurWithin(event) {
+            const scope = scopeRef.current;
+            const prevElements = prevElementsRef.current;
+
+            if (scope !== null && prevElements !== null) {
+              const {recovery, all} = prevElements;
+              const scopedNodes = scope.DO_NOT_USE_queryAllNodes(
+                testScopeQuery,
+              );
+              if (scopedNodes !== null) {
+                const scopeNodesSet = new Set(scopedNodes);
+                const allPreviousNodesSet = new Set(all);
+
+                // Look for closest previous node
+                for (let i = recovery.length - 1; i >= 0; i--) {
+                  const prevRecoveryElement = recovery[i];
+                  // If we find a match, focus nearby and exit early
+                  if (scopeNodesSet.has(prevRecoveryElement)) {
+                    const prevElementIndex = scopedNodes.indexOf(
+                      prevRecoveryElement,
+                    );
+                    const replaceIndex = prevElementIndex + 1;
+                    if (replaceIndex < scopedNodes.length) {
+                      // Focus on the element that 'replaced' the previously focused element
+                      const possibleReplacedNode = scopedNodes[replaceIndex];
+                      if (!allPreviousNodesSet.has(possibleReplacedNode)) {
+                        possibleReplacedNode.focus();
+                        return;
+                      }
+                    }
+                    // If there's no new focusable element, fallback to focusing
+                    // on the previous recovery element
+                    prevRecoveryElement.focus();
+                    return;
+                  }
+                }
+                // Otherwise focus the first element
+                scopedNodes[0].focus();
+              }
+            }
+          },
+        });
+
+        const attemptAutofocus = React.useCallback(() => {
+          const scope = scopeRef.current;
+          const activeElement = document.activeElement;
+          if (
+            scope !== null &&
+            autoFocus === true &&
+            (!activeElement || !scope.containsNode(activeElement))
+          ) {
+            const scopedNodes = scope.DO_NOT_USE_queryAllNodes(testScopeQuery);
+            if (scopedNodes !== null) {
+              scopedNodes[0].focus();
+            }
+          }
+        }, [autoFocus]);
+        React.useLayoutEffect(attemptAutofocus, [attemptAutofocus]);
+        React.useEffect(attemptAutofocus, [attemptAutofocus]);
+
+        return <TestScope ref={scopeRef}>{children}</TestScope>;
+      };
+
+      const Test = ({showNestedRegion}) => (
+        <div>
+          <FocusRegion autoFocus={true}>
+            <button ref={buttonRef}>Press me!</button>
+            {showNestedRegion ? (
+              <FocusRegion autoFocus={true}>
+                <button ref={nestedButtonRef}>Press me 2!</button>
+              </FocusRegion>
+            ) : null}
+            <button ref={button2Ref}>Press me!</button>
+          </FocusRegion>
+        </div>
+      );
+
+      ReactDOM.render(<Test showNestedRegion={false} />, container);
+      expect(document.activeElement).toBe(buttonRef.current);
+      ReactDOM.render(<Test showNestedRegion={true} />, container);
+      expect(document.activeElement).toBe(nestedButtonRef.current);
+      ReactDOM.render(<Test showNestedRegion={false} />, container);
+      expect(document.activeElement).toBe(buttonRef.current);
+    });
+
+    // @gate experimental
     it('is called after a focused suspended element is hidden', () => {
       const Suspense = React.Suspense;
       let suspend = false;
