@@ -15,7 +15,12 @@ import type {ReactRenderer} from './types';
 
 const APPEND_STACK_TO_METHODS = ['error', 'trace', 'warn'];
 
-const FRAME_REGEX = /\n {4}in /;
+// React's custom built component stack strings match "\s{4}in"
+// Chrome's prefix matches "\s{4}at"
+const PREFIX_REGEX = /\s{4}(in|at)\s{1}/;
+// Firefox and Safari have no prefix ("")
+// but we can fallback to looking for location info (e.g. "foo.js:12:345")
+const ROW_COLUMN_NUMBER_REGEX = /:\d+:\d+$/;
 
 const injectedRenderers: Map<
   ReactRenderer,
@@ -94,8 +99,11 @@ export function patch(): void {
         try {
           // If we are ever called with a string that already has a component stack, e.g. a React error/warning,
           // don't append a second stack.
+          const lastArg = args.length > 0 ? args[args.length - 1] : null;
           const alreadyHasComponentStack =
-            args.length > 0 && FRAME_REGEX.exec(args[args.length - 1]);
+            lastArg !== null &&
+            (PREFIX_REGEX.exec(lastArg) ||
+              ROW_COLUMN_NUMBER_REGEX.exec(lastArg));
 
           if (!alreadyHasComponentStack) {
             // If there's a component stack for at least one of the injected renderers, append it.
