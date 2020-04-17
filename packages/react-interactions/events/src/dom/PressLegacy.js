@@ -227,7 +227,7 @@ function dispatchEvent(
   const target = ((state.pressTarget: any): Element | Document);
   const pointerType = state.pointerType;
   const defaultPrevented =
-    (event != null && event.nativeEvent.defaultPrevented === true);
+    event != null && event.nativeEvent.defaultPrevented === true;
   const touchEvent = state.touchEvent;
   const syntheticEvent = createPressEvent(
     context,
