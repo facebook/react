@@ -3869,4 +3869,53 @@ describe('ReactSuspenseWithNoopRenderer', () => {
       expect(root).toMatchRenderedOutput(<span prop="b" />);
     });
   });
+
+  it('regression: #18657', async () => {
+    const {useState} = React;
+
+    let setText;
+    function App() {
+      const [text, _setText] = useState('A');
+      setText = _setText;
+      return <AsyncText text={text} />;
+    }
+
+    const root = ReactNoop.createRoot();
+    await ReactNoop.act(async () => {
+      await resolveText('A');
+      root.render(
+        <Suspense fallback={<Text text="Loading..." />}>
+          <App />
+        </Suspense>,
+      );
+    });
+    expect(Scheduler).toHaveYielded(['A']);
+    expect(root).toMatchRenderedOutput(<span prop="A" />);
+
+    await ReactNoop.act(async () => {
+      setText('B');
+      Scheduler.unstable_runWithPriority(
+        Scheduler.unstable_IdlePriority,
+        () => {
+          setText('B');
+        },
+      );
+      // Suspend the first update. The second update doesn't run because it has
+      // Idle priority.
+      expect(Scheduler).toFlushAndYield(['Suspend! [B]', 'Loading...']);
+
+      // Commit the fallback. Now we'll try working on Idle.
+      jest.runAllTimers();
+
+      // It also suspends.
+      expect(Scheduler).toFlushAndYield(['Suspend! [B]']);
+    });
+
+    await ReactNoop.act(async () => {
+      setText('B');
+      await resolveText('B');
+    });
+    expect(Scheduler).toHaveYielded(['Promise resolved [B]', 'B']);
+    expect(root).toMatchRenderedOutput(<span prop="B" />);
+  });
 });
