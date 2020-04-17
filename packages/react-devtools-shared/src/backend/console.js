@@ -27,6 +27,7 @@ const injectedRenderers: Map<
   {|
     getCurrentFiber: () => Fiber | null,
     getDisplayNameForFiber: (fiber: Fiber) => string | null,
+    getStackByFiberInDevAndProd?: (fiber: Object) => string,
   |},
 > = new Map();
 
@@ -54,7 +55,12 @@ export function dangerous_setTargetConsoleForTesting(
 // These internals will be used if the console is patched.
 // Injecting them separately allows the console to easily be patched or un-patched later (at runtime).
 export function registerRenderer(renderer: ReactRenderer): void {
-  const {getCurrentFiber, findFiberByHostInstance, version} = renderer;
+  const {
+    getCurrentFiber,
+    getStackByFiberInDevAndProd,
+    findFiberByHostInstance,
+    version,
+  } = renderer;
 
   // Ignore React v15 and older because they don't expose a component stack anyway.
   if (typeof findFiberByHostInstance !== 'function') {
@@ -67,6 +73,7 @@ export function registerRenderer(renderer: ReactRenderer): void {
     injectedRenderers.set(renderer, {
       getCurrentFiber,
       getDisplayNameForFiber,
+      getStackByFiberInDevAndProd,
     });
   }
 }
@@ -112,22 +119,29 @@ export function patch(): void {
             for (const {
               getCurrentFiber,
               getDisplayNameForFiber,
+              getStackByFiberInDevAndProd,
             } of injectedRenderers.values()) {
               let current: ?Fiber = getCurrentFiber();
               let ownerStack: string = '';
-              while (current != null) {
-                const name = getDisplayNameForFiber(current);
-                const owner = current._debugOwner;
-                const ownerName =
-                  owner != null ? getDisplayNameForFiber(owner) : null;
+              if (current !== null) {
+                if (typeof getStackByFiberInDevAndProd === 'function') {
+                  ownerStack = getStackByFiberInDevAndProd(current);
+                } else {
+                  while (current != null) {
+                    const name = getDisplayNameForFiber(current);
+                    const owner = current._debugOwner;
+                    const ownerName =
+                      owner != null ? getDisplayNameForFiber(owner) : null;
 
-                ownerStack += describeComponentFrame(
-                  name,
-                  current._debugSource,
-                  ownerName,
-                );
+                    ownerStack += describeComponentFrame(
+                      name,
+                      current._debugSource,
+                      ownerName,
+                    );
 
-                current = owner;
+                    current = owner;
+                  }
+                }
               }
 
               if (ownerStack !== '') {

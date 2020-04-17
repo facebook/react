@@ -140,7 +140,7 @@ describe('console', () => {
         <Child />
       </Intermediate>
     );
-    const Child = () => {
+    const Child = props => {
       fakeConsole.error('error');
       fakeConsole.log('log');
       fakeConsole.warn('warn');
@@ -149,20 +149,31 @@ describe('console', () => {
 
     act(() => ReactDOM.render(<Parent />, document.createElement('div')));
 
-    expect(mockLog).toHaveBeenCalledTimes(1);
+    // TRICKY DevTools console override re-renders the component to intentionally trigger an error,
+    // in which case all of the mock functions will be called an additional time.
+
+    expect(mockError).toHaveBeenCalledTimes(2);
+    expect(mockError.mock.calls[0]).toHaveLength(1);
+    expect(mockError.mock.calls[0][0]).toBe('error');
+    expect(mockError.mock.calls[1]).toHaveLength(2);
+    expect(mockError.mock.calls[1][0]).toBe('error');
+    expect(normalizeCodeLocInfo(mockError.mock.calls[1][1])).toBe(
+      '\n    in Child (at **)\n    in Intermediate (at **)\n    in Parent (at **)',
+    );
+
+    expect(mockLog).toHaveBeenCalledTimes(2);
     expect(mockLog.mock.calls[0]).toHaveLength(1);
     expect(mockLog.mock.calls[0][0]).toBe('log');
-    expect(mockWarn).toHaveBeenCalledTimes(1);
-    expect(mockWarn.mock.calls[0]).toHaveLength(2);
+    expect(mockLog.mock.calls[1]).toHaveLength(1);
+    expect(mockLog.mock.calls[1][0]).toBe('log');
+
+    expect(mockWarn).toHaveBeenCalledTimes(2);
+    expect(mockWarn.mock.calls[0]).toHaveLength(1);
     expect(mockWarn.mock.calls[0][0]).toBe('warn');
-    expect(normalizeCodeLocInfo(mockWarn.mock.calls[0][1])).toEqual(
-      '\n    in Child (at **)\n    in Parent (at **)',
-    );
-    expect(mockError).toHaveBeenCalledTimes(1);
-    expect(mockError.mock.calls[0]).toHaveLength(2);
-    expect(mockError.mock.calls[0][0]).toBe('error');
-    expect(normalizeCodeLocInfo(mockError.mock.calls[0][1])).toBe(
-      '\n    in Child (at **)\n    in Parent (at **)',
+    expect(mockWarn.mock.calls[1]).toHaveLength(2);
+    expect(mockWarn.mock.calls[1][0]).toBe('warn');
+    expect(normalizeCodeLocInfo(mockWarn.mock.calls[1][1])).toEqual(
+      '\n    in Child (at **)\n    in Intermediate (at **)\n    in Parent (at **)',
     );
   });
 
@@ -198,23 +209,23 @@ describe('console', () => {
     expect(mockWarn.mock.calls[0]).toHaveLength(2);
     expect(mockWarn.mock.calls[0][0]).toBe('active warn');
     expect(normalizeCodeLocInfo(mockWarn.mock.calls[0][1])).toEqual(
-      '\n    in Child (at **)\n    in Parent (at **)',
+      '\n    in Child (at **)\n    in Intermediate (at **)\n    in Parent (at **)',
     );
     expect(mockWarn.mock.calls[1]).toHaveLength(2);
     expect(mockWarn.mock.calls[1][0]).toBe('passive warn');
     expect(normalizeCodeLocInfo(mockWarn.mock.calls[1][1])).toEqual(
-      '\n    in Child (at **)\n    in Parent (at **)',
+      '\n    in Child (at **)\n    in Intermediate (at **)\n    in Parent (at **)',
     );
     expect(mockError).toHaveBeenCalledTimes(2);
     expect(mockError.mock.calls[0]).toHaveLength(2);
     expect(mockError.mock.calls[0][0]).toBe('active error');
     expect(normalizeCodeLocInfo(mockError.mock.calls[0][1])).toBe(
-      '\n    in Child (at **)\n    in Parent (at **)',
+      '\n    in Child (at **)\n    in Intermediate (at **)\n    in Parent (at **)',
     );
     expect(mockError.mock.calls[1]).toHaveLength(2);
     expect(mockError.mock.calls[1][0]).toBe('passive error');
     expect(normalizeCodeLocInfo(mockError.mock.calls[1][1])).toBe(
-      '\n    in Child (at **)\n    in Parent (at **)',
+      '\n    in Child (at **)\n    in Intermediate (at **)\n    in Parent (at **)',
     );
   });
 
@@ -254,23 +265,23 @@ describe('console', () => {
     expect(mockWarn.mock.calls[0]).toHaveLength(2);
     expect(mockWarn.mock.calls[0][0]).toBe('didMount warn');
     expect(normalizeCodeLocInfo(mockWarn.mock.calls[0][1])).toEqual(
-      '\n    in Child (at **)\n    in Parent (at **)',
+      '\n    in Child (at **)\n    in Intermediate (at **)\n    in Parent (at **)',
     );
     expect(mockWarn.mock.calls[1]).toHaveLength(2);
     expect(mockWarn.mock.calls[1][0]).toBe('didUpdate warn');
     expect(normalizeCodeLocInfo(mockWarn.mock.calls[1][1])).toEqual(
-      '\n    in Child (at **)\n    in Parent (at **)',
+      '\n    in Child (at **)\n    in Intermediate (at **)\n    in Parent (at **)',
     );
     expect(mockError).toHaveBeenCalledTimes(2);
     expect(mockError.mock.calls[0]).toHaveLength(2);
     expect(mockError.mock.calls[0][0]).toBe('didMount error');
     expect(normalizeCodeLocInfo(mockError.mock.calls[0][1])).toBe(
-      '\n    in Child (at **)\n    in Parent (at **)',
+      '\n    in Child (at **)\n    in Intermediate (at **)\n    in Parent (at **)',
     );
     expect(mockError.mock.calls[1]).toHaveLength(2);
     expect(mockError.mock.calls[1][0]).toBe('didUpdate error');
     expect(normalizeCodeLocInfo(mockError.mock.calls[1][1])).toBe(
-      '\n    in Child (at **)\n    in Parent (at **)',
+      '\n    in Child (at **)\n    in Intermediate (at **)\n    in Parent (at **)',
     );
   });
 
@@ -303,13 +314,13 @@ describe('console', () => {
     expect(mockWarn.mock.calls[0]).toHaveLength(2);
     expect(mockWarn.mock.calls[0][0]).toBe('warn');
     expect(normalizeCodeLocInfo(mockWarn.mock.calls[0][1])).toEqual(
-      '\n    in Child (at **)\n    in Parent (at **)',
+      '\n    in Child (at **)\n    in Intermediate (at **)\n    in Parent (at **)',
     );
     expect(mockError).toHaveBeenCalledTimes(1);
     expect(mockError.mock.calls[0]).toHaveLength(2);
     expect(mockError.mock.calls[0][0]).toBe('error');
     expect(normalizeCodeLocInfo(mockError.mock.calls[0][1])).toBe(
-      '\n    in Child (at **)\n    in Parent (at **)',
+      '\n    in Child (at **)\n    in Intermediate (at **)\n    in Parent (at **)',
     );
   });
 
@@ -333,16 +344,19 @@ describe('console', () => {
     patchConsole();
     act(() => ReactDOM.render(<Child />, document.createElement('div')));
 
-    expect(mockWarn).toHaveBeenCalledTimes(2);
-    expect(mockWarn.mock.calls[1]).toHaveLength(2);
-    expect(mockWarn.mock.calls[1][0]).toBe('warn');
-    expect(normalizeCodeLocInfo(mockWarn.mock.calls[1][1])).toEqual(
+    // TRICKY DevTools console override re-renders the component to intentionally trigger an error,
+    // in which case all of the mock functions will be called an additional time.
+
+    expect(mockWarn).toHaveBeenCalledTimes(3);
+    expect(mockWarn.mock.calls[2]).toHaveLength(2);
+    expect(mockWarn.mock.calls[2][0]).toBe('warn');
+    expect(normalizeCodeLocInfo(mockWarn.mock.calls[2][1])).toEqual(
       '\n    in Child (at **)',
     );
-    expect(mockError).toHaveBeenCalledTimes(2);
-    expect(mockError.mock.calls[1]).toHaveLength(2);
-    expect(mockError.mock.calls[1][0]).toBe('error');
-    expect(normalizeCodeLocInfo(mockError.mock.calls[1][1])).toBe(
+    expect(mockError).toHaveBeenCalledTimes(3);
+    expect(mockError.mock.calls[2]).toHaveLength(2);
+    expect(mockError.mock.calls[2][0]).toBe('error');
+    expect(normalizeCodeLocInfo(mockError.mock.calls[2][1])).toBe(
       '\n    in Child (at **)',
     );
   });
