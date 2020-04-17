@@ -22,7 +22,7 @@ import {DiscreteEvent} from 'shared/ReactTypes';
  */
 
 type FocusEvent = {|
-  relatedTarget: null | Element | Document,
+  isTargetAttached: boolean,
   target: Element | Document,
   type: FocusEventType | FocusWithinEventType,
   pointerType: PointerType,
@@ -53,7 +53,6 @@ type FocusEventType = 'focus' | 'blur' | 'focuschange' | 'focusvisiblechange';
 type FocusWithinProps = {
   disabled?: boolean,
   onFocusWithin?: (e: FocusEvent) => void,
-  onAfterBlurWithin?: (e: FocusEvent) => void,
   onBeforeBlurWithin?: (e: FocusEvent) => void,
   onBlurWithin?: (e: FocusEvent) => void,
   onFocusWithinChange?: boolean => void,
@@ -66,8 +65,7 @@ type FocusWithinEventType =
   | 'focuswithinchange'
   | 'blurwithin'
   | 'focuswithin'
-  | 'beforeblurwithin'
-  | 'afterblurwithin';
+  | 'beforeblurwithin';
 
 /**
  * Shared between Focus and FocusWithin
@@ -118,7 +116,8 @@ const focusVisibleEvents = hasPointerEvents
 
 const targetEventTypes = ['focus', 'blur', 'beforeblur', ...focusVisibleEvents];
 
-const rootEventTypes = ['afterblur'];
+// Used only for the blur "detachedTarget" logic
+const rootEventTypes = ['blur'];
 
 function addWindowEventListener(types, callback, options) {
   types.forEach(type => {
@@ -193,10 +192,10 @@ function createFocusEvent(
   type: FocusEventType | FocusWithinEventType,
   target: Element | Document,
   pointerType: PointerType,
-  relatedTarget: null | Element | Document,
+  isTargetAttached: boolean,
 ): FocusEvent {
   return {
-    relatedTarget,
+    isTargetAttached,
     target,
     type,
     pointerType,
@@ -298,7 +297,7 @@ function dispatchFocusEvents(
       'focus',
       target,
       pointerType,
-      null,
+      true,
     );
     context.dispatchEvent(syntheticEvent, onFocus, DiscreteEvent);
   }
@@ -322,7 +321,7 @@ function dispatchBlurEvents(
       'blur',
       target,
       pointerType,
-      null,
+      true,
     );
     context.dispatchEvent(syntheticEvent, onBlur, DiscreteEvent);
   }
@@ -347,7 +346,7 @@ function dispatchFocusWithinEvents(
       'focuswithin',
       target,
       pointerType,
-      null,
+      true,
     );
     context.dispatchEvent(syntheticEvent, onFocusWithin, DiscreteEvent);
   }
@@ -362,36 +361,16 @@ function dispatchBlurWithinEvents(
   const pointerType = state.pointerType;
   const target = ((state.focusTarget: any): Element | Document) || event.target;
   const onBlurWithin = (props.onBlurWithin: any);
+  const isTargetAttached = state.detachedTarget === null;
   if (isFunction(onBlurWithin)) {
     const syntheticEvent = createFocusEvent(
       context,
       'blurwithin',
       target,
       pointerType,
-      null,
+      isTargetAttached,
     );
     context.dispatchEvent(syntheticEvent, onBlurWithin, DiscreteEvent);
-  }
-}
-
-function dispatchAfterBlurWithinEvents(
-  context: ReactDOMResponderContext,
-  event: ReactDOMResponderEvent,
-  props: FocusWithinProps,
-  state: FocusState,
-) {
-  const pointerType = state.pointerType;
-  const onAfterBlurWithin = (props.onAfterBlurWithin: any);
-  const relatedTarget = state.detachedTarget;
-  if (isFunction(onAfterBlurWithin) && relatedTarget !== null) {
-    const syntheticEvent = createFocusEvent(
-      context,
-      'afterblurwithin',
-      relatedTarget,
-      pointerType,
-      relatedTarget,
-    );
-    context.dispatchEvent(syntheticEvent, onAfterBlurWithin, DiscreteEvent);
   }
 }
 
@@ -637,7 +616,7 @@ const focusWithinResponderImpl = {
             'beforeblurwithin',
             event.target,
             state.pointerType,
-            null,
+            true,
           );
           state.detachedTarget = event.target;
           context.dispatchEvent(
@@ -681,13 +660,10 @@ const focusWithinResponderImpl = {
     props: FocusWithinProps,
     state: FocusState,
   ): void {
-    if (event.type === 'afterblur') {
+    if (event.type === 'blur') {
       const detachedTarget = state.detachedTarget;
-      if (
-        detachedTarget !== null &&
-        detachedTarget === event.nativeEvent.relatedTarget
-      ) {
-        dispatchAfterBlurWithinEvents(context, event, props, state);
+      if (detachedTarget !== null && detachedTarget === event.target) {
+        dispatchBlurWithinEvents(context, event, props, state);
         state.detachedTarget = null;
         if (state.addedRootEvents) {
           state.addedRootEvents = false;

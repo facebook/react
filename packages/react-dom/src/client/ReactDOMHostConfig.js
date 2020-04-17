@@ -62,6 +62,7 @@ import {REACT_OPAQUE_ID_TYPE} from 'shared/ReactSymbols';
 import {
   mountEventResponder,
   unmountEventResponder,
+  DEPRECATED_dispatchEventForResponderEventSystem,
 } from '../events/DeprecatedDOMEventResponderSystem';
 import {retryIfBlockedOn} from '../events/ReactDOMEventReplaying';
 
@@ -73,6 +74,8 @@ import {
   enableScopeAPI,
 } from 'shared/ReactFeatureFlags';
 import {
+  RESPONDER_EVENT_SYSTEM,
+  IS_PASSIVE,
   PLUGIN_EVENT_SYSTEM,
   USE_EVENT_SYSTEM,
 } from '../events/EventSystemFlags';
@@ -525,9 +528,22 @@ function createEvent(type: TopLevelType): Event {
 }
 
 function dispatchBeforeDetachedBlur(target: HTMLElement): void {
+  const targetInstance = getClosestInstanceFromNode(target);
   ((selectionInformation: any): SelectionInformation).activeElementDetached = target;
 
-  if (enableDeprecatedFlareAPI || enableUseEventAPI) {
+  if (enableDeprecatedFlareAPI) {
+    DEPRECATED_dispatchEventForResponderEventSystem(
+      'beforeblur',
+      targetInstance,
+      ({
+        target,
+        timeStamp: Date.now(),
+      }: any),
+      target,
+      RESPONDER_EVENT_SYSTEM | IS_PASSIVE,
+    );
+  }
+  if (enableUseEventAPI) {
     const event = createEvent(TOP_BEFORE_BLUR);
     // Dispatch "beforeblur" directly on the target,
     // so it gets picked up by the event system and
@@ -537,7 +553,20 @@ function dispatchBeforeDetachedBlur(target: HTMLElement): void {
 }
 
 function dispatchAfterDetachedBlur(target: HTMLElement): void {
-  if (enableDeprecatedFlareAPI || enableUseEventAPI) {
+  if (enableDeprecatedFlareAPI) {
+    DEPRECATED_dispatchEventForResponderEventSystem(
+      'blur',
+      null,
+      ({
+        isTargetAttached: false,
+        target,
+        timeStamp: Date.now(),
+      }: any),
+      target,
+      RESPONDER_EVENT_SYSTEM | IS_PASSIVE,
+    );
+  }
+  if (enableUseEventAPI) {
     const event = createEvent(TOP_AFTER_BLUR);
     // So we know what was detached, make the relatedTarget the
     // detached target on the "afterblur" event.
