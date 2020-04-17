@@ -555,10 +555,11 @@ function dispatchBeforeDetachedBlur(target: HTMLElement): void {
 function dispatchAfterDetachedBlur(target: HTMLElement): void {
   if (enableDeprecatedFlareAPI) {
     DEPRECATED_dispatchEventForResponderEventSystem(
-      'afterblur',
+      'blur',
       null,
       ({
-        relatedTarget: target,
+        isTargetAttached: false,
+        target,
         timeStamp: Date.now(),
       }: any),
       target,
