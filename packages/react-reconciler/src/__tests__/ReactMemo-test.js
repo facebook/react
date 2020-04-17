@@ -497,5 +497,21 @@ describe('memo', () => {
         expect(root).toMatchRenderedOutput('1');
       });
     });
+
+    it('inner component of react memo should have _debugOwner set', async () => {
+      const InComponent = React.forwardRef((props, ref) => <div ref={ref} />);
+      const Outer = React.memo(InComponent);
+      const App = () => {
+        const ref = React.createRef();
+        return <Outer ref={ref}>Click me! </Outer>;
+      };
+      ReactNoop.render(<App />);
+      expect(Scheduler).toFlushWithoutYielding();
+      const innerFiber = ReactNoop.getRoot().current.child.child.child;
+      const innerFiberOwner = innerFiber._debugOwner;
+      expect(innerFiber.type.$$typeof).toBe(Symbol.for('react.forward_ref'));
+      expect(innerFiberOwner).not.toBeNull();
+      expect(innerFiberOwner.type.$$typeof).toBe(Symbol.for('react.memo'));
+    });
   }
 });

@@ -429,6 +429,9 @@ function updateMemoComponent(
     child.ref = workInProgress.ref;
     child.return = workInProgress;
     workInProgress.child = child;
+    if (__DEV__) {
+      child._debugOwner = workInProgress;
+    }
     return child;
   }
   if (__DEV__) {
