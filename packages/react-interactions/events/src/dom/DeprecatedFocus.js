@@ -381,13 +381,14 @@ function dispatchAfterBlurWithinEvents(
   state: FocusState,
 ) {
   const pointerType = state.pointerType;
+  const target = ((state.focusTarget: any): Element | Document) || event.target;
   const onAfterBlurWithin = (props.onAfterBlurWithin: any);
   const relatedTarget = state.detachedTarget;
-  if (isFunction(onAfterBlurWithin) && relatedTarget !== null) {
+  if (isFunction(onAfterBlurWithin)) {
     const syntheticEvent = createFocusEvent(
       context,
       'afterblurwithin',
-      relatedTarget,
+      target,
       pointerType,
       relatedTarget,
     );
@@ -683,10 +684,7 @@ const focusWithinResponderImpl = {
   ): void {
     if (event.type === 'afterblur') {
       const detachedTarget = state.detachedTarget;
-      if (
-        detachedTarget !== null &&
-        detachedTarget === event.nativeEvent.relatedTarget
-      ) {
+      if (detachedTarget !== null && detachedTarget === event.target) {
         dispatchAfterBlurWithinEvents(context, event, props, state);
         state.detachedTarget = null;
         if (state.addedRootEvents) {
