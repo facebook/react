@@ -1681,11 +1681,7 @@ function getRemainingWorkInPrimaryTree(
     // This boundary already timed out. Check if this render includes the level
     // that previously suspended.
     const baseTime = currentSuspenseState.baseTime;
-    if (
-      baseTime !== NoWork &&
-      baseTime < renderExpirationTime &&
-      baseTime > currentChildExpirationTime
-    ) {
+    if (baseTime !== NoWork && baseTime < renderExpirationTime) {
       // There's pending work at a lower level that might now be unblocked.
       return baseTime;
     }
