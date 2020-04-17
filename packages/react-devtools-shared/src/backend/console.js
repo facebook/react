@@ -107,7 +107,10 @@ export function patch(): void {
             for (const {getCurrentFiber} of injectedRenderers.values()) {
               const current: ?Fiber = getCurrentFiber();
               if (current != null) {
-                args.push(getStackByFiberInDevAndProd(current));
+                const componentStack = getStackByFiberInDevAndProd(current);
+                if (componentStack !== '') {
+                  args.push(componentStack);
+                }
                 break;
               }
             }

@@ -35,11 +35,12 @@ module.exports = {
     'react-dom': 'react-dom',
     'react-is': 'react-is',
     scheduler: 'scheduler',
-    'shared/ReactFeatureFlags': 'shared/forks/ReactFeatureFlags.devtools',
   },
   plugins: [
     new DefinePlugin({
       __DEV__,
+      __PROFILE__: false,
+      __EXPERIMENTAL__: true,
       'process.env.DEVTOOLS_VERSION': `"${DEVTOOLS_VERSION}"`,
       'process.env.GITHUB_URL': `"${GITHUB_URL}"`,
       'process.env.NODE_ENV': `"${NODE_ENV}"`,

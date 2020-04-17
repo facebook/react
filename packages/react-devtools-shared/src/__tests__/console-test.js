@@ -114,7 +114,7 @@ describe('console', () => {
   });
 
   it('should not append multiple stacks', () => {
-    const Child = () => {
+    const Child = ({children}) => {
       fakeConsole.warn('warn\n    in Child (at fake.js:123)');
       fakeConsole.error('error', '\n    in Child (at fake.js:123)');
       return null;
@@ -135,12 +135,12 @@ describe('console', () => {
 
   it('should append component stacks to errors and warnings logged during render', () => {
     const Intermediate = ({children}) => children;
-    const Parent = () => (
+    const Parent = ({children}) => (
       <Intermediate>
         <Child />
       </Intermediate>
     );
-    const Child = () => {
+    const Child = ({children}) => {
       fakeConsole.error('error');
       fakeConsole.log('log');
       fakeConsole.warn('warn');
@@ -149,42 +149,31 @@ describe('console', () => {
 
     act(() => ReactDOM.render(<Parent />, document.createElement('div')));
 
-    // TRICKY DevTools console override re-renders the component to intentionally trigger an error,
-    // in which case all of the mock functions will be called an additional time.
-
-    expect(mockError).toHaveBeenCalledTimes(2);
-    expect(mockError.mock.calls[0]).toHaveLength(1);
-    expect(mockError.mock.calls[0][0]).toBe('error');
-    expect(mockError.mock.calls[1]).toHaveLength(2);
-    expect(mockError.mock.calls[1][0]).toBe('error');
-    expect(normalizeCodeLocInfo(mockError.mock.calls[1][1])).toBe(
-      '\n    in Child (at **)\n    in Intermediate (at **)\n    in Parent (at **)',
-    );
-
-    expect(mockLog).toHaveBeenCalledTimes(2);
+    expect(mockLog).toHaveBeenCalledTimes(1);
     expect(mockLog.mock.calls[0]).toHaveLength(1);
     expect(mockLog.mock.calls[0][0]).toBe('log');
-    expect(mockLog.mock.calls[1]).toHaveLength(1);
-    expect(mockLog.mock.calls[1][0]).toBe('log');
-
-    expect(mockWarn).toHaveBeenCalledTimes(2);
-    expect(mockWarn.mock.calls[0]).toHaveLength(1);
+    expect(mockWarn).toHaveBeenCalledTimes(1);
+    expect(mockWarn.mock.calls[0]).toHaveLength(2);
     expect(mockWarn.mock.calls[0][0]).toBe('warn');
-    expect(mockWarn.mock.calls[1]).toHaveLength(2);
-    expect(mockWarn.mock.calls[1][0]).toBe('warn');
-    expect(normalizeCodeLocInfo(mockWarn.mock.calls[1][1])).toEqual(
+    expect(normalizeCodeLocInfo(mockWarn.mock.calls[0][1])).toEqual(
+      '\n    in Child (at **)\n    in Intermediate (at **)\n    in Parent (at **)',
+    );
+    expect(mockError).toHaveBeenCalledTimes(1);
+    expect(mockError.mock.calls[0]).toHaveLength(2);
+    expect(mockError.mock.calls[0][0]).toBe('error');
+    expect(normalizeCodeLocInfo(mockError.mock.calls[0][1])).toBe(
       '\n    in Child (at **)\n    in Intermediate (at **)\n    in Parent (at **)',
     );
   });
 
   it('should append component stacks to errors and warnings logged from effects', () => {
     const Intermediate = ({children}) => children;
-    const Parent = () => (
+    const Parent = ({children}) => (
       <Intermediate>
         <Child />
       </Intermediate>
     );
-    const Child = () => {
+    const Child = ({children}) => {
       React.useLayoutEffect(() => {
         fakeConsole.error('active error');
         fakeConsole.log('active log');
@@ -231,7 +220,7 @@ describe('console', () => {
 
   it('should append component stacks to errors and warnings logged from commit hooks', () => {
     const Intermediate = ({children}) => children;
-    const Parent = () => (
+    const Parent = ({children}) => (
       <Intermediate>
         <Child />
       </Intermediate>
@@ -287,7 +276,7 @@ describe('console', () => {
 
   it('should append component stacks to errors and warnings logged from gDSFP', () => {
     const Intermediate = ({children}) => children;
-    const Parent = () => (
+    const Parent = ({children}) => (
       <Intermediate>
         <Child />
       </Intermediate>
@@ -325,7 +314,7 @@ describe('console', () => {
   });
 
   it('should append stacks after being uninstalled and reinstalled', () => {
-    const Child = () => {
+    const Child = ({children}) => {
       fakeConsole.warn('warn');
       fakeConsole.error('error');
       return null;
@@ -344,19 +333,16 @@ describe('console', () => {
     patchConsole();
     act(() => ReactDOM.render(<Child />, document.createElement('div')));
 
-    // TRICKY DevTools console override re-renders the component to intentionally trigger an error,
-    // in which case all of the mock functions will be called an additional time.
-
-    expect(mockWarn).toHaveBeenCalledTimes(3);
-    expect(mockWarn.mock.calls[2]).toHaveLength(2);
-    expect(mockWarn.mock.calls[2][0]).toBe('warn');
-    expect(normalizeCodeLocInfo(mockWarn.mock.calls[2][1])).toEqual(
+    expect(mockWarn).toHaveBeenCalledTimes(2);
+    expect(mockWarn.mock.calls[1]).toHaveLength(2);
+    expect(mockWarn.mock.calls[1][0]).toBe('warn');
+    expect(normalizeCodeLocInfo(mockWarn.mock.calls[1][1])).toEqual(
       '\n    in Child (at **)',
     );
-    expect(mockError).toHaveBeenCalledTimes(3);
-    expect(mockError.mock.calls[2]).toHaveLength(2);
-    expect(mockError.mock.calls[2][0]).toBe('error');
-    expect(normalizeCodeLocInfo(mockError.mock.calls[2][1])).toBe(
+    expect(mockError).toHaveBeenCalledTimes(2);
+    expect(mockError.mock.calls[1]).toHaveLength(2);
+    expect(mockError.mock.calls[1][0]).toBe('error');
+    expect(normalizeCodeLocInfo(mockError.mock.calls[1][1])).toBe(
       '\n    in Child (at **)',
     );
   });

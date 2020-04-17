@@ -37,12 +37,13 @@ const config = {
       'react-debug-tools': resolve(builtModulesDir, 'react-debug-tools'),
       'react-is': resolve(builtModulesDir, 'react-is'),
       scheduler: resolve(builtModulesDir, 'scheduler'),
-      'shared/ReactFeatureFlags': 'shared/forks/ReactFeatureFlags.devtools',
     },
   },
   plugins: [
     new DefinePlugin({
       __DEV__,
+      __PROFILE__: false,
+      __EXPERIMENTAL__: true,
       'process.env.GITHUB_URL': `"${GITHUB_URL}"`,
       'process.env.DEVTOOLS_VERSION': `"${DEVTOOLS_VERSION}"`,
     }),

@@ -38,12 +38,13 @@ module.exports = {
       'react-debug-tools': resolve(builtModulesDir, 'react-debug-tools'),
       'react-is': resolve(builtModulesDir, 'react-is'),
       scheduler: resolve(builtModulesDir, 'scheduler'),
-      'shared/ReactFeatureFlags': 'shared/forks/ReactFeatureFlags.devtools',
     },
   },
   plugins: [
     new DefinePlugin({
       __DEV__: true,
+      __PROFILE__: false,
+      __EXPERIMENTAL__: true,
       'process.env.DEVTOOLS_VERSION': `"${DEVTOOLS_VERSION}"`,
       'process.env.GITHUB_URL': `"${GITHUB_URL}"`,
     }),
