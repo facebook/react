@@ -242,4 +242,20 @@ describe('when Trusted Types are available in global object', () => {
     // check that the warning is printed only once
     ReactDOM.render(<script>alert("I am not executed")</script>, container);
   });
+
+  it('should warn twice when rendering scRipt tag and prevent code execution on mistyped tag', () => {
+    expect(() => {
+      ReactDOM.render(<scRipt>alert("I am not executed")</scRipt>, container);
+    }).toErrorDev([
+      'Warning: <scRipt /> is using incorrect casing. ' +
+        'Use PascalCase for React components, ' +
+        'or lowercase for HTML elements.\n' +
+        '    in scRipt (at **)',
+      'Warning: Encountered a script tag while rendering React component. ' +
+        'Scripts inside React components are never executed when rendering ' +
+        'on the client. Consider using template tag instead ' +
+        '(https://developer.mozilla.org/en-US/docs/Web/HTML/Element/template).\n' +
+        '    in scRipt (at **)',
+    ]);
+  });
 });
