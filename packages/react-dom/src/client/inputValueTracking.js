@@ -88,7 +88,7 @@ function trackValueOnNode(node: any): ?ValueTracker {
     enumerable: descriptor.enumerable,
   });
 
-  const tracker = {
+  return {
     getValue() {
       return currentValue;
     },
@@ -100,7 +100,6 @@ function trackValueOnNode(node: any): ?ValueTracker {
       delete node[valueField];
     },
   };
-  return tracker;
 }
 
 export function track(node: ElementWithValueTracker) {

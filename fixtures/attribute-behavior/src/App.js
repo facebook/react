@@ -1,17 +1,13 @@
 import React from 'react';
 import {createElement} from 'glamor/react'; // eslint-disable-line
-/* @jsx createElement */
-
-import {MultiGrid, AutoSizer} from 'react-virtualized';
+import {AutoSizer, MultiGrid} from 'react-virtualized';
 import 'react-virtualized/styles.css';
 import FileSaver from 'file-saver';
 
-import {
-  inject as injectErrorOverlay,
-  uninject as uninjectErrorOverlay,
-} from 'react-error-overlay/lib/overlay';
+import {inject as injectErrorOverlay, uninject as uninjectErrorOverlay,} from 'react-error-overlay/lib/overlay';
 
 import attributes from './attributes';
+/* @jsx createElement */
 
 const types = [
   {
@@ -706,8 +702,7 @@ function saveToLocalStorage(completedHashes) {
 function restoreFromLocalStorage() {
   const str = localStorage.getItem('completedHashes');
   if (str) {
-    const completedHashes = new Set(JSON.parse(str));
-    return completedHashes;
+    return new Set(JSON.parse(str));
   }
   return new Set();
 }

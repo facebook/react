@@ -5,9 +5,7 @@
 const {execRead, logPromise} = require('../utils');
 
 const run = async () => {
-  const version = await execRead('npm info react@next version');
-
-  return version;
+  return await execRead('npm info react@next version');
 };
 
 module.exports = async params => {

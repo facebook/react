@@ -154,16 +154,13 @@ export function unstable_createResource<I, K: string | number, V>(
       const result: Result<V> = accessResult(resource, fetch, input, key);
       switch (result.status) {
         case Pending: {
-          const suspender = result.value;
-          throw suspender;
+          throw result.value;
         }
         case Resolved: {
-          const value = result.value;
-          return value;
+          return result.value;
         }
         case Rejected: {
-          const error = result.value;
-          throw error;
+          throw result.value;
         }
         default:
           // Should be unreachable

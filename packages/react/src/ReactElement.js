@@ -449,7 +449,7 @@ export function createFactory(type) {
 }
 
 export function cloneAndReplaceKey(oldElement, newKey) {
-  const newElement = ReactElement(
+  return ReactElement(
     oldElement.type,
     newKey,
     oldElement.ref,
@@ -458,8 +458,6 @@ export function cloneAndReplaceKey(oldElement, newKey) {
     oldElement._owner,
     oldElement.props,
   );
-
-  return newElement;
 }
 
 /**

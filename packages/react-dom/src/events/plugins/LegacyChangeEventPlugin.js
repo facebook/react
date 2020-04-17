@@ -287,12 +287,11 @@ const ChangeEventPlugin = {
     if (getTargetInstFunc) {
       const inst = getTargetInstFunc(topLevelType, targetInst);
       if (inst) {
-        const event = createAndAccumulateChangeEvent(
+        return createAndAccumulateChangeEvent(
           inst,
           nativeEvent,
           nativeEventTarget,
         );
-        return event;
       }
     }
 

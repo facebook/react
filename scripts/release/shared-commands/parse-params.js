@@ -20,7 +20,5 @@ const paramDefinitions = [
 ];
 
 module.exports = () => {
-  const params = commandLineArgs(paramDefinitions);
-
-  return params;
+  return commandLineArgs(paramDefinitions);
 };

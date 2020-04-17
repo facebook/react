@@ -48,8 +48,7 @@ describe('ReactFresh', () => {
   });
 
   function prepare(version) {
-    const Component = version();
-    return Component;
+    return version();
   }
 
   function render(version, props) {

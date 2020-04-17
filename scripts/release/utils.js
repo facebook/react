@@ -68,9 +68,7 @@ const getArtifactsList = async buildID => {
   }
 
   const jobArtifactsURL = `https://circleci.com/api/v1.1/project/github/facebook/react/${job.job_number}/artifacts?circle-token=${process.env.CIRCLE_CI_API_TOKEN}`;
-  const jobArtifacts = await http.get(jobArtifactsURL, true);
-
-  return jobArtifacts;
+  return await http.get(jobArtifactsURL, true);
 };
 
 const getBuildInfo = async () => {
