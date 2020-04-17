@@ -116,6 +116,7 @@ import {
   Snapshot,
   Callback,
   Passive,
+  PassiveUnmountPending,
   Incomplete,
   HostEffectMask,
   Hydrating,
@@ -262,7 +263,6 @@ let pendingPassiveEffectsRenderPriority: ReactPriorityLevel = NoPriority;
 let pendingPassiveEffectsExpirationTime: ExpirationTime = NoWork;
 let pendingPassiveHookEffectsMount: Array<HookEffect | Fiber> = [];
 let pendingPassiveHookEffectsUnmount: Array<HookEffect | Fiber> = [];
-let pendingPassiveHookEffectsUnmountAlternatesDEV: Array<Fiber> = [];
 let pendingPassiveProfilerEffects: Array<Fiber> = [];
 
 let rootsWithPendingDiscreteUpdates: Map<
@@ -2313,10 +2313,10 @@ export function enqueuePendingPassiveHookEffectUnmount(
     pendingPassiveHookEffectsUnmount.push(effect, fiber);
     if (__DEV__) {
       if (deferPassiveEffectCleanupDuringUnmount) {
-        if (fiber.alternate !== null) {
-          // Alternate pointers get disconnected during unmount.
-          // Track alternates explicitly here to avoid warning about state updates for unmounted components.
-          pendingPassiveHookEffectsUnmountAlternatesDEV.push(fiber.alternate);
+        fiber.effectTag |= PassiveUnmountPending;
+        const alternate = fiber.alternate;
+        if (alternate !== null) {
+          alternate.effectTag |= PassiveUnmountPending;
         }
       }
     }
@@ -2377,19 +2377,22 @@ function flushPassiveEffectsImpl() {
     // First pass: Destroy stale passive effects.
     const unmountEffects = pendingPassiveHookEffectsUnmount;
     pendingPassiveHookEffectsUnmount = [];
-    if (__DEV__) {
-      if (
-        deferPassiveEffectCleanupDuringUnmount &&
-        runAllPassiveEffectDestroysBeforeCreates
-      ) {
-        pendingPassiveHookEffectsUnmountAlternatesDEV = [];
-      }
-    }
     for (let i = 0; i < unmountEffects.length; i += 2) {
       const effect = ((unmountEffects[i]: any): HookEffect);
       const fiber = ((unmountEffects[i + 1]: any): Fiber);
       const destroy = effect.destroy;
       effect.destroy = undefined;
+
+      if (__DEV__) {
+        if (deferPassiveEffectCleanupDuringUnmount) {
+          fiber.effectTag &= ~PassiveUnmountPending;
+          const alternate = fiber.alternate;
+          if (alternate !== null) {
+            alternate.effectTag &= ~PassiveUnmountPending;
+          }
+        }
+      }
+
       if (typeof destroy === 'function') {
         if (__DEV__) {
           setCurrentDebugFiberInDEV(fiber);
@@ -2869,10 +2872,7 @@ function warnAboutUpdateOnUnmountedFiberInDEV(fiber) {
     ) {
       // If there are pending passive effects unmounts for this Fiber,
       // we can assume that they would have prevented this update.
-      if (
-        pendingPassiveHookEffectsUnmount.indexOf(fiber) >= 0 ||
-        pendingPassiveHookEffectsUnmountAlternatesDEV.indexOf(fiber) >= 0
-      ) {
+      if ((fiber.effectTag & PassiveUnmountPending) !== NoEffect) {
         return;
       }
     }
