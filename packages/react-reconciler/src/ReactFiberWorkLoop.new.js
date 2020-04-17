@@ -116,7 +116,7 @@ import {
   Snapshot,
   Callback,
   Passive,
-  PassiveUnmountPending,
+  PassiveUnmountPendingDev,
   Incomplete,
   HostEffectMask,
   Hydrating,
@@ -2313,10 +2313,10 @@ export function enqueuePendingPassiveHookEffectUnmount(
     pendingPassiveHookEffectsUnmount.push(effect, fiber);
     if (__DEV__) {
       if (deferPassiveEffectCleanupDuringUnmount) {
-        fiber.effectTag |= PassiveUnmountPending;
+        fiber.effectTag |= PassiveUnmountPendingDev;
         const alternate = fiber.alternate;
         if (alternate !== null) {
-          alternate.effectTag |= PassiveUnmountPending;
+          alternate.effectTag |= PassiveUnmountPendingDev;
         }
       }
     }
@@ -2385,10 +2385,10 @@ function flushPassiveEffectsImpl() {
 
       if (__DEV__) {
         if (deferPassiveEffectCleanupDuringUnmount) {
-          fiber.effectTag &= ~PassiveUnmountPending;
+          fiber.effectTag &= ~PassiveUnmountPendingDev;
           const alternate = fiber.alternate;
           if (alternate !== null) {
-            alternate.effectTag &= ~PassiveUnmountPending;
+            alternate.effectTag &= ~PassiveUnmountPendingDev;
           }
         }
       }
@@ -2872,7 +2872,7 @@ function warnAboutUpdateOnUnmountedFiberInDEV(fiber) {
     ) {
       // If there are pending passive effects unmounts for this Fiber,
       // we can assume that they would have prevented this update.
-      if ((fiber.effectTag & PassiveUnmountPending) !== NoEffect) {
+      if ((fiber.effectTag & PassiveUnmountPendingDev) !== NoEffect) {
         return;
       }
     }
