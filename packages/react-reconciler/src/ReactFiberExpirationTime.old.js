@@ -15,6 +15,7 @@ import {
   ImmediatePriority,
   UserBlockingPriority,
   NormalPriority,
+  LowPriority,
   IdlePriority,
 } from './SchedulerWithReactIntegration.old';
 
@@ -71,16 +72,16 @@ function computeExpirationBucket(
 
 // TODO: This corresponds to Scheduler's NormalPriority, not LowPriority. Update
 // the names to reflect.
-export const LOW_PRIORITY_EXPIRATION = 5000;
-export const LOW_PRIORITY_BATCH_SIZE = 250;
+export const NORMAL_PRIORITY_EXPIRATION = 5000;
+export const NORMAL_PRIORITY_BATCH_SIZE = 250;
 
 export function computeAsyncExpiration(
   currentTime: ExpirationTime,
 ): ExpirationTime {
   return computeExpirationBucket(
     currentTime,
-    LOW_PRIORITY_EXPIRATION,
-    LOW_PRIORITY_BATCH_SIZE,
+    NORMAL_PRIORITY_EXPIRATION,
+    NORMAL_PRIORITY_BATCH_SIZE,
   );
 }
 
@@ -92,7 +93,7 @@ export function computeSuspenseExpiration(
   return computeExpirationBucket(
     currentTime,
     timeoutMs,
-    LOW_PRIORITY_BATCH_SIZE,
+    NORMAL_PRIORITY_BATCH_SIZE,
   );
 }
 
@@ -125,7 +126,7 @@ export function inferPriorityFromExpirationTime(
   if (expirationTime === Sync) {
     return ImmediatePriority;
   }
-  if (expirationTime === Never || expirationTime === Idle) {
+  if (expirationTime <= ContinuousHydration) {
     return IdlePriority;
   }
   const msUntil =
@@ -136,12 +137,9 @@ export function inferPriorityFromExpirationTime(
   if (msUntil <= HIGH_PRIORITY_EXPIRATION + HIGH_PRIORITY_BATCH_SIZE) {
     return UserBlockingPriority;
   }
-  if (msUntil <= LOW_PRIORITY_EXPIRATION + LOW_PRIORITY_BATCH_SIZE) {
+  if (msUntil <= NORMAL_PRIORITY_EXPIRATION + NORMAL_PRIORITY_BATCH_SIZE) {
     return NormalPriority;
   }
 
-  // TODO: Handle LowPriority
-
-  // Assume anything lower has idle priority
-  return IdlePriority;
+  return LowPriority;
 }
