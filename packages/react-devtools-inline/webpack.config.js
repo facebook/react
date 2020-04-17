@@ -35,6 +35,7 @@ module.exports = {
     'react-dom': 'react-dom',
     'react-is': 'react-is',
     scheduler: 'scheduler',
+    'shared/ReactFeatureFlags': 'shared/forks/ReactFeatureFlags.devtools',
   },
   plugins: [
     new DefinePlugin({

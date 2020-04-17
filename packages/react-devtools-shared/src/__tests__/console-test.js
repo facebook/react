@@ -140,7 +140,7 @@ describe('console', () => {
         <Child />
       </Intermediate>
     );
-    const Child = props => {
+    const Child = () => {
       fakeConsole.error('error');
       fakeConsole.log('log');
       fakeConsole.warn('warn');

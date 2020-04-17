@@ -38,6 +38,7 @@ module.exports = {
       'react-dom': resolve(builtModulesDir, 'react-dom'),
       'react-is': resolve(builtModulesDir, 'react-is'),
       scheduler: resolve(builtModulesDir, 'scheduler'),
+      'shared/ReactFeatureFlags': 'shared/forks/ReactFeatureFlags.devtools',
     },
   },
   plugins: [

@@ -37,6 +37,7 @@ module.exports = {
       'react-debug-tools': resolve(builtModulesDir, 'react-debug-tools'),
       'react-is': resolve(builtModulesDir, 'react-is'),
       scheduler: resolve(builtModulesDir, 'scheduler'),
+      'shared/ReactFeatureFlags': 'shared/forks/ReactFeatureFlags.devtools',
     },
   },
   node: {

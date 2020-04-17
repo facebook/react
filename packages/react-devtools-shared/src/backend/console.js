@@ -7,11 +7,10 @@
  * @flow
  */
 
-import {getInternalReactConstants} from './renderer';
-import describeComponentFrame from './describeComponentFrame';
-
 import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
 import type {ReactRenderer} from './types';
+
+import {getStackByFiberInDevAndProd} from 'react-reconciler/src/ReactFiberComponentStack';
 
 const APPEND_STACK_TO_METHODS = ['error', 'trace', 'warn'];
 
@@ -26,8 +25,6 @@ const injectedRenderers: Map<
   ReactRenderer,
   {|
     getCurrentFiber: () => Fiber | null,
-    getDisplayNameForFiber: (fiber: Fiber) => string | null,
-    getStackByFiberInDevAndProd?: (fiber: Object) => string,
   |},
 > = new Map();
 
@@ -55,12 +52,7 @@ export function dangerous_setTargetConsoleForTesting(
 // These internals will be used if the console is patched.
 // Injecting them separately allows the console to easily be patched or un-patched later (at runtime).
 export function registerRenderer(renderer: ReactRenderer): void {
-  const {
-    getCurrentFiber,
-    getStackByFiberInDevAndProd,
-    findFiberByHostInstance,
-    version,
-  } = renderer;
+  const {getCurrentFiber, findFiberByHostInstance} = renderer;
 
   // Ignore React v15 and older because they don't expose a component stack anyway.
   if (typeof findFiberByHostInstance !== 'function') {
@@ -68,12 +60,8 @@ export function registerRenderer(renderer: ReactRenderer): void {
   }
 
   if (typeof getCurrentFiber === 'function') {
-    const {getDisplayNameForFiber} = getInternalReactConstants(version);
-
     injectedRenderers.set(renderer, {
       getCurrentFiber,
-      getDisplayNameForFiber,
-      getStackByFiberInDevAndProd,
     });
   }
 }
@@ -116,36 +104,10 @@ export function patch(): void {
             // If there's a component stack for at least one of the injected renderers, append it.
             // We don't handle the edge case of stacks for more than one (e.g. interleaved renderers?)
             // eslint-disable-next-line no-for-of-loops/no-for-of-loops
-            for (const {
-              getCurrentFiber,
-              getDisplayNameForFiber,
-              getStackByFiberInDevAndProd,
-            } of injectedRenderers.values()) {
-              let current: ?Fiber = getCurrentFiber();
-              let ownerStack: string = '';
-              if (current !== null) {
-                if (typeof getStackByFiberInDevAndProd === 'function') {
-                  ownerStack = getStackByFiberInDevAndProd(current);
-                } else {
-                  while (current != null) {
-                    const name = getDisplayNameForFiber(current);
-                    const owner = current._debugOwner;
-                    const ownerName =
-                      owner != null ? getDisplayNameForFiber(owner) : null;
-
-                    ownerStack += describeComponentFrame(
-                      name,
-                      current._debugSource,
-                      ownerName,
-                    );
-
-                    current = owner;
-                  }
-                }
-              }
-
-              if (ownerStack !== '') {
-                args.push(ownerStack);
+            for (const {getCurrentFiber} of injectedRenderers.values()) {
+              const current: ?Fiber = getCurrentFiber();
+              if (current != null) {
+                args.push(getStackByFiberInDevAndProd(current));
                 break;
               }
             }
