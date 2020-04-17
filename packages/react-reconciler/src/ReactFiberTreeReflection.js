@@ -346,10 +346,15 @@ export function isFiberSuspenseAndTimedOut(fiber: Fiber): boolean {
 // It should not be used anywhere else. See PR #18609 for details.
 export function isFiberInsideHiddenOrRemovedTree(fiber: Fiber): boolean {
   let node = fiber;
+  let lastChild = null;
   while (node !== null) {
-    if (node.effectTag & Deletion || isFiberSuspenseAndTimedOut(node)) {
+    if (
+      node.effectTag & Deletion ||
+      (isFiberSuspenseAndTimedOut(node) && node.child === lastChild)
+    ) {
       return true;
     }
+    lastChild = node;
     node = node.return;
   }
   return false;
