@@ -766,22 +766,6 @@ const pressResponderImpl = {
             removeRootEventTypes(context, state);
           }
 
-          // Determine whether to call preventDefault on subsequent native events.
-          if (
-            target !== null &&
-            context.isTargetWithinResponder(target) &&
-            context.isTargetWithinHostComponent(target, 'a')
-          ) {
-            const {
-              altKey,
-              ctrlKey,
-              metaKey,
-              shiftKey,
-            } = (nativeEvent: MouseEvent);
-            // Check "open in new window/tab" and "open context menu" key modifiers
-            const preventDefault = props.preventDefault;
-          }
-
           dispatchPressEndEvents(event, context, props, state);
           state.touchEvent = null;
         } else if (type === 'mouseup') {

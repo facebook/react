@@ -986,7 +986,6 @@ describe.each(environmentTable)('Press responder', hasPointerEvents => {
     // @gate experimental
     it('prevents native behavior by default', () => {
       const onPress = jest.fn();
-      const preventDefault = jest.fn();
       const ref = React.createRef();
 
       const Component = () => {
