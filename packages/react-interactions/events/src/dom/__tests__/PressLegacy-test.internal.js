@@ -495,6 +495,21 @@ describe.each(environmentTable)('Press responder', hasPointerEvents => {
     });
 
     // @gate experimental
+    it('is called with modifier keys', () => {
+      componentInit();
+      const target = createEventTarget(ref.current);
+      target.pointerdown({metaKey: true, pointerType: 'mouse'});
+      target.pointerup({metaKey: true, pointerType: 'mouse'});
+      expect(onPress).toHaveBeenCalledWith(
+        expect.objectContaining({
+          pointerType: 'mouse',
+          type: 'press',
+          metaKey: true,
+        }),
+      );
+    });
+
+    // @gate experimental
     it('is called if target rect is not right but the target is (for mouse events)', () => {
       componentInit();
       const buttonRef = React.createRef();
@@ -982,58 +997,8 @@ describe.each(environmentTable)('Press responder', hasPointerEvents => {
 
       const target = createEventTarget(ref.current);
       target.pointerdown();
-      target.pointerup({preventDefault});
-      expect(preventDefault).toBeCalled();
-      expect(onPress).toHaveBeenCalledWith(
-        expect.objectContaining({defaultPrevented: true}),
-      );
-    });
-
-    // @gate experimental
-    it('deeply prevents native behaviour by default', () => {
-      const onPress = jest.fn();
-      const preventDefault = jest.fn();
-      const buttonRef = React.createRef();
-
-      const Component = () => {
-        const listener = usePress({onPress});
-        return (
-          <a href="#">
-            <button ref={buttonRef} DEPRECATED_flareListeners={listener} />
-          </a>
-        );
-      };
-      ReactDOM.render(<Component />, container);
-
-      const target = createEventTarget(buttonRef.current);
-      target.pointerdown();
-      target.pointerup({preventDefault});
-      expect(preventDefault).toBeCalled();
-    });
-
-    // @gate experimental
-    it('prevents native behaviour by default with nested elements', () => {
-      const onPress = jest.fn();
-      const preventDefault = jest.fn();
-      const ref = React.createRef();
-
-      const Component = () => {
-        const listener = usePress({onPress});
-        return (
-          <a href="#" DEPRECATED_flareListeners={listener}>
-            <div ref={ref} />
-          </a>
-        );
-      };
-      ReactDOM.render(<Component />, container);
-
-      const target = createEventTarget(ref.current);
-      target.pointerdown();
-      target.pointerup({preventDefault});
-      expect(preventDefault).toBeCalled();
-      expect(onPress).toHaveBeenCalledWith(
-        expect.objectContaining({defaultPrevented: true}),
-      );
+      target.pointerup();
+      expect(onPress).toBeCalled();
     });
 
     // @gate experimental
