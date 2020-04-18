@@ -354,22 +354,16 @@ function doesFiberContain(parentFiber: Fiber, childFiber: Fiber): boolean {
   return false;
 }
 
-function isFiberInHiddenTreeThatsContainsTargetFiber(
+function isFiberTimedOutSuspenseThatContainsTargetFiber(
   fiber: Fiber,
   targetFiber: Fiber,
 ): boolean {
-  let node = fiber;
-  while (node !== null) {
-    if (isFiberSuspenseAndTimedOut(node)) {
-      const child = node.child;
-      if (child !== null) {
-        return doesFiberContain(child, targetFiber);
-      }
-      return false;
-    }
-    node = node.return;
-  }
-  return false;
+  const child = fiber.child;
+  return (
+    isFiberSuspenseAndTimedOut(fiber) &&
+    child !== null &&
+    doesFiberContain(child, targetFiber)
+  );
 }
 
 function isFiberDeletedAndContainsTargetFiber(
@@ -387,6 +381,6 @@ export function isFiberHiddenOrDeletedAndContains(
 ): boolean {
   return (
     isFiberDeletedAndContainsTargetFiber(parentFiber, childFiber) ||
-    isFiberInHiddenTreeThatsContainsTargetFiber(parentFiber, childFiber)
+    isFiberTimedOutSuspenseThatContainsTargetFiber(parentFiber, childFiber)
   );
 }

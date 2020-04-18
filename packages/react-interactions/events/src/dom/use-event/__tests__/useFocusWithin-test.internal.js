@@ -497,5 +497,78 @@ describe.each(table)(`useFocus`, hasPointerEvents => {
 
       document.body.removeChild(container2);
     });
+
+    // @gate experimental
+    it('is called after a focused suspended element is hidden then shown', () => {
+      const Suspense = React.Suspense;
+      let suspend = false;
+      let resolve;
+      const promise = new Promise(resolvePromise => (resolve = resolvePromise));
+      const buttonRef = React.createRef();
+
+      function Child() {
+        if (suspend) {
+          throw promise;
+        } else {
+          return <input ref={innerRef} />;
+        }
+      }
+
+      const Component = ({show}) => {
+        useFocusWithin(ref, {
+          onBeforeBlurWithin,
+          onAfterBlurWithin,
+        });
+
+        return (
+          <div ref={ref}>
+            <Suspense fallback={<button ref={buttonRef}>Loading...</button>}>
+              <Child />
+            </Suspense>
+          </div>
+        );
+      };
+
+      const container2 = document.createElement('div');
+      document.body.appendChild(container2);
+
+      const root = ReactDOM.createRoot(container2);
+
+      act(() => {
+        root.render(<Component />);
+      });
+      jest.runAllTimers();
+
+      expect(onBeforeBlurWithin).toHaveBeenCalledTimes(0);
+      expect(onAfterBlurWithin).toHaveBeenCalledTimes(0);
+
+      suspend = true;
+      act(() => {
+        root.render(<Component />);
+      });
+      jest.runAllTimers();
+      expect(onBeforeBlurWithin).toHaveBeenCalledTimes(0);
+      expect(onAfterBlurWithin).toHaveBeenCalledTimes(0);
+
+      act(() => {
+        root.render(<Component />);
+      });
+      jest.runAllTimers();
+      expect(onBeforeBlurWithin).toHaveBeenCalledTimes(0);
+      expect(onAfterBlurWithin).toHaveBeenCalledTimes(0);
+
+      buttonRef.current.focus();
+      suspend = false;
+      act(() => {
+        root.render(<Component />);
+      });
+      jest.runAllTimers();
+      expect(onBeforeBlurWithin).toHaveBeenCalledTimes(1);
+      expect(onAfterBlurWithin).toHaveBeenCalledTimes(1);
+
+      resolve();
+
+      document.body.removeChild(container2);
+    });
   });
 });
