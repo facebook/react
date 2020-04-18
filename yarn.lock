@@ -5158,6 +5158,7 @@ eslint-plugin-no-unsafe-innerhtml@1.0.16:
 
 "eslint-plugin-react-internal@link:./scripts/eslint-rules":
   version "0.0.0"
+  uid ""
 
 eslint-plugin-react@^6.7.1:
   version "6.10.3"
@@ -5700,6 +5701,14 @@ fancy-log@^1.3.2:
     ansi-gray "^0.1.1"
     color-support "^1.1.3"
     time-stamp "^1.0.0"
+
+fast-check@^1.24.1:
+  version "1.24.1"
+  resolved "https://registry.yarnpkg.com/fast-check/-/fast-check-1.24.1.tgz#42a153e664122b1a2defdaea4e9b8311635fa7e7"
+  integrity sha512-ECF5LDbt4F8sJyTDI62fRLn0BdHDAdBacxlEsxaYbtqwbsdWofoYZUSaUp9tJrLsqCQ8jG28SkNvPZpDfNo3tw==
+  dependencies:
+    pure-rand "^2.0.0"
+    tslib "^1.10.0"
 
 fast-deep-equal@^1.0.0:
   version "1.1.0"
@@ -10745,6 +10754,11 @@ punycode@^2.1.0, punycode@^2.1.1:
   version "2.1.1"
   resolved "https://registry.yarnpkg.com/punycode/-/punycode-2.1.1.tgz#b58b010ac40c22c5657616c8d2c2c02c7bf479ec"
   integrity sha512-XRsRjdf+j5ml+y/6GKHPZbrF/8p2Yga0JPtdqTIY2Xe5ohJPD9saDJJLPvp9+NSBprVvevdXZybnj2cv8OEd0A==
+
+pure-rand@^2.0.0:
+  version "2.0.0"
+  resolved "https://registry.yarnpkg.com/pure-rand/-/pure-rand-2.0.0.tgz#3324633545207907fe964c2f0ebf05d8e9a7f129"
+  integrity sha512-mk98aayyd00xbfHgE3uEmAUGzz3jCdm8Mkf5DUXUhc7egmOaGG2D7qhVlynGenNe9VaNJZvzO9hkc8myuTkDgw==
 
 qs@6.7.0:
   version "6.7.0"

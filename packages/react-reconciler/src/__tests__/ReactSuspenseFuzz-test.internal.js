@@ -3,9 +3,8 @@ let Suspense;
 let ReactNoop;
 let Scheduler;
 let ReactFeatureFlags;
-let Random;
 
-const SEED = process.env.FUZZ_TEST_SEED || 'default';
+const fc = require('fast-check');
 const prettyFormatPkg = require('pretty-format');
 
 function prettyFormat(thing) {
@@ -27,7 +26,6 @@ describe('ReactSuspenseFuzz', () => {
     Suspense = React.Suspense;
     ReactNoop = require('react-noop-renderer');
     Scheduler = require('scheduler');
-    Random = require('random-seed');
   });
 
   function createFuzzer() {
@@ -185,123 +183,101 @@ describe('ReactSuspenseFuzz', () => {
       expect(concurrentOutput).toEqual(expectedOutput);
     }
 
-    function pickRandomWeighted(rand, options) {
-      let totalWeight = 0;
-      for (let i = 0; i < options.length; i++) {
-        totalWeight += options[i].weight;
-      }
-      let remainingWeight = rand.floatBetween(0, totalWeight);
-      for (let i = 0; i < options.length; i++) {
-        const {value, weight} = options[i];
-        remainingWeight -= weight;
-        if (remainingWeight <= 0) {
-          return value;
-        }
-      }
+    function testCaseArbitrary() {
+      const updatesArbitrary = arb =>
+        fc.frequency(
+          // Remark: Using a frequency to build an array
+          //         Remove the ability to shrink it automatically
+          //         But its content remains shrinkable
+          {arbitrary: fc.constant([]), weight: 8},
+          {arbitrary: fc.array(arb, 1, 1), weight: 4},
+          {arbitrary: fc.array(arb, 2, 2), weight: 1},
+        );
+
+      const {rootChildrenArbitrary} = fc.letrec(tie => ({
+        // Produce one specific type of child
+        returnChildArbitrary: fc.constant(null),
+        textChildArbitrary: fc
+          .tuple(
+            fc.hexaString().noShrink(),
+            updatesArbitrary(
+              fc.record({
+                beginAfter: fc.nat(10000),
+                suspendFor: fc.nat(10000),
+              }),
+            ),
+            fc.nat(10000),
+          )
+          .map(([text, updates, initialDelay]) => (
+            <Text text={text} initialDelay={initialDelay} updates={updates} />
+          )),
+        containerChildArbitrary: fc
+          .tuple(
+            updatesArbitrary(fc.record({remountAfter: fc.nat(10000)})),
+            tie('subChildrenArbitrary'),
+          )
+          .map(([updates, children]) =>
+            React.createElement(Container, {updates}, ...children),
+          ),
+        suspenseChildArbitrary: fc
+          .tuple(
+            fc.oneof(
+              // fallback = none
+              fc.constant(undefined),
+              // fallback = loading
+              fc.constant('Loading...'),
+              // fallback = nested suspense
+              tie('subChildrenArbitrary').map(children =>
+                React.createElement(React.Fragment, null, ...children),
+              ),
+            ),
+            tie('subChildrenArbitrary'),
+          )
+          .map(([fallback, children]) =>
+            React.createElement(Suspense, {fallback}, ...children),
+          ),
+        // Produce the first child
+        childArbitrary: fc.oneof(
+          tie('returnChildArbitrary'),
+          tie('textChildArbitrary'),
+        ),
+        // Produce a child with sibling
+        childWithSiblingArbitrary: fc.oneof(
+          tie('returnChildArbitrary'),
+          tie('textChildArbitrary'),
+          tie('containerChildArbitrary'),
+          tie('suspenseChildArbitrary'),
+        ),
+        // Produce sub children
+        subChildrenArbitrary: fc
+          .tuple(
+            tie('childArbitrary'),
+            fc.array(tie('childWithSiblingArbitrary'), 0, 2),
+          )
+          .map(([firstChild, others]) => [firstChild, ...others]),
+        // Produce the root children
+        rootChildrenArbitrary: fc
+          .tuple(
+            tie('childArbitrary'),
+            fc.array(tie('childWithSiblingArbitrary')),
+          )
+          .map(([firstChild, others]) => [firstChild, ...others]),
+      }));
+
+      return rootChildrenArbitrary.map(children => {
+        const el = React.createElement(React.Fragment, null, ...children);
+        return {
+          randomTestCase: React.createElement(
+            React.Fragment,
+            null,
+            ...children,
+          ),
+          toString: () => prettyFormat(el),
+        };
+      });
     }
 
-    function generateTestCase(rand, numberOfElements) {
-      let remainingElements = numberOfElements;
-
-      function createRandomChild(hasSibling) {
-        const possibleActions = [
-          {value: 'return', weight: 1},
-          {value: 'text', weight: 1},
-        ];
-
-        if (hasSibling) {
-          possibleActions.push({value: 'container', weight: 1});
-          possibleActions.push({value: 'suspense', weight: 1});
-        }
-
-        const action = pickRandomWeighted(rand, possibleActions);
-
-        switch (action) {
-          case 'text': {
-            remainingElements--;
-
-            const numberOfUpdates = pickRandomWeighted(rand, [
-              {value: 0, weight: 8},
-              {value: 1, weight: 4},
-              {value: 2, weight: 1},
-            ]);
-
-            const updates = [];
-            for (let i = 0; i < numberOfUpdates; i++) {
-              updates.push({
-                beginAfter: rand.intBetween(0, 10000),
-                suspendFor: rand.intBetween(0, 10000),
-              });
-            }
-
-            return (
-              <Text
-                text={(remainingElements + 9).toString(36).toUpperCase()}
-                initialDelay={rand.intBetween(0, 10000)}
-                updates={updates}
-              />
-            );
-          }
-          case 'container': {
-            const numberOfUpdates = pickRandomWeighted(rand, [
-              {value: 0, weight: 8},
-              {value: 1, weight: 4},
-              {value: 2, weight: 1},
-            ]);
-
-            const updates = [];
-            for (let i = 0; i < numberOfUpdates; i++) {
-              updates.push({
-                remountAfter: rand.intBetween(0, 10000),
-              });
-            }
-
-            remainingElements--;
-            const children = createRandomChildren(3);
-            return React.createElement(Container, {updates}, ...children);
-          }
-          case 'suspense': {
-            remainingElements--;
-            const children = createRandomChildren(3);
-
-            const fallbackType = pickRandomWeighted(rand, [
-              {value: 'none', weight: 1},
-              {value: 'normal', weight: 1},
-              {value: 'nested suspense', weight: 1},
-            ]);
-
-            let fallback;
-            if (fallbackType === 'normal') {
-              fallback = 'Loading...';
-            } else if (fallbackType === 'nested suspense') {
-              fallback = React.createElement(
-                React.Fragment,
-                null,
-                ...createRandomChildren(3),
-              );
-            }
-
-            return React.createElement(Suspense, {fallback}, ...children);
-          }
-          case 'return':
-          default:
-            return null;
-        }
-      }
-
-      function createRandomChildren(limit) {
-        const children = [];
-        while (remainingElements > 0 && children.length < limit) {
-          children.push(createRandomChild(children.length > 0));
-        }
-        return children;
-      }
-
-      const children = createRandomChildren(Infinity);
-      return React.createElement(React.Fragment, null, ...children);
-    }
-
-    return {Container, Text, testResolvedOutput, generateTestCase};
+    return {Container, Text, testResolvedOutput, testCaseArbitrary};
   }
 
   it('basic cases', () => {
@@ -318,30 +294,13 @@ describe('ReactSuspenseFuzz', () => {
     );
   });
 
-  it(`generative tests (random seed: ${SEED})`, () => {
-    const {generateTestCase, testResolvedOutput} = createFuzzer();
-
-    const rand = Random.create(SEED);
-
-    const NUMBER_OF_TEST_CASES = 500;
-    const ELEMENTS_PER_CASE = 12;
-
-    for (let i = 0; i < NUMBER_OF_TEST_CASES; i++) {
-      const randomTestCase = generateTestCase(rand, ELEMENTS_PER_CASE);
-      try {
-        testResolvedOutput(randomTestCase);
-      } catch (e) {
-        console.log(`
-Failed fuzzy test case:
-
-${prettyFormat(randomTestCase)}
-
-Random seed is ${SEED}
-`);
-
-        throw e;
-      }
-    }
+  it(`generative tests`, () => {
+    const {testCaseArbitrary, testResolvedOutput} = createFuzzer();
+    fc.assert(
+      fc.property(testCaseArbitrary(), ({randomTestCase}) =>
+        testResolvedOutput(randomTestCase),
+      ),
+    );
   });
 
   describe('hard-coded cases', () => {
