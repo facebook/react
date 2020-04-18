@@ -1210,49 +1210,18 @@ export function isHiddenSubtree(fiber: Fiber): boolean {
 }
 
 export function setFocusIfFocusable(node: Instance): boolean {
-  if (node.nodeType !== Node.ELEMENT_NODE) {
-    // Text and comment nodes aren't focusable.
-    // Technically this check should not be necessary,
-    // since React treats elements (Instances) and text (TextInstance) differently.
-    return false;
-  }
-
-  if (((node: any): HTMLInputElement).disabled === true) {
-    // Disabled inputs can't be focused.
-    return false;
-  }
-
-  const element = ((node: any): HTMLElement);
-
-  if (element.tabIndex === null || element.tabIndex < 0) {
-    // The HTML spec says that negative tab index values indicate an element should be,
-    // "click focusable but not sequentially focusable".
-    // https://html.spec.whatwg.org/multipage/interaction.html#the-tabindex-attribute
-    //
-    // The HTML focusable spec also says,
-    // "User agents should consider focusable areas with non-null tabindex values to be click focusable."
-    // https://html.spec.whatwg.org/multipage/interaction.html#focusable
-    //
-    // Despite this, it seems like some browsers (e.g. Chrome, Firefox) return -1 even for elements
-    // that don't accept focus, like HTMLImageElement or the outermost HTMLElement tag.
-    // I think this method should (at least for now) only concern itself with "sequentially focusable" elements.
-    // https://html.spec.whatwg.org/multipage/interaction.html#sequentially-focusable
-    return false;
-  }
-
-  if (element.offsetWidth === 0 || element.offsetHeight === 0) {
-    // Hidden items can't be focused.
-    return false;
-  }
-
-  // At this point we assume the element accepts focus, so let's try and see.
-  // Listen for a "focus" event to verify that focus was set.
+  // The logic for determining if an element is focusable is kind of complex,
+  // and since we want to actually change focus anyway- we can just skip it.
+  // Instead we'll just listen for a "focus" event to verify that focus was set.
+  //
   // We could compare the node to document.activeElement after focus,
   // but this would not handle the case where application code managed focus to automatically blur.
   let didFocus = false;
   const handleFocus = () => {
     didFocus = true;
   };
+
+  const element = ((node: any): HTMLElement);
   try {
     element.addEventListener('focus', handleFocus);
     element.focus();

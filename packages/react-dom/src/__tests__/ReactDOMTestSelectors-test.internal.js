@@ -937,9 +937,9 @@ No matching component was found for:
       expect(didFocus).toBe(false);
     });
 
-    it('should return false if the only focusable elements are visible', () => {
+    it('should return false if the only focusable elements are hidden', () => {
       function Example() {
-        return <button style={{display: 'none'}}>not clickable</button>;
+        return <button hidden={true}>not clickable</button>;
       }
 
       render(<Example />, container);
@@ -968,7 +968,7 @@ No matching component was found for:
       }
       function FirstChild() {
         return (
-          <button style={{display: 'none'}} onFocus={handleFirstFocus}>
+          <button hidden={true} onFocus={handleFirstFocus}>
             not clickable
           </button>
         );
