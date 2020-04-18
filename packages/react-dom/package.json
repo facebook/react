@@ -38,7 +38,6 @@
     "unstable-fizz.js",
     "unstable-fizz.browser.js",
     "unstable-fizz.node.js",
-    "unstable-native-dependencies.js",
     "cjs/",
     "umd/"
   ],
