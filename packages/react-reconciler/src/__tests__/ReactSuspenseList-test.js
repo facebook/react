@@ -847,6 +847,83 @@ describe('ReactSuspenseList', () => {
         <span>C</span>
       </>,
     );
+  }); // @gate experimental
+  it('displays each items in "forwards" order in nested SuspenseLists on re-render', async () => {
+    const A = createAsyncText('A');
+    const B = createAsyncText('B');
+    const C = createAsyncText('C');
+
+    function Foo({showMore}) {
+      // Text nodes have been added in order not to have the warning:
+      // > A single row was passed to a <SuspenseList revealOrder="forwards" />.
+      // > This is not useful since it needs multiple rows. Did you mean to pass multiple children or an array?
+      return (
+        <SuspenseList revealOrder="forwards">
+          <Text text="Another child" />
+          <SuspenseList revealOrder="forwards">
+            <Suspense fallback={<Text text="Loading A" />}>
+              <A />
+            </Suspense>
+            {showMore && (
+              <Suspense fallback={<Text text="Loading B" />}>
+                <B />
+              </Suspense>
+            )}
+            {showMore && (
+              <Suspense fallback={<Text text="Loading C" />}>
+                <C />
+              </Suspense>
+            )}
+          </SuspenseList>
+        </SuspenseList>
+      );
+    }
+
+    await A.resolve();
+    await B.resolve();
+
+    ReactNoop.render(<Foo showMore={false} />);
+
+    expect(Scheduler).toFlushAndYield(['Another child', 'A']);
+
+    expect(ReactNoop).toMatchRenderedOutput(
+      <>
+        <span>Another child</span>
+        <span>A</span>
+      </>,
+    );
+
+    ReactNoop.render(<Foo showMore={true} />);
+
+    expect(Scheduler).toFlushAndYield([
+      'Another child',
+      'A',
+      'B',
+      'Suspend! [C]',
+      'Loading C',
+    ]);
+
+    expect(ReactNoop).toMatchRenderedOutput(
+      <>
+        <span>Another child</span>
+        <span>A</span>
+        <span>B</span>
+        <span>Loading C</span>
+      </>,
+    );
+
+    await C.resolve();
+
+    expect(Scheduler).toFlushAndYield(['C']);
+
+    expect(ReactNoop).toMatchRenderedOutput(
+      <>
+        <span>Another child</span>
+        <span>A</span>
+        <span>B</span>
+        <span>C</span>
+      </>,
+    );
   });
 
   // @gate experimental
