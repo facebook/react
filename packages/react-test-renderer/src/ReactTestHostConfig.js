@@ -445,3 +445,11 @@ export function unmountEventListener(listener: any) {
 export function validateEventListenerTarget(target: any, listener: any) {
   throw new Error('Not yet implemented.');
 }
+
+export function beforeActiveInstanceBlur() {
+  // noop
+}
+
+export function afterActiveInstanceBlur() {
+  // noop
+}

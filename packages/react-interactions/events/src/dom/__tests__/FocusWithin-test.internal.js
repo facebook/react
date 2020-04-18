@@ -367,6 +367,40 @@ describe.each(table)('FocusWithin responder', hasPointerEvents => {
     });
 
     // @gate experimental
+    it('is called after many elements are unmounted', () => {
+      const buttonRef = React.createRef();
+      const inputRef = React.createRef();
+
+      const Component = ({show}) => {
+        const listener = useFocusWithin({
+          onBeforeBlurWithin,
+          onBlurWithin,
+        });
+        return (
+          <div ref={ref} DEPRECATED_flareListeners={listener}>
+            {show && <button>Press me!</button>}
+            {show && <button>Press me!</button>}
+            {show && <input ref={inputRef} />}
+            {show && <button>Press me!</button>}
+            {!show && <button ref={buttonRef}>Press me!</button>}
+            {show && <button>Press me!</button>}
+            <button>Press me!</button>
+            <button>Press me!</button>
+          </div>
+        );
+      };
+
+      ReactDOM.render(<Component show={true} />, container);
+
+      inputRef.current.focus();
+      expect(onBeforeBlurWithin).toHaveBeenCalledTimes(0);
+      expect(onBlurWithin).toHaveBeenCalledTimes(0);
+      ReactDOM.render(<Component show={false} />, container);
+      expect(onBeforeBlurWithin).toHaveBeenCalledTimes(1);
+      expect(onBlurWithin).toHaveBeenCalledTimes(1);
+    });
+
+    // @gate experimental
     it('is called after a nested focused element is unmounted (with scope query)', () => {
       const TestScope = React.unstable_createScope();
       const testScopeQuery = (type, props) => true;
