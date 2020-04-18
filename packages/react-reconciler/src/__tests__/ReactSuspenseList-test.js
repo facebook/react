@@ -847,8 +847,10 @@ describe('ReactSuspenseList', () => {
         <span>C</span>
       </>,
     );
-  }); // @gate experimental
-  it('displays each items in "forwards" order in nested SuspenseLists on re-render', async () => {
+  });
+
+  // @gate experimental
+  it('displays each items in "forwards" order in nested SuspenseLists after re-render', async () => {
     const A = createAsyncText('A');
     const B = createAsyncText('B');
     const C = createAsyncText('C');
