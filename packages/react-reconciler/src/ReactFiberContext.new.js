@@ -67,11 +67,10 @@ function cacheContext(
 ): void {
   if (disableLegacyContext) {
     return;
-  } else {
-    const instance = workInProgress.stateNode;
-    instance.__reactInternalMemoizedUnmaskedChildContext = unmaskedContext;
-    instance.__reactInternalMemoizedMaskedChildContext = maskedContext;
   }
+  const instance = workInProgress.stateNode;
+  instance.__reactInternalMemoizedUnmaskedChildContext = unmaskedContext;
+  instance.__reactInternalMemoizedMaskedChildContext = maskedContext;
 }
 
 function getMaskedContext(
@@ -138,19 +137,19 @@ function isContextProvider(type: Function): boolean {
 function popContext(fiber: Fiber): void {
   if (disableLegacyContext) {
     return;
-  } else {
-    pop(didPerformWorkStackCursor, fiber);
-    pop(contextStackCursor, fiber);
   }
+
+  pop(didPerformWorkStackCursor, fiber);
+  pop(contextStackCursor, fiber);
 }
 
 function popTopLevelContextObject(fiber: Fiber): void {
   if (disableLegacyContext) {
     return;
-  } else {
-    pop(didPerformWorkStackCursor, fiber);
-    pop(contextStackCursor, fiber);
   }
+
+  pop(didPerformWorkStackCursor, fiber);
+  pop(contextStackCursor, fiber);
 }
 
 function pushTopLevelContextObject(
@@ -160,16 +159,16 @@ function pushTopLevelContextObject(
 ): void {
   if (disableLegacyContext) {
     return;
-  } else {
-    invariant(
-      contextStackCursor.current === emptyContextObject,
-      'Unexpected context found on stack. ' +
-        'This error is likely caused by a bug in React. Please file an issue.',
-    );
-
-    push(contextStackCursor, context, fiber);
-    push(didPerformWorkStackCursor, didChange, fiber);
   }
+
+  invariant(
+    contextStackCursor.current === emptyContextObject,
+    'Unexpected context found on stack. ' +
+    'This error is likely caused by a bug in React. Please file an issue.',
+  );
+
+  push(contextStackCursor, context, fiber);
+  push(didPerformWorkStackCursor, didChange, fiber);
 }
 
 function processChildContext(
@@ -193,8 +192,8 @@ function processChildContext(
           warnedAboutMissingGetChildContext[componentName] = true;
           console.error(
             '%s.childContextTypes is specified but there is no getChildContext() method ' +
-              'on the instance. You can either define getChildContext() on %s or remove ' +
-              'childContextTypes from it.',
+            'on the instance. You can either define getChildContext() on %s or remove ' +
+            'childContextTypes from it.',
             componentName,
             componentName,
           );
@@ -254,36 +253,36 @@ function invalidateContextProvider(
 ): void {
   if (disableLegacyContext) {
     return;
-  } else {
-    const instance = workInProgress.stateNode;
-    invariant(
-      instance,
-      'Expected to have an instance by this point. ' +
-        'This error is likely caused by a bug in React. Please file an issue.',
+  }
+
+  const instance = workInProgress.stateNode;
+  invariant(
+    instance,
+    'Expected to have an instance by this point. ' +
+    'This error is likely caused by a bug in React. Please file an issue.',
+  );
+
+  if (didChange) {
+    // Merge parent and own context.
+    // Skip this if we're not updating due to sCU.
+    // This avoids unnecessarily recomputing memoized values.
+    const mergedContext = processChildContext(
+      workInProgress,
+      type,
+      previousContext,
     );
+    instance.__reactInternalMemoizedMergedChildContext = mergedContext;
 
-    if (didChange) {
-      // Merge parent and own context.
-      // Skip this if we're not updating due to sCU.
-      // This avoids unnecessarily recomputing memoized values.
-      const mergedContext = processChildContext(
-        workInProgress,
-        type,
-        previousContext,
-      );
-      instance.__reactInternalMemoizedMergedChildContext = mergedContext;
-
-      // Replace the old (or empty) context with the new one.
-      // It is important to unwind the context in the reverse order.
-      pop(didPerformWorkStackCursor, workInProgress);
-      pop(contextStackCursor, workInProgress);
-      // Now push the new context and mark that it has changed.
-      push(contextStackCursor, mergedContext, workInProgress);
-      push(didPerformWorkStackCursor, didChange, workInProgress);
-    } else {
-      pop(didPerformWorkStackCursor, workInProgress);
-      push(didPerformWorkStackCursor, didChange, workInProgress);
-    }
+    // Replace the old (or empty) context with the new one.
+    // It is important to unwind the context in the reverse order.
+    pop(didPerformWorkStackCursor, workInProgress);
+    pop(contextStackCursor, workInProgress);
+    // Now push the new context and mark that it has changed.
+    push(contextStackCursor, mergedContext, workInProgress);
+    push(didPerformWorkStackCursor, didChange, workInProgress);
+  } else {
+    pop(didPerformWorkStackCursor, workInProgress);
+    push(didPerformWorkStackCursor, didChange, workInProgress);
   }
 }
 
@@ -296,7 +295,7 @@ function findCurrentUnmaskedContext(fiber: Fiber): Object {
     invariant(
       isFiberMounted(fiber) && fiber.tag === ClassComponent,
       'Expected subtree parent to be a mounted class component. ' +
-        'This error is likely caused by a bug in React. Please file an issue.',
+      'This error is likely caused by a bug in React. Please file an issue.',
     );
 
     let node = fiber;
@@ -317,7 +316,7 @@ function findCurrentUnmaskedContext(fiber: Fiber): Object {
     invariant(
       false,
       'Found unexpected detached subtree parent. ' +
-        'This error is likely caused by a bug in React. Please file an issue.',
+      'This error is likely caused by a bug in React. Please file an issue.',
     );
   }
 }
