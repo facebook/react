@@ -18,7 +18,7 @@ import type {Fiber} from './ReactInternalTypes';
 import type {RootTag} from './ReactRootTags';
 import type {WorkTag} from './ReactWorkTags';
 import type {TypeOfMode} from './ReactTypeOfMode';
-import type {ExpirationTime} from './ReactFiberExpirationTime.new';
+import type {ExpirationTimeOpaque} from './ReactFiberExpirationTime.new';
 import type {SuspenseInstance} from './ReactFiberHostConfig';
 
 import invariant from 'shared/invariant';
@@ -145,8 +145,8 @@ function FiberNode(
   this.firstEffect = null;
   this.lastEffect = null;
 
-  this.expirationTime = NoWork;
-  this.childExpirationTime = NoWork;
+  this.expirationTime_opaque = NoWork;
+  this.childExpirationTime_opaque = NoWork;
 
   this.alternate = null;
 
@@ -309,8 +309,9 @@ export function createWorkInProgress(current: Fiber, pendingProps: any): Fiber {
     }
   }
 
-  workInProgress.childExpirationTime = current.childExpirationTime;
-  workInProgress.expirationTime = current.expirationTime;
+  workInProgress.childExpirationTime_opaque =
+    current.childExpirationTime_opaque;
+  workInProgress.expirationTime_opaque = current.expirationTime_opaque;
 
   workInProgress.child = current.child;
   workInProgress.memoizedProps = current.memoizedProps;
@@ -364,7 +365,7 @@ export function createWorkInProgress(current: Fiber, pendingProps: any): Fiber {
 // Used to reuse a Fiber for a second pass.
 export function resetWorkInProgress(
   workInProgress: Fiber,
-  renderExpirationTime: ExpirationTime,
+  renderExpirationTime: ExpirationTimeOpaque,
 ) {
   // This resets the Fiber to what createFiber or createWorkInProgress would
   // have set the values to before during the first pass. Ideally this wouldn't
@@ -386,8 +387,8 @@ export function resetWorkInProgress(
   const current = workInProgress.alternate;
   if (current === null) {
     // Reset to createFiber's initial values.
-    workInProgress.childExpirationTime = NoWork;
-    workInProgress.expirationTime = renderExpirationTime;
+    workInProgress.childExpirationTime_opaque = NoWork;
+    workInProgress.expirationTime_opaque = renderExpirationTime;
 
     workInProgress.child = null;
     workInProgress.memoizedProps = null;
@@ -406,8 +407,9 @@ export function resetWorkInProgress(
     }
   } else {
     // Reset to the cloned values that createWorkInProgress would've.
-    workInProgress.childExpirationTime = current.childExpirationTime;
-    workInProgress.expirationTime = current.expirationTime;
+    workInProgress.childExpirationTime_opaque =
+      current.childExpirationTime_opaque;
+    workInProgress.expirationTime_opaque = current.expirationTime_opaque;
 
     workInProgress.child = current.child;
     workInProgress.memoizedProps = current.memoizedProps;
@@ -463,7 +465,7 @@ export function createFiberFromTypeAndProps(
   pendingProps: any,
   owner: null | Fiber,
   mode: TypeOfMode,
-  expirationTime: ExpirationTime,
+  expirationTime: ExpirationTimeOpaque,
 ): Fiber {
   let fiberTag = IndeterminateComponent;
   // The resolved type is set if we know what the final type will be. I.e. it's not lazy.
@@ -591,7 +593,7 @@ export function createFiberFromTypeAndProps(
   const fiber = createFiber(fiberTag, pendingProps, key, mode);
   fiber.elementType = type;
   fiber.type = resolvedType;
-  fiber.expirationTime = expirationTime;
+  fiber.expirationTime_opaque = expirationTime;
 
   return fiber;
 }
@@ -599,7 +601,7 @@ export function createFiberFromTypeAndProps(
 export function createFiberFromElement(
   element: ReactElement,
   mode: TypeOfMode,
-  expirationTime: ExpirationTime,
+  expirationTime: ExpirationTimeOpaque,
 ): Fiber {
   let owner = null;
   if (__DEV__) {
@@ -626,11 +628,11 @@ export function createFiberFromElement(
 export function createFiberFromFragment(
   elements: ReactFragment,
   mode: TypeOfMode,
-  expirationTime: ExpirationTime,
+  expirationTime: ExpirationTimeOpaque,
   key: null | string,
 ): Fiber {
   const fiber = createFiber(Fragment, elements, key, mode);
-  fiber.expirationTime = expirationTime;
+  fiber.expirationTime_opaque = expirationTime;
   return fiber;
 }
 
@@ -638,13 +640,13 @@ export function createFiberFromFundamental(
   fundamentalComponent: ReactFundamentalComponent<any, any>,
   pendingProps: any,
   mode: TypeOfMode,
-  expirationTime: ExpirationTime,
+  expirationTime: ExpirationTimeOpaque,
   key: null | string,
 ): Fiber {
   const fiber = createFiber(FundamentalComponent, pendingProps, key, mode);
   fiber.elementType = fundamentalComponent;
   fiber.type = fundamentalComponent;
-  fiber.expirationTime = expirationTime;
+  fiber.expirationTime_opaque = expirationTime;
   return fiber;
 }
 
@@ -652,20 +654,20 @@ function createFiberFromScope(
   scope: ReactScope,
   pendingProps: any,
   mode: TypeOfMode,
-  expirationTime: ExpirationTime,
+  expirationTime: ExpirationTimeOpaque,
   key: null | string,
 ) {
   const fiber = createFiber(ScopeComponent, pendingProps, key, mode);
   fiber.type = scope;
   fiber.elementType = scope;
-  fiber.expirationTime = expirationTime;
+  fiber.expirationTime_opaque = expirationTime;
   return fiber;
 }
 
 function createFiberFromProfiler(
   pendingProps: any,
   mode: TypeOfMode,
-  expirationTime: ExpirationTime,
+  expirationTime: ExpirationTimeOpaque,
   key: null | string,
 ): Fiber {
   if (__DEV__) {
@@ -678,7 +680,7 @@ function createFiberFromProfiler(
   // TODO: The Profiler fiber shouldn't have a type. It has a tag.
   fiber.elementType = REACT_PROFILER_TYPE;
   fiber.type = REACT_PROFILER_TYPE;
-  fiber.expirationTime = expirationTime;
+  fiber.expirationTime_opaque = expirationTime;
 
   if (enableProfilerTimer) {
     fiber.stateNode = {
@@ -693,7 +695,7 @@ function createFiberFromProfiler(
 export function createFiberFromSuspense(
   pendingProps: any,
   mode: TypeOfMode,
-  expirationTime: ExpirationTime,
+  expirationTime: ExpirationTimeOpaque,
   key: null | string,
 ) {
   const fiber = createFiber(SuspenseComponent, pendingProps, key, mode);
@@ -704,14 +706,14 @@ export function createFiberFromSuspense(
   fiber.type = REACT_SUSPENSE_TYPE;
   fiber.elementType = REACT_SUSPENSE_TYPE;
 
-  fiber.expirationTime = expirationTime;
+  fiber.expirationTime_opaque = expirationTime;
   return fiber;
 }
 
 export function createFiberFromSuspenseList(
   pendingProps: any,
   mode: TypeOfMode,
-  expirationTime: ExpirationTime,
+  expirationTime: ExpirationTimeOpaque,
   key: null | string,
 ) {
   const fiber = createFiber(SuspenseListComponent, pendingProps, key, mode);
@@ -722,17 +724,17 @@ export function createFiberFromSuspenseList(
     fiber.type = REACT_SUSPENSE_LIST_TYPE;
   }
   fiber.elementType = REACT_SUSPENSE_LIST_TYPE;
-  fiber.expirationTime = expirationTime;
+  fiber.expirationTime_opaque = expirationTime;
   return fiber;
 }
 
 export function createFiberFromText(
   content: string,
   mode: TypeOfMode,
-  expirationTime: ExpirationTime,
+  expirationTime: ExpirationTimeOpaque,
 ): Fiber {
   const fiber = createFiber(HostText, content, null, mode);
-  fiber.expirationTime = expirationTime;
+  fiber.expirationTime_opaque = expirationTime;
   return fiber;
 }
 
@@ -755,11 +757,11 @@ export function createFiberFromDehydratedFragment(
 export function createFiberFromPortal(
   portal: ReactPortal,
   mode: TypeOfMode,
-  expirationTime: ExpirationTime,
+  expirationTime: ExpirationTimeOpaque,
 ): Fiber {
   const pendingProps = portal.children !== null ? portal.children : [];
   const fiber = createFiber(HostPortal, pendingProps, portal.key, mode);
-  fiber.expirationTime = expirationTime;
+  fiber.expirationTime_opaque = expirationTime;
   fiber.stateNode = {
     containerInfo: portal.containerInfo,
     pendingChildren: null, // Used by persistent updates
@@ -805,8 +807,8 @@ export function assignFiberPropertiesInDEV(
   target.nextEffect = source.nextEffect;
   target.firstEffect = source.firstEffect;
   target.lastEffect = source.lastEffect;
-  target.expirationTime = source.expirationTime;
-  target.childExpirationTime = source.childExpirationTime;
+  target.expirationTime_opaque = source.expirationTime_opaque;
+  target.childExpirationTime_opaque = source.childExpirationTime_opaque;
   target.alternate = source.alternate;
   if (enableProfilerTimer) {
     target.actualDuration = source.actualDuration;

@@ -9,7 +9,7 @@
 
 import type {Fiber} from './ReactInternalTypes';
 import type {SuspenseInstance} from './ReactFiberHostConfig';
-import type {ExpirationTime} from './ReactFiberExpirationTime.new';
+import type {ExpirationTimeOpaque} from './ReactFiberExpirationTime.new';
 import {SuspenseComponent, SuspenseListComponent} from './ReactWorkTags';
 import {NoEffect, DidCapture} from './ReactSideEffectTags';
 import {
@@ -32,12 +32,12 @@ export type SuspenseState = {|
   // Represents the work that was deprioritized when we committed the fallback.
   // The work outside the boundary already committed at this level, so we cannot
   // unhide the content without including it.
-  baseTime: ExpirationTime,
+  baseTime: ExpirationTimeOpaque,
   // Represents the earliest expiration time we should attempt to hydrate
   // a dehydrated boundary at.
   // Never is the default for dehydrated boundaries.
   // NoWork is the default for normal boundaries, which turns into "normal" pri.
-  retryTime: ExpirationTime,
+  retryTime: ExpirationTimeOpaque,
 |};
 
 export type SuspenseListTailMode = 'collapsed' | 'hidden' | void;

@@ -18,9 +18,9 @@ import {
   IdlePriority,
 } from './SchedulerWithReactIntegration.new';
 
-export type ExpirationTime = number;
+export opaque type ExpirationTimeOpaque = number;
 
-export const NoWork = 0;
+export const NoWork: ExpirationTimeOpaque = 0;
 // TODO: Think of a better name for Never. The key difference with Idle is that
 // Never work can be committed in an inconsistent state without tearing the UI.
 // The main example is offscreen content, like a hidden subtree. So one possible
@@ -28,25 +28,25 @@ export const NoWork = 0;
 // which are inconsistent in the sense that they haven't finished yet, but
 // aren't visibly inconsistent because the server rendered HTML matches what the
 // hydrated tree would look like.
-export const Never = 1;
+export const Never: ExpirationTimeOpaque = 1;
 // Idle is slightly higher priority than Never. It must completely finish in
 // order to be consistent.
-export const Idle = 2;
+export const Idle: ExpirationTimeOpaque = 2;
 // Continuous Hydration is slightly higher than Idle and is used to increase
 // priority of hover targets.
-export const ContinuousHydration = 3;
-export const LongTransition = 49999;
-export const ShortTransition = 99999;
-export const DefaultUpdateTime = 1073741296;
-export const UserBlockingUpdateTime = 1073741761;
-export const Sync = MAX_SIGNED_31_BIT_INT;
-export const Batched = Sync - 1;
+export const ContinuousHydration: ExpirationTimeOpaque = 3;
+export const LongTransition: ExpirationTimeOpaque = 49999;
+export const ShortTransition: ExpirationTimeOpaque = 99999;
+export const DefaultUpdateTime: ExpirationTimeOpaque = 1073741296;
+export const UserBlockingUpdateTime: ExpirationTimeOpaque = 1073741761;
+export const Sync: ExpirationTimeOpaque = MAX_SIGNED_31_BIT_INT;
+export const Batched: ExpirationTimeOpaque = Sync - 1;
 
 // Accounts for -1 trick to bump updates into a different batch
 const ADJUSTMENT_OFFSET = 5;
 
 export function inferPriorityFromExpirationTime(
-  expirationTime: ExpirationTime,
+  expirationTime: ExpirationTimeOpaque,
 ): ReactPriorityLevel {
   if (expirationTime >= Batched - ADJUSTMENT_OFFSET) {
     return ImmediatePriority;
@@ -63,4 +63,30 @@ export function inferPriorityFromExpirationTime(
 
   // Assume anything lower has idle priority
   return IdlePriority;
+}
+
+export function isSameOrHigherPriority(
+  a: ExpirationTimeOpaque,
+  b: ExpirationTimeOpaque,
+) {
+  return a >= b;
+}
+
+export function isSameExpirationTime(
+  a: ExpirationTimeOpaque,
+  b: ExpirationTimeOpaque,
+) {
+  return a === b;
+}
+
+export function bumpPriorityHigher(
+  a: ExpirationTimeOpaque,
+): ExpirationTimeOpaque {
+  return a + 1;
+}
+
+export function bumpPriorityLower(
+  a: ExpirationTimeOpaque,
+): ExpirationTimeOpaque {
+  return a - 1;
 }

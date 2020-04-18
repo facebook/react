@@ -10,7 +10,7 @@
 import type {ReactContext} from 'shared/ReactTypes';
 import type {Fiber, ContextDependency} from './ReactInternalTypes';
 import type {StackCursor} from './ReactFiberStack.new';
-import type {ExpirationTime} from './ReactFiberExpirationTime.new';
+import type {ExpirationTimeOpaque} from './ReactFiberExpirationTime.new';
 
 import {isPrimaryRenderer} from './ReactFiberHostConfig';
 import {createCursor, push, pop} from './ReactFiberStack.new';
@@ -20,6 +20,7 @@ import {
   ClassComponent,
   DehydratedFragment,
 } from './ReactWorkTags';
+import {isSameOrHigherPriority} from './ReactFiberExpirationTime.new';
 
 import invariant from 'shared/invariant';
 import is from 'shared/objectIs';
@@ -147,26 +148,37 @@ export function calculateChangedBits<T>(
 
 export function scheduleWorkOnParentPath(
   parent: Fiber | null,
-  renderExpirationTime: ExpirationTime,
+  renderExpirationTime: ExpirationTimeOpaque,
 ) {
   // Update the child expiration time of all the ancestors, including
   // the alternates.
   let node = parent;
   while (node !== null) {
     const alternate = node.alternate;
-    if (node.childExpirationTime < renderExpirationTime) {
-      node.childExpirationTime = renderExpirationTime;
+    if (
+      !isSameOrHigherPriority(
+        node.childExpirationTime_opaque,
+        renderExpirationTime,
+      )
+    ) {
+      node.childExpirationTime_opaque = renderExpirationTime;
       if (
         alternate !== null &&
-        alternate.childExpirationTime < renderExpirationTime
+        !isSameOrHigherPriority(
+          alternate.childExpirationTime_opaque,
+          renderExpirationTime,
+        )
       ) {
-        alternate.childExpirationTime = renderExpirationTime;
+        alternate.childExpirationTime_opaque = renderExpirationTime;
       }
     } else if (
       alternate !== null &&
-      alternate.childExpirationTime < renderExpirationTime
+      !isSameOrHigherPriority(
+        alternate.childExpirationTime_opaque,
+        renderExpirationTime,
+      )
     ) {
-      alternate.childExpirationTime = renderExpirationTime;
+      alternate.childExpirationTime_opaque = renderExpirationTime;
     } else {
       // Neither alternate was updated, which means the rest of the
       // ancestor path already has sufficient priority.
@@ -180,7 +192,7 @@ export function propagateContextChange(
   workInProgress: Fiber,
   context: ReactContext<mixed>,
   changedBits: number,
-  renderExpirationTime: ExpirationTime,
+  renderExpirationTime: ExpirationTimeOpaque,
 ): void {
   let fiber = workInProgress.child;
   if (fiber !== null) {
@@ -215,21 +227,31 @@ export function propagateContextChange(
             enqueueUpdate(fiber, update);
           }
 
-          if (fiber.expirationTime < renderExpirationTime) {
-            fiber.expirationTime = renderExpirationTime;
+          if (
+            !isSameOrHigherPriority(
+              fiber.expirationTime_opaque,
+              renderExpirationTime,
+            )
+          ) {
+            fiber.expirationTime_opaque = renderExpirationTime;
           }
           const alternate = fiber.alternate;
           if (
             alternate !== null &&
-            alternate.expirationTime < renderExpirationTime
+            !isSameOrHigherPriority(
+              alternate.expirationTime_opaque,
+              renderExpirationTime,
+            )
           ) {
-            alternate.expirationTime = renderExpirationTime;
+            alternate.expirationTime_opaque = renderExpirationTime;
           }
 
           scheduleWorkOnParentPath(fiber.return, renderExpirationTime);
 
           // Mark the expiration time on the list, too.
-          if (list.expirationTime < renderExpirationTime) {
+          if (
+            !isSameOrHigherPriority(list.expirationTime, renderExpirationTime)
+          ) {
             list.expirationTime = renderExpirationTime;
           }
 
@@ -254,15 +276,23 @@ export function propagateContextChange(
         parentSuspense !== null,
         'We just came from a parent so we must have had a parent. This is a bug in React.',
       );
-      if (parentSuspense.expirationTime < renderExpirationTime) {
-        parentSuspense.expirationTime = renderExpirationTime;
+      if (
+        !isSameOrHigherPriority(
+          parentSuspense.expirationTime_opaque,
+          renderExpirationTime,
+        )
+      ) {
+        parentSuspense.expirationTime_opaque = renderExpirationTime;
       }
       const alternate = parentSuspense.alternate;
       if (
         alternate !== null &&
-        alternate.expirationTime < renderExpirationTime
+        !isSameOrHigherPriority(
+          alternate.expirationTime_opaque,
+          renderExpirationTime,
+        )
       ) {
-        alternate.expirationTime = renderExpirationTime;
+        alternate.expirationTime_opaque = renderExpirationTime;
       }
       // This is intentionally passing this fiber as the parent
       // because we want to schedule this fiber as having work
@@ -304,7 +334,7 @@ export function propagateContextChange(
 
 export function prepareToReadContext(
   workInProgress: Fiber,
-  renderExpirationTime: ExpirationTime,
+  renderExpirationTime: ExpirationTimeOpaque,
 ): void {
   currentlyRenderingFiber = workInProgress;
   lastContextDependency = null;
@@ -314,7 +344,12 @@ export function prepareToReadContext(
   if (dependencies !== null) {
     const firstContext = dependencies.firstContext;
     if (firstContext !== null) {
-      if (dependencies.expirationTime >= renderExpirationTime) {
+      if (
+        isSameOrHigherPriority(
+          dependencies.expirationTime,
+          renderExpirationTime,
+        )
+      ) {
         // Context list has a pending update. Mark that this fiber performed work.
         markWorkInProgressReceivedUpdate();
       }

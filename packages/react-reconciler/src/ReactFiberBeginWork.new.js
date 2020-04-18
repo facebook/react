@@ -12,7 +12,7 @@ import type {BlockComponent} from 'react/src/ReactBlock';
 import type {LazyComponent as LazyComponentType} from 'react/src/ReactLazy';
 import type {Fiber} from './ReactInternalTypes';
 import type {FiberRoot} from './ReactInternalTypes';
-import type {ExpirationTime} from './ReactFiberExpirationTime.new';
+import type {ExpirationTimeOpaque} from './ReactFiberExpirationTime.new';
 import type {
   SuspenseState,
   SuspenseListRenderState,
@@ -100,6 +100,9 @@ import {
   Never,
   Sync,
   DefaultUpdateTime,
+  isSameOrHigherPriority,
+  isSameExpirationTime,
+  bumpPriorityHigher,
 } from './ReactFiberExpirationTime.new';
 import {
   ConcurrentMode,
@@ -212,7 +215,7 @@ export function reconcileChildren(
   current: Fiber | null,
   workInProgress: Fiber,
   nextChildren: any,
-  renderExpirationTime: ExpirationTime,
+  renderExpirationTime: ExpirationTimeOpaque,
 ) {
   if (current === null) {
     // If this is a fresh new component that hasn't been rendered yet, we
@@ -245,7 +248,7 @@ function forceUnmountCurrentAndReconcile(
   current: Fiber,
   workInProgress: Fiber,
   nextChildren: any,
-  renderExpirationTime: ExpirationTime,
+  renderExpirationTime: ExpirationTimeOpaque,
 ) {
   // This function is fork of reconcileChildren. It's used in cases where we
   // want to reconcile without matching against the existing set. This has the
@@ -278,7 +281,7 @@ function updateForwardRef(
   workInProgress: Fiber,
   Component: any,
   nextProps: any,
-  renderExpirationTime: ExpirationTime,
+  renderExpirationTime: ExpirationTimeOpaque,
 ) {
   // TODO: current can be non-null here even if the component
   // hasn't yet mounted. This happens after the first render suspends.
@@ -373,7 +376,7 @@ function updateMemoComponent(
   Component: any,
   nextProps: any,
   updateExpirationTime,
-  renderExpirationTime: ExpirationTime,
+  renderExpirationTime: ExpirationTimeOpaque,
 ): null | Fiber {
   if (current === null) {
     const type = Component.type;
@@ -445,7 +448,7 @@ function updateMemoComponent(
     }
   }
   const currentChild = ((current.child: any): Fiber); // This is always exactly one child
-  if (updateExpirationTime < renderExpirationTime) {
+  if (!isSameOrHigherPriority(updateExpirationTime, renderExpirationTime)) {
     // This will be the props with resolved defaultProps,
     // unlike current.memoizedProps which will be the unresolved ones.
     const prevProps = currentChild.memoizedProps;
@@ -475,7 +478,7 @@ function updateSimpleMemoComponent(
   Component: any,
   nextProps: any,
   updateExpirationTime,
-  renderExpirationTime: ExpirationTime,
+  renderExpirationTime: ExpirationTimeOpaque,
 ): null | Fiber {
   // TODO: current can be non-null here even if the component
   // hasn't yet mounted. This happens when the inner render suspends.
@@ -520,7 +523,7 @@ function updateSimpleMemoComponent(
       (__DEV__ ? workInProgress.type === current.type : true)
     ) {
       didReceiveUpdate = false;
-      if (updateExpirationTime < renderExpirationTime) {
+      if (!isSameOrHigherPriority(updateExpirationTime, renderExpirationTime)) {
         // The pending update priority was cleared at the beginning of
         // beginWork. We're about to bail out, but there might be additional
         // updates at a lower priority. Usually, the priority level of the
@@ -534,7 +537,7 @@ function updateSimpleMemoComponent(
         // contains hooks.
         // TODO: Move the reset at in beginWork out of the common path so that
         // this is no longer necessary.
-        workInProgress.expirationTime = current.expirationTime;
+        workInProgress.expirationTime_opaque = current.expirationTime_opaque;
         return bailoutOnAlreadyFinishedWork(
           current,
           workInProgress,
@@ -555,7 +558,7 @@ function updateSimpleMemoComponent(
 function updateFragment(
   current: Fiber | null,
   workInProgress: Fiber,
-  renderExpirationTime: ExpirationTime,
+  renderExpirationTime: ExpirationTimeOpaque,
 ) {
   const nextChildren = workInProgress.pendingProps;
   reconcileChildren(
@@ -570,7 +573,7 @@ function updateFragment(
 function updateMode(
   current: Fiber | null,
   workInProgress: Fiber,
-  renderExpirationTime: ExpirationTime,
+  renderExpirationTime: ExpirationTimeOpaque,
 ) {
   const nextChildren = workInProgress.pendingProps.children;
   reconcileChildren(
@@ -585,7 +588,7 @@ function updateMode(
 function updateProfiler(
   current: Fiber | null,
   workInProgress: Fiber,
-  renderExpirationTime: ExpirationTime,
+  renderExpirationTime: ExpirationTimeOpaque,
 ) {
   if (enableProfilerTimer) {
     workInProgress.effectTag |= Update;
@@ -715,7 +718,7 @@ function updateBlock<Props, Data>(
   workInProgress: Fiber,
   block: BlockComponent<Props, Data>,
   nextProps: any,
-  renderExpirationTime: ExpirationTime,
+  renderExpirationTime: ExpirationTimeOpaque,
 ) {
   // TODO: current can be non-null here even if the component
   // hasn't yet mounted. This happens after the first render suspends.
@@ -793,7 +796,7 @@ function updateClassComponent(
   workInProgress: Fiber,
   Component: any,
   nextProps,
-  renderExpirationTime: ExpirationTime,
+  renderExpirationTime: ExpirationTimeOpaque,
 ) {
   if (__DEV__) {
     if (workInProgress.type !== workInProgress.elementType) {
@@ -892,7 +895,7 @@ function finishClassComponent(
   Component: any,
   shouldUpdate: boolean,
   hasContext: boolean,
-  renderExpirationTime: ExpirationTime,
+  renderExpirationTime: ExpirationTimeOpaque,
 ) {
   // Refs should update even if shouldComponentUpdate returns false
   markRef(current, workInProgress);
@@ -1069,7 +1072,11 @@ function updateHostRoot(current, workInProgress, renderExpirationTime) {
   return workInProgress.child;
 }
 
-function updateHostComponent(current, workInProgress, renderExpirationTime) {
+function updateHostComponent(
+  current: Fiber | null,
+  workInProgress: Fiber,
+  renderExpirationTime: ExpirationTimeOpaque,
+) {
   pushHostContext(workInProgress);
 
   if (current === null) {
@@ -1100,14 +1107,17 @@ function updateHostComponent(current, workInProgress, renderExpirationTime) {
   // Check the host config to see if the children are offscreen/hidden.
   if (
     workInProgress.mode & ConcurrentMode &&
-    renderExpirationTime !== Never &&
+    !isSameExpirationTime(
+      renderExpirationTime,
+      (Never: ExpirationTimeOpaque),
+    ) &&
     shouldDeprioritizeSubtree(type, nextProps)
   ) {
     if (enableSchedulerTracing) {
-      markSpawnedWork(Never);
+      markSpawnedWork((Never: ExpirationTimeOpaque));
     }
     // Schedule this fiber to re-render at offscreen priority. Then bailout.
-    workInProgress.expirationTime = workInProgress.childExpirationTime = Never;
+    workInProgress.expirationTime_opaque = workInProgress.childExpirationTime_opaque = Never;
     return null;
   }
 
@@ -1608,7 +1618,7 @@ function validateFunctionComponentInDev(workInProgress: Fiber, Component: any) {
 }
 
 function mountSuspenseState(
-  renderExpirationTime: ExpirationTime,
+  renderExpirationTime: ExpirationTimeOpaque,
 ): SuspenseState {
   return {
     dehydrated: null,
@@ -1619,7 +1629,7 @@ function mountSuspenseState(
 
 function updateSuspenseState(
   prevSuspenseState: SuspenseState,
-  renderExpirationTime: ExpirationTime,
+  renderExpirationTime: ExpirationTimeOpaque,
 ): SuspenseState {
   const prevSuspendedTime = prevSuspenseState.baseTime;
   return {
@@ -1627,7 +1637,10 @@ function updateSuspenseState(
     baseTime:
       // Choose whichever time is inclusive of the other one. This represents
       // the union of all the levels that suspended.
-      prevSuspendedTime !== NoWork && prevSuspendedTime < renderExpirationTime
+      !isSameExpirationTime(
+        prevSuspendedTime,
+        (NoWork: ExpirationTimeOpaque),
+      ) && !isSameOrHigherPriority(prevSuspendedTime, renderExpirationTime)
         ? prevSuspendedTime
         : renderExpirationTime,
     retryTime: NoWork,
@@ -1638,7 +1651,7 @@ function shouldRemainOnFallback(
   suspenseContext: SuspenseContext,
   current: null | Fiber,
   workInProgress: Fiber,
-  renderExpirationTime: ExpirationTime,
+  renderExpirationTime: ExpirationTimeOpaque,
 ) {
   // If we're already showing a fallback, there are cases where we need to
   // remain on that fallback regardless of whether the content has resolved.
@@ -1650,7 +1663,10 @@ function shouldRemainOnFallback(
       // the level that triggered the fallback, we must continue showing it,
       // regardless of what the Suspense context says.
       const baseTime = suspenseState.baseTime;
-      if (baseTime !== NoWork && baseTime < renderExpirationTime) {
+      if (
+        !isSameExpirationTime(baseTime, (NoWork: ExpirationTimeOpaque)) &&
+        !isSameOrHigherPriority(baseTime, renderExpirationTime)
+      ) {
         return true;
       }
       // Otherwise, fall through to check the Suspense context.
@@ -1674,19 +1690,24 @@ function getRemainingWorkInPrimaryTree(
   workInProgress: Fiber,
   renderExpirationTime,
 ) {
-  const currentChildExpirationTime = current.childExpirationTime;
+  const currentChildExpirationTime = current.childExpirationTime_opaque;
   const currentSuspenseState: SuspenseState = current.memoizedState;
   if (currentSuspenseState !== null) {
     // This boundary already timed out. Check if this render includes the level
     // that previously suspended.
     const baseTime = currentSuspenseState.baseTime;
-    if (baseTime !== NoWork && baseTime < renderExpirationTime) {
+    if (
+      !isSameExpirationTime(baseTime, (NoWork: ExpirationTimeOpaque)) &&
+      !isSameOrHigherPriority(baseTime, renderExpirationTime)
+    ) {
       // There's pending work at a lower level that might now be unblocked.
       return baseTime;
     }
   }
 
-  if (currentChildExpirationTime < renderExpirationTime) {
+  if (
+    !isSameOrHigherPriority(currentChildExpirationTime, renderExpirationTime)
+  ) {
     // The highest priority remaining work is not part of this render. So the
     // remaining work has not changed.
     return currentChildExpirationTime;
@@ -1701,8 +1722,8 @@ function getRemainingWorkInPrimaryTree(
     // separate task thread, this would be: currentChildBits & ~renderBits
     const root = getWorkInProgressRoot();
     if (root !== null) {
-      const lastPendingTime = root.lastPendingTime;
-      if (lastPendingTime < renderExpirationTime) {
+      const lastPendingTime = root.lastPendingTime_opaque;
+      if (!isSameOrHigherPriority(lastPendingTime, renderExpirationTime)) {
         return lastPendingTime;
       }
     }
@@ -1905,7 +1926,7 @@ function updateSuspenseComponent(
               // going to render this fragment.
               null,
               mode,
-              NoWork,
+              (NoWork: ExpirationTimeOpaque),
               null,
             );
             primaryChildFragment.return = workInProgress;
@@ -1957,7 +1978,7 @@ function updateSuspenseComponent(
             fallbackChildFragment.return = workInProgress;
             primaryChildFragment.sibling = fallbackChildFragment;
             fallbackChildFragment.effectTag |= Placement;
-            primaryChildFragment.childExpirationTime = getRemainingWorkInPrimaryTree(
+            primaryChildFragment.childExpirationTime_opaque = getRemainingWorkInPrimaryTree(
               current,
               workInProgress,
               renderExpirationTime,
@@ -2027,7 +2048,7 @@ function updateSuspenseComponent(
         );
         fallbackChildFragment.return = workInProgress;
         primaryChildFragment.sibling = fallbackChildFragment;
-        primaryChildFragment.childExpirationTime = getRemainingWorkInPrimaryTree(
+        primaryChildFragment.childExpirationTime_opaque = getRemainingWorkInPrimaryTree(
           current,
           workInProgress,
           renderExpirationTime,
@@ -2128,7 +2149,7 @@ function updateSuspenseComponent(
         fallbackChildFragment.return = workInProgress;
         primaryChildFragment.sibling = fallbackChildFragment;
         fallbackChildFragment.effectTag |= Placement;
-        primaryChildFragment.childExpirationTime = getRemainingWorkInPrimaryTree(
+        primaryChildFragment.childExpirationTime_opaque = getRemainingWorkInPrimaryTree(
           current,
           workInProgress,
           renderExpirationTime,
@@ -2157,7 +2178,7 @@ function updateSuspenseComponent(
 function retrySuspenseComponentWithoutHydrating(
   current: Fiber,
   workInProgress: Fiber,
-  renderExpirationTime: ExpirationTime,
+  renderExpirationTime: ExpirationTimeOpaque,
 ) {
   // We're now not suspended nor dehydrated.
   workInProgress.memoizedState = null;
@@ -2179,7 +2200,7 @@ function retrySuspenseComponentWithoutHydrating(
 function mountDehydratedSuspenseComponent(
   workInProgress: Fiber,
   suspenseInstance: SuspenseInstance,
-  renderExpirationTime: ExpirationTime,
+  renderExpirationTime: ExpirationTimeOpaque,
 ): null | Fiber {
   // During the first pass, we'll bail out and not drill into the children.
   // Instead, we'll leave the content in place and try to hydrate it later.
@@ -2193,7 +2214,7 @@ function mountDehydratedSuspenseComponent(
           'the server rendered components.',
       );
     }
-    workInProgress.expirationTime = Sync;
+    workInProgress.expirationTime_opaque = Sync;
   } else if (isSuspenseInstanceFallback(suspenseInstance)) {
     // This is a client-only boundary. Since we won't get any content from the server
     // for this, we need to schedule that at a higher priority based on when it would
@@ -2211,13 +2232,13 @@ function mountDehydratedSuspenseComponent(
     if (enableSchedulerTracing) {
       markSpawnedWork(newExpirationTime);
     }
-    workInProgress.expirationTime = newExpirationTime;
+    workInProgress.expirationTime_opaque = newExpirationTime;
   } else {
     // We'll continue hydrating the rest at offscreen priority since we'll already
     // be showing the right content coming from the server, it is no rush.
-    workInProgress.expirationTime = Never;
+    workInProgress.expirationTime_opaque = Never;
     if (enableSchedulerTracing) {
-      markSpawnedWork(Never);
+      markSpawnedWork((Never: ExpirationTimeOpaque));
     }
   }
   return null;
@@ -2228,7 +2249,7 @@ function updateDehydratedSuspenseComponent(
   workInProgress: Fiber,
   suspenseInstance: SuspenseInstance,
   suspenseState: SuspenseState,
-  renderExpirationTime: ExpirationTime,
+  renderExpirationTime: ExpirationTimeOpaque,
 ): null | Fiber {
   // We should never be hydrating at this point because it is the first pass,
   // but after we've already committed once.
@@ -2254,16 +2275,28 @@ function updateDehydratedSuspenseComponent(
   }
   // We use childExpirationTime to indicate that a child might depend on context, so if
   // any context has changed, we need to treat is as if the input might have changed.
-  const hasContextChanged = current.childExpirationTime >= renderExpirationTime;
+  const hasContextChanged = isSameOrHigherPriority(
+    current.childExpirationTime_opaque,
+    renderExpirationTime,
+  );
   if (didReceiveUpdate || hasContextChanged) {
     // This boundary has changed since the first render. This means that we are now unable to
     // hydrate it. We might still be able to hydrate it using an earlier expiration time, if
     // we are rendering at lower expiration than sync.
-    if (renderExpirationTime < Sync) {
-      if (suspenseState.retryTime <= renderExpirationTime) {
+    if (
+      !isSameOrHigherPriority(
+        renderExpirationTime,
+        (Sync: ExpirationTimeOpaque),
+      )
+    ) {
+      if (
+        isSameOrHigherPriority(renderExpirationTime, suspenseState.retryTime)
+      ) {
         // This render is even higher pri than we've seen before, let's try again
         // at even higher pri.
-        const attemptHydrationAtExpirationTime = renderExpirationTime + 1;
+        const attemptHydrationAtExpirationTime = bumpPriorityHigher(
+          renderExpirationTime,
+        );
         suspenseState.retryTime = attemptHydrationAtExpirationTime;
         scheduleUpdateOnFiber(current, attemptHydrationAtExpirationTime);
         // TODO: Early abort this render.
@@ -2338,14 +2371,22 @@ function updateDehydratedSuspenseComponent(
 
 function scheduleWorkOnFiber(
   fiber: Fiber,
-  renderExpirationTime: ExpirationTime,
+  renderExpirationTime: ExpirationTimeOpaque,
 ) {
-  if (fiber.expirationTime < renderExpirationTime) {
-    fiber.expirationTime = renderExpirationTime;
+  if (
+    !isSameOrHigherPriority(fiber.expirationTime_opaque, renderExpirationTime)
+  ) {
+    fiber.expirationTime_opaque = renderExpirationTime;
   }
   const alternate = fiber.alternate;
-  if (alternate !== null && alternate.expirationTime < renderExpirationTime) {
-    alternate.expirationTime = renderExpirationTime;
+  if (
+    alternate !== null &&
+    !isSameOrHigherPriority(
+      alternate.expirationTime_opaque,
+      renderExpirationTime,
+    )
+  ) {
+    alternate.expirationTime_opaque = renderExpirationTime;
   }
   scheduleWorkOnParentPath(fiber.return, renderExpirationTime);
 }
@@ -2353,7 +2394,7 @@ function scheduleWorkOnFiber(
 function propagateSuspenseContextChange(
   workInProgress: Fiber,
   firstChild: null | Fiber,
-  renderExpirationTime: ExpirationTime,
+  renderExpirationTime: ExpirationTimeOpaque,
 ): void {
   // Mark any Suspense boundaries with fallbacks as having work to do.
   // If they were previously forced into fallbacks, they may now be able
@@ -2603,7 +2644,7 @@ function initSuspenseListRenderState(
 function updateSuspenseListComponent(
   current: Fiber | null,
   workInProgress: Fiber,
-  renderExpirationTime: ExpirationTime,
+  renderExpirationTime: ExpirationTimeOpaque,
 ) {
   const nextProps = workInProgress.pendingProps;
   const revealOrder: SuspenseListRevealOrder = nextProps.revealOrder;
@@ -2731,7 +2772,7 @@ function updateSuspenseListComponent(
 function updatePortalComponent(
   current: Fiber | null,
   workInProgress: Fiber,
-  renderExpirationTime: ExpirationTime,
+  renderExpirationTime: ExpirationTimeOpaque,
 ) {
   pushHostContainer(workInProgress, workInProgress.stateNode.containerInfo);
   const nextChildren = workInProgress.pendingProps;
@@ -2761,7 +2802,7 @@ function updatePortalComponent(
 function updateContextProvider(
   current: Fiber | null,
   workInProgress: Fiber,
-  renderExpirationTime: ExpirationTime,
+  renderExpirationTime: ExpirationTimeOpaque,
 ) {
   const providerType: ReactProviderType<any> = workInProgress.type;
   const context: ReactContext<any> = providerType._context;
@@ -2818,7 +2859,7 @@ let hasWarnedAboutUsingContextAsConsumer = false;
 function updateContextConsumer(
   current: Fiber | null,
   workInProgress: Fiber,
-  renderExpirationTime: ExpirationTime,
+  renderExpirationTime: ExpirationTimeOpaque,
 ) {
   let context: ReactContext<any> = workInProgress.type;
   // The logic below for Context differs depending on PROD or DEV mode. In
@@ -2919,7 +2960,7 @@ export function markWorkInProgressReceivedUpdate() {
 function bailoutOnAlreadyFinishedWork(
   current: Fiber | null,
   workInProgress: Fiber,
-  renderExpirationTime: ExpirationTime,
+  renderExpirationTime: ExpirationTimeOpaque,
 ): Fiber | null {
   if (current !== null) {
     // Reuse previous dependencies
@@ -2931,14 +2972,16 @@ function bailoutOnAlreadyFinishedWork(
     stopProfilerTimerIfRunning(workInProgress);
   }
 
-  const updateExpirationTime = workInProgress.expirationTime;
-  if (updateExpirationTime !== NoWork) {
+  const updateExpirationTime = workInProgress.expirationTime_opaque;
+  if (
+    !isSameExpirationTime(updateExpirationTime, (NoWork: ExpirationTimeOpaque))
+  ) {
     markUnprocessedUpdateTime(updateExpirationTime);
   }
 
   // Check if the children have any pending work.
-  const childExpirationTime = workInProgress.childExpirationTime;
-  if (childExpirationTime < renderExpirationTime) {
+  const childExpirationTime = workInProgress.childExpirationTime_opaque;
+  if (!isSameOrHigherPriority(childExpirationTime, renderExpirationTime)) {
     // The children don't have any work either. We can skip them.
     // TODO: Once we add back resuming, we should check if the children are
     // a work-in-progress set. If so, we need to transfer their effects.
@@ -3017,9 +3060,9 @@ function remountFiber(
 function beginWork(
   current: Fiber | null,
   workInProgress: Fiber,
-  renderExpirationTime: ExpirationTime,
+  renderExpirationTime: ExpirationTimeOpaque,
 ): Fiber | null {
-  const updateExpirationTime = workInProgress.expirationTime;
+  const updateExpirationTime = workInProgress.expirationTime_opaque;
 
   if (__DEV__) {
     if (workInProgress._debugNeedsRemount && current !== null) {
@@ -3033,7 +3076,7 @@ function beginWork(
           workInProgress.pendingProps,
           workInProgress._debugOwner || null,
           workInProgress.mode,
-          workInProgress.expirationTime,
+          workInProgress.expirationTime_opaque,
         ),
       );
     }
@@ -3052,7 +3095,9 @@ function beginWork(
       // If props or context changed, mark the fiber as having performed work.
       // This may be unset if the props are determined to be equal later (memo).
       didReceiveUpdate = true;
-    } else if (updateExpirationTime < renderExpirationTime) {
+    } else if (
+      !isSameOrHigherPriority(updateExpirationTime, renderExpirationTime)
+    ) {
       didReceiveUpdate = false;
       // This fiber does not have any pending work. Bailout without entering
       // the begin phase. There's still some bookkeeping we that needs to be done
@@ -3066,14 +3111,17 @@ function beginWork(
           pushHostContext(workInProgress);
           if (
             workInProgress.mode & ConcurrentMode &&
-            renderExpirationTime !== Never &&
+            !isSameExpirationTime(
+              renderExpirationTime,
+              (Never: ExpirationTimeOpaque),
+            ) &&
             shouldDeprioritizeSubtree(workInProgress.type, newProps)
           ) {
             if (enableSchedulerTracing) {
-              markSpawnedWork(Never);
+              markSpawnedWork((Never: ExpirationTimeOpaque));
             }
             // Schedule this fiber to re-render at offscreen priority. Then bailout.
-            workInProgress.expirationTime = workInProgress.childExpirationTime = Never;
+            workInProgress.expirationTime_opaque = workInProgress.childExpirationTime_opaque = Never;
             return null;
           }
           break;
@@ -3098,8 +3146,10 @@ function beginWork(
         case Profiler:
           if (enableProfilerTimer) {
             // Profiler should only call onRender when one of its descendants actually rendered.
-            const hasChildWork =
-              workInProgress.childExpirationTime >= renderExpirationTime;
+            const hasChildWork = isSameOrHigherPriority(
+              workInProgress.childExpirationTime_opaque,
+              renderExpirationTime,
+            );
             if (hasChildWork) {
               workInProgress.effectTag |= Update;
             }
@@ -3134,8 +3184,13 @@ function beginWork(
             // child fragment.
             const primaryChildFragment: Fiber = (workInProgress.child: any);
             const primaryChildExpirationTime =
-              primaryChildFragment.childExpirationTime;
-            if (primaryChildExpirationTime >= renderExpirationTime) {
+              primaryChildFragment.childExpirationTime_opaque;
+            if (
+              isSameOrHigherPriority(
+                primaryChildExpirationTime,
+                renderExpirationTime,
+              )
+            ) {
               // The primary children have pending work. Use the normal path
               // to attempt to render the primary children again.
               return updateSuspenseComponent(
@@ -3160,12 +3215,19 @@ function beginWork(
               // based on similar logic in `resetChildExpirationTime`.
               let primaryChild = primaryChildFragment.child;
               while (primaryChild !== null) {
-                const childUpdateExpirationTime = primaryChild.expirationTime;
+                const childUpdateExpirationTime =
+                  primaryChild.expirationTime_opaque;
                 const childChildExpirationTime =
-                  primaryChild.childExpirationTime;
+                  primaryChild.childExpirationTime_opaque;
                 if (
-                  childUpdateExpirationTime >= renderExpirationTime ||
-                  childChildExpirationTime >= renderExpirationTime
+                  isSameOrHigherPriority(
+                    childUpdateExpirationTime,
+                    renderExpirationTime,
+                  ) ||
+                  isSameOrHigherPriority(
+                    childChildExpirationTime,
+                    renderExpirationTime,
+                  )
                 ) {
                   // Found a child with an update with sufficient priority.
                   // Use the normal path to render the primary children again.
@@ -3209,8 +3271,10 @@ function beginWork(
           const didSuspendBefore =
             (current.effectTag & DidCapture) !== NoEffect;
 
-          const hasChildWork =
-            workInProgress.childExpirationTime >= renderExpirationTime;
+          const hasChildWork = isSameOrHigherPriority(
+            workInProgress.childExpirationTime_opaque,
+            renderExpirationTime,
+          );
 
           if (didSuspendBefore) {
             if (hasChildWork) {
@@ -3275,7 +3339,7 @@ function beginWork(
   // the update queue. However, there's an exception: SimpleMemoComponent
   // sometimes bails out later in the begin phase. This indicates that we should
   // move this assignment out of the common path and into each branch.
-  workInProgress.expirationTime = NoWork;
+  workInProgress.expirationTime_opaque = NoWork;
 
   switch (workInProgress.tag) {
     case IndeterminateComponent: {

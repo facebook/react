@@ -8,7 +8,7 @@
  */
 
 import type {Fiber} from './ReactInternalTypes';
-import type {ExpirationTime} from './ReactFiberExpirationTime.new';
+import type {ExpirationTimeOpaque} from './ReactFiberExpirationTime.new';
 import type {UpdateQueue} from './ReactUpdateQueue.new';
 
 import * as React from 'react';
@@ -40,7 +40,7 @@ import {
   initializeUpdateQueue,
   cloneUpdateQueue,
 } from './ReactUpdateQueue.new';
-import {NoWork} from './ReactFiberExpirationTime.new';
+import {NoWork, isSameExpirationTime} from './ReactFiberExpirationTime.new';
 import {
   cacheContext,
   getMaskedContext,
@@ -177,7 +177,12 @@ export function applyDerivedStateFromProps(
 
   // Once the update queue is empty, persist the derived state onto the
   // base state.
-  if (workInProgress.expirationTime === NoWork) {
+  if (
+    isSameExpirationTime(
+      workInProgress.expirationTime_opaque,
+      (NoWork: ExpirationTimeOpaque),
+    )
+  ) {
     // Queue is always non-null for classes
     const updateQueue: UpdateQueue<any> = (workInProgress.updateQueue: any);
     updateQueue.baseState = memoizedState;
@@ -766,7 +771,7 @@ function mountClassInstance(
   workInProgress: Fiber,
   ctor: any,
   newProps: any,
-  renderExpirationTime: ExpirationTime,
+  renderExpirationTime: ExpirationTimeOpaque,
 ): void {
   if (__DEV__) {
     checkClassInstance(workInProgress, ctor, newProps);
@@ -861,7 +866,7 @@ function resumeMountClassInstance(
   workInProgress: Fiber,
   ctor: any,
   newProps: any,
-  renderExpirationTime: ExpirationTime,
+  renderExpirationTime: ExpirationTimeOpaque,
 ): boolean {
   const instance = workInProgress.stateNode;
 
@@ -996,7 +1001,7 @@ function updateClassInstance(
   workInProgress: Fiber,
   ctor: any,
   newProps: any,
-  renderExpirationTime: ExpirationTime,
+  renderExpirationTime: ExpirationTimeOpaque,
 ): boolean {
   const instance = workInProgress.stateNode;
 

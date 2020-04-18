@@ -19,7 +19,7 @@ import type {
 import type {RendererInspectionConfig} from './ReactFiberHostConfig';
 import {FundamentalComponent} from './ReactWorkTags';
 import type {ReactNodeList} from 'shared/ReactTypes';
-import type {ExpirationTime} from './ReactFiberExpirationTime.new';
+import type {ExpirationTimeOpaque} from './ReactFiberExpirationTime.new';
 import type {SuspenseState} from './ReactFiberSuspenseComponent.new';
 
 import {
@@ -77,6 +77,7 @@ import {
   Sync,
   ContinuousHydration,
   UserBlockingUpdateTime,
+  isSameOrHigherPriority,
 } from './ReactFiberExpirationTime.new';
 import {requestCurrentSuspenseConfig} from './ReactFiberSuspenseConfig';
 import {
@@ -234,7 +235,7 @@ export function updateContainer(
   container: OpaqueRoot,
   parentComponent: ?React$Component<any, any>,
   callback: ?Function,
-): ExpirationTime {
+): ExpirationTimeOpaque {
   if (__DEV__) {
     onScheduleRoot(container, element);
   }
@@ -335,11 +336,13 @@ export function attemptSynchronousHydration(fiber: Fiber): void {
       const root: FiberRoot = fiber.stateNode;
       if (root.hydrate) {
         // Flush the first scheduled "update".
-        flushRoot(root, root.firstPendingTime);
+        flushRoot(root, root.firstPendingTime_opaque);
       }
       break;
     case SuspenseComponent:
-      flushSync(() => scheduleUpdateOnFiber(fiber, Sync));
+      flushSync(() =>
+        scheduleUpdateOnFiber(fiber, (Sync: ExpirationTimeOpaque)),
+      );
       // If we're still blocked after this, we need to increase
       // the priority of any promises resolving within this
       // boundary so that they next attempt also has higher pri.
@@ -349,17 +352,20 @@ export function attemptSynchronousHydration(fiber: Fiber): void {
   }
 }
 
-function markRetryTimeImpl(fiber: Fiber, retryTime: ExpirationTime) {
+function markRetryTimeImpl(fiber: Fiber, retryTime: ExpirationTimeOpaque) {
   const suspenseState: null | SuspenseState = fiber.memoizedState;
   if (suspenseState !== null && suspenseState.dehydrated !== null) {
-    if (suspenseState.retryTime < retryTime) {
+    if (!isSameOrHigherPriority(suspenseState.retryTime, retryTime)) {
       suspenseState.retryTime = retryTime;
     }
   }
 }
 
 // Increases the priority of thennables when they resolve within this boundary.
-function markRetryTimeIfNotHydrated(fiber: Fiber, retryTime: ExpirationTime) {
+function markRetryTimeIfNotHydrated(
+  fiber: Fiber,
+  retryTime: ExpirationTimeOpaque,
+) {
   markRetryTimeImpl(fiber, retryTime);
   const alternate = fiber.alternate;
   if (alternate) {
@@ -388,8 +394,11 @@ export function attemptContinuousHydration(fiber: Fiber): void {
     // Suspense.
     return;
   }
-  scheduleUpdateOnFiber(fiber, ContinuousHydration);
-  markRetryTimeIfNotHydrated(fiber, ContinuousHydration);
+  scheduleUpdateOnFiber(fiber, (ContinuousHydration: ExpirationTimeOpaque));
+  markRetryTimeIfNotHydrated(
+    fiber,
+    (ContinuousHydration: ExpirationTimeOpaque),
+  );
 }
 
 export function attemptHydrationAtCurrentPriority(fiber: Fiber): void {
@@ -482,7 +491,7 @@ if (__DEV__) {
       // Shallow cloning props works as a workaround for now to bypass the bailout check.
       fiber.memoizedProps = {...fiber.memoizedProps};
 
-      scheduleUpdateOnFiber(fiber, Sync);
+      scheduleUpdateOnFiber(fiber, (Sync: ExpirationTimeOpaque));
     }
   };
 
@@ -492,11 +501,11 @@ if (__DEV__) {
     if (fiber.alternate) {
       fiber.alternate.pendingProps = fiber.pendingProps;
     }
-    scheduleUpdateOnFiber(fiber, Sync);
+    scheduleUpdateOnFiber(fiber, (Sync: ExpirationTimeOpaque));
   };
 
   scheduleUpdate = (fiber: Fiber) => {
-    scheduleUpdateOnFiber(fiber, Sync);
+    scheduleUpdateOnFiber(fiber, (Sync: ExpirationTimeOpaque));
   };
 
   setSuspenseHandler = (newShouldSuspendImpl: Fiber => boolean) => {
