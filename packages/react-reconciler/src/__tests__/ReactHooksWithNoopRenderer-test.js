@@ -1252,6 +1252,95 @@ describe('ReactHooksWithNoopRenderer', () => {
       });
     });
 
+    // @gate deferPassiveEffectCleanupDuringUnmount && runAllPassiveEffectDestroysBeforeCreates
+    it('does not warn about state updates for unmounted components with pending passive unmounts for alternates', () => {
+      let setParentState = null;
+      const setChildStates = [];
+
+      function Parent() {
+        const [state, setState] = useState(true);
+        setParentState = setState;
+        Scheduler.unstable_yieldValue(`Parent ${state} render`);
+        useLayoutEffect(() => {
+          Scheduler.unstable_yieldValue(`Parent ${state} commit`);
+        });
+        if (state) {
+          return (
+            <>
+              <Child label="one" />
+              <Child label="two" />
+            </>
+          );
+        } else {
+          return null;
+        }
+      }
+
+      function Child({label}) {
+        const [state, setState] = useState(0);
+        useLayoutEffect(() => {
+          Scheduler.unstable_yieldValue(`Child ${label} commit`);
+        });
+        useEffect(() => {
+          setChildStates.push(setState);
+          Scheduler.unstable_yieldValue(`Child ${label} passive create`);
+          return () => {
+            Scheduler.unstable_yieldValue(`Child ${label} passive destroy`);
+          };
+        }, []);
+        Scheduler.unstable_yieldValue(`Child ${label} render`);
+        return state;
+      }
+
+      // Schedule debounced state update for child (prob a no-op for this test)
+      // later tick: schedule unmount for parent
+      // start process unmount (but don't flush passive effectS)
+      // State update on child
+      act(() => {
+        ReactNoop.render(<Parent />);
+        expect(Scheduler).toFlushAndYieldThrough([
+          'Parent true render',
+          'Child one render',
+          'Child two render',
+          'Child one commit',
+          'Child two commit',
+          'Parent true commit',
+          'Child one passive create',
+          'Child two passive create',
+        ]);
+
+        // Update children.
+        setChildStates.forEach(setChildState => setChildState(1));
+        expect(Scheduler).toFlushAndYieldThrough([
+          'Child one render',
+          'Child two render',
+          'Child one commit',
+          'Child two commit',
+        ]);
+
+        // Schedule another update for children, and partially process it.
+        setChildStates.forEach(setChildState => setChildState(2));
+        expect(Scheduler).toFlushAndYieldThrough(['Child one render']);
+
+        // Schedule unmount for the parent that unmounts children with pending update.
+        Scheduler.unstable_runWithPriority(
+          Scheduler.unstable_UserBlockingPriority,
+          () => setParentState(false),
+        );
+        expect(Scheduler).toFlushAndYieldThrough([
+          'Parent false render',
+          'Parent false commit',
+        ]);
+
+        // Schedule updates for children too (which should be ignored)
+        setChildStates.forEach(setChildState => setChildState(2));
+        expect(Scheduler).toFlushAndYield([
+          'Child one passive destroy',
+          'Child two passive destroy',
+        ]);
+      });
+    });
+
     it('warns about state updates for unmounted components with no pending passive unmounts', () => {
       let completePendingRequest = null;
       function Component() {
