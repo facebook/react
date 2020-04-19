@@ -465,10 +465,41 @@ describe('ReactIncrementalUpdates', () => {
       Scheduler.unstable_advanceTime(10000);
 
       setCount(2);
-
       expect(Scheduler).toFlushExpired([]);
-      expect(Scheduler).toFlushAndYield(['Render: 2']);
     });
+  });
+
+  it('regression: does not expire soon due to previous flushSync', () => {
+    function Text({text}) {
+      Scheduler.unstable_yieldValue(text);
+      return text;
+    }
+
+    ReactNoop.flushSync(() => {
+      ReactNoop.render(<Text text="A" />);
+    });
+    expect(Scheduler).toHaveYielded(['A']);
+
+    Scheduler.unstable_advanceTime(10000);
+
+    ReactNoop.render(<Text text="B" />);
+    expect(Scheduler).toFlushExpired([]);
+  });
+
+  it('regression: does not expire soon due to previous expired work', () => {
+    function Text({text}) {
+      Scheduler.unstable_yieldValue(text);
+      return text;
+    }
+
+    ReactNoop.render(<Text text="A" />);
+    Scheduler.unstable_advanceTime(10000);
+    expect(Scheduler).toFlushExpired(['A']);
+
+    Scheduler.unstable_advanceTime(10000);
+
+    ReactNoop.render(<Text text="B" />);
+    expect(Scheduler).toFlushExpired([]);
   });
 
   it('when rebasing, does not exclude updates that were already committed, regardless of priority', async () => {
