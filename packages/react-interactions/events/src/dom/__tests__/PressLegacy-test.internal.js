@@ -469,15 +469,12 @@ describe.each(environmentTable)('Press responder', hasPointerEvents => {
     });
 
     // @gate experimental
-    it('is called after valid "keyup" event', () => {
+    it('is called after valid "click" event', () => {
       componentInit();
       const target = createEventTarget(ref.current);
-      target.keydown({key: 'Enter'});
-      target.keyup({key: 'Enter'});
+      target.pointerdown();
+      target.pointerup();
       expect(onPress).toHaveBeenCalledTimes(1);
-      expect(onPress).toHaveBeenCalledWith(
-        expect.objectContaining({pointerType: 'keyboard', type: 'press'}),
-      );
     });
 
     // @gate experimental
@@ -804,40 +801,6 @@ describe.each(environmentTable)('Press responder', hasPointerEvents => {
       });
     });
 
-    describe('beyond bounds of hit rect', () => {
-      /** ┌──────────────────┐
-       *  │  ┌────────────┐  │
-       *  │  │ VisualRect │  │
-       *  │  └────────────┘  │
-       *  │     HitRect      │
-       *  └──────────────────┘
-       *                   X   <= Move to X and release
-       */
-      // @gate experimental
-      it('"onPress" is not called on release', () => {
-        componentInit();
-        const target = createEventTarget(ref.current);
-        const targetContainer = createEventTarget(container);
-        target.setBoundingClientRect(rectMock);
-        target.pointerdown({pointerType});
-        target.pointermove({pointerType, ...coordinatesInside});
-        if (pointerType === 'mouse') {
-          // TODO: use setPointerCapture so this is only true for fallback mouse events.
-          targetContainer.pointermove({pointerType, ...coordinatesOutside});
-          targetContainer.pointerup({pointerType, ...coordinatesOutside});
-        } else {
-          target.pointermove({pointerType, ...coordinatesOutside});
-          target.pointerup({pointerType, ...coordinatesOutside});
-        }
-        expect(events.filter(removePressMoveStrings)).toEqual([
-          'onPressStart',
-          'onPressChange',
-          'onPressEnd',
-          'onPressChange',
-        ]);
-      });
-    });
-
     // @gate experimental
     it('"onPress" is called on re-entry to hit rect', () => {
       componentInit();
@@ -926,8 +889,8 @@ describe.each(environmentTable)('Press responder', hasPointerEvents => {
           'pointerdown',
           'inner: onPressEnd',
           'inner: onPressChange',
-          'inner: onPress',
           'pointerup',
+          'inner: onPress',
         ]);
       });
     }
@@ -1023,7 +986,6 @@ describe.each(environmentTable)('Press responder', hasPointerEvents => {
     // @gate experimental
     it('prevents native behavior by default', () => {
       const onPress = jest.fn();
-      const preventDefault = jest.fn();
       const ref = React.createRef();
 
       const Component = () => {
@@ -1034,79 +996,8 @@ describe.each(environmentTable)('Press responder', hasPointerEvents => {
 
       const target = createEventTarget(ref.current);
       target.pointerdown();
-      target.pointerup({preventDefault});
-      expect(preventDefault).toBeCalled();
-      expect(onPress).toHaveBeenCalledWith(
-        expect.objectContaining({defaultPrevented: true}),
-      );
-    });
-
-    // @gate experimental
-    it('prevents native behaviour for keyboard events by default', () => {
-      const onPress = jest.fn();
-      const preventDefault = jest.fn();
-      const ref = React.createRef();
-
-      const Component = () => {
-        const listener = usePress({onPress});
-        return <a href="#" ref={ref} DEPRECATED_flareListeners={listener} />;
-      };
-      ReactDOM.render(<Component />, container);
-
-      const target = createEventTarget(ref.current);
-      target.keydown({key: 'Enter', preventDefault});
-      target.keyup({key: 'Enter'});
-      expect(preventDefault).toBeCalled();
-      expect(onPress).toHaveBeenCalledWith(
-        expect.objectContaining({defaultPrevented: true}),
-      );
-    });
-
-    // @gate experimental
-    it('deeply prevents native behaviour by default', () => {
-      const onPress = jest.fn();
-      const preventDefault = jest.fn();
-      const buttonRef = React.createRef();
-
-      const Component = () => {
-        const listener = usePress({onPress});
-        return (
-          <a href="#">
-            <button ref={buttonRef} DEPRECATED_flareListeners={listener} />
-          </a>
-        );
-      };
-      ReactDOM.render(<Component />, container);
-
-      const target = createEventTarget(buttonRef.current);
-      target.pointerdown();
-      target.pointerup({preventDefault});
-      expect(preventDefault).toBeCalled();
-    });
-
-    // @gate experimental
-    it('prevents native behaviour by default with nested elements', () => {
-      const onPress = jest.fn();
-      const preventDefault = jest.fn();
-      const ref = React.createRef();
-
-      const Component = () => {
-        const listener = usePress({onPress});
-        return (
-          <a href="#" DEPRECATED_flareListeners={listener}>
-            <div ref={ref} />
-          </a>
-        );
-      };
-      ReactDOM.render(<Component />, container);
-
-      const target = createEventTarget(ref.current);
-      target.pointerdown();
-      target.pointerup({preventDefault});
-      expect(preventDefault).toBeCalled();
-      expect(onPress).toHaveBeenCalledWith(
-        expect.objectContaining({defaultPrevented: true}),
-      );
+      target.pointerup();
+      expect(onPress).toBeCalled();
     });
 
     // @gate experimental

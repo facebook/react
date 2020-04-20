@@ -16,7 +16,7 @@ import type {
 } from 'shared/ReactTypes';
 import type {DOMTopLevelEventType} from 'legacy-events/TopLevelEventTypes';
 
-type AnyNativeEvent = Event | KeyboardEvent | MouseEvent | Touch;
+type AnyNativeEvent = Event | KeyboardEvent | MouseEvent | TouchEvent;
 
 export type PointerType =
   | ''
