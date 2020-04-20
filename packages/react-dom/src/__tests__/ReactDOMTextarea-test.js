@@ -352,7 +352,16 @@ describe('ReactDOMTextarea', () => {
 
     expect(node.value).toBe('kitten');
 
-    ReactDOM.render(<textarea defaultValue="gorilla" />, container);
+    expect(() =>
+      ReactDOM.render(<textarea defaultValue="gorilla" />, container),
+    ).toErrorDev(
+      'Warning: A component is changing a controlled textarea to be uncontrolled. ' +
+        'This is likely caused by the value changing from a defined to ' +
+        'undefined, which should not happen. ' +
+        'Decide between using a controlled or uncontrolled textarea ' +
+        'element for the lifetime of the component. More info: https://fb.me/react-controlled-components\n' +
+        '    in textarea (at **)',
+    );
 
     expect(node.value).toEqual('kitten');
   });
@@ -374,7 +383,16 @@ describe('ReactDOMTextarea', () => {
 
     expect(node.value).toBe('puppies');
 
-    ReactDOM.render(<textarea defaultValue="gorilla" />, container);
+    expect(() =>
+      ReactDOM.render(<textarea defaultValue="gorilla" />, container),
+    ).toErrorDev(
+      'Warning: A component is changing a controlled textarea to be uncontrolled. ' +
+        'This is likely caused by the value changing from a defined to ' +
+        'undefined, which should not happen. ' +
+        'Decide between using a controlled or uncontrolled textarea ' +
+        'element for the lifetime of the component. More info: https://fb.me/react-controlled-components\n' +
+        '    in textarea (at **)',
+    );
 
     expect(node.value).toEqual('puppies');
   });
@@ -699,5 +717,88 @@ describe('ReactDOMTextarea', () => {
       // TODO: defaultValue is a reserved prop and is not validated. Check warnings when they are.
       expect(node.value).toBe('foo');
     });
+  });
+
+  it('should warn if controlled textarea switches to uncontrolled (value is undefined)', () => {
+    const container = document.createElement('div');
+    const stub = <textarea value="controlled" onChange={emptyFunction} />;
+    ReactDOM.render(stub, container);
+    expect(() => ReactDOM.render(<textarea />, container)).toErrorDev(
+      'Warning: A component is changing a controlled textarea to be uncontrolled. ' +
+        'This is likely caused by the value changing from a defined to ' +
+        'undefined, which should not happen. ' +
+        'Decide between using a controlled or uncontrolled textarea ' +
+        'element for the lifetime of the component. More info: https://fb.me/react-controlled-components\n' +
+        '    in textarea (at **)',
+    );
+  });
+
+  it('should warn if controlled textarea switches to uncontrolled (value is null)', () => {
+    const container = document.createElement('div');
+    const stub = <textarea value="controlled" onChange={emptyFunction} />;
+    ReactDOM.render(stub, container);
+    expect(() =>
+      ReactDOM.render(<textarea value={null} />, container),
+    ).toErrorDev([
+      '`value` prop on `textarea` should not be null. ' +
+        'Consider using an empty string to clear the component or `undefined` for uncontrolled components',
+      'Warning: A component is changing a controlled textarea to be uncontrolled. ' +
+        'This is likely caused by the value changing from a defined to ' +
+        'undefined, which should not happen. ' +
+        'Decide between using a controlled or uncontrolled textarea ' +
+        'element for the lifetime of the component. More info: https://fb.me/react-controlled-components\n' +
+        '    in textarea (at **)',
+    ]);
+  });
+
+  it('should warn if controlled textarea switches to uncontrolled with defaultValue', () => {
+    const container = document.createElement('div');
+    const stub = <textarea value="controlled" onChange={emptyFunction} />;
+    ReactDOM.render(stub, container);
+    expect(() =>
+      ReactDOM.render(<textarea defaultValue="uncontrolled" />, container),
+    ).toErrorDev(
+      'Warning: A component is changing a controlled textarea to be uncontrolled. ' +
+        'This is likely caused by the value changing from a defined to ' +
+        'undefined, which should not happen. ' +
+        'Decide between using a controlled or uncontrolled textarea ' +
+        'element for the lifetime of the component. More info: https://fb.me/react-controlled-components\n' +
+        '    in textarea (at **)',
+    );
+  });
+
+  it('should warn if uncontrolled textarea (value is undefined) switches to controlled', () => {
+    const container = document.createElement('div');
+    const stub = <textarea />;
+    ReactDOM.render(stub, container);
+    expect(() =>
+      ReactDOM.render(<textarea value="controlled" />, container),
+    ).toErrorDev(
+      'Warning: A component is changing an uncontrolled textarea to be controlled. ' +
+        'This is likely caused by the value changing from undefined to ' +
+        'a defined value, which should not happen. ' +
+        'Decide between using a controlled or uncontrolled textarea ' +
+        'element for the lifetime of the component. More info: https://fb.me/react-controlled-components\n' +
+        '    in textarea (at **)',
+    );
+  });
+
+  it('should warn if uncontrolled textarea (value is null) switches to controlled', () => {
+    const container = document.createElement('div');
+    const stub = <textarea value={null} />;
+    expect(() => ReactDOM.render(stub, container)).toErrorDev(
+      '`value` prop on `textarea` should not be null. ' +
+        'Consider using an empty string to clear the component or `undefined` for uncontrolled components.',
+    );
+    expect(() =>
+      ReactDOM.render(<textarea value="controlled" />, container),
+    ).toErrorDev(
+      'Warning: A component is changing an uncontrolled textarea to be controlled. ' +
+        'This is likely caused by the value changing from undefined to ' +
+        'a defined value, which should not happen. ' +
+        'Decide between using a controlled or uncontrolled textarea ' +
+        'element for the lifetime of the component. More info: https://fb.me/react-controlled-components\n' +
+        '    in textarea (at **)',
+    );
   });
 });
