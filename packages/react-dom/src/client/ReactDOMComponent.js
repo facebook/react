@@ -1111,10 +1111,7 @@ export function diffHydratedProperties(
         const serverHTML = domElement.innerHTML;
         const nextHtml = nextProp ? nextProp[HTML] : undefined;
         if (nextHtml != null) {
-          const expectedHTML = normalizeHTML(
-            domElement,
-            nextHtml != null ? nextHtml : '',
-          );
+          const expectedHTML = normalizeHTML(domElement, nextHtml);
           if (expectedHTML !== serverHTML) {
             warnForPropDifference(propKey, serverHTML, expectedHTML);
           }
