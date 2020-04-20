@@ -565,7 +565,7 @@ describe('ReactDOMServerHydration', () => {
     expect(domElement.innerHTML).toEqual(markup);
   });
 
-  it('should warns if innerHTML mismatches with dangerouslySetInnerHTML=undefined on the client', () => {
+  it('should warn if innerHTML mismatches with dangerouslySetInnerHTML=undefined and children on the client', () => {
     const domElement = document.createElement('div');
     const markup = ReactDOMServer.renderToStaticMarkup(
       <div dangerouslySetInnerHTML={{__html: '<p>server</p>'}} />,
@@ -583,6 +583,22 @@ describe('ReactDOMServerHydration', () => {
       expect(domElement.innerHTML).not.toEqual(markup);
     }).toErrorDev(
       'Warning: Text content did not match. Server: "server" Client: "client"',
+    );
+  });
+
+  it('should warn if innerHTML mismatches with dangerouslySetInnerHTML=undefined on the client', () => {
+    const domElement = document.createElement('div');
+    const markup = ReactDOMServer.renderToStaticMarkup(
+      <div dangerouslySetInnerHTML={{__html: '<p>server</p>'}} />,
+    );
+    domElement.innerHTML = markup;
+
+    expect(() => {
+      ReactDOM.hydrate(<div dangerouslySetInnerHTML={undefined} />, domElement);
+
+      expect(domElement.innerHTML).not.toEqual(markup);
+    }).toErrorDev(
+      'Warning: Did not expect server HTML to contain a <p> in <div>',
     );
   });
 });
