@@ -564,4 +564,25 @@ describe('ReactDOMServerHydration', () => {
 
     expect(domElement.innerHTML).toEqual(markup);
   });
+
+  it('should warns if innerHTML mismatches with dangerouslySetInnerHTML=undefined on the client', () => {
+    const domElement = document.createElement('div');
+    const markup = ReactDOMServer.renderToStaticMarkup(
+      <div dangerouslySetInnerHTML={{__html: '<p>server</p>'}} />,
+    );
+    domElement.innerHTML = markup;
+
+    expect(() => {
+      ReactDOM.hydrate(
+        <div dangerouslySetInnerHTML={undefined}>
+          <p>client</p>
+        </div>,
+        domElement,
+      );
+
+      expect(domElement.innerHTML).not.toEqual(markup);
+    }).toErrorDev(
+      'Warning: Text content did not match. Server: "server" Client: "client"',
+    );
+  });
 });
