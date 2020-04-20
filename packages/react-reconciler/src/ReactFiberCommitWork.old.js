@@ -885,7 +885,21 @@ function commitAttachRef(finishedWork: Fiber) {
       instanceToUse = instance.methods;
     }
     if (typeof ref === 'function') {
-      ref(instanceToUse);
+      try {
+        ref(instanceToUse);
+      } catch (refError) {
+        try {
+          // Detach invalid ref before it throws again in safelyDetachRef
+          // For such cases:
+          // (elem) => {this.inputField = elem; throw new Error('error')}
+          ref(null);
+        } catch (e) {
+          // This catch block will be executed
+          // because the same ref will throw again
+          finishedWork.ref = null;
+          captureCommitPhaseError(finishedWork, refError);
+        }
+      }
     } else {
       if (__DEV__) {
         if (!ref.hasOwnProperty('current')) {
@@ -898,7 +912,12 @@ function commitAttachRef(finishedWork: Fiber) {
         }
       }
 
-      ref.current = instanceToUse;
+      try {
+        ref.current = instanceToUse;
+      } catch (e) {
+        // To prevent assignment to immutable object again in safelyDetachRef
+        finishedWork.ref = null;
+      }
     }
   }
 }
