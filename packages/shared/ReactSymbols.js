@@ -7,6 +7,10 @@
  * @flow
  */
 
+// ATTENTION
+// When adding new symbols to this file,
+// Please consider also adding to 'react-devtools-shared/src/backend/ReactSymbols'
+
 // The Symbol used to tag the ReactElement-like types. If there is no native Symbol
 // nor polyfill, then a plain number is used for performance.
 export let REACT_ELEMENT_TYPE = 0xeac7;

@@ -8,9 +8,10 @@
  */
 
 import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
-import type {ReactRenderer} from './types';
+import type {CurrentDispatcherRef, ReactRenderer, WorkTagMap} from './types';
 
-import {getStackByFiberInDevAndProd} from 'react-reconciler/src/ReactFiberComponentStack';
+import {getInternalReactConstants} from './renderer';
+import {getStackByFiberInDevAndProd} from './DevToolsFiberComponentStack';
 
 const APPEND_STACK_TO_METHODS = ['error', 'trace', 'warn'];
 
@@ -24,7 +25,9 @@ const ROW_COLUMN_NUMBER_REGEX = /:\d+:\d+$/;
 const injectedRenderers: Map<
   ReactRenderer,
   {|
+    currentDispatcherRef: CurrentDispatcherRef,
     getCurrentFiber: () => Fiber | null,
+    workTagMap: WorkTagMap,
   |},
 > = new Map();
 
@@ -52,16 +55,27 @@ export function dangerous_setTargetConsoleForTesting(
 // These internals will be used if the console is patched.
 // Injecting them separately allows the console to easily be patched or un-patched later (at runtime).
 export function registerRenderer(renderer: ReactRenderer): void {
-  const {getCurrentFiber, findFiberByHostInstance} = renderer;
+  const {
+    currentDispatcherRef,
+    getCurrentFiber,
+    findFiberByHostInstance,
+    version,
+  } = renderer;
 
   // Ignore React v15 and older because they don't expose a component stack anyway.
   if (typeof findFiberByHostInstance !== 'function') {
     return;
   }
 
-  if (typeof getCurrentFiber === 'function') {
+  // currentDispatcherRef gets injected for v16.8+ to support hooks inspection.
+  // getCurrentFiber gets injected for v16.9+.
+  if (currentDispatcherRef != null && typeof getCurrentFiber === 'function') {
+    const {ReactTypeOfWork} = getInternalReactConstants(version);
+
     injectedRenderers.set(renderer, {
+      currentDispatcherRef,
       getCurrentFiber,
+      workTagMap: ReactTypeOfWork,
     });
   }
 }
@@ -104,10 +118,18 @@ export function patch(): void {
             // If there's a component stack for at least one of the injected renderers, append it.
             // We don't handle the edge case of stacks for more than one (e.g. interleaved renderers?)
             // eslint-disable-next-line no-for-of-loops/no-for-of-loops
-            for (const {getCurrentFiber} of injectedRenderers.values()) {
+            for (const {
+              currentDispatcherRef,
+              getCurrentFiber,
+              workTagMap,
+            } of injectedRenderers.values()) {
               const current: ?Fiber = getCurrentFiber();
               if (current != null) {
-                const componentStack = getStackByFiberInDevAndProd(current);
+                const componentStack = getStackByFiberInDevAndProd(
+                  workTagMap,
+                  current,
+                  currentDispatcherRef,
+                );
                 if (componentStack !== '') {
                   args.push(componentStack);
                 }

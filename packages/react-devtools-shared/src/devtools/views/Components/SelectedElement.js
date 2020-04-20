@@ -463,7 +463,7 @@ function InspectedElementView({
   );
 }
 
-// This function is based on packages/shared/describeComponentFrame.js
+// This function is based on describeComponentFrame() in packages/shared/ReactComponentStackFrame
 function formatSourceForDisplay(fileName: string, lineNumber: string) {
   const BEFORE_SLASH_RE = /^(.*)[\\\/]/;
 
