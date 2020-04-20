@@ -143,8 +143,9 @@ export function getChildHostContext(
   return NO_CONTEXT;
 }
 
-export function prepareForCommit(containerInfo: Container): void {
+export function prepareForCommit(containerInfo: Container): null | Object {
   // noop
+  return null;
 }
 
 export function resetAfterCommit(containerInfo: Container): void {
@@ -444,4 +445,12 @@ export function unmountEventListener(listener: any) {
 
 export function validateEventListenerTarget(target: any, listener: any) {
   throw new Error('Not yet implemented.');
+}
+
+export function beforeActiveInstanceBlur() {
+  // noop
+}
+
+export function afterActiveInstanceBlur() {
+  // noop
 }

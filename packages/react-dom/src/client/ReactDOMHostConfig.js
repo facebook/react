@@ -91,10 +91,6 @@ import {
 import {getListenerMapForElement} from '../events/DOMEventListenerMap';
 import {TOP_BEFORE_BLUR, TOP_AFTER_BLUR} from '../events/DOMTopLevelEventTypes';
 
-// TODO: This is an exposed internal, we should move this around
-// so this isn't the case.
-import {isFiberInsideHiddenOrRemovedTree} from 'react-reconciler/src/ReactFiberTreeReflection';
-
 export type ReactListenerEvent = ReactDOMListenerEvent;
 export type ReactListenerMap = ReactDOMListenerMap;
 export type ReactListener = ReactDOMListener;
@@ -159,7 +155,6 @@ export opaque type OpaqueIDType =
     };
 
 type SelectionInformation = {|
-  activeElementDetached: null | HTMLElement,
   focusedElem: null | HTMLElement,
   selectionRange: mixed,
 |};
@@ -247,32 +242,40 @@ export function getPublicInstance(instance: Instance): * {
   return instance;
 }
 
-export function prepareForCommit(containerInfo: Container): void {
+export function prepareForCommit(containerInfo: Container): Object | null {
   eventsEnabled = ReactBrowserEventEmitterIsEnabled();
   selectionInformation = getSelectionInformation();
+  let activeInstance = null;
   if (enableDeprecatedFlareAPI || enableUseEventAPI) {
     const focusedElem = selectionInformation.focusedElem;
     if (focusedElem !== null) {
-      const instance = getClosestInstanceFromNode(focusedElem);
-      if (instance !== null && isFiberInsideHiddenOrRemovedTree(instance)) {
-        dispatchBeforeDetachedBlur(focusedElem);
-      }
+      activeInstance = getClosestInstanceFromNode(focusedElem);
     }
   }
   ReactBrowserEventEmitterSetEnabled(false);
+  return activeInstance;
+}
+
+export function beforeActiveInstanceBlur(): void {
+  if (enableDeprecatedFlareAPI || enableUseEventAPI) {
+    ReactBrowserEventEmitterSetEnabled(true);
+    dispatchBeforeDetachedBlur((selectionInformation: any).focusedElem);
+    ReactBrowserEventEmitterSetEnabled(false);
+  }
+}
+
+export function afterActiveInstanceBlur(): void {
+  if (enableDeprecatedFlareAPI || enableUseEventAPI) {
+    ReactBrowserEventEmitterSetEnabled(true);
+    dispatchAfterDetachedBlur((selectionInformation: any).focusedElem);
+    ReactBrowserEventEmitterSetEnabled(false);
+  }
 }
 
 export function resetAfterCommit(containerInfo: Container): void {
   restoreSelection(selectionInformation);
   ReactBrowserEventEmitterSetEnabled(eventsEnabled);
   eventsEnabled = null;
-  if (enableDeprecatedFlareAPI || enableUseEventAPI) {
-    const activeElementDetached = (selectionInformation: any)
-      .activeElementDetached;
-    if (activeElementDetached !== null) {
-      dispatchAfterDetachedBlur(activeElementDetached);
-    }
-  }
   selectionInformation = null;
 }
 
@@ -525,8 +528,6 @@ function createEvent(type: TopLevelType): Event {
 }
 
 function dispatchBeforeDetachedBlur(target: HTMLElement): void {
-  ((selectionInformation: any): SelectionInformation).activeElementDetached = target;
-
   if (enableDeprecatedFlareAPI || enableUseEventAPI) {
     const event = createEvent(TOP_BEFORE_BLUR);
     // Dispatch "beforeblur" directly on the target,

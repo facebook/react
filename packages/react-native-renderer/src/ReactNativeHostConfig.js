@@ -223,8 +223,9 @@ export function getPublicInstance(instance: Instance): * {
   return instance;
 }
 
-export function prepareForCommit(containerInfo: Container): void {
+export function prepareForCommit(containerInfo: Container): null | Object {
   // Noop
+  return null;
 }
 
 export function prepareUpdate(
@@ -572,4 +573,12 @@ export function unmountEventListener(listener: any) {
 
 export function validateEventListenerTarget(target: any, listener: any) {
   throw new Error('Not yet implemented.');
+}
+
+export function beforeActiveInstanceBlur() {
+  // noop
+}
+
+export function afterActiveInstanceBlur() {
+  // noop
 }

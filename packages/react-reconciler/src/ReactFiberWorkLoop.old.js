@@ -72,6 +72,8 @@ import {
   cancelTimeout,
   noTimeout,
   warnsIfNotActing,
+  beforeActiveInstanceBlur,
+  afterActiveInstanceBlur,
 } from './ReactFiberHostConfig';
 
 import {
@@ -191,6 +193,7 @@ import {onCommitRoot} from './ReactFiberDevToolsHook.old';
 
 // Used by `act`
 import enqueueTask from 'shared/enqueueTask';
+import {isFiberHiddenOrDeletedAndContains} from './ReactFiberTreeReflection';
 
 const ceil = Math.ceil;
 
@@ -295,6 +298,9 @@ let currentEventTime: ExpirationTime = NoWork;
 // Dev only flag that tracks if passive effects are currently being flushed.
 // We warn about state updates for unmounted components differently in this case.
 let isFlushingPassiveEffects = false;
+
+let focusedInstanceHandle: null | Fiber = null;
+let shouldFireAfterActiveInstanceBlur: boolean = false;
 
 export function getWorkInProgressRoot(): FiberRoot | null {
   return workInProgressRoot;
@@ -1921,7 +1927,9 @@ function commitRootImpl(root, renderPriorityLevel) {
     // The first phase a "before mutation" phase. We use this phase to read the
     // state of the host tree right before we mutate it. This is where
     // getSnapshotBeforeUpdate is called.
-    prepareForCommit(root.containerInfo);
+    focusedInstanceHandle = prepareForCommit(root.containerInfo);
+    shouldFireAfterActiveInstanceBlur = false;
+
     nextEffect = firstEffect;
     do {
       if (__DEV__) {
@@ -1942,6 +1950,9 @@ function commitRootImpl(root, renderPriorityLevel) {
         }
       }
     } while (nextEffect !== null);
+
+    // We no longer need to track the active instance fiber
+    focusedInstanceHandle = null;
 
     if (enableProfilerTimer) {
       // Mark the current commit time to be shared by all Profilers in this
@@ -1976,6 +1987,10 @@ function commitRootImpl(root, renderPriorityLevel) {
         }
       }
     } while (nextEffect !== null);
+
+    if (shouldFireAfterActiveInstanceBlur) {
+      afterActiveInstanceBlur();
+    }
     resetAfterCommit(root.containerInfo);
 
     // The work-in-progress tree is now the current tree. This must come after
@@ -2143,6 +2158,14 @@ function commitRootImpl(root, renderPriorityLevel) {
 
 function commitBeforeMutationEffects() {
   while (nextEffect !== null) {
+    if (
+      !shouldFireAfterActiveInstanceBlur &&
+      focusedInstanceHandle !== null &&
+      isFiberHiddenOrDeletedAndContains(nextEffect, focusedInstanceHandle)
+    ) {
+      shouldFireAfterActiveInstanceBlur = true;
+      beforeActiveInstanceBlur();
+    }
     const effectTag = nextEffect.effectTag;
     if ((effectTag & Snapshot) !== NoEffect) {
       setCurrentDebugFiberInDEV(nextEffect);

@@ -342,20 +342,45 @@ export function isFiberSuspenseAndTimedOut(fiber: Fiber): boolean {
   );
 }
 
-// This is only safe to call in the commit phase when the return tree is consistent.
-// It should not be used anywhere else. See PR #18609 for details.
-export function isFiberInsideHiddenOrRemovedTree(fiber: Fiber): boolean {
-  let node = fiber;
-  let lastChild = null;
+function doesFiberContain(parentFiber: Fiber, childFiber: Fiber): boolean {
+  let node = childFiber;
+  const parentFiberAlternate = parentFiber.alternate;
   while (node !== null) {
-    if (
-      node.effectTag & Deletion ||
-      (isFiberSuspenseAndTimedOut(node) && node.child === lastChild)
-    ) {
+    if (node === parentFiber || node === parentFiberAlternate) {
       return true;
     }
-    lastChild = node;
     node = node.return;
   }
   return false;
+}
+
+function isFiberTimedOutSuspenseThatContainsTargetFiber(
+  fiber: Fiber,
+  targetFiber: Fiber,
+): boolean {
+  const child = fiber.child;
+  return (
+    isFiberSuspenseAndTimedOut(fiber) &&
+    child !== null &&
+    doesFiberContain(child, targetFiber)
+  );
+}
+
+function isFiberDeletedAndContainsTargetFiber(
+  fiber: Fiber,
+  targetFiber: Fiber,
+): boolean {
+  return (
+    (fiber.effectTag & Deletion) !== 0 && doesFiberContain(fiber, targetFiber)
+  );
+}
+
+export function isFiberHiddenOrDeletedAndContains(
+  parentFiber: Fiber,
+  childFiber: Fiber,
+): boolean {
+  return (
+    isFiberDeletedAndContainsTargetFiber(parentFiber, childFiber) ||
+    isFiberTimedOutSuspenseThatContainsTargetFiber(parentFiber, childFiber)
+  );
 }

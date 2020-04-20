@@ -89,6 +89,8 @@ export const makeOpaqueHydratingObject =
 export const makeClientId = $$$hostConfig.makeClientId;
 export const makeClientIdInDEV = $$$hostConfig.makeClientIdInDEV;
 export const makeServerId = $$$hostConfig.makeServerId;
+export const beforeActiveInstanceBlur = $$$hostConfig.beforeActiveInstanceBlur;
+export const afterActiveInstanceBlur = $$$hostConfig.afterActiveInstanceBlur;
 
 // -------------------
 //      Mutation

@@ -363,7 +363,9 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
     cancelTimeout: clearTimeout,
     noTimeout: -1,
 
-    prepareForCommit(): void {},
+    prepareForCommit(): null | Object {
+      return null;
+    },
 
     resetAfterCommit(): void {},
 
@@ -437,6 +439,14 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
     },
 
     beforeRemoveInstance(instance: any): void {
+      // NO-OP
+    },
+
+    beforeActiveInstanceBlur() {
+      // NO-OP
+    },
+
+    afterActiveInstanceBlur() {
       // NO-OP
     },
   };
