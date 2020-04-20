@@ -53,10 +53,10 @@ import {
   CONCURRENT_MODE_NUMBER,
   CONCURRENT_MODE_SYMBOL_STRING,
   DEPRECATED_ASYNC_MODE_SYMBOL_STRING,
-  CONTEXT_PROVIDER_NUMBER,
-  CONTEXT_PROVIDER_SYMBOL_STRING,
-  CONTEXT_CONSUMER_NUMBER,
-  CONTEXT_CONSUMER_SYMBOL_STRING,
+  PROVIDER_NUMBER,
+  PROVIDER_SYMBOL_STRING,
+  CONTEXT_NUMBER,
+  CONTEXT_SYMBOL_STRING,
   STRICT_MODE_NUMBER,
   STRICT_MODE_SYMBOL_STRING,
   PROFILER_NUMBER,
@@ -328,15 +328,15 @@ export function getInternalReactConstants(
           case CONCURRENT_MODE_SYMBOL_STRING:
           case DEPRECATED_ASYNC_MODE_SYMBOL_STRING:
             return null;
-          case CONTEXT_PROVIDER_NUMBER:
-          case CONTEXT_PROVIDER_SYMBOL_STRING:
+          case PROVIDER_NUMBER:
+          case PROVIDER_SYMBOL_STRING:
             // 16.3.0 exposed the context object as "context"
             // PR #12501 changed it to "_context" for 16.3.1+
             // NOTE Keep in sync with inspectElementRaw()
             resolvedContext = fiber.type._context || fiber.type.context;
             return `${resolvedContext.displayName || 'Context'}.Provider`;
-          case CONTEXT_CONSUMER_NUMBER:
-          case CONTEXT_CONSUMER_SYMBOL_STRING:
+          case CONTEXT_NUMBER:
+          case CONTEXT_SYMBOL_STRING:
             // 16.3-16.5 read from "type" because the Consumer is the actual context object.
             // 16.6+ should read from "type._context" because Consumer can be different (in DEV).
             // NOTE Keep in sync with inspectElementRaw()
@@ -652,11 +652,11 @@ export function attach(
           case CONCURRENT_MODE_SYMBOL_STRING:
           case DEPRECATED_ASYNC_MODE_SYMBOL_STRING:
             return ElementTypeOtherOrUnknown;
-          case CONTEXT_PROVIDER_NUMBER:
-          case CONTEXT_PROVIDER_SYMBOL_STRING:
+          case PROVIDER_NUMBER:
+          case PROVIDER_SYMBOL_STRING:
             return ElementTypeContext;
-          case CONTEXT_CONSUMER_NUMBER:
-          case CONTEXT_CONSUMER_SYMBOL_STRING:
+          case CONTEXT_NUMBER:
+          case CONTEXT_SYMBOL_STRING:
             return ElementTypeContext;
           case STRICT_MODE_NUMBER:
           case STRICT_MODE_SYMBOL_STRING:
@@ -2183,8 +2183,8 @@ export function attach(
         }
       }
     } else if (
-      typeSymbol === CONTEXT_CONSUMER_NUMBER ||
-      typeSymbol === CONTEXT_CONSUMER_SYMBOL_STRING
+      typeSymbol === CONTEXT_NUMBER ||
+      typeSymbol === CONTEXT_SYMBOL_STRING
     ) {
       // 16.3-16.5 read from "type" because the Consumer is the actual context object.
       // 16.6+ should read from "type._context" because Consumer can be different (in DEV).
@@ -2200,8 +2200,8 @@ export function attach(
         const currentType = current.type;
         const currentTypeSymbol = getTypeSymbol(currentType);
         if (
-          currentTypeSymbol === CONTEXT_PROVIDER_NUMBER ||
-          currentTypeSymbol === CONTEXT_PROVIDER_SYMBOL_STRING
+          currentTypeSymbol === PROVIDER_NUMBER ||
+          currentTypeSymbol === PROVIDER_SYMBOL_STRING
         ) {
           // 16.3.0 exposed the context object as "context"
           // PR #12501 changed it to "_context" for 16.3.1+
