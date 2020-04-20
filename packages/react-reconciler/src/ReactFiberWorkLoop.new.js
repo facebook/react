@@ -301,8 +301,8 @@ let currentEventTime: ExpirationTime = NoWork;
 // We warn about state updates for unmounted components differently in this case.
 let isFlushingPassiveEffects = false;
 
-let activeInstanceFiber = null;
-let shouldFireAfterActiveInstanceBlur = null;
+let focusedInstanceHandle: null | Fiber = null;
+let shouldFireAfterActiveInstanceBlur: boolean = false;
 
 export function getWorkInProgressRoot(): FiberRoot | null {
   return workInProgressRoot;
@@ -1908,7 +1908,7 @@ function commitRootImpl(root, renderPriorityLevel) {
     // The first phase a "before mutation" phase. We use this phase to read the
     // state of the host tree right before we mutate it. This is where
     // getSnapshotBeforeUpdate is called.
-    activeInstanceFiber = prepareForCommit(root.containerInfo);
+    focusedInstanceHandle = prepareForCommit(root.containerInfo);
     shouldFireAfterActiveInstanceBlur = false;
 
     nextEffect = firstEffect;
@@ -1933,7 +1933,7 @@ function commitRootImpl(root, renderPriorityLevel) {
     } while (nextEffect !== null);
 
     // We no longer need to track the active instance fiber
-    activeInstanceFiber = null;
+    focusedInstanceHandle = null;
 
     if (enableProfilerTimer) {
       // Mark the current commit time to be shared by all Profilers in this
@@ -2141,8 +2141,8 @@ function commitBeforeMutationEffects() {
   while (nextEffect !== null) {
     if (
       !shouldFireAfterActiveInstanceBlur &&
-      activeInstanceFiber != null &&
-      isFiberHiddenOrDeletedAndContains(nextEffect, activeInstanceFiber)
+      focusedInstanceHandle !== null &&
+      isFiberHiddenOrDeletedAndContains(nextEffect, focusedInstanceHandle)
     ) {
       shouldFireAfterActiveInstanceBlur = true;
       beforeActiveInstanceBlur();

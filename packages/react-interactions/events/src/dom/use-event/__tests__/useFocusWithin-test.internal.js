@@ -42,17 +42,22 @@ const table = [[forcePointerEvents], [!forcePointerEvents]];
 
 describe.each(table)(`useFocus`, hasPointerEvents => {
   let container;
+  let container2;
 
   beforeEach(() => {
     initializeModules(hasPointerEvents);
     container = document.createElement('div');
     document.body.appendChild(container);
+    container2 = document.createElement('div');
+    document.body.appendChild(container2);
   });
 
   afterEach(() => {
     ReactDOM.render(null, container);
     document.body.removeChild(container);
+    document.body.removeChild(container2);
     container = null;
+    container2 = null;
   });
 
   describe('disabled', () => {
@@ -465,9 +470,6 @@ describe.each(table)(`useFocus`, hasPointerEvents => {
         );
       };
 
-      const container2 = document.createElement('div');
-      document.body.appendChild(container2);
-
       const root = ReactDOM.createRoot(container2);
 
       act(() => {
@@ -494,8 +496,6 @@ describe.each(table)(`useFocus`, hasPointerEvents => {
       expect(onBeforeBlurWithin).toHaveBeenCalledTimes(1);
       expect(onAfterBlurWithin).toHaveBeenCalledTimes(1);
       resolve();
-
-      document.body.removeChild(container2);
     });
 
     // @gate experimental
@@ -528,9 +528,6 @@ describe.each(table)(`useFocus`, hasPointerEvents => {
           </div>
         );
       };
-
-      const container2 = document.createElement('div');
-      document.body.appendChild(container2);
 
       const root = ReactDOM.createRoot(container2);
 
@@ -567,8 +564,6 @@ describe.each(table)(`useFocus`, hasPointerEvents => {
       expect(onAfterBlurWithin).toHaveBeenCalledTimes(1);
 
       resolve();
-
-      document.body.removeChild(container2);
     });
   });
 });

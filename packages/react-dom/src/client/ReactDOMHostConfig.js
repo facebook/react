@@ -242,10 +242,10 @@ export function getPublicInstance(instance: Instance): * {
   return instance;
 }
 
-export function prepareForCommit(containerInfo: Container): Object | void {
+export function prepareForCommit(containerInfo: Container): Object | null {
   eventsEnabled = ReactBrowserEventEmitterIsEnabled();
   selectionInformation = getSelectionInformation();
-  let activeInstance;
+  let activeInstance = null;
   if (enableDeprecatedFlareAPI || enableUseEventAPI) {
     const focusedElem = selectionInformation.focusedElem;
     if (focusedElem !== null) {
