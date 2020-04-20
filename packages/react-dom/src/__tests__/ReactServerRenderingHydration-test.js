@@ -548,4 +548,20 @@ describe('ReactDOMServerHydration', () => {
     expect(ref.current).toBe(div);
     expect(element.innerHTML).toBe('<div>Hello World</div>');
   });
+
+  // regression test for https://github.com/facebook/react/issues/17170
+  it('should not warn if dangerouslySetInnerHtml=undefined', () => {
+    const domElement = document.createElement('div');
+    const reactElement = (
+      <div dangerouslySetInnerHTML={undefined}>
+        <p>Hello, World!</p>
+      </div>
+    );
+    const markup = ReactDOMServer.renderToStaticMarkup(reactElement);
+    domElement.innerHTML = markup;
+
+    ReactDOM.hydrate(reactElement, domElement);
+
+    expect(domElement.innerHTML).toEqual(markup);
+  });
 });
