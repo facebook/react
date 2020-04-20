@@ -260,6 +260,7 @@ export function prepareForCommit(containerInfo: Container): void {
     }
   }
   ReactBrowserEventEmitterSetEnabled(false);
+  return null;
 }
 
 export function resetAfterCommit(containerInfo: Container): void {
