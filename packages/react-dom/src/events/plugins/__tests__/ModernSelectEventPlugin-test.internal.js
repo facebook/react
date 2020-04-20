@@ -145,4 +145,23 @@ describe('SelectEventPlugin', () => {
     node.dispatchEvent(nativeEvent);
     expect(select).toHaveBeenCalledTimes(1);
   });
+
+  it('should handle selectionchange events', function() {
+    const onSelect = jest.fn();
+    const node = ReactDOM.render(
+      <input type="text" onSelect={onSelect} />,
+      container,
+    );
+    node.focus();
+
+    // Make sure the event was not called before we emit the selection change event
+    expect(onSelect).toHaveBeenCalledTimes(0);
+
+    // This is dispatched e.g. when using CMD+a on macOS
+    document.dispatchEvent(
+      new Event('selectionchange', {bubbles: false, cancelable: false}),
+    );
+
+    expect(onSelect).toHaveBeenCalledTimes(1);
+  });
 });

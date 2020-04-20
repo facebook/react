@@ -43,14 +43,28 @@ export function isListeningToAllDependencies(
   registrationName: string,
   mountAt: Document | Element,
 ): boolean {
-  const listenerMap = getListenerMapForElement(mountAt);
   const dependencies = registrationNameDependencies[registrationName];
+  return isListeningToEvents(dependencies, mountAt);
+}
 
-  for (let i = 0; i < dependencies.length; i++) {
-    const dependency = dependencies[i];
-    if (!listenerMap.has(dependency)) {
+export function isListeningToEvents(
+  events: Array<string>,
+  mountAt: Document | Element,
+): boolean {
+  const listenerMap = getListenerMapForElement(mountAt);
+  for (let i = 0; i < events.length; i++) {
+    const event = events[i];
+    if (!listenerMap.has(event)) {
       return false;
     }
   }
   return true;
+}
+
+export function isListeningToEvent(
+  registrationName: string,
+  mountAt: Document | Element,
+): boolean {
+  const listenerMap = getListenerMapForElement(mountAt);
+  return listenerMap.has(registrationName);
 }

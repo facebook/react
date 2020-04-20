@@ -25,11 +25,22 @@ import getActiveElement from '../../client/getActiveElement';
 import {getNodeFromInstance} from '../../client/ReactDOMComponentTree';
 import {hasSelectionCapabilities} from '../../client/ReactInputSelection';
 import {DOCUMENT_NODE} from '../../shared/HTMLNodeType';
-import {isListeningToAllDependencies} from '../DOMEventListenerMap';
+import {isListeningToEvent, isListeningToEvents} from '../DOMEventListenerMap';
 import {accumulateTwoPhaseListeners} from '../DOMModernPluginEventSystem';
 
 const skipSelectionChangeEvent =
   canUseDOM && 'documentMode' in document && document.documentMode <= 11;
+
+const rootTargetDependencies = [
+  TOP_BLUR,
+  TOP_CONTEXT_MENU,
+  TOP_DRAG_END,
+  TOP_FOCUS,
+  TOP_KEY_DOWN,
+  TOP_KEY_UP,
+  TOP_MOUSE_DOWN,
+  TOP_MOUSE_UP,
+];
 
 const eventTypes = {
   select: {
@@ -37,17 +48,7 @@ const eventTypes = {
       bubbled: 'onSelect',
       captured: 'onSelectCapture',
     },
-    dependencies: [
-      TOP_BLUR,
-      TOP_CONTEXT_MENU,
-      TOP_DRAG_END,
-      TOP_FOCUS,
-      TOP_KEY_DOWN,
-      TOP_KEY_UP,
-      TOP_MOUSE_DOWN,
-      TOP_MOUSE_UP,
-      TOP_SELECTION_CHANGE,
-    ],
+    dependencies: [...rootTargetDependencies, TOP_SELECTION_CHANGE],
   },
 };
 
@@ -168,13 +169,19 @@ const SelectEventPlugin = {
     eventSystemFlags,
     container,
   ) {
-    const containerOrDoc =
-      container || getEventTargetDocument(nativeEventTarget);
+    const doc = getEventTargetDocument(nativeEventTarget);
     // Track whether all listeners exists for this plugin. If none exist, we do
     // not extract events. See #3639.
     if (
-      !containerOrDoc ||
-      !isListeningToAllDependencies('onSelect', containerOrDoc)
+      // We only listen to TOP_SELECTION_CHANGE on the document, never the
+      // root.
+      !isListeningToEvent(TOP_SELECTION_CHANGE, doc) ||
+      // If we are handling TOP_SELECTION_CHANGE, then we don't need to
+      // check for the other dependencies, as TOP_SELECTION_CHANGE is only
+      // event attached from the onChange plugin and we don't expose an
+      // onSelectionChange event from React.
+      (topLevelType !== TOP_SELECTION_CHANGE &&
+        !isListeningToEvents(rootTargetDependencies, container))
     ) {
       return null;
     }
