@@ -21,6 +21,8 @@ describe('BeforeInputEventPlugin', () => {
     if (envSimulator) {
       envSimulator();
     }
+    ReactFeatureFlags = require('shared/ReactFeatureFlags');
+    ReactFeatureFlags.enableModernEventSystem = true;
     return require('react-dom');
   }
 
@@ -78,8 +80,6 @@ describe('BeforeInputEventPlugin', () => {
   }
 
   beforeEach(() => {
-    ReactFeatureFlags = require('shared/ReactFeatureFlags');
-    ReactFeatureFlags.enableModernEventSystem = true;
     React = require('react');
     container = document.createElement('div');
     document.body.appendChild(container);

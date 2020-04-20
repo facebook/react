@@ -82,6 +82,7 @@ import {
   TOP_CLICK,
   TOP_BEFORE_BLUR,
   TOP_AFTER_BLUR,
+  TOP_SELECTION_CHANGE,
 } from './DOMTopLevelEventTypes';
 import {
   getClosestInstanceFromNode,
@@ -250,23 +251,21 @@ function dispatchEventsForPlugins(
 
   for (let i = 0; i < plugins.length; i++) {
     const possiblePlugin: PluginModule<AnyNativeEvent> = plugins[i];
-    if (possiblePlugin !== undefined) {
-      const extractedEvents = possiblePlugin.extractEvents(
-        topLevelType,
-        targetInst,
-        nativeEvent,
-        nativeEventTarget,
-        eventSystemFlags,
-        targetContainer,
-      );
-      if (isArray(extractedEvents)) {
-        // Flow complains about @@iterator being missing in ReactSyntheticEvent,
-        // so we cast to avoid the Flow error.
-        const arrOfExtractedEvents = ((extractedEvents: any): Array<ReactSyntheticEvent>);
-        syntheticEvents.push(...arrOfExtractedEvents);
-      } else if (extractedEvents != null) {
-        syntheticEvents.push(extractedEvents);
-      }
+    const extractedEvents = possiblePlugin.extractEvents(
+      topLevelType,
+      targetInst,
+      nativeEvent,
+      nativeEventTarget,
+      eventSystemFlags,
+      targetContainer,
+    );
+    if (isArray(extractedEvents)) {
+      // Flow complains about @@iterator being missing in ReactSyntheticEvent,
+      // so we cast to avoid the Flow error.
+      const arrOfExtractedEvents = ((extractedEvents: any): Array<ReactSyntheticEvent>);
+      syntheticEvents.push(...arrOfExtractedEvents);
+    } else if (extractedEvents != null) {
+      syntheticEvents.push(extractedEvents);
     }
   }
   dispatchEventsInBatch(syntheticEvents);
@@ -314,6 +313,14 @@ export function listenToTopLevelEvent(
     capture === undefined
       ? topLevelType
       : `${typeStr}_${capture ? 'capture' : 'bubble'}`;
+
+  // TOP_SELECTION_CHANGE needs to be attached to the document
+  // otherwise it won't capture incoming events that are only
+  // triggered on the document directly.
+  if (topLevelType === TOP_SELECTION_CHANGE) {
+    targetContainer = (targetContainer: any).ownerDocument || targetContainer;
+    listenerMap = getListenerMapForElement(targetContainer);
+  }
   const listenerEntry = listenerMap.get(listenerMapKey);
   const shouldUpgrade = shouldUpgradeListener(listenerEntry, passive);
   if (listenerEntry === undefined || shouldUpgrade) {
