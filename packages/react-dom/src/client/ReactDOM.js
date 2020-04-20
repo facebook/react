@@ -39,13 +39,6 @@ import {
 } from 'react-reconciler/src/ReactFiberReconciler';
 import {createPortal as createPortalImpl} from 'react-reconciler/src/ReactPortal';
 import {canUseDOM} from 'shared/ExecutionEnvironment';
-import {setBatchingImplementation} from 'legacy-events/ReactGenericBatching';
-import {
-  setRestoreImplementation,
-  enqueueStateRestore,
-  restoreStateIfNeeded,
-} from 'legacy-events/ReactControlledComponent';
-import {runEventsInBatch} from 'legacy-events/EventBatching';
 import {
   eventNameDispatchConfigs,
   injectEventPluginsByName,
@@ -69,6 +62,12 @@ import {
   setAttemptHydrationAtCurrentPriority,
   queueExplicitHydrationTarget,
 } from '../events/ReactDOMEventReplaying';
+import {setBatchingImplementation} from '../events/ReactDOMUpdateBatching';
+import {
+  setRestoreImplementation,
+  enqueueStateRestore,
+  restoreStateIfNeeded,
+} from '../events/ReactDOMControlledComponent';
 
 setAttemptSynchronousHydration(attemptSynchronousHydration);
 setAttemptUserBlockingHydration(attemptUserBlockingHydration);
@@ -172,8 +171,8 @@ function unstable_createPortal(
 }
 
 const Internals = {
-  // Keep in sync with ReactDOMUnstableNativeDependencies.js
-  // ReactTestUtils.js, and ReactTestUtilsAct.js. This is an array for better minification.
+  // Keep in sync with ReactTestUtils.js, and ReactTestUtilsAct.js.
+  // This is an array for better minification.
   Events: [
     getInstanceFromNode,
     getNodeFromInstance,
@@ -183,7 +182,6 @@ const Internals = {
     enqueueStateRestore,
     restoreStateIfNeeded,
     dispatchEvent,
-    runEventsInBatch,
     flushPassiveEffects,
     IsThisRendererActing,
   ],

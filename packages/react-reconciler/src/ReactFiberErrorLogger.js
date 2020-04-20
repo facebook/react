@@ -7,7 +7,7 @@
  * @flow
  */
 
-import type {Fiber} from './ReactFiber';
+import type {Fiber} from './ReactInternalTypes';
 import type {CapturedValue} from './ReactCapturedValue';
 
 import {showErrorDialog} from './ReactFiberErrorDialog';

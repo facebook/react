@@ -7,9 +7,9 @@
  * @flow
  */
 
-import type {Fiber} from './ReactFiber';
+import type {Fiber} from './ReactInternalTypes';
 import type {Container, SuspenseInstance} from './ReactFiberHostConfig';
-import type {SuspenseState} from './ReactFiberSuspenseComponent';
+import type {SuspenseState} from './ReactFiberSuspenseComponent.old';
 
 import invariant from 'shared/invariant';
 
@@ -25,7 +25,7 @@ import {
   FundamentalComponent,
   SuspenseComponent,
 } from './ReactWorkTags';
-import {NoEffect, Placement, Hydrating} from './ReactSideEffectTags';
+import {NoEffect, Placement, Hydrating, Deletion} from './ReactSideEffectTags';
 import {enableFundamentalAPI} from 'shared/ReactFeatureFlags';
 
 const ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
@@ -331,4 +331,56 @@ export function findCurrentHostFiberWithNoPortals(parent: Fiber): Fiber | null {
   // Flow needs the return null here, but ESLint complains about it.
   // eslint-disable-next-line no-unreachable
   return null;
+}
+
+export function isFiberSuspenseAndTimedOut(fiber: Fiber): boolean {
+  const memoizedState = fiber.memoizedState;
+  return (
+    fiber.tag === SuspenseComponent &&
+    memoizedState !== null &&
+    memoizedState.dehydrated === null
+  );
+}
+
+function doesFiberContain(parentFiber: Fiber, childFiber: Fiber): boolean {
+  let node = childFiber;
+  const parentFiberAlternate = parentFiber.alternate;
+  while (node !== null) {
+    if (node === parentFiber || node === parentFiberAlternate) {
+      return true;
+    }
+    node = node.return;
+  }
+  return false;
+}
+
+function isFiberTimedOutSuspenseThatContainsTargetFiber(
+  fiber: Fiber,
+  targetFiber: Fiber,
+): boolean {
+  const child = fiber.child;
+  return (
+    isFiberSuspenseAndTimedOut(fiber) &&
+    child !== null &&
+    doesFiberContain(child, targetFiber)
+  );
+}
+
+function isFiberDeletedAndContainsTargetFiber(
+  fiber: Fiber,
+  targetFiber: Fiber,
+): boolean {
+  return (
+    (fiber.effectTag & Deletion) !== 0 && doesFiberContain(fiber, targetFiber)
+  );
+}
+
+export function isFiberHiddenOrDeletedAndContains(
+  parentFiber: Fiber,
+  childFiber: Fiber,
+): boolean {
+  return (
+    isFiberDeletedAndContainsTargetFiber(parentFiber, childFiber) ||
+    isFiberTimedOutSuspenseThatContainsTargetFiber(parentFiber, childFiber)
+  );
 }

@@ -84,6 +84,7 @@ import possibleStandardNames from '../shared/possibleStandardNames';
 import {validateProperties as validateARIAProperties} from '../shared/ReactDOMInvalidARIAHook';
 import {validateProperties as validateInputProperties} from '../shared/ReactDOMNullInputValuePropHook';
 import {validateProperties as validateUnknownProperties} from '../shared/ReactDOMUnknownPropertyHook';
+import {REACT_OPAQUE_ID_TYPE} from 'shared/ReactSymbols';
 
 import {
   enableDeprecatedFlareAPI,
@@ -823,10 +824,7 @@ export function diffProperties(
         // inserted already.
       }
     } else if (propKey === CHILDREN) {
-      if (
-        lastProp !== nextProp &&
-        (typeof nextProp === 'string' || typeof nextProp === 'number')
-      ) {
+      if (typeof nextProp === 'string' || typeof nextProp === 'number') {
         (updatePayload = updatePayload || []).push(propKey, '' + nextProp);
       }
     } else if (
@@ -849,6 +847,15 @@ export function diffProperties(
         // to update this element.
         updatePayload = [];
       }
+    } else if (
+      typeof nextProp === 'object' &&
+      nextProp !== null &&
+      nextProp.$$typeof === REACT_OPAQUE_ID_TYPE
+    ) {
+      // If we encounter useOpaqueReference's opaque object, this means we are hydrating.
+      // In this case, call the opaque object's toString function which generates a new client
+      // ID so client and server IDs match and throws to rerender.
+      nextProp.toString();
     } else {
       // For any other property we always add it to the queue and then we
       // filter it out using the whitelist during the commit.
@@ -1103,12 +1110,11 @@ export function diffHydratedProperties(
       } else if (propKey === DANGEROUSLY_SET_INNER_HTML) {
         const serverHTML = domElement.innerHTML;
         const nextHtml = nextProp ? nextProp[HTML] : undefined;
-        const expectedHTML = normalizeHTML(
-          domElement,
-          nextHtml != null ? nextHtml : '',
-        );
-        if (expectedHTML !== serverHTML) {
-          warnForPropDifference(propKey, serverHTML, expectedHTML);
+        if (nextHtml != null) {
+          const expectedHTML = normalizeHTML(domElement, nextHtml);
+          if (expectedHTML !== serverHTML) {
+            warnForPropDifference(propKey, serverHTML, expectedHTML);
+          }
         }
       } else if (propKey === STYLE) {
         // $FlowFixMe - Should be inferred as not undefined.
@@ -1348,10 +1354,6 @@ export function listenToEventResponderEventTypes(
       const targetEventType = isPassive
         ? eventType
         : eventType.substring(0, eventType.length - 7);
-      // We don't listen to this as we actually emulate it in the host config
-      if (targetEventType === 'beforeblur') {
-        continue;
-      }
       if (!listenerMap.has(eventKey)) {
         if (isPassive) {
           const activeKey = targetEventType + '_active';

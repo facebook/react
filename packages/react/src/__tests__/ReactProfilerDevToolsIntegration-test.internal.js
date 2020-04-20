@@ -188,7 +188,7 @@ describe('ReactProfiler DevTools integration', () => {
 
     // Commit something
     root.update(<Text text="A" />);
-    expect(Scheduler).toFlushAndYield(__DEV__ ? ['A', 'A'] : ['A']);
+    expect(Scheduler).toFlushAndYield(['A']);
     expect(root).toMatchRenderedOutput('A');
 
     // Advance time by many seconds, larger than the default expiration time
@@ -200,7 +200,7 @@ describe('ReactProfiler DevTools integration', () => {
     // Update B should not instantly expire.
     expect(Scheduler).toFlushExpired([]);
 
-    expect(Scheduler).toFlushAndYield(__DEV__ ? ['B', 'B'] : ['B']);
+    expect(Scheduler).toFlushAndYield(['B']);
     expect(root).toMatchRenderedOutput('B');
   });
 });

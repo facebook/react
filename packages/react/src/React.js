@@ -10,6 +10,7 @@
 import ReactVersion from 'shared/ReactVersion';
 import {
   REACT_FRAGMENT_TYPE,
+  REACT_DEBUG_TRACING_MODE_TYPE,
   REACT_PROFILER_TYPE,
   REACT_STRICT_MODE_TYPE,
   REACT_SUSPENSE_TYPE,
@@ -45,6 +46,7 @@ import {
   useResponder,
   useTransition,
   useDeferredValue,
+  useOpaqueIdentifier,
 } from './ReactHooks';
 import {withSuspenseConfig} from './ReactBatchConfig';
 import {
@@ -95,6 +97,7 @@ export {
   REACT_FRAGMENT_TYPE as Fragment,
   REACT_PROFILER_TYPE as Profiler,
   REACT_STRICT_MODE_TYPE as StrictMode,
+  REACT_DEBUG_TRACING_MODE_TYPE as unstable_DebugTracingMode,
   REACT_SUSPENSE_TYPE as Suspense,
   createElement,
   cloneElement,
@@ -117,4 +120,5 @@ export {
   createFundamental as unstable_createFundamental,
   // enableScopeAPI
   createScope as unstable_createScope,
+  useOpaqueIdentifier as unstable_useOpaqueIdentifier,
 };

@@ -49,7 +49,8 @@ describe('ReactBlocks', () => {
     };
   });
 
-  it.experimental('renders a simple component', () => {
+  // @gate experimental
+  it('renders a simple component', () => {
     function User(props, data) {
       return <div>{typeof data}</div>;
     }
@@ -71,7 +72,8 @@ describe('ReactBlocks', () => {
     expect(ReactNoop).toMatchRenderedOutput(<div>undefined</div>);
   });
 
-  it.experimental('prints the name of the render function in warnings', () => {
+  // @gate experimental
+  it('prints the name of the render function in warnings', () => {
     function load(firstName) {
       return {
         name: firstName,
@@ -108,7 +110,8 @@ describe('ReactBlocks', () => {
     );
   });
 
-  it.experimental('renders a component with a suspending load', async () => {
+  // @gate experimental
+  it('renders a component with a suspending load', async () => {
     function load(id) {
       return {
         id: id,
@@ -147,115 +150,111 @@ describe('ReactBlocks', () => {
     expect(ReactNoop).toMatchRenderedOutput(<span>Name: Sebastian</span>);
   });
 
-  it.experimental(
-    'does not support a lazy wrapper around a chunk',
-    async () => {
-      function load(id) {
-        return {
-          id: id,
-          name: readString('Sebastian'),
-        };
-      }
+  // @gate experimental
+  it('does not support a lazy wrapper around a chunk', async () => {
+    function load(id) {
+      return {
+        id: id,
+        name: readString('Sebastian'),
+      };
+    }
 
-      function Render(props, data) {
-        return (
-          <span>
-            {props.title}: {data.name}
-          </span>
-        );
-      }
-
-      const loadUser = block(Render, load);
-
-      function App({User}) {
-        return (
-          <Suspense fallback={'Loading...'}>
-            <User title="Name" />
-          </Suspense>
-        );
-      }
-
-      let resolveLazy;
-      const LazyUser = React.lazy(
-        () =>
-          new Promise(resolve => {
-            resolveLazy = function() {
-              resolve({
-                default: loadUser(123),
-              });
-            };
-          }),
+    function Render(props, data) {
+      return (
+        <span>
+          {props.title}: {data.name}
+        </span>
       );
+    }
 
-      await ReactNoop.act(async () => {
-        ReactNoop.render(<App User={LazyUser} />);
-      });
+    const loadUser = block(Render, load);
 
-      expect(ReactNoop).toMatchRenderedOutput('Loading...');
-
-      // Resolve the component.
-      await resolveLazy();
-
-      expect(Scheduler).toFlushAndThrow(
-        'Element type is invalid. Received a promise that resolves to: [object Object]. ' +
-          'Lazy element type must resolve to a class or function.' +
-          (__DEV__
-            ? ' Did you wrap a component in React.lazy() more than once?'
-            : ''),
+    function App({User}) {
+      return (
+        <Suspense fallback={'Loading...'}>
+          <User title="Name" />
+        </Suspense>
       );
-    },
-  );
+    }
 
-  it.experimental(
-    'can receive updated data for the same component',
-    async () => {
-      function load(firstName) {
-        return {
-          name: firstName,
-        };
-      }
+    let resolveLazy;
+    const LazyUser = React.lazy(
+      () =>
+        new Promise(resolve => {
+          resolveLazy = function() {
+            resolve({
+              default: loadUser(123),
+            });
+          };
+        }),
+    );
 
-      function Render(props, data) {
-        const [initialName] = useState(data.name);
-        return (
-          <>
-            <span>Initial name: {initialName}</span>
-            <span>Latest name: {data.name}</span>
-          </>
-        );
-      }
+    await ReactNoop.act(async () => {
+      ReactNoop.render(<App User={LazyUser} />);
+    });
 
-      const loadUser = block(Render, load);
+    expect(ReactNoop).toMatchRenderedOutput('Loading...');
 
-      function App({User}) {
-        return (
-          <Suspense fallback={'Loading...'}>
-            <User title="Name" />
-          </Suspense>
-        );
-      }
+    // Resolve the component.
+    await resolveLazy();
 
-      await ReactNoop.act(async () => {
-        ReactNoop.render(<App User={loadUser('Sebastian')} />);
-      });
+    expect(Scheduler).toFlushAndThrow(
+      'Element type is invalid. Received a promise that resolves to: [object Object]. ' +
+        'Lazy element type must resolve to a class or function.' +
+        (__DEV__
+          ? ' Did you wrap a component in React.lazy() more than once?'
+          : ''),
+    );
+  });
 
-      expect(ReactNoop).toMatchRenderedOutput(
+  // @gate experimental
+  it('can receive updated data for the same component', async () => {
+    function load(firstName) {
+      return {
+        name: firstName,
+      };
+    }
+
+    function Render(props, data) {
+      const [initialName] = useState(data.name);
+      return (
         <>
-          <span>Initial name: Sebastian</span>
-          <span>Latest name: Sebastian</span>
-        </>,
+          <span>Initial name: {initialName}</span>
+          <span>Latest name: {data.name}</span>
+        </>
       );
+    }
 
-      await ReactNoop.act(async () => {
-        ReactNoop.render(<App User={loadUser('Dan')} />);
-      });
+    const loadUser = block(Render, load);
 
-      expect(ReactNoop).toMatchRenderedOutput(
-        <>
-          <span>Initial name: Sebastian</span>
-          <span>Latest name: Dan</span>
-        </>,
+    function App({User}) {
+      return (
+        <Suspense fallback={'Loading...'}>
+          <User title="Name" />
+        </Suspense>
       );
-    },
-  );
+    }
+
+    await ReactNoop.act(async () => {
+      ReactNoop.render(<App User={loadUser('Sebastian')} />);
+    });
+
+    expect(ReactNoop).toMatchRenderedOutput(
+      <>
+        <span>Initial name: Sebastian</span>
+        <span>Latest name: Sebastian</span>
+      </>,
+    );
+
+    await ReactNoop.act(async () => {
+      ReactNoop.render(<App User={loadUser('Dan')} />);
+    });
+
+    expect(ReactNoop).toMatchRenderedOutput(
+      <>
+        <span>Initial name: Sebastian</span>
+        <span>Latest name: Dan</span>
+      </>,
+    );
+  });
 });

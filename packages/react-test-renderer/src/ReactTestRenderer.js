@@ -7,8 +7,8 @@
  * @flow
  */
 
-import type {Fiber} from 'react-reconciler/src/ReactFiber';
-import type {FiberRoot} from 'react-reconciler/src/ReactFiberRoot';
+import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
+import type {FiberRoot} from 'react-reconciler/src/ReactInternalTypes';
 import type {Instance, TextInstance} from './ReactTestHostConfig';
 
 import * as Scheduler from 'scheduler/unstable_mock';

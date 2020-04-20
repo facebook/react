@@ -13,6 +13,7 @@ module.exports = {
     Proxy: true,
     WeakMap: true,
     WeakSet: true,
+    Reflect: true,
     // Vendor specific
     MSApp: true,
     __REACT_DEVTOOLS_GLOBAL_HOOK__: true,

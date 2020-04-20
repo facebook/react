@@ -15,7 +15,7 @@ import type {ReactProvider, ReactContext} from 'shared/ReactTypes';
 import * as React from 'react';
 import invariant from 'shared/invariant';
 import getComponentName from 'shared/getComponentName';
-import describeComponentFrame from 'shared/describeComponentFrame';
+import {describeUnknownElementTypeFrameInDEV} from 'shared/ReactComponentStackFrame';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import {
   warnAboutDeprecatedLifecycles,
@@ -28,6 +28,7 @@ import {
 } from 'shared/ReactFeatureFlags';
 
 import {
+  REACT_DEBUG_TRACING_MODE_TYPE,
   REACT_FORWARD_REF_TYPE,
   REACT_FRAGMENT_TYPE,
   REACT_STRICT_MODE_TYPE,
@@ -67,7 +68,7 @@ import {
   getIntrinsicNamespace,
   getChildNamespace,
 } from '../shared/DOMNamespaces';
-import ReactControlledValuePropTypes from '../shared/ReactControlledValuePropTypes';
+import {checkControlledValueProps} from '../shared/ReactControlledValuePropTypes';
 import assertValidProps from '../shared/assertValidProps';
 import dangerousStyleValue from '../shared/dangerousStyleValue';
 import hyphenateStyleName from '../shared/hyphenateStyleName';
@@ -112,11 +113,11 @@ if (__DEV__) {
   };
 
   describeStackFrame = function(element): string {
-    const source = element._source;
-    const type = element.type;
-    const name = getComponentName(type);
-    const ownerName = null;
-    return describeComponentFrame(name, source, ownerName);
+    return describeUnknownElementTypeFrameInDEV(
+      element.type,
+      element._source,
+      null,
+    );
   };
 
   pushCurrentDebugStack = function(stack: Array<Frame>) {
@@ -1002,6 +1003,7 @@ class ReactDOMServerRenderer {
       }
 
       switch (elementType) {
+        case REACT_DEBUG_TRACING_MODE_TYPE:
         case REACT_STRICT_MODE_TYPE:
         case REACT_PROFILER_TYPE:
         case REACT_SUSPENSE_LIST_TYPE:
@@ -1358,7 +1360,7 @@ class ReactDOMServerRenderer {
     let props = element.props;
     if (tag === 'input') {
       if (__DEV__) {
-        ReactControlledValuePropTypes.checkPropTypes('input', props);
+        checkControlledValueProps('input', props);
 
         if (
           props.checked !== undefined &&
@@ -1410,7 +1412,7 @@ class ReactDOMServerRenderer {
       );
     } else if (tag === 'textarea') {
       if (__DEV__) {
-        ReactControlledValuePropTypes.checkPropTypes('textarea', props);
+        checkControlledValueProps('textarea', props);
         if (
           props.value !== undefined &&
           props.defaultValue !== undefined &&
@@ -1465,7 +1467,7 @@ class ReactDOMServerRenderer {
       });
     } else if (tag === 'select') {
       if (__DEV__) {
-        ReactControlledValuePropTypes.checkPropTypes('select', props);
+        checkControlledValueProps('select', props);
 
         for (let i = 0; i < valuePropNames.length; i++) {
           const propName = valuePropNames[i];

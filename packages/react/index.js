@@ -59,6 +59,7 @@ export {
   createMutableSource,
   Fragment,
   Profiler,
+  unstable_DebugTracingMode,
   StrictMode,
   Suspense,
   createElement,
@@ -76,4 +77,5 @@ export {
   DEPRECATED_createResponder,
   unstable_createFundamental,
   unstable_createScope,
+  unstable_useOpaqueIdentifier,
 } from './src/React';

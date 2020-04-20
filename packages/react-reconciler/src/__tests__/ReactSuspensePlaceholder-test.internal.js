@@ -23,7 +23,7 @@ describe('ReactSuspensePlaceholder', () => {
     jest.resetModules();
 
     ReactFeatureFlags = require('shared/ReactFeatureFlags');
-    ReactFeatureFlags.debugRenderPhaseSideEffectsForStrictMode = false;
+
     ReactFeatureFlags.enableProfilerTimer = true;
     ReactFeatureFlags.replayFailedUnitOfWorkWithInvokeGuardedCallback = false;
     React = require('react');
@@ -498,6 +498,13 @@ describe('ReactSuspensePlaceholder', () => {
             </Suspense>
           </>,
         );
+
+        // TODO: This is here only to shift us into the next JND bucket. A
+        // consequence of AsyncText relying on the same timer queue as React's
+        // internal Suspense timer. We should decouple our AsyncText helpers
+        // from timers.
+        Scheduler.unstable_advanceTime(100);
+
         expect(Scheduler).toFlushAndYield([
           'App',
           'Suspending',

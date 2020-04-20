@@ -68,7 +68,7 @@
     "jest-diff": "^25.2.6",
     "jest-snapshot-serializer-raw": "^1.1.0",
     "minimatch": "^3.0.4",
-    "minimist": "^1.2.0",
+    "minimist": "^1.2.3",
     "mkdirp": "^0.5.1",
     "ncp": "^2.0.0",
     "object-assign": "^4.1.1",
@@ -110,6 +110,8 @@
     "test": "cross-env NODE_ENV=development jest --config ./scripts/jest/config.source.js",
     "test-www": "cross-env NODE_ENV=development jest --config ./scripts/jest/config.source-www.js",
     "test-www-variant": "cross-env NODE_ENV=development VARIANT=true jest --config ./scripts/jest/config.source-www.js",
+    "test-prod-www": "cross-env NODE_ENV=production jest --config ./scripts/jest/config.source-www.js",
+    "test-prod-www-variant": "cross-env NODE_ENV=production VARIANT=true jest --config ./scripts/jest/config.source-www.js",
     "test-persistent": "cross-env NODE_ENV=development jest --config ./scripts/jest/config.source-persistent.js",
     "debug-test-persistent": "cross-env NODE_ENV=development node --inspect-brk node_modules/jest/bin/jest.js --config ./scripts/jest/config.source-persistent.js --runInBand",
     "test-prod": "cross-env NODE_ENV=production jest --config ./scripts/jest/config.source.js",
@@ -124,6 +126,7 @@
     "flow-ci": "node ./scripts/tasks/flow-ci.js",
     "prettier": "node ./scripts/prettier/index.js write-changed",
     "prettier-all": "node ./scripts/prettier/index.js write",
-    "version-check": "node ./scripts/tasks/version-check.js"
+    "version-check": "node ./scripts/tasks/version-check.js",
+    "merge-fork": "node ./scripts/merge-fork/merge-fork.js"
   }
 }

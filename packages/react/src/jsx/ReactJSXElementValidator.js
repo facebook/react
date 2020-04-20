@@ -24,10 +24,29 @@ import {
 import {warnAboutSpreadingKeyToJSX} from 'shared/ReactFeatureFlags';
 
 import {jsxDEV} from './ReactJSXElement';
+
+import {describeUnknownElementTypeFrameInDEV} from 'shared/ReactComponentStackFrame';
+
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 
 const ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
 const ReactDebugCurrentFrame = ReactSharedInternals.ReactDebugCurrentFrame;
+
+function setCurrentlyValidatingElement(element) {
+  if (__DEV__) {
+    if (element) {
+      const owner = element._owner;
+      const stack = describeUnknownElementTypeFrameInDEV(
+        element.type,
+        element._source,
+        owner ? owner.type : null,
+      );
+      ReactDebugCurrentFrame.setExtraStackFrame(stack);
+    } else {
+      ReactDebugCurrentFrame.setExtraStackFrame(null);
+    }
+  }
+}
 
 let propTypesMisspellWarningShown;
 
@@ -140,14 +159,14 @@ function validateExplicitKey(element, parentType) {
       )}.`;
     }
 
-    ReactDebugCurrentFrame.setCurrentlyValidatingElement(element);
+    setCurrentlyValidatingElement(element);
     console.error(
       'Each child in a list should have a unique "key" prop.' +
         '%s%s See https://fb.me/react-warning-keys for more information.',
       currentComponentErrorInfo,
       childOwner,
     );
-    ReactDebugCurrentFrame.setCurrentlyValidatingElement(null);
+    setCurrentlyValidatingElement(null);
   }
 }
 
@@ -224,9 +243,9 @@ function validatePropTypes(element) {
       return;
     }
     if (propTypes) {
-      ReactDebugCurrentFrame.setCurrentlyValidatingElement(element);
+      setCurrentlyValidatingElement(element);
       checkPropTypes(propTypes, element.props, 'prop', name);
-      ReactDebugCurrentFrame.setCurrentlyValidatingElement(null);
+      setCurrentlyValidatingElement(null);
     } else if (type.PropTypes !== undefined && !propTypesMisspellWarningShown) {
       propTypesMisspellWarningShown = true;
       console.error(
@@ -252,7 +271,7 @@ function validatePropTypes(element) {
  */
 function validateFragmentProps(fragment) {
   if (__DEV__) {
-    ReactDebugCurrentFrame.setCurrentlyValidatingElement(fragment);
+    setCurrentlyValidatingElement(fragment);
 
     const keys = Object.keys(fragment.props);
     for (let i = 0; i < keys.length; i++) {
@@ -271,7 +290,7 @@ function validateFragmentProps(fragment) {
       console.error('Invalid attribute `ref` supplied to `React.Fragment`.');
     }
 
-    ReactDebugCurrentFrame.setCurrentlyValidatingElement(null);
+    setCurrentlyValidatingElement(null);
   }
 }
 

@@ -17,7 +17,12 @@ describe('ReactDOMComponent', () => {
   const ReactFeatureFlags = require('shared/ReactFeatureFlags');
 
   function normalizeCodeLocInfo(str) {
-    return str && str.replace(/\(at .+?:\d+\)/g, '(at **)');
+    return (
+      str &&
+      str.replace(/\n +(?:at|in) ([\S]+)[^\n]*/g, function(m, name) {
+        return '\n    in ' + name + ' (at **)';
+      })
+    );
   }
 
   beforeEach(() => {
@@ -444,6 +449,111 @@ describe('ReactDOMComponent', () => {
       expect(node.hasAttribute('src')).toBe(false);
       expect(node.hasAttribute('data-foo')).toBe(false);
     });
+
+    if (ReactFeatureFlags.enableFilterEmptyStringAttributesDOM) {
+      it('should not add an empty src attribute', () => {
+        const container = document.createElement('div');
+        expect(() => ReactDOM.render(<img src="" />, container)).toErrorDev(
+          'An empty string ("") was passed to the src attribute. ' +
+            'This may cause the browser to download the whole page again over the network. ' +
+            'To fix this, either do not render the element at all ' +
+            'or pass null to src instead of an empty string.',
+        );
+        const node = container.firstChild;
+        expect(node.hasAttribute('src')).toBe(false);
+
+        ReactDOM.render(<img src="abc" />, container);
+        expect(node.hasAttribute('src')).toBe(true);
+
+        expect(() => ReactDOM.render(<img src="" />, container)).toErrorDev(
+          'An empty string ("") was passed to the src attribute. ' +
+            'This may cause the browser to download the whole page again over the network. ' +
+            'To fix this, either do not render the element at all ' +
+            'or pass null to src instead of an empty string.',
+        );
+        expect(node.hasAttribute('src')).toBe(false);
+      });
+
+      it('should not add an empty href attribute', () => {
+        const container = document.createElement('div');
+        expect(() => ReactDOM.render(<link href="" />, container)).toErrorDev(
+          'An empty string ("") was passed to the href attribute. ' +
+            'To fix this, either do not render the element at all ' +
+            'or pass null to href instead of an empty string.',
+        );
+        const node = container.firstChild;
+        expect(node.hasAttribute('href')).toBe(false);
+
+        ReactDOM.render(<link href="abc" />, container);
+        expect(node.hasAttribute('href')).toBe(true);
+
+        expect(() => ReactDOM.render(<link href="" />, container)).toErrorDev(
+          'An empty string ("") was passed to the href attribute. ' +
+            'To fix this, either do not render the element at all ' +
+            'or pass null to href instead of an empty string.',
+        );
+        expect(node.hasAttribute('href')).toBe(false);
+      });
+
+      it('should not add an empty action attribute', () => {
+        const container = document.createElement('div');
+        expect(() => ReactDOM.render(<form action="" />, container)).toErrorDev(
+          'An empty string ("") was passed to the action attribute. ' +
+            'To fix this, either do not render the element at all ' +
+            'or pass null to action instead of an empty string.',
+        );
+        const node = container.firstChild;
+        expect(node.hasAttribute('action')).toBe(false);
+
+        ReactDOM.render(<form action="abc" />, container);
+        expect(node.hasAttribute('action')).toBe(true);
+
+        expect(() => ReactDOM.render(<form action="" />, container)).toErrorDev(
+          'An empty string ("") was passed to the action attribute. ' +
+            'To fix this, either do not render the element at all ' +
+            'or pass null to action instead of an empty string.',
+        );
+        expect(node.hasAttribute('action')).toBe(false);
+      });
+
+      it('should not add an empty formAction attribute', () => {
+        const container = document.createElement('div');
+        expect(() =>
+          ReactDOM.render(<button formAction="" />, container),
+        ).toErrorDev(
+          'An empty string ("") was passed to the formAction attribute. ' +
+            'To fix this, either do not render the element at all ' +
+            'or pass null to formAction instead of an empty string.',
+        );
+        const node = container.firstChild;
+        expect(node.hasAttribute('formAction')).toBe(false);
+
+        ReactDOM.render(<button formAction="abc" />, container);
+        expect(node.hasAttribute('formAction')).toBe(true);
+
+        expect(() =>
+          ReactDOM.render(<button formAction="" />, container),
+        ).toErrorDev(
+          'An empty string ("") was passed to the formAction attribute. ' +
+            'To fix this, either do not render the element at all ' +
+            'or pass null to formAction instead of an empty string.',
+        );
+        expect(node.hasAttribute('formAction')).toBe(false);
+      });
+
+      it('should not filter attributes for custom elements', () => {
+        const container = document.createElement('div');
+        ReactDOM.render(
+          <some-custom-element action="" formAction="" href="" src="" />,
+          container,
+        );
+        const node = container.firstChild;
+        expect(node.hasAttribute('action')).toBe(true);
+        expect(node.hasAttribute('formAction')).toBe(true);
+        expect(node.hasAttribute('href')).toBe(true);
+        expect(node.hasAttribute('src')).toBe(true);
+      });
+    }
 
     it('should apply React-specific aliases to HTML elements', () => {
       const container = document.createElement('div');
@@ -1614,16 +1724,26 @@ describe('ReactDOMComponent', () => {
             <tr />
           </div>,
         );
-      }).toErrorDev([
-        'Warning: validateDOMNesting(...): <tr> cannot appear as a child of ' +
-          '<div>.' +
-          '\n    in tr (at **)' +
-          '\n    in div (at **)',
-        'Warning: validateDOMNesting(...): <tr> cannot appear as a child of ' +
-          '<div>.' +
-          '\n    in tr (at **)' +
-          '\n    in div (at **)',
-      ]);
+      }).toErrorDev(
+        ReactFeatureFlags.enableComponentStackLocations
+          ? [
+              // This warning dedupes since they're in the same component.
+              'Warning: validateDOMNesting(...): <tr> cannot appear as a child of ' +
+                '<div>.' +
+                '\n    in tr (at **)' +
+                '\n    in div (at **)',
+            ]
+          : [
+              'Warning: validateDOMNesting(...): <tr> cannot appear as a child of ' +
+                '<div>.' +
+                '\n    in tr (at **)' +
+                '\n    in div (at **)',
+              'Warning: validateDOMNesting(...): <tr> cannot appear as a child of ' +
+                '<div>.' +
+                '\n    in tr (at **)' +
+                '\n    in div (at **)',
+            ],
+      );
     });
 
     it('warns on invalid nesting at root', () => {

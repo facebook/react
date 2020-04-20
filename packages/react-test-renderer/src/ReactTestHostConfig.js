@@ -14,6 +14,7 @@ import type {
 } from 'shared/ReactTypes';
 
 import {enableDeprecatedFlareAPI} from 'shared/ReactFeatureFlags';
+import {REACT_OPAQUE_ID_TYPE} from 'shared/ReactSymbols';
 
 export type Type = string;
 export type Props = Object;
@@ -44,6 +45,12 @@ export type ChildSet = void; // Unused
 export type TimeoutHandle = TimeoutID;
 export type NoTimeout = -1;
 export type EventResponder = any;
+export opaque type OpaqueIDType =
+  | string
+  | {
+      toString: () => string | void,
+      valueOf: () => string | void,
+    };
 
 export type ReactListenerEvent = Object;
 export type ReactListenerMap = Object;
@@ -136,8 +143,9 @@ export function getChildHostContext(
   return NO_CONTEXT;
 }
 
-export function prepareForCommit(containerInfo: Container): void {
+export function prepareForCommit(containerInfo: Container): null | Object {
   // noop
+  return null;
 }
 
 export function resetAfterCommit(containerInfo: Container): void {
@@ -381,6 +389,48 @@ export function beforeRemoveInstance(instance: any) {
   // noop
 }
 
+let clientId: number = 0;
+export function makeClientId(): OpaqueIDType {
+  return 'c_' + (clientId++).toString(36);
+}
+
+export function makeClientIdInDEV(warnOnAccessInDEV: () => void): OpaqueIDType {
+  const id = 'c_' + (clientId++).toString(36);
+  return {
+    toString() {
+      warnOnAccessInDEV();
+      return id;
+    },
+    valueOf() {
+      warnOnAccessInDEV();
+      return id;
+    },
+  };
+}
+
+let serverId: number = 0;
+export function makeServerId(): OpaqueIDType {
+  return 's_' + (serverId++).toString(36);
+}
+
+export function isOpaqueHydratingObject(value: mixed): boolean {
+  return (
+    value !== null &&
+    typeof value === 'object' &&
+    value.$$typeof === REACT_OPAQUE_ID_TYPE
+  );
+}
+
+export function makeOpaqueHydratingObject(
+  attemptToReadValue: () => void,
+): OpaqueIDType {
+  return {
+    $$typeof: REACT_OPAQUE_ID_TYPE,
+    toString: attemptToReadValue,
+    valueOf: attemptToReadValue,
+  };
+}
+
 export function registerEvent(event: any, rootContainerInstance: Container) {
   throw new Error('Not yet implemented.');
 }
@@ -395,4 +445,12 @@ export function unmountEventListener(listener: any) {
 
 export function validateEventListenerTarget(target: any, listener: any) {
   throw new Error('Not yet implemented.');
+}
+
+export function beforeActiveInstanceBlur() {
+  // noop
+}
+
+export function afterActiveInstanceBlur() {
+  // noop
 }

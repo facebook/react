@@ -11,6 +11,7 @@ import typeof * as FeatureFlagsType from 'shared/ReactFeatureFlags';
 import typeof * as ExportsType from './ReactFeatureFlags.testing.www';
 
 export const debugRenderPhaseSideEffectsForStrictMode = false;
+export const enableDebugTracing = false;
 export const warnAboutDeprecatedLifecycles = true;
 export const replayFailedUnitOfWorkWithInvokeGuardedCallback = false;
 export const enableProfilerTimer = false;
@@ -27,7 +28,6 @@ export const enableFundamentalAPI = false;
 export const enableScopeAPI = true;
 export const enableUseEventAPI = true;
 export const warnAboutUnmockedScheduler = true;
-export const flushSuspenseFallbacksInTests = true;
 export const enableSuspenseCallback = true;
 export const warnAboutDefaultPropsOnFunctionComponents = false;
 export const warnAboutStringRefs = false;
@@ -41,7 +41,9 @@ export const deferPassiveEffectCleanupDuringUnmount = true;
 export const runAllPassiveEffectDestroysBeforeCreates = true;
 export const enableModernEventSystem = false;
 export const warnAboutSpreadingKeyToJSX = false;
+export const enableComponentStackLocations = false;
 export const enableLegacyFBSupport = !__EXPERIMENTAL__;
+export const enableFilterEmptyStringAttributesDOM = false;
 
 // Internal-only attempt to debug a React Native issue. See D20130868.
 export const throwEarlyForMysteriousError = false;

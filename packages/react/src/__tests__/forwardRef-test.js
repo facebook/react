@@ -121,7 +121,7 @@ describe('forwardRef', () => {
     ).toErrorDev(
       'Warning: Failed prop type: The prop `required` is marked as required in ' +
         '`ForwardRef(NamedFunction)`, but its value is `undefined`.\n' +
-        '    in ForwardRef(NamedFunction) (at **)',
+        '    in NamedFunction (at **)',
     );
   });
 
@@ -242,6 +242,33 @@ describe('forwardRef', () => {
     ).toErrorDev(
       'Warning: Failed prop type: The prop `required` is marked as required in ' +
         '`Foo`, but its value is `undefined`.\n' +
+        '    in Foo (at **)',
+    );
+  });
+
+  it('should honor a displayName in stacks if set on the inner function', () => {
+    const Component = props => <div {...props} />;
+
+    const inner = (props, ref) => <Component {...props} forwardedRef={ref} />;
+    inner.displayName = 'Foo';
+    const RefForwardingComponent = React.forwardRef(inner);
+
+    RefForwardingComponent.propTypes = {
+      optional: PropTypes.string,
+      required: PropTypes.string.isRequired,
+    };
+
+    RefForwardingComponent.defaultProps = {
+      optional: 'default',
+    };
+
+    const ref = React.createRef();
+
+    expect(() =>
+      ReactNoop.render(<RefForwardingComponent ref={ref} optional="foo" />),
+    ).toErrorDev(
+      'Warning: Failed prop type: The prop `required` is marked as required in ' +
+        '`ForwardRef(Foo)`, but its value is `undefined`.\n' +
         '    in Foo (at **)',
     );
   });
