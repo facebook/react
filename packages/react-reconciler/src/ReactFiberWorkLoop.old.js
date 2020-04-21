@@ -2956,7 +2956,7 @@ function warnAboutUpdateOnUnmountedFiberInDEV(fiber) {
         tag === ClassComponent
           ? 'the componentWillUnmount method'
           : 'a useEffect cleanup function',
-        getStackByFiberInDevAndProd(fiber),
+        getStackByFiberInDevAndProd(fiber), // CUSTOM STACK
       );
     }
   }
@@ -3111,7 +3111,7 @@ export function warnIfNotScopedWithMatchingAct(fiber: Fiber): void {
           '// ...\n' +
           'act(() => ...);' +
           '%s',
-        getStackByFiberInDevAndProd(fiber),
+        getStackByFiberInDevAndProd(fiber), // CUSTOM STACK
       );
     }
   }
@@ -3135,10 +3135,8 @@ export function warnIfNotCurrentlyActingEffectsInDEV(fiber: Fiber): void {
           '/* assert on the output */\n\n' +
           "This ensures that you're testing the behavior the user would see " +
           'in the browser.' +
-          ' Learn more at https://fb.me/react-wrap-tests-with-act' +
-          '%s',
+          ' Learn more at https://fb.me/react-wrap-tests-with-act',
         getComponentName(fiber.type),
-        getStackByFiberInDevAndProd(fiber),
       );
     }
   }
@@ -3165,7 +3163,7 @@ function warnIfNotCurrentlyActingUpdatesInDEV(fiber: Fiber): void {
           ' Learn more at https://fb.me/react-wrap-tests-with-act' +
           '%s',
         getComponentName(fiber.type),
-        getStackByFiberInDevAndProd(fiber),
+        getStackByFiberInDevAndProd(fiber), // CUSTOM STACK
       );
     }
   }

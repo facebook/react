@@ -186,7 +186,7 @@ function findHostInstanceWithWarning(
             methodName,
             methodName,
             componentName,
-            getStackByFiberInDevAndProd(hostFiber),
+            getStackByFiberInDevAndProd(hostFiber), // CUSTOM STACK
           );
         } else {
           console.error(
@@ -198,7 +198,7 @@ function findHostInstanceWithWarning(
             methodName,
             methodName,
             componentName,
-            getStackByFiberInDevAndProd(hostFiber),
+            getStackByFiberInDevAndProd(hostFiber), // CUSTOM STACK
           );
         }
       }

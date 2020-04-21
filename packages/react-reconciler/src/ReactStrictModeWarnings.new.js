@@ -346,7 +346,7 @@ if (__DEV__) {
             '\n\nLearn more about this warning here: https://fb.me/react-legacy-context' +
             '%s',
           sortedNames,
-          firstComponentStack,
+          firstComponentStack, // CUSTOM STACK
         );
       },
     );

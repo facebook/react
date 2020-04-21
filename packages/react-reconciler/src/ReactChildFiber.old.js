@@ -44,7 +44,6 @@ import {
   createFiberFromPortal,
 } from './ReactFiber.old';
 import {emptyRefsObject} from './ReactFiberClassComponent.old';
-import {getStackByFiberInDevAndProd} from './ReactFiberComponentStack';
 import {getCurrentFiberStackInDev} from './ReactCurrentFiber';
 import {isCompatibleFamilyForHotReloading} from './ReactFiberHotReloading.old';
 import {StrictMode} from './ReactTypeOfMode';
@@ -136,10 +135,9 @@ function coerceRef(
                 'will be removed in a future major release. We recommend using ' +
                 'useRef() or createRef() instead. ' +
                 'Learn more about using refs safely here: ' +
-                'https://fb.me/react-strict-mode-string-ref%s',
+                'https://fb.me/react-strict-mode-string-ref',
               componentName,
               mixedRef,
-              getStackByFiberInDevAndProd(returnFiber),
             );
           } else {
             console.error(
@@ -147,9 +145,8 @@ function coerceRef(
                 'String refs are a source of potential bugs and should be avoided. ' +
                 'We recommend using useRef() or createRef() instead. ' +
                 'Learn more about using refs safely here: ' +
-                'https://fb.me/react-strict-mode-string-ref%s',
+                'https://fb.me/react-strict-mode-string-ref',
               mixedRef,
-              getStackByFiberInDevAndProd(returnFiber),
             );
           }
           didWarnAboutStringRefs[componentName] = true;

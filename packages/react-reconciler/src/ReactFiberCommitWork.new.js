@@ -74,7 +74,6 @@ import getComponentName from 'shared/getComponentName';
 import invariant from 'shared/invariant';
 
 import {onCommitUnmount} from './ReactFiberDevToolsHook.new';
-import {getStackByFiberInDevAndProd} from './ReactFiberComponentStack';
 import {resolveDefaultProps} from './ReactFiberLazyComponent.new';
 import {
   getCommitTime,
@@ -369,9 +368,8 @@ function commitHookEffectListMount(tag: number, finishedWork: Fiber) {
             }
             console.error(
               'An effect function must not return anything besides a function, ' +
-                'which is used for clean-up.%s%s',
+                'which is used for clean-up.%s',
               addendum,
-              getStackByFiberInDevAndProd(finishedWork),
             );
           }
         }
@@ -891,9 +889,8 @@ function commitAttachRef(finishedWork: Fiber) {
         if (!ref.hasOwnProperty('current')) {
           console.error(
             'Unexpected ref object provided for %s. ' +
-              'Use either a ref-setter function or React.createRef().%s',
+              'Use either a ref-setter function or React.createRef().',
             getComponentName(finishedWork.type),
-            getStackByFiberInDevAndProd(finishedWork),
           );
         }
       }
