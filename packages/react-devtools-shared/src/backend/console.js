@@ -111,8 +111,8 @@ export function patch(): void {
           const lastArg = args.length > 0 ? args[args.length - 1] : null;
           const alreadyHasComponentStack =
             lastArg !== null &&
-            (PREFIX_REGEX.exec(lastArg) ||
-              ROW_COLUMN_NUMBER_REGEX.exec(lastArg));
+            (PREFIX_REGEX.test(lastArg) ||
+              ROW_COLUMN_NUMBER_REGEX.test(lastArg));
 
           if (!alreadyHasComponentStack) {
             // If there's a component stack for at least one of the injected renderers, append it.
