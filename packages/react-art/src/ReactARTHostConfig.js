@@ -493,22 +493,6 @@ export function makeServerId(): OpaqueIDType {
   throw new Error('Not yet implemented');
 }
 
-export function registerEvent(event: any, rootContainerInstance: any) {
-  throw new Error('Not yet implemented.');
-}
-
-export function mountEventListener(listener: any) {
-  throw new Error('Not yet implemented.');
-}
-
-export function unmountEventListener(listener: any) {
-  throw new Error('Not yet implemented.');
-}
-
-export function validateEventListenerTarget(target: any, listener: any) {
-  throw new Error('Not yet implemented.');
-}
-
 export function beforeActiveInstanceBlur() {
   // noop
 }

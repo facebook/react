@@ -36,5 +36,4 @@ export {
   unstable_scheduleHydration,
   unstable_renderSubtreeIntoContainer,
   unstable_createPortal,
-  unstable_useEvent,
 } from './src/client/ReactDOM';
