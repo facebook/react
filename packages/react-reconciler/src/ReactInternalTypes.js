@@ -18,10 +18,7 @@ import type {
   MutableSourceGetSnapshotFn,
   MutableSource,
 } from 'shared/ReactTypes';
-import type {
-  SuspenseInstance,
-  ReactListenerEvent,
-} from './ReactFiberHostConfig';
+import type {SuspenseInstance} from './ReactFiberHostConfig';
 import type {WorkTag} from './ReactWorkTags';
 import type {TypeOfMode} from './ReactTypeOfMode';
 import type {SideEffectTag} from './ReactSideEffectTags';
@@ -32,10 +29,7 @@ import type {RootTag} from './ReactRootTags';
 import type {TimeoutHandle, NoTimeout} from './ReactFiberHostConfig';
 import type {Wakeable} from 'shared/ReactTypes';
 import type {Interaction} from 'scheduler/src/Tracing';
-import type {
-  OpaqueIDType,
-  ReactListenerMap,
-} from 'react-reconciler/src/ReactFiberHostConfig';
+import type {OpaqueIDType} from 'react-reconciler/src/ReactFiberHostConfig';
 import type {SuspenseConfig, TimeoutConfig} from './ReactFiberSuspenseConfig';
 
 export type ReactPriorityLevel = 99 | 98 | 97 | 96 | 95 | 90;
@@ -325,6 +319,5 @@ export type Dispatcher = {|
     getSnapshot: MutableSourceGetSnapshotFn<Source, Snapshot>,
     subscribe: MutableSourceSubscribeFn<Source, Snapshot>,
   ): Snapshot,
-  useEvent(event: ReactListenerEvent): ReactListenerMap,
   useOpaqueIdentifier(): OpaqueIDType | void,
 |};

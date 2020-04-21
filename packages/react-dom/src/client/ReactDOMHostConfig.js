@@ -13,17 +13,12 @@ import type {
   ReactDOMEventResponder,
   ReactDOMEventResponderInstance,
   ReactDOMFundamentalComponentInstance,
-  ReactDOMListener,
-  ReactDOMListenerEvent,
-  ReactDOMListenerMap,
 } from '../shared/ReactDOMTypes';
-import type {ReactScopeMethods} from 'shared/ReactTypes';
 
 import {
   precacheFiberNode,
   updateFiberProps,
   getClosestInstanceFromNode,
-  getListenersFromTarget,
 } from './ReactDOMComponentTree';
 import {
   createElement,
@@ -69,31 +64,8 @@ import {
   enableSuspenseServerRenderer,
   enableDeprecatedFlareAPI,
   enableFundamentalAPI,
-  enableUseEventAPI,
-  enableScopeAPI,
 } from 'shared/ReactFeatureFlags';
-import {
-  PLUGIN_EVENT_SYSTEM,
-  USE_EVENT_SYSTEM,
-} from '../events/EventSystemFlags';
-import {
-  isManagedDOMElement,
-  isValidEventTarget,
-  listenToTopLevelEvent,
-  attachListenerToManagedDOMElement,
-  detachListenerFromManagedDOMElement,
-  attachTargetEventListener,
-  detachTargetEventListener,
-  isReactScope,
-  attachListenerToReactScope,
-  detachListenerFromReactScope,
-} from '../events/DOMModernPluginEventSystem';
-import {getListenerMapForElement} from '../events/DOMEventListenerMap';
 import {TOP_BEFORE_BLUR, TOP_AFTER_BLUR} from '../events/DOMTopLevelEventTypes';
-
-export type ReactListenerEvent = ReactDOMListenerEvent;
-export type ReactListenerMap = ReactDOMListenerMap;
-export type ReactListener = ReactDOMListener;
 
 export type Type = string;
 export type Props = {
@@ -246,7 +218,7 @@ export function prepareForCommit(containerInfo: Container): Object | null {
   eventsEnabled = ReactBrowserEventEmitterIsEnabled();
   selectionInformation = getSelectionInformation();
   let activeInstance = null;
-  if (enableDeprecatedFlareAPI || enableUseEventAPI) {
+  if (enableDeprecatedFlareAPI) {
     const focusedElem = selectionInformation.focusedElem;
     if (focusedElem !== null) {
       activeInstance = getClosestInstanceFromNode(focusedElem);
@@ -257,7 +229,7 @@ export function prepareForCommit(containerInfo: Container): Object | null {
 }
 
 export function beforeActiveInstanceBlur(): void {
-  if (enableDeprecatedFlareAPI || enableUseEventAPI) {
+  if (enableDeprecatedFlareAPI) {
     ReactBrowserEventEmitterSetEnabled(true);
     dispatchBeforeDetachedBlur((selectionInformation: any).focusedElem);
     ReactBrowserEventEmitterSetEnabled(false);
@@ -265,7 +237,7 @@ export function beforeActiveInstanceBlur(): void {
 }
 
 export function afterActiveInstanceBlur(): void {
-  if (enableDeprecatedFlareAPI || enableUseEventAPI) {
+  if (enableDeprecatedFlareAPI) {
     ReactBrowserEventEmitterSetEnabled(true);
     dispatchAfterDetachedBlur((selectionInformation: any).focusedElem);
     ReactBrowserEventEmitterSetEnabled(false);
@@ -528,7 +500,7 @@ function createEvent(type: TopLevelType): Event {
 }
 
 function dispatchBeforeDetachedBlur(target: HTMLElement): void {
-  if (enableDeprecatedFlareAPI || enableUseEventAPI) {
+  if (enableDeprecatedFlareAPI) {
     const event = createEvent(TOP_BEFORE_BLUR);
     // Dispatch "beforeblur" directly on the target,
     // so it gets picked up by the event system and
@@ -538,7 +510,7 @@ function dispatchBeforeDetachedBlur(target: HTMLElement): void {
 }
 
 function dispatchAfterDetachedBlur(target: HTMLElement): void {
-  if (enableDeprecatedFlareAPI || enableUseEventAPI) {
+  if (enableDeprecatedFlareAPI) {
     const event = createEvent(TOP_AFTER_BLUR);
     // So we know what was detached, make the relatedTarget the
     // detached target on the "afterblur" event.
@@ -550,23 +522,8 @@ function dispatchAfterDetachedBlur(target: HTMLElement): void {
 
 export function beforeRemoveInstance(
   instance: Instance | TextInstance | SuspenseInstance,
-): void {
-  if (enableUseEventAPI) {
-    // It's unfortunate that we have to do this cleanup, but
-    // it's necessary otherwise we will leak the host instances
-    // from the useEvent hook instances Map. We call destroy
-    // on each listener to ensure we properly remove the instance
-    // from the instances Map. Note: we have this Map so that we
-    // can properly unmount instances when the function component
-    // that the hook is attached to gets unmounted.
-    const listenersSet = getListenersFromTarget(instance);
-    if (listenersSet !== null) {
-      const listeners = Array.from(listenersSet);
-      for (let i = 0; i < listeners.length; i++) {
-        listeners[i].destroy(instance);
-      }
-    }
-  }
+) {
+  // TODO for ReactDOM.createEventInstance
 }
 
 export function removeChild(
@@ -1140,79 +1097,4 @@ export function makeOpaqueHydratingObject(
     toString: attemptToReadValue,
     valueOf: attemptToReadValue,
   };
-}
-
-export function registerEvent(
-  event: ReactDOMListenerEvent,
-  rootContainerInstance: Container,
-): void {
-  const {passive, priority, type} = event;
-  const listenerMap = getListenerMapForElement(rootContainerInstance);
-  // Add the event listener to the target container (falling back to
-  // the target if we didn't find one).
-  listenToTopLevelEvent(
-    type,
-    rootContainerInstance,
-    listenerMap,
-    PLUGIN_EVENT_SYSTEM | USE_EVENT_SYSTEM,
-    passive,
-    priority,
-  );
-}
-
-export function mountEventListener(listener: ReactDOMListener): void {
-  if (enableUseEventAPI) {
-    const {target} = listener;
-    if (isManagedDOMElement(target)) {
-      attachListenerToManagedDOMElement(listener);
-    } else if (enableScopeAPI && isReactScope(target)) {
-      attachListenerToReactScope(listener);
-    } else {
-      attachTargetEventListener(listener);
-    }
-  }
-}
-
-export function unmountEventListener(listener: ReactDOMListener): void {
-  if (enableUseEventAPI) {
-    const {target} = listener;
-    if (isManagedDOMElement(target)) {
-      detachListenerFromManagedDOMElement(listener);
-    } else if (enableScopeAPI && isReactScope(target)) {
-      detachListenerFromReactScope(listener);
-    } else {
-      detachTargetEventListener(listener);
-    }
-  }
-}
-
-export function validateEventListenerTarget(
-  target: EventTarget | ReactScopeMethods,
-  listener: ?(SyntheticEvent<EventTarget>) => void,
-): boolean {
-  if (enableUseEventAPI) {
-    if (
-      target != null &&
-      (isManagedDOMElement(target) ||
-        isValidEventTarget(target) ||
-        isReactScope(target))
-    ) {
-      if (listener == null || typeof listener === 'function') {
-        return true;
-      }
-      if (__DEV__) {
-        console.warn(
-          'Event listener method setListener() from useEvent() hook requires the second argument' +
-            ' to be either a valid function callback or null/undefined.',
-        );
-      }
-    }
-    if (__DEV__) {
-      console.warn(
-        'Event listener method setListener() from useEvent() hook requires the first argument to be ' +
-          'a valid DOM EventTarget. If using a ref, ensure the current value is not null.',
-      );
-    }
-  }
-  return false;
 }

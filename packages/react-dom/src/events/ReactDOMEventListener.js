@@ -44,7 +44,6 @@ import {
   addEventBubbleListener,
   addEventCaptureListener,
   addEventCaptureListenerWithPassiveFlag,
-  addEventBubbleListenerWithPassiveFlag,
   removeEventListener,
 } from './EventListener';
 import getEventTarget from './getEventTarget';
@@ -56,7 +55,6 @@ import {
   enableDeprecatedFlareAPI,
   enableModernEventSystem,
   enableLegacyFBSupport,
-  enableUseEventAPI,
 } from 'shared/ReactFeatureFlags';
 import {
   UserBlockingEvent,
@@ -200,37 +198,17 @@ export function addTrappedEventListener(
     };
   }
   if (capture) {
-    if (enableUseEventAPI && passive !== undefined) {
-      // This is only used with passive is either true or false.
-      unsubscribeListener = addEventCaptureListenerWithPassiveFlag(
-        targetContainer,
-        rawEventName,
-        listener,
-        passive,
-      );
-    } else {
-      unsubscribeListener = addEventCaptureListener(
-        targetContainer,
-        rawEventName,
-        listener,
-      );
-    }
+    unsubscribeListener = addEventCaptureListener(
+      targetContainer,
+      rawEventName,
+      listener,
+    );
   } else {
-    if (enableUseEventAPI && passive !== undefined) {
-      // This is only used with passive is either true or false.
-      unsubscribeListener = addEventBubbleListenerWithPassiveFlag(
-        targetContainer,
-        rawEventName,
-        listener,
-        passive,
-      );
-    } else {
-      unsubscribeListener = addEventBubbleListener(
-        targetContainer,
-        rawEventName,
-        listener,
-      );
-    }
+    unsubscribeListener = addEventBubbleListener(
+      targetContainer,
+      rawEventName,
+      listener,
+    );
   }
   return unsubscribeListener;
 }

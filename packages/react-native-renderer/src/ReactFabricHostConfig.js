@@ -77,9 +77,6 @@ export type UpdatePayload = Object;
 export type TimeoutHandle = TimeoutID;
 export type NoTimeout = -1;
 
-export type ReactListenerEvent = Object;
-export type ReactListenerMap = Object;
-export type ReactListener = Object;
 export type OpaqueIDType = void;
 
 export type RendererInspectionConfig = $ReadOnly<{|
@@ -508,22 +505,6 @@ export function makeClientIdInDEV(warnOnAccessInDEV: () => void): OpaqueIDType {
 
 export function makeServerId(): OpaqueIDType {
   throw new Error('Not yet implemented');
-}
-
-export function registerEvent(event: any, rootContainerInstance: Container) {
-  throw new Error('Not yet implemented.');
-}
-
-export function mountEventListener(listener: any) {
-  throw new Error('Not yet implemented.');
-}
-
-export function unmountEventListener(listener: any) {
-  throw new Error('Not yet implemented.');
-}
-
-export function validateEventListenerTarget(target: any, listener: any) {
-  throw new Error('Not yet implemented.');
 }
 
 export function beforeActiveInstanceBlur() {
