@@ -178,9 +178,9 @@ import {
 // DEV stuff
 import getComponentName from 'shared/getComponentName';
 import ReactStrictModeWarnings from './ReactStrictModeWarnings.old';
-import {getStackByFiberInDevAndProd} from './ReactFiberComponentStack';
 import {
   isRendering as ReactCurrentDebugFiberIsRenderingInDEV,
+  current as ReactCurrentFiberCurrent,
   resetCurrentFiber as resetCurrentDebugFiberInDEV,
   setCurrentFiber as setCurrentDebugFiberInDEV,
 } from './ReactCurrentFiber';
@@ -2949,15 +2949,24 @@ function warnAboutUpdateOnUnmountedFiberInDEV(fiber) {
       // 1. Updating an ancestor that a component had registered itself with on mount.
       // 2. Resetting state when a component is hidden after going offscreen.
     } else {
-      console.error(
-        "Can't perform a React state update on an unmounted component. This " +
-          'is a no-op, but it indicates a memory leak in your application. To ' +
-          'fix, cancel all subscriptions and asynchronous tasks in %s.%s',
-        tag === ClassComponent
-          ? 'the componentWillUnmount method'
-          : 'a useEffect cleanup function',
-        getStackByFiberInDevAndProd(fiber),
-      );
+      const previousFiber = ReactCurrentFiberCurrent;
+      try {
+        setCurrentDebugFiberInDEV(fiber);
+        console.error(
+          "Can't perform a React state update on an unmounted component. This " +
+            'is a no-op, but it indicates a memory leak in your application. To ' +
+            'fix, cancel all subscriptions and asynchronous tasks in %s.',
+          tag === ClassComponent
+            ? 'the componentWillUnmount method'
+            : 'a useEffect cleanup function',
+        );
+      } finally {
+        if (previousFiber) {
+          setCurrentDebugFiberInDEV(fiber);
+        } else {
+          resetCurrentDebugFiberInDEV();
+        }
+      }
     }
   }
 }
@@ -3094,25 +3103,33 @@ export function warnIfNotScopedWithMatchingAct(fiber: Fiber): void {
       IsSomeRendererActing.current === true &&
       IsThisRendererActing.current !== true
     ) {
-      console.error(
-        "It looks like you're using the wrong act() around your test interactions.\n" +
-          'Be sure to use the matching version of act() corresponding to your renderer:\n\n' +
-          '// for react-dom:\n' +
-          // Break up imports to avoid accidentally parsing them as dependencies.
-          'import {act} fr' +
-          "om 'react-dom/test-utils';\n" +
-          '// ...\n' +
-          'act(() => ...);\n\n' +
-          '// for react-test-renderer:\n' +
-          // Break up imports to avoid accidentally parsing them as dependencies.
-          'import TestRenderer fr' +
-          "om react-test-renderer';\n" +
-          'const {act} = TestRenderer;\n' +
-          '// ...\n' +
-          'act(() => ...);' +
-          '%s',
-        getStackByFiberInDevAndProd(fiber),
-      );
+      const previousFiber = ReactCurrentFiberCurrent;
+      try {
+        setCurrentDebugFiberInDEV(fiber);
+        console.error(
+          "It looks like you're using the wrong act() around your test interactions.\n" +
+            'Be sure to use the matching version of act() corresponding to your renderer:\n\n' +
+            '// for react-dom:\n' +
+            // Break up imports to avoid accidentally parsing them as dependencies.
+            'import {act} fr' +
+            "om 'react-dom/test-utils';\n" +
+            '// ...\n' +
+            'act(() => ...);\n\n' +
+            '// for react-test-renderer:\n' +
+            // Break up imports to avoid accidentally parsing them as dependencies.
+            'import TestRenderer fr' +
+            "om react-test-renderer';\n" +
+            'const {act} = TestRenderer;\n' +
+            '// ...\n' +
+            'act(() => ...);',
+        );
+      } finally {
+        if (previousFiber) {
+          setCurrentDebugFiberInDEV(fiber);
+        } else {
+          resetCurrentDebugFiberInDEV();
+        }
+      }
     }
   }
 }
@@ -3135,10 +3152,8 @@ export function warnIfNotCurrentlyActingEffectsInDEV(fiber: Fiber): void {
           '/* assert on the output */\n\n' +
           "This ensures that you're testing the behavior the user would see " +
           'in the browser.' +
-          ' Learn more at https://fb.me/react-wrap-tests-with-act' +
-          '%s',
+          ' Learn more at https://fb.me/react-wrap-tests-with-act',
         getComponentName(fiber.type),
-        getStackByFiberInDevAndProd(fiber),
       );
     }
   }
@@ -3152,21 +3167,29 @@ function warnIfNotCurrentlyActingUpdatesInDEV(fiber: Fiber): void {
       IsSomeRendererActing.current === false &&
       IsThisRendererActing.current === false
     ) {
-      console.error(
-        'An update to %s inside a test was not wrapped in act(...).\n\n' +
-          'When testing, code that causes React state updates should be ' +
-          'wrapped into act(...):\n\n' +
-          'act(() => {\n' +
-          '  /* fire events that update state */\n' +
-          '});\n' +
-          '/* assert on the output */\n\n' +
-          "This ensures that you're testing the behavior the user would see " +
-          'in the browser.' +
-          ' Learn more at https://fb.me/react-wrap-tests-with-act' +
-          '%s',
-        getComponentName(fiber.type),
-        getStackByFiberInDevAndProd(fiber),
-      );
+      const previousFiber = ReactCurrentFiberCurrent;
+      try {
+        setCurrentDebugFiberInDEV(fiber);
+        console.error(
+          'An update to %s inside a test was not wrapped in act(...).\n\n' +
+            'When testing, code that causes React state updates should be ' +
+            'wrapped into act(...):\n\n' +
+            'act(() => {\n' +
+            '  /* fire events that update state */\n' +
+            '});\n' +
+            '/* assert on the output */\n\n' +
+            "This ensures that you're testing the behavior the user would see " +
+            'in the browser.' +
+            ' Learn more at https://fb.me/react-wrap-tests-with-act',
+          getComponentName(fiber.type),
+        );
+      } finally {
+        if (previousFiber) {
+          setCurrentDebugFiberInDEV(fiber);
+        } else {
+          resetCurrentDebugFiberInDEV();
+        }
+      }
     }
   }
 }

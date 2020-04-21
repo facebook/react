@@ -15,15 +15,6 @@ let ReactDOMServer;
 let ReactTestUtils;
 
 describe('ReactComponent', () => {
-  function normalizeCodeLocInfo(str) {
-    return (
-      str &&
-      str.replace(/\n +(?:at|in) ([\S]+)[^\n]*/g, function(m, name) {
-        return '\n    in ' + name + ' (at **)';
-      })
-    );
-  }
-
   beforeEach(() => {
     React = require('react');
     ReactDOM = require('react-dom');
@@ -470,20 +461,11 @@ describe('ReactComponent', () => {
     };
     const element = <div>{[children]}</div>;
     const container = document.createElement('div');
-    let ex;
-    try {
+    expect(() => {
       ReactDOM.render(element, container);
-    } catch (e) {
-      ex = e;
-    }
-    expect(ex).toBeDefined();
-    expect(normalizeCodeLocInfo(ex.message)).toBe(
-      'Objects are not valid as a React child (found: object with keys {x, y, z}).' +
-        (__DEV__
-          ? ' If you meant to render a collection of children, use ' +
-            'an array instead.' +
-            '\n    in div (at **)'
-          : ''),
+    }).toThrowError(
+      'Objects are not valid as a React child (found: object with keys {x, y, z}). ' +
+        'If you meant to render a collection of children, use an array instead.',
     );
   });
 
@@ -499,21 +481,12 @@ describe('ReactComponent', () => {
       }
     }
     const container = document.createElement('div');
-    let ex;
-    try {
+    expect(() => {
       ReactDOM.render(<Foo />, container);
-    } catch (e) {
-      ex = e;
-    }
-    expect(ex).toBeDefined();
-    expect(normalizeCodeLocInfo(ex.message)).toBe(
+    }).toThrowError(
       'Objects are not valid as a React child (found: object with keys {a, b, c}).' +
-        (__DEV__
-          ? ' If you meant to render a collection of children, use ' +
-            'an array instead.\n' +
-            '    in div (at **)\n' +
-            '    in Foo (at **)'
-          : ''),
+        ' If you meant to render a collection of children, use an array ' +
+        'instead.',
     );
   });
 
@@ -524,20 +497,12 @@ describe('ReactComponent', () => {
       z: <span />,
     };
     const element = <div>{[children]}</div>;
-    let ex;
-    try {
+    expect(() => {
       ReactDOMServer.renderToString(element);
-    } catch (e) {
-      ex = e;
-    }
-    expect(ex).toBeDefined();
-    expect(normalizeCodeLocInfo(ex.message)).toBe(
-      'Objects are not valid as a React child (found: object with keys {x, y, z}).' +
-        (__DEV__
-          ? ' If you meant to render a collection of children, use ' +
-            'an array instead.' +
-            '\n    in div (at **)'
-          : ''),
+    }).toThrowError(
+      'Objects are not valid as a React child (found: object with keys {x, y, z}). ' +
+        'If you meant to render a collection of children, use ' +
+        'an array instead.',
     );
   });
 
@@ -553,21 +518,12 @@ describe('ReactComponent', () => {
       }
     }
     const container = document.createElement('div');
-    let ex;
-    try {
+    expect(() => {
       ReactDOMServer.renderToString(<Foo />, container);
-    } catch (e) {
-      ex = e;
-    }
-    expect(ex).toBeDefined();
-    expect(normalizeCodeLocInfo(ex.message)).toBe(
-      'Objects are not valid as a React child (found: object with keys {a, b, c}).' +
-        (__DEV__
-          ? ' If you meant to render a collection of children, use ' +
-            'an array instead.\n' +
-            '    in div (at **)\n' +
-            '    in Foo (at **)'
-          : ''),
+    }).toThrowError(
+      'Objects are not valid as a React child (found: object with keys {a, b, c}). ' +
+        'If you meant to render a collection of children, use ' +
+        'an array instead.',
     );
   });
 
