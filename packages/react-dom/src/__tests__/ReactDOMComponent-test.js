@@ -16,15 +16,6 @@ describe('ReactDOMComponent', () => {
   let ReactDOMServer;
   const ReactFeatureFlags = require('shared/ReactFeatureFlags');
 
-  function normalizeCodeLocInfo(str) {
-    return (
-      str &&
-      str.replace(/\n +(?:at|in) ([\S]+)[^\n]*/g, function(m, name) {
-        return '\n    in ' + name + ' (at **)';
-      })
-    );
-  }
-
   beforeEach(() => {
     jest.resetModules();
     React = require('react');
@@ -1320,36 +1311,24 @@ describe('ReactDOMComponent', () => {
 
     it('should throw on children for void elements', () => {
       const container = document.createElement('div');
-      let caughtErr;
-      try {
+      expect(() => {
         ReactDOM.render(<input>children</input>, container);
-      } catch (err) {
-        caughtErr = err;
-      }
-      expect(caughtErr).not.toBe(undefined);
-      expect(normalizeCodeLocInfo(caughtErr.message)).toContain(
+      }).toThrowError(
         'input is a void element tag and must neither have `children` nor ' +
-          'use `dangerouslySetInnerHTML`.' +
-          (__DEV__ ? '\n    in input (at **)' : ''),
+          'use `dangerouslySetInnerHTML`.',
       );
     });
 
     it('should throw on dangerouslySetInnerHTML for void elements', () => {
       const container = document.createElement('div');
-      let caughtErr;
-      try {
+      expect(() => {
         ReactDOM.render(
           <input dangerouslySetInnerHTML={{__html: 'content'}} />,
           container,
         );
-      } catch (err) {
-        caughtErr = err;
-      }
-      expect(caughtErr).not.toBe(undefined);
-      expect(normalizeCodeLocInfo(caughtErr.message)).toContain(
+      }).toThrowError(
         'input is a void element tag and must neither have `children` nor ' +
-          'use `dangerouslySetInnerHTML`.' +
-          (__DEV__ ? '\n    in input (at **)' : ''),
+          'use `dangerouslySetInnerHTML`.',
       );
     });
 
@@ -1461,18 +1440,11 @@ describe('ReactDOMComponent', () => {
       }
 
       const container = document.createElement('div');
-      let caughtErr;
-      try {
+      expect(() => {
         ReactDOM.render(<X />, container);
-      } catch (err) {
-        caughtErr = err;
-      }
-
-      expect(caughtErr).not.toBe(undefined);
-      expect(normalizeCodeLocInfo(caughtErr.message)).toContain(
+      }).toThrowError(
         'input is a void element tag and must neither have `children` ' +
-          'nor use `dangerouslySetInnerHTML`.' +
-          (__DEV__ ? '\n    in input (at **)' + '\n    in X (at **)' : ''),
+          'nor use `dangerouslySetInnerHTML`.',
       );
     });
 
@@ -1627,19 +1599,12 @@ describe('ReactDOMComponent', () => {
         }
       }
 
-      let caughtErr;
-      try {
+      expect(() => {
         ReactDOM.render(<Animal />, container);
-      } catch (err) {
-        caughtErr = err;
-      }
-
-      expect(caughtErr).not.toBe(undefined);
-      expect(normalizeCodeLocInfo(caughtErr.message)).toContain(
+      }).toThrowError(
         'The `style` prop expects a mapping from style properties to values, ' +
           "not a string. For example, style={{marginRight: spacing + 'em'}} " +
-          'when using JSX.' +
-          (__DEV__ ? '\n    in div (at **)' + '\n    in Animal (at **)' : ''),
+          'when using JSX.',
       );
     });
 
