@@ -431,7 +431,7 @@ export function createElement(
   }
   if (namespaceURI === HTML_NAMESPACE) {
     const lowerCaseType = type.toLowerCase();
-    
+
     if (__DEV__) {
       isCustomComponentTag = isCustomComponent(type, props);
       // Should this check be gated by parent namespace? Not sure we want to
