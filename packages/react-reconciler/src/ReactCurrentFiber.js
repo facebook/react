@@ -31,7 +31,7 @@ export function getCurrentFiberOwnerNameInDevOrNull(): string | null {
   return null;
 }
 
-export function getCurrentFiberStackInDev(): string {
+function getCurrentFiberStackInDev(): string {
   if (__DEV__) {
     if (current === null) {
       return '';

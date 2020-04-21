@@ -44,7 +44,6 @@ import {
   createFiberFromPortal,
 } from './ReactFiber.old';
 import {emptyRefsObject} from './ReactFiberClassComponent.old';
-import {getCurrentFiberStackInDev} from './ReactCurrentFiber';
 import {isCompatibleFamilyForHotReloading} from './ReactFiberHotReloading.old';
 import {StrictMode} from './ReactTypeOfMode';
 
@@ -53,7 +52,7 @@ let didWarnAboutGenerators;
 let didWarnAboutStringRefs;
 let ownerHasKeyUseWarning;
 let ownerHasFunctionTypeWarning;
-let warnForMissingKey = (child: mixed) => {};
+let warnForMissingKey = (child: mixed, returnFiber: Fiber) => {};
 
 if (__DEV__) {
   didWarnAboutMaps = false;
@@ -68,7 +67,7 @@ if (__DEV__) {
   ownerHasKeyUseWarning = {};
   ownerHasFunctionTypeWarning = {};
 
-  warnForMissingKey = (child: mixed) => {
+  warnForMissingKey = (child: mixed, returnFiber: Fiber) => {
     if (child === null || typeof child !== 'object') {
       return;
     }
@@ -82,15 +81,12 @@ if (__DEV__) {
     );
     child._store.validated = true;
 
-    const currentComponentErrorInfo =
-      'Each child in a list should have a unique ' +
-      '"key" prop. See https://fb.me/react-warning-keys for ' +
-      'more information.' +
-      getCurrentFiberStackInDev();
-    if (ownerHasKeyUseWarning[currentComponentErrorInfo]) {
+    const componentName = getComponentName(returnFiber.type) || 'Component';
+
+    if (ownerHasKeyUseWarning[componentName]) {
       return;
     }
-    ownerHasKeyUseWarning[currentComponentErrorInfo] = true;
+    ownerHasKeyUseWarning[componentName] = true;
 
     console.error(
       'Each child in a list should have a unique ' +
@@ -231,18 +227,13 @@ function throwOnInvalidObjectType(returnFiber: Fiber, newChild: Object) {
   }
 }
 
-function warnOnFunctionType() {
+function warnOnFunctionType(returnFiber: Fiber) {
   if (__DEV__) {
-    const currentComponentErrorInfo =
-      'Functions are not valid as a React child. This may happen if ' +
-      'you return a Component instead of <Component /> from render. ' +
-      'Or maybe you meant to call this function rather than return it.' +
-      getCurrentFiberStackInDev();
-
-    if (ownerHasFunctionTypeWarning[currentComponentErrorInfo]) {
+    const componentName = getComponentName(returnFiber.type) || 'Component';
+    if (ownerHasFunctionTypeWarning[componentName]) {
       return;
     }
-    ownerHasFunctionTypeWarning[currentComponentErrorInfo] = true;
+    ownerHasFunctionTypeWarning[componentName] = true;
 
     console.error(
       'Functions are not valid as a React child. This may happen if ' +
@@ -569,7 +560,7 @@ function ChildReconciler(shouldTrackSideEffects) {
 
     if (__DEV__) {
       if (typeof newChild === 'function') {
-        warnOnFunctionType();
+        warnOnFunctionType(returnFiber);
       }
     }
 
@@ -657,7 +648,7 @@ function ChildReconciler(shouldTrackSideEffects) {
 
     if (__DEV__) {
       if (typeof newChild === 'function') {
-        warnOnFunctionType();
+        warnOnFunctionType(returnFiber);
       }
     }
 
@@ -736,7 +727,7 @@ function ChildReconciler(shouldTrackSideEffects) {
 
     if (__DEV__) {
       if (typeof newChild === 'function') {
-        warnOnFunctionType();
+        warnOnFunctionType(returnFiber);
       }
     }
 
@@ -749,6 +740,7 @@ function ChildReconciler(shouldTrackSideEffects) {
   function warnOnInvalidKey(
     child: mixed,
     knownKeys: Set<string> | null,
+    returnFiber: Fiber,
   ): Set<string> | null {
     if (__DEV__) {
       if (typeof child !== 'object' || child === null) {
@@ -757,7 +749,7 @@ function ChildReconciler(shouldTrackSideEffects) {
       switch (child.$$typeof) {
         case REACT_ELEMENT_TYPE:
         case REACT_PORTAL_TYPE:
-          warnForMissingKey(child);
+          warnForMissingKey(child, returnFiber);
           const key = child.key;
           if (typeof key !== 'string') {
             break;
@@ -817,7 +809,7 @@ function ChildReconciler(shouldTrackSideEffects) {
       let knownKeys = null;
       for (let i = 0; i < newChildren.length; i++) {
         const child = newChildren[i];
-        knownKeys = warnOnInvalidKey(child, knownKeys);
+        knownKeys = warnOnInvalidKey(child, knownKeys, returnFiber);
       }
     }
 
@@ -1001,7 +993,7 @@ function ChildReconciler(shouldTrackSideEffects) {
         let step = newChildren.next();
         for (; !step.done; step = newChildren.next()) {
           const child = step.value;
-          knownKeys = warnOnInvalidKey(child, knownKeys);
+          knownKeys = warnOnInvalidKey(child, knownKeys, returnFiber);
         }
       }
     }
@@ -1395,7 +1387,7 @@ function ChildReconciler(shouldTrackSideEffects) {
 
     if (__DEV__) {
       if (typeof newChild === 'function') {
-        warnOnFunctionType();
+        warnOnFunctionType(returnFiber);
       }
     }
     if (typeof newChild === 'undefined' && !isUnkeyedTopLevelFragment) {
