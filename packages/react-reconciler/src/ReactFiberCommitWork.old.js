@@ -1116,6 +1116,9 @@ function detachFiber(fiber: Fiber) {
   // get GC:ed but we don't know which for sure which parent is the current
   // one so we'll settle for GC:ing the subtree of this child. This child
   // itself will be GC:ed when the parent updates the next time.
+  // Note: we cannot null out sibling here, otherwise it can cause issues
+  // with findDOMNode and how it requires the sibling field to carry out
+  // traversal in a later effect. See PR #16820.
   fiber.alternate = null;
   fiber.child = null;
   fiber.dependencies = null;
@@ -1125,7 +1128,6 @@ function detachFiber(fiber: Fiber) {
   fiber.memoizedState = null;
   fiber.pendingProps = null;
   fiber.return = null;
-  fiber.sibling = null;
   fiber.stateNode = null;
   fiber.updateQueue = null;
   if (__DEV__) {
