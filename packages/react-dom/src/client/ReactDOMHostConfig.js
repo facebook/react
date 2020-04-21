@@ -19,6 +19,7 @@ import {
   precacheFiberNode,
   updateFiberProps,
   getClosestInstanceFromNode,
+  clearFiberNode,
 } from './ReactDOMComponentTree';
 import {
   createElement,
@@ -522,8 +523,10 @@ function dispatchAfterDetachedBlur(target: HTMLElement): void {
 
 export function beforeRemoveInstance(
   instance: Instance | TextInstance | SuspenseInstance,
-) {
-  // TODO for ReactDOM.createEventInstance
+): void {
+  // Clear the fiber off the instance, to help GC
+  clearFiberNode(instance);
+  // TODO handle ReactDOM.createEventInstance
 }
 
 export function removeChild(

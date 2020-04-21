@@ -40,6 +40,12 @@ export function precacheFiberNode(
   (node: any)[internalInstanceKey] = hostInst;
 }
 
+export function clearFiberNode(
+  node: Instance | TextInstance | SuspenseInstance,
+): void {
+  (node: any)[internalInstanceKey] = null;
+}
+
 export function markContainerAsRoot(hostRoot: Fiber, node: Container): void {
   node[internalContainerInstanceKey] = hostRoot;
 }
