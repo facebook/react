@@ -20,7 +20,7 @@ const APPEND_STACK_TO_METHODS = ['error', 'trace', 'warn'];
 const PREFIX_REGEX = /\s{4}(in|at)\s{1}/;
 // Firefox and Safari have no prefix ("")
 // but we can fallback to looking for location info (e.g. "foo.js:12:345")
-const ROW_COLUMN_NUMBER_REGEX = /:\d+:\d+$/;
+const ROW_COLUMN_NUMBER_REGEX = /:\d+:\d+(\n|$)/;
 
 const injectedRenderers: Map<
   ReactRenderer,
