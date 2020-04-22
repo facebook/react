@@ -10,7 +10,7 @@
 import type {ReactContext} from 'shared/ReactTypes';
 import type {Fiber, ContextDependency} from './ReactInternalTypes';
 import type {StackCursor} from './ReactFiberStack.new';
-import type {ExpirationTimeOpaque} from './ReactFiberExpirationTime.new';
+import type {Lanes} from './ReactFiberLane';
 
 import {isPrimaryRenderer} from './ReactFiberHostConfig';
 import {createCursor, push, pop} from './ReactFiberStack.new';
@@ -20,12 +20,17 @@ import {
   ClassComponent,
   DehydratedFragment,
 } from './ReactWorkTags';
-import {isSameOrHigherPriority} from './ReactFiberExpirationTime.new';
+import {
+  NoLanes,
+  isSubsetOfLanes,
+  includesSomeLane,
+  mergeLanes,
+  pickArbitraryLane,
+} from './ReactFiberLane';
 
 import invariant from 'shared/invariant';
 import is from 'shared/objectIs';
 import {createUpdate, enqueueUpdate, ForceUpdate} from './ReactUpdateQueue.new';
-import {NoWork} from './ReactFiberExpirationTime.new';
 import {markWorkInProgressReceivedUpdate} from './ReactFiberBeginWork.new';
 import {enableSuspenseServerRenderer} from 'shared/ReactFeatureFlags';
 
@@ -148,37 +153,22 @@ export function calculateChangedBits<T>(
 
 export function scheduleWorkOnParentPath(
   parent: Fiber | null,
-  renderExpirationTime: ExpirationTimeOpaque,
+  renderLanes: Lanes,
 ) {
-  // Update the child expiration time of all the ancestors, including
-  // the alternates.
+  // Update the child lanes of all the ancestors, including the alternates.
   let node = parent;
   while (node !== null) {
     const alternate = node.alternate;
-    if (
-      !isSameOrHigherPriority(
-        node.childExpirationTime_opaque,
-        renderExpirationTime,
-      )
-    ) {
-      node.childExpirationTime_opaque = renderExpirationTime;
-      if (
-        alternate !== null &&
-        !isSameOrHigherPriority(
-          alternate.childExpirationTime_opaque,
-          renderExpirationTime,
-        )
-      ) {
-        alternate.childExpirationTime_opaque = renderExpirationTime;
+    if (!isSubsetOfLanes(node.childLanes, renderLanes)) {
+      node.childLanes = mergeLanes(node.childLanes, renderLanes);
+      if (alternate !== null) {
+        alternate.childLanes = mergeLanes(alternate.childLanes, renderLanes);
       }
     } else if (
       alternate !== null &&
-      !isSameOrHigherPriority(
-        alternate.childExpirationTime_opaque,
-        renderExpirationTime,
-      )
+      !isSubsetOfLanes(alternate.childLanes, renderLanes)
     ) {
-      alternate.childExpirationTime_opaque = renderExpirationTime;
+      alternate.childLanes = mergeLanes(alternate.childLanes, renderLanes);
     } else {
       // Neither alternate was updated, which means the rest of the
       // ancestor path already has sufficient priority.
@@ -192,7 +182,7 @@ export function propagateContextChange(
   workInProgress: Fiber,
   context: ReactContext<mixed>,
   changedBits: number,
-  renderExpirationTime: ExpirationTimeOpaque,
+  renderLanes: Lanes,
 ): void {
   let fiber = workInProgress.child;
   if (fiber !== null) {
@@ -218,7 +208,11 @@ export function propagateContextChange(
 
           if (fiber.tag === ClassComponent) {
             // Schedule a force update on the work-in-progress.
-            const update = createUpdate(-1, renderExpirationTime, null);
+            const update = createUpdate(
+              -1,
+              pickArbitraryLane(renderLanes),
+              null,
+            );
             update.tag = ForceUpdate;
             // TODO: Because we don't have a work-in-progress, this will add the
             // update to the current fiber, too, which means it will persist even if
@@ -226,34 +220,15 @@ export function propagateContextChange(
             // worth fixing.
             enqueueUpdate(fiber, update);
           }
-
-          if (
-            !isSameOrHigherPriority(
-              fiber.expirationTime_opaque,
-              renderExpirationTime,
-            )
-          ) {
-            fiber.expirationTime_opaque = renderExpirationTime;
-          }
+          fiber.lanes = mergeLanes(fiber.lanes, renderLanes);
           const alternate = fiber.alternate;
-          if (
-            alternate !== null &&
-            !isSameOrHigherPriority(
-              alternate.expirationTime_opaque,
-              renderExpirationTime,
-            )
-          ) {
-            alternate.expirationTime_opaque = renderExpirationTime;
+          if (alternate !== null) {
+            alternate.lanes = mergeLanes(alternate.lanes, renderLanes);
           }
+          scheduleWorkOnParentPath(fiber.return, renderLanes);
 
-          scheduleWorkOnParentPath(fiber.return, renderExpirationTime);
-
-          // Mark the expiration time on the list, too.
-          if (
-            !isSameOrHigherPriority(list.expirationTime, renderExpirationTime)
-          ) {
-            list.expirationTime = renderExpirationTime;
-          }
+          // Mark the updated lanes on the list, too.
+          list.lanes = mergeLanes(list.lanes, renderLanes);
 
           // Since we already found a match, we can stop traversing the
           // dependency list.
@@ -276,29 +251,16 @@ export function propagateContextChange(
         parentSuspense !== null,
         'We just came from a parent so we must have had a parent. This is a bug in React.',
       );
-      if (
-        !isSameOrHigherPriority(
-          parentSuspense.expirationTime_opaque,
-          renderExpirationTime,
-        )
-      ) {
-        parentSuspense.expirationTime_opaque = renderExpirationTime;
-      }
+      parentSuspense.lanes = mergeLanes(parentSuspense.lanes, renderLanes);
       const alternate = parentSuspense.alternate;
-      if (
-        alternate !== null &&
-        !isSameOrHigherPriority(
-          alternate.expirationTime_opaque,
-          renderExpirationTime,
-        )
-      ) {
-        alternate.expirationTime_opaque = renderExpirationTime;
+      if (alternate !== null) {
+        alternate.lanes = mergeLanes(alternate.lanes, renderLanes);
       }
       // This is intentionally passing this fiber as the parent
       // because we want to schedule this fiber as having work
-      // on its children. We'll use the childExpirationTime on
+      // on its children. We'll use the childLanes on
       // this fiber to indicate that a context has changed.
-      scheduleWorkOnParentPath(parentSuspense, renderExpirationTime);
+      scheduleWorkOnParentPath(parentSuspense, renderLanes);
       nextFiber = fiber.sibling;
     } else {
       // Traverse down.
@@ -334,7 +296,7 @@ export function propagateContextChange(
 
 export function prepareToReadContext(
   workInProgress: Fiber,
-  renderExpirationTime: ExpirationTimeOpaque,
+  renderLanes: Lanes,
 ): void {
   currentlyRenderingFiber = workInProgress;
   lastContextDependency = null;
@@ -344,12 +306,7 @@ export function prepareToReadContext(
   if (dependencies !== null) {
     const firstContext = dependencies.firstContext;
     if (firstContext !== null) {
-      if (
-        isSameOrHigherPriority(
-          dependencies.expirationTime,
-          renderExpirationTime,
-        )
-      ) {
+      if (includesSomeLane(dependencies.lanes, renderLanes)) {
         // Context list has a pending update. Mark that this fiber performed work.
         markWorkInProgressReceivedUpdate();
       }
@@ -411,7 +368,7 @@ export function readContext<T>(
       // This is the first dependency for this component. Create a new list.
       lastContextDependency = contextItem;
       currentlyRenderingFiber.dependencies_new = {
-        expirationTime: NoWork,
+        lanes: NoLanes,
         firstContext: contextItem,
         responders: null,
       };

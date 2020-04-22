@@ -19,7 +19,7 @@ import type {
 import type {RendererInspectionConfig} from './ReactFiberHostConfig';
 import {FundamentalComponent} from './ReactWorkTags';
 import type {ReactNodeList} from 'shared/ReactTypes';
-import type {ExpirationTimeOpaque} from './ReactFiberExpirationTime.new';
+import type {Lane} from './ReactFiberLane';
 import type {SuspenseState} from './ReactFiberSuspenseComponent.new';
 
 import {
@@ -47,7 +47,7 @@ import {createFiberRoot} from './ReactFiberRoot.new';
 import {injectInternals, onScheduleRoot} from './ReactFiberDevToolsHook.new';
 import {
   requestEventTime,
-  requestUpdateExpirationTime,
+  requestUpdateLane,
   scheduleUpdateOnFiber,
   flushRoot,
   batchedEventUpdates,
@@ -74,11 +74,12 @@ import {
 } from './ReactCurrentFiber';
 import {StrictMode} from './ReactTypeOfMode';
 import {
-  Sync,
-  ContinuousHydration,
-  UserBlockingUpdateTime,
-  isSameOrHigherPriority,
-} from './ReactFiberExpirationTime.new';
+  SyncLane,
+  InputDiscreteHydrationLane,
+  SelectiveHydrationLane,
+  getHighestPriorityPendingLanes,
+  higherPriorityLane,
+} from './ReactFiberLane';
 import {requestCurrentSuspenseConfig} from './ReactFiberSuspenseConfig';
 import {
   scheduleRefresh,
@@ -235,7 +236,7 @@ export function updateContainer(
   container: OpaqueRoot,
   parentComponent: ?React$Component<any, any>,
   callback: ?Function,
-): ExpirationTimeOpaque {
+): Lane {
   if (__DEV__) {
     onScheduleRoot(container, element);
   }
@@ -249,7 +250,7 @@ export function updateContainer(
     }
   }
   const suspenseConfig = requestCurrentSuspenseConfig();
-  const expirationTime = requestUpdateExpirationTime(current, suspenseConfig);
+  const lane = requestUpdateLane(current, suspenseConfig);
 
   const context = getContextForSubtree(parentComponent);
   if (container.context === null) {
@@ -275,7 +276,7 @@ export function updateContainer(
     }
   }
 
-  const update = createUpdate(eventTime, expirationTime, suspenseConfig);
+  const update = createUpdate(eventTime, lane, suspenseConfig);
   // Caution: React DevTools currently depends on this property
   // being called "element".
   update.payload = {element};
@@ -295,9 +296,9 @@ export function updateContainer(
   }
 
   enqueueUpdate(current, update);
-  scheduleUpdateOnFiber(current, expirationTime);
+  scheduleUpdateOnFiber(current, lane);
 
-  return expirationTime;
+  return lane;
 }
 
 export {
@@ -336,40 +337,37 @@ export function attemptSynchronousHydration(fiber: Fiber): void {
       const root: FiberRoot = fiber.stateNode;
       if (root.hydrate) {
         // Flush the first scheduled "update".
-        flushRoot(root, root.firstPendingTime_opaque);
+        const lanes = getHighestPriorityPendingLanes(root);
+        flushRoot(root, lanes);
       }
       break;
     case SuspenseComponent:
-      flushSync(() =>
-        scheduleUpdateOnFiber(fiber, (Sync: ExpirationTimeOpaque)),
-      );
+      flushSync(() => scheduleUpdateOnFiber(fiber, SyncLane));
       // If we're still blocked after this, we need to increase
       // the priority of any promises resolving within this
       // boundary so that they next attempt also has higher pri.
-      const retryExpTime = UserBlockingUpdateTime;
-      markRetryTimeIfNotHydrated(fiber, retryExpTime);
+      const retryLane = InputDiscreteHydrationLane;
+      markRetryLaneIfNotHydrated(fiber, retryLane);
       break;
   }
 }
 
-function markRetryTimeImpl(fiber: Fiber, retryTime: ExpirationTimeOpaque) {
+function markRetryLaneImpl(fiber: Fiber, retryLane: Lane) {
   const suspenseState: null | SuspenseState = fiber.memoizedState;
   if (suspenseState !== null && suspenseState.dehydrated !== null) {
-    if (!isSameOrHigherPriority(suspenseState.retryTime, retryTime)) {
-      suspenseState.retryTime = retryTime;
-    }
+    suspenseState.retryLane = higherPriorityLane(
+      suspenseState.retryLane,
+      retryLane,
+    );
   }
 }
 
 // Increases the priority of thennables when they resolve within this boundary.
-function markRetryTimeIfNotHydrated(
-  fiber: Fiber,
-  retryTime: ExpirationTimeOpaque,
-) {
-  markRetryTimeImpl(fiber, retryTime);
+function markRetryLaneIfNotHydrated(fiber: Fiber, retryLane: Lane) {
+  markRetryLaneImpl(fiber, retryLane);
   const alternate = fiber.alternate;
   if (alternate) {
-    markRetryTimeImpl(alternate, retryTime);
+    markRetryLaneImpl(alternate, retryLane);
   }
 }
 
@@ -381,9 +379,9 @@ export function attemptUserBlockingHydration(fiber: Fiber): void {
     // Suspense.
     return;
   }
-  const expTime = UserBlockingUpdateTime;
-  scheduleUpdateOnFiber(fiber, expTime);
-  markRetryTimeIfNotHydrated(fiber, expTime);
+  const lane = InputDiscreteHydrationLane;
+  scheduleUpdateOnFiber(fiber, lane);
+  markRetryLaneIfNotHydrated(fiber, lane);
 }
 
 export function attemptContinuousHydration(fiber: Fiber): void {
@@ -394,11 +392,9 @@ export function attemptContinuousHydration(fiber: Fiber): void {
     // Suspense.
     return;
   }
-  scheduleUpdateOnFiber(fiber, (ContinuousHydration: ExpirationTimeOpaque));
-  markRetryTimeIfNotHydrated(
-    fiber,
-    (ContinuousHydration: ExpirationTimeOpaque),
-  );
+  const lane = SelectiveHydrationLane;
+  scheduleUpdateOnFiber(fiber, lane);
+  markRetryLaneIfNotHydrated(fiber, lane);
 }
 
 export function attemptHydrationAtCurrentPriority(fiber: Fiber): void {
@@ -407,9 +403,9 @@ export function attemptHydrationAtCurrentPriority(fiber: Fiber): void {
     // their priority other than synchronously flush it.
     return;
   }
-  const expTime = requestUpdateExpirationTime(fiber, null);
-  scheduleUpdateOnFiber(fiber, expTime);
-  markRetryTimeIfNotHydrated(fiber, expTime);
+  const lane = requestUpdateLane(fiber, null);
+  scheduleUpdateOnFiber(fiber, lane);
+  markRetryLaneIfNotHydrated(fiber, lane);
 }
 
 export {findHostInstance};
@@ -491,7 +487,7 @@ if (__DEV__) {
       // Shallow cloning props works as a workaround for now to bypass the bailout check.
       fiber.memoizedProps = {...fiber.memoizedProps};
 
-      scheduleUpdateOnFiber(fiber, (Sync: ExpirationTimeOpaque));
+      scheduleUpdateOnFiber(fiber, SyncLane);
     }
   };
 
@@ -501,11 +497,11 @@ if (__DEV__) {
     if (fiber.alternate) {
       fiber.alternate.pendingProps = fiber.pendingProps;
     }
-    scheduleUpdateOnFiber(fiber, (Sync: ExpirationTimeOpaque));
+    scheduleUpdateOnFiber(fiber, SyncLane);
   };
 
   scheduleUpdate = (fiber: Fiber) => {
-    scheduleUpdateOnFiber(fiber, (Sync: ExpirationTimeOpaque));
+    scheduleUpdateOnFiber(fiber, SyncLane);
   };
 
   setSuspenseHandler = (newShouldSuspendImpl: Fiber => boolean) => {

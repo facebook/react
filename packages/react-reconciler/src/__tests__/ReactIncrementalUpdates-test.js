@@ -170,22 +170,32 @@ describe('ReactIncrementalUpdates', () => {
     // Now flush the remaining work. Even though e and f were already processed,
     // they should be processed again, to ensure that the terminal state
     // is deterministic.
-    expect(Scheduler).toFlushAndYield([
-      'a',
-      'b',
-      'c',
+    expect(Scheduler).toFlushAndYield(
+      gate(flags =>
+        flags.new
+          ? ['a', 'b', 'c', 'd', 'e', 'f', 'g']
+          : [
+              'a',
+              'b',
+              'c',
 
-      // e, f, and g are in a separate batch from a, b, and c because they
-      // were scheduled in the middle of a render
-      'e',
-      'f',
-      'g',
+              // The old reconciler has a quirk where `d` has slightly lower
+              // priority than `g`, because it was scheduled in the middle of a
+              // render. This is an implementation detail, but I've left the
+              // test in this branch as-is since this was written so long ago.
+              // This first render does not include d.
+              'e',
+              'f',
+              'g',
 
-      'd',
-      'e',
-      'f',
-      'g',
-    ]);
+              // This second render does.
+              'd',
+              'e',
+              'f',
+              'g',
+            ],
+      ),
+    );
     expect(ReactNoop.getChildren()).toEqual([span('abcdefg')]);
   });
 
@@ -244,22 +254,32 @@ describe('ReactIncrementalUpdates', () => {
     // Now flush the remaining work. Even though e and f were already processed,
     // they should be processed again, to ensure that the terminal state
     // is deterministic.
-    expect(Scheduler).toFlushAndYield([
-      'a',
-      'b',
-      'c',
+    expect(Scheduler).toFlushAndYield(
+      gate(flags =>
+        flags.new
+          ? ['a', 'b', 'c', 'd', 'e', 'f', 'g']
+          : [
+              'a',
+              'b',
+              'c',
 
-      // e, f, and g are in a separate batch from a, b, and c because they
-      // were scheduled in the middle of a render
-      'e',
-      'f',
-      'g',
+              // The old reconciler has a quirk where `d` has slightly lower
+              // priority than `g`, because it was scheduled in the middle of a
+              // render. This is an implementation detail, but I've left the
+              // test in this branch as-is since this was written so long ago.
+              // This first render does not include d.
+              'e',
+              'f',
+              'g',
 
-      'd',
-      'e',
-      'f',
-      'g',
-    ]);
+              // This second render does.
+              'd',
+              'e',
+              'f',
+              'g',
+            ],
+      ),
+    );
     expect(ReactNoop.getChildren()).toEqual([span('fg')]);
   });
 
@@ -348,7 +368,7 @@ describe('ReactIncrementalUpdates', () => {
     expect(Scheduler).toHaveYielded(['componentWillReceiveProps', 'render']);
   });
 
-  it('enqueues setState inside an updater function as if the in-progress update is progressed (and warns)', () => {
+  it('updates triggered from inside a class setState updater', () => {
     let instance;
     class Foo extends React.Component {
       state = {};
@@ -372,12 +392,26 @@ describe('ReactIncrementalUpdates', () => {
     });
 
     expect(() =>
-      expect(Scheduler).toFlushAndYield([
-        'setState updater',
-        // Update b is enqueued with the same priority as update a, so it should
-        // be flushed in the same commit.
-        'render',
-      ]),
+      expect(Scheduler).toFlushAndYield(
+        gate(flags =>
+          flags.new
+            ? [
+                'setState updater',
+                // In the new reconciler, updates inside the render phase are
+                // treated as if they came from an event, so the update gets
+                // shifted to a subsequent render.
+                'render',
+                'render',
+              ]
+            : [
+                'setState updater',
+                // In the old reconciler, updates in the render phase receive
+                // the currently rendering expiration time, so the update
+                // flushes immediately in the same render.
+                'render',
+              ],
+        ),
+      ),
     ).toErrorDev(
       'An update (setState, replaceState, or forceUpdate) was scheduled ' +
         'from inside an update function. Update functions should be pure, ' +
@@ -391,7 +425,19 @@ describe('ReactIncrementalUpdates', () => {
       this.setState({a: 'a'});
       return {b: 'b'};
     });
-    expect(Scheduler).toFlushAndYield(['render']);
+    expect(Scheduler).toFlushAndYield(
+      gate(flags =>
+        flags.new
+          ? // In the new reconciler, updates inside the render phase are
+            // treated as if they came from an event, so the update gets shifted
+            // to a subsequent render.
+            ['render', 'render']
+          : // In the old reconciler, updates in the render phase receive
+            // the currently rendering expiration time, so the update flushes
+            // immediately in the same render.
+            ['render'],
+      ),
+    );
   });
 
   it('getDerivedStateFromProps should update base state of updateQueue (based on product bug)', () => {
