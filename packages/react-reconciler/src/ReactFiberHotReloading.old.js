@@ -20,7 +20,7 @@ import {
 } from './ReactFiberWorkLoop.old';
 import {updateContainer, syncUpdates} from './ReactFiberReconciler.old';
 import {emptyContextObject} from './ReactFiberContext.old';
-import {Sync} from './ReactFiberExpirationTime';
+import {Sync} from './ReactFiberExpirationTime.old';
 import {
   ClassComponent,
   FunctionComponent,

@@ -454,6 +454,11 @@ const attributes = [
     read: getProperty('disablepictureinpicture'),
   },
   {
+    name: 'disableRemotePlayback',
+    tagName: 'video',
+    read: getProperty('disableremoteplayback'),
+  },
+  {
     name: 'display',
     tagName: 'svg',
     overrideStringValue: 'list-item',

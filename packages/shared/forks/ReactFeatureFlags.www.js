@@ -16,7 +16,6 @@ const dynamicFeatureFlags: DynamicFeatureFlags = require('ReactFeatureFlags');
 
 export const {
   debugRenderPhaseSideEffectsForStrictMode,
-  disableModulePatternComponents,
   disableInputAttributeSyncing,
   enableTrustedTypesIntegration,
   disableSchedulerTimeoutBasedOnReactExpirationTime,
@@ -25,6 +24,8 @@ export const {
   replayFailedUnitOfWorkWithInvokeGuardedCallback,
   enableModernEventSystem,
   enableFilterEmptyStringAttributesDOM,
+  enableLegacyFBSupport,
+  enableDebugTracing,
 } = dynamicFeatureFlags;
 
 // On WWW, __EXPERIMENTAL__ is used for a new modern build.
@@ -51,25 +52,21 @@ export const enableBlocksAPI = true;
 
 export const disableJavaScriptURLs = true;
 
+export const disableModulePatternComponents = true;
+
 export const enableDeprecatedFlareAPI = true;
 
 export const enableFundamentalAPI = false;
 
 export const enableScopeAPI = true;
 
-export const enableUseEventAPI = true;
-
 export const warnAboutUnmockedScheduler = true;
 
 export const enableSuspenseCallback = true;
 
-export const flushSuspenseFallbacksInTests = true;
-
 export const disableTextareaChildren = __EXPERIMENTAL__;
 
 export const warnUnstableRenderSubtreeIntoContainer = false;
-
-export const enableLegacyFBSupport = !__EXPERIMENTAL__;
 
 // Internal-only attempt to debug a React Native issue. See D20130868.
 export const throwEarlyForMysteriousError = false;

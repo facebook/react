@@ -24,8 +24,13 @@ function initializeModules(hasPointerEvents) {
   ReactFeatureFlags.enableDeprecatedFlareAPI = true;
   React = require('react');
   ReactDOM = require('react-dom');
-  HoverResponder = require('react-interactions/events/hover').HoverResponder;
-  useHover = require('react-interactions/events/hover').useHover;
+
+  // TODO: This import throws outside of experimental mode. Figure out better
+  // strategy for gated imports.
+  if (__EXPERIMENTAL__) {
+    HoverResponder = require('react-interactions/events/hover').HoverResponder;
+    useHover = require('react-interactions/events/hover').useHover;
+  }
 }
 
 const forcePointerEvents = true;
@@ -33,11 +38,6 @@ const table = [[forcePointerEvents], [!forcePointerEvents]];
 
 describe.each(table)('Hover responder', hasPointerEvents => {
   let container;
-
-  if (!__EXPERIMENTAL__) {
-    it("empty test so Jest doesn't complain", () => {});
-    return;
-  }
 
   beforeEach(() => {
     initializeModules(hasPointerEvents);
@@ -54,7 +54,7 @@ describe.each(table)('Hover responder', hasPointerEvents => {
   describe('disabled', () => {
     let onHoverChange, onHoverStart, onHoverMove, onHoverEnd, ref;
 
-    beforeEach(() => {
+    const componentInit = () => {
       onHoverChange = jest.fn();
       onHoverStart = jest.fn();
       onHoverMove = jest.fn();
@@ -71,9 +71,11 @@ describe.each(table)('Hover responder', hasPointerEvents => {
         return <div ref={ref} DEPRECATED_flareListeners={listener} />;
       };
       ReactDOM.render(<Component />, container);
-    });
+    };
 
+    // @gate experimental
     it('does not call callbacks', () => {
+      componentInit();
       const target = createEventTarget(ref.current);
       target.pointerenter();
       target.pointerexit();
@@ -87,7 +89,7 @@ describe.each(table)('Hover responder', hasPointerEvents => {
   describe('onHoverStart', () => {
     let onHoverStart, ref;
 
-    beforeEach(() => {
+    const componentInit = () => {
       onHoverStart = jest.fn();
       ref = React.createRef();
       const Component = () => {
@@ -97,22 +99,28 @@ describe.each(table)('Hover responder', hasPointerEvents => {
         return <div ref={ref} DEPRECATED_flareListeners={listener} />;
       };
       ReactDOM.render(<Component />, container);
-    });
+    };
 
+    // @gate experimental
     it('is called for mouse pointers', () => {
+      componentInit();
       const target = createEventTarget(ref.current);
       target.pointerenter();
       expect(onHoverStart).toHaveBeenCalledTimes(1);
     });
 
+    // @gate experimental
     it('is not called for touch pointers', () => {
+      componentInit();
       const target = createEventTarget(ref.current);
       target.pointerdown({pointerType: 'touch'});
       target.pointerup({pointerType: 'touch'});
       expect(onHoverStart).not.toBeCalled();
     });
 
+    // @gate experimental
     it('is called if a mouse pointer is used after a touch pointer', () => {
+      componentInit();
       const target = createEventTarget(ref.current);
       target.pointerdown({pointerType: 'touch'});
       target.pointerup({pointerType: 'touch'});
@@ -124,7 +132,7 @@ describe.each(table)('Hover responder', hasPointerEvents => {
   describe('onHoverChange', () => {
     let onHoverChange, ref;
 
-    beforeEach(() => {
+    const componentInit = () => {
       onHoverChange = jest.fn();
       ref = React.createRef();
       const Component = () => {
@@ -134,9 +142,11 @@ describe.each(table)('Hover responder', hasPointerEvents => {
         return <div ref={ref} DEPRECATED_flareListeners={listener} />;
       };
       ReactDOM.render(<Component />, container);
-    });
+    };
 
+    // @gate experimental
     it('is called for mouse pointers', () => {
+      componentInit();
       const target = createEventTarget(ref.current);
       target.pointerenter();
       expect(onHoverChange).toHaveBeenCalledTimes(1);
@@ -146,7 +156,9 @@ describe.each(table)('Hover responder', hasPointerEvents => {
       expect(onHoverChange).toHaveBeenCalledWith(false);
     });
 
+    // @gate experimental
     it('is not called for touch pointers', () => {
+      componentInit();
       const target = createEventTarget(ref.current);
       target.pointerdown({pointerType: 'touch'});
       target.pointerup({pointerType: 'touch'});
@@ -157,7 +169,7 @@ describe.each(table)('Hover responder', hasPointerEvents => {
   describe('onHoverEnd', () => {
     let onHoverEnd, ref;
 
-    beforeEach(() => {
+    const componentInit = () => {
       onHoverEnd = jest.fn();
       ref = React.createRef();
       const Component = () => {
@@ -167,9 +179,11 @@ describe.each(table)('Hover responder', hasPointerEvents => {
         return <div ref={ref} DEPRECATED_flareListeners={listener} />;
       };
       ReactDOM.render(<Component />, container);
-    });
+    };
 
+    // @gate experimental
     it('is called for mouse pointers', () => {
+      componentInit();
       const target = createEventTarget(ref.current);
       target.pointerenter();
       target.pointerexit();
@@ -177,7 +191,9 @@ describe.each(table)('Hover responder', hasPointerEvents => {
     });
 
     if (hasPointerEvents) {
+      // @gate experimental
       it('is called once for cancelled mouse pointers', () => {
+        componentInit();
         const target = createEventTarget(ref.current);
         target.pointerenter();
         target.pointercancel();
@@ -192,14 +208,18 @@ describe.each(table)('Hover responder', hasPointerEvents => {
       });
     }
 
+    // @gate experimental
     it('is not called for touch pointers', () => {
+      componentInit();
       const target = createEventTarget(ref.current);
       target.pointerdown({pointerType: 'touch'});
       target.pointerup({pointerType: 'touch'});
       expect(onHoverEnd).not.toBeCalled();
     });
 
+    // @gate experimental
     it('should correctly work with React Portals', () => {
+      componentInit();
       const portalNode = document.createElement('div');
       const divRef = React.createRef();
       const spanRef = React.createRef();
@@ -227,6 +247,7 @@ describe.each(table)('Hover responder', hasPointerEvents => {
   });
 
   describe('onHoverMove', () => {
+    // @gate experimental
     it('is called after the active pointer moves"', () => {
       const onHoverMove = jest.fn();
       const ref = React.createRef();
@@ -250,6 +271,7 @@ describe.each(table)('Hover responder', hasPointerEvents => {
   });
 
   describe('nested Hover components', () => {
+    // @gate experimental
     it('not propagate by default', () => {
       const events = [];
       const innerRef = React.createRef();
@@ -310,10 +332,12 @@ describe.each(table)('Hover responder', hasPointerEvents => {
     });
   });
 
+  // @gate experimental
   it('expect displayName to show up for event component', () => {
     expect(HoverResponder.displayName).toBe('Hover');
   });
 
+  // @gate experimental
   it('should correctly pass through event properties', () => {
     const timeStamps = [];
     const ref = React.createRef();

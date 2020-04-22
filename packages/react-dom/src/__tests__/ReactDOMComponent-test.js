@@ -16,10 +16,6 @@ describe('ReactDOMComponent', () => {
   let ReactDOMServer;
   const ReactFeatureFlags = require('shared/ReactFeatureFlags');
 
-  function normalizeCodeLocInfo(str) {
-    return str && str.replace(/\(at .+?:\d+\)/g, '(at **)');
-  }
-
   beforeEach(() => {
     jest.resetModules();
     React = require('react');
@@ -1315,36 +1311,24 @@ describe('ReactDOMComponent', () => {
 
     it('should throw on children for void elements', () => {
       const container = document.createElement('div');
-      let caughtErr;
-      try {
+      expect(() => {
         ReactDOM.render(<input>children</input>, container);
-      } catch (err) {
-        caughtErr = err;
-      }
-      expect(caughtErr).not.toBe(undefined);
-      expect(normalizeCodeLocInfo(caughtErr.message)).toContain(
+      }).toThrowError(
         'input is a void element tag and must neither have `children` nor ' +
-          'use `dangerouslySetInnerHTML`.' +
-          (__DEV__ ? '\n    in input (at **)' : ''),
+          'use `dangerouslySetInnerHTML`.',
       );
     });
 
     it('should throw on dangerouslySetInnerHTML for void elements', () => {
       const container = document.createElement('div');
-      let caughtErr;
-      try {
+      expect(() => {
         ReactDOM.render(
           <input dangerouslySetInnerHTML={{__html: 'content'}} />,
           container,
         );
-      } catch (err) {
-        caughtErr = err;
-      }
-      expect(caughtErr).not.toBe(undefined);
-      expect(normalizeCodeLocInfo(caughtErr.message)).toContain(
+      }).toThrowError(
         'input is a void element tag and must neither have `children` nor ' +
-          'use `dangerouslySetInnerHTML`.' +
-          (__DEV__ ? '\n    in input (at **)' : ''),
+          'use `dangerouslySetInnerHTML`.',
       );
     });
 
@@ -1456,18 +1440,11 @@ describe('ReactDOMComponent', () => {
       }
 
       const container = document.createElement('div');
-      let caughtErr;
-      try {
+      expect(() => {
         ReactDOM.render(<X />, container);
-      } catch (err) {
-        caughtErr = err;
-      }
-
-      expect(caughtErr).not.toBe(undefined);
-      expect(normalizeCodeLocInfo(caughtErr.message)).toContain(
+      }).toThrowError(
         'input is a void element tag and must neither have `children` ' +
-          'nor use `dangerouslySetInnerHTML`.' +
-          (__DEV__ ? '\n    in input (at **)' + '\n    in X (at **)' : ''),
+          'nor use `dangerouslySetInnerHTML`.',
       );
     });
 
@@ -1622,19 +1599,12 @@ describe('ReactDOMComponent', () => {
         }
       }
 
-      let caughtErr;
-      try {
+      expect(() => {
         ReactDOM.render(<Animal />, container);
-      } catch (err) {
-        caughtErr = err;
-      }
-
-      expect(caughtErr).not.toBe(undefined);
-      expect(normalizeCodeLocInfo(caughtErr.message)).toContain(
+      }).toThrowError(
         'The `style` prop expects a mapping from style properties to values, ' +
           "not a string. For example, style={{marginRight: spacing + 'em'}} " +
-          'when using JSX.' +
-          (__DEV__ ? '\n    in div (at **)' + '\n    in Animal (at **)' : ''),
+          'when using JSX.',
       );
     });
 
@@ -1719,16 +1689,26 @@ describe('ReactDOMComponent', () => {
             <tr />
           </div>,
         );
-      }).toErrorDev([
-        'Warning: validateDOMNesting(...): <tr> cannot appear as a child of ' +
-          '<div>.' +
-          '\n    in tr (at **)' +
-          '\n    in div (at **)',
-        'Warning: validateDOMNesting(...): <tr> cannot appear as a child of ' +
-          '<div>.' +
-          '\n    in tr (at **)' +
-          '\n    in div (at **)',
-      ]);
+      }).toErrorDev(
+        ReactFeatureFlags.enableComponentStackLocations
+          ? [
+              // This warning dedupes since they're in the same component.
+              'Warning: validateDOMNesting(...): <tr> cannot appear as a child of ' +
+                '<div>.' +
+                '\n    in tr (at **)' +
+                '\n    in div (at **)',
+            ]
+          : [
+              'Warning: validateDOMNesting(...): <tr> cannot appear as a child of ' +
+                '<div>.' +
+                '\n    in tr (at **)' +
+                '\n    in div (at **)',
+              'Warning: validateDOMNesting(...): <tr> cannot appear as a child of ' +
+                '<div>.' +
+                '\n    in tr (at **)' +
+                '\n    in div (at **)',
+            ],
+      );
     });
 
     it('warns on invalid nesting at root', () => {

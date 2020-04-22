@@ -19,11 +19,6 @@ let Scheduler;
 describe('mixing responders with the heritage event system', () => {
   let container;
 
-  if (!__EXPERIMENTAL__) {
-    it("empty test so Jest doesn't complain", () => {});
-    return;
-  }
-
   beforeEach(() => {
     ReactFeatureFlags = require('shared/ReactFeatureFlags');
     ReactFeatureFlags.enableDeprecatedFlareAPI = true;
@@ -39,11 +34,7 @@ describe('mixing responders with the heritage event system', () => {
     container = null;
   });
 
-  if (!__EXPERIMENTAL__) {
-    it("empty test so Jest doesn't complain", () => {});
-    return;
-  }
-
+  // @gate experimental
   it('should properly only flush sync once when the event systems are mixed', () => {
     const useTap = require('react-interactions/events/tap').useTap;
     const ref = React.createRef();
@@ -113,6 +104,7 @@ describe('mixing responders with the heritage event system', () => {
     document.body.removeChild(newContainer);
   });
 
+  // @gate experimental
   it('should properly flush sync when the event systems are mixed with unstable_flushDiscreteUpdates', () => {
     const useTap = require('react-interactions/events/tap').useTap;
     const ref = React.createRef();
@@ -182,6 +174,7 @@ describe('mixing responders with the heritage event system', () => {
     document.body.removeChild(newContainer);
   });
 
+  // @gate experimental
   it(
     'should only flush before outermost discrete event handler when mixing ' +
       'event systems',
@@ -241,6 +234,7 @@ describe('mixing responders with the heritage event system', () => {
   );
 
   describe('mixing the Input and Press repsonders', () => {
+    // @gate experimental
     it('is async for non-input events', () => {
       const useTap = require('react-interactions/events/tap').useTap;
       const useInput = require('react-interactions/events/input').useInput;

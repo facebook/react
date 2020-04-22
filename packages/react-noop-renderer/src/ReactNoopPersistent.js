@@ -24,6 +24,7 @@ export const {
   getOrCreateRootContainer,
   createRoot,
   createBlockingRoot,
+  createLegacyRoot,
   getChildrenAsJSX,
   getPendingChildrenAsJSX,
   createPortal,

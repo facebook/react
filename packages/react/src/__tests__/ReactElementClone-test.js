@@ -301,8 +301,8 @@ describe('ReactElementClone', () => {
       'Warning: Failed prop type: ' +
         'Invalid prop `color` of type `number` supplied to `Component`, ' +
         'expected `string`.\n' +
-        '    in Component (created by GrandParent)\n' +
-        '    in Parent (created by GrandParent)\n' +
+        '    in Component (at **)\n' +
+        '    in Parent (at **)\n' +
         '    in GrandParent',
     );
   });

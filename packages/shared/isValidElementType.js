@@ -13,6 +13,7 @@ import {
   REACT_FRAGMENT_TYPE,
   REACT_PROFILER_TYPE,
   REACT_PROVIDER_TYPE,
+  REACT_DEBUG_TRACING_MODE_TYPE,
   REACT_STRICT_MODE_TYPE,
   REACT_SUSPENSE_TYPE,
   REACT_SUSPENSE_LIST_TYPE,
@@ -32,6 +33,7 @@ export default function isValidElementType(type: mixed) {
     // Note: its typeof might be other than 'symbol' or 'number' if it's a polyfill.
     type === REACT_FRAGMENT_TYPE ||
     type === REACT_PROFILER_TYPE ||
+    type === REACT_DEBUG_TRACING_MODE_TYPE ||
     type === REACT_STRICT_MODE_TYPE ||
     type === REACT_SUSPENSE_TYPE ||
     type === REACT_SUSPENSE_LIST_TYPE ||

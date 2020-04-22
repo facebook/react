@@ -9,8 +9,10 @@
 
 import type {Fiber} from './ReactInternalTypes';
 
-import {getStackByFiberInDevAndProd} from './ReactFiberComponentStack';
-
+import {
+  resetCurrentFiber as resetCurrentDebugFiberInDEV,
+  setCurrentFiber as setCurrentDebugFiberInDEV,
+} from './ReactCurrentFiber';
 import getComponentName from 'shared/getComponentName';
 import {StrictMode} from './ReactTypeOfMode';
 
@@ -336,18 +338,20 @@ if (__DEV__) {
         });
 
         const sortedNames = setToSortedString(uniqueNames);
-        const firstComponentStack = getStackByFiberInDevAndProd(firstFiber);
 
-        console.error(
-          'Legacy context API has been detected within a strict-mode tree.' +
-            '\n\nThe old API will be supported in all 16.x releases, but applications ' +
-            'using it should migrate to the new version.' +
-            '\n\nPlease update the following components: %s' +
-            '\n\nLearn more about this warning here: https://fb.me/react-legacy-context' +
-            '%s',
-          sortedNames,
-          firstComponentStack,
-        );
+        try {
+          setCurrentDebugFiberInDEV(firstFiber);
+          console.error(
+            'Legacy context API has been detected within a strict-mode tree.' +
+              '\n\nThe old API will be supported in all 16.x releases, but applications ' +
+              'using it should migrate to the new version.' +
+              '\n\nPlease update the following components: %s' +
+              '\n\nLearn more about this warning here: https://fb.me/react-legacy-context',
+            sortedNames,
+          );
+        } finally {
+          resetCurrentDebugFiberInDEV();
+        }
       },
     );
   };

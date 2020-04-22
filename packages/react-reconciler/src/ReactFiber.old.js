@@ -18,7 +18,7 @@ import type {Fiber} from './ReactInternalTypes';
 import type {RootTag} from './ReactRootTags';
 import type {WorkTag} from './ReactWorkTags';
 import type {TypeOfMode} from './ReactTypeOfMode';
-import type {ExpirationTime} from './ReactFiberExpirationTime';
+import type {ExpirationTime} from './ReactFiberExpirationTime.old';
 import type {SuspenseInstance} from './ReactFiberHostConfig';
 
 import invariant from 'shared/invariant';
@@ -63,10 +63,11 @@ import {
   resolveFunctionForHotReloading,
   resolveForwardRefForHotReloading,
 } from './ReactFiberHotReloading.old';
-import {NoWork} from './ReactFiberExpirationTime';
+import {NoWork} from './ReactFiberExpirationTime.old';
 import {
   NoMode,
   ConcurrentMode,
+  DebugTracingMode,
   ProfileMode,
   StrictMode,
   BlockingMode,
@@ -74,6 +75,7 @@ import {
 import {
   REACT_FORWARD_REF_TYPE,
   REACT_FRAGMENT_TYPE,
+  REACT_DEBUG_TRACING_MODE_TYPE,
   REACT_STRICT_MODE_TYPE,
   REACT_PROFILER_TYPE,
   REACT_PROVIDER_TYPE,
@@ -488,6 +490,10 @@ export function createFiberFromTypeAndProps(
           expirationTime,
           key,
         );
+      case REACT_DEBUG_TRACING_MODE_TYPE:
+        fiberTag = Mode;
+        mode |= DebugTracingMode;
+        break;
       case REACT_STRICT_MODE_TYPE:
         fiberTag = Mode;
         mode |= StrictMode;

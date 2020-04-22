@@ -11,6 +11,7 @@ import typeof * as FeatureFlagsType from 'shared/ReactFeatureFlags';
 import typeof * as ExportsType from './ReactFeatureFlags.native-fb';
 
 // The rest of the flags are static for better dead code elimination.
+export const enableDebugTracing = false;
 export const enableProfilerTimer = __PROFILE__;
 export const enableProfilerCommitHooks = false;
 export const enableSchedulerTracing = __PROFILE__;
@@ -26,9 +27,7 @@ export const warnAboutDeprecatedLifecycles = true;
 export const enableDeprecatedFlareAPI = false;
 export const enableFundamentalAPI = false;
 export const enableScopeAPI = false;
-export const enableUseEventAPI = false;
 export const warnAboutUnmockedScheduler = true;
-export const flushSuspenseFallbacksInTests = true;
 export const enableSuspenseCallback = false;
 export const warnAboutDefaultPropsOnFunctionComponents = false;
 export const warnAboutStringRefs = false;

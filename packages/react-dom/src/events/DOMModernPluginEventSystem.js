@@ -17,11 +17,7 @@ import type {EventSystemFlags} from './EventSystemFlags';
 import type {EventPriority, ReactScopeMethods} from 'shared/ReactTypes';
 import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
 import type {PluginModule} from 'legacy-events/PluginModuleType';
-import type {
-  ReactSyntheticEvent,
-  CustomDispatchConfig,
-} from 'legacy-events/ReactSyntheticEventType';
-import type {ReactDOMListener} from '../shared/ReactDOMTypes';
+import type {ReactSyntheticEvent} from 'legacy-events/ReactSyntheticEventType';
 
 import {registrationNameDependencies} from 'legacy-events/EventPluginRegistry';
 import {plugins} from 'legacy-events/EventPluginRegistry';
@@ -33,7 +29,11 @@ import {
   USE_EVENT_SYSTEM,
 } from './EventSystemFlags';
 
-import {HostRoot, HostPortal} from 'react-reconciler/src/ReactWorkTags';
+import {
+  HostRoot,
+  HostPortal,
+  HostComponent,
+} from 'react-reconciler/src/ReactWorkTags';
 
 import {
   addTrappedEventListener,
@@ -75,22 +75,14 @@ import {
   TOP_PROGRESS,
   TOP_PLAYING,
   TOP_CLICK,
-  TOP_BEFORE_BLUR,
-  TOP_AFTER_BLUR,
+  TOP_SELECTION_CHANGE,
 } from './DOMTopLevelEventTypes';
-import {
-  getClosestInstanceFromNode,
-  getListenersFromTarget,
-  initListenersSet,
-} from '../client/ReactDOMComponentTree';
+import {getClosestInstanceFromNode} from '../client/ReactDOMComponentTree';
 import {COMMENT_NODE} from '../shared/HTMLNodeType';
-import {topLevelEventsToDispatchConfig} from './DOMEventProperties';
 import {batchedEventUpdates} from './ReactDOMUpdateBatching';
+import getListener from './getListener';
 
-import {
-  enableLegacyFBSupport,
-  enableUseEventAPI,
-} from 'shared/ReactFeatureFlags';
+import {enableLegacyFBSupport} from 'shared/ReactFeatureFlags';
 import {
   invokeGuardedCallbackAndCatchFirstError,
   rethrowCaughtError,
@@ -132,43 +124,7 @@ const capturePhaseEvents = new Set([
   TOP_WAITING,
 ]);
 
-if (enableUseEventAPI) {
-  capturePhaseEvents.add(TOP_BEFORE_BLUR);
-  capturePhaseEvents.add(TOP_AFTER_BLUR);
-}
-
-const emptyDispatchConfigForCustomEvents: CustomDispatchConfig = {
-  customEvent: true,
-  phasedRegistrationNames: {
-    bubbled: null,
-    captured: null,
-  },
-};
-
 const isArray = Array.isArray;
-
-// TODO: we should remove the FlowFixMes and the casting to figure out how to make
-// these patterns work properly.
-// $FlowFixMe: Flow struggles with this pattern, so we also have to cast it.
-const PossiblyWeakMap = ((typeof WeakMap === 'function' ? WeakMap : Map): any);
-
-// $FlowFixMe: Flow cannot handle polymorphic WeakMaps
-export const eventTargetEventListenerStore: WeakMap<
-  EventTarget,
-  Map<
-    DOMTopLevelEventType,
-    {bubbled: Set<ReactDOMListener>, captured: Set<ReactDOMListener>},
-  >,
-> = new PossiblyWeakMap();
-
-// $FlowFixMe: Flow cannot handle polymorphic WeakMaps
-export const reactScopeListenerStore: WeakMap<
-  ReactScopeMethods,
-  Map<
-    DOMTopLevelEventType,
-    {bubbled: Set<ReactDOMListener>, captured: Set<ReactDOMListener>},
-  >,
-> = new PossiblyWeakMap();
 
 function executeDispatch(
   event: ReactSyntheticEvent,
@@ -243,23 +199,21 @@ function dispatchEventsForPlugins(
 
   for (let i = 0; i < plugins.length; i++) {
     const possiblePlugin: PluginModule<AnyNativeEvent> = plugins[i];
-    if (possiblePlugin !== undefined) {
-      const extractedEvents = possiblePlugin.extractEvents(
-        topLevelType,
-        targetInst,
-        nativeEvent,
-        nativeEventTarget,
-        eventSystemFlags,
-        targetContainer,
-      );
-      if (isArray(extractedEvents)) {
-        // Flow complains about @@iterator being missing in ReactSyntheticEvent,
-        // so we cast to avoid the Flow error.
-        const arrOfExtractedEvents = ((extractedEvents: any): Array<ReactSyntheticEvent>);
-        syntheticEvents.push(...arrOfExtractedEvents);
-      } else if (extractedEvents != null) {
-        syntheticEvents.push(extractedEvents);
-      }
+    const extractedEvents = possiblePlugin.extractEvents(
+      topLevelType,
+      targetInst,
+      nativeEvent,
+      nativeEventTarget,
+      eventSystemFlags,
+      targetContainer,
+    );
+    if (isArray(extractedEvents)) {
+      // Flow complains about @@iterator being missing in ReactSyntheticEvent,
+      // so we cast to avoid the Flow error.
+      const arrOfExtractedEvents = ((extractedEvents: any): Array<ReactSyntheticEvent>);
+      syntheticEvents.push(...arrOfExtractedEvents);
+    } else if (extractedEvents != null) {
+      syntheticEvents.push(extractedEvents);
     }
   }
   dispatchEventsInBatch(syntheticEvents);
@@ -307,6 +261,14 @@ export function listenToTopLevelEvent(
     capture === undefined
       ? topLevelType
       : `${typeStr}_${capture ? 'capture' : 'bubble'}`;
+
+  // TOP_SELECTION_CHANGE needs to be attached to the document
+  // otherwise it won't capture incoming events that are only
+  // triggered on the document directly.
+  if (topLevelType === TOP_SELECTION_CHANGE) {
+    targetContainer = (targetContainer: any).ownerDocument || targetContainer;
+    listenerMap = getListenerMapForElement(targetContainer);
+  }
   const listenerEntry = listenerMap.get(listenerMapKey);
   const shouldUpgrade = shouldUpgradeListener(listenerEntry, passive);
   if (listenerEntry === undefined || shouldUpgrade) {
@@ -500,175 +462,184 @@ export function dispatchEventForPluginEventSystem(
   );
 }
 
-function getNearestRootOrPortalContainer(instance: Element): Element {
-  let node = getClosestInstanceFromNode(instance);
-  while (node !== null) {
-    const tag = node.tag;
-    // Once we encounter a host container or root container
-    // we can return their DOM instance.
-    if (tag === HostRoot || tag === HostPortal) {
-      return node.stateNode.containerInfo;
-    }
-    node = node.return;
-  }
-  return instance;
-}
+export function accumulateTwoPhaseListeners(event: ReactSyntheticEvent): void {
+  const phasedRegistrationNames = event.dispatchConfig.phasedRegistrationNames;
+  const dispatchListeners = [];
+  const dispatchInstances: Array<Fiber | null> = [];
+  const dispatchCurrentTargets = [];
 
-function addEventTypeToDispatchConfig(type: DOMTopLevelEventType): void {
-  const dispatchConfig = topLevelEventsToDispatchConfig.get(type);
-  // If we don't have a dispatchConfig, then we're dealing with
-  // an event type that React does not know about (i.e. a custom event).
-  // We need to register an event config for this or the SimpleEventPlugin
-  // will not appropriately provide a SyntheticEvent, so we use out empty
-  // dispatch config for custom events.
-  if (dispatchConfig === undefined) {
-    topLevelEventsToDispatchConfig.set(
-      type,
-      emptyDispatchConfigForCustomEvents,
-    );
-  }
-}
+  const {bubbled, captured} = phasedRegistrationNames;
+  // If we are not handling EventTarget only phase, then we're doing the
+  // usual two phase accumulation using the React fiber tree to pick up
+  // all relevant useEvent and on* prop events.
+  let instance = event._targetInst;
 
-export function attachListenerToManagedDOMElement(
-  listener: ReactDOMListener,
-): void {
-  const {event, target} = listener;
-  const {passive, priority, type} = event;
-
-  const managedTargetElement = ((target: any): Element);
-  const containerEventTarget = getNearestRootOrPortalContainer(
-    managedTargetElement,
-  );
-  const listenerMap = getListenerMapForElement(containerEventTarget);
-  // Add the event listener to the target container (falling back to
-  // the target if we didn't find one).
-  listenToTopLevelEvent(
-    type,
-    containerEventTarget,
-    listenerMap,
-    PLUGIN_EVENT_SYSTEM | USE_EVENT_SYSTEM,
-    passive,
-    priority,
-  );
-  // Get the internal listeners Set from the target instance.
-  let listeners = getListenersFromTarget(managedTargetElement);
-  // If we don't have any listeners, then we need to init them.
-  if (listeners === null) {
-    listeners = new Set();
-    initListenersSet(managedTargetElement, listeners);
-  }
-  // Add our listener to the listeners Set.
-  listeners.add(listener);
-  // Finally, add the event to our known event types list.
-  addEventTypeToDispatchConfig(type);
-}
-
-export function detachListenerFromManagedDOMElement(
-  listener: ReactDOMListener,
-): void {
-  const {target} = listener;
-  const managedTargetElement = ((target: any): Element);
-  // Get the internal listeners Set from the target instance.
-  const listeners = getListenersFromTarget(managedTargetElement);
-  if (listeners !== null) {
-    // Remove out listener from the listeners Set.
-    listeners.delete(listener);
-  }
-}
-
-export function attachTargetEventListener(listener: ReactDOMListener): void {
-  const {event, target} = listener;
-  const {capture, passive, priority, type} = event;
-  const eventTarget = ((target: any): EventTarget);
-  const listenerMap = getListenerMapForElement(eventTarget);
-  // Add the event listener to the TargetEvent object.
-  listenToTopLevelEvent(
-    type,
-    eventTarget,
-    listenerMap,
-    PLUGIN_EVENT_SYSTEM | USE_EVENT_SYSTEM | IS_TARGET_PHASE_ONLY,
-    passive,
-    priority,
-    capture,
-  );
-  let eventTypeMap = eventTargetEventListenerStore.get(eventTarget);
-  if (eventTypeMap === undefined) {
-    eventTypeMap = new Map();
-    eventTargetEventListenerStore.set(eventTarget, eventTypeMap);
-  }
-  // Get the listeners by the event type
-  let listeners = eventTypeMap.get(type);
-  if (listeners === undefined) {
-    listeners = {captured: new Set(), bubbled: new Set()};
-    eventTypeMap.set(type, listeners);
-  }
-  // Add our listener to the listeners Set.
-  if (capture) {
-    listeners.captured.add(listener);
-  } else {
-    listeners.bubbled.add(listener);
-  }
-  // Finally, add the event to our known event types list.
-  addEventTypeToDispatchConfig(type);
-}
-
-export function detachTargetEventListener(listener: ReactDOMListener): void {
-  const {event, target} = listener;
-  const {capture, type} = event;
-  const validEventTarget = ((target: any): EventTarget);
-  const eventTypeMap = eventTargetEventListenerStore.get(validEventTarget);
-  if (eventTypeMap !== undefined) {
-    const listeners = eventTypeMap.get(type);
-    if (listeners !== undefined) {
-      // Remove out listener from the listeners Set.
-      if (capture) {
-        listeners.captured.delete(listener);
-      } else {
-        listeners.bubbled.delete(listener);
+  // Accumulate all instances and listeners via the target -> root path.
+  while (instance !== null) {
+    const {stateNode, tag} = instance;
+    // Handle listeners that are on HostComponents (i.e. <div>)
+    if (tag === HostComponent && stateNode !== null) {
+      const currentTarget = stateNode;
+      // Standard React on* listeners, i.e. onClick prop
+      if (captured !== null) {
+        const captureListener = getListener(instance, captured);
+        if (captureListener != null) {
+          // Capture listeners/instances should go at the start, so we
+          // unshift them to the start of the array.
+          dispatchListeners.unshift(captureListener);
+          dispatchInstances.unshift(instance);
+          dispatchCurrentTargets.unshift(currentTarget);
+        }
+      }
+      if (bubbled !== null) {
+        const bubbleListener = getListener(instance, bubbled);
+        if (bubbleListener != null) {
+          // Bubble listeners/instances should go at the end, so we
+          // push them to the end of the array.
+          dispatchListeners.push(bubbleListener);
+          dispatchInstances.push(instance);
+          dispatchCurrentTargets.push(currentTarget);
+        }
       }
     }
+    instance = instance.return;
+  }
+
+  // To prevent allocation to the event unless we actually
+  // have listeners we check the length of one of the arrays.
+  if (dispatchListeners.length > 0) {
+    event._dispatchListeners = dispatchListeners;
+    event._dispatchInstances = dispatchInstances;
+    event._dispatchCurrentTargets = dispatchCurrentTargets;
   }
 }
 
-export function attachListenerToReactScope(listener: ReactDOMListener): void {
-  const {event, target} = listener;
-  const {capture, type} = event;
-  const reactScope = ((target: any): ReactScopeMethods);
-  let eventTypeMap = reactScopeListenerStore.get(reactScope);
-  if (eventTypeMap === undefined) {
-    eventTypeMap = new Map();
-    reactScopeListenerStore.set(reactScope, eventTypeMap);
+function getParent(inst: Fiber | null): Fiber | null {
+  if (inst === null) {
+    return null;
   }
-  // Get the listeners by the event type
-  let listeners = eventTypeMap.get(type);
-  if (listeners === undefined) {
-    listeners = {captured: new Set(), bubbled: new Set()};
-    eventTypeMap.set(type, listeners);
+  do {
+    inst = inst.return;
+    // TODO: If this is a HostRoot we might want to bail out.
+    // That is depending on if we want nested subtrees (layers) to bubble
+    // events to their parent. We could also go through parentNode on the
+    // host node but that wouldn't work for React Native and doesn't let us
+    // do the portal feature.
+  } while (inst && inst.tag !== HostComponent);
+  if (inst) {
+    return inst;
   }
-  // Add our listener to the listeners Set.
-  if (capture) {
-    listeners.captured.add(listener);
-  } else {
-    listeners.bubbled.add(listener);
-  }
-  // Finally, add the event to our known event types list.
-  addEventTypeToDispatchConfig(type);
+  return null;
 }
 
-export function detachListenerFromReactScope(listener: ReactDOMListener): void {
-  const {event, target} = listener;
-  const {capture, type} = event;
-  const reactScope = ((target: any): ReactScopeMethods);
-  const eventTypeMap = reactScopeListenerStore.get(reactScope);
-  if (eventTypeMap !== undefined) {
-    const listeners = eventTypeMap.get(type);
-    if (listeners !== undefined) {
-      // Remove out listener from the listeners Set.
+/**
+ * Return the lowest common ancestor of A and B, or null if they are in
+ * different trees.
+ */
+function getLowestCommonAncestor(instA: Fiber, instB: Fiber): Fiber | null {
+  let nodeA = instA;
+  let nodeB = instB;
+  let depthA = 0;
+  for (let tempA = nodeA; tempA; tempA = getParent(tempA)) {
+    depthA++;
+  }
+  let depthB = 0;
+  for (let tempB = nodeB; tempB; tempB = getParent(tempB)) {
+    depthB++;
+  }
+
+  // If A is deeper, crawl up.
+  while (depthA - depthB > 0) {
+    nodeA = getParent(nodeA);
+    depthA--;
+  }
+
+  // If B is deeper, crawl up.
+  while (depthB - depthA > 0) {
+    nodeB = getParent(nodeB);
+    depthB--;
+  }
+
+  // Walk in lockstep until we find a match.
+  let depth = depthA;
+  while (depth--) {
+    if (nodeA === nodeB || (nodeB !== null && nodeA === nodeB.alternate)) {
+      return nodeA;
+    }
+    nodeA = getParent(nodeA);
+    nodeB = getParent(nodeB);
+  }
+  return null;
+}
+
+function accumulateEnterLeaveListenersForEvent(
+  event: ReactSyntheticEvent,
+  target: Fiber,
+  common: Fiber | null,
+  capture: boolean,
+): void {
+  const registrationName = event.dispatchConfig.registrationName;
+  if (registrationName === undefined) {
+    return;
+  }
+  const dispatchListeners = [];
+  const dispatchInstances: Array<Fiber | null> = [];
+  const dispatchCurrentTargets = [];
+
+  let instance = target;
+  while (instance !== null) {
+    if (instance === common) {
+      break;
+    }
+    const {alternate, stateNode, tag} = instance;
+    if (alternate !== null && alternate === common) {
+      break;
+    }
+    if (tag === HostComponent && stateNode !== null) {
+      const currentTarget = stateNode;
       if (capture) {
-        listeners.captured.delete(listener);
+        const captureListener = getListener(instance, registrationName);
+        if (captureListener != null) {
+          // Capture listeners/instances should go at the start, so we
+          // unshift them to the start of the array.
+          dispatchListeners.unshift(captureListener);
+          dispatchInstances.unshift(instance);
+          dispatchCurrentTargets.unshift(currentTarget);
+        }
       } else {
-        listeners.bubbled.delete(listener);
+        const bubbleListener = getListener(instance, registrationName);
+        if (bubbleListener != null) {
+          // Bubble listeners/instances should go at the end, so we
+          // push them to the end of the array.
+          dispatchListeners.push(bubbleListener);
+          dispatchInstances.push(instance);
+          dispatchCurrentTargets.push(currentTarget);
+        }
       }
     }
+    instance = instance.return;
+  }
+  // To prevent allocation to the event unless we actually
+  // have listeners we check the length of one of the arrays.
+  if (dispatchListeners.length > 0) {
+    event._dispatchListeners = dispatchListeners;
+    event._dispatchInstances = dispatchInstances;
+    event._dispatchCurrentTargets = dispatchCurrentTargets;
+  }
+}
+
+export function accumulateEnterLeaveListeners(
+  leaveEvent: ReactSyntheticEvent,
+  enterEvent: ReactSyntheticEvent,
+  from: Fiber | null,
+  to: Fiber | null,
+): void {
+  const common = from && to ? getLowestCommonAncestor(from, to) : null;
+
+  if (from !== null) {
+    accumulateEnterLeaveListenersForEvent(leaveEvent, from, common, false);
+  }
+  if (to !== null) {
+    accumulateEnterLeaveListenersForEvent(enterEvent, to, common, true);
   }
 }

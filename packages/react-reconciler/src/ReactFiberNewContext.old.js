@@ -10,7 +10,7 @@
 import type {ReactContext} from 'shared/ReactTypes';
 import type {Fiber, ContextDependency} from './ReactInternalTypes';
 import type {StackCursor} from './ReactFiberStack.old';
-import type {ExpirationTime} from './ReactFiberExpirationTime';
+import type {ExpirationTime} from './ReactFiberExpirationTime.old';
 
 import {isPrimaryRenderer} from './ReactFiberHostConfig';
 import {createCursor, push, pop} from './ReactFiberStack.old';
@@ -24,7 +24,7 @@ import {
 import invariant from 'shared/invariant';
 import is from 'shared/objectIs';
 import {createUpdate, enqueueUpdate, ForceUpdate} from './ReactUpdateQueue.old';
-import {NoWork} from './ReactFiberExpirationTime';
+import {NoWork} from './ReactFiberExpirationTime.old';
 import {markWorkInProgressReceivedUpdate} from './ReactFiberBeginWork.old';
 import {enableSuspenseServerRenderer} from 'shared/ReactFeatureFlags';
 

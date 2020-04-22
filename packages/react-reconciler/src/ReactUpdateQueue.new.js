@@ -85,11 +85,10 @@
 // resources, but the final state is always the same.
 
 import type {Fiber} from './ReactInternalTypes';
-import type {ExpirationTime} from './ReactFiberExpirationTime';
+import type {ExpirationTime} from './ReactFiberExpirationTime.new';
 import type {SuspenseConfig} from './ReactFiberSuspenseConfig';
-import type {ReactPriorityLevel} from './ReactInternalTypes';
 
-import {NoWork, Sync} from './ReactFiberExpirationTime';
+import {NoWork, Sync} from './ReactFiberExpirationTime.new';
 import {
   enterDisallowedContextReadInDEV,
   exitDisallowedContextReadInDEV,
@@ -105,11 +104,13 @@ import {
 } from './ReactFiberWorkLoop.new';
 
 import invariant from 'shared/invariant';
-import {getCurrentPriorityLevel} from './SchedulerWithReactIntegration.new';
 
 import {disableLogs, reenableLogs} from 'shared/ConsolePatchingDev';
 
 export type Update<State> = {|
+  // TODO: Temporary field. Will remove this by storing a map of
+  // transition -> event time on the root.
+  eventTime: ExpirationTime,
   expirationTime: ExpirationTime,
   suspenseConfig: null | SuspenseConfig,
 
@@ -118,12 +119,11 @@ export type Update<State> = {|
   callback: (() => mixed) | null,
 
   next: Update<State> | null,
-
-  // DEV only
-  priority?: ReactPriorityLevel,
 |};
 
-type SharedQueue<State> = {|pending: Update<State> | null|};
+type SharedQueue<State> = {|
+  pending: Update<State> | null,
+|};
 
 export type UpdateQueue<State> = {|
   baseState: State,
@@ -187,10 +187,12 @@ export function cloneUpdateQueue<State>(
 }
 
 export function createUpdate(
+  eventTime: ExpirationTime,
   expirationTime: ExpirationTime,
   suspenseConfig: null | SuspenseConfig,
 ): Update<*> {
   const update: Update<*> = {
+    eventTime,
     expirationTime,
     suspenseConfig,
 
@@ -200,9 +202,6 @@ export function createUpdate(
 
     next: null,
   };
-  if (__DEV__) {
-    update.priority = getCurrentPriorityLevel();
-  }
   return update;
 }
 
@@ -268,6 +267,7 @@ export function enqueueCapturedUpdate<State>(
         let update = firstBaseUpdate;
         do {
           const clone: Update<State> = {
+            eventTime: update.eventTime,
             expirationTime: update.expirationTime,
             suspenseConfig: update.suspenseConfig,
 
@@ -471,13 +471,15 @@ export function processUpdateQueue<State>(
 
     let update = firstBaseUpdate;
     do {
+      const updateEventTime = update.eventTime;
       const updateExpirationTime = update.expirationTime;
       if (updateExpirationTime < renderExpirationTime) {
         // Priority is insufficient. Skip this update. If this is the first
         // skipped update, the previous update/state is the new base
         // update/state.
         const clone: Update<State> = {
-          expirationTime: update.expirationTime,
+          eventTime: updateEventTime,
+          expirationTime: updateExpirationTime,
           suspenseConfig: update.suspenseConfig,
 
           tag: update.tag,
@@ -501,6 +503,7 @@ export function processUpdateQueue<State>(
 
         if (newLastBaseUpdate !== null) {
           const clone: Update<State> = {
+            eventTime: updateEventTime,
             expirationTime: Sync, // This update is going to be committed so we never want uncommit it.
             suspenseConfig: update.suspenseConfig,
 
@@ -519,10 +522,7 @@ export function processUpdateQueue<State>(
         // TODO: We should skip this update if it was already committed but currently
         // we have no way of detecting the difference between a committed and suspended
         // update here.
-        markRenderEventTimeAndConfig(
-          updateExpirationTime,
-          update.suspenseConfig,
-        );
+        markRenderEventTimeAndConfig(updateEventTime, update.suspenseConfig);
 
         // Process this update.
         newState = getStateFromUpdate(

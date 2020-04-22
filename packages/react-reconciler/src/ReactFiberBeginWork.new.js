@@ -12,7 +12,7 @@ import type {BlockComponent} from 'react/src/ReactBlock';
 import type {LazyComponent as LazyComponentType} from 'react/src/ReactLazy';
 import type {Fiber} from './ReactInternalTypes';
 import type {FiberRoot} from './ReactInternalTypes';
-import type {ExpirationTime} from './ReactFiberExpirationTime';
+import type {ExpirationTime} from './ReactFiberExpirationTime.new';
 import type {
   SuspenseState,
   SuspenseListRenderState,
@@ -100,7 +100,7 @@ import {
   Never,
   Sync,
   computeAsyncExpiration,
-} from './ReactFiberExpirationTime';
+} from './ReactFiberExpirationTime.new';
 import {
   ConcurrentMode,
   NoMode,
@@ -1681,11 +1681,7 @@ function getRemainingWorkInPrimaryTree(
     // This boundary already timed out. Check if this render includes the level
     // that previously suspended.
     const baseTime = currentSuspenseState.baseTime;
-    if (
-      baseTime !== NoWork &&
-      baseTime < renderExpirationTime &&
-      baseTime > currentChildExpirationTime
-    ) {
+    if (baseTime !== NoWork && baseTime < renderExpirationTime) {
       // There's pending work at a lower level that might now be unblocked.
       return baseTime;
     }
@@ -3141,10 +3137,7 @@ function beginWork(
             const primaryChildFragment: Fiber = (workInProgress.child: any);
             const primaryChildExpirationTime =
               primaryChildFragment.childExpirationTime;
-            if (
-              primaryChildExpirationTime !== NoWork &&
-              primaryChildExpirationTime >= renderExpirationTime
-            ) {
+            if (primaryChildExpirationTime >= renderExpirationTime) {
               // The primary children have pending work. Use the normal path
               // to attempt to render the primary children again.
               return updateSuspenseComponent(
@@ -3173,10 +3166,8 @@ function beginWork(
                 const childChildExpirationTime =
                   primaryChild.childExpirationTime;
                 if (
-                  (childUpdateExpirationTime !== NoWork &&
-                    childUpdateExpirationTime >= renderExpirationTime) ||
-                  (childChildExpirationTime !== NoWork &&
-                    childChildExpirationTime >= renderExpirationTime)
+                  childUpdateExpirationTime >= renderExpirationTime ||
+                  childChildExpirationTime >= renderExpirationTime
                 ) {
                   // Found a child with an update with sufficient priority.
                   // Use the normal path to render the primary children again.

@@ -7,6 +7,10 @@
  * @flow
  */
 
+// ATTENTION
+// When adding new symbols to this file,
+// Please consider also adding to 'react-devtools-shared/src/backend/ReactSymbols'
+
 // The Symbol used to tag the ReactElement-like types. If there is no native Symbol
 // nor polyfill, then a plain number is used for performance.
 export let REACT_ELEMENT_TYPE = 0xeac7;
@@ -27,6 +31,7 @@ export let REACT_FUNDAMENTAL_TYPE = 0xead5;
 export let REACT_RESPONDER_TYPE = 0xead6;
 export let REACT_SCOPE_TYPE = 0xead7;
 export let REACT_OPAQUE_ID_TYPE = 0xeae0;
+export let REACT_DEBUG_TRACING_MODE_TYPE = 0xeae1;
 
 if (typeof Symbol === 'function' && Symbol.for) {
   const symbolFor = Symbol.for;
@@ -48,6 +53,7 @@ if (typeof Symbol === 'function' && Symbol.for) {
   REACT_RESPONDER_TYPE = symbolFor('react.responder');
   REACT_SCOPE_TYPE = symbolFor('react.scope');
   REACT_OPAQUE_ID_TYPE = symbolFor('react.opaque.id');
+  REACT_DEBUG_TRACING_MODE_TYPE = symbolFor('react.debug_trace_mode');
 }
 
 const MAYBE_ITERATOR_SYMBOL = typeof Symbol === 'function' && Symbol.iterator;

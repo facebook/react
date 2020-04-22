@@ -17,7 +17,6 @@ import {
   FunctionComponent,
   IndeterminateComponent,
   ForwardRef,
-  MemoComponent,
   SimpleMemoComponent,
   Block,
   ClassComponent,
@@ -50,8 +49,6 @@ function describeFiber(fiber: Fiber): string {
       return describeFunctionComponentFrame(fiber.type, source, owner);
     case ForwardRef:
       return describeFunctionComponentFrame(fiber.type.render, source, owner);
-    case MemoComponent:
-      return describeFunctionComponentFrame(fiber.type.type, source, owner);
     case Block:
       return describeFunctionComponentFrame(fiber.type._render, source, owner);
     case ClassComponent:
@@ -62,11 +59,15 @@ function describeFiber(fiber: Fiber): string {
 }
 
 export function getStackByFiberInDevAndProd(workInProgress: Fiber): string {
-  let info = '';
-  let node = workInProgress;
-  do {
-    info += describeFiber(node);
-    node = node.return;
-  } while (node);
-  return info;
+  try {
+    let info = '';
+    let node = workInProgress;
+    do {
+      info += describeFiber(node);
+      node = node.return;
+    } while (node);
+    return info;
+  } catch (x) {
+    return '\nError generating stack: ' + x.message + '\n' + x.stack;
+  }
 }

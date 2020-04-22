@@ -56,7 +56,7 @@
     "eslint-plugin-no-for-of-loops": "^1.0.0",
     "eslint-plugin-react": "^6.7.1",
     "eslint-plugin-react-internal": "link:./scripts/eslint-rules",
-    "fbjs-scripts": "0.8.3",
+    "fbjs-scripts": "1.2.0",
     "filesize": "^6.0.1",
     "flow-bin": "0.97",
     "glob": "^7.1.6",
@@ -110,6 +110,8 @@
     "test": "cross-env NODE_ENV=development jest --config ./scripts/jest/config.source.js",
     "test-www": "cross-env NODE_ENV=development jest --config ./scripts/jest/config.source-www.js",
     "test-www-variant": "cross-env NODE_ENV=development VARIANT=true jest --config ./scripts/jest/config.source-www.js",
+    "test-prod-www": "cross-env NODE_ENV=production jest --config ./scripts/jest/config.source-www.js",
+    "test-prod-www-variant": "cross-env NODE_ENV=production VARIANT=true jest --config ./scripts/jest/config.source-www.js",
     "test-persistent": "cross-env NODE_ENV=development jest --config ./scripts/jest/config.source-persistent.js",
     "debug-test-persistent": "cross-env NODE_ENV=development node --inspect-brk node_modules/jest/bin/jest.js --config ./scripts/jest/config.source-persistent.js --runInBand",
     "test-prod": "cross-env NODE_ENV=production jest --config ./scripts/jest/config.source.js",
@@ -124,6 +126,7 @@
     "flow-ci": "node ./scripts/tasks/flow-ci.js",
     "prettier": "node ./scripts/prettier/index.js write-changed",
     "prettier-all": "node ./scripts/prettier/index.js write",
-    "version-check": "node ./scripts/tasks/version-check.js"
+    "version-check": "node ./scripts/tasks/version-check.js",
+    "merge-fork": "node ./scripts/merge-fork/merge-fork.js"
   }
 }

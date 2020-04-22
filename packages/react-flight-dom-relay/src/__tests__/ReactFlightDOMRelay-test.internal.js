@@ -93,7 +93,8 @@ describe('ReactFlightDOMRelay', () => {
     });
   });
 
-  it.experimental('can transfer a Block to the client and render there', () => {
+  // @gate experimental
+  it('can transfer a Block to the client and render there', () => {
     function load(firstName, lastName) {
       return {name: firstName + ' ' + lastName};
     }

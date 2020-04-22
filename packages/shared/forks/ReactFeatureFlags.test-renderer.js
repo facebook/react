@@ -11,6 +11,7 @@ import typeof * as FeatureFlagsType from 'shared/ReactFeatureFlags';
 import typeof * as ExportsType from './ReactFeatureFlags.test-renderer';
 
 export const debugRenderPhaseSideEffectsForStrictMode = false;
+export const enableDebugTracing = false;
 export const warnAboutDeprecatedLifecycles = true;
 export const replayFailedUnitOfWorkWithInvokeGuardedCallback = false;
 export const enableProfilerTimer = __PROFILE__;
@@ -25,9 +26,7 @@ export const enableSchedulerDebugging = false;
 export const enableDeprecatedFlareAPI = false;
 export const enableFundamentalAPI = false;
 export const enableScopeAPI = false;
-export const enableUseEventAPI = false;
 export const warnAboutUnmockedScheduler = false;
-export const flushSuspenseFallbacksInTests = true;
 export const enableSuspenseCallback = false;
 export const warnAboutDefaultPropsOnFunctionComponents = false;
 export const warnAboutStringRefs = false;

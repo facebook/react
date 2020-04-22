@@ -7,21 +7,27 @@
  * @flow
  */
 
-import {getInternalReactConstants} from './renderer';
-import describeComponentFrame from './describeComponentFrame';
-
 import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
-import type {ReactRenderer} from './types';
+import type {CurrentDispatcherRef, ReactRenderer, WorkTagMap} from './types';
+
+import {getInternalReactConstants} from './renderer';
+import {getStackByFiberInDevAndProd} from './DevToolsFiberComponentStack';
 
 const APPEND_STACK_TO_METHODS = ['error', 'trace', 'warn'];
 
-const FRAME_REGEX = /\n {4}in /;
+// React's custom built component stack strings match "\s{4}in"
+// Chrome's prefix matches "\s{4}at"
+const PREFIX_REGEX = /\s{4}(in|at)\s{1}/;
+// Firefox and Safari have no prefix ("")
+// but we can fallback to looking for location info (e.g. "foo.js:12:345")
+const ROW_COLUMN_NUMBER_REGEX = /:\d+:\d+(\n|$)/;
 
 const injectedRenderers: Map<
   ReactRenderer,
   {|
+    currentDispatcherRef: CurrentDispatcherRef,
     getCurrentFiber: () => Fiber | null,
-    getDisplayNameForFiber: (fiber: Fiber) => string | null,
+    workTagMap: WorkTagMap,
   |},
 > = new Map();
 
@@ -49,19 +55,27 @@ export function dangerous_setTargetConsoleForTesting(
 // These internals will be used if the console is patched.
 // Injecting them separately allows the console to easily be patched or un-patched later (at runtime).
 export function registerRenderer(renderer: ReactRenderer): void {
-  const {getCurrentFiber, findFiberByHostInstance, version} = renderer;
+  const {
+    currentDispatcherRef,
+    getCurrentFiber,
+    findFiberByHostInstance,
+    version,
+  } = renderer;
 
   // Ignore React v15 and older because they don't expose a component stack anyway.
   if (typeof findFiberByHostInstance !== 'function') {
     return;
   }
 
-  if (typeof getCurrentFiber === 'function') {
-    const {getDisplayNameForFiber} = getInternalReactConstants(version);
+  // currentDispatcherRef gets injected for v16.8+ to support hooks inspection.
+  // getCurrentFiber gets injected for v16.9+.
+  if (currentDispatcherRef != null && typeof getCurrentFiber === 'function') {
+    const {ReactTypeOfWork} = getInternalReactConstants(version);
 
     injectedRenderers.set(renderer, {
+      currentDispatcherRef,
       getCurrentFiber,
-      getDisplayNameForFiber,
+      workTagMap: ReactTypeOfWork,
     });
   }
 }
@@ -94,36 +108,31 @@ export function patch(): void {
         try {
           // If we are ever called with a string that already has a component stack, e.g. a React error/warning,
           // don't append a second stack.
+          const lastArg = args.length > 0 ? args[args.length - 1] : null;
           const alreadyHasComponentStack =
-            args.length > 0 && FRAME_REGEX.exec(args[args.length - 1]);
+            lastArg !== null &&
+            (PREFIX_REGEX.test(lastArg) ||
+              ROW_COLUMN_NUMBER_REGEX.test(lastArg));
 
           if (!alreadyHasComponentStack) {
             // If there's a component stack for at least one of the injected renderers, append it.
             // We don't handle the edge case of stacks for more than one (e.g. interleaved renderers?)
             // eslint-disable-next-line no-for-of-loops/no-for-of-loops
             for (const {
+              currentDispatcherRef,
               getCurrentFiber,
-              getDisplayNameForFiber,
+              workTagMap,
             } of injectedRenderers.values()) {
-              let current: ?Fiber = getCurrentFiber();
-              let ownerStack: string = '';
-              while (current != null) {
-                const name = getDisplayNameForFiber(current);
-                const owner = current._debugOwner;
-                const ownerName =
-                  owner != null ? getDisplayNameForFiber(owner) : null;
-
-                ownerStack += describeComponentFrame(
-                  name,
-                  current._debugSource,
-                  ownerName,
+              const current: ?Fiber = getCurrentFiber();
+              if (current != null) {
+                const componentStack = getStackByFiberInDevAndProd(
+                  workTagMap,
+                  current,
+                  currentDispatcherRef,
                 );
-
-                current = owner;
-              }
-
-              if (ownerStack !== '') {
-                args.push(ownerStack);
+                if (componentStack !== '') {
+                  args.push(componentStack);
+                }
                 break;
               }
             }

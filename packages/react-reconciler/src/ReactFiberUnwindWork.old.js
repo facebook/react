@@ -8,7 +8,7 @@
  */
 
 import type {Fiber} from './ReactInternalTypes';
-import type {ExpirationTime} from './ReactFiberExpirationTime';
+import type {ExpirationTime} from './ReactFiberExpirationTime.old';
 import type {SuspenseState} from './ReactFiberSuspenseComponent.old';
 
 import {resetWorkInProgressVersions as resetMutableSourceWorkInProgressVersions} from './ReactMutableSource.old';

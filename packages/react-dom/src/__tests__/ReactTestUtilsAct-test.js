@@ -124,7 +124,8 @@ describe('ReactTestUtils.act()', () => {
       ]);
     });
 
-    it.experimental('warns in blocking mode', () => {
+    // @gate experimental
+    it('warns in blocking mode', () => {
       expect(() => {
         const root = ReactDOM.createBlockingRoot(document.createElement('div'));
         root.render(<App />);
@@ -134,7 +135,8 @@ describe('ReactTestUtils.act()', () => {
       ]);
     });
 
-    it.experimental('warns in concurrent mode', () => {
+    // @gate experimental
+    it('warns in concurrent mode', () => {
       expect(() => {
         const root = ReactDOM.createRoot(document.createElement('div'));
         root.render(<App />);

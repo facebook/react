@@ -49,6 +49,25 @@ import {
   patch as patchConsole,
   registerRenderer as registerRendererWithConsole,
 } from './console';
+import {
+  CONCURRENT_MODE_NUMBER,
+  CONCURRENT_MODE_SYMBOL_STRING,
+  DEPRECATED_ASYNC_MODE_SYMBOL_STRING,
+  PROVIDER_NUMBER,
+  PROVIDER_SYMBOL_STRING,
+  CONTEXT_NUMBER,
+  CONTEXT_SYMBOL_STRING,
+  STRICT_MODE_NUMBER,
+  STRICT_MODE_SYMBOL_STRING,
+  PROFILER_NUMBER,
+  PROFILER_SYMBOL_STRING,
+  SCOPE_NUMBER,
+  SCOPE_SYMBOL_STRING,
+  FORWARD_REF_NUMBER,
+  FORWARD_REF_SYMBOL_STRING,
+  MEMO_NUMBER,
+  MEMO_SYMBOL_STRING,
+} from './ReactSymbols';
 
 import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
 import type {
@@ -66,6 +85,7 @@ import type {
   ProfilingDataForRootBackend,
   ReactRenderer,
   RendererInterface,
+  WorkTagMap,
 } from './types';
 import type {Interaction} from 'react-devtools-shared/src/devtools/views/Profiler/types';
 import type {
@@ -76,26 +96,6 @@ import type {
 type getDisplayNameForFiberType = (fiber: Fiber) => string | null;
 type getTypeSymbolType = (type: any) => Symbol | number;
 
-type ReactSymbolsType = {|
-  CONCURRENT_MODE_NUMBER: number,
-  CONCURRENT_MODE_SYMBOL_STRING: string,
-  DEPRECATED_ASYNC_MODE_SYMBOL_STRING: string,
-  CONTEXT_CONSUMER_NUMBER: number,
-  CONTEXT_CONSUMER_SYMBOL_STRING: string,
-  CONTEXT_PROVIDER_NUMBER: number,
-  CONTEXT_PROVIDER_SYMBOL_STRING: string,
-  FORWARD_REF_NUMBER: number,
-  FORWARD_REF_SYMBOL_STRING: string,
-  MEMO_NUMBER: number,
-  MEMO_SYMBOL_STRING: string,
-  PROFILER_NUMBER: number,
-  PROFILER_SYMBOL_STRING: string,
-  STRICT_MODE_NUMBER: number,
-  STRICT_MODE_SYMBOL_STRING: string,
-  SCOPE_NUMBER: number,
-  SCOPE_SYMBOL_STRING: string,
-|};
-
 type ReactPriorityLevelsType = {|
   ImmediatePriority: number,
   UserBlockingPriority: number,
@@ -103,32 +103,6 @@ type ReactPriorityLevelsType = {|
   LowPriority: number,
   IdlePriority: number,
   NoPriority: number,
-|};
-
-type ReactTypeOfWorkType = {|
-  ClassComponent: number,
-  ContextConsumer: number,
-  ContextProvider: number,
-  CoroutineComponent: number,
-  CoroutineHandlerPhase: number,
-  DehydratedSuspenseComponent: number,
-  ForwardRef: number,
-  Fragment: number,
-  FunctionComponent: number,
-  HostComponent: number,
-  HostPortal: number,
-  HostRoot: number,
-  HostText: number,
-  IncompleteClassComponent: number,
-  IndeterminateComponent: number,
-  LazyComponent: number,
-  MemoComponent: number,
-  Mode: number,
-  Profiler: number,
-  SimpleMemoComponent: number,
-  SuspenseComponent: number,
-  SuspenseListComponent: number,
-  YieldComponent: number,
 |};
 
 type ReactTypeOfSideEffectType = {|
@@ -149,30 +123,9 @@ export function getInternalReactConstants(
   getDisplayNameForFiber: getDisplayNameForFiberType,
   getTypeSymbol: getTypeSymbolType,
   ReactPriorityLevels: ReactPriorityLevelsType,
-  ReactSymbols: ReactSymbolsType,
   ReactTypeOfSideEffect: ReactTypeOfSideEffectType,
-  ReactTypeOfWork: ReactTypeOfWorkType,
+  ReactTypeOfWork: WorkTagMap,
 |} {
-  const ReactSymbols: ReactSymbolsType = {
-    CONCURRENT_MODE_NUMBER: 0xeacf,
-    CONCURRENT_MODE_SYMBOL_STRING: 'Symbol(react.concurrent_mode)',
-    DEPRECATED_ASYNC_MODE_SYMBOL_STRING: 'Symbol(react.async_mode)',
-    CONTEXT_CONSUMER_NUMBER: 0xeace,
-    CONTEXT_CONSUMER_SYMBOL_STRING: 'Symbol(react.context)',
-    CONTEXT_PROVIDER_NUMBER: 0xeacd,
-    CONTEXT_PROVIDER_SYMBOL_STRING: 'Symbol(react.provider)',
-    FORWARD_REF_NUMBER: 0xead0,
-    FORWARD_REF_SYMBOL_STRING: 'Symbol(react.forward_ref)',
-    MEMO_NUMBER: 0xead3,
-    MEMO_SYMBOL_STRING: 'Symbol(react.memo)',
-    PROFILER_NUMBER: 0xead2,
-    PROFILER_SYMBOL_STRING: 'Symbol(react.profiler)',
-    STRICT_MODE_NUMBER: 0xeacc,
-    STRICT_MODE_SYMBOL_STRING: 'Symbol(react.strict_mode)',
-    SCOPE_NUMBER: 0xead7,
-    SCOPE_SYMBOL_STRING: 'Symbol(react.scope)',
-  };
-
   const ReactTypeOfSideEffect: ReactTypeOfSideEffectType = {
     NoEffect: 0b00,
     PerformedWork: 0b01,
@@ -195,13 +148,14 @@ export function getInternalReactConstants(
     NoPriority: 90,
   };
 
-  let ReactTypeOfWork: ReactTypeOfWorkType = ((null: any): ReactTypeOfWorkType);
+  let ReactTypeOfWork: WorkTagMap = ((null: any): WorkTagMap);
 
   // **********************************************************
   // The section below is copied from files in React repo.
   // Keep it in sync, and add version guards if it changes.
   if (gte(version, '16.6.0-beta.0')) {
     ReactTypeOfWork = {
+      Block: 22,
       ClassComponent: 1,
       ContextConsumer: 9,
       ContextProvider: 10,
@@ -228,6 +182,7 @@ export function getInternalReactConstants(
     };
   } else if (gte(version, '16.4.3-alpha')) {
     ReactTypeOfWork = {
+      Block: -1, // Doesn't exist yet
       ClassComponent: 2,
       ContextConsumer: 11,
       ContextProvider: 12,
@@ -254,6 +209,7 @@ export function getInternalReactConstants(
     };
   } else {
     ReactTypeOfWork = {
+      Block: -1, // Doesn't exist yet
       ClassComponent: 2,
       ContextConsumer: 12,
       ContextProvider: 13,
@@ -309,26 +265,6 @@ export function getInternalReactConstants(
     SuspenseComponent,
     SuspenseListComponent,
   } = ReactTypeOfWork;
-
-  const {
-    CONCURRENT_MODE_NUMBER,
-    CONCURRENT_MODE_SYMBOL_STRING,
-    DEPRECATED_ASYNC_MODE_SYMBOL_STRING,
-    CONTEXT_PROVIDER_NUMBER,
-    CONTEXT_PROVIDER_SYMBOL_STRING,
-    CONTEXT_CONSUMER_NUMBER,
-    CONTEXT_CONSUMER_SYMBOL_STRING,
-    STRICT_MODE_NUMBER,
-    STRICT_MODE_SYMBOL_STRING,
-    PROFILER_NUMBER,
-    PROFILER_SYMBOL_STRING,
-    SCOPE_NUMBER,
-    SCOPE_SYMBOL_STRING,
-    FORWARD_REF_NUMBER,
-    FORWARD_REF_SYMBOL_STRING,
-    MEMO_NUMBER,
-    MEMO_SYMBOL_STRING,
-  } = ReactSymbols;
 
   function resolveFiberType(type: any) {
     const typeSymbol = getTypeSymbol(type);
@@ -392,15 +328,15 @@ export function getInternalReactConstants(
           case CONCURRENT_MODE_SYMBOL_STRING:
           case DEPRECATED_ASYNC_MODE_SYMBOL_STRING:
             return null;
-          case CONTEXT_PROVIDER_NUMBER:
-          case CONTEXT_PROVIDER_SYMBOL_STRING:
+          case PROVIDER_NUMBER:
+          case PROVIDER_SYMBOL_STRING:
             // 16.3.0 exposed the context object as "context"
             // PR #12501 changed it to "_context" for 16.3.1+
             // NOTE Keep in sync with inspectElementRaw()
             resolvedContext = fiber.type._context || fiber.type.context;
             return `${resolvedContext.displayName || 'Context'}.Provider`;
-          case CONTEXT_CONSUMER_NUMBER:
-          case CONTEXT_CONSUMER_SYMBOL_STRING:
+          case CONTEXT_NUMBER:
+          case CONTEXT_SYMBOL_STRING:
             // 16.3-16.5 read from "type" because the Consumer is the actual context object.
             // 16.6+ should read from "type._context" because Consumer can be different (in DEV).
             // NOTE Keep in sync with inspectElementRaw()
@@ -431,7 +367,6 @@ export function getInternalReactConstants(
     getTypeSymbol,
     ReactPriorityLevels,
     ReactTypeOfWork,
-    ReactSymbols,
     ReactTypeOfSideEffect,
   };
 }
@@ -447,7 +382,6 @@ export function attach(
     getTypeSymbol,
     ReactPriorityLevels,
     ReactTypeOfWork,
-    ReactSymbols,
     ReactTypeOfSideEffect,
   } = getInternalReactConstants(renderer.version);
   const {NoEffect, PerformedWork, Placement} = ReactTypeOfSideEffect;
@@ -477,19 +411,6 @@ export function attach(
     IdlePriority,
     NoPriority,
   } = ReactPriorityLevels;
-  const {
-    CONCURRENT_MODE_NUMBER,
-    CONCURRENT_MODE_SYMBOL_STRING,
-    DEPRECATED_ASYNC_MODE_SYMBOL_STRING,
-    CONTEXT_CONSUMER_NUMBER,
-    CONTEXT_CONSUMER_SYMBOL_STRING,
-    CONTEXT_PROVIDER_NUMBER,
-    CONTEXT_PROVIDER_SYMBOL_STRING,
-    PROFILER_NUMBER,
-    PROFILER_SYMBOL_STRING,
-    STRICT_MODE_NUMBER,
-    STRICT_MODE_SYMBOL_STRING,
-  } = ReactSymbols;
 
   const {
     overrideHookState,
@@ -731,11 +652,11 @@ export function attach(
           case CONCURRENT_MODE_SYMBOL_STRING:
           case DEPRECATED_ASYNC_MODE_SYMBOL_STRING:
             return ElementTypeOtherOrUnknown;
-          case CONTEXT_PROVIDER_NUMBER:
-          case CONTEXT_PROVIDER_SYMBOL_STRING:
+          case PROVIDER_NUMBER:
+          case PROVIDER_SYMBOL_STRING:
             return ElementTypeContext;
-          case CONTEXT_CONSUMER_NUMBER:
-          case CONTEXT_CONSUMER_SYMBOL_STRING:
+          case CONTEXT_NUMBER:
+          case CONTEXT_SYMBOL_STRING:
             return ElementTypeContext;
           case STRICT_MODE_NUMBER:
           case STRICT_MODE_SYMBOL_STRING:
@@ -2262,8 +2183,8 @@ export function attach(
         }
       }
     } else if (
-      typeSymbol === CONTEXT_CONSUMER_NUMBER ||
-      typeSymbol === CONTEXT_CONSUMER_SYMBOL_STRING
+      typeSymbol === CONTEXT_NUMBER ||
+      typeSymbol === CONTEXT_SYMBOL_STRING
     ) {
       // 16.3-16.5 read from "type" because the Consumer is the actual context object.
       // 16.6+ should read from "type._context" because Consumer can be different (in DEV).
@@ -2279,8 +2200,8 @@ export function attach(
         const currentType = current.type;
         const currentTypeSymbol = getTypeSymbol(currentType);
         if (
-          currentTypeSymbol === CONTEXT_PROVIDER_NUMBER ||
-          currentTypeSymbol === CONTEXT_PROVIDER_SYMBOL_STRING
+          currentTypeSymbol === PROVIDER_NUMBER ||
+          currentTypeSymbol === PROVIDER_SYMBOL_STRING
         ) {
           // 16.3.0 exposed the context object as "context"
           // PR #12501 changed it to "_context" for 16.3.1+

@@ -159,8 +159,9 @@ describe('forwardRef', () => {
     }
 
     function Wrapper(props) {
+      const forwardedRef = props.forwardedRef;
       Scheduler.unstable_yieldValue('Wrapper');
-      return <BadRender {...props} ref={props.forwardedRef} />;
+      return <BadRender {...props} ref={forwardedRef} />;
     }
 
     const RefForwardingComponent = React.forwardRef((props, ref) => (
