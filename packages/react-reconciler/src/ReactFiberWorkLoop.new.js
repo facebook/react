@@ -396,29 +396,6 @@ export function computeExpirationForFiber(
   return expirationTime;
 }
 
-export function priorityLevelToLabel(
-  priorityLevel: ReactPriorityLevel,
-): string {
-  if (__DEV__ && enableDebugTracing) {
-    switch (priorityLevel) {
-      case ImmediatePriority:
-        return 'immediate';
-      case UserBlockingPriority:
-        return 'user-blocking';
-      case NormalPriority:
-        return 'normal';
-      case LowPriority:
-        return 'low';
-      case IdlePriority:
-        return 'idle';
-      default:
-        return 'other';
-    }
-  } else {
-    return '';
-  }
-}
-
 export function scheduleUpdateOnFiber(
   fiber: Fiber,
   expirationTime: ExpirationTime,
@@ -1431,7 +1408,7 @@ function renderRootSync(root, expirationTime) {
   if (__DEV__) {
     if (enableDebugTracing) {
       const priorityLevel = getCurrentPriorityLevel();
-      const label = priorityLevelToLabel(priorityLevel);
+      const label = 'Unknown';
       logRenderStarted(label);
     }
   }
@@ -1498,8 +1475,7 @@ function renderRootConcurrent(root, expirationTime) {
 
   if (__DEV__) {
     if (enableDebugTracing) {
-      const priorityLevel = getCurrentPriorityLevel();
-      const label = priorityLevelToLabel(priorityLevel);
+      const label = 'Unknown';
       logRenderStarted(label);
     }
   }
@@ -1795,7 +1771,7 @@ function commitRoot(root) {
 function commitRootImpl(root, renderPriorityLevel) {
   if (__DEV__) {
     if (enableDebugTracing) {
-      const label = priorityLevelToLabel(renderPriorityLevel);
+      const label = 'Unknown';
       logCommitStarted(label);
     }
   }
@@ -2251,8 +2227,7 @@ function commitLayoutEffects(
 ) {
   if (__DEV__) {
     if (enableDebugTracing) {
-      const priorityLevel = getCurrentPriorityLevel();
-      const label = priorityLevelToLabel(priorityLevel);
+      const label = 'Unknown';
       logLayoutEffectsStarted(label);
     }
   }
@@ -2375,8 +2350,7 @@ function flushPassiveEffectsImpl() {
 
   if (__DEV__) {
     if (enableDebugTracing) {
-      const priorityLevel = getCurrentPriorityLevel();
-      const label = priorityLevelToLabel(priorityLevel);
+      const label = 'Unknown';
       logPassiveEffectsStarted(label);
     }
   }

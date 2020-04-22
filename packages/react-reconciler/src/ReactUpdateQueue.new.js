@@ -121,9 +121,6 @@ export type Update<State> = {|
   callback: (() => mixed) | null,
 
   next: Update<State> | null,
-
-  // DEV only
-  priority?: ReactPriorityLevel,
 |};
 
 type SharedQueue<State> = {|
@@ -207,9 +204,6 @@ export function createUpdate(
 
     next: null,
   };
-  if (__DEV__) {
-    update.priority = getCurrentPriorityLevel();
-  }
   return update;
 }
 

@@ -54,7 +54,6 @@ import {
   warnIfNotScopedWithMatchingAct,
   markRenderEventTimeAndConfig,
   markUnprocessedUpdateTime,
-  priorityLevelToLabel,
 } from './ReactFiberWorkLoop.new';
 
 import invariant from 'shared/invariant';
@@ -1655,10 +1654,6 @@ function dispatchAction<S, A>(
     next: (null: any),
   };
 
-  if (__DEV__) {
-    update.priority = getCurrentPriorityLevel();
-  }
-
   // Append the update to the end of the list.
   const pending = queue.pending;
   if (pending === null) {
@@ -1733,11 +1728,7 @@ function dispatchAction<S, A>(
   if (__DEV__) {
     if (enableDebugTracing) {
       if (fiber.mode & DebugTracingMode) {
-        const priorityLevel = inferPriorityFromExpirationTime(
-          currentTime,
-          expirationTime,
-        );
-        const label = priorityLevelToLabel(priorityLevel);
+        const label = 'Unknown';
         const name = getComponentName(fiber.type) || 'Unknown';
         logStateUpdateScheduled(name, label, action);
       }
