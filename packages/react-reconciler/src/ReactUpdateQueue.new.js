@@ -87,7 +87,6 @@
 import type {Fiber} from './ReactInternalTypes';
 import type {ExpirationTime} from './ReactFiberExpirationTime.new';
 import type {SuspenseConfig} from './ReactFiberSuspenseConfig';
-import type {ReactPriorityLevel} from './ReactInternalTypes';
 
 import {NoWork, Sync} from './ReactFiberExpirationTime.new';
 import {
@@ -105,7 +104,6 @@ import {
 } from './ReactFiberWorkLoop.new';
 
 import invariant from 'shared/invariant';
-import {getCurrentPriorityLevel} from './SchedulerWithReactIntegration.new';
 
 import {disableLogs, reenableLogs} from 'shared/ConsolePatchingDev';
 
@@ -121,9 +119,6 @@ export type Update<State> = {|
   callback: (() => mixed) | null,
 
   next: Update<State> | null,
-
-  // DEV only
-  priority?: ReactPriorityLevel,
 |};
 
 type SharedQueue<State> = {|
@@ -207,9 +202,6 @@ export function createUpdate(
 
     next: null,
   };
-  if (__DEV__) {
-    update.priority = getCurrentPriorityLevel();
-  }
   return update;
 }
 

@@ -24,15 +24,10 @@ import type {FiberRoot} from './ReactInternalTypes';
 import type {OpaqueIDType} from './ReactFiberHostConfig';
 
 import ReactSharedInternals from 'shared/ReactSharedInternals';
-import {enableDebugTracing} from 'shared/ReactFeatureFlags';
 
 import {markRootExpiredAtTime} from './ReactFiberRoot.new';
-import {
-  inferPriorityFromExpirationTime,
-  NoWork,
-  Sync,
-} from './ReactFiberExpirationTime.new';
-import {NoMode, BlockingMode, DebugTracingMode} from './ReactTypeOfMode';
+import {NoWork, Sync} from './ReactFiberExpirationTime.new';
+import {NoMode, BlockingMode} from './ReactTypeOfMode';
 import {readContext} from './ReactFiberNewContext.new';
 import {createDeprecatedResponderListener} from './ReactFiberDeprecatedEvents.new';
 import {
@@ -54,7 +49,6 @@ import {
   warnIfNotScopedWithMatchingAct,
   markRenderEventTimeAndConfig,
   markUnprocessedUpdateTime,
-  priorityLevelToLabel,
 } from './ReactFiberWorkLoop.new';
 
 import invariant from 'shared/invariant';
@@ -83,7 +77,6 @@ import {
   warnAboutMultipleRenderersDEV,
 } from './ReactMutableSource.new';
 import {getIsRendering} from './ReactCurrentFiber';
-import {logStateUpdateScheduled} from './DebugTracing';
 
 const {ReactCurrentDispatcher, ReactCurrentBatchConfig} = ReactSharedInternals;
 
@@ -1655,10 +1648,6 @@ function dispatchAction<S, A>(
     next: (null: any),
   };
 
-  if (__DEV__) {
-    update.priority = getCurrentPriorityLevel();
-  }
-
   // Append the update to the end of the list.
   const pending = queue.pending;
   if (pending === null) {
@@ -1728,20 +1717,6 @@ function dispatchAction<S, A>(
       }
     }
     scheduleUpdateOnFiber(fiber, expirationTime);
-  }
-
-  if (__DEV__) {
-    if (enableDebugTracing) {
-      if (fiber.mode & DebugTracingMode) {
-        const priorityLevel = inferPriorityFromExpirationTime(
-          currentTime,
-          expirationTime,
-        );
-        const label = priorityLevelToLabel(priorityLevel);
-        const name = getComponentName(fiber.type) || 'Unknown';
-        logStateUpdateScheduled(name, label, action);
-      }
-    }
   }
 }
 
