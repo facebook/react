@@ -186,6 +186,23 @@ function NumberInputs() {
           that we can not control for.
         </p>
       </TestCase>
+
+      <TestCase
+        title="Unfocusing"
+        description="Does not clean the input when two decimal separators are typed">
+        <TestCase.Steps>
+          <li>Type "1."</li>
+          <li>Unfocus</li>
+          <li>Type ".." at the end of value</li>
+          <li>Unfocus again</li>
+        </TestCase.Steps>
+
+        <TestCase.ExpectedResult>
+          The value should not disappear
+        </TestCase.ExpectedResult>
+
+        <NumberTestCase />
+      </TestCase>
     </FixtureSet>
   );
 }
