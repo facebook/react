@@ -16,7 +16,7 @@ import type {
   ReactEventResponderListener,
 } from 'shared/ReactTypes';
 import type {Fiber, Dispatcher} from './ReactInternalTypes';
-import type {ExpirationTimeOpaque} from './ReactFiberExpirationTime.new';
+import type {Lanes, Lane} from './ReactFiberLane';
 import type {HookEffectTag} from './ReactHookEffectTags';
 import type {SuspenseConfig} from './ReactFiberSuspenseConfig';
 import type {ReactPriorityLevel} from './ReactInternalTypes';
@@ -25,14 +25,17 @@ import type {OpaqueIDType} from './ReactFiberHostConfig';
 
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 
-import {markRootExpiredAtTime} from './ReactFiberRoot.new';
-import {
-  NoWork,
-  Sync,
-  isSameOrHigherPriority,
-  isSameExpirationTime,
-} from './ReactFiberExpirationTime.new';
 import {NoMode, BlockingMode} from './ReactTypeOfMode';
+import {
+  NoLane,
+  NoLanes,
+  includesSomeLane,
+  isSubsetOfLanes,
+  combineLanes,
+  removeLanes,
+  markRootExpired,
+  markRootMutableRead,
+} from './ReactFiberLane';
 import {readContext} from './ReactFiberNewContext.new';
 import {createDeprecatedResponderListener} from './ReactFiberDeprecatedEvents.new';
 import {
@@ -47,13 +50,13 @@ import {
 import {
   getWorkInProgressRoot,
   scheduleUpdateOnFiber,
-  requestUpdateExpirationTime,
+  requestUpdateLane,
   requestEventTime,
   warnIfNotCurrentlyActingEffectsInDEV,
   warnIfNotCurrentlyActingUpdatesInDev,
   warnIfNotScopedWithMatchingAct,
   markRenderEventTimeAndConfig,
-  markUnprocessedUpdateTime,
+  markSkippedUpdateLanes,
 } from './ReactFiberWorkLoop.new';
 
 import invariant from 'shared/invariant';
@@ -74,10 +77,8 @@ import {
   makeOpaqueHydratingObject,
 } from './ReactFiberHostConfig';
 import {
-  getLastPendingExpirationTime,
   getWorkInProgressVersion,
   markSourceAsDirty,
-  setPendingExpirationTime,
   setWorkInProgressVersion,
   warnAboutMultipleRenderersDEV,
 } from './ReactMutableSource.new';
@@ -89,7 +90,7 @@ type Update<S, A> = {|
   // TODO: Temporary field. Will remove this by storing a map of
   // transition -> start time on the root.
   eventTime: number,
-  expirationTime: ExpirationTimeOpaque,
+  lane: Lane,
   suspenseConfig: null | SuspenseConfig,
   action: A,
   eagerReducer: ((S, A) => S) | null,
@@ -156,7 +157,7 @@ type BasicStateAction<S> = (S => S) | S;
 type Dispatch<A> = A => void;
 
 // These are set right before calling the component.
-let renderExpirationTime: ExpirationTimeOpaque = NoWork;
+let renderLanes: Lanes = NoLanes;
 // The work-in-progress fiber. I've named it differently to distinguish it from
 // the work-in-progress hook.
 let currentlyRenderingFiber: Fiber = (null: any);
@@ -347,9 +348,9 @@ export function renderWithHooks<Props, SecondArg>(
   Component: (p: Props, arg: SecondArg) => any,
   props: Props,
   secondArg: SecondArg,
-  nextRenderExpirationTime: ExpirationTimeOpaque,
+  nextRenderLanes: Lanes,
 ): any {
-  renderExpirationTime = nextRenderExpirationTime;
+  renderLanes = nextRenderLanes;
   currentlyRenderingFiber = workInProgress;
 
   if (__DEV__) {
@@ -365,7 +366,7 @@ export function renderWithHooks<Props, SecondArg>(
 
   workInProgress.memoizedState = null;
   workInProgress.updateQueue = null;
-  workInProgress.expirationTime_opaque = NoWork;
+  workInProgress.lanes = NoLanes;
 
   // The following should have already been reset
   // currentHook = null;
@@ -454,7 +455,7 @@ export function renderWithHooks<Props, SecondArg>(
   const didRenderTooFewHooks =
     currentHook !== null && currentHook.next !== null;
 
-  renderExpirationTime = NoWork;
+  renderLanes = NoLanes;
   currentlyRenderingFiber = (null: any);
 
   currentHook = null;
@@ -480,13 +481,11 @@ export function renderWithHooks<Props, SecondArg>(
 export function bailoutHooks(
   current: Fiber,
   workInProgress: Fiber,
-  expirationTime: ExpirationTimeOpaque,
+  lanes: Lanes,
 ) {
   workInProgress.updateQueue = current.updateQueue;
   workInProgress.effectTag &= ~(PassiveEffect | UpdateEffect);
-  if (isSameOrHigherPriority(expirationTime, current.expirationTime_opaque)) {
-    current.expirationTime_opaque = NoWork;
-  }
+  current.lanes = removeLanes(current.lanes, lanes);
 }
 
 export function resetHooksAfterThrow(): void {
@@ -514,7 +513,7 @@ export function resetHooksAfterThrow(): void {
     didScheduleRenderPhaseUpdate = false;
   }
 
-  renderExpirationTime = NoWork;
+  renderLanes = NoLanes;
   currentlyRenderingFiber = (null: any);
 
   currentHook = null;
@@ -708,15 +707,15 @@ function updateReducer<S, I, A>(
     let update = first;
     do {
       const suspenseConfig = update.suspenseConfig;
-      const updateExpirationTime = update.expirationTime;
+      const updateLane = update.lane;
       const updateEventTime = update.eventTime;
-      if (!isSameOrHigherPriority(updateExpirationTime, renderExpirationTime)) {
+      if (!includesSomeLane(renderLanes, updateLane) && updateLane !== NoLane) {
         // Priority is insufficient. Skip this update. If this is the first
         // skipped update, the previous update/state is the new base
         // update/state.
         const clone: Update<S, A> = {
           eventTime: updateEventTime,
-          expirationTime: updateExpirationTime,
+          lane: updateLane,
           suspenseConfig: suspenseConfig,
           action: update.action,
           eagerReducer: update.eagerReducer,
@@ -730,22 +729,20 @@ function updateReducer<S, I, A>(
           newBaseQueueLast = newBaseQueueLast.next = clone;
         }
         // Update the remaining priority in the queue.
-        if (
-          !isSameOrHigherPriority(
-            currentlyRenderingFiber.expirationTime_opaque,
-            updateExpirationTime,
-          )
-        ) {
-          currentlyRenderingFiber.expirationTime_opaque = updateExpirationTime;
-          markUnprocessedUpdateTime(updateExpirationTime);
-        }
+        // TODO: Don't need to accumulate this. Instead, we can remove
+        // renderLanes from the original lanes.
+        currentlyRenderingFiber.lanes = combineLanes(
+          currentlyRenderingFiber.lanes,
+          updateLane,
+        );
+        markSkippedUpdateLanes(updateLane);
       } else {
         // This update does have sufficient priority.
 
         if (newBaseQueueLast !== null) {
           const clone: Update<S, A> = {
             eventTime: updateEventTime,
-            expirationTime: Sync, // This update is going to be committed so we never want uncommit it.
+            lane: NoLane, // This update is going to be committed so we never want uncommit it.
             suspenseConfig: update.suspenseConfig,
             action: update.action,
             eagerReducer: update.eagerReducer,
@@ -884,24 +881,14 @@ function readFromUnsubcribedMutableSource<Source, Snapshot>(
   if (currentRenderVersion !== null) {
     isSafeToReadFromSource = currentRenderVersion === version;
   } else {
-    // If there's no version, then we should fallback to checking the update time.
-    const pendingExpirationTime = getLastPendingExpirationTime(root);
+    // If there's no version, then we should fallback to checking the lanes.
 
-    if (
-      isSameExpirationTime(
-        pendingExpirationTime,
-        (NoWork: ExpirationTimeOpaque),
-      )
-    ) {
-      isSafeToReadFromSource = true;
-    } else {
-      // If the source has pending updates, we can use the current render's expiration
-      // time to determine if it's safe to read again from the source.
-      isSafeToReadFromSource = isSameOrHigherPriority(
-        pendingExpirationTime,
-        renderExpirationTime,
-      );
-    }
+    // If the source has pending updates, we can use the current render's expiration
+    // time to determine if it's safe to read again from the source.
+    isSafeToReadFromSource = isSubsetOfLanes(
+      renderLanes,
+      root.mutableReadLanes,
+    );
 
     if (isSafeToReadFromSource) {
       // If it's safe to read from this source during the current render,
@@ -994,19 +981,16 @@ function useMutableSource<Source, Snapshot>(
         setSnapshot(maybeNewSnapshot);
 
         const suspenseConfig = requestCurrentSuspenseConfig();
-        const expirationTime = requestUpdateExpirationTime(
-          fiber,
-          suspenseConfig,
-        );
-        setPendingExpirationTime(root, expirationTime);
+        const lane = requestUpdateLane(fiber, suspenseConfig);
+        markRootMutableRead(root, lane);
 
         // If the source mutated between render and now,
         // there may be state updates already scheduled from the old getSnapshot.
         // Those updates should not commit without this value.
         // There is no mechanism currently to associate these updates though,
         // so for now we fall back to synchronously flushing all pending updates.
-        // TODO: Improve this later.
-        markRootExpiredAtTime(root, getLastPendingExpirationTime(root));
+        // TODO: This should entangle the lanes instead of expiring everything.
+        markRootExpired(root, root.mutableReadLanes);
       }
     }
   }, [getSnapshot, source, subscribe]);
@@ -1022,12 +1006,9 @@ function useMutableSource<Source, Snapshot>(
 
         // Record a pending mutable source update with the same expiration time.
         const suspenseConfig = requestCurrentSuspenseConfig();
-        const expirationTime = requestUpdateExpirationTime(
-          fiber,
-          suspenseConfig,
-        );
+        const lane = requestUpdateLane(fiber, suspenseConfig);
 
-        setPendingExpirationTime(root, expirationTime);
+        markRootMutableRead(root, lane);
       } catch (error) {
         // A selector might throw after a source mutation.
         // e.g. it might try to read from a part of the store that no longer exists.
@@ -1646,11 +1627,11 @@ function dispatchAction<S, A>(
 
   const eventTime = requestEventTime();
   const suspenseConfig = requestCurrentSuspenseConfig();
-  const expirationTime = requestUpdateExpirationTime(fiber, suspenseConfig);
+  const lane = requestUpdateLane(fiber, suspenseConfig);
 
   const update: Update<S, A> = {
     eventTime,
-    expirationTime,
+    lane,
     suspenseConfig,
     action,
     eagerReducer: null,
@@ -1678,18 +1659,10 @@ function dispatchAction<S, A>(
     // queue -> linked list of updates. After this render pass, we'll restart
     // and apply the stashed updates on top of the work-in-progress hook.
     didScheduleRenderPhaseUpdateDuringThisPass = didScheduleRenderPhaseUpdate = true;
-    update.expirationTime = renderExpirationTime;
   } else {
     if (
-      isSameExpirationTime(
-        fiber.expirationTime_opaque,
-        (NoWork: ExpirationTimeOpaque),
-      ) &&
-      (alternate === null ||
-        isSameExpirationTime(
-          alternate.expirationTime_opaque,
-          (NoWork: ExpirationTimeOpaque),
-        ))
+      fiber.lanes === NoLanes &&
+      (alternate === null || alternate.lanes === NoLanes)
     ) {
       // The queue is currently empty, which means we can eagerly compute the
       // next state before entering the render phase. If the new state is the
@@ -1733,7 +1706,7 @@ function dispatchAction<S, A>(
         warnIfNotCurrentlyActingUpdatesInDev(fiber);
       }
     }
-    scheduleUpdateOnFiber(fiber, expirationTime);
+    scheduleUpdateOnFiber(fiber, lane);
   }
 }
 
