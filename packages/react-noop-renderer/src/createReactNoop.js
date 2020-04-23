@@ -449,6 +449,10 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
     afterActiveInstanceBlur() {
       // NO-OP
     },
+
+    preparePortalMount() {
+      // NO-OP
+    },
   };
 
   const hostConfig = useMutation

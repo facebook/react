@@ -82,6 +82,7 @@ import {
   mountFundamentalComponent,
   cloneFundamentalInstance,
   shouldUpdateFundamentalComponent,
+  preparePortalMount,
 } from './ReactFiberHostConfig';
 import {
   getRootHostContainer,
@@ -973,6 +974,9 @@ function completeWork(
     case HostPortal:
       popHostContainer(workInProgress);
       updateHostContainer(workInProgress);
+      if (current === null) {
+        preparePortalMount(workInProgress.stateNode.containerInfo);
+      }
       return null;
     case ContextProvider:
       // Pop provider fiber
