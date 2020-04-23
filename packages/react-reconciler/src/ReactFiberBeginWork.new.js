@@ -45,6 +45,7 @@ import {
   FundamentalComponent,
   ScopeComponent,
   Block,
+  OffscreenComponent,
 } from './ReactWorkTags';
 import {
   NoEffect,
@@ -553,6 +554,21 @@ function updateSimpleMemoComponent(
     nextProps,
     renderExpirationTime,
   );
+}
+
+function updateOffscreenComponent(
+  current: Fiber | null,
+  workInProgress: Fiber,
+  renderExpirationTime: ExpirationTimeOpaque,
+) {
+  const nextChildren = workInProgress.pendingProps;
+  reconcileChildren(
+    current,
+    workInProgress,
+    nextChildren,
+    renderExpirationTime,
+  );
+  return workInProgress.child;
 }
 
 function updateFragment(
@@ -3445,6 +3461,13 @@ function beginWork(
         type,
         resolvedProps,
         updateExpirationTime,
+        renderExpirationTime,
+      );
+    }
+    case OffscreenComponent: {
+      return updateOffscreenComponent(
+        current,
+        workInProgress,
         renderExpirationTime,
       );
     }

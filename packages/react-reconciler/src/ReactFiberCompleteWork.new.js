@@ -53,6 +53,7 @@ import {
   FundamentalComponent,
   ScopeComponent,
   Block,
+  OffscreenComponent,
 } from './ReactWorkTags';
 import {NoMode, BlockingMode} from './ReactTypeOfMode';
 import {Ref, Update, NoEffect, DidCapture} from './ReactSideEffectTags';
@@ -1287,6 +1288,8 @@ function completeWork(
         return null;
       }
       break;
+    case OffscreenComponent:
+      return null;
   }
   invariant(
     false,

@@ -54,6 +54,7 @@ import {
   FundamentalComponent,
   ScopeComponent,
   Block,
+  OffscreenComponent,
 } from './ReactWorkTags';
 import getComponentName from 'shared/getComponentName';
 
@@ -87,6 +88,7 @@ import {
   REACT_FUNDAMENTAL_TYPE,
   REACT_SCOPE_TYPE,
   REACT_BLOCK_TYPE,
+  REACT_OFFSCREEN_TYPE,
 } from 'shared/ReactSymbols';
 
 export type {Fiber};
@@ -511,6 +513,13 @@ export function createFiberFromTypeAndProps(
           expirationTime,
           key,
         );
+      case REACT_OFFSCREEN_TYPE:
+        return createFiberFromOffscreen(
+          pendingProps,
+          mode,
+          expirationTime,
+          key,
+        );
       default: {
         if (typeof type === 'object' && type !== null) {
           switch (type.$$typeof) {
@@ -724,6 +733,24 @@ export function createFiberFromSuspenseList(
     fiber.type = REACT_SUSPENSE_LIST_TYPE;
   }
   fiber.elementType = REACT_SUSPENSE_LIST_TYPE;
+  fiber.expirationTime_opaque = expirationTime;
+  return fiber;
+}
+
+export function createFiberFromOffscreen(
+  pendingProps: any,
+  mode: TypeOfMode,
+  expirationTime: ExpirationTimeOpaque,
+  key: null | string,
+) {
+  const fiber = createFiber(OffscreenComponent, pendingProps, key, mode);
+  // TODO: The OffscreenComponent fiber shouldn't have a type. It has a tag.
+  // This needs to be fixed in getComponentName so that it relies on the tag
+  // instead.
+  if (__DEV__) {
+    fiber.type = REACT_OFFSCREEN_TYPE;
+  }
+  fiber.elementType = REACT_OFFSCREEN_TYPE;
   fiber.expirationTime_opaque = expirationTime;
   return fiber;
 }
