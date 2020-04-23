@@ -206,6 +206,8 @@ const tests = {
       _use();
       _useState();
       use_hook();
+      // also valid because it's not matching the PascalCase namespace
+      jest.useFakeTimer()
     `,
     `
       // Regression test for some internal code.
