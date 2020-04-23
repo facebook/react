@@ -346,4 +346,51 @@ describe('console', () => {
       '\n    in Child (at **)',
     );
   });
+
+  it('should be resilient to prepareStackTrace', () => {
+    Error.prepareStackTrace = function(error, callsites) {
+      const stack = ['An error occurred:', error.message];
+      for (let i = 0; i < callsites.length; i++) {
+        const callsite = callsites[i];
+        stack.push(
+          '\t' + callsite.getFunctionName(),
+          '\t\tat ' + callsite.getFileName(),
+          '\t\ton line ' + callsite.getLineNumber(),
+        );
+      }
+
+      return stack.join('\n');
+    };
+
+    const Intermediate = ({children}) => children;
+    const Parent = ({children}) => (
+      <Intermediate>
+        <Child />
+      </Intermediate>
+    );
+    const Child = ({children}) => {
+      fakeConsole.error('error');
+      fakeConsole.log('log');
+      fakeConsole.warn('warn');
+      return null;
+    };
+
+    act(() => ReactDOM.render(<Parent />, document.createElement('div')));
+
+    expect(mockLog).toHaveBeenCalledTimes(1);
+    expect(mockLog.mock.calls[0]).toHaveLength(1);
+    expect(mockLog.mock.calls[0][0]).toBe('log');
+    expect(mockWarn).toHaveBeenCalledTimes(1);
+    expect(mockWarn.mock.calls[0]).toHaveLength(2);
+    expect(mockWarn.mock.calls[0][0]).toBe('warn');
+    expect(normalizeCodeLocInfo(mockWarn.mock.calls[0][1])).toEqual(
+      '\n    in Child (at **)\n    in Intermediate (at **)\n    in Parent (at **)',
+    );
+    expect(mockError).toHaveBeenCalledTimes(1);
+    expect(mockError.mock.calls[0]).toHaveLength(2);
+    expect(mockError.mock.calls[0][0]).toBe('error');
+    expect(normalizeCodeLocInfo(mockError.mock.calls[0][1])).toBe(
+      '\n    in Child (at **)\n    in Intermediate (at **)\n    in Parent (at **)',
+    );
+  });
 });
