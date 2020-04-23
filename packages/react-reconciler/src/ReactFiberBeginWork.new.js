@@ -1737,7 +1737,6 @@ function updateSuspenseComponent(
   workInProgress,
   renderExpirationTime,
 ) {
-  const mode = workInProgress.mode;
   const nextProps = workInProgress.pendingProps;
 
   // This is used by DevTools to force a boundary to suspend.
@@ -1749,7 +1748,7 @@ function updateSuspenseComponent(
 
   let suspenseContext: SuspenseContext = suspenseStackCursor.current;
 
-  let nextDidTimeout = false;
+  let showFallback = false;
   const didSuspend = (workInProgress.effectTag & DidCapture) !== NoEffect;
 
   if (
@@ -1763,7 +1762,7 @@ function updateSuspenseComponent(
   ) {
     // Something in this boundary's subtree already suspended. Switch to
     // rendering the fallback children.
-    nextDidTimeout = true;
+    showFallback = true;
     workInProgress.effectTag &= ~DidCapture;
   } else {
     // Attempting the main content
@@ -1792,29 +1791,30 @@ function updateSuspenseComponent(
 
   pushSuspenseContext(workInProgress, suspenseContext);
 
-  // This next part is a bit confusing. If the children timeout, we switch to
-  // showing the fallback children in place of the "primary" children.
-  // However, we don't want to delete the primary children because then their
-  // state will be lost (both the React state and the host state, e.g.
-  // uncontrolled form inputs). Instead we keep them mounted and hide them.
-  // Both the fallback children AND the primary children are rendered at the
-  // same time. Once the primary children are un-suspended, we can delete
-  // the fallback children — don't need to preserve their state.
+  // OK, the next part is confusing. We're about to reconcile the Suspense
+  // boundary's children. This involves some custom reconcilation logic. Two
+  // main reasons this is so complicated.
   //
-  // The two sets of children are siblings in the host environment, but
-  // semantically, for purposes of reconciliation, they are two separate sets.
-  // So we store them using two fragment fibers.
+  // First, Legacy Mode has different semantics for backwards compatibility. The
+  // primary tree will commit in an inconsistent state, so when we do the
+  // second pass to render the fallback, we do some exceedingly, uh, clever
+  // hacks to make that not totally break. Like transferring effects and
+  // deletions from hidden tree. In Concurrent Mode, it's much simpler,
+  // because we bailout on the primary tree completely and leave it in its old
+  // state, no effects. Same as what we do for Offscreen (except that
+  // Offscreen doesn't have the first render pass).
   //
-  // However, we want to avoid allocating extra fibers for every placeholder.
-  // They're only necessary when the children time out, because that's the
-  // only time when both sets are mounted.
+  // Second is hydration. During hydration, the Suspense fiber has a slightly
+  // different layout, where the child points to a dehydrated fragment, which
+  // contains the DOM rendered by the server.
   //
-  // So, the extra fragment fibers are only used if the children time out.
-  // Otherwise, we render the primary children directly. This requires some
-  // custom reconciliation logic to preserve the state of the primary
-  // children. It's essentially a very basic form of re-parenting.
-
+  // Third, even if you set all that aside, Suspense is like error boundaries in
+  // that we first we try to render one tree, and if that fails, we render again
+  // and switch to a different tree. Like a try/catch block. So we have to track
+  // which branch we're currently rendering. Ideally we would model this using
+  // a stack.
   if (current === null) {
+    // Initial mount
     // If we're currently hydrating, try to hydrate this boundary.
     // But only if this has a fallback.
     if (nextProps.fallback !== undefined) {
@@ -1836,64 +1836,33 @@ function updateSuspenseComponent(
       }
     }
 
-    // This is the initial mount. This branch is pretty simple because there's
-    // no previous state that needs to be preserved.
-    if (nextDidTimeout) {
-      // Mount separate fragments for primary and fallback children.
+    if (showFallback) {
       const nextFallbackChildren = nextProps.fallback;
-      const primaryChildFragment = createFiberFromFragment(
-        null,
-        mode,
-        NoWork,
-        null,
-      );
-      primaryChildFragment.return = workInProgress;
-
-      if ((workInProgress.mode & BlockingMode) === NoMode) {
-        // Outside of blocking mode, we commit the effects from the
-        // partially completed, timed-out tree, too.
-        const progressedState: SuspenseState = workInProgress.memoizedState;
-        const progressedPrimaryChild: Fiber | null =
-          progressedState !== null
-            ? (workInProgress.child: any).child
-            : (workInProgress.child: any);
-        primaryChildFragment.child = progressedPrimaryChild;
-        let progressedChild = progressedPrimaryChild;
-        while (progressedChild !== null) {
-          progressedChild.return = primaryChildFragment;
-          progressedChild = progressedChild.sibling;
-        }
-      }
-
-      const fallbackChildFragment = createFiberFromFragment(
-        nextFallbackChildren,
-        mode,
-        renderExpirationTime,
-        null,
-      );
-      fallbackChildFragment.return = workInProgress;
-      primaryChildFragment.sibling = fallbackChildFragment;
-      // Skip the primary children, and continue working on the
-      // fallback children.
-      workInProgress.memoizedState = mountSuspenseState(renderExpirationTime);
-      workInProgress.child = primaryChildFragment;
-      return fallbackChildFragment;
-    } else {
-      // Mount the primary children without an intermediate fragment fiber.
-      const nextPrimaryChildren = nextProps.children;
-      workInProgress.memoizedState = null;
-      return (workInProgress.child = mountChildFibers(
+      const fallbackFragment = mountSuspenseFallbackChildren(
         workInProgress,
-        null,
+        nextFallbackChildren,
+        renderExpirationTime,
+      );
+      workInProgress.memoizedState = mountSuspenseState(renderExpirationTime);
+      return fallbackFragment;
+    } else {
+      const nextPrimaryChildren = nextProps.children;
+      return mountSuspensePrimaryChildren(
+        workInProgress,
         nextPrimaryChildren,
         renderExpirationTime,
-      ));
+      );
     }
   } else {
-    // This is an update. This branch is more complicated because we need to
-    // ensure the state of the primary children is preserved.
+    // This is an update.
+
+    // If the current fiber has a SuspenseState, that means it's already showing
+    // a fallback.
     const prevState: null | SuspenseState = current.memoizedState;
     if (prevState !== null) {
+      // The current tree is already showing a fallback
+
+      // Special path for hydration
       if (enableSuspenseServerRenderer) {
         const dehydrated = prevState.dehydrated;
         if (dehydrated !== null) {
@@ -1917,238 +1886,67 @@ function updateSuspenseComponent(
             return null;
           } else {
             // Suspended but we should no longer be in dehydrated mode.
-            // Therefore we now have to render the fallback. Wrap the children
-            // in a fragment fiber to keep them separate from the fallback
-            // children.
+            // Therefore we now have to render the fallback.
             const nextFallbackChildren = nextProps.fallback;
-            const primaryChildFragment = createFiberFromFragment(
-              // It shouldn't matter what the pending props are because we aren't
-              // going to render this fragment.
-              null,
-              mode,
-              (NoWork: ExpirationTimeOpaque),
-              null,
-            );
-            primaryChildFragment.return = workInProgress;
-
-            // This is always null since we never want the previous child
-            // that we're not going to hydrate.
-            primaryChildFragment.child = null;
-
-            if ((workInProgress.mode & BlockingMode) === NoMode) {
-              // Outside of blocking mode, we commit the effects from the
-              // partially completed, timed-out tree, too.
-              let progressedChild = (primaryChildFragment.child =
-                workInProgress.child);
-              while (progressedChild !== null) {
-                progressedChild.return = primaryChildFragment;
-                progressedChild = progressedChild.sibling;
-              }
-            } else {
-              // We will have dropped the effect list which contains the deletion.
-              // We need to reconcile to delete the current child.
-              reconcileChildFibers(
-                workInProgress,
-                current.child,
-                null,
-                renderExpirationTime,
-              );
-            }
-
-            // Because primaryChildFragment is a new fiber that we're inserting as the
-            // parent of a new tree, we need to set its treeBaseDuration.
-            if (enableProfilerTimer && workInProgress.mode & ProfileMode) {
-              // treeBaseDuration is the sum of all the child tree base durations.
-              let treeBaseDuration = 0;
-              let hiddenChild = primaryChildFragment.child;
-              while (hiddenChild !== null) {
-                treeBaseDuration += hiddenChild.treeBaseDuration;
-                hiddenChild = hiddenChild.sibling;
-              }
-              primaryChildFragment.treeBaseDuration = treeBaseDuration;
-            }
-
-            // Create a fragment from the fallback children, too.
-            const fallbackChildFragment = createFiberFromFragment(
-              nextFallbackChildren,
-              mode,
-              renderExpirationTime,
-              null,
-            );
-            fallbackChildFragment.return = workInProgress;
-            primaryChildFragment.sibling = fallbackChildFragment;
-            fallbackChildFragment.effectTag |= Placement;
-            primaryChildFragment.childExpirationTime_opaque = getRemainingWorkInPrimaryTree(
+            const fallbackChildFragment = mountSuspenseFallbackAfterRetryWithoutHydrating(
               current,
               workInProgress,
+              nextFallbackChildren,
               renderExpirationTime,
             );
+
             workInProgress.memoizedState = updateSuspenseState(
               current.memoizedState,
               renderExpirationTime,
             );
-            workInProgress.child = primaryChildFragment;
 
-            // Skip the primary children, and continue working on the
-            // fallback children.
             return fallbackChildFragment;
           }
         }
       }
-      // The current tree already timed out. That means each child set is
-      // wrapped in a fragment fiber.
-      const currentPrimaryChildFragment: Fiber = (current.child: any);
-      const currentFallbackChildFragment: Fiber = (currentPrimaryChildFragment.sibling: any);
-      if (nextDidTimeout) {
-        // Still timed out. Reuse the current primary children by cloning
-        // its fragment. We're going to skip over these entirely.
+
+      if (showFallback) {
         const nextFallbackChildren = nextProps.fallback;
-        const primaryChildFragment = createWorkInProgress(
-          currentPrimaryChildFragment,
-          currentPrimaryChildFragment.pendingProps,
-        );
-        primaryChildFragment.return = workInProgress;
-
-        if ((workInProgress.mode & BlockingMode) === NoMode) {
-          // Outside of blocking mode, we commit the effects from the
-          // partially completed, timed-out tree, too.
-          const progressedState: SuspenseState = workInProgress.memoizedState;
-          const progressedPrimaryChild: Fiber | null =
-            progressedState !== null
-              ? (workInProgress.child: any).child
-              : (workInProgress.child: any);
-          if (progressedPrimaryChild !== currentPrimaryChildFragment.child) {
-            primaryChildFragment.child = progressedPrimaryChild;
-            let progressedChild = progressedPrimaryChild;
-            while (progressedChild !== null) {
-              progressedChild.return = primaryChildFragment;
-              progressedChild = progressedChild.sibling;
-            }
-          }
-        }
-
-        // Because primaryChildFragment is a new fiber that we're inserting as the
-        // parent of a new tree, we need to set its treeBaseDuration.
-        if (enableProfilerTimer && workInProgress.mode & ProfileMode) {
-          // treeBaseDuration is the sum of all the child tree base durations.
-          let treeBaseDuration = 0;
-          let hiddenChild = primaryChildFragment.child;
-          while (hiddenChild !== null) {
-            treeBaseDuration += hiddenChild.treeBaseDuration;
-            hiddenChild = hiddenChild.sibling;
-          }
-          primaryChildFragment.treeBaseDuration = treeBaseDuration;
-        }
-
-        // Clone the fallback child fragment, too. These we'll continue
-        // working on.
-        const fallbackChildFragment = createWorkInProgress(
-          currentFallbackChildFragment,
+        const fallbackChildFragment = updateSuspenseFallbackChildren(
+          current,
+          workInProgress,
           nextFallbackChildren,
+          renderExpirationTime,
         );
-        fallbackChildFragment.return = workInProgress;
-        primaryChildFragment.sibling = fallbackChildFragment;
+        const primaryChildFragment: Fiber = (workInProgress.child: any);
         primaryChildFragment.childExpirationTime_opaque = getRemainingWorkInPrimaryTree(
           current,
           workInProgress,
           renderExpirationTime,
         );
-        // Skip the primary children, and continue working on the
-        // fallback children.
         workInProgress.memoizedState = updateSuspenseState(
           current.memoizedState,
           renderExpirationTime,
         );
-        workInProgress.child = primaryChildFragment;
         return fallbackChildFragment;
       } else {
-        // No longer suspended. Switch back to showing the primary children,
-        // and remove the intermediate fragment fiber.
         const nextPrimaryChildren = nextProps.children;
-        const currentPrimaryChild = currentPrimaryChildFragment.child;
-        const primaryChild = reconcileChildFibers(
+        const primaryChildFragment = updateSuspensePrimaryChildren(
+          current,
           workInProgress,
-          currentPrimaryChild,
           nextPrimaryChildren,
           renderExpirationTime,
         );
-
-        // If this render doesn't suspend, we need to delete the fallback
-        // children. Wait until the complete phase, after we've confirmed the
-        // fallback is no longer needed.
-        // TODO: Would it be better to store the fallback fragment on
-        // the stateNode?
-
-        // Continue rendering the children, like we normally do.
         workInProgress.memoizedState = null;
-        return (workInProgress.child = primaryChild);
+        return primaryChildFragment;
       }
     } else {
-      // The current tree has not already timed out. That means the primary
-      // children are not wrapped in a fragment fiber.
-      const currentPrimaryChild = current.child;
-      if (nextDidTimeout) {
-        // Timed out. Wrap the children in a fragment fiber to keep them
-        // separate from the fallback children.
+      // The current tree is not already showing a fallback.
+      if (showFallback) {
+        // Timed out.
         const nextFallbackChildren = nextProps.fallback;
-        const primaryChildFragment = createFiberFromFragment(
-          // It shouldn't matter what the pending props are because we aren't
-          // going to render this fragment.
-          null,
-          mode,
-          NoWork,
-          null,
-        );
-        primaryChildFragment.return = workInProgress;
-        primaryChildFragment.child = currentPrimaryChild;
-        if (currentPrimaryChild !== null) {
-          currentPrimaryChild.return = primaryChildFragment;
-        }
-
-        // Even though we're creating a new fiber, there are no new children,
-        // because we're reusing an already mounted tree. So we don't need to
-        // schedule a placement.
-        // primaryChildFragment.effectTag |= Placement;
-
-        if ((workInProgress.mode & BlockingMode) === NoMode) {
-          // Outside of blocking mode, we commit the effects from the
-          // partially completed, timed-out tree, too.
-          const progressedState: SuspenseState = workInProgress.memoizedState;
-          const progressedPrimaryChild: Fiber | null =
-            progressedState !== null
-              ? (workInProgress.child: any).child
-              : (workInProgress.child: any);
-          primaryChildFragment.child = progressedPrimaryChild;
-          let progressedChild = progressedPrimaryChild;
-          while (progressedChild !== null) {
-            progressedChild.return = primaryChildFragment;
-            progressedChild = progressedChild.sibling;
-          }
-        }
-
-        // Because primaryChildFragment is a new fiber that we're inserting as the
-        // parent of a new tree, we need to set its treeBaseDuration.
-        if (enableProfilerTimer && workInProgress.mode & ProfileMode) {
-          // treeBaseDuration is the sum of all the child tree base durations.
-          let treeBaseDuration = 0;
-          let hiddenChild = primaryChildFragment.child;
-          while (hiddenChild !== null) {
-            treeBaseDuration += hiddenChild.treeBaseDuration;
-            hiddenChild = hiddenChild.sibling;
-          }
-          primaryChildFragment.treeBaseDuration = treeBaseDuration;
-        }
-
-        // Create a fragment from the fallback children, too.
-        const fallbackChildFragment = createFiberFromFragment(
+        const fallbackChildFragment = updateSuspenseFallbackChildren(
+          current,
+          workInProgress,
           nextFallbackChildren,
-          mode,
           renderExpirationTime,
-          null,
         );
-        fallbackChildFragment.return = workInProgress;
-        primaryChildFragment.sibling = fallbackChildFragment;
-        fallbackChildFragment.effectTag |= Placement;
+        const primaryChildFragment: Fiber = (workInProgress.child: any);
         primaryChildFragment.childExpirationTime_opaque = getRemainingWorkInPrimaryTree(
           current,
           workInProgress,
@@ -2157,22 +1955,199 @@ function updateSuspenseComponent(
         // Skip the primary children, and continue working on the
         // fallback children.
         workInProgress.memoizedState = mountSuspenseState(renderExpirationTime);
-        workInProgress.child = primaryChildFragment;
         return fallbackChildFragment;
       } else {
         // Still haven't timed out. Continue rendering the children, like we
         // normally do.
-        workInProgress.memoizedState = null;
         const nextPrimaryChildren = nextProps.children;
-        return (workInProgress.child = reconcileChildFibers(
+        const primaryChildFragment = updateSuspensePrimaryChildren(
+          current,
           workInProgress,
-          currentPrimaryChild,
           nextPrimaryChildren,
           renderExpirationTime,
-        ));
+        );
+        workInProgress.memoizedState = null;
+        return primaryChildFragment;
       }
     }
   }
+}
+
+function mountSuspensePrimaryChildren(
+  workInProgress,
+  primaryChildren,
+  renderExpirationTime,
+) {
+  const mode = workInProgress.mode;
+  const primaryChildFragment = createFiberFromFragment(
+    primaryChildren,
+    mode,
+    renderExpirationTime,
+    null,
+  );
+  primaryChildFragment.return = workInProgress;
+  workInProgress.child = primaryChildFragment;
+  return primaryChildFragment;
+}
+
+function mountSuspenseFallbackChildren(
+  workInProgress,
+  fallbackChildren,
+  renderExpirationTime,
+) {
+  const mode = workInProgress.mode;
+
+  const progressedPrimaryFragment: Fiber | null = workInProgress.child;
+
+  let primaryChildFragment;
+  let fallbackChildFragment;
+  if ((mode & BlockingMode) === NoMode && progressedPrimaryFragment !== null) {
+    // In legacy mode, we commit the primary tree as if it successfully
+    // completed, even though it's in an inconsistent state.
+    primaryChildFragment = progressedPrimaryFragment;
+    primaryChildFragment.childExpirationTime_opaque = NoWork;
+
+    if (enableProfilerTimer && workInProgress.mode & ProfileMode) {
+      // Reset the durations from the first pass so they aren't included in the
+      // final amounts. This seems counterintuitive, since we're intentionally
+      // not measuring part of the render phase, but this makes it match what we
+      // do in Concurrent Mode.
+      primaryChildFragment.actualDuration = 0;
+      primaryChildFragment.actualStartTime = -1;
+      primaryChildFragment.selfBaseDuration = 0;
+      primaryChildFragment.treeBaseDuration = 0;
+    }
+
+    fallbackChildFragment = createFiberFromFragment(
+      fallbackChildren,
+      mode,
+      renderExpirationTime,
+      null,
+    );
+  } else {
+    primaryChildFragment = createFiberFromFragment(null, mode, NoWork, null);
+    fallbackChildFragment = createFiberFromFragment(
+      fallbackChildren,
+      mode,
+      renderExpirationTime,
+      null,
+    );
+  }
+
+  primaryChildFragment.return = workInProgress;
+  fallbackChildFragment.return = workInProgress;
+  primaryChildFragment.sibling = fallbackChildFragment;
+  workInProgress.child = primaryChildFragment;
+  return fallbackChildFragment;
+}
+
+function updateSuspensePrimaryChildren(
+  current,
+  workInProgress,
+  primaryChildren,
+  renderExpirationTime,
+) {
+  const currentPrimaryChildFragment: Fiber = (current.child: any);
+  const currentFallbackChildFragment: Fiber | null =
+    currentPrimaryChildFragment.sibling;
+
+  const primaryChildFragment = createWorkInProgress(
+    currentPrimaryChildFragment,
+    primaryChildren,
+  );
+  if ((workInProgress.mode & BlockingMode) === NoMode) {
+    primaryChildFragment.expirationTime_opaque = renderExpirationTime;
+  }
+  primaryChildFragment.return = workInProgress;
+  primaryChildFragment.sibling = null;
+  if (currentFallbackChildFragment !== null) {
+    // Delete the fallback child fragment
+    currentFallbackChildFragment.nextEffect = null;
+    currentFallbackChildFragment.effectTag = Deletion;
+    workInProgress.firstEffect = workInProgress.lastEffect = currentFallbackChildFragment;
+  }
+
+  workInProgress.child = primaryChildFragment;
+  return primaryChildFragment;
+}
+
+function updateSuspenseFallbackChildren(
+  current,
+  workInProgress,
+  fallbackChildren,
+  renderExpirationTime,
+) {
+  const mode = workInProgress.mode;
+  const currentPrimaryChildFragment: Fiber = (current.child: any);
+  const currentFallbackChildFragment: Fiber | null =
+    currentPrimaryChildFragment.sibling;
+
+  let primaryChildFragment;
+  if ((mode & BlockingMode) === NoMode) {
+    // In legacy mode, we commit the primary tree as if it successfully
+    // completed, even though it's in an inconsistent state.
+    const progressedPrimaryFragment: Fiber = (workInProgress.child: any);
+    primaryChildFragment = progressedPrimaryFragment;
+    primaryChildFragment.childExpirationTime_opaque = NoWork;
+
+    if (enableProfilerTimer && workInProgress.mode & ProfileMode) {
+      // Reset the durations from the first pass so they aren't included in the
+      // final amounts. This seems counterintuitive, since we're intentionally
+      // not measuring part of the render phase, but this makes it match what we
+      // do in Concurrent Mode.
+      primaryChildFragment.actualDuration = 0;
+      primaryChildFragment.actualStartTime = -1;
+      primaryChildFragment.selfBaseDuration =
+        currentPrimaryChildFragment.selfBaseDuration;
+      primaryChildFragment.treeBaseDuration =
+        currentPrimaryChildFragment.treeBaseDuration;
+    }
+
+    // The fallback fiber was added as a deletion effect during the first pass.
+    // However, since we're going to remain on the fallback, we no longer want
+    // to delete it. So we need to remove it from the list. Deletions are stored
+    // on the same list as effects. We want to keep the effects from the primary
+    // tree. So we copy the primary child fragment's effect list, which does not
+    // include the fallback deletion effect.
+    const progressedLastEffect = primaryChildFragment.lastEffect;
+    if (progressedLastEffect !== null) {
+      workInProgress.firstEffect = primaryChildFragment.firstEffect;
+      workInProgress.lastEffect = progressedLastEffect;
+      progressedLastEffect.nextEffect = null;
+    } else {
+      // TODO: Reset this somewhere else? Lol legacy mode is so weird.
+      workInProgress.firstEffect = workInProgress.lastEffect = null;
+    }
+  } else {
+    primaryChildFragment = createWorkInProgress(
+      currentPrimaryChildFragment,
+      currentPrimaryChildFragment.pendingProps,
+    );
+  }
+  let fallbackChildFragment;
+  if (currentFallbackChildFragment !== null) {
+    fallbackChildFragment = createWorkInProgress(
+      currentFallbackChildFragment,
+      fallbackChildren,
+    );
+  } else {
+    fallbackChildFragment = createFiberFromFragment(
+      fallbackChildren,
+      mode,
+      renderExpirationTime,
+      null,
+    );
+    // Needs a placement effect because the parent (the Suspense boundary) already
+    // mounted but this is a new fiber.
+    fallbackChildFragment.effectTag |= Placement;
+  }
+
+  fallbackChildFragment.return = workInProgress;
+  primaryChildFragment.return = workInProgress;
+  primaryChildFragment.sibling = fallbackChildFragment;
+  workInProgress.child = primaryChildFragment;
+
+  return fallbackChildFragment;
 }
 
 function retrySuspenseComponentWithoutHydrating(
@@ -2180,21 +2155,70 @@ function retrySuspenseComponentWithoutHydrating(
   workInProgress: Fiber,
   renderExpirationTime: ExpirationTimeOpaque,
 ) {
-  // We're now not suspended nor dehydrated.
-  workInProgress.memoizedState = null;
-  // Retry with the full children.
-  const nextProps = workInProgress.pendingProps;
-  const nextChildren = nextProps.children;
-  // This will ensure that the children get Placement effects and
-  // that the old child gets a Deletion effect.
-  // We could also call forceUnmountCurrentAndReconcile.
-  reconcileChildren(
-    current,
+  // This will add the old fiber to the deletion list
+  reconcileChildFibers(
     workInProgress,
-    nextChildren,
+    current.child,
+    null,
     renderExpirationTime,
   );
-  return workInProgress.child;
+
+  // We're now not suspended nor dehydrated.
+  const nextProps = workInProgress.pendingProps;
+  const primaryChildren = nextProps.children;
+  const primaryChildFragment = mountSuspensePrimaryChildren(
+    workInProgress,
+    primaryChildren,
+    renderExpirationTime,
+  );
+  // Needs a placement effect because the parent (the Suspense boundary) already
+  // mounted but this is a new fiber.
+  primaryChildFragment.effectTag |= Placement;
+  workInProgress.memoizedState = null;
+
+  return primaryChildFragment;
+}
+
+function mountSuspenseFallbackAfterRetryWithoutHydrating(
+  current,
+  workInProgress,
+  fallbackChildren,
+  renderExpirationTime,
+) {
+  const mode = workInProgress.mode;
+  const primaryChildFragment = createFiberFromFragment(
+    null,
+    mode,
+    NoWork,
+    null,
+  );
+  const fallbackChildFragment = createFiberFromFragment(
+    fallbackChildren,
+    mode,
+    renderExpirationTime,
+    null,
+  );
+  // Needs a placement effect because the parent (the Suspense
+  // boundary) already mounted but this is a new fiber.
+  fallbackChildFragment.effectTag |= Placement;
+
+  primaryChildFragment.return = workInProgress;
+  fallbackChildFragment.return = workInProgress;
+  primaryChildFragment.sibling = fallbackChildFragment;
+  workInProgress.child = primaryChildFragment;
+
+  if ((workInProgress.mode & BlockingMode) !== NoMode) {
+    // We will have dropped the effect list which contains the
+    // deletion. We need to reconcile to delete the current child.
+    reconcileChildFibers(
+      workInProgress,
+      current.child,
+      null,
+      renderExpirationTime,
+    );
+  }
+
+  return fallbackChildFragment;
 }
 
 function mountDehydratedSuspenseComponent(
@@ -2346,26 +2370,20 @@ function updateDehydratedSuspenseComponent(
       suspenseInstance,
     );
     const nextProps = workInProgress.pendingProps;
-    const nextChildren = nextProps.children;
-    const child = mountChildFibers(
+    const primaryChildren = nextProps.children;
+    const primaryChildFragment = mountSuspensePrimaryChildren(
       workInProgress,
-      null,
-      nextChildren,
+      primaryChildren,
       renderExpirationTime,
     );
-    let node = child;
-    while (node) {
-      // Mark each child as hydrating. This is a fast path to know whether this
-      // tree is part of a hydrating tree. This is used to determine if a child
-      // node has fully mounted yet, and for scheduling event replaying.
-      // Conceptually this is similar to Placement in that a new subtree is
-      // inserted into the React tree here. It just happens to not need DOM
-      // mutations because it already exists.
-      node.effectTag |= Hydrating;
-      node = node.sibling;
-    }
-    workInProgress.child = child;
-    return workInProgress.child;
+    // Mark the children as hydrating. This is a fast path to know whether this
+    // tree is part of a hydrating tree. This is used to determine if a child
+    // node has fully mounted yet, and for scheduling event replaying.
+    // Conceptually this is similar to Placement in that a new subtree is
+    // inserted into the React tree here. It just happens to not need DOM
+    // mutations because it already exists.
+    primaryChildFragment.effectTag |= Hydrating;
+    return primaryChildFragment;
   }
 }
 
@@ -2687,7 +2705,7 @@ function updateSuspenseListComponent(
   pushSuspenseContext(workInProgress, suspenseContext);
 
   if ((workInProgress.mode & BlockingMode) === NoMode) {
-    // Outside of blocking mode, SuspenseList doesn't work so we just
+    // In legacy mode, SuspenseList doesn't work so we just
     // use make it a noop by treating it as the default revealOrder.
     workInProgress.memoizedState = null;
   } else {
@@ -3200,46 +3218,7 @@ function beginWork(
               );
             } else {
               // The primary child fragment does not have pending work marked
-              // on it...
-
-              // ...usually. There's an unfortunate edge case where the fragment
-              // fiber is not part of the return path of the children, so when
-              // an update happens, the fragment doesn't get marked during
-              // setState. This is something we should consider addressing when
-              // we refactor the Fiber data structure. (There's a test with more
-              // details; to find it, comment out the following block and see
-              // which one fails.)
-              //
-              // As a workaround, we need to recompute the `childExpirationTime`
-              // by bubbling it up from the next level of children. This is
-              // based on similar logic in `resetChildExpirationTime`.
-              let primaryChild = primaryChildFragment.child;
-              while (primaryChild !== null) {
-                const childUpdateExpirationTime =
-                  primaryChild.expirationTime_opaque;
-                const childChildExpirationTime =
-                  primaryChild.childExpirationTime_opaque;
-                if (
-                  isSameOrHigherPriority(
-                    childUpdateExpirationTime,
-                    renderExpirationTime,
-                  ) ||
-                  isSameOrHigherPriority(
-                    childChildExpirationTime,
-                    renderExpirationTime,
-                  )
-                ) {
-                  // Found a child with an update with sufficient priority.
-                  // Use the normal path to render the primary children again.
-                  return updateSuspenseComponent(
-                    current,
-                    workInProgress,
-                    renderExpirationTime,
-                  );
-                }
-                primaryChild = primaryChild.sibling;
-              }
-
+              // on it
               pushSuspenseContext(
                 workInProgress,
                 setDefaultShallowSuspenseContext(suspenseStackCursor.current),

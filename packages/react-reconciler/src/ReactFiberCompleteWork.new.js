@@ -55,13 +55,7 @@ import {
   Block,
 } from './ReactWorkTags';
 import {NoMode, BlockingMode} from './ReactTypeOfMode';
-import {
-  Ref,
-  Update,
-  NoEffect,
-  DidCapture,
-  Deletion,
-} from './ReactSideEffectTags';
+import {Ref, Update, NoEffect, DidCapture} from './ReactSideEffectTags';
 import invariant from 'shared/invariant';
 
 import {
@@ -888,26 +882,6 @@ function completeWork(
       } else {
         const prevState: null | SuspenseState = current.memoizedState;
         prevDidTimeout = prevState !== null;
-        if (!nextDidTimeout && prevState !== null) {
-          // We just switched from the fallback to the normal children.
-          // Delete the fallback.
-          // TODO: Would it be better to store the fallback fragment on
-          // the stateNode during the begin phase?
-          const currentFallbackChild: Fiber | null = (current.child: any)
-            .sibling;
-          if (currentFallbackChild !== null) {
-            // Deletions go at the beginning of the return fiber's effect list
-            const first = workInProgress.firstEffect;
-            if (first !== null) {
-              workInProgress.firstEffect = currentFallbackChild;
-              currentFallbackChild.nextEffect = first;
-            } else {
-              workInProgress.firstEffect = workInProgress.lastEffect = currentFallbackChild;
-              currentFallbackChild.nextEffect = null;
-            }
-            currentFallbackChild.effectTag = Deletion;
-          }
-        }
       }
 
       if (nextDidTimeout && !prevDidTimeout) {
