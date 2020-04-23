@@ -1672,6 +1672,62 @@ describe('ReactIncrementalErrorHandling', () => {
     expect(ReactNoop.getChildren()).toEqual([span('Caught an error: Hello')]);
   });
 
+  it('provides component stack even if overriding prepareStackTrace', () => {
+    Error.prepareStackTrace = function(error, callsites) {
+      const stack = ['An error occurred:', error.message];
+      for (let i = 0; i < callsites.length; i++) {
+        const callsite = callsites[i];
+        stack.push(
+          '\t' + callsite.getFunctionName(),
+          '\t\tat ' + callsite.getFileName(),
+          '\t\ton line ' + callsite.getLineNumber(),
+        );
+      }
+
+      return stack.join('\n');
+    };
+
+    class ErrorBoundary extends React.Component {
+      state = {error: null, errorInfo: null};
+      componentDidCatch(error, errorInfo) {
+        this.setState({error, errorInfo});
+      }
+      render() {
+        if (this.state.errorInfo) {
+          Scheduler.unstable_yieldValue('render error message');
+          return (
+            <span
+              prop={`Caught an error:${normalizeCodeLocInfo(
+                this.state.errorInfo.componentStack,
+              )}.`}
+            />
+          );
+        }
+        return this.props.children;
+      }
+    }
+
+    function BrokenRender(props) {
+      throw new Error('Hello');
+    }
+
+    ReactNoop.render(
+      <ErrorBoundary>
+        <BrokenRender />
+      </ErrorBoundary>,
+    );
+    expect(Scheduler).toFlushAndYield(['render error message']);
+    Error.prepareStackTrace = undefined;
+
+    expect(ReactNoop.getChildren()).toEqual([
+      span(
+        'Caught an error:\n' +
+          '    in BrokenRender (at **)\n' +
+          '    in ErrorBoundary (at **).',
+      ),
+    ]);
+  });
+
   if (!ReactFeatureFlags.disableModulePatternComponents) {
     it('handles error thrown inside getDerivedStateFromProps of a module-style context provider', () => {
       function Provider() {

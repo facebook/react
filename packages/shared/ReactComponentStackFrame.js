@@ -80,6 +80,9 @@ export function describeNativeComponentFrame(
   let control;
 
   reentry = true;
+  const previousPrepareStackTrace = Error.prepareStackTrace;
+  // $FlowFixMe It does accept undefined.
+  Error.prepareStackTrace = undefined;
   let previousDispatcher;
   if (__DEV__) {
     previousDispatcher = ReactCurrentDispatcher.current;
@@ -184,6 +187,7 @@ export function describeNativeComponentFrame(
       ReactCurrentDispatcher.current = previousDispatcher;
       reenableLogs();
     }
+    Error.prepareStackTrace = previousPrepareStackTrace;
   }
   // Fallback to just using the name if we couldn't make it throw.
   const name = fn ? fn.displayName || fn.name : '';
