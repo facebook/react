@@ -239,4 +239,30 @@ describe('EnterLeaveEventPlugin', () => {
 
     ReactDOM.render(<Parent />, container);
   });
+
+  it('should work with portals outside of the root', () => {
+    const divRef = React.createRef();
+    const onMouseLeave = jest.fn();
+
+    function Component() {
+      return (
+        <div onMouseLeave={onMouseLeave}>
+          {ReactDOM.createPortal(<div ref={divRef} />, document.body)}
+        </div>
+      );
+    }
+
+    ReactDOM.render(<Component />, container);
+
+    // Leave from the portal div
+    divRef.current.dispatchEvent(
+      new MouseEvent('mouseout', {
+        bubbles: true,
+        cancelable: true,
+        relatedTarget: document.body,
+      }),
+    );
+
+    expect(onMouseLeave).toHaveBeenCalledTimes(1);
+  });
 });

@@ -435,3 +435,7 @@ export function beforeActiveInstanceBlur() {
 export function afterActiveInstanceBlur() {
   // noop
 }
+
+export function preparePortalMount(portalInstance: Instance): void {
+  // noop
+}

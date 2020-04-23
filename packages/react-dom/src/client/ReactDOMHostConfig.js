@@ -64,8 +64,10 @@ import {
   enableSuspenseServerRenderer,
   enableDeprecatedFlareAPI,
   enableFundamentalAPI,
+  enableModernEventSystem,
 } from 'shared/ReactFeatureFlags';
 import {TOP_BEFORE_BLUR, TOP_AFTER_BLUR} from '../events/DOMTopLevelEventTypes';
+import {listenToEvent} from '../events/DOMModernPluginEventSystem';
 
 export type Type = string;
 export type Props = {
@@ -1097,4 +1099,10 @@ export function makeOpaqueHydratingObject(
     toString: attemptToReadValue,
     valueOf: attemptToReadValue,
   };
+}
+
+export function preparePortalMount(portalInstance: Instance): void {
+  if (enableModernEventSystem) {
+    listenToEvent('onMouseEnter', portalInstance);
+  }
 }
