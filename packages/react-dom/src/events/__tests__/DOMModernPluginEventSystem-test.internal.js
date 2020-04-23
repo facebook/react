@@ -336,6 +336,68 @@ describe('DOMModernPluginEventSystem', () => {
           expect(log[5]).toEqual(['bubble', buttonElement]);
         });
 
+        it('handle propagation of click events between disjointed comment roots #3', () => {
+          const buttonRef = React.createRef();
+          const divRef = React.createRef();
+          const childRef = React.createRef();
+          const log = [];
+          const onClick = jest.fn(e => log.push(['bubble', e.currentTarget]));
+          const onClickCapture = jest.fn(e =>
+            log.push(['capture', e.currentTarget]),
+          );
+
+          function Child() {
+            return (
+              <div
+                ref={divRef}
+                onClick={onClick}
+                onClickCapture={onClickCapture}>
+                Click me!
+              </div>
+            );
+          }
+
+          function Parent() {
+            return (
+              <button
+                ref={buttonRef}
+                onClick={onClick}
+                onClickCapture={onClickCapture}>
+                <div ref={childRef} />
+              </button>
+            );
+          }
+
+          const disjointedNode = document.createComment(
+            ' react-mount-point-unstable ',
+          );
+          ReactDOM.render(<Parent />, container);
+          const containerParent = document.createElement('div');
+          containerParent.appendChild(disjointedNode);
+          containerParent.appendChild(container);
+          document.body.appendChild(containerParent);
+          ReactDOM.render(<Child />, disjointedNode);
+
+          const buttonElement = buttonRef.current;
+          dispatchClickEvent(buttonElement);
+          expect(onClick).toHaveBeenCalledTimes(2);
+          expect(onClickCapture).toHaveBeenCalledTimes(2);
+          expect(log[0]).toEqual(['capture', buttonElement]);
+          expect(log[1]).toEqual(['bubble', buttonElement]);
+
+          const divElement = divRef.current;
+          dispatchClickEvent(divElement);
+          expect(onClick).toHaveBeenCalledTimes(3);
+          expect(onClickCapture).toHaveBeenCalledTimes(3);
+          expect(log[2]).toEqual(['capture', buttonElement]);
+          expect(log[3]).toEqual(['bubble', buttonElement]);
+          expect(log[4]).toEqual(['capture', divElement]);
+          expect(log[5]).toEqual(['bubble', divElement]);
+
+          document.body.removeChild(containerParent);
+          document.body.appendChild(container);
+        });
+
         it('handle propagation of click events between portals', () => {
           const buttonRef = React.createRef();
           const divRef = React.createRef();

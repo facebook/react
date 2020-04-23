@@ -379,6 +379,16 @@ function isMatchingRootContainer(
   );
 }
 
+function isContainerParentOfTargetContainer(
+  container: Node,
+  targetContainer: Node,
+): boolean {
+  if (container.nodeType === COMMENT_NODE) {
+    container = (container: any).parentNode;
+  }
+  return container !== null && container.contains(targetContainer);
+}
+
 export function isManagedDOMElement(
   target: EventTarget | ReactScopeMethods,
 ): boolean {
@@ -471,9 +481,17 @@ export function dispatchEventForPluginEventSystem(
               grandNode = grandNode.return;
             }
           }
+
           const parentSubtreeInst = getClosestInstanceFromNode(container);
           if (parentSubtreeInst === null) {
-            return;
+            // If the current container is a parent of the target container, then
+            // there's no point in propagating up the tree further.
+            if (
+              isContainerParentOfTargetContainer(container, targetContainerNode)
+            ) {
+              return;
+            }
+            break;
           }
           node = ancestorInst = parentSubtreeInst;
           continue;
