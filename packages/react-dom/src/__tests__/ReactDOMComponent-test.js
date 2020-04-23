@@ -1689,26 +1689,12 @@ describe('ReactDOMComponent', () => {
             <tr />
           </div>,
         );
-      }).toErrorDev(
-        ReactFeatureFlags.enableComponentStackLocations
-          ? [
-              // This warning dedupes since they're in the same component.
-              'Warning: validateDOMNesting(...): <tr> cannot appear as a child of ' +
-                '<div>.' +
-                '\n    in tr (at **)' +
-                '\n    in div (at **)',
-            ]
-          : [
-              'Warning: validateDOMNesting(...): <tr> cannot appear as a child of ' +
-                '<div>.' +
-                '\n    in tr (at **)' +
-                '\n    in div (at **)',
-              'Warning: validateDOMNesting(...): <tr> cannot appear as a child of ' +
-                '<div>.' +
-                '\n    in tr (at **)' +
-                '\n    in div (at **)',
-            ],
-      );
+      }).toErrorDev([
+        'Warning: validateDOMNesting(...): <tr> cannot appear as a child of ' +
+          '<div>.' +
+          '\n    in tr (at **)' +
+          '\n    in div (at **)',
+      ]);
     });
 
     it('warns on invalid nesting at root', () => {
@@ -1777,18 +1763,6 @@ describe('ReactDOMComponent', () => {
         return <Row />;
       }
 
-      class Table extends React.Component {
-        render() {
-          return <table>{this.props.children}</table>;
-        }
-      }
-
-      class FancyTable extends React.Component {
-        render() {
-          return <Table>{this.props.children}</Table>;
-        }
-      }
-
       function Viz1() {
         return (
           <table>
@@ -1806,6 +1780,27 @@ describe('ReactDOMComponent', () => {
           '\n    in table (at **)' +
           '\n    in Viz1 (at **)',
       );
+    });
+
+    it('gives useful context in warnings 2', () => {
+      function Row() {
+        return <tr />;
+      }
+      function FancyRow() {
+        return <Row />;
+      }
+
+      class Table extends React.Component {
+        render() {
+          return <table>{this.props.children}</table>;
+        }
+      }
+
+      class FancyTable extends React.Component {
+        render() {
+          return <Table>{this.props.children}</Table>;
+        }
+      }
 
       function Viz2() {
         return (
@@ -1826,7 +1821,27 @@ describe('ReactDOMComponent', () => {
           '\n    in FancyTable (at **)' +
           '\n    in Viz2 (at **)',
       );
+    });
 
+    it('gives useful context in warnings 3', () => {
+      function Row() {
+        return <tr />;
+      }
+      function FancyRow() {
+        return <Row />;
+      }
+
+      class Table extends React.Component {
+        render() {
+          return <table>{this.props.children}</table>;
+        }
+      }
+
+      class FancyTable extends React.Component {
+        render() {
+          return <Table>{this.props.children}</Table>;
+        }
+      }
       expect(() => {
         ReactTestUtils.renderIntoDocument(
           <FancyTable>
@@ -1841,6 +1856,15 @@ describe('ReactDOMComponent', () => {
           '\n    in Table (at **)' +
           '\n    in FancyTable (at **)',
       );
+    });
+
+    it('gives useful context in warnings 4', () => {
+      function Row() {
+        return <tr />;
+      }
+      function FancyRow() {
+        return <Row />;
+      }
 
       expect(() => {
         ReactTestUtils.renderIntoDocument(
@@ -1854,6 +1878,20 @@ describe('ReactDOMComponent', () => {
           '\n    in FancyRow (at **)' +
           '\n    in table (at **)',
       );
+    });
+
+    it('gives useful context in warnings 5', () => {
+      class Table extends React.Component {
+        render() {
+          return <table>{this.props.children}</table>;
+        }
+      }
+
+      class FancyTable extends React.Component {
+        render() {
+          return <Table>{this.props.children}</Table>;
+        }
+      }
 
       expect(() => {
         ReactTestUtils.renderIntoDocument(

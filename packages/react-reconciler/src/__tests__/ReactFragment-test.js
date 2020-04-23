@@ -10,7 +10,6 @@
 'use strict';
 
 let React;
-let ReactFeatureFlags;
 let ReactNoop;
 let Scheduler;
 
@@ -19,7 +18,6 @@ describe('ReactFragment', () => {
     jest.resetModules();
 
     React = require('react');
-    ReactFeatureFlags = require('shared/ReactFeatureFlags');
     ReactNoop = require('react-noop-renderer');
     Scheduler = require('scheduler');
   });
@@ -902,27 +900,15 @@ describe('ReactFragment', () => {
     );
 
     ReactNoop.render(<Foo condition={false} />);
-    if (ReactFeatureFlags.enableComponentStackLocations) {
-      // The key warning gets deduped because it's in the same component.
-      expect(Scheduler).toFlushWithoutYielding();
-    } else {
-      expect(() => expect(Scheduler).toFlushWithoutYielding()).toErrorDev(
-        'Each child in a list should have a unique "key" prop.',
-      );
-    }
+    // The key warning gets deduped because it's in the same component.
+    expect(Scheduler).toFlushWithoutYielding();
 
     expect(ops).toEqual(['Update Stateful']);
     expect(ReactNoop.getChildren()).toEqual([span(), div()]);
 
     ReactNoop.render(<Foo condition={true} />);
-    if (ReactFeatureFlags.enableComponentStackLocations) {
-      // The key warning gets deduped because it's in the same component.
-      expect(Scheduler).toFlushWithoutYielding();
-    } else {
-      expect(() => expect(Scheduler).toFlushWithoutYielding()).toErrorDev(
-        'Each child in a list should have a unique "key" prop.',
-      );
-    }
+    // The key warning gets deduped because it's in the same component.
+    expect(Scheduler).toFlushWithoutYielding();
 
     expect(ops).toEqual(['Update Stateful', 'Update Stateful']);
     expect(ReactNoop.getChildren()).toEqual([span(), div()]);
