@@ -172,6 +172,7 @@ import {
   resolveLazyComponentTag,
   createFiberFromTypeAndProps,
   createFiberFromFragment,
+  createFiberFromOffscreen,
   createWorkInProgress,
   isSimpleFunctionComponent,
 } from './ReactFiber.new';
@@ -1995,7 +1996,7 @@ function mountSuspensePrimaryChildren(
   renderExpirationTime,
 ) {
   const mode = workInProgress.mode;
-  const primaryChildFragment = createFiberFromFragment(
+  const primaryChildFragment = createFiberFromOffscreen(
     primaryChildren,
     mode,
     renderExpirationTime,
@@ -2041,7 +2042,7 @@ function mountSuspenseFallbackChildren(
       null,
     );
   } else {
-    primaryChildFragment = createFiberFromFragment(null, mode, NoWork, null);
+    primaryChildFragment = createFiberFromOffscreen(null, mode, NoWork, null);
     fallbackChildFragment = createFiberFromFragment(
       fallbackChildren,
       mode,
@@ -2202,7 +2203,7 @@ function mountSuspenseFallbackAfterRetryWithoutHydrating(
   renderExpirationTime,
 ) {
   const mode = workInProgress.mode;
-  const primaryChildFragment = createFiberFromFragment(
+  const primaryChildFragment = createFiberFromOffscreen(
     null,
     mode,
     NoWork,
