@@ -40,7 +40,6 @@ import {
   ForceUpdate,
   enqueueUpdate,
 } from './ReactUpdateQueue.old';
-import {getStackByFiberInDevAndProd} from './ReactFiberComponentStack';
 import {markFailedErrorBoundaryForHotReloading} from './ReactFiberHotReloading.old';
 import {
   suspenseStackCursor,
@@ -344,8 +343,7 @@ function throwException(
         ' suspended while rendering, but no fallback UI was specified.\n' +
         '\n' +
         'Add a <Suspense fallback=...> component higher in the tree to ' +
-        'provide a loading indicator or placeholder to display.' +
-        getStackByFiberInDevAndProd(sourceFiber),
+        'provide a loading indicator or placeholder to display.',
     );
   }
 
