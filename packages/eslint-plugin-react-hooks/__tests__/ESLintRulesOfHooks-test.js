@@ -311,7 +311,7 @@ const tests = {
         if (c) {} else {}
         if (c) {} else {}
         if (c) {} else {}
-        
+
         // 10 hooks
         useHook();
         useHook();
