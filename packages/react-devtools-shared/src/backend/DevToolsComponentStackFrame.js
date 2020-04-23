@@ -80,6 +80,10 @@ export function describeNativeComponentFrame(
 
   let control;
 
+  const previousPrepareStackTrace = Error.prepareStackTrace;
+  // $FlowFixMe It does accept undefined.
+  Error.prepareStackTrace = undefined;
+
   reentry = true;
   let previousDispatcher;
   if (__DEV__) {
@@ -181,6 +185,9 @@ export function describeNativeComponentFrame(
     }
   } finally {
     reentry = false;
+
+    Error.prepareStackTrace = previousPrepareStackTrace;
+
     if (__DEV__) {
       currentDispatcherRef.current = previousDispatcher;
       reenableLogs();
