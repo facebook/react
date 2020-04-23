@@ -202,20 +202,28 @@ describe('ReactDOMServer', () => {
 
   describe('renderToStaticMarkup', () => {
     it('should restore hooks internals upon exiting for nested renderers', () => {
-      const NestedComponent = () => <div>&nbsp;</div>;
+      const NestedComponent = () => {
+        const memo = React.useMemo(() => 1, [1]);
+        return <div>{memo}</div>;
+      };
 
-      const memoize = () => {
+      const nestedRenderer = () => {
         return ReactDOMServer.renderToStaticMarkup(<NestedComponent />);
       };
 
-      const TestComponent = () => {
-        const htmlProcessed = React.useMemo(() => memoize(), [1]);
-        return <div>{htmlProcessed}</div>;
+      const FirstTestComponent = () => {
+        const memo = React.useMemo(() => nestedRenderer(), [1]);
+        return <div>{memo}</div>;
       };
 
-      const response = ReactDOMServer.renderToStaticMarkup(<TestComponent />);
+      // rewrites currentlyRenderingComponent, firstWorkInProgressHook
+      // breaks workInProgressHook, sets to null
+      const firstResponse = ReactDOMServer.renderToStaticMarkup(<FirstTestComponent />);
+      expect(firstResponse).toBe('<div>&lt;div&gt;1&lt;/div&gt;</div>');
 
-      expect(response).toBe('<div>&lt;div&gt; &lt;/div&gt;</div>');
+      // breaks workInProgressHook, sets to undefined
+      const secondResponse = ReactDOMServer.renderToStaticMarkup(<FirstTestComponent />);
+      expect(secondResponse).toBe('<div>&lt;div&gt;1&lt;/div&gt;</div>');
     });
 
     it('should not put checksum and React ID on components', () => {
