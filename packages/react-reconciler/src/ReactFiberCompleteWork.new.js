@@ -26,6 +26,8 @@ import type {
   SuspenseListRenderState,
 } from './ReactFiberSuspenseComponent.new';
 import type {SuspenseContext} from './ReactFiberSuspenseContext.new';
+import type {OffscreenState} from './ReactFiberOffscreenComponent';
+
 import {resetWorkInProgressVersions as resetMutableSourceWorkInProgressVersions} from './ReactMutableSource.new';
 
 import {now} from './SchedulerWithReactIntegration.new';
@@ -1288,8 +1290,19 @@ function completeWork(
         return null;
       }
       break;
-    case OffscreenComponent:
+    case OffscreenComponent: {
+      if (current !== null) {
+        const nextState: OffscreenState | null = workInProgress.memoizedState;
+        const prevState: OffscreenState | null = current.memoizedState;
+
+        const prevIsHidden = prevState !== null;
+        const nextIsHidden = nextState !== null;
+        if (prevIsHidden !== nextIsHidden) {
+          workInProgress.effectTag |= Update;
+        }
+      }
       return null;
+    }
   }
   invariant(
     false,

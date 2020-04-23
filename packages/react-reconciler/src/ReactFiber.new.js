@@ -20,6 +20,7 @@ import type {WorkTag} from './ReactWorkTags';
 import type {TypeOfMode} from './ReactTypeOfMode';
 import type {ExpirationTimeOpaque} from './ReactFiberExpirationTime.new';
 import type {SuspenseInstance} from './ReactFiberHostConfig';
+import type {OffscreenProps} from './ReactFiberOffscreenComponent';
 
 import invariant from 'shared/invariant';
 import {
@@ -738,7 +739,7 @@ export function createFiberFromSuspenseList(
 }
 
 export function createFiberFromOffscreen(
-  pendingProps: any,
+  pendingProps: OffscreenProps,
   mode: TypeOfMode,
   expirationTime: ExpirationTimeOpaque,
   key: null | string,

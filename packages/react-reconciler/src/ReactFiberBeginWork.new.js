@@ -19,6 +19,10 @@ import type {
   SuspenseListTailMode,
 } from './ReactFiberSuspenseComponent.new';
 import type {SuspenseContext} from './ReactFiberSuspenseContext.new';
+import type {
+  OffscreenProps,
+  OffscreenState,
+} from './ReactFiberOffscreenComponent';
 
 import checkPropTypes from 'shared/checkPropTypes';
 
@@ -562,7 +566,20 @@ function updateOffscreenComponent(
   workInProgress: Fiber,
   renderExpirationTime: ExpirationTimeOpaque,
 ) {
-  const nextChildren = workInProgress.pendingProps;
+  const nextProps: OffscreenProps = workInProgress.pendingProps;
+  const nextChildren = nextProps.children;
+
+  if (current !== null) {
+    if (nextProps.mode === 'hidden') {
+      // TODO: Should currently be unreachable because Offscreen is only used as
+      // an implementation detail of Suspense. Once this is a public API, it
+      // will need to create an OffscreenState.
+    } else {
+      // Clear the offscreen state.
+      workInProgress.memoizedState = null;
+    }
+  }
+
   reconcileChildren(
     current,
     workInProgress,
@@ -1854,12 +1871,16 @@ function updateSuspenseComponent(
     }
 
     if (showFallback) {
+      const nextPrimaryChildren = nextProps.children;
       const nextFallbackChildren = nextProps.fallback;
       const fallbackFragment = mountSuspenseFallbackChildren(
         workInProgress,
+        nextPrimaryChildren,
         nextFallbackChildren,
         renderExpirationTime,
       );
+      const primaryChildFragment: Fiber = (workInProgress.child: any);
+      primaryChildFragment.memoizedState = ({baseTime: NoWork}: OffscreenState);
       workInProgress.memoizedState = mountSuspenseState(renderExpirationTime);
       return fallbackFragment;
     } else {
@@ -1904,14 +1925,19 @@ function updateSuspenseComponent(
           } else {
             // Suspended but we should no longer be in dehydrated mode.
             // Therefore we now have to render the fallback.
+            const nextPrimaryChildren = nextProps.children;
             const nextFallbackChildren = nextProps.fallback;
             const fallbackChildFragment = mountSuspenseFallbackAfterRetryWithoutHydrating(
               current,
               workInProgress,
+              nextPrimaryChildren,
               nextFallbackChildren,
               renderExpirationTime,
             );
-
+            const primaryChildFragment: Fiber = (workInProgress.child: any);
+            primaryChildFragment.memoizedState = ({
+              baseTime: NoWork,
+            }: OffscreenState);
             workInProgress.memoizedState = updateSuspenseState(
               current.memoizedState,
               renderExpirationTime,
@@ -1924,13 +1950,18 @@ function updateSuspenseComponent(
 
       if (showFallback) {
         const nextFallbackChildren = nextProps.fallback;
+        const nextPrimaryChildren = nextProps.children;
         const fallbackChildFragment = updateSuspenseFallbackChildren(
           current,
           workInProgress,
+          nextPrimaryChildren,
           nextFallbackChildren,
           renderExpirationTime,
         );
         const primaryChildFragment: Fiber = (workInProgress.child: any);
+        primaryChildFragment.memoizedState = ({
+          baseTime: NoWork,
+        }: OffscreenState);
         primaryChildFragment.childExpirationTime_opaque = getRemainingWorkInPrimaryTree(
           current,
           workInProgress,
@@ -1957,13 +1988,18 @@ function updateSuspenseComponent(
       if (showFallback) {
         // Timed out.
         const nextFallbackChildren = nextProps.fallback;
+        const nextPrimaryChildren = nextProps.children;
         const fallbackChildFragment = updateSuspenseFallbackChildren(
           current,
           workInProgress,
+          nextPrimaryChildren,
           nextFallbackChildren,
           renderExpirationTime,
         );
         const primaryChildFragment: Fiber = (workInProgress.child: any);
+        primaryChildFragment.memoizedState = ({
+          baseTime: NoWork,
+        }: OffscreenState);
         primaryChildFragment.childExpirationTime_opaque = getRemainingWorkInPrimaryTree(
           current,
           workInProgress,
@@ -1996,8 +2032,12 @@ function mountSuspensePrimaryChildren(
   renderExpirationTime,
 ) {
   const mode = workInProgress.mode;
+  const primaryChildProps: OffscreenProps = {
+    mode: 'visible',
+    children: primaryChildren,
+  };
   const primaryChildFragment = createFiberFromOffscreen(
-    primaryChildren,
+    primaryChildProps,
     mode,
     renderExpirationTime,
     null,
@@ -2009,12 +2049,17 @@ function mountSuspensePrimaryChildren(
 
 function mountSuspenseFallbackChildren(
   workInProgress,
+  primaryChildren,
   fallbackChildren,
   renderExpirationTime,
 ) {
   const mode = workInProgress.mode;
-
   const progressedPrimaryFragment: Fiber | null = workInProgress.child;
+
+  const primaryChildProps: OffscreenProps = {
+    mode: 'hidden',
+    children: primaryChildren,
+  };
 
   let primaryChildFragment;
   let fallbackChildFragment;
@@ -2023,6 +2068,7 @@ function mountSuspenseFallbackChildren(
     // completed, even though it's in an inconsistent state.
     primaryChildFragment = progressedPrimaryFragment;
     primaryChildFragment.childExpirationTime_opaque = NoWork;
+    primaryChildFragment.pendingProps = primaryChildProps;
 
     if (enableProfilerTimer && workInProgress.mode & ProfileMode) {
       // Reset the durations from the first pass so they aren't included in the
@@ -2042,7 +2088,12 @@ function mountSuspenseFallbackChildren(
       null,
     );
   } else {
-    primaryChildFragment = createFiberFromOffscreen(null, mode, NoWork, null);
+    primaryChildFragment = createFiberFromOffscreen(
+      primaryChildProps,
+      mode,
+      NoWork,
+      null,
+    );
     fallbackChildFragment = createFiberFromFragment(
       fallbackChildren,
       mode,
@@ -2058,6 +2109,15 @@ function mountSuspenseFallbackChildren(
   return fallbackChildFragment;
 }
 
+function createWorkInProgressOffscreenFiber(
+  current: Fiber,
+  offscreenProps: OffscreenProps,
+) {
+  // The props argument to `createWorkInProgress` is `any` typed, so we use this
+  // wrapper function to constrain it.
+  return createWorkInProgress(current, offscreenProps);
+}
+
 function updateSuspensePrimaryChildren(
   current,
   workInProgress,
@@ -2068,9 +2128,12 @@ function updateSuspensePrimaryChildren(
   const currentFallbackChildFragment: Fiber | null =
     currentPrimaryChildFragment.sibling;
 
-  const primaryChildFragment = createWorkInProgress(
+  const primaryChildFragment = createWorkInProgressOffscreenFiber(
     currentPrimaryChildFragment,
-    primaryChildren,
+    {
+      mode: 'visible',
+      children: primaryChildren,
+    },
   );
   if ((workInProgress.mode & BlockingMode) === NoMode) {
     primaryChildFragment.expirationTime_opaque = renderExpirationTime;
@@ -2091,6 +2154,7 @@ function updateSuspensePrimaryChildren(
 function updateSuspenseFallbackChildren(
   current,
   workInProgress,
+  primaryChildren,
   fallbackChildren,
   renderExpirationTime,
 ) {
@@ -2099,6 +2163,11 @@ function updateSuspenseFallbackChildren(
   const currentFallbackChildFragment: Fiber | null =
     currentPrimaryChildFragment.sibling;
 
+  const primaryChildProps: OffscreenProps = {
+    mode: 'hidden',
+    children: primaryChildren,
+  };
+
   let primaryChildFragment;
   if ((mode & BlockingMode) === NoMode) {
     // In legacy mode, we commit the primary tree as if it successfully
@@ -2106,6 +2175,7 @@ function updateSuspenseFallbackChildren(
     const progressedPrimaryFragment: Fiber = (workInProgress.child: any);
     primaryChildFragment = progressedPrimaryFragment;
     primaryChildFragment.childExpirationTime_opaque = NoWork;
+    primaryChildFragment.pendingProps = primaryChildProps;
 
     if (enableProfilerTimer && workInProgress.mode & ProfileMode) {
       // Reset the durations from the first pass so they aren't included in the
@@ -2136,9 +2206,9 @@ function updateSuspenseFallbackChildren(
       workInProgress.firstEffect = workInProgress.lastEffect = null;
     }
   } else {
-    primaryChildFragment = createWorkInProgress(
+    primaryChildFragment = createWorkInProgressOffscreenFiber(
       currentPrimaryChildFragment,
-      currentPrimaryChildFragment.pendingProps,
+      primaryChildProps,
     );
   }
   let fallbackChildFragment;
@@ -2199,12 +2269,13 @@ function retrySuspenseComponentWithoutHydrating(
 function mountSuspenseFallbackAfterRetryWithoutHydrating(
   current,
   workInProgress,
+  primaryChildren,
   fallbackChildren,
   renderExpirationTime,
 ) {
   const mode = workInProgress.mode;
   const primaryChildFragment = createFiberFromOffscreen(
-    null,
+    primaryChildren,
     mode,
     NoWork,
     null,
