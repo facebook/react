@@ -106,6 +106,7 @@ const tests = {
       ({useHook() { useState(); }});
       const {useHook3 = () => { useState(); }} = {};
       ({useHook = () => { useState(); }} = {});
+      Namespace.useHook = () => { useState(); };
     `,
     `
       // Valid because hooks can call hooks.
@@ -192,45 +193,11 @@ const tests = {
       }
     `,
     `
-      // Currently valid.
-      // We *could* make this invalid if we want, but it creates false positives
-      // (see the FooStore case).
-      class C {
-        m() {
-          This.useHook();
-          Super.useHook();
-        }
-      }
-    `,
-    `
-      // Valid although we *could* consider these invalid.
-      // But it doesn't bring much benefit since it's an immediate runtime error anyway.
-      // So might as well allow it.
-      Hook.use();
-      Hook._use();
-      Hook.useState();
-      Hook._useState();
-      Hook.use42();
-      Hook.useHook();
-      Hook.use_hook();
-    `,
-    `
       // Valid -- this is a regression test.
       jest.useFakeTimers();
       beforeEach(() => {
         jest.useRealTimers();
       })
-    `,
-    `
-      // Valid because that's a false positive we've seen quite a bit.
-      // This is a regression test.
-      class Foo extends Component {
-        render() {
-          if (cond) {
-            FooStore.useFeatureFlag();
-          }
-        }
-      }
     `,
     `
       // Valid because they're not matching use[A-Z].
@@ -239,16 +206,6 @@ const tests = {
       _use();
       _useState();
       use_hook();
-    `,
-    `
-      // This is grey area.
-      // Currently it's valid (although React.useCallback would fail here).
-      // We could also get stricter and disallow it, just like we did
-      // with non-namespace use*() top-level calls.
-      const History = require('history-2.1.2');
-      const browserHistory = History.useBasename(History.createHistory)({
-        basename: '/',
-      });
     `,
     `
       // Regression test for some internal code.
@@ -352,7 +309,6 @@ const tests = {
         if (c) {} else {}
         if (c) {} else {}
         if (c) {} else {}
-
         // 10 hooks
         useHook();
         useHook();
@@ -391,6 +347,68 @@ const tests = {
         }
       `,
       errors: [conditionalError('useConditionalHook')],
+    },
+    {
+      code: `
+        Hook.use();
+        Hook._use();
+        Hook.useState();
+        Hook._useState();
+        Hook.use42();
+        Hook.useHook();
+        Hook.use_hook();
+      `,
+      errors: [
+        topLevelError('Hook.useState'),
+        topLevelError('Hook.use42'),
+        topLevelError('Hook.useHook'),
+      ],
+    },
+    {
+      code: `
+        class C {
+          m() {
+            This.useHook();
+            Super.useHook();
+          }
+        }
+      `,
+      errors: [classError('This.useHook'), classError('Super.useHook')],
+    },
+    {
+      code: `
+        class Foo extends Component {
+          render() {
+            if (cond) {
+              FooStore.useFeatureFlag();
+            }
+          }
+        }
+      `,
+      errors: [classError('FooStore.useFeatureFlag')],
+    },
+    {
+      code: `
+        // Invalid because it's dangerous and might not warn otherwise.
+        // This *must* be invalid.
+        function ComponentWithConditionalHook() {
+          if (cond) {
+            Namespace.useConditionalHook();
+          }
+        }
+      `,
+      errors: [conditionalError('Namespace.useConditionalHook')],
+    },
+    {
+      code: `
+        // Extending the isHook check to [A-Z].*\.use
+        // to not let it be called on top level
+        const History = require('history-2.1.2');
+        const browserHistory = History.useBasename(History.createHistory)({
+          basename: '/',
+        });
+      `,
+      errors: [topLevelError('History.useBasename')],
     },
     {
       code: `

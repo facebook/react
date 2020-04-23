@@ -31,10 +31,9 @@ function isHook(node) {
     !node.computed &&
     isHook(node.property)
   ) {
-    // Only consider React.useFoo() to be namespace hooks for now to avoid false positives.
-    // We can expand this check later.
     const obj = node.object;
-    return obj.type === 'Identifier' && obj.name === 'React';
+    const isPascalCaseNameSpace = /^[A-Z].*/;
+    return obj.type === 'Identifier' && isPascalCaseNameSpace.test(obj.name);
   } else {
     return false;
   }
