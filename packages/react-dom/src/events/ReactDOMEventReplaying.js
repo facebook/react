@@ -30,10 +30,7 @@ import {
   getContainerFromFiber,
   getSuspenseInstanceFromFiber,
 } from 'react-reconciler/src/ReactFiberTreeReflection';
-import {
-  attemptToDispatchEvent,
-  addResponderEventSystemEvent,
-} from './ReactDOMEventListener';
+import {attemptToDispatchEvent} from './ReactDOMEventListener';
 import {getListenerMapForElement} from './DOMEventListenerMap';
 import {
   getInstanceFromNode,
@@ -121,6 +118,7 @@ import {
 import {IS_REPLAYED, PLUGIN_EVENT_SYSTEM} from './EventSystemFlags';
 import {legacyListenToTopLevelEvent} from './DOMLegacyEventPluginSystem';
 import {listenToTopLevelEvent} from './DOMModernPluginEventSystem';
+import {addResponderEventSystemEvent} from './DeprecatedDOMEventResponderSystem';
 
 type QueuedReplayableEvent = {|
   blockedOn: null | Container | SuspenseInstance,
