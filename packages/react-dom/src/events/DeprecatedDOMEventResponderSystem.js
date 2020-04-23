@@ -10,6 +10,7 @@ import {
   type EventSystemFlags,
   IS_PASSIVE,
   PASSIVE_NOT_SUPPORTED,
+  RESPONDER_EVENT_SYSTEM,
 } from './EventSystemFlags';
 import type {AnyNativeEvent} from 'legacy-events/PluginModuleType';
 import {
@@ -37,6 +38,15 @@ import invariant from 'shared/invariant';
 
 import {getClosestInstanceFromNode} from '../client/ReactDOMComponentTree';
 import {enqueueStateRestore} from './ReactDOMControlledComponent';
+import {createEventListenerWrapper} from './ReactDOMEventListener';
+import {passiveBrowserEventsSupported} from './checkPassiveEvents';
+import {getRawEventName} from './DOMTopLevelEventTypes';
+import {
+  addEventCaptureListener,
+  addEventCaptureListenerWithPassiveFlag,
+  removeEventListener,
+} from './EventListener';
+
 import {
   ContinuousEvent,
   UserBlockingEvent,
@@ -570,4 +580,51 @@ function DEPRECATED_registerRootEventType(
   );
   rootEventTypesSet.add(rootEventType);
   rootEventResponderInstances.add(eventResponderInstance);
+}
+
+export function addResponderEventSystemEvent(
+  document: Document,
+  topLevelType: string,
+  passive: boolean,
+): any => void {
+  let eventFlags = RESPONDER_EVENT_SYSTEM;
+
+  // If passive option is not supported, then the event will be
+  // active and not passive, but we flag it as using not being
+  // supported too. This way the responder event plugins know,
+  // and can provide polyfills if needed.
+  if (passive) {
+    if (passiveBrowserEventsSupported) {
+      eventFlags |= IS_PASSIVE;
+    } else {
+      eventFlags |= PASSIVE_NOT_SUPPORTED;
+      passive = false;
+    }
+  }
+  // Check if interactive and wrap in discreteUpdates
+  const listener = createEventListenerWrapper(
+    document,
+    ((topLevelType: any): DOMTopLevelEventType),
+    eventFlags,
+  );
+  if (passiveBrowserEventsSupported) {
+    return addEventCaptureListenerWithPassiveFlag(
+      document,
+      topLevelType,
+      listener,
+      passive,
+    );
+  } else {
+    return addEventCaptureListener(document, topLevelType, listener);
+  }
+}
+
+export function removeTrappedEventListener(
+  targetContainer: EventTarget,
+  topLevelType: DOMTopLevelEventType,
+  capture: boolean,
+  listener: any => void,
+): void {
+  const rawEventName = getRawEventName(topLevelType);
+  removeEventListener(targetContainer, rawEventName, listener, capture);
 }

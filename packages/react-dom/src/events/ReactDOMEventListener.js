@@ -36,20 +36,10 @@ import {
   LEGACY_FB_SUPPORT,
   PLUGIN_EVENT_SYSTEM,
   RESPONDER_EVENT_SYSTEM,
-  IS_PASSIVE,
-  PASSIVE_NOT_SUPPORTED,
 } from './EventSystemFlags';
 
-import {
-  addEventBubbleListener,
-  addEventCaptureListener,
-  addEventCaptureListenerWithPassiveFlag,
-  removeEventListener,
-} from './EventListener';
 import getEventTarget from './getEventTarget';
 import {getClosestInstanceFromNode} from '../client/ReactDOMComponentTree';
-import {getRawEventName} from './DOMTopLevelEventTypes';
-import {passiveBrowserEventsSupported} from './checkPassiveEvents';
 
 import {
   enableDeprecatedFlareAPI,
@@ -85,58 +75,29 @@ export function isEnabled() {
   return _enabled;
 }
 
-export function addResponderEventSystemEvent(
-  document: Document,
-  topLevelType: string,
-  passive: boolean,
-): any => void {
-  let eventFlags = RESPONDER_EVENT_SYSTEM;
-
-  // If passive option is not supported, then the event will be
-  // active and not passive, but we flag it as using not being
-  // supported too. This way the responder event plugins know,
-  // and can provide polyfills if needed.
-  if (passive) {
-    if (passiveBrowserEventsSupported) {
-      eventFlags |= IS_PASSIVE;
-    } else {
-      eventFlags |= PASSIVE_NOT_SUPPORTED;
-      passive = false;
-    }
-  }
-  // Check if interactive and wrap in discreteUpdates
-  const listener = dispatchEvent.bind(
-    null,
-    ((topLevelType: any): DOMTopLevelEventType),
-    eventFlags,
-    document,
-  );
-  if (passiveBrowserEventsSupported) {
-    return addEventCaptureListenerWithPassiveFlag(
-      document,
-      topLevelType,
-      listener,
-      passive,
-    );
-  } else {
-    return addEventCaptureListener(document, topLevelType, listener);
-  }
-}
-
-export function addTrappedEventListener(
+export function createEventListenerWrapper(
   targetContainer: EventTarget,
   topLevelType: DOMTopLevelEventType,
   eventSystemFlags: EventSystemFlags,
-  capture: boolean,
-  isDeferredListenerForLegacyFBSupport?: boolean,
-  passive?: boolean,
+): Function {
+  return dispatchEvent.bind(
+    null,
+    topLevelType,
+    eventSystemFlags,
+    targetContainer,
+  );
+}
+
+export function createEventListenerWrapperWithPriority(
+  targetContainer: EventTarget,
+  topLevelType: DOMTopLevelEventType,
+  eventSystemFlags: EventSystemFlags,
   priority?: EventPriority,
-): any => void {
+): Function {
   const eventPriority =
     priority === undefined
       ? getEventPriorityForPluginSystem(topLevelType)
       : priority;
-  let listener;
   let listenerWrapper;
   switch (eventPriority) {
     case DiscreteEvent:
@@ -150,77 +111,12 @@ export function addTrappedEventListener(
       listenerWrapper = dispatchEvent;
       break;
   }
-  // If passive option is not supported, then the event will be
-  // active and not passive.
-  if (passive === true && !passiveBrowserEventsSupported) {
-    passive = false;
-  }
-
-  listener = listenerWrapper.bind(
+  return listenerWrapper.bind(
     null,
     topLevelType,
     eventSystemFlags,
     targetContainer,
   );
-
-  targetContainer =
-    enableLegacyFBSupport && isDeferredListenerForLegacyFBSupport
-      ? (targetContainer: any).ownerDocument
-      : targetContainer;
-
-  const rawEventName = getRawEventName(topLevelType);
-
-  let unsubscribeListener;
-  // When legacyFBSupport is enabled, it's for when we
-  // want to add a one time event listener to a container.
-  // This should only be used with enableLegacyFBSupport
-  // due to requirement to provide compatibility with
-  // internal FB www event tooling. This works by removing
-  // the event listener as soon as it is invoked. We could
-  // also attempt to use the {once: true} param on
-  // addEventListener, but that requires support and some
-  // browsers do not support this today, and given this is
-  // to support legacy code patterns, it's likely they'll
-  // need support for such browsers.
-  if (enableLegacyFBSupport && isDeferredListenerForLegacyFBSupport) {
-    const originalListener = listener;
-    listener = function(...p) {
-      try {
-        return originalListener.apply(this, p);
-      } finally {
-        removeEventListener(
-          targetContainer,
-          rawEventName,
-          unsubscribeListener,
-          capture,
-        );
-      }
-    };
-  }
-  if (capture) {
-    unsubscribeListener = addEventCaptureListener(
-      targetContainer,
-      rawEventName,
-      listener,
-    );
-  } else {
-    unsubscribeListener = addEventBubbleListener(
-      targetContainer,
-      rawEventName,
-      listener,
-    );
-  }
-  return unsubscribeListener;
-}
-
-export function removeTrappedEventListener(
-  targetContainer: EventTarget,
-  topLevelType: DOMTopLevelEventType,
-  capture: boolean,
-  listener: any => void,
-): void {
-  const rawEventName = getRawEventName(topLevelType);
-  removeEventListener(targetContainer, rawEventName, listener, capture);
 }
 
 function dispatchDiscreteEvent(

@@ -9,9 +9,9 @@
 
 'use strict';
 
-let React = require('react');
-let ReactDOM = require('react-dom');
-let TestUtils = require('react-dom/test-utils');
+let React;
+let ReactDOM;
+let TestUtils;
 let ReactFeatureFlags;
 let Scheduler;
 
@@ -34,6 +34,7 @@ describe('ChangeEventPlugin', () => {
   let container;
 
   beforeEach(() => {
+    jest.resetModules();
     ReactFeatureFlags = require('shared/ReactFeatureFlags');
     // TODO pull this into helper method, reduce repetition.
     // mock the browser APIs which are used in schedule:
@@ -53,7 +54,11 @@ describe('ChangeEventPlugin', () => {
         postMessageCallback(postMessageEvent);
       }
     };
-    jest.resetModules();
+    ReactFeatureFlags.enableModernEventSystem = true;
+    React = require('react');
+    ReactDOM = require('react-dom');
+    TestUtils = require('react-dom/test-utils');
+    Scheduler = require('scheduler');
     container = document.createElement('div');
     document.body.appendChild(container);
   });
@@ -467,17 +472,6 @@ describe('ChangeEventPlugin', () => {
   });
 
   describe('concurrent mode', () => {
-    beforeEach(() => {
-      jest.resetModules();
-      ReactFeatureFlags = require('shared/ReactFeatureFlags');
-      ReactFeatureFlags.enableModernEventSystem = true;
-
-      React = require('react');
-      ReactDOM = require('react-dom');
-      TestUtils = require('react-dom/test-utils');
-      Scheduler = require('scheduler');
-    });
-
     // @gate experimental
     it('text input', () => {
       const root = ReactDOM.createRoot(container);
@@ -719,14 +713,6 @@ describe('ChangeEventPlugin', () => {
 
     // @gate experimental
     it('mouse enter/leave should be user-blocking but not discrete', async () => {
-      // This is currently behind a feature flag
-      jest.resetModules();
-      ReactFeatureFlags.enableModernEventSystem = true;
-      React = require('react');
-      ReactDOM = require('react-dom');
-      TestUtils = require('react-dom/test-utils');
-      Scheduler = require('scheduler');
-
       const {act} = TestUtils;
       const {useState} = React;
 

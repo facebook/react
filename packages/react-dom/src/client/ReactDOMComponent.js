@@ -10,7 +10,11 @@
 import {registrationNameModules} from 'legacy-events/EventPluginRegistry';
 import {canUseDOM} from 'shared/ExecutionEnvironment';
 import invariant from 'shared/invariant';
-import {setListenToResponderEventTypes} from '../events/DeprecatedDOMEventResponderSystem';
+import {
+  setListenToResponderEventTypes,
+  addResponderEventSystemEvent,
+  removeTrappedEventListener,
+} from '../events/DeprecatedDOMEventResponderSystem';
 
 import {
   getValueForAttribute,
@@ -56,10 +60,6 @@ import {
   TOP_TOGGLE,
 } from '../events/DOMTopLevelEventTypes';
 import {getListenerMapForElement} from '../events/DOMEventListenerMap';
-import {
-  addResponderEventSystemEvent,
-  removeTrappedEventListener,
-} from '../events/ReactDOMEventListener.js';
 import {mediaEventTypes} from '../events/DOMTopLevelEventTypes';
 import {
   createDangerousStringForStyles,

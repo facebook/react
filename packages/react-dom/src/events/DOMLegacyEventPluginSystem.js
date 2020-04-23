@@ -44,9 +44,10 @@ import {
   getRawEventName,
   mediaEventTypes,
 } from './DOMTopLevelEventTypes';
-import {addTrappedEventListener} from './ReactDOMEventListener';
+import {createEventListenerWrapperWithPriority} from './ReactDOMEventListener';
 import {batchedEventUpdates} from './ReactDOMUpdateBatching';
 import getListener from './getListener';
+import {addEventCaptureListener, addEventBubbleListener} from './EventListener';
 
 /**
  * Summary of `DOMEventPluginSystem` event handling:
@@ -397,6 +398,24 @@ export function legacyTrapCapturedEvent(
     true,
   );
   listenerMap.set(topLevelType, {passive: undefined, listener});
+}
+
+function addTrappedEventListener(
+  targetContainer: EventTarget,
+  topLevelType: DOMTopLevelEventType,
+  eventSystemFlags: EventSystemFlags,
+  capture: boolean,
+): any => void {
+  const rawEventName = getRawEventName(topLevelType);
+  const listener = createEventListenerWrapperWithPriority(
+    targetContainer,
+    topLevelType,
+    eventSystemFlags,
+  );
+  const unsubscribeListener = capture
+    ? addEventCaptureListener(targetContainer, rawEventName, listener)
+    : addEventBubbleListener(targetContainer, rawEventName, listener);
+  return unsubscribeListener;
 }
 
 function getParent(inst: Object | null): Object | null {
