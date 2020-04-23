@@ -1,6 +1,7 @@
 'use strict';
 
 const chalk = require('chalk');
+const fc = require('fast-check');
 const util = require('util');
 const shouldIgnoreConsoleError = require('./shouldIgnoreConsoleError');
 const {getTestFlags} = require('./TestFlags');
@@ -313,3 +314,10 @@ if (process.env.REACT_CLASS_EQUIVALENCE_TEST) {
 
   require('jasmine-check').install();
 }
+
+// Configure fuzzer based on environment variables if any
+// Do not require fast-check in beforeEach if you want to benefit from this configuration
+fc.configureGlobal({
+  numRuns: 500, // default is 100
+  seed: +process.env.FUZZ_TEST_SEED || undefined,
+});
