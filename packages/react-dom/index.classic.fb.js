@@ -30,8 +30,6 @@ export {
   unmountComponentAtNode,
   createRoot,
   createBlockingRoot,
-  unstable_discreteUpdates,
-  unstable_flushDiscreteUpdates,
   unstable_flushControlled,
   unstable_scheduleHydration,
   unstable_renderSubtreeIntoContainer,

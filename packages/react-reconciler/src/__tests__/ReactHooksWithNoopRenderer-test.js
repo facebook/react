@@ -1656,7 +1656,7 @@ describe('ReactHooksWithNoopRenderer', () => {
       });
     });
 
-    it('flushes passive effects when flushing discrete updates', () => {
+    it('does not flush non-discrete passive effects when flushing sync', () => {
       let _updateCount;
       function Counter(props) {
         const [count, updateCount] = useState(0);
@@ -1678,28 +1678,28 @@ describe('ReactHooksWithNoopRenderer', () => {
         expect(ReactNoop.getChildren()).toEqual([span('Count: 0')]);
       }).toErrorDev(['An update to Counter ran an effect']);
 
-      // A discrete event forces the passive effect to be flushed --
-      // updateCount(1) happens first, so 2 wins.
-      ReactNoop.flushDiscreteUpdates();
-      ReactNoop.discreteUpdates(() => {
-        // (use batchedUpdates to silence the act() warning)
-        ReactNoop.batchedUpdates(() => {
+      // A flush sync doesn't cause the passive effects to fire.
+      // So we haven't added the other update yet.
+      act(() => {
+        ReactNoop.flushSync(() => {
           _updateCount(2);
         });
       });
-      expect(Scheduler).toHaveYielded(['Will set count to 1']);
-      expect(() => {
-        expect(Scheduler).toFlushAndYield(['Count: 2']);
-      }).toErrorDev([
-        'An update to Counter ran an effect',
-        'An update to Counter ran an effect',
+
+      // As a result we, somewhat surprisingly, commit them in the opposite order.
+      // This should be fine because any non-discrete set of work doesn't guarantee order
+      // and easily could've happened slightly later too.
+      expect(Scheduler).toHaveYielded([
+        'Will set count to 1',
+        'Count: 2',
+        'Count: 1',
       ]);
 
-      expect(ReactNoop.getChildren()).toEqual([span('Count: 2')]);
+      expect(ReactNoop.getChildren()).toEqual([span('Count: 1')]);
     });
 
     // @gate enableSchedulerTracing
-    it('flushes passive effects when flushing discrete updates (with tracing)', () => {
+    it('does not flush non-discrete passive effects when flushing sync (with tracing)', () => {
       const onInteractionScheduledWorkCompleted = jest.fn();
       const onWorkCanceled = jest.fn();
       SchedulerTracing.unstable_subscribe({
@@ -1744,24 +1744,20 @@ describe('ReactHooksWithNoopRenderer', () => {
 
       expect(onInteractionScheduledWorkCompleted).toHaveBeenCalledTimes(0);
 
-      // A discrete event forces the passive effect to be flushed --
-      // updateCount(1) happens first, so 2 wins.
-      ReactNoop.flushDiscreteUpdates();
-      ReactNoop.discreteUpdates(() => {
-        // (use batchedUpdates to silence the act() warning)
-        ReactNoop.batchedUpdates(() => {
+      // A flush sync doesn't cause the passive effects to fire.
+      act(() => {
+        ReactNoop.flushSync(() => {
           _updateCount(2);
         });
       });
-      expect(Scheduler).toHaveYielded(['Will set count to 1']);
-      expect(() => {
-        expect(Scheduler).toFlushAndYield(['Count: 2']);
-      }).toErrorDev([
-        'An update to Counter ran an effect',
-        'An update to Counter ran an effect',
+
+      expect(Scheduler).toHaveYielded([
+        'Will set count to 1',
+        'Count: 2',
+        'Count: 1',
       ]);
 
-      expect(ReactNoop.getChildren()).toEqual([span('Count: 2')]);
+      expect(ReactNoop.getChildren()).toEqual([span('Count: 1')]);
 
       expect(onInteractionScheduledWorkCompleted).toHaveBeenCalledTimes(1);
       expect(onWorkCanceled).toHaveBeenCalledTimes(0);

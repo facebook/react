@@ -21,7 +21,6 @@ import {
   batchedUpdates as batchedUpdates_old,
   unbatchedUpdates as unbatchedUpdates_old,
   deferredUpdates as deferredUpdates_old,
-  syncUpdates as syncUpdates_old,
   discreteUpdates as discreteUpdates_old,
   flushDiscreteUpdates as flushDiscreteUpdates_old,
   flushControlled as flushControlled_old,
@@ -49,7 +48,6 @@ import {
   batchedUpdates as batchedUpdates_new,
   unbatchedUpdates as unbatchedUpdates_new,
   deferredUpdates as deferredUpdates_new,
-  syncUpdates as syncUpdates_new,
   discreteUpdates as discreteUpdates_new,
   flushDiscreteUpdates as flushDiscreteUpdates_new,
   flushControlled as flushControlled_new,
@@ -88,9 +86,6 @@ export const unbatchedUpdates = enableNewReconciler
 export const deferredUpdates = enableNewReconciler
   ? deferredUpdates_new
   : deferredUpdates_old;
-export const syncUpdates = enableNewReconciler
-  ? syncUpdates_new
-  : syncUpdates_old;
 export const discreteUpdates = enableNewReconciler
   ? discreteUpdates_new
   : discreteUpdates_old;

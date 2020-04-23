@@ -21,8 +21,6 @@ export {
   // exposeConcurrentModeAPIs
   createRoot,
   createBlockingRoot,
-  unstable_discreteUpdates,
-  unstable_flushDiscreteUpdates,
   unstable_flushControlled,
   unstable_scheduleHydration,
   // Disabled behind disableUnstableRenderSubtreeIntoContainer
