@@ -380,6 +380,8 @@ const tests = {
     },
     {
       code: `
+        // This is a false positive (it's valid) that unfortunately 
+        // we cannot avoid. Prefer to rename it to not start with "use"
         class Foo extends Component {
           render() {
             if (cond) {
@@ -401,17 +403,6 @@ const tests = {
         }
       `,
       errors: [conditionalError('Namespace.useConditionalHook')],
-    },
-    {
-      code: `
-        // Extending the isHook check to [A-Z].*\.use
-        // to not let it be called on top level
-        const History = require('history-2.1.2');
-        const browserHistory = History.useBasename(History.createHistory)({
-          basename: '/',
-        });
-      `,
-      errors: [topLevelError('History.useBasename')],
     },
     {
       code: `
