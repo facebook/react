@@ -86,7 +86,7 @@ describe('ReactSuspense', () => {
                   JSON.parse(line.split('::', 2)[1].split(' resolved')[0]),
                 );
               return `
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import ReactDOM from "react-dom";
 import { unstable_runWithPriority } from "scheduler";
 
