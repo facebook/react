@@ -634,6 +634,17 @@ export function unhideTextInstance(
   textInstance.nodeValue = text;
 }
 
+export function clearContainer(container: Container): void {
+  if (container.nodeType === ELEMENT_NODE) {
+    ((container: any): Element).innerHTML = '';
+  } else if (container.nodeType === DOCUMENT_NODE) {
+    const documentElement = ((container: any): Document).documentElement;
+    if (documentElement != null) {
+      documentElement.innerHTML = '';
+    }
+  }
+}
+
 // -------------------
 //     Hydration
 // -------------------

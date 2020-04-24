@@ -113,7 +113,28 @@ describe('ReactDOMRoot', () => {
     expect(() => Scheduler.unstable_flushAll()).toErrorDev('Extra attributes');
   });
 
-  it('does not clear existing children', async () => {
+  it('clears existing children with legacy API', async () => {
+    container.innerHTML = '<div>a</div><div>b</div>';
+    ReactDOM.render(
+      <div>
+        <span>c</span>
+        <span>d</span>
+      </div>,
+      container,
+    );
+    expect(container.textContent).toEqual('cd');
+    ReactDOM.render(
+      <div>
+        <span>d</span>
+        <span>c</span>
+      </div>,
+      container,
+    );
+    Scheduler.unstable_flushAll();
+    expect(container.textContent).toEqual('dc');
+  });
+
+  it('clears existing children', async () => {
     container.innerHTML = '<div>a</div><div>b</div>';
     const root = ReactDOM.createRoot(container);
     root.render(
@@ -123,7 +144,7 @@ describe('ReactDOMRoot', () => {
       </div>,
     );
     Scheduler.unstable_flushAll();
-    expect(container.textContent).toEqual('abcd');
+    expect(container.textContent).toEqual('cd');
     root.render(
       <div>
         <span>d</span>
@@ -131,7 +152,7 @@ describe('ReactDOMRoot', () => {
       </div>,
     );
     Scheduler.unstable_flushAll();
-    expect(container.textContent).toEqual('abdc');
+    expect(container.textContent).toEqual('dc');
   });
 
   it('throws a good message on invalid containers', () => {
@@ -220,7 +241,14 @@ describe('ReactDOMRoot', () => {
     let unmounted = false;
     expect(() => {
       unmounted = ReactDOM.unmountComponentAtNode(container);
-    }).toErrorDev('Did you mean to call root.unmount()?', {withoutStack: true});
+    }).toErrorDev(
+      [
+        'Did you mean to call root.unmount()?',
+        // This is more of a symptom but restructuring the code to avoid it isn't worth it:
+        "The node you're attempting to unmount was rendered by React and is not a top-level container.",
+      ],
+      {withoutStack: true},
+    );
     expect(unmounted).toBe(false);
     Scheduler.unstable_flushAll();
     expect(container.textContent).toEqual('Hi');

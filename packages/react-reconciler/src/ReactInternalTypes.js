@@ -247,6 +247,9 @@ type BaseFiberRootProperties = {|
   // render again
   lastPingedTime: ExpirationTime,
   lastExpiredTime: ExpirationTime,
+  // The container had non-React managed children before rendering;
+  // it should be cleared during the commit phase, before new children are appended.
+  clearContainerBeforeMount: boolean,
   // Used by useMutableSource hook to avoid tearing within this root
   // when external, mutable sources are read from during render.
   mutableSourceLastPendingUpdateTime: ExpirationTime,
