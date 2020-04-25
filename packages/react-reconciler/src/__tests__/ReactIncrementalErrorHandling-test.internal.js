@@ -239,8 +239,9 @@ describe('ReactIncrementalErrorHandling', () => {
       });
     }
 
-    ReactNoop.render(<App isBroken={true} />, onCommit);
-    Scheduler.unstable_advanceTime(1000);
+    ReactNoop.discreteUpdates(() => {
+      ReactNoop.render(<App isBroken={true} />, onCommit);
+    });
     expect(Scheduler).toFlushAndYieldThrough(['error']);
     interrupt();
 
@@ -296,8 +297,9 @@ describe('ReactIncrementalErrorHandling', () => {
       });
     }
 
-    ReactNoop.render(<App isBroken={true} />, onCommit);
-    Scheduler.unstable_advanceTime(1000);
+    ReactNoop.discreteUpdates(() => {
+      ReactNoop.render(<App isBroken={true} />, onCommit);
+    });
     expect(Scheduler).toFlushAndYieldThrough(['error']);
     interrupt();
 

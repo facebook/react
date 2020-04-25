@@ -8,7 +8,7 @@
  */
 
 import type {Fiber} from './ReactInternalTypes';
-import type {ExpirationTime} from './ReactFiberExpirationTime.new';
+import type {ExpirationTimeOpaque} from './ReactFiberExpirationTime.new';
 import type {UpdateQueue} from './ReactUpdateQueue.new';
 
 import * as React from 'react';
@@ -40,7 +40,7 @@ import {
   initializeUpdateQueue,
   cloneUpdateQueue,
 } from './ReactUpdateQueue.new';
-import {NoWork} from './ReactFiberExpirationTime.new';
+import {NoWork, isSameExpirationTime} from './ReactFiberExpirationTime.new';
 import {
   cacheContext,
   getMaskedContext,
@@ -50,8 +50,8 @@ import {
 } from './ReactFiberContext.new';
 import {readContext} from './ReactFiberNewContext.new';
 import {
-  requestCurrentTimeForUpdate,
-  computeExpirationForFiber,
+  requestEventTime,
+  requestUpdateExpirationTime,
   scheduleUpdateOnFiber,
 } from './ReactFiberWorkLoop.new';
 import {requestCurrentSuspenseConfig} from './ReactFiberSuspenseConfig';
@@ -92,7 +92,7 @@ if (__DEV__) {
     if (callback === null || typeof callback === 'function') {
       return;
     }
-    const key = `${callerName}_${(callback: any)}`;
+    const key = callerName + '_' + (callback: any);
     if (!didWarnOnInvalidCallback.has(key)) {
       didWarnOnInvalidCallback.add(key);
       console.error(
@@ -177,7 +177,12 @@ export function applyDerivedStateFromProps(
 
   // Once the update queue is empty, persist the derived state onto the
   // base state.
-  if (workInProgress.expirationTime === NoWork) {
+  if (
+    isSameExpirationTime(
+      workInProgress.expirationTime_opaque,
+      (NoWork: ExpirationTimeOpaque),
+    )
+  ) {
     // Queue is always non-null for classes
     const updateQueue: UpdateQueue<any> = (workInProgress.updateQueue: any);
     updateQueue.baseState = memoizedState;
@@ -188,15 +193,11 @@ const classComponentUpdater = {
   isMounted,
   enqueueSetState(inst, payload, callback) {
     const fiber = getInstance(inst);
-    const currentTime = requestCurrentTimeForUpdate();
+    const eventTime = requestEventTime();
     const suspenseConfig = requestCurrentSuspenseConfig();
-    const expirationTime = computeExpirationForFiber(
-      currentTime,
-      fiber,
-      suspenseConfig,
-    );
+    const expirationTime = requestUpdateExpirationTime(fiber, suspenseConfig);
 
-    const update = createUpdate(currentTime, expirationTime, suspenseConfig);
+    const update = createUpdate(eventTime, expirationTime, suspenseConfig);
     update.payload = payload;
     if (callback !== undefined && callback !== null) {
       if (__DEV__) {
@@ -210,15 +211,11 @@ const classComponentUpdater = {
   },
   enqueueReplaceState(inst, payload, callback) {
     const fiber = getInstance(inst);
-    const currentTime = requestCurrentTimeForUpdate();
+    const eventTime = requestEventTime();
     const suspenseConfig = requestCurrentSuspenseConfig();
-    const expirationTime = computeExpirationForFiber(
-      currentTime,
-      fiber,
-      suspenseConfig,
-    );
+    const expirationTime = requestUpdateExpirationTime(fiber, suspenseConfig);
 
-    const update = createUpdate(currentTime, expirationTime, suspenseConfig);
+    const update = createUpdate(eventTime, expirationTime, suspenseConfig);
     update.tag = ReplaceState;
     update.payload = payload;
 
@@ -234,15 +231,11 @@ const classComponentUpdater = {
   },
   enqueueForceUpdate(inst, callback) {
     const fiber = getInstance(inst);
-    const currentTime = requestCurrentTimeForUpdate();
+    const eventTime = requestEventTime();
     const suspenseConfig = requestCurrentSuspenseConfig();
-    const expirationTime = computeExpirationForFiber(
-      currentTime,
-      fiber,
-      suspenseConfig,
-    );
+    const expirationTime = requestUpdateExpirationTime(fiber, suspenseConfig);
 
-    const update = createUpdate(currentTime, expirationTime, suspenseConfig);
+    const update = createUpdate(eventTime, expirationTime, suspenseConfig);
     update.tag = ForceUpdate;
 
     if (callback !== undefined && callback !== null) {
@@ -778,7 +771,7 @@ function mountClassInstance(
   workInProgress: Fiber,
   ctor: any,
   newProps: any,
-  renderExpirationTime: ExpirationTime,
+  renderExpirationTime: ExpirationTimeOpaque,
 ): void {
   if (__DEV__) {
     checkClassInstance(workInProgress, ctor, newProps);
@@ -873,7 +866,7 @@ function resumeMountClassInstance(
   workInProgress: Fiber,
   ctor: any,
   newProps: any,
-  renderExpirationTime: ExpirationTime,
+  renderExpirationTime: ExpirationTimeOpaque,
 ): boolean {
   const instance = workInProgress.stateNode;
 
@@ -1008,7 +1001,7 @@ function updateClassInstance(
   workInProgress: Fiber,
   ctor: any,
   newProps: any,
-  renderExpirationTime: ExpirationTime,
+  renderExpirationTime: ExpirationTimeOpaque,
 ): boolean {
   const instance = workInProgress.stateNode;
 

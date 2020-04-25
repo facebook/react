@@ -22,6 +22,11 @@ describe('ReactExpiration', () => {
     Scheduler = require('scheduler');
   });
 
+  function Text(props) {
+    Scheduler.unstable_yieldValue(props.text);
+    return props.text;
+  }
+
   function span(prop) {
     return {type: 'span', children: [], prop, hidden: false};
   }
@@ -47,7 +52,7 @@ describe('ReactExpiration', () => {
   });
 
   it('two updates of like priority in the same event always flush within the same batch', () => {
-    class Text extends React.Component {
+    class TextClass extends React.Component {
       componentDidMount() {
         Scheduler.unstable_yieldValue(`${this.props.text} [commit]`);
       }
@@ -68,7 +73,7 @@ describe('ReactExpiration', () => {
 
     // First, show what happens for updates in two separate events.
     // Schedule an update.
-    ReactNoop.render(<Text text="A" />);
+    ReactNoop.render(<TextClass text="A" />);
     // Advance the timer.
     Scheduler.unstable_advanceTime(2000);
     // Partially flush the first update, then interrupt it.
@@ -80,29 +85,28 @@ describe('ReactExpiration', () => {
     expect(ReactNoop.getChildren()).toEqual([]);
 
     // Schedule another update.
-    ReactNoop.render(<Text text="B" />);
-    // The updates should flush in separate batches, since sufficient time
-    // passed in between them *and* they occurred in separate events.
-    // Note: This isn't necessarily the ideal behavior. It might be better to
-    // batch these two updates together. The fact that they aren't batched
-    // is an implementation detail. The important part of this unit test is that
-    // they are batched if it's possible that they happened in the same event.
-    expect(Scheduler).toFlushAndYield([
-      'A [render]',
-      'A [commit]',
-      'B [render]',
-      'B [commit]',
-    ]);
+    ReactNoop.render(<TextClass text="B" />);
+    expect(Scheduler).toFlushAndYield(
+      gate(flags =>
+        flags.new
+          ? // In the new reconciler, both updates are batched
+            ['B [render]', 'B [commit]']
+          : // In the old reconciler, they are flushed separately. That's not
+            // ideal, but for the purposes of this test it's fine since they
+            // didn't happen in the same event,
+            ['A [render]', 'A [commit]', 'B [render]', 'B [commit]'],
+      ),
+    );
     expect(ReactNoop.getChildren()).toEqual([span('B')]);
 
     // Now do the same thing again, except this time don't flush any work in
     // between the two updates.
-    ReactNoop.render(<Text text="A" />);
+    ReactNoop.render(<TextClass text="A" />);
     Scheduler.unstable_advanceTime(2000);
     expect(Scheduler).toHaveYielded([]);
     expect(ReactNoop.getChildren()).toEqual([span('B')]);
     // Schedule another update.
-    ReactNoop.render(<Text text="B" />);
+    ReactNoop.render(<TextClass text="B" />);
     // The updates should flush in the same batch, since as far as the scheduler
     // knows, they may have occurred inside the same event.
     expect(Scheduler).toFlushAndYield(['B [render]', 'B [commit]']);
@@ -112,7 +116,7 @@ describe('ReactExpiration', () => {
     'two updates of like priority in the same event always flush within the ' +
       "same batch, even if there's a sync update in between",
     () => {
-      class Text extends React.Component {
+      class TextClass extends React.Component {
         componentDidMount() {
           Scheduler.unstable_yieldValue(`${this.props.text} [commit]`);
         }
@@ -133,7 +137,7 @@ describe('ReactExpiration', () => {
 
       // First, show what happens for updates in two separate events.
       // Schedule an update.
-      ReactNoop.render(<Text text="A" />);
+      ReactNoop.render(<TextClass text="A" />);
       // Advance the timer.
       Scheduler.unstable_advanceTime(2000);
       // Partially flush the first update, then interrupt it.
@@ -145,24 +149,23 @@ describe('ReactExpiration', () => {
       expect(ReactNoop.getChildren()).toEqual([]);
 
       // Schedule another update.
-      ReactNoop.render(<Text text="B" />);
-      // The updates should flush in separate batches, since sufficient time
-      // passed in between them *and* they occurred in separate events.
-      // Note: This isn't necessarily the ideal behavior. It might be better to
-      // batch these two updates together. The fact that they aren't batched
-      // is an implementation detail. The important part of this unit test is that
-      // they are batched if it's possible that they happened in the same event.
-      expect(Scheduler).toFlushAndYield([
-        'A [render]',
-        'A [commit]',
-        'B [render]',
-        'B [commit]',
-      ]);
+      ReactNoop.render(<TextClass text="B" />);
+      expect(Scheduler).toFlushAndYield(
+        gate(flags =>
+          flags.new
+            ? // In the new reconciler, both updates are batched
+              ['B [render]', 'B [commit]']
+            : // In the old reconciler, they are flushed separately. That's not
+              // ideal, but for the purposes of this test it's fine since they
+              // didn't happen in the same event,
+              ['A [render]', 'A [commit]', 'B [render]', 'B [commit]'],
+        ),
+      );
       expect(ReactNoop.getChildren()).toEqual([span('B')]);
 
       // Now do the same thing again, except this time don't flush any work in
       // between the two updates.
-      ReactNoop.render(<Text text="A" />);
+      ReactNoop.render(<TextClass text="A" />);
       Scheduler.unstable_advanceTime(2000);
       expect(Scheduler).toHaveYielded([]);
       expect(ReactNoop.getChildren()).toEqual([span('B')]);
@@ -172,7 +175,7 @@ describe('ReactExpiration', () => {
       interrupt();
 
       // Schedule another update.
-      ReactNoop.render(<Text text="B" />);
+      ReactNoop.render(<TextClass text="B" />);
       // The updates should flush in the same batch, since as far as the scheduler
       // knows, they may have occurred inside the same event.
       expect(Scheduler).toFlushAndYield(['B [render]', 'B [commit]']);
@@ -242,6 +245,60 @@ describe('ReactExpiration', () => {
       '1 [C] [render]',
       '1 [D] [render]',
     ]);
+  });
+
+  it('stops yielding if CPU-bound update takes too long to finish', () => {
+    const root = ReactNoop.createRoot();
+    function App() {
+      return (
+        <>
+          <Text text="A" />
+          <Text text="B" />
+          <Text text="C" />
+          <Text text="D" />
+          <Text text="E" />
+        </>
+      );
+    }
+
+    root.render(<App />);
+
+    expect(Scheduler).toFlushAndYieldThrough(['A']);
+    expect(Scheduler).toFlushAndYieldThrough(['B']);
+    expect(Scheduler).toFlushAndYieldThrough(['C']);
+
+    Scheduler.unstable_advanceTime(10000);
+
+    expect(Scheduler).toFlushExpired(['D', 'E']);
+    expect(root).toMatchRenderedOutput('ABCDE');
+  });
+
+  it('root expiration is measured from the time of the first update', () => {
+    Scheduler.unstable_advanceTime(10000);
+
+    const root = ReactNoop.createRoot();
+    function App() {
+      return (
+        <>
+          <Text text="A" />
+          <Text text="B" />
+          <Text text="C" />
+          <Text text="D" />
+          <Text text="E" />
+        </>
+      );
+    }
+
+    root.render(<App />);
+
+    expect(Scheduler).toFlushAndYieldThrough(['A']);
+    expect(Scheduler).toFlushAndYieldThrough(['B']);
+    expect(Scheduler).toFlushAndYieldThrough(['C']);
+
+    Scheduler.unstable_advanceTime(10000);
+
+    expect(Scheduler).toFlushExpired(['D', 'E']);
+    expect(root).toMatchRenderedOutput('ABCDE');
   });
 
   it('should measure expiration times relative to module initialization', () => {

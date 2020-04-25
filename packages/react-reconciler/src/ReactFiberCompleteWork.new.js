@@ -8,7 +8,7 @@
  */
 
 import type {Fiber} from './ReactInternalTypes';
-import type {ExpirationTime} from './ReactFiberExpirationTime.new';
+import type {ExpirationTimeOpaque} from './ReactFiberExpirationTime.new';
 import type {
   ReactFundamentalComponentInstance,
   ReactScopeInstance,
@@ -130,7 +130,11 @@ import {
   renderHasNotSuspendedYet,
 } from './ReactFiberWorkLoop.new';
 import {createFundamentalStateInstance} from './ReactFiberFundamental.new';
-import {Never} from './ReactFiberExpirationTime.new';
+import {
+  Never,
+  isSameOrHigherPriority,
+  bumpPriorityLower,
+} from './ReactFiberExpirationTime.new';
 import {resetChildFibers} from './ReactChildFiber.new';
 import {updateDeprecatedEventListeners} from './ReactFiberDeprecatedEvents.new';
 import {createScopeMethods} from './ReactFiberScope.new';
@@ -638,7 +642,7 @@ function cutOffTailIfNeeded(
 function completeWork(
   current: Fiber | null,
   workInProgress: Fiber,
-  renderExpirationTime: ExpirationTime,
+  renderExpirationTime: ExpirationTimeOpaque,
 ): Fiber | null {
   const newProps = workInProgress.pendingProps;
 
@@ -845,7 +849,7 @@ function completeWork(
             );
             prepareToHydrateHostSuspenseInstance(workInProgress);
             if (enableSchedulerTracing) {
-              markSpawnedWork(Never);
+              markSpawnedWork((Never: ExpirationTimeOpaque));
             }
             return null;
           } else {
@@ -870,7 +874,7 @@ function completeWork(
 
       if ((workInProgress.effectTag & DidCapture) !== NoEffect) {
         // Something suspended. Re-render with the fallback children.
-        workInProgress.expirationTime = renderExpirationTime;
+        workInProgress.expirationTime_opaque = renderExpirationTime;
         // Do not reset the effect list.
         return workInProgress;
       }
@@ -1119,7 +1123,10 @@ function completeWork(
             // the expiration.
             now() * 2 - renderState.renderingStartTime >
               renderState.tailExpiration &&
-            renderExpirationTime > Never
+            !isSameOrHigherPriority(
+              (Never: ExpirationTimeOpaque),
+              renderExpirationTime,
+            )
           ) {
             // We have now passed our CPU deadline and we'll just give up further
             // attempts to render the main content and only render fallbacks.
@@ -1135,8 +1142,8 @@ function completeWork(
             // So we'll pick it back up the very next render pass once we've had
             // an opportunity to yield for paint.
 
-            const nextPriority = renderExpirationTime - 1;
-            workInProgress.expirationTime = workInProgress.childExpirationTime = nextPriority;
+            const nextPriority = bumpPriorityLower(renderExpirationTime);
+            workInProgress.expirationTime_opaque = workInProgress.childExpirationTime_opaque = nextPriority;
             if (enableSchedulerTracing) {
               markSpawnedWork(nextPriority);
             }

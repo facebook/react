@@ -33,7 +33,10 @@ import {
   executeUserEventHandler,
 } from './ReactDOMUpdateBatching';
 import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
-import {enableDeprecatedFlareAPI} from 'shared/ReactFeatureFlags';
+import {
+  enableDeprecatedFlareAPI,
+  enableNewReconciler,
+} from 'shared/ReactFeatureFlags';
 import invariant from 'shared/invariant';
 
 import {getClosestInstanceFromNode} from '../client/ReactDOMComponentTree';
@@ -282,7 +285,9 @@ function doesFiberHaveResponder(
 ): boolean {
   const tag = fiber.tag;
   if (tag === HostComponent || tag === ScopeComponent) {
-    const dependencies = fiber.dependencies;
+    const dependencies = enableNewReconciler
+      ? fiber.dependencies_new
+      : fiber.dependencies_old;
     if (dependencies !== null) {
       const respondersMap = dependencies.responders;
       if (respondersMap !== null && respondersMap.has(responder)) {
@@ -381,7 +386,10 @@ function traverseAndHandleEventResponderInstances(
   let node = targetFiber;
   let insidePortal = false;
   while (node !== null) {
-    const {dependencies, tag} = node;
+    const {tag} = node;
+    const dependencies = enableNewReconciler
+      ? node.dependencies_new
+      : node.dependencies_old;
     if (tag === HostPortal) {
       insidePortal = true;
     } else if (

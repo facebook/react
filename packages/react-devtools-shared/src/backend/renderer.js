@@ -2142,13 +2142,17 @@ export function attach(
     const {
       _debugOwner,
       _debugSource,
-      dependencies,
       stateNode,
       memoizedProps,
       memoizedState,
       tag,
       type,
     } = fiber;
+
+    const dependencies =
+      (fiber: any).dependencies ||
+      (fiber: any).dependencies_old ||
+      (fiber: any).dependencies_new;
 
     const elementType = getElementTypeForFiber(fiber);
 

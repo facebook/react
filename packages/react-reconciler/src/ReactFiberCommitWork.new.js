@@ -17,7 +17,7 @@ import type {
 } from './ReactFiberHostConfig';
 import type {Fiber} from './ReactInternalTypes';
 import type {FiberRoot} from './ReactInternalTypes';
-import type {ExpirationTime} from './ReactFiberExpirationTime.new';
+import type {ExpirationTimeOpaque} from './ReactFiberExpirationTime.new';
 import type {SuspenseState} from './ReactFiberSuspenseComponent.new';
 import type {UpdateQueue} from './ReactUpdateQueue.new';
 import type {FunctionComponentUpdateQueue} from './ReactFiberHooks.new';
@@ -502,7 +502,7 @@ function commitLifeCycles(
   finishedRoot: FiberRoot,
   current: Fiber | null,
   finishedWork: Fiber,
-  committedExpirationTime: ExpirationTime,
+  committedExpirationTime: ExpirationTimeOpaque,
 ): void {
   switch (finishedWork.tag) {
     case FunctionComponent:
@@ -1115,7 +1115,7 @@ function detachFiber(fiber: Fiber) {
   // traversal in a later effect. See PR #16820.
   fiber.alternate = null;
   fiber.child = null;
-  fiber.dependencies = null;
+  fiber.dependencies_new = null;
   fiber.firstEffect = null;
   fiber.lastEffect = null;
   fiber.memoizedProps = null;

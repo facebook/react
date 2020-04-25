@@ -12,7 +12,7 @@ import type {ReactPortal} from 'shared/ReactTypes';
 import type {BlockComponent} from 'react/src/ReactBlock';
 import type {LazyComponent} from 'react/src/ReactLazy';
 import type {Fiber} from './ReactInternalTypes';
-import type {ExpirationTime} from './ReactFiberExpirationTime.new';
+import type {ExpirationTimeOpaque} from './ReactFiberExpirationTime.new';
 
 import getComponentName from 'shared/getComponentName';
 import {Placement, Deletion} from './ReactSideEffectTags';
@@ -377,7 +377,7 @@ function ChildReconciler(shouldTrackSideEffects) {
     returnFiber: Fiber,
     current: Fiber | null,
     textContent: string,
-    expirationTime: ExpirationTime,
+    expirationTime: ExpirationTimeOpaque,
   ) {
     if (current === null || current.tag !== HostText) {
       // Insert
@@ -400,7 +400,7 @@ function ChildReconciler(shouldTrackSideEffects) {
     returnFiber: Fiber,
     current: Fiber | null,
     element: ReactElement,
-    expirationTime: ExpirationTime,
+    expirationTime: ExpirationTimeOpaque,
   ): Fiber {
     if (current !== null) {
       if (
@@ -456,7 +456,7 @@ function ChildReconciler(shouldTrackSideEffects) {
     returnFiber: Fiber,
     current: Fiber | null,
     portal: ReactPortal,
-    expirationTime: ExpirationTime,
+    expirationTime: ExpirationTimeOpaque,
   ): Fiber {
     if (
       current === null ||
@@ -484,7 +484,7 @@ function ChildReconciler(shouldTrackSideEffects) {
     returnFiber: Fiber,
     current: Fiber | null,
     fragment: Iterable<*>,
-    expirationTime: ExpirationTime,
+    expirationTime: ExpirationTimeOpaque,
     key: null | string,
   ): Fiber {
     if (current === null || current.tag !== Fragment) {
@@ -508,7 +508,7 @@ function ChildReconciler(shouldTrackSideEffects) {
   function createChild(
     returnFiber: Fiber,
     newChild: any,
-    expirationTime: ExpirationTime,
+    expirationTime: ExpirationTimeOpaque,
   ): Fiber | null {
     if (typeof newChild === 'string' || typeof newChild === 'number') {
       // Text nodes don't have keys. If the previous node is implicitly keyed
@@ -573,7 +573,7 @@ function ChildReconciler(shouldTrackSideEffects) {
     returnFiber: Fiber,
     oldFiber: Fiber | null,
     newChild: any,
-    expirationTime: ExpirationTime,
+    expirationTime: ExpirationTimeOpaque,
   ): Fiber | null {
     // Update the fiber if the keys match, otherwise return null.
 
@@ -662,7 +662,7 @@ function ChildReconciler(shouldTrackSideEffects) {
     returnFiber: Fiber,
     newIdx: number,
     newChild: any,
-    expirationTime: ExpirationTime,
+    expirationTime: ExpirationTimeOpaque,
   ): Fiber | null {
     if (typeof newChild === 'string' || typeof newChild === 'number') {
       // Text nodes don't have keys, so we neither have to check the old nor
@@ -785,7 +785,7 @@ function ChildReconciler(shouldTrackSideEffects) {
     returnFiber: Fiber,
     currentFirstChild: Fiber | null,
     newChildren: Array<*>,
-    expirationTime: ExpirationTime,
+    expirationTime: ExpirationTimeOpaque,
   ): Fiber | null {
     // This algorithm can't optimize by searching from both ends since we
     // don't have backpointers on fibers. I'm trying to see how far we can get
@@ -944,7 +944,7 @@ function ChildReconciler(shouldTrackSideEffects) {
     returnFiber: Fiber,
     currentFirstChild: Fiber | null,
     newChildrenIterable: Iterable<*>,
-    expirationTime: ExpirationTime,
+    expirationTime: ExpirationTimeOpaque,
   ): Fiber | null {
     // This is the same implementation as reconcileChildrenArray(),
     // but using the iterator instead.
@@ -1134,7 +1134,7 @@ function ChildReconciler(shouldTrackSideEffects) {
     returnFiber: Fiber,
     currentFirstChild: Fiber | null,
     textContent: string,
-    expirationTime: ExpirationTime,
+    expirationTime: ExpirationTimeOpaque,
   ): Fiber {
     // There's no need to check for keys on text nodes since we don't have a
     // way to define them.
@@ -1162,7 +1162,7 @@ function ChildReconciler(shouldTrackSideEffects) {
     returnFiber: Fiber,
     currentFirstChild: Fiber | null,
     element: ReactElement,
-    expirationTime: ExpirationTime,
+    expirationTime: ExpirationTimeOpaque,
   ): Fiber {
     const key = element.key;
     let child = currentFirstChild;
@@ -1266,7 +1266,7 @@ function ChildReconciler(shouldTrackSideEffects) {
     returnFiber: Fiber,
     currentFirstChild: Fiber | null,
     portal: ReactPortal,
-    expirationTime: ExpirationTime,
+    expirationTime: ExpirationTimeOpaque,
   ): Fiber {
     const key = portal.key;
     let child = currentFirstChild;
@@ -1309,7 +1309,7 @@ function ChildReconciler(shouldTrackSideEffects) {
     returnFiber: Fiber,
     currentFirstChild: Fiber | null,
     newChild: any,
-    expirationTime: ExpirationTime,
+    expirationTime: ExpirationTimeOpaque,
   ): Fiber | null {
     // This function is not recursive.
     // If the top level item is an array, we treat it as a set of children,
@@ -1464,7 +1464,7 @@ export function cloneChildFibers(
 // Reset a workInProgress child set to prepare it for a second pass.
 export function resetChildFibers(
   workInProgress: Fiber,
-  renderExpirationTime: ExpirationTime,
+  renderExpirationTime: ExpirationTimeOpaque,
 ): void {
   let child = workInProgress.child;
   while (child !== null) {

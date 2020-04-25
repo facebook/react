@@ -442,6 +442,9 @@ describe('ReactIncrementalUpdates', () => {
     expect(ReactNoop.getChildren()).toEqual([span('derived state')]);
   });
 
+  // Note: This test doesn't really make sense in the new model, but we might
+  // want to port it once lanes are implemented.
+  // @gate old
   it('flushes all expired updates in a single batch', () => {
     const {useEffect} = React;
 
@@ -531,6 +534,9 @@ describe('ReactIncrementalUpdates', () => {
     });
   });
 
+  // Note: This test doesn't really make sense in the new model, but we might
+  // want to port it once lanes are implemented.
+  // @gate old
   it('flushes all expired updates in a single batch across multiple roots', () => {
     // Same as previous test, but with two roots.
     const {useEffect} = React;
@@ -640,6 +646,9 @@ describe('ReactIncrementalUpdates', () => {
     });
   });
 
+  // Note: This test doesn't really make sense in the new model, but we might
+  // want to port it once lanes are implemented.
+  // @gate old
   it('does not throw out partially completed tree if it expires midway through', () => {
     function Text({text}) {
       Scheduler.unstable_yieldValue(text);

@@ -7,12 +7,16 @@
  * @flow
  */
 
-import type {ExpirationTime} from './ReactFiberExpirationTime.new';
+import type {ExpirationTimeOpaque} from './ReactFiberExpirationTime.new';
 import type {FiberRoot} from './ReactInternalTypes';
 import type {MutableSource, MutableSourceVersion} from 'shared/ReactTypes';
 
 import {isPrimaryRenderer} from './ReactFiberHostConfig';
-import {NoWork} from './ReactFiberExpirationTime.new';
+import {
+  NoWork,
+  isSameOrHigherPriority,
+  isSameExpirationTime,
+} from './ReactFiberExpirationTime.new';
 
 // Work in progress version numbers only apply to a single render,
 // and should be reset before starting a new render.
@@ -28,29 +32,39 @@ if (__DEV__) {
 
 export function clearPendingUpdates(
   root: FiberRoot,
-  expirationTime: ExpirationTime,
+  expirationTime: ExpirationTimeOpaque,
 ): void {
-  if (expirationTime <= root.mutableSourceLastPendingUpdateTime) {
+  if (
+    isSameOrHigherPriority(
+      root.mutableSourceLastPendingUpdateTime_opaque,
+      expirationTime,
+    )
+  ) {
     // All updates for this source have been processed.
-    root.mutableSourceLastPendingUpdateTime = NoWork;
+    root.mutableSourceLastPendingUpdateTime_opaque = NoWork;
   }
 }
 
-export function getLastPendingExpirationTime(root: FiberRoot): ExpirationTime {
-  return root.mutableSourceLastPendingUpdateTime;
+export function getLastPendingExpirationTime(
+  root: FiberRoot,
+): ExpirationTimeOpaque {
+  return root.mutableSourceLastPendingUpdateTime_opaque;
 }
 
 export function setPendingExpirationTime(
   root: FiberRoot,
-  expirationTime: ExpirationTime,
+  expirationTime: ExpirationTimeOpaque,
 ): void {
   const mutableSourceLastPendingUpdateTime =
-    root.mutableSourceLastPendingUpdateTime;
+    root.mutableSourceLastPendingUpdateTime_opaque;
   if (
-    mutableSourceLastPendingUpdateTime === NoWork ||
-    expirationTime < mutableSourceLastPendingUpdateTime
+    isSameExpirationTime(
+      mutableSourceLastPendingUpdateTime,
+      (NoWork: ExpirationTimeOpaque),
+    ) ||
+    !isSameOrHigherPriority(expirationTime, mutableSourceLastPendingUpdateTime)
   ) {
-    root.mutableSourceLastPendingUpdateTime = expirationTime;
+    root.mutableSourceLastPendingUpdateTime_opaque = expirationTime;
   }
 }
 

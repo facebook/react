@@ -16,7 +16,7 @@ import type {
   ReactEventResponderListener,
 } from 'shared/ReactTypes';
 import type {Fiber, Dispatcher} from './ReactInternalTypes';
-import type {ExpirationTime} from './ReactFiberExpirationTime.new';
+import type {ExpirationTimeOpaque} from './ReactFiberExpirationTime.new';
 import type {HookEffectTag} from './ReactHookEffectTags';
 import type {SuspenseConfig} from './ReactFiberSuspenseConfig';
 import type {ReactPriorityLevel} from './ReactInternalTypes';
@@ -26,7 +26,12 @@ import type {OpaqueIDType} from './ReactFiberHostConfig';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 
 import {markRootExpiredAtTime} from './ReactFiberRoot.new';
-import {NoWork, Sync} from './ReactFiberExpirationTime.new';
+import {
+  NoWork,
+  Sync,
+  isSameOrHigherPriority,
+  isSameExpirationTime,
+} from './ReactFiberExpirationTime.new';
 import {NoMode, BlockingMode} from './ReactTypeOfMode';
 import {readContext} from './ReactFiberNewContext.new';
 import {createDeprecatedResponderListener} from './ReactFiberDeprecatedEvents.new';
@@ -42,8 +47,8 @@ import {
 import {
   getWorkInProgressRoot,
   scheduleUpdateOnFiber,
-  computeExpirationForFiber,
-  requestCurrentTimeForUpdate,
+  requestUpdateExpirationTime,
+  requestEventTime,
   warnIfNotCurrentlyActingEffectsInDEV,
   warnIfNotCurrentlyActingUpdatesInDev,
   warnIfNotScopedWithMatchingAct,
@@ -83,8 +88,8 @@ const {ReactCurrentDispatcher, ReactCurrentBatchConfig} = ReactSharedInternals;
 type Update<S, A> = {|
   // TODO: Temporary field. Will remove this by storing a map of
   // transition -> start time on the root.
-  eventTime: ExpirationTime,
-  expirationTime: ExpirationTime,
+  eventTime: number,
+  expirationTime: ExpirationTimeOpaque,
   suspenseConfig: null | SuspenseConfig,
   action: A,
   eagerReducer: ((S, A) => S) | null,
@@ -151,7 +156,7 @@ type BasicStateAction<S> = (S => S) | S;
 type Dispatch<A> = A => void;
 
 // These are set right before calling the component.
-let renderExpirationTime: ExpirationTime = NoWork;
+let renderExpirationTime: ExpirationTimeOpaque = NoWork;
 // The work-in-progress fiber. I've named it differently to distinguish it from
 // the work-in-progress hook.
 let currentlyRenderingFiber: Fiber = (null: any);
@@ -342,7 +347,7 @@ export function renderWithHooks<Props, SecondArg>(
   Component: (p: Props, arg: SecondArg) => any,
   props: Props,
   secondArg: SecondArg,
-  nextRenderExpirationTime: ExpirationTime,
+  nextRenderExpirationTime: ExpirationTimeOpaque,
 ): any {
   renderExpirationTime = nextRenderExpirationTime;
   currentlyRenderingFiber = workInProgress;
@@ -360,7 +365,7 @@ export function renderWithHooks<Props, SecondArg>(
 
   workInProgress.memoizedState = null;
   workInProgress.updateQueue = null;
-  workInProgress.expirationTime = NoWork;
+  workInProgress.expirationTime_opaque = NoWork;
 
   // The following should have already been reset
   // currentHook = null;
@@ -475,12 +480,12 @@ export function renderWithHooks<Props, SecondArg>(
 export function bailoutHooks(
   current: Fiber,
   workInProgress: Fiber,
-  expirationTime: ExpirationTime,
+  expirationTime: ExpirationTimeOpaque,
 ) {
   workInProgress.updateQueue = current.updateQueue;
   workInProgress.effectTag &= ~(PassiveEffect | UpdateEffect);
-  if (current.expirationTime <= expirationTime) {
-    current.expirationTime = NoWork;
+  if (isSameOrHigherPriority(expirationTime, current.expirationTime_opaque)) {
+    current.expirationTime_opaque = NoWork;
   }
 }
 
@@ -705,7 +710,7 @@ function updateReducer<S, I, A>(
       const suspenseConfig = update.suspenseConfig;
       const updateExpirationTime = update.expirationTime;
       const updateEventTime = update.eventTime;
-      if (updateExpirationTime < renderExpirationTime) {
+      if (!isSameOrHigherPriority(updateExpirationTime, renderExpirationTime)) {
         // Priority is insufficient. Skip this update. If this is the first
         // skipped update, the previous update/state is the new base
         // update/state.
@@ -725,8 +730,13 @@ function updateReducer<S, I, A>(
           newBaseQueueLast = newBaseQueueLast.next = clone;
         }
         // Update the remaining priority in the queue.
-        if (updateExpirationTime > currentlyRenderingFiber.expirationTime) {
-          currentlyRenderingFiber.expirationTime = updateExpirationTime;
+        if (
+          !isSameOrHigherPriority(
+            currentlyRenderingFiber.expirationTime_opaque,
+            updateExpirationTime,
+          )
+        ) {
+          currentlyRenderingFiber.expirationTime_opaque = updateExpirationTime;
           markUnprocessedUpdateTime(updateExpirationTime);
         }
       } else {
@@ -877,12 +887,20 @@ function readFromUnsubcribedMutableSource<Source, Snapshot>(
     // If there's no version, then we should fallback to checking the update time.
     const pendingExpirationTime = getLastPendingExpirationTime(root);
 
-    if (pendingExpirationTime === NoWork) {
+    if (
+      isSameExpirationTime(
+        pendingExpirationTime,
+        (NoWork: ExpirationTimeOpaque),
+      )
+    ) {
       isSafeToReadFromSource = true;
     } else {
       // If the source has pending updates, we can use the current render's expiration
       // time to determine if it's safe to read again from the source.
-      isSafeToReadFromSource = pendingExpirationTime >= renderExpirationTime;
+      isSafeToReadFromSource = isSameOrHigherPriority(
+        pendingExpirationTime,
+        renderExpirationTime,
+      );
     }
 
     if (isSafeToReadFromSource) {
@@ -975,10 +993,8 @@ function useMutableSource<Source, Snapshot>(
       if (!is(snapshot, maybeNewSnapshot)) {
         setSnapshot(maybeNewSnapshot);
 
-        const currentTime = requestCurrentTimeForUpdate();
         const suspenseConfig = requestCurrentSuspenseConfig();
-        const expirationTime = computeExpirationForFiber(
-          currentTime,
+        const expirationTime = requestUpdateExpirationTime(
           fiber,
           suspenseConfig,
         );
@@ -1005,10 +1021,8 @@ function useMutableSource<Source, Snapshot>(
         latestSetSnapshot(latestGetSnapshot(source._source));
 
         // Record a pending mutable source update with the same expiration time.
-        const currentTime = requestCurrentTimeForUpdate();
         const suspenseConfig = requestCurrentSuspenseConfig();
-        const expirationTime = computeExpirationForFiber(
-          currentTime,
+        const expirationTime = requestUpdateExpirationTime(
           fiber,
           suspenseConfig,
         );
@@ -1630,16 +1644,12 @@ function dispatchAction<S, A>(
     }
   }
 
-  const currentTime = requestCurrentTimeForUpdate();
+  const eventTime = requestEventTime();
   const suspenseConfig = requestCurrentSuspenseConfig();
-  const expirationTime = computeExpirationForFiber(
-    currentTime,
-    fiber,
-    suspenseConfig,
-  );
+  const expirationTime = requestUpdateExpirationTime(fiber, suspenseConfig);
 
   const update: Update<S, A> = {
-    eventTime: currentTime,
+    eventTime,
     expirationTime,
     suspenseConfig,
     action,
@@ -1671,8 +1681,15 @@ function dispatchAction<S, A>(
     update.expirationTime = renderExpirationTime;
   } else {
     if (
-      fiber.expirationTime === NoWork &&
-      (alternate === null || alternate.expirationTime === NoWork)
+      isSameExpirationTime(
+        fiber.expirationTime_opaque,
+        (NoWork: ExpirationTimeOpaque),
+      ) &&
+      (alternate === null ||
+        isSameExpirationTime(
+          alternate.expirationTime_opaque,
+          (NoWork: ExpirationTimeOpaque),
+        ))
     ) {
       // The queue is currently empty, which means we can eagerly compute the
       // next state before entering the render phase. If the new state is the

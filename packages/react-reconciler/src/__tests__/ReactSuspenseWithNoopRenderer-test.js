@@ -554,6 +554,8 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     expect(ReactNoop.getChildren()).toEqual([span('(empty)')]);
   });
 
+  // Note: This test was written to test a heuristic used in the expiration
+  // times model. Might not make sense in the new model.
   it('tries each subsequent level after suspending', async () => {
     const root = ReactNoop.createRoot();
 
@@ -606,17 +608,28 @@ describe('ReactSuspenseWithNoopRenderer', () => {
       root.render(<App step={4} shouldSuspend={false} />);
     });
 
-    // Should suspend at each distinct level
-    expect(Scheduler).toHaveYielded([
-      'Sibling',
-      'Suspend! [Step 1]',
-      'Sibling',
-      'Suspend! [Step 2]',
-      'Sibling',
-      'Suspend! [Step 3]',
-      'Sibling',
-      'Step 4',
-    ]);
+    expect(Scheduler).toHaveYielded(
+      gate(flags =>
+        flags.new
+          ? [
+              // The new reconciler batches everything together, so it finishes
+              // without suspending again.
+              'Sibling',
+              'Step 4',
+            ]
+          : [
+              // The old reconciler tries at each distinct level.
+              'Sibling',
+              'Suspend! [Step 1]',
+              'Sibling',
+              'Suspend! [Step 2]',
+              'Sibling',
+              'Suspend! [Step 3]',
+              'Sibling',
+              'Step 4',
+            ],
+      ),
+    );
   });
 
   it('forces an expiration after an update times out', async () => {
