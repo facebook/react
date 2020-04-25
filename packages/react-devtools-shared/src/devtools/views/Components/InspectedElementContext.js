@@ -209,6 +209,7 @@ function InspectedElementContextController({children}: Props) {
             hooks,
             props,
             state,
+            key,
           } = ((data.value: any): InspectedElementBackend);
 
           const inspectedElement: InspectedElementFrontend = {
@@ -241,6 +242,7 @@ function InspectedElementContextController({children}: Props) {
             hooks: hydrateHelper(hooks),
             props: hydrateHelper(props),
             state: hydrateHelper(state),
+            key: hydrateHelper(key),
           };
 
           element = store.getElementByID(id);

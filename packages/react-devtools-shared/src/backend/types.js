@@ -202,6 +202,7 @@ export type InspectedElement = {|
   hooks: Object | null,
   props: Object | null,
   state: Object | null,
+  key: number | string | null,
 
   // List of owners
   owners: Array<Owner> | null,
