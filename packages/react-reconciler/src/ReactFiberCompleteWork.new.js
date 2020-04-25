@@ -63,7 +63,7 @@ import {
   Update,
   NoEffect,
   DidCapture,
-  ClearContainer,
+  Snapshot,
 } from './ReactSideEffectTags';
 import invariant from 'shared/invariant';
 
@@ -686,7 +686,7 @@ function completeWork(
           // This handles the case of React rendering into a container with previous children.
           // It's also safe to do for updates too, because current.child would only be null
           // if the previous render was null (so the the container would already be empty).
-          workInProgress.effectTag |= ClearContainer;
+          workInProgress.effectTag |= Snapshot;
         }
       }
       updateHostContainer(workInProgress);

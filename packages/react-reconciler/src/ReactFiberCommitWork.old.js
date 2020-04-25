@@ -68,7 +68,6 @@ import {
   Snapshot,
   Update,
   Passive,
-  ClearContainer,
 } from './ReactSideEffectTags';
 import getComponentName from 'shared/getComponentName';
 import invariant from 'shared/invariant';
@@ -297,7 +296,7 @@ function commitBeforeMutationLifeCycles(
     }
     case HostRoot: {
       if (supportsMutation) {
-        if (finishedWork.effectTag & ClearContainer) {
+        if (finishedWork.effectTag & Snapshot) {
           const root = finishedWork.stateNode;
           clearContainer(root.containerInfo);
         }

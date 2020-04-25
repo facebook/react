@@ -74,7 +74,7 @@ describe('when Trusted Types are available in global object', () => {
         container,
       );
       expect(container.innerHTML).toBe('<div><b>Hi</b></div>');
-      // Second call to innerHTML is the ClearContainer check.
+      // Second call to innerHTML is the clearContainer check.
       expect(innerHTMLCalls.length).toBe(2);
       // Ensure it didn't get stringified when passed to a DOM sink:
       expect(innerHTMLCalls[0]).toBe(ttObject1);
