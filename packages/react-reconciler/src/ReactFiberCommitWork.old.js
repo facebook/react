@@ -68,6 +68,7 @@ import {
   Snapshot,
   Update,
   Passive,
+  ClearContainer,
 } from './ReactSideEffectTags';
 import getComponentName from 'shared/getComponentName';
 import invariant from 'shared/invariant';
@@ -111,6 +112,7 @@ import {
   commitHydratedContainer,
   commitHydratedSuspenseInstance,
   beforeRemoveInstance,
+  clearContainer,
 } from './ReactFiberHostConfig';
 import {
   captureCommitPhaseError,
@@ -293,7 +295,15 @@ function commitBeforeMutationLifeCycles(
       }
       return;
     }
-    case HostRoot:
+    case HostRoot: {
+      if (supportsMutation) {
+        if (finishedWork.effectTag & ClearContainer) {
+          const root = finishedWork.stateNode;
+          clearContainer(root.containerInfo);
+        }
+      }
+      return;
+    }
     case HostComponent:
     case HostText:
     case HostPortal:

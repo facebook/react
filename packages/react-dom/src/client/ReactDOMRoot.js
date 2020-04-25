@@ -123,20 +123,12 @@ function createRootImpl(
     (options != null && options.hydrationOptions) || null;
   const root = createContainer(container, tag, hydrate, hydrationCallbacks);
   markContainerAsRoot(root.current, container);
-  if (hydrate) {
-    if (tag !== LegacyRoot) {
-      const doc =
-        container.nodeType === DOCUMENT_NODE
-          ? container
-          : container.ownerDocument;
-      eagerlyTrapReplayableEvents(container, doc);
-    }
-  } else if (container.lastChild != null) {
-    // If the container has children already and we aren't hydrating-
-    // schedule them to be cleared before we mount new, React-managed children.
-    // This mimics legacy render into subtree behavior in a way that is safe for concurrent mode.
-    // (It doesn't result in multiple obsevable mutations.)
-    root.clearContainerBeforeMount = true;
+  if (hydrate && tag !== LegacyRoot) {
+    const doc =
+      container.nodeType === DOCUMENT_NODE
+        ? container
+        : container.ownerDocument;
+    eagerlyTrapReplayableEvents(container, doc);
   }
   return root;
 }

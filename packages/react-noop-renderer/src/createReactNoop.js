@@ -155,6 +155,10 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
     insertInContainerOrInstanceBefore(parentInstance, child, beforeChild);
   }
 
+  function clearContainer(container: Container): void {
+    container.children.splice(0);
+  }
+
   function removeChildFromContainerOrInstance(
     parentInstance: Container | Instance,
     child: Instance | TextInstance,
@@ -502,6 +506,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
         insertInContainerBefore,
         removeChild,
         removeChildFromContainer,
+        clearContainer,
 
         hideInstance(instance: Instance): void {
           instance.hidden = true;
@@ -531,6 +536,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
         supportsPersistence: true,
 
         cloneInstance,
+        clearContainer,
 
         createContainerChildSet(
           container: Container,

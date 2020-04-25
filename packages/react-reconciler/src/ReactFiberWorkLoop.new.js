@@ -111,6 +111,7 @@ import {
   HostEffectMask,
   Hydrating,
   HydratingAndUpdate,
+  ClearContainer,
 } from './ReactSideEffectTags';
 import {
   NoWork,
@@ -2240,7 +2241,7 @@ function commitBeforeMutationEffects() {
       beforeActiveInstanceBlur();
     }
     const effectTag = nextEffect.effectTag;
-    if ((effectTag & Snapshot) !== NoEffect) {
+    if ((effectTag & (Snapshot | ClearContainer)) !== NoEffect) {
       setCurrentDebugFiberInDEV(nextEffect);
 
       const current = nextEffect.alternate;

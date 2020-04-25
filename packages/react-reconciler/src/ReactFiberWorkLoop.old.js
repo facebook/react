@@ -74,7 +74,6 @@ import {
   warnsIfNotActing,
   beforeActiveInstanceBlur,
   afterActiveInstanceBlur,
-  clearContainer,
 } from './ReactFiberHostConfig';
 
 import {
@@ -124,6 +123,7 @@ import {
   HostEffectMask,
   Hydrating,
   HydratingAndUpdate,
+  ClearContainer,
 } from './ReactSideEffectTags';
 import {
   NoWork,
@@ -1913,15 +1913,6 @@ function commitRootImpl(root, renderPriorityLevel) {
     firstEffect = finishedWork.firstEffect;
   }
 
-  if (root.clearContainerBeforeMount) {
-    // We are about to mount into a container that previous contained non-React elements.
-    // We should clear the previous contents before beginning.
-    // This mimics legacy render into subtree behavior in a way that is safe for concurrent mode.
-    // (It doesn't result in multiple obsevable mutations.)
-    root.clearContainerBeforeMount = false;
-    clearContainer(root.containerInfo);
-  }
-
   if (firstEffect !== null) {
     const prevExecutionContext = executionContext;
     executionContext |= CommitContext;
@@ -2177,7 +2168,7 @@ function commitBeforeMutationEffects() {
       beforeActiveInstanceBlur();
     }
     const effectTag = nextEffect.effectTag;
-    if ((effectTag & Snapshot) !== NoEffect) {
+    if ((effectTag & (Snapshot | ClearContainer)) !== NoEffect) {
       setCurrentDebugFiberInDEV(nextEffect);
 
       const current = nextEffect.alternate;
