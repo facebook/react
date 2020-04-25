@@ -284,6 +284,7 @@ function InspectedElementView({
     props,
     source,
     state,
+    key,
   } = inspectedElement;
 
   const {ownerID} = useContext(TreeStateContext);
@@ -298,6 +299,12 @@ function InspectedElementView({
   const inspectContextPath = useCallback(
     (path: Array<string | number>) => {
       getInspectedElementPath(id, ['context', ...path]);
+    },
+    [getInspectedElementPath, id],
+  );
+  const inspectKeyPath = useCallback(
+    (path: Array<string | number>) => {
+      getInspectedElementPath(id, ['key', ...path]);
     },
     [getInspectedElementPath, id],
   );
@@ -377,6 +384,12 @@ function InspectedElementView({
           pathRoot="props"
           showWhenEmpty={true}
           canAddEntries={typeof overridePropsFn === 'function'}
+        />
+        <InspectedElementTree
+          label=""
+          data={{key: key}}
+          inspectPath={inspectKeyPath}
+          pathRoot="key"
         />
         {type === ElementTypeSuspense ? (
           <InspectedElementTree

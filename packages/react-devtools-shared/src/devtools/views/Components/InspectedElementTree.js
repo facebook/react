@@ -78,7 +78,7 @@ export default function InspectedElementTree({
     return (
       <div className={styles.InspectedElementTree}>
         <div className={styles.HeaderRow}>
-          <div className={styles.Header}>{label}</div>
+          {label && <div className={styles.Header}>{label}</div>}
           {!isEmpty && (
             <Button onClick={handleCopy} title="Copy to clipboard">
               <ButtonIcon type="copy" />
