@@ -1343,13 +1343,28 @@ describe('ReactSuspenseWithNoopRenderer', () => {
 
       ReactNoop.renderLegacySyncRoot(<Demo />);
 
-      expect(Scheduler).toHaveYielded([
-        'Suspend! [Hi]',
-        'Loading...',
-        // Re-render due to lifecycle update
-        'Suspend! [Hi]',
-        'Loading...',
-      ]);
+      expect(Scheduler).toHaveYielded(
+        gate(flags =>
+          flags.new
+            ? [
+                'Suspend! [Hi]',
+                'Loading...',
+                // Re-render due to lifecycle update
+                'Loading...',
+              ]
+            : [
+                'Suspend! [Hi]',
+                'Loading...',
+                // Re-render due to lifecycle update
+                // Note: Old reconciler has an issue where the primary fragment
+                // fiber isn't marked during setState, so as a compromise we
+                // sometimes over-render the primary child even when it hasn't
+                // been updated.
+                'Suspend! [Hi]',
+                'Loading...',
+              ],
+        ),
+      );
       expect(ReactNoop.getChildren()).toEqual([span('Loading...')]);
       await advanceTimers(100);
       expect(Scheduler).toHaveYielded(['Promise resolved [Hi]']);
