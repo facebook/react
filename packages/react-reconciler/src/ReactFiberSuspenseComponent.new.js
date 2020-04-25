@@ -29,10 +29,6 @@ export type SuspenseState = {|
   // here to indicate that it is dehydrated (flag) and for quick access
   // to check things like isSuspenseInstancePending.
   dehydrated: null | SuspenseInstance,
-  // Represents the work that was deprioritized when we committed the fallback.
-  // The work outside the boundary already committed at this level, so we cannot
-  // unhide the content without including it.
-  baseTime: ExpirationTimeOpaque,
   // Represents the earliest expiration time we should attempt to hydrate
   // a dehydrated boundary at.
   // Never is the default for dehydrated boundaries.

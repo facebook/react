@@ -187,6 +187,7 @@ import {
   renderDidSuspendDelayIfPossible,
   markUnprocessedUpdateTime,
   getWorkInProgressRoot,
+  pushRenderExpirationTime,
 } from './ReactFiberWorkLoop.new';
 
 import {disableLogs, reenableLogs} from 'shared/ConsolePatchingDev';
@@ -569,17 +570,30 @@ function updateOffscreenComponent(
   const nextProps: OffscreenProps = workInProgress.pendingProps;
   const nextChildren = nextProps.children;
 
+  let subtreeRenderTime = renderExpirationTime;
   if (current !== null) {
     if (nextProps.mode === 'hidden') {
       // TODO: Should currently be unreachable because Offscreen is only used as
       // an implementation detail of Suspense. Once this is a public API, it
       // will need to create an OffscreenState.
     } else {
-      // Clear the offscreen state.
-      workInProgress.memoizedState = null;
+      const prevState: OffscreenState | null = current.memoizedState;
+      if (prevState !== null) {
+        const baseTime = prevState.baseTime;
+        subtreeRenderTime = !isSameOrHigherPriority(
+          baseTime,
+          renderExpirationTime,
+        )
+          ? baseTime
+          : renderExpirationTime;
+
+        // Since we're not hidden anymore, reset the state
+        workInProgress.memoizedState = null;
+      }
     }
   }
 
+  pushRenderExpirationTime(workInProgress, subtreeRenderTime);
   reconcileChildren(
     current,
     workInProgress,
@@ -1651,33 +1665,32 @@ function validateFunctionComponentInDev(workInProgress: Fiber, Component: any) {
   }
 }
 
-function mountSuspenseState(
+const SUSPENDED_MARKER: SuspenseState = {
+  dehydrated: null,
+  retryTime: NoWork,
+};
+
+function mountSuspenseOffscreenState(
   renderExpirationTime: ExpirationTimeOpaque,
-): SuspenseState {
+): OffscreenState {
   return {
-    dehydrated: null,
     baseTime: renderExpirationTime,
-    retryTime: NoWork,
   };
 }
 
-function updateSuspenseState(
-  prevSuspenseState: SuspenseState,
+function updateSuspenseOffscreenState(
+  prevOffscreenState: OffscreenState,
   renderExpirationTime: ExpirationTimeOpaque,
-): SuspenseState {
-  const prevSuspendedTime = prevSuspenseState.baseTime;
+): OffscreenState {
+  const prevBaseTime = prevOffscreenState.baseTime;
   return {
-    dehydrated: null,
+    // Choose whichever time is inclusive of the other one. This represents
+    // the union of all the levels that suspended.
     baseTime:
-      // Choose whichever time is inclusive of the other one. This represents
-      // the union of all the levels that suspended.
-      !isSameExpirationTime(
-        prevSuspendedTime,
-        (NoWork: ExpirationTimeOpaque),
-      ) && !isSameOrHigherPriority(prevSuspendedTime, renderExpirationTime)
-        ? prevSuspendedTime
+      !isSameExpirationTime(prevBaseTime, (NoWork: ExpirationTimeOpaque)) &&
+      !isSameOrHigherPriority(prevBaseTime, renderExpirationTime)
+        ? prevBaseTime
         : renderExpirationTime,
-    retryTime: NoWork,
   };
 }
 
@@ -1692,19 +1705,7 @@ function shouldRemainOnFallback(
   // For example, SuspenseList coordinates when nested content appears.
   if (current !== null) {
     const suspenseState: SuspenseState = current.memoizedState;
-    if (suspenseState !== null) {
-      // Currently showing a fallback. If the current render includes
-      // the level that triggered the fallback, we must continue showing it,
-      // regardless of what the Suspense context says.
-      const baseTime = suspenseState.baseTime;
-      if (
-        !isSameExpirationTime(baseTime, (NoWork: ExpirationTimeOpaque)) &&
-        !isSameOrHigherPriority(baseTime, renderExpirationTime)
-      ) {
-        return true;
-      }
-      // Otherwise, fall through to check the Suspense context.
-    } else {
+    if (suspenseState === null) {
       // Currently showing content. Don't hide it, even if ForceSuspenseFallack
       // is true. More precise name might be "ForceRemainSuspenseFallback".
       // Note: This is a factoring smell. Can't remain on a fallback if there's
@@ -1712,6 +1713,7 @@ function shouldRemainOnFallback(
       return false;
     }
   }
+
   // Not currently showing content. Consult the Suspense context.
   return hasSuspenseContext(
     suspenseContext,
@@ -1725,20 +1727,6 @@ function getRemainingWorkInPrimaryTree(
   renderExpirationTime,
 ) {
   const currentChildExpirationTime = current.childExpirationTime_opaque;
-  const currentSuspenseState: SuspenseState = current.memoizedState;
-  if (currentSuspenseState !== null) {
-    // This boundary already timed out. Check if this render includes the level
-    // that previously suspended.
-    const baseTime = currentSuspenseState.baseTime;
-    if (
-      !isSameExpirationTime(baseTime, (NoWork: ExpirationTimeOpaque)) &&
-      !isSameOrHigherPriority(baseTime, renderExpirationTime)
-    ) {
-      // There's pending work at a lower level that might now be unblocked.
-      return baseTime;
-    }
-  }
-
   if (
     !isSameOrHigherPriority(currentChildExpirationTime, renderExpirationTime)
   ) {
@@ -1880,8 +1868,10 @@ function updateSuspenseComponent(
         renderExpirationTime,
       );
       const primaryChildFragment: Fiber = (workInProgress.child: any);
-      primaryChildFragment.memoizedState = ({baseTime: NoWork}: OffscreenState);
-      workInProgress.memoizedState = mountSuspenseState(renderExpirationTime);
+      primaryChildFragment.memoizedState = mountSuspenseOffscreenState(
+        renderExpirationTime,
+      );
+      workInProgress.memoizedState = SUSPENDED_MARKER;
       return fallbackFragment;
     } else {
       const nextPrimaryChildren = nextProps.children;
@@ -1935,14 +1925,10 @@ function updateSuspenseComponent(
               renderExpirationTime,
             );
             const primaryChildFragment: Fiber = (workInProgress.child: any);
-            primaryChildFragment.memoizedState = ({
-              baseTime: NoWork,
-            }: OffscreenState);
-            workInProgress.memoizedState = updateSuspenseState(
-              current.memoizedState,
+            primaryChildFragment.memoizedState = mountSuspenseOffscreenState(
               renderExpirationTime,
             );
-
+            workInProgress.memoizedState = SUSPENDED_MARKER;
             return fallbackChildFragment;
           }
         }
@@ -1959,18 +1945,21 @@ function updateSuspenseComponent(
           renderExpirationTime,
         );
         const primaryChildFragment: Fiber = (workInProgress.child: any);
-        primaryChildFragment.memoizedState = ({
-          baseTime: NoWork,
-        }: OffscreenState);
+        const prevOffscreenState: OffscreenState | null = (current.child: any)
+          .memoizedState;
+        primaryChildFragment.memoizedState =
+          prevOffscreenState === null
+            ? mountSuspenseOffscreenState(renderExpirationTime)
+            : updateSuspenseOffscreenState(
+                prevOffscreenState,
+                renderExpirationTime,
+              );
         primaryChildFragment.childExpirationTime_opaque = getRemainingWorkInPrimaryTree(
           current,
           workInProgress,
           renderExpirationTime,
         );
-        workInProgress.memoizedState = updateSuspenseState(
-          current.memoizedState,
-          renderExpirationTime,
-        );
+        workInProgress.memoizedState = SUSPENDED_MARKER;
         return fallbackChildFragment;
       } else {
         const nextPrimaryChildren = nextProps.children;
@@ -1997,9 +1986,15 @@ function updateSuspenseComponent(
           renderExpirationTime,
         );
         const primaryChildFragment: Fiber = (workInProgress.child: any);
-        primaryChildFragment.memoizedState = ({
-          baseTime: NoWork,
-        }: OffscreenState);
+        const prevOffscreenState: OffscreenState | null = (current.child: any)
+          .memoizedState;
+        primaryChildFragment.memoizedState =
+          prevOffscreenState === null
+            ? mountSuspenseOffscreenState(renderExpirationTime)
+            : updateSuspenseOffscreenState(
+                prevOffscreenState,
+                renderExpirationTime,
+              );
         primaryChildFragment.childExpirationTime_opaque = getRemainingWorkInPrimaryTree(
           current,
           workInProgress,
@@ -2007,7 +2002,7 @@ function updateSuspenseComponent(
         );
         // Skip the primary children, and continue working on the
         // fallback children.
-        workInProgress.memoizedState = mountSuspenseState(renderExpirationTime);
+        workInProgress.memoizedState = SUSPENDED_MARKER;
         return fallbackChildFragment;
       } else {
         // Still haven't timed out. Continue rendering the children, like we
@@ -3383,6 +3378,10 @@ function beginWork(
             // as before. We can fast bail out.
             return null;
           }
+        }
+        case OffscreenComponent: {
+          pushRenderExpirationTime(workInProgress, renderExpirationTime);
+          break;
         }
       }
       return bailoutOnAlreadyFinishedWork(

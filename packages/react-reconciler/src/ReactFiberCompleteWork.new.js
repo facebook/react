@@ -131,6 +131,7 @@ import {
   renderDidSuspend,
   renderDidSuspendDelayIfPossible,
   renderHasNotSuspendedYet,
+  popRenderExpirationTime,
 } from './ReactFiberWorkLoop.new';
 import {createFundamentalStateInstance} from './ReactFiberFundamental.new';
 import {Never, isSameOrHigherPriority} from './ReactFiberExpirationTime.new';
@@ -1312,6 +1313,7 @@ function completeWork(
       }
       break;
     case OffscreenComponent: {
+      popRenderExpirationTime(workInProgress);
       if (current !== null) {
         const nextState: OffscreenState | null = workInProgress.memoizedState;
         const prevState: OffscreenState | null = current.memoizedState;
