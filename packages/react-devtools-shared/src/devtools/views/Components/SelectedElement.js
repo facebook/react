@@ -376,6 +376,14 @@ function InspectedElementView({
     <Fragment>
       <div className={styles.InspectedElement}>
         <HocBadges element={element} />
+        {key && (
+          <InspectedElementTree
+            label=""
+            data={{key: key}}
+            inspectPath={inspectKeyPath}
+            pathRoot="key"
+          />
+        )}
         <InspectedElementTree
           label="props"
           data={props}
@@ -384,12 +392,6 @@ function InspectedElementView({
           pathRoot="props"
           showWhenEmpty={true}
           canAddEntries={typeof overridePropsFn === 'function'}
-        />
-        <InspectedElementTree
-          label=""
-          data={{key: key}}
-          inspectPath={inspectKeyPath}
-          pathRoot="key"
         />
         {type === ElementTypeSuspense ? (
           <InspectedElementTree
