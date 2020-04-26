@@ -1808,22 +1808,26 @@ describe('ReactHooksWithNoopRenderer', () => {
           ReactNoop.flushSync(() => {
             updateCount(props.count);
           });
+          // This shouldn't flush synchronously.
+          expect(ReactNoop.getChildren()).not.toEqual([
+            span('Count: ' + props.count),
+          ]);
         }, [props.count]);
         return <Text text={'Count: ' + count} />;
       }
-      act(() => {
-        ReactNoop.render(<Counter count={0} />, () =>
-          Scheduler.unstable_yieldValue('Sync effect'),
-        );
-        expect(Scheduler).toFlushAndYieldThrough([
-          'Count: (empty)',
-          'Sync effect',
-        ]);
-        expect(ReactNoop.getChildren()).toEqual([span('Count: (empty)')]);
-        expect(() => {
-          ReactNoop.flushPassiveEffects();
-        }).toThrow('flushSync was called from inside a lifecycle method');
-      });
+      expect(() =>
+        act(() => {
+          ReactNoop.render(<Counter count={0} />, () =>
+            Scheduler.unstable_yieldValue('Sync effect'),
+          );
+          expect(Scheduler).toFlushAndYieldThrough([
+            'Count: (empty)',
+            'Sync effect',
+          ]);
+          expect(ReactNoop.getChildren()).toEqual([span('Count: (empty)')]);
+        }),
+      ).toErrorDev('flushSync was called from inside a lifecycle method');
+      expect(ReactNoop.getChildren()).toEqual([span('Count: 0')]);
     });
 
     it('unmounts previous effect', () => {
