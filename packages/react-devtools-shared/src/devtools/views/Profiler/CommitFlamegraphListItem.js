@@ -115,7 +115,7 @@ function CommitFlamegraphListItem({data, index, style}: Props) {
             color={color}
             height={lineHeight}
             isDimmed={index < selectedChartNodeIndex}
-            isSelected={index === selectedChartNodeIndex}
+            isSelected={selectedChartNode && selectedChartNode.id === id}
             key={id}
             label={label}
             onClick={event => handleClick(event, id, name)}
