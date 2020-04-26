@@ -15,6 +15,7 @@ type Props = {|
   color: string,
   height: number,
   isDimmed?: boolean,
+  isHovered?: boolean,
   label: string,
   onClick: (event: SyntheticMouseEvent<*>) => mixed,
   onDoubleClick?: (event: SyntheticMouseEvent<*>) => mixed,
@@ -33,6 +34,7 @@ export default function ChartNode({
   color,
   height,
   isDimmed = false,
+  isHovered = false,
   label,
   onClick,
   onMouseEnter,
@@ -55,7 +57,7 @@ export default function ChartNode({
         onDoubleClick={onDoubleClick}
         className={styles.Rect}
         style={{
-          opacity: isDimmed ? 0.5 : 1,
+          opacity: isHovered ? 0.75 : isDimmed ? 0.5 : 1,
         }}
       />
       {width >= minWidthToDisplay && (

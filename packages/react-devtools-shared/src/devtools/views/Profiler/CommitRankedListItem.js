@@ -27,7 +27,9 @@ type Props = {
 function CommitRankedListItem({data, index, style}: Props) {
   const {
     chartData,
-    hoverFiber,
+    isHovered,
+    onElementMouseEnter,
+    onElementMouseLeave,
     scaleX,
     selectedFiberIndex,
     selectFiber,
@@ -49,11 +51,11 @@ function CommitRankedListItem({data, index, style}: Props) {
 
   const handleMouseEnter = () => {
     const {id, name} = node;
-    hoverFiber({id, name});
+    onElementMouseEnter({id, name});
   };
 
   const handleMouseLeave = () => {
-    hoverFiber(null);
+    onElementMouseLeave();
   };
 
   // List items are absolutely positioned using the CSS "top" attribute.
@@ -67,6 +69,7 @@ function CommitRankedListItem({data, index, style}: Props) {
       color={getGradientColor(node.value / chartData.maxValue)}
       height={lineHeight}
       isDimmed={index < selectedFiberIndex}
+      isHovered={isHovered}
       key={node.id}
       label={node.label}
       onClick={handleClick}
