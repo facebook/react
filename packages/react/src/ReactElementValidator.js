@@ -278,6 +278,25 @@ function validateFragmentProps(fragment) {
   }
 }
 
+function getTypeString(type) {
+  let typeString;
+  let info = '';
+  if (type === null) {
+    typeString = 'null';
+  } else if (Array.isArray(type)) {
+    typeString = 'array';
+  } else if (type !== undefined && type.$$typeof === REACT_ELEMENT_TYPE) {
+    typeString = `<${getComponentName(type.type) || 'Unknown'} />`;
+    info = ' Did you accidentally export a JSX literal instead of a component?';
+  } else {
+    typeString = typeof type;
+  }
+  return {
+    typeString,
+    _info: info,
+  };
+}
+
 export function jsxWithValidation(
   type,
   props,
@@ -310,18 +329,8 @@ export function jsxWithValidation(
       info += getDeclarationErrorAddendum();
     }
 
-    let typeString;
-    if (type === null) {
-      typeString = 'null';
-    } else if (Array.isArray(type)) {
-      typeString = 'array';
-    } else if (type !== undefined && type.$$typeof === REACT_ELEMENT_TYPE) {
-      typeString = `<${getComponentName(type.type) || 'Unknown'} />`;
-      info =
-        ' Did you accidentally export a JSX literal instead of a component?';
-    } else {
-      typeString = typeof type;
-    }
+    const {typeString, _info} = getTypeString(type);
+    info = _info || info;
 
     if (__DEV__) {
       console.error(
@@ -434,18 +443,8 @@ export function createElementWithValidation(type, props, children) {
       info += getDeclarationErrorAddendum();
     }
 
-    let typeString;
-    if (type === null) {
-      typeString = 'null';
-    } else if (Array.isArray(type)) {
-      typeString = 'array';
-    } else if (type !== undefined && type.$$typeof === REACT_ELEMENT_TYPE) {
-      typeString = `<${getComponentName(type.type) || 'Unknown'} />`;
-      info =
-        ' Did you accidentally export a JSX literal instead of a component?';
-    } else {
-      typeString = typeof type;
-    }
+    const {typeString, _info} = getTypeString(type);
+    info = _info || info;
 
     if (__DEV__) {
       console.error(
