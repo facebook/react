@@ -219,6 +219,7 @@ function InspectedElementContextController({children}: Props) {
             canViewSource,
             hasLegacyContext,
             id,
+            key,
             source,
             type,
             owners:
