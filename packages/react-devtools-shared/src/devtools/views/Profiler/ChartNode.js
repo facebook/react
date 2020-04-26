@@ -15,6 +15,7 @@ type Props = {|
   color: string,
   height: number,
   isDimmed?: boolean,
+  isSelected?: boolean,
   label: string,
   onClick: (event: SyntheticMouseEvent<*>) => mixed,
   onDoubleClick?: (event: SyntheticMouseEvent<*>) => mixed,
@@ -33,6 +34,7 @@ export default function ChartNode({
   color,
   height,
   isDimmed = false,
+  isSelected = false,
   label,
   onClick,
   onMouseEnter,
@@ -43,12 +45,29 @@ export default function ChartNode({
   x,
   y,
 }: Props) {
+  const fill = isSelected ? 'url(#selectedPattern)' : color;
+  const patternDefs = isSelected ? (
+    <defs>
+      <pattern
+        id="selectedPattern"
+        patternUnits="userSpaceOnUse"
+        width="4"
+        height="4">
+        <path
+          d="M-1,1 l2,-2 M0,4 l4,-4 M3,5 l2,-2"
+          style={{strokeWidth: 2.4, stroke: color}}
+        />
+      </pattern>
+    </defs>
+  ) : null;
+
   return (
     <g className={styles.Group} transform={`translate(${x},${y})`}>
+      {patternDefs}
       <rect
         width={width}
         height={height}
-        fill={color}
+        fill={fill}
         onClick={onClick}
         onMouseEnter={onMouseEnter}
         onMouseLeave={onMouseLeave}

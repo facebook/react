@@ -8,3 +8,7 @@
   stroke: var(--color-commit-did-not-render-pattern);
   stroke-width: 1;
 }
+
+.FocusedContainer {
+  outline: none;
+}

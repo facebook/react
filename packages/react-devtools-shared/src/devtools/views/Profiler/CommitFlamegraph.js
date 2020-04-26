@@ -8,7 +8,14 @@
  */
 
 import * as React from 'react';
-import {forwardRef, useCallback, useContext, useMemo, useState} from 'react';
+import {
+  forwardRef,
+  useCallback,
+  useContext,
+  useMemo,
+  useState,
+  useRef,
+} from 'react';
 import AutoSizer from 'react-virtualized-auto-sizer';
 import {FixedSizeList} from 'react-window';
 import {ProfilerContext} from './ProfilerContext';
@@ -101,6 +108,7 @@ function CommitFlamegraph({chartData, commitTree, height, width}: Props) {
   );
   const {lineHeight} = useContext(SettingsContext);
   const {selectFiber, selectedFiberID} = useContext(ProfilerContext);
+  const chartList = useRef(null);
 
   const selectedChartNodeIndex = useMemo<number>(() => {
     if (selectedFiberID === null) {
@@ -159,18 +167,98 @@ function CommitFlamegraph({chartData, commitTree, height, width}: Props) {
     [hoveredFiberData],
   );
 
+  const goToNextFiberID = useCallback(
+    changeIndexInRowBy => {
+      const currentRow = chartData.rows[selectedChartNodeIndex];
+      const indexInCurrentRow = selectedFiberID
+        ? currentRow.findIndex(node => node.id === selectedFiberID)
+        : 0;
+
+      let nextIndexInRow = indexInCurrentRow + changeIndexInRowBy;
+      let nextChartNodeIndex = selectedChartNodeIndex;
+      if (nextIndexInRow < 0) {
+        nextChartNodeIndex =
+          nextChartNodeIndex === chartData.rows.length - 1
+            ? 0
+            : nextChartNodeIndex + 1;
+        nextIndexInRow = chartData.rows[nextChartNodeIndex].length - 1;
+      } else if (nextIndexInRow > currentRow.length - 1) {
+        nextChartNodeIndex -= 1;
+        nextIndexInRow = 0;
+      }
+
+      if (nextChartNodeIndex < 0) {
+        nextChartNodeIndex = chartData.rows.length - 1;
+        nextIndexInRow = 0;
+      }
+
+      if (nextChartNodeIndex > chartData.rows.length - 1) {
+        nextChartNodeIndex = 0;
+        nextIndexInRow = chartData.rows[0].length - 1;
+      }
+
+      selectFiber(chartData.rows[nextChartNodeIndex][nextIndexInRow].id, null);
+      if (chartList.current) {
+        chartList.current.scrollToItem(nextChartNodeIndex);
+      }
+    },
+    [chartData, selectedChartNodeIndex, selectedFiberID, selectFiber],
+  );
+
+  const handleKeyDown = useCallback(
+    event => {
+      switch (event.key) {
+        case 'ArrowUp':
+          if (selectedChartNodeIndex > 0 && selectedChartNode) {
+            const [parentNode] = chartData.rows[selectedChartNodeIndex - 1]
+              .filter(row => row.offset <= selectedChartNode.offset)
+              .slice(-1);
+            if (parentNode && chartList.current) {
+              selectFiber(parentNode.id, parentNode.name);
+              chartList.current.scrollToItem(selectedChartNodeIndex - 1);
+            }
+          }
+          event.preventDefault();
+          break;
+        case 'ArrowRight':
+          goToNextFiberID(-1);
+          event.preventDefault();
+          break;
+        case 'ArrowLeft':
+          goToNextFiberID(1);
+          event.preventDefault();
+          break;
+        default:
+          break;
+      }
+    },
+    [
+      chartData,
+      selectedChartNodeIndex,
+      selectFiber,
+      selectedChartNode,
+      goToNextFiberID,
+    ],
+  );
+
   return (
-    <Tooltip label={tooltipLabel}>
-      <FixedSizeList
-        height={height}
-        innerElementType={InnerElementType}
-        itemCount={chartData.depth}
-        itemData={itemData}
-        itemSize={lineHeight}
-        width={width}>
-        {CommitFlamegraphListItem}
-      </FixedSizeList>
-    </Tooltip>
+    <div
+      tabIndex={0}
+      className={styles.FocusedContainer}
+      onKeyDown={handleKeyDown}>
+      <Tooltip label={tooltipLabel}>
+        <FixedSizeList
+          ref={chartList}
+          height={height}
+          innerElementType={InnerElementType}
+          itemCount={chartData.depth}
+          itemData={itemData}
+          itemSize={lineHeight}
+          width={width}>
+          {CommitFlamegraphListItem}
+        </FixedSizeList>
+      </Tooltip>
+    </div>
   );
 }
 
