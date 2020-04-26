@@ -29,3 +29,7 @@
   text-align: left;
   transition: all ease-in-out 250ms;
 }
+
+.SelectedPath {
+  stroke-width: 2.4;
+}
