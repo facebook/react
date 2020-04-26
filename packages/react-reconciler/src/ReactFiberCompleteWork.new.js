@@ -127,11 +127,7 @@ import {
   renderHasNotSuspendedYet,
 } from './ReactFiberWorkLoop.new';
 import {createFundamentalStateInstance} from './ReactFiberFundamental.new';
-import {
-  Never,
-  isSameOrHigherPriority,
-  bumpPriorityLower,
-} from './ReactFiberExpirationTime.new';
+import {Never, isSameOrHigherPriority} from './ReactFiberExpirationTime.new';
 import {resetChildFibers} from './ReactChildFiber.new';
 import {updateDeprecatedEventListeners} from './ReactFiberDeprecatedEvents.new';
 import {createScopeMethods} from './ReactFiberScope.new';
@@ -1118,11 +1114,9 @@ function completeWork(
             // them, then they really have the same priority as this render.
             // So we'll pick it back up the very next render pass once we've had
             // an opportunity to yield for paint.
-
-            const nextPriority = bumpPriorityLower(renderExpirationTime);
-            workInProgress.expirationTime_opaque = workInProgress.childExpirationTime_opaque = nextPriority;
+            workInProgress.expirationTime_opaque = renderExpirationTime;
             if (enableSchedulerTracing) {
-              markSpawnedWork(nextPriority);
+              markSpawnedWork(renderExpirationTime);
             }
           }
         }
