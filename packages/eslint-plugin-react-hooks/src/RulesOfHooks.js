@@ -9,14 +9,7 @@
 
 'use strict';
 
-/**
- * Catch all identifiers that begin with "use" followed by an uppercase Latin
- * character to exclude identifiers like "user".
- */
-
-function isHookName(s) {
-  return /^use[A-Z0-9].*$/.test(s);
-}
+import {isHookName} from './utils';
 
 /**
  * We consider hooks to be a hook name identifier or a member expression

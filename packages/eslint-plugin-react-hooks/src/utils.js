@@ -1,4 +1,13 @@
+/**
+ * Copyright (c) Facebook, Inc. and its affiliates.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+
 /* eslint-disable no-for-of-loops/no-for-of-loops */
+
+'use strict';
 
 // The meat of the logic.
 export function collectRecommendations({
@@ -337,6 +346,51 @@ export function getReactiveHookCallbackIndex(calleeNode, options) {
         return -1;
       }
   }
+}
+
+// What's the index of the initial value that needs to be analyzed for a given Hook?
+// -1 if it's not a Hook we care about (e.g. useEffect).
+// 0 for useRef/useState/useDebugValue(initialValue).
+// For additionally configured Hooks, assume that they're like useEffect(-1).
+export function getReactiveHookInitialValueIndex(calleeNode, options) {
+  const node = getNodeWithoutReactNamespace(calleeNode);
+  if (node.type !== 'Identifier') {
+    return -1;
+  }
+  switch (node.name) {
+    case 'useDebugValue': // useDebugValue(val)
+    case 'useRef': // useRef(val)
+    case 'useState':
+      // useState(val)
+      return 0;
+    default:
+      if (node === calleeNode && options && options.additionalHooks) {
+        // Allow the user to provide a regular expression which enables the lint to
+        // target custom reactive hooks.
+        let name;
+        try {
+          name = toPropertyAccessString(node);
+        } catch (error) {
+          if (/Unsupported node type/.test(error.message)) {
+            return 0;
+          } else {
+            throw error;
+          }
+        }
+        return options.additionalHooks.test(name) ? 0 : -1;
+      } else {
+        return -1;
+      }
+  }
+}
+
+/**
+ * Catch all identifiers that begin with "use" followed by an uppercase Latin
+ * character to exclude identifiers like "user".
+ */
+
+export function isHookName(s) {
+  return /^use[A-Z0-9].*$/.test(s);
 }
 
 /**
