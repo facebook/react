@@ -17,7 +17,6 @@ import {
 } from 'shared/ReactSymbols';
 
 import {isValidElement, cloneAndReplaceKey} from './ReactElement';
-import ReactDebugCurrentFrame from './ReactDebugCurrentFrame';
 
 const SEPARATOR = '.';
 const SUBSEPARATOR = ':';
@@ -190,21 +189,15 @@ function mapIntoArray(
         );
       }
     } else if (type === 'object') {
-      let addendum = '';
-      if (__DEV__) {
-        addendum =
-          ' If you meant to render a collection of children, use an array ' +
-          'instead.' +
-          ReactDebugCurrentFrame.getStackAddendum();
-      }
       const childrenString = '' + (children: any);
       invariant(
         false,
-        'Objects are not valid as a React child (found: %s).%s',
+        'Objects are not valid as a React child (found: %s). ' +
+          'If you meant to render a collection of children, use an array ' +
+          'instead.',
         childrenString === '[object Object]'
           ? 'object with keys {' + Object.keys((children: any)).join(', ') + '}'
           : childrenString,
-        addendum,
       );
     }
   }

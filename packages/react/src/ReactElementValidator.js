@@ -31,7 +31,24 @@ import {
   cloneElement,
   jsxDEV,
 } from './ReactElement';
-import {setCurrentlyValidatingElement} from './ReactDebugCurrentFrame';
+import {setExtraStackFrame} from './ReactDebugCurrentFrame';
+import {describeUnknownElementTypeFrameInDEV} from 'shared/ReactComponentStackFrame';
+
+function setCurrentlyValidatingElement(element) {
+  if (__DEV__) {
+    if (element) {
+      const owner = element._owner;
+      const stack = describeUnknownElementTypeFrameInDEV(
+        element.type,
+        element._source,
+        owner ? owner.type : null,
+      );
+      setExtraStackFrame(stack);
+    } else {
+      setExtraStackFrame(null);
+    }
+  }
+}
 
 let propTypesMisspellWarningShown;
 
@@ -127,16 +144,16 @@ function validateExplicitKey(element, parentType) {
     )}.`;
   }
 
-  setCurrentlyValidatingElement(element);
   if (__DEV__) {
+    setCurrentlyValidatingElement(element);
     console.error(
       'Each child in a list should have a unique "key" prop.' +
         '%s%s See https://fb.me/react-warning-keys for more information.',
       currentComponentErrorInfo,
       childOwner,
     );
+    setCurrentlyValidatingElement(null);
   }
-  setCurrentlyValidatingElement(null);
 }
 
 /**

@@ -1,5 +1,6 @@
 [ignore]
 .*/scripts/bench/.*
+.*/build/.*
 
 # These shims are copied into external projects:
 .*/rollup/shims/facebook-www/.*
@@ -20,16 +21,16 @@
 %REACT_RENDERER_FLOW_IGNORES%
 
 [include]
-../../../node_modules/
-../../../packages/
-../../../scripts/
+./node_modules/
+./packages/
+./scripts/
 
 [libs]
-../../../node_modules/fbjs/flow/lib/dev.js
-../environment.js
-../react-devtools.js
-../react-native-host-hooks.js
-../react-relay-hooks.js
+./node_modules/fbjs/flow/lib/dev.js
+./scripts/flow/environment.js
+./scripts/flow/react-devtools.js
+./scripts/flow/react-native-host-hooks.js
+./scripts/flow/react-relay-hooks.js
 
 [lints]
 untyped-type-import=error

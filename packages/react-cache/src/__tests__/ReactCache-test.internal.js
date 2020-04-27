@@ -24,7 +24,7 @@ describe('ReactCache', () => {
     jest.resetModules();
 
     ReactFeatureFlags = require('shared/ReactFeatureFlags');
-    ReactFeatureFlags.debugRenderPhaseSideEffectsForStrictMode = false;
+
     ReactFeatureFlags.replayFailedUnitOfWorkWithInvokeGuardedCallback = false;
     React = require('react');
     Suspense = React.Suspense;

@@ -43,8 +43,25 @@ export function forwardRef<Props, ElementType: React$ElementType>(
     }
   }
 
-  return {
+  const elementType = {
     $$typeof: REACT_FORWARD_REF_TYPE,
     render,
   };
+  if (__DEV__) {
+    let ownName;
+    Object.defineProperty(elementType, 'displayName', {
+      enumerable: false,
+      configurable: true,
+      get: function() {
+        return ownName;
+      },
+      set: function(name) {
+        ownName = name;
+        if (render.displayName == null) {
+          render.displayName = name;
+        }
+      },
+    });
+  }
+  return elementType;
 }

@@ -18,6 +18,7 @@ describe('Component stack trace displaying', () => {
     ReactDOM = require('react-dom');
   });
 
+  // @gate !enableComponentStackLocations || !__DEV__
   it('should provide filenames in stack traces', () => {
     class Component extends React.Component {
       render() {

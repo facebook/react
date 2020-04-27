@@ -184,7 +184,7 @@ describe('DOMPropertyOperations', () => {
           container,
         ),
       ).toErrorDev(
-        'A component is changing a controlled input of type text to be uncontrolled',
+        'A component is changing a controlled input to be uncontrolled',
       );
       if (disableInputAttributeSyncing) {
         expect(container.firstChild.hasAttribute('value')).toBe(false);

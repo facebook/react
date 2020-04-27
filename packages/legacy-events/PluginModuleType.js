@@ -7,7 +7,7 @@
  * @flow
  */
 
-import type {Fiber} from 'react-reconciler/src/ReactFiber';
+import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
 import type {
   DispatchConfig,
   ReactSyntheticEvent,

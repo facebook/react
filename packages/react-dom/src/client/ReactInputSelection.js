@@ -100,8 +100,6 @@ export function hasSelectionCapabilities(elem) {
 export function getSelectionInformation() {
   const focusedElem = getActiveElementDeep();
   return {
-    // Used by Flare
-    activeElementDetached: null,
     focusedElem: focusedElem,
     selectionRange: hasSelectionCapabilities(focusedElem)
       ? getSelection(focusedElem)

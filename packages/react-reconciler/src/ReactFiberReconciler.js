@@ -42,7 +42,6 @@ import {
   createPortal as createPortal_old,
 } from './ReactFiberReconciler.old';
 
-// TODO: Update these to point to the fork.
 import {
   createContainer as createContainer_new,
   updateContainer as updateContainer_new,
@@ -69,7 +68,7 @@ import {
   injectIntoDevTools as injectIntoDevTools_new,
   act as act_new,
   createPortal as createPortal_new,
-} from './ReactFiberReconciler.old';
+} from './ReactFiberReconciler.new';
 
 export const createContainer = enableNewReconciler
   ? createContainer_new

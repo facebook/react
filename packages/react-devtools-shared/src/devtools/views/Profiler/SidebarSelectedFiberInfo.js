@@ -8,7 +8,7 @@
  */
 
 import * as React from 'react';
-import {Fragment, useContext} from 'react';
+import {Fragment, useContext, useEffect, useRef} from 'react';
 import WhatChanged from './WhatChanged';
 import {ProfilerContext} from './ProfilerContext';
 import {formatDuration, formatTime} from './utils';
@@ -31,11 +31,47 @@ export default function SidebarSelectedFiberInfo(_: Props) {
     selectFiber,
   } = useContext(ProfilerContext);
   const {profilingCache} = profilerStore;
+  const selectedListItemRef = useRef<HTMLElement | null>(null);
 
   const commitIndices = profilingCache.getFiberCommits({
     fiberID: ((selectedFiberID: any): number),
     rootID: ((rootID: any): number),
   });
+
+  const handleKeyDown = event => {
+    switch (event.key) {
+      case 'ArrowUp':
+        if (selectedCommitIndex !== null) {
+          const prevIndex = commitIndices.indexOf(selectedCommitIndex);
+          const nextIndex =
+            prevIndex > 0 ? prevIndex - 1 : commitIndices.length - 1;
+          selectCommitIndex(commitIndices[nextIndex]);
+        }
+        event.preventDefault();
+        break;
+      case 'ArrowDown':
+        if (selectedCommitIndex !== null) {
+          const prevIndex = commitIndices.indexOf(selectedCommitIndex);
+          const nextIndex =
+            prevIndex < commitIndices.length - 1 ? prevIndex + 1 : 0;
+          selectCommitIndex(commitIndices[nextIndex]);
+        }
+        event.preventDefault();
+        break;
+      default:
+        break;
+    }
+  };
+
+  useEffect(() => {
+    const selectedElement = selectedListItemRef.current;
+    if (
+      selectedElement !== null &&
+      typeof selectedElement.scrollIntoView === 'function'
+    ) {
+      selectedElement.scrollIntoView({block: 'nearest', inline: 'nearest'});
+    }
+  }, [selectedCommitIndex]);
 
   const listItems = [];
   let i = 0;
@@ -50,6 +86,7 @@ export default function SidebarSelectedFiberInfo(_: Props) {
     listItems.push(
       <button
         key={commitIndex}
+        ref={selectedCommitIndex === commitIndex ? selectedListItemRef : null}
         className={
           selectedCommitIndex === commitIndex
             ? styles.CurrentCommit
@@ -75,7 +112,7 @@ export default function SidebarSelectedFiberInfo(_: Props) {
           <ButtonIcon type="close" />
         </Button>
       </div>
-      <div className={styles.Content}>
+      <div className={styles.Content} onKeyDown={handleKeyDown} tabIndex={0}>
         <WhatChanged fiberID={((selectedFiberID: any): number)} />
         {listItems.length > 0 && (
           <Fragment>

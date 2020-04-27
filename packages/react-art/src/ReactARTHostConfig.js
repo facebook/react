@@ -306,6 +306,7 @@ export function getPublicInstance(instance) {
 
 export function prepareForCommit() {
   // Noop
+  return null;
 }
 
 export function prepareUpdate(domElement, type, oldProps, newProps) {
@@ -470,18 +471,32 @@ export function beforeRemoveInstance(instance) {
   // noop
 }
 
-export function registerEvent(event: any, rootContainerInstance: any) {
+export function isOpaqueHydratingObject(value: mixed): boolean {
+  throw new Error('Not yet implemented');
+}
+
+export function makeOpaqueHydratingObject(
+  attemptToReadValue: () => void,
+): OpaqueIDType {
   throw new Error('Not yet implemented.');
 }
 
-export function mountEventListener(listener: any) {
-  throw new Error('Not yet implemented.');
+export function makeClientId(): OpaqueIDType {
+  throw new Error('Not yet implemented');
 }
 
-export function unmountEventListener(listener: any) {
-  throw new Error('Not yet implemented.');
+export function makeClientIdInDEV(warnOnAccessInDEV: () => void): OpaqueIDType {
+  throw new Error('Not yet implemented');
 }
 
-export function validateEventListenerTarget(target: any, listener: any) {
-  throw new Error('Not yet implemented.');
+export function makeServerId(): OpaqueIDType {
+  throw new Error('Not yet implemented');
+}
+
+export function beforeActiveInstanceBlur() {
+  // noop
+}
+
+export function afterActiveInstanceBlur() {
+  // noop
 }

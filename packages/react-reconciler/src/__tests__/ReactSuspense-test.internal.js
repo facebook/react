@@ -16,7 +16,7 @@ describe('ReactSuspense', () => {
   beforeEach(() => {
     jest.resetModules();
     ReactFeatureFlags = require('shared/ReactFeatureFlags');
-    ReactFeatureFlags.debugRenderPhaseSideEffectsForStrictMode = false;
+
     ReactFeatureFlags.replayFailedUnitOfWorkWithInvokeGuardedCallback = false;
     ReactFeatureFlags.enableSchedulerTracing = true;
     React = require('react');

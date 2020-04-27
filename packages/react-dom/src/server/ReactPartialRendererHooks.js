@@ -7,11 +7,10 @@
  * @flow
  */
 
-import type {
-  Dispatcher as DispatcherType,
-  TimeoutConfig,
-} from 'react-reconciler/src/ReactFiberHooks';
+import type {Dispatcher as DispatcherType} from 'react-reconciler/src/ReactInternalTypes';
 import type {ThreadID} from './ReactThreadIDAllocator';
+import type {OpaqueIDType} from 'react-reconciler/src/ReactFiberHostConfig';
+
 import type {
   MutableSource,
   MutableSourceGetSnapshotFn,
@@ -20,9 +19,9 @@ import type {
   ReactEventResponderListener,
 } from 'shared/ReactTypes';
 import type {SuspenseConfig} from 'react-reconciler/src/ReactFiberSuspenseConfig';
-import type {ReactDOMListenerMap} from '../shared/ReactDOMTypes';
 
 import {validateContextBounds} from './ReactPartialRendererContext';
+import {makeServerId} from '../client/ReactDOMHostConfig';
 
 import invariant from 'shared/invariant';
 import is from 'shared/objectIs';
@@ -44,6 +43,10 @@ type Hook = {|
   memoizedState: any,
   queue: UpdateQueue<any> | null,
   next: Hook | null,
+|};
+
+type TimeoutConfig = {|
+  timeoutMs: number,
 |};
 
 let currentlyRenderingComponent: Object | null = null;
@@ -491,11 +494,8 @@ function useTransition(
   return [startTransition, false];
 }
 
-function useEvent(event: any): ReactDOMListenerMap {
-  return {
-    clear: noop,
-    setListener: noop,
-  };
+function useOpaqueIdentifier(): OpaqueIDType {
+  return makeServerId();
 }
 
 function noop(): void {}
@@ -524,7 +524,7 @@ export const Dispatcher: DispatcherType = {
   useResponder,
   useDeferredValue,
   useTransition,
-  useEvent,
+  useOpaqueIdentifier,
   // Subscriptions are not setup in a server environment.
   useMutableSource,
 };
