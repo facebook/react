@@ -1278,25 +1278,44 @@ describe('ReactDOMServerHooks', () => {
           // State update should trigger the ID to update, which changes the props
           // of ChildWithID. This should cause ChildWithID to hydrate before Children
 
-          expect(Scheduler).toFlushAndYieldThrough(
-            __DEV__
-              ? [
-                  'Child with ID',
-                  // Fallbacks are immdiately committed in TestUtils version
-                  // of act
-                  // 'Child with ID',
-                  // 'Child with ID',
-                  'Child One',
-                  'Child Two',
-                ]
-              : [
-                  'Child with ID',
-                  'Child with ID',
-                  'Child with ID',
-                  'Child One',
-                  'Child Two',
-                ],
-          );
+          gate(flags => {
+            if (__DEV__) {
+              expect(Scheduler).toFlushAndYieldThrough([
+                'Child with ID',
+                // Fallbacks are immdiately committed in TestUtils version
+                // of act
+                // 'Child with ID',
+                // 'Child with ID',
+                'Child One',
+                'Child Two',
+              ]);
+            } else if (flags.new) {
+              // Upgrading a dehyrdating boundary works a little differently in
+              // the new reconciler. After the update on the boundary is
+              // scheduled, it waits until the end of the current time slice
+              // before restarting at the higher priority.
+              expect(Scheduler).toFlushAndYieldThrough([
+                'Child with ID',
+                'Child with ID',
+                'Child with ID',
+                'Child with ID',
+                'Child One',
+                'Child Two',
+              ]);
+            } else {
+              // Whereas the old reconciler relies on a Scheduler hack to
+              // interrupt the current task. It's not clear if this is any
+              // better or worse, though. Regardless it's not a big deal since
+              // the time slices aren't that big.
+              expect(Scheduler).toFlushAndYieldThrough([
+                'Child with ID',
+                'Child with ID',
+                'Child with ID',
+                'Child One',
+                'Child Two',
+              ]);
+            }
+          });
 
           expect(child1Ref.current).toBe(null);
           expect(childWithIDRef.current).toEqual(

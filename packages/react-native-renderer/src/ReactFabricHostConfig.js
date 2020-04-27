@@ -77,9 +77,6 @@ export type UpdatePayload = Object;
 export type TimeoutHandle = TimeoutID;
 export type NoTimeout = -1;
 
-export type ReactListenerEvent = Object;
-export type ReactListenerMap = Object;
-export type ReactListener = Object;
 export type OpaqueIDType = void;
 
 export type RendererInspectionConfig = $ReadOnly<{|
@@ -304,8 +301,9 @@ export function getPublicInstance(instance: Instance): * {
   return instance.canonical;
 }
 
-export function prepareForCommit(containerInfo: Container): void {
+export function prepareForCommit(containerInfo: Container): null | Object {
   // Noop
+  return null;
 }
 
 export function prepareUpdate(
@@ -509,18 +507,14 @@ export function makeServerId(): OpaqueIDType {
   throw new Error('Not yet implemented');
 }
 
-export function registerEvent(event: any, rootContainerInstance: Container) {
-  throw new Error('Not yet implemented.');
+export function beforeActiveInstanceBlur() {
+  // noop
 }
 
-export function mountEventListener(listener: any) {
-  throw new Error('Not yet implemented.');
+export function afterActiveInstanceBlur() {
+  // noop
 }
 
-export function unmountEventListener(listener: any) {
-  throw new Error('Not yet implemented.');
-}
-
-export function validateEventListenerTarget(target: any, listener: any) {
-  throw new Error('Not yet implemented.');
+export function preparePortalMount(portalInstance: Instance): void {
+  // noop
 }

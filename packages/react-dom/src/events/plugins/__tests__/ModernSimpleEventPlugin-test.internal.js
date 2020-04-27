@@ -13,6 +13,7 @@ describe('SimpleEventPlugin', function() {
   let React;
   let ReactDOM;
   let Scheduler;
+  let ReactFeatureFlags;
 
   let onClick;
   let container;
@@ -36,6 +37,8 @@ describe('SimpleEventPlugin', function() {
 
   beforeEach(function() {
     jest.resetModules();
+    ReactFeatureFlags = require('shared/ReactFeatureFlags');
+    ReactFeatureFlags.enableModernEventSystem = true;
     React = require('react');
     ReactDOM = require('react-dom');
     Scheduler = require('scheduler');
@@ -231,7 +234,8 @@ describe('SimpleEventPlugin', function() {
   describe('interactive events, in concurrent mode', () => {
     beforeEach(() => {
       jest.resetModules();
-
+      ReactFeatureFlags = require('shared/ReactFeatureFlags');
+      ReactFeatureFlags.enableModernEventSystem = true;
       ReactDOM = require('react-dom');
       Scheduler = require('scheduler');
     });

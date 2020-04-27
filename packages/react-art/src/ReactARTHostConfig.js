@@ -306,6 +306,7 @@ export function getPublicInstance(instance) {
 
 export function prepareForCommit() {
   // Noop
+  return null;
 }
 
 export function prepareUpdate(domElement, type, oldProps, newProps) {
@@ -492,18 +493,14 @@ export function makeServerId(): OpaqueIDType {
   throw new Error('Not yet implemented');
 }
 
-export function registerEvent(event: any, rootContainerInstance: any) {
-  throw new Error('Not yet implemented.');
+export function beforeActiveInstanceBlur() {
+  // noop
 }
 
-export function mountEventListener(listener: any) {
-  throw new Error('Not yet implemented.');
+export function afterActiveInstanceBlur() {
+  // noop
 }
 
-export function unmountEventListener(listener: any) {
-  throw new Error('Not yet implemented.');
-}
-
-export function validateEventListenerTarget(target: any, listener: any) {
-  throw new Error('Not yet implemented.');
+export function preparePortalMount(portalInstance: any): void {
+  // noop
 }

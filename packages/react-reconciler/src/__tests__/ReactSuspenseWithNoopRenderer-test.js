@@ -554,6 +554,8 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     expect(ReactNoop.getChildren()).toEqual([span('(empty)')]);
   });
 
+  // Note: This test was written to test a heuristic used in the expiration
+  // times model. Might not make sense in the new model.
   it('tries each subsequent level after suspending', async () => {
     const root = ReactNoop.createRoot();
 
@@ -606,17 +608,28 @@ describe('ReactSuspenseWithNoopRenderer', () => {
       root.render(<App step={4} shouldSuspend={false} />);
     });
 
-    // Should suspend at each distinct level
-    expect(Scheduler).toHaveYielded([
-      'Sibling',
-      'Suspend! [Step 1]',
-      'Sibling',
-      'Suspend! [Step 2]',
-      'Sibling',
-      'Suspend! [Step 3]',
-      'Sibling',
-      'Step 4',
-    ]);
+    expect(Scheduler).toHaveYielded(
+      gate(flags =>
+        flags.new
+          ? [
+              // The new reconciler batches everything together, so it finishes
+              // without suspending again.
+              'Sibling',
+              'Step 4',
+            ]
+          : [
+              // The old reconciler tries at each distinct level.
+              'Sibling',
+              'Suspend! [Step 1]',
+              'Sibling',
+              'Suspend! [Step 2]',
+              'Sibling',
+              'Suspend! [Step 3]',
+              'Sibling',
+              'Step 4',
+            ],
+      ),
+    );
   });
 
   it('forces an expiration after an update times out', async () => {
@@ -1330,13 +1343,28 @@ describe('ReactSuspenseWithNoopRenderer', () => {
 
       ReactNoop.renderLegacySyncRoot(<Demo />);
 
-      expect(Scheduler).toHaveYielded([
-        'Suspend! [Hi]',
-        'Loading...',
-        // Re-render due to lifecycle update
-        'Suspend! [Hi]',
-        'Loading...',
-      ]);
+      expect(Scheduler).toHaveYielded(
+        gate(flags =>
+          flags.new
+            ? [
+                'Suspend! [Hi]',
+                'Loading...',
+                // Re-render due to lifecycle update
+                'Loading...',
+              ]
+            : [
+                'Suspend! [Hi]',
+                'Loading...',
+                // Re-render due to lifecycle update
+                // Note: Old reconciler has an issue where the primary fragment
+                // fiber isn't marked during setState, so as a compromise we
+                // sometimes over-render the primary child even when it hasn't
+                // been updated.
+                'Suspend! [Hi]',
+                'Loading...',
+              ],
+        ),
+      );
       expect(ReactNoop.getChildren()).toEqual([span('Loading...')]);
       await advanceTimers(100);
       expect(Scheduler).toHaveYielded(['Promise resolved [Hi]']);
@@ -3868,5 +3896,54 @@ describe('ReactSuspenseWithNoopRenderer', () => {
       // The bug was that the pending state got stuck forever.
       expect(root).toMatchRenderedOutput(<span prop="b" />);
     });
+  });
+
+  it('regression: #18657', async () => {
+    const {useState} = React;
+
+    let setText;
+    function App() {
+      const [text, _setText] = useState('A');
+      setText = _setText;
+      return <AsyncText text={text} />;
+    }
+
+    const root = ReactNoop.createRoot();
+    await ReactNoop.act(async () => {
+      await resolveText('A');
+      root.render(
+        <Suspense fallback={<Text text="Loading..." />}>
+          <App />
+        </Suspense>,
+      );
+    });
+    expect(Scheduler).toHaveYielded(['A']);
+    expect(root).toMatchRenderedOutput(<span prop="A" />);
+
+    await ReactNoop.act(async () => {
+      setText('B');
+      Scheduler.unstable_runWithPriority(
+        Scheduler.unstable_IdlePriority,
+        () => {
+          setText('B');
+        },
+      );
+      // Suspend the first update. The second update doesn't run because it has
+      // Idle priority.
+      expect(Scheduler).toFlushAndYield(['Suspend! [B]', 'Loading...']);
+
+      // Commit the fallback. Now we'll try working on Idle.
+      jest.runAllTimers();
+
+      // It also suspends.
+      expect(Scheduler).toFlushAndYield(['Suspend! [B]']);
+    });
+
+    await ReactNoop.act(async () => {
+      setText('B');
+      await resolveText('B');
+    });
+    expect(Scheduler).toHaveYielded(['Promise resolved [B]', 'B']);
+    expect(root).toMatchRenderedOutput(<span prop="B" />);
   });
 });

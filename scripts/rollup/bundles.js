@@ -155,15 +155,6 @@ const bundles = [
     externals: ['react'],
   },
 
-  /* React DOM internals required for react-native-web (e.g., to shim native events from react-dom) */
-  {
-    bundleTypes: [UMD_DEV, UMD_PROD, NODE_DEV, NODE_PROD],
-    moduleType: RENDERER_UTILS,
-    entry: 'react-dom/unstable-native-dependencies',
-    global: 'ReactDOMUnstableNativeDependencies',
-    externals: ['react', 'react-dom'],
-  },
-
   /******* React DOM Server *******/
   {
     bundleTypes: [

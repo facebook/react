@@ -8,16 +8,14 @@
  */
 
 import type {Fiber} from './ReactInternalTypes';
-import type {ExpirationTime} from './ReactFiberExpirationTime.new';
+import type {ExpirationTimeOpaque} from './ReactFiberExpirationTime.new';
 import type {UpdateQueue} from './ReactUpdateQueue.new';
-import type {ReactPriorityLevel} from './ReactInternalTypes';
 
 import * as React from 'react';
 import {Update, Snapshot} from './ReactSideEffectTags';
 import {
   debugRenderPhaseSideEffectsForStrictMode,
   disableLegacyContext,
-  enableDebugTracing,
   warnAboutDeprecatedLifecycles,
 } from 'shared/ReactFeatureFlags';
 import ReactStrictModeWarnings from './ReactStrictModeWarnings.new';
@@ -29,7 +27,7 @@ import invariant from 'shared/invariant';
 import {REACT_CONTEXT_TYPE, REACT_PROVIDER_TYPE} from 'shared/ReactSymbols';
 
 import {resolveDefaultProps} from './ReactFiberLazyComponent.new';
-import {DebugTracingMode, StrictMode} from './ReactTypeOfMode';
+import {StrictMode} from './ReactTypeOfMode';
 
 import {
   enqueueUpdate,
@@ -42,7 +40,7 @@ import {
   initializeUpdateQueue,
   cloneUpdateQueue,
 } from './ReactUpdateQueue.new';
-import {NoWork} from './ReactFiberExpirationTime.new';
+import {NoWork, isSameExpirationTime} from './ReactFiberExpirationTime.new';
 import {
   cacheContext,
   getMaskedContext,
@@ -52,13 +50,11 @@ import {
 } from './ReactFiberContext.new';
 import {readContext} from './ReactFiberNewContext.new';
 import {
-  requestCurrentTimeForUpdate,
-  computeExpirationForFiber,
+  requestEventTime,
+  requestUpdateExpirationTime,
   scheduleUpdateOnFiber,
-  priorityLevelToLabel,
 } from './ReactFiberWorkLoop.new';
 import {requestCurrentSuspenseConfig} from './ReactFiberSuspenseConfig';
-import {logForceUpdateScheduled, logStateUpdateScheduled} from './DebugTracing';
 
 import {disableLogs, reenableLogs} from 'shared/ConsolePatchingDev';
 
@@ -96,7 +92,7 @@ if (__DEV__) {
     if (callback === null || typeof callback === 'function') {
       return;
     }
-    const key = `${callerName}_${(callback: any)}`;
+    const key = callerName + '_' + (callback: any);
     if (!didWarnOnInvalidCallback.has(key)) {
       didWarnOnInvalidCallback.add(key);
       console.error(
@@ -181,7 +177,12 @@ export function applyDerivedStateFromProps(
 
   // Once the update queue is empty, persist the derived state onto the
   // base state.
-  if (workInProgress.expirationTime === NoWork) {
+  if (
+    isSameExpirationTime(
+      workInProgress.expirationTime_opaque,
+      (NoWork: ExpirationTimeOpaque),
+    )
+  ) {
     // Queue is always non-null for classes
     const updateQueue: UpdateQueue<any> = (workInProgress.updateQueue: any);
     updateQueue.baseState = memoizedState;
@@ -192,15 +193,11 @@ const classComponentUpdater = {
   isMounted,
   enqueueSetState(inst, payload, callback) {
     const fiber = getInstance(inst);
-    const currentTime = requestCurrentTimeForUpdate();
+    const eventTime = requestEventTime();
     const suspenseConfig = requestCurrentSuspenseConfig();
-    const expirationTime = computeExpirationForFiber(
-      currentTime,
-      fiber,
-      suspenseConfig,
-    );
+    const expirationTime = requestUpdateExpirationTime(fiber, suspenseConfig);
 
-    const update = createUpdate(currentTime, expirationTime, suspenseConfig);
+    const update = createUpdate(eventTime, expirationTime, suspenseConfig);
     update.payload = payload;
     if (callback !== undefined && callback !== null) {
       if (__DEV__) {
@@ -211,30 +208,14 @@ const classComponentUpdater = {
 
     enqueueUpdate(fiber, update);
     scheduleUpdateOnFiber(fiber, expirationTime);
-
-    if (__DEV__) {
-      if (enableDebugTracing) {
-        if (fiber.mode & DebugTracingMode) {
-          const label = priorityLevelToLabel(
-            ((update.priority: any): ReactPriorityLevel),
-          );
-          const name = getComponentName(fiber.type) || 'Unknown';
-          logStateUpdateScheduled(name, label, payload);
-        }
-      }
-    }
   },
   enqueueReplaceState(inst, payload, callback) {
     const fiber = getInstance(inst);
-    const currentTime = requestCurrentTimeForUpdate();
+    const eventTime = requestEventTime();
     const suspenseConfig = requestCurrentSuspenseConfig();
-    const expirationTime = computeExpirationForFiber(
-      currentTime,
-      fiber,
-      suspenseConfig,
-    );
+    const expirationTime = requestUpdateExpirationTime(fiber, suspenseConfig);
 
-    const update = createUpdate(currentTime, expirationTime, suspenseConfig);
+    const update = createUpdate(eventTime, expirationTime, suspenseConfig);
     update.tag = ReplaceState;
     update.payload = payload;
 
@@ -247,30 +228,14 @@ const classComponentUpdater = {
 
     enqueueUpdate(fiber, update);
     scheduleUpdateOnFiber(fiber, expirationTime);
-
-    if (__DEV__) {
-      if (enableDebugTracing) {
-        if (fiber.mode & DebugTracingMode) {
-          const label = priorityLevelToLabel(
-            ((update.priority: any): ReactPriorityLevel),
-          );
-          const name = getComponentName(fiber.type) || 'Unknown';
-          logStateUpdateScheduled(name, label, payload);
-        }
-      }
-    }
   },
   enqueueForceUpdate(inst, callback) {
     const fiber = getInstance(inst);
-    const currentTime = requestCurrentTimeForUpdate();
+    const eventTime = requestEventTime();
     const suspenseConfig = requestCurrentSuspenseConfig();
-    const expirationTime = computeExpirationForFiber(
-      currentTime,
-      fiber,
-      suspenseConfig,
-    );
+    const expirationTime = requestUpdateExpirationTime(fiber, suspenseConfig);
 
-    const update = createUpdate(currentTime, expirationTime, suspenseConfig);
+    const update = createUpdate(eventTime, expirationTime, suspenseConfig);
     update.tag = ForceUpdate;
 
     if (callback !== undefined && callback !== null) {
@@ -282,18 +247,6 @@ const classComponentUpdater = {
 
     enqueueUpdate(fiber, update);
     scheduleUpdateOnFiber(fiber, expirationTime);
-
-    if (__DEV__) {
-      if (enableDebugTracing) {
-        if (fiber.mode & DebugTracingMode) {
-          const label = priorityLevelToLabel(
-            ((update.priority: any): ReactPriorityLevel),
-          );
-          const name = getComponentName(fiber.type) || 'Unknown';
-          logForceUpdateScheduled(name, label);
-        }
-      }
-    }
   },
 };
 
@@ -818,7 +771,7 @@ function mountClassInstance(
   workInProgress: Fiber,
   ctor: any,
   newProps: any,
-  renderExpirationTime: ExpirationTime,
+  renderExpirationTime: ExpirationTimeOpaque,
 ): void {
   if (__DEV__) {
     checkClassInstance(workInProgress, ctor, newProps);
@@ -913,7 +866,7 @@ function resumeMountClassInstance(
   workInProgress: Fiber,
   ctor: any,
   newProps: any,
-  renderExpirationTime: ExpirationTime,
+  renderExpirationTime: ExpirationTimeOpaque,
 ): boolean {
   const instance = workInProgress.stateNode;
 
@@ -1048,7 +1001,7 @@ function updateClassInstance(
   workInProgress: Fiber,
   ctor: any,
   newProps: any,
-  renderExpirationTime: ExpirationTime,
+  renderExpirationTime: ExpirationTimeOpaque,
 ): boolean {
   const instance = workInProgress.stateNode;
 

@@ -289,12 +289,11 @@ exports[`ReactFreshBabelPlugin includes custom hooks into the signatures when co
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-
-var _s = $RefreshSig$();
-
 exports.default = App;
 
 var _hooks = require("./hooks");
+
+var _s = $RefreshSig$();
 
 function App() {
   _s();

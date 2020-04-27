@@ -11,6 +11,7 @@
 
 let React;
 let ReactDOM;
+let ReactFeatureFlags;
 
 describe('BeforeInputEventPlugin', () => {
   let container;
@@ -20,6 +21,8 @@ describe('BeforeInputEventPlugin', () => {
     if (envSimulator) {
       envSimulator();
     }
+    ReactFeatureFlags = require('shared/ReactFeatureFlags');
+    ReactFeatureFlags.enableModernEventSystem = true;
     return require('react-dom');
   }
 

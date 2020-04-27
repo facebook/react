@@ -12,6 +12,7 @@ import type {Fiber} from './ReactInternalTypes';
 import type {FiberRoot} from './ReactInternalTypes';
 import type {Instance} from './ReactFiberHostConfig';
 import type {ReactNodeList} from 'shared/ReactTypes';
+import type {ExpirationTimeOpaque} from './ReactFiberExpirationTime.new';
 
 import {
   flushSync,
@@ -319,7 +320,7 @@ function scheduleFibersWithFamiliesRecursively(
       fiber._debugNeedsRemount = true;
     }
     if (needsRemount || needsRender) {
-      scheduleUpdateOnFiber(fiber, Sync);
+      scheduleUpdateOnFiber(fiber, (Sync: ExpirationTimeOpaque));
     }
     if (child !== null && !needsRemount) {
       scheduleFibersWithFamiliesRecursively(

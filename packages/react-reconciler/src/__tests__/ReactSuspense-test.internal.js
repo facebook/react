@@ -357,15 +357,15 @@ describe('ReactSuspense', () => {
       // This update will suspend.
       root.update(<App shouldSuspend={true} step={1} />);
 
-      // Need to move into the next async bucket.
-      Scheduler.unstable_advanceTime(1000);
-      // Do a bit of work, then interrupt to trigger a restart.
+      // Do a bit of work
       expect(Scheduler).toFlushAndYieldThrough(['A1']);
-      interrupt();
 
-      // Schedule another update. This will have lower priority because of
-      // the interrupt trick above.
+      // Schedule another update. This will get bumped into a different batch
+      // because we're already in the middle of rendering.
       root.update(<App shouldSuspend={false} step={2} />);
+
+      // Interrupt to trigger a restart.
+      interrupt();
 
       expect(Scheduler).toFlushAndYieldThrough([
         // Should have restarted the first update, because of the interruption

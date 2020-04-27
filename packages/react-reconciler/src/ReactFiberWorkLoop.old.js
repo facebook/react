@@ -72,6 +72,8 @@ import {
   cancelTimeout,
   noTimeout,
   warnsIfNotActing,
+  beforeActiveInstanceBlur,
+  afterActiveInstanceBlur,
 } from './ReactFiberHostConfig';
 
 import {
@@ -116,6 +118,7 @@ import {
   Snapshot,
   Callback,
   Passive,
+  PassiveUnmountPendingDev,
   Incomplete,
   HostEffectMask,
   Hydrating,
@@ -175,9 +178,9 @@ import {
 // DEV stuff
 import getComponentName from 'shared/getComponentName';
 import ReactStrictModeWarnings from './ReactStrictModeWarnings.old';
-import {getStackByFiberInDevAndProd} from './ReactFiberComponentStack';
 import {
   isRendering as ReactCurrentDebugFiberIsRenderingInDEV,
+  current as ReactCurrentFiberCurrent,
   resetCurrentFiber as resetCurrentDebugFiberInDEV,
   setCurrentFiber as setCurrentDebugFiberInDEV,
 } from './ReactCurrentFiber';
@@ -190,6 +193,7 @@ import {onCommitRoot} from './ReactFiberDevToolsHook.old';
 
 // Used by `act`
 import enqueueTask from 'shared/enqueueTask';
+import {isFiberHiddenOrDeletedAndContains} from './ReactFiberTreeReflection';
 
 const ceil = Math.ceil;
 
@@ -294,6 +298,9 @@ let currentEventTime: ExpirationTime = NoWork;
 // Dev only flag that tracks if passive effects are currently being flushed.
 // We warn about state updates for unmounted components differently in this case.
 let isFlushingPassiveEffects = false;
+
+let focusedInstanceHandle: null | Fiber = null;
+let shouldFireAfterActiveInstanceBlur: boolean = false;
 
 export function getWorkInProgressRoot(): FiberRoot | null {
   return workInProgressRoot;
@@ -1920,7 +1927,9 @@ function commitRootImpl(root, renderPriorityLevel) {
     // The first phase a "before mutation" phase. We use this phase to read the
     // state of the host tree right before we mutate it. This is where
     // getSnapshotBeforeUpdate is called.
-    prepareForCommit(root.containerInfo);
+    focusedInstanceHandle = prepareForCommit(root.containerInfo);
+    shouldFireAfterActiveInstanceBlur = false;
+
     nextEffect = firstEffect;
     do {
       if (__DEV__) {
@@ -1941,6 +1950,9 @@ function commitRootImpl(root, renderPriorityLevel) {
         }
       }
     } while (nextEffect !== null);
+
+    // We no longer need to track the active instance fiber
+    focusedInstanceHandle = null;
 
     if (enableProfilerTimer) {
       // Mark the current commit time to be shared by all Profilers in this
@@ -1975,6 +1987,10 @@ function commitRootImpl(root, renderPriorityLevel) {
         }
       }
     } while (nextEffect !== null);
+
+    if (shouldFireAfterActiveInstanceBlur) {
+      afterActiveInstanceBlur();
+    }
     resetAfterCommit(root.containerInfo);
 
     // The work-in-progress tree is now the current tree. This must come after
@@ -2142,6 +2158,14 @@ function commitRootImpl(root, renderPriorityLevel) {
 
 function commitBeforeMutationEffects() {
   while (nextEffect !== null) {
+    if (
+      !shouldFireAfterActiveInstanceBlur &&
+      focusedInstanceHandle !== null &&
+      isFiberHiddenOrDeletedAndContains(nextEffect, focusedInstanceHandle)
+    ) {
+      shouldFireAfterActiveInstanceBlur = true;
+      beforeActiveInstanceBlur();
+    }
     const effectTag = nextEffect.effectTag;
     if ((effectTag & Snapshot) !== NoEffect) {
       setCurrentDebugFiberInDEV(nextEffect);
@@ -2329,6 +2353,15 @@ export function enqueuePendingPassiveHookEffectUnmount(
 ): void {
   if (runAllPassiveEffectDestroysBeforeCreates) {
     pendingPassiveHookEffectsUnmount.push(effect, fiber);
+    if (__DEV__) {
+      if (deferPassiveEffectCleanupDuringUnmount) {
+        fiber.effectTag |= PassiveUnmountPendingDev;
+        const alternate = fiber.alternate;
+        if (alternate !== null) {
+          alternate.effectTag |= PassiveUnmountPendingDev;
+        }
+      }
+    }
     if (!rootDoesHavePassiveEffects) {
       rootDoesHavePassiveEffects = true;
       scheduleCallback(NormalPriority, () => {
@@ -2391,6 +2424,17 @@ function flushPassiveEffectsImpl() {
       const fiber = ((unmountEffects[i + 1]: any): Fiber);
       const destroy = effect.destroy;
       effect.destroy = undefined;
+
+      if (__DEV__) {
+        if (deferPassiveEffectCleanupDuringUnmount) {
+          fiber.effectTag &= ~PassiveUnmountPendingDev;
+          const alternate = fiber.alternate;
+          if (alternate !== null) {
+            alternate.effectTag &= ~PassiveUnmountPendingDev;
+          }
+        }
+      }
+
       if (typeof destroy === 'function') {
         if (__DEV__) {
           setCurrentDebugFiberInDEV(fiber);
@@ -2873,7 +2917,7 @@ function warnAboutUpdateOnUnmountedFiberInDEV(fiber) {
     ) {
       // If there are pending passive effects unmounts for this Fiber,
       // we can assume that they would have prevented this update.
-      if (pendingPassiveHookEffectsUnmount.indexOf(fiber) >= 0) {
+      if ((fiber.effectTag & PassiveUnmountPendingDev) !== NoEffect) {
         return;
       }
     }
@@ -2905,15 +2949,24 @@ function warnAboutUpdateOnUnmountedFiberInDEV(fiber) {
       // 1. Updating an ancestor that a component had registered itself with on mount.
       // 2. Resetting state when a component is hidden after going offscreen.
     } else {
-      console.error(
-        "Can't perform a React state update on an unmounted component. This " +
-          'is a no-op, but it indicates a memory leak in your application. To ' +
-          'fix, cancel all subscriptions and asynchronous tasks in %s.%s',
-        tag === ClassComponent
-          ? 'the componentWillUnmount method'
-          : 'a useEffect cleanup function',
-        getStackByFiberInDevAndProd(fiber),
-      );
+      const previousFiber = ReactCurrentFiberCurrent;
+      try {
+        setCurrentDebugFiberInDEV(fiber);
+        console.error(
+          "Can't perform a React state update on an unmounted component. This " +
+            'is a no-op, but it indicates a memory leak in your application. To ' +
+            'fix, cancel all subscriptions and asynchronous tasks in %s.',
+          tag === ClassComponent
+            ? 'the componentWillUnmount method'
+            : 'a useEffect cleanup function',
+        );
+      } finally {
+        if (previousFiber) {
+          setCurrentDebugFiberInDEV(fiber);
+        } else {
+          resetCurrentDebugFiberInDEV();
+        }
+      }
     }
   }
 }
@@ -3050,25 +3103,33 @@ export function warnIfNotScopedWithMatchingAct(fiber: Fiber): void {
       IsSomeRendererActing.current === true &&
       IsThisRendererActing.current !== true
     ) {
-      console.error(
-        "It looks like you're using the wrong act() around your test interactions.\n" +
-          'Be sure to use the matching version of act() corresponding to your renderer:\n\n' +
-          '// for react-dom:\n' +
-          // Break up imports to avoid accidentally parsing them as dependencies.
-          'import {act} fr' +
-          "om 'react-dom/test-utils';\n" +
-          '// ...\n' +
-          'act(() => ...);\n\n' +
-          '// for react-test-renderer:\n' +
-          // Break up imports to avoid accidentally parsing them as dependencies.
-          'import TestRenderer fr' +
-          "om react-test-renderer';\n" +
-          'const {act} = TestRenderer;\n' +
-          '// ...\n' +
-          'act(() => ...);' +
-          '%s',
-        getStackByFiberInDevAndProd(fiber),
-      );
+      const previousFiber = ReactCurrentFiberCurrent;
+      try {
+        setCurrentDebugFiberInDEV(fiber);
+        console.error(
+          "It looks like you're using the wrong act() around your test interactions.\n" +
+            'Be sure to use the matching version of act() corresponding to your renderer:\n\n' +
+            '// for react-dom:\n' +
+            // Break up imports to avoid accidentally parsing them as dependencies.
+            'import {act} fr' +
+            "om 'react-dom/test-utils';\n" +
+            '// ...\n' +
+            'act(() => ...);\n\n' +
+            '// for react-test-renderer:\n' +
+            // Break up imports to avoid accidentally parsing them as dependencies.
+            'import TestRenderer fr' +
+            "om react-test-renderer';\n" +
+            'const {act} = TestRenderer;\n' +
+            '// ...\n' +
+            'act(() => ...);',
+        );
+      } finally {
+        if (previousFiber) {
+          setCurrentDebugFiberInDEV(fiber);
+        } else {
+          resetCurrentDebugFiberInDEV();
+        }
+      }
     }
   }
 }
@@ -3091,10 +3152,8 @@ export function warnIfNotCurrentlyActingEffectsInDEV(fiber: Fiber): void {
           '/* assert on the output */\n\n' +
           "This ensures that you're testing the behavior the user would see " +
           'in the browser.' +
-          ' Learn more at https://fb.me/react-wrap-tests-with-act' +
-          '%s',
+          ' Learn more at https://fb.me/react-wrap-tests-with-act',
         getComponentName(fiber.type),
-        getStackByFiberInDevAndProd(fiber),
       );
     }
   }
@@ -3108,21 +3167,29 @@ function warnIfNotCurrentlyActingUpdatesInDEV(fiber: Fiber): void {
       IsSomeRendererActing.current === false &&
       IsThisRendererActing.current === false
     ) {
-      console.error(
-        'An update to %s inside a test was not wrapped in act(...).\n\n' +
-          'When testing, code that causes React state updates should be ' +
-          'wrapped into act(...):\n\n' +
-          'act(() => {\n' +
-          '  /* fire events that update state */\n' +
-          '});\n' +
-          '/* assert on the output */\n\n' +
-          "This ensures that you're testing the behavior the user would see " +
-          'in the browser.' +
-          ' Learn more at https://fb.me/react-wrap-tests-with-act' +
-          '%s',
-        getComponentName(fiber.type),
-        getStackByFiberInDevAndProd(fiber),
-      );
+      const previousFiber = ReactCurrentFiberCurrent;
+      try {
+        setCurrentDebugFiberInDEV(fiber);
+        console.error(
+          'An update to %s inside a test was not wrapped in act(...).\n\n' +
+            'When testing, code that causes React state updates should be ' +
+            'wrapped into act(...):\n\n' +
+            'act(() => {\n' +
+            '  /* fire events that update state */\n' +
+            '});\n' +
+            '/* assert on the output */\n\n' +
+            "This ensures that you're testing the behavior the user would see " +
+            'in the browser.' +
+            ' Learn more at https://fb.me/react-wrap-tests-with-act',
+          getComponentName(fiber.type),
+        );
+      } finally {
+        if (previousFiber) {
+          setCurrentDebugFiberInDEV(fiber);
+        } else {
+          resetCurrentDebugFiberInDEV();
+        }
+      }
     }
   }
 }
@@ -3191,7 +3258,7 @@ function scheduleInteractions(root, expirationTime, interactions) {
   }
 
   if (interactions.size > 0) {
-    const pendingInteractionMap = root.pendingInteractionMap;
+    const pendingInteractionMap = root.pendingInteractionMap_old;
     const pendingInteractions = pendingInteractionMap.get(expirationTime);
     if (pendingInteractions != null) {
       interactions.forEach(interaction => {
@@ -3240,7 +3307,7 @@ function startWorkOnPendingInteractions(root, expirationTime) {
   // we can accurately attribute time spent working on it, And so that cascading
   // work triggered during the render phase will be associated with it.
   const interactions: Set<Interaction> = new Set();
-  root.pendingInteractionMap.forEach(
+  root.pendingInteractionMap_old.forEach(
     (scheduledInteractions, scheduledExpirationTime) => {
       if (scheduledExpirationTime >= expirationTime) {
         scheduledInteractions.forEach(interaction =>
@@ -3297,7 +3364,7 @@ function finishPendingInteractions(root, committedExpirationTime) {
     // Clear completed interactions from the pending Map.
     // Unless the render was suspended or cascading work was scheduled,
     // In which case– leave pending interactions until the subsequent render.
-    const pendingInteractionMap = root.pendingInteractionMap;
+    const pendingInteractionMap = root.pendingInteractionMap_old;
     pendingInteractionMap.forEach(
       (scheduledInteractions, scheduledExpirationTime) => {
         // Only decrement the pending interaction count if we're done.

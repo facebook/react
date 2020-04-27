@@ -27,13 +27,9 @@ import {updateValueIfChanged} from '../../client/inputValueTracking';
 import {setDefaultValue} from '../../client/ReactDOMInput';
 import {enqueueStateRestore} from '../ReactDOMControlledComponent';
 
-import {
-  disableInputAttributeSyncing,
-  enableModernEventSystem,
-} from 'shared/ReactFeatureFlags';
-import accumulateTwoPhaseListeners from '../accumulateTwoPhaseListeners';
+import {disableInputAttributeSyncing} from 'shared/ReactFeatureFlags';
 import {batchedUpdates} from '../ReactDOMUpdateBatching';
-import {dispatchEventsInBatch} from '../DOMModernPluginEventSystem';
+import {accumulateTwoPhaseDispatches} from '../DOMLegacyEventPluginSystem';
 
 const eventTypes = {
   change: {
@@ -64,7 +60,7 @@ function createAndAccumulateChangeEvent(inst, nativeEvent, target) {
   event.type = 'change';
   // Flag this event loop as needing state restore.
   enqueueStateRestore(target);
-  accumulateTwoPhaseListeners(event);
+  accumulateTwoPhaseDispatches(event);
   return event;
 }
 /**
@@ -105,11 +101,7 @@ function manualDispatchChangeEvent(nativeEvent) {
 }
 
 function runEventInBatch(event) {
-  if (enableModernEventSystem) {
-    dispatchEventsInBatch([event]);
-  } else {
-    runEventsInBatch(event);
-  }
+  runEventsInBatch(event);
 }
 
 function getInstIfValueChanged(targetInst) {

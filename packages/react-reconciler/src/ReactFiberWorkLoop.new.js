@@ -9,7 +9,7 @@
 
 import type {Thenable, Wakeable} from 'shared/ReactTypes';
 import type {Fiber, FiberRoot} from './ReactInternalTypes';
-import type {ExpirationTime} from './ReactFiberExpirationTime.new';
+import type {ExpirationTimeOpaque} from './ReactFiberExpirationTime.new';
 import type {ReactPriorityLevel} from './ReactInternalTypes';
 import type {Interaction} from 'scheduler/src/Tracing';
 import type {SuspenseConfig} from './ReactFiberSuspenseConfig';
@@ -26,8 +26,6 @@ import {
   enableProfilerCommitHooks,
   enableSchedulerTracing,
   warnAboutUnmockedScheduler,
-  disableSchedulerTimeoutBasedOnReactExpirationTime,
-  enableDebugTracing,
 } from 'shared/ReactFeatureFlags';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import invariant from 'shared/invariant';
@@ -40,25 +38,15 @@ import {
   shouldYield,
   requestPaint,
   now,
-  NoPriority,
-  ImmediatePriority,
-  UserBlockingPriority,
-  NormalPriority,
-  LowPriority,
-  IdlePriority,
+  NoPriority as NoSchedulerPriority,
+  ImmediatePriority as ImmediateSchedulerPriority,
+  UserBlockingPriority as UserBlockingSchedulerPriority,
+  NormalPriority as NormalSchedulerPriority,
+  LowPriority as LowSchedulerPriority,
+  IdlePriority as IdleSchedulerPriority,
   flushSyncCallbackQueue,
   scheduleSyncCallback,
 } from './SchedulerWithReactIntegration.new';
-import {
-  logCommitStarted,
-  logCommitStopped,
-  logLayoutEffectsStarted,
-  logLayoutEffectsStopped,
-  logPassiveEffectsStarted,
-  logPassiveEffectsStopped,
-  logRenderStarted,
-  logRenderStopped,
-} from './DebugTracing';
 
 // The scheduler is imported here *only* to detect whether it's been mocked
 import * as Scheduler from 'scheduler';
@@ -72,6 +60,8 @@ import {
   cancelTimeout,
   noTimeout,
   warnsIfNotActing,
+  beforeActiveInstanceBlur,
+  afterActiveInstanceBlur,
 } from './ReactFiberHostConfig';
 
 import {
@@ -116,6 +106,7 @@ import {
   Snapshot,
   Callback,
   Passive,
+  PassiveUnmountPendingDev,
   Incomplete,
   HostEffectMask,
   Hydrating,
@@ -124,19 +115,31 @@ import {
 import {
   NoWork,
   Sync,
+  UserBlockingUpdateTime,
+  DefaultUpdateTime,
   Never,
-  msToExpirationTime,
-  expirationTimeToMs,
-  computeInteractiveExpiration,
-  computeAsyncExpiration,
-  computeSuspenseTimeout,
-  LOW_PRIORITY_EXPIRATION,
   inferPriorityFromExpirationTime,
   Batched,
   Idle,
+  ContinuousHydration,
   ShortTransition,
   LongTransition,
+  isSameOrHigherPriority,
+  isSameExpirationTime,
+  bumpPriorityLower,
 } from './ReactFiberExpirationTime.new';
+import {
+  SyncLanePriority,
+  SyncBatchedLanePriority,
+  InputDiscreteLanePriority,
+  InputContinuousLanePriority,
+  DefaultLanePriority,
+  TransitionShortLanePriority,
+  TransitionLongLanePriority,
+  HydrationContinuousLanePriority,
+  IdleLanePriority,
+  OffscreenLanePriority,
+} from './ReactFiberLane';
 import {beginWork as originalBeginWork} from './ReactFiberBeginWork.new';
 import {completeWork} from './ReactFiberCompleteWork.new';
 import {unwindWork, unwindInterruptedWork} from './ReactFiberUnwindWork.new';
@@ -177,9 +180,9 @@ import {
 // DEV stuff
 import getComponentName from 'shared/getComponentName';
 import ReactStrictModeWarnings from './ReactStrictModeWarnings.new';
-import {getStackByFiberInDevAndProd} from './ReactFiberComponentStack';
 import {
   isRendering as ReactCurrentDebugFiberIsRenderingInDEV,
+  current as ReactCurrentFiberCurrent,
   resetCurrentFiber as resetCurrentDebugFiberInDEV,
   setCurrentFiber as setCurrentDebugFiberInDEV,
 } from './ReactCurrentFiber';
@@ -192,6 +195,7 @@ import {onCommitRoot} from './ReactFiberDevToolsHook.new';
 
 // Used by `act`
 import enqueueTask from 'shared/enqueueTask';
+import {isFiberHiddenOrDeletedAndContains} from './ReactFiberTreeReflection';
 
 const ceil = Math.ceil;
 
@@ -226,21 +230,21 @@ let workInProgressRoot: FiberRoot | null = null;
 // The fiber we're working on
 let workInProgress: Fiber | null = null;
 // The expiration time we're rendering
-let renderExpirationTime: ExpirationTime = NoWork;
+let renderExpirationTime: ExpirationTimeOpaque = NoWork;
 // Whether to root completed, errored, suspended, etc.
 let workInProgressRootExitStatus: RootExitStatus = RootIncomplete;
 // A fatal error, if one is thrown
 let workInProgressRootFatalError: mixed = null;
 // Most recent event time among processed updates during this render.
-// This is conceptually a time stamp but expressed in terms of an ExpirationTime
+// This is conceptually a time stamp but expressed in terms of an ExpirationTimeOpaque
 // because we deal mostly with expiration times in the hot path, so this avoids
 // the conversion happening in the hot path.
-let workInProgressRootLatestProcessedEventTime: ExpirationTime = Sync;
-let workInProgressRootLatestSuspenseTimeout: ExpirationTime = Sync;
+let workInProgressRootLatestProcessedEventTime: number = -1;
+let workInProgressRootLatestSuspenseTimeout: number = -1;
 let workInProgressRootCanSuspendUsingConfig: null | SuspenseConfig = null;
 // The work left over by components that were visited during this render. Only
 // includes unprocessed updates, not work in bailed out children.
-let workInProgressRootNextUnprocessedUpdateTime: ExpirationTime = NoWork;
+let workInProgressRootNextUnprocessedUpdateTime: ExpirationTimeOpaque = NoWork;
 
 // If we're pinged while rendering we don't always restart immediately.
 // This flag determines if it might be worthwhile to restart if an opportunity
@@ -250,6 +254,7 @@ let workInProgressRootHasPendingPing: boolean = false;
 // model where we don't commit new loading states in too quick succession.
 let globalMostRecentFallbackTime: number = 0;
 const FALLBACK_THROTTLE_MS: number = 500;
+const DEFAULT_TIMEOUT_MS: number = 5000;
 
 let nextEffect: Fiber | null = null;
 let hasUncaughtError = false;
@@ -258,15 +263,15 @@ let legacyErrorBoundariesThatAlreadyFailed: Set<mixed> | null = null;
 
 let rootDoesHavePassiveEffects: boolean = false;
 let rootWithPendingPassiveEffects: FiberRoot | null = null;
-let pendingPassiveEffectsRenderPriority: ReactPriorityLevel = NoPriority;
-let pendingPassiveEffectsExpirationTime: ExpirationTime = NoWork;
+let pendingPassiveEffectsRenderPriority: ReactPriorityLevel = NoSchedulerPriority;
+let pendingPassiveEffectsExpirationTime: ExpirationTimeOpaque = NoWork;
 let pendingPassiveHookEffectsMount: Array<HookEffect | Fiber> = [];
 let pendingPassiveHookEffectsUnmount: Array<HookEffect | Fiber> = [];
 let pendingPassiveProfilerEffects: Array<Fiber> = [];
 
 let rootsWithPendingDiscreteUpdates: Map<
   FiberRoot,
-  ExpirationTime,
+  ExpirationTimeOpaque,
 > | null = null;
 
 // Use these to prevent an infinite loop of nested updates
@@ -281,140 +286,153 @@ let nestedPassiveUpdateCount: number = 0;
 // during the commit phase. This enables them to be traced across components
 // that spawn new work during render. E.g. hidden boundaries, suspended SSR
 // hydration or SuspenseList.
-let spawnedWorkDuringRender: null | Array<ExpirationTime> = null;
+let spawnedWorkDuringRender: null | Array<ExpirationTimeOpaque> = null;
 
-// Expiration times are computed by adding to the current time (the start
-// time). However, if two updates are scheduled within the same event, we
-// should treat their start times as simultaneous, even if the actual clock
-// time has advanced between the first and second call.
-
-// In other words, because expiration times determine how updates are batched,
-// we want all updates of like priority that occur within the same event to
-// receive the same expiration time. Otherwise we get tearing.
-let currentEventTime: ExpirationTime = NoWork;
+// If two updates are scheduled within the same event, we should treat their
+// event times as simultaneous, even if the actual clock time has advanced
+// between the first and second call.
+let currentEventTime: number = -1;
 
 // Dev only flag that tracks if passive effects are currently being flushed.
 // We warn about state updates for unmounted components differently in this case.
 let isFlushingPassiveEffects = false;
 
+let focusedInstanceHandle: null | Fiber = null;
+let shouldFireAfterActiveInstanceBlur: boolean = false;
+
 export function getWorkInProgressRoot(): FiberRoot | null {
   return workInProgressRoot;
 }
 
-export function requestCurrentTimeForUpdate() {
+export function requestEventTime() {
   if ((executionContext & (RenderContext | CommitContext)) !== NoContext) {
     // We're inside React, so it's fine to read the actual time.
-    return msToExpirationTime(now());
+    return now();
   }
   // We're not inside React, so we may be in the middle of a browser event.
-  if (currentEventTime !== NoWork) {
+  if (currentEventTime !== -1) {
     // Use the same start time for all updates until we enter React again.
     return currentEventTime;
   }
   // This is the first update since React yielded. Compute a new start time.
-  currentEventTime = msToExpirationTime(now());
+  currentEventTime = now();
   return currentEventTime;
 }
 
 export function getCurrentTime() {
-  return msToExpirationTime(now());
+  return now();
 }
 
-export function computeExpirationForFiber(
-  currentTime: ExpirationTime,
+export function requestUpdateExpirationTime(
   fiber: Fiber,
-  suspenseConfig: null | SuspenseConfig,
-): ExpirationTime {
+  suspenseConfig: SuspenseConfig | null,
+): ExpirationTimeOpaque {
+  // Special cases
   const mode = fiber.mode;
   if ((mode & BlockingMode) === NoMode) {
     return Sync;
-  }
-
-  const priorityLevel = getCurrentPriorityLevel();
-  if ((mode & ConcurrentMode) === NoMode) {
-    return priorityLevel === ImmediatePriority ? Sync : Batched;
-  }
-
-  if ((executionContext & RenderContext) !== NoContext) {
+  } else if ((mode & ConcurrentMode) === NoMode) {
+    return getCurrentPriorityLevel() === ImmediateSchedulerPriority
+      ? (Sync: ExpirationTimeOpaque)
+      : Batched;
+  } else if ((executionContext & RenderContext) !== NoContext) {
     // Use whatever time we're already rendering
-    // TODO: Should there be a way to opt out, like with `runWithPriority`?
+    // TODO: Treat render phase updates as if they came from an
+    // interleaved event.
     return renderExpirationTime;
   }
 
-  let expirationTime;
+  let updateLanePriority;
   if (suspenseConfig !== null) {
     // If there's a SuspenseConfig, choose an expiration time that's lower
     // priority than a normal concurrent update (regardless of the current
-    // Scheduler priority.) Timeouts larger than 10 seconds move one level lower
-    // than that.
+    // Scheduler priority.) Timeouts larger than 10 seconds move one level
+    // lower than that.
+    // TODO: This will coerce numbers larger than 31 bits to 0.
     const timeoutMs = suspenseConfig.timeoutMs;
-    expirationTime =
-      // TODO: This will coerce numbers larger than 31 bits to 0.
+    updateLanePriority =
       timeoutMs === undefined || (timeoutMs | 0) < 10000
-        ? ShortTransition
-        : LongTransition;
+        ? TransitionShortLanePriority
+        : TransitionLongLanePriority;
   } else {
-    // Compute an expiration time based on the Scheduler priority.
+    // TODO: If we're not inside `runWithPriority`, this returns the priority
+    // of the currently running task. That's probably not what we want.
+    const priorityLevel = getCurrentPriorityLevel();
     switch (priorityLevel) {
-      case ImmediatePriority:
-        expirationTime = Sync;
+      case ImmediateSchedulerPriority:
+        updateLanePriority = SyncLanePriority;
         break;
-      case UserBlockingPriority:
-        // TODO: Rename this to computeUserBlockingExpiration
-        expirationTime = computeInteractiveExpiration(currentTime);
+      case UserBlockingSchedulerPriority:
+        updateLanePriority = InputContinuousLanePriority;
         break;
-      case NormalPriority:
-      case LowPriority: // TODO: Handle LowPriority
-        // TODO: Rename this to... something better.
-        expirationTime = computeAsyncExpiration(currentTime);
+      case NormalSchedulerPriority:
+      case LowSchedulerPriority:
+        // TODO: Handle LowSchedulerPriority, somehow. Maybe the same lane as hydration.
+        updateLanePriority = DefaultLanePriority;
         break;
-      case IdlePriority:
-        expirationTime = Idle;
+      case IdleSchedulerPriority:
+        updateLanePriority = IdleLanePriority;
         break;
       default:
         invariant(false, 'Expected a valid priority level');
     }
   }
 
+  // TODO: In the new system, what we'll do here is claim one of the bits of
+  // the root's `pendingLanes` field, based on its priority. We'll combine this
+  // function with `scheduleUpdateOnFiber` and `markRootUpdatedAtTime`.
+  let expirationTime;
+  switch (updateLanePriority) {
+    case SyncLanePriority:
+      return Sync;
+    case SyncBatchedLanePriority:
+      return Batched;
+    case InputDiscreteLanePriority:
+    case InputContinuousLanePriority:
+      expirationTime = UserBlockingUpdateTime;
+      break;
+    case DefaultLanePriority:
+      expirationTime = DefaultUpdateTime;
+      break;
+    case TransitionShortLanePriority:
+      expirationTime = ShortTransition;
+      break;
+    case TransitionLongLanePriority:
+      expirationTime = LongTransition;
+      break;
+    case HydrationContinuousLanePriority:
+      expirationTime = ContinuousHydration;
+      break;
+    case IdleLanePriority:
+      expirationTime = Idle;
+      break;
+    case OffscreenLanePriority:
+      expirationTime = Never;
+      break;
+    default:
+      invariant(false, 'Expected a valid priority level');
+  }
+
   // If we're in the middle of rendering a tree, do not update at the same
   // expiration time that is already rendering.
   // TODO: We shouldn't have to do this if the update is on a different root.
-  // Refactor computeExpirationForFiber + scheduleUpdate so we have access to
-  // the root when we check for this condition.
-  if (workInProgressRoot !== null && expirationTime === renderExpirationTime) {
+  // TODO: In the new system, we'll find a different bit that's not the one
+  // we're currently rendering.
+  if (
+    workInProgressRoot !== null &&
+    isSameExpirationTime(expirationTime, renderExpirationTime)
+  ) {
     // This is a trick to move this update into a separate batch
-    expirationTime -= 1;
+    // TODO: This probably causes problems with ContinuousHydration and Idle
+    expirationTime = bumpPriorityLower(expirationTime);
   }
 
   return expirationTime;
 }
 
-export function priorityLevelToLabel(
-  priorityLevel: ReactPriorityLevel,
-): string {
-  if (__DEV__ && enableDebugTracing) {
-    switch (priorityLevel) {
-      case ImmediatePriority:
-        return 'immediate';
-      case UserBlockingPriority:
-        return 'user-blocking';
-      case NormalPriority:
-        return 'normal';
-      case LowPriority:
-        return 'low';
-      case IdlePriority:
-        return 'idle';
-      default:
-        return 'other';
-    }
-  } else {
-    return '';
-  }
-}
-
 export function scheduleUpdateOnFiber(
   fiber: Fiber,
-  expirationTime: ExpirationTime,
+  expirationTime: ExpirationTimeOpaque,
 ) {
   checkForNestedUpdates();
   warnAboutRenderPhaseUpdatesInDEV(fiber);
@@ -425,11 +443,11 @@ export function scheduleUpdateOnFiber(
     return null;
   }
 
-  // TODO: computeExpirationForFiber also reads the priority. Pass the
+  // TODO: requestUpdateLanePriority also reads the priority. Pass the
   // priority as an argument to that function and this one.
   const priorityLevel = getCurrentPriorityLevel();
 
-  if (expirationTime === Sync) {
+  if (isSameExpirationTime(expirationTime, (Sync: ExpirationTimeOpaque))) {
     if (
       // Check if we're inside unbatchedUpdates
       (executionContext & LegacyUnbatchedContext) !== NoContext &&
@@ -464,8 +482,8 @@ export function scheduleUpdateOnFiber(
     (executionContext & DiscreteEventContext) !== NoContext &&
     // Only updates at user-blocking priority or greater are considered
     // discrete, even inside a discrete event.
-    (priorityLevel === UserBlockingPriority ||
-      priorityLevel === ImmediatePriority)
+    (priorityLevel === UserBlockingSchedulerPriority ||
+      priorityLevel === ImmediateSchedulerPriority)
   ) {
     // This is the result of a discrete event. Track the lowest priority
     // discrete update per root so we can flush them early, if needed.
@@ -473,7 +491,10 @@ export function scheduleUpdateOnFiber(
       rootsWithPendingDiscreteUpdates = new Map([[root, expirationTime]]);
     } else {
       const lastDiscreteTime = rootsWithPendingDiscreteUpdates.get(root);
-      if (lastDiscreteTime === undefined || lastDiscreteTime > expirationTime) {
+      if (
+        lastDiscreteTime === undefined ||
+        !isSameOrHigherPriority(expirationTime, lastDiscreteTime)
+      ) {
         rootsWithPendingDiscreteUpdates.set(root, expirationTime);
       }
     }
@@ -486,12 +507,15 @@ export function scheduleUpdateOnFiber(
 // on a fiber.
 function markUpdateTimeFromFiberToRoot(fiber, expirationTime) {
   // Update the source fiber's expiration time
-  if (fiber.expirationTime < expirationTime) {
-    fiber.expirationTime = expirationTime;
+  if (!isSameOrHigherPriority(fiber.expirationTime_opaque, expirationTime)) {
+    fiber.expirationTime_opaque = expirationTime;
   }
   let alternate = fiber.alternate;
-  if (alternate !== null && alternate.expirationTime < expirationTime) {
-    alternate.expirationTime = expirationTime;
+  if (
+    alternate !== null &&
+    !isSameOrHigherPriority(alternate.expirationTime_opaque, expirationTime)
+  ) {
+    alternate.expirationTime_opaque = expirationTime;
   }
   // Walk the parent path to the root and update the child expiration time.
   let node = fiber.return;
@@ -501,19 +525,27 @@ function markUpdateTimeFromFiberToRoot(fiber, expirationTime) {
   } else {
     while (node !== null) {
       alternate = node.alternate;
-      if (node.childExpirationTime < expirationTime) {
-        node.childExpirationTime = expirationTime;
+      if (
+        !isSameOrHigherPriority(node.childExpirationTime_opaque, expirationTime)
+      ) {
+        node.childExpirationTime_opaque = expirationTime;
         if (
           alternate !== null &&
-          alternate.childExpirationTime < expirationTime
+          !isSameOrHigherPriority(
+            alternate.childExpirationTime_opaque,
+            expirationTime,
+          )
         ) {
-          alternate.childExpirationTime = expirationTime;
+          alternate.childExpirationTime_opaque = expirationTime;
         }
       } else if (
         alternate !== null &&
-        alternate.childExpirationTime < expirationTime
+        !isSameOrHigherPriority(
+          alternate.childExpirationTime_opaque,
+          expirationTime,
+        )
       ) {
-        alternate.childExpirationTime = expirationTime;
+        alternate.childExpirationTime_opaque = expirationTime;
       }
       if (node.return === null && node.tag === HostRoot) {
         root = node.stateNode;
@@ -535,7 +567,7 @@ function markUpdateTimeFromFiberToRoot(fiber, expirationTime) {
         // suspended now, right before marking the incoming update. This has the
         // effect of interrupting the current render and switching to the update.
         // TODO: This happens to work when receiving an update during the render
-        // phase, because of the trick inside computeExpirationForFiber to
+        // phase, because of the trick inside requestUpdateExpirationTime to
         // subtract 1 from `renderExpirationTime` to move it into a
         // separate bucket. But we should probably model it with an exception,
         // using the same mechanism we use to force hydration of a subtree.
@@ -553,19 +585,21 @@ function markUpdateTimeFromFiberToRoot(fiber, expirationTime) {
   return root;
 }
 
-function getNextRootExpirationTimeToWorkOn(root: FiberRoot): ExpirationTime {
+function getNextRootExpirationTimeToWorkOn(
+  root: FiberRoot,
+): ExpirationTimeOpaque {
   // Determines the next expiration time that the root should render, taking
   // into account levels that may be suspended, or levels that may have
   // received a ping.
 
-  const lastExpiredTime = root.lastExpiredTime;
-  if (lastExpiredTime !== NoWork) {
+  const lastExpiredTime = root.lastExpiredTime_opaque;
+  if (!isSameExpirationTime(lastExpiredTime, (NoWork: ExpirationTimeOpaque))) {
     return lastExpiredTime;
   }
 
   // "Pending" refers to any update that hasn't committed yet, including if it
   // suspended. The "suspended" range is therefore a subset.
-  const firstPendingTime = root.firstPendingTime;
+  const firstPendingTime = root.firstPendingTime_opaque;
   if (!isRootSuspendedAtTime(root, firstPendingTime)) {
     // The highest priority pending time is not suspended. Let's work on that.
     return firstPendingTime;
@@ -574,13 +608,18 @@ function getNextRootExpirationTimeToWorkOn(root: FiberRoot): ExpirationTime {
   // If the first pending time is suspended, check if there's a lower priority
   // pending level that we know about. Or check if we received a ping. Work
   // on whichever is higher priority.
-  const lastPingedTime = root.lastPingedTime;
-  const nextKnownPendingLevel = root.nextKnownPendingLevel;
-  const nextLevel =
-    lastPingedTime > nextKnownPendingLevel
-      ? lastPingedTime
-      : nextKnownPendingLevel;
-  if (nextLevel <= Idle && firstPendingTime !== nextLevel) {
+  const lastPingedTime = root.lastPingedTime_opaque;
+  const nextKnownPendingLevel = root.nextKnownPendingLevel_opaque;
+  const nextLevel = !isSameOrHigherPriority(
+    nextKnownPendingLevel,
+    lastPingedTime,
+  )
+    ? lastPingedTime
+    : nextKnownPendingLevel;
+  if (
+    isSameOrHigherPriority((Idle: ExpirationTimeOpaque), nextLevel) &&
+    !isSameExpirationTime(firstPendingTime, nextLevel)
+  ) {
     // Don't work on Idle/Never priority unless everything else is committed.
     return NoWork;
   }
@@ -593,80 +632,97 @@ function getNextRootExpirationTimeToWorkOn(root: FiberRoot): ExpirationTime {
 // the next level that the root has work on. This function is called on every
 // update, and right before exiting a task.
 function ensureRootIsScheduled(root: FiberRoot) {
-  const lastExpiredTime = root.lastExpiredTime;
-  if (lastExpiredTime !== NoWork) {
-    // Special case: Expired work should flush synchronously.
-    root.callbackExpirationTime = Sync;
-    root.callbackPriority = ImmediatePriority;
-    root.callbackNode = scheduleSyncCallback(
-      performSyncWorkOnRoot.bind(null, root),
-    );
-    return;
-  }
-
-  const expirationTime = getNextRootExpirationTimeToWorkOn(root);
   const existingCallbackNode = root.callbackNode;
-  if (expirationTime === NoWork) {
-    // There's nothing to work on.
+
+  const newCallbackId = getNextRootExpirationTimeToWorkOn(root);
+  if (newCallbackId === (NoWork: ExpirationTimeOpaque)) {
+    // Special case: There's nothing to work on.
     if (existingCallbackNode !== null) {
+      cancelCallback(existingCallbackNode);
+      root.expiresAt = -1;
       root.callbackNode = null;
-      root.callbackExpirationTime = NoWork;
-      root.callbackPriority = NoPriority;
+      root.callbackIsSync = false;
+      root.callbackId = NoWork;
     }
     return;
   }
 
-  // TODO: If this is an update, we already read the current time. Pass the
-  // time as an argument.
-  const currentTime = requestCurrentTimeForUpdate();
-  const priorityLevel = inferPriorityFromExpirationTime(
-    currentTime,
-    expirationTime,
-  );
+  const newTaskIsSync =
+    newCallbackId === (Sync: ExpirationTimeOpaque) ||
+    !isSameExpirationTime(
+      root.lastExpiredTime_opaque,
+      (NoWork: ExpirationTimeOpaque),
+    );
 
-  // If there's an existing render task, confirm it has the correct priority and
-  // expiration time. Otherwise, we'll cancel it and schedule a new one.
-  if (existingCallbackNode !== null) {
-    const existingCallbackPriority = root.callbackPriority;
-    const existingCallbackExpirationTime = root.callbackExpirationTime;
-    if (
-      // Callback must have the exact same expiration time.
-      existingCallbackExpirationTime === expirationTime &&
-      // Callback must have greater or equal priority.
-      existingCallbackPriority >= priorityLevel
-    ) {
-      // Existing callback is sufficient.
-      return;
+  // Check if there's an existing task. We may be able to reuse it.
+  const existingTaskId = root.callbackId;
+  const existingCallbackIsSync = root.callbackIsSync;
+  if (existingTaskId !== (NoWork: ExpirationTimeOpaque)) {
+    if (newCallbackId === existingTaskId) {
+      // This task is already scheduled. Let's check its priority.
+      if (
+        (newTaskIsSync && existingCallbackIsSync) ||
+        (!newTaskIsSync && !existingCallbackIsSync)
+      ) {
+        // The priority hasn't changed. Exit.
+        return;
+      }
+      // The task ID is the same but the priority changed. Cancel the existing
+      // callback. We'll schedule a new one below.
     }
-    // Need to schedule a new task.
-    // TODO: Instead of scheduling a new task, we should be able to change the
-    // priority of the existing one.
     cancelCallback(existingCallbackNode);
   }
 
-  root.callbackExpirationTime = expirationTime;
-  root.callbackPriority = priorityLevel;
-
-  let callbackNode;
-  if (expirationTime === Sync) {
-    // Sync React callbacks are scheduled on a special internal queue
-    callbackNode = scheduleSyncCallback(performSyncWorkOnRoot.bind(null, root));
-  } else if (disableSchedulerTimeoutBasedOnReactExpirationTime) {
-    callbackNode = scheduleCallback(
-      priorityLevel,
-      performConcurrentWorkOnRoot.bind(null, root),
+  // Schedule a new callback.
+  let newCallbackNode;
+  if (newTaskIsSync) {
+    // Special case: Sync React callbacks are scheduled on a special internal queue
+    newCallbackNode = scheduleSyncCallback(
+      performSyncWorkOnRoot.bind(null, root),
     );
   } else {
-    callbackNode = scheduleCallback(
-      priorityLevel,
-      performConcurrentWorkOnRoot.bind(null, root),
-      // Compute a task timeout based on the expiration time. This also affects
-      // ordering because tasks are processed in timeout order.
-      {timeout: expirationTimeToMs(expirationTime) - now()},
-    );
+    // TODO: Use LanePriority instead of SchedulerPriority
+    const priorityLevel = inferPriorityFromExpirationTime(newCallbackId);
+    if (
+      priorityLevel === NormalSchedulerPriority ||
+      priorityLevel === UserBlockingSchedulerPriority
+    ) {
+      const existingExpirationTime = root.expiresAt;
+      const currentTimeMs = now();
+
+      // Compute an expiration time based on the priority level.
+      const expiration =
+        priorityLevel === UserBlockingSchedulerPriority ? 250 : 5000;
+
+      let msUntilExpiration;
+      if (existingExpirationTime === -1) {
+        // This is the first concurrent update on the root. Use the expiration
+        // time we just computed.
+        msUntilExpiration = expiration;
+        root.expiresAt = msUntilExpiration + currentTimeMs;
+      } else {
+        // There's already an expiration time. Use the smaller of the current
+        // expiration and the one we just computed.
+        msUntilExpiration = existingExpirationTime - currentTimeMs;
+        if (expiration < msUntilExpiration) {
+          root.expiresAt = expiration;
+        }
+      }
+      newCallbackNode = scheduleCallback(
+        priorityLevel,
+        performConcurrentWorkOnRoot.bind(null, root),
+      );
+    } else {
+      newCallbackNode = scheduleCallback(
+        priorityLevel,
+        performConcurrentWorkOnRoot.bind(null, root),
+      );
+    }
   }
 
-  root.callbackNode = callbackNode;
+  root.callbackId = newCallbackId;
+  root.callbackNode = newCallbackNode;
+  root.callbackIsSync = newTaskIsSync;
 }
 
 // This is the entry point for every concurrent task, i.e. anything that
@@ -674,25 +730,24 @@ function ensureRootIsScheduled(root: FiberRoot) {
 function performConcurrentWorkOnRoot(root, didTimeout) {
   // Since we know we're in a React event, we can clear the current
   // event time. The next update will compute a new event time.
-  currentEventTime = NoWork;
+  currentEventTime = -1;
 
-  // Check if the render expired.
+  // Determine the next expiration time to work on, using the fields stored
+  // on the root.
+  let expirationTime = getNextRootExpirationTimeToWorkOn(root);
+  if (isSameExpirationTime(expirationTime, (NoWork: ExpirationTimeOpaque))) {
+    return null;
+  }
+
   if (didTimeout) {
-    // The render task took too long to complete. Mark the current time as
-    // expired to synchronously render all expired work in a single batch.
-    const currentTime = requestCurrentTimeForUpdate();
-    markRootExpiredAtTime(root, currentTime);
+    // The render task took too long to complete. Mark the root as expired to
+    // prevent yielding to other tasks until this one finishes.
+    markRootExpiredAtTime(root, expirationTime);
     // This will schedule a synchronous callback.
     ensureRootIsScheduled(root);
     return null;
   }
 
-  // Determine the next expiration time to work on, using the fields stored
-  // on the root.
-  let expirationTime = getNextRootExpirationTimeToWorkOn(root);
-  if (expirationTime === NoWork) {
-    return null;
-  }
   const originalCallbackNode = root.callbackNode;
   invariant(
     (executionContext & (RenderContext | CommitContext)) === NoContext,
@@ -710,7 +765,12 @@ function performConcurrentWorkOnRoot(root, didTimeout) {
       // render at Idle (or lower) so that all pending updates are included.
       // If it still fails after the second attempt, we'll give up and commit
       // the resulting tree.
-      expirationTime = expirationTime > Idle ? Idle : expirationTime;
+      expirationTime = !isSameOrHigherPriority(
+        (Idle: ExpirationTimeOpaque),
+        expirationTime,
+      )
+        ? (Idle: ExpirationTimeOpaque)
+        : expirationTime;
       exitStatus = renderRootSync(root, expirationTime);
     }
 
@@ -726,8 +786,10 @@ function performConcurrentWorkOnRoot(root, didTimeout) {
     // or, if something suspended, wait to commit it after a timeout.
     const finishedWork: Fiber = (root.current.alternate: any);
     root.finishedWork = finishedWork;
-    root.finishedExpirationTime = expirationTime;
-    root.nextKnownPendingLevel = getRemainingExpirationTime(finishedWork);
+    root.finishedExpirationTime_opaque = expirationTime;
+    root.nextKnownPendingLevel_opaque = getRemainingExpirationTime(
+      finishedWork,
+    );
     finishConcurrentRender(root, finishedWork, exitStatus, expirationTime);
   }
 
@@ -762,7 +824,7 @@ function finishConcurrentRender(
     }
     case RootSuspended: {
       markRootSuspendedAtTime(root, expirationTime);
-      const lastSuspendedTime = root.lastSuspendedTime;
+      const lastSuspendedTime = root.lastSuspendedTime_opaque;
 
       // We have an acceptable loading state. We need to figure out if we
       // should immediately commit it or wait a bit.
@@ -771,7 +833,7 @@ function finishConcurrentRender(
       // have a new loading state ready. We want to ensure that we commit
       // that as soon as possible.
       const hasNotProcessedNewUpdates =
-        workInProgressRootLatestProcessedEventTime === Sync;
+        workInProgressRootLatestProcessedEventTime === -1;
       if (
         hasNotProcessedNewUpdates &&
         // do not delay if we're inside an act() scope
@@ -788,29 +850,41 @@ function finishConcurrentRender(
         // Don't bother with a very short suspense time.
         if (msUntilTimeout > 10) {
           if (workInProgressRootHasPendingPing) {
-            const lastPingedTime = root.lastPingedTime;
-            if (lastPingedTime === NoWork || lastPingedTime >= expirationTime) {
+            const lastPingedTime = root.lastPingedTime_opaque;
+            if (
+              isSameExpirationTime(
+                lastPingedTime,
+                (NoWork: ExpirationTimeOpaque),
+              ) ||
+              isSameOrHigherPriority(lastPingedTime, expirationTime)
+            ) {
               // This render was pinged but we didn't get to restart
               // earlier so try restarting now instead.
-              root.lastPingedTime = expirationTime;
+              root.lastPingedTime_opaque = expirationTime;
               prepareFreshStack(root, expirationTime);
               break;
             }
           }
 
           const nextTime = getNextRootExpirationTimeToWorkOn(root);
-          if (nextTime !== NoWork && nextTime !== expirationTime) {
+          if (
+            !isSameExpirationTime(nextTime, (NoWork: ExpirationTimeOpaque)) &&
+            !isSameExpirationTime(nextTime, expirationTime)
+          ) {
             // There's additional work on this root.
             break;
           }
           if (
-            lastSuspendedTime !== NoWork &&
-            lastSuspendedTime !== expirationTime
+            !isSameExpirationTime(
+              lastSuspendedTime,
+              (NoWork: ExpirationTimeOpaque),
+            ) &&
+            !isSameExpirationTime(lastSuspendedTime, expirationTime)
           ) {
             // We should prefer to render the fallback of at the last
             // suspended level. Ping the last suspended level to try
             // rendering it again.
-            root.lastPingedTime = lastSuspendedTime;
+            root.lastPingedTime_opaque = lastSuspendedTime;
             break;
           }
 
@@ -830,7 +904,7 @@ function finishConcurrentRender(
     }
     case RootSuspendedWithDelay: {
       markRootSuspendedAtTime(root, expirationTime);
-      const lastSuspendedTime = root.lastSuspendedTime;
+      const lastSuspendedTime = root.lastSuspendedTime_opaque;
 
       if (
         // do not delay if we're inside an act() scope
@@ -839,39 +913,50 @@ function finishConcurrentRender(
         // We're suspended in a state that should be avoided. We'll try to
         // avoid committing it for as long as the timeouts let us.
         if (workInProgressRootHasPendingPing) {
-          const lastPingedTime = root.lastPingedTime;
-          if (lastPingedTime === NoWork || lastPingedTime >= expirationTime) {
+          const lastPingedTime = root.lastPingedTime_opaque;
+          if (
+            isSameExpirationTime(
+              lastPingedTime,
+              (NoWork: ExpirationTimeOpaque),
+            ) ||
+            isSameOrHigherPriority(lastPingedTime, expirationTime)
+          ) {
             // This render was pinged but we didn't get to restart earlier
             // so try restarting now instead.
-            root.lastPingedTime = expirationTime;
+            root.lastPingedTime_opaque = expirationTime;
             prepareFreshStack(root, expirationTime);
             break;
           }
         }
 
         const nextTime = getNextRootExpirationTimeToWorkOn(root);
-        if (nextTime !== NoWork && nextTime !== expirationTime) {
+        if (
+          !isSameExpirationTime(nextTime, (NoWork: ExpirationTimeOpaque)) &&
+          !isSameExpirationTime(nextTime, expirationTime)
+        ) {
           // There's additional work on this root.
           break;
         }
         if (
-          lastSuspendedTime !== NoWork &&
-          lastSuspendedTime !== expirationTime
+          !isSameExpirationTime(
+            lastSuspendedTime,
+            (NoWork: ExpirationTimeOpaque),
+          ) &&
+          !isSameExpirationTime(lastSuspendedTime, expirationTime)
         ) {
           // We should prefer to render the fallback of at the last
           // suspended level. Ping the last suspended level to try
           // rendering it again.
-          root.lastPingedTime = lastSuspendedTime;
+          root.lastPingedTime_opaque = lastSuspendedTime;
           break;
         }
 
         let msUntilTimeout;
-        if (workInProgressRootLatestSuspenseTimeout !== Sync) {
+        if (workInProgressRootLatestSuspenseTimeout !== -1) {
           // We have processed a suspense config whose expiration time we
           // can use as the timeout.
-          msUntilTimeout =
-            expirationTimeToMs(workInProgressRootLatestSuspenseTimeout) - now();
-        } else if (workInProgressRootLatestProcessedEventTime === Sync) {
+          msUntilTimeout = workInProgressRootLatestSuspenseTimeout - now();
+        } else if (workInProgressRootLatestProcessedEventTime === -1) {
           // This should never normally happen because only new updates
           // cause delayed states, so we should have processed something.
           // However, this could also happen in an offscreen tree.
@@ -879,9 +964,7 @@ function finishConcurrentRender(
         } else {
           // If we didn't process a suspense config, compute a JND based on
           // the amount of time elapsed since the most recent event time.
-          const eventTimeMs = expirationTimeToMs(
-            workInProgressRootLatestProcessedEventTime,
-          );
+          const eventTimeMs = workInProgressRootLatestProcessedEventTime;
           const timeElapsedMs = now() - eventTimeMs;
           msUntilTimeout = jnd(timeElapsedMs) - timeElapsedMs;
         }
@@ -907,7 +990,7 @@ function finishConcurrentRender(
       if (
         // do not delay if we're inside an act() scope
         !shouldForceFlushFallbacksInDEV() &&
-        workInProgressRootLatestProcessedEventTime !== Sync &&
+        workInProgressRootLatestProcessedEventTime !== -1 &&
         workInProgressRootCanSuspendUsingConfig !== null
       ) {
         // If we have exceeded the minimum loading delay, which probably
@@ -916,7 +999,6 @@ function finishConcurrentRender(
         // enough time.
         const msUntilTimeout = computeMsUntilSuspenseLoadingDelay(
           workInProgressRootLatestProcessedEventTime,
-          expirationTime,
           workInProgressRootCanSuspendUsingConfig,
         );
         if (msUntilTimeout > 10) {
@@ -947,15 +1029,15 @@ function performSyncWorkOnRoot(root) {
 
   flushPassiveEffects();
 
-  const lastExpiredTime = root.lastExpiredTime;
+  const lastExpiredTime = root.lastExpiredTime_opaque;
 
   let expirationTime;
-  if (lastExpiredTime !== NoWork) {
+  if (!isSameExpirationTime(lastExpiredTime, (NoWork: ExpirationTimeOpaque))) {
     // There's expired work on this root. Check if we have a partial tree
     // that we can reuse.
     if (
       root === workInProgressRoot &&
-      renderExpirationTime >= lastExpiredTime
+      isSameOrHigherPriority(renderExpirationTime, lastExpiredTime)
     ) {
       // There's a partial tree with equal or greater than priority than the
       // expired level. Finish rendering it before rendering the rest of the
@@ -978,7 +1060,12 @@ function performSyncWorkOnRoot(root) {
     // render at Idle (or lower) so that all pending updates are included.
     // If it still fails after the second attempt, we'll give up and commit
     // the resulting tree.
-    expirationTime = expirationTime > Idle ? Idle : expirationTime;
+    expirationTime = !isSameOrHigherPriority(
+      (Idle: ExpirationTimeOpaque),
+      expirationTime,
+    )
+      ? (Idle: ExpirationTimeOpaque)
+      : expirationTime;
     exitStatus = renderRootSync(root, expirationTime);
   }
 
@@ -994,8 +1081,8 @@ function performSyncWorkOnRoot(root) {
   // will commit it even if something suspended.
   const finishedWork: Fiber = (root.current.alternate: any);
   root.finishedWork = finishedWork;
-  root.finishedExpirationTime = expirationTime;
-  root.nextKnownPendingLevel = getRemainingExpirationTime(finishedWork);
+  root.finishedExpirationTime_opaque = expirationTime;
+  root.nextKnownPendingLevel_opaque = getRemainingExpirationTime(finishedWork);
   commitRoot(root);
 
   // Before exiting, make sure there's a callback scheduled for the next
@@ -1005,7 +1092,10 @@ function performSyncWorkOnRoot(root) {
   return null;
 }
 
-export function flushRoot(root: FiberRoot, expirationTime: ExpirationTime) {
+export function flushRoot(
+  root: FiberRoot,
+  expirationTime: ExpirationTimeOpaque,
+) {
   markRootExpiredAtTime(root, expirationTime);
   ensureRootIsScheduled(root);
   if ((executionContext & (RenderContext | CommitContext)) === NoContext) {
@@ -1043,7 +1133,7 @@ export function flushDiscreteUpdates() {
 
 export function deferredUpdates<A>(fn: () => A): A {
   // TODO: Remove in favor of Scheduler.next
-  return runWithPriority(NormalPriority, fn);
+  return runWithPriority(NormalSchedulerPriority, fn);
 }
 
 export function syncUpdates<A, B, C, R>(
@@ -1052,7 +1142,7 @@ export function syncUpdates<A, B, C, R>(
   b: B,
   c: C,
 ): R {
-  return runWithPriority(ImmediatePriority, fn.bind(null, a, b, c));
+  return runWithPriority(ImmediateSchedulerPriority, fn.bind(null, a, b, c));
 }
 
 function flushPendingDiscreteUpdates() {
@@ -1109,7 +1199,10 @@ export function discreteUpdates<A, B, C, D, R>(
   executionContext |= DiscreteEventContext;
   try {
     // Should this
-    return runWithPriority(UserBlockingPriority, fn.bind(null, a, b, c, d));
+    return runWithPriority(
+      UserBlockingSchedulerPriority,
+      fn.bind(null, a, b, c, d),
+    );
   } finally {
     executionContext = prevExecutionContext;
     if (executionContext === NoContext) {
@@ -1145,7 +1238,7 @@ export function flushSync<A, R>(fn: A => R, a: A): R {
   const prevExecutionContext = executionContext;
   executionContext |= BatchedContext;
   try {
-    return runWithPriority(ImmediatePriority, fn.bind(null, a));
+    return runWithPriority(ImmediateSchedulerPriority, fn.bind(null, a));
   } finally {
     executionContext = prevExecutionContext;
     // Flush the immediate callbacks that were scheduled during this batch.
@@ -1159,7 +1252,7 @@ export function flushControlled(fn: () => mixed): void {
   const prevExecutionContext = executionContext;
   executionContext |= BatchedContext;
   try {
-    runWithPriority(ImmediatePriority, fn);
+    runWithPriority(ImmediateSchedulerPriority, fn);
   } finally {
     executionContext = prevExecutionContext;
     if (executionContext === NoContext) {
@@ -1171,7 +1264,7 @@ export function flushControlled(fn: () => mixed): void {
 
 function prepareFreshStack(root, expirationTime) {
   root.finishedWork = null;
-  root.finishedExpirationTime = NoWork;
+  root.finishedExpirationTime_opaque = NoWork;
 
   const timeoutHandle = root.timeoutHandle;
   if (timeoutHandle !== noTimeout) {
@@ -1183,17 +1276,23 @@ function prepareFreshStack(root, expirationTime) {
   }
 
   // Check if there's a suspended level at lower priority.
-  const lastSuspendedTime = root.lastSuspendedTime;
-  if (lastSuspendedTime !== NoWork && lastSuspendedTime < expirationTime) {
-    const lastPingedTime = root.lastPingedTime;
+  const lastSuspendedTime = root.lastSuspendedTime_opaque;
+  if (
+    !isSameExpirationTime(lastSuspendedTime, (NoWork: ExpirationTimeOpaque)) &&
+    !isSameOrHigherPriority(lastSuspendedTime, expirationTime)
+  ) {
+    const lastPingedTime = root.lastPingedTime_opaque;
     // Make sure the suspended level is marked as pinged so that we return back
     // to it later, in case the render we're about to start gets aborted.
     // Generally we only reach this path via a ping, but we shouldn't assume
     // that will always be the case.
     // Note: This is defensive coding to prevent a pending commit from
     // being dropped without being rescheduled. It shouldn't be necessary.
-    if (lastPingedTime === NoWork || lastPingedTime > lastSuspendedTime) {
-      root.lastPingedTime = lastSuspendedTime;
+    if (
+      isSameExpirationTime(lastPingedTime, (NoWork: ExpirationTimeOpaque)) ||
+      !isSameOrHigherPriority(lastSuspendedTime, lastPingedTime)
+    ) {
+      root.lastPingedTime_opaque = lastSuspendedTime;
     }
   }
 
@@ -1209,8 +1308,8 @@ function prepareFreshStack(root, expirationTime) {
   renderExpirationTime = expirationTime;
   workInProgressRootExitStatus = RootIncomplete;
   workInProgressRootFatalError = null;
-  workInProgressRootLatestProcessedEventTime = Sync;
-  workInProgressRootLatestSuspenseTimeout = Sync;
+  workInProgressRootLatestProcessedEventTime = -1;
+  workInProgressRootLatestSuspenseTimeout = -1;
   workInProgressRootCanSuspendUsingConfig = null;
   workInProgressRootNextUnprocessedUpdateTime = NoWork;
   workInProgressRootHasPendingPing = false;
@@ -1323,41 +1422,43 @@ export function markCommitTimeOfFallback() {
 }
 
 export function markRenderEventTimeAndConfig(
-  eventTime: ExpirationTime,
+  eventTime: number,
   suspenseConfig: null | SuspenseConfig,
 ): void {
-  // Anything lower pri than Idle is not an update, so we should skip it.
-  if (eventTime > Idle) {
-    // Track the most recent event time of all updates processed in this batch.
-    if (workInProgressRootLatestProcessedEventTime > eventTime) {
-      workInProgressRootLatestProcessedEventTime = eventTime;
-    }
+  // Track the most recent event time of all updates processed in this batch.
+  if (workInProgressRootLatestProcessedEventTime < eventTime) {
+    workInProgressRootLatestProcessedEventTime = eventTime;
+  }
 
-    // Track the largest/latest timeout deadline in this batch.
-    // TODO: If there are two transitions in the same batch, shouldn't we
-    // choose the smaller one? Maybe this is because when an intermediate
-    // transition is superseded, we should ignore its suspense config, but
-    // we don't currently.
-    if (suspenseConfig !== null) {
-      // If `timeoutMs` is not specified, we default to 5 seconds. We have to
-      // resolve this default here because `suspenseConfig` is owned
-      // by userspace.
-      // TODO: Store this on the root instead (transition -> timeoutMs)
-      // TODO: Should this default to a JND instead?
-      const timeoutMs = suspenseConfig.timeoutMs | 0 || LOW_PRIORITY_EXPIRATION;
-      const timeoutTime = computeSuspenseTimeout(eventTime, timeoutMs);
-      if (timeoutTime < workInProgressRootLatestSuspenseTimeout) {
-        workInProgressRootLatestSuspenseTimeout = timeoutTime;
-        workInProgressRootCanSuspendUsingConfig = suspenseConfig;
-      }
+  // Track the largest/latest timeout deadline in this batch.
+  // TODO: If there are two transitions in the same batch, shouldn't we
+  // choose the smaller one? Maybe this is because when an intermediate
+  // transition is superseded, we should ignore its suspense config, but
+  // we don't currently.
+  if (suspenseConfig !== null) {
+    // If `timeoutMs` is not specified, we default to 5 seconds. We have to
+    // resolve this default here because `suspenseConfig` is owned
+    // by userspace.
+    // TODO: Store this on the root instead (transition -> timeoutMs)
+    // TODO: Should this default to a JND instead?
+    const timeoutMs = suspenseConfig.timeoutMs | 0 || DEFAULT_TIMEOUT_MS;
+    const timeoutTime = eventTime + timeoutMs;
+    if (timeoutTime > workInProgressRootLatestSuspenseTimeout) {
+      workInProgressRootLatestSuspenseTimeout = timeoutTime;
+      workInProgressRootCanSuspendUsingConfig = suspenseConfig;
     }
   }
 }
 
 export function markUnprocessedUpdateTime(
-  expirationTime: ExpirationTime,
+  expirationTime: ExpirationTimeOpaque,
 ): void {
-  if (expirationTime > workInProgressRootNextUnprocessedUpdateTime) {
+  if (
+    !isSameOrHigherPriority(
+      workInProgressRootNextUnprocessedUpdateTime,
+      expirationTime,
+    )
+  ) {
     workInProgressRootNextUnprocessedUpdateTime = expirationTime;
   }
 }
@@ -1378,7 +1479,10 @@ export function renderDidSuspendDelayIfPossible(): void {
 
   // Check if there's a lower priority update somewhere else in the tree.
   if (
-    workInProgressRootNextUnprocessedUpdateTime !== NoWork &&
+    !isSameExpirationTime(
+      workInProgressRootNextUnprocessedUpdateTime,
+      (NoWork: ExpirationTimeOpaque),
+    ) &&
     workInProgressRoot !== null
   ) {
     // Mark the current render as suspended, and then mark that there's a
@@ -1414,20 +1518,15 @@ function renderRootSync(root, expirationTime) {
 
   // If the root or expiration time have changed, throw out the existing stack
   // and prepare a fresh one. Otherwise we'll continue where we left off.
-  if (root !== workInProgressRoot || expirationTime !== renderExpirationTime) {
+  if (
+    root !== workInProgressRoot ||
+    !isSameExpirationTime(expirationTime, renderExpirationTime)
+  ) {
     prepareFreshStack(root, expirationTime);
     startWorkOnPendingInteractions(root, expirationTime);
   }
 
   const prevInteractions = pushInteractions(root);
-
-  if (__DEV__) {
-    if (enableDebugTracing) {
-      const priorityLevel = getCurrentPriorityLevel();
-      const label = priorityLevelToLabel(priorityLevel);
-      logRenderStarted(label);
-    }
-  }
 
   do {
     try {
@@ -1454,12 +1553,6 @@ function renderRootSync(root, expirationTime) {
     );
   }
 
-  if (__DEV__) {
-    if (enableDebugTracing) {
-      logRenderStopped();
-    }
-  }
-
   // Set this to null to indicate there's no in-progress render.
   workInProgressRoot = null;
 
@@ -1482,20 +1575,15 @@ function renderRootConcurrent(root, expirationTime) {
 
   // If the root or expiration time have changed, throw out the existing stack
   // and prepare a fresh one. Otherwise we'll continue where we left off.
-  if (root !== workInProgressRoot || expirationTime !== renderExpirationTime) {
+  if (
+    root !== workInProgressRoot ||
+    !isSameExpirationTime(expirationTime, renderExpirationTime)
+  ) {
     prepareFreshStack(root, expirationTime);
     startWorkOnPendingInteractions(root, expirationTime);
   }
 
   const prevInteractions = pushInteractions(root);
-
-  if (__DEV__) {
-    if (enableDebugTracing) {
-      const priorityLevel = getCurrentPriorityLevel();
-      const label = priorityLevelToLabel(priorityLevel);
-      logRenderStarted(label);
-    }
-  }
 
   do {
     try {
@@ -1512,12 +1600,6 @@ function renderRootConcurrent(root, expirationTime) {
 
   popDispatcher(prevDispatcher);
   executionContext = prevExecutionContext;
-
-  if (__DEV__) {
-    if (enableDebugTracing) {
-      logRenderStopped();
-    }
-  }
 
   // Check if the tree has completed.
   if (workInProgress !== null) {
@@ -1703,17 +1785,23 @@ function completeUnitOfWork(unitOfWork: Fiber): void {
 }
 
 function getRemainingExpirationTime(fiber: Fiber) {
-  const updateExpirationTime = fiber.expirationTime;
-  const childExpirationTime = fiber.childExpirationTime;
-  return updateExpirationTime > childExpirationTime
+  const updateExpirationTime = fiber.expirationTime_opaque;
+  const childExpirationTime = fiber.childExpirationTime_opaque;
+  return !isSameOrHigherPriority(childExpirationTime, updateExpirationTime)
     ? updateExpirationTime
     : childExpirationTime;
 }
 
 function resetChildExpirationTime(completedWork: Fiber) {
   if (
-    renderExpirationTime !== Never &&
-    completedWork.childExpirationTime === Never
+    !isSameExpirationTime(
+      renderExpirationTime,
+      (Never: ExpirationTimeOpaque),
+    ) &&
+    isSameExpirationTime(
+      completedWork.childExpirationTime_opaque,
+      (Never: ExpirationTimeOpaque),
+    )
   ) {
     // The children of this component are hidden. Don't bubble their
     // expiration times.
@@ -1742,12 +1830,22 @@ function resetChildExpirationTime(completedWork: Fiber) {
 
     let child = completedWork.child;
     while (child !== null) {
-      const childUpdateExpirationTime = child.expirationTime;
-      const childChildExpirationTime = child.childExpirationTime;
-      if (childUpdateExpirationTime > newChildExpirationTime) {
+      const childUpdateExpirationTime = child.expirationTime_opaque;
+      const childChildExpirationTime = child.childExpirationTime_opaque;
+      if (
+        !isSameOrHigherPriority(
+          newChildExpirationTime,
+          childUpdateExpirationTime,
+        )
+      ) {
         newChildExpirationTime = childUpdateExpirationTime;
       }
-      if (childChildExpirationTime > newChildExpirationTime) {
+      if (
+        !isSameOrHigherPriority(
+          newChildExpirationTime,
+          childChildExpirationTime,
+        )
+      ) {
         newChildExpirationTime = childChildExpirationTime;
       }
       if (shouldBubbleActualDurations) {
@@ -1761,37 +1859,41 @@ function resetChildExpirationTime(completedWork: Fiber) {
   } else {
     let child = completedWork.child;
     while (child !== null) {
-      const childUpdateExpirationTime = child.expirationTime;
-      const childChildExpirationTime = child.childExpirationTime;
-      if (childUpdateExpirationTime > newChildExpirationTime) {
+      const childUpdateExpirationTime = child.expirationTime_opaque;
+      const childChildExpirationTime = child.childExpirationTime_opaque;
+      if (
+        !isSameOrHigherPriority(
+          newChildExpirationTime,
+          childUpdateExpirationTime,
+        )
+      ) {
         newChildExpirationTime = childUpdateExpirationTime;
       }
-      if (childChildExpirationTime > newChildExpirationTime) {
+      if (
+        !isSameOrHigherPriority(
+          newChildExpirationTime,
+          childChildExpirationTime,
+        )
+      ) {
         newChildExpirationTime = childChildExpirationTime;
       }
       child = child.sibling;
     }
   }
 
-  completedWork.childExpirationTime = newChildExpirationTime;
+  completedWork.childExpirationTime_opaque = newChildExpirationTime;
 }
 
 function commitRoot(root) {
   const renderPriorityLevel = getCurrentPriorityLevel();
   runWithPriority(
-    ImmediatePriority,
+    ImmediateSchedulerPriority,
     commitRootImpl.bind(null, root, renderPriorityLevel),
   );
   return null;
 }
 
 function commitRootImpl(root, renderPriorityLevel) {
-  if (__DEV__) {
-    if (enableDebugTracing) {
-      const label = priorityLevelToLabel(renderPriorityLevel);
-      logCommitStarted(label);
-    }
-  }
   do {
     // `flushPassiveEffects` will call `flushSyncUpdateQueue` at the end, which
     // means `flushPassiveEffects` will sometimes result in additional
@@ -1809,17 +1911,12 @@ function commitRootImpl(root, renderPriorityLevel) {
   );
 
   const finishedWork = root.finishedWork;
-  const expirationTime = root.finishedExpirationTime;
+  const expirationTime = root.finishedExpirationTime_opaque;
   if (finishedWork === null) {
-    if (__DEV__) {
-      if (enableDebugTracing) {
-        logCommitStopped();
-      }
-    }
     return null;
   }
   root.finishedWork = null;
-  root.finishedExpirationTime = NoWork;
+  root.finishedExpirationTime_opaque = NoWork;
 
   invariant(
     finishedWork !== root.current,
@@ -1830,8 +1927,12 @@ function commitRootImpl(root, renderPriorityLevel) {
   // commitRoot never returns a continuation; it always finishes synchronously.
   // So we can clear these now to allow a new callback to be scheduled.
   root.callbackNode = null;
-  root.callbackExpirationTime = NoWork;
-  root.callbackPriority = NoPriority;
+  root.callbackId = NoWork;
+  // TODO: Use LanePriority instead of SchedulerPriority
+  if (renderPriorityLevel < ImmediateSchedulerPriority) {
+    // If this was a concurrent render, we can reset the expiration time.
+    root.expiresAt = -1;
+  }
 
   // Update the first and last pending times on this root. The new first
   // pending time is whatever is left on the root fiber.
@@ -1851,7 +1952,10 @@ function commitRootImpl(root, renderPriorityLevel) {
     const lastDiscreteTime = rootsWithPendingDiscreteUpdates.get(root);
     if (
       lastDiscreteTime !== undefined &&
-      remainingExpirationTimeBeforeCommit < lastDiscreteTime
+      !isSameOrHigherPriority(
+        remainingExpirationTimeBeforeCommit,
+        lastDiscreteTime,
+      )
     ) {
       rootsWithPendingDiscreteUpdates.delete(root);
     }
@@ -1901,7 +2005,9 @@ function commitRootImpl(root, renderPriorityLevel) {
     // The first phase a "before mutation" phase. We use this phase to read the
     // state of the host tree right before we mutate it. This is where
     // getSnapshotBeforeUpdate is called.
-    prepareForCommit(root.containerInfo);
+    focusedInstanceHandle = prepareForCommit(root.containerInfo);
+    shouldFireAfterActiveInstanceBlur = false;
+
     nextEffect = firstEffect;
     do {
       if (__DEV__) {
@@ -1922,6 +2028,9 @@ function commitRootImpl(root, renderPriorityLevel) {
         }
       }
     } while (nextEffect !== null);
+
+    // We no longer need to track the active instance fiber
+    focusedInstanceHandle = null;
 
     if (enableProfilerTimer) {
       // Mark the current commit time to be shared by all Profilers in this
@@ -1956,6 +2065,10 @@ function commitRootImpl(root, renderPriorityLevel) {
         }
       }
     } while (nextEffect !== null);
+
+    if (shouldFireAfterActiveInstanceBlur) {
+      afterActiveInstanceBlur();
+    }
     resetAfterCommit(root.containerInfo);
 
     // The work-in-progress tree is now the current tree. This must come after
@@ -2037,8 +2150,13 @@ function commitRootImpl(root, renderPriorityLevel) {
   }
 
   // Check if there's remaining work on this root
-  const remainingExpirationTime = root.firstPendingTime;
-  if (remainingExpirationTime !== NoWork) {
+  const remainingExpirationTime = root.firstPendingTime_opaque;
+  if (
+    !isSameExpirationTime(
+      remainingExpirationTime,
+      (NoWork: ExpirationTimeOpaque),
+    )
+  ) {
     if (enableSchedulerTracing) {
       if (spawnedWorkDuringRender !== null) {
         const expirationTimes = spawnedWorkDuringRender;
@@ -2069,7 +2187,9 @@ function commitRootImpl(root, renderPriorityLevel) {
     }
   }
 
-  if (remainingExpirationTime === Sync) {
+  if (
+    isSameExpirationTime(remainingExpirationTime, (Sync: ExpirationTimeOpaque))
+  ) {
     // Count the number of times the root synchronously re-renders without
     // finishing. If there are too many, it indicates an infinite update loop.
     if (root === rootWithNestedUpdates) {
@@ -2082,7 +2202,7 @@ function commitRootImpl(root, renderPriorityLevel) {
     nestedUpdateCount = 0;
   }
 
-  onCommitRoot(finishedWork.stateNode, expirationTime);
+  onCommitRoot(finishedWork.stateNode, renderPriorityLevel);
 
   // Always call this before exiting `commitRoot`, to ensure that any
   // additional work on this root is scheduled.
@@ -2096,12 +2216,6 @@ function commitRootImpl(root, renderPriorityLevel) {
   }
 
   if ((executionContext & LegacyUnbatchedContext) !== NoContext) {
-    if (__DEV__) {
-      if (enableDebugTracing) {
-        logCommitStopped();
-      }
-    }
-
     // This is a legacy edge case. We just committed the initial mount of
     // a ReactDOM.render-ed root inside of batchedUpdates. The commit fired
     // synchronously, but layout updates should be deferred until the end
@@ -2112,17 +2226,19 @@ function commitRootImpl(root, renderPriorityLevel) {
   // If layout work was scheduled, flush it now.
   flushSyncCallbackQueue();
 
-  if (__DEV__) {
-    if (enableDebugTracing) {
-      logCommitStopped();
-    }
-  }
-
   return null;
 }
 
 function commitBeforeMutationEffects() {
   while (nextEffect !== null) {
+    if (
+      !shouldFireAfterActiveInstanceBlur &&
+      focusedInstanceHandle !== null &&
+      isFiberHiddenOrDeletedAndContains(nextEffect, focusedInstanceHandle)
+    ) {
+      shouldFireAfterActiveInstanceBlur = true;
+      beforeActiveInstanceBlur();
+    }
     const effectTag = nextEffect.effectTag;
     if ((effectTag & Snapshot) !== NoEffect) {
       setCurrentDebugFiberInDEV(nextEffect);
@@ -2137,7 +2253,7 @@ function commitBeforeMutationEffects() {
       // the earliest opportunity.
       if (!rootDoesHavePassiveEffects) {
         rootDoesHavePassiveEffects = true;
-        scheduleCallback(NormalPriority, () => {
+        scheduleCallback(NormalSchedulerPriority, () => {
           flushPassiveEffects();
           return null;
         });
@@ -2223,16 +2339,8 @@ function commitMutationEffects(root: FiberRoot, renderPriorityLevel) {
 
 function commitLayoutEffects(
   root: FiberRoot,
-  committedExpirationTime: ExpirationTime,
+  committedExpirationTime: ExpirationTimeOpaque,
 ) {
-  if (__DEV__) {
-    if (enableDebugTracing) {
-      const priorityLevel = getCurrentPriorityLevel();
-      const label = priorityLevelToLabel(priorityLevel);
-      logLayoutEffectsStarted(label);
-    }
-  }
-
   // TODO: Should probably move the bulk of this function to commitWork.
   while (nextEffect !== null) {
     setCurrentDebugFiberInDEV(nextEffect);
@@ -2256,21 +2364,15 @@ function commitLayoutEffects(
     resetCurrentDebugFiberInDEV();
     nextEffect = nextEffect.nextEffect;
   }
-
-  if (__DEV__) {
-    if (enableDebugTracing) {
-      logLayoutEffectsStopped();
-    }
-  }
 }
 
 export function flushPassiveEffects() {
-  if (pendingPassiveEffectsRenderPriority !== NoPriority) {
+  if (pendingPassiveEffectsRenderPriority !== NoSchedulerPriority) {
     const priorityLevel =
-      pendingPassiveEffectsRenderPriority > NormalPriority
-        ? NormalPriority
+      pendingPassiveEffectsRenderPriority > NormalSchedulerPriority
+        ? NormalSchedulerPriority
         : pendingPassiveEffectsRenderPriority;
-    pendingPassiveEffectsRenderPriority = NoPriority;
+    pendingPassiveEffectsRenderPriority = NoSchedulerPriority;
     return runWithPriority(priorityLevel, flushPassiveEffectsImpl);
   }
 }
@@ -2280,7 +2382,7 @@ export function enqueuePendingPassiveProfilerEffect(fiber: Fiber): void {
     pendingPassiveProfilerEffects.push(fiber);
     if (!rootDoesHavePassiveEffects) {
       rootDoesHavePassiveEffects = true;
-      scheduleCallback(NormalPriority, () => {
+      scheduleCallback(NormalSchedulerPriority, () => {
         flushPassiveEffects();
         return null;
       });
@@ -2296,7 +2398,7 @@ export function enqueuePendingPassiveHookEffectMount(
     pendingPassiveHookEffectsMount.push(effect, fiber);
     if (!rootDoesHavePassiveEffects) {
       rootDoesHavePassiveEffects = true;
-      scheduleCallback(NormalPriority, () => {
+      scheduleCallback(NormalSchedulerPriority, () => {
         flushPassiveEffects();
         return null;
       });
@@ -2310,9 +2412,18 @@ export function enqueuePendingPassiveHookEffectUnmount(
 ): void {
   if (runAllPassiveEffectDestroysBeforeCreates) {
     pendingPassiveHookEffectsUnmount.push(effect, fiber);
+    if (__DEV__) {
+      if (deferPassiveEffectCleanupDuringUnmount) {
+        fiber.effectTag |= PassiveUnmountPendingDev;
+        const alternate = fiber.alternate;
+        if (alternate !== null) {
+          alternate.effectTag |= PassiveUnmountPendingDev;
+        }
+      }
+    }
     if (!rootDoesHavePassiveEffects) {
       rootDoesHavePassiveEffects = true;
-      scheduleCallback(NormalPriority, () => {
+      scheduleCallback(NormalSchedulerPriority, () => {
         flushPassiveEffects();
         return null;
       });
@@ -2341,14 +2452,6 @@ function flushPassiveEffectsImpl() {
   );
 
   if (__DEV__) {
-    if (enableDebugTracing) {
-      const priorityLevel = getCurrentPriorityLevel();
-      const label = priorityLevelToLabel(priorityLevel);
-      logPassiveEffectsStarted(label);
-    }
-  }
-
-  if (__DEV__) {
     isFlushingPassiveEffects = true;
   }
 
@@ -2372,6 +2475,17 @@ function flushPassiveEffectsImpl() {
       const fiber = ((unmountEffects[i + 1]: any): Fiber);
       const destroy = effect.destroy;
       effect.destroy = undefined;
+
+      if (__DEV__) {
+        if (deferPassiveEffectCleanupDuringUnmount) {
+          fiber.effectTag &= ~PassiveUnmountPendingDev;
+          const alternate = fiber.alternate;
+          if (alternate !== null) {
+            alternate.effectTag &= ~PassiveUnmountPendingDev;
+          }
+        }
+      }
+
       if (typeof destroy === 'function') {
         if (__DEV__) {
           setCurrentDebugFiberInDEV(fiber);
@@ -2515,12 +2629,6 @@ function flushPassiveEffectsImpl() {
     isFlushingPassiveEffects = false;
   }
 
-  if (__DEV__) {
-    if (enableDebugTracing) {
-      logPassiveEffectsStopped();
-    }
-  }
-
   executionContext = prevExecutionContext;
 
   flushSyncCallbackQueue();
@@ -2562,12 +2670,19 @@ function captureCommitPhaseErrorOnRoot(
   error: mixed,
 ) {
   const errorInfo = createCapturedValue(error, sourceFiber);
-  const update = createRootErrorUpdate(rootFiber, errorInfo, Sync);
+  const update = createRootErrorUpdate(
+    rootFiber,
+    errorInfo,
+    (Sync: ExpirationTimeOpaque),
+  );
   enqueueUpdate(rootFiber, update);
-  const root = markUpdateTimeFromFiberToRoot(rootFiber, Sync);
+  const root = markUpdateTimeFromFiberToRoot(
+    rootFiber,
+    (Sync: ExpirationTimeOpaque),
+  );
   if (root !== null) {
     ensureRootIsScheduled(root);
-    schedulePendingInteractions(root, Sync);
+    schedulePendingInteractions(root, (Sync: ExpirationTimeOpaque));
   }
 }
 
@@ -2596,14 +2711,16 @@ export function captureCommitPhaseError(sourceFiber: Fiber, error: mixed) {
         const update = createClassErrorUpdate(
           fiber,
           errorInfo,
-          // TODO: This is always sync
-          Sync,
+          (Sync: ExpirationTimeOpaque),
         );
         enqueueUpdate(fiber, update);
-        const root = markUpdateTimeFromFiberToRoot(fiber, Sync);
+        const root = markUpdateTimeFromFiberToRoot(
+          fiber,
+          (Sync: ExpirationTimeOpaque),
+        );
         if (root !== null) {
           ensureRootIsScheduled(root);
-          schedulePendingInteractions(root, Sync);
+          schedulePendingInteractions(root, (Sync: ExpirationTimeOpaque));
         }
         return;
       }
@@ -2615,7 +2732,7 @@ export function captureCommitPhaseError(sourceFiber: Fiber, error: mixed) {
 export function pingSuspendedRoot(
   root: FiberRoot,
   wakeable: Wakeable,
-  suspendedTime: ExpirationTime,
+  suspendedTime: ExpirationTimeOpaque,
 ) {
   const pingCache = root.pingCache;
   if (pingCache !== null) {
@@ -2624,7 +2741,10 @@ export function pingSuspendedRoot(
     pingCache.delete(wakeable);
   }
 
-  if (workInProgressRoot === root && renderExpirationTime === suspendedTime) {
+  if (
+    workInProgressRoot === root &&
+    isSameExpirationTime(renderExpirationTime, suspendedTime)
+  ) {
     // Received a ping at the same priority level at which we're currently
     // rendering. We might want to restart this render. This should mirror
     // the logic of whether or not a root suspends once it completes.
@@ -2641,7 +2761,7 @@ export function pingSuspendedRoot(
     if (
       workInProgressRootExitStatus === RootSuspendedWithDelay ||
       (workInProgressRootExitStatus === RootSuspended &&
-        workInProgressRootLatestProcessedEventTime === Sync &&
+        workInProgressRootLatestProcessedEventTime === -1 &&
         now() - globalMostRecentFallbackTime < FALLBACK_THROTTLE_MS)
     ) {
       // Restart from the root. Don't need to schedule a ping because
@@ -2660,14 +2780,17 @@ export function pingSuspendedRoot(
     return;
   }
 
-  const lastPingedTime = root.lastPingedTime;
-  if (lastPingedTime !== NoWork && lastPingedTime < suspendedTime) {
+  const lastPingedTime = root.lastPingedTime_opaque;
+  if (
+    !isSameExpirationTime(lastPingedTime, (NoWork: ExpirationTimeOpaque)) &&
+    !isSameOrHigherPriority(lastPingedTime, suspendedTime)
+  ) {
     // There's already a lower priority ping scheduled.
     return;
   }
 
   // Mark the time at which this ping was scheduled.
-  root.lastPingedTime = suspendedTime;
+  root.lastPingedTime_opaque = suspendedTime;
 
   ensureRootIsScheduled(root);
   schedulePendingInteractions(root, suspendedTime);
@@ -2675,20 +2798,15 @@ export function pingSuspendedRoot(
 
 function retryTimedOutBoundary(
   boundaryFiber: Fiber,
-  retryTime: ExpirationTime,
+  retryTime: ExpirationTimeOpaque,
 ) {
   // The boundary fiber (a Suspense component or SuspenseList component)
   // previously was rendered in its fallback state. One of the promises that
   // suspended it has resolved, which means at least part of the tree was
   // likely unblocked. Try rendering again, at a new expiration time.
-  if (retryTime === NoWork) {
+  if (isSameExpirationTime(retryTime, (NoWork: ExpirationTimeOpaque))) {
     const suspenseConfig = null; // Retries don't carry over the already committed update.
-    const currentTime = requestCurrentTimeForUpdate();
-    retryTime = computeExpirationForFiber(
-      currentTime,
-      boundaryFiber,
-      suspenseConfig,
-    );
+    retryTime = requestUpdateExpirationTime(boundaryFiber, suspenseConfig);
   }
   // TODO: Special case idle priority?
   const root = markUpdateTimeFromFiberToRoot(boundaryFiber, retryTime);
@@ -2768,8 +2886,7 @@ function jnd(timeElapsed: number) {
 }
 
 function computeMsUntilSuspenseLoadingDelay(
-  mostRecentEventTime: ExpirationTime,
-  committedExpirationTime: ExpirationTime,
+  mostRecentEventTime: number,
   suspenseConfig: SuspenseConfig,
 ) {
   const busyMinDurationMs = (suspenseConfig.busyMinDurationMs: any) | 0;
@@ -2780,7 +2897,7 @@ function computeMsUntilSuspenseLoadingDelay(
 
   // Compute the time until this render pass would expire.
   const currentTimeMs: number = now();
-  const eventTimeMs: number = expirationTimeToMs(mostRecentEventTime);
+  const eventTimeMs: number = mostRecentEventTime;
   const timeElapsed = currentTimeMs - eventTimeMs;
   if (timeElapsed <= busyDelayMs) {
     // If we haven't yet waited longer than the initial delay, we don't
@@ -2851,7 +2968,7 @@ function warnAboutUpdateOnUnmountedFiberInDEV(fiber) {
     ) {
       // If there are pending passive effects unmounts for this Fiber,
       // we can assume that they would have prevented this update.
-      if (pendingPassiveHookEffectsUnmount.indexOf(fiber) >= 0) {
+      if ((fiber.effectTag & PassiveUnmountPendingDev) !== NoEffect) {
         return;
       }
     }
@@ -2883,15 +3000,24 @@ function warnAboutUpdateOnUnmountedFiberInDEV(fiber) {
       // 1. Updating an ancestor that a component had registered itself with on mount.
       // 2. Resetting state when a component is hidden after going offscreen.
     } else {
-      console.error(
-        "Can't perform a React state update on an unmounted component. This " +
-          'is a no-op, but it indicates a memory leak in your application. To ' +
-          'fix, cancel all subscriptions and asynchronous tasks in %s.%s',
-        tag === ClassComponent
-          ? 'the componentWillUnmount method'
-          : 'a useEffect cleanup function',
-        getStackByFiberInDevAndProd(fiber),
-      );
+      const previousFiber = ReactCurrentFiberCurrent;
+      try {
+        setCurrentDebugFiberInDEV(fiber);
+        console.error(
+          "Can't perform a React state update on an unmounted component. This " +
+            'is a no-op, but it indicates a memory leak in your application. To ' +
+            'fix, cancel all subscriptions and asynchronous tasks in %s.',
+          tag === ClassComponent
+            ? 'the componentWillUnmount method'
+            : 'a useEffect cleanup function',
+        );
+      } finally {
+        if (previousFiber) {
+          setCurrentDebugFiberInDEV(fiber);
+        } else {
+          resetCurrentDebugFiberInDEV();
+        }
+      }
     }
   }
 }
@@ -3028,25 +3154,33 @@ export function warnIfNotScopedWithMatchingAct(fiber: Fiber): void {
       IsSomeRendererActing.current === true &&
       IsThisRendererActing.current !== true
     ) {
-      console.error(
-        "It looks like you're using the wrong act() around your test interactions.\n" +
-          'Be sure to use the matching version of act() corresponding to your renderer:\n\n' +
-          '// for react-dom:\n' +
-          // Break up imports to avoid accidentally parsing them as dependencies.
-          'import {act} fr' +
-          "om 'react-dom/test-utils';\n" +
-          '// ...\n' +
-          'act(() => ...);\n\n' +
-          '// for react-test-renderer:\n' +
-          // Break up imports to avoid accidentally parsing them as dependencies.
-          'import TestRenderer fr' +
-          "om react-test-renderer';\n" +
-          'const {act} = TestRenderer;\n' +
-          '// ...\n' +
-          'act(() => ...);' +
-          '%s',
-        getStackByFiberInDevAndProd(fiber),
-      );
+      const previousFiber = ReactCurrentFiberCurrent;
+      try {
+        setCurrentDebugFiberInDEV(fiber);
+        console.error(
+          "It looks like you're using the wrong act() around your test interactions.\n" +
+            'Be sure to use the matching version of act() corresponding to your renderer:\n\n' +
+            '// for react-dom:\n' +
+            // Break up imports to avoid accidentally parsing them as dependencies.
+            'import {act} fr' +
+            "om 'react-dom/test-utils';\n" +
+            '// ...\n' +
+            'act(() => ...);\n\n' +
+            '// for react-test-renderer:\n' +
+            // Break up imports to avoid accidentally parsing them as dependencies.
+            'import TestRenderer fr' +
+            "om react-test-renderer';\n" +
+            'const {act} = TestRenderer;\n' +
+            '// ...\n' +
+            'act(() => ...);',
+        );
+      } finally {
+        if (previousFiber) {
+          setCurrentDebugFiberInDEV(fiber);
+        } else {
+          resetCurrentDebugFiberInDEV();
+        }
+      }
     }
   }
 }
@@ -3069,10 +3203,8 @@ export function warnIfNotCurrentlyActingEffectsInDEV(fiber: Fiber): void {
           '/* assert on the output */\n\n' +
           "This ensures that you're testing the behavior the user would see " +
           'in the browser.' +
-          ' Learn more at https://fb.me/react-wrap-tests-with-act' +
-          '%s',
+          ' Learn more at https://fb.me/react-wrap-tests-with-act',
         getComponentName(fiber.type),
-        getStackByFiberInDevAndProd(fiber),
       );
     }
   }
@@ -3086,21 +3218,29 @@ function warnIfNotCurrentlyActingUpdatesInDEV(fiber: Fiber): void {
       IsSomeRendererActing.current === false &&
       IsThisRendererActing.current === false
     ) {
-      console.error(
-        'An update to %s inside a test was not wrapped in act(...).\n\n' +
-          'When testing, code that causes React state updates should be ' +
-          'wrapped into act(...):\n\n' +
-          'act(() => {\n' +
-          '  /* fire events that update state */\n' +
-          '});\n' +
-          '/* assert on the output */\n\n' +
-          "This ensures that you're testing the behavior the user would see " +
-          'in the browser.' +
-          ' Learn more at https://fb.me/react-wrap-tests-with-act' +
-          '%s',
-        getComponentName(fiber.type),
-        getStackByFiberInDevAndProd(fiber),
-      );
+      const previousFiber = ReactCurrentFiberCurrent;
+      try {
+        setCurrentDebugFiberInDEV(fiber);
+        console.error(
+          'An update to %s inside a test was not wrapped in act(...).\n\n' +
+            'When testing, code that causes React state updates should be ' +
+            'wrapped into act(...):\n\n' +
+            'act(() => {\n' +
+            '  /* fire events that update state */\n' +
+            '});\n' +
+            '/* assert on the output */\n\n' +
+            "This ensures that you're testing the behavior the user would see " +
+            'in the browser.' +
+            ' Learn more at https://fb.me/react-wrap-tests-with-act',
+          getComponentName(fiber.type),
+        );
+      } finally {
+        if (previousFiber) {
+          setCurrentDebugFiberInDEV(fiber);
+        } else {
+          resetCurrentDebugFiberInDEV();
+        }
+      }
     }
   }
 }
@@ -3147,12 +3287,18 @@ export function warnIfUnmockedScheduler(fiber: Fiber) {
   }
 }
 
-function computeThreadID(root, expirationTime) {
+function computeThreadID(
+  root: FiberRoot,
+  expirationTime: ExpirationTimeOpaque,
+) {
   // Interaction threads are unique per root and expiration time.
-  return expirationTime * 1000 + root.interactionThreadID;
+  // NOTE: Intentionally unsound cast. All that matters is that it's a number
+  // and it represents a batch of work. Could make a helper function instead,
+  // but meh this is fine for now.
+  return (expirationTime: any) * 1000 + root.interactionThreadID;
 }
 
-export function markSpawnedWork(expirationTime: ExpirationTime) {
+export function markSpawnedWork(expirationTime: ExpirationTimeOpaque) {
   if (!enableSchedulerTracing) {
     return;
   }
@@ -3163,13 +3309,17 @@ export function markSpawnedWork(expirationTime: ExpirationTime) {
   }
 }
 
-function scheduleInteractions(root, expirationTime, interactions) {
+function scheduleInteractions(
+  root: FiberRoot,
+  expirationTime: ExpirationTimeOpaque,
+  interactions: Set<Interaction>,
+) {
   if (!enableSchedulerTracing) {
     return;
   }
 
   if (interactions.size > 0) {
-    const pendingInteractionMap = root.pendingInteractionMap;
+    const pendingInteractionMap = root.pendingInteractionMap_new;
     const pendingInteractions = pendingInteractionMap.get(expirationTime);
     if (pendingInteractions != null) {
       interactions.forEach(interaction => {
@@ -3197,7 +3347,10 @@ function scheduleInteractions(root, expirationTime, interactions) {
   }
 }
 
-function schedulePendingInteractions(root, expirationTime) {
+function schedulePendingInteractions(
+  root: FiberRoot,
+  expirationTime: ExpirationTimeOpaque,
+) {
   // This is called when work is scheduled on a root.
   // It associates the current interactions with the newly-scheduled expiration.
   // They will be restored when that expiration is later committed.
@@ -3208,7 +3361,10 @@ function schedulePendingInteractions(root, expirationTime) {
   scheduleInteractions(root, expirationTime, __interactionsRef.current);
 }
 
-function startWorkOnPendingInteractions(root, expirationTime) {
+function startWorkOnPendingInteractions(
+  root: FiberRoot,
+  expirationTime: ExpirationTimeOpaque,
+) {
   // This is called when new work is started on a root.
   if (!enableSchedulerTracing) {
     return;
@@ -3218,9 +3374,9 @@ function startWorkOnPendingInteractions(root, expirationTime) {
   // we can accurately attribute time spent working on it, And so that cascading
   // work triggered during the render phase will be associated with it.
   const interactions: Set<Interaction> = new Set();
-  root.pendingInteractionMap.forEach(
+  root.pendingInteractionMap_new.forEach(
     (scheduledInteractions, scheduledExpirationTime) => {
-      if (scheduledExpirationTime >= expirationTime) {
+      if (isSameOrHigherPriority(scheduledExpirationTime, expirationTime)) {
         scheduledInteractions.forEach(interaction =>
           interactions.add(interaction),
         );
@@ -3243,7 +3399,7 @@ function startWorkOnPendingInteractions(root, expirationTime) {
         subscriber.onWorkStarted(interactions, threadID);
       } catch (error) {
         // If the subscriber throws, rethrow it in a separate task
-        scheduleCallback(ImmediatePriority, () => {
+        scheduleCallback(ImmediateSchedulerPriority, () => {
           throw error;
         });
       }
@@ -3256,7 +3412,7 @@ function finishPendingInteractions(root, committedExpirationTime) {
     return;
   }
 
-  const earliestRemainingTimeAfterCommit = root.firstPendingTime;
+  const earliestRemainingTimeAfterCommit = root.firstPendingTime_opaque;
 
   let subscriber;
 
@@ -3268,20 +3424,25 @@ function finishPendingInteractions(root, committedExpirationTime) {
     }
   } catch (error) {
     // If the subscriber throws, rethrow it in a separate task
-    scheduleCallback(ImmediatePriority, () => {
+    scheduleCallback(ImmediateSchedulerPriority, () => {
       throw error;
     });
   } finally {
     // Clear completed interactions from the pending Map.
     // Unless the render was suspended or cascading work was scheduled,
     // In which case– leave pending interactions until the subsequent render.
-    const pendingInteractionMap = root.pendingInteractionMap;
+    const pendingInteractionMap = root.pendingInteractionMap_new;
     pendingInteractionMap.forEach(
       (scheduledInteractions, scheduledExpirationTime) => {
         // Only decrement the pending interaction count if we're done.
         // If there's still work at the current priority,
         // That indicates that we are waiting for suspense data.
-        if (scheduledExpirationTime > earliestRemainingTimeAfterCommit) {
+        if (
+          !isSameOrHigherPriority(
+            earliestRemainingTimeAfterCommit,
+            scheduledExpirationTime,
+          )
+        ) {
           pendingInteractionMap.delete(scheduledExpirationTime);
 
           scheduledInteractions.forEach(interaction => {
@@ -3292,7 +3453,7 @@ function finishPendingInteractions(root, committedExpirationTime) {
                 subscriber.onInteractionScheduledWorkCompleted(interaction);
               } catch (error) {
                 // If the subscriber throws, rethrow it in a separate task
-                scheduleCallback(ImmediatePriority, () => {
+                scheduleCallback(ImmediateSchedulerPriority, () => {
                   throw error;
                 });
               }

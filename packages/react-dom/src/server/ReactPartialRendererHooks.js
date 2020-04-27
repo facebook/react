@@ -19,7 +19,6 @@ import type {
   ReactEventResponderListener,
 } from 'shared/ReactTypes';
 import type {SuspenseConfig} from 'react-reconciler/src/ReactFiberSuspenseConfig';
-import type {ReactDOMListenerMap} from '../shared/ReactDOMTypes';
 
 import {validateContextBounds} from './ReactPartialRendererContext';
 import {makeServerId} from '../client/ReactDOMHostConfig';
@@ -60,13 +59,6 @@ function basicStateReducer<S>(state: S, action: BasicStateAction<S>): S {
 function useCallback<T>(callback: T, deps: Array<mixed> | void | null): T {
   // Callbacks are passed as they are in the server environment.
   return callback;
-}
-
-function useEvent(event: any): ReactDOMListenerMap {
-  return {
-    clear: noop,
-    setListener: noop,
-  };
 }
 
 function useResponder(responder, props): ReactEventResponderListener<any, any> {
@@ -135,7 +127,6 @@ export class ContextHooks {
       useDeferredValue: this.useDeferredValue.bind(this),
       useTransition: this.useTransition.bind(this),
       useOpaqueIdentifier,
-      useEvent,
       // Subscriptions are not setup in a server environment.
       useMutableSource: this.useMutableSource.bind(this),
     };

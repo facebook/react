@@ -19,7 +19,7 @@ import type {
 import type {RendererInspectionConfig} from './ReactFiberHostConfig';
 import {FundamentalComponent} from './ReactWorkTags';
 import type {ReactNodeList} from 'shared/ReactTypes';
-import type {ExpirationTime} from './ReactFiberExpirationTime.new';
+import type {ExpirationTimeOpaque} from './ReactFiberExpirationTime.new';
 import type {SuspenseState} from './ReactFiberSuspenseComponent.new';
 
 import {
@@ -46,8 +46,8 @@ import {
 import {createFiberRoot} from './ReactFiberRoot.new';
 import {injectInternals, onScheduleRoot} from './ReactFiberDevToolsHook.new';
 import {
-  requestCurrentTimeForUpdate,
-  computeExpirationForFiber,
+  requestEventTime,
+  requestUpdateExpirationTime,
   scheduleUpdateOnFiber,
   flushRoot,
   batchedEventUpdates,
@@ -66,16 +66,18 @@ import {
   act,
 } from './ReactFiberWorkLoop.new';
 import {createUpdate, enqueueUpdate} from './ReactUpdateQueue.new';
-import {getStackByFiberInDevAndProd} from './ReactFiberComponentStack';
 import {
   isRendering as ReactCurrentFiberIsRendering,
   current as ReactCurrentFiberCurrent,
+  resetCurrentFiber as resetCurrentDebugFiberInDEV,
+  setCurrentFiber as setCurrentDebugFiberInDEV,
 } from './ReactCurrentFiber';
 import {StrictMode} from './ReactTypeOfMode';
 import {
   Sync,
   ContinuousHydration,
-  computeInteractiveExpiration,
+  UserBlockingUpdateTime,
+  isSameOrHigherPriority,
 } from './ReactFiberExpirationTime.new';
 import {requestCurrentSuspenseConfig} from './ReactFiberSuspenseConfig';
 import {
@@ -176,30 +178,41 @@ function findHostInstanceWithWarning(
       const componentName = getComponentName(fiber.type) || 'Component';
       if (!didWarnAboutFindNodeInStrictMode[componentName]) {
         didWarnAboutFindNodeInStrictMode[componentName] = true;
-        if (fiber.mode & StrictMode) {
-          console.error(
-            '%s is deprecated in StrictMode. ' +
-              '%s was passed an instance of %s which is inside StrictMode. ' +
-              'Instead, add a ref directly to the element you want to reference. ' +
-              'Learn more about using refs safely here: ' +
-              'https://fb.me/react-strict-mode-find-node%s',
-            methodName,
-            methodName,
-            componentName,
-            getStackByFiberInDevAndProd(hostFiber),
-          );
-        } else {
-          console.error(
-            '%s is deprecated in StrictMode. ' +
-              '%s was passed an instance of %s which renders StrictMode children. ' +
-              'Instead, add a ref directly to the element you want to reference. ' +
-              'Learn more about using refs safely here: ' +
-              'https://fb.me/react-strict-mode-find-node%s',
-            methodName,
-            methodName,
-            componentName,
-            getStackByFiberInDevAndProd(hostFiber),
-          );
+
+        const previousFiber = ReactCurrentFiberCurrent;
+        try {
+          setCurrentDebugFiberInDEV(hostFiber);
+          if (fiber.mode & StrictMode) {
+            console.error(
+              '%s is deprecated in StrictMode. ' +
+                '%s was passed an instance of %s which is inside StrictMode. ' +
+                'Instead, add a ref directly to the element you want to reference. ' +
+                'Learn more about using refs safely here: ' +
+                'https://fb.me/react-strict-mode-find-node',
+              methodName,
+              methodName,
+              componentName,
+            );
+          } else {
+            console.error(
+              '%s is deprecated in StrictMode. ' +
+                '%s was passed an instance of %s which renders StrictMode children. ' +
+                'Instead, add a ref directly to the element you want to reference. ' +
+                'Learn more about using refs safely here: ' +
+                'https://fb.me/react-strict-mode-find-node',
+              methodName,
+              methodName,
+              componentName,
+            );
+          }
+        } finally {
+          // Ideally this should reset to previous but this shouldn't be called in
+          // render and there's another warning for that anyway.
+          if (previousFiber) {
+            setCurrentDebugFiberInDEV(previousFiber);
+          } else {
+            resetCurrentDebugFiberInDEV();
+          }
         }
       }
     }
@@ -222,12 +235,12 @@ export function updateContainer(
   container: OpaqueRoot,
   parentComponent: ?React$Component<any, any>,
   callback: ?Function,
-): ExpirationTime {
+): ExpirationTimeOpaque {
   if (__DEV__) {
     onScheduleRoot(container, element);
   }
   const current = container.current;
-  const currentTime = requestCurrentTimeForUpdate();
+  const eventTime = requestEventTime();
   if (__DEV__) {
     // $FlowExpectedError - jest isn't a global, and isn't recognized outside of tests
     if ('undefined' !== typeof jest) {
@@ -236,11 +249,7 @@ export function updateContainer(
     }
   }
   const suspenseConfig = requestCurrentSuspenseConfig();
-  const expirationTime = computeExpirationForFiber(
-    currentTime,
-    current,
-    suspenseConfig,
-  );
+  const expirationTime = requestUpdateExpirationTime(current, suspenseConfig);
 
   const context = getContextForSubtree(parentComponent);
   if (container.context === null) {
@@ -266,7 +275,7 @@ export function updateContainer(
     }
   }
 
-  const update = createUpdate(currentTime, expirationTime, suspenseConfig);
+  const update = createUpdate(eventTime, expirationTime, suspenseConfig);
   // Caution: React DevTools currently depends on this property
   // being called "element".
   update.payload = {element};
@@ -327,33 +336,36 @@ export function attemptSynchronousHydration(fiber: Fiber): void {
       const root: FiberRoot = fiber.stateNode;
       if (root.hydrate) {
         // Flush the first scheduled "update".
-        flushRoot(root, root.firstPendingTime);
+        flushRoot(root, root.firstPendingTime_opaque);
       }
       break;
     case SuspenseComponent:
-      flushSync(() => scheduleUpdateOnFiber(fiber, Sync));
+      flushSync(() =>
+        scheduleUpdateOnFiber(fiber, (Sync: ExpirationTimeOpaque)),
+      );
       // If we're still blocked after this, we need to increase
       // the priority of any promises resolving within this
       // boundary so that they next attempt also has higher pri.
-      const retryExpTime = computeInteractiveExpiration(
-        requestCurrentTimeForUpdate(),
-      );
+      const retryExpTime = UserBlockingUpdateTime;
       markRetryTimeIfNotHydrated(fiber, retryExpTime);
       break;
   }
 }
 
-function markRetryTimeImpl(fiber: Fiber, retryTime: ExpirationTime) {
+function markRetryTimeImpl(fiber: Fiber, retryTime: ExpirationTimeOpaque) {
   const suspenseState: null | SuspenseState = fiber.memoizedState;
   if (suspenseState !== null && suspenseState.dehydrated !== null) {
-    if (suspenseState.retryTime < retryTime) {
+    if (!isSameOrHigherPriority(suspenseState.retryTime, retryTime)) {
       suspenseState.retryTime = retryTime;
     }
   }
 }
 
 // Increases the priority of thennables when they resolve within this boundary.
-function markRetryTimeIfNotHydrated(fiber: Fiber, retryTime: ExpirationTime) {
+function markRetryTimeIfNotHydrated(
+  fiber: Fiber,
+  retryTime: ExpirationTimeOpaque,
+) {
   markRetryTimeImpl(fiber, retryTime);
   const alternate = fiber.alternate;
   if (alternate) {
@@ -369,7 +381,7 @@ export function attemptUserBlockingHydration(fiber: Fiber): void {
     // Suspense.
     return;
   }
-  const expTime = computeInteractiveExpiration(requestCurrentTimeForUpdate());
+  const expTime = UserBlockingUpdateTime;
   scheduleUpdateOnFiber(fiber, expTime);
   markRetryTimeIfNotHydrated(fiber, expTime);
 }
@@ -382,8 +394,11 @@ export function attemptContinuousHydration(fiber: Fiber): void {
     // Suspense.
     return;
   }
-  scheduleUpdateOnFiber(fiber, ContinuousHydration);
-  markRetryTimeIfNotHydrated(fiber, ContinuousHydration);
+  scheduleUpdateOnFiber(fiber, (ContinuousHydration: ExpirationTimeOpaque));
+  markRetryTimeIfNotHydrated(
+    fiber,
+    (ContinuousHydration: ExpirationTimeOpaque),
+  );
 }
 
 export function attemptHydrationAtCurrentPriority(fiber: Fiber): void {
@@ -392,8 +407,7 @@ export function attemptHydrationAtCurrentPriority(fiber: Fiber): void {
     // their priority other than synchronously flush it.
     return;
   }
-  const currentTime = requestCurrentTimeForUpdate();
-  const expTime = computeExpirationForFiber(currentTime, fiber, null);
+  const expTime = requestUpdateExpirationTime(fiber, null);
   scheduleUpdateOnFiber(fiber, expTime);
   markRetryTimeIfNotHydrated(fiber, expTime);
 }
@@ -477,7 +491,7 @@ if (__DEV__) {
       // Shallow cloning props works as a workaround for now to bypass the bailout check.
       fiber.memoizedProps = {...fiber.memoizedProps};
 
-      scheduleUpdateOnFiber(fiber, Sync);
+      scheduleUpdateOnFiber(fiber, (Sync: ExpirationTimeOpaque));
     }
   };
 
@@ -487,11 +501,11 @@ if (__DEV__) {
     if (fiber.alternate) {
       fiber.alternate.pendingProps = fiber.pendingProps;
     }
-    scheduleUpdateOnFiber(fiber, Sync);
+    scheduleUpdateOnFiber(fiber, (Sync: ExpirationTimeOpaque));
   };
 
   scheduleUpdate = (fiber: Fiber) => {
-    scheduleUpdateOnFiber(fiber, Sync);
+    scheduleUpdateOnFiber(fiber, (Sync: ExpirationTimeOpaque));
   };
 
   setSuspenseHandler = (newShouldSuspendImpl: Fiber => boolean) => {

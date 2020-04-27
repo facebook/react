@@ -17,15 +17,6 @@ let ReactCurrentDispatcher;
 const enableSuspenseServerRenderer = require('shared/ReactFeatureFlags')
   .enableSuspenseServerRenderer;
 
-function normalizeCodeLocInfo(str) {
-  return (
-    str &&
-    str.replace(/\n +(?:at|in) ([\S]+)[^\n]*/g, function(m, name) {
-      return '\n    in ' + name + ' (at **)';
-    })
-  );
-}
-
 describe('ReactDOMServer', () => {
   beforeEach(() => {
     jest.resetModules();
@@ -172,17 +163,11 @@ describe('ReactDOMServer', () => {
     });
 
     it('should throw prop mapping error for an <iframe /> with invalid props', () => {
-      let caughtErr;
-      try {
+      expect(() => {
         ReactDOMServer.renderToString(<iframe style="border:none;" />);
-      } catch (err) {
-        caughtErr = err;
-      }
-      expect(caughtErr).not.toBe(undefined);
-      expect(normalizeCodeLocInfo(caughtErr.message)).toContain(
+      }).toThrowError(
         'The `style` prop expects a mapping from style properties to values, not ' +
-          "a string. For example, style={{marginRight: spacing + 'em'}} when using JSX." +
-          (__DEV__ ? '\n    in iframe (at **)' : ''),
+          "a string. For example, style={{marginRight: spacing + 'em'}} when using JSX.",
       );
     });
 

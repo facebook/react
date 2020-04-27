@@ -36,7 +36,6 @@ import {
   enableSuspenseCallback,
   enableScopeAPI,
   runAllPassiveEffectDestroysBeforeCreates,
-  enableUseEventAPI,
 } from 'shared/ReactFeatureFlags';
 import {
   FunctionComponent,
@@ -74,7 +73,6 @@ import getComponentName from 'shared/getComponentName';
 import invariant from 'shared/invariant';
 
 import {onCommitUnmount} from './ReactFiberDevToolsHook.old';
-import {getStackByFiberInDevAndProd} from './ReactFiberComponentStack';
 import {resolveDefaultProps} from './ReactFiberLazyComponent.old';
 import {
   getCommitTime,
@@ -369,9 +367,8 @@ function commitHookEffectListMount(tag: number, finishedWork: Fiber) {
             }
             console.error(
               'An effect function must not return anything besides a function, ' +
-                'which is used for clean-up.%s%s',
+                'which is used for clean-up.%s',
               addendum,
-              getStackByFiberInDevAndProd(finishedWork),
             );
           }
         }
@@ -891,9 +888,8 @@ function commitAttachRef(finishedWork: Fiber) {
         if (!ref.hasOwnProperty('current')) {
           console.error(
             'Unexpected ref object provided for %s. ' +
-              'Use either a ref-setter function or React.createRef().%s',
+              'Use either a ref-setter function or React.createRef().',
             getComponentName(finishedWork.type),
-            getStackByFiberInDevAndProd(finishedWork),
           );
         }
       }
@@ -1020,9 +1016,7 @@ function commitUnmount(
       if (enableDeprecatedFlareAPI) {
         unmountDeprecatedResponderListeners(current);
       }
-      if (enableDeprecatedFlareAPI || enableUseEventAPI) {
-        beforeRemoveInstance(current.stateNode);
-      }
+      beforeRemoveInstance(current.stateNode);
       safelyDetachRef(current);
       return;
     }
@@ -1116,16 +1110,18 @@ function detachFiber(fiber: Fiber) {
   // get GC:ed but we don't know which for sure which parent is the current
   // one so we'll settle for GC:ing the subtree of this child. This child
   // itself will be GC:ed when the parent updates the next time.
+  // Note: we cannot null out sibling here, otherwise it can cause issues
+  // with findDOMNode and how it requires the sibling field to carry out
+  // traversal in a later effect. See PR #16820.
   fiber.alternate = null;
   fiber.child = null;
-  fiber.dependencies = null;
+  fiber.dependencies_old = null;
   fiber.firstEffect = null;
   fiber.lastEffect = null;
   fiber.memoizedProps = null;
   fiber.memoizedState = null;
   fiber.pendingProps = null;
   fiber.return = null;
-  fiber.sibling = null;
   fiber.stateNode = null;
   fiber.updateQueue = null;
   if (__DEV__) {

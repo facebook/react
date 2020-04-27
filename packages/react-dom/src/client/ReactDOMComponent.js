@@ -10,7 +10,11 @@
 import {registrationNameModules} from 'legacy-events/EventPluginRegistry';
 import {canUseDOM} from 'shared/ExecutionEnvironment';
 import invariant from 'shared/invariant';
-import {setListenToResponderEventTypes} from '../events/DeprecatedDOMEventResponderSystem';
+import {
+  setListenToResponderEventTypes,
+  addResponderEventSystemEvent,
+  removeTrappedEventListener,
+} from '../events/DeprecatedDOMEventResponderSystem';
 
 import {
   getValueForAttribute,
@@ -56,10 +60,6 @@ import {
   TOP_TOGGLE,
 } from '../events/DOMTopLevelEventTypes';
 import {getListenerMapForElement} from '../events/DOMEventListenerMap';
-import {
-  addResponderEventSystemEvent,
-  removeTrappedEventListener,
-} from '../events/ReactDOMEventListener.js';
 import {mediaEventTypes} from '../events/DOMTopLevelEventTypes';
 import {
   createDangerousStringForStyles,
@@ -430,11 +430,13 @@ export function createElement(
     namespaceURI = getIntrinsicNamespace(type);
   }
   if (namespaceURI === HTML_NAMESPACE) {
+    const lowerCaseType = type.toLowerCase();
+
     if (__DEV__) {
       isCustomComponentTag = isCustomComponent(type, props);
       // Should this check be gated by parent namespace? Not sure we want to
       // allow <SVG> or <mATH>.
-      if (!isCustomComponentTag && type !== type.toLowerCase()) {
+      if (!isCustomComponentTag && type !== lowerCaseType) {
         console.error(
           '<%s /> is using incorrect casing. ' +
             'Use PascalCase for React components, ' +
@@ -444,7 +446,7 @@ export function createElement(
       }
     }
 
-    if (type === 'script') {
+    if (lowerCaseType === 'script') {
       // Create the script via .innerHTML so its "parser-inserted" flag is
       // set to true and it does not execute
       const div = ownerDocument.createElement('div');
@@ -1110,12 +1112,11 @@ export function diffHydratedProperties(
       } else if (propKey === DANGEROUSLY_SET_INNER_HTML) {
         const serverHTML = domElement.innerHTML;
         const nextHtml = nextProp ? nextProp[HTML] : undefined;
-        const expectedHTML = normalizeHTML(
-          domElement,
-          nextHtml != null ? nextHtml : '',
-        );
-        if (expectedHTML !== serverHTML) {
-          warnForPropDifference(propKey, serverHTML, expectedHTML);
+        if (nextHtml != null) {
+          const expectedHTML = normalizeHTML(domElement, nextHtml);
+          if (expectedHTML !== serverHTML) {
+            warnForPropDifference(propKey, serverHTML, expectedHTML);
+          }
         }
       } else if (propKey === STYLE) {
         // $FlowFixMe - Should be inferred as not undefined.
@@ -1355,10 +1356,6 @@ export function listenToEventResponderEventTypes(
       const targetEventType = isPassive
         ? eventType
         : eventType.substring(0, eventType.length - 7);
-      // We don't listen to this as we actually emulate it in the host config
-      if (targetEventType === 'beforeblur') {
-        continue;
-      }
       if (!listenerMap.has(eventKey)) {
         if (isPassive) {
           const activeKey = targetEventType + '_active';

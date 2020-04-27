@@ -85,11 +85,14 @@
 // resources, but the final state is always the same.
 
 import type {Fiber} from './ReactInternalTypes';
-import type {ExpirationTime} from './ReactFiberExpirationTime.new';
+import type {ExpirationTimeOpaque} from './ReactFiberExpirationTime.new';
 import type {SuspenseConfig} from './ReactFiberSuspenseConfig';
-import type {ReactPriorityLevel} from './ReactInternalTypes';
 
-import {NoWork, Sync} from './ReactFiberExpirationTime.new';
+import {
+  NoWork,
+  Sync,
+  isSameOrHigherPriority,
+} from './ReactFiberExpirationTime.new';
 import {
   enterDisallowedContextReadInDEV,
   exitDisallowedContextReadInDEV,
@@ -105,15 +108,14 @@ import {
 } from './ReactFiberWorkLoop.new';
 
 import invariant from 'shared/invariant';
-import {getCurrentPriorityLevel} from './SchedulerWithReactIntegration.new';
 
 import {disableLogs, reenableLogs} from 'shared/ConsolePatchingDev';
 
 export type Update<State> = {|
   // TODO: Temporary field. Will remove this by storing a map of
   // transition -> event time on the root.
-  eventTime: ExpirationTime,
-  expirationTime: ExpirationTime,
+  eventTime: number,
+  expirationTime: ExpirationTimeOpaque,
   suspenseConfig: null | SuspenseConfig,
 
   tag: 0 | 1 | 2 | 3,
@@ -121,9 +123,6 @@ export type Update<State> = {|
   callback: (() => mixed) | null,
 
   next: Update<State> | null,
-
-  // DEV only
-  priority?: ReactPriorityLevel,
 |};
 
 type SharedQueue<State> = {|
@@ -192,8 +191,8 @@ export function cloneUpdateQueue<State>(
 }
 
 export function createUpdate(
-  eventTime: ExpirationTime,
-  expirationTime: ExpirationTime,
+  eventTime: number,
+  expirationTime: ExpirationTimeOpaque,
   suspenseConfig: null | SuspenseConfig,
 ): Update<*> {
   const update: Update<*> = {
@@ -207,9 +206,6 @@ export function createUpdate(
 
     next: null,
   };
-  if (__DEV__) {
-    update.priority = getCurrentPriorityLevel();
-  }
   return update;
 }
 
@@ -414,7 +410,7 @@ export function processUpdateQueue<State>(
   workInProgress: Fiber,
   props: any,
   instance: any,
-  renderExpirationTime: ExpirationTime,
+  renderExpirationTime: ExpirationTimeOpaque,
 ): void {
   // This is always non-null on a ClassComponent or HostRoot
   const queue: UpdateQueue<State> = (workInProgress.updateQueue: any);
@@ -481,7 +477,7 @@ export function processUpdateQueue<State>(
     do {
       const updateEventTime = update.eventTime;
       const updateExpirationTime = update.expirationTime;
-      if (updateExpirationTime < renderExpirationTime) {
+      if (!isSameOrHigherPriority(updateExpirationTime, renderExpirationTime)) {
         // Priority is insufficient. Skip this update. If this is the first
         // skipped update, the previous update/state is the new base
         // update/state.
@@ -503,7 +499,7 @@ export function processUpdateQueue<State>(
           newLastBaseUpdate = newLastBaseUpdate.next = clone;
         }
         // Update the remaining priority in the queue.
-        if (updateExpirationTime > newExpirationTime) {
+        if (!isSameOrHigherPriority(newExpirationTime, updateExpirationTime)) {
           newExpirationTime = updateExpirationTime;
         }
       } else {
@@ -588,7 +584,7 @@ export function processUpdateQueue<State>(
     // shouldComponentUpdate is tricky; but we'll have to account for
     // that regardless.
     markUnprocessedUpdateTime(newExpirationTime);
-    workInProgress.expirationTime = newExpirationTime;
+    workInProgress.expirationTime_opaque = newExpirationTime;
     workInProgress.memoizedState = newState;
   }
 

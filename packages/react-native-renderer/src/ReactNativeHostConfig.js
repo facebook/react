@@ -28,10 +28,6 @@ import ReactNativeFiberHostComponent from './ReactNativeFiberHostComponent';
 
 const {get: getViewConfigForType} = ReactNativeViewConfigRegistry;
 
-export type ReactListenerEvent = Object;
-export type ReactListenerMap = Object;
-export type ReactListener = Object;
-
 export type Type = string;
 export type Props = Object;
 export type Container = number;
@@ -223,8 +219,9 @@ export function getPublicInstance(instance: Instance): * {
   return instance;
 }
 
-export function prepareForCommit(containerInfo: Container): void {
+export function prepareForCommit(containerInfo: Container): null | Object {
   // Noop
+  return null;
 }
 
 export function prepareUpdate(
@@ -558,18 +555,14 @@ export function makeServerId(): OpaqueIDType {
   throw new Error('Not yet implemented');
 }
 
-export function registerEvent(event: any, rootContainerInstance: Container) {
-  throw new Error('Not yet implemented.');
+export function beforeActiveInstanceBlur() {
+  // noop
 }
 
-export function mountEventListener(listener: any) {
-  throw new Error('Not yet implemented.');
+export function afterActiveInstanceBlur() {
+  // noop
 }
 
-export function unmountEventListener(listener: any) {
-  throw new Error('Not yet implemented.');
-}
-
-export function validateEventListenerTarget(target: any, listener: any) {
-  throw new Error('Not yet implemented.');
+export function preparePortalMount(portalInstance: Instance): void {
+  // noop
 }

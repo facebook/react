@@ -65,7 +65,8 @@ const createMatcherFor = (consoleMethod, matcherName) =>
       let caughtError;
 
       const isLikelyAComponentStack = message =>
-        typeof message === 'string' && message.includes('\n    in ');
+        typeof message === 'string' &&
+        (message.includes('\n    in ') || message.includes('\n    at '));
 
       const consoleSpy = (format, ...args) => {
         // Ignore uncaught errors reported by jsdom

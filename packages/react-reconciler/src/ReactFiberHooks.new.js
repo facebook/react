@@ -14,31 +14,25 @@ import type {
   ReactEventResponder,
   ReactContext,
   ReactEventResponderListener,
-  ReactScopeMethods,
 } from 'shared/ReactTypes';
 import type {Fiber, Dispatcher} from './ReactInternalTypes';
-import type {ExpirationTime} from './ReactFiberExpirationTime.new';
+import type {ExpirationTimeOpaque} from './ReactFiberExpirationTime.new';
 import type {HookEffectTag} from './ReactHookEffectTags';
 import type {SuspenseConfig} from './ReactFiberSuspenseConfig';
 import type {ReactPriorityLevel} from './ReactInternalTypes';
 import type {FiberRoot} from './ReactInternalTypes';
-import type {
-  OpaqueIDType,
-  ReactListenerEvent,
-  ReactListenerMap,
-  ReactListener,
-} from './ReactFiberHostConfig';
+import type {OpaqueIDType} from './ReactFiberHostConfig';
 
 import ReactSharedInternals from 'shared/ReactSharedInternals';
-import {enableDebugTracing, enableUseEventAPI} from 'shared/ReactFeatureFlags';
 
 import {markRootExpiredAtTime} from './ReactFiberRoot.new';
 import {
-  inferPriorityFromExpirationTime,
   NoWork,
   Sync,
+  isSameOrHigherPriority,
+  isSameExpirationTime,
 } from './ReactFiberExpirationTime.new';
-import {NoMode, BlockingMode, DebugTracingMode} from './ReactTypeOfMode';
+import {NoMode, BlockingMode} from './ReactTypeOfMode';
 import {readContext} from './ReactFiberNewContext.new';
 import {createDeprecatedResponderListener} from './ReactFiberDeprecatedEvents.new';
 import {
@@ -46,7 +40,6 @@ import {
   Passive as PassiveEffect,
 } from './ReactSideEffectTags';
 import {
-  NoEffect as NoHookEffect,
   HasEffect as HookHasEffect,
   Layout as HookLayout,
   Passive as HookPassive,
@@ -54,21 +47,14 @@ import {
 import {
   getWorkInProgressRoot,
   scheduleUpdateOnFiber,
-  computeExpirationForFiber,
-  requestCurrentTimeForUpdate,
+  requestUpdateExpirationTime,
+  requestEventTime,
   warnIfNotCurrentlyActingEffectsInDEV,
   warnIfNotCurrentlyActingUpdatesInDev,
   warnIfNotScopedWithMatchingAct,
   markRenderEventTimeAndConfig,
   markUnprocessedUpdateTime,
-  priorityLevelToLabel,
 } from './ReactFiberWorkLoop.new';
-import {
-  registerEvent,
-  mountEventListener as mountHostEventListener,
-  unmountEventListener as unmountHostEventListener,
-  validateEventListenerTarget,
-} from './ReactFiberHostConfig';
 
 import invariant from 'shared/invariant';
 import getComponentName from 'shared/getComponentName';
@@ -95,17 +81,15 @@ import {
   setWorkInProgressVersion,
   warnAboutMultipleRenderersDEV,
 } from './ReactMutableSource.new';
-import {getRootHostContainer} from './ReactFiberHostContext.new';
 import {getIsRendering} from './ReactCurrentFiber';
-import {logStateUpdateScheduled} from './DebugTracing';
 
 const {ReactCurrentDispatcher, ReactCurrentBatchConfig} = ReactSharedInternals;
 
 type Update<S, A> = {|
   // TODO: Temporary field. Will remove this by storing a map of
   // transition -> start time on the root.
-  eventTime: ExpirationTime,
-  expirationTime: ExpirationTime,
+  eventTime: number,
+  expirationTime: ExpirationTimeOpaque,
   suspenseConfig: null | SuspenseConfig,
   action: A,
   eagerReducer: ((S, A) => S) | null,
@@ -136,7 +120,6 @@ export type HookType =
   | 'useDeferredValue'
   | 'useTransition'
   | 'useMutableSource'
-  | 'useEvent'
   | 'useOpaqueIdentifier';
 
 let didWarnAboutMismatchedHooksForComponent;
@@ -173,7 +156,7 @@ type BasicStateAction<S> = (S => S) | S;
 type Dispatch<A> = A => void;
 
 // These are set right before calling the component.
-let renderExpirationTime: ExpirationTime = NoWork;
+let renderExpirationTime: ExpirationTimeOpaque = NoWork;
 // The work-in-progress fiber. I've named it differently to distinguish it from
 // the work-in-progress hook.
 let currentlyRenderingFiber: Fiber = (null: any);
@@ -364,7 +347,7 @@ export function renderWithHooks<Props, SecondArg>(
   Component: (p: Props, arg: SecondArg) => any,
   props: Props,
   secondArg: SecondArg,
-  nextRenderExpirationTime: ExpirationTime,
+  nextRenderExpirationTime: ExpirationTimeOpaque,
 ): any {
   renderExpirationTime = nextRenderExpirationTime;
   currentlyRenderingFiber = workInProgress;
@@ -382,7 +365,7 @@ export function renderWithHooks<Props, SecondArg>(
 
   workInProgress.memoizedState = null;
   workInProgress.updateQueue = null;
-  workInProgress.expirationTime = NoWork;
+  workInProgress.expirationTime_opaque = NoWork;
 
   // The following should have already been reset
   // currentHook = null;
@@ -497,12 +480,12 @@ export function renderWithHooks<Props, SecondArg>(
 export function bailoutHooks(
   current: Fiber,
   workInProgress: Fiber,
-  expirationTime: ExpirationTime,
+  expirationTime: ExpirationTimeOpaque,
 ) {
   workInProgress.updateQueue = current.updateQueue;
   workInProgress.effectTag &= ~(PassiveEffect | UpdateEffect);
-  if (current.expirationTime <= expirationTime) {
-    current.expirationTime = NoWork;
+  if (isSameOrHigherPriority(expirationTime, current.expirationTime_opaque)) {
+    current.expirationTime_opaque = NoWork;
   }
 }
 
@@ -727,7 +710,7 @@ function updateReducer<S, I, A>(
       const suspenseConfig = update.suspenseConfig;
       const updateExpirationTime = update.expirationTime;
       const updateEventTime = update.eventTime;
-      if (updateExpirationTime < renderExpirationTime) {
+      if (!isSameOrHigherPriority(updateExpirationTime, renderExpirationTime)) {
         // Priority is insufficient. Skip this update. If this is the first
         // skipped update, the previous update/state is the new base
         // update/state.
@@ -747,8 +730,13 @@ function updateReducer<S, I, A>(
           newBaseQueueLast = newBaseQueueLast.next = clone;
         }
         // Update the remaining priority in the queue.
-        if (updateExpirationTime > currentlyRenderingFiber.expirationTime) {
-          currentlyRenderingFiber.expirationTime = updateExpirationTime;
+        if (
+          !isSameOrHigherPriority(
+            currentlyRenderingFiber.expirationTime_opaque,
+            updateExpirationTime,
+          )
+        ) {
+          currentlyRenderingFiber.expirationTime_opaque = updateExpirationTime;
           markUnprocessedUpdateTime(updateExpirationTime);
         }
       } else {
@@ -899,12 +887,20 @@ function readFromUnsubcribedMutableSource<Source, Snapshot>(
     // If there's no version, then we should fallback to checking the update time.
     const pendingExpirationTime = getLastPendingExpirationTime(root);
 
-    if (pendingExpirationTime === NoWork) {
+    if (
+      isSameExpirationTime(
+        pendingExpirationTime,
+        (NoWork: ExpirationTimeOpaque),
+      )
+    ) {
       isSafeToReadFromSource = true;
     } else {
       // If the source has pending updates, we can use the current render's expiration
       // time to determine if it's safe to read again from the source.
-      isSafeToReadFromSource = pendingExpirationTime >= renderExpirationTime;
+      isSafeToReadFromSource = isSameOrHigherPriority(
+        pendingExpirationTime,
+        renderExpirationTime,
+      );
     }
 
     if (isSafeToReadFromSource) {
@@ -997,10 +993,8 @@ function useMutableSource<Source, Snapshot>(
       if (!is(snapshot, maybeNewSnapshot)) {
         setSnapshot(maybeNewSnapshot);
 
-        const currentTime = requestCurrentTimeForUpdate();
         const suspenseConfig = requestCurrentSuspenseConfig();
-        const expirationTime = computeExpirationForFiber(
-          currentTime,
+        const expirationTime = requestUpdateExpirationTime(
           fiber,
           suspenseConfig,
         );
@@ -1027,10 +1021,8 @@ function useMutableSource<Source, Snapshot>(
         latestSetSnapshot(latestGetSnapshot(source._source));
 
         // Record a pending mutable source update with the same expiration time.
-        const currentTime = requestCurrentTimeForUpdate();
         const suspenseConfig = requestCurrentSuspenseConfig();
-        const expirationTime = computeExpirationForFiber(
-          currentTime,
+        const expirationTime = requestUpdateExpirationTime(
           fiber,
           suspenseConfig,
         );
@@ -1652,16 +1644,12 @@ function dispatchAction<S, A>(
     }
   }
 
-  const currentTime = requestCurrentTimeForUpdate();
+  const eventTime = requestEventTime();
   const suspenseConfig = requestCurrentSuspenseConfig();
-  const expirationTime = computeExpirationForFiber(
-    currentTime,
-    fiber,
-    suspenseConfig,
-  );
+  const expirationTime = requestUpdateExpirationTime(fiber, suspenseConfig);
 
   const update: Update<S, A> = {
-    eventTime: currentTime,
+    eventTime,
     expirationTime,
     suspenseConfig,
     action,
@@ -1669,10 +1657,6 @@ function dispatchAction<S, A>(
     eagerState: null,
     next: (null: any),
   };
-
-  if (__DEV__) {
-    update.priority = getCurrentPriorityLevel();
-  }
 
   // Append the update to the end of the list.
   const pending = queue.pending;
@@ -1697,8 +1681,15 @@ function dispatchAction<S, A>(
     update.expirationTime = renderExpirationTime;
   } else {
     if (
-      fiber.expirationTime === NoWork &&
-      (alternate === null || alternate.expirationTime === NoWork)
+      isSameExpirationTime(
+        fiber.expirationTime_opaque,
+        (NoWork: ExpirationTimeOpaque),
+      ) &&
+      (alternate === null ||
+        isSameExpirationTime(
+          alternate.expirationTime_opaque,
+          (NoWork: ExpirationTimeOpaque),
+        ))
     ) {
       // The queue is currently empty, which means we can eagerly compute the
       // next state before entering the render phase. If the new state is the
@@ -1744,172 +1735,6 @@ function dispatchAction<S, A>(
     }
     scheduleUpdateOnFiber(fiber, expirationTime);
   }
-
-  if (__DEV__) {
-    if (enableDebugTracing) {
-      if (fiber.mode & DebugTracingMode) {
-        const priorityLevel = inferPriorityFromExpirationTime(
-          currentTime,
-          expirationTime,
-        );
-        const label = priorityLevelToLabel(priorityLevel);
-        const name = getComponentName(fiber.type) || 'Unknown';
-        logStateUpdateScheduled(name, label, action);
-      }
-    }
-  }
-}
-
-const noOpMount = () => {};
-
-function validateNotInFunctionRender(): boolean {
-  if (currentlyRenderingFiber === null) {
-    return true;
-  }
-  if (__DEV__) {
-    console.warn(
-      'Event listener methods from useEvent() cannot be called during render.' +
-        ' These methods should be called in an effect or event callback outside the render.',
-    );
-  }
-  return false;
-}
-
-function createReactListener(
-  event: ReactListenerEvent,
-  callback: (SyntheticEvent<EventTarget>) => void,
-  target: EventTarget | ReactScopeMethods,
-  destroy: Node => void,
-): ReactListener {
-  return {
-    callback,
-    destroy,
-    event,
-    target,
-  };
-}
-
-function mountEventListener(event: ReactListenerEvent): ReactListenerMap {
-  if (enableUseEventAPI) {
-    const hook = mountWorkInProgressHook();
-    const listenerMap: Map<
-      EventTarget | ReactScopeMethods,
-      ReactListener,
-    > = new Map();
-    const rootContainerInstance = getRootHostContainer();
-
-    // Register the event to the current root to ensure event
-    // replaying can pick up the event ahead of time.
-    registerEvent(event, rootContainerInstance);
-
-    const clear = () => {
-      if (validateNotInFunctionRender()) {
-        const listeners = Array.from(listenerMap.values());
-        for (let i = 0; i < listeners.length; i++) {
-          unmountHostEventListener(listeners[i]);
-        }
-        listenerMap.clear();
-      }
-    };
-
-    const destroy = (target: Node) => {
-      // We don't need to call detachListenerFromInstance
-      // here as this method should only ever be called
-      // from renderers that need to remove the instance
-      // from the map representing an instance that still
-      // holds a reference to the listenerMap. This means
-      // things like "window" listeners on ReactDOM should
-      // never enter this call path as the the instance in
-      // those cases would be that of "window", which
-      // should be handled via an optimized route in the
-      // renderer, making less overhead here. If we change
-      // this heuristic we should update this path to make
-      // sure we call detachListenerFromInstance.
-      listenerMap.delete(target);
-    };
-
-    const reactListenerMap: ReactListenerMap = {
-      clear,
-      setListener(
-        target: EventTarget | ReactScopeMethods,
-        callback: ?(SyntheticEvent<EventTarget>) => void,
-      ): void {
-        if (
-          validateNotInFunctionRender() &&
-          validateEventListenerTarget(target, callback)
-        ) {
-          let listener = listenerMap.get(target);
-          if (listener === undefined) {
-            if (callback == null) {
-              return;
-            }
-            listener = createReactListener(event, callback, target, destroy);
-            listenerMap.set(target, listener);
-          } else {
-            if (callback == null) {
-              listenerMap.delete(target);
-              unmountHostEventListener(listener);
-              return;
-            }
-            listener.callback = callback;
-          }
-          mountHostEventListener(listener);
-        }
-      },
-    };
-    // In order to clear up upon the hook unmounting,
-    // we ensure we set the effecrt tag so that we visit
-    // this effect in the commit phase, so we can handle
-    // clean-up accordingly.
-    currentlyRenderingFiber.effectTag |= UpdateEffect;
-    pushEffect(NoHookEffect, noOpMount, clear, null);
-    hook.memoizedState = [reactListenerMap, event, clear];
-    return reactListenerMap;
-  }
-  // To make Flow not complain
-  return (undefined: any);
-}
-
-function updateEventListener(event: ReactListenerEvent): ReactListenerMap {
-  if (enableUseEventAPI) {
-    const hook = updateWorkInProgressHook();
-    const [reactListenerMap, memoizedEvent, clear] = hook.memoizedState;
-    if (__DEV__) {
-      if (memoizedEvent.type !== event.type) {
-        console.warn(
-          'The event type argument passed to the useEvent() hook was different between renders.' +
-            ' The event type is static and should never change between renders.',
-        );
-      }
-      if (memoizedEvent.capture !== event.capture) {
-        console.warn(
-          'The "capture" option passed to the useEvent() hook was different between renders.' +
-            ' The "capture" option is static and should never change between renders.',
-        );
-      }
-      if (memoizedEvent.priority !== event.priority) {
-        console.warn(
-          'The "priority" option passed to the useEvent() hook was different between renders.' +
-            ' The "priority" option is static and should never change between renders.',
-        );
-      }
-      if (memoizedEvent.passive !== event.passive) {
-        console.warn(
-          'The "passive" option passed to the useEvent() hook was different between renders.' +
-            ' The "passive" option is static and should never change between renders.',
-        );
-      }
-    }
-    // In order to clear up upon the hook unmounting,
-    // we ensure we set the effecrt tag so that we visit
-    // this effect in the commit phase, so we can handle
-    // clean-up accordingly.
-    currentlyRenderingFiber.effectTag |= UpdateEffect;
-    pushEffect(NoHookEffect, noOpMount, clear, null);
-    return reactListenerMap;
-  }
-  // To make Flow not complain
-  return (undefined: any);
 }
 
 export const ContextOnlyDispatcher: Dispatcher = {
@@ -1929,7 +1754,6 @@ export const ContextOnlyDispatcher: Dispatcher = {
   useDeferredValue: throwInvalidHookError,
   useTransition: throwInvalidHookError,
   useMutableSource: throwInvalidHookError,
-  useEvent: throwInvalidHookError,
   useOpaqueIdentifier: throwInvalidHookError,
 };
 
@@ -1950,7 +1774,6 @@ const HooksDispatcherOnMount: Dispatcher = {
   useDeferredValue: mountDeferredValue,
   useTransition: mountTransition,
   useMutableSource: mountMutableSource,
-  useEvent: mountEventListener,
   useOpaqueIdentifier: mountOpaqueIdentifier,
 };
 
@@ -1971,7 +1794,6 @@ const HooksDispatcherOnUpdate: Dispatcher = {
   useDeferredValue: updateDeferredValue,
   useTransition: updateTransition,
   useMutableSource: updateMutableSource,
-  useEvent: updateEventListener,
   useOpaqueIdentifier: updateOpaqueIdentifier,
 };
 
@@ -1992,7 +1814,6 @@ const HooksDispatcherOnRerender: Dispatcher = {
   useDeferredValue: rerenderDeferredValue,
   useTransition: rerenderTransition,
   useMutableSource: updateMutableSource,
-  useEvent: updateEventListener,
   useOpaqueIdentifier: rerenderOpaqueIdentifier,
 };
 
@@ -2151,11 +1972,6 @@ if (__DEV__) {
       mountHookTypesDev();
       return mountMutableSource(source, getSnapshot, subscribe);
     },
-    useEvent(event: ReactListenerEvent): ReactListenerMap {
-      currentHookNameInDev = 'useEvent';
-      mountHookTypesDev();
-      return mountEventListener(event);
-    },
     useOpaqueIdentifier(): OpaqueIDType | void {
       currentHookNameInDev = 'useOpaqueIdentifier';
       mountHookTypesDev();
@@ -2285,11 +2101,6 @@ if (__DEV__) {
       currentHookNameInDev = 'useMutableSource';
       updateHookTypesDev();
       return mountMutableSource(source, getSnapshot, subscribe);
-    },
-    useEvent(event: ReactListenerEvent): ReactListenerMap {
-      currentHookNameInDev = 'useEvent';
-      updateHookTypesDev();
-      return mountEventListener(event);
     },
     useOpaqueIdentifier(): OpaqueIDType | void {
       currentHookNameInDev = 'useOpaqueIdentifier';
@@ -2421,11 +2232,6 @@ if (__DEV__) {
       updateHookTypesDev();
       return updateMutableSource(source, getSnapshot, subscribe);
     },
-    useEvent(event: ReactListenerEvent): ReactListenerMap {
-      currentHookNameInDev = 'useEvent';
-      updateHookTypesDev();
-      return updateEventListener(event);
-    },
     useOpaqueIdentifier(): OpaqueIDType | void {
       currentHookNameInDev = 'useOpaqueIdentifier';
       updateHookTypesDev();
@@ -2556,11 +2362,6 @@ if (__DEV__) {
       currentHookNameInDev = 'useMutableSource';
       updateHookTypesDev();
       return updateMutableSource(source, getSnapshot, subscribe);
-    },
-    useEvent(event: ReactListenerEvent): ReactListenerMap {
-      currentHookNameInDev = 'useEvent';
-      updateHookTypesDev();
-      return updateEventListener(event);
     },
     useOpaqueIdentifier(): OpaqueIDType | void {
       currentHookNameInDev = 'useOpaqueIdentifier';
@@ -2706,12 +2507,6 @@ if (__DEV__) {
       warnInvalidHookAccess();
       mountHookTypesDev();
       return mountMutableSource(source, getSnapshot, subscribe);
-    },
-    useEvent(event: ReactListenerEvent): ReactListenerMap {
-      currentHookNameInDev = 'useEvent';
-      warnInvalidHookAccess();
-      mountHookTypesDev();
-      return mountEventListener(event);
     },
     useOpaqueIdentifier(): OpaqueIDType | void {
       currentHookNameInDev = 'useOpaqueIdentifier';
@@ -2859,12 +2654,6 @@ if (__DEV__) {
       updateHookTypesDev();
       return updateMutableSource(source, getSnapshot, subscribe);
     },
-    useEvent(event: ReactListenerEvent): ReactListenerMap {
-      currentHookNameInDev = 'useEvent';
-      warnInvalidHookAccess();
-      updateHookTypesDev();
-      return updateEventListener(event);
-    },
     useOpaqueIdentifier(): OpaqueIDType | void {
       currentHookNameInDev = 'useOpaqueIdentifier';
       warnInvalidHookAccess();
@@ -3011,12 +2800,6 @@ if (__DEV__) {
       warnInvalidHookAccess();
       updateHookTypesDev();
       return updateMutableSource(source, getSnapshot, subscribe);
-    },
-    useEvent(event: ReactListenerEvent): ReactListenerMap {
-      currentHookNameInDev = 'useEvent';
-      warnInvalidHookAccess();
-      updateHookTypesDev();
-      return updateEventListener(event);
     },
     useOpaqueIdentifier(): OpaqueIDType | void {
       currentHookNameInDev = 'useOpaqueIdentifier';

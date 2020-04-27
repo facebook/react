@@ -15,7 +15,6 @@ import type {
   ReactProviderType,
   ReactEventResponder,
   ReactEventResponderListener,
-  ReactScopeMethods,
 } from 'shared/ReactTypes';
 import type {
   Fiber,
@@ -47,14 +46,6 @@ type HookLogEntry = {
   value: mixed,
   ...
 };
-
-type ReactDebugListenerMap = {|
-  clear: () => void,
-  setListener: (
-    target: EventTarget | ReactScopeMethods,
-    callback: ?(SyntheticEvent<EventTarget>) => void,
-  ) => void,
-|};
 
 let hookLog: Array<HookLogEntry> = [];
 
@@ -311,16 +302,6 @@ function useTransition(
   return [callback => {}, false];
 }
 
-const noOp = () => {};
-
-function useEvent(event: any): ReactDebugListenerMap {
-  hookLog.push({primitive: 'Event', stackError: new Error(), value: event});
-  return {
-    clear: noOp,
-    setListener: noOp,
-  };
-}
-
 function useDeferredValue<T>(value: T, config: TimeoutConfig | null | void): T {
   // useDeferredValue() composes multiple hooks internally.
   // Advance the current hook index the same number of times
@@ -368,7 +349,6 @@ const Dispatcher: DispatcherType = {
   useTransition,
   useMutableSource,
   useDeferredValue,
-  useEvent,
   useOpaqueIdentifier,
 };
 

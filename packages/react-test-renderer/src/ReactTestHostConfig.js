@@ -52,9 +52,6 @@ export opaque type OpaqueIDType =
       valueOf: () => string | void,
     };
 
-export type ReactListenerEvent = Object;
-export type ReactListenerMap = Object;
-export type ReactListener = Object;
 export type RendererInspectionConfig = $ReadOnly<{||}>;
 
 export * from 'react-reconciler/src/ReactFiberHostConfigWithNoPersistence';
@@ -143,8 +140,9 @@ export function getChildHostContext(
   return NO_CONTEXT;
 }
 
-export function prepareForCommit(containerInfo: Container): void {
+export function prepareForCommit(containerInfo: Container): null | Object {
   // noop
+  return null;
 }
 
 export function resetAfterCommit(containerInfo: Container): void {
@@ -430,18 +428,14 @@ export function makeOpaqueHydratingObject(
   };
 }
 
-export function registerEvent(event: any, rootContainerInstance: Container) {
-  throw new Error('Not yet implemented.');
+export function beforeActiveInstanceBlur() {
+  // noop
 }
 
-export function mountEventListener(listener: any) {
-  throw new Error('Not yet implemented.');
+export function afterActiveInstanceBlur() {
+  // noop
 }
 
-export function unmountEventListener(listener: any) {
-  throw new Error('Not yet implemented.');
-}
-
-export function validateEventListenerTarget(target: any, listener: any) {
-  throw new Error('Not yet implemented.');
+export function preparePortalMount(portalInstance: Instance): void {
+  // noop
 }

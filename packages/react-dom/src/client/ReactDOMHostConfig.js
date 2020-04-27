@@ -13,17 +13,12 @@ import type {
   ReactDOMEventResponder,
   ReactDOMEventResponderInstance,
   ReactDOMFundamentalComponentInstance,
-  ReactDOMListener,
-  ReactDOMListenerEvent,
-  ReactDOMListenerMap,
 } from '../shared/ReactDOMTypes';
-import type {ReactScopeMethods} from 'shared/ReactTypes';
 
 import {
   precacheFiberNode,
   updateFiberProps,
   getClosestInstanceFromNode,
-  getListenersFromTarget,
 } from './ReactDOMComponentTree';
 import {
   createElement,
@@ -62,7 +57,6 @@ import {REACT_OPAQUE_ID_TYPE} from 'shared/ReactSymbols';
 import {
   mountEventResponder,
   unmountEventResponder,
-  DEPRECATED_dispatchEventForResponderEventSystem,
 } from '../events/DeprecatedDOMEventResponderSystem';
 import {retryIfBlockedOn} from '../events/ReactDOMEventReplaying';
 
@@ -70,37 +64,10 @@ import {
   enableSuspenseServerRenderer,
   enableDeprecatedFlareAPI,
   enableFundamentalAPI,
-  enableUseEventAPI,
-  enableScopeAPI,
+  enableModernEventSystem,
 } from 'shared/ReactFeatureFlags';
-import {
-  RESPONDER_EVENT_SYSTEM,
-  IS_PASSIVE,
-  PLUGIN_EVENT_SYSTEM,
-  USE_EVENT_SYSTEM,
-} from '../events/EventSystemFlags';
-import {
-  isManagedDOMElement,
-  isValidEventTarget,
-  listenToTopLevelEvent,
-  attachListenerToManagedDOMElement,
-  detachListenerFromManagedDOMElement,
-  attachTargetEventListener,
-  detachTargetEventListener,
-  isReactScope,
-  attachListenerToReactScope,
-  detachListenerFromReactScope,
-} from '../events/DOMModernPluginEventSystem';
-import {getListenerMapForElement} from '../events/DOMEventListenerMap';
 import {TOP_BEFORE_BLUR, TOP_AFTER_BLUR} from '../events/DOMTopLevelEventTypes';
-
-// TODO: This is an exposed internal, we should move this around
-// so this isn't the case.
-import {isFiberInsideHiddenOrRemovedTree} from 'react-reconciler/src/ReactFiberTreeReflection';
-
-export type ReactListenerEvent = ReactDOMListenerEvent;
-export type ReactListenerMap = ReactDOMListenerMap;
-export type ReactListener = ReactDOMListener;
+import {listenToEvent} from '../events/DOMModernPluginEventSystem';
 
 export type Type = string;
 export type Props = {
@@ -162,7 +129,6 @@ export opaque type OpaqueIDType =
     };
 
 type SelectionInformation = {|
-  activeElementDetached: null | HTMLElement,
   focusedElem: null | HTMLElement,
   selectionRange: mixed,
 |};
@@ -250,32 +216,40 @@ export function getPublicInstance(instance: Instance): * {
   return instance;
 }
 
-export function prepareForCommit(containerInfo: Container): void {
+export function prepareForCommit(containerInfo: Container): Object | null {
   eventsEnabled = ReactBrowserEventEmitterIsEnabled();
   selectionInformation = getSelectionInformation();
-  if (enableDeprecatedFlareAPI || enableUseEventAPI) {
+  let activeInstance = null;
+  if (enableDeprecatedFlareAPI) {
     const focusedElem = selectionInformation.focusedElem;
     if (focusedElem !== null) {
-      const instance = getClosestInstanceFromNode(focusedElem);
-      if (instance !== null && isFiberInsideHiddenOrRemovedTree(instance)) {
-        dispatchBeforeDetachedBlur(focusedElem);
-      }
+      activeInstance = getClosestInstanceFromNode(focusedElem);
     }
   }
   ReactBrowserEventEmitterSetEnabled(false);
+  return activeInstance;
+}
+
+export function beforeActiveInstanceBlur(): void {
+  if (enableDeprecatedFlareAPI) {
+    ReactBrowserEventEmitterSetEnabled(true);
+    dispatchBeforeDetachedBlur((selectionInformation: any).focusedElem);
+    ReactBrowserEventEmitterSetEnabled(false);
+  }
+}
+
+export function afterActiveInstanceBlur(): void {
+  if (enableDeprecatedFlareAPI) {
+    ReactBrowserEventEmitterSetEnabled(true);
+    dispatchAfterDetachedBlur((selectionInformation: any).focusedElem);
+    ReactBrowserEventEmitterSetEnabled(false);
+  }
 }
 
 export function resetAfterCommit(containerInfo: Container): void {
   restoreSelection(selectionInformation);
   ReactBrowserEventEmitterSetEnabled(eventsEnabled);
   eventsEnabled = null;
-  if (enableDeprecatedFlareAPI || enableUseEventAPI) {
-    const activeElementDetached = (selectionInformation: any)
-      .activeElementDetached;
-    if (activeElementDetached !== null) {
-      dispatchAfterDetachedBlur(activeElementDetached);
-    }
-  }
   selectionInformation = null;
 }
 
@@ -528,22 +502,7 @@ function createEvent(type: TopLevelType): Event {
 }
 
 function dispatchBeforeDetachedBlur(target: HTMLElement): void {
-  const targetInstance = getClosestInstanceFromNode(target);
-  ((selectionInformation: any): SelectionInformation).activeElementDetached = target;
-
   if (enableDeprecatedFlareAPI) {
-    DEPRECATED_dispatchEventForResponderEventSystem(
-      'beforeblur',
-      targetInstance,
-      ({
-        target,
-        timeStamp: Date.now(),
-      }: any),
-      target,
-      RESPONDER_EVENT_SYSTEM | IS_PASSIVE,
-    );
-  }
-  if (enableUseEventAPI) {
     const event = createEvent(TOP_BEFORE_BLUR);
     // Dispatch "beforeblur" directly on the target,
     // so it gets picked up by the event system and
@@ -554,19 +513,6 @@ function dispatchBeforeDetachedBlur(target: HTMLElement): void {
 
 function dispatchAfterDetachedBlur(target: HTMLElement): void {
   if (enableDeprecatedFlareAPI) {
-    DEPRECATED_dispatchEventForResponderEventSystem(
-      'blur',
-      null,
-      ({
-        isTargetAttached: false,
-        target,
-        timeStamp: Date.now(),
-      }: any),
-      target,
-      RESPONDER_EVENT_SYSTEM | IS_PASSIVE,
-    );
-  }
-  if (enableUseEventAPI) {
     const event = createEvent(TOP_AFTER_BLUR);
     // So we know what was detached, make the relatedTarget the
     // detached target on the "afterblur" event.
@@ -578,23 +524,8 @@ function dispatchAfterDetachedBlur(target: HTMLElement): void {
 
 export function beforeRemoveInstance(
   instance: Instance | TextInstance | SuspenseInstance,
-): void {
-  if (enableUseEventAPI) {
-    // It's unfortunate that we have to do this cleanup, but
-    // it's necessary otherwise we will leak the host instances
-    // from the useEvent hook instances Map. We call destroy
-    // on each listener to ensure we properly remove the instance
-    // from the instances Map. Note: we have this Map so that we
-    // can properly unmount instances when the function component
-    // that the hook is attached to gets unmounted.
-    const listenersSet = getListenersFromTarget(instance);
-    if (listenersSet !== null) {
-      const listeners = Array.from(listenersSet);
-      for (let i = 0; i < listeners.length; i++) {
-        listeners[i].destroy(instance);
-      }
-    }
-  }
+) {
+  // TODO for ReactDOM.createEventInstance
 }
 
 export function removeChild(
@@ -1170,77 +1101,8 @@ export function makeOpaqueHydratingObject(
   };
 }
 
-export function registerEvent(
-  event: ReactDOMListenerEvent,
-  rootContainerInstance: Container,
-): void {
-  const {passive, priority, type} = event;
-  const listenerMap = getListenerMapForElement(rootContainerInstance);
-  // Add the event listener to the target container (falling back to
-  // the target if we didn't find one).
-  listenToTopLevelEvent(
-    type,
-    rootContainerInstance,
-    listenerMap,
-    PLUGIN_EVENT_SYSTEM | USE_EVENT_SYSTEM,
-    passive,
-    priority,
-  );
-}
-
-export function mountEventListener(listener: ReactDOMListener): void {
-  if (enableUseEventAPI) {
-    const {target} = listener;
-    if (isManagedDOMElement(target)) {
-      attachListenerToManagedDOMElement(listener);
-    } else if (enableScopeAPI && isReactScope(target)) {
-      attachListenerToReactScope(listener);
-    } else {
-      attachTargetEventListener(listener);
-    }
+export function preparePortalMount(portalInstance: Instance): void {
+  if (enableModernEventSystem) {
+    listenToEvent('onMouseEnter', portalInstance);
   }
-}
-
-export function unmountEventListener(listener: ReactDOMListener): void {
-  if (enableUseEventAPI) {
-    const {target} = listener;
-    if (isManagedDOMElement(target)) {
-      detachListenerFromManagedDOMElement(listener);
-    } else if (enableScopeAPI && isReactScope(target)) {
-      detachListenerFromReactScope(listener);
-    } else {
-      detachTargetEventListener(listener);
-    }
-  }
-}
-
-export function validateEventListenerTarget(
-  target: EventTarget | ReactScopeMethods,
-  listener: ?(SyntheticEvent<EventTarget>) => void,
-): boolean {
-  if (enableUseEventAPI) {
-    if (
-      target != null &&
-      (isManagedDOMElement(target) ||
-        isValidEventTarget(target) ||
-        isReactScope(target))
-    ) {
-      if (listener == null || typeof listener === 'function') {
-        return true;
-      }
-      if (__DEV__) {
-        console.warn(
-          'Event listener method setListener() from useEvent() hook requires the second argument' +
-            ' to be either a valid function callback or null/undefined.',
-        );
-      }
-    }
-    if (__DEV__) {
-      console.warn(
-        'Event listener method setListener() from useEvent() hook requires the first argument to be ' +
-          'a valid DOM EventTarget. If using a ref, ensure the current value is not null.',
-      );
-    }
-  }
-  return false;
 }

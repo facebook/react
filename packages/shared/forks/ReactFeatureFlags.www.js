@@ -16,7 +16,6 @@ const dynamicFeatureFlags: DynamicFeatureFlags = require('ReactFeatureFlags');
 
 export const {
   debugRenderPhaseSideEffectsForStrictMode,
-  disableModulePatternComponents,
   disableInputAttributeSyncing,
   enableTrustedTypesIntegration,
   disableSchedulerTimeoutBasedOnReactExpirationTime,
@@ -53,13 +52,13 @@ export const enableBlocksAPI = true;
 
 export const disableJavaScriptURLs = true;
 
+export const disableModulePatternComponents = true;
+
 export const enableDeprecatedFlareAPI = true;
 
 export const enableFundamentalAPI = false;
 
 export const enableScopeAPI = true;
-
-export const enableUseEventAPI = true;
 
 export const warnAboutUnmockedScheduler = true;
 
