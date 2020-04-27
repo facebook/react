@@ -201,7 +201,7 @@ describe('ReactDOMServer', () => {
   });
 
   describe('renderToStaticMarkup', () => {
-    it('should restore hooks internals upon exiting for nested renderers', () => {
+    it('should execute hooks in separate namespaces for concurrent renderers', () => {
       const NestedComponent = () => {
         const memo = React.useMemo(() => 1, [1]);
         return <div>{memo}</div>;
@@ -218,11 +218,15 @@ describe('ReactDOMServer', () => {
 
       // rewrites currentlyRenderingComponent, firstWorkInProgressHook
       // breaks workInProgressHook, sets to null
-      const firstResponse = ReactDOMServer.renderToStaticMarkup(<FirstTestComponent />);
+      const firstResponse = ReactDOMServer.renderToStaticMarkup(
+        <FirstTestComponent />,
+      );
       expect(firstResponse).toBe('<div>&lt;div&gt;1&lt;/div&gt;</div>');
 
       // breaks workInProgressHook, sets to undefined
-      const secondResponse = ReactDOMServer.renderToStaticMarkup(<FirstTestComponent />);
+      const secondResponse = ReactDOMServer.renderToStaticMarkup(
+        <FirstTestComponent />,
+      );
       expect(secondResponse).toBe('<div>&lt;div&gt;1&lt;/div&gt;</div>');
     });
 

@@ -56,13 +56,7 @@ import {
   createMarkupForRoot,
 } from './DOMMarkupOperations';
 import escapeTextForBrowser from './escapeTextForBrowser';
-import {
-  prepareToUseHooks,
-  finishHooks,
-  Dispatcher,
-  currentThreadID,
-  setCurrentThreadID,
-} from './ReactPartialRendererHooks';
+import {ContextHooks} from './ReactPartialRendererHooks';
 import {
   Namespaces,
   getIntrinsicNamespace,
@@ -411,6 +405,7 @@ function resolve(
   child: mixed,
   context: Object,
   threadID: ThreadID,
+  contextHooks: ContextHooks,
 ): {|
   child: mixed,
   context: Object,
@@ -525,9 +520,14 @@ function resolve(
         }
       }
       const componentIdentity = {};
-      prepareToUseHooks(componentIdentity);
+      contextHooks.prepareToUseHooks(componentIdentity);
       inst = Component(element.props, publicContext, updater);
-      inst = finishHooks(Component, element.props, inst, publicContext);
+      inst = contextHooks.finishHooks(
+        Component,
+        element.props,
+        inst,
+        publicContext,
+      );
 
       if (__DEV__) {
         // Support for module components is deprecated and is removed behind a flag.
@@ -725,6 +725,7 @@ class ReactDOMServerRenderer {
   contextStack: Array<ReactContext<any>>;
   contextValueStack: Array<any>;
   contextProviderStack: ?Array<ReactProvider<any>>; // DEV-only
+  contextHooks: ContextHooks;
 
   constructor(children: mixed, makeStaticMarkup: boolean) {
     const flatChildren = flattenTopLevelChildren(children);
@@ -757,6 +758,7 @@ class ReactDOMServerRenderer {
     if (__DEV__) {
       this.contextProviderStack = [];
     }
+    this.contextHooks = new ContextHooks();
   }
 
   destroy() {
@@ -837,10 +839,10 @@ class ReactDOMServerRenderer {
       return null;
     }
 
-    const prevThreadID = currentThreadID;
-    setCurrentThreadID(this.threadID);
+    const prevThreadID = this.contextHooks.currentThreadID;
+    this.contextHooks.currentThreadID = this.threadID;
     const prevDispatcher = ReactCurrentDispatcher.current;
-    ReactCurrentDispatcher.current = Dispatcher;
+    ReactCurrentDispatcher.current = this.contextHooks.Dispatcher;
     try {
       // Markup generated within <Suspense> ends up buffered until we know
       // nothing in that boundary suspended
@@ -935,7 +937,7 @@ class ReactDOMServerRenderer {
       return out[0];
     } finally {
       ReactCurrentDispatcher.current = prevDispatcher;
-      setCurrentThreadID(prevThreadID);
+      this.contextHooks.currentThreadID = prevThreadID;
     }
   }
 
@@ -959,7 +961,12 @@ class ReactDOMServerRenderer {
       return escapeTextForBrowser(text);
     } else {
       let nextChild;
-      ({child: nextChild, context} = resolve(child, context, this.threadID));
+      ({child: nextChild, context} = resolve(
+        child,
+        context,
+        this.threadID,
+        this.contextHooks,
+      ));
       if (nextChild === null || nextChild === false) {
         return '';
       } else if (!React.isValidElement(nextChild)) {
@@ -1089,9 +1096,9 @@ class ReactDOMServerRenderer {
             const element: ReactElement = ((nextChild: any): ReactElement);
             let nextChildren;
             const componentIdentity = {};
-            prepareToUseHooks(componentIdentity);
+            this.contextHooks.prepareToUseHooks(componentIdentity);
             nextChildren = elementType.render(element.props, element.ref);
-            nextChildren = finishHooks(
+            nextChildren = this.contextHooks.finishHooks(
               elementType.render,
               element.props,
               nextChildren,
