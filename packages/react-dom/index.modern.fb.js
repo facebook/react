@@ -19,4 +19,5 @@ export {
   createBlockingRoot as unstable_createBlockingRoot,
   unstable_flushControlled,
   unstable_scheduleHydration,
+  unstable_createEventHandle,
 } from './src/client/ReactDOM';

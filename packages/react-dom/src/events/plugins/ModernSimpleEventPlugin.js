@@ -25,7 +25,10 @@ import {
   topLevelEventsToDispatchConfig,
   simpleEventPluginEventTypes,
 } from '../DOMEventProperties';
-import {accumulateTwoPhaseListeners} from '../DOMModernPluginEventSystem';
+import {
+  accumulateTwoPhaseListeners,
+  accumulateEventTargetListeners,
+} from '../DOMModernPluginEventSystem';
 import {IS_TARGET_PHASE_ONLY} from '../EventSystemFlags';
 
 import SyntheticAnimationEvent from '../SyntheticAnimationEvent';
@@ -210,10 +213,11 @@ const SimpleEventPlugin: ModernPluginModule<MouseEvent> = {
       eventSystemFlags & IS_TARGET_PHASE_ONLY &&
       targetContainer != null
     ) {
-      // TODO: accumulateEventTargetListeners
+      accumulateEventTargetListeners(dispatchQueue, event, targetContainer);
     } else {
-      accumulateTwoPhaseListeners(targetInst, dispatchQueue, event);
+      accumulateTwoPhaseListeners(targetInst, dispatchQueue, event, true);
     }
+    return event;
   },
 };
 

@@ -20,6 +20,7 @@ import {
   unmountComponentAtNode,
 } from './ReactDOMLegacy';
 import {createRoot, createBlockingRoot, isValidContainer} from './ReactDOMRoot';
+import {createEventHandle} from './ReactDOMEventHandle';
 
 import {
   batchedEventUpdates,
@@ -208,6 +209,8 @@ export {
   // Temporary alias since we already shipped React 16 RC with it.
   // TODO: remove in React 17.
   unstable_createPortal,
+  // enableCreateEventHandleAPI
+  createEventHandle as unstable_createEventHandle,
 };
 
 const foundDevTools = injectIntoDevTools({

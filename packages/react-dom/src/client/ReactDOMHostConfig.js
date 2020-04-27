@@ -76,12 +76,15 @@ import {
   enableDeprecatedFlareAPI,
   enableFundamentalAPI,
   enableModernEventSystem,
-  enableScopeAPI,
   enableCreateEventHandleAPI,
+  enableScopeAPI,
 } from 'shared/ReactFeatureFlags';
 import {HostComponent, HostText} from 'react-reconciler/src/ReactWorkTags';
 import {TOP_BEFORE_BLUR, TOP_AFTER_BLUR} from '../events/DOMTopLevelEventTypes';
-import {listenToEvent} from '../events/DOMModernPluginEventSystem';
+import {
+  listenToEvent,
+  clearEventHandleListenersForTarget,
+} from '../events/DOMModernPluginEventSystem';
 
 export type Type = string;
 export type Props = {
@@ -539,7 +542,9 @@ function dispatchAfterDetachedBlur(target: HTMLElement): void {
 export function removeInstanceEventHandles(
   instance: Instance | TextInstance | SuspenseInstance,
 ) {
-  // TODO for ReactDOM.createEventInstance
+  if (enableCreateEventHandleAPI) {
+    clearEventHandleListenersForTarget(instance);
+  }
 }
 
 export function removeChild(
@@ -1136,8 +1141,12 @@ export function prepareScopeUpdate(
   }
 }
 
-export function removeScopeEventHandles(scopeInstance: Object): void {
-  // TODO when we add createEventHandle
+export function removeScopeEventHandles(
+  scopeInstance: ReactScopeInstance,
+): void {
+  if (enableScopeAPI && enableCreateEventHandleAPI) {
+    clearEventHandleListenersForTarget(scopeInstance);
+  }
 }
 
 export function getInstanceFromScope(
