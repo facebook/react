@@ -22,11 +22,15 @@ import {
   TOP_SELECTION_CHANGE,
 } from '../DOMTopLevelEventTypes';
 import getActiveElement from '../../client/getActiveElement';
-import {getNodeFromInstance} from '../../client/ReactDOMComponentTree';
+import {
+  getNodeFromInstance,
+  getEventListenerMap,
+} from '../../client/ReactDOMComponentTree';
 import {hasSelectionCapabilities} from '../../client/ReactInputSelection';
 import {DOCUMENT_NODE} from '../../shared/HTMLNodeType';
-import {isListeningToAllDependencies} from '../DOMEventListenerMap';
 import {accumulateTwoPhaseDispatches} from '../DOMLegacyEventPluginSystem';
+
+import {registrationNameDependencies} from 'legacy-events/EventPluginRegistry';
 
 const skipSelectionChangeEvent =
   canUseDOM && 'documentMode' in document && document.documentMode <= 11;
@@ -141,6 +145,21 @@ function constructSelectEvent(nativeEvent, nativeEventTarget) {
   }
 
   return null;
+}
+
+function isListeningToAllDependencies(
+  registrationName: string,
+  mountAt: Document | Element,
+): boolean {
+  const dependencies = registrationNameDependencies[registrationName];
+  const listenerMap = getEventListenerMap(mountAt);
+  for (let i = 0; i < dependencies.length; i++) {
+    const event = dependencies[i];
+    if (!listenerMap.has(event)) {
+      return false;
+    }
+  }
+  return true;
 }
 
 /**

@@ -9,7 +9,7 @@
 
 import type {AnyNativeEvent} from 'legacy-events/PluginModuleType';
 import type {DOMTopLevelEventType} from 'legacy-events/TopLevelEventTypes';
-import type {ElementListenerMap} from '../events/DOMEventListenerMap';
+import type {ElementListenerMap} from '../client/ReactDOMComponentTree';
 import type {EventSystemFlags} from './EventSystemFlags';
 import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
 import type {PluginModule} from 'legacy-events/PluginModuleType';
@@ -29,8 +29,10 @@ import accumulateInto from 'legacy-events/accumulateInto';
 import {registrationNameDependencies} from 'legacy-events/EventPluginRegistry';
 
 import getEventTarget from './getEventTarget';
-import {getClosestInstanceFromNode} from '../client/ReactDOMComponentTree';
-import {getListenerMapForElement} from './DOMEventListenerMap';
+import {
+  getClosestInstanceFromNode,
+  getEventListenerMap,
+} from '../client/ReactDOMComponentTree';
 import isEventSupported from './isEventSupported';
 import {
   TOP_BLUR,
@@ -319,7 +321,7 @@ export function legacyListenToEvent(
   registrationName: string,
   mountAt: Document | Element,
 ): void {
-  const listenerMap = getListenerMapForElement(mountAt);
+  const listenerMap = getEventListenerMap(mountAt);
   const dependencies = registrationNameDependencies[registrationName];
 
   for (let i = 0; i < dependencies.length; i++) {
