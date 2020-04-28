@@ -636,11 +636,11 @@ export function unhideTextInstance(
 
 export function clearContainer(container: Container): void {
   if (container.nodeType === ELEMENT_NODE) {
-    ((container: any): Element).innerHTML = '';
+    ((container: any): Element).textContent = '';
   } else if (container.nodeType === DOCUMENT_NODE) {
-    const documentElement = ((container: any): Document).documentElement;
-    if (documentElement != null) {
-      documentElement.innerHTML = '';
+    const body = ((container: any): Document).body;
+    if (body != null) {
+      body.textContent = '';
     }
   }
 }

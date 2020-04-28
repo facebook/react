@@ -427,12 +427,8 @@ export function unhideTextInstance(textInstance, text): void {
   // Noop
 }
 
-export function clearContainer(container: Container): void {
-  // TODO This doesn't work for anything other than SVG.
-  // Is that okay?
-  while (container.lastChild != null) {
-    container.lastChild.eject();
-  }
+export function clearContainer(container) {
+  // TODO Implement this
 }
 
 export function DEPRECATED_mountResponderInstance(
