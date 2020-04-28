@@ -127,7 +127,7 @@ describe('ReactDOMFiberAsync', () => {
     expect(ops).toEqual(['A', 'ABCD']);
   });
 
-  it('flushSync throws if already performing work', () => {
+  it('flushSync logs an error if already performing work', () => {
     class Component extends React.Component {
       componentDidUpdate() {
         ReactDOM.flushSync(() => {});
@@ -140,7 +140,7 @@ describe('ReactDOMFiberAsync', () => {
     // Initial mount
     ReactDOM.render(<Component />, container);
     // Update
-    expect(() => ReactDOM.render(<Component />, container)).toThrow(
+    expect(() => ReactDOM.render(<Component />, container)).toErrorDev(
       'flushSync was called from inside a lifecycle method',
     );
   });

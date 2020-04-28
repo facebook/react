@@ -1228,14 +1228,17 @@ export function unbatchedUpdates<A, R>(fn: (a: A) => R, a: A): R {
 }
 
 export function flushSync<A, R>(fn: A => R, a: A): R {
-  if ((executionContext & (RenderContext | CommitContext)) !== NoContext) {
-    invariant(
-      false,
-      'flushSync was called from inside a lifecycle method. It cannot be ' +
-        'called when React is already rendering.',
-    );
-  }
   const prevExecutionContext = executionContext;
+  if ((prevExecutionContext & (RenderContext | CommitContext)) !== NoContext) {
+    if (__DEV__) {
+      console.error(
+        'flushSync was called from inside a lifecycle method. React cannot ' +
+          'flush when React is already rendering. Consider moving this call to ' +
+          'a scheduler task or micro task.',
+      );
+    }
+    return fn(a);
+  }
   executionContext |= BatchedContext;
   try {
     return runWithPriority(ImmediateSchedulerPriority, fn.bind(null, a));
