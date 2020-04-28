@@ -30,6 +30,10 @@
         margin: 0;
       }
 
+      .input-container {
+        position: relative;
+      }
+
       .input {
         display: block;
         font-weight: 100;
@@ -37,6 +41,18 @@
         border: 1px solid #aaa;
         background-color: #fff;
         color: #666;
+        position: relative;
+        left: -8px;
+      }
+
+      .copy-btn {
+        position: absolute;
+        cursor: pointer;
+        top: 0px;
+        right: -10px;
+      }
+      .copy-btn:active {
+        opacity: 0.5;
       }
 
       .link {
@@ -116,8 +132,14 @@
           <div class="box-header">React DOM</div>
           <div class="box-content">
             Add one of the following:
-            <span class="input" contenteditable="true" id="localhost"></span>
-            <span class="input" contenteditable="true" id="byip"></span>
+            <div class="input-container">
+              <span class="input" contenteditable="true" id="localhost"></span>
+              <span class="copy-btn" id="copy-localhost" title="copy">&#x1f4cb;</span>
+            </div>
+            <div class="input-container">
+              <span class="input" contenteditable="true" id="byip"></span>
+              <span class="copy-btn" id="copy-byip" title="copy">&#x1f4cb;</span>
+            </div>
             to the top of the page you want to debug,
             <br />
             <strong>before</strong> importing React DOM.
@@ -127,6 +149,7 @@
       </div>
     </div>
     <script>
+      const {clipboard} = require('electron');
       const port = process.env.PORT || 8097;
       const localIp = require("ip").address();
       const $ = document.querySelector.bind(document);
@@ -134,7 +157,7 @@
       function selectAll(event) {
         const element = event.target;
         if (window.getSelection) {
-          const selection = window.getSelection();        
+          const selection = window.getSelection();
           const range = document.createRange();
           range.selectNodeContents(element);
           selection.removeAllRanges();
@@ -157,6 +180,16 @@
       $byIp.innerText = `<script src="http://${localIp}:${port}"></` + 'script>';
       $byIp.addEventListener('click', selectAll);
       $byIp.addEventListener('focus', selectAll);
+
+      function copyPreviousElementText(event) {
+        const prevElemSibling = event.target.previousElementSibling;
+        clipboard.writeText(prevElemSibling.textContent);
+      }
+
+      const $copyLocalhost = $("#copy-localhost");
+      $copyLocalhost.addEventListener('click', copyPreviousElementText);
+      const $copyByIp = $("#copy-byip");
+      $copyByIp.addEventListener('click', copyPreviousElementText);
 
       let devtools;
       try {
