@@ -124,6 +124,22 @@ const bundles = [
     externals: ['react'],
   },
 
+  /******* React Data (experimental, new) *******/
+  {
+    bundleTypes: [
+      NODE_DEV,
+      NODE_PROD,
+      NODE_PROFILING,
+      FB_WWW_DEV,
+      FB_WWW_PROD,
+      FB_WWW_PROFILING,
+    ],
+    moduleType: ISOMORPHIC,
+    entry: 'react-data',
+    global: 'ReactData',
+    externals: ['react'],
+  },
+
   /******* React DOM *******/
   {
     bundleTypes: [

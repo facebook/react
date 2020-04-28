@@ -3,10 +3,10 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
+ *
  * @flow
  */
 
-import {createContext} from 'react';
-
-// TODO
-export const CacheContext: any = createContext(null);
+export function createResource(): any {
+  // TODO
+}
