@@ -1,0 +1,382 @@
+// @flow
+
+import * as React from 'react';
+import {
+  FixedSizeList,
+  VariableSizeList,
+  FixedSizeGrid,
+  VariableSizeGrid,
+} from './';
+
+type ItemData = {|
+  num: number,
+  str: string,
+|};
+
+const assertVoid = (value: void) => {};
+const assertEmpty = (value: empty) => {};
+const assertNumber = (value: number) => {};
+const assertString = (value: string) => {};
+const assertCustomType = (value: ItemData) => {};
+
+/* FixedSizeList */
+
+{
+  const Item = ({ index, style }) => {
+    (index: number);
+    (style: Object);
+    return null;
+  };
+  <FixedSizeList width={0} height={0} itemSize={0} itemCount={0}>
+    {Item}
+  </FixedSizeList>;
+}
+
+{
+  const Item = ({ data }) => {
+    assertNumber(data);
+    // $FlowFixMe number is passed to FixedSizeList
+    assertString(data);
+    return null;
+  };
+  const itemKey = (index, data) => {
+    assertNumber(data);
+    // $FlowFixMe expected
+    assertString(data);
+    return index;
+  };
+  <FixedSizeList width={0} height={0} itemSize={0} itemCount={0} itemData={1} itemKey={itemKey}>
+    {Item}
+  </FixedSizeList>;
+}
+
+{
+  const Item = ({ data }) => {
+    assertCustomType(data);
+    // $FlowFixMe ItemData is passed to FixedSizeList
+    assertString(data);
+    return null;
+  };
+  const itemKey = (index, data) => {
+    assertCustomType(data);
+    // $FlowFixMe expected
+    assertString(data);
+    return index;
+  };
+  <FixedSizeList
+    width={0}
+    height={0}
+    itemSize={0}
+    itemCount={0}
+    itemData={{
+      num: 123,
+      str: 'abc',
+    }}
+    itemKey={itemKey}
+  >
+    {Item}
+  </FixedSizeList>;
+}
+
+{
+  const Item = ({ data }) => {
+    assertVoid(data);
+    // $FlowFixMe itemData is undefined by default
+    assertEmpty(data);
+
+    return null;
+  };
+  const itemKey = (index, data) => {
+    assertVoid(data);
+    // $FlowFixMe expected
+    assertString(data);
+    return index;
+  };
+  <FixedSizeList width={0} height={0} itemSize={0} itemCount={0} itemKey={itemKey}>
+    {Item}
+  </FixedSizeList>;
+}
+
+/* VariableSizeList */
+
+{
+  const Item = ({ data }) => {
+    assertNumber(data);
+    // $FlowFixMe number is passed to VariableSizeList
+    assertString(data);
+    return null;
+  };
+  const itemKey = (index, data) => {
+    assertNumber(data);
+    // $FlowFixMe expected
+    assertString(data);
+    return index;
+  };
+  <VariableSizeList
+    width={0}
+    height={0}
+    itemSize={0}
+    itemCount={0}
+    itemData={1}
+    itemKey={itemKey}
+  >
+    {Item}
+  </VariableSizeList>;
+}
+
+{
+  const Item = ({ data }) => {
+    assertCustomType(data);
+    // $FlowFixMe ItemData is passed to VariableSizeList
+    assertString(data);
+    return null;
+  };
+  const itemKey = (index, data) => {
+    assertCustomType(data);
+    // $FlowFixMe expected
+    assertString(data);
+    return index;
+  };
+  <VariableSizeList
+    width={0}
+    height={0}
+    itemSize={0}
+    itemCount={0}
+    itemData={{
+      num: 123,
+      str: 'abc',
+    }}
+    itemKey={itemKey}
+  >
+    {Item}
+  </VariableSizeList>;
+}
+
+{
+  const Item = ({ data }) => {
+    assertVoid(data);
+    // $FlowFixMe itemData is undefined by default
+    assertEmpty(data);
+    return null;
+  };
+  const itemKey = (index, data) => {
+    assertVoid(data);
+    // $FlowFixMe expected
+    assertString(data);
+    return index;
+  };
+  <VariableSizeList width={0} height={0} itemSize={0} itemCount={0} itemKey={itemKey}>
+    {Item}
+  </VariableSizeList>;
+}
+
+{
+  class Item extends React.PureComponent<{ data: void }> {
+    render() {
+      const { data } = this.props;
+      assertVoid(data);
+      // $FlowFixMe itemData is undefined by default
+      assertEmpty(data);
+      return null;
+    }
+  }
+  const itemKey = (index, data) => {
+    assertVoid(data);
+    // $FlowFixMe expected
+    assertString(data);
+    return index;
+  };
+  <VariableSizeList width={0} height={0} itemSize={0} itemCount={0} itemKey={itemKey}>
+    {Item}
+  </VariableSizeList>;
+}
+
+/* FixedSizeGrid */
+
+{
+  const Item = ({ columnIndex, rowIndex, style }) => {
+    (columnIndex: number);
+    (rowIndex: number);
+    (style: Object);
+    return null;
+  };
+  <FixedSizeGrid
+    width={0}
+    height={0}
+    rowHeight={0}
+    rowCount={0}
+    columnWidth={0}
+    columnCount={0}
+  >
+    {Item}
+  </FixedSizeGrid>;
+}
+
+{
+  const Item = ({ data }) => {
+    assertNumber(data);
+    // $FlowFixMe number is passed to FixedSizeGrid
+    assertString(data);
+    return null;
+  };
+  const itemKey = ({ columnIndex, data, rowIndex }) => {
+    assertNumber(data);
+    // $FlowFixMe expected
+    assertString(data);
+    return `${columnIndex}:${rowIndex}`;
+  };
+  <FixedSizeGrid
+    width={0}
+    height={0}
+    rowHeight={0}
+    rowCount={0}
+    columnWidth={0}
+    columnCount={0}
+    itemData={1}
+    itemKey={itemKey}
+  >
+    {Item}
+  </FixedSizeGrid>;
+}
+
+{
+  const Item = ({ data }) => {
+    assertCustomType(data);
+    // $FlowFixMe ItemData is passed to FixedSizeGrid
+    assertString(data);
+    return null;
+  };
+  const itemKey = ({ columnIndex, data, rowIndex }) => {
+    assertCustomType(data);
+    // $FlowFixMe expected
+    assertString(data);
+    return `${columnIndex}:${rowIndex}`;
+  };
+  <FixedSizeGrid
+    width={0}
+    height={0}
+    rowHeight={0}
+    rowCount={0}
+    columnWidth={0}
+    columnCount={0}
+    itemData={{
+      num: 123,
+      str: 'abc',
+    }}
+    itemKey={itemKey}
+  >
+    {Item}
+  </FixedSizeGrid>;
+}
+
+{
+  const Item = ({ data }) => {
+    assertVoid(data);
+    // $FlowFixMe itemData is undefined by default
+    assertEmpty(data);
+    return null;
+  };
+  const itemKey = ({ columnIndex, data, rowIndex }) => {
+    assertVoid(data);
+    // $FlowFixMe expected
+    assertString(data);
+    return `${columnIndex}:${rowIndex}`;
+  };
+  <FixedSizeGrid
+    width={0}
+    height={0}
+    rowHeight={0}
+    rowCount={0}
+    columnWidth={0}
+    columnCount={0}
+    itemKey={itemKey}
+  >
+    {Item}
+  </FixedSizeGrid>;
+}
+
+/* VariableSizeGrid */
+
+{
+  const Item = ({ data }) => {
+    assertNumber(data);
+    // $FlowFixMe number is passed to VariableSizeGrid
+    assertString(data);
+    return null;
+  };
+  <VariableSizeGrid
+    width={0}
+    height={0}
+    rowHeight={0}
+    rowCount={0}
+    columnWidth={0}
+    columnCount={0}
+    itemData={1}
+  >
+    {Item}
+  </VariableSizeGrid>;
+}
+
+{
+  const Item = ({ data }) => {
+    assertCustomType(data);
+    // $FlowFixMe ItemData is passed to VariableSizeGrid
+    assertString(data);
+    return null;
+  };
+  <VariableSizeGrid
+    width={0}
+    height={0}
+    rowHeight={0}
+    rowCount={0}
+    columnWidth={0}
+    columnCount={0}
+    itemData={{
+      num: 123,
+      str: 'abc',
+    }}
+  >
+    {Item}
+  </VariableSizeGrid>;
+}
+
+{
+  const Item = ({ data }) => {
+    assertVoid(data);
+    // $FlowFixMe itemData is undefined by default
+    assertEmpty(data);
+    return null;
+  };
+  <VariableSizeGrid
+    width={0}
+    height={0}
+    rowHeight={0}
+    rowCount={0}
+    columnWidth={0}
+    columnCount={0}
+  >
+    {Item}
+  </VariableSizeGrid>;
+}
+
+{
+  class Item extends React.PureComponent<{ data: void }> {
+    render() {
+      const { data } = this.props;
+      assertVoid(data);
+      // $FlowFixMe itemData is undefined by default
+      assertEmpty(data);
+      return null;
+    }
+  }
+  <VariableSizeGrid
+    width={0}
+    height={0}
+    rowHeight={0}
+    rowCount={0}
+    columnWidth={0}
+    columnCount={0}
+  >
+    {Item}
+  </VariableSizeGrid>;
+}
