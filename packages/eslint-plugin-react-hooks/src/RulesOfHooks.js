@@ -9,28 +9,7 @@
 
 'use strict';
 
-import {isHookName} from './utils';
-
-/**
- * We consider hooks to be a hook name identifier or a member expression
- * containing a hook name.
- */
-
-function isHook(node) {
-  if (node.type === 'Identifier') {
-    return isHookName(node.name);
-  } else if (
-    node.type === 'MemberExpression' &&
-    !node.computed &&
-    isHook(node.property)
-  ) {
-    const obj = node.object;
-    const isPascalCaseNameSpace = /^[A-Z].*/;
-    return obj.type === 'Identifier' && isPascalCaseNameSpace.test(obj.name);
-  } else {
-    return false;
-  }
-}
+import {isHook} from './utils';
 
 /**
  * Checks if the node is a React component name. React component names must

@@ -10,6 +10,7 @@
 import {
   getNodeWithoutReactNamespace,
   getReactiveHookInitialValueIndex,
+  isHook,
   isHookName,
 } from './utils';
 
@@ -103,7 +104,9 @@ function visitCallExpression(context, callExpressionNode) {
   if (
     functionCall === true &&
     initialValueNode &&
-    initialValueNode.type === 'CallExpression'
+    initialValueNode.type === 'CallExpression' &&
+    initialValueNode.callee &&
+    !isHook(initialValueNode.callee)
   ) {
     context.report({
       node: initialValueNode,

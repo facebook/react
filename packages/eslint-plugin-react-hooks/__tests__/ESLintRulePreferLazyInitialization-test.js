@@ -254,6 +254,66 @@ const tests = {
         },
       ],
     },
+
+    // allowing another hook to be called within a hook
+    {
+      code: normalizeIndent`
+        useCustomState(useState(0));
+      `,
+      options: [
+        {
+          additionalHooks: 'useCustomState',
+        },
+      ],
+    },
+
+    {
+      code: normalizeIndent`
+        useRef(useState(()=>new Foo()));
+      `,
+      options: [
+        {
+          additionalHooks: 'useCustomState',
+        },
+      ],
+    },
+
+    // with React namespace
+
+    {
+      code: normalizeIndent`
+        React.useCustomState(useState(0));
+      `,
+      options: [
+        {
+          additionalHooks: 'useCustomState',
+        },
+      ],
+    },
+
+    {
+      code: normalizeIndent`
+        React.useState(()=>new Foo());
+      `,
+    },
+
+    {
+      code: normalizeIndent`
+        const foo = React.useRef(null);
+        function getFoo() {
+          if (foo.current == null) {
+            foo.current = new Foo();
+          }
+          return foo;
+        }
+      `,
+    },
+
+    {
+      code: normalizeIndent`
+        useState(useFoo(useBar(useBaz(3))));
+      `,
+    },
   ],
   invalid: [
     /* ---------------------
@@ -706,6 +766,50 @@ const tests = {
       errors: [
         {message: createErrorMessage('useRef')},
         {message: createErrorMessage('useCustomHook')},
+      ],
+    },
+
+    // with React namespace
+    {
+      code: normalizeIndent`
+        React.useCustomHook(new Foo());
+        useCustomState(new Foo());
+        React.useRef(bar());
+        useCustomHook(foo());
+      `,
+      options: [
+        {
+          additionalHooks: 'useCustom(Hook|State)',
+          classObjectInstantiation: false,
+        },
+      ],
+      errors: [
+        {message: createErrorMessage('useRef')},
+        {message: createErrorMessage('useCustomHook')},
+      ],
+    },
+
+    // nested hooks
+    {
+      code: normalizeIndent`
+        useRef(useState(new Foo()));
+      `,
+      errors: [{message: createErrorMessage('useState')}],
+    },
+
+    // nested hooks
+    {
+      code: normalizeIndent`
+        useCustomHook(useCustomState(new Foo()) + useState(new Bar()));
+      `,
+      options: [
+        {
+          additionalHooks: 'useCustom(Hook|State)',
+        },
+      ],
+      errors: [
+        {message: createErrorMessage('useCustomState')},
+        {message: createErrorMessage('useState')},
       ],
     },
   ],

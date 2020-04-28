@@ -394,6 +394,27 @@ export function isHookName(s) {
 }
 
 /**
+ * We consider hooks to be a hook name identifier or a member expression
+ * containing a hook name.
+ */
+
+export function isHook(node) {
+  if (node.type === 'Identifier') {
+    return isHookName(node.name);
+  } else if (
+    node.type === 'MemberExpression' &&
+    !node.computed &&
+    isHook(node.property)
+  ) {
+    const obj = node.object;
+    const isPascalCaseNameSpace = /^[A-Z].*/;
+    return obj.type === 'Identifier' && isPascalCaseNameSpace.test(obj.name);
+  } else {
+    return false;
+  }
+}
+
+/**
  * ESLint won't assign node.parent to references from context.getScope()
  *
  * So instead we search for the node from an ancestor assigning node.parent
