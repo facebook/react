@@ -25,7 +25,7 @@ app.on('ready', function() {
     width: 800,
     height: 600,
     icon: join(__dirname, 'icons/icon128.png'),
-    frame: false,
+    frame: process.platform === 'linux' ? true : false,
     //titleBarStyle: 'customButtonsOnHover',
     webPreferences: {
       nodeIntegration: true,
