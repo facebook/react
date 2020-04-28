@@ -108,6 +108,22 @@ const bundles = [
     externals: ['react'],
   },
 
+  /******* React Cache (experimental, new) *******/
+  {
+    bundleTypes: [
+      NODE_DEV,
+      NODE_PROD,
+      NODE_PROFILING,
+      FB_WWW_DEV,
+      FB_WWW_PROD,
+      FB_WWW_PROFILING,
+    ],
+    moduleType: ISOMORPHIC,
+    entry: 'react/unstable-cache',
+    global: 'ReactCache',
+    externals: ['react'],
+  },
+
   /******* React DOM *******/
   {
     bundleTypes: [
@@ -529,7 +545,7 @@ const bundles = [
     externals: [],
   },
 
-  /******* React Cache (experimental) *******/
+  /******* React Cache (experimental, old) *******/
   {
     bundleTypes: [
       FB_WWW_DEV,
