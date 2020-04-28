@@ -99,7 +99,8 @@
     "testRegex": "/scripts/jest/dont-run-jest-directly\\.js$"
   },
   "scripts": {
-    "build": "node ./scripts/rollup/build.js",
+    "build": "yarn build-react-window && node ./scripts/rollup/build.js",
+    "build-react-window": "cd packages/react-devtools-shared/src/node_modules/react-window && yarn install && yarn build",
     "build-for-devtools": "cross-env RELEASE_CHANNEL=experimental yarn build react/index,react-dom,react-is,react-debug-tools,scheduler,react-test-renderer --type=NODE",
     "linc": "node ./scripts/tasks/linc.js",
     "lint": "node ./scripts/tasks/eslint.js",
