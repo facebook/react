@@ -427,6 +427,10 @@ export function unhideTextInstance(textInstance, text): void {
   // Noop
 }
 
+export function clearContainer(container) {
+  // TODO Implement this
+}
+
 export function DEPRECATED_mountResponderInstance(
   responder: ReactEventResponder<any, any>,
   responderInstance: ReactEventResponderInstance<any, any>,

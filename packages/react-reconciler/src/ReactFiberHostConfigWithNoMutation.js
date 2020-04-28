@@ -37,3 +37,4 @@ export const hideInstance = shim;
 export const hideTextInstance = shim;
 export const unhideInstance = shim;
 export const unhideTextInstance = shim;
+export const clearContainer = shim;
