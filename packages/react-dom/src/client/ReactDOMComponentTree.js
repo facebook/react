@@ -15,6 +15,7 @@ import type {
   SuspenseInstance,
   Props,
 } from './ReactDOMHostConfig';
+import type {DOMTopLevelEventType} from 'legacy-events/TopLevelEventTypes';
 
 import {
   HostComponent,
@@ -30,8 +31,19 @@ const randomKey = Math.random()
   .toString(36)
   .slice(2);
 const internalInstanceKey = '__reactFiber$' + randomKey;
-const internalEventHandlersKey = '__reactEvents$' + randomKey;
+const internalPropsKey = '__reactProps$' + randomKey;
 const internalContainerInstanceKey = '__reactContainer$' + randomKey;
+const internalEventHandlersKey = '__reactEvents$' + randomKey;
+
+export type ElementListenerMap = Map<
+  DOMTopLevelEventType | string,
+  ElementListenerMapEntry,
+>;
+
+export type ElementListenerMapEntry = {
+  passive: void | boolean,
+  listener: any => void,
+};
 
 export function precacheFiberNode(
   hostInst: Fiber,
@@ -176,12 +188,20 @@ export function getNodeFromInstance(inst: Fiber): Instance | TextInstance {
 export function getFiberCurrentPropsFromNode(
   node: Instance | TextInstance | SuspenseInstance,
 ): Props {
-  return (node: any)[internalEventHandlersKey] || null;
+  return (node: any)[internalPropsKey] || null;
 }
 
 export function updateFiberProps(
   node: Instance | TextInstance | SuspenseInstance,
   props: Props,
 ): void {
-  (node: any)[internalEventHandlersKey] = props;
+  (node: any)[internalPropsKey] = props;
+}
+
+export function getEventListenerMap(node: EventTarget): ElementListenerMap {
+  let elementListenerMap = (node: any)[internalEventHandlersKey];
+  if (elementListenerMap === undefined) {
+    elementListenerMap = (node: any)[internalEventHandlersKey] = new Map();
+  }
+  return elementListenerMap;
 }

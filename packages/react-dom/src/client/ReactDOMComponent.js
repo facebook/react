@@ -59,7 +59,6 @@ import {
   TOP_SUBMIT,
   TOP_TOGGLE,
 } from '../events/DOMTopLevelEventTypes';
-import {getListenerMapForElement} from '../events/DOMEventListenerMap';
 import {mediaEventTypes} from '../events/DOMTopLevelEventTypes';
 import {
   createDangerousStringForStyles,
@@ -96,6 +95,7 @@ import {
   legacyTrapBubbledEvent,
 } from '../events/DOMLegacyEventPluginSystem';
 import {listenToEvent} from '../events/DOMModernPluginEventSystem';
+import {getEventListenerMap} from './ReactDOMComponentTree';
 
 let didWarnInvalidHydration = false;
 let didWarnScriptTags = false;
@@ -1346,7 +1346,7 @@ export function listenToEventResponderEventTypes(
   if (enableDeprecatedFlareAPI) {
     // Get the listening Map for this element. We use this to track
     // what events we're listening to.
-    const listenerMap = getListenerMapForElement(document);
+    const listenerMap = getEventListenerMap(document);
 
     // Go through each target event type of the event responder
     for (let i = 0, length = eventTypes.length; i < length; ++i) {
