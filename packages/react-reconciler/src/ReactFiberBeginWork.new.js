@@ -80,7 +80,12 @@ import invariant from 'shared/invariant';
 import shallowEqual from 'shared/shallowEqual';
 import getComponentName from 'shared/getComponentName';
 import ReactStrictModeWarnings from './ReactStrictModeWarnings.new';
-import {REACT_LAZY_TYPE, getIteratorFn} from 'shared/ReactSymbols';
+import {
+  REACT_ELEMENT_TYPE,
+  REACT_LAZY_TYPE,
+  REACT_LEGACY_HIDDEN_TYPE,
+  getIteratorFn,
+} from 'shared/ReactSymbols';
 import {
   getCurrentFiberOwnerNameInDevOrNull,
   setIsRendering,
@@ -571,30 +576,69 @@ function updateOffscreenComponent(
   const nextProps: OffscreenProps = workInProgress.pendingProps;
   const nextChildren = nextProps.children;
 
-  let subtreeRenderTime = renderExpirationTime;
-  if (current !== null) {
-    if (nextProps.mode === 'hidden') {
-      // TODO: Should currently be unreachable because Offscreen is only used as
-      // an implementation detail of Suspense. Once this is a public API, it
-      // will need to create an OffscreenState.
-    } else {
-      const prevState: OffscreenState | null = current.memoizedState;
+  const prevState: OffscreenState | null =
+    current !== null ? current.memoizedState : null;
+
+  if (nextProps.mode === 'hidden') {
+    if (
+      !isSameExpirationTime(renderExpirationTime, (Never: ExpirationTimeOpaque))
+    ) {
+      let nextBaseTime;
       if (prevState !== null) {
-        const baseTime = prevState.baseTime;
-        subtreeRenderTime = !isSameOrHigherPriority(
-          baseTime,
+        const prevBaseTime = prevState.baseTime;
+        nextBaseTime = !isSameOrHigherPriority(
+          prevBaseTime,
           renderExpirationTime,
         )
-          ? baseTime
+          ? prevBaseTime
           : renderExpirationTime;
-
-        // Since we're not hidden anymore, reset the state
-        workInProgress.memoizedState = null;
+      } else {
+        nextBaseTime = renderExpirationTime;
       }
+
+      // Schedule this fiber to re-render at offscreen priority. Then bailout.
+      if (enableSchedulerTracing) {
+        markSpawnedWork((Never: ExpirationTimeOpaque));
+      }
+      workInProgress.expirationTime_opaque = workInProgress.childExpirationTime_opaque = Never;
+      const nextState: OffscreenState = {
+        baseTime: nextBaseTime,
+      };
+      workInProgress.memoizedState = nextState;
+      // We're about to bail out, but we need to push this to the stack anyway
+      // to avoid a push/pop misalignment.
+      pushRenderExpirationTime(workInProgress, nextBaseTime);
+      return null;
+    } else {
+      // Rendering at offscreen, so we can clear the base time.
+      const nextState: OffscreenState = {
+        baseTime: NoWork,
+      };
+      workInProgress.memoizedState = nextState;
+      pushRenderExpirationTime(workInProgress, renderExpirationTime);
     }
+  } else {
+    let subtreeRenderTime;
+    if (prevState !== null) {
+      const baseTime = prevState.baseTime;
+      subtreeRenderTime = !isSameOrHigherPriority(
+        baseTime,
+        renderExpirationTime,
+      )
+        ? baseTime
+        : renderExpirationTime;
+
+      // Since we're not hidden anymore, reset the state
+      workInProgress.memoizedState = null;
+    } else {
+      // We weren't previously hidden, and we still aren't, so there's nothing
+      // special to do. Need to push to the stack regardless, though, to avoid
+      // a push/pop misalignment.
+      subtreeRenderTime = renderExpirationTime;
+    }
+    pushRenderExpirationTime(workInProgress, subtreeRenderTime);
   }
 
-  pushRenderExpirationTime(workInProgress, subtreeRenderTime);
   reconcileChildren(
     current,
     workInProgress,
@@ -604,44 +648,10 @@ function updateOffscreenComponent(
   return workInProgress.child;
 }
 
-function updateLegacyHiddenComponent(
-  current: Fiber | null,
-  workInProgress: Fiber,
-  renderExpirationTime: ExpirationTimeOpaque,
-) {
-  const nextProps: OffscreenProps = workInProgress.pendingProps;
-  const nextChildren = nextProps.children;
-
-  let subtreeRenderTime = renderExpirationTime;
-  if (current !== null) {
-    if (nextProps.mode === 'hidden') {
-      throw Error('TODO');
-    } else {
-      const prevState: OffscreenState | null = current.memoizedState;
-      if (prevState !== null) {
-        const baseTime = prevState.baseTime;
-        subtreeRenderTime = !isSameOrHigherPriority(
-          baseTime,
-          renderExpirationTime,
-        )
-          ? baseTime
-          : renderExpirationTime;
-
-        // Since we're not hidden anymore, reset the state
-        workInProgress.memoizedState = null;
-      }
-    }
-  }
-
-  pushRenderExpirationTime(workInProgress, subtreeRenderTime);
-  reconcileChildren(
-    current,
-    workInProgress,
-    nextChildren,
-    renderExpirationTime,
-  );
-  return workInProgress.child;
-}
+// Note: These happen to have identical begin phases, for now. We shouldn't hold
+// ourselves to this constraint, though. If the behavior diverges, we should
+// fork the function.
+const updateLegacyHiddenComponent = updateOffscreenComponent;
 
 function updateFragment(
   current: Fiber | null,
@@ -1192,21 +1202,23 @@ function updateHostComponent(
 
   markRef(current, workInProgress);
 
-  // Check the host config to see if the children are offscreen/hidden.
   if (
-    workInProgress.mode & ConcurrentMode &&
-    !isSameExpirationTime(
-      renderExpirationTime,
-      (Never: ExpirationTimeOpaque),
-    ) &&
-    shouldDeprioritizeSubtree(type, nextProps)
+    (workInProgress.mode & ConcurrentMode) !== NoMode &&
+    nextProps.hasOwnProperty('hidden')
   ) {
-    if (enableSchedulerTracing) {
-      markSpawnedWork((Never: ExpirationTimeOpaque));
-    }
-    // Schedule this fiber to re-render at offscreen priority. Then bailout.
-    workInProgress.expirationTime_opaque = workInProgress.childExpirationTime_opaque = Never;
-    return null;
+    const wrappedChildren = {
+      $$typeof: REACT_ELEMENT_TYPE,
+      type: REACT_LEGACY_HIDDEN_TYPE,
+      key: null,
+      ref: null,
+      props: {
+        children: nextChildren,
+        // Check the host config to see if the children are offscreen/hidden.
+        mode: shouldDeprioritizeSubtree(type, nextProps) ? 'hidden' : 'visible',
+      },
+      _owner: __DEV__ ? {} : null,
+    };
+    nextChildren = wrappedChildren;
   }
 
   reconcileChildren(
@@ -3250,21 +3262,6 @@ function beginWork(
           break;
         case HostComponent:
           pushHostContext(workInProgress);
-          if (
-            workInProgress.mode & ConcurrentMode &&
-            !isSameExpirationTime(
-              renderExpirationTime,
-              (Never: ExpirationTimeOpaque),
-            ) &&
-            shouldDeprioritizeSubtree(workInProgress.type, newProps)
-          ) {
-            if (enableSchedulerTracing) {
-              markSpawnedWork((Never: ExpirationTimeOpaque));
-            }
-            // Schedule this fiber to re-render at offscreen priority. Then bailout.
-            workInProgress.expirationTime_opaque = workInProgress.childExpirationTime_opaque = Never;
-            return null;
-          }
           break;
         case ClassComponent: {
           const Component = workInProgress.type;
@@ -3419,13 +3416,22 @@ function beginWork(
             return null;
           }
         }
-        case OffscreenComponent: {
-          pushRenderExpirationTime(workInProgress, renderExpirationTime);
-          break;
-        }
+        case OffscreenComponent:
         case LegacyHiddenComponent: {
-          pushRenderExpirationTime(workInProgress, renderExpirationTime);
-          break;
+          // Need to check if the tree still needs to be deferred. This is
+          // almost identical to the logic used in the normal update path,
+          // so we'll just enter that. The only difference is we'll bail out
+          // at the next level instead of this one, because the child props
+          // have not changed. Which is fine.
+          // TODO: Probably should refactor `beginWork` to split the bailout
+          // path from the normal path. I'm tempted to do a labeled break here
+          // but I won't :)
+          workInProgress.expirationTime_opaque = NoWork;
+          return updateOffscreenComponent(
+            current,
+            workInProgress,
+            renderExpirationTime,
+          );
         }
       }
       return bailoutOnAlreadyFinishedWork(
