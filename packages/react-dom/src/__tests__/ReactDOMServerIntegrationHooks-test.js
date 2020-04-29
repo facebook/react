@@ -564,7 +564,7 @@ describe('ReactDOMServerHooks', () => {
   });
 
   describe('useCallback', () => {
-    itRenders('should ignore callbacks on the server', async render => {
+    itRenders('should not invoke the passed callbacks', async render => {
       function Counter(props) {
         useCallback(() => {
           yieldValue('should not be invoked');
@@ -589,6 +589,34 @@ describe('ReactDOMServerHooks', () => {
       expect(domNode.tagName).toEqual('SPAN');
       expect(domNode.textContent).toEqual('Count: 5');
     });
+
+    itRenders(
+      'should only change the returned reference when the inputs change',
+      async render => {
+        function CapitalizedText(props) {
+          const [text, setText] = useState(props.text);
+          const [count, setCount] = useState(0);
+          const capitalizeText = useCallback(() => text.toUpperCase(), [text]);
+          yieldValue(capitalizeText);
+          if (count < 3) {
+            setCount(count + 1);
+          }
+          if (text === 'hello' && count === 2) {
+            setText('hello, world.');
+          }
+          return <Text text={capitalizeText()} />;
+        }
+
+        const domNode = await render(<CapitalizedText text="hello" />);
+        const [first, second, third, fourth, result] = clearYields();
+        expect(first).toBe(second);
+        expect(second).toBe(third);
+        expect(third).not.toBe(fourth);
+        expect(result).toEqual('HELLO, WORLD.');
+        expect(domNode.tagName).toEqual('SPAN');
+        expect(domNode.textContent).toEqual('HELLO, WORLD.');
+      },
+    );
   });
 
   describe('useImperativeHandle', () => {

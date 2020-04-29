@@ -456,8 +456,7 @@ export function useCallback<T>(
   callback: T,
   deps: Array<mixed> | void | null,
 ): T {
-  // Callbacks are passed as they are in the server environment.
-  return callback;
+  return useMemo(() => callback, deps);
 }
 
 function useResponder(responder, props): ReactEventResponderListener<any, any> {
