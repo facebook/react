@@ -7,9 +7,10 @@
 
 import React, {useReducer, useTransition, Suspense} from 'react';
 import loadPost from './Post';
-import {createCache, CacheProvider} from './lib/cache';
+import {createCache, CacheProvider} from 'react/unstable-cache';
 
 const initialState = {
+  // TODO: use this for invalidation.
   cache: createCache(),
   params: {id: 1},
   RootBlock: loadPost({id: 1}),

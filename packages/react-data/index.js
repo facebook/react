@@ -9,4 +9,4 @@
 
 'use strict';
 
-export * from './src/ReactCacheOld';
+export * from './src/ReactData';

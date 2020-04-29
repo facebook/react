@@ -6,11 +6,13 @@
  */
 
 import * as React from 'react';
-import {fetch} from './lib/data';
+import {fetch} from 'react-data/fetch';
 
 function load(postId) {
   return {
-    comments: fetch('http://localhost:3001/comments?postId=' + postId),
+    comments: JSON.parse(
+      fetch('http://localhost:3001/comments?postId=' + postId)
+    ),
   };
 }
 

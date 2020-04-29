@@ -1,0 +1,22 @@
+{
+  "private": true,
+  "name": "react-data",
+  "description": "Helpers for creating React data sources",
+  "version": "0.0.0",
+  "repository": {
+    "type" : "git",
+    "url" : "https://github.com/facebook/react.git",
+    "directory": "packages/react-data"
+  },
+  "files": [
+    "LICENSE",
+    "README.md",
+    "build-info.json",
+    "index.js",
+    "fetch.js",
+    "cjs/"
+  ],
+  "peerDependencies": {
+    "react": "^16.13.1"
+  }
+}

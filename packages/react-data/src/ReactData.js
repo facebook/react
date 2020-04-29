@@ -7,6 +7,6 @@
  * @flow
  */
 
-'use strict';
-
-export * from './src/ReactCacheOld';
+export function createResource(): any {
+  // TODO
+}
