@@ -9,6 +9,10 @@ import {readCache} from './cache';
 
 // TODO: clean up and move to react-data/fetch.
 
+// TODO: some other data provider besides fetch.
+
+// TODO: base agnostic helper like createResource. Maybe separate.
+
 let sigil = {};
 
 function readFetchMap() {

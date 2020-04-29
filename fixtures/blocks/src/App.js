@@ -18,6 +18,7 @@ const initialState = {
 function reducer(state, action) {
   switch (action.type) {
     case 'navigate':
+      // TODO: cancel previous fetch?
       return {
         cache: state.cache,
         params: action.nextParams,

@@ -9,9 +9,15 @@ import {createContext} from 'react';
 
 // TODO: clean up and move to react/cache.
 
+// TODO: cancellation token.
+
+// TODO: does there need to be default context?
+
 const CacheContext = createContext(null);
 
 export const CacheProvider = CacheContext.Provider;
+
+// TODO: use this for invalidation.
 
 export function createCache() {
   return new Map();
