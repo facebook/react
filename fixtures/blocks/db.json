@@ -1,0 +1,46 @@
+{
+  "posts": [
+    {
+      "id": 1,
+      "title": "My First Post",
+      "body": "Hello, world!"
+    },
+    {
+      "id": 2,
+      "title": "My Second Post",
+      "body": "Let me tell you everything about useEffect"
+    },
+    {
+      "id": 3,
+      "title": "My Third Post",
+      "body": "Why is everything so complicated?"
+    }
+  ],
+  "comments": [
+    {
+      "id": 1,
+      "body": "Hey there",
+      "postId": 1
+    },
+    {
+      "id": 2,
+      "body": "Welcome to the chat",
+      "postId": 1
+    },
+    {
+      "id": 3,
+      "body": "What editor/font are you using?",
+      "postId": 2
+    },
+    {
+      "id": 4,
+      "body": "It's always been hard",
+      "postId": 3
+    },
+    {
+      "id": 5,
+      "body": "It's still easy",
+      "postId": 3
+    }
+  ]
+}
