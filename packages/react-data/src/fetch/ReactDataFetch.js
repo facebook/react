@@ -56,7 +56,7 @@ function createFromThenable(thenable, wrapValue): Result {
       if (result.status === Pending) {
         const resolvedResult = ((result: any): ResolvedResult);
         resolvedResult.status = Resolved;
-        resolvedResult.value = wrapValue(value);
+        resolvedResult.value = wrapValue ? wrapValue(value) : value;
       }
     },
     err => {
@@ -78,22 +78,6 @@ function readResult(result: Result) {
   }
 }
 
-function getArrayBuffer(nativeResponse) {
-  return nativeResponse.arrayBuffer();
-}
-
-function getBlob(nativeResponse) {
-  return nativeResponse.blob();
-}
-
-function getJson(nativeResponse) {
-  return nativeResponse.json();
-}
-
-function getText(nativeResponse) {
-  return nativeResponse.json();
-}
-
 function Response(nativeResponse) {
   this.headers = nativeResponse.headers;
   this.ok = nativeResponse.ok;
@@ -104,34 +88,49 @@ function Response(nativeResponse) {
   this.url = nativeResponse.url;
 
   this._entry = null;
-  this._consumed = null;
+  this._format = null;
   this._response = nativeResponse;
+}
+
+function getConsumed(response, format) {
+  const consumedFormat = response._format;
+  if (consumedFormat != null && format !== consumedFormat) {
+    throw new Error('Already read.');
+  }
+  const entry = response._entry;
+  if (entry == null) {
+    response._format = format;
+  }
+  return entry;
 }
 
 Response.prototype = {
   constructor: Response,
   arrayBuffer() {
-    return this._read('arrayBuffer', getArrayBuffer);
+    let entry = getConsumed(this, 'arrayBuffer');
+    if (entry == null) {
+      this._entry = entry = createFromThenable(this._response.arrayBuffer());
+    }
+    return readResult(entry);
   },
   blob() {
-    return this._read('blob', getBlob);
+    let entry = getConsumed(this, 'blob');
+    if (entry == null) {
+      this._entry = entry = createFromThenable(this._response.blob());
+    }
+    return readResult(entry);
   },
   json() {
-    return this._read('json', getJson);
+    let entry = getConsumed(this, 'json');
+    if (entry == null) {
+      this._entry = entry = createFromThenable(this._response.json());
+    }
+    return readResult(entry);
   },
   text() {
-    return this._read('text', getText);
-  },
-  _read(type: string, getThenable) {
-    const consumed = this._consumed;
-    if (consumed != null && type !== consumed) {
-      throw new Error('Already read.');
-    }
-    let entry = this._entry;
+    let entry = getConsumed(this, 'text');
     if (entry == null) {
-      this._consumed = type;
-      const thenable = getThenable(this._response);
-      entry = this._entry = createFromThenable(thenable, r => r);
+      this._entry = entry = createFromThenable(this._response.text());
     }
     return readResult(entry);
   },
