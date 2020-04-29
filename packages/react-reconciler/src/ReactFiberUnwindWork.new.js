@@ -21,6 +21,7 @@ import {
   SuspenseComponent,
   SuspenseListComponent,
   OffscreenComponent,
+  LegacyHiddenComponent,
 } from './ReactWorkTags';
 import {DidCapture, NoEffect, ShouldCapture} from './ReactSideEffectTags';
 import {enableSuspenseServerRenderer} from 'shared/ReactFeatureFlags';
@@ -108,6 +109,7 @@ function unwindWork(
       popProvider(workInProgress);
       return null;
     case OffscreenComponent:
+    case LegacyHiddenComponent:
       popRenderExpirationTime(workInProgress);
       return null;
     default:
@@ -147,6 +149,7 @@ function unwindInterruptedWork(interruptedWork: Fiber) {
       popProvider(interruptedWork);
       break;
     case OffscreenComponent:
+    case LegacyHiddenComponent:
       popRenderExpirationTime(interruptedWork);
       break;
     default:

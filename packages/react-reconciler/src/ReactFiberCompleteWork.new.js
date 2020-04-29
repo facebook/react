@@ -56,6 +56,7 @@ import {
   ScopeComponent,
   Block,
   OffscreenComponent,
+  LegacyHiddenComponent,
 } from './ReactWorkTags';
 import {NoMode, BlockingMode} from './ReactTypeOfMode';
 import {
@@ -1312,7 +1313,8 @@ function completeWork(
         return null;
       }
       break;
-    case OffscreenComponent: {
+    case OffscreenComponent:
+    case LegacyHiddenComponent: {
       popRenderExpirationTime(workInProgress);
       if (current !== null) {
         const nextState: OffscreenState | null = workInProgress.memoizedState;

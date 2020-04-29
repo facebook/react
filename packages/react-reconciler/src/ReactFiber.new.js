@@ -56,6 +56,7 @@ import {
   ScopeComponent,
   Block,
   OffscreenComponent,
+  LegacyHiddenComponent,
 } from './ReactWorkTags';
 import getComponentName from 'shared/getComponentName';
 
@@ -90,6 +91,7 @@ import {
   REACT_SCOPE_TYPE,
   REACT_BLOCK_TYPE,
   REACT_OFFSCREEN_TYPE,
+  REACT_LEGACY_HIDDEN_TYPE,
 } from 'shared/ReactSymbols';
 
 export type {Fiber};
@@ -521,6 +523,13 @@ export function createFiberFromTypeAndProps(
           expirationTime,
           key,
         );
+      case REACT_LEGACY_HIDDEN_TYPE:
+        return createFiberFromLegacyHidden(
+          pendingProps,
+          mode,
+          expirationTime,
+          key,
+        );
       default: {
         if (typeof type === 'object' && type !== null) {
           switch (type.$$typeof) {
@@ -752,6 +761,24 @@ export function createFiberFromOffscreen(
     fiber.type = REACT_OFFSCREEN_TYPE;
   }
   fiber.elementType = REACT_OFFSCREEN_TYPE;
+  fiber.expirationTime_opaque = expirationTime;
+  return fiber;
+}
+
+export function createFiberFromLegacyHidden(
+  pendingProps: OffscreenProps,
+  mode: TypeOfMode,
+  expirationTime: ExpirationTimeOpaque,
+  key: null | string,
+) {
+  const fiber = createFiber(LegacyHiddenComponent, pendingProps, key, mode);
+  // TODO: The LegacyHidden fiber shouldn't have a type. It has a tag.
+  // This needs to be fixed in getComponentName so that it relies on the tag
+  // instead.
+  if (__DEV__) {
+    fiber.type = REACT_LEGACY_HIDDEN_TYPE;
+  }
+  fiber.elementType = REACT_LEGACY_HIDDEN_TYPE;
   fiber.expirationTime_opaque = expirationTime;
   return fiber;
 }

@@ -50,6 +50,7 @@ import {
   ScopeComponent,
   Block,
   OffscreenComponent,
+  LegacyHiddenComponent,
 } from './ReactWorkTags';
 import {
   NoEffect,
@@ -576,6 +577,45 @@ function updateOffscreenComponent(
       // TODO: Should currently be unreachable because Offscreen is only used as
       // an implementation detail of Suspense. Once this is a public API, it
       // will need to create an OffscreenState.
+    } else {
+      const prevState: OffscreenState | null = current.memoizedState;
+      if (prevState !== null) {
+        const baseTime = prevState.baseTime;
+        subtreeRenderTime = !isSameOrHigherPriority(
+          baseTime,
+          renderExpirationTime,
+        )
+          ? baseTime
+          : renderExpirationTime;
+
+        // Since we're not hidden anymore, reset the state
+        workInProgress.memoizedState = null;
+      }
+    }
+  }
+
+  pushRenderExpirationTime(workInProgress, subtreeRenderTime);
+  reconcileChildren(
+    current,
+    workInProgress,
+    nextChildren,
+    renderExpirationTime,
+  );
+  return workInProgress.child;
+}
+
+function updateLegacyHiddenComponent(
+  current: Fiber | null,
+  workInProgress: Fiber,
+  renderExpirationTime: ExpirationTimeOpaque,
+) {
+  const nextProps: OffscreenProps = workInProgress.pendingProps;
+  const nextChildren = nextProps.children;
+
+  let subtreeRenderTime = renderExpirationTime;
+  if (current !== null) {
+    if (nextProps.mode === 'hidden') {
+      throw Error('TODO');
     } else {
       const prevState: OffscreenState | null = current.memoizedState;
       if (prevState !== null) {
@@ -3383,6 +3423,10 @@ function beginWork(
           pushRenderExpirationTime(workInProgress, renderExpirationTime);
           break;
         }
+        case LegacyHiddenComponent: {
+          pushRenderExpirationTime(workInProgress, renderExpirationTime);
+          break;
+        }
       }
       return bailoutOnAlreadyFinishedWork(
         current,
@@ -3535,13 +3579,6 @@ function beginWork(
         renderExpirationTime,
       );
     }
-    case OffscreenComponent: {
-      return updateOffscreenComponent(
-        current,
-        workInProgress,
-        renderExpirationTime,
-      );
-    }
     case SimpleMemoComponent: {
       return updateSimpleMemoComponent(
         current,
@@ -3607,6 +3644,20 @@ function beginWork(
         );
       }
       break;
+    }
+    case OffscreenComponent: {
+      return updateOffscreenComponent(
+        current,
+        workInProgress,
+        renderExpirationTime,
+      );
+    }
+    case LegacyHiddenComponent: {
+      return updateLegacyHiddenComponent(
+        current,
+        workInProgress,
+        renderExpirationTime,
+      );
     }
   }
   invariant(
