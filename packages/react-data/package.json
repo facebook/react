@@ -13,6 +13,7 @@
     "README.md",
     "build-info.json",
     "index.js",
+    "fetch.js",
     "cjs/"
   ],
   "peerDependencies": {

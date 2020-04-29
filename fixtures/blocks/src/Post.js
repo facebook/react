@@ -7,7 +7,7 @@
 
 import * as React from 'react';
 import {block, Suspense} from 'react';
-import {fetch} from './lib/data';
+import {fetch} from 'react-data/fetch';
 import loadComments from './Comments';
 
 function load(params) {

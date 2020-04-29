@@ -6,4 +6,7 @@
  *
  * @flow
  */
-export {createCache, readCache, CacheProvider} from './src/cache/ReactCache';
+
+'use strict';
+
+export * from './src/fetch/ReactDataFetch';

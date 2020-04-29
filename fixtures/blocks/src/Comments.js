@@ -6,7 +6,7 @@
  */
 
 import * as React from 'react';
-import {fetch} from './lib/data';
+import {fetch} from 'react-data/fetch';
 
 function load(postId) {
   return {

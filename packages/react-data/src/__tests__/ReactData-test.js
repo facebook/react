@@ -16,6 +16,7 @@ describe('ReactData', () => {
     ReactData = require('react-data');
   });
 
+  // TODO: test something useful.
   it('exports something', () => {
     expect(ReactData.createResource).not.toBe(undefined);
   });

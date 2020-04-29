@@ -140,6 +140,22 @@ const bundles = [
     externals: ['react'],
   },
 
+  /******* React Data Fetch (experimental, new) *******/
+  {
+    bundleTypes: [
+      NODE_DEV,
+      NODE_PROD,
+      NODE_PROFILING,
+      FB_WWW_DEV,
+      FB_WWW_PROD,
+      FB_WWW_PROFILING,
+    ],
+    moduleType: ISOMORPHIC,
+    entry: 'react-data/fetch',
+    global: 'ReactDataFetch',
+    externals: ['react', 'react-data'],
+  },
+
   /******* React DOM *******/
   {
     bundleTypes: [

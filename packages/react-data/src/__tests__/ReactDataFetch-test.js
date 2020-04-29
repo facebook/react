@@ -9,15 +9,15 @@
 
 'use strict';
 
-describe('ReactCache', () => {
-  let ReactCache;
+describe('ReactDataFetch', () => {
+  let ReactDataFetch;
 
   beforeEach(() => {
-    ReactCache = require('react/unstable-cache');
+    ReactDataFetch = require('react-data/fetch');
   });
 
   // TODO: test something useful.
   it('exports something', () => {
-    expect(ReactCache.readCache).not.toBe(undefined);
+    expect(ReactDataFetch.fetch).not.toBe(undefined);
   });
 });
