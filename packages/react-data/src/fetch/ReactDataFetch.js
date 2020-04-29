@@ -94,34 +94,38 @@ function Response(nativeResponse) {
 Response.prototype = {
   constructor: Response,
   arrayBuffer() {
-    let entry = this._entries.get('arrayBuffer');
+    const entries = this._entries;
+    let entry = entries.get('arrayBuffer');
     if (!entry) {
       entry = createFromThenable(this._response.arrayBuffer());
-      this._entries.set('arrayBuffer', entry);
+      entries.set('arrayBuffer', entry);
     }
     return readResult(entry);
   },
   blob() {
-    let entry = this._entries.get('blob');
+    const entries = this._entries;
+    let entry = entries.get('blob');
     if (!entry) {
       entry = createFromThenable(this._response.blob());
-      this._entries.set('blob', entry);
+      entries.set('blob', entry);
     }
     return readResult(entry);
   },
   json() {
-    let entry = this._entries.get('json');
+    const entries = this._entries;
+    let entry = entries.get('json');
     if (!entry) {
       entry = createFromThenable(this._response.json());
-      this._entries.set('json', entry);
+      entries.set('json', entry);
     }
     return readResult(entry);
   },
   text() {
-    let entry = this._entries.get('text');
+    const entries = this._entries;
+    let entry = entries.get('text');
     if (!entry) {
       entry = createFromThenable(this._response.text());
-      this._entries.set('text', entry);
+      entries.set('text', entry);
     }
     return readResult(entry);
   },
