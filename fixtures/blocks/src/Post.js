@@ -12,7 +12,7 @@ import loadComments from './Comments';
 
 function load(params) {
   return {
-    post: fetch('http://localhost:3001/posts/' + params.id),
+    post: JSON.parse(fetch('http://localhost:3001/posts/' + params.id)),
     Comments: loadComments(params.id),
   };
 }

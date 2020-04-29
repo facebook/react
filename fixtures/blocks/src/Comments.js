@@ -10,7 +10,9 @@ import {fetch} from 'react-data/fetch';
 
 function load(postId) {
   return {
-    comments: fetch('http://localhost:3001/comments?postId=' + postId),
+    comments: JSON.parse(
+      fetch('http://localhost:3001/comments?postId=' + postId)
+    ),
   };
 }
 

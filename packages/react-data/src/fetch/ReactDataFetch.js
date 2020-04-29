@@ -61,23 +61,13 @@ export function fetch(url: string): Object {
     map.set(url, result);
     const xhr = new XMLHttpRequest();
     xhr.onload = function() {
-      // TODO: handle status codes.
-      // TODO: something more flexible than JSON.parse.
+      // TODO: should we handle status codes?
       if (result.status !== Pending) {
-        return;
-      }
-      let responseJSON;
-      try {
-        responseJSON = JSON.parse(xhr.response);
-      } catch (err) {
-        const rejectedResult = ((result: any): RejectedResult);
-        rejectedResult.status = Rejected;
-        rejectedResult.value = err;
         return;
       }
       const resolvedResult = ((result: any): ResolvedResult);
       resolvedResult.status = Resolved;
-      resolvedResult.value = responseJSON;
+      resolvedResult.value = xhr.response;
       resolve();
     };
     xhr.onerror = function() {
@@ -95,14 +85,9 @@ export function fetch(url: string): Object {
     throw wakeable;
   }
   const result: Result = entry;
-  switch (result.status) {
-    case Resolved:
-      return result.value;
-    case Pending:
-    case Rejected:
-      throw result.value;
-    default:
-      // Should be unreachable
-      return (undefined: any);
+  if (result.status === Resolved) {
+    return result.value;
+  } else {
+    throw result.value;
   }
 }
