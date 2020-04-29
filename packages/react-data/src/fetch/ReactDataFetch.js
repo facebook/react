@@ -78,6 +78,14 @@ function readResult(result: Result) {
   }
 }
 
+function getArrayBuffer(nativeResponse) {
+  return nativeResponse.arrayBuffer();
+}
+
+function getBlob(nativeResponse) {
+  return nativeResponse.blob();
+}
+
 function getJson(nativeResponse) {
   return nativeResponse.json();
 }
@@ -101,6 +109,12 @@ function Response(nativeResponse) {
 }
 
 Response.prototype = {
+  arrayBuffer() {
+    return this._read('arrayBuffer', getArrayBuffer);
+  },
+  blob() {
+    return this._read('blob', getBlob);
+  },
   json() {
     return this._read('json', getJson);
   },
