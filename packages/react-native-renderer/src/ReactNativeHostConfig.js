@@ -87,6 +87,7 @@ function recursivelyUncacheFiberNode(node: Instance | TextInstance) {
 
 export * from 'react-reconciler/src/ReactFiberHostConfigWithNoPersistence';
 export * from 'react-reconciler/src/ReactFiberHostConfigWithNoHydration';
+export * from 'react-reconciler/src/ReactFiberHostConfigWithNoScopes';
 
 export function appendInitialChild(
   parentInstance: Instance,
@@ -570,19 +571,4 @@ export function afterActiveInstanceBlur() {
 
 export function preparePortalMount(portalInstance: Instance): void {
   // noop
-}
-
-export function prepareScopeUpdate(
-  scopeInstance: Object,
-  internalInstanceHandle: Object,
-): void {
-  // noop
-}
-
-export function prepareScopeUnmount(scopeInstance: Object): void {
-  // noop
-}
-
-export function getInstanceFromScope(scopeInstance: Object): null | Object {
-  return null;
 }

@@ -24,9 +24,11 @@ import {
   HostRoot,
   SuspenseComponent,
 } from 'react-reconciler/src/ReactWorkTags';
-import invariant from 'shared/invariant';
 
 import {getParentSuspenseInstance} from './ReactDOMHostConfig';
+
+import invariant from 'shared/invariant';
+import {enableScopeAPI} from 'shared/ReactFeatureFlags';
 
 const randomKey = Math.random()
   .toString(36)
@@ -210,5 +212,8 @@ export function getEventListenerMap(node: EventTarget): ElementListenerMap {
 export function getFiberFromScopeInstance(
   scope: ReactScopeInstance,
 ): null | Fiber {
-  return (scope: any)[internalInstanceKey] || null;
+  if (enableScopeAPI) {
+    return (scope: any)[internalInstanceKey] || null;
+  }
+  return null;
 }
