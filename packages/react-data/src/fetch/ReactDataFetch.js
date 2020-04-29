@@ -56,7 +56,7 @@ function createFromThenable(thenable, wrapValue): Result {
       if (result.status === Pending) {
         const resolvedResult = ((result: any): ResolvedResult);
         resolvedResult.status = Resolved;
-        resolvedResult.value = wrapValue ? wrapValue(value) : value;
+        resolvedResult.value = value;
       }
     },
     err => {
@@ -148,11 +148,13 @@ export function fetch(url: string, options: mixed): Object {
       }
     }
     const thenable = nativeFetch(url, options);
-    entry = createFromThenable(
-      thenable,
-      nativeResponse => new Response(nativeResponse),
-    );
+    entry = createFromThenable(thenable);
     map.set(url, entry);
   }
-  return readResult(entry);
+  const nativeResponse = (readResult(entry): any);
+  if (nativeResponse._reactResponse) {
+    return nativeResponse._reactResponse;
+  } else {
+    return (nativeResponse._reactResponse = new Response(nativeResponse));
+  }
 }
