@@ -87,50 +87,41 @@ function Response(nativeResponse) {
   this.type = nativeResponse.type;
   this.url = nativeResponse.url;
 
-  this._entry = null;
-  this._format = null;
+  this._entries = new Map();
   this._response = nativeResponse;
-}
-
-function getConsumed(response, format) {
-  const consumedFormat = response._format;
-  if (consumedFormat != null && format !== consumedFormat) {
-    throw new Error('Already read.');
-  }
-  const entry = response._entry;
-  if (entry == null) {
-    response._format = format;
-  }
-  return entry;
 }
 
 Response.prototype = {
   constructor: Response,
   arrayBuffer() {
-    let entry = getConsumed(this, 'arrayBuffer');
-    if (entry == null) {
-      this._entry = entry = createFromThenable(this._response.arrayBuffer());
+    let entry = this._entries.get('arrayBuffer');
+    if (!entry) {
+      entry = createFromThenable(this._response.arrayBuffer());
+      this._entries.set('arrayBuffer', entry);
     }
     return readResult(entry);
   },
   blob() {
-    let entry = getConsumed(this, 'blob');
-    if (entry == null) {
-      this._entry = entry = createFromThenable(this._response.blob());
+    let entry = this._entries.get('blob');
+    if (!entry) {
+      entry = createFromThenable(this._response.blob());
+      this._entries.set('blob', entry);
     }
     return readResult(entry);
   },
   json() {
-    let entry = getConsumed(this, 'json');
-    if (entry == null) {
-      this._entry = entry = createFromThenable(this._response.json());
+    let entry = this._entries.get('json');
+    if (!entry) {
+      entry = createFromThenable(this._response.json());
+      this._entries.set('json', entry);
     }
     return readResult(entry);
   },
   text() {
-    let entry = getConsumed(this, 'text');
-    if (entry == null) {
-      this._entry = entry = createFromThenable(this._response.text());
+    let entry = this._entries.get('text');
+    if (!entry) {
+      entry = createFromThenable(this._response.text());
+      this._entries.set('text', entry);
     }
     return readResult(entry);
   },
@@ -139,7 +130,7 @@ Response.prototype = {
 export function fetch(url: string, options: mixed): Object {
   const map = readResultMap();
   let entry = map.get(url);
-  if (entry == null) {
+  if (!entry) {
     if (options) {
       if (options.method || options.body || options.signal) {
         // TODO: wire up our own cancellation mechanism.
