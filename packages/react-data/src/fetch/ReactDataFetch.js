@@ -109,6 +109,7 @@ function Response(nativeResponse) {
 }
 
 Response.prototype = {
+  constructor: Response,
   arrayBuffer() {
     return this._read('arrayBuffer', getArrayBuffer);
   },
