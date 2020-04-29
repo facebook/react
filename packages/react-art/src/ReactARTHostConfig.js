@@ -427,7 +427,7 @@ export function unhideTextInstance(textInstance, text): void {
   // Noop
 }
 
-export function clearContainer(container) {
+export function clearContainer(container, scope) {
   // TODO Implement this
 }
 

@@ -482,7 +482,7 @@ export function unhideInstance(instance: Instance, props: Props): void {
   );
 }
 
-export function clearContainer(container: Container): void {
+export function clearContainer(container: Container, scope: Object): void {
   // TODO Implement this for React Native
   // UIManager does not expose a "remove all" type method.
 }

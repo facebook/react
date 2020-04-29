@@ -300,7 +300,7 @@ function commitBeforeMutationLifeCycles(
       if (supportsMutation) {
         if (finishedWork.effectTag & Snapshot) {
           const root = finishedWork.stateNode;
-          clearContainer(root.containerInfo);
+          clearContainer(root.containerInfo, root);
         }
       }
       return;

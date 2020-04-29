@@ -126,7 +126,7 @@ export function removeChild(
   parentInstance.children.splice(index, 1);
 }
 
-export function clearContainer(container: Container): void {
+export function clearContainer(container: Container, root: Object): void {
   container.children.splice(0);
 }
 

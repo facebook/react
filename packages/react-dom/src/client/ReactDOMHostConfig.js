@@ -634,13 +634,21 @@ export function unhideTextInstance(
   textInstance.nodeValue = text;
 }
 
-export function clearContainer(container: Container): void {
-  if (container.nodeType === ELEMENT_NODE) {
-    ((container: any): Element).textContent = '';
-  } else if (container.nodeType === DOCUMENT_NODE) {
-    const body = ((container: any): Document).body;
-    if (body != null) {
-      body.textContent = '';
+export function clearContainer(container: Container, root: RootType): void {
+  const legacyRootContainer = container._reactRootContainer;
+  // If there is a legacy root container, check to see if the root
+  // matches the root's container that we want to clear.
+  if (
+    legacyRootContainer == null ||
+    legacyRootContainer._internalRoot === root
+  ) {
+    if (container.nodeType === ELEMENT_NODE) {
+      ((container: any): Element).textContent = '';
+    } else if (container.nodeType === DOCUMENT_NODE) {
+      const body = ((container: any): Document).body;
+      if (body != null) {
+        body.textContent = '';
+      }
     }
   }
 }
