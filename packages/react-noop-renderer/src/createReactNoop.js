@@ -457,6 +457,14 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
     preparePortalMount() {
       // NO-OP
     },
+
+    prepareScopeUpdate() {},
+
+    prepareScopeUnmount() {},
+
+    getInstanceFromScope() {
+      throw new Error('Not yet implemented.');
+    },
   };
 
   const hostConfig = useMutation

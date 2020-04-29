@@ -112,6 +112,8 @@ import {
   commitHydratedSuspenseInstance,
   beforeRemoveInstance,
   clearContainer,
+  prepareScopeUpdate,
+  prepareScopeUnmount,
 } from './ReactFiberHostConfig';
 import {
   captureCommitPhaseError,
@@ -888,7 +890,7 @@ function commitAttachRef(finishedWork: Fiber) {
     }
     // Moved outside to ensure DCE works with this flag
     if (enableScopeAPI && finishedWork.tag === ScopeComponent) {
-      instanceToUse = instance.methods;
+      instanceToUse = instance;
     }
     if (typeof ref === 'function') {
       ref(instanceToUse);
@@ -1063,10 +1065,12 @@ function commitUnmount(
       return;
     }
     case ScopeComponent: {
-      if (enableDeprecatedFlareAPI) {
-        unmountDeprecatedResponderListeners(current);
-      }
       if (enableScopeAPI) {
+        if (enableDeprecatedFlareAPI) {
+          unmountDeprecatedResponderListeners(current);
+        }
+        const scopeInstance = current.stateNode;
+        prepareScopeUnmount(scopeInstance);
         safelyDetachRef(current);
       }
       return;
@@ -1715,7 +1719,6 @@ function commitWork(current: Fiber | null, finishedWork: Fiber): void {
     case ScopeComponent: {
       if (enableScopeAPI) {
         const scopeInstance = finishedWork.stateNode;
-        scopeInstance.fiber = finishedWork;
         if (enableDeprecatedFlareAPI) {
           const newProps = finishedWork.memoizedProps;
           const oldProps = current !== null ? current.memoizedProps : newProps;
@@ -1725,6 +1728,7 @@ function commitWork(current: Fiber | null, finishedWork: Fiber): void {
             updateDeprecatedEventListeners(nextListeners, finishedWork, null);
           }
         }
+        prepareScopeUpdate(scopeInstance, finishedWork);
         return;
       }
       break;

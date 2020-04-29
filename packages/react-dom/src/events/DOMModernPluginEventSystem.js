@@ -14,7 +14,7 @@ import type {
   ElementListenerMapEntry,
 } from '../client/ReactDOMComponentTree';
 import type {EventSystemFlags} from './EventSystemFlags';
-import type {EventPriority, ReactScopeMethods} from 'shared/ReactTypes';
+import type {EventPriority} from 'shared/ReactTypes';
 import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
 import type {PluginModule} from 'legacy-events/PluginModuleType';
 import type {ReactSyntheticEvent} from 'legacy-events/ReactSyntheticEventType';
@@ -379,22 +379,6 @@ function isMatchingRootContainer(
     (grandContainer.nodeType === COMMENT_NODE &&
       grandContainer.parentNode === targetContainer)
   );
-}
-
-export function isManagedDOMElement(
-  target: EventTarget | ReactScopeMethods,
-): boolean {
-  return getClosestInstanceFromNode(((target: any): Node)) !== null;
-}
-
-export function isValidEventTarget(
-  target: EventTarget | ReactScopeMethods,
-): boolean {
-  return typeof (target: Object).addEventListener === 'function';
-}
-
-export function isReactScope(target: EventTarget | ReactScopeMethods): boolean {
-  return typeof (target: Object).getChildContextValues === 'function';
 }
 
 export function dispatchEventForPluginEventSystem(
