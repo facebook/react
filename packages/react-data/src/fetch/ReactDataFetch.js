@@ -78,6 +78,14 @@ function readResult(result: Result) {
   }
 }
 
+function getJson(nativeResponse) {
+  return nativeResponse.json();
+}
+
+function getText(nativeResponse) {
+  return nativeResponse.json();
+}
+
 function Response(nativeResponse) {
   this.headers = nativeResponse.headers;
   this.ok = nativeResponse.ok;
@@ -87,29 +95,32 @@ function Response(nativeResponse) {
   this.type = nativeResponse.type;
   this.url = nativeResponse.url;
 
-  this.json = function() {
-    return read('json', () => nativeResponse.json());
-  };
+  this._entry = null;
+  this._consumed = null;
+  this._response = nativeResponse;
+}
 
-  this.text = function() {
-    return read('text', () => nativeResponse.text());
-  };
-
-  let entry: void | Result;
-  let consumedType: void | string;
-
-  function read(type, getThenable) {
-    if (consumedType != null && type !== consumedType) {
+Response.prototype = {
+  json() {
+    return this._read('json', getJson);
+  },
+  text() {
+    return this._read('text', getText);
+  },
+  _read(type: string, getThenable) {
+    const consumed = this._consumed;
+    if (consumed != null && type !== consumed) {
       throw new Error('Already read.');
     }
+    let entry = this._entry;
     if (entry == null) {
-      consumedType = type;
-      const thenable = getThenable();
-      entry = createFromThenable(thenable, r => r);
+      this._consumed = type;
+      const thenable = getThenable(this._response);
+      entry = this._entry = createFromThenable(thenable, r => r);
     }
     return readResult(entry);
-  }
-}
+  },
+};
 
 export function fetch(url: string, options: mixed): Object {
   const map = readResultMap();
