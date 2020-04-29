@@ -46,7 +46,7 @@ function readResultMap(): Map<string, Result> {
   return map;
 }
 
-function createFromThenable(thenable, wrapValue): Result {
+function createFromThenable(thenable): Result {
   const result: Result = {
     status: Pending,
     value: (null: any),
