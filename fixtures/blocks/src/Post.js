@@ -11,8 +11,10 @@ import {fetch} from 'react-data/fetch';
 import loadComments from './Comments';
 
 function load(params) {
+  const postResponse = fetch('http://localhost:3001/posts/' + params.id);
   return {
-    post: JSON.parse(fetch('http://localhost:3001/posts/' + params.id)),
+    post: postResponse.json(),
+    meta: postResponse.status + ' ' + postResponse.statusText,
     Comments: loadComments(params.id),
   };
 }
@@ -23,6 +25,7 @@ function Post(props, data) {
       <h1>Post {data.post.id}</h1>
       <h4>{data.post.title}</h4>
       <p>{data.post.body}</p>
+      <pre>{data.meta}</pre>
       <hr />
       <Suspense fallback={<p>Loading comments...</p>}>
         <data.Comments />

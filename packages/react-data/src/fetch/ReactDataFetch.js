@@ -32,6 +32,8 @@ type RejectedResult = {|
 
 type Result = PendingResult | ResolvedResult | RejectedResult;
 
+// TODO: this is a browser-only version. Add a separate Node entry point.
+const nativeFetch = window.fetch;
 const fetchKey = {};
 
 function readResultMap(): Map<string, Result> {
@@ -44,50 +46,88 @@ function readResultMap(): Map<string, Result> {
   return map;
 }
 
-// TODO: options, auth, etc.
-export function fetch(url: string): Object {
-  const map = readResultMap();
-  const entry = map.get(url);
-  if (entry === undefined) {
-    let resolve = () => {};
-    const wakeable: Wakeable = new Promise(r => {
-      // TODO: should this be a plain thenable instead?
-      resolve = r;
-    });
-    const result: Result = {
-      status: Pending,
-      value: wakeable,
-    };
-    map.set(url, result);
-    const xhr = new XMLHttpRequest();
-    xhr.onload = function() {
-      // TODO: should we handle status codes?
-      if (result.status !== Pending) {
-        return;
+function createFromThenable(thenable, wrapValue): Result {
+  const result: Result = {
+    status: Pending,
+    value: (null: any),
+  };
+  result.value = thenable.then(
+    value => {
+      if (result.status === Pending) {
+        const resolvedResult = ((result: any): ResolvedResult);
+        resolvedResult.status = Resolved;
+        resolvedResult.value = wrapValue(value);
       }
-      const resolvedResult = ((result: any): ResolvedResult);
-      resolvedResult.status = Resolved;
-      resolvedResult.value = xhr.response;
-      resolve();
-    };
-    xhr.onerror = function() {
-      if (result.status !== Pending) {
-        return;
+    },
+    err => {
+      if (result.status === Pending) {
+        const rejectedResult = ((result: any): RejectedResult);
+        rejectedResult.status = Rejected;
+        rejectedResult.value = err;
       }
-      const rejectedResult = ((result: any): RejectedResult);
-      rejectedResult.status = Rejected;
-      // TODO: use something else as the error value?
-      rejectedResult.value = xhr;
-      resolve();
-    };
-    xhr.open('GET', url);
-    xhr.send();
-    throw wakeable;
-  }
-  const result: Result = entry;
+    },
+  );
+  return result;
+}
+
+function readResult(result: Result) {
   if (result.status === Resolved) {
     return result.value;
   } else {
     throw result.value;
   }
+}
+
+function Response(nativeResponse) {
+  this.headers = nativeResponse.headers;
+  this.ok = nativeResponse.ok;
+  this.redirected = nativeResponse.redirected;
+  this.status = nativeResponse.status;
+  this.statusText = nativeResponse.statusText;
+  this.type = nativeResponse.type;
+  this.url = nativeResponse.url;
+
+  this.json = function() {
+    return read('json', () => nativeResponse.json());
+  };
+
+  this.text = function() {
+    return read('text', () => nativeResponse.text());
+  };
+
+  let entry: void | Result;
+  let consumedType: void | string;
+
+  function read(type, getThenable) {
+    if (consumedType != null && type !== consumedType) {
+      throw new Error('Already read.');
+    }
+    if (entry == null) {
+      consumedType = type;
+      const thenable = getThenable();
+      entry = createFromThenable(thenable, r => r);
+    }
+    return readResult(entry);
+  }
+}
+
+export function fetch(url: string, options: mixed): Object {
+  const map = readResultMap();
+  let entry = map.get(url);
+  if (entry == null) {
+    if (options) {
+      if (options.method || options.body || options.signal) {
+        // TODO: wire up our own cancellation mechanism.
+        // TODO: figure out what to do with POST.
+        throw Error('Unsupported option');
+      }
+    }
+    const thenable = nativeFetch(url, options);
+    entry = createFromThenable(
+      thenable,
+      nativeResponse => new Response(nativeResponse),
+    );
+    map.set(url, entry);
+  }
+  return readResult(entry);
 }
