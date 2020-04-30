@@ -687,8 +687,21 @@ function completeWork(
           // It's also safe to do for updates too, because current.child would only be null
           // if the previous render was null (so the the container would already be empty).
           //
-          // The additional root.hydrate check is required for hydration in legacy mode with no fallback.
-          workInProgress.effectTag |= Snapshot;
+          // The additional root.hydrate check above is required for hydration in legacy mode with no fallback.
+          //
+          // The root container check below also avoids a potential legacy mode problem
+          // where unmounting from a container then rendering into it again
+          // can sometimes cause the container to be cleared after the new render.
+          const containerInfo = fiberRoot.containerInfo;
+          const legacyRootContainer =
+            containerInfo == null ? null : containerInfo._reactRootContainer;
+          if (
+            legacyRootContainer == null ||
+            legacyRootContainer._internalRoot == null ||
+            legacyRootContainer._internalRoot === fiberRoot
+          ) {
+            workInProgress.effectTag |= Snapshot;
+          }
         }
       }
       updateHostContainer(workInProgress);
