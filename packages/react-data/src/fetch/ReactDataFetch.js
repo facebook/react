@@ -46,7 +46,7 @@ function readResultMap(): Map<string, Result> {
   return map;
 }
 
-function createFromThenable(thenable): Result {
+function toResult(thenable): Result {
   const result: Result = {
     status: Pending,
     value: (null: any),
@@ -87,47 +87,35 @@ function Response(nativeResponse) {
   this.type = nativeResponse.type;
   this.url = nativeResponse.url;
 
-  this._entries = new Map();
   this._response = nativeResponse;
+  this._arrayBuffer = null;
+  this._blob = null;
+  this._json = null;
+  this._text = null;
 }
 
 Response.prototype = {
   constructor: Response,
   arrayBuffer() {
-    const entries = this._entries;
-    let entry = entries.get('arrayBuffer');
-    if (!entry) {
-      entry = createFromThenable(this._response.arrayBuffer());
-      entries.set('arrayBuffer', entry);
-    }
-    return readResult(entry);
+    return readResult(
+      this._arrayBuffer ||
+        (this._arrayBuffer = toResult(this._response.arrayBuffer())),
+    );
   },
   blob() {
-    const entries = this._entries;
-    let entry = entries.get('blob');
-    if (!entry) {
-      entry = createFromThenable(this._response.blob());
-      entries.set('blob', entry);
-    }
-    return readResult(entry);
+    return readResult(
+      this._blob || (this._blob = toResult(this._response.blob())),
+    );
   },
   json() {
-    const entries = this._entries;
-    let entry = entries.get('json');
-    if (!entry) {
-      entry = createFromThenable(this._response.json());
-      entries.set('json', entry);
-    }
-    return readResult(entry);
+    return readResult(
+      this._json || (this._json = toResult(this._response.json())),
+    );
   },
   text() {
-    const entries = this._entries;
-    let entry = entries.get('text');
-    if (!entry) {
-      entry = createFromThenable(this._response.text());
-      entries.set('text', entry);
-    }
-    return readResult(entry);
+    return readResult(
+      this._text || (this._text = toResult(this._response.text())),
+    );
   },
 };
 
@@ -143,7 +131,7 @@ export function fetch(url: string, options: mixed): Object {
       }
     }
     const thenable = nativeFetch(url, options);
-    entry = createFromThenable(thenable);
+    entry = toResult(thenable);
     map.set(url, entry);
   }
   const nativeResponse = (readResult(entry): any);
