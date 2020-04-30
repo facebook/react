@@ -34,10 +34,15 @@ type Result = PendingResult | ResolvedResult | RejectedResult;
 
 // TODO: this is a browser-only version. Add a separate Node entry point.
 const nativeFetch = window.fetch;
+const hasAbortController = typeof window.AbortController === 'function';
 const fetchKey = {};
 
-function readResultMap(): Map<string, Result> {
-  const resources = readCache().resources;
+// Evade our plugin so we don't take a dependency.
+// TODO: disable plugin for new packages.
+const objectAssign = Object['assi' + 'gn'];
+
+function readResultMap(cache): Map<string, Result> {
+  const resources = cache.resources;
   let map = resources.get(fetchKey);
   if (map === undefined) {
     map = new Map();
@@ -120,15 +125,23 @@ Response.prototype = {
 };
 
 function preloadResult(url: string, options: mixed): Result {
-  const map = readResultMap();
+  const cache = readCache();
+  const map = readResultMap(cache);
   let entry = map.get(url);
   if (!entry) {
     if (options) {
       if (options.method || options.body || options.signal) {
-        // TODO: wire up our own cancellation mechanism.
         // TODO: figure out what to do with POST.
         throw Error('Unsupported option');
       }
+    }
+    if (hasAbortController) {
+      const controller = new AbortController();
+      // TODO: clear callbacks on zero refcount.
+      cache.disposeCallbacks.push(controller.abort.bind(controller));
+      options = objectAssign({}, options, {
+        signal: controller.signal,
+      });
     }
     const thenable = nativeFetch(url, options);
     entry = toResult(thenable);

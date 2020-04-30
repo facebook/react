@@ -13,6 +13,8 @@ import invariant from 'shared/invariant';
 
 type Cache = {|
   resources: Map<any, any>,
+  disposeCallbacks: Array<() => void>,
+  dispose: () => void,
 |};
 
 // TODO: should there be a default cache?
@@ -20,8 +22,18 @@ const CacheContext: ReactContext<null | Cache> = createContext(null);
 
 function CacheImpl() {
   this.resources = new Map();
-  // TODO: cancellation token.
+  this.disposeCallbacks = [];
 }
+CacheImpl.prototype = {
+  constructor: CacheImpl,
+  dispose() {
+    const callbacks = this.disposeCallbacks;
+    this.disposeCallbacks = [];
+    for (let i = 0; i < callbacks.length; i++) {
+      callbacks[i]();
+    }
+  },
+};
 
 function createCache(): Cache {
   // $FlowFixMe
