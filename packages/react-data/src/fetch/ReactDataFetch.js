@@ -49,9 +49,9 @@ function readResultMap(): Map<string, Result> {
 function toResult(thenable): Result {
   const result: Result = {
     status: Pending,
-    value: (null: any),
+    value: thenable,
   };
-  result.value = thenable.then(
+  thenable.then(
     value => {
       if (result.status === Pending) {
         const resolvedResult = ((result: any): ResolvedResult);
