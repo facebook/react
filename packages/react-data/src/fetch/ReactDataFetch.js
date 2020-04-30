@@ -32,6 +32,8 @@ type RejectedResult = {|
 
 type Result = PendingResult | ResolvedResult | RejectedResult;
 
+// TODO: this is a browser-only version. Add a separate Node entry point.
+const nativeFetch = window.fetch;
 const fetchKey = {};
 
 function readResultMap(): Map<string, Result> {
@@ -44,50 +46,98 @@ function readResultMap(): Map<string, Result> {
   return map;
 }
 
-// TODO: options, auth, etc.
-export function fetch(url: string): Object {
-  const map = readResultMap();
-  const entry = map.get(url);
-  if (entry === undefined) {
-    let resolve = () => {};
-    const wakeable: Wakeable = new Promise(r => {
-      // TODO: should this be a plain thenable instead?
-      resolve = r;
-    });
-    const result: Result = {
-      status: Pending,
-      value: wakeable,
-    };
-    map.set(url, result);
-    const xhr = new XMLHttpRequest();
-    xhr.onload = function() {
-      // TODO: should we handle status codes?
-      if (result.status !== Pending) {
-        return;
+function toResult(thenable): Result {
+  const result: Result = {
+    status: Pending,
+    value: thenable,
+  };
+  thenable.then(
+    value => {
+      if (result.status === Pending) {
+        const resolvedResult = ((result: any): ResolvedResult);
+        resolvedResult.status = Resolved;
+        resolvedResult.value = value;
       }
-      const resolvedResult = ((result: any): ResolvedResult);
-      resolvedResult.status = Resolved;
-      resolvedResult.value = xhr.response;
-      resolve();
-    };
-    xhr.onerror = function() {
-      if (result.status !== Pending) {
-        return;
+    },
+    err => {
+      if (result.status === Pending) {
+        const rejectedResult = ((result: any): RejectedResult);
+        rejectedResult.status = Rejected;
+        rejectedResult.value = err;
       }
-      const rejectedResult = ((result: any): RejectedResult);
-      rejectedResult.status = Rejected;
-      // TODO: use something else as the error value?
-      rejectedResult.value = xhr;
-      resolve();
-    };
-    xhr.open('GET', url);
-    xhr.send();
-    throw wakeable;
-  }
-  const result: Result = entry;
+    },
+  );
+  return result;
+}
+
+function readResult(result: Result) {
   if (result.status === Resolved) {
     return result.value;
   } else {
     throw result.value;
+  }
+}
+
+function Response(nativeResponse) {
+  this.headers = nativeResponse.headers;
+  this.ok = nativeResponse.ok;
+  this.redirected = nativeResponse.redirected;
+  this.status = nativeResponse.status;
+  this.statusText = nativeResponse.statusText;
+  this.type = nativeResponse.type;
+  this.url = nativeResponse.url;
+
+  this._response = nativeResponse;
+  this._arrayBuffer = null;
+  this._blob = null;
+  this._json = null;
+  this._text = null;
+}
+
+Response.prototype = {
+  constructor: Response,
+  arrayBuffer() {
+    return readResult(
+      this._arrayBuffer ||
+        (this._arrayBuffer = toResult(this._response.arrayBuffer())),
+    );
+  },
+  blob() {
+    return readResult(
+      this._blob || (this._blob = toResult(this._response.blob())),
+    );
+  },
+  json() {
+    return readResult(
+      this._json || (this._json = toResult(this._response.json())),
+    );
+  },
+  text() {
+    return readResult(
+      this._text || (this._text = toResult(this._response.text())),
+    );
+  },
+};
+
+export function fetch(url: string, options: mixed): Object {
+  const map = readResultMap();
+  let entry = map.get(url);
+  if (!entry) {
+    if (options) {
+      if (options.method || options.body || options.signal) {
+        // TODO: wire up our own cancellation mechanism.
+        // TODO: figure out what to do with POST.
+        throw Error('Unsupported option');
+      }
+    }
+    const thenable = nativeFetch(url, options);
+    entry = toResult(thenable);
+    map.set(url, entry);
+  }
+  const nativeResponse = (readResult(entry): any);
+  if (nativeResponse._reactResponse) {
+    return nativeResponse._reactResponse;
+  } else {
+    return (nativeResponse._reactResponse = new Response(nativeResponse));
   }
 }
