@@ -7,10 +7,14 @@
 
 import * as React from 'react';
 import {block, Suspense} from 'react';
-import {fetch} from 'react-data/fetch';
+import {fetch, preload} from 'react-data/fetch';
 import loadComments from './Comments';
 
 function load(params) {
+  if (params.id < 3) {
+    const nextId = params.id + 1;
+    preload('http://localhost:3001/posts/' + nextId);
+  }
   const postResponse = fetch('http://localhost:3001/posts/' + params.id);
   return {
     post: postResponse.json(),

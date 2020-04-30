@@ -119,7 +119,7 @@ Response.prototype = {
   },
 };
 
-export function fetch(url: string, options: mixed): Object {
+function preloadResult(url: string, options: mixed): Result {
   const map = readResultMap();
   let entry = map.get(url);
   if (!entry) {
@@ -134,7 +134,17 @@ export function fetch(url: string, options: mixed): Object {
     entry = toResult(thenable);
     map.set(url, entry);
   }
-  const nativeResponse = (readResult(entry): any);
+  return entry;
+}
+
+export function preload(url: string, options: mixed): void {
+  preloadResult(url, options);
+  // Don't return anything.
+}
+
+export function fetch(url: string, options: mixed): Object {
+  const result = preloadResult(url, options);
+  const nativeResponse = (readResult(result): any);
   if (nativeResponse._reactResponse) {
     return nativeResponse._reactResponse;
   } else {
