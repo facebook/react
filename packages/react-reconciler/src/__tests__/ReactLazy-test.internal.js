@@ -6,6 +6,15 @@ let ReactFeatureFlags;
 let Suspense;
 let lazy;
 
+function normalizeCodeLocInfo(str) {
+  return (
+    str &&
+    str.replace(/\n +(?:at|in) ([\S]+)[^\n]*/g, function(m, name) {
+      return '\n    in ' + name + ' (at **)';
+    })
+  );
+}
+
 describe('ReactLazy', () => {
   beforeEach(() => {
     jest.resetModules();
@@ -1197,7 +1206,7 @@ describe('ReactLazy', () => {
       state = {error: null};
 
       componentDidCatch(error, errMessage) {
-        componentStackMessage = errMessage.componentStack;
+        componentStackMessage = normalizeCodeLocInfo(errMessage.componentStack);
         this.setState({
           error,
         });
@@ -1241,7 +1250,7 @@ describe('ReactLazy', () => {
       state = {error: null};
 
       componentDidCatch(error, errMessage) {
-        componentStackMessage = errMessage.componentStack;
+        componentStackMessage = normalizeCodeLocInfo(errMessage.componentStack);
         this.setState({
           error,
         });
