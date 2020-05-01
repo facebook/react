@@ -8,7 +8,7 @@
  */
 
 import type {ReactNodeList} from 'shared/ReactTypes';
-import type {ExpirationTimeOpaque} from './ReactFiberExpirationTime.new';
+import type {Lanes} from './ReactFiberLane';
 
 export type OffscreenProps = {|
   // TODO: Pick an API before exposing the Offscreen type. I've chosen an enum
@@ -24,8 +24,8 @@ export type OffscreenProps = {|
 // We use the existence of the state object as an indicator that the component
 // is hidden.
 export type OffscreenState = {|
-  // TODO: This doesn't do anything, yet. It's always NoWork. But eventually it
+  // TODO: This doesn't do anything, yet. It's always NoLanes. But eventually it
   // will represent the pending work that must be included in the render in
   // order to unhide the component.
-  baseTime: ExpirationTimeOpaque,
+  baseLanes: Lanes,
 |};

@@ -8,7 +8,7 @@
  */
 
 import type {Fiber} from './ReactInternalTypes';
-import type {ExpirationTimeOpaque} from './ReactFiberExpirationTime.new';
+import type {Lanes} from './ReactFiberLane';
 import type {SuspenseState} from './ReactFiberSuspenseComponent.new';
 
 import {resetWorkInProgressVersions as resetMutableSourceWorkInProgressVersions} from './ReactMutableSource.new';
@@ -39,10 +39,7 @@ import {popRenderExpirationTime} from './ReactFiberWorkLoop.new';
 
 import invariant from 'shared/invariant';
 
-function unwindWork(
-  workInProgress: Fiber,
-  renderExpirationTime: ExpirationTimeOpaque,
-) {
+function unwindWork(workInProgress: Fiber, renderLanes: Lanes) {
   switch (workInProgress.tag) {
     case ClassComponent: {
       const Component = workInProgress.type;

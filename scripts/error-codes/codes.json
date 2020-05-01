@@ -353,5 +353,8 @@
   "353": "A server block should never encode any other slots. This is a bug in React.",
   "354": "getInspectorDataForViewAtPoint() is not available in production.",
   "355": "The object passed back from useOpaqueIdentifier is meant to be passed through to attributes only. Do not read the value directly.",
-  "356": "Could not read the cache."
+  "356": "Could not read the cache.",
+  "357": "Invalid update priority:  %s. This is a bug in React.",
+  "358": "Invalid transition priority:  %s. This is a bug in React.",
+  "359": "Invalid lane:  %s. This is a bug in React."
 }

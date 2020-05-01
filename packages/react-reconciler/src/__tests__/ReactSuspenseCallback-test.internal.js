@@ -31,23 +31,20 @@ describe('ReactSuspense', () => {
 
   function createThenable() {
     let completed = false;
-    const resolveRef = {current: null};
-    const promise = {
-      then(resolve, reject) {
-        resolveRef.current = () => {
-          completed = true;
-          resolve();
-        };
-      },
-    };
-
+    let resolve;
+    const promise = new Promise(res => {
+      resolve = () => {
+        completed = true;
+        res();
+      };
+    });
     const PromiseComp = () => {
       if (!completed) {
         throw promise;
       }
       return 'Done';
     };
-    return {promise, resolveRef, PromiseComp};
+    return {promise, resolve, PromiseComp};
   }
 
   it('check type', () => {
@@ -74,8 +71,8 @@ describe('ReactSuspense', () => {
     expect(() => Scheduler.unstable_flushAll()).toErrorDev([]);
   });
 
-  it('1 then 0 suspense callback', () => {
-    const {promise, resolveRef, PromiseComp} = createThenable();
+  it('1 then 0 suspense callback', async () => {
+    const {promise, resolve, PromiseComp} = createThenable();
 
     let ops = [];
     const suspenseCallback = thenables => {
@@ -94,21 +91,21 @@ describe('ReactSuspense', () => {
     expect(ops).toEqual([new Set([promise])]);
     ops = [];
 
-    resolveRef.current();
+    await resolve();
     expect(Scheduler).toFlushWithoutYielding();
     expect(ReactNoop.getChildren()).toEqual([text('Done')]);
     expect(ops).toEqual([]);
   });
 
-  it('2 then 1 then 0 suspense callback', () => {
+  it('2 then 1 then 0 suspense callback', async () => {
     const {
       promise: promise1,
-      resolveRef: resolveRef1,
+      resolve: resolve1,
       PromiseComp: PromiseComp1,
     } = createThenable();
     const {
       promise: promise2,
-      resolveRef: resolveRef2,
+      resolve: resolve2,
       PromiseComp: PromiseComp2,
     } = createThenable();
 
@@ -132,14 +129,14 @@ describe('ReactSuspense', () => {
     expect(ops).toEqual([new Set([promise1, promise2])]);
     ops = [];
 
-    resolveRef1.current();
+    await resolve1();
     ReactNoop.render(element);
     expect(Scheduler).toFlushWithoutYielding();
     expect(ReactNoop.getChildren()).toEqual([text('Waiting Tier 1')]);
     expect(ops).toEqual([new Set([promise2])]);
     ops = [];
 
-    resolveRef2.current();
+    await resolve2();
     ReactNoop.render(element);
     expect(Scheduler).toFlushWithoutYielding();
     expect(ReactNoop.getChildren()).toEqual([text('Done'), text('Done')]);
@@ -177,15 +174,15 @@ describe('ReactSuspense', () => {
     expect(ops2).toEqual([new Set([promise])]);
   });
 
-  it('competing suspense promises', () => {
+  it('competing suspense promises', async () => {
     const {
       promise: promise1,
-      resolveRef: resolveRef1,
+      resolve: resolve1,
       PromiseComp: PromiseComp1,
     } = createThenable();
     const {
       promise: promise2,
-      resolveRef: resolveRef2,
+      resolve: resolve2,
       PromiseComp: PromiseComp2,
     } = createThenable();
 
@@ -219,7 +216,7 @@ describe('ReactSuspense', () => {
     ops1 = [];
     ops2 = [];
 
-    resolveRef1.current();
+    await resolve1();
     ReactNoop.render(element);
     expect(Scheduler).toFlushWithoutYielding();
     expect(ReactNoop.getChildren()).toEqual([
@@ -231,7 +228,7 @@ describe('ReactSuspense', () => {
     ops1 = [];
     ops2 = [];
 
-    resolveRef2.current();
+    await resolve2();
     ReactNoop.render(element);
     expect(Scheduler).toFlushWithoutYielding();
     expect(ReactNoop.getChildren()).toEqual([text('Done'), text('Done')]);

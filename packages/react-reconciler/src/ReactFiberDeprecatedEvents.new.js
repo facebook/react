@@ -19,7 +19,7 @@ import {
   DEPRECATED_mountResponderInstance,
   DEPRECATED_unmountResponderInstance,
 } from './ReactFiberHostConfig';
-import {NoWork} from './ReactFiberExpirationTime.new';
+import {NoLanes} from './ReactFiberLane';
 
 import {REACT_RESPONDER_TYPE} from 'shared/ReactSymbols';
 
@@ -154,7 +154,7 @@ export function updateDeprecatedEventListeners(
   if (listeners != null) {
     if (dependencies === null) {
       dependencies = fiber.dependencies_new = {
-        expirationTime: NoWork,
+        lanes: NoLanes,
         firstContext: null,
         responders: new Map(),
       };

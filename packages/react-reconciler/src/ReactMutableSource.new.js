@@ -7,16 +7,9 @@
  * @flow
  */
 
-import type {ExpirationTimeOpaque} from './ReactFiberExpirationTime.new';
-import type {FiberRoot} from './ReactInternalTypes';
 import type {MutableSource, MutableSourceVersion} from 'shared/ReactTypes';
 
 import {isPrimaryRenderer} from './ReactFiberHostConfig';
-import {
-  NoWork,
-  isSameOrHigherPriority,
-  isSameExpirationTime,
-} from './ReactFiberExpirationTime.new';
 
 // Work in progress version numbers only apply to a single render,
 // and should be reset before starting a new render.
@@ -28,44 +21,6 @@ let rendererSigil;
 if (__DEV__) {
   // Used to detect multiple renderers using the same mutable source.
   rendererSigil = {};
-}
-
-export function clearPendingUpdates(
-  root: FiberRoot,
-  expirationTime: ExpirationTimeOpaque,
-): void {
-  if (
-    isSameOrHigherPriority(
-      root.mutableSourceLastPendingUpdateTime_opaque,
-      expirationTime,
-    )
-  ) {
-    // All updates for this source have been processed.
-    root.mutableSourceLastPendingUpdateTime_opaque = NoWork;
-  }
-}
-
-export function getLastPendingExpirationTime(
-  root: FiberRoot,
-): ExpirationTimeOpaque {
-  return root.mutableSourceLastPendingUpdateTime_opaque;
-}
-
-export function setPendingExpirationTime(
-  root: FiberRoot,
-  expirationTime: ExpirationTimeOpaque,
-): void {
-  const mutableSourceLastPendingUpdateTime =
-    root.mutableSourceLastPendingUpdateTime_opaque;
-  if (
-    isSameExpirationTime(
-      mutableSourceLastPendingUpdateTime,
-      (NoWork: ExpirationTimeOpaque),
-    ) ||
-    !isSameOrHigherPriority(expirationTime, mutableSourceLastPendingUpdateTime)
-  ) {
-    root.mutableSourceLastPendingUpdateTime_opaque = expirationTime;
-  }
 }
 
 export function markSourceAsDirty(mutableSource: MutableSource<any>): void {
