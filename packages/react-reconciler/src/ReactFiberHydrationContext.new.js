@@ -55,7 +55,7 @@ import {
   didNotFindHydratableSuspenseInstance,
 } from './ReactFiberHostConfig';
 import {enableSuspenseServerRenderer} from 'shared/ReactFeatureFlags';
-import {Never, NoWork} from './ReactFiberExpirationTime.new';
+import {Never} from './ReactFiberExpirationTime.new';
 
 // The deepest Fiber on the stack involved in a hydration context.
 // This may have been an insertion or a hydration.
@@ -231,7 +231,6 @@ function tryHydrate(fiber, nextInstance) {
         if (suspenseInstance !== null) {
           const suspenseState: SuspenseState = {
             dehydrated: suspenseInstance,
-            baseTime: NoWork,
             retryTime: Never,
           };
           fiber.memoizedState = suspenseState;

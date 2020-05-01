@@ -57,6 +57,7 @@ import {
   ScopeComponent,
   Block,
   OffscreenComponent,
+  LegacyHiddenComponent,
 } from './ReactWorkTags';
 import {
   invokeGuardedCallback,
@@ -817,6 +818,7 @@ function commitLifeCycles(
     case FundamentalComponent:
     case ScopeComponent:
     case OffscreenComponent:
+    case LegacyHiddenComponent:
       return;
   }
   invariant(
@@ -847,7 +849,8 @@ function hideOrUnhideAllChildren(finishedWork, isHidden) {
           unhideTextInstance(instance, node.memoizedProps);
         }
       } else if (
-        node.tag === OffscreenComponent &&
+        (node.tag === OffscreenComponent ||
+          node.tag === LegacyHiddenComponent) &&
         (node.memoizedState: OffscreenState) !== null &&
         node !== finishedWork
       ) {
@@ -1592,7 +1595,8 @@ function commitWork(current: Fiber | null, finishedWork: Fiber): void {
         }
         break;
       }
-      case OffscreenComponent: {
+      case OffscreenComponent:
+      case LegacyHiddenComponent: {
         return;
       }
     }
@@ -1731,7 +1735,8 @@ function commitWork(current: Fiber | null, finishedWork: Fiber): void {
       }
       break;
     }
-    case OffscreenComponent: {
+    case OffscreenComponent:
+    case LegacyHiddenComponent: {
       const newState: OffscreenState | null = finishedWork.memoizedState;
       const isHidden = newState !== null;
       hideOrUnhideAllChildren(finishedWork, isHidden);

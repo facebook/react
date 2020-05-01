@@ -15,6 +15,7 @@ import type {Interaction} from 'scheduler/src/Tracing';
 import type {SuspenseConfig} from './ReactFiberSuspenseConfig';
 import type {SuspenseState} from './ReactFiberSuspenseComponent.new';
 import type {Effect as HookEffect} from './ReactFiberHooks.new';
+import type {StackCursor} from './ReactFiberStack.new';
 
 import {
   warnAboutDeprecatedLifecycles,
@@ -168,6 +169,11 @@ import {
   getIsUpdatingOpaqueValueInRenderPhaseInDEV,
 } from './ReactFiberHooks.new';
 import {createCapturedValue} from './ReactCapturedValue';
+import {
+  push as pushToStack,
+  pop as popFromStack,
+  createCursor,
+} from './ReactFiberStack.new';
 
 import {
   recordCommitTime,
@@ -231,6 +237,12 @@ let workInProgressRoot: FiberRoot | null = null;
 let workInProgress: Fiber | null = null;
 // The expiration time we're rendering
 let renderExpirationTime: ExpirationTimeOpaque = NoWork;
+
+// Stack that allows components to channge renderExpirationTime for its subtree
+const renderExpirationTimeCursor: StackCursor<ExpirationTimeOpaque> = createCursor(
+  NoWork,
+);
+
 // Whether to root completed, errored, suspended, etc.
 let workInProgressRootExitStatus: RootExitStatus = RootIncomplete;
 // A fatal error, if one is thrown
@@ -1263,6 +1275,19 @@ export function flushControlled(fn: () => mixed): void {
       flushSyncCallbackQueue();
     }
   }
+}
+
+export function pushRenderExpirationTime(
+  fiber: Fiber,
+  subtreeRenderTime: ExpirationTimeOpaque,
+) {
+  pushToStack(renderExpirationTimeCursor, renderExpirationTime, fiber);
+  renderExpirationTime = subtreeRenderTime;
+}
+
+export function popRenderExpirationTime(fiber: Fiber) {
+  renderExpirationTime = renderExpirationTimeCursor.current;
+  popFromStack(renderExpirationTimeCursor, fiber);
 }
 
 function prepareFreshStack(root, expirationTime) {

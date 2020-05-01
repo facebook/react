@@ -56,6 +56,7 @@ import {
   ScopeComponent,
   Block,
   OffscreenComponent,
+  LegacyHiddenComponent,
 } from './ReactWorkTags';
 import {NoMode, BlockingMode} from './ReactTypeOfMode';
 import {
@@ -131,6 +132,7 @@ import {
   renderDidSuspend,
   renderDidSuspendDelayIfPossible,
   renderHasNotSuspendedYet,
+  popRenderExpirationTime,
 } from './ReactFiberWorkLoop.new';
 import {createFundamentalStateInstance} from './ReactFiberFundamental.new';
 import {Never, isSameOrHigherPriority} from './ReactFiberExpirationTime.new';
@@ -1311,7 +1313,9 @@ function completeWork(
         return null;
       }
       break;
-    case OffscreenComponent: {
+    case OffscreenComponent:
+    case LegacyHiddenComponent: {
+      popRenderExpirationTime(workInProgress);
       if (current !== null) {
         const nextState: OffscreenState | null = workInProgress.memoizedState;
         const prevState: OffscreenState | null = current.memoizedState;
