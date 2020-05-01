@@ -579,17 +579,12 @@ const bundles = [
 
   /******* React Cache (experimental, old) *******/
   {
-    bundleTypes: [
-      FB_WWW_DEV,
-      FB_WWW_PROD,
-      NODE_DEV,
-      NODE_PROD,
-      UMD_DEV,
-      UMD_PROD,
-    ],
+    // This is only used by our own tests.
+    // We can delete it later.
+    bundleTypes: [NODE_DEV, NODE_PROD],
     moduleType: ISOMORPHIC,
     entry: 'react-cache',
-    global: 'ReactCache',
+    global: 'ReactCacheOld',
     externals: ['react', 'scheduler'],
   },
 
