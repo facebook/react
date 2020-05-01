@@ -87,6 +87,7 @@ import {
   cloneFundamentalInstance,
   shouldUpdateFundamentalComponent,
   preparePortalMount,
+  prepareScopeUpdate,
 } from './ReactFiberHostConfig';
 import {
   getRootHostContainer,
@@ -138,7 +139,7 @@ import {createFundamentalStateInstance} from './ReactFiberFundamental.new';
 import {Never, isSameOrHigherPriority} from './ReactFiberExpirationTime.new';
 import {resetChildFibers} from './ReactChildFiber.new';
 import {updateDeprecatedEventListeners} from './ReactFiberDeprecatedEvents.new';
-import {createScopeMethods} from './ReactFiberScope.new';
+import {createScopeInstance} from './ReactFiberScope.new';
 
 function markUpdate(workInProgress: Fiber) {
   // Tag the fiber with an update effect. This turns a Placement into
@@ -1247,13 +1248,8 @@ function completeWork(
     case ScopeComponent: {
       if (enableScopeAPI) {
         if (current === null) {
-          const type = workInProgress.type;
-          const scopeInstance: ReactScopeInstance = {
-            fiber: workInProgress,
-            methods: null,
-          };
+          const scopeInstance: ReactScopeInstance = createScopeInstance();
           workInProgress.stateNode = scopeInstance;
-          scopeInstance.methods = createScopeMethods(type, scopeInstance);
           if (enableDeprecatedFlareAPI) {
             const listeners = newProps.DEPRECATED_flareListeners;
             if (listeners != null) {
@@ -1265,6 +1261,7 @@ function completeWork(
               );
             }
           }
+          prepareScopeUpdate(scopeInstance, workInProgress);
           if (workInProgress.ref !== null) {
             markRef(workInProgress);
             markUpdate(workInProgress);

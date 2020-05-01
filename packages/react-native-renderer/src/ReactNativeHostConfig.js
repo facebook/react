@@ -87,6 +87,7 @@ function recursivelyUncacheFiberNode(node: Instance | TextInstance) {
 
 export * from 'react-reconciler/src/ReactFiberHostConfigWithNoPersistence';
 export * from 'react-reconciler/src/ReactFiberHostConfigWithNoHydration';
+export * from 'react-reconciler/src/ReactFiberHostConfigWithNoScopes';
 
 export function appendInitialChild(
   parentInstance: Instance,

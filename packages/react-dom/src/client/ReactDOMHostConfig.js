@@ -9,6 +9,7 @@
 
 import type {TopLevelType} from 'legacy-events/TopLevelEventTypes';
 import type {RootType} from './ReactDOMRoot';
+import type {ReactScopeInstance} from 'shared/ReactTypes';
 import type {
   ReactDOMEventResponder,
   ReactDOMEventResponderInstance,
@@ -19,6 +20,7 @@ import {
   precacheFiberNode,
   updateFiberProps,
   getClosestInstanceFromNode,
+  getFiberFromScopeInstance,
 } from './ReactDOMComponentTree';
 import {
   createElement,
@@ -65,6 +67,7 @@ import {
   enableDeprecatedFlareAPI,
   enableFundamentalAPI,
   enableModernEventSystem,
+  enableScopeAPI,
 } from 'shared/ReactFeatureFlags';
 import {TOP_BEFORE_BLUR, TOP_AFTER_BLUR} from '../events/DOMTopLevelEventTypes';
 import {listenToEvent} from '../events/DOMModernPluginEventSystem';
@@ -1116,4 +1119,26 @@ export function preparePortalMount(portalInstance: Instance): void {
   if (enableModernEventSystem) {
     listenToEvent('onMouseEnter', portalInstance);
   }
+}
+
+export function prepareScopeUpdate(
+  scopeInstance: ReactScopeInstance,
+  internalInstanceHandle: Object,
+): void {
+  if (enableScopeAPI) {
+    precacheFiberNode(internalInstanceHandle, scopeInstance);
+  }
+}
+
+export function prepareScopeUnmount(scopeInstance: Object): void {
+  // TODO when we add createEventHandle
+}
+
+export function getInstanceFromScope(
+  scopeInstance: ReactScopeInstance,
+): null | Object {
+  if (enableScopeAPI) {
+    return getFiberFromScopeInstance(scopeInstance);
+  }
+  return null;
 }

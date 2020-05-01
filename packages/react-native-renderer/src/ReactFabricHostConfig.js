@@ -183,6 +183,7 @@ class ReactFabricHostComponent {
 
 export * from 'react-reconciler/src/ReactFiberHostConfigWithNoMutation';
 export * from 'react-reconciler/src/ReactFiberHostConfigWithNoHydration';
+export * from 'react-reconciler/src/ReactFiberHostConfigWithNoScopes';
 
 export function appendInitialChild(
   parentInstance: Instance,

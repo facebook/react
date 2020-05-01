@@ -9,14 +9,16 @@
 
 import type {Fiber} from './ReactInternalTypes';
 import type {
-  ReactScope,
   ReactScopeInstance,
-  ReactScopeMethods,
   ReactContext,
   ReactScopeQuery,
 } from 'shared/ReactTypes';
 
-import {getPublicInstance, getInstanceFromNode} from './ReactFiberHostConfig';
+import {
+  getPublicInstance,
+  getInstanceFromNode,
+  getInstanceFromScope,
+} from './ReactFiberHostConfig';
 import {isFiberSuspenseAndTimedOut} from './ReactFiberTreeReflection';
 
 import {HostComponent, ScopeComponent, ContextProvider} from './ReactWorkTags';
@@ -138,50 +140,60 @@ function collectNearestChildContextValues<T>(
   }
 }
 
-export function createScopeMethods(
-  scope: ReactScope,
-  instance: ReactScopeInstance,
-): ReactScopeMethods {
+function DO_NOT_USE_queryAllNodes(fn: ReactScopeQuery): null | Array<Object> {
+  const currentFiber = getInstanceFromScope(this);
+  if (currentFiber === null) {
+    return null;
+  }
+  const child = currentFiber.child;
+  const scopedNodes = [];
+  if (child !== null) {
+    collectScopedNodesFromChildren(child, fn, scopedNodes);
+  }
+  return scopedNodes.length === 0 ? null : scopedNodes;
+}
+
+function DO_NOT_USE_queryFirstNode(fn: ReactScopeQuery): null | Object {
+  const currentFiber = getInstanceFromScope(this);
+  if (currentFiber === null) {
+    return null;
+  }
+  const child = currentFiber.child;
+  if (child !== null) {
+    return collectFirstScopedNodeFromChildren(child, fn);
+  }
+  return null;
+}
+
+function containsNode(node: Object): boolean {
+  let fiber = getInstanceFromNode(node);
+  while (fiber !== null) {
+    if (fiber.tag === ScopeComponent && fiber.stateNode === this) {
+      return true;
+    }
+    fiber = fiber.return;
+  }
+  return false;
+}
+
+function getChildContextValues<T>(context: ReactContext<T>): Array<T> {
+  const currentFiber = getInstanceFromScope(this);
+  if (currentFiber === null) {
+    return [];
+  }
+  const child = currentFiber.child;
+  const childContextValues = [];
+  if (child !== null) {
+    collectNearestChildContextValues(child, context, childContextValues);
+  }
+  return childContextValues;
+}
+
+export function createScopeInstance(): ReactScopeInstance {
   return {
-    DO_NOT_USE_queryAllNodes(fn: ReactScopeQuery): null | Array<Object> {
-      const currentFiber = ((instance.fiber: any): Fiber);
-      const child = currentFiber.child;
-      const scopedNodes = [];
-      if (child !== null) {
-        collectScopedNodesFromChildren(child, fn, scopedNodes);
-      }
-      return scopedNodes.length === 0 ? null : scopedNodes;
-    },
-    DO_NOT_USE_queryFirstNode(fn: ReactScopeQuery): null | Object {
-      const currentFiber = ((instance.fiber: any): Fiber);
-      const child = currentFiber.child;
-      if (child !== null) {
-        return collectFirstScopedNodeFromChildren(child, fn);
-      }
-      return null;
-    },
-    containsNode(node: Object): boolean {
-      let fiber = getInstanceFromNode(node);
-      while (fiber !== null) {
-        if (
-          fiber.tag === ScopeComponent &&
-          fiber.type === scope &&
-          fiber.stateNode === instance
-        ) {
-          return true;
-        }
-        fiber = fiber.return;
-      }
-      return false;
-    },
-    getChildContextValues<T>(context: ReactContext<T>): Array<T> {
-      const currentFiber = ((instance.fiber: any): Fiber);
-      const child = currentFiber.child;
-      const childContextValues = [];
-      if (child !== null) {
-        collectNearestChildContextValues(child, context, childContextValues);
-      }
-      return childContextValues;
-    },
+    DO_NOT_USE_queryAllNodes,
+    DO_NOT_USE_queryFirstNode,
+    containsNode,
+    getChildContextValues,
   };
 }

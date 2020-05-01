@@ -84,6 +84,9 @@ export const makeServerId = $$$hostConfig.makeServerId;
 export const beforeActiveInstanceBlur = $$$hostConfig.beforeActiveInstanceBlur;
 export const afterActiveInstanceBlur = $$$hostConfig.afterActiveInstanceBlur;
 export const preparePortalMount = $$$hostConfig.preparePortalMount;
+export const prepareScopeUpdate = $$$hostConfig.preparePortalMount;
+export const prepareScopeUnmount = $$$hostConfig.prepareScopeUnmount;
+export const getInstanceFromScope = $$$hostConfig.getInstanceFromScope;
 
 // -------------------
 //      Mutation

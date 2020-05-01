@@ -243,6 +243,7 @@ function applyTextProps(instance, props, prevProps = {}) {
 
 export * from 'react-reconciler/src/ReactFiberHostConfigWithNoPersistence';
 export * from 'react-reconciler/src/ReactFiberHostConfigWithNoHydration';
+export * from 'react-reconciler/src/ReactFiberHostConfigWithNoScopes';
 
 export function appendInitialChild(parentInstance, child) {
   if (typeof child === 'string') {
