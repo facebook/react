@@ -224,6 +224,7 @@ let isComposing = false;
  * @return {?object} A SyntheticCompositionEvent.
  */
 function extractCompositionEvent(
+  dispatchQueue,
   topLevelType,
   targetInst,
   nativeEvent,
@@ -260,10 +261,11 @@ function extractCompositionEvent(
 
   const event = SyntheticCompositionEvent.getPooled(
     eventType,
-    targetInst,
+    null,
     nativeEvent,
     nativeEventTarget,
   );
+  accumulateTwoPhaseListeners(targetInst, dispatchQueue, event);
 
   if (fallbackData) {
     // Inject data generated from fallback path into the synthetic event.
@@ -275,9 +277,6 @@ function extractCompositionEvent(
       event.data = customData;
     }
   }
-
-  accumulateTwoPhaseListeners(event);
-  return event;
 }
 
 /**
@@ -410,6 +409,7 @@ function getFallbackBeforeInputChars(topLevelType: TopLevelType, nativeEvent) {
  * @return {?object} A SyntheticInputEvent.
  */
 function extractBeforeInputEvent(
+  dispatchQueue,
   topLevelType,
   targetInst,
   nativeEvent,
@@ -431,14 +431,12 @@ function extractBeforeInputEvent(
 
   const event = SyntheticInputEvent.getPooled(
     eventTypes.beforeInput,
-    targetInst,
+    null,
     nativeEvent,
     nativeEventTarget,
   );
-
+  accumulateTwoPhaseListeners(targetInst, dispatchQueue, event);
   event.data = chars;
-  accumulateTwoPhaseListeners(event);
-  return event;
 }
 
 /**
@@ -463,35 +461,28 @@ const BeforeInputEventPlugin = {
   eventTypes: eventTypes,
 
   extractEvents: function(
+    dispatchQueue,
     topLevelType,
     targetInst,
     nativeEvent,
     nativeEventTarget,
     eventSystemFlags,
+    container,
   ) {
-    const composition = extractCompositionEvent(
+    extractCompositionEvent(
+      dispatchQueue,
       topLevelType,
       targetInst,
       nativeEvent,
       nativeEventTarget,
     );
-
-    const beforeInput = extractBeforeInputEvent(
+    extractBeforeInputEvent(
+      dispatchQueue,
       topLevelType,
       targetInst,
       nativeEvent,
       nativeEventTarget,
     );
-
-    if (composition === null) {
-      return beforeInput;
-    }
-
-    if (beforeInput === null) {
-      return composition;
-    }
-
-    return [composition, beforeInput];
   },
 };
 

@@ -108,7 +108,7 @@ function getEventTargetDocument(eventTarget) {
  * @param {object} nativeEventTarget
  * @return {?SyntheticEvent}
  */
-function constructSelectEvent(nativeEvent, nativeEventTarget) {
+function constructSelectEvent(dispatchQueue, nativeEvent, nativeEventTarget) {
   // Ensure we have the right element, and that the user is not dragging a
   // selection (this matches native `select` event behavior). In HTML5, select
   // fires only on input and textarea thus if there's no focused element we
@@ -120,7 +120,7 @@ function constructSelectEvent(nativeEvent, nativeEventTarget) {
     activeElement == null ||
     activeElement !== getActiveElement(doc)
   ) {
-    return null;
+    return;
   }
 
   // Only fire when selection has actually changed.
@@ -130,7 +130,7 @@ function constructSelectEvent(nativeEvent, nativeEventTarget) {
 
     const syntheticEvent = SyntheticEvent.getPooled(
       eventTypes.select,
-      activeElementInst,
+      null,
       nativeEvent,
       nativeEventTarget,
     );
@@ -138,12 +138,12 @@ function constructSelectEvent(nativeEvent, nativeEventTarget) {
     syntheticEvent.type = 'select';
     syntheticEvent.target = activeElement;
 
-    accumulateTwoPhaseListeners(syntheticEvent);
-
-    return syntheticEvent;
+    accumulateTwoPhaseListeners(
+      activeElementInst,
+      dispatchQueue,
+      syntheticEvent,
+    );
   }
-
-  return null;
 }
 
 function isListeningToEvents(
@@ -186,6 +186,7 @@ const SelectEventPlugin = {
   eventTypes: eventTypes,
 
   extractEvents: function(
+    dispatchQueue,
     topLevelType,
     targetInst,
     nativeEvent,
@@ -207,7 +208,7 @@ const SelectEventPlugin = {
       (topLevelType !== TOP_SELECTION_CHANGE &&
         !isListeningToEvents(rootTargetDependencies, container))
     ) {
-      return null;
+      return;
     }
 
     const targetNode = targetInst ? getNodeFromInstance(targetInst) : window;
@@ -238,7 +239,8 @@ const SelectEventPlugin = {
       case TOP_MOUSE_UP:
       case TOP_DRAG_END:
         mouseDown = false;
-        return constructSelectEvent(nativeEvent, nativeEventTarget);
+        constructSelectEvent(dispatchQueue, nativeEvent, nativeEventTarget);
+        break;
       // Chrome and IE fire non-standard event when selection is changed (and
       // sometimes when it hasn't). IE's event fires out of order with respect
       // to key and input events on deletion, so we discard it.
@@ -255,10 +257,10 @@ const SelectEventPlugin = {
       // falls through
       case TOP_KEY_DOWN:
       case TOP_KEY_UP:
-        return constructSelectEvent(nativeEvent, nativeEventTarget);
+        constructSelectEvent(dispatchQueue, nativeEvent, nativeEventTarget);
     }
 
-    return null;
+    return;
   },
 };
 

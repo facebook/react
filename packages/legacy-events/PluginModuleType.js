@@ -22,7 +22,7 @@ export type PluginName = string;
 
 export type EventSystemFlags = number;
 
-export type PluginModule<NativeEvent> = {
+export type LegacyPluginModule<NativeEvent> = {
   eventTypes: EventTypes,
   extractEvents: (
     topLevelType: TopLevelType,
@@ -33,4 +33,33 @@ export type PluginModule<NativeEvent> = {
     container?: null | EventTarget,
   ) => ?ReactSyntheticEvent,
   tapMoveThreshold?: number,
+};
+
+export type DispatchQueueItemPhaseEntry = {|
+  instance: null | Fiber,
+  listener: Function,
+  currentTarget: EventTarget,
+|};
+
+export type DispatchQueueItemPhase = Array<DispatchQueueItemPhaseEntry>;
+
+export type DispatchQueueItem = {|
+  event: ReactSyntheticEvent,
+  capture: DispatchQueueItemPhase,
+  bubble: DispatchQueueItemPhase,
+|};
+
+export type DispatchQueue = Array<DispatchQueueItem>;
+
+export type ModernPluginModule<NativeEvent> = {
+  eventTypes: EventTypes,
+  extractEvents: (
+    dispatchQueue: DispatchQueue,
+    topLevelType: TopLevelType,
+    targetInst: null | Fiber,
+    nativeTarget: NativeEvent,
+    nativeEventTarget: null | EventTarget,
+    eventSystemFlags: number,
+    container: null | EventTarget,
+  ) => void,
 };

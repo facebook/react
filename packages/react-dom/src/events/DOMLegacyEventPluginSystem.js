@@ -12,7 +12,7 @@ import type {DOMTopLevelEventType} from 'legacy-events/TopLevelEventTypes';
 import type {ElementListenerMap} from '../client/ReactDOMComponentTree';
 import type {EventSystemFlags} from './EventSystemFlags';
 import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
-import type {PluginModule} from 'legacy-events/PluginModuleType';
+import type {LegacyPluginModule} from 'legacy-events/PluginModuleType';
 import type {ReactSyntheticEvent} from 'legacy-events/ReactSyntheticEventType';
 import type {TopLevelType} from 'legacy-events/TopLevelEventTypes';
 import forEachAccumulated from 'legacy-events/forEachAccumulated';
@@ -191,9 +191,10 @@ function extractPluginEvents(
   eventSystemFlags: EventSystemFlags,
 ): Array<ReactSyntheticEvent> | ReactSyntheticEvent | null {
   let events = null;
-  for (let i = 0; i < plugins.length; i++) {
+  const legacyPlugins = ((plugins: any): Array<LegacyPluginModule<Event>>);
+  for (let i = 0; i < legacyPlugins.length; i++) {
     // Not every plugin in the ordering may be loaded at runtime.
-    const possiblePlugin: PluginModule<AnyNativeEvent> = plugins[i];
+    const possiblePlugin = legacyPlugins[i];
     if (possiblePlugin) {
       const extractedEvents = possiblePlugin.extractEvents(
         topLevelType,
