@@ -33,14 +33,6 @@ export default function Badge({className, hocDisplayNames, type}: Props) {
     totalBadgeCount += hocDisplayNames.length;
   }
 
-  if (type === ElementTypeMemo) {
-    typeLabel = 'Memo';
-    totalBadgeCount++;
-  } else if (type === ElementTypeForwardRef) {
-    typeLabel = 'ForwardRef';
-    totalBadgeCount++;
-  }
-
   if (hocDisplayNames === null && typeLabel === null) {
     return null;
   }

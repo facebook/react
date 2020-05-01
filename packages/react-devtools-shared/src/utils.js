@@ -260,9 +260,7 @@ export function separateDisplayNameAndHOCs(
 
   switch (type) {
     case ElementTypeClass:
-    case ElementTypeForwardRef:
     case ElementTypeFunction:
-    case ElementTypeMemo:
       if (displayName.indexOf('(') >= 0) {
         const matches = displayName.match(/[^()]+/g);
         if (matches != null) {
@@ -270,6 +268,12 @@ export function separateDisplayNameAndHOCs(
           hocDisplayNames = matches;
         }
       }
+      break;
+    case ElementTypeForwardRef:
+      hocDisplayNames = ['ForwardRef']
+    break;
+    case ElementTypeMemo:
+      hocDisplayNames = ['Memo']
       break;
     default:
       break;
