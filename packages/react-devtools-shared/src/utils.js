@@ -270,10 +270,10 @@ export function separateDisplayNameAndHOCs(
       }
       break;
     case ElementTypeForwardRef:
-      hocDisplayNames = ['ForwardRef']
-    break;
+      hocDisplayNames = ['ForwardRef'];
+      break;
     case ElementTypeMemo:
-      hocDisplayNames = ['Memo']
+      hocDisplayNames = ['Memo'];
       break;
     default:
       break;

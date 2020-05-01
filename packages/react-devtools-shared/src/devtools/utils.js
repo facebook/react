@@ -7,11 +7,6 @@
  * @flow
  */
 
-import {
-  ElementTypeForwardRef,
-  ElementTypeMemo,
-} from 'react-devtools-shared/src/types';
-
 import type {Element} from './views/Components/types';
 import type Store from './store';
 
