@@ -302,7 +302,7 @@ const bundles = [
     ],
   },
   {
-    bundleTypes: [], // TODO: FB_WWW_DEV, FB_WWW_PROD
+    bundleTypes: [FB_WWW_DEV, FB_WWW_PROD],
     moduleType: RENDERER,
     entry: 'react-flight-dom-relay/server-runtime',
     global: 'ReactFlightDOMRelayServerRuntime',
