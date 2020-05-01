@@ -13,6 +13,7 @@ let React;
 
 let ReactDOM;
 let Scheduler;
+let act;
 
 const setUntrackedInputValue = Object.getOwnPropertyDescriptor(
   HTMLInputElement.prototype,
@@ -27,6 +28,7 @@ describe('ReactDOMFiberAsync', () => {
     container = document.createElement('div');
     React = require('react');
     ReactDOM = require('react-dom');
+    act = require('react-dom/test-utils').act;
     Scheduler = require('scheduler');
 
     document.body.appendChild(container);
@@ -634,5 +636,49 @@ describe('ReactDOMFiberAsync', () => {
       expect(Scheduler).toFlushExpired(['A', 'B', 'C']);
       expect(container.textContent).toEqual('ABC');
     });
+  });
+
+  // @gate experimental
+  it('unmounted roots should never clear newer root content from a container', () => {
+    const ref = React.createRef();
+
+    function OldApp() {
+      const [value, setValue] = React.useState('old');
+      function hideOnClick() {
+        // Schedule a discrete update.
+        setValue('update');
+        // Synchronously unmount this root.
+        ReactDOM.flushSync(() => oldRoot.unmount());
+      }
+      return (
+        <button onClick={hideOnClick} ref={ref}>
+          {value}
+        </button>
+      );
+    }
+
+    function NewApp() {
+      return <button ref={ref}>new</button>;
+    }
+
+    const oldRoot = ReactDOM.createRoot(container);
+    act(() => {
+      oldRoot.render(<OldApp />);
+    });
+
+    // Invoke discrete event.
+    ref.current.click();
+
+    // The root should now be unmounted.
+    expect(container.textContent).toBe('');
+
+    // We can now render a new one.
+    const newRoot = ReactDOM.createRoot(container);
+    ReactDOM.flushSync(() => {
+      newRoot.render(<NewApp />);
+    });
+    ref.current.click();
+
+    expect(container.textContent).toBe('new');
   });
 });
