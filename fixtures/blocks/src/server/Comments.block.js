@@ -6,6 +6,7 @@
  */
 
 import * as React from 'react';
+import {block} from 'react';
 import {fetch} from 'react-data/fetch';
 
 function load(postId) {
@@ -17,7 +18,7 @@ function load(postId) {
 function Comments(props, data) {
   return (
     <>
-      <h3>Comments</h3>
+      <h5>Comments</h5>
       <ul>
         {data.comments.slice(0, 5).map(item => (
           <li key={item.id}>{item.body}</li>
@@ -27,4 +28,4 @@ function Comments(props, data) {
   );
 }
 
-export default React.block(Comments, load);
+export default block(Comments, load);

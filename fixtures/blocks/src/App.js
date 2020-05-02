@@ -5,15 +5,15 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import React, {useReducer, useTransition, Suspense} from 'react';
-import loadPost from './Post';
+import React, {useReducer, useEffect, useTransition, Suspense} from 'react';
+import loadFeed from './server/Feed.block';
 import {createCache, CacheProvider} from 'react/unstable-cache';
 
 const initialState = {
   // TODO: use this for invalidation.
   cache: createCache(),
-  params: {id: 1},
-  RootBlock: loadPost({id: 1}),
+  params: {},
+  RootBlock: loadFeed({}),
 };
 
 function reducer(state, action) {
@@ -23,7 +23,7 @@ function reducer(state, action) {
       return {
         cache: state.cache,
         params: action.nextParams,
-        RootBlock: loadPost(action.nextParams),
+        RootBlock: loadFeed(action.nextParams),
       };
     default:
       throw new Error();
@@ -31,34 +31,21 @@ function reducer(state, action) {
 }
 
 function Router() {
-  const [state, dispatch] = useReducer(reducer, initialState);
-  const [startTransition, isPending] = useTransition({
+  const [state /*dispatch*/] = useReducer(reducer, initialState);
+  const [, /*startTransition*/ isPending] = useTransition({
     timeoutMs: 3000,
   });
+
+  useEffect(() => {
+    document.body.style.cursor = isPending ? 'wait' : '';
+  }, [isPending]);
+
   return (
-    <>
-      <button
-        disabled={isPending}
-        onClick={() => {
-          startTransition(() => {
-            dispatch({
-              type: 'navigate',
-              nextParams: {
-                id: state.params.id === 3 ? 1 : state.params.id + 1,
-              },
-            });
-          });
-        }}>
-        Next
-      </button>
-      {isPending && ' ...'}
-      <hr />
-      <Suspense fallback={<h4>Loading Page...</h4>}>
-        <CacheProvider value={state.cache}>
-          <state.RootBlock />
-        </CacheProvider>
-      </Suspense>
-    </>
+    <Suspense fallback={<h2>Loading...</h2>}>
+      <CacheProvider value={state.cache}>
+        <state.RootBlock />
+      </CacheProvider>
+    </Suspense>
   );
 }
 
