@@ -8,30 +8,28 @@
 
 import * as React from 'react';
 import {block} from 'react';
+import {fetch} from 'react-data/fetch';
 
 // Server
 
-import {fetch} from 'react-data/fetch';
+import PostList from './PostList';
 
-function load(postId) {
+function load(params) {
+  const allPosts = fetch('/posts').json();
   return {
-    comments: fetch(`/comments?postId=${postId}`).json(),
+    posts: <PostList posts={allPosts} />,
   };
 }
 
 // Client
 
-function Comments(props, data) {
+function FeedPage(props, data) {
   return (
     <>
-      <h5>Comments</h5>
-      <ul>
-        {data.comments.slice(0, 5).map(item => (
-          <li key={item.id}>{item.body}</li>
-        ))}
-      </ul>
+      <h2>Feed</h2>
+      {data.posts}
     </>
   );
 }
 
-export default block(Comments, load);
+export default block(FeedPage, load);

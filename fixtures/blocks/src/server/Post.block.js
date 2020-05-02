@@ -4,9 +4,13 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  */
+/* eslint-disable import/first */
 
 import * as React from 'react';
 import {block, Suspense} from 'react';
+
+// Server
+
 import loadComments from './Comments.block';
 
 function load(postId) {
@@ -14,6 +18,8 @@ function load(postId) {
     Comments: loadComments(postId),
   };
 }
+
+// Client
 
 function Post(props, data) {
   return (

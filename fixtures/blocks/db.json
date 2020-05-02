@@ -2,18 +2,21 @@
   "posts": [
     {
       "id": 1,
-      "title": "My First Post",
+      "userId": 2,
+      "title": "Welcome",
       "body": "Hello, world!"
     },
     {
       "id": 2,
-      "title": "My Second Post",
+      "userId": 3,
+      "title": "A Guide to useEffect",
       "body": "Let me tell you everything about useEffect"
     },
     {
       "id": 3,
-      "title": "My Third Post",
-      "body": "Why is everything so complicated?"
+      "userId": 1,
+      "title": "Here and There",
+      "body": "Browsers are smart"
     }
   ],
   "comments": [
@@ -42,5 +45,15 @@
       "body": "It's still easy",
       "postId": 3
     }
-  ]
+  ],
+  "users": [{
+    "id": 1,
+    "name": "Sebastian"
+  }, {
+    "id": 2,
+    "name": "Sophie"
+  }, {
+    "id": 3,
+    "name": "Dan"
+  }]
 }

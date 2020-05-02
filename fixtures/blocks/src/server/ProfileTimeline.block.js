@@ -12,26 +12,24 @@ import {block} from 'react';
 // Server
 
 import {fetch} from 'react-data/fetch';
+import PostList from './PostList';
 
-function load(postId) {
+function load(userId) {
+  const postsByUser = fetch(`/posts?userId=${userId}`).json();
   return {
-    comments: fetch(`/comments?postId=${postId}`).json(),
+    posts: <PostList posts={postsByUser} />,
   };
 }
 
 // Client
 
-function Comments(props, data) {
+function ProfileTimeline(props, data) {
   return (
     <>
-      <h5>Comments</h5>
-      <ul>
-        {data.comments.slice(0, 5).map(item => (
-          <li key={item.id}>{item.body}</li>
-        ))}
-      </ul>
+      <h3>Timeline</h3>
+      {data.posts}
     </>
   );
 }
 
-export default block(Comments, load);
+export default block(ProfileTimeline, load);

@@ -2,6 +2,7 @@
   "name": "blocks",
   "version": "0.1.0",
   "private": true,
+  "proxy": "http://localhost:3001/",
   "dependencies": {
     "concurrently": "^5.2.0",
     "json-server": "^0.16.1",
