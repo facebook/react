@@ -354,5 +354,8 @@
   "354": "getInspectorDataForViewAtPoint() is not available in production.",
   "355": "The object passed back from useOpaqueIdentifier is meant to be passed through to attributes only. Do not read the value directly.",
   "356": "Could not read the cache.",
-  "357": "The current renderer does not support React Scopes. This error is likely caused by a bug in React. Please file an issue."
+  "357": "The current renderer does not support React Scopes. This error is likely caused by a bug in React. Please file an issue.",
+  "358": "Invalid update priority: %s. This is a bug in React.",
+  "359": "Invalid transition priority: %s. This is a bug in React.",
+  "360": "Invalid lane: %s. This is a bug in React."
 }

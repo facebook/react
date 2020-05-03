@@ -1306,44 +1306,25 @@ describe('ReactDOMServerHooks', () => {
           // State update should trigger the ID to update, which changes the props
           // of ChildWithID. This should cause ChildWithID to hydrate before Children
 
-          gate(flags => {
-            if (__DEV__) {
-              expect(Scheduler).toFlushAndYieldThrough([
-                'Child with ID',
-                // Fallbacks are immdiately committed in TestUtils version
-                // of act
-                // 'Child with ID',
-                // 'Child with ID',
-                'Child One',
-                'Child Two',
-              ]);
-            } else if (flags.new) {
-              // Upgrading a dehyrdating boundary works a little differently in
-              // the new reconciler. After the update on the boundary is
-              // scheduled, it waits until the end of the current time slice
-              // before restarting at the higher priority.
-              expect(Scheduler).toFlushAndYieldThrough([
-                'Child with ID',
-                'Child with ID',
-                'Child with ID',
-                'Child with ID',
-                'Child One',
-                'Child Two',
-              ]);
-            } else {
-              // Whereas the old reconciler relies on a Scheduler hack to
-              // interrupt the current task. It's not clear if this is any
-              // better or worse, though. Regardless it's not a big deal since
-              // the time slices aren't that big.
-              expect(Scheduler).toFlushAndYieldThrough([
-                'Child with ID',
-                'Child with ID',
-                'Child with ID',
-                'Child One',
-                'Child Two',
-              ]);
-            }
-          });
+          expect(Scheduler).toFlushAndYieldThrough(
+            __DEV__
+              ? [
+                  'Child with ID',
+                  // Fallbacks are immediately committed in TestUtils version
+                  // of act
+                  // 'Child with ID',
+                  // 'Child with ID',
+                  'Child One',
+                  'Child Two',
+                ]
+              : [
+                  'Child with ID',
+                  'Child with ID',
+                  'Child with ID',
+                  'Child One',
+                  'Child Two',
+                ],
+          );
 
           expect(child1Ref.current).toBe(null);
           expect(childWithIDRef.current).toEqual(
@@ -1691,15 +1672,24 @@ describe('ReactDOMServerHooks', () => {
 
         ReactDOM.createRoot(container, {hydrate: true}).render(<App />);
 
-        expect(() =>
-          expect(() => Scheduler.unstable_flushAll()).toThrow(
+        if (gate(flags => flags.new)) {
+          expect(() => Scheduler.unstable_flushAll()).toErrorDev([
             'The object passed back from useOpaqueIdentifier is meant to be passed through to attributes only. ' +
               'Do not read the value directly.',
-          ),
-        ).toErrorDev([
-          'The object passed back from useOpaqueIdentifier is meant to be passed through to attributes only. ' +
-            'Do not read the value directly.',
-        ]);
+          ]);
+        } else {
+          // In the old reconciler, the error isn't surfaced to the user. That
+          // part isn't important, as long as It warns.
+          expect(() =>
+            expect(() => Scheduler.unstable_flushAll()).toThrow(
+              'The object passed back from useOpaqueIdentifier is meant to be passed through to attributes only. ' +
+                'Do not read the value directly.',
+            ),
+          ).toErrorDev([
+            'The object passed back from useOpaqueIdentifier is meant to be passed through to attributes only. ' +
+              'Do not read the value directly.',
+          ]);
+        }
       });
 
       it('useOpaqueIdentifier throws if you try to add the result as a number in a child component wrapped in a Suspense', async () => {
@@ -1724,15 +1714,24 @@ describe('ReactDOMServerHooks', () => {
 
         ReactDOM.createRoot(container, {hydrate: true}).render(<App />);
 
-        expect(() =>
-          expect(() => Scheduler.unstable_flushAll()).toThrow(
+        if (gate(flags => flags.new)) {
+          expect(() => Scheduler.unstable_flushAll()).toErrorDev([
             'The object passed back from useOpaqueIdentifier is meant to be passed through to attributes only. ' +
               'Do not read the value directly.',
-          ),
-        ).toErrorDev([
-          'The object passed back from useOpaqueIdentifier is meant to be passed through to attributes only. ' +
-            'Do not read the value directly.',
-        ]);
+          ]);
+        } else {
+          // In the old reconciler, the error isn't surfaced to the user. That
+          // part isn't important, as long as It warns.
+          expect(() =>
+            expect(() => Scheduler.unstable_flushAll()).toThrow(
+              'The object passed back from useOpaqueIdentifier is meant to be passed through to attributes only. ' +
+                'Do not read the value directly.',
+            ),
+          ).toErrorDev([
+            'The object passed back from useOpaqueIdentifier is meant to be passed through to attributes only. ' +
+              'Do not read the value directly.',
+          ]);
+        }
       });
 
       it('useOpaqueIdentifier with two opaque identifiers on the same page', () => {
