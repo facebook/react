@@ -35,7 +35,7 @@ function InteractionListItem({data: itemData, index, style}: Props) {
     selectTab,
   } = itemData;
 
-  const {commitData, interactionCommits} = dataForRoot;
+  const {commitData } = dataForRoot;
   const {interactions, lastInteractionTime, maxCommitDuration} = chartData;
 
   const interaction = interactions[index];
@@ -46,8 +46,6 @@ function InteractionListItem({data: itemData, index, style}: Props) {
   const handleClick = useCallback(() => {
     selectInteraction(interaction.id);
   }, [interaction, selectInteraction]);
-
-  const commits = interactionCommits.get(interaction.id) || [];
 
   const startTime = interaction.timestamp;
   const stopTime = lastInteractionTime;
@@ -79,7 +77,7 @@ function InteractionListItem({data: itemData, index, style}: Props) {
           width: scaleX(stopTime - startTime, 0),
         }}
       />
-      {commits.map(commitIndex => (
+      {commitData.map((commit, commitIndex) => (
         <div
           className={styles.CommitBox}
           key={commitIndex}
@@ -90,11 +88,11 @@ function InteractionListItem({data: itemData, index, style}: Props) {
                 1,
                 Math.max(
                   0,
-                  commitData[commitIndex].duration / maxCommitDuration,
+                  commit.duration / maxCommitDuration,
                 ),
               ) || 0,
             ),
-            left: labelWidth + scaleX(commitData[commitIndex].timestamp, 0),
+            left: labelWidth + scaleX(commit.timestamp, 0),
           }}
         />
       ))}
