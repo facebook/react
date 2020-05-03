@@ -21,9 +21,9 @@ describe('ReactFlightDOMRelay', () => {
     act = require('react-dom/test-utils').act;
     React = require('react');
     ReactDOM = require('react-dom');
-    ReactDOMFlightRelayServer = require('react-flight-dom-relay/server');
-    ReactDOMFlightRelayServerRuntime = require('react-flight-dom-relay/server-runtime');
-    ReactDOMFlightRelayClient = require('react-flight-dom-relay');
+    ReactDOMFlightRelayServer = require('react-transport-dom-relay/server');
+    ReactDOMFlightRelayServerRuntime = require('react-transport-dom-relay/server-runtime');
+    ReactDOMFlightRelayClient = require('react-transport-dom-relay');
   });
 
   function readThrough(data) {

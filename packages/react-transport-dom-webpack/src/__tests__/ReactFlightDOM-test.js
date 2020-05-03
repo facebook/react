@@ -28,9 +28,9 @@ let act;
 let Stream;
 let React;
 let ReactDOM;
-let ReactFlightDOMServer;
-let ReactFlightDOMServerRuntime;
-let ReactFlightDOMClient;
+let ReactTransportDOMServer;
+let ReactTransportDOMServerRuntime;
+let ReactTransportDOMClient;
 
 describe('ReactFlightDOM', () => {
   beforeEach(() => {
@@ -41,9 +41,9 @@ describe('ReactFlightDOM', () => {
     Stream = require('stream');
     React = require('react');
     ReactDOM = require('react-dom');
-    ReactFlightDOMServer = require('react-flight-dom-webpack/server');
-    ReactFlightDOMServerRuntime = require('react-flight-dom-webpack/server-runtime');
-    ReactFlightDOMClient = require('react-flight-dom-webpack');
+    ReactTransportDOMServer = require('react-transport-dom-webpack/server');
+    ReactTransportDOMServerRuntime = require('react-transport-dom-webpack/server-runtime');
+    ReactTransportDOMClient = require('react-transport-dom-webpack');
   });
 
   function getTestStream() {
@@ -76,14 +76,14 @@ describe('ReactFlightDOM', () => {
     };
     if (load === undefined) {
       return () => {
-        return ReactFlightDOMServerRuntime.serverBlockNoData('path/' + idx);
+        return ReactTransportDOMServerRuntime.serverBlockNoData('path/' + idx);
       };
     }
     return function(...args) {
       const curriedLoad = () => {
         return load(...args);
       };
-      return ReactFlightDOMServerRuntime.serverBlock(
+      return ReactTransportDOMServerRuntime.serverBlock(
         'path/' + idx,
         curriedLoad,
       );
@@ -125,8 +125,8 @@ describe('ReactFlightDOM', () => {
     }
 
     const {writable, readable} = getTestStream();
-    ReactFlightDOMServer.pipeToNodeWritable(<App />, writable, webpackMap);
-    const response = ReactFlightDOMClient.createFromReadableStream(readable);
+    ReactTransportDOMServer.pipeToNodeWritable(<App />, writable, webpackMap);
+    const response = ReactTransportDOMClient.createFromReadableStream(readable);
     await waitForSuspense(() => {
       const model = response.readRoot();
       expect(model).toEqual({
@@ -175,12 +175,12 @@ describe('ReactFlightDOM', () => {
     }
 
     const {writable, readable} = getTestStream();
-    ReactFlightDOMServer.pipeToNodeWritable(
+    ReactTransportDOMServer.pipeToNodeWritable(
       <RootModel />,
       writable,
       webpackMap,
     );
-    const response = ReactFlightDOMClient.createFromReadableStream(readable);
+    const response = ReactTransportDOMClient.createFromReadableStream(readable);
 
     const container = document.createElement('div');
     const root = ReactDOM.createRoot(container);
@@ -214,12 +214,12 @@ describe('ReactFlightDOM', () => {
     }
 
     const {writable, readable} = getTestStream();
-    ReactFlightDOMServer.pipeToNodeWritable(
+    ReactTransportDOMServer.pipeToNodeWritable(
       <RootModel />,
       writable,
       webpackMap,
     );
-    const response = ReactFlightDOMClient.createFromReadableStream(readable);
+    const response = ReactTransportDOMClient.createFromReadableStream(readable);
 
     const container = document.createElement('div');
     const root = ReactDOM.createRoot(container);
@@ -251,12 +251,12 @@ describe('ReactFlightDOM', () => {
     }
 
     const {writable, readable} = getTestStream();
-    ReactFlightDOMServer.pipeToNodeWritable(
+    ReactTransportDOMServer.pipeToNodeWritable(
       <RootModel />,
       writable,
       webpackMap,
     );
-    const response = ReactFlightDOMClient.createFromReadableStream(readable);
+    const response = ReactTransportDOMClient.createFromReadableStream(readable);
 
     const container = document.createElement('div');
     const root = ReactDOM.createRoot(container);
@@ -410,8 +410,12 @@ describe('ReactFlightDOM', () => {
     }
 
     const {writable, readable} = getTestStream();
-    ReactFlightDOMServer.pipeToNodeWritable(profileModel, writable, webpackMap);
-    const response = ReactFlightDOMClient.createFromReadableStream(readable);
+    ReactTransportDOMServer.pipeToNodeWritable(
+      profileModel,
+      writable,
+      webpackMap,
+    );
+    const response = ReactTransportDOMClient.createFromReadableStream(readable);
 
     const container = document.createElement('div');
     const root = ReactDOM.createRoot(container);

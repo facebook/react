@@ -16,15 +16,15 @@ global.TextEncoder = require('util').TextEncoder;
 global.TextDecoder = require('util').TextDecoder;
 
 let React;
-let ReactFlightDOMServer;
-let ReactFlightDOMClient;
+let ReactTransportDOMServer;
+let ReactTransportDOMClient;
 
 describe('ReactFlightDOMBrowser', () => {
   beforeEach(() => {
     jest.resetModules();
     React = require('react');
-    ReactFlightDOMServer = require('react-flight-dom-webpack/server.browser');
-    ReactFlightDOMClient = require('react-flight-dom-webpack');
+    ReactTransportDOMServer = require('react-transport-dom-webpack/server.browser');
+    ReactTransportDOMClient = require('react-transport-dom-webpack');
   });
 
   async function waitForSuspense(fn) {
@@ -61,8 +61,8 @@ describe('ReactFlightDOMBrowser', () => {
       return model;
     }
 
-    const stream = ReactFlightDOMServer.renderToReadableStream(<App />);
-    const response = ReactFlightDOMClient.createFromReadableStream(stream);
+    const stream = ReactTransportDOMServer.renderToReadableStream(<App />);
+    const response = ReactTransportDOMClient.createFromReadableStream(stream);
     await waitForSuspense(() => {
       const model = response.readRoot();
       expect(model).toEqual({

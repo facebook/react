@@ -1,6 +1,6 @@
 'use strict';
 
-const ReactFlightDOMServer = require('react-flight-dom-webpack/server');
+const ReactTransportDOMServer = require('react-transport-dom-webpack/server');
 const React = require('react');
 const Stream = require('stream');
 
@@ -22,5 +22,5 @@ module.exports = function(req, res) {
   let model = {
     content: <HTML />,
   };
-  ReactFlightDOMServer.pipeToNodeWritable(model, res);
+  ReactTransportDOMServer.pipeToNodeWritable(model, res);
 };

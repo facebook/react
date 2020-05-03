@@ -237,43 +237,43 @@ const bundles = [
     externals: ['react', 'react-dom/server'],
   },
 
-  /******* React DOM Flight Server Webpack *******/
+  /******* React Transport DOM Server Webpack *******/
   {
     bundleTypes: [NODE_DEV, NODE_PROD, UMD_DEV, UMD_PROD],
     moduleType: RENDERER,
-    entry: 'react-flight-dom-webpack/server.browser',
-    global: 'ReactFlightDOMServer',
+    entry: 'react-transport-dom-webpack/server.browser',
+    global: 'ReactTransportDOMServer',
     externals: ['react', 'react-dom/server'],
   },
   {
     bundleTypes: [NODE_DEV, NODE_PROD],
     moduleType: RENDERER,
-    entry: 'react-flight-dom-webpack/server.node',
-    global: 'ReactFlightDOMServer',
+    entry: 'react-transport-dom-webpack/server.node',
+    global: 'ReactTransportDOMServer',
     externals: ['react', 'react-dom/server'],
   },
   {
     bundleTypes: [NODE_DEV, NODE_PROD],
     moduleType: RENDERER,
-    entry: 'react-flight-dom-webpack/server-runtime',
-    global: 'ReactFlightDOMServerRuntime',
+    entry: 'react-transport-dom-webpack/server-runtime',
+    global: 'ReactTransportDOMServerRuntime',
     externals: ['react'],
   },
 
-  /******* React DOM Flight Client Webpack *******/
+  /******* React Transport DOM Client Webpack *******/
   {
     bundleTypes: [NODE_DEV, NODE_PROD, UMD_DEV, UMD_PROD],
     moduleType: RENDERER,
-    entry: 'react-flight-dom-webpack',
-    global: 'ReactFlightDOMClient',
+    entry: 'react-transport-dom-webpack',
+    global: 'ReactTransportDOMClient',
     externals: ['react'],
   },
 
-  /******* React DOM Flight Webpack Plugin *******/
+  /******* React Transport DOM Webpack Plugin *******/
   {
     bundleTypes: [NODE_DEV, NODE_PROD],
     moduleType: RENDERER_UTILS,
-    entry: 'react-flight-dom-webpack/plugin',
+    entry: 'react-transport-dom-webpack/plugin',
     global: 'ReactFlightWebpackPlugin',
     externals: [],
     babel: opts =>
@@ -289,11 +289,11 @@ const bundles = [
       }),
   },
 
-  /******* React DOM Flight Server Relay *******/
+  /******* React Transport DOM Server Relay *******/
   {
     bundleTypes: [FB_WWW_DEV, FB_WWW_PROD],
     moduleType: RENDERER,
-    entry: 'react-flight-dom-relay/server',
+    entry: 'react-transport-dom-relay/server',
     global: 'ReactFlightDOMRelayServer',
     externals: [
       'react',
@@ -304,7 +304,7 @@ const bundles = [
   {
     bundleTypes: [FB_WWW_DEV, FB_WWW_PROD],
     moduleType: RENDERER,
-    entry: 'react-flight-dom-relay/server-runtime',
+    entry: 'react-transport-dom-relay/server-runtime',
     global: 'ReactFlightDOMRelayServerRuntime',
     externals: ['react', 'ReactFlightDOMRelayServerIntegration'],
   },
@@ -313,7 +313,7 @@ const bundles = [
   {
     bundleTypes: [FB_WWW_DEV, FB_WWW_PROD],
     moduleType: RENDERER,
-    entry: 'react-flight-dom-relay',
+    entry: 'react-transport-dom-relay',
     global: 'ReactFlightDOMRelayClient',
     externals: ['react', 'ReactFlightDOMRelayClientIntegration'],
   },
