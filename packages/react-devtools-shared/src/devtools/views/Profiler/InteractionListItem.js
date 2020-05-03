@@ -35,7 +35,7 @@ function InteractionListItem({data: itemData, index, style}: Props) {
     selectTab,
   } = itemData;
 
-  const {commitData } = dataForRoot;
+  const {commitData} = dataForRoot;
   const {interactions, lastInteractionTime, maxCommitDuration} = chartData;
 
   const interaction = interactions[index];
@@ -84,13 +84,8 @@ function InteractionListItem({data: itemData, index, style}: Props) {
           onClick={() => viewCommit(commitIndex)}
           style={{
             backgroundColor: getGradientColor(
-              Math.min(
-                1,
-                Math.max(
-                  0,
-                  commit.duration / maxCommitDuration,
-                ),
-              ) || 0,
+              Math.min(1, Math.max(0, commit.duration / maxCommitDuration)) ||
+                0,
             ),
             left: labelWidth + scaleX(commit.timestamp, 0),
           }}
