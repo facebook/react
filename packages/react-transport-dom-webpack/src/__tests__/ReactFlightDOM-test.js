@@ -41,9 +41,9 @@ describe('ReactFlightDOM', () => {
     Stream = require('stream');
     React = require('react');
     ReactDOM = require('react-dom');
-    ReactFlightDOMServer = require('react-flight-dom-webpack/server');
-    ReactFlightDOMServerRuntime = require('react-flight-dom-webpack/server-runtime');
-    ReactFlightDOMClient = require('react-flight-dom-webpack');
+    ReactFlightDOMServer = require('react-transport-dom-webpack/server');
+    ReactFlightDOMServerRuntime = require('react-transport-dom-webpack/server-runtime');
+    ReactFlightDOMClient = require('react-transport-dom-webpack');
   });
 
   function getTestStream() {
