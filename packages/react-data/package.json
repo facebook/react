@@ -14,8 +14,13 @@
     "build-info.json",
     "index.js",
     "fetch.js",
+    "fetch.browser.js",
+    "fetch.node.js",
     "cjs/"
   ],
+  "browser": {
+    "./fetch.js": "./fetch.browser.js"
+  },
   "peerDependencies": {
     "react": "^16.13.1"
   }

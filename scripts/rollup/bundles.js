@@ -135,9 +135,16 @@ const bundles = [
       FB_WWW_PROFILING,
     ],
     moduleType: ISOMORPHIC,
-    entry: 'react-data/fetch',
+    entry: 'react-data/fetch.browser',
     global: 'ReactDataFetch',
     externals: ['react', 'react-data'],
+  },
+  {
+    bundleTypes: [NODE_DEV, NODE_PROD],
+    moduleType: ISOMORPHIC,
+    entry: 'react-data/fetch.node',
+    global: 'ReactDataFetch',
+    externals: ['react', 'react-data', 'https'],
   },
 
   /******* React DOM *******/

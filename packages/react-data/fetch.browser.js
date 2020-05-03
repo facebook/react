@@ -7,4 +7,6 @@
  * @flow
  */
 
-export * from './fetch.node';
+'use strict';
+
+export * from './src/fetch/ReactDataFetchBrowser';
