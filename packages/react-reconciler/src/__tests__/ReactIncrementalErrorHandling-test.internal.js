@@ -1676,7 +1676,7 @@ describe('ReactIncrementalErrorHandling', () => {
 
   it('provides component stack even if overriding prepareStackTrace', () => {
     Error.prepareStackTrace = function(error, callsites) {
-      const stack = ['An error occurred:', error.message];
+      const stack = error ? ['An error occurred:', error.message] : [];
       for (let i = 0; i < callsites.length; i++) {
         const callsite = callsites[i];
         stack.push(
@@ -1689,6 +1689,16 @@ describe('ReactIncrementalErrorHandling', () => {
       return stack.join('\n');
     };
 
+    function normalize(str) {
+      return str.replace(/\t(at|on line) ([\S]+)[^\n]*/g, function(
+        m,
+        tag,
+        name,
+      ) {
+        return '\t' + tag + ' **';
+      });
+    }
+
     class ErrorBoundary extends React.Component {
       state = {error: null, errorInfo: null};
       componentDidCatch(error, errorInfo) {
@@ -1699,7 +1709,7 @@ describe('ReactIncrementalErrorHandling', () => {
           Scheduler.unstable_yieldValue('render error message');
           return (
             <span
-              prop={`Caught an error:${normalizeCodeLocInfo(
+              prop={`Caught an error:${normalize(
                 this.state.errorInfo.componentStack,
               )}.`}
             />
@@ -1724,8 +1734,12 @@ describe('ReactIncrementalErrorHandling', () => {
     expect(ReactNoop.getChildren()).toEqual([
       span(
         'Caught an error:\n' +
-          '    in BrokenRender (at **)\n' +
-          '    in ErrorBoundary (at **).',
+          '\tBrokenRender\n' +
+          '\t\tat **\n' +
+          '\t\ton line **\n' +
+          '\tErrorBoundary\n' +
+          '\t\tat **\n' +
+          '\t\ton line **.',
       ),
     ]);
   });

@@ -54,19 +54,31 @@ function describeFiber(fiber: Fiber): string {
     case ClassComponent:
       return describeClassComponentFrame(fiber.type, source, owner);
     default:
-      return '';
+      return null;
   }
 }
 
 export function getStackByFiberInDevAndProd(workInProgress: Fiber): string {
   try {
-    let info = '';
+    const frames = [];
     let node = workInProgress;
     do {
-      info += describeFiber(node);
+      const frame = describeFiber(node);
+      if (frame) {
+        frames.push(frame);
+      }
       node = node.return;
     } while (node);
-    return info;
+    const prepareStackTrace = Error.prepareStackTrace;
+    if (typeof frames === 'object' && prepareStackTrace) {
+      const e = Error();
+      const prefix = prepareStackTrace(e, []);
+      return prepareStackTrace(e, frames)
+        .substr(prefix.length)
+        .replace(/ at new /g, ' at ');
+    } else {
+      return '\n' + frames.join('\n');
+    }
   } catch (x) {
     return '\nError generating stack: ' + x.message + '\n' + x.stack;
   }

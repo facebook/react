@@ -44,7 +44,7 @@ export function describeBuiltInComponentFrame(
       }
     }
     // We use the prefix to ensure our stacks line up with native stack frames.
-    return '\n' + prefix + name;
+    return prefix + name;
   } else {
     let ownerName = null;
     if (__DEV__ && ownerFn) {
@@ -81,8 +81,10 @@ export function describeNativeComponentFrame(
 
   reentry = true;
   const previousPrepareStackTrace = Error.prepareStackTrace;
-  // $FlowFixMe It does accept undefined.
-  Error.prepareStackTrace = undefined;
+  Error.prepareStackTrace = function(e, callsites) {
+    // We return the array instead of the string so we can prepare it later.
+    return callsites;
+  };
   let previousDispatcher;
   if (__DEV__) {
     previousDispatcher = ReactCurrentDispatcher.current;
@@ -133,14 +135,20 @@ export function describeNativeComponentFrame(
     }
   } catch (sample) {
     // This is inlined manually because closure doesn't do it for us.
-    if (sample && control && typeof sample.stack === 'string') {
+    if (sample && control && sample.stack) {
       // This extracts the first frame from the sample that isn't also in the control.
       // Skipping one frame that we assume is the frame that calls the two.
-      const sampleLines = sample.stack.split('\n');
-      const controlLines = control.stack.split('\n');
+      const sampleLines =
+        typeof sample.stack === 'string'
+          ? sample.stack.split('\n')
+          : sample.stack;
+      const controlLines =
+        typeof control.stack === 'string'
+          ? control.stack.split('\n')
+          : control.stack;
       let s = sampleLines.length - 1;
       let c = controlLines.length - 1;
-      while (s >= 1 && c >= 0 && sampleLines[s] !== controlLines[c]) {
+      while (s >= 1 && c >= 0 && '' + sampleLines[s] !== '' + controlLines[c]) {
         // We expect at least one stack frame to be shared.
         // Typically this will be the root most one. However, stack frames may be
         // cut off due to maximum stack limits. In this case, one maybe cut off
@@ -152,7 +160,7 @@ export function describeNativeComponentFrame(
       for (; s >= 1 && c >= 0; s--, c--) {
         // Next we find the first one that isn't the same which should be the
         // frame that called our sample function and the control.
-        if (sampleLines[s] !== controlLines[c]) {
+        if ('' + sampleLines[s] !== '' + controlLines[c]) {
           // In V8, the first line is describing the message but other VMs don't.
           // If we're about to return the first line, and the control is also on the same
           // line, that's a pretty good indicator that our sample threw at same line as
@@ -164,9 +172,12 @@ export function describeNativeComponentFrame(
               c--;
               // We may still have similar intermediate frames from the construct call.
               // The next one that isn't the same should be our match though.
-              if (c < 0 || sampleLines[s] !== controlLines[c]) {
-                // V8 adds a "new" prefix for native classes. Let's remove it to make it prettier.
-                const frame = '\n' + sampleLines[s].replace(' at new ', ' at ');
+              if (c < 0 || '' + sampleLines[s] !== '' + controlLines[c]) {
+                let frame = sampleLines[s];
+                if (typeof frame === 'string') {
+                  // V8 adds a "new" prefix for native classes. Let's remove it to make it prettier.
+                  frame = frame.replace(' at new ', ' at ');
+                }
                 if (__DEV__) {
                   if (typeof fn === 'function') {
                     componentFrameCache.set(fn, frame);
@@ -227,7 +238,7 @@ function describeComponentFrame(
   } else if (ownerName) {
     sourceInfo = ' (created by ' + ownerName + ')';
   }
-  return '\n    in ' + (name || 'Unknown') + sourceInfo;
+  return '    in ' + (name || 'Unknown') + sourceInfo;
 }
 
 export function describeClassComponentFrame(
@@ -251,7 +262,7 @@ export function describeFunctionComponentFrame(
     return describeNativeComponentFrame(fn, false);
   } else {
     if (!fn) {
-      return '';
+      return null;
     }
     const name = fn.displayName || fn.name || null;
     let ownerName = null;
@@ -273,10 +284,10 @@ export function describeUnknownElementTypeFrameInDEV(
   ownerFn: void | null | Function,
 ): string {
   if (!__DEV__) {
-    return '';
+    return null;
   }
   if (type == null) {
-    return '';
+    return null;
   }
   if (typeof type === 'function') {
     if (enableComponentStackLocations) {
@@ -318,5 +329,5 @@ export function describeUnknownElementTypeFrameInDEV(
       }
     }
   }
-  return '';
+  return null;
 }
