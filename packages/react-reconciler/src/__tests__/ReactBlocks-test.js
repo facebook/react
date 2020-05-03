@@ -257,4 +257,52 @@ describe('ReactBlocks', () => {
       </>,
     );
   });
+
+  // @gate experimental
+  it('can load a nested block after an update', async () => {
+    const loadChild = block(
+      function Child(props, data) {
+        return <span>Name: {data.name}</span>;
+      },
+      function load(name) {
+        return {
+          name: readString(name),
+        };
+      },
+    );
+
+    const loadParent = block(
+      function Parent(props, data) {
+        return (
+          <Suspense fallback="Loading...">
+            {data.Child ? <data.Child /> : <span>Empty</span>}
+          </Suspense>
+        );
+      },
+      function load(name) {
+        return {
+          Child: name !== null ? loadChild(name) : null,
+        };
+      },
+    );
+
+    function App({Page}) {
+      return <Page />;
+    }
+
+    await ReactNoop.act(async () => {
+      ReactNoop.render(<App Page={loadParent(null)} />);
+    });
+    expect(ReactNoop).toMatchRenderedOutput(<span>Empty</span>);
+
+    await ReactNoop.act(async () => {
+      ReactNoop.render(<App Page={loadParent('Sebastian')} />);
+    });
+
+    await ReactNoop.act(async () => {
+      jest.advanceTimersByTime(1000);
+    });
+
+    expect(ReactNoop).toMatchRenderedOutput(<span>Name: Sebastian</span>);
+  });
 });
