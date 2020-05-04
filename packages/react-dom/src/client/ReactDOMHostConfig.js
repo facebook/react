@@ -1224,7 +1224,7 @@ export function setFocusIfFocusable(node: Instance): boolean {
   const element = ((node: any): HTMLElement);
   try {
     element.addEventListener('focus', handleFocus);
-    element.focus();
+    (element.focus || HTMLElement.prototype.focus).call(element);
   } finally {
     element.removeEventListener('focus', handleFocus);
   }

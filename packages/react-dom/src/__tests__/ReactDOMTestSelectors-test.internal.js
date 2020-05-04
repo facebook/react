@@ -865,24 +865,6 @@ No matching component was found for:
   });
 
   describe('focusWithin', () => {
-    beforeEach(() => {
-      // JSdom does not do actual layout and so doesn't return meaningful values here.
-      // For the purposes of our tests though, we need somewhat meaningful values here,
-      // else the DOM host config will assume elements are not visible.
-      Object.defineProperties(HTMLElement.prototype, {
-        offsetWidth: {
-          get: function() {
-            return parseInt(this.style.width, 10) || 0;
-          },
-        },
-        offsetHeight: {
-          get: function() {
-            return parseInt(this.style.height, 10) || 0;
-          },
-        },
-      });
-    });
-
     it('should return false if the specified component path has no matches', () => {
       function Example() {
         return <Child />;
