@@ -41,7 +41,7 @@ function reducer(state, action) {
         ...state,
         url: action.url,
         pendingUrl: action.url,
-        RootBlock: loadApp(action.url),
+        RootBlock: action.RootBlock,
       };
     default:
       throw new Error();
@@ -65,6 +65,7 @@ function Router() {
         // TODO: Instant Transitions, somehow.
         dispatch({
           type: 'completeNavigation',
+          RootBlock: loadApp(url),
           url,
         });
       });
