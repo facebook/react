@@ -277,6 +277,8 @@ export function createWorkInProgress(current: Fiber, pendingProps: any): Fiber {
     current.alternate = workInProgress;
   } else {
     workInProgress.pendingProps = pendingProps;
+    // Needed because Blocks store data on type.
+    workInProgress.type = current.type;
 
     // We already have an alternate.
     // Reset the effect tag.
@@ -413,6 +415,8 @@ export function resetWorkInProgress(
     workInProgress.memoizedProps = current.memoizedProps;
     workInProgress.memoizedState = current.memoizedState;
     workInProgress.updateQueue = current.updateQueue;
+    // Needed because Blocks store data on type.
+    workInProgress.type = current.type;
 
     // Clone the dependencies object. This is mutated during the render phase, so
     // it cannot be shared with the current fiber.
