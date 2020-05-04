@@ -1429,7 +1429,8 @@ function scanForDeclaredBareFunctions({
  */
 function getDependency(node) {
   if (
-    (node.parent.type === 'MemberExpression' || node.parent.type === 'OptionalMemberExpression') &&
+    (node.parent.type === 'MemberExpression' ||
+      node.parent.type === 'OptionalMemberExpression') &&
     node.parent.object === node &&
     node.parent.property.name !== 'current' &&
     !node.parent.computed &&
