@@ -16,7 +16,13 @@ import type {
 import type {EventSystemFlags} from './EventSystemFlags';
 import type {EventPriority} from 'shared/ReactTypes';
 import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
-import type {PluginModule} from 'legacy-events/PluginModuleType';
+import type {
+  ModernPluginModule,
+  DispatchQueue,
+  DispatchQueueItem,
+  DispatchQueueItemPhase,
+  DispatchQueueItemPhaseEntry,
+} from 'legacy-events/PluginModuleType';
 import type {ReactSyntheticEvent} from 'legacy-events/ReactSyntheticEventType';
 
 import {registrationNameDependencies} from 'legacy-events/EventPluginRegistry';
@@ -130,8 +136,6 @@ const capturePhaseEvents = new Set([
   TOP_WAITING,
 ]);
 
-const isArray = Array.isArray;
-
 function executeDispatch(
   event: ReactSyntheticEvent,
   listener: Function,
@@ -143,50 +147,41 @@ function executeDispatch(
   event.currentTarget = null;
 }
 
-function executeDispatchesInOrder(event: ReactSyntheticEvent): void {
-  // TODO we should remove _dispatchListeners and _dispatchInstances at some point.
-  const dispatchListeners = event._dispatchListeners;
-  const dispatchInstances = event._dispatchInstances;
-  const dispatchCurrentTargets = event._dispatchCurrentTargets;
+function executeDispatchesInOrder(
+  event: ReactSyntheticEvent,
+  capture: DispatchQueueItemPhase,
+  bubble: DispatchQueueItemPhase,
+): void {
   let previousInstance;
-
-  if (
-    dispatchListeners !== null &&
-    dispatchInstances !== null &&
-    dispatchCurrentTargets !== null
-  ) {
-    for (let i = 0; i < dispatchListeners.length; i++) {
-      const instance = dispatchInstances[i];
-      const listener = dispatchListeners[i];
-      const currentTarget = dispatchCurrentTargets[i];
-
-      // We check if the instance was the same as the last one,
-      // if it was, then we're still on the same instance thus
-      // propagation should not stop. If we add support for
-      // stopImmediatePropagation at some point, then we'll
-      // need to handle that case here differently.
-      if (instance !== previousInstance && event.isPropagationStopped()) {
-        break;
-      }
-      // Listeners and Instances are two parallel arrays that are always in sync.
-      executeDispatch(event, listener, currentTarget);
-      previousInstance = instance;
+  // Dispatch capture phase first.
+  for (let i = capture.length - 1; i >= 0; i--) {
+    const {instance, currentTarget, listener} = capture[i];
+    if (instance !== previousInstance && event.isPropagationStopped()) {
+      return;
     }
+    executeDispatch(event, listener, currentTarget);
+    previousInstance = instance;
   }
-  event._dispatchListeners = null;
-  event._dispatchInstances = null;
-  event._dispatchCurrentTargets = null;
+  previousInstance = undefined;
+  // Dispatch bubble phase second.
+  for (let i = 0; i < bubble.length; i++) {
+    const {instance, currentTarget, listener} = bubble[i];
+    if (instance !== previousInstance && event.isPropagationStopped()) {
+      return;
+    }
+    executeDispatch(event, listener, currentTarget);
+    previousInstance = instance;
+  }
 }
 
-export function dispatchEventsInBatch(
-  events: Array<ReactSyntheticEvent>,
-): void {
-  for (let i = 0; i < events.length; i++) {
-    const syntheticEvent = events[i];
-    executeDispatchesInOrder(syntheticEvent);
+export function dispatchEventsInBatch(dispatchQueue: DispatchQueue): void {
+  for (let i = 0; i < dispatchQueue.length; i++) {
+    const dispatchQueueItem: DispatchQueueItem = dispatchQueue[i];
+    const {event, capture, bubble} = dispatchQueueItem;
+    executeDispatchesInOrder(event, capture, bubble);
     // Release the event from the pool if needed
-    if (!syntheticEvent.isPersistent()) {
-      syntheticEvent.constructor.release(syntheticEvent);
+    if (!event.isPersistent()) {
+      event.constructor.release(event);
     }
   }
   // This would be a good time to rethrow if any of the event handlers threw.
@@ -200,12 +195,14 @@ function dispatchEventsForPlugins(
   targetInst: null | Fiber,
   targetContainer: EventTarget,
 ): void {
+  const modernPlugins = ((plugins: any): Array<ModernPluginModule<Event>>);
   const nativeEventTarget = getEventTarget(nativeEvent);
-  const syntheticEvents: Array<ReactSyntheticEvent> = [];
+  const dispatchQueue: DispatchQueue = [];
 
-  for (let i = 0; i < plugins.length; i++) {
-    const possiblePlugin: PluginModule<AnyNativeEvent> = plugins[i];
-    const extractedEvents = possiblePlugin.extractEvents(
+  for (let i = 0; i < modernPlugins.length; i++) {
+    const plugin = modernPlugins[i];
+    plugin.extractEvents(
+      dispatchQueue,
       topLevelType,
       targetInst,
       nativeEvent,
@@ -213,16 +210,8 @@ function dispatchEventsForPlugins(
       eventSystemFlags,
       targetContainer,
     );
-    if (isArray(extractedEvents)) {
-      // Flow complains about @@iterator being missing in ReactSyntheticEvent,
-      // so we cast to avoid the Flow error.
-      const arrOfExtractedEvents = ((extractedEvents: any): Array<ReactSyntheticEvent>);
-      syntheticEvents.push(...arrOfExtractedEvents);
-    } else if (extractedEvents != null) {
-      syntheticEvents.push(extractedEvents);
-    }
   }
-  dispatchEventsInBatch(syntheticEvents);
+  dispatchEventsInBatch(dispatchQueue);
 }
 
 export function listenToTopLevelEvent(
@@ -480,17 +469,44 @@ export function dispatchEventForPluginEventSystem(
   );
 }
 
-export function accumulateTwoPhaseListeners(event: ReactSyntheticEvent): void {
+function createDispatchQueueItemPhaseEntry(
+  instance: null | Fiber,
+  listener: Function,
+  currentTarget: EventTarget,
+): DispatchQueueItemPhaseEntry {
+  return {
+    instance,
+    listener,
+    currentTarget,
+  };
+}
+
+function createDispatchQueueItem(
+  event: ReactSyntheticEvent,
+  capture: DispatchQueueItemPhase,
+  bubble: DispatchQueueItemPhase,
+): DispatchQueueItem {
+  return {
+    event,
+    capture,
+    bubble,
+  };
+}
+
+export function accumulateTwoPhaseListeners(
+  targetFiber: Fiber | null,
+  dispatchQueue: DispatchQueue,
+  event: ReactSyntheticEvent,
+): void {
   const phasedRegistrationNames = event.dispatchConfig.phasedRegistrationNames;
-  const dispatchListeners = [];
-  const dispatchInstances: Array<Fiber | null> = [];
-  const dispatchCurrentTargets = [];
+  const capturePhase: DispatchQueueItemPhase = [];
+  const bubblePhase: DispatchQueueItemPhase = [];
 
   const {bubbled, captured} = phasedRegistrationNames;
   // If we are not handling EventTarget only phase, then we're doing the
   // usual two phase accumulation using the React fiber tree to pick up
   // all relevant useEvent and on* prop events.
-  let instance = event._targetInst;
+  let instance = targetFiber;
 
   // Accumulate all instances and listeners via the target -> root path.
   while (instance !== null) {
@@ -502,33 +518,34 @@ export function accumulateTwoPhaseListeners(event: ReactSyntheticEvent): void {
       if (captured !== null) {
         const captureListener = getListener(instance, captured);
         if (captureListener != null) {
-          // Capture listeners/instances should go at the start, so we
-          // unshift them to the start of the array.
-          dispatchListeners.unshift(captureListener);
-          dispatchInstances.unshift(instance);
-          dispatchCurrentTargets.unshift(currentTarget);
+          capturePhase.push(
+            createDispatchQueueItemPhaseEntry(
+              instance,
+              captureListener,
+              currentTarget,
+            ),
+          );
         }
       }
       if (bubbled !== null) {
         const bubbleListener = getListener(instance, bubbled);
         if (bubbleListener != null) {
-          // Bubble listeners/instances should go at the end, so we
-          // push them to the end of the array.
-          dispatchListeners.push(bubbleListener);
-          dispatchInstances.push(instance);
-          dispatchCurrentTargets.push(currentTarget);
+          bubblePhase.push(
+            createDispatchQueueItemPhaseEntry(
+              instance,
+              bubbleListener,
+              currentTarget,
+            ),
+          );
         }
       }
     }
     instance = instance.return;
   }
-
-  // To prevent allocation to the event unless we actually
-  // have listeners we check the length of one of the arrays.
-  if (dispatchListeners.length > 0) {
-    event._dispatchListeners = dispatchListeners;
-    event._dispatchInstances = dispatchInstances;
-    event._dispatchCurrentTargets = dispatchCurrentTargets;
+  if (capturePhase.length !== 0 || bubblePhase.length !== 0) {
+    dispatchQueue.push(
+      createDispatchQueueItem(event, capturePhase, bubblePhase),
+    );
   }
 }
 
@@ -591,6 +608,7 @@ function getLowestCommonAncestor(instA: Fiber, instB: Fiber): Fiber | null {
 }
 
 function accumulateEnterLeaveListenersForEvent(
+  dispatchQueue: DispatchQueue,
   event: ReactSyntheticEvent,
   target: Fiber,
   common: Fiber | null,
@@ -600,9 +618,8 @@ function accumulateEnterLeaveListenersForEvent(
   if (registrationName === undefined) {
     return;
   }
-  const dispatchListeners = [];
-  const dispatchInstances: Array<Fiber | null> = [];
-  const dispatchCurrentTargets = [];
+  const capturePhase: DispatchQueueItemPhase = [];
+  const bubblePhase: DispatchQueueItemPhase = [];
 
   let instance = target;
   while (instance !== null) {
@@ -618,35 +635,38 @@ function accumulateEnterLeaveListenersForEvent(
       if (capture) {
         const captureListener = getListener(instance, registrationName);
         if (captureListener != null) {
-          // Capture listeners/instances should go at the start, so we
-          // unshift them to the start of the array.
-          dispatchListeners.unshift(captureListener);
-          dispatchInstances.unshift(instance);
-          dispatchCurrentTargets.unshift(currentTarget);
+          capturePhase.push(
+            createDispatchQueueItemPhaseEntry(
+              instance,
+              captureListener,
+              currentTarget,
+            ),
+          );
         }
       } else {
         const bubbleListener = getListener(instance, registrationName);
         if (bubbleListener != null) {
-          // Bubble listeners/instances should go at the end, so we
-          // push them to the end of the array.
-          dispatchListeners.push(bubbleListener);
-          dispatchInstances.push(instance);
-          dispatchCurrentTargets.push(currentTarget);
+          bubblePhase.push(
+            createDispatchQueueItemPhaseEntry(
+              instance,
+              bubbleListener,
+              currentTarget,
+            ),
+          );
         }
       }
     }
     instance = instance.return;
   }
-  // To prevent allocation to the event unless we actually
-  // have listeners we check the length of one of the arrays.
-  if (dispatchListeners.length > 0) {
-    event._dispatchListeners = dispatchListeners;
-    event._dispatchInstances = dispatchInstances;
-    event._dispatchCurrentTargets = dispatchCurrentTargets;
+  if (capturePhase.length !== 0 || bubblePhase.length !== 0) {
+    dispatchQueue.push(
+      createDispatchQueueItem(event, capturePhase, bubblePhase),
+    );
   }
 }
 
 export function accumulateEnterLeaveListeners(
+  dispatchQueue: DispatchQueue,
   leaveEvent: ReactSyntheticEvent,
   enterEvent: ReactSyntheticEvent,
   from: Fiber | null,
@@ -655,9 +675,21 @@ export function accumulateEnterLeaveListeners(
   const common = from && to ? getLowestCommonAncestor(from, to) : null;
 
   if (from !== null) {
-    accumulateEnterLeaveListenersForEvent(leaveEvent, from, common, false);
+    accumulateEnterLeaveListenersForEvent(
+      dispatchQueue,
+      leaveEvent,
+      from,
+      common,
+      false,
+    );
   }
   if (to !== null) {
-    accumulateEnterLeaveListenersForEvent(enterEvent, to, common, true);
+    accumulateEnterLeaveListenersForEvent(
+      dispatchQueue,
+      enterEvent,
+      to,
+      common,
+      true,
+    );
   }
 }

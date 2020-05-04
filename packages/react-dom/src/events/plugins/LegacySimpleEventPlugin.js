@@ -13,7 +13,7 @@ import type {
 } from 'legacy-events/TopLevelEventTypes';
 import type {ReactSyntheticEvent} from 'legacy-events/ReactSyntheticEventType';
 import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
-import type {PluginModule} from 'legacy-events/PluginModuleType';
+import type {LegacyPluginModule} from 'legacy-events/PluginModuleType';
 
 import SyntheticEvent from 'legacy-events/SyntheticEvent';
 
@@ -72,7 +72,7 @@ const knownHTMLTopLevelTypes: Array<DOMTopLevelEventType> = [
   DOMTopLevelEventTypes.TOP_WAITING,
 ];
 
-const SimpleEventPlugin: PluginModule<MouseEvent> = {
+const SimpleEventPlugin: LegacyPluginModule<MouseEvent> = {
   // simpleEventPluginEventTypes gets populated from
   // the DOMEventProperties module.
   eventTypes: simpleEventPluginEventTypes,

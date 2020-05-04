@@ -53,11 +53,13 @@ const EnterLeaveEventPlugin = {
    * the `mouseover` top-level event.
    */
   extractEvents: function(
+    dispatchQueue,
     topLevelType,
     targetInst,
     nativeEvent,
     nativeEventTarget,
     eventSystemFlags,
+    container,
   ) {
     const isOverEvent =
       topLevelType === TOP_MOUSE_OVER || topLevelType === TOP_POINTER_OVER;
@@ -73,14 +75,14 @@ const EnterLeaveEventPlugin = {
         // make sure the node that we're coming from is managed by React.
         const inst = getClosestInstanceFromNode(related);
         if (inst !== null) {
-          return null;
+          return;
         }
       }
     }
 
     if (!isOutEvent && !isOverEvent) {
       // Must not be a mouse or pointer in or out - ignoring.
-      return null;
+      return;
     }
 
     let win;
@@ -120,7 +122,7 @@ const EnterLeaveEventPlugin = {
 
     if (from === to) {
       // Nothing pertains to our managed components.
-      return null;
+      return;
     }
 
     let eventInterface, leaveEventType, enterEventType, eventTypePrefix;
@@ -163,9 +165,7 @@ const EnterLeaveEventPlugin = {
     enter.target = toNode;
     enter.relatedTarget = fromNode;
 
-    accumulateEnterLeaveListeners(leave, enter, from, to);
-
-    return [leave, enter];
+    accumulateEnterLeaveListeners(dispatchQueue, leave, enter, from, to);
   },
 };
 
