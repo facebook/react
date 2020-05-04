@@ -24,16 +24,23 @@ const initialState = {
   // TODO: use this for invalidation.
   cache: createCache(),
   url: initialUrl,
+  pendingUrl: initialUrl,
   RootBlock: loadApp(initialUrl),
 };
 
 function reducer(state, action) {
   switch (action.type) {
-    case 'navigate':
+    case 'startNavigation':
+      return {
+        ...state,
+        pendingUrl: action.url,
+      };
+    case 'completeNavigation':
       // TODO: cancel previous fetch?
       return {
-        cache: state.cache,
+        ...state,
         url: action.url,
+        pendingUrl: action.url,
         RootBlock: loadApp(action.url),
       };
     default:
@@ -56,11 +63,14 @@ function Router() {
       startTransition(() => {
         // TODO: Here, There, and Everywhere.
         // TODO: Instant Transitions, somehow.
-        // TODO: Buttons should update immediately.
         dispatch({
-          type: 'navigate',
+          type: 'completeNavigation',
           url,
         });
+      });
+      dispatch({
+        type: 'startNavigation',
+        url,
       });
     },
     [startTransition]
@@ -76,10 +86,11 @@ function Router() {
 
   const routeContext = useMemo(
     () => ({
+      pendingUrl: state.pendingUrl,
       url: state.url,
       navigate,
     }),
-    [state.url, navigate]
+    [state.url, state.pendingUrl, navigate]
   );
 
   return (

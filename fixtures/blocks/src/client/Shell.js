@@ -17,7 +17,7 @@ function TabBar({children}) {
 }
 
 function TabLink({to, children}) {
-  const {url: activeUrl, navigate} = useRouter();
+  const {pendingUrl: activeUrl, navigate} = useRouter();
   const active = activeUrl === to;
   if (active) {
     return (
