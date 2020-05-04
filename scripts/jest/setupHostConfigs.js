@@ -3,7 +3,7 @@
 const inlinedHostConfigs = require('../shared/inlinedHostConfigs');
 
 jest.mock('react-reconciler/src/ReactFiberReconciler', () => {
-  return require.requireActual(
+  return jest.requireActual(
     __VARIANT__
       ? 'react-reconciler/src/ReactFiberReconciler.new'
       : 'react-reconciler/src/ReactFiberReconciler.old'
@@ -16,7 +16,7 @@ const shimHostConfigPath = 'react-reconciler/src/ReactFiberHostConfig';
 jest.mock('react-reconciler', () => {
   return config => {
     jest.mock(shimHostConfigPath, () => config);
-    return require.requireActual('react-reconciler');
+    return jest.requireActual('react-reconciler');
   };
 });
 const shimServerStreamConfigPath = 'react-server/src/ReactServerStreamConfig';
@@ -26,7 +26,7 @@ jest.mock('react-server', () => {
   return config => {
     jest.mock(shimServerStreamConfigPath, () => config);
     jest.mock(shimServerFormatConfigPath, () => config);
-    return require.requireActual('react-server');
+    return jest.requireActual('react-server');
   };
 });
 jest.mock('react-server/flight', () => {
@@ -37,11 +37,11 @@ jest.mock('react-server/flight', () => {
       resolveModuleMetaData: config.resolveModuleMetaData,
     }));
     jest.mock(shimFlightServerConfigPath, () =>
-      require.requireActual(
+      jest.requireActual(
         'react-server/src/forks/ReactFlightServerConfig.custom'
       )
     );
-    return require.requireActual('react-server/flight');
+    return jest.requireActual('react-server/flight');
   };
 });
 const shimFlightClientHostConfigPath =
@@ -49,7 +49,7 @@ const shimFlightClientHostConfigPath =
 jest.mock('react-client/flight', () => {
   return config => {
     jest.mock(shimFlightClientHostConfigPath, () => config);
-    return require.requireActual('react-client/flight');
+    return jest.requireActual('react-client/flight');
   };
 });
 
@@ -67,7 +67,7 @@ function mockAllConfigs(rendererInfo) {
     jest.mock(path, () => {
       let idx = path.lastIndexOf('/');
       let forkPath = path.substr(0, idx) + '/forks' + path.substr(idx);
-      return require.requireActual(`${forkPath}.${rendererInfo.shortName}.js`);
+      return jest.requireActual(`${forkPath}.${rendererInfo.shortName}.js`);
     });
   });
 }
@@ -83,7 +83,7 @@ inlinedHostConfigs.forEach(rendererInfo => {
   rendererInfo.entryPoints.forEach(entryPoint => {
     jest.mock(entryPoint, () => {
       mockAllConfigs(rendererInfo);
-      return require.requireActual(entryPoint);
+      return jest.requireActual(entryPoint);
     });
   });
 });
@@ -91,10 +91,10 @@ inlinedHostConfigs.forEach(rendererInfo => {
 // Make it possible to import this module inside
 // the React package itself.
 jest.mock('shared/ReactSharedInternals', () =>
-  require.requireActual('react/src/ReactSharedInternals')
+  jest.requireActual('react/src/ReactSharedInternals')
 );
 
-jest.mock('scheduler', () => require.requireActual('scheduler/unstable_mock'));
+jest.mock('scheduler', () => jest.requireActual('scheduler/unstable_mock'));
 jest.mock('scheduler/src/SchedulerHostConfig', () =>
-  require.requireActual('scheduler/src/forks/SchedulerHostConfig.mock.js')
+  jest.requireActual('scheduler/src/forks/SchedulerHostConfig.mock.js')
 );

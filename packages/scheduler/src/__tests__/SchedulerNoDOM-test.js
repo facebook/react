@@ -24,11 +24,9 @@ describe('SchedulerNoDOM', () => {
     jest.useFakeTimers();
 
     // Un-mock scheduler
-    jest.mock('scheduler', () => require.requireActual('scheduler'));
+    jest.mock('scheduler', () => jest.requireActual('scheduler'));
     jest.mock('scheduler/src/SchedulerHostConfig', () =>
-      require.requireActual(
-        'scheduler/src/forks/SchedulerHostConfig.default.js',
-      ),
+      jest.requireActual('scheduler/src/forks/SchedulerHostConfig.default.js'),
     );
 
     Scheduler = require('scheduler');

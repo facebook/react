@@ -19,7 +19,7 @@ let ReactTestUtils;
 
 function initModules() {
   // Reset warning cache.
-  jest.resetModuleRegistry();
+  jest.resetModules();
   PropTypes = require('prop-types');
   React = require('react');
   ReactDOM = require('react-dom');

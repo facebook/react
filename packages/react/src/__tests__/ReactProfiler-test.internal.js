@@ -265,7 +265,7 @@ describe('Profiler', () => {
           // Mock the Scheduler module so we can track how many times the current
           // time is read
           jest.mock('scheduler', obj => {
-            const ActualScheduler = require.requireActual(
+            const ActualScheduler = jest.requireActual(
               'scheduler/unstable_mock',
             );
             return {
@@ -305,7 +305,7 @@ describe('Profiler', () => {
 
           // Restore original mock
           jest.mock('scheduler', () =>
-            require.requireActual('scheduler/unstable_mock'),
+            jest.requireActual('scheduler/unstable_mock'),
           );
         });
 
