@@ -35,7 +35,7 @@ function Post(props, data) {
       <p>{props.post.body}</p>
       <Suspense
         fallback={<h5>Loading comments...</h5>}
-        unstable_avoidThisFallback={props.waitForComments}>
+        unstable_avoidThisFallback={true}>
         <data.Comments />
       </Suspense>
     </div>

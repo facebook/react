@@ -21,7 +21,7 @@ export default function PostList({posts}) {
         const Post = loadPost(post.id);
         return (
           <Suspense key={post.id} fallback={<PostGlimmer />}>
-            <Post post={post} waitForComments={true} />
+            <Post post={post} />
           </Suspense>
         );
       })}
