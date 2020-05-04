@@ -363,6 +363,10 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       return inst;
     },
 
+    clearInstanceHandle() {
+      // NO-OP
+    },
+
     scheduleTimeout: setTimeout,
     cancelTimeout: clearTimeout,
     noTimeout: -1,
