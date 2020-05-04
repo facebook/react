@@ -68,9 +68,6 @@ export const disableTextareaChildren = __EXPERIMENTAL__;
 
 export const warnUnstableRenderSubtreeIntoContainer = false;
 
-// Internal-only attempt to debug a React Native issue. See D20130868.
-export const throwEarlyForMysteriousError = false;
-
 // Enable forked reconciler. Piggy-backing on the "variant" global so that we
 // don't have to add another test dimension. The build system will compile this
 // to the correct value.
