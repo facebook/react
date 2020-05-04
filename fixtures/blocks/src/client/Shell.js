@@ -6,6 +6,7 @@
  */
 
 import * as React from 'react';
+import Link from './Link';
 import {useRouter} from './RouterContext';
 
 function TabBar({children}) {
@@ -17,7 +18,7 @@ function TabBar({children}) {
 }
 
 function TabLink({to, children}) {
-  const {pendingUrl: activeUrl, navigate} = useRouter();
+  const {pendingUrl: activeUrl} = useRouter();
   const active = activeUrl === to;
   if (active) {
     return (
@@ -32,29 +33,26 @@ function TabLink({to, children}) {
     );
   }
   return (
-    <a
+    <Link
       style={{
         display: 'inline-block',
         width: 50,
         marginRight: 20,
       }}
-      href={to}
-      onClick={e => {
-        e.preventDefault();
-        window.history.pushState(null, null, to);
-        navigate(to);
-      }}>
+      to={to}>
       {children}
-    </a>
+    </Link>
   );
 }
+
+// TODO: Error Boundaries.
 
 export default function Shell({children}) {
   return (
     <>
       <TabBar>
         <TabLink to="/">Home</TabLink>
-        <TabLink to="/profile">Profile</TabLink>
+        <TabLink to="/profile/3">Profile</TabLink>
       </TabBar>
       <br />
       {children}

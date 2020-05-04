@@ -23,27 +23,32 @@
     {
       "id": 1,
       "body": "Hey there",
-      "postId": 1
+      "postId": 1,
+      "userId": 1
     },
     {
       "id": 2,
       "body": "Welcome to the chat",
-      "postId": 1
+      "postId": 1,
+      "userId": 2
     },
     {
       "id": 3,
       "body": "What editor/font are you using?",
-      "postId": 2
+      "postId": 2,
+      "userId": 2
     },
     {
       "id": 4,
       "body": "It's always been hard",
-      "postId": 3
+      "postId": 3,
+      "userId": 1
     },
     {
       "id": 5,
       "body": "It's still easy",
-      "postId": 3
+      "postId": 3,
+      "userId": 2
     }
   ],
   "users": [{

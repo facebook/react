@@ -16,15 +16,13 @@ import loadProfilePage from './ProfilePage.block';
 
 function load(url) {
   let Page;
-  switch (url) {
-    case '/':
-      Page = loadFeedPage();
-      break;
-    case '/profile':
-      Page = loadProfilePage(3);
-      break;
-    default:
-      throw Error('Not found');
+  const segments = url.split('/').filter(Boolean);
+  if (segments.length === 0) {
+    Page = loadFeedPage();
+  } else if (segments[0] === 'profile') {
+    Page = loadProfilePage(Number(segments[1]));
+  } else {
+    throw Error('Not found');
   }
   return {Page};
 }

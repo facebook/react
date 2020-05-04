@@ -15,7 +15,7 @@ import {fetch} from 'react-data/fetch';
 import PostList from './PostList';
 
 function load(userId) {
-  const postsByUser = fetch(`/posts?userId=${userId}`).json();
+  const postsByUser = fetch(`/posts?userId=${userId}&_expand=user`).json();
   return {
     posts: <PostList posts={postsByUser} />,
   };
