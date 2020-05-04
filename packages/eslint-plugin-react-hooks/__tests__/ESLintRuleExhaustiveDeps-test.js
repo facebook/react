@@ -1762,7 +1762,7 @@ const tests = {
             return [
               history?.foo
             ];
-          }, [history?.foo]);
+          }, []);
         }
       `,
       errors: [
