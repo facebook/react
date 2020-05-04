@@ -100,9 +100,6 @@ export const warnAboutSpreadingKeyToJSX = false;
 
 export const enableComponentStackLocations = __EXPERIMENTAL__;
 
-// Internal-only attempt to debug a React Native issue. See D20130868.
-export const throwEarlyForMysteriousError = false;
-
 export const enableNewReconciler = false;
 
 // --------------------------

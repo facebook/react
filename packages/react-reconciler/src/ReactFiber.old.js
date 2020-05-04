@@ -27,7 +27,6 @@ import {
   enableFundamentalAPI,
   enableScopeAPI,
   enableBlocksAPI,
-  throwEarlyForMysteriousError,
 } from 'shared/ReactFeatureFlags';
 import {NoEffect, Placement} from './ReactSideEffectTags';
 import {ConcurrentRoot, BlockingRoot} from './ReactRootTags';
@@ -296,18 +295,6 @@ export function createWorkInProgress(current: Fiber, pendingProps: any): Fiber {
       // But works for yielding (the common case) and should support resuming.
       workInProgress.actualDuration = 0;
       workInProgress.actualStartTime = -1;
-    }
-  }
-
-  if (throwEarlyForMysteriousError) {
-    // Trying to debug a mysterious internal-only production failure.
-    // See D20130868 and t62461245.
-    // This is only on for RN FB builds.
-    if (current == null) {
-      throw Error('current is ' + current + " but it can't be");
-    }
-    if (workInProgress == null) {
-      throw Error('workInProgress is ' + workInProgress + " but it can't be");
     }
   }
 

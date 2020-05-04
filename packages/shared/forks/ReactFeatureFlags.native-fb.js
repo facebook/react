@@ -45,9 +45,6 @@ export const enableComponentStackLocations = false;
 export const enableLegacyFBSupport = false;
 export const enableFilterEmptyStringAttributesDOM = false;
 
-// Internal-only attempt to debug a React Native issue. See D20130868.
-export const throwEarlyForMysteriousError = true;
-
 export const enableNewReconciler = false;
 
 // Flow magic to verify the exports of this file match the original version.
