@@ -153,6 +153,10 @@ export function resetAfterCommit(containerInfo: Container): void {
   // noop
 }
 
+export function clearInstanceHandle() {
+  // noop
+}
+
 export function createInstance(
   type: string,
   props: Props,

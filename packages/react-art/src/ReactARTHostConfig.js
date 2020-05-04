@@ -322,6 +322,10 @@ export function resetTextContent(domElement) {
   // Noop
 }
 
+export function clearInstanceHandle(instance) {
+  // Noop
+}
+
 export function shouldDeprioritizeSubtree(type, props) {
   return false;
 }

@@ -55,6 +55,12 @@ export function precacheFiberNode(
   (node: any)[internalInstanceKey] = hostInst;
 }
 
+export function uncacheFiberNode(
+  node: Instance | TextInstance | SuspenseInstance | ReactScopeInstance,
+): void {
+  (node: any)[internalInstanceKey] = null;
+}
+
 export function markContainerAsRoot(hostRoot: Fiber, node: Container): void {
   node[internalContainerInstanceKey] = hostRoot;
 }

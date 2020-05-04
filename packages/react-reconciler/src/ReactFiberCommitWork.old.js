@@ -98,6 +98,7 @@ import {
   insertInContainerBefore,
   removeChild,
   removeChildFromContainer,
+  clearInstanceHandle,
   clearSuspenseBoundary,
   clearSuspenseBoundaryFromContainer,
   replaceContainerChildren,
@@ -188,27 +189,29 @@ function safelyCallComponentWillUnmount(current, instance) {
   }
 }
 
-function safelyDetachRef(current: Fiber) {
+function safelyDetachRef(current: Fiber): boolean {
   const ref = current.ref;
-  if (ref !== null) {
-    if (typeof ref === 'function') {
-      if (__DEV__) {
-        invokeGuardedCallback(null, ref, null, null);
-        if (hasCaughtError()) {
-          const refError = clearCaughtError();
-          captureCommitPhaseError(current, refError);
-        }
-      } else {
-        try {
-          ref(null);
-        } catch (refError) {
-          captureCommitPhaseError(current, refError);
-        }
+  if (ref === null) {
+    return false;
+  }
+  if (typeof ref === 'function') {
+    if (__DEV__) {
+      invokeGuardedCallback(null, ref, null, null);
+      if (hasCaughtError()) {
+        const refError = clearCaughtError();
+        captureCommitPhaseError(current, refError);
       }
     } else {
-      ref.current = null;
+      try {
+        ref(null);
+      } catch (refError) {
+        captureCommitPhaseError(current, refError);
+      }
     }
+  } else {
+    ref.current = null;
   }
+  return true;
 }
 
 function safelyCallDestroy(current, destroy) {
@@ -1027,8 +1030,13 @@ function commitUnmount(
       if (enableDeprecatedFlareAPI) {
         unmountDeprecatedResponderListeners(current);
       }
-      beforeRemoveInstance(current.stateNode);
-      safelyDetachRef(current);
+      const instance = current.stateNode;
+      beforeRemoveInstance(instance);
+      if (safelyDetachRef(current)) {
+        // To reduce the impact of userspace memory leaks,
+        // detach Fibers from nodes that have refs.
+        clearInstanceHandle(instance);
+      }
       return;
     }
     case HostPortal: {

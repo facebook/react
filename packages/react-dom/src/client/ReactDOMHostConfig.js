@@ -18,6 +18,7 @@ import type {
 
 import {
   precacheFiberNode,
+  uncacheFiberNode,
   updateFiberProps,
   getClosestInstanceFromNode,
   getFiberFromScopeInstance,
@@ -646,6 +647,10 @@ export function clearContainer(container: Container): void {
       body.textContent = '';
     }
   }
+}
+
+export function clearInstanceHandle(instance: Instance) {
+  uncacheFiberNode(instance);
 }
 
 // -------------------

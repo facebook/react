@@ -74,6 +74,7 @@ export const mountFundamentalComponent =
 export const shouldUpdateFundamentalComponent =
   $$$hostConfig.shouldUpdateFundamentalComponent;
 export const getInstanceFromNode = $$$hostConfig.getInstanceFromNode;
+export const clearInstanceHandle = $$$hostConfig.clearInstanceHandle;
 export const beforeRemoveInstance = $$$hostConfig.beforeRemoveInstance;
 export const isOpaqueHydratingObject = $$$hostConfig.isOpaqueHydratingObject;
 export const makeOpaqueHydratingObject =

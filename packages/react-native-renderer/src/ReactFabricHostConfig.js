@@ -342,6 +342,10 @@ export function shouldSetTextContent(type: string, props: Props): boolean {
   return false;
 }
 
+export function clearInstanceHandle(instance: Instance) {
+  instance.canonical._internalInstanceHandle = null;
+}
+
 // The Fabric renderer is secondary to the existing React Native renderer.
 export const isPrimaryRenderer = false;
 

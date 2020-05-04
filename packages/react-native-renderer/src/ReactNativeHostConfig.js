@@ -488,6 +488,10 @@ export function clearContainer(container: Container): void {
   // UIManager does not expose a "remove all" type method.
 }
 
+export function clearInstanceHandle(instance: Instance) {
+  uncacheFiberNode(instance);
+}
+
 export function unhideTextInstance(
   textInstance: TextInstance,
   text: string,
