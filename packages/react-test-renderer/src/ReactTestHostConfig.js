@@ -153,7 +153,7 @@ export function resetAfterCommit(containerInfo: Container): void {
   // noop
 }
 
-export function clearInstanceHandle() {
+export function clearInstanceHandle(instance: Instance) {
   // noop
 }
 
