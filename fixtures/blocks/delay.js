@@ -5,9 +5,10 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import React from 'react';
-import ReactDOM from 'react-dom';
-import './index.css';
-import Router from './Router';
-
-ReactDOM.createRoot(document.getElementById('root')).render(<Router />);
+module.exports = (req, res, next) => {
+  if (req.query.delay) {
+    setTimeout(next, Number(req.query.delay));
+  } else {
+    next();
+  }
+};

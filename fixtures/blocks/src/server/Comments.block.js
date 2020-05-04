@@ -4,20 +4,27 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  */
+/* eslint-disable import/first */
 
 import * as React from 'react';
+import {block} from 'react';
+
+// Server
+
 import {fetch} from 'react-data/fetch';
 
 function load(postId) {
   return {
-    comments: fetch('http://localhost:3001/comments?postId=' + postId).json(),
+    comments: fetch(`/comments?postId=${postId}`).json(),
   };
 }
+
+// Client
 
 function Comments(props, data) {
   return (
     <>
-      <h3>Comments</h3>
+      <h5>Comments</h5>
       <ul>
         {data.comments.slice(0, 5).map(item => (
           <li key={item.id}>{item.body}</li>
@@ -27,4 +34,4 @@ function Comments(props, data) {
   );
 }
 
-export default React.block(Comments, load);
+export default block(Comments, load);
