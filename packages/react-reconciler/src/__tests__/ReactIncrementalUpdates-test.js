@@ -16,7 +16,7 @@ let Scheduler;
 
 describe('ReactIncrementalUpdates', () => {
   beforeEach(() => {
-    jest.resetModuleRegistry();
+    jest.resetModules();
 
     React = require('react');
     ReactNoop = require('react-noop-renderer');

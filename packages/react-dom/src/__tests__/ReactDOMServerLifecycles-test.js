@@ -16,7 +16,7 @@ let ReactDOMServer;
 
 function initModules() {
   // Reset warning cache.
-  jest.resetModuleRegistry();
+  jest.resetModules();
   React = require('react');
   ReactDOMServer = require('react-dom/server');
 

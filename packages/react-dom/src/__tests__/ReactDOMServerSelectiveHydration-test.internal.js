@@ -93,7 +93,7 @@ function dispatchClickEvent(target) {
 
 describe('ReactDOMServerSelectiveHydration', () => {
   beforeEach(() => {
-    jest.resetModuleRegistry();
+    jest.resetModules();
 
     const ReactFeatureFlags = require('shared/ReactFeatureFlags');
     ReactFeatureFlags.enableDeprecatedFlareAPI = true;

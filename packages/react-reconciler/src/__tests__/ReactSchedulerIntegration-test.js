@@ -417,7 +417,7 @@ describe(
       jest.resetModules();
 
       jest.mock('scheduler', () => {
-        const actual = require.requireActual('scheduler/unstable_mock');
+        const actual = jest.requireActual('scheduler/unstable_mock');
         return {
           ...actual,
           unstable_shouldYield() {
@@ -438,7 +438,7 @@ describe(
 
     afterEach(() => {
       jest.mock('scheduler', () =>
-        require.requireActual('scheduler/unstable_mock'),
+        jest.requireActual('scheduler/unstable_mock'),
       );
     });
 
