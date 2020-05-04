@@ -257,4 +257,87 @@ describe('ReactBlocks', () => {
       </>,
     );
   });
+
+  // Regression test.
+  // @gate experimental
+  it('does not render stale data after ping', async () => {
+    function Child() {
+      return <span>Name: {readString('Sebastian')}</span>;
+    }
+
+    const loadParent = block(
+      function Parent(props, data) {
+        return (
+          <Suspense fallback="Loading...">
+            {data.name ? <Child /> : <span>Empty</span>}
+          </Suspense>
+        );
+      },
+      function load(name) {
+        return {name};
+      },
+    );
+
+    function App({Page}) {
+      return <Page />;
+    }
+
+    await ReactNoop.act(async () => {
+      ReactNoop.render(<App Page={loadParent(null)} />);
+    });
+    expect(ReactNoop).toMatchRenderedOutput(<span>Empty</span>);
+
+    await ReactNoop.act(async () => {
+      ReactNoop.render(<App Page={loadParent('Sebastian')} />);
+    });
+    await ReactNoop.act(async () => {
+      jest.advanceTimersByTime(1000);
+    });
+    expect(ReactNoop).toMatchRenderedOutput(<span>Name: Sebastian</span>);
+  });
+
+  // Regression test.
+  // @gate experimental
+  it('does not render stale data after ping and setState', async () => {
+    function Child() {
+      return <span>Name: {readString('Sebastian')}</span>;
+    }
+
+    let _setSuspend;
+    const loadParent = block(
+      function Parent(props, data) {
+        const [suspend, setSuspend] = useState(true);
+        _setSuspend = setSuspend;
+        if (!suspend) {
+          return <span>{data.name}</span>;
+        }
+        return (
+          <Suspense fallback="Loading...">
+            {data.name ? <Child /> : <span>Empty</span>}
+          </Suspense>
+        );
+      },
+      function load(name) {
+        return {name};
+      },
+    );
+
+    function App({Page}) {
+      return <Page />;
+    }
+
+    await ReactNoop.act(async () => {
+      ReactNoop.render(<App Page={loadParent(null)} />);
+    });
+    expect(ReactNoop).toMatchRenderedOutput(<span>Empty</span>);
+
+    await ReactNoop.act(async () => {
+      ReactNoop.render(<App Page={loadParent('Sebastian')} />);
+    });
+    await ReactNoop.act(async () => {
+      _setSuspend(false);
+      jest.advanceTimersByTime(1000);
+    });
+    expect(ReactNoop).toMatchRenderedOutput(<span>Sebastian</span>);
+  });
 });
