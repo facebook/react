@@ -180,6 +180,7 @@ import {
   markUnprocessedUpdateTime,
   getWorkInProgressRoot,
 } from './ReactFiberWorkLoop.old';
+import {unstable_wrap as Schedule_tracing_wrap} from 'scheduler/tracing';
 
 import {disableLogs, reenableLogs} from 'shared/ConsolePatchingDev';
 
@@ -2303,10 +2304,11 @@ function updateDehydratedSuspenseComponent(
     // Leave the child in place. I.e. the dehydrated fragment.
     workInProgress.child = current.child;
     // Register a callback to retry this boundary once the server has sent the result.
-    registerSuspenseInstanceRetry(
-      suspenseInstance,
-      retryDehydratedSuspenseBoundary.bind(null, current),
-    );
+    let retry = retryDehydratedSuspenseBoundary.bind(null, current);
+    if (enableSchedulerTracing) {
+      retry = Schedule_tracing_wrap(retry);
+    }
+    registerSuspenseInstanceRetry(suspenseInstance, retry);
     return null;
   } else {
     // This is the first attempt.
