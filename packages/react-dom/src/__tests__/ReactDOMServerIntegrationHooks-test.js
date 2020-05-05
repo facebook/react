@@ -1051,7 +1051,7 @@ describe('ReactDOMServerHooks', () => {
         document.body.append(container);
 
         container.innerHTML = ReactDOMServer.renderToString(<App />);
-        const root = ReactDOM.createRoot(container, {hydrate: true});
+        const root = ReactDOM.unstable_createRoot(container, {hydrate: true});
         root.render(<App />);
         Scheduler.unstable_flushAll();
         jest.runAllTimers();
@@ -1136,7 +1136,7 @@ describe('ReactDOMServerHooks', () => {
         const container = document.createElement('div');
         document.body.append(container);
         container.innerHTML = ReactDOMServer.renderToString(<App />);
-        const root = ReactDOM.createRoot(container, {hydrate: true});
+        const root = ReactDOM.unstable_createRoot(container, {hydrate: true});
         ReactTestUtils.act(() => {
           root.render(<App />);
         });
@@ -1196,7 +1196,7 @@ describe('ReactDOMServerHooks', () => {
         const container = document.createElement('div');
         document.body.append(container);
         container.innerHTML = ReactDOMServer.renderToString(<App />);
-        const root = ReactDOM.createRoot(container, {hydrate: true});
+        const root = ReactDOM.unstable_createRoot(container, {hydrate: true});
         ReactTestUtils.act(() => {
           root.render(<App />);
         });
@@ -1291,7 +1291,7 @@ describe('ReactDOMServerHooks', () => {
 
         const childOneSpan = container.getElementsByTagName('span')[0];
 
-        const root = ReactDOM.createRoot(container, {hydrate: true});
+        const root = ReactDOM.unstable_createRoot(container, {hydrate: true});
         root.render(<App show={false} />);
         expect(Scheduler).toHaveYielded([]);
 
@@ -1397,7 +1397,7 @@ describe('ReactDOMServerHooks', () => {
         container.innerHTML = ReactDOMServer.renderToString(<App />);
 
         suspend = true;
-        const root = ReactDOM.createRoot(container, {hydrate: true});
+        const root = ReactDOM.unstable_createRoot(container, {hydrate: true});
         await ReactTestUtils.act(async () => {
           root.render(<App />);
         });
@@ -1447,7 +1447,9 @@ describe('ReactDOMServerHooks', () => {
 
         // This is the wrong HTML string
         container.innerHTML = '<span></span>';
-        ReactDOM.createRoot(container, {hydrate: true}).render(<App />);
+        ReactDOM.unstable_createRoot(container, {hydrate: true}).render(
+          <App />,
+        );
         expect(() =>
           expect(() => Scheduler.unstable_flushAll()).toThrow(),
         ).toErrorDev([
@@ -1497,7 +1499,7 @@ describe('ReactDOMServerHooks', () => {
         container.innerHTML = ReactDOMServer.renderToString(<App />);
 
         suspend = false;
-        const root = ReactDOM.createRoot(container, {hydrate: true});
+        const root = ReactDOM.unstable_createRoot(container, {hydrate: true});
         await ReactTestUtils.act(async () => {
           root.render(<App />);
         });
@@ -1533,7 +1535,9 @@ describe('ReactDOMServerHooks', () => {
 
         // This is the wrong HTML string
         container.innerHTML = '<span></span>';
-        ReactDOM.createRoot(container, {hydrate: true}).render(<App />);
+        ReactDOM.unstable_createRoot(container, {hydrate: true}).render(
+          <App />,
+        );
         expect(() =>
           expect(() => Scheduler.unstable_flushAll()).toThrow(),
         ).toErrorDev([
@@ -1555,7 +1559,9 @@ describe('ReactDOMServerHooks', () => {
 
         // This is the wrong HTML string
         container.innerHTML = '<span></span>';
-        ReactDOM.createRoot(container, {hydrate: true}).render(<App />);
+        ReactDOM.unstable_createRoot(container, {hydrate: true}).render(
+          <App />,
+        );
         expect(() =>
           expect(() => Scheduler.unstable_flushAll()).toThrow(
             'The object passed back from useOpaqueIdentifier is meant to be passed through to attributes only. ' +
@@ -1584,7 +1590,9 @@ describe('ReactDOMServerHooks', () => {
 
         // This is the wrong HTML string
         container.innerHTML = '<span></span>';
-        ReactDOM.createRoot(container, {hydrate: true}).render(<App />);
+        ReactDOM.unstable_createRoot(container, {hydrate: true}).render(
+          <App />,
+        );
         expect(() =>
           expect(() => Scheduler.unstable_flushAll()).toThrow(
             'The object passed back from useOpaqueIdentifier is meant to be passed through to attributes only. ' +
@@ -1612,7 +1620,9 @@ describe('ReactDOMServerHooks', () => {
         document.body.appendChild(container);
 
         container.innerHTML = ReactDOMServer.renderToString(<App />);
-        ReactDOM.createRoot(container, {hydrate: true}).render(<App />);
+        ReactDOM.unstable_createRoot(container, {hydrate: true}).render(
+          <App />,
+        );
         expect(() =>
           expect(() => Scheduler.unstable_flushAll()).toThrow(
             'The object passed back from useOpaqueIdentifier is meant to be passed through to attributes only. ' +
@@ -1637,7 +1647,9 @@ describe('ReactDOMServerHooks', () => {
         document.body.appendChild(container);
 
         container.innerHTML = ReactDOMServer.renderToString(<App />);
-        ReactDOM.createRoot(container, {hydrate: true}).render(<App />);
+        ReactDOM.unstable_createRoot(container, {hydrate: true}).render(
+          <App />,
+        );
         expect(() =>
           expect(() => Scheduler.unstable_flushAll()).toThrow(
             'The object passed back from useOpaqueIdentifier is meant to be passed through to attributes only. ' +
@@ -1670,7 +1682,9 @@ describe('ReactDOMServerHooks', () => {
 
         container.innerHTML = ReactDOMServer.renderToString(<App />);
 
-        ReactDOM.createRoot(container, {hydrate: true}).render(<App />);
+        ReactDOM.unstable_createRoot(container, {hydrate: true}).render(
+          <App />,
+        );
 
         if (gate(flags => flags.new)) {
           expect(() => Scheduler.unstable_flushAll()).toErrorDev([
@@ -1712,7 +1726,9 @@ describe('ReactDOMServerHooks', () => {
 
         container.innerHTML = ReactDOMServer.renderToString(<App />);
 
-        ReactDOM.createRoot(container, {hydrate: true}).render(<App />);
+        ReactDOM.unstable_createRoot(container, {hydrate: true}).render(
+          <App />,
+        );
 
         if (gate(flags => flags.new)) {
           expect(() => Scheduler.unstable_flushAll()).toErrorDev([
@@ -1772,7 +1788,9 @@ describe('ReactDOMServerHooks', () => {
             .getAttribute('aria-labelledby'),
         ).toEqual(serverID);
 
-        ReactDOM.createRoot(container, {hydrate: true}).render(<App />);
+        ReactDOM.unstable_createRoot(container, {hydrate: true}).render(
+          <App />,
+        );
         jest.runAllTimers();
         expect(Scheduler).toHaveYielded([]);
         expect(Scheduler).toFlushAndYield([]);
