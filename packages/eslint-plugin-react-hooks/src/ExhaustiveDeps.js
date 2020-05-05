@@ -1429,7 +1429,8 @@ function scanForDeclaredBareFunctions({
  */
 function getDependency(node) {
   if (
-    node.parent.type === 'MemberExpression' &&
+    (node.parent.type === 'MemberExpression' ||
+      node.parent.type === 'OptionalMemberExpression') &&
     node.parent.object === node &&
     node.parent.property.name !== 'current' &&
     !node.parent.computed &&
@@ -1456,6 +1457,7 @@ function getDependency(node) {
  * (foo) -> 'foo'
  * foo.(bar) -> 'foo.bar'
  * foo.bar.(baz) -> 'foo.bar.baz'
+ * foo?.(bar) -> 'foo?.bar'
  * Otherwise throw.
  */
 function toPropertyAccessString(node) {
@@ -1465,6 +1467,10 @@ function toPropertyAccessString(node) {
     const object = toPropertyAccessString(node.object);
     const property = toPropertyAccessString(node.property);
     return `${object}.${property}`;
+  } else if (node.type === 'OptionalMemberExpression' && !node.computed) {
+    const object = toPropertyAccessString(node.object);
+    const property = toPropertyAccessString(node.property);
+    return `${object}?.${property}`;
   } else {
     throw new Error(`Unsupported node type: ${node.type}`);
   }

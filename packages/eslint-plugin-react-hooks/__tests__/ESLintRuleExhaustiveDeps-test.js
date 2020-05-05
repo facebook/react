@@ -1757,6 +1757,38 @@ const tests = {
     },
     {
       code: normalizeIndent`
+        function MyComponent({ history }) {
+          useEffect(() => {
+            return [
+              history?.foo
+            ];
+          }, []);
+        }
+      `,
+      errors: [
+        {
+          message:
+            "React Hook useEffect has a missing dependency: 'history?.foo'. " +
+            'Either include it or remove the dependency array.',
+          suggestions: [
+            {
+              desc: 'Update the dependencies array to be: [history?.foo]',
+              output: normalizeIndent`
+                function MyComponent({ history }) {
+                  useEffect(() => {
+                    return [
+                      history?.foo
+                    ];
+                  }, [history?.foo]);
+                }
+              `,
+            },
+          ],
+        },
+      ],
+    },
+    {
+      code: normalizeIndent`
         function MyComponent() {
           useEffect(() => {}, ['foo']);
         }
