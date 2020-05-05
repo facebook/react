@@ -56,6 +56,7 @@ export type RendererInspectionConfig = $ReadOnly<{||}>;
 
 export * from 'react-reconciler/src/ReactFiberHostConfigWithNoPersistence';
 export * from 'react-reconciler/src/ReactFiberHostConfigWithNoHydration';
+export * from 'react-reconciler/src/ReactFiberHostConfigWithNoTestSelectors';
 
 const EVENT_COMPONENT_CONTEXT = {};
 const NO_CONTEXT = {};

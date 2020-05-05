@@ -88,6 +88,18 @@ import {
 } from './ReactFiberHotReloading.new';
 
 export {createPortal} from './ReactPortal';
+export {
+  createComponentSelector,
+  createHasPsuedoClassSelector,
+  createRoleSelector,
+  createTestNameSelector,
+  createTextSelector,
+  getFindAllNodesFailureDescription,
+  findAllNodes,
+  findBoundingRects,
+  focusWithin,
+  observeVisibleRects,
+} from './ReactTestSelectors';
 
 type OpaqueRoot = FiberRoot;
 

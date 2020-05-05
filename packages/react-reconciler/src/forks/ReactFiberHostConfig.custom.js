@@ -89,6 +89,20 @@ export const prepareScopeUnmount = $$$hostConfig.prepareScopeUnmount;
 export const getInstanceFromScope = $$$hostConfig.getInstanceFromScope;
 
 // -------------------
+//      Test selectors
+//     (optional)
+// -------------------
+export const supportsTestSelectors = $$$hostConfig.supportsTestSelectors;
+export const findFiberRoot = $$$hostConfig.findFiberRoot;
+export const getBoundingRect = $$$hostConfig.getBoundingRect;
+export const getTextContent = $$$hostConfig.getTextContent;
+export const isHiddenSubtree = $$$hostConfig.isHiddenSubtree;
+export const matchAccessibilityRole = $$$hostConfig.matchAccessibilityRole;
+export const setFocusIfFocusable = $$$hostConfig.setFocusIfFocusable;
+export const setupIntersectionObserver =
+  $$$hostConfig.setupIntersectionObserver;
+
+// -------------------
 //      Mutation
 //     (optional)
 // -------------------

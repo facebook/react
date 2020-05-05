@@ -8,4 +8,16 @@
  */
 
 export * from './index.modern.fb.js';
-export {act} from 'react-reconciler/src/ReactFiberReconciler';
+export {
+  act,
+  createComponentSelector,
+  createHasPsuedoClassSelector,
+  createRoleSelector,
+  createTestNameSelector,
+  createTextSelector,
+  getFindAllNodesFailureDescription,
+  findAllNodes,
+  findBoundingRects,
+  focusWithin,
+  observeVisibleRects,
+} from 'react-reconciler/src/ReactFiberReconciler';

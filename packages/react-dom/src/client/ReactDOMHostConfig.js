@@ -8,6 +8,12 @@
  */
 
 import type {TopLevelType} from 'legacy-events/TopLevelEventTypes';
+import type {Fiber, FiberRoot} from 'react-reconciler/src/ReactInternalTypes';
+import type {
+  BoundingRect,
+  IntersectionObserverOptions,
+  ObserveVisibleRectsCallback,
+} from 'react-reconciler/src/ReactTestSelectors';
 import type {RootType} from './ReactDOMRoot';
 import type {ReactScopeInstance} from 'shared/ReactTypes';
 import type {
@@ -21,7 +27,10 @@ import {
   updateFiberProps,
   getClosestInstanceFromNode,
   getFiberFromScopeInstance,
+  getInstanceFromNode as getInstanceFromNodeDOMTree,
+  isContainerMarkedAsRoot,
 } from './ReactDOMComponentTree';
+import {hasRole} from './DOMAccessibilityRoles';
 import {
   createElement,
   createTextNode,
@@ -69,6 +78,7 @@ import {
   enableModernEventSystem,
   enableScopeAPI,
 } from 'shared/ReactFeatureFlags';
+import {HostComponent, HostText} from 'react-reconciler/src/ReactWorkTags';
 import {TOP_BEFORE_BLUR, TOP_AFTER_BLUR} from '../events/DOMTopLevelEventTypes';
 import {listenToEvent} from '../events/DOMModernPluginEventSystem';
 
@@ -1141,4 +1151,143 @@ export function getInstanceFromScope(
     return getFiberFromScopeInstance(scopeInstance);
   }
   return null;
+}
+
+export const supportsTestSelectors = true;
+
+export function findFiberRoot(node: Instance): null | FiberRoot {
+  const stack = [node];
+  let index = 0;
+  while (index < stack.length) {
+    const current = stack[index++];
+    if (isContainerMarkedAsRoot(current)) {
+      return ((getInstanceFromNodeDOMTree(current): any): FiberRoot);
+    }
+    stack.push(...current.children);
+  }
+  return null;
+}
+
+export function getBoundingRect(node: Instance): BoundingRect {
+  const rect = node.getBoundingClientRect();
+  return {
+    x: rect.left,
+    y: rect.top,
+    width: rect.width,
+    height: rect.height,
+  };
+}
+
+export function matchAccessibilityRole(node: Instance, role: string): boolean {
+  if (hasRole(node, role)) {
+    return true;
+  }
+
+  return false;
+}
+
+export function getTextContent(fiber: Fiber): string | null {
+  switch (fiber.tag) {
+    case HostComponent:
+      let textContent = '';
+      const childNodes = fiber.stateNode.childNodes;
+      for (let i = 0; i < childNodes.length; i++) {
+        const childNode = childNodes[i];
+        if (childNode.nodeType === Node.TEXT_NODE) {
+          textContent += childNode.textContent;
+        }
+      }
+      return textContent;
+    case HostText:
+      return fiber.stateNode.textContent;
+  }
+
+  return null;
+}
+
+export function isHiddenSubtree(fiber: Fiber): boolean {
+  return fiber.tag === HostComponent && fiber.memoizedProps.hidden === true;
+}
+
+export function setFocusIfFocusable(node: Instance): boolean {
+  // The logic for determining if an element is focusable is kind of complex,
+  // and since we want to actually change focus anyway- we can just skip it.
+  // Instead we'll just listen for a "focus" event to verify that focus was set.
+  //
+  // We could compare the node to document.activeElement after focus,
+  // but this would not handle the case where application code managed focus to automatically blur.
+  let didFocus = false;
+  const handleFocus = () => {
+    didFocus = true;
+  };
+
+  const element = ((node: any): HTMLElement);
+  try {
+    element.addEventListener('focus', handleFocus);
+    (element.focus || HTMLElement.prototype.focus).call(element);
+  } finally {
+    element.removeEventListener('focus', handleFocus);
+  }
+
+  return didFocus;
+}
+
+type RectRatio = {
+  ratio: number,
+  rect: BoundingRect,
+};
+
+export function setupIntersectionObserver(
+  targets: Array<Instance>,
+  callback: ObserveVisibleRectsCallback,
+  options?: IntersectionObserverOptions,
+): {|
+  disconnect: () => void,
+  observe: (instance: Instance) => void,
+  unobserve: (instance: Instance) => void,
+|} {
+  const rectRatioCache: Map<Instance, RectRatio> = new Map();
+  targets.forEach(target => {
+    rectRatioCache.set(target, {
+      rect: getBoundingRect(target),
+      ratio: 0,
+    });
+  });
+
+  const handleIntersection = (entries: Array<IntersectionObserverEntry>) => {
+    entries.forEach(entry => {
+      const {boundingClientRect, intersectionRatio, target} = entry;
+      rectRatioCache.set(target, {
+        rect: {
+          x: boundingClientRect.left,
+          y: boundingClientRect.top,
+          width: boundingClientRect.width,
+          height: boundingClientRect.height,
+        },
+        ratio: intersectionRatio,
+      });
+    });
+
+    callback(Array.from(rectRatioCache.values()));
+  };
+
+  const observer = new IntersectionObserver(handleIntersection, options);
+  targets.forEach(target => {
+    observer.observe((target: any));
+  });
+
+  return {
+    disconnect: () => observer.disconnect(),
+    observe: target => {
+      rectRatioCache.set(target, {
+        rect: getBoundingRect(target),
+        ratio: 0,
+      });
+      observer.observe((target: any));
+    },
+    unobserve: target => {
+      rectRatioCache.delete(target);
+      observer.unobserve((target: any));
+    },
+  };
 }
