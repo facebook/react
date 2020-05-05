@@ -7,7 +7,7 @@
 /* eslint-disable import/first */
 
 import * as React from 'react';
-import {block} from 'react';
+import {unstable_block as block} from 'react';
 import {fetch} from 'react-data/fetch';
 
 // Server

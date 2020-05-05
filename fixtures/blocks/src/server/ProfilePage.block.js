@@ -7,7 +7,7 @@
 /* eslint-disable import/first */
 
 import * as React from 'react';
-import {block, Suspense} from 'react';
+import {unstable_block as block, Suspense} from 'react';
 
 // Server
 

@@ -7,7 +7,7 @@
 /* eslint-disable import/first */
 
 import * as React from 'react';
-import {Suspense, SuspenseList} from 'react';
+import {Suspense, unstable_SuspenseList as SuspenseList} from 'react';
 import {preload} from 'react-data/fetch';
 
 import loadPost from './Post.block';

@@ -6,8 +6,8 @@
  */
 
 import React from 'react';
-import ReactDOM from 'react-dom';
+import {unstable_createRoot as createRoot} from 'react-dom';
 import './index.css';
 import Router from './Router';
 
-ReactDOM.createRoot(document.getElementById('root')).render(<Router />);
+createRoot(document.getElementById('root')).render(<Router />);

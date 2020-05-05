@@ -8,7 +8,7 @@
 import React, {
   useReducer,
   useEffect,
-  useTransition,
+  unstable_useTransition as useTransition,
   useCallback,
   useMemo,
   Suspense,
