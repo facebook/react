@@ -15,8 +15,8 @@ import {matchRoute} from './ServerRouter';
 import loadFeedPage from './FeedPage.block';
 import loadProfilePage from './ProfilePage.block';
 
-function load({route}) {
-  const Page = matchRoute(route, [
+function load(params) {
+  const Page = matchRoute(params, [
     ['/', loadFeedPage],
     ['/profile/:userId/*', loadProfilePage],
   ]);

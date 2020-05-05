@@ -14,7 +14,7 @@ import {unstable_block as block} from 'react';
 import {fetch} from 'react-data/fetch';
 import PostList from './PostList';
 
-function load(params, userId) {
+function load({userId}) {
   const postsByUser = fetch(`/posts?userId=${userId}&_expand=user`).json();
   return {
     posts: <PostList posts={postsByUser} />,

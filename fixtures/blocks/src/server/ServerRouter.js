@@ -6,15 +6,15 @@
  */
 /* eslint-disable import/first */
 
-function tryMatch(template, url) {
+function tryMatch(template, params) {
   const templateSegments = template.split('/').filter(Boolean);
-  const urlSegments = url.split('/').filter(Boolean);
-  let nextParams = {};
-  while (urlSegments.length > 0) {
+  const routeSegments = params.route.split('/').filter(Boolean);
+  let nextParams = {...params};
+  while (routeSegments.length > 0) {
     if (templateSegments.length === 0) {
       return null;
     }
-    const urlSegment = urlSegments.shift();
+    const urlSegment = routeSegments.shift();
     const templateSegment = templateSegments.shift();
     if (urlSegment === templateSegment) {
       continue;
@@ -24,7 +24,7 @@ function tryMatch(template, url) {
       continue;
     }
     if (templateSegment === '*') {
-      nextParams.route = '/' + urlSegment + urlSegments.join('/');
+      nextParams.route = '/' + urlSegment + routeSegments.join('/');
       return nextParams;
     }
     return null;
@@ -39,13 +39,13 @@ function tryMatch(template, url) {
   return null;
 }
 
-export function matchRoute(url, routes) {
+export function matchRoute(params, routes) {
   let Block;
   for (let route of routes) {
-    const [template, load, ...restArgs] = route;
-    const nextParams = tryMatch(template, url);
+    const [template, load] = route;
+    const nextParams = tryMatch(template, params);
     if (nextParams) {
-      Block = load(nextParams, ...restArgs);
+      Block = load(nextParams);
       break;
     }
   }

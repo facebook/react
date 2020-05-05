@@ -16,11 +16,11 @@ import {matchRoute} from './ServerRouter';
 import loadProfileBio from './ProfileBio.block';
 import loadProfileTimeline from './ProfileTimeline.block';
 
-function load({userId, route}) {
-  const user = fetch(`/users/${userId}`).json();
-  const Tab = matchRoute(route, [
-    ['/', loadProfileTimeline, userId],
-    ['/bio', loadProfileBio, user],
+function load(params) {
+  const user = fetch(`/users/${params.userId}`).json();
+  const Tab = matchRoute(params, [
+    ['/', loadProfileTimeline],
+    ['/bio', loadProfileBio],
   ]);
   return {
     Tab,

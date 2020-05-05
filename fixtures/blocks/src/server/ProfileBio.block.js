@@ -13,10 +13,11 @@ import {unstable_block as block} from 'react';
 
 import {fetch} from 'react-data/fetch';
 
-function load(params, user) {
+function load({userId}) {
+  const user = fetch(`/users/${userId}`).json();
   return {
-    user,
-    bio: fetch(`/bios/${user.bioId}`).json(),
+    name: user.name,
+    bio: fetch(`/bios/${user.bioId}`).json().text,
   };
 }
 
@@ -25,8 +26,8 @@ function load(params, user) {
 function ProfileBio(props, data) {
   return (
     <>
-      <h3>{data.user.name}'s Bio</h3>
-      <p>{data.bio.text}</p>
+      <h3>{data.name}'s Bio</h3>
+      <p>{data.bio}</p>
     </>
   );
 }
