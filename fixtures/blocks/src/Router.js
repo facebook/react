@@ -15,17 +15,32 @@ import React, {
 } from 'react';
 import {createCache, CacheProvider} from 'react/unstable-cache';
 import {RouterProvider} from './client/RouterContext';
-// TODO: entry point. This can't really done in the client code.
 import loadApp from './server/App.block';
 
 const initialUrl = window.location.pathname;
+
+let RootBlock;
+if (initialUrl.startsWith('/~/')) {
+  // Request a nested Block directly, for testing.
+  // e.g. /~/ProfilePage.block?userId=3&route=/bio
+  // This mode doesn't support navigation.
+  const blockName = initialUrl.slice(3);
+  const loadEntrypoint = require('./server/' + blockName).default;
+  const params = Object.fromEntries(
+    new URLSearchParams(window.location.search)
+  );
+  RootBlock = loadEntrypoint(params);
+} else {
+  // Normal request from the root router.
+  RootBlock = loadApp({route: initialUrl});
+}
 
 const initialState = {
   // TODO: use this for invalidation.
   cache: createCache(),
   url: initialUrl,
   pendingUrl: initialUrl,
-  RootBlock: loadApp(initialUrl),
+  RootBlock,
 };
 
 function reducer(state, action) {
@@ -65,7 +80,7 @@ function Router() {
         // TODO: Instant Transitions, somehow.
         dispatch({
           type: 'completeNavigation',
-          RootBlock: loadApp(url),
+          RootBlock: loadApp({route: url}),
           url,
         });
       });
