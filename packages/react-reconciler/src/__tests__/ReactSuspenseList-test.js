@@ -12,7 +12,7 @@ describe('ReactSuspenseList', () => {
     ReactNoop = require('react-noop-renderer');
     Scheduler = require('scheduler');
     Suspense = React.Suspense;
-    SuspenseList = React.SuspenseList;
+    SuspenseList = React.unstable_SuspenseList;
   });
 
   function Text(props) {

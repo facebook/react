@@ -2737,7 +2737,9 @@ describe('ReactSuspenseWithNoopRenderer', () => {
 
     function App() {
       const [page, setPage] = React.useState('A');
-      const [startLoading, isLoading] = React.useTransition(SUSPENSE_CONFIG);
+      const [startLoading, isLoading] = React.unstable_useTransition(
+        SUSPENSE_CONFIG,
+      );
       transitionToPage = nextPage => startLoading(() => setPage(nextPage));
       return (
         <Fragment>
@@ -3718,7 +3720,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
 
   // @gate experimental
   it('regression: ping at high priority causes update to be dropped', async () => {
-    const {useState, useTransition} = React;
+    const {useState, unstable_useTransition: useTransition} = React;
 
     let setTextA;
     function A() {
@@ -3836,10 +3838,10 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     let setTextWithLongTransition;
 
     function App() {
-      const [startShortTransition, isPending1] = React.useTransition({
+      const [startShortTransition, isPending1] = React.unstable_useTransition({
         timeoutMs: 5000,
       });
-      const [startLongTransition, isPending2] = React.useTransition({
+      const [startLongTransition, isPending2] = React.unstable_useTransition({
         timeoutMs: 30000,
       });
       const isPending = isPending1 || isPending2;

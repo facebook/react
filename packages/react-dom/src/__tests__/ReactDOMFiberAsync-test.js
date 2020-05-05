@@ -192,7 +192,7 @@ describe('ReactDOMFiberAsync', () => {
           );
         }
       }
-      const root = ReactDOM.createRoot(container);
+      const root = ReactDOM.unstable_createRoot(container);
       root.render(<Counter />);
       Scheduler.unstable_flushAll();
       expect(asyncValueRef.current.textContent).toBe('');
@@ -213,7 +213,7 @@ describe('ReactDOMFiberAsync', () => {
 
     // @gate experimental
     it('top-level updates are concurrent', () => {
-      const root = ReactDOM.createRoot(container);
+      const root = ReactDOM.unstable_createRoot(container);
       root.render(<div>Hi</div>);
       expect(container.textContent).toEqual('');
       Scheduler.unstable_flushAll();
@@ -236,7 +236,7 @@ describe('ReactDOMFiberAsync', () => {
         }
       }
 
-      const root = ReactDOM.createRoot(container);
+      const root = ReactDOM.unstable_createRoot(container);
       root.render(<Component />);
       expect(container.textContent).toEqual('');
       Scheduler.unstable_flushAll();
@@ -267,7 +267,7 @@ describe('ReactDOMFiberAsync', () => {
         }
       }
 
-      const root = ReactDOM.createRoot(container);
+      const root = ReactDOM.unstable_createRoot(container);
       root.render(<Component />);
       Scheduler.unstable_flushAll();
 
@@ -309,7 +309,7 @@ describe('ReactDOMFiberAsync', () => {
           return this.state.counter;
         }
       }
-      const root = ReactDOM.createRoot(container);
+      const root = ReactDOM.unstable_createRoot(container);
       root.render(<Counter />);
       Scheduler.unstable_flushAll();
       expect(container.textContent).toEqual('0');
@@ -423,7 +423,7 @@ describe('ReactDOMFiberAsync', () => {
         }
       }
 
-      const root = ReactDOM.createRoot(container);
+      const root = ReactDOM.unstable_createRoot(container);
       root.render(<Form />);
       // Flush
       Scheduler.unstable_flushAll();
@@ -490,7 +490,7 @@ describe('ReactDOMFiberAsync', () => {
         }
       }
 
-      const root = ReactDOM.createRoot(container);
+      const root = ReactDOM.unstable_createRoot(container);
       root.render(<Form />);
       // Flush
       Scheduler.unstable_flushAll();
@@ -551,7 +551,7 @@ describe('ReactDOMFiberAsync', () => {
         }
       }
 
-      const root = ReactDOM.createRoot(container);
+      const root = ReactDOM.unstable_createRoot(container);
       root.render(<Form />);
       // Flush
       Scheduler.unstable_flushAll();
@@ -614,7 +614,7 @@ describe('ReactDOMFiberAsync', () => {
   describe('createBlockingRoot', () => {
     // @gate experimental
     it('updates flush without yielding in the next event', () => {
-      const root = ReactDOM.createBlockingRoot(container);
+      const root = ReactDOM.unstable_createBlockingRoot(container);
 
       function Text(props) {
         Scheduler.unstable_yieldValue(props.text);
@@ -661,7 +661,7 @@ describe('ReactDOMFiberAsync', () => {
       return <button ref={ref}>new</button>;
     }
 
-    const oldRoot = ReactDOM.createRoot(container);
+    const oldRoot = ReactDOM.unstable_createRoot(container);
     act(() => {
       oldRoot.render(<OldApp />);
     });
@@ -673,7 +673,7 @@ describe('ReactDOMFiberAsync', () => {
     expect(container.textContent).toBe('');
 
     // We can now render a new one.
-    const newRoot = ReactDOM.createRoot(container);
+    const newRoot = ReactDOM.unstable_createRoot(container);
     ReactDOM.flushSync(() => {
       newRoot.render(<NewApp />);
     });

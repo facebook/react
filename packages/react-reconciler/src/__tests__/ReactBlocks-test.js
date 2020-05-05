@@ -24,7 +24,7 @@ describe('ReactBlocks', () => {
     React = require('react');
     ReactNoop = require('react-noop-renderer');
 
-    block = React.block;
+    block = React.unstable_block;
     useState = React.useState;
     Suspense = React.Suspense;
     const cache = new Map();

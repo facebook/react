@@ -40,11 +40,15 @@ export {
   createFactory,
   // exposeConcurrentModeAPIs
   useTransition,
+  useTransition as unstable_useTransition,
   useDeferredValue,
+  useDeferredValue as unstable_useDeferredValue,
   SuspenseList,
+  SuspenseList as unstable_SuspenseList,
   unstable_withSuspenseConfig,
   // enableBlocksAPI
   block,
+  block as unstable_block,
   // enableDeprecatedFlareAPI
   DEPRECATED_useResponder,
   DEPRECATED_createResponder,

@@ -183,7 +183,7 @@ describe('ReactFlightDOM', () => {
     const response = ReactTransportDOMClient.createFromReadableStream(readable);
 
     const container = document.createElement('div');
-    const root = ReactDOM.createRoot(container);
+    const root = ReactDOM.unstable_createRoot(container);
     await act(async () => {
       root.render(<App response={response} />);
     });
@@ -222,7 +222,7 @@ describe('ReactFlightDOM', () => {
     const response = ReactTransportDOMClient.createFromReadableStream(readable);
 
     const container = document.createElement('div');
-    const root = ReactDOM.createRoot(container);
+    const root = ReactDOM.unstable_createRoot(container);
     await act(async () => {
       root.render(<App response={response} />);
     });
@@ -259,7 +259,7 @@ describe('ReactFlightDOM', () => {
     const response = ReactTransportDOMClient.createFromReadableStream(readable);
 
     const container = document.createElement('div');
-    const root = ReactDOM.createRoot(container);
+    const root = ReactDOM.unstable_createRoot(container);
     await act(async () => {
       root.render(<App response={response} />);
     });
@@ -418,7 +418,7 @@ describe('ReactFlightDOM', () => {
     const response = ReactTransportDOMClient.createFromReadableStream(readable);
 
     const container = document.createElement('div');
-    const root = ReactDOM.createRoot(container);
+    const root = ReactDOM.unstable_createRoot(container);
     await act(async () => {
       root.render(<ProfilePage response={response} />);
     });

@@ -126,7 +126,7 @@ describe('ReactDOMHooks', () => {
     const inputRef = createRef();
     const labelRef = createRef();
 
-    const root = ReactDOM.createRoot(container);
+    const root = ReactDOM.unstable_createRoot(container);
     root.render(<Example inputRef={inputRef} labelRef={labelRef} />);
 
     Scheduler.unstable_flushAll();

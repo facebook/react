@@ -63,8 +63,8 @@ describe('ReactHooksWithNoopRenderer', () => {
     useImperativeHandle = React.useImperativeHandle;
     forwardRef = React.forwardRef;
     memo = React.memo;
-    useTransition = React.useTransition;
-    useDeferredValue = React.useDeferredValue;
+    useTransition = React.unstable_useTransition;
+    useDeferredValue = React.unstable_useDeferredValue;
     Suspense = React.Suspense;
     act = ReactNoop.act;
 
