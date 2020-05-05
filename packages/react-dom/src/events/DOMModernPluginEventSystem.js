@@ -39,6 +39,7 @@ import {
   HostRoot,
   HostPortal,
   HostComponent,
+  HostText,
 } from 'react-reconciler/src/ReactWorkTags';
 
 import getEventTarget from './getEventTarget';
@@ -420,19 +421,21 @@ export function dispatchEventForPluginEventSystem(
         if (node === null) {
           return;
         }
-        if (node.tag === HostRoot || node.tag === HostPortal) {
+        const nodeTag = node.tag;
+        if (nodeTag === HostRoot || nodeTag === HostPortal) {
           const container = node.stateNode.containerInfo;
           if (isMatchingRootContainer(container, targetContainerNode)) {
             break;
           }
-          if (node.tag === HostPortal) {
+          if (nodeTag === HostPortal) {
             // The target is a portal, but it's not the rootContainer we're looking for.
             // Normally portals handle their own events all the way down to the root.
             // So we should be able to stop now. However, we don't know if this portal
             // was part of *our* root.
             let grandNode = node.return;
             while (grandNode !== null) {
-              if (grandNode.tag === HostRoot || grandNode.tag === HostPortal) {
+              const grandTag = grandNode.tag;
+              if (grandTag === HostRoot || grandTag === HostPortal) {
                 const grandContainer = grandNode.stateNode.containerInfo;
                 if (
                   isMatchingRootContainer(grandContainer, targetContainerNode)
@@ -450,7 +453,13 @@ export function dispatchEventForPluginEventSystem(
           if (parentSubtreeInst === null) {
             return;
           }
-          node = ancestorInst = parentSubtreeInst;
+          const parentTag = parentSubtreeInst.tag;
+          // getClosestInstanceFromNode can return a HostRoot or SuspenseComponent.
+          // So we need to ensure we only set the ancestor to a HostComponent or HostText.
+          if (parentTag === HostComponent || parentTag === HostText) {
+            ancestorInst = parentSubtreeInst;
+          }
+          node = parentSubtreeInst;
           continue;
         }
         node = node.return;
