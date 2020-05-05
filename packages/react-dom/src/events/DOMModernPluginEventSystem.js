@@ -677,7 +677,7 @@ function accumulateEnterLeaveListenersForEvent(
 export function accumulateEnterLeaveListeners(
   dispatchQueue: DispatchQueue,
   leaveEvent: ReactSyntheticEvent,
-  enterEvent: ReactSyntheticEvent,
+  enterEvent: null | ReactSyntheticEvent,
   from: Fiber | null,
   to: Fiber | null,
 ): void {
@@ -692,7 +692,7 @@ export function accumulateEnterLeaveListeners(
       false,
     );
   }
-  if (to !== null) {
+  if (to !== null && enterEvent !== null) {
     accumulateEnterLeaveListenersForEvent(
       dispatchQueue,
       enterEvent,

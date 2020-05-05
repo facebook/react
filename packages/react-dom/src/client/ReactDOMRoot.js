@@ -42,6 +42,7 @@ import {
   DOCUMENT_NODE,
   DOCUMENT_FRAGMENT_NODE,
 } from '../shared/HTMLNodeType';
+import {ensureListeningTo} from './ReactDOMComponent';
 
 import {
   createContainer,
@@ -53,6 +54,8 @@ import {
   ConcurrentRoot,
   LegacyRoot,
 } from 'react-reconciler/src/ReactRootTags';
+
+import {enableModernEventSystem} from 'shared/ReactFeatureFlags';
 
 function ReactDOMRoot(container: Container, options: void | RootOptions) {
   this._internalRoot = createRootImpl(container, ConcurrentRoot, options);
@@ -129,6 +132,10 @@ function createRootImpl(
         ? container
         : container.ownerDocument;
     eagerlyTrapReplayableEvents(container, doc);
+  } else if (enableModernEventSystem) {
+    // We use ensureListeningTo because the container might
+    // be a COMMENT_NODE.
+    ensureListeningTo(container, 'onMouseEnter');
   }
   return root;
 }
