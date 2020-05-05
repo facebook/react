@@ -119,21 +119,21 @@ function getImplicitRole(element: Element): string | null {
   return null;
 }
 
-function getExplicitRole(element: Element): string | null {
+function getExplicitRoles(element: Element): Array<string> | null {
   const role = element.getAttribute('role');
   if (role) {
-    return role.trim().split(' ')[0];
+    return role.trim().split(' ');
   }
 
   return null;
 }
 
 // https://w3c.github.io/html-aria/#document-conformance-requirements-for-use-of-aria-attributes-in-html
-export function getRole(element: Element): string | null {
-  const explicitRole = getExplicitRole(element);
-  if (explicitRole !== null) {
-    return explicitRole;
+export function hasRole(element: Element, role: string): boolean {
+  const explicitRoles = getExplicitRoles(element);
+  if (explicitRoles !== null && explicitRoles.indexOf(role) >= 0) {
+    return true;
   }
 
-  return getImplicitRole(element);
+  return role === getImplicitRole(element);
 }

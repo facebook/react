@@ -30,7 +30,7 @@ import {
   getInstanceFromNode as getInstanceFromNodeDOMTree,
   isContainerMarkedAsRoot,
 } from './ReactDOMComponentTree';
-import {getRole} from './DOMAccessibilityRoles';
+import {hasRole} from './DOMAccessibilityRoles';
 import {
   createElement,
   createTextNode,
@@ -1179,7 +1179,7 @@ export function getBoundingRect(node: Instance): BoundingRect {
 }
 
 export function matchAccessibilityRole(node: Instance, role: string): boolean {
-  if (role === getRole(node)) {
+  if (hasRole(node, role)) {
     return true;
   }
 

@@ -361,6 +361,30 @@ describe('ReactDOMTestSelectors', () => {
       expect(matches[0].id).toBe('match');
     });
 
+    it('should support filtering by explicit secondary accessibiliy role', () => {
+      const ref = React.createRef();
+
+      function Example() {
+        return (
+          <div>
+            <div>foo</div>
+            <div>
+              <div ref={ref} role="meter progressbar" />
+            </div>
+          </div>
+        );
+      }
+
+      render(<Example />, container);
+
+      const matches = findAllNodes(document.body, [
+        createComponentSelector(Example),
+        createRoleSelector('progressbar'),
+      ]);
+      expect(matches).toHaveLength(1);
+      expect(matches[0]).toBe(ref.current);
+    });
+
     it('should support filtering by implicit accessibiliy role', () => {
       function Example() {
         return (
