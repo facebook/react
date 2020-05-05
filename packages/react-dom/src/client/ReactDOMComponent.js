@@ -9,6 +9,7 @@
 
 import {registrationNameModules} from 'legacy-events/EventPluginRegistry';
 import {canUseDOM} from 'shared/ExecutionEnvironment';
+import invariant from 'shared/invariant';
 import {
   setListenToResponderEventTypes,
   addResponderEventSystemEvent,
@@ -282,12 +283,13 @@ export function ensureListeningTo(
     // Containers should only ever be element nodes. We do not
     // want to register events to document fragments or documents
     // with the modern plugin event system.
-    if (
+    invariant(
       rootContainerElement != null &&
-      rootContainerElement.nodeType === ELEMENT_NODE
-    ) {
-      listenToEvent(registrationName, ((rootContainerElement: any): Element));
-    }
+        rootContainerElement.nodeType === ELEMENT_NODE,
+      'ensureListeningTo(): received a container that was not an element node. ' +
+        'This is likely a bug in React.',
+    );
+    listenToEvent(registrationName, ((rootContainerElement: any): Element));
   } else {
     // Legacy plugin event system path
     const isDocumentOrFragment =
