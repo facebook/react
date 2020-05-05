@@ -193,6 +193,7 @@ import {
   markSpawnedWork,
   retryDehydratedSuspenseBoundary,
   scheduleUpdateOnFiber,
+  renderDidSuspend,
   renderDidSuspendDelayIfPossible,
   markSkippedUpdateLanes,
   getWorkInProgressRoot,
@@ -2231,6 +2232,11 @@ function mountDehydratedSuspenseComponent(
     // wrong priority associated with it and will prevent hydration of parent path.
     // Instead, we'll leave work left on it to render it in a separate commit.
 
+    // Mark this render as suspended. Not because we want it to actually suspend,
+    // but just so that SuspenseList knows that this render might have something
+    // suspended in it.
+    renderDidSuspend();
+
     // TODO This time should be the time at which the server rendered response that is
     // a parent to this boundary was displayed. However, since we currently don't have
     // a protocol to transfer that time, we'll just estimate it by using the current
@@ -2242,6 +2248,13 @@ function mountDehydratedSuspenseComponent(
     }
     workInProgress.lanes = laneToLanes(DefaultHydrationLane);
   } else {
+    if (isSuspenseInstancePending(suspenseInstance)) {
+      // Mark this render as suspended. Not because we want it to actually suspend,
+      // but just so that SuspenseList knows that this render might have something
+      // suspended in it.
+      renderDidSuspend();
+    }
+
     // We'll continue hydrating the rest at offscreen priority since we'll already
     // be showing the right content coming from the server, it is no rush.
     workInProgress.lanes = laneToLanes(OffscreenLane);

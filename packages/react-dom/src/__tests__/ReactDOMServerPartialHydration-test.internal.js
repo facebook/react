@@ -2752,4 +2752,172 @@ describe('ReactDOMServerPartialHydration', () => {
     // Now we're hydrated.
     expect(ref.current).not.toBe(null);
   });
+
+  // @gate experimental
+  it('shows client boundaries in order if they are in a "forwards" SuspenseList', async () => {
+    let suspendA = true;
+    let resolveA;
+    const promiseA = new Promise(resolvePromise => (resolveA = resolvePromise));
+    let suspendB = true;
+    let resolveB;
+    const promiseB = new Promise(resolvePromise => (resolveB = resolvePromise));
+    let suspendC = true;
+    let resolveC;
+    const promiseC = new Promise(resolvePromise => (resolveC = resolvePromise));
+
+    function ChildA() {
+      if (suspendA) {
+        throw promiseA;
+      } else {
+        return <span>A</span>;
+      }
+    }
+    function ChildB() {
+      if (suspendB) {
+        throw promiseB;
+      } else {
+        return <span>B</span>;
+      }
+    }
+    function ChildC() {
+      if (suspendC) {
+        throw promiseC;
+      } else {
+        return <span>C</span>;
+      }
+    }
+
+    function App() {
+      return (
+        <SuspenseList revealOrder="forwards">
+          <Suspense fallback="Loading A">
+            <ChildA />
+          </Suspense>
+          <Suspense fallback="Loading B">
+            <ChildB />
+          </Suspense>
+          <Suspense fallback="Loading C">
+            <ChildC />
+          </Suspense>
+        </SuspenseList>
+      );
+    }
+
+    const html = ReactDOMServer.renderToString(<App />);
+
+    const container = document.createElement('div');
+    container.innerHTML = html;
+
+    const root = ReactDOM.createRoot(container, {hydrate: true});
+
+    act(() => {
+      root.render(<App />);
+    });
+    expect(container.textContent).toBe('Loading ALoading BLoading C');
+
+    suspendB = false;
+    await act(async () => {
+      await resolveB();
+    });
+
+    expect(container.textContent).toBe('Loading ALoading BLoading C');
+
+    suspendA = false;
+    await act(async () => {
+      await resolveA();
+    });
+
+    expect(container.textContent).toBe('ABLoading C');
+
+    suspendC = false;
+    await act(async () => {
+      await resolveC();
+    });
+
+    expect(container.textContent).toBe('ABC');
+  });
+
+  // @gate experimental
+  it('shows client boundaries together if they are in a "together" SuspenseList', async () => {
+    let suspendA = true;
+    let resolveA;
+    const promiseA = new Promise(resolvePromise => (resolveA = resolvePromise));
+    let suspendB = true;
+    let resolveB;
+    const promiseB = new Promise(resolvePromise => (resolveB = resolvePromise));
+    let suspendC = true;
+    let resolveC;
+    const promiseC = new Promise(resolvePromise => (resolveC = resolvePromise));
+
+    function ChildA() {
+      if (suspendA) {
+        throw promiseA;
+      } else {
+        return <span>A</span>;
+      }
+    }
+    function ChildB() {
+      if (suspendB) {
+        throw promiseB;
+      } else {
+        return <span>B</span>;
+      }
+    }
+    function ChildC() {
+      if (suspendC) {
+        throw promiseC;
+      } else {
+        return <span>C</span>;
+      }
+    }
+
+    function App() {
+      return (
+        <SuspenseList revealOrder="together">
+          <Suspense fallback="Loading A">
+            <ChildA />
+          </Suspense>
+          <Suspense fallback="Loading B">
+            <ChildB />
+          </Suspense>
+          <Suspense fallback="Loading C">
+            <ChildC />
+          </Suspense>
+        </SuspenseList>
+      );
+    }
+
+    const html = ReactDOMServer.renderToString(<App />);
+
+    const container = document.createElement('div');
+    container.innerHTML = html;
+
+    const root = ReactDOM.createRoot(container, {hydrate: true});
+
+    act(() => {
+      root.render(<App />);
+    });
+    expect(container.textContent).toBe('Loading ALoading BLoading C');
+
+    suspendB = false;
+    await act(async () => {
+      await resolveB();
+    });
+
+    expect(container.textContent).toBe('Loading ALoading BLoading C');
+
+    suspendA = false;
+    await act(async () => {
+      await resolveA();
+    });
+
+    expect(container.textContent).toBe('Loading ALoading BLoading C');
+
+    suspendC = false;
+    await act(async () => {
+      await resolveC();
+    });
+
+    expect(container.textContent).toBe('ABC');
+  });
 });
