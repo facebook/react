@@ -380,11 +380,12 @@ export function computeExpirationForFiber(
 export function scheduleUpdateOnFiber(
   fiber: Fiber,
   expirationTime: ExpirationTime,
+  force?: boolean,
 ) {
   checkForNestedUpdates();
   warnAboutInvalidUpdatesOnClassComponentsInDEV(fiber);
 
-  const root = markUpdateTimeFromFiberToRoot(fiber, expirationTime);
+  const root = markUpdateTimeFromFiberToRoot(fiber, expirationTime, force);
   if (root === null) {
     warnAboutUpdateOnUnmountedFiberInDEV(fiber);
     return;
@@ -453,19 +454,31 @@ export const scheduleWork = scheduleUpdateOnFiber;
 // work without treating it as a typical update that originates from an event;
 // e.g. retrying a Suspense boundary isn't an update, but it does schedule work
 // on a fiber.
-function markUpdateTimeFromFiberToRoot(fiber, expirationTime) {
+function markUpdateTimeFromFiberToRoot(fiber, expirationTime, force) {
   // Update the source fiber's expiration time
   if (fiber.expirationTime < expirationTime) {
     fiber.expirationTime = expirationTime;
     if (enableReifyNextWork) {
-      fiber.mode &= ~ReifiedWorkMode;
+      if (force === true) {
+        // console.log('marking path as reified');
+        fiber.mode |= ReifiedWorkMode;
+      } else {
+        // console.log('marking path as NOT reified');
+        fiber.mode &= ~ReifiedWorkMode;
+      }
     }
   }
   let alternate = fiber.alternate;
   if (alternate !== null && alternate.expirationTime < expirationTime) {
     alternate.expirationTime = expirationTime;
     if (enableReifyNextWork) {
-      alternate.mode &= ~ReifiedWorkMode;
+      if (force === true) {
+        // console.log('marking alternate path as reified');
+        alternate.mode |= ReifiedWorkMode;
+      } else {
+        // console.log('marking alternate path as NOT reified');
+        alternate.mode &= ~ReifiedWorkMode;
+      }
     }
   }
   // Walk the parent path to the root and update the child expiration time.
@@ -479,7 +492,13 @@ function markUpdateTimeFromFiberToRoot(fiber, expirationTime) {
       if (node.childExpirationTime < expirationTime) {
         node.childExpirationTime = expirationTime;
         if (enableReifyNextWork) {
-          node.mode &= ~ReifiedWorkMode;
+          if (force === true) {
+            // console.log('marking path as reified');
+            node.mode |= ReifiedWorkMode;
+          } else {
+            // console.log('marking path as NOT reified');
+            node.mode &= ~ReifiedWorkMode;
+          }
         }
         if (
           alternate !== null &&
@@ -487,7 +506,13 @@ function markUpdateTimeFromFiberToRoot(fiber, expirationTime) {
         ) {
           alternate.childExpirationTime = expirationTime;
           if (enableReifyNextWork) {
-            alternate.mode &= ~ReifiedWorkMode;
+            if (force === true) {
+              // console.log('marking alternate path as reified');
+              alternate.mode |= ReifiedWorkMode;
+            } else {
+              // console.log('marking alternate path as NOT reified');
+              alternate.mode &= ~ReifiedWorkMode;
+            }
           }
         }
       } else if (
@@ -496,7 +521,13 @@ function markUpdateTimeFromFiberToRoot(fiber, expirationTime) {
       ) {
         alternate.childExpirationTime = expirationTime;
         if (enableReifyNextWork) {
-          alternate.mode &= ~ReifiedWorkMode;
+          if (force === true) {
+            // console.log('marking alternate path as reified');
+            alternate.mode |= ReifiedWorkMode;
+          } else {
+            // console.log('marking alternate path as NOT reified');
+            alternate.mode &= ~ReifiedWorkMode;
+          }
         }
       }
       if (node.return === null && node.tag === HostRoot) {

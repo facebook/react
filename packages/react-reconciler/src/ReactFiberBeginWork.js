@@ -2792,6 +2792,7 @@ export function markWorkInProgressReceivedUpdate() {
 }
 
 function reifyNextWork(workInProgress: Fiber, renderExpirationTime) {
+  // console.log('reifying next work from ', workInProgress.tag);
   let fiber = workInProgress.child;
   if (fiber !== null) {
     // Set the return pointer of the child to the work-in-progress fiber.
@@ -2802,11 +2803,32 @@ function reifyNextWork(workInProgress: Fiber, renderExpirationTime) {
     let nextFiber;
 
     if (fiber.mode & ReifiedWorkMode) {
+      // this fiber and it's sub tree have already been reified. whatever work exists
+      // there we need to progress forward with it. no need to delve deeper
       nextFiber = null;
     } else {
       fiber.mode |= ReifiedWorkMode;
 
-      if (fiber.expirationTime >= renderExpirationTime) {
+      // console.log(
+      //   '-- checking',
+      //   fiber.tag,
+      //   fiber._debugNeedsRemount,
+      //   fiber.type && fiber.type.name,
+      // );
+      // fiber.alternate &&
+      //   console.log(
+      //     '-- checking alternate',
+      //     fiber.alternate.tag,
+      //     fiber.alternate._debugNeedsRemount,
+      //     fiber.type === fiber.alternate.type,
+      //   );
+
+      if (__DEV__ && fiber._debugNeedsRemount) {
+        // this fiber needs to be remounted. we can bail out of the reify algo for this
+        // subtree and let normal work takes it's course
+        console.log('fiber', fiber.tag, 'has debug marker');
+        nextFiber = null;
+      } else if (fiber.expirationTime >= renderExpirationTime) {
         let didBailout;
         switch (fiber.tag) {
           case ForwardRef:
@@ -3022,6 +3044,8 @@ function beginWork(
   renderExpirationTime: ExpirationTime,
 ): Fiber | null {
   const updateExpirationTime = workInProgress.expirationTime;
+
+  // console.log('beginWork', workInProgress.tag);
 
   if (__DEV__) {
     if (workInProgress._debugNeedsRemount && current !== null) {

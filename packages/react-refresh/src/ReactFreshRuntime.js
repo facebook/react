@@ -149,11 +149,14 @@ function isReactClass(type) {
 
 function canPreserveStateBetween(prevType, nextType) {
   if (isReactClass(prevType) || isReactClass(nextType)) {
+    console.log('this update CANNOT preserve state');
     return false;
   }
   if (haveEqualSignatures(prevType, nextType)) {
+    console.log('this update CAN preserve state');
     return true;
   }
+  console.log('DEFAULT CASE this update CANNOT preserve state');
   return false;
 }
 

@@ -319,7 +319,7 @@ function scheduleFibersWithFamiliesRecursively(
       fiber._debugNeedsRemount = true;
     }
     if (needsRemount || needsRender) {
-      scheduleWork(fiber, Sync);
+      scheduleWork(fiber, Sync, true);
     }
     if (child !== null && !needsRemount) {
       scheduleFibersWithFamiliesRecursively(
