@@ -36,6 +36,8 @@ export const deferRenderPhaseUpdateToNextBatch = !__VARIANT__;
 export const debugRenderPhaseSideEffectsForStrictMode = __DEV__;
 export const replayFailedUnitOfWorkWithInvokeGuardedCallback = __DEV__;
 
+export const enableHiddenAPI = __VARIANT__ && __DEV__;
+
 // TODO: These flags are hard-coded to the default values used in open source.
 // Update the tests so that they pass in either mode, then set these
 // to __VARIANT__.
