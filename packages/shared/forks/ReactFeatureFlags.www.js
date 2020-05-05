@@ -74,6 +74,8 @@ export const warnUnstableRenderSubtreeIntoContainer = false;
 // to the correct value.
 export const enableNewReconciler = __VARIANT__;
 
+export const enableHiddenAPI = false;
+
 export const deferPassiveEffectCleanupDuringUnmount = true;
 export const runAllPassiveEffectDestroysBeforeCreates = true;
 

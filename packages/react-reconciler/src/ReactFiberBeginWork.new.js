@@ -621,14 +621,79 @@ function updateOffscreenComponent(
     pushRenderLanes(workInProgress, subtreeRenderLanes);
   }
 
+  if (nextProps.mode === 'hidden') {
+    return null;
+  } else {
+    reconcileChildren(current, workInProgress, nextChildren, renderLanes);
+    return workInProgress.child;
+  }
+}
+
+function updateLegacyHiddenComponent(
+  current: Fiber | null,
+  workInProgress: Fiber,
+  renderLanes: Lanes,
+) {
+  const nextProps: OffscreenProps = workInProgress.pendingProps;
+  const nextChildren = nextProps.children;
+
+  const prevState: OffscreenState | null =
+    current !== null ? current.memoizedState : null;
+
+  if (nextProps.mode === 'hidden') {
+    if (!includesSomeLane(renderLanes, (OffscreenLane: Lane))) {
+      let nextBaseLanes;
+      if (prevState !== null) {
+        const prevBaseLanes = prevState.baseLanes;
+        nextBaseLanes = mergeLanes(prevBaseLanes, renderLanes);
+      } else {
+        nextBaseLanes = renderLanes;
+      }
+
+      // Schedule this fiber to re-render at offscreen priority. Then bailout.
+      if (enableSchedulerTracing) {
+        markSpawnedWork((OffscreenLane: Lane));
+      }
+      workInProgress.lanes = workInProgress.childLanes = laneToLanes(
+        OffscreenLane,
+      );
+      const nextState: OffscreenState = {
+        baseLanes: nextBaseLanes,
+      };
+      workInProgress.memoizedState = nextState;
+      // We're about to bail out, but we need to push this to the stack anyway
+      // to avoid a push/pop misalignment.
+      pushRenderLanes(workInProgress, nextBaseLanes);
+      return null;
+    } else {
+      // Rendering at offscreen, so we can clear the base lanes.
+      const nextState: OffscreenState = {
+        baseLanes: NoLanes,
+      };
+      workInProgress.memoizedState = nextState;
+      // Push the lanes that were skipped when we bailed out.
+      const subtreeRenderLanes =
+        prevState !== null ? prevState.baseLanes : renderLanes;
+      pushRenderLanes(workInProgress, subtreeRenderLanes);
+    }
+  } else {
+    let subtreeRenderLanes;
+    if (prevState !== null) {
+      subtreeRenderLanes = mergeLanes(prevState.baseLanes, renderLanes);
+      // Since we're not hidden anymore, reset the state
+      workInProgress.memoizedState = null;
+    } else {
+      // We weren't previously hidden, and we still aren't, so there's nothing
+      // special to do. Need to push to the stack regardless, though, to avoid
+      // a push/pop misalignment.
+      subtreeRenderLanes = renderLanes;
+    }
+    pushRenderLanes(workInProgress, subtreeRenderLanes);
+  }
+
   reconcileChildren(current, workInProgress, nextChildren, renderLanes);
   return workInProgress.child;
 }
-
-// Note: These happen to have identical begin phases, for now. We shouldn't hold
-// ourselves to this constraint, though. If the behavior diverges, we should
-// fork the function.
-const updateLegacyHiddenComponent = updateOffscreenComponent;
 
 function updateFragment(
   current: Fiber | null,
@@ -3212,8 +3277,7 @@ function beginWork(
             return null;
           }
         }
-        case OffscreenComponent:
-        case LegacyHiddenComponent: {
+        case OffscreenComponent: {
           // Need to check if the tree still needs to be deferred. This is
           // almost identical to the logic used in the normal update path,
           // so we'll just enter that. The only difference is we'll bail out
@@ -3224,6 +3288,22 @@ function beginWork(
           // but I won't :)
           workInProgress.lanes = NoLanes;
           return updateOffscreenComponent(current, workInProgress, renderLanes);
+        }
+        case LegacyHiddenComponent: {
+          // Need to check if the tree still needs to be deferred. This is
+          // almost identical to the logic used in the normal update path,
+          // so we'll just enter that. The only difference is we'll bail out
+          // at the next level instead of this one, because the child props
+          // have not changed. Which is fine.
+          // TODO: Probably should refactor `beginWork` to split the bailout
+          // path from the normal path. I'm tempted to do a labeled break here
+          // but I won't :)
+          workInProgress.lanes = NoLanes;
+          return updateLegacyHiddenComponent(
+            current,
+            workInProgress,
+            renderLanes,
+          );
         }
       }
       return bailoutOnAlreadyFinishedWork(current, workInProgress, renderLanes);

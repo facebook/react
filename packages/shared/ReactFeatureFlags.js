@@ -102,6 +102,8 @@ export const enableComponentStackLocations = __EXPERIMENTAL__;
 
 export const enableNewReconciler = false;
 
+export const enableHiddenAPI = false;
+
 // --------------------------
 // Future APIs to be deprecated
 // --------------------------
