@@ -51,7 +51,7 @@ function reducer(state, action) {
 function Router() {
   const [state, dispatch] = useReducer(reducer, initialState);
   const [startTransition, isPending] = useTransition({
-    timeoutMs: 3000,
+    timeoutMs: 1500,
   });
 
   useEffect(() => {

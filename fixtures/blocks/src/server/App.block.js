@@ -20,7 +20,7 @@ function load(url) {
   if (segments.length === 0) {
     Page = loadFeedPage();
   } else if (segments[0] === 'profile') {
-    Page = loadProfilePage(Number(segments[1]));
+    Page = loadProfilePage(Number(segments[1]), segments[2]);
   } else {
     throw Error('Not found');
   }
@@ -30,6 +30,8 @@ function load(url) {
 // Client
 
 import Shell from '../client/Shell';
+
+// TODO: some notion of key.
 
 function App(props, data) {
   return (

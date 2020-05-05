@@ -6,15 +6,25 @@
  */
 
 import * as React from 'react';
-import TabNav from './TabNav';
+import {TabBar, TabLink} from './TabNav';
 
 // TODO: Error Boundaries.
+
+function MainTabNav() {
+  return (
+    <TabBar>
+      <TabLink to="/">Home</TabLink>
+      <TabLink to="/profile/3" partial={true}>
+        Profile
+      </TabLink>
+    </TabBar>
+  );
+}
 
 export default function Shell({children}) {
   return (
     <>
-      <TabNav />
-      <br />
+      <MainTabNav />
       {children}
     </>
   );

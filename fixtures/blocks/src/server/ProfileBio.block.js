@@ -12,19 +12,23 @@ import {block} from 'react';
 // Server
 
 import {fetch} from 'react-data/fetch';
-import PostList from './PostList';
 
-function load(userId) {
-  const postsByUser = fetch(`/posts?userId=${userId}&_expand=user`).json();
+function load(user) {
   return {
-    posts: <PostList posts={postsByUser} />,
+    user,
+    bio: fetch(`/bios/${user.bioId}`).json(),
   };
 }
 
 // Client
 
-function ProfileTimeline(props, data) {
-  return <>{data.posts}</>;
+function ProfileBio(props, data) {
+  return (
+    <>
+      <h3>{data.user.name}'s Bio</h3>
+      <p>{data.bio.text}</p>
+    </>
+  );
 }
 
-export default block(ProfileTimeline, load);
+export default block(ProfileBio, load);
