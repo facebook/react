@@ -6,57 +6,25 @@
  */
 
 import * as React from 'react';
-import {useRouter} from './RouterContext';
+import {TabBar, TabLink} from './TabNav';
 
-function TabBar({children}) {
-  return (
-    <div style={{border: '1px solid #aaa', padding: 20, width: 500}}>
-      {children}
-    </div>
-  );
-}
+// TODO: Error Boundaries.
 
-function TabLink({to, children}) {
-  const {url: activeUrl, navigate} = useRouter();
-  const active = activeUrl === to;
-  if (active) {
-    return (
-      <b
-        style={{
-          display: 'inline-block',
-          width: 50,
-          marginRight: 20,
-        }}>
-        {children}
-      </b>
-    );
-  }
+function MainTabNav() {
   return (
-    <a
-      style={{
-        display: 'inline-block',
-        width: 50,
-        marginRight: 20,
-      }}
-      href={to}
-      onClick={e => {
-        e.preventDefault();
-        window.history.pushState(null, null, to);
-        navigate(to);
-      }}>
-      {children}
-    </a>
+    <TabBar>
+      <TabLink to="/">Home</TabLink>
+      <TabLink to="/profile/3" partial={true}>
+        Profile
+      </TabLink>
+    </TabBar>
   );
 }
 
 export default function Shell({children}) {
   return (
     <>
-      <TabBar>
-        <TabLink to="/">Home</TabLink>
-        <TabLink to="/profile">Profile</TabLink>
-      </TabBar>
-      <br />
+      <MainTabNav />
       {children}
     </>
   );

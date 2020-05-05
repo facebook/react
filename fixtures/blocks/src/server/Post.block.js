@@ -21,6 +21,8 @@ function load(postId) {
 
 // Client
 
+import Link from '../client/Link';
+
 function Post(props, data) {
   return (
     <div
@@ -31,7 +33,13 @@ function Post(props, data) {
         padding: 20,
         maxWidth: 500,
       }}>
-      <h4 style={{marginTop: 0}}>{props.post.title}</h4>
+      <h4 style={{marginTop: 0}}>
+        {props.post.title}
+        {' by '}
+        <Link to={`/profile/${props.post.user.id}`}>
+          {props.post.user.name}
+        </Link>
+      </h4>
       <p>{props.post.body}</p>
       <Suspense
         fallback={<h5>Loading comments...</h5>}

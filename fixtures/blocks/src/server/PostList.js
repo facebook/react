@@ -17,7 +17,7 @@ export default function PostList({posts}) {
   return (
     <SuspenseList revealOrder="forwards" tail="collapsed">
       {posts.map(post => {
-        preload(`/comments?postId=${post.id}`);
+        preload(`/comments?postId=${post.id}&_expand=user`);
         const Post = loadPost(post.id);
         return (
           <Suspense key={post.id} fallback={<PostGlimmer />}>

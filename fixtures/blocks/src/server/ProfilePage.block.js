@@ -12,23 +12,47 @@ import {block, Suspense} from 'react';
 // Server
 
 import {fetch} from 'react-data/fetch';
+import loadProfileBio from './ProfileBio.block';
 import loadProfileTimeline from './ProfileTimeline.block';
 
-function load(userId) {
+function load(userId, tab) {
+  const user = fetch(`/users/${userId}`).json();
+  let Tab;
+  switch (tab) {
+    case 'bio':
+      Tab = loadProfileBio(user);
+      break;
+    default:
+      Tab = loadProfileTimeline(userId);
+      break;
+  }
   return {
-    user: fetch(`/users/${userId}`).json(),
-    ProfileTimeline: loadProfileTimeline(userId),
+    Tab,
+    user,
   };
 }
 
 // Client
 
+import {TabBar, TabLink} from '../client/TabNav';
+
+function ProfileTabNav({userId}) {
+  // TODO: Don't hardcode ID.
+  return (
+    <TabBar>
+      <TabLink to={`/profile/${userId}`}>Timeline</TabLink>
+      <TabLink to={`/profile/${userId}/bio`}>Bio</TabLink>
+    </TabBar>
+  );
+}
+
 function ProfilePage(props, data) {
   return (
     <>
       <h2>{data.user.name}</h2>
-      <Suspense fallback={<h3>Loading Timeline...</h3>}>
-        <data.ProfileTimeline />
+      <ProfileTabNav userId={data.user.id} />
+      <Suspense fallback={<h3>Loading...</h3>}>
+        <data.Tab />
       </Suspense>
     </>
   );

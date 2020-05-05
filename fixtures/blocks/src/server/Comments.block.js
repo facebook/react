@@ -15,19 +15,25 @@ import {fetch} from 'react-data/fetch';
 
 function load(postId) {
   return {
-    comments: fetch(`/comments?postId=${postId}`).json(),
+    comments: fetch(`/comments?postId=${postId}&_expand=user`).json(),
   };
 }
 
 // Client
+
+import Link from '../client/Link';
 
 function Comments(props, data) {
   return (
     <>
       <h5>Comments</h5>
       <ul>
-        {data.comments.slice(0, 5).map(item => (
-          <li key={item.id}>{item.body}</li>
+        {data.comments.slice(0, 5).map(comment => (
+          <li key={comment.id}>
+            {comment.body}
+            {' • '}
+            <Link to={`/profile/${comment.user.id}`}>{comment.user.name}</Link>
+          </li>
         ))}
       </ul>
     </>

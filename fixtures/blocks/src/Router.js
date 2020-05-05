@@ -24,17 +24,24 @@ const initialState = {
   // TODO: use this for invalidation.
   cache: createCache(),
   url: initialUrl,
+  pendingUrl: initialUrl,
   RootBlock: loadApp(initialUrl),
 };
 
 function reducer(state, action) {
   switch (action.type) {
-    case 'navigate':
+    case 'startNavigation':
+      return {
+        ...state,
+        pendingUrl: action.url,
+      };
+    case 'completeNavigation':
       // TODO: cancel previous fetch?
       return {
-        cache: state.cache,
+        ...state,
         url: action.url,
-        RootBlock: loadApp(action.url),
+        pendingUrl: action.url,
+        RootBlock: action.RootBlock,
       };
     default:
       throw new Error();
@@ -44,7 +51,7 @@ function reducer(state, action) {
 function Router() {
   const [state, dispatch] = useReducer(reducer, initialState);
   const [startTransition, isPending] = useTransition({
-    timeoutMs: 3000,
+    timeoutMs: 1500,
   });
 
   useEffect(() => {
@@ -56,11 +63,15 @@ function Router() {
       startTransition(() => {
         // TODO: Here, There, and Everywhere.
         // TODO: Instant Transitions, somehow.
-        // TODO: Buttons should update immediately.
         dispatch({
-          type: 'navigate',
+          type: 'completeNavigation',
+          RootBlock: loadApp(url),
           url,
         });
+      });
+      dispatch({
+        type: 'startNavigation',
+        url,
       });
     },
     [startTransition]
@@ -76,10 +87,11 @@ function Router() {
 
   const routeContext = useMemo(
     () => ({
+      pendingUrl: state.pendingUrl,
       url: state.url,
       navigate,
     }),
-    [state.url, navigate]
+    [state.url, state.pendingUrl, navigate]
   );
 
   return (
