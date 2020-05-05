@@ -12,20 +12,16 @@ import {unstable_block as block, Suspense} from 'react';
 // Server
 
 import {fetch} from 'react-data/fetch';
+import {matchRoute} from './ServerRouter';
 import loadProfileBio from './ProfileBio.block';
 import loadProfileTimeline from './ProfileTimeline.block';
 
-function load(userId, tab) {
+function load({userId, route}) {
   const user = fetch(`/users/${userId}`).json();
-  let Tab;
-  switch (tab) {
-    case 'bio':
-      Tab = loadProfileBio(user);
-      break;
-    default:
-      Tab = loadProfileTimeline(userId);
-      break;
-  }
+  const Tab = matchRoute(route, [
+    ['/', loadProfileTimeline, userId],
+    ['/bio', loadProfileBio, user],
+  ]);
   return {
     Tab,
     user,

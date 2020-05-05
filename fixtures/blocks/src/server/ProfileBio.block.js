@@ -13,7 +13,7 @@ import {unstable_block as block} from 'react';
 
 import {fetch} from 'react-data/fetch';
 
-function load(user) {
+function load(params, user) {
   return {
     user,
     bio: fetch(`/bios/${user.bioId}`).json(),

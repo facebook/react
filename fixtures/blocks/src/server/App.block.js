@@ -11,19 +11,15 @@ import {unstable_block as block} from 'react';
 
 // Server
 
+import {matchRoute} from './ServerRouter';
 import loadFeedPage from './FeedPage.block';
 import loadProfilePage from './ProfilePage.block';
 
-function load(url) {
-  let Page;
-  const segments = url.split('/').filter(Boolean);
-  if (segments.length === 0) {
-    Page = loadFeedPage();
-  } else if (segments[0] === 'profile') {
-    Page = loadProfilePage(Number(segments[1]), segments[2]);
-  } else {
-    throw Error('Not found');
-  }
+function load(route) {
+  const Page = matchRoute(route, [
+    ['/', loadFeedPage],
+    ['/profile/:userId/*', loadProfilePage],
+  ]);
   return {Page};
 }
 
