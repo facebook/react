@@ -65,18 +65,16 @@ const EnterLeaveEventPlugin = {
       topLevelType === TOP_MOUSE_OVER || topLevelType === TOP_POINTER_OVER;
     const isOutEvent =
       topLevelType === TOP_MOUSE_OUT || topLevelType === TOP_POINTER_OUT;
+    const related = nativeEvent.relatedTarget || nativeEvent.fromElement;
 
-    if (isOverEvent && (eventSystemFlags & IS_REPLAYED) === 0) {
-      const related = nativeEvent.relatedTarget || nativeEvent.fromElement;
-      if (related) {
-        // Due to the fact we don't add listeners to the document with the
-        // modern event system and instead attach listeners to roots, we
-        // need to handle the over event case. To ensure this, we just need to
-        // make sure the node that we're coming from is managed by React.
-        const inst = getClosestInstanceFromNode(related);
-        if (inst !== null) {
-          return;
-        }
+    if (isOverEvent && (eventSystemFlags & IS_REPLAYED) === 0 && related) {
+      // Due to the fact we don't add listeners to the document with the
+      // modern event system and instead attach listeners to roots, we
+      // need to handle the over event case. To ensure this, we just need to
+      // make sure the node that we're coming from is managed by React.
+      const inst = getClosestInstanceFromNode(related);
+      if (inst !== null) {
+        return;
       }
     }
 
@@ -103,7 +101,6 @@ const EnterLeaveEventPlugin = {
     let to;
     if (isOutEvent) {
       from = targetInst;
-      const related = nativeEvent.relatedTarget || nativeEvent.toElement;
       to = related ? getClosestInstanceFromNode(related) : null;
       if (to !== null) {
         const nearestMounted = getNearestMountedFiber(to);
@@ -155,7 +152,7 @@ const EnterLeaveEventPlugin = {
     leave.target = fromNode;
     leave.relatedTarget = toNode;
 
-    const enter = eventInterface.getPooled(
+    let enter = eventInterface.getPooled(
       enterEventType,
       to,
       nativeEvent,
@@ -164,6 +161,14 @@ const EnterLeaveEventPlugin = {
     enter.type = eventTypePrefix + 'enter';
     enter.target = toNode;
     enter.relatedTarget = fromNode;
+
+    // If we are not processing the first ancestor, then we
+    // should not process the same nativeEvent again, as we
+    // will have already processed it in the first ancestor.
+    const nativeTargetInst = getClosestInstanceFromNode(nativeEventTarget);
+    if (nativeTargetInst !== targetInst) {
+      enter = null;
+    }
 
     accumulateEnterLeaveListeners(dispatchQueue, leave, enter, from, to);
   },
