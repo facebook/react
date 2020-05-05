@@ -18,7 +18,7 @@ import {
   scheduleUpdateOnFiber,
   flushPassiveEffects,
 } from './ReactFiberWorkLoop.new';
-import {updateContainer, syncUpdates} from './ReactFiberReconciler.new';
+import {updateContainer} from './ReactFiberReconciler.new';
 import {emptyContextObject} from './ReactFiberContext.new';
 import {SyncLane} from './ReactFiberLane';
 import {
@@ -258,7 +258,7 @@ export const scheduleRoot: ScheduleRoot = (
       return;
     }
     flushPassiveEffects();
-    syncUpdates(() => {
+    flushSync(() => {
       updateContainer(element, root, null, null);
     });
   }

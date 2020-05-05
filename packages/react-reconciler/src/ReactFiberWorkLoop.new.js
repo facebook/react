@@ -1008,15 +1008,6 @@ export function deferredUpdates<A>(fn: () => A): A {
   return runWithPriority(NormalSchedulerPriority, fn);
 }
 
-export function syncUpdates<A, B, C, R>(
-  fn: (A, B, C) => R,
-  a: A,
-  b: B,
-  c: C,
-): R {
-  return runWithPriority(ImmediateSchedulerPriority, fn.bind(null, a, b, c));
-}
-
 function flushPendingDiscreteUpdates() {
   if (rootsWithPendingDiscreteUpdates !== null) {
     // For each root with pending discrete updates, schedule a callback to
@@ -1113,7 +1104,11 @@ export function flushSync<A, R>(fn: A => R, a: A): R {
   }
   executionContext |= BatchedContext;
   try {
-    return runWithPriority(ImmediateSchedulerPriority, fn.bind(null, a));
+    if (fn) {
+      return runWithPriority(ImmediateSchedulerPriority, fn.bind(null, a));
+    } else {
+      return (undefined: $FlowFixMe);
+    }
   } finally {
     executionContext = prevExecutionContext;
     // Flush the immediate callbacks that were scheduled during this batch.
