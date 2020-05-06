@@ -7,28 +7,19 @@
 /* eslint-disable import/first */
 
 import * as React from 'react';
-import {unstable_block as block} from 'react';
-
-// Server
-
 import {fetch} from 'react-data/fetch';
 
-function load(postId) {
-  return {
-    comments: fetch(`/comments?postId=${postId}&_expand=user`).json(),
-  };
-}
+// TODO: Replace with asset reference.
+import loadLink from './Link.block';
 
-// Client
-
-import Link from '../client/Link';
-
-function Comments(props, data) {
+export default function Comments({postId}) {
+  const Link = loadLink();
+  const comments = fetch(`/comments?postId=${postId}&_expand=user`).json();
   return (
     <>
       <h5>Comments</h5>
       <ul>
-        {data.comments.slice(0, 5).map(comment => (
+        {comments.slice(0, 5).map(comment => (
           <li key={comment.id}>
             {comment.body}
             {' • '}
@@ -39,5 +30,3 @@ function Comments(props, data) {
     </>
   );
 }
-
-export default block(Comments, load);

@@ -15,32 +15,16 @@ import React, {
 } from 'react';
 import {createCache, CacheProvider} from 'react/unstable-cache';
 import {RouterProvider} from './client/RouterContext';
-import loadApp from './server/App.block';
+// TODO: can't really import a server component on the client.
+import App from './server/App';
 
 const initialUrl = window.location.pathname;
-
-let RootBlock;
-if (initialUrl.startsWith('/~/')) {
-  // Request a nested Block directly, for testing.
-  // e.g. /~/ProfilePage.block?userId=3&route=/bio
-  // This mode doesn't support navigation.
-  const blockName = initialUrl.slice(3);
-  const loadEntrypoint = require('./server/' + blockName).default;
-  const params = Object.fromEntries(
-    new URLSearchParams(window.location.search)
-  );
-  RootBlock = loadEntrypoint(params);
-} else {
-  // Normal request from the root router.
-  RootBlock = loadApp({route: initialUrl});
-}
-
 const initialState = {
   // TODO: use this for invalidation.
   cache: createCache(),
   url: initialUrl,
   pendingUrl: initialUrl,
-  RootBlock,
+  root: <App route={initialUrl} />,
 };
 
 function reducer(state, action) {
@@ -56,7 +40,7 @@ function reducer(state, action) {
         ...state,
         url: action.url,
         pendingUrl: action.url,
-        RootBlock: action.RootBlock,
+        root: action.root,
       };
     default:
       throw new Error();
@@ -80,7 +64,7 @@ function Router() {
         // TODO: Instant Transitions, somehow.
         dispatch({
           type: 'completeNavigation',
-          RootBlock: loadApp({route: url}),
+          root: <App route={url} />,
           url,
         });
       });
@@ -112,9 +96,7 @@ function Router() {
   return (
     <Suspense fallback={<h2>Loading...</h2>}>
       <CacheProvider value={state.cache}>
-        <RouterProvider value={routeContext}>
-          <state.RootBlock />
-        </RouterProvider>
+        <RouterProvider value={routeContext}>{state.root}</RouterProvider>
       </CacheProvider>
     </Suspense>
   );

@@ -7,23 +7,14 @@
 /* eslint-disable import/first */
 
 import * as React from 'react';
-import {unstable_block as block, Suspense} from 'react';
+import {Suspense} from 'react';
+import Comments from './Comments';
 
-// Server
+// TODO: Replace with asset reference.
+import loadLink from './Link.block';
 
-import loadComments from './Comments.block';
-
-function load(postId) {
-  return {
-    Comments: loadComments(postId),
-  };
-}
-
-// Client
-
-import Link from '../client/Link';
-
-function Post(props, data) {
+export default function Post({post}) {
+  const Link = loadLink();
   return (
     <div
       style={{
@@ -34,20 +25,16 @@ function Post(props, data) {
         maxWidth: 500,
       }}>
       <h4 style={{marginTop: 0}}>
-        {props.post.title}
+        {post.title}
         {' by '}
-        <Link to={`/profile/${props.post.user.id}`}>
-          {props.post.user.name}
-        </Link>
+        <Link to={`/profile/${post.user.id}`}>{post.user.name}</Link>
       </h4>
-      <p>{props.post.body}</p>
+      <p>{post.body}</p>
       <Suspense
         fallback={<h5>Loading comments...</h5>}
         unstable_avoidThisFallback={true}>
-        <data.Comments />
+        <Comments postId={post.id} />
       </Suspense>
     </div>
   );
 }
-
-export default block(Post, load);
