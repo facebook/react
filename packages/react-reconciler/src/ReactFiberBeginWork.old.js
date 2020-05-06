@@ -1110,6 +1110,8 @@ function updateHostComponent(current, workInProgress, renderExpirationTime) {
     }
     // Schedule this fiber to re-render at offscreen priority. Then bailout.
     workInProgress.expirationTime = workInProgress.childExpirationTime = Never;
+    // We should never render the children of a dehydrated boundary until we
+    // upgrade it. We return null instead of bailoutOnAlreadyFinishedWork.
     return null;
   }
 
@@ -3128,7 +3130,8 @@ function beginWork(
                 // been unsuspended it has committed as a resolved Suspense component.
                 // If it needs to be retried, it should have work scheduled on it.
                 workInProgress.effectTag |= DidCapture;
-                break;
+
+                return null;
               }
             }
 
