@@ -6,7 +6,9 @@
  */
 /* eslint-disable import/first */
 
-function tryMatch(template, params) {
+import * as React from 'react';
+
+function tryMatch(params, template) {
   const templateSegments = template.split('/').filter(Boolean);
   const routeSegments = params.route.split('/').filter(Boolean);
   let nextParams = {...params};
@@ -39,18 +41,20 @@ function tryMatch(template, params) {
   return null;
 }
 
-export function matchRoute(params, routes) {
-  let Block;
-  for (let route of routes) {
-    const [template, load] = route;
-    const nextParams = tryMatch(template, params);
+export function matchRoute(params, templates) {
+  for (let template in templates) {
+    if (!templates.hasOwnProperty(template)) {
+      continue;
+    }
+    const nextParams = tryMatch(params, template);
     if (nextParams) {
-      Block = load(nextParams);
-      break;
+      let [load, key] = templates[template];
+      if (typeof key === 'function') {
+        key = key(nextParams);
+      }
+      const Block = load(nextParams);
+      return <Block key={key} />;
     }
   }
-  if (!Block) {
-    throw Error('Not found.');
-  }
-  return Block;
+  throw Error('Not found.');
 }

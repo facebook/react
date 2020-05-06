@@ -15,26 +15,23 @@ import {matchRoute} from './ServerRouter';
 import loadFeedPage from './FeedPage.block';
 import loadProfilePage from './ProfilePage.block';
 
+const AppRoutes = {
+  '/': [loadFeedPage, 'home'],
+  '/profile/:userId/*': [loadProfilePage, p => `profile-${p.userId}`],
+};
+
 function load(params) {
-  const Page = matchRoute(params, [
-    ['/', loadFeedPage],
-    ['/profile/:userId/*', loadProfilePage],
-  ]);
-  return {Page};
+  return {
+    match: matchRoute(params, AppRoutes),
+  };
 }
 
 // Client
 
 import Shell from '../client/Shell';
 
-// TODO: some notion of key.
-
 function App(props, data) {
-  return (
-    <Shell>
-      <data.Page />
-    </Shell>
-  );
+  return <Shell>{data.match}</Shell>;
 }
 
 export default block(App, load);

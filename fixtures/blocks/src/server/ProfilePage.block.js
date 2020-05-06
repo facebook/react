@@ -16,14 +16,15 @@ import {matchRoute} from './ServerRouter';
 import loadProfileBio from './ProfileBio.block';
 import loadProfileTimeline from './ProfileTimeline.block';
 
+const ProfileRoutes = {
+  '/': [loadProfileTimeline, 'timeline'],
+  '/bio': [loadProfileBio, 'bio'],
+};
+
 function load(params) {
   const user = fetch(`/users/${params.userId}`).json();
-  const Tab = matchRoute(params, [
-    ['/', loadProfileTimeline],
-    ['/bio', loadProfileBio],
-  ]);
   return {
-    Tab,
+    match: matchRoute(params, ProfileRoutes),
     user,
   };
 }
@@ -47,9 +48,7 @@ function ProfilePage(props, data) {
     <>
       <h2>{data.user.name}</h2>
       <ProfileTabNav userId={data.user.id} />
-      <Suspense fallback={<h3>Loading...</h3>}>
-        <data.Tab />
-      </Suspense>
+      <Suspense fallback={<h3>Loading...</h3>}>{data.match}</Suspense>
     </>
   );
 }
