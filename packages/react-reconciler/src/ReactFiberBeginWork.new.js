@@ -3112,7 +3112,9 @@ function beginWork(
                 // been unsuspended it has committed as a resolved Suspense component.
                 // If it needs to be retried, it should have work scheduled on it.
                 workInProgress.effectTag |= DidCapture;
-                break;
+                // We should never render the children of a dehydrated boundary until we
+                // upgrade it. We return null instead of bailoutOnAlreadyFinishedWork.
+                return null;
               }
             }
 
