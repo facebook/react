@@ -65,16 +65,18 @@ const EnterLeaveEventPlugin = {
       topLevelType === TOP_MOUSE_OVER || topLevelType === TOP_POINTER_OVER;
     const isOutEvent =
       topLevelType === TOP_MOUSE_OUT || topLevelType === TOP_POINTER_OUT;
-    const related = nativeEvent.relatedTarget || nativeEvent.fromElement;
 
-    if (isOverEvent && (eventSystemFlags & IS_REPLAYED) === 0 && related) {
-      // Due to the fact we don't add listeners to the document with the
-      // modern event system and instead attach listeners to roots, we
-      // need to handle the over event case. To ensure this, we just need to
-      // make sure the node that we're coming from is managed by React.
-      const inst = getClosestInstanceFromNode(related);
-      if (inst !== null) {
-        return;
+    if (isOverEvent && (eventSystemFlags & IS_REPLAYED) === 0) {
+      const related = nativeEvent.relatedTarget || nativeEvent.fromElement;
+      if (related) {
+        // Due to the fact we don't add listeners to the document with the
+        // modern event system and instead attach listeners to roots, we
+        // need to handle the over event case. To ensure this, we just need to
+        // make sure the node that we're coming from is managed by React.
+        const inst = getClosestInstanceFromNode(related);
+        if (inst !== null) {
+          return;
+        }
       }
     }
 
@@ -100,6 +102,7 @@ const EnterLeaveEventPlugin = {
     let from;
     let to;
     if (isOutEvent) {
+      const related = nativeEvent.relatedTarget || nativeEvent.toElement;
       from = targetInst;
       to = related ? getClosestInstanceFromNode(related) : null;
       if (to !== null) {
