@@ -854,6 +854,75 @@ describe('ReactDOMServerPartialHydration', () => {
   });
 
   // @gate experimental
+  it('warns but works if setState is called before commit in a dehydrated component', async () => {
+    let suspend = false;
+    let resolve;
+    const promise = new Promise(resolvePromise => (resolve = resolvePromise));
+
+    let updateText;
+
+    function Child() {
+      const [state, setState] = React.useState('Hello');
+      updateText = setState;
+      Scheduler.unstable_yieldValue('Child');
+      if (suspend) {
+        throw promise;
+      } else {
+        return state;
+      }
+    }
+
+    function Sibling() {
+      Scheduler.unstable_yieldValue('Sibling');
+      return null;
+    }
+
+    function App() {
+      return (
+        <div>
+          <Suspense fallback="Loading...">
+            <Child />
+            <Sibling />
+          </Suspense>
+        </div>
+      );
+    }
+
+    suspend = false;
+    const finalHTML = ReactDOMServer.renderToString(<App />);
+    expect(Scheduler).toHaveYielded(['Child', 'Sibling']);
+
+    const container = document.createElement('div');
+    container.innerHTML = finalHTML;
+
+    const root = ReactDOM.createRoot(container, {hydrate: true});
+
+    await act(async () => {
+      suspend = true;
+      root.render(<App />);
+      expect(Scheduler).toFlushAndYieldThrough(['Child']);
+
+      // While we're part way through the hydration, we update the state.
+      // This will schedule an update on the children of the suspense boundary.
+      expect(() => updateText('Hi')).toErrorDev(
+        "Can't perform a React state update on a component that hasn't mounted yet.",
+      );
+
+      // This will throw it away and rerender.
+      expect(Scheduler).toFlushAndYield(['Child', 'Sibling']);
+
+      expect(container.textContent).toBe('Hello');
+
+      suspend = false;
+      resolve();
+      await promise;
+    });
+    expect(Scheduler).toHaveYielded(['Child', 'Sibling']);
+
+    expect(container.textContent).toBe('Hello');
+  });
+
+  // @gate experimental
   it('blocks the update to hydrate first if context has changed', async () => {
     let suspend = false;
     let resolve;

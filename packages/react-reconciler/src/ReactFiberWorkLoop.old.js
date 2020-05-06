@@ -96,6 +96,7 @@ import {
 } from './ReactTypeOfMode';
 import {
   HostRoot,
+  IndeterminateComponent,
   ClassComponent,
   SuspenseComponent,
   SuspenseListComponent,
@@ -498,6 +499,15 @@ function markUpdateTimeFromFiberToRoot(fiber, expirationTime) {
   if (alternate !== null && alternate.expirationTime < expirationTime) {
     alternate.expirationTime = expirationTime;
   }
+  if (__DEV__) {
+    if (
+      alternate === null &&
+      (fiber.effectTag & (Placement | Hydrating)) !== NoEffect
+    ) {
+      warnAboutUpdateOnNotYetMountedFiberInDEV(fiber);
+    }
+  }
+
   // Walk the parent path to the root and update the child expiration time.
   let node = fiber.return;
   let root = null;
@@ -506,6 +516,14 @@ function markUpdateTimeFromFiberToRoot(fiber, expirationTime) {
   } else {
     while (node !== null) {
       alternate = node.alternate;
+      if (__DEV__) {
+        if (
+          alternate === null &&
+          (node.effectTag & (Placement | Hydrating)) !== NoEffect
+        ) {
+          warnAboutUpdateOnNotYetMountedFiberInDEV(fiber);
+        }
+      }
       if (node.childExpirationTime < expirationTime) {
         node.childExpirationTime = expirationTime;
         if (
@@ -2897,6 +2915,60 @@ function flushRenderPhaseStrictModeWarningsInDEV() {
 
     if (warnAboutDeprecatedLifecycles) {
       ReactStrictModeWarnings.flushPendingUnsafeLifecycleWarnings();
+    }
+  }
+}
+
+let didWarnStateUpdateForNotYetMountedComponent: Set<string> | null = null;
+function warnAboutUpdateOnNotYetMountedFiberInDEV(fiber) {
+  if (__DEV__) {
+    if ((executionContext & RenderContext) !== NoContext) {
+      // We let the other warning about render phase updates deal with this one.
+      return;
+    }
+
+    const tag = fiber.tag;
+    if (
+      tag !== IndeterminateComponent &&
+      tag !== HostRoot &&
+      tag !== ClassComponent &&
+      tag !== FunctionComponent &&
+      tag !== ForwardRef &&
+      tag !== MemoComponent &&
+      tag !== SimpleMemoComponent &&
+      tag !== Block
+    ) {
+      // Only warn for user-defined components, not internal ones like Suspense.
+      return;
+    }
+
+    // We show the whole stack but dedupe on the top component's name because
+    // the problematic code almost always lies inside that component.
+    const componentName = getComponentName(fiber.type) || 'ReactComponent';
+    if (didWarnStateUpdateForNotYetMountedComponent !== null) {
+      if (didWarnStateUpdateForNotYetMountedComponent.has(componentName)) {
+        return;
+      }
+      didWarnStateUpdateForNotYetMountedComponent.add(componentName);
+    } else {
+      didWarnStateUpdateForNotYetMountedComponent = new Set([componentName]);
+    }
+
+    const previousFiber = ReactCurrentFiberCurrent;
+    try {
+      setCurrentDebugFiberInDEV(fiber);
+      console.error(
+        "Can't perform a React state update on a component that hasn't mounted yet. " +
+          'This indicates that you have a side-effect in your render function that ' +
+          'asynchronously later calls tries to update the component. Move this work to ' +
+          'useEffect instead.',
+      );
+    } finally {
+      if (previousFiber) {
+        setCurrentDebugFiberInDEV(fiber);
+      } else {
+        resetCurrentDebugFiberInDEV();
+      }
     }
   }
 }
