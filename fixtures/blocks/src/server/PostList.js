@@ -9,16 +9,14 @@
 import * as React from 'react';
 import {Suspense, unstable_SuspenseList as SuspenseList} from 'react';
 import {preload} from 'react-data/fetch';
-
-import loadPost from './Post.block';
 import PostGlimmer from './PostGlimmer';
+import Post from './Post';
 
 export default function PostList({posts}) {
   return (
     <SuspenseList revealOrder="forwards" tail="collapsed">
       {posts.map(post => {
         preload(`/comments?postId=${post.id}&_expand=user`);
-        const Post = loadPost(post.id);
         return (
           <Suspense key={post.id} fallback={<PostGlimmer />}>
             <Post post={post} />

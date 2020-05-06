@@ -7,28 +7,15 @@
 /* eslint-disable import/first */
 
 import * as React from 'react';
-import {unstable_block as block} from 'react';
-
-// Server
-
 import {fetch} from 'react-data/fetch';
 
-function load(user) {
-  return {
-    user,
-    bio: fetch(`/bios/${user.bioId}`).json(),
-  };
-}
-
-// Client
-
-function ProfileBio(props, data) {
+export default function ProfileBio({userId}) {
+  const user = fetch(`/users/${userId}`).json();
+  const bio = fetch(`/bios/${user.bioId}`).json().text;
   return (
     <>
-      <h3>{data.user.name}'s Bio</h3>
-      <p>{data.bio.text}</p>
+      <h3>{user.name}'s Bio</h3>
+      <p>{bio}</p>
     </>
   );
 }
-
-export default block(ProfileBio, load);

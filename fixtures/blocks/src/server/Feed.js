@@ -7,29 +7,15 @@
 /* eslint-disable import/first */
 
 import * as React from 'react';
-import {unstable_block as block} from 'react';
 import {fetch} from 'react-data/fetch';
-
-// Server
-
 import PostList from './PostList';
 
-function load(params) {
-  const allPosts = fetch('/posts?_expand=user').json();
-  return {
-    posts: <PostList posts={allPosts} />,
-  };
-}
-
-// Client
-
-function FeedPage(props, data) {
+export default function Feed() {
+  const posts = fetch('/posts?_expand=user').json();
   return (
     <>
       <h2>Feed</h2>
-      {data.posts}
+      <PostList posts={posts} />
     </>
   );
 }
-
-export default block(FeedPage, load);

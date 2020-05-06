@@ -15,17 +15,16 @@ import React, {
 } from 'react';
 import {createCache, CacheProvider} from 'react/unstable-cache';
 import {RouterProvider} from './client/RouterContext';
-// TODO: entry point. This can't really done in the client code.
-import loadApp from './server/App.block';
+// TODO: can't really import a server component on the client.
+import App from './server/App';
 
 const initialUrl = window.location.pathname;
-
 const initialState = {
   // TODO: use this for invalidation.
   cache: createCache(),
   url: initialUrl,
   pendingUrl: initialUrl,
-  RootBlock: loadApp(initialUrl),
+  root: <App route={initialUrl} />,
 };
 
 function reducer(state, action) {
@@ -41,7 +40,7 @@ function reducer(state, action) {
         ...state,
         url: action.url,
         pendingUrl: action.url,
-        RootBlock: action.RootBlock,
+        root: action.root,
       };
     default:
       throw new Error();
@@ -65,7 +64,7 @@ function Router() {
         // TODO: Instant Transitions, somehow.
         dispatch({
           type: 'completeNavigation',
-          RootBlock: loadApp(url),
+          root: <App route={url} />,
           url,
         });
       });
@@ -97,9 +96,7 @@ function Router() {
   return (
     <Suspense fallback={<h2>Loading...</h2>}>
       <CacheProvider value={state.cache}>
-        <RouterProvider value={routeContext}>
-          <state.RootBlock />
-        </RouterProvider>
+        <RouterProvider value={routeContext}>{state.root}</RouterProvider>
       </CacheProvider>
     </Suspense>
   );
