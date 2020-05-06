@@ -13,7 +13,7 @@ import ProfileTimeline from './ProfileTimeline';
 import ProfileBio from './ProfileBio';
 
 // TODO: Replace with asset reference.
-import loadProfileNav from './ProfileNav.block';
+import ProfileNav from '../client/ProfileNav';
 
 // TODO: Router component?
 const ProfileRoutes = {
@@ -23,7 +23,6 @@ const ProfileRoutes = {
 
 export default function ProfilePage(props) {
   const user = fetch(`/users/${props.userId}`).json();
-  const ProfileNav = loadProfileNav();
   const match = matchRoute(props, ProfileRoutes);
   return (
     <>

@@ -12,7 +12,7 @@ import FeedPage from './FeedPage';
 import ProfilePage from './ProfilePage';
 
 // TODO: Replace with asset reference.
-import loadShell from './Shell.block';
+import Shell from '../client/Shell';
 
 // TODO: Router component?
 const AppRoutes = {
@@ -23,7 +23,6 @@ const AppRoutes = {
 };
 
 export default function App(props) {
-  const Shell = loadShell();
   const match = matchRoute(props, AppRoutes);
   return <Shell>{match}</Shell>;
 }
