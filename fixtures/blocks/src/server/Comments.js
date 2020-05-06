@@ -10,10 +10,9 @@ import * as React from 'react';
 import {fetch} from 'react-data/fetch';
 
 // TODO: Replace with asset reference.
-import loadLink from './Link.block';
+import Link from '../client/Link';
 
 export default function Comments({postId}) {
-  const Link = loadLink();
   const comments = fetch(`/comments?postId=${postId}&_expand=user`).json();
   return (
     <>

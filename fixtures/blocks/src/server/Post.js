@@ -11,10 +11,9 @@ import {Suspense} from 'react';
 import Comments from './Comments';
 
 // TODO: Replace with asset reference.
-import loadLink from './Link.block';
+import Link from '../client/Link';
 
 export default function Post({post}) {
-  const Link = loadLink();
   return (
     <div
       style={{
