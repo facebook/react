@@ -8,7 +8,10 @@
  */
 
 import type {Fiber} from './ReactInternalTypes';
-import type {SuspenseInstance} from './ReactFiberHostConfig';
+import type {
+  SuspenseInstance,
+  HydratableInstance,
+} from './ReactFiberHostConfig';
 import type {ExpirationTime} from './ReactFiberExpirationTime.old';
 import {SuspenseComponent, SuspenseListComponent} from './ReactWorkTags';
 import {NoEffect, DidCapture} from './ReactSideEffectTags';
@@ -59,6 +62,8 @@ export type SuspenseListRenderState = {|
   // Last Effect before we rendered the "rendering" item.
   // Used to remove new effects added by the rendered item.
   lastEffect: null | Fiber,
+  // The hydratable instance before we entered the SuspenseList.
+  hydrationState: null | HydratableInstance,
 |};
 
 export function shouldCaptureSuspense(

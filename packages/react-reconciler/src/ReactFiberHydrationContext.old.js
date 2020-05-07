@@ -85,6 +85,14 @@ function enterHydrationState(fiber: Fiber): boolean {
   return true;
 }
 
+function snapshotHydrationState(): null | HydratableInstance {
+  return nextHydratableInstance;
+}
+
+function restoreHydrationState(snapshot: null | HydratableInstance) {
+  nextHydratableInstance = snapshot;
+}
+
 function reenterHydrationStateFromDehydratedSuspenseInstance(
   fiber: Fiber,
   suspenseInstance: SuspenseInstance,
@@ -492,6 +500,8 @@ function getIsHydrating(): boolean {
 export {
   warnIfHydrating,
   enterHydrationState,
+  snapshotHydrationState,
+  restoreHydrationState,
   getIsHydrating,
   reenterHydrationStateFromDehydratedSuspenseInstance,
   resetHydrationState,

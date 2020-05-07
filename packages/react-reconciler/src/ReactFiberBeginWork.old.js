@@ -152,6 +152,7 @@ import {
   enterHydrationState,
   reenterHydrationStateFromDehydratedSuspenseInstance,
   resetHydrationState,
+  snapshotHydrationState,
   tryToClaimNextHydratableInstance,
   warnIfHydrating,
 } from './ReactFiberHydrationContext.old';
@@ -2597,6 +2598,7 @@ function initSuspenseListRenderState(
       tailExpiration: 0,
       tailMode: tailMode,
       lastEffect: lastEffectBeforeRendering,
+      hydrationState: snapshotHydrationState(),
     }: SuspenseListRenderState);
   } else {
     // We can reuse the existing object from previous renders.
@@ -2608,6 +2610,7 @@ function initSuspenseListRenderState(
     renderState.tailExpiration = 0;
     renderState.tailMode = tailMode;
     renderState.lastEffect = lastEffectBeforeRendering;
+    renderState.hydrationState = snapshotHydrationState();
   }
 }
 

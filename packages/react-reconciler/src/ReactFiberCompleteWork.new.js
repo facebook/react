@@ -119,6 +119,7 @@ import {
   popHydrationState,
   resetHydrationState,
   getIsHydrating,
+  restoreHydrationState,
 } from './ReactFiberHydrationContext.new';
 import {
   enableSchedulerTracing,
@@ -1056,6 +1057,10 @@ function completeWork(
                   workInProgress.firstEffect = null;
                 }
                 workInProgress.lastEffect = renderState.lastEffect;
+
+                // Restore hydration state to where we were in the beginning of the list.
+                restoreHydrationState(renderState.hydrationState);
+
                 // Reset the child fibers to their original state.
                 resetChildFibers(workInProgress, renderLanes);
 
