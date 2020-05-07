@@ -27,6 +27,7 @@ import {
   enableProfilerCommitHooks,
   enableSchedulerTracing,
   warnAboutUnmockedScheduler,
+  deferRenderPhaseUpdateToNextBatch,
 } from 'shared/ReactFeatureFlags';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import invariant from 'shared/invariant';
@@ -123,6 +124,7 @@ import {
   isSubsetOfLanes,
   mergeLanes,
   removeLanes,
+  pickArbitraryLane,
   hasDiscreteLanes,
   hasUpdatePriority,
   getNextLanes,
@@ -354,6 +356,21 @@ export function requestUpdateLane(
     return getCurrentPriorityLevel() === ImmediateSchedulerPriority
       ? (SyncLane: Lane)
       : (SyncBatchedLane: Lane);
+  } else if (
+    !deferRenderPhaseUpdateToNextBatch &&
+    (executionContext & RenderContext) !== NoContext &&
+    workInProgressRootRenderLanes !== NoLanes
+  ) {
+    // This is a render phase update. These are not officially supported. The
+    // old behavior is to give this the same "thread" (expiration time) as
+    // whatever is currently rendering. So if you call `setState` on a component
+    // that happens later in the same render, it will flush. Ideally, we want to
+    // remove the special case and treat them as if they came from an
+    // interleaved event. Regardless, this pattern is not officially supported.
+    // This behavior is only a fallback. The flag only exists until we can roll
+    // out the setState warnning, since existing code might accidentally rely on
+    // the current behavior.
+    return pickArbitraryLane(workInProgressRootRenderLanes);
   }
 
   // The algorithm for assigning an update to a lane should be stable for all
@@ -542,11 +559,19 @@ function markUpdateLaneFromFiberToRoot(
     markRootUpdated(root, lane);
     if (workInProgressRoot === root) {
       // Received an update to a tree that's in the middle of rendering. Mark
-      // that there is unprocessed work on this root.
-      workInProgressRootUpdatedLanes = mergeLanes(
-        workInProgressRootUpdatedLanes,
-        lane,
-      );
+      // that there was an interleaved update work on this root. Unless the
+      // `deferRenderPhaseUpdateToNextBatch` flag is off and this is a render
+      // phase update. In that case, we don't treat render phase updates as if
+      // they were interleaved, for backwards compat reasons.
+      if (
+        deferRenderPhaseUpdateToNextBatch ||
+        (executionContext & RenderContext) === NoContext
+      ) {
+        workInProgressRootUpdatedLanes = mergeLanes(
+          workInProgressRootUpdatedLanes,
+          lane,
+        );
+      }
       if (workInProgressRootExitStatus === RootSuspendedWithDelay) {
         // The root already suspended with a delay, which means this render
         // definitely won't finish. Since we have a new update, let's mark it as

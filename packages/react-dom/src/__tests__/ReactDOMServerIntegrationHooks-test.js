@@ -1686,7 +1686,9 @@ describe('ReactDOMServerHooks', () => {
           <App />,
         );
 
-        if (gate(flags => flags.new)) {
+        if (
+          gate(flags => flags.new && flags.deferRenderPhaseUpdateToNextBatch)
+        ) {
           expect(() => Scheduler.unstable_flushAll()).toErrorDev([
             'The object passed back from useOpaqueIdentifier is meant to be passed through to attributes only. ' +
               'Do not read the value directly.',
@@ -1730,7 +1732,9 @@ describe('ReactDOMServerHooks', () => {
           <App />,
         );
 
-        if (gate(flags => flags.new)) {
+        if (
+          gate(flags => flags.new && flags.deferRenderPhaseUpdateToNextBatch)
+        ) {
           expect(() => Scheduler.unstable_flushAll()).toErrorDev([
             'The object passed back from useOpaqueIdentifier is meant to be passed through to attributes only. ' +
               'Do not read the value directly.',
