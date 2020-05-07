@@ -394,7 +394,7 @@ describe('ReactIncrementalUpdates', () => {
     expect(() =>
       expect(Scheduler).toFlushAndYield(
         gate(flags =>
-          flags.new
+          flags.new && flags.deferRenderPhaseUpdateToNextBatch
             ? [
                 'setState updater',
                 // In the new reconciler, updates inside the render phase are
@@ -427,7 +427,7 @@ describe('ReactIncrementalUpdates', () => {
     });
     expect(Scheduler).toFlushAndYield(
       gate(flags =>
-        flags.new
+        flags.new && flags.deferRenderPhaseUpdateToNextBatch
           ? // In the new reconciler, updates inside the render phase are
             // treated as if they came from an event, so the update gets shifted
             // to a subsequent render.
