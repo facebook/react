@@ -115,6 +115,8 @@ import {
   prepareToHydrateHostSuspenseInstance,
   popHydrationState,
   resetHydrationState,
+  getIsHydrating,
+  restoreHydrationState,
 } from './ReactFiberHydrationContext.old';
 import {
   enableSchedulerTracing,
@@ -575,6 +577,11 @@ function cutOffTailIfNeeded(
   renderState: SuspenseListRenderState,
   hasRenderedATailFallback: boolean,
 ) {
+  if (getIsHydrating()) {
+    // If we're hydrating, we should consume as many items as we can
+    // so we don't leave any behind.
+    return;
+  }
   switch (renderState.tailMode) {
     case 'hidden': {
       // Any insertions at the end of the tail list after this point
@@ -1066,6 +1073,10 @@ function completeWork(
                   workInProgress.firstEffect = null;
                 }
                 workInProgress.lastEffect = renderState.lastEffect;
+
+                // Restore hydration state to where we were in the beginning of the list.
+                restoreHydrationState(renderState.hydrationState);
+
                 // Reset the child fibers to their original state.
                 resetChildFibers(workInProgress, renderExpirationTime);
 
@@ -1119,6 +1130,7 @@ function completeWork(
               if (lastEffect !== null) {
                 lastEffect.nextEffect = null;
               }
+
               // We're done.
               return null;
             }

@@ -1699,6 +1699,99 @@ describe('ReactDOMServerPartialHydration', () => {
   });
 
   // @gate experimental
+  it('clears server boundaries when SuspenseList does a second pass', async () => {
+    let suspend = false;
+    let resolve;
+    const promise = new Promise(resolvePromise => (resolve = resolvePromise));
+
+    const ref = React.createRef();
+
+    function Child({children}) {
+      if (suspend) {
+        throw promise;
+      } else {
+        return children;
+      }
+    }
+
+    function Before() {
+      Scheduler.unstable_yieldValue('Before');
+      return null;
+    }
+
+    function After() {
+      Scheduler.unstable_yieldValue('After');
+      return null;
+    }
+
+    function FirstRow() {
+      return (
+        <>
+          <Before />
+          <Suspense fallback="Loading A">
+            <span>A</span>
+          </Suspense>
+          <After />
+        </>
+      );
+    }
+
+    function App() {
+      return (
+        <Suspense fallback={null}>
+          <SuspenseList revealOrder="forwards" tail="hidden">
+            <FirstRow />
+            <Suspense fallback="Loading B">
+              <Child>
+                <span ref={ref}>B</span>
+              </Child>
+            </Suspense>
+          </SuspenseList>
+        </Suspense>
+      );
+    }
+
+    suspend = false;
+    const html = ReactDOMServer.renderToString(<App />);
+    expect(Scheduler).toHaveYielded(['Before', 'After']);
+
+    const container = document.createElement('div');
+    container.innerHTML = html;
+
+    const b = container.getElementsByTagName('span')[1];
+    expect(b.textContent).toBe('B');
+
+    const root = ReactDOM.createRoot(container, {hydrate: true});
+
+    // Increase hydration priority to higher than "offscreen".
+    ReactDOM.unstable_scheduleHydration(b);
+
+    suspend = true;
+
+    await act(async () => {
+      root.render(<App />);
+      expect(Scheduler).toFlushAndYieldThrough(['Before']);
+      // This took a long time to render.
+      Scheduler.unstable_advanceTime(1000);
+      expect(Scheduler).toFlushAndYield(['After']);
+      // This will cause us to skip the second row completely.
+    });
+
+    // We haven't hydrated the second child but the placeholder is still in the list.
+    expect(ref.current).toBe(null);
+    expect(container.textContent).toBe('AB');
+
+    suspend = false;
+    await act(async () => {
+      // Resolve the boundary to be in its resolved final state.
+      await resolve();
+    });
+
+    expect(container.textContent).toBe('AB');
+    expect(ref.current).toBe(b);
+  });
+
+  // @gate experimental
   it('can client render nested boundaries', async () => {
     let suspend = false;
     const promise = new Promise(() => {});
@@ -2658,5 +2751,173 @@ describe('ReactDOMServerPartialHydration', () => {
 
     // Now we're hydrated.
     expect(ref.current).not.toBe(null);
+  });
+
+  // @gate experimental
+  it('shows client boundaries in order if they are in a "forwards" SuspenseList', async () => {
+    let suspendA = true;
+    let resolveA;
+    const promiseA = new Promise(resolvePromise => (resolveA = resolvePromise));
+    let suspendB = true;
+    let resolveB;
+    const promiseB = new Promise(resolvePromise => (resolveB = resolvePromise));
+    let suspendC = true;
+    let resolveC;
+    const promiseC = new Promise(resolvePromise => (resolveC = resolvePromise));
+
+    function ChildA() {
+      if (suspendA) {
+        throw promiseA;
+      } else {
+        return <span>A</span>;
+      }
+    }
+    function ChildB() {
+      if (suspendB) {
+        throw promiseB;
+      } else {
+        return <span>B</span>;
+      }
+    }
+    function ChildC() {
+      if (suspendC) {
+        throw promiseC;
+      } else {
+        return <span>C</span>;
+      }
+    }
+
+    function App() {
+      return (
+        <SuspenseList revealOrder="forwards">
+          <Suspense fallback="Loading A">
+            <ChildA />
+          </Suspense>
+          <Suspense fallback="Loading B">
+            <ChildB />
+          </Suspense>
+          <Suspense fallback="Loading C">
+            <ChildC />
+          </Suspense>
+        </SuspenseList>
+      );
+    }
+
+    const html = ReactDOMServer.renderToString(<App />);
+
+    const container = document.createElement('div');
+    container.innerHTML = html;
+
+    const root = ReactDOM.createRoot(container, {hydrate: true});
+
+    act(() => {
+      root.render(<App />);
+    });
+    expect(container.textContent).toBe('Loading ALoading BLoading C');
+
+    suspendB = false;
+    await act(async () => {
+      await resolveB();
+    });
+
+    expect(container.textContent).toBe('Loading ALoading BLoading C');
+
+    suspendA = false;
+    await act(async () => {
+      await resolveA();
+    });
+
+    expect(container.textContent).toBe('ABLoading C');
+
+    suspendC = false;
+    await act(async () => {
+      await resolveC();
+    });
+
+    expect(container.textContent).toBe('ABC');
+  });
+
+  // @gate experimental
+  it('shows client boundaries together if they are in a "together" SuspenseList', async () => {
+    let suspendA = true;
+    let resolveA;
+    const promiseA = new Promise(resolvePromise => (resolveA = resolvePromise));
+    let suspendB = true;
+    let resolveB;
+    const promiseB = new Promise(resolvePromise => (resolveB = resolvePromise));
+    let suspendC = true;
+    let resolveC;
+    const promiseC = new Promise(resolvePromise => (resolveC = resolvePromise));
+
+    function ChildA() {
+      if (suspendA) {
+        throw promiseA;
+      } else {
+        return <span>A</span>;
+      }
+    }
+    function ChildB() {
+      if (suspendB) {
+        throw promiseB;
+      } else {
+        return <span>B</span>;
+      }
+    }
+    function ChildC() {
+      if (suspendC) {
+        throw promiseC;
+      } else {
+        return <span>C</span>;
+      }
+    }
+
+    function App() {
+      return (
+        <SuspenseList revealOrder="together">
+          <Suspense fallback="Loading A">
+            <ChildA />
+          </Suspense>
+          <Suspense fallback="Loading B">
+            <ChildB />
+          </Suspense>
+          <Suspense fallback="Loading C">
+            <ChildC />
+          </Suspense>
+        </SuspenseList>
+      );
+    }
+
+    const html = ReactDOMServer.renderToString(<App />);
+
+    const container = document.createElement('div');
+    container.innerHTML = html;
+
+    const root = ReactDOM.createRoot(container, {hydrate: true});
+
+    act(() => {
+      root.render(<App />);
+    });
+    expect(container.textContent).toBe('Loading ALoading BLoading C');
+
+    suspendB = false;
+    await act(async () => {
+      await resolveB();
+    });
+
+    expect(container.textContent).toBe('Loading ALoading BLoading C');
+
+    suspendA = false;
+    await act(async () => {
+      await resolveA();
+    });
+
+    expect(container.textContent).toBe('Loading ALoading BLoading C');
+
+    suspendC = false;
+    await act(async () => {
+      await resolveC();
+    });
+
+    expect(container.textContent).toBe('ABC');
   });
 });
