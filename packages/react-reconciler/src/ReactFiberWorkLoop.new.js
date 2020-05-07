@@ -2760,6 +2760,10 @@ function warnAboutUpdateOnNotYetMountedFiberInDEV(fiber) {
       return;
     }
 
+    if (!(fiber.mode & (BlockingMode | ConcurrentMode))) {
+      return;
+    }
+
     const tag = fiber.tag;
     if (
       tag !== IndeterminateComponent &&

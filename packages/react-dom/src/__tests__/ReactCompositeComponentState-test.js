@@ -510,4 +510,33 @@ describe('ReactCompositeComponent-state', () => {
       expect(el.textContent).toBe('count:4');
     });
   }
+
+  it('should support setState in componentWillUnmount', () => {
+    let subscription;
+    class A extends React.Component {
+      componentWillUnmount() {
+        subscription();
+      }
+      render() {
+        return 'A';
+      }
+    }
+
+    class B extends React.Component {
+      state = {siblingUnmounted: false};
+      UNSAFE_componentWillMount() {
+        subscription = () => this.setState({siblingUnmounted: true});
+      }
+      render() {
+        return 'B' + (this.state.siblingUnmounted ? ' No Sibling' : '');
+      }
+    }
+
+    const el = document.createElement('div');
+    ReactDOM.render(<A />, el);
+    expect(el.textContent).toBe('A');
+
+    ReactDOM.render(<B />, el);
+    expect(el.textContent).toBe('B No Sibling');
+  });
 });
