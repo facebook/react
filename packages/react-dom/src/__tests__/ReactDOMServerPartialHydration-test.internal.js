@@ -1699,6 +1699,99 @@ describe('ReactDOMServerPartialHydration', () => {
   });
 
   // @gate experimental
+  it('clears server boundaries when SuspenseList does a second pass', async () => {
+    let suspend = false;
+    let resolve;
+    const promise = new Promise(resolvePromise => (resolve = resolvePromise));
+
+    const ref = React.createRef();
+
+    function Child({children}) {
+      if (suspend) {
+        throw promise;
+      } else {
+        return children;
+      }
+    }
+
+    function Before() {
+      Scheduler.unstable_yieldValue('Before');
+      return null;
+    }
+
+    function After() {
+      Scheduler.unstable_yieldValue('After');
+      return null;
+    }
+
+    function FirstRow() {
+      return (
+        <>
+          <Before />
+          <Suspense fallback="Loading A">
+            <span>A</span>
+          </Suspense>
+          <After />
+        </>
+      );
+    }
+
+    function App() {
+      return (
+        <Suspense fallback={null}>
+          <SuspenseList revealOrder="forwards" tail="hidden">
+            <FirstRow />
+            <Suspense fallback="Loading B">
+              <Child>
+                <span ref={ref}>B</span>
+              </Child>
+            </Suspense>
+          </SuspenseList>
+        </Suspense>
+      );
+    }
+
+    suspend = false;
+    const html = ReactDOMServer.renderToString(<App />);
+    expect(Scheduler).toHaveYielded(['Before', 'After']);
+
+    const container = document.createElement('div');
+    container.innerHTML = html;
+
+    const b = container.getElementsByTagName('span')[1];
+    expect(b.textContent).toBe('B');
+
+    const root = ReactDOM.createRoot(container, {hydrate: true});
+
+    // Increase hydration priority to higher than "offscreen".
+    ReactDOM.unstable_scheduleHydration(b);
+
+    suspend = true;
+
+    await act(async () => {
+      root.render(<App />);
+      expect(Scheduler).toFlushAndYieldThrough(['Before']);
+      // This took a long time to render.
+      Scheduler.unstable_advanceTime(1000);
+      expect(Scheduler).toFlushAndYield(['After']);
+      // This will cause us to skip the second row completely.
+    });
+
+    // We haven't hydrated the second child but the placeholder is still in the list.
+    expect(ref.current).toBe(null);
+    expect(container.textContent).toBe('AB');
+
+    suspend = false;
+    await act(async () => {
+      // Resolve the boundary to be in its resolved final state.
+      await resolve();
+    });
+
+    expect(container.textContent).toBe('AB');
+    expect(ref.current).toBe(b);
+  });
+
+  // @gate experimental
   it('can client render nested boundaries', async () => {
     let suspend = false;
     const promise = new Promise(() => {});
