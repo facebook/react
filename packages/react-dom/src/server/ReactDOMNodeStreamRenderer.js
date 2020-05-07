@@ -11,11 +11,15 @@ import ReactPartialRenderer from './ReactPartialRenderer';
 
 // This is a Readable Node.js stream which wraps the ReactDOMPartialRenderer.
 class ReactMarkupReadableStream extends Readable {
-  constructor(element, makeStaticMarkup) {
+  constructor(element, makeStaticMarkup, trustedTypes) {
     // Calls the stream.Readable(options) constructor. Consider exposing built-in
     // features like highWaterMark in the future.
     super({});
-    this.partialRenderer = new ReactPartialRenderer(element, makeStaticMarkup);
+    this.partialRenderer = new ReactPartialRenderer(
+      element,
+      makeStaticMarkup,
+      trustedTypes,
+    );
   }
 
   _destroy(err, callback) {
@@ -36,8 +40,8 @@ class ReactMarkupReadableStream extends Readable {
  * server.
  * See https://reactjs.org/docs/react-dom-server.html#rendertonodestream
  */
-export function renderToNodeStream(element) {
-  return new ReactMarkupReadableStream(element, false);
+export function renderToNodeStream(element, trustedTypes) {
+  return new ReactMarkupReadableStream(element, false, trustedTypes);
 }
 
 /**
@@ -45,6 +49,6 @@ export function renderToNodeStream(element) {
  * such as data-react-id that React uses internally.
  * See https://reactjs.org/docs/react-dom-server.html#rendertostaticnodestream
  */
-export function renderToStaticNodeStream(element) {
-  return new ReactMarkupReadableStream(element, true);
+export function renderToStaticNodeStream(element, trustedTypes) {
+  return new ReactMarkupReadableStream(element, true, trustedTypes);
 }
