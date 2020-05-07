@@ -20,7 +20,7 @@ import {
 } from './ReactFiberWorkLoop.new';
 import {updateContainer} from './ReactFiberReconciler.new';
 import {emptyContextObject} from './ReactFiberContext.new';
-import {SyncLane} from './ReactFiberLane';
+import {SyncLane, NoTimestamp} from './ReactFiberLane';
 import {
   ClassComponent,
   FunctionComponent,
@@ -319,7 +319,7 @@ function scheduleFibersWithFamiliesRecursively(
       fiber._debugNeedsRemount = true;
     }
     if (needsRemount || needsRender) {
-      scheduleUpdateOnFiber(fiber, SyncLane);
+      scheduleUpdateOnFiber(fiber, SyncLane, NoTimestamp);
     }
     if (child !== null && !needsRemount) {
       scheduleFibersWithFamiliesRecursively(

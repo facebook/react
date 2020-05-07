@@ -2301,7 +2301,12 @@ function updateDehydratedSuspenseComponent(
         // is one of the very rare times where we mutate the current tree
         // during the render phase.
         suspenseState.retryLane = attemptHydrationAtLane;
-        scheduleUpdateOnFiber(current, attemptHydrationAtLane);
+        // TODO: The event time is used to prevent starvation if a lane takes
+        // too long to finish rendering. Ideally this would be the time at which
+        // we started rendering. For spawned work, it's not a big deal, though,
+        // because eventually the original update will expire.
+        const eventTime = -1;
+        scheduleUpdateOnFiber(current, attemptHydrationAtLane, eventTime);
       } else {
         // We have already tried to ping at a higher priority than we're rendering with
         // so if we got here, we must have failed to hydrate at those levels. We must

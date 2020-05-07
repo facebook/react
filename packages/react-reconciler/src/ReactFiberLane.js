@@ -29,6 +29,7 @@ export opaque type LanePriority =
   | 16;
 export opaque type Lanes = number;
 export opaque type Lane = number;
+export opaque type LaneMap<T> = Array<T>;
 
 import invariant from 'shared/invariant';
 
@@ -66,7 +67,7 @@ const IdleLanePriority: LanePriority = 2;
 
 const OffscreenLanePriority: LanePriority = 1;
 
-const NoLanePriority: LanePriority = 0;
+export const NoLanePriority: LanePriority = 0;
 
 const TotalLanes = 31;
 
@@ -116,6 +117,8 @@ const IdleUpdateRangeStart = 28;
 const IdleUpdateRangeEnd = 30;
 
 export const OffscreenLane: Lane = /*                   */ 0b1000000000000000000000000000000;
+
+export const NoTimestamp = -1;
 
 // "Registers" used to "return" multiple values
 // Used by getHighestPriorityLanes and getNextLanes:
@@ -365,6 +368,46 @@ export function getNextLanes(root: FiberRoot, wipLanes: Lanes): Lanes {
   return nextLanes;
 }
 
+export function markStarvedLanesAsExpired(
+  root: FiberRoot,
+  currentTime: number,
+): void {
+  // TODO: This gets called every time we yield. We can optimize by storing
+  // the earliest expiration time on the root. Then use that to quickly bail out
+  // of this function.
+
+  const pendingLanes = root.pendingLanes;
+  const eventTimes = root.eventTimes;
+
+  // Iterate through the pending lanes and check how long they've been CPU
+  // bound. After a certain amount of time, we'll assume the update is being
+  // starved and mark it as expired to force it to finish.
+  let lanes = pendingLanes;
+  while (lanes > 0) {
+    const index = ctrz(lanes);
+    const lane = 1 << index;
+
+    const eventTime = eventTimes[index];
+    if (eventTime !== NoTimestamp) {
+      getHighestPriorityLanes(lanes);
+      const priority = return_highestLanePriority;
+      if (priority <= IdleHydrationLanePriority) {
+        // Anything idle priority or lower should never expire.
+      } else {
+        // User interactions should expire slightly more quickly.
+        const expirationHeuristic =
+          priority >= InputContinuousLanePriority ? 1000 : 5000;
+        if (eventTime + expirationHeuristic <= currentTime) {
+          // This lane expired
+          root.expiredLanes |= lane;
+        }
+      }
+    }
+
+    lanes &= ~lane;
+  }
+}
+
 // This returns the highest priority pending lanes regardless of whether they
 // are suspended.
 export function getHighestPriorityPendingLanes(root: FiberRoot) {
@@ -555,7 +598,15 @@ export function higherPriorityLane(a: Lane, b: Lane) {
   return a !== NoLane && a < b ? a : b;
 }
 
-export function markRootUpdated(root: FiberRoot, updateLane: Lane) {
+export function createLaneMap<T>(initial: T): LaneMap<T> {
+  return new Array(TotalLanes).fill(initial);
+}
+
+export function markRootUpdated(
+  root: FiberRoot,
+  updateLane: Lane,
+  eventTime: number,
+) {
   root.pendingLanes |= updateLane;
 
   // TODO: Theoretically, any update to any lane can unblock any other lane. But
@@ -570,17 +621,69 @@ export function markRootUpdated(root: FiberRoot, updateLane: Lane) {
 
   // Unsuspend any update at equal or lower priority.
   const higherPriorityLanes = updateLane - 1; // Turns 0b1000 into 0b0111
+  const equalOrLowerPriorityLanes = ~higherPriorityLanes;
+
+  // We use this below to mark the event time
+  const unsuspendedLanes = equalOrLowerPriorityLanes & root.suspendedLanes;
+
   root.suspendedLanes &= higherPriorityLanes;
   root.pingedLanes &= higherPriorityLanes;
+
+  if (eventTime !== NoTimestamp) {
+    const eventTimes = root.eventTimes;
+    let lanes = updateLane | unsuspendedLanes;
+    while (lanes > 0) {
+      const index = ctrz(lanes);
+
+      // Assumes event times are monotonically increasing. First one wins.
+      if (eventTimes[index] === NoTimestamp) {
+        eventTimes[index] = eventTime;
+      }
+
+      lanes &= ~(1 << index);
+    }
+  }
 }
 
 export function markRootSuspended(root: FiberRoot, suspendedLanes: Lanes) {
   root.suspendedLanes |= suspendedLanes;
   root.pingedLanes &= ~suspendedLanes;
+
+  // The suspended lanes are no longer CPU-bound. Clear their event times.
+  const eventTimes = root.eventTimes;
+  let lanes = suspendedLanes;
+  while (lanes > 0) {
+    const index = ctrz(lanes);
+
+    eventTimes[index] = NoTimestamp;
+
+    lanes &= ~(1 << index);
+  }
 }
 
-export function markRootPinged(root: FiberRoot, pingedLanes: Lanes) {
+export function markRootPinged(
+  root: FiberRoot,
+  pingedLanes: Lanes,
+  eventTime: number,
+) {
   root.pingedLanes |= root.suspendedLanes & pingedLanes;
+
+  if (eventTime !== -1) {
+    // Pinged lanes are no longer IO-bound. Set a new event time again to
+    // prevent CPU starvation.
+    const eventTimes = root.eventTimes;
+    let lanes = pingedLanes;
+    while (lanes > 0) {
+      const index = ctrz(lanes);
+
+      // Assumes event times are monotonically increasing. Last one wins.
+      if (eventTimes[index] === -1) {
+        eventTimes[index] = eventTime;
+      }
+
+      lanes &= ~(1 << index);
+    }
+  }
 }
 
 export function markRootExpired(root: FiberRoot, expiredLanes: Lanes) {
@@ -600,6 +703,8 @@ export function markRootMutableRead(root: FiberRoot, updateLane: Lane) {
 }
 
 export function markRootFinished(root: FiberRoot, remainingLanes: Lanes) {
+  const noLongerPendingLanes = root.pendingLanes & ~remainingLanes;
+
   root.pendingLanes = remainingLanes;
 
   // Let's try everything again
@@ -608,6 +713,17 @@ export function markRootFinished(root: FiberRoot, remainingLanes: Lanes) {
 
   root.expiredLanes &= remainingLanes;
   root.mutableReadLanes &= remainingLanes;
+
+  const eventTimes = root.eventTimes;
+  let lanes = noLongerPendingLanes;
+  while (lanes > 0) {
+    const index = ctrz(lanes);
+
+    // Clear the event time
+    eventTimes[index] = -1;
+
+    lanes &= ~(1 << index);
+  }
 }
 
 export function getBumpedLaneForHydration(
@@ -671,18 +787,25 @@ export function getBumpedLaneForHydration(
 
 const clz32 = Math.clz32 ? Math.clz32 : clz32Fallback;
 
-// Taken from:
+// Count leading zeros. Only used on lanes, so assume input is an integer.
+// Based on:
 // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Math/clz32
 const log = Math.log;
 const LN2 = Math.LN2;
-function clz32Fallback(x) {
-  // Let n be ToUint32(x).
-  // Let p be the number of leading zero bits in
-  // the 32-bit binary representation of n.
-  // Return p.
-  const asUint = x >>> 0;
-  if (asUint === 0) {
+function clz32Fallback(lanes: Lanes | Lane) {
+  if (lanes === 0) {
     return 32;
   }
-  return (31 - ((log(asUint) / LN2) | 0)) | 0; // the "| 0" acts like math.floor
+  return (31 - ((log(lanes) / LN2) | 0)) | 0;
+}
+
+// Count trailing zeros. Only used on lanes, so assume input is an integer.
+function ctrz(lanes: Lanes | Lane) {
+  let bits = lanes;
+  bits |= bits << 16;
+  bits |= bits << 8;
+  bits |= bits << 4;
+  bits |= bits << 2;
+  bits |= bits << 1;
+  return 32 - clz32(~bits);
 }
