@@ -23,12 +23,16 @@ type Props = {
   ...
 };
 
+type DragStartCommit = {
+  dragStartCommitIndex: number,
+  rectLeft: number,
+};
+
 function SnapshotCommitListItem({data: itemData, index, style}: Props) {
   const {
     commitDurations,
     commitTimes,
     filteredCommitIndices,
-    isMouseDown,
     maxDuration,
     selectedCommitIndex,
     selectCommitIndex,
@@ -44,6 +48,55 @@ function SnapshotCommitListItem({data: itemData, index, style}: Props) {
     selectCommitIndex,
   ]);
 
+  let dragStartCommit: DragStartCommit | null = null;
+  const maxCommitIndex = filteredCommitIndices.length - 1;
+
+  const handleDrag = (e: any) => {
+    if (e.buttons === 0) {
+      document.removeEventListener('mousemove', handleDrag);
+      const iframe = document.querySelector('iframe');
+      if (iframe) iframe.style.pointerEvents = 'auto';
+      dragStartCommit = null;
+      return;
+    }
+    if (dragStartCommit === null) return;
+
+    let newCommitIndex = index;
+    let newCommitRectLeft = dragStartCommit.rectLeft;
+
+    if (e.pageX < dragStartCommit.rectLeft) {
+      while (e.pageX < newCommitRectLeft) {
+        newCommitRectLeft = newCommitRectLeft - 1 - width;
+        newCommitIndex -= 1;
+      }
+    } else {
+      let newCommitRectRight = newCommitRectLeft + 1 + width;
+      while (e.pageX > newCommitRectRight) {
+        newCommitRectRight = newCommitRectRight + 1 + width;
+        newCommitIndex += 1;
+      }
+    }
+
+    if (newCommitIndex < 0) {
+      newCommitIndex = 0;
+    } else if (newCommitIndex > maxCommitIndex) {
+      newCommitIndex = maxCommitIndex;
+    }
+    selectCommitIndex(newCommitIndex);
+  };
+
+  const handleMouseDown = (e: any) => {
+    handleClick();
+    document.addEventListener('mousemove', handleDrag);
+    const iframe = document.querySelector('iframe');
+    if (iframe) iframe.style.pointerEvents = 'none';
+    const rect = e.target.getBoundingClientRect();
+    dragStartCommit = {
+      dragStartCommitIndex: index,
+      rectLeft: rect.left,
+    };
+  };
+
   // Guard against commits with duration 0
   const percentage =
     Math.min(1, Math.max(0, commitDuration / maxDuration)) || 0;
@@ -56,7 +109,7 @@ function SnapshotCommitListItem({data: itemData, index, style}: Props) {
     <div
       className={styles.Outer}
       onClick={handleClick}
-      onMouseEnter={isMouseDown ? handleClick : null}
+      onMouseDown={handleMouseDown}
       style={{
         ...style,
         width,
