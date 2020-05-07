@@ -29,6 +29,9 @@ export default {
           additionalHooks: {
             type: 'string',
           },
+          additionalHooksMap: {
+            type: 'object',
+          },
           enableDangerousAutofixThisMayCauseInfiniteLoops: {
             type: 'boolean',
           },
@@ -45,6 +48,12 @@ export default {
         ? new RegExp(context.options[0].additionalHooks)
         : undefined;
 
+    const additionalHooksMap =
+      (context.options &&
+        context.options[0] &&
+        context.options[0].additionalHooksMap) ||
+      undefined;
+
     const enableDangerousAutofixThisMayCauseInfiniteLoops =
       (context.options &&
         context.options[0] &&
@@ -53,6 +62,7 @@ export default {
 
     const options = {
       additionalHooks,
+      additionalHooksMap,
       enableDangerousAutofixThisMayCauseInfiniteLoops,
     };
 
@@ -1525,7 +1535,12 @@ function getReactiveHookCallbackIndex(calleeNode, options) {
       // useImperativeHandle(ref, fn)
       return 1;
     default:
-      if (node === calleeNode && options && options.additionalHooks) {
+      if (node === calleeNode && options && options.additionalHooksMap &&
+          node.name in options.additionalHooksMap) {
+        // Allow the user to explicitly specify the callback index in the
+        // additionalHooksMap.
+        return options.additionalHooksMap[node.name];
+      } else if (node === calleeNode && options && options.additionalHooks) {
         // Allow the user to provide a regular expression which enables the lint to
         // target custom reactive hooks.
         let name;
