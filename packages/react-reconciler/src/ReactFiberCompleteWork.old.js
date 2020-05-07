@@ -115,6 +115,7 @@ import {
   prepareToHydrateHostSuspenseInstance,
   popHydrationState,
   resetHydrationState,
+  getIsHydrating,
 } from './ReactFiberHydrationContext.old';
 import {
   enableSchedulerTracing,
@@ -575,6 +576,11 @@ function cutOffTailIfNeeded(
   renderState: SuspenseListRenderState,
   hasRenderedATailFallback: boolean,
 ) {
+  if (getIsHydrating()) {
+    // If we're hydrating, we should consume as many items as we can
+    // so we don't leave any behind.
+    return;
+  }
   switch (renderState.tailMode) {
     case 'hidden': {
       // Any insertions at the end of the tail list after this point
