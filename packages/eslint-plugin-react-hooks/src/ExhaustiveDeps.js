@@ -1535,8 +1535,12 @@ function getReactiveHookCallbackIndex(calleeNode, options) {
       // useImperativeHandle(ref, fn)
       return 1;
     default:
-      if (node === calleeNode && options && options.additionalHooksMap &&
-          node.name in options.additionalHooksMap) {
+      if (
+        node === calleeNode &&
+        options &&
+        options.additionalHooksMap &&
+        node.name in options.additionalHooksMap
+      ) {
         // Allow the user to explicitly specify the callback index in the
         // additionalHooksMap.
         return options.additionalHooksMap[node.name];
