@@ -36,7 +36,7 @@
   "peerDependencies": {
     "react": "^16.0.0",
     "react-dom": "^16.0.0",
-    "webpack": "^4.41.2"
+    "webpack": "^4.43.0"
   },
   "dependencies": {
     "loose-envify": "^1.1.0",
