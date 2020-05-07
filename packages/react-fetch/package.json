@@ -1,26 +1,22 @@
 {
   "private": true,
-  "name": "react-data",
+  "name": "react-fetch",
   "description": "Helpers for creating React data sources",
   "version": "0.0.0",
   "repository": {
     "type" : "git",
     "url" : "https://github.com/facebook/react.git",
-    "directory": "packages/react-data"
+    "directory": "packages/react-fetch"
   },
   "files": [
     "LICENSE",
     "README.md",
     "build-info.json",
     "index.js",
-    "fetch.js",
-    "fetch.browser.js",
-    "fetch.node.js",
+    "index.browser.js",
+    "index.node.js",
     "cjs/"
   ],
-  "browser": {
-    "./fetch.js": "./fetch.browser.js"
-  },
   "peerDependencies": {
     "react": "^16.13.1"
   }

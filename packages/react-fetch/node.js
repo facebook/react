@@ -9,4 +9,4 @@
 
 'use strict';
 
-export * from './src/fetch/ReactDataFetchBrowser';
+export * from './src/ReactFetchNode';

@@ -9,15 +9,15 @@
 
 'use strict';
 
-describe('ReactDataFetch', () => {
-  let ReactDataFetch;
+describe('ReactFetchBrowser', () => {
+  let ReactFetchBrowser;
 
   beforeEach(() => {
-    ReactDataFetch = require('react-data/fetch');
+    ReactFetchBrowser = require('react-fetch');
   });
 
   // TODO: test something useful.
   it('exports something', () => {
-    expect(ReactDataFetch.fetch).not.toBe(undefined);
+    expect(ReactFetchBrowser.fetch).not.toBe(undefined);
   });
 });
