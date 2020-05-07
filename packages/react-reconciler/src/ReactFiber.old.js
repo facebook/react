@@ -27,6 +27,7 @@ import {
   enableFundamentalAPI,
   enableScopeAPI,
   enableBlocksAPI,
+  enableDirectContextPropagation,
 } from 'shared/ReactFeatureFlags';
 import {NoEffect, Placement} from './ReactSideEffectTags';
 import {ConcurrentRoot, BlockingRoot} from './ReactRootTags';
@@ -317,6 +318,18 @@ export function createWorkInProgress(current: Fiber, pendingProps: any): Fiber {
           firstContext: currentDependencies.firstContext,
           responders: currentDependencies.responders,
         };
+
+  if (enableDirectContextPropagation) {
+    if (currentDependencies !== null) {
+      // we need to clone danglingReaders because it may fill up during a render
+      // and if that render restarts the dangling readers will be cleaned up
+      // before the render is committed.
+      workInProgress.dependencies_old.danglingReaders =
+        currentDependencies.danglingReaders === null
+          ? null
+          : Array.from(currentDependencies.danglingReaders);
+    }
+  }
 
   // These will be overridden during the parent's reconciliation
   workInProgress.sibling = current.sibling;

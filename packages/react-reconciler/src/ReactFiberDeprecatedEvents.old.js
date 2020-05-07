@@ -25,6 +25,7 @@ import {REACT_RESPONDER_TYPE} from 'shared/ReactSymbols';
 
 import invariant from 'shared/invariant';
 import {HostComponent, HostRoot} from './ReactWorkTags';
+import {enableDirectContextPropagation} from 'shared/ReactFeatureFlags';
 
 const emptyObject = {};
 const isArray = Array.isArray;
@@ -158,6 +159,9 @@ export function updateDeprecatedEventListeners(
         firstContext: null,
         responders: new Map(),
       };
+    }
+    if (enableDirectContextPropagation) {
+      dependencies.danglingReaders = null;
     }
     let respondersMap = dependencies.responders;
     if (respondersMap === null) {

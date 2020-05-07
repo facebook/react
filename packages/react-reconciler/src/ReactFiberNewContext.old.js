@@ -26,7 +26,10 @@ import is from 'shared/objectIs';
 import {createUpdate, enqueueUpdate, ForceUpdate} from './ReactUpdateQueue.old';
 import {NoWork} from './ReactFiberExpirationTime.old';
 import {markWorkInProgressReceivedUpdate} from './ReactFiberBeginWork.old';
-import {enableSuspenseServerRenderer} from 'shared/ReactFeatureFlags';
+import {
+  enableSuspenseServerRenderer,
+  enableDirectContextPropagation,
+} from 'shared/ReactFeatureFlags';
 
 const valueCursor: StackCursor<mixed> = createCursor(null);
 
@@ -39,6 +42,12 @@ if (__DEV__) {
 let currentlyRenderingFiber: Fiber | null = null;
 let lastContextDependency: ContextDependency<mixed> | null = null;
 let lastContextWithAllBitsObserved: ReactContext<any> | null = null;
+let lastPreviousContextDependency: ContextDependency<mixed> | null;
+if (enableDirectContextPropagation) {
+  // this module global tracks the context dependency in the same slot as the
+  // lastContextDependency from the previously committed render
+  lastPreviousContextDependency = null;
+}
 
 let isDisallowedContextReadInDEV: boolean = false;
 
@@ -67,6 +76,12 @@ export function exitDisallowedContextReadInDEV(): void {
 
 export function pushProvider<T>(providerFiber: Fiber, nextValue: T): void {
   const context: ReactContext<T> = providerFiber.type._context;
+
+  if (enableDirectContextPropagation) {
+    // push the previousReaders onto the stack
+    push(valueCursor, context._currentReaders, providerFiber);
+    context._currentReaders = providerFiber.memoizedState;
+  }
 
   if (isPrimaryRenderer) {
     push(valueCursor, context._currentValue, providerFiber);
@@ -115,6 +130,12 @@ export function popProvider(providerFiber: Fiber): void {
     context._currentValue = currentValue;
   } else {
     context._currentValue2 = currentValue;
+  }
+
+  if (enableDirectContextPropagation) {
+    // pop the previousReaders off the stack and restore
+    context._currentReaders = valueCursor.current;
+    pop(valueCursor, providerFiber);
   }
 }
 
@@ -176,12 +197,102 @@ export function scheduleWorkOnParentPath(
   }
 }
 
+export function propagateContextDirectlyToReaders(
+  workInProgress: Fiber,
+  context: ReactContext<mixed>,
+  changedBits: number,
+  renderExpirationTime: ExpirationTime,
+): void {
+  const state = workInProgress.memoizedState;
+  if (state === null) {
+    // this Provider has no readers to propagate to
+    return;
+  } else {
+    let reader = state.firstReader;
+    while (reader !== null) {
+      // notify each read of the context change
+      const fiber = reader.fiber;
+
+      // this implementation propagates to fibers and alternates because
+      // we cannot know whether which one is part of the current tree
+      let listToProcess = fiber.dependencies_old;
+      let nextListToProcess =
+        fiber.alternate !== null ? fiber.alternate.dependencies_old : null;
+      if (listToProcess === null) {
+        // if the list is null use the nextListToProcess
+        listToProcess = nextListToProcess;
+        nextListToProcess = null;
+      }
+      while (listToProcess !== null) {
+        let dependency = listToProcess.firstContext;
+        while (dependency !== null) {
+          // Check if the context matches.
+          if (
+            dependency.context === context &&
+            (dependency.observedBits & changedBits) !== 0
+          ) {
+            // Match! Schedule an update on this fiber.
+
+            if (fiber.tag === ClassComponent) {
+              // Schedule a force update on the work-in-progress.
+              const update = createUpdate(renderExpirationTime, null);
+              update.tag = ForceUpdate;
+              // TODO: Because we don't have a work-in-progress, this will add the
+              // update to the current fiber, too, which means it will persist even if
+              // this render is thrown away. Since it's a race condition, not sure it's
+              // worth fixing.
+              enqueueUpdate(fiber, update);
+            }
+
+            if (fiber.expirationTime < renderExpirationTime) {
+              fiber.expirationTime = renderExpirationTime;
+            }
+            const alternate = fiber.alternate;
+            if (
+              alternate !== null &&
+              alternate.expirationTime < renderExpirationTime
+            ) {
+              alternate.expirationTime = renderExpirationTime;
+            }
+
+            scheduleWorkOnParentPath(fiber.return, renderExpirationTime);
+
+            // Mark the expiration time on the list, too.
+            if (listToProcess.expirationTime < renderExpirationTime) {
+              listToProcess.expirationTime = renderExpirationTime;
+            }
+
+            // Since we already found a match, we can stop traversing the
+            // dependency list.
+            break;
+          }
+          dependency = dependency.next;
+        }
+        listToProcess = nextListToProcess;
+        nextListToProcess = null;
+      }
+
+      reader = reader.next;
+    }
+  }
+}
+
 export function propagateContextChange(
   workInProgress: Fiber,
   context: ReactContext<mixed>,
   changedBits: number,
   renderExpirationTime: ExpirationTime,
 ): void {
+  if (enableDirectContextPropagation) {
+    // instead of traditional walking propagation we are going to use
+    // reader tracking exclusively to fast path dependent fibers
+    return propagateContextDirectlyToReaders(
+      workInProgress,
+      context,
+      changedBits,
+      renderExpirationTime,
+    );
+  }
   let fiber = workInProgress.child;
   if (fiber !== null) {
     // Set the return pointer of the child to the work-in-progress fiber.
@@ -302,6 +413,94 @@ export function propagateContextChange(
   }
 }
 
+function attachReader(contextItem) {
+  if (enableDirectContextPropagation) {
+    const context = contextItem.context;
+    let currentReaders = context._currentReaders;
+
+    const reader = {
+      fiber: currentlyRenderingFiber,
+      host: null,
+      next: null,
+      prev: null,
+    };
+
+    if (currentReaders == null || currentReaders.firstReader === null) {
+      currentReaders = context._currentReaders = {
+        firstReader: reader,
+      };
+    } else {
+      // prepend reader to list
+      reader.next = currentReaders.firstReader;
+      currentReaders.firstReader = currentReaders.firstReader.prev = reader;
+    }
+
+    reader.host = currentReaders;
+
+    return reader;
+  }
+}
+
+function detachReader(reader) {
+  if (enableDirectContextPropagation) {
+    if (reader.host === null) {
+      // this reader is unattached, nothing to do
+      return;
+    }
+    if (reader.prev === null) {
+      // if we are detaching the firstReader
+      // point reader's host to next next item
+      reader.host.firstReader = reader.next;
+    }
+
+    // now disconnect from neighbors and host
+    if (reader.next !== null) {
+      reader.next.prev = reader.prev;
+    }
+    if (reader.prev !== null) {
+      reader.prev.next = reader.next;
+    }
+    reader.prev = reader.next = reader.host = null;
+  }
+}
+
+export function cleanupReadersOnUnmount(fiber: Fiber) {
+  if (enableDirectContextPropagation) {
+    let cleanupFiber = fiber;
+    let nextCleanupFiber = fiber.alternate;
+    while (cleanupFiber !== null) {
+      const dependencies = cleanupFiber.dependencies_old;
+      if (dependencies !== null) {
+        const {firstContext} = dependencies;
+        // this fiber had unresolved dangling readers, clean them up
+        detachDanglingReaders(dependencies);
+
+        if (firstContext !== null) {
+          // this fiber had readers to clean up;
+          let contextItem = firstContext;
+          while (contextItem !== null) {
+            detachReader(contextItem.reader);
+            contextItem = contextItem.next;
+          }
+        }
+      }
+      cleanupFiber = nextCleanupFiber;
+      nextCleanupFiber = null;
+    }
+  }
+}
+
+function detachDanglingReaders(dependencies) {
+  const {danglingReaders} = dependencies;
+  if (danglingReaders !== null) {
+    for (let i = 0; i < danglingReaders.length; i++) {
+      detachReader(danglingReaders[i].reader);
+    }
+    danglingReaders.length = 0;
+    dependencies.danglingReaders = null;
+  }
+}
+
 export function prepareToReadContext(
   workInProgress: Fiber,
   renderExpirationTime: ExpirationTime,
@@ -309,10 +508,18 @@ export function prepareToReadContext(
   currentlyRenderingFiber = workInProgress;
   lastContextDependency = null;
   lastContextWithAllBitsObserved = null;
+  if (enableDirectContextPropagation) {
+    lastPreviousContextDependency = null;
+  }
 
   const dependencies = workInProgress.dependencies_old;
   if (dependencies !== null) {
-    const firstContext = dependencies.firstContext;
+    const {firstContext} = dependencies;
+    if (enableDirectContextPropagation) {
+      lastPreviousContextDependency = firstContext;
+      // on last commit this fiber had unused readers we should clean up
+      detachDanglingReaders(dependencies);
+    }
     if (firstContext !== null) {
       if (dependencies.expirationTime >= renderExpirationTime) {
         // Context list has a pending update. Mark that this fiber performed work.
@@ -363,6 +570,10 @@ export function readContext<T>(
       observedBits: resolvedObservedBits,
       next: null,
     };
+    if (enableDirectContextPropagation) {
+      // when enabled all contextItems will always have a reader
+      contextItem.reader = null;
+    }
 
     if (lastContextDependency === null) {
       invariant(
@@ -380,9 +591,45 @@ export function readContext<T>(
         firstContext: contextItem,
         responders: null,
       };
+      if (enableDirectContextPropagation) {
+        // dangling readers will get cleaned up either on unmount or on next prepareToReadContext
+        currentlyRenderingFiber.dependencies_old.danglingReaders = null;
+      }
     } else {
       // Append a new context item.
       lastContextDependency = lastContextDependency.next = contextItem;
+    }
+    if (enableDirectContextPropagation) {
+      if (lastPreviousContextDependency !== null) {
+        // previous list exists, we should reuse existing readers where possible
+        if (
+          lastPreviousContextDependency.context !==
+          lastContextDependency.context
+        ) {
+          // for most context reads the the dependency list will be identical from
+          // render to render, however with readContext and useContext it is
+          // possible to change which contexts are read from. if we encounter an unexpected
+          // context we move the missed item to dangling readers list and do a new attachment
+          lastContextDependency.reader = attachReader(lastContextDependency);
+          const dependencies = currentlyRenderingFiber.dependencies_old;
+          if (dependencies.danglingReaders === null) {
+            dependencies.danglingReaders = [lastPreviousContextDependency];
+          } else {
+            dependencies.danglingReaders.push(lastPreviousContextDependency);
+          }
+        } else {
+          // reuse previous reader
+          lastContextDependency.reader = lastPreviousContextDependency.reader;
+        }
+
+        // advance lastPreviousContextDependency pointer in conjunction with each new contextItem
+        // it is possible that this can end up being null here and a subsequent context read
+        // will appear like a new mount which is fine.
+        lastPreviousContextDependency = lastPreviousContextDependency.next;
+      } else {
+        // previous list does not exist, most likely a mount. attach new reader
+        lastContextDependency.reader = attachReader(lastContextDependency);
+      }
     }
   }
   return isPrimaryRenderer ? context._currentValue : context._currentValue2;

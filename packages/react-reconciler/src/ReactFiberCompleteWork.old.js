@@ -124,6 +124,7 @@ import {
   enableFundamentalAPI,
   enableScopeAPI,
   enableBlocksAPI,
+  enableDirectContextPropagation,
 } from 'shared/ReactFeatureFlags';
 import {
   markSpawnedWork,
@@ -987,6 +988,10 @@ function completeWork(
       }
       return null;
     case ContextProvider:
+      if (enableDirectContextPropagation) {
+        workInProgress.memoizedState =
+          workInProgress.type._context._currentReaders;
+      }
       // Pop provider fiber
       popProvider(workInProgress);
       return null;

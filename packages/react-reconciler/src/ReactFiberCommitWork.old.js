@@ -36,6 +36,7 @@ import {
   enableSuspenseCallback,
   enableScopeAPI,
   runAllPassiveEffectDestroysBeforeCreates,
+  enableDirectContextPropagation,
 } from 'shared/ReactFeatureFlags';
 import {
   FunctionComponent,
@@ -83,6 +84,7 @@ import {
 } from './ReactProfilerTimer.old';
 import {ProfileMode} from './ReactTypeOfMode';
 import {commitUpdateQueue} from './ReactUpdateQueue.old';
+import {cleanupReadersOnUnmount} from './ReactFiberNewContext.old';
 import {
   getPublicInstance,
   supportsMutation,
@@ -937,6 +939,9 @@ function commitUnmount(
     case MemoComponent:
     case SimpleMemoComponent:
     case Block: {
+      if (enableDirectContextPropagation) {
+        cleanupReadersOnUnmount(current);
+      }
       const updateQueue: FunctionComponentUpdateQueue | null = (current.updateQueue: any);
       if (updateQueue !== null) {
         const lastEffect = updateQueue.lastEffect;
@@ -1016,6 +1021,9 @@ function commitUnmount(
       return;
     }
     case ClassComponent: {
+      if (enableDirectContextPropagation) {
+        cleanupReadersOnUnmount(current);
+      }
       safelyDetachRef(current);
       const instance = current.stateNode;
       if (typeof instance.componentWillUnmount === 'function') {

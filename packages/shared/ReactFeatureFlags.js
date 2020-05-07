@@ -127,3 +127,6 @@ export const enableModernEventSystem = false;
 
 // Support legacy Primer support on internal FB www
 export const enableLegacyFBSupport = false;
+
+// enable new direct reader context propagation
+export const enableDirectContextPropagation = true;

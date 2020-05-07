@@ -1915,4 +1915,228 @@ Context fuzz tester error! Copy and paste the following line into the test suite
         'a future major release. Did you mean to render <Context.Provider> instead?',
     );
   });
+
+  it('should cleanup properly on unmount', () => {
+    const MyContext = React.createContext(0);
+
+    class Indirection extends React.Component {
+      shouldComponentUpdate() {
+        return false;
+      }
+      render() {
+        return this.props.children;
+      }
+    }
+
+    let externalSetKey;
+
+    function Wrapper() {
+      const [key, setKey] = React.useState('Foo');
+      externalSetKey = setKey;
+      return <Consumer key={key.toUpperCase()} consumerKey={key} />;
+    }
+
+    function Consumer({consumerKey}) {
+      const ctx = React.useContext(MyContext);
+      return <Text text={`${consumerKey} ${ctx}`} />;
+    }
+
+    function App({consumerKey}) {
+      return (
+        <>
+          <MyContext.Provider value={1}>
+            <Indirection>
+              <Wrapper />
+            </Indirection>
+          </MyContext.Provider>
+        </>
+      );
+    }
+
+    ReactNoop.render(<App consumerKey={'Foo'} />);
+    expect(Scheduler).toFlushAndYield(['Foo 1']);
+    expect(ReactNoop.getChildren()).toEqual([span('Foo 1')]);
+
+    ReactNoop.act(() => externalSetKey('foo'));
+    expect(Scheduler).toHaveYielded(['foo 1']);
+    expect(ReactNoop.getChildren()).toEqual([span('foo 1')]);
+
+    ReactNoop.act(() => externalSetKey('FOO'));
+    expect(Scheduler).toHaveYielded(['FOO 1']);
+    expect(ReactNoop.getChildren()).toEqual([span('FOO 1')]);
+
+    ReactNoop.act(() => externalSetKey('Bar'));
+    expect(Scheduler).toHaveYielded(['Bar 1']);
+    expect(ReactNoop.getChildren()).toEqual([span('Bar 1')]);
+
+    ReactNoop.act(() => externalSetKey('bar'));
+    expect(Scheduler).toHaveYielded(['bar 1']);
+    expect(ReactNoop.getChildren()).toEqual([span('bar 1')]);
+
+    ReactNoop.act(() => externalSetKey('BAR'));
+    expect(Scheduler).toHaveYielded(['BAR 1']);
+    expect(ReactNoop.getChildren()).toEqual([span('BAR 1')]);
+  });
+
+  it('should cleanup dangling readers when reads change', () => {
+    const MyContext1 = React.createContext(1);
+    const MyContext2 = React.createContext(2);
+    const MyContext3 = React.createContext(3);
+
+    const names = new Map([
+      [MyContext1, 'MyContext1'],
+      [MyContext2, 'MyContext2'],
+      [MyContext3, 'MyContext3'],
+    ]);
+
+    class Indirection extends React.Component {
+      shouldComponentUpdate() {
+        return false;
+      }
+      render() {
+        return this.props.children;
+      }
+    }
+
+    let externalSetWhichContext;
+    let externalForceUpdate;
+
+    function Wrapper() {
+      const [whichContext, setWhichContext] = React.useState(MyContext1);
+      const [, forceUpdate] = React.useReducer(
+        s => ++s,
+        null,
+        () => 0,
+      );
+      externalSetWhichContext = setWhichContext;
+      externalForceUpdate = forceUpdate;
+      return <Consumer context={whichContext} />;
+    }
+
+    function Consumer({context}) {
+      const ctx = React.useContext(context);
+      return <Text text={`${names.get(context)} ${ctx}`} />;
+    }
+
+    function App() {
+      return (
+        <>
+          <MyContext1.Provider value={1}>
+            <MyContext2.Provider value={2}>
+              <MyContext3.Provider value={3}>
+                <Indirection>
+                  <Wrapper />
+                </Indirection>
+              </MyContext3.Provider>
+            </MyContext2.Provider>
+          </MyContext1.Provider>
+        </>
+      );
+    }
+
+    ReactNoop.render(<App />);
+    expect(Scheduler).toFlushAndYield(['MyContext1 1']);
+    expect(ReactNoop.getChildren()).toEqual([span('MyContext1 1')]);
+
+    ReactNoop.act(() => externalSetWhichContext(MyContext1));
+    expect(Scheduler).toHaveYielded([]);
+    expect(ReactNoop.getChildren()).toEqual([span('MyContext1 1')]);
+
+    ReactNoop.act(() => externalForceUpdate());
+    expect(Scheduler).toHaveYielded(['MyContext1 1']);
+    expect(ReactNoop.getChildren()).toEqual([span('MyContext1 1')]);
+
+    ReactNoop.act(() => externalSetWhichContext(MyContext2));
+    expect(Scheduler).toHaveYielded(['MyContext2 2']);
+    expect(ReactNoop.getChildren()).toEqual([span('MyContext2 2')]);
+
+    ReactNoop.act(() => externalForceUpdate());
+    expect(Scheduler).toHaveYielded(['MyContext2 2']);
+    expect(ReactNoop.getChildren()).toEqual([span('MyContext2 2')]);
+
+    ReactNoop.act(() => externalForceUpdate());
+    expect(Scheduler).toHaveYielded(['MyContext2 2']);
+    expect(ReactNoop.getChildren()).toEqual([span('MyContext2 2')]);
+  });
+
+  it('should cleanup handle increasing and decreasing context reads', () => {
+    const MyContext1 = React.createContext(1);
+    const MyContext2 = React.createContext(2);
+    const MyContext3 = React.createContext(3);
+    const MyContext4 = React.createContext(4);
+    const MyContext5 = React.createContext(5);
+
+    const order1 = [MyContext1, MyContext2, MyContext3, MyContext4, MyContext5];
+    const order2 = [MyContext2, MyContext1, MyContext5, MyContext4, MyContext3];
+    const order3 = [MyContext5, MyContext3, MyContext2, MyContext1, MyContext4];
+
+    class Indirection extends React.Component {
+      shouldComponentUpdate() {
+        return false;
+      }
+      render() {
+        return this.props.children;
+      }
+    }
+
+    let externalSetHowMany;
+    let externalSetOrder;
+    let externalForceUpdate;
+
+    function Wrapper() {
+      const [howMany, setHowMany] = React.useState(0);
+      const [order, setOrder] = React.useState(order1);
+      const [, forceUpdate] = React.useReducer(
+        s => ++s,
+        null,
+        () => 0,
+      );
+      externalSetHowMany = setHowMany;
+      externalSetOrder = setOrder;
+      externalForceUpdate = forceUpdate;
+      return <Consumer howMany={howMany} order={order} />;
+    }
+
+    function Consumer({howMany, order}) {
+      const results = Array.from({length: howMany}, (_, i) => {
+        return readContext(order[i]);
+      });
+      return <Text text={`${results.join('')}`} />;
+    }
+
+    function App() {
+      return (
+        <>
+          <MyContext1.Provider value={1}>
+            <MyContext2.Provider value={2}>
+              <MyContext4.Provider value={4}>
+                <MyContext5.Provider value={5}>
+                  <Indirection>
+                    <Wrapper />
+                  </Indirection>
+                </MyContext5.Provider>
+              </MyContext4.Provider>
+            </MyContext2.Provider>
+          </MyContext1.Provider>
+        </>
+      );
+    }
+
+    ReactNoop.render(<App />);
+    expect(Scheduler).toFlushAndYield(['']);
+    expect(ReactNoop.getChildren()).toEqual([span('')]);
+
+    ReactNoop.act(() => externalSetHowMany(3));
+    ReactNoop.act(() => externalSetHowMany(4));
+    ReactNoop.act(() => externalSetHowMany(2));
+    expect(Scheduler).toHaveYielded(['123', '1234', '12']);
+    expect(ReactNoop.getChildren()).toEqual([span('12')]);
+
+    ReactNoop.act(() => externalSetOrder(order2));
+    ReactNoop.act(() => externalSetOrder(order3));
+    ReactNoop.act(() => externalSetOrder(order1));
+    ReactNoop.act(() => externalForceUpdate());
+    expect(Scheduler).toHaveYielded(['21', '53', '12', '12']);
+    expect(ReactNoop.getChildren()).toEqual([span('12')]);
+  });
 });
