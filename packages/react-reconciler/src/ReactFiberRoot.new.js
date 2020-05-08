@@ -46,11 +46,12 @@ function FiberRootNode(containerInfo, tag, hydrate) {
   this.pingedLanes = NoLanes;
   this.expiredLanes = NoLanes;
   this.mutableReadLanes = NoLanes;
-
   this.finishedLanes = NoLanes;
 
   this.entangledLanes = NoLanes;
   this.entanglements = createLaneMap(NoLanes);
+
+  this.mutableSourceEagerHydrationData = [];
 
   if (enableSchedulerTracing) {
     this.interactionThreadID = unstable_getThreadID();

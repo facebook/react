@@ -13,6 +13,7 @@ import type {LazyComponent as LazyComponentType} from 'react/src/ReactLazy';
 import type {Fiber} from './ReactInternalTypes';
 import type {FiberRoot} from './ReactInternalTypes';
 import type {Lanes, Lane} from './ReactFiberLane';
+import type {MutableSource} from 'shared/ReactTypes';
 import type {
   SuspenseState,
   SuspenseListRenderState,
@@ -193,8 +194,12 @@ import {
   markSkippedUpdateLanes,
   getWorkInProgressRoot,
   pushRenderLanes,
+  getExecutionContext,
+  RetryAfterError,
+  NoContext,
 } from './ReactFiberWorkLoop.new';
 import {unstable_wrap as Schedule_tracing_wrap} from 'scheduler/tracing';
+import {setWorkInProgressVersion} from './ReactMutableSource.new';
 
 import {disableLogs, reenableLogs} from 'shared/ConsolePatchingDev';
 
@@ -1070,6 +1075,16 @@ function updateHostRoot(current, workInProgress, renderLanes) {
     // We always try to hydrate. If this isn't a hydration pass there won't
     // be any children to hydrate which is effectively the same thing as
     // not hydrating.
+
+    const mutableSourceEagerHydrationData =
+      root.mutableSourceEagerHydrationData;
+    for (let i = 0; i < mutableSourceEagerHydrationData.length; i += 2) {
+      const mutableSource = ((mutableSourceEagerHydrationData[
+        i
+      ]: any): MutableSource<any>);
+      const version = mutableSourceEagerHydrationData[i + 1];
+      setWorkInProgressVersion(mutableSource, version);
+    }
 
     const child = mountChildFibers(
       workInProgress,
@@ -2252,6 +2267,14 @@ function updateDehydratedSuspenseComponent(
   // We should never be hydrating at this point because it is the first pass,
   // but after we've already committed once.
   warnIfHydrating();
+
+  if ((getExecutionContext() & RetryAfterError) !== NoContext) {
+    return retrySuspenseComponentWithoutHydrating(
+      current,
+      workInProgress,
+      renderLanes,
+    );
+  }
 
   if ((workInProgress.mode & BlockingMode) === NoMode) {
     return retrySuspenseComponentWithoutHydrating(

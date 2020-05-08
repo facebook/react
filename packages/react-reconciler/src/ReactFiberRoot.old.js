@@ -45,6 +45,7 @@ function FiberRootNode(containerInfo, tag, hydrate) {
   this.lastPingedTime = NoWork;
   this.lastExpiredTime = NoWork;
   this.mutableSourceLastPendingUpdateTime = NoWork;
+  this.mutableSourceEagerHydrationData = [];
 
   if (enableSchedulerTracing) {
     this.interactionThreadID = unstable_getThreadID();

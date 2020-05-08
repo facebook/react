@@ -10,6 +10,14 @@ jest.mock('react-reconciler/src/ReactFiberReconciler', () => {
   );
 });
 
+jest.mock('react-reconciler/src/ReactMutableSource', () => {
+  return require.requireActual(
+    __VARIANT__
+      ? 'react-reconciler/src/ReactMutableSource.new'
+      : 'react-reconciler/src/ReactMutableSource.old'
+  );
+});
+
 // When testing the custom renderer code path through `react-reconciler`,
 // turn the export into a function, and use the argument as host config.
 const shimHostConfigPath = 'react-reconciler/src/ReactFiberHostConfig';

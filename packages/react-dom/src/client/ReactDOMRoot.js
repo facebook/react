@@ -9,9 +9,8 @@
 
 import type {Container} from './ReactDOMHostConfig';
 import type {RootTag} from 'react-reconciler/src/ReactRootTags';
-import type {ReactNodeList} from 'shared/ReactTypes';
+import type {MutableSource, ReactNodeList} from 'shared/ReactTypes';
 import type {FiberRoot} from 'react-reconciler/src/ReactInternalTypes';
-import {findHostInstanceWithNoPortals} from 'react-reconciler/src/ReactFiberReconciler';
 
 export type RootType = {
   render(children: ReactNodeList): void,
@@ -30,6 +29,8 @@ export type RootOptions = {
   ...
 };
 
+import {findHostInstanceWithNoPortals} from 'react-reconciler/src/ReactFiberReconciler';
+import {registerMutableSourceForHydration} from 'react-reconciler/src/ReactMutableSource';
 import {
   isContainerMarkedAsRoot,
   markContainerAsRoot,
@@ -113,6 +114,13 @@ ReactDOMRoot.prototype.unmount = ReactDOMBlockingRoot.prototype.unmount = functi
   updateContainer(null, root, null, () => {
     unmarkContainerAsRoot(container);
   });
+};
+
+ReactDOMRoot.prototype.registerMutableSourceForHydration = ReactDOMBlockingRoot.prototype.registerMutableSourceForHydration = function(
+  mutableSource: MutableSource<any>,
+): void {
+  const root = this._internalRoot;
+  registerMutableSourceForHydration(root, mutableSource);
 };
 
 function createRootImpl(
