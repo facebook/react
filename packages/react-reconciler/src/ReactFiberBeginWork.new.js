@@ -112,6 +112,7 @@ import {
   SyncLane,
   OffscreenLane,
   DefaultHydrationLane,
+  NoTimestamp,
   includesSomeLane,
   laneToLanes,
   removeLanes,
@@ -2301,11 +2302,8 @@ function updateDehydratedSuspenseComponent(
         // is one of the very rare times where we mutate the current tree
         // during the render phase.
         suspenseState.retryLane = attemptHydrationAtLane;
-        // TODO: The event time is used to prevent starvation if a lane takes
-        // too long to finish rendering. Ideally this would be the time at which
-        // we started rendering. For spawned work, it's not a big deal, though,
-        // because eventually the original update will expire.
-        const eventTime = -1;
+        // TODO: Ideally this would inherit the event time of the current render
+        const eventTime = NoTimestamp;
         scheduleUpdateOnFiber(current, attemptHydrationAtLane, eventTime);
       } else {
         // We have already tried to ping at a higher priority than we're rendering with

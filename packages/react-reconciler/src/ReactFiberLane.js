@@ -368,6 +368,21 @@ export function getNextLanes(root: FiberRoot, wipLanes: Lanes): Lanes {
   return nextLanes;
 }
 
+function computeExpirationTime(lane: Lane, currentTime: number) {
+  // TODO: Expiration heuristic is constant per lane, so could use a map.
+  getHighestPriorityLanes(lane);
+  const priority = return_highestLanePriority;
+  if (priority >= InputContinuousLanePriority) {
+    // User interactions should expire slightly more quickly.
+    return currentTime + 1000;
+  } else if (priority >= TransitionLongLanePriority) {
+    return currentTime + 5000;
+  } else {
+    // Anything idle priority or lower should never expire.
+    return NoTimestamp;
+  }
+}
+
 export function markStarvedLanesAsExpired(
   root: FiberRoot,
   currentTime: number,
@@ -377,31 +392,33 @@ export function markStarvedLanesAsExpired(
   // of this function.
 
   const pendingLanes = root.pendingLanes;
-  const eventTimes = root.eventTimes;
+  const suspendedLanes = root.suspendedLanes;
+  const pingedLanes = root.pingedLanes;
+  const expirationTimes = root.expirationTimes;
 
-  // Iterate through the pending lanes and check how long they've been CPU
-  // bound. After a certain amount of time, we'll assume the update is being
-  // starved and mark it as expired to force it to finish.
+  // Iterate through the pending lanes and check if we've reached their
+  // expiration time. If so, we'll assume the update is being starved and mark
+  // it as expired to force it to finish.
   let lanes = pendingLanes;
   while (lanes > 0) {
     const index = ctrz(lanes);
     const lane = 1 << index;
 
-    const eventTime = eventTimes[index];
-    if (eventTime !== NoTimestamp) {
-      getHighestPriorityLanes(lanes);
-      const priority = return_highestLanePriority;
-      if (priority <= IdleHydrationLanePriority) {
-        // Anything idle priority or lower should never expire.
-      } else {
-        // User interactions should expire slightly more quickly.
-        const expirationHeuristic =
-          priority >= InputContinuousLanePriority ? 1000 : 5000;
-        if (eventTime + expirationHeuristic <= currentTime) {
-          // This lane expired
-          root.expiredLanes |= lane;
-        }
+    const expirationTime = expirationTimes[index];
+    if (expirationTime === NoTimestamp) {
+      // Found a pending lane with no expiration time. If it's not suspended, or
+      // if it's pinged, assume it's CPU-bound. Compute a new expiration time
+      // using the current time.
+      if (
+        (lane & suspendedLanes) === NoLanes ||
+        (lane & pingedLanes) !== NoLanes
+      ) {
+        // Assumes timestamps are monotonically increasing.
+        expirationTimes[index] = computeExpirationTime(lane, currentTime);
       }
+    } else if (expirationTime <= currentTime) {
+      // This lane expired
+      root.expiredLanes |= lane;
     }
 
     lanes &= ~lane;
@@ -602,11 +619,7 @@ export function createLaneMap<T>(initial: T): LaneMap<T> {
   return new Array(TotalLanes).fill(initial);
 }
 
-export function markRootUpdated(
-  root: FiberRoot,
-  updateLane: Lane,
-  eventTime: number,
-) {
+export function markRootUpdated(root: FiberRoot, updateLane: Lane) {
   root.pendingLanes |= updateLane;
 
   // TODO: Theoretically, any update to any lane can unblock any other lane. But
@@ -621,43 +634,25 @@ export function markRootUpdated(
 
   // Unsuspend any update at equal or lower priority.
   const higherPriorityLanes = updateLane - 1; // Turns 0b1000 into 0b0111
-  const equalOrLowerPriorityLanes = ~higherPriorityLanes;
-
-  // We use this below to mark the event time
-  const unsuspendedLanes = equalOrLowerPriorityLanes & root.suspendedLanes;
 
   root.suspendedLanes &= higherPriorityLanes;
   root.pingedLanes &= higherPriorityLanes;
-
-  if (eventTime !== NoTimestamp) {
-    const eventTimes = root.eventTimes;
-    let lanes = updateLane | unsuspendedLanes;
-    while (lanes > 0) {
-      const index = ctrz(lanes);
-
-      // Assumes event times are monotonically increasing. First one wins.
-      if (eventTimes[index] === NoTimestamp) {
-        eventTimes[index] = eventTime;
-      }
-
-      lanes &= ~(1 << index);
-    }
-  }
 }
 
 export function markRootSuspended(root: FiberRoot, suspendedLanes: Lanes) {
   root.suspendedLanes |= suspendedLanes;
   root.pingedLanes &= ~suspendedLanes;
 
-  // The suspended lanes are no longer CPU-bound. Clear their event times.
-  const eventTimes = root.eventTimes;
+  // The suspended lanes are no longer CPU-bound. Clear their expiration times.
+  const expirationTimes = root.expirationTimes;
   let lanes = suspendedLanes;
   while (lanes > 0) {
     const index = ctrz(lanes);
+    const lane = 1 << index;
 
-    eventTimes[index] = NoTimestamp;
+    expirationTimes[index] = NoTimestamp;
 
-    lanes &= ~(1 << index);
+    lanes &= ~lane;
   }
 }
 
@@ -667,23 +662,6 @@ export function markRootPinged(
   eventTime: number,
 ) {
   root.pingedLanes |= root.suspendedLanes & pingedLanes;
-
-  if (eventTime !== -1) {
-    // Pinged lanes are no longer IO-bound. Set a new event time again to
-    // prevent CPU starvation.
-    const eventTimes = root.eventTimes;
-    let lanes = pingedLanes;
-    while (lanes > 0) {
-      const index = ctrz(lanes);
-
-      // Assumes event times are monotonically increasing. Last one wins.
-      if (eventTimes[index] === -1) {
-        eventTimes[index] = eventTime;
-      }
-
-      lanes &= ~(1 << index);
-    }
-  }
 }
 
 export function markRootExpired(root: FiberRoot, expiredLanes: Lanes) {
@@ -714,15 +692,16 @@ export function markRootFinished(root: FiberRoot, remainingLanes: Lanes) {
   root.expiredLanes &= remainingLanes;
   root.mutableReadLanes &= remainingLanes;
 
-  const eventTimes = root.eventTimes;
+  const expirationTimes = root.expirationTimes;
   let lanes = noLongerPendingLanes;
   while (lanes > 0) {
     const index = ctrz(lanes);
+    const lane = 1 << index;
 
-    // Clear the event time
-    eventTimes[index] = -1;
+    // Clear the expiration time
+    expirationTimes[index] = -1;
 
-    lanes &= ~(1 << index);
+    lanes &= ~lane;
   }
 }
 

@@ -445,7 +445,7 @@ export function scheduleUpdateOnFiber(
   checkForNestedUpdates();
   warnAboutRenderPhaseUpdatesInDEV(fiber);
 
-  const root = markUpdateLaneFromFiberToRoot(fiber, lane, eventTime);
+  const root = markUpdateLaneFromFiberToRoot(fiber, lane);
   if (root === null) {
     warnAboutUpdateOnUnmountedFiberInDEV(fiber);
     return null;
@@ -518,7 +518,6 @@ export function scheduleUpdateOnFiber(
 function markUpdateLaneFromFiberToRoot(
   fiber: Fiber,
   lane: Lane,
-  eventTime: number,
 ): FiberRoot | null {
   // Update the source fiber's lanes
   fiber.lanes = mergeLanes(fiber.lanes, lane);
@@ -564,7 +563,7 @@ function markUpdateLaneFromFiberToRoot(
 
   if (root !== null) {
     // Mark that the root has a pending update.
-    markRootUpdated(root, lane, eventTime);
+    markRootUpdated(root, lane);
     if (workInProgressRoot === root) {
       // Received an update to a tree that's in the middle of rendering. Mark
       // that there was an interleaved update work on this root. Unless the
@@ -2496,11 +2495,7 @@ function captureCommitPhaseErrorOnRoot(
   const update = createRootErrorUpdate(rootFiber, errorInfo, (SyncLane: Lane));
   enqueueUpdate(rootFiber, update);
   const eventTime = requestEventTime();
-  const root = markUpdateLaneFromFiberToRoot(
-    rootFiber,
-    (SyncLane: Lane),
-    eventTime,
-  );
+  const root = markUpdateLaneFromFiberToRoot(rootFiber, (SyncLane: Lane));
   if (root !== null) {
     ensureRootIsScheduled(root, eventTime);
     schedulePendingInteractions(root, SyncLane);
@@ -2536,11 +2531,7 @@ export function captureCommitPhaseError(sourceFiber: Fiber, error: mixed) {
         );
         enqueueUpdate(fiber, update);
         const eventTime = requestEventTime();
-        const root = markUpdateLaneFromFiberToRoot(
-          fiber,
-          (SyncLane: Lane),
-          eventTime,
-        );
+        const root = markUpdateLaneFromFiberToRoot(fiber, (SyncLane: Lane));
         if (root !== null) {
           ensureRootIsScheduled(root, eventTime);
           schedulePendingInteractions(root, SyncLane);
@@ -2619,11 +2610,7 @@ function retryTimedOutBoundary(boundaryFiber: Fiber, retryLane: Lane) {
   }
   // TODO: Special case idle priority?
   const eventTime = requestEventTime();
-  const root = markUpdateLaneFromFiberToRoot(
-    boundaryFiber,
-    retryLane,
-    eventTime,
-  );
+  const root = markUpdateLaneFromFiberToRoot(boundaryFiber, retryLane);
   if (root !== null) {
     ensureRootIsScheduled(root, eventTime);
     schedulePendingInteractions(root, retryLane);
