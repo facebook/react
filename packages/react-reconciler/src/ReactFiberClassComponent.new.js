@@ -202,7 +202,7 @@ const classComponentUpdater = {
     }
 
     enqueueUpdate(fiber, update);
-    scheduleUpdateOnFiber(fiber, lane);
+    scheduleUpdateOnFiber(fiber, lane, eventTime);
   },
   enqueueReplaceState(inst, payload, callback) {
     const fiber = getInstance(inst);
@@ -222,7 +222,7 @@ const classComponentUpdater = {
     }
 
     enqueueUpdate(fiber, update);
-    scheduleUpdateOnFiber(fiber, lane);
+    scheduleUpdateOnFiber(fiber, lane, eventTime);
   },
   enqueueForceUpdate(inst, callback) {
     const fiber = getInstance(inst);
@@ -241,7 +241,7 @@ const classComponentUpdater = {
     }
 
     enqueueUpdate(fiber, update);
-    scheduleUpdateOnFiber(fiber, lane);
+    scheduleUpdateOnFiber(fiber, lane, eventTime);
   },
 };
 

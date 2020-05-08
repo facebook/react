@@ -620,7 +620,7 @@ function ensureRootIsScheduled(root: FiberRoot) {
   if (lastExpiredTime !== NoWork) {
     // Special case: Expired work should flush synchronously.
     root.callbackExpirationTime = Sync;
-    root.callbackPriority = ImmediatePriority;
+    root.callbackPriority_old = ImmediatePriority;
     root.callbackNode = scheduleSyncCallback(
       performSyncWorkOnRoot.bind(null, root),
     );
@@ -634,7 +634,7 @@ function ensureRootIsScheduled(root: FiberRoot) {
     if (existingCallbackNode !== null) {
       root.callbackNode = null;
       root.callbackExpirationTime = NoWork;
-      root.callbackPriority = NoPriority;
+      root.callbackPriority_old = NoPriority;
     }
     return;
   }
@@ -650,7 +650,7 @@ function ensureRootIsScheduled(root: FiberRoot) {
   // If there's an existing render task, confirm it has the correct priority and
   // expiration time. Otherwise, we'll cancel it and schedule a new one.
   if (existingCallbackNode !== null) {
-    const existingCallbackPriority = root.callbackPriority;
+    const existingCallbackPriority = root.callbackPriority_old;
     const existingCallbackExpirationTime = root.callbackExpirationTime;
     if (
       // Callback must have the exact same expiration time.
@@ -668,7 +668,7 @@ function ensureRootIsScheduled(root: FiberRoot) {
   }
 
   root.callbackExpirationTime = expirationTime;
-  root.callbackPriority = priorityLevel;
+  root.callbackPriority_old = priorityLevel;
 
   let callbackNode;
   if (expirationTime === Sync) {
@@ -1878,7 +1878,7 @@ function commitRootImpl(root, renderPriorityLevel) {
   // So we can clear these now to allow a new callback to be scheduled.
   root.callbackNode = null;
   root.callbackExpirationTime = NoWork;
-  root.callbackPriority = NoPriority;
+  root.callbackPriority_old = NoPriority;
 
   // Update the first and last pending times on this root. The new first
   // pending time is whatever is left on the root fiber.

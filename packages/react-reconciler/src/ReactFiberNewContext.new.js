@@ -22,6 +22,7 @@ import {
 } from './ReactWorkTags';
 import {
   NoLanes,
+  NoTimestamp,
   isSubsetOfLanes,
   includesSomeLane,
   mergeLanes,
@@ -209,7 +210,7 @@ export function propagateContextChange(
           if (fiber.tag === ClassComponent) {
             // Schedule a force update on the work-in-progress.
             const update = createUpdate(
-              -1,
+              NoTimestamp,
               pickArbitraryLane(renderLanes),
               null,
             );

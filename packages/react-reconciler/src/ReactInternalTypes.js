@@ -23,7 +23,7 @@ import type {WorkTag} from './ReactWorkTags';
 import type {TypeOfMode} from './ReactTypeOfMode';
 import type {SideEffectTag} from './ReactSideEffectTags';
 import type {ExpirationTime} from './ReactFiberExpirationTime.old';
-import type {Lane, Lanes} from './ReactFiberLane';
+import type {Lane, LanePriority, Lanes, LaneMap} from './ReactFiberLane';
 import type {HookType} from './ReactFiberHooks.old';
 import type {RootTag} from './ReactRootTags';
 import type {TimeoutHandle, NoTimeout} from './ReactFiberHostConfig';
@@ -226,7 +226,7 @@ type BaseFiberRootProperties = {|
   // Expiration of the callback associated with this root
   callbackExpirationTime: ExpirationTime,
   // Priority of the callback associated with this root
-  callbackPriority: ReactPriorityLevel,
+  callbackPriority_old: ReactPriorityLevel,
 
   finishedExpirationTime: ExpirationTime,
   // The earliest pending expiration time that exists in the tree
@@ -252,17 +252,8 @@ type BaseFiberRootProperties = {|
   // Represents the next task that the root should work on, or the current one
   // if it's already working.
   callbackId: Lanes,
-  // Whether the currently scheduled task for this root is synchronous or
-  // batched/concurrent. We have to track this because Scheduler does not
-  // support synchronous tasks, so we put those on a separate queue. So you
-  // could also think of this as "which queue is the callback scheduled with?"
-  callbackIsSync: boolean,
-  // Timestamp at which we will synchronously finish the current task to
-  // prevent starvation.
-  // TODO: There should be a separate expiration per lane.
-  // NOTE: This is not an "ExpirationTime" as used by the old reconciler. It's a
-  // timestamp, in milliseconds.
-  expiresAt: number,
+  callbackPriority_new: LanePriority,
+  expirationTimes: LaneMap<number>,
 
   pendingLanes: Lanes,
   suspendedLanes: Lanes,
