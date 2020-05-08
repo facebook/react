@@ -8,7 +8,7 @@
  */
 
 import * as React from 'react';
-import {useCallback, useEffect, useMemo, useRef, useState} from 'react';
+import {useEffect, useMemo, useRef, useState} from 'react';
 import AutoSizer from 'react-virtualized-auto-sizer';
 import {FixedSizeList} from 'react-window';
 import SnapshotCommitListItem from './SnapshotCommitListItem';
@@ -20,11 +20,11 @@ export type ItemData = {|
   commitDurations: Array<number>,
   commitTimes: Array<number>,
   filteredCommitIndices: Array<number>,
-  isMouseDown: boolean,
   maxDuration: number,
   selectedCommitIndex: number | null,
   selectedFilteredCommitIndex: number | null,
   selectCommitIndex: (index: number) => void,
+  startCommitDrag: (newDragState: DragState) => void,
 |};
 
 type Props = {|
@@ -73,6 +73,12 @@ type ListProps = {|
   width: number,
 |};
 
+type DragState = {
+  commitIndex: number,
+  left: number,
+  sizeIncrement: number,
+};
+
 function List({
   commitDurations,
   selectedCommitIndex,
@@ -97,28 +103,6 @@ function List({
     }
   }, [listRef, selectedFilteredCommitIndex]);
 
-  // When the mouse is down, dragging over a commit should auto-select it.
-  // This provides a nice way for users to swipe across a range of commits to compare them.
-  const [isMouseDown, setIsMouseDown] = useState(false);
-  const handleMouseDown = useCallback(() => {
-    setIsMouseDown(true);
-  }, []);
-  const handleMouseUp = useCallback(() => {
-    setIsMouseDown(false);
-  }, []);
-  useEffect(() => {
-    if (divRef.current === null) {
-      return () => {};
-    }
-
-    // It's important to listen to the ownerDocument to support the browser extension.
-    // Here we use portals to render individual tabs (e.g. Profiler),
-    // and the root document might belong to a different window.
-    const ownerDocument = divRef.current.ownerDocument;
-    ownerDocument.addEventListener('mouseup', handleMouseUp);
-    return () => ownerDocument.removeEventListener('mouseup', handleMouseUp);
-  }, [divRef, handleMouseUp]);
-
   const itemSize = useMemo(
     () => Math.max(minBarWidth, width / filteredCommitIndices.length),
     [filteredCommitIndices, width],
@@ -128,23 +112,76 @@ function List({
     [commitDurations],
   );
 
+  const maxCommitIndex = filteredCommitIndices.length - 1;
+
+  const [dragState, setDragState] = useState<DragState | null>(null);
+
+  const handleDragCommit = ({buttons, pageX}: any) => {
+    if (buttons === 0) {
+      setDragState(null);
+      return;
+    }
+
+    if (dragState !== null) {
+      const {commitIndex, left, sizeIncrement} = dragState;
+
+      let newCommitIndex = commitIndex;
+      let newCommitLeft = left;
+
+      if (pageX < newCommitLeft) {
+        while (pageX < newCommitLeft) {
+          newCommitLeft -= sizeIncrement;
+          newCommitIndex -= 1;
+        }
+      } else {
+        let newCommitRectRight = newCommitLeft + sizeIncrement;
+        while (pageX > newCommitRectRight) {
+          newCommitRectRight += sizeIncrement;
+          newCommitIndex += 1;
+        }
+      }
+
+      if (newCommitIndex < 0) {
+        newCommitIndex = 0;
+      } else if (newCommitIndex > maxCommitIndex) {
+        newCommitIndex = maxCommitIndex;
+      }
+
+      selectCommitIndex(newCommitIndex);
+    }
+  };
+
+  useEffect(() => {
+    if (dragState === null) {
+      return;
+    }
+
+    const element = divRef.current;
+    if (element !== null) {
+      const ownerDocument = element.ownerDocument;
+      ownerDocument.addEventListener('mousemove', handleDragCommit);
+      return () => {
+        ownerDocument.removeEventListener('mousemove', handleDragCommit);
+      };
+    }
+  }, [dragState]);
+
   // Pass required contextual data down to the ListItem renderer.
   const itemData = useMemo<ItemData>(
     () => ({
       commitDurations,
       commitTimes,
       filteredCommitIndices,
-      isMouseDown,
       maxDuration,
       selectedCommitIndex,
       selectedFilteredCommitIndex,
       selectCommitIndex,
+      startCommitDrag: setDragState,
     }),
     [
       commitDurations,
       commitTimes,
       filteredCommitIndices,
-      isMouseDown,
       maxDuration,
       selectedCommitIndex,
       selectedFilteredCommitIndex,
@@ -153,11 +190,7 @@ function List({
   );
 
   return (
-    <div
-      onMouseDown={handleMouseDown}
-      onMouseUp={handleMouseUp}
-      ref={divRef}
-      style={{height, width}}>
+    <div ref={divRef} style={{height, width}}>
       <FixedSizeList
         className={styles.List}
         layout="horizontal"
