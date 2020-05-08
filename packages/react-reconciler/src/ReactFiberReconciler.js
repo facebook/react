@@ -49,6 +49,7 @@ import {
   findBoundingRects as findBoundingRects_old,
   focusWithin as focusWithin_old,
   observeVisibleRects as observeVisibleRects_old,
+  registerMutableSourceForHydration as registerMutableSourceForHydration_old,
 } from './ReactFiberReconciler.old';
 
 import {
@@ -86,6 +87,7 @@ import {
   findBoundingRects as findBoundingRects_new,
   focusWithin as focusWithin_new,
   observeVisibleRects as observeVisibleRects_new,
+  registerMutableSourceForHydration as registerMutableSourceForHydration_new,
 } from './ReactFiberReconciler.new';
 
 export const createContainer = enableNewReconciler
@@ -186,3 +188,7 @@ export const focusWithin = enableNewReconciler
 export const observeVisibleRects = enableNewReconciler
   ? observeVisibleRects_new
   : observeVisibleRects_old;
+
+export const registerMutableSourceForHydration = enableNewReconciler
+  ? registerMutableSourceForHydration_new
+  : registerMutableSourceForHydration_old;

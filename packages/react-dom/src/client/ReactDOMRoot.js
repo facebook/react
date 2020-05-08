@@ -29,8 +29,6 @@ export type RootOptions = {
   ...
 };
 
-import {findHostInstanceWithNoPortals} from 'react-reconciler/src/ReactFiberReconciler';
-import {registerMutableSourceForHydration} from 'react-reconciler/src/ReactMutableSource';
 import {
   isContainerMarkedAsRoot,
   markContainerAsRoot,
@@ -48,6 +46,8 @@ import {ensureListeningTo} from './ReactDOMComponent';
 import {
   createContainer,
   updateContainer,
+  findHostInstanceWithNoPortals,
+  registerMutableSourceForHydration,
 } from 'react-reconciler/src/ReactFiberReconciler';
 import invariant from 'shared/invariant';
 import {
