@@ -1032,6 +1032,162 @@ describe('ReactDOMServerHooks', () => {
         );
       });
 
+      it('useOpaqueIdentifier identifierPrefix works for server renderer and does not clash', async () => {
+        function ChildTwo({id}) {
+          return <div id={id}>Child Three</div>;
+        }
+        function App() {
+          const id = useOpaqueIdentifier();
+          const idTwo = useOpaqueIdentifier();
+
+          return (
+            <div>
+              <div aria-labelledby={id}>Chid One</div>
+              <ChildTwo id={id} />
+              <div aria-labelledby={idTwo}>Child Three</div>
+              <div id={idTwo}>Child Four</div>
+            </div>
+          );
+        }
+
+        const containerOne = document.createElement('div');
+        document.body.append(containerOne);
+
+        containerOne.innerHTML = ReactDOMServer.renderToString(<App />, {
+          identifierPrefix: 'one',
+        });
+
+        const containerTwo = document.createElement('div');
+        document.body.append(containerTwo);
+
+        containerTwo.innerHTML = ReactDOMServer.renderToString(<App />, {
+          identifierPrefix: 'two',
+        });
+
+        expect(document.body.children.length).toEqual(2);
+        const childOne = document.body.children[0];
+        const childTwo = document.body.children[1];
+
+        expect(
+          childOne.children[0].children[0].getAttribute('aria-labelledby'),
+        ).toEqual(childOne.children[0].children[1].getAttribute('id'));
+        expect(
+          childOne.children[0].children[2].getAttribute('aria-labelledby'),
+        ).toEqual(childOne.children[0].children[3].getAttribute('id'));
+
+        expect(
+          childOne.children[0].children[0].getAttribute('aria-labelledby'),
+        ).not.toEqual(
+          childOne.children[0].children[2].getAttribute('aria-labelledby'),
+        );
+
+        expect(
+          childOne.children[0].children[0]
+            .getAttribute('aria-labelledby')
+            .startsWith('one'),
+        ).toBe(true);
+        expect(
+          childOne.children[0].children[2]
+            .getAttribute('aria-labelledby')
+            .includes('one'),
+        ).toBe(true);
+
+        expect(
+          childTwo.children[0].children[0].getAttribute('aria-labelledby'),
+        ).toEqual(childTwo.children[0].children[1].getAttribute('id'));
+        expect(
+          childTwo.children[0].children[2].getAttribute('aria-labelledby'),
+        ).toEqual(childTwo.children[0].children[3].getAttribute('id'));
+
+        expect(
+          childTwo.children[0].children[0].getAttribute('aria-labelledby'),
+        ).not.toEqual(
+          childTwo.children[0].children[2].getAttribute('aria-labelledby'),
+        );
+
+        expect(
+          childTwo.children[0].children[0]
+            .getAttribute('aria-labelledby')
+            .startsWith('two'),
+        ).toBe(true);
+        expect(
+          childTwo.children[0].children[2]
+            .getAttribute('aria-labelledby')
+            .startsWith('two'),
+        ).toBe(true);
+      });
+
+      it('useOpaqueIdentifier identifierPrefix works for multiple reads on a streaming server renderer', async () => {
+        function ChildTwo() {
+          const id = useOpaqueIdentifier();
+
+          return <div id={id}>Child Two</div>;
+        }
+
+        function App() {
+          const id = useOpaqueIdentifier();
+
+          return (
+            <>
+              <div id={id}>Child One</div>
+              <ChildTwo />
+              <div aria-labelledby={id}>Aria One</div>
+            </>
+          );
+        }
+
+        const container = document.createElement('div');
+        document.body.append(container);
+
+        const streamOne = ReactDOMServer.renderToNodeStream(<App />, {
+          identifierPrefix: 'one',
+        }).setEncoding('utf8');
+        const streamTwo = ReactDOMServer.renderToNodeStream(<App />, {
+          identifierPrefix: 'two',
+        }).setEncoding('utf8');
+
+        const containerOne = document.createElement('div');
+        const containerTwo = document.createElement('div');
+
+        streamOne._read(10);
+        streamTwo._read(10);
+
+        containerOne.innerHTML = streamOne.read();
+        containerTwo.innerHTML = streamTwo.read();
+
+        expect(containerOne.children[0].getAttribute('id')).not.toEqual(
+          containerOne.children[1].getAttribute('id'),
+        );
+        expect(containerTwo.children[0].getAttribute('id')).not.toEqual(
+          containerTwo.children[1].getAttribute('id'),
+        );
+        expect(containerOne.children[0].getAttribute('id')).not.toEqual(
+          containerTwo.children[0].getAttribute('id'),
+        );
+        expect(
+          containerOne.children[0].getAttribute('id').includes('one'),
+        ).toBe(true);
+        expect(
+          containerOne.children[1].getAttribute('id').includes('one'),
+        ).toBe(true);
+        expect(
+          containerTwo.children[0].getAttribute('id').includes('two'),
+        ).toBe(true);
+        expect(
+          containerTwo.children[1].getAttribute('id').includes('two'),
+        ).toBe(true);
+
+        expect(containerOne.children[1].getAttribute('id')).not.toEqual(
+          containerTwo.children[1].getAttribute('id'),
+        );
+        expect(containerOne.children[0].getAttribute('id')).toEqual(
+          containerOne.children[2].getAttribute('aria-labelledby'),
+        );
+        expect(containerTwo.children[0].getAttribute('id')).toEqual(
+          containerTwo.children[2].getAttribute('aria-labelledby'),
+        );
+      });
+
       it('useOpaqueIdentifier: IDs match when, after hydration, a new component that uses the ID is rendered', async () => {
         let _setShowDiv;
         function App() {

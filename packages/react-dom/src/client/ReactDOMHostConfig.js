@@ -1102,11 +1102,6 @@ export function makeClientIdInDEV(warnOnAccessInDEV: () => void): OpaqueIDType {
   };
 }
 
-let serverId: number = 0;
-export function makeServerId(): OpaqueIDType {
-  return 'R:' + (serverId++).toString(36);
-}
-
 export function isOpaqueHydratingObject(value: mixed): boolean {
   return (
     value !== null &&

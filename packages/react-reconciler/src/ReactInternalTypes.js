@@ -29,7 +29,6 @@ import type {RootTag} from './ReactRootTags';
 import type {TimeoutHandle, NoTimeout} from './ReactFiberHostConfig';
 import type {Wakeable} from 'shared/ReactTypes';
 import type {Interaction} from 'scheduler/src/Tracing';
-import type {OpaqueIDType} from 'react-reconciler/src/ReactFiberHostConfig';
 import type {SuspenseConfig, TimeoutConfig} from './ReactFiberSuspenseConfig';
 
 export type ReactPriorityLevel = 99 | 98 | 97 | 96 | 95 | 90;
@@ -356,5 +355,5 @@ export type Dispatcher = {|
     getSnapshot: MutableSourceGetSnapshotFn<Source, Snapshot>,
     subscribe: MutableSourceSubscribeFn<Source, Snapshot>,
   ): Snapshot,
-  useOpaqueIdentifier(): OpaqueIDType | void,
+  useOpaqueIdentifier(): any,
 |};
