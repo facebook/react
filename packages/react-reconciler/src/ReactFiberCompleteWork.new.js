@@ -1098,7 +1098,8 @@ function completeWork(
             if (
               renderState.tail === null &&
               renderState.tailMode === 'hidden' &&
-              !renderedTail.alternate
+              !renderedTail.alternate &&
+              !getIsHydrating() // We don't cut it if we're hydrating.
             ) {
               // We need to delete the row we just rendered.
               // Reset the effect list to what it was before we rendered this

@@ -1699,7 +1699,7 @@ describe('ReactDOMServerPartialHydration', () => {
   });
 
   // @gate experimental
-  it('clears server boundaries when SuspenseList does a second pass', async () => {
+  it('clears server boundaries when SuspenseList runs out of time hydrating', async () => {
     let suspend = false;
     let resolve;
     const promise = new Promise(resolvePromise => (resolve = resolvePromise));
@@ -1789,6 +1789,63 @@ describe('ReactDOMServerPartialHydration', () => {
 
     expect(container.textContent).toBe('AB');
     expect(ref.current).toBe(b);
+  });
+
+  // @gate experimental
+  it('clears server boundaries when SuspenseList suspends last row hydrating', async () => {
+    let suspend = false;
+    let resolve;
+    const promise = new Promise(resolvePromise => (resolve = resolvePromise));
+
+    function Child({children}) {
+      if (suspend) {
+        throw promise;
+      } else {
+        return children;
+      }
+    }
+
+    function App() {
+      return (
+        <Suspense fallback={null}>
+          <SuspenseList revealOrder="forwards" tail="hidden">
+            <Suspense fallback="Loading A">
+              <span>A</span>
+            </Suspense>
+            <Suspense fallback="Loading B">
+              <Child>
+                <span>B</span>
+              </Child>
+            </Suspense>
+          </SuspenseList>
+        </Suspense>
+      );
+    }
+
+    suspend = true;
+    const html = ReactDOMServer.renderToString(<App />);
+
+    const container = document.createElement('div');
+    container.innerHTML = html;
+
+    const root = ReactDOM.createRoot(container, {hydrate: true});
+
+    suspend = true;
+
+    await act(async () => {
+      root.render(<App />);
+    });
+
+    // We haven't hydrated the second child but the placeholder is still in the list.
+    expect(container.textContent).toBe('ALoading B');
+
+    suspend = false;
+    await act(async () => {
+      // Resolve the boundary to be in its resolved final state.
+      await resolve();
+    });
+
+    expect(container.textContent).toBe('AB');
   });
 
   // @gate experimental
