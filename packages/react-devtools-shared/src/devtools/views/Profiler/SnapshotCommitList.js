@@ -24,13 +24,7 @@ export type ItemData = {|
   selectedCommitIndex: number | null,
   selectedFilteredCommitIndex: number | null,
   selectCommitIndex: (index: number) => void,
-  startCommitDrag: (newDragStartCommit: DragStartCommit) => void,
-|};
-
-type State = {|
-  dragCommitStarted: boolean,
-  dragStartCommit: DragStartCommit | null,
-  modifiedIframes: Map<HTMLElement, string> | null,
+  startCommitDrag: (newDragState: DragState) => void,
 |};
 
 type Props = {|
@@ -79,10 +73,10 @@ type ListProps = {|
   width: number,
 |};
 
-type DragStartCommit = {
-  dragStartCommitIndex: number,
-  rectLeft: number,
-  width: number,
+type DragState = {
+  commitIndex: number,
+  left: number,
+  sizeIncrement: number,
 };
 
 function List({
@@ -120,75 +114,48 @@ function List({
 
   const maxCommitIndex = filteredCommitIndices.length - 1;
 
-  const [state, setState] = useState<State>({
-    dragCommitStarted: false,
-    dragStartCommit: null,
-    modifiedIframes: null,
-  });
+  const [dragState, setDragState] = useState<DragState | null>(null);
 
-  const startCommitDrag = (newDragStartCommit: DragStartCommit) => {
-    const element = divRef.current;
-    if (element !== null) {
-      const iframes = element.ownerDocument.querySelectorAll('iframe');
-      if (iframes.length > 0) {
-        const modifiedIframesMap = new Map();
-        for (let i = 0; i < iframes.length; i++) {
-          if (iframes[i].style.pointerEvents !== 'none') {
-            modifiedIframesMap.set(iframes[i], iframes[i].style.pointerEvents);
-            iframes[i].style.pointerEvents = 'none';
-          }
-        }
-        setState({
-          dragCommitStarted: true,
-          dragStartCommit: newDragStartCommit,
-          modifiedIframes: modifiedIframesMap,
-        });
-      }
-    }
-  };
-
-  const handleDragCommit = (e: any) => {
-    const {dragCommitStarted, dragStartCommit, modifiedIframes} = state;
-    if (dragCommitStarted === false || dragStartCommit === null) return;
-    if (e.buttons === 0) {
-      if (modifiedIframes !== null) {
-        modifiedIframes.forEach((value, iframe) => {
-          iframe.style.pointerEvents = value;
-        });
-      }
-      setState({
-        dragCommitStarted: false,
-        dragStartCommit: null,
-        modifiedIframes: null,
-      });
+  const handleDragCommit = ({buttons, pageX}: any) => {
+    if (buttons === 0) {
+      setDragState(null);
       return;
     }
 
-    let newCommitIndex = dragStartCommit.dragStartCommitIndex;
-    let newCommitRectLeft = dragStartCommit.rectLeft;
+    if (dragState !== null) {
+      const {commitIndex, left, sizeIncrement} = dragState;
 
-    if (e.pageX < dragStartCommit.rectLeft) {
-      while (e.pageX < newCommitRectLeft) {
-        newCommitRectLeft = newCommitRectLeft - 1 - dragStartCommit.width;
-        newCommitIndex -= 1;
-      }
-    } else {
-      let newCommitRectRight = newCommitRectLeft + dragStartCommit.width;
-      while (e.pageX > newCommitRectRight) {
-        newCommitRectRight = newCommitRectRight + 1 + dragStartCommit.width;
-        newCommitIndex += 1;
-      }
-    }
+      let newCommitIndex = commitIndex;
+      let newCommitLeft = left;
 
-    if (newCommitIndex < 0) {
-      newCommitIndex = 0;
-    } else if (newCommitIndex > maxCommitIndex) {
-      newCommitIndex = maxCommitIndex;
+      if (pageX < newCommitLeft) {
+        while (pageX < newCommitLeft) {
+          newCommitLeft -= sizeIncrement;
+          newCommitIndex -= 1;
+        }
+      } else {
+        let newCommitRectRight = newCommitLeft + sizeIncrement;
+        while (pageX > newCommitRectRight) {
+          newCommitRectRight += sizeIncrement;
+          newCommitIndex += 1;
+        }
+      }
+
+      if (newCommitIndex < 0) {
+        newCommitIndex = 0;
+      } else if (newCommitIndex > maxCommitIndex) {
+        newCommitIndex = maxCommitIndex;
+      }
+
+      selectCommitIndex(newCommitIndex);
     }
-    selectCommitIndex(newCommitIndex);
   };
 
   useEffect(() => {
+    if (dragState === null) {
+      return;
+    }
+
     const element = divRef.current;
     if (element !== null) {
       const ownerDocument = element.ownerDocument;
@@ -197,7 +164,7 @@ function List({
         ownerDocument.removeEventListener('mousemove', handleDragCommit);
       };
     }
-  }, [state]);
+  }, [dragState]);
 
   // Pass required contextual data down to the ListItem renderer.
   const itemData = useMemo<ItemData>(
@@ -209,7 +176,7 @@ function List({
       selectedCommitIndex,
       selectedFilteredCommitIndex,
       selectCommitIndex,
-      startCommitDrag,
+      startCommitDrag: setDragState,
     }),
     [
       commitDurations,
@@ -219,7 +186,6 @@ function List({
       selectedCommitIndex,
       selectedFilteredCommitIndex,
       selectCommitIndex,
-      startCommitDrag,
     ],
   );
 
