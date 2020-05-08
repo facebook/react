@@ -8,7 +8,7 @@
  */
 
 import * as React from 'react';
-import {useEffect, useMemo, useRef} from 'react';
+import {useEffect, useMemo, useRef, useState} from 'react';
 import AutoSizer from 'react-virtualized-auto-sizer';
 import {FixedSizeList} from 'react-window';
 import SnapshotCommitListItem from './SnapshotCommitListItem';
@@ -24,6 +24,13 @@ export type ItemData = {|
   selectedCommitIndex: number | null,
   selectedFilteredCommitIndex: number | null,
   selectCommitIndex: (index: number) => void,
+  startCommitDrag: (newDragStartCommit: DragStartCommit) => void,
+|};
+
+type State = {|
+  dragCommitStarted: boolean,
+  dragStartCommit: DragStartCommit | null,
+  modifiedIframes: Map<HTMLElement, string> | null,
 |};
 
 type Props = {|
@@ -72,6 +79,12 @@ type ListProps = {|
   width: number,
 |};
 
+type DragStartCommit = {
+  dragStartCommitIndex: number,
+  rectLeft: number,
+  width: number,
+};
+
 function List({
   commitDurations,
   selectedCommitIndex,
@@ -105,6 +118,87 @@ function List({
     [commitDurations],
   );
 
+  const maxCommitIndex = filteredCommitIndices.length - 1;
+
+  const [state, setState] = useState<State>({
+    dragCommitStarted: false,
+    dragStartCommit: null,
+    modifiedIframes: null,
+  });
+
+  const startCommitDrag = (newDragStartCommit: DragStartCommit) => {
+    const element = divRef.current;
+    if (element !== null) {
+      const iframes = element.ownerDocument.querySelectorAll('iframe');
+      if (iframes.length > 0) {
+        const modifiedIframesMap = new Map();
+        for (let i = 0; i < iframes.length; i++) {
+          if (iframes[i].style.pointerEvents !== 'none') {
+            modifiedIframesMap.set(iframes[i], iframes[i].style.pointerEvents);
+            iframes[i].style.pointerEvents = 'none';
+          }
+        }
+        setState({
+          dragCommitStarted: true,
+          dragStartCommit: newDragStartCommit,
+          modifiedIframes: modifiedIframesMap,
+        });
+      }
+    }
+  };
+
+  const handleDragCommit = (e: any) => {
+    const {dragCommitStarted, dragStartCommit, modifiedIframes} = state;
+    if (dragCommitStarted === false || dragStartCommit === null) return;
+    if (e.buttons === 0) {
+      if (modifiedIframes !== null) {
+        modifiedIframes.forEach((value, iframe) => {
+          iframe.style.pointerEvents = value;
+        });
+      }
+      setState({
+        dragCommitStarted: false,
+        dragStartCommit: null,
+        modifiedIframes: null,
+      });
+      return;
+    }
+
+    let newCommitIndex = dragStartCommit.dragStartCommitIndex;
+    let newCommitRectLeft = dragStartCommit.rectLeft;
+
+    if (e.pageX < dragStartCommit.rectLeft) {
+      while (e.pageX < newCommitRectLeft) {
+        newCommitRectLeft = newCommitRectLeft - 1 - dragStartCommit.width;
+        newCommitIndex -= 1;
+      }
+    } else {
+      let newCommitRectRight = newCommitRectLeft + dragStartCommit.width;
+      while (e.pageX > newCommitRectRight) {
+        newCommitRectRight = newCommitRectRight + 1 + dragStartCommit.width;
+        newCommitIndex += 1;
+      }
+    }
+
+    if (newCommitIndex < 0) {
+      newCommitIndex = 0;
+    } else if (newCommitIndex > maxCommitIndex) {
+      newCommitIndex = maxCommitIndex;
+    }
+    selectCommitIndex(newCommitIndex);
+  };
+
+  useEffect(() => {
+    const element = divRef.current;
+    if (element !== null) {
+      const ownerDocument = element.ownerDocument;
+      ownerDocument.addEventListener('mousemove', handleDragCommit);
+      return () => {
+        ownerDocument.removeEventListener('mousemove', handleDragCommit);
+      };
+    }
+  }, [state]);
+
   // Pass required contextual data down to the ListItem renderer.
   const itemData = useMemo<ItemData>(
     () => ({
@@ -115,6 +209,7 @@ function List({
       selectedCommitIndex,
       selectedFilteredCommitIndex,
       selectCommitIndex,
+      startCommitDrag,
     }),
     [
       commitDurations,
@@ -124,6 +219,7 @@ function List({
       selectedCommitIndex,
       selectedFilteredCommitIndex,
       selectCommitIndex,
+      startCommitDrag,
     ],
   );
 

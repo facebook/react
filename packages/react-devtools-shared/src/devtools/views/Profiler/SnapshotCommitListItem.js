@@ -23,11 +23,6 @@ type Props = {
   ...
 };
 
-type DragStartCommit = {
-  dragStartCommitIndex: number,
-  rectLeft: number,
-};
-
 function SnapshotCommitListItem({data: itemData, index, style}: Props) {
   const {
     commitDurations,
@@ -36,6 +31,7 @@ function SnapshotCommitListItem({data: itemData, index, style}: Props) {
     maxDuration,
     selectedCommitIndex,
     selectCommitIndex,
+    startCommitDrag,
   } = itemData;
 
   index = filteredCommitIndices[index];
@@ -43,59 +39,10 @@ function SnapshotCommitListItem({data: itemData, index, style}: Props) {
   const commitDuration = commitDurations[index];
   const commitTime = commitTimes[index];
 
-  const handleClick = useCallback(() => selectCommitIndex(index), [
-    index,
-    selectCommitIndex,
-  ]);
-
-  let dragStartCommit: DragStartCommit | null = null;
-  const maxCommitIndex = filteredCommitIndices.length - 1;
-
-  const handleDrag = (e: any) => {
-    if (e.buttons === 0) {
-      document.removeEventListener('mousemove', handleDrag);
-      const iframe = document.querySelector('iframe');
-      if (iframe) iframe.style.pointerEvents = 'auto';
-      dragStartCommit = null;
-      return;
-    }
-    if (dragStartCommit === null) return;
-
-    let newCommitIndex = index;
-    let newCommitRectLeft = dragStartCommit.rectLeft;
-
-    if (e.pageX < dragStartCommit.rectLeft) {
-      while (e.pageX < newCommitRectLeft) {
-        newCommitRectLeft = newCommitRectLeft - 1 - width;
-        newCommitIndex -= 1;
-      }
-    } else {
-      let newCommitRectRight = newCommitRectLeft + 1 + width;
-      while (e.pageX > newCommitRectRight) {
-        newCommitRectRight = newCommitRectRight + 1 + width;
-        newCommitIndex += 1;
-      }
-    }
-
-    if (newCommitIndex < 0) {
-      newCommitIndex = 0;
-    } else if (newCommitIndex > maxCommitIndex) {
-      newCommitIndex = maxCommitIndex;
-    }
-    selectCommitIndex(newCommitIndex);
-  };
-
-  const handleMouseDown = (e: any) => {
-    handleClick();
-    document.addEventListener('mousemove', handleDrag);
-    const iframe = document.querySelector('iframe');
-    if (iframe) iframe.style.pointerEvents = 'none';
-    const rect = e.target.getBoundingClientRect();
-    dragStartCommit = {
-      dragStartCommitIndex: index,
-      rectLeft: rect.left,
-    };
-  };
+  const memoizedSelectCommitIndex = useCallback(
+    () => selectCommitIndex(index),
+    [index, selectCommitIndex],
+  );
 
   // Guard against commits with duration 0
   const percentage =
@@ -105,10 +52,19 @@ function SnapshotCommitListItem({data: itemData, index, style}: Props) {
   // Leave a 1px gap between snapshots
   const width = parseFloat(style.width) - 1;
 
+  const handleMouseDown = (e: any) => {
+    memoizedSelectCommitIndex();
+    const rect = e.target.getBoundingClientRect();
+    startCommitDrag({
+      dragStartCommitIndex: index,
+      rectLeft: rect.left,
+      width,
+    });
+  };
+
   return (
     <div
       className={styles.Outer}
-      onClick={handleClick}
       onMouseDown={handleMouseDown}
       style={{
         ...style,
