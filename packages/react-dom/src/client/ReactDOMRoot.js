@@ -26,6 +26,7 @@ export type RootOptions = {
     onDeleted?: (suspenseNode: Comment) => void,
     ...
   },
+  mutableSources?: Array<MutableSource<any>>,
   ...
 };
 
@@ -116,13 +117,6 @@ ReactDOMRoot.prototype.unmount = ReactDOMBlockingRoot.prototype.unmount = functi
   });
 };
 
-ReactDOMRoot.prototype.registerMutableSourceForHydration = ReactDOMBlockingRoot.prototype.registerMutableSourceForHydration = function(
-  mutableSource: MutableSource<any>,
-): void {
-  const root = this._internalRoot;
-  registerMutableSourceForHydration(root, mutableSource);
-};
-
 function createRootImpl(
   container: Container,
   tag: RootTag,
@@ -132,6 +126,7 @@ function createRootImpl(
   const hydrate = options != null && options.hydrate === true;
   const hydrationCallbacks =
     (options != null && options.hydrationOptions) || null;
+  const mutableSources = (options != null && options.mutableSources) || null;
   const root = createContainer(container, tag, hydrate, hydrationCallbacks);
   markContainerAsRoot(root.current, container);
   const containerNodeType = container.nodeType;
@@ -151,6 +146,14 @@ function createRootImpl(
   ) {
     ensureListeningTo(container, 'onMouseEnter');
   }
+
+  if (mutableSources) {
+    for (let i = 0; i < mutableSources.length; i++) {
+      const mutableSource = mutableSources[i];
+      registerMutableSourceForHydration(root, mutableSource);
+    }
+  }
+
   return root;
 }
 

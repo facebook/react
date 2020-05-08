@@ -157,9 +157,11 @@ describe('useMutableSourceHydration', () => {
     expect(Scheduler).toHaveYielded(['only:one']);
     expect(source.listenerCount).toBe(0);
 
-    const root = ReactDOM.unstable_createRoot(container, {hydrate: true});
+    const root = ReactDOM.unstable_createRoot(container, {
+      hydrate: true,
+      mutableSources: [mutableSource],
+    });
     act(() => {
-      root.registerMutableSourceForHydration(mutableSource);
       root.render(<TestComponent />);
     });
     expect(Scheduler).toHaveYielded(['only:one']);
@@ -190,10 +192,12 @@ describe('useMutableSourceHydration', () => {
     expect(Scheduler).toHaveYielded(['only:one']);
     expect(source.listenerCount).toBe(0);
 
-    const root = ReactDOM.unstable_createRoot(container, {hydrate: true});
+    const root = ReactDOM.unstable_createRoot(container, {
+      hydrate: true,
+      mutableSources: [mutableSource],
+    });
     expect(() => {
       act(() => {
-        root.registerMutableSourceForHydration(mutableSource);
         root.render(<TestComponent />);
 
         source.value = 'two';
@@ -238,10 +242,12 @@ describe('useMutableSourceHydration', () => {
     expect(Scheduler).toHaveYielded(['a:one', 'b:one']);
     expect(source.listenerCount).toBe(0);
 
-    const root = ReactDOM.unstable_createRoot(container, {hydrate: true});
+    const root = ReactDOM.unstable_createRoot(container, {
+      hydrate: true,
+      mutableSources: [mutableSource],
+    });
     expect(() => {
       act(() => {
-        root.registerMutableSourceForHydration(mutableSource);
         root.render(<TestComponent />);
         expect(Scheduler).toFlushAndYieldThrough(['a:one']);
         source.value = 'two';
@@ -287,10 +293,12 @@ describe('useMutableSourceHydration', () => {
     container.innerHTML = htmlString;
     expect(Scheduler).toHaveYielded(['0:a:one', '1:b:one']);
 
-    const root = ReactDOM.unstable_createRoot(container, {hydrate: true});
+    const root = ReactDOM.unstable_createRoot(container, {
+      hydrate: true,
+      mutableSources: [mutableSource],
+    });
     expect(() => {
       act(() => {
-        root.registerMutableSourceForHydration(mutableSource);
         root.render(
           <>
             <Component
@@ -351,10 +359,12 @@ describe('useMutableSourceHydration', () => {
     expect(Scheduler).toHaveYielded([1, 'a:one']);
     expect(source.listenerCount).toBe(0);
 
-    const root = ReactDOM.unstable_createRoot(container, {hydrate: true});
+    const root = ReactDOM.unstable_createRoot(container, {
+      hydrate: true,
+      mutableSources: [mutableSource],
+    });
     expect(() => {
       act(() => {
-        root.registerMutableSourceForHydration(mutableSource);
         root.render(<TestComponent flag={1} />);
         expect(Scheduler).toFlushAndYieldThrough([1]);
 
