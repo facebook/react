@@ -50,8 +50,6 @@ function SnapshotCommitListItem({data: itemData, index, style}: Props) {
   const handleMouseDown = ({buttons, target}: any) => {
     if (buttons === 1) {
       selectCommitIndex(index);
-
-      // TODO Count for border/margin
       startCommitDrag({
         commitIndex: index,
         left: target.getBoundingClientRect().left,
