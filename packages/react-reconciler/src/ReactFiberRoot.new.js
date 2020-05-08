@@ -12,7 +12,12 @@ import type {RootTag} from './ReactRootTags';
 
 import {noTimeout} from './ReactFiberHostConfig';
 import {createHostRootFiber} from './ReactFiber.new';
-import {NoLanes} from './ReactFiberLane';
+import {
+  NoLanes,
+  NoLanePriority,
+  NoTimestamp,
+  createLaneMap,
+} from './ReactFiberLane';
 import {
   enableSchedulerTracing,
   enableSuspenseCallback,
@@ -33,8 +38,8 @@ function FiberRootNode(containerInfo, tag, hydrate) {
   this.hydrate = hydrate;
   this.callbackNode = null;
   this.callbackId = NoLanes;
-  this.callbackIsSync = false;
-  this.expiresAt = -1;
+  this.callbackPriority_new = NoLanePriority;
+  this.expirationTimes = createLaneMap(NoTimestamp);
 
   this.pendingLanes = NoLanes;
   this.suspendedLanes = NoLanes;

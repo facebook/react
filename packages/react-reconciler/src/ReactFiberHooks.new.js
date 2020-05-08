@@ -1720,7 +1720,7 @@ function dispatchAction<S, A>(
         warnIfNotCurrentlyActingUpdatesInDev(fiber);
       }
     }
-    scheduleUpdateOnFiber(fiber, lane);
+    scheduleUpdateOnFiber(fiber, lane, eventTime);
   }
 }
 

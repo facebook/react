@@ -488,8 +488,8 @@ describe('ReactIncrementalUpdates', () => {
     expect(ReactNoop.getChildren()).toEqual([span('derived state')]);
   });
 
-  // Note: This test doesn't really make sense in the new model, but we might
-  // want to port it once lanes are implemented.
+  // Note: This test doesn't really make sense in the new model. The
+  // corresponding concept is tested in ReactExpiration-test.
   // @gate old
   it('flushes all expired updates in a single batch', () => {
     const {useEffect} = React;

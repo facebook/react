@@ -112,6 +112,7 @@ import {
   SyncLane,
   OffscreenLane,
   DefaultHydrationLane,
+  NoTimestamp,
   includesSomeLane,
   laneToLanes,
   removeLanes,
@@ -2301,7 +2302,9 @@ function updateDehydratedSuspenseComponent(
         // is one of the very rare times where we mutate the current tree
         // during the render phase.
         suspenseState.retryLane = attemptHydrationAtLane;
-        scheduleUpdateOnFiber(current, attemptHydrationAtLane);
+        // TODO: Ideally this would inherit the event time of the current render
+        const eventTime = NoTimestamp;
+        scheduleUpdateOnFiber(current, attemptHydrationAtLane, eventTime);
       } else {
         // We have already tried to ping at a higher priority than we're rendering with
         // so if we got here, we must have failed to hydrate at those levels. We must
