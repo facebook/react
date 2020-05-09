@@ -260,7 +260,9 @@ export function separateDisplayNameAndHOCs(
 
   switch (type) {
     case ElementTypeClass:
+    case ElementTypeForwardRef:
     case ElementTypeFunction:
+    case ElementTypeMemo:
       if (displayName.indexOf('(') >= 0) {
         const matches = displayName.match(/[^()]+/g);
         if (matches != null) {
@@ -269,14 +271,22 @@ export function separateDisplayNameAndHOCs(
         }
       }
       break;
-    case ElementTypeForwardRef:
-      hocDisplayNames = ['ForwardRef'];
-      break;
-    case ElementTypeMemo:
-      hocDisplayNames = ['Memo'];
-      break;
     default:
       break;
+  }
+
+  if (type === ElementTypeMemo) {
+    if (hocDisplayNames === null) {
+      hocDisplayNames = ['Memo'];
+    } else {
+      hocDisplayNames.unshift('Memo');
+    }
+  } else if (type === ElementTypeForwardRef) {
+    if (hocDisplayNames === null) {
+      hocDisplayNames = ['ForwardRef'];
+    } else {
+      hocDisplayNames.unshift('ForwardRef');
+    }
   }
 
   return [displayName, hocDisplayNames];
