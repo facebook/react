@@ -916,7 +916,8 @@ function functionError(hook, fn) {
   return {
     message:
       `React Hook "${hook}" is called in function "${fn}" that is neither ` +
-      'a React function component nor a custom React Hook function.',
+      'a React function component nor a custom React Hook function.' +
+      ' React component names must start with an uppercase letter.',
   };
 }
 
