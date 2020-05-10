@@ -100,8 +100,6 @@ export function hasSelectionCapabilities(elem) {
 export function getSelectionInformation() {
   const focusedElem = getActiveElementDeep();
   return {
-    // Used by Flare
-    activeElementDetached: null,
     focusedElem: focusedElem,
     selectionRange: hasSelectionCapabilities(focusedElem)
       ? getSelection(focusedElem)
@@ -181,7 +179,8 @@ export function getSelection(input) {
  * -@offsets   Object of same form that is returned from get*
  */
 export function setSelection(input, offsets) {
-  let {start, end} = offsets;
+  const start = offsets.start;
+  let end = offsets.end;
   if (end === undefined) {
     end = start;
   }

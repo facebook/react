@@ -7,13 +7,8 @@
  * @flow
  */
 
-import React, {
-  useCallback,
-  useContext,
-  useEffect,
-  useMemo,
-  useRef,
-} from 'react';
+import * as React from 'react';
+import {useCallback, useContext, useEffect, useMemo, useRef} from 'react';
 import {SettingsModalContext} from './SettingsModalContext';
 import Button from '../Button';
 import ButtonIcon from '../ButtonIcon';
@@ -75,14 +70,11 @@ function SettingsModalImpl(_: {||}) {
   const modalRef = useRef<HTMLDivElement | null>(null);
   useModalDismissSignal(modalRef, dismissModal);
 
-  useEffect(
-    () => {
-      if (modalRef.current !== null) {
-        modalRef.current.focus();
-      }
-    },
-    [modalRef],
-  );
+  useEffect(() => {
+    if (modalRef.current !== null) {
+      modalRef.current.focus();
+    }
+  }, [modalRef]);
 
   let view = null;
   switch (selectedTabID) {

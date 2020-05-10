@@ -7,7 +7,8 @@
  * @flow
  */
 
-import React, {useEffect, useRef, useState} from 'react';
+import * as React from 'react';
+import {useEffect, useRef, useState} from 'react';
 import EditableValue from './EditableValue';
 import ExpandCollapseToggle from './ExpandCollapseToggle';
 import {alphaSortEntries, getMetaValueLabel} from '../utils';
@@ -55,20 +56,17 @@ export default function KeyValue({
     value[meta.inspectable] &&
     value[meta.size] !== 0;
 
-  useEffect(
-    () => {
-      if (
-        isInspectable &&
-        isOpen &&
-        !prevIsOpenRef.current &&
-        typeof inspectPath === 'function'
-      ) {
-        inspectPath(path);
-      }
-      prevIsOpenRef.current = isOpen;
-    },
-    [inspectPath, isInspectable, isOpen, path],
-  );
+  useEffect(() => {
+    if (
+      isInspectable &&
+      isOpen &&
+      !prevIsOpenRef.current &&
+      typeof inspectPath === 'function'
+    ) {
+      inspectPath(path);
+    }
+    prevIsOpenRef.current = isOpen;
+  }, [inspectPath, isInspectable, isOpen, path]);
 
   const toggleIsOpen = () => setIsOpen(prevIsOpen => !prevIsOpen);
 
@@ -78,7 +76,7 @@ export default function KeyValue({
       type:
         value !== null &&
         typeof value === 'object' &&
-        value.hasOwnProperty(meta.type)
+        hasOwnProperty.call(value, meta.type)
           ? value[meta.type]
           : typeof value,
     },
@@ -136,8 +134,8 @@ export default function KeyValue({
       </div>
     );
   } else if (
-    value.hasOwnProperty(meta.type) &&
-    !value.hasOwnProperty(meta.unserializable)
+    hasOwnProperty.call(value, meta.type) &&
+    !hasOwnProperty.call(value, meta.unserializable)
   ) {
     children = (
       <div
@@ -219,7 +217,7 @@ export default function KeyValue({
       const hasChildren = entries.length > 0;
       const displayName = getMetaValueLabel(value);
 
-      let areChildrenReadOnly = isReadOnly || !!value[meta.readonly];
+      const areChildrenReadOnly = isReadOnly || !!value[meta.readonly];
       children = entries.map<Element<any>>(([key, keyValue]) => (
         <KeyValue
           key={key}

@@ -7,7 +7,8 @@
  * @flow
  */
 
-import React, {memo, useCallback} from 'react';
+import * as React from 'react';
+import {memo} from 'react';
 import {areEqual} from 'react-window';
 import {getGradientColor, formatDuration, formatTime} from './utils';
 
@@ -19,6 +20,7 @@ type Props = {
   data: ItemData,
   index: number,
   style: Object,
+  ...
 };
 
 function SnapshotCommitListItem({data: itemData, index, style}: Props) {
@@ -26,21 +28,16 @@ function SnapshotCommitListItem({data: itemData, index, style}: Props) {
     commitDurations,
     commitTimes,
     filteredCommitIndices,
-    isMouseDown,
     maxDuration,
     selectedCommitIndex,
     selectCommitIndex,
+    startCommitDrag,
   } = itemData;
 
   index = filteredCommitIndices[index];
 
   const commitDuration = commitDurations[index];
   const commitTime = commitTimes[index];
-
-  const handleClick = useCallback(() => selectCommitIndex(index), [
-    index,
-    selectCommitIndex,
-  ]);
 
   // Guard against commits with duration 0
   const percentage =
@@ -50,11 +47,21 @@ function SnapshotCommitListItem({data: itemData, index, style}: Props) {
   // Leave a 1px gap between snapshots
   const width = parseFloat(style.width) - 1;
 
+  const handleMouseDown = ({buttons, target}: any) => {
+    if (buttons === 1) {
+      selectCommitIndex(index);
+      startCommitDrag({
+        commitIndex: index,
+        left: target.getBoundingClientRect().left,
+        sizeIncrement: parseFloat(style.width),
+      });
+    }
+  };
+
   return (
     <div
       className={styles.Outer}
-      onClick={handleClick}
-      onMouseEnter={isMouseDown ? handleClick : null}
+      onMouseDown={handleMouseDown}
       style={{
         ...style,
         width,

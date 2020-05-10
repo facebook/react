@@ -33,7 +33,8 @@ export default function Home() {
               <td>
                 <a href="https://www.mozilla.org/en-US/firefox/organizations/">
                   ESR<sup>†</sup>
-                </a>, Latest
+                </a>
+                , Latest
               </td>
             </tr>
             <tr>

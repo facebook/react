@@ -7,10 +7,10 @@
  * @flow
  */
 
-'use strict';
+import type {ReactFabricType} from './src/ReactNativeTypes';
+import * as ReactFabric from './src/ReactFabric';
+// Assert that the exports line up with the type we're going to expose.
+// eslint-disable-next-line no-unused-expressions
+(ReactFabric: ReactFabricType);
 
-const ReactFabric = require('./src/ReactFabric');
-
-// TODO: decide on the top-level export form.
-// This is hacky but makes it work with both Rollup and Jest.
-module.exports = ReactFabric.default || ReactFabric;
+export * from './src/ReactFabric';

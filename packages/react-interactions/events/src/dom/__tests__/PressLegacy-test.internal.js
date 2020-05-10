@@ -30,9 +30,14 @@ function initializeModules(hasPointerEvents) {
   ReactFeatureFlags.enableDeprecatedFlareAPI = true;
   React = require('react');
   ReactDOM = require('react-dom');
-  PressResponder = require('react-interactions/events/press-legacy')
-    .PressResponder;
-  usePress = require('react-interactions/events/press-legacy').usePress;
+
+  // TODO: This import throws outside of experimental mode. Figure out better
+  // strategy for gated imports.
+  if (__EXPERIMENTAL__) {
+    PressResponder = require('react-interactions/events/press-legacy')
+      .PressResponder;
+    usePress = require('react-interactions/events/press-legacy').usePress;
+  }
 }
 
 function removePressMoveStrings(eventString) {
@@ -66,7 +71,7 @@ describe.each(environmentTable)('Press responder', hasPointerEvents => {
   describe('disabled', () => {
     let onPressStart, onPress, onPressEnd, ref;
 
-    beforeEach(() => {
+    const componentInit = () => {
       onPressStart = jest.fn();
       onPress = jest.fn();
       onPressEnd = jest.fn();
@@ -82,9 +87,11 @@ describe.each(environmentTable)('Press responder', hasPointerEvents => {
       };
       ReactDOM.render(<Component />, container);
       document.elementFromPoint = () => ref.current;
-    });
+    };
 
+    // @gate experimental
     it('does not call callbacks', () => {
+      componentInit();
       const target = createEventTarget(ref.current);
       target.pointerdown();
       target.pointerup();
@@ -97,7 +104,7 @@ describe.each(environmentTable)('Press responder', hasPointerEvents => {
   describe('onPressStart', () => {
     let onPressStart, ref;
 
-    beforeEach(() => {
+    const componentInit = () => {
       onPressStart = jest.fn();
       ref = React.createRef();
       const Component = () => {
@@ -108,21 +115,33 @@ describe.each(environmentTable)('Press responder', hasPointerEvents => {
       };
       ReactDOM.render(<Component />, container);
       document.elementFromPoint = () => ref.current;
+    };
+
+    // @gate experimental
+    it('is called after pointer down: mouse', () => {
+      componentInit();
+      const target = createEventTarget(ref.current);
+      target.pointerdown({pointerType: 'mouse'});
+      expect(onPressStart).toHaveBeenCalledTimes(1);
+      expect(onPressStart).toHaveBeenCalledWith(
+        expect.objectContaining({pointerType: 'mouse', type: 'pressstart'}),
+      );
     });
 
-    it.each(pointerTypesTable)(
-      'is called after pointer down: %s',
-      pointerType => {
-        const target = createEventTarget(ref.current);
-        target.pointerdown({pointerType});
-        expect(onPressStart).toHaveBeenCalledTimes(1);
-        expect(onPressStart).toHaveBeenCalledWith(
-          expect.objectContaining({pointerType, type: 'pressstart'}),
-        );
-      },
-    );
+    // @gate experimental
+    it('is called after pointer down: touch', () => {
+      componentInit();
+      const target = createEventTarget(ref.current);
+      target.pointerdown({pointerType: 'touch'});
+      expect(onPressStart).toHaveBeenCalledTimes(1);
+      expect(onPressStart).toHaveBeenCalledWith(
+        expect.objectContaining({pointerType: 'touch', type: 'pressstart'}),
+      );
+    });
 
+    // @gate experimental
     it('is called after middle-button pointer down', () => {
+      componentInit();
       const target = createEventTarget(ref.current);
       target.pointerdown({
         button: buttonType.auxiliary,
@@ -139,7 +158,9 @@ describe.each(environmentTable)('Press responder', hasPointerEvents => {
       );
     });
 
+    // @gate experimental
     it('is not called after pointer move following middle-button press', () => {
+      componentInit();
       const node = ref.current;
       const target = createEventTarget(node);
       target.setBoundingClientRect({x: 0, y: 0, width: 100, height: 100});
@@ -154,7 +175,9 @@ describe.each(environmentTable)('Press responder', hasPointerEvents => {
       expect(onPressStart).toHaveBeenCalledTimes(1);
     });
 
+    // @gate experimental
     it('ignores any events not caused by primary/middle-click or touch/pen contact', () => {
+      componentInit();
       const target = createEventTarget(ref.current);
       target.pointerdown({buttons: buttonsType.secondary});
       target.pointerup({buttons: buttonsType.secondary});
@@ -163,7 +186,9 @@ describe.each(environmentTable)('Press responder', hasPointerEvents => {
       expect(onPressStart).toHaveBeenCalledTimes(0);
     });
 
+    // @gate experimental
     it('is called once after "keydown" events for Enter', () => {
+      componentInit();
       const target = createEventTarget(ref.current);
       target.keydown({key: 'Enter'});
       target.keydown({key: 'Enter'});
@@ -174,7 +199,9 @@ describe.each(environmentTable)('Press responder', hasPointerEvents => {
       );
     });
 
+    // @gate experimental
     it('is called once after "keydown" events for Spacebar', () => {
+      componentInit();
       const target = createEventTarget(ref.current);
       const preventDefault = jest.fn();
       target.keydown({key: ' ', preventDefault});
@@ -189,7 +216,9 @@ describe.each(environmentTable)('Press responder', hasPointerEvents => {
       );
     });
 
+    // @gate experimental
     it('is not called after "keydown" for other keys', () => {
+      componentInit();
       const target = createEventTarget(ref.current);
       target.keydown({key: 'a'});
       expect(onPressStart).not.toBeCalled();
@@ -199,7 +228,7 @@ describe.each(environmentTable)('Press responder', hasPointerEvents => {
   describe('onPressEnd', () => {
     let onPressEnd, ref;
 
-    beforeEach(() => {
+    const componentInit = () => {
       onPressEnd = jest.fn();
       ref = React.createRef();
       const Component = () => {
@@ -210,22 +239,35 @@ describe.each(environmentTable)('Press responder', hasPointerEvents => {
       };
       ReactDOM.render(<Component />, container);
       document.elementFromPoint = () => ref.current;
+    };
+
+    // @gate experimental
+    it('is called after pointer up: mouse', () => {
+      componentInit();
+      const target = createEventTarget(ref.current);
+      target.pointerdown({pointerType: 'mouse'});
+      target.pointerup({pointerType: 'mouse'});
+      expect(onPressEnd).toHaveBeenCalledTimes(1);
+      expect(onPressEnd).toHaveBeenCalledWith(
+        expect.objectContaining({pointerType: 'mouse', type: 'pressend'}),
+      );
     });
 
-    it.each(pointerTypesTable)(
-      'is called after pointer up: %s',
-      pointerType => {
-        const target = createEventTarget(ref.current);
-        target.pointerdown({pointerType});
-        target.pointerup({pointerType});
-        expect(onPressEnd).toHaveBeenCalledTimes(1);
-        expect(onPressEnd).toHaveBeenCalledWith(
-          expect.objectContaining({pointerType, type: 'pressend'}),
-        );
-      },
-    );
+    // @gate experimental
+    it('is called after pointer up: touch', () => {
+      componentInit();
+      const target = createEventTarget(ref.current);
+      target.pointerdown({pointerType: 'touch'});
+      target.pointerup({pointerType: 'touch'});
+      expect(onPressEnd).toHaveBeenCalledTimes(1);
+      expect(onPressEnd).toHaveBeenCalledWith(
+        expect.objectContaining({pointerType: 'touch', type: 'pressend'}),
+      );
+    });
 
+    // @gate experimental
     it('is called after middle-button pointer up', () => {
+      componentInit();
       const target = createEventTarget(ref.current);
       target.pointerdown({
         buttons: buttonsType.auxiliary,
@@ -242,7 +284,9 @@ describe.each(environmentTable)('Press responder', hasPointerEvents => {
       );
     });
 
+    // @gate experimental
     it('is called after "keyup" event for Enter', () => {
+      componentInit();
       const target = createEventTarget(ref.current);
       target.keydown({key: 'Enter'});
       // click occurs before keyup
@@ -254,7 +298,9 @@ describe.each(environmentTable)('Press responder', hasPointerEvents => {
       );
     });
 
+    // @gate experimental
     it('is called after "keyup" event for Spacebar', () => {
+      componentInit();
       const target = createEventTarget(ref.current);
       target.keydown({key: ' '});
       target.keyup({key: ' '});
@@ -264,14 +310,18 @@ describe.each(environmentTable)('Press responder', hasPointerEvents => {
       );
     });
 
+    // @gate experimental
     it('is not called after "keyup" event for other keys', () => {
+      componentInit();
       const target = createEventTarget(ref.current);
       target.keydown({key: 'Enter'});
       target.keyup({key: 'a'});
       expect(onPressEnd).not.toBeCalled();
     });
 
+    // @gate experimental
     it('is called with keyboard modifiers', () => {
+      componentInit();
       const target = createEventTarget(ref.current);
       target.keydown({key: 'Enter'});
       target.keyup({
@@ -297,7 +347,7 @@ describe.each(environmentTable)('Press responder', hasPointerEvents => {
   describe('onPressChange', () => {
     let onPressChange, ref;
 
-    beforeEach(() => {
+    const componentInit = () => {
       onPressChange = jest.fn();
       ref = React.createRef();
       const Component = () => {
@@ -308,22 +358,35 @@ describe.each(environmentTable)('Press responder', hasPointerEvents => {
       };
       ReactDOM.render(<Component />, container);
       document.elementFromPoint = () => ref.current;
+    };
+
+    // @gate experimental
+    it('is called after pointer down and up: mouse', () => {
+      componentInit();
+      const target = createEventTarget(ref.current);
+      target.pointerdown({pointerType: 'mouse'});
+      expect(onPressChange).toHaveBeenCalledTimes(1);
+      expect(onPressChange).toHaveBeenCalledWith(true);
+      target.pointerup({pointerType: 'mouse'});
+      expect(onPressChange).toHaveBeenCalledTimes(2);
+      expect(onPressChange).toHaveBeenCalledWith(false);
     });
 
-    it.each(pointerTypesTable)(
-      'is called after pointer down and up: %s',
-      pointerType => {
-        const target = createEventTarget(ref.current);
-        target.pointerdown({pointerType});
-        expect(onPressChange).toHaveBeenCalledTimes(1);
-        expect(onPressChange).toHaveBeenCalledWith(true);
-        target.pointerup({pointerType});
-        expect(onPressChange).toHaveBeenCalledTimes(2);
-        expect(onPressChange).toHaveBeenCalledWith(false);
-      },
-    );
+    // @gate experimental
+    it('is called after pointer down and up: touch', () => {
+      componentInit();
+      const target = createEventTarget(ref.current);
+      target.pointerdown({pointerType: 'touch'});
+      expect(onPressChange).toHaveBeenCalledTimes(1);
+      expect(onPressChange).toHaveBeenCalledWith(true);
+      target.pointerup({pointerType: 'touch'});
+      expect(onPressChange).toHaveBeenCalledTimes(2);
+      expect(onPressChange).toHaveBeenCalledWith(false);
+    });
 
+    // @gate experimental
     it('is called after valid "keydown" and "keyup" events', () => {
+      componentInit();
       const target = createEventTarget(ref.current);
       target.keydown({key: 'Enter'});
       expect(onPressChange).toHaveBeenCalledTimes(1);
@@ -337,7 +400,7 @@ describe.each(environmentTable)('Press responder', hasPointerEvents => {
   describe('onPress', () => {
     let onPress, ref;
 
-    beforeEach(() => {
+    const componentInit = () => {
       onPress = jest.fn();
       ref = React.createRef();
       const Component = () => {
@@ -354,22 +417,35 @@ describe.each(environmentTable)('Press responder', hasPointerEvents => {
         right: 100,
       });
       document.elementFromPoint = () => ref.current;
+    };
+
+    // @gate experimental
+    it('is called after pointer up: mouse', () => {
+      componentInit();
+      const target = createEventTarget(ref.current);
+      target.pointerdown({pointerType: 'mouse'});
+      target.pointerup({pointerType: 'mouse', x: 10, y: 10});
+      expect(onPress).toHaveBeenCalledTimes(1);
+      expect(onPress).toHaveBeenCalledWith(
+        expect.objectContaining({pointerType: 'mouse', type: 'press'}),
+      );
     });
 
-    it.each(pointerTypesTable)(
-      'is called after pointer up: %s',
-      pointerType => {
-        const target = createEventTarget(ref.current);
-        target.pointerdown({pointerType});
-        target.pointerup({pointerType, x: 10, y: 10});
-        expect(onPress).toHaveBeenCalledTimes(1);
-        expect(onPress).toHaveBeenCalledWith(
-          expect.objectContaining({pointerType, type: 'press'}),
-        );
-      },
-    );
+    // @gate experimental
+    it('is called after pointer up: touch', () => {
+      componentInit();
+      const target = createEventTarget(ref.current);
+      target.pointerdown({pointerType: 'touch'});
+      target.pointerup({pointerType: 'touch', x: 10, y: 10});
+      expect(onPress).toHaveBeenCalledTimes(1);
+      expect(onPress).toHaveBeenCalledWith(
+        expect.objectContaining({pointerType: 'touch', type: 'press'}),
+      );
+    });
 
+    // @gate experimental
     it('is not called after middle-button press', () => {
+      componentInit();
       const target = createEventTarget(ref.current);
       target.pointerdown({
         buttons: buttonsType.auxiliary,
@@ -379,7 +455,9 @@ describe.each(environmentTable)('Press responder', hasPointerEvents => {
       expect(onPress).not.toHaveBeenCalled();
     });
 
+    // @gate experimental
     it('is not called after virtual middle-button press', () => {
+      componentInit();
       const target = createEventTarget(ref.current);
       target.pointerdown({
         button: buttonType.auxiliary,
@@ -390,7 +468,9 @@ describe.each(environmentTable)('Press responder', hasPointerEvents => {
       expect(onPress).not.toHaveBeenCalled();
     });
 
+    // @gate experimental
     it('is called after valid "keyup" event', () => {
+      componentInit();
       const target = createEventTarget(ref.current);
       target.keydown({key: 'Enter'});
       target.keyup({key: 'Enter'});
@@ -400,7 +480,9 @@ describe.each(environmentTable)('Press responder', hasPointerEvents => {
       );
     });
 
+    // @gate experimental
     it('is not called after invalid "keyup" event', () => {
+      componentInit();
       const inputRef = React.createRef();
       const Component = () => {
         const listener = usePress({onPress});
@@ -415,7 +497,9 @@ describe.each(environmentTable)('Press responder', hasPointerEvents => {
       expect(onPress).not.toBeCalled();
     });
 
+    // @gate experimental
     it('is called with modifier keys', () => {
+      componentInit();
       const target = createEventTarget(ref.current);
       target.pointerdown({metaKey: true, pointerType: 'mouse'});
       target.pointerup({metaKey: true, pointerType: 'mouse'});
@@ -428,7 +512,9 @@ describe.each(environmentTable)('Press responder', hasPointerEvents => {
       );
     });
 
+    // @gate experimental
     it('is called if target rect is not right but the target is (for mouse events)', () => {
+      componentInit();
       const buttonRef = React.createRef();
       const divRef = React.createRef();
 
@@ -450,7 +536,9 @@ describe.each(environmentTable)('Press responder', hasPointerEvents => {
       expect(onPress).toBeCalled();
     });
 
+    // @gate experimental
     it('is called once after virtual screen reader "click" event', () => {
+      componentInit();
       const target = createEventTarget(ref.current);
       const preventDefault = jest.fn();
       target.virtualclick({preventDefault});
@@ -468,7 +556,7 @@ describe.each(environmentTable)('Press responder', hasPointerEvents => {
   describe('onPressMove', () => {
     let onPressMove, ref;
 
-    beforeEach(() => {
+    const componentInit = () => {
       onPressMove = jest.fn();
       ref = React.createRef();
       const Component = () => {
@@ -485,25 +573,41 @@ describe.each(environmentTable)('Press responder', hasPointerEvents => {
         right: 100,
       });
       document.elementFromPoint = () => ref.current;
+    };
+
+    // @gate experimental
+    it('is called after pointer move: mouse', () => {
+      componentInit();
+      const node = ref.current;
+      const target = createEventTarget(node);
+      target.setBoundingClientRect({x: 0, y: 0, width: 100, height: 100});
+      target.pointerdown({pointerType: 'mouse'});
+      target.pointermove({pointerType: 'mouse', x: 10, y: 10});
+      target.pointermove({pointerType: 'mouse', x: 20, y: 20});
+      expect(onPressMove).toHaveBeenCalledTimes(2);
+      expect(onPressMove).toHaveBeenCalledWith(
+        expect.objectContaining({pointerType: 'mouse', type: 'pressmove'}),
+      );
     });
 
-    it.each(pointerTypesTable)(
-      'is called after pointer move: %s',
-      pointerType => {
-        const node = ref.current;
-        const target = createEventTarget(node);
-        target.setBoundingClientRect({x: 0, y: 0, width: 100, height: 100});
-        target.pointerdown({pointerType});
-        target.pointermove({pointerType, x: 10, y: 10});
-        target.pointermove({pointerType, x: 20, y: 20});
-        expect(onPressMove).toHaveBeenCalledTimes(2);
-        expect(onPressMove).toHaveBeenCalledWith(
-          expect.objectContaining({pointerType, type: 'pressmove'}),
-        );
-      },
-    );
+    // @gate experimental
+    it('is called after pointer move: touch', () => {
+      componentInit();
+      const node = ref.current;
+      const target = createEventTarget(node);
+      target.setBoundingClientRect({x: 0, y: 0, width: 100, height: 100});
+      target.pointerdown({pointerType: 'touch'});
+      target.pointermove({pointerType: 'touch', x: 10, y: 10});
+      target.pointermove({pointerType: 'touch', x: 20, y: 20});
+      expect(onPressMove).toHaveBeenCalledTimes(2);
+      expect(onPressMove).toHaveBeenCalledWith(
+        expect.objectContaining({pointerType: 'touch', type: 'pressmove'}),
+      );
+    });
 
+    // @gate experimental
     it('is not called if pointer move occurs during keyboard press', () => {
+      componentInit();
       const target = createEventTarget(ref.current);
       target.setBoundingClientRect({x: 0, y: 0, width: 100, height: 100});
       target.keydown({key: 'Enter'});
@@ -520,7 +624,7 @@ describe.each(environmentTable)('Press responder', hasPointerEvents => {
   describe.each(pointerTypesTable)('press with movement: %s', pointerType => {
     let events, ref, outerRef;
 
-    beforeEach(() => {
+    const componentInit = () => {
       events = [];
       ref = React.createRef();
       outerRef = React.createRef();
@@ -543,7 +647,7 @@ describe.each(environmentTable)('Press responder', hasPointerEvents => {
       };
       ReactDOM.render(<Component />, container);
       document.elementFromPoint = () => ref.current;
-    });
+    };
 
     const rectMock = {width: 100, height: 100, x: 50, y: 50};
     const pressRectOffset = 20;
@@ -564,7 +668,9 @@ describe.each(environmentTable)('Press responder', hasPointerEvents => {
        *  │     HitRect    X │ <= Move to X and release
        *  └──────────────────┘
        */
+      // @gate experimental
       it('"onPress*" events are called immediately', () => {
+        componentInit();
         const target = createEventTarget(ref.current);
         target.setBoundingClientRect(rectMock);
         target.pointerdown({pointerType});
@@ -580,7 +686,9 @@ describe.each(environmentTable)('Press responder', hasPointerEvents => {
         ]);
       });
 
+      // @gate experimental
       it('"onPress*" events are correctly called with target change', () => {
+        componentInit();
         const target = createEventTarget(ref.current);
         const outerTarget = createEventTarget(outerRef.current);
         target.setBoundingClientRect(rectMock);
@@ -609,8 +717,10 @@ describe.each(environmentTable)('Press responder', hasPointerEvents => {
         ]);
       });
 
+      // @gate experimental
       it('press retention offset can be configured', () => {
-        let localEvents = [];
+        componentInit();
+        const localEvents = [];
         const localRef = React.createRef();
         const createEventHandler = msg => () => {
           localEvents.push(msg);
@@ -649,7 +759,9 @@ describe.each(environmentTable)('Press responder', hasPointerEvents => {
         ]);
       });
 
+      // @gate experimental
       it('responder region accounts for decrease in element dimensions', () => {
+        componentInit();
         const target = createEventTarget(ref.current);
         target.setBoundingClientRect(rectMock);
         target.pointerdown({pointerType});
@@ -669,7 +781,9 @@ describe.each(environmentTable)('Press responder', hasPointerEvents => {
         ]);
       });
 
+      // @gate experimental
       it('responder region accounts for increase in element dimensions', () => {
+        componentInit();
         const target = createEventTarget(ref.current);
         target.setBoundingClientRect(rectMock);
         target.pointerdown({pointerType});
@@ -699,7 +813,9 @@ describe.each(environmentTable)('Press responder', hasPointerEvents => {
        *  └──────────────────┘
        *                   X   <= Move to X and release
        */
+      // @gate experimental
       it('"onPress" is not called on release', () => {
+        componentInit();
         const target = createEventTarget(ref.current);
         const targetContainer = createEventTarget(container);
         target.setBoundingClientRect(rectMock);
@@ -722,7 +838,9 @@ describe.each(environmentTable)('Press responder', hasPointerEvents => {
       });
     });
 
+    // @gate experimental
     it('"onPress" is called on re-entry to hit rect', () => {
+      componentInit();
       const target = createEventTarget(ref.current);
       const targetContainer = createEventTarget(container);
       target.setBoundingClientRect(rectMock);
@@ -754,6 +872,7 @@ describe.each(environmentTable)('Press responder', hasPointerEvents => {
 
   describe('nested responders', () => {
     if (hasPointerEvents) {
+      // @gate experimental
       it('dispatch events in the correct order', () => {
         const events = [];
         const ref = React.createRef();
@@ -814,6 +933,7 @@ describe.each(environmentTable)('Press responder', hasPointerEvents => {
     }
 
     describe('correctly not propagate', () => {
+      // @gate experimental
       it('for onPress', () => {
         const ref = React.createRef();
         const onPress = jest.fn();
@@ -840,6 +960,7 @@ describe.each(environmentTable)('Press responder', hasPointerEvents => {
         expect(onPress).toHaveBeenCalledTimes(1);
       });
 
+      // @gate experimental
       it('for onPressStart/onPressEnd', () => {
         const ref = React.createRef();
         const onPressStart = jest.fn();
@@ -869,6 +990,7 @@ describe.each(environmentTable)('Press responder', hasPointerEvents => {
         expect(onPressEnd).toHaveBeenCalledTimes(1);
       });
 
+      // @gate experimental
       it('for onPressChange', () => {
         const ref = React.createRef();
         const onPressChange = jest.fn();
@@ -898,6 +1020,7 @@ describe.each(environmentTable)('Press responder', hasPointerEvents => {
   });
 
   describe('link components', () => {
+    // @gate experimental
     it('prevents native behavior by default', () => {
       const onPress = jest.fn();
       const preventDefault = jest.fn();
@@ -918,6 +1041,7 @@ describe.each(environmentTable)('Press responder', hasPointerEvents => {
       );
     });
 
+    // @gate experimental
     it('prevents native behaviour for keyboard events by default', () => {
       const onPress = jest.fn();
       const preventDefault = jest.fn();
@@ -938,6 +1062,7 @@ describe.each(environmentTable)('Press responder', hasPointerEvents => {
       );
     });
 
+    // @gate experimental
     it('deeply prevents native behaviour by default', () => {
       const onPress = jest.fn();
       const preventDefault = jest.fn();
@@ -959,6 +1084,7 @@ describe.each(environmentTable)('Press responder', hasPointerEvents => {
       expect(preventDefault).toBeCalled();
     });
 
+    // @gate experimental
     it('prevents native behaviour by default with nested elements', () => {
       const onPress = jest.fn();
       const preventDefault = jest.fn();
@@ -983,6 +1109,7 @@ describe.each(environmentTable)('Press responder', hasPointerEvents => {
       );
     });
 
+    // @gate experimental
     it('uses native behaviour for interactions with modifier keys', () => {
       const onPress = jest.fn();
       const preventDefault = jest.fn();
@@ -1005,6 +1132,7 @@ describe.each(environmentTable)('Press responder', hasPointerEvents => {
       });
     });
 
+    // @gate experimental
     it('uses native behaviour for pointer events if preventDefault is false', () => {
       const onPress = jest.fn();
       const preventDefault = jest.fn();
@@ -1025,6 +1153,7 @@ describe.each(environmentTable)('Press responder', hasPointerEvents => {
       );
     });
 
+    // @gate experimental
     it('uses native behaviour for keyboard events if preventDefault is false', () => {
       const onPress = jest.fn();
       const preventDefault = jest.fn();
@@ -1048,7 +1177,8 @@ describe.each(environmentTable)('Press responder', hasPointerEvents => {
   });
 
   describe('responder cancellation', () => {
-    it.each(pointerTypesTable)('ends on pointer cancel', pointerType => {
+    // @gate experimental
+    it('ends on pointer cancel: mouse', () => {
       const onPressEnd = jest.fn();
       const ref = React.createRef();
 
@@ -1059,12 +1189,30 @@ describe.each(environmentTable)('Press responder', hasPointerEvents => {
       ReactDOM.render(<Component />, container);
 
       const target = createEventTarget(ref.current);
-      target.pointerdown({pointerType});
-      target.pointercancel({pointerType});
+      target.pointerdown({pointerType: 'mouse'});
+      target.pointercancel({pointerType: 'mouse'});
+      expect(onPressEnd).toHaveBeenCalledTimes(1);
+    });
+
+    // @gate experimental
+    it('ends on pointer cancel: touch', () => {
+      const onPressEnd = jest.fn();
+      const ref = React.createRef();
+
+      const Component = () => {
+        const listener = usePress({onPressEnd});
+        return <a href="#" ref={ref} DEPRECATED_flareListeners={listener} />;
+      };
+      ReactDOM.render(<Component />, container);
+
+      const target = createEventTarget(ref.current);
+      target.pointerdown({pointerType: 'touch'});
+      target.pointercancel({pointerType: 'touch'});
       expect(onPressEnd).toHaveBeenCalledTimes(1);
     });
   });
 
+  // @gate experimental
   it('does end on "scroll" to document (not mouse)', () => {
     const onPressEnd = jest.fn();
     const ref = React.createRef();
@@ -1082,6 +1230,7 @@ describe.each(environmentTable)('Press responder', hasPointerEvents => {
     expect(onPressEnd).toHaveBeenCalledTimes(1);
   });
 
+  // @gate experimental
   it('does end on "scroll" to a parent container (not mouse)', () => {
     const onPressEnd = jest.fn();
     const ref = React.createRef();
@@ -1104,6 +1253,7 @@ describe.each(environmentTable)('Press responder', hasPointerEvents => {
     expect(onPressEnd).toHaveBeenCalledTimes(1);
   });
 
+  // @gate experimental
   it('does not end on "scroll" to an element outside', () => {
     const onPressEnd = jest.fn();
     const ref = React.createRef();
@@ -1127,10 +1277,12 @@ describe.each(environmentTable)('Press responder', hasPointerEvents => {
     expect(onPressEnd).not.toBeCalled();
   });
 
+  // @gate experimental
   it('expect displayName to show up for event component', () => {
     expect(PressResponder.displayName).toBe('Press');
   });
 
+  // @gate experimental
   it('should not trigger an invariant in addRootEventTypes()', () => {
     const ref = React.createRef();
 
@@ -1147,6 +1299,7 @@ describe.each(environmentTable)('Press responder', hasPointerEvents => {
     target.pointerdown();
   });
 
+  // @gate experimental
   it('event.preventDefault works as expected', () => {
     const onPress = jest.fn(e => e.preventDefault());
     const onPressStart = jest.fn(e => e.preventDefault());
@@ -1166,5 +1319,27 @@ describe.each(environmentTable)('Press responder', hasPointerEvents => {
     expect(preventDefault).toBeCalled();
     expect(onPressStart).toBeCalled();
     expect(onPressEnd).toBeCalled();
+  });
+
+  // @gate experimental
+  it('when blur occurs on a pressed target, we should disengage press', () => {
+    const onPress = jest.fn();
+    const onPressStart = jest.fn();
+    const onPressEnd = jest.fn();
+    const buttonRef = React.createRef();
+
+    const Component = () => {
+      const listener = usePress({onPress, onPressStart, onPressEnd});
+      return <button ref={buttonRef} DEPRECATED_flareListeners={listener} />;
+    };
+    ReactDOM.render(<Component />, container);
+
+    const target = createEventTarget(buttonRef.current);
+    target.pointerdown();
+    expect(onPressStart).toBeCalled();
+    target.blur();
+    expect(onPressEnd).toBeCalled();
+    target.pointerup();
+    expect(onPress).not.toBeCalled();
   });
 });

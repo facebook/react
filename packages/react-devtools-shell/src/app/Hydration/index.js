@@ -7,7 +7,8 @@
  * @flow
  */
 
-import React, {Fragment, useDebugValue, useState} from 'react';
+import * as React from 'react';
+import {Fragment, useDebugValue, useState} from 'react';
 
 const div = document.createElement('div');
 const exmapleFunction = () => {};
@@ -17,8 +18,16 @@ typedArray[1] = 2;
 typedArray[2] = 3;
 
 const arrayOfArrays = [
-  [['a', 'b', 'c'], ['d', 'e', 'f'], ['h', 'i', 'j']],
-  [['k', 'l', 'm'], ['n', 'o', 'p'], ['q', 'r', 's']],
+  [
+    ['a', 'b', 'c'],
+    ['d', 'e', 'f'],
+    ['h', 'i', 'j'],
+  ],
+  [
+    ['k', 'l', 'm'],
+    ['n', 'o', 'p'],
+    ['q', 'r', 's'],
+  ],
   [['t', 'u', 'v'], ['w', 'x', 'y'], ['z']],
   [],
 ];

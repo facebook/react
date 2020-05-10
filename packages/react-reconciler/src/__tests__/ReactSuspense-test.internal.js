@@ -16,7 +16,7 @@ describe('ReactSuspense', () => {
   beforeEach(() => {
     jest.resetModules();
     ReactFeatureFlags = require('shared/ReactFeatureFlags');
-    ReactFeatureFlags.debugRenderPhaseSideEffectsForStrictMode = false;
+
     ReactFeatureFlags.replayFailedUnitOfWorkWithInvokeGuardedCallback = false;
     ReactFeatureFlags.enableSchedulerTracing = true;
     React = require('react');
@@ -28,46 +28,53 @@ describe('ReactSuspense', () => {
 
     Suspense = React.Suspense;
 
-    TextResource = ReactCache.unstable_createResource(([text, ms = 0]) => {
-      let listeners = null;
-      let status = 'pending';
-      let value = null;
-      return {
-        then(resolve, reject) {
-          switch (status) {
-            case 'pending': {
-              if (listeners === null) {
-                listeners = [{resolve, reject}];
-                setTimeout(() => {
-                  if (textResourceShouldFail) {
-                    Scheduler.unstable_yieldValue(`Promise rejected [${text}]`);
-                    status = 'rejected';
-                    value = new Error('Failed to load: ' + text);
-                    listeners.forEach(listener => listener.reject(value));
-                  } else {
-                    Scheduler.unstable_yieldValue(`Promise resolved [${text}]`);
-                    status = 'resolved';
-                    value = text;
-                    listeners.forEach(listener => listener.resolve(value));
-                  }
-                }, ms);
-              } else {
-                listeners.push({resolve, reject});
+    TextResource = ReactCache.unstable_createResource(
+      ([text, ms = 0]) => {
+        let listeners = null;
+        let status = 'pending';
+        let value = null;
+        return {
+          then(resolve, reject) {
+            switch (status) {
+              case 'pending': {
+                if (listeners === null) {
+                  listeners = [{resolve, reject}];
+                  setTimeout(() => {
+                    if (textResourceShouldFail) {
+                      Scheduler.unstable_yieldValue(
+                        `Promise rejected [${text}]`,
+                      );
+                      status = 'rejected';
+                      value = new Error('Failed to load: ' + text);
+                      listeners.forEach(listener => listener.reject(value));
+                    } else {
+                      Scheduler.unstable_yieldValue(
+                        `Promise resolved [${text}]`,
+                      );
+                      status = 'resolved';
+                      value = text;
+                      listeners.forEach(listener => listener.resolve(value));
+                    }
+                  }, ms);
+                } else {
+                  listeners.push({resolve, reject});
+                }
+                break;
               }
-              break;
+              case 'resolved': {
+                resolve(value);
+                break;
+              }
+              case 'rejected': {
+                reject(value);
+                break;
+              }
             }
-            case 'resolved': {
-              resolve(value);
-              break;
-            }
-            case 'rejected': {
-              reject(value);
-              break;
-            }
-          }
-        },
-      };
-    }, ([text, ms]) => text);
+          },
+        };
+      },
+      ([text, ms]) => text,
+    );
     textResourceShouldFail = false;
   });
 
@@ -192,7 +199,7 @@ describe('ReactSuspense', () => {
 
   it('interrupts current render if promise resolves before current render phase', () => {
     let didResolve = false;
-    let listeners = [];
+    const listeners = [];
 
     const thenable = {
       then(resolve) {
@@ -315,6 +322,7 @@ describe('ReactSuspense', () => {
     },
   );
 
+  // @gate experimental
   it(
     'interrupts current render when something suspends with a ' +
       "delay and we've already skipped over a lower priority update in " +
@@ -350,15 +358,20 @@ describe('ReactSuspense', () => {
       // This update will suspend.
       root.update(<App shouldSuspend={true} step={1} />);
 
-      // Need to move into the next async bucket.
-      Scheduler.unstable_advanceTime(1000);
-      // Do a bit of work, then interrupt to trigger a restart.
+      // Do a bit of work
       expect(Scheduler).toFlushAndYieldThrough(['A1']);
-      interrupt();
 
-      // Schedule another update. This will have lower priority because of
-      // the interrupt trick above.
-      root.update(<App shouldSuspend={false} step={2} />);
+      // Schedule another update. This will have lower priority because it's
+      // a transition.
+      React.unstable_withSuspenseConfig(
+        () => {
+          root.update(<App shouldSuspend={false} step={2} />);
+        },
+        {timeoutMs: 10000},
+      );
+
+      // Interrupt to trigger a restart.
+      interrupt();
 
       expect(Scheduler).toFlushAndYieldThrough([
         // Should have restarted the first update, because of the interruption
@@ -382,6 +395,7 @@ describe('ReactSuspense', () => {
     },
   );
 
+  // @gate experimental
   it(
     'interrupts current render when something suspends with a ' +
       "delay and we've already bailed out lower priority update in " +
@@ -443,16 +457,20 @@ describe('ReactSuspense', () => {
         setShouldSuspend(true);
 
         // Need to move into the next async bucket.
-        Scheduler.unstable_advanceTime(1000);
         // Do a bit of work, then interrupt to trigger a restart.
         expect(Scheduler).toFlushAndYieldThrough(['A']);
         interrupt();
         // Should not have committed loading state
         expect(root).toMatchRenderedOutput('ABC');
 
-        // Schedule another update. This will have lower priority because of
-        // the interrupt trick above.
-        setShouldHideInParent(true);
+        // Schedule another update. This will have lower priority because it's
+        // a transition.
+        React.unstable_withSuspenseConfig(
+          () => {
+            setShouldHideInParent(true);
+          },
+          {timeoutMs: 10000},
+        );
 
         expect(Scheduler).toFlushAndYieldThrough([
           // Should have restarted the first update, because of the interruption
@@ -884,12 +902,9 @@ describe('ReactSuspense', () => {
       function AsyncTextWithEffect(props) {
         const text = props.text;
 
-        useLayoutEffect(
-          () => {
-            Scheduler.unstable_yieldValue('Did commit: ' + text);
-          },
-          [text],
-        );
+        useLayoutEffect(() => {
+          Scheduler.unstable_yieldValue('Did commit: ' + text);
+        }, [text]);
 
         try {
           TextResource.read([props.text, props.ms]);

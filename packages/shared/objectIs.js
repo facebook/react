@@ -17,4 +17,7 @@ function is(x: any, y: any) {
   );
 }
 
-export default (typeof Object.is === 'function' ? Object.is : is);
+const objectIs: (x: any, y: any) => boolean =
+  typeof Object.is === 'function' ? Object.is : is;
+
+export default objectIs;

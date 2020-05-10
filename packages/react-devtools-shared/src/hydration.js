@@ -7,7 +7,6 @@
  * @flow
  */
 
-import Symbol from 'es6-symbol';
 import {
   getDataType,
   getDisplayNameForReactElement,
@@ -52,6 +51,7 @@ export type Unserializable = {
   size?: number,
   type: string,
   unserializable: boolean,
+  ...
 };
 
 // This threshold determines the depth at which the bridge "dehydrates" nested data.
@@ -129,7 +129,7 @@ export function dehydrate(
   | Unserializable
   | Array<Dehydrated>
   | Array<Unserializable>
-  | {[key: string]: string | Dehydrated | Unserializable} {
+  | {[key: string]: string | Dehydrated | Unserializable, ...} {
   const type = getDataType(data);
 
   let isPathWhitelistedCheck;
@@ -151,7 +151,7 @@ export function dehydrate(
         inspectable: false,
         preview_short: formatDataForPreview(data, false),
         preview_long: formatDataForPreview(data, true),
-        name: data.name,
+        name: data.name || 'function',
         type,
       };
 
@@ -287,7 +287,7 @@ export function dehydrate(
         return createDehydrated(type, true, data, cleaned, path);
       } else {
         const object = {};
-        for (let name in data) {
+        for (const name in data) {
           object[name] = dehydrate(
             data[name],
             cleaned,
@@ -375,7 +375,7 @@ export function hydrate(
       parent[last] = undefined;
     } else {
       // Replace the string keys with Symbols so they're non-enumerable.
-      const replaced: {[key: Symbol]: boolean | string} = {};
+      const replaced: {[key: Symbol]: boolean | string, ...} = {};
       replaced[meta.inspectable] = !!value.inspectable;
       replaced[meta.inspected] = false;
       replaced[meta.name] = value.name;

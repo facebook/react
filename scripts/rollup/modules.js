@@ -1,11 +1,7 @@
 'use strict';
 
 const forks = require('./forks');
-const bundleTypes = require('./bundles').bundleTypes;
-
-const UMD_DEV = bundleTypes.UMD_DEV;
-const UMD_PROD = bundleTypes.UMD_PROD;
-const UMD_PROFILING = bundleTypes.UMD_PROFILING;
+const {UMD_DEV, UMD_PROD, UMD_PROFILING} = require('./bundles').bundleTypes;
 
 // For any external that is used in a DEV-only condition, explicitly
 // specify whether it has side effects during import or not. This lets
@@ -18,6 +14,7 @@ const importSideEffects = Object.freeze({
   scheduler: HAS_NO_SIDE_EFFECTS_ON_IMPORT,
   'scheduler/tracing': HAS_NO_SIDE_EFFECTS_ON_IMPORT,
   'react-dom/server': HAS_NO_SIDE_EFFECTS_ON_IMPORT,
+  'react/jsx-dev-runtime': HAS_NO_SIDE_EFFECTS_ON_IMPORT,
 });
 
 // Bundles exporting globals that other modules rely on.
@@ -64,7 +61,7 @@ function getDependencies(bundleType, entry) {
 }
 
 // Hijacks some modules for optimization and integration reasons.
-function getForks(bundleType, entry, moduleType) {
+function getForks(bundleType, entry, moduleType, bundle) {
   const forksForBundle = {};
   Object.keys(forks).forEach(srcModule => {
     const dependencies = getDependencies(bundleType, entry);
@@ -72,7 +69,8 @@ function getForks(bundleType, entry, moduleType) {
       bundleType,
       entry,
       dependencies,
-      moduleType
+      moduleType,
+      bundle
     );
     if (targetModule === null) {
       return;

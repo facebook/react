@@ -7,7 +7,7 @@
  * @flow
  */
 
-import EventEmitter from 'events';
+import EventEmitter from '../events';
 import throttle from 'lodash.throttle';
 import {
   SESSION_STORAGE_LAST_SELECTION_KEY,
@@ -109,7 +109,7 @@ export default class Agent extends EventEmitter<{|
   _bridge: BackendBridge;
   _isProfiling: boolean = false;
   _recordChangeDescriptions: boolean = false;
-  _rendererInterfaces: {[key: RendererID]: RendererInterface} = {};
+  _rendererInterfaces: {[key: RendererID]: RendererInterface, ...} = {};
   _persistedSelection: PersistedSelection | null = null;
   _persistedSelectionMatch: PathMatch | null = null;
   _traceUpdatesEnabled: boolean = false;
@@ -185,7 +185,7 @@ export default class Agent extends EventEmitter<{|
     setupTraceUpdates(this);
   }
 
-  get rendererInterfaces(): {[key: RendererID]: RendererInterface} {
+  get rendererInterfaces(): {[key: RendererID]: RendererInterface, ...} {
     return this._rendererInterfaces;
   }
 
@@ -211,7 +211,7 @@ export default class Agent extends EventEmitter<{|
   }
 
   getIDForNode(node: Object): number | null {
-    for (let rendererID in this._rendererInterfaces) {
+    for (const rendererID in this._rendererInterfaces) {
       const renderer = ((this._rendererInterfaces[
         (rendererID: any)
       ]: any): RendererInterface);
@@ -389,7 +389,7 @@ export default class Agent extends EventEmitter<{|
 
     setTraceUpdatesEnabled(traceUpdatesEnabled);
 
-    for (let rendererID in this._rendererInterfaces) {
+    for (const rendererID in this._rendererInterfaces) {
       const renderer = ((this._rendererInterfaces[
         (rendererID: any)
       ]: any): RendererInterface);
@@ -413,7 +413,7 @@ export default class Agent extends EventEmitter<{|
   startProfiling = (recordChangeDescriptions: boolean) => {
     this._recordChangeDescriptions = recordChangeDescriptions;
     this._isProfiling = true;
-    for (let rendererID in this._rendererInterfaces) {
+    for (const rendererID in this._rendererInterfaces) {
       const renderer = ((this._rendererInterfaces[
         (rendererID: any)
       ]: any): RendererInterface);
@@ -425,7 +425,7 @@ export default class Agent extends EventEmitter<{|
   stopProfiling = () => {
     this._isProfiling = false;
     this._recordChangeDescriptions = false;
-    for (let rendererID in this._rendererInterfaces) {
+    for (const rendererID in this._rendererInterfaces) {
       const renderer = ((this._rendererInterfaces[
         (rendererID: any)
       ]: any): RendererInterface);
@@ -456,7 +456,7 @@ export default class Agent extends EventEmitter<{|
   };
 
   updateComponentFilters = (componentFilters: Array<ComponentFilter>) => {
-    for (let rendererID in this._rendererInterfaces) {
+    for (const rendererID in this._rendererInterfaces) {
       const renderer = ((this._rendererInterfaces[
         (rendererID: any)
       ]: any): RendererInterface);

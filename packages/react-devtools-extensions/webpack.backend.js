@@ -24,7 +24,11 @@ module.exports = {
   },
   output: {
     path: __dirname + '/build',
-    filename: '[name].js',
+    filename: 'react_devtools_backend.js',
+  },
+  node: {
+    // Don't define a polyfill on window.setImmediate
+    setImmediate: false,
   },
   resolve: {
     alias: {
@@ -38,6 +42,8 @@ module.exports = {
   plugins: [
     new DefinePlugin({
       __DEV__: true,
+      __PROFILE__: false,
+      __EXPERIMENTAL__: true,
       'process.env.DEVTOOLS_VERSION': `"${DEVTOOLS_VERSION}"`,
       'process.env.GITHUB_URL': `"${GITHUB_URL}"`,
     }),

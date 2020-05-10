@@ -7,13 +7,10 @@
  * @flow
  */
 
-import Symbol from 'es6-symbol';
 import LRU from 'lru-cache';
 import {
   isElement,
   typeOf,
-  AsyncMode,
-  ConcurrentMode,
   ContextConsumer,
   ContextProvider,
   ForwardRef,
@@ -44,7 +41,6 @@ import {
   ElementTypeMemo,
 } from 'react-devtools-shared/src/types';
 import {localStorageGetItem, localStorageSetItem} from './storage';
-import {alphaSortEntries} from './devtools/views/utils';
 import {meta} from './hydration';
 
 import type {ComponentFilter, ElementType} from './types';
@@ -53,7 +49,17 @@ const cachedDisplayNames: WeakMap<Function, string> = new WeakMap();
 
 // On large trees, encoding takes significant time.
 // Try to reuse the already encoded strings.
-let encodedStringCache = new LRU({max: 1000});
+const encodedStringCache = new LRU({max: 1000});
+
+export function alphaSortKeys(a: string, b: string): number {
+  if (a > b) {
+    return 1;
+  } else if (b > a) {
+    return -1;
+  } else {
+    return 0;
+  }
+}
 
 export function getDisplayName(
   type: Function,
@@ -90,7 +96,7 @@ export function utfDecodeString(array: Array<number>): string {
 }
 
 export function utfEncodeString(string: string): Array<number> {
-  let cached = encodedStringCache.get(string);
+  const cached = encodedStringCache.get(string);
   if (cached !== undefined) {
     return cached;
   }
@@ -108,7 +114,7 @@ export function printOperationsArray(operations: Array<number>) {
   const rendererID = operations[0];
   const rootID = operations[1];
 
-  const logs = [`opertions for renderer:${rendererID} and root:${rootID}`];
+  const logs = [`operations for renderer:${rendererID} and root:${rootID}`];
 
   let i = 2;
 
@@ -275,12 +281,12 @@ export function separateDisplayNameAndHOCs(
 // Pulled from react-compat
 // https://github.com/developit/preact-compat/blob/7c5de00e7c85e2ffd011bf3af02899b63f699d3a/src/index.js#L349
 export function shallowDiffers(prev: Object, next: Object): boolean {
-  for (let attribute in prev) {
+  for (const attribute in prev) {
     if (!(attribute in next)) {
       return true;
     }
   }
-  for (let attribute in next) {
+  for (const attribute in next) {
     if (prev[attribute] !== next[attribute]) {
       return true;
     }
@@ -385,10 +391,10 @@ export function getDataType(data: Object): DataType {
       if (Array.isArray(data)) {
         return 'array';
       } else if (ArrayBuffer.isView(data)) {
-        return data.constructor.hasOwnProperty('BYTES_PER_ELEMENT')
+        return hasOwnProperty.call(data.constructor, 'BYTES_PER_ELEMENT')
           ? 'typed_array'
           : 'data_view';
-      } else if (data.constructor.name === 'ArrayBuffer') {
+      } else if (data.constructor && data.constructor.name === 'ArrayBuffer') {
         // HACK This ArrayBuffer check is gross; is there a better way?
         // We could try to create a new DataView with the value.
         // If it doesn't error, we know it's an ArrayBuffer,
@@ -396,7 +402,7 @@ export function getDataType(data: Object): DataType {
         return 'array_buffer';
       } else if (typeof data[Symbol.iterator] === 'function') {
         return 'iterator';
-      } else if (data.constructor.name === 'RegExp') {
+      } else if (data.constructor && data.constructor.name === 'RegExp') {
         return 'regexp';
       } else if (Object.prototype.toString.call(data) === '[object Date]') {
         return 'date';
@@ -416,9 +422,6 @@ export function getDisplayNameForReactElement(
 ): string | null {
   const elementType = typeOf(element);
   switch (elementType) {
-    case AsyncMode:
-    case ConcurrentMode:
-      return 'ConcurrentMode';
     case ContextConsumer:
       return 'ContextConsumer';
     case ContextProvider:
@@ -490,7 +493,7 @@ export function formatDataForPreview(
   data: any,
   showFormattedValue: boolean,
 ): string {
-  if (data != null && data.hasOwnProperty(meta.type)) {
+  if (data != null && hasOwnProperty.call(data, meta.type)) {
     return showFormattedValue
       ? data[meta.preview_long]
       : data[meta.preview_short];
@@ -502,7 +505,7 @@ export function formatDataForPreview(
     case 'html_element':
       return `<${truncateForDisplay(data.tagName.toLowerCase())} />`;
     case 'function':
-      return truncateForDisplay(data.name);
+      return truncateForDisplay(`ƒ ${data.name}() {}`);
     case 'string':
       return `"${data}"`;
     case 'bigint':
@@ -534,7 +537,7 @@ export function formatDataForPreview(
         }
         return `[${truncateForDisplay(formatted)}]`;
       } else {
-        const length = data.hasOwnProperty(meta.size)
+        const length = hasOwnProperty.call(data, meta.size)
           ? data[meta.size]
           : data.length;
         return `Array(${length})`;
@@ -601,7 +604,7 @@ export function formatDataForPreview(
       return data.toString();
     case 'object':
       if (showFormattedValue) {
-        const keys = Object.keys(data).sort(alphaSortEntries);
+        const keys = Object.keys(data).sort(alphaSortKeys);
 
         let formatted = '';
         for (let i = 0; i < keys.length; i++) {

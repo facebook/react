@@ -8,14 +8,22 @@
  */
 
 import type {
+  MutableSource,
+  MutableSourceGetSnapshotFn,
+  MutableSourceSubscribeFn,
   ReactContext,
   ReactEventResponder,
   ReactEventResponderListener,
 } from 'shared/ReactTypes';
+import type {OpaqueIDType} from 'react-reconciler/src/ReactFiberHostConfig';
+
 import invariant from 'shared/invariant';
 import {REACT_RESPONDER_TYPE} from 'shared/ReactSymbols';
 
 import ReactCurrentDispatcher from './ReactCurrentDispatcher';
+
+type BasicStateAction<S> = (S => S) | S;
+type Dispatch<A> = A => void;
 
 function resolveDispatcher() {
   const dispatcher = ReactCurrentDispatcher.current;
@@ -34,7 +42,7 @@ function resolveDispatcher() {
 export function useContext<T>(
   Context: ReactContext<T>,
   unstable_observedBits: number | boolean | void,
-) {
+): T {
   const dispatcher = resolveDispatcher();
   if (__DEV__) {
     if (unstable_observedBits !== undefined) {
@@ -45,8 +53,8 @@ export function useContext<T>(
         unstable_observedBits,
         typeof unstable_observedBits === 'number' && Array.isArray(arguments[2])
           ? '\n\nDid you call array.map(useContext)? ' +
-            'Calling Hooks inside a loop is not supported. ' +
-            'Learn more at https://fb.me/rules-of-hooks'
+              'Calling Hooks inside a loop is not supported. ' +
+              'Learn more at https://fb.me/rules-of-hooks'
           : '',
       );
     }
@@ -72,7 +80,9 @@ export function useContext<T>(
   return dispatcher.useContext(Context, unstable_observedBits);
 }
 
-export function useState<S>(initialState: (() => S) | S) {
+export function useState<S>(
+  initialState: (() => S) | S,
+): [S, Dispatch<BasicStateAction<S>>] {
   const dispatcher = resolveDispatcher();
   return dispatcher.useState(initialState);
 }
@@ -81,58 +91,61 @@ export function useReducer<S, I, A>(
   reducer: (S, A) => S,
   initialArg: I,
   init?: I => S,
-) {
+): [S, Dispatch<A>] {
   const dispatcher = resolveDispatcher();
   return dispatcher.useReducer(reducer, initialArg, init);
 }
 
-export function useRef<T>(initialValue: T): {current: T} {
+export function useRef<T>(initialValue: T): {|current: T|} {
   const dispatcher = resolveDispatcher();
   return dispatcher.useRef(initialValue);
 }
 
 export function useEffect(
   create: () => (() => void) | void,
-  inputs: Array<mixed> | void | null,
-) {
+  deps: Array<mixed> | void | null,
+): void {
   const dispatcher = resolveDispatcher();
-  return dispatcher.useEffect(create, inputs);
+  return dispatcher.useEffect(create, deps);
 }
 
 export function useLayoutEffect(
   create: () => (() => void) | void,
-  inputs: Array<mixed> | void | null,
-) {
+  deps: Array<mixed> | void | null,
+): void {
   const dispatcher = resolveDispatcher();
-  return dispatcher.useLayoutEffect(create, inputs);
+  return dispatcher.useLayoutEffect(create, deps);
 }
 
-export function useCallback(
-  callback: () => mixed,
-  inputs: Array<mixed> | void | null,
-) {
+export function useCallback<T>(
+  callback: T,
+  deps: Array<mixed> | void | null,
+): T {
   const dispatcher = resolveDispatcher();
-  return dispatcher.useCallback(callback, inputs);
+  return dispatcher.useCallback(callback, deps);
 }
 
-export function useMemo(
-  create: () => mixed,
-  inputs: Array<mixed> | void | null,
-) {
+export function useMemo<T>(
+  create: () => T,
+  deps: Array<mixed> | void | null,
+): T {
   const dispatcher = resolveDispatcher();
-  return dispatcher.useMemo(create, inputs);
+  return dispatcher.useMemo(create, deps);
 }
 
 export function useImperativeHandle<T>(
-  ref: {current: T | null} | ((inst: T | null) => mixed) | null | void,
+  ref: {|current: T | null|} | ((inst: T | null) => mixed) | null | void,
   create: () => T,
-  inputs: Array<mixed> | void | null,
+  deps: Array<mixed> | void | null,
 ): void {
   const dispatcher = resolveDispatcher();
-  return dispatcher.useImperativeHandle(ref, create, inputs);
+  return dispatcher.useImperativeHandle(ref, create, deps);
 }
 
-export function useDebugValue(value: any, formatterFn: ?(value: any) => any) {
+export function useDebugValue<T>(
+  value: T,
+  formatterFn: ?(value: T) => mixed,
+): void {
   if (__DEV__) {
     const dispatcher = resolveDispatcher();
     return dispatcher.useDebugValue(value, formatterFn);
@@ -168,4 +181,18 @@ export function useTransition(
 export function useDeferredValue<T>(value: T, config: ?Object): T {
   const dispatcher = resolveDispatcher();
   return dispatcher.useDeferredValue(value, config);
+}
+
+export function useOpaqueIdentifier(): OpaqueIDType | void {
+  const dispatcher = resolveDispatcher();
+  return dispatcher.useOpaqueIdentifier();
+}
+
+export function useMutableSource<Source, Snapshot>(
+  source: MutableSource<Source>,
+  getSnapshot: MutableSourceGetSnapshotFn<Source, Snapshot>,
+  subscribe: MutableSourceSubscribeFn<Source, Snapshot>,
+): Snapshot {
+  const dispatcher = resolveDispatcher();
+  return dispatcher.useMutableSource(source, getSnapshot, subscribe);
 }

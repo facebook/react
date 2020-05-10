@@ -28,7 +28,7 @@ const main = async () => {
   console.log('WEB_EXT_FIREFOX=nightly yarn run test:firefox');
   console.log(chalk.gray('\n# You can test against older versions too:'));
   console.log(
-    'WEB_EXT_FIREFOX=/Applications/Firefox52.app/Contents/MacOS/firefox-bin yarn run test:firefox'
+    'WEB_EXT_FIREFOX=/Applications/Firefox Developer Edition.app/Contents/MacOS/firefox-bin yarn run test:firefox'
   );
 };
 

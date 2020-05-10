@@ -11,12 +11,18 @@ import type {DispatchConfig} from './ReactSyntheticEventType';
 import type {
   AnyNativeEvent,
   PluginName,
-  PluginModule,
+  LegacyPluginModule,
+  ModernPluginModule,
 } from './PluginModuleType';
 
 import invariant from 'shared/invariant';
 
-type NamesToPlugins = {[key: PluginName]: PluginModule<AnyNativeEvent>};
+type NamesToPlugins = {
+  [key: PluginName]:
+    | LegacyPluginModule<AnyNativeEvent>
+    | ModernPluginModule<AnyNativeEvent>,
+  ...,
+};
 type EventPluginOrder = null | Array<PluginName>;
 
 /**
@@ -84,12 +90,14 @@ function recomputePluginOrdering(): void {
  */
 function publishEventForPlugin(
   dispatchConfig: DispatchConfig,
-  pluginModule: PluginModule<AnyNativeEvent>,
+  pluginModule:
+    | LegacyPluginModule<AnyNativeEvent>
+    | ModernPluginModule<AnyNativeEvent>,
   eventName: string,
 ): boolean {
   invariant(
     !eventNameDispatchConfigs.hasOwnProperty(eventName),
-    'EventPluginHub: More than one plugin attempted to publish the same ' +
+    'EventPluginRegistry: More than one plugin attempted to publish the same ' +
       'event name, `%s`.',
     eventName,
   );
@@ -128,12 +136,14 @@ function publishEventForPlugin(
  */
 function publishRegistrationName(
   registrationName: string,
-  pluginModule: PluginModule<AnyNativeEvent>,
+  pluginModule:
+    | LegacyPluginModule<AnyNativeEvent>
+    | ModernPluginModule<AnyNativeEvent>,
   eventName: string,
 ): void {
   invariant(
     !registrationNameModules[registrationName],
-    'EventPluginHub: More than one plugin attempted to publish the same ' +
+    'EventPluginRegistry: More than one plugin attempted to publish the same ' +
       'registration name, `%s`.',
     registrationName,
   );
@@ -153,8 +163,6 @@ function publishRegistrationName(
 
 /**
  * Registers plugins so that they can extract and dispatch events.
- *
- * @see {EventPluginHub}
  */
 
 /**
@@ -193,7 +201,6 @@ export const possibleRegistrationNames = __DEV__ ? {} : (null: any);
  *
  * @param {array} InjectedEventPluginOrder
  * @internal
- * @see {EventPluginHub.injection.injectEventPluginOrder}
  */
 export function injectEventPluginOrder(
   injectedEventPluginOrder: EventPluginOrder,
@@ -209,14 +216,13 @@ export function injectEventPluginOrder(
 }
 
 /**
- * Injects plugins to be used by `EventPluginHub`. The plugin names must be
+ * Injects plugins to be used by plugin event system. The plugin names must be
  * in the ordering injected by `injectEventPluginOrder`.
  *
  * Plugins can be injected as part of page initialization or on-the-fly.
  *
  * @param {object} injectedNamesToPlugins Map from names to plugin modules.
  * @internal
- * @see {EventPluginHub.injection.injectEventPluginsByName}
  */
 export function injectEventPluginsByName(
   injectedNamesToPlugins: NamesToPlugins,
@@ -243,5 +249,22 @@ export function injectEventPluginsByName(
   }
   if (isOrderingDirty) {
     recomputePluginOrdering();
+  }
+}
+
+export function injectEventPlugins(
+  eventPlugins: [ModernPluginModule<AnyNativeEvent>],
+): void {
+  for (let i = 0; i < eventPlugins.length; i++) {
+    const pluginModule = eventPlugins[i];
+    plugins.push(pluginModule);
+    const publishedEvents = pluginModule.eventTypes;
+    for (const eventName in publishedEvents) {
+      publishEventForPlugin(
+        publishedEvents[eventName],
+        pluginModule,
+        eventName,
+      );
+    }
   }
 }

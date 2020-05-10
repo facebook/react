@@ -281,14 +281,22 @@ describe('ReactMultiChild', () => {
   it('should warn for using maps as children with owner info', () => {
     class Parent extends React.Component {
       render() {
-        return <div>{new Map([['foo', 0], ['bar', 1]])}</div>;
+        return (
+          <div>
+            {
+              new Map([
+                ['foo', 0],
+                ['bar', 1],
+              ])
+            }
+          </div>
+        );
       }
     }
     const container = document.createElement('div');
     expect(() => ReactDOM.render(<Parent />, container)).toErrorDev(
-      'Warning: Using Maps as children is unsupported and will likely yield ' +
-        'unexpected results. Convert it to a sequence/iterable of keyed ' +
-        'ReactElements instead.\n' +
+      'Using Maps as children is not supported. ' +
+        'Use an array of keyed ReactElements instead.\n' +
         '    in div (at **)\n' +
         '    in Parent (at **)',
     );
@@ -296,8 +304,8 @@ describe('ReactMultiChild', () => {
 
   it('should warn for using generators as children', () => {
     function* Foo() {
-      yield <h1 key="1">Hello</h1>;
-      yield <h1 key="2">World</h1>;
+      yield (<h1 key="1">Hello</h1>);
+      yield (<h1 key="2">World</h1>);
     }
 
     const div = document.createElement('div');
@@ -318,8 +326,8 @@ describe('ReactMultiChild', () => {
   it('should not warn for using generators in legacy iterables', () => {
     const fooIterable = {
       '@@iterator': function*() {
-        yield <h1 key="1">Hello</h1>;
-        yield <h1 key="2">World</h1>;
+        yield (<h1 key="1">Hello</h1>);
+        yield (<h1 key="2">World</h1>);
       },
     };
 
@@ -338,8 +346,8 @@ describe('ReactMultiChild', () => {
   it('should not warn for using generators in modern iterables', () => {
     const fooIterable = {
       [Symbol.iterator]: function*() {
-        yield <h1 key="1">Hello</h1>;
-        yield <h1 key="2">World</h1>;
+        yield (<h1 key="1">Hello</h1>);
+        yield (<h1 key="2">World</h1>);
       },
     };
 
@@ -374,7 +382,13 @@ describe('ReactMultiChild', () => {
     class Letters extends React.Component {
       render() {
         const letters = this.props.letters.split('');
-        return <div>{letters.map(c => <Letter key={c} char={c} />)}</div>;
+        return (
+          <div>
+            {letters.map(c => (
+              <Letter key={c} char={c} />
+            ))}
+          </div>
+        );
       }
     }
 

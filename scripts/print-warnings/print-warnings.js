@@ -6,7 +6,7 @@
  */
 'use strict';
 
-const babylon = require('babylon');
+const babelParser = require('@babel/parser');
 const fs = require('fs');
 const through = require('through2');
 const traverse = require('@babel/traverse').default;
@@ -14,9 +14,9 @@ const gs = require('glob-stream');
 
 const evalToString = require('../shared/evalToString');
 
-const babylonOptions = {
+const parserOptions = {
   sourceType: 'module',
-  // As a parser, babylon has its own options and we can't directly
+  // babelParser has its own options and we can't directly
   // import/require a babel preset. It should be kept **the same** as
   // the `babel-plugin-syntax-*` ones specified in
   // https://github.com/facebook/fbjs/blob/master/packages/babel-preset-fbjs/configure.js
@@ -40,7 +40,7 @@ function transform(file, enc, cb) {
 
     let ast;
     try {
-      ast = babylon.parse(source, babylonOptions);
+      ast = babelParser.parse(source, parserOptions);
     } catch (error) {
       console.error('Failed to parse source file:', file.path);
       throw error;

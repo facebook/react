@@ -22,7 +22,7 @@ describe('ReactServer', () => {
   });
 
   it('can call render', () => {
-    let result = ReactNoopServer.render(<div>hello world</div>);
+    const result = ReactNoopServer.render(<div>hello world</div>);
     expect(result).toEqual([{type: 'div', props: {children: 'hello world'}}]);
   });
 });

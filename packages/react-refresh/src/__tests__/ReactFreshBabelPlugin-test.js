@@ -7,9 +7,9 @@
 
 'use strict';
 
-let babel = require('@babel/core');
-let {wrap} = require('jest-snapshot-serializer-raw');
-let freshPlugin = require('react-refresh/babel');
+const babel = require('@babel/core');
+const {wrap} = require('jest-snapshot-serializer-raw');
+const freshPlugin = require('react-refresh/babel');
 
 function transform(input, options = {}) {
   return wrap(
@@ -415,7 +415,7 @@ describe('ReactFreshBabelPlugin', () => {
         }
     `,
         {
-          plugins: ['transform-es2015-modules-commonjs'],
+          plugins: ['@babel/transform-modules-commonjs'],
         },
       ),
     ).toMatchSnapshot();

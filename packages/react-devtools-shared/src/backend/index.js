@@ -19,6 +19,10 @@ export function initBackend(
   agent: Agent,
   global: Object,
 ): () => void {
+  if (hook == null) {
+    // DevTools didn't get injected into this page (maybe b'c of the contentType).
+    return () => {};
+  }
   const subs = [
     hook.sub(
       'renderer-attached',
@@ -30,6 +34,7 @@ export function initBackend(
         id: number,
         renderer: ReactRenderer,
         rendererInterface: RendererInterface,
+        ...
       }) => {
         agent.setRendererInterface(id, rendererInterface);
 
@@ -91,7 +96,7 @@ export function initBackend(
   subs.push(
     hook.sub(
       'renderer',
-      ({id, renderer}: {id: number, renderer: ReactRenderer}) => {
+      ({id, renderer}: {id: number, renderer: ReactRenderer, ...}) => {
         attachRenderer(id, renderer);
       },
     ),

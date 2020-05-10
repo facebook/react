@@ -14,11 +14,13 @@ import {
   useLayoutEffect,
   useReducer,
   useState,
+  useContext,
 } from 'react';
 import {
   localStorageGetItem,
   localStorageSetItem,
 } from 'react-devtools-shared/src/storage';
+import {StoreContext, BridgeContext} from './context';
 import {sanitizeForParse, smartParse, smartStringify} from '../utils';
 
 type ACTION_RESET = {|
@@ -79,6 +81,7 @@ export function useEditableValue(
 ): [UseEditableValueState, UseEditableValueDispatch] {
   const [state, dispatch] = useReducer<
     UseEditableValueState,
+    UseEditableValueState,
     UseEditableValueAction,
   >(useEditableValueReducer, {
     editableValue: smartStringify(externalValue),
@@ -106,36 +109,33 @@ export function useEditableValue(
 }
 
 export function useIsOverflowing(
-  containerRef: {current: HTMLDivElement | null},
+  containerRef: {current: HTMLDivElement | null, ...},
   totalChildWidth: number,
 ): boolean {
   const [isOverflowing, setIsOverflowing] = useState<boolean>(false);
 
   // It's important to use a layout effect, so that we avoid showing a flash of overflowed content.
-  useLayoutEffect(
-    () => {
-      if (containerRef.current === null) {
-        return () => {};
-      }
+  useLayoutEffect(() => {
+    if (containerRef.current === null) {
+      return () => {};
+    }
 
-      const container = ((containerRef.current: any): HTMLDivElement);
+    const container = ((containerRef.current: any): HTMLDivElement);
 
-      const handleResize = throttle(
-        () => setIsOverflowing(container.clientWidth <= totalChildWidth),
-        100,
-      );
+    const handleResize = throttle(
+      () => setIsOverflowing(container.clientWidth <= totalChildWidth),
+      100,
+    );
 
-      handleResize();
+    handleResize();
 
-      // It's important to listen to the ownerDocument.defaultView to support the browser extension.
-      // Here we use portals to render individual tabs (e.g. Profiler),
-      // and the root document might belong to a different window.
-      const ownerWindow = container.ownerDocument.defaultView;
-      ownerWindow.addEventListener('resize', handleResize);
-      return () => ownerWindow.removeEventListener('resize', handleResize);
-    },
-    [containerRef, totalChildWidth],
-  );
+    // It's important to listen to the ownerDocument.defaultView to support the browser extension.
+    // Here we use portals to render individual tabs (e.g. Profiler),
+    // and the root document might belong to a different window.
+    const ownerWindow = container.ownerDocument.defaultView;
+    ownerWindow.addEventListener('resize', handleResize);
+    return () => ownerWindow.removeEventListener('resize', handleResize);
+  }, [containerRef, totalChildWidth]);
 
   return isOverflowing;
 }
@@ -145,26 +145,23 @@ export function useLocalStorage<T>(
   key: string,
   initialValue: T | (() => T),
 ): [T, (value: T | (() => T)) => void] {
-  const getValueFromLocalStorage = useCallback(
-    () => {
-      try {
-        const item = localStorageGetItem(key);
-        if (item != null) {
-          return JSON.parse(item);
-        }
-      } catch (error) {
-        console.log(error);
+  const getValueFromLocalStorage = useCallback(() => {
+    try {
+      const item = localStorageGetItem(key);
+      if (item != null) {
+        return JSON.parse(item);
       }
-      if (typeof initialValue === 'function') {
-        return ((initialValue: any): () => T)();
-      } else {
-        return initialValue;
-      }
-    },
-    [initialValue, key],
-  );
+    } catch (error) {
+      console.log(error);
+    }
+    if (typeof initialValue === 'function') {
+      return ((initialValue: any): () => T)();
+    } else {
+      return initialValue;
+    }
+  }, [initialValue, key]);
 
-  const [storedValue, setStoredValue] = useState(getValueFromLocalStorage);
+  const [storedValue, setStoredValue] = useState<any>(getValueFromLocalStorage);
 
   const setValue = useCallback(
     value => {
@@ -182,73 +179,67 @@ export function useLocalStorage<T>(
 
   // Listen for changes to this local storage value made from other windows.
   // This enables the e.g. "⚛️ Elements" tab to update in response to changes from "⚛️ Settings".
-  useLayoutEffect(
-    () => {
-      const onStorage = event => {
-        const newValue = getValueFromLocalStorage();
-        if (key === event.key && storedValue !== newValue) {
-          setValue(newValue);
-        }
-      };
+  useLayoutEffect(() => {
+    const onStorage = event => {
+      const newValue = getValueFromLocalStorage();
+      if (key === event.key && storedValue !== newValue) {
+        setValue(newValue);
+      }
+    };
 
-      window.addEventListener('storage', onStorage);
+    window.addEventListener('storage', onStorage);
 
-      return () => {
-        window.removeEventListener('storage', onStorage);
-      };
-    },
-    [getValueFromLocalStorage, key, storedValue, setValue],
-  );
+    return () => {
+      window.removeEventListener('storage', onStorage);
+    };
+  }, [getValueFromLocalStorage, key, storedValue, setValue]);
 
   return [storedValue, setValue];
 }
 
 export function useModalDismissSignal(
-  modalRef: {current: HTMLDivElement | null},
+  modalRef: {current: HTMLDivElement | null, ...},
   dismissCallback: () => void,
   dismissOnClickOutside?: boolean = true,
 ): void {
-  useEffect(
-    () => {
-      if (modalRef.current === null) {
-        return () => {};
+  useEffect(() => {
+    if (modalRef.current === null) {
+      return () => {};
+    }
+
+    const handleDocumentKeyDown = ({key}: any) => {
+      if (key === 'Escape') {
+        dismissCallback();
       }
+    };
 
-      const handleDocumentKeyDown = ({key}: any) => {
-        if (key === 'Escape') {
-          dismissCallback();
-        }
-      };
+    const handleDocumentClick = (event: any) => {
+      // $FlowFixMe
+      if (
+        modalRef.current !== null &&
+        !modalRef.current.contains(event.target)
+      ) {
+        event.stopPropagation();
+        event.preventDefault();
 
-      const handleDocumentClick = (event: any) => {
-        // $FlowFixMe
-        if (
-          modalRef.current !== null &&
-          !modalRef.current.contains(event.target)
-        ) {
-          event.stopPropagation();
-          event.preventDefault();
-
-          dismissCallback();
-        }
-      };
-
-      // It's important to listen to the ownerDocument to support the browser extension.
-      // Here we use portals to render individual tabs (e.g. Profiler),
-      // and the root document might belong to a different window.
-      const ownerDocument = modalRef.current.ownerDocument;
-      ownerDocument.addEventListener('keydown', handleDocumentKeyDown);
-      if (dismissOnClickOutside) {
-        ownerDocument.addEventListener('click', handleDocumentClick);
+        dismissCallback();
       }
+    };
 
-      return () => {
-        ownerDocument.removeEventListener('keydown', handleDocumentKeyDown);
-        ownerDocument.removeEventListener('click', handleDocumentClick);
-      };
-    },
-    [modalRef, dismissCallback, dismissOnClickOutside],
-  );
+    // It's important to listen to the ownerDocument to support the browser extension.
+    // Here we use portals to render individual tabs (e.g. Profiler),
+    // and the root document might belong to a different window.
+    const ownerDocument = modalRef.current.ownerDocument;
+    ownerDocument.addEventListener('keydown', handleDocumentKeyDown);
+    if (dismissOnClickOutside) {
+      ownerDocument.addEventListener('click', handleDocumentClick);
+    }
+
+    return () => {
+      ownerDocument.removeEventListener('keydown', handleDocumentKeyDown);
+      ownerDocument.removeEventListener('click', handleDocumentClick);
+    };
+  }, [modalRef, dismissCallback, dismissOnClickOutside]);
 }
 
 // Copied from https://github.com/facebook/react/pull/15022
@@ -276,42 +267,71 @@ export function useSubscription<Value>({
     });
   }
 
-  useEffect(
-    () => {
-      let didUnsubscribe = false;
+  useEffect(() => {
+    let didUnsubscribe = false;
 
-      const checkForUpdates = () => {
-        if (didUnsubscribe) {
-          return;
+    const checkForUpdates = () => {
+      if (didUnsubscribe) {
+        return;
+      }
+
+      setState(prevState => {
+        if (
+          prevState.getCurrentValue !== getCurrentValue ||
+          prevState.subscribe !== subscribe
+        ) {
+          return prevState;
         }
 
-        setState(prevState => {
-          if (
-            prevState.getCurrentValue !== getCurrentValue ||
-            prevState.subscribe !== subscribe
-          ) {
-            return prevState;
-          }
+        const value = getCurrentValue();
+        if (prevState.value === value) {
+          return prevState;
+        }
 
-          const value = getCurrentValue();
-          if (prevState.value === value) {
-            return prevState;
-          }
+        return {...prevState, value};
+      });
+    };
+    const unsubscribe = subscribe(checkForUpdates);
 
-          return {...prevState, value};
-        });
-      };
-      const unsubscribe = subscribe(checkForUpdates);
+    checkForUpdates();
 
-      checkForUpdates();
-
-      return () => {
-        didUnsubscribe = true;
-        unsubscribe();
-      };
-    },
-    [getCurrentValue, subscribe],
-  );
+    return () => {
+      didUnsubscribe = true;
+      unsubscribe();
+    };
+  }, [getCurrentValue, subscribe]);
 
   return state.value;
+}
+
+export function useHighlightNativeElement() {
+  const bridge = useContext(BridgeContext);
+  const store = useContext(StoreContext);
+
+  const highlightNativeElement = useCallback(
+    (id: number) => {
+      const element = store.getElementByID(id);
+      const rendererID = store.getRendererIDForElement(id);
+      if (element !== null && rendererID !== null) {
+        bridge.send('highlightNativeElement', {
+          displayName: element.displayName,
+          hideAfterTimeout: false,
+          id,
+          openNativeElementsPanel: false,
+          rendererID,
+          scrollIntoView: false,
+        });
+      }
+    },
+    [store, bridge],
+  );
+
+  const clearHighlightNativeElement = useCallback(() => {
+    bridge.send('clearNativeElementHighlight');
+  }, [bridge]);
+
+  return {
+    highlightNativeElement,
+    clearHighlightNativeElement,
+  };
 }

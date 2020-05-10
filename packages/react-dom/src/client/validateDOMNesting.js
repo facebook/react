@@ -5,9 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-// TODO: direct imports like some-package/src/* are bad. Fix me.
-import {getCurrentFiberStackInDev} from 'react-reconciler/src/ReactCurrentFiber';
-
 let validateDOMNesting = () => {};
 let updatedAncestorInfo = () => {};
 
@@ -159,8 +156,8 @@ if (__DEV__) {
   };
 
   updatedAncestorInfo = function(oldInfo, tag) {
-    let ancestorInfo = {...(oldInfo || emptyAncestorInfo)};
-    let info = {tag};
+    const ancestorInfo = {...(oldInfo || emptyAncestorInfo)};
+    const info = {tag};
 
     if (inScopeTags.indexOf(tag) !== -1) {
       ancestorInfo.aTagInScope = null;
@@ -430,10 +427,8 @@ if (__DEV__) {
     }
 
     const ancestorTag = invalidParentOrAncestor.tag;
-    const addendum = getCurrentFiberStackInDev();
 
-    const warnKey =
-      !!invalidParent + '|' + childTag + '|' + ancestorTag + '|' + addendum;
+    const warnKey = !!invalidParent + '|' + childTag + '|' + ancestorTag;
     if (didWarn[warnKey]) {
       return;
     }

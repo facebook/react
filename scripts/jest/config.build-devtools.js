@@ -26,13 +26,6 @@ const packages = readdirSync(packagesRoot).filter(dir => {
 // Create a module map to point React packages to the build output
 const moduleNameMapper = {};
 
-// Allow bundle tests to read (but not write!) default feature flags.
-// This lets us determine whether we're running in different modes
-// without making relevant tests internal-only.
-moduleNameMapper[
-  '^shared/ReactFeatureFlags'
-] = `<rootDir>/packages/shared/forks/ReactFeatureFlags.readonly`;
-
 // Map packages to bundles
 packages.forEach(name => {
   // Root entry point
@@ -42,6 +35,11 @@ packages.forEach(name => {
     `^${name}\/([^\/]+)$`
   ] = `<rootDir>/build/node_modules/${name}/$1`;
 });
+
+// Allow tests to import shared code (e.g. feature flags, getStackByFiberInDevAndProd)
+moduleNameMapper['^shared/([^/]+)$'] = '<rootDir>/packages/shared/$1';
+moduleNameMapper['^react-reconciler/([^/]+)$'] =
+  '<rootDir>/packages/react-reconciler/$1';
 
 module.exports = Object.assign({}, baseConfig, {
   // Redirect imports to the compiled bundles

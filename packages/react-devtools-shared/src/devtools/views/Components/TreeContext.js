@@ -24,7 +24,8 @@
 // For this reason, changes to the tree context are processed in sequence: tree -> search -> owners
 // This enables each section to potentially override (or mask) previous values.
 
-import React, {
+import * as React from 'react';
+import {
   createContext,
   useCallback,
   useContext,
@@ -156,7 +157,8 @@ type State = {|
 |};
 
 function reduceTreeState(store: Store, state: State, action: Action): State {
-  let {numElements, ownerID, selectedElementIndex, selectedElementID} = state;
+  let {numElements, selectedElementIndex, selectedElementID} = state;
+  const ownerID = state.ownerID;
 
   let lookupIDForIndex = true;
 
@@ -276,13 +278,13 @@ function reduceTreeState(store: Store, state: State, action: Action): State {
 
 function reduceSearchState(store: Store, state: State, action: Action): State {
   let {
-    ownerID,
     searchIndex,
     searchResults,
     searchText,
     selectedElementID,
     selectedElementIndex,
   } = state;
+  const ownerID = state.ownerID;
 
   const prevSearchIndex = searchIndex;
   const prevSearchText = searchText;
@@ -451,10 +453,8 @@ function reduceOwnersState(store: Store, state: State, action: Action): State {
     selectedElementIndex,
     ownerID,
     ownerFlatTree,
-    searchIndex,
-    searchResults,
-    searchText,
   } = state;
+  const {searchIndex, searchResults, searchText} = state;
 
   let prevSelectedElementIndex = selectedElementIndex;
 
@@ -718,65 +718,56 @@ function TreeContextController({
   );
 
   // Listen for host element selections.
-  useEffect(
-    () => {
-      const handleSelectFiber = (id: number) =>
-        dispatchWrapper({type: 'SELECT_ELEMENT_BY_ID', payload: id});
-      bridge.addListener('selectFiber', handleSelectFiber);
-      return () => bridge.removeListener('selectFiber', handleSelectFiber);
-    },
-    [bridge, dispatchWrapper],
-  );
+  useEffect(() => {
+    const handleSelectFiber = (id: number) =>
+      dispatchWrapper({type: 'SELECT_ELEMENT_BY_ID', payload: id});
+    bridge.addListener('selectFiber', handleSelectFiber);
+    return () => bridge.removeListener('selectFiber', handleSelectFiber);
+  }, [bridge, dispatchWrapper]);
 
   // If a newly-selected search result or inspection selection is inside of a collapsed subtree, auto expand it.
   // This needs to be a layout effect to avoid temporarily flashing an incorrect selection.
   const prevSelectedElementID = useRef<number | null>(null);
-  useLayoutEffect(
-    () => {
-      if (state.selectedElementID !== prevSelectedElementID.current) {
-        prevSelectedElementID.current = state.selectedElementID;
+  useLayoutEffect(() => {
+    if (state.selectedElementID !== prevSelectedElementID.current) {
+      prevSelectedElementID.current = state.selectedElementID;
 
-        if (state.selectedElementID !== null) {
-          let element = store.getElementByID(state.selectedElementID);
-          if (element !== null && element.parentID > 0) {
-            store.toggleIsCollapsed(element.parentID, false);
-          }
+      if (state.selectedElementID !== null) {
+        const element = store.getElementByID(state.selectedElementID);
+        if (element !== null && element.parentID > 0) {
+          store.toggleIsCollapsed(element.parentID, false);
         }
       }
-    },
-    [state.selectedElementID, store],
-  );
+    }
+  }, [state.selectedElementID, store]);
 
   // Mutations to the underlying tree may impact this context (e.g. search results, selection state).
-  useEffect(
-    () => {
-      const handleStoreMutated = ([addedElementIDs, removedElementIDs]: [
-        Array<number>,
-        Map<number, number>,
-      ]) => {
-        dispatchWrapper({
-          type: 'HANDLE_STORE_MUTATION',
-          payload: [addedElementIDs, removedElementIDs],
-        });
-      };
+  useEffect(() => {
+    const handleStoreMutated = ([addedElementIDs, removedElementIDs]: [
+      Array<number>,
+      Map<number, number>,
+    ]) => {
+      dispatchWrapper({
+        type: 'HANDLE_STORE_MUTATION',
+        payload: [addedElementIDs, removedElementIDs],
+      });
+    };
 
-      // Since this is a passive effect, the tree may have been mutated before our initial subscription.
-      if (store.revision !== initialRevision) {
-        // At the moment, we can treat this as a mutation.
-        // We don't know which Elements were newly added/removed, but that should be okay in this case.
-        // It would only impact the search state, which is unlikely to exist yet at this point.
-        dispatchWrapper({
-          type: 'HANDLE_STORE_MUTATION',
-          payload: [[], new Map()],
-        });
-      }
+    // Since this is a passive effect, the tree may have been mutated before our initial subscription.
+    if (store.revision !== initialRevision) {
+      // At the moment, we can treat this as a mutation.
+      // We don't know which Elements were newly added/removed, but that should be okay in this case.
+      // It would only impact the search state, which is unlikely to exist yet at this point.
+      dispatchWrapper({
+        type: 'HANDLE_STORE_MUTATION',
+        payload: [[], new Map()],
+      });
+    }
 
-      store.addListener('mutated', handleStoreMutated);
+    store.addListener('mutated', handleStoreMutated);
 
-      return () => store.removeListener('mutated', handleStoreMutated);
-    },
-    [dispatchWrapper, initialRevision, store],
-  );
+    return () => store.removeListener('mutated', handleStoreMutated);
+  }, [dispatchWrapper, initialRevision, store]);
 
   return (
     <TreeStateContext.Provider value={state}>

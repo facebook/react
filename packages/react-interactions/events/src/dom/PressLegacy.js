@@ -11,13 +11,13 @@ import type {
   ReactDOMResponderEvent,
   ReactDOMResponderContext,
   PointerType,
-} from 'shared/ReactDOMTypes';
+} from 'react-dom/src/shared/ReactDOMTypes';
 import type {
   EventPriority,
   ReactEventResponderListener,
 } from 'shared/ReactTypes';
 
-import React from 'react';
+import * as React from 'react';
 import {DiscreteEvent, UserBlockingEvent} from 'shared/ReactTypes';
 
 type PressProps = {|
@@ -27,6 +27,7 @@ type PressProps = {|
     right: number,
     bottom: number,
     left: number,
+    ...
   },
   preventDefault: boolean,
   onPress: (e: PressEvent) => void,
@@ -65,6 +66,7 @@ type PressState = {
   activePointerId: null | number,
   shouldPreventClick: boolean,
   touchEvent: null | Touch,
+  ...
 };
 
 type PressEventType =
@@ -124,6 +126,7 @@ const rootEventTypes = hasPointerEvents
       'click',
       'keyup',
       'scroll',
+      'blur',
     ]
   : [
       'click',
@@ -136,6 +139,7 @@ const rootEventTypes = hasPointerEvents
       'dragstart',
       'mouseup_active',
       'touchend',
+      'blur',
     ];
 
 function isFunction(obj): boolean {
@@ -170,8 +174,7 @@ function createPressEvent(
     ({altKey, ctrlKey, metaKey, shiftKey} = nativeEvent);
     // Only check for one property, checking for all of them is costly. We can assume
     // if clientX exists, so do the rest.
-    let eventObject;
-    eventObject = (touchEvent: any) || (nativeEvent: any);
+    const eventObject = (touchEvent: any) || (nativeEvent: any);
     if (eventObject) {
       ({clientX, clientY, pageX, pageY, screenX, screenY} = eventObject);
     }
@@ -339,9 +342,9 @@ function isValidKeyboardEvent(nativeEvent: Object): boolean {
   // "Spacebar" is for IE 11
   return (
     (key === 'Enter' || key === ' ' || key === 'Spacebar') &&
-    (tagName !== 'INPUT' &&
-      tagName !== 'TEXTAREA' &&
-      isContentEditable !== true)
+    tagName !== 'INPUT' &&
+    tagName !== 'TEXTAREA' &&
+    isContentEditable !== true
   );
 }
 
@@ -480,7 +483,10 @@ function updateIsPressWithinResponderRegion(
     bottom != null &&
     x !== null &&
     y !== null &&
-    (x >= left && x <= right && y >= top && y <= bottom);
+    x >= left &&
+    x <= right &&
+    y >= top &&
+    y <= bottom;
 }
 
 // After some investigation work, screen reader virtual
@@ -664,7 +670,8 @@ const pressResponderImpl = {
     props: PressProps,
     state: PressState,
   ): void {
-    let {pointerType, target, type} = event;
+    const {pointerType, type} = event;
+    let target = event.target;
 
     const nativeEvent: any = event.nativeEvent;
     const isPressed = state.isPressed;
@@ -772,6 +779,7 @@ const pressResponderImpl = {
 
           // Determine whether to call preventDefault on subsequent native events.
           if (
+            target !== null &&
             context.isTargetWithinResponder(target) &&
             context.isTargetWithinHostComponent(target, 'a')
           ) {
@@ -803,6 +811,7 @@ const pressResponderImpl = {
             if (
               !isKeyboardEvent &&
               pressTarget !== null &&
+              target !== null &&
               !targetIsDocument(pressTarget)
             ) {
               if (
@@ -874,6 +883,14 @@ const pressResponderImpl = {
       case 'touchcancel':
       case 'dragstart': {
         dispatchCancel(event, context, props, state);
+        break;
+      }
+      case 'blur': {
+        // If we encounter a blur that happens on the pressed target
+        // then disengage the blur.
+        if (isPressed && target === state.pressTarget) {
+          dispatchCancel(event, context, props, state);
+        }
       }
     }
   },
@@ -886,6 +903,7 @@ const pressResponderImpl = {
   },
 };
 
+// $FlowFixMe Can't add generic types without causing a parsing/syntax errors
 export const PressResponder = React.DEPRECATED_createResponder(
   'Press',
   pressResponderImpl,
@@ -893,6 +911,6 @@ export const PressResponder = React.DEPRECATED_createResponder(
 
 export function usePress(
   props: PressProps,
-): ReactEventResponderListener<any, any> {
+): ?ReactEventResponderListener<any, any> {
   return React.DEPRECATED_useResponder(PressResponder, props);
 }

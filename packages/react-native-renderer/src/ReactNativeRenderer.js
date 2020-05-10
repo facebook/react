@@ -7,7 +7,7 @@
  * @flow
  */
 
-import type {ReactNativeType, HostComponent} from './ReactNativeTypes';
+import type {HostComponent} from './ReactNativeTypes';
 import type {ReactNodeList} from 'shared/ReactTypes';
 
 import './ReactNativeInjection';
@@ -23,10 +23,10 @@ import {
   updateContainer,
   injectIntoDevTools,
   getPublicRootInstance,
-} from 'react-reconciler/inline.native';
+} from 'react-reconciler/src/ReactFiberReconciler';
 // TODO: direct imports like some-package/src/* are bad. Fix me.
-import {getStackByFiberInDevAndProd} from 'react-reconciler/src/ReactCurrentFiber';
-import {createPortal} from 'shared/ReactPortal';
+import {getStackByFiberInDevAndProd} from 'react-reconciler/src/ReactFiberComponentStack';
+import {createPortal as createPortalImpl} from 'react-reconciler/src/ReactPortal';
 import {
   setBatchingImplementation,
   batchedUpdates,
@@ -35,12 +35,12 @@ import ReactVersion from 'shared/ReactVersion';
 // Module provided by RN:
 import {UIManager} from 'react-native/Libraries/ReactPrivate/ReactNativePrivateInterface';
 
-import NativeMethodsMixin from './NativeMethodsMixin';
-import ReactNativeComponent from './ReactNativeComponent';
 import {getClosestInstanceFromNode} from './ReactNativeComponentTree';
-import {getInspectorDataForViewTag} from './ReactNativeFiberInspector';
-
-import {LegacyRoot} from 'shared/ReactRootTags';
+import {
+  getInspectorDataForViewTag,
+  getInspectorDataForViewAtPoint,
+} from './ReactNativeFiberInspector';
+import {LegacyRoot} from 'react-reconciler/src/ReactRootTags';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import getComponentName from 'shared/getComponentName';
 
@@ -146,6 +146,71 @@ function findNodeHandle(componentOrHandle: any): ?number {
   return hostInstance._nativeTag;
 }
 
+function dispatchCommand(handle: any, command: string, args: Array<any>) {
+  if (handle._nativeTag == null) {
+    if (__DEV__) {
+      console.error(
+        "dispatchCommand was called with a ref that isn't a " +
+          'native component. Use React.forwardRef to get access to the underlying native component',
+      );
+    }
+    return;
+  }
+
+  if (handle._internalInstanceHandle) {
+    nativeFabricUIManager.dispatchCommand(
+      handle._internalInstanceHandle.stateNode.node,
+      command,
+      args,
+    );
+  } else {
+    UIManager.dispatchViewManagerCommand(handle._nativeTag, command, args);
+  }
+}
+
+function render(
+  element: React$Element<any>,
+  containerTag: any,
+  callback: ?Function,
+) {
+  let root = roots.get(containerTag);
+
+  if (!root) {
+    // TODO (bvaughn): If we decide to keep the wrapper component,
+    // We could create a wrapper for containerTag as well to reduce special casing.
+    root = createContainer(containerTag, LegacyRoot, false, null);
+    roots.set(containerTag, root);
+  }
+  updateContainer(element, root, null, callback);
+
+  return getPublicRootInstance(root);
+}
+
+function unmountComponentAtNode(containerTag: number) {
+  const root = roots.get(containerTag);
+  if (root) {
+    // TODO: Is it safe to reset this now or should I wait since this unmount could be deferred?
+    updateContainer(null, root, null, () => {
+      roots.delete(containerTag);
+    });
+  }
+}
+
+function unmountComponentAtNodeAndRemoveContainer(containerTag: number) {
+  unmountComponentAtNode(containerTag);
+
+  // Call back into native to remove all of the subviews from this container
+  UIManager.removeRootView(containerTag);
+}
+
+function createPortal(
+  children: ReactNodeList,
+  containerTag: number,
+  key: ?string = null,
+) {
+  return createPortalImpl(children, containerTag, null, key);
+}
+
 setBatchingImplementation(
   batchedUpdatesImpl,
   discreteUpdates,
@@ -154,7 +219,7 @@ setBatchingImplementation(
 );
 
 function computeComponentStackForErrorReporting(reactTag: number): string {
-  let fiber = getClosestInstanceFromNode(reactTag);
+  const fiber = getClosestInstanceFromNode(reactTag);
   if (!fiber) {
     return '';
   }
@@ -163,84 +228,34 @@ function computeComponentStackForErrorReporting(reactTag: number): string {
 
 const roots = new Map();
 
-const ReactNativeRenderer: ReactNativeType = {
-  NativeComponent: ReactNativeComponent(findNodeHandle, findHostInstance),
+const Internals = {
+  computeComponentStackForErrorReporting,
+};
 
+export {
   // This is needed for implementation details of TouchableNativeFeedback
   // Remove this once TouchableNativeFeedback doesn't use cloneElement
   findHostInstance_DEPRECATED,
   findNodeHandle,
-
-  dispatchCommand(handle: any, command: string, args: Array<any>) {
-    if (handle._nativeTag == null) {
-      if (__DEV__) {
-        if (handle._nativeTag == null) {
-          console.error(
-            "dispatchCommand was called with a ref that isn't a " +
-              'native component. Use React.forwardRef to get access to the underlying native component',
-          );
-        }
-      }
-      return;
-    }
-
-    UIManager.dispatchViewManagerCommand(handle._nativeTag, command, args);
-  },
-
-  render(element: React$Element<any>, containerTag: any, callback: ?Function) {
-    let root = roots.get(containerTag);
-
-    if (!root) {
-      // TODO (bvaughn): If we decide to keep the wrapper component,
-      // We could create a wrapper for containerTag as well to reduce special casing.
-      root = createContainer(containerTag, LegacyRoot, false, null);
-      roots.set(containerTag, root);
-    }
-    updateContainer(element, root, null, callback);
-
-    return getPublicRootInstance(root);
-  },
-
-  unmountComponentAtNode(containerTag: number) {
-    const root = roots.get(containerTag);
-    if (root) {
-      // TODO: Is it safe to reset this now or should I wait since this unmount could be deferred?
-      updateContainer(null, root, null, () => {
-        roots.delete(containerTag);
-      });
-    }
-  },
-
-  unmountComponentAtNodeAndRemoveContainer(containerTag: number) {
-    ReactNativeRenderer.unmountComponentAtNode(containerTag);
-
-    // Call back into native to remove all of the subviews from this container
-    UIManager.removeRootView(containerTag);
-  },
-
-  createPortal(
-    children: ReactNodeList,
-    containerTag: number,
-    key: ?string = null,
-  ) {
-    return createPortal(children, containerTag, null, key);
-  },
-
-  unstable_batchedUpdates: batchedUpdates,
-
-  __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED: {
-    // Used as a mixin in many createClass-based components
-    NativeMethodsMixin: NativeMethodsMixin(findNodeHandle, findHostInstance),
-    computeComponentStackForErrorReporting,
-  },
+  dispatchCommand,
+  render,
+  unmountComponentAtNode,
+  unmountComponentAtNodeAndRemoveContainer,
+  createPortal,
+  batchedUpdates as unstable_batchedUpdates,
+  Internals as __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED,
 };
 
 injectIntoDevTools({
   findFiberByHostInstance: getClosestInstanceFromNode,
-  getInspectorDataForViewTag: getInspectorDataForViewTag,
   bundleType: __DEV__ ? 1 : 0,
   version: ReactVersion,
   rendererPackageName: 'react-native-renderer',
+  rendererConfig: {
+    getInspectorDataForViewTag: getInspectorDataForViewTag,
+    getInspectorDataForViewAtPoint: getInspectorDataForViewAtPoint.bind(
+      null,
+      findNodeHandle,
+    ),
+  },
 });
-
-export default ReactNativeRenderer;

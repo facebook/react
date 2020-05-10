@@ -87,7 +87,7 @@ function getElementType(internalInstance: InternalInstance): ElementType {
 }
 
 function getChildren(internalInstance: Object): Array<any> {
-  let children = [];
+  const children = [];
 
   // If the parent is a native node without rendered children, but with
   // multiple string children, then the `element` that gets passed in here is
@@ -106,7 +106,7 @@ function getChildren(internalInstance: Object): Array<any> {
     }
   } else if (internalInstance._renderedChildren) {
     const renderedChildren = internalInstance._renderedChildren;
-    for (let name in renderedChildren) {
+    for (const name in renderedChildren) {
       const child = renderedChildren[name];
       if (getElementType(child) !== ElementTypeOtherOrUnknown) {
         children.push(child);
@@ -157,6 +157,11 @@ export function attach(
       // Not implemented.
       return null;
     };
+  }
+
+  function getDisplayNameForFiberID(id: number): string | null {
+    const internalInstance = idToInternalInstanceMap.get(id);
+    return internalInstance ? getData(internalInstance).displayName : null;
   }
 
   function getID(internalInstance: InternalInstance): number {
@@ -381,8 +386,8 @@ export function attach(
           ? getID(internalInstance._currentElement._owner)
           : 0;
 
-      let displayNameStringID = getStringID(displayName);
-      let keyStringID = getStringID(key);
+      const displayNameStringID = getStringID(displayName);
+      const keyStringID = getStringID(key);
       pushOperation(TREE_OPERATION_ADD);
       pushOperation(id);
       pushOperation(type);
@@ -442,7 +447,7 @@ export function attach(
       renderer.Mount._instancesByReactRootID ||
       renderer.Mount._instancesByContainerID;
 
-    for (let key in roots) {
+    for (const key in roots) {
       const internalInstance = roots[key];
       const id = getID(internalInstance);
       crawlAndRecordInitialMounts(id, 0, id);
@@ -450,8 +455,8 @@ export function attach(
     }
   }
 
-  let pendingOperations: Array<number> = [];
-  let pendingStringTable: Map<string, number> = new Map();
+  const pendingOperations: Array<number> = [];
+  const pendingStringTable: Map<string, number> = new Map();
   let pendingUnmountedIDs: Array<number> = [];
   let pendingStringTableLength: number = 0;
   let pendingUnmountedRootID: number | null = null;
@@ -964,6 +969,7 @@ export function attach(
     copyElementPath,
     flushInitialOperations,
     getBestMatchForTrackedPath,
+    getDisplayNameForFiberID,
     getFiberIDForNative: getInternalIDForNative,
     getInstanceAndStyle,
     findNativeNodesForFiberID: (id: number) => {

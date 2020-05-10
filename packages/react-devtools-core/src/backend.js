@@ -27,15 +27,14 @@ type ConnectOptions = {
   resolveRNStyle?: ResolveNativeStyle,
   isAppActive?: () => boolean,
   websocket?: ?WebSocket,
+  ...
 };
 
 installHook(window);
 
-const hook: DevToolsHook = window.__REACT_DEVTOOLS_GLOBAL_HOOK__;
+const hook: ?DevToolsHook = window.__REACT_DEVTOOLS_GLOBAL_HOOK__;
 
-let savedComponentFilters: Array<
-  ComponentFilter,
-> = getDefaultComponentFilters();
+let savedComponentFilters: Array<ComponentFilter> = getDefaultComponentFilters();
 
 function debug(methodName: string, ...args) {
   if (__DEBUG__) {
@@ -49,6 +48,10 @@ function debug(methodName: string, ...args) {
 }
 
 export function connectToDevTools(options: ?ConnectOptions) {
+  if (hook == null) {
+    // DevTools didn't get injected into this page (maybe b'c of the contentType).
+    return;
+  }
   const {
     host = 'localhost',
     nativeStyleEditorValidAttributes,
@@ -56,8 +59,7 @@ export function connectToDevTools(options: ?ConnectOptions) {
     websocket,
     resolveRNStyle = null,
     isAppActive = () => true,
-  } =
-    options || {};
+  } = options || {};
 
   let retryTimeoutID: TimeoutID | null = null;
 
@@ -123,7 +125,7 @@ export function connectToDevTools(options: ?ConnectOptions) {
     });
     bridge.addListener(
       'inspectElement',
-      ({id, rendererID}: {id: number, rendererID: number}) => {
+      ({id, rendererID}: {id: number, rendererID: number, ...}) => {
         const renderer = agent.rendererInterfaces[rendererID];
         if (renderer != null) {
           // Send event for RN to highlight.

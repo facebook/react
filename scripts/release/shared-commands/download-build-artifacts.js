@@ -11,8 +11,8 @@ const theme = require('../theme');
 
 const run = async ({build, cwd}) => {
   const artifacts = await getArtifactsList(build);
-  const nodeModulesArtifact = artifacts.find(
-    entry => entry.path === 'home/circleci/project/node_modules.tgz'
+  const nodeModulesArtifact = artifacts.find(entry =>
+    entry.path.endsWith('node_modules.tgz')
   );
 
   if (!nodeModulesArtifact) {
@@ -30,7 +30,9 @@ const run = async ({build, cwd}) => {
 
   // Download and extract artifact
   await exec(`rm -rf ./build/node_modules*`, {cwd});
-  await exec(`curl ${nodeModulesURL} --output ./build/node_modules.tgz`, {cwd});
+  await exec(`curl -L ${nodeModulesURL} --output ./build/node_modules.tgz`, {
+    cwd,
+  });
   await exec(`mkdir ./build/node_modules`, {cwd});
   await exec(`tar zxvf ./build/node_modules.tgz -C ./build/node_modules/`, {
     cwd,
@@ -40,18 +42,14 @@ const run = async ({build, cwd}) => {
   const compressedPackages = readdirSync(join(cwd, 'build/node_modules/'));
   for (let i = 0; i < compressedPackages.length; i++) {
     await exec(
-      `tar zxvf ./build/node_modules/${
-        compressedPackages[i]
-      } -C ./build/node_modules/`,
+      `tar zxvf ./build/node_modules/${compressedPackages[i]} -C ./build/node_modules/`,
       {cwd}
     );
     const packageJSON = readJsonSync(
       join(cwd, `/build/node_modules/package/package.json`)
     );
     await exec(
-      `mv ./build/node_modules/package ./build/node_modules/${
-        packageJSON.name
-      }`,
+      `mv ./build/node_modules/package ./build/node_modules/${packageJSON.name}`,
       {cwd}
     );
   }

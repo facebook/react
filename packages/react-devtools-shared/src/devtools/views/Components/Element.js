@@ -7,7 +7,8 @@
  * @flow
  */
 
-import React, {Fragment, useContext, useMemo, useState} from 'react';
+import * as React from 'react';
+import {Fragment, useContext, useMemo, useState} from 'react';
 import Store from 'react-devtools-shared/src/devtools/store';
 import Badge from './Badge';
 import ButtonIcon from '../ButtonIcon';
@@ -24,6 +25,7 @@ type Props = {
   data: ItemData,
   index: number,
   style: Object,
+  ...
 };
 
 export default function ElementView({data, index, style}: Props) {
@@ -193,12 +195,9 @@ type DisplayNameProps = {|
 
 function DisplayName({displayName, id}: DisplayNameProps) {
   const {searchIndex, searchResults, searchText} = useContext(TreeStateContext);
-  const isSearchResult = useMemo(
-    () => {
-      return searchResults.includes(id);
-    },
-    [id, searchResults],
-  );
+  const isSearchResult = useMemo(() => {
+    return searchResults.includes(id);
+  }, [id, searchResults]);
   const isCurrentResult =
     searchIndex !== null && id === searchResults[searchIndex];
 

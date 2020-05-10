@@ -1,7 +1,7 @@
 /* global chrome */
 
 import {createElement} from 'react';
-import {createRoot, flushSync} from 'react-dom';
+import {unstable_createRoot as createRoot, flushSync} from 'react-dom';
 import Bridge from 'react-devtools-shared/src/bridge';
 import Store from 'react-devtools-shared/src/devtools/store';
 import {getBrowserName, getBrowserTheme} from './utils';
@@ -216,9 +216,7 @@ function createPanelIfReactLoaded() {
               showTabBar: false,
               store,
               warnIfUnsupportedVersionDetected: true,
-              viewAttributeSourceFunction: isChrome
-                ? viewAttributeSourceFunction
-                : null,
+              viewAttributeSourceFunction,
               viewElementSourceFunction,
             }),
           );
@@ -230,11 +228,11 @@ function createPanelIfReactLoaded() {
       cloneStyleTags = () => {
         const linkTags = [];
         // eslint-disable-next-line no-for-of-loops/no-for-of-loops
-        for (let linkTag of document.getElementsByTagName('link')) {
+        for (const linkTag of document.getElementsByTagName('link')) {
           if (linkTag.rel === 'stylesheet') {
             const newLinkTag = document.createElement('link');
             // eslint-disable-next-line no-for-of-loops/no-for-of-loops
-            for (let attribute of linkTag.attributes) {
+            for (const attribute of linkTag.attributes) {
               newLinkTag.setAttribute(attribute.nodeName, attribute.nodeValue);
             }
             linkTags.push(newLinkTag);
@@ -273,7 +271,7 @@ function createPanelIfReactLoaded() {
         // When the user chooses a different node in the browser Elements tab,
         // copy it over to the hook object so that we can sync the selection.
         chrome.devtools.inspectedWindow.eval(
-          '(window.__REACT_DEVTOOLS_GLOBAL_HOOK__.$0 !== $0) ?' +
+          '(window.__REACT_DEVTOOLS_GLOBAL_HOOK__ && window.__REACT_DEVTOOLS_GLOBAL_HOOK__.$0 !== $0) ?' +
             '(window.__REACT_DEVTOOLS_GLOBAL_HOOK__.$0 = $0, true) :' +
             'false',
           (didSelectionChange, evalError) => {
@@ -357,11 +355,9 @@ function createPanelIfReactLoaded() {
 
         // It's easiest to recreate the DevTools panel (to clean up potential stale state).
         // We can revisit this in the future as a small optimization.
-        flushSync(() => {
-          root.unmount(() => {
-            initBridgeAndStore();
-          });
-        });
+        flushSync(() => root.unmount());
+
+        initBridgeAndStore();
       });
     },
   );
