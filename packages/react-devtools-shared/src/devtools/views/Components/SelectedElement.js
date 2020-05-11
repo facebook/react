@@ -190,6 +190,15 @@ export default function SelectedElement(_: Props) {
   return (
     <div className={styles.SelectedElement}>
       <div className={styles.TitleRow}>
+        {element.key && (
+          <>
+            <div className={styles.Key} title={`key "${element.key}"`}>
+              {element.key}
+            </div>
+            <div className={styles.KeyArrow} />
+          </>
+        )}
+
         <div className={styles.SelectedComponentName}>
           <div className={styles.Component} title={element.displayName}>
             {element.displayName}
@@ -284,7 +293,6 @@ function InspectedElementView({
     props,
     source,
     state,
-    key,
   } = inspectedElement;
 
   const {ownerID} = useContext(TreeStateContext);
@@ -299,12 +307,6 @@ function InspectedElementView({
   const inspectContextPath = useCallback(
     (path: Array<string | number>) => {
       getInspectedElementPath(id, ['context', ...path]);
-    },
-    [getInspectedElementPath, id],
-  );
-  const inspectKeyPath = useCallback(
-    (path: Array<string | number>) => {
-      getInspectedElementPath(id, ['key', ...path]);
     },
     [getInspectedElementPath, id],
   );
@@ -376,14 +378,6 @@ function InspectedElementView({
     <Fragment>
       <div className={styles.InspectedElement}>
         <HocBadges element={element} />
-        {key && (
-          <InspectedElementTree
-            label=""
-            data={{key: key}}
-            inspectPath={inspectKeyPath}
-            pathRoot="key"
-          />
-        )}
         <InspectedElementTree
           label="props"
           data={props}
