@@ -417,13 +417,13 @@ export function dispatchEventForPluginEventSystem(
       // sub-tree for that root and make that our ancestor instance.
       let node = targetInst;
 
-      while (true) {
+      mainLoop: while (true) {
         if (node === null) {
           return;
         }
         const nodeTag = node.tag;
         if (nodeTag === HostRoot || nodeTag === HostPortal) {
-          const container = node.stateNode.containerInfo;
+          let container = node.stateNode.containerInfo;
           if (isMatchingRootContainer(container, targetContainerNode)) {
             break;
           }
@@ -449,18 +449,23 @@ export function dispatchEventForPluginEventSystem(
               grandNode = grandNode.return;
             }
           }
-          const parentSubtreeInst = getClosestInstanceFromNode(container);
-          if (parentSubtreeInst === null) {
-            return;
+          // Now we need to find it's corresponding host fiber in the other
+          // tree. To do this we can use getClosestInstanceFromNode, but we
+          // need to validate that the fiber is a host instance, otherwise
+          // we need to traverse up through the DOM till we find the correct
+          // node that is from the other tree.
+          while (container !== null) {
+            const parentNode = getClosestInstanceFromNode(container);
+            if (parentNode === null) {
+              return;
+            }
+            const parentTag = parentNode.tag;
+            if (parentTag === HostComponent || parentTag === HostText) {
+              node = ancestorInst = parentNode;
+              continue mainLoop;
+            }
+            container = container.parentNode;
           }
-          const parentTag = parentSubtreeInst.tag;
-          // getClosestInstanceFromNode can return a HostRoot or SuspenseComponent.
-          // So we need to ensure we only set the ancestor to a HostComponent or HostText.
-          if (parentTag === HostComponent || parentTag === HostText) {
-            ancestorInst = parentSubtreeInst;
-          }
-          node = parentSubtreeInst;
-          continue;
         }
         node = node.return;
       }
