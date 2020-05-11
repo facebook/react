@@ -22,6 +22,7 @@ import {
   REACT_SUSPENSE_LIST_TYPE,
   REACT_LAZY_TYPE,
   REACT_BLOCK_TYPE,
+  REACT_OFFSCREEN_TYPE,
 } from 'shared/ReactSymbols';
 import type {ReactContext, ReactProviderType} from 'shared/ReactTypes';
 
@@ -73,6 +74,8 @@ function getComponentName(type: mixed): string | null {
       return 'Suspense';
     case REACT_SUSPENSE_LIST_TYPE:
       return 'SuspenseList';
+    case REACT_OFFSCREEN_TYPE:
+      return 'Offscreen';
   }
   if (typeof type === 'object') {
     switch (type.$$typeof) {

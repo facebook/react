@@ -19,6 +19,7 @@ export type OffscreenProps = {|
   // called "Offscreen." Possible alt: <Visibility />?
   mode?: 'hidden' | 'visible' | null | void,
   children?: ReactNodeList,
+  cleanupPassiveEffects?: boolean,
 |};
 
 // We use the existence of the state object as an indicator that the component

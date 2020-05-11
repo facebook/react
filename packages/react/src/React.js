@@ -15,6 +15,7 @@ import {
   REACT_STRICT_MODE_TYPE,
   REACT_SUSPENSE_TYPE,
   REACT_SUSPENSE_LIST_TYPE,
+  REACT_OFFSCREEN_TYPE,
 } from 'shared/ReactSymbols';
 
 import {Component, PureComponent} from './ReactBaseClasses';
@@ -99,6 +100,8 @@ export {
   REACT_STRICT_MODE_TYPE as StrictMode,
   REACT_DEBUG_TRACING_MODE_TYPE as unstable_DebugTracingMode,
   REACT_SUSPENSE_TYPE as Suspense,
+  // enableHiddenAPI
+  REACT_OFFSCREEN_TYPE as unstable_Offscreen,
   createElement,
   cloneElement,
   isValidElement,

@@ -37,6 +37,7 @@ import {
   enableSuspenseCallback,
   enableScopeAPI,
   runAllPassiveEffectDestroysBeforeCreates,
+  enableHiddenAPI,
 } from 'shared/ReactFeatureFlags';
 import {
   FunctionComponent,
@@ -68,6 +69,7 @@ import {
   NoEffect,
   ContentReset,
   Placement,
+  Ref,
   Snapshot,
   Update,
   Passive,
@@ -550,7 +552,7 @@ function commitLifeCycles(
     case ClassComponent: {
       const instance = finishedWork.stateNode;
       if (finishedWork.effectTag & Update) {
-        if (current === null) {
+        if (current === null || finishedWork.effectTag & Placement) {
           // We could update instance props and state here,
           // but instead we rely on them being set during last render.
           // TODO: revisit this when we implement resuming.
@@ -828,6 +830,186 @@ function commitLifeCycles(
     'This unit of work tag should not have side-effects. This error is ' +
       'likely caused by a bug in React. Please file an issue.',
   );
+}
+
+function toggleHideAndEffectsForSubtree(finishedWork, effectsToRun, isUnmount) {
+  return toggleHideAndEffectsForSubtreeImpl(
+    finishedWork,
+    finishedWork,
+    effectsToRun,
+    isUnmount,
+    true,
+  );
+}
+
+function toggleHideAndEffectsForSubtreeImpl(
+  finishedWork,
+  fiber,
+  effectsToRun,
+  isUnmount,
+  shouldToggleHide,
+) {
+  if (fiber === null) {
+    return;
+  } else if (
+    (fiber.tag === OffscreenComponent || fiber.tag === LegacyHiddenComponent) &&
+    finishedWork !== fiber &&
+    fiber.memoizedState !== null
+  ) {
+    // A nested Offscreen component is Offscreen, which means its effects have already
+    // been unmounted. Skip over the children.
+    toggleHideAndEffectsForSubtreeImpl(
+      finishedWork,
+      fiber.sibling,
+      effectsToRun,
+      isUnmount,
+      shouldToggleHide,
+    );
+  } else {
+    let shouldToggleHideForChildren = shouldToggleHide;
+    switch (fiber.tag) {
+      case HostComponent: {
+        if (shouldToggleHide) {
+          const instance = fiber.stateNode;
+          if (isUnmount) {
+            hideInstance(instance);
+          } else {
+            unhideInstance(fiber.stateNode, fiber.memoizedProps);
+          }
+          // Subsequent children do not need their hidden/unhidden because the
+          // parent has been hidden/unhidden
+          shouldToggleHideForChildren = false;
+        }
+
+        if (fiber.ref !== null) {
+          if (isUnmount) {
+            commitDetachRef(fiber);
+          } else {
+            fiber.effectTag |= Ref;
+          }
+        }
+        break;
+      }
+      case HostText: {
+        if (shouldToggleHide) {
+          const instance = fiber.stateNode;
+          if (isUnmount) {
+            hideTextInstance(instance);
+          } else {
+            unhideTextInstance(instance, fiber.memoizedProps);
+          }
+          // Subsequent children do not need to be hidden/unhidden because the
+          // parent has been hidden/unhidden
+          shouldToggleHideForChildren = false;
+        }
+        break;
+      }
+      case ClassComponent: {
+        if (isUnmount) {
+          if (fiber.ref !== null) {
+            commitDetachRef(fiber);
+          }
+          const instance = fiber.stateNode;
+          if (typeof instance.componentWillUnmount === 'function') {
+            safelyCallComponentWillUnmount(fiber, instance);
+          }
+        } else {
+          if (fiber.ref !== null) {
+            fiber.effectTag |= Ref;
+          }
+
+          const instance = fiber.stateNode;
+          if (typeof instance.componentDidMount === 'function') {
+            fiber.effectTag |= Update | Placement;
+          }
+        }
+        break;
+      }
+      case FunctionComponent:
+      case ForwardRef:
+      case SimpleMemoComponent:
+      case Block: {
+        if (isUnmount) {
+          if ((effectsToRun & HookLayout) !== NoEffect) {
+            commitHookEffectListUnmount(HookLayout, fiber);
+          }
+          if ((effectsToRun & HookPassive) !== NoEffect) {
+            schedulePassiveEffectsUnmount(fiber);
+          }
+        } else {
+          const updateQueue: FunctionComponentUpdateQueue | null = (fiber.updateQueue: any);
+          const lastEffect =
+            updateQueue !== null ? updateQueue.lastEffect : null;
+          if (lastEffect !== null) {
+            const firstEffect = lastEffect.next;
+            let effect = firstEffect;
+            do {
+              if (
+                (effect.tag & HookLayout) === HookLayout &&
+                (effectsToRun & HookLayout) !== NoEffect
+              ) {
+                effect.tag |= HookHasEffect;
+              }
+
+              if (
+                (effect.tag & HookLayout) === HookPassive &&
+                (effectsToRun & HookPassive) !== NoEffect
+              ) {
+                effect.tag |= HookHasEffect;
+              }
+              effect = effect.next;
+            } while (effect !== firstEffect);
+          }
+        }
+        break;
+      }
+      case HostPortal: {
+        // Because Portals can be deeply nested and are outside of the DOM tree, its children
+        // must be hidden/unhidden as well
+        shouldToggleHideForChildren = true;
+        break;
+      }
+      default:
+        break;
+    }
+
+    toggleHideAndEffectsForSubtreeImpl(
+      finishedWork,
+      fiber.child,
+      effectsToRun,
+      isUnmount,
+      shouldToggleHideForChildren,
+    );
+
+    toggleHideAndEffectsForSubtreeImpl(
+      finishedWork,
+      fiber.sibling,
+      effectsToRun,
+      isUnmount,
+      shouldToggleHide,
+    );
+  }
+}
+
+function schedulePassiveEffectsUnmount(finishedWork: Fiber) {
+  if (runAllPassiveEffectDestroysBeforeCreates) {
+    const updateQueue: FunctionComponentUpdateQueue | null = (finishedWork.updateQueue: any);
+    const lastEffect = updateQueue !== null ? updateQueue.lastEffect : null;
+    if (lastEffect !== null) {
+      const firstEffect = lastEffect.next;
+      let effect = firstEffect;
+      do {
+        const {next, tag} = effect;
+        if (
+          (tag & HookPassive) !== NoHookEffect &&
+          (tag & HookHasEffect) !== NoHookEffect
+        ) {
+          enqueuePendingPassiveHookEffectUnmount(finishedWork, effect);
+        }
+        effect = next;
+      } while (effect !== firstEffect);
+    }
+  }
 }
 
 function hideOrUnhideAllChildren(finishedWork, isHidden) {
@@ -1742,8 +1924,19 @@ function commitWork(current: Fiber | null, finishedWork: Fiber): void {
     case OffscreenComponent:
     case LegacyHiddenComponent: {
       const newState: OffscreenState | null = finishedWork.memoizedState;
+      const newProps = finishedWork.memoizedProps;
       const isHidden = newState !== null;
-      hideOrUnhideAllChildren(finishedWork, isHidden);
+      let effectsToRun = HookLayout;
+      if (newProps && newProps.cleanupPassiveEffects) {
+        effectsToRun |= HookPassive;
+      }
+      if (supportsMutation) {
+        if (enableHiddenAPI && runAllPassiveEffectDestroysBeforeCreates) {
+          toggleHideAndEffectsForSubtree(finishedWork, effectsToRun, isHidden);
+        } else {
+          hideOrUnhideAllChildren(finishedWork, isHidden);
+        }
+      }
       return;
     }
   }

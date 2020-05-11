@@ -82,4 +82,5 @@ export {
   unstable_createFundamental,
   unstable_createScope,
   unstable_useOpaqueIdentifier,
+  unstable_Offscreen,
 } from './src/React';
