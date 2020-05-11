@@ -77,16 +77,14 @@ export default function InspectedElementTree({
   } else {
     return (
       <div className={styles.InspectedElementTree}>
-        {label && (
-          <div className={styles.HeaderRow}>
-            <div className={styles.Header}>{label}</div>
-            {!isEmpty && (
-              <Button onClick={handleCopy} title="Copy to clipboard">
-                <ButtonIcon type="copy" />
-              </Button>
-            )}
-          </div>
-        )}
+        <div className={styles.HeaderRow}>
+          <div className={styles.Header}>{label}</div>
+          {!isEmpty && (
+            <Button onClick={handleCopy} title="Copy to clipboard">
+              <ButtonIcon type="copy" />
+            </Button>
+          )}
+        </div>
         {isEmpty && !canAddEntries && <div className={styles.Empty}>None</div>}
         {!isEmpty &&
           (entries: any).map(([name, value]) => (
