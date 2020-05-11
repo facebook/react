@@ -224,6 +224,95 @@ describe('DOMModernPluginEventSystem', () => {
           expect(log[5]).toEqual(['bubble', buttonElement]);
         });
 
+        it('handle propagation of click events between disjointed roots #2', () => {
+          const buttonRef = React.createRef();
+          const button2Ref = React.createRef();
+          const divRef = React.createRef();
+          const spanRef = React.createRef();
+          const log = [];
+          const onClick = jest.fn(e => log.push(['bubble', e.currentTarget]));
+          const onClickCapture = jest.fn(e =>
+            log.push(['capture', e.currentTarget]),
+          );
+
+          function Child() {
+            return (
+              <div
+                ref={divRef}
+                onClick={onClick}
+                onClickCapture={onClickCapture}>
+                Click me!
+              </div>
+            );
+          }
+
+          function Parent() {
+            return (
+              <button
+                ref={button2Ref}
+                onClick={onClick}
+                onClickCapture={onClickCapture}
+              />
+            );
+          }
+
+          function GrandParent() {
+            return (
+              <button
+                ref={buttonRef}
+                onClick={onClick}
+                onClickCapture={onClickCapture}>
+                <span ref={spanRef} />
+              </button>
+            );
+          }
+
+          // We make a wrapper with an inner container that we
+          // render to. So it looks like <div><span></span></div>
+          // We then render to all three:
+          // - container
+          // - parentContainer
+          // - childContainer
+
+          const parentContainer = document.createElement('div');
+          const childContainer = document.createElement('div');
+
+          ReactDOM.render(<GrandParent />, container);
+          ReactDOM.render(<Parent />, parentContainer);
+          ReactDOM.render(<Child />, childContainer);
+
+          parentContainer.appendChild(childContainer);
+          spanRef.current.appendChild(parentContainer);
+
+          // Inside <GrandParent />
+          const buttonElement = buttonRef.current;
+          dispatchClickEvent(buttonElement);
+          expect(onClick).toHaveBeenCalledTimes(1);
+          expect(onClickCapture).toHaveBeenCalledTimes(1);
+          expect(log[0]).toEqual(['capture', buttonElement]);
+          expect(log[1]).toEqual(['bubble', buttonElement]);
+
+          // Inside <Child />
+          const divElement = divRef.current;
+          dispatchClickEvent(divElement);
+          expect(onClick).toHaveBeenCalledTimes(3);
+          expect(onClickCapture).toHaveBeenCalledTimes(3);
+          expect(log[2]).toEqual(['capture', divElement]);
+          expect(log[3]).toEqual(['bubble', divElement]);
+          expect(log[4]).toEqual(['capture', buttonElement]);
+          expect(log[5]).toEqual(['bubble', buttonElement]);
+
+          // Inside <Parent />
+          const buttonElement2 = button2Ref.current;
+          dispatchClickEvent(buttonElement2);
+          expect(onClick).toHaveBeenCalledTimes(5);
+          expect(onClickCapture).toHaveBeenCalledTimes(5);
+          expect(log[6]).toEqual(['capture', buttonElement2]);
+          expect(log[7]).toEqual(['bubble', buttonElement2]);
+          expect(log[8]).toEqual(['capture', buttonElement]);
+          expect(log[9]).toEqual(['bubble', buttonElement]);
+        });
+
         it('handle propagation of click events between disjointed comment roots', () => {
           const buttonRef = React.createRef();
           const divRef = React.createRef();
