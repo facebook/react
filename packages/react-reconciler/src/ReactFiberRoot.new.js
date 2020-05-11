@@ -49,6 +49,9 @@ function FiberRootNode(containerInfo, tag, hydrate) {
 
   this.finishedLanes = NoLanes;
 
+  this.entangledLanes = NoLanes;
+  this.entanglements = createLaneMap(NoLanes);
+
   if (enableSchedulerTracing) {
     this.interactionThreadID = unstable_getThreadID();
     this.memoizedInteractions = new Set();
