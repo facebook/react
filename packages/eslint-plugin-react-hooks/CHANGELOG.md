@@ -5,6 +5,7 @@
 
 * **New Violations:** Consider `PascalCase.useFoo()` calls as Hooks. ([@cyan33](https://github.com/cyan33) in [#18722](https://github.com/facebook/react/pull/18722))
 * **New Violations:** Check callback body when it's not written inline. ([@gaearon](https://github.com/gaearon) in [#18435](https://github.com/facebook/react/pull/18435))
+* **New Violations:** Check dependencies for all Hooks ending with `Effect`. ([@airjp73](https://github.com/airjp73) in [#18580](https://github.com/facebook/react/pull/18580))
 * Add a way to enable the dangerous autofix. ([@gaearon](https://github.com/gaearon) in [#18437](https://github.com/facebook/react/pull/18437))
 * Offer a more sensible suggestion when encountering an assignment. ([@Zzzen](https://github.com/Zzzen) in [#16784](https://github.com/facebook/react/pull/16784))
 * Consider TypeScript casts of `useRef` as constant. ([@sophiebits](https://github.com/sophiebits) in [#18496](https://github.com/facebook/react/pull/18496))
