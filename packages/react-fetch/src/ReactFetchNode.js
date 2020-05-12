@@ -9,18 +9,10 @@
 
 import type {Wakeable} from 'shared/ReactTypes';
 
+import * as http from 'http';
 import * as https from 'https';
 
 import {readCache} from 'react/unstable-cache';
-
-type FetchOptions = {|
-  method?: string,
-  headers?: any,
-  redirect?: 'follow' | 'manual' | 'error',
-  // Not yet implemented
-  signal?: any,
-  body?: any,
-|};
 
 type FetchResponse = {|
   // Properties
@@ -29,7 +21,7 @@ type FetchResponse = {|
   redirected: boolean,
   status: number,
   statusText: string,
-  type: 'basic' | 'opaqueredirect',
+  type: 'basic',
   url: string,
   // Methods
   arrayBuffer(): ArrayBuffer,
@@ -38,129 +30,28 @@ type FetchResponse = {|
   text(): string,
 |};
 
-const defaultOptions: FetchOptions = {
-  method: 'GET',
-  headers: {},
-  redirect: 'follow',
-};
-
-const assign = Object['as' + 'sign'];
-
-function makeRequest(
+function nodeFetch(
   url: string,
-  fetchOptions: FetchOptions,
-  done: any => void,
-  err: any => void,
-  redirects: number = 0,
+  options: mixed,
+  onResolve: any => void,
+  onReject: any => void,
 ): void {
-  const {hostname, pathname} = new URL(url);
-
-  const options = assign({}, defaultOptions, fetchOptions, {
+  const {hostname, pathname, search, port, protocol} = new URL(url);
+  const nodeOptions = {
     hostname,
-    path: pathname,
+    port,
+    path: pathname + search,
+    // TODO: cherry-pick supported user-passed options.
+  };
+  const nodeImpl = protocol === 'https:' ? https : http;
+  const request = nodeImpl.request(nodeOptions, response => {
+    // TODO: support redirects.
+    onResolve(new Response(response));
   });
-
-  const request = https.request(options, response => {
-    if (isRedirect(response.statusCode)) {
-      if (options.redirect === 'error') {
-        throw new Error('Failed to fetch');
-      }
-
-      let nextUrl = new URL(response.headers.location, url);
-      nextUrl = nextUrl.href;
-
-      if (options.redirect === 'manual') {
-        createOpaqueRedirectResponse(url);
-      } else {
-        makeRequest(nextUrl, fetchOptions, done, err, redirects + 1);
-      }
-
-      return;
-    }
-
-    response.on('data', data => {
-      done(createResponse(url, redirects > 0, response, data));
-    });
-  });
-
   request.on('error', error => {
-    err(error);
+    onReject(error);
   });
-
   request.end();
-}
-
-function isRedirect(code: number): boolean {
-  switch (code) {
-    case 301:
-    case 302:
-    case 303:
-    case 307:
-    case 308:
-      return true;
-    default:
-      return false;
-  }
-}
-
-function createOpaqueRedirectResponse(url: string): FetchResponse {
-  return {
-    headers: {},
-    ok: false,
-    redirected: false,
-    status: 0,
-    statusText: '',
-    type: 'opaqueredirect',
-    url,
-    arrayBuffer() {
-      throw new Error('TODO');
-    },
-    blob() {
-      throw new Error('TODO');
-    },
-    json() {
-      throw new Error('TODO');
-    },
-    text() {
-      throw new Error('TODO');
-    },
-  };
-}
-
-function createResponse(
-  url: string,
-  redirected: boolean,
-  response: any,
-  data: Buffer,
-): FetchResponse {
-  return {
-    headers: response.headers,
-    ok: response.statusCode >= 200 && response.statusCode < 300,
-    redirected,
-    status: response.statusCode,
-    statusText: response.statusMessage,
-    type: 'basic',
-    url,
-    arrayBuffer() {
-      return Uint8Array.from(data).buffer;
-    },
-    blob() {
-      // TODO: Not sure how to handle this just yet.
-      throw new Error('TODO');
-    },
-    json() {
-      return JSON.parse(data.toString());
-    },
-    text() {
-      return data.toString();
-    },
-  };
-}
-
-function nodeFetch(url: string, options: FetchOptions): Promise<any> {
-  return new Promise((resolve, reject) => {
-    return makeRequest(url, options, resolve, reject);
-  });
 }
 
 const Pending = 0;
@@ -172,9 +63,9 @@ type PendingResult = {|
   value: Wakeable,
 |};
 
-type ResolvedResult = {|
+type ResolvedResult<V> = {|
   status: 1,
-  value: mixed,
+  value: V,
 |};
 
 type RejectedResult = {|
@@ -182,11 +73,11 @@ type RejectedResult = {|
   value: mixed,
 |};
 
-type Result = PendingResult | ResolvedResult | RejectedResult;
+type Result<V> = PendingResult | ResolvedResult<V> | RejectedResult;
 
 const fetchKey = {};
 
-function readResultMap(): Map<string, Result> {
+function readResultMap(): Map<string, Result<FetchResponse>> {
   const resources = readCache().resources;
   let map = resources.get(fetchKey);
   if (map === undefined) {
@@ -196,31 +87,7 @@ function readResultMap(): Map<string, Result> {
   return map;
 }
 
-function toResult(thenable): Result {
-  const result: Result = {
-    status: Pending,
-    value: thenable,
-  };
-  thenable.then(
-    value => {
-      if (result.status === Pending) {
-        const resolvedResult = ((result: any): ResolvedResult);
-        resolvedResult.status = Resolved;
-        resolvedResult.value = value;
-      }
-    },
-    err => {
-      if (result.status === Pending) {
-        const rejectedResult = ((result: any): RejectedResult);
-        rejectedResult.status = Rejected;
-        rejectedResult.value = err;
-      }
-    },
-  );
-  return result;
-}
-
-function readResult(result: Result) {
+function readResult<T>(result: Result<T>): T {
   if (result.status === Resolved) {
     return result.value;
   } else {
@@ -230,46 +97,75 @@ function readResult(result: Result) {
 
 function Response(nativeResponse) {
   this.headers = nativeResponse.headers;
-  this.ok = nativeResponse.ok;
-  this.redirected = nativeResponse.redirected;
-  this.status = nativeResponse.status;
-  this.statusText = nativeResponse.statusText;
-  this.type = nativeResponse.type;
+  this.ok = nativeResponse.statusCode >= 200 && nativeResponse.statusCode < 300;
+  this.redirected = false; // TODO
+  this.status = nativeResponse.statusCode;
+  this.statusText = nativeResponse.statusMessage;
+  this.type = 'basic';
   this.url = nativeResponse.url;
 
   this._response = nativeResponse;
-  this._arrayBuffer = null;
   this._blob = null;
   this._json = null;
   this._text = null;
+
+  const callbacks = [];
+  function wake() {
+    // This assumes they won't throw.
+    while (callbacks.length > 0) {
+      const cb = callbacks.pop();
+      cb();
+    }
+  }
+  const result: PendingResult = (this._result = {
+    status: Pending,
+    value: {
+      then(cb) {
+        callbacks.push(cb);
+      },
+    },
+  });
+  const data = [];
+  nativeResponse.on('data', chunk => data.push(chunk));
+  nativeResponse.on('end', () => {
+    if (result.status === Pending) {
+      const resolvedResult = ((result: any): ResolvedResult<Buffer>);
+      resolvedResult.status = Resolved;
+      resolvedResult.value = Buffer.concat(data);
+      wake();
+    }
+  });
+  nativeResponse.on('error', err => {
+    if (result.status === Pending) {
+      const rejectedResult = ((result: any): RejectedResult);
+      rejectedResult.status = Rejected;
+      rejectedResult.value = err;
+      wake();
+    }
+  });
 }
 
 Response.prototype = {
   constructor: Response,
   arrayBuffer() {
-    return readResult(
-      this._arrayBuffer ||
-        (this._arrayBuffer = toResult(this._response.arrayBuffer())),
-    );
+    const buffer = readResult(this._result);
+    return buffer;
   },
   blob() {
-    return readResult(
-      this._blob || (this._blob = toResult(this._response.blob())),
-    );
+    // TODO: Is this needed?
+    throw new Error('Not implemented.');
   },
   json() {
-    return readResult(
-      this._json || (this._json = toResult(this._response.json())),
-    );
+    const buffer = readResult(this._result);
+    return JSON.parse(buffer.toString());
   },
   text() {
-    return readResult(
-      this._text || (this._text = toResult(this._response.text())),
-    );
+    const buffer = readResult(this._result);
+    return buffer.toString();
   },
 };
 
-function preloadResult(url: string, options: FetchOptions): Result {
+function preloadResult(url: string, options: mixed): Result<FetchResponse> {
   const map = readResultMap();
   let entry = map.get(url);
   if (!entry) {
@@ -280,23 +176,54 @@ function preloadResult(url: string, options: FetchOptions): Result {
         throw Error('Unsupported option');
       }
     }
-    const thenable = nodeFetch(url, options);
-    entry = toResult(thenable);
+    const callbacks = [];
+    const wakeable = {
+      then(cb) {
+        callbacks.push(cb);
+      },
+    };
+    const wake = () => {
+      // This assumes they won't throw.
+      while (callbacks.length > 0) {
+        const cb = callbacks.pop();
+        cb();
+      }
+    };
+    const result: Result<FetchResponse> = (entry = {
+      status: Pending,
+      value: wakeable,
+    });
+    nodeFetch(
+      url,
+      options,
+      response => {
+        if (result.status === Pending) {
+          const resolvedResult = ((result: any): ResolvedResult<FetchResponse>);
+          resolvedResult.status = Resolved;
+          resolvedResult.value = response;
+          wake();
+        }
+      },
+      err => {
+        if (result.status === Pending) {
+          const rejectedResult = ((result: any): RejectedResult);
+          rejectedResult.status = Rejected;
+          rejectedResult.value = err;
+          wake();
+        }
+      },
+    );
     map.set(url, entry);
   }
   return entry;
 }
 
-export function preload(url: string, options: FetchOptions): void {
+export function preload(url: string, options: mixed): void {
+  preloadResult(url, options);
   // Don't return anything.
 }
 
-export function fetch(url: string, options: FetchOptions): Object {
+export function fetch(url: string, options: mixed): FetchResponse {
   const result = preloadResult(url, options);
-  const nativeResponse = (readResult(result): any);
-  if (nativeResponse._reactResponse) {
-    return nativeResponse._reactResponse;
-  } else {
-    return (nativeResponse._reactResponse = new Response(nativeResponse));
-  }
+  return readResult(result);
 }

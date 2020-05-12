@@ -137,7 +137,7 @@ const bundles = [
     moduleType: ISOMORPHIC,
     entry: 'react-fetch/index.node',
     global: 'ReactFetch',
-    externals: ['react', 'https'],
+    externals: ['react', 'http', 'https'],
   },
 
   /******* React DOM *******/
