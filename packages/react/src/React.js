@@ -15,6 +15,7 @@ import {
   REACT_STRICT_MODE_TYPE,
   REACT_SUSPENSE_TYPE,
   REACT_SUSPENSE_LIST_TYPE,
+  REACT_LEGACY_HIDDEN_TYPE,
 } from 'shared/ReactSymbols';
 
 import {Component, PureComponent} from './ReactBaseClasses';
@@ -110,6 +111,7 @@ export {
   useTransition,
   useDeferredValue,
   REACT_SUSPENSE_LIST_TYPE as SuspenseList,
+  REACT_LEGACY_HIDDEN_TYPE as unstable_LegacyHidden,
   withSuspenseConfig as unstable_withSuspenseConfig,
   // enableBlocksAPI
   block,

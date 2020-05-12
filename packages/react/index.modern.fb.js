@@ -32,6 +32,7 @@ export {
   Profiler,
   StrictMode,
   Suspense,
+  unstable_LegacyHidden,
   createElement,
   cloneElement,
   isValidElement,
