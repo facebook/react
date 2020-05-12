@@ -9,4 +9,4 @@
 
 'use strict';
 
-export * from './index.node';
+export * from './src/ReactFetchBrowser';

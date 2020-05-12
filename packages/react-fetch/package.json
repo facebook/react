@@ -13,11 +13,14 @@
     "README.md",
     "build-info.json",
     "index.js",
-    "index.browser.js",
     "index.node.js",
+    "index.browser.js",
     "cjs/"
   ],
   "peerDependencies": {
     "react": "^16.13.1"
+  },
+  "browser": {
+    "./index.js": "./index.browser.js"
   }
 }

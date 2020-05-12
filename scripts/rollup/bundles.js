@@ -115,7 +115,7 @@ const bundles = [
     externals: ['react'],
   },
 
-  /******* React Fetch (experimental, new) *******/
+  /******* React Fetch Browser (experimental, new) *******/
   {
     bundleTypes: [
       NODE_DEV,
@@ -126,14 +126,16 @@ const bundles = [
       FB_WWW_PROFILING,
     ],
     moduleType: ISOMORPHIC,
-    entry: 'react-fetch',
+    entry: 'react-fetch/index.browser',
     global: 'ReactFetch',
     externals: ['react'],
   },
+
+  /******* React Fetch Node (experimental, new) *******/
   {
     bundleTypes: [NODE_DEV, NODE_PROD],
     moduleType: ISOMORPHIC,
-    entry: 'react-fetch/node',
+    entry: 'react-fetch/index.node',
     global: 'ReactFetch',
     externals: ['react', 'https'],
   },
