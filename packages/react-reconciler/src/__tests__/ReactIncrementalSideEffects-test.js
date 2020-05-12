@@ -38,6 +38,25 @@ describe('ReactIncrementalSideEffects', () => {
     return {text: t, hidden: false};
   }
 
+  // TODO: Delete this once new API exists in both forks
+  function LegacyHiddenDiv({hidden, children, ...props}) {
+    if (gate(flags => flags.new)) {
+      return (
+        <div hidden={hidden} {...props}>
+          <React.unstable_LegacyHidden mode={hidden ? 'hidden' : 'visible'}>
+            {children}
+          </React.unstable_LegacyHidden>
+        </div>
+      );
+    } else {
+      return (
+        <div hidden={hidden} {...props}>
+          {children}
+        </div>
+      );
+    }
+  }
+
   it('can update child nodes of a host instance', () => {
     function Bar(props) {
       return <span>{props.text}</span>;
@@ -405,6 +424,7 @@ describe('ReactIncrementalSideEffects', () => {
     ]);
   });
 
+  // @gate enableLegacyHiddenType
   it('preserves a previously rendered node when deprioritized', () => {
     function Middle(props) {
       Scheduler.unstable_yieldValue('Middle');
@@ -415,9 +435,9 @@ describe('ReactIncrementalSideEffects', () => {
       Scheduler.unstable_yieldValue('Foo');
       return (
         <div>
-          <div hidden={true}>
+          <LegacyHiddenDiv hidden={true}>
             <Middle>{props.text}</Middle>
-          </div>
+          </LegacyHiddenDiv>
         </div>
       );
     }
@@ -455,6 +475,7 @@ describe('ReactIncrementalSideEffects', () => {
     );
   });
 
+  // @gate enableLegacyHiddenType
   it('can reuse side-effects after being preempted', () => {
     function Bar(props) {
       Scheduler.unstable_yieldValue('Bar');
@@ -471,7 +492,7 @@ describe('ReactIncrementalSideEffects', () => {
     function Foo(props) {
       Scheduler.unstable_yieldValue('Foo');
       return (
-        <div hidden={true}>
+        <LegacyHiddenDiv hidden={true}>
           {props.step === 0 ? (
             <div>
               <Bar>Hi</Bar>
@@ -480,7 +501,7 @@ describe('ReactIncrementalSideEffects', () => {
           ) : (
             middleContent
           )}
-        </div>
+        </LegacyHiddenDiv>
       );
     }
 
@@ -534,6 +555,7 @@ describe('ReactIncrementalSideEffects', () => {
     );
   });
 
+  // @gate enableLegacyHiddenType
   it('can reuse side-effects after being preempted, if shouldComponentUpdate is false', () => {
     class Bar extends React.Component {
       shouldComponentUpdate(nextProps) {
@@ -563,9 +585,9 @@ describe('ReactIncrementalSideEffects', () => {
     function Foo(props) {
       Scheduler.unstable_yieldValue('Foo');
       return (
-        <div hidden={true}>
+        <LegacyHiddenDiv hidden={true}>
           <Content step={props.step} text={props.text} />
-        </div>
+        </LegacyHiddenDiv>
       );
     }
 
@@ -649,12 +671,13 @@ describe('ReactIncrementalSideEffects', () => {
     expect(ReactNoop.getChildrenAsJSX()).toEqual(<span prop={3} />);
   });
 
+  // @gate enableLegacyHiddenType
   it('updates a child even though the old props is empty', () => {
     function Foo(props) {
       return (
-        <div hidden={true}>
+        <LegacyHiddenDiv hidden={true}>
           <span prop={1} />
-        </div>
+        </LegacyHiddenDiv>
       );
     }
 
@@ -888,6 +911,7 @@ describe('ReactIncrementalSideEffects', () => {
     expect(ops).toEqual(['Bar', 'Baz', 'Bar', 'Bar']);
   });
 
+  // @gate enableLegacyHiddenType
   it('deprioritizes setStates that happens within a deprioritized tree', () => {
     const barInstances = [];
 
@@ -910,11 +934,11 @@ describe('ReactIncrementalSideEffects', () => {
       return (
         <div>
           <span prop={props.tick} />
-          <div hidden={true}>
+          <LegacyHiddenDiv hidden={true}>
             <Bar idx={props.idx} />
             <Bar idx={props.idx} />
             <Bar idx={props.idx} />
-          </div>
+          </LegacyHiddenDiv>
         </div>
       );
     }

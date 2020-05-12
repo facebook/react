@@ -75,6 +75,25 @@ describe('ReactFresh', () => {
     return type;
   }
 
+  // TODO: Delete this once new API exists in both forks
+  function LegacyHiddenDiv({hidden, children, ...props}) {
+    if (gate(flags => flags.new)) {
+      return (
+        <div hidden={hidden} {...props}>
+          <React.unstable_LegacyHidden mode={hidden ? 'hidden' : 'visible'}>
+            {children}
+          </React.unstable_LegacyHidden>
+        </div>
+      );
+    } else {
+      return (
+        <div hidden={hidden} {...props}>
+          {children}
+        </div>
+      );
+    }
+  }
+
   it('can preserve state for compatible types', () => {
     if (__DEV__) {
       const HelloV1 = render(() => {
@@ -2417,9 +2436,9 @@ describe('ReactFresh', () => {
             Scheduler.unstable_yieldValue('App#layout');
           });
           return (
-            <div hidden={offscreen}>
+            <LegacyHiddenDiv hidden={offscreen}>
               <Hello />
-            </div>
+            </LegacyHiddenDiv>
           );
         };
       });

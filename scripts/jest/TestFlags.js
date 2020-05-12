@@ -73,6 +73,10 @@ function getTestFlags() {
       classic: releaseChannel === 'classic',
       www,
 
+      // Using this more specific flag so it's easier to clean up later
+      enableLegacyHiddenType:
+        featureFlags.enableNewReconciler === false || __EXPERIMENTAL__,
+
       ...featureFlags,
       ...environmentFlags,
     },

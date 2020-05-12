@@ -45,6 +45,25 @@ describe('ReactIncrementalErrorHandling', () => {
     );
   }
 
+  // TODO: Delete this once new API exists in both forks
+  function LegacyHiddenDiv({hidden, children, ...props}) {
+    if (gate(flags => flags.new)) {
+      return (
+        <div hidden={hidden} {...props}>
+          <React.unstable_LegacyHidden mode={hidden ? 'hidden' : 'visible'}>
+            {children}
+          </React.unstable_LegacyHidden>
+        </div>
+      );
+    } else {
+      return (
+        <div hidden={hidden} {...props}>
+          {children}
+        </div>
+      );
+    }
+  }
+
   it('recovers from errors asynchronously', () => {
     class ErrorBoundary extends React.Component {
       state = {error: null};
@@ -270,6 +289,7 @@ describe('ReactIncrementalErrorHandling', () => {
     expect(ReactNoop.getChildren()).toEqual([span('Everything is fine.')]);
   });
 
+  // @gate enableLegacyHiddenType
   it('does not include offscreen work when retrying after an error', () => {
     function App(props) {
       if (props.isBroken) {
@@ -280,9 +300,9 @@ describe('ReactIncrementalErrorHandling', () => {
       return (
         <>
           Everything is fine
-          <div hidden={true}>
+          <LegacyHiddenDiv hidden={true}>
             <div>Offscreen content</div>
-          </div>
+          </LegacyHiddenDiv>
         </>
       );
     }
