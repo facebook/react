@@ -363,5 +363,8 @@
   "362": "Could not find React container within specified host subtree.",
   "363": "Test selector API is not supported by this renderer.",
   "364": "Invalid host root specified. Should be either a React container or a node with a testname attribute.",
-  "365": "Invalid selector type %s specified."
+  "365": "Invalid selector type %s specified.",
+  "366": "ReactDOM.createEventHandle: setListener called on an target that did not have a corresponding root. This is likely a bug in React.",
+  "367": "ReactDOM.createEventHandle: setListener called on an element target that is not managed by React. Ensure React rendered the DOM element.",
+  "368": "ReactDOM.createEventHandle: setListener called on an invalid target. Provide a vaid EventTarget or an element managed by React."
 }

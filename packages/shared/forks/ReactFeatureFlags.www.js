@@ -58,7 +58,7 @@ export const disableModulePatternComponents = true;
 
 export const enableDeprecatedFlareAPI = true;
 
-export const enableCreateEventHandleAPI = false;
+export const enableCreateEventHandleAPI = true;
 
 export const enableFundamentalAPI = false;
 
