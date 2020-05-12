@@ -387,7 +387,7 @@ export function getNextLanes(root: FiberRoot, wipLanes: Lanes): Lanes {
     const entanglements = root.entanglements;
     let lanes = nextLanes & entangledLanes;
     while (lanes > 0) {
-      const index = ctrz(lanes);
+      const index = pickArbitraryLaneIndex(lanes);
       const lane = 1 << index;
 
       nextLanes |= entanglements[index];
@@ -432,7 +432,7 @@ export function markStarvedLanesAsExpired(
   // it as expired to force it to finish.
   let lanes = pendingLanes;
   while (lanes > 0) {
-    const index = ctrz(lanes);
+    const index = pickArbitraryLaneIndex(lanes);
     const lane = 1 << index;
 
     const expirationTime = expirationTimes[index];
@@ -619,6 +619,10 @@ export function pickArbitraryLane(lanes: Lanes): Lane {
   return getLowestPriorityLane(lanes);
 }
 
+function pickArbitraryLaneIndex(lanes: Lane | Lanes) {
+  return 31 - clz32(lanes);
+}
+
 export function includesSomeLane(a: Lanes | Lane, b: Lanes | Lane) {
   return (a & b) !== NoLanes;
 }
@@ -678,7 +682,7 @@ export function markRootSuspended(root: FiberRoot, suspendedLanes: Lanes) {
   const expirationTimes = root.expirationTimes;
   let lanes = suspendedLanes;
   while (lanes > 0) {
-    const index = ctrz(lanes);
+    const index = pickArbitraryLaneIndex(lanes);
     const lane = 1 << index;
 
     expirationTimes[index] = NoTimestamp;
@@ -728,7 +732,7 @@ export function markRootFinished(root: FiberRoot, remainingLanes: Lanes) {
   const expirationTimes = root.expirationTimes;
   let lanes = noLongerPendingLanes;
   while (lanes > 0) {
-    const index = ctrz(lanes);
+    const index = pickArbitraryLaneIndex(lanes);
     const lane = 1 << index;
 
     // Clear the expiration time
@@ -744,7 +748,7 @@ export function markRootEntangled(root: FiberRoot, entangledLanes: Lanes) {
   const entanglements = root.entanglements;
   let lanes = entangledLanes;
   while (lanes > 0) {
-    const index = ctrz(lanes);
+    const index = pickArbitraryLaneIndex(lanes);
     const lane = 1 << index;
 
     entanglements[index] |= entangledLanes;
@@ -824,15 +828,4 @@ function clz32Fallback(lanes: Lanes | Lane) {
     return 32;
   }
   return (31 - ((log(lanes) / LN2) | 0)) | 0;
-}
-
-// Count trailing zeros. Only used on lanes, so assume input is an integer.
-function ctrz(lanes: Lanes | Lane) {
-  let bits = lanes;
-  bits |= bits << 16;
-  bits |= bits << 8;
-  bits |= bits << 4;
-  bits |= bits << 2;
-  bits |= bits << 1;
-  return 32 - clz32(~bits);
 }
