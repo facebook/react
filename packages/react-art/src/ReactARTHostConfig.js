@@ -473,7 +473,7 @@ export function getInstanceFromNode(node) {
   throw new Error('Not yet implemented.');
 }
 
-export function beforeRemoveInstance(instance) {
+export function removeInstanceEventHandles(instance) {
   // noop
 }
 

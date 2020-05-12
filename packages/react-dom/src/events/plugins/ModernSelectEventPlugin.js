@@ -28,7 +28,11 @@ import {
 } from '../../client/ReactDOMComponentTree';
 import {hasSelectionCapabilities} from '../../client/ReactInputSelection';
 import {DOCUMENT_NODE} from '../../shared/HTMLNodeType';
-import {accumulateTwoPhaseListeners} from '../DOMModernPluginEventSystem';
+import {
+  accumulateTwoPhaseListeners,
+  getListenerMapKey,
+  capturePhaseEvents,
+} from '../DOMModernPluginEventSystem';
 
 const skipSelectionChangeEvent =
   canUseDOM && 'documentMode' in document && document.documentMode <= 11;
@@ -153,7 +157,9 @@ function isListeningToEvents(
   const listenerMap = getEventListenerMap(mountAt);
   for (let i = 0; i < events.length; i++) {
     const event = events[i];
-    if (!listenerMap.has(event)) {
+    const capture = capturePhaseEvents.has(event);
+    const listenerMapKey = getListenerMapKey(event, capture);
+    if (!listenerMap.has(listenerMapKey)) {
       return false;
     }
   }
@@ -165,7 +171,9 @@ function isListeningToEvent(
   mountAt: Document | Element,
 ): boolean {
   const listenerMap = getEventListenerMap(mountAt);
-  return listenerMap.has(registrationName);
+  const capture = capturePhaseEvents.has(registrationName);
+  const listenerMapKey = getListenerMapKey(registrationName, capture);
+  return listenerMap.has(listenerMapKey);
 }
 
 /**

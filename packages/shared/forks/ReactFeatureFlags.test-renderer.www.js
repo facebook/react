@@ -26,6 +26,7 @@ export const disableInputAttributeSyncing = false;
 export const enableDeprecatedFlareAPI = true;
 export const enableFundamentalAPI = false;
 export const enableScopeAPI = true;
+export const enableCreateEventHandleAPI = false;
 export const warnAboutUnmockedScheduler = true;
 export const enableSuspenseCallback = true;
 export const warnAboutDefaultPropsOnFunctionComponents = false;

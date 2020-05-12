@@ -32,7 +32,6 @@ import {
   LEGACY_FB_SUPPORT,
   IS_REPLAYED,
   IS_TARGET_PHASE_ONLY,
-  USE_EVENT_SYSTEM,
 } from './EventSystemFlags';
 
 import {
@@ -78,6 +77,8 @@ import {
   TOP_PLAYING,
   TOP_CLICK,
   TOP_SELECTION_CHANGE,
+  TOP_BEFORE_BLUR,
+  TOP_AFTER_BLUR,
   getRawEventName,
 } from './DOMTopLevelEventTypes';
 import {
@@ -89,7 +90,10 @@ import {batchedEventUpdates} from './ReactDOMUpdateBatching';
 import getListener from './getListener';
 import {passiveBrowserEventsSupported} from './checkPassiveEvents';
 
-import {enableLegacyFBSupport} from 'shared/ReactFeatureFlags';
+import {
+  enableLegacyFBSupport,
+  enableCreateEventHandleAPI,
+} from 'shared/ReactFeatureFlags';
 import {
   invokeGuardedCallbackAndCatchFirstError,
   rethrowCaughtError,
@@ -99,9 +103,11 @@ import {
   removeEventListener,
   addEventCaptureListener,
   addEventBubbleListener,
+  addEventBubbleListenerWithPassiveFlag,
+  addEventCaptureListenerWithPassiveFlag,
 } from './EventListener';
 
-const capturePhaseEvents = new Set([
+export const capturePhaseEvents: Set<DOMTopLevelEventType> = new Set([
   TOP_FOCUS,
   TOP_BLUR,
   TOP_SCROLL,
@@ -136,6 +142,11 @@ const capturePhaseEvents = new Set([
   TOP_VOLUME_CHANGE,
   TOP_WAITING,
 ]);
+
+if (enableCreateEventHandleAPI) {
+  capturePhaseEvents.add(TOP_BEFORE_BLUR);
+  capturePhaseEvents.add(TOP_AFTER_BLUR);
+}
 
 function executeDispatch(
   event: ReactSyntheticEvent,
@@ -217,7 +228,7 @@ function dispatchEventsForPlugins(
 
 export function listenToTopLevelEvent(
   topLevelType: DOMTopLevelEventType,
-  targetContainer: EventTarget,
+  target: EventTarget,
   listenerMap: ElementListenerMap,
   eventSystemFlags: EventSystemFlags,
   passive?: boolean,
@@ -228,25 +239,26 @@ export function listenToTopLevelEvent(
   // otherwise it won't capture incoming events that are only
   // triggered on the document directly.
   if (topLevelType === TOP_SELECTION_CHANGE) {
-    targetContainer = (targetContainer: any).ownerDocument || targetContainer;
-    listenerMap = getEventListenerMap(targetContainer);
+    target = (target: any).ownerDocument || target;
+    listenerMap = getEventListenerMap(target);
   }
-  const listenerEntry: ElementListenerMapEntry | void = listenerMap.get(
-    topLevelType,
-  );
-  const isCapturePhase =
+  capture =
     capture === undefined ? capturePhaseEvents.has(topLevelType) : capture;
+  const listenerMapKey = getListenerMapKey(topLevelType, capture);
+  const listenerEntry: ElementListenerMapEntry | void = listenerMap.get(
+    listenerMapKey,
+  );
   if (listenerEntry === undefined) {
     const listener = addTrappedEventListener(
-      targetContainer,
+      target,
       topLevelType,
       eventSystemFlags,
-      isCapturePhase,
+      capture,
       false,
       passive,
       priority,
     );
-    listenerMap.set(topLevelType, {passive, listener});
+    listenerMap.set(listenerMapKey, {passive, listener});
   }
 }
 
@@ -324,17 +336,35 @@ function addTrappedEventListener(
     };
   }
   if (capture) {
-    unsubscribeListener = addEventCaptureListener(
-      targetContainer,
-      rawEventName,
-      listener,
-    );
+    if (enableCreateEventHandleAPI && passive !== undefined) {
+      unsubscribeListener = addEventCaptureListenerWithPassiveFlag(
+        targetContainer,
+        rawEventName,
+        listener,
+        passive,
+      );
+    } else {
+      unsubscribeListener = addEventCaptureListener(
+        targetContainer,
+        rawEventName,
+        listener,
+      );
+    }
   } else {
-    unsubscribeListener = addEventBubbleListener(
-      targetContainer,
-      rawEventName,
-      listener,
-    );
+    if (enableCreateEventHandleAPI && passive !== undefined) {
+      unsubscribeListener = addEventBubbleListenerWithPassiveFlag(
+        targetContainer,
+        rawEventName,
+        listener,
+        passive,
+      );
+    } else {
+      unsubscribeListener = addEventBubbleListener(
+        targetContainer,
+        rawEventName,
+        listener,
+      );
+    }
   }
   return unsubscribeListener;
 }
@@ -397,8 +427,6 @@ export function dispatchEventForPluginEventSystem(
       (eventSystemFlags & LEGACY_FB_SUPPORT) === 0 &&
       // We also don't want to defer during event replaying.
       (eventSystemFlags & IS_REPLAYED) === 0 &&
-      // We don't want to apply the legacy FB support for the useEvent API.
-      (eventSystemFlags & USE_EVENT_SYSTEM) === 0 &&
       willDeferLaterForLegacyFBSupport(topLevelType, targetContainer)
     ) {
       return;
@@ -706,4 +734,11 @@ export function accumulateEnterLeaveListeners(
       true,
     );
   }
+}
+
+export function getListenerMapKey(
+  topLevelType: DOMTopLevelEventType,
+  capture: boolean,
+): string {
+  return `${getRawEventName(topLevelType)}__${capture ? 'capture' : 'bubble'}`;
 }

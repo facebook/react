@@ -12,7 +12,9 @@ import type {
   ReactEventResponder,
   ReactEventResponderInstance,
   EventPriority,
+  ReactScopeInstance,
 } from 'shared/ReactTypes';
+import type {DOMTopLevelEventType} from 'legacy-events/TopLevelEventTypes';
 
 type AnyNativeEvent = Event | KeyboardEvent | MouseEvent | Touch;
 
@@ -75,3 +77,18 @@ export type ReactDOMResponderContext = {
   getResponderNode(): Element | null,
   ...
 };
+
+export type ReactDOMEventHandle = {|
+  setListener(
+    target: EventTarget | ReactScopeInstance,
+    callback: (SyntheticEvent<EventTarget>) => void,
+  ): void,
+  clear(): void,
+|};
+
+export type ReactDOMEventHandleListener = {|
+  callback: (SyntheticEvent<EventTarget>) => void,
+  capture: boolean,
+  destroy: (target: EventTarget | ReactScopeInstance) => void,
+  type: DOMTopLevelEventType,
+|};
