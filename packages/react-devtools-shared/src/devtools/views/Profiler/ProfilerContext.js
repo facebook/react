@@ -43,7 +43,7 @@ export type Context = {|
   // 1. The selected root in the Components tree (if it has any profiling data) or
   // 2. The first root in the list with profiling data.
   rootID: number | null,
-  setRootIDcleanFiber: (id: number) => void,
+  setRootID: (id: number) => void,
 
   // Controls whether commits are filtered by duration.
   // This value is controlled by a filter toggle UI in the Profiler toolbar.
@@ -154,7 +154,7 @@ function ProfilerContextController({children}: Props) {
     [dispatch, selectFiberID, selectFiberName, store],
   );
 
-  const setRootIDcleanFiber = useCallback(
+  const setRootIDAndClearFiber = useCallback(
     (id: number | null) => {
       selectFiber(null, null);
       setRootID(id);
@@ -182,9 +182,9 @@ function ProfilerContextController({children}: Props) {
             selectedElementRootID !== null &&
             dataForRoots.has(selectedElementRootID)
           ) {
-            setRootIDcleanFiber(selectedElementRootID);
+            setRootIDAndClearFiber(selectedElementRootID);
           } else {
-            setRootIDcleanFiber(firstRootID);
+            setRootIDAndClearFiber(firstRootID);
           }
         }
       }
@@ -245,7 +245,7 @@ function ProfilerContextController({children}: Props) {
       supportsProfiling,
 
       rootID,
-      setRootIDcleanFiber,
+      setRootID: setRootIDAndClearFiber,
 
       isCommitFilterEnabled,
       setIsCommitFilterEnabled,
@@ -275,7 +275,8 @@ function ProfilerContextController({children}: Props) {
       supportsProfiling,
 
       rootID,
-      setRootIDcleanFiber,
+      setRootID,
+      setRootIDAndClearFiber,
 
       isCommitFilterEnabled,
       setIsCommitFilterEnabled,

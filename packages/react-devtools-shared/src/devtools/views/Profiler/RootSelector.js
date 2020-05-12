@@ -14,9 +14,7 @@ import {ProfilerContext} from './ProfilerContext';
 import styles from './RootSelector.css';
 
 export default function RootSelector(_: {||}) {
-  const {profilingData, rootID, setRootIDcleanFiber} = useContext(
-    ProfilerContext,
-  );
+  const {profilingData, rootID, setRootID} = useContext(ProfilerContext);
 
   const options = [];
   if (profilingData !== null) {
@@ -31,9 +29,9 @@ export default function RootSelector(_: {||}) {
 
   const handleChange = useCallback(
     ({currentTarget}) => {
-      setRootIDcleanFiber(parseInt(currentTarget.value, 10));
+      setRootID(parseInt(currentTarget.value, 10));
     },
-    [setRootIDcleanFiber],
+    [setRootID],
   );
 
   if (profilingData === null || profilingData.dataForRoots.size <= 1) {
