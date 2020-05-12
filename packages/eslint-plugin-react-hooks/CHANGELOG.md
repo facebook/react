@@ -1,3 +1,6 @@
+## 4.0.1
+* Declare support for ESLint 7. ([@MichaelDeBoey](https://github.com/MichaelDeBoey) in [#18878](https://github.com/facebook/react/pull/18878))
+
 ## 4.0.0
 
 * **New Violations:** Consider `PascalCase.useFoo()` calls as Hooks. ([@cyan33](https://github.com/cyan33) in [#18722](https://github.com/facebook/react/pull/18722))
