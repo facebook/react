@@ -74,7 +74,8 @@ export const mountFundamentalComponent =
 export const shouldUpdateFundamentalComponent =
   $$$hostConfig.shouldUpdateFundamentalComponent;
 export const getInstanceFromNode = $$$hostConfig.getInstanceFromNode;
-export const beforeRemoveInstance = $$$hostConfig.beforeRemoveInstance;
+export const removeInstanceEventHandles =
+  $$$hostConfig.removeInstanceEventHandles;
 export const isOpaqueHydratingObject = $$$hostConfig.isOpaqueHydratingObject;
 export const makeOpaqueHydratingObject =
   $$$hostConfig.makeOpaqueHydratingObject;
@@ -84,7 +85,7 @@ export const beforeActiveInstanceBlur = $$$hostConfig.beforeActiveInstanceBlur;
 export const afterActiveInstanceBlur = $$$hostConfig.afterActiveInstanceBlur;
 export const preparePortalMount = $$$hostConfig.preparePortalMount;
 export const prepareScopeUpdate = $$$hostConfig.preparePortalMount;
-export const prepareScopeUnmount = $$$hostConfig.prepareScopeUnmount;
+export const removeScopeEventHandles = $$$hostConfig.removeScopeEventHandles;
 export const getInstanceFromScope = $$$hostConfig.getInstanceFromScope;
 
 // -------------------

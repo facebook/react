@@ -387,7 +387,7 @@ export function getInstanceFromNode(mockNode: Object) {
   return null;
 }
 
-export function beforeRemoveInstance(instance: any) {
+export function removeInstanceEventHandles(instance: any) {
   // noop
 }
 
@@ -444,7 +444,7 @@ export function prepareScopeUpdate(scopeInstance: Object, inst: Object): void {
   nodeToInstanceMap.set(scopeInstance, inst);
 }
 
-export function prepareScopeUnmount(scopeInstance: Object): void {
+export function removeScopeEventHandles(scopeInstance: Object): void {
   nodeToInstanceMap.delete(scopeInstance);
 }
 

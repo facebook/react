@@ -77,6 +77,7 @@ import {
   enableFundamentalAPI,
   enableModernEventSystem,
   enableScopeAPI,
+  enableCreateEventHandleAPI,
 } from 'shared/ReactFeatureFlags';
 import {HostComponent, HostText} from 'react-reconciler/src/ReactWorkTags';
 import {TOP_BEFORE_BLUR, TOP_AFTER_BLUR} from '../events/DOMTopLevelEventTypes';
@@ -233,7 +234,7 @@ export function prepareForCommit(containerInfo: Container): Object | null {
   eventsEnabled = ReactBrowserEventEmitterIsEnabled();
   selectionInformation = getSelectionInformation();
   let activeInstance = null;
-  if (enableDeprecatedFlareAPI) {
+  if (enableDeprecatedFlareAPI || enableCreateEventHandleAPI) {
     const focusedElem = selectionInformation.focusedElem;
     if (focusedElem !== null) {
       activeInstance = getClosestInstanceFromNode(focusedElem);
@@ -244,7 +245,7 @@ export function prepareForCommit(containerInfo: Container): Object | null {
 }
 
 export function beforeActiveInstanceBlur(): void {
-  if (enableDeprecatedFlareAPI) {
+  if (enableDeprecatedFlareAPI || enableCreateEventHandleAPI) {
     ReactBrowserEventEmitterSetEnabled(true);
     dispatchBeforeDetachedBlur((selectionInformation: any).focusedElem);
     ReactBrowserEventEmitterSetEnabled(false);
@@ -252,7 +253,7 @@ export function beforeActiveInstanceBlur(): void {
 }
 
 export function afterActiveInstanceBlur(): void {
-  if (enableDeprecatedFlareAPI) {
+  if (enableDeprecatedFlareAPI || enableCreateEventHandleAPI) {
     ReactBrowserEventEmitterSetEnabled(true);
     dispatchAfterDetachedBlur((selectionInformation: any).focusedElem);
     ReactBrowserEventEmitterSetEnabled(false);
@@ -515,7 +516,7 @@ function createEvent(type: TopLevelType): Event {
 }
 
 function dispatchBeforeDetachedBlur(target: HTMLElement): void {
-  if (enableDeprecatedFlareAPI) {
+  if (enableDeprecatedFlareAPI || enableCreateEventHandleAPI) {
     const event = createEvent(TOP_BEFORE_BLUR);
     // Dispatch "beforeblur" directly on the target,
     // so it gets picked up by the event system and
@@ -525,7 +526,7 @@ function dispatchBeforeDetachedBlur(target: HTMLElement): void {
 }
 
 function dispatchAfterDetachedBlur(target: HTMLElement): void {
-  if (enableDeprecatedFlareAPI) {
+  if (enableDeprecatedFlareAPI || enableCreateEventHandleAPI) {
     const event = createEvent(TOP_AFTER_BLUR);
     // So we know what was detached, make the relatedTarget the
     // detached target on the "afterblur" event.
@@ -535,7 +536,7 @@ function dispatchAfterDetachedBlur(target: HTMLElement): void {
   }
 }
 
-export function beforeRemoveInstance(
+export function removeInstanceEventHandles(
   instance: Instance | TextInstance | SuspenseInstance,
 ) {
   // TODO for ReactDOM.createEventInstance
@@ -1135,7 +1136,7 @@ export function prepareScopeUpdate(
   }
 }
 
-export function prepareScopeUnmount(scopeInstance: Object): void {
+export function removeScopeEventHandles(scopeInstance: Object): void {
   // TODO when we add createEventHandle
 }
 

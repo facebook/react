@@ -442,7 +442,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       throw new Error('Not yet implemented.');
     },
 
-    beforeRemoveInstance(instance: any): void {
+    removeInstanceEventHandles(instance: any): void {
       // NO-OP
     },
 
@@ -460,7 +460,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
 
     prepareScopeUpdate() {},
 
-    prepareScopeUnmount() {},
+    removeScopeEventHandles() {},
 
     getInstanceFromScope() {
       throw new Error('Not yet implemented.');

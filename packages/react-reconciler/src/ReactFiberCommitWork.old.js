@@ -36,6 +36,7 @@ import {
   enableSuspenseCallback,
   enableScopeAPI,
   runAllPassiveEffectDestroysBeforeCreates,
+  enableCreateEventHandleAPI,
 } from 'shared/ReactFeatureFlags';
 import {
   FunctionComponent,
@@ -110,10 +111,10 @@ import {
   updateFundamentalComponent,
   commitHydratedContainer,
   commitHydratedSuspenseInstance,
-  beforeRemoveInstance,
+  removeInstanceEventHandles,
   clearContainer,
   prepareScopeUpdate,
-  prepareScopeUnmount,
+  removeScopeEventHandles,
 } from './ReactFiberHostConfig';
 import {
   captureCommitPhaseError,
@@ -1027,7 +1028,9 @@ function commitUnmount(
       if (enableDeprecatedFlareAPI) {
         unmountDeprecatedResponderListeners(current);
       }
-      beforeRemoveInstance(current.stateNode);
+      if (enableCreateEventHandleAPI && current.ref !== null) {
+        removeInstanceEventHandles(current.stateNode);
+      }
       safelyDetachRef(current);
       return;
     }
@@ -1070,7 +1073,9 @@ function commitUnmount(
           unmountDeprecatedResponderListeners(current);
         }
         const scopeInstance = current.stateNode;
-        prepareScopeUnmount(scopeInstance);
+        if (enableCreateEventHandleAPI && current.ref !== null) {
+          removeScopeEventHandles(scopeInstance);
+        }
         safelyDetachRef(current);
       }
       return;

@@ -27,6 +27,7 @@ export const warnAboutDeprecatedLifecycles = true;
 export const enableDeprecatedFlareAPI = false;
 export const enableFundamentalAPI = false;
 export const enableScopeAPI = false;
+export const enableCreateEventHandleAPI = false;
 export const warnAboutUnmockedScheduler = true;
 export const enableSuspenseCallback = false;
 export const warnAboutDefaultPropsOnFunctionComponents = false;
