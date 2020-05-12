@@ -142,6 +142,25 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     }
   }
 
+  // TODO: Delete this once new API exists in both forks
+  function LegacyHiddenDiv({hidden, children, ...props}) {
+    if (gate(flags => flags.new)) {
+      return (
+        <div hidden={hidden} {...props}>
+          <React.unstable_LegacyHidden mode={hidden ? 'hidden' : 'visible'}>
+            {children}
+          </React.unstable_LegacyHidden>
+        </div>
+      );
+    } else {
+      return (
+        <div hidden={hidden} {...props}>
+          {children}
+        </div>
+      );
+    }
+  }
+
   it('does not restart rendering for initial render', async () => {
     function Bar(props) {
       Scheduler.unstable_yieldValue('Bar');
@@ -2891,6 +2910,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
   });
 
   // @gate experimental
+  // @gate enableLegacyHiddenType
   it('should not render hidden content while suspended on higher pri', async () => {
     function Offscreen() {
       Scheduler.unstable_yieldValue('Offscreen');
@@ -2902,9 +2922,9 @@ describe('ReactSuspenseWithNoopRenderer', () => {
       });
       return (
         <>
-          <div hidden={true}>
+          <LegacyHiddenDiv hidden={true}>
             <Offscreen />
-          </div>
+          </LegacyHiddenDiv>
           <Suspense fallback={<Text text="Loading..." />}>
             {showContent ? <AsyncText text="A" ms={2000} /> : null}
           </Suspense>
@@ -2946,6 +2966,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
   });
 
   // @gate experimental
+  // @gate enableLegacyHiddenType
   it('should be able to unblock higher pri content before suspended hidden', async () => {
     function Offscreen() {
       Scheduler.unstable_yieldValue('Offscreen');
@@ -2957,10 +2978,10 @@ describe('ReactSuspenseWithNoopRenderer', () => {
       });
       return (
         <Suspense fallback={<Text text="Loading..." />}>
-          <div hidden={true}>
+          <LegacyHiddenDiv hidden={true}>
             <AsyncText text="A" ms={2000} />
             <Offscreen />
-          </div>
+          </LegacyHiddenDiv>
           {showContent ? <AsyncText text="A" ms={2000} /> : null}
         </Suspense>
       );

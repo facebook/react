@@ -36,6 +36,13 @@ export const deferRenderPhaseUpdateToNextBatch = !__VARIANT__;
 export const debugRenderPhaseSideEffectsForStrictMode = __DEV__;
 export const replayFailedUnitOfWorkWithInvokeGuardedCallback = __DEV__;
 
+// Do not add the corresponding warning to the warning filter! Only exists so we
+// can detect callers and migrate them to the new API. Should not visible to
+// anyone outside React Core team.
+//
+// Disabled in our tests, but we'll enable in www.
+export const warnAboutDOMHiddenAttribute = false;
+
 // TODO: These flags are hard-coded to the default values used in open source.
 // Update the tests so that they pass in either mode, then set these
 // to __VARIANT__.

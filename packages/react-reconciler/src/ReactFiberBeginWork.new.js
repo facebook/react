@@ -75,17 +75,13 @@ import {
   warnAboutDefaultPropsOnFunctionComponents,
   enableScopeAPI,
   enableBlocksAPI,
+  warnAboutDOMHiddenAttribute,
 } from 'shared/ReactFeatureFlags';
 import invariant from 'shared/invariant';
 import shallowEqual from 'shared/shallowEqual';
 import getComponentName from 'shared/getComponentName';
 import ReactStrictModeWarnings from './ReactStrictModeWarnings.new';
-import {
-  REACT_ELEMENT_TYPE,
-  REACT_LAZY_TYPE,
-  REACT_LEGACY_HIDDEN_TYPE,
-  getIteratorFn,
-} from 'shared/ReactSymbols';
+import {REACT_LAZY_TYPE, getIteratorFn} from 'shared/ReactSymbols';
 import {
   getCurrentFiberOwnerNameInDevOrNull,
   setIsRendering,
@@ -128,7 +124,6 @@ import {
 } from './ReactTypeOfMode';
 import {
   shouldSetTextContent,
-  shouldDeprioritizeSubtree,
   isSuspenseInstancePending,
   isSuspenseInstanceFallback,
   registerSuspenseInstanceRetry,
@@ -572,7 +567,15 @@ function updateOffscreenComponent(
     current !== null ? current.memoizedState : null;
 
   if (nextProps.mode === 'hidden') {
-    if (!includesSomeLane(renderLanes, (OffscreenLane: Lane))) {
+    if ((workInProgress.mode & ConcurrentMode) === NoMode) {
+      // In legacy sync mode, don't defer the subtree. Render it now.
+      // TODO: Figure out what we should do in Blocking mode.
+      const nextState: OffscreenState = {
+        baseLanes: NoLanes,
+      };
+      workInProgress.memoizedState = nextState;
+      pushRenderLanes(workInProgress, renderLanes);
+    } else if (!includesSomeLane(renderLanes, (OffscreenLane: Lane))) {
       let nextBaseLanes;
       if (prevState !== null) {
         const prevBaseLanes = prevState.baseLanes;
@@ -1122,23 +1125,19 @@ function updateHostComponent(
 
   markRef(current, workInProgress);
 
-  if (
-    (workInProgress.mode & ConcurrentMode) !== NoMode &&
-    nextProps.hasOwnProperty('hidden')
-  ) {
-    const wrappedChildren = {
-      $$typeof: REACT_ELEMENT_TYPE,
-      type: REACT_LEGACY_HIDDEN_TYPE,
-      key: null,
-      ref: null,
-      props: {
-        children: nextChildren,
-        // Check the host config to see if the children are offscreen/hidden.
-        mode: shouldDeprioritizeSubtree(type, nextProps) ? 'hidden' : 'visible',
-      },
-      _owner: __DEV__ ? {} : null,
-    };
-    nextChildren = wrappedChildren;
+  if (__DEV__) {
+    if (
+      warnAboutDOMHiddenAttribute &&
+      (workInProgress.mode & ConcurrentMode) !== NoMode &&
+      nextProps.hasOwnProperty('hidden')
+    ) {
+      // This warning will not be user visible. Only exists so React Core team
+      // can find existing callers and migrate them to the new API.
+      console.error(
+        'Detected use of DOM `hidden` attribute. Should migrate to new API. ' +
+          '(owner: React Core)',
+      );
+    }
   }
 
   reconcileChildren(current, workInProgress, nextChildren, renderLanes);

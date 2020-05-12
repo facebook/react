@@ -77,6 +77,7 @@ export {
   unstable_withSuspenseConfig,
   block,
   block as unstable_block,
+  unstable_LegacyHidden,
   DEPRECATED_useResponder,
   DEPRECATED_createResponder,
   unstable_createFundamental,

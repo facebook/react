@@ -55,6 +55,25 @@ function loadModules() {
   });
 }
 
+// TODO: Delete this once new API exists in both forks
+function LegacyHiddenDiv({hidden, children, ...props}) {
+  if (gate(flags => flags.new)) {
+    return (
+      <div hidden={hidden} {...props}>
+        <React.unstable_LegacyHidden mode={hidden ? 'hidden' : 'visible'}>
+          {children}
+        </React.unstable_LegacyHidden>
+      </div>
+    );
+  } else {
+    return (
+      <div hidden={hidden} {...props}>
+        {children}
+      </div>
+    );
+  }
+}
+
 describe('ReactDOMTracing', () => {
   beforeEach(() => {
     jest.resetModules();
@@ -65,6 +84,7 @@ describe('ReactDOMTracing', () => {
   describe('interaction tracing', () => {
     describe('hidden', () => {
       // @gate experimental
+      // @gate enableLegacyHiddenType
       it('traces interaction through hidden subtree', () => {
         const Child = () => {
           const [didMount, setDidMount] = React.useState(false);
@@ -86,9 +106,9 @@ describe('ReactDOMTracing', () => {
             Scheduler.unstable_yieldValue('App:mount');
           }, []);
           return (
-            <div hidden={true}>
+            <LegacyHiddenDiv hidden={true}>
               <Child />
-            </div>
+            </LegacyHiddenDiv>
           );
         };
 
@@ -142,6 +162,7 @@ describe('ReactDOMTracing', () => {
       });
 
       // @gate experimental
+      // @gate enableLegacyHiddenType
       it('traces interaction through hidden subtree when there is other pending traced work', () => {
         const Child = () => {
           Scheduler.unstable_yieldValue('Child');
@@ -157,9 +178,9 @@ describe('ReactDOMTracing', () => {
             Scheduler.unstable_yieldValue('App:mount');
           }, []);
           return (
-            <div hidden={true}>
+            <LegacyHiddenDiv hidden={true}>
               <Child />
-            </div>
+            </LegacyHiddenDiv>
           );
         };
 
@@ -210,6 +231,7 @@ describe('ReactDOMTracing', () => {
       });
 
       // @gate experimental
+      // @gate enableLegacyHiddenType
       it('traces interaction through hidden subtree that schedules more idle/never work', () => {
         const Child = () => {
           const [didMount, setDidMount] = React.useState(false);
@@ -234,9 +256,9 @@ describe('ReactDOMTracing', () => {
             Scheduler.unstable_yieldValue('App:mount');
           }, []);
           return (
-            <div hidden={true}>
+            <LegacyHiddenDiv hidden={true}>
               <Child />
-            </div>
+            </LegacyHiddenDiv>
           );
         };
 
@@ -293,6 +315,7 @@ describe('ReactDOMTracing', () => {
       });
 
       // @gate experimental
+      // @gate enableLegacyHiddenType
       it('does not continue interactions across pre-existing idle work', () => {
         const Child = () => {
           Scheduler.unstable_yieldValue('Child');
@@ -304,9 +327,9 @@ describe('ReactDOMTracing', () => {
         const WithHiddenWork = () => {
           Scheduler.unstable_yieldValue('WithHiddenWork');
           return (
-            <div hidden={true}>
+            <LegacyHiddenDiv hidden={true}>
               <Child />
-            </div>
+            </LegacyHiddenDiv>
           );
         };
 
@@ -394,6 +417,7 @@ describe('ReactDOMTracing', () => {
       });
 
       // @gate experimental
+      // @gate enableLegacyHiddenType
       it('should properly trace interactions when there is work of interleaved priorities', () => {
         const Child = () => {
           Scheduler.unstable_yieldValue('Child');
@@ -411,9 +435,9 @@ describe('ReactDOMTracing', () => {
             Scheduler.unstable_yieldValue('MaybeHiddenWork:effect');
           });
           return flag ? (
-            <div hidden={true}>
+            <LegacyHiddenDiv hidden={true}>
               <Child />
-            </div>
+            </LegacyHiddenDiv>
           ) : null;
         };
 
