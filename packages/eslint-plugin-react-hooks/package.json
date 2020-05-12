@@ -29,7 +29,7 @@
   },
   "homepage": "https://reactjs.org/",
   "peerDependencies": {
-    "eslint": "^3.0.0 || ^4.0.0 || ^5.0.0 || ^6.0.0"
+    "eslint": "^3.0.0 || ^4.0.0 || ^5.0.0 || ^6.0.0 || ^7.0.0"
   },
   "devDependencies": {
     "@typescript-eslint/parser": "^2.26.0"
