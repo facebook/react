@@ -115,16 +115,7 @@ const bundles = [
     externals: ['react'],
   },
 
-  /******* React Data (experimental, new) *******/
-  {
-    bundleTypes: [NODE_DEV, NODE_PROD, NODE_PROFILING],
-    moduleType: ISOMORPHIC,
-    entry: 'react-data',
-    global: 'ReactData',
-    externals: ['react'],
-  },
-
-  /******* React Data Fetch (experimental, new) *******/
+  /******* React Fetch Browser (experimental, new) *******/
   {
     bundleTypes: [
       NODE_DEV,
@@ -135,9 +126,18 @@ const bundles = [
       FB_WWW_PROFILING,
     ],
     moduleType: ISOMORPHIC,
-    entry: 'react-data/fetch',
-    global: 'ReactDataFetch',
-    externals: ['react', 'react-data'],
+    entry: 'react-fetch/index.browser',
+    global: 'ReactFetch',
+    externals: ['react'],
+  },
+
+  /******* React Fetch Node (experimental, new) *******/
+  {
+    bundleTypes: [NODE_DEV, NODE_PROD],
+    moduleType: ISOMORPHIC,
+    entry: 'react-fetch/index.node',
+    global: 'ReactFetch',
+    externals: ['react', 'http', 'https'],
   },
 
   /******* React DOM *******/

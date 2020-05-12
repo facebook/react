@@ -1,4 +1,4 @@
-# react-data
+# react-fetch
 
 This package is meant to be used alongside yet-to-be-released, experimental React features. It's unlikely to be useful in any other context.
 

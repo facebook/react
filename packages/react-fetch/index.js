@@ -7,6 +7,6 @@
  * @flow
  */
 
-export function createResource(): any {
-  // TODO
-}
+'use strict';
+
+export * from './index.node';

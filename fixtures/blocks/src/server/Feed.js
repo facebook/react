@@ -7,7 +7,7 @@
 /* eslint-disable import/first */
 
 import * as React from 'react';
-import {fetch} from 'react-data/fetch';
+import {fetch} from 'react-fetch';
 import PostList from './PostList';
 
 export default function Feed() {
