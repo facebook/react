@@ -110,7 +110,6 @@ ruleTester.run('no-production-logging', rule, {
   invalid: [
     {
       code: "console.error('Oh no');",
-      output: "if (__DEV__) {console.error('Oh no')};",
       errors: [
         {
           message: `Wrap console.error() in an "if (__DEV__) {}" check`,
@@ -119,7 +118,6 @@ ruleTester.run('no-production-logging', rule, {
     },
     {
       code: "console.warn('Oh no');",
-      output: "if (__DEV__) {console.warn('Oh no')};",
       errors: [
         {
           message: `Wrap console.warn() in an "if (__DEV__) {}" check`,
@@ -128,7 +126,6 @@ ruleTester.run('no-production-logging', rule, {
     },
     {
       code: "console.warn('Oh no')",
-      output: "if (__DEV__) {console.warn('Oh no')}",
       errors: [
         {
           message: `Wrap console.warn() in an "if (__DEV__) {}" check`,
@@ -141,11 +138,6 @@ ruleTester.run('no-production-logging', rule, {
           console.warn('Oh no');
         }
       `,
-      output: `
-        if (potato) {
-          if (__DEV__) {console.warn('Oh no')};
-        }
-      `,
       errors: [
         {
           message: `Wrap console.warn() in an "if (__DEV__) {}" check`,
@@ -158,11 +150,6 @@ ruleTester.run('no-production-logging', rule, {
           console.error('Oh no');
         }
       `,
-      output: `
-        if (__DEV__ || potato && true) {
-          if (__DEV__) {console.error('Oh no')};
-        }
-      `,
       errors: [
         {
           message: `Wrap console.error() in an "if (__DEV__) {}" check`,
@@ -173,11 +160,6 @@ ruleTester.run('no-production-logging', rule, {
       code: `
         if (banana && __DEV__ && potato && kitten) {
           console.error('Oh no');
-        }
-      `,
-      output: `
-        if (banana && __DEV__ && potato && kitten) {
-          if (__DEV__) {console.error('Oh no')};
         }
       `,
       // Technically this code is valid but we prefer
@@ -194,11 +176,6 @@ ruleTester.run('no-production-logging', rule, {
           console.error('Oh no');
         }
       `,
-      output: `
-        if (!__DEV__) {
-          if (__DEV__) {console.error('Oh no')};
-        }
-      `,
       errors: [
         {
           message: `Wrap console.error() in an "if (__DEV__) {}" check`,
@@ -209,11 +186,6 @@ ruleTester.run('no-production-logging', rule, {
       code: `
         if (foo || x && __DEV__) {
           console.error('Oh no');
-        }
-      `,
-      output: `
-        if (foo || x && __DEV__) {
-          if (__DEV__) {console.error('Oh no')};
         }
       `,
       errors: [
@@ -227,12 +199,6 @@ ruleTester.run('no-production-logging', rule, {
         if (__DEV__) {
         } else {
           console.error('Oh no');
-        }
-      `,
-      output: `
-        if (__DEV__) {
-        } else {
-          if (__DEV__) {console.error('Oh no')};
         }
       `,
       errors: [
@@ -248,15 +214,6 @@ ruleTester.run('no-production-logging', rule, {
           if (__DEV__) {
           } else {
             console.error('Oh no');
-          }
-        }
-      `,
-      output: `
-        if (__DEV__) {
-        } else {
-          if (__DEV__) {
-          } else {
-            if (__DEV__) {console.error('Oh no')};
           }
         }
       `,
