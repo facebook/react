@@ -47,7 +47,7 @@
     "cross-env": "^6.0.3",
     "danger": "^9.2.10",
     "error-stack-parser": "^2.0.6",
-    "eslint": "^7.0.0",
+    "eslint": "^6.8.0",
     "eslint-config-fbjs": "^1.1.1",
     "eslint-config-prettier": "^6.9.0",
     "eslint-plugin-babel": "^5.3.0",
