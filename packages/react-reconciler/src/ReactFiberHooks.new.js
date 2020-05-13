@@ -32,7 +32,7 @@ import {
   isSubsetOfLanes,
   mergeLanes,
   removeLanes,
-  markRootExpired,
+  markRootEntangled,
   markRootMutableRead,
 } from './ReactFiberLane';
 import {readContext} from './ReactFiberNewContext.new';
@@ -999,12 +999,11 @@ function useMutableSource<Source, Snapshot>(
         markRootMutableRead(root, lane);
 
         // If the source mutated between render and now,
-        // there may be state updates already scheduled from the old getSnapshot.
-        // Those updates should not commit without this value.
-        // There is no mechanism currently to associate these updates though,
-        // so for now we fall back to synchronously flushing all pending updates.
-        // TODO: This should entangle the lanes instead of expiring everything.
-        markRootExpired(root, root.mutableReadLanes);
+        // there may be state updates already scheduled from the old source.
+        // Entangle the updates so that they render in the same batch.
+        // TODO: I think we need to entangle even if the snapshot matches,
+        // because there could have been an update to a different hook.
+        markRootEntangled(root, root.mutableReadLanes);
       }
     }
   }, [getSnapshot, source, subscribe]);

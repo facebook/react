@@ -365,6 +365,37 @@ export function getNextLanes(root: FiberRoot, wipLanes: Lanes): Lanes {
     }
   }
 
+  // Check for entangled lanes and add them to the batch.
+  //
+  // A lane is said to be entangled with another when it's not allowed to render
+  // in a batch that does not also include the other lane. Typically we do this
+  // when multiple updates have the same source, and we only want to respond to
+  // the most recent event from that source.
+  //
+  // Note that we apply entanglements *after* checking for partial work above.
+  // This means that if a lane is entangled during an interleaved event while
+  // it's already rendering, we won't interrupt it. This is intentional, since
+  // entanglement is usually "best effort": we'll try our best to render the
+  // lanes in the same batch, but it's not worth throwing out partially
+  // completed work in order to do it.
+  //
+  // For those exceptions where entanglement is semantically important, like
+  // useMutableSource, we should ensure that there is no partial work at the
+  // time we apply the entanglement.
+  const entangledLanes = root.entangledLanes;
+  if (entangledLanes !== NoLanes) {
+    const entanglements = root.entanglements;
+    let lanes = nextLanes & entangledLanes;
+    while (lanes > 0) {
+      const index = pickArbitraryLaneIndex(lanes);
+      const lane = 1 << index;
+
+      nextLanes |= entanglements[index];
+
+      lanes &= ~lane;
+    }
+  }
+
   return nextLanes;
 }
 
@@ -401,7 +432,7 @@ export function markStarvedLanesAsExpired(
   // it as expired to force it to finish.
   let lanes = pendingLanes;
   while (lanes > 0) {
-    const index = ctrz(lanes);
+    const index = pickArbitraryLaneIndex(lanes);
     const lane = 1 << index;
 
     const expirationTime = expirationTimes[index];
@@ -588,6 +619,10 @@ export function pickArbitraryLane(lanes: Lanes): Lane {
   return getLowestPriorityLane(lanes);
 }
 
+function pickArbitraryLaneIndex(lanes: Lane | Lanes) {
+  return 31 - clz32(lanes);
+}
+
 export function includesSomeLane(a: Lanes | Lane, b: Lanes | Lane) {
   return (a & b) !== NoLanes;
 }
@@ -647,7 +682,7 @@ export function markRootSuspended(root: FiberRoot, suspendedLanes: Lanes) {
   const expirationTimes = root.expirationTimes;
   let lanes = suspendedLanes;
   while (lanes > 0) {
-    const index = ctrz(lanes);
+    const index = pickArbitraryLaneIndex(lanes);
     const lane = 1 << index;
 
     expirationTimes[index] = NoTimestamp;
@@ -692,14 +727,31 @@ export function markRootFinished(root: FiberRoot, remainingLanes: Lanes) {
   root.expiredLanes &= remainingLanes;
   root.mutableReadLanes &= remainingLanes;
 
+  root.entangledLanes &= remainingLanes;
+
   const expirationTimes = root.expirationTimes;
   let lanes = noLongerPendingLanes;
   while (lanes > 0) {
-    const index = ctrz(lanes);
+    const index = pickArbitraryLaneIndex(lanes);
     const lane = 1 << index;
 
     // Clear the expiration time
     expirationTimes[index] = -1;
+
+    lanes &= ~lane;
+  }
+}
+
+export function markRootEntangled(root: FiberRoot, entangledLanes: Lanes) {
+  root.entangledLanes |= entangledLanes;
+
+  const entanglements = root.entanglements;
+  let lanes = entangledLanes;
+  while (lanes > 0) {
+    const index = pickArbitraryLaneIndex(lanes);
+    const lane = 1 << index;
+
+    entanglements[index] |= entangledLanes;
 
     lanes &= ~lane;
   }
@@ -776,15 +828,4 @@ function clz32Fallback(lanes: Lanes | Lane) {
     return 32;
   }
   return (31 - ((log(lanes) / LN2) | 0)) | 0;
-}
-
-// Count trailing zeros. Only used on lanes, so assume input is an integer.
-function ctrz(lanes: Lanes | Lane) {
-  let bits = lanes;
-  bits |= bits << 16;
-  bits |= bits << 8;
-  bits |= bits << 4;
-  bits |= bits << 2;
-  bits |= bits << 1;
-  return 32 - clz32(~bits);
 }

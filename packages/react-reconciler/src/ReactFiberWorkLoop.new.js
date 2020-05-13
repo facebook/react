@@ -673,6 +673,15 @@ function performConcurrentWorkOnRoot(root, didTimeout) {
   currentEventWipLanes = NoLanes;
   currentEventPendingLanes = NoLanes;
 
+  invariant(
+    (executionContext & (RenderContext | CommitContext)) === NoContext,
+    'Should not already be working.',
+  );
+
+  // Flush any pending passive effects before deciding which lanes to work on,
+  // in case they schedule additional work.
+  flushPassiveEffects();
+
   // Determine the next expiration time to work on, using the fields stored
   // on the root.
   let lanes = getNextLanes(
@@ -697,12 +706,6 @@ function performConcurrentWorkOnRoot(root, didTimeout) {
   }
 
   const originalCallbackNode = root.callbackNode;
-  invariant(
-    (executionContext & (RenderContext | CommitContext)) === NoContext,
-    'Should not already be working.',
-  );
-
-  flushPassiveEffects();
 
   let exitStatus = renderRootConcurrent(root, lanes);
 

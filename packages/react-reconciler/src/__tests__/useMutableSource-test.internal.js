@@ -1481,21 +1481,39 @@ describe('useMutableSource', () => {
           source.valueB = '3';
         },
       );
+
+      expect(Scheduler).toFlushAndYieldThrough([
+        // The partial render completes
+        'Child: 2',
+        'Commit: 2, 2',
+      ]);
+
+      // Now there are two pending mutations at different priorities. But they
+      // both read the same verion of the mutable source, so we must render
+      // them simultaneously.
+      //
+      if (gate(flags => flags.new)) {
+        // In the new reconciler, we can do this with entanglement: when the
+        // high priority render starts, we'll also include the low pri work.
+        expect(Scheduler).toFlushAndYieldThrough([
+          'Parent: 3',
+          // Demonstrates that we can yield here
+        ]);
+        expect(Scheduler).toFlushAndYield([
+          // Now finish the rest of the update
+          'Child: 3',
+          'Commit: 3, 3',
+        ]);
+      } else {
+        // In the old reconciler, we don't have an entanglement mechanism. The
+        // best we can do is synchronously flush both updates.
+        expect(Scheduler).toFlushAndYield([
+          'Parent: 3',
+          'Child: 3',
+          'Commit: 3, 3',
+        ]);
+      }
     });
-
-    expect(Scheduler).toHaveYielded([
-      // The partial render completes
-      'Child: 2',
-      'Commit: 2, 2',
-
-      // Then we start rendering the low priority mutation
-      'Parent: 3',
-
-      // Eventually the child corrects itself, because of the check that
-      // occurs when re-subscribing.
-      'Child: 3',
-      'Commit: 3, 3',
-    ]);
   });
 
   // @gate experimental
