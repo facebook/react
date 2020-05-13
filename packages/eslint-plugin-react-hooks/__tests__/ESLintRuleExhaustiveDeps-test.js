@@ -406,6 +406,15 @@ const tests = {
       `,
     },
     {
+      code: normalizeIndent`
+        function MyComponent(props) {
+          useWithoutEffectSuffix(() => {
+            console.log(props.foo);
+          }, []);
+        }
+      `,
+    },
+    {
       // Valid because we don't care about hooks outside of components.
       code: normalizeIndent`
         const local = {};
