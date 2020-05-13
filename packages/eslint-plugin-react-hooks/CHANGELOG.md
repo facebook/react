@@ -1,3 +1,6 @@
+## 4.0.2
+* Prevent Hooks that have `Effect` in the middle from being considered effects. ([@surgeboris](https://github.com/surgeboris) in [#18907](https://github.com/facebook/react/pull/18907))
+
 ## 4.0.1
 * Declare support for ESLint 7. ([@MichaelDeBoey](https://github.com/MichaelDeBoey) in [#18878](https://github.com/facebook/react/pull/18878))
 
