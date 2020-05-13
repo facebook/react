@@ -416,6 +416,11 @@ export default class Store extends EventEmitter<{|
   }
 
   getElementByID(id: number): Element | null {
+    if (
+      this._profilerStore._dataFrontend &&
+      this._profilerStore._dataFrontend.imported === true
+    )
+      return null;
     const element = this._idToElement.get(id);
     if (element == null) {
       console.warn(`No element found with id "${id}"`);

@@ -99,21 +99,21 @@ export function prepareProfilingDataFrontendFromBackendAndStore(
     );
   });
 
-  return {dataForRoots};
+  return {dataForRoots, imported: false};
 }
 
 // Converts a Profiling data export into the format required by the Store.
-export function prepareProfilingDataFrontendFromExport(
-  profilingDataExport: ProfilingDataExport,
+export function prepareProfilingDataFrontendFromImport(
+  profilingDataImport: ProfilingDataExport,
 ): ProfilingDataFrontend {
-  const {version} = profilingDataExport;
+  const {version} = profilingDataImport;
 
   if (version !== PROFILER_EXPORT_VERSION) {
     throw Error(`Unsupported profiler export version "${version}"`);
   }
 
   const dataForRoots: Map<number, ProfilingDataForRootFrontend> = new Map();
-  profilingDataExport.dataForRoots.forEach(
+  profilingDataImport.dataForRoots.forEach(
     ({
       commitData,
       displayName,
@@ -156,7 +156,7 @@ export function prepareProfilingDataFrontendFromExport(
     },
   );
 
-  return {dataForRoots};
+  return {dataForRoots, imported: true};
 }
 
 // Converts a Store Profiling data into a format that can be safely (JSON) serialized for export.

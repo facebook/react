@@ -105,6 +105,7 @@ export type ProfilingDataForRootFrontend = {|
 export type ProfilingDataFrontend = {|
   // Profiling data per root.
   dataForRoots: Map<number, ProfilingDataForRootFrontend>,
+  imported: boolean,
 |};
 
 export type CommitDataExport = {|

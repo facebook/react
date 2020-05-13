@@ -16,7 +16,7 @@ import ButtonIcon from '../ButtonIcon';
 import {StoreContext} from '../context';
 import {
   prepareProfilingDataExport,
-  prepareProfilingDataFrontendFromExport,
+  prepareProfilingDataFrontendFromImport,
 } from './utils';
 import {downloadFile} from '../utils';
 
@@ -77,11 +77,11 @@ export default function ProfilingImportExportButtons() {
       fileReader.addEventListener('load', () => {
         try {
           const raw = ((fileReader.result: any): string);
-          const profilingDataExport = ((JSON.parse(
+          const profilingDataImport = ((JSON.parse(
             raw,
           ): any): ProfilingDataExport);
-          profilerStore.profilingData = prepareProfilingDataFrontendFromExport(
-            profilingDataExport,
+          profilerStore.profilingData = prepareProfilingDataFrontendFromImport(
+            profilingDataImport,
           );
         } catch (error) {
           modalDialogDispatch({
