@@ -1399,6 +1399,101 @@ describe('useMutableSource', () => {
   });
 
   // @gate experimental
+  it(
+    'if source is mutated after initial read but before subscription is set ' +
+      'up, should still entangle all pending mutations even if snapshot of ' +
+      'new subscription happens to match',
+    async () => {
+      const source = createSource({
+        a: 'a0',
+        b: 'b0',
+      });
+      const mutableSource = createMutableSource(source);
+
+      const getSnapshotA = () => source.value.a;
+      const getSnapshotB = () => source.value.b;
+
+      function mutateA(newA) {
+        source.value = {
+          ...source.value,
+          a: newA,
+        };
+      }
+
+      function mutateB(newB) {
+        source.value = {
+          ...source.value,
+          b: newB,
+        };
+      }
+
+      function Read({getSnapshot}) {
+        const value = useMutableSource(
+          mutableSource,
+          getSnapshot,
+          defaultSubscribe,
+        );
+        Scheduler.unstable_yieldValue(value);
+        return value;
+      }
+
+      function Text({text}) {
+        Scheduler.unstable_yieldValue(text);
+        return text;
+      }
+
+      const root = ReactNoop.createRoot();
+      await act(async () => {
+        root.render(
+          <>
+            <Read getSnapshot={getSnapshotA} />
+          </>,
+        );
+      });
+      expect(Scheduler).toHaveYielded(['a0']);
+      expect(root).toMatchRenderedOutput('a0');
+
+      await act(async () => {
+        root.render(
+          <>
+            <Read getSnapshot={getSnapshotA} />
+            <Read getSnapshot={getSnapshotB} />
+            <Text text="c" />
+          </>,
+        );
+
+        expect(Scheduler).toFlushAndYieldThrough(['a0', 'b0']);
+        // Mutate in an event. This schedules a subscription update on a, which
+        // already mounted, but not b, which hasn't subscribed yet.
+        mutateA('a1');
+        mutateB('b1');
+
+        // Mutate again at lower priority. This will schedule another subscription
+        // update on a, but not b. When b mounts and subscriptions, the value it
+        // read during render will happen to match the latest value. But it should
+        // still entangle the updates to prevent the previous update (a1) from
+        // rendering by itself.
+        Scheduler.unstable_runWithPriority(
+          Scheduler.unstable_IdlePriority,
+          () => {
+            mutateA('a0');
+            mutateB('b0');
+          },
+        );
+        // Finish the current render
+        expect(Scheduler).toFlushUntilNextPaint(['c']);
+        // a0 will re-render because of the mutation update. But it should show
+        // the latest value, not the intermediate one, to avoid tearing with b.
+        expect(Scheduler).toFlushUntilNextPaint(['a0']);
+        expect(root).toMatchRenderedOutput('a0b0c');
+        // We should be done.
+        expect(Scheduler).toFlushAndYield([]);
+        expect(root).toMatchRenderedOutput('a0b0c');
+      });
+    },
+  );
+
+  // @gate experimental
   it('getSnapshot changes and then source is mutated during interleaved event', async () => {
     const {useEffect} = React;
 

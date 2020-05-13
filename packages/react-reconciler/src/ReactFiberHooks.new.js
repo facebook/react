@@ -997,14 +997,11 @@ function useMutableSource<Source, Snapshot>(
         const suspenseConfig = requestCurrentSuspenseConfig();
         const lane = requestUpdateLane(fiber, suspenseConfig);
         markRootMutableRead(root, lane);
-
-        // If the source mutated between render and now,
-        // there may be state updates already scheduled from the old source.
-        // Entangle the updates so that they render in the same batch.
-        // TODO: I think we need to entangle even if the snapshot matches,
-        // because there could have been an update to a different hook.
-        markRootEntangled(root, root.mutableReadLanes);
       }
+      // If the source mutated between render and now,
+      // there may be state updates already scheduled from the old source.
+      // Entangle the updates so that they render in the same batch.
+      markRootEntangled(root, root.mutableReadLanes);
     }
   }, [getSnapshot, source, subscribe]);
 

@@ -986,15 +986,14 @@ function useMutableSource<Source, Snapshot>(
           suspenseConfig,
         );
         setPendingExpirationTime(root, expirationTime);
-
-        // If the source mutated between render and now,
-        // there may be state updates already scheduled from the old getSnapshot.
-        // Those updates should not commit without this value.
-        // There is no mechanism currently to associate these updates though,
-        // so for now we fall back to synchronously flushing all pending updates.
-        // TODO: Improve this later.
-        markRootExpiredAtTime(root, getLastPendingExpirationTime(root));
       }
+      // If the source mutated between render and now,
+      // there may be state updates already scheduled from the old getSnapshot.
+      // Those updates should not commit without this value.
+      // There is no mechanism currently to associate these updates though,
+      // so for now we fall back to synchronously flushing all pending updates.
+      // TODO: Improve this later.
+      markRootExpiredAtTime(root, getLastPendingExpirationTime(root));
     }
   }, [getSnapshot, source, subscribe]);
 
