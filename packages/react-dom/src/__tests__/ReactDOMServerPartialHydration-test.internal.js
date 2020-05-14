@@ -2841,6 +2841,37 @@ describe('ReactDOMServerPartialHydration', () => {
 
   // @gate experimental
   // @gate new
+  it('renders a hidden LegacyHidden component inside a Suspense boundary', async () => {
+    const LegacyHidden = React.unstable_LegacyHidden;
+
+    const ref = React.createRef();
+
+    function App() {
+      return (
+        <Suspense fallback="Loading...">
+          <LegacyHidden mode="hidden">
+            <span ref={ref}>Hidden child</span>
+          </LegacyHidden>
+        </Suspense>
+      );
+    }
+
+    const finalHTML = ReactDOMServer.renderToString(<App />);
+
+    const container = document.createElement('div');
+    container.innerHTML = finalHTML;
+
+    const span = container.getElementsByTagName('span')[0];
+    expect(span).toBe(undefined);
+
+    const root = ReactDOM.createRoot(container, {hydrate: true});
+    root.render(<App />);
+    Scheduler.unstable_flushAll();
+    expect(ref.current.innerHTML).toBe('Hidden child');
+  });
+
+  // @gate experimental
+  // @gate new
   it('renders a visible LegacyHidden component', async () => {
     const LegacyHidden = React.unstable_LegacyHidden;
 
