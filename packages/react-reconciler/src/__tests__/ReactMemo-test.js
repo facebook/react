@@ -497,5 +497,30 @@ describe('memo', () => {
         expect(root).toMatchRenderedOutput('1');
       });
     });
+
+    it('should honor a displayName if set on the memo wrapper in warnings', () => {
+      const MemoComponent = React.memo(function Component(props) {
+        return <div {...props} />;
+      });
+
+      MemoComponent.displayName = 'Foo';
+
+      MemoComponent.propTypes = {
+        optional: PropTypes.string,
+        required: PropTypes.string.isRequired,
+      };
+
+      MemoComponent.defaultProps = {
+        optional: 'default',
+      };
+
+      expect(() =>
+        ReactNoop.render(<MemoComponent optional="foo" />),
+      ).toErrorDev(
+        'Warning: Failed prop type: The prop `required` is marked as required in ' +
+          '`Foo`, but its value is `undefined`.\n' +
+          '    in Foo (at **)',
+      );
+    });
   }
 });
