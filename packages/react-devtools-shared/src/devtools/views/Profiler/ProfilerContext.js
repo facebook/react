@@ -138,7 +138,11 @@ function ProfilerContextController({children}: Props) {
       selectFiberName(name);
 
       // Sync selection to the Components tab for convenience.
-      if (id !== null) {
+      if (
+        id !== null &&
+        profilingData !== null &&
+        profilingData.imported === false
+      ) {
         const element = store.getElementByID(id);
 
         // Keep in mind that profiling data may be from a previous session.
@@ -151,7 +155,7 @@ function ProfilerContextController({children}: Props) {
         }
       }
     },
-    [dispatch, selectFiberID, selectFiberName, store],
+    [dispatch, selectFiberID, selectFiberName, store, profilingData],
   );
 
   const setRootIDAndClearFiber = useCallback(

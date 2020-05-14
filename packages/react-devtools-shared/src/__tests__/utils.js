@@ -173,7 +173,7 @@ export function requireTestRenderer(): ReactTestRenderer {
 export function exportImportHelper(bridge: FrontendBridge, store: Store): void {
   const {
     prepareProfilingDataExport,
-    prepareProfilingDataFrontendFromImport,
+    prepareProfilingDataFrontendForImport,
   } = require('react-devtools-shared/src/devtools/views/Profiler/utils');
 
   const {profilerStore} = store;
@@ -194,7 +194,7 @@ export function exportImportHelper(bridge: FrontendBridge, store: Store): void {
   );
   const parsedProfilingDataExport = JSON.parse(serializedProfilingDataExport);
 
-  const profilingDataFrontendImport = prepareProfilingDataFrontendFromImport(
+  const profilingDataFrontendImport = prepareProfilingDataFrontendForImport(
     (parsedProfilingDataExport: any),
   );
 

@@ -16,7 +16,7 @@ import ButtonIcon from '../ButtonIcon';
 import {StoreContext} from '../context';
 import {
   prepareProfilingDataExport,
-  prepareProfilingDataFrontendFromImport,
+  prepareProfilingDataFrontendForImport,
 } from './utils';
 import {downloadFile} from '../utils';
 
@@ -80,7 +80,7 @@ export default function ProfilingImportExportButtons() {
           const profilingDataImport = ((JSON.parse(
             raw,
           ): any): ProfilingDataExport);
-          profilerStore.profilingData = prepareProfilingDataFrontendFromImport(
+          profilerStore.profilingData = prepareProfilingDataFrontendForImport(
             profilingDataImport,
           );
         } catch (error) {

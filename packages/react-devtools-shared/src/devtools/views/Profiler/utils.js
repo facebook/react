@@ -103,7 +103,7 @@ export function prepareProfilingDataFrontendFromBackendAndStore(
 }
 
 // Converts a Profiling data export into the format required by the Store.
-export function prepareProfilingDataFrontendFromImport(
+export function prepareProfilingDataFrontendForImport(
   profilingDataImport: ProfilingDataExport,
 ): ProfilingDataFrontend {
   const {version} = profilingDataImport;
