@@ -77,11 +77,11 @@ export default function ProfilingImportExportButtons() {
       fileReader.addEventListener('load', () => {
         try {
           const raw = ((fileReader.result: any): string);
-          const profilingDataImport = ((JSON.parse(
+          const profilingDataExport = ((JSON.parse(
             raw,
           ): any): ProfilingDataExport);
           profilerStore.profilingData = prepareProfilingDataFrontendForImport(
-            profilingDataImport,
+            profilingDataExport,
           );
         } catch (error) {
           modalDialogDispatch({

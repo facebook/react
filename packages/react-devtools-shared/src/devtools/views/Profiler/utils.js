@@ -104,16 +104,16 @@ export function prepareProfilingDataFrontendFromBackendAndStore(
 
 // Converts a Profiling data export into the format required by the Store.
 export function prepareProfilingDataFrontendForImport(
-  profilingDataImport: ProfilingDataExport,
+  profilingDataExport: ProfilingDataExport,
 ): ProfilingDataFrontend {
-  const {version} = profilingDataImport;
+  const {version} = profilingDataExport;
 
   if (version !== PROFILER_EXPORT_VERSION) {
     throw Error(`Unsupported profiler export version "${version}"`);
   }
 
   const dataForRoots: Map<number, ProfilingDataForRootFrontend> = new Map();
-  profilingDataImport.dataForRoots.forEach(
+  profilingDataExport.dataForRoots.forEach(
     ({
       commitData,
       displayName,
