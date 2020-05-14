@@ -1494,6 +1494,45 @@ describe('useMutableSource', () => {
   );
 
   // @gate experimental
+  it(
+    'can store functions in source',
+    async () => {
+      const source = createSource(() => 'a');
+      const mutableSource = createMutableSource(source);
+
+      const getSnapshot = () => source.value;
+
+      function Read() {
+        const fn = useMutableSource(
+          mutableSource,
+          getSnapshot,
+          defaultSubscribe,
+        );
+        const value = fn();
+        Scheduler.unstable_yieldValue(value);
+        return value;
+      }
+
+      const root = ReactNoop.createRoot();
+      await act(async () => {
+        root.render(
+          <>
+            <Read />
+          </>,
+        );
+      });
+      expect(Scheduler).toHaveYielded(['a']);
+      expect(root).toMatchRenderedOutput('a');
+
+      await act(async () => {
+        source.value = () => 'b';
+        expect(Scheduler).toFlushUntilNextPaint(['b']);
+        expect(root).toMatchRenderedOutput('b');
+      });
+    },
+  );
+
+  // @gate experimental
   it('getSnapshot changes and then source is mutated during interleaved event', async () => {
     const {useEffect} = React;
 

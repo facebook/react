@@ -1012,7 +1012,8 @@ function useMutableSource<Source, Snapshot>(
       const latestSetSnapshot = refs.setSnapshot;
 
       try {
-        latestSetSnapshot(latestGetSnapshot(source._source));
+        const value = latestGetSnapshot(source._source);
+        latestSetSnapshot(() => value);
 
         // Record a pending mutable source update with the same expiration time.
         const suspenseConfig = requestCurrentSuspenseConfig();
