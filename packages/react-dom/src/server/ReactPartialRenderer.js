@@ -42,6 +42,7 @@ import {
   REACT_MEMO_TYPE,
   REACT_FUNDAMENTAL_TYPE,
   REACT_SCOPE_TYPE,
+  REACT_LEGACY_HIDDEN_TYPE,
 } from 'shared/ReactSymbols';
 
 import {
@@ -1019,6 +1020,18 @@ class ReactDOMServerRenderer {
       }
 
       switch (elementType) {
+        case REACT_LEGACY_HIDDEN_TYPE: {
+          if (!enableSuspenseServerRenderer) {
+            break;
+          }
+          if (((nextChild: any): ReactElement).props.mode === 'hidden') {
+            // In hidden mode, render nothing.
+            return '';
+          }
+          // Otherwise the tree is visible, so act like a fragment.
+        }
+        // Intentional fall through
+        // eslint-disable-next-line no-fallthrough
         case REACT_DEBUG_TRACING_MODE_TYPE:
         case REACT_STRICT_MODE_TYPE:
         case REACT_PROFILER_TYPE:
