@@ -62,7 +62,7 @@ function getComponentName(type: mixed): string | null {
   }
   switch (type) {
     case REACT_FRAGMENT_TYPE:
-      return 'Fragment';
+      return 'React.Fragment';
     case REACT_PORTAL_TYPE:
       return 'Portal';
     case REACT_PROFILER_TYPE:
