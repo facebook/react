@@ -23,13 +23,12 @@ import type {WorkTag} from './ReactWorkTags';
 import type {TypeOfMode} from './ReactTypeOfMode';
 import type {SideEffectTag} from './ReactSideEffectTags';
 import type {ExpirationTime} from './ReactFiberExpirationTime.old';
-// import type {UpdateQueue} from './ReactUpdateQueue.old';
+import type {Lane, LanePriority, Lanes, LaneMap} from './ReactFiberLane';
 import type {HookType} from './ReactFiberHooks.old';
 import type {RootTag} from './ReactRootTags';
 import type {TimeoutHandle, NoTimeout} from './ReactFiberHostConfig';
 import type {Wakeable} from 'shared/ReactTypes';
 import type {Interaction} from 'scheduler/src/Tracing';
-import type {OpaqueIDType} from 'react-reconciler/src/ReactFiberHostConfig';
 import type {SuspenseConfig, TimeoutConfig} from './ReactFiberSuspenseConfig';
 
 export type ReactPriorityLevel = 99 | 98 | 97 | 96 | 95 | 90;
@@ -41,8 +40,18 @@ export type ContextDependency<T> = {
   ...
 };
 
-export type Dependencies = {
+export type Dependencies_old = {
   expirationTime: ExpirationTime,
+  firstContext: ContextDependency<mixed> | null,
+  responders: Map<
+    ReactEventResponder<any, any>,
+    ReactEventResponderInstance<any, any>,
+  > | null,
+  ...
+};
+
+export type Dependencies_new = {
+  lanes: Lanes,
   firstContext: ContextDependency<mixed> | null,
   responders: Map<
     ReactEventResponder<any, any>,
@@ -115,7 +124,8 @@ export type Fiber = {|
   memoizedState: any,
 
   // Dependencies (contexts, events) for this fiber, if it has any
-  dependencies: Dependencies | null,
+  dependencies_new: Dependencies_new | null,
+  dependencies_old: Dependencies_old | null,
 
   // Bitfield that describes properties about the fiber and its subtree. E.g.
   // the ConcurrentMode flag indicates whether the subtree should be async-by-
@@ -137,12 +147,13 @@ export type Fiber = {|
   firstEffect: Fiber | null,
   lastEffect: Fiber | null,
 
-  // Represents a time in the future by which this work should be completed.
-  // Does not include work found in its subtree.
+  // Only used by old reconciler
   expirationTime: ExpirationTime,
-
-  // This is used to quickly determine if a subtree has no pending changes.
   childExpirationTime: ExpirationTime,
+
+  // Only used by new reconciler
+  lanes: Lanes,
+  childLanes: Lanes,
 
   // This is a pooled version of a Fiber. Every fiber that gets updated will
   // eventually have a pair. There are cases when we can clean up pairs to save
@@ -184,8 +195,6 @@ export type Fiber = {|
   _debugHookTypes?: Array<HookType> | null,
 |};
 
-export type PendingInteractionMap = Map<ExpirationTime, Set<Interaction>>;
-
 type BaseFiberRootProperties = {|
   // The type of root (legacy, batched, concurrent, etc.)
   tag: RootTag,
@@ -197,12 +206,8 @@ type BaseFiberRootProperties = {|
   // The currently active root fiber. This is the mutable root of the tree.
   current: Fiber,
 
-  pingCache:
-    | WeakMap<Wakeable, Set<ExpirationTime>>
-    | Map<Wakeable, Set<ExpirationTime>>
-    | null,
+  pingCache: WeakMap<Wakeable, Set<mixed>> | Map<Wakeable, Set<mixed>> | null,
 
-  finishedExpirationTime: ExpirationTime,
   // A finished work-in-progress HostRoot that's ready to be committed.
   finishedWork: Fiber | null,
   // Timeout handle returned by setTimeout. Used to cancel a pending timeout, if
@@ -215,10 +220,15 @@ type BaseFiberRootProperties = {|
   +hydrate: boolean,
   // Node returned by Scheduler.scheduleCallback
   callbackNode: *,
+
+  // Only used by old reconciler
+
   // Expiration of the callback associated with this root
   callbackExpirationTime: ExpirationTime,
   // Priority of the callback associated with this root
-  callbackPriority: ReactPriorityLevel,
+  callbackPriority_old: ReactPriorityLevel,
+
+  finishedExpirationTime: ExpirationTime,
   // The earliest pending expiration time that exists in the tree
   firstPendingTime: ExpirationTime,
   // The latest pending expiration time that exists in the tree
@@ -236,6 +246,25 @@ type BaseFiberRootProperties = {|
   // Used by useMutableSource hook to avoid tearing within this root
   // when external, mutable sources are read from during render.
   mutableSourceLastPendingUpdateTime: ExpirationTime,
+
+  // Only used by new reconciler
+
+  // Represents the next task that the root should work on, or the current one
+  // if it's already working.
+  callbackId: Lanes,
+  callbackPriority_new: LanePriority,
+  expirationTimes: LaneMap<number>,
+
+  pendingLanes: Lanes,
+  suspendedLanes: Lanes,
+  pingedLanes: Lanes,
+  expiredLanes: Lanes,
+  mutableReadLanes: Lanes,
+
+  finishedLanes: Lanes,
+
+  entangledLanes: Lanes,
+  entanglements: LaneMap<Lanes>,
 |};
 
 // The following attributes are only used by interaction tracing builds.
@@ -245,7 +274,8 @@ type BaseFiberRootProperties = {|
 type ProfilingOnlyFiberRootProperties = {|
   interactionThreadID: number,
   memoizedInteractions: Set<Interaction>,
-  pendingInteractionMap: PendingInteractionMap,
+  pendingInteractionMap_new: Map<Lane | Lanes, Set<Interaction>>,
+  pendingInteractionMap_old: Map<ExpirationTime, Set<Interaction>>,
 |};
 
 export type SuspenseHydrationCallbacks = {
@@ -319,5 +349,5 @@ export type Dispatcher = {|
     getSnapshot: MutableSourceGetSnapshotFn<Source, Snapshot>,
     subscribe: MutableSourceSubscribeFn<Source, Snapshot>,
   ): Snapshot,
-  useOpaqueIdentifier(): OpaqueIDType | void,
+  useOpaqueIdentifier(): any,
 |};

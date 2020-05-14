@@ -52,17 +52,22 @@ const eventTypes = {
   },
 };
 
-function createAndAccumulateChangeEvent(inst, nativeEvent, target) {
+function createAndAccumulateChangeEvent(
+  dispatchQueue,
+  inst,
+  nativeEvent,
+  target,
+) {
   const event = SyntheticEvent.getPooled(
     eventTypes.change,
-    inst,
+    null,
     nativeEvent,
     target,
   );
   event.type = 'change';
   // Flag this event loop as needing state restore.
   enqueueStateRestore(target);
-  accumulateTwoPhaseListeners(event);
+  accumulateTwoPhaseListeners(inst, dispatchQueue, event);
   return event;
 }
 /**
@@ -264,11 +269,13 @@ const ChangeEventPlugin = {
   _isInputEventSupported: isInputEventSupported,
 
   extractEvents: function(
+    dispatchQueue,
     topLevelType,
     targetInst,
     nativeEvent,
     nativeEventTarget,
     eventSystemFlags,
+    container,
   ) {
     const targetNode = targetInst ? getNodeFromInstance(targetInst) : window;
 
@@ -289,12 +296,13 @@ const ChangeEventPlugin = {
     if (getTargetInstFunc) {
       const inst = getTargetInstFunc(topLevelType, targetInst);
       if (inst) {
-        const event = createAndAccumulateChangeEvent(
+        createAndAccumulateChangeEvent(
+          dispatchQueue,
           inst,
           nativeEvent,
           nativeEventTarget,
         );
-        return event;
+        return;
       }
     }
 

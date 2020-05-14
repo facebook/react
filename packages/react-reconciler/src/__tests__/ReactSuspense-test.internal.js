@@ -322,6 +322,7 @@ describe('ReactSuspense', () => {
     },
   );
 
+  // @gate experimental
   it(
     'interrupts current render when something suspends with a ' +
       "delay and we've already skipped over a lower priority update in " +
@@ -357,15 +358,20 @@ describe('ReactSuspense', () => {
       // This update will suspend.
       root.update(<App shouldSuspend={true} step={1} />);
 
-      // Need to move into the next async bucket.
-      Scheduler.unstable_advanceTime(1000);
-      // Do a bit of work, then interrupt to trigger a restart.
+      // Do a bit of work
       expect(Scheduler).toFlushAndYieldThrough(['A1']);
-      interrupt();
 
-      // Schedule another update. This will have lower priority because of
-      // the interrupt trick above.
-      root.update(<App shouldSuspend={false} step={2} />);
+      // Schedule another update. This will have lower priority because it's
+      // a transition.
+      React.unstable_withSuspenseConfig(
+        () => {
+          root.update(<App shouldSuspend={false} step={2} />);
+        },
+        {timeoutMs: 10000},
+      );
+
+      // Interrupt to trigger a restart.
+      interrupt();
 
       expect(Scheduler).toFlushAndYieldThrough([
         // Should have restarted the first update, because of the interruption
@@ -389,6 +395,7 @@ describe('ReactSuspense', () => {
     },
   );
 
+  // @gate experimental
   it(
     'interrupts current render when something suspends with a ' +
       "delay and we've already bailed out lower priority update in " +
@@ -450,16 +457,20 @@ describe('ReactSuspense', () => {
         setShouldSuspend(true);
 
         // Need to move into the next async bucket.
-        Scheduler.unstable_advanceTime(1000);
         // Do a bit of work, then interrupt to trigger a restart.
         expect(Scheduler).toFlushAndYieldThrough(['A']);
         interrupt();
         // Should not have committed loading state
         expect(root).toMatchRenderedOutput('ABC');
 
-        // Schedule another update. This will have lower priority because of
-        // the interrupt trick above.
-        setShouldHideInParent(true);
+        // Schedule another update. This will have lower priority because it's
+        // a transition.
+        React.unstable_withSuspenseConfig(
+          () => {
+            setShouldHideInParent(true);
+          },
+          {timeoutMs: 10000},
+        );
 
         expect(Scheduler).toFlushAndYieldThrough([
           // Should have restarted the first update, because of the interruption

@@ -1,0 +1,8 @@
+body {
+  font-family: Helvetica;
+  padding-left: 10px;
+}
+
+* {
+  box-sizing: border-box;
+}

@@ -854,6 +854,75 @@ describe('ReactDOMServerPartialHydration', () => {
   });
 
   // @gate experimental
+  it('warns but works if setState is called before commit in a dehydrated component', async () => {
+    let suspend = false;
+    let resolve;
+    const promise = new Promise(resolvePromise => (resolve = resolvePromise));
+
+    let updateText;
+
+    function Child() {
+      const [state, setState] = React.useState('Hello');
+      updateText = setState;
+      Scheduler.unstable_yieldValue('Child');
+      if (suspend) {
+        throw promise;
+      } else {
+        return state;
+      }
+    }
+
+    function Sibling() {
+      Scheduler.unstable_yieldValue('Sibling');
+      return null;
+    }
+
+    function App() {
+      return (
+        <div>
+          <Suspense fallback="Loading...">
+            <Child />
+            <Sibling />
+          </Suspense>
+        </div>
+      );
+    }
+
+    suspend = false;
+    const finalHTML = ReactDOMServer.renderToString(<App />);
+    expect(Scheduler).toHaveYielded(['Child', 'Sibling']);
+
+    const container = document.createElement('div');
+    container.innerHTML = finalHTML;
+
+    const root = ReactDOM.createRoot(container, {hydrate: true});
+
+    await act(async () => {
+      suspend = true;
+      root.render(<App />);
+      expect(Scheduler).toFlushAndYieldThrough(['Child']);
+
+      // While we're part way through the hydration, we update the state.
+      // This will schedule an update on the children of the suspense boundary.
+      expect(() => updateText('Hi')).toErrorDev(
+        "Can't perform a React state update on a component that hasn't mounted yet.",
+      );
+
+      // This will throw it away and rerender.
+      expect(Scheduler).toFlushAndYield(['Child', 'Sibling']);
+
+      expect(container.textContent).toBe('Hello');
+
+      suspend = false;
+      resolve();
+      await promise;
+    });
+    expect(Scheduler).toHaveYielded(['Child', 'Sibling']);
+
+    expect(container.textContent).toBe('Hello');
+  });
+
+  // @gate experimental
   it('blocks the update to hydrate first if context has changed', async () => {
     let suspend = false;
     let resolve;
@@ -1627,6 +1696,156 @@ describe('ReactDOMServerPartialHydration', () => {
     });
 
     expect(container.textContent).toBe('ABC');
+  });
+
+  // @gate experimental
+  it('clears server boundaries when SuspenseList runs out of time hydrating', async () => {
+    let suspend = false;
+    let resolve;
+    const promise = new Promise(resolvePromise => (resolve = resolvePromise));
+
+    const ref = React.createRef();
+
+    function Child({children}) {
+      if (suspend) {
+        throw promise;
+      } else {
+        return children;
+      }
+    }
+
+    function Before() {
+      Scheduler.unstable_yieldValue('Before');
+      return null;
+    }
+
+    function After() {
+      Scheduler.unstable_yieldValue('After');
+      return null;
+    }
+
+    function FirstRow() {
+      return (
+        <>
+          <Before />
+          <Suspense fallback="Loading A">
+            <span>A</span>
+          </Suspense>
+          <After />
+        </>
+      );
+    }
+
+    function App() {
+      return (
+        <Suspense fallback={null}>
+          <SuspenseList revealOrder="forwards" tail="hidden">
+            <FirstRow />
+            <Suspense fallback="Loading B">
+              <Child>
+                <span ref={ref}>B</span>
+              </Child>
+            </Suspense>
+          </SuspenseList>
+        </Suspense>
+      );
+    }
+
+    suspend = false;
+    const html = ReactDOMServer.renderToString(<App />);
+    expect(Scheduler).toHaveYielded(['Before', 'After']);
+
+    const container = document.createElement('div');
+    container.innerHTML = html;
+
+    const b = container.getElementsByTagName('span')[1];
+    expect(b.textContent).toBe('B');
+
+    const root = ReactDOM.createRoot(container, {hydrate: true});
+
+    // Increase hydration priority to higher than "offscreen".
+    ReactDOM.unstable_scheduleHydration(b);
+
+    suspend = true;
+
+    await act(async () => {
+      root.render(<App />);
+      expect(Scheduler).toFlushAndYieldThrough(['Before']);
+      // This took a long time to render.
+      Scheduler.unstable_advanceTime(1000);
+      expect(Scheduler).toFlushAndYield(['After']);
+      // This will cause us to skip the second row completely.
+    });
+
+    // We haven't hydrated the second child but the placeholder is still in the list.
+    expect(ref.current).toBe(null);
+    expect(container.textContent).toBe('AB');
+
+    suspend = false;
+    await act(async () => {
+      // Resolve the boundary to be in its resolved final state.
+      await resolve();
+    });
+
+    expect(container.textContent).toBe('AB');
+    expect(ref.current).toBe(b);
+  });
+
+  // @gate experimental
+  it('clears server boundaries when SuspenseList suspends last row hydrating', async () => {
+    let suspend = false;
+    let resolve;
+    const promise = new Promise(resolvePromise => (resolve = resolvePromise));
+
+    function Child({children}) {
+      if (suspend) {
+        throw promise;
+      } else {
+        return children;
+      }
+    }
+
+    function App() {
+      return (
+        <Suspense fallback={null}>
+          <SuspenseList revealOrder="forwards" tail="hidden">
+            <Suspense fallback="Loading A">
+              <span>A</span>
+            </Suspense>
+            <Suspense fallback="Loading B">
+              <Child>
+                <span>B</span>
+              </Child>
+            </Suspense>
+          </SuspenseList>
+        </Suspense>
+      );
+    }
+
+    suspend = true;
+    const html = ReactDOMServer.renderToString(<App />);
+
+    const container = document.createElement('div');
+    container.innerHTML = html;
+
+    const root = ReactDOM.createRoot(container, {hydrate: true});
+
+    suspend = true;
+
+    await act(async () => {
+      root.render(<App />);
+    });
+
+    // We haven't hydrated the second child but the placeholder is still in the list.
+    expect(container.textContent).toBe('ALoading B');
+
+    suspend = false;
+    await act(async () => {
+      // Resolve the boundary to be in its resolved final state.
+      await resolve();
+    });
+
+    expect(container.textContent).toBe('AB');
   });
 
   // @gate experimental

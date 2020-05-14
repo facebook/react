@@ -26,6 +26,10 @@ module.exports = {
     path: __dirname + '/build',
     filename: 'react_devtools_backend.js',
   },
+  node: {
+    // Don't define a polyfill on window.setImmediate
+    setImmediate: false,
+  },
   resolve: {
     alias: {
       react: resolve(builtModulesDir, 'react'),

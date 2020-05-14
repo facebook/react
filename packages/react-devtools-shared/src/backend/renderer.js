@@ -2142,13 +2142,18 @@ export function attach(
     const {
       _debugOwner,
       _debugSource,
-      dependencies,
       stateNode,
+      key,
       memoizedProps,
       memoizedState,
       tag,
       type,
     } = fiber;
+
+    const dependencies =
+      (fiber: any).dependencies ||
+      (fiber: any).dependencies_old ||
+      (fiber: any).dependencies_new;
 
     const elementType = getElementTypeForFiber(fiber);
 
@@ -2295,6 +2300,8 @@ export function attach(
 
       // Does the component have legacy context attached to it.
       hasLegacyContext,
+
+      key: key != null ? key : null,
 
       displayName: getDisplayNameForFiber(fiber),
       type: elementType,

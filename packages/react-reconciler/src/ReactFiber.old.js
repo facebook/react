@@ -27,7 +27,6 @@ import {
   enableFundamentalAPI,
   enableScopeAPI,
   enableBlocksAPI,
-  throwEarlyForMysteriousError,
 } from 'shared/ReactFeatureFlags';
 import {NoEffect, Placement} from './ReactSideEffectTags';
 import {ConcurrentRoot, BlockingRoot} from './ReactRootTags';
@@ -134,7 +133,7 @@ function FiberNode(
   this.memoizedProps = null;
   this.updateQueue = null;
   this.memoizedState = null;
-  this.dependencies = null;
+  this.dependencies_old = null;
 
   this.mode = mode;
 
@@ -277,6 +276,8 @@ export function createWorkInProgress(current: Fiber, pendingProps: any): Fiber {
     current.alternate = workInProgress;
   } else {
     workInProgress.pendingProps = pendingProps;
+    // Needed because Blocks store data on type.
+    workInProgress.type = current.type;
 
     // We already have an alternate.
     // Reset the effect tag.
@@ -297,18 +298,6 @@ export function createWorkInProgress(current: Fiber, pendingProps: any): Fiber {
     }
   }
 
-  if (throwEarlyForMysteriousError) {
-    // Trying to debug a mysterious internal-only production failure.
-    // See D20130868 and t62461245.
-    // This is only on for RN FB builds.
-    if (current == null) {
-      throw Error('current is ' + current + " but it can't be");
-    }
-    if (workInProgress == null) {
-      throw Error('workInProgress is ' + workInProgress + " but it can't be");
-    }
-  }
-
   workInProgress.childExpirationTime = current.childExpirationTime;
   workInProgress.expirationTime = current.expirationTime;
 
@@ -319,8 +308,8 @@ export function createWorkInProgress(current: Fiber, pendingProps: any): Fiber {
 
   // Clone the dependencies object. This is mutated during the render phase, so
   // it cannot be shared with the current fiber.
-  const currentDependencies = current.dependencies;
-  workInProgress.dependencies =
+  const currentDependencies = current.dependencies_old;
+  workInProgress.dependencies_old =
     currentDependencies === null
       ? null
       : {
@@ -394,7 +383,7 @@ export function resetWorkInProgress(
     workInProgress.memoizedState = null;
     workInProgress.updateQueue = null;
 
-    workInProgress.dependencies = null;
+    workInProgress.dependencies_old = null;
 
     workInProgress.stateNode = null;
 
@@ -413,11 +402,13 @@ export function resetWorkInProgress(
     workInProgress.memoizedProps = current.memoizedProps;
     workInProgress.memoizedState = current.memoizedState;
     workInProgress.updateQueue = current.updateQueue;
+    // Needed because Blocks store data on type.
+    workInProgress.type = current.type;
 
     // Clone the dependencies object. This is mutated during the render phase, so
     // it cannot be shared with the current fiber.
-    const currentDependencies = current.dependencies;
-    workInProgress.dependencies =
+    const currentDependencies = current.dependencies_old;
+    workInProgress.dependencies_old =
       currentDependencies === null
         ? null
         : {
@@ -799,7 +790,7 @@ export function assignFiberPropertiesInDEV(
   target.memoizedProps = source.memoizedProps;
   target.updateQueue = source.updateQueue;
   target.memoizedState = source.memoizedState;
-  target.dependencies = source.dependencies;
+  target.dependencies_old = source.dependencies_old;
   target.mode = source.mode;
   target.effectTag = source.effectTag;
   target.nextEffect = source.nextEffect;

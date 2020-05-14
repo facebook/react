@@ -8,7 +8,7 @@
  */
 
 import type {Fiber} from './ReactInternalTypes';
-import type {ExpirationTime} from './ReactFiberExpirationTime.new';
+import type {Lanes} from './ReactFiberLane';
 import type {SuspenseState} from './ReactFiberSuspenseComponent.new';
 
 import {resetWorkInProgressVersions as resetMutableSourceWorkInProgressVersions} from './ReactMutableSource.new';
@@ -20,6 +20,8 @@ import {
   ContextProvider,
   SuspenseComponent,
   SuspenseListComponent,
+  OffscreenComponent,
+  LegacyHiddenComponent,
 } from './ReactWorkTags';
 import {DidCapture, NoEffect, ShouldCapture} from './ReactSideEffectTags';
 import {enableSuspenseServerRenderer} from 'shared/ReactFeatureFlags';
@@ -33,13 +35,11 @@ import {
   popTopLevelContextObject as popTopLevelLegacyContextObject,
 } from './ReactFiberContext.new';
 import {popProvider} from './ReactFiberNewContext.new';
+import {popRenderLanes} from './ReactFiberWorkLoop.new';
 
 import invariant from 'shared/invariant';
 
-function unwindWork(
-  workInProgress: Fiber,
-  renderExpirationTime: ExpirationTime,
-) {
+function unwindWork(workInProgress: Fiber, renderLanes: Lanes) {
   switch (workInProgress.tag) {
     case ClassComponent: {
       const Component = workInProgress.type;
@@ -105,6 +105,10 @@ function unwindWork(
     case ContextProvider:
       popProvider(workInProgress);
       return null;
+    case OffscreenComponent:
+    case LegacyHiddenComponent:
+      popRenderLanes(workInProgress);
+      return null;
     default:
       return null;
   }
@@ -140,6 +144,10 @@ function unwindInterruptedWork(interruptedWork: Fiber) {
       break;
     case ContextProvider:
       popProvider(interruptedWork);
+      break;
+    case OffscreenComponent:
+    case LegacyHiddenComponent:
+      popRenderLanes(interruptedWork);
       break;
     default:
       break;

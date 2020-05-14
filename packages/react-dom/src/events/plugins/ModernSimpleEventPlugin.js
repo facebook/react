@@ -11,9 +11,11 @@ import type {
   TopLevelType,
   DOMTopLevelEventType,
 } from 'legacy-events/TopLevelEventTypes';
-import type {ReactSyntheticEvent} from 'legacy-events/ReactSyntheticEventType';
 import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
-import type {PluginModule} from 'legacy-events/PluginModuleType';
+import type {
+  ModernPluginModule,
+  DispatchQueue,
+} from 'legacy-events/PluginModuleType';
 import type {EventSystemFlags} from '../EventSystemFlags';
 
 import SyntheticEvent from 'legacy-events/SyntheticEvent';
@@ -23,7 +25,11 @@ import {
   topLevelEventsToDispatchConfig,
   simpleEventPluginEventTypes,
 } from '../DOMEventProperties';
-import {accumulateTwoPhaseListeners} from '../DOMModernPluginEventSystem';
+import {
+  accumulateTwoPhaseListeners,
+  accumulateEventTargetListeners,
+} from '../DOMModernPluginEventSystem';
+import {IS_TARGET_PHASE_ONLY} from '../EventSystemFlags';
 
 import SyntheticAnimationEvent from '../SyntheticAnimationEvent';
 import SyntheticClipboardEvent from '../SyntheticClipboardEvent';
@@ -37,6 +43,8 @@ import SyntheticTransitionEvent from '../SyntheticTransitionEvent';
 import SyntheticUIEvent from '../SyntheticUIEvent';
 import SyntheticWheelEvent from '../SyntheticWheelEvent';
 import getEventCharCode from '../getEventCharCode';
+
+import {enableCreateEventHandleAPI} from 'shared/ReactFeatureFlags';
 
 // Only used in DEV for exhaustiveness validation.
 const knownHTMLTopLevelTypes: Array<DOMTopLevelEventType> = [
@@ -73,21 +81,22 @@ const knownHTMLTopLevelTypes: Array<DOMTopLevelEventType> = [
   DOMTopLevelEventTypes.TOP_WAITING,
 ];
 
-const SimpleEventPlugin: PluginModule<MouseEvent> = {
+const SimpleEventPlugin: ModernPluginModule<MouseEvent> = {
   // simpleEventPluginEventTypes gets populated from
   // the DOMEventProperties module.
   eventTypes: simpleEventPluginEventTypes,
   extractEvents: function(
+    dispatchQueue: DispatchQueue,
     topLevelType: TopLevelType,
     targetInst: null | Fiber,
     nativeEvent: MouseEvent,
     nativeEventTarget: null | EventTarget,
-    eventSystemFlags?: EventSystemFlags,
-    targetContainer?: null | EventTarget,
-  ): null | ReactSyntheticEvent {
+    eventSystemFlags: EventSystemFlags,
+    targetContainer: null | EventTarget,
+  ): void {
     const dispatchConfig = topLevelEventsToDispatchConfig.get(topLevelType);
     if (!dispatchConfig) {
-      return null;
+      return;
     }
     let EventConstructor;
     switch (topLevelType) {
@@ -96,7 +105,7 @@ const SimpleEventPlugin: PluginModule<MouseEvent> = {
         // the unwanted keypress events. Enter is however both printable and
         // non-printable. One would expect Tab to be as well (but it isn't).
         if (getEventCharCode(nativeEvent) === 0) {
-          return null;
+          return;
         }
       /* falls through */
       case DOMTopLevelEventTypes.TOP_KEY_DOWN:
@@ -113,7 +122,7 @@ const SimpleEventPlugin: PluginModule<MouseEvent> = {
         // Firefox creates a click event on right mouse clicks. This removes the
         // unwanted click events.
         if (nativeEvent.button === 2) {
-          return null;
+          return;
         }
       /* falls through */
       case DOMTopLevelEventTypes.TOP_AUX_CLICK:
@@ -193,12 +202,21 @@ const SimpleEventPlugin: PluginModule<MouseEvent> = {
     }
     const event = EventConstructor.getPooled(
       dispatchConfig,
-      targetInst,
+      null,
       nativeEvent,
       nativeEventTarget,
     );
 
-    accumulateTwoPhaseListeners(event);
+    if (
+      enableCreateEventHandleAPI &&
+      eventSystemFlags !== undefined &&
+      eventSystemFlags & IS_TARGET_PHASE_ONLY &&
+      targetContainer != null
+    ) {
+      accumulateEventTargetListeners(dispatchQueue, event, targetContainer);
+    } else {
+      accumulateTwoPhaseListeners(targetInst, dispatchQueue, event, true);
+    }
     return event;
   },
 };

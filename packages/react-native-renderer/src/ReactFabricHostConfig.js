@@ -183,6 +183,8 @@ class ReactFabricHostComponent {
 
 export * from 'react-reconciler/src/ReactFiberHostConfigWithNoMutation';
 export * from 'react-reconciler/src/ReactFiberHostConfigWithNoHydration';
+export * from 'react-reconciler/src/ReactFiberHostConfigWithNoScopes';
+export * from 'react-reconciler/src/ReactFiberHostConfigWithNoTestSelectors';
 
 export function appendInitialChild(
   parentInstance: Instance,
@@ -481,7 +483,7 @@ export function getInstanceFromNode(node: any) {
   throw new Error('Not yet implemented.');
 }
 
-export function beforeRemoveInstance(instance: any) {
+export function removeInstanceEventHandles(instance: any) {
   // noop
 }
 
@@ -503,14 +505,14 @@ export function makeClientIdInDEV(warnOnAccessInDEV: () => void): OpaqueIDType {
   throw new Error('Not yet implemented');
 }
 
-export function makeServerId(): OpaqueIDType {
-  throw new Error('Not yet implemented');
-}
-
 export function beforeActiveInstanceBlur() {
   // noop
 }
 
 export function afterActiveInstanceBlur() {
+  // noop
+}
+
+export function preparePortalMount(portalInstance: Instance): void {
   // noop
 }

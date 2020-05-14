@@ -16,7 +16,8 @@
     "cjs/",
     "umd/",
     "jsx-runtime.js",
-    "jsx-dev-runtime.js"
+    "jsx-dev-runtime.js",
+    "unstable-cache.js"
   ],
   "main": "index.js",
   "repository": {

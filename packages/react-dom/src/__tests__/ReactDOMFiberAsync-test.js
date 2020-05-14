@@ -13,6 +13,7 @@ let React;
 
 let ReactDOM;
 let Scheduler;
+let act;
 
 const setUntrackedInputValue = Object.getOwnPropertyDescriptor(
   HTMLInputElement.prototype,
@@ -27,6 +28,7 @@ describe('ReactDOMFiberAsync', () => {
     container = document.createElement('div');
     React = require('react');
     ReactDOM = require('react-dom');
+    act = require('react-dom/test-utils').act;
     Scheduler = require('scheduler');
 
     document.body.appendChild(container);
@@ -127,7 +129,7 @@ describe('ReactDOMFiberAsync', () => {
     expect(ops).toEqual(['A', 'ABCD']);
   });
 
-  it('flushSync throws if already performing work', () => {
+  it('flushSync logs an error if already performing work', () => {
     class Component extends React.Component {
       componentDidUpdate() {
         ReactDOM.flushSync(() => {});
@@ -140,7 +142,7 @@ describe('ReactDOMFiberAsync', () => {
     // Initial mount
     ReactDOM.render(<Component />, container);
     // Update
-    expect(() => ReactDOM.render(<Component />, container)).toThrow(
+    expect(() => ReactDOM.render(<Component />, container)).toErrorDev(
       'flushSync was called from inside a lifecycle method',
     );
   });
@@ -190,7 +192,7 @@ describe('ReactDOMFiberAsync', () => {
           );
         }
       }
-      const root = ReactDOM.createRoot(container);
+      const root = ReactDOM.unstable_createRoot(container);
       root.render(<Counter />);
       Scheduler.unstable_flushAll();
       expect(asyncValueRef.current.textContent).toBe('');
@@ -211,7 +213,7 @@ describe('ReactDOMFiberAsync', () => {
 
     // @gate experimental
     it('top-level updates are concurrent', () => {
-      const root = ReactDOM.createRoot(container);
+      const root = ReactDOM.unstable_createRoot(container);
       root.render(<div>Hi</div>);
       expect(container.textContent).toEqual('');
       Scheduler.unstable_flushAll();
@@ -234,7 +236,7 @@ describe('ReactDOMFiberAsync', () => {
         }
       }
 
-      const root = ReactDOM.createRoot(container);
+      const root = ReactDOM.unstable_createRoot(container);
       root.render(<Component />);
       expect(container.textContent).toEqual('');
       Scheduler.unstable_flushAll();
@@ -265,7 +267,7 @@ describe('ReactDOMFiberAsync', () => {
         }
       }
 
-      const root = ReactDOM.createRoot(container);
+      const root = ReactDOM.unstable_createRoot(container);
       root.render(<Component />);
       Scheduler.unstable_flushAll();
 
@@ -307,7 +309,7 @@ describe('ReactDOMFiberAsync', () => {
           return this.state.counter;
         }
       }
-      const root = ReactDOM.createRoot(container);
+      const root = ReactDOM.unstable_createRoot(container);
       root.render(<Counter />);
       Scheduler.unstable_flushAll();
       expect(container.textContent).toEqual('0');
@@ -421,7 +423,7 @@ describe('ReactDOMFiberAsync', () => {
         }
       }
 
-      const root = ReactDOM.createRoot(container);
+      const root = ReactDOM.unstable_createRoot(container);
       root.render(<Form />);
       // Flush
       Scheduler.unstable_flushAll();
@@ -488,7 +490,7 @@ describe('ReactDOMFiberAsync', () => {
         }
       }
 
-      const root = ReactDOM.createRoot(container);
+      const root = ReactDOM.unstable_createRoot(container);
       root.render(<Form />);
       // Flush
       Scheduler.unstable_flushAll();
@@ -549,7 +551,7 @@ describe('ReactDOMFiberAsync', () => {
         }
       }
 
-      const root = ReactDOM.createRoot(container);
+      const root = ReactDOM.unstable_createRoot(container);
       root.render(<Form />);
       // Flush
       Scheduler.unstable_flushAll();
@@ -612,7 +614,7 @@ describe('ReactDOMFiberAsync', () => {
   describe('createBlockingRoot', () => {
     // @gate experimental
     it('updates flush without yielding in the next event', () => {
-      const root = ReactDOM.createBlockingRoot(container);
+      const root = ReactDOM.unstable_createBlockingRoot(container);
 
       function Text(props) {
         Scheduler.unstable_yieldValue(props.text);
@@ -634,5 +636,49 @@ describe('ReactDOMFiberAsync', () => {
       expect(Scheduler).toFlushExpired(['A', 'B', 'C']);
       expect(container.textContent).toEqual('ABC');
     });
+  });
+
+  // @gate experimental
+  it('unmounted roots should never clear newer root content from a container', () => {
+    const ref = React.createRef();
+
+    function OldApp() {
+      const [value, setValue] = React.useState('old');
+      function hideOnClick() {
+        // Schedule a discrete update.
+        setValue('update');
+        // Synchronously unmount this root.
+        ReactDOM.flushSync(() => oldRoot.unmount());
+      }
+      return (
+        <button onClick={hideOnClick} ref={ref}>
+          {value}
+        </button>
+      );
+    }
+
+    function NewApp() {
+      return <button ref={ref}>new</button>;
+    }
+
+    const oldRoot = ReactDOM.unstable_createRoot(container);
+    act(() => {
+      oldRoot.render(<OldApp />);
+    });
+
+    // Invoke discrete event.
+    ref.current.click();
+
+    // The root should now be unmounted.
+    expect(container.textContent).toBe('');
+
+    // We can now render a new one.
+    const newRoot = ReactDOM.unstable_createRoot(container);
+    ReactDOM.flushSync(() => {
+      newRoot.render(<NewApp />);
+    });
+    ref.current.click();
+
+    expect(container.textContent).toBe('new');
   });
 });

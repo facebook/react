@@ -260,7 +260,7 @@ function getFormat(bundleType) {
 
 function getFilename(name, globalName, bundleType) {
   // we do this to replace / to -, for react-dom/server
-  name = name.replace('/', '-');
+  name = name.replace('/index.', '.').replace('/', '-');
   switch (bundleType) {
     case UMD_DEV:
       return `${name}.development.js`;

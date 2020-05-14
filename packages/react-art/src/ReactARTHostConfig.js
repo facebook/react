@@ -243,6 +243,8 @@ function applyTextProps(instance, props, prevProps = {}) {
 
 export * from 'react-reconciler/src/ReactFiberHostConfigWithNoPersistence';
 export * from 'react-reconciler/src/ReactFiberHostConfigWithNoHydration';
+export * from 'react-reconciler/src/ReactFiberHostConfigWithNoScopes';
+export * from 'react-reconciler/src/ReactFiberHostConfigWithNoTestSelectors';
 
 export function appendInitialChild(parentInstance, child) {
   if (typeof child === 'string') {
@@ -427,6 +429,10 @@ export function unhideTextInstance(textInstance, text): void {
   // Noop
 }
 
+export function clearContainer(container) {
+  // TODO Implement this
+}
+
 export function DEPRECATED_mountResponderInstance(
   responder: ReactEventResponder<any, any>,
   responderInstance: ReactEventResponderInstance<any, any>,
@@ -467,7 +473,7 @@ export function getInstanceFromNode(node) {
   throw new Error('Not yet implemented.');
 }
 
-export function beforeRemoveInstance(instance) {
+export function removeInstanceEventHandles(instance) {
   // noop
 }
 
@@ -489,14 +495,14 @@ export function makeClientIdInDEV(warnOnAccessInDEV: () => void): OpaqueIDType {
   throw new Error('Not yet implemented');
 }
 
-export function makeServerId(): OpaqueIDType {
-  throw new Error('Not yet implemented');
-}
-
 export function beforeActiveInstanceBlur() {
   // noop
 }
 
 export function afterActiveInstanceBlur() {
+  // noop
+}
+
+export function preparePortalMount(portalInstance: any): void {
   // noop
 }

@@ -689,16 +689,15 @@ export default function(babel, opts = {}) {
               return;
             }
             const handle = createRegistration(programPath, persistentID);
-            if (
-              (targetExpr.type === 'ArrowFunctionExpression' ||
-                targetExpr.type === 'FunctionExpression') &&
-              targetPath.parent.type === 'VariableDeclarator'
-            ) {
-              // Special case when a function would get an inferred name:
+            if (targetPath.parent.type === 'VariableDeclarator') {
+              // Special case when a variable would get an inferred name:
               // let Foo = () => {}
               // let Foo = function() {}
+              // let Foo = styled.div``;
               // We'll register it on next line so that
               // we don't mess up the inferred 'Foo' function name.
+              // (eg: with @babel/plugin-transform-react-display-name or
+              // babel-plugin-styled-components)
               insertAfterPath.insertAfter(
                 t.expressionStatement(
                   t.assignmentExpression('=', handle, declPath.node.id),
@@ -710,7 +709,7 @@ export default function(babel, opts = {}) {
               targetPath.replaceWith(
                 t.assignmentExpression('=', handle, targetExpr),
               );
-              // Result: let Foo = _c1 = hoc(() => {})
+              // Result: let Foo = hoc(_c1 = () => {})
             }
           },
         );

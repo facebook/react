@@ -53,6 +53,7 @@ describe('ReactFiberHostContext', () => {
       appendChildToContainer: function() {
         return null;
       },
+      clearContainer: function() {},
       supportsMutation: true,
     });
 
@@ -107,6 +108,7 @@ describe('ReactFiberHostContext', () => {
       appendChildToContainer: function() {
         return null;
       },
+      clearContainer: function() {},
       supportsMutation: true,
     });
 

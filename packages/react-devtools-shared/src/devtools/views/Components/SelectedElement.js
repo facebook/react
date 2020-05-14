@@ -190,6 +190,15 @@ export default function SelectedElement(_: Props) {
   return (
     <div className={styles.SelectedElement}>
       <div className={styles.TitleRow}>
+        {element.key && (
+          <>
+            <div className={styles.Key} title={`key "${element.key}"`}>
+              {element.key}
+            </div>
+            <div className={styles.KeyArrow} />
+          </>
+        )}
+
         <div className={styles.SelectedComponentName}>
           <div className={styles.Component} title={element.displayName}>
             {element.displayName}

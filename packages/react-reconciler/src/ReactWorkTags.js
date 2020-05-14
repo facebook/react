@@ -30,7 +30,9 @@ export type WorkTag =
   | 19
   | 20
   | 21
-  | 22;
+  | 22
+  | 23
+  | 24;
 
 export const FunctionComponent = 0;
 export const ClassComponent = 1;
@@ -55,3 +57,5 @@ export const SuspenseListComponent = 19;
 export const FundamentalComponent = 20;
 export const ScopeComponent = 21;
 export const Block = 22;
+export const OffscreenComponent = 23;
+export const LegacyHiddenComponent = 24;

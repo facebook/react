@@ -9,10 +9,10 @@
 
 import type {AnyNativeEvent} from 'legacy-events/PluginModuleType';
 import type {DOMTopLevelEventType} from 'legacy-events/TopLevelEventTypes';
-import type {ElementListenerMap} from '../events/DOMEventListenerMap';
+import type {ElementListenerMap} from '../client/ReactDOMComponentTree';
 import type {EventSystemFlags} from './EventSystemFlags';
 import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
-import type {PluginModule} from 'legacy-events/PluginModuleType';
+import type {LegacyPluginModule} from 'legacy-events/PluginModuleType';
 import type {ReactSyntheticEvent} from 'legacy-events/ReactSyntheticEventType';
 import type {TopLevelType} from 'legacy-events/TopLevelEventTypes';
 import forEachAccumulated from 'legacy-events/forEachAccumulated';
@@ -29,8 +29,10 @@ import accumulateInto from 'legacy-events/accumulateInto';
 import {registrationNameDependencies} from 'legacy-events/EventPluginRegistry';
 
 import getEventTarget from './getEventTarget';
-import {getClosestInstanceFromNode} from '../client/ReactDOMComponentTree';
-import {getListenerMapForElement} from './DOMEventListenerMap';
+import {
+  getClosestInstanceFromNode,
+  getEventListenerMap,
+} from '../client/ReactDOMComponentTree';
 import isEventSupported from './isEventSupported';
 import {
   TOP_BLUR,
@@ -44,9 +46,10 @@ import {
   getRawEventName,
   mediaEventTypes,
 } from './DOMTopLevelEventTypes';
-import {addTrappedEventListener} from './ReactDOMEventListener';
+import {createEventListenerWrapperWithPriority} from './ReactDOMEventListener';
 import {batchedEventUpdates} from './ReactDOMUpdateBatching';
 import getListener from './getListener';
+import {addEventCaptureListener, addEventBubbleListener} from './EventListener';
 
 /**
  * Summary of `DOMEventPluginSystem` event handling:
@@ -188,9 +191,10 @@ function extractPluginEvents(
   eventSystemFlags: EventSystemFlags,
 ): Array<ReactSyntheticEvent> | ReactSyntheticEvent | null {
   let events = null;
-  for (let i = 0; i < plugins.length; i++) {
+  const legacyPlugins = ((plugins: any): Array<LegacyPluginModule<Event>>);
+  for (let i = 0; i < legacyPlugins.length; i++) {
     // Not every plugin in the ordering may be loaded at runtime.
-    const possiblePlugin: PluginModule<AnyNativeEvent> = plugins[i];
+    const possiblePlugin = legacyPlugins[i];
     if (possiblePlugin) {
       const extractedEvents = possiblePlugin.extractEvents(
         topLevelType,
@@ -318,7 +322,7 @@ export function legacyListenToEvent(
   registrationName: string,
   mountAt: Document | Element,
 ): void {
-  const listenerMap = getListenerMapForElement(mountAt);
+  const listenerMap = getEventListenerMap(mountAt);
   const dependencies = registrationNameDependencies[registrationName];
 
   for (let i = 0; i < dependencies.length; i++) {
@@ -397,6 +401,24 @@ export function legacyTrapCapturedEvent(
     true,
   );
   listenerMap.set(topLevelType, {passive: undefined, listener});
+}
+
+function addTrappedEventListener(
+  targetContainer: EventTarget,
+  topLevelType: DOMTopLevelEventType,
+  eventSystemFlags: EventSystemFlags,
+  capture: boolean,
+): any => void {
+  const rawEventName = getRawEventName(topLevelType);
+  const listener = createEventListenerWrapperWithPriority(
+    targetContainer,
+    topLevelType,
+    eventSystemFlags,
+  );
+  const unsubscribeListener = capture
+    ? addEventCaptureListener(targetContainer, rawEventName, listener)
+    : addEventBubbleListener(targetContainer, rawEventName, listener);
+  return unsubscribeListener;
 }
 
 function getParent(inst: Object | null): Object | null {
