@@ -21,6 +21,9 @@ export const enableModernEventSystem = __VARIANT__;
 export const enableLegacyFBSupport = __VARIANT__;
 export const enableDebugTracing = !__VARIANT__;
 
+// Temporary flag, in case we need to re-enable this feature.
+export const disableHiddenPropDeprioritization = __VARIANT__;
+
 // This only has an effect in the new reconciler. But also, the new reconciler
 // is only enabled when __VARIANT__ is true. So this is set to the opposite of
 // __VARIANT__ so that it's `false` when running against the new reconciler.
@@ -35,13 +38,6 @@ export const deferRenderPhaseUpdateToNextBatch = !__VARIANT__;
 // so we don't need to use __VARIANT__ to get extra coverage.
 export const debugRenderPhaseSideEffectsForStrictMode = __DEV__;
 export const replayFailedUnitOfWorkWithInvokeGuardedCallback = __DEV__;
-
-// Do not add the corresponding warning to the warning filter! Only exists so we
-// can detect callers and migrate them to the new API. Should not visible to
-// anyone outside React Core team.
-//
-// Disabled in our tests, but we'll enable in www.
-export const warnAboutDOMHiddenAttribute = false;
 
 // TODO: These flags are hard-coded to the default values used in open source.
 // Update the tests so that they pass in either mode, then set these

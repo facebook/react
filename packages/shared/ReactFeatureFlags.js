@@ -140,4 +140,4 @@ export const enableLegacyFBSupport = false;
 export const deferRenderPhaseUpdateToNextBatch = true;
 
 // Flag used by www build so we can log occurrences of legacy hidden API
-export const warnAboutDOMHiddenAttribute = false;
+export const disableHiddenPropDeprioritization = true;

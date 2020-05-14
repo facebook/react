@@ -69,7 +69,6 @@ import {
   warnAboutDefaultPropsOnFunctionComponents,
   enableScopeAPI,
   enableBlocksAPI,
-  warnAboutDOMHiddenAttribute,
 } from 'shared/ReactFeatureFlags';
 import invariant from 'shared/invariant';
 import shallowEqual from 'shared/shallowEqual';
@@ -1099,21 +1098,6 @@ function updateHostComponent(current, workInProgress, renderExpirationTime) {
   }
 
   markRef(current, workInProgress);
-
-  if (__DEV__) {
-    if (
-      warnAboutDOMHiddenAttribute &&
-      (workInProgress.mode & ConcurrentMode) !== NoMode &&
-      nextProps.hasOwnProperty('hidden')
-    ) {
-      // This warning will not be user visible. Only exists so React Core team
-      // can find existing callers and migrate them to the new API.
-      console.error(
-        'Detected use of DOM `hidden` attribute. Should migrate to new API. ' +
-          '(owner: React Core)',
-      );
-    }
-  }
 
   // Check the host config to see if the children are offscreen/hidden.
   if (

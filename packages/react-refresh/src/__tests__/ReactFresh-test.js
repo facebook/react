@@ -79,7 +79,9 @@ describe('ReactFresh', () => {
   function LegacyHiddenDiv({hidden, children, ...props}) {
     if (gate(flags => flags.new)) {
       return (
-        <div hidden={hidden} {...props}>
+        <div
+          hidden={hidden ? 'unstable-do-not-use-legacy-hidden' : false}
+          {...props}>
           <React.unstable_LegacyHidden mode={hidden ? 'hidden' : 'visible'}>
             {children}
           </React.unstable_LegacyHidden>
@@ -87,7 +89,9 @@ describe('ReactFresh', () => {
       );
     } else {
       return (
-        <div hidden={hidden} {...props}>
+        <div
+          hidden={hidden ? 'unstable-do-not-use-legacy-hidden' : false}
+          {...props}>
           {children}
         </div>
       );

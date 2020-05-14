@@ -78,6 +78,7 @@ import {
   enableModernEventSystem,
   enableCreateEventHandleAPI,
   enableScopeAPI,
+  disableHiddenPropDeprioritization,
 } from 'shared/ReactFeatureFlags';
 import {HostComponent, HostText} from 'react-reconciler/src/ReactWorkTags';
 import {TOP_BEFORE_BLUR, TOP_AFTER_BLUR} from '../events/DOMTopLevelEventTypes';
@@ -372,7 +373,14 @@ export function shouldSetTextContent(type: string, props: Props): boolean {
 }
 
 export function shouldDeprioritizeSubtree(type: string, props: Props): boolean {
-  return !!props.hidden;
+  if (disableHiddenPropDeprioritization) {
+    // This is obnoxiously specific so that nobody uses it, but we can still opt
+    // in via an infra-level userspace abstraction.
+    return props.hidden === 'unstable-do-not-use-legacy-hidden';
+  } else {
+    // Legacy behavior. Any truthy value works.
+    return !!props.hidden;
+  }
 }
 
 export function createTextInstance(
