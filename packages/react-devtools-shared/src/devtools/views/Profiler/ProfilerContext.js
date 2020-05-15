@@ -138,16 +138,16 @@ function ProfilerContextController({children}: Props) {
       selectFiberName(name);
 
       // Sync selection to the Components tab for convenience.
+      // Keep in mind that profiling data may be from a previous session.
+      // If data has been imported, we should skip the selection sync.
       if (
         id !== null &&
         profilingData !== null &&
         profilingData.imported === false
       ) {
-        const element = store.getElementByID(id);
-
-        // Keep in mind that profiling data may be from a previous session.
-        // In that case, IDs may match up arbitrarily; to be safe, compare both ID and display name.
-        if (element !== null && element.displayName === name) {
+        // We should still check to see if this element is still in the store.
+        // It may have been removed during profiling.
+        if (store.containsElement(id)) {
           dispatch({
             type: 'SELECT_ELEMENT_BY_ID',
             payload: id,

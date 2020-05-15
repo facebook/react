@@ -16,7 +16,7 @@ describe('profiling utils', () => {
 
   it('should throw if importing older/unsupported data', () => {
     expect(() =>
-      utils.prepareProfilingDataFrontendForImport(
+      utils.prepareProfilingDataFrontendFromExport(
         ({
           version: 0,
           dataForRoots: [],

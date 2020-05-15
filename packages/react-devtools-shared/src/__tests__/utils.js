@@ -173,7 +173,7 @@ export function requireTestRenderer(): ReactTestRenderer {
 export function exportImportHelper(bridge: FrontendBridge, store: Store): void {
   const {
     prepareProfilingDataExport,
-    prepareProfilingDataFrontendForImport,
+    prepareProfilingDataFrontendFromExport,
   } = require('react-devtools-shared/src/devtools/views/Profiler/utils');
 
   const {profilerStore} = store;
@@ -181,6 +181,7 @@ export function exportImportHelper(bridge: FrontendBridge, store: Store): void {
   expect(profilerStore.profilingData).not.toBeNull();
 
   const profilingDataFrontendInitial = ((profilerStore.profilingData: any): ProfilingDataFrontend);
+  expect(profilingDataFrontendInitial.imported).toBe(false);
 
   const profilingDataExport = prepareProfilingDataExport(
     profilingDataFrontendInitial,
@@ -194,13 +195,14 @@ export function exportImportHelper(bridge: FrontendBridge, store: Store): void {
   );
   const parsedProfilingDataExport = JSON.parse(serializedProfilingDataExport);
 
-  const profilingDataFrontendImport = prepareProfilingDataFrontendForImport(
+  const profilingDataFrontend = prepareProfilingDataFrontendFromExport(
     (parsedProfilingDataExport: any),
   );
+  expect(profilingDataFrontend.imported).toBe(true);
 
   // Sanity check that profiling snapshots are serialized correctly.
   expect(profilingDataFrontendInitial.dataForRoots).toEqual(
-    profilingDataFrontendImport.dataForRoots,
+    profilingDataFrontend.dataForRoots,
   );
 
   // Snapshot the JSON-parsed object, rather than the raw string, because Jest formats the diff nicer.
@@ -208,6 +210,6 @@ export function exportImportHelper(bridge: FrontendBridge, store: Store): void {
 
   act(() => {
     // Apply the new exported-then-imported data so tests can re-run assertions.
-    profilerStore.profilingData = profilingDataFrontendImport;
+    profilerStore.profilingData = profilingDataFrontend;
   });
 }
