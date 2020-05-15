@@ -137,7 +137,7 @@ export default function ElementView({data, index, style}: Props) {
             "
           </Fragment>
         )}
-        {hocDisplayNames !== null ? (
+        {hocDisplayNames !== null && hocDisplayNames.length > 0 ? (
           <Badge
             className={styles.Badge}
             hocDisplayNames={hocDisplayNames}
