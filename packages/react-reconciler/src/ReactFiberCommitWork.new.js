@@ -17,7 +17,7 @@ import type {
 } from './ReactFiberHostConfig';
 import type {Fiber} from './ReactInternalTypes';
 import type {FiberRoot} from './ReactInternalTypes';
-import type {ExpirationTimeOpaque} from './ReactFiberExpirationTime.new';
+import type {Lanes} from './ReactFiberLane';
 import type {SuspenseState} from './ReactFiberSuspenseComponent.new';
 import type {UpdateQueue} from './ReactUpdateQueue.new';
 import type {FunctionComponentUpdateQueue} from './ReactFiberHooks.new';
@@ -37,6 +37,7 @@ import {
   enableSuspenseCallback,
   enableScopeAPI,
   runAllPassiveEffectDestroysBeforeCreates,
+  enableCreateEventHandleAPI,
 } from 'shared/ReactFeatureFlags';
 import {
   FunctionComponent,
@@ -113,10 +114,10 @@ import {
   updateFundamentalComponent,
   commitHydratedContainer,
   commitHydratedSuspenseInstance,
-  beforeRemoveInstance,
+  removeInstanceEventHandles,
   clearContainer,
   prepareScopeUpdate,
-  prepareScopeUnmount,
+  removeScopeEventHandles,
 } from './ReactFiberHostConfig';
 import {
   captureCommitPhaseError,
@@ -516,7 +517,7 @@ function commitLifeCycles(
   finishedRoot: FiberRoot,
   current: Fiber | null,
   finishedWork: Fiber,
-  committedExpirationTime: ExpirationTimeOpaque,
+  committedLanes: Lanes,
 ): void {
   switch (finishedWork.tag) {
     case FunctionComponent:
@@ -1029,7 +1030,9 @@ function commitUnmount(
       if (enableDeprecatedFlareAPI) {
         unmountDeprecatedResponderListeners(current);
       }
-      beforeRemoveInstance(current.stateNode);
+      if (enableCreateEventHandleAPI && current.ref !== null) {
+        removeInstanceEventHandles(current.stateNode);
+      }
       safelyDetachRef(current);
       return;
     }
@@ -1072,7 +1075,9 @@ function commitUnmount(
           unmountDeprecatedResponderListeners(current);
         }
         const scopeInstance = current.stateNode;
-        prepareScopeUnmount(scopeInstance);
+        if (enableCreateEventHandleAPI && current.ref !== null) {
+          removeScopeEventHandles(scopeInstance);
+        }
         safelyDetachRef(current);
       }
       return;

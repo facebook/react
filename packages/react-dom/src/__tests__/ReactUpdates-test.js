@@ -25,6 +25,29 @@ describe('ReactUpdates', () => {
     Scheduler = require('scheduler');
   });
 
+  // TODO: Delete this once new API exists in both forks
+  function LegacyHiddenDiv({hidden, children, ...props}) {
+    if (gate(flags => flags.new)) {
+      return (
+        <div
+          hidden={hidden ? 'unstable-do-not-use-legacy-hidden' : false}
+          {...props}>
+          <React.unstable_LegacyHidden mode={hidden ? 'hidden' : 'visible'}>
+            {children}
+          </React.unstable_LegacyHidden>
+        </div>
+      );
+    } else {
+      return (
+        <div
+          hidden={hidden ? 'unstable-do-not-use-legacy-hidden' : false}
+          {...props}>
+          {children}
+        </div>
+      );
+    }
+  }
+
   it('should batch state when updating state twice', () => {
     let updateCount = 0;
 
@@ -1288,6 +1311,7 @@ describe('ReactUpdates', () => {
   });
 
   // @gate experimental
+  // @gate enableLegacyHiddenType
   it('delays sync updates inside hidden subtrees in Concurrent Mode', () => {
     const container = document.createElement('div');
 
@@ -1311,15 +1335,15 @@ describe('ReactUpdates', () => {
       });
       return (
         <div>
-          <div hidden={true}>
+          <LegacyHiddenDiv hidden={true}>
             <Bar />
-          </div>
+          </LegacyHiddenDiv>
           <Baz />
         </div>
       );
     }
 
-    const root = ReactDOM.createRoot(container);
+    const root = ReactDOM.unstable_createRoot(container);
     let hiddenDiv;
     act(() => {
       root.render(<Foo />);

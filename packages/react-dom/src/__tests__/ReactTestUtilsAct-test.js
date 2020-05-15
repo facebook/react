@@ -30,7 +30,7 @@ describe('ReactTestUtils.act()', () => {
   if (__EXPERIMENTAL__) {
     let concurrentRoot = null;
     const renderConcurrent = (el, dom) => {
-      concurrentRoot = ReactDOM.createRoot(dom);
+      concurrentRoot = ReactDOM.unstable_createRoot(dom);
       concurrentRoot.render(el);
     };
 
@@ -76,7 +76,7 @@ describe('ReactTestUtils.act()', () => {
   if (__EXPERIMENTAL__) {
     let blockingRoot = null;
     const renderBatched = (el, dom) => {
-      blockingRoot = ReactDOM.createBlockingRoot(dom);
+      blockingRoot = ReactDOM.unstable_createBlockingRoot(dom);
       blockingRoot.render(el);
     };
 
@@ -127,7 +127,9 @@ describe('ReactTestUtils.act()', () => {
     // @gate experimental
     it('warns in blocking mode', () => {
       expect(() => {
-        const root = ReactDOM.createBlockingRoot(document.createElement('div'));
+        const root = ReactDOM.unstable_createBlockingRoot(
+          document.createElement('div'),
+        );
         root.render(<App />);
         Scheduler.unstable_flushAll();
       }).toErrorDev([
@@ -138,7 +140,9 @@ describe('ReactTestUtils.act()', () => {
     // @gate experimental
     it('warns in concurrent mode', () => {
       expect(() => {
-        const root = ReactDOM.createRoot(document.createElement('div'));
+        const root = ReactDOM.unstable_createRoot(
+          document.createElement('div'),
+        );
         root.render(<App />);
         Scheduler.unstable_flushAll();
       }).toErrorDev([

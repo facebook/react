@@ -23,13 +23,12 @@ import type {WorkTag} from './ReactWorkTags';
 import type {TypeOfMode} from './ReactTypeOfMode';
 import type {SideEffectTag} from './ReactSideEffectTags';
 import type {ExpirationTime} from './ReactFiberExpirationTime.old';
-import type {ExpirationTimeOpaque} from './ReactFiberExpirationTime.new';
+import type {Lane, LanePriority, Lanes, LaneMap} from './ReactFiberLane';
 import type {HookType} from './ReactFiberHooks.old';
 import type {RootTag} from './ReactRootTags';
 import type {TimeoutHandle, NoTimeout} from './ReactFiberHostConfig';
 import type {Wakeable} from 'shared/ReactTypes';
 import type {Interaction} from 'scheduler/src/Tracing';
-import type {OpaqueIDType} from 'react-reconciler/src/ReactFiberHostConfig';
 import type {SuspenseConfig, TimeoutConfig} from './ReactFiberSuspenseConfig';
 
 export type ReactPriorityLevel = 99 | 98 | 97 | 96 | 95 | 90;
@@ -52,7 +51,7 @@ export type Dependencies_old = {
 };
 
 export type Dependencies_new = {
-  expirationTime: ExpirationTimeOpaque,
+  lanes: Lanes,
   firstContext: ContextDependency<mixed> | null,
   responders: Map<
     ReactEventResponder<any, any>,
@@ -148,16 +147,13 @@ export type Fiber = {|
   firstEffect: Fiber | null,
   lastEffect: Fiber | null,
 
-  // Represents a time in the future by which this work should be completed.
-  // Does not include work found in its subtree.
+  // Only used by old reconciler
   expirationTime: ExpirationTime,
-
-  // This is used to quickly determine if a subtree has no pending changes.
   childExpirationTime: ExpirationTime,
 
   // Only used by new reconciler
-  expirationTime_opaque: ExpirationTimeOpaque,
-  childExpirationTime_opaque: ExpirationTimeOpaque,
+  lanes: Lanes,
+  childLanes: Lanes,
 
   // This is a pooled version of a Fiber. Every fiber that gets updated will
   // eventually have a pair. There are cases when we can clean up pairs to save
@@ -230,7 +226,7 @@ type BaseFiberRootProperties = {|
   // Expiration of the callback associated with this root
   callbackExpirationTime: ExpirationTime,
   // Priority of the callback associated with this root
-  callbackPriority: ReactPriorityLevel,
+  callbackPriority_old: ReactPriorityLevel,
 
   finishedExpirationTime: ExpirationTime,
   // The earliest pending expiration time that exists in the tree
@@ -255,31 +251,20 @@ type BaseFiberRootProperties = {|
 
   // Represents the next task that the root should work on, or the current one
   // if it's already working.
-  // TODO: In the new system, this will be a Lanes bitmask.
-  callbackId: ExpirationTimeOpaque,
-  // Whether the currently scheduled task for this root is synchronous or
-  // batched/concurrent. We have to track this because Scheduler does not
-  // support synchronous tasks, so we put those on a separate queue. So you
-  // could also think of this as "which queue is the callback scheduled with?"
-  callbackIsSync: boolean,
-  // Timestamp at which we will synchronously finish the current task to
-  // prevent starvation.
-  // TODO: There should be a separate expiration per lane.
-  // NOTE: This is not an "ExpirationTime" as used by the old reconciler. It's a
-  // timestamp, in milliseconds.
-  expiresAt: number,
+  callbackId: Lanes,
+  callbackPriority_new: LanePriority,
+  expirationTimes: LaneMap<number>,
 
-  // Same as corresponding fields in the old reconciler, but opaque. These will
-  // become bitmasks.
-  finishedExpirationTime_opaque: ExpirationTimeOpaque,
-  firstPendingTime_opaque: ExpirationTimeOpaque,
-  lastPendingTime_opaque: ExpirationTimeOpaque,
-  firstSuspendedTime_opaque: ExpirationTimeOpaque,
-  lastSuspendedTime_opaque: ExpirationTimeOpaque,
-  nextKnownPendingLevel_opaque: ExpirationTimeOpaque,
-  lastPingedTime_opaque: ExpirationTimeOpaque,
-  lastExpiredTime_opaque: ExpirationTimeOpaque,
-  mutableSourceLastPendingUpdateTime_opaque: ExpirationTimeOpaque,
+  pendingLanes: Lanes,
+  suspendedLanes: Lanes,
+  pingedLanes: Lanes,
+  expiredLanes: Lanes,
+  mutableReadLanes: Lanes,
+
+  finishedLanes: Lanes,
+
+  entangledLanes: Lanes,
+  entanglements: LaneMap<Lanes>,
 |};
 
 // The following attributes are only used by interaction tracing builds.
@@ -289,7 +274,7 @@ type BaseFiberRootProperties = {|
 type ProfilingOnlyFiberRootProperties = {|
   interactionThreadID: number,
   memoizedInteractions: Set<Interaction>,
-  pendingInteractionMap_new: Map<ExpirationTimeOpaque, Set<Interaction>>,
+  pendingInteractionMap_new: Map<Lane | Lanes, Set<Interaction>>,
   pendingInteractionMap_old: Map<ExpirationTime, Set<Interaction>>,
 |};
 
@@ -364,5 +349,5 @@ export type Dispatcher = {|
     getSnapshot: MutableSourceGetSnapshotFn<Source, Snapshot>,
     subscribe: MutableSourceSubscribeFn<Source, Snapshot>,
   ): Snapshot,
-  useOpaqueIdentifier(): OpaqueIDType | void,
+  useOpaqueIdentifier(): any,
 |};

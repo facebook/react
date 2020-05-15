@@ -60,43 +60,38 @@ export function prepareProfilingDataFrontendFromBackendAndStore(
           throw Error(`Could not find profiling snapshots for root ${rootID}`);
         }
 
-        const filteredCommitData = [];
-        const filteredOperations = [];
-
-        // Filter empty commits from the profiler data.
-        // It is very important to keep operations and commit data arrays perfect in sync.
-        // So we must use the same criteria to filter both.
-        // If these two arrays were to get out of sync, the profiler would runtime error.
-        // We choose to filter on commit metadata, rather than the operations array,
-        // because the latter may have false positives,
-        // (e.g. a commit that re-rendered a component with the same treeBaseDuration as before).
-        commitData.forEach((commitDataBackend, commitIndex) => {
-          if (commitDataBackend.fiberActualDurations.length > 0) {
-            filteredCommitData.push({
-              changeDescriptions:
-                commitDataBackend.changeDescriptions != null
-                  ? new Map(commitDataBackend.changeDescriptions)
-                  : null,
-              duration: commitDataBackend.duration,
-              fiberActualDurations: new Map(
-                commitDataBackend.fiberActualDurations,
-              ),
-              fiberSelfDurations: new Map(commitDataBackend.fiberSelfDurations),
-              interactionIDs: commitDataBackend.interactionIDs,
-              priorityLevel: commitDataBackend.priorityLevel,
-              timestamp: commitDataBackend.timestamp,
-            });
-            filteredOperations.push(operations[commitIndex]);
-          }
-        });
+        // Do not filter empty commits from the profiler data!
+        // We used to do this, but it was error prone (see #18798).
+        // A commit may appear to be empty (no actual durations) because of component filters,
+        // but filtering these empty commits causes interaction commit indices to be off by N.
+        // This not only corrupts the resulting data, but also potentially causes runtime errors.
+        //
+        // For that matter, hiding "empty" commits might cause confusion too.
+        // A commit *did happen* even if none of the components the Profiler is showing were involved.
+        const convertedCommitData = commitData.map(
+          (commitDataBackend, commitIndex) => ({
+            changeDescriptions:
+              commitDataBackend.changeDescriptions != null
+                ? new Map(commitDataBackend.changeDescriptions)
+                : null,
+            duration: commitDataBackend.duration,
+            fiberActualDurations: new Map(
+              commitDataBackend.fiberActualDurations,
+            ),
+            fiberSelfDurations: new Map(commitDataBackend.fiberSelfDurations),
+            interactionIDs: commitDataBackend.interactionIDs,
+            priorityLevel: commitDataBackend.priorityLevel,
+            timestamp: commitDataBackend.timestamp,
+          }),
+        );
 
         dataForRoots.set(rootID, {
-          commitData: filteredCommitData,
+          commitData: convertedCommitData,
           displayName,
           initialTreeBaseDurations: new Map(initialTreeBaseDurations),
           interactionCommits: new Map(interactionCommits),
           interactions: new Map(interactions),
-          operations: filteredOperations,
+          operations,
           rootID,
           snapshots,
         });

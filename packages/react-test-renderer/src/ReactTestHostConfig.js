@@ -56,6 +56,7 @@ export type RendererInspectionConfig = $ReadOnly<{||}>;
 
 export * from 'react-reconciler/src/ReactFiberHostConfigWithNoPersistence';
 export * from 'react-reconciler/src/ReactFiberHostConfigWithNoHydration';
+export * from 'react-reconciler/src/ReactFiberHostConfigWithNoTestSelectors';
 
 const EVENT_COMPONENT_CONTEXT = {};
 const NO_CONTEXT = {};
@@ -386,7 +387,7 @@ export function getInstanceFromNode(mockNode: Object) {
   return null;
 }
 
-export function beforeRemoveInstance(instance: any) {
+export function removeInstanceEventHandles(instance: any) {
   // noop
 }
 
@@ -407,11 +408,6 @@ export function makeClientIdInDEV(warnOnAccessInDEV: () => void): OpaqueIDType {
       return id;
     },
   };
-}
-
-let serverId: number = 0;
-export function makeServerId(): OpaqueIDType {
-  return 's_' + (serverId++).toString(36);
 }
 
 export function isOpaqueHydratingObject(value: mixed): boolean {
@@ -448,7 +444,7 @@ export function prepareScopeUpdate(scopeInstance: Object, inst: Object): void {
   nodeToInstanceMap.set(scopeInstance, inst);
 }
 
-export function prepareScopeUnmount(scopeInstance: Object): void {
+export function removeScopeEventHandles(scopeInstance: Object): void {
   nodeToInstanceMap.delete(scopeInstance);
 }
 

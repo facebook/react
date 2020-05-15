@@ -96,6 +96,7 @@ import {
 } from './ReactTypeOfMode';
 import {
   HostRoot,
+  IndeterminateComponent,
   ClassComponent,
   SuspenseComponent,
   SuspenseListComponent,
@@ -189,7 +190,8 @@ import {
   hasCaughtError,
   clearCaughtError,
 } from 'shared/ReactErrorUtils';
-import {onCommitRoot} from './ReactFiberDevToolsHook.old';
+import {onCommitRoot as onCommitRootDevTools} from './ReactFiberDevToolsHook.old';
+import {onCommitRoot as onCommitRootTestSelector} from './ReactTestSelectors';
 
 // Used by `act`
 import enqueueTask from 'shared/enqueueTask';
@@ -497,6 +499,15 @@ function markUpdateTimeFromFiberToRoot(fiber, expirationTime) {
   if (alternate !== null && alternate.expirationTime < expirationTime) {
     alternate.expirationTime = expirationTime;
   }
+  if (__DEV__) {
+    if (
+      alternate === null &&
+      (fiber.effectTag & (Placement | Hydrating)) !== NoEffect
+    ) {
+      warnAboutUpdateOnNotYetMountedFiberInDEV(fiber);
+    }
+  }
+
   // Walk the parent path to the root and update the child expiration time.
   let node = fiber.return;
   let root = null;
@@ -505,6 +516,14 @@ function markUpdateTimeFromFiberToRoot(fiber, expirationTime) {
   } else {
     while (node !== null) {
       alternate = node.alternate;
+      if (__DEV__) {
+        if (
+          alternate === null &&
+          (node.effectTag & (Placement | Hydrating)) !== NoEffect
+        ) {
+          warnAboutUpdateOnNotYetMountedFiberInDEV(fiber);
+        }
+      }
       if (node.childExpirationTime < expirationTime) {
         node.childExpirationTime = expirationTime;
         if (
@@ -601,7 +620,7 @@ function ensureRootIsScheduled(root: FiberRoot) {
   if (lastExpiredTime !== NoWork) {
     // Special case: Expired work should flush synchronously.
     root.callbackExpirationTime = Sync;
-    root.callbackPriority = ImmediatePriority;
+    root.callbackPriority_old = ImmediatePriority;
     root.callbackNode = scheduleSyncCallback(
       performSyncWorkOnRoot.bind(null, root),
     );
@@ -615,7 +634,7 @@ function ensureRootIsScheduled(root: FiberRoot) {
     if (existingCallbackNode !== null) {
       root.callbackNode = null;
       root.callbackExpirationTime = NoWork;
-      root.callbackPriority = NoPriority;
+      root.callbackPriority_old = NoPriority;
     }
     return;
   }
@@ -631,7 +650,7 @@ function ensureRootIsScheduled(root: FiberRoot) {
   // If there's an existing render task, confirm it has the correct priority and
   // expiration time. Otherwise, we'll cancel it and schedule a new one.
   if (existingCallbackNode !== null) {
-    const existingCallbackPriority = root.callbackPriority;
+    const existingCallbackPriority = root.callbackPriority_old;
     const existingCallbackExpirationTime = root.callbackExpirationTime;
     if (
       // Callback must have the exact same expiration time.
@@ -649,7 +668,7 @@ function ensureRootIsScheduled(root: FiberRoot) {
   }
 
   root.callbackExpirationTime = expirationTime;
-  root.callbackPriority = priorityLevel;
+  root.callbackPriority_old = priorityLevel;
 
   let callbackNode;
   if (expirationTime === Sync) {
@@ -1065,15 +1084,6 @@ export function deferredUpdates<A>(fn: () => A): A {
   return runWithPriority(NormalPriority, fn);
 }
 
-export function syncUpdates<A, B, C, R>(
-  fn: (A, B, C) => R,
-  a: A,
-  b: B,
-  c: C,
-): R {
-  return runWithPriority(ImmediatePriority, fn.bind(null, a, b, c));
-}
-
 function flushPendingDiscreteUpdates() {
   if (rootsWithPendingDiscreteUpdates !== null) {
     // For each root with pending discrete updates, schedule a callback to
@@ -1167,7 +1177,11 @@ export function flushSync<A, R>(fn: A => R, a: A): R {
   }
   executionContext |= BatchedContext;
   try {
-    return runWithPriority(ImmediatePriority, fn.bind(null, a));
+    if (fn) {
+      return runWithPriority(ImmediatePriority, fn.bind(null, a));
+    } else {
+      return (undefined: $FlowFixMe);
+    }
   } finally {
     executionContext = prevExecutionContext;
     // Flush the immediate callbacks that were scheduled during this batch.
@@ -1864,7 +1878,7 @@ function commitRootImpl(root, renderPriorityLevel) {
   // So we can clear these now to allow a new callback to be scheduled.
   root.callbackNode = null;
   root.callbackExpirationTime = NoWork;
-  root.callbackPriority = NoPriority;
+  root.callbackPriority_old = NoPriority;
 
   // Update the first and last pending times on this root. The new first
   // pending time is whatever is left on the root fiber.
@@ -2124,7 +2138,11 @@ function commitRootImpl(root, renderPriorityLevel) {
     nestedUpdateCount = 0;
   }
 
-  onCommitRoot(finishedWork.stateNode, expirationTime);
+  onCommitRootDevTools(finishedWork.stateNode, expirationTime);
+
+  if (__DEV__) {
+    onCommitRootTestSelector();
+  }
 
   // Always call this before exiting `commitRoot`, to ensure that any
   // additional work on this root is scheduled.
@@ -2897,6 +2915,64 @@ function flushRenderPhaseStrictModeWarningsInDEV() {
 
     if (warnAboutDeprecatedLifecycles) {
       ReactStrictModeWarnings.flushPendingUnsafeLifecycleWarnings();
+    }
+  }
+}
+
+let didWarnStateUpdateForNotYetMountedComponent: Set<string> | null = null;
+function warnAboutUpdateOnNotYetMountedFiberInDEV(fiber) {
+  if (__DEV__) {
+    if ((executionContext & RenderContext) !== NoContext) {
+      // We let the other warning about render phase updates deal with this one.
+      return;
+    }
+
+    if (!(fiber.mode & (BlockingMode | ConcurrentMode))) {
+      return;
+    }
+
+    const tag = fiber.tag;
+    if (
+      tag !== IndeterminateComponent &&
+      tag !== HostRoot &&
+      tag !== ClassComponent &&
+      tag !== FunctionComponent &&
+      tag !== ForwardRef &&
+      tag !== MemoComponent &&
+      tag !== SimpleMemoComponent &&
+      tag !== Block
+    ) {
+      // Only warn for user-defined components, not internal ones like Suspense.
+      return;
+    }
+
+    // We show the whole stack but dedupe on the top component's name because
+    // the problematic code almost always lies inside that component.
+    const componentName = getComponentName(fiber.type) || 'ReactComponent';
+    if (didWarnStateUpdateForNotYetMountedComponent !== null) {
+      if (didWarnStateUpdateForNotYetMountedComponent.has(componentName)) {
+        return;
+      }
+      didWarnStateUpdateForNotYetMountedComponent.add(componentName);
+    } else {
+      didWarnStateUpdateForNotYetMountedComponent = new Set([componentName]);
+    }
+
+    const previousFiber = ReactCurrentFiberCurrent;
+    try {
+      setCurrentDebugFiberInDEV(fiber);
+      console.error(
+        "Can't perform a React state update on a component that hasn't mounted yet. " +
+          'This indicates that you have a side-effect in your render function that ' +
+          'asynchronously later calls tries to update the component. Move this work to ' +
+          'useEffect instead.',
+      );
+    } finally {
+      if (previousFiber) {
+        setCurrentDebugFiberInDEV(fiber);
+      } else {
+        resetCurrentDebugFiberInDEV();
+      }
     }
   }
 }

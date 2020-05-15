@@ -24,6 +24,8 @@ import {
   ContinuousEvent,
 } from 'shared/ReactTypes';
 
+import {enableCreateEventHandleAPI} from 'shared/ReactFeatureFlags';
+
 // Needed for SimpleEventPlugin, rather than
 // do it in two places, which duplicates logic
 // and increases the bundle size, we do it all
@@ -94,6 +96,13 @@ const otherDiscreteEvents = [
   DOMTopLevelEventTypes.TOP_COMPOSITION_END,
   DOMTopLevelEventTypes.TOP_COMPOSITION_UPDATE,
 ];
+
+if (enableCreateEventHandleAPI) {
+  otherDiscreteEvents.push(
+    DOMTopLevelEventTypes.TOP_BEFORE_BLUR,
+    DOMTopLevelEventTypes.TOP_AFTER_BLUR,
+  );
+}
 
 // prettier-ignore
 const userBlockingPairsForSimpleEventPlugin = [
@@ -236,7 +245,7 @@ export function getEventPriorityForListenerSystem(
   }
   if (__DEV__) {
     console.warn(
-      'The event "type" provided to useEvent() does not have a known priority type.' +
+      'The event "type" provided to createEventHandle() does not have a known priority type.' +
         ' It is recommended to provide a "priority" option to specify a priority.',
     );
   }

@@ -53,11 +53,13 @@ const EnterLeaveEventPlugin = {
    * the `mouseover` top-level event.
    */
   extractEvents: function(
+    dispatchQueue,
     topLevelType,
     targetInst,
     nativeEvent,
     nativeEventTarget,
     eventSystemFlags,
+    container,
   ) {
     const isOverEvent =
       topLevelType === TOP_MOUSE_OVER || topLevelType === TOP_POINTER_OVER;
@@ -73,14 +75,14 @@ const EnterLeaveEventPlugin = {
         // make sure the node that we're coming from is managed by React.
         const inst = getClosestInstanceFromNode(related);
         if (inst !== null) {
-          return null;
+          return;
         }
       }
     }
 
     if (!isOutEvent && !isOverEvent) {
       // Must not be a mouse or pointer in or out - ignoring.
-      return null;
+      return;
     }
 
     let win;
@@ -100,8 +102,8 @@ const EnterLeaveEventPlugin = {
     let from;
     let to;
     if (isOutEvent) {
-      from = targetInst;
       const related = nativeEvent.relatedTarget || nativeEvent.toElement;
+      from = targetInst;
       to = related ? getClosestInstanceFromNode(related) : null;
       if (to !== null) {
         const nearestMounted = getNearestMountedFiber(to);
@@ -120,7 +122,7 @@ const EnterLeaveEventPlugin = {
 
     if (from === to) {
       // Nothing pertains to our managed components.
-      return null;
+      return;
     }
 
     let eventInterface, leaveEventType, enterEventType, eventTypePrefix;
@@ -153,7 +155,7 @@ const EnterLeaveEventPlugin = {
     leave.target = fromNode;
     leave.relatedTarget = toNode;
 
-    const enter = eventInterface.getPooled(
+    let enter = eventInterface.getPooled(
       enterEventType,
       to,
       nativeEvent,
@@ -163,9 +165,15 @@ const EnterLeaveEventPlugin = {
     enter.target = toNode;
     enter.relatedTarget = fromNode;
 
-    accumulateEnterLeaveListeners(leave, enter, from, to);
+    // If we are not processing the first ancestor, then we
+    // should not process the same nativeEvent again, as we
+    // will have already processed it in the first ancestor.
+    const nativeTargetInst = getClosestInstanceFromNode(nativeEventTarget);
+    if (nativeTargetInst !== targetInst) {
+      enter = null;
+    }
 
-    return [leave, enter];
+    accumulateEnterLeaveListeners(dispatchQueue, leave, enter, from, to);
   },
 };
 

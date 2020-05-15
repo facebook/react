@@ -8,7 +8,7 @@
  */
 
 import type {Fiber} from './ReactInternalTypes';
-import type {ExpirationTimeOpaque} from './ReactFiberExpirationTime.new';
+import type {Lanes} from './ReactFiberLane';
 import type {
   ReactFundamentalComponentInstance,
   ReactScopeInstance,
@@ -118,6 +118,7 @@ import {
   prepareToHydrateHostSuspenseInstance,
   popHydrationState,
   resetHydrationState,
+  getIsHydrating,
 } from './ReactFiberHydrationContext.new';
 import {
   enableSchedulerTracing,
@@ -133,10 +134,10 @@ import {
   renderDidSuspend,
   renderDidSuspendDelayIfPossible,
   renderHasNotSuspendedYet,
-  popRenderExpirationTime,
+  popRenderLanes,
 } from './ReactFiberWorkLoop.new';
 import {createFundamentalStateInstance} from './ReactFiberFundamental.new';
-import {Never, isSameOrHigherPriority} from './ReactFiberExpirationTime.new';
+import {OffscreenLane} from './ReactFiberLane';
 import {resetChildFibers} from './ReactChildFiber.new';
 import {updateDeprecatedEventListeners} from './ReactFiberDeprecatedEvents.new';
 import {createScopeInstance} from './ReactFiberScope.new';
@@ -579,6 +580,11 @@ function cutOffTailIfNeeded(
   renderState: SuspenseListRenderState,
   hasRenderedATailFallback: boolean,
 ) {
+  if (getIsHydrating()) {
+    // If we're hydrating, we should consume as many items as we can
+    // so we don't leave any behind.
+    return;
+  }
   switch (renderState.tailMode) {
     case 'hidden': {
       // Any insertions at the end of the tail list after this point
@@ -644,7 +650,7 @@ function cutOffTailIfNeeded(
 function completeWork(
   current: Fiber | null,
   workInProgress: Fiber,
-  renderExpirationTime: ExpirationTimeOpaque,
+  renderLanes: Lanes,
 ): Fiber | null {
   const newProps = workInProgress.pendingProps;
 
@@ -857,7 +863,7 @@ function completeWork(
             );
             prepareToHydrateHostSuspenseInstance(workInProgress);
             if (enableSchedulerTracing) {
-              markSpawnedWork((Never: ExpirationTimeOpaque));
+              markSpawnedWork(OffscreenLane);
             }
             return null;
           } else {
@@ -882,7 +888,7 @@ function completeWork(
 
       if ((workInProgress.effectTag & DidCapture) !== NoEffect) {
         // Something suspended. Re-render with the fallback children.
-        workInProgress.expirationTime_opaque = renderExpirationTime;
+        workInProgress.lanes = renderLanes;
         // Do not reset the effect list.
         return workInProgress;
       }
@@ -1051,7 +1057,7 @@ function completeWork(
                 }
                 workInProgress.lastEffect = renderState.lastEffect;
                 // Reset the child fibers to their original state.
-                resetChildFibers(workInProgress, renderExpirationTime);
+                resetChildFibers(workInProgress, renderLanes);
 
                 // Set up the Suspense Context to force suspense and immediately
                 // rerender the children.
@@ -1092,7 +1098,8 @@ function completeWork(
             if (
               renderState.tail === null &&
               renderState.tailMode === 'hidden' &&
-              !renderedTail.alternate
+              !renderedTail.alternate &&
+              !getIsHydrating() // We don't cut it if we're hydrating.
             ) {
               // We need to delete the row we just rendered.
               // Reset the effect list to what it was before we rendered this
@@ -1111,10 +1118,7 @@ function completeWork(
             // the expiration.
             now() * 2 - renderState.renderingStartTime >
               renderState.tailExpiration &&
-            !isSameOrHigherPriority(
-              (Never: ExpirationTimeOpaque),
-              renderExpirationTime,
-            )
+            renderLanes !== OffscreenLane
           ) {
             // We have now passed our CPU deadline and we'll just give up further
             // attempts to render the main content and only render fallbacks.
@@ -1129,9 +1133,9 @@ function completeWork(
             // them, then they really have the same priority as this render.
             // So we'll pick it back up the very next render pass once we've had
             // an opportunity to yield for paint.
-            workInProgress.expirationTime_opaque = renderExpirationTime;
+            workInProgress.lanes = renderLanes;
             if (enableSchedulerTracing) {
-              markSpawnedWork(renderExpirationTime);
+              markSpawnedWork(renderLanes);
             }
           }
         }
@@ -1297,7 +1301,7 @@ function completeWork(
       break;
     case OffscreenComponent:
     case LegacyHiddenComponent: {
-      popRenderExpirationTime(workInProgress);
+      popRenderLanes(workInProgress);
       if (current !== null) {
         const nextState: OffscreenState | null = workInProgress.memoizedState;
         const prevState: OffscreenState | null = current.memoizedState;

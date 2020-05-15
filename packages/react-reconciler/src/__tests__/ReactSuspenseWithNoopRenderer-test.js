@@ -142,6 +142,25 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     }
   }
 
+  // TODO: Delete this once new API exists in both forks
+  function LegacyHiddenDiv({hidden, children, ...props}) {
+    if (gate(flags => flags.new)) {
+      return (
+        <div hidden={hidden} {...props}>
+          <React.unstable_LegacyHidden mode={hidden ? 'hidden' : 'visible'}>
+            {children}
+          </React.unstable_LegacyHidden>
+        </div>
+      );
+    } else {
+      return (
+        <div hidden={hidden} {...props}>
+          {children}
+        </div>
+      );
+    }
+  }
+
   it('does not restart rendering for initial render', async () => {
     function Bar(props) {
       Scheduler.unstable_yieldValue('Bar');
@@ -2737,7 +2756,9 @@ describe('ReactSuspenseWithNoopRenderer', () => {
 
     function App() {
       const [page, setPage] = React.useState('A');
-      const [startLoading, isLoading] = React.useTransition(SUSPENSE_CONFIG);
+      const [startLoading, isLoading] = React.unstable_useTransition(
+        SUSPENSE_CONFIG,
+      );
       transitionToPage = nextPage => startLoading(() => setPage(nextPage));
       return (
         <Fragment>
@@ -2889,6 +2910,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
   });
 
   // @gate experimental
+  // @gate enableLegacyHiddenType
   it('should not render hidden content while suspended on higher pri', async () => {
     function Offscreen() {
       Scheduler.unstable_yieldValue('Offscreen');
@@ -2900,9 +2922,9 @@ describe('ReactSuspenseWithNoopRenderer', () => {
       });
       return (
         <>
-          <div hidden={true}>
+          <LegacyHiddenDiv hidden={true}>
             <Offscreen />
-          </div>
+          </LegacyHiddenDiv>
           <Suspense fallback={<Text text="Loading..." />}>
             {showContent ? <AsyncText text="A" ms={2000} /> : null}
           </Suspense>
@@ -2944,6 +2966,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
   });
 
   // @gate experimental
+  // @gate enableLegacyHiddenType
   it('should be able to unblock higher pri content before suspended hidden', async () => {
     function Offscreen() {
       Scheduler.unstable_yieldValue('Offscreen');
@@ -2955,10 +2978,10 @@ describe('ReactSuspenseWithNoopRenderer', () => {
       });
       return (
         <Suspense fallback={<Text text="Loading..." />}>
-          <div hidden={true}>
+          <LegacyHiddenDiv hidden={true}>
             <AsyncText text="A" ms={2000} />
             <Offscreen />
-          </div>
+          </LegacyHiddenDiv>
           {showContent ? <AsyncText text="A" ms={2000} /> : null}
         </Suspense>
       );
@@ -3718,7 +3741,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
 
   // @gate experimental
   it('regression: ping at high priority causes update to be dropped', async () => {
-    const {useState, useTransition} = React;
+    const {useState, unstable_useTransition: useTransition} = React;
 
     let setTextA;
     function A() {
@@ -3836,10 +3859,10 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     let setTextWithLongTransition;
 
     function App() {
-      const [startShortTransition, isPending1] = React.useTransition({
+      const [startShortTransition, isPending1] = React.unstable_useTransition({
         timeoutMs: 5000,
       });
-      const [startLongTransition, isPending2] = React.useTransition({
+      const [startLongTransition, isPending2] = React.unstable_useTransition({
         timeoutMs: 30000,
       });
       const isPending = isPending1 || isPending2;

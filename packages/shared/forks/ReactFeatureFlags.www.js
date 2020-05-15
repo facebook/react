@@ -26,6 +26,8 @@ export const {
   enableFilterEmptyStringAttributesDOM,
   enableLegacyFBSupport,
   enableDebugTracing,
+  deferRenderPhaseUpdateToNextBatch,
+  disableHiddenPropDeprioritization,
 } = dynamicFeatureFlags;
 
 // On WWW, __EXPERIMENTAL__ is used for a new modern build.
@@ -56,6 +58,8 @@ export const disableModulePatternComponents = true;
 
 export const enableDeprecatedFlareAPI = true;
 
+export const enableCreateEventHandleAPI = true;
+
 export const enableFundamentalAPI = false;
 
 export const enableScopeAPI = true;
@@ -67,9 +71,6 @@ export const enableSuspenseCallback = true;
 export const disableTextareaChildren = __EXPERIMENTAL__;
 
 export const warnUnstableRenderSubtreeIntoContainer = false;
-
-// Internal-only attempt to debug a React Native issue. See D20130868.
-export const throwEarlyForMysteriousError = false;
 
 // Enable forked reconciler. Piggy-backing on the "variant" global so that we
 // don't have to add another test dimension. The build system will compile this

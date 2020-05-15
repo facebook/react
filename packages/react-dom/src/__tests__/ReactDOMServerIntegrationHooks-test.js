@@ -1032,6 +1032,162 @@ describe('ReactDOMServerHooks', () => {
         );
       });
 
+      it('useOpaqueIdentifier identifierPrefix works for server renderer and does not clash', async () => {
+        function ChildTwo({id}) {
+          return <div id={id}>Child Three</div>;
+        }
+        function App() {
+          const id = useOpaqueIdentifier();
+          const idTwo = useOpaqueIdentifier();
+
+          return (
+            <div>
+              <div aria-labelledby={id}>Chid One</div>
+              <ChildTwo id={id} />
+              <div aria-labelledby={idTwo}>Child Three</div>
+              <div id={idTwo}>Child Four</div>
+            </div>
+          );
+        }
+
+        const containerOne = document.createElement('div');
+        document.body.append(containerOne);
+
+        containerOne.innerHTML = ReactDOMServer.renderToString(<App />, {
+          identifierPrefix: 'one',
+        });
+
+        const containerTwo = document.createElement('div');
+        document.body.append(containerTwo);
+
+        containerTwo.innerHTML = ReactDOMServer.renderToString(<App />, {
+          identifierPrefix: 'two',
+        });
+
+        expect(document.body.children.length).toEqual(2);
+        const childOne = document.body.children[0];
+        const childTwo = document.body.children[1];
+
+        expect(
+          childOne.children[0].children[0].getAttribute('aria-labelledby'),
+        ).toEqual(childOne.children[0].children[1].getAttribute('id'));
+        expect(
+          childOne.children[0].children[2].getAttribute('aria-labelledby'),
+        ).toEqual(childOne.children[0].children[3].getAttribute('id'));
+
+        expect(
+          childOne.children[0].children[0].getAttribute('aria-labelledby'),
+        ).not.toEqual(
+          childOne.children[0].children[2].getAttribute('aria-labelledby'),
+        );
+
+        expect(
+          childOne.children[0].children[0]
+            .getAttribute('aria-labelledby')
+            .startsWith('one'),
+        ).toBe(true);
+        expect(
+          childOne.children[0].children[2]
+            .getAttribute('aria-labelledby')
+            .includes('one'),
+        ).toBe(true);
+
+        expect(
+          childTwo.children[0].children[0].getAttribute('aria-labelledby'),
+        ).toEqual(childTwo.children[0].children[1].getAttribute('id'));
+        expect(
+          childTwo.children[0].children[2].getAttribute('aria-labelledby'),
+        ).toEqual(childTwo.children[0].children[3].getAttribute('id'));
+
+        expect(
+          childTwo.children[0].children[0].getAttribute('aria-labelledby'),
+        ).not.toEqual(
+          childTwo.children[0].children[2].getAttribute('aria-labelledby'),
+        );
+
+        expect(
+          childTwo.children[0].children[0]
+            .getAttribute('aria-labelledby')
+            .startsWith('two'),
+        ).toBe(true);
+        expect(
+          childTwo.children[0].children[2]
+            .getAttribute('aria-labelledby')
+            .startsWith('two'),
+        ).toBe(true);
+      });
+
+      it('useOpaqueIdentifier identifierPrefix works for multiple reads on a streaming server renderer', async () => {
+        function ChildTwo() {
+          const id = useOpaqueIdentifier();
+
+          return <div id={id}>Child Two</div>;
+        }
+
+        function App() {
+          const id = useOpaqueIdentifier();
+
+          return (
+            <>
+              <div id={id}>Child One</div>
+              <ChildTwo />
+              <div aria-labelledby={id}>Aria One</div>
+            </>
+          );
+        }
+
+        const container = document.createElement('div');
+        document.body.append(container);
+
+        const streamOne = ReactDOMServer.renderToNodeStream(<App />, {
+          identifierPrefix: 'one',
+        }).setEncoding('utf8');
+        const streamTwo = ReactDOMServer.renderToNodeStream(<App />, {
+          identifierPrefix: 'two',
+        }).setEncoding('utf8');
+
+        const containerOne = document.createElement('div');
+        const containerTwo = document.createElement('div');
+
+        streamOne._read(10);
+        streamTwo._read(10);
+
+        containerOne.innerHTML = streamOne.read();
+        containerTwo.innerHTML = streamTwo.read();
+
+        expect(containerOne.children[0].getAttribute('id')).not.toEqual(
+          containerOne.children[1].getAttribute('id'),
+        );
+        expect(containerTwo.children[0].getAttribute('id')).not.toEqual(
+          containerTwo.children[1].getAttribute('id'),
+        );
+        expect(containerOne.children[0].getAttribute('id')).not.toEqual(
+          containerTwo.children[0].getAttribute('id'),
+        );
+        expect(
+          containerOne.children[0].getAttribute('id').includes('one'),
+        ).toBe(true);
+        expect(
+          containerOne.children[1].getAttribute('id').includes('one'),
+        ).toBe(true);
+        expect(
+          containerTwo.children[0].getAttribute('id').includes('two'),
+        ).toBe(true);
+        expect(
+          containerTwo.children[1].getAttribute('id').includes('two'),
+        ).toBe(true);
+
+        expect(containerOne.children[1].getAttribute('id')).not.toEqual(
+          containerTwo.children[1].getAttribute('id'),
+        );
+        expect(containerOne.children[0].getAttribute('id')).toEqual(
+          containerOne.children[2].getAttribute('aria-labelledby'),
+        );
+        expect(containerTwo.children[0].getAttribute('id')).toEqual(
+          containerTwo.children[2].getAttribute('aria-labelledby'),
+        );
+      });
+
       it('useOpaqueIdentifier: IDs match when, after hydration, a new component that uses the ID is rendered', async () => {
         let _setShowDiv;
         function App() {
@@ -1051,7 +1207,7 @@ describe('ReactDOMServerHooks', () => {
         document.body.append(container);
 
         container.innerHTML = ReactDOMServer.renderToString(<App />);
-        const root = ReactDOM.createRoot(container, {hydrate: true});
+        const root = ReactDOM.unstable_createRoot(container, {hydrate: true});
         root.render(<App />);
         Scheduler.unstable_flushAll();
         jest.runAllTimers();
@@ -1136,7 +1292,7 @@ describe('ReactDOMServerHooks', () => {
         const container = document.createElement('div');
         document.body.append(container);
         container.innerHTML = ReactDOMServer.renderToString(<App />);
-        const root = ReactDOM.createRoot(container, {hydrate: true});
+        const root = ReactDOM.unstable_createRoot(container, {hydrate: true});
         ReactTestUtils.act(() => {
           root.render(<App />);
         });
@@ -1196,7 +1352,7 @@ describe('ReactDOMServerHooks', () => {
         const container = document.createElement('div');
         document.body.append(container);
         container.innerHTML = ReactDOMServer.renderToString(<App />);
-        const root = ReactDOM.createRoot(container, {hydrate: true});
+        const root = ReactDOM.unstable_createRoot(container, {hydrate: true});
         ReactTestUtils.act(() => {
           root.render(<App />);
         });
@@ -1291,7 +1447,7 @@ describe('ReactDOMServerHooks', () => {
 
         const childOneSpan = container.getElementsByTagName('span')[0];
 
-        const root = ReactDOM.createRoot(container, {hydrate: true});
+        const root = ReactDOM.unstable_createRoot(container, {hydrate: true});
         root.render(<App show={false} />);
         expect(Scheduler).toHaveYielded([]);
 
@@ -1306,44 +1462,25 @@ describe('ReactDOMServerHooks', () => {
           // State update should trigger the ID to update, which changes the props
           // of ChildWithID. This should cause ChildWithID to hydrate before Children
 
-          gate(flags => {
-            if (__DEV__) {
-              expect(Scheduler).toFlushAndYieldThrough([
-                'Child with ID',
-                // Fallbacks are immdiately committed in TestUtils version
-                // of act
-                // 'Child with ID',
-                // 'Child with ID',
-                'Child One',
-                'Child Two',
-              ]);
-            } else if (flags.new) {
-              // Upgrading a dehyrdating boundary works a little differently in
-              // the new reconciler. After the update on the boundary is
-              // scheduled, it waits until the end of the current time slice
-              // before restarting at the higher priority.
-              expect(Scheduler).toFlushAndYieldThrough([
-                'Child with ID',
-                'Child with ID',
-                'Child with ID',
-                'Child with ID',
-                'Child One',
-                'Child Two',
-              ]);
-            } else {
-              // Whereas the old reconciler relies on a Scheduler hack to
-              // interrupt the current task. It's not clear if this is any
-              // better or worse, though. Regardless it's not a big deal since
-              // the time slices aren't that big.
-              expect(Scheduler).toFlushAndYieldThrough([
-                'Child with ID',
-                'Child with ID',
-                'Child with ID',
-                'Child One',
-                'Child Two',
-              ]);
-            }
-          });
+          expect(Scheduler).toFlushAndYieldThrough(
+            __DEV__
+              ? [
+                  'Child with ID',
+                  // Fallbacks are immediately committed in TestUtils version
+                  // of act
+                  // 'Child with ID',
+                  // 'Child with ID',
+                  'Child One',
+                  'Child Two',
+                ]
+              : [
+                  'Child with ID',
+                  'Child with ID',
+                  'Child with ID',
+                  'Child One',
+                  'Child Two',
+                ],
+          );
 
           expect(child1Ref.current).toBe(null);
           expect(childWithIDRef.current).toEqual(
@@ -1416,7 +1553,7 @@ describe('ReactDOMServerHooks', () => {
         container.innerHTML = ReactDOMServer.renderToString(<App />);
 
         suspend = true;
-        const root = ReactDOM.createRoot(container, {hydrate: true});
+        const root = ReactDOM.unstable_createRoot(container, {hydrate: true});
         await ReactTestUtils.act(async () => {
           root.render(<App />);
         });
@@ -1466,7 +1603,9 @@ describe('ReactDOMServerHooks', () => {
 
         // This is the wrong HTML string
         container.innerHTML = '<span></span>';
-        ReactDOM.createRoot(container, {hydrate: true}).render(<App />);
+        ReactDOM.unstable_createRoot(container, {hydrate: true}).render(
+          <App />,
+        );
         expect(() =>
           expect(() => Scheduler.unstable_flushAll()).toThrow(),
         ).toErrorDev([
@@ -1516,7 +1655,7 @@ describe('ReactDOMServerHooks', () => {
         container.innerHTML = ReactDOMServer.renderToString(<App />);
 
         suspend = false;
-        const root = ReactDOM.createRoot(container, {hydrate: true});
+        const root = ReactDOM.unstable_createRoot(container, {hydrate: true});
         await ReactTestUtils.act(async () => {
           root.render(<App />);
         });
@@ -1552,7 +1691,9 @@ describe('ReactDOMServerHooks', () => {
 
         // This is the wrong HTML string
         container.innerHTML = '<span></span>';
-        ReactDOM.createRoot(container, {hydrate: true}).render(<App />);
+        ReactDOM.unstable_createRoot(container, {hydrate: true}).render(
+          <App />,
+        );
         expect(() =>
           expect(() => Scheduler.unstable_flushAll()).toThrow(),
         ).toErrorDev([
@@ -1574,7 +1715,9 @@ describe('ReactDOMServerHooks', () => {
 
         // This is the wrong HTML string
         container.innerHTML = '<span></span>';
-        ReactDOM.createRoot(container, {hydrate: true}).render(<App />);
+        ReactDOM.unstable_createRoot(container, {hydrate: true}).render(
+          <App />,
+        );
         expect(() =>
           expect(() => Scheduler.unstable_flushAll()).toThrow(
             'The object passed back from useOpaqueIdentifier is meant to be passed through to attributes only. ' +
@@ -1603,7 +1746,9 @@ describe('ReactDOMServerHooks', () => {
 
         // This is the wrong HTML string
         container.innerHTML = '<span></span>';
-        ReactDOM.createRoot(container, {hydrate: true}).render(<App />);
+        ReactDOM.unstable_createRoot(container, {hydrate: true}).render(
+          <App />,
+        );
         expect(() =>
           expect(() => Scheduler.unstable_flushAll()).toThrow(
             'The object passed back from useOpaqueIdentifier is meant to be passed through to attributes only. ' +
@@ -1631,7 +1776,9 @@ describe('ReactDOMServerHooks', () => {
         document.body.appendChild(container);
 
         container.innerHTML = ReactDOMServer.renderToString(<App />);
-        ReactDOM.createRoot(container, {hydrate: true}).render(<App />);
+        ReactDOM.unstable_createRoot(container, {hydrate: true}).render(
+          <App />,
+        );
         expect(() =>
           expect(() => Scheduler.unstable_flushAll()).toThrow(
             'The object passed back from useOpaqueIdentifier is meant to be passed through to attributes only. ' +
@@ -1656,7 +1803,9 @@ describe('ReactDOMServerHooks', () => {
         document.body.appendChild(container);
 
         container.innerHTML = ReactDOMServer.renderToString(<App />);
-        ReactDOM.createRoot(container, {hydrate: true}).render(<App />);
+        ReactDOM.unstable_createRoot(container, {hydrate: true}).render(
+          <App />,
+        );
         expect(() =>
           expect(() => Scheduler.unstable_flushAll()).toThrow(
             'The object passed back from useOpaqueIdentifier is meant to be passed through to attributes only. ' +
@@ -1689,17 +1838,30 @@ describe('ReactDOMServerHooks', () => {
 
         container.innerHTML = ReactDOMServer.renderToString(<App />);
 
-        ReactDOM.createRoot(container, {hydrate: true}).render(<App />);
+        ReactDOM.unstable_createRoot(container, {hydrate: true}).render(
+          <App />,
+        );
 
-        expect(() =>
-          expect(() => Scheduler.unstable_flushAll()).toThrow(
+        if (
+          gate(flags => flags.new && flags.deferRenderPhaseUpdateToNextBatch)
+        ) {
+          expect(() => Scheduler.unstable_flushAll()).toErrorDev([
             'The object passed back from useOpaqueIdentifier is meant to be passed through to attributes only. ' +
               'Do not read the value directly.',
-          ),
-        ).toErrorDev([
-          'The object passed back from useOpaqueIdentifier is meant to be passed through to attributes only. ' +
-            'Do not read the value directly.',
-        ]);
+          ]);
+        } else {
+          // In the old reconciler, the error isn't surfaced to the user. That
+          // part isn't important, as long as It warns.
+          expect(() =>
+            expect(() => Scheduler.unstable_flushAll()).toThrow(
+              'The object passed back from useOpaqueIdentifier is meant to be passed through to attributes only. ' +
+                'Do not read the value directly.',
+            ),
+          ).toErrorDev([
+            'The object passed back from useOpaqueIdentifier is meant to be passed through to attributes only. ' +
+              'Do not read the value directly.',
+          ]);
+        }
       });
 
       it('useOpaqueIdentifier throws if you try to add the result as a number in a child component wrapped in a Suspense', async () => {
@@ -1722,17 +1884,30 @@ describe('ReactDOMServerHooks', () => {
 
         container.innerHTML = ReactDOMServer.renderToString(<App />);
 
-        ReactDOM.createRoot(container, {hydrate: true}).render(<App />);
+        ReactDOM.unstable_createRoot(container, {hydrate: true}).render(
+          <App />,
+        );
 
-        expect(() =>
-          expect(() => Scheduler.unstable_flushAll()).toThrow(
+        if (
+          gate(flags => flags.new && flags.deferRenderPhaseUpdateToNextBatch)
+        ) {
+          expect(() => Scheduler.unstable_flushAll()).toErrorDev([
             'The object passed back from useOpaqueIdentifier is meant to be passed through to attributes only. ' +
               'Do not read the value directly.',
-          ),
-        ).toErrorDev([
-          'The object passed back from useOpaqueIdentifier is meant to be passed through to attributes only. ' +
-            'Do not read the value directly.',
-        ]);
+          ]);
+        } else {
+          // In the old reconciler, the error isn't surfaced to the user. That
+          // part isn't important, as long as It warns.
+          expect(() =>
+            expect(() => Scheduler.unstable_flushAll()).toThrow(
+              'The object passed back from useOpaqueIdentifier is meant to be passed through to attributes only. ' +
+                'Do not read the value directly.',
+            ),
+          ).toErrorDev([
+            'The object passed back from useOpaqueIdentifier is meant to be passed through to attributes only. ' +
+              'Do not read the value directly.',
+          ]);
+        }
       });
 
       it('useOpaqueIdentifier with two opaque identifiers on the same page', () => {
@@ -1773,7 +1948,9 @@ describe('ReactDOMServerHooks', () => {
             .getAttribute('aria-labelledby'),
         ).toEqual(serverID);
 
-        ReactDOM.createRoot(container, {hydrate: true}).render(<App />);
+        ReactDOM.unstable_createRoot(container, {hydrate: true}).render(
+          <App />,
+        );
         jest.runAllTimers();
         expect(Scheduler).toHaveYielded([]);
         expect(Scheduler).toFlushAndYield([]);

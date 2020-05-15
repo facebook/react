@@ -32,6 +32,7 @@ export {
   Profiler,
   StrictMode,
   Suspense,
+  unstable_LegacyHidden,
   createElement,
   cloneElement,
   isValidElement,
@@ -39,12 +40,12 @@ export {
   __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED,
   createFactory,
   // exposeConcurrentModeAPIs
-  useTransition,
-  useDeferredValue,
-  SuspenseList,
+  useTransition as unstable_useTransition,
+  useDeferredValue as unstable_useDeferredValue,
+  SuspenseList as unstable_SuspenseList,
   unstable_withSuspenseConfig,
   // enableBlocksAPI
-  block,
+  block as unstable_block,
   unstable_useOpaqueIdentifier,
   // enableDebugTracing
   unstable_DebugTracingMode,

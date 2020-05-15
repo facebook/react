@@ -42,6 +42,7 @@ import {
   DOCUMENT_NODE,
   DOCUMENT_FRAGMENT_NODE,
 } from '../shared/HTMLNodeType';
+import {ensureListeningTo} from './ReactDOMComponent';
 
 import {
   createContainer,
@@ -53,6 +54,8 @@ import {
   ConcurrentRoot,
   LegacyRoot,
 } from 'react-reconciler/src/ReactRootTags';
+
+import {enableModernEventSystem} from 'shared/ReactFeatureFlags';
 
 function ReactDOMRoot(container: Container, options: void | RootOptions) {
   this._internalRoot = createRootImpl(container, ConcurrentRoot, options);
@@ -123,12 +126,22 @@ function createRootImpl(
     (options != null && options.hydrationOptions) || null;
   const root = createContainer(container, tag, hydrate, hydrationCallbacks);
   markContainerAsRoot(root.current, container);
+  const containerNodeType = container.nodeType;
+
   if (hydrate && tag !== LegacyRoot) {
     const doc =
-      container.nodeType === DOCUMENT_NODE
-        ? container
-        : container.ownerDocument;
-    eagerlyTrapReplayableEvents(container, doc);
+      containerNodeType === DOCUMENT_NODE ? container : container.ownerDocument;
+    // We need to cast this because Flow doesn't work
+    // with the hoisted containerNodeType. If we inline
+    // it, then Flow doesn't complain. We intentionally
+    // hoist it to reduce code-size.
+    eagerlyTrapReplayableEvents(container, ((doc: any): Document));
+  } else if (
+    enableModernEventSystem &&
+    containerNodeType !== DOCUMENT_FRAGMENT_NODE &&
+    containerNodeType !== DOCUMENT_NODE
+  ) {
+    ensureListeningTo(container, 'onMouseEnter');
   }
   return root;
 }

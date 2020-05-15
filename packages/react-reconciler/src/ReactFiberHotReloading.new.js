@@ -12,16 +12,15 @@ import type {Fiber} from './ReactInternalTypes';
 import type {FiberRoot} from './ReactInternalTypes';
 import type {Instance} from './ReactFiberHostConfig';
 import type {ReactNodeList} from 'shared/ReactTypes';
-import type {ExpirationTimeOpaque} from './ReactFiberExpirationTime.new';
 
 import {
   flushSync,
   scheduleUpdateOnFiber,
   flushPassiveEffects,
 } from './ReactFiberWorkLoop.new';
-import {updateContainer, syncUpdates} from './ReactFiberReconciler.new';
+import {updateContainer} from './ReactFiberReconciler.new';
 import {emptyContextObject} from './ReactFiberContext.new';
-import {Sync} from './ReactFiberExpirationTime.new';
+import {SyncLane, NoTimestamp} from './ReactFiberLane';
 import {
   ClassComponent,
   FunctionComponent,
@@ -259,7 +258,7 @@ export const scheduleRoot: ScheduleRoot = (
       return;
     }
     flushPassiveEffects();
-    syncUpdates(() => {
+    flushSync(() => {
       updateContainer(element, root, null, null);
     });
   }
@@ -320,7 +319,7 @@ function scheduleFibersWithFamiliesRecursively(
       fiber._debugNeedsRemount = true;
     }
     if (needsRemount || needsRender) {
-      scheduleUpdateOnFiber(fiber, (Sync: ExpirationTimeOpaque));
+      scheduleUpdateOnFiber(fiber, SyncLane, NoTimestamp);
     }
     if (child !== null && !needsRemount) {
       scheduleFibersWithFamiliesRecursively(

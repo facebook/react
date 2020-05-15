@@ -53,6 +53,25 @@ describe('ReactSchedulerIntegration', () => {
     }
   }
 
+  // TODO: Delete this once new API exists in both forks
+  function LegacyHiddenDiv({hidden, children, ...props}) {
+    if (gate(flags => flags.new)) {
+      return (
+        <div hidden={hidden} {...props}>
+          <React.unstable_LegacyHidden mode={hidden ? 'hidden' : 'visible'}>
+            {children}
+          </React.unstable_LegacyHidden>
+        </div>
+      );
+    } else {
+      return (
+        <div hidden={hidden} {...props}>
+          {children}
+        </div>
+      );
+    }
+  }
+
   it('flush sync has correct priority', () => {
     function ReadPriority() {
       Scheduler.unstable_yieldValue(
@@ -351,6 +370,7 @@ describe('ReactSchedulerIntegration', () => {
     expect(Scheduler).toHaveYielded(['A', 'B', 'C']);
   });
 
+  // @gate enableLegacyHiddenType
   it('idle updates are not blocked by offscreen work', async () => {
     function Text({text}) {
       Scheduler.unstable_yieldValue(text);
@@ -361,9 +381,9 @@ describe('ReactSchedulerIntegration', () => {
       return (
         <>
           <Text text={`Visible: ` + label} />
-          <div hidden={true}>
+          <LegacyHiddenDiv hidden={true}>
             <Text text={`Hidden: ` + label} />
-          </div>
+          </LegacyHiddenDiv>
         </>
       );
     }

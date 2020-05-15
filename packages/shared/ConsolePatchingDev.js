@@ -19,6 +19,7 @@ let prevWarn;
 let prevError;
 
 function disabledLog() {}
+disabledLog.__reactDisabledLog = true;
 
 export function disableLogs(): void {
   if (__DEV__) {

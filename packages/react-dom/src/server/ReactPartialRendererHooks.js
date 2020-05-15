@@ -8,8 +8,6 @@
  */
 
 import type {Dispatcher as DispatcherType} from 'react-reconciler/src/ReactInternalTypes';
-import type {ThreadID} from './ReactThreadIDAllocator';
-import type {OpaqueIDType} from 'react-reconciler/src/ReactFiberHostConfig';
 
 import type {
   MutableSource,
@@ -19,9 +17,9 @@ import type {
   ReactEventResponderListener,
 } from 'shared/ReactTypes';
 import type {SuspenseConfig} from 'react-reconciler/src/ReactFiberSuspenseConfig';
+import type PartialRenderer from './ReactPartialRenderer';
 
 import {validateContextBounds} from './ReactPartialRendererContext';
-import {makeServerId} from '../client/ReactDOMHostConfig';
 
 import invariant from 'shared/invariant';
 import is from 'shared/objectIs';
@@ -48,6 +46,8 @@ type Hook = {|
 type TimeoutConfig = {|
   timeoutMs: number,
 |};
+
+type OpaqueIDType = string;
 
 let currentlyRenderingComponent: Object | null = null;
 let firstWorkInProgressHook: Hook | null = null;
@@ -226,7 +226,7 @@ function readContext<T>(
   context: ReactContext<T>,
   observedBits: void | number | boolean,
 ): T {
-  const threadID = currentThreadID;
+  const threadID = currentPartialRenderer.threadID;
   validateContextBounds(context, threadID);
   if (__DEV__) {
     if (isInHookUserCodeInDev) {
@@ -249,7 +249,7 @@ function useContext<T>(
     currentHookNameInDev = 'useContext';
   }
   resolveCurrentlyRenderingComponent();
-  const threadID = currentThreadID;
+  const threadID = currentPartialRenderer.threadID;
   validateContextBounds(context, threadID);
   return context[threadID];
 }
@@ -494,15 +494,18 @@ function useTransition(
 }
 
 function useOpaqueIdentifier(): OpaqueIDType {
-  return makeServerId();
+  return (
+    (currentPartialRenderer.identifierPrefix || '') +
+    'R:' +
+    (currentPartialRenderer.uniqueID++).toString(36)
+  );
 }
 
 function noop(): void {}
 
-export let currentThreadID: ThreadID = 0;
-
-export function setCurrentThreadID(threadID: ThreadID) {
-  currentThreadID = threadID;
+export let currentPartialRenderer: PartialRenderer = (null: any);
+export function setCurrentPartialRenderer(renderer: PartialRenderer) {
+  currentPartialRenderer = renderer;
 }
 
 export const Dispatcher: DispatcherType = {

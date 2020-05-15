@@ -2143,6 +2143,7 @@ export function attach(
       _debugOwner,
       _debugSource,
       stateNode,
+      key,
       memoizedProps,
       memoizedState,
       tag,
@@ -2299,6 +2300,8 @@ export function attach(
 
       // Does the component have legacy context attached to it.
       hasLegacyContext,
+
+      key: key != null ? key : null,
 
       displayName: getDisplayNameForFiber(fiber),
       type: elementType,

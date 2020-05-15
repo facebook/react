@@ -27,6 +27,7 @@ export const warnAboutDeprecatedLifecycles = true;
 export const enableDeprecatedFlareAPI = false;
 export const enableFundamentalAPI = false;
 export const enableScopeAPI = false;
+export const enableCreateEventHandleAPI = false;
 export const warnAboutUnmockedScheduler = true;
 export const enableSuspenseCallback = false;
 export const warnAboutDefaultPropsOnFunctionComponents = false;
@@ -45,10 +46,9 @@ export const enableComponentStackLocations = false;
 export const enableLegacyFBSupport = false;
 export const enableFilterEmptyStringAttributesDOM = false;
 
-// Internal-only attempt to debug a React Native issue. See D20130868.
-export const throwEarlyForMysteriousError = true;
-
 export const enableNewReconciler = false;
+export const deferRenderPhaseUpdateToNextBatch = true;
+export const disableHiddenPropDeprioritization = true;
 
 // Flow magic to verify the exports of this file match the original version.
 // eslint-disable-next-line no-unused-vars

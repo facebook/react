@@ -9,6 +9,7 @@
 
 import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
 import type {ReactScopeInstance} from 'shared/ReactTypes';
+import type {ReactDOMEventHandleListener} from '../shared/ReactDOMTypes';
 import type {
   Container,
   TextInstance,
@@ -37,6 +38,7 @@ const internalInstanceKey = '__reactFiber$' + randomKey;
 const internalPropsKey = '__reactProps$' + randomKey;
 const internalContainerInstanceKey = '__reactContainer$' + randomKey;
 const internalEventHandlersKey = '__reactEvents$' + randomKey;
+const internalEventHandlerListenersKey = '__reactListeners$' + randomKey;
 
 export type ElementListenerMap = Map<
   DOMTopLevelEventType | string,
@@ -216,4 +218,17 @@ export function getFiberFromScopeInstance(
     return (scope: any)[internalInstanceKey] || null;
   }
   return null;
+}
+
+export function setEventHandlerListeners(
+  scope: EventTarget | ReactScopeInstance,
+  listeners: Set<ReactDOMEventHandleListener>,
+): void {
+  (scope: any)[internalEventHandlerListenersKey] = listeners;
+}
+
+export function getEventHandlerListeners(
+  scope: EventTarget | ReactScopeInstance,
+): null | Set<ReactDOMEventHandleListener> {
+  return (scope: any)[internalEventHandlerListenersKey] || null;
 }

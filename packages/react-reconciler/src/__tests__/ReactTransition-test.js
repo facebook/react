@@ -25,7 +25,7 @@ describe('ReactTransition', () => {
     ReactNoop = require('react-noop-renderer');
     Scheduler = require('scheduler');
     useState = React.useState;
-    useTransition = React.useTransition;
+    useTransition = React.unstable_useTransition;
     Suspense = React.Suspense;
     act = ReactNoop.act;
   });

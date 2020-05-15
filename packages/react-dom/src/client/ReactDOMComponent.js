@@ -269,7 +269,7 @@ if (__DEV__) {
   };
 }
 
-function ensureListeningTo(
+export function ensureListeningTo(
   rootContainerInstance: Element | Node,
   registrationName: string,
 ): void {
@@ -280,7 +280,7 @@ function ensureListeningTo(
       rootContainerInstance.nodeType === COMMENT_NODE
         ? rootContainerInstance.parentNode
         : rootContainerInstance;
-    // Containers can only ever be element nodes. We do not
+    // Containers should only ever be element nodes. We do not
     // want to register events to document fragments or documents
     // with the modern plugin event system.
     invariant(
