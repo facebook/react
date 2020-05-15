@@ -363,8 +363,7 @@ describe('Store', () => {
       );
 
       const container = document.createElement('div');
-      const root = ReactDOM.
-      createRoot(container);
+       const root = ReactDOM.createRoot(container);
       act(() => {
         root.render(<Wrapper shouldSuspense={true} />);
       });
