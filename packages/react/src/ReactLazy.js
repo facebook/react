@@ -10,6 +10,7 @@
 import type {Wakeable, Thenable} from 'shared/ReactTypes';
 
 import {REACT_LAZY_TYPE} from 'shared/ReactSymbols';
+import invariant from 'shared/invariant';
 
 const Uninitialized = -1;
 const Pending = 0;
@@ -52,6 +53,10 @@ function lazyInitializer<T>(payload: Payload<T>): T {
   if (payload._status === Uninitialized) {
     const ctor = payload._result;
     const thenable = ctor();
+    invariant(
+      thenable !== undefined && typeof thenable.then === 'function',
+      'lazy: Expects to receive an async function.',
+    );
     // Transition to the next state.
     const pending: PendingPayload = (payload: any);
     pending._status = Pending;
@@ -59,7 +64,7 @@ function lazyInitializer<T>(payload: Payload<T>): T {
     thenable.then(
       moduleObject => {
         if (payload._status === Pending) {
-          const defaultExport = moduleObject.default;
+          const defaultExport = moduleObject && moduleObject.default;
           if (__DEV__) {
             if (defaultExport === undefined) {
               console.error(

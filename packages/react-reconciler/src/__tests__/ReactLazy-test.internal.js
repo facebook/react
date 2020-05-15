@@ -187,6 +187,39 @@ describe('ReactLazy', () => {
     expect(Scheduler).toFlushAndThrow('Element type is invalid');
   });
 
+  it('does not support an async function that returns an empty object', async () => {
+    spyOnDev(console, 'error');
+
+    const Lazy = lazy(async () => {});
+
+    ReactTestRenderer.create(
+      <Suspense fallback={'Loading...'}>
+        <Lazy />
+      </Suspense>,
+    );
+
+    await Promise.resolve();
+
+    if (__DEV__) {
+      expect(console.error).toHaveBeenCalledTimes(1);
+      expect(console.error.calls.argsFor(0)[0]).toContain(
+        'Expected the result of a dynamic import() call',
+      );
+    }
+  });
+
+  it('does not support a regular function', () => {
+    const Lazy = lazy(() => {});
+
+    expect(() =>
+      ReactTestRenderer.create(
+        <Suspense fallback={'Loading...'}>
+          <Lazy />
+        </Suspense>,
+      ),
+    ).toThrowError('lazy: Expects to receive an async function.');
+  });
+
   it('throws if promise rejects', async () => {
     const LazyText = lazy(async () => {
       throw new Error('Bad network');
