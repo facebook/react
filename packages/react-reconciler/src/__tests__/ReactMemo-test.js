@@ -502,16 +502,30 @@ describe('memo', () => {
       const MemoComponent = React.memo(function Component(props) {
         return <div {...props} />;
       });
-
       MemoComponent.displayName = 'Foo';
-
       MemoComponent.propTypes = {
-        optional: PropTypes.string,
         required: PropTypes.string.isRequired,
       };
 
-      MemoComponent.defaultProps = {
-        optional: 'default',
+      expect(() =>
+        ReactNoop.render(<MemoComponent optional="foo" />),
+      ).toErrorDev(
+        'Warning: Failed prop type: The prop `required` is marked as required in ' +
+          '`Foo`, but its value is `undefined`.\n' +
+          '    in Foo (at **)',
+      );
+    });
+
+    it('should honor a inner displayName if set on the wrapped function', () => {
+      function Component(props) {
+        return <div {...props} />;
+      }
+      Component.displayName = 'Foo';
+
+      const MemoComponent = React.memo(Component);
+      MemoComponent.displayName = 'Bar';
+      MemoComponent.propTypes = {
+        required: PropTypes.string.isRequired,
       };
 
       expect(() =>
