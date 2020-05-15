@@ -627,6 +627,6 @@ exports[`Store should show the right display names for special component types 1
     ▾ <Suspense>
         <MyComponent5>
       <Baz> [withFoo][withBar]
-      <Baz> [withFoo][withBar][Memo]
-      <Baz> [withFoo][withBar][ForwardRef]
+      <Baz> [Memo][withFoo][withBar]
+      <Baz> [ForwardRef][withFoo][withBar]
 `;
