@@ -871,6 +871,16 @@ describe('Store', () => {
     const MyComponent5 = (props, ref) => null;
     const LazyComponent = React.lazy(() => fakeImport(MyComponent5));
 
+    const FakeHigherOrderComponent = () => null;
+    FakeHigherOrderComponent.displayName = 'withFoo(withBar(Baz))';
+
+    const MemoizedFakeHigherOrderComponent = React.memo(
+      FakeHigherOrderComponent,
+    );
+    const ForwardRefFakeHigherOrderComponent = React.forwardRef(
+      FakeHigherOrderComponent,
+    );
+
     const App = () => (
       <React.Fragment>
         <MyComponent />
@@ -882,6 +892,9 @@ describe('Store', () => {
         <React.Suspense fallback="Loading...">
           <LazyComponent />
         </React.Suspense>
+        <FakeHigherOrderComponent />
+        <MemoizedFakeHigherOrderComponent />
+        <ForwardRefFakeHigherOrderComponent />
       </React.Fragment>
     );
 
