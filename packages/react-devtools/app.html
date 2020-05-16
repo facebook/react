@@ -30,10 +30,6 @@
         margin: 0;
       }
 
-      .input-container {
-        position: relative;
-      }
-
       .input {
         display: block;
         font-weight: 100;
@@ -41,18 +37,6 @@
         border: 1px solid #aaa;
         background-color: #fff;
         color: #666;
-        position: relative;
-        left: -8px;
-      }
-
-      .copy-btn {
-        position: absolute;
-        cursor: pointer;
-        top: 0px;
-        right: -10px;
-      }
-      .copy-btn:active {
-        opacity: 0.5;
       }
 
       .link {
@@ -131,15 +115,11 @@
         <div class="box">
           <div class="box-header">React DOM</div>
           <div class="box-content">
-            Add one of the following:
-            <div class="input-container">
-              <span class="input" contenteditable="true" id="localhost"></span>
-              <span class="copy-btn" id="copy-localhost" title="copy">&#x1f4cb;</span>
+            <div id="box-content-status">
+              Add one of the following (click to copy):
             </div>
-            <div class="input-container">
-              <span class="input" contenteditable="true" id="byip"></span>
-              <span class="copy-btn" id="copy-byip" title="copy">&#x1f4cb;</span>
-            </div>
+            <span class="input" contenteditable="true" id="localhost"></span>
+            <span class="input" contenteditable="true" id="byip"></span>
             to the top of the page you want to debug,
             <br />
             <strong>before</strong> importing React DOM.
@@ -149,12 +129,14 @@
       </div>
     </div>
     <script>
-      const {clipboard} = require('electron');
+      const {clipboard} = require("electron");
       const port = process.env.PORT || 8097;
       const localIp = require("ip").address();
       const $ = document.querySelector.bind(document);
+      const boxContentInitialStatus = $("#box-content-status").textContent;
+      let boxContentStatusID;
 
-      function selectAll(event) {
+      function selectAllAndCopy(event) {
         const element = event.target;
         if (window.getSelection) {
           const selection = window.getSelection();
@@ -162,6 +144,13 @@
           range.selectNodeContents(element);
           selection.removeAllRanges();
           selection.addRange(range);
+          clipboard.writeText(event.target.textContent);
+          const $boxContentStatus = $("#box-content-status");
+          $boxContentStatus.textContent = "Copied to clipboard";
+          if (boxContentStatusID) clearTimeout(boxContentStatusID);
+          boxContentStatusID = setTimeout(() => {
+            $boxContentStatus.textContent = boxContentInitialStatus;
+          }, 1000);
         }
       }
 
@@ -173,23 +162,13 @@
 
       const $localhost = $("#localhost");
       $localhost.innerText = `<script src="http://localhost:${port}"></` + 'script>';
-      $localhost.addEventListener('click', selectAll);
-      $localhost.addEventListener('focus', selectAll);
+      $localhost.addEventListener('click', selectAllAndCopy);
+      $localhost.addEventListener('focus', selectAllAndCopy);
 
       const $byIp = $("#byip");
       $byIp.innerText = `<script src="http://${localIp}:${port}"></` + 'script>';
-      $byIp.addEventListener('click', selectAll);
-      $byIp.addEventListener('focus', selectAll);
-
-      function copyPreviousElementText(event) {
-        const prevElemSibling = event.target.previousElementSibling;
-        clipboard.writeText(prevElemSibling.textContent);
-      }
-
-      const $copyLocalhost = $("#copy-localhost");
-      $copyLocalhost.addEventListener('click', copyPreviousElementText);
-      const $copyByIp = $("#copy-byip");
-      $copyByIp.addEventListener('click', copyPreviousElementText);
+      $byIp.addEventListener('click', selectAllAndCopy);
+      $byIp.addEventListener('focus', selectAllAndCopy);
 
       let devtools;
       try {
