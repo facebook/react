@@ -100,7 +100,7 @@
   <body>
     <div id="container" class="container" style="-webkit-user-select: none; -webkit-app-region: drag;">
       <div class="waiting-header">Waiting for React to connect…</div>
-      <div class="boxes">
+      <div class="boxes" style="-webkit-app-region: none;">
         <div class="box">
           <div class="box-header">React Native</div>
           <div class="box-content">
@@ -133,7 +133,8 @@
       const port = process.env.PORT || 8097;
       const localIp = require("ip").address();
       const $ = document.querySelector.bind(document);
-      const boxContentInitialStatus = $("#box-content-status").textContent;
+      const $boxContentStatus = $("#box-content-status");
+      const boxContentInitialStatus = $boxContentStatus.textContent;
       let boxContentStatusID;
 
       function selectAllAndCopy(event) {
@@ -145,7 +146,6 @@
           selection.removeAllRanges();
           selection.addRange(range);
           clipboard.writeText(event.target.textContent);
-          const $boxContentStatus = $("#box-content-status");
           $boxContentStatus.textContent = "Copied to clipboard";
           if (boxContentStatusID) clearTimeout(boxContentStatusID);
           boxContentStatusID = setTimeout(() => {
