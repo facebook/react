@@ -104,6 +104,9 @@ function createPanelIfReactLoaded() {
         bridge.addListener('syncSelectionToNativeElementsPanel', () => {
           setBrowserSelectionFromReact();
         });
+        bridge.addListener('syncContextMenuTargetFormBrowser', () => {
+          setReactSelectionFromContextMenuTarget();
+        });
 
         // This flag lets us tip the Store off early that we expect to be profiling.
         // This avoids flashing a temporary "Profiling not supported" message in the Profiler tab,
@@ -285,6 +288,10 @@ function createPanelIfReactLoaded() {
         );
       }
 
+      function setReactSelectionFromContextMenuTarget() {
+        bridge.send('syncSelectionFromNativeElementsPanel');
+      }
+
       setReactSelectionFromBrowser();
       chrome.devtools.panels.elements.onSelectionChanged.addListener(() => {
         setReactSelectionFromBrowser();
@@ -299,6 +306,7 @@ function createPanelIfReactLoaded() {
         'panel.html',
         extensionPanel => {
           extensionPanel.onShown.addListener(panel => {
+            bridge.send('reactContextMenu', {display: true});
             if (needsToSyncElementSelection) {
               needsToSyncElementSelection = false;
               bridge.send('syncSelectionFromNativeElementsPanel');
@@ -318,6 +326,7 @@ function createPanelIfReactLoaded() {
             }
           });
           extensionPanel.onHidden.addListener(panel => {
+            bridge.send('reactContextMenu', {display: false});
             // TODO: Stop highlighting and stuff.
           });
         },

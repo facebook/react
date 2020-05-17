@@ -78,6 +78,27 @@ function setIconAndPopup(reactBuildType, tabId) {
   });
 }
 
+function toggleContextMenu(display) {
+  if (display) {
+    removeContextMenu();
+    chrome.contextMenus.create({
+      id: 'react-inspect-component',
+      title: 'Inspect React Component',
+      contexts: ['all']
+    });
+
+    chrome.contextMenus.onClicked.addListener((info, tab) => {
+      ports[tab.id]['content-script'].postMessage({reactContextMenu: info.menuItemId});
+    });
+  } else {
+    removeContextMenu();
+  }
+}
+
+function removeContextMenu() {
+  chrome.contextMenus.removeAll();
+}
+
 // Listen to URL changes on the active tab and reset the DevTools icon.
 // This prevents non-disabled icons from sticking in Firefox.
 // Don't listen to this event in Chrome though.
@@ -110,6 +131,9 @@ chrome.runtime.onMessage.addListener((request, sender) => {
       }
 
       setIconAndPopup(reactBuildType, sender.tab.id);
+    }
+    if (request.event === 'reactContextMenu' && request.payload) {
+      toggleContextMenu(request.payload.display);
     }
   }
 });

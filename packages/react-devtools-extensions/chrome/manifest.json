@@ -40,7 +40,7 @@
     "persistent": false
   },
 
-  "permissions": ["file:///*", "http://*/*", "https://*/*"],
+  "permissions": ["file:///*", "http://*/*", "https://*/*", "contextMenus"],
 
   "content_scripts": [
     {
