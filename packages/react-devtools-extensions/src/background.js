@@ -84,11 +84,13 @@ function toggleContextMenu(display) {
     chrome.contextMenus.create({
       id: 'react-inspect-component',
       title: 'Inspect React Component',
-      contexts: ['all']
+      contexts: ['all'],
     });
 
     chrome.contextMenus.onClicked.addListener((info, tab) => {
-      ports[tab.id]['content-script'].postMessage({reactContextMenu: info.menuItemId});
+      ports[tab.id]['content-script'].postMessage({
+        reactContextMenu: info.menuItemId,
+      });
     });
   } else {
     removeContextMenu();

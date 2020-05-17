@@ -43,7 +43,8 @@ function setup(hook) {
         ) {
           return;
         }
-        if (event.data.payload.reactContextMenu) this.send('syncContextMenuTargetFormBrowser');
+        if (event.data.payload.reactContextMenu)
+          this.send('syncContextMenuTargetFormBrowser');
         fn(event.data.payload);
       };
       window.addEventListener('message', listener);
