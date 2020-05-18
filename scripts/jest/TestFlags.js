@@ -65,13 +65,17 @@ function getTestFlags() {
   return new Proxy(
     {
       // Feature flag aliases
-      old: featureFlags.enableNewReconciler === true,
+      old: featureFlags.enableNewReconciler === false,
       new: featureFlags.enableNewReconciler === true,
 
       channel: releaseChannel,
       modern: releaseChannel === 'modern',
       classic: releaseChannel === 'classic',
       www,
+
+      // Using this more specific flag so it's easier to clean up later
+      enableLegacyHiddenType:
+        featureFlags.enableNewReconciler === false || __EXPERIMENTAL__,
 
       ...featureFlags,
       ...environmentFlags,

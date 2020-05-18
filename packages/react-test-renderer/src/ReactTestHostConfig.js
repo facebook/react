@@ -52,13 +52,11 @@ export opaque type OpaqueIDType =
       valueOf: () => string | void,
     };
 
-export type ReactListenerEvent = Object;
-export type ReactListenerMap = Object;
-export type ReactListener = Object;
 export type RendererInspectionConfig = $ReadOnly<{||}>;
 
 export * from 'react-reconciler/src/ReactFiberHostConfigWithNoPersistence';
 export * from 'react-reconciler/src/ReactFiberHostConfigWithNoHydration';
+export * from 'react-reconciler/src/ReactFiberHostConfigWithNoTestSelectors';
 
 const EVENT_COMPONENT_CONTEXT = {};
 const NO_CONTEXT = {};
@@ -129,6 +127,10 @@ export function removeChild(
   parentInstance.children.splice(index, 1);
 }
 
+export function clearContainer(container: Container): void {
+  container.children.splice(0);
+}
+
 export function getRootHostContext(
   rootContainerInstance: Container,
 ): HostContext {
@@ -143,8 +145,9 @@ export function getChildHostContext(
   return NO_CONTEXT;
 }
 
-export function prepareForCommit(containerInfo: Container): void {
+export function prepareForCommit(containerInfo: Container): null | Object {
   // noop
+  return null;
 }
 
 export function resetAfterCommit(containerInfo: Container): void {
@@ -384,7 +387,7 @@ export function getInstanceFromNode(mockNode: Object) {
   return null;
 }
 
-export function beforeRemoveInstance(instance: any) {
+export function removeInstanceEventHandles(instance: any) {
   // noop
 }
 
@@ -407,11 +410,6 @@ export function makeClientIdInDEV(warnOnAccessInDEV: () => void): OpaqueIDType {
   };
 }
 
-let serverId: number = 0;
-export function makeServerId(): OpaqueIDType {
-  return 's_' + (serverId++).toString(36);
-}
-
 export function isOpaqueHydratingObject(value: mixed): boolean {
   return (
     value !== null &&
@@ -430,18 +428,26 @@ export function makeOpaqueHydratingObject(
   };
 }
 
-export function registerEvent(event: any, rootContainerInstance: Container) {
-  throw new Error('Not yet implemented.');
+export function beforeActiveInstanceBlur() {
+  // noop
 }
 
-export function mountEventListener(listener: any) {
-  throw new Error('Not yet implemented.');
+export function afterActiveInstanceBlur() {
+  // noop
 }
 
-export function unmountEventListener(listener: any) {
-  throw new Error('Not yet implemented.');
+export function preparePortalMount(portalInstance: Instance): void {
+  // noop
 }
 
-export function validateEventListenerTarget(target: any, listener: any) {
-  throw new Error('Not yet implemented.');
+export function prepareScopeUpdate(scopeInstance: Object, inst: Object): void {
+  nodeToInstanceMap.set(scopeInstance, inst);
+}
+
+export function removeScopeEventHandles(scopeInstance: Object): void {
+  nodeToInstanceMap.delete(scopeInstance);
+}
+
+export function getInstanceFromScope(scopeInstance: Object): null | Object {
+  return nodeToInstanceMap.get(scopeInstance) || null;
 }

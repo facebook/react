@@ -398,7 +398,7 @@ describe('Concurrent Mode', () => {
     }
 
     const container = document.createElement('div');
-    const root = ReactDOM.createRoot(container);
+    const root = ReactDOM.unstable_createRoot(container);
     root.render(<AsyncRoot />);
     expect(() => Scheduler.unstable_flushAll()).toErrorDev(
       [
@@ -454,7 +454,7 @@ Please update the following components: AsyncRoot`,
     }
 
     const container = document.createElement('div');
-    const root = ReactDOM.createRoot(container);
+    const root = ReactDOM.unstable_createRoot(container);
     root.render(<AsyncRoot />);
 
     expect(() => {
@@ -533,7 +533,7 @@ Please update the following components: Parent`,
     }
 
     const container = document.createElement('div');
-    const root = ReactDOM.createRoot(container);
+    const root = ReactDOM.unstable_createRoot(container);
     root.render(<AsyncRoot foo={true} />);
     expect(() =>
       Scheduler.unstable_flushAll(),

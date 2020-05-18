@@ -337,17 +337,9 @@ describe('ProfilerContext', () => {
     await utils.actAsync(() => context.selectFiber(parentID, 'Parent'));
     expect(selectedElementID).toBe(parentID);
 
-    // We expect a "no element found" warning.
-    // Let's hide it from the test console though.
-    spyOn(console, 'warn');
-
     // Select an unmounted element and verify no Components tab selection doesn't change.
     await utils.actAsync(() => context.selectFiber(childID, 'Child'));
     expect(selectedElementID).toBe(parentID);
-
-    expect(console.warn).toHaveBeenCalledWith(
-      `No element found with id "${childID}"`,
-    );
 
     done();
   });

@@ -22,9 +22,8 @@ describe('ReactIncrementalErrorReplay-test', () => {
     // This is the method we're going to test.
     // If this is no longer used, you can delete this test file.;
 
-    const assignFiberPropertiesInDEV = require('shared/ReactFeatureFlags')
-      ? // TODO: Update this to point to the new module, once it exists
-        require('../ReactFiber.old').assignFiberPropertiesInDEV
+    const assignFiberPropertiesInDEV = gate(flags => flags.new)
+      ? require('../ReactFiber.new').assignFiberPropertiesInDEV
       : require('../ReactFiber.old').assignFiberPropertiesInDEV;
 
     // Get a real fiber.

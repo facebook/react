@@ -10,10 +10,12 @@
 import ReactVersion from 'shared/ReactVersion';
 import {
   REACT_FRAGMENT_TYPE,
+  REACT_DEBUG_TRACING_MODE_TYPE,
   REACT_PROFILER_TYPE,
   REACT_STRICT_MODE_TYPE,
   REACT_SUSPENSE_TYPE,
   REACT_SUSPENSE_LIST_TYPE,
+  REACT_LEGACY_HIDDEN_TYPE,
 } from 'shared/ReactSymbols';
 
 import {Component, PureComponent} from './ReactBaseClasses';
@@ -96,6 +98,7 @@ export {
   REACT_FRAGMENT_TYPE as Fragment,
   REACT_PROFILER_TYPE as Profiler,
   REACT_STRICT_MODE_TYPE as StrictMode,
+  REACT_DEBUG_TRACING_MODE_TYPE as unstable_DebugTracingMode,
   REACT_SUSPENSE_TYPE as Suspense,
   createElement,
   cloneElement,
@@ -108,6 +111,7 @@ export {
   useTransition,
   useDeferredValue,
   REACT_SUSPENSE_LIST_TYPE as SuspenseList,
+  REACT_LEGACY_HIDDEN_TYPE as unstable_LegacyHidden,
   withSuspenseConfig as unstable_withSuspenseConfig,
   // enableBlocksAPI
   block,

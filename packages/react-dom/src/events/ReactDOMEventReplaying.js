@@ -10,7 +10,7 @@
 import type {AnyNativeEvent} from 'legacy-events/PluginModuleType';
 import type {Container, SuspenseInstance} from '../client/ReactDOMHostConfig';
 import type {DOMTopLevelEventType} from 'legacy-events/TopLevelEventTypes';
-import type {ElementListenerMap} from '../events/DOMEventListenerMap';
+import type {ElementListenerMap} from '../client/ReactDOMComponentTree';
 import type {EventSystemFlags} from './EventSystemFlags';
 import type {FiberRoot} from 'react-reconciler/src/ReactInternalTypes';
 
@@ -30,14 +30,11 @@ import {
   getContainerFromFiber,
   getSuspenseInstanceFromFiber,
 } from 'react-reconciler/src/ReactFiberTreeReflection';
-import {
-  attemptToDispatchEvent,
-  addResponderEventSystemEvent,
-} from './ReactDOMEventListener';
-import {getListenerMapForElement} from './DOMEventListenerMap';
+import {attemptToDispatchEvent} from './ReactDOMEventListener';
 import {
   getInstanceFromNode,
   getClosestInstanceFromNode,
+  getEventListenerMap,
 } from '../client/ReactDOMComponentTree';
 import {unsafeCastDOMTopLevelTypeToString} from 'legacy-events/TopLevelEventTypes';
 import {HostRoot, SuspenseComponent} from 'react-reconciler/src/ReactWorkTags';
@@ -121,6 +118,7 @@ import {
 import {IS_REPLAYED, PLUGIN_EVENT_SYSTEM} from './EventSystemFlags';
 import {legacyListenToTopLevelEvent} from './DOMLegacyEventPluginSystem';
 import {listenToTopLevelEvent} from './DOMModernPluginEventSystem';
+import {addResponderEventSystemEvent} from './DeprecatedDOMEventResponderSystem';
 
 type QueuedReplayableEvent = {|
   blockedOn: null | Container | SuspenseInstance,
@@ -258,10 +256,10 @@ export function eagerlyTrapReplayableEvents(
   container: Container,
   document: Document,
 ) {
-  const listenerMapForDoc = getListenerMapForElement(document);
+  const listenerMapForDoc = getEventListenerMap(document);
   let listenerMapForContainer;
   if (enableModernEventSystem) {
-    listenerMapForContainer = getListenerMapForElement(container);
+    listenerMapForContainer = getEventListenerMap(container);
   }
   // Discrete
   discreteReplayableEvents.forEach(topLevelType => {

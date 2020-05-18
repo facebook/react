@@ -14,10 +14,10 @@ export {
   __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED,
   version,
   createRoot,
+  createRoot as unstable_createRoot,
   createBlockingRoot,
-  unstable_discreteUpdates,
-  unstable_flushDiscreteUpdates,
+  createBlockingRoot as unstable_createBlockingRoot,
   unstable_flushControlled,
   unstable_scheduleHydration,
-  unstable_useEvent,
+  unstable_createEventHandle,
 } from './src/client/ReactDOM';

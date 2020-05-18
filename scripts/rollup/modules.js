@@ -15,6 +15,7 @@ const importSideEffects = Object.freeze({
   'scheduler/tracing': HAS_NO_SIDE_EFFECTS_ON_IMPORT,
   'react-dom/server': HAS_NO_SIDE_EFFECTS_ON_IMPORT,
   'react/jsx-dev-runtime': HAS_NO_SIDE_EFFECTS_ON_IMPORT,
+  'react-fetch/node': HAS_NO_SIDE_EFFECTS_ON_IMPORT,
 });
 
 // Bundles exporting globals that other modules rely on.

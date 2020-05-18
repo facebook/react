@@ -32,6 +32,7 @@ export {
   Profiler,
   StrictMode,
   Suspense,
+  unstable_LegacyHidden,
   createElement,
   cloneElement,
   isValidElement,
@@ -39,16 +40,22 @@ export {
   __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED,
   // exposeConcurrentModeAPIs
   useTransition,
+  useTransition as unstable_useTransition,
   useDeferredValue,
+  useDeferredValue as unstable_useDeferredValue,
   SuspenseList,
+  SuspenseList as unstable_SuspenseList,
   unstable_withSuspenseConfig,
   // enableBlocksAPI
   block,
+  block as unstable_block,
   // enableDeprecatedFlareAPI
   DEPRECATED_useResponder,
   DEPRECATED_createResponder,
   // enableScopeAPI
   unstable_createScope,
   unstable_useOpaqueIdentifier,
+  // enableDebugTracing
+  unstable_DebugTracingMode,
 } from './src/React';
 export {jsx, jsxs, jsxDEV} from './src/jsx/ReactJSX';

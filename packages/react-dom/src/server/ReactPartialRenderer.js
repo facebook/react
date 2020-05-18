@@ -28,6 +28,7 @@ import {
 } from 'shared/ReactFeatureFlags';
 
 import {
+  REACT_DEBUG_TRACING_MODE_TYPE,
   REACT_FORWARD_REF_TYPE,
   REACT_FRAGMENT_TYPE,
   REACT_STRICT_MODE_TYPE,
@@ -41,6 +42,7 @@ import {
   REACT_MEMO_TYPE,
   REACT_FUNDAMENTAL_TYPE,
   REACT_SCOPE_TYPE,
+  REACT_LEGACY_HIDDEN_TYPE,
 } from 'shared/ReactSymbols';
 
 import {
@@ -59,8 +61,8 @@ import {
   prepareToUseHooks,
   finishHooks,
   Dispatcher,
-  currentThreadID,
-  setCurrentThreadID,
+  currentPartialRenderer,
+  setCurrentPartialRenderer,
 } from './ReactPartialRendererHooks';
 import {
   Namespaces,
@@ -77,6 +79,10 @@ import warnValidStyle from '../shared/warnValidStyle';
 import {validateProperties as validateARIAProperties} from '../shared/ReactDOMInvalidARIAHook';
 import {validateProperties as validateInputProperties} from '../shared/ReactDOMNullInputValuePropHook';
 import {validateProperties as validateUnknownProperties} from '../shared/ReactDOMUnknownPropertyHook';
+
+export type ServerOptions = {
+  identifierPrefix?: string,
+};
 
 // Based on reading the React.Children implementation. TODO: type this somewhere?
 type ReactNode = string | number | ReactElement;
@@ -725,7 +731,14 @@ class ReactDOMServerRenderer {
   contextValueStack: Array<any>;
   contextProviderStack: ?Array<ReactProvider<any>>; // DEV-only
 
-  constructor(children: mixed, makeStaticMarkup: boolean) {
+  uniqueID: number;
+  identifierPrefix: string;
+
+  constructor(
+    children: mixed,
+    makeStaticMarkup: boolean,
+    options?: ServerOptions,
+  ) {
     const flatChildren = flattenTopLevelChildren(children);
 
     const topFrame: Frame = {
@@ -753,6 +766,11 @@ class ReactDOMServerRenderer {
     this.contextIndex = -1;
     this.contextStack = [];
     this.contextValueStack = [];
+
+    // useOpaqueIdentifier ID
+    this.uniqueID = 0;
+    this.identifierPrefix = (options && options.identifierPrefix) || '';
+
     if (__DEV__) {
       this.contextProviderStack = [];
     }
@@ -836,8 +854,8 @@ class ReactDOMServerRenderer {
       return null;
     }
 
-    const prevThreadID = currentThreadID;
-    setCurrentThreadID(this.threadID);
+    const prevPartialRenderer = currentPartialRenderer;
+    setCurrentPartialRenderer(this);
     const prevDispatcher = ReactCurrentDispatcher.current;
     ReactCurrentDispatcher.current = Dispatcher;
     try {
@@ -934,7 +952,7 @@ class ReactDOMServerRenderer {
       return out[0];
     } finally {
       ReactCurrentDispatcher.current = prevDispatcher;
-      setCurrentThreadID(prevThreadID);
+      setCurrentPartialRenderer(prevPartialRenderer);
     }
   }
 
@@ -1002,6 +1020,19 @@ class ReactDOMServerRenderer {
       }
 
       switch (elementType) {
+        case REACT_LEGACY_HIDDEN_TYPE: {
+          if (!enableSuspenseServerRenderer) {
+            break;
+          }
+          if (((nextChild: any): ReactElement).props.mode === 'hidden') {
+            // In hidden mode, render nothing.
+            return '';
+          }
+          // Otherwise the tree is visible, so act like a fragment.
+        }
+        // Intentional fall through
+        // eslint-disable-next-line no-fallthrough
+        case REACT_DEBUG_TRACING_MODE_TYPE:
         case REACT_STRICT_MODE_TYPE:
         case REACT_PROFILER_TYPE:
         case REACT_SUSPENSE_LIST_TYPE:

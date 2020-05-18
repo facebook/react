@@ -8,12 +8,8 @@
  */
 
 import {enableProfilerTimer} from 'shared/ReactFeatureFlags';
-import {getCurrentTime} from './ReactFiberWorkLoop.new';
-import {inferPriorityFromExpirationTime} from './ReactFiberExpirationTime.new';
 
-import type {Fiber} from './ReactInternalTypes';
-import type {FiberRoot} from './ReactInternalTypes';
-import type {ExpirationTime} from './ReactFiberExpirationTime.new';
+import type {Fiber, FiberRoot, ReactPriorityLevel} from './ReactInternalTypes';
 import type {ReactNodeList} from 'shared/ReactTypes';
 
 import {DidCapture} from './ReactSideEffectTags';
@@ -82,16 +78,14 @@ export function onScheduleRoot(root: FiberRoot, children: ReactNodeList) {
   }
 }
 
-export function onCommitRoot(root: FiberRoot, expirationTime: ExpirationTime) {
+export function onCommitRoot(
+  root: FiberRoot,
+  priorityLevel: ReactPriorityLevel,
+) {
   if (injectedHook && typeof injectedHook.onCommitFiberRoot === 'function') {
     try {
       const didError = (root.current.effectTag & DidCapture) === DidCapture;
       if (enableProfilerTimer) {
-        const currentTime = getCurrentTime();
-        const priorityLevel = inferPriorityFromExpirationTime(
-          currentTime,
-          expirationTime,
-        );
         injectedHook.onCommitFiberRoot(
           rendererID,
           root,

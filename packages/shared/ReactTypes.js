@@ -179,16 +179,11 @@ export type ReactScopeQuery = (
   instance: mixed,
 ) => boolean;
 
-export type ReactScopeMethods = {|
+export type ReactScopeInstance = {|
   DO_NOT_USE_queryAllNodes(ReactScopeQuery): null | Array<Object>,
   DO_NOT_USE_queryFirstNode(ReactScopeQuery): null | Object,
   containsNode(Object): boolean,
   getChildContextValues: <T>(context: ReactContext<T>) => Array<T>,
-|};
-
-export type ReactScopeInstance = {|
-  fiber: Object,
-  methods: null | ReactScopeMethods,
 |};
 
 // Mutable source version can be anything (e.g. number, string, immutable data structure)

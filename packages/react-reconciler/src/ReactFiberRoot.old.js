@@ -36,7 +36,7 @@ function FiberRootNode(containerInfo, tag, hydrate) {
   this.pendingContext = null;
   this.hydrate = hydrate;
   this.callbackNode = null;
-  this.callbackPriority = NoPriority;
+  this.callbackPriority_old = NoPriority;
   this.firstPendingTime = NoWork;
   this.lastPendingTime = NoWork;
   this.firstSuspendedTime = NoWork;
@@ -44,13 +44,12 @@ function FiberRootNode(containerInfo, tag, hydrate) {
   this.nextKnownPendingLevel = NoWork;
   this.lastPingedTime = NoWork;
   this.lastExpiredTime = NoWork;
-  this.mutableSourceFirstPendingUpdateTime = NoWork;
   this.mutableSourceLastPendingUpdateTime = NoWork;
 
   if (enableSchedulerTracing) {
     this.interactionThreadID = unstable_getThreadID();
     this.memoizedInteractions = new Set();
-    this.pendingInteractionMap = new Map();
+    this.pendingInteractionMap_old = new Map();
   }
   if (enableSuspenseCallback) {
     this.hydrationCallbacks = null;

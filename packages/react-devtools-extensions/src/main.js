@@ -1,7 +1,7 @@
 /* global chrome */
 
 import {createElement} from 'react';
-import {createRoot, flushSync} from 'react-dom';
+import {unstable_createRoot as createRoot, flushSync} from 'react-dom';
 import Bridge from 'react-devtools-shared/src/bridge';
 import Store from 'react-devtools-shared/src/devtools/store';
 import {getBrowserName, getBrowserTheme} from './utils';

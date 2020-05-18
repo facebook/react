@@ -36,7 +36,6 @@ import {
 import getComponentName from 'shared/getComponentName';
 import invariant from 'shared/invariant';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
-
 import {getPublicInstance} from './ReactFiberHostConfig';
 import {
   findCurrentUnmaskedContext,
@@ -57,7 +56,6 @@ import {
   flushSync,
   flushControlled,
   deferredUpdates,
-  syncUpdates,
   discreteUpdates,
   flushDiscreteUpdates,
   flushPassiveEffects,
@@ -67,10 +65,11 @@ import {
   act,
 } from './ReactFiberWorkLoop.old';
 import {createUpdate, enqueueUpdate} from './ReactUpdateQueue.old';
-import {getStackByFiberInDevAndProd} from './ReactFiberComponentStack';
 import {
   isRendering as ReactCurrentFiberIsRendering,
   current as ReactCurrentFiberCurrent,
+  resetCurrentFiber as resetCurrentDebugFiberInDEV,
+  setCurrentFiber as setCurrentDebugFiberInDEV,
 } from './ReactCurrentFiber';
 import {StrictMode} from './ReactTypeOfMode';
 import {
@@ -87,6 +86,18 @@ import {
 } from './ReactFiberHotReloading.old';
 
 export {createPortal} from './ReactPortal';
+export {
+  createComponentSelector,
+  createHasPsuedoClassSelector,
+  createRoleSelector,
+  createTestNameSelector,
+  createTextSelector,
+  getFindAllNodesFailureDescription,
+  findAllNodes,
+  findBoundingRects,
+  focusWithin,
+  observeVisibleRects,
+} from './ReactTestSelectors';
 
 type OpaqueRoot = FiberRoot;
 
@@ -177,30 +188,41 @@ function findHostInstanceWithWarning(
       const componentName = getComponentName(fiber.type) || 'Component';
       if (!didWarnAboutFindNodeInStrictMode[componentName]) {
         didWarnAboutFindNodeInStrictMode[componentName] = true;
-        if (fiber.mode & StrictMode) {
-          console.error(
-            '%s is deprecated in StrictMode. ' +
-              '%s was passed an instance of %s which is inside StrictMode. ' +
-              'Instead, add a ref directly to the element you want to reference. ' +
-              'Learn more about using refs safely here: ' +
-              'https://fb.me/react-strict-mode-find-node%s',
-            methodName,
-            methodName,
-            componentName,
-            getStackByFiberInDevAndProd(hostFiber),
-          );
-        } else {
-          console.error(
-            '%s is deprecated in StrictMode. ' +
-              '%s was passed an instance of %s which renders StrictMode children. ' +
-              'Instead, add a ref directly to the element you want to reference. ' +
-              'Learn more about using refs safely here: ' +
-              'https://fb.me/react-strict-mode-find-node%s',
-            methodName,
-            methodName,
-            componentName,
-            getStackByFiberInDevAndProd(hostFiber),
-          );
+
+        const previousFiber = ReactCurrentFiberCurrent;
+        try {
+          setCurrentDebugFiberInDEV(hostFiber);
+          if (fiber.mode & StrictMode) {
+            console.error(
+              '%s is deprecated in StrictMode. ' +
+                '%s was passed an instance of %s which is inside StrictMode. ' +
+                'Instead, add a ref directly to the element you want to reference. ' +
+                'Learn more about using refs safely here: ' +
+                'https://fb.me/react-strict-mode-find-node',
+              methodName,
+              methodName,
+              componentName,
+            );
+          } else {
+            console.error(
+              '%s is deprecated in StrictMode. ' +
+                '%s was passed an instance of %s which renders StrictMode children. ' +
+                'Instead, add a ref directly to the element you want to reference. ' +
+                'Learn more about using refs safely here: ' +
+                'https://fb.me/react-strict-mode-find-node',
+              methodName,
+              methodName,
+              componentName,
+            );
+          }
+        } finally {
+          // Ideally this should reset to previous but this shouldn't be called in
+          // render and there's another warning for that anyway.
+          if (previousFiber) {
+            setCurrentDebugFiberInDEV(previousFiber);
+          } else {
+            resetCurrentDebugFiberInDEV();
+          }
         }
       }
     }
@@ -297,7 +319,6 @@ export {
   batchedUpdates,
   unbatchedUpdates,
   deferredUpdates,
-  syncUpdates,
   discreteUpdates,
   flushDiscreteUpdates,
   flushControlled,

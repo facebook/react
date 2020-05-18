@@ -208,7 +208,7 @@ jobs:
       - run:
           environment:
             RELEASE_CHANNEL: experimental
-          command: yarn test-www-variant --maxWorkers=2
+          command: yarn test-prod-www-variant --maxWorkers=2
 
   RELEASE_CHANNEL_stable_yarn_test_persistent:
     docker: *docker

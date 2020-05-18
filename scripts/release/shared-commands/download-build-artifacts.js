@@ -30,7 +30,9 @@ const run = async ({build, cwd}) => {
 
   // Download and extract artifact
   await exec(`rm -rf ./build/node_modules*`, {cwd});
-  await exec(`curl ${nodeModulesURL} --output ./build/node_modules.tgz`, {cwd});
+  await exec(`curl -L ${nodeModulesURL} --output ./build/node_modules.tgz`, {
+    cwd,
+  });
   await exec(`mkdir ./build/node_modules`, {cwd});
   await exec(`tar zxvf ./build/node_modules.tgz -C ./build/node_modules/`, {
     cwd,

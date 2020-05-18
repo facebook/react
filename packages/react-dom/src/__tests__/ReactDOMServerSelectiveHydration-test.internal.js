@@ -885,7 +885,21 @@ describe('ReactDOMServerSelectiveHydration', () => {
 
       // Start rendering. This will force the first boundary to hydrate
       // by scheduling it at one higher pri than Idle.
-      expect(Scheduler).toFlushAndYieldThrough(['App', 'A']);
+      expect(Scheduler).toFlushAndYieldThrough(
+        gate(flags =>
+          flags.new
+            ? // An update was scheduled to force hydrate the boundary, but the
+              // new reconciler will continue rendering at Idle until the next
+              // time React yields. This is fine though because it will switch
+              // to the hydration level when it re-enters the work loop.
+              ['App', 'AA']
+            : // The old reconciler gives Scheduler a `timeout` argument, which
+              // affects the ordering of tasks in the queue. That triggers an
+              // immediate interruption, as opposed to at the end of the current
+              // time slice.
+              ['App', 'A'],
+        ),
+      );
 
       // Hover over A which (could) schedule at one higher pri than Idle.
       dispatchMouseHoverEvent(spanA, null);

@@ -8,23 +8,29 @@
  */
 
 import type {TopLevelType} from 'legacy-events/TopLevelEventTypes';
+import type {Fiber, FiberRoot} from 'react-reconciler/src/ReactInternalTypes';
+import type {
+  BoundingRect,
+  IntersectionObserverOptions,
+  ObserveVisibleRectsCallback,
+} from 'react-reconciler/src/ReactTestSelectors';
 import type {RootType} from './ReactDOMRoot';
+import type {ReactScopeInstance} from 'shared/ReactTypes';
 import type {
   ReactDOMEventResponder,
   ReactDOMEventResponderInstance,
   ReactDOMFundamentalComponentInstance,
-  ReactDOMListener,
-  ReactDOMListenerEvent,
-  ReactDOMListenerMap,
 } from '../shared/ReactDOMTypes';
-import type {ReactScopeMethods} from 'shared/ReactTypes';
 
 import {
   precacheFiberNode,
   updateFiberProps,
   getClosestInstanceFromNode,
-  getListenersFromTarget,
+  getFiberFromScopeInstance,
+  getInstanceFromNode as getInstanceFromNodeDOMTree,
+  isContainerMarkedAsRoot,
 } from './ReactDOMComponentTree';
+import {hasRole} from './DOMAccessibilityRoles';
 import {
   createElement,
   createTextNode,
@@ -62,7 +68,6 @@ import {REACT_OPAQUE_ID_TYPE} from 'shared/ReactSymbols';
 import {
   mountEventResponder,
   unmountEventResponder,
-  DEPRECATED_dispatchEventForResponderEventSystem,
 } from '../events/DeprecatedDOMEventResponderSystem';
 import {retryIfBlockedOn} from '../events/ReactDOMEventReplaying';
 
@@ -70,34 +75,17 @@ import {
   enableSuspenseServerRenderer,
   enableDeprecatedFlareAPI,
   enableFundamentalAPI,
-  enableUseEventAPI,
+  enableModernEventSystem,
+  enableCreateEventHandleAPI,
   enableScopeAPI,
+  disableHiddenPropDeprioritization,
 } from 'shared/ReactFeatureFlags';
-import {HostComponent} from 'react-reconciler/src/ReactWorkTags';
-import {
-  RESPONDER_EVENT_SYSTEM,
-  IS_PASSIVE,
-  PLUGIN_EVENT_SYSTEM,
-  USE_EVENT_SYSTEM,
-} from '../events/EventSystemFlags';
-import {
-  isManagedDOMElement,
-  isValidEventTarget,
-  listenToTopLevelEvent,
-  attachListenerToManagedDOMElement,
-  detachListenerFromManagedDOMElement,
-  attachTargetEventListener,
-  detachTargetEventListener,
-  isReactScope,
-  attachListenerToReactScope,
-  detachListenerFromReactScope,
-} from '../events/DOMModernPluginEventSystem';
-import {getListenerMapForElement} from '../events/DOMEventListenerMap';
+import {HostComponent, HostText} from 'react-reconciler/src/ReactWorkTags';
 import {TOP_BEFORE_BLUR, TOP_AFTER_BLUR} from '../events/DOMTopLevelEventTypes';
-
-export type ReactListenerEvent = ReactDOMListenerEvent;
-export type ReactListenerMap = ReactDOMListenerMap;
-export type ReactListener = ReactDOMListener;
+import {
+  listenToEvent,
+  clearEventHandleListenersForTarget,
+} from '../events/DOMModernPluginEventSystem';
 
 export type Type = string;
 export type Props = {
@@ -159,7 +147,6 @@ export opaque type OpaqueIDType =
     };
 
 type SelectionInformation = {|
-  activeElementDetached: null | HTMLElement,
   focusedElem: null | HTMLElement,
   selectionRange: mixed,
 |};
@@ -247,23 +234,40 @@ export function getPublicInstance(instance: Instance): * {
   return instance;
 }
 
-export function prepareForCommit(containerInfo: Container): void {
+export function prepareForCommit(containerInfo: Container): Object | null {
   eventsEnabled = ReactBrowserEventEmitterIsEnabled();
   selectionInformation = getSelectionInformation();
+  let activeInstance = null;
+  if (enableDeprecatedFlareAPI || enableCreateEventHandleAPI) {
+    const focusedElem = selectionInformation.focusedElem;
+    if (focusedElem !== null) {
+      activeInstance = getClosestInstanceFromNode(focusedElem);
+    }
+  }
   ReactBrowserEventEmitterSetEnabled(false);
+  return activeInstance;
+}
+
+export function beforeActiveInstanceBlur(): void {
+  if (enableDeprecatedFlareAPI || enableCreateEventHandleAPI) {
+    ReactBrowserEventEmitterSetEnabled(true);
+    dispatchBeforeDetachedBlur((selectionInformation: any).focusedElem);
+    ReactBrowserEventEmitterSetEnabled(false);
+  }
+}
+
+export function afterActiveInstanceBlur(): void {
+  if (enableDeprecatedFlareAPI || enableCreateEventHandleAPI) {
+    ReactBrowserEventEmitterSetEnabled(true);
+    dispatchAfterDetachedBlur((selectionInformation: any).focusedElem);
+    ReactBrowserEventEmitterSetEnabled(false);
+  }
 }
 
 export function resetAfterCommit(containerInfo: Container): void {
   restoreSelection(selectionInformation);
   ReactBrowserEventEmitterSetEnabled(eventsEnabled);
   eventsEnabled = null;
-  if (enableDeprecatedFlareAPI || enableUseEventAPI) {
-    const activeElementDetached = (selectionInformation: any)
-      .activeElementDetached;
-    if (activeElementDetached !== null) {
-      dispatchAfterDetachedBlur(activeElementDetached);
-    }
-  }
   selectionInformation = null;
 }
 
@@ -369,7 +373,14 @@ export function shouldSetTextContent(type: string, props: Props): boolean {
 }
 
 export function shouldDeprioritizeSubtree(type: string, props: Props): boolean {
-  return !!props.hidden;
+  if (disableHiddenPropDeprioritization) {
+    // This is obnoxiously specific so that nobody uses it, but we can still opt
+    // in via an infra-level userspace abstraction.
+    return props.hidden === 'unstable-do-not-use-legacy-hidden';
+  } else {
+    // Legacy behavior. Any truthy value works.
+    return !!props.hidden;
+  }
 }
 
 export function createTextInstance(
@@ -516,52 +527,17 @@ function createEvent(type: TopLevelType): Event {
 }
 
 function dispatchBeforeDetachedBlur(target: HTMLElement): void {
-  const targetInstance = getClosestInstanceFromNode(target);
-  ((selectionInformation: any): SelectionInformation).activeElementDetached = target;
-
-  if (enableDeprecatedFlareAPI) {
-    DEPRECATED_dispatchEventForResponderEventSystem(
-      'beforeblur',
-      targetInstance,
-      ({
-        target,
-        timeStamp: Date.now(),
-      }: any),
-      target,
-      RESPONDER_EVENT_SYSTEM | IS_PASSIVE,
-    );
-  }
-  if (enableUseEventAPI) {
-    try {
-      // We need to temporarily enable the event system
-      // to dispatch the "beforeblur" event.
-      ReactBrowserEventEmitterSetEnabled(true);
-      const event = createEvent(TOP_BEFORE_BLUR);
-      // Dispatch "beforeblur" directly on the target,
-      // so it gets picked up by the event system and
-      // can propagate through the React internal tree.
-      target.dispatchEvent(event);
-    } finally {
-      ReactBrowserEventEmitterSetEnabled(false);
-    }
+  if (enableDeprecatedFlareAPI || enableCreateEventHandleAPI) {
+    const event = createEvent(TOP_BEFORE_BLUR);
+    // Dispatch "beforeblur" directly on the target,
+    // so it gets picked up by the event system and
+    // can propagate through the React internal tree.
+    target.dispatchEvent(event);
   }
 }
 
 function dispatchAfterDetachedBlur(target: HTMLElement): void {
-  if (enableDeprecatedFlareAPI) {
-    DEPRECATED_dispatchEventForResponderEventSystem(
-      'blur',
-      null,
-      ({
-        isTargetAttached: false,
-        target,
-        timeStamp: Date.now(),
-      }: any),
-      target,
-      RESPONDER_EVENT_SYSTEM | IS_PASSIVE,
-    );
-  }
-  if (enableUseEventAPI) {
+  if (enableDeprecatedFlareAPI || enableCreateEventHandleAPI) {
     const event = createEvent(TOP_AFTER_BLUR);
     // So we know what was detached, make the relatedTarget the
     // detached target on the "afterblur" event.
@@ -571,35 +547,11 @@ function dispatchAfterDetachedBlur(target: HTMLElement): void {
   }
 }
 
-// This is a specific event for the React Flare
-// event system, so event responders can act
-// accordingly to a DOM node being unmounted that
-// previously had active document focus.
-export function beforeRemoveInstance(
+export function removeInstanceEventHandles(
   instance: Instance | TextInstance | SuspenseInstance,
-): void {
-  if (
-    (enableDeprecatedFlareAPI || enableUseEventAPI) &&
-    selectionInformation &&
-    instance === selectionInformation.focusedElem
-  ) {
-    dispatchBeforeDetachedBlur(((instance: any): HTMLElement));
-  }
-  if (enableUseEventAPI) {
-    // It's unfortunate that we have to do this cleanup, but
-    // it's necessary otherwise we will leak the host instances
-    // from the useEvent hook instances Map. We call destroy
-    // on each listener to ensure we properly remove the instance
-    // from the instances Map. Note: we have this Map so that we
-    // can properly unmount instances when the function component
-    // that the hook is attached to gets unmounted.
-    const listenersSet = getListenersFromTarget(instance);
-    if (listenersSet !== null) {
-      const listeners = Array.from(listenersSet);
-      for (let i = 0; i < listeners.length; i++) {
-        listeners[i].destroy(instance);
-      }
-    }
+) {
+  if (enableCreateEventHandleAPI) {
+    clearEventHandleListenersForTarget(instance);
   }
 }
 
@@ -674,28 +626,7 @@ export function clearSuspenseBoundaryFromContainer(
   retryIfBlockedOn(container);
 }
 
-function instanceContainsElem(instance: Instance, element: HTMLElement) {
-  let fiber = getClosestInstanceFromNode(element);
-  while (fiber !== null) {
-    if (fiber.tag === HostComponent && fiber.stateNode === instance) {
-      return true;
-    }
-    fiber = fiber.return;
-  }
-  return false;
-}
-
 export function hideInstance(instance: Instance): void {
-  // Ensure we trigger `onBeforeBlur` if the active focused elment
-  // is ether the instance of a child or the instance. We need
-  // to traverse the Fiber tree here rather than use node.contains()
-  // as the child node might be inside a Portal.
-  if ((enableDeprecatedFlareAPI || enableUseEventAPI) && selectionInformation) {
-    const focusedElem = selectionInformation.focusedElem;
-    if (focusedElem !== null && instanceContainsElem(instance, focusedElem)) {
-      dispatchBeforeDetachedBlur(((focusedElem: any): HTMLElement));
-    }
-  }
   // TODO: Does this work for all element types? What about MathML? Should we
   // pass host context to this method?
   instance = ((instance: any): HTMLElement);
@@ -728,6 +659,17 @@ export function unhideTextInstance(
   text: string,
 ): void {
   textInstance.nodeValue = text;
+}
+
+export function clearContainer(container: Container): void {
+  if (container.nodeType === ELEMENT_NODE) {
+    ((container: any): Element).textContent = '';
+  } else if (container.nodeType === DOCUMENT_NODE) {
+    const body = ((container: any): Document).body;
+    if (body != null) {
+      body.textContent = '';
+    }
+  }
 }
 
 // -------------------
@@ -1174,11 +1116,6 @@ export function makeClientIdInDEV(warnOnAccessInDEV: () => void): OpaqueIDType {
   };
 }
 
-let serverId: number = 0;
-export function makeServerId(): OpaqueIDType {
-  return 'R:' + (serverId++).toString(36);
-}
-
 export function isOpaqueHydratingObject(value: mixed): boolean {
   return (
     value !== null &&
@@ -1197,77 +1134,173 @@ export function makeOpaqueHydratingObject(
   };
 }
 
-export function registerEvent(
-  event: ReactDOMListenerEvent,
-  rootContainerInstance: Container,
+export function preparePortalMount(portalInstance: Instance): void {
+  if (enableModernEventSystem) {
+    listenToEvent('onMouseEnter', portalInstance);
+  }
+}
+
+export function prepareScopeUpdate(
+  scopeInstance: ReactScopeInstance,
+  internalInstanceHandle: Object,
 ): void {
-  const {passive, priority, type} = event;
-  const listenerMap = getListenerMapForElement(rootContainerInstance);
-  // Add the event listener to the target container (falling back to
-  // the target if we didn't find one).
-  listenToTopLevelEvent(
-    type,
-    rootContainerInstance,
-    listenerMap,
-    PLUGIN_EVENT_SYSTEM | USE_EVENT_SYSTEM,
-    passive,
-    priority,
-  );
-}
-
-export function mountEventListener(listener: ReactDOMListener): void {
-  if (enableUseEventAPI) {
-    const {target} = listener;
-    if (isManagedDOMElement(target)) {
-      attachListenerToManagedDOMElement(listener);
-    } else if (enableScopeAPI && isReactScope(target)) {
-      attachListenerToReactScope(listener);
-    } else {
-      attachTargetEventListener(listener);
-    }
+  if (enableScopeAPI) {
+    precacheFiberNode(internalInstanceHandle, scopeInstance);
   }
 }
 
-export function unmountEventListener(listener: ReactDOMListener): void {
-  if (enableUseEventAPI) {
-    const {target} = listener;
-    if (isManagedDOMElement(target)) {
-      detachListenerFromManagedDOMElement(listener);
-    } else if (enableScopeAPI && isReactScope(target)) {
-      detachListenerFromReactScope(listener);
-    } else {
-      detachTargetEventListener(listener);
-    }
+export function removeScopeEventHandles(
+  scopeInstance: ReactScopeInstance,
+): void {
+  if (enableScopeAPI && enableCreateEventHandleAPI) {
+    clearEventHandleListenersForTarget(scopeInstance);
   }
 }
 
-export function validateEventListenerTarget(
-  target: EventTarget | ReactScopeMethods,
-  listener: ?(Event) => void,
-): boolean {
-  if (enableUseEventAPI) {
-    if (
-      target != null &&
-      (isManagedDOMElement(target) ||
-        isValidEventTarget(target) ||
-        isReactScope(target))
-    ) {
-      if (listener == null || typeof listener === 'function') {
-        return true;
-      }
-      if (__DEV__) {
-        console.warn(
-          'Event listener method setListener() from useEvent() hook requires the second argument' +
-            ' to be either a valid function callback or null/undefined.',
-        );
-      }
-    }
-    if (__DEV__) {
-      console.warn(
-        'Event listener method setListener() from useEvent() hook requires the first argument to be ' +
-          'a valid DOM EventTarget. If using a ref, ensure the current value is not null.',
-      );
-    }
+export function getInstanceFromScope(
+  scopeInstance: ReactScopeInstance,
+): null | Object {
+  if (enableScopeAPI) {
+    return getFiberFromScopeInstance(scopeInstance);
   }
+  return null;
+}
+
+export const supportsTestSelectors = true;
+
+export function findFiberRoot(node: Instance): null | FiberRoot {
+  const stack = [node];
+  let index = 0;
+  while (index < stack.length) {
+    const current = stack[index++];
+    if (isContainerMarkedAsRoot(current)) {
+      return ((getInstanceFromNodeDOMTree(current): any): FiberRoot);
+    }
+    stack.push(...current.children);
+  }
+  return null;
+}
+
+export function getBoundingRect(node: Instance): BoundingRect {
+  const rect = node.getBoundingClientRect();
+  return {
+    x: rect.left,
+    y: rect.top,
+    width: rect.width,
+    height: rect.height,
+  };
+}
+
+export function matchAccessibilityRole(node: Instance, role: string): boolean {
+  if (hasRole(node, role)) {
+    return true;
+  }
+
   return false;
+}
+
+export function getTextContent(fiber: Fiber): string | null {
+  switch (fiber.tag) {
+    case HostComponent:
+      let textContent = '';
+      const childNodes = fiber.stateNode.childNodes;
+      for (let i = 0; i < childNodes.length; i++) {
+        const childNode = childNodes[i];
+        if (childNode.nodeType === Node.TEXT_NODE) {
+          textContent += childNode.textContent;
+        }
+      }
+      return textContent;
+    case HostText:
+      return fiber.stateNode.textContent;
+  }
+
+  return null;
+}
+
+export function isHiddenSubtree(fiber: Fiber): boolean {
+  return fiber.tag === HostComponent && fiber.memoizedProps.hidden === true;
+}
+
+export function setFocusIfFocusable(node: Instance): boolean {
+  // The logic for determining if an element is focusable is kind of complex,
+  // and since we want to actually change focus anyway- we can just skip it.
+  // Instead we'll just listen for a "focus" event to verify that focus was set.
+  //
+  // We could compare the node to document.activeElement after focus,
+  // but this would not handle the case where application code managed focus to automatically blur.
+  let didFocus = false;
+  const handleFocus = () => {
+    didFocus = true;
+  };
+
+  const element = ((node: any): HTMLElement);
+  try {
+    element.addEventListener('focus', handleFocus);
+    (element.focus || HTMLElement.prototype.focus).call(element);
+  } finally {
+    element.removeEventListener('focus', handleFocus);
+  }
+
+  return didFocus;
+}
+
+type RectRatio = {
+  ratio: number,
+  rect: BoundingRect,
+};
+
+export function setupIntersectionObserver(
+  targets: Array<Instance>,
+  callback: ObserveVisibleRectsCallback,
+  options?: IntersectionObserverOptions,
+): {|
+  disconnect: () => void,
+  observe: (instance: Instance) => void,
+  unobserve: (instance: Instance) => void,
+|} {
+  const rectRatioCache: Map<Instance, RectRatio> = new Map();
+  targets.forEach(target => {
+    rectRatioCache.set(target, {
+      rect: getBoundingRect(target),
+      ratio: 0,
+    });
+  });
+
+  const handleIntersection = (entries: Array<IntersectionObserverEntry>) => {
+    entries.forEach(entry => {
+      const {boundingClientRect, intersectionRatio, target} = entry;
+      rectRatioCache.set(target, {
+        rect: {
+          x: boundingClientRect.left,
+          y: boundingClientRect.top,
+          width: boundingClientRect.width,
+          height: boundingClientRect.height,
+        },
+        ratio: intersectionRatio,
+      });
+    });
+
+    callback(Array.from(rectRatioCache.values()));
+  };
+
+  const observer = new IntersectionObserver(handleIntersection, options);
+  targets.forEach(target => {
+    observer.observe((target: any));
+  });
+
+  return {
+    disconnect: () => observer.disconnect(),
+    observe: target => {
+      rectRatioCache.set(target, {
+        rect: getBoundingRect(target),
+        ratio: 0,
+      });
+      observer.observe((target: any));
+    },
+    unobserve: target => {
+      rectRatioCache.delete(target);
+      observer.unobserve((target: any));
+    },
+  };
 }

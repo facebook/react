@@ -11,6 +11,7 @@ import typeof * as FeatureFlagsType from 'shared/ReactFeatureFlags';
 import typeof * as ExportsType from './ReactFeatureFlags.testing';
 
 export const debugRenderPhaseSideEffectsForStrictMode = false;
+export const enableDebugTracing = false;
 export const warnAboutDeprecatedLifecycles = true;
 export const replayFailedUnitOfWorkWithInvokeGuardedCallback = false;
 export const enableProfilerTimer = __PROFILE__;
@@ -25,7 +26,7 @@ export const enableSchedulerDebugging = false;
 export const enableDeprecatedFlareAPI = false;
 export const enableFundamentalAPI = false;
 export const enableScopeAPI = false;
-export const enableUseEventAPI = false;
+export const enableCreateEventHandleAPI = false;
 export const warnAboutUnmockedScheduler = false;
 export const enableSuspenseCallback = false;
 export const warnAboutDefaultPropsOnFunctionComponents = false;
@@ -44,10 +45,9 @@ export const enableComponentStackLocations = false;
 export const enableLegacyFBSupport = false;
 export const enableFilterEmptyStringAttributesDOM = false;
 
-// Internal-only attempt to debug a React Native issue. See D20130868.
-export const throwEarlyForMysteriousError = false;
-
 export const enableNewReconciler = false;
+export const deferRenderPhaseUpdateToNextBatch = true;
+export const disableHiddenPropDeprioritization = true;
 
 // Flow magic to verify the exports of this file match the original version.
 // eslint-disable-next-line no-unused-vars

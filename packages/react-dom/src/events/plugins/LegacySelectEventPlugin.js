@@ -22,11 +22,15 @@ import {
   TOP_SELECTION_CHANGE,
 } from '../DOMTopLevelEventTypes';
 import getActiveElement from '../../client/getActiveElement';
-import {getNodeFromInstance} from '../../client/ReactDOMComponentTree';
+import {
+  getNodeFromInstance,
+  getEventListenerMap,
+} from '../../client/ReactDOMComponentTree';
 import {hasSelectionCapabilities} from '../../client/ReactInputSelection';
 import {DOCUMENT_NODE} from '../../shared/HTMLNodeType';
-import {isListeningToAllDependencies} from '../DOMEventListenerMap';
-import accumulateTwoPhaseListeners from '../accumulateTwoPhaseListeners';
+import {accumulateTwoPhaseDispatches} from '../DOMLegacyEventPluginSystem';
+
+import {registrationNameDependencies} from 'legacy-events/EventPluginRegistry';
 
 const skipSelectionChangeEvent =
   canUseDOM && 'documentMode' in document && document.documentMode <= 11;
@@ -135,12 +139,27 @@ function constructSelectEvent(nativeEvent, nativeEventTarget) {
     syntheticEvent.type = 'select';
     syntheticEvent.target = activeElement;
 
-    accumulateTwoPhaseListeners(syntheticEvent);
+    accumulateTwoPhaseDispatches(syntheticEvent);
 
     return syntheticEvent;
   }
 
   return null;
+}
+
+function isListeningToAllDependencies(
+  registrationName: string,
+  mountAt: Document | Element,
+): boolean {
+  const dependencies = registrationNameDependencies[registrationName];
+  const listenerMap = getEventListenerMap(mountAt);
+  for (let i = 0; i < dependencies.length; i++) {
+    const event = dependencies[i];
+    if (!listenerMap.has(event)) {
+      return false;
+    }
+  }
+  return true;
 }
 
 /**
@@ -166,16 +185,11 @@ const SelectEventPlugin = {
     nativeEvent,
     nativeEventTarget,
     eventSystemFlags,
-    container,
   ) {
-    const containerOrDoc =
-      container || getEventTargetDocument(nativeEventTarget);
+    const doc = getEventTargetDocument(nativeEventTarget);
     // Track whether all listeners exists for this plugin. If none exist, we do
     // not extract events. See #3639.
-    if (
-      !containerOrDoc ||
-      !isListeningToAllDependencies('onSelect', containerOrDoc)
-    ) {
+    if (!doc || !isListeningToAllDependencies('onSelect', doc)) {
       return null;
     }
 

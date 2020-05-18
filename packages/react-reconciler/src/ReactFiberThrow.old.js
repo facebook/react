@@ -29,9 +29,9 @@ import {
   ShouldCapture,
   LifecycleEffectMask,
 } from './ReactSideEffectTags';
-import {NoMode, BlockingMode} from './ReactTypeOfMode';
 import {shouldCaptureSuspense} from './ReactFiberSuspenseComponent.old';
-
+import {NoMode, BlockingMode, DebugTracingMode} from './ReactTypeOfMode';
+import {enableDebugTracing} from 'shared/ReactFeatureFlags';
 import {createCapturedValue} from './ReactCapturedValue';
 import {
   enqueueCapturedUpdate,
@@ -40,7 +40,6 @@ import {
   ForceUpdate,
   enqueueUpdate,
 } from './ReactUpdateQueue.old';
-import {getStackByFiberInDevAndProd} from './ReactFiberComponentStack';
 import {markFailedErrorBoundaryForHotReloading} from './ReactFiberHotReloading.old';
 import {
   suspenseStackCursor,
@@ -55,6 +54,7 @@ import {
   pingSuspendedRoot,
 } from './ReactFiberWorkLoop.old';
 import {logCapturedError} from './ReactFiberErrorLogger';
+import {logComponentSuspended} from './DebugTracing';
 
 import {Sync} from './ReactFiberExpirationTime.old';
 
@@ -193,6 +193,15 @@ function throwException(
   ) {
     // This is a wakeable.
     const wakeable: Wakeable = (value: any);
+
+    if (__DEV__) {
+      if (enableDebugTracing) {
+        if (sourceFiber.mode & DebugTracingMode) {
+          const name = getComponentName(sourceFiber.type) || 'Unknown';
+          logComponentSuspended(name, wakeable);
+        }
+      }
+    }
 
     if ((sourceFiber.mode & BlockingMode) === NoMode) {
       // Reset the memoizedState to what it was before we attempted
@@ -334,8 +343,7 @@ function throwException(
         ' suspended while rendering, but no fallback UI was specified.\n' +
         '\n' +
         'Add a <Suspense fallback=...> component higher in the tree to ' +
-        'provide a loading indicator or placeholder to display.' +
-        getStackByFiberInDevAndProd(sourceFiber),
+        'provide a loading indicator or placeholder to display.',
     );
   }
 

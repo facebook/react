@@ -586,7 +586,11 @@ const pressResponderImpl = {
                 !ctrlKey &&
                 !altKey
               ) {
-                nativeEvent.preventDefault();
+                // Prevent spacebar press from scrolling the window
+                const key = nativeEvent.key;
+                if (key === ' ' || key === 'Spacebar') {
+                  nativeEvent.preventDefault();
+                }
                 state.shouldPreventClick = true;
               }
             } else {
@@ -637,7 +641,11 @@ const pressResponderImpl = {
           addRootEventTypes(context, state);
         } else {
           // Prevent spacebar press from scrolling the window
-          if (isValidKeyboardEvent(nativeEvent) && nativeEvent.key === ' ') {
+          const key = nativeEvent.key;
+          if (
+            isValidKeyboardEvent(nativeEvent) &&
+            (key === ' ' || key === 'Spacebar')
+          ) {
             nativeEvent.preventDefault();
           }
         }

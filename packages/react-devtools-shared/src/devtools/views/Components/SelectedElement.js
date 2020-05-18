@@ -190,6 +190,15 @@ export default function SelectedElement(_: Props) {
   return (
     <div className={styles.SelectedElement}>
       <div className={styles.TitleRow}>
+        {element.key && (
+          <>
+            <div className={styles.Key} title={`key "${element.key}"`}>
+              {element.key}
+            </div>
+            <div className={styles.KeyArrow} />
+          </>
+        )}
+
         <div className={styles.SelectedComponentName}>
           <div className={styles.Component} title={element.displayName}>
             {element.displayName}
@@ -463,7 +472,7 @@ function InspectedElementView({
   );
 }
 
-// This function is based on packages/shared/describeComponentFrame.js
+// This function is based on describeComponentFrame() in packages/shared/ReactComponentStackFrame
 function formatSourceForDisplay(fileName: string, lineNumber: string) {
   const BEFORE_SLASH_RE = /^(.*)[\\\/]/;
 

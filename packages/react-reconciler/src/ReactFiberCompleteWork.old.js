@@ -61,6 +61,7 @@ import {
   NoEffect,
   DidCapture,
   Deletion,
+  Snapshot,
 } from './ReactSideEffectTags';
 import invariant from 'shared/invariant';
 
@@ -82,6 +83,8 @@ import {
   mountFundamentalComponent,
   cloneFundamentalInstance,
   shouldUpdateFundamentalComponent,
+  preparePortalMount,
+  prepareScopeUpdate,
 } from './ReactFiberHostConfig';
 import {
   getRootHostContainer,
@@ -112,6 +115,7 @@ import {
   prepareToHydrateHostSuspenseInstance,
   popHydrationState,
   resetHydrationState,
+  getIsHydrating,
 } from './ReactFiberHydrationContext.old';
 import {
   enableSchedulerTracing,
@@ -132,7 +136,7 @@ import {createFundamentalStateInstance} from './ReactFiberFundamental.old';
 import {Never} from './ReactFiberExpirationTime.old';
 import {resetChildFibers} from './ReactChildFiber.old';
 import {updateDeprecatedEventListeners} from './ReactFiberDeprecatedEvents.old';
-import {createScopeMethods} from './ReactFiberScope.old';
+import {createScopeInstance} from './ReactFiberScope.old';
 
 function markUpdate(workInProgress: Fiber) {
   // Tag the fiber with an update effect. This turns a Placement into
@@ -572,6 +576,11 @@ function cutOffTailIfNeeded(
   renderState: SuspenseListRenderState,
   hasRenderedATailFallback: boolean,
 ) {
+  if (getIsHydrating()) {
+    // If we're hydrating, we should consume as many items as we can
+    // so we don't leave any behind.
+    return;
+  }
   switch (renderState.tailMode) {
     case 'hidden': {
       // Any insertions at the end of the tail list after this point
@@ -677,6 +686,12 @@ function completeWork(
           // If we hydrated, then we'll need to schedule an update for
           // the commit side-effects on the root.
           markUpdate(workInProgress);
+        } else if (!fiberRoot.hydrate) {
+          // Schedule an effect to clear this container at the start of the next commit.
+          // This handles the case of React rendering into a container with previous children.
+          // It's also safe to do for updates too, because current.child would only be null
+          // if the previous render was null (so the the container would already be empty).
+          workInProgress.effectTag |= Snapshot;
         }
       }
       updateHostContainer(workInProgress);
@@ -973,6 +988,9 @@ function completeWork(
     case HostPortal:
       popHostContainer(workInProgress);
       updateHostContainer(workInProgress);
+      if (current === null) {
+        preparePortalMount(workInProgress.stateNode.containerInfo);
+      }
       return null;
     case ContextProvider:
       // Pop provider fiber
@@ -1096,7 +1114,8 @@ function completeWork(
             if (
               renderState.tail === null &&
               renderState.tailMode === 'hidden' &&
-              !renderedTail.alternate
+              !renderedTail.alternate &&
+              !getIsHydrating() // We don't cut it if we're hydrating.
             ) {
               // We need to delete the row we just rendered.
               // Reset the effect list to what it was before we rendered this
@@ -1251,13 +1270,8 @@ function completeWork(
     case ScopeComponent: {
       if (enableScopeAPI) {
         if (current === null) {
-          const type = workInProgress.type;
-          const scopeInstance: ReactScopeInstance = {
-            fiber: workInProgress,
-            methods: null,
-          };
+          const scopeInstance: ReactScopeInstance = createScopeInstance();
           workInProgress.stateNode = scopeInstance;
-          scopeInstance.methods = createScopeMethods(type, scopeInstance);
           if (enableDeprecatedFlareAPI) {
             const listeners = newProps.DEPRECATED_flareListeners;
             if (listeners != null) {
@@ -1269,6 +1283,7 @@ function completeWork(
               );
             }
           }
+          prepareScopeUpdate(scopeInstance, workInProgress);
           if (workInProgress.ref !== null) {
             markRef(workInProgress);
             markUpdate(workInProgress);

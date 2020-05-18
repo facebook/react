@@ -9,7 +9,7 @@
 
 import type {AnyNativeEvent} from 'legacy-events/PluginModuleType';
 import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
-import type {PluginModule} from 'legacy-events/PluginModuleType';
+import type {LegacyPluginModule} from 'legacy-events/PluginModuleType';
 import type {ReactSyntheticEvent} from 'legacy-events/ReactSyntheticEventType';
 import type {TopLevelType} from 'legacy-events/TopLevelEventTypes';
 
@@ -37,9 +37,10 @@ function extractPluginEvents(
   nativeEventTarget: null | EventTarget,
 ): Array<ReactSyntheticEvent> | ReactSyntheticEvent | null {
   let events = null;
-  for (let i = 0; i < plugins.length; i++) {
+  const legacyPlugins = ((plugins: any): Array<LegacyPluginModule<Event>>);
+  for (let i = 0; i < legacyPlugins.length; i++) {
     // Not every plugin in the ordering may be loaded at runtime.
-    const possiblePlugin: PluginModule<AnyNativeEvent> = plugins[i];
+    const possiblePlugin: LegacyPluginModule<AnyNativeEvent> = legacyPlugins[i];
     if (possiblePlugin) {
       const extractedEvents = possiblePlugin.extractEvents(
         topLevelType,

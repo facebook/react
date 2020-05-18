@@ -180,6 +180,7 @@ import {
   markUnprocessedUpdateTime,
   getWorkInProgressRoot,
 } from './ReactFiberWorkLoop.old';
+import {unstable_wrap as Schedule_tracing_wrap} from 'scheduler/tracing';
 
 import {disableLogs, reenableLogs} from 'shared/ConsolePatchingDev';
 
@@ -1109,6 +1110,8 @@ function updateHostComponent(current, workInProgress, renderExpirationTime) {
     }
     // Schedule this fiber to re-render at offscreen priority. Then bailout.
     workInProgress.expirationTime = workInProgress.childExpirationTime = Never;
+    // We should never render the children of a dehydrated boundary until we
+    // upgrade it. We return null instead of bailoutOnAlreadyFinishedWork.
     return null;
   }
 
@@ -1681,11 +1684,7 @@ function getRemainingWorkInPrimaryTree(
     // This boundary already timed out. Check if this render includes the level
     // that previously suspended.
     const baseTime = currentSuspenseState.baseTime;
-    if (
-      baseTime !== NoWork &&
-      baseTime < renderExpirationTime &&
-      baseTime > currentChildExpirationTime
-    ) {
+    if (baseTime !== NoWork && baseTime < renderExpirationTime) {
       // There's pending work at a lower level that might now be unblocked.
       return baseTime;
     }
@@ -2307,10 +2306,11 @@ function updateDehydratedSuspenseComponent(
     // Leave the child in place. I.e. the dehydrated fragment.
     workInProgress.child = current.child;
     // Register a callback to retry this boundary once the server has sent the result.
-    registerSuspenseInstanceRetry(
-      suspenseInstance,
-      retryDehydratedSuspenseBoundary.bind(null, current),
-    );
+    let retry = retryDehydratedSuspenseBoundary.bind(null, current);
+    if (enableSchedulerTracing) {
+      retry = Schedule_tracing_wrap(retry);
+    }
+    registerSuspenseInstanceRetry(suspenseInstance, retry);
     return null;
   } else {
     // This is the first attempt.
@@ -2929,7 +2929,7 @@ function bailoutOnAlreadyFinishedWork(
 ): Fiber | null {
   if (current !== null) {
     // Reuse previous dependencies
-    workInProgress.dependencies = current.dependencies;
+    workInProgress.dependencies_old = current.dependencies_old;
   }
 
   if (enableProfilerTimer) {
@@ -3130,7 +3130,8 @@ function beginWork(
                 // been unsuspended it has committed as a resolved Suspense component.
                 // If it needs to be retried, it should have work scheduled on it.
                 workInProgress.effectTag |= DidCapture;
-                break;
+
+                return null;
               }
             }
 
@@ -3141,10 +3142,7 @@ function beginWork(
             const primaryChildFragment: Fiber = (workInProgress.child: any);
             const primaryChildExpirationTime =
               primaryChildFragment.childExpirationTime;
-            if (
-              primaryChildExpirationTime !== NoWork &&
-              primaryChildExpirationTime >= renderExpirationTime
-            ) {
+            if (primaryChildExpirationTime >= renderExpirationTime) {
               // The primary children have pending work. Use the normal path
               // to attempt to render the primary children again.
               return updateSuspenseComponent(
@@ -3173,10 +3171,8 @@ function beginWork(
                 const childChildExpirationTime =
                   primaryChild.childExpirationTime;
                 if (
-                  (childUpdateExpirationTime !== NoWork &&
-                    childUpdateExpirationTime >= renderExpirationTime) ||
-                  (childChildExpirationTime !== NoWork &&
-                    childChildExpirationTime >= renderExpirationTime)
+                  childUpdateExpirationTime >= renderExpirationTime ||
+                  childChildExpirationTime >= renderExpirationTime
                 ) {
                   // Found a child with an update with sufficient priority.
                   // Use the normal path to render the primary children again.

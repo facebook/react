@@ -496,7 +496,7 @@ describe('ReactDOMServerHydration', () => {
     const finalHTML = ReactDOMServer.renderToString(<div />);
     const container = document.createElement('div');
     container.innerHTML = finalHTML;
-    const root = ReactDOM.createRoot(container, {hydrate: true});
+    const root = ReactDOM.unstable_createRoot(container, {hydrate: true});
     root.render(<div />);
     Scheduler.unstable_flushAll();
     root.render(null);
@@ -547,5 +547,58 @@ describe('ReactDOMServerHydration', () => {
     // not a Suspense boundary.
     expect(ref.current).toBe(div);
     expect(element.innerHTML).toBe('<div>Hello World</div>');
+  });
+
+  // regression test for https://github.com/facebook/react/issues/17170
+  it('should not warn if dangerouslySetInnerHtml=undefined', () => {
+    const domElement = document.createElement('div');
+    const reactElement = (
+      <div dangerouslySetInnerHTML={undefined}>
+        <p>Hello, World!</p>
+      </div>
+    );
+    const markup = ReactDOMServer.renderToStaticMarkup(reactElement);
+    domElement.innerHTML = markup;
+
+    ReactDOM.hydrate(reactElement, domElement);
+
+    expect(domElement.innerHTML).toEqual(markup);
+  });
+
+  it('should warn if innerHTML mismatches with dangerouslySetInnerHTML=undefined and children on the client', () => {
+    const domElement = document.createElement('div');
+    const markup = ReactDOMServer.renderToStaticMarkup(
+      <div dangerouslySetInnerHTML={{__html: '<p>server</p>'}} />,
+    );
+    domElement.innerHTML = markup;
+
+    expect(() => {
+      ReactDOM.hydrate(
+        <div dangerouslySetInnerHTML={undefined}>
+          <p>client</p>
+        </div>,
+        domElement,
+      );
+
+      expect(domElement.innerHTML).not.toEqual(markup);
+    }).toErrorDev(
+      'Warning: Text content did not match. Server: "server" Client: "client"',
+    );
+  });
+
+  it('should warn if innerHTML mismatches with dangerouslySetInnerHTML=undefined on the client', () => {
+    const domElement = document.createElement('div');
+    const markup = ReactDOMServer.renderToStaticMarkup(
+      <div dangerouslySetInnerHTML={{__html: '<p>server</p>'}} />,
+    );
+    domElement.innerHTML = markup;
+
+    expect(() => {
+      ReactDOM.hydrate(<div dangerouslySetInnerHTML={undefined} />, domElement);
+
+      expect(domElement.innerHTML).not.toEqual(markup);
+    }).toErrorDev(
+      'Warning: Did not expect server HTML to contain a <p> in <div>',
+    );
   });
 });

@@ -17,12 +17,13 @@ import type {
 } from './ReactFiberHostConfig';
 import type {Fiber} from './ReactInternalTypes';
 import type {FiberRoot} from './ReactInternalTypes';
-import type {ExpirationTime} from './ReactFiberExpirationTime.new';
+import type {Lanes} from './ReactFiberLane';
 import type {SuspenseState} from './ReactFiberSuspenseComponent.new';
 import type {UpdateQueue} from './ReactUpdateQueue.new';
 import type {FunctionComponentUpdateQueue} from './ReactFiberHooks.new';
 import type {Wakeable} from 'shared/ReactTypes';
 import type {ReactPriorityLevel} from './ReactInternalTypes';
+import type {OffscreenState} from './ReactFiberOffscreenComponent';
 
 import {unstable_wrap as Schedule_tracing_wrap} from 'scheduler/tracing';
 import {
@@ -36,7 +37,7 @@ import {
   enableSuspenseCallback,
   enableScopeAPI,
   runAllPassiveEffectDestroysBeforeCreates,
-  enableUseEventAPI,
+  enableCreateEventHandleAPI,
 } from 'shared/ReactFeatureFlags';
 import {
   FunctionComponent,
@@ -56,6 +57,8 @@ import {
   FundamentalComponent,
   ScopeComponent,
   Block,
+  OffscreenComponent,
+  LegacyHiddenComponent,
 } from './ReactWorkTags';
 import {
   invokeGuardedCallback,
@@ -74,7 +77,6 @@ import getComponentName from 'shared/getComponentName';
 import invariant from 'shared/invariant';
 
 import {onCommitUnmount} from './ReactFiberDevToolsHook.new';
-import {getStackByFiberInDevAndProd} from './ReactFiberComponentStack';
 import {resolveDefaultProps} from './ReactFiberLazyComponent.new';
 import {
   getCommitTime,
@@ -112,7 +114,10 @@ import {
   updateFundamentalComponent,
   commitHydratedContainer,
   commitHydratedSuspenseInstance,
-  beforeRemoveInstance,
+  removeInstanceEventHandles,
+  clearContainer,
+  prepareScopeUpdate,
+  removeScopeEventHandles,
 } from './ReactFiberHostConfig';
 import {
   captureCommitPhaseError,
@@ -295,7 +300,15 @@ function commitBeforeMutationLifeCycles(
       }
       return;
     }
-    case HostRoot:
+    case HostRoot: {
+      if (supportsMutation) {
+        if (finishedWork.effectTag & Snapshot) {
+          const root = finishedWork.stateNode;
+          clearContainer(root.containerInfo);
+        }
+      }
+      return;
+    }
     case HostComponent:
     case HostText:
     case HostPortal:
@@ -369,9 +382,8 @@ function commitHookEffectListMount(tag: number, finishedWork: Fiber) {
             }
             console.error(
               'An effect function must not return anything besides a function, ' +
-                'which is used for clean-up.%s%s',
+                'which is used for clean-up.%s',
               addendum,
-              getStackByFiberInDevAndProd(finishedWork),
             );
           }
         }
@@ -505,7 +517,7 @@ function commitLifeCycles(
   finishedRoot: FiberRoot,
   current: Fiber | null,
   finishedWork: Fiber,
-  committedExpirationTime: ExpirationTime,
+  committedLanes: Lanes,
 ): void {
   switch (finishedWork.tag) {
     case FunctionComponent:
@@ -808,6 +820,8 @@ function commitLifeCycles(
     case IncompleteClassComponent:
     case FundamentalComponent:
     case ScopeComponent:
+    case OffscreenComponent:
+    case LegacyHiddenComponent:
       return;
   }
   invariant(
@@ -838,16 +852,13 @@ function hideOrUnhideAllChildren(finishedWork, isHidden) {
           unhideTextInstance(instance, node.memoizedProps);
         }
       } else if (
-        node.tag === SuspenseComponent &&
-        node.memoizedState !== null &&
-        node.memoizedState.dehydrated === null
+        (node.tag === OffscreenComponent ||
+          node.tag === LegacyHiddenComponent) &&
+        (node.memoizedState: OffscreenState) !== null &&
+        node !== finishedWork
       ) {
-        // Found a nested Suspense component that timed out. Skip over the
-        // primary child fragment, which should remain hidden.
-        const fallbackChildFragment: Fiber = (node.child: any).sibling;
-        fallbackChildFragment.return = node;
-        node = fallbackChildFragment;
-        continue;
+        // Found a nested Offscreen component that is hidden. Don't search
+        // any deeper. This tree should remain hidden.
       } else if (node.child !== null) {
         node.child.return = node;
         node = node.child;
@@ -882,7 +893,7 @@ function commitAttachRef(finishedWork: Fiber) {
     }
     // Moved outside to ensure DCE works with this flag
     if (enableScopeAPI && finishedWork.tag === ScopeComponent) {
-      instanceToUse = instance.methods;
+      instanceToUse = instance;
     }
     if (typeof ref === 'function') {
       ref(instanceToUse);
@@ -891,9 +902,8 @@ function commitAttachRef(finishedWork: Fiber) {
         if (!ref.hasOwnProperty('current')) {
           console.error(
             'Unexpected ref object provided for %s. ' +
-              'Use either a ref-setter function or React.createRef().%s',
+              'Use either a ref-setter function or React.createRef().',
             getComponentName(finishedWork.type),
-            getStackByFiberInDevAndProd(finishedWork),
           );
         }
       }
@@ -1020,8 +1030,8 @@ function commitUnmount(
       if (enableDeprecatedFlareAPI) {
         unmountDeprecatedResponderListeners(current);
       }
-      if (enableDeprecatedFlareAPI || enableUseEventAPI) {
-        beforeRemoveInstance(current.stateNode);
+      if (enableCreateEventHandleAPI && current.ref !== null) {
+        removeInstanceEventHandles(current.stateNode);
       }
       safelyDetachRef(current);
       return;
@@ -1060,10 +1070,14 @@ function commitUnmount(
       return;
     }
     case ScopeComponent: {
-      if (enableDeprecatedFlareAPI) {
-        unmountDeprecatedResponderListeners(current);
-      }
       if (enableScopeAPI) {
+        if (enableDeprecatedFlareAPI) {
+          unmountDeprecatedResponderListeners(current);
+        }
+        const scopeInstance = current.stateNode;
+        if (enableCreateEventHandleAPI && current.ref !== null) {
+          removeScopeEventHandles(scopeInstance);
+        }
         safelyDetachRef(current);
       }
       return;
@@ -1116,17 +1130,23 @@ function detachFiber(fiber: Fiber) {
   // get GC:ed but we don't know which for sure which parent is the current
   // one so we'll settle for GC:ing the subtree of this child. This child
   // itself will be GC:ed when the parent updates the next time.
-  fiber.return = null;
-  fiber.child = null;
-  fiber.memoizedState = null;
-  fiber.updateQueue = null;
-  fiber.dependencies = null;
+  // Note: we cannot null out sibling here, otherwise it can cause issues
+  // with findDOMNode and how it requires the sibling field to carry out
+  // traversal in a later effect. See PR #16820.
   fiber.alternate = null;
+  fiber.child = null;
+  fiber.dependencies_new = null;
   fiber.firstEffect = null;
   fiber.lastEffect = null;
-  fiber.pendingProps = null;
   fiber.memoizedProps = null;
+  fiber.memoizedState = null;
+  fiber.pendingProps = null;
+  fiber.return = null;
   fiber.stateNode = null;
+  fiber.updateQueue = null;
+  if (__DEV__) {
+    fiber._debugOwner = null;
+  }
 }
 
 function emptyPortalContainer(current: Fiber) {
@@ -1584,6 +1604,10 @@ function commitWork(current: Fiber | null, finishedWork: Fiber): void {
         }
         break;
       }
+      case OffscreenComponent:
+      case LegacyHiddenComponent: {
+        return;
+      }
     }
 
     commitContainer(finishedWork);
@@ -1706,7 +1730,6 @@ function commitWork(current: Fiber | null, finishedWork: Fiber): void {
     case ScopeComponent: {
       if (enableScopeAPI) {
         const scopeInstance = finishedWork.stateNode;
-        scopeInstance.fiber = finishedWork;
         if (enableDeprecatedFlareAPI) {
           const newProps = finishedWork.memoizedProps;
           const oldProps = current !== null ? current.memoizedProps : newProps;
@@ -1716,9 +1739,17 @@ function commitWork(current: Fiber | null, finishedWork: Fiber): void {
             updateDeprecatedEventListeners(nextListeners, finishedWork, null);
           }
         }
+        prepareScopeUpdate(scopeInstance, finishedWork);
         return;
       }
       break;
+    }
+    case OffscreenComponent:
+    case LegacyHiddenComponent: {
+      const newState: OffscreenState | null = finishedWork.memoizedState;
+      const isHidden = newState !== null;
+      hideOrUnhideAllChildren(finishedWork, isHidden);
+      return;
     }
   }
   invariant(
@@ -1731,18 +1762,22 @@ function commitWork(current: Fiber | null, finishedWork: Fiber): void {
 function commitSuspenseComponent(finishedWork: Fiber) {
   const newState: SuspenseState | null = finishedWork.memoizedState;
 
-  let newDidTimeout;
-  let primaryChildParent = finishedWork;
-  if (newState === null) {
-    newDidTimeout = false;
-  } else {
-    newDidTimeout = true;
-    primaryChildParent = finishedWork.child;
+  if (newState !== null) {
     markCommitTimeOfFallback();
-  }
 
-  if (supportsMutation && primaryChildParent !== null) {
-    hideOrUnhideAllChildren(primaryChildParent, newDidTimeout);
+    if (supportsMutation) {
+      // Hide the Offscreen component that contains the primary children. TODO:
+      // Ideally, this effect would have been scheduled on the Offscreen fiber
+      // itself. That's how unhiding works: the Offscreen component schedules an
+      // effect on itself. However, in this case, the component didn't complete,
+      // so the fiber was never added to the effect list in the normal path. We
+      // could have appended it to the effect list in the Suspense component's
+      // second pass, but doing it this way is less complicated. This would be
+      // simpler if we got rid of the effect list and traversed the tree, like
+      // we're planning to do.
+      const primaryChildParent: Fiber = (finishedWork.child: any);
+      hideOrUnhideAllChildren(primaryChildParent, true);
+    }
   }
 
   if (enableSuspenseCallback && newState !== null) {

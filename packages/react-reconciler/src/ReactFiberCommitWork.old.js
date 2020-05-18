@@ -36,7 +36,7 @@ import {
   enableSuspenseCallback,
   enableScopeAPI,
   runAllPassiveEffectDestroysBeforeCreates,
-  enableUseEventAPI,
+  enableCreateEventHandleAPI,
 } from 'shared/ReactFeatureFlags';
 import {
   FunctionComponent,
@@ -74,7 +74,6 @@ import getComponentName from 'shared/getComponentName';
 import invariant from 'shared/invariant';
 
 import {onCommitUnmount} from './ReactFiberDevToolsHook.old';
-import {getStackByFiberInDevAndProd} from './ReactFiberComponentStack';
 import {resolveDefaultProps} from './ReactFiberLazyComponent.old';
 import {
   getCommitTime,
@@ -112,7 +111,10 @@ import {
   updateFundamentalComponent,
   commitHydratedContainer,
   commitHydratedSuspenseInstance,
-  beforeRemoveInstance,
+  removeInstanceEventHandles,
+  clearContainer,
+  prepareScopeUpdate,
+  removeScopeEventHandles,
 } from './ReactFiberHostConfig';
 import {
   captureCommitPhaseError,
@@ -295,7 +297,15 @@ function commitBeforeMutationLifeCycles(
       }
       return;
     }
-    case HostRoot:
+    case HostRoot: {
+      if (supportsMutation) {
+        if (finishedWork.effectTag & Snapshot) {
+          const root = finishedWork.stateNode;
+          clearContainer(root.containerInfo);
+        }
+      }
+      return;
+    }
     case HostComponent:
     case HostText:
     case HostPortal:
@@ -369,9 +379,8 @@ function commitHookEffectListMount(tag: number, finishedWork: Fiber) {
             }
             console.error(
               'An effect function must not return anything besides a function, ' +
-                'which is used for clean-up.%s%s',
+                'which is used for clean-up.%s',
               addendum,
-              getStackByFiberInDevAndProd(finishedWork),
             );
           }
         }
@@ -882,7 +891,7 @@ function commitAttachRef(finishedWork: Fiber) {
     }
     // Moved outside to ensure DCE works with this flag
     if (enableScopeAPI && finishedWork.tag === ScopeComponent) {
-      instanceToUse = instance.methods;
+      instanceToUse = instance;
     }
     if (typeof ref === 'function') {
       ref(instanceToUse);
@@ -891,9 +900,8 @@ function commitAttachRef(finishedWork: Fiber) {
         if (!ref.hasOwnProperty('current')) {
           console.error(
             'Unexpected ref object provided for %s. ' +
-              'Use either a ref-setter function or React.createRef().%s',
+              'Use either a ref-setter function or React.createRef().',
             getComponentName(finishedWork.type),
-            getStackByFiberInDevAndProd(finishedWork),
           );
         }
       }
@@ -1020,8 +1028,8 @@ function commitUnmount(
       if (enableDeprecatedFlareAPI) {
         unmountDeprecatedResponderListeners(current);
       }
-      if (enableDeprecatedFlareAPI || enableUseEventAPI) {
-        beforeRemoveInstance(current.stateNode);
+      if (enableCreateEventHandleAPI && current.ref !== null) {
+        removeInstanceEventHandles(current.stateNode);
       }
       safelyDetachRef(current);
       return;
@@ -1060,10 +1068,14 @@ function commitUnmount(
       return;
     }
     case ScopeComponent: {
-      if (enableDeprecatedFlareAPI) {
-        unmountDeprecatedResponderListeners(current);
-      }
       if (enableScopeAPI) {
+        if (enableDeprecatedFlareAPI) {
+          unmountDeprecatedResponderListeners(current);
+        }
+        const scopeInstance = current.stateNode;
+        if (enableCreateEventHandleAPI && current.ref !== null) {
+          removeScopeEventHandles(scopeInstance);
+        }
         safelyDetachRef(current);
       }
       return;
@@ -1116,17 +1128,23 @@ function detachFiber(fiber: Fiber) {
   // get GC:ed but we don't know which for sure which parent is the current
   // one so we'll settle for GC:ing the subtree of this child. This child
   // itself will be GC:ed when the parent updates the next time.
-  fiber.return = null;
-  fiber.child = null;
-  fiber.memoizedState = null;
-  fiber.updateQueue = null;
-  fiber.dependencies = null;
+  // Note: we cannot null out sibling here, otherwise it can cause issues
+  // with findDOMNode and how it requires the sibling field to carry out
+  // traversal in a later effect. See PR #16820.
   fiber.alternate = null;
+  fiber.child = null;
+  fiber.dependencies_old = null;
   fiber.firstEffect = null;
   fiber.lastEffect = null;
-  fiber.pendingProps = null;
   fiber.memoizedProps = null;
+  fiber.memoizedState = null;
+  fiber.pendingProps = null;
+  fiber.return = null;
   fiber.stateNode = null;
+  fiber.updateQueue = null;
+  if (__DEV__) {
+    fiber._debugOwner = null;
+  }
 }
 
 function emptyPortalContainer(current: Fiber) {
@@ -1706,7 +1724,6 @@ function commitWork(current: Fiber | null, finishedWork: Fiber): void {
     case ScopeComponent: {
       if (enableScopeAPI) {
         const scopeInstance = finishedWork.stateNode;
-        scopeInstance.fiber = finishedWork;
         if (enableDeprecatedFlareAPI) {
           const newProps = finishedWork.memoizedProps;
           const oldProps = current !== null ? current.memoizedProps : newProps;
@@ -1716,6 +1733,7 @@ function commitWork(current: Fiber | null, finishedWork: Fiber): void {
             updateDeprecatedEventListeners(nextListeners, finishedWork, null);
           }
         }
+        prepareScopeUpdate(scopeInstance, finishedWork);
         return;
       }
       break;
