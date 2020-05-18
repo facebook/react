@@ -115,6 +115,7 @@ import {
   isSuspenseInstancePending,
   isSuspenseInstanceFallback,
   registerSuspenseInstanceRetry,
+  supportsHydration,
 } from './ReactFiberHostConfig';
 import type {SuspenseInstance} from './ReactFiberHostConfig';
 import {shouldSuspend} from './ReactFiberReconciler';
@@ -1043,14 +1044,18 @@ function updateHostRoot(current, workInProgress, renderExpirationTime) {
     // be any children to hydrate which is effectively the same thing as
     // not hydrating.
 
-    const mutableSourceEagerHydrationData =
-      root.mutableSourceEagerHydrationData;
-    for (let i = 0; i < mutableSourceEagerHydrationData.length; i += 2) {
-      const mutableSource = ((mutableSourceEagerHydrationData[
-        i
-      ]: any): MutableSource<any>);
-      const version = mutableSourceEagerHydrationData[i + 1];
-      setWorkInProgressVersion(mutableSource, version);
+    if (supportsHydration) {
+      const mutableSourceEagerHydrationData =
+        root.mutableSourceEagerHydrationData;
+      if (mutableSourceEagerHydrationData != null) {
+        for (let i = 0; i < mutableSourceEagerHydrationData.length; i += 2) {
+          const mutableSource = ((mutableSourceEagerHydrationData[
+            i
+          ]: any): MutableSource<any>);
+          const version = mutableSourceEagerHydrationData[i + 1];
+          setWorkInProgressVersion(mutableSource, version);
+        }
+      }
     }
 
     const child = mountChildFibers(

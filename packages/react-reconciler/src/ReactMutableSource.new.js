@@ -100,5 +100,9 @@ export function registerMutableSourceForHydration(
 
   // TODO Clear this data once all pending hydration work is finished.
   // Retaining it forever may interfere with GC.
-  root.mutableSourceEagerHydrationData.push(mutableSource, version);
+  if (root.mutableSourceEagerHydrationData == null) {
+    root.mutableSourceEagerHydrationData = [mutableSource, version];
+  } else {
+    root.mutableSourceEagerHydrationData.push(mutableSource, version);
+  }
 }

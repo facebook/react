@@ -24,9 +24,9 @@ export type RootOptions = {
   hydrationOptions?: {
     onHydrated?: (suspenseNode: Comment) => void,
     onDeleted?: (suspenseNode: Comment) => void,
+    mutableSources?: Array<MutableSource<any>>,
     ...
   },
-  mutableSources?: Array<MutableSource<any>>,
   ...
 };
 
@@ -126,7 +126,11 @@ function createRootImpl(
   const hydrate = options != null && options.hydrate === true;
   const hydrationCallbacks =
     (options != null && options.hydrationOptions) || null;
-  const mutableSources = (options != null && options.mutableSources) || null;
+  const mutableSources =
+    (options != null &&
+      options.hydrationOptions != null &&
+      options.hydrationOptions.mutableSources) ||
+    null;
   const root = createContainer(container, tag, hydrate, hydrationCallbacks);
   markContainerAsRoot(root.current, container);
   const containerNodeType = container.nodeType;

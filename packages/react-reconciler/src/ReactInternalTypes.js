@@ -249,9 +249,9 @@ type BaseFiberRootProperties = {|
   mutableSourceLastPendingUpdateTime: ExpirationTime,
 
   // Used by useMutableSource hook to avoid tearing during hydrtaion.
-  mutableSourceEagerHydrationData: Array<
+  mutableSourceEagerHydrationData?: Array<
     MutableSource<any> | MutableSourceVersion,
-  >,
+  > | null,
 
   // Only used by new reconciler
 

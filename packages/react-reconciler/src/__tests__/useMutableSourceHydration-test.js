@@ -159,7 +159,9 @@ describe('useMutableSourceHydration', () => {
 
     const root = ReactDOM.unstable_createRoot(container, {
       hydrate: true,
-      mutableSources: [mutableSource],
+      hydrationOptions: {
+        mutableSources: [mutableSource],
+      },
     });
     act(() => {
       root.render(<TestComponent />);
@@ -194,7 +196,9 @@ describe('useMutableSourceHydration', () => {
 
     const root = ReactDOM.unstable_createRoot(container, {
       hydrate: true,
-      mutableSources: [mutableSource],
+      hydrationOptions: {
+        mutableSources: [mutableSource],
+      },
     });
     expect(() => {
       act(() => {
@@ -244,7 +248,9 @@ describe('useMutableSourceHydration', () => {
 
     const root = ReactDOM.unstable_createRoot(container, {
       hydrate: true,
-      mutableSources: [mutableSource],
+      hydrationOptions: {
+        mutableSources: [mutableSource],
+      },
     });
     expect(() => {
       act(() => {
@@ -295,7 +301,9 @@ describe('useMutableSourceHydration', () => {
 
     const root = ReactDOM.unstable_createRoot(container, {
       hydrate: true,
-      mutableSources: [mutableSource],
+      hydrationOptions: {
+        mutableSources: [mutableSource],
+      },
     });
     expect(() => {
       act(() => {
@@ -361,7 +369,9 @@ describe('useMutableSourceHydration', () => {
 
     const root = ReactDOM.unstable_createRoot(container, {
       hydrate: true,
-      mutableSources: [mutableSource],
+      hydrationOptions: {
+        mutableSources: [mutableSource],
+      },
     });
     expect(() => {
       act(() => {

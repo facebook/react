@@ -11,7 +11,7 @@ import type {FiberRoot, SuspenseHydrationCallbacks} from './ReactInternalTypes';
 import type {ExpirationTime} from './ReactFiberExpirationTime.old';
 import type {RootTag} from './ReactRootTags';
 
-import {noTimeout} from './ReactFiberHostConfig';
+import {noTimeout, supportsHydration} from './ReactFiberHostConfig';
 import {createHostRootFiber} from './ReactFiber.old';
 import {NoWork} from './ReactFiberExpirationTime.old';
 import {
@@ -45,7 +45,10 @@ function FiberRootNode(containerInfo, tag, hydrate) {
   this.lastPingedTime = NoWork;
   this.lastExpiredTime = NoWork;
   this.mutableSourceLastPendingUpdateTime = NoWork;
-  this.mutableSourceEagerHydrationData = [];
+
+  if (supportsHydration) {
+    this.mutableSourceEagerHydrationData = null;
+  }
 
   if (enableSchedulerTracing) {
     this.interactionThreadID = unstable_getThreadID();
