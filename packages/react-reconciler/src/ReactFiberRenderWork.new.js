@@ -18,8 +18,8 @@ import {includesSomeLane} from './ReactFiberLane';
 import {reconcileChildren} from './ReactFiberBeginWork.new';
 import {cloneChildFibers} from './ReactChildFiber.new';
 import {
-  pushProvider,
-  popProvider,
+  setContextValue,
+  restoreContextValue,
   propagateContextChange,
   calculateChangedBits,
 } from './ReactFiberNewContext.new';
@@ -47,8 +47,7 @@ export function* renderContextProvider(
   }
 
   const newValue = newProps.value;
-  pushProvider(workInProgress, newValue);
-
+  const prevValueOnStack = setContextValue(context, newValue);
   try {
     if (oldProps !== null) {
       const oldValue = oldProps.value;
@@ -79,7 +78,7 @@ export function* renderContextProvider(
     reconcileChildren(current, workInProgress, newChildren, renderLanes);
     yield workInProgress.child;
   } finally {
-    popProvider(workInProgress);
+    restoreContextValue(context, prevValueOnStack);
   }
 }
 
