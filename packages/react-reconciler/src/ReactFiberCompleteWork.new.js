@@ -111,7 +111,6 @@ import {
   popContext as popLegacyContext,
   popTopLevelContextObject as popTopLevelLegacyContextObject,
 } from './ReactFiberContext.new';
-import {popProvider} from './ReactFiberNewContext.new';
 import {
   prepareToHydrateHostInstance,
   prepareToHydrateHostTextInstance,
@@ -141,6 +140,7 @@ import {OffscreenLane} from './ReactFiberLane';
 import {resetChildFibers} from './ReactChildFiber.new';
 import {updateDeprecatedEventListeners} from './ReactFiberDeprecatedEvents.new';
 import {createScopeInstance} from './ReactFiberScope.new';
+import {completeGeneratorComponent} from './ReactFiberGeneratorComponent.new';
 
 function markUpdate(workInProgress: Fiber) {
   // Tag the fiber with an update effect. This turns a Placement into
@@ -977,9 +977,7 @@ function completeWork(
       }
       return null;
     case ContextProvider:
-      // Pop provider fiber
-      popProvider(workInProgress);
-      return null;
+      return completeGeneratorComponent(current, workInProgress);
     case IncompleteClassComponent: {
       // Same as class component case. I put it down here so that the tags are
       // sequential to ensure this switch is compiled to a jump table.
