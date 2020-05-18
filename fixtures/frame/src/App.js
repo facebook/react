@@ -51,9 +51,15 @@ function Shell({path}) {
 function ShellTabBar() {
   return (
     <>
-      <Link to={[]}>Feed</Link>{' '}
-      <Link to={['profile', 'dan', 'about']}>Dan's Profile</Link>{' '}
-      <Link to={['profile', 'seb', 'about']}>Seb's Profile</Link>
+      <Link to={[]} plainWhenActive={true}>
+        Feed
+      </Link>{' '}
+      <Link to={['profile', 'dan', 'about']} plainWhenActive={true}>
+        Dan's Profile
+      </Link>{' '}
+      <Link to={['profile', 'seb', 'about']} plainWhenActive={true}>
+        Seb's Profile
+      </Link>
     </>
   );
 }
@@ -84,8 +90,12 @@ function ProfileTabBar({id}) {
   return (
     <>
       {/* TODO: Relative links? */}
-      <Link to={['profile', id, 'about']}>About</Link>{' '}
-      <Link to={['profile', id, 'photos']}>Photos</Link>
+      <Link to={['profile', id, 'about']} plainWhenActive={true}>
+        About
+      </Link>{' '}
+      <Link to={['profile', id, 'photos']} plainWhenActive={true}>
+        Photos
+      </Link>
       <br />
       <br />
       <Link to={['profile', 'dan', 'photos']}>Go to Dan's Photos</Link>
@@ -123,13 +133,18 @@ function ProfileTabs({path}) {
 
 const FrameContext = createContext(null);
 
-function Link({to, children}) {
-  const context = useContext(FrameContext);
+function Link({to, children, plainWhenActive}) {
+  const {matchRoute, segments} = useContext(FrameContext);
   // A match contains metadata we want to pass to the client.
   // It is essentially the target frame + what to render in it.
-  const match = context.match(to);
+  const match = matchRoute(to);
+  const isActive = to.join('/') === segments.join('/');
   return (
-    <ClientLink match={match} to={to}>
+    <ClientLink
+      match={match}
+      to={to}
+      isActive={isActive}
+      plainWhenActive={plainWhenActive}>
       {children}
     </ClientLink>
   );
@@ -150,7 +165,7 @@ function Frame({entry}) {
 function ReplayableFrame({entry, children}) {
   // Get by name from the map.
   const Match = EntryPoints[entry];
-  const {segments, parents, match: matchParent} = useContext(FrameContext);
+  const {segments, parents, matchRoute: matchParent} = useContext(FrameContext);
   const depth = parents.length;
   const path = {segments, depth};
   // This is this frame's keypath.
@@ -161,7 +176,7 @@ function ReplayableFrame({entry, children}) {
       value={{
         segments: segments,
         parents: nextParents,
-        match(to) {
+        matchRoute(to) {
           if (!isSubpathOf(to, path)) {
             // Can't handle this route. Ask the parent.
             return matchParent(to);
@@ -239,9 +254,12 @@ function isSubpathOf(child, parent) {
 
 const ClientFrameContext = createContext(null);
 
-function ClientLink({match, to, children}) {
+function ClientLink({match, to, children, isActive, plainWhenActive}) {
   const router = useContext(ClientFrameContext);
   const href = '/' + to.join('/');
+  if (isActive && plainWhenActive) {
+    return <b>{children}</b>;
+  }
   return (
     <a
       href={href}
