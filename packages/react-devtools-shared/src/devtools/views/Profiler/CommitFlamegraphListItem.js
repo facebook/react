@@ -28,7 +28,6 @@ type Props = {
 function CommitFlamegraphListItem({data, index, style}: Props) {
   const {
     chartData,
-    isHovered,
     onElementMouseEnter,
     onElementMouseLeave,
     scaleX,
@@ -116,7 +115,6 @@ function CommitFlamegraphListItem({data, index, style}: Props) {
             color={color}
             height={lineHeight}
             isDimmed={index < selectedChartNodeIndex}
-            isHovered={isHovered}
             key={id}
             label={label}
             onClick={event => handleClick(event, id, name)}

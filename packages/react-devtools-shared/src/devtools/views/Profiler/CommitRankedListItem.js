@@ -27,7 +27,6 @@ type Props = {
 function CommitRankedListItem({data, index, style}: Props) {
   const {
     chartData,
-    isHovered,
     onElementMouseEnter,
     onElementMouseLeave,
     scaleX,
@@ -69,7 +68,6 @@ function CommitRankedListItem({data, index, style}: Props) {
       color={getGradientColor(node.value / chartData.maxValue)}
       height={lineHeight}
       isDimmed={index < selectedFiberIndex}
-      isHovered={isHovered}
       key={node.id}
       label={node.label}
       onClick={handleClick}

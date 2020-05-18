@@ -29,7 +29,6 @@ import type {CommitTree} from './types';
 
 export type ItemData = {|
   chartData: ChartData,
-  isHovered: boolean,
   onElementMouseEnter: (fiberData: TooltipFiberData) => void,
   onElementMouseLeave: () => void,
   scaleX: (value: number, fallbackValue: number) => number,
@@ -113,20 +112,22 @@ function CommitRanked({chartData, commitTree, height, width}: Props) {
     [chartData, selectedFiberID],
   );
 
-  const handleElementMouseEnter = ({id, name}) => {
-    highlightNativeElement(id); // Highlight last hovered element.
-    setHoveredFiberData({id, name}); // Set hovered fiber data for tooltip
-  };
+  const handleElementMouseEnter = useCallback(
+    ({id, name}) => {
+      highlightNativeElement(id); // Highlight last hovered element.
+      setHoveredFiberData({id, name}); // Set hovered fiber data for tooltip
+    },
+    [highlightNativeElement],
+  );
 
-  const handleElementMouseLeave = () => {
+  const handleElementMouseLeave = useCallback(() => {
     clearHighlightNativeElement(); // clear highlighting of element on mouse leave
     setHoveredFiberData(null); // clear hovered fiber data for tooltip
-  };
+  }, [clearHighlightNativeElement]);
 
   const itemData = useMemo<ItemData>(
     () => ({
       chartData,
-      isHovered: hoveredFiberData !== null,
       onElementMouseEnter: handleElementMouseEnter,
       onElementMouseLeave: handleElementMouseLeave,
       scaleX: scale(0, chartData.nodes[selectedFiberIndex].value, 0, width),
@@ -137,7 +138,6 @@ function CommitRanked({chartData, commitTree, height, width}: Props) {
     }),
     [
       chartData,
-      hoveredFiberData,
       handleElementMouseEnter,
       handleElementMouseLeave,
       selectedFiberID,
