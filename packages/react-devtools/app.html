@@ -95,6 +95,19 @@
         text-align: center;
         margin-top: 1rem;
       }
+
+      .prompt,
+      .confirmation {
+        margin-bottom: 0.25rem;
+      }
+
+      .confirmation {
+        font-style: italic;
+      }
+
+      .hidden {
+        display: none;
+      }
     </style>
   </head>
   <body>
@@ -115,8 +128,11 @@
         <div class="box">
           <div class="box-header">React DOM</div>
           <div class="box-content">
-            <div id="box-content-status">
+            <div id="box-content-prompt" class="prompt">
               Add one of the following (click to copy):
+            </div>
+            <div id="box-content-confirmation" class="confirmation hidden">
+              Copied to clipboard.
             </div>
             <span class="input" contenteditable="true" id="localhost"></span>
             <span class="input" contenteditable="true" id="byip"></span>
@@ -133,9 +149,9 @@
       const port = process.env.PORT || 8097;
       const localIp = require("ip").address();
       const $ = document.querySelector.bind(document);
-      const $boxContentStatus = $("#box-content-status");
-      const boxContentInitialStatus = $boxContentStatus.textContent;
-      let boxContentStatusID;
+      const $promptDiv = $("#box-content-prompt");
+      const $confirmationDiv = $("#box-content-confirmation");
+      let timeoutID;
 
       function selectAllAndCopy(event) {
         const element = event.target;
@@ -146,10 +162,17 @@
           selection.removeAllRanges();
           selection.addRange(range);
           clipboard.writeText(event.target.textContent);
-          $boxContentStatus.textContent = "Copied to clipboard";
-          if (boxContentStatusID) clearTimeout(boxContentStatusID);
-          boxContentStatusID = setTimeout(() => {
-            $boxContentStatus.textContent = boxContentInitialStatus;
+
+          $promptDiv.classList.add('hidden');
+          $confirmationDiv.classList.remove('hidden');
+
+          if (timeoutID) {
+            clearTimeout(timeoutID);
+          }
+
+          timeoutID = setTimeout(() => {
+            $promptDiv.classList.remove('hidden');
+            $confirmationDiv.classList.add('hidden');
           }, 1000);
         }
       }
