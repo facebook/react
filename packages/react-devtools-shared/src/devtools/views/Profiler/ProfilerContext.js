@@ -8,7 +8,14 @@
  */
 
 import * as React from 'react';
-import {createContext, useCallback, useContext, useMemo, useState} from 'react';
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useMemo,
+  useState,
+  useEffect,
+} from 'react';
 import {unstable_batchedUpdates as batchedUpdates} from 'react-dom';
 import {useLocalStorage, useSubscription} from '../hooks';
 import {
@@ -68,6 +75,11 @@ export type Context = {|
   // Which interaction is currently selected in the Interactions graph?
   selectedInteractionID: number | null,
   selectInteraction: (id: number | null) => void,
+
+  numFilteredCommits: number,
+  setNumFilteredCommits: (value: number) => void,
+  selectedFilteredCommitIndex: number | null,
+  setSelectedFilteredCommitIndex: (value: number | null) => void,
 |};
 
 const ProfilerContext = createContext<Context>(((null: any): Context));
@@ -235,6 +247,29 @@ function ProfilerContextController({children}: Props) {
     });
   }
 
+  const [numFilteredCommits, setNumFilteredCommits] = useState<number>(0);
+  const [
+    selectedFilteredCommitIndex,
+    setSelectedFilteredCommitIndex,
+  ] = useState<number | null>(null);
+
+  // TODO (ProfilerContext) This should be managed by the context controller (reducer).
+  useEffect(() => {
+    if (selectedFilteredCommitIndex === null) {
+      if (numFilteredCommits > 0) {
+        selectCommitIndex(0);
+      } else {
+        selectCommitIndex(null);
+      }
+    } else if (selectedFilteredCommitIndex >= numFilteredCommits) {
+      if (numFilteredCommits === 0) {
+        selectCommitIndex(null);
+      } else {
+        selectCommitIndex(numFilteredCommits - 1);
+      }
+    }
+  }, [selectedFilteredCommitIndex, numFilteredCommits]);
+
   const value = useMemo(
     () => ({
       selectedTabID,
@@ -265,6 +300,11 @@ function ProfilerContextController({children}: Props) {
 
       selectedInteractionID,
       selectInteraction,
+
+      numFilteredCommits,
+      setNumFilteredCommits,
+      selectedFilteredCommitIndex,
+      setSelectedFilteredCommitIndex,
     }),
     [
       selectedTabID,
@@ -296,6 +336,11 @@ function ProfilerContextController({children}: Props) {
 
       selectedInteractionID,
       selectInteraction,
+
+      numFilteredCommits,
+      setNumFilteredCommits,
+      selectedFilteredCommitIndex,
+      setSelectedFilteredCommitIndex,
     ],
   );
 

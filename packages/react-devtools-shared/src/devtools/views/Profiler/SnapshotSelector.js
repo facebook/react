@@ -8,7 +8,7 @@
  */
 
 import * as React from 'react';
-import {Fragment, useCallback, useContext, useMemo} from 'react';
+import {Fragment, useCallback, useContext, useMemo, useEffect} from 'react';
 import Button from '../Button';
 import ButtonIcon from '../ButtonIcon';
 import {ProfilerContext} from './ProfilerContext';
@@ -27,6 +27,10 @@ export default function SnapshotSelector(_: Props) {
     rootID,
     selectedCommitIndex,
     selectCommitIndex,
+    numFilteredCommits,
+    setNumFilteredCommits,
+    selectedFilteredCommitIndex,
+    setSelectedFilteredCommitIndex,
   } = useContext(ProfilerContext);
 
   const {profilerStore} = useContext(StoreContext);
@@ -53,10 +57,12 @@ export default function SnapshotSelector(_: Props) {
     [commitData, isCommitFilterEnabled, minCommitDuration],
   );
 
-  const numFilteredCommits = filteredCommitIndices.length;
+  useEffect(() => {
+    setNumFilteredCommits(filteredCommitIndices.length);
+  }, [filteredCommitIndices.length]);
 
   // Map the (unfiltered) selected commit index to an index within the filtered data.
-  const selectedFilteredCommitIndex = useMemo(() => {
+  const newSelectedFilteredCommitIndex = useMemo(() => {
     if (selectedCommitIndex !== null) {
       for (let i = 0; i < filteredCommitIndices.length; i++) {
         if (filteredCommitIndices[i] === selectedCommitIndex) {
@@ -67,18 +73,9 @@ export default function SnapshotSelector(_: Props) {
     return null;
   }, [filteredCommitIndices, selectedCommitIndex]);
 
-  // TODO (ProfilerContext) This should be managed by the context controller (reducer).
-  // It doesn't currently know about the filtered commits though (since it doesn't suspend).
-  // Maybe this component should pass filteredCommitIndices up?
-  if (selectedFilteredCommitIndex === null) {
-    if (numFilteredCommits > 0) {
-      selectCommitIndex(0);
-    } else {
-      selectCommitIndex(null);
-    }
-  } else if (selectedFilteredCommitIndex >= numFilteredCommits) {
-    selectCommitIndex(numFilteredCommits === 0 ? null : numFilteredCommits - 1);
-  }
+  useEffect(() => {
+    setSelectedFilteredCommitIndex(newSelectedFilteredCommitIndex);
+  }, [newSelectedFilteredCommitIndex]);
 
   let label = null;
   if (numFilteredCommits > 0) {
