@@ -1,0 +1,12 @@
+{
+  "name": "frame",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "prestart": "cp -r ../../build/node_modules/* ./node_modules/",
+    "start": "next dev"
+  },
+  "dependencies": {
+    "next": "9.4.2-canary.1"
+  }
+}
