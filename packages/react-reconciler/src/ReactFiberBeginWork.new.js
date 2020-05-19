@@ -566,7 +566,10 @@ function updateOffscreenComponent(
   const prevState: OffscreenState | null =
     current !== null ? current.memoizedState : null;
 
-  if (nextProps.mode === 'hidden') {
+  if (
+    nextProps.mode === 'hidden' ||
+    nextProps.mode === 'unstable-defer-without-hiding'
+  ) {
     if ((workInProgress.mode & ConcurrentMode) === NoMode) {
       // In legacy sync mode, don't defer the subtree. Render it now.
       // TODO: Figure out what we should do in Blocking mode.
