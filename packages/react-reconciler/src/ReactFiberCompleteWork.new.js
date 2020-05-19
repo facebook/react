@@ -1308,7 +1308,10 @@ function completeWork(
 
         const prevIsHidden = prevState !== null;
         const nextIsHidden = nextState !== null;
-        if (prevIsHidden !== nextIsHidden) {
+        if (
+          prevIsHidden !== nextIsHidden &&
+          newProps.mode !== 'unstable-defer-without-hiding'
+        ) {
           workInProgress.effectTag |= Update;
         }
       }
