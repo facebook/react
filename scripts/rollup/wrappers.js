@@ -1,7 +1,8 @@
 'use strict';
 
 const {bundleTypes, moduleTypes} = require('./bundles');
-const reactVersion = require('../../package.json').version;
+const reactVersion = require('../../packages/react/package.json').version;
+if (!reactVersion) throw new Error('react version not found');
 
 const {
   UMD_DEV,
@@ -28,10 +29,27 @@ const license = ` * Copyright (c) Facebook, Inc. and its affiliates.
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.`;
 
+function getPackageVersion(filename) {
+  let packageName = filename.split('.')[0];
+  let packageVersion;
+  try {
+    packageVersion = require('../../packages/' + packageName + '/package.json')
+      .version;
+  } catch (e) {
+    console.warn(
+      'package',
+      packageName,
+      'does not has a package.json: fallback to react version'
+    );
+  }
+  return packageVersion || reactVersion;
+}
+
 const wrappers = {
   /***************** UMD_DEV *****************/
   [UMD_DEV](source, globalName, filename, moduleType) {
-    return `/** @license React v${reactVersion}
+    const packageVersion = getPackageVersion(filename);
+    return `/** @license React v${packageVersion}
  * ${filename}
  *
 ${license}
@@ -44,7 +62,8 @@ ${source}`;
 
   /***************** UMD_PROD *****************/
   [UMD_PROD](source, globalName, filename, moduleType) {
-    return `/** @license React v${reactVersion}
+    const packageVersion = getPackageVersion(filename);
+    return `/** @license React v${packageVersion}
  * ${filename}
  *
 ${license}
@@ -54,7 +73,8 @@ ${source}`;
 
   /***************** UMD_PROFILING *****************/
   [UMD_PROFILING](source, globalName, filename, moduleType) {
-    return `/** @license React v${reactVersion}
+    const packageVersion = getPackageVersion(filename);
+    return `/** @license React v${packageVersion}
  * ${filename}
  *
 ${license}
@@ -64,7 +84,8 @@ ${source}`;
 
   /***************** NODE_DEV *****************/
   [NODE_DEV](source, globalName, filename, moduleType) {
-    return `/** @license React v${reactVersion}
+    const packageVersion = getPackageVersion(filename);
+    return `/** @license React v${packageVersion}
  * ${filename}
  *
 ${license}
@@ -91,7 +112,8 @@ ${source}
 
   /***************** NODE_PROD *****************/
   [NODE_PROD](source, globalName, filename, moduleType) {
-    return `/** @license React v${reactVersion}
+    const packageVersion = getPackageVersion(filename);
+    return `/** @license React v${packageVersion}
  * ${filename}
  *
 ${license}
@@ -110,7 +132,8 @@ ${source}`;
 
   /***************** NODE_PROFILING *****************/
   [NODE_PROFILING](source, globalName, filename, moduleType) {
-    return `/** @license React v${reactVersion}
+    const packageVersion = getPackageVersion(filename);
+    return `/** @license React v${packageVersion}
  * ${filename}
  *
 ${license}
@@ -278,7 +301,8 @@ ${source}`;
 const reconcilerWrappers = {
   /***************** NODE_DEV (reconciler only) *****************/
   [NODE_DEV](source, globalName, filename, moduleType) {
-    return `/** @license React v${reactVersion}
+    const packageVersion = getPackageVersion(filename);
+    return `/** @license React v${packageVersion}
  * ${filename}
  *
 ${license}
@@ -297,7 +321,8 @@ ${source}
 
   /***************** NODE_PROD (reconciler only) *****************/
   [NODE_PROD](source, globalName, filename, moduleType) {
-    return `/** @license React v${reactVersion}
+    const packageVersion = getPackageVersion(filename);
+    return `/** @license React v${packageVersion}
  * ${filename}
  *
 ${license}
