@@ -235,6 +235,11 @@ function updateThemeVariables(
   documentElements: DocumentElements,
 ): void {
   updateStyleHelper(theme, 'color-attribute-name', documentElements);
+  updateStyleHelper(
+    theme,
+    'color-attribute-name-not-editable',
+    documentElements,
+  );
   updateStyleHelper(theme, 'color-attribute-name-inverted', documentElements);
   updateStyleHelper(theme, 'color-attribute-value', documentElements);
   updateStyleHelper(theme, 'color-attribute-value-inverted', documentElements);
