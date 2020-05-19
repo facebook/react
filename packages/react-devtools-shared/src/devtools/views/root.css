@@ -53,7 +53,11 @@
   --light-color-dim: #777d88;
   --light-color-dimmer: #cfd1d5;
   --light-color-dimmest: #eff0f1;
+  --light-color-error-background: hsl(0, 100%, 97%);
+  --light-color-error-border: hsl(0, 100%, 92%);
+  --light-color-error-text: #ff0000;
   --light-color-expand-collapse-toggle: #777d88;
+  --light-color-link: #0000ff;
   --light-color-modal-background: rgba(255, 255, 255, 0.75);
   --light-color-record-active: #fc3a4b;
   --light-color-record-hover: #3578e5;
@@ -126,7 +130,11 @@
   --dark-color-dim: #8f949d;
   --dark-color-dimmer: #777d88;
   --dark-color-dimmest: #4f5766;
+  --dark-color-error-background: #200;
+  --dark-color-error-border: #900;
+  --dark-color-error-text: #f55;
   --dark-color-expand-collapse-toggle: #8f949d;
+  --dark-color-link: #61dafb;
   --dark-color-modal-background: rgba(0, 0, 0, 0.75);
   --dark-color-record-active: #fc3a4b;
   --dark-color-record-hover: #a2e9fc;
