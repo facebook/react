@@ -2709,13 +2709,7 @@ describe('ReactSuspenseList', () => {
     // actualDuration
     expect(onRender.mock.calls[2][2]).toBe((1 + 4 + 5 + 3) * 2 + 3);
     // treeBaseDuration
-    expect(onRender.mock.calls[2][3]).toBe(
-      1 +
-        4 +
-        3 +
-        3 +
-        /* Resuspending a boundary also includes the content in base duration but it shouldn't */ 5,
-    );
+    expect(onRender.mock.calls[2][3]).toBe(1 + 4 + 3 + 3);
 
     await C.resolve();
 
