@@ -22,7 +22,11 @@ import {
   SuspenseListComponent,
 } from './ReactWorkTags';
 import {DidCapture, NoEffect, ShouldCapture} from './ReactSideEffectTags';
-import {enableSuspenseServerRenderer} from 'shared/ReactFeatureFlags';
+import {NoMode, ProfileMode} from './ReactTypeOfMode';
+import {
+  enableSuspenseServerRenderer,
+  enableProfilerTimer,
+} from 'shared/ReactFeatureFlags';
 
 import {popHostContainer, popHostContext} from './ReactFiberHostContext.old';
 import {popSuspenseContext} from './ReactFiberSuspenseContext.old';
@@ -33,6 +37,7 @@ import {
   popTopLevelContextObject as popTopLevelLegacyContextObject,
 } from './ReactFiberContext.old';
 import {popProvider} from './ReactFiberNewContext.old';
+import {transferActualDuration} from './ReactProfilerTimer.old';
 
 import invariant from 'shared/invariant';
 
@@ -49,6 +54,12 @@ function unwindWork(
       const effectTag = workInProgress.effectTag;
       if (effectTag & ShouldCapture) {
         workInProgress.effectTag = (effectTag & ~ShouldCapture) | DidCapture;
+        if (
+          enableProfilerTimer &&
+          (workInProgress.mode & ProfileMode) !== NoMode
+        ) {
+          transferActualDuration(workInProgress);
+        }
         return workInProgress;
       }
       return null;
@@ -89,6 +100,12 @@ function unwindWork(
       if (effectTag & ShouldCapture) {
         workInProgress.effectTag = (effectTag & ~ShouldCapture) | DidCapture;
         // Captured a suspense effect. Re-render the boundary.
+        if (
+          enableProfilerTimer &&
+          (workInProgress.mode & ProfileMode) !== NoMode
+        ) {
+          transferActualDuration(workInProgress);
+        }
         return workInProgress;
       }
       return null;

@@ -54,7 +54,7 @@ import {
   ScopeComponent,
   Block,
 } from './ReactWorkTags';
-import {NoMode, BlockingMode} from './ReactTypeOfMode';
+import {NoMode, BlockingMode, ProfileMode} from './ReactTypeOfMode';
 import {
   Ref,
   Update,
@@ -125,6 +125,7 @@ import {
   enableFundamentalAPI,
   enableScopeAPI,
   enableBlocksAPI,
+  enableProfilerTimer,
 } from 'shared/ReactFeatureFlags';
 import {
   markSpawnedWork,
@@ -137,6 +138,7 @@ import {Never} from './ReactFiberExpirationTime.old';
 import {resetChildFibers} from './ReactChildFiber.old';
 import {updateDeprecatedEventListeners} from './ReactFiberDeprecatedEvents.old';
 import {createScopeInstance} from './ReactFiberScope.old';
+import {transferActualDuration} from './ReactProfilerTimer.old';
 
 function markUpdate(workInProgress: Fiber) {
   // Tag the fiber with an update effect. This turns a Placement into
@@ -885,6 +887,12 @@ function completeWork(
       if ((workInProgress.effectTag & DidCapture) !== NoEffect) {
         // Something suspended. Re-render with the fallback children.
         workInProgress.expirationTime = renderExpirationTime;
+        if (
+          enableProfilerTimer &&
+          (workInProgress.mode & ProfileMode) !== NoMode
+        ) {
+          transferActualDuration(workInProgress);
+        }
         // Do not reset the effect list.
         return workInProgress;
       }
@@ -1084,6 +1092,7 @@ function completeWork(
                     ForceSuspenseFallback,
                   ),
                 );
+
                 return workInProgress.child;
               }
               row = row.sibling;

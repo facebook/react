@@ -1571,13 +1571,14 @@ function completeUnitOfWork(unitOfWork: Fiber): void {
         stopProfilerTimerIfRunningAndRecordDelta(completedWork, false);
       }
       resetCurrentDebugFiberInDEV();
-      resetChildLanes(completedWork);
 
       if (next !== null) {
         // Completing this fiber spawned new work. Work on that next.
         workInProgress = next;
         return;
       }
+
+      resetChildLanes(completedWork);
 
       if (
         returnFiber !== null &&
@@ -1625,6 +1626,16 @@ function completeUnitOfWork(unitOfWork: Fiber): void {
 
       // Because this fiber did not complete, don't reset its expiration time.
 
+      if (next !== null) {
+        // If completing this work spawned new work, do that next. We'll come
+        // back here again.
+        // Since we're restarting, remove anything that is not a host effect
+        // from the effect tag.
+        next.effectTag &= HostEffectMask;
+        workInProgress = next;
+        return;
+      }
+
       if (
         enableProfilerTimer &&
         (completedWork.mode & ProfileMode) !== NoMode
@@ -1640,16 +1651,6 @@ function completeUnitOfWork(unitOfWork: Fiber): void {
           child = child.sibling;
         }
         completedWork.actualDuration = actualDuration;
-      }
-
-      if (next !== null) {
-        // If completing this work spawned new work, do that next. We'll come
-        // back here again.
-        // Since we're restarting, remove anything that is not a host effect
-        // from the effect tag.
-        next.effectTag &= HostEffectMask;
-        workInProgress = next;
-        return;
       }
 
       if (returnFiber !== null) {
