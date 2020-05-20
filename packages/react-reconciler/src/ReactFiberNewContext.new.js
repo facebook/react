@@ -35,8 +35,6 @@ import {createUpdate, enqueueUpdate, ForceUpdate} from './ReactUpdateQueue.new';
 import {markWorkInProgressReceivedUpdate} from './ReactFiberBeginWork.new';
 import {enableSuspenseServerRenderer} from 'shared/ReactFeatureFlags';
 
-const valueCursor: StackCursor<mixed> = createCursor(null);
-
 let rendererSigil;
 if (__DEV__) {
   // Use this to detect multiple renderers using the same context
@@ -72,13 +70,10 @@ export function exitDisallowedContextReadInDEV(): void {
   }
 }
 
-export function pushProvider<T>(providerFiber: Fiber, nextValue: T): void {
-  const context: ReactContext<T> = providerFiber.type._context;
-
+export function setContextValue<T>(context: ReactContext<T>, value: T) {
   if (isPrimaryRenderer) {
-    push(valueCursor, context._currentValue, providerFiber);
-
-    context._currentValue = nextValue;
+    const prevValueOnStack = context._currentValue;
+    context._currentValue = value;
     if (__DEV__) {
       if (
         context._currentRenderer !== undefined &&
@@ -92,10 +87,10 @@ export function pushProvider<T>(providerFiber: Fiber, nextValue: T): void {
       }
       context._currentRenderer = rendererSigil;
     }
+    return prevValueOnStack;
   } else {
-    push(valueCursor, context._currentValue2, providerFiber);
-
-    context._currentValue2 = nextValue;
+    const prevValueOnStack = context._currentValue2;
+    context._currentValue2 = value;
     if (__DEV__) {
       if (
         context._currentRenderer2 !== undefined &&
@@ -109,19 +104,15 @@ export function pushProvider<T>(providerFiber: Fiber, nextValue: T): void {
       }
       context._currentRenderer2 = rendererSigil;
     }
+    return prevValueOnStack;
   }
 }
 
-export function popProvider(providerFiber: Fiber): void {
-  const currentValue = valueCursor.current;
-
-  pop(valueCursor, providerFiber);
-
-  const context: ReactContext<any> = providerFiber.type._context;
+export function restoreContextValue<T>(context: ReactContext<T>, value: T) {
   if (isPrimaryRenderer) {
-    context._currentValue = currentValue;
+    context._currentValue = value;
   } else {
-    context._currentValue2 = currentValue;
+    context._currentValue2 = value;
   }
 }
 

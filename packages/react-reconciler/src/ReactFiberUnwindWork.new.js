@@ -34,8 +34,8 @@ import {
   popContext as popLegacyContext,
   popTopLevelContextObject as popTopLevelLegacyContextObject,
 } from './ReactFiberContext.new';
-import {popProvider} from './ReactFiberNewContext.new';
 import {popRenderLanes} from './ReactFiberWorkLoop.new';
+import {unwindGeneratorComponent} from './ReactFiberGeneratorComponent.new';
 
 import invariant from 'shared/invariant';
 
@@ -103,7 +103,7 @@ function unwindWork(workInProgress: Fiber, renderLanes: Lanes) {
       popHostContainer(workInProgress);
       return null;
     case ContextProvider:
-      popProvider(workInProgress);
+      unwindGeneratorComponent(workInProgress);
       return null;
     case OffscreenComponent:
     case LegacyHiddenComponent:
@@ -143,7 +143,7 @@ function unwindInterruptedWork(interruptedWork: Fiber) {
       popSuspenseContext(interruptedWork);
       break;
     case ContextProvider:
-      popProvider(interruptedWork);
+      unwindGeneratorComponent(interruptedWork);
       break;
     case OffscreenComponent:
     case LegacyHiddenComponent:

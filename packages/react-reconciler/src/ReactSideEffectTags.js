@@ -36,3 +36,4 @@ export const HostEffectMask = /*           */ 0b00011111111111;
 
 export const Incomplete = /*               */ 0b00100000000000;
 export const ShouldCapture = /*            */ 0b01000000000000;
+export const GeneratorIncomplete = /*      */ 0b10000000000000;
