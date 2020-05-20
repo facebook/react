@@ -138,6 +138,3 @@ export const enableLegacyFBSupport = false;
 // expiration time is currently rendering. Remove this flag once we have
 // migrated to the new behavior.
 export const deferRenderPhaseUpdateToNextBatch = true;
-
-// Flag used by www build so we can log occurrences of legacy hidden API
-export const disableHiddenPropDeprioritization = true;
