@@ -208,6 +208,9 @@ function InspectedElementContextController({children}: Props) {
             context,
             hooks,
             props,
+            rendererPackageName,
+            rendererVersion,
+            rootType,
             state,
             key,
           } = ((data.value: any): InspectedElementBackend);
@@ -220,6 +223,9 @@ function InspectedElementContextController({children}: Props) {
             hasLegacyContext,
             id,
             key,
+            rendererPackageName,
+            rendererVersion,
+            rootType,
             source,
             type,
             owners:

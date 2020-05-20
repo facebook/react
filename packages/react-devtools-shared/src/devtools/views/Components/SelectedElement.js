@@ -291,11 +291,13 @@ function InspectedElementView({
     hooks,
     owners,
     props,
+    rendererPackageName,
+    rendererVersion,
+    rootType,
     source,
     state,
   } = inspectedElement;
 
-  const {ownerID} = useContext(TreeStateContext);
   const bridge = useContext(BridgeContext);
   const store = useContext(StoreContext);
 
@@ -374,6 +376,15 @@ function InspectedElementView({
     };
   }
 
+  const rendererLabel =
+    rendererPackageName !== null && rendererVersion !== null
+      ? `${rendererPackageName}@${rendererVersion}`
+      : null;
+  const showRenderedBy =
+    (owners !== null && owners.length > 0) ||
+    rendererLabel !== null ||
+    rootType !== null;
+
   return (
     <Fragment>
       <div className={styles.InspectedElement}>
@@ -415,19 +426,27 @@ function InspectedElementView({
 
         <NativeStyleEditor />
 
-        {ownerID === null && owners !== null && owners.length > 0 && (
+        {showRenderedBy && (
           <div className={styles.Owners}>
             <div className={styles.OwnersHeader}>rendered by</div>
-            {owners.map(owner => (
-              <OwnerView
-                key={owner.id}
-                displayName={owner.displayName || 'Anonymous'}
-                hocDisplayNames={owner.hocDisplayNames}
-                id={owner.id}
-                isInStore={store.containsElement(owner.id)}
-                type={owner.type}
-              />
-            ))}
+            {owners !== null &&
+              owners.length > 0 &&
+              owners.map(owner => (
+                <OwnerView
+                  key={owner.id}
+                  displayName={owner.displayName || 'Anonymous'}
+                  hocDisplayNames={owner.hocDisplayNames}
+                  id={owner.id}
+                  isInStore={store.containsElement(owner.id)}
+                  type={owner.type}
+                />
+              ))}
+            {rootType !== null && (
+              <div className={styles.OwnersMetaField}>{rootType}</div>
+            )}
+            {rendererLabel !== null && (
+              <div className={styles.OwnersMetaField}>{rendererLabel}</div>
+            )}
           </div>
         )}
 

@@ -22,6 +22,7 @@ import {unstable_getThreadID} from 'scheduler/tracing';
 import {NoPriority} from './SchedulerWithReactIntegration.old';
 import {initializeUpdateQueue} from './ReactUpdateQueue.old';
 import {clearPendingUpdates as clearPendingMutableSourceUpdates} from './ReactMutableSource.old';
+import {LegacyRoot, BlockingRoot, ConcurrentRoot} from './ReactRootTags';
 
 function FiberRootNode(containerInfo, tag, hydrate) {
   this.tag = tag;
@@ -53,6 +54,20 @@ function FiberRootNode(containerInfo, tag, hydrate) {
   }
   if (enableSuspenseCallback) {
     this.hydrationCallbacks = null;
+  }
+
+  if (__DEV__) {
+    switch (tag) {
+      case BlockingRoot:
+        this._debugRootType = 'createBlockingRoot()';
+        break;
+      case ConcurrentRoot:
+        this._debugRootType = 'createRoot()';
+        break;
+      case LegacyRoot:
+        this._debugRootType = 'createLegacyRoot()';
+        break;
+    }
   }
 }
 
