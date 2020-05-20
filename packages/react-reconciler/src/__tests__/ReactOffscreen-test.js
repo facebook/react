@@ -2,6 +2,7 @@ let React;
 let ReactNoop;
 let Scheduler;
 let LegacyHidden;
+let useState;
 
 describe('ReactOffscreen', () => {
   beforeEach(() => {
@@ -11,6 +12,7 @@ describe('ReactOffscreen', () => {
     ReactNoop = require('react-noop-renderer');
     Scheduler = require('scheduler');
     LegacyHidden = React.unstable_LegacyHidden;
+    useState = React.useState;
   });
 
   function Text(props) {
@@ -74,6 +76,92 @@ describe('ReactOffscreen', () => {
       <>
         <span prop="Normal" />
         <span prop="Deferred" />
+      </>,
+    );
+  });
+
+  // @gate experimental
+  // @gate new
+  it('does not defer in legacy mode', async () => {
+    let setState;
+    function Foo() {
+      const [state, _setState] = useState('A');
+      setState = _setState;
+      return <Text text={state} />;
+    }
+
+    const root = ReactNoop.createLegacyRoot();
+    await ReactNoop.act(async () => {
+      root.render(
+        <>
+          <LegacyHidden mode="hidden">
+            <Foo />
+          </LegacyHidden>
+          <Text text="Outside" />
+        </>,
+      );
+      // Should not defer the hidden tree
+      expect(Scheduler).toFlushUntilNextPaint(['A', 'Outside']);
+    });
+    expect(root).toMatchRenderedOutput(
+      <>
+        <span prop="A" />
+        <span prop="Outside" />
+      </>,
+    );
+
+    // Test that the children can be updated
+    await ReactNoop.act(async () => {
+      setState('B');
+    });
+    expect(Scheduler).toHaveYielded(['B']);
+    expect(root).toMatchRenderedOutput(
+      <>
+        <span prop="B" />
+        <span prop="Outside" />
+      </>,
+    );
+  });
+
+  // @gate experimental
+  // @gate new
+  it('does not defer in blocking mode', async () => {
+    let setState;
+    function Foo() {
+      const [state, _setState] = useState('A');
+      setState = _setState;
+      return <Text text={state} />;
+    }
+
+    const root = ReactNoop.createBlockingRoot();
+    await ReactNoop.act(async () => {
+      root.render(
+        <>
+          <LegacyHidden mode="hidden">
+            <Foo />
+          </LegacyHidden>
+          <Text text="Outside" />
+        </>,
+      );
+      // Should not defer the hidden tree
+      expect(Scheduler).toFlushUntilNextPaint(['A', 'Outside']);
+    });
+    expect(root).toMatchRenderedOutput(
+      <>
+        <span prop="A" />
+        <span prop="Outside" />
+      </>,
+    );
+
+    // Test that the children can be updated
+    await ReactNoop.act(async () => {
+      setState('B');
+    });
+    expect(Scheduler).toHaveYielded(['B']);
+    expect(root).toMatchRenderedOutput(
+      <>
+        <span prop="B" />
+        <span prop="Outside" />
       </>,
     );
   });

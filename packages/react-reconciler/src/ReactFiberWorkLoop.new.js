@@ -1684,7 +1684,8 @@ function resetChildLanes(completedWork: Fiber) {
     (completedWork.tag === LegacyHiddenComponent ||
       completedWork.tag === OffscreenComponent) &&
     completedWork.memoizedState !== null &&
-    !includesSomeLane(subtreeRenderLanes, (OffscreenLane: Lane))
+    !includesSomeLane(subtreeRenderLanes, (OffscreenLane: Lane)) &&
+    (completedWork.mode & ConcurrentMode) !== NoLanes
   ) {
     // The children of this component are hidden. Don't bubble their
     // expiration times.
