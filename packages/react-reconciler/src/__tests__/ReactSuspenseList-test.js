@@ -1,6 +1,7 @@
 let React;
 let ReactNoop;
 let Scheduler;
+let Profiler;
 let Suspense;
 let SuspenseList;
 
@@ -11,6 +12,7 @@ describe('ReactSuspenseList', () => {
     React = require('react');
     ReactNoop = require('react-noop-renderer');
     Scheduler = require('scheduler');
+    Profiler = React.Profiler;
     Suspense = React.Suspense;
     SuspenseList = React.unstable_SuspenseList;
   });
@@ -2566,5 +2568,171 @@ describe('ReactSuspenseList', () => {
         <span>B</span>
       </>,
     );
+  });
+
+  // @gate experimental && enableProfilerTimer
+  it('counts the actual duration when profiling a SuspenseList', async () => {
+    // Order of parameters: id, phase, actualDuration, treeBaseDuration
+    const onRender = jest.fn();
+
+    const Fallback = () => {
+      Scheduler.unstable_yieldValue('Fallback');
+      Scheduler.unstable_advanceTime(3);
+      return <span>Loading...</span>;
+    };
+
+    const A = createAsyncText('A');
+    const B = createAsyncText('B');
+    const C = createAsyncText('C');
+    const D = createAsyncText('D');
+    await A.resolve();
+    await B.resolve();
+
+    function Sleep({time, children}) {
+      Scheduler.unstable_advanceTime(time);
+      return children;
+    }
+
+    function App({addRow, suspendTail}) {
+      Scheduler.unstable_yieldValue('App');
+      return (
+        <Profiler id="root" onRender={onRender}>
+          <SuspenseList revealOrder="forwards">
+            <Suspense fallback={<Fallback />}>
+              <Sleep time={1}>
+                <A />
+              </Sleep>
+            </Suspense>
+            <Suspense fallback={<Fallback />}>
+              <Sleep time={4}>
+                <B />
+              </Sleep>
+            </Suspense>
+            <Suspense fallback={<Fallback />}>
+              <Sleep time={5}>{suspendTail ? <C /> : <Text text="C" />}</Sleep>
+            </Suspense>
+            {addRow ? (
+              <Suspense fallback={<Fallback />}>
+                <Sleep time={12}>
+                  <D />
+                </Sleep>
+              </Suspense>
+            ) : null}
+          </SuspenseList>
+        </Profiler>
+      );
+    }
+
+    ReactNoop.render(<App suspendTail={true} />);
+
+    expect(Scheduler).toFlushAndYield([
+      'App',
+      'A',
+      'B',
+      'Suspend! [C]',
+      'Fallback',
+    ]);
+    expect(ReactNoop).toMatchRenderedOutput(
+      <>
+        <span>A</span>
+        <span>B</span>
+        <span>Loading...</span>
+      </>,
+    );
+    expect(onRender).toHaveBeenCalledTimes(1);
+
+    // The treeBaseDuration should be the time to render each child. The last
+    // one counts the fallback time.
+    // The actualDuration should also include the 5ms spent rendering the
+    // last suspended row.
+
+    // actualDuration
+    expect(onRender.mock.calls[0][2]).toBe(1 + 4 + 5 + 3);
+    // treeBaseDuration
+    expect(onRender.mock.calls[0][3]).toBe(1 + 4 + 3);
+
+    ReactNoop.render(<App suspendTail={false} />);
+
+    expect(Scheduler).toFlushAndYield(['App', 'A', 'B', 'C']);
+
+    expect(ReactNoop).toMatchRenderedOutput(
+      <>
+        <span>A</span>
+        <span>B</span>
+        <span>C</span>
+      </>,
+    );
+    expect(onRender).toHaveBeenCalledTimes(2);
+
+    // actualDuration
+    expect(onRender.mock.calls[1][2]).toBe(1 + 4 + 5);
+    // treeBaseDuration
+    expect(onRender.mock.calls[1][3]).toBe(1 + 4 + 5);
+
+    ReactNoop.render(<App addRow={true} suspendTail={true} />);
+
+    expect(Scheduler).toFlushAndYield([
+      'App',
+      'A',
+      'B',
+      'Suspend! [C]',
+      'Fallback',
+      // We rendered in together mode for the head, now we re-render with forced suspense.
+      'A',
+      'B',
+      'Suspend! [C]',
+      'Fallback',
+      // Lastly we render the tail.
+      'Fallback',
+    ]);
+
+    // Flush suspended time.
+    jest.advanceTimersByTime(1000);
+
+    expect(ReactNoop).toMatchRenderedOutput(
+      <>
+        <span>A</span>
+        <span>B</span>
+        <span hidden={true}>C</span>
+        <span>Loading...</span>
+        <span>Loading...</span>
+      </>,
+    );
+    expect(onRender).toHaveBeenCalledTimes(3);
+
+    // The treeBaseDuration should be the time to render the first two
+    // children and then two fallbacks.
+    // The actualDuration should also include rendering the content of
+    // the first fallback, as well as the second pass to render the head
+    // with force fallback mode.
+
+    // actualDuration
+    expect(onRender.mock.calls[2][2]).toBe((1 + 4 + 5 + 3) * 2 + 3);
+    // treeBaseDuration
+    expect(onRender.mock.calls[2][3]).toBe(
+      1 +
+        4 +
+        3 +
+        3 +
+        /* Resuspending a boundary also includes the content in base duration but it shouldn't */ 5,
+    );
+
+    await C.resolve();
+
+    expect(Scheduler).toFlushAndYield(['C', 'Suspend! [D]']);
+    expect(ReactNoop).toMatchRenderedOutput(
+      <>
+        <span>A</span>
+        <span>B</span>
+        <span>C</span>
+        <span>Loading...</span>
+      </>,
+    );
+    expect(onRender).toHaveBeenCalledTimes(4);
+
+    // actualDuration
+    expect(onRender.mock.calls[3][2]).toBe(5 + 12);
+    // treeBaseDuration
+    expect(onRender.mock.calls[3][3]).toBe(1 + 4 + 5 + 3);
   });
 });
