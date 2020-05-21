@@ -802,6 +802,10 @@ export function attach(
 
       // Location of component in source coude.
       source,
+
+      rootType: null,
+      rendererPackageName: null,
+      rendererVersion: null,
     };
   }
 

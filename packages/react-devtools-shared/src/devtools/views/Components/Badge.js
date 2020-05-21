@@ -26,11 +26,11 @@ export default function Badge({
   type,
   children,
 }: Props) {
-  let totalBadgeCount = 0;
-
-  if (hocDisplayNames !== null) {
-    totalBadgeCount += hocDisplayNames.length;
+  if (hocDisplayNames === null) {
+    return null;
   }
+
+  const totalBadgeCount = hocDisplayNames.length;
 
   return (
     <Fragment>

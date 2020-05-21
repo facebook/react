@@ -87,6 +87,7 @@ export type ReactProviderType<T> = {
 export type ReactRenderer = {
   findFiberByHostInstance: (hostInstance: NativeType) => ?Fiber,
   version: string,
+  rendererPackageName: string,
   bundleType: BundleType,
   // 16.9+
   overrideHookState?: ?(
@@ -207,10 +208,17 @@ export type InspectedElement = {|
   // List of owners
   owners: Array<Owner> | null,
 
-  // Location of component in source coude.
+  // Location of component in source code.
   source: Source | null,
 
   type: ElementType,
+
+  // Meta information about the root this element belongs to.
+  rootType: string | null,
+
+  // Meta information about the renderer that created this element.
+  rendererPackageName: string | null,
+  rendererVersion: string | null,
 |};
 
 export const InspectElementFullDataType = 'full-data';
