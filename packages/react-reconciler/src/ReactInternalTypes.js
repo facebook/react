@@ -350,4 +350,6 @@ export type Dispatcher = {|
     subscribe: MutableSourceSubscribeFn<Source, Snapshot>,
   ): Snapshot,
   useOpaqueIdentifier(): any,
+
+  unstable_isNewReconciler?: boolean,
 |};

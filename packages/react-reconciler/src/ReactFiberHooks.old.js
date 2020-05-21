@@ -24,7 +24,10 @@ import type {FiberRoot} from './ReactInternalTypes';
 import type {OpaqueIDType} from './ReactFiberHostConfig';
 
 import ReactSharedInternals from 'shared/ReactSharedInternals';
-import {enableDebugTracing} from 'shared/ReactFeatureFlags';
+import {
+  enableDebugTracing,
+  enableNewReconciler,
+} from 'shared/ReactFeatureFlags';
 
 import {markRootExpiredAtTime} from './ReactFiberRoot.old';
 import {NoMode, BlockingMode, DebugTracingMode} from './ReactTypeOfMode';
@@ -1757,6 +1760,8 @@ export const ContextOnlyDispatcher: Dispatcher = {
   useTransition: throwInvalidHookError,
   useMutableSource: throwInvalidHookError,
   useOpaqueIdentifier: throwInvalidHookError,
+
+  unstable_isNewReconciler: enableNewReconciler,
 };
 
 const HooksDispatcherOnMount: Dispatcher = {
@@ -1777,6 +1782,8 @@ const HooksDispatcherOnMount: Dispatcher = {
   useTransition: mountTransition,
   useMutableSource: mountMutableSource,
   useOpaqueIdentifier: mountOpaqueIdentifier,
+
+  unstable_isNewReconciler: enableNewReconciler,
 };
 
 const HooksDispatcherOnUpdate: Dispatcher = {
@@ -1797,6 +1804,8 @@ const HooksDispatcherOnUpdate: Dispatcher = {
   useTransition: updateTransition,
   useMutableSource: updateMutableSource,
   useOpaqueIdentifier: updateOpaqueIdentifier,
+
+  unstable_isNewReconciler: enableNewReconciler,
 };
 
 const HooksDispatcherOnRerender: Dispatcher = {
@@ -1817,6 +1826,8 @@ const HooksDispatcherOnRerender: Dispatcher = {
   useTransition: rerenderTransition,
   useMutableSource: updateMutableSource,
   useOpaqueIdentifier: rerenderOpaqueIdentifier,
+
+  unstable_isNewReconciler: enableNewReconciler,
 };
 
 let HooksDispatcherOnMountInDEV: Dispatcher | null = null;
@@ -1979,6 +1990,8 @@ if (__DEV__) {
       mountHookTypesDev();
       return mountOpaqueIdentifier();
     },
+
+    unstable_isNewReconciler: enableNewReconciler,
   };
 
   HooksDispatcherOnMountWithHookTypesInDEV = {
@@ -2109,6 +2122,8 @@ if (__DEV__) {
       updateHookTypesDev();
       return mountOpaqueIdentifier();
     },
+
+    unstable_isNewReconciler: enableNewReconciler,
   };
 
   HooksDispatcherOnUpdateInDEV = {
@@ -2239,6 +2254,8 @@ if (__DEV__) {
       updateHookTypesDev();
       return updateOpaqueIdentifier();
     },
+
+    unstable_isNewReconciler: enableNewReconciler,
   };
 
   HooksDispatcherOnRerenderInDEV = {
@@ -2370,6 +2387,8 @@ if (__DEV__) {
       updateHookTypesDev();
       return rerenderOpaqueIdentifier();
     },
+
+    unstable_isNewReconciler: enableNewReconciler,
   };
 
   InvalidNestedHooksDispatcherOnMountInDEV = {
@@ -2516,6 +2535,8 @@ if (__DEV__) {
       mountHookTypesDev();
       return mountOpaqueIdentifier();
     },
+
+    unstable_isNewReconciler: enableNewReconciler,
   };
 
   InvalidNestedHooksDispatcherOnUpdateInDEV = {
@@ -2662,6 +2683,8 @@ if (__DEV__) {
       updateHookTypesDev();
       return updateOpaqueIdentifier();
     },
+
+    unstable_isNewReconciler: enableNewReconciler,
   };
 
   InvalidNestedHooksDispatcherOnRerenderInDEV = {
@@ -2809,5 +2832,7 @@ if (__DEV__) {
       updateHookTypesDev();
       return rerenderOpaqueIdentifier();
     },
+
+    unstable_isNewReconciler: enableNewReconciler,
   };
 }
