@@ -20,4 +20,5 @@ export {
   unstable_flushControlled,
   unstable_scheduleHydration,
   unstable_createEventHandle,
+  unstable_isNewReconciler,
 } from './src/client/ReactDOM';

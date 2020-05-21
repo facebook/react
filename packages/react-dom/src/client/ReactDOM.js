@@ -45,7 +45,10 @@ import {
 } from 'legacy-events/EventPluginRegistry';
 import ReactVersion from 'shared/ReactVersion';
 import invariant from 'shared/invariant';
-import {warnUnstableRenderSubtreeIntoContainer} from 'shared/ReactFeatureFlags';
+import {
+  warnUnstableRenderSubtreeIntoContainer,
+  enableNewReconciler,
+} from 'shared/ReactFeatureFlags';
 
 import {
   getInstanceFromNode,
@@ -246,3 +249,5 @@ if (__DEV__) {
     }
   }
 }
+
+export const unstable_isNewReconciler = enableNewReconciler;
