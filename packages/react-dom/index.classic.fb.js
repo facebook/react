@@ -37,4 +37,5 @@ export {
   unstable_renderSubtreeIntoContainer,
   unstable_createPortal,
   unstable_createEventHandle,
+  unstable_isNewReconciler,
 } from './src/client/ReactDOM';
