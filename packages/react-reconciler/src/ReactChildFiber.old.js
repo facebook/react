@@ -412,7 +412,7 @@ function ChildReconciler(shouldTrackSideEffects) {
         existing.return = returnFiber;
         if (__DEV__) {
           existing._debugSource = element._source;
-          existing._debugOwner = element._owner;
+          existing._debugOwner = element._debugOwner;
         }
         return existing;
       } else if (enableBlocksAPI && current.tag === Block) {
@@ -433,7 +433,7 @@ function ChildReconciler(shouldTrackSideEffects) {
           existing.type = type;
           if (__DEV__) {
             existing._debugSource = element._source;
-            existing._debugOwner = element._owner;
+            existing._debugOwner = element._debugOwner;
           }
           return existing;
         }
@@ -1176,7 +1176,7 @@ function ChildReconciler(shouldTrackSideEffects) {
               existing.return = returnFiber;
               if (__DEV__) {
                 existing._debugSource = element._source;
-                existing._debugOwner = element._owner;
+                existing._debugOwner = element._debugOwner;
               }
               return existing;
             }
@@ -1201,7 +1201,7 @@ function ChildReconciler(shouldTrackSideEffects) {
                   existing.return = returnFiber;
                   if (__DEV__) {
                     existing._debugSource = element._source;
-                    existing._debugOwner = element._owner;
+                    existing._debugOwner = element._debugOwner;
                   }
                   return existing;
                 }
@@ -1223,7 +1223,7 @@ function ChildReconciler(shouldTrackSideEffects) {
               existing.return = returnFiber;
               if (__DEV__) {
                 existing._debugSource = element._source;
-                existing._debugOwner = element._owner;
+                existing._debugOwner = element._debugOwner;
               }
               return existing;
             }

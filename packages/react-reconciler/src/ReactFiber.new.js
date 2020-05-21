@@ -606,7 +606,7 @@ export function createFiberFromElement(
   );
   if (__DEV__) {
     fiber._debugSource = element._source;
-    fiber._debugOwner = element._owner;
+    fiber._debugOwner = element._debugOwner;
   }
   return fiber;
 }

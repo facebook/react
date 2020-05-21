@@ -22,6 +22,7 @@ export type ReactElement = {|
   _owner: any,
 
   // __DEV__
+  _debugOwner: any,
   _store: {validated: boolean, ...},
   _self: React$Element<any>,
   _shadowChildren: any,

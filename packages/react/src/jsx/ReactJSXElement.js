@@ -160,6 +160,8 @@ const ReactElement = function(type, key, ref, self, source, owner, props) {
   };
 
   if (__DEV__) {
+    element._debugOwner = owner;
+
     // The validation flag is currently mutative. We put it on
     // an external backing store so that we can freeze the whole object.
     // This can be replaced with a WeakMap once they are implemented in
