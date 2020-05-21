@@ -4145,6 +4145,92 @@ describe('Profiler', () => {
         expect(call[0]).toEqual('test-profiler');
         expect(call[4]).toMatchInteractions([]);
       });
+
+      it('should properly report base duration wrt suspended subtrees', async () => {
+        loadModulesForTracing({useNoopRenderer: true});
+
+        const onRender = jest.fn();
+
+        let resolve = null;
+        const promise = new Promise(_resolve => {
+          resolve = _resolve;
+        });
+
+        function Other() {
+          Scheduler.unstable_advanceTime(1);
+          Scheduler.unstable_yieldValue('Other');
+          return <div>Other</div>;
+        }
+
+        function Fallback() {
+          Scheduler.unstable_advanceTime(8);
+          Scheduler.unstable_yieldValue('Fallback');
+          return <div>Fallback</div>;
+        }
+
+        let shouldSuspend = false;
+        function Suspender() {
+          Scheduler.unstable_advanceTime(15);
+          if (shouldSuspend) {
+            Scheduler.unstable_yieldValue('Suspender!');
+            throw promise;
+          }
+          Scheduler.unstable_yieldValue('Suspender');
+          return <div>Suspender</div>;
+        }
+
+        function App() {
+          return (
+            <React.Profiler id="root" onRender={onRender}>
+              <Other />
+              <React.Suspense fallback={<Fallback />}>
+                <Suspender />
+              </React.Suspense>
+            </React.Profiler>
+          );
+        }
+
+        ReactNoop.render(<App />);
+        expect(Scheduler).toFlushAndYield(['Other', 'Suspender']);
+        expect(ReactNoop).toMatchRenderedOutput(
+          <>
+            <div>Other</div>
+            <div>Suspender</div>
+          </>,
+        );
+        expect(onRender).toHaveBeenCalledTimes(1);
+        expect(onRender.mock.calls[0][2]).toBe(1 + 15); // actual
+        expect(onRender.mock.calls[0][3]).toBe(1 + 15); // base
+
+        shouldSuspend = true;
+        ReactNoop.render(<App />);
+        expect(Scheduler).toFlushAndYield(['Other', 'Suspender!', 'Fallback']);
+        await awaitableAdvanceTimers(20000);
+        expect(ReactNoop).toMatchRenderedOutput(
+          <>
+            <div>Other</div>
+            <div hidden={true}>Suspender</div>
+            <div>Fallback</div>
+          </>,
+        );
+        expect(onRender).toHaveBeenCalledTimes(2);
+        expect(onRender.mock.calls[1][2]).toBe(1 + 15 + 8); // actual
+        expect(onRender.mock.calls[1][3]).toBe(1 + 8); // base
+
+        shouldSuspend = false;
+        resolve();
+        await promise;
+        expect(Scheduler).toFlushAndYield(['Suspender']);
+        expect(ReactNoop).toMatchRenderedOutput(
+          <>
+            <div>Other</div>
+            <div>Suspender</div>
+          </>,
+        );
+        expect(onRender).toHaveBeenCalledTimes(3);
+        expect(onRender.mock.calls[2][2]).toBe(15); // actual
+        expect(onRender.mock.calls[2][3]).toBe(1 + 15); // base
+      });
     });
   });
 });
