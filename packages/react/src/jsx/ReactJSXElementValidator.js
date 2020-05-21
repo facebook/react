@@ -29,17 +29,16 @@ import {describeUnknownElementTypeFrameInDEV} from 'shared/ReactComponentStackFr
 
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 
-const ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
 const ReactDebugCurrentFrame = ReactSharedInternals.ReactDebugCurrentFrame;
 
 function setCurrentlyValidatingElement(element) {
   if (__DEV__) {
     if (element) {
-      const owner = element._owner;
+      const debugOwner = element._debugOwner;
       const stack = describeUnknownElementTypeFrameInDEV(
         element.type,
         element._source,
-        owner ? owner.type : null,
+        debugOwner ? debugOwner.type : null,
       );
       ReactDebugCurrentFrame.setExtraStackFrame(stack);
     } else {
@@ -75,8 +74,8 @@ export function isValidElement(object) {
 
 function getDeclarationErrorAddendum() {
   if (__DEV__) {
-    if (ReactCurrentOwner.current) {
-      const name = getComponentName(ReactCurrentOwner.current.type);
+    if (ReactDebugCurrentFrame.debugOwner) {
+      const name = getComponentName(ReactDebugCurrentFrame.debugOwner.type);
       if (name) {
         return '\n\nCheck the render method of `' + name + '`.';
       }
@@ -150,12 +149,12 @@ function validateExplicitKey(element, parentType) {
     let childOwner = '';
     if (
       element &&
-      element._owner &&
-      element._owner !== ReactCurrentOwner.current
+      element._debugOwner &&
+      element._debugOwner !== ReactDebugCurrentFrame.debugOwner
     ) {
       // Give the component that originally created this child.
       childOwner = ` It was passed a child from ${getComponentName(
-        element._owner.type,
+        element._debugOwner.type,
       )}.`;
     }
 

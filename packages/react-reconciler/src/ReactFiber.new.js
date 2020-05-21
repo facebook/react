@@ -454,7 +454,7 @@ export function createFiberFromTypeAndProps(
   type: any, // React$ElementType
   key: null | string,
   pendingProps: any,
-  owner: null | Fiber,
+  debugOwner: null | Fiber,
   mode: TypeOfMode,
   lanes: Lanes,
 ): Fiber {
@@ -559,7 +559,9 @@ export function createFiberFromTypeAndProps(
               "it's defined in, or you might have mixed up default and " +
               'named imports.';
           }
-          const ownerName = owner ? getComponentName(owner.type) : null;
+          const ownerName = debugOwner
+            ? getComponentName(debugOwner.type)
+            : null;
           if (ownerName) {
             info += '\n\nCheck the render method of `' + ownerName + '`.';
           }
@@ -580,7 +582,9 @@ export function createFiberFromTypeAndProps(
   fiber.elementType = type;
   fiber.type = resolvedType;
   fiber.lanes = lanes;
-
+  if (__DEV__) {
+    fiber._debugOwner = debugOwner;
+  }
   return fiber;
 }
 
@@ -589,9 +593,9 @@ export function createFiberFromElement(
   mode: TypeOfMode,
   lanes: Lanes,
 ): Fiber {
-  let owner = null;
+  let debugOwner = null;
   if (__DEV__) {
-    owner = element._owner;
+    debugOwner = element._debugOwner;
   }
   const type = element.type;
   const key = element.key;
@@ -600,13 +604,12 @@ export function createFiberFromElement(
     type,
     key,
     pendingProps,
-    owner,
+    debugOwner,
     mode,
     lanes,
   );
   if (__DEV__) {
     fiber._debugSource = element._source;
-    fiber._debugOwner = element._debugOwner;
   }
   return fiber;
 }

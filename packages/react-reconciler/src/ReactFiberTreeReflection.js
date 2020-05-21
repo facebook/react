@@ -10,6 +10,7 @@
 import type {Fiber} from './ReactInternalTypes';
 import type {Container, SuspenseInstance} from './ReactFiberHostConfig';
 import type {SuspenseState} from './ReactFiberSuspenseComponent.old';
+import {isRendering as ReactCurrentFiberIsRendering} from './ReactCurrentFiber';
 
 import invariant from 'shared/invariant';
 
@@ -28,7 +29,10 @@ import {
 import {NoEffect, Placement, Hydrating, Deletion} from './ReactSideEffectTags';
 import {enableFundamentalAPI} from 'shared/ReactFeatureFlags';
 
-const ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
+let ReactDebugCurrentFrame;
+if (__DEV__) {
+  ReactDebugCurrentFrame = ReactSharedInternals.ReactDebugCurrentFrame;
+}
 
 export function getNearestMountedFiber(fiber: Fiber): null | Fiber {
   let node = fiber;
@@ -92,10 +96,14 @@ export function isFiberMounted(fiber: Fiber): boolean {
 
 export function isMounted(component: React$Component<any, any>): boolean {
   if (__DEV__) {
-    const owner = (ReactCurrentOwner.current: any);
-    if (owner !== null && owner.tag === ClassComponent) {
-      const ownerFiber: Fiber = owner;
-      const instance = ownerFiber.stateNode;
+    const debugOwner = (ReactDebugCurrentFrame.debugOwner: any);
+    if (
+      ReactCurrentFiberIsRendering &&
+      debugOwner !== null &&
+      debugOwner.tag === ClassComponent
+    ) {
+      const debugOwnerFiber: Fiber = debugOwner;
+      const instance = debugOwnerFiber.stateNode;
       if (!instance._warnedAboutRefsInRender) {
         console.error(
           '%s is accessing isMounted inside its render() function. ' +
@@ -103,7 +111,7 @@ export function isMounted(component: React$Component<any, any>): boolean {
             'never access something that requires stale data from the previous ' +
             'render, such as refs. Move this logic to componentDidMount and ' +
             'componentDidUpdate instead.',
-          getComponentName(ownerFiber.type) || 'A component',
+          getComponentName(debugOwnerFiber.type) || 'A component',
         );
       }
       instance._warnedAboutRefsInRender = true;

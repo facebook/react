@@ -164,8 +164,6 @@ const ReactElement = function(type, key, ref, self, source, owner, props) {
   };
 
   if (__DEV__) {
-    element._debugOwner = ReactDebugCurrentFrame.debugOwner;
-
     // The validation flag is currently mutative. We put it on
     // an external backing store so that we can freeze the whole object.
     // This can be replaced with a WeakMap once they are implemented in
@@ -196,6 +194,12 @@ const ReactElement = function(type, key, ref, self, source, owner, props) {
       enumerable: false,
       writable: false,
       value: source,
+    });
+    Object.defineProperty(element, '_debugOwner', {
+      configurable: false,
+      enumerable: false,
+      writable: false,
+      value: ReactDebugCurrentFrame.debugOwner,
     });
     if (Object.freeze) {
       Object.freeze(element.props);

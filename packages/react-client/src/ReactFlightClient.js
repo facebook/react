@@ -235,6 +235,12 @@ function createElement(type, key, props): React$Element<any> {
       writable: false,
       value: null,
     });
+    Object.defineProperty(element, '_debugOwner', {
+      configurable: false,
+      enumerable: false,
+      writable: false,
+      value: null,
+    });
   }
   return element;
 }

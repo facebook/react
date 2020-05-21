@@ -24,6 +24,7 @@ import {
   injectIntoDevTools,
   getPublicRootInstance,
 } from 'react-reconciler/src/ReactFiberReconciler';
+import {isRendering as ReactCurrentFiberIsRendering} from 'react-reconciler/src/ReactCurrentFiber';
 // TODO: direct imports like some-package/src/* are bad. Fix me.
 import {getStackByFiberInDevAndProd} from 'react-reconciler/src/ReactFiberComponentStack';
 import {createPortal as createPortalImpl} from 'react-reconciler/src/ReactPortal';
@@ -44,26 +45,33 @@ import {LegacyRoot} from 'react-reconciler/src/ReactRootTags';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import getComponentName from 'shared/getComponentName';
 
-const ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
+let ReactDebugCurrentFrame;
+if (__DEV__) {
+  ReactDebugCurrentFrame = ReactSharedInternals.ReactDebugCurrentFrame;
+}
 
 function findHostInstance_DEPRECATED(
   componentOrHandle: any,
 ): ?React$ElementRef<HostComponent<mixed>> {
   if (__DEV__) {
-    const owner = ReactCurrentOwner.current;
-    if (owner !== null && owner.stateNode !== null) {
-      if (!owner.stateNode._warnedAboutRefsInRender) {
+    const debugOwner = ReactDebugCurrentFrame.debugOwner;
+    if (
+      ReactCurrentFiberIsRendering &&
+      debugOwner !== null &&
+      debugOwner.stateNode !== null
+    ) {
+      if (!debugOwner.stateNode._warnedAboutRefsInRender) {
         console.error(
           '%s is accessing findNodeHandle inside its render(). ' +
             'render() should be a pure function of props and state. It should ' +
             'never access something that requires stale data from the previous ' +
             'render, such as refs. Move this logic to componentDidMount and ' +
             'componentDidUpdate instead.',
-          getComponentName(owner.type) || 'A component',
+          getComponentName(debugOwner.type) || 'A component',
         );
       }
 
-      owner.stateNode._warnedAboutRefsInRender = true;
+      debugOwner.stateNode._warnedAboutRefsInRender = true;
     }
   }
   if (componentOrHandle == null) {
@@ -97,20 +105,24 @@ function findHostInstance_DEPRECATED(
 
 function findNodeHandle(componentOrHandle: any): ?number {
   if (__DEV__) {
-    const owner = ReactCurrentOwner.current;
-    if (owner !== null && owner.stateNode !== null) {
-      if (!owner.stateNode._warnedAboutRefsInRender) {
+    const debugOwner = ReactDebugCurrentFrame.debugOwner;
+    if (
+      ReactCurrentFiberIsRendering &&
+      debugOwner !== null &&
+      debugOwner.stateNode !== null
+    ) {
+      if (!debugOwner.stateNode._warnedAboutRefsInRender) {
         console.error(
           '%s is accessing findNodeHandle inside its render(). ' +
             'render() should be a pure function of props and state. It should ' +
             'never access something that requires stale data from the previous ' +
             'render, such as refs. Move this logic to componentDidMount and ' +
             'componentDidUpdate instead.',
-          getComponentName(owner.type) || 'A component',
+          getComponentName(debugOwner.type) || 'A component',
         );
       }
 
-      owner.stateNode._warnedAboutRefsInRender = true;
+      debugOwner.stateNode._warnedAboutRefsInRender = true;
     }
   }
   if (componentOrHandle == null) {

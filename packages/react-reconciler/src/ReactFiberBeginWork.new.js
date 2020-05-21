@@ -323,7 +323,6 @@ function updateForwardRef(
   let nextChildren;
   prepareToReadContext(workInProgress, renderLanes);
   if (__DEV__) {
-    ReactCurrentOwner.current = workInProgress;
     setIsRendering(true);
     nextChildren = renderWithHooks(
       current,
@@ -726,7 +725,6 @@ function updateFunctionComponent(
   let nextChildren;
   prepareToReadContext(workInProgress, renderLanes);
   if (__DEV__) {
-    ReactCurrentOwner.current = workInProgress;
     setIsRendering(true);
     nextChildren = renderWithHooks(
       current,
@@ -795,7 +793,6 @@ function updateBlock<Props, Data>(
   let nextChildren;
   prepareToReadContext(workInProgress, renderLanes);
   if (__DEV__) {
-    ReactCurrentOwner.current = workInProgress;
     setIsRendering(true);
     nextChildren = renderWithHooks(
       current,
@@ -1384,7 +1381,6 @@ function mountIndeterminateComponent(
     }
 
     setIsRendering(true);
-    ReactCurrentOwner.current = workInProgress;
     value = renderWithHooks(
       null,
       workInProgress,
@@ -2875,7 +2871,6 @@ function updateContextConsumer(
   const newValue = readContext(context, newProps.unstable_observedBits);
   let newChildren;
   if (__DEV__) {
-    ReactCurrentOwner.current = workInProgress;
     setIsRendering(true);
     newChildren = render(newValue);
     setIsRendering(false);

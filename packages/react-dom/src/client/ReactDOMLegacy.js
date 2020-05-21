@@ -32,17 +32,19 @@ import {
   findHostInstance,
   findHostInstanceWithWarning,
 } from 'react-reconciler/src/ReactFiberReconciler';
+import {isRendering as ReactCurrentFiberIsRendering} from 'react-reconciler/src/ReactCurrentFiber';
 import getComponentName from 'shared/getComponentName';
 import invariant from 'shared/invariant';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import {has as hasInstance} from 'shared/ReactInstanceMap';
 
-const ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
+let ReactDebugCurrentFrame;
 
 let topLevelUpdateWarnings;
 let warnedAboutHydrateAPI = false;
 
 if (__DEV__) {
+  ReactDebugCurrentFrame = ReactSharedInternals.ReactDebugCurrentFrame;
   topLevelUpdateWarnings = (container: Container) => {
     if (container._reactRootContainer && container.nodeType !== COMMENT_NODE) {
       const hostInstance = findHostInstanceWithNoPortals(
@@ -225,9 +227,14 @@ export function findDOMNode(
   componentOrElement: Element | ?React$Component<any, any>,
 ): null | Element | Text {
   if (__DEV__) {
-    const owner = (ReactCurrentOwner.current: any);
-    if (owner !== null && owner.stateNode !== null) {
-      const warnedAboutRefsInRender = owner.stateNode._warnedAboutRefsInRender;
+    const debugOwner = (ReactDebugCurrentFrame.debugOwner: any);
+    if (
+      ReactCurrentFiberIsRendering &&
+      debugOwner !== null &&
+      debugOwner.stateNode !== null
+    ) {
+      const warnedAboutRefsInRender =
+        debugOwner.stateNode._warnedAboutRefsInRender;
       if (!warnedAboutRefsInRender) {
         console.error(
           '%s is accessing findDOMNode inside its render(). ' +
@@ -235,10 +242,10 @@ export function findDOMNode(
             'never access something that requires stale data from the previous ' +
             'render, such as refs. Move this logic to componentDidMount and ' +
             'componentDidUpdate instead.',
-          getComponentName(owner.type) || 'A component',
+          getComponentName(debugOwner.type) || 'A component',
         );
       }
-      owner.stateNode._warnedAboutRefsInRender = true;
+      debugOwner.stateNode._warnedAboutRefsInRender = true;
     }
   }
   if (componentOrElement == null) {
