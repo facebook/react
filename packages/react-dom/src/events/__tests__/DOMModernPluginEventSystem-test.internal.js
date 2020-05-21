@@ -78,6 +78,27 @@ describe('DOMModernPluginEventSystem', () => {
           endNativeEventListenerClearDown();
         });
 
+        it('does not pool events', () => {
+          const buttonRef = React.createRef();
+          const log = [];
+          const onClick = jest.fn(e => log.push(e));
+
+          function Test() {
+            return <button ref={buttonRef} onClick={onClick} />;
+          }
+
+          ReactDOM.render(<Test />, container);
+
+          let buttonElement = buttonRef.current;
+          dispatchClickEvent(buttonElement);
+          expect(onClick).toHaveBeenCalledTimes(1);
+          dispatchClickEvent(buttonElement);
+          expect(onClick).toHaveBeenCalledTimes(2);
+          expect(log[0]).not.toBe(log[1]);
+          expect(log[0].type).toBe('click');
+          expect(log[1].type).toBe('click');
+        });
+
         it('handle propagation of click events', () => {
           const buttonRef = React.createRef();
           const divRef = React.createRef();
