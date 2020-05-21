@@ -13,6 +13,7 @@ import type {LazyComponent as LazyComponentType} from 'react/src/ReactLazy';
 import type {Fiber} from './ReactInternalTypes';
 import type {FiberRoot} from './ReactInternalTypes';
 import type {ExpirationTime} from './ReactFiberExpirationTime.old';
+import type {MutableSource} from 'shared/ReactTypes';
 import type {
   SuspenseState,
   SuspenseListRenderState,
@@ -114,6 +115,7 @@ import {
   isSuspenseInstancePending,
   isSuspenseInstanceFallback,
   registerSuspenseInstanceRetry,
+  supportsHydration,
 } from './ReactFiberHostConfig';
 import type {SuspenseInstance} from './ReactFiberHostConfig';
 import {shouldSuspend} from './ReactFiberReconciler';
@@ -179,8 +181,12 @@ import {
   renderDidSuspendDelayIfPossible,
   markUnprocessedUpdateTime,
   getWorkInProgressRoot,
+  getExecutionContext,
+  RetryAfterError,
+  NoContext,
 } from './ReactFiberWorkLoop.old';
 import {unstable_wrap as Schedule_tracing_wrap} from 'scheduler/tracing';
+import {setWorkInProgressVersion} from './ReactMutableSource.old';
 
 import {disableLogs, reenableLogs} from 'shared/ConsolePatchingDev';
 
@@ -1037,6 +1043,20 @@ function updateHostRoot(current, workInProgress, renderExpirationTime) {
     // We always try to hydrate. If this isn't a hydration pass there won't
     // be any children to hydrate which is effectively the same thing as
     // not hydrating.
+
+    if (supportsHydration) {
+      const mutableSourceEagerHydrationData =
+        root.mutableSourceEagerHydrationData;
+      if (mutableSourceEagerHydrationData != null) {
+        for (let i = 0; i < mutableSourceEagerHydrationData.length; i += 2) {
+          const mutableSource = ((mutableSourceEagerHydrationData[
+            i
+          ]: any): MutableSource<any>);
+          const version = mutableSourceEagerHydrationData[i + 1];
+          setWorkInProgressVersion(mutableSource, version);
+        }
+      }
+    }
 
     const child = mountChildFibers(
       workInProgress,
@@ -2238,6 +2258,14 @@ function updateDehydratedSuspenseComponent(
   // We should never be hydrating at this point because it is the first pass,
   // but after we've already committed once.
   warnIfHydrating();
+
+  if ((getExecutionContext() & RetryAfterError) !== NoContext) {
+    return retrySuspenseComponentWithoutHydrating(
+      current,
+      workInProgress,
+      renderExpirationTime,
+    );
+  }
 
   if ((workInProgress.mode & BlockingMode) === NoMode) {
     return retrySuspenseComponentWithoutHydrating(

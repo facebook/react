@@ -85,6 +85,7 @@ import {
   findHostInstancesForRefresh,
 } from './ReactFiberHotReloading.old';
 
+export {registerMutableSourceForHydration} from './ReactMutableSource.old';
 export {createPortal} from './ReactPortal';
 export {
   createComponentSelector,

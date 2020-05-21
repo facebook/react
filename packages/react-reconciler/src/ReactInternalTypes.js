@@ -16,6 +16,7 @@ import type {
   ReactContext,
   MutableSourceSubscribeFn,
   MutableSourceGetSnapshotFn,
+  MutableSourceVersion,
   MutableSource,
 } from 'shared/ReactTypes';
 import type {SuspenseInstance} from './ReactFiberHostConfig';
@@ -246,6 +247,11 @@ type BaseFiberRootProperties = {|
   // Used by useMutableSource hook to avoid tearing within this root
   // when external, mutable sources are read from during render.
   mutableSourceLastPendingUpdateTime: ExpirationTime,
+
+  // Used by useMutableSource hook to avoid tearing during hydrtaion.
+  mutableSourceEagerHydrationData?: Array<
+    MutableSource<any> | MutableSourceVersion,
+  > | null,
 
   // Only used by new reconciler
 
