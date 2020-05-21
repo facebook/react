@@ -2101,6 +2101,9 @@ function commitRootImpl(root, renderPriorityLevel) {
     while (nextEffect !== null) {
       const nextNextEffect = nextEffect.nextEffect;
       nextEffect.nextEffect = null;
+      if (nextEffect.effectTag & Deletion) {
+        nextEffect.sibling = null;
+      }
       nextEffect = nextNextEffect;
     }
   }
@@ -2595,6 +2598,9 @@ function flushPassiveEffectsImpl() {
     const nextNextEffect = effect.nextEffect;
     // Remove nextEffect pointer to assist GC
     effect.nextEffect = null;
+    if (effect.effectTag & Deletion) {
+      effect.sibling = null;
+    }
     effect = nextNextEffect;
   }
 
