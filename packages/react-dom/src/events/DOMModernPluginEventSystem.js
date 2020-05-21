@@ -207,10 +207,7 @@ export function dispatchEventsInBatch(dispatchQueue: DispatchQueue): void {
     const dispatchQueueItem: DispatchQueueItem = dispatchQueue[i];
     const {event, capture, bubble} = dispatchQueueItem;
     executeDispatchesInOrder(event, capture, bubble);
-    // Release the event from the pool if needed
-    if (!event.isPersistent()) {
-      event.constructor.release(event);
-    }
+    // Modern event system doesn't use pooling.
   }
   // This would be a good time to rethrow if any of the event handlers threw.
   rethrowCaughtError();

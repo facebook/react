@@ -11,6 +11,7 @@
 
 let React;
 let ReactDOM;
+const ReactFeatureFlags = require('shared/ReactFeatureFlags');
 
 describe('SyntheticWheelEvent', () => {
   let container;
@@ -113,23 +114,25 @@ describe('SyntheticWheelEvent', () => {
     expect(events.length).toBe(2);
   });
 
-  it('should be able to `persist`', () => {
-    const events = [];
-    const onWheel = event => {
-      expect(event.isPersistent()).toBe(false);
-      event.persist();
-      expect(event.isPersistent()).toBe(true);
-      events.push(event);
-    };
-    ReactDOM.render(<div onWheel={onWheel} />, container);
+  if (!ReactFeatureFlags.enableModernEventSystem) {
+    it('should be able to `persist`', () => {
+      const events = [];
+      const onWheel = event => {
+        expect(event.isPersistent()).toBe(false);
+        event.persist();
+        expect(event.isPersistent()).toBe(true);
+        events.push(event);
+      };
+      ReactDOM.render(<div onWheel={onWheel} />, container);
 
-    container.firstChild.dispatchEvent(
-      new MouseEvent('wheel', {
-        bubbles: true,
-      }),
-    );
+      container.firstChild.dispatchEvent(
+        new MouseEvent('wheel', {
+          bubbles: true,
+        }),
+      );
 
-    expect(events.length).toBe(1);
-    expect(events[0].type).toBe('wheel');
-  });
+      expect(events.length).toBe(1);
+      expect(events[0].type).toBe('wheel');
+    });
+  }
 });
