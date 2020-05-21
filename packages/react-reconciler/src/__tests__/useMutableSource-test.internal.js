@@ -1494,6 +1494,34 @@ describe('useMutableSource', () => {
   );
 
   // @gate experimental
+  it('warns about functions being used as snapshot values', async () => {
+    const source = createSource(() => 'a');
+    const mutableSource = createMutableSource(source);
+
+    const getSnapshot = () => source.value;
+
+    function Read() {
+      const fn = useMutableSource(mutableSource, getSnapshot, defaultSubscribe);
+      const value = fn();
+      Scheduler.unstable_yieldValue(value);
+      return value;
+    }
+
+    const root = ReactNoop.createRoot();
+    await act(async () => {
+      root.render(
+        <>
+          <Read />
+        </>,
+      );
+      expect(() => expect(Scheduler).toFlushAndYield(['a'])).toErrorDev(
+        'Mutable source should not return a function as the snapshot value.',
+      );
+    });
+    expect(root).toMatchRenderedOutput('a');
+  });
+
+  // @gate experimental
   it('getSnapshot changes and then source is mutated during interleaved event', async () => {
     const {useEffect} = React;
 

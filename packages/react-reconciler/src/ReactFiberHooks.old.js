@@ -900,7 +900,16 @@ function readFromUnsubcribedMutableSource<Source, Snapshot>(
   }
 
   if (isSafeToReadFromSource) {
-    return getSnapshot(source._source);
+    const snapshot = getSnapshot(source._source);
+    if (__DEV__) {
+      if (typeof snapshot === 'function') {
+        console.error(
+          'Mutable source should not return a function as the snapshot value. ' +
+            'Functions may close over mutable values and cause tearing.',
+        );
+      }
+    }
+    return snapshot;
   } else {
     // This handles the special case of a mutable source being shared beween renderers.
     // In that case, if the source is mutated between the first and second renderer,
@@ -978,6 +987,15 @@ function useMutableSource<Source, Snapshot>(
     const maybeNewVersion = getVersion(source._source);
     if (!is(version, maybeNewVersion)) {
       const maybeNewSnapshot = getSnapshot(source._source);
+      if (__DEV__) {
+        if (typeof maybeNewSnapshot === 'function') {
+          console.error(
+            'Mutable source should not return a function as the snapshot value. ' +
+              'Functions may close over mutable values and cause tearing.',
+          );
+        }
+      }
+
       if (!is(snapshot, maybeNewSnapshot)) {
         setSnapshot(maybeNewSnapshot);
 
