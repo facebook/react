@@ -1993,6 +1993,9 @@ function commitRootImpl(root, renderPriorityLevel) {
     while (nextEffect !== null) {
       const nextNextEffect = nextEffect.nextEffect;
       nextEffect.nextEffect = null;
+      if (nextEffect.effectTag & Deletion) {
+        detachFiberAfterEffects(nextEffect);
+      }
       nextEffect = nextNextEffect;
     }
   }
@@ -2447,6 +2450,9 @@ function flushPassiveEffectsImpl() {
     const nextNextEffect = effect.nextEffect;
     // Remove nextEffect pointer to assist GC
     effect.nextEffect = null;
+    if (effect.effectTag & Deletion) {
+      detachFiberAfterEffects(effect);
+    }
     effect = nextNextEffect;
   }
 
@@ -3548,4 +3554,8 @@ export function act(callback: () => Thenable<mixed>): Thenable<void> {
       },
     };
   }
+}
+
+function detachFiberAfterEffects(fiber: Fiber): void {
+  fiber.sibling = null;
 }
