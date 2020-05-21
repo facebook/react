@@ -1514,7 +1514,7 @@ describe('useMutableSource', () => {
           <Read />
         </>,
       );
-      expect(() => expect(Scheduler).toFlushAndYield(['a'])).toWarnDev(
+      expect(() => expect(Scheduler).toFlushAndYield(['a'])).toErrorDev(
         'Mutable source should not return a function as the snapshot value.',
       );
     });
