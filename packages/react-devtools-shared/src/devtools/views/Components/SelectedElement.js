@@ -45,7 +45,7 @@ import type {
   InspectedElementContextType,
   StoreAsGlobal,
 } from './InspectedElementContext';
-import type {Element, InspectedElement} from './types';
+import type {Element, InspectedElement, Owner} from './types';
 import type {ElementType} from 'react-devtools-shared/src/types';
 
 export type Props = {||};
@@ -380,10 +380,9 @@ function InspectedElementView({
     rendererPackageName !== null && rendererVersion !== null
       ? `${rendererPackageName}@${rendererVersion}`
       : null;
+  const showOwnersList = owners !== null && owners.length > 0;
   const showRenderedBy =
-    (owners !== null && owners.length > 0) ||
-    rendererLabel !== null ||
-    rootType !== null;
+    showOwnersList || rendererLabel !== null || rootType !== null;
 
   return (
     <Fragment>
@@ -429,9 +428,8 @@ function InspectedElementView({
         {showRenderedBy && (
           <div className={styles.Owners}>
             <div className={styles.OwnersHeader}>rendered by</div>
-            {owners !== null &&
-              owners.length > 0 &&
-              owners.map(owner => (
+            {showOwnersList &&
+              ((owners: any): Array<Owner>).map(owner => (
                 <OwnerView
                   key={owner.id}
                   displayName={owner.displayName || 'Anonymous'}
