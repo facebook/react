@@ -11,6 +11,10 @@ import ReactSharedInternals from 'shared/ReactSharedInternals';
 import {REACT_ELEMENT_TYPE} from 'shared/ReactSymbols';
 
 const ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
+let ReactDebugCurrentFrame;
+if (__DEV__) {
+  ReactDebugCurrentFrame = ReactSharedInternals.ReactDebugCurrentFrame;
+}
 
 const hasOwnProperty = Object.prototype.hasOwnProperty;
 
@@ -160,7 +164,7 @@ const ReactElement = function(type, key, ref, self, source, owner, props) {
   };
 
   if (__DEV__) {
-    element._debugOwner = owner;
+    element._debugOwner = ReactDebugCurrentFrame.debugOwner;
 
     // The validation flag is currently mutative. We put it on
     // an external backing store so that we can freeze the whole object.

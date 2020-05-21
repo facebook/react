@@ -46,6 +46,7 @@ function getCurrentFiberStackInDev(): string {
 export function resetCurrentFiber() {
   if (__DEV__) {
     ReactDebugCurrentFrame.getCurrentStack = null;
+    ReactDebugCurrentFrame.debugOwner = null;
     current = null;
     isRendering = false;
   }
@@ -54,6 +55,7 @@ export function resetCurrentFiber() {
 export function setCurrentFiber(fiber: Fiber) {
   if (__DEV__) {
     ReactDebugCurrentFrame.getCurrentStack = getCurrentFiberStackInDev;
+    ReactDebugCurrentFrame.debugOwner = fiber;
     current = fiber;
     isRendering = false;
   }

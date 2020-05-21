@@ -25,6 +25,7 @@ if (__DEV__) {
   };
   // Stack implementation injected by the current renderer.
   ReactDebugCurrentFrame.getCurrentStack = (null: null | (() => string));
+  ReactDebugCurrentFrame.debugOwner = null;
 
   ReactDebugCurrentFrame.getStackAddendum = function(): string {
     let stack = '';
