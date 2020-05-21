@@ -1124,7 +1124,7 @@ function commitNestedUnmounts(
   }
 }
 
-function detachFiber(fiber: Fiber) {
+function detachFiberMutation(fiber: Fiber) {
   // Cut off the return pointers to disconnect it from the tree. Ideally, we
   // should clear the child pointer of the parent alternate to let this
   // get GC:ed but we don't know which for sure which parent is the current
@@ -1132,7 +1132,8 @@ function detachFiber(fiber: Fiber) {
   // itself will be GC:ed when the parent updates the next time.
   // Note: we cannot null out sibling here, otherwise it can cause issues
   // with findDOMNode and how it requires the sibling field to carry out
-  // traversal in a later effect. See PR #16820.
+  // traversal in a later effect. See PR #16820. We now clear the sibling
+  // field after effects, see: detachFiberAfterEffects.
   fiber.alternate = null;
   fiber.child = null;
   fiber.dependencies_new = null;
@@ -1543,9 +1544,9 @@ function commitDeletion(
     commitNestedUnmounts(finishedRoot, current, renderPriorityLevel);
   }
   const alternate = current.alternate;
-  detachFiber(current);
+  detachFiberMutation(current);
   if (alternate !== null) {
-    detachFiber(alternate);
+    detachFiberMutation(alternate);
   }
 }
 
