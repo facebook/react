@@ -1,4 +1,4 @@
-# Contributing to React
+o# Contributing to React
 
 Want to contribute to React? There are a few things you need to know.  
 
