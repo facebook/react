@@ -171,6 +171,7 @@ export default function(babel, opts = {}) {
         for (let i = 0; i < referencePaths.length; i++) {
           const ref = referencePaths[i];
           if (
+            ref.node &&
             ref.node.type !== 'JSXIdentifier' &&
             ref.node.type !== 'Identifier'
           ) {
