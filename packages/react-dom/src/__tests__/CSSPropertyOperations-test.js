@@ -254,4 +254,30 @@ describe('CSSPropertyOperations', () => {
 
     expect(root.children[0].style.getPropertyValue('--foo')).toEqual('5');
   });
+
+  it('should render when style object has `null` prototype', () => {
+    class Comp extends React.Component {
+      render() {
+        const style = Object.create(null);
+        return <div style={style} />;
+      }
+    }
+
+    const root = document.createElement('div');
+    ReactDOM.render(<Comp />, root);
+  });
+
+  it('should render when style object has `__proto__`', () => {
+    class Comp extends React.Component {
+      render() {
+        const style = {
+          __proto__: { hasOwnProperty: '' }
+        };
+        return <div style={style} />;
+      }
+    }
+
+    const root = document.createElement('div');
+    ReactDOM.render(<Comp />, root);
+  });
 });
