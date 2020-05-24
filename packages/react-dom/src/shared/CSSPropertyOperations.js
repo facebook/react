@@ -11,6 +11,8 @@ import dangerousStyleValue from './dangerousStyleValue';
 import hyphenateStyleName from './hyphenateStyleName';
 import warnValidStyle from './warnValidStyle';
 
+const hasOwnProperty = Object.prototype.hasOwnProperty;
+
 /**
  * Operations for dealing with CSS properties.
  */
@@ -26,7 +28,7 @@ export function createDangerousStringForStyles(styles) {
     let serialized = '';
     let delimiter = '';
     for (const styleName in styles) {
-      if (!styles.hasOwnProperty(styleName)) {
+      if (!hasOwnProperty.call(styles, styleName)) {
         continue;
       }
       const styleValue = styles[styleName];
@@ -59,7 +61,7 @@ export function createDangerousStringForStyles(styles) {
 export function setValueForStyles(node, styles) {
   const style = node.style;
   for (let styleName in styles) {
-    if (!styles.hasOwnProperty(styleName)) {
+    if (!hasOwnProperty.call(styles, styleName)) {
       continue;
     }
     const isCustomProperty = styleName.indexOf('--') === 0;

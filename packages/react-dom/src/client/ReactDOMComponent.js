@@ -110,6 +110,7 @@ const HTML = '__html';
 const DEPRECATED_flareListeners = 'DEPRECATED_flareListeners';
 
 const {html: HTML_NAMESPACE} = Namespaces;
+const hasOwnProperty = Object.prototype.hasOwnProperty;
 
 let warnedUnknownTags;
 let suppressHydrationWarning;
@@ -731,7 +732,7 @@ export function diffProperties(
     if (propKey === STYLE) {
       const lastStyle = lastProps[propKey];
       for (styleName in lastStyle) {
-        if (lastStyle.hasOwnProperty(styleName)) {
+        if (hasOwnProperty.call(lastStyle, styleName)) {
           if (!styleUpdates) {
             styleUpdates = {};
           }
@@ -783,8 +784,8 @@ export function diffProperties(
         // Unset styles on `lastProp` but not on `nextProp`.
         for (styleName in lastProp) {
           if (
-            lastProp.hasOwnProperty(styleName) &&
-            (!nextProp || !nextProp.hasOwnProperty(styleName))
+            hasOwnProperty.call(lastProp, styleName) &&
+            (!nextProp || !hasOwnProperty.call(nextProp, styleName))
           ) {
             if (!styleUpdates) {
               styleUpdates = {};
@@ -795,7 +796,7 @@ export function diffProperties(
         // Update styles that changed since `lastProp`.
         for (styleName in nextProp) {
           if (
-            nextProp.hasOwnProperty(styleName) &&
+            hasOwnProperty.call(nextProp, styleName) &&
             lastProp[styleName] !== nextProp[styleName]
           ) {
             if (!styleUpdates) {
