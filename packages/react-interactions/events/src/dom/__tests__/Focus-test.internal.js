@@ -28,8 +28,14 @@ function initializeModules(hasPointerEvents) {
   ReactFeatureFlags.enableDeprecatedFlareAPI = true;
   React = require('react');
   ReactDOM = require('react-dom');
-  FocusResponder = require('react-interactions/events/focus').FocusResponder;
-  useFocus = require('react-interactions/events/focus').useFocus;
+
+  // TODO: This import throws outside of experimental mode. Figure out better
+  // strategy for gated imports.
+  if (__EXPERIMENTAL__) {
+    FocusResponder = require('react-interactions/events/deprecated-focus')
+      .FocusResponder;
+    useFocus = require('react-interactions/events/deprecated-focus').useFocus;
+  }
 }
 
 const forcePointerEvents = true;
@@ -53,7 +59,7 @@ describe.each(table)('Focus responder', hasPointerEvents => {
   describe('disabled', () => {
     let onBlur, onFocus, ref;
 
-    beforeEach(() => {
+    const componentInit = () => {
       onBlur = jest.fn();
       onFocus = jest.fn();
       ref = React.createRef();
@@ -66,9 +72,11 @@ describe.each(table)('Focus responder', hasPointerEvents => {
         return <div ref={ref} DEPRECATED_flareListeners={listener} />;
       };
       ReactDOM.render(<Component />, container);
-    });
+    };
 
+    // @gate experimental
     it('does not call callbacks', () => {
+      componentInit();
       const target = createEventTarget(ref.current);
       target.focus();
       target.blur();
@@ -80,7 +88,7 @@ describe.each(table)('Focus responder', hasPointerEvents => {
   describe('onBlur', () => {
     let onBlur, ref;
 
-    beforeEach(() => {
+    const componentInit = () => {
       onBlur = jest.fn();
       ref = React.createRef();
       const Component = () => {
@@ -90,9 +98,11 @@ describe.each(table)('Focus responder', hasPointerEvents => {
         return <div ref={ref} DEPRECATED_flareListeners={listener} />;
       };
       ReactDOM.render(<Component />, container);
-    });
+    };
 
+    // @gate experimental
     it('is called after "blur" event', () => {
+      componentInit();
       const target = createEventTarget(ref.current);
       target.focus();
       target.blur();
@@ -120,21 +130,25 @@ describe.each(table)('Focus responder', hasPointerEvents => {
       ReactDOM.render(<Component />, container);
     };
 
-    beforeEach(componentInit);
-
+    // @gate experimental
     it('is called after "focus" event', () => {
+      componentInit();
       const target = createEventTarget(ref.current);
       target.focus();
       expect(onFocus).toHaveBeenCalledTimes(1);
     });
 
+    // @gate experimental
     it('is not called if descendants of target receive focus', () => {
+      componentInit();
       const target = createEventTarget(innerRef.current);
       target.focus();
       expect(onFocus).not.toBeCalled();
     });
 
+    // @gate experimental
     it('is called with the correct pointerType: mouse', () => {
+      componentInit();
       const target = createEventTarget(ref.current);
       target.pointerdown();
       target.pointerup();
@@ -144,7 +158,9 @@ describe.each(table)('Focus responder', hasPointerEvents => {
       );
     });
 
+    // @gate experimental
     it('is called with the correct pointerType: touch', () => {
+      componentInit();
       const target = createEventTarget(ref.current);
       const pointerType = 'touch';
       target.pointerdown({pointerType});
@@ -156,7 +172,9 @@ describe.each(table)('Focus responder', hasPointerEvents => {
     });
 
     if (hasPointerEvents) {
+      // @gate experimental
       it('is called with the correct pointerType: pen', () => {
+        componentInit();
         const target = createEventTarget(ref.current);
         const pointerType = 'pen';
         target.pointerdown({pointerType});
@@ -168,7 +186,9 @@ describe.each(table)('Focus responder', hasPointerEvents => {
       });
     }
 
+    // @gate experimental
     it('is called with the correct pointerType using a keyboard', () => {
+      componentInit();
       const target = createEventTarget(ref.current);
       target.keydown({key: 'LeftArrow'});
       target.focus();
@@ -178,6 +198,7 @@ describe.each(table)('Focus responder', hasPointerEvents => {
       );
     });
 
+    // @gate experimental
     it('is called with the correct pointerType using Tab+altKey on Mac', () => {
       platform.set('mac');
       jest.resetModules();
@@ -202,7 +223,7 @@ describe.each(table)('Focus responder', hasPointerEvents => {
   describe('onFocusChange', () => {
     let onFocusChange, ref, innerRef;
 
-    beforeEach(() => {
+    const componentInit = () => {
       onFocusChange = jest.fn();
       ref = React.createRef();
       innerRef = React.createRef();
@@ -217,9 +238,11 @@ describe.each(table)('Focus responder', hasPointerEvents => {
         );
       };
       ReactDOM.render(<Component />, container);
-    });
+    };
 
+    // @gate experimental
     it('is called after "blur" and "focus" events', () => {
+      componentInit();
       const target = createEventTarget(ref.current);
       target.focus();
       expect(onFocusChange).toHaveBeenCalledTimes(1);
@@ -229,7 +252,9 @@ describe.each(table)('Focus responder', hasPointerEvents => {
       expect(onFocusChange).toHaveBeenCalledWith(false);
     });
 
+    // @gate experimental
     it('is not called after "blur" and "focus" events on descendants', () => {
+      componentInit();
       const target = createEventTarget(innerRef.current);
       target.focus();
       expect(onFocusChange).toHaveBeenCalledTimes(0);
@@ -241,7 +266,7 @@ describe.each(table)('Focus responder', hasPointerEvents => {
   describe('onFocusVisibleChange', () => {
     let onFocusVisibleChange, ref, innerRef;
 
-    beforeEach(() => {
+    const componentInit = () => {
       onFocusVisibleChange = jest.fn();
       ref = React.createRef();
       innerRef = React.createRef();
@@ -256,9 +281,11 @@ describe.each(table)('Focus responder', hasPointerEvents => {
         );
       };
       ReactDOM.render(<Component />, container);
-    });
+    };
 
+    // @gate experimental
     it('is called after "focus" and "blur" if keyboard navigation is active', () => {
+      componentInit();
       const target = createEventTarget(ref.current);
       const containerTarget = createEventTarget(container);
       // use keyboard first
@@ -271,7 +298,9 @@ describe.each(table)('Focus responder', hasPointerEvents => {
       expect(onFocusVisibleChange).toHaveBeenCalledWith(false);
     });
 
+    // @gate experimental
     it('is called if non-keyboard event is dispatched on target previously focused with keyboard', () => {
+      componentInit();
       const target = createEventTarget(ref.current);
       const containerTarget = createEventTarget(container);
       // use keyboard first
@@ -288,7 +317,9 @@ describe.each(table)('Focus responder', hasPointerEvents => {
       expect(onFocusVisibleChange).toHaveBeenCalledTimes(2);
     });
 
+    // @gate experimental
     it('is not called after "focus" and "blur" events without keyboard', () => {
+      componentInit();
       const target = createEventTarget(ref.current);
       const containerTarget = createEventTarget(container);
       target.pointerdown();
@@ -298,7 +329,9 @@ describe.each(table)('Focus responder', hasPointerEvents => {
       expect(onFocusVisibleChange).toHaveBeenCalledTimes(0);
     });
 
+    // @gate experimental
     it('is not called after "blur" and "focus" events on descendants', () => {
+      componentInit();
       const innerTarget = createEventTarget(innerRef.current);
       const containerTarget = createEventTarget(container);
       containerTarget.keydown({key: 'Tab'});
@@ -310,6 +343,7 @@ describe.each(table)('Focus responder', hasPointerEvents => {
   });
 
   describe('nested Focus components', () => {
+    // @gate experimental
     it('propagates events in the correct order', () => {
       const events = [];
       const innerRef = React.createRef();
@@ -362,6 +396,7 @@ describe.each(table)('Focus responder', hasPointerEvents => {
     });
   });
 
+  // @gate experimental
   it('expect displayName to show up for event component', () => {
     expect(FocusResponder.displayName).toBe('Focus');
   });

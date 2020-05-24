@@ -12,10 +12,15 @@
 declare var __PROFILE__: boolean;
 declare var __UMD__: boolean;
 declare var __EXPERIMENTAL__: boolean;
+declare var __VARIANT__: boolean;
 
 declare var __REACT_DEVTOOLS_GLOBAL_HOOK__: any; /*?{
   inject: ?((stuff: Object) => void)
 };*/
+
+declare module 'create-react-class' {
+  declare var exports: React$CreateClass;
+}
 
 declare var trustedTypes: {|
   isHTML: (value: any) => boolean,
@@ -39,15 +44,21 @@ declare module 'ReactFiberErrorDialog' {
 declare module 'EventListener' {
   declare module.exports: {
     listen: (
-      target: Element,
+      target: EventTarget,
       type: string,
       callback: Function,
       priority?: number,
       options?: {passive: boolean, ...},
     ) => mixed,
-    capture: (target: Element, type: string, callback: Function) => mixed,
+    capture: (target: EventTarget, type: string, callback: Function) => mixed,
     captureWithPassiveFlag: (
-      target: Element,
+      target: EventTarget,
+      type: string,
+      callback: Function,
+      passive: boolean,
+    ) => mixed,
+    bubbleWithPassiveFlag: (
+      target: EventTarget,
       type: string,
       callback: Function,
       passive: boolean,
@@ -55,3 +66,6 @@ declare module 'EventListener' {
     ...
   };
 }
+
+declare function __webpack_chunk_load__(id: string): Promise<mixed>;
+declare function __webpack_require__(id: string): {default: any};

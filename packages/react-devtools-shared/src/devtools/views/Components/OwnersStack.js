@@ -6,7 +6,8 @@
  *
  * @flow
  */
-import React, {
+import * as React from 'react';
+import {
   Fragment,
   useCallback,
   useContext,
@@ -76,7 +77,7 @@ export default function OwnerStack() {
   const {ownerID} = useContext(TreeStateContext);
   const treeDispatch = useContext(TreeDispatcherContext);
 
-  const [state, dispatch] = useReducer<State, Action>(dialogReducer, {
+  const [state, dispatch] = useReducer<State, State, Action>(dialogReducer, {
     ownerID: null,
     owners: [],
     selectedIndex: 0,

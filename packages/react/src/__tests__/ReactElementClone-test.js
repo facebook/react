@@ -301,8 +301,8 @@ describe('ReactElementClone', () => {
       'Warning: Failed prop type: ' +
         'Invalid prop `color` of type `number` supplied to `Component`, ' +
         'expected `string`.\n' +
-        '    in Component (created by GrandParent)\n' +
-        '    in Parent (created by GrandParent)\n' +
+        '    in Component (at **)\n' +
+        '    in Parent (at **)\n' +
         '    in GrandParent',
     );
   });
@@ -315,7 +315,7 @@ describe('ReactElementClone', () => {
   });
 
   it('should ignore undefined key and ref', () => {
-    const element = React.createFactory(ComponentClass)({
+    const element = React.createElement(ComponentClass, {
       key: '12',
       ref: '34',
       foo: '56',
@@ -337,7 +337,7 @@ describe('ReactElementClone', () => {
   });
 
   it('should extract null key and ref', () => {
-    const element = React.createFactory(ComponentClass)({
+    const element = React.createElement(ComponentClass, {
       key: '12',
       ref: '34',
       foo: '56',

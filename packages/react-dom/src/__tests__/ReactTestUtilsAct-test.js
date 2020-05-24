@@ -30,7 +30,7 @@ describe('ReactTestUtils.act()', () => {
   if (__EXPERIMENTAL__) {
     let concurrentRoot = null;
     const renderConcurrent = (el, dom) => {
-      concurrentRoot = ReactDOM.createRoot(dom);
+      concurrentRoot = ReactDOM.unstable_createRoot(dom);
       concurrentRoot.render(el);
     };
 
@@ -76,7 +76,7 @@ describe('ReactTestUtils.act()', () => {
   if (__EXPERIMENTAL__) {
     let blockingRoot = null;
     const renderBatched = (el, dom) => {
-      blockingRoot = ReactDOM.createBlockingRoot(dom);
+      blockingRoot = ReactDOM.unstable_createBlockingRoot(dom);
       blockingRoot.render(el);
     };
 
@@ -121,28 +121,31 @@ describe('ReactTestUtils.act()', () => {
         );
       }).toErrorDev([
         'An update to App ran an effect, but was not wrapped in act(...)',
-        'An update to App ran an effect, but was not wrapped in act(...)',
       ]);
     });
 
-    it.experimental('warns in blocking mode', () => {
+    // @gate experimental
+    it('warns in blocking mode', () => {
       expect(() => {
-        const root = ReactDOM.createBlockingRoot(document.createElement('div'));
+        const root = ReactDOM.unstable_createBlockingRoot(
+          document.createElement('div'),
+        );
         root.render(<App />);
         Scheduler.unstable_flushAll();
       }).toErrorDev([
         'An update to App ran an effect, but was not wrapped in act(...)',
-        'An update to App ran an effect, but was not wrapped in act(...)',
       ]);
     });
 
-    it.experimental('warns in concurrent mode', () => {
+    // @gate experimental
+    it('warns in concurrent mode', () => {
       expect(() => {
-        const root = ReactDOM.createRoot(document.createElement('div'));
+        const root = ReactDOM.unstable_createRoot(
+          document.createElement('div'),
+        );
         root.render(<App />);
         Scheduler.unstable_flushAll();
       }).toErrorDev([
-        'An update to App ran an effect, but was not wrapped in act(...)',
         'An update to App ran an effect, but was not wrapped in act(...)',
       ]);
     });
@@ -186,7 +189,7 @@ function runActTests(label, render, unmount, rerender) {
 
       it('flushes effects on every call', () => {
         function App() {
-          let [ctr, setCtr] = React.useState(0);
+          const [ctr, setCtr] = React.useState(0);
           React.useEffect(() => {
             Scheduler.unstable_yieldValue(ctr);
           });
@@ -222,7 +225,7 @@ function runActTests(label, render, unmount, rerender) {
 
       it("should keep flushing effects until the're done", () => {
         function App() {
-          let [ctr, setCtr] = React.useState(0);
+          const [ctr, setCtr] = React.useState(0);
           React.useEffect(() => {
             if (ctr < 5) {
               setCtr(x => x + 1);
@@ -261,7 +264,7 @@ function runActTests(label, render, unmount, rerender) {
       it('warns if a setState is called outside of act(...)', () => {
         let setValue = null;
         function App() {
-          let [value, _setValue] = React.useState(0);
+          const [value, _setValue] = React.useState(0);
           setValue = _setValue;
           return value;
         }
@@ -286,9 +289,9 @@ function runActTests(label, render, unmount, rerender) {
 
         it('lets a ticker update', () => {
           function App() {
-            let [toggle, setToggle] = React.useState(0);
+            const [toggle, setToggle] = React.useState(0);
             React.useEffect(() => {
-              let timeout = setTimeout(() => {
+              const timeout = setTimeout(() => {
                 setToggle(1);
               }, 200);
               return () => clearTimeout(timeout);
@@ -308,7 +311,7 @@ function runActTests(label, render, unmount, rerender) {
 
         it('can use the async version to catch microtasks', async () => {
           function App() {
-            let [toggle, setToggle] = React.useState(0);
+            const [toggle, setToggle] = React.useState(0);
             React.useEffect(() => {
               // just like the previous test, except we
               // use a promise and schedule the update
@@ -332,7 +335,7 @@ function runActTests(label, render, unmount, rerender) {
           // this component triggers an effect, that waits a tick,
           // then sets state. repeats this 5 times.
           function App() {
-            let [state, setState] = React.useState(0);
+            const [state, setState] = React.useState(0);
             async function ticker() {
               await null;
               setState(x => x + 1);
@@ -353,7 +356,7 @@ function runActTests(label, render, unmount, rerender) {
 
         it('flushes immediate re-renders with act', () => {
           function App() {
-            let [ctr, setCtr] = React.useState(0);
+            const [ctr, setCtr] = React.useState(0);
             React.useEffect(() => {
               if (ctr === 0) {
                 setCtr(1);
@@ -408,7 +411,7 @@ function runActTests(label, render, unmount, rerender) {
     describe('asynchronous tests', () => {
       it('works with timeouts', async () => {
         function App() {
-          let [ctr, setCtr] = React.useState(0);
+          const [ctr, setCtr] = React.useState(0);
           function doSomething() {
             setTimeout(() => {
               setCtr(1);
@@ -432,7 +435,7 @@ function runActTests(label, render, unmount, rerender) {
 
       it('flushes microtasks before exiting', async () => {
         function App() {
-          let [ctr, setCtr] = React.useState(0);
+          const [ctr, setCtr] = React.useState(0);
           async function someAsyncFunction() {
             // queue a bunch of promises to be sure they all flush
             await null;
@@ -486,7 +489,7 @@ function runActTests(label, render, unmount, rerender) {
 
       it('async commits and effects are guaranteed to be flushed', async () => {
         function App() {
-          let [state, setState] = React.useState(0);
+          const [state, setState] = React.useState(0);
           async function something() {
             await null;
             setState(1);
@@ -513,7 +516,7 @@ function runActTests(label, render, unmount, rerender) {
         // this component triggers an effect, that waits a tick,
         // then sets state. repeats this 5 times.
         function App() {
-          let [state, setState] = React.useState(0);
+          const [state, setState] = React.useState(0);
           async function ticker() {
             await null;
             setState(x => x + 1);
@@ -607,7 +610,9 @@ function runActTests(label, render, unmount, rerender) {
             },
           );
 
-          expect(Component).toHaveBeenCalledTimes(4);
+          expect(Component).toHaveBeenCalledTimes(
+            label === 'legacy mode' ? 4 : 8,
+          );
           unmount(secondContainer);
         });
       }
@@ -722,6 +727,7 @@ function runActTests(label, render, unmount, rerender) {
 
     describe('suspense', () => {
       if (__DEV__ && __EXPERIMENTAL__) {
+        // todo - remove __DEV__ check once we start using testing builds
         it('triggers fallbacks if available', async () => {
           let resolved = false;
           let resolve;

@@ -7,7 +7,13 @@
  * @flow
  */
 
-import React, {Fragment, Suspense, SuspenseList, useState} from 'react';
+import * as React from 'react';
+import {
+  Fragment,
+  Suspense,
+  unstable_SuspenseList as SuspenseList,
+  useState,
+} from 'react';
 
 function SuspenseTree() {
   return (
@@ -46,13 +52,13 @@ function PrimaryFallbackTest({initialSuspend}) {
 }
 
 function useTestSequence(label, T1, T2) {
-  let [step, setStep] = useState(0);
-  let next = (
+  const [step, setStep] = useState(0);
+  const next = (
     <button onClick={() => setStep(s => (s + 1) % allSteps.length)}>
       next {label} content
     </button>
   );
-  let allSteps = [
+  const allSteps = [
     <Fragment>{next}</Fragment>,
     <Fragment>
       {next} <T1 prop={step}>mount</T1>
@@ -127,7 +133,7 @@ function SuspenseListTest() {
 }
 
 function LoadLater() {
-  const [loadChild, setLoadChild] = useState(0);
+  const [loadChild, setLoadChild] = useState(false);
   return (
     <Suspense
       fallback={

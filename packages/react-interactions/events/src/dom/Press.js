@@ -7,9 +7,9 @@
  * @flow
  */
 
-import type {PointerType} from 'shared/ReactDOMTypes';
+import type {PointerType} from 'react-dom/src/shared/ReactDOMTypes';
 
-import React from 'react';
+import * as React from 'react';
 import {useTap} from 'react-interactions/events/tap';
 import {useKeyboard} from 'react-interactions/events/keyboard';
 

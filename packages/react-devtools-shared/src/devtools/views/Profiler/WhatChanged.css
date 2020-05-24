@@ -1,0 +1,29 @@
+.Component {
+  margin-bottom: 0.5rem;
+}
+
+.Item {
+  margin-top: 0.25rem;
+}
+
+.Key {
+  font-family: var(--font-family-monospace);
+  font-size: var(--font-size-monospace-small);
+  line-height: 1;
+}
+
+.Key:first-of-type::before {
+  content: ' (';
+}
+
+.Key::after {
+  content: ', ';
+}
+
+.Key:last-of-type::after {
+  content: ')';
+}
+
+.Label {
+  font-weight: bold;
+}

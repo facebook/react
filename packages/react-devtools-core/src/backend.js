@@ -32,7 +32,7 @@ type ConnectOptions = {
 
 installHook(window);
 
-const hook: DevToolsHook = window.__REACT_DEVTOOLS_GLOBAL_HOOK__;
+const hook: ?DevToolsHook = window.__REACT_DEVTOOLS_GLOBAL_HOOK__;
 
 let savedComponentFilters: Array<ComponentFilter> = getDefaultComponentFilters();
 
@@ -48,6 +48,10 @@ function debug(methodName: string, ...args) {
 }
 
 export function connectToDevTools(options: ?ConnectOptions) {
+  if (hook == null) {
+    // DevTools didn't get injected into this page (maybe b'c of the contentType).
+    return;
+  }
   const {
     host = 'localhost',
     nativeStyleEditorValidAttributes,

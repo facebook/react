@@ -5,7 +5,7 @@
 import {createElement} from 'react';
 import {
   // $FlowFixMe Flow does not yet know about createRoot()
-  createRoot,
+  unstable_createRoot as createRoot,
 } from 'react-dom';
 import DeeplyNestedComponents from './DeeplyNestedComponents';
 import Iframe from './Iframe';

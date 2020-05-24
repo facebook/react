@@ -1,6 +1,6 @@
 'use strict';
 
-const jestDiff = require('jest-diff');
+const jestDiff = require('jest-diff').default;
 
 function toContainNoInteractions(actualSet) {
   return {

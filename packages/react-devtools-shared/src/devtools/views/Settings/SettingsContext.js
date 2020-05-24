@@ -7,7 +7,8 @@
  * @flow
  */
 
-import React, {
+import * as React from 'react';
+import {
   createContext,
   useContext,
   useEffect,
@@ -234,6 +235,11 @@ function updateThemeVariables(
   documentElements: DocumentElements,
 ): void {
   updateStyleHelper(theme, 'color-attribute-name', documentElements);
+  updateStyleHelper(
+    theme,
+    'color-attribute-name-not-editable',
+    documentElements,
+  );
   updateStyleHelper(theme, 'color-attribute-name-inverted', documentElements);
   updateStyleHelper(theme, 'color-attribute-value', documentElements);
   updateStyleHelper(theme, 'color-attribute-value-inverted', documentElements);
@@ -313,7 +319,11 @@ function updateThemeVariables(
   updateStyleHelper(theme, 'color-dim', documentElements);
   updateStyleHelper(theme, 'color-dimmer', documentElements);
   updateStyleHelper(theme, 'color-dimmest', documentElements);
+  updateStyleHelper(theme, 'color-error-background', documentElements);
+  updateStyleHelper(theme, 'color-error-border', documentElements);
+  updateStyleHelper(theme, 'color-error-text', documentElements);
   updateStyleHelper(theme, 'color-expand-collapse-toggle', documentElements);
+  updateStyleHelper(theme, 'color-link', documentElements);
   updateStyleHelper(theme, 'color-modal-background', documentElements);
   updateStyleHelper(theme, 'color-record-active', documentElements);
   updateStyleHelper(theme, 'color-record-hover', documentElements);

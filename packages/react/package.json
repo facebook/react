@@ -4,7 +4,7 @@
   "keywords": [
     "react"
   ],
-  "version": "16.12.0",
+  "version": "16.13.1",
   "homepage": "https://reactjs.org/",
   "bugs": "https://github.com/facebook/react/issues",
   "license": "MIT",
@@ -14,7 +14,10 @@
     "build-info.json",
     "index.js",
     "cjs/",
-    "umd/"
+    "umd/",
+    "jsx-runtime.js",
+    "jsx-dev-runtime.js",
+    "unstable-cache.js"
   ],
   "main": "index.js",
   "repository": {
@@ -27,8 +30,7 @@
   },
   "dependencies": {
     "loose-envify": "^1.1.0",
-    "object-assign": "^4.1.1",
-    "prop-types": "^15.6.2"
+    "object-assign": "^4.1.1"
   },
   "browserify": {
     "transform": [

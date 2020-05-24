@@ -181,6 +181,7 @@ export function exportImportHelper(bridge: FrontendBridge, store: Store): void {
   expect(profilerStore.profilingData).not.toBeNull();
 
   const profilingDataFrontendInitial = ((profilerStore.profilingData: any): ProfilingDataFrontend);
+  expect(profilingDataFrontendInitial.imported).toBe(false);
 
   const profilingDataExport = prepareProfilingDataExport(
     profilingDataFrontendInitial,
@@ -197,15 +198,18 @@ export function exportImportHelper(bridge: FrontendBridge, store: Store): void {
   const profilingDataFrontend = prepareProfilingDataFrontendFromExport(
     (parsedProfilingDataExport: any),
   );
+  expect(profilingDataFrontend.imported).toBe(true);
 
   // Sanity check that profiling snapshots are serialized correctly.
-  expect(profilingDataFrontendInitial).toEqual(profilingDataFrontend);
+  expect(profilingDataFrontendInitial.dataForRoots).toEqual(
+    profilingDataFrontend.dataForRoots,
+  );
 
   // Snapshot the JSON-parsed object, rather than the raw string, because Jest formats the diff nicer.
   expect(parsedProfilingDataExport).toMatchSnapshot('imported data');
 
   act(() => {
-    // Apply the new exported-then-reimported data so tests can re-run assertions.
+    // Apply the new exported-then-imported data so tests can re-run assertions.
     profilerStore.profilingData = profilingDataFrontend;
   });
 }

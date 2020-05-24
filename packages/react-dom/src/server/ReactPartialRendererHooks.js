@@ -7,16 +7,18 @@
  * @flow
  */
 
+import type {Dispatcher as DispatcherType} from 'react-reconciler/src/ReactInternalTypes';
+
 import type {
-  Dispatcher as DispatcherType,
-  TimeoutConfig,
-} from 'react-reconciler/src/ReactFiberHooks';
-import type {ThreadID} from './ReactThreadIDAllocator';
-import type {
+  MutableSource,
+  MutableSourceGetSnapshotFn,
+  MutableSourceSubscribeFn,
   ReactContext,
   ReactEventResponderListener,
 } from 'shared/ReactTypes';
 import type {SuspenseConfig} from 'react-reconciler/src/ReactFiberSuspenseConfig';
+import type PartialRenderer from './ReactPartialRenderer';
+
 import {validateContextBounds} from './ReactPartialRendererContext';
 
 import invariant from 'shared/invariant';
@@ -40,6 +42,12 @@ type Hook = {|
   queue: UpdateQueue<any> | null,
   next: Hook | null,
 |};
+
+type TimeoutConfig = {|
+  timeoutMs: number,
+|};
+
+type OpaqueIDType = string;
 
 let currentlyRenderingComponent: Object | null = null;
 let firstWorkInProgressHook: Hook | null = null;
@@ -218,7 +226,7 @@ function readContext<T>(
   context: ReactContext<T>,
   observedBits: void | number | boolean,
 ): T {
-  let threadID = currentThreadID;
+  const threadID = currentPartialRenderer.threadID;
   validateContextBounds(context, threadID);
   if (__DEV__) {
     if (isInHookUserCodeInDev) {
@@ -241,12 +249,13 @@ function useContext<T>(
     currentHookNameInDev = 'useContext';
   }
   resolveCurrentlyRenderingComponent();
-  let threadID = currentThreadID;
+  const threadID = currentPartialRenderer.threadID;
   validateContextBounds(context, threadID);
   return context[threadID];
 }
 
 function basicStateReducer<S>(state: S, action: BasicStateAction<S>): S {
+  // $FlowFixMe: Flow doesn't like mixed types
   return typeof action === 'function' ? action(state) : action;
 }
 
@@ -447,8 +456,7 @@ export function useCallback<T>(
   callback: T,
   deps: Array<mixed> | void | null,
 ): T {
-  // Callbacks are passed as they are in the server environment.
-  return callback;
+  return useMemo(() => callback, deps);
 }
 
 function useResponder(responder, props): ReactEventResponderListener<any, any> {
@@ -456,6 +464,18 @@ function useResponder(responder, props): ReactEventResponderListener<any, any> {
     props,
     responder,
   };
+}
+
+// TODO Decide on how to implement this hook for server rendering.
+// If a mutation occurs during render, consider triggering a Suspense boundary
+// and falling back to client rendering.
+function useMutableSource<Source, Snapshot>(
+  source: MutableSource<Source>,
+  getSnapshot: MutableSourceGetSnapshotFn<Source, Snapshot>,
+  subscribe: MutableSourceSubscribeFn<Source, Snapshot>,
+): Snapshot {
+  resolveCurrentlyRenderingComponent();
+  return getSnapshot(source._source);
 }
 
 function useDeferredValue<T>(value: T, config: TimeoutConfig | null | void): T {
@@ -473,12 +493,19 @@ function useTransition(
   return [startTransition, false];
 }
 
+function useOpaqueIdentifier(): OpaqueIDType {
+  return (
+    (currentPartialRenderer.identifierPrefix || '') +
+    'R:' +
+    (currentPartialRenderer.uniqueID++).toString(36)
+  );
+}
+
 function noop(): void {}
 
-export let currentThreadID: ThreadID = 0;
-
-export function setCurrentThreadID(threadID: ThreadID) {
-  currentThreadID = threadID;
+export let currentPartialRenderer: PartialRenderer = (null: any);
+export function setCurrentPartialRenderer(renderer: PartialRenderer) {
+  currentPartialRenderer = renderer;
 }
 
 export const Dispatcher: DispatcherType = {
@@ -499,4 +526,7 @@ export const Dispatcher: DispatcherType = {
   useResponder,
   useDeferredValue,
   useTransition,
+  useOpaqueIdentifier,
+  // Subscriptions are not setup in a server environment.
+  useMutableSource,
 };

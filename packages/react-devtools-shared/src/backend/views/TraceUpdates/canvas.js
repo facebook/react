@@ -35,8 +35,8 @@ export function draw(nodeToData: Map<NativeType, Data>): void {
   }
 
   const canvasFlow: HTMLCanvasElement = ((canvas: any): HTMLCanvasElement);
-  canvasFlow.width = window.screen.availWidth;
-  canvasFlow.height = window.screen.availHeight;
+  canvasFlow.width = window.innerWidth;
+  canvasFlow.height = window.innerHeight;
 
   const context = canvasFlow.getContext('2d');
   context.clearRect(0, 0, canvasFlow.width, canvasFlow.height);

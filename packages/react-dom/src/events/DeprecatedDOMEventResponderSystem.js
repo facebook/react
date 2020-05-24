@@ -10,29 +10,46 @@ import {
   type EventSystemFlags,
   IS_PASSIVE,
   PASSIVE_NOT_SUPPORTED,
-} from 'legacy-events/EventSystemFlags';
+  RESPONDER_EVENT_SYSTEM,
+} from './EventSystemFlags';
 import type {AnyNativeEvent} from 'legacy-events/PluginModuleType';
-import {HostComponent, ScopeComponent, HostPortal} from 'shared/ReactWorkTags';
+import {
+  HostComponent,
+  ScopeComponent,
+  HostPortal,
+} from 'react-reconciler/src/ReactWorkTags';
 import type {EventPriority} from 'shared/ReactTypes';
 import type {
   ReactDOMEventResponder,
   ReactDOMEventResponderInstance,
   ReactDOMResponderContext,
   ReactDOMResponderEvent,
-} from 'shared/ReactDOMTypes';
+} from '../shared/ReactDOMTypes';
 import type {DOMTopLevelEventType} from 'legacy-events/TopLevelEventTypes';
 import {
   batchedEventUpdates,
   discreteUpdates,
   flushDiscreteUpdatesIfNeeded,
   executeUserEventHandler,
-} from 'legacy-events/ReactGenericBatching';
-import {enqueueStateRestore} from 'legacy-events/ReactControlledComponent';
-import type {Fiber} from 'react-reconciler/src/ReactFiber';
-import {enableDeprecatedFlareAPI} from 'shared/ReactFeatureFlags';
+} from './ReactDOMUpdateBatching';
+import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
+import {
+  enableDeprecatedFlareAPI,
+  enableNewReconciler,
+} from 'shared/ReactFeatureFlags';
 import invariant from 'shared/invariant';
 
 import {getClosestInstanceFromNode} from '../client/ReactDOMComponentTree';
+import {enqueueStateRestore} from './ReactDOMControlledComponent';
+import {createEventListenerWrapper} from './ReactDOMEventListener';
+import {passiveBrowserEventsSupported} from './checkPassiveEvents';
+import {getRawEventName} from './DOMTopLevelEventTypes';
+import {
+  addEventCaptureListener,
+  addEventCaptureListenerWithPassiveFlag,
+  removeEventListener,
+} from './EventListener';
+
 import {
   ContinuousEvent,
   UserBlockingEvent,
@@ -171,10 +188,10 @@ const eventResponderContext: ReactDOMResponderContext = {
     validateResponderContext();
     for (let i = 0; i < rootEventTypes.length; i++) {
       const rootEventType = rootEventTypes[i];
-      let rootEventResponders = rootEventTypesToEventResponderInstances.get(
+      const rootEventResponders = rootEventTypesToEventResponderInstances.get(
         rootEventType,
       );
-      let rootEventTypesSet = ((currentInstance: any): ReactDOMEventResponderInstance)
+      const rootEventTypesSet = ((currentInstance: any): ReactDOMEventResponderInstance)
         .rootEventTypes;
       if (rootEventTypesSet !== null) {
         rootEventTypesSet.delete(rootEventType);
@@ -268,7 +285,9 @@ function doesFiberHaveResponder(
 ): boolean {
   const tag = fiber.tag;
   if (tag === HostComponent || tag === ScopeComponent) {
-    const dependencies = fiber.dependencies;
+    const dependencies = enableNewReconciler
+      ? fiber.dependencies_new
+      : fiber.dependencies_old;
     if (dependencies !== null) {
       const respondersMap = dependencies.responders;
       if (respondersMap !== null && respondersMap.has(responder)) {
@@ -367,7 +386,10 @@ function traverseAndHandleEventResponderInstances(
   let node = targetFiber;
   let insidePortal = false;
   while (node !== null) {
-    const {dependencies, tag} = node;
+    const {tag} = node;
+    const dependencies = enableNewReconciler
+      ? node.dependencies_new
+      : node.dependencies_old;
     if (tag === HostPortal) {
       insidePortal = true;
     } else if (
@@ -458,7 +480,7 @@ export function unmountEventResponder(
   const responder = ((responderInstance.responder: any): ReactDOMEventResponder);
   const onUnmount = responder.onUnmount;
   if (onUnmount !== null) {
-    let {props, state} = responderInstance;
+    const {props, state} = responderInstance;
     const previousInstance = currentInstance;
     currentInstance = responderInstance;
     try {
@@ -473,7 +495,7 @@ export function unmountEventResponder(
 
     for (let i = 0; i < rootEventTypes.length; i++) {
       const topLevelEventType = rootEventTypes[i];
-      let rootEventResponderInstances = rootEventTypesToEventResponderInstances.get(
+      const rootEventResponderInstances = rootEventTypesToEventResponderInstances.get(
         topLevelEventType,
       );
       if (rootEventResponderInstances !== undefined) {
@@ -566,4 +588,51 @@ function DEPRECATED_registerRootEventType(
   );
   rootEventTypesSet.add(rootEventType);
   rootEventResponderInstances.add(eventResponderInstance);
+}
+
+export function addResponderEventSystemEvent(
+  document: Document,
+  topLevelType: string,
+  passive: boolean,
+): any => void {
+  let eventFlags = RESPONDER_EVENT_SYSTEM;
+
+  // If passive option is not supported, then the event will be
+  // active and not passive, but we flag it as using not being
+  // supported too. This way the responder event plugins know,
+  // and can provide polyfills if needed.
+  if (passive) {
+    if (passiveBrowserEventsSupported) {
+      eventFlags |= IS_PASSIVE;
+    } else {
+      eventFlags |= PASSIVE_NOT_SUPPORTED;
+      passive = false;
+    }
+  }
+  // Check if interactive and wrap in discreteUpdates
+  const listener = createEventListenerWrapper(
+    document,
+    ((topLevelType: any): DOMTopLevelEventType),
+    eventFlags,
+  );
+  if (passiveBrowserEventsSupported) {
+    return addEventCaptureListenerWithPassiveFlag(
+      document,
+      topLevelType,
+      listener,
+      passive,
+    );
+  } else {
+    return addEventCaptureListener(document, topLevelType, listener);
+  }
+}
+
+export function removeTrappedEventListener(
+  targetContainer: EventTarget,
+  topLevelType: DOMTopLevelEventType,
+  capture: boolean,
+  listener: any => void,
+): void {
+  const rawEventName = getRawEventName(topLevelType);
+  removeEventListener(targetContainer, rawEventName, listener, capture);
 }

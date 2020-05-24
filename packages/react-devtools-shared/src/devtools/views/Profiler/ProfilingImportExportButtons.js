@@ -7,7 +7,8 @@
  * @flow
  */
 
-import React, {Fragment, useContext, useCallback, useRef} from 'react';
+import * as React from 'react';
+import {Fragment, useContext, useCallback, useRef} from 'react';
 import {ProfilerContext} from './ProfilerContext';
 import {ModalDialogContext} from '../ModalDialog';
 import Button from '../Button';
@@ -38,7 +39,9 @@ export default function ProfilingImportExportButtons() {
       return;
     }
 
-    if (profilingData !== null && downloadRef.current !== null) {
+    const anchorElement = downloadRef.current;
+
+    if (profilingData !== null && anchorElement !== null) {
       const profilingDataExport = prepareProfilingDataExport(profilingData);
       const date = new Date();
       const dateString = date
@@ -54,7 +57,7 @@ export default function ProfilingImportExportButtons() {
         })
         .replace(/:/g, '-');
       downloadFile(
-        downloadRef.current,
+        anchorElement,
         `profiling-data.${dateString}.${timeString}.json`,
         JSON.stringify(profilingDataExport, null, 2),
       );

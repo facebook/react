@@ -139,7 +139,7 @@ function runTests(itRenders, itRejectsRendering, expectToReject) {
   );
 
   it('rejects a javascript protocol href if it is added during an update', () => {
-    let container = document.createElement('div');
+    const container = document.createElement('div');
     ReactDOM.render(<a href="thisisfine">click me</a>, container);
     expectToReject(() => {
       ReactDOM.render(<a href="javascript:notfine">click me</a>, container);
@@ -244,7 +244,7 @@ describe('ReactDOMServerIntegration - Untrusted URLs - disableJavaScriptURLs', (
     }
 
     let toStringCalls = 0;
-    let firstIsSafe = {
+    const firstIsSafe = {
       toString() {
         // This tries to avoid the validation by pretending to be safe
         // the first times it is called and then becomes dangerous.
@@ -262,7 +262,7 @@ describe('ReactDOMServerIntegration - Untrusted URLs - disableJavaScriptURLs', (
   });
 
   it('rejects a javascript protocol href if it is added during an update twice', () => {
-    let container = document.createElement('div');
+    const container = document.createElement('div');
     ReactDOM.render(<a href="thisisfine">click me</a>, container);
     expectToReject(() => {
       ReactDOM.render(<a href="javascript:notfine">click me</a>, container);

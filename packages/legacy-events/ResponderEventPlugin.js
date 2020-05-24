@@ -5,19 +5,13 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import {getLowestCommonAncestor, isAncestor} from 'shared/ReactTreeTraversal';
-
 import {
   executeDirectDispatch,
   hasDispatches,
   executeDispatchesInOrderStopAtTrue,
   getInstanceFromNode,
+  getFiberCurrentPropsFromNode,
 } from './EventPluginUtils';
-import {
-  accumulateDirectDispatches,
-  accumulateTwoPhaseDispatches,
-  accumulateTwoPhaseDispatchesSkipTarget,
-} from './EventPropagators';
 import ResponderSyntheticEvent from './ResponderSyntheticEvent';
 import ResponderTouchHistoryStore from './ResponderTouchHistoryStore';
 import accumulate from './accumulate';
@@ -32,6 +26,10 @@ import {
   moveDependencies,
   endDependencies,
 } from './ResponderTopLevelEventTypes';
+import accumulateInto from './accumulateInto';
+import forEachAccumulated from './forEachAccumulated';
+import {HostComponent} from 'react-reconciler/src/ReactWorkTags';
+import invariant from 'shared/invariant';
 
 /**
  * Instance of element that should respond to touch/move types of interactions,
@@ -150,6 +148,198 @@ const eventTypes = {
     dependencies: [],
   },
 };
+
+// Start of inline: the below functions were inlined from
+// EventPropagator.js, as they deviated from ReactDOM's newer
+// implementations.
+
+function getParent(inst) {
+  do {
+    inst = inst.return;
+    // TODO: If this is a HostRoot we might want to bail out.
+    // That is depending on if we want nested subtrees (layers) to bubble
+    // events to their parent. We could also go through parentNode on the
+    // host node but that wouldn't work for React Native and doesn't let us
+    // do the portal feature.
+  } while (inst && inst.tag !== HostComponent);
+  if (inst) {
+    return inst;
+  }
+  return null;
+}
+
+/**
+ * Return the lowest common ancestor of A and B, or null if they are in
+ * different trees.
+ */
+export function getLowestCommonAncestor(instA, instB) {
+  let depthA = 0;
+  for (let tempA = instA; tempA; tempA = getParent(tempA)) {
+    depthA++;
+  }
+  let depthB = 0;
+  for (let tempB = instB; tempB; tempB = getParent(tempB)) {
+    depthB++;
+  }
+
+  // If A is deeper, crawl up.
+  while (depthA - depthB > 0) {
+    instA = getParent(instA);
+    depthA--;
+  }
+
+  // If B is deeper, crawl up.
+  while (depthB - depthA > 0) {
+    instB = getParent(instB);
+    depthB--;
+  }
+
+  // Walk in lockstep until we find a match.
+  let depth = depthA;
+  while (depth--) {
+    if (instA === instB || instA === instB.alternate) {
+      return instA;
+    }
+    instA = getParent(instA);
+    instB = getParent(instB);
+  }
+  return null;
+}
+
+/**
+ * Return if A is an ancestor of B.
+ */
+function isAncestor(instA, instB) {
+  while (instB) {
+    if (instA === instB || instA === instB.alternate) {
+      return true;
+    }
+    instB = getParent(instB);
+  }
+  return false;
+}
+
+/**
+ * Simulates the traversal of a two-phase, capture/bubble event dispatch.
+ */
+function traverseTwoPhase(inst, fn, arg) {
+  const path = [];
+  while (inst) {
+    path.push(inst);
+    inst = getParent(inst);
+  }
+  let i;
+  for (i = path.length; i-- > 0; ) {
+    fn(path[i], 'captured', arg);
+  }
+  for (i = 0; i < path.length; i++) {
+    fn(path[i], 'bubbled', arg);
+  }
+}
+
+function getListener(inst, registrationName) {
+  const stateNode = inst.stateNode;
+  if (stateNode === null) {
+    // Work in progress (ex: onload events in incremental mode).
+    return null;
+  }
+  const props = getFiberCurrentPropsFromNode(stateNode);
+  if (props === null) {
+    // Work in progress.
+    return null;
+  }
+  const listener = props[registrationName];
+  invariant(
+    !listener || typeof listener === 'function',
+    'Expected `%s` listener to be a function, instead got a value of `%s` type.',
+    registrationName,
+    typeof listener,
+  );
+  return listener;
+}
+
+function listenerAtPhase(inst, event, propagationPhase: PropagationPhases) {
+  const registrationName =
+    event.dispatchConfig.phasedRegistrationNames[propagationPhase];
+  return getListener(inst, registrationName);
+}
+
+function accumulateDirectionalDispatches(inst, phase, event) {
+  if (__DEV__) {
+    if (!inst) {
+      console.error('Dispatching inst must not be null');
+    }
+  }
+  const listener = listenerAtPhase(inst, event, phase);
+  if (listener) {
+    event._dispatchListeners = accumulateInto(
+      event._dispatchListeners,
+      listener,
+    );
+    event._dispatchInstances = accumulateInto(event._dispatchInstances, inst);
+  }
+}
+
+/**
+ * Accumulates without regard to direction, does not look for phased
+ * registration names. Same as `accumulateDirectDispatchesSingle` but without
+ * requiring that the `dispatchMarker` be the same as the dispatched ID.
+ */
+function accumulateDispatches(
+  inst: Object,
+  ignoredDirection: ?boolean,
+  event: Object,
+): void {
+  if (inst && event && event.dispatchConfig.registrationName) {
+    const registrationName = event.dispatchConfig.registrationName;
+    const listener = getListener(inst, registrationName);
+    if (listener) {
+      event._dispatchListeners = accumulateInto(
+        event._dispatchListeners,
+        listener,
+      );
+      event._dispatchInstances = accumulateInto(event._dispatchInstances, inst);
+    }
+  }
+}
+
+/**
+ * Accumulates dispatches on an `SyntheticEvent`, but only for the
+ * `dispatchMarker`.
+ * @param {SyntheticEvent} event
+ */
+function accumulateDirectDispatchesSingle(event: Object) {
+  if (event && event.dispatchConfig.registrationName) {
+    accumulateDispatches(event._targetInst, null, event);
+  }
+}
+
+function accumulateDirectDispatches(events: ?(Array<Object> | Object)) {
+  forEachAccumulated(events, accumulateDirectDispatchesSingle);
+}
+
+function accumulateTwoPhaseDispatchesSingleSkipTarget(event) {
+  if (event && event.dispatchConfig.phasedRegistrationNames) {
+    const targetInst = event._targetInst;
+    const parentInst = targetInst ? getParent(targetInst) : null;
+    traverseTwoPhase(parentInst, accumulateDirectionalDispatches, event);
+  }
+}
+
+function accumulateTwoPhaseDispatchesSkipTarget(events) {
+  forEachAccumulated(events, accumulateTwoPhaseDispatchesSingleSkipTarget);
+}
+
+function accumulateTwoPhaseDispatchesSingle(event) {
+  if (event && event.dispatchConfig.phasedRegistrationNames) {
+    traverseTwoPhase(event._targetInst, accumulateDirectionalDispatches, event);
+  }
+}
+
+function accumulateTwoPhaseDispatches(events) {
+  forEachAccumulated(events, accumulateTwoPhaseDispatchesSingle);
+}
+// End of inline
 
 /**
  *
@@ -282,7 +472,7 @@ to return true:wantsResponderID|                            |
                                +                            + */
 
 /**
- * A note about event ordering in the `EventPluginHub`.
+ * A note about event ordering in the `EventPluginRegistry`.
  *
  * Suppose plugins are injected in the following order:
  *
@@ -301,7 +491,7 @@ to return true:wantsResponderID|                            |
  * - When returned from `extractEvents`, deferred-dispatched events contain an
  *   "accumulation" of deferred dispatches.
  * - These deferred dispatches are accumulated/collected before they are
- *   returned, but processed at a later time by the `EventPluginHub` (hence the
+ *   returned, but processed at a later time by the `EventPluginRegistry` (hence the
  *   name deferred).
  *
  * In the process of returning their deferred-dispatched events, event plugins
@@ -325,9 +515,9 @@ to return true:wantsResponderID|                            |
  * - `R`s on-demand events (if any)   (dispatched by `R` on-demand)
  * - `S`s on-demand events (if any)   (dispatched by `S` on-demand)
  * - `C`s on-demand events (if any)   (dispatched by `C` on-demand)
- * - `R`s extracted events (if any)   (dispatched by `EventPluginHub`)
- * - `S`s extracted events (if any)   (dispatched by `EventPluginHub`)
- * - `C`s extracted events (if any)   (dispatched by `EventPluginHub`)
+ * - `R`s extracted events (if any)   (dispatched by `EventPluginRegistry`)
+ * - `S`s extracted events (if any)   (dispatched by `EventPluginRegistry`)
+ * - `C`s extracted events (if any)   (dispatched by `EventPluginRegistry`)
  *
  * In the case of `ResponderEventPlugin`: If the `startShouldSetResponder`
  * on-demand dispatch returns `true` (and some other details are satisfied) the
@@ -336,9 +526,9 @@ to return true:wantsResponderID|                            |
  * will appear as follows:
  *
  * - `startShouldSetResponder` (`ResponderEventPlugin` dispatches on-demand)
- * - `touchStartCapture`       (`EventPluginHub` dispatches as usual)
- * - `touchStart`              (`EventPluginHub` dispatches as usual)
- * - `responderGrant/Reject`   (`EventPluginHub` dispatches as usual)
+ * - `touchStartCapture`       (`EventPluginRegistry` dispatches as usual)
+ * - `touchStart`              (`EventPluginRegistry` dispatches as usual)
+ * - `responderGrant/Reject`   (`EventPluginRegistry` dispatches as usual)
  */
 
 function setResponderAndExtractTransfer(

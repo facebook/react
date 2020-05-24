@@ -7,7 +7,8 @@
  * @flow
  */
 
-import React, {Fragment, useContext, useMemo, useState} from 'react';
+import * as React from 'react';
+import {Fragment, useContext, useMemo, useState} from 'react';
 import Store from 'react-devtools-shared/src/devtools/store';
 import Badge from './Badge';
 import ButtonIcon from '../ButtonIcon';
@@ -136,11 +137,17 @@ export default function ElementView({data, index, style}: Props) {
             "
           </Fragment>
         )}
-        <Badge
-          className={styles.Badge}
-          hocDisplayNames={hocDisplayNames}
-          type={type}
-        />
+        {hocDisplayNames !== null && hocDisplayNames.length > 0 ? (
+          <Badge
+            className={styles.Badge}
+            hocDisplayNames={hocDisplayNames}
+            type={type}>
+            <DisplayName
+              displayName={hocDisplayNames[0]}
+              id={((id: any): number)}
+            />
+          </Badge>
+        ) : null}
       </div>
     </div>
   );

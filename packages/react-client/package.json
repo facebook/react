@@ -1,0 +1,38 @@
+{
+  "name": "react-client",
+  "description": "React package for consuming streaming models.",
+  "version": "0.1.0",
+  "private": true,
+  "keywords": [
+    "react"
+  ],
+  "homepage": "https://reactjs.org/",
+  "bugs": "https://github.com/facebook/react/issues",
+  "license": "MIT",
+  "files": [
+    "LICENSE",
+    "README.md",
+    "flight.js",
+    "cjs/"
+  ],
+  "repository": {
+    "type" : "git",
+    "url" : "https://github.com/facebook/react.git",
+    "directory": "packages/react-client"
+  },
+  "engines": {
+    "node": ">=0.10.0"
+  },
+  "peerDependencies": {
+    "react": "^16.0.0"
+  },
+  "dependencies": {
+    "loose-envify": "^1.1.0",
+    "object-assign": "^4.1.1"
+  },
+  "browserify": {
+    "transform": [
+      "loose-envify"
+    ]
+  }
+}

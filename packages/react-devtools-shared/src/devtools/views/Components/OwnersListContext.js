@@ -7,7 +7,8 @@
  * @flow
  */
 
-import React, {createContext, useCallback, useContext, useEffect} from 'react';
+import * as React from 'react';
+import {createContext, useCallback, useContext, useEffect} from 'react';
 import {createResource} from '../../cache';
 import {BridgeContext, StoreContext} from '../context';
 import {TreeStateContext} from './TreeContext';
@@ -34,7 +35,7 @@ type InProgressRequest = {|
 const inProgressRequests: WeakMap<Element, InProgressRequest> = new WeakMap();
 const resource: Resource<Element, Element, Array<Owner>> = createResource(
   (element: Element) => {
-    let request = inProgressRequests.get(element);
+    const request = inProgressRequests.get(element);
     if (request != null) {
       return request.promise;
     }

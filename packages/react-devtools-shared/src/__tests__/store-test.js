@@ -352,18 +352,18 @@ describe('Store', () => {
       };
       const Wrapper = ({shouldSuspense}) => (
         <React.Fragment>
-          <React.SuspenseList revealOrder="forwards" tail="collapsed">
+          <React.unstable_SuspenseList revealOrder="forwards" tail="collapsed">
             <Component key="A" />
             <React.Suspense fallback={<Loading />}>
               {shouldSuspense ? <SuspendingComponent /> : <Component key="B" />}
             </React.Suspense>
             <Component key="C" />
-          </React.SuspenseList>
+          </React.unstable_SuspenseList>
         </React.Fragment>
       );
 
       const container = document.createElement('div');
-      const root = ReactDOM.createRoot(container);
+      const root = ReactDOM.unstable_createRoot(container);
       act(() => {
         root.render(<Wrapper shouldSuspense={true} />);
       });
@@ -856,16 +856,30 @@ describe('Store', () => {
 
     const MyComponent = (props, ref) => null;
     const FowardRefComponent = React.forwardRef(MyComponent);
+    const MyComponent2 = (props, ref) => null;
     const FowardRefComponentWithAnonymousFunction = React.forwardRef(() => (
-      <MyComponent />
+      <MyComponent2 />
     ));
+    const MyComponent3 = (props, ref) => null;
     const FowardRefComponentWithCustomDisplayName = React.forwardRef(
-      MyComponent,
+      MyComponent3,
     );
     FowardRefComponentWithCustomDisplayName.displayName = 'Custom';
-    const MemoComponent = React.memo(MyComponent);
+    const MyComponent4 = (props, ref) => null;
+    const MemoComponent = React.memo(MyComponent4);
     const MemoForwardRefComponent = React.memo(FowardRefComponent);
-    const LazyComponent = React.lazy(() => fakeImport(MyComponent));
+    const MyComponent5 = (props, ref) => null;
+    const LazyComponent = React.lazy(() => fakeImport(MyComponent5));
+
+    const FakeHigherOrderComponent = () => null;
+    FakeHigherOrderComponent.displayName = 'withFoo(withBar(Baz))';
+
+    const MemoizedFakeHigherOrderComponent = React.memo(
+      FakeHigherOrderComponent,
+    );
+    const ForwardRefFakeHigherOrderComponent = React.forwardRef(
+      FakeHigherOrderComponent,
+    );
 
     const App = () => (
       <React.Fragment>
@@ -878,6 +892,9 @@ describe('Store', () => {
         <React.Suspense fallback="Loading...">
           <LazyComponent />
         </React.Suspense>
+        <FakeHigherOrderComponent />
+        <MemoizedFakeHigherOrderComponent />
+        <ForwardRefFakeHigherOrderComponent />
       </React.Fragment>
     );
 

@@ -8,7 +8,8 @@
  */
 
 import {copy} from 'clipboard-js';
-import React, {Fragment, useCallback, useContext} from 'react';
+import * as React from 'react';
+import {Fragment, useCallback, useContext} from 'react';
 import {TreeDispatcherContext, TreeStateContext} from './TreeContext';
 import {BridgeContext, ContextMenuContext, StoreContext} from '../context';
 import ContextMenu from '../../ContextMenu/ContextMenu';
@@ -25,6 +26,7 @@ import ViewElementSourceContext from './ViewElementSourceContext';
 import NativeStyleEditor from './NativeStyleEditor';
 import Toggle from '../Toggle';
 import Badge from './Badge';
+import {useHighlightNativeElement} from '../hooks';
 import {
   ComponentFilterElementType,
   ElementTypeClass,
@@ -36,12 +38,14 @@ import {
 
 import styles from './SelectedElement.css';
 
+import type {ContextMenuContextType} from '../context';
 import type {
   CopyInspectedElementPath,
   GetInspectedElementPath,
+  InspectedElementContextType,
   StoreAsGlobal,
 } from './InspectedElementContext';
-import type {Element, InspectedElement} from './types';
+import type {Element, InspectedElement, Owner} from './types';
 import type {ElementType} from 'react-devtools-shared/src/types';
 
 export type Props = {||};
@@ -61,8 +65,7 @@ export default function SelectedElement(_: Props) {
     getInspectedElementPath,
     getInspectedElement,
     storeAsGlobal,
-    viewInspectedElementPath,
-  } = useContext(InspectedElementContext);
+  } = useContext<InspectedElementContextType>(InspectedElementContext);
 
   const element =
     inspectedElementID !== null
@@ -187,6 +190,15 @@ export default function SelectedElement(_: Props) {
   return (
     <div className={styles.SelectedElement}>
       <div className={styles.TitleRow}>
+        {element.key && (
+          <>
+            <div className={styles.Key} title={`key "${element.key}"`}>
+              {element.key}
+            </div>
+            <div className={styles.KeyArrow} />
+          </>
+        )}
+
         <div className={styles.SelectedComponentName}>
           <div className={styles.Component} title={element.displayName}>
             {element.displayName}
@@ -243,7 +255,6 @@ export default function SelectedElement(_: Props) {
           getInspectedElementPath={getInspectedElementPath}
           inspectedElement={inspectedElement}
           storeAsGlobal={storeAsGlobal}
-          viewInspectedElementPath={viewInspectedElementPath}
         />
       )}
     </div>
@@ -269,7 +280,6 @@ function InspectedElementView({
   getInspectedElementPath,
   inspectedElement,
   storeAsGlobal,
-  viewInspectedElementPath,
 }: InspectedElementViewProps) {
   const {id, type} = element;
   const {
@@ -281,18 +291,20 @@ function InspectedElementView({
     hooks,
     owners,
     props,
+    rendererPackageName,
+    rendererVersion,
+    rootType,
     source,
     state,
   } = inspectedElement;
 
-  const {ownerID} = useContext(TreeStateContext);
   const bridge = useContext(BridgeContext);
   const store = useContext(StoreContext);
 
   const {
     isEnabledForInspectedElement,
     viewAttributeSourceFunction,
-  } = useContext(ContextMenuContext);
+  } = useContext<ContextMenuContextType>(ContextMenuContext);
 
   const inspectContextPath = useCallback(
     (path: Array<string | number>) => {
@@ -364,6 +376,14 @@ function InspectedElementView({
     };
   }
 
+  const rendererLabel =
+    rendererPackageName !== null && rendererVersion !== null
+      ? `${rendererPackageName}@${rendererVersion}`
+      : null;
+  const showOwnersList = owners !== null && owners.length > 0;
+  const showRenderedBy =
+    showOwnersList || rendererLabel !== null || rootType !== null;
+
   return (
     <Fragment>
       <div className={styles.InspectedElement}>
@@ -405,19 +425,26 @@ function InspectedElementView({
 
         <NativeStyleEditor />
 
-        {ownerID === null && owners !== null && owners.length > 0 && (
+        {showRenderedBy && (
           <div className={styles.Owners}>
             <div className={styles.OwnersHeader}>rendered by</div>
-            {owners.map(owner => (
-              <OwnerView
-                key={owner.id}
-                displayName={owner.displayName || 'Anonymous'}
-                hocDisplayNames={owner.hocDisplayNames}
-                id={owner.id}
-                isInStore={store.containsElement(owner.id)}
-                type={owner.type}
-              />
-            ))}
+            {showOwnersList &&
+              ((owners: any): Array<Owner>).map(owner => (
+                <OwnerView
+                  key={owner.id}
+                  displayName={owner.displayName || 'Anonymous'}
+                  hocDisplayNames={owner.hocDisplayNames}
+                  id={owner.id}
+                  isInStore={store.containsElement(owner.id)}
+                  type={owner.type}
+                />
+              ))}
+            {rootType !== null && (
+              <div className={styles.OwnersMetaField}>{rootType}</div>
+            )}
+            {rendererLabel !== null && (
+              <div className={styles.OwnersMetaField}>{rendererLabel}</div>
+            )}
           </div>
         )}
 
@@ -462,7 +489,7 @@ function InspectedElementView({
   );
 }
 
-// This function is based on packages/shared/describeComponentFrame.js
+// This function is based on describeComponentFrame() in packages/shared/ReactComponentStackFrame
 function formatSourceForDisplay(fileName: string, lineNumber: string) {
   const BEFORE_SLASH_RE = /^(.*)[\\\/]/;
 
@@ -522,6 +549,10 @@ function OwnerView({
   type,
 }: OwnerViewProps) {
   const dispatch = useContext(TreeDispatcherContext);
+  const {
+    highlightNativeElement,
+    clearHighlightNativeElement,
+  } = useHighlightNativeElement();
 
   const handleClick = useCallback(
     () =>
@@ -532,18 +563,26 @@ function OwnerView({
     [dispatch, id],
   );
 
+  const onMouseEnter = () => highlightNativeElement(id);
+
+  const onMouseLeave = clearHighlightNativeElement;
+
   return (
     <Button
       key={id}
       className={styles.OwnerButton}
       disabled={!isInStore}
-      onClick={handleClick}>
-      <span
-        className={`${styles.Owner} ${isInStore ? '' : styles.NotInStore}`}
-        title={displayName}>
-        {displayName}
+      onClick={handleClick}
+      onMouseEnter={onMouseEnter}
+      onMouseLeave={onMouseLeave}>
+      <span className={styles.OwnerContent}>
+        <span
+          className={`${styles.Owner} ${isInStore ? '' : styles.NotInStore}`}
+          title={displayName}>
+          {displayName}
+        </span>
+        <Badge hocDisplayNames={hocDisplayNames} type={type} />
       </span>
-      <Badge hocDisplayNames={hocDisplayNames} type={type} />
     </Button>
   );
 }

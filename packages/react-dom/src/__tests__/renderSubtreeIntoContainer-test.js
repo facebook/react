@@ -16,6 +16,8 @@ const ReactTestUtils = require('react-dom/test-utils');
 const renderSubtreeIntoContainer = require('react-dom')
   .unstable_renderSubtreeIntoContainer;
 
+const ReactFeatureFlags = require('shared/ReactFeatureFlags');
+
 describe('renderSubtreeIntoContainer', () => {
   it('should pass context when rendering subtree elsewhere', () => {
     const portal = document.createElement('div');
@@ -46,11 +48,18 @@ describe('renderSubtreeIntoContainer', () => {
       }
 
       componentDidMount() {
-        expect(
-          function() {
-            renderSubtreeIntoContainer(this, <Component />, portal);
-          }.bind(this),
-        ).not.toThrow();
+        if (ReactFeatureFlags.warnUnstableRenderSubtreeIntoContainer) {
+          expect(
+            function() {
+              renderSubtreeIntoContainer(this, <Component />, portal);
+            }.bind(this),
+          ).toWarnDev(
+            'ReactDOM.unstable_renderSubtreeIntoContainer() is deprecated and ' +
+              'will be removed in a future major release. Consider using React Portals instead.',
+          );
+        } else {
+          renderSubtreeIntoContainer(this, <Component />, portal);
+        }
       }
     }
 

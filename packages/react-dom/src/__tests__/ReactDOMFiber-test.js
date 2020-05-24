@@ -211,7 +211,7 @@ describe('ReactDOMFiber', () => {
   };
 
   const assertNamespacesMatch = function(tree) {
-    let testContainer = document.createElement('div');
+    const testContainer = document.createElement('div');
     svgEls = [];
     htmlEls = [];
     mathEls = [];
@@ -247,30 +247,32 @@ describe('ReactDOMFiber', () => {
   });
 
   // TODO: remove in React 17
-  it('should support unstable_createPortal alias', () => {
-    const portalContainer = document.createElement('div');
+  if (!__EXPERIMENTAL__) {
+    it('should support unstable_createPortal alias', () => {
+      const portalContainer = document.createElement('div');
 
-    expect(() =>
-      ReactDOM.render(
-        <div>
-          {ReactDOM.unstable_createPortal(<div>portal</div>, portalContainer)}
-        </div>,
-        container,
-      ),
-    ).toWarnDev(
-      'The ReactDOM.unstable_createPortal() alias has been deprecated, ' +
-        'and will be removed in React 17+. Update your code to use ' +
-        'ReactDOM.createPortal() instead. It has the exact same API, ' +
-        'but without the "unstable_" prefix.',
-      {withoutStack: true},
-    );
-    expect(portalContainer.innerHTML).toBe('<div>portal</div>');
-    expect(container.innerHTML).toBe('<div></div>');
+      expect(() =>
+        ReactDOM.render(
+          <div>
+            {ReactDOM.unstable_createPortal(<div>portal</div>, portalContainer)}
+          </div>,
+          container,
+        ),
+      ).toWarnDev(
+        'The ReactDOM.unstable_createPortal() alias has been deprecated, ' +
+          'and will be removed in React 17+. Update your code to use ' +
+          'ReactDOM.createPortal() instead. It has the exact same API, ' +
+          'but without the "unstable_" prefix.',
+        {withoutStack: true},
+      );
+      expect(portalContainer.innerHTML).toBe('<div>portal</div>');
+      expect(container.innerHTML).toBe('<div></div>');
 
-    ReactDOM.unmountComponentAtNode(container);
-    expect(portalContainer.innerHTML).toBe('');
-    expect(container.innerHTML).toBe('');
-  });
+      ReactDOM.unmountComponentAtNode(container);
+      expect(portalContainer.innerHTML).toBe('');
+      expect(container.innerHTML).toBe('');
+    });
+  }
 
   it('should render many portals', () => {
     const portalContainer1 = document.createElement('div');
@@ -1222,7 +1224,7 @@ describe('ReactDOMFiber', () => {
 
   // Regression test for https://github.com/facebook/react/issues/12643#issuecomment-413727104
   it('should not diff memoized host components', () => {
-    let inputRef = React.createRef();
+    const inputRef = React.createRef();
     let didCallOnChange = false;
 
     class Child extends React.Component {
@@ -1277,5 +1279,37 @@ describe('ReactDOMFiber', () => {
       }),
     );
     expect(didCallOnChange).toBe(true);
+  });
+
+  it('unmounted legacy roots should never clear newer root content from a container', () => {
+    const ref = React.createRef();
+
+    function OldApp() {
+      const hideOnFocus = () => {
+        // This app unmounts itself inside of a focus event.
+        ReactDOM.unmountComponentAtNode(container);
+      };
+
+      return (
+        <button onFocus={hideOnFocus} ref={ref}>
+          old
+        </button>
+      );
+    }
+
+    function NewApp() {
+      return <button ref={ref}>new</button>;
+    }
+
+    ReactDOM.render(<OldApp />, container);
+    ref.current.focus();
+
+    ReactDOM.render(<NewApp />, container);
+
+    // Calling focus again will flush previously scheduled discerete work for the old root-
+    // but this should not clear out the newly mounted app.
+    ref.current.focus();
+
+    expect(container.textContent).toBe('new');
   });
 });

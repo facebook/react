@@ -79,6 +79,7 @@ export type InspectedElement = {|
   hooks: Object | null,
   props: Object | null,
   state: Object | null,
+  key: number | string | null,
 
   // List of owners
   owners: Array<Owner> | null,
@@ -87,6 +88,13 @@ export type InspectedElement = {|
   source: Source | null,
 
   type: ElementType,
+
+  // Meta information about the root this element belongs to.
+  rootType: string | null,
+
+  // Meta information about the renderer that created this element.
+  rendererPackageName: string | null,
+  rendererVersion: string | null,
 |};
 
 // TODO: Add profiling type

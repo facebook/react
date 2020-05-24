@@ -7,7 +7,8 @@
  * @flow
  */
 
-import React, {memo, useCallback} from 'react';
+import * as React from 'react';
+import {memo, useCallback} from 'react';
 import styles from './ListItem.css';
 
 import type {Item} from './List';

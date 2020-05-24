@@ -7,15 +7,72 @@
   </summary>
   
   <!-- Upcoming changes go here -->
+</details>
+
+## 4.7.0 (May 18, 2020)
+
+#### Features
+* Improved appended component stacks for third party warnings to be more like native ([bvaughn](https://github.com/bvaughn) in [#18656](https://github.com/facebook/react/pull/18656))
+* Improve inline search results by highlighting match on HOC badge ([bl00mber](https://github.com/bl00mber) in [#18802](https://github.com/facebook/react/pull/18802))
+* Add key badge to inspected element in right hand pane ([karlhorky]](https://github.com/karlhorky) in [#18737](https://github.com/facebook/react/pull/18737))
+* Improve Profiler snapshot selector drag-and-drop UX ([bl00mber](https://github.com/bl00mber) in [#18852](https://github.com/facebook/react/pull/18852))
+* Profiler tooltip now includes self duration to make it easier to scan times without requiring selection ([bvaughn](https://github.com/bvaughn) in [#18510](https://github.com/facebook/react/pull/18510))
+* Rendered by list also now highlights native elements on hover ([hristo-kanchev](https://github.com/hristo-kanchev) in [#18479](https://github.com/facebook/react/pull/18479))
+* Add in-page highlighting for mouse-over interactions in Profiler ([bl00mber](https://github.com/bl00mber) in [#18745](https://github.com/facebook/react/pull/18745))
+
+#### Bugfix
+* Fix Profiler bug "_Could not find commit data for root_" by resetting selected node on root change ([bl00mber](https://github.com/bl00mber) in [#18880](https://github.com/facebook/react/pull/18880))
+* Add `imported` flag to Profiling data to more reliably differentiate between imported and session data ([bl00mber](https://github.com/bl00mber) in [#18913](https://github.com/facebook/react/pull/18913))
+* Disable Profiler filtering to avoid edge case runtime error "_Cannot read property 'duration' of undefined_" ([bvaughn](https://github.com/bvaughn) in [#18862](https://github.com/facebook/react/pull/18862))
+* Fix Profiler bug "_cannot read property 'memoizedState' of null_" ([bvaughn](https://github.com/bvaughn) in [#18522](https://github.com/facebook/react/pull/18522))
+* Whitespace search results highlighting bug fix ([bvaughn](https://github.com/bvaughn) in [#18527](https://github.com/facebook/react/pull/18527))
+* Improved confusing Profiler tooltip text for components that did not render ([bvaughn](https://github.com/bvaughn) in [#18523](https://github.com/facebook/react/pull/18523))
+* Fix edge case performance issue when highlight elements enabled ([Faelivrinx](https://github.com/Faelivrinx) in [#18498](https://github.com/facebook/react/pull/18498))
+* Disabled Webpack auto polyfill for `setImmediate` ([bvaughn](https://github.com/bvaughn) in [#18860](https://github.com/facebook/react/pull/18860))
+* Fix mouse interactions for standalone DevTools on Linux ([bl00mber](https://github.com/bl00mber) in [#18772](https://github.com/facebook/react/pull/18772))
+
+## 4.6.0 (March 26, 2020)
+
+#### Features
+* Add shortcut keys for tab switching ([kerolloz](https://github.com/kerolloz) in [#18248](https://github.com/facebook/react/pull/18248))
+
+#### Bugfix
+* Improve display of complex values for `useDebugValue` ([eps1lon](https://github.com/eps1lon) in [#18070](https://github.com/facebook/react/pull/18070))
+* Fix minor CSS layout issue that broke Profiler commit selector UI ([bvaughn](https://github.com/bvaughn) in [#18286](https://github.com/facebook/react/pull/18286))
+* Inlined DevTools event emitter implementation to fix a source of Profiler bugs ([bvaughn](https://github.com/bvaughn) in [#18378](https://github.com/facebook/react/pull/18378))
+
+#### Cleanup
+* Remove "es6-symbol" dependency from "react-devtools-inline" package ([bvaughn](https://github.com/bvaughn) in [#18397](https://github.com/facebook/react/pull/18397))
+
+## 4.5.0 (March 3, 2020)
 
 #### Features
 * Improve function props display for inspected elements ([bvaughn](https://github.com/bvaughn) in [#17789](https://github.com/facebook/react/pull/17789))
+* Re-enabled context menu for Firefox extension ([bvaughn](https://github.com/bvaughn) in [#17838](https://github.com/facebook/react/pull/17838))
+* Apply changes to props/state/hooks on blur (rather than on ENTER) ([muratcatal](https://github.com/muratcatal) in [#17062](https://github.com/facebook/react/pull/17062))
+* Add info tooltip to nodes in Profiler ([M-Izadmehr](https://github.com/M-Izadmehr) in [#18048](https://github.com/facebook/react/pull/18048))
+* Added resize support to Components panel ([hristo-kanchev](https://github.com/hristo-kanchev) in [#18046](https://github.com/facebook/react/pull/18046))
+
 #### Bugfix
-* Improve how empty commits are filtered ([bvaughn](https://github.com/bvaughn) in [#17771](https://github.com/facebook/react/pull/17771))
+* Improve how empty commits are filtered ([nutboltu](https://github.com/nutboltu) in [#17931](https://github.com/facebook/react/pull/17931))
+* BigInt serialize issue in devtools copy to clipboard ([bvaughn](https://github.com/bvaughn) in [#17771](https://github.com/facebook/react/pull/17771))
 * Renamed "backend.js" to "react_devtools_backend.js" to reduce potential confusion from profiling ([bvaughn](https://github.com/bvaughn) in [#17790](https://github.com/facebook/react/pull/17790))
 * Update root styles to prevent `box-sizing` style from leaking outside of inline target ([GasimGasimzada](https://github.com/GasimGasimzada) in [#17775](https://github.com/facebook/react/pull/17775))
-https://github.com/facebook/react/pull/17775
-</details>
+* Fix "_Cannot read property 'sub' of undefined_" error when navigating to plain-text pages ([wfnuser](https://github.com/wfnuser) in [#17848](https://github.com/facebook/react/pull/17848))
+* Fix potential error with composite hooks during shallow re-rendering ([bvaughn](https://github.com/bvaughn) in [#18130](https://github.com/facebook/react/pull/18130))
+* Scope dev tools wildcard styles within DevTools CSS class ([@GasimGasimzada](https://github.com/GasimGasimzada) in [9cc094a](https://github.com/facebook/react/commit/9cc094a19a9e43d33ba5ac713935e657ea4e3cdd#diff-ab5ee5655b2aac3260e1f836546a13c9))
+
+###### Info summary tooltips
+
+![Profiler tooltips in Flamegraph chart](https://user-images.githubusercontent.com/28848972/74614074-09468100-5115-11ea-8c87-c224d229ef15.gif)
+
+![Profiler tooltips in Ranked chart](https://user-images.githubusercontent.com/28848972/74614072-08155400-5115-11ea-8d19-7ab3d27b9b0a.gif)
+
+###### Components panel resize
+
+![Horizontal Components panel resizing](https://user-images.githubusercontent.com/23095052/74603147-ca7edf80-50b0-11ea-887f-db7ada855c50.gif)
+
+![Vertical Components panel resizing](https://user-images.githubusercontent.com/23095052/74603149-d074c080-50b0-11ea-820f-63db30b4c285.gif)
 
 ## 4.4.0 (January 3, 2020)
 #### Features

@@ -5,14 +5,14 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import React from 'react';
+import * as React from 'react';
 import ReactVersion from 'shared/ReactVersion';
-import {LegacyRoot} from 'shared/ReactRootTags';
+import {LegacyRoot} from 'react-reconciler/src/ReactRootTags';
 import {
   createContainer,
   updateContainer,
   injectIntoDevTools,
-} from 'react-reconciler/inline.art';
+} from 'react-reconciler/src/ReactFiberReconciler';
 import Transform from 'art/core/transform';
 import Mode from 'art/modes/current';
 import FastNoSideEffects from 'art/modes/fast-noSideEffects';

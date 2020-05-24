@@ -252,7 +252,7 @@ describe('SchedulerBrowser', () => {
   });
 
   it('schedule new task after a cancellation', () => {
-    let handle = scheduleCallback(NormalPriority, () => {
+    const handle = scheduleCallback(NormalPriority, () => {
       runtime.log('A');
     });
 

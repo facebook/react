@@ -22,24 +22,17 @@ export function error(format, ...args) {
 
 function printWarning(level, format, args) {
   if (__DEV__) {
-    const hasExistingStack =
-      args.length > 0 &&
-      typeof args[args.length - 1] === 'string' &&
-      args[args.length - 1].indexOf('\n    in') === 0;
-
-    if (!hasExistingStack) {
-      const React = require('react');
-      const ReactSharedInternals =
-        React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED;
-      // Defensive in case this is fired before React is initialized.
-      if (ReactSharedInternals != null) {
-        const ReactDebugCurrentFrame =
-          ReactSharedInternals.ReactDebugCurrentFrame;
-        const stack = ReactDebugCurrentFrame.getStackAddendum();
-        if (stack !== '') {
-          format += '%s';
-          args.push(stack);
-        }
+    const React = require('react');
+    const ReactSharedInternals =
+      React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED;
+    // Defensive in case this is fired before React is initialized.
+    if (ReactSharedInternals != null) {
+      const ReactDebugCurrentFrame =
+        ReactSharedInternals.ReactDebugCurrentFrame;
+      const stack = ReactDebugCurrentFrame.getStackAddendum();
+      if (stack !== '') {
+        format += '%s';
+        args.push(stack);
       }
     }
     // TODO: don't ignore level and pass it down somewhere too.

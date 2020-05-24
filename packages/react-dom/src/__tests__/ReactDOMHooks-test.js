@@ -32,8 +32,8 @@ describe('ReactDOMHooks', () => {
   });
 
   it('can ReactDOM.render() from useEffect', () => {
-    let container2 = document.createElement('div');
-    let container3 = document.createElement('div');
+    const container2 = document.createElement('div');
+    const container3 = document.createElement('div');
 
     function Example1({n}) {
       React.useEffect(() => {
@@ -105,41 +105,39 @@ describe('ReactDOMHooks', () => {
     expect(labelRef.current.innerHTML).toBe('abc');
   });
 
-  it.experimental(
-    'should not bail out when an update is scheduled from within an event handler in Concurrent Mode',
-    () => {
-      const {createRef, useCallback, useState} = React;
+  // @gate experimental
+  it('should not bail out when an update is scheduled from within an event handler in Concurrent Mode', () => {
+    const {createRef, useCallback, useState} = React;
 
-      const Example = ({inputRef, labelRef}) => {
-        const [text, setText] = useState('');
-        const handleInput = useCallback(event => {
-          setText(event.target.value);
-        });
+    const Example = ({inputRef, labelRef}) => {
+      const [text, setText] = useState('');
+      const handleInput = useCallback(event => {
+        setText(event.target.value);
+      });
 
-        return (
-          <>
-            <input ref={inputRef} onInput={handleInput} />
-            <label ref={labelRef}>{text}</label>
-          </>
-        );
-      };
-
-      const inputRef = createRef();
-      const labelRef = createRef();
-
-      const root = ReactDOM.createRoot(container);
-      root.render(<Example inputRef={inputRef} labelRef={labelRef} />);
-
-      Scheduler.unstable_flushAll();
-
-      inputRef.current.value = 'abc';
-      inputRef.current.dispatchEvent(
-        new Event('input', {bubbles: true, cancelable: true}),
+      return (
+        <>
+          <input ref={inputRef} onInput={handleInput} />
+          <label ref={labelRef}>{text}</label>
+        </>
       );
+    };
 
-      Scheduler.unstable_flushAll();
+    const inputRef = createRef();
+    const labelRef = createRef();
 
-      expect(labelRef.current.innerHTML).toBe('abc');
-    },
-  );
+    const root = ReactDOM.unstable_createRoot(container);
+    root.render(<Example inputRef={inputRef} labelRef={labelRef} />);
+
+    Scheduler.unstable_flushAll();
+
+    inputRef.current.value = 'abc';
+    inputRef.current.dispatchEvent(
+      new Event('input', {bubbles: true, cancelable: true}),
+    );
+
+    Scheduler.unstable_flushAll();
+
+    expect(labelRef.current.innerHTML).toBe('abc');
+  });
 });

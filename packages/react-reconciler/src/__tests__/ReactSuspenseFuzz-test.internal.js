@@ -21,7 +21,7 @@ describe('ReactSuspenseFuzz', () => {
   beforeEach(() => {
     jest.resetModules();
     ReactFeatureFlags = require('shared/ReactFeatureFlags');
-    ReactFeatureFlags.debugRenderPhaseSideEffectsForStrictMode = false;
+
     ReactFeatureFlags.replayFailedUnitOfWorkWithInvokeGuardedCallback = false;
     React = require('react');
     Suspense = React.Suspense;
@@ -226,7 +226,7 @@ describe('ReactSuspenseFuzz', () => {
               {value: 2, weight: 1},
             ]);
 
-            let updates = [];
+            const updates = [];
             for (let i = 0; i < numberOfUpdates; i++) {
               updates.push({
                 beginAfter: rand.intBetween(0, 10000),
@@ -249,7 +249,7 @@ describe('ReactSuspenseFuzz', () => {
               {value: 2, weight: 1},
             ]);
 
-            let updates = [];
+            const updates = [];
             for (let i = 0; i < numberOfUpdates; i++) {
               updates.push({
                 remountAfter: rand.intBetween(0, 10000),

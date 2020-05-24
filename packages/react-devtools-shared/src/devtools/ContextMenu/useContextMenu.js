@@ -10,6 +10,7 @@
 import {useContext, useEffect} from 'react';
 import {RegistryContext} from './Contexts';
 
+import type {RegistryContextType} from './Contexts';
 import type {ElementRef} from 'react';
 
 export default function useContextMenu({
@@ -19,18 +20,22 @@ export default function useContextMenu({
 }: {|
   data: Object,
   id: string,
-  ref: ElementRef<HTMLElement>,
+  ref: {current: ElementRef<'div'> | null},
 |}) {
-  const {showMenu} = useContext(RegistryContext);
+  const {showMenu} = useContext<RegistryContextType>(RegistryContext);
 
   useEffect(() => {
     if (ref.current !== null) {
-      const handleContextMenu = event => {
+      const handleContextMenu = (event: MouseEvent | TouchEvent) => {
         event.preventDefault();
         event.stopPropagation();
 
-        const pageX = event.pageX || (event.touches && event.touches[0].pageX);
-        const pageY = event.pageY || (event.touches && event.touches[0].pageY);
+        const pageX =
+          (event: any).pageX ||
+          (event.touches && (event: any).touches[0].pageX);
+        const pageY =
+          (event: any).pageY ||
+          (event.touches && (event: any).touches[0].pageY);
 
         showMenu({data, id, pageX, pageY});
       };

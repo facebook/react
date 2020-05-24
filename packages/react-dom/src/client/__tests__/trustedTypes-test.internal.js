@@ -54,7 +54,7 @@ describe('when Trusted Types are available in global object', () => {
   });
 
   it('should not stringify trusted values for dangerouslySetInnerHTML', () => {
-    let innerHTMLDescriptor = Object.getOwnPropertyDescriptor(
+    const innerHTMLDescriptor = Object.getOwnPropertyDescriptor(
       Element.prototype,
       'innerHTML',
     );
@@ -97,7 +97,7 @@ describe('when Trusted Types are available in global object', () => {
   });
 
   it('should not stringify trusted values for setAttribute (unknown attribute)', () => {
-    let setAttribute = Element.prototype.setAttribute;
+    const setAttribute = Element.prototype.setAttribute;
     try {
       const setAttributeCalls = [];
       Element.prototype.setAttribute = function(name, value) {
@@ -125,7 +125,7 @@ describe('when Trusted Types are available in global object', () => {
   });
 
   it('should not stringify trusted values for setAttribute (known attribute)', () => {
-    let setAttribute = Element.prototype.setAttribute;
+    const setAttribute = Element.prototype.setAttribute;
     try {
       const setAttributeCalls = [];
       Element.prototype.setAttribute = function(name, value) {
@@ -153,7 +153,7 @@ describe('when Trusted Types are available in global object', () => {
   });
 
   it('should not stringify trusted values for setAttributeNS', () => {
-    let setAttributeNS = Element.prototype.setAttributeNS;
+    const setAttributeNS = Element.prototype.setAttributeNS;
     try {
       const setAttributeNSCalls = [];
       Element.prototype.setAttributeNS = function(ns, name, value) {
@@ -241,5 +241,21 @@ describe('when Trusted Types are available in global object', () => {
 
     // check that the warning is printed only once
     ReactDOM.render(<script>alert("I am not executed")</script>, container);
+  });
+
+  it('should warn twice when rendering scRipt tag and prevent code execution on mistyped tag', () => {
+    expect(() => {
+      ReactDOM.render(<scRipt>alert("I am not executed")</scRipt>, container);
+    }).toErrorDev([
+      'Warning: <scRipt /> is using incorrect casing. ' +
+        'Use PascalCase for React components, ' +
+        'or lowercase for HTML elements.\n' +
+        '    in scRipt (at **)',
+      'Warning: Encountered a script tag while rendering React component. ' +
+        'Scripts inside React components are never executed when rendering ' +
+        'on the client. Consider using template tag instead ' +
+        '(https://developer.mozilla.org/en-US/docs/Web/HTML/Element/template).\n' +
+        '    in scRipt (at **)',
+    ]);
   });
 });
