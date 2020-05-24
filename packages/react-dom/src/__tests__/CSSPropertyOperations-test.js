@@ -271,7 +271,7 @@ describe('CSSPropertyOperations', () => {
     class Comp extends React.Component {
       render() {
         const style = {
-          __proto__: { hasOwnProperty: '' }
+          __proto__: {hasOwnProperty: ''},
         };
         return <div style={style} />;
       }
