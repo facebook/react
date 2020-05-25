@@ -26,6 +26,9 @@ const packages = readdirSync(packagesRoot).filter(dir => {
 // Create a module map to point React packages to the build output
 const moduleNameMapper = {};
 
+moduleNameMapper['react-devtools-target-flags'] =
+  '<rootDir>/packages/react-devtools-shared/config/TargetFlags.default';
+
 // Map packages to bundles
 packages.forEach(name => {
   // Root entry point

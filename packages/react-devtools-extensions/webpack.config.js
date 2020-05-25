@@ -3,7 +3,10 @@
 const {resolve} = require('path');
 const {DefinePlugin} = require('webpack');
 const {GITHUB_URL, getVersionString} = require('./utils');
-const {validateWebpackTarget} = require('react-devtools-shared/config/validateTarget');
+const {
+  validateWebpackTarget,
+  resolveTargetFlags,
+} = require('react-devtools-shared/config/resolveTarget');
 
 const TARGET = process.env.TARGET;
 validateWebpackTarget(TARGET);
@@ -46,6 +49,7 @@ module.exports = {
       'react-dom': resolve(builtModulesDir, 'react-dom'),
       'react-is': resolve(builtModulesDir, 'react-is'),
       scheduler: resolve(builtModulesDir, 'scheduler'),
+      'react-devtools-target-flags': resolveTargetFlags(resolve, TARGET),
     },
   },
   optimization: {
@@ -59,7 +63,6 @@ module.exports = {
       'process.env.DEVTOOLS_VERSION': `"${DEVTOOLS_VERSION}"`,
       'process.env.GITHUB_URL': `"${GITHUB_URL}"`,
       'process.env.NODE_ENV': `"${NODE_ENV}"`,
-      'process.env.TARGET': `"${TARGET}"`,
     }),
   ],
   module: {
