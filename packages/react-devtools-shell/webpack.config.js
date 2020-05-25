@@ -4,16 +4,14 @@ const {
   GITHUB_URL,
   getVersionString,
 } = require('react-devtools-extensions/utils');
+const {validateWebpackTarget} = require('react-devtools-shared/config/validateTarget');
+
+const TARGET = process.env.TARGET;
+validateWebpackTarget(TARGET);
 
 const NODE_ENV = process.env.NODE_ENV;
 if (!NODE_ENV) {
   console.error('NODE_ENV not set');
-  process.exit(1);
-}
-
-const TARGET = process.env.TARGET;
-if (!TARGET) {
-  console.error('TARGET not set');
   process.exit(1);
 }
 
@@ -49,6 +47,7 @@ const config = {
       __EXPERIMENTAL__: true,
       'process.env.GITHUB_URL': `"${GITHUB_URL}"`,
       'process.env.DEVTOOLS_VERSION': `"${DEVTOOLS_VERSION}"`,
+      'process.env.TARGET': `"${TARGET}"`,
     }),
   ],
   module: {

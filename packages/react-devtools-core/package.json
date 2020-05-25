@@ -17,11 +17,11 @@
   ],
   "scripts": {
     "build": "yarn build:backend && yarn build:standalone",
-    "build:backend": "cross-env NODE_ENV=production webpack --config webpack.backend.js",
-    "build:standalone": "cross-env NODE_ENV=production webpack --config webpack.standalone.js",
+    "build:backend": "cross-env NODE_ENV=production TARGET=backend webpack --config webpack.backend.js",
+    "build:standalone": "cross-env NODE_ENV=production TARGET=standalone webpack --config webpack.standalone.js",
     "prepublish": "yarn run build",
-    "start:backend": "cross-env NODE_ENV=development webpack --config webpack.backend.js --watch",
-    "start:standalone": "cross-env NODE_ENV=development webpack --config webpack.standalone.js --watch"
+    "start:backend": "cross-env NODE_ENV=development TARGET=backend webpack --config webpack.backend.js --watch",
+    "start:standalone": "cross-env NODE_ENV=development TARGET=standalone webpack --config webpack.standalone.js --watch"
   },
   "dependencies": {
     "shell-quote": "^1.6.1",

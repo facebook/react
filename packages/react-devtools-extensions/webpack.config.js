@@ -3,6 +3,10 @@
 const {resolve} = require('path');
 const {DefinePlugin} = require('webpack');
 const {GITHUB_URL, getVersionString} = require('./utils');
+const {validateWebpackTarget} = require('react-devtools-shared/config/validateTarget');
+
+const TARGET = process.env.TARGET;
+validateWebpackTarget(TARGET);
 
 const NODE_ENV = process.env.NODE_ENV;
 if (!NODE_ENV) {
@@ -55,6 +59,7 @@ module.exports = {
       'process.env.DEVTOOLS_VERSION': `"${DEVTOOLS_VERSION}"`,
       'process.env.GITHUB_URL': `"${GITHUB_URL}"`,
       'process.env.NODE_ENV': `"${NODE_ENV}"`,
+      'process.env.TARGET': `"${TARGET}"`,
     }),
   ],
   module: {

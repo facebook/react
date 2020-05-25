@@ -172,7 +172,7 @@ export function installHook(target: any): DevToolsHook | null {
     // In that case, we'll patch later (when the frontend attaches).
     //
     // Don't patch in test environments because we don't want to interfere with Jest's own console overrides.
-    if (process.env.NODE_ENV !== 'test') {
+    if (process.env.NODE_ENV !== 'test' && process.env.TARGET !== 'extension') {
       try {
         const appendComponentStack =
           window.__REACT_DEVTOOLS_APPEND_COMPONENT_STACK__ !== false;
