@@ -87,6 +87,38 @@ describe('ReactDOMServerPartialHydration', () => {
     SuspenseList = React.SuspenseList;
   });
 
+  // Note: This is based on a similar component we use in www. We can delete
+  // once the unstable_LegacyHidden API exists in both forks, and once the
+  // extra div wrapper is no longer neccessary.
+  function LegacyHiddenDiv({children, mode}) {
+    let wrappedChildren;
+    if (gate(flags => flags.new)) {
+      // The new reconciler does not support `<div hidden={true} />`. The
+      // equivalent behavior was moved to a special type, unstable_LegacyHidden.
+      // Eventually, we will replace this with an official API.
+      wrappedChildren = (
+        <React.unstable_LegacyHidden
+          mode={mode === 'hidden' ? 'unstable-defer-without-hiding' : mode}>
+          {children}
+        </React.unstable_LegacyHidden>
+      );
+    } else {
+      // The old reconciler fork does not support the new type. Use the old
+      // `<div hidden={true} />` API. Once we remove this branch, we can also
+      // remove the extra DOM node wrapper around the children.
+      wrappedChildren = children;
+    }
+
+    return (
+      <div
+        hidden={
+          mode === 'hidden' ? 'unstable-do-not-use-legacy-hidden' : undefined
+        }>
+        {wrappedChildren}
+      </div>
+    );
+  }
+
   // @gate experimental
   it('hydrates a parent even if a child Suspense boundary is blocked', async () => {
     let suspend = false;
@@ -2810,18 +2842,21 @@ describe('ReactDOMServerPartialHydration', () => {
     expect(ref.current).not.toBe(null);
   });
 
+  // This test fails, in both forks. Without a boundary, the deferred tree won't
+  // re-enter hydration mode. It doesn't come up in practice because there's
+  // always a parent Suspense boundary. But it's still a bug. Leaving for a
+  // follow up.
+  //
+  // @gate FIXME
   // @gate experimental
-  // @gate new
-  it('renders a hidden LegacyHidden component', async () => {
-    const LegacyHidden = React.unstable_LegacyHidden;
-
+  it('hydrates a hidden subtree outside of a Suspense boundary', async () => {
     const ref = React.createRef();
 
     function App() {
       return (
-        <LegacyHidden mode="hidden">
+        <LegacyHiddenDiv mode="hidden">
           <span ref={ref}>Hidden child</span>
-        </LegacyHidden>
+        </LegacyHiddenDiv>
       );
     }
 
@@ -2831,27 +2866,25 @@ describe('ReactDOMServerPartialHydration', () => {
     container.innerHTML = finalHTML;
 
     const span = container.getElementsByTagName('span')[0];
-    expect(span).toBe(undefined);
+    expect(span.innerHTML).toBe('Hidden child');
 
     const root = ReactDOM.createRoot(container, {hydrate: true});
     root.render(<App />);
     Scheduler.unstable_flushAll();
-    expect(ref.current.innerHTML).toBe('Hidden child');
+    expect(ref.current).toBe(span);
+    expect(span.innerHTML).toBe('Hidden child');
   });
 
   // @gate experimental
-  // @gate new
   it('renders a hidden LegacyHidden component inside a Suspense boundary', async () => {
-    const LegacyHidden = React.unstable_LegacyHidden;
-
     const ref = React.createRef();
 
     function App() {
       return (
         <Suspense fallback="Loading...">
-          <LegacyHidden mode="hidden">
+          <LegacyHiddenDiv mode="hidden">
             <span ref={ref}>Hidden child</span>
-          </LegacyHidden>
+          </LegacyHiddenDiv>
         </Suspense>
       );
     }
@@ -2862,26 +2895,24 @@ describe('ReactDOMServerPartialHydration', () => {
     container.innerHTML = finalHTML;
 
     const span = container.getElementsByTagName('span')[0];
-    expect(span).toBe(undefined);
+    expect(span.innerHTML).toBe('Hidden child');
 
     const root = ReactDOM.createRoot(container, {hydrate: true});
     root.render(<App />);
     Scheduler.unstable_flushAll();
-    expect(ref.current.innerHTML).toBe('Hidden child');
+    expect(ref.current).toBe(span);
+    expect(span.innerHTML).toBe('Hidden child');
   });
 
   // @gate experimental
-  // @gate new
   it('renders a visible LegacyHidden component', async () => {
-    const LegacyHidden = React.unstable_LegacyHidden;
-
     const ref = React.createRef();
 
     function App() {
       return (
-        <LegacyHidden mode="visible">
+        <LegacyHiddenDiv mode="visible">
           <span ref={ref}>Hidden child</span>
-        </LegacyHidden>
+        </LegacyHiddenDiv>
       );
     }
 

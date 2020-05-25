@@ -1020,18 +1020,14 @@ class ReactDOMServerRenderer {
       }
 
       switch (elementType) {
-        case REACT_LEGACY_HIDDEN_TYPE: {
-          if (!enableSuspenseServerRenderer) {
-            break;
-          }
-          if (((nextChild: any): ReactElement).props.mode === 'hidden') {
-            // In hidden mode, render nothing.
-            return '';
-          }
-          // Otherwise the tree is visible, so act like a fragment.
-        }
-        // Intentional fall through
-        // eslint-disable-next-line no-fallthrough
+        // TODO: LegacyHidden acts the same as a fragment. This only works
+        // because we currently assume that every instance of LegacyHidden is
+        // accompanied by a host component wrapper. In the hidden mode, the host
+        // component is given a `hidden` attribute, which ensures that the
+        // initial HTML is not visible. To support the use of LegacyHidden as a
+        // true fragment, without an extra DOM node, we would have to hide the
+        // initial HTML in some other way.
+        case REACT_LEGACY_HIDDEN_TYPE:
         case REACT_DEBUG_TRACING_MODE_TYPE:
         case REACT_STRICT_MODE_TYPE:
         case REACT_PROFILER_TYPE:

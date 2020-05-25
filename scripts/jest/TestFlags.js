@@ -41,6 +41,9 @@ const environmentFlags = {
   experimental: __EXPERIMENTAL__,
   // Similarly, should stable imply "classic"?
   stable: !__EXPERIMENTAL__,
+
+  // Use this for tests that are known to be broken.
+  FIXME: false,
 };
 
 function getTestFlags() {
