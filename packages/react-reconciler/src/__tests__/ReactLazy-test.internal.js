@@ -867,6 +867,7 @@ describe('ReactLazy', () => {
       return props.inner + props.outer;
     };
     Add = React.memo(Add);
+    Add.displayName = 'Add';
     Add.propTypes = {
       inner: PropTypes.number.isRequired,
       innerWithDefault: PropTypes.number.isRequired,
@@ -882,6 +883,7 @@ describe('ReactLazy', () => {
       return props.inner + props.outer;
     };
     Add = React.memo(Add);
+    Add.displayName = 'Add';
     Add.propTypes = {
       inner: PropTypes.number.isRequired,
     };
@@ -945,7 +947,7 @@ describe('ReactLazy', () => {
     expect(() => {
       expect(Scheduler).toFlushAndYield(['Inner default text']);
     }).toErrorDev(
-      'The prop `text` is marked as required in `T`, but its value is `undefined`',
+      'The prop `text` is marked as required in `Memo(T)`, but its value is `undefined`',
     );
     expect(root).toMatchRenderedOutput('Inner default text');
 
@@ -958,7 +960,7 @@ describe('ReactLazy', () => {
       );
       expect(Scheduler).toFlushAndYield([null]);
     }).toErrorDev(
-      'The prop `text` is marked as required in `T`, but its value is `null`',
+      'The prop `text` is marked as required in `Memo(T)`, but its value is `null`',
     );
     expect(root).toMatchRenderedOutput(null);
   });
@@ -1050,6 +1052,7 @@ describe('ReactLazy', () => {
     Add.defaultProps = {
       inner: 2,
     };
+    Add.displayName = 'Add';
     const LazyAdd = lazy(() => fakeImport(Add));
     const root = ReactTestRenderer.create(
       <Suspense fallback={<Text text="Loading..." />}>

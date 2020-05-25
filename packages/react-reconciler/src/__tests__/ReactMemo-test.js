@@ -365,7 +365,7 @@ describe('memo', () => {
           expect(Scheduler).toFlushWithoutYielding();
         }).toErrorDev(
           // Outer props are checked in createElement
-          'Invalid prop `outer` of type `string` supplied to `FnInner`, expected `number`.',
+          'Invalid prop `outer` of type `string` supplied to `Memo(FnInner)`, expected `number`.',
         );
 
         // Update
@@ -374,7 +374,7 @@ describe('memo', () => {
           expect(Scheduler).toFlushWithoutYielding();
         }).toErrorDev(
           // Outer props are checked in createElement
-          'Invalid prop `outer` of type `boolean` supplied to `FnInner`, expected `number`.',
+          'Invalid prop `outer` of type `boolean` supplied to `Memo(FnInner)`, expected `number`.',
         );
       });
 
@@ -408,8 +408,8 @@ describe('memo', () => {
           );
           expect(Scheduler).toFlushWithoutYielding();
         }).toErrorDev([
-          'Invalid prop `outer` of type `string` supplied to `Inner`, expected `number`.',
-          'Invalid prop `middle` of type `string` supplied to `Inner`, expected `number`.',
+          'Invalid prop `outer` of type `string` supplied to `Memo(Memo(Inner))`, expected `number`.',
+          'Invalid prop `middle` of type `string` supplied to `Memo(Inner)`, expected `number`.',
           'Invalid prop `inner` of type `string` supplied to `Inner`, expected `number`.',
         ]);
 
@@ -422,8 +422,8 @@ describe('memo', () => {
           );
           expect(Scheduler).toFlushWithoutYielding();
         }).toErrorDev([
-          'Invalid prop `outer` of type `boolean` supplied to `Inner`, expected `number`.',
-          'Invalid prop `middle` of type `boolean` supplied to `Inner`, expected `number`.',
+          'Invalid prop `outer` of type `boolean` supplied to `Memo(Memo(Inner))`, expected `number`.',
+          'Invalid prop `middle` of type `boolean` supplied to `Memo(Inner)`, expected `number`.',
           'Invalid prop `inner` of type `boolean` supplied to `Inner`, expected `number`.',
         ]);
       });

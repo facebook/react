@@ -30,10 +30,10 @@ function getWrappedName(
   innerType: any,
   wrapperName: string,
 ): string {
-  const functionName = innerType.displayName || innerType.name || '';
+  const innerName = getComponentName(innerType) || '';
   return (
     (outerType: any).displayName ||
-    (functionName !== '' ? `${wrapperName}(${functionName})` : wrapperName)
+    (innerName !== '' ? `${wrapperName}(${innerName})` : wrapperName)
   );
 }
 
@@ -85,7 +85,7 @@ function getComponentName(type: mixed): string | null {
       case REACT_FORWARD_REF_TYPE:
         return getWrappedName(type, type.render, 'ForwardRef');
       case REACT_MEMO_TYPE:
-        return getComponentName(type.type);
+        return getWrappedName(type, type.type, 'Memo');
       case REACT_BLOCK_TYPE:
         return getComponentName(type._render);
       case REACT_LAZY_TYPE: {
