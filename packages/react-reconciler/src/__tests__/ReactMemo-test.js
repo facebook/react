@@ -532,7 +532,7 @@ describe('memo', () => {
         ReactNoop.render(<MemoComponent optional="foo" />),
       ).toErrorDev(
         'Warning: Failed prop type: The prop `required` is marked as required in ' +
-          '`Foo`, but its value is `undefined`.\n' +
+          '`Bar`, but its value is `undefined`.\n' +
           '    in Foo (at **)',
       );
     });
