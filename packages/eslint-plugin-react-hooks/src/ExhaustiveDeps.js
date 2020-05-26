@@ -1238,7 +1238,7 @@ function collectRecommendations({
     const keys = path.split('.');
     let node = rootNode;
     for (const key of keys) {
-      let child = node.children.get(key);
+      let child = getChildByKey(node, key);
       if (!child) {
         child = createDepTree();
         node.children.set(key, child);
@@ -1251,13 +1251,28 @@ function collectRecommendations({
     const keys = path.split('.');
     let node = rootNode;
     for (const key of keys) {
-      const child = node.children.get(key);
+      const child = getChildByKey(node, key);
       if (!child) {
         return;
       }
       fn(child);
       node = child;
     }
+  }
+
+  /**
+   * Match key with optional chaining
+   * key -> key
+   * key? -> key
+   * key -> key?
+   * Otherwise undefined.
+   */
+  function getChildByKey(node, key) {
+    return (
+      node.children.get(key) ||
+      node.children.get(key.split('?')[0]) ||
+      node.children.get(key + '?')
+    );
   }
 
   // Now we can learn which dependencies are missing or necessary.
