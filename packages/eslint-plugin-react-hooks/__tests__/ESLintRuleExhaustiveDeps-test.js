@@ -360,50 +360,32 @@ const tests = {
     {
       code: normalizeIndent`
         function MyComponent(props) {
-          useCustomHook(() => {
+          useCustomEffect(() => {
             console.log(props.foo);
           });
         }
       `,
-      options: [{additionalHooks: 'useCustomHook'}],
+      options: [{additionalHooks: 'useCustomEffect'}],
     },
     {
       code: normalizeIndent`
         function MyComponent(props) {
-          useCustomHook(() => {
+          useCustomEffect(() => {
             console.log(props.foo);
           }, [props.foo]);
         }
       `,
-      options: [{additionalHooks: 'useCustomHook'}],
+      options: [{additionalHooks: 'useCustomEffect'}],
     },
     {
       code: normalizeIndent`
         function MyComponent(props) {
-          useCustomHook(() => {
+          useCustomEffect(() => {
             console.log(props.foo);
           }, []);
         }
       `,
-      options: [{additionalHooks: 'useAnotherHook'}],
-    },
-    {
-      code: normalizeIndent`
-        function MyComponent(props) {
-          useCustomEffect(() => {
-            console.log(props.foo);
-          });
-        }
-      `,
-    },
-    {
-      code: normalizeIndent`
-        function MyComponent(props) {
-          useCustomEffect(() => {
-            console.log(props.foo);
-          }, [props.foo]);
-        }
-      `,
+      options: [{additionalHooks: 'useAnotherEffect'}],
     },
     {
       code: normalizeIndent`
@@ -3073,105 +3055,6 @@ const tests = {
     {
       code: normalizeIndent`
         function MyComponent(props) {
-          useCustomHook(() => {
-            console.log(props.foo);
-          }, []);
-          useEffect(() => {
-            console.log(props.foo);
-          }, []);
-          React.useEffect(() => {
-            console.log(props.foo);
-          }, []);
-          React.useCustomHook(() => {
-            console.log(props.foo);
-          }, []);
-        }
-      `,
-      options: [{additionalHooks: 'useCustomHook'}],
-      errors: [
-        {
-          message:
-            "React Hook useCustomHook has a missing dependency: 'props.foo'. " +
-            'Either include it or remove the dependency array.',
-          suggestions: [
-            {
-              desc: 'Update the dependencies array to be: [props.foo]',
-              output: normalizeIndent`
-                function MyComponent(props) {
-                  useCustomHook(() => {
-                    console.log(props.foo);
-                  }, [props.foo]);
-                  useEffect(() => {
-                    console.log(props.foo);
-                  }, []);
-                  React.useEffect(() => {
-                    console.log(props.foo);
-                  }, []);
-                  React.useCustomHook(() => {
-                    console.log(props.foo);
-                  }, []);
-                }
-              `,
-            },
-          ],
-        },
-        {
-          message:
-            "React Hook useEffect has a missing dependency: 'props.foo'. " +
-            'Either include it or remove the dependency array.',
-          suggestions: [
-            {
-              desc: 'Update the dependencies array to be: [props.foo]',
-              output: normalizeIndent`
-                function MyComponent(props) {
-                  useCustomHook(() => {
-                    console.log(props.foo);
-                  }, []);
-                  useEffect(() => {
-                    console.log(props.foo);
-                  }, [props.foo]);
-                  React.useEffect(() => {
-                    console.log(props.foo);
-                  }, []);
-                  React.useCustomHook(() => {
-                    console.log(props.foo);
-                  }, []);
-                }
-              `,
-            },
-          ],
-        },
-        {
-          message:
-            "React Hook React.useEffect has a missing dependency: 'props.foo'. " +
-            'Either include it or remove the dependency array.',
-          suggestions: [
-            {
-              desc: 'Update the dependencies array to be: [props.foo]',
-              output: normalizeIndent`
-                function MyComponent(props) {
-                  useCustomHook(() => {
-                    console.log(props.foo);
-                  }, []);
-                  useEffect(() => {
-                    console.log(props.foo);
-                  }, []);
-                  React.useEffect(() => {
-                    console.log(props.foo);
-                  }, [props.foo]);
-                  React.useCustomHook(() => {
-                    console.log(props.foo);
-                  }, []);
-                }
-              `,
-            },
-          ],
-        },
-      ],
-    },
-    {
-      code: normalizeIndent`
-        function MyComponent(props) {
           useCustomEffect(() => {
             console.log(props.foo);
           }, []);
@@ -3186,6 +3069,7 @@ const tests = {
           }, []);
         }
       `,
+      options: [{additionalHooks: 'useCustomEffect'}],
       errors: [
         {
           message:
@@ -4219,36 +4103,6 @@ const tests = {
           `and use that variable in the cleanup function.`,
       ],
       options: [{additionalHooks: 'useLayoutEffect_SAFE_FOR_SSR'}],
-    },
-    {
-      code: `
-        function MyComponent() {
-          const myRef = useRef();
-          useIsomorphicLayoutEffect(() => {
-            const handleMove = () => {};
-            myRef.current.addEventListener('mousemove', handleMove);
-            return () => myRef.current.removeEventListener('mousemove', handleMove);
-          });
-          return <div ref={myRef} />;
-        }
-      `,
-      output: `
-        function MyComponent() {
-          const myRef = useRef();
-          useIsomorphicLayoutEffect(() => {
-            const handleMove = () => {};
-            myRef.current.addEventListener('mousemove', handleMove);
-            return () => myRef.current.removeEventListener('mousemove', handleMove);
-          });
-          return <div ref={myRef} />;
-        }
-      `,
-      errors: [
-        `The ref value 'myRef.current' will likely have changed by the time ` +
-          `this effect cleanup function runs. If this ref points to a node ` +
-          `rendered by React, copy 'myRef.current' to a variable inside the effect, ` +
-          `and use that variable in the cleanup function.`,
-      ],
     },
     {
       // Autofix ignores constant primitives (leaving the ones that are there).

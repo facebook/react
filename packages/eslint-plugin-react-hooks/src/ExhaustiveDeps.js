@@ -1510,9 +1510,7 @@ function getReactiveHookCallbackIndex(calleeNode, options) {
       // useImperativeHandle(ref, fn)
       return 1;
     default:
-      if (node === calleeNode && node.name.match(/^use.+Effect$/)) {
-        return 0;
-      } else if (node === calleeNode && options && options.additionalHooks) {
+      if (node === calleeNode && options && options.additionalHooks) {
         // Allow the user to provide a regular expression which enables the lint to
         // target custom reactive hooks.
         let name;
