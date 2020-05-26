@@ -588,6 +588,80 @@ describe('ReactDOMServerPartialHydration', () => {
   });
 
   // @gate experimental
+  it('blocks updates to hydrate the content first if props changed at idle priority', async () => {
+    let suspend = false;
+    let resolve;
+    const promise = new Promise(resolvePromise => (resolve = resolvePromise));
+    const ref = React.createRef();
+
+    function Child({text}) {
+      if (suspend) {
+        throw promise;
+      } else {
+        return text;
+      }
+    }
+
+    function App({text, className}) {
+      return (
+        <div>
+          <Suspense fallback="Loading...">
+            <span ref={ref} className={className}>
+              <Child text={text} />
+            </span>
+          </Suspense>
+        </div>
+      );
+    }
+
+    suspend = false;
+    const finalHTML = ReactDOMServer.renderToString(
+      <App text="Hello" className="hello" />,
+    );
+    const container = document.createElement('div');
+    container.innerHTML = finalHTML;
+
+    const span = container.getElementsByTagName('span')[0];
+
+    // On the client we don't have all data yet but we want to start
+    // hydrating anyway.
+    suspend = true;
+    const root = ReactDOM.createRoot(container, {hydrate: true});
+    root.render(<App text="Hello" className="hello" />);
+    Scheduler.unstable_flushAll();
+    jest.runAllTimers();
+
+    expect(ref.current).toBe(null);
+    expect(span.textContent).toBe('Hello');
+
+    // Schedule an update at idle priority
+    Scheduler.unstable_runWithPriority(Scheduler.unstable_IdlePriority, () => {
+      root.render(<App text="Hi" className="hi" />);
+    });
+
+    // At the same time, resolving the promise so that rendering can complete.
+    suspend = false;
+    resolve();
+    await promise;
+
+    // This should first complete the hydration and then flush the update onto the hydrated state.
+    Scheduler.unstable_flushAll();
+    jest.runAllTimers();
+
+    // The new span should be the same since we should have successfully hydrated
+    // before changing it.
+    const newSpan = container.getElementsByTagName('span')[0];
+    expect(span).toBe(newSpan);
+
+    // We should now have fully rendered with a ref on the new span.
+    expect(ref.current).toBe(span);
+    expect(span.textContent).toBe('Hi');
+    // If we ended up hydrating the existing content, we won't have properly
+    // patched up the tree, which might mean we haven't patched the className.
+    expect(span.className).toBe('hi');
+  });
+
+  // @gate experimental
   it('shows the fallback if props have changed before hydration completes and is still suspended', async () => {
     let suspend = false;
     let resolve;
