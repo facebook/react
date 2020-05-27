@@ -62,6 +62,8 @@ const {
   RN_FB_PROFILING,
 } = Bundles.bundleTypes;
 
+const {getFilename} = Bundles;
+
 function parseRequestedNames(names, toCase) {
   let result = [];
   for (let i = 0; i < names.length; i++) {
@@ -255,37 +257,6 @@ function getFormat(bundleType) {
     case RN_FB_PROD:
     case RN_FB_PROFILING:
       return `cjs`;
-  }
-}
-
-function getFilename(name, globalName, bundleType) {
-  // we do this to replace / to -, for react-dom/server
-  name = name.replace('/index.', '.').replace('/', '-');
-  switch (bundleType) {
-    case UMD_DEV:
-      return `${name}.development.js`;
-    case UMD_PROD:
-      return `${name}.production.min.js`;
-    case UMD_PROFILING:
-      return `${name}.profiling.min.js`;
-    case NODE_DEV:
-      return `${name}.development.js`;
-    case NODE_PROD:
-      return `${name}.production.min.js`;
-    case NODE_PROFILING:
-      return `${name}.profiling.min.js`;
-    case FB_WWW_DEV:
-    case RN_OSS_DEV:
-    case RN_FB_DEV:
-      return `${globalName}-dev.js`;
-    case FB_WWW_PROD:
-    case RN_OSS_PROD:
-    case RN_FB_PROD:
-      return `${globalName}-prod.js`;
-    case FB_WWW_PROFILING:
-    case RN_FB_PROFILING:
-    case RN_OSS_PROFILING:
-      return `${globalName}-profiling.js`;
   }
 }
 
@@ -558,7 +529,7 @@ async function createBundle(bundle, bundleType) {
     return;
   }
 
-  const filename = getFilename(bundle.entry, bundle.global, bundleType);
+  const filename = getFilename(bundle, bundleType);
   const logKey =
     chalk.white.bold(filename) + chalk.dim(` (${bundleType.toLowerCase()})`);
   const format = getFormat(bundleType);
@@ -765,17 +736,11 @@ async function buildEverything() {
       [bundle, FB_WWW_PROFILING],
       [bundle, RN_OSS_DEV],
       [bundle, RN_OSS_PROD],
-      [bundle, RN_OSS_PROFILING]
+      [bundle, RN_OSS_PROFILING],
+      [bundle, RN_FB_DEV],
+      [bundle, RN_FB_PROD],
+      [bundle, RN_FB_PROFILING]
     );
-
-    if (__EXPERIMENTAL__) {
-      // FB-specific RN builds are experimental-only.
-      bundles.push(
-        [bundle, RN_FB_DEV],
-        [bundle, RN_FB_PROD],
-        [bundle, RN_FB_PROFILING]
-      );
-    }
   }
 
   if (!shouldExtractErrors && process.env.CIRCLE_NODE_TOTAL) {
