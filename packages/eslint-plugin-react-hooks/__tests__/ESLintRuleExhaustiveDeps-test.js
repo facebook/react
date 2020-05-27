@@ -433,7 +433,7 @@ const tests = {
           });
         }
       `,
-      options: [{additionalHooksMap: {useCustomEffect: 0}}],
+      options: [{additionalHooks: [{test: 'useCustomEffect', callbackIndex: 0}]}],
     },
     {
       code: normalizeIndent`
@@ -444,7 +444,7 @@ const tests = {
           });
         }
       `,
-      options: [{additionalHooksMap: {useCustomEffect: 1}}],
+      options: [{additionalHooks: [{test: 'useCustomEffect', callbackIndex: 1}]}],
     },
     {
       code: normalizeIndent`
@@ -454,7 +454,7 @@ const tests = {
           }, [props.foo]);
         }
       `,
-      options: [{additionalHooksMap: {useCustomEffect: 0}}],
+      options: [{additionalHooks: [{test: 'useCustomEffect', callbackIndex: 0}]}],
     },
     {
       code: normalizeIndent`
@@ -465,7 +465,7 @@ const tests = {
           }, [props.foo]);
         }
       `,
-      options: [{additionalHooksMap: {useCustomEffect: 1}}],
+      options: [{additionalHooks: [{test: 'useCustomEffect', callbackIndex: 1}]}],
     },
     {
       code: normalizeIndent`
@@ -481,8 +481,10 @@ const tests = {
       `,
       options: [
         {
-          additionalHooksMap: {useCustomEffect: 1},
-          additionalHooks: 'useCustomHook',
+          additionalHooks: [
+            {test: 'useCustomHook', callbackIndex: 0},
+            {test: 'useCustomEffect', callbackIndex: 1},
+          ],
         },
       ],
     },
@@ -3268,7 +3270,7 @@ const tests = {
           }, []);
         }
       `,
-      options: [{additionalHooksMap: {useCustomHook: 1}}],
+      options: [{additionalHooks: [{test: 'useCustomHook', callbackIndex: 1}]}],
       errors: [
         {
           message:
@@ -3346,6 +3348,37 @@ const tests = {
                   React.useCustomHook(ref, () => {
                     console.log(props.foo);
                   }, []);
+                }
+              `,
+            },
+          ],
+        },
+      ],
+    },
+    {
+      code: normalizeIndent`
+        function MyComponent(props) {
+          const ref = useRef();
+          useCustomHook(ref, () => {
+            console.log(props.foo);
+          }, []);
+        }
+      `,
+      options: [{additionalHooks: [{test: 'useCust.*Hook', callbackIndex: 1}]}],
+      errors: [
+        {
+          message:
+            "React Hook useCustomHook has a missing dependency: 'props.foo'. " +
+            'Either include it or remove the dependency array.',
+          suggestions: [
+            {
+              desc: 'Update the dependencies array to be: [props.foo]',
+              output: normalizeIndent`
+                function MyComponent(props) {
+                  const ref = useRef();
+                  useCustomHook(ref, () => {
+                    console.log(props.foo);
+                  }, [props.foo]);
                 }
               `,
             },
