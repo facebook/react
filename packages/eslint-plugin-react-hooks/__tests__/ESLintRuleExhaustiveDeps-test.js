@@ -251,6 +251,44 @@ const tests = {
         }
       `,
     },
+    // Nullish coalescing and optional chaining
+    {
+      code: normalizeIndent`
+        function MyComponent(props) {
+          useEffect(() => {
+            console.log(props.foo?.bar?.baz ?? null);
+          }, [props.foo]);
+        }
+      `,
+    },
+    {
+      code: normalizeIndent`
+        function MyComponent(props) {
+          useEffect(() => {
+            console.log(props.foo?.bar);
+          }, [props.foo?.bar]);
+        }
+      `,
+    },
+    {
+      code: normalizeIndent`
+        function MyComponent(props) {
+          useEffect(() => {
+            console.log(props.foo);
+            console.log(props.foo?.bar);
+          }, [props.foo]);
+        }
+      `,
+    },
+    {
+      code: normalizeIndent`
+        function MyComponent(props) {
+          useEffect(() => {
+            console.log(props.foo?.toString());
+          }, [props.foo]);
+        }
+      `,
+    },
     {
       code: normalizeIndent`
         function MyComponent() {
