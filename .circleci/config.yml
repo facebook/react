@@ -364,6 +364,20 @@ jobs:
       - run: yarn lint-build
       - run: scripts/circleci/check_minified_errors.sh
 
+  RELEASE_CHANNEL_stable_yarn_lint_build:
+    docker: *docker
+    environment: *environment
+    steps:
+      - checkout
+      - attach_workspace: *attach_workspace
+      - *restore_yarn_cache
+      - *run_yarn
+      - run:
+          environment:
+            RELEASE_CHANNEL: stable
+          command: yarn lint-build
+      - run: scripts/circleci/check_minified_errors.sh
+
   RELEASE_CHANNEL_stable_yarn_test_build:
     docker: *docker
     environment: *environment
@@ -500,7 +514,7 @@ workflows:
       - sizebot_stable:
           requires:
             - RELEASE_CHANNEL_stable_yarn_build
-      - yarn_lint_build:
+      - RELEASE_CHANNEL_stable_yarn_lint_build:
           requires:
             - RELEASE_CHANNEL_stable_yarn_build
       - RELEASE_CHANNEL_stable_yarn_test_build:
