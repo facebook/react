@@ -430,13 +430,11 @@ export function createElement(
     namespaceURI = getIntrinsicNamespace(type);
   }
   if (namespaceURI === HTML_NAMESPACE) {
-    const lowerCaseType = type.toLowerCase();
-
     if (__DEV__) {
       isCustomComponentTag = isCustomComponent(type, props);
       // Should this check be gated by parent namespace? Not sure we want to
       // allow <SVG> or <mATH>.
-      if (!isCustomComponentTag && type !== lowerCaseType) {
+      if (!isCustomComponentTag && type !== type.toLowerCase()) {
         console.error(
           '<%s /> is using incorrect casing. ' +
             'Use PascalCase for React components, ' +
@@ -446,7 +444,7 @@ export function createElement(
       }
     }
 
-    if (lowerCaseType === 'script') {
+    if (type === 'script') {
       // Create the script via .innerHTML so its "parser-inserted" flag is
       // set to true and it does not execute
       const div = ownerDocument.createElement('div');
