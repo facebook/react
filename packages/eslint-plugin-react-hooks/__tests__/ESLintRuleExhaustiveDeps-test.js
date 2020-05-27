@@ -433,7 +433,9 @@ const tests = {
           });
         }
       `,
-      options: [{additionalHooks: [{test: 'useCustomEffect', callbackIndex: 0}]}],
+      options: [
+        {additionalHooks: [{test: 'useCustomEffect', callbackIndex: 0}]},
+      ],
     },
     {
       code: normalizeIndent`
@@ -444,7 +446,9 @@ const tests = {
           });
         }
       `,
-      options: [{additionalHooks: [{test: 'useCustomEffect', callbackIndex: 1}]}],
+      options: [
+        {additionalHooks: [{test: 'useCustomEffect', callbackIndex: 1}]},
+      ],
     },
     {
       code: normalizeIndent`
@@ -454,7 +458,9 @@ const tests = {
           }, [props.foo]);
         }
       `,
-      options: [{additionalHooks: [{test: 'useCustomEffect', callbackIndex: 0}]}],
+      options: [
+        {additionalHooks: [{test: 'useCustomEffect', callbackIndex: 0}]},
+      ],
     },
     {
       code: normalizeIndent`
@@ -465,7 +471,9 @@ const tests = {
           }, [props.foo]);
         }
       `,
-      options: [{additionalHooks: [{test: 'useCustomEffect', callbackIndex: 1}]}],
+      options: [
+        {additionalHooks: [{test: 'useCustomEffect', callbackIndex: 1}]},
+      ],
     },
     {
       code: normalizeIndent`
