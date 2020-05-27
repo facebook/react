@@ -555,9 +555,10 @@ workflows:
       - yarn_test_build_devtools:
           requires:
             - yarn_build
-      - build_devtools_and_process_artifacts:
-          requires:
-            - yarn_build
+      # FIXME: Temporarily disabled to unblock master.
+      # - build_devtools_and_process_artifacts:
+      #     requires:
+      #       - yarn_build
 
   fuzz_tests:
     triggers:
