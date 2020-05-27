@@ -18,7 +18,20 @@ npm install eslint-plugin-react-hooks --save-dev
 yarn add eslint-plugin-react-hooks --dev
 ```
 
-Then add it to your ESLint configuration:
+Then extend the recommended eslint config:
+
+```js
+{
+  "extends": [
+    // ...
+    "plugin:react-hooks/recommended"
+  ]
+}
+```
+
+### Custom Configuration
+
+If you want more fine-grained configuration, you can instead add a snippet like this to your ESLint configuration file:
 
 ```js
 {
@@ -34,16 +47,6 @@ Then add it to your ESLint configuration:
 }
 ```
 
-Or use the recommended config:
-
-```js
-{
-  "extends": [
-    // ...
-    "plugin:react-hooks/recommended"
-  ]
-}
-```
 
 ## Valid and Invalid Examples
 
