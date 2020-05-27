@@ -29,9 +29,9 @@ Then extend the recommended eslint config:
 }
 ```
 
-### Custom configuration
+### Custom Configuration
 
-If you want more fine-grained configuration, you can instead add the following snippet to your eslint configuration file:
+If you want more fine-grained configuration, you can instead add a snippet like this to your ESLint configuration file:
 
 ```js
 {
