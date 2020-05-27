@@ -5,3 +5,7 @@
 JestReact-prod.js
 JestReact-dev.js
 **/jest-react/**
+# ESLint ignores `node_modules/*` in subdirectories
+# So we have to add this to lint build files.
+# https://github.com/eslint/eslint/pull/12888
+!/build/node_modules/*
