@@ -1,5 +1,4 @@
 let React;
-let ReactFeatureFlags;
 let Fragment;
 let ReactNoop;
 let Scheduler;
@@ -14,7 +13,6 @@ describe('ReactSuspenseWithNoopRenderer', () => {
   beforeEach(() => {
     jest.resetModules();
 
-    ReactFeatureFlags = require('shared/ReactFeatureFlags');
     React = require('react');
     Fragment = React.Fragment;
     ReactNoop = require('react-noop-renderer');
@@ -1737,26 +1735,13 @@ describe('ReactSuspenseWithNoopRenderer', () => {
 
     expect(Scheduler).toHaveYielded(['Promise resolved [B]']);
 
-    if (
-      ReactFeatureFlags.deferPassiveEffectCleanupDuringUnmount &&
-      ReactFeatureFlags.runAllPassiveEffectDestroysBeforeCreates
-    ) {
-      expect(Scheduler).toFlushAndYield([
-        'B',
-        'Destroy Layout Effect [Loading...]',
-        'Layout Effect [B]',
-        'Destroy Effect [Loading...]',
-        'Effect [B]',
-      ]);
-    } else {
-      expect(Scheduler).toFlushAndYield([
-        'B',
-        'Destroy Layout Effect [Loading...]',
-        'Destroy Effect [Loading...]',
-        'Layout Effect [B]',
-        'Effect [B]',
-      ]);
-    }
+    expect(Scheduler).toFlushAndYield([
+      'B',
+      'Destroy Layout Effect [Loading...]',
+      'Layout Effect [B]',
+      'Destroy Effect [Loading...]',
+      'Effect [B]',
+    ]);
 
     // Update
     ReactNoop.renderLegacySyncRoot(<App text="B2" />, () =>
@@ -1786,30 +1771,15 @@ describe('ReactSuspenseWithNoopRenderer', () => {
 
     expect(Scheduler).toHaveYielded(['Promise resolved [B2]']);
 
-    if (
-      ReactFeatureFlags.deferPassiveEffectCleanupDuringUnmount &&
-      ReactFeatureFlags.runAllPassiveEffectDestroysBeforeCreates
-    ) {
-      expect(Scheduler).toFlushAndYield([
-        'B2',
-        'Destroy Layout Effect [Loading...]',
-        'Destroy Layout Effect [B]',
-        'Layout Effect [B2]',
-        'Destroy Effect [Loading...]',
-        'Destroy Effect [B]',
-        'Effect [B2]',
-      ]);
-    } else {
-      expect(Scheduler).toFlushAndYield([
-        'B2',
-        'Destroy Layout Effect [Loading...]',
-        'Destroy Effect [Loading...]',
-        'Destroy Layout Effect [B]',
-        'Layout Effect [B2]',
-        'Destroy Effect [B]',
-        'Effect [B2]',
-      ]);
-    }
+    expect(Scheduler).toFlushAndYield([
+      'B2',
+      'Destroy Layout Effect [Loading...]',
+      'Destroy Layout Effect [B]',
+      'Layout Effect [B2]',
+      'Destroy Effect [Loading...]',
+      'Destroy Effect [B]',
+      'Effect [B2]',
+    ]);
   });
 
   it('suspends for longer if something took a long (CPU bound) time to render', async () => {
