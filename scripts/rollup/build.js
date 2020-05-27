@@ -516,6 +516,10 @@ function shouldSkipBundle(bundle, bundleType) {
       return true;
     }
   }
+  if (!__EXPERIMENTAL__ && bundle.entry.indexOf('unstable') !== -1) {
+    // Don't build unstable entry point bundles for the stable release channel.
+    return true;
+  }
   return false;
 }
 
