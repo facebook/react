@@ -69,13 +69,10 @@ const bundles = [
       `./build/node_modules/*/cjs/*.js`,
     ],
   },
-];
-
-if (process.env.RELEASE_CHANNEL === 'experimental') {
-  bundles.push({
+  {
     format: 'fb',
     filePatterns: [`./build/facebook-www/*.js`],
-  });
-}
+  },
+];
 
 bundles.map(checkFilesExist).map(lint);
