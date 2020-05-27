@@ -72,16 +72,6 @@ ${license}
 
 'use strict';
 
-${
-  globalName === 'ReactNoopRenderer' ||
-  globalName === 'ReactNoopRendererPersistent'
-    ? // React Noop needs regenerator runtime because it uses
-      // generators but GCC doesn't handle them in the output.
-      // So we use Babel for them.
-      `const regeneratorRuntime = require("regenerator-runtime");`
-    : ``
-}
-
 if (process.env.NODE_ENV !== "production") {
   (function() {
 ${source}
@@ -96,15 +86,6 @@ ${source}
  *
 ${license}
  */
-${
-  globalName === 'ReactNoopRenderer' ||
-  globalName === 'ReactNoopRendererPersistent'
-    ? // React Noop needs regenerator runtime because it uses
-      // generators but GCC doesn't handle them in the output.
-      // So we use Babel for them.
-      `const regeneratorRuntime = require("regenerator-runtime");`
-    : ``
-}
 ${source}`;
   },
 
@@ -115,15 +96,6 @@ ${source}`;
  *
 ${license}
  */
-${
-  globalName === 'ReactNoopRenderer' ||
-  globalName === 'ReactNoopRendererPersistent'
-    ? // React Noop needs regenerator runtime because it uses
-      // generators but GCC doesn't handle them in the output.
-      // So we use Babel for them.
-      `const regeneratorRuntime = require("regenerator-runtime");`
-    : ``
-}
 ${source}`;
   },
 
