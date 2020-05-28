@@ -356,7 +356,9 @@ const bundles = [
 
   /******* React Native *******/
   {
-    bundleTypes: [RN_FB_DEV, RN_FB_PROD, RN_FB_PROFILING],
+    bundleTypes: __EXPERIMENTAL__
+      ? [RN_FB_DEV, RN_FB_PROD, RN_FB_PROFILING]
+      : [],
     moduleType: RENDERER,
     entry: 'react-native-renderer',
     global: 'ReactNativeRenderer',
@@ -384,7 +386,9 @@ const bundles = [
 
   /******* React Native Fabric *******/
   {
-    bundleTypes: [RN_FB_DEV, RN_FB_PROD, RN_FB_PROFILING],
+    bundleTypes: __EXPERIMENTAL__
+      ? [RN_FB_DEV, RN_FB_PROD, RN_FB_PROFILING]
+      : [],
     moduleType: RENDERER,
     entry: 'react-native-renderer/fabric',
     global: 'ReactFabric',
@@ -793,9 +797,43 @@ deepFreeze(bundles);
 deepFreeze(bundleTypes);
 deepFreeze(moduleTypes);
 
+function getFilename(bundle, bundleType) {
+  let name = bundle.entry;
+  const globalName = bundle.global;
+  // we do this to replace / to -, for react-dom/server
+  name = name.replace('/index.', '.').replace('/', '-');
+  switch (bundleType) {
+    case UMD_DEV:
+      return `${name}.development.js`;
+    case UMD_PROD:
+      return `${name}.production.min.js`;
+    case UMD_PROFILING:
+      return `${name}.profiling.min.js`;
+    case NODE_DEV:
+      return `${name}.development.js`;
+    case NODE_PROD:
+      return `${name}.production.min.js`;
+    case NODE_PROFILING:
+      return `${name}.profiling.min.js`;
+    case FB_WWW_DEV:
+    case RN_OSS_DEV:
+    case RN_FB_DEV:
+      return `${globalName}-dev.js`;
+    case FB_WWW_PROD:
+    case RN_OSS_PROD:
+    case RN_FB_PROD:
+      return `${globalName}-prod.js`;
+    case FB_WWW_PROFILING:
+    case RN_FB_PROFILING:
+    case RN_OSS_PROFILING:
+      return `${globalName}-profiling.js`;
+  }
+}
+
 module.exports = {
   fbBundleExternalsMap,
   bundleTypes,
   moduleTypes,
   bundles,
+  getFilename,
 };
