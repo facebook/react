@@ -1273,4 +1273,80 @@ describe('ReactLazy', () => {
 
     expect(componentStackMessage).toContain('in Lazy');
   });
+
+  // @gate enableLazyElements && enableNewReconciler
+  it('mount and reorder lazy elements', async () => {
+    class Child extends React.Component {
+      componentDidMount() {
+        Scheduler.unstable_yieldValue('Did mount: ' + this.props.label);
+      }
+      componentDidUpdate() {
+        Scheduler.unstable_yieldValue('Did update: ' + this.props.label);
+      }
+      render() {
+        return <Text text={this.props.label} />;
+      }
+    }
+
+    const lazyChildA = lazy(() => {
+      Scheduler.unstable_yieldValue('Init A');
+      return fakeImport(<Child key="A" label="A" />);
+    });
+    const lazyChildB = lazy(() => {
+      Scheduler.unstable_yieldValue('Init B');
+      return fakeImport(<Child key="B" label="B" />);
+    });
+    const lazyChildA2 = lazy(() => {
+      Scheduler.unstable_yieldValue('Init A2');
+      return fakeImport(<Child key="A" label="a" />);
+    });
+    const lazyChildB2 = lazy(() => {
+      Scheduler.unstable_yieldValue('Init B2');
+      return fakeImport(<Child key="B" label="b" />);
+    });
+
+    function Parent({swap}) {
+      return (
+        <Suspense fallback={<Text text="Loading..." />}>
+          {swap ? [lazyChildB2, lazyChildA2] : [lazyChildA, lazyChildB]}
+        </Suspense>
+      );
+    }
+
+    const root = ReactTestRenderer.create(<Parent swap={false} />, {
+      unstable_isConcurrent: true,
+    });
+
+    expect(Scheduler).toFlushAndYield(['Init A', 'Loading...']);
+    expect(root).not.toMatchRenderedOutput('AB');
+
+    await lazyChildA;
+    // We need to flush to trigger the B to load.
+    expect(Scheduler).toFlushAndYield(['Init B']);
+    await lazyChildB;
+
+    expect(Scheduler).toFlushAndYield([
+      'A',
+      'B',
+      'Did mount: A',
+      'Did mount: B',
+    ]);
+    expect(root).toMatchRenderedOutput('AB');
+
+    // Swap the position of A and B
+    root.update(<Parent swap={true} />);
+    expect(Scheduler).toFlushAndYield(['Init B2', 'Loading...']);
+    await lazyChildB2;
+    // We need to flush to trigger the second one to load.
+    expect(Scheduler).toFlushAndYield(['Init A2', 'Loading...']);
+    await lazyChildA2;
+
+    expect(Scheduler).toFlushAndYield([
+      'b',
+      'a',
+      'Did update: b',
+      'Did update: a',
+    ]);
+    expect(root).toMatchRenderedOutput('ba');
+  });
 });

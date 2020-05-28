@@ -50,6 +50,7 @@ export const enableSuspenseServerRenderer = true;
 export const enableSelectiveHydration = true;
 
 export const enableBlocksAPI = true;
+export const enableLazyElements = true;
 
 export const disableJavaScriptURLs = true;
 
