@@ -1,6 +1,12 @@
 'use strict';
 
-const {existsSync, readdirSync, unlinkSync} = require('fs');
+const {
+  existsSync,
+  readdirSync,
+  unlinkSync,
+  readFileSync,
+  writeFileSync,
+} = require('fs');
 const Bundles = require('./bundles');
 const {
   asyncCopyTo,
@@ -115,6 +121,56 @@ function getTarOptions(tgzName, packageName) {
   };
 }
 
+let entryPointsToHasBundle = new Map();
+// eslint-disable-next-line no-for-of-loops/no-for-of-loops
+for (const bundle of Bundles.bundles) {
+  let hasBundle = entryPointsToHasBundle.get(bundle.entry);
+  if (!hasBundle) {
+    entryPointsToHasBundle.set(bundle.entry, bundle.bundleTypes.length > 0);
+  }
+}
+
+function filterOutEntrypoints(name) {
+  // Remove entry point files that are not built in this configuration.
+  let jsonPath = `build/node_modules/${name}/package.json`;
+  let packageJSON = JSON.parse(readFileSync(jsonPath));
+  let files = packageJSON.files;
+  if (!Array.isArray(files)) {
+    throw new Error('expected all package.json files to contain a files field');
+  }
+  let changed = false;
+  for (let i = 0; i < files.length; i++) {
+    let filename = files[i];
+    let entry =
+      filename === 'index.js'
+        ? name
+        : name + '/' + filename.replace(/\.js$/, '');
+    let hasBundle = entryPointsToHasBundle.get(entry);
+    if (hasBundle === undefined) {
+      // This entry doesn't exist in the bundles. Check if something similar exists.
+      hasBundle =
+        entryPointsToHasBundle.get(entry + '.node') ||
+        entryPointsToHasBundle.get(entry + '.browser');
+    }
+    if (hasBundle === undefined) {
+      // This doesn't exist in the bundles. It's an extra file.
+    } else if (hasBundle === true) {
+      // This is built in this release channel.
+    } else {
+      // This doesn't have any bundleTypes in this release channel.
+      // Let's remove it.
+      files.splice(i, 1);
+      i--;
+      unlinkSync(`build/node_modules/${name}/${filename}`);
+      changed = true;
+    }
+  }
+  if (changed) {
+    let newJSON = JSON.stringify(packageJSON, null, '  ');
+    writeFileSync(jsonPath, newJSON);
+  }
+}
+
 async function prepareNpmPackage(name) {
   await Promise.all([
     asyncCopyTo('LICENSE', `build/node_modules/${name}/LICENSE`),
@@ -128,6 +184,7 @@ async function prepareNpmPackage(name) {
     ),
     asyncCopyTo(`packages/${name}/npm`, `build/node_modules/${name}`),
   ]);
+  filterOutEntrypoints(name);
   const tgzName = (
     await asyncExecuteCommand(`npm pack build/node_modules/${name}`)
   ).trim();

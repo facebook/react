@@ -1,5 +1,12 @@
 'use strict';
 
+const RELEASE_CHANNEL = process.env.RELEASE_CHANNEL;
+
+const __EXPERIMENTAL__ =
+  typeof RELEASE_CHANNEL === 'string'
+    ? RELEASE_CHANNEL === 'experimental'
+    : true;
+
 const bundleTypes = {
   UMD_DEV: 'UMD_DEV',
   UMD_PROD: 'UMD_PROD',
@@ -108,7 +115,7 @@ const bundles = [
 
   /******* React Cache (experimental, new) *******/
   {
-    bundleTypes: [NODE_DEV, NODE_PROD, NODE_PROFILING],
+    bundleTypes: __EXPERIMENTAL__ ? [NODE_DEV, NODE_PROD, NODE_PROFILING] : [],
     moduleType: ISOMORPHIC,
     entry: 'react/unstable-cache',
     global: 'ReactCache',
@@ -223,14 +230,16 @@ const bundles = [
 
   /******* React DOM Fizz Server *******/
   {
-    bundleTypes: [NODE_DEV, NODE_PROD, UMD_DEV, UMD_PROD],
+    bundleTypes: __EXPERIMENTAL__
+      ? [NODE_DEV, NODE_PROD, UMD_DEV, UMD_PROD]
+      : [],
     moduleType: RENDERER,
     entry: 'react-dom/unstable-fizz.browser',
     global: 'ReactDOMFizzServer',
     externals: ['react', 'react-dom/server'],
   },
   {
-    bundleTypes: [NODE_DEV, NODE_PROD],
+    bundleTypes: __EXPERIMENTAL__ ? [NODE_DEV, NODE_PROD] : [],
     moduleType: RENDERER,
     entry: 'react-dom/unstable-fizz.node',
     global: 'ReactDOMFizzServer',
