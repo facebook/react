@@ -8,6 +8,7 @@ const {bundles, getFilename, bundleTypes} = require('../bundles');
 const Packaging = require('../packaging');
 
 const {
+  NODE_ES2015,
   UMD_DEV,
   UMD_PROD,
   UMD_PROFILING,
@@ -31,6 +32,8 @@ function getFormat(bundleType) {
     case UMD_PROD:
     case UMD_PROFILING:
       return 'umd';
+    case NODE_ES2015:
+      return 'cjs2015';
     case NODE_DEV:
     case NODE_PROD:
     case NODE_PROFILING:
@@ -60,6 +63,7 @@ function getESLintInstance(format) {
 
 const esLints = {
   cjs: getESLintInstance('cjs'),
+  cjs2015: getESLintInstance('cjs2015'),
   rn: getESLintInstance('rn'),
   fb: getESLintInstance('fb'),
   umd: getESLintInstance('umd'),
