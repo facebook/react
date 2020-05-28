@@ -31,10 +31,6 @@ module.exports = {
     path: __dirname + '/build',
     filename: '[name].js',
   },
-  node: {
-    // Don't define a polyfill on window.setImmediate
-    setImmediate: false,
-  },
   resolve: {
     alias: {
       react: resolve(builtModulesDir, 'react'),
