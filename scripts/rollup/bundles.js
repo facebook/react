@@ -126,14 +126,7 @@ const bundles = [
 
   /******* React Fetch Browser (experimental, new) *******/
   {
-    bundleTypes: [
-      NODE_DEV,
-      NODE_PROD,
-      NODE_PROFILING,
-      FB_WWW_DEV,
-      FB_WWW_PROD,
-      FB_WWW_PROFILING,
-    ],
+    bundleTypes: [NODE_DEV, NODE_PROD],
     moduleType: ISOMORPHIC,
     entry: 'react-fetch/index.browser',
     global: 'ReactFetch',
