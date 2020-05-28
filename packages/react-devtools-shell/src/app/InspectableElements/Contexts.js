@@ -65,6 +65,14 @@ class LegacyContextConsumer extends Component<any> {
   }
 }
 
+function FunctionalLegacyContextConsumer(props, context) {
+  return context.null;
+}
+
+FunctionalLegacyContextConsumer.contextTypes = {
+  null: PropTypes.any,
+};
+
 const ModernContext = createContext();
 ModernContext.displayName = 'ModernContext';
 const ArrayContext = createContext(contextData.array);
@@ -92,22 +100,33 @@ class ModernContextType extends Component<any> {
   }
 }
 
-function FunctionalContextConsumer() {
+function FunctionalModernContextConsumer() {
   useContext(StringContext);
   return null;
 }
+
+function FunctionalLegacyAndModernContextConsumer(props, context) {
+  useContext(StringContext);
+  return context.null;
+}
+
+FunctionalLegacyAndModernContextConsumer.contextTypes = {
+  null: PropTypes.any,
+};
 
 export default function Contexts() {
   return (
     <Fragment>
       <LegacyContextProvider>
         <LegacyContextConsumer />
+        <FunctionalLegacyContextConsumer />
+        <FunctionalLegacyAndModernContextConsumer />
       </LegacyContextProvider>
       <ModernContext.Provider value={contextData}>
         <ModernContext.Consumer>{value => null}</ModernContext.Consumer>
         <ModernContextType />
       </ModernContext.Provider>
-      <FunctionalContextConsumer />
+      <FunctionalModernContextConsumer />
       <ArrayContext.Consumer>{value => null}</ArrayContext.Consumer>
       <BoolContext.Consumer>{value => null}</BoolContext.Consumer>
       <FuncContext.Consumer>{value => null}</FuncContext.Consumer>
