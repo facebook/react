@@ -604,9 +604,10 @@ function processDebugValues(
 }
 
 export function inspectHooks<Props>(
-  renderFunction: Props => React$Node,
+  renderFunction: (Props, any) => React$Node,
   props: Props,
   currentDispatcher: ?CurrentDispatcherRef,
+  legacyContext: any,
 ): HooksTree {
   // DevTools will pass the current renderer's injected dispatcher.
   // Other apps might compile debug hooks as part of their app though.
@@ -620,7 +621,7 @@ export function inspectHooks<Props>(
   let ancestorStackError;
   try {
     ancestorStackError = new Error();
-    renderFunction(props);
+    renderFunction(props, legacyContext);
   } finally {
     readHookLog = hookLog;
     hookLog = [];
@@ -632,19 +633,36 @@ export function inspectHooks<Props>(
 
 function setupContexts(contextMap: Map<ReactContext<any>, any>, fiber: Fiber) {
   let current = fiber;
-  while (current) {
-    if (current.tag === ContextProvider) {
-      const providerType: ReactProviderType<any> = current.type;
-      const context: ReactContext<any> = providerType._context;
-      if (!contextMap.has(context)) {
-        // Store the current value that we're going to restore later.
-        contextMap.set(context, context._currentValue);
-        // Set the inner most provider value on the context.
-        context._currentValue = current.memoizedProps.value;
+  let legacyContext = null;
+  if (current.elementType.contextTypes) {
+    let childContextFound = false;
+    while (current !== null && childContextFound === false) {
+      if (
+        current.stateNode &&
+        current.stateNode.__reactInternalMemoizedMergedChildContext
+      ) {
+        childContextFound = true;
+        legacyContext =
+          current.stateNode.__reactInternalMemoizedMergedChildContext;
       }
+      current = current.return;
     }
-    current = current.return;
+  } else {
+    while (current) {
+      if (current.tag === ContextProvider) {
+        const providerType: ReactProviderType<any> = current.type;
+        const context: ReactContext<any> = providerType._context;
+        if (!contextMap.has(context)) {
+          // Store the current value that we're going to restore later.
+          contextMap.set(context, context._currentValue);
+          // Set the inner most provider value on the context.
+          context._currentValue = current.memoizedProps.value;
+        }
+      }
+      current = current.return;
+    }
   }
+  return legacyContext;
 }
 
 function restoreContexts(contextMap: Map<ReactContext<any>, any>) {
@@ -722,7 +740,7 @@ export function inspectHooksOfFiber(
   currentHook = (fiber.memoizedState: Hook);
   const contextMap = new Map();
   try {
-    setupContexts(contextMap, fiber);
+    const legacyContext = setupContexts(contextMap, fiber);
     if (fiber.tag === ForwardRef) {
       return inspectHooksOfForwardRef(
         type.render,
@@ -731,7 +749,7 @@ export function inspectHooksOfFiber(
         currentDispatcher,
       );
     }
-    return inspectHooks(type, props, currentDispatcher);
+    return inspectHooks(type, props, currentDispatcher, legacyContext);
   } finally {
     currentHook = null;
     restoreContexts(contextMap);
