@@ -76,9 +76,6 @@ export const warnUnstableRenderSubtreeIntoContainer = false;
 // to the correct value.
 export const enableNewReconciler = __VARIANT__;
 
-export const deferPassiveEffectCleanupDuringUnmount = true;
-export const runAllPassiveEffectDestroysBeforeCreates = true;
-
 // Flow magic to verify the exports of this file match the original version.
 // eslint-disable-next-line no-unused-vars
 type Check<_X, Y: _X, X: Y = _X> = null;

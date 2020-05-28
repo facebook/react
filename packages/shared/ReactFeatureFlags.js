@@ -82,21 +82,6 @@ export const disableSchedulerTimeoutBasedOnReactExpirationTime = false;
 
 export const enableTrustedTypesIntegration = false;
 
-// Controls sequence of passive effect destroy and create functions.
-// If this flag is off, destroy and create functions may be interleaved.
-// When the flag is on, all destroy functions will be run (for all fibers)
-// before any create functions are run, similar to how layout effects work.
-// This flag provides a killswitch if that proves to break existing code somehow.
-export const runAllPassiveEffectDestroysBeforeCreates = false;
-
-// Controls behavior of deferred effect destroy functions during unmount.
-// Previously these functions were run during commit (along with layout effects).
-// Ideally we should delay these until after commit for performance reasons.
-// This flag provides a killswitch if that proves to break existing code somehow.
-//
-// WARNING This flag only has an affect if used with runAllPassiveEffectDestroysBeforeCreates.
-export const deferPassiveEffectCleanupDuringUnmount = false;
-
 // Enables a warning when trying to spread a 'key' to an element;
 // a deprecated pattern we want to get rid of in the future
 export const warnAboutSpreadingKeyToJSX = false;
