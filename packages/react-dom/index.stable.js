@@ -19,6 +19,6 @@ export {
   unmountComponentAtNode,
   unstable_renderSubtreeIntoContainer,
   // Temporary alias since we already shipped React 16 RC with it.
-  // TODO: remove in React 17.
+  // TODO: remove in React 18.
   unstable_createPortal,
 } from './src/client/ReactDOM';

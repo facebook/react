@@ -246,7 +246,7 @@ describe('ReactDOMFiber', () => {
     expect(container.innerHTML).toBe('');
   });
 
-  // TODO: remove in React 17
+  // TODO: remove in React 18
   if (!__EXPERIMENTAL__) {
     it('should support unstable_createPortal alias', () => {
       const portalContainer = document.createElement('div');
@@ -260,7 +260,7 @@ describe('ReactDOMFiber', () => {
         ),
       ).toWarnDev(
         'The ReactDOM.unstable_createPortal() alias has been deprecated, ' +
-          'and will be removed in React 17+. Update your code to use ' +
+          'and will be removed in React 18+. Update your code to use ' +
           'ReactDOM.createPortal() instead. It has the exact same API, ' +
           'but without the "unstable_" prefix.',
         {withoutStack: true},
