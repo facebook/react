@@ -20,7 +20,9 @@ describe('ReactDOMFizzServer', () => {
   beforeEach(() => {
     jest.resetModules();
     React = require('react');
-    ReactDOMFizzServer = require('react-dom/unstable-fizz.browser');
+    if (__EXPERIMENTAL__) {
+      ReactDOMFizzServer = require('react-dom/unstable-fizz.browser');
+    }
   });
 
   async function readResult(stream) {
@@ -35,6 +37,7 @@ describe('ReactDOMFizzServer', () => {
     }
   }
 
+  // @gate experimental
   it('should call renderToReadableStream', async () => {
     const stream = ReactDOMFizzServer.renderToReadableStream(
       <div>hello world</div>,

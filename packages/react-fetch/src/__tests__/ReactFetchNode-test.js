@@ -20,7 +20,9 @@ describe('ReactFetchNode', () => {
 
   beforeEach(done => {
     jest.resetModules();
-    ReactCache = require('react/unstable-cache');
+    if (__EXPERIMENTAL__) {
+      ReactCache = require('react/unstable-cache');
+    }
     ReactFetchNode = require('react-fetch');
     http = require('http');
     fetch = ReactFetchNode.fetch;
@@ -54,6 +56,7 @@ describe('ReactFetchNode', () => {
     }
   }
 
+  // @gate experimental
   it('can read text', async () => {
     serverImpl = (req, res) => {
       res.write('ok');
@@ -70,6 +73,7 @@ describe('ReactFetchNode', () => {
     });
   });
 
+  // @gate experimental
   it('can read json', async () => {
     serverImpl = (req, res) => {
       res.write(JSON.stringify({name: 'Sema'}));
