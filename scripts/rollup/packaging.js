@@ -1,6 +1,12 @@
 'use strict';
 
-const {existsSync, readdirSync, unlinkSync} = require('fs');
+const {
+  existsSync,
+  readdirSync,
+  unlinkSync,
+  readFileSync,
+  writeFileSync,
+} = require('fs');
 const Bundles = require('./bundles');
 const {
   asyncCopyTo,
@@ -115,6 +121,57 @@ function getTarOptions(tgzName, packageName) {
   };
 }
 
+const RELEASE_CHANNEL = process.env.RELEASE_CHANNEL;
+
+// Default to building in experimental mode. If the release channel is set via
+// an environment variable, then check if it's "experimental".
+const __EXPERIMENTAL__ =
+  typeof RELEASE_CHANNEL === 'string'
+    ? RELEASE_CHANNEL === 'experimental'
+    : true;
+
+function filterOutEntrypoints(name) {
+  // Remove entry point files that are not built in this configuration.
+  let jsonPath = `build/node_modules/${name}/package.json`;
+  let packageJSON = JSON.parse(readFileSync(jsonPath));
+  let files = packageJSON.files;
+  if (!Array.isArray(files)) {
+    throw new Error('expected all package.json files to contain a files field');
+  }
+  let changed = false;
+  for (let i = 0; i < files.length; i++) {
+    let filename = files[i];
+    if (filename.indexOf('.js') === -1) {
+      continue;
+    }
+    let filepath = `packages/${name}/${filename}`;
+    // Check for forks.
+    const thisForkedEntry = filepath.replace(
+      '.js',
+      __EXPERIMENTAL__ ? '.experimental.js' : '.stable.js'
+    );
+    let hasExports;
+    if (existsSync(thisForkedEntry)) {
+      hasExports = readFileSync(thisForkedEntry).indexOf('export ') > 0;
+    } else {
+      // If the file isn't forked, assume we have exports.
+      hasExports = true;
+    }
+    if (!hasExports) {
+      // This file doesn't have any exports in this release channel.
+      // Let's remove it.
+      files.splice(i, 1);
+      i--;
+      unlinkSync(`build/node_modules/${name}/${filename}`);
+      changed = true;
+    }
+  }
+  if (changed) {
+    let newJSON = JSON.stringify(packageJSON, null, '  ');
+    writeFileSync(jsonPath, newJSON);
+  }
+}
+
 async function prepareNpmPackage(name) {
   await Promise.all([
     asyncCopyTo('LICENSE', `build/node_modules/${name}/LICENSE`),
@@ -128,6 +185,7 @@ async function prepareNpmPackage(name) {
     ),
     asyncCopyTo(`packages/${name}/npm`, `build/node_modules/${name}`),
   ]);
+  filterOutEntrypoints(name);
   const tgzName = (
     await asyncExecuteCommand(`npm pack build/node_modules/${name}`)
   ).trim();

@@ -7,4 +7,4 @@
  * @flow
  */
 
-export {createCache, readCache, CacheProvider} from './src/cache/ReactCache';
+throw new Error('This feature is only available in experimental builds');
