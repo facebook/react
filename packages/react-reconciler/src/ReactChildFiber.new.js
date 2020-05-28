@@ -33,7 +33,11 @@ import {
   Block,
 } from './ReactWorkTags';
 import invariant from 'shared/invariant';
-import {warnAboutStringRefs, enableBlocksAPI} from 'shared/ReactFeatureFlags';
+import {
+  warnAboutStringRefs,
+  enableBlocksAPI,
+  enableLazyElements,
+} from 'shared/ReactFeatureFlags';
 
 import {
   createWorkInProgress,
@@ -532,6 +536,13 @@ function ChildReconciler(shouldTrackSideEffects) {
           created.return = returnFiber;
           return created;
         }
+        case REACT_LAZY_TYPE: {
+          if (enableLazyElements) {
+            const payload = newChild._payload;
+            const init = newChild._init;
+            return createChild(returnFiber, init(payload), lanes);
+          }
+        }
       }
 
       if (isArray(newChild) || getIteratorFn(newChild)) {
@@ -602,6 +613,13 @@ function ChildReconciler(shouldTrackSideEffects) {
             return null;
           }
         }
+        case REACT_LAZY_TYPE: {
+          if (enableLazyElements) {
+            const payload = newChild._payload;
+            const init = newChild._init;
+            return updateSlot(returnFiber, oldFiber, init(payload), lanes);
+          }
+        }
       }
 
       if (isArray(newChild) || getIteratorFn(newChild)) {
@@ -663,6 +681,18 @@ function ChildReconciler(shouldTrackSideEffects) {
             ) || null;
           return updatePortal(returnFiber, matchedFiber, newChild, lanes);
         }
+        case REACT_LAZY_TYPE:
+          if (enableLazyElements) {
+            const payload = newChild._payload;
+            const init = newChild._init;
+            return updateFromMap(
+              existingChildren,
+              returnFiber,
+              newIdx,
+              init(payload),
+              lanes,
+            );
+          }
       }
 
       if (isArray(newChild) || getIteratorFn(newChild)) {
@@ -720,6 +750,15 @@ function ChildReconciler(shouldTrackSideEffects) {
             key,
           );
           break;
+        case REACT_LAZY_TYPE:
+          if (enableLazyElements) {
+            const payload = child._payload;
+            const init = (child._init: any);
+            warnOnInvalidKey(init(payload), knownKeys, returnFiber);
+            break;
+          }
+        // We intentionally fallthrough here if enableLazyElements is not on.
+        // eslint-disable-next-lined no-fallthrough
         default:
           break;
       }
@@ -1276,6 +1315,18 @@ function ChildReconciler(shouldTrackSideEffects) {
               lanes,
             ),
           );
+        case REACT_LAZY_TYPE:
+          if (enableLazyElements) {
+            const payload = newChild._payload;
+            const init = newChild._init;
+            // TODO: This function is supposed to be non-recursive.
+            return reconcileChildFibers(
+              returnFiber,
+              currentFirstChild,
+              init(payload),
+              lanes,
+            );
+          }
       }
     }
 
