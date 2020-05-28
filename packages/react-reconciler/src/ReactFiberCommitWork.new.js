@@ -859,6 +859,8 @@ function hideOrUnhideAllChildren(finishedWork, isHidden) {
       ) {
         // Found a nested Offscreen component that is hidden. Don't search
         // any deeper. This tree should remain hidden.
+        const fallbackChildFragment: Fiber = (node.child: any).sibling;
+        fallbackChildFragment.return = node;
       } else if (node.child !== null) {
         node.child.return = node;
         node = node.child;
