@@ -111,6 +111,10 @@ type ReactTypeOfSideEffectType = {|
   Placement: number,
 |};
 
+type VersionFlags = {|
+  enableLegacyContext: boolean,
+|};
+
 // Some environments (e.g. React Native / Hermes) don't support the performace API yet.
 const getCurrentTime =
   typeof performance === 'object' && typeof performance.now === 'function'
@@ -125,6 +129,7 @@ export function getInternalReactConstants(
   ReactPriorityLevels: ReactPriorityLevelsType,
   ReactTypeOfSideEffect: ReactTypeOfSideEffectType,
   ReactTypeOfWork: WorkTagMap,
+  versionFlags: VersionFlags,
 |} {
   const ReactTypeOfSideEffect: ReactTypeOfSideEffectType = {
     NoEffect: 0b00,
@@ -238,6 +243,14 @@ export function getInternalReactConstants(
   // **********************************************************
   // End of copied code.
   // **********************************************************
+
+  let versionFlags: VersionFlags = {
+    enableLegacyContext: true,
+  };
+
+  if (gte(version, '17.0.0')) {
+    versionFlags['enableLegacyContext'] = false;
+  }
 
   function getTypeSymbol(type: any): Symbol | number {
     const symbolOrNumber =
@@ -368,6 +381,7 @@ export function getInternalReactConstants(
     ReactPriorityLevels,
     ReactTypeOfWork,
     ReactTypeOfSideEffect,
+    versionFlags,
   };
 }
 
@@ -383,6 +397,7 @@ export function attach(
     ReactPriorityLevels,
     ReactTypeOfWork,
     ReactTypeOfSideEffect,
+    versionFlags,
   } = getInternalReactConstants(renderer.version);
   const {NoEffect, PerformedWork, Placement} = ReactTypeOfSideEffect;
   const {
@@ -2187,20 +2202,22 @@ export function attach(
           context = stateNode.context;
         }
       } else {
-        // Try to extract legacyContext from stateless components
-        // which do not have stateNode
-        let current = fiber.return;
-        let childContextFound = false;
-        while (current !== null && childContextFound === false) {
-          if (
-            current.stateNode &&
-            current.stateNode.__reactInternalMemoizedMergedChildContext
-          ) {
-            childContextFound = true;
-            context =
-              current.stateNode.__reactInternalMemoizedMergedChildContext;
+        if (versionFlags.enableLegacyContext) {
+          // Try to extract legacyContext from stateless components
+          // which do not have stateNode
+          let current = fiber.return;
+          let childContextFound = false;
+          while (current !== null && childContextFound === false) {
+            if (
+              current.stateNode &&
+              current.stateNode.__reactInternalMemoizedMergedChildContext
+            ) {
+              childContextFound = true;
+              context =
+                current.stateNode.__reactInternalMemoizedMergedChildContext;
+            }
+            current = current.return;
           }
-          current = current.return;
         }
       }
     } else if (
@@ -2282,6 +2299,7 @@ export function attach(
         hooks = inspectHooksOfFiber(
           fiber,
           (renderer.currentDispatcherRef: any),
+          versionFlags.enableLegacyContext,
         );
       } finally {
         // Restore original console functionality.

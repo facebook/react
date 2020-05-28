@@ -631,10 +631,14 @@ export function inspectHooks<Props>(
   return buildTree(rootStack, readHookLog);
 }
 
-function setupContexts(contextMap: Map<ReactContext<any>, any>, fiber: Fiber) {
+function setupContexts(
+  contextMap: Map<ReactContext<any>, any>,
+  fiber: Fiber,
+  enableLegacyContext: ?boolean,
+) {
   let current = fiber;
   let legacyContext = null;
-  if (current.elementType.contextTypes) {
+  if (enableLegacyContext && current.elementType.contextTypes) {
     let childContextFound = false;
     while (current !== null && childContextFound === false) {
       if (
@@ -709,6 +713,7 @@ function resolveDefaultProps(Component, baseProps) {
 export function inspectHooksOfFiber(
   fiber: Fiber,
   currentDispatcher: ?CurrentDispatcherRef,
+  enableLegacyContext: ?boolean,
 ) {
   // DevTools will pass the current renderer's injected dispatcher.
   // Other apps might compile debug hooks as part of their app though.
@@ -740,7 +745,7 @@ export function inspectHooksOfFiber(
   currentHook = (fiber.memoizedState: Hook);
   const contextMap = new Map();
   try {
-    const legacyContext = setupContexts(contextMap, fiber);
+    const legacyContext = setupContexts(contextMap, fiber, enableLegacyContext);
     if (fiber.tag === ForwardRef) {
       return inspectHooksOfForwardRef(
         type.render,
