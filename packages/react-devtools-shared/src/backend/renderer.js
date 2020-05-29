@@ -2201,23 +2201,24 @@ export function attach(
         if (!shouldHideContext) {
           context = stateNode.context;
         }
-      } else {
-        if (versionFlags.enableLegacyContext) {
-          // Try to extract legacyContext from stateless components
-          // which do not have stateNode
-          let current = fiber.return;
-          let childContextFound = false;
-          while (current !== null && childContextFound === false) {
-            if (
-              current.stateNode &&
-              current.stateNode.__reactInternalMemoizedMergedChildContext
-            ) {
-              childContextFound = true;
-              context =
-                current.stateNode.__reactInternalMemoizedMergedChildContext;
-            }
-            current = current.return;
+      } else if (
+        tag === FunctionComponent &&
+        versionFlags.enableLegacyContext
+      ) {
+        // Try to extract legacyContext from stateless components
+        // which do not have stateNode
+        let current = fiber.return;
+        let childContextFound = false;
+        while (current !== null && childContextFound === false) {
+          if (
+            current.stateNode &&
+            current.stateNode.__reactInternalMemoizedMergedChildContext
+          ) {
+            childContextFound = true;
+            context =
+              current.stateNode.__reactInternalMemoizedMergedChildContext;
           }
+          current = current.return;
         }
       }
     } else if (
