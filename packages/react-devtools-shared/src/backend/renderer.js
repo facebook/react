@@ -430,11 +430,18 @@ export function attach(
   if (process.env.NODE_ENV !== 'test') {
     registerRendererWithConsole(renderer);
 
-    // The renderer interface can't read this preference directly,
+    // The renderer interface can't read these preferences directly,
     // because it is stored in localStorage within the context of the extension.
     // It relies on the extension to pass the preference through via the global.
-    if (window.__REACT_DEVTOOLS_APPEND_COMPONENT_STACK__ !== false) {
-      patchConsole();
+    const appendComponentStack =
+      window.__REACT_DEVTOOLS_APPEND_COMPONENT_STACK__ !== false;
+    const breakOnConsoleErrors =
+      window.__REACT_DEVTOOLS_BREAK_ON_CONSOLE_ERRORS__ === true;
+    if (appendComponentStack || breakOnConsoleErrors) {
+      patchConsole({
+        appendComponentStack,
+        breakOnConsoleErrors,
+      });
     }
   }
 

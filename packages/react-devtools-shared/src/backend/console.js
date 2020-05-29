@@ -80,9 +80,25 @@ export function registerRenderer(renderer: ReactRenderer): void {
   }
 }
 
+const consoleSettingsRef = {
+  appendComponentStack: false,
+  breakOnConsoleErrors: false,
+};
+
 // Patches whitelisted console methods to append component stack for the current fiber.
 // Call unpatch() to remove the injected behavior.
-export function patch(): void {
+export function patch({
+  appendComponentStack,
+  breakOnConsoleErrors,
+}: {
+  appendComponentStack: boolean,
+  breakOnConsoleErrors: boolean,
+}): void {
+  // Settings may change after we've patched the console.
+  // Using a shared ref allows the patch function to read the latest values.
+  consoleSettingsRef.appendComponentStack = appendComponentStack;
+  consoleSettingsRef.breakOnConsoleErrors = breakOnConsoleErrors;
+
   if (unpatchFn !== null) {
     // Don't patch twice.
     return;
@@ -105,40 +121,56 @@ export function patch(): void {
         targetConsole[method]);
 
       const overrideMethod = (...args) => {
-        try {
-          // If we are ever called with a string that already has a component stack, e.g. a React error/warning,
-          // don't append a second stack.
-          const lastArg = args.length > 0 ? args[args.length - 1] : null;
-          const alreadyHasComponentStack =
-            lastArg !== null &&
-            (PREFIX_REGEX.test(lastArg) ||
-              ROW_COLUMN_NUMBER_REGEX.test(lastArg));
+        const latestAppendComponentStack =
+          consoleSettingsRef.appendComponentStack;
+        const latestBreakOnConsoleErrors =
+          consoleSettingsRef.breakOnConsoleErrors;
 
-          if (!alreadyHasComponentStack) {
-            // If there's a component stack for at least one of the injected renderers, append it.
-            // We don't handle the edge case of stacks for more than one (e.g. interleaved renderers?)
-            // eslint-disable-next-line no-for-of-loops/no-for-of-loops
-            for (const {
-              currentDispatcherRef,
-              getCurrentFiber,
-              workTagMap,
-            } of injectedRenderers.values()) {
-              const current: ?Fiber = getCurrentFiber();
-              if (current != null) {
-                const componentStack = getStackByFiberInDevAndProd(
-                  workTagMap,
-                  current,
-                  currentDispatcherRef,
-                );
-                if (componentStack !== '') {
-                  args.push(componentStack);
+        if (latestAppendComponentStack) {
+          try {
+            // If we are ever called with a string that already has a component stack, e.g. a React error/warning,
+            // don't append a second stack.
+            const lastArg = args.length > 0 ? args[args.length - 1] : null;
+            const alreadyHasComponentStack =
+              lastArg !== null &&
+              (PREFIX_REGEX.test(lastArg) ||
+                ROW_COLUMN_NUMBER_REGEX.test(lastArg));
+
+            if (!alreadyHasComponentStack) {
+              // If there's a component stack for at least one of the injected renderers, append it.
+              // We don't handle the edge case of stacks for more than one (e.g. interleaved renderers?)
+              // eslint-disable-next-line no-for-of-loops/no-for-of-loops
+              for (const {
+                currentDispatcherRef,
+                getCurrentFiber,
+                workTagMap,
+              } of injectedRenderers.values()) {
+                const current: ?Fiber = getCurrentFiber();
+                if (current != null) {
+                  const componentStack = getStackByFiberInDevAndProd(
+                    workTagMap,
+                    current,
+                    currentDispatcherRef,
+                  );
+                  if (componentStack !== '') {
+                    args.push(componentStack);
+                  }
+                  break;
                 }
-                break;
               }
             }
+          } catch (error) {
+            // Don't let a DevTools or React internal error interfere with logging.
           }
-        } catch (error) {
-          // Don't let a DevTools or React internal error interfere with logging.
+        }
+
+        if (latestBreakOnConsoleErrors) {
+          // --- Welcome to debugging with React DevTools ---
+          // This debugger statement means that you've enabled the "break on warnings" feature.
+          // Use the browser's Call Stack panel to step out of this override function-
+          // to where the original warning or error was logged.
+          // eslint-disable-next-line no-debugger
+          debugger;
         }
 
         originalMethod(...args);

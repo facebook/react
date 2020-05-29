@@ -7,8 +7,9 @@ import Store from 'react-devtools-shared/src/devtools/store';
 import {getBrowserName, getBrowserTheme} from './utils';
 import {LOCAL_STORAGE_TRACE_UPDATES_ENABLED_KEY} from 'react-devtools-shared/src/constants';
 import {
-  getSavedComponentFilters,
   getAppendComponentStack,
+  getBreakOnConsoleErrors,
+  getSavedComponentFilters,
 } from 'react-devtools-shared/src/utils';
 import {
   localStorageGetItem,
@@ -28,17 +29,18 @@ let panelCreated = false;
 // because they are stored in localStorage within the context of the extension.
 // Instead it relies on the extension to pass filters through.
 function syncSavedPreferences() {
-  const componentFilters = getSavedComponentFilters();
-  chrome.devtools.inspectedWindow.eval(
-    `window.__REACT_DEVTOOLS_COMPONENT_FILTERS__ = ${JSON.stringify(
-      componentFilters,
-    )};`,
-  );
-
   const appendComponentStack = getAppendComponentStack();
+  const breakOnConsoleErrors = getBreakOnConsoleErrors();
+  const componentFilters = getSavedComponentFilters();
   chrome.devtools.inspectedWindow.eval(
     `window.__REACT_DEVTOOLS_APPEND_COMPONENT_STACK__ = ${JSON.stringify(
       appendComponentStack,
+    )};
+    window.__REACT_DEVTOOLS_BREAK_ON_CONSOLE_ERRORS__ = ${JSON.stringify(
+      breakOnConsoleErrors,
+    )};
+    window.__REACT_DEVTOOLS_COMPONENT_FILTERS__ = ${JSON.stringify(
+      componentFilters,
     )};`,
   );
 }
