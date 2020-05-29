@@ -66,7 +66,7 @@ class LegacyContextConsumer extends Component<any> {
 }
 
 function FunctionalLegacyContextConsumer(props, context) {
-  return context.null;
+  return null;
 }
 
 FunctionalLegacyContextConsumer.contextTypes = {
@@ -107,7 +107,7 @@ function FunctionalModernContextConsumer() {
 
 function FunctionalLegacyAndModernContextConsumer(props, context) {
   useContext(StringContext);
-  return context.null;
+  return null;
 }
 
 FunctionalLegacyAndModernContextConsumer.contextTypes = {
