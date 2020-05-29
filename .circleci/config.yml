@@ -269,6 +269,7 @@ jobs:
           paths:
             - RELEASE_CHANNEL
             - facebook-www
+            - facebook-react-native
             - node_modules
             - react-native
             - dist
@@ -295,6 +296,7 @@ jobs:
           paths:
             - RELEASE_CHANNEL
             - facebook-www
+            - facebook-react-native
             - node_modules
             - react-native
             - dist
