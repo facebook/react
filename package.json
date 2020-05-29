@@ -61,7 +61,7 @@
     "flow-bin": "0.97",
     "glob": "^7.1.6",
     "glob-stream": "^6.1.0",
-    "google-closure-compiler": "^20200224.0.0",
+    "google-closure-compiler": "^20200517.0.0",
     "gzip-size": "^5.1.1",
     "jasmine-check": "^1.0.0-rc.0",
     "jest": "^25.2.7",
