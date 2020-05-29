@@ -89,7 +89,7 @@ describe('DOMModernPluginEventSystem', () => {
 
           ReactDOM.render(<Test />, container);
 
-          let buttonElement = buttonRef.current;
+          const buttonElement = buttonRef.current;
           dispatchClickEvent(buttonElement);
           expect(onClick).toHaveBeenCalledTimes(1);
           dispatchClickEvent(buttonElement);
