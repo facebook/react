@@ -621,7 +621,11 @@ export function inspectHooks<Props>(
   let ancestorStackError;
   try {
     ancestorStackError = new Error();
-    renderFunction(props, legacyContext);
+    if (legacyContext) {
+      renderFunction(props, legacyContext);
+    } else {
+      renderFunction(props);
+    }
   } finally {
     readHookLog = hookLog;
     hookLog = [];
@@ -745,16 +749,25 @@ export function inspectHooksOfFiber(
   currentHook = (fiber.memoizedState: Hook);
   const contextMap = new Map();
   try {
-    const legacyContext = setupContexts(contextMap, fiber, enableLegacyContext);
-    if (fiber.tag === ForwardRef) {
+    if (fiber.tag === FunctionComponent) {
+      const legacyContext = setupContexts(
+        contextMap,
+        fiber,
+        enableLegacyContext,
+      );
+      return inspectHooks(type, props, currentDispatcher, legacyContext);
+    } else if (fiber.tag === ForwardRef) {
+      setupContexts(contextMap, fiber);
       return inspectHooksOfForwardRef(
         type.render,
         props,
         fiber.ref,
         currentDispatcher,
       );
+    } else {
+      setupContexts(contextMap, fiber);
+      return inspectHooks(type, props, currentDispatcher);
     }
-    return inspectHooks(type, props, currentDispatcher, legacyContext);
   } finally {
     currentHook = null;
     restoreContexts(contextMap);
