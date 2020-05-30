@@ -1,0 +1,93 @@
+# ---------------------------------------------------------------#
+# NOTE: this file is generated.                                  #
+# If you want to edit it, open ./scripts/flow/config/flowconfig. #
+# Then run Yarn for changes to take effect.                      #
+# ---------------------------------------------------------------#
+[ignore]
+.*/scripts/bench/.*
+.*/build/.*
+
+# These shims are copied into external projects:
+.*/rollup/shims/facebook-www/.*
+.*/rollup/shims/react-native/.*
+
+.*/node_modules/@snyk/.*
+.*/node_modules/y18n/.*
+.*/node_modules/chrome-devtools-frontend/.*
+.*/node_modules/devtools-timeline-model/.*
+.*/node_modules/create-react-class/.*
+.*/node_modules/react-native-web/.*
+.*/__mocks__/.*
+.*/__tests__/.*
+
+# TODO: noop should get its own inlinedHostConfig entry
+.*/packages/react-noop-renderer/.*
+
+.*/packages/react-dom/testing
+.*/packages/react-dom/unstable-fizz.browser
+.*/packages/react-dom/src/server/ReactDOMFizzServerBrowser.js
+.*/packages/react-transport-dom-webpack/server.browser
+.*/packages/react-transport-dom-webpack/src/ReactFlightDOMServerBrowser.js
+.*/packages/.*/forks/.*.dom-browser.js
+.*/packages/react-art
+.*/packages/.*/forks/.*.art.js
+.*/packages/react-native-renderer
+.*/packages/.*/forks/.*.native.js
+.*/packages/react-native-renderer
+.*/packages/.*/forks/.*.fabric.js
+.*/packages/react-test-renderer
+.*/packages/.*/forks/.*.test.js
+.*/packages/react-transport-dom-relay
+.*/packages/.*/forks/.*.dom-relay.js
+.*/packages/react-client/flight
+.*/packages/react-server/flight
+.*/packages/react-server/flight-server-runtime
+.*/packages/.*/forks/.*.custom.js
+
+[include]
+./node_modules/
+./packages/
+./scripts/
+
+[libs]
+./node_modules/fbjs/flow/lib/dev.js
+./scripts/flow/environment.js
+./scripts/flow/react-devtools.js
+./scripts/flow/react-native-host-hooks.js
+./scripts/flow/react-relay-hooks.js
+
+[lints]
+untyped-type-import=error
+
+[options]
+server.max_workers=4
+esproposal.class_static_fields=enable
+esproposal.class_instance_fields=enable
+
+# Substituted by createFlowConfig.js:
+module.name_mapper='ReactFiberHostConfig$' -> 'forks/ReactFiberHostConfig.dom'
+module.name_mapper='ReactServerStreamConfig$' -> 'forks/ReactServerStreamConfig.dom'
+module.name_mapper='ReactServerFormatConfig$' -> 'forks/ReactServerFormatConfig.dom'
+module.name_mapper='ReactFlightServerConfig$' -> 'forks/ReactFlightServerConfig.dom'
+module.name_mapper='ReactFlightClientHostConfig$' -> 'forks/ReactFlightClientHostConfig.dom'
+
+munge_underscores=false
+
+suppress_type=$FlowIssue
+suppress_type=$FlowFixMe
+suppress_type=$FixMe
+suppress_type=$FlowExpectedError
+
+suppress_comment=\\(.\\|\n\\)*\\$FlowFixMe
+suppress_comment=\\(.\\|\n\\)*\\$FlowIssue
+suppress_comment=\\(.\\|\n\\)*\\$FlowFixedInNextDeploy
+suppress_comment=\\(.\\|\n\\)*\\$FlowExpectedError
+
+[version]
+^0.97.0
+
+# ---------------------------------------------------------------#
+# NOTE: this file is generated.                                  #
+# If you want to edit it, open ./scripts/flow/config/flowconfig. #
+# Then run Yarn for changes to take effect.                      #
+# ---------------------------------------------------------------#
