@@ -2792,6 +2792,8 @@ function updatePortalComponent(
   return workInProgress.child;
 }
 
+let hasWarnedAboutUsingNoValuePropOnContextProvider = false;
+
 function updateContextProvider(
   current: Fiber | null,
   workInProgress: Fiber,
@@ -2806,6 +2808,12 @@ function updateContextProvider(
   const newValue = newProps.value;
 
   if (__DEV__) {
+    if (!('value' in newProps)) {
+      if (!hasWarnedAboutUsingNoValuePropOnContextProvider) {
+        hasWarnedAboutUsingNoValuePropOnContextProvider = true;
+        console.error('<Context.Provider> must have a value prop');
+      }
+    }
     const providerPropTypes = workInProgress.type.propTypes;
 
     if (providerPropTypes) {

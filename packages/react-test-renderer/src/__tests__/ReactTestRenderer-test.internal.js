@@ -1012,7 +1012,7 @@ describe('ReactTestRenderer', () => {
     const Context = React.createContext(null);
     const Indirection = React.Fragment;
     const App = () => (
-      <Context.Provider>
+      <Context.Provider value={null}>
         <Indirection>
           <Context.Consumer>{() => null}</Context.Consumer>
         </Indirection>

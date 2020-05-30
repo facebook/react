@@ -1089,6 +1089,21 @@ describe('ReactNewContext', () => {
       );
     });
 
+    it('warns if no value prop provided', () => {
+      const Context = React.createContext();
+
+      ReactNoop.render(
+        <Context.Provider anyPropNameOtherThanValue="value could be anything" />,
+      );
+
+      expect(() => expect(Scheduler).toFlushWithoutYielding()).toErrorDev(
+        '<Context.Provider> must have a value prop',
+        {
+          withoutStack: true,
+        },
+      );
+    });
+
     it('warns if multiple renderers concurrently render the same context', () => {
       spyOnDev(console, 'error');
       const Context = React.createContext(0);
@@ -1617,7 +1632,7 @@ describe('ReactNewContext', () => {
     // caused by unwinding the context from wrong point.
     ReactNoop.render(
       <errorInCompletePhase>
-        <Context.Provider />
+        <Context.Provider value={null} />
       </errorInCompletePhase>,
     );
     expect(Scheduler).toFlushAndThrow('Error in host config.');
