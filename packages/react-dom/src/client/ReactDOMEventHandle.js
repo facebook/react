@@ -163,7 +163,7 @@ export function createEventHandle(
         callback: null | ((SyntheticEvent<EventTarget>) => void),
       ): void {
         // Check if the target is a DOM element.
-        if ((target: any) && target.nodeType === ELEMENT_NODE) {
+        if (target && (target: any).nodeType === ELEMENT_NODE) {
           const targetElement = ((target: any): Element);
           // Check if the DOM element is managed by React.
           const targetFiber = getClosestInstanceFromNode(targetElement);
