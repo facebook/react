@@ -25,7 +25,7 @@ import {
   FundamentalComponent,
   SuspenseComponent,
 } from './ReactWorkTags';
-import {NoEffect, Placement, Hydrating, Deletion} from './ReactSideEffectTags';
+import {NoEffect, Placement, Hydrating} from './ReactSideEffectTags';
 import {enableFundamentalAPI} from 'shared/ReactFeatureFlags';
 
 const ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
@@ -333,24 +333,19 @@ export function findCurrentHostFiberWithNoPortals(parent: Fiber): Fiber | null {
   return null;
 }
 
-// This function detects when a Suspense boundary goes from visible to hidden.
-// It returns false if the boundary is already hidden.
-// TODO: Use an effect tag. And move this to ReactFiberCommitWork.
 export function isFiberSuspenseAndTimedOut(fiber: Fiber): boolean {
-  if (fiber.tag === SuspenseComponent) {
-    const current = fiber.alternate;
-    if (current !== null) {
-      const oldState = current.memoizedState;
-      if (oldState === null || oldState.dehydrated !== null) {
-        const newState = fiber.memoizedState;
-        return newState !== null && newState.dehydrated === null;
-      }
-    }
-  }
-  return false;
+  const memoizedState = fiber.memoizedState;
+  return (
+    fiber.tag === SuspenseComponent &&
+    memoizedState !== null &&
+    memoizedState.dehydrated === null
+  );
 }
 
-function doesFiberContain(parentFiber: Fiber, childFiber: Fiber): boolean {
+export function doesFiberContain(
+  parentFiber: Fiber,
+  childFiber: Fiber,
+): boolean {
   let node = childFiber;
   const parentFiberAlternate = parentFiber.alternate;
   while (node !== null) {
@@ -360,35 +355,4 @@ function doesFiberContain(parentFiber: Fiber, childFiber: Fiber): boolean {
     node = node.return;
   }
   return false;
-}
-
-function isFiberTimedOutSuspenseThatContainsTargetFiber(
-  fiber: Fiber,
-  targetFiber: Fiber,
-): boolean {
-  const child = fiber.child;
-  return (
-    isFiberSuspenseAndTimedOut(fiber) &&
-    child !== null &&
-    doesFiberContain(child, targetFiber)
-  );
-}
-
-function isFiberDeletedAndContainsTargetFiber(
-  fiber: Fiber,
-  targetFiber: Fiber,
-): boolean {
-  return (
-    (fiber.effectTag & Deletion) !== 0 && doesFiberContain(fiber, targetFiber)
-  );
-}
-
-export function isFiberHiddenOrDeletedAndContains(
-  parentFiber: Fiber,
-  childFiber: Fiber,
-): boolean {
-  return (
-    isFiberDeletedAndContainsTargetFiber(parentFiber, childFiber) ||
-    isFiberTimedOutSuspenseThatContainsTargetFiber(parentFiber, childFiber)
-  );
 }
