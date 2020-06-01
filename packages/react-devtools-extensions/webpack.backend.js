@@ -19,7 +19,7 @@ const DEVTOOLS_VERSION = getVersionString();
 
 module.exports = {
   mode: __DEV__ ? 'development' : 'production',
-  devtool: __DEV__ ? 'cheap-module-eval-source-map' : false,
+  devtool: false,
   entry: {
     backend: './src/backend.js',
   },
