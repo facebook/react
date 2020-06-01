@@ -1290,7 +1290,9 @@ function collectRecommendations({
       if (child.isSatisfiedRecursively) {
         if (child.hasRequiredNodesBelow) {
           // Remember this dep actually satisfied something.
-          satisfyingPaths.add(path);
+          // Here we only want to compare the "normalized" path, without any optional chaining ("?.") operator
+          // foo?.bar -> foo.bar
+          satisfyingPaths.add(path.replace(/\?$/, ''));
         }
         // It doesn't matter if there's something deeper.
         // It would be transitively satisfied since we assume immutability.
