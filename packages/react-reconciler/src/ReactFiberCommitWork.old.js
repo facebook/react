@@ -1735,6 +1735,23 @@ function attachSuspenseRetryListeners(finishedWork: Fiber) {
   }
 }
 
+// This function detects when a Suspense boundary goes from visible to hidden.
+// It returns false if the boundary is already hidden.
+// TODO: Use an effect tag.
+export function isSuspenseBoundaryBeingHidden(
+  current: Fiber | null,
+  finishedWork: Fiber,
+): boolean {
+  if (current !== null) {
+    const oldState: SuspenseState | null = current.memoizedState;
+    if (oldState === null || oldState.dehydrated !== null) {
+      const newState: SuspenseState | null = finishedWork.memoizedState;
+      return newState !== null && newState.dehydrated === null;
+    }
+  }
+  return false;
+}
+
 function commitResetTextContent(current: Fiber) {
   if (!supportsMutation) {
     return;

@@ -25,7 +25,7 @@ import {
   FundamentalComponent,
   SuspenseComponent,
 } from './ReactWorkTags';
-import {NoEffect, Placement, Hydrating, Deletion} from './ReactSideEffectTags';
+import {NoEffect, Placement, Hydrating} from './ReactSideEffectTags';
 import {enableFundamentalAPI} from 'shared/ReactFeatureFlags';
 
 const ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
@@ -342,7 +342,10 @@ export function isFiberSuspenseAndTimedOut(fiber: Fiber): boolean {
   );
 }
 
-function doesFiberContain(parentFiber: Fiber, childFiber: Fiber): boolean {
+export function doesFiberContain(
+  parentFiber: Fiber,
+  childFiber: Fiber,
+): boolean {
   let node = childFiber;
   const parentFiberAlternate = parentFiber.alternate;
   while (node !== null) {
@@ -352,35 +355,4 @@ function doesFiberContain(parentFiber: Fiber, childFiber: Fiber): boolean {
     node = node.return;
   }
   return false;
-}
-
-function isFiberTimedOutSuspenseThatContainsTargetFiber(
-  fiber: Fiber,
-  targetFiber: Fiber,
-): boolean {
-  const child = fiber.child;
-  return (
-    isFiberSuspenseAndTimedOut(fiber) &&
-    child !== null &&
-    doesFiberContain(child, targetFiber)
-  );
-}
-
-function isFiberDeletedAndContainsTargetFiber(
-  fiber: Fiber,
-  targetFiber: Fiber,
-): boolean {
-  return (
-    (fiber.effectTag & Deletion) !== 0 && doesFiberContain(fiber, targetFiber)
-  );
-}
-
-export function isFiberHiddenOrDeletedAndContains(
-  parentFiber: Fiber,
-  childFiber: Fiber,
-): boolean {
-  return (
-    isFiberDeletedAndContainsTargetFiber(parentFiber, childFiber) ||
-    isFiberTimedOutSuspenseThatContainsTargetFiber(parentFiber, childFiber)
-  );
 }

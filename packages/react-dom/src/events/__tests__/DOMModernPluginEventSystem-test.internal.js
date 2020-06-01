@@ -2489,6 +2489,68 @@ describe('DOMModernPluginEventSystem', () => {
             document.body.removeChild(container2);
           });
 
+          // @gate experimental
+          it('regression: does not fire beforeblur/afterblur if target is already hidden', () => {
+            const Suspense = React.Suspense;
+            let suspend = false;
+            const promise = Promise.resolve();
+            const beforeBlurHandle = ReactDOM.unstable_createEventHandle(
+              'beforeblur',
+            );
+            const innerRef = React.createRef();
+
+            function Child() {
+              if (suspend) {
+                throw promise;
+              }
+              return <input ref={innerRef} />;
+            }
+
+            const Component = () => {
+              const ref = React.useRef(null);
+              const [, setState] = React.useState(0);
+
+              React.useEffect(() => {
+                beforeBlurHandle.setListener(ref.current, () => {
+                  // In the regression case, this would trigger an update, then
+                  // the resulting render would trigger another blur event,
+                  // which would trigger an update again, and on and on in an
+                  // infinite loop.
+                  setState(n => n + 1);
+                });
+              }, []);
+
+              return (
+                <div ref={ref}>
+                  <Suspense fallback="Loading...">
+                    <Child />
+                  </Suspense>
+                </div>
+              );
+            };
+
+            const container2 = document.createElement('div');
+            document.body.appendChild(container2);
+
+            const root = ReactDOM.createRoot(container2);
+            ReactTestUtils.act(() => {
+              root.render(<Component />);
+            });
+
+            // Focus the input node
+            const inner = innerRef.current;
+            const target = createEventTarget(inner);
+            target.focus();
+
+            // Suspend. This hides the input node, causing it to lose focus.
+            suspend = true;
+            ReactTestUtils.act(() => {
+              root.render(<Component />);
+            });
+
+            document.body.removeChild(container2);
+          });
+
           describe('Compatibility with Scopes API', () => {
             beforeEach(() => {
               jest.resetModules();

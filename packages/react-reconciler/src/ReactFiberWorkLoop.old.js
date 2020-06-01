@@ -156,6 +156,7 @@ import {
   commitAttachRef,
   commitPassiveEffectDurations,
   commitResetTextContent,
+  isSuspenseBoundaryBeingHidden,
 } from './ReactFiberCommitWork.old';
 import {enqueueUpdate} from './ReactUpdateQueue.old';
 import {resetContextDependencies} from './ReactFiberNewContext.old';
@@ -193,7 +194,7 @@ import {onCommitRoot as onCommitRootTestSelector} from './ReactTestSelectors';
 
 // Used by `act`
 import enqueueTask from 'shared/enqueueTask';
-import {isFiberHiddenOrDeletedAndContains} from './ReactFiberTreeReflection';
+import {doesFiberContain} from './ReactFiberTreeReflection';
 
 const ceil = Math.ceil;
 
@@ -2220,19 +2221,31 @@ function commitRootImpl(root, renderPriorityLevel) {
 
 function commitBeforeMutationEffects() {
   while (nextEffect !== null) {
-    if (
-      !shouldFireAfterActiveInstanceBlur &&
-      focusedInstanceHandle !== null &&
-      isFiberHiddenOrDeletedAndContains(nextEffect, focusedInstanceHandle)
-    ) {
-      shouldFireAfterActiveInstanceBlur = true;
-      beforeActiveInstanceBlur();
+    const current = nextEffect.alternate;
+
+    if (!shouldFireAfterActiveInstanceBlur && focusedInstanceHandle !== null) {
+      if ((nextEffect.effectTag & Deletion) !== NoEffect) {
+        if (doesFiberContain(nextEffect, focusedInstanceHandle)) {
+          shouldFireAfterActiveInstanceBlur = true;
+          beforeActiveInstanceBlur();
+        }
+      } else {
+        // TODO: Move this out of the hot path using a dedicated effect tag.
+        if (
+          nextEffect.tag === SuspenseComponent &&
+          isSuspenseBoundaryBeingHidden(current, nextEffect) &&
+          doesFiberContain(nextEffect, focusedInstanceHandle)
+        ) {
+          shouldFireAfterActiveInstanceBlur = true;
+          beforeActiveInstanceBlur();
+        }
+      }
     }
+
     const effectTag = nextEffect.effectTag;
     if ((effectTag & Snapshot) !== NoEffect) {
       setCurrentDebugFiberInDEV(nextEffect);
 
-      const current = nextEffect.alternate;
       commitBeforeMutationEffectOnFiber(current, nextEffect);
 
       resetCurrentDebugFiberInDEV();
