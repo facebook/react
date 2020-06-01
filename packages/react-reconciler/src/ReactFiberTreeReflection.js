@@ -333,13 +333,21 @@ export function findCurrentHostFiberWithNoPortals(parent: Fiber): Fiber | null {
   return null;
 }
 
+// This function detects when a Suspense boundary goes from visible to hidden.
+// It returns false if the boundary is already hidden.
+// TODO: Use an effect tag. And move this to ReactFiberCommitWork.
 export function isFiberSuspenseAndTimedOut(fiber: Fiber): boolean {
-  const memoizedState = fiber.memoizedState;
-  return (
-    fiber.tag === SuspenseComponent &&
-    memoizedState !== null &&
-    memoizedState.dehydrated === null
-  );
+  if (fiber.tag === SuspenseComponent) {
+    const current = fiber.alternate;
+    if (current !== null) {
+      const oldState = current.memoizedState;
+      if (oldState === null || oldState.dehydrated !== null) {
+        const newState = fiber.memoizedState;
+        return newState !== null && newState.dehydrated === null;
+      }
+    }
+  }
+  return false;
 }
 
 function doesFiberContain(parentFiber: Fiber, childFiber: Fiber): boolean {

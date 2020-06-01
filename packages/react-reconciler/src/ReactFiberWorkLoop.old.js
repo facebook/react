@@ -2222,6 +2222,8 @@ function commitBeforeMutationEffects() {
   while (nextEffect !== null) {
     if (
       !shouldFireAfterActiveInstanceBlur &&
+      // TODO: This checks every effect in the list, regardless of the type of
+      // fiber or the effect tag. Could optimize by checking for a specific tag.
       focusedInstanceHandle !== null &&
       isFiberHiddenOrDeletedAndContains(nextEffect, focusedInstanceHandle)
     ) {
