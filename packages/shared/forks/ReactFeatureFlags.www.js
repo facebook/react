@@ -21,7 +21,6 @@ export const {
   disableSchedulerTimeoutBasedOnReactExpirationTime,
   warnAboutSpreadingKeyToJSX,
   replayFailedUnitOfWorkWithInvokeGuardedCallback,
-  enableModernEventSystem,
   enableFilterEmptyStringAttributesDOM,
   enableLegacyFBSupport,
   enableDebugTracing,
@@ -72,6 +71,8 @@ export const enableComponentStackLocations = true;
 export const disableTextareaChildren = __EXPERIMENTAL__;
 
 export const warnUnstableRenderSubtreeIntoContainer = false;
+
+export const enableModernEventSystem = true;
 
 // Enable forked reconciler. Piggy-backing on the "variant" global so that we
 // don't have to add another test dimension. The build system will compile this
