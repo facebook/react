@@ -1254,7 +1254,8 @@ const tests = {
             'Either include it or remove the dependency array.',
           suggestions: [
             {
-              desc: 'Update the dependencies array to be: [props.foo?.toString]',
+              desc:
+                'Update the dependencies array to be: [props.foo?.toString]',
               output: normalizeIndent`
                 function MyComponent(props) {
                   useCallback(() => {
