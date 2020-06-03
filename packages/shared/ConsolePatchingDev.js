@@ -17,6 +17,9 @@ let prevLog;
 let prevInfo;
 let prevWarn;
 let prevError;
+let prevGroup;
+let prevgGoupCollapsed;
+let prevGroupEnd;
 
 function disabledLog() {}
 disabledLog.__reactDisabledLog = true;
@@ -29,8 +32,11 @@ export function disableLogs(): void {
       prevInfo = console.info;
       prevWarn = console.warn;
       prevError = console.error;
+      prevGroup = console.group;
+      prevgGoupCollapsed = console.groupCollapsed;
+      prevGroupEnd = console.groupEnd;
       // $FlowFixMe Flow thinks console is immutable.
-      console.log = console.info = console.warn = console.error = disabledLog;
+      console.log = console.info = console.warn = console.error = console.group = console.groupCollapsed = console.groupEnd = disabledLog;
       /* eslint-enable react-internal/no-production-logging */
     }
     disabledDepth++;
@@ -50,6 +56,12 @@ export function reenableLogs(): void {
       console.warn = prevWarn;
       // $FlowFixMe Flow thinks console is immutable.
       console.error = prevError;
+      // $FlowFixMe Flow thinks console is immutable.
+      console.group = prevGroup;
+      // $FlowFixMe Flow thinks console is immutable.
+      console.groupCollapsed = prevgGoupCollapsed;
+      // $FlowFixMe Flow thinks console is immutable.
+      console.groupEnd = prevGroupEnd;
       /* eslint-enable react-internal/no-production-logging */
     }
     if (disabledDepth < 0) {
