@@ -711,8 +711,7 @@ function callComponentWillMount(workInProgress, instance) {
 
   if (typeof instance.componentWillMount === 'function') {
     instance.componentWillMount();
-  }
-  if (typeof instance.UNSAFE_componentWillMount === 'function') {
+  }else if (typeof instance.UNSAFE_componentWillMount === 'function') {
     instance.UNSAFE_componentWillMount();
   }
 
@@ -738,8 +737,7 @@ function callComponentWillReceiveProps(
   const oldState = instance.state;
   if (typeof instance.componentWillReceiveProps === 'function') {
     instance.componentWillReceiveProps(newProps, nextContext);
-  }
-  if (typeof instance.UNSAFE_componentWillReceiveProps === 'function') {
+  }else if (typeof instance.UNSAFE_componentWillReceiveProps === 'function') {
     instance.UNSAFE_componentWillReceiveProps(newProps, nextContext);
   }
 
@@ -955,8 +953,7 @@ function resumeMountClassInstance(
     ) {
       if (typeof instance.componentWillMount === 'function') {
         instance.componentWillMount();
-      }
-      if (typeof instance.UNSAFE_componentWillMount === 'function') {
+      }else if (typeof instance.UNSAFE_componentWillMount === 'function') {
         instance.UNSAFE_componentWillMount();
       }
     }
@@ -1110,8 +1107,7 @@ function updateClassInstance(
     ) {
       if (typeof instance.componentWillUpdate === 'function') {
         instance.componentWillUpdate(newProps, newState, nextContext);
-      }
-      if (typeof instance.UNSAFE_componentWillUpdate === 'function') {
+      }else if (typeof instance.UNSAFE_componentWillUpdate === 'function') {
         instance.UNSAFE_componentWillUpdate(newProps, newState, nextContext);
       }
     }
