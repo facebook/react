@@ -2814,7 +2814,9 @@ function updateContextProvider(
     if (!('value' in newProps)) {
       if (!hasWarnedAboutUsingNoValuePropOnContextProvider) {
         hasWarnedAboutUsingNoValuePropOnContextProvider = true;
-        console.error('<Context.Provider> must have a value prop');
+        console.error(
+          'The prop `value` is required in `Context.Provider`, have you misspelled it',
+        );
       }
     }
     const providerPropTypes = workInProgress.type.propTypes;

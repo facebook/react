@@ -1097,7 +1097,7 @@ describe('ReactNewContext', () => {
       );
 
       expect(() => expect(Scheduler).toFlushWithoutYielding()).toErrorDev(
-        '<Context.Provider> must have a value prop',
+        'The prop `value` is required in `Context.Provider`, have you misspelled it',
         {
           withoutStack: true,
         },
