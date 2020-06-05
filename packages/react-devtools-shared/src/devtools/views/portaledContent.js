@@ -8,10 +8,12 @@
  */
 
 import * as React from 'react';
-import {useContext} from 'react';
+import {useContext, useMemo} from 'react';
 import {createPortal} from 'react-dom';
 import ErrorBoundary from './ErrorBoundary';
+import ReactNotDetected from './ReactNotDetected';
 import {StoreContext} from './context';
+import {useSubscription} from './hooks';
 import Store from '../store';
 
 export type Props = {portalContainer?: Element, ...};
@@ -22,10 +24,28 @@ export default function portaledContent(
 ): React$StatelessFunctionalComponent<any> {
   return function PortaledContent({portalContainer, ...rest}: Props) {
     const store = useContext(StoreContext);
+    const subscription = useMemo(
+      () => ({
+        getCurrentValue: () => {
+          return store.profilerStore.isProfiling || store.roots.length > 0;
+        },
+        subscribe: (callback: Function) => {
+          store.addListener('roots', callback);
+          store.profilerStore.addListener('isProfiling', callback);
+          return () => {
+            store.removeListener('roots', callback);
+            store.profilerStore.removeListener('isProfiling', callback);
+          };
+        },
+      }),
+      [store],
+    );
+
+    const isReactDetected = useSubscription<boolean>(subscription);
 
     const children = (
       <ErrorBoundary store={store} onRetry={onErrorRetry}>
-        <Component {...rest} />
+        {isReactDetected ? <Component {...rest} /> : <ReactNotDetected />}
       </ErrorBoundary>
     );
 

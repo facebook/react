@@ -59,6 +59,8 @@
   --light-color-expand-collapse-toggle: #777d88;
   --light-color-link: #0000ff;
   --light-color-modal-background: rgba(255, 255, 255, 0.75);
+  --light-color-react-not-dected-background: #f7f7f7;
+  --light-color-react-not-dected-logo: #e7e7e7;
   --light-color-record-active: #fc3a4b;
   --light-color-record-hover: #3578e5;
   --light-color-record-inactive: #0088fa;
@@ -136,6 +138,8 @@
   --dark-color-expand-collapse-toggle: #8f949d;
   --dark-color-link: #61dafb;
   --dark-color-modal-background: rgba(0, 0, 0, 0.75);
+  --dark-color-react-not-dected-background: #111111;
+  --dark-color-react-not-dected-logo: #222222;
   --dark-color-record-active: #fc3a4b;
   --dark-color-record-hover: #a2e9fc;
   --dark-color-record-inactive: #61dafb;

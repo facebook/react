@@ -296,9 +296,12 @@ export default class Agent extends EventEmitter<{|
     );
 
     // This code path should only be hit if the shell has explicitly told the Store that it supports profiling.
-    // In that case, the shell must also listen for this specific message to know when it needs to reload the app.
-    // The agent can't do this in a way that is renderer agnostic.
-    this._bridge.send('reloadAppForProfiling');
+    // Let the extension know to store a profiling flag.
+    this._bridge.send('prepForReloadAndProfile');
+
+    // The agent can't do this reload in a way that is renderer-agnostic.
+    // TODO Support React Native once it supports reload-and-profile functionality.
+    window.location.reload();
   };
 
   overrideContext = ({id, path, rendererID, value}: SetInParams) => {

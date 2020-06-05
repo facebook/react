@@ -22,9 +22,9 @@ describe('Bridge', () => {
     const bridge = new Bridge(wall);
 
     // Check that we're wired up correctly.
-    bridge.send('reloadAppForProfiling');
+    bridge.send('getProfilingStatus');
     jest.runAllTimers();
-    expect(wall.send).toHaveBeenCalledWith('reloadAppForProfiling');
+    expect(wall.send).toHaveBeenCalledWith('getProfilingStatus');
 
     // Should flush pending messages and then shut down.
     wall.send.mockClear();

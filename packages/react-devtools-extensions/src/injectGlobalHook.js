@@ -16,6 +16,7 @@ function injectCode(code) {
 }
 
 let lastDetectionResult;
+let hasBackendBeenInjected = false;
 
 // We want to detect when a renderer attaches, and notify the "background page"
 // (which is shared between tabs and can highlight the React icon).
@@ -23,21 +24,35 @@ let lastDetectionResult;
 // (it will be injected directly into the page).
 // So instead, the hook will use postMessage() to pass message to us here.
 // And when this happens, we'll send a message to the "background page".
-window.addEventListener('message', function(evt) {
-  if (evt.source !== window || !evt.data) {
+window.addEventListener('message', function({data, source}) {
+  if (source !== window || !data) {
     return;
   }
-  if (evt.data.source === 'react-devtools-detector') {
-    lastDetectionResult = {
-      hasDetectedReact: true,
-      reactBuildType: evt.data.reactBuildType,
-    };
-    chrome.runtime.sendMessage(lastDetectionResult);
-  } else if (evt.data.source === 'react-devtools-inject-backend') {
-    const script = document.createElement('script');
-    script.src = chrome.runtime.getURL('build/react_devtools_backend.js');
-    document.documentElement.appendChild(script);
-    script.parentNode.removeChild(script);
+
+  switch (data.source) {
+    case 'react-deventools-detector':
+      lastDetectionResult = {
+        hasDetectedReact: true,
+        reactBuildType: data.reactBuildType,
+      };
+      chrome.runtime.sendMessage(lastDetectionResult);
+      break;
+    case 'react-devtools-content-script':
+      const {payload} = data;
+      if (payload && payload.event === 'injectBackend') {
+        if (!hasBackendBeenInjected) {
+          hasBackendBeenInjected = true;
+
+          // Let the extension know to stop asking.
+          chrome.runtime.sendMessage({backendInjectedAck: true});
+
+          const script = document.createElement('script');
+          script.src = chrome.runtime.getURL('build/react_devtools_backend.js');
+          document.documentElement.appendChild(script);
+          script.parentNode.removeChild(script);
+        }
+      }
+      break;
   }
 });
 

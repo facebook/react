@@ -122,6 +122,8 @@ export default function setupHighlighter(
 
       if (openNativeElementsPanel) {
         window.__REACT_DEVTOOLS_GLOBAL_HOOK__.$0 = node;
+
+        // We can't call the inspect() function from this context, but the extension script can.
         bridge.send('syncSelectionToNativeElementsPanel');
       }
     } else {
