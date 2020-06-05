@@ -711,7 +711,7 @@ function callComponentWillMount(workInProgress, instance) {
 
   if (typeof instance.componentWillMount === 'function') {
     instance.componentWillMount();
-  }else if (typeof instance.UNSAFE_componentWillMount === 'function') {
+  } else if (typeof instance.UNSAFE_componentWillMount === 'function') {
     instance.UNSAFE_componentWillMount();
   }
 
