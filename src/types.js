@@ -39,6 +39,7 @@ export type ReactMeasure = {|
 export type ReactProfilerDataPriority = {|
   events: Array<ReactEvent>,
   measures: Array<ReactMeasure>,
+  maxNestedMeasures: number,
 |};
 
 export type ReactProfilerData = {|

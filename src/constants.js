@@ -1,5 +1,5 @@
-export const LABEL_SIZE = 120;
-export const LABEL_FONT_SIZE = 14;
+export const LABEL_SIZE = 80;
+export const LABEL_FONT_SIZE = 11;
 export const MARKER_HEIGHT = 20;
 export const MARKER_TICK_HEIGHT = 8;
 export const MARKER_FONT_SIZE = 10;
