@@ -139,6 +139,8 @@ if (__DEV__) {
     // is often used for testing purposes.
     // @see https://electronjs.org/docs/api/webview-tag
     webview: true,
+    // @see https://developer.mozilla.org/en-US/docs/Web/HTML/Element/kbd
+    kdb: true
   };
 
   validatePropertiesInDevelopment = function(type, props) {
