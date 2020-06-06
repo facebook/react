@@ -140,7 +140,7 @@ if (__DEV__) {
     // @see https://electronjs.org/docs/api/webview-tag
     webview: true,
     // @see https://developer.mozilla.org/en-US/docs/Web/HTML/Element/kbd
-    kbd: true
+    kbd: true,
   };
 
   validatePropertiesInDevelopment = function(type, props) {
