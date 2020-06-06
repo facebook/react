@@ -371,7 +371,7 @@ export function requestUpdateLane(
     // remove the special case and treat them as if they came from an
     // interleaved event. Regardless, this pattern is not officially supported.
     // This behavior is only a fallback. The flag only exists until we can roll
-    // out the setState warnning, since existing code might accidentally rely on
+    // out the setState warning, since existing code might accidentally rely on
     // the current behavior.
     return pickArbitraryLane(workInProgressRootRenderLanes);
   }
