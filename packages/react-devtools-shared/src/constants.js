@@ -8,7 +8,7 @@
  */
 
 // Flip this flag to true to enable verbose console debug logging.
-export const __DEBUG__ = false;
+export const __DEBUG__ = true;
 
 export const TREE_OPERATION_ADD = 1;
 export const TREE_OPERATION_REMOVE = 2;
