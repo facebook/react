@@ -233,8 +233,7 @@ const tests = {
       }
     `,
     // When ref mutations occur in callbacks
-    {
-      code: normalizeIndent`
+    normalizeIndent`
       const ComponentWithRef = () => {
         const someRef = useRef();
 
@@ -245,10 +244,19 @@ const tests = {
         return <div onClick={someCallback}>some child</div>;
       };
     `,
-    },
-    // TODO: Scenarios where React is no in play at all
+    // Scenarios where React is not in play at all
     normalizeIndent`
       myObject.current = 'some value';
+    `,
+    normalizeIndent`
+      function someNonComponentFunction() {
+        someObject.current = 'some value';
+      }
+    `,
+    normalizeIndent`
+      const someNonComponentFunction = () => {
+        someObject.current = 'some value';
+      }
     `,
   ],
   invalid: [
@@ -354,6 +362,43 @@ const tests = {
         },
       ],
     },
+    // TODO: handle assignments to variables
+    // {
+    //   code: normalizeIndent`
+    //     function ComponentWithRef({ someProp }) {
+    //       const someRef = useRef();
+
+    //       someRef.current = someProp;
+    //     }
+    //   `,
+    //   errors: [
+    //     {
+    //       message: errorMessage,
+    //       suggestions: [
+    //         {
+    //           desc: 'Place the ref mutation in a useEffect',
+    //           output: normalizeIndent`
+    //             function ComponentWithRef({ someProp }) {
+    //               const someRef = useRef();
+
+    //               useEffect(() => { someRef.current = 'some value'; }, [someProp]);
+    //             }
+    //           `,
+    //         },
+    //         {
+    //           desc: 'Place the ref mutation in a useLayoutEffect',
+    //           output: normalizeIndent`
+    //             function ComponentWithRef({ someProp }) {
+    //               const someRef = useRef();
+
+    //               useLayoutEffect(() => { someRef.current = 'some value'; }, [someProp]);
+    //             }
+    //           `,
+    //         },
+    //       ],
+    //     },
+    //   ],
+    // },
   ],
 };
 
