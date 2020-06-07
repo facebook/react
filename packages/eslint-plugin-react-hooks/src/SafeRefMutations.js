@@ -5,145 +5,40 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-/**
- * Catch all identifiers that begin with "use" followed by an uppercase Latin
- * character to exclude identifiers like "user".
- */
+import {
+  getFunctionName,
+  isComponentName,
+  isForwardRefCallback,
+  isHook,
+  isMemoCallback,
+  isReactFunction,
+} from './utils';
 
-function getFunctionName(node) {
-  if (
-    node.type === 'FunctionDeclaration' ||
-    (node.type === 'FunctionExpression' && node.id)
-  ) {
-    // function useHook() {}
-    // const whatever = function useHook() {};
-    //
-    // Function declaration or function expression names win over any
-    // assignment statements or other renames.
-    return node.id;
-  } else if (
-    node.type === 'FunctionExpression' ||
-    node.type === 'ArrowFunctionExpression'
-  ) {
-    if (
-      node.parent.type === 'VariableDeclarator' &&
-      node.parent.init === node
-    ) {
-      // const useHook = () => {};
-      return node.parent.id;
-    } else if (
-      node.parent.type === 'AssignmentExpression' &&
-      node.parent.right === node &&
-      node.parent.operator === '='
-    ) {
-      // useHook = () => {};
-      return node.parent.left;
-    } else if (
-      node.parent.type === 'Property' &&
-      node.parent.value === node &&
-      !node.parent.computed
-    ) {
-      // {useHook: () => {}}
-      // {useHook() {}}
-      return node.parent.key;
-
-      // NOTE: We could also support `ClassProperty` and `MethodDefinition`
-      // here to be pedantic. However, hooks in a class are an anti-pattern. So
-      // we don't allow it to error early.
-      //
-      // class {useHook = () => {}}
-      // class {useHook() {}}
-    } else if (
-      node.parent.type === 'AssignmentPattern' &&
-      node.parent.right === node &&
-      !node.parent.computed
-    ) {
-      // const {useHook = () => {}} = {};
-      // ({useHook = () => {}} = {});
-      //
-      // Kinda clowny, but we'd said we'd follow spec convention for
-      // `IsAnonymousFunctionDefinition()` usage.
-      return node.parent.left;
-    } else {
-      return undefined;
-    }
-  } else {
-    return undefined;
-  }
-}
-
-function isHookName(s) {
-  return /^use[A-Z0-9].*$/.test(s);
-}
-
-/**
- * We consider hooks to be a hook name identifier or a member expression
- * containing a hook name.
- */
-
-function isHook(node) {
-  if (node.type === 'Identifier') {
-    return isHookName(node.name);
-  } else if (
-    node.type === 'MemberExpression' &&
-    !node.computed &&
-    isHook(node.property)
-  ) {
-    const obj = node.object;
-    const isPascalCaseNameSpace = /^[A-Z].*/;
-    return obj.type === 'Identifier' && isPascalCaseNameSpace.test(obj.name);
-  } else {
-    return false;
-  }
-}
-
-/**
- * Checks if the node is a React component name. React component names must
- * always start with a non-lowercase letter. So `MyComponent` or `_MyComponent`
- * are valid component names for instance.
- */
-
-function isComponentName(node) {
-  if (node.type === 'Identifier') {
-    return !/^[a-z]/.test(node.name);
-  } else {
-    return false;
-  }
-}
-
-function isReactFunction(node, functionName) {
+function isFunction(node) {
   return (
-    node.name === functionName ||
-    (node.type === 'MemberExpression' &&
-      node.object.name === 'React' &&
-      node.property.name === functionName)
+    node.type === 'FunctionDeclaration' ||
+    node.type === 'ArrowFunctionExpression'
   );
 }
 
-/**
- * Checks if the node is a callback argument of forwardRef. This render function
- * should follow the rules of hooks.
- */
-
-function isForwardRefCallback(node) {
-  return !!(
-    node.parent &&
-    node.parent.callee &&
-    isReactFunction(node.parent.callee, 'forwardRef')
-  );
+function isAssignmentExpression(node) {
+  return node.type === 'AssignmentExpression';
 }
 
-/**
- * Checks if the node is a callback argument of React.memo. This anonymous
- * functional component should follow the rules of hooks.
- */
+function isMemberExpression(node) {
+  return node.type === 'MemberExpression';
+}
 
-function isMemoCallback(node) {
-  return !!(
-    node.parent &&
-    node.parent.callee &&
-    isReactFunction(node.parent.callee, 'memo')
-  );
+function isIdentifier(node) {
+  return node.type === 'Identifier';
+}
+
+function isCallExpression(node) {
+  return node.type === 'CallExpression';
+}
+
+function isProgram(node) {
+  return node.type === 'Program';
 }
 
 function getComponentOrHookScopeBlock(node) {
@@ -177,33 +72,6 @@ function getNearestFunctionScopeBlock(node) {
   }
 
   return;
-}
-
-function isFunction(node) {
-  return (
-    node.type === 'FunctionDeclaration' ||
-    node.type === 'ArrowFunctionExpression'
-  );
-}
-
-function isAssignmentExpression(node) {
-  return node.type === 'AssignmentExpression';
-}
-
-function isMemberExpression(node) {
-  return node.type === 'MemberExpression';
-}
-
-function isIdentifier(node) {
-  return node.type === 'Identifier';
-}
-
-function isCallExpression(node) {
-  return node.type === 'CallExpression';
-}
-
-function isProgram(node) {
-  return node.type === 'Program';
 }
 
 function isAssignmentToCurrent(node) {
