@@ -152,6 +152,16 @@ export function useDebugValue<T>(
   }
 }
 
+export function useDebugName<T>(
+  name: T,
+  formatterFn: ?(name: T) => mixed,
+): void {
+  if (__DEV__) {
+    const dispatcher = resolveDispatcher();
+    return dispatcher.useDebugName(name, formatterFn);
+  }
+}
+
 export const emptyObject = {};
 
 export function useResponder(

@@ -342,6 +342,7 @@ export type Dispatcher = {|
     deps: Array<mixed> | void | null,
   ): void,
   useDebugValue<T>(value: T, formatterFn: ?(value: T) => mixed): void,
+  useDebugName<T>(name: T, formatterFn: ?(name: T) => mixed): void,
   useResponder<E, C>(
     responder: ReactEventResponder<E, C>,
     props: Object,

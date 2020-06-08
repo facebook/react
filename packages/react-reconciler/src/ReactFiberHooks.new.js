@@ -117,6 +117,7 @@ export type HookType =
   | 'useMemo'
   | 'useImperativeHandle'
   | 'useDebugValue'
+  | 'useDebugName'
   | 'useResponder'
   | 'useDeferredValue'
   | 'useTransition'
@@ -1390,6 +1391,12 @@ function mountDebugValue<T>(value: T, formatterFn: ?(value: T) => mixed): void {
 
 const updateDebugValue = mountDebugValue;
 
+function mountDebugName<T>(name: T, formatterFn: ?(name: T) => mixed): void {
+  // no-op as mountDebugValue
+}
+
+const updateDebugName = mountDebugName;
+
 function mountCallback<T>(callback: T, deps: Array<mixed> | void | null): T {
   const hook = mountWorkInProgressHook();
   const nextDeps = deps === undefined ? null : deps;
@@ -1752,6 +1759,7 @@ export const ContextOnlyDispatcher: Dispatcher = {
   useRef: throwInvalidHookError,
   useState: throwInvalidHookError,
   useDebugValue: throwInvalidHookError,
+  useDebugName: throwInvalidHookError,
   useResponder: throwInvalidHookError,
   useDeferredValue: throwInvalidHookError,
   useTransition: throwInvalidHookError,
@@ -1774,6 +1782,7 @@ const HooksDispatcherOnMount: Dispatcher = {
   useRef: mountRef,
   useState: mountState,
   useDebugValue: mountDebugValue,
+  useDebugName: mountDebugName,
   useResponder: createDeprecatedResponderListener,
   useDeferredValue: mountDeferredValue,
   useTransition: mountTransition,
@@ -1796,6 +1805,7 @@ const HooksDispatcherOnUpdate: Dispatcher = {
   useRef: updateRef,
   useState: updateState,
   useDebugValue: updateDebugValue,
+  useDebugName: updateDebugName,
   useResponder: createDeprecatedResponderListener,
   useDeferredValue: updateDeferredValue,
   useTransition: updateTransition,
@@ -1818,6 +1828,7 @@ const HooksDispatcherOnRerender: Dispatcher = {
   useRef: updateRef,
   useState: rerenderState,
   useDebugValue: updateDebugValue,
+  useDebugName: updateDebugName,
   useResponder: createDeprecatedResponderListener,
   useDeferredValue: rerenderDeferredValue,
   useTransition: rerenderTransition,
@@ -1953,6 +1964,11 @@ if (__DEV__) {
       mountHookTypesDev();
       return mountDebugValue(value, formatterFn);
     },
+    useDebugName<T>(name: T, formatterFn: ?(name: T) => mixed): void {
+      currentHookNameInDev = 'useDebugName';
+      mountHookTypesDev();
+      return mountDebugName(name, formatterFn);
+    },
     useResponder<E, C>(
       responder: ReactEventResponder<E, C>,
       props,
@@ -2084,6 +2100,11 @@ if (__DEV__) {
       currentHookNameInDev = 'useDebugValue';
       updateHookTypesDev();
       return mountDebugValue(value, formatterFn);
+    },
+    useDebugName<T>(name: T, formatterFn: ?(name: T) => mixed): void {
+      currentHookNameInDev = 'useDebugName';
+      updateHookTypesDev();
+      return mountDebugName(name, formatterFn);
     },
     useResponder<E, C>(
       responder: ReactEventResponder<E, C>,
@@ -2217,6 +2238,11 @@ if (__DEV__) {
       updateHookTypesDev();
       return updateDebugValue(value, formatterFn);
     },
+    useDebugName<T>(name: T, formatterFn: ?(name: T) => mixed): void {
+      currentHookNameInDev = 'useDebugName';
+      updateHookTypesDev();
+      return updateDebugName(name, formatterFn);
+    },
     useResponder<E, C>(
       responder: ReactEventResponder<E, C>,
       props,
@@ -2349,6 +2375,11 @@ if (__DEV__) {
       currentHookNameInDev = 'useDebugValue';
       updateHookTypesDev();
       return updateDebugValue(value, formatterFn);
+    },
+    useDebugName<T>(name: T, formatterFn: ?(name: T) => mixed): void {
+      currentHookNameInDev = 'useDebugName';
+      updateHookTypesDev();
+      return updateDebugName(name, formatterFn);
     },
     useResponder<E, C>(
       responder: ReactEventResponder<E, C>,
@@ -2492,6 +2523,12 @@ if (__DEV__) {
       warnInvalidHookAccess();
       mountHookTypesDev();
       return mountDebugValue(value, formatterFn);
+    },
+    useDebugName<T>(name: T, formatterFn: ?(name: T) => mixed): void {
+      currentHookNameInDev = 'useDebugName';
+      warnInvalidHookAccess();
+      mountHookTypesDev();
+      return mountDebugName(name, formatterFn);
     },
     useResponder<E, C>(
       responder: ReactEventResponder<E, C>,
@@ -2641,6 +2678,12 @@ if (__DEV__) {
       updateHookTypesDev();
       return updateDebugValue(value, formatterFn);
     },
+    useDebugName<T>(name: T, formatterFn: ?(name: T) => mixed): void {
+      currentHookNameInDev = 'useDebugName';
+      warnInvalidHookAccess();
+      updateHookTypesDev();
+      return updateDebugName(name, formatterFn);
+    },
     useResponder<E, C>(
       responder: ReactEventResponder<E, C>,
       props,
@@ -2789,6 +2832,12 @@ if (__DEV__) {
       warnInvalidHookAccess();
       updateHookTypesDev();
       return updateDebugValue(value, formatterFn);
+    },
+    useDebugName<T>(name: T, formatterFn: ?(name: T) => mixed): void {
+      currentHookNameInDev = 'useDebugName';
+      warnInvalidHookAccess();
+      updateHookTypesDev();
+      return updateDebugName(name, formatterFn);
     },
     useResponder<E, C>(
       responder: ReactEventResponder<E, C>,

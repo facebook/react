@@ -84,6 +84,7 @@ function getPrimitiveStackCache(): Map<string, Array<any>> {
       Dispatcher.useEffect(() => {});
       Dispatcher.useImperativeHandle(undefined, () => null);
       Dispatcher.useDebugValue(null);
+      Dispatcher.useDebugName(null);
       Dispatcher.useCallback(() => {});
       Dispatcher.useMemo(() => null);
       Dispatcher.useMutableSource(
@@ -233,6 +234,14 @@ function useDebugValue(value: any, formatterFn: ?(value: any) => any) {
   });
 }
 
+function useDebugName(value: string, formatterFn: ?(value: string) => string) {
+  hookLog.push({
+    primitive: 'DebugName',
+    stackError: new Error(),
+    value: typeof formatterFn === 'function' ? formatterFn(value) : value,
+  });
+}
+
 function useCallback<T>(callback: T, inputs: Array<mixed> | void | null): T {
   const hook = nextHook();
   hookLog.push({
@@ -340,6 +349,7 @@ const Dispatcher: DispatcherType = {
   useEffect,
   useImperativeHandle,
   useDebugValue,
+  useDebugName,
   useLayoutEffect,
   useMemo,
   useReducer,
@@ -565,6 +575,8 @@ function buildTree(rootStack, readHookLog): HooksTree {
 
   // Associate custom hook values (useDebugValue() hook entries) with the correct hooks.
   processDebugValues(rootChildren, null);
+  // Associate hook names from useDebugName() with the hooks that were called before them.
+  processDebugNames(rootChildren);
 
   return rootChildren;
 }
@@ -599,6 +611,29 @@ function processDebugValues(
       parentHooksNode.value = debugValueHooksNodes[0].value;
     } else if (debugValueHooksNodes.length > 1) {
       parentHooksNode.value = debugValueHooksNodes.map(({value}) => value);
+    }
+  }
+}
+
+// The method attributes the name to the last processed hook, if defined.
+function processDebugNames(hooksTree: HooksTree): void {
+  let lastProcessedHookReference: any = null;
+
+  for (let i = 0; i < hooksTree.length; i++) {
+    const hooksNode = hooksTree[i];
+    if (hooksNode.name === 'DebugName' && hooksNode.subHooks.length === 0) {
+      if (i !== 0) {
+        lastProcessedHookReference = hooksTree[i - 1];
+        // Do not append names which are identical to default hook names
+        if (lastProcessedHookReference.name.toLowerCase() !== hooksNode.value) {
+          lastProcessedHookReference.name =
+            lastProcessedHookReference.name + ', ' + hooksNode.value;
+        }
+      }
+      hooksTree.splice(i, 1);
+      i--;
+    } else {
+      processDebugNames(hooksNode.subHooks);
     }
   }
 }

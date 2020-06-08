@@ -21,6 +21,7 @@ export {
   useEffect,
   useImperativeHandle,
   useDebugValue,
+  useDebugName,
   useLayoutEffect,
   useMemo,
   useMutableSource,
