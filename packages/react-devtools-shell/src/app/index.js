@@ -19,6 +19,7 @@ import ReactNativeWeb from './ReactNativeWeb';
 import ToDoList from './ToDoList';
 import Toggle from './Toggle';
 import SuspenseTree from './SuspenseTree';
+import NamedHooks from './NamedHooks';
 import {ignoreErrors, ignoreWarnings} from './console';
 
 import './styles.css';
@@ -59,6 +60,7 @@ function mountTestApp() {
   mountHelper(SuspenseTree);
   mountHelper(DeeplyNestedComponents);
   mountHelper(Iframe);
+  mountHelper(NamedHooks);
 }
 
 function unmountTestApp() {
