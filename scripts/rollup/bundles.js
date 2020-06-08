@@ -667,6 +667,15 @@ const bundles = [
     externals: [],
   },
 
+  /******* React Named Hooks *******/
+  {
+    bundleTypes: [NODE_DEV, NODE_PROD],
+    moduleType: ISOMORPHIC,
+    entry: 'react-named-hooks',
+    global: 'ReactNamedHooks',
+    externals: [],
+  },
+
   /******* React Fresh *******/
   {
     bundleTypes: [NODE_DEV, NODE_PROD],

@@ -523,6 +523,7 @@ export const Dispatcher: DispatcherType = {
   useEffect: noop,
   // Debugging effect
   useDebugValue: noop,
+  useDebugName: noop,
   useResponder,
   useDeferredValue,
   useTransition,

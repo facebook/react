@@ -716,90 +716,92 @@ describe('ReactHooksInspectionIntegration', () => {
     });
   });
 
-  describe('useDebugName', () => {
-    it('should work on nested default hooks', () => {
-      function useInner() {
-        const [name1] = React.useState(0);
-        React.useDebugName('name1');
-        return name1;
-      }
-      function useOuter() {
-        const name2 = React.useRef(null);
-        React.useDebugName('name2');
-        useInner();
-        return name2;
-      }
-      function Example() {
-        useOuter();
-        return null;
-      }
-      const renderer = ReactTestRenderer.create(<Example />);
-      const childFiber = renderer.root.findByType(Example)._currentFiber();
-      const tree = ReactDebugTools.inspectHooksOfFiber(childFiber);
-      expect(tree).toEqual([
-        {
-          isStateEditable: false,
-          id: null,
-          name: 'Outer',
-          value: undefined,
-          subHooks: [
-            {
-              isStateEditable: false,
-              id: 0,
-              name: __DEV__ ? 'Ref, name2' : 'Ref',
-              value: null,
-              subHooks: [],
-            },
-            {
-              isStateEditable: false,
-              id: null,
-              name: 'Inner',
-              value: undefined,
-              subHooks: [
-                {
-                  isStateEditable: true,
-                  id: 2,
-                  name: __DEV__ ? 'State, name1' : 'State',
-                  value: 0,
-                  subHooks: [],
-                },
-              ],
-            },
-          ],
-        },
-      ]);
-    });
+  if (__DEV__) {
+    describe('useDebugName', () => {
+      it('should work on nested default hooks', () => {
+        function useInner() {
+          const [name1] = React.useState(0);
+          React.useDebugName('name1');
+          return name1;
+        }
+        function useOuter() {
+          const name2 = React.useRef(null);
+          React.useDebugName('name2');
+          useInner();
+          return name2;
+        }
+        function Example() {
+          useOuter();
+          return null;
+        }
+        const renderer = ReactTestRenderer.create(<Example />);
+        const childFiber = renderer.root.findByType(Example)._currentFiber();
+        const tree = ReactDebugTools.inspectHooksOfFiber(childFiber);
+        expect(tree).toEqual([
+          {
+            isStateEditable: false,
+            id: null,
+            name: 'Outer',
+            value: undefined,
+            subHooks: [
+              {
+                isStateEditable: false,
+                id: 0,
+                name: __DEV__ ? 'Ref, name2' : 'Ref',
+                value: null,
+                subHooks: [],
+              },
+              {
+                isStateEditable: false,
+                id: null,
+                name: 'Inner',
+                value: undefined,
+                subHooks: [
+                  {
+                    isStateEditable: true,
+                    id: 2,
+                    name: __DEV__ ? 'State, name1' : 'State',
+                    value: 0,
+                    subHooks: [],
+                  },
+                ],
+              },
+            ],
+          },
+        ]);
+      });
 
-    it('supports more than one name when assigned', () => {
-      function Foo(props) {
-        const [name] = React.useState('hello world');
-        React.useDebugName('data');
-        React.useDebugName('name');
-        return <div>{name}</div>;
-      }
-      const tree = ReactDebugTools.inspectHooks(Foo, {});
-      expect(tree).toEqual([
-        {
-          isStateEditable: true,
-          id: 0,
-          name: __DEV__ ? 'State, data, name' : 'State',
-          value: 'hello world',
-          subHooks: [],
-        },
-      ]);
-    });
+      it('supports more than one name when assigned', () => {
+        function Foo(props) {
+          const [name] = React.useState('hello world');
+          React.useDebugName('data');
+          React.useDebugName('name');
+          return <div>{name}</div>;
+        }
+        const tree = ReactDebugTools.inspectHooks(Foo, {});
+        expect(tree).toEqual([
+          {
+            isStateEditable: true,
+            id: 0,
+            name: __DEV__ ? 'State, data, name' : 'State',
+            value: 'hello world',
+            subHooks: [],
+          },
+        ]);
+      });
 
-    it('should ignore useDebugName() if there is no hook that it can handle', () => {
-      function Example() {
-        React.useDebugName('this is invalid');
-        return null;
-      }
-      const renderer = ReactTestRenderer.create(<Example />);
-      const childFiber = renderer.root.findByType(Example)._currentFiber();
-      const tree = ReactDebugTools.inspectHooksOfFiber(childFiber);
-      expect(tree).toHaveLength(0);
+      it('should ignore useDebugName() if there is no hook that it can handle', () => {
+        function Example() {
+          React.useDebugName('this is invalid');
+          return null;
+        }
+        const renderer = ReactTestRenderer.create(<Example />);
+        const childFiber = renderer.root.findByType(Example)._currentFiber();
+        const tree = ReactDebugTools.inspectHooksOfFiber(childFiber);
+        expect(tree).toHaveLength(0);
+      });
     });
-  });
+  }
 
   it('should support defaultProps and lazy', async () => {
     const Suspense = React.Suspense;

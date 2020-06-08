@@ -234,7 +234,7 @@ function useDebugValue(value: any, formatterFn: ?(value: any) => any) {
   });
 }
 
-function useDebugName(value: string, formatterFn: ?(value: string) => string) {
+function useDebugName(value: any, formatterFn: ?(value: any) => any) {
   hookLog.push({
     primitive: 'DebugName',
     stackError: new Error(),
@@ -627,6 +627,7 @@ function processDebugNames(hooksTree: HooksTree): void {
         // Do not append names which are identical to default hook names
         if (lastProcessedHookReference.name.toLowerCase() !== hooksNode.value) {
           lastProcessedHookReference.name =
+            // $FlowFixMe: Flow doesn't like mixed types
             lastProcessedHookReference.name + ', ' + hooksNode.value;
         }
       }

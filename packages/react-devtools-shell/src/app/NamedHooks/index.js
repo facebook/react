@@ -41,7 +41,7 @@ function reducer(state, action) {
 
 const StringContext = createContext('123');
 
-export default function NamedHooks(props) {
+export default function NamedHooks(props: any) {
   const [count, setCount] = useState(0);
   useDebugName('count');
   const memoizedSetClick = useCallback(() => setCount(count + 1), [count]);
