@@ -332,4 +332,57 @@ describe('ReactHooksInspection', () => {
       ]);
     });
   });
+
+  describe('useDebugName', () => {
+    it('should append hook name identifier if it is not equal to default hook name', () => {
+      function Foo(props) {
+        const [state] = React.useState('hello world');
+        // when variable name === hook name, useDebugName should not change `name` key
+        React.useDebugName('state');
+        const [name] = React.useState('hello world');
+        React.useDebugName('name');
+        return (
+          <div>
+            {state}
+            {name}
+          </div>
+        );
+      }
+      const tree = ReactDebugTools.inspectHooks(Foo, {});
+      expect(tree).toEqual([
+        {
+          isStateEditable: true,
+          id: 0,
+          name: 'State',
+          value: 'hello world',
+          subHooks: [],
+        },
+        {
+          isStateEditable: true,
+          id: 2,
+          name: __DEV__ ? 'State, name' : 'State',
+          value: 'hello world',
+          subHooks: [],
+        },
+      ]);
+    });
+
+    it('should support an optional formatter function param', () => {
+      function Foo(props) {
+        const [data] = React.useState(0);
+        React.useDebugName('data', value => `name:${value}`);
+        return <div>{data}</div>;
+      }
+      const tree = ReactDebugTools.inspectHooks(Foo, {});
+      expect(tree).toEqual([
+        {
+          isStateEditable: true,
+          id: 0,
+          name: __DEV__ ? 'State, name:data' : 'State',
+          subHooks: [],
+          value: 0,
+        },
+      ]);
+    });
+  });
 });
