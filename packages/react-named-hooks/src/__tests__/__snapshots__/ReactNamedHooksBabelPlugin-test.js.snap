@@ -1,0 +1,72 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`ReactNamedHooksBabelPlugin injects first array item for useState, useReducer 1`] = `
+function Foo() {
+  const [count, setCount] = useState(0);
+  useDebugName("count");
+  const [data, dispatch] = useReducer(reducer, initialData);
+  useDebugName("data");
+  return <div></div>;
+}
+`;
+
+exports[`ReactNamedHooksBabelPlugin do not injects when lowercased first array item is a default hook name for useState, useReducer 1`] = `
+function Foo() {
+  const [State, setCount] = useState(0);
+  const [reduceR, dispatch] = useReducer(reducer, initialData);
+  return <div></div>;
+}
+`;
+
+exports[`ReactNamedHooksBabelPlugin inejcts identifier for useRef, useCallback, useMemo 1`] = `
+function Foo() {
+  const spanRef = useRef(null);
+  useDebugName("spanRef");
+  const memoizedSetClick = useCallback(() => setCount(count + 1), [count]);
+  useDebugName("memoizedSetClick");
+  const memoizedCountMultiplied = useMemo(() => count * 2, [count]);
+  useDebugName("memoizedCountMultiplied");
+  return <div></div>;
+}
+`;
+
+exports[`ReactNamedHooksBabelPlugin do not injects when lowercased identifier is a default hook name for useRef, useCallback, useMemo 1`] = `
+function Foo() {
+  const Ref = useRef(null);
+  const CallBack = useCallback(() => setCount(count + 1), [count]);
+  const memo = useMemo(() => count * 2, [count]);
+  return <div></div>;
+}
+`;
+
+exports[`ReactNamedHooksBabelPlugin inejcts first argument for useContext 1`] = `
+function Foo() {
+  const ctxValue = useContext(StringContext);
+  useDebugName("StringContext");
+  return <div></div>;
+}
+`;
+
+exports[`ReactNamedHooksBabelPlugin do not injects when lowercased first argument is a default hook name for useContext 1`] = `
+function Foo() {
+  const ctxValue = useContext(Context);
+  return <div></div>;
+}
+`;
+
+exports[`ReactNamedHooksBabelPlugin injects for default hooks within nested custom hook 1`] = `
+function useNestedInnerHook() {
+  const [nestedState] = useState(123);
+  useDebugName("nestedState");
+  return nestedState;
+}
+
+function useNestedOuterHook() {
+  return useNestedInnerHook();
+}
+
+function Foo() {
+  useNestedOuterHook();
+  return <div></div>;
+}
+`;
