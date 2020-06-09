@@ -2366,13 +2366,13 @@ export function attach(
     });
   }
 
-  function createIsPathWhitelisted(
+  function createIsPathAllowlisted(
     key: string | null,
     secondaryCategory: 'hooks' | null,
   ) {
     // This function helps prevent previously-inspected paths from being dehydrated in updates.
     // This is important to avoid a bad user experience where expanded toggles collapse on update.
-    return function isPathWhitelisted(path: Array<string | number>): boolean {
+    return function isPathAllowlisted(path: Array<string | number>): boolean {
       switch (secondaryCategory) {
         case 'hooks':
           if (path.length === 1) {
@@ -2514,7 +2514,7 @@ export function attach(
               ((mostRecentlyInspectedElement: any): InspectedElement),
               path,
             ),
-            createIsPathWhitelisted(null, secondaryCategory),
+            createIsPathAllowlisted(null, secondaryCategory),
             path,
           ),
         };
@@ -2559,19 +2559,19 @@ export function attach(
       const cleanedInspectedElement = {...mostRecentlyInspectedElement};
       cleanedInspectedElement.context = cleanForBridge(
         cleanedInspectedElement.context,
-        createIsPathWhitelisted('context', null),
+        createIsPathAllowlisted('context', null),
       );
       cleanedInspectedElement.hooks = cleanForBridge(
         cleanedInspectedElement.hooks,
-        createIsPathWhitelisted('hooks', 'hooks'),
+        createIsPathAllowlisted('hooks', 'hooks'),
       );
       cleanedInspectedElement.props = cleanForBridge(
         cleanedInspectedElement.props,
-        createIsPathWhitelisted('props', null),
+        createIsPathAllowlisted('props', null),
       );
       cleanedInspectedElement.state = cleanForBridge(
         cleanedInspectedElement.state,
-        createIsPathWhitelisted('state', null),
+        createIsPathAllowlisted('state', null),
       );
 
       return {
