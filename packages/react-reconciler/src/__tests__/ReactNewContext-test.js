@@ -42,23 +42,20 @@ describe('ReactNewContext', () => {
     return dispatcher.readContext(Context, observedBits);
   }
 
-  // TODO: Delete this once new API exists in both forks
-  function LegacyHiddenDiv({hidden, children, ...props}) {
-    if (gate(flags => flags.new)) {
-      return (
-        <div hidden={hidden} {...props}>
-          <React.unstable_LegacyHidden mode={hidden ? 'hidden' : 'visible'}>
-            {children}
-          </React.unstable_LegacyHidden>
-        </div>
-      );
-    } else {
-      return (
-        <div hidden={hidden} {...props}>
+  // Note: This is based on a similar component we use in www. We can delete
+  // once the extra div wrapper is no longer neccessary.
+  function LegacyHiddenDiv({children, mode}) {
+    return (
+      <div
+        hidden={
+          mode === 'hidden' ? 'unstable-do-not-use-legacy-hidden' : undefined
+        }>
+        <React.unstable_LegacyHidden
+          mode={mode === 'hidden' ? 'unstable-defer-without-hiding' : mode}>
           {children}
-        </div>
-      );
-    }
+        </React.unstable_LegacyHidden>
+      </div>
+    );
   }
 
   // We have several ways of reading from context. sharedContextTests runs
@@ -922,7 +919,7 @@ describe('ReactNewContext', () => {
         expect(ReactNoop.getChildren()).toEqual([span(2), span(2)]);
       });
 
-      // @gate enableLegacyHiddenType
+      // @gate experimental
       it("context consumer doesn't bail out inside hidden subtree", () => {
         const Context = React.createContext('dark');
         const Consumer = getConsumer(Context);
@@ -930,7 +927,7 @@ describe('ReactNewContext', () => {
         function App({theme}) {
           return (
             <Context.Provider value={theme}>
-              <LegacyHiddenDiv hidden={true}>
+              <LegacyHiddenDiv mode="hidden">
                 <Consumer>{value => <Text text={value} />}</Consumer>
               </LegacyHiddenDiv>
             </Context.Provider>

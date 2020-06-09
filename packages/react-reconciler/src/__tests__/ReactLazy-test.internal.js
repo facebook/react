@@ -1274,7 +1274,7 @@ describe('ReactLazy', () => {
     expect(componentStackMessage).toContain('in Lazy');
   });
 
-  // @gate enableLazyElements && enableNewReconciler
+  // @gate enableLazyElements
   it('mount and reorder lazy elements', async () => {
     class Child extends React.Component {
       componentDidMount() {

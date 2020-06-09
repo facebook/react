@@ -23,7 +23,6 @@ export const {
   replayFailedUnitOfWorkWithInvokeGuardedCallback,
   enableFilterEmptyStringAttributesDOM,
   enableLegacyFBSupport,
-  enableDebugTracing,
   deferRenderPhaseUpdateToNextBatch,
 } = dynamicFeatureFlags;
 
@@ -78,6 +77,9 @@ export const enableModernEventSystem = true;
 // don't have to add another test dimension. The build system will compile this
 // to the correct value.
 export const enableNewReconciler = __VARIANT__;
+
+// TODO: This does not currently exist in the Lanes implementation.
+export const enableDebugTracing = false;
 
 // Flow magic to verify the exports of this file match the original version.
 // eslint-disable-next-line no-unused-vars

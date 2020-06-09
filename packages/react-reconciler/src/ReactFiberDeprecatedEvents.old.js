@@ -150,10 +150,10 @@ export function updateDeprecatedEventListeners(
   rootContainerInstance: null | Container,
 ): void {
   const visistedResponders = new Set();
-  let dependencies = fiber.dependencies_new;
+  let dependencies = fiber.dependencies;
   if (listeners != null) {
     if (dependencies === null) {
-      dependencies = fiber.dependencies_new = {
+      dependencies = fiber.dependencies = {
         lanes: NoLanes,
         firstContext: null,
         responders: new Map(),
@@ -218,7 +218,7 @@ export function createDeprecatedResponderListener(
 }
 
 export function unmountDeprecatedResponderListeners(fiber: Fiber) {
-  const dependencies = fiber.dependencies_new;
+  const dependencies = fiber.dependencies;
 
   if (dependencies !== null) {
     const respondersMap = dependencies.responders;

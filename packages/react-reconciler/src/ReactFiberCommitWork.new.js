@@ -1034,7 +1034,7 @@ function detachFiberMutation(fiber: Fiber) {
   // field after effects, see: detachFiberAfterEffects.
   fiber.alternate = null;
   fiber.child = null;
-  fiber.dependencies_new = null;
+  fiber.dependencies = null;
   fiber.firstEffect = null;
   fiber.lastEffect = null;
   fiber.memoizedProps = null;

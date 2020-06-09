@@ -287,27 +287,14 @@ describe('Profiler', () => {
           </div>,
         );
 
-        // Should be called two times:
-        // 1. To compute the update expiration time
-        // 2. To record the commit time
-        // No additional calls from ProfilerTimer are expected.
-        expect(Scheduler).toHaveYielded(
-          gate(flags =>
-            flags.new
-              ? [
-                  // The new reconciler reads the current time in more places,
-                  // to detect starvation. This is unrelated to the profiler,
-                  // which happens to use the same Scheduler method that we
-                  // mocked above. We should rewrite this test so that it's
-                  // less fragile.
-                  'read current time',
-                  'read current time',
-                  'read current time',
-                  'read current time',
-                ]
-              : ['read current time', 'read current time'],
-          ),
-        );
+        // TODO: unstable_now is called by more places than just the profiler.
+        // Rewrite this test so it's less fragile.
+        expect(Scheduler).toHaveYielded([
+          'read current time',
+          'read current time',
+          'read current time',
+          'read current time',
+        ]);
 
         // Restore original mock
         jest.mock('scheduler', () =>

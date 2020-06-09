@@ -619,7 +619,7 @@ function ensureRootIsScheduled(root: FiberRoot, currentTime: number) {
     if (existingCallbackNode !== null) {
       cancelCallback(existingCallbackNode);
       root.callbackNode = null;
-      root.callbackPriority_new = NoLanePriority;
+      root.callbackPriority = NoLanePriority;
       root.callbackId = NoLanes;
     }
     return;
@@ -627,7 +627,7 @@ function ensureRootIsScheduled(root: FiberRoot, currentTime: number) {
 
   // Check if there's an existing task. We may be able to reuse it.
   const existingCallbackId = root.callbackId;
-  const existingCallbackPriority = root.callbackPriority_new;
+  const existingCallbackPriority = root.callbackPriority;
   if (existingCallbackId !== NoLanes) {
     if (newCallbackId === existingCallbackId) {
       // This task is already scheduled. Let's check its priority.
@@ -660,7 +660,7 @@ function ensureRootIsScheduled(root: FiberRoot, currentTime: number) {
   }
 
   root.callbackId = newCallbackId;
-  root.callbackPriority_new = newCallbackPriority;
+  root.callbackPriority = newCallbackPriority;
   root.callbackNode = newCallbackNode;
 }
 
@@ -3196,7 +3196,7 @@ function scheduleInteractions(
   }
 
   if (interactions.size > 0) {
-    const pendingInteractionMap = root.pendingInteractionMap_new;
+    const pendingInteractionMap = root.pendingInteractionMap;
     const pendingInteractions = pendingInteractionMap.get(lane);
     if (pendingInteractions != null) {
       interactions.forEach(interaction => {
@@ -3245,15 +3245,13 @@ function startWorkOnPendingInteractions(root: FiberRoot, lanes: Lanes) {
   // we can accurately attribute time spent working on it, And so that cascading
   // work triggered during the render phase will be associated with it.
   const interactions: Set<Interaction> = new Set();
-  root.pendingInteractionMap_new.forEach(
-    (scheduledInteractions, scheduledLane) => {
-      if (includesSomeLane(lanes, scheduledLane)) {
-        scheduledInteractions.forEach(interaction =>
-          interactions.add(interaction),
-        );
-      }
-    },
-  );
+  root.pendingInteractionMap.forEach((scheduledInteractions, scheduledLane) => {
+    if (includesSomeLane(lanes, scheduledLane)) {
+      scheduledInteractions.forEach(interaction =>
+        interactions.add(interaction),
+      );
+    }
+  });
 
   // Store the current set of interactions on the FiberRoot for a few reasons:
   // We can re-use it in hot functions like performConcurrentWorkOnRoot()
@@ -3303,7 +3301,7 @@ function finishPendingInteractions(root, committedLanes) {
     // Clear completed interactions from the pending Map.
     // Unless the render was suspended or cascading work was scheduled,
     // In which case– leave pending interactions until the subsequent render.
-    const pendingInteractionMap = root.pendingInteractionMap_new;
+    const pendingInteractionMap = root.pendingInteractionMap;
     pendingInteractionMap.forEach((scheduledInteractions, lane) => {
       // Only decrement the pending interaction count if we're done.
       // If there's still work at the current priority,
