@@ -9,20 +9,24 @@ import ReactVersion from 'shared/ReactVersion';
 import invariant from 'shared/invariant';
 
 import {renderToString, renderToStaticMarkup} from './ReactDOMStringRenderer';
+import {
+  renderToBrowserStream,
+  renderToStaticBrowserStream,
+} from './ReactDOMBrowserStreamRenderer';
 
 function renderToNodeStream() {
   invariant(
     false,
-    'ReactDOMServer.renderToNodeStream(): The streaming API is not available ' +
-      'in the browser. Use ReactDOMServer.renderToString() instead.',
+    'ReactDOMServer.renderToNodeStream(): This streaming API is not available ' +
+      'in the browser. Use ReactDOMServer.renderToBrowserStream() instead.',
   );
 }
 
 function renderToStaticNodeStream() {
   invariant(
     false,
-    'ReactDOMServer.renderToStaticNodeStream(): The streaming API is not available ' +
-      'in the browser. Use ReactDOMServer.renderToStaticMarkup() instead.',
+    'ReactDOMServer.renderToStaticNodeStream(): This streaming API is not available ' +
+      'in the browser. Use ReactDOMServer.renderToStaticBrowserStream() instead.',
   );
 }
 
@@ -31,5 +35,7 @@ export {
   renderToStaticMarkup,
   renderToNodeStream,
   renderToStaticNodeStream,
+  renderToBrowserStream,
+  renderToStaticBrowserStream,
   ReactVersion as version,
 };

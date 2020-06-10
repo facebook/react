@@ -12,5 +12,7 @@ export {
   renderToStaticMarkup,
   renderToNodeStream,
   renderToStaticNodeStream,
+  renderToBrowserStream,
+  renderToStaticBrowserStream,
   version,
 } from './src/server/ReactDOMServerBrowser';

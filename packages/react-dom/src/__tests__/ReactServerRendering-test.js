@@ -621,6 +621,16 @@ describe('ReactDOMServer', () => {
       });
     });
   });
+  it('throws meaningfully for browser-only APIs', () => {
+    expect(() => ReactDOMServer.renderToBrowserStream(<div />)).toThrow(
+      'ReactDOMServer.renderToBrowserStream(): This streaming API is not available ' +
+        'in Node environement. Use ReactDOMServer.renderToNodeStream() instead.',
+    );
+    expect(() => ReactDOMServer.renderToStaticBrowserStream(<div />)).toThrow(
+      'ReactDOMServer.renderToStaticBrowserStream(): This streaming API is not available ' +
+        'in Node environement. Use ReactDOMServer.renderToStaticNodeStream() instead.',
+    );
+  });
 
   it('warns with a no-op when an async setState is triggered', () => {
     class Foo extends React.Component {

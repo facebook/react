@@ -54,14 +54,14 @@ describe('ReactServerRenderingBrowser', () => {
 
   it('throws meaningfully for server-only APIs', () => {
     expect(() => ReactDOMServerBrowser.renderToNodeStream(<div />)).toThrow(
-      'ReactDOMServer.renderToNodeStream(): The streaming API is not available ' +
-        'in the browser. Use ReactDOMServer.renderToString() instead.',
+      'ReactDOMServer.renderToNodeStream(): This streaming API is not available ' +
+        'in the browser. Use ReactDOMServer.renderToBrowserStream() instead.',
     );
     expect(() =>
       ReactDOMServerBrowser.renderToStaticNodeStream(<div />),
     ).toThrow(
-      'ReactDOMServer.renderToStaticNodeStream(): The streaming API is not available ' +
-        'in the browser. Use ReactDOMServer.renderToStaticMarkup() instead.',
+      'ReactDOMServer.renderToStaticNodeStream(): This streaming API is not available ' +
+        'in the browser. Use ReactDOMServer.renderToStaticBrowserStream() instead.',
     );
   });
 });
