@@ -22,6 +22,9 @@ describe('ReactServerRenderingBrowser', () => {
     // For extra isolation between what would be two bundles on npm
     jest.resetModuleRegistry();
     ReactDOMServerBrowser = require('react-dom/server.browser');
+    // add a Polyfill for ReadableStream API
+    const streams = require('web-streams-polyfill/ponyfill');
+    global.ReadableStream = streams.ReadableStream;
   });
 
   it('provides the same top-level API as react-dom/server', () => {
@@ -63,5 +66,67 @@ describe('ReactServerRenderingBrowser', () => {
       'ReactDOMServer.renderToStaticNodeStream(): This streaming API is not available ' +
         'in the browser. Use ReactDOMServer.renderToStaticBrowserStream() instead.',
     );
+  });
+
+  describe('renderToBrowserStream', () => {
+    it('should generate simple markup', async () => {
+      const SuccessfulElement = React.createElement(() => <img />);
+      const stream = ReactDOMServerBrowser.renderToBrowserStream(
+        SuccessfulElement,
+      );
+      const reader = stream.getReader();
+      const string = (await reader.read()).value;
+      expect(string).toMatch(new RegExp('<img data-reactroot=""' + '/>'));
+    });
+
+    it('should handle errors correctly', () => {
+      const FailingElement = React.createElement(() => {
+        throw new Error('An Error');
+      });
+      const stream = ReactDOMServerBrowser.renderToBrowserStream(
+        FailingElement,
+      );
+      const response = stream.getReader();
+      let handleError = false;
+      response
+        .read()
+        .catch(e => {
+          handleError = true;
+        })
+        .finally(() => {
+          expect(handleError).toBeTruthy();
+        });
+    });
+  });
+
+  describe('renderToStaticBrowserStream', () => {
+    it('should generate simple markup', async () => {
+      const SuccessfulElement = React.createElement(() => <img />);
+      const stream = ReactDOMServerBrowser.renderToStaticBrowserStream(
+        SuccessfulElement,
+      );
+      const reader = stream.getReader();
+      const string = (await reader.read()).value;
+      expect(string).toMatch(new RegExp('<img' + '/>'));
+    });
+
+    it('should handle errors correctly', () => {
+      const FailingElement = React.createElement(() => {
+        throw new Error('An Error');
+      });
+      const stream = ReactDOMServerBrowser.renderToStaticBrowserStream(
+        FailingElement,
+      );
+      const response = stream.getReader();
+      let handleError = false;
+      response
+        .read()
+        .catch(e => {
+          handleError = true;
+        })
+        .finally(() => {
+          expect(handleError).toBeTruthy();
+        });
+    });
   });
 });

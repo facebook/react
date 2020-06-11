@@ -13685,6 +13685,11 @@ web-ext@^3.0.0:
     yargs "13.2.4"
     zip-dir "1.0.2"
 
+web-streams-polyfill@^2.1.1:
+  version "2.1.1"
+  resolved "https://registry.yarnpkg.com/web-streams-polyfill/-/web-streams-polyfill-2.1.1.tgz#2c82b6193849ccb9efaa267772c28260ef68d6d2"
+  integrity sha512-dlNpL2aab3g8CKfGz6rl8FNmGaRWLLn2g/DtSc9IjB30mEdE6XxzPfPSig5BwGSzI+oLxHyETrQGKjrVVhbLCg==
+
 webidl-conversions@^4.0.2:
   version "4.0.2"
   resolved "https://registry.yarnpkg.com/webidl-conversions/-/webidl-conversions-4.0.2.tgz#a855980b1f0b6b359ba1d5d9fb39ae941faa63ad"
