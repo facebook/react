@@ -10,14 +10,17 @@ import ReactPartialRenderer from './ReactPartialRenderer';
 
 // This is a ReadableStream which wraps the ReactDOMPartialRenderer.
 function ReactMarkupReadableStream(element, makeStaticMarkup, options) {
-  const partialRenderer = new ReactPartialRenderer(
-    element,
-    makeStaticMarkup,
-    options,
-  );
+  let partialRenderer;
   return new ReadableStream({
     // Calls the ReadableStream(options). Consider exposing built-in
     // features like highWaterMark in the future.
+    start() {
+      partialRenderer = new ReactPartialRenderer(
+        element,
+        makeStaticMarkup,
+        options,
+      );
+    },
     pull(controller) {
       try {
         const chunk = partialRenderer.read(controller.desiredSize);
