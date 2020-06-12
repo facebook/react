@@ -29,8 +29,19 @@ export function disableLogs(): void {
       prevInfo = console.info;
       prevWarn = console.warn;
       prevError = console.error;
-      // $FlowFixMe Flow thinks console is immutable.
-      console.log = console.info = console.warn = console.error = disabledLog;
+      // https://github.com/facebook/react/issues/19099
+      const props = {
+        configurable: true,
+        enumerable: true,
+        value: disabledLog,
+        writable: true,
+      };
+      Object.defineProperties(console, {
+        info: props,
+        log: props,
+        warn: props,
+        error: props,
+      });
       /* eslint-enable react-internal/no-production-logging */
     }
     disabledDepth++;
@@ -42,14 +53,17 @@ export function reenableLogs(): void {
     disabledDepth--;
     if (disabledDepth === 0) {
       /* eslint-disable react-internal/no-production-logging */
-      // $FlowFixMe Flow thinks console is immutable.
-      console.log = prevLog;
-      // $FlowFixMe Flow thinks console is immutable.
-      console.info = prevInfo;
-      // $FlowFixMe Flow thinks console is immutable.
-      console.warn = prevWarn;
-      // $FlowFixMe Flow thinks console is immutable.
-      console.error = prevError;
+      const props = {
+        configurable: true,
+        enumerable: true,
+        writable: true,
+      };
+      Object.defineProperties(console, {
+        log: { ...props, value: prevLog },
+        info: { ...props, value: prevInfo },
+        warn: { ...props, value: prevWarn },
+        error: { ...props, value: prevError },
+      });
       /* eslint-enable react-internal/no-production-logging */
     }
     if (disabledDepth < 0) {
