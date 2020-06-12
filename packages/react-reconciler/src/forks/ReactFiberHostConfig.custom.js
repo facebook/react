@@ -51,8 +51,6 @@ export const appendInitialChild = $$$hostConfig.appendInitialChild;
 export const finalizeInitialChildren = $$$hostConfig.finalizeInitialChildren;
 export const prepareUpdate = $$$hostConfig.prepareUpdate;
 export const shouldSetTextContent = $$$hostConfig.shouldSetTextContent;
-export const shouldDeprioritizeSubtree =
-  $$$hostConfig.shouldDeprioritizeSubtree;
 export const createTextInstance = $$$hostConfig.createTextInstance;
 export const scheduleTimeout = $$$hostConfig.scheduleTimeout;
 export const cancelTimeout = $$$hostConfig.cancelTimeout;

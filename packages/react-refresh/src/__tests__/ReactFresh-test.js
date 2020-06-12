@@ -79,10 +79,7 @@ describe('ReactFresh', () => {
   // once the extra div wrapper is no longer neccessary.
   function LegacyHiddenDiv({children, mode}) {
     return (
-      <div
-        hidden={
-          mode === 'hidden' ? 'unstable-do-not-use-legacy-hidden' : undefined
-        }>
+      <div hidden={mode === 'hidden'}>
         <React.unstable_LegacyHidden
           mode={mode === 'hidden' ? 'unstable-defer-without-hiding' : mode}>
           {children}

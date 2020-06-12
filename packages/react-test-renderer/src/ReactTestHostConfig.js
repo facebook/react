@@ -218,10 +218,6 @@ export function shouldSetTextContent(type: string, props: Props): boolean {
   return false;
 }
 
-export function shouldDeprioritizeSubtree(type: string, props: Props): boolean {
-  return false;
-}
-
 export function createTextInstance(
   text: string,
   rootContainerInstance: Container,
