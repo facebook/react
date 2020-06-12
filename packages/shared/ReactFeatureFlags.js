@@ -87,7 +87,7 @@ export const enableTrustedTypesIntegration = false;
 // a deprecated pattern we want to get rid of in the future
 export const warnAboutSpreadingKeyToJSX = false;
 
-export const enableComponentStackLocations = __EXPERIMENTAL__;
+export const enableComponentStackLocations = true;
 
 export const enableNewReconciler = false;
 
