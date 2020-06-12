@@ -335,10 +335,6 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
 
     shouldSetTextContent,
 
-    shouldDeprioritizeSubtree(type: string, props: Props): boolean {
-      return !!props.hidden;
-    },
-
     createTextInstance(
       text: string,
       rootContainerInstance: Container,
