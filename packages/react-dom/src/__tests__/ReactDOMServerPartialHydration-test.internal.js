@@ -88,33 +88,17 @@ describe('ReactDOMServerPartialHydration', () => {
   });
 
   // Note: This is based on a similar component we use in www. We can delete
-  // once the unstable_LegacyHidden API exists in both forks, and once the
-  // extra div wrapper is no longer neccessary.
+  // once the extra div wrapper is no longer neccessary.
   function LegacyHiddenDiv({children, mode}) {
-    let wrappedChildren;
-    if (gate(flags => flags.new)) {
-      // The new reconciler does not support `<div hidden={true} />`. The
-      // equivalent behavior was moved to a special type, unstable_LegacyHidden.
-      // Eventually, we will replace this with an official API.
-      wrappedChildren = (
-        <React.unstable_LegacyHidden
-          mode={mode === 'hidden' ? 'unstable-defer-without-hiding' : mode}>
-          {children}
-        </React.unstable_LegacyHidden>
-      );
-    } else {
-      // The old reconciler fork does not support the new type. Use the old
-      // `<div hidden={true} />` API. Once we remove this branch, we can also
-      // remove the extra DOM node wrapper around the children.
-      wrappedChildren = children;
-    }
-
     return (
       <div
         hidden={
           mode === 'hidden' ? 'unstable-do-not-use-legacy-hidden' : undefined
         }>
-        {wrappedChildren}
+        <React.unstable_LegacyHidden
+          mode={mode === 'hidden' ? 'unstable-defer-without-hiding' : mode}>
+          {children}
+        </React.unstable_LegacyHidden>
       </div>
     );
   }

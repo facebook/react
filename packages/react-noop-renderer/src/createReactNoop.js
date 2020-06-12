@@ -214,7 +214,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
         ? computeText((newProps.children: any) + '', instance.context)
         : null,
       prop: newProps.prop,
-      hidden: newProps.hidden === true,
+      hidden: !!newProps.hidden,
       context: instance.context,
     };
     Object.defineProperty(clone, 'id', {
@@ -283,7 +283,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
           ? computeText((props.children: any) + '', hostContext)
           : null,
         prop: props.prop,
-        hidden: props.hidden === true,
+        hidden: !!props.hidden,
         context: hostContext,
       };
       // Hide from unit tests
@@ -490,7 +490,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
           }
           hostUpdateCounter++;
           instance.prop = newProps.prop;
-          instance.hidden = newProps.hidden === true;
+          instance.hidden = !!newProps.hidden;
           if (shouldSetTextContent(type, newProps)) {
             instance.text = computeText(
               (newProps.children: any) + '',

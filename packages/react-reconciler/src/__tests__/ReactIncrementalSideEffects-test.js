@@ -38,23 +38,20 @@ describe('ReactIncrementalSideEffects', () => {
     return {text: t, hidden: false};
   }
 
-  // TODO: Delete this once new API exists in both forks
-  function LegacyHiddenDiv({hidden, children, ...props}) {
-    if (gate(flags => flags.new)) {
-      return (
-        <div hidden={hidden} {...props}>
-          <React.unstable_LegacyHidden mode={hidden ? 'hidden' : 'visible'}>
-            {children}
-          </React.unstable_LegacyHidden>
-        </div>
-      );
-    } else {
-      return (
-        <div hidden={hidden} {...props}>
+  // Note: This is based on a similar component we use in www. We can delete
+  // once the extra div wrapper is no longer neccessary.
+  function LegacyHiddenDiv({children, mode}) {
+    return (
+      <div
+        hidden={
+          mode === 'hidden' ? 'unstable-do-not-use-legacy-hidden' : undefined
+        }>
+        <React.unstable_LegacyHidden
+          mode={mode === 'hidden' ? 'unstable-defer-without-hiding' : mode}>
           {children}
-        </div>
-      );
-    }
+        </React.unstable_LegacyHidden>
+      </div>
+    );
   }
 
   it('can update child nodes of a host instance', () => {
@@ -424,7 +421,7 @@ describe('ReactIncrementalSideEffects', () => {
     ]);
   });
 
-  // @gate enableLegacyHiddenType
+  // @gate experimental
   it('preserves a previously rendered node when deprioritized', () => {
     function Middle(props) {
       Scheduler.unstable_yieldValue('Middle');
@@ -435,7 +432,7 @@ describe('ReactIncrementalSideEffects', () => {
       Scheduler.unstable_yieldValue('Foo');
       return (
         <div>
-          <LegacyHiddenDiv hidden={true}>
+          <LegacyHiddenDiv mode="hidden">
             <Middle>{props.text}</Middle>
           </LegacyHiddenDiv>
         </div>
@@ -475,7 +472,7 @@ describe('ReactIncrementalSideEffects', () => {
     );
   });
 
-  // @gate enableLegacyHiddenType
+  // @gate experimental
   it('can reuse side-effects after being preempted', () => {
     function Bar(props) {
       Scheduler.unstable_yieldValue('Bar');
@@ -492,7 +489,7 @@ describe('ReactIncrementalSideEffects', () => {
     function Foo(props) {
       Scheduler.unstable_yieldValue('Foo');
       return (
-        <LegacyHiddenDiv hidden={true}>
+        <LegacyHiddenDiv mode="hidden">
           {props.step === 0 ? (
             <div>
               <Bar>Hi</Bar>
@@ -555,7 +552,7 @@ describe('ReactIncrementalSideEffects', () => {
     );
   });
 
-  // @gate enableLegacyHiddenType
+  // @gate experimental
   it('can reuse side-effects after being preempted, if shouldComponentUpdate is false', () => {
     class Bar extends React.Component {
       shouldComponentUpdate(nextProps) {
@@ -585,7 +582,7 @@ describe('ReactIncrementalSideEffects', () => {
     function Foo(props) {
       Scheduler.unstable_yieldValue('Foo');
       return (
-        <LegacyHiddenDiv hidden={true}>
+        <LegacyHiddenDiv mode="hidden">
           <Content step={props.step} text={props.text} />
         </LegacyHiddenDiv>
       );
@@ -671,11 +668,11 @@ describe('ReactIncrementalSideEffects', () => {
     expect(ReactNoop.getChildrenAsJSX()).toEqual(<span prop={3} />);
   });
 
-  // @gate enableLegacyHiddenType
+  // @gate experimental
   it('updates a child even though the old props is empty', () => {
     function Foo(props) {
       return (
-        <LegacyHiddenDiv hidden={true}>
+        <LegacyHiddenDiv mode="hidden">
           <span prop={1} />
         </LegacyHiddenDiv>
       );
@@ -911,7 +908,7 @@ describe('ReactIncrementalSideEffects', () => {
     expect(ops).toEqual(['Bar', 'Baz', 'Bar', 'Bar']);
   });
 
-  // @gate enableLegacyHiddenType
+  // @gate experimental
   it('deprioritizes setStates that happens within a deprioritized tree', () => {
     const barInstances = [];
 
@@ -934,7 +931,7 @@ describe('ReactIncrementalSideEffects', () => {
       return (
         <div>
           <span prop={props.tick} />
-          <LegacyHiddenDiv hidden={true}>
+          <LegacyHiddenDiv mode="hidden">
             <Bar idx={props.idx} />
             <Bar idx={props.idx} />
             <Bar idx={props.idx} />

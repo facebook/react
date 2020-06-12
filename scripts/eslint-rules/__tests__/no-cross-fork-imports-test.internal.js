@@ -54,6 +54,7 @@ ruleTester.run('eslint-rules/no-cross-fork-imports', rule, {
             'from the new fork.',
         },
       ],
+      output: "import {scheduleUpdateOnFiber} from './ReactFiberWorkLoop.old';",
     },
     {
       code:
@@ -66,6 +67,7 @@ ruleTester.run('eslint-rules/no-cross-fork-imports', rule, {
             'from the new fork.',
         },
       ],
+      output: "import {scheduleUpdateOnFiber} from './ReactFiberWorkLoop.old';",
     },
     {
       code: "import {scheduleUpdateOnFiber} from './ReactFiberWorkLoop.old';",
@@ -77,6 +79,7 @@ ruleTester.run('eslint-rules/no-cross-fork-imports', rule, {
             'from the old fork.',
         },
       ],
+      output: "import {scheduleUpdateOnFiber} from './ReactFiberWorkLoop.new';",
     },
     {
       code:
@@ -89,6 +92,7 @@ ruleTester.run('eslint-rules/no-cross-fork-imports', rule, {
             'from the old fork.',
         },
       ],
+      output: "import {scheduleUpdateOnFiber} from './ReactFiberWorkLoop.new';",
     },
   ],
 });

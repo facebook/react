@@ -45,23 +45,20 @@ describe('ReactIncrementalErrorHandling', () => {
     );
   }
 
-  // TODO: Delete this once new API exists in both forks
-  function LegacyHiddenDiv({hidden, children, ...props}) {
-    if (gate(flags => flags.new)) {
-      return (
-        <div hidden={hidden} {...props}>
-          <React.unstable_LegacyHidden mode={hidden ? 'hidden' : 'visible'}>
-            {children}
-          </React.unstable_LegacyHidden>
-        </div>
-      );
-    } else {
-      return (
-        <div hidden={hidden} {...props}>
+  // Note: This is based on a similar component we use in www. We can delete
+  // once the extra div wrapper is no longer neccessary.
+  function LegacyHiddenDiv({children, mode}) {
+    return (
+      <div
+        hidden={
+          mode === 'hidden' ? 'unstable-do-not-use-legacy-hidden' : undefined
+        }>
+        <React.unstable_LegacyHidden
+          mode={mode === 'hidden' ? 'unstable-defer-without-hiding' : mode}>
           {children}
-        </div>
-      );
-    }
+        </React.unstable_LegacyHidden>
+      </div>
+    );
   }
 
   it('recovers from errors asynchronously', () => {
@@ -289,7 +286,7 @@ describe('ReactIncrementalErrorHandling', () => {
     expect(ReactNoop.getChildren()).toEqual([span('Everything is fine.')]);
   });
 
-  // @gate enableLegacyHiddenType
+  // @gate experimental
   it('does not include offscreen work when retrying after an error', () => {
     function App(props) {
       if (props.isBroken) {
@@ -300,7 +297,7 @@ describe('ReactIncrementalErrorHandling', () => {
       return (
         <>
           Everything is fine
-          <LegacyHiddenDiv hidden={true}>
+          <LegacyHiddenDiv mode="hidden">
             <div>Offscreen content</div>
           </LegacyHiddenDiv>
         </>

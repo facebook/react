@@ -174,6 +174,7 @@ export function getInternalReactConstants(
       LazyComponent: 16,
       MemoComponent: 14,
       Mode: 8,
+      OffscreenComponent: 23, // Experimental
       Profiler: 12,
       SimpleMemoComponent: 15,
       SuspenseComponent: 13,
@@ -201,6 +202,7 @@ export function getInternalReactConstants(
       LazyComponent: -1, // Doesn't exist yet
       MemoComponent: -1, // Doesn't exist yet
       Mode: 10,
+      OffscreenComponent: -1, // Experimental
       Profiler: 15,
       SimpleMemoComponent: -1, // Doesn't exist yet
       SuspenseComponent: 16,
@@ -228,6 +230,7 @@ export function getInternalReactConstants(
       LazyComponent: -1, // Doesn't exist yet
       MemoComponent: -1, // Doesn't exist yet
       Mode: 11,
+      OffscreenComponent: -1, // Experimental
       Profiler: 15,
       SimpleMemoComponent: -1, // Doesn't exist yet
       SuspenseComponent: 16,
@@ -399,6 +402,7 @@ export function attach(
     IncompleteClassComponent,
     IndeterminateComponent,
     MemoComponent,
+    OffscreenComponent,
     SimpleMemoComponent,
     SuspenseComponent,
     SuspenseListComponent,
@@ -575,6 +579,7 @@ export function attach(
       case HostPortal:
       case HostText:
       case Fragment:
+      case OffscreenComponent:
         return true;
       case HostRoot:
         // It is never valid to filter the root element.
@@ -1210,28 +1215,41 @@ export function attach(
       // because we don't want to highlight every host node inside of a newly mounted subtree.
     }
 
-    const isTimedOutSuspense =
-      fiber.tag === ReactTypeOfWork.SuspenseComponent &&
-      fiber.memoizedState !== null;
-
-    if (isTimedOutSuspense) {
-      // Special case: if Suspense mounts in a timed-out state,
-      // get the fallback child from the inner fragment and mount
-      // it as if it was our own child. Updates handle this too.
-      const primaryChildFragment = fiber.child;
-      const fallbackChildFragment = primaryChildFragment
-        ? primaryChildFragment.sibling
-        : null;
-      const fallbackChild = fallbackChildFragment
-        ? fallbackChildFragment.child
-        : null;
-      if (fallbackChild !== null) {
-        mountFiberRecursively(
-          fallbackChild,
-          shouldIncludeInTree ? fiber : parentFiber,
-          true,
-          traceNearestHostComponentUpdate,
-        );
+    if (fiber.tag === ReactTypeOfWork.SuspenseComponent) {
+      const isTimedOut = fiber.memoizedState !== null;
+      if (isTimedOut) {
+        // Special case: if Suspense mounts in a timed-out state,
+        // get the fallback child from the inner fragment and mount
+        // it as if it was our own child. Updates handle this too.
+        const primaryChildFragment = fiber.child;
+        const fallbackChildFragment = primaryChildFragment
+          ? primaryChildFragment.sibling
+          : null;
+        const fallbackChild = fallbackChildFragment
+          ? fallbackChildFragment.child
+          : null;
+        if (fallbackChild !== null) {
+          mountFiberRecursively(
+            fallbackChild,
+            shouldIncludeInTree ? fiber : parentFiber,
+            true,
+            traceNearestHostComponentUpdate,
+          );
+        }
+      } else {
+        const areSuspenseChildrenConditionallyWrapped =
+          OffscreenComponent === -1;
+        const primaryChild: Fiber | null = areSuspenseChildrenConditionallyWrapped
+          ? fiber.child
+          : (fiber.child: any).child;
+        if (primaryChild !== null) {
+          mountFiberRecursively(
+            primaryChild,
+            shouldIncludeInTree ? fiber : parentFiber,
+            true,
+            traceNearestHostComponentUpdate,
+          );
+        }
       }
     } else {
       if (fiber.child !== null) {
@@ -2153,14 +2171,10 @@ export function attach(
       key,
       memoizedProps,
       memoizedState,
+      dependencies,
       tag,
       type,
     } = fiber;
-
-    const dependencies =
-      (fiber: any).dependencies ||
-      (fiber: any).dependencies_old ||
-      (fiber: any).dependencies_new;
 
     const elementType = getElementTypeForFiber(fiber);
 

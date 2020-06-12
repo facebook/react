@@ -53,23 +53,20 @@ describe('ReactSchedulerIntegration', () => {
     }
   }
 
-  // TODO: Delete this once new API exists in both forks
-  function LegacyHiddenDiv({hidden, children, ...props}) {
-    if (gate(flags => flags.new)) {
-      return (
-        <div hidden={hidden} {...props}>
-          <React.unstable_LegacyHidden mode={hidden ? 'hidden' : 'visible'}>
-            {children}
-          </React.unstable_LegacyHidden>
-        </div>
-      );
-    } else {
-      return (
-        <div hidden={hidden} {...props}>
+  // Note: This is based on a similar component we use in www. We can delete
+  // once the extra div wrapper is no longer neccessary.
+  function LegacyHiddenDiv({children, mode}) {
+    return (
+      <div
+        hidden={
+          mode === 'hidden' ? 'unstable-do-not-use-legacy-hidden' : undefined
+        }>
+        <React.unstable_LegacyHidden
+          mode={mode === 'hidden' ? 'unstable-defer-without-hiding' : mode}>
           {children}
-        </div>
-      );
-    }
+        </React.unstable_LegacyHidden>
+      </div>
+    );
   }
 
   it('flush sync has correct priority', () => {
@@ -370,7 +367,7 @@ describe('ReactSchedulerIntegration', () => {
     expect(Scheduler).toHaveYielded(['A', 'B', 'C']);
   });
 
-  // @gate enableLegacyHiddenType
+  // @gate experimental
   it('idle updates are not blocked by offscreen work', async () => {
     function Text({text}) {
       Scheduler.unstable_yieldValue(text);
@@ -381,7 +378,7 @@ describe('ReactSchedulerIntegration', () => {
       return (
         <>
           <Text text={`Visible: ` + label} />
-          <LegacyHiddenDiv hidden={true}>
+          <LegacyHiddenDiv mode="hidden">
             <Text text={`Hidden: ` + label} />
           </LegacyHiddenDiv>
         </>
