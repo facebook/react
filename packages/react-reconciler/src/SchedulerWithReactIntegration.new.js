@@ -17,8 +17,8 @@ import {enableSchedulerTracing} from 'shared/ReactFeatureFlags';
 import invariant from 'shared/invariant';
 import {
   SyncLanePriority,
-  getCurrentLanePriority,
-  setCurrentLanePriority,
+  getCurrentUpdateLanePriority,
+  setCurrentUpdateLanePriority,
 } from './ReactFiberLane';
 
 const {
@@ -176,11 +176,11 @@ function flushSyncCallbackQueueImpl() {
     // Prevent re-entrancy.
     isFlushingSyncQueue = true;
     let i = 0;
-    const previousLandPriority = getCurrentLanePriority();
+    const previousLandPriority = getCurrentUpdateLanePriority();
     try {
       const isSync = true;
       const queue = syncQueue;
-      setCurrentLanePriority(SyncLanePriority);
+      setCurrentUpdateLanePriority(SyncLanePriority);
       runWithPriority(ImmediatePriority, () => {
         for (; i < queue.length; i++) {
           let callback = queue[i];
@@ -202,7 +202,7 @@ function flushSyncCallbackQueueImpl() {
       );
       throw error;
     } finally {
-      setCurrentLanePriority(previousLandPriority);
+      setCurrentUpdateLanePriority(previousLandPriority);
       isFlushingSyncQueue = false;
     }
   }
