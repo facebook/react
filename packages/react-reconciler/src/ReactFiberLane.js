@@ -120,14 +120,14 @@ export const OffscreenLane: Lane = /*                   */ 0b1000000000000000000
 
 export const NoTimestamp = -1;
 
-let currentLanePriority: LanePriority = NoLanePriority;
+let currentUpdateLanePriority: LanePriority = NoLanePriority;
 
-export function getCurrentLanePriority(): LanePriority {
-  return currentLanePriority;
+export function getCurrentUpdateLanePriority(): LanePriority {
+  return currentUpdateLanePriority;
 }
 
-export function setCurrentLanePriority(newLanePriority: LanePriority) {
-  currentLanePriority = newLanePriority;
+export function setCurrentUpdateLanePriority(newLanePriority: LanePriority) {
+  currentUpdateLanePriority = newLanePriority;
 }
 
 // "Registers" used to "return" multiple values
