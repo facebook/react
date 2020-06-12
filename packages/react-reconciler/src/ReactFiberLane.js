@@ -49,10 +49,10 @@ const InputDiscreteHydrationLanePriority: LanePriority = 14;
 export const InputDiscreteLanePriority: LanePriority = 13;
 
 const InputContinuousHydrationLanePriority: LanePriority = 12;
-const InputContinuousLanePriority: LanePriority = 11;
+export const InputContinuousLanePriority: LanePriority = 11;
 
 const DefaultHydrationLanePriority: LanePriority = 10;
-const DefaultLanePriority: LanePriority = 9;
+export const DefaultLanePriority: LanePriority = 9;
 
 const TransitionShortHydrationLanePriority: LanePriority = 8;
 export const TransitionShortLanePriority: LanePriority = 7;
@@ -119,6 +119,16 @@ const IdleUpdateRangeEnd = 30;
 export const OffscreenLane: Lane = /*                   */ 0b1000000000000000000000000000000;
 
 export const NoTimestamp = -1;
+
+let currentLanePriority: LanePriority = NoLanePriority;
+
+export function getCurrentLanePriority(): LanePriority {
+  return currentLanePriority;
+}
+
+export function setCurrentLanePriority(newLanePriority: LanePriority) {
+  currentLanePriority = newLanePriority;
+}
 
 // "Registers" used to "return" multiple values
 // Used by getHighestPriorityLanes and getNextLanes:

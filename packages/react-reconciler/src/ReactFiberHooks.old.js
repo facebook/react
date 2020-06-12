@@ -33,11 +33,16 @@ import {NoMode, BlockingMode, DebugTracingMode} from './ReactTypeOfMode';
 import {
   NoLane,
   NoLanes,
+  DefaultLanePriority,
+  InputContinuousLanePriority,
   isSubsetOfLanes,
   mergeLanes,
   removeLanes,
   markRootEntangled,
   markRootMutableRead,
+  getCurrentLanePriority,
+  setCurrentLanePriority,
+  schedulerPriorityToLanePriority,
 } from './ReactFiberLane';
 import {readContext} from './ReactFiberNewContext.old';
 import {createDeprecatedResponderListener} from './ReactFiberDeprecatedEvents.old';
@@ -1502,25 +1507,43 @@ function rerenderDeferredValue<T>(
 
 function startTransition(setPending, config, callback) {
   const priorityLevel = getCurrentPriorityLevel();
-  runWithPriority(
-    priorityLevel < UserBlockingPriority ? UserBlockingPriority : priorityLevel,
-    () => {
-      setPending(true);
-    },
-  );
-  runWithPriority(
-    priorityLevel > NormalPriority ? NormalPriority : priorityLevel,
-    () => {
-      const previousConfig = ReactCurrentBatchConfig.suspense;
-      ReactCurrentBatchConfig.suspense = config === undefined ? null : config;
-      try {
-        setPending(false);
-        callback();
-      } finally {
-        ReactCurrentBatchConfig.suspense = previousConfig;
-      }
-    },
-  );
+  const previousLanePriority = getCurrentLanePriority();
+  try {
+    setCurrentLanePriority(
+      priorityLevel < UserBlockingPriority
+        ? InputContinuousLanePriority
+        : schedulerPriorityToLanePriority(priorityLevel),
+    );
+    runWithPriority(
+      priorityLevel < UserBlockingPriority
+        ? UserBlockingPriority
+        : priorityLevel,
+      () => {
+        setPending(true);
+      },
+    );
+
+    setCurrentLanePriority(
+      priorityLevel > NormalPriority
+        ? DefaultLanePriority
+        : schedulerPriorityToLanePriority(priorityLevel),
+    );
+    runWithPriority(
+      priorityLevel > NormalPriority ? NormalPriority : priorityLevel,
+      () => {
+        const previousConfig = ReactCurrentBatchConfig.suspense;
+        ReactCurrentBatchConfig.suspense = config === undefined ? null : config;
+        try {
+          setPending(false);
+          callback();
+        } finally {
+          ReactCurrentBatchConfig.suspense = previousConfig;
+        }
+      },
+    );
+  } finally {
+    setCurrentLanePriority(previousLanePriority);
+  }
 }
 
 function mountTransition(
