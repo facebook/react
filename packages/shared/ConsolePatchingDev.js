@@ -36,6 +36,7 @@ export function disableLogs(): void {
         value: disabledLog,
         writable: true,
       };
+      // $FlowFixMe Flow thinks console is immutable.
       Object.defineProperties(console, {
         info: props,
         log: props,
@@ -58,11 +59,12 @@ export function reenableLogs(): void {
         enumerable: true,
         writable: true,
       };
+      // $FlowFixMe Flow thinks console is immutable.
       Object.defineProperties(console, {
-        log: { ...props, value: prevLog },
-        info: { ...props, value: prevInfo },
-        warn: { ...props, value: prevWarn },
-        error: { ...props, value: prevError },
+        log: {...props, value: prevLog},
+        info: {...props, value: prevInfo},
+        warn: {...props, value: prevWarn},
+        error: {...props, value: prevError},
       });
       /* eslint-enable react-internal/no-production-logging */
     }
