@@ -118,7 +118,9 @@ it('warns when using the wrong act version - test + dom: updates', () => {
     TestRenderer.act(() => {
       setCtr(1);
     });
-  }).toWarnDev(["It looks like you're using the wrong act()"]);
+  }).toWarnDev(["It looks like you're using the wrong act()"], {
+    withoutStack: true,
+  });
 });
 
 it('warns when using the wrong act version - dom + test: .create()', () => {
@@ -154,7 +156,9 @@ it('warns when using the wrong act version - dom + test: updates', () => {
     TestUtils.act(() => {
       setCtr(1);
     });
-  }).toWarnDev(["It looks like you're using the wrong act()"]);
+  }).toWarnDev(["It looks like you're using the wrong act()"], {
+    withoutStack: true,
+  });
 });
 
 it('does not warn when nesting react-act inside react-dom', () => {
