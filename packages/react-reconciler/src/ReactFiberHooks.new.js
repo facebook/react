@@ -30,16 +30,16 @@ import {NoMode, BlockingMode} from './ReactTypeOfMode';
 import {
   NoLane,
   NoLanes,
+  DefaultLanePriority,
   InputContinuousLanePriority,
   isSubsetOfLanes,
   mergeLanes,
   removeLanes,
   markRootEntangled,
   markRootMutableRead,
-  getCurrentUpdateLanePriority,
-  setCurrentUpdateLanePriority,
-  higherLanePriority,
-  DefaultLanePriority,
+  getCurrentLanePriority,
+  setCurrentLanePriority,
+  schedulerPriorityToLanePriority,
 } from './ReactFiberLane';
 import {readContext} from './ReactFiberNewContext.new';
 import {createDeprecatedResponderListener} from './ReactFiberDeprecatedEvents.new';
@@ -1503,34 +1503,43 @@ function rerenderDeferredValue<T>(
 
 function startTransition(setPending, config, callback) {
   const priorityLevel = getCurrentPriorityLevel();
-  const previousLanePriority = getCurrentUpdateLanePriority();
-  setCurrentUpdateLanePriority(
-    higherLanePriority(previousLanePriority, InputContinuousLanePriority),
-  );
-  runWithPriority(
-    priorityLevel < UserBlockingPriority ? UserBlockingPriority : priorityLevel,
-    () => {
-      setPending(true);
-    },
-  );
+  const previousLanePriority = getCurrentLanePriority();
+  try {
+    setCurrentLanePriority(
+      priorityLevel < UserBlockingPriority
+        ? InputContinuousLanePriority
+        : schedulerPriorityToLanePriority(priorityLevel),
+    );
+    runWithPriority(
+      priorityLevel < UserBlockingPriority
+        ? UserBlockingPriority
+        : priorityLevel,
+      () => {
+        setPending(true);
+      },
+    );
 
-  // If there's no SuspenseConfig set, we'll use the DefaultLanePriority for this transition.
-  setCurrentUpdateLanePriority(DefaultLanePriority);
-
-  runWithPriority(
-    priorityLevel > NormalPriority ? NormalPriority : priorityLevel,
-    () => {
-      const previousConfig = ReactCurrentBatchConfig.suspense;
-      ReactCurrentBatchConfig.suspense = config === undefined ? null : config;
-      try {
-        setPending(false);
-        callback();
-      } finally {
-        setCurrentUpdateLanePriority(previousLanePriority);
-        ReactCurrentBatchConfig.suspense = previousConfig;
-      }
-    },
-  );
+    setCurrentLanePriority(
+      priorityLevel > NormalPriority
+        ? DefaultLanePriority
+        : schedulerPriorityToLanePriority(priorityLevel),
+    );
+    runWithPriority(
+      priorityLevel > NormalPriority ? NormalPriority : priorityLevel,
+      () => {
+        const previousConfig = ReactCurrentBatchConfig.suspense;
+        ReactCurrentBatchConfig.suspense = config === undefined ? null : config;
+        try {
+          setPending(false);
+          callback();
+        } finally {
+          ReactCurrentBatchConfig.suspense = previousConfig;
+        }
+      },
+    );
+  } finally {
+    setCurrentLanePriority(previousLanePriority);
+  }
 }
 
 function mountTransition(

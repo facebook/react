@@ -120,14 +120,14 @@ export const OffscreenLane: Lane = /*                   */ 0b1000000000000000000
 
 export const NoTimestamp = -1;
 
-let currentUpdateLanePriority: LanePriority = NoLanePriority;
+let currentLanePriority: LanePriority = NoLanePriority;
 
-export function getCurrentUpdateLanePriority(): LanePriority {
-  return currentUpdateLanePriority;
+export function getCurrentLanePriority(): LanePriority {
+  return currentLanePriority;
 }
 
-export function setCurrentUpdateLanePriority(newLanePriority: LanePriority) {
-  currentUpdateLanePriority = newLanePriority;
+export function setCurrentLanePriority(newLanePriority: LanePriority) {
+  currentLanePriority = newLanePriority;
 }
 
 // "Registers" used to "return" multiple values
@@ -659,13 +659,6 @@ export function laneToLanes(lane: Lane): Lanes {
 export function higherPriorityLane(a: Lane, b: Lane) {
   // This works because the bit ranges decrease in priority as you go left.
   return a !== NoLane && a < b ? a : b;
-}
-
-export function higherLanePriority(
-  a: LanePriority,
-  b: LanePriority,
-): LanePriority {
-  return a !== NoLanePriority && a > b ? a : b;
 }
 
 export function createLaneMap<T>(initial: T): LaneMap<T> {

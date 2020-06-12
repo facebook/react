@@ -26,7 +26,7 @@ import {
   enableSchedulerTracing,
   warnAboutUnmockedScheduler,
   deferRenderPhaseUpdateToNextBatch,
-  decoupleUpdatePriorityFromScheduler,
+  enableCurrentLanePriority,
 } from 'shared/ReactFeatureFlags';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import invariant from 'shared/invariant';
@@ -132,8 +132,8 @@ import {
   hasUpdatePriority,
   getNextLanes,
   returnNextLanesPriority,
-  setCurrentUpdateLanePriority,
-  getCurrentUpdateLanePriority,
+  setCurrentLanePriority,
+  getCurrentLanePriority,
   markStarvedLanesAsExpired,
   getLanesToRetrySynchronouslyOnError,
   markRootUpdated,
@@ -398,6 +398,7 @@ export function requestUpdateLane(
     currentEventWipLanes = workInProgressRootIncludedLanes;
   }
 
+  let lane;
   if (suspenseConfig !== null) {
     // Use the size of the timeout as a heuristic to prioritize shorter
     // transitions over longer ones.
@@ -415,56 +416,32 @@ export function requestUpdateLane(
           : NoLanes;
     }
 
-    return findTransitionLane(
+    lane = findTransitionLane(
       transitionLanePriority,
       currentEventWipLanes,
       currentEventPendingLanes,
     );
-  }
-
-  // TODO: Remove this dependency on the Scheduler priority.
-  // To do that, we're replacing it with an update lane priority.
-  const schedulerPriority = getCurrentPriorityLevel();
-
-  // The old behavior was using the priority level of the Scheduler.
-  // This couples React to the Scheduler internals, so we're replacing it
-  // with the currentUpdateLanePriority above. As an example of how this
-  // could be problematic, if we're not inside `Scheduler.runWithPriority`,
-  // then we'll get the priority of the current running Scheduler task,
-  // which is probably not what we want.
-  let lane;
-  if (
-    // TODO: Temporary. We're removing the concept of discrete updates.
-    (executionContext & DiscreteEventContext) !== NoContext &&
-    schedulerPriority === UserBlockingSchedulerPriority
+  } else if (
+    enableCurrentLanePriority &&
+    getCurrentLanePriority() !== NoLanePriority
   ) {
-    lane = findUpdateLane(InputDiscreteLanePriority, currentEventWipLanes);
+    const currentLanePriority = getCurrentLanePriority();
+    lane = findUpdateLane(currentLanePriority, currentEventWipLanes);
   } else {
-    const schedulerLanePriority = schedulerPriorityToLanePriority(
-      schedulerPriority,
-    );
+    // TODO: If we're not inside `runWithPriority`, this returns the priority
+    // of the currently running task. That's probably not what we want.
+    const schedulerPriority = getCurrentPriorityLevel();
 
-    if (decoupleUpdatePriorityFromScheduler) {
-      // In the new strategy, we will track the current update lane priority
-      // inside React and use that priority to select a lane for this update.
-      // For now, we're just logging when they're different so we can assess.
-      const currentUpdateLanePriority = getCurrentUpdateLanePriority();
-
-      if (
-        schedulerLanePriority !== currentUpdateLanePriority &&
-        currentUpdateLanePriority !== NoLanePriority
-      ) {
-        if (__DEV__) {
-          console.error(
-            'Expected current scheduler lane priority %s to match current update lane priority %s',
-            schedulerLanePriority,
-            currentUpdateLanePriority,
-          );
-        }
-      }
+    if (
+      // TODO: Temporary. We're removing the concept of discrete updates.
+      (executionContext & DiscreteEventContext) !== NoContext &&
+      schedulerPriority === UserBlockingSchedulerPriority
+    ) {
+      lane = findUpdateLane(InputDiscreteLanePriority, currentEventWipLanes);
+    } else {
+      const lanePriority = schedulerPriorityToLanePriority(schedulerPriority);
+      lane = findUpdateLane(lanePriority, currentEventWipLanes);
     }
-
-    lane = findUpdateLane(schedulerLanePriority, currentEventWipLanes);
   }
 
   return lane;
@@ -1101,12 +1078,12 @@ export function flushDiscreteUpdates() {
 
 export function deferredUpdates<A>(fn: () => A): A {
   // TODO: Remove in favor of Scheduler.next
-  const previousLanePriority = getCurrentUpdateLanePriority();
+  const previousLanePriority = getCurrentLanePriority();
   try {
-    setCurrentUpdateLanePriority(DefaultLanePriority);
+    setCurrentLanePriority(DefaultLanePriority);
     return runWithPriority(NormalSchedulerPriority, fn);
   } finally {
-    setCurrentUpdateLanePriority(previousLanePriority);
+    setCurrentLanePriority(previousLanePriority);
   }
 }
 
@@ -1162,16 +1139,16 @@ export function discreteUpdates<A, B, C, D, R>(
 ): R {
   const prevExecutionContext = executionContext;
   executionContext |= DiscreteEventContext;
-  const previousLanePriority = getCurrentUpdateLanePriority();
+  const previousLanePriority = getCurrentLanePriority();
   try {
-    setCurrentUpdateLanePriority(InputDiscreteLanePriority);
+    setCurrentLanePriority(InputDiscreteLanePriority);
     // Should this
     return runWithPriority(
       UserBlockingSchedulerPriority,
       fn.bind(null, a, b, c, d),
     );
   } finally {
-    setCurrentUpdateLanePriority(previousLanePriority);
+    setCurrentLanePriority(previousLanePriority);
     executionContext = prevExecutionContext;
     if (executionContext === NoContext) {
       // Flush the immediate callbacks that were scheduled during this batch
@@ -1208,16 +1185,16 @@ export function flushSync<A, R>(fn: A => R, a: A): R {
     return fn(a);
   }
   executionContext |= BatchedContext;
-  const previousLanePriority = getCurrentUpdateLanePriority();
+  const previousLanePriority = getCurrentLanePriority();
   try {
-    setCurrentUpdateLanePriority(SyncLanePriority);
+    setCurrentLanePriority(SyncLanePriority);
     if (fn) {
       return runWithPriority(ImmediateSchedulerPriority, fn.bind(null, a));
     } else {
       return (undefined: $FlowFixMe);
     }
   } finally {
-    setCurrentUpdateLanePriority(previousLanePriority);
+    setCurrentLanePriority(previousLanePriority);
     executionContext = prevExecutionContext;
     // Flush the immediate callbacks that were scheduled during this batch.
     // Note that this will happen even if batchedUpdates is higher up
@@ -1229,12 +1206,12 @@ export function flushSync<A, R>(fn: A => R, a: A): R {
 export function flushControlled(fn: () => mixed): void {
   const prevExecutionContext = executionContext;
   executionContext |= BatchedContext;
-  const previousLanePriority = getCurrentUpdateLanePriority();
+  const previousLanePriority = getCurrentLanePriority();
   try {
-    setCurrentUpdateLanePriority(SyncLanePriority);
+    setCurrentLanePriority(SyncLanePriority);
     runWithPriority(ImmediateSchedulerPriority, fn);
   } finally {
-    setCurrentUpdateLanePriority(previousLanePriority);
+    setCurrentLanePriority(previousLanePriority);
     executionContext = prevExecutionContext;
     if (executionContext === NoContext) {
       // Flush the immediate callbacks that were scheduled during this batch
@@ -1825,10 +1802,16 @@ function resetChildLanes(completedWork: Fiber) {
 
 function commitRoot(root) {
   const renderPriorityLevel = getCurrentPriorityLevel();
-  runWithPriority(
-    ImmediateSchedulerPriority,
-    commitRootImpl.bind(null, root, renderPriorityLevel),
-  );
+  const previousLanePriority = getCurrentLanePriority();
+  try {
+    setCurrentLanePriority(SyncLanePriority);
+    runWithPriority(
+      ImmediateSchedulerPriority,
+      commitRootImpl.bind(null, root, renderPriorityLevel),
+    );
+  } finally {
+    setCurrentLanePriority(previousLanePriority);
+  }
   return null;
 }
 
@@ -1915,9 +1898,6 @@ function commitRootImpl(root, renderPriorityLevel) {
   }
 
   if (firstEffect !== null) {
-    const previousLanePriority = getCurrentUpdateLanePriority();
-    setCurrentUpdateLanePriority(SyncLanePriority);
-
     const prevExecutionContext = executionContext;
     executionContext |= CommitContext;
     const prevInteractions = pushInteractions(root);
@@ -2038,9 +2018,6 @@ function commitRootImpl(root, renderPriorityLevel) {
       popInteractions(((prevInteractions: any): Set<Interaction>));
     }
     executionContext = prevExecutionContext;
-
-    // Reset the priority to the previous non-sync value.
-    setCurrentUpdateLanePriority(previousLanePriority);
   } else {
     // No effects.
     root.current = finishedWork;
@@ -2303,14 +2280,12 @@ export function flushPassiveEffects() {
         ? NormalSchedulerPriority
         : pendingPassiveEffectsRenderPriority;
     pendingPassiveEffectsRenderPriority = NoSchedulerPriority;
-    const previousLanePriority = getCurrentUpdateLanePriority();
+    const previousLanePriority = getCurrentLanePriority();
     try {
-      setCurrentUpdateLanePriority(
-        schedulerPriorityToLanePriority(priorityLevel),
-      );
+      setCurrentLanePriority(schedulerPriorityToLanePriority(priorityLevel));
       return runWithPriority(priorityLevel, flushPassiveEffectsImpl);
     } finally {
-      setCurrentUpdateLanePriority(previousLanePriority);
+      setCurrentLanePriority(previousLanePriority);
     }
   }
 }
