@@ -241,6 +241,13 @@ export function click(payload) {
   });
 }
 
+export function contextmenuleftclick(payload) {
+  return createMouseEvent('contextmenu', {
+    button: buttonType.secondary,
+    ...payload,
+  });
+}
+
 export function contextmenu(payload) {
   return createMouseEvent('contextmenu', {
     ...payload,

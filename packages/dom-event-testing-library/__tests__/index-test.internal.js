@@ -58,6 +58,7 @@ describe('createEventTarget', () => {
         "keyup",
         "scroll",
         "virtualclick",
+        "contextmenuleftclick",
         "contextmenu",
         "pointercancel",
         "pointerdown",
