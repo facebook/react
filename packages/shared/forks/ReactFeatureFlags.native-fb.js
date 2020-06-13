@@ -18,6 +18,7 @@ export const enableSchedulerTracing = __PROFILE__;
 export const enableSuspenseServerRenderer = false;
 export const enableSelectiveHydration = false;
 export const enableBlocksAPI = false;
+export const enableLazyElements = false;
 export const enableSchedulerDebugging = false;
 export const debugRenderPhaseSideEffectsForStrictMode = true;
 export const disableJavaScriptURLs = false;
@@ -38,8 +39,6 @@ export const enableTrustedTypesIntegration = false;
 export const disableTextareaChildren = false;
 export const disableModulePatternComponents = false;
 export const warnUnstableRenderSubtreeIntoContainer = false;
-export const deferPassiveEffectCleanupDuringUnmount = false;
-export const runAllPassiveEffectDestroysBeforeCreates = false;
 export const enableModernEventSystem = false;
 export const warnAboutSpreadingKeyToJSX = false;
 export const enableComponentStackLocations = false;
@@ -48,7 +47,6 @@ export const enableFilterEmptyStringAttributesDOM = false;
 
 export const enableNewReconciler = false;
 export const deferRenderPhaseUpdateToNextBatch = true;
-export const disableHiddenPropDeprioritization = true;
 
 // Flow magic to verify the exports of this file match the original version.
 // eslint-disable-next-line no-unused-vars

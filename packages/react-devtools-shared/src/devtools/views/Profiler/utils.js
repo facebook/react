@@ -99,7 +99,7 @@ export function prepareProfilingDataFrontendFromBackendAndStore(
     );
   });
 
-  return {dataForRoots};
+  return {dataForRoots, imported: false};
 }
 
 // Converts a Profiling data export into the format required by the Store.
@@ -156,7 +156,7 @@ export function prepareProfilingDataFrontendFromExport(
     },
   );
 
-  return {dataForRoots};
+  return {dataForRoots, imported: true};
 }
 
 // Converts a Store Profiling data into a format that can be safely (JSON) serialized for export.

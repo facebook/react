@@ -323,10 +323,6 @@ export function resetTextContent(domElement) {
   // Noop
 }
 
-export function shouldDeprioritizeSubtree(type, props) {
-  return false;
-}
-
 export function getRootHostContext() {
   return NO_CONTEXT;
 }

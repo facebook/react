@@ -37,6 +37,9 @@ module.exports = {
     // Flight Webpack
     __webpack_chunk_load__: true,
     __webpack_require__: true,
+
+    // jest
+    expect: true,
   },
   parserOptions: {
     ecmaVersion: 5,

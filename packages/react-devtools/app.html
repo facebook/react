@@ -95,12 +95,25 @@
         text-align: center;
         margin-top: 1rem;
       }
+
+      .prompt,
+      .confirmation {
+        margin-bottom: 0.25rem;
+      }
+
+      .confirmation {
+        font-style: italic;
+      }
+
+      .hidden {
+        display: none;
+      }
     </style>
   </head>
   <body>
     <div id="container" class="container" style="-webkit-user-select: none; -webkit-app-region: drag;">
       <div class="waiting-header">Waiting for React to connect…</div>
-      <div class="boxes">
+      <div class="boxes" style="-webkit-app-region: none;">
         <div class="box">
           <div class="box-header">React Native</div>
           <div class="box-content">
@@ -115,7 +128,12 @@
         <div class="box">
           <div class="box-header">React DOM</div>
           <div class="box-content">
-            Add one of the following:
+            <div id="box-content-prompt" class="prompt">
+              Add one of the following (click to copy):
+            </div>
+            <div id="box-content-confirmation" class="confirmation hidden">
+              Copied to clipboard.
+            </div>
             <span class="input" contenteditable="true" id="localhost"></span>
             <span class="input" contenteditable="true" id="byip"></span>
             to the top of the page you want to debug,
@@ -127,18 +145,35 @@
       </div>
     </div>
     <script>
+      const {clipboard} = require("electron");
       const port = process.env.PORT || 8097;
       const localIp = require("ip").address();
       const $ = document.querySelector.bind(document);
+      const $promptDiv = $("#box-content-prompt");
+      const $confirmationDiv = $("#box-content-confirmation");
+      let timeoutID;
 
-      function selectAll(event) {
+      function selectAllAndCopy(event) {
         const element = event.target;
         if (window.getSelection) {
-          const selection = window.getSelection();        
+          const selection = window.getSelection();
           const range = document.createRange();
           range.selectNodeContents(element);
           selection.removeAllRanges();
           selection.addRange(range);
+          clipboard.writeText(event.target.textContent);
+
+          $promptDiv.classList.add('hidden');
+          $confirmationDiv.classList.remove('hidden');
+
+          if (timeoutID) {
+            clearTimeout(timeoutID);
+          }
+
+          timeoutID = setTimeout(() => {
+            $promptDiv.classList.remove('hidden');
+            $confirmationDiv.classList.add('hidden');
+          }, 1000);
         }
       }
 
@@ -150,13 +185,13 @@
 
       const $localhost = $("#localhost");
       $localhost.innerText = `<script src="http://localhost:${port}"></` + 'script>';
-      $localhost.addEventListener('click', selectAll);
-      $localhost.addEventListener('focus', selectAll);
+      $localhost.addEventListener('click', selectAllAndCopy);
+      $localhost.addEventListener('focus', selectAllAndCopy);
 
       const $byIp = $("#byip");
       $byIp.innerText = `<script src="http://${localIp}:${port}"></` + 'script>';
-      $byIp.addEventListener('click', selectAll);
-      $byIp.addEventListener('focus', selectAll);
+      $byIp.addEventListener('click', selectAllAndCopy);
+      $byIp.addEventListener('focus', selectAllAndCopy);
 
       let devtools;
       try {

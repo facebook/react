@@ -87,6 +87,19 @@ describe('ReactDOMServerPartialHydration', () => {
     SuspenseList = React.SuspenseList;
   });
 
+  // Note: This is based on a similar component we use in www. We can delete
+  // once the extra div wrapper is no longer neccessary.
+  function LegacyHiddenDiv({children, mode}) {
+    return (
+      <div hidden={mode === 'hidden'}>
+        <React.unstable_LegacyHidden
+          mode={mode === 'hidden' ? 'unstable-defer-without-hiding' : mode}>
+          {children}
+        </React.unstable_LegacyHidden>
+      </div>
+    );
+  }
+
   // @gate experimental
   it('hydrates a parent even if a child Suspense boundary is blocked', async () => {
     let suspend = false;
@@ -532,6 +545,80 @@ describe('ReactDOMServerPartialHydration', () => {
 
     // Render an update, which will be higher or the same priority as pinging the hydration.
     root.render(<App text="Hi" className="hi" />);
+
+    // At the same time, resolving the promise so that rendering can complete.
+    suspend = false;
+    resolve();
+    await promise;
+
+    // This should first complete the hydration and then flush the update onto the hydrated state.
+    Scheduler.unstable_flushAll();
+    jest.runAllTimers();
+
+    // The new span should be the same since we should have successfully hydrated
+    // before changing it.
+    const newSpan = container.getElementsByTagName('span')[0];
+    expect(span).toBe(newSpan);
+
+    // We should now have fully rendered with a ref on the new span.
+    expect(ref.current).toBe(span);
+    expect(span.textContent).toBe('Hi');
+    // If we ended up hydrating the existing content, we won't have properly
+    // patched up the tree, which might mean we haven't patched the className.
+    expect(span.className).toBe('hi');
+  });
+
+  // @gate experimental
+  it('blocks updates to hydrate the content first if props changed at idle priority', async () => {
+    let suspend = false;
+    let resolve;
+    const promise = new Promise(resolvePromise => (resolve = resolvePromise));
+    const ref = React.createRef();
+
+    function Child({text}) {
+      if (suspend) {
+        throw promise;
+      } else {
+        return text;
+      }
+    }
+
+    function App({text, className}) {
+      return (
+        <div>
+          <Suspense fallback="Loading...">
+            <span ref={ref} className={className}>
+              <Child text={text} />
+            </span>
+          </Suspense>
+        </div>
+      );
+    }
+
+    suspend = false;
+    const finalHTML = ReactDOMServer.renderToString(
+      <App text="Hello" className="hello" />,
+    );
+    const container = document.createElement('div');
+    container.innerHTML = finalHTML;
+
+    const span = container.getElementsByTagName('span')[0];
+
+    // On the client we don't have all data yet but we want to start
+    // hydrating anyway.
+    suspend = true;
+    const root = ReactDOM.createRoot(container, {hydrate: true});
+    root.render(<App text="Hello" className="hello" />);
+    Scheduler.unstable_flushAll();
+    jest.runAllTimers();
+
+    expect(ref.current).toBe(null);
+    expect(span.textContent).toBe('Hello');
+
+    // Schedule an update at idle priority
+    Scheduler.unstable_runWithPriority(Scheduler.unstable_IdlePriority, () => {
+      root.render(<App text="Hi" className="hi" />);
+    });
 
     // At the same time, resolving the promise so that rendering can complete.
     suspend = false;
@@ -2808,5 +2895,93 @@ describe('ReactDOMServerPartialHydration', () => {
 
     // Now we're hydrated.
     expect(ref.current).not.toBe(null);
+  });
+
+  // This test fails, in both forks. Without a boundary, the deferred tree won't
+  // re-enter hydration mode. It doesn't come up in practice because there's
+  // always a parent Suspense boundary. But it's still a bug. Leaving for a
+  // follow up.
+  //
+  // @gate FIXME
+  // @gate experimental
+  it('hydrates a hidden subtree outside of a Suspense boundary', async () => {
+    const ref = React.createRef();
+
+    function App() {
+      return (
+        <LegacyHiddenDiv mode="hidden">
+          <span ref={ref}>Hidden child</span>
+        </LegacyHiddenDiv>
+      );
+    }
+
+    const finalHTML = ReactDOMServer.renderToString(<App />);
+
+    const container = document.createElement('div');
+    container.innerHTML = finalHTML;
+
+    const span = container.getElementsByTagName('span')[0];
+    expect(span.innerHTML).toBe('Hidden child');
+
+    const root = ReactDOM.createRoot(container, {hydrate: true});
+    root.render(<App />);
+    Scheduler.unstable_flushAll();
+    expect(ref.current).toBe(span);
+    expect(span.innerHTML).toBe('Hidden child');
+  });
+
+  // @gate experimental
+  it('renders a hidden LegacyHidden component inside a Suspense boundary', async () => {
+    const ref = React.createRef();
+
+    function App() {
+      return (
+        <Suspense fallback="Loading...">
+          <LegacyHiddenDiv mode="hidden">
+            <span ref={ref}>Hidden child</span>
+          </LegacyHiddenDiv>
+        </Suspense>
+      );
+    }
+
+    const finalHTML = ReactDOMServer.renderToString(<App />);
+
+    const container = document.createElement('div');
+    container.innerHTML = finalHTML;
+
+    const span = container.getElementsByTagName('span')[0];
+    expect(span.innerHTML).toBe('Hidden child');
+
+    const root = ReactDOM.createRoot(container, {hydrate: true});
+    root.render(<App />);
+    Scheduler.unstable_flushAll();
+    expect(ref.current).toBe(span);
+    expect(span.innerHTML).toBe('Hidden child');
+  });
+
+  // @gate experimental
+  it('renders a visible LegacyHidden component', async () => {
+    const ref = React.createRef();
+
+    function App() {
+      return (
+        <LegacyHiddenDiv mode="visible">
+          <span ref={ref}>Hidden child</span>
+        </LegacyHiddenDiv>
+      );
+    }
+
+    const finalHTML = ReactDOMServer.renderToString(<App />);
+
+    const container = document.createElement('div');
+    container.innerHTML = finalHTML;
+
+    const span = container.getElementsByTagName('span')[0];
+
+    const root = ReactDOM.createRoot(container, {hydrate: true});
+    root.render(<App />);
+    Scheduler.unstable_flushAll();
+    expect(ref.current).toBe(span);
+    expect(ref.current.innerHTML).toBe('Hidden child');
   });
 });

@@ -34,7 +34,6 @@
     "server.browser.js",
     "server.node.js",
     "test-utils.js",
-    "unstable-fire.js",
     "unstable-fizz.js",
     "unstable-fizz.browser.js",
     "unstable-fizz.node.js",

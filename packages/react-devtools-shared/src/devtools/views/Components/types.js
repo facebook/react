@@ -88,6 +88,13 @@ export type InspectedElement = {|
   source: Source | null,
 
   type: ElementType,
+
+  // Meta information about the root this element belongs to.
+  rootType: string | null,
+
+  // Meta information about the renderer that created this element.
+  rendererPackageName: string | null,
+  rendererVersion: string | null,
 |};
 
 // TODO: Add profiling type

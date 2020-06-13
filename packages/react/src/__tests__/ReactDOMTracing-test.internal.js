@@ -55,27 +55,17 @@ function loadModules() {
   });
 }
 
-// TODO: Delete this once new API exists in both forks
-function LegacyHiddenDiv({hidden, children, ...props}) {
-  if (gate(flags => flags.new)) {
-    return (
-      <div
-        hidden={hidden ? 'unstable-do-not-use-legacy-hidden' : false}
-        {...props}>
-        <React.unstable_LegacyHidden mode={hidden ? 'hidden' : 'visible'}>
-          {children}
-        </React.unstable_LegacyHidden>
-      </div>
-    );
-  } else {
-    return (
-      <div
-        hidden={hidden ? 'unstable-do-not-use-legacy-hidden' : false}
-        {...props}>
+// Note: This is based on a similar component we use in www. We can delete once
+// the extra div wrapper is no longer neccessary.
+function LegacyHiddenDiv({children, mode}) {
+  return (
+    <div hidden={mode === 'hidden'}>
+      <React.unstable_LegacyHidden
+        mode={mode === 'hidden' ? 'unstable-defer-without-hiding' : mode}>
         {children}
-      </div>
-    );
-  }
+      </React.unstable_LegacyHidden>
+    </div>
+  );
 }
 
 describe('ReactDOMTracing', () => {
@@ -88,7 +78,6 @@ describe('ReactDOMTracing', () => {
   describe('interaction tracing', () => {
     describe('hidden', () => {
       // @gate experimental
-      // @gate enableLegacyHiddenType
       it('traces interaction through hidden subtree', () => {
         const Child = () => {
           const [didMount, setDidMount] = React.useState(false);
@@ -110,7 +99,7 @@ describe('ReactDOMTracing', () => {
             Scheduler.unstable_yieldValue('App:mount');
           }, []);
           return (
-            <LegacyHiddenDiv hidden={true}>
+            <LegacyHiddenDiv mode="hidden">
               <Child />
             </LegacyHiddenDiv>
           );
@@ -166,7 +155,6 @@ describe('ReactDOMTracing', () => {
       });
 
       // @gate experimental
-      // @gate enableLegacyHiddenType
       it('traces interaction through hidden subtree when there is other pending traced work', () => {
         const Child = () => {
           Scheduler.unstable_yieldValue('Child');
@@ -182,7 +170,7 @@ describe('ReactDOMTracing', () => {
             Scheduler.unstable_yieldValue('App:mount');
           }, []);
           return (
-            <LegacyHiddenDiv hidden={true}>
+            <LegacyHiddenDiv mode="hidden">
               <Child />
             </LegacyHiddenDiv>
           );
@@ -235,7 +223,6 @@ describe('ReactDOMTracing', () => {
       });
 
       // @gate experimental
-      // @gate enableLegacyHiddenType
       it('traces interaction through hidden subtree that schedules more idle/never work', () => {
         const Child = () => {
           const [didMount, setDidMount] = React.useState(false);
@@ -260,7 +247,7 @@ describe('ReactDOMTracing', () => {
             Scheduler.unstable_yieldValue('App:mount');
           }, []);
           return (
-            <LegacyHiddenDiv hidden={true}>
+            <LegacyHiddenDiv mode="hidden">
               <Child />
             </LegacyHiddenDiv>
           );
@@ -319,7 +306,6 @@ describe('ReactDOMTracing', () => {
       });
 
       // @gate experimental
-      // @gate enableLegacyHiddenType
       it('does not continue interactions across pre-existing idle work', () => {
         const Child = () => {
           Scheduler.unstable_yieldValue('Child');
@@ -331,7 +317,7 @@ describe('ReactDOMTracing', () => {
         const WithHiddenWork = () => {
           Scheduler.unstable_yieldValue('WithHiddenWork');
           return (
-            <LegacyHiddenDiv hidden={true}>
+            <LegacyHiddenDiv mode="hidden">
               <Child />
             </LegacyHiddenDiv>
           );
@@ -421,7 +407,6 @@ describe('ReactDOMTracing', () => {
       });
 
       // @gate experimental
-      // @gate enableLegacyHiddenType
       it('should properly trace interactions when there is work of interleaved priorities', () => {
         const Child = () => {
           Scheduler.unstable_yieldValue('Child');
@@ -439,7 +424,7 @@ describe('ReactDOMTracing', () => {
             Scheduler.unstable_yieldValue('MaybeHiddenWork:effect');
           });
           return flag ? (
-            <LegacyHiddenDiv hidden={true}>
+            <LegacyHiddenDiv mode="hidden">
               <Child />
             </LegacyHiddenDiv>
           ) : null;

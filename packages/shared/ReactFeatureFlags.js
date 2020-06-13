@@ -41,6 +41,7 @@ export const enableSelectiveHydration = __EXPERIMENTAL__;
 
 // Flight experiments
 export const enableBlocksAPI = __EXPERIMENTAL__;
+export const enableLazyElements = __EXPERIMENTAL__;
 
 // Only used in www builds.
 export const enableSchedulerDebugging = false;
@@ -62,7 +63,7 @@ export const enableCreateEventHandleAPI = false;
 
 // New API for JSX transforms to target - https://github.com/reactjs/rfcs/pull/107
 
-// We will enforce mocking scheduler with scheduler/unstable_mock at some point. (v17?)
+// We will enforce mocking scheduler with scheduler/unstable_mock at some point. (v18?)
 // Till then, we warn about the missing mock, but still fallback to a legacy mode compatible version
 export const warnAboutUnmockedScheduler = false;
 
@@ -82,26 +83,11 @@ export const disableSchedulerTimeoutBasedOnReactExpirationTime = false;
 
 export const enableTrustedTypesIntegration = false;
 
-// Controls sequence of passive effect destroy and create functions.
-// If this flag is off, destroy and create functions may be interleaved.
-// When the flag is on, all destroy functions will be run (for all fibers)
-// before any create functions are run, similar to how layout effects work.
-// This flag provides a killswitch if that proves to break existing code somehow.
-export const runAllPassiveEffectDestroysBeforeCreates = false;
-
-// Controls behavior of deferred effect destroy functions during unmount.
-// Previously these functions were run during commit (along with layout effects).
-// Ideally we should delay these until after commit for performance reasons.
-// This flag provides a killswitch if that proves to break existing code somehow.
-//
-// WARNING This flag only has an affect if used with runAllPassiveEffectDestroysBeforeCreates.
-export const deferPassiveEffectCleanupDuringUnmount = false;
-
 // Enables a warning when trying to spread a 'key' to an element;
 // a deprecated pattern we want to get rid of in the future
 export const warnAboutSpreadingKeyToJSX = false;
 
-export const enableComponentStackLocations = __EXPERIMENTAL__;
+export const enableComponentStackLocations = true;
 
 export const enableNewReconciler = false;
 
@@ -132,12 +118,8 @@ export const enableModernEventSystem = false;
 export const enableLegacyFBSupport = false;
 
 // Updates that occur in the render phase are not officially supported. But when
-// they do occur, in the new reconciler, we defer them to a subsequent render by
-// picking a lane that's not currently rendering. We treat them the same as if
-// they came from an interleaved event. In the old reconciler, we use whatever
-// expiration time is currently rendering. Remove this flag once we have
-// migrated to the new behavior.
+// they do occur, we defer them to a subsequent render by picking a lane that's
+// not currently rendering. We treat them the same as if they came from an
+// interleaved event. Remove this flag once we have migrated to the
+// new behavior.
 export const deferRenderPhaseUpdateToNextBatch = true;
-
-// Flag used by www build so we can log occurrences of legacy hidden API
-export const disableHiddenPropDeprioritization = true;

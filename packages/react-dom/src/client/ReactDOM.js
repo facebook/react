@@ -45,7 +45,10 @@ import {
 } from 'legacy-events/EventPluginRegistry';
 import ReactVersion from 'shared/ReactVersion';
 import invariant from 'shared/invariant';
-import {warnUnstableRenderSubtreeIntoContainer} from 'shared/ReactFeatureFlags';
+import {
+  warnUnstableRenderSubtreeIntoContainer,
+  enableNewReconciler,
+} from 'shared/ReactFeatureFlags';
 
 import {
   getInstanceFromNode,
@@ -161,7 +164,7 @@ function unstable_createPortal(
       didWarnAboutUnstableCreatePortal = true;
       console.warn(
         'The ReactDOM.unstable_createPortal() alias has been deprecated, ' +
-          'and will be removed in React 17+. Update your code to use ' +
+          'and will be removed in React 18+. Update your code to use ' +
           'ReactDOM.createPortal() instead. It has the exact same API, ' +
           'but without the "unstable_" prefix.',
       );
@@ -207,7 +210,7 @@ export {
   renderSubtreeIntoContainer as unstable_renderSubtreeIntoContainer,
   // Disabled behind disableUnstableCreatePortal
   // Temporary alias since we already shipped React 16 RC with it.
-  // TODO: remove in React 17.
+  // TODO: remove in React 18.
   unstable_createPortal,
   // enableCreateEventHandleAPI
   createEventHandle as unstable_createEventHandle,
@@ -246,3 +249,5 @@ if (__DEV__) {
     }
   }
 }
+
+export const unstable_isNewReconciler = enableNewReconciler;

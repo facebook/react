@@ -24,6 +24,7 @@ import type {FiberRoot} from './ReactInternalTypes';
 import type {OpaqueIDType} from './ReactFiberHostConfig';
 
 import ReactSharedInternals from 'shared/ReactSharedInternals';
+import {enableNewReconciler} from 'shared/ReactFeatureFlags';
 
 import {NoMode, BlockingMode} from './ReactTypeOfMode';
 import {
@@ -913,7 +914,16 @@ function readFromUnsubcribedMutableSource<Source, Snapshot>(
   }
 
   if (isSafeToReadFromSource) {
-    return getSnapshot(source._source);
+    const snapshot = getSnapshot(source._source);
+    if (__DEV__) {
+      if (typeof snapshot === 'function') {
+        console.error(
+          'Mutable source should not return a function as the snapshot value. ' +
+            'Functions may close over mutable values and cause tearing.',
+        );
+      }
+    }
+    return snapshot;
   } else {
     // This handles the special case of a mutable source being shared beween renderers.
     // In that case, if the source is mutated between the first and second renderer,
@@ -991,6 +1001,15 @@ function useMutableSource<Source, Snapshot>(
     const maybeNewVersion = getVersion(source._source);
     if (!is(version, maybeNewVersion)) {
       const maybeNewSnapshot = getSnapshot(source._source);
+      if (__DEV__) {
+        if (typeof maybeNewSnapshot === 'function') {
+          console.error(
+            'Mutable source should not return a function as the snapshot value. ' +
+              'Functions may close over mutable values and cause tearing.',
+          );
+        }
+      }
+
       if (!is(snapshot, maybeNewSnapshot)) {
         setSnapshot(maybeNewSnapshot);
 
@@ -1738,6 +1757,8 @@ export const ContextOnlyDispatcher: Dispatcher = {
   useTransition: throwInvalidHookError,
   useMutableSource: throwInvalidHookError,
   useOpaqueIdentifier: throwInvalidHookError,
+
+  unstable_isNewReconciler: enableNewReconciler,
 };
 
 const HooksDispatcherOnMount: Dispatcher = {
@@ -1758,6 +1779,8 @@ const HooksDispatcherOnMount: Dispatcher = {
   useTransition: mountTransition,
   useMutableSource: mountMutableSource,
   useOpaqueIdentifier: mountOpaqueIdentifier,
+
+  unstable_isNewReconciler: enableNewReconciler,
 };
 
 const HooksDispatcherOnUpdate: Dispatcher = {
@@ -1778,6 +1801,8 @@ const HooksDispatcherOnUpdate: Dispatcher = {
   useTransition: updateTransition,
   useMutableSource: updateMutableSource,
   useOpaqueIdentifier: updateOpaqueIdentifier,
+
+  unstable_isNewReconciler: enableNewReconciler,
 };
 
 const HooksDispatcherOnRerender: Dispatcher = {
@@ -1798,6 +1823,8 @@ const HooksDispatcherOnRerender: Dispatcher = {
   useTransition: rerenderTransition,
   useMutableSource: updateMutableSource,
   useOpaqueIdentifier: rerenderOpaqueIdentifier,
+
+  unstable_isNewReconciler: enableNewReconciler,
 };
 
 let HooksDispatcherOnMountInDEV: Dispatcher | null = null;
@@ -1960,6 +1987,8 @@ if (__DEV__) {
       mountHookTypesDev();
       return mountOpaqueIdentifier();
     },
+
+    unstable_isNewReconciler: enableNewReconciler,
   };
 
   HooksDispatcherOnMountWithHookTypesInDEV = {
@@ -2090,6 +2119,8 @@ if (__DEV__) {
       updateHookTypesDev();
       return mountOpaqueIdentifier();
     },
+
+    unstable_isNewReconciler: enableNewReconciler,
   };
 
   HooksDispatcherOnUpdateInDEV = {
@@ -2220,6 +2251,8 @@ if (__DEV__) {
       updateHookTypesDev();
       return updateOpaqueIdentifier();
     },
+
+    unstable_isNewReconciler: enableNewReconciler,
   };
 
   HooksDispatcherOnRerenderInDEV = {
@@ -2351,6 +2384,8 @@ if (__DEV__) {
       updateHookTypesDev();
       return rerenderOpaqueIdentifier();
     },
+
+    unstable_isNewReconciler: enableNewReconciler,
   };
 
   InvalidNestedHooksDispatcherOnMountInDEV = {
@@ -2497,6 +2532,8 @@ if (__DEV__) {
       mountHookTypesDev();
       return mountOpaqueIdentifier();
     },
+
+    unstable_isNewReconciler: enableNewReconciler,
   };
 
   InvalidNestedHooksDispatcherOnUpdateInDEV = {
@@ -2643,6 +2680,8 @@ if (__DEV__) {
       updateHookTypesDev();
       return updateOpaqueIdentifier();
     },
+
+    unstable_isNewReconciler: enableNewReconciler,
   };
 
   InvalidNestedHooksDispatcherOnRerenderInDEV = {
@@ -2790,5 +2829,7 @@ if (__DEV__) {
       updateHookTypesDev();
       return rerenderOpaqueIdentifier();
     },
+
+    unstable_isNewReconciler: enableNewReconciler,
   };
 }

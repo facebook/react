@@ -20,19 +20,20 @@ describe('ReactFetchNode', () => {
 
   beforeEach(done => {
     jest.resetModules();
-    ReactCache = require('react/unstable-cache');
-    ReactFetchNode = require('react-fetch');
+    if (__EXPERIMENTAL__) {
+      ReactCache = require('react/unstable-cache');
+      // TODO: A way to pass load context.
+      ReactCache.CacheProvider._context._currentValue = ReactCache.createCache();
+      ReactFetchNode = require('react-fetch');
+      fetch = ReactFetchNode.fetch;
+    }
     http = require('http');
-    fetch = ReactFetchNode.fetch;
 
     server = http.createServer((req, res) => {
       serverImpl(req, res);
     });
     server.listen(done);
     serverEndpoint = `http://localhost:${server.address().port}/`;
-
-    // TODO: A way to pass load context.
-    ReactCache.CacheProvider._context._currentValue = ReactCache.createCache();
   });
 
   afterEach(done => {
@@ -54,6 +55,7 @@ describe('ReactFetchNode', () => {
     }
   }
 
+  // @gate experimental
   it('can read text', async () => {
     serverImpl = (req, res) => {
       res.write('ok');
@@ -70,6 +72,7 @@ describe('ReactFetchNode', () => {
     });
   });
 
+  // @gate experimental
   it('can read json', async () => {
     serverImpl = (req, res) => {
       res.write(JSON.stringify({name: 'Sema'}));

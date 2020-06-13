@@ -14,15 +14,10 @@
 // with the __VARIANT__ set to `true`, and once set to `false`.
 
 export const warnAboutSpreadingKeyToJSX = __VARIANT__;
-export const enableComponentStackLocations = __VARIANT__;
 export const disableInputAttributeSyncing = __VARIANT__;
 export const enableFilterEmptyStringAttributesDOM = __VARIANT__;
-export const enableModernEventSystem = __VARIANT__;
 export const enableLegacyFBSupport = __VARIANT__;
 export const enableDebugTracing = !__VARIANT__;
-
-// Temporary flag, in case we need to re-enable this feature.
-export const disableHiddenPropDeprioritization = __VARIANT__;
 
 // This only has an effect in the new reconciler. But also, the new reconciler
 // is only enabled when __VARIANT__ is true. So this is set to the opposite of

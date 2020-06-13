@@ -27,7 +27,6 @@ import type {OffscreenState} from './ReactFiberOffscreenComponent';
 
 import {unstable_wrap as Schedule_tracing_wrap} from 'scheduler/tracing';
 import {
-  deferPassiveEffectCleanupDuringUnmount,
   enableSchedulerTracing,
   enableProfilerTimer,
   enableProfilerCommitHooks,
@@ -36,7 +35,6 @@ import {
   enableFundamentalAPI,
   enableSuspenseCallback,
   enableScopeAPI,
-  runAllPassiveEffectDestroysBeforeCreates,
   enableCreateEventHandleAPI,
 } from 'shared/ReactFeatureFlags';
 import {
@@ -71,7 +69,6 @@ import {
   Placement,
   Snapshot,
   Update,
-  Passive,
 } from './ReactSideEffectTags';
 import getComponentName from 'shared/getComponentName';
 import invariant from 'shared/invariant';
@@ -81,9 +78,7 @@ import {resolveDefaultProps} from './ReactFiberLazyComponent.new';
 import {
   getCommitTime,
   recordLayoutEffectDuration,
-  recordPassiveEffectDuration,
   startLayoutEffectTimer,
-  startPassiveEffectTimer,
 } from './ReactProfilerTimer.new';
 import {ProfileMode} from './ReactTypeOfMode';
 import {commitUpdateQueue} from './ReactUpdateQueue.new';
@@ -134,10 +129,6 @@ import {
   Passive as HookPassive,
 } from './ReactHookEffectTags';
 import {didWarnAboutReassigningProps} from './ReactFiberBeginWork.new';
-import {
-  runWithPriority,
-  NormalPriority,
-} from './SchedulerWithReactIntegration.new';
 import {
   updateDeprecatedEventListeners,
   unmountDeprecatedResponderListeners,
@@ -394,67 +385,22 @@ function commitHookEffectListMount(tag: number, finishedWork: Fiber) {
 }
 
 function schedulePassiveEffects(finishedWork: Fiber) {
-  if (runAllPassiveEffectDestroysBeforeCreates) {
-    const updateQueue: FunctionComponentUpdateQueue | null = (finishedWork.updateQueue: any);
-    const lastEffect = updateQueue !== null ? updateQueue.lastEffect : null;
-    if (lastEffect !== null) {
-      const firstEffect = lastEffect.next;
-      let effect = firstEffect;
-      do {
-        const {next, tag} = effect;
-        if (
-          (tag & HookPassive) !== NoHookEffect &&
-          (tag & HookHasEffect) !== NoHookEffect
-        ) {
-          enqueuePendingPassiveHookEffectUnmount(finishedWork, effect);
-          enqueuePendingPassiveHookEffectMount(finishedWork, effect);
-        }
-        effect = next;
-      } while (effect !== firstEffect);
-    }
-  }
-}
-
-export function commitPassiveHookEffects(finishedWork: Fiber): void {
-  if ((finishedWork.effectTag & Passive) !== NoEffect) {
-    switch (finishedWork.tag) {
-      case FunctionComponent:
-      case ForwardRef:
-      case SimpleMemoComponent:
-      case Block: {
-        // TODO (#17945) We should call all passive destroy functions (for all fibers)
-        // before calling any create functions. The current approach only serializes
-        // these for a single fiber.
-        if (
-          enableProfilerTimer &&
-          enableProfilerCommitHooks &&
-          finishedWork.mode & ProfileMode
-        ) {
-          try {
-            startPassiveEffectTimer();
-            commitHookEffectListUnmount(
-              HookPassive | HookHasEffect,
-              finishedWork,
-            );
-            commitHookEffectListMount(
-              HookPassive | HookHasEffect,
-              finishedWork,
-            );
-          } finally {
-            recordPassiveEffectDuration(finishedWork);
-          }
-        } else {
-          commitHookEffectListUnmount(
-            HookPassive | HookHasEffect,
-            finishedWork,
-          );
-          commitHookEffectListMount(HookPassive | HookHasEffect, finishedWork);
-        }
-        break;
+  const updateQueue: FunctionComponentUpdateQueue | null = (finishedWork.updateQueue: any);
+  const lastEffect = updateQueue !== null ? updateQueue.lastEffect : null;
+  if (lastEffect !== null) {
+    const firstEffect = lastEffect.next;
+    let effect = firstEffect;
+    do {
+      const {next, tag} = effect;
+      if (
+        (tag & HookPassive) !== NoHookEffect &&
+        (tag & HookHasEffect) !== NoHookEffect
+      ) {
+        enqueuePendingPassiveHookEffectUnmount(finishedWork, effect);
+        enqueuePendingPassiveHookEffectMount(finishedWork, effect);
       }
-      default:
-        break;
-    }
+      effect = next;
+    } while (effect !== firstEffect);
   }
 }
 
@@ -543,9 +489,7 @@ function commitLifeCycles(
         commitHookEffectListMount(HookLayout | HookHasEffect, finishedWork);
       }
 
-      if (runAllPassiveEffectDestroysBeforeCreates) {
-        schedulePassiveEffects(finishedWork);
-      }
+      schedulePassiveEffects(finishedWork);
       return;
     }
     case ClassComponent: {
@@ -946,74 +890,28 @@ function commitUnmount(
         if (lastEffect !== null) {
           const firstEffect = lastEffect.next;
 
-          if (
-            deferPassiveEffectCleanupDuringUnmount &&
-            runAllPassiveEffectDestroysBeforeCreates
-          ) {
-            let effect = firstEffect;
-            do {
-              const {destroy, tag} = effect;
-              if (destroy !== undefined) {
-                if ((tag & HookPassive) !== NoHookEffect) {
-                  enqueuePendingPassiveHookEffectUnmount(current, effect);
+          let effect = firstEffect;
+          do {
+            const {destroy, tag} = effect;
+            if (destroy !== undefined) {
+              if ((tag & HookPassive) !== NoHookEffect) {
+                enqueuePendingPassiveHookEffectUnmount(current, effect);
+              } else {
+                if (
+                  enableProfilerTimer &&
+                  enableProfilerCommitHooks &&
+                  current.mode & ProfileMode
+                ) {
+                  startLayoutEffectTimer();
+                  safelyCallDestroy(current, destroy);
+                  recordLayoutEffectDuration(current);
                 } else {
-                  if (
-                    enableProfilerTimer &&
-                    enableProfilerCommitHooks &&
-                    current.mode & ProfileMode
-                  ) {
-                    startLayoutEffectTimer();
-                    safelyCallDestroy(current, destroy);
-                    recordLayoutEffectDuration(current);
-                  } else {
-                    safelyCallDestroy(current, destroy);
-                  }
+                  safelyCallDestroy(current, destroy);
                 }
               }
-              effect = effect.next;
-            } while (effect !== firstEffect);
-          } else {
-            // When the owner fiber is deleted, the destroy function of a passive
-            // effect hook is called during the synchronous commit phase. This is
-            // a concession to implementation complexity. Calling it in the
-            // passive effect phase (like they usually are, when dependencies
-            // change during an update) would require either traversing the
-            // children of the deleted fiber again, or including unmount effects
-            // as part of the fiber effect list.
-            //
-            // Because this is during the sync commit phase, we need to change
-            // the priority.
-            //
-            // TODO: Reconsider this implementation trade off.
-            const priorityLevel =
-              renderPriorityLevel > NormalPriority
-                ? NormalPriority
-                : renderPriorityLevel;
-            runWithPriority(priorityLevel, () => {
-              let effect = firstEffect;
-              do {
-                const {destroy, tag} = effect;
-                if (destroy !== undefined) {
-                  if (
-                    enableProfilerTimer &&
-                    enableProfilerCommitHooks &&
-                    current.mode & ProfileMode
-                  ) {
-                    if ((tag & HookPassive) !== NoHookEffect) {
-                      safelyCallDestroy(current, destroy);
-                    } else {
-                      startLayoutEffectTimer();
-                      safelyCallDestroy(current, destroy);
-                      recordLayoutEffectDuration(current);
-                    }
-                  } else {
-                    safelyCallDestroy(current, destroy);
-                  }
-                }
-                effect = effect.next;
-              } while (effect !== firstEffect);
-            });
-          }
+            }
+            effect = effect.next;
+          } while (effect !== firstEffect);
         }
       }
       return;
@@ -1124,7 +1022,7 @@ function commitNestedUnmounts(
   }
 }
 
-function detachFiber(fiber: Fiber) {
+function detachFiberMutation(fiber: Fiber) {
   // Cut off the return pointers to disconnect it from the tree. Ideally, we
   // should clear the child pointer of the parent alternate to let this
   // get GC:ed but we don't know which for sure which parent is the current
@@ -1132,10 +1030,11 @@ function detachFiber(fiber: Fiber) {
   // itself will be GC:ed when the parent updates the next time.
   // Note: we cannot null out sibling here, otherwise it can cause issues
   // with findDOMNode and how it requires the sibling field to carry out
-  // traversal in a later effect. See PR #16820.
+  // traversal in a later effect. See PR #16820. We now clear the sibling
+  // field after effects, see: detachFiberAfterEffects.
   fiber.alternate = null;
   fiber.child = null;
-  fiber.dependencies_new = null;
+  fiber.dependencies = null;
   fiber.firstEffect = null;
   fiber.lastEffect = null;
   fiber.memoizedProps = null;
@@ -1543,9 +1442,9 @@ function commitDeletion(
     commitNestedUnmounts(finishedRoot, current, renderPriorityLevel);
   }
   const alternate = current.alternate;
-  detachFiber(current);
+  detachFiberMutation(current);
   if (alternate !== null) {
-    detachFiber(alternate);
+    detachFiberMutation(alternate);
   }
 }
 
@@ -1851,6 +1750,23 @@ function attachSuspenseRetryListeners(finishedWork: Fiber) {
       }
     });
   }
+}
+
+// This function detects when a Suspense boundary goes from visible to hidden.
+// It returns false if the boundary is already hidden.
+// TODO: Use an effect tag.
+export function isSuspenseBoundaryBeingHidden(
+  current: Fiber | null,
+  finishedWork: Fiber,
+): boolean {
+  if (current !== null) {
+    const oldState: SuspenseState | null = current.memoizedState;
+    if (oldState === null || oldState.dehydrated !== null) {
+      const newState: SuspenseState | null = finishedWork.memoizedState;
+      return newState !== null && newState.dehydrated === null;
+    }
+  }
+  return false;
 }
 
 function commitResetTextContent(current: Fiber) {

@@ -14,7 +14,7 @@ import type {DehydratedData} from 'react-devtools-shared/src/devtools/views/Comp
 
 export function cleanForBridge(
   data: Object | null,
-  isPathWhitelisted: (path: Array<string | number>) => boolean,
+  isPathAllowed: (path: Array<string | number>) => boolean,
   path?: Array<string | number> = [],
 ): DehydratedData | null {
   if (data !== null) {
@@ -25,7 +25,7 @@ export function cleanForBridge(
       cleanedPaths,
       unserializablePaths,
       path,
-      isPathWhitelisted,
+      isPathAllowed,
     );
 
     return {

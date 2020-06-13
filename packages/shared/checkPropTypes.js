@@ -9,11 +9,34 @@
 
 const loggedTypeFailures = {};
 
+import {describeUnknownElementTypeFrameInDEV} from 'shared/ReactComponentStackFrame';
+
+import ReactSharedInternals from 'shared/ReactSharedInternals';
+
+const ReactDebugCurrentFrame = ReactSharedInternals.ReactDebugCurrentFrame;
+
+function setCurrentlyValidatingElement(element) {
+  if (__DEV__) {
+    if (element) {
+      const owner = element._owner;
+      const stack = describeUnknownElementTypeFrameInDEV(
+        element.type,
+        element._source,
+        owner ? owner.type : null,
+      );
+      ReactDebugCurrentFrame.setExtraStackFrame(stack);
+    } else {
+      ReactDebugCurrentFrame.setExtraStackFrame(null);
+    }
+  }
+}
+
 export default function checkPropTypes(
   typeSpecs: Object,
   values: Object,
   location: string,
   componentName: ?string,
+  element?: any,
 ): void {
   if (__DEV__) {
     // $FlowFixMe This is okay but Flow doesn't know it.
@@ -55,6 +78,7 @@ export default function checkPropTypes(
           error = ex;
         }
         if (error && !(error instanceof Error)) {
+          setCurrentlyValidatingElement(element);
           console.error(
             '%s: type specification of %s' +
               ' `%s` is invalid; the type checker ' +
@@ -67,12 +91,15 @@ export default function checkPropTypes(
             typeSpecName,
             typeof error,
           );
+          setCurrentlyValidatingElement(null);
         }
         if (error instanceof Error && !(error.message in loggedTypeFailures)) {
           // Only monitor this failure once because there tends to be a lot of the
           // same error.
           loggedTypeFailures[error.message] = true;
+          setCurrentlyValidatingElement(element);
           console.error('Failed %s type: %s', location, error.message);
+          setCurrentlyValidatingElement(null);
         }
       }
     }

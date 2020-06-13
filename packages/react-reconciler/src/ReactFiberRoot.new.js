@@ -10,7 +10,7 @@
 import type {FiberRoot, SuspenseHydrationCallbacks} from './ReactInternalTypes';
 import type {RootTag} from './ReactRootTags';
 
-import {noTimeout} from './ReactFiberHostConfig';
+import {noTimeout, supportsHydration} from './ReactFiberHostConfig';
 import {createHostRootFiber} from './ReactFiber.new';
 import {
   NoLanes,
@@ -24,6 +24,7 @@ import {
 } from 'shared/ReactFeatureFlags';
 import {unstable_getThreadID} from 'scheduler/tracing';
 import {initializeUpdateQueue} from './ReactUpdateQueue.new';
+import {LegacyRoot, BlockingRoot, ConcurrentRoot} from './ReactRootTags';
 
 function FiberRootNode(containerInfo, tag, hydrate) {
   this.tag = tag;
@@ -38,7 +39,7 @@ function FiberRootNode(containerInfo, tag, hydrate) {
   this.hydrate = hydrate;
   this.callbackNode = null;
   this.callbackId = NoLanes;
-  this.callbackPriority_new = NoLanePriority;
+  this.callbackPriority = NoLanePriority;
   this.expirationTimes = createLaneMap(NoTimestamp);
 
   this.pendingLanes = NoLanes;
@@ -46,19 +47,36 @@ function FiberRootNode(containerInfo, tag, hydrate) {
   this.pingedLanes = NoLanes;
   this.expiredLanes = NoLanes;
   this.mutableReadLanes = NoLanes;
-
   this.finishedLanes = NoLanes;
 
   this.entangledLanes = NoLanes;
   this.entanglements = createLaneMap(NoLanes);
 
+  if (supportsHydration) {
+    this.mutableSourceEagerHydrationData = null;
+  }
+
   if (enableSchedulerTracing) {
     this.interactionThreadID = unstable_getThreadID();
     this.memoizedInteractions = new Set();
-    this.pendingInteractionMap_new = new Map();
+    this.pendingInteractionMap = new Map();
   }
   if (enableSuspenseCallback) {
     this.hydrationCallbacks = null;
+  }
+
+  if (__DEV__) {
+    switch (tag) {
+      case BlockingRoot:
+        this._debugRootType = 'createBlockingRoot()';
+        break;
+      case ConcurrentRoot:
+        this._debugRootType = 'createRoot()';
+        break;
+      case LegacyRoot:
+        this._debugRootType = 'createLegacyRoot()';
+        break;
+    }
   }
 }
 

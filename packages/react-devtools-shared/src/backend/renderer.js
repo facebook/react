@@ -174,6 +174,7 @@ export function getInternalReactConstants(
       LazyComponent: 16,
       MemoComponent: 14,
       Mode: 8,
+      OffscreenComponent: 23, // Experimental
       Profiler: 12,
       SimpleMemoComponent: 15,
       SuspenseComponent: 13,
@@ -201,6 +202,7 @@ export function getInternalReactConstants(
       LazyComponent: -1, // Doesn't exist yet
       MemoComponent: -1, // Doesn't exist yet
       Mode: 10,
+      OffscreenComponent: -1, // Experimental
       Profiler: 15,
       SimpleMemoComponent: -1, // Doesn't exist yet
       SuspenseComponent: 16,
@@ -228,6 +230,7 @@ export function getInternalReactConstants(
       LazyComponent: -1, // Doesn't exist yet
       MemoComponent: -1, // Doesn't exist yet
       Mode: 11,
+      OffscreenComponent: -1, // Experimental
       Profiler: 15,
       SimpleMemoComponent: -1, // Doesn't exist yet
       SuspenseComponent: 16,
@@ -399,6 +402,7 @@ export function attach(
     IncompleteClassComponent,
     IndeterminateComponent,
     MemoComponent,
+    OffscreenComponent,
     SimpleMemoComponent,
     SuspenseComponent,
     SuspenseListComponent,
@@ -430,11 +434,18 @@ export function attach(
   if (process.env.NODE_ENV !== 'test') {
     registerRendererWithConsole(renderer);
 
-    // The renderer interface can't read this preference directly,
+    // The renderer interface can't read these preferences directly,
     // because it is stored in localStorage within the context of the extension.
     // It relies on the extension to pass the preference through via the global.
-    if (window.__REACT_DEVTOOLS_APPEND_COMPONENT_STACK__ !== false) {
-      patchConsole();
+    const appendComponentStack =
+      window.__REACT_DEVTOOLS_APPEND_COMPONENT_STACK__ !== false;
+    const breakOnConsoleErrors =
+      window.__REACT_DEVTOOLS_BREAK_ON_CONSOLE_ERRORS__ === true;
+    if (appendComponentStack || breakOnConsoleErrors) {
+      patchConsole({
+        appendComponentStack,
+        breakOnConsoleErrors,
+      });
     }
   }
 
@@ -568,6 +579,7 @@ export function attach(
       case HostPortal:
       case HostText:
       case Fragment:
+      case OffscreenComponent:
         return true;
       case HostRoot:
         // It is never valid to filter the root element.
@@ -1203,28 +1215,41 @@ export function attach(
       // because we don't want to highlight every host node inside of a newly mounted subtree.
     }
 
-    const isTimedOutSuspense =
-      fiber.tag === ReactTypeOfWork.SuspenseComponent &&
-      fiber.memoizedState !== null;
-
-    if (isTimedOutSuspense) {
-      // Special case: if Suspense mounts in a timed-out state,
-      // get the fallback child from the inner fragment and mount
-      // it as if it was our own child. Updates handle this too.
-      const primaryChildFragment = fiber.child;
-      const fallbackChildFragment = primaryChildFragment
-        ? primaryChildFragment.sibling
-        : null;
-      const fallbackChild = fallbackChildFragment
-        ? fallbackChildFragment.child
-        : null;
-      if (fallbackChild !== null) {
-        mountFiberRecursively(
-          fallbackChild,
-          shouldIncludeInTree ? fiber : parentFiber,
-          true,
-          traceNearestHostComponentUpdate,
-        );
+    if (fiber.tag === ReactTypeOfWork.SuspenseComponent) {
+      const isTimedOut = fiber.memoizedState !== null;
+      if (isTimedOut) {
+        // Special case: if Suspense mounts in a timed-out state,
+        // get the fallback child from the inner fragment and mount
+        // it as if it was our own child. Updates handle this too.
+        const primaryChildFragment = fiber.child;
+        const fallbackChildFragment = primaryChildFragment
+          ? primaryChildFragment.sibling
+          : null;
+        const fallbackChild = fallbackChildFragment
+          ? fallbackChildFragment.child
+          : null;
+        if (fallbackChild !== null) {
+          mountFiberRecursively(
+            fallbackChild,
+            shouldIncludeInTree ? fiber : parentFiber,
+            true,
+            traceNearestHostComponentUpdate,
+          );
+        }
+      } else {
+        const areSuspenseChildrenConditionallyWrapped =
+          OffscreenComponent === -1;
+        const primaryChild: Fiber | null = areSuspenseChildrenConditionallyWrapped
+          ? fiber.child
+          : (fiber.child: any).child;
+        if (primaryChild !== null) {
+          mountFiberRecursively(
+            primaryChild,
+            shouldIncludeInTree ? fiber : parentFiber,
+            true,
+            traceNearestHostComponentUpdate,
+          );
+        }
       }
     } else {
       if (fiber.child !== null) {
@@ -2146,14 +2171,10 @@ export function attach(
       key,
       memoizedProps,
       memoizedState,
+      dependencies,
       tag,
       type,
     } = fiber;
-
-    const dependencies =
-      (fiber: any).dependencies ||
-      (fiber: any).dependencies_old ||
-      (fiber: any).dependencies_new;
 
     const elementType = getElementTypeForFiber(fiber);
 
@@ -2278,6 +2299,16 @@ export function attach(
       }
     }
 
+    let rootType = null;
+    let current = fiber;
+    while (current.return !== null) {
+      current = current.return;
+    }
+    const fiberRoot = current.stateNode;
+    if (fiberRoot != null && fiberRoot._debugRootType !== null) {
+      rootType = fiberRoot._debugRootType;
+    }
+
     return {
       id,
 
@@ -2318,6 +2349,10 @@ export function attach(
 
       // Location of component in source coude.
       source: _debugSource || null,
+
+      rootType,
+      rendererPackageName: renderer.rendererPackageName,
+      rendererVersion: renderer.version,
     };
   }
 
@@ -2345,13 +2380,13 @@ export function attach(
     });
   }
 
-  function createIsPathWhitelisted(
+  function createisPathAllowed(
     key: string | null,
     secondaryCategory: 'hooks' | null,
   ) {
     // This function helps prevent previously-inspected paths from being dehydrated in updates.
     // This is important to avoid a bad user experience where expanded toggles collapse on update.
-    return function isPathWhitelisted(path: Array<string | number>): boolean {
+    return function isPathAllowed(path: Array<string | number>): boolean {
       switch (secondaryCategory) {
         case 'hooks':
           if (path.length === 1) {
@@ -2493,7 +2528,7 @@ export function attach(
               ((mostRecentlyInspectedElement: any): InspectedElement),
               path,
             ),
-            createIsPathWhitelisted(null, secondaryCategory),
+            createisPathAllowed(null, secondaryCategory),
             path,
           ),
         };
@@ -2538,19 +2573,19 @@ export function attach(
       const cleanedInspectedElement = {...mostRecentlyInspectedElement};
       cleanedInspectedElement.context = cleanForBridge(
         cleanedInspectedElement.context,
-        createIsPathWhitelisted('context', null),
+        createisPathAllowed('context', null),
       );
       cleanedInspectedElement.hooks = cleanForBridge(
         cleanedInspectedElement.hooks,
-        createIsPathWhitelisted('hooks', 'hooks'),
+        createisPathAllowed('hooks', 'hooks'),
       );
       cleanedInspectedElement.props = cleanForBridge(
         cleanedInspectedElement.props,
-        createIsPathWhitelisted('props', null),
+        createisPathAllowed('props', null),
       );
       cleanedInspectedElement.state = cleanForBridge(
         cleanedInspectedElement.state,
-        createIsPathWhitelisted('state', null),
+        createisPathAllowed('state', null),
       );
 
       return {

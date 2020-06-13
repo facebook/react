@@ -1058,7 +1058,7 @@ describe('ReactDOMComponent', () => {
       expect(nodeValueSetter).toHaveBeenCalledTimes(3);
     });
 
-    it('should ignore attribute whitelist for elements with the "is" attribute', () => {
+    it('should ignore attribute list for elements with the "is" attribute', () => {
       const container = document.createElement('div');
       ReactDOM.render(<button is="test" cowabunga="chevynova" />, container);
       expect(container.firstChild.hasAttribute('cowabunga')).toBe(true);

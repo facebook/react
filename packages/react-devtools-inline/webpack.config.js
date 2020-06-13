@@ -1,5 +1,6 @@
 const {resolve} = require('path');
 const {DefinePlugin} = require('webpack');
+const TerserPlugin = require('terser-webpack-plugin');
 const {
   GITHUB_URL,
   getVersionString,
@@ -35,6 +36,16 @@ module.exports = {
     'react-dom': 'react-dom',
     'react-is': 'react-is',
     scheduler: 'scheduler',
+  },
+  optimization: {
+    minimizer: [
+      new TerserPlugin({
+        terserOptions: {
+          compress: {drop_debugger: false},
+          output: {comments: true},
+        },
+      }),
+    ],
   },
   plugins: [
     new DefinePlugin({

@@ -18,6 +18,7 @@ import {
 import {
   COMFORTABLE_LINE_HEIGHT,
   COMPACT_LINE_HEIGHT,
+  LOCAL_STORAGE_SHOULD_BREAK_ON_CONSOLE_ERRORS,
   LOCAL_STORAGE_SHOULD_PATCH_CONSOLE_KEY,
   LOCAL_STORAGE_TRACE_UPDATES_ENABLED_KEY,
 } from 'react-devtools-shared/src/constants';
@@ -39,6 +40,9 @@ type Context = {|
 
   appendComponentStack: boolean,
   setAppendComponentStack: (value: boolean) => void,
+
+  breakOnConsoleErrors: boolean,
+  setBreakOnConsoleErrors: (value: boolean) => void,
 
   theme: Theme,
   setTheme(value: Theme): void,
@@ -79,6 +83,13 @@ function SettingsContextController({
     appendComponentStack,
     setAppendComponentStack,
   ] = useLocalStorage<boolean>(LOCAL_STORAGE_SHOULD_PATCH_CONSOLE_KEY, true);
+  const [
+    breakOnConsoleErrors,
+    setBreakOnConsoleErrors,
+  ] = useLocalStorage<boolean>(
+    LOCAL_STORAGE_SHOULD_BREAK_ON_CONSOLE_ERRORS,
+    false,
+  );
   const [
     traceUpdatesEnabled,
     setTraceUpdatesEnabled,
@@ -133,8 +144,11 @@ function SettingsContextController({
   }, [browserTheme, theme, documentElements]);
 
   useEffect(() => {
-    bridge.send('updateAppendComponentStack', appendComponentStack);
-  }, [bridge, appendComponentStack]);
+    bridge.send('updateConsolePatchSettings', {
+      appendComponentStack,
+      breakOnConsoleErrors,
+    });
+  }, [bridge, appendComponentStack, breakOnConsoleErrors]);
 
   useEffect(() => {
     bridge.send('setTraceUpdatesEnabled', traceUpdatesEnabled);
@@ -143,12 +157,14 @@ function SettingsContextController({
   const value = useMemo(
     () => ({
       appendComponentStack,
+      breakOnConsoleErrors,
       displayDensity,
       lineHeight:
         displayDensity === 'compact'
           ? COMPACT_LINE_HEIGHT
           : COMFORTABLE_LINE_HEIGHT,
       setAppendComponentStack,
+      setBreakOnConsoleErrors,
       setDisplayDensity,
       setTheme,
       setTraceUpdatesEnabled,
@@ -157,8 +173,10 @@ function SettingsContextController({
     }),
     [
       appendComponentStack,
+      breakOnConsoleErrors,
       displayDensity,
       setAppendComponentStack,
+      setBreakOnConsoleErrors,
       setDisplayDensity,
       setTheme,
       setTraceUpdatesEnabled,
@@ -235,6 +253,11 @@ function updateThemeVariables(
   documentElements: DocumentElements,
 ): void {
   updateStyleHelper(theme, 'color-attribute-name', documentElements);
+  updateStyleHelper(
+    theme,
+    'color-attribute-name-not-editable',
+    documentElements,
+  );
   updateStyleHelper(theme, 'color-attribute-name-inverted', documentElements);
   updateStyleHelper(theme, 'color-attribute-value', documentElements);
   updateStyleHelper(theme, 'color-attribute-value-inverted', documentElements);
@@ -314,7 +337,11 @@ function updateThemeVariables(
   updateStyleHelper(theme, 'color-dim', documentElements);
   updateStyleHelper(theme, 'color-dimmer', documentElements);
   updateStyleHelper(theme, 'color-dimmest', documentElements);
+  updateStyleHelper(theme, 'color-error-background', documentElements);
+  updateStyleHelper(theme, 'color-error-border', documentElements);
+  updateStyleHelper(theme, 'color-error-text', documentElements);
   updateStyleHelper(theme, 'color-expand-collapse-toggle', documentElements);
+  updateStyleHelper(theme, 'color-link', documentElements);
   updateStyleHelper(theme, 'color-modal-background', documentElements);
   updateStyleHelper(theme, 'color-record-active', documentElements);
   updateStyleHelper(theme, 'color-record-hover', documentElements);

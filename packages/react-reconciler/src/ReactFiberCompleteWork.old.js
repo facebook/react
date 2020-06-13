@@ -8,7 +8,7 @@
  */
 
 import type {Fiber} from './ReactInternalTypes';
-import type {ExpirationTime} from './ReactFiberExpirationTime.old';
+import type {Lanes} from './ReactFiberLane';
 import type {
   ReactFundamentalComponentInstance,
   ReactScopeInstance,
@@ -26,6 +26,8 @@ import type {
   SuspenseListRenderState,
 } from './ReactFiberSuspenseComponent.old';
 import type {SuspenseContext} from './ReactFiberSuspenseContext.old';
+import type {OffscreenState} from './ReactFiberOffscreenComponent';
+
 import {resetWorkInProgressVersions as resetMutableSourceWorkInProgressVersions} from './ReactMutableSource.old';
 
 import {now} from './SchedulerWithReactIntegration.old';
@@ -53,14 +55,15 @@ import {
   FundamentalComponent,
   ScopeComponent,
   Block,
+  OffscreenComponent,
+  LegacyHiddenComponent,
 } from './ReactWorkTags';
-import {NoMode, BlockingMode} from './ReactTypeOfMode';
+import {NoMode, BlockingMode, ProfileMode} from './ReactTypeOfMode';
 import {
   Ref,
   Update,
   NoEffect,
   DidCapture,
-  Deletion,
   Snapshot,
 } from './ReactSideEffectTags';
 import invariant from 'shared/invariant';
@@ -125,18 +128,21 @@ import {
   enableFundamentalAPI,
   enableScopeAPI,
   enableBlocksAPI,
+  enableProfilerTimer,
 } from 'shared/ReactFeatureFlags';
 import {
   markSpawnedWork,
   renderDidSuspend,
   renderDidSuspendDelayIfPossible,
   renderHasNotSuspendedYet,
+  popRenderLanes,
 } from './ReactFiberWorkLoop.old';
 import {createFundamentalStateInstance} from './ReactFiberFundamental.old';
-import {Never} from './ReactFiberExpirationTime.old';
+import {OffscreenLane} from './ReactFiberLane';
 import {resetChildFibers} from './ReactChildFiber.old';
 import {updateDeprecatedEventListeners} from './ReactFiberDeprecatedEvents.old';
 import {createScopeInstance} from './ReactFiberScope.old';
+import {transferActualDuration} from './ReactProfilerTimer.old';
 
 function markUpdate(workInProgress: Fiber) {
   // Tag the fiber with an update effect. This turns a Placement into
@@ -646,7 +652,7 @@ function cutOffTailIfNeeded(
 function completeWork(
   current: Fiber | null,
   workInProgress: Fiber,
-  renderExpirationTime: ExpirationTime,
+  renderLanes: Lanes,
 ): Fiber | null {
   const newProps = workInProgress.pendingProps;
 
@@ -859,7 +865,7 @@ function completeWork(
             );
             prepareToHydrateHostSuspenseInstance(workInProgress);
             if (enableSchedulerTracing) {
-              markSpawnedWork(Never);
+              markSpawnedWork(OffscreenLane);
             }
             return null;
           } else {
@@ -884,8 +890,14 @@ function completeWork(
 
       if ((workInProgress.effectTag & DidCapture) !== NoEffect) {
         // Something suspended. Re-render with the fallback children.
-        workInProgress.expirationTime = renderExpirationTime;
+        workInProgress.lanes = renderLanes;
         // Do not reset the effect list.
+        if (
+          enableProfilerTimer &&
+          (workInProgress.mode & ProfileMode) !== NoMode
+        ) {
+          transferActualDuration(workInProgress);
+        }
         return workInProgress;
       }
 
@@ -898,26 +910,6 @@ function completeWork(
       } else {
         const prevState: null | SuspenseState = current.memoizedState;
         prevDidTimeout = prevState !== null;
-        if (!nextDidTimeout && prevState !== null) {
-          // We just switched from the fallback to the normal children.
-          // Delete the fallback.
-          // TODO: Would it be better to store the fallback fragment on
-          // the stateNode during the begin phase?
-          const currentFallbackChild: Fiber | null = (current.child: any)
-            .sibling;
-          if (currentFallbackChild !== null) {
-            // Deletions go at the beginning of the return fiber's effect list
-            const first = workInProgress.firstEffect;
-            if (first !== null) {
-              workInProgress.firstEffect = currentFallbackChild;
-              currentFallbackChild.nextEffect = first;
-            } else {
-              workInProgress.firstEffect = workInProgress.lastEffect = currentFallbackChild;
-              currentFallbackChild.nextEffect = null;
-            }
-            currentFallbackChild.effectTag = Deletion;
-          }
-        }
       }
 
       if (nextDidTimeout && !prevDidTimeout) {
@@ -1073,7 +1065,7 @@ function completeWork(
                 }
                 workInProgress.lastEffect = renderState.lastEffect;
                 // Reset the child fibers to their original state.
-                resetChildFibers(workInProgress, renderExpirationTime);
+                resetChildFibers(workInProgress, renderLanes);
 
                 // Set up the Suspense Context to force suspense and immediately
                 // rerender the children.
@@ -1134,7 +1126,7 @@ function completeWork(
             // the expiration.
             now() * 2 - renderState.renderingStartTime >
               renderState.tailExpiration &&
-            renderExpirationTime > Never
+            renderLanes !== OffscreenLane
           ) {
             // We have now passed our CPU deadline and we'll just give up further
             // attempts to render the main content and only render fallbacks.
@@ -1149,11 +1141,9 @@ function completeWork(
             // them, then they really have the same priority as this render.
             // So we'll pick it back up the very next render pass once we've had
             // an opportunity to yield for paint.
-
-            const nextPriority = renderExpirationTime - 1;
-            workInProgress.expirationTime = workInProgress.childExpirationTime = nextPriority;
+            workInProgress.lanes = renderLanes;
             if (enableSchedulerTracing) {
-              markSpawnedWork(nextPriority);
+              markSpawnedWork(renderLanes);
             }
           }
         }
@@ -1317,6 +1307,24 @@ function completeWork(
         return null;
       }
       break;
+    case OffscreenComponent:
+    case LegacyHiddenComponent: {
+      popRenderLanes(workInProgress);
+      if (current !== null) {
+        const nextState: OffscreenState | null = workInProgress.memoizedState;
+        const prevState: OffscreenState | null = current.memoizedState;
+
+        const prevIsHidden = prevState !== null;
+        const nextIsHidden = nextState !== null;
+        if (
+          prevIsHidden !== nextIsHidden &&
+          newProps.mode !== 'unstable-defer-without-hiding'
+        ) {
+          workInProgress.effectTag |= Update;
+        }
+      }
+      return null;
+    }
   }
   invariant(
     false,

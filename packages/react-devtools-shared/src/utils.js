@@ -31,6 +31,7 @@ import {
 import {ElementTypeRoot} from 'react-devtools-shared/src/types';
 import {
   LOCAL_STORAGE_FILTER_PREFERENCES_KEY,
+  LOCAL_STORAGE_SHOULD_BREAK_ON_CONSOLE_ERRORS,
   LOCAL_STORAGE_SHOULD_PATCH_CONSOLE_KEY,
 } from './constants';
 import {ComponentFilterElementType, ElementTypeHostComponent} from './types';
@@ -248,6 +249,25 @@ export function setAppendComponentStack(value: boolean): void {
   );
 }
 
+export function getBreakOnConsoleErrors(): boolean {
+  try {
+    const raw = localStorageGetItem(
+      LOCAL_STORAGE_SHOULD_BREAK_ON_CONSOLE_ERRORS,
+    );
+    if (raw != null) {
+      return JSON.parse(raw);
+    }
+  } catch (error) {}
+  return true;
+}
+
+export function setBreakOnConsoleErrors(value: boolean): void {
+  localStorageSetItem(
+    LOCAL_STORAGE_SHOULD_BREAK_ON_CONSOLE_ERRORS,
+    JSON.stringify(value),
+  );
+}
+
 export function separateDisplayNameAndHOCs(
   displayName: string | null,
   type: ElementType,
@@ -273,6 +293,20 @@ export function separateDisplayNameAndHOCs(
       break;
     default:
       break;
+  }
+
+  if (type === ElementTypeMemo) {
+    if (hocDisplayNames === null) {
+      hocDisplayNames = ['Memo'];
+    } else {
+      hocDisplayNames.unshift('Memo');
+    }
+  } else if (type === ElementTypeForwardRef) {
+    if (hocDisplayNames === null) {
+      hocDisplayNames = ['ForwardRef'];
+    } else {
+      hocDisplayNames.unshift('ForwardRef');
+    }
   }
 
   return [displayName, hocDisplayNames];

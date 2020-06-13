@@ -1494,6 +1494,34 @@ describe('useMutableSource', () => {
   );
 
   // @gate experimental
+  it('warns about functions being used as snapshot values', async () => {
+    const source = createSource(() => 'a');
+    const mutableSource = createMutableSource(source);
+
+    const getSnapshot = () => source.value;
+
+    function Read() {
+      const fn = useMutableSource(mutableSource, getSnapshot, defaultSubscribe);
+      const value = fn();
+      Scheduler.unstable_yieldValue(value);
+      return value;
+    }
+
+    const root = ReactNoop.createRoot();
+    await act(async () => {
+      root.render(
+        <>
+          <Read />
+        </>,
+      );
+      expect(() => expect(Scheduler).toFlushAndYield(['a'])).toErrorDev(
+        'Mutable source should not return a function as the snapshot value.',
+      );
+    });
+    expect(root).toMatchRenderedOutput('a');
+  });
+
+  // @gate experimental
   it('getSnapshot changes and then source is mutated during interleaved event', async () => {
     const {useEffect} = React;
 
@@ -1587,27 +1615,15 @@ describe('useMutableSource', () => {
       // both read the same verion of the mutable source, so we must render
       // them simultaneously.
       //
-      if (gate(flags => flags.new)) {
-        // In the new reconciler, we can do this with entanglement: when the
-        // high priority render starts, we'll also include the low pri work.
-        expect(Scheduler).toFlushAndYieldThrough([
-          'Parent: 3',
-          // Demonstrates that we can yield here
-        ]);
-        expect(Scheduler).toFlushAndYield([
-          // Now finish the rest of the update
-          'Child: 3',
-          'Commit: 3, 3',
-        ]);
-      } else {
-        // In the old reconciler, we don't have an entanglement mechanism. The
-        // best we can do is synchronously flush both updates.
-        expect(Scheduler).toFlushAndYield([
-          'Parent: 3',
-          'Child: 3',
-          'Commit: 3, 3',
-        ]);
-      }
+      expect(Scheduler).toFlushAndYieldThrough([
+        'Parent: 3',
+        // Demonstrates that we can yield here
+      ]);
+      expect(Scheduler).toFlushAndYield([
+        // Now finish the rest of the update
+        'Child: 3',
+        'Commit: 3, 3',
+      ]);
     });
   });
 
