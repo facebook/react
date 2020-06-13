@@ -755,7 +755,7 @@ export function diffProperties(
       }
     } else {
       // For all other deleted properties we add it to the queue. We use
-      // the whitelist in the commit phase instead.
+      // the allowed property list in the commit phase instead.
       (updatePayload = updatePayload || []).push(propKey, null);
     }
   }
@@ -858,7 +858,7 @@ export function diffProperties(
       nextProp.toString();
     } else {
       // For any other property we always add it to the queue and then we
-      // filter it out using the whitelist during the commit.
+      // filter it out using the allowed property list during the commit.
       (updatePayload = updatePayload || []).push(propKey, nextProp);
     }
   }
@@ -1029,7 +1029,7 @@ export function diffHydratedProperties(
     for (let i = 0; i < attributes.length; i++) {
       const name = attributes[i].name.toLowerCase();
       switch (name) {
-        // Built-in SSR attribute is whitelisted
+        // Built-in SSR attribute is allowed
         case 'data-reactroot':
           break;
         // Controlled attributes are not validated

@@ -154,7 +154,7 @@ export const TOP_BEFORE_BLUR = unsafeCastStringToDOMTopLevelType('beforeblur');
 
 // List of events that need to be individually attached to media elements.
 // Note that events in this list will *not* be listened to at the top level
-// unless they're explicitly whitelisted in `ReactBrowserEventEmitter.listenTo`.
+// unless they're explicitly listed in `ReactBrowserEventEmitter.listenTo`.
 export const mediaEventTypes = [
   TOP_ABORT,
   TOP_CAN_PLAY,
