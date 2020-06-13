@@ -4,6 +4,7 @@ let ReactNoop;
 let Scheduler;
 let Suspense;
 
+const {getParameters} = require('codesandbox/lib/api/define');
 const fc = require('fast-check');
 
 const beforeEachAction = () => {
@@ -31,20 +32,27 @@ function AsyncText({text, readOrThrow}) {
   return <span>{text}</span>;
 }
 
-function withCustomError(gens, customToString) {
-  return fc.record(gens).map(out => {
-    return {
-      ...out,
-      toString() {
-        return `
-Raw failure:
-${fc.stringify(out)}
-
-Formated failure:
-${customToString(out)}`;
+function buildCodeSandboxReporter(createFilesFromCounterexample) {
+  return function reporter(runDetails) {
+    if (!runDetails.failed) {
+      return;
+    }
+    const counterexample = runDetails.counterexample;
+    const originalErrorMessage = fc.defaultReportMessage(runDetails);
+    if (counterexample === undefined) {
+      throw new Error(originalErrorMessage);
+    }
+    const files = {
+      ...createFilesFromCounterexample(...counterexample),
+      'report.txt': {
+        content: originalErrorMessage,
       },
     };
-  });
+    const url = `https://codesandbox.io/api/v1/sandboxes/define?parameters=${getParameters(
+      {files},
+    )}`;
+    throw new Error(`${originalErrorMessage}\n\nReproduction link: ${url}`);
+  };
 }
 
 describe('ReactSuspense', () => {
@@ -54,103 +62,27 @@ describe('ReactSuspense', () => {
     await fc.assert(
       fc
         .asyncProperty(
-          withCustomError(
-            {
-              // Scheduler able to re-order operations
-              s: fc.scheduler(),
-              // The initial text defined in the App component
-              initialText: fc.stringOf(fc.hexa()),
-              // Array of updates with the associated priority
-              textUpdates: fc.array(
-                fc.record({
-                  // Priority of the task
-                  priority: fc.constantFrom(
-                    Scheduler.unstable_ImmediatePriority,
-                    Scheduler.unstable_UserBlockingPriority,
-                    Scheduler.unstable_NormalPriority,
-                    Scheduler.unstable_IdlePriority,
-                    Scheduler.unstable_LowPriority,
-                  ),
-                  // Value to set for text
-                  text: fc.stringOf(fc.hexa()),
-                }),
+          // Scheduler able to re-order operations
+          fc.scheduler(),
+          // The initial text defined in the App component
+          fc.stringOf(fc.hexa()),
+          // Array of updates with the associated priority
+          fc.array(
+            fc.record({
+              // Priority of the task
+              priority: fc.constantFrom(
+                Scheduler.unstable_ImmediatePriority,
+                Scheduler.unstable_UserBlockingPriority,
+                Scheduler.unstable_NormalPriority,
+                Scheduler.unstable_IdlePriority,
+                Scheduler.unstable_LowPriority,
               ),
-            },
-            ({s, initialText, textUpdates}) => {
-              // This list of actions could be directly exposed by fast-check
-              const actions = s
-                .toString()
-                .split('\n')
-                .filter(line => line.includes('-> [task#'))
-                .map(line =>
-                  JSON.parse(line.split('::', 2)[1].split(' resolved')[0]),
-                );
-              return `
-import React, { useState } from "react";
-import ReactDOM from "react-dom";
-import { unstable_runWithPriority } from "scheduler";
-
-function createResource(name) {
-  let resolved = false;
-  let resolve;
-  let promise = new Promise(r => (resolve = r));
-  return {
-    name,
-    read() {
-      console.log(\`Reading \${JSON.stringify(name)}\`);
-      if (!resolved) throw promise;
-    },
-    resolve() {
-      console.log(\`Resolving \${JSON.stringify(name)}\`);
-      resolved = true;
-      resolve();
-    }
-  };
-}
-
-let _setText;
-const resources = new Map();
-${actions
-  .map(a => {
-    const escapedText = JSON.stringify(a.text);
-    return `resources.set(${escapedText}, createResource(${escapedText}));`;
-  })
-  .join('\n')}
-
-${actions
-  .map((a, id) => {
-    const escapedText = JSON.stringify(a.text);
-    const delay = (id + 1) * 1000;
-    if (a.type === 'request') {
-      return `setTimeout(() => resources.get(${escapedText}).resolve(), ${delay});`;
-    } else if (a.type === 'scheduler') {
-      return `setTimeout(() => unstable_runWithPriority(${a.priority}, () => _setText(${escapedText})), ${delay});`;
-    }
-    return '// UNEXPECTED ACTION...';
-  })
-  .join('\n')}
-
-function App() {
-  const [text, setText] = useState(${JSON.stringify(initialText)});
-  _setText = setText;
-  const res = resources.get(text);
-  res.read();
-  return <span>{res.name}</span>;
-}
-
-const rootElement = document.getElementById("root");
-ReactDOM.createRoot(
-  rootElement
-).render(
-  <React.Suspense fallback={<h1>Loading the app...</h1>}>
-    <App />
-  </React.Suspense>
-);
-              `;
-            },
+              // Value to set for text
+              text: fc.stringOf(fc.hexa()),
+            }),
           ),
           // The code under test
-          async ({s, initialText, textUpdates}) => {
+          async (s, initialText, textUpdates) => {
             // We simulate a cache: string -> Promise
             // It may contain successes and rejections
             const cache = new Map();
@@ -166,7 +98,8 @@ ReactDOM.createRoot(
                 // Not yet queried
                 const promise = s.schedule(
                   Promise.resolve(),
-                  JSON.stringify({type: 'request', text}),
+                  `Resolve async request for text ${JSON.stringify(text)}`,
+                  {type: 'request', text},
                 );
                 const cachedValue = {promise, resolvedWith: null};
                 promise.then(success => (cachedValue.resolvedWith = {success}));
@@ -197,7 +130,10 @@ ReactDOM.createRoot(
             s.scheduleSequence(
               textUpdates.map(update => {
                 return {
-                  label: JSON.stringify({type: 'scheduler', ...update}),
+                  label: `Call setText(${JSON.stringify(
+                    update.text,
+                  )}) with priority ${update.priority}`,
+                  metadata: {type: 'setText', ...update},
                   builder: async () =>
                     Scheduler.unstable_runWithPriority(update.priority, () => {
                       setText(update.text);
@@ -223,6 +159,123 @@ ReactDOM.createRoot(
           },
         )
         .beforeEach(beforeEachAction),
+      {
+        examples: [
+          // If you want to replay failures or provide custom example, you can specify them here
+          /*[
+            fc.schedulerFor()`
+        -> [task${2}] sequence::Call setText("1") with priority 1 resolved
+        -> [task${1}] promise::Resolve async request for text "" resolved`,
+            '',
+            [{priority: 1, text: '1'}],
+          ],*/
+        ],
+        reporter: buildCodeSandboxReporter((s, initialText, textUpdates) => {
+          const actions = s.report();
+          const allResources = new Set(actions.map(a => a.metadata.text));
+          return {
+            'package.json': {
+              content: JSON.stringify(
+                {
+                  dependencies: {
+                    react: '0.0.0-experimental-33c3af284',
+                    'react-dom': '0.0.0-experimental-33c3af284',
+                  },
+                },
+                undefined,
+                2,
+              ),
+            },
+            'report.counterexample.txt': {
+              content: `
+actions = ${JSON.stringify(actions, undefined, 2)};
+initialText = ${JSON.stringify(initialText)};
+textUpdates = ${JSON.stringify(textUpdates, undefined, 2)};
+              `,
+            },
+            'data.js': {
+              content: `
+import { unstable_runWithPriority } from "scheduler";
+
+export const initialText = ${JSON.stringify(initialText)};
+
+let _setText;
+export const defineSetText = (setText) => (_setText = setText);
+
+function createResource(name) {
+  let resolved = false;
+  let resolve;
+  let promise = new Promise(r => (resolve = r));
+  return {
+    get name() {
+      if (!resolved) throw promise;
+      return name;
+    },
+    resolve() {
+      resolved = true;
+      resolve();
+    }
+  };
+}
+
+function resolveResource(name) {
+  console.log(\`Resolving resource for \${JSON.stringify(name)}\`);
+  resourcesManager.get(name).resolve();
+}
+
+function updateState(priority, name) {
+  console.log(\`Calling setText with \${JSON.stringify(name)}\`);
+  unstable_runWithPriority(priority, () => _setText(name));
+}
+
+export const resourcesManager = new Map();
+${Array.from(allResources)
+  .map(text => {
+    const escapedText = JSON.stringify(text);
+    return `resourcesManager.set(${escapedText}, createResource(${escapedText}));`;
+  })
+  .join('\n')}
+
+${actions
+  .map((a, id) => {
+    const escapedText = JSON.stringify(a.metadata.text);
+    const delay = (id + 1) * 1000;
+    if (a.metadata.type === 'request')
+      return `setTimeout(() => resolveResource(${escapedText}), ${delay});`;
+    if (a.metadata.type === 'setText')
+      return `setTimeout(() => updateState(${a.metadata.priority}, ${escapedText}), ${delay});`;
+  })
+  .join('\n')}
+              `,
+            },
+            'index.js': {
+              content: `
+import React, { useState } from "react";
+import ReactDOM from "react-dom";
+import { defineSetText, initialText, resourcesManager } from "./data";
+
+function App() {
+  const [text, setText] = useState(initialText);
+  defineSetText(setText);
+
+  console.log(\`Rendering App for text=\${JSON.stringify(text)}\`);
+  const res = resourcesManager.get(text);
+  return <span>{res.name}</span>; // res.name throws in case the requested data is not available
+}
+
+const rootElement = document.getElementById("root");
+ReactDOM.unstable_createRoot(
+  rootElement
+).render(
+  <React.Suspense fallback={<h1>Loading the app...</h1>}>
+    <App />
+  </React.Suspense>
+);
+              `,
+            },
+          };
+        }),
+      },
     );
   });
 });
