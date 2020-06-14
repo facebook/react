@@ -167,7 +167,6 @@ import {
   reenterHydrationStateFromDehydratedSuspenseInstance,
   resetHydrationState,
   tryToClaimNextHydratableInstance,
-  getIsHydrating,
   warnIfHydrating,
 } from './ReactFiberHydrationContext.new';
 import {
@@ -584,13 +583,7 @@ function updateOffscreenComponent(
       };
       workInProgress.memoizedState = nextState;
       pushRenderLanes(workInProgress, renderLanes);
-    } else if (
-      !includesSomeLane(renderLanes, (OffscreenLane: Lane)) ||
-      // Server renderer does not render hidden subtrees, so if we're hydrating
-      // we should always bail out and schedule a subsequent render pass, to
-      // force a client render. Even if we're already at Offscreen priority.
-      (current === null && getIsHydrating())
-    ) {
+    } else if (!includesSomeLane(renderLanes, (OffscreenLane: Lane))) {
       let nextBaseLanes;
       if (prevState !== null) {
         const prevBaseLanes = prevState.baseLanes;
@@ -2948,7 +2941,7 @@ function bailoutOnAlreadyFinishedWork(
 ): Fiber | null {
   if (current !== null) {
     // Reuse previous dependencies
-    workInProgress.dependencies_new = current.dependencies_new;
+    workInProgress.dependencies = current.dependencies;
   }
 
   if (enableProfilerTimer) {

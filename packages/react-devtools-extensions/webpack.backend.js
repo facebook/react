@@ -2,6 +2,7 @@
 
 const {resolve} = require('path');
 const {DefinePlugin} = require('webpack');
+const TerserPlugin = require('terser-webpack-plugin');
 const {GITHUB_URL, getVersionString} = require('./utils');
 
 const NODE_ENV = process.env.NODE_ENV;
@@ -38,6 +39,16 @@ module.exports = {
       'react-is': resolve(builtModulesDir, 'react-is'),
       scheduler: resolve(builtModulesDir, 'scheduler'),
     },
+  },
+  optimization: {
+    minimizer: [
+      new TerserPlugin({
+        terserOptions: {
+          compress: {drop_debugger: false},
+          output: {comments: true},
+        },
+      }),
+    ],
   },
   plugins: [
     new DefinePlugin({

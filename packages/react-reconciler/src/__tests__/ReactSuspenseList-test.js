@@ -294,21 +294,7 @@ describe('ReactSuspenseList', () => {
 
     await C.resolve();
 
-    expect(Scheduler).toFlushAndYield(
-      gate(flags =>
-        flags.new
-          ? ['C']
-          : [
-              // Note: Old reconciler has an issue where the primary fragment
-              // fiber isn't marked during setState, so as a compromise we
-              // sometimes over-render the primary child even when it hasn't
-              // been updated.
-              'Suspend! [B]',
-
-              'C',
-            ],
-      ),
-    );
+    expect(Scheduler).toFlushAndYield(['C']);
 
     expect(ReactNoop).toMatchRenderedOutput(
       <>

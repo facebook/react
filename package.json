@@ -47,7 +47,7 @@
     "cross-env": "^6.0.3",
     "danger": "^9.2.10",
     "error-stack-parser": "^2.0.6",
-    "eslint": "^6.8.0",
+    "eslint": "^7.0.0",
     "eslint-config-fbjs": "^1.1.1",
     "eslint-config-prettier": "^6.9.0",
     "eslint-plugin-babel": "^5.3.0",
@@ -61,7 +61,7 @@
     "flow-bin": "0.97",
     "glob": "^7.1.6",
     "glob-stream": "^6.1.0",
-    "google-closure-compiler": "^20200224.0.0",
+    "google-closure-compiler": "^20200517.0.0",
     "gzip-size": "^5.1.1",
     "jasmine-check": "^1.0.0-rc.0",
     "jest": "^25.2.7",
@@ -127,6 +127,7 @@
     "prettier": "node ./scripts/prettier/index.js write-changed",
     "prettier-all": "node ./scripts/prettier/index.js write",
     "version-check": "node ./scripts/tasks/version-check.js",
-    "merge-fork": "node ./scripts/merge-fork/merge-fork.js"
+    "merge-fork": "node ./scripts/merge-fork/merge-fork.js",
+    "replace-fork": "node ./scripts/merge-fork/replace-fork.js"
   }
 }

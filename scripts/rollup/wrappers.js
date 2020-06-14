@@ -4,6 +4,7 @@ const {bundleTypes, moduleTypes} = require('./bundles');
 const reactVersion = require('../../package.json').version;
 
 const {
+  NODE_ES2015,
   UMD_DEV,
   UMD_PROD,
   UMD_PROFILING,
@@ -29,6 +30,19 @@ const license = ` * Copyright (c) Facebook, Inc. and its affiliates.
  * LICENSE file in the root directory of this source tree.`;
 
 const wrappers = {
+  /***************** NODE_ES2015 *****************/
+  [NODE_ES2015](source, globalName, filename, moduleType) {
+    return `/** @license React v${reactVersion}
+ * ${filename}
+ *
+${license}
+ */
+
+'use strict';
+
+${source}`;
+  },
+
   /***************** UMD_DEV *****************/
   [UMD_DEV](source, globalName, filename, moduleType) {
     return `/** @license React v${reactVersion}
@@ -72,16 +86,6 @@ ${license}
 
 'use strict';
 
-${
-  globalName === 'ReactNoopRenderer' ||
-  globalName === 'ReactNoopRendererPersistent'
-    ? // React Noop needs regenerator runtime because it uses
-      // generators but GCC doesn't handle them in the output.
-      // So we use Babel for them.
-      `const regeneratorRuntime = require("regenerator-runtime");`
-    : ``
-}
-
 if (process.env.NODE_ENV !== "production") {
   (function() {
 ${source}
@@ -96,15 +100,6 @@ ${source}
  *
 ${license}
  */
-${
-  globalName === 'ReactNoopRenderer' ||
-  globalName === 'ReactNoopRendererPersistent'
-    ? // React Noop needs regenerator runtime because it uses
-      // generators but GCC doesn't handle them in the output.
-      // So we use Babel for them.
-      `const regeneratorRuntime = require("regenerator-runtime");`
-    : ``
-}
 ${source}`;
   },
 
@@ -115,15 +110,6 @@ ${source}`;
  *
 ${license}
  */
-${
-  globalName === 'ReactNoopRenderer' ||
-  globalName === 'ReactNoopRendererPersistent'
-    ? // React Noop needs regenerator runtime because it uses
-      // generators but GCC doesn't handle them in the output.
-      // So we use Babel for them.
-      `const regeneratorRuntime = require("regenerator-runtime");`
-    : ``
-}
 ${source}`;
   },
 

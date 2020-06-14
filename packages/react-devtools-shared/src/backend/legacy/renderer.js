@@ -586,10 +586,10 @@ export function attach(
     });
   }
 
-  function createIsPathWhitelisted(key: string) {
+  function createisPathAllowed(key: string) {
     // This function helps prevent previously-inspected paths from being dehydrated in updates.
     // This is important to avoid a bad user experience where expanded toggles collapse on update.
-    return function isPathWhitelisted(path: Array<string | number>): boolean {
+    return function isPathAllowed(path: Array<string | number>): boolean {
       let current = currentlyInspectedPaths[key];
       if (!current) {
         return false;
@@ -706,15 +706,15 @@ export function attach(
 
     inspectedElement.context = cleanForBridge(
       inspectedElement.context,
-      createIsPathWhitelisted('context'),
+      createisPathAllowed('context'),
     );
     inspectedElement.props = cleanForBridge(
       inspectedElement.props,
-      createIsPathWhitelisted('props'),
+      createisPathAllowed('props'),
     );
     inspectedElement.state = cleanForBridge(
       inspectedElement.state,
-      createIsPathWhitelisted('state'),
+      createisPathAllowed('state'),
     );
 
     return {

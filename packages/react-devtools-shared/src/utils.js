@@ -31,6 +31,7 @@ import {
 import {ElementTypeRoot} from 'react-devtools-shared/src/types';
 import {
   LOCAL_STORAGE_FILTER_PREFERENCES_KEY,
+  LOCAL_STORAGE_SHOULD_BREAK_ON_CONSOLE_ERRORS,
   LOCAL_STORAGE_SHOULD_PATCH_CONSOLE_KEY,
 } from './constants';
 import {ComponentFilterElementType, ElementTypeHostComponent} from './types';
@@ -244,6 +245,25 @@ export function getAppendComponentStack(): boolean {
 export function setAppendComponentStack(value: boolean): void {
   localStorageSetItem(
     LOCAL_STORAGE_SHOULD_PATCH_CONSOLE_KEY,
+    JSON.stringify(value),
+  );
+}
+
+export function getBreakOnConsoleErrors(): boolean {
+  try {
+    const raw = localStorageGetItem(
+      LOCAL_STORAGE_SHOULD_BREAK_ON_CONSOLE_ERRORS,
+    );
+    if (raw != null) {
+      return JSON.parse(raw);
+    }
+  } catch (error) {}
+  return true;
+}
+
+export function setBreakOnConsoleErrors(value: boolean): void {
+  localStorageSetItem(
+    LOCAL_STORAGE_SHOULD_BREAK_ON_CONSOLE_ERRORS,
     JSON.stringify(value),
   );
 }

@@ -45,6 +45,7 @@ export type WorkTagMap = {|
   LazyComponent: WorkTag,
   MemoComponent: WorkTag,
   Mode: WorkTag,
+  OffscreenComponent: WorkTag,
   Profiler: WorkTag,
   SimpleMemoComponent: WorkTag,
   SuspenseComponent: WorkTag,

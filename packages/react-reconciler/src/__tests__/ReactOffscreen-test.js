@@ -21,7 +21,6 @@ describe('ReactOffscreen', () => {
   }
 
   // @gate experimental
-  // @gate new
   it('unstable-defer-without-hiding should never toggle the visibility of its children', async () => {
     function App({mode}) {
       return (
@@ -81,7 +80,6 @@ describe('ReactOffscreen', () => {
   });
 
   // @gate experimental
-  // @gate new
   it('does not defer in legacy mode', async () => {
     let setState;
     function Foo() {
@@ -124,7 +122,6 @@ describe('ReactOffscreen', () => {
   });
 
   // @gate experimental
-  // @gate new
   it('does not defer in blocking mode', async () => {
     let setState;
     function Foo() {

@@ -17,8 +17,9 @@ import {
 import Bridge from 'react-devtools-shared/src/bridge';
 import Store from 'react-devtools-shared/src/devtools/store';
 import {
-  getSavedComponentFilters,
   getAppendComponentStack,
+  getBreakOnConsoleErrors,
+  getSavedComponentFilters,
 } from 'react-devtools-shared/src/utils';
 import {Server} from 'ws';
 import {join} from 'path';
@@ -282,11 +283,14 @@ function startServer(port?: number = 8097) {
     // Because of this it relies on the extension to pass filters, so include them wth the response here.
     // This will ensure that saved filters are shared across different web pages.
     const savedPreferencesString = `
-      window.__REACT_DEVTOOLS_COMPONENT_FILTERS__ = ${JSON.stringify(
-        getSavedComponentFilters(),
-      )};
       window.__REACT_DEVTOOLS_APPEND_COMPONENT_STACK__ = ${JSON.stringify(
         getAppendComponentStack(),
+      )};
+      window.__REACT_DEVTOOLS_BREAK_ON_CONSOLE_ERRORS__ = ${JSON.stringify(
+        getBreakOnConsoleErrors(),
+      )};
+      window.__REACT_DEVTOOLS_COMPONENT_FILTERS__ = ${JSON.stringify(
+        getSavedComponentFilters(),
       )};`;
 
     response.end(
