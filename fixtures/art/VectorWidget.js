@@ -84,29 +84,29 @@ class VectorWidget extends React.Component {
     return (
       <Group onMouseDown={this.handleMouseDown} onMouseUp={this.handleMouseUp}>
         <Group x={210} y={135}>
-          <Shape fill="rgba(0,0,0,0.1)" d={BORDER_PATH} />
-          <Shape fill="#7BC7BA" d={BG_PATH} />
-          <Shape fill="#DCDCDC" d={BAR_PATH} />
-          <Shape fill="#D97B76" d={RED_DOT_PATH} />
-          <Shape fill="#DBBB79" d={YELLOW_DOT_PATH} />
-          <Shape fill="#A6BD8A" d={GREEN_DOT_PATH} />
+          <Shape fill={BORDER_COLOR} d={BORDER_PATH} />
+          <Shape fill={BG_COLOR} d={BG_PATH} />
+          <Shape fill={BAR_COLOR} d={BAR_PATH} />
+          <Shape fill={RED_DOT_COLOR} d={RED_DOT_PATH} />
+          <Shape fill={YELLOW_DOT_COLOR} d={YELLOW_DOT_PATH} />
+          <Shape fill={GREEN_DOT_COLOR} d={GREEN_DOT_PATH} />
           <Group x={55} y={29}>
             <Group rotation={rotation} originX={84} originY={89}>
               <Group x={84} y={89}>
-                <Circle fill="#FFFFFF" radius={16} />
+                <Circle fill={WHITE_COLOR} radius={16} />
               </Group>
               <Group>
-                <Shape d={RING_ONE_PATH} stroke="#FFFFFF" strokeWidth={8} />
+                <Shape d={RING_ONE_PATH} stroke={WHITE_COLOR} strokeWidth={8} />
                 <Shape
                   d={RING_TWO_PATH}
                   transform={RING_TWO_ROTATE}
-                  stroke="#FFFFFF"
+                  stroke={WHITE_COLOR}
                   strokeWidth={8}
                 />
                 <Shape
                   d={RING_THREE_PATH}
                   transform={RING_THREE_ROTATE}
-                  stroke="#FFFFFF"
+                  stroke={WHITE_COLOR}
                   strokeWidth={8}
                 />
               </Group>
@@ -144,5 +144,13 @@ var RING_THREE_ROTATE = new Transform()
   .translate(84.0, 89.0)
   .rotate(-300.0)
   .translate(-84.0, -89.0);
+
+var BORDER_COLOR = 'rgba(0,0,0,0.1)';
+var BG_COLOR = '#7BC7BA';
+var BAR_COLOR = '#DCDCDC';
+var RED_DOT_COLOR = '#D97B76';
+var YELLOW_DOT_COLOR = '#DBBB79';
+var GREEN_DOT_COLOR = '#A6BD8A';
+var WHITE_COLOR = '#FFFFFF';
 
 module.exports = VectorWidget;
