@@ -50,6 +50,7 @@ import {
 } from './context';
 
 import JSON_PATH from 'url:../static/small-devtools.json';
+//import JSON_PATH from 'url:../static/initial-render.json';
 
 const CONTEXT_MENU_ID = 'canvas';
 
@@ -68,21 +69,11 @@ const TEXT_CSS_PIXELS_OFFSET_TOP = 11;
 const FONT_SIZE = 10;
 const BORDER_OPACITY = 0.4;
 
-const REACT_DEVTOOLS_FONT_SIZE = 12;
 const REACT_GUTTER_SIZE = 4;
 const REACT_EVENT_SIZE = 6;
 const REACT_WORK_SIZE = 12;
-const REACT_WORK_DEPTH_OFFSET = 3;
 const REACT_EVENT_BORDER_SIZE = 1;
 const REACT_PRIORITY_BORDER_SIZE = 1;
-const REACT_DEVTOOLS_PRIORITY_SIZE =
-  REACT_GUTTER_SIZE * 3 +
-  REACT_EVENT_SIZE +
-  REACT_WORK_SIZE +
-  REACT_PRIORITY_BORDER_SIZE;
-const REACT_DEVTOOLS_CANVAS_HEIGHT =
-  (REACT_DEVTOOLS_PRIORITY_SIZE + REACT_PRIORITY_BORDER_SIZE) *
-  REACT_PRIORITIES.length;
 
 const FLAMECHART_FONT_SIZE = 10;
 const FLAMECHART_FRAME_HEIGHT = 16;
@@ -107,28 +98,38 @@ function getTimeTickInterval(zoomLevel) {
   return interval;
 }
 
-function getHoveredEvent(data, flamechart, state) {
+function getHoveredEvent(schedulerCanvasHeight, data, flamechart, state) {
   const { canvasMouseX, canvasMouseY, offsetY } = state;
 
   if (canvasMouseX < LABEL_FIXED_WIDTH || canvasMouseY < HEADER_HEIGHT_FIXED) {
     return null;
   }
 
-  if (canvasMouseY + offsetY < REACT_DEVTOOLS_CANVAS_HEIGHT) {
+  if (canvasMouseY + offsetY < schedulerCanvasHeight) {
     if (data != null) {
-      const priorityIndex = Math.floor(
-        (canvasMouseY - HEADER_HEIGHT_FIXED + offsetY) /
-          REACT_DEVTOOLS_PRIORITY_SIZE
-      );
-      if (priorityIndex >= REACT_PRIORITIES.length) {
+      let adjustedCanvasMouseY = canvasMouseY - HEADER_HEIGHT_FIXED + offsetY;
+      let priorityMinY = HEADER_HEIGHT_FIXED;
+      let priorityIndex = null;
+      let priority = null;
+      for (let index = 0; index < REACT_PRIORITIES.length; index++) {
+        priority = REACT_PRIORITIES[index];
+
+        const priorityHeight = getPriorityHeight(data, priority);
+        if (
+          adjustedCanvasMouseY >= priorityMinY &&
+          adjustedCanvasMouseY <= priorityMinY + priorityHeight
+        ) {
+          priorityIndex = index;
+          break;
+        }
+        priorityMinY += priorityHeight;
+      }
+
+      if (priorityIndex === null) {
         return null;
       }
 
-      const priority = REACT_PRIORITIES[priorityIndex];
-      const baseY =
-        HEADER_HEIGHT_FIXED +
-        REACT_DEVTOOLS_PRIORITY_SIZE * priorityIndex -
-        offsetY;
+      const baseY = priorityMinY - offsetY;
       const eventMinY = baseY + REACT_GUTTER_SIZE / 2;
       const eventMaxY = eventMinY + REACT_EVENT_SIZE + REACT_GUTTER_SIZE;
       const measureMinY = eventMaxY;
@@ -184,10 +185,7 @@ function getHoveredEvent(data, flamechart, state) {
   } else {
     if (flamechart !== null) {
       const layerIndex = Math.floor(
-        (canvasMouseY +
-          offsetY -
-          HEADER_HEIGHT_FIXED -
-          REACT_DEVTOOLS_CANVAS_HEIGHT) /
+        (canvasMouseY + offsetY - HEADER_HEIGHT_FIXED - schedulerCanvasHeight) /
           FLAMECHART_FRAME_HEIGHT
       );
       const layer = flamechart.layers[layerIndex];
@@ -247,6 +245,7 @@ const trimFlamegraphText = (context, text, width) => {
 };
 
 const renderReact = ({
+  baseY,
   canvasWidth,
   context,
   eventOrMeasure,
@@ -318,34 +317,9 @@ const renderReact = ({
           break;
       }
 
-      y =
-        HEADER_HEIGHT_FIXED +
-        (REACT_DEVTOOLS_PRIORITY_SIZE * priorityIndex +
-          REACT_GUTTER_SIZE +
-          REACT_EVENT_SIZE +
-          REACT_GUTTER_SIZE) -
-        offsetY;
-
-      let height = REACT_WORK_SIZE - REACT_WORK_DEPTH_OFFSET * depth;
+      y = baseY + REACT_WORK_SIZE * depth + REACT_GUTTER_SIZE * depth - offsetY;
 
       const lineWidth = Math.floor(REACT_EVENT_BORDER_SIZE);
-
-      if (depth > 0) {
-        context.fillStyle = COLORS.REACT_WORK_BORDER;
-        context.fillRect(
-          Math.floor(x),
-          Math.floor(y),
-          Math.floor(width),
-          Math.floor(height)
-        );
-
-        height -= lineWidth;
-
-        if (width > lineWidth * 2) {
-          width -= lineWidth * 2;
-          x += lineWidth;
-        }
-      }
 
       // $FlowFixMe We know these won't be null
       context.fillStyle = showHoverHighlight
@@ -357,7 +331,7 @@ const renderReact = ({
         Math.floor(x),
         Math.floor(y),
         Math.floor(width),
-        Math.floor(height)
+        REACT_WORK_SIZE
       );
       break;
     case 'schedule-render':
@@ -395,12 +369,7 @@ const renderReact = ({
 
       if (fillStyle !== null) {
         const circumference = REACT_EVENT_SIZE;
-        y =
-          HEADER_HEIGHT_FIXED +
-          (REACT_DEVTOOLS_PRIORITY_SIZE * priorityIndex +
-            REACT_GUTTER_SIZE +
-            REACT_EVENT_SIZE / 2) -
-          offsetY;
+        y = baseY + REACT_EVENT_SIZE / 2 - offsetY;
 
         context.beginPath();
         context.fillStyle = fillStyle;
@@ -456,6 +425,7 @@ const renderCanvas = memoize(
     canvas,
     canvasWidth,
     canvasHeight,
+    schedulerCanvasHeight,
     state,
     hoveredEvent
   ) => {
@@ -484,21 +454,47 @@ const renderCanvas = memoize(
       // Time markers do not scroll off screen; they are always rendered at a fixed vertical position.
       y = HEADER_HEIGHT_FIXED - offsetY;
 
+      let priorityMinY = HEADER_HEIGHT_FIXED;
+
       REACT_PRIORITIES.forEach((priority, priorityIndex) => {
         const currentPriority = data[priority];
-        currentPriority.events.forEach(event => {
-          const showHoverHighlight =
-            hoveredEvent && hoveredEvent.event === event;
-          renderReact({
-            canvasWidth,
-            context,
-            eventOrMeasure: event,
-            showGroupHighlight: false,
-            showHoverHighlight,
-            priorityIndex,
-            state,
+
+        let baseY = priorityMinY + REACT_GUTTER_SIZE;
+
+        if (currentPriority.events.length > 0) {
+          currentPriority.events.forEach(event => {
+            const showHoverHighlight =
+              hoveredEvent && hoveredEvent.event === event;
+            renderReact({
+              baseY,
+              canvasWidth,
+              context,
+              eventOrMeasure: event,
+              showGroupHighlight: false,
+              showHoverHighlight,
+              priorityIndex,
+              state,
+            });
           });
-        });
+
+          // Draw the hovered and/or selected items on top so they stand out.
+          // This is helpful if there are multiple (overlapping) items close to each other.
+          if (hoveredEvent !== null && hoveredEvent.event !== null) {
+            renderReact({
+              baseY,
+              canvasWidth,
+              context,
+              eventOrMeasure: hoveredEvent.event,
+              showGroupHighlight: false,
+              showHoverHighlight: true,
+              priorityIndex: hoveredEvent.priorityIndex,
+              state,
+            });
+          }
+
+          baseY += REACT_EVENT_SIZE + REACT_GUTTER_SIZE;
+        }
+
         currentPriority.measures.forEach(measure => {
           const showHoverHighlight =
             hoveredEvent && hoveredEvent.measure === measure;
@@ -507,6 +503,7 @@ const renderCanvas = memoize(
             hoveredEvent.measure !== null &&
             hoveredEvent.measure.batchUID === measure.batchUID;
           renderReact({
+            baseY,
             canvasWidth,
             context,
             eventOrMeasure: measure,
@@ -517,19 +514,7 @@ const renderCanvas = memoize(
           });
         });
 
-        // Draw the hovered and/or selected items on top so they stand out.
-        // This is helpful if there are multiple (overlapping) items close to each other.
-        if (hoveredEvent !== null && hoveredEvent.event !== null) {
-          renderReact({
-            canvasWidth,
-            context,
-            eventOrMeasure: hoveredEvent.event,
-            showGroupHighlight: false,
-            showHoverHighlight: true,
-            priorityIndex: hoveredEvent.priorityIndex,
-            state,
-          });
-        }
+        priorityMinY += getPriorityHeight(data, priority);
       });
     }
 
@@ -545,7 +530,7 @@ const renderCanvas = memoize(
 
         const y = Math.floor(
           HEADER_HEIGHT_FIXED +
-            REACT_DEVTOOLS_CANVAS_HEIGHT +
+            schedulerCanvasHeight +
             i * FLAMECHART_FRAME_HEIGHT -
             offsetY
         );
@@ -609,18 +594,24 @@ const renderCanvas = memoize(
     y = HEADER_HEIGHT_FIXED - offsetY;
 
     REACT_PRIORITIES.forEach((priority, priorityIndex) => {
+      const priorityHeight = getPriorityHeight(data, priority);
+
+      if (priorityHeight === 0) {
+        return;
+      }
+
       context.fillStyle = COLORS.PRIORITY_BACKGROUND;
       context.fillRect(
         0,
         Math.floor(y),
         Math.floor(LABEL_FIXED_WIDTH),
-        REACT_DEVTOOLS_PRIORITY_SIZE
+        priorityHeight
       );
 
       context.fillStyle = COLORS.PRIORITY_BORDER;
       context.fillRect(
         0,
-        Math.floor(y + REACT_DEVTOOLS_PRIORITY_SIZE),
+        Math.floor(y + priorityHeight),
         canvasWidth,
         REACT_PRIORITY_BORDER_SIZE
       );
@@ -630,16 +621,16 @@ const renderCanvas = memoize(
         Math.floor(LABEL_FIXED_WIDTH) - REACT_PRIORITY_BORDER_SIZE,
         Math.floor(y),
         REACT_PRIORITY_BORDER_SIZE,
-        REACT_DEVTOOLS_PRIORITY_SIZE
+        priorityHeight
       );
 
       context.fillStyle = COLORS.PRIORITY_LABEL;
       context.textAlign = 'left';
       context.textBaseline = 'middle';
-      context.font = `${REACT_DEVTOOLS_FONT_SIZE}px sans-serif`;
-      context.fillText(priority, 10, y + REACT_DEVTOOLS_PRIORITY_SIZE / 2);
+      context.font = `${LABEL_FONT_SIZE}px sans-serif`;
+      context.fillText(priority, 4, y + priorityHeight / 2);
 
-      y += REACT_DEVTOOLS_PRIORITY_SIZE + REACT_PRIORITY_BORDER_SIZE;
+      y += priorityHeight + REACT_PRIORITY_BORDER_SIZE;
     });
 
     // TOP: Time markers
@@ -690,9 +681,46 @@ const renderCanvas = memoize(
   }
 );
 
+const cachedPriorityHeights = new Map();
+const getPriorityHeight = (data, priority) => {
+  if (cachedPriorityHeights.has(priority)) {
+    return cachedPriorityHeights.get(priority);
+  } else {
+    const numMeasures = data[priority].maxNestedMeasures;
+    const events = data[priority].events;
+
+    let priorityHeight = 0;
+    if (numMeasures > 0 && events.length > 0) {
+      priorityHeight =
+        REACT_GUTTER_SIZE +
+        REACT_EVENT_SIZE +
+        REACT_WORK_SIZE * numMeasures +
+        REACT_GUTTER_SIZE * numMeasures +
+        REACT_PRIORITY_BORDER_SIZE;
+    } else if (numMeasures > 0) {
+      priorityHeight =
+        REACT_GUTTER_SIZE +
+        REACT_WORK_SIZE * numMeasures +
+        REACT_GUTTER_SIZE * numMeasures +
+        REACT_PRIORITY_BORDER_SIZE;
+    } else if (events.length > 0) {
+      priorityHeight =
+        REACT_GUTTER_SIZE +
+        REACT_EVENT_SIZE +
+        REACT_GUTTER_SIZE +
+        REACT_PRIORITY_BORDER_SIZE;
+    }
+
+    cachedPriorityHeights.set(priority, priorityHeight);
+
+    return priorityHeight;
+  }
+};
+
 function App() {
   const [data, setData] = useState<ReactProfilerData | null>(null);
   const [flamechart, setFlamechart] = useState<FlamechartData | null>(null);
+  const [schedulerCanvasHeight, setSchedulerCanvasHeight] = useState<number>(0);
 
   useEffect(() => {
     fetch(JSON_PATH)
@@ -710,6 +738,14 @@ function App() {
 
             const flamechart = preprocessFlamechart(data);
             setFlamechart(flamechart);
+
+            let height = 0;
+
+            REACT_PRIORITIES.forEach(priority => {
+              height += getPriorityHeight(processedData, priority);
+            });
+
+            setSchedulerCanvasHeight(height);
           });
         }
       });
@@ -723,6 +759,7 @@ function App() {
             data={data}
             flamechart={flamechart}
             height={height}
+            schedulerCanvasHeight={schedulerCanvasHeight}
             width={width}
           />
         )}
@@ -753,7 +790,13 @@ const zoomToBatch = (data, measure, state) => {
   state.zoomTo(startTime, stopTime);
 };
 
-function AutoSizedCanvas({ data, flamechart, height, width }) {
+function AutoSizedCanvas({
+  data,
+  flamechart,
+  height,
+  schedulerCanvasHeight,
+  width,
+}) {
   const canvasRef = useRef();
 
   const state = usePanAndZoom({
@@ -765,12 +808,17 @@ function AutoSizedCanvas({ data, flamechart, height, width }) {
     unscaledContentWidth: data != null ? data.duration : 0,
     unscaledContentHeight:
       data != null
-        ? REACT_DEVTOOLS_CANVAS_HEIGHT +
+        ? schedulerCanvasHeight +
           flamechart.layers.length * FLAMECHART_FRAME_HEIGHT
         : 0,
   });
 
-  const hoveredEvent = getHoveredEvent(data, flamechart, state);
+  const hoveredEvent = getHoveredEvent(
+    schedulerCanvasHeight,
+    data,
+    flamechart,
+    state
+  );
   const [isContextMenuShown, setIsContextMenuShown] = useState<boolean>(false);
 
   useContextMenu({
@@ -786,15 +834,18 @@ function AutoSizedCanvas({ data, flamechart, height, width }) {
   });
 
   useLayoutEffect(() => {
-    renderCanvas(
-      data,
-      flamechart,
-      canvasRef.current,
-      width,
-      height,
-      state,
-      hoveredEvent
-    );
+    if (data !== null) {
+      renderCanvas(
+        data,
+        flamechart,
+        canvasRef.current,
+        width,
+        height,
+        schedulerCanvasHeight,
+        state,
+        hoveredEvent
+      );
+    }
   });
 
   return (
@@ -851,6 +902,18 @@ function AutoSizedCanvas({ data, flamechart, height, width }) {
                   title="Copy file path"
                 >
                   Copy file path
+                </ContextMenuItem>
+              )}
+              {flamechartNode !== null && (
+                <ContextMenuItem
+                  onClick={() =>
+                    copy(
+                      `line ${flamechartNode.node.frame.line}, column ${flamechartNode.node.frame.col}`
+                    )
+                  }
+                  title="Copy location"
+                >
+                  Copy location
                 </ContextMenuItem>
               )}
             </Fragment>

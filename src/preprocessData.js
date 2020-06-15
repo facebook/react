@@ -24,18 +24,22 @@ export default function reactProfilerProcessor(
     high: {
       events: [],
       measures: [],
+      maxNestedMeasures: 0,
     },
     normal: {
       events: [],
       measures: [],
+      maxNestedMeasures: 0,
     },
     low: {
       events: [],
       measures: [],
+      maxNestedMeasures: 0,
     },
     unscheduled: {
       events: [],
       measures: [],
+      maxNestedMeasures: 0,
     },
   };
 
@@ -46,23 +50,23 @@ export default function reactProfilerProcessor(
 
   const metadata = {
     high: {
-      nextRenderShouldGenerateNewBatchID: true,
       batchUID: 0,
+      nextRenderShouldGenerateNewBatchID: true,
       stack: [],
     },
     normal: {
-      nextRenderShouldGenerateNewBatchID: true,
       batchUID: 0,
+      nextRenderShouldGenerateNewBatchID: true,
       stack: [],
     },
     low: {
-      nextRenderShouldGenerateNewBatchID: true,
       batchUID: 0,
+      nextRenderShouldGenerateNewBatchID: true,
       stack: [],
     },
     unscheduled: {
-      nextRenderShouldGenerateNewBatchID: true,
       batchUID: 0,
+      nextRenderShouldGenerateNewBatchID: true,
       stack: [],
     },
   };
@@ -120,6 +124,11 @@ export default function reactProfilerProcessor(
 
     const index = currentProfilerDataGroup.measures.length;
     const depth = getDepth();
+
+    currentProfilerDataGroup.maxNestedMeasures = Math.max(
+      currentProfilerDataGroup.maxNestedMeasures,
+      depth + 1
+    );
 
     stack.push({
       depth,
@@ -226,7 +235,6 @@ export default function reactProfilerProcessor(
         name === '--layout-effects-start'
           ? 'layout-effects'
           : 'passive-effects';
-      throwIfIncomplete(type);
       markWorkStarted(type, startTime);
     } else if (
       name === '--layout-effects-stop' ||
