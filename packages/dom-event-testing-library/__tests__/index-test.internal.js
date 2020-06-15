@@ -162,6 +162,73 @@ describe('createEventTarget', () => {
     });
   });
 
+  describe('.contextmenu()', () => {
+    test('default', () => {
+      const target = createEventTarget(node);
+      node.addEventListener('contextmenu', e => {
+        expect(e.altKey).toEqual(false);
+        expect(e.button).toEqual(2);
+        expect(e.buttons).toEqual(0);
+        expect(e.clientX).toEqual(0);
+        expect(e.clientY).toEqual(0);
+        expect(e.ctrlKey).toEqual(false);
+        expect(e.detail).toEqual(1);
+        expect(typeof e.getModifierState).toEqual('function');
+        expect(e.metaKey).toEqual(false);
+        expect(e.movementX).toEqual(0);
+        expect(e.movementY).toEqual(0);
+        expect(e.offsetX).toEqual(0);
+        expect(e.offsetY).toEqual(0);
+        expect(e.pageX).toEqual(0);
+        expect(e.pageY).toEqual(0);
+        expect(typeof e.preventDefault).toEqual('function');
+        expect(e.screenX).toEqual(0);
+        expect(e.screenY).toEqual(defaultBrowserChromeSize);
+        expect(e.shiftKey).toEqual(false);
+        expect(typeof e.timeStamp).toEqual('number');
+      });
+      target.contextmenuleftclick();
+    });
+
+    test('custom payload', () => {
+      const target = createEventTarget(node);
+      node.addEventListener('contextmenu', e => {
+        expect(e.altKey).toEqual(true);
+        expect(e.button).toEqual(1);
+        expect(e.buttons).toEqual(4);
+        expect(e.clientX).toEqual(10);
+        expect(e.clientY).toEqual(20);
+        expect(e.ctrlKey).toEqual(true);
+        expect(e.metaKey).toEqual(true);
+        expect(e.movementX).toEqual(1);
+        expect(e.movementY).toEqual(2);
+        expect(e.offsetX).toEqual(5);
+        expect(e.offsetY).toEqual(5);
+        expect(e.pageX).toEqual(50);
+        expect(e.pageY).toEqual(50);
+        expect(e.screenX).toEqual(10);
+        expect(e.screenY).toEqual(20 + defaultBrowserChromeSize);
+        expect(e.shiftKey).toEqual(true);
+      });
+      target.contextmenuleftclick({
+        altKey: true,
+        button: 1,
+        buttons: 4,
+        x: 10,
+        y: 20,
+        ctrlKey: true,
+        metaKey: true,
+        movementX: 1,
+        movementY: 2,
+        offsetX: 5,
+        offsetY: 5,
+        pageX: 50,
+        pageY: 50,
+        shiftKey: true,
+      });
+    });
+  });
+
   describe('.focus()', () => {
     test('default', () => {
       const target = createEventTarget(node);
