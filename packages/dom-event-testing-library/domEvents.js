@@ -241,7 +241,7 @@ export function click(payload) {
   });
 }
 
-export function contextmenuleftclick(payload) {
+export function contextmenurightclick(payload) {
   return createMouseEvent('contextmenu', {
     button: buttonType.secondary,
     ...payload,

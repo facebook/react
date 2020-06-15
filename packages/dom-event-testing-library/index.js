@@ -42,8 +42,8 @@ const createEventTarget = node => ({
   virtualclick(payload) {
     node.dispatchEvent(domEvents.virtualclick(payload));
   },
-  contextmenuleftclick(payload) {
-    node.dispatchEvent(domEvents.contextmenuleftclick(payload));
+  contextmenurightclick(payload) {
+    node.dispatchEvent(domEvents.contextmenurightclick(payload));
   },
   /**
    * PointerEvent abstraction.

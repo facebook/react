@@ -58,7 +58,7 @@ describe('createEventTarget', () => {
         "keyup",
         "scroll",
         "virtualclick",
-        "contextmenuleftclick",
+        "contextmenurightclick",
         "contextmenu",
         "pointercancel",
         "pointerdown",
@@ -187,7 +187,7 @@ describe('createEventTarget', () => {
         expect(e.shiftKey).toEqual(false);
         expect(typeof e.timeStamp).toEqual('number');
       });
-      target.contextmenuleftclick();
+      target.contextmenurightclick();
     });
 
     test('custom payload', () => {
@@ -210,7 +210,7 @@ describe('createEventTarget', () => {
         expect(e.screenY).toEqual(20 + defaultBrowserChromeSize);
         expect(e.shiftKey).toEqual(true);
       });
-      target.contextmenuleftclick({
+      target.contextmenurightclick({
         altKey: true,
         button: 1,
         buttons: 4,
