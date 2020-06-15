@@ -1282,7 +1282,7 @@ describe('Profiler', () => {
       it('should report time spent in layout effects and commit lifecycles', () => {
         const callback = jest.fn();
 
-        const ComponetWithEffects = () => {
+        const ComponentWithEffects = () => {
           React.useLayoutEffect(() => {
             Scheduler.unstable_advanceTime(10);
             return () => {
@@ -1321,7 +1321,7 @@ describe('Profiler', () => {
 
         const renderer = ReactTestRenderer.create(
           <React.Profiler id="mount-test" onCommit={callback}>
-            <ComponetWithEffects />
+            <ComponentWithEffects />
             <ComponentWithCommitHooks />
           </React.Profiler>,
         );
@@ -1341,7 +1341,7 @@ describe('Profiler', () => {
 
         renderer.update(
           <React.Profiler id="update-test" onCommit={callback}>
-            <ComponetWithEffects />
+            <ComponentWithEffects />
             <ComponentWithCommitHooks />
           </React.Profiler>,
         );
@@ -1378,7 +1378,7 @@ describe('Profiler', () => {
       it('should report time spent in layout effects and commit lifecycles with cascading renders', () => {
         const callback = jest.fn();
 
-        const ComponetWithEffects = ({shouldCascade}) => {
+        const ComponentWithEffects = ({shouldCascade}) => {
           const [didCascade, setDidCascade] = React.useState(false);
           React.useLayoutEffect(() => {
             if (shouldCascade && !didCascade) {
@@ -1414,7 +1414,7 @@ describe('Profiler', () => {
 
         const renderer = ReactTestRenderer.create(
           <React.Profiler id="mount-test" onCommit={callback}>
-            <ComponetWithEffects shouldCascade={true} />
+            <ComponentWithEffects shouldCascade={true} />
             <ComponentWithCommitHooks />
           </React.Profiler>,
         );
@@ -1443,7 +1443,7 @@ describe('Profiler', () => {
 
         renderer.update(
           <React.Profiler id="update-test" onCommit={callback}>
-            <ComponetWithEffects />
+            <ComponentWithEffects />
             <ComponentWithCommitHooks shouldCascade={true} />
           </React.Profiler>,
         );
@@ -1472,7 +1472,7 @@ describe('Profiler', () => {
       it('should bubble time spent in layout effects to higher profilers', () => {
         const callback = jest.fn();
 
-        const ComponetWithEffects = ({
+        const ComponentWithEffects = ({
           cleanupDuration,
           duration,
           setCountRef,
@@ -1498,14 +1498,14 @@ describe('Profiler', () => {
           renderer = ReactTestRenderer.create(
             <React.Profiler id="root-mount" onCommit={callback}>
               <React.Profiler id="a">
-                <ComponetWithEffects
+                <ComponentWithEffects
                   duration={10}
                   cleanupDuration={100}
                   setCountRef={setCountRef}
                 />
               </React.Profiler>
               <React.Profiler id="b">
-                <ComponetWithEffects duration={1000} cleanupDuration={10000} />
+                <ComponentWithEffects duration={1000} cleanupDuration={10000} />
               </React.Profiler>
             </React.Profiler>,
           );
@@ -1539,7 +1539,7 @@ describe('Profiler', () => {
           renderer.update(
             <React.Profiler id="root-update" onCommit={callback}>
               <React.Profiler id="b">
-                <ComponetWithEffects duration={1000} cleanupDuration={10000} />
+                <ComponentWithEffects duration={1000} cleanupDuration={10000} />
               </React.Profiler>
             </React.Profiler>,
           );
@@ -1572,7 +1572,7 @@ describe('Profiler', () => {
           }
         }
 
-        const ComponetWithEffects = ({
+        const ComponentWithEffects = ({
           cleanupDuration,
           duration,
           effectDuration,
@@ -1600,20 +1600,20 @@ describe('Profiler', () => {
             <React.Profiler id="root" onCommit={callback}>
               <ErrorBoundary
                 fallback={
-                  <ComponetWithEffects
+                  <ComponentWithEffects
                     duration={10000000}
                     effectDuration={100000000}
                     cleanupDuration={1000000000}
                   />
                 }>
-                <ComponetWithEffects
+                <ComponentWithEffects
                   duration={10}
                   effectDuration={100}
                   cleanupDuration={1000}
                   shouldThrow={true}
                 />
               </ErrorBoundary>
-              <ComponetWithEffects
+              <ComponentWithEffects
                 duration={10000}
                 effectDuration={100000}
                 cleanupDuration={1000000}
@@ -1660,7 +1660,7 @@ describe('Profiler', () => {
           }
         }
 
-        const ComponetWithEffects = ({
+        const ComponentWithEffects = ({
           cleanupDuration,
           duration,
           effectDuration,
@@ -1688,20 +1688,20 @@ describe('Profiler', () => {
             <React.Profiler id="root" onCommit={callback}>
               <ErrorBoundary
                 fallback={
-                  <ComponetWithEffects
+                  <ComponentWithEffects
                     duration={10000000}
                     effectDuration={100000000}
                     cleanupDuration={1000000000}
                   />
                 }>
-                <ComponetWithEffects
+                <ComponentWithEffects
                   duration={10}
                   effectDuration={100}
                   cleanupDuration={1000}
                   shouldThrow={true}
                 />
               </ErrorBoundary>
-              <ComponetWithEffects
+              <ComponentWithEffects
                 duration={10000}
                 effectDuration={100000}
                 cleanupDuration={1000000}
@@ -1731,20 +1731,20 @@ describe('Profiler', () => {
             <React.Profiler id="root" onCommit={callback}>
               <ErrorBoundary
                 fallback={
-                  <ComponetWithEffects
+                  <ComponentWithEffects
                     duration={10000000}
                     effectDuration={100000000}
                     cleanupDuration={1000000000}
                   />
                 }>
-                <ComponetWithEffects
+                <ComponentWithEffects
                   duration={10}
                   effectDuration={100}
                   cleanupDuration={1000}
                   shouldThrow={false}
                 />
               </ErrorBoundary>
-              <ComponetWithEffects
+              <ComponentWithEffects
                 duration={10000}
                 effectDuration={100000}
                 cleanupDuration={1000000}
@@ -1780,7 +1780,7 @@ describe('Profiler', () => {
         it('should report interactions that were active', () => {
           const callback = jest.fn();
 
-          const ComponetWithEffects = () => {
+          const ComponentWithEffects = () => {
             const [didMount, setDidMount] = React.useState(false);
             React.useLayoutEffect(() => {
               Scheduler.unstable_advanceTime(didMount ? 1000 : 100);
@@ -1809,7 +1809,7 @@ describe('Profiler', () => {
             () => {
               ReactTestRenderer.create(
                 <React.Profiler id="root" onCommit={callback}>
-                  <ComponetWithEffects />
+                  <ComponentWithEffects />
                 </React.Profiler>,
               );
             },
@@ -1848,7 +1848,7 @@ describe('Profiler', () => {
       it('should report time spent in passive effects', () => {
         const callback = jest.fn();
 
-        const ComponetWithEffects = () => {
+        const ComponentWithEffects = () => {
           React.useLayoutEffect(() => {
             // This layout effect is here to verify that its time isn't reported.
             Scheduler.unstable_advanceTime(5);
@@ -1877,7 +1877,7 @@ describe('Profiler', () => {
         ReactTestRenderer.act(() => {
           renderer = ReactTestRenderer.create(
             <React.Profiler id="mount-test" onPostCommit={callback}>
-              <ComponetWithEffects />
+              <ComponentWithEffects />
             </React.Profiler>,
           );
         });
@@ -1899,7 +1899,7 @@ describe('Profiler', () => {
         ReactTestRenderer.act(() => {
           renderer.update(
             <React.Profiler id="update-test" onPostCommit={callback}>
-              <ComponetWithEffects />
+              <ComponentWithEffects />
             </React.Profiler>,
           );
         });
@@ -1944,7 +1944,7 @@ describe('Profiler', () => {
       it('should report time spent in passive effects with cascading renders', () => {
         const callback = jest.fn();
 
-        const ComponetWithEffects = () => {
+        const ComponentWithEffects = () => {
           const [didMount, setDidMount] = React.useState(false);
           React.useEffect(() => {
             if (!didMount) {
@@ -1963,7 +1963,7 @@ describe('Profiler', () => {
         ReactTestRenderer.act(() => {
           ReactTestRenderer.create(
             <React.Profiler id="mount-test" onPostCommit={callback}>
-              <ComponetWithEffects />
+              <ComponentWithEffects />
             </React.Profiler>,
           );
         });
@@ -1992,7 +1992,7 @@ describe('Profiler', () => {
       it('should bubble time spent in effects to higher profilers', () => {
         const callback = jest.fn();
 
-        const ComponetWithEffects = ({
+        const ComponentWithEffects = ({
           cleanupDuration,
           duration,
           setCountRef,
@@ -2018,14 +2018,14 @@ describe('Profiler', () => {
           renderer = ReactTestRenderer.create(
             <React.Profiler id="root-mount" onPostCommit={callback}>
               <React.Profiler id="a">
-                <ComponetWithEffects
+                <ComponentWithEffects
                   duration={10}
                   cleanupDuration={100}
                   setCountRef={setCountRef}
                 />
               </React.Profiler>
               <React.Profiler id="b">
-                <ComponetWithEffects duration={1000} cleanupDuration={10000} />
+                <ComponentWithEffects duration={1000} cleanupDuration={10000} />
               </React.Profiler>
             </React.Profiler>,
           );
@@ -2059,7 +2059,7 @@ describe('Profiler', () => {
           renderer.update(
             <React.Profiler id="root-update" onPostCommit={callback}>
               <React.Profiler id="b">
-                <ComponetWithEffects duration={1000} cleanupDuration={10000} />
+                <ComponentWithEffects duration={1000} cleanupDuration={10000} />
               </React.Profiler>
             </React.Profiler>,
           );
@@ -2092,7 +2092,7 @@ describe('Profiler', () => {
           }
         }
 
-        const ComponetWithEffects = ({
+        const ComponentWithEffects = ({
           cleanupDuration,
           duration,
           effectDuration,
@@ -2120,20 +2120,20 @@ describe('Profiler', () => {
             <React.Profiler id="root" onPostCommit={callback}>
               <ErrorBoundary
                 fallback={
-                  <ComponetWithEffects
+                  <ComponentWithEffects
                     duration={10000000}
                     effectDuration={100000000}
                     cleanupDuration={1000000000}
                   />
                 }>
-                <ComponetWithEffects
+                <ComponentWithEffects
                   duration={10}
                   effectDuration={100}
                   cleanupDuration={1000}
                   shouldThrow={true}
                 />
               </ErrorBoundary>
-              <ComponetWithEffects
+              <ComponentWithEffects
                 duration={10000}
                 effectDuration={100000}
                 cleanupDuration={1000000}
@@ -2180,7 +2180,7 @@ describe('Profiler', () => {
           }
         }
 
-        const ComponetWithEffects = ({
+        const ComponentWithEffects = ({
           cleanupDuration,
           duration,
           effectDuration,
@@ -2209,20 +2209,20 @@ describe('Profiler', () => {
             <React.Profiler id="root" onPostCommit={callback}>
               <ErrorBoundary
                 fallback={
-                  <ComponetWithEffects
+                  <ComponentWithEffects
                     duration={10000000}
                     effectDuration={100000000}
                     cleanupDuration={1000000000}
                   />
                 }>
-                <ComponetWithEffects
+                <ComponentWithEffects
                   duration={10}
                   effectDuration={100}
                   cleanupDuration={1000}
                   shouldThrow={true}
                 />
               </ErrorBoundary>
-              <ComponetWithEffects
+              <ComponentWithEffects
                 duration={10000}
                 effectDuration={100000}
                 cleanupDuration={1000000}
@@ -2252,20 +2252,20 @@ describe('Profiler', () => {
             <React.Profiler id="root" onPostCommit={callback}>
               <ErrorBoundary
                 fallback={
-                  <ComponetWithEffects
+                  <ComponentWithEffects
                     duration={10000000}
                     effectDuration={100000000}
                     cleanupDuration={1000000000}
                   />
                 }>
-                <ComponetWithEffects
+                <ComponentWithEffects
                   duration={10}
                   effectDuration={100}
                   cleanupDuration={1000}
                   shouldThrow={false}
                 />
               </ErrorBoundary>
-              <ComponetWithEffects
+              <ComponentWithEffects
                 duration={10000}
                 effectDuration={100000}
                 cleanupDuration={1000000}
@@ -2303,7 +2303,7 @@ describe('Profiler', () => {
         it('should report interactions that were active', () => {
           const callback = jest.fn();
 
-          const ComponetWithEffects = () => {
+          const ComponentWithEffects = () => {
             const [didMount, setDidMount] = React.useState(false);
             React.useEffect(() => {
               Scheduler.unstable_advanceTime(didMount ? 1000 : 100);
@@ -2333,7 +2333,7 @@ describe('Profiler', () => {
               () => {
                 ReactTestRenderer.create(
                   <React.Profiler id="root" onPostCommit={callback}>
-                    <ComponetWithEffects />
+                    <ComponentWithEffects />
                   </React.Profiler>,
                 );
               },
@@ -2875,7 +2875,7 @@ describe('Profiler', () => {
         Scheduler.unstable_yieldValue('onPostCommit');
       });
 
-      const ComponetWithEffects = () => {
+      const ComponentWithEffects = () => {
         React.useEffect(() => {
           Scheduler.unstable_yieldValue('passive effect');
         });
@@ -2892,7 +2892,7 @@ describe('Profiler', () => {
             id="root"
             onCommit={onCommit}
             onPostCommit={onPostCommit}>
-            <ComponetWithEffects />
+            <ComponentWithEffects />
           </React.Profiler>,
         );
       });

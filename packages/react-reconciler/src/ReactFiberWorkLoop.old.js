@@ -371,7 +371,7 @@ export function requestUpdateLane(
     // remove the special case and treat them as if they came from an
     // interleaved event. Regardless, this pattern is not officially supported.
     // This behavior is only a fallback. The flag only exists until we can roll
-    // out the setState warnning, since existing code might accidentally rely on
+    // out the setState warning, since existing code might accidentally rely on
     // the current behavior.
     return pickArbitraryLane(workInProgressRootRenderLanes);
   }
@@ -383,7 +383,7 @@ export function requestUpdateLane(
   //
   // However, the "included" lanes could be mutated in between updates in the
   // same event, like if you perform an update inside `flushSync`. Or any other
-  // codepath that might call `prepareFreshStack`.
+  // code path that might call `prepareFreshStack`.
   //
   // The trick we use is to cache the first of each of these inputs within an
   // event. Then reset the cached values once we can be sure the event is over.

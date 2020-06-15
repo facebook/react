@@ -867,19 +867,19 @@ describe('Store', () => {
     }
 
     const MyComponent = (props, ref) => null;
-    const FowardRefComponent = React.forwardRef(MyComponent);
+    const ForwardRefComponent = React.forwardRef(MyComponent);
     const MyComponent2 = (props, ref) => null;
-    const FowardRefComponentWithAnonymousFunction = React.forwardRef(() => (
+    const ForwardRefComponentWithAnonymousFunction = React.forwardRef(() => (
       <MyComponent2 />
     ));
     const MyComponent3 = (props, ref) => null;
-    const FowardRefComponentWithCustomDisplayName = React.forwardRef(
+    const ForwardRefComponentWithCustomDisplayName = React.forwardRef(
       MyComponent3,
     );
-    FowardRefComponentWithCustomDisplayName.displayName = 'Custom';
+    ForwardRefComponentWithCustomDisplayName.displayName = 'Custom';
     const MyComponent4 = (props, ref) => null;
     const MemoComponent = React.memo(MyComponent4);
-    const MemoForwardRefComponent = React.memo(FowardRefComponent);
+    const MemoForwardRefComponent = React.memo(ForwardRefComponent);
     const MyComponent5 = (props, ref) => null;
     const LazyComponent = React.lazy(() => fakeImport(MyComponent5));
 
@@ -896,9 +896,9 @@ describe('Store', () => {
     const App = () => (
       <React.Fragment>
         <MyComponent />
-        <FowardRefComponent />
-        <FowardRefComponentWithAnonymousFunction />
-        <FowardRefComponentWithCustomDisplayName />
+        <ForwardRefComponent />
+        <ForwardRefComponentWithAnonymousFunction />
+        <ForwardRefComponentWithCustomDisplayName />
         <MemoComponent />
         <MemoForwardRefComponent />
         <React.Suspense fallback="Loading...">

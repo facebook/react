@@ -46,7 +46,7 @@ describe('ReactIncrementalErrorHandling', () => {
   }
 
   // Note: This is based on a similar component we use in www. We can delete
-  // once the extra div wrapper is no longer neccessary.
+  // once the extra div wrapper is no longer necessary.
   function LegacyHiddenDiv({children, mode}) {
     return (
       <div hidden={mode === 'hidden'}>
@@ -440,8 +440,8 @@ describe('ReactIncrementalErrorHandling', () => {
       'C',
       'D',
 
-      // Since the error occured during a partially concurrent render, we should
-      // retry one more time, synchonrously.
+      // Since the error occurred during a partially concurrent render, we should
+      // retry one more time, synchronously.
       'A',
       'B',
       'Oops',

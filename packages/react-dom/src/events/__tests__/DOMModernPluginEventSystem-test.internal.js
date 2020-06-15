@@ -704,7 +704,7 @@ describe('DOMModernPluginEventSystem', () => {
         it('native stopPropagation on click events between portals', () => {
           const buttonRef = React.createRef();
           const divRef = React.createRef();
-          const middelDivRef = React.createRef();
+          const middleDivRef = React.createRef();
           const log = [];
           const onClick = jest.fn(e => log.push(['bubble', e.currentTarget]));
           const onClickCapture = jest.fn(e =>
@@ -716,7 +716,7 @@ describe('DOMModernPluginEventSystem', () => {
 
           function Child() {
             return (
-              <div ref={middelDivRef}>
+              <div ref={middleDivRef}>
                 <div
                   ref={divRef}
                   onClick={onClick}
@@ -731,7 +731,7 @@ describe('DOMModernPluginEventSystem', () => {
             React.useLayoutEffect(() => {
               // This should prevent the portalElement listeners from
               // capturing the events in the bubble phase.
-              middelDivRef.current.addEventListener('click', e => {
+              middleDivRef.current.addEventListener('click', e => {
                 e.stopPropagation();
               });
             });
@@ -920,7 +920,7 @@ describe('DOMModernPluginEventSystem', () => {
         it('native stopPropagation on focus events between portals', () => {
           const buttonRef = React.createRef();
           const divRef = React.createRef();
-          const middelDivRef = React.createRef();
+          const middleDivRef = React.createRef();
           const log = [];
           const onFocus = jest.fn(e => log.push(['bubble', e.currentTarget]));
           const onFocusCapture = jest.fn(e =>
@@ -932,7 +932,7 @@ describe('DOMModernPluginEventSystem', () => {
 
           function Child() {
             return (
-              <div ref={middelDivRef}>
+              <div ref={middleDivRef}>
                 <div
                   ref={divRef}
                   onClick={onFocus}
@@ -948,7 +948,7 @@ describe('DOMModernPluginEventSystem', () => {
             React.useLayoutEffect(() => {
               // This should prevent the portalElement listeners from
               // capturing the events in the bubble phase.
-              middelDivRef.current.addEventListener('click', e => {
+              middleDivRef.current.addEventListener('click', e => {
                 e.stopPropagation();
               });
             });
@@ -1662,7 +1662,7 @@ describe('DOMModernPluginEventSystem', () => {
           });
 
           // @gate experimental
-          it('should correctly handle stopPropagation corrrectly for target events', () => {
+          it('should correctly handle stopPropagation correctly for target events', () => {
             const buttonRef = React.createRef();
             const divRef = React.createRef();
             const clickEvent = jest.fn();
@@ -1695,12 +1695,12 @@ describe('DOMModernPluginEventSystem', () => {
           });
 
           // @gate experimental
-          it('should correctly handle stopPropagation corrrectly for many target events', () => {
+          it('should correctly handle stopPropagation correctly for many target events', () => {
             const buttonRef = React.createRef();
-            const targetListerner1 = jest.fn(e => e.stopPropagation());
-            const targetListerner2 = jest.fn(e => e.stopPropagation());
-            const targetListerner3 = jest.fn(e => e.stopPropagation());
-            const targetListerner4 = jest.fn(e => e.stopPropagation());
+            const targetListener1 = jest.fn(e => e.stopPropagation());
+            const targetListener2 = jest.fn(e => e.stopPropagation());
+            const targetListener3 = jest.fn(e => e.stopPropagation());
+            const targetListener4 = jest.fn(e => e.stopPropagation());
             const click1 = ReactDOM.unstable_createEventHandle('click');
             const click2 = ReactDOM.unstable_createEventHandle('click');
             const click3 = ReactDOM.unstable_createEventHandle('click');
@@ -1708,10 +1708,10 @@ describe('DOMModernPluginEventSystem', () => {
 
             function Test() {
               React.useEffect(() => {
-                click1.setListener(buttonRef.current, targetListerner1);
-                click2.setListener(buttonRef.current, targetListerner2);
-                click3.setListener(buttonRef.current, targetListerner3);
-                click4.setListener(buttonRef.current, targetListerner4);
+                click1.setListener(buttonRef.current, targetListener1);
+                click2.setListener(buttonRef.current, targetListener2);
+                click3.setListener(buttonRef.current, targetListener3);
+                click4.setListener(buttonRef.current, targetListener4);
               });
 
               return <button ref={buttonRef}>Click me!</button>;
@@ -1722,19 +1722,19 @@ describe('DOMModernPluginEventSystem', () => {
 
             const buttonElement = buttonRef.current;
             dispatchClickEvent(buttonElement);
-            expect(targetListerner1).toHaveBeenCalledTimes(1);
-            expect(targetListerner2).toHaveBeenCalledTimes(1);
-            expect(targetListerner3).toHaveBeenCalledTimes(1);
-            expect(targetListerner4).toHaveBeenCalledTimes(1);
+            expect(targetListener1).toHaveBeenCalledTimes(1);
+            expect(targetListener2).toHaveBeenCalledTimes(1);
+            expect(targetListener3).toHaveBeenCalledTimes(1);
+            expect(targetListener4).toHaveBeenCalledTimes(1);
           });
 
           // @gate experimental
           it('should correctly handle stopPropagation for mixed capture/bubbling target listeners', () => {
             const buttonRef = React.createRef();
-            const targetListerner1 = jest.fn(e => e.stopPropagation());
-            const targetListerner2 = jest.fn(e => e.stopPropagation());
-            const targetListerner3 = jest.fn(e => e.stopPropagation());
-            const targetListerner4 = jest.fn(e => e.stopPropagation());
+            const targetListener1 = jest.fn(e => e.stopPropagation());
+            const targetListener2 = jest.fn(e => e.stopPropagation());
+            const targetListener3 = jest.fn(e => e.stopPropagation());
+            const targetListener4 = jest.fn(e => e.stopPropagation());
             const click1 = ReactDOM.unstable_createEventHandle('click', {
               capture: true,
             });
@@ -1746,10 +1746,10 @@ describe('DOMModernPluginEventSystem', () => {
 
             function Test() {
               React.useEffect(() => {
-                click1.setListener(buttonRef.current, targetListerner1);
-                click2.setListener(buttonRef.current, targetListerner2);
-                click3.setListener(buttonRef.current, targetListerner3);
-                click4.setListener(buttonRef.current, targetListerner4);
+                click1.setListener(buttonRef.current, targetListener1);
+                click2.setListener(buttonRef.current, targetListener2);
+                click3.setListener(buttonRef.current, targetListener3);
+                click4.setListener(buttonRef.current, targetListener4);
               });
 
               return <button ref={buttonRef}>Click me!</button>;
@@ -1760,10 +1760,10 @@ describe('DOMModernPluginEventSystem', () => {
 
             const buttonElement = buttonRef.current;
             dispatchClickEvent(buttonElement);
-            expect(targetListerner1).toHaveBeenCalledTimes(1);
-            expect(targetListerner2).toHaveBeenCalledTimes(1);
-            expect(targetListerner3).toHaveBeenCalledTimes(0);
-            expect(targetListerner4).toHaveBeenCalledTimes(0);
+            expect(targetListener1).toHaveBeenCalledTimes(1);
+            expect(targetListener2).toHaveBeenCalledTimes(1);
+            expect(targetListener3).toHaveBeenCalledTimes(0);
+            expect(targetListener4).toHaveBeenCalledTimes(0);
           });
 
           // @gate experimental
@@ -2035,10 +2035,10 @@ describe('DOMModernPluginEventSystem', () => {
           // @gate experimental
           it('should correctly handle stopPropagation for mixed listeners', () => {
             const buttonRef = React.createRef();
-            const rootListerner1 = jest.fn(e => e.stopPropagation());
-            const rootListerner2 = jest.fn();
-            const targetListerner1 = jest.fn();
-            const targetListerner2 = jest.fn();
+            const rootListener1 = jest.fn(e => e.stopPropagation());
+            const rootListener2 = jest.fn();
+            const targetListener1 = jest.fn();
+            const targetListener2 = jest.fn();
             const click1 = ReactDOM.unstable_createEventHandle('click', {
               capture: true,
             });
@@ -2050,10 +2050,10 @@ describe('DOMModernPluginEventSystem', () => {
 
             function Test() {
               React.useEffect(() => {
-                click1.setListener(window, rootListerner1);
-                click2.setListener(buttonRef.current, targetListerner1);
-                click3.setListener(window, rootListerner2);
-                click4.setListener(buttonRef.current, targetListerner2);
+                click1.setListener(window, rootListener1);
+                click2.setListener(buttonRef.current, targetListener1);
+                click3.setListener(window, rootListener2);
+                click4.setListener(buttonRef.current, targetListener2);
 
                 return () => {
                   click1.setListener(window, null);
@@ -2069,19 +2069,19 @@ describe('DOMModernPluginEventSystem', () => {
 
             const buttonElement = buttonRef.current;
             dispatchClickEvent(buttonElement);
-            expect(rootListerner1).toHaveBeenCalledTimes(1);
-            expect(targetListerner1).toHaveBeenCalledTimes(0);
-            expect(targetListerner2).toHaveBeenCalledTimes(0);
-            expect(rootListerner2).toHaveBeenCalledTimes(0);
+            expect(rootListener1).toHaveBeenCalledTimes(1);
+            expect(targetListener1).toHaveBeenCalledTimes(0);
+            expect(targetListener2).toHaveBeenCalledTimes(0);
+            expect(rootListener2).toHaveBeenCalledTimes(0);
           });
 
           // @gate experimental
           it('should correctly handle stopPropagation for delegated listeners', () => {
             const buttonRef = React.createRef();
-            const rootListerner1 = jest.fn(e => e.stopPropagation());
-            const rootListerner2 = jest.fn();
-            const rootListerner3 = jest.fn(e => e.stopPropagation());
-            const rootListerner4 = jest.fn();
+            const rootListener1 = jest.fn(e => e.stopPropagation());
+            const rootListener2 = jest.fn();
+            const rootListener3 = jest.fn(e => e.stopPropagation());
+            const rootListener4 = jest.fn();
             const click1 = ReactDOM.unstable_createEventHandle('click', {
               capture: true,
             });
@@ -2093,10 +2093,10 @@ describe('DOMModernPluginEventSystem', () => {
 
             function Test() {
               React.useEffect(() => {
-                click1.setListener(window, rootListerner1);
-                click2.setListener(window, rootListerner2);
-                click3.setListener(window, rootListerner3);
-                click4.setListener(window, rootListerner4);
+                click1.setListener(window, rootListener1);
+                click2.setListener(window, rootListener2);
+                click3.setListener(window, rootListener3);
+                click4.setListener(window, rootListener4);
 
                 return () => {
                   click1.setListener(window, null);
@@ -2115,10 +2115,10 @@ describe('DOMModernPluginEventSystem', () => {
 
             const buttonElement = buttonRef.current;
             dispatchClickEvent(buttonElement);
-            expect(rootListerner1).toHaveBeenCalledTimes(1);
-            expect(rootListerner2).toHaveBeenCalledTimes(1);
-            expect(rootListerner3).toHaveBeenCalledTimes(0);
-            expect(rootListerner4).toHaveBeenCalledTimes(0);
+            expect(rootListener1).toHaveBeenCalledTimes(1);
+            expect(rootListener2).toHaveBeenCalledTimes(1);
+            expect(rootListener3).toHaveBeenCalledTimes(0);
+            expect(rootListener4).toHaveBeenCalledTimes(0);
           });
 
           // @gate experimental
@@ -2229,7 +2229,7 @@ describe('DOMModernPluginEventSystem', () => {
 
             let customEventHandle;
 
-            // Test that we get a warning when we don't provide an explicit priortiy
+            // Test that we get a warning when we don't provide an explicit priority
             expect(() => {
               customEventHandle = ReactDOM.unstable_createEventHandle(
                 'custom-event',

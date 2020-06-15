@@ -586,7 +586,7 @@ export function attach(
     });
   }
 
-  function createisPathAllowed(key: string) {
+  function createIsPathAllowed(key: string) {
     // This function helps prevent previously-inspected paths from being dehydrated in updates.
     // This is important to avoid a bad user experience where expanded toggles collapse on update.
     return function isPathAllowed(path: Array<string | number>): boolean {
@@ -706,15 +706,15 @@ export function attach(
 
     inspectedElement.context = cleanForBridge(
       inspectedElement.context,
-      createisPathAllowed('context'),
+      createIsPathAllowed('context'),
     );
     inspectedElement.props = cleanForBridge(
       inspectedElement.props,
-      createisPathAllowed('props'),
+      createIsPathAllowed('props'),
     );
     inspectedElement.state = cleanForBridge(
       inspectedElement.state,
-      createisPathAllowed('state'),
+      createIsPathAllowed('state'),
     );
 
     return {
@@ -800,7 +800,7 @@ export function attach(
       // List of owners
       owners,
 
-      // Location of component in source coude.
+      // Location of component in source code.
       source,
 
       rootType: null,

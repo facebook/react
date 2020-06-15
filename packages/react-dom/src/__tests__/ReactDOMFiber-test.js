@@ -1306,7 +1306,7 @@ describe('ReactDOMFiber', () => {
 
     ReactDOM.render(<NewApp />, container);
 
-    // Calling focus again will flush previously scheduled discerete work for the old root-
+    // Calling focus again will flush previously scheduled discrete work for the old root-
     // but this should not clear out the newly mounted app.
     ref.current.focus();
 

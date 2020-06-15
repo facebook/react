@@ -205,7 +205,7 @@ type BaseFiberRootProperties = {|
   // Node returned by Scheduler.scheduleCallback
   callbackNode: *,
 
-  // Used by useMutableSource hook to avoid tearing during hydrtaion.
+  // Used by useMutableSource hook to avoid tearing during hydration.
   mutableSourceEagerHydrationData?: Array<
     MutableSource<any> | MutableSourceVersion,
   > | null,

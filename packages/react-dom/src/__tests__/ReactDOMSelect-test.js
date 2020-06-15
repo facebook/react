@@ -507,7 +507,7 @@ describe('ReactDOMSelect', () => {
     expect(markup).not.toContain('<option selected="" value="monkey"');
   });
 
-  it('should not control defaultValue if readding options', () => {
+  it('should not control defaultValue if re-adding options', () => {
     const container = document.createElement('div');
 
     const node = ReactDOM.render(

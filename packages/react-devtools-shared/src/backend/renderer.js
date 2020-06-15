@@ -111,7 +111,7 @@ type ReactTypeOfSideEffectType = {|
   Placement: number,
 |};
 
-// Some environments (e.g. React Native / Hermes) don't support the performace API yet.
+// Some environments (e.g. React Native / Hermes) don't support the performance API yet.
 const getCurrentTime =
   typeof performance === 'object' && typeof performance.now === 'function'
     ? () => performance.now()
@@ -532,7 +532,7 @@ export function attach(
 
   // If necessary, we can revisit optimizing this operation.
   // For example, we could add a new recursive unmount tree operation.
-  // The unmount operations are already significantly smaller than mount opreations though.
+  // The unmount operations are already significantly smaller than mount operations though.
   // This is something to keep in mind for later.
   function updateComponentFilters(componentFilters: Array<ComponentFilter>) {
     if (isProfiling) {
@@ -551,7 +551,7 @@ export function attach(
 
     applyComponentFilters(componentFilters);
 
-    // Reset psuedo counters so that new path selections will be persisted.
+    // Reset pseudo counters so that new path selections will be persisted.
     rootDisplayNameCounter.clear();
 
     // Recursively re-mount all roots with new filter criteria applied.
@@ -810,7 +810,7 @@ export function attach(
 
   // Record all contexts at the time profiling is started.
   // Fibers only store the current context value,
-  // so we need to track them separatenly in order to determine changed keys.
+  // so we need to track them separately in order to determine changed keys.
   function crawlToInitializeContextsMap(fiber: Fiber) {
     updateContextsForFiber(fiber);
     let current = fiber.child;
@@ -961,7 +961,7 @@ export function attach(
       // (1) an initial tree snapshot and
       // (2) the operations array for each commit
       // Because of this, it's important that the operations and metadata arrays align,
-      // So it's important not to ommit even empty operations while profiing is active.
+      // So it's important not to omit even empty operations while profiling is active.
       if (!isProfiling) {
         return;
       }
@@ -1156,7 +1156,7 @@ export function attach(
     }
     const id = getFiberID(primaryFiber);
     if (isRoot) {
-      // Roots must be removed only after all children (pending and simultated) have been removed.
+      // Roots must be removed only after all children (pending and simulated) have been removed.
       // So we track it separately.
       pendingUnmountedRootID = id;
     } else if (!shouldFilterFiber(fiber)) {
@@ -1320,7 +1320,7 @@ export function attach(
       const {alternate} = fiber;
 
       // It's important to update treeBaseDuration even if the current Fiber did not render,
-      // becuase it's possible that one of its descednants did.
+      // because it's possible that one of its descendants did.
       if (
         alternate == null ||
         treeBaseDuration !== alternate.treeBaseDuration
@@ -1382,7 +1382,7 @@ export function attach(
     // This is trickier than a simple comparison though, since certain types of fibers are filtered.
     const nextChildren: Array<number> = [];
 
-    // This is a naive implimentation that shallowly recurses children.
+    // This is a naive implementation that shallowly recourses children.
     // We might want to revisit this if it proves to be too inefficient.
     let child = childSet;
     while (child !== null) {
@@ -1476,7 +1476,7 @@ export function attach(
     // Suspense components only have a non-null memoizedState if they're timed-out.
     const prevDidTimeout = isSuspense && prevFiber.memoizedState !== null;
     const nextDidTimeOut = isSuspense && nextFiber.memoizedState !== null;
-    // The logic below is inspired by the codepaths in updateSuspenseComponent()
+    // The logic below is inspired by the code paths in updateSuspenseComponent()
     // inside ReactFiberBeginWork in the React source code.
     if (prevDidTimeout && nextDidTimeOut) {
       // Fallback -> Fallback:
@@ -1540,7 +1540,7 @@ export function attach(
       }
     } else {
       // Common case: Primary -> Primary.
-      // This is the same codepath as for non-Suspense fibers.
+      // This is the same code path as for non-Suspense fibers.
       if (nextFiber.child !== prevFiber.child) {
         // If the first child is different, we need to traverse them.
         // Each next child will be either a new child (mount) or an alternate (update).
@@ -1596,7 +1596,7 @@ export function attach(
       } else {
         if (traceUpdatesEnabled) {
           // If we're tracing updates and we've bailed out before reaching a host node,
-          // we should fall back to recursively marking the nearest host descendates for highlight.
+          // we should fall back to recursively marking the nearest host descendants for highlight.
           if (traceNearestHostComponentUpdate) {
             const hostFibers = findAllCurrentHostFibers(
               getFiberID(getPrimaryFiber(nextFiber)),
@@ -2347,7 +2347,7 @@ export function attach(
       // List of owners
       owners,
 
-      // Location of component in source coude.
+      // Location of component in source code.
       source: _debugSource || null,
 
       rootType,
@@ -2380,7 +2380,7 @@ export function attach(
     });
   }
 
-  function createisPathAllowed(
+  function createIsPathAllowed(
     key: string | null,
     secondaryCategory: 'hooks' | null,
   ) {
@@ -2528,7 +2528,7 @@ export function attach(
               ((mostRecentlyInspectedElement: any): InspectedElement),
               path,
             ),
-            createisPathAllowed(null, secondaryCategory),
+            createIsPathAllowed(null, secondaryCategory),
             path,
           ),
         };
@@ -2564,7 +2564,7 @@ export function attach(
 
       // Any time an inspected element has an update,
       // we should update the selected $r value as wel.
-      // Do this before dehyration (cleanForBridge).
+      // Do this before dehydration (cleanForBridge).
       updateSelectedElement(mostRecentlyInspectedElement);
 
       // Clone before cleaning so that we preserve the full data.
@@ -2573,19 +2573,19 @@ export function attach(
       const cleanedInspectedElement = {...mostRecentlyInspectedElement};
       cleanedInspectedElement.context = cleanForBridge(
         cleanedInspectedElement.context,
-        createisPathAllowed('context', null),
+        createIsPathAllowed('context', null),
       );
       cleanedInspectedElement.hooks = cleanForBridge(
         cleanedInspectedElement.hooks,
-        createisPathAllowed('hooks', 'hooks'),
+        createIsPathAllowed('hooks', 'hooks'),
       );
       cleanedInspectedElement.props = cleanForBridge(
         cleanedInspectedElement.props,
-        createisPathAllowed('props', null),
+        createIsPathAllowed('props', null),
       );
       cleanedInspectedElement.state = cleanForBridge(
         cleanedInspectedElement.state,
-        createisPathAllowed('state', null),
+        createIsPathAllowed('state', null),
       );
 
       return {
@@ -2678,7 +2678,7 @@ export function attach(
   }
 
   function setInContext(id: number, path: Array<string | number>, value: any) {
-    // To simplify hydration and display of primative context values (e.g. number, string)
+    // To simplify hydration and display of primitive context values (e.g. number, string)
     // the inspectElement() method wraps context in a {value: ...} object.
     // We need to remove the first part of the path (the "value") before continuing.
     path = path.slice(1);
@@ -2843,7 +2843,7 @@ export function attach(
       if (shouldRecordChangeDescriptions) {
         // Record all contexts at the time profiling is started.
         // Fibers only store the current context value,
-        // so we need to track them separatenly in order to determine changed keys.
+        // so we need to track them separately in order to determine changed keys.
         crawlToInitializeContextsMap(root.current);
       }
     });

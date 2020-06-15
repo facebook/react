@@ -147,7 +147,7 @@ function flushWork(hasTimeRemaining, initialTime) {
         throw error;
       }
     } else {
-      // No catch in prod codepath.
+      // No catch in prod code path.
       return workLoop(hasTimeRemaining, initialTime);
     }
   } finally {
