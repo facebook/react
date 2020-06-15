@@ -951,7 +951,7 @@ export function didNotFindHydratableContainerSuspenseInstance(
   parentContainer: Container,
 ) {
   if (__DEV__) {
-    // TODO: warnForInsertedHydratedSupsense(parentContainer);
+    // TODO: warnForInsertedHydratedSuspense(parentContainer);
   }
 }
 

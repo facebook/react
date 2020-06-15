@@ -925,7 +925,7 @@ function readFromUnsubcribedMutableSource<Source, Snapshot>(
     }
     return snapshot;
   } else {
-    // This handles the special case of a mutable source being shared beween renderers.
+    // This handles the special case of a mutable source being shared between renderers.
     // In that case, if the source is mutated between the first and second renderer,
     // The second renderer don't know that it needs to reset the WIP version during unwind,
     // (because the hook only marks sources as dirty if it's written to their WIP version).
@@ -1072,7 +1072,7 @@ function useMutableSource<Source, Snapshot>(
   // It's possible that the underlying source was mutated between the when the last "change" event fired,
   // and when the current render (with the new getSnapshot function) is processed.
   //
-  // In both cases, we need to throw away pending udpates (since they are no longer relevant)
+  // In both cases, we need to throw away pending updates (since they are no longer relevant)
   // and treat reading from the source as we do in the mount case.
   if (
     !is(prevGetSnapshot, getSnapshot) ||

@@ -56,7 +56,7 @@ function loadModules() {
 }
 
 // Note: This is based on a similar component we use in www. We can delete once
-// the extra div wrapper is no longer neccessary.
+// the extra div wrapper is no longer necessary.
 function LegacyHiddenDiv({children, mode}) {
   return (
     <div hidden={mode === 'hidden'}>

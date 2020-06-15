@@ -209,7 +209,7 @@ export function createEventHandle(
           invariant(
             false,
             'ReactDOM.createEventHandle: setListener called on an invalid ' +
-              'target. Provide a vaid EventTarget or an element managed by React.',
+              'target. Provide a valid EventTarget or an element managed by React.',
           );
         }
         let listener = listeners.get(target);

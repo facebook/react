@@ -100,7 +100,7 @@ it('flushes effects on every call', () => {
   expect(button.innerHTML).toEqual('5');
 });
 
-it("should keep flushing effects until the're done", () => {
+it("should keep flushing effects until they're done", () => {
   function App() {
     const [ctr, setCtr] = React.useState(0);
     React.useEffect(() => {

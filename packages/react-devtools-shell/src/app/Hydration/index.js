@@ -11,7 +11,7 @@ import * as React from 'react';
 import {Fragment, useDebugValue, useState} from 'react';
 
 const div = document.createElement('div');
-const exmapleFunction = () => {};
+const exampleFunction = () => {};
 const typedArray = new Uint8Array(3);
 typedArray[0] = 1;
 typedArray[1] = 2;
@@ -112,7 +112,7 @@ export default function Hydration() {
       <h1>Hydration</h1>
       <DehydratableProps
         html_element={div}
-        fn={exmapleFunction}
+        fn={exampleFunction}
         symbol={Symbol('symbol')}
         react_element={<span />}
         array_buffer={typedArray.buffer}

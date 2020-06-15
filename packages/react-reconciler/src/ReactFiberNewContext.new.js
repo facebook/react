@@ -244,7 +244,7 @@ export function propagateContextChange(
       enableSuspenseServerRenderer &&
       fiber.tag === DehydratedFragment
     ) {
-      // If a dehydrated suspense bounudary is in this subtree, we don't know
+      // If a dehydrated suspense boundary is in this subtree, we don't know
       // if it will have any context consumers in it. The best we can do is
       // mark it as having updates.
       const parentSuspense = fiber.return;

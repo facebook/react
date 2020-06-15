@@ -155,7 +155,7 @@ export default function SelectedElement(_: Props) {
     } else {
       const nearestSuspenseElementID = nearestSuspenseElement.id;
 
-      // If we're suspending from an arbitary (non-Suspense) component, select the nearest Suspense element in the Tree.
+      // If we're suspending from an arbitrary (non-Suspense) component, select the nearest Suspense element in the Tree.
       // This way when the fallback UI is shown and the current element is hidden, something meaningful is selected.
       if (nearestSuspenseElement !== element) {
         dispatch({
@@ -248,7 +248,7 @@ export default function SelectedElement(_: Props) {
       {inspectedElement !== null && (
         <InspectedElementView
           key={
-            inspectedElementID /* Force reset when seleted Element changes */
+            inspectedElementID /* Force reset when selected Element changes */
           }
           copyInspectedElementPath={copyInspectedElementPath}
           element={element}
@@ -596,13 +596,13 @@ function CannotSuspendWarningMessage() {
       filter.isEnabled,
   );
 
-  // Has the user filted out Suspense nodes from the tree?
+  // Has the user filtered out Suspense nodes from the tree?
   // If so, the selected element might actually be in a Suspense tree after all.
   if (areSuspenseElementsHidden) {
     return (
       <div className={styles.CannotSuspendWarningMessage}>
         Suspended state cannot be toggled while Suspense components are hidden.
-        Disable the filter and try agan.
+        Disable the filter and try again.
       </div>
     );
   } else {

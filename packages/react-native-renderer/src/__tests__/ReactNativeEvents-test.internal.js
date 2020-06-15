@@ -83,7 +83,7 @@ it('fails to register the same event name with different types', () => {
     }
 
     // This view config has the same bubbling and direct event name
-    // which will fail to register in developement.
+    // which will fail to register in development.
     return {
       uiViewClassName: 'InvalidEvents',
       validAttributes: {

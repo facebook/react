@@ -180,7 +180,7 @@ describe('useMutableSource', () => {
       source.value = 'two';
       expect(Scheduler).toFlushAndYieldThrough(['a:two', 'b:two']);
 
-      // Umounting a component should remove its subscriptino.
+      // Umounting a component should remove its subscription.
       ReactNoop.renderToRootWithID(
         <>
           <Component
@@ -391,7 +391,7 @@ describe('useMutableSource', () => {
       expect(unsubscribeA).toHaveBeenCalledTimes(1);
       expect(subscribeB).toHaveBeenCalledTimes(1);
 
-      // Unmounting should call the newer unsunscribe.
+      // Unmounting should call the newer unsubscribe.
       ReactNoop.unmountRootWithID('root');
       expect(Scheduler).toFlushAndYield([]);
       ReactNoop.flushPassiveEffects();
@@ -430,7 +430,7 @@ describe('useMutableSource', () => {
       source.value = 'two';
       expect(Scheduler).toFlushAndYieldThrough(['a:two']);
 
-      // Re-renders that occur before the udpate is processed
+      // Re-renders that occur before the update is processed
       // should reuse snapshot so long as the config has not changed
       ReactNoop.flushSync(() => {
         ReactNoop.render(
@@ -692,7 +692,7 @@ describe('useMutableSource', () => {
       );
       expect(Scheduler).toFlushAndYield(['a:a:one', 'Sync effect']);
 
-      // Because the store has not chagned yet, there are no pending updates,
+      // Because the store has not changed yet, there are no pending updates,
       // so it is considered safe to read from when we start this render.
       ReactNoop.render(
         <>
@@ -1002,7 +1002,7 @@ describe('useMutableSource', () => {
   });
 
   // @gate experimental
-  it('should not warn about updates that fire between unmount and passive unsubcribe', () => {
+  it('should not warn about updates that fire between unmount and passive unsubscribe', () => {
     const source = createSource('one');
     const mutableSource = createMutableSource(source);
 
@@ -1027,7 +1027,7 @@ describe('useMutableSource', () => {
       expect(Scheduler).toFlushAndYield(['only:one', 'Sync effect']);
       ReactNoop.flushPassiveEffects();
 
-      // Umounting a root should remove the remaining event listeners in a passive effect
+      // Unmounting a root should remove the remaining event listeners in a passive effect
       ReactNoop.unmountRootWithID('root');
       expect(Scheduler).toFlushAndYieldThrough(['layout unmount']);
 
@@ -1612,7 +1612,7 @@ describe('useMutableSource', () => {
       ]);
 
       // Now there are two pending mutations at different priorities. But they
-      // both read the same verion of the mutable source, so we must render
+      // both read the same version of the mutable source, so we must render
       // them simultaneously.
       //
       expect(Scheduler).toFlushAndYieldThrough([
