@@ -14,15 +14,15 @@
     "d3-hierarchy": "^1.1.9",
     "lodash.clonedeep": "^4.5.0",
     "memoize-one": "^5.1.1",
-    "pretty-ms": "^5.1.0",
-    "react": "^16.12.0",
-    "react-dom": "^16.12.0",
+    "pretty-ms": "^7.0.0",
+    "react": "^16.13.1",
+    "react-dom": "^16.13.1",
     "react-virtualized-auto-sizer": "^1.0.2",
-    "scheduler": "^0.18.0"
+    "scheduler": "^0.19.1"
   },
   "devDependencies": {
     "parcel": "2.0.0-alpha.3.2",
-    "postcss-modules": "^1.4.1",
+    "postcss-modules": "^2.0.0",
     "prettier": "^1.19.1"
   }
 }
