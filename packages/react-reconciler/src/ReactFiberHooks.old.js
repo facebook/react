@@ -43,7 +43,6 @@ import {
   markRootMutableRead,
   getCurrentUpdateLanePriority,
   setCurrentUpdateLanePriority,
-  schedulerPriorityToLanePriority,
 } from './ReactFiberLane';
 import {readContext} from './ReactFiberNewContext.old';
 import {createDeprecatedResponderListener} from './ReactFiberDeprecatedEvents.old';
@@ -1518,7 +1517,7 @@ function startTransition(setPending, config, callback) {
   );
 
   setCurrentUpdateLanePriority(
-    config === undefined ||
+    config == null ||
       config.timeoutMs === undefined ||
       (config.timeoutMs | 0) < 10000
       ? TransitionShortLanePriority

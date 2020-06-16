@@ -71,11 +71,13 @@ export const disableTextareaChildren = __EXPERIMENTAL__;
 
 export const warnUnstableRenderSubtreeIntoContainer = false;
 
+export const enableModernEventSystem = true;
+
 // Enable forked reconciler. Piggy-backing on the "variant" global so that we
 // don't have to add another test dimension. The build system will compile this
 // to the correct value.
 export const enableNewReconciler = __VARIANT__;
-export const decoupleUpdatePriorityFromScheduler = __VARIANT__;
+export const enableCurrentUpdateLanePriority = __VARIANT__;
 
 // TODO: This does not currently exist in the new reconciler fork.
 export const enableDebugTracing = !__VARIANT__;
