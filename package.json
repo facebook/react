@@ -21,6 +21,7 @@
     "scheduler": "^0.19.1"
   },
   "devDependencies": {
+    "flow-bin": "^0.127.0",
     "parcel": "2.0.0-alpha.3.2",
     "postcss-modules": "^2.0.0",
     "prettier": "^1.19.1"
