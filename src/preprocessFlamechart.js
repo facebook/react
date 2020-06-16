@@ -3,10 +3,11 @@
 import { importFromChromeTimeline } from './speedscope/import/chrome';
 import { Flamechart } from './speedscope/lib/flamechart';
 
+import type { TimelineEvent } from './speedscope/import/chrome';
 import type { FlamechartData } from './types';
 
 export default function preprocessFlamechart(
-  rawData: Array<any>
+  rawData: TimelineEvent[]
 ): FlamechartData {
   const parsedData = importFromChromeTimeline(rawData, 'react-devtools');
   const profile = parsedData.profiles[0]; // TODO Choose the main CPU thread only

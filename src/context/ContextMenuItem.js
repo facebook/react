@@ -14,7 +14,7 @@ type Props = {|
 export default function ContextMenuItem({ children, onClick, title }: Props) {
   const { hideMenu } = useContext(RegistryContext);
 
-  const handleClick = event => {
+  const handleClick: MouseEventHandler = event => {
     onClick();
     hideMenu();
   };

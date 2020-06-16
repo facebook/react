@@ -4,12 +4,13 @@ import { createContext } from 'react';
 
 export type ShowFn = ({| data: Object, pageX: number, pageY: number |}) => void;
 export type HideFn = () => void;
+export type OnChangeFn = boolean => void;
 
 const idToShowFnMap = new Map<string, ShowFn>();
 const idToHideFnMap = new Map<string, HideFn>();
 
-let currentHideFn = null;
-let currentOnChange = null;
+let currentHideFn: ?HideFn = null;
+let currentOnChange: ?OnChangeFn = null;
 
 function hideMenu() {
   if (typeof currentHideFn === 'function') {
@@ -33,7 +34,7 @@ function showMenu({
 }: {|
   data: Object,
   id: string,
-  onChange?: Function,
+  onChange?: OnChangeFn,
   pageX: number,
   pageY: number,
 |}) {
@@ -63,7 +64,13 @@ function registerMenu(id: string, showFn: ShowFn, hideFn: HideFn) {
   };
 }
 
-export const RegistryContext = createContext({
+type ContextMenuContext = {|
+  hideMenu: typeof hideMenu,
+  showMenu: typeof showMenu,
+  registerMenu: typeof registerMenu,
+|};
+
+export const RegistryContext = createContext<ContextMenuContext>({
   hideMenu,
   showMenu,
   registerMenu,

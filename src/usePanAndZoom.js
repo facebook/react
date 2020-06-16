@@ -1,3 +1,5 @@
+// @flow
+
 import { useEffect, useReducer } from 'react';
 import { getCanvasMousePos } from './canvasUtils';
 import {
@@ -9,7 +11,24 @@ import {
   ZOOM_WHEEL_DELTA_THRESHOLD,
 } from './constants';
 
-const initialState = {
+type State = {|
+  canvasHeight: number,
+  canvasWidth: number,
+  canvasMouseX: number,
+  canvasMouseY: number,
+  fixedColumnWidth: number,
+  fixedHeaderHeight: number,
+  isDragging: boolean,
+  minZoomLevel: number,
+  offsetX: number,
+  offsetY: number,
+  unscaledContentHeight: number,
+  unscaledContentWidth: number,
+  zoomLevel: number,
+  zoomTo: null | ((startTime: number, endTime: number) => void),
+|};
+
+const initialState: State = {
   canvasHeight: 0,
   canvasWidth: 0,
   canvasMouseX: 0,
@@ -27,23 +46,23 @@ const initialState = {
 };
 
 // TODO Account for fixed label width
-export function positionToTimestamp(position, state) {
+export function positionToTimestamp(position: number, state: State) {
   return (position - state.fixedColumnWidth + state.offsetX) / state.zoomLevel;
 }
 
 // TODO Account for fixed label width
-export function timestampToPosition(timestamp, state) {
+export function timestampToPosition(timestamp: number, state: State) {
   return timestamp * state.zoomLevel + state.fixedColumnWidth - state.offsetX;
 }
 
-export function durationToWidth(duration, state) {
+export function durationToWidth(duration: number, state: State) {
   return Math.max(
     duration * state.zoomLevel - BAR_HORIZONTAL_SPACING,
     MIN_BAR_WIDTH
   );
 }
 
-function getMaxOffsetX(state) {
+function getMaxOffsetX(state: State) {
   return (
     state.unscaledContentWidth * state.zoomLevel -
     state.canvasWidth +
@@ -51,17 +70,58 @@ function getMaxOffsetX(state) {
   );
 }
 
-function getMaxOffsetY(state) {
+function getMaxOffsetY(state: State) {
   return (
     state.unscaledContentHeight - state.canvasHeight + state.fixedHeaderHeight
   );
 }
 
-function reducer(state, action) {
-  const { payload, type } = action;
-  switch (type) {
-    case 'initialize':
-      return {
+type InitializeAction = {|
+  type: 'initialize',
+  payload: $Shape<State>,
+|};
+type MouseDownAction = {|
+  type: 'mouse-down',
+|};
+type MouseMoveAction = {|
+  type: 'mouse-move',
+  payload: {|
+    canvas: HTMLCanvasElement,
+    event: MouseEvent,
+  |},
+|};
+type MouseUpAction = {|
+  type: 'mouse-up',
+|};
+type WheelAction = {|
+  type: 'wheel',
+  payload: {|
+    canvas: HTMLCanvasElement,
+    event: WheelEvent,
+  |},
+|};
+type ZoomToAction = {|
+  type: 'zoom-to',
+  payload: {|
+    startTime: number,
+    stopTime: number,
+  |},
+|};
+
+function reducer(
+  state: State,
+  action:
+    | InitializeAction
+    | MouseDownAction
+    | MouseMoveAction
+    | MouseUpAction
+    | WheelAction
+    | ZoomToAction
+): State {
+  switch (action.type) {
+    case 'initialize': {
+      const { payload } = action;
+      return ({
         ...state,
         canvasHeight: payload.canvasHeight,
         canvasWidth: payload.canvasWidth,
@@ -73,13 +133,16 @@ function reducer(state, action) {
         zoomLevel: payload.zoomLevel,
         offsetX: clamp(0, getMaxOffsetX(state), state.offsetX),
         offsetY: clamp(0, getMaxOffsetY(state), state.offsetY),
-      };
-    case 'mouse-down':
+      }: State);
+    }
+    case 'mouse-down': {
       return {
         ...state,
         isDragging: true,
       };
-    case 'mouse-move':
+    }
+    case 'mouse-move': {
+      const { payload } = action;
       const { canvasMouseX, canvasMouseY } = getCanvasMousePos(
         payload.canvas,
         payload.event
@@ -108,12 +171,15 @@ function reducer(state, action) {
           canvasMouseY,
         };
       }
-    case 'mouse-up':
+    }
+    case 'mouse-up': {
       return {
         ...state,
         isDragging: false,
       };
-    case 'wheel':
+    }
+    case 'wheel': {
+      const { payload } = action;
       const { canvas, event } = payload;
       const { deltaX, deltaY } = event;
       const {
@@ -180,7 +246,9 @@ function reducer(state, action) {
         }
       }
       break;
-    case 'zoom-to':
+    }
+    case 'zoom-to': {
+      const { payload } = action;
       const { startTime, stopTime } = payload;
       const { canvasWidth, fixedColumnWidth } = state;
 
@@ -192,20 +260,30 @@ function reducer(state, action) {
         offsetX: newZoomLevel * startTime,
         zoomLevel: newZoomLevel,
       };
-      break;
+    }
     default:
-      throw Error(`Unexpected type "${type}"`);
+      throw Error(`Unexpected type "${action.type}"`);
   }
 
   return state;
 }
 
-function clamp(min, max, value) {
+function clamp(min: number, max: number, value: number): number {
   if (Number.isNaN(min) || Number.isNaN(max) || Number.isNaN(value)) {
     debugger;
   }
   return Math.max(min, Math.min(max, value));
 }
+
+type Props = {|
+  canvasRef: {| current: ?HTMLCanvasElement |},
+  canvasHeight: number,
+  canvasWidth: number,
+  fixedColumnWidth: number,
+  fixedHeaderHeight: number,
+  unscaledContentWidth: number,
+  unscaledContentHeight: number,
+|};
 
 // Inspired by https://github.com/jsdf/flamechart
 export default function usePanAndZoom({
@@ -216,10 +294,10 @@ export default function usePanAndZoom({
   fixedHeaderHeight,
   unscaledContentWidth,
   unscaledContentHeight,
-}) {
+}: Props) {
   const [state, dispatch] = useReducer(reducer, {
     ...initialState,
-    zoomTo: (startTime, stopTime) =>
+    zoomTo: (startTime: number, stopTime: number) =>
       dispatch({
         type: 'zoom-to',
         payload: {
@@ -264,25 +342,30 @@ export default function usePanAndZoom({
   useEffect(() => {
     const canvas = canvasRef.current;
 
-    const onCanvasMouseDown = event => {
+    if (!(canvas instanceof HTMLCanvasElement)) {
+      console.error('canvas is not a HTMLCanvasElement!', canvas);
+      return;
+    }
+
+    const onCanvasMouseDown: MouseEventHandler = event => {
       dispatch({ type: 'mouse-down' });
     };
 
-    const onCanvasMouseMove = event => {
+    const onCanvasMouseMove: MouseEventHandler = event => {
       dispatch({
         type: 'mouse-move',
         payload: {
-          canvas: canvasRef.current,
+          canvas,
           event,
         },
       });
     };
 
-    const onDocumentMouseUp = event => {
+    const onDocumentMouseUp: MouseEventHandler = event => {
       dispatch({ type: 'mouse-up' });
     };
 
-    const onCanvasWheel = event => {
+    const onCanvasWheel: WheelEventHandler = event => {
       event.preventDefault();
       event.stopPropagation();
 
@@ -299,20 +382,16 @@ export default function usePanAndZoom({
 
     document.addEventListener('mouseup', onDocumentMouseUp);
 
-    if (canvas instanceof HTMLCanvasElement) {
-      canvas.addEventListener('wheel', onCanvasWheel);
-      canvas.addEventListener('mousedown', onCanvasMouseDown);
-      canvas.addEventListener('mousemove', onCanvasMouseMove);
-    }
+    canvas.addEventListener('wheel', onCanvasWheel);
+    canvas.addEventListener('mousedown', onCanvasMouseDown);
+    canvas.addEventListener('mousemove', onCanvasMouseMove);
 
     return () => {
       document.removeEventListener('mouseup', onDocumentMouseUp);
 
-      if (canvas instanceof HTMLCanvasElement) {
-        canvas.removeEventListener('wheel', onCanvasWheel);
-        canvas.removeEventListener('mousedown', onCanvasMouseDown);
-        canvas.removeEventListener('mousemove', onCanvasMouseMove);
-      }
+      canvas.removeEventListener('wheel', onCanvasWheel);
+      canvas.removeEventListener('mousedown', onCanvasMouseDown);
+      canvas.removeEventListener('mousemove', onCanvasMouseMove);
     };
   }, [canvasRef]);
 

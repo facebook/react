@@ -1,3 +1,5 @@
+// @flow
+
 import { useEffect, useRef, useState } from 'react';
 import { durationToWidth, timestampToPosition } from './usePanAndZoom';
 import { EVENT_SIZE } from './constants';

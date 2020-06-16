@@ -1,3 +1,5 @@
+// @flow
+
 export const LABEL_SIZE = 80;
 export const LABEL_FONT_SIZE = 11;
 export const MARKER_HEIGHT = 20;

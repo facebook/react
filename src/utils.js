@@ -7,7 +7,7 @@ import type {
   Milliseconds,
   ReactPriority,
   ReactProfilerData,
-} from '../types';
+} from './types';
 
 // TODO Batch duration probably shouldn't include delayed passive effects?
 // It should probably end with the layout effect.

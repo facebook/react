@@ -1,5 +1,7 @@
 // @flow
 
+import { Flamechart } from './speedscope/lib/flamechart';
+
 export type Milliseconds = number;
 
 export type ReactPriority = 'unscheduled' | 'high' | 'normal' | 'low';
@@ -57,4 +59,4 @@ export type ReactHoverContextInfo = {|
   zeroAt: Milliseconds,
 |};
 
-export type FlamechartData = any;
+export type FlamechartData = Flamechart;

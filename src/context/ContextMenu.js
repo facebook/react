@@ -54,18 +54,25 @@ export default function ContextMenu({ children, id }: Props) {
 
   const [state, setState] = useState(HIDDEN_STATE);
 
-  const bodyAccessorRef = useRef(null);
-  const containerRef = useRef(null);
-  const menuRef = useRef(null);
+  const bodyAccessorRef = useRef<?HTMLDivElement>(null);
+  const containerRef = useRef<?HTMLDivElement>(null);
+  const menuRef = useRef<?HTMLDivElement>(null);
 
   useEffect(() => {
+    if (!bodyAccessorRef.current) {
+      return;
+    }
     const ownerDocument = bodyAccessorRef.current.ownerDocument;
     containerRef.current = ownerDocument.createElement('div');
-    ownerDocument.body.appendChild(containerRef.current);
+    if (ownerDocument.body) {
+      ownerDocument.body.appendChild(containerRef.current);
+    }
     return () => {
-      ownerDocument.body.removeChild(containerRef.current);
+      if (ownerDocument.body && containerRef.current) {
+        ownerDocument.body.removeChild(containerRef.current);
+      }
     };
-  }, []);
+  }, [bodyAccessorRef, containerRef]);
 
   useEffect(() => {
     const showMenu = ({ data, pageX, pageY }) => {
@@ -76,13 +83,18 @@ export default function ContextMenu({ children, id }: Props) {
   }, [id]);
 
   useLayoutEffect(() => {
-    if (!state.isVisible) {
+    if (!state.isVisible || !containerRef.current) {
       return;
     }
 
     const menu = menuRef.current;
+    if (!menu) {
+      return;
+    }
 
-    const hideUnlessContains = event => {
+    const hideUnlessContains: MouseEventHandler &
+      TouchEventHandler &
+      KeyboardEventHandler = event => {
       if (!menu.contains(event.target)) {
         hideMenu();
       }
