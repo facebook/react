@@ -26,7 +26,7 @@ import {
   enableSchedulerTracing,
   warnAboutUnmockedScheduler,
   deferRenderPhaseUpdateToNextBatch,
-  enableCurrentLanePriority,
+  enableCurrentUpdateLanePriority,
 } from 'shared/ReactFeatureFlags';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import invariant from 'shared/invariant';
@@ -422,14 +422,16 @@ export function requestUpdateLane(
       currentEventPendingLanes,
     );
   } else if (
-    enableCurrentLanePriority &&
+    enableCurrentUpdateLanePriority &&
     getCurrentUpdateLanePriority() !== NoLanePriority
   ) {
-    const currentLanePriority = getCurrentUpdateLanePriority();
-    lane = findUpdateLane(currentLanePriority, currentEventWipLanes);
+    // Use the current update lane priority for this update.
+    const currentUpdateLanePriority = getCurrentUpdateLanePriority();
+    lane = findUpdateLane(currentUpdateLanePriority, currentEventWipLanes);
   } else {
-    // TODO: If we're not inside `runWithPriority`, this returns the priority
-    // of the currently running task. That's probably not what we want.
+    // If we're not inside `runWithPriority`, this returns the priority of the
+    // currently running task. That's not what we want so this will be replaced
+    // by current lane priority after we've removed `runWithPriority` entirely.
     const schedulerPriority = getCurrentPriorityLevel();
 
     if (

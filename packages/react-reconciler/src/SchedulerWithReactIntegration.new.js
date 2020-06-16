@@ -176,7 +176,7 @@ function flushSyncCallbackQueueImpl() {
     // Prevent re-entrancy.
     isFlushingSyncQueue = true;
     let i = 0;
-    const previousLandPriority = getCurrentUpdateLanePriority();
+    const previousLanePriority = getCurrentUpdateLanePriority();
     try {
       const isSync = true;
       const queue = syncQueue;
@@ -202,7 +202,7 @@ function flushSyncCallbackQueueImpl() {
       );
       throw error;
     } finally {
-      setCurrentUpdateLanePriority(previousLandPriority);
+      setCurrentUpdateLanePriority(previousLanePriority);
       isFlushingSyncQueue = false;
     }
   }
