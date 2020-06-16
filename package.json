@@ -2,9 +2,9 @@
   "name": "scheduling-profiler-prototype",
   "version": "0.0.1",
   "scripts": {
-    "build": "parcel build index.html",
+    "build": "parcel build index.html --no-cache",
     "prettier": "prettier --write '**/*.{js,json,css}'",
-    "start": "parcel index.html"
+    "start": "parcel index.html --no-cache"
   },
   "author": "Brian Vaughn <bvaughn@fb.com>",
   "license": "MIT",
