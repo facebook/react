@@ -24,9 +24,12 @@ import type {FiberRoot} from './ReactInternalTypes';
 import type {OpaqueIDType} from './ReactFiberHostConfig';
 
 import ReactSharedInternals from 'shared/ReactSharedInternals';
-import {enableNewReconciler} from 'shared/ReactFeatureFlags';
+import {
+  enableDebugTracing,
+  enableNewReconciler,
+} from 'shared/ReactFeatureFlags';
 
-import {NoMode, BlockingMode} from './ReactTypeOfMode';
+import {NoMode, BlockingMode, DebugTracingMode} from './ReactTypeOfMode';
 import {
   NoLane,
   NoLanes,
@@ -83,6 +86,7 @@ import {
   warnAboutMultipleRenderersDEV,
 } from './ReactMutableSource.old';
 import {getIsRendering} from './ReactCurrentFiber';
+import {logStateUpdateScheduled} from './DebugTracing';
 
 const {ReactCurrentDispatcher, ReactCurrentBatchConfig} = ReactSharedInternals;
 
@@ -1736,6 +1740,15 @@ function dispatchAction<S, A>(
       }
     }
     scheduleUpdateOnFiber(fiber, lane, eventTime);
+  }
+
+  if (__DEV__) {
+    if (enableDebugTracing) {
+      if (fiber.mode & DebugTracingMode) {
+        const name = getComponentName(fiber.type) || 'Unknown';
+        logStateUpdateScheduled(name, lane, action);
+      }
+    }
   }
 }
 
