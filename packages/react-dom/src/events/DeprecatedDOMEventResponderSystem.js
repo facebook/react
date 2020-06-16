@@ -94,7 +94,7 @@ const eventResponderContext: ReactDOMResponderContext = {
     validateEventValue(eventValue);
     switch (eventPriority) {
       case DiscreteEvent: {
-        flushDiscreteUpdatesIfNeeded(currentTimeStamp);
+        flushDiscreteUpdatesIfNeeded();
         discreteUpdates(() =>
           executeUserEventHandler(eventListener, eventValue),
         );

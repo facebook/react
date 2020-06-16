@@ -131,7 +131,7 @@ function dispatchDiscreteEvent(
     // flushed for this event and we don't need to do it again.
     (eventSystemFlags & LEGACY_FB_SUPPORT) === 0
   ) {
-    flushDiscreteUpdatesIfNeeded(nativeEvent.timeStamp);
+    flushDiscreteUpdatesIfNeeded();
   }
   discreteUpdates(
     dispatchEvent,

@@ -9,8 +9,6 @@
 
 'use strict';
 
-import {createEventTarget} from 'dom-event-testing-library';
-
 let React;
 let ReactFeatureFlags;
 let ReactDOM;
@@ -34,136 +32,7 @@ describe('mixing responders with the heritage event system', () => {
     container = null;
   });
 
-  // @gate experimental
-  it('should properly only flush sync once when the event systems are mixed', () => {
-    const useTap = require('react-interactions/events/tap').useTap;
-    const ref = React.createRef();
-    let renderCounts = 0;
-
-    function MyComponent() {
-      const [, updateCounter] = React.useState(0);
-      renderCounts++;
-
-      function handleTap() {
-        updateCounter(count => count + 1);
-      }
-
-      const listener = useTap({
-        onTapEnd: handleTap,
-      });
-
-      return (
-        <div>
-          <button
-            ref={ref}
-            DEPRECATED_flareListeners={listener}
-            onClick={() => {
-              updateCounter(count => count + 1);
-            }}>
-            Press me
-          </button>
-        </div>
-      );
-    }
-
-    const newContainer = document.createElement('div');
-    const root = ReactDOM.createRoot(newContainer);
-    document.body.appendChild(newContainer);
-    root.render(<MyComponent />);
-    Scheduler.unstable_flushAll();
-
-    const target = createEventTarget(ref.current);
-    target.pointerdown({timeStamp: 100});
-    target.pointerup({timeStamp: 100});
-    target.click({timeStamp: 100});
-
-    if (__DEV__) {
-      expect(renderCounts).toBe(2);
-    } else {
-      expect(renderCounts).toBe(1);
-    }
-    Scheduler.unstable_flushAll();
-    if (__DEV__) {
-      expect(renderCounts).toBe(4);
-    } else {
-      expect(renderCounts).toBe(2);
-    }
-
-    target.pointerdown({timeStamp: 100});
-    target.pointerup({timeStamp: 100});
-    // Ensure the timeStamp logic works
-    target.click({timeStamp: 101});
-
-    if (__DEV__) {
-      expect(renderCounts).toBe(6);
-    } else {
-      expect(renderCounts).toBe(3);
-    }
-
-    Scheduler.unstable_flushAll();
-    document.body.removeChild(newContainer);
-  });
-
-  // @gate experimental
-  it(
-    'should only flush before outermost discrete event handler when mixing ' +
-      'event systems',
-    async () => {
-      const {useState} = React;
-      const useTap = require('react-interactions/events/tap').useTap;
-
-      const button = React.createRef();
-
-      function MyComponent() {
-        const [pressesCount, updatePressesCount] = useState(0);
-        const [clicksCount, updateClicksCount] = useState(0);
-
-        function handleTap() {
-          // This dispatches a synchronous, discrete event in the legacy event
-          // system. However, because it's nested inside the new event system,
-          // its updates should not flush until the end of the outer handler.
-          const target = createEventTarget(button.current);
-          target.click();
-          // Text context should not have changed
-          Scheduler.unstable_yieldValue(newContainer.textContent);
-          updatePressesCount(pressesCount + 1);
-        }
-
-        const tap = useTap({
-          onTapEnd: handleTap,
-        });
-
-        return (
-          <div>
-            <button
-              DEPRECATED_flareListeners={tap}
-              ref={button}
-              onClick={() => updateClicksCount(clicksCount + 1)}>
-              Presses: {pressesCount}, Clicks: {clicksCount}
-            </button>
-          </div>
-        );
-      }
-
-      const newContainer = document.createElement('div');
-      document.body.appendChild(newContainer);
-      const root = ReactDOM.createRoot(newContainer);
-
-      root.render(<MyComponent />);
-      expect(Scheduler).toFlushWithoutYielding();
-      expect(newContainer.textContent).toEqual('Presses: 0, Clicks: 0');
-
-      const target = createEventTarget(button.current);
-      target.pointerdown({timeStamp: 100});
-      target.pointerup({timeStamp: 100});
-
-      expect(Scheduler).toHaveYielded(['Presses: 0, Clicks: 0']);
-      expect(Scheduler).toFlushWithoutYielding();
-      expect(newContainer.textContent).toEqual('Presses: 1, Clicks: 1');
-    },
-  );
-
-  describe('mixing the Input and Press responders', () => {
+  describe('mixing the Input and Press repsonders', () => {
     // @gate experimental
     it('is async for non-input events', () => {
       const useTap = require('react-interactions/events/tap').useTap;
