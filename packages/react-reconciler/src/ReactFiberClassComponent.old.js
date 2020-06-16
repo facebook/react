@@ -16,6 +16,7 @@ import {Update, Snapshot} from './ReactSideEffectTags';
 import {
   debugRenderPhaseSideEffectsForStrictMode,
   disableLegacyContext,
+  enableDebugTracing,
   warnAboutDeprecatedLifecycles,
 } from 'shared/ReactFeatureFlags';
 import ReactStrictModeWarnings from './ReactStrictModeWarnings.old';
@@ -27,7 +28,7 @@ import invariant from 'shared/invariant';
 import {REACT_CONTEXT_TYPE, REACT_PROVIDER_TYPE} from 'shared/ReactSymbols';
 
 import {resolveDefaultProps} from './ReactFiberLazyComponent.old';
-import {StrictMode} from './ReactTypeOfMode';
+import {DebugTracingMode, StrictMode} from './ReactTypeOfMode';
 
 import {
   enqueueUpdate,
@@ -55,6 +56,7 @@ import {
   scheduleUpdateOnFiber,
 } from './ReactFiberWorkLoop.old';
 import {requestCurrentSuspenseConfig} from './ReactFiberSuspenseConfig';
+import {logForceUpdateScheduled, logStateUpdateScheduled} from './DebugTracing';
 
 import {disableLogs, reenableLogs} from 'shared/ConsolePatchingDev';
 
@@ -203,6 +205,15 @@ const classComponentUpdater = {
 
     enqueueUpdate(fiber, update);
     scheduleUpdateOnFiber(fiber, lane, eventTime);
+
+    if (__DEV__) {
+      if (enableDebugTracing) {
+        if (fiber.mode & DebugTracingMode) {
+          const name = getComponentName(fiber.type) || 'Unknown';
+          logStateUpdateScheduled(name, lane, payload);
+        }
+      }
+    }
   },
   enqueueReplaceState(inst, payload, callback) {
     const fiber = getInstance(inst);
@@ -223,6 +234,15 @@ const classComponentUpdater = {
 
     enqueueUpdate(fiber, update);
     scheduleUpdateOnFiber(fiber, lane, eventTime);
+
+    if (__DEV__) {
+      if (enableDebugTracing) {
+        if (fiber.mode & DebugTracingMode) {
+          const name = getComponentName(fiber.type) || 'Unknown';
+          logStateUpdateScheduled(name, lane, payload);
+        }
+      }
+    }
   },
   enqueueForceUpdate(inst, callback) {
     const fiber = getInstance(inst);
@@ -242,6 +262,15 @@ const classComponentUpdater = {
 
     enqueueUpdate(fiber, update);
     scheduleUpdateOnFiber(fiber, lane, eventTime);
+
+    if (__DEV__) {
+      if (enableDebugTracing) {
+        if (fiber.mode & DebugTracingMode) {
+          const name = getComponentName(fiber.type) || 'Unknown';
+          logForceUpdateScheduled(name, lane);
+        }
+      }
+    }
   },
 };
 
