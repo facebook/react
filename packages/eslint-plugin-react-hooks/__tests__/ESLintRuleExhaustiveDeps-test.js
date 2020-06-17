@@ -1141,7 +1141,7 @@ const tests = {
             let ignore = false;
             fetchSomething();
             async function fetchSomething() {
-              const result = await (await fetch('http://hn.algolia.com/api/v1/search?query=' + query)).json();
+              const result = await (await fetch('https://hn.algolia.com/api/v1/search?query=' + query)).json();
               if (!ignore) setState(result);
             }
             return () => { ignore = true; };

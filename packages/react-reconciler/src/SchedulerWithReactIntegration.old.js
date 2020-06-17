@@ -41,7 +41,7 @@ if (enableSchedulerTracing) {
       'example, `react-dom/profiling`) without also replacing the ' +
       '`scheduler/tracing` module with `scheduler/tracing-profiling`. Your ' +
       'bundler might have a setting for aliasing both modules. Learn more at ' +
-      'http://fb.me/react-profiling',
+      'https://fb.me/react-profiling',
   );
 }
 
