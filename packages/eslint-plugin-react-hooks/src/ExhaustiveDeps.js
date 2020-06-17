@@ -145,7 +145,7 @@ export default {
           if (
             declaredDependenciesNode.elements &&
             declaredDependenciesNode.elements.some(
-              el => el.type === 'Identifier' && el.name === callback.name,
+              el => el && el.type === 'Identifier' && el.name === callback.name,
             )
           ) {
             // If it's already in the list of deps, we don't care because
