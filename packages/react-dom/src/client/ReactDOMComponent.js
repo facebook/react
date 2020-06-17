@@ -317,7 +317,7 @@ export function trapClickOnNonInteractiveElement(node: HTMLElement) {
   // non-interactive elements, which means delegated click listeners do not
   // fire. The workaround for this bug involves attaching an empty click
   // listener on the target node.
-  // http://www.quirksmode.org/blog/archives/2010/09/click_event_del.html
+  // https://www.quirksmode.org/blog/archives/2010/09/click_event_del.html
   // Just set it using the onclick property so that we don't have to manage any
   // bookkeeping for it. Not sure if we need to clear it when the listener is
   // removed.
