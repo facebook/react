@@ -1,5 +1,15 @@
 // @flow
 
+import type { PanAndZoomState } from './usePanAndZoom';
+import type { FlamechartFrame } from './speedscope/lib/flamechart';
+import type {
+  ReactEvent,
+  ReactMeasure,
+  ReactProfilerData,
+  ReactHoverContextInfo,
+  Return,
+} from './types';
+
 import prettyMilliseconds from 'pretty-ms';
 import React, { Fragment, useLayoutEffect, useRef } from 'react';
 import { COLORS } from './constants';
@@ -9,7 +19,13 @@ import styles from './EventTooltip.css';
 
 const TOOLTIP_OFFSET = 4;
 
-export default function EventTooltip({ data, hoveredEvent, state }) {
+type Props = {|
+  data: ReactProfilerData | null,
+  hoveredEvent: ReactHoverContextInfo | null,
+  state: PanAndZoomState,
+|};
+
+export default function EventTooltip({ data, hoveredEvent, state }: Props) {
   const { canvasMouseY, canvasMouseX } = state;
 
   const tooltipRef = useSmartTooltip({
@@ -85,12 +101,13 @@ export default function EventTooltip({ data, hoveredEvent, state }) {
         tooltipRef={tooltipRef}
       />
     );
-  } else {
-    return null;
   }
+  return null;
 }
 
-function formatComponentStack(componentStack) {
+declare function formatComponentStack(componentStack: null): null;
+declare function formatComponentStack(componentStack: string): string;
+function formatComponentStack(componentStack: string | null): string | null {
   if (componentStack == null) {
     return null;
   }
@@ -104,7 +121,15 @@ function formatComponentStack(componentStack) {
   return lines.join('\n');
 }
 
-const TooltipFlamechartNode = ({ data, flamechartNode, tooltipRef }) => {
+const TooltipFlamechartNode = ({
+  data,
+  flamechartNode,
+  tooltipRef,
+}: {
+  data: ReactProfilerData | null,
+  flamechartNode: FlamechartFrame,
+  tooltipRef: Return<typeof useRef>,
+}) => {
   const { end, node, start } = flamechartNode;
   const { col, file, line, name } = node.frame;
   return (
@@ -126,7 +151,17 @@ const TooltipFlamechartNode = ({ data, flamechartNode, tooltipRef }) => {
   );
 };
 
-const TooltipReactEvent = ({ color, data, event, tooltipRef }) => {
+const TooltipReactEvent = ({
+  color,
+  data,
+  event,
+  tooltipRef,
+}: {
+  color: string,
+  data: ReactProfilerData | null,
+  event: ReactEvent,
+  tooltipRef: Return<typeof useRef>,
+}) => {
   const { componentName, componentStack, timestamp, type } = event;
 
   let label = null;
@@ -176,7 +211,15 @@ const TooltipReactEvent = ({ color, data, event, tooltipRef }) => {
   );
 };
 
-const TooltipReactMeasure = ({ data, measure, tooltipRef }) => {
+const TooltipReactMeasure = ({
+  data,
+  measure,
+  tooltipRef,
+}: {
+  data: ReactProfilerData | null,
+  measure: ReactMeasure,
+  tooltipRef: Return<typeof useRef>,
+}) => {
   const { batchUID, duration, priority, timestamp, type } = measure;
 
   let label = null;

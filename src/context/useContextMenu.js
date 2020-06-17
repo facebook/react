@@ -1,21 +1,22 @@
 // @flow
 
-import { useContext, useEffect } from 'react';
+import { useContext, useEffect, useRef } from 'react';
 import { RegistryContext } from './Contexts';
 
 import type { ElementRef } from 'react';
 import type { OnChangeFn } from './Contexts';
+import type { Return } from '../types';
 
-export default function useContextMenu({
+export default function useContextMenu<T>({
   data,
   id,
   onChange,
   ref,
 }: {|
-  data: Object, // TODO: Type this?
+  data: T,
   id: string,
   onChange: OnChangeFn,
-  ref: {| current: HTMLElement | null |},
+  ref: Return<typeof useRef>,
 |}) {
   const { showMenu } = useContext(RegistryContext);
 

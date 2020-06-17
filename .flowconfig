@@ -1,4 +1,5 @@
 [ignore]
+./src/graveyard
 
 [include]
 

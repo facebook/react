@@ -1,6 +1,15 @@
 // @flow
 
-import { Flamechart } from './speedscope/lib/flamechart';
+import type { Flamechart, FlamechartFrame } from './speedscope/lib/flamechart';
+
+// Type utilities
+
+// Source: https://github.com/facebook/flow/issues/4002#issuecomment-323612798
+type Return_<R, F: (...args: Array<any>) => R> = R;
+/** Get return type of a function. */
+export type Return<T> = Return_<*, T>;
+
+// Project types
 
 export type Milliseconds = number;
 
@@ -45,6 +54,8 @@ export type ReactProfilerDataPriority = {|
 |};
 
 export type ReactProfilerData = {|
+  startTime: number,
+  duration: number,
   unscheduled: ReactProfilerDataPriority,
   high: ReactProfilerDataPriority,
   normal: ReactProfilerDataPriority,
@@ -54,9 +65,9 @@ export type ReactProfilerData = {|
 export type ReactHoverContextInfo = {|
   event: ReactEvent | null,
   measure: ReactMeasure | null,
-  priorityIndex: number,
-  reactProfilerData: ReactProfilerData,
-  zeroAt: Milliseconds,
+  priorityIndex: number | null,
+  data: ReactProfilerData | null,
+  flamechartNode: FlamechartFrame | null,
 |};
 
 export type FlamechartData = Flamechart;

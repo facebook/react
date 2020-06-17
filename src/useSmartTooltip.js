@@ -4,8 +4,14 @@ import { useLayoutEffect, useRef } from 'react';
 
 const TOOLTIP_OFFSET = 4;
 
-export default function useSmartTooltip({ mouseX, mouseY }) {
-  const ref = useRef(null);
+export default function useSmartTooltip({
+  mouseX,
+  mouseY,
+}: {
+  mouseX: number,
+  mouseY: number,
+}) {
+  const ref = useRef<HTMLElement | null>(null);
 
   useLayoutEffect(() => {
     const element = ref.current;

@@ -11,7 +11,7 @@ import {
   ZOOM_WHEEL_DELTA_THRESHOLD,
 } from './constants';
 
-type State = {|
+export type PanAndZoomState = {|
   canvasHeight: number,
   canvasWidth: number,
   canvasMouseX: number,
@@ -28,7 +28,7 @@ type State = {|
   zoomTo: null | ((startTime: number, endTime: number) => void),
 |};
 
-const initialState: State = {
+const initialState: PanAndZoomState = {
   canvasHeight: 0,
   canvasWidth: 0,
   canvasMouseX: 0,
@@ -46,23 +46,23 @@ const initialState: State = {
 };
 
 // TODO Account for fixed label width
-export function positionToTimestamp(position: number, state: State) {
+export function positionToTimestamp(position: number, state: PanAndZoomState) {
   return (position - state.fixedColumnWidth + state.offsetX) / state.zoomLevel;
 }
 
 // TODO Account for fixed label width
-export function timestampToPosition(timestamp: number, state: State) {
+export function timestampToPosition(timestamp: number, state: PanAndZoomState) {
   return timestamp * state.zoomLevel + state.fixedColumnWidth - state.offsetX;
 }
 
-export function durationToWidth(duration: number, state: State) {
+export function durationToWidth(duration: number, state: PanAndZoomState) {
   return Math.max(
     duration * state.zoomLevel - BAR_HORIZONTAL_SPACING,
     MIN_BAR_WIDTH
   );
 }
 
-function getMaxOffsetX(state: State) {
+function getMaxOffsetX(state: PanAndZoomState) {
   return (
     state.unscaledContentWidth * state.zoomLevel -
     state.canvasWidth +
@@ -70,7 +70,7 @@ function getMaxOffsetX(state: State) {
   );
 }
 
-function getMaxOffsetY(state: State) {
+function getMaxOffsetY(state: PanAndZoomState) {
   return (
     state.unscaledContentHeight - state.canvasHeight + state.fixedHeaderHeight
   );
@@ -109,7 +109,7 @@ type ZoomToAction = {|
 |};
 
 function reducer(
-  state: State,
+  state: PanAndZoomState,
   action:
     | InitializeAction
     | MouseDownAction
@@ -117,7 +117,7 @@ function reducer(
     | MouseUpAction
     | WheelAction
     | ZoomToAction
-): State {
+): PanAndZoomState {
   switch (action.type) {
     case 'initialize': {
       const { payload } = action;
@@ -276,7 +276,7 @@ function clamp(min: number, max: number, value: number): number {
 }
 
 type Props = {|
-  canvasRef: {| current: ?HTMLCanvasElement |},
+  canvasRef: {| current: HTMLCanvasElement | null |},
   canvasHeight: number,
   canvasWidth: number,
   fixedColumnWidth: number,

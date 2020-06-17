@@ -36,7 +36,7 @@ export const ZOOM_WHEEL_DELTA_THRESHOLD = 1;
 export const MIN_ZOOM_LEVEL = 0.25;
 export const MAX_ZOOM_LEVEL = 1000;
 
-export const COLORS = {
+export const COLORS = Object.freeze({
   BACKGROUND: '#ffffff',
   FLAME_GRAPH: '#fff79f',
   FLAME_GRAPH_HOVER: '#ffe900',
@@ -69,4 +69,4 @@ export const COLORS = {
   REACT_WORK_BORDER: '#ffffff',
   TIME_MARKER_LINE: '#CAD6DE',
   TIME_MARKER_LABEL: '#18212b',
-};
+});

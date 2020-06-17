@@ -3,7 +3,10 @@
 import type { TimelineEvent } from './speedscope/import/chrome';
 
 import type {
+  Milliseconds,
   BatchUID,
+  ReactEvent,
+  ReactMeasureType,
   ReactPriority,
   ReactProfilerData,
   ReactProfilerDataPriority,
@@ -11,10 +14,19 @@ import type {
 
 // TODO Combine yields/starts that are closer than some threshold with the previous event to reduce renders.
 
+// TODO: Figure out what this is
+type StackElement = {|
+  type: ReactMeasureType,
+  depth: number,
+  index: number,
+  startTime: Milliseconds,
+  stopTime?: Milliseconds,
+|};
+
 type Metadata = {|
   nextRenderShouldGenerateNewBatchID: boolean,
   batchUID: BatchUID,
-  +stack: Array<any>,
+  +stack: StackElement[],
 |};
 
 export default function reactProfilerProcessor(
@@ -45,12 +57,12 @@ export default function reactProfilerProcessor(
     },
   };
 
-  let currentMetadata: ?Metadata = null;
-  let currentPriority = 'unscheduled';
-  let currentProfilerDataGroup = null;
+  let currentMetadata: Metadata | null = null;
+  let currentPriority: ReactPriority = 'unscheduled';
+  let currentProfilerDataGroup: ReactProfilerDataPriority | null = null;
   let uidCounter = 0;
 
-  const metadata = {
+  const metadata: {| [priority: ReactPriority]: Metadata |} = {
     high: {
       batchUID: 0,
       nextRenderShouldGenerateNewBatchID: true,
@@ -91,13 +103,16 @@ export default function reactProfilerProcessor(
     }
     const { stack } = currentMetadata;
     if (stack.length > 0) {
-      const { depth, type } = stack[stack.length - 1];
+      const { depth, type } = (stack[stack.length - 1]: StackElement);
       return type === 'render-idle' ? depth : depth + 1;
     }
     return 0;
   };
 
-  const markWorkCompleted = (type, stopTime) => {
+  const markWorkCompleted = (
+    type: ReactMeasureType,
+    stopTime: Milliseconds
+  ) => {
     if (!currentMetadata) {
       return;
     }
@@ -130,7 +145,10 @@ export default function reactProfilerProcessor(
     }
   };
 
-  const markWorkStarted = (type, startTime) => {
+  const markWorkStarted = (type: ReactMeasureType, startTime: Milliseconds) => {
+    if (!currentMetadata || !currentProfilerDataGroup) {
+      return;
+    }
     const { batchUID, stack } = currentMetadata;
 
     const index = currentProfilerDataGroup.measures.length;
@@ -159,6 +177,9 @@ export default function reactProfilerProcessor(
   };
 
   const throwIfIncomplete = type => {
+    if (!currentMetadata) {
+      return;
+    }
     const { stack } = currentMetadata;
     const lastIndex = stack.length - 1;
     if (lastIndex >= 0) {
@@ -298,7 +319,7 @@ export default function reactProfilerProcessor(
   ['unscheduled', 'high', 'normal', 'low'].forEach(priority => {
     const { events, measures } = reactProfilerData[priority];
     if (events.length > 0) {
-      const { timestamp } = events[events.length - 1];
+      const { timestamp } = (events[events.length - 1]: ReactEvent);
       reactProfilerData.duration = Math.max(
         reactProfilerData.duration,
         timestamp
