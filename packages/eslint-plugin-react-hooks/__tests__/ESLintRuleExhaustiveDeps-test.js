@@ -371,6 +371,20 @@ const tests = {
     },
     {
       code: normalizeIndent`
+        function MyComponent({myEffect}) {
+          useEffect(myEffect, [,myEffect]);
+        }
+      `,
+    },
+    {
+      code: normalizeIndent`
+        function MyComponent({myEffect}) {
+          useEffect(myEffect, [,myEffect,,]);
+        }
+      `,
+    },
+    {
+      code: normalizeIndent`
         let local = {};
         function myEffect() {
           console.log(local);
