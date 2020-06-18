@@ -13,12 +13,12 @@ import type {Fiber} from './ReactInternalTypes';
 import {enableSchedulingProfiling} from 'shared/ReactFeatureFlags';
 import {getStackByFiberInDevAndProd} from './ReactFiberComponentStack';
 
+/**
+ * If performance exists and supports the subset of the User Timing API that we
+ * require.
+ */
 const supportsUserTiming =
-  typeof performance !== 'undefined' &&
-  typeof performance.mark === 'function' &&
-  typeof performance.clearMarks === 'function' &&
-  typeof performance.measure === 'function' &&
-  typeof performance.clearMeasures === 'function';
+  typeof performance !== 'undefined' && typeof performance.mark === 'function';
 
 function formatLanes(laneOrLanes: Lane | Lanes): string {
   return '0b' + (laneOrLanes: any).toString(2).padStart(31, '0');
