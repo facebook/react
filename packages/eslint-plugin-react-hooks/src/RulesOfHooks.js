@@ -39,6 +39,10 @@ function isHook(node) {
   }
 }
 
+function isDefaultExport(node) {
+  return node.type === 'ExportDefaultDeclaration';
+}
+
 /**
  * Checks if the node is a React component name. React component names must
  * always start with a non-lowercase letter. So `MyComponent` or `_MyComponent`
@@ -92,7 +96,11 @@ function isInsideComponentOrHook(node) {
   while (node) {
     const functionName = getFunctionName(node);
     if (functionName) {
-      if (isComponentName(functionName) || isHook(functionName)) {
+      if (
+        isComponentName(functionName) ||
+        isHook(functionName) ||
+        isDefaultExport(functionName)
+      ) {
         return true;
       }
     }
@@ -593,6 +601,8 @@ function getFunctionName(node) {
       // Kinda clowny, but we'd said we'd follow spec convention for
       // `IsAnonymousFunctionDefinition()` usage.
       return node.parent.left;
+    } else if (node.parent.type === 'ExportDefaultDeclaration') {
+      return node.parent;
     } else {
       return undefined;
     }

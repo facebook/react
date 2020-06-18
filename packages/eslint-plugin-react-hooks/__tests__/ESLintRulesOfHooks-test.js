@@ -380,7 +380,7 @@ const tests = {
     },
     {
       code: `
-        // This is a false positive (it's valid) that unfortunately 
+        // This is a false positive (it's valid) that unfortunately
         // we cannot avoid. Prefer to rename it to not start with "use"
         class Foo extends Component {
           render() {
@@ -505,6 +505,39 @@ const tests = {
         });
       `,
       errors: [genericError('useHookInsideCallback')],
+    },
+    {
+      code: `
+        export const Foo = () => {
+          const cb = useCallback(() => {
+            useHook()
+          }, [])
+          return <button onClick={cb}></button>
+        }
+      `,
+      errors: [genericError('useHook')],
+    },
+    {
+      code: `
+        export default () => {
+          const cb = useCallback(() => {
+            useHook()
+          }, [])
+          return <button onClick={cb}></button>
+        }
+      `,
+      errors: [
+        functionError(
+          'useCallback',
+          `export default () => {
+          const cb = useCallback(() => {
+            useHook()
+          }, [])
+          return <button onClick={cb}></button>
+        }`
+        ),
+        genericError('useHook'),
+      ],
     },
     {
       code: `
