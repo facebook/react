@@ -65,10 +65,10 @@ describe('SchedulingProfiling', () => {
       '--schedule-render-Unknown-0b0000000000000000000000000000001-',
       '--render-start-0b0000000000000000000000000000001',
       '--render-stop',
-      '--commit-start-0b0000000000000000000000000000001',
-      '--layout-effects-start-0b0000000000000000000000000000001',
-      '--layout-effects-stop',
-      '--commit-stop',
+      // '--commit-start-0b0000000000000000000000000000001',
+      // '--layout-effects-start-0b0000000000000000000000000000001',
+      // '--layout-effects-stop',
+      // '--commit-stop',
     ]);
   });
 
@@ -87,10 +87,10 @@ describe('SchedulingProfiling', () => {
     expect(marks).toEqual([
       '--render-start-0b0000000000000000000001000000000',
       '--render-stop',
-      '--commit-start-0b0000000000000000000001000000000',
-      '--layout-effects-start-0b0000000000000000000001000000000',
-      '--layout-effects-stop',
-      '--commit-stop',
+      // '--commit-start-0b0000000000000000000001000000000',
+      // '--layout-effects-start-0b0000000000000000000001000000000',
+      // '--layout-effects-stop',
+      // '--commit-stop',
     ]);
   });
 
@@ -112,10 +112,10 @@ describe('SchedulingProfiling', () => {
       '--render-start-0b0000000000000000000000000000001',
       '--suspense-suspend-Example-0-\n    at Example\n    at Suspense',
       '--render-stop',
-      '--commit-start-0b0000000000000000000000000000001',
-      '--layout-effects-start-0b0000000000000000000000000000001',
-      '--layout-effects-stop',
-      '--commit-stop',
+      // '--commit-start-0b0000000000000000000000000000001',
+      // '--layout-effects-start-0b0000000000000000000000000000001',
+      // '--layout-effects-stop',
+      // '--commit-stop',
     ]);
 
     marks.splice(0);
@@ -144,10 +144,10 @@ describe('SchedulingProfiling', () => {
       '--render-start-0b0000000000000000000000000000001',
       '--suspense-suspend-Example-0-\n    at Example\n    at Suspense',
       '--render-stop',
-      '--commit-start-0b0000000000000000000000000000001',
-      '--layout-effects-start-0b0000000000000000000000000000001',
-      '--layout-effects-stop',
-      '--commit-stop',
+      // '--commit-start-0b0000000000000000000000000000001',
+      // '--layout-effects-start-0b0000000000000000000000000000001',
+      // '--layout-effects-stop',
+      // '--commit-stop',
     ]);
 
     marks.splice(0);
@@ -184,10 +184,10 @@ describe('SchedulingProfiling', () => {
       '--render-start-0b0000000000000000000001000000000',
       '--suspense-suspend-Example-0-\n    at Example\n    at Suspense',
       '--render-stop',
-      '--commit-start-0b0000000000000000000001000000000',
-      '--layout-effects-start-0b0000000000000000000001000000000',
-      '--layout-effects-stop',
-      '--commit-stop',
+      // '--commit-start-0b0000000000000000000001000000000',
+      // '--layout-effects-start-0b0000000000000000000001000000000',
+      // '--layout-effects-stop',
+      // '--commit-stop',
     ]);
 
     marks.splice(0);
@@ -224,10 +224,10 @@ describe('SchedulingProfiling', () => {
       '--render-start-0b0000000000000000000001000000000',
       '--suspense-suspend-Example-0-\n    at Example\n    at Suspense',
       '--render-stop',
-      '--commit-start-0b0000000000000000000001000000000',
-      '--layout-effects-start-0b0000000000000000000001000000000',
-      '--layout-effects-stop',
-      '--commit-stop',
+      // '--commit-start-0b0000000000000000000001000000000',
+      // '--layout-effects-start-0b0000000000000000000001000000000',
+      // '--layout-effects-stop',
+      // '--commit-stop',
     ]);
 
     marks.splice(0);
@@ -263,15 +263,15 @@ describe('SchedulingProfiling', () => {
     expect(marks.map(normalizeCodeLocInfo)).toEqual([
       '--render-start-0b0000000000000000000001000000000',
       '--render-stop',
-      '--commit-start-0b0000000000000000000001000000000',
-      '--layout-effects-start-0b0000000000000000000001000000000',
+      // '--commit-start-0b0000000000000000000001000000000',
+      // '--layout-effects-start-0b0000000000000000000001000000000',
       '--schedule-state-update-Example-0b0000000000000000000000000000001-\n    in Example (at **)',
-      '--layout-effects-stop',
+      // '--layout-effects-stop',
       '--render-start-0b0000000000000000000000000000001',
       '--render-stop',
-      '--commit-start-0b0000000000000000000000000000001',
-      '--commit-stop',
-      '--commit-stop',
+      // '--commit-start-0b0000000000000000000000000000001',
+      // '--commit-stop',
+      // '--commit-stop',
     ]);
   });
 
@@ -299,15 +299,15 @@ describe('SchedulingProfiling', () => {
     expect(marks.map(normalizeCodeLocInfo)).toEqual([
       '--render-start-0b0000000000000000000001000000000',
       '--render-stop',
-      '--commit-start-0b0000000000000000000001000000000',
-      '--layout-effects-start-0b0000000000000000000001000000000',
+      // '--commit-start-0b0000000000000000000001000000000',
+      // '--layout-effects-start-0b0000000000000000000001000000000',
       '--schedule-forced-update-Example-0b0000000000000000000000000000001-\n    in Example (at **)',
-      '--layout-effects-stop',
+      // '--layout-effects-stop',
       '--render-start-0b0000000000000000000000000000001',
       '--render-stop',
-      '--commit-start-0b0000000000000000000000000000001',
-      '--commit-stop',
-      '--commit-stop',
+      // '--commit-start-0b0000000000000000000000000000001',
+      // '--commit-stop',
+      // '--commit-stop',
     ]);
   });
 
@@ -342,10 +342,10 @@ describe('SchedulingProfiling', () => {
       '--render-cancel',
       '--schedule-state-update-Example-0b0000000000000000000010000000000-\n    in Example (at **)',
       '--render-stop',
-      '--commit-start-0b0000000000000000000001000000000',
-      '--layout-effects-start-0b0000000000000000000001000000000',
-      '--layout-effects-stop',
-      '--commit-stop',
+      // '--commit-start-0b0000000000000000000001000000000',
+      // '--layout-effects-start-0b0000000000000000000001000000000',
+      // '--layout-effects-stop',
+      // '--commit-stop',
     ]);
   });
 
@@ -380,10 +380,10 @@ describe('SchedulingProfiling', () => {
       '--render-cancel',
       '--schedule-forced-update-Example-0b0000000000000000000010000000000-\n    in Example (at **)',
       '--render-stop',
-      '--commit-start-0b0000000000000000000001000000000',
-      '--layout-effects-start-0b0000000000000000000001000000000',
-      '--layout-effects-stop',
-      '--commit-stop',
+      // '--commit-start-0b0000000000000000000001000000000',
+      // '--layout-effects-start-0b0000000000000000000001000000000',
+      // '--layout-effects-stop',
+      // '--commit-stop',
     ]);
   });
 
@@ -410,15 +410,15 @@ describe('SchedulingProfiling', () => {
     expect(marks.map(normalizeCodeLocInfo)).toEqual([
       '--render-start-0b0000000000000000000001000000000',
       '--render-stop',
-      '--commit-start-0b0000000000000000000001000000000',
-      '--layout-effects-start-0b0000000000000000000001000000000',
+      // '--commit-start-0b0000000000000000000001000000000',
+      // '--layout-effects-start-0b0000000000000000000001000000000',
       '--schedule-state-update-Example-0b0000000000000000000000000000001-\n    in Example (at **)',
-      '--layout-effects-stop',
+      // '--layout-effects-stop',
       '--render-start-0b0000000000000000000000000000001',
       '--render-stop',
-      '--commit-start-0b0000000000000000000000000000001',
-      '--commit-stop',
-      '--commit-stop',
+      // '--commit-start-0b0000000000000000000000000000001',
+      // '--commit-stop',
+      // '--commit-stop',
     ]);
   });
 
@@ -439,15 +439,15 @@ describe('SchedulingProfiling', () => {
       '--schedule-render-Unknown-0b0000000000000000000001000000000-',
       '--render-start-0b0000000000000000000001000000000',
       '--render-stop',
-      '--commit-start-0b0000000000000000000001000000000',
-      '--layout-effects-start-0b0000000000000000000001000000000',
-      '--layout-effects-stop',
-      '--commit-stop',
+      // '--commit-start-0b0000000000000000000001000000000',
+      // '--layout-effects-start-0b0000000000000000000001000000000',
+      // '--layout-effects-stop',
+      // '--commit-stop',
       '--schedule-state-update-Example-0b0000000000000000000010000000000-\n    in Example (at **)',
       '--render-start-0b0000000000000000000010000000000',
       '--render-stop',
-      '--commit-start-0b0000000000000000000010000000000',
-      '--commit-stop',
+      // '--commit-start-0b0000000000000000000010000000000',
+      // '--commit-stop',
     ]);
   });
 
@@ -470,10 +470,10 @@ describe('SchedulingProfiling', () => {
       '--schedule-state-update-Example-0b0000000000000000000010000000000-\n    in Example (at **)',
       '--schedule-state-update-Example-0b0000000000000000000010000000000-\n    in Example (at **)',
       '--render-stop',
-      '--commit-start-0b0000000000000000000001000000000',
-      '--layout-effects-start-0b0000000000000000000001000000000',
-      '--layout-effects-stop',
-      '--commit-stop',
+      // '--commit-start-0b0000000000000000000001000000000',
+      // '--layout-effects-start-0b0000000000000000000001000000000',
+      // '--layout-effects-stop',
+      // '--commit-stop',
     ]);
   });
 });
