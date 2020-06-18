@@ -26,6 +26,7 @@ import type {OpaqueIDType} from './ReactFiberHostConfig';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import {
   enableDebugTracing,
+  enableSchedulingProfiling,
   enableNewReconciler,
 } from 'shared/ReactFeatureFlags';
 
@@ -87,6 +88,7 @@ import {
 } from './ReactMutableSource.old';
 import {getIsRendering} from './ReactCurrentFiber';
 import {logStateUpdateScheduled} from './DebugTracing';
+import {markStateUpdateScheduled} from './SchedulingProfiling';
 
 const {ReactCurrentDispatcher, ReactCurrentBatchConfig} = ReactSharedInternals;
 
@@ -1749,6 +1751,11 @@ function dispatchAction<S, A>(
         logStateUpdateScheduled(name, lane, action);
       }
     }
+  }
+
+  if (enableSchedulingProfiling) {
+    const name = getComponentName(fiber.type) || 'Unknown';
+    markStateUpdateScheduled(name, fiber, lane);
   }
 }
 

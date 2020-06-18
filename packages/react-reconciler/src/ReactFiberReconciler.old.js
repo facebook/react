@@ -35,6 +35,7 @@ import {
 } from './ReactWorkTags';
 import getComponentName from 'shared/getComponentName';
 import invariant from 'shared/invariant';
+import {enableSchedulingProfiling} from 'shared/ReactFeatureFlags';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import {getPublicInstance} from './ReactFiberHostConfig';
 import {
@@ -87,6 +88,7 @@ import {
   setRefreshHandler,
   findHostInstancesForRefresh,
 } from './ReactFiberHotReloading.old';
+import {markRenderScheduled} from './SchedulingProfiling';
 
 export {registerMutableSourceForHydration} from './ReactMutableSource.new';
 export {createPortal} from './ReactPortal';
@@ -264,6 +266,16 @@ export function updateContainer(
   }
   const suspenseConfig = requestCurrentSuspenseConfig();
   const lane = requestUpdateLane(current, suspenseConfig);
+
+  // TODO: Confirm that this location and container/lane make sense
+  if (enableSchedulingProfiling) {
+    let componentName = 'Unknown';
+    if (ReactCurrentFiberCurrent !== null) {
+      componentName =
+        getComponentName(ReactCurrentFiberCurrent.type) || componentName;
+    }
+    markRenderScheduled(componentName, current, lane);
+  }
 
   const context = getContextForSubtree(parentComponent);
   if (container.context === null) {

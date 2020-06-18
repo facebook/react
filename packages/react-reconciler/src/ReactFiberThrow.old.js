@@ -31,7 +31,10 @@ import {
 } from './ReactSideEffectTags';
 import {shouldCaptureSuspense} from './ReactFiberSuspenseComponent.old';
 import {NoMode, BlockingMode, DebugTracingMode} from './ReactTypeOfMode';
-import {enableDebugTracing} from 'shared/ReactFeatureFlags';
+import {
+  enableDebugTracing,
+  enableSchedulingProfiling,
+} from 'shared/ReactFeatureFlags';
 import {createCapturedValue} from './ReactCapturedValue';
 import {
   enqueueCapturedUpdate,
@@ -55,6 +58,7 @@ import {
 } from './ReactFiberWorkLoop.old';
 import {logCapturedError} from './ReactFiberErrorLogger';
 import {logComponentSuspended} from './DebugTracing';
+import {markComponentSuspended} from './SchedulingProfiling';
 
 import {
   SyncLane,
@@ -198,6 +202,11 @@ function throwException(
           logComponentSuspended(name, wakeable);
         }
       }
+    }
+
+    if (enableSchedulingProfiling) {
+      const name = getComponentName(sourceFiber.type) || 'Unknown';
+      markComponentSuspended(name, sourceFiber, wakeable);
     }
 
     if ((sourceFiber.mode & BlockingMode) === NoMode) {

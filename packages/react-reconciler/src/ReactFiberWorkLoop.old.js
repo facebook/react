@@ -27,6 +27,7 @@ import {
   warnAboutUnmockedScheduler,
   deferRenderPhaseUpdateToNextBatch,
   enableDebugTracing,
+  enableSchedulingProfiling,
 } from 'shared/ReactFeatureFlags';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import invariant from 'shared/invariant';
@@ -56,6 +57,18 @@ import {
   logRenderStarted,
   logRenderStopped,
 } from './DebugTracing';
+import {
+  markCommitStarted,
+  markCommitStopped,
+  markLayoutEffectsStarted,
+  markLayoutEffectsStopped,
+  markPassiveEffectsStarted,
+  markPassiveEffectsStopped,
+  markRenderStarted,
+  markRenderYielded,
+  markRenderStopped,
+  markRenderAbandoned,
+} from './SchedulingProfiling';
 
 // The scheduler is imported here *only* to detect whether it's been mocked
 import * as Scheduler from 'scheduler';
@@ -460,6 +473,18 @@ export function scheduleUpdateOnFiber(
   if (root === null) {
     warnAboutUpdateOnUnmountedFiberInDEV(fiber);
     return null;
+  }
+
+  if (enableSchedulingProfiling) {
+    if (
+      workInProgressRoot !== null &&
+      // TODO: Confirm that this makes sense
+      !includesSomeLane(workInProgressRootRenderLanes, lane)
+      // Original criterion: expirationTime > renderExpirationTime
+      // Location: https://github.com/bvaughn/react/blob/root-event-marks/packages/react-reconciler/src/ReactFiberWorkLoop.js#L2846
+    ) {
+      markRenderAbandoned();
+    }
   }
 
   // TODO: requestUpdateLanePriority also reads the priority. Pass the
@@ -1461,6 +1486,10 @@ function renderRootSync(root: FiberRoot, lanes: Lanes) {
     }
   }
 
+  if (enableSchedulingProfiling) {
+    markRenderStarted(lanes);
+  }
+
   do {
     try {
       workLoopSync();
@@ -1490,6 +1519,10 @@ function renderRootSync(root: FiberRoot, lanes: Lanes) {
     if (enableDebugTracing) {
       logRenderStopped();
     }
+  }
+
+  if (enableSchedulingProfiling) {
+    markRenderStopped();
   }
 
   // Set this to null to indicate there's no in-progress render.
@@ -1528,6 +1561,10 @@ function renderRootConcurrent(root: FiberRoot, lanes: Lanes) {
     }
   }
 
+  if (enableSchedulingProfiling) {
+    markRenderStarted(lanes);
+  }
+
   do {
     try {
       workLoopConcurrent();
@@ -1553,9 +1590,16 @@ function renderRootConcurrent(root: FiberRoot, lanes: Lanes) {
   // Check if the tree has completed.
   if (workInProgress !== null) {
     // Still work remaining.
+    if (enableSchedulingProfiling) {
+      markRenderYielded();
+    }
     return RootIncomplete;
   } else {
     // Completed the tree.
+    if (enableSchedulingProfiling) {
+      markRenderStopped();
+    }
+
     // Set this to null to indicate there's no in-progress render.
     workInProgressRoot = null;
     workInProgressRootRenderLanes = NoLanes;
