@@ -17,7 +17,7 @@ aliases:
   - &run_yarn
     run:
       name: Install Packages
-      command: yarn --frozen-lockfile
+      command: yarn --immutable --immutable-cache --check-cache
 
   - &attach_workspace
     at: build
