@@ -12,7 +12,7 @@ import typeof * as ExportsType from './ReactFeatureFlags.testing.www';
 
 export const debugRenderPhaseSideEffectsForStrictMode = false;
 export const enableDebugTracing = false;
-export const enableSchedulingProfiler = false;
+export const enableSchedulingProfiling = false;
 export const warnAboutDeprecatedLifecycles = true;
 export const replayFailedUnitOfWorkWithInvokeGuardedCallback = false;
 export const enableProfilerTimer = false;
