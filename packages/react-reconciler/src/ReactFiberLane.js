@@ -661,6 +661,13 @@ export function higherPriorityLane(a: Lane, b: Lane) {
   return a !== NoLane && a < b ? a : b;
 }
 
+export function higherLanePriority(
+  a: LanePriority,
+  b: LanePriority,
+): LanePriority {
+  return a !== NoLanePriority && a > b ? a : b;
+}
+
 export function createLaneMap<T>(initial: T): LaneMap<T> {
   return new Array(TotalLanes).fill(initial);
 }
