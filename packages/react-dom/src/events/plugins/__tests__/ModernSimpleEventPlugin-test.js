@@ -385,7 +385,7 @@ describe('SimpleEventPlugin', function() {
                       lowPriCount: state.lowPriCount + 1,
                     }));
                   },
-                  {timeout: 5000},
+                  {timeoutMs: 5000},
                 );
               }}>
               {text}
