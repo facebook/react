@@ -40,6 +40,7 @@ import {
   markRootMutableRead,
   getCurrentUpdateLanePriority,
   setCurrentUpdateLanePriority,
+  higherLanePriority,
 } from './ReactFiberLane';
 import {readContext} from './ReactFiberNewContext.new';
 import {createDeprecatedResponderListener} from './ReactFiberDeprecatedEvents.new';
@@ -1504,7 +1505,9 @@ function rerenderDeferredValue<T>(
 function startTransition(setPending, config, callback) {
   const priorityLevel = getCurrentPriorityLevel();
   const previousLanePriority = getCurrentUpdateLanePriority();
-  setCurrentUpdateLanePriority(InputContinuousLanePriority);
+  setCurrentUpdateLanePriority(
+    higherLanePriority(previousLanePriority, InputContinuousLanePriority),
+  );
   runWithPriority(
     priorityLevel < UserBlockingPriority ? UserBlockingPriority : priorityLevel,
     () => {
