@@ -1872,7 +1872,7 @@ function commitRootImpl(root, renderPriorityLevel) {
       logCommitStarted(lanes);
     }
   }
-  
+
   if (enableSchedulingProfiling) {
     markCommitStarted(lanes);
   }
@@ -1899,7 +1899,7 @@ function commitRootImpl(root, renderPriorityLevel) {
         logCommitStopped();
       }
     }
-    
+
     if (enableSchedulingProfiling) {
       markCommitStopped();
     }
@@ -2194,6 +2194,10 @@ function commitRootImpl(root, renderPriorityLevel) {
       }
     }
 
+    if (enableSchedulingProfiling) {
+      markCommitStopped();
+    }
+
     // This is a legacy edge case. We just committed the initial mount of
     // a ReactDOM.render-ed root inside of batchedUpdates. The commit fired
     // synchronously, but layout updates should be deferred until the end
@@ -2208,6 +2212,10 @@ function commitRootImpl(root, renderPriorityLevel) {
     if (enableDebugTracing) {
       logCommitStopped();
     }
+  }
+
+  if (enableSchedulingProfiling) {
+    markCommitStopped();
   }
 
   return null;
@@ -2368,7 +2376,7 @@ function commitLayoutEffects(root: FiberRoot, committedLanes: Lanes) {
       logLayoutEffectsStopped();
     }
   }
-  
+
   if (enableSchedulingProfiling) {
     markLayoutEffectsStopped();
   }
@@ -2459,12 +2467,12 @@ function flushPassiveEffectsImpl() {
     }
   }
 
-  if (__DEV__) {
-    isFlushingPassiveEffects = true;
-  }
-  
   if (enableSchedulingProfiling) {
     markPassiveEffectsStarted(lanes);
+  }
+
+  if (__DEV__) {
+    isFlushingPassiveEffects = true;
   }
 
   const prevExecutionContext = executionContext;
@@ -2614,10 +2622,6 @@ function flushPassiveEffectsImpl() {
     popInteractions(((prevInteractions: any): Set<Interaction>));
     finishPendingInteractions(root, lanes);
   }
-  
-  if (enableSchedulingProfiling) {
-    markPassiveEffectsStopped();
-  }
 
   if (__DEV__) {
     isFlushingPassiveEffects = false;
@@ -2627,6 +2631,10 @@ function flushPassiveEffectsImpl() {
     if (enableDebugTracing) {
       logPassiveEffectsStopped();
     }
+  }
+
+  if (enableSchedulingProfiling) {
+    markPassiveEffectsStopped();
   }
 
   executionContext = prevExecutionContext;
