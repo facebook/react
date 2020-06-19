@@ -398,7 +398,6 @@ export function requestUpdateLane(
     currentEventWipLanes = workInProgressRootIncludedLanes;
   }
 
-  let lane;
   if (suspenseConfig !== null) {
     // Use the size of the timeout as a heuristic to prioritize shorter
     // transitions over longer ones.
@@ -416,34 +415,74 @@ export function requestUpdateLane(
           : NoLanes;
     }
 
-    lane = findTransitionLane(
+    return findTransitionLane(
       transitionLanePriority,
       currentEventWipLanes,
       currentEventPendingLanes,
     );
-  } else if (
-    enableCurrentUpdateLanePriority &&
-    getCurrentUpdateLanePriority() !== NoLanePriority
-  ) {
-    // Use the current update lane priority for this update.
-    const currentUpdateLanePriority = getCurrentUpdateLanePriority();
-    lane = findUpdateLane(currentUpdateLanePriority, currentEventWipLanes);
-  } else {
-    // If we're not inside `runWithPriority`, this returns the priority of the
-    // currently running task. That's not what we want so this will be replaced
-    // by current lane priority after we've removed `runWithPriority` entirely.
-    const schedulerPriority = getCurrentPriorityLevel();
+  }
 
-    if (
-      // TODO: Temporary. We're removing the concept of discrete updates.
-      (executionContext & DiscreteEventContext) !== NoContext &&
-      schedulerPriority === UserBlockingSchedulerPriority
-    ) {
-      lane = findUpdateLane(InputDiscreteLanePriority, currentEventWipLanes);
-    } else {
-      const lanePriority = schedulerPriorityToLanePriority(schedulerPriority);
-      lane = findUpdateLane(lanePriority, currentEventWipLanes);
+  // TODO: Remove this dependency on the Scheduler priority.
+  // To do that, we're replacing it with an update lane priority.
+  const schedulerPriority = getCurrentPriorityLevel();
+
+  if (enableCurrentUpdateLanePriority) {
+    // In the new strategy, we will track the current update lane priority
+    // inside React and use that priority to select a lane for this update.
+    const currentUpdateLanePriority = getCurrentUpdateLanePriority();
+
+    // The update lane priority will conflict with any callsites using
+    // Scheduler methods like `runWithPriority` or `next`. Until those
+    // callsites are migrated, we need to check that the priorities match
+    // before using the new update lane priority.
+    const laneSchedulerPriority = lanePriorityToSchedulerPriority(
+      currentUpdateLanePriority,
+    );
+    if (schedulerPriority === laneSchedulerPriority) {
+      let lane;
+      if (
+        currentUpdateLanePriority === TransitionShortLanePriority ||
+        currentUpdateLanePriority === TransitionLongLanePriority
+      ) {
+        lane = findTransitionLane(
+          currentUpdateLanePriority,
+          currentEventWipLanes,
+          NoLanes,
+        );
+      } else {
+        lane = findUpdateLane(currentUpdateLanePriority, currentEventWipLanes);
+      }
+
+      return lane;
+    } else if (currentUpdateLanePriority !== NoLanePriority) {
+      // If the priorities don't match, log it so we can fix it. Once this
+      // error stops firing, we can use only the currentUpdateLanePriority.
+      if (__DEV__) {
+        console.error(
+          'Expected current update lane priority %s to match current scheduler priority %s',
+          lanePriorityToSchedulerPriority(currentUpdateLanePriority),
+          schedulerPriority,
+        );
+      }
     }
+  }
+
+  // The old behavior was using the priority level of the Scheduler.
+  // This couples React to the Scheduler internals, so we're replacing it
+  // with the currentUpdateLanePriority above. As an example of how this
+  // could be problematic, if we're not inside `Scheduler.runWithPriority`,
+  // then we'll get the priority of the current running Scheduler task,
+  // which is probably not what we want.
+  let lane;
+  if (
+    // TODO: Temporary. We're removing the concept of discrete updates.
+    (executionContext & DiscreteEventContext) !== NoContext &&
+    schedulerPriority === UserBlockingSchedulerPriority
+  ) {
+    lane = findUpdateLane(InputDiscreteLanePriority, currentEventWipLanes);
+  } else {
+    const lanePriority = schedulerPriorityToLanePriority(schedulerPriority);
+    lane = findUpdateLane(lanePriority, currentEventWipLanes);
   }
 
   return lane;
