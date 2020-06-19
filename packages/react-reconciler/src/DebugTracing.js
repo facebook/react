@@ -7,7 +7,6 @@
  * @flow
  */
 
-import type {Lane, Lanes} from './ReactFiberLane';
 import type {Wakeable} from 'shared/ReactTypes';
 
 import {enableDebugTracing} from 'shared/ReactFeatureFlags';
@@ -17,10 +16,6 @@ let nativeConsoleLog: null | Function = null;
 
 const pendingGroupArgs: Array<any> = [];
 let printedGroupIndex: number = -1;
-
-function formatLanes(laneOrLanes: Lane | Lanes): string {
-  return '0b' + (laneOrLanes: any).toString(2).padStart(31, '0');
-}
 
 function group(...groupArgs): void {
   pendingGroupArgs.push(groupArgs);
@@ -62,11 +57,11 @@ function log(...logArgs): void {
 const REACT_LOGO_STYLE =
   'background-color: #20232a; color: #61dafb; padding: 0 2px;';
 
-export function logCommitStarted(lanes: Lanes): void {
+export function logCommitStarted(priorityLabel: string): void {
   if (__DEV__) {
     if (enableDebugTracing) {
       group(
-        `%c⚛️%c commit%c (${formatLanes(lanes)})`,
+        `%c⚛️%c commit%c (priority: ${priorityLabel})`,
         REACT_LOGO_STYLE,
         '',
         'font-weight: normal;',
@@ -133,11 +128,11 @@ export function logComponentSuspended(
   }
 }
 
-export function logLayoutEffectsStarted(lanes: Lanes): void {
+export function logLayoutEffectsStarted(priorityLabel: string): void {
   if (__DEV__) {
     if (enableDebugTracing) {
       group(
-        `%c⚛️%c layout effects%c (${formatLanes(lanes)})`,
+        `%c⚛️%c layout effects%c (priority: ${priorityLabel})`,
         REACT_LOGO_STYLE,
         '',
         'font-weight: normal;',
@@ -154,11 +149,11 @@ export function logLayoutEffectsStopped(): void {
   }
 }
 
-export function logPassiveEffectsStarted(lanes: Lanes): void {
+export function logPassiveEffectsStarted(priorityLabel: string): void {
   if (__DEV__) {
     if (enableDebugTracing) {
       group(
-        `%c⚛️%c passive effects%c (${formatLanes(lanes)})`,
+        `%c⚛️%c passive effects%c (priority: ${priorityLabel})`,
         REACT_LOGO_STYLE,
         '',
         'font-weight: normal;',
@@ -175,11 +170,11 @@ export function logPassiveEffectsStopped(): void {
   }
 }
 
-export function logRenderStarted(lanes: Lanes): void {
+export function logRenderStarted(priorityLabel: string): void {
   if (__DEV__) {
     if (enableDebugTracing) {
       group(
-        `%c⚛️%c render%c (${formatLanes(lanes)})`,
+        `%c⚛️%c render%c (priority: ${priorityLabel})`,
         REACT_LOGO_STYLE,
         '',
         'font-weight: normal;',
@@ -198,12 +193,12 @@ export function logRenderStopped(): void {
 
 export function logForceUpdateScheduled(
   componentName: string,
-  lane: Lane,
+  priorityLabel: string,
 ): void {
   if (__DEV__) {
     if (enableDebugTracing) {
       log(
-        `%c⚛️%c ${componentName} forced update %c(${formatLanes(lane)})`,
+        `%c⚛️%c ${componentName} forced update %c(priority: ${priorityLabel})`,
         REACT_LOGO_STYLE,
         'color: #db2e1f; font-weight: bold;',
         '',
@@ -214,13 +209,13 @@ export function logForceUpdateScheduled(
 
 export function logStateUpdateScheduled(
   componentName: string,
-  lane: Lane,
+  priorityLabel: string,
   payloadOrAction: any,
 ): void {
   if (__DEV__) {
     if (enableDebugTracing) {
       log(
-        `%c⚛️%c ${componentName} updated state %c(${formatLanes(lane)})`,
+        `%c⚛️%c ${componentName} updated state %c(priority: ${priorityLabel})`,
         REACT_LOGO_STYLE,
         'color: #01a252; font-weight: bold;',
         '',
