@@ -26,7 +26,6 @@ import {
   enableSchedulerTracing,
   warnAboutUnmockedScheduler,
   deferRenderPhaseUpdateToNextBatch,
-  enableDebugTracing,
 } from 'shared/ReactFeatureFlags';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import invariant from 'shared/invariant';
@@ -46,16 +45,6 @@ import {
   flushSyncCallbackQueue,
   scheduleSyncCallback,
 } from './SchedulerWithReactIntegration.old';
-import {
-  logCommitStarted,
-  logCommitStopped,
-  logLayoutEffectsStarted,
-  logLayoutEffectsStopped,
-  logPassiveEffectsStarted,
-  logPassiveEffectsStopped,
-  logRenderStarted,
-  logRenderStopped,
-} from './DebugTracing';
 
 // The scheduler is imported here *only* to detect whether it's been mocked
 import * as Scheduler from 'scheduler';
@@ -1455,12 +1444,6 @@ function renderRootSync(root: FiberRoot, lanes: Lanes) {
 
   const prevInteractions = pushInteractions(root);
 
-  if (__DEV__) {
-    if (enableDebugTracing) {
-      logRenderStarted(lanes);
-    }
-  }
-
   do {
     try {
       workLoopSync();
@@ -1484,12 +1467,6 @@ function renderRootSync(root: FiberRoot, lanes: Lanes) {
       'Cannot commit an incomplete root. This error is likely caused by a ' +
         'bug in React. Please file an issue.',
     );
-  }
-
-  if (__DEV__) {
-    if (enableDebugTracing) {
-      logRenderStopped();
-    }
   }
 
   // Set this to null to indicate there's no in-progress render.
@@ -1522,12 +1499,6 @@ function renderRootConcurrent(root: FiberRoot, lanes: Lanes) {
 
   const prevInteractions = pushInteractions(root);
 
-  if (__DEV__) {
-    if (enableDebugTracing) {
-      logRenderStarted(lanes);
-    }
-  }
-
   do {
     try {
       workLoopConcurrent();
@@ -1543,12 +1514,6 @@ function renderRootConcurrent(root: FiberRoot, lanes: Lanes) {
 
   popDispatcher(prevDispatcher);
   executionContext = prevExecutionContext;
-
-  if (__DEV__) {
-    if (enableDebugTracing) {
-      logRenderStopped();
-    }
-  }
 
   // Check if the tree has completed.
   if (workInProgress !== null) {
@@ -1820,15 +1785,6 @@ function commitRoot(root) {
 }
 
 function commitRootImpl(root, renderPriorityLevel) {
-  const finishedWork = root.finishedWork;
-  const lanes = root.finishedLanes;
-
-  if (__DEV__) {
-    if (enableDebugTracing) {
-      logCommitStarted(lanes);
-    }
-  }
-
   do {
     // `flushPassiveEffects` will call `flushSyncUpdateQueue` at the end, which
     // means `flushPassiveEffects` will sometimes result in additional
@@ -1845,13 +1801,9 @@ function commitRootImpl(root, renderPriorityLevel) {
     'Should not already be working.',
   );
 
+  const finishedWork = root.finishedWork;
+  const lanes = root.finishedLanes;
   if (finishedWork === null) {
-    if (__DEV__) {
-      if (enableDebugTracing) {
-        logCommitStopped();
-      }
-    }
-
     return null;
   }
   root.finishedWork = null;
@@ -2136,12 +2088,6 @@ function commitRootImpl(root, renderPriorityLevel) {
   }
 
   if ((executionContext & LegacyUnbatchedContext) !== NoContext) {
-    if (__DEV__) {
-      if (enableDebugTracing) {
-        logCommitStopped();
-      }
-    }
-
     // This is a legacy edge case. We just committed the initial mount of
     // a ReactDOM.render-ed root inside of batchedUpdates. The commit fired
     // synchronously, but layout updates should be deferred until the end
@@ -2151,12 +2097,6 @@ function commitRootImpl(root, renderPriorityLevel) {
 
   // If layout work was scheduled, flush it now.
   flushSyncCallbackQueue();
-
-  if (__DEV__) {
-    if (enableDebugTracing) {
-      logCommitStopped();
-    }
-  }
 
   return null;
 }
@@ -2282,12 +2222,6 @@ function commitMutationEffects(root: FiberRoot, renderPriorityLevel) {
 }
 
 function commitLayoutEffects(root: FiberRoot, committedLanes: Lanes) {
-  if (__DEV__) {
-    if (enableDebugTracing) {
-      logLayoutEffectsStarted(committedLanes);
-    }
-  }
-
   // TODO: Should probably move the bulk of this function to commitWork.
   while (nextEffect !== null) {
     setCurrentDebugFiberInDEV(nextEffect);
@@ -2305,12 +2239,6 @@ function commitLayoutEffects(root: FiberRoot, committedLanes: Lanes) {
 
     resetCurrentDebugFiberInDEV();
     nextEffect = nextEffect.nextEffect;
-  }
-
-  if (__DEV__) {
-    if (enableDebugTracing) {
-      logLayoutEffectsStopped();
-    }
   }
 }
 
@@ -2392,12 +2320,6 @@ function flushPassiveEffectsImpl() {
     (executionContext & (RenderContext | CommitContext)) === NoContext,
     'Cannot flush passive effects while already rendering.',
   );
-
-  if (__DEV__) {
-    if (enableDebugTracing) {
-      logPassiveEffectsStarted(lanes);
-    }
-  }
 
   if (__DEV__) {
     isFlushingPassiveEffects = true;
@@ -2553,12 +2475,6 @@ function flushPassiveEffectsImpl() {
 
   if (__DEV__) {
     isFlushingPassiveEffects = false;
-  }
-
-  if (__DEV__) {
-    if (enableDebugTracing) {
-      logPassiveEffectsStopped();
-    }
   }
 
   executionContext = prevExecutionContext;

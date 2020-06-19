@@ -78,8 +78,8 @@ export const enableModernEventSystem = true;
 // to the correct value.
 export const enableNewReconciler = __VARIANT__;
 
-// TODO: This does not currently exist in the new reconciler fork.
-export const enableDebugTracing = !__VARIANT__;
+// TODO: This does not currently exist in the Lanes implementation.
+export const enableDebugTracing = false;
 
 // Flow magic to verify the exports of this file match the original version.
 // eslint-disable-next-line no-unused-vars
