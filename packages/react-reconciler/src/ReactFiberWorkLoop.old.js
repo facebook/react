@@ -1872,6 +1872,10 @@ function commitRootImpl(root, renderPriorityLevel) {
       logCommitStarted(lanes);
     }
   }
+  
+  if (enableSchedulingProfiling) {
+    markCommitStarted(lanes);
+  }
 
   do {
     // `flushPassiveEffects` will call `flushSyncUpdateQueue` at the end, which
@@ -1894,6 +1898,10 @@ function commitRootImpl(root, renderPriorityLevel) {
       if (enableDebugTracing) {
         logCommitStopped();
       }
+    }
+    
+    if (enableSchedulingProfiling) {
+      markCommitStopped();
     }
 
     return null;
@@ -2332,6 +2340,10 @@ function commitLayoutEffects(root: FiberRoot, committedLanes: Lanes) {
     }
   }
 
+  if (enableSchedulingProfiling) {
+    markLayoutEffectsStarted(committedLanes);
+  }
+
   // TODO: Should probably move the bulk of this function to commitWork.
   while (nextEffect !== null) {
     setCurrentDebugFiberInDEV(nextEffect);
@@ -2355,6 +2367,10 @@ function commitLayoutEffects(root: FiberRoot, committedLanes: Lanes) {
     if (enableDebugTracing) {
       logLayoutEffectsStopped();
     }
+  }
+  
+  if (enableSchedulingProfiling) {
+    markLayoutEffectsStopped();
   }
 }
 
@@ -2445,6 +2461,10 @@ function flushPassiveEffectsImpl() {
 
   if (__DEV__) {
     isFlushingPassiveEffects = true;
+  }
+  
+  if (enableSchedulingProfiling) {
+    markPassiveEffectsStarted(lanes);
   }
 
   const prevExecutionContext = executionContext;
@@ -2593,6 +2613,10 @@ function flushPassiveEffectsImpl() {
   if (enableSchedulerTracing) {
     popInteractions(((prevInteractions: any): Set<Interaction>));
     finishPendingInteractions(root, lanes);
+  }
+  
+  if (enableSchedulingProfiling) {
+    markPassiveEffectsStopped();
   }
 
   if (__DEV__) {
