@@ -65,6 +65,12 @@ import {
   enqueueStateRestore,
   restoreStateIfNeeded,
 } from '../events/ReactDOMControlledComponent';
+import type {ReactPriorityLevel} from 'react-reconciler/src/ReactInternalTypes';
+import {
+  getCurrentUpdateLanePriority,
+  schedulerPriorityToLanePriority,
+  setCurrentUpdateLanePriority,
+} from 'react-reconciler/src/ReactFiberLane';
 
 setAttemptSynchronousHydration(attemptSynchronousHydration);
 setAttemptUserBlockingHydration(attemptUserBlockingHydration);
@@ -118,6 +124,18 @@ function createPortal(
 function scheduleHydration(target: Node) {
   if (target) {
     queueExplicitHydrationTarget(target);
+  }
+}
+
+// TODO: Remove this once callers migrate to alternatives.
+// This should only be used by React internals.
+function runWithPriority<T>(priority: ReactPriorityLevel, fn: () => T) {
+  const previousPriority = getCurrentUpdateLanePriority();
+  try {
+    setCurrentUpdateLanePriority(schedulerPriorityToLanePriority(priority));
+    return fn();
+  } finally {
+    setCurrentUpdateLanePriority(previousPriority);
   }
 }
 
@@ -197,6 +215,7 @@ export {
   createBlockingRoot,
   flushControlled as unstable_flushControlled,
   scheduleHydration as unstable_scheduleHydration,
+  runWithPriority as unstable_runWithPriority,
   // Disabled behind disableUnstableRenderSubtreeIntoContainer
   renderSubtreeIntoContainer as unstable_renderSubtreeIntoContainer,
   // Disabled behind disableUnstableCreatePortal

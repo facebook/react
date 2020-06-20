@@ -25,6 +25,7 @@ export {
   createBlockingRoot as unstable_createBlockingRoot,
   unstable_flushControlled,
   unstable_scheduleHydration,
+  unstable_runWithPriority,
   unstable_renderSubtreeIntoContainer,
   unstable_createPortal,
   unstable_createEventHandle,
