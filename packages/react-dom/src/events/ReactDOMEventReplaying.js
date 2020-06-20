@@ -562,8 +562,11 @@ export function queueExplicitHydrationTarget(target: Node): void {
     let i = 0;
     if (enableCurrentUpdateLanePriority) {
       for (; i < queuedExplicitHydrationTargets.length; i++) {
+        const queuedLanePriority =
+          queuedExplicitHydrationTargets[i].lanePriority;
         if (
-          updateLanePriority <= queuedExplicitHydrationTargets[i].lanePriority
+          higherLanePriority(updateLanePriority, queuedLanePriority) ===
+          queuedLanePriority
         ) {
           break;
         }
