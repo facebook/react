@@ -21,6 +21,7 @@ import {
   enableDeprecatedFlareAPI,
   enableSelectiveHydration,
   enableModernEventSystem,
+  enableCurrentUpdateLanePriority,
 } from 'shared/ReactFeatureFlags';
 import {
   unstable_runWithPriority as runWithPriority,
@@ -138,6 +139,13 @@ import {
 import {IS_REPLAYED, PLUGIN_EVENT_SYSTEM} from './EventSystemFlags';
 import {listenToTopLevelEvent} from './DOMModernPluginEventSystem';
 import {addResponderEventSystemEvent} from './DeprecatedDOMEventResponderSystem';
+import {
+  DefaultLanePriority,
+  getCurrentUpdateLanePriority,
+  higherLanePriority,
+  setCurrentUpdateLanePriority,
+} from 'react-reconciler/src/ReactFiberLane';
+import type {LanePriority} from 'react-reconciler/src/ReactFiberLane';
 
 type QueuedReplayableEvent = {|
   blockedOn: null | Container | SuspenseInstance,
@@ -168,7 +176,7 @@ type QueuedHydrationTarget = {|
   blockedOn: null | Container | SuspenseInstance,
   target: Node,
   priority: number,
-  lanePriority: ReactPriorityLevel,
+  lanePriority: LanePriority,
 |};
 const queuedExplicitHydrationTargets: Array<QueuedHydrationTarget> = [];
 
@@ -530,11 +538,17 @@ function attemptExplicitHydrationTarget(
           // We're blocked on hydrating this boundary.
           // Increase its priority.
           queuedTarget.blockedOn = instance;
-          attemptHydrationAtPriority(queuedTarget.lanePriority, () => {
+          const previousLanePriority = getCurrentUpdateLanePriority();
+          try {
+            setCurrentUpdateLanePriority(queuedTarget.lanePriority);
+
+            // TODO: Double wrapping is temporary while we remove Scheduler runWithPriority.
             runWithPriority(queuedTarget.priority, () => {
               attemptHydrationAtCurrentPriority(nearestMounted);
             });
-          });
+          } finally {
+            setCurrentUpdateLanePriority(previousLanePriority);
+          }
 
           return;
         }
@@ -555,7 +569,10 @@ function attemptExplicitHydrationTarget(
 export function queueExplicitHydrationTarget(target: Node): void {
   if (enableSelectiveHydration) {
     const schedulerPriority = getCurrentPriorityLevel();
-    const updateLanePriority = getCurrentUpdatePriority();
+    const updateLanePriority = higherLanePriority(
+      getCurrentUpdateLanePriority(),
+      DefaultLanePriority,
+    );
     const queuedTarget: QueuedHydrationTarget = {
       blockedOn: null,
       target: target,
@@ -563,9 +580,20 @@ export function queueExplicitHydrationTarget(target: Node): void {
       lanePriority: updateLanePriority,
     };
     let i = 0;
-    for (; i < queuedExplicitHydrationTargets.length; i++) {
-      if (schedulerPriority <= queuedExplicitHydrationTargets[i].priority) {
-        break;
+    if (enableCurrentUpdateLanePriority) {
+      for (; i < queuedExplicitHydrationTargets.length; i++) {
+        if (
+          updateLanePriority <= queuedExplicitHydrationTargets[i].lanePriority
+        ) {
+          break;
+        }
+      }
+    } else {
+      // TODO: Remove after we switch to use the update lane priority.
+      for (; i < queuedExplicitHydrationTargets.length; i++) {
+        if (schedulerPriority <= queuedExplicitHydrationTargets[i].priority) {
+          break;
+        }
       }
     }
     queuedExplicitHydrationTargets.splice(i, 0, queuedTarget);
