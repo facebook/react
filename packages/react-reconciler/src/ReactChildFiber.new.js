@@ -515,6 +515,17 @@ function ChildReconciler(shouldTrackSideEffects) {
       return created;
     }
 
+    if (isArray(newChild) || getIteratorFn(newChild)) {
+      const created = createFiberFromFragment(
+        newChild,
+        returnFiber.mode,
+        lanes,
+        null,
+      );
+      created.return = returnFiber;
+      return created;
+    }
+
     if (typeof newChild === 'object' && newChild !== null) {
       switch (newChild.$$typeof) {
         case REACT_ELEMENT_TYPE: {
@@ -543,17 +554,6 @@ function ChildReconciler(shouldTrackSideEffects) {
             return createChild(returnFiber, init(payload), lanes);
           }
         }
-      }
-
-      if (isArray(newChild) || getIteratorFn(newChild)) {
-        const created = createFiberFromFragment(
-          newChild,
-          returnFiber.mode,
-          lanes,
-          null,
-        );
-        created.return = returnFiber;
-        return created;
       }
 
       throwOnInvalidObjectType(returnFiber, newChild);
@@ -586,6 +586,14 @@ function ChildReconciler(shouldTrackSideEffects) {
         return null;
       }
       return updateTextNode(returnFiber, oldFiber, '' + newChild, lanes);
+    }
+
+    if (isArray(newChild) || getIteratorFn(newChild)) {
+      if (key !== null) {
+        return null;
+      }
+
+      return updateFragment(returnFiber, oldFiber, newChild, lanes, null);
     }
 
     if (typeof newChild === 'object' && newChild !== null) {
@@ -622,14 +630,6 @@ function ChildReconciler(shouldTrackSideEffects) {
         }
       }
 
-      if (isArray(newChild) || getIteratorFn(newChild)) {
-        if (key !== null) {
-          return null;
-        }
-
-        return updateFragment(returnFiber, oldFiber, newChild, lanes, null);
-      }
-
       throwOnInvalidObjectType(returnFiber, newChild);
     }
 
@@ -654,6 +654,11 @@ function ChildReconciler(shouldTrackSideEffects) {
       // new node for the key. If both are text nodes, they match.
       const matchedFiber = existingChildren.get(newIdx) || null;
       return updateTextNode(returnFiber, matchedFiber, '' + newChild, lanes);
+    }
+
+    if (isArray(newChild) || getIteratorFn(newChild)) {
+      const matchedFiber = existingChildren.get(newIdx) || null;
+      return updateFragment(returnFiber, matchedFiber, newChild, lanes, null);
     }
 
     if (typeof newChild === 'object' && newChild !== null) {
@@ -695,10 +700,7 @@ function ChildReconciler(shouldTrackSideEffects) {
           }
       }
 
-      if (isArray(newChild) || getIteratorFn(newChild)) {
-        const matchedFiber = existingChildren.get(newIdx) || null;
-        return updateFragment(returnFiber, matchedFiber, newChild, lanes, null);
-      }
+
 
       throwOnInvalidObjectType(returnFiber, newChild);
     }
@@ -1291,7 +1293,14 @@ function ChildReconciler(shouldTrackSideEffects) {
     if (isUnkeyedTopLevelFragment) {
       newChild = newChild.props.children;
     }
-
+    if (isArray(newChild)) {
+      return reconcileChildrenArray(
+        returnFiber,
+        currentFirstChild,
+        newChild,
+        lanes,
+      );
+    }
     // Handle object types
     const isObject = typeof newChild === 'object' && newChild !== null;
 
@@ -1341,14 +1350,6 @@ function ChildReconciler(shouldTrackSideEffects) {
       );
     }
 
-    if (isArray(newChild)) {
-      return reconcileChildrenArray(
-        returnFiber,
-        currentFirstChild,
-        newChild,
-        lanes,
-      );
-    }
 
     if (getIteratorFn(newChild)) {
       return reconcileChildrenIterator(
