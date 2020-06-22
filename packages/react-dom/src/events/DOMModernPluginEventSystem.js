@@ -21,7 +21,7 @@ import type {
   ElementListenerMap,
   ElementListenerMapEntry,
 } from '../client/ReactDOMComponentTree';
-import type {EventPriority, ReactScopeInstance} from 'shared/ReactTypes';
+import type {EventPriority} from 'shared/ReactTypes';
 import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
 
 import {registrationNameDependencies} from './EventRegistry';
@@ -951,24 +951,6 @@ export function addEventTypeToDispatchConfig(type: DOMTopLevelEventType): void {
   // dispatch config for custom events.
   if (reactName === undefined) {
     topLevelEventsToReactNames.set(type, null);
-  }
-}
-
-export function clearEventHandleListenersForTarget(
-  target: EventTarget | ReactScopeInstance,
-): void {
-  // It's unfortunate that we have to do this cleanup, but
-  // it's necessary otherwise we will leak the host instances
-  // on the createEventHandle API "listeners" Map. We call destroy
-  // on each listener to ensure we properly remove the instance
-  // from the listeners Map. Note: we have this Map so that we
-  // can track listeners for the handle.clear() API call.
-  const listeners = getEventHandlerListeners(target);
-  if (listeners !== null) {
-    const listenersArr = Array.from(listeners);
-    for (let i = 0; i < listenersArr.length; i++) {
-      listenersArr[i].destroy(target);
-    }
   }
 }
 
