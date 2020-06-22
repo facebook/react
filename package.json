@@ -4,7 +4,8 @@
   "scripts": {
     "build": "parcel build index.html --no-cache",
     "prettier": "prettier --write '**/*.{js,json,css}'",
-    "start": "parcel index.html --no-cache"
+    "start": "parcel index.html --no-cache",
+    "test": "jest"
   },
   "author": "Brian Vaughn <bvaughn@fb.com>",
   "license": "MIT",
