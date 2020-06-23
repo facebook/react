@@ -3,7 +3,7 @@
   "version": "0.0.1",
   "scripts": {
     "build": "parcel build index.html --no-cache",
-    "prettier": "prettier --write '**/*.{js,json,css}'",
+    "prettier": "prettier --write \"**/*.{js,json,css}\"",
     "start": "parcel index.html --no-cache",
     "test": "jest"
   },

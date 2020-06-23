@@ -1,7 +1,7 @@
 // @flow
 
-import { importFromChromeTimeline } from './speedscope/import/chrome';
-import { Flamechart } from './speedscope/lib/flamechart';
+import { importFromChromeTimeline } from '../speedscope/import/chrome';
+import { Flamechart } from '../speedscope/lib/flamechart';
 
 import type { TimelineEvent } from './speedscope/import/chrome';
 import type { FlamechartData } from './types';

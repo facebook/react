@@ -36,6 +36,27 @@ export const ZOOM_WHEEL_DELTA_THRESHOLD = 1;
 export const MIN_ZOOM_LEVEL = 0.25;
 export const MAX_ZOOM_LEVEL = 1000;
 
+export const REACT_PRIORITIES = ['unscheduled', 'high', 'normal', 'low'];
+
+export const ROW_CSS_PIXELS_HEIGHT = 16;
+export const TEXT_CSS_PIXELS_OFFSET_START = 3;
+export const TEXT_CSS_PIXELS_OFFSET_TOP = 11;
+export const FONT_SIZE = 10;
+export const BORDER_OPACITY = 0.4;
+
+export const REACT_GUTTER_SIZE = 4;
+export const REACT_EVENT_SIZE = 6;
+export const REACT_WORK_SIZE = 12;
+export const REACT_EVENT_BORDER_SIZE = 1;
+export const REACT_PRIORITY_BORDER_SIZE = 1;
+
+export const FLAMECHART_FONT_SIZE = 10;
+export const FLAMECHART_FRAME_HEIGHT = 16;
+export const FLAMECHART_TEXT_PADDING = 3;
+
+export const LABEL_FIXED_WIDTH = LABEL_SIZE + REACT_PRIORITY_BORDER_SIZE;
+export const HEADER_HEIGHT_FIXED = MARKER_HEIGHT + REACT_PRIORITY_BORDER_SIZE;
+
 export const COLORS = Object.freeze({
   BACKGROUND: '#ffffff',
   FLAME_GRAPH: '#fff79f',

@@ -1,7 +1,7 @@
 // @flow
 
 import { useEffect, useReducer } from 'react';
-import { getCanvasMousePos } from './canvasUtils';
+import { getCanvasMousePos } from '../canvas/canvasUtils';
 import {
   BAR_HORIZONTAL_SPACING,
   MAX_ZOOM_LEVEL,
@@ -9,7 +9,7 @@ import {
   MIN_ZOOM_LEVEL,
   MOVE_WHEEL_DELTA_THRESHOLD,
   ZOOM_WHEEL_DELTA_THRESHOLD,
-} from './constants';
+} from '../canvas/constants';
 
 export type PanAndZoomState = {|
   canvasHeight: number,

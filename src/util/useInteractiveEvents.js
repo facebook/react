@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { durationToWidth, timestampToPosition } from './usePanAndZoom';
-import { EVENT_SIZE } from './constants';
+import { EVENT_SIZE } from '../constants';
 
 function doesEventIntersectPosition(position, state, event) {
   const { duration, timestamp } = event;
