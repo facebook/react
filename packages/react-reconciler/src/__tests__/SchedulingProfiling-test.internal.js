@@ -351,18 +351,12 @@ describe('SchedulingProfiling', () => {
       expect(Scheduler).toFlushUntilNextPaint([]);
     }).toErrorDev('Cannot update during an existing state transition');
 
-    expect(marks.map(normalizeCodeLocInfo)).toEqual([
-      '--render-start-512',
-      '--render-cancel',
-      '--schedule-state-update-Example-1024-\n    in Example (at **)',
-      '--render-cancel',
-      '--schedule-state-update-Example-1024-\n    in Example (at **)',
-      '--render-stop',
-      '--commit-start-512',
-      '--layout-effects-start-512',
-      '--layout-effects-stop',
-      '--commit-stop',
-    ]);
+    expect(marks.map(normalizeCodeLocInfo)).toEqual(
+      expect.arrayContaining([
+        '--render-cancel',
+        '--schedule-state-update-Example-1024-\n    in Example (at **)',
+      ]),
+    );
   });
 
   // @gate experimental && enableSchedulingProfiling
@@ -387,18 +381,12 @@ describe('SchedulingProfiling', () => {
       expect(Scheduler).toFlushUntilNextPaint([]);
     }).toErrorDev('Cannot update during an existing state transition');
 
-    expect(marks.map(normalizeCodeLocInfo)).toEqual([
-      '--render-start-512',
-      '--render-cancel',
-      '--schedule-forced-update-Example-1024-\n    in Example (at **)',
-      '--render-cancel',
-      '--schedule-forced-update-Example-1024-\n    in Example (at **)',
-      '--render-stop',
-      '--commit-start-512',
-      '--layout-effects-start-512',
-      '--layout-effects-stop',
-      '--commit-stop',
-    ]);
+    expect(marks.map(normalizeCodeLocInfo)).toEqual(
+      expect.arrayContaining([
+        '--render-cancel',
+        '--schedule-forced-update-Example-1024-\n    in Example (at **)',
+      ]),
+    );
   });
 
   // @gate experimental && enableSchedulingProfiling
@@ -478,16 +466,9 @@ describe('SchedulingProfiling', () => {
     ReactTestRenderer.act(() => {
       ReactTestRenderer.create(<Example />, {unstable_isConcurrent: true});
     });
-    expect(marks.map(normalizeCodeLocInfo)).toEqual([
-      '--schedule-render-Unknown-512-',
-      '--render-start-512',
+
+    expect(marks.map(normalizeCodeLocInfo)).toContain(
       '--schedule-state-update-Example-1024-\n    in Example (at **)',
-      '--schedule-state-update-Example-1024-\n    in Example (at **)',
-      '--render-stop',
-      '--commit-start-512',
-      '--layout-effects-start-512',
-      '--layout-effects-stop',
-      '--commit-stop',
-    ]);
+    );
   });
 });
