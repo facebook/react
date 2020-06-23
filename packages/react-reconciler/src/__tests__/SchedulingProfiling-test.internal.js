@@ -67,11 +67,11 @@ describe('SchedulingProfiling', () => {
     ReactTestRenderer.create(<div />);
 
     expect(marks).toEqual([
-      '--schedule-render-Unknown-0b0000000000000000000000000000001-',
-      '--render-start-0b0000000000000000000000000000001',
+      '--schedule-render-Unknown-1-',
+      '--render-start-1',
       '--render-stop',
-      '--commit-start-0b0000000000000000000000000000001',
-      '--layout-effects-start-0b0000000000000000000000000000001',
+      '--commit-start-1',
+      '--layout-effects-start-1',
       '--layout-effects-stop',
       '--commit-stop',
     ]);
@@ -81,19 +81,17 @@ describe('SchedulingProfiling', () => {
   it('should mark concurrent render without suspends or state updates', () => {
     ReactTestRenderer.create(<div />, {unstable_isConcurrent: true});
 
-    expect(marks).toEqual([
-      '--schedule-render-Unknown-0b0000000000000000000001000000000-',
-    ]);
+    expect(marks).toEqual(['--schedule-render-Unknown-512-']);
 
     marks.splice(0);
 
     expect(Scheduler).toFlushUntilNextPaint([]);
 
     expect(marks).toEqual([
-      '--render-start-0b0000000000000000000001000000000',
+      '--render-start-512',
       '--render-stop',
-      '--commit-start-0b0000000000000000000001000000000',
-      '--layout-effects-start-0b0000000000000000000001000000000',
+      '--commit-start-512',
+      '--layout-effects-start-512',
       '--layout-effects-stop',
       '--commit-stop',
     ]);
@@ -116,8 +114,8 @@ describe('SchedulingProfiling', () => {
     expect(ReactNoop.flushNextYield()).toEqual(['Foo']);
 
     expect(marks).toEqual([
-      '--schedule-render-Unknown-0b0000000000000000000001000000000-',
-      '--render-start-0b0000000000000000000001000000000',
+      '--schedule-render-Unknown-512-',
+      '--render-start-512',
       '--render-yield',
     ]);
   });
@@ -136,12 +134,12 @@ describe('SchedulingProfiling', () => {
     );
 
     expect(marks).toEqual([
-      '--schedule-render-Unknown-0b0000000000000000000000000000001-',
-      '--render-start-0b0000000000000000000000000000001',
+      '--schedule-render-Unknown-1-',
+      '--render-start-1',
       '--suspense-suspend-Example-0-\n    at Example\n    at Suspense',
       '--render-stop',
-      '--commit-start-0b0000000000000000000000000000001',
-      '--layout-effects-start-0b0000000000000000000000000000001',
+      '--commit-start-1',
+      '--layout-effects-start-1',
       '--layout-effects-stop',
       '--commit-stop',
     ]);
@@ -168,12 +166,12 @@ describe('SchedulingProfiling', () => {
     );
 
     expect(marks).toEqual([
-      '--schedule-render-Unknown-0b0000000000000000000000000000001-',
-      '--render-start-0b0000000000000000000000000000001',
+      '--schedule-render-Unknown-1-',
+      '--render-start-1',
       '--suspense-suspend-Example-0-\n    at Example\n    at Suspense',
       '--render-stop',
-      '--commit-start-0b0000000000000000000000000000001',
-      '--layout-effects-start-0b0000000000000000000000000000001',
+      '--commit-start-1',
+      '--layout-effects-start-1',
       '--layout-effects-stop',
       '--commit-stop',
     ]);
@@ -200,20 +198,18 @@ describe('SchedulingProfiling', () => {
       {unstable_isConcurrent: true},
     );
 
-    expect(marks).toEqual([
-      '--schedule-render-Unknown-0b0000000000000000000001000000000-',
-    ]);
+    expect(marks).toEqual(['--schedule-render-Unknown-512-']);
 
     marks.splice(0);
 
     expect(Scheduler).toFlushUntilNextPaint([]);
 
     expect(marks).toEqual([
-      '--render-start-0b0000000000000000000001000000000',
+      '--render-start-512',
       '--suspense-suspend-Example-0-\n    at Example\n    at Suspense',
       '--render-stop',
-      '--commit-start-0b0000000000000000000001000000000',
-      '--layout-effects-start-0b0000000000000000000001000000000',
+      '--commit-start-512',
+      '--layout-effects-start-512',
       '--layout-effects-stop',
       '--commit-stop',
     ]);
@@ -240,20 +236,18 @@ describe('SchedulingProfiling', () => {
       {unstable_isConcurrent: true},
     );
 
-    expect(marks).toEqual([
-      '--schedule-render-Unknown-0b0000000000000000000001000000000-',
-    ]);
+    expect(marks).toEqual(['--schedule-render-Unknown-512-']);
 
     marks.splice(0);
 
     expect(Scheduler).toFlushUntilNextPaint([]);
 
     expect(marks).toEqual([
-      '--render-start-0b0000000000000000000001000000000',
+      '--render-start-512',
       '--suspense-suspend-Example-0-\n    at Example\n    at Suspense',
       '--render-stop',
-      '--commit-start-0b0000000000000000000001000000000',
-      '--layout-effects-start-0b0000000000000000000001000000000',
+      '--commit-start-512',
+      '--layout-effects-start-512',
       '--layout-effects-stop',
       '--commit-stop',
     ]);
@@ -280,24 +274,22 @@ describe('SchedulingProfiling', () => {
 
     ReactTestRenderer.create(<Example />, {unstable_isConcurrent: true});
 
-    expect(marks).toEqual([
-      '--schedule-render-Unknown-0b0000000000000000000001000000000-',
-    ]);
+    expect(marks).toEqual(['--schedule-render-Unknown-512-']);
 
     marks.splice(0);
 
     expect(Scheduler).toFlushUntilNextPaint([]);
 
     expect(marks.map(normalizeCodeLocInfo)).toEqual([
-      '--render-start-0b0000000000000000000001000000000',
+      '--render-start-512',
       '--render-stop',
-      '--commit-start-0b0000000000000000000001000000000',
-      '--layout-effects-start-0b0000000000000000000001000000000',
-      '--schedule-state-update-Example-0b0000000000000000000000000000001-\n    in Example (at **)',
+      '--commit-start-512',
+      '--layout-effects-start-512',
+      '--schedule-state-update-Example-1-\n    in Example (at **)',
       '--layout-effects-stop',
-      '--render-start-0b0000000000000000000000000000001',
+      '--render-start-1',
       '--render-stop',
-      '--commit-start-0b0000000000000000000000000000001',
+      '--commit-start-1',
       '--commit-stop',
       '--commit-stop',
     ]);
@@ -316,24 +308,22 @@ describe('SchedulingProfiling', () => {
 
     ReactTestRenderer.create(<Example />, {unstable_isConcurrent: true});
 
-    expect(marks).toEqual([
-      '--schedule-render-Unknown-0b0000000000000000000001000000000-',
-    ]);
+    expect(marks).toEqual(['--schedule-render-Unknown-512-']);
 
     marks.splice(0);
 
     expect(Scheduler).toFlushUntilNextPaint([]);
 
     expect(marks.map(normalizeCodeLocInfo)).toEqual([
-      '--render-start-0b0000000000000000000001000000000',
+      '--render-start-512',
       '--render-stop',
-      '--commit-start-0b0000000000000000000001000000000',
-      '--layout-effects-start-0b0000000000000000000001000000000',
-      '--schedule-forced-update-Example-0b0000000000000000000000000000001-\n    in Example (at **)',
+      '--commit-start-512',
+      '--layout-effects-start-512',
+      '--schedule-forced-update-Example-1-\n    in Example (at **)',
       '--layout-effects-stop',
-      '--render-start-0b0000000000000000000000000000001',
+      '--render-start-1',
       '--render-stop',
-      '--commit-start-0b0000000000000000000000000000001',
+      '--commit-start-1',
       '--commit-stop',
       '--commit-stop',
     ]);
@@ -353,9 +343,7 @@ describe('SchedulingProfiling', () => {
 
     ReactTestRenderer.create(<Example />, {unstable_isConcurrent: true});
 
-    expect(marks).toEqual([
-      '--schedule-render-Unknown-0b0000000000000000000001000000000-',
-    ]);
+    expect(marks).toEqual(['--schedule-render-Unknown-512-']);
 
     marks.splice(0);
 
@@ -364,14 +352,14 @@ describe('SchedulingProfiling', () => {
     }).toErrorDev('Cannot update during an existing state transition');
 
     expect(marks.map(normalizeCodeLocInfo)).toEqual([
-      '--render-start-0b0000000000000000000001000000000',
+      '--render-start-512',
       '--render-cancel',
-      '--schedule-state-update-Example-0b0000000000000000000010000000000-\n    in Example (at **)',
+      '--schedule-state-update-Example-1024-\n    in Example (at **)',
       '--render-cancel',
-      '--schedule-state-update-Example-0b0000000000000000000010000000000-\n    in Example (at **)',
+      '--schedule-state-update-Example-1024-\n    in Example (at **)',
       '--render-stop',
-      '--commit-start-0b0000000000000000000001000000000',
-      '--layout-effects-start-0b0000000000000000000001000000000',
+      '--commit-start-512',
+      '--layout-effects-start-512',
       '--layout-effects-stop',
       '--commit-stop',
     ]);
@@ -391,9 +379,7 @@ describe('SchedulingProfiling', () => {
 
     ReactTestRenderer.create(<Example />, {unstable_isConcurrent: true});
 
-    expect(marks).toEqual([
-      '--schedule-render-Unknown-0b0000000000000000000001000000000-',
-    ]);
+    expect(marks).toEqual(['--schedule-render-Unknown-512-']);
 
     marks.splice(0);
 
@@ -402,14 +388,14 @@ describe('SchedulingProfiling', () => {
     }).toErrorDev('Cannot update during an existing state transition');
 
     expect(marks.map(normalizeCodeLocInfo)).toEqual([
-      '--render-start-0b0000000000000000000001000000000',
+      '--render-start-512',
       '--render-cancel',
-      '--schedule-forced-update-Example-0b0000000000000000000010000000000-\n    in Example (at **)',
+      '--schedule-forced-update-Example-1024-\n    in Example (at **)',
       '--render-cancel',
-      '--schedule-forced-update-Example-0b0000000000000000000010000000000-\n    in Example (at **)',
+      '--schedule-forced-update-Example-1024-\n    in Example (at **)',
       '--render-stop',
-      '--commit-start-0b0000000000000000000001000000000',
-      '--layout-effects-start-0b0000000000000000000001000000000',
+      '--commit-start-512',
+      '--layout-effects-start-512',
       '--layout-effects-stop',
       '--commit-stop',
     ]);
@@ -427,24 +413,22 @@ describe('SchedulingProfiling', () => {
 
     ReactTestRenderer.create(<Example />, {unstable_isConcurrent: true});
 
-    expect(marks).toEqual([
-      '--schedule-render-Unknown-0b0000000000000000000001000000000-',
-    ]);
+    expect(marks).toEqual(['--schedule-render-Unknown-512-']);
 
     marks.splice(0);
 
     expect(Scheduler).toFlushUntilNextPaint([]);
 
     expect(marks.map(normalizeCodeLocInfo)).toEqual([
-      '--render-start-0b0000000000000000000001000000000',
+      '--render-start-512',
       '--render-stop',
-      '--commit-start-0b0000000000000000000001000000000',
-      '--layout-effects-start-0b0000000000000000000001000000000',
-      '--schedule-state-update-Example-0b0000000000000000000000000000001-\n    in Example (at **)',
+      '--commit-start-512',
+      '--layout-effects-start-512',
+      '--schedule-state-update-Example-1-\n    in Example (at **)',
       '--layout-effects-stop',
-      '--render-start-0b0000000000000000000000000000001',
+      '--render-start-1',
       '--render-stop',
-      '--commit-start-0b0000000000000000000000000000001',
+      '--commit-start-1',
       '--commit-stop',
       '--commit-stop',
     ]);
@@ -464,19 +448,19 @@ describe('SchedulingProfiling', () => {
       ReactTestRenderer.create(<Example />, {unstable_isConcurrent: true});
     });
     expect(marks.map(normalizeCodeLocInfo)).toEqual([
-      '--schedule-render-Unknown-0b0000000000000000000001000000000-',
-      '--render-start-0b0000000000000000000001000000000',
+      '--schedule-render-Unknown-512-',
+      '--render-start-512',
       '--render-stop',
-      '--commit-start-0b0000000000000000000001000000000',
-      '--layout-effects-start-0b0000000000000000000001000000000',
+      '--commit-start-512',
+      '--layout-effects-start-512',
       '--layout-effects-stop',
       '--commit-stop',
-      '--passive-effects-start-0b0000000000000000000001000000000',
-      '--schedule-state-update-Example-0b0000000000000000000010000000000-\n    in Example (at **)',
+      '--passive-effects-start-512',
+      '--schedule-state-update-Example-1024-\n    in Example (at **)',
       '--passive-effects-stop',
-      '--render-start-0b0000000000000000000010000000000',
+      '--render-start-1024',
       '--render-stop',
-      '--commit-start-0b0000000000000000000010000000000',
+      '--commit-start-1024',
       '--commit-stop',
     ]);
   });
@@ -495,13 +479,13 @@ describe('SchedulingProfiling', () => {
       ReactTestRenderer.create(<Example />, {unstable_isConcurrent: true});
     });
     expect(marks.map(normalizeCodeLocInfo)).toEqual([
-      '--schedule-render-Unknown-0b0000000000000000000001000000000-',
-      '--render-start-0b0000000000000000000001000000000',
-      '--schedule-state-update-Example-0b0000000000000000000010000000000-\n    in Example (at **)',
-      '--schedule-state-update-Example-0b0000000000000000000010000000000-\n    in Example (at **)',
+      '--schedule-render-Unknown-512-',
+      '--render-start-512',
+      '--schedule-state-update-Example-1024-\n    in Example (at **)',
+      '--schedule-state-update-Example-1024-\n    in Example (at **)',
       '--render-stop',
-      '--commit-start-0b0000000000000000000001000000000',
-      '--layout-effects-start-0b0000000000000000000001000000000',
+      '--commit-start-512',
+      '--layout-effects-start-512',
       '--layout-effects-stop',
       '--commit-stop',
     ]);

@@ -21,7 +21,7 @@ const supportsUserTiming =
   typeof performance !== 'undefined' && typeof performance.mark === 'function';
 
 function formatLanes(laneOrLanes: Lane | Lanes): string {
-  return '0b' + (laneOrLanes: any).toString(2).padStart(31, '0');
+  return ((laneOrLanes: any): number).toString();
 }
 
 export function markCommitStarted(lanes: Lanes): void {
