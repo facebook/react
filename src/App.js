@@ -15,15 +15,8 @@ import { unstable_batchedUpdates } from 'react-dom';
 import memoize from 'memoize-one';
 import usePanAndZoom from './util/usePanAndZoom';
 
-import {
-  getCanvasContext,
-  getTimeTickInterval,
-  cachedFlamegraphTextWidths,
-  trimFlamegraphText,
-  getHoveredEvent,
-  getPriorityHeight,
-} from './canvas/canvasUtils';
-import { renderCanvas, renderReact } from './canvas/renderCanvas';
+import { getHoveredEvent, getPriorityHeight } from './canvas/canvasUtils';
+import { renderCanvas } from './canvas/renderCanvas';
 
 import prettyMilliseconds from 'pretty-ms';
 import { getBatchRange } from './util/getBatchRange';
