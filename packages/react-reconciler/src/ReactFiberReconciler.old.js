@@ -267,7 +267,6 @@ export function updateContainer(
   const suspenseConfig = requestCurrentSuspenseConfig();
   const lane = requestUpdateLane(current, suspenseConfig);
 
-  // TODO: Confirm that this location and container/lane make sense
   if (enableSchedulingProfiling) {
     let componentName = 'Unknown';
     if (ReactCurrentFiberCurrent !== null) {
