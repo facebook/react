@@ -737,7 +737,7 @@ export function markRootFinished(root: FiberRoot, remainingLanes: Lanes) {
     const lane = 1 << index;
 
     // Clear the expiration time
-    expirationTimes[index] = -1;
+    expirationTimes[index] = NoTimestamp;
 
     lanes &= ~lane;
   }
