@@ -1,6 +1,14 @@
 // @flow
 // Contains helper functions for rendering canvas elements
 
+import type {
+  ReactProfilerData,
+  FlamechartData,
+  ReactHoverContextInfo,
+  ReactPriority,
+} from '../types';
+import type { PanAndZoomState } from '../util/usePanAndZoom';
+
 import memoize from 'memoize-one';
 import {
   INTERVAL_TIMES,
@@ -69,7 +77,7 @@ export function getCanvasMousePos(
 // In Chrome, these seem to range from 70-140 pixels wide.
 // Time wise, they represent intervals of e.g. 1s, 500ms, 200ms, 100ms, 50ms, 20ms.
 // Based on zoom, we should determine which amount to actually show.
-export function getTimeTickInterval(zoomLevel) {
+export function getTimeTickInterval(zoomLevel: number) {
   let interval = INTERVAL_TIMES[0];
   for (let i = 0; i < INTERVAL_TIMES.length; i++) {
     const currentInterval = INTERVAL_TIMES[i];
@@ -82,7 +90,11 @@ export function getTimeTickInterval(zoomLevel) {
 }
 
 export const cachedFlamegraphTextWidths = new Map();
-export const trimFlamegraphText = (context, text, width) => {
+export const trimFlamegraphText = (
+  context: CanvasRenderingContext2D,
+  text: string,
+  width: number
+) => {
   for (let i = text.length - 1; i >= 0; i--) {
     const trimmedText = i === text.length - 1 ? text : text.substr(0, i) + '…';
 

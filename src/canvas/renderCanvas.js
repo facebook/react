@@ -1,5 +1,12 @@
 // @flow
 
+import type {
+  ReactProfilerData,
+  FlamechartData,
+  ReactHoverContextInfo,
+} from '../types';
+import type { PanAndZoomState } from '../util/usePanAndZoom';
+
 import React from 'react';
 import memoize from 'memoize-one';
 
@@ -36,8 +43,6 @@ import {
   LABEL_FIXED_WIDTH,
   HEADER_HEIGHT_FIXED,
 } from './constants';
-
-import type { PanAndZoomState } from '../util/usePanAndZoom';
 
 // The canvas we're rendering looks a little like the outline below.
 // Left labels mark different scheduler REACT_PRIORITIES,
