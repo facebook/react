@@ -43,12 +43,10 @@ import {
 
 import getEventTarget from './getEventTarget';
 import {
-  TOP_FOCUS,
   TOP_LOAD,
   TOP_ABORT,
   TOP_CANCEL,
   TOP_INVALID,
-  TOP_BLUR,
   TOP_SCROLL,
   TOP_CLOSE,
   TOP_RESET,
@@ -207,8 +205,6 @@ function extractEvents(
 }
 
 export const capturePhaseEvents: Set<DOMTopLevelEventType> = new Set([
-  TOP_FOCUS,
-  TOP_BLUR,
   TOP_SCROLL,
   TOP_LOAD,
   TOP_ABORT,

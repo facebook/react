@@ -11,7 +11,7 @@ import {canUseDOM} from 'shared/ExecutionEnvironment';
 
 import {registerTwoPhaseEvent} from '../EventRegistry';
 import {
-  TOP_BLUR,
+  TOP_FOCUS_OUT,
   TOP_COMPOSITION_START,
   TOP_COMPOSITION_END,
   TOP_COMPOSITION_UPDATE,
@@ -66,24 +66,24 @@ function registerEvents() {
     TOP_PASTE,
   ]);
   registerTwoPhaseEvent('onCompositionEnd', [
-    TOP_BLUR,
     TOP_COMPOSITION_END,
+    TOP_FOCUS_OUT,
     TOP_KEY_DOWN,
     TOP_KEY_PRESS,
     TOP_KEY_UP,
     TOP_MOUSE_DOWN,
   ]);
   registerTwoPhaseEvent('onCompositionStart', [
-    TOP_BLUR,
     TOP_COMPOSITION_START,
+    TOP_FOCUS_OUT,
     TOP_KEY_DOWN,
     TOP_KEY_PRESS,
     TOP_KEY_UP,
     TOP_MOUSE_DOWN,
   ]);
   registerTwoPhaseEvent('onCompositionUpdate', [
-    TOP_BLUR,
     TOP_COMPOSITION_UPDATE,
+    TOP_FOCUS_OUT,
     TOP_KEY_DOWN,
     TOP_KEY_PRESS,
     TOP_KEY_UP,
@@ -154,7 +154,7 @@ function isFallbackCompositionEnd(topLevelType, nativeEvent) {
       return nativeEvent.keyCode !== START_KEYCODE;
     case TOP_KEY_PRESS:
     case TOP_MOUSE_DOWN:
-    case TOP_BLUR:
+    case TOP_FOCUS_OUT:
       // Events are not possible without cancelling IME.
       return true;
     default:
