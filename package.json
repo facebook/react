@@ -113,7 +113,7 @@
     "test-www-variant": "yarn test -c www --variant",
     "test-prod-www": "yarn test -c www --prod",
     "test-prod-www-variant": "yarn test -c www --prod --variant",
-    "test-persistent": "yarn test -c persist --variant",
+    "test-persistent": "yarn test -c persist",
     "debug-test-persistent": "yarn test -c persist --debug",
     "test-prod": "yarn test -c source --prod",
     "debug-test-prod": "yarn test -c source --prod --debug",
