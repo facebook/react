@@ -427,8 +427,6 @@ jobs:
       - *restore_yarn_cache
       - *run_yarn
       - run:
-          environment:
-            RELEASE_CHANNEL: stable
           command: yarn test --release-channel=stable --build --prod --ci
 
   yarn_test_build_prod:
