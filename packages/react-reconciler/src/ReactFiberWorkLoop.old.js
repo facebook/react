@@ -1849,7 +1849,7 @@ function commitRootImpl(root, renderPriorityLevel) {
 
   if (lanesBefore !== lanes) {
     // eslint-disable-next-line react-internal/no-production-logging
-    throw Error(
+    console.log(
       `🔥🔥🔥 performConcurrentWorkOnRoot() changing lanes in commit ${DEBUG_COMMIT_COUNT} (${(lanesBefore: any)
         .toString(2)
         .padStart(31, '0')} => ${(lanes: any).toString(2).padStart(31, '0')})`,
@@ -1858,7 +1858,7 @@ function commitRootImpl(root, renderPriorityLevel) {
 
   if (finishedWorkBefore !== finishedWork) {
     // eslint-disable-next-line react-internal/no-production-logging
-    throw Error(
+    console.log(
       `🔥🔥🔥 performConcurrentWorkOnRoot() changing finishedWork in commit ${DEBUG_COMMIT_COUNT}`,
     );
   }

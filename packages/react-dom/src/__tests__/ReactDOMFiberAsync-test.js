@@ -581,7 +581,7 @@ describe('ReactDOMFiberAsync', () => {
     });
   });
 
-  it('regression test: does not drop passive effects across roots (#17066)', () => {
+  fit('regression test: does not drop passive effects across roots (#17066)', () => {
     const {useState, useEffect} = React;
 
     function App({label}) {

@@ -46,7 +46,8 @@ function FiberRootNode(containerInfo, tag, hydrate) {
     set(value) {
       if (DEBUG_FINISHED_LANES) {
         if (value !== finishedWork) {
-          throw Error(
+          // eslint-disable-next-line react-internal/no-production-logging
+          console.log(
             `🔥🔥🔥 finishedWork expectedly changed in commit ${DEBUG_COMMIT_COUNT}`,
           );
         }
@@ -78,7 +79,8 @@ function FiberRootNode(containerInfo, tag, hydrate) {
     set(value) {
       if (DEBUG_FINISHED_LANES) {
         if (value !== finishedLanes) {
-          throw Error(
+          // eslint-disable-next-line react-internal/no-production-logging
+          console.log(
             `🔥🔥🔥 finishedLanes (${(finishedLanes: any)
               .toString(2)
               .padStart(31, '0')} => ${(value: any)
