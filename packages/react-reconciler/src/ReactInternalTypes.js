@@ -310,6 +310,10 @@ export type Dispatcher = {|
     subscribe: MutableSourceSubscribeFn<Source, Snapshot>,
   ): Snapshot,
   useOpaqueIdentifier(): any,
+  useSnapshotBeforeCommit(
+    create: () => void,
+    deps: Array<mixed> | void | null,
+  ): void,
 
   unstable_isNewReconciler?: boolean,
 |};

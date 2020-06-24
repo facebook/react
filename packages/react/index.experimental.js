@@ -49,4 +49,5 @@ export {
   unstable_useOpaqueIdentifier,
   // enableDebugTracing
   unstable_DebugTracingMode,
+  unstable_useSnapshotBeforeCommit,
 } from './src/React';

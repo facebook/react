@@ -127,6 +127,7 @@ import {
   HasEffect as HookHasEffect,
   Layout as HookLayout,
   Passive as HookPassive,
+  Snapshot as HookSnapshot,
 } from './ReactHookEffectTags';
 import {didWarnAboutReassigningProps} from './ReactFiberBeginWork.old';
 import {
@@ -231,6 +232,7 @@ function commitBeforeMutationLifeCycles(
     case ForwardRef:
     case SimpleMemoComponent:
     case Block: {
+      commitSnapshotHookEffectList(finishedWork);
       return;
     }
     case ClassComponent: {
@@ -375,6 +377,33 @@ function commitHookEffectListMount(tag: number, finishedWork: Fiber) {
               'An effect function must not return anything besides a function, ' +
                 'which is used for clean-up.%s',
               addendum,
+            );
+          }
+        }
+      }
+      effect = effect.next;
+    } while (effect !== firstEffect);
+  }
+}
+
+function commitSnapshotHookEffectList(finishedWork: Fiber) {
+  const updateQueue: FunctionComponentUpdateQueue | null = (finishedWork.updateQueue: any);
+  const lastEffect = updateQueue !== null ? updateQueue.lastEffect : null;
+  if (lastEffect !== null) {
+    const firstEffect = lastEffect.next;
+    let effect = firstEffect;
+    do {
+      if ((effect.tag & HookSnapshot) === HookSnapshot) {
+        // Run snapshot effect
+        const create = effect.create;
+        // There shouldn't be a return
+        const possibleBadValue = create();
+
+        if (__DEV__) {
+          if (typeof possibleBadValue === 'function') {
+            console.error(
+              "useSnapshotBeforeCommit's function must not return anything. Use an effect " +
+                'for when you want to return a function that handles clean-up.',
             );
           }
         }

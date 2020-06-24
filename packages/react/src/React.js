@@ -48,6 +48,7 @@ import {
   useTransition,
   useDeferredValue,
   useOpaqueIdentifier,
+  useSnapshotBeforeCommit,
 } from './ReactHooks';
 import {withSuspenseConfig} from './ReactBatchConfig';
 import {
@@ -123,4 +124,5 @@ export {
   // enableScopeAPI
   createScope as unstable_createScope,
   useOpaqueIdentifier as unstable_useOpaqueIdentifier,
+  useSnapshotBeforeCommit as unstable_useSnapshotBeforeCommit,
 };

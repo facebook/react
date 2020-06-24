@@ -1992,4 +1992,21 @@ describe('ReactHooks', () => {
     act(() => setShouldThrow(true));
     expect(root).toMatchRenderedOutput('Error!');
   });
+
+  // @gate experimental
+  it('useSnapshotBeforeCommit should warn if a destroy function is returned', () => {
+    const {unstable_useSnapshotBeforeCommit: useSnapshotBeforeCommit} = React;
+    function Component() {
+      useSnapshotBeforeCommit(() => {
+        return () => {};
+      });
+      return null;
+    }
+
+    const root = ReactTestRenderer.create(null);
+    expect(() => root.update(<Component />)).toErrorDev([
+      "Warning: useSnapshotBeforeCommit's function must not return anything." +
+        ' Use an effect for when you want to return a function that handles clean-up.',
+    ]);
+  });
 });

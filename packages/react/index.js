@@ -83,4 +83,5 @@ export {
   unstable_createFundamental,
   unstable_createScope,
   unstable_useOpaqueIdentifier,
+  unstable_useSnapshotBeforeCommit,
 } from './src/React';

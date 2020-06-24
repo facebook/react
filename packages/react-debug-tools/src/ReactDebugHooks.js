@@ -333,6 +333,18 @@ function useOpaqueIdentifier(): OpaqueIDType | void {
   return value;
 }
 
+function useSnapshotBeforeCommit(
+  create: () => void,
+  inputs: Array<mixed> | void | null,
+): void {
+  nextHook();
+  hookLog.push({
+    primitive: 'SnapshotBeforeCommit',
+    stackError: new Error(),
+    value: create,
+  });
+}
+
 const Dispatcher: DispatcherType = {
   readContext,
   useCallback,
@@ -350,6 +362,7 @@ const Dispatcher: DispatcherType = {
   useMutableSource,
   useDeferredValue,
   useOpaqueIdentifier,
+  useSnapshotBeforeCommit,
 };
 
 // Inspect

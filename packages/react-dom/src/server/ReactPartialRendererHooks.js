@@ -529,4 +529,5 @@ export const Dispatcher: DispatcherType = {
   useOpaqueIdentifier,
   // Subscriptions are not setup in a server environment.
   useMutableSource,
+  useSnapshotBeforeCommit: noop,
 };

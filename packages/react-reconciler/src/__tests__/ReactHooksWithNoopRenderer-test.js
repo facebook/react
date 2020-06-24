@@ -29,6 +29,7 @@ let useRef;
 let useImperativeHandle;
 let useTransition;
 let useDeferredValue;
+let useSnapshotBeforeCommit;
 let forwardRef;
 let memo;
 let act;
@@ -57,6 +58,7 @@ describe('ReactHooksWithNoopRenderer', () => {
     useDeferredValue = React.unstable_useDeferredValue;
     Suspense = React.Suspense;
     act = ReactNoop.act;
+    useSnapshotBeforeCommit = React.unstable_useSnapshotBeforeCommit;
 
     TextResource = ReactCache.unstable_createResource(
       ([text, ms = 0]) => {
@@ -2315,6 +2317,51 @@ describe('ReactHooksWithNoopRenderer', () => {
       ReactNoop.render(null);
       expect(Scheduler).toFlushAndYieldThrough(['Unmount: 1']);
       expect(ReactNoop.getChildren()).toEqual([]);
+    });
+  });
+
+  describe('useSnapshotBeforeCommit', () => {
+    // @gate experimental
+    it('fires callback before the host has been mutated', () => {
+      function getCommittedText() {
+        const yields = Scheduler.unstable_clearYields();
+        const children = ReactNoop.getChildren();
+        Scheduler.unstable_yieldValue(yields);
+        if (children === null) {
+          return null;
+        }
+        return children[0].prop;
+      }
+
+      function Counter(props) {
+        useSnapshotBeforeCommit(() => {
+          Scheduler.unstable_yieldValue(`Snapshot: ${props.count}`);
+        });
+        useLayoutEffect(() => {
+          Scheduler.unstable_yieldValue(`Layout: ${getCommittedText()}`);
+        });
+        return <Text text={props.count} />;
+      }
+
+      ReactNoop.render(<Counter count={0} />, () =>
+        Scheduler.unstable_yieldValue('Sync effect'),
+      );
+      expect(Scheduler).toFlushAndYieldThrough([
+        [0, 'Snapshot: 0'],
+        'Layout: 0',
+        'Sync effect',
+      ]);
+      expect(ReactNoop.getChildren()).toEqual([span(0)]);
+
+      ReactNoop.render(<Counter count={1} />, () =>
+        Scheduler.unstable_yieldValue('Sync effect'),
+      );
+      expect(Scheduler).toFlushAndYieldThrough([
+        [1, 'Snapshot: 1'],
+        'Layout: 1',
+        'Sync effect',
+      ]);
+      expect(ReactNoop.getChildren()).toEqual([span(1)]);
     });
   });
 

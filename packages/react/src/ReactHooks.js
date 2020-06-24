@@ -196,3 +196,11 @@ export function useMutableSource<Source, Snapshot>(
   const dispatcher = resolveDispatcher();
   return dispatcher.useMutableSource(source, getSnapshot, subscribe);
 }
+
+export function useSnapshotBeforeCommit(
+  create: () => void,
+  deps: Array<mixed> | void | null,
+): void {
+  const dispatcher = resolveDispatcher();
+  return dispatcher.useSnapshotBeforeCommit(create, deps);
+}

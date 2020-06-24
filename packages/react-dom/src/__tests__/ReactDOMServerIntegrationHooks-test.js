@@ -33,6 +33,7 @@ let forwardRef;
 let yieldedValues;
 let yieldValue;
 let clearYields;
+let useSnapshotBeforeCommit;
 
 function initModules() {
   // Reset warning cache.
@@ -55,6 +56,7 @@ function initModules() {
   useLayoutEffect = React.useLayoutEffect;
   useOpaqueIdentifier = React.unstable_useOpaqueIdentifier;
   forwardRef = React.forwardRef;
+  useSnapshotBeforeCommit = React.unstable_useSnapshotBeforeCommit;
 
   yieldedValues = [];
   yieldValue = value => {
@@ -633,6 +635,23 @@ describe('ReactDOMServerHooks', () => {
       const domNode = await serverRender(
         <Counter label="Count" ref={counter} />,
       );
+      expect(clearYields()).toEqual(['Count: 0']);
+      expect(domNode.tagName).toEqual('SPAN');
+      expect(domNode.textContent).toEqual('Count: 0');
+    });
+  });
+
+  describe('useSnapshotBeforeCommit', () => {
+    // @gate experimental
+    it('should not be invoked on the server', async () => {
+      function Counter() {
+        useSnapshotBeforeCommit(() => {
+          throw new Error('should not be invoked');
+        });
+
+        return <Text text="Count: 0" />;
+      }
+      const domNode = await serverRender(<Counter />);
       expect(clearYields()).toEqual(['Count: 0']);
       expect(domNode.tagName).toEqual('SPAN');
       expect(domNode.textContent).toEqual('Count: 0');

@@ -44,11 +44,13 @@ import {createDeprecatedResponderListener} from './ReactFiberDeprecatedEvents.ol
 import {
   Update as UpdateEffect,
   Passive as PassiveEffect,
+  Snapshot as SnapshotEffect,
 } from './ReactSideEffectTags';
 import {
   HasEffect as HookHasEffect,
   Layout as HookLayout,
   Passive as HookPassive,
+  Snapshot as HookSnapshot,
 } from './ReactHookEffectTags';
 import {
   getWorkInProgressRoot,
@@ -125,7 +127,8 @@ export type HookType =
   | 'useDeferredValue'
   | 'useTransition'
   | 'useMutableSource'
-  | 'useOpaqueIdentifier';
+  | 'useOpaqueIdentifier'
+  | 'useSnapshotBeforeCommit';
 
 let didWarnAboutMismatchedHooksForComponent;
 let didWarnAboutUseOpaqueIdentifier;
@@ -1302,6 +1305,20 @@ function updateLayoutEffect(
   return updateEffectImpl(UpdateEffect, HookLayout, create, deps);
 }
 
+function mountSnapshotBeforeCommit(
+  create: () => void,
+  deps: Array<mixed> | void | null,
+): void {
+  return mountEffectImpl(SnapshotEffect, HookSnapshot, create, deps);
+}
+
+function updateSnapshotBeforeCommit(
+  create: () => void,
+  deps: Array<mixed> | void | null,
+): void {
+  return updateEffectImpl(SnapshotEffect, HookSnapshot, create, deps);
+}
+
 function imperativeHandleEffect<T>(
   create: () => T,
   ref: {|current: T | null|} | ((inst: T | null) => mixed) | null | void,
@@ -1770,6 +1787,7 @@ export const ContextOnlyDispatcher: Dispatcher = {
   useTransition: throwInvalidHookError,
   useMutableSource: throwInvalidHookError,
   useOpaqueIdentifier: throwInvalidHookError,
+  useSnapshotBeforeCommit: throwInvalidHookError,
 
   unstable_isNewReconciler: enableNewReconciler,
 };
@@ -1792,6 +1810,7 @@ const HooksDispatcherOnMount: Dispatcher = {
   useTransition: mountTransition,
   useMutableSource: mountMutableSource,
   useOpaqueIdentifier: mountOpaqueIdentifier,
+  useSnapshotBeforeCommit: mountSnapshotBeforeCommit,
 
   unstable_isNewReconciler: enableNewReconciler,
 };
@@ -1814,6 +1833,7 @@ const HooksDispatcherOnUpdate: Dispatcher = {
   useTransition: updateTransition,
   useMutableSource: updateMutableSource,
   useOpaqueIdentifier: updateOpaqueIdentifier,
+  useSnapshotBeforeCommit: updateSnapshotBeforeCommit,
 
   unstable_isNewReconciler: enableNewReconciler,
 };
@@ -1836,6 +1856,7 @@ const HooksDispatcherOnRerender: Dispatcher = {
   useTransition: rerenderTransition,
   useMutableSource: updateMutableSource,
   useOpaqueIdentifier: rerenderOpaqueIdentifier,
+  useSnapshotBeforeCommit: updateSnapshotBeforeCommit,
 
   unstable_isNewReconciler: enableNewReconciler,
 };
@@ -2000,6 +2021,15 @@ if (__DEV__) {
       mountHookTypesDev();
       return mountOpaqueIdentifier();
     },
+    useSnapshotBeforeCommit(
+      create: () => void,
+      deps: Array<mixed> | void | null,
+    ): void {
+      currentHookNameInDev = 'useSnapshotBeforeCommit';
+      mountHookTypesDev();
+      checkDepsAreArrayDev(deps);
+      return mountSnapshotBeforeCommit(create, deps);
+    },
 
     unstable_isNewReconciler: enableNewReconciler,
   };
@@ -2131,6 +2161,14 @@ if (__DEV__) {
       currentHookNameInDev = 'useOpaqueIdentifier';
       updateHookTypesDev();
       return mountOpaqueIdentifier();
+    },
+    useSnapshotBeforeCommit(
+      create: () => void,
+      deps: Array<mixed> | void | null,
+    ): void {
+      currentHookNameInDev = 'useSnapshotBeforeCommit';
+      updateHookTypesDev();
+      return mountSnapshotBeforeCommit(create, deps);
     },
 
     unstable_isNewReconciler: enableNewReconciler,
@@ -2264,6 +2302,14 @@ if (__DEV__) {
       updateHookTypesDev();
       return updateOpaqueIdentifier();
     },
+    useSnapshotBeforeCommit(
+      create: () => void,
+      deps: Array<mixed> | void | null,
+    ): void {
+      currentHookNameInDev = 'useSnapshotBeforeCommit';
+      updateHookTypesDev();
+      return updateSnapshotBeforeCommit(create, deps);
+    },
 
     unstable_isNewReconciler: enableNewReconciler,
   };
@@ -2396,6 +2442,14 @@ if (__DEV__) {
       currentHookNameInDev = 'useOpaqueIdentifier';
       updateHookTypesDev();
       return rerenderOpaqueIdentifier();
+    },
+    useSnapshotBeforeCommit(
+      create: () => void,
+      deps: Array<mixed> | void | null,
+    ): void {
+      currentHookNameInDev = 'useSnapshotBeforeCommit';
+      updateHookTypesDev();
+      return updateSnapshotBeforeCommit(create, deps);
     },
 
     unstable_isNewReconciler: enableNewReconciler,
@@ -2545,6 +2599,15 @@ if (__DEV__) {
       mountHookTypesDev();
       return mountOpaqueIdentifier();
     },
+    useSnapshotBeforeCommit(
+      create: () => void,
+      deps: Array<mixed> | void | null,
+    ): void {
+      currentHookNameInDev = 'useSnapshotBeforeCommit';
+      warnInvalidHookAccess();
+      mountHookTypesDev();
+      return mountSnapshotBeforeCommit(create, deps);
+    },
 
     unstable_isNewReconciler: enableNewReconciler,
   };
@@ -2692,6 +2755,15 @@ if (__DEV__) {
       warnInvalidHookAccess();
       updateHookTypesDev();
       return updateOpaqueIdentifier();
+    },
+    useSnapshotBeforeCommit(
+      create: () => void,
+      deps: Array<mixed> | void | null,
+    ): void {
+      currentHookNameInDev = 'useSnapshotBeforeCommit';
+      warnInvalidHookAccess();
+      updateHookTypesDev();
+      return updateSnapshotBeforeCommit(create, deps);
     },
 
     unstable_isNewReconciler: enableNewReconciler,
@@ -2841,6 +2913,15 @@ if (__DEV__) {
       warnInvalidHookAccess();
       updateHookTypesDev();
       return rerenderOpaqueIdentifier();
+    },
+    useSnapshotBeforeCommit(
+      create: () => void,
+      deps: Array<mixed> | void | null,
+    ): void {
+      currentHookNameInDev = 'useSnapshotBeforeCommit';
+      warnInvalidHookAccess();
+      updateHookTypesDev();
+      return updateSnapshotBeforeCommit(create, deps);
     },
 
     unstable_isNewReconciler: enableNewReconciler,
